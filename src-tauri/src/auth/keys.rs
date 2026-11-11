@@ -29,7 +29,7 @@ fn parse_or_set_aside(path: &Path, text: &str) -> HashMap<String, String> {
 
 /// Parses a stored JSON file, or moves it aside as `.corrupt-<n>` for hand
 /// recovery and returns None, as if it had never been written.
-pub(super) fn parse_json_or_set_aside<T: serde::de::DeserializeOwned>(
+pub(crate) fn parse_json_or_set_aside<T: serde::de::DeserializeOwned>(
     path: &Path,
     text: &str,
 ) -> Option<T> {

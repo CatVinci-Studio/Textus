@@ -19,6 +19,7 @@ import "../inline-chat.css";
 import { TextusAiOffNote } from "../../TextusAiSwitch";
 import "./chat-window.css";
 import { IslandSheet } from "../../../engine/layout/Island";
+import { START_MODE } from "../last-mode";
 
 /**
  * The chat as its own OS window: the cross-file surface, following the user's
@@ -106,7 +107,7 @@ export function ChatWindowApp({ tabs }: { tabs?: ChatTabs }) {
           docPath={context.docPath}
           workspaceRoot={settings.agentWorkspaceRoot || null}
           conversation={conversation}
-          defaultMode={settings.agentDefaultMode}
+          defaultMode={START_MODE}
           defaultWebSearch={settings.enableWebSearch}
           labels={labels}
           proposalStatus={bridge.proposalStatus}

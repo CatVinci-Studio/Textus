@@ -18,6 +18,7 @@ fn run_at(base_url: &str) -> ImageRun {
         made: AtomicUsize::new(0),
         limit: PER_SEND,
         folder: None,
+        request: None,
     }
 }
 
@@ -334,6 +335,19 @@ fn a_picture_let_go_while_painting_stays_gone() {
     ai_discard_generated_image(id.clone());
     finish(&id, Slot::Failed("late".into()));
     assert!(picture(&id).unwrap_err().contains("no longer available"));
+}
+
+#[test]
+fn stopping_a_request_stops_its_pictures_still_being_made() {
+    // A service that takes the request and never answers.
+    let service = std::net::TcpListener::bind("127.0.0.1:0").unwrap();
+    let run = run_at(&format!("http://{}", service.local_addr().unwrap())).for_request("r1");
+    let (id, _) = run.start("a lighthouse".into(), Aspect::Square, None);
+    std::thread::sleep(std::time::Duration::from_millis(200));
+    stop_request("r2");
+    assert!(look(&id).is_none(), "another request's Stop leaves it be");
+    stop_request("r1");
+    assert_eq!(picture(&id).unwrap_err(), pending::STOPPED);
 }
 
 #[test]

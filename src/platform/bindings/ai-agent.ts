@@ -40,7 +40,7 @@ export const commands = {
 	ai_redraw_generated_image: (id: string, prompt: string) => __TAURI_INVOKE<null>("ai_redraw_generated_image", { id, prompt }),
 	/**
 	 *  Lets a picture go: its proposal was rejected, or it was saved. One
-	 *  still being made is let go too; what it makes is thrown away.
+	 *  still being made is stopped, and nothing more is paid for it.
 	 */
 	ai_discard_generated_image: (id: string) => __TAURI_INVOKE<void>("ai_discard_generated_image", { id }),
 	/**

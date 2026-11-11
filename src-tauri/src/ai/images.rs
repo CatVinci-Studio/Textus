@@ -77,11 +77,18 @@ pub fn ai_redraw_generated_image(id: String, prompt: String) -> Result<(), Strin
     redraw(&id, prompt)
 }
 
+/// Stops the pictures request `request_id` asked for and are still being
+/// made (its Stop).
+pub(crate) fn stop_request(request_id: &str) {
+    pending::stop_request(request_id);
+}
+
 /// Lets a picture go: its proposal was rejected, or it was saved. One
-/// still being made is let go too; what it makes is thrown away.
+/// still being made is stopped, and nothing more is paid for it.
 #[tauri::command]
 #[cfg_attr(test, specta::specta)]
 pub fn ai_discard_generated_image(id: String) {
+    pending::stop(&id);
     pending().retain(|(i, _)| *i != id);
 }
 

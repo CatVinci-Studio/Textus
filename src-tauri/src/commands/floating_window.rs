@@ -92,6 +92,20 @@ fn corner_of(window: &tauri::WebviewWindow, width: f64, height: f64) -> (f64, f6
     (right - width - 32.0, bottom - height - 32.0)
 }
 
+/// Closes the floating windows editor window `owner` opened, as it closes.
+pub fn close_owned_by(app: &tauri::AppHandle, owner: &str) {
+    for (label, window) in app.webview_windows() {
+        let owned = label.starts_with(FLOATING_LABEL_PREFIX)
+            && window.url().is_ok_and(|url| {
+                url.query_pairs()
+                    .any(|(key, value)| key == "owner" && value == owner)
+            });
+        if owned {
+            let _ = window.destroy();
+        }
+    }
+}
+
 #[tauri::command]
 #[cfg_attr(test, specta::specta)]
 pub fn close_floating_window(app: tauri::AppHandle, view: String) {

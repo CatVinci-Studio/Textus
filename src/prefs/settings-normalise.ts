@@ -35,7 +35,6 @@ import {
   type DocLetterSpacing,
   LETTER_SPACING_BY,
   PANDOC_ARGS_FORMATS,
-  storedAgentMode,
 } from "./settings-values";
 
 /** Saved settings read back whole: a missing, ill-typed or unknown value
@@ -141,9 +140,6 @@ function readSettings(parsed: Raw | null): Settings {
           ? parsed.writingProvider
           : "",
       writingModels: stringMap(parsed.writingModels),
-      agentDefaultMode:
-        storedAgentMode(parsed.agentDefaultMode) ??
-        DEFAULT_SETTINGS.agentDefaultMode,
       revisionDisplay:
         parsed.revisionDisplay === "new"
           ? "final"

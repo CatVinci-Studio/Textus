@@ -61,12 +61,20 @@ export function endAgentSession(conversation: string): void {
   session?.connection.stop();
 }
 
-/** Stops the step the agent is on; what streamed so far stays. */
+/** How long an agent has to stop once asked before its process is ended. */
+const STOP_GRACE_MS = 5000;
+
+/** Stops the step the agent is on; what streamed so far stays. One that
+ *  hasn't stopped by STOP_GRACE_MS is ended, its session with it. */
 export function cancelAgentExchange(conversation: string): void {
   const session = sessions.get(conversation);
   if (!session) return;
   session.refuse?.();
   session.connection.notify("session/cancel", { sessionId: session.sessionId });
+  setTimeout(() => {
+    if (sessions.get(conversation) === session && session.events)
+      endAgentSession(conversation);
+  }, STOP_GRACE_MS);
 }
 
 /** `content` from line `line` (1-based), at most `limit` lines. */

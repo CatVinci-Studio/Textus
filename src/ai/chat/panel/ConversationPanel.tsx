@@ -23,6 +23,7 @@ import {
 } from "../../paper/paper-genres";
 import { ModeIcon } from "../mode-icons";
 import { useSettings, type PanelMode } from "../../../prefs/SettingsContext";
+import { START_MODE } from "../last-mode";
 
 /** The panel always asks for the document as it is now; this stands until
  *  it answers, and where there is none. */
@@ -57,7 +58,7 @@ export function ConversationPanel({
   const agentPanel = useAgentPanel();
   const conversation = useConversation(model);
   // The composer's mode: the empty state says what the AI will do in it.
-  const [mode, setMode] = useState<PanelMode>(settings.agentDefaultMode);
+  const [mode, setMode] = useState<PanelMode>(START_MODE);
   // Research mode's kind of piece, "auto" for the model's choice; the
   // message sent is its topic.
   const [paperGenre, setPaperGenre] = useState<PaperGenreChoice>("auto");
@@ -112,7 +113,7 @@ export function ConversationPanel({
         docPath={docPath}
         workspaceRoot={settings.agentWorkspaceRoot || null}
         conversation={conversation}
-        defaultMode={settings.agentDefaultMode}
+        defaultMode={START_MODE}
         defaultWebSearch={settings.enableWebSearch}
         labels={labels}
         fillHeight

@@ -28,7 +28,6 @@ import {
   type ImageStorageMode,
   type ImageHost,
   type ImageNamingMode,
-  type AgentMode,
 } from "./settings-values";
 
 /** Every setting's type and choices, and the defaults a new install starts from. */
@@ -92,8 +91,6 @@ export interface Settings {
    *  `contributes.agents`) Textus AI's chat talks to instead of a model;
    *  "" for none. */
   chatAgent: string;
-  /** Initial mode shown in a newly mounted Agent composer. */
-  agentDefaultMode: AgentMode;
   /// How a pending rewrite shows, as Word's markup views: "final" (result in
   /// the text, removals in the margin), "original" (struck original, new text
   /// in the margin; "inline" where no room) or "inline". Legacy "new" reads as "final".
@@ -300,7 +297,6 @@ export const DEFAULT_SETTINGS: Settings = {
   writingModels: {},
   agentModels: {},
   chatAgent: "",
-  agentDefaultMode: "review",
   revisionDisplay: "final",
   completionTone: "default",
   writingConventions: "automatic",

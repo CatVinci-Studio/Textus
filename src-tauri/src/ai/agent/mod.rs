@@ -212,7 +212,7 @@ async fn ai_agent_message_inner(
     let user_turn = AgentTurn::User { text, images };
     let plain_message = message.clone();
     // generate_image, while an image model is set.
-    let image_run = session.pictures(request.image_model.as_ref());
+    let image_run = session.pictures(request);
 
     let agent = session.provider(thinking, web.native).await?;
     let result = match agent {

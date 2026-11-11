@@ -1,6 +1,9 @@
 import { storedAgentMode, type AgentMode } from "../../prefs/SettingsContext";
 import { LOCAL_KEYS, readLocalJson, writeLocal } from "../../storage/local";
 
+/** The mode a conversation starts in, until another is picked. */
+export const START_MODE: AgentMode = "review";
+
 /**
  * The panel's last mode, kept with the default it was picked under so a new
  * Settings default still takes effect. In localStorage so the detached

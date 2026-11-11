@@ -140,10 +140,7 @@ pub(super) fn install_sync(
         let dir = plugin_dir_in(&staging)?;
         let (head, text) = read_checked_manifest(&dir)?;
         let target = root.join(&head.id);
-        if target.exists() {
-            std::fs::remove_dir_all(&target).map_err(|e| e.to_string())?;
-        }
-        std::fs::rename(&dir, &target).map_err(|e| e.to_string())?;
+        swap_in(&dir, &target, &staging.with_extension("old"))?;
         // Installed now, so no longer a developer folder, and not Official until the
         // catalog says so.
         state::update(app, |state| {
@@ -158,6 +155,25 @@ pub(super) fn install_sync(
         let _ = std::fs::remove_dir_all(&staging);
     }
     result
+}
+
+/// Puts `new` at `target`: the version there is moved aside first and put back
+/// if the move in fails, so an update never leaves no version at all.
+fn swap_in(new: &Path, target: &Path, aside: &Path) -> Result<(), String> {
+    let had = target.exists();
+    if had {
+        std::fs::rename(target, aside).map_err(|e| e.to_string())?;
+    }
+    if let Err(e) = std::fs::rename(new, target) {
+        if had {
+            let _ = std::fs::rename(aside, target);
+        }
+        return Err(e.to_string());
+    }
+    if had {
+        let _ = std::fs::remove_dir_all(aside);
+    }
+    Ok(())
 }
 
 /// A plugin's files as text, by path in the plugin, as Textus AI writes them.

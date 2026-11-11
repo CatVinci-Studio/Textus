@@ -103,3 +103,21 @@ fn a_zip_unpacks_its_files() {
     assert!(out.join("dist/host.js").is_file());
     assert_eq!(plugin_dir_in(&out).unwrap(), out);
 }
+
+#[test]
+fn an_update_that_cannot_move_in_keeps_the_version_there() {
+    let root = tempfile::tempdir().unwrap();
+    let target = root.path().join("p");
+    manifest(&target, "p");
+    let aside = root.path().join(".p.old");
+    assert!(swap_in(&root.path().join("missing"), &target, &aside).is_err());
+    assert!(target.join(MANIFEST).is_file());
+    assert!(!aside.exists());
+
+    let new = root.path().join("new");
+    manifest(&new, "p");
+    std::fs::write(new.join("added"), "x").unwrap();
+    swap_in(&new, &target, &aside).unwrap();
+    assert!(target.join("added").is_file());
+    assert!(!aside.exists() && !new.exists());
+}

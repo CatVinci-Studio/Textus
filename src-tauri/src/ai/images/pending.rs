@@ -110,7 +110,50 @@ pub(crate) fn asked() -> std::sync::MutexGuard<'static, Vec<(String, std::sync::
 
 /// Makes picture `id` from what was asked, in the background, its slot
 /// filled when it comes.
-pub(crate) fn make(id: String, asked_for: std::sync::Arc<Asked>) {
+/// A picture being made: its id, the request that asked, the task to stop.
+type Making = (String, Option<String>, tauri::async_runtime::JoinHandle<()>);
+
+static MAKING: Mutex<Vec<Making>> = Mutex::new(Vec::new());
+
+fn making() -> std::sync::MutexGuard<'static, Vec<Making>> {
+    MAKING.lock().unwrap_or_else(|e| e.into_inner())
+}
+
+/// Stops making picture `id`, if it still is: nothing more is paid for it.
+pub(crate) fn stop(id: &str) {
+    making().retain(|(i, _, task)| {
+        if i == id {
+            task.abort();
+        }
+        i != id
+    });
+}
+
+/// Stops the pictures request `request_id` asked for and are still being
+/// made; each is left failed, to be asked for again.
+pub(crate) fn stop_request(request_id: &str) {
+    let stopped: Vec<String> = {
+        let mut making = making();
+        let (stopped, kept) = std::mem::take(&mut *making)
+            .into_iter()
+            .partition::<Vec<_>, _>(|(_, request, _)| request.as_deref() == Some(request_id));
+        *making = kept;
+        stopped
+            .into_iter()
+            .map(|(id, _, task)| {
+                task.abort();
+                id
+            })
+            .collect()
+    };
+    for id in stopped {
+        finish(&id, Slot::Failed(STOPPED.into()));
+    }
+}
+
+pub(crate) const STOPPED: &str = "Stopped before the picture was made.";
+
+pub(crate) fn make(id: String, asked_for: std::sync::Arc<Asked>, request: Option<String>) {
     {
         let mut asked = asked();
         asked.retain(|(i, _)| *i != id);
@@ -118,7 +161,8 @@ pub(crate) fn make(id: String, asked_for: std::sync::Arc<Asked>) {
         let live: Vec<String> = pending().iter().map(|(i, _)| i.clone()).collect();
         asked.retain(|(i, _)| live.contains(i));
     }
-    tauri::async_runtime::spawn(async move {
+    let picture = id.clone();
+    let task = tauri::async_runtime::spawn(async move {
         let (prompt, reference) = asked_for.sent();
         let slot = match asked_for
             .job
@@ -128,8 +172,11 @@ pub(crate) fn make(id: String, asked_for: std::sync::Arc<Asked>) {
             Ok(image) => Slot::Ready(image),
             Err(why) => Slot::Failed(why.to_string()),
         };
-        finish(&id, slot);
+        finish(&picture, slot);
     });
+    let mut making = making();
+    making.retain(|(_, _, task)| !task.inner().is_finished());
+    making.push((id, request, task));
 }
 
 /// Asks again for a picture that wasn't made: its slot goes back to being
@@ -150,7 +197,7 @@ pub(crate) fn retry(id: &str) -> Result<(), String> {
         }
         *slot = Slot::Making;
     }
-    make(id.to_string(), asked_for);
+    make(id.to_string(), asked_for, None);
     Ok(())
 }
 
@@ -193,6 +240,7 @@ pub(crate) fn redraw(id: &str, prompt: String) -> Result<(), String> {
             aspect: before.aspect,
             reference: before.reference.clone(),
         }),
+        None,
     );
     Ok(())
 }

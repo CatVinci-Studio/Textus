@@ -144,43 +144,6 @@ describe("colour swatches", () => {
   });
 });
 
-describe("the default Agent mode", () => {
-  beforeAll(installTestLocalStorage);
-  beforeEach(() => localStorage.clear());
-
-  it("starts new conversations in Review mode", () => {
-    expect(loadSettings().agentDefaultMode).toBe("review");
-  });
-
-  it("keeps a saved mode", () => {
-    for (const mode of ["write", "review"]) {
-      localStorage.setItem(
-        SETTINGS_KEY,
-        JSON.stringify({ agentDefaultMode: mode }),
-      );
-      expect(loadSettings().agentDefaultMode).toBe(mode);
-    }
-  });
-
-  it("reads 1.2.0's Revise mode as Write", () => {
-    localStorage.setItem(
-      SETTINGS_KEY,
-      JSON.stringify({ agentDefaultMode: "revise" }),
-    );
-    expect(loadSettings().agentDefaultMode).toBe("write");
-  });
-
-  it("rejects a mode it doesn't know", () => {
-    for (const saved of ["destroy", "ask", 3]) {
-      localStorage.setItem(
-        SETTINGS_KEY,
-        JSON.stringify({ agentDefaultMode: saved }),
-      );
-      expect(loadSettings().agentDefaultMode).toBe("review");
-    }
-  });
-});
-
 describe("separate writing and Agent models", () => {
   beforeAll(installTestLocalStorage);
   beforeEach(() => localStorage.clear());
