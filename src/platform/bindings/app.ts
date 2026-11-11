@@ -42,7 +42,7 @@ export const commands = {
 	 *  the cursor until release: over a tab row the tab lands there, over a
 	 *  window's documents it opens split there, else in a new window.
 	 */
-	start_floating_tab_drag: (tab: DetachedTab_Deserialize, title: string, dirty: boolean, destroySource: boolean) => __TAURI_INVOKE<null>("start_floating_tab_drag", { tab, title, dirty, destroySource }),
+	start_floating_tab_drag: (tab: DetachedTab_Deserialize, title: string, dirty: boolean, destroySource: boolean, rowHeight: number | null) => __TAURI_INVOKE<null>("start_floating_tab_drag", { tab, title, dirty, destroySource, rowHeight }),
 	/**
 	 *  Where a floating view can float over the desktop: the platforms whose
 	 *  windows can be transparent without a compositor to ask.

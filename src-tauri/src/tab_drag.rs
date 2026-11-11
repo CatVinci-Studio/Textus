@@ -123,17 +123,13 @@ pub use pill::DRAG_PILL_LABEL;
 #[cfg(any(target_os = "macos", windows))]
 use pill::{create_drag_pill, destroy_drag_pill, move_drag_pill, park_drag_pill};
 
-/// Height of the strip along a window's top edge that counts as its tab row for
-/// drops; below it the documents take the tab as a split. Keep in step with TAB_ROW_HEIGHT_LOGICAL in useTabDragMerge.ts.
-#[cfg(any(target_os = "macos", windows))]
-const TAB_ROW_HEIGHT_LOGICAL: f64 = 72.0;
-
-/// Which window (if any) is under the cursor, and whether over its tab row
-/// (the tab joins the row) or its documents (it opens beside them, split).
+/// Which window (if any) is under the cursor, and whether over its tab row -
+/// the `row` logical points along its top, as the window measures it (the
+/// tab joins the row) - or its documents (it opens beside them, split).
 /// The pill and hidden windows never are; the drag source is, so a tab can
 /// drop back where it came from.
 #[cfg(any(target_os = "macos", windows))]
-fn window_hit(app: &tauri::AppHandle, x: f64, y: f64) -> Option<(String, bool)> {
+fn window_hit(app: &tauri::AppHandle, x: f64, y: f64, row: f64) -> Option<(String, bool)> {
     for (label, window) in app.windows() {
         if !crate::commands::chat_window::is_editor_window(&label)
             || !window.is_visible().unwrap_or(false)
@@ -152,7 +148,7 @@ fn window_hit(app: &tauri::AppHandle, x: f64, y: f64) -> Option<(String, bool)> 
         let ww = size.width as f64 / scale;
         let wh = size.height as f64 / scale;
         if x >= wx && x <= wx + ww && y >= wy && y <= wy + wh {
-            return Some((label, y <= wy + TAB_ROW_HEIGHT_LOGICAL));
+            return Some((label, y <= wy + row));
         }
     }
     None
@@ -174,10 +170,11 @@ pub fn start_floating_tab_drag(
     title: String,
     dirty: bool,
     destroy_source: bool,
+    row_height: f64,
 ) -> Result<(), String> {
     #[cfg(not(any(target_os = "macos", windows)))]
     {
-        let _ = (window, tab, title, dirty, destroy_source);
+        let _ = (window, tab, title, dirty, destroy_source, row_height);
         Err("floating tab drags need global cursor tracking".to_string())
     }
     #[cfg(any(target_os = "macos", windows))]
@@ -200,11 +197,11 @@ pub fn start_floating_tab_drag(
                 let (x, y, down) = mouse::state();
                 if !down {
                     // Release: one fresh hit test decides; the cached one may be two ticks stale.
-                    break (x, y, window_hit(&app, x, y));
+                    break (x, y, window_hit(&app, x, y, row_height));
                 }
                 // The pill moves every tick; the costly hit test runs every 3rd.
                 if ticks.is_multiple_of(3) {
-                    hit = window_hit(&app, x, y);
+                    hit = window_hit(&app, x, y, row_height);
                 }
                 ticks += 1;
 

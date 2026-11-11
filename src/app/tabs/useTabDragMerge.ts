@@ -30,8 +30,10 @@ import { paneOf, splitLayout } from "../../engine/layout/store";
 // drag) and as merge target. Within-bar reordering lives in the tab bar.
 
 // The drop target is a window's top strip (window bar plus tab bar), with
-// headroom, not its whole body.
+// headroom, not its whole body: at the interface's scale, and handed to
+// Rust with a drag so both test the same strip.
 const TAB_ROW_HEIGHT_LOGICAL = 72;
+const rowStrip = () => scaledPx(TAB_ROW_HEIGHT_LOGICAL);
 
 // Hit-testing is in global logical points, so each window's bounds use its
 // own scaleFactor: it may sit on a different-DPI display.
@@ -43,7 +45,7 @@ function pointInTopStrip(lx: number, ly: number, w: WindowBounds): boolean {
     lx >= x &&
     lx <= x + width &&
     ly >= y &&
-    ly <= y + scaledPx(TAB_ROW_HEIGHT_LOGICAL)
+    ly <= y + rowStrip()
   );
 }
 
@@ -108,7 +110,10 @@ export function useTabDragMerge(opts: {
       const tab = liveTabs().find((tb) => tb.id === id);
       if (!tab) return;
       try {
-        await windowIpc.startFloatingTabDrag(floatingDragArgs(tab, t, false));
+        await windowIpc.startFloatingTabDrag(
+          floatingDragArgs(tab, t, false),
+          rowStrip(),
+        );
       } catch {
         return; // drag couldn't start (unsupported platform / one already active) - keep the tab
       }
@@ -162,6 +167,7 @@ export function useTabDragMerge(opts: {
       void flushPendingWrites();
       void windowIpc.startFloatingTabDrag(
         floatingDragArgs(tab, latest.current.t, true),
+        rowStrip(),
       );
     }
 

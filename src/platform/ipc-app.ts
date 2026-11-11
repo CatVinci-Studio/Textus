@@ -38,18 +38,19 @@ export const windowIpc = {
   listWindowBounds: () => desktopQueryCommand("list_window_bounds", []),
   moveTabToNewWindow: ({ tab }: FloatingDragArgs) =>
     desktopActionCommand("move_tab_to_new_window", tab),
-  startFloatingTabDrag: ({
-    tab,
-    title,
-    dirty,
-    destroySource,
-  }: FloatingDragArgs) =>
+  /** `rowHeight`: how far down a window its tab row reaches, for a drop -
+   *  the window's own measure, so Rust's test and the window's agree. */
+  startFloatingTabDrag: (
+    { tab, title, dirty, destroySource }: FloatingDragArgs,
+    rowHeight: number,
+  ) =>
     desktopActionCommand(
       "start_floating_tab_drag",
       tab,
       title,
       dirty,
       destroySource,
+      rowHeight,
     ),
   startWindowDragTracking: () =>
     desktopQueryCommand("start_window_drag_tracking", false),
