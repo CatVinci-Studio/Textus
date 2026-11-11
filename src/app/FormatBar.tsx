@@ -1,6 +1,7 @@
+import { useScrollFade } from "../engine/controls/scroll-fade";
 import { tabElement } from "../engine/layout/tab-element";
 import { tabInUse } from "../engine/layout/store";
-import { useEffect, useState, type ComponentType } from "react";
+import { useEffect, useRef, useState, type ComponentType } from "react";
 import type { Strings } from "../i18n/strings";
 import { caretBlock, NO_BLOCK, type CaretBlock } from "../editor/caret-block";
 import { IconButton } from "../engine/controls/IconButton";
@@ -178,6 +179,9 @@ export function FormatBar({
   tabId: string;
 }) {
   const block = useCaretBlock(tabId);
+  // Narrower than its buttons, it scrolls, its edge fading where more are.
+  const row = useRef<HTMLDivElement>(null);
+  useScrollFade(row, "x");
   return (
     <div
       className="format-bar"
@@ -186,29 +190,31 @@ export function FormatBar({
       // A press leaves the caret where it was, in the document.
       onMouseDown={(e) => e.preventDefault()}
     >
-      {GROUPS.map((group, g) => (
-        <div key={g} className="format-bar-group">
-          {group.map((b) => {
-            const label = b.label(t);
-            return (
-              <IconButton
-                key={label}
-                label={label}
-                hint={b.keys ? `${label}  ${formatCombo(b.keys)}` : label}
-                pressed={b.on ? b.on(block) : undefined}
-                onClick={() => {
-                  focusDocument(tabId);
-                  window.dispatchEvent(
-                    new CustomEvent(b.event, { detail: b.detail }),
-                  );
-                }}
-              >
-                <b.Icon />
-              </IconButton>
-            );
-          })}
-        </div>
-      ))}
+      <div ref={row} className="format-bar-row tx-scroll-fade">
+        {GROUPS.map((group, g) => (
+          <div key={g} className="format-bar-group">
+            {group.map((b) => {
+              const label = b.label(t);
+              return (
+                <IconButton
+                  key={label}
+                  label={label}
+                  hint={b.keys ? `${label}  ${formatCombo(b.keys)}` : label}
+                  pressed={b.on ? b.on(block) : undefined}
+                  onClick={() => {
+                    focusDocument(tabId);
+                    window.dispatchEvent(
+                      new CustomEvent(b.event, { detail: b.detail }),
+                    );
+                  }}
+                >
+                  <b.Icon />
+                </IconButton>
+              );
+            })}
+          </div>
+        ))}
+      </div>
     </div>
   );
 }

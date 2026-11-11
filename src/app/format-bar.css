@@ -20,15 +20,24 @@
   gap: var(--space-2);
   height: var(--format-bar-height);
   padding: var(--format-bar-bleed) var(--space-3) 0;
-  overflow-x: auto;
-  scrollbar-width: none;
   border-bottom: 1px solid var(--ui-border);
   /* The sheet's paper, inside its rounded top. */
   border-radius: var(--island-radius) var(--island-radius) 0 0;
   background: var(--doc-bg, var(--ui-bg));
 }
 
-.format-bar::-webkit-scrollbar {
+/* Its buttons, scrolling sideways when the island is narrower. */
+.format-bar-row {
+  display: flex;
+  align-items: center;
+  gap: var(--space-2);
+  min-width: 0;
+  height: 100%;
+  overflow-x: auto;
+  scrollbar-width: none;
+}
+
+.format-bar-row::-webkit-scrollbar {
   display: none;
 }
 
