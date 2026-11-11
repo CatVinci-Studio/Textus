@@ -64,23 +64,7 @@ fn public_url(url: &str) -> Option<reqwest::Url> {
     if !matches!(parsed.scheme(), "https" | "http") {
         return None;
     }
-    let host = parsed
-        .host_str()?
-        .trim_matches(['[', ']'])
-        .to_ascii_lowercase();
-    let local = match host.parse::<std::net::IpAddr>() {
-        Ok(std::net::IpAddr::V4(ip)) => {
-            ip.is_loopback() || ip.is_private() || ip.is_link_local() || ip.is_unspecified()
-        }
-        Ok(std::net::IpAddr::V6(ip)) => {
-            ip.is_loopback() || ip.is_unspecified() || (ip.segments()[0] & 0xfe00) == 0xfc00
-        }
-        Err(_) => {
-            let name = host.trim_end_matches('.');
-            name == "localhost" || name.ends_with(".localhost") || name.ends_with(".local")
-        }
-    };
-    (!local).then_some(parsed)
+    (!crate::net::local_host(parsed.host_str()?)).then_some(parsed)
 }
 
 fn cache_path(app: &tauri::AppHandle, url: &str) -> Option<PathBuf> {
