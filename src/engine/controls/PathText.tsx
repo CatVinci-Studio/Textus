@@ -10,7 +10,13 @@ export function PathText({ path }: { path: string }) {
   const tail = path.slice(cut) || path;
   return (
     <Tooltip text={path}>
-      <span className="tx-path" tabIndex={-1}>
+      <span
+        className="tx-path"
+        tabIndex={-1}
+        // Its last name kept whole up to a few words: past that, what is
+        // beside it wraps rather than cutting the name.
+        style={{ minWidth: `${Math.min(tail.length, 24)}ch` }}
+      >
         {cut > 0 && tail !== path && (
           <span className="tx-path-head">{head}</span>
         )}

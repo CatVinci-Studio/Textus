@@ -115,7 +115,8 @@ export function PluginPage({
                 t={t}
                 official={record.official}
                 author={manifest.author || manifest.publisher}
-                version={manifest.version}
+                // The version is the row's own label: here only its source.
+                version={record.origin === "dev" ? manifest.version : undefined}
                 dev={record.origin === "dev"}
               />
             }

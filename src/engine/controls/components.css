@@ -55,10 +55,23 @@
   font-size: var(--text-body-large);
 }
 
+/* The name as wide as its words, so the control goes under it exactly
+   when the two don't fit; a hint under it counts as a few words' width,
+   not its whole length. A switch is small: it stays at the row's end and
+   the name wraps beside it. */
 .settings-row > *:first-child,
 .tx-row > *:first-child {
-  flex: 1 1 0;
+  flex: 1 1 auto;
   word-break: keep-all;
+}
+:is(.settings-row, .tx-row)
+  > :first-child
+  :is(.settings-row-hint, .tx-list-note):not(:has(.tx-path)) {
+  contain: inline-size;
+  min-width: 18ch;
+}
+.settings-toggle-row > :first-child {
+  flex-basis: 0;
 }
 
 .settings-text-input,
@@ -177,7 +190,6 @@ textarea.tx-input {
   /* As wide as its place, never widening it, but with a folder name's
      room kept: past that its row's controls wrap instead. */
   contain: inline-size;
-  min-width: 16ch;
 }
 .tx-path-head,
 .tx-path-tail {
@@ -216,7 +228,7 @@ textarea.tx-input {
 }
 .tx-head-main > :first-child {
   flex: 1 1 auto;
-  overflow-wrap: anywhere;
+  overflow-wrap: break-word;
 }
 .tx-head-tools {
   display: flex;

@@ -246,7 +246,6 @@
 .settings-row-control {
   display: flex;
   align-items: center;
-  justify-content: flex-end;
   flex-wrap: wrap;
   gap: 8px;
   flex: 0 1 auto;
@@ -334,7 +333,7 @@ button.settings-danger-button {
   max-width: 420px;
   /* Running text, not a name: it breaks as text does. */
   word-break: normal;
-  overflow-wrap: anywhere;
+  overflow-wrap: break-word;
 }
 
 /* The sign-in page's address, for when no browser opened: selectable, and
@@ -387,7 +386,6 @@ button.settings-inline-button {
   gap: 8px;
   flex-shrink: 1;
   flex-wrap: wrap;
-  justify-content: flex-end;
   min-width: 0;
   max-width: 100%;
 }
@@ -399,10 +397,11 @@ button.settings-inline-button {
   font-variant-numeric: tabular-nums;
 }
 
-/* Clear waits for the row it is on: a column of them was all one saw. */
+/* Clear waits for the row it is on: a column of them was all one saw. Out
+   of the row until then, so a key wrapped under its name starts there. */
 @media (hover: hover) {
   .shortcut-setting:not(:hover, :focus-within) .shortcut-clear {
-    visibility: hidden;
+    display: none;
   }
 }
 
@@ -482,21 +481,20 @@ button.settings-inline-button {
 .image-folder-control {
   display: flex;
   flex-wrap: wrap;
-  justify-content: flex-end;
   gap: 8px;
   min-width: 0;
 }
 
 .image-folder-input {
-  flex: 0 1 140px;
-  width: 140px;
+  flex: 1 1 12ch;
+  min-width: 0;
 }
 
 .image-folder-example {
   display: block;
   /* Whole, even on a narrow window: the end of the link is the part that
      differs. */
-  overflow-wrap: anywhere;
+  overflow-wrap: break-word;
   font-family: var(--font-mono);
   font-size: var(--text-footnote);
 }
@@ -916,10 +914,6 @@ button.settings-inline-button {
   font-size: var(--text-body);
   line-height: 1.5;
   tab-size: 2;
-}
-
-.settings-row-stacked .shortcut-row-controls {
-  justify-content: flex-end;
 }
 
 /* Settings › About: the app on its own, centred. */
