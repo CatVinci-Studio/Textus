@@ -1869,6 +1869,7 @@ para usar una.
   pluginScheduleNotice:
     "{name} programó una tarea. Solo se ejecuta mientras Textus está abierto: activa «{setting}» para que también se ejecute con todas las ventanas cerradas.",
   pluginPermNetwork: "Conectarse a {host}",
+  pluginPermCommands: "Ejecutar los comandos de {plugin}",
   pluginPermNetworkAny: "Conectarse a cualquier sitio web",
   menuPlugins: "Complementos",
   menuManagePlugins: "Gestionar complementos…",

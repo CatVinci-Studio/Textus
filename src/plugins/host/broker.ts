@@ -60,7 +60,12 @@ export interface BrokerDeps {
   /** Sets one of the plugin's own settings, for every folder. */
   setSetting(id: string, key: string, value: unknown): Promise<void>;
   /** Runs any command - the app's, or a plugin's. */
-  runCommand(command: string, args: unknown[]): Promise<unknown>;
+  /** `caller`: the plugin that asks. */
+  runCommand(
+    command: string,
+    args: unknown[],
+    caller?: string,
+  ): Promise<unknown>;
   /** textus.offerPlugin, from the plugin `caller`: whether it is on. */
   offerPlugin(
     caller: { id: string; name: string },

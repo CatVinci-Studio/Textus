@@ -1768,6 +1768,7 @@ ${AI_NAME}에게 주는 글쓰기 지침으로, 모든 문서에 적용됩니다
   pluginScheduleNotice:
     "{name}에서 예약 작업을 설정했습니다. Textus가 실행 중일 때만 동작합니다. “{setting}”을(를) 켜면 모든 창을 닫아도 동작합니다.",
   pluginPermNetwork: "{host}에 연결",
+  pluginPermCommands: "{plugin}의 명령 실행",
   pluginPermNetworkAny: "모든 웹사이트에 연결",
   menuPlugins: "플러그인",
   menuManagePlugins: "플러그인 관리…",

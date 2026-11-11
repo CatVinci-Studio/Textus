@@ -20,7 +20,8 @@
       "network:api.example.com",
       "network:*.wikipedia.org",
       "network:localhost:23119",
-      "network:127.0.0.1"
+      "network:127.0.0.1",
+      "commands:catvinci.sync"
     ],
     "invalid": [
       "network:",
@@ -28,7 +29,10 @@
       "network:x:123456",
       "network:*.",
       "files.delete",
-      "network:host:"
+      "network:host:",
+      "commands:",
+      "commands:Sync.x",
+      "commands:textus"
     ]
   }
 }

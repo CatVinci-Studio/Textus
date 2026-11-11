@@ -1816,6 +1816,7 @@ type /name in a conversation to use one.
   pluginScheduleNotice:
     "{name} scheduled something. It only runs while Textus is running: turn on “{setting}” so it also runs with every window closed.",
   pluginPermNetwork: "Connect to {host}",
+  pluginPermCommands: "Run the commands of {plugin}",
   pluginPermNetworkAny: "Connect to any website",
   menuPlugins: "Plugins",
   menuManagePlugins: "Manage Plugins…",

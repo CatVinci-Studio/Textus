@@ -35,12 +35,16 @@ type PlainPermission =
 export type PluginPlatform = "desktop" | "ios";
 
 /** A permission, as the manifest names it. `network:<host>` names one
- *  host (`*.domain` for its subdomains, `host:port`, or `*` for any). */
-export type Permission = PlainPermission | `network:${string}`;
+ *  host (`*.domain` for its subdomains, `host:port`, or `*` for any);
+ *  `commands:<plugin id>` lets it run that plugin's listed commands. */
+export type Permission =
+  PlainPermission | `network:${string}` | `commands:${string}`;
 
 export function isPermission(value: unknown): value is Permission {
   if (typeof value !== "string") return false;
   if ((PLAIN_PERMISSIONS as readonly string[]).includes(value)) return true;
+  if (value.startsWith("commands:"))
+    return ID.test(value.slice("commands:".length));
   const host = value.startsWith("network:") && value.slice("network:".length);
   return !!host && /^(\*|(\*\.)?[a-z0-9.-]+(:\d{1,5})?)$/i.test(host);
 }

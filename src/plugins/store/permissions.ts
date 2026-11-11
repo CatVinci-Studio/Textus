@@ -2,9 +2,9 @@ import { fill } from "../../i18n/fill";
 import type { Strings } from "../../i18n/strings";
 import type { Permission } from "./manifest";
 
-/** Each permission's words, but `network:<host>`'s. */
+/** Each permission's words, but those naming a host or a plugin. */
 export const PERMISSION_LABELS: Record<
-  Exclude<Permission, `network:${string}`>,
+  Exclude<Permission, `network:${string}` | `commands:${string}`>,
   keyof Strings
 > = {
   "editor.read": "pluginPermEditorRead",
@@ -26,6 +26,10 @@ export const PERMISSION_LABELS: Record<
 export function permissionLabel(permission: Permission, t: Strings): string {
   const label = PERMISSION_LABELS[permission as keyof typeof PERMISSION_LABELS];
   if (label) return t[label] as string;
+  if (permission.startsWith("commands:"))
+    return fill(t.pluginPermCommands, {
+      plugin: permission.slice("commands:".length),
+    });
   const host = permission.slice("network:".length);
   return host === "*"
     ? t.pluginPermNetworkAny

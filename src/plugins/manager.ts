@@ -203,10 +203,19 @@ async function host(record: PluginRecord): Promise<PluginHost> {
         pickWithCommands: (items, query, placeholder) =>
           windowInfo().pickWithCommands?.(items, query, placeholder) ??
           Promise.resolve(null),
-        runCommand: async (command, args) => {
+        runCommand: async (command, args, caller) => {
           const owner = pluginsSnapshot().records.find(
             (r) => r.status === "on" && command.startsWith(`${r.id}.`),
           );
+          // Another plugin reaches only the commands this one lists.
+          if (
+            owner &&
+            caller !== owner.id &&
+            !owner.manifest?.contributes.commands.some(
+              (c) => c.command === command,
+            )
+          )
+            throw new Error(`${command} isn't one of ${owner.id}'s commands.`);
           if (owner) return runPluginCommand(owner.id, command, args);
           if (!runCommand(command, args))
             throw new Error(`No command ${command}.`);

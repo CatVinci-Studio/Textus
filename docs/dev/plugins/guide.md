@@ -213,9 +213,10 @@ The rest of this section goes by what you want to do. The
 ### Commands and dialogs - `commands`, `ui`
 
 `commands.register(id, run)` for a command of the manifest's;
-`commands.execute(id, ...args)` runs any command - Textus's own
-(`textus.save`, `textus.closeTab` with `{ save: true }`) or another
-plugin's. `textus.offerPlugin` with `{ id }` suggests an official
+`commands.execute(id, ...args)` runs a command - Textus's own
+(`textus.save`, `textus.closeTab` with `{ save: true }`), yours, or one
+another plugin lists in its manifest, with the permission
+`commands:<that plugin's id>`. `textus.offerPlugin` with `{ id }` suggests an official
 plugin that works well with yours - the user decides, and it resolves
 whether that plugin is on (best from something the user does; never
 await it in `activate`, which has 10 seconds). `ui` draws Textus's own

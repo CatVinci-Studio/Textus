@@ -1859,6 +1859,7 @@ export default {
   pluginScheduleNotice:
     "{name} запланировал задачу. Она выполняется, только пока Textus запущен: включите «{setting}», чтобы она выполнялась и при закрытых окнах.",
   pluginPermNetwork: "Подключаться к {host}",
+  pluginPermCommands: "Выполнять команды {plugin}",
   pluginPermNetworkAny: "Подключаться к любым сайтам",
   menuPlugins: "Плагины",
   menuManagePlugins: "Управление плагинами…",

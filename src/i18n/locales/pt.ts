@@ -1849,6 +1849,7 @@ Habilidades ficam na pasta skills/ ao lado deste arquivo, um arquivo
   pluginScheduleNotice:
     "{name} agendou uma tarefa. Ela só é executada enquanto o Textus está aberto: ative “{setting}” para que também seja executada com todas as janelas fechadas.",
   pluginPermNetwork: "Conectar-se a {host}",
+  pluginPermCommands: "Executar os comandos de {plugin}",
   pluginPermNetworkAny: "Conectar-se a qualquer site",
   menuPlugins: "Plugins",
   menuManagePlugins: "Gerenciar plugins…",

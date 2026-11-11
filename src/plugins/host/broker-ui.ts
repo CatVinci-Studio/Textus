@@ -31,6 +31,13 @@ function tone(value: unknown): "info" | "warning" | "error" {
  * own and titled with the plugin's name so the user knows who is asking. No
  * permission needed.
  */
+/** The plugin a command id belongs to ("pub.name.cmd" -> "pub.name");
+ *  null for Textus's own. */
+function commandOwner(command: string): string | null {
+  const owner = /^([a-z0-9-]+\.[a-z0-9-]+)\.[^.]/.exec(command)?.[1];
+  return owner && !owner.startsWith("textus.") ? owner : null;
+}
+
 export function uiHandlers(p: PluginScope) {
   const progresses = progressesOf(p.id);
   return {
@@ -49,7 +56,11 @@ export function uiHandlers(p: PluginScope) {
       // Here rather than an app command, so the dialog can say who asks.
       if (id === "textus.offerPlugin")
         return p.deps.offerPlugin({ id: p.id, name: p.name() }, list[0]);
-      return p.deps.runCommand(id, list);
+      // Another plugin's command runs with that plugin's permissions: only
+      // with leave to (`commands:<its id>`), and only one it lists.
+      const owner = commandOwner(id);
+      if (owner && owner !== p.id) p.need(`commands:${owner}`);
+      return p.deps.runCommand(id, list, p.id);
     },
     // With an action ("Undo"), true when it was clicked before the note
     // went, false when it went by itself.

@@ -1695,6 +1695,7 @@ export default {
   pluginScheduleNotice:
     "「{name}」安排了定时任务。它只在 Textus 运行时执行：打开「{setting}」，关闭所有窗口后也会执行。",
   pluginPermNetwork: "连接 {host}",
+  pluginPermCommands: "运行 {plugin} 的命令",
   pluginPermNetworkAny: "连接任意网站",
   menuPlugins: "插件",
   menuManagePlugins: "管理插件…",

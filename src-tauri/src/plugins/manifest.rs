@@ -32,6 +32,9 @@ pub fn is_permission(value: &str) -> bool {
     if LISTS.plain.iter().any(|p| p == value) {
         return true;
     }
+    if let Some(plugin) = value.strip_prefix("commands:") {
+        return super::require_id(plugin).is_ok();
+    }
     let Some(host) = value.strip_prefix("network:") else {
         return false;
     };
