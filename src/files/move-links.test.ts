@@ -1,7 +1,7 @@
 import { beforeEach, expect, it, vi } from "vitest";
 import { fs } from "../platform/ipc";
 import { showConfirm } from "../engine/controls/app-dialog";
-import { getWindowAccess } from "../plugins/app-bridge";
+import { unsavedDocumentAt } from "../registry/open-documents";
 import { resolveStrings } from "../i18n/strings";
 import { updateLinksAfterMove } from "./move-links";
 
@@ -19,7 +19,7 @@ vi.mock("../engine/controls/app-dialog", () => ({
   showConfirm: vi.fn(),
   showMessage: vi.fn(),
 }));
-vi.mock("../plugins/app-bridge", () => ({ getWindowAccess: vi.fn() }));
+vi.mock("../registry/open-documents", () => ({ unsavedDocumentAt: vi.fn() }));
 
 const t = resolveStrings("en");
 // After /w/plan.md became /w/archive/plan.md; CRLF and a BOM must survive.
@@ -74,7 +74,7 @@ beforeEach(() => {
     truncated: false,
   });
   vi.mocked(fs.readTextFile).mockImplementation(async (p) => disk[p]);
-  vi.mocked(getWindowAccess).mockReturnValue(null);
+  vi.mocked(unsavedDocumentAt).mockReturnValue(null);
 });
 
 const written = () =>
@@ -113,16 +113,11 @@ it("updates at once in an Obsidian vault unless the vault turned that off", asyn
 it("edits a document with unsaved changes in its tab, not on disk", async () => {
   vi.mocked(fs.folderConventions).mockResolvedValue(vault());
   const replaceText = vi.fn(() => true);
-  vi.mocked(getWindowAccess).mockReturnValue({
-    documentAt: (path: string) =>
-      path === "/w/index.md"
-        ? {
-            text: () => "typed [p](plan.md)",
-            revision: () => "r1",
-            replaceText,
-          }
-        : null,
-  } as never);
+  vi.mocked(unsavedDocumentAt).mockImplementation((path: string) =>
+    path === "/w/index.md"
+      ? { text: () => "typed [p](plan.md)", revision: () => "r1", replaceText }
+      : null,
+  );
   await updateLinksAfterMove("/w/plan.md", "/w/archive/plan.md", "/w", t);
   expect(replaceText).toHaveBeenCalledWith("typed [p](archive/plan.md)", "r1");
   expect(Object.keys(written())).toEqual(["/w/archive/plan.md"]);

@@ -28,3 +28,17 @@ export function setOpenDocument(
 export function openDocumentAt(path: string): OpenDocumentAccess | null {
   return openDocuments.get(path) ?? null;
 }
+
+/** Whether the document at a path has unsaved changes: the window says. */
+let unsaved: (path: string) => boolean = () => false;
+
+export function setUnsavedCheck(check: ((path: string) => boolean) | null) {
+  unsaved = check ?? (() => false);
+}
+
+/** The document at `path` while it has unsaved changes: what a change to
+ *  the file makes in its editor, so nothing typed is lost. A saved one is
+ *  changed on disk, and its tab takes the new text. */
+export function unsavedDocumentAt(path: string): OpenDocumentAccess | null {
+  return unsaved(path) ? openDocumentAt(path) : null;
+}

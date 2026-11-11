@@ -12,8 +12,14 @@ import { useLatest } from "../utils/hooks/useLatest";
 import { registerCommand } from "../registry/commands";
 import type { TabState } from "./tabs/useTabState";
 import type { OpenOptions } from "./useFileOpening";
-import { emitPluginEvent, setWindowAccess, getWindowAccess, type PluginTabInfo, type PluginTabView } from "../plugins/app-bridge";
-import { openDocumentAt } from "../registry/open-documents";
+import {
+  emitPluginEvent,
+  setWindowAccess,
+  getWindowAccess,
+  type PluginTabInfo,
+  type PluginTabView,
+} from "../plugins/app-bridge";
+import { setUnsavedCheck, unsavedDocumentAt } from "../registry/open-documents";
 import type { Where } from "../plugins/app-bridge";
 import { askPlugin, loadPlugins, runPluginAiTool } from "../plugins/manager";
 import {
@@ -183,17 +189,17 @@ export function usePluginWindow({
         const tab = tabsRef.current.find((t) => t.path === path);
         return tab ? saveTabRef.current(tab.id) : Promise.resolve(false);
       },
-      documentAt: (path) => {
-        const tab = tabsRef.current.find((t) => t.path === path);
-        return tab && tab.content !== tab.savedContent
-          ? openDocumentAt(path)
-          : null;
-      },
+      documentAt: unsavedDocumentAt,
     });
     setWindowFolderSource(() => rootRef.current);
+    setUnsavedCheck((path) => {
+      const tab = tabsRef.current.find((t) => t.path === path);
+      return !!tab && tab.content !== tab.savedContent;
+    });
     return () => {
       setWindowAccess(null);
       setWindowFolderSource(null);
+      setUnsavedCheck(null);
     };
   }, [
     rootRef,

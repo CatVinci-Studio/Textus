@@ -2,7 +2,7 @@ import { fill } from "../i18n/fill";
 import { notesRoot, renameRule } from "./link-style";
 import { fs } from "../platform/ipc";
 import type { Strings } from "../i18n/strings";
-import { openDocumentAt } from "../registry/open-documents";
+import { unsavedDocumentAt } from "../registry/open-documents";
 import { linkPlanner } from "./link-rewrite";
 import { showConfirm, showMessage } from "../engine/controls/app-dialog";
 import { FILE_WRITTEN_EVENT } from "../utils/events";
@@ -40,7 +40,7 @@ export async function updateLinksAfterMove(
   }
   const planner = linkPlanner(files, { root, from, to, linkRoot });
   // What is typed in a tab counts, not the copy on disk.
-  const tab = (path: string) => openDocumentAt(path);
+  const tab = unsavedDocumentAt;
   const current = documents.map((d) => ({
     path: d.path,
     text: tab(d.path)?.text() ?? d.text,
