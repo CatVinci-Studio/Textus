@@ -57,7 +57,7 @@ Instruções de escrita para esta pasta.
 
 Tudo o que estiver fora de comentários como este é enviado à
 ${AI_NAME} em toda conversa sobre um documento desta pasta,
-depois das suas instruções de escrita globais (Ajustes > ${AI_NAME}).
+depois das suas instruções de escrita globais (Ajustes › ${AI_NAME}).
 Quando houver divergência, vale este arquivo. Comentários nunca são
 enviados.
 
@@ -86,7 +86,7 @@ Vale a pena escrever aqui, por exemplo:
   Contexto     Escrevo reportagens longas de divulgação científica para o público geral.
 
 Instruções para uma só pasta ficam no .textus/agent.md dessa pasta
-(menu da pasta no painel de IA > Editar instruções de escrita da pasta).
+(menu da pasta no painel de IA › Editar instruções de escrita da pasta).
 Os dois são enviados; quando divergem, vale o da pasta.
 
 Habilidades ficam na pasta skills/ ao lado deste arquivo, um arquivo
@@ -532,11 +532,11 @@ Habilidades ficam na pasta skills/ ao lado deste arquivo, um arquivo
   modelMissingHint:
     "Este modelo não está na lista atual do provedor e pode ter sido descontinuado. Escolha outro ou o padrão.",
   modelFetchedAt: "Atualizada em {date}",
-  aiErrorNotConfigured: `Este serviço de IA ainda não está conectado. Configure-o em Ajustes > ${AI_NAME}.`,
-  aiErrorAuth: `O serviço recusou as credenciais. Verifique a chave de API (ou entre de novo) em Ajustes > ${AI_NAME}.`,
+  aiErrorNotConfigured: `Este serviço de IA ainda não está conectado. Configure-o em Ajustes › ${AI_NAME}.`,
+  aiErrorAuth: `O serviço recusou as credenciais. Verifique a chave de API (ou entre de novo) em Ajustes › ${AI_NAME}.`,
   aiErrorWorkspaceKey:
     "Esta chave da Anthropic não pertence a um workspace. Crie uma chave dentro de um workspace no Anthropic Console e use-a.",
-  aiErrorBalance: `O saldo ou a cota deste serviço acabou. Recarregue ou verifique seu plano no site do provedor, ou escolha outro serviço em Ajustes > ${AI_NAME}.`,
+  aiErrorBalance: `O saldo ou a cota deste serviço acabou. Recarregue ou verifique seu plano no site do provedor, ou escolha outro serviço em Ajustes › ${AI_NAME}.`,
   aiErrorRateLimit:
     "O serviço está ocupado ou você atingiu o limite de requisições. Aguarde um pouco e tente de novo.",
   aiErrorServer:
@@ -547,7 +547,7 @@ Habilidades ficam na pasta skills/ ao lado deste arquivo, um arquivo
     "Não foi possível acessar o serviço. Verifique sua conexão com a internet ou as configurações de proxy.",
   aiErrorContextLength:
     "A conversa está longa demais para este modelo. Comece uma nova conversa ou anexe menos.",
-  aiErrorModel: `Este modelo não está disponível para sua conta. Escolha outro em Ajustes > ${AI_NAME}.`,
+  aiErrorModel: `Este modelo não está disponível para sua conta. Escolha outro em Ajustes › ${AI_NAME}.`,
   grammarIgnore: "Ignorar",
   grammarKindSpelling: "Ortografia",
   grammarKindGrammar: "Gramática",
@@ -651,6 +651,8 @@ Habilidades ficam na pasta skills/ ao lado deste arquivo, um arquivo
   errorNoText: "Não há texto legível nele.",
   errorUnreadable: "Não é possível ler este arquivo.",
   errorExists: "Já existe algo com esse nome.",
+  errorAgentRefused: "O agente recusou.",
+  errorAgentStopped: "O agente parou.",
   errorAlreadyThere: "Ele já está nessa pasta.",
   errorNotFolder: "Isso não é uma pasta.",
   errorTrashShownFolder:
@@ -763,7 +765,7 @@ Habilidades ficam na pasta skills/ ao lado deste arquivo, um arquivo
   completionTone_academic: "Acadêmico",
   completionTone_concise: "Conciso",
   webSearchLabel: "Busca na web",
-  webSearchNeedsService: `Este modelo não consegue buscar na web sozinho: escolha um serviço de busca em Ajustes > ${AI_NAME}.`,
+  webSearchNeedsService: `Este modelo não consegue buscar na web sozinho: escolha um serviço de busca em Ajustes › ${AI_NAME}.`,
   searchServiceLabel: "Serviço de busca",
   searchServiceAuto: "Automático",
   searchServiceZhipu: "Zhipu",
@@ -835,7 +837,7 @@ Habilidades ficam na pasta skills/ ao lado deste arquivo, um arquivo
   agentAttachFile:
     "Anexar arquivos: documentos, PDFs, imagens, código, um zip – qualquer arquivo",
   chatAttachmentTruncated: "(parcial)",
-  chatAttachmentNoVision: `Este provedor não lê imagens. Troque de provedor em Ajustes > ${AI_NAME} ou anexe um documento.`,
+  chatAttachmentNoVision: `Este provedor não lê imagens. Troque de provedor em Ajustes › ${AI_NAME} ou anexe um documento.`,
   aiGrammarLabel: "Ativar verificação gramatical",
   aiAskLabel: `Chat da ${AI_NAME}`,
   aiAskToggleLabel: `Ativar chat da ${AI_NAME}`,

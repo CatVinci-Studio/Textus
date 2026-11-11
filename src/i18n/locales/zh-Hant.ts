@@ -52,7 +52,7 @@ export default {
 這個資料夾的寫作指示。
 
 寫在註解（像這一段）之外的內容，會在這個資料夾每份文件的每次對話中
-傳送給 ${AI_NAME}，排在你的全域寫作指示（設定 > ${AI_NAME}）之後；
+傳送給 ${AI_NAME}，排在你的全域寫作指示（設定 › ${AI_NAME}）之後；
 兩者衝突時，以這個檔案為準。註解不會傳送。
 
 可以寫在這裡的內容，例如：
@@ -79,7 +79,7 @@ export default {
   背景    我為一般讀者撰寫長篇科普報導。
 
 只適用於單一資料夾的指示，寫在該資料夾的 .textus/agent.md 中（AI 面板的
-資料夾選單 > 編輯這個資料夾的寫作指示）。兩份都會傳送；內容衝突時，以
+資料夾選單 › 編輯這個資料夾的寫作指示）。兩份都會傳送；內容衝突時，以
 資料夾的為準。
 
 技能放在這個檔案旁邊的 skills/ 資料夾中，一個技能一個 .md 檔；
@@ -468,18 +468,18 @@ export default {
   modelMissingHint:
     "服務供應商目前的清單中沒有這個模型，可能已經停止提供。改選其他模型，或使用預設模型。",
   modelFetchedAt: "上次取得：{date}",
-  aiErrorNotConfigured: `這個 AI 服務還沒有連線。在「設定 > ${AI_NAME}」中完成設定。`,
-  aiErrorAuth: `服務拒絕了這組憑證。在「設定 > ${AI_NAME}」中檢查 API 金鑰，或重新登入。`,
+  aiErrorNotConfigured: `這個 AI 服務還沒有連線。在「設定 › ${AI_NAME}」中完成設定。`,
+  aiErrorAuth: `服務拒絕了這組憑證。在「設定 › ${AI_NAME}」中檢查 API 金鑰，或重新登入。`,
   aiErrorWorkspaceKey:
     "這組 Anthropic 金鑰不屬於任何工作區。在 Anthropic Console 的工作區中建立金鑰，再改用那組金鑰。",
-  aiErrorBalance: `這個服務的餘額或額度已用完。請到服務商網站儲值或查看方案，或在「設定 > ${AI_NAME}」中改用其他服務。`,
+  aiErrorBalance: `這個服務的餘額或額度已用完。請到服務商網站儲值或查看方案，或在「設定 › ${AI_NAME}」中改用其他服務。`,
   aiErrorRateLimit: "服務忙碌中，或已達到速率限制。稍候片刻再重試。",
   aiErrorServer: "服務本身發生問題。過一會兒再重試。",
   aiErrorTimeout: "要求逾時。檢查網路連線後再重試。",
   aiErrorNetwork: "無法連線到服務。檢查網路連線或代理伺服器設定。",
   aiErrorContextLength:
     "對話太長，超出了這個模型的上限。請新建一個對話，或少附加一些內容。",
-  aiErrorModel: `你的帳號無法使用這個模型。在「設定 > ${AI_NAME}」中改選其他模型。`,
+  aiErrorModel: `你的帳號無法使用這個模型。在「設定 › ${AI_NAME}」中改選其他模型。`,
   grammarIgnore: "忽略",
   grammarKindSpelling: "錯別字",
   grammarKindGrammar: "文法",
@@ -575,6 +575,8 @@ export default {
   errorNoText: "裡面沒有可讀的文字。",
   errorUnreadable: "無法讀取這個檔案。",
   errorExists: "已有同名的檔案或資料夾。",
+  errorAgentRefused: "代理程式拒絕了這個請求。",
+  errorAgentStopped: "代理程式已停止。",
   errorAlreadyThere: "它已經在那個資料夾裡了。",
   errorNotFolder: "那不是資料夾。",
   errorTrashShownFolder: "檔案樹顯示的資料夾無法移到垃圾桶。",
@@ -674,7 +676,7 @@ export default {
   completionTone_academic: "學術",
   completionTone_concise: "簡潔",
   webSearchLabel: "網路搜尋",
-  webSearchNeedsService: `這個模型無法自行上網搜尋。請在「設定 > ${AI_NAME}」中選擇一個搜尋服務。`,
+  webSearchNeedsService: `這個模型無法自行上網搜尋。請在「設定 › ${AI_NAME}」中選擇一個搜尋服務。`,
   searchServiceLabel: "搜尋服務",
   searchServiceAuto: "自動",
   searchServiceZhipu: "智譜",
@@ -739,7 +741,7 @@ export default {
   conventionsEu: "歐盟機構",
   agentAttachFile: "附加檔案：文件、PDF、圖片、程式碼、壓縮檔，任何檔案都可以",
   chatAttachmentTruncated: "（已截斷）",
-  chatAttachmentNoVision: `這個服務供應商無法讀取圖片。在「設定 > ${AI_NAME}」中更換服務供應商，或改為附加文件。`,
+  chatAttachmentNoVision: `這個服務供應商無法讀取圖片。在「設定 › ${AI_NAME}」中更換服務供應商，或改為附加文件。`,
   aiGrammarLabel: "啟用文法檢查",
   aiAskLabel: `${AI_NAME} 對話`,
   aiAskToggleLabel: `啟用 ${AI_NAME} 對話`,

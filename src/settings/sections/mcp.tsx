@@ -52,22 +52,28 @@ export function McpSection({
         .status()
         .then((list) => {
           if (stopped) return;
-          setStatus(list);
-          const missing = ids.some((id) => !list.some((s) => s.id === id));
-          if (missing) unlisted++;
+          const missing = ids.filter((id) => !list.some((s) => s.id === id));
+          if (missing.length) unlisted++;
+          const gaveUp = missing.length > 0 && unlisted >= 10;
+          // One that never shows up has failed, not still starting.
+          setStatus(
+            gaveUp ? [...list, ...failed(missing, t.errorTimeout)] : list,
+          );
           if (
             list.some((s) => s.state === "starting") ||
-            (missing && unlisted < 10)
+            (missing.length && !gaveUp)
           )
-            timer = window.setTimeout(poll, missing ? 300 : 1000);
+            timer = window.setTimeout(poll, missing.length ? 300 : 1000);
         })
-        .catch(() => {});
+        .catch((err: unknown) => {
+          if (!stopped) setStatus(failed(ids, explainError(err, t)));
+        });
     void poll();
     return () => {
       stopped = true;
       window.clearTimeout(timer);
     };
-  }, [enabledKey, enabledIds]);
+  }, [enabledKey, enabledIds, t]);
 
   const save = (server: McpServer) => {
     const rest = servers.filter((s) => s.id !== server.id);
@@ -116,7 +122,14 @@ export function McpSection({
               onEdit={() => setEditing(server)}
               onRemove={() => void remove(server)}
               onRestart={() =>
-                void mcp.restart(server.id).then(setStatus, () => {})
+                void mcp
+                  .restart(server.id)
+                  .then(setStatus, (err: unknown) =>
+                    setStatus((list) => [
+                      ...list.filter((s) => s.id !== server.id),
+                      ...failed([server.id], explainError(err, t)),
+                    ]),
+                  )
               }
             />
           ))
@@ -127,6 +140,17 @@ export function McpSection({
       footer={after}
     />
   );
+}
+
+/** Servers whose state couldn't be had, shown as failed for a reason. */
+function failed(ids: string[], error: string): McpServerStatus[] {
+  return ids.map((id) => ({
+    id,
+    state: "failed",
+    server: "",
+    tools: [],
+    error,
+  }));
 }
 
 function blankServer(): McpServer {

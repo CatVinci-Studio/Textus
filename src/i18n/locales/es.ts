@@ -59,7 +59,7 @@ Instrucciones de escritura para esta carpeta.
 Todo lo que quede fuera de comentarios como este se envía a
 ${AI_NAME} en cada conversación sobre un documento de esta
 carpeta, después de tus instrucciones de escritura globales
-(Ajustes > ${AI_NAME}). Si se contradicen, prevalece este archivo.
+(Ajustes › ${AI_NAME}). Si se contradicen, prevalece este archivo.
 Los comentarios nunca se envían.
 
 Ejemplos de lo que conviene escribir aquí:
@@ -542,11 +542,11 @@ para usar una.
   modelMissingHint:
     "Este modelo no está en la lista actual del proveedor; puede que lo hayan retirado. Elige otro o el predeterminado.",
   modelFetchedAt: "Actualizada el {date}",
-  aiErrorNotConfigured: `Este servicio de IA aún no está conectado. Configúralo en Ajustes > ${AI_NAME}.`,
-  aiErrorAuth: `El servicio rechazó las credenciales. Revisa la clave de API (o vuelve a iniciar sesión) en Ajustes > ${AI_NAME}.`,
+  aiErrorNotConfigured: `Este servicio de IA aún no está conectado. Configúralo en Ajustes › ${AI_NAME}.`,
+  aiErrorAuth: `El servicio rechazó las credenciales. Revisa la clave de API (o vuelve a iniciar sesión) en Ajustes › ${AI_NAME}.`,
   aiErrorWorkspaceKey:
     "Esta clave de Anthropic no está vinculada a ningún espacio de trabajo. Crea una clave dentro de un espacio de trabajo en la Anthropic Console y úsala.",
-  aiErrorBalance: `Se ha agotado el saldo o la cuota de este servicio. Recarga o revisa tu plan en la web del proveedor, o elige otro servicio en Ajustes > ${AI_NAME}.`,
+  aiErrorBalance: `Se ha agotado el saldo o la cuota de este servicio. Recarga o revisa tu plan en la web del proveedor, o elige otro servicio en Ajustes › ${AI_NAME}.`,
   aiErrorRateLimit:
     "El servicio está saturado o se alcanzó el límite de solicitudes. Espera un momento y vuelve a intentarlo.",
   aiErrorServer:
@@ -557,7 +557,7 @@ para usar una.
     "No se pudo conectar con el servicio. Revisa tu conexión a internet o los ajustes del proxy.",
   aiErrorContextLength:
     "La conversación es demasiado larga para este modelo. Empieza una conversación nueva o adjunta menos.",
-  aiErrorModel: `Este modelo no está disponible para tu cuenta. Elige otro en Ajustes > ${AI_NAME}.`,
+  aiErrorModel: `Este modelo no está disponible para tu cuenta. Elige otro en Ajustes › ${AI_NAME}.`,
   grammarIgnore: "Ignorar",
   grammarKindSpelling: "Ortografía",
   grammarKindGrammar: "Gramática",
@@ -663,6 +663,8 @@ para usar una.
   errorNoText: "No tiene texto legible.",
   errorUnreadable: "No se puede leer este archivo.",
   errorExists: "Ya hay algo con ese nombre.",
+  errorAgentRefused: "El agente lo rechazó.",
+  errorAgentStopped: "El agente se detuvo.",
   errorAlreadyThere: "Ya está en esa carpeta.",
   errorNotFolder: "No es una carpeta.",
   errorTrashShownFolder:
@@ -776,7 +778,7 @@ para usar una.
   completionTone_academic: "Académico",
   completionTone_concise: "Conciso",
   webSearchLabel: "Búsqueda web",
-  webSearchNeedsService: `Este modelo no puede buscar en la web por sí mismo: elige un servicio de búsqueda en Ajustes > ${AI_NAME}.`,
+  webSearchNeedsService: `Este modelo no puede buscar en la web por sí mismo: elige un servicio de búsqueda en Ajustes › ${AI_NAME}.`,
   searchServiceLabel: "Servicio de búsqueda",
   searchServiceAuto: "Automático",
   searchServiceZhipu: "Zhipu",
@@ -848,7 +850,7 @@ para usar una.
   agentAttachFile:
     "Adjuntar archivos: documentos, PDF, imágenes, código, un zip… cualquier archivo",
   chatAttachmentTruncated: "(recortado)",
-  chatAttachmentNoVision: `Este proveedor no puede leer imágenes. Cambia de proveedor en Ajustes > ${AI_NAME} o adjunta un documento.`,
+  chatAttachmentNoVision: `Este proveedor no puede leer imágenes. Cambia de proveedor en Ajustes › ${AI_NAME} o adjunta un documento.`,
   aiGrammarLabel: "Activar revisión gramatical",
   aiAskLabel: `Chat de ${AI_NAME}`,
   aiAskToggleLabel: `Activar el chat de ${AI_NAME}`,

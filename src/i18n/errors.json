@@ -99,5 +99,10 @@
   "skillNoMode": {
     "en": "A skill needs at least one mode.",
     "text": "errorSkillNoMode"
+  },
+  "agentRefused": { "en": "The agent refused.", "text": "errorAgentRefused" },
+  "agentStopped": {
+    "en": "The agent was stopped.",
+    "text": "errorAgentStopped"
   }
 }

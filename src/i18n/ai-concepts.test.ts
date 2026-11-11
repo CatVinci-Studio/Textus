@@ -36,7 +36,7 @@ describe.each(LANGS)("AI concept copy in %s", (lang) => {
   });
 
   it("every Settings path names a page that exists", () => {
-    // The AI page is AI_NAME ("Textus AI"), not "Settings → AI".
+    // The AI page is AI_NAME ("Textus AI"), not "Settings › AI".
     const settings = t.settingsTitle;
     // Settings' own pages and groups, as its list names them.
     const pages = [
@@ -46,11 +46,12 @@ describe.each(LANGS)("AI concept copy in %s", (lang) => {
     let paths = 0;
     for (const [key, value] of Object.entries(t)) {
       if (typeof value !== "string") continue;
-      for (const m of value.matchAll(new RegExp(`${settings} [>→] `, "g"))) {
+      for (const m of value.matchAll(new RegExp(`${settings} [›>→] `, "g"))) {
         paths++;
         const rest = value.slice((m.index ?? 0) + m[0].length);
         expect(
-          pages.some((page) => rest.startsWith(page)),
+          rest.startsWith("{page}") ||
+            pages.some((page) => rest.startsWith(page)),
           `${key}: ${value}`,
         ).toBe(true);
       }

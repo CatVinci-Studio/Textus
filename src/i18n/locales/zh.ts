@@ -52,7 +52,7 @@ export default {
 这是这个文件夹的写作要求。
 
 写在注释（比如这一段）之外的内容，会在这个文件夹每篇文档的每次对话中
-发给 ${AI_NAME}，排在全局写作要求（设置 > ${AI_NAME}）之后；两者
+发给 ${AI_NAME}，排在全局写作要求（设置 › ${AI_NAME}）之后；两者
 冲突时以这份为准。注释永远不会发送。
 
 适合写在这里的内容，例如：
@@ -79,7 +79,7 @@ export default {
   背景    我写面向大众读者的科普长文。
 
 只针对某个文件夹的要求，写在那个文件夹的 .textus/agent.md 里（AI 面板的
-文件夹菜单 > 编辑这个文件夹的写作要求）。两份都会发送；有冲突时以文件夹的
+文件夹菜单 › 编辑这个文件夹的写作要求）。两份都会发送；有冲突时以文件夹的
 为准。
 
 技能放在本文件旁边的 skills/ 文件夹里，一个技能一个 .md 文件；
@@ -468,18 +468,18 @@ export default {
   modelMissingHint:
     "服务商当前的模型列表里没有这个模型，可能已经下线。请换一个，或使用默认模型。",
   modelFetchedAt: "上次获取：{date}",
-  aiErrorNotConfigured: `这个 AI 服务还没有连接，请在「设置 > ${AI_NAME}」中配置。`,
-  aiErrorAuth: `服务拒绝了凭据，请在「设置 > ${AI_NAME}」中检查 API Key 或重新登录。`,
+  aiErrorNotConfigured: `这个 AI 服务还没有连接，请在「设置 › ${AI_NAME}」中配置。`,
+  aiErrorAuth: `服务拒绝了凭据，请在「设置 › ${AI_NAME}」中检查 API Key 或重新登录。`,
   aiErrorWorkspaceKey:
     "这个 Anthropic Key 不属于任何工作区。请在 Anthropic Console 的工作区里新建一个 Key 再使用。",
-  aiErrorBalance: `该服务的余额或额度已用完。请到服务商网站充值或查看套餐，或在「设置 > ${AI_NAME}」中换用其他服务。`,
+  aiErrorBalance: `该服务的余额或额度已用完。请到服务商网站充值或查看套餐，或在「设置 › ${AI_NAME}」中换用其他服务。`,
   aiErrorRateLimit: "服务繁忙或已达到频率限制，请稍等片刻再重试。",
   aiErrorServer: "服务端出了问题，请过一会儿再试。",
   aiErrorTimeout: "请求超时，请检查网络后重试。",
   aiErrorNetwork: "无法连接到服务，请检查网络或代理设置。",
   aiErrorContextLength:
     "对话太长，超出了这个模型的上限。请新建一个对话，或少附加一些内容。",
-  aiErrorModel: `你的账号无法使用这个模型，请在「设置 > ${AI_NAME}」中换一个。`,
+  aiErrorModel: `你的账号无法使用这个模型，请在「设置 › ${AI_NAME}」中换一个。`,
   grammarIgnore: "忽略",
   grammarKindSpelling: "错别字",
   grammarKindGrammar: "语法",
@@ -574,6 +574,8 @@ export default {
   errorNoText: "里面没有可读的文字。",
   errorUnreadable: "无法读取此文件。",
   errorExists: "已有同名的文件或文件夹。",
+  errorAgentRefused: "智能体拒绝了这个请求。",
+  errorAgentStopped: "智能体已停止。",
   errorAlreadyThere: "它已经在那个文件夹里了。",
   errorNotFolder: "那不是文件夹。",
   errorTrashShownFolder: "文件树显示的文件夹不能移到废纸篓。",
@@ -673,7 +675,7 @@ export default {
   completionTone_academic: "学术",
   completionTone_concise: "简洁",
   webSearchLabel: "联网搜索",
-  webSearchNeedsService: `这个模型不能自己联网搜索，请在「设置 > ${AI_NAME}」中选一个搜索服务。`,
+  webSearchNeedsService: `这个模型不能自己联网搜索，请在「设置 › ${AI_NAME}」中选一个搜索服务。`,
   searchServiceLabel: "搜索服务",
   searchServiceAuto: "自动",
   searchServiceZhipu: "智谱",
@@ -738,7 +740,7 @@ export default {
   conventionsEu: "欧盟机构",
   agentAttachFile: "附加文件：文档、PDF、图片、代码、压缩包，任何文件都可以",
   chatAttachmentTruncated: "（已截断）",
-  chatAttachmentNoVision: `当前服务商无法读取图片。请在「设置 > ${AI_NAME}」中更换服务商，或改为附加文档。`,
+  chatAttachmentNoVision: `当前服务商无法读取图片。请在「设置 › ${AI_NAME}」中更换服务商，或改为附加文档。`,
   aiGrammarLabel: "开启语法检查",
   aiAskLabel: `${AI_NAME} 对话`,
   aiAskToggleLabel: `开启 ${AI_NAME} 对话`,

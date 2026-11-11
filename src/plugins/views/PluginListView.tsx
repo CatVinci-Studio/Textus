@@ -116,7 +116,7 @@ export const PluginListPane = memo(function PluginListPane({
   view: string;
   className?: string;
 }) {
-  const { info, items, setItems, children, open, toggleOpen, error } =
+  const { info, items, setItems, children, open, toggleOpen, error, fail } =
     usePluginListItems(plugin, view);
   const [query, setQuery] = useState("");
   const [active, setActive] = useState(0);
@@ -129,22 +129,23 @@ export const PluginListPane = memo(function PluginListPane({
 
   const select = (item: PluginListItem) => {
     if (info?.select)
-      void askPlugin(plugin, "$listSelect", { view, item }).catch(() => {});
+      void askPlugin(plugin, "$listSelect", { view, item }).catch(fail);
     else defaultSelect(plugin, item);
   };
 
   const check = (item: PluginListItem) => {
     // Ticked at once; the plugin's refresh has the last word.
-    setItems(
-      (all) =>
-        all?.map((i) => (i === item ? { ...i, checkbox: !i.checkbox } : i)) ??
-        all,
-    );
+    const ticked = { ...item, checkbox: !item.checkbox };
+    setItems((all) => all?.map((i) => (i === item ? ticked : i)) ?? all);
     void askPlugin(plugin, "$listCheck", {
       view,
       item,
       checked: !item.checkbox,
-    }).catch(() => {});
+    }).catch((err: unknown) => {
+      // Not ticked after all.
+      setItems((all) => all?.map((i) => (i === ticked ? item : i)) ?? all);
+      fail(err);
+    });
   };
 
   // A row dragged onto another: the plugin moves it there (onMove).
@@ -177,7 +178,7 @@ export const PluginListPane = memo(function PluginListPane({
             view,
             item,
             target: target.item,
-          }).catch(() => {});
+          }).catch(fail);
         },
       });
     },
@@ -406,6 +407,10 @@ function usePluginListItems(plugin: string, view: string) {
   );
   const [open, setOpen] = useState<Set<string>>(() => new Set());
   const [error, setError] = useState<string | null>(null);
+  const fail = useCallback(
+    (err: unknown) => setError(String((err as Error)?.message ?? err)),
+    [],
+  );
 
   const ask = useCallback(
     (parent?: PluginListItem) =>
@@ -418,10 +423,8 @@ function usePluginListItems(plugin: string, view: string) {
   // Started on first show: the plugin registers its list as it activates.
   useEffect(() => {
     if (info) return;
-    askPlugin(plugin, "$ping", {}).catch((err) =>
-      setError(String((err as Error)?.message ?? err)),
-    );
-  }, [plugin, info]);
+    askPlugin(plugin, "$ping", {}).catch(fail);
+  }, [plugin, info, fail]);
 
   // Read as they are when the list refreshes, not a reason to refresh.
   const state = useLatest({ open, items, children });
@@ -446,14 +449,14 @@ function usePluginListItems(plugin: string, view: string) {
             .then(
               (kids) => live && setChildren((m) => new Map(m).set(id, kids)),
             )
-            .catch(() => {});
+            .catch((err: unknown) => live && fail(err));
         }
       })
-      .catch((err) => live && setError(String((err as Error)?.message ?? err)));
+      .catch((err: unknown) => live && fail(err));
     return () => {
       live = false;
     };
-  }, [ask, version, state]);
+  }, [ask, version, state, fail]);
 
   const toggleOpen = (item: PluginListItem, key: string) => {
     const next = new Set(open);
@@ -465,10 +468,10 @@ function usePluginListItems(plugin: string, view: string) {
     setOpen(next);
     void ask(item)
       .then((got) => setChildren((m) => new Map(m).set(key, got)))
-      .catch(() => {});
+      .catch(fail);
   };
 
-  return { info, items, setItems, children, open, toggleOpen, error };
+  return { info, items, setItems, children, open, toggleOpen, error, fail };
 }
 
 function findItem(

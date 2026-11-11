@@ -57,7 +57,7 @@ Writing instructions for this folder.
 
 Everything outside comments like this one is sent to ${AI_NAME} with
 every conversation about a document in this folder, after your
-global writing instructions (Settings > ${AI_NAME}). Where the two
+global writing instructions (Settings › ${AI_NAME}). Where the two
 disagree, this file wins. Comments are never sent.
 
 Worth writing here, for example:
@@ -85,7 +85,7 @@ Worth writing here, for example:
   Background   I write long-form science journalism for a general audience.
 
 Instructions for one folder only go in that folder's .textus/agent.md
-(the AI panel's folder menu > Edit the folder's writing instructions).
+(the AI panel's folder menu › Edit the folder's writing instructions).
 Both are sent; where they disagree, the folder's win.
 
 Skills go in the skills/ folder next to this file, one .md file each;
@@ -502,7 +502,7 @@ type /name in a conversation to use one.
   toolbarHighlight: "Highlight",
   toolbarMore: "More",
   zenExitButton: "Leave Zen Mode",
-  /** File > Open's file-type choices besides Markdown. */
+  /** File › Open's file-type choices besides Markdown. */
   openDialogText: "Text files",
   openDialogAll: "All files",
   openDialogWord: "Word documents",
@@ -514,11 +514,11 @@ type /name in a conversation to use one.
   modelMissingHint:
     "This model isn't in the provider's current list - it may have been retired. Pick another, or the default.",
   modelFetchedAt: "Fetched {date}",
-  aiErrorNotConfigured: `This AI service isn't connected yet. Set it up in Settings > ${AI_NAME}.`,
-  aiErrorAuth: `The service rejected the credentials. Check the API key (or sign in again) in Settings > ${AI_NAME}.`,
+  aiErrorNotConfigured: `This AI service isn't connected yet. Set it up in Settings › ${AI_NAME}.`,
+  aiErrorAuth: `The service rejected the credentials. Check the API key (or sign in again) in Settings › ${AI_NAME}.`,
   aiErrorWorkspaceKey:
     "This Anthropic key isn't tied to a workspace. Create a key inside a workspace in the Anthropic Console and use that one.",
-  aiErrorBalance: `Your balance or quota with this service has run out. Top up or check your plan on the provider's site, or pick another service in Settings > ${AI_NAME}.`,
+  aiErrorBalance: `Your balance or quota with this service has run out. Top up or check your plan on the provider's site, or pick another service in Settings › ${AI_NAME}.`,
   aiErrorRateLimit:
     "The service is busy or you've hit a rate limit. Wait a moment and retry.",
   aiErrorServer:
@@ -529,7 +529,7 @@ type /name in a conversation to use one.
     "Couldn't reach the service. Check your internet connection or proxy settings.",
   aiErrorContextLength:
     "The conversation is too long for this model. Start a new conversation, or attach less.",
-  aiErrorModel: `This model isn't available for your account. Pick another in Settings > ${AI_NAME}.`,
+  aiErrorModel: `This model isn't available for your account. Pick another in Settings › ${AI_NAME}.`,
   grammarIgnore: "Ignore",
   grammarKindSpelling: "Spelling",
   grammarKindGrammar: "Grammar",
@@ -632,6 +632,8 @@ type /name in a conversation to use one.
   errorNoText: "There is no readable text in it.",
   errorUnreadable: "This file can't be read.",
   errorExists: "Something with that name is already there.",
+  errorAgentRefused: "The agent turned that down.",
+  errorAgentStopped: "The agent stopped.",
   errorAlreadyThere: "It is already in that folder.",
   errorNotFolder: "That isn't a folder.",
   errorTrashShownFolder:
@@ -733,7 +735,7 @@ type /name in a conversation to use one.
   completionTone_academic: "Academic",
   completionTone_concise: "Concise",
   webSearchLabel: "Web search",
-  webSearchNeedsService: `This model can't search the web by itself - choose a search service in Settings > ${AI_NAME}.`,
+  webSearchNeedsService: `This model can't search the web by itself - choose a search service in Settings › ${AI_NAME}.`,
   searchServiceLabel: "Search service",
   searchServiceAuto: "Automatic",
   searchServiceZhipu: "Zhipu",
@@ -804,7 +806,7 @@ type /name in a conversation to use one.
   agentAttachFile:
     "Attach files: documents, PDFs, pictures, code, a zip - any file",
   chatAttachmentTruncated: "(shortened)",
-  chatAttachmentNoVision: `This provider can't read images. Switch provider in Settings > ${AI_NAME}, or attach a document instead.`,
+  chatAttachmentNoVision: `This provider can't read images. Switch provider in Settings › ${AI_NAME}, or attach a document instead.`,
   aiGrammarLabel: "Enable grammar check",
   aiAskLabel: `${AI_NAME} Chat`,
   aiAskToggleLabel: `Enable ${AI_NAME} chat`,

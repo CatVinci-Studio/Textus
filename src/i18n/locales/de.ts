@@ -59,7 +59,7 @@ Schreibanweisungen für diesen Ordner.
 
 Alles außerhalb von Kommentaren wie diesem wird bei jeder Unterhaltung
 über ein Dokument dieses Ordners an ${AI_NAME} gesendet, nach deinen
-globalen Schreibanweisungen (Einstellungen > ${AI_NAME}). Wo sich beide
+globalen Schreibanweisungen (Einstellungen › ${AI_NAME}). Wo sich beide
 widersprechen, gilt diese Datei. Kommentare werden nie gesendet.
 
 Was hier zum Beispiel hingehört:
@@ -87,7 +87,7 @@ Was hier zum Beispiel hingehört:
   Hintergrund  Ich schreibe lange Wissenschaftsreportagen für ein breites Publikum.
 
 Anweisungen, die nur für einen Ordner gelten, gehören in dessen
-.textus/agent.md (Ordnermenü im KI-Bereich > Schreibanweisungen des Ordners bearbeiten).
+.textus/agent.md (Ordnermenü im KI-Bereich › Schreibanweisungen des Ordners bearbeiten).
 Beide werden gesendet; wo sie sich widersprechen, gelten die des Ordners.
 
 Skills liegen im Ordner skills/ neben dieser Datei, je Skill eine
@@ -522,11 +522,11 @@ Skills liegen im Ordner skills/ neben dieser Datei, je Skill eine
   modelMissingHint:
     "Dieses Modell steht nicht in der aktuellen Liste des Anbieters – vielleicht wurde es eingestellt. Wähle ein anderes oder das Standardmodell.",
   modelFetchedAt: "Abgerufen am {date}",
-  aiErrorNotConfigured: `Dieser KI-Dienst ist noch nicht verbunden. Richte ihn unter Einstellungen > ${AI_NAME} ein.`,
-  aiErrorAuth: `Der Dienst hat die Zugangsdaten abgelehnt. Prüfe den API-Schlüssel (oder melde dich erneut an) unter Einstellungen > ${AI_NAME}.`,
+  aiErrorNotConfigured: `Dieser KI-Dienst ist noch nicht verbunden. Richte ihn unter Einstellungen › ${AI_NAME} ein.`,
+  aiErrorAuth: `Der Dienst hat die Zugangsdaten abgelehnt. Prüfe den API-Schlüssel (oder melde dich erneut an) unter Einstellungen › ${AI_NAME}.`,
   aiErrorWorkspaceKey:
     "Dieser Anthropic-Schlüssel gehört zu keinem Workspace. Erstelle in der Anthropic Console einen Schlüssel innerhalb eines Workspaces und verwende diesen.",
-  aiErrorBalance: `Guthaben oder Kontingent bei diesem Dienst sind aufgebraucht. Lade beim Anbieter auf oder prüfe deinen Tarif, oder wähle unter Einstellungen > ${AI_NAME} einen anderen Dienst.`,
+  aiErrorBalance: `Guthaben oder Kontingent bei diesem Dienst sind aufgebraucht. Lade beim Anbieter auf oder prüfe deinen Tarif, oder wähle unter Einstellungen › ${AI_NAME} einen anderen Dienst.`,
   aiErrorRateLimit:
     "Der Dienst ist ausgelastet oder du hast ein Anfragelimit erreicht. Warte kurz und versuch es dann noch einmal.",
   aiErrorServer:
@@ -537,7 +537,7 @@ Skills liegen im Ordner skills/ neben dieser Datei, je Skill eine
     "Der Dienst ist nicht erreichbar. Prüfe deine Internetverbindung oder die Proxy-Einstellungen.",
   aiErrorContextLength:
     "Die Unterhaltung ist für dieses Modell zu lang. Beginne eine neue Unterhaltung oder hänge weniger an.",
-  aiErrorModel: `Dieses Modell ist für dein Konto nicht verfügbar. Wähle unter Einstellungen > ${AI_NAME} ein anderes.`,
+  aiErrorModel: `Dieses Modell ist für dein Konto nicht verfügbar. Wähle unter Einstellungen › ${AI_NAME} ein anderes.`,
   grammarIgnore: "Ignorieren",
   grammarKindSpelling: "Rechtschreibung",
   grammarKindGrammar: "Grammatik",
@@ -644,6 +644,8 @@ Skills liegen im Ordner skills/ neben dieser Datei, je Skill eine
   errorNoText: "Es enthält keinen lesbaren Text.",
   errorUnreadable: "Diese Datei kann nicht gelesen werden.",
   errorExists: "Dieser Name ist dort schon vergeben.",
+  errorAgentRefused: "Der Agent hat das abgelehnt.",
+  errorAgentStopped: "Der Agent wurde beendet.",
   errorAlreadyThere: "Es liegt schon in diesem Ordner.",
   errorNotFolder: "Das ist kein Ordner.",
   errorTrashShownFolder:
@@ -748,7 +750,7 @@ Skills liegen im Ordner skills/ neben dieser Datei, je Skill eine
   completionTone_academic: "Wissenschaftlich",
   completionTone_concise: "Knapp",
   webSearchLabel: "Websuche",
-  webSearchNeedsService: `Dieses Modell kann nicht selbst im Web suchen – wähle unter Einstellungen > ${AI_NAME} einen Suchdienst.`,
+  webSearchNeedsService: `Dieses Modell kann nicht selbst im Web suchen – wähle unter Einstellungen › ${AI_NAME} einen Suchdienst.`,
   searchServiceLabel: "Suchdienst",
   searchServiceAuto: "Automatisch",
   searchServiceZhipu: "Zhipu",
@@ -821,7 +823,7 @@ Skills liegen im Ordner skills/ neben dieser Datei, je Skill eine
   agentAttachFile:
     "Dateien anhängen: Dokumente, PDFs, Bilder, Code, ein Zip – jede Datei",
   chatAttachmentTruncated: "(gekürzt)",
-  chatAttachmentNoVision: `Dieser Anbieter kann keine Bilder lesen. Wechsle den Anbieter unter Einstellungen > ${AI_NAME} oder hänge stattdessen ein Dokument an.`,
+  chatAttachmentNoVision: `Dieser Anbieter kann keine Bilder lesen. Wechsle den Anbieter unter Einstellungen › ${AI_NAME} oder hänge stattdessen ein Dokument an.`,
   aiGrammarLabel: "Grammatikprüfung aktivieren",
   aiAskLabel: `Chat mit ${AI_NAME}`,
   aiAskToggleLabel: `Chat mit ${AI_NAME} aktivieren`,

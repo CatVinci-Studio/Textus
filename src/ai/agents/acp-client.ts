@@ -6,6 +6,8 @@
  * permission for a step, a file read or written.
  */
 
+import { ownError } from "../../utils/error-text";
+
 export const PROTOCOL_VERSION = 1;
 
 /** What the agent asks of the client, and what hears its updates. */
@@ -141,7 +143,7 @@ export class AcpConnection {
     if (error)
       waiting.reject(
         new AcpError(
-          error.message ?? "The agent refused.",
+          error.message ?? ownError("agentRefused"),
           error.code ?? 0,
           error.data,
         ),
@@ -157,7 +159,7 @@ export class AcpConnection {
   }
 
   stop(): void {
-    this.close(new Error("The agent was stopped."));
+    this.close(new Error(ownError("agentStopped")));
     this.transport.stop();
   }
 

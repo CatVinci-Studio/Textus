@@ -55,7 +55,7 @@ export default {
 이 폴더의 글쓰기 지침입니다.
 
 이런 주석 밖에 적은 내용은 이 폴더 문서에 관한 모든 대화에서
-전역 글쓰기 지침(설정 > ${AI_NAME}) 다음에 ${AI_NAME}에게
+전역 글쓰기 지침(설정 › ${AI_NAME}) 다음에 ${AI_NAME}에게
 전송됩니다. 두 지침이 서로 다르면 이 파일이 우선합니다. 주석은
 전송되지 않습니다.
 
@@ -84,7 +84,7 @@ ${AI_NAME}에게 주는 글쓰기 지침으로, 모든 문서에 적용됩니다
   배경    일반 독자를 위한 긴 과학 기사를 쓴다.
 
 한 폴더에만 해당하는 지침은 그 폴더의 .textus/agent.md에
-적습니다(AI 패널의 폴더 메뉴 > 폴더 글쓰기 지침 편집).
+적습니다(AI 패널의 폴더 메뉴 › 폴더 글쓰기 지침 편집).
 두 지침이 모두 전송되며, 서로 다르면 폴더 지침이 우선합니다.
 
 스킬은 이 파일 옆의 skills/ 폴더에 스킬 하나당 .md 파일 하나로
@@ -490,11 +490,11 @@ ${AI_NAME}에게 주는 글쓰기 지침으로, 모든 문서에 적용됩니다
   modelMissingHint:
     "이 모델은 제공업체의 현재 목록에 없어 지원이 종료되었을 수 있습니다. 다른 모델이나 기본 모델을 선택하세요.",
   modelFetchedAt: "가져온 날짜: {date}",
-  aiErrorNotConfigured: `이 AI 서비스는 아직 연결되지 않았습니다. 설정 > ${AI_NAME}에서 연결하세요.`,
-  aiErrorAuth: `서비스가 인증 정보를 거부했습니다. 설정 > ${AI_NAME}에서 API 키를 확인하거나 다시 로그인하세요.`,
+  aiErrorNotConfigured: `이 AI 서비스는 아직 연결되지 않았습니다. 설정 › ${AI_NAME}에서 연결하세요.`,
+  aiErrorAuth: `서비스가 인증 정보를 거부했습니다. 설정 › ${AI_NAME}에서 API 키를 확인하거나 다시 로그인하세요.`,
   aiErrorWorkspaceKey:
     "이 Anthropic 키는 워크스페이스에 속해 있지 않습니다. Anthropic Console의 워크스페이스 안에서 키를 만들어 사용하세요.",
-  aiErrorBalance: `이 서비스의 잔액 또는 사용 한도가 소진되었습니다. 제공업체 사이트에서 충전하거나 요금제를 확인하거나, 설정 > ${AI_NAME}에서 다른 서비스를 선택하세요.`,
+  aiErrorBalance: `이 서비스의 잔액 또는 사용 한도가 소진되었습니다. 제공업체 사이트에서 충전하거나 요금제를 확인하거나, 설정 › ${AI_NAME}에서 다른 서비스를 선택하세요.`,
   aiErrorRateLimit:
     "서비스가 혼잡하거나 요청 한도에 도달했습니다. 잠시 기다린 다음 다시 시도하세요.",
   aiErrorServer: "서비스 측에 문제가 생겼습니다. 잠시 후 다시 시도하세요.",
@@ -504,7 +504,7 @@ ${AI_NAME}에게 주는 글쓰기 지침으로, 모든 문서에 적용됩니다
     "서비스에 연결할 수 없습니다. 인터넷 연결이나 프록시 설정을 확인하세요.",
   aiErrorContextLength:
     "이 모델에는 대화가 너무 깁니다. 새 대화를 시작하거나 첨부를 줄이세요.",
-  aiErrorModel: `이 계정에서는 이 모델을 사용할 수 없습니다. 설정 > ${AI_NAME}에서 다른 모델을 선택하세요.`,
+  aiErrorModel: `이 계정에서는 이 모델을 사용할 수 없습니다. 설정 › ${AI_NAME}에서 다른 모델을 선택하세요.`,
   grammarIgnore: "무시",
   grammarKindSpelling: "맞춤법",
   grammarKindGrammar: "문법",
@@ -607,6 +607,8 @@ ${AI_NAME}에게 주는 글쓰기 지침으로, 모든 문서에 적용됩니다
   errorNoText: "읽을 수 있는 텍스트가 없습니다.",
   errorUnreadable: "이 파일을 읽을 수 없습니다.",
   errorExists: "같은 이름이 이미 있습니다.",
+  errorAgentRefused: "에이전트가 이 요청을 거절했습니다.",
+  errorAgentStopped: "에이전트가 중지되었습니다.",
   errorAlreadyThere: "이미 그 폴더에 있습니다.",
   errorNotFolder: "폴더가 아닙니다.",
   errorTrashShownFolder:
@@ -707,7 +709,7 @@ ${AI_NAME}에게 주는 글쓰기 지침으로, 모든 문서에 적용됩니다
   completionTone_academic: "학술적으로",
   completionTone_concise: "간결하게",
   webSearchLabel: "웹 검색",
-  webSearchNeedsService: `이 모델은 스스로 웹을 검색할 수 없습니다. 설정 > ${AI_NAME}에서 검색 서비스를 선택하세요.`,
+  webSearchNeedsService: `이 모델은 스스로 웹을 검색할 수 없습니다. 설정 › ${AI_NAME}에서 검색 서비스를 선택하세요.`,
   searchServiceLabel: "검색 서비스",
   searchServiceAuto: "자동",
   searchServiceZhipu: "Zhipu",
@@ -777,7 +779,7 @@ ${AI_NAME}에게 주는 글쓰기 지침으로, 모든 문서에 적용됩니다
   conventionsEu: "EU 기관",
   agentAttachFile: "파일 첨부: 문서, PDF, 이미지, 코드, zip 등 어떤 파일이든",
   chatAttachmentTruncated: "(일부 생략)",
-  chatAttachmentNoVision: `이 제공업체는 이미지를 읽을 수 없습니다. 설정 > ${AI_NAME}에서 제공업체를 바꾸거나 문서를 첨부하세요.`,
+  chatAttachmentNoVision: `이 제공업체는 이미지를 읽을 수 없습니다. 설정 › ${AI_NAME}에서 제공업체를 바꾸거나 문서를 첨부하세요.`,
   aiGrammarLabel: "문법 검사 사용",
   aiAskLabel: `${AI_NAME} 채팅`,
   aiAskToggleLabel: `${AI_NAME} 채팅 사용`,

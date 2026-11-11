@@ -60,7 +60,7 @@ Instructions d'écriture pour ce dossier.
 
 Tout ce qui se trouve hors des commentaires comme celui-ci est envoyé
 à ${AI_NAME} avec chaque conversation sur un document de ce dossier,
-après vos instructions d'écriture globales (Réglages > ${AI_NAME}).
+après vos instructions d'écriture globales (Réglages › ${AI_NAME}).
 En cas de contradiction, ce fichier l'emporte. Les commentaires ne
 sont jamais envoyés.
 
@@ -544,11 +544,11 @@ utiliser une.
   modelMissingHint:
     "Ce modèle ne figure pas dans la liste actuelle du fournisseur\u00a0: il a peut-être été retiré. Choisissez-en un autre, ou celui par défaut.",
   modelFetchedAt: "Récupérée le {date}",
-  aiErrorNotConfigured: `Ce service d'IA n'est pas encore connecté. Configurez-le dans Réglages > ${AI_NAME}.`,
-  aiErrorAuth: `Le service a refusé les identifiants. Vérifiez la clé API (ou reconnectez-vous) dans Réglages > ${AI_NAME}.`,
+  aiErrorNotConfigured: `Ce service d'IA n'est pas encore connecté. Configurez-le dans Réglages › ${AI_NAME}.`,
+  aiErrorAuth: `Le service a refusé les identifiants. Vérifiez la clé API (ou reconnectez-vous) dans Réglages › ${AI_NAME}.`,
   aiErrorWorkspaceKey:
     "Cette clé Anthropic n'est rattachée à aucun espace de travail. Créez une clé dans un espace de travail de la console Anthropic et utilisez-la.",
-  aiErrorBalance: `Le solde ou le quota de ce service est épuisé. Rechargez ou vérifiez votre offre sur le site du fournisseur, ou choisissez un autre service dans Réglages > ${AI_NAME}.`,
+  aiErrorBalance: `Le solde ou le quota de ce service est épuisé. Rechargez ou vérifiez votre offre sur le site du fournisseur, ou choisissez un autre service dans Réglages › ${AI_NAME}.`,
   aiErrorRateLimit:
     "Le service est surchargé ou vous avez atteint une limite de requêtes. Patientez un instant, puis réessayez.",
   aiErrorServer:
@@ -559,7 +559,7 @@ utiliser une.
     "Impossible de joindre le service. Vérifiez votre connexion Internet ou les réglages du proxy.",
   aiErrorContextLength:
     "La conversation est trop longue pour ce modèle. Commencez une nouvelle conversation ou joignez moins.",
-  aiErrorModel: `Ce modèle n'est pas disponible pour votre compte. Choisissez-en un autre dans Réglages > ${AI_NAME}.`,
+  aiErrorModel: `Ce modèle n'est pas disponible pour votre compte. Choisissez-en un autre dans Réglages › ${AI_NAME}.`,
   grammarIgnore: "Ignorer",
   grammarKindSpelling: "Orthographe",
   grammarKindGrammar: "Grammaire",
@@ -666,6 +666,8 @@ utiliser une.
   errorNoText: "Il ne contient aucun texte lisible.",
   errorUnreadable: "Ce fichier ne peut pas être lu.",
   errorExists: "Un élément porte déjà ce nom.",
+  errorAgentRefused: "L’agent a refusé.",
+  errorAgentStopped: "L’agent s’est arrêté.",
   errorAlreadyThere: "Il est déjà dans ce dossier.",
   errorNotFolder: "Ce n'est pas un dossier.",
   errorTrashShownFolder:
@@ -776,7 +778,7 @@ utiliser une.
   completionTone_academic: "Académique",
   completionTone_concise: "Concis",
   webSearchLabel: "Recherche web",
-  webSearchNeedsService: `Ce modèle ne peut pas chercher sur le web par lui-même\u00a0: choisissez un service de recherche dans Réglages > ${AI_NAME}.`,
+  webSearchNeedsService: `Ce modèle ne peut pas chercher sur le web par lui-même\u00a0: choisissez un service de recherche dans Réglages › ${AI_NAME}.`,
   searchServiceLabel: "Service de recherche",
   searchServiceAuto: "Automatique",
   searchServiceZhipu: "Zhipu",
@@ -850,7 +852,7 @@ utiliser une.
   agentAttachFile:
     "Joindre des fichiers : documents, PDF, images, code, un zip… n’importe quel fichier",
   chatAttachmentTruncated: "(tronqué)",
-  chatAttachmentNoVision: `Ce fournisseur ne peut pas lire les images. Changez de fournisseur dans Réglages > ${AI_NAME}, ou joignez plutôt un document.`,
+  chatAttachmentNoVision: `Ce fournisseur ne peut pas lire les images. Changez de fournisseur dans Réglages › ${AI_NAME}, ou joignez plutôt un document.`,
   aiGrammarLabel: "Activer la vérification grammaticale",
   aiAskLabel: `Discussion avec ${AI_NAME}`,
   aiAskToggleLabel: `Activer la discussion avec ${AI_NAME}`,

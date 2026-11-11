@@ -55,7 +55,7 @@ export default {
 このフォルダーの執筆の指示です。
 
 このようなコメントの外に書いた内容は、このフォルダーの文書に
-ついての毎回の会話で、グローバルな執筆の指示（設定 > ${AI_NAME}）
+ついての毎回の会話で、グローバルな執筆の指示（設定 › ${AI_NAME}）
 の後に${AI_NAME}へ送られます。食い違う点はこのファイルが優先され
 ます。コメントは送信されません。
 
@@ -499,11 +499,11 @@ ${AI_NAME}への執筆の指示です。すべての文書に適用されます�
   modelMissingHint:
     "このモデルはプロバイダーの現在の一覧にありません。提供終了の可能性があります。別のモデルか既定のモデルを選んでください。",
   modelFetchedAt: "{date} に取得",
-  aiErrorNotConfigured: `このAIサービスはまだ接続されていません。「設定 > ${AI_NAME}」で設定してください。`,
-  aiErrorAuth: `サービスが認証情報を拒否しました。「設定 > ${AI_NAME}」でAPIキーを確認するか、再度サインインしてください。`,
+  aiErrorNotConfigured: `このAIサービスはまだ接続されていません。「設定 › ${AI_NAME}」で設定してください。`,
+  aiErrorAuth: `サービスが認証情報を拒否しました。「設定 › ${AI_NAME}」でAPIキーを確認するか、再度サインインしてください。`,
   aiErrorWorkspaceKey:
     "このAnthropicキーはワークスペースに属していません。Anthropic Consoleのワークスペース内でキーを作成して使ってください。",
-  aiErrorBalance: `このサービスの残高または利用枠がなくなりました。プロバイダのサイトでチャージするかプランを確認するか、「設定 > ${AI_NAME}」で別のサービスを選んでください。`,
+  aiErrorBalance: `このサービスの残高または利用枠がなくなりました。プロバイダのサイトでチャージするかプランを確認するか、「設定 › ${AI_NAME}」で別のサービスを選んでください。`,
   aiErrorRateLimit:
     "サービスが混み合っているか、レート制限に達しました。少し待ってから再試行してください。",
   aiErrorServer:
@@ -514,7 +514,7 @@ ${AI_NAME}への執筆の指示です。すべての文書に適用されます�
     "サービスに接続できません。インターネット接続またはプロキシ設定を確認してください。",
   aiErrorContextLength:
     "このモデルには会話が長すぎます。新しい会話を始めるか、添付を減らしてください。",
-  aiErrorModel: `このモデルはお使いのアカウントでは利用できません。「設定 > ${AI_NAME}」で別のモデルを選んでください。`,
+  aiErrorModel: `このモデルはお使いのアカウントでは利用できません。「設定 › ${AI_NAME}」で別のモデルを選んでください。`,
   grammarIgnore: "無視",
   grammarKindSpelling: "誤字",
   grammarKindGrammar: "文法",
@@ -618,6 +618,8 @@ ${AI_NAME}への執筆の指示です。すべての文書に適用されます�
   errorNoText: "読み取れるテキストがありません。",
   errorUnreadable: "このファイルは読み込めません。",
   errorExists: "同じ名前のものがすでにあります。",
+  errorAgentRefused: "エージェントがこの要求を断りました。",
+  errorAgentStopped: "エージェントが停止しました。",
   errorAlreadyThere: "すでにそのフォルダにあります。",
   errorNotFolder: "フォルダではありません。",
   errorTrashShownFolder: "ツリーに表示中のフォルダはゴミ箱に移せません。",
@@ -719,7 +721,7 @@ ${AI_NAME}への執筆の指示です。すべての文書に適用されます�
   completionTone_academic: "学術的",
   completionTone_concise: "簡潔",
   webSearchLabel: "ウェブ検索",
-  webSearchNeedsService: `このモデルは自分ではウェブ検索できません。「設定 > ${AI_NAME}」で検索サービスを選んでください。`,
+  webSearchNeedsService: `このモデルは自分ではウェブ検索できません。「設定 › ${AI_NAME}」で検索サービスを選んでください。`,
   searchServiceLabel: "検索サービス",
   searchServiceAuto: "自動",
   searchServiceZhipu: "Zhipu",
@@ -791,7 +793,7 @@ ${AI_NAME}への執筆の指示です。すべての文書に適用されます�
   agentAttachFile:
     "ファイルを添付：文書、PDF、画像、コード、zip など、どんなファイルでも",
   chatAttachmentTruncated: "（一部のみ）",
-  chatAttachmentNoVision: `このプロバイダーは画像を読めません。「設定 > ${AI_NAME}」でプロバイダーを変更するか、文書を添付してください。`,
+  chatAttachmentNoVision: `このプロバイダーは画像を読めません。「設定 › ${AI_NAME}」でプロバイダーを変更するか、文書を添付してください。`,
   aiGrammarLabel: "文法チェックを有効にする",
   aiAskLabel: `${AI_NAME} チャット`,
   aiAskToggleLabel: `${AI_NAME} チャットを有効にする`,
