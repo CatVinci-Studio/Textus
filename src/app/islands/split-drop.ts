@@ -9,7 +9,7 @@ import {
 import { type SplitDirection } from "../../engine/layout/tree";
 import { pairLayout } from "../../engine/layout/ops";
 import { moveTab, splitOff, type SplitLayout } from "../../engine/layout/ops";
-import { paneById } from "../../engine/layout/tree";
+import { paneById, paneWithTab } from "../../engine/layout/tree";
 import type { DocumentDrop } from "../../engine/controls/document-drop";
 import {
   dropGeometry,
@@ -86,9 +86,44 @@ export function splitForDrop(
   else commitDrop(dropLayout(splitLayout(), tabId, target, tabIds));
 }
 
-/** The pane something on its way in shows in, in the preview of where it
- *  will open: an island of its own, still empty. */
+/** The tab something on its way in stands as, in the preview of where it
+ *  will open. */
 const ARRIVING = "drop:arriving";
+
+/**
+ * Where tab `tabId` lands in `shown`, dashed: a new island of its own is
+ * only its room (no row), a slot in another island's row only its outline.
+ * `room` and `row` say which pane each is.
+ */
+export function roomMarks(
+  shown: SplitLayout | null,
+  tabId: string,
+): { rules: string[]; room: string | null; row: string | undefined } {
+  const pane = shown && paneWithTab(shown.root, tabId);
+  if (!pane) return { rules: [], room: null, row: undefined };
+  if (pane.tabs.length === 1) {
+    const id = CSS.escape(pane.id);
+    return {
+      rules: [
+        `section.island[data-pane-id="${id}"] { background: var(--drop-room-island) center / 100% 100% no-repeat !important; box-shadow: none !important; }`,
+        `section.island[data-pane-id="${id}"] > * { visibility: hidden; }`,
+        `.island-row[data-pane-id="${id}"] { visibility: hidden; }`,
+      ],
+      room: pane.id,
+      row: undefined,
+    };
+  }
+  const slot = `.tab-pill[data-tab="${CSS.escape(tabId)}"]`;
+  return {
+    rules: [
+      `${slot} { background: var(--drop-room-slot) center / 100% 100% no-repeat !important; box-shadow: none !important; }`,
+      `${slot}::before, ${slot}::after { display: none !important; }`,
+      `${slot} > * { visibility: hidden; }`,
+    ],
+    room: null,
+    row: pane.id,
+  };
+}
 
 /**
  * Something not yet a tab of this window dragged over its documents - a
@@ -99,8 +134,20 @@ const ARRIVING = "drop:arriving";
 export function arrivalPreview(tabIds: () => readonly string[]) {
   let geometry: DropGeometry | null = null;
   let shown: string | null = null;
+  let style: HTMLStyleElement | null = null;
+  const mark = (layout: SplitLayout | null) => {
+    const { rules } = roomMarks(layout, ARRIVING);
+    if (!rules.length) {
+      style?.remove();
+      style = null;
+      return;
+    }
+    style ??= document.head.appendChild(document.createElement("style"));
+    style.textContent = rules.join("\n");
+  };
   const clear = () => {
     shown = null;
+    mark(null);
     previewSplit(null);
   };
   return {
@@ -113,14 +160,14 @@ export function arrivalPreview(tabIds: () => readonly string[]) {
         : null;
       if (key === shown) return target;
       shown = key;
-      previewSplit(
-        target
-          ? (dropLayout(splitLayout(), ARRIVING, target, [
-              ...tabIds(),
-              ARRIVING,
-            ]) ?? null)
-          : null,
-      );
+      const layout = target
+        ? (dropLayout(splitLayout(), ARRIVING, target, [
+            ...tabIds(),
+            ARRIVING,
+          ]) ?? null)
+        : null;
+      mark(layout);
+      previewSplit(layout);
       return target;
     },
     /** Nothing shown; the layout the drag found kept for a drop that

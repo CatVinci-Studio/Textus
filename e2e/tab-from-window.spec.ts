@@ -31,6 +31,10 @@ test("let go over the documents' right edge, it opens an island there", async ({
     row: false,
   });
   await page.waitForTimeout(300);
+  // Before it lands: its island is only a dashed room, nothing drawn in it.
+  const room = page.locator(".main-pane > section.island").last();
+  await expect(room).toHaveCSS("background-image", /svg/);
+  await expect(room.locator(".ProseMirror")).toBeHidden();
   await emit(page, "receive-detached-tab", {
     ...doc("Elsewhere"),
     ...at,

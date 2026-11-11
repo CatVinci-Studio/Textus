@@ -19,10 +19,10 @@ import {
   type SplitLayout,
 } from "../../engine/layout/ops";
 import { paneOf, previewSplit, splitLayout } from "../../engine/layout/store";
-import { paneById, paneWithTab } from "../../engine/layout/tree";
+import { paneById } from "../../engine/layout/tree";
 import { frameLayout } from "../../engine/frame/frame-store";
 import { setDragging } from "../../engine/controls/document-drop";
-import { commitDrop, dropLayout } from "./split-drop";
+import { commitDrop, dropLayout, roomMarks } from "./split-drop";
 import { liftIsland, type IslandLift } from "./island-lift";
 import "./split-drop.css";
 
@@ -288,25 +288,10 @@ function placeMarks(tabId: string) {
       roomPane = null;
       if (!whole && (left || shown)) {
         rules.push(`[data-tab-id="${tab}"] { visibility: hidden; }`);
-        const pane = shown && paneWithTab(shown.root, tabId);
-        if (pane && pane.tabs.length === 1) {
-          // A new island: only its room, dashed; no row of its own.
-          const id = CSS.escape(pane.id);
-          roomPane = pane.id;
-          rules.push(
-            `section.island[data-pane-id="${id}"] { background: var(--drop-room-island) center / 100% 100% no-repeat !important; box-shadow: none !important; }`,
-            `.island-row[data-pane-id="${id}"] { visibility: hidden; }`,
-          );
-        } else if (pane) {
-          // Joining a row: its slot there, dashed.
-          const slot = `.tab-pill[data-tab="${tab}"]`;
-          roomRow = pane.id;
-          rules.push(
-            `${slot} { background: var(--drop-room-slot) center / 100% 100% no-repeat !important; box-shadow: none !important; }`,
-            `${slot}::before, ${slot}::after { display: none !important; }`,
-            `${slot} > * { visibility: hidden; }`,
-          );
-        }
+        const marks = roomMarks(shown, tabId);
+        rules.push(...marks.rules);
+        roomPane = marks.room;
+        roomRow = marks.row;
       }
       // Rewritten only when it changes: each rewrite restyles the page.
       const text = rules.join("\n");
