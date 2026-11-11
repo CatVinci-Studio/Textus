@@ -217,7 +217,7 @@ export function SourceEditor({
   return (
     <div
       ref={hostRef}
-      className={`source-view ${className}${typewriter ? " typewriter-source" : ""}`}
+      className={`source-view tx-scroll-reveal ${className}${typewriter ? " typewriter-source" : ""}`}
     />
   );
 }

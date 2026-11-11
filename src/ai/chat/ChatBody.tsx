@@ -334,7 +334,7 @@ export function ChatBody({
           )
         : showMessages && (
             <div
-              className="inline-chat-messages"
+              className="inline-chat-messages tx-scroll-reveal"
               ref={listRef}
               onScroll={follow.onScroll}
             >

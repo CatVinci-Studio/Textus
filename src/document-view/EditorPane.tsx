@@ -154,7 +154,7 @@ export const EditorPane = memo(function EditorPane({
   const scrollRef = useKeptScroll(isActive, filePath);
 
   return (
-    <div className="editor-scroll" ref={scrollRef}>
+    <div className="editor-scroll tx-scroll-reveal" ref={scrollRef}>
       <div
         className={`editor-content ${settings.typewriterMode ? "typewriter-active" : ""}`}
       >

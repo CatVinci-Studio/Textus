@@ -9,6 +9,6 @@ import "./plugin-tab.css";
  */
 export function PluginTab({ t, id }: { t: Strings; id: string | null }) {
   return (
-    <div className="plugin-tab">{id && <PluginDetail id={id} t={t} />}</div>
+    <div className="plugin-tab tx-scroll-reveal">{id && <PluginDetail id={id} t={t} />}</div>
   );
 }

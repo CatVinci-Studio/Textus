@@ -83,7 +83,7 @@ export function SettingsTab({
     pluginCommands,
   };
   return (
-    <div className="settings-tab" ref={content}>
+    <div className="settings-tab tx-scroll-reveal" ref={content}>
       {/* Too narrow a column to set anything in: shown instead of the page
           (settings-tab.css). */}
       <p className="tx-empty settings-tab-narrow">{t.settingsNeedsRoom}</p>

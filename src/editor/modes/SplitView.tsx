@@ -83,7 +83,7 @@ export function SplitView({
       />
       <div
         ref={previewRef}
-        className={`split-preview${breaks ? " split-preview-breaks" : ""}`}
+        className={`split-preview tx-scroll-reveal${breaks ? " split-preview-breaks" : ""}`}
         onScroll={(e) => {
           const source = sourceScroller();
           if (source) follow(e.currentTarget, source, "preview");

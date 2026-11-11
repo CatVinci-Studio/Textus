@@ -944,9 +944,10 @@ input[type="checkbox"].ui-check:checked {
   background: transparent;
 }
 
-/* The document's own bar shows only while it scrolls or under the pointer,
-   so it doesn't run down the middle of the window beside the AI panel. */
-:is(.editor-scroll, .source-view, .source-view .cm-scroller):not(
+/* A page's own bar (a document, Settings: marked tx-scroll-reveal) shows
+   only while it scrolls or under the pointer, so it doesn't run down the
+   middle of the window beside another island. */
+:is(.tx-scroll-reveal, .tx-scroll-reveal .cm-scroller):not(
     .is-scrolling
   )::-webkit-scrollbar-thumb:not(:hover) {
   background-color: transparent;
@@ -954,7 +955,7 @@ input[type="checkbox"].ui-check:checked {
 
 /* WebKit restyles a scrollbar only when its element's own style changes; a
    property with no visible effect here (no columns) makes the change real. */
-:is(.editor-scroll, .source-view, .source-view .cm-scroller).is-scrolling {
+:is(.tx-scroll-reveal, .tx-scroll-reveal .cm-scroller).is-scrolling {
   column-rule-color: transparent;
 }
 

@@ -164,7 +164,7 @@ export function StartPage({ t }: { t: Strings }) {
   // A project with nothing to open: its files are in the sidebar.
   if (empty)
     return (
-      <div className="start-page" role="region" aria-label={t.startPageTab}>
+      <div className="start-page tx-scroll-reveal" role="region" aria-label={t.startPageTab}>
         <div className="tx-empty">
           {t.startPagePickDocument.replace(
             "{folder}",
@@ -174,7 +174,7 @@ export function StartPage({ t }: { t: Strings }) {
       </div>
     );
   return (
-    <div className="start-page" role="region" aria-label={t.startPageTab}>
+    <div className="start-page tx-scroll-reveal" role="region" aria-label={t.startPageTab}>
       <div className="start-page-body">
         <header className="start-page-brand">
           <img

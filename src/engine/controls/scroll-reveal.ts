@@ -1,10 +1,11 @@
-/** The scrollers whose bar shows only while they move. */
-const REVEAL_SELECTOR =
-  ".editor-scroll, .source-view .cm-scroller, .source-view";
+/** The scrollers whose bar shows only while they move: those marked
+ *  `tx-scroll-reveal` (a page's own scroller), and CodeMirror's inside a
+ *  marked one. design-system.css hides their bars by the same rule. */
+const REVEAL_SELECTOR = ".tx-scroll-reveal, .tx-scroll-reveal .cm-scroller";
 /** How long the bar stays after the last scroll step. */
 const HIDE_AFTER_MS = 900;
 
-/** The document's scrollbar shows while it scrolls and fades after. One
+/** A page's scrollbar shows while it scrolls and fades after. One
  *  capture-phase listener serves every tab's scroller, since scroll doesn't
  *  bubble. */
 export function installScrollReveal(): void {
