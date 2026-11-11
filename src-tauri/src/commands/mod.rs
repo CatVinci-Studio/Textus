@@ -2,7 +2,6 @@
 //! `#[cfg(desktop)]` modules are about OS windows or the desktop shell (and
 //! `tree_ops`, also `#[cfg(desktop)]`); `documents` is `#[cfg(mobile)]`.
 
-pub mod args;
 pub mod attachment;
 #[cfg(desktop)]
 pub mod chat_window;

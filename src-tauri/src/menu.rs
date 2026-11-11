@@ -75,7 +75,7 @@ pub(crate) fn focused_editor_window(app: &tauri::AppHandle) -> Option<String> {
         });
 
     match focused {
-        Some(label) if crate::commands::chat_window::is_editor_window(&label) => Some(label),
+        Some(label) if crate::windows::is_editor_window(&label) => Some(label),
         Some(label) => app
             .try_state::<crate::commands::chat_window::OpenChatWindows>()
             .and_then(|open| crate::commands::chat_window::editor_for_chat(&label, &open)),
@@ -84,7 +84,7 @@ pub(crate) fn focused_editor_window(app: &tauri::AppHandle) -> Option<String> {
     .or_else(|| {
         windows
             .keys()
-            .find(|label| crate::commands::chat_window::is_editor_window(label))
+            .find(|label| crate::windows::is_editor_window(label))
             .cloned()
     })
 }

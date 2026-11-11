@@ -105,7 +105,7 @@ pub async fn search_folder_text(
 #[cfg_attr(test, specta::specta)]
 pub async fn pick_open_folder(window: tauri::WebviewWindow) -> Result<Option<String>, String> {
     let picked = tauri::async_runtime::spawn_blocking(move || {
-        crate::commands::fs::window_file_dialog(&window).blocking_pick_folder()
+        crate::dialogs::window_file_dialog(&window).blocking_pick_folder()
     })
     .await
     .map_err(|e| e.to_string())?

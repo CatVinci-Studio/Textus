@@ -13,25 +13,11 @@ fn registry(entries: Vec<(&str, &str)>) -> OpenChatWindows {
 }
 
 #[test]
-fn editor_windows_are_those_holding_a_document() {
-    assert!(is_editor_window("main"));
-    assert!(is_editor_window("window-1"));
-    assert!(is_editor_window("window-42"));
-}
-
-#[test]
-fn chat_and_pill_windows_are_not_editors() {
-    assert!(!is_editor_window("chat-1"));
-    assert!(!is_editor_window("chat-99"));
-    assert!(!is_editor_window(crate::tab_drag::DRAG_PILL_LABEL));
-}
-
-#[test]
 fn detached_chat_labels_are_classified_as_chats() {
     // The label format detach_chat_window builds must keep matching the prefix
     // the predicate tests.
     let label = format!("{CHAT_LABEL_PREFIX}{}", 7);
-    assert!(!is_editor_window(&label));
+    assert!(!crate::windows::is_editor_window(&label));
 }
 
 #[test]

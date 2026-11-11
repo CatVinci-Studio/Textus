@@ -3,12 +3,14 @@
 
 mod ai;
 mod app_identity;
+mod args;
 mod atomic;
 mod auth;
 #[cfg(desktop)]
 mod background;
 #[cfg(desktop)]
 pub mod cli;
+mod dialogs;
 mod errors;
 // Checks src/platform/bindings/; desktop builds hold every command it lists.
 #[cfg(desktop)]
@@ -37,6 +39,8 @@ mod walk;
 mod webview_memory;
 mod window_frame;
 mod window_guard;
+#[cfg(desktop)]
+mod windows;
 
 use std::sync::atomic::{AtomicBool, Ordering};
 use std::sync::Mutex;
@@ -112,7 +116,7 @@ fn desktop_builder(builder: tauri::Builder<tauri::Wry>) -> tauri::Builder<tauri:
             // Remember a window's size and place on Close, since after Destroyed they can
             // no longer be read.
             if matches!(event, tauri::WindowEvent::CloseRequested { .. })
-                && commands::chat_window::is_editor_window(window.label())
+                && crate::windows::is_editor_window(window.label())
             {
                 commands::prefs::remember_editor_window(app, window);
             }
@@ -184,7 +188,7 @@ pub fn run() {
         let editor_open = app
             .windows()
             .keys()
-            .any(|label| commands::chat_window::is_editor_window(label));
+            .any(|label| crate::windows::is_editor_window(label));
         if paths.is_empty() && !editor_open {
             // Launched again while running in the background with no
             // window: the same documents a fresh launch would restore.

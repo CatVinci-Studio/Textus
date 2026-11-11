@@ -102,7 +102,7 @@ fn run_plugin_command(app: &AppHandle, command: &str) {
     let window = app
         .windows()
         .into_iter()
-        .find(|(label, _)| crate::commands::chat_window::is_editor_window(label))
+        .find(|(label, _)| crate::windows::is_editor_window(label))
         .map(|(_, window)| window);
     match window {
         Some(window) => {

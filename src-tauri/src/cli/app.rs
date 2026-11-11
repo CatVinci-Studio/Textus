@@ -330,7 +330,7 @@ async fn listening_window(app: &AppHandle) -> Option<String> {
         }
         let any_editor = windows
             .keys()
-            .any(|label| crate::commands::chat_window::is_editor_window(label));
+            .any(|label| crate::windows::is_editor_window(label));
         if !opened && !any_editor {
             let _ = crate::editor_windows::open_new_window(app);
             opened = true;

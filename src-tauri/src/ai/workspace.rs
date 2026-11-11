@@ -252,7 +252,7 @@ pub async fn list_skills(
 #[cfg_attr(test, specta::specta)]
 pub async fn pick_workspace_root(window: tauri::WebviewWindow) -> Result<Option<String>, String> {
     let picked = tauri::async_runtime::spawn_blocking(move || {
-        crate::commands::fs::window_file_dialog(&window).blocking_pick_folder()
+        crate::dialogs::window_file_dialog(&window).blocking_pick_folder()
     })
     .await
     .map_err(|e| e.to_string())?;
@@ -304,7 +304,7 @@ pub async fn import_agent_skill(
 ) -> Result<Option<Vec<AgentSkill>>, String> {
     let picked = {
         tauri::async_runtime::spawn_blocking(move || {
-            crate::commands::fs::window_file_dialog(&window)
+            crate::dialogs::window_file_dialog(&window)
                 .add_filter("Markdown", &["md"])
                 .blocking_pick_file()
         })

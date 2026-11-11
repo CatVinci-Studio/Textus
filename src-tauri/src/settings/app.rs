@@ -280,10 +280,11 @@ pub(crate) fn apply_window_backgrounds(app: &AppHandle) {
     for (label, window) in app.windows() {
         // Only the windows the user sees: not the transparent tab-drag
         // pill, the hidden PDF-export renderers or background host.
-        if label == crate::tab_drag::DRAG_PILL_LABEL
-            || label == crate::schedule::HOST_LABEL
-            || label.starts_with(crate::commands::export::PDF_EXPORT_LABEL_PREFIX)
-        {
+        use crate::windows::WindowKind;
+        if matches!(
+            WindowKind::of(&label),
+            Some(WindowKind::DragPill | WindowKind::BackgroundHost | WindowKind::PdfExport)
+        ) {
             continue;
         }
         let _ = window.set_background_color(color);

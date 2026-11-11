@@ -414,7 +414,7 @@ pub async fn plugin_pick_package(
     folder: bool,
     filter_name: String,
 ) -> Option<Vec<String>> {
-    use crate::commands::fs::window_file_dialog;
+    use crate::dialogs::window_file_dialog;
     tauri::async_runtime::spawn_blocking(move || {
         let dialog = window_file_dialog(&window);
         if folder {

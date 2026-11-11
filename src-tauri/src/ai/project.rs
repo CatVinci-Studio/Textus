@@ -141,7 +141,7 @@ pub async fn ensure_project_file(
 #[cfg_attr(test, specta::specta)]
 pub async fn pick_text_files(window: tauri::WebviewWindow) -> Vec<String> {
     tauri::async_runtime::spawn_blocking(move || {
-        crate::commands::fs::window_file_dialog(&window)
+        crate::dialogs::window_file_dialog(&window)
             .add_filter("Text", &["md", "markdown", "txt"])
             .blocking_pick_files()
             .unwrap_or_default()
@@ -166,7 +166,7 @@ pub async fn import_references_picked(
 ) -> Result<Option<ImportedReferences>, String> {
     let root = project_root(doc_path.as_deref(), workspace_root.as_deref())?;
     tauri::async_runtime::spawn_blocking(move || {
-        let dialog = crate::commands::fs::window_file_dialog(&window);
+        let dialog = crate::dialogs::window_file_dialog(&window);
         let picked: Vec<PathBuf> = if folder {
             #[cfg(desktop)]
             let one = dialog.blocking_pick_folder();

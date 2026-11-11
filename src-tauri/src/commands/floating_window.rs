@@ -159,7 +159,7 @@ pub fn floating_window_position(app: tauri::AppHandle, view: String) -> Option<(
 #[tauri::command]
 #[cfg_attr(test, specta::specta)]
 pub fn show_floating_owner(app: tauri::AppHandle, owner: String) {
-    if !crate::commands::chat_window::is_editor_window(&owner) {
+    if !crate::windows::is_editor_window(&owner) {
         return;
     }
     if let Some(window) = app.get_window(&owner) {

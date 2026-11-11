@@ -98,9 +98,7 @@ pub fn list_window_bounds(app: tauri::AppHandle) -> Vec<WindowBounds> {
         .filter_map(|(label, window)| {
             // Never a drop target: the pill being dragged, a detached chat (a dropped tab
             // would vanish), or a hidden window.
-            if !crate::commands::chat_window::is_editor_window(label)
-                || !window.is_visible().unwrap_or(false)
-            {
+            if !crate::windows::is_editor_window(label) || !window.is_visible().unwrap_or(false) {
                 return None;
             }
             let pos = window.outer_position().ok()?;
@@ -131,9 +129,7 @@ use pill::{create_drag_pill, destroy_drag_pill, move_drag_pill, park_drag_pill};
 #[cfg(any(target_os = "macos", windows))]
 fn window_hit(app: &tauri::AppHandle, x: f64, y: f64, row: f64) -> Option<(String, bool)> {
     for (label, window) in app.windows() {
-        if !crate::commands::chat_window::is_editor_window(&label)
-            || !window.is_visible().unwrap_or(false)
-        {
+        if !crate::windows::is_editor_window(&label) || !window.is_visible().unwrap_or(false) {
             continue;
         }
         let (Ok(pos), Ok(size), Ok(scale)) = (

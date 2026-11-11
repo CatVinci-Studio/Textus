@@ -23,7 +23,8 @@ pub enum AppState {
 
 /// A window of the user's: not one Textus keeps out of sight.
 pub fn is_user_window(label: &str) -> bool {
-    use crate::commands::chat_window::{is_editor_window, CHAT_LABEL_PREFIX};
+    use crate::commands::chat_window::CHAT_LABEL_PREFIX;
+    use crate::windows::is_editor_window;
     is_editor_window(label) || label.starts_with(CHAT_LABEL_PREFIX)
 }
 

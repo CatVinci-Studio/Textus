@@ -162,7 +162,7 @@ pub async fn pick_attachment_files(
     conversation: String,
 ) -> Result<Vec<ChatAttachment>, String> {
     let picked = tauri::async_runtime::spawn_blocking(move || {
-        super::fs::window_file_dialog(&window)
+        crate::dialogs::window_file_dialog(&window)
             .add_filter("Documents, archives and pictures", SUPPORTED_EXTENSIONS)
             .add_filter("All files", &["*"])
             .blocking_pick_files()

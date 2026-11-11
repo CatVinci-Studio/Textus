@@ -1,4 +1,4 @@
-use super::args::Args;
+use crate::args::Args;
 use std::collections::HashMap;
 use std::sync::Mutex;
 use tauri::{Emitter, Manager, State, WebviewUrl, WebviewWindowBuilder};
@@ -6,16 +6,6 @@ use tauri::{Emitter, Manager, State, WebviewUrl, WebviewWindowBuilder};
 /// Label prefix of every detached chat window. A chat window has no tab bar
 /// or document, so it must never be taken for an editor window.
 pub const CHAT_LABEL_PREFIX: &str = "chat-";
-
-/// Whether `label` names a window that hosts a document (not the drag pill
-/// and not a detached chat).
-pub fn is_editor_window(label: &str) -> bool {
-    label != crate::tab_drag::DRAG_PILL_LABEL
-        && !label.starts_with(CHAT_LABEL_PREFIX)
-        && !label.starts_with(crate::commands::floating_window::FLOATING_LABEL_PREFIX)
-        && !label.starts_with(crate::commands::export::PDF_EXPORT_LABEL_PREFIX)
-        && label != crate::schedule::HOST_LABEL
-}
 
 /// One detached chat window. Unlike Quick Ask it follows whatever document the
 /// user edits, so there is at most one per editor window.
@@ -233,7 +223,7 @@ fn forget_entries(label: &str, open: &OpenChatWindows) -> bool {
 /// listen).
 pub fn notify_chat_windows_changed(app: &tauri::AppHandle) {
     for (label, window) in app.windows() {
-        if is_editor_window(&label) {
+        if crate::windows::is_editor_window(&label) {
             let _ = window.emit(CHAT_WINDOWS_CHANGED, ());
         }
     }

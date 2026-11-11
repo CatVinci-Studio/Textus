@@ -38,20 +38,6 @@ fn marked_hidden(_meta: &std::fs::Metadata) -> bool {
     false
 }
 
-/// A native file dialog owned by the window that asked for it. Unowned, a
-/// Windows dialog can open behind the app, and a macOS sheet can land on a hidden window.
-pub(crate) fn window_file_dialog(
-    window: &tauri::WebviewWindow,
-) -> tauri_plugin_dialog::FileDialogBuilder<tauri::Wry> {
-    use tauri_plugin_dialog::DialogExt;
-    let dialog = window.dialog().file();
-    // set_parent is desktop-only API; iOS presents the picker modally over
-    // its single window anyway.
-    #[cfg(desktop)]
-    let dialog = dialog.set_parent(window);
-    dialog
-}
-
 /// The file types File > Open offers: Markdown first, then text, Word and any
 /// file. None on macOS, where NSOpenPanel has no type menu, so no filter means
 /// "All files".
@@ -90,9 +76,10 @@ pub async fn open_file_dialog(
     tauri::async_runtime::spawn_blocking(move || {
         filters
             .iter()
-            .fold(window_file_dialog(&window), |dialog, (name, exts)| {
-                dialog.add_filter(name, exts)
-            })
+            .fold(
+                crate::dialogs::window_file_dialog(&window),
+                |dialog, (name, exts)| dialog.add_filter(name, exts),
+            )
             .blocking_pick_file()
             .map(|p| p.to_string())
     })
@@ -106,7 +93,7 @@ pub async fn open_file_dialog(
 #[cfg_attr(test, specta::specta)]
 pub async fn open_css_file_dialog(window: tauri::WebviewWindow) -> Option<String> {
     tauri::async_runtime::spawn_blocking(move || {
-        window_file_dialog(&window)
+        crate::dialogs::window_file_dialog(&window)
             .add_filter("CSS", &["css"])
             .blocking_pick_file()
             .map(|p| p.to_string())
@@ -121,7 +108,7 @@ pub async fn open_css_file_dialog(window: tauri::WebviewWindow) -> Option<String
 #[cfg_attr(test, specta::specta)]
 pub async fn open_settings_file_dialog(window: tauri::WebviewWindow) -> Option<String> {
     tauri::async_runtime::spawn_blocking(move || {
-        window_file_dialog(&window)
+        crate::dialogs::window_file_dialog(&window)
             .add_filter("JSON", &["json"])
             .blocking_pick_file()
             .map(|p| p.to_string())
@@ -139,7 +126,7 @@ pub async fn save_settings_file_dialog(
     default_name: String,
 ) -> Option<String> {
     tauri::async_runtime::spawn_blocking(move || {
-        window_file_dialog(&window)
+        crate::dialogs::window_file_dialog(&window)
             .set_file_name(default_name)
             .add_filter("JSON", &["json"])
             .blocking_save_file()
@@ -161,7 +148,7 @@ pub async fn open_image_file_dialog(
 ) -> Option<String> {
     tauri::async_runtime::spawn_blocking(move || {
         let exts: Vec<&str> = extensions.iter().map(String::as_str).collect();
-        window_file_dialog(&window)
+        crate::dialogs::window_file_dialog(&window)
             .add_filter(&filter_name, &exts)
             .blocking_pick_file()
             .map(|p| p.to_string())
@@ -186,7 +173,7 @@ pub async fn save_file_dialog(
         } else {
             default_name.trim()
         };
-        let dialog = window_file_dialog(&window);
+        let dialog = crate::dialogs::window_file_dialog(&window);
         let dialog = match default_dir.filter(|dir| Path::new(dir).is_dir()) {
             Some(dir) => dialog.set_directory(dir),
             None => dialog,

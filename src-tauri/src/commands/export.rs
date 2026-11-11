@@ -209,7 +209,8 @@ pub async fn export_save_dialog(
     filter_name: String,
     ext: String,
 ) -> Option<String> {
-    use super::fs::{window_file_dialog, with_default_extension};
+    use super::fs::with_default_extension;
+    use crate::dialogs::window_file_dialog;
     if let Some(target) = take_cli_export_target() {
         return Some(target);
     }

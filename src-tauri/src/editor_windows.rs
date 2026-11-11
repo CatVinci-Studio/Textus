@@ -283,7 +283,7 @@ pub(crate) fn reopen_without_windows(app: &tauri::AppHandle) {
     let existing = app
         .windows()
         .into_iter()
-        .find(|(label, _)| commands::chat_window::is_editor_window(label))
+        .find(|(label, _)| crate::windows::is_editor_window(label))
         .map(|(_, window)| window);
     if let Some(window) = existing {
         let _ = window.unminimize();

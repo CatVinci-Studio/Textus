@@ -3,7 +3,7 @@
 //! the revision choices kept beside memory.
 
 use super::*;
-use crate::commands::args::Args;
+use crate::args::Args;
 
 /// memory_pass's inputs, the keys of `ai.memoryPass`'s invoke.
 #[derive(Deserialize)]
