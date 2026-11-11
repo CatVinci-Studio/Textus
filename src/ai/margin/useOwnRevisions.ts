@@ -43,6 +43,8 @@ export function useOwnRevisions({
   const loadedFor = useRef<string | null>(null);
   // The original last seen, so only a change to it writes the file.
   const baseSeen = useRef<ProseNode | null>(null);
+  // The original as the file spells it, while it is the one tracked.
+  const keptText = useRef<{ base: ProseNode; text: string } | null>(null);
 
   const view = run((ctx) => ctx.get(editorViewCtx)) ?? null;
   useEffect(() => {
@@ -83,13 +85,16 @@ export function useOwnRevisions({
         if (!alive) return;
         loadedFor.current = filePath;
         run((ctx) => {
-          const kept = keptOriginal(
-            text,
-            ctx.get(serializerCtx)(view.state.doc),
-          );
+          const serialize = ctx.get(serializerCtx);
+          const kept = keptOriginal(text, serialize(view.state.doc), (md) => {
+            const doc = parseMarkdownSource(ctx, md);
+            return doc ? serialize(doc) : md;
+          });
           if (kept === null) return;
           const base = parseMarkdownSource(ctx, kept);
-          if (!base || typeof base === "string") return;
+          if (!base) return;
+          // Until a change is accepted the file keeps the original as written.
+          keptText.current = { base, text: kept };
           view.dispatch(
             view.state.tr.setMeta(ownRevisionKey, { type: "base", base }),
           );
@@ -110,7 +115,9 @@ export function useOwnRevisions({
     if (!filePath || !view) return;
     return trackFile(filePath, () => {
       const base = ownRevisionKey.getState(view.state)?.base;
-      return base ? (run((ctx) => ctx.get(serializerCtx)(base)) ?? null) : null;
+      if (!base) return null;
+      if (keptText.current?.base === base) return keptText.current.text;
+      return run((ctx) => ctx.get(serializerCtx)(base)) ?? null;
     });
   }, [filePath, view, run]);
 
@@ -206,11 +213,13 @@ export function useOwnRevisions({
  * The original kept beside a file (`text`, as stored) that tracking carries
  * on from, or null. Changes revised from text the editor no longer shows
  * give way, as a proposal does; one kept from before 1.3 has no revised
- * text and always carries on.
+ * text and always carries on. The revised text is as the tab saved it, in
+ * the writer's own spelling: `same` writes it as `shown` is written.
  */
 export function keptOriginal(
   text: string | null,
   shown: string,
+  same: (markdown: string) => string = (markdown) => markdown,
 ): string | null {
   let saved: { base?: unknown; revised?: unknown };
   try {
@@ -219,6 +228,7 @@ export function keptOriginal(
     return null;
   }
   if (typeof saved.base !== "string") return null;
-  if (typeof saved.revised === "string" && saved.revised !== shown) return null;
+  if (typeof saved.revised === "string" && same(saved.revised) !== shown)
+    return null;
   return saved.base;
 }

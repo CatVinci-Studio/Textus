@@ -1,4 +1,7 @@
+// @vitest-environment jsdom
 import { describe, expect, it } from "vitest";
+import { parserCtx, serializerCtx } from "@milkdown/kit/core";
+import { closeViews, openView } from "../../editor/editor-view-kit";
 import { keptOriginal } from "./useOwnRevisions";
 
 const SHOWN = "The harbour was quiet at dawn.\n";
@@ -24,5 +27,23 @@ describe("keptOriginal", () => {
     expect(keptOriginal(null, SHOWN)).toBeNull();
     expect(keptOriginal("{", SHOWN)).toBeNull();
     expect(keptOriginal("{}", SHOWN)).toBeNull();
+  });
+
+  it("carries on when the file's text is written its own way (a table, __bold__)", async () => {
+    // As the tab saved it, which keeps the writer's own spelling.
+    const revised = "| a |b|\n|---|---|\n| 1 |2|\n\n__bold__\n";
+    const { editor, view } = await openView(revised);
+    const [shown, same] = editor.action((ctx) => {
+      const serialize = ctx.get(serializerCtx);
+      const parse = ctx.get(parserCtx);
+      return [
+        serialize(view.state.doc),
+        (md: string) => serialize(parse(md)),
+      ] as const;
+    });
+    expect(shown).not.toBe(revised);
+    const text = JSON.stringify({ base: "original", revised });
+    expect(keptOriginal(text, shown, same)).toBe("original");
+    await closeViews();
   });
 });

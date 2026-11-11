@@ -1,4 +1,4 @@
-import { useLayoutEffect, useMemo, useRef } from "react";
+import { useLayoutEffect, useRef } from "react";
 import { Cascade } from "../engine/controls/cascade";
 import {
   renderMarkdownHtml,
@@ -44,7 +44,8 @@ export function MarkdownText({
  * the card keeps line breaks.
  */
 export function InlineMarkdownText({ text }: { text: string }) {
-  const html = useMemo(() => renderMarkdownInlineHtml(text), [text]);
+  // Drawn again once KaTeX arrives, as a reply is.
+  const html = useKatexHtml(text, renderMarkdownInlineHtml);
   // Safe: renderMarkdownInlineHtml sanitizes.
   return <span dangerouslySetInnerHTML={{ __html: html }} />;
 }
