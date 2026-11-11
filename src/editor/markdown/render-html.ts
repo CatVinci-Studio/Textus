@@ -1,3 +1,4 @@
+import { splitFrontmatter } from "../../utils/frontmatter";
 import { Marked, Renderer, type TokenizerAndRendererExtension } from "marked";
 import createDOMPurify from "dompurify";
 import { escapeHtml } from "../../utils/html";
@@ -223,7 +224,7 @@ const documentMarked = new Marked({
 /** A whole document -> sanitized HTML, for the split view's preview. Front
  *  matter is dropped; raw HTML follows the editor's policy. */
 export function renderDocumentHtml(markdown: string): string {
-  const body = markdown.replace(/^---\n[\s\S]*?\n---\n?/, "");
+  const { body } = splitFrontmatter(markdown);
   mathSlots = [];
   const parsed = documentMarked.parse(normalizeMathDelimiters(body), {
     async: false,

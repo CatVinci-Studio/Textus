@@ -1,3 +1,4 @@
+import { splitFrontmatter } from "../utils/frontmatter";
 import { fill } from "../i18n/fill";
 import { useCallback, useEffect, useRef, useState } from "react";
 import { useSettings } from "../prefs/SettingsContext";
@@ -57,9 +58,8 @@ function loadView(): View {
 /** The first lines of a Markdown document with its syntax mostly gone -
  *  enough to recognise it by, not a rendering. */
 export function previewText(markdown: string): string {
-  return markdown
-    .replace(/^---\n[\s\S]*?\n---\n/, "")
-    .split("\n")
+  return splitFrontmatter(markdown)
+    .body.split("\n")
     .slice(0, 24)
     .map((line) =>
       line

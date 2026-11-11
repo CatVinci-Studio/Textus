@@ -95,3 +95,10 @@ fn the_index_reads_only_what_changed() {
     assert_eq!(again.len(), 2);
     assert!(again[0].ends_with("a.md") && again[1].ends_with("b.md"));
 }
+
+#[test]
+fn front_matter_is_read_as_the_app_does() {
+    for (name, text, yaml, _) in crate::ai::workspace::tests::frontmatter_cases() {
+        assert_eq!(front_matter(&text).0, yaml, "{name}");
+    }
+}

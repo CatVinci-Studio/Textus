@@ -114,13 +114,14 @@ fn without_comments(line: &str, open: &mut bool) -> String {
 
 /// The front matter's YAML and the line the rest starts on.
 fn front_matter(text: &str) -> (Option<String>, usize) {
+    let text = text.strip_prefix('\u{feff}').unwrap_or(text);
     let mut lines = text.split('\n');
     if lines.next().map(|l| l.trim_end()) != Some("---") {
         return (None, 0);
     }
     let mut yaml = Vec::new();
     for (i, line) in lines.enumerate() {
-        if line.trim_end() == "---" {
+        if matches!(line.trim_end(), "---" | "...") {
             return (Some(yaml.join("\n")), i + 2);
         }
         yaml.push(line.trim_end_matches('\r'));

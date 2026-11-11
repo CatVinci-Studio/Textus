@@ -14,16 +14,20 @@ export type FrontmatterValue =
 
 export type Frontmatter = Record<string, FrontmatterValue>;
 
-const FENCE = /^---[ \t]*\r?\n([\s\S]*?)\r?\n---[ \t]*(?:\r?\n|$)/;
+/** Front matter: a first `---` line (after a byte-order mark, if any) and
+ *  a `---` or `...` line below, with or without lines between; LF or CRLF.
+ *  The backend reads it by the same cases (frontmatter-cases.json). */
+export const FRONTMATTER =
+  /^\uFEFF?---[ \t]*\r?\n(?:([\s\S]*?)\r?\n)?(?:---|\.\.\.)[ \t]*(?:\r?\n|$)/;
 
 /** The front matter block and what follows it. */
 export function splitFrontmatter(text: string): {
   yaml: string | null;
   body: string;
 } {
-  const m = FENCE.exec(text);
+  const m = FRONTMATTER.exec(text);
   if (!m) return { yaml: null, body: text };
-  return { yaml: m[1], body: text.slice(m[0].length) };
+  return { yaml: m[1] ?? "", body: text.slice(m[0].length) };
 }
 
 function scalar(raw: string): FrontmatterValue {

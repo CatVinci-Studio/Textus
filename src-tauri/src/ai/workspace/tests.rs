@@ -574,3 +574,35 @@ fn a_skills_switch_keeps_its_name_its_keys_and_one_front_matter() {
         "{again}"
     );
 }
+
+/// The front matter cases the app's own reader takes too.
+pub(crate) fn frontmatter_cases() -> Vec<(String, String, Option<String>, String)> {
+    let cases: Vec<serde_json::Value> =
+        serde_json::from_str(include_str!("../../../../src/utils/frontmatter-cases.json")).unwrap();
+    cases
+        .iter()
+        .map(|c| {
+            (
+                c["name"].as_str().unwrap().to_string(),
+                c["text"].as_str().unwrap().to_string(),
+                c["yaml"].as_str().map(str::to_string),
+                c["body"].as_str().unwrap().to_string(),
+            )
+        })
+        .collect()
+}
+
+#[test]
+fn frontmatter_splits_as_the_app_does() {
+    for (name, text, yaml, body) in frontmatter_cases() {
+        let (front, rest) = split_frontmatter(&text);
+        assert_eq!(front.is_some(), yaml.is_some(), "{name}");
+        // Without front matter the whole file is the body, less a BOM.
+        let want = if yaml.is_some() {
+            body
+        } else {
+            text.trim_start_matches('\u{feff}').to_string()
+        };
+        assert_eq!(rest, want, "{name}");
+    }
+}

@@ -457,4 +457,4 @@ pub async fn delete_global_skill(app: AppHandle, name: String) -> Result<Vec<Str
 }
 
 #[cfg(test)]
-mod tests;
+pub(crate) mod tests;

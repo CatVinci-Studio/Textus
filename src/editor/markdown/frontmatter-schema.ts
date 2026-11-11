@@ -1,3 +1,4 @@
+import { FRONTMATTER } from "../../utils/frontmatter";
 import type { RemarkPluginRaw } from "@milkdown/kit/transformer";
 import { $nodeSchema, $remark } from "@milkdown/kit/utils";
 import remarkFrontmatter from "remark-frontmatter";
@@ -13,10 +14,6 @@ export const remarkFrontmatterPlugin = $remark(
   "yaml",
 );
 
-/** A file that opens with front matter: a `---` line, and another below. */
-const CLOSED_FRONTMATTER =
-  /^---[ \t]*\r?\n(?:[\s\S]*?\r?\n)?---[ \t]*(?:\r?\n|$)/;
-
 /**
  * remark-frontmatter, used only on a file whose front matter is closed: an
  * unclosed first-line `---` made it read the rest of the file without
@@ -31,7 +28,7 @@ const remarkClosedFrontmatter: RemarkPluginRaw<string> = function (
   const syntax = extensions.at(-1)!;
   const parse = this.parser!;
   this.parser = (document, file) => {
-    if (CLOSED_FRONTMATTER.test(document)) return parse(document, file);
+    if (FRONTMATTER.test(document)) return parse(document, file);
     const at = extensions.indexOf(syntax);
     extensions.splice(at, 1);
     try {
