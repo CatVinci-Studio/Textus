@@ -77,7 +77,7 @@ function App() {
 
   const { textusAi, tutorial, settingsOpening, pendingClose } = shell;
   const { draftsRestoredCount, setDraftsRestoredCount, wordImported } = shell;
-  const { tabs, activeTabId, setActiveTabId, addBlankTab, reorderTab } =
+  const { tabs, activeTabId, setActiveTabId, addBlankTab } =
     shell.tabState;
   const { panelOpen, setPanelOpen, toggleSidebar, sidebarWidth } = shell.panels;
   const { agentPanel, toggleAgentPanel } = shell.panels;
@@ -232,7 +232,6 @@ function App() {
             onDetach={handleTabDetach}
             onMoveToNewWindow={moveTabToNewWindow}
             onToggleReadOnly={toggleReadOnly}
-            onReorder={reorderTab}
             onKeep={(id) => shell.tabState.updateTab(id, { preview: false })}
             previewTab={dragHoverPreview}
             onChange={handleChange}

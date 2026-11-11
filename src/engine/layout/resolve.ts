@@ -1,5 +1,5 @@
 import {
-  pairLayout,
+  asRoot,
   type Arrival,
   type SplitLayout,
   type SplitRequest,
@@ -13,7 +13,6 @@ import {
   splitPane,
   tidy,
   keepsItself,
-  type Branch,
 } from "./tree";
 
 /**
@@ -30,58 +29,50 @@ interface Blank {
 /**
  * The layout as the window's tabs now stand: a tab opened joins the pane in
  * use, a closed one leaves its pane, the tab in front shows in its pane,
- * and a pane left without tabs goes, one pane left ending the split. A
- * split asked for takes a tab beside the one in front into a new pane, or
- * waits for a blank one. The same object comes back when nothing changed.
+ * and a pane left without tabs goes. A split asked for takes a tab beside
+ * the one in front into a new pane, or waits for a blank one. The same object comes back when nothing changed.
  */
 export function resolveSplit(
-  layout: SplitLayout | null,
+  layout: SplitLayout,
   request: SplitRequest | null,
   tabIds: readonly string[],
   active: string,
   arrival: (tabId: string) => Arrival | undefined,
-): SplitLayout | null | Blank {
+): SplitLayout | Blank {
   // A tab arriving with its place asked for takes it, not the pane in use.
   if (!request)
     for (const id of tabIds) {
       const place = arrival(id);
-      if (place && !(layout && paneWithTab(layout.root, id)))
+      if (place && !paneWithTab(layout.root, id))
         layout = place(layout) ?? layout;
     }
   if (request) {
     const side = request.direction === "row" ? "right" : "bottom";
-    const home = layout && paneWithTab(layout.root, active);
-    // The tab beside the one in front, in its pane or the window.
-    const near = home ? home.tabs : tabIds;
-    const at = near.indexOf(active);
-    const other = near[at + 1] ?? near[at - 1];
-    if (!layout || !home) {
-      if (!other) {
-        const waiting = pairLayout(request.direction, active, null, 1);
-        return { blank: waiting };
-      }
-      const paired = pairLayout(request.direction, active, other);
-      const [first] = paired.root.children as [ReturnType<typeof pane>];
-      first.tabs = tabIds.filter((id) => id !== other);
-      first.front = active;
-      return settle(paired, tabIds, active);
-    }
+    const home =
+      paneWithTab(layout.root, active) ??
+      paneById(layout.root, layout.focus) ??
+      panesOf(layout.root)[0];
+    // The tab beside the one in front, in its pane.
+    const at = home.tabs.indexOf(active);
+    const other = home.tabs[at + 1] ?? home.tabs[at - 1];
     const added = pane(other ? [other] : [], other ?? null);
     const without = mapPanes(layout.root, (p) =>
       p.id === home.id ? { ...p, tabs: p.tabs.filter((t) => t !== other) } : p,
     );
-    const root = splitPane(without, home.id, side, added) as Branch;
-    const next = { root, focus: added.id };
+    const next = {
+      root: asRoot(splitPane(without, home.id, side, added)),
+      focus: added.id,
+    };
     return other ? settle(next, tabIds, active) : { blank: next };
   }
-  return layout ? settle(layout, tabIds, active) : null;
+  return settle(layout, tabIds, active);
 }
 
 function settle(
   layout: SplitLayout,
   tabIds: readonly string[],
   active: string,
-): SplitLayout | null {
+): SplitLayout {
   const open = new Set(tabIds);
   let root = mapPanes(layout.root, (p) => ({
     ...p,
@@ -97,19 +88,23 @@ function settle(
     root = mapPanes(root, (p) =>
       p.id === focus ? { ...p, tabs: [...p.tabs, ...fresh] } : p,
     );
-  // A pane waiting for its blank tab stays.
-  const left = tidy(root, (p) => keepsItself(p) || p.front === null);
-  if (!left || left.kind === "pane") return null;
+  // A pane waiting for its blank tab stays; with no tab at all, the pane
+  // in use waits for the window's first.
+  const left =
+    tidy(root, (p) => keepsItself(p) || p.front === null) ??
+    paneById(root, focus)!;
   const home = paneWithTab(left, active);
-  const fronted = mapPanes(left, (p) => {
-    const front =
-      p.id === home?.id
-        ? active
-        : p.front && p.tabs.includes(p.front)
-          ? p.front
-          : (p.tabs[0] ?? null);
-    return front === p.front ? p : { ...p, front };
-  }) as Branch;
+  const fronted = asRoot(
+    mapPanes(left, (p) => {
+      const front =
+        p.id === home?.id
+          ? active
+          : p.front && p.tabs.includes(p.front)
+            ? p.front
+            : (p.tabs[0] ?? null);
+      return front === p.front ? p : { ...p, front };
+    }),
+  );
   const next: SplitLayout = {
     root: fronted,
     focus:

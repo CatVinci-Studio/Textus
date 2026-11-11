@@ -9,9 +9,8 @@ const pane = (id: string): Pane => ({
   front: id,
 });
 const ui = new Set(["ai", "settings"]);
-const input = (root: LayoutNode | null, w = 1200): IslandsInput => ({
+const input = (root: LayoutNode, w = 1200): IslandsInput => ({
   root,
-  single: "window",
   box: { x: 0, y: 0, w, h: 800 },
   gap: 8,
   rowHeight: 40,
@@ -28,7 +27,14 @@ const input = (root: LayoutNode | null, w = 1200): IslandsInput => ({
 
 describe("solveIslands", () => {
   it("one island: its row on top, its sheet under it", () => {
-    const { islands } = solveIslands(input(null));
+    const one: LayoutNode = {
+      kind: "split",
+      direction: "row",
+      children: [pane("window")],
+      sizes: [1],
+    };
+    const { islands, dividers } = solveIslands(input(one));
+    expect(dividers).toEqual([]);
     expect(islands.get("window")).toEqual({
       row: { x: 0, y: 0, w: 1200, h: 40 },
       sheet: { x: 0, y: 40, w: 1200, h: 760 },
@@ -106,6 +112,6 @@ describe("solveIslands", () => {
       sizes: [0.5, 0.5],
     };
     expect(leastWidth(input(root))).toBe(360 + 8 + 320);
-    expect(leastWidth(input(null))).toBe(0);
+    expect(leastWidth(input(pane("one")))).toBe(360);
   });
 });

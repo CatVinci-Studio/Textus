@@ -10,17 +10,12 @@ import {
 } from "../../ai/chat/conversation-scope";
 import { useChatHistory } from "../../ai/chat/chat-history";
 import { makeBlankTab, type DocTab } from "../../document/doc-tabs";
-import {
-  besideLayout,
-  placeOnArrival,
-  splitLayout,
-} from "../../engine/layout/store";
+import { placeOnArrival, splitLayout } from "../../engine/layout/store";
 import { moveTab, splitOff } from "../../engine/layout/ops";
 import { paneWithTab } from "../../engine/layout/tree";
 import type { TabState } from "../tabs/useTabState";
 import { pageOf } from "../tabs/page-tabs";
 import { AI_PRESS_EVENT, conversationIn } from "./ai-tabs";
-import { tabInUse } from "../../engine/layout/store";
 
 const NONE: string[] = [];
 
@@ -118,27 +113,14 @@ export function useAiTabs({
     const layout = splitLayout();
     const home = kept && layout && paneWithTab(layout.root, kept.id);
     if (made.length) {
-      // Beside the AI's other tabs; the first in an island of its own on
-      // the right of everything. The tab in use stays in front where the
-      // AI opens beside it.
-      const inUse = tabInUse();
-      const windowTabs = tabsRef.current.map((t) => t.id);
+      // Beside the AI's other tabs; the first in an island of its own at
+      // the right of everything, not beside whichever island came last.
+      // The tab in use stays in front where the AI opens beside it.
       for (const tab of made)
         placeOnArrival(tab.id, (now) =>
           home
-            ? ((now && moveTab(now, tab.id, home.id)) ?? now)
-            : now
-              ? // A window already split: a column of its own at the right
-                // of all of it, not beside whichever island came last.
-                (splitOff(now, tab.id, null, "right") ?? now)
-              : besideLayout(
-                  now,
-                  tab.id,
-                  inUse ?? windowTabs[0] ?? null,
-                  "right",
-                  undefined,
-                  windowTabs,
-                ),
+            ? (moveTab(now, tab.id, home.id) ?? now)
+            : (splitOff(now, tab.id, null, "right") ?? now),
         );
     }
     if (gone.length || made.length)

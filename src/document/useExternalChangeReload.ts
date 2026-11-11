@@ -1,4 +1,4 @@
-import { splitLayout, tabInUse } from "../engine/layout/store";
+import { windowLayout } from "../engine/layout/store";
 import { panesOf } from "../engine/layout/tree";
 import { useEffect } from "react";
 import { thisWindow } from "../platform/this-window";
@@ -18,14 +18,12 @@ import { openDocumentAt } from "../registry/open-documents";
 /** How often the shown documents' times are read while the window shows. */
 const WATCH_MS = 1500;
 
-/** The tabs whose documents are on screen: the one in front, or one per
- *  pane of a split. */
+/** The tabs whose documents are on screen: each island's in front. */
 function shownTabIds(): Set<string> {
-  const split = splitLayout();
   return new Set(
-    split
-      ? panesOf(split.root).flatMap((pane) => (pane.front ? [pane.front] : []))
-      : [tabInUse()],
+    panesOf(windowLayout().root).flatMap((pane) =>
+      pane.front ? [pane.front] : [],
+    ),
   );
 }
 

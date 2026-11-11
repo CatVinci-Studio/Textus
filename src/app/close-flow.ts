@@ -13,7 +13,7 @@ import { drafts, session } from "../platform/ipc";
 import {
   paneOf,
   shownIsland,
-  splitLayout,
+  windowLayout,
 } from "../engine/layout/store";
 import { flushPendingWrites } from "../storage/pending-writes";
 import { useModalDialog } from "../engine/controls/useModalDialog";
@@ -104,7 +104,7 @@ export function useTabRemoval(opts: {
         const remaining = tabsRef.current.filter((tb) => tb.id !== id);
         if (remaining.length === 0) return start?.id ?? prevActive;
         // Split: a neighbor in the same island while it has one.
-        const island = shownIsland(paneOf(splitLayout(), id))?.tabs ?? [];
+        const island = shownIsland(paneOf(windowLayout(), id))?.tabs ?? [];
         const at = island.indexOf(id);
         const near = island.filter((tabId) => tabId !== id);
         if (at >= 0 && near.length > 0)

@@ -25,7 +25,7 @@ import type { AgentMode } from "../../prefs/SettingsContext";
 import { TabBar } from "../../engine/controls/tabs/TabBar";
 import { tabMenuItems } from "../tabs/tab-menu-items";
 import { FormatBar } from "../FormatBar";
-import { useSplitPanes } from "../../engine/layout/useSplitPanes";
+import { useIslands } from "../../engine/layout/useIslands";
 import { panesOf, type Pane } from "../../engine/layout/tree";
 import { focusPane, reorderInPane } from "../../engine/layout/store";
 import { useTabsInBar } from "./tabs-in-bar";
@@ -44,8 +44,6 @@ function pluginTabItems(
 
 /** Panes named in reading order, for tests and styles to find. */
 const ORDINALS = ["first", "second", "third", "fourth", "fifth", "sixth"];
-/** The one island of a window not split, as the area knows it. */
-const WINDOW = "window";
 
 /** The documents islands: each pane of open tabs an island, its tab row over
  *  its sheet, each tab's view on it - drawn by the engine's island area. */
@@ -60,7 +58,6 @@ export function DocumentIslands({
   onDetach,
   onMoveToNewWindow,
   onToggleReadOnly,
-  onReorder,
   onKeep,
   previewTab,
   onChange,
@@ -81,7 +78,6 @@ export function DocumentIslands({
   onDetach: (tabId: string) => void;
   onMoveToNewWindow: (tabId: string) => void;
   onToggleReadOnly: (tabId: string) => void;
-  onReorder: (tabId: string, index: number) => void;
   /** A preview tab kept. */
   onKeep: (tabId: string) => void;
   previewTab: TabBarProps["previewTab"];
@@ -103,13 +99,12 @@ export function DocumentIslands({
   // Files Textus AI changed: their tabs say so.
   const changed = useChangedFiles();
   const marks = useAiFileMarks();
-  const kept = useSplitPanes();
   // Zen shows the tab in use alone; the split waits until Zen ends.
-  const split = zen ? null : kept;
+  const layout = useIslands(zen);
   const phone = usePhoneLayout();
   // A phone's column has its bar of its own, not islands.
   const islands = canUseWindows;
-  const panes = split ? panesOf(split.root) : [];
+  const panes = panesOf(layout.root);
   // Each pane shows its tab in front; its place in reading order names it.
   const shownIn = new Map(
     panes.flatMap((p, i) =>
@@ -133,14 +128,14 @@ export function DocumentIslands({
   const tabBar = (
     list: DocTab[],
     active: string,
-    pane: string | null,
+    pane: string,
     inner = false,
     style?: CSSProperties,
   ) => (
     <TabBar
-      key={pane ?? "window"}
+      key={pane}
       style={style}
-      paneId={pane ?? undefined}
+      paneId={pane}
       inner={inner}
       tabs={list.map((tab) => ({
         id: tab.id,
@@ -158,14 +153,13 @@ export function DocumentIslands({
       onActivate={onActivate}
       onClose={onClose}
       onAdd={() => {
-        if (pane !== null) focusPane(pane);
+        focusPane(pane);
         onAdd();
       }}
       // Pulled over the documents it splits; out of the window it tears
       // off where the platform gives global cursor positions.
       onPullOut={(id, title) =>
         pullTab(id, title, {
-          tabIds: tabs.map((tab) => tab.id),
           activate: onActivate,
           detach: canDragTabsBetweenWindows ? onDetach : undefined,
           releaseOutside:
@@ -174,12 +168,8 @@ export function DocumentIslands({
               : undefined,
         })
       }
-      onReorder={
-        pane === null
-          ? onReorder
-          : (id, index) => reorderInPane(pane, id, index)
-      }
-      previewTab={pane === null || pane === panes[0]?.id ? previewTab : null}
+      onReorder={(id, index) => reorderInPane(pane, id, index)}
+      previewTab={pane === panes[0]?.id ? previewTab : null}
       // Open beside and Move to New Window are drags (pullTab).
       menuFor={(id) => [
         ...pathItem(id, byId.get(id)?.path),
@@ -205,8 +195,7 @@ export function DocumentIslands({
     // The views lie on their island's sheet, placed by the area; a
     // phone's column lays its view out under its own bar.
     for (const { pane, place } of places)
-      if (islands)
-        cells.set(pane?.id ?? WINDOW, tabsInBar ? place.sheet : place.whole);
+      if (islands) cells.set(pane.id, tabsInBar ? place.sheet : place.whole);
     const listOf = (pane: Pane) =>
       pane.tabs.flatMap((id) => byId.get(id) ?? []);
     return (
@@ -215,50 +204,43 @@ export function DocumentIslands({
             sheet, its documents on the sheet (below). A phone's column has
             its own bar; a clean sheet is the page itself. */}
         {places.map(({ pane, place, key }) =>
-          !pane
-            ? showTabBar &&
-              (islands ? (
+          !islands
+            ? tabBar(
+                listOf(pane),
+                pane.front ?? "",
+                pane.id,
+                place.inner,
+                place.row,
+              )
+            : // Its sheet while it has a row, and in Zen with the tab bar
+              // on; the tab bar off, the documents lie on the window.
+              (tabsInBar || showTabBar) && (
                 <Island
                   key={key}
                   frame={place.frame}
-                  row={tabBar(tabs, activeTabId, null)}
+                  paneId={pane.id}
+                  row={
+                    tabsInBar
+                      ? tabBar(
+                          listOf(pane),
+                          pane.front ?? "",
+                          pane.id,
+                          place.inner,
+                        )
+                      : undefined
+                  }
                   rowStyle={place.row}
-                  sheetStyle={place.sheet}
+                  inner={place.inner}
+                  sheetStyle={body(pane.id)}
                 />
-              ) : (
-                tabBar(tabs, activeTabId, null)
-              ))
-            : !islands
-              ? tabBar(
-                  listOf(pane),
-                  pane.front ?? "",
-                  pane.id,
-                  place.inner,
-                  place.row,
-                )
-              : tabsInBar && (
-                  <Island
-                    key={key}
-                    frame={place.frame}
-                    paneId={pane.id}
-                    row={tabBar(
-                      listOf(pane),
-                      pane.front ?? "",
-                      pane.id,
-                      place.inner,
-                    )}
-                    rowStyle={place.row}
-                    inner={place.inner}
-                    sheetStyle={body(pane.id)}
-                  />
-                ),
+              ),
         )}
         {/* Each document's length at its page's corner. */}
         {islands && (
           <DocumentCorners
             fronts={places.map(({ pane, place }) => ({
-              tab: byId.get(pane ? (pane.front ?? "") : activeTabId),
-              style: body(pane?.id ?? WINDOW),
+              tab: byId.get(pane.front ?? ""),
+              style: body(pane.id),
               frame: place.frame,
             }))}
             lang={lang}
@@ -269,7 +251,7 @@ export function DocumentIslands({
           tabs={tabs}
           activeTabId={activeTabId}
           shownIn={shownIn}
-          styleOf={(pane) => body(pane ?? WINDOW)}
+          styleOf={body}
           onActivate={onActivate}
           onChange={onChange}
           typewriter={typewriter}
@@ -288,9 +270,7 @@ export function DocumentIslands({
 
   return (
     <IslandArea
-      layout={split}
-      tabs={tabs.map((tab) => tab.id)}
-      front={activeTabId}
+      layout={layout}
       rows={tabsInBar}
       plain={!tabsInBar}
       // A panel's island holds pages only (the AI, Settings, a plugin's).

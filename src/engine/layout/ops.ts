@@ -18,14 +18,14 @@ import {
 
 /**
  * Everything that rearranges a window's islands, as pure functions: a
- * layout in, the layout after out - null when one island is
- * left (no split). The menus, the keys and every drag call these and commit
+ * layout in, the layout after out - one island is a layout too (a branch
+ * of one pane); null only when no island is left. The menus, the keys and every drag call these and commit
  * what comes back (store.ts); a drag in progress shows it first, as
  * a preview. Any island takes any of the window's tabs.
  */
 
 export interface SplitLayout {
-  /** Always a branch: one pane is no split. */
+  /** Always a branch: one pane, a branch of one, is the window unsplit. */
   root: Branch;
   /** The pane in use, by id: a tab opened now joins it. */
   focus: string;
@@ -41,7 +41,7 @@ export interface SplitRequest {
  *  is opened (beside, on a side it was dropped on, the AI's island), and
  *  taken by the layout as the tab arrives, so it is never drawn first in
  *  the pane in use. */
-export type Arrival = (layout: SplitLayout | null) => SplitLayout | null;
+export type Arrival = (layout: SplitLayout) => SplitLayout | null;
 
 /** The share of the space a pane may take at least, in a pair. */
 const MIN_RATIO = 0.2;
@@ -70,14 +70,26 @@ export function pairLayout(
   };
 }
 
+/** `node` as a layout's root: one pane is a branch of one. */
+export function asRoot(node: LayoutNode): Branch {
+  return node.kind === "pane"
+    ? { kind: "split", direction: "row", children: [node], sizes: [1] }
+    : node;
+}
+
+/** Whether a layout has more than one island. */
+export function isSplit(layout: SplitLayout): boolean {
+  return layout.root.children.length > 1;
+}
+
 /** The layout after `root` changed: tidied, the focus kept on a pane
- *  still there; null when one pane is left. */
+ *  still there; null when no pane is left. */
 function settled(root: LayoutNode, focus: string): SplitLayout | null {
   const left = tidy(root);
-  if (!left || left.kind === "pane") return null;
+  if (!left) return null;
   const kept = paneById(left, focus);
   return {
-    root: left,
+    root: asRoot(left),
     focus: kept ? focus : panesOf(left)[0].id,
   };
 }
@@ -130,18 +142,20 @@ export function reorderTab(
 }
 
 /** `tabId` out of its pane into a new one on `side` of pane `id` - or of
- *  the whole layout, with `id` null - that one in use. */
+ *  the whole layout, with `id` null, taking `share` of it - that one in
+ *  use. */
 export function splitOff(
   layout: SplitLayout,
   tabId: string,
   id: string | null,
   side: Side,
+  share?: number,
 ): SplitLayout | null {
   const added = pane([tabId]);
   const without = withoutTab(layout.root, tabId);
   const root =
     id === null
-      ? splitWhole(without, side, added)
+      ? splitWhole(without, side, added, share)
       : splitPane(without, id, side, added);
   return settled(root, added.id);
 }
@@ -195,17 +209,13 @@ export function focusOn(layout: SplitLayout, id: string): SplitLayout {
     : { ...layout, focus: id };
 }
 
-/** One island of `tabIds`, `front` in front, as a layout: what a window
- *  with no split shows, spelt out so a drag's preview can work on it. */
+/** One island of `tabIds`, `front` in front: a window unsplit. */
 export function oneIsland(
   tabIds: readonly string[],
   front: string | null,
 ): SplitLayout {
   const only = { ...pane([...tabIds]), front };
-  return {
-    root: { kind: "split", direction: "row", children: [only], sizes: [1] },
-    focus: only.id,
-  };
+  return { root: asRoot(only), focus: only.id };
 }
 
 /** A drag's preview once the tab has left its place: `tabId` out of its
@@ -213,13 +223,7 @@ export function oneIsland(
 export function lifted(layout: SplitLayout, tabId: string): SplitLayout {
   const left = tidy(withoutTab(layout.root, tabId), keepsItself);
   if (!left) return layout;
-  return {
-    root:
-      left.kind === "pane"
-        ? { kind: "split", direction: "row", children: [left], sizes: [1] }
-        : left,
-    focus: layout.focus,
-  };
+  return { root: asRoot(left), focus: layout.focus };
 }
 
 /** A drag's preview of `tabId` joining pane `id` at `index`: its place
@@ -239,11 +243,5 @@ export function joined(
   });
   const left = tidy(root, keepsItself);
   if (!left) return layout;
-  return {
-    root:
-      left.kind === "pane"
-        ? { kind: "split", direction: "row", children: [left], sizes: [1] }
-        : left,
-    focus: layout.focus,
-  };
+  return { root: asRoot(left), focus: layout.focus };
 }

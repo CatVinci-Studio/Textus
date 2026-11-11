@@ -13,12 +13,11 @@ const resolveSplit = (
   resolveWith(args[0], args[1], args[2], args[3], args[4] ?? (() => undefined));
 import { besideLayout } from "./store";
 import { type SplitLayout } from "./ops";
-import { pairLayout } from "./ops";
+import { oneIsland, pairLayout } from "./ops";
 import { panesOf } from "./tree";
 
 /** Each pane's tabs and the one in front, and which pane is in use. */
 function look(layout: ReturnType<typeof resolveSplit>) {
-  if (!layout) return null;
   const shown = "blank" in layout ? layout.blank : layout;
   const panes = panesOf(shown.root);
   return {
@@ -38,16 +37,22 @@ function split(groups: string[][], fronts: string[], focus = 0): SplitLayout {
 describe("resolveSplit", () => {
   it("pairs the tab in front with the one after it, the rest beside it", () => {
     const ask = { direction: "row" as const };
-    expect(look(resolveSplit(null, ask, ["a", "b", "c"], "b"))).toMatchObject({
+    const one = (tabs: string[], front: string) => oneIsland(tabs, front);
+    expect(
+      look(resolveSplit(one(["a", "b", "c"], "b"), ask, ["a", "b", "c"], "b")),
+    ).toMatchObject({
       tabs: [["a", "b"], ["c"]],
       fronts: ["b", "c"],
     });
-    expect(look(resolveSplit(null, ask, ["a"], "a"))).toMatchObject({
+    expect(look(resolveSplit(one(["a"], "a"), ask, ["a"], "a"))).toMatchObject({
       blank: true,
       tabs: [["a"], []],
       focus: 1,
     });
-    expect(resolveSplit(null, null, ["a", "b"], "a")).toBeNull();
+    // Nothing asked: one island stays one.
+    expect(
+      look(resolveSplit(one(["a", "b"], "a"), null, ["a", "b"], "a")),
+    ).toMatchObject({ tabs: [["a", "b"]], fronts: ["a"] });
   });
 
   it("splits the pane in use again, a tab of its own going into the new pane", () => {
@@ -83,7 +88,7 @@ describe("resolveSplit", () => {
     // in the update it arrives in; unsplit, it splits the window.
     const beside = (id: string) =>
       id === "n"
-        ? (now: SplitLayout | null) => besideLayout(now, "n", "a")
+        ? (now: SplitLayout) => besideLayout(now, "n", "a")
         : undefined;
     const first = split([["a"], ["b"]], ["a", "b"], 0);
     expect(look(resolveSplit(first, null, ["a", "b", "n"], "n"))).toMatchObject(
@@ -93,11 +98,11 @@ describe("resolveSplit", () => {
       look(resolveSplit(first, null, ["a", "b", "n"], "n", beside)),
     ).toMatchObject({ tabs: [["a"], ["b", "n"]] });
     expect(
-      look(resolveSplit(null, null, ["a", "n"], "n", beside)),
+      look(resolveSplit(oneIsland(["a"], "a"), null, ["a", "n"], "n", beside)),
     ).toMatchObject({ tabs: [["a"], ["n"]] });
   });
 
-  it("takes the blank tab into the pane waiting for it, and ends when a pane has no tabs", () => {
+  it("takes the blank tab into the pane waiting for it, and is one island when a pane has no tabs", () => {
     const waiting = pairLayout("row", "a", null, 1);
     expect(look(resolveSplit(waiting, null, ["a", "n"], "n"))).toMatchObject({
       tabs: [["a"], ["n"]],
@@ -105,8 +110,8 @@ describe("resolveSplit", () => {
       focus: 1,
     });
     expect(
-      resolveSplit(split([["a"], ["b"]], ["a", "b"]), null, ["a"], "a"),
-    ).toBeNull();
+      look(resolveSplit(split([["a"], ["b"]], ["a", "b"]), null, ["a"], "a")),
+    ).toMatchObject({ tabs: [["a"]], fronts: ["a"] });
   });
 
   it("shows another of a pane's tabs when the one shown closes", () => {

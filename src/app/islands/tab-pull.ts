@@ -1,4 +1,3 @@
-import { tabInUse } from "../../engine/layout/store";
 import { dragGhost } from "../../engine/drag/ghost";
 import { dropIntent } from "../../engine/drag/drop-intent";
 import { scaledPx } from "../../engine/tokens/chrome-scale";
@@ -14,11 +13,11 @@ import {
   lifted,
   movePane,
   moveTab,
-  oneIsland,
+  isSplit,
   reorderTab,
   type SplitLayout,
 } from "../../engine/layout/ops";
-import { paneOf, previewSplit, splitLayout } from "../../engine/layout/store";
+import { paneOf, previewSplit, windowLayout } from "../../engine/layout/store";
 import { paneById } from "../../engine/layout/tree";
 import { frameLayout } from "../../engine/frame/frame-store";
 import { setDragging } from "../../engine/controls/document-drop";
@@ -54,7 +53,6 @@ export function pullTab(
   tabId: string,
   title: string,
   opts: {
-    tabIds: readonly string[];
     activate: (id: string) => void;
     detach?: (id: string) => void;
     /** Let go outside the window, where `detach` can't follow the pointer. */
@@ -64,14 +62,13 @@ export function pullTab(
   },
 ): void {
   const ghost = dragGhost(title, "tab-pull-ghost");
-  const from = tabRectOf(paneOf(splitLayout(), tabId), tabId);
+  // The layout the drag began over: tested against, and the base of every
+  // preview.
+  const base = windowLayout();
+  const from = tabRectOf(paneOf(base, tabId), tabId);
   if (from) ghost.gather(from);
   setDragging(true);
-  // The layout the drag began over: tested against, and the base of every
-  // preview (one island, spelt out, for a window not split).
   const geometry = dropGeometry();
-  const base: SplitLayout =
-    splitLayout() ?? oneIsland(opts.tabIds, tabInUse() || null);
   const marks = placeMarks(tabId);
   const intent = dropIntent();
   let start: { x: number; y: number } | null = null;
@@ -81,7 +78,7 @@ export function pullTab(
   let last = { x: 0, y: 0, alt: false };
 
   const wholeIsland = (alt: boolean) =>
-    opts.island ?? (alt ? paneOf(splitLayout(), tabId) : null);
+    opts.island ?? (alt && isSplit(base) ? paneOf(base, tabId) : null);
 
   /** The place under (x, y). */
   const placeAt = (x: number, y: number, alt: boolean): Place | null => {
@@ -114,7 +111,7 @@ export function pullTab(
       };
     }
     if (!target) return null;
-    const next = dropLayout(splitLayout(), tabId, target, opts.tabIds);
+    const next = dropLayout(base, tabId, target);
     if (next === undefined) return null;
     const pane = target.zone === "center" ? paneOf(base, target.tabId) : null;
     // Its own island's middle: where it came from.

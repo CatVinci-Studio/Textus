@@ -114,7 +114,6 @@ export function useWindowWiring({
   useEffect(() => {
     setDocumentDrop(
       fileDropOnDocuments((path, drop) => void openPathInTab(path, { drop }), {
-        tabIds: () => liveTabs().map((tab) => tab.id),
         // With Shift: a link to it in the document in use (one never
         // saved has no place to link from: it opens instead).
         link: (path) => {

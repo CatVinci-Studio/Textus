@@ -9,8 +9,8 @@ import type { DividerRects } from "./solve";
  * the islands' area after each solve.
  */
 export interface FrameIsland {
-  /** Its pane; null for the one island of a window not split. */
-  paneId: string | null;
+  /** Its pane: every island has one, a window unsplit its only one. */
+  paneId: string;
   /** Its key in the frame (its parts' data-frame). */
   key: string;
   row: Rect | null;

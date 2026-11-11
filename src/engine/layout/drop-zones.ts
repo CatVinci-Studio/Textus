@@ -92,11 +92,9 @@ function union(rects: DOMRect[]): DOMRect {
  *  a drag tests against the layout it began over, not the preview moving
  *  under it. */
 export interface DropGeometry {
-  /** A split's panes: each one's body and the tab in front there. */
+  /** The islands: each one's body and the tab in front there. */
   panes: { rect: DOMRect; tabId: string | undefined }[];
-  /** One document: the column under its tab row. */
-  single: { rect: DOMRect; tabId: string | undefined } | null;
-  /** A split's tab rows: the row, its tabs' centres, its pane's body. */
+  /** Their tab rows: the row, its tabs' centres, its island's body. */
   bars: {
     pane: string;
     row: DOMRect;
@@ -111,22 +109,13 @@ const domRect = (r: Rect) => new DOMRect(r.x, r.y, r.w, r.h);
  *  laid them out (frame-store, tab-strips). */
 export function dropGeometry(): DropGeometry {
   const { islands } = frameLayout();
-  const split = islands.filter((island) => island.paneId !== null);
-  const one = islands.find((island) => island.paneId === null);
   return {
-    panes: split.map((island) => ({
+    panes: islands.map((island) => ({
       rect: domRect(island.sheet),
       tabId: shownIsland(island.paneId)?.front ?? undefined,
     })),
-    single:
-      !split.length && one
-        ? {
-            rect: domRect(one.sheet),
-            tabId: shownIsland(null)?.front ?? undefined,
-          }
-        : null,
-    bars: split.flatMap((island) => {
-      const pane = island.paneId!;
+    bars: islands.flatMap((island) => {
+      const pane = island.paneId;
       const strip = stripPlaces(pane);
       const start = tabsStartOf(pane);
       if (!island.row || !strip || start === null) return [];
@@ -169,22 +158,16 @@ export function dropTargetAt(
   halves = false,
   held?: DropTarget | null,
 ): DropTarget | null {
-  let rect: DOMRect;
-  let tabId: string | undefined;
-  const { panes, single } = geometry;
-  if (panes.length) {
-    const pane = panes.find((p) => inside(p.rect, x, y));
-    if (!pane?.tabId) return null;
+  const { panes } = geometry;
+  const pane = panes.find((p) => inside(p.rect, x, y));
+  if (!pane?.tabId) return null;
+  // Split, an outer edge puts it beside all of them.
+  if (panes.length > 1) {
     const area = union(panes.map((p) => p.rect));
     const edge = outerEdge(area, x, y);
     if (edge) return { zone: edge, tabId: pane.tabId, rect: area, whole: true };
-    rect = pane.rect;
-    tabId = pane.tabId;
-  } else {
-    if (!single) return null;
-    rect = single.rect;
-    tabId = single.tabId;
   }
+  const { rect, tabId } = pane;
   if (!tabId || !inside(rect, x, y)) return null;
   const fx = (x - rect.left) / rect.width;
   const fy = (y - rect.top) / rect.height;
@@ -217,8 +200,8 @@ function halfAt(fx: number, fy: number): DropZone {
   return fx < 0.5 ? "left" : "right";
 }
 
-/** A split pane's tab row under (x, y), and the slot there: how many of
- *  its other tabs lie left of x. */
+/** An island's tab row under (x, y), and the slot there: how many of its
+ *  other tabs lie left of x. */
 export function barDropAt(
   x: number,
   y: number,

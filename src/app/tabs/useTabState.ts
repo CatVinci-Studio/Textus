@@ -33,7 +33,6 @@ export interface TabState {
    *  model first. */
   liveTabs: () => DocTab[];
   updateTab: (id: string, patch: Partial<DocTab>) => void;
-  reorderTab: (id: string, index: number) => void;
   addBlankTab: () => void;
   /** Opens the start page in a tab of its own. */
   addStartTab: () => void;
@@ -96,17 +95,6 @@ export function useTabState(): TabState {
     );
   }, []);
 
-  // Put tab `id` at `index` among the remaining tabs.
-  const reorderTab = useCallback((id: string, index: number) => {
-    setTabs((prev) => {
-      const moved = prev.find((tab) => tab.id === id);
-      if (!moved) return prev;
-      const rest = prev.filter((tab) => tab.id !== id);
-      rest.splice(index, 0, moved);
-      return rest;
-    });
-  }, []);
-
   // A start page open turns into the new document instead of staying beside it.
   const addBlankTab = useCallback(() => {
     const start = tabsRef.current.find(showsStartPage);
@@ -140,7 +128,6 @@ export function useTabState(): TabState {
     tabsRef,
     liveTabs,
     updateTab,
-    reorderTab,
     addBlankTab,
     addStartTab,
   };

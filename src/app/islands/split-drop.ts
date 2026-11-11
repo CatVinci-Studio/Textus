@@ -3,11 +3,9 @@ import {
   paneOf,
   previewSplit,
   setSplitLayout,
-  splitLayout,
+  windowLayout,
   placeOnArrival,
 } from "../../engine/layout/store";
-import { type SplitDirection } from "../../engine/layout/tree";
-import { pairLayout } from "../../engine/layout/ops";
 import { moveTab, splitOff, type SplitLayout } from "../../engine/layout/ops";
 import { paneById, paneWithTab } from "../../engine/layout/tree";
 import type { DocumentDrop } from "../../engine/controls/document-drop";
@@ -21,47 +19,26 @@ import "./split-drop.css";
 import { transientStyle } from "../../engine/tokens/appearance";
 
 /**
- * The layout once `tabId` is dropped at `target`: on a pane's edge, in a
- * new pane on that side of it; in its middle, in that pane. With one
- * document an edge splits the window, and a tab dropped on its own
- * document pairs with a neighbour. Null ends the split; undefined: the
- * drop changes nothing.
+ * The layout once `tabId` is dropped at `target`: on an island's edge, in a
+ * new island on that side of it (on the split's outer edge, beside all of
+ * them); in its middle, in that island. Undefined: the drop changes
+ * nothing.
  */
 export function dropLayout(
-  now: SplitLayout | null,
+  now: SplitLayout,
   tabId: string,
   target: DropTarget,
-  tabIds: readonly string[],
 ): SplitLayout | null | undefined {
-  if (now && target.whole && target.zone !== "center")
+  if (target.whole && target.zone !== "center")
     return splitOff(now, tabId, null, target.zone) ?? undefined;
   const pane = paneOf(now, target.tabId);
-  if (now && pane !== null) {
-    if (target.zone === "center") return moveTab(now, tabId, pane);
-    // A pane's only tab dropped on its own edge stays where it is.
-    if (!paneById(now.root, pane)?.tabs.some((id) => id !== tabId))
-      return undefined;
-    return splitOff(now, tabId, pane, target.zone) ?? undefined;
-  }
-  if (target.zone === "center") return undefined;
-  let other = target.tabId;
-  if (other === tabId) {
-    const at = tabIds.indexOf(tabId);
-    other = tabIds[at + 1] ?? tabIds[at - 1];
-    if (!other) return undefined;
-  }
-  const direction: SplitDirection =
-    target.zone === "left" || target.zone === "right" ? "row" : "column";
-  const first = target.zone === "left" || target.zone === "top";
-  // The window's other tabs stay with the document dropped beside, in
-  // their order.
-  const rest = tabIds.filter((id) => id !== tabId);
-  const layout = first
-    ? pairLayout(direction, tabId, other, 1)
-    : pairLayout(direction, other, tabId, 0);
-  const [a, b] = layout.root.children;
-  if (a.kind === "pane" && b.kind === "pane") (first ? b : a).tabs = rest;
-  return layout;
+  if (pane === null) return undefined;
+  const others = paneById(now.root, pane)?.tabs.some((id) => id !== tabId);
+  if (target.zone === "center")
+    return pane === paneOf(now, tabId) ? undefined : moveTab(now, tabId, pane);
+  // An island's only tab dropped on its own edge stays where it is.
+  if (!others) return undefined;
+  return splitOff(now, tabId, pane, target.zone) ?? undefined;
 }
 
 /** Commits a layout dropLayout gave. */
@@ -76,15 +53,11 @@ export function commitDrop(next: SplitLayout | null | undefined): void {
 export function splitForDrop(
   tabId: string,
   target: DropTarget,
-  tabIds: readonly string[],
   arriving = false,
 ): void {
   if (arriving)
-    placeOnArrival(
-      tabId,
-      (now) => dropLayout(now, tabId, target, tabIds) ?? now,
-    );
-  else commitDrop(dropLayout(splitLayout(), tabId, target, tabIds));
+    placeOnArrival(tabId, (now) => dropLayout(now, tabId, target) ?? now);
+  else commitDrop(dropLayout(windowLayout(), tabId, target));
 }
 
 /** The tab something on its way in stands as, in the preview of where it
@@ -132,7 +105,7 @@ export function roomMarks(
  * where it will open, as for a tab pulled within the window (pullTab).
  * Tested against the layout the drag found (DropGeometry).
  */
-export function arrivalPreview(tabIds: () => readonly string[]) {
+export function arrivalPreview() {
   let geometry: DropGeometry | null = null;
   let shown: string | null = null;
   let style: HTMLStyleElement | null = null;
@@ -162,10 +135,7 @@ export function arrivalPreview(tabIds: () => readonly string[]) {
       if (key === shown) return target;
       shown = key;
       const layout = target
-        ? (dropLayout(splitLayout(), ARRIVING, target, [
-            ...tabIds(),
-            ARRIVING,
-          ]) ?? null)
+        ? (dropLayout(windowLayout(), ARRIVING, target) ?? null)
         : null;
       mark(layout);
       previewSplit(layout);
@@ -195,9 +165,9 @@ export function arrivalPreview(tabIds: () => readonly string[]) {
  *  held it is linked to instead (`link`). */
 export function fileDropOnDocuments(
   open: (path: string, target: DropTarget) => void,
-  opts: { tabIds: () => readonly string[]; link: (path: string) => void },
+  opts: { link: (path: string) => void },
 ): DocumentDrop {
-  const arrival = arrivalPreview(opts.tabIds);
+  const arrival = arrivalPreview();
   return {
     over(x, y, link = false) {
       if (!link) return !!arrival.show(x, y);

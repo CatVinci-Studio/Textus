@@ -55,9 +55,9 @@ export function DocumentViews({
   activeTabId: string;
   /** The tabs in front of a pane: its id and its name in reading order. */
   shownIn: ReadonlyMap<string, { id: string; name: string }>;
-  /** Where a pane's views lie; null: the one island unsplit's. Undefined
-   *  where nothing places them (a phone's column). */
-  styleOf: (paneId: string | null) => CSSProperties | undefined;
+  /** Where an island's views lie; undefined where nothing places them (a
+   *  phone's column). */
+  styleOf: (paneId: string) => CSSProperties | undefined;
   onActivate: (tabId: string) => void;
   onChange: (tabId: string, markdown: string) => void;
   typewriter: boolean;
@@ -77,15 +77,10 @@ export function DocumentViews({
       {/* In a split, a click or focus in a pane brings its tab to the front. */}
       {tabs.map((tab) => {
         const pane = shownIn.get(tab.id);
-        const single = !pane && tab.id === activeTabId && shownIn.size === 0;
-        // On its island's sheet; a tab in none of them (one pulled away)
-        // takes no room, in front or not.
-        const placed = pane
-          ? styleOf(pane.id)
-          : single
-            ? styleOf(null)
-            : undefined;
-        const shown = !!pane || (single && !!placed);
+        // On its island's sheet; a phone's column lays it out in its own
+        // flow; a tab in no island (one pulled away) takes no room.
+        const placed = pane && styleOf(pane.id);
+        const shown = !!placed;
         return (
           <div
             key={tab.id}
@@ -98,7 +93,7 @@ export function DocumentViews({
             style={
               shown
                 ? { ...placed, ...tabZoomStyle(tab.id) }
-                : { display: single ? "contents" : "none" }
+                : { display: pane ? "contents" : "none" }
             }
             onPointerDownCapture={
               pane && tab.id !== activeTabId

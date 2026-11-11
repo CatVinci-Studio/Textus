@@ -20,7 +20,7 @@ export function useTitleRoom(on: boolean) {
   const titleRef = useRef<HTMLSpanElement>(null);
   const bar = useBarObstacles();
   const { islands } = useFrameLayout();
-  const island = islands.find((i) => i.paneId === null) ?? islands[0];
+  const island = islands[0];
   const across = island && { x: island.whole.x, w: island.whole.w };
   const width = useRef<number | null>(null);
   useLayoutEffect(() => {

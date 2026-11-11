@@ -6,7 +6,7 @@ import {
   type ReactNode,
 } from "react";
 import { nodeAt, panesOf, type Pane } from "./tree";
-import type { SplitLayout } from "./ops";
+import { isSplit, type SplitLayout } from "./ops";
 import { islandKeys } from "./island-keys";
 import { IslandNumbers } from "./IslandNumbers";
 import { SplitDivider } from "./SplitDivider";
@@ -23,8 +23,7 @@ import "./split-panes.css";
 
 /** Where one island goes in the area, in pixels. */
 export interface IslandPlace {
-  /** Its pane; none when the area is one island, unsplit. */
-  paneId?: string;
+  paneId: string;
   /** Its row of tabs, and its sheet under it. */
   row?: CSSProperties;
   sheet?: CSSProperties;
@@ -39,10 +38,10 @@ export interface IslandPlace {
   frame: string;
 }
 
-/** The islands' content: given where each goes (one place, unsplit, with
- *  no layout) and the key each is drawn under, draws them all. */
+/** The islands' content: given where each goes and the key each is drawn
+ *  under, draws them all. */
 export type IslandContent = (
-  places: { pane: Pane | null; place: IslandPlace; key: string }[],
+  places: { pane: Pane; place: IslandPlace; key: string }[],
 ) => ReactNode;
 
 /**
@@ -53,20 +52,14 @@ export type IslandContent = (
  */
 export function IslandArea({
   layout,
-  tabs,
-  front,
   rows,
   plain,
   isPanel,
   content,
   t,
 }: {
-  /** The window's layout; null: one island filling it. */
-  layout: SplitLayout | null;
-  /** The window's tabs, for the one island unsplit. */
-  tabs: readonly string[];
-  /** The tab in front of the one island, unsplit. */
-  front: string | null;
+  /** The window's islands, one when unsplit. */
+  layout: SplitLayout;
   /** The islands show rows of tabs. */
   rows: boolean;
   plain: boolean;
@@ -79,24 +72,21 @@ export function IslandArea({
   const probe = useRef<HTMLDivElement>(null);
   const keyed = useRef(new Map<string, string>());
   const panel = usePanelWidth();
-  const room = useIslandRoom(ref, probe, `${!!layout} ${rows} ${plain}`);
-  const all = layout ? panesOf(layout.root) : [];
-  const { keys, byTab } = islandKeys(
-    layout ? all : [{ id: "window", tabs }],
-    keyed.current,
-  );
+  const split = isSplit(layout);
+  const room = useIslandRoom(ref, probe, `${split} ${rows} ${plain}`);
+  const all = panesOf(layout.root);
+  const { keys, byTab } = islandKeys(all, keyed.current);
   keyed.current = byTab;
   const area = room && boxOf(room, rows);
   const solved =
-    room && area && solve(room, area, layout, keys[0], rows, panel, isPanel);
-  const box = (key: string) => solved?.islands.get(key);
-  const places = (layout ? all : [null]).map((pane, i) => {
-    const rects = box(pane ? pane.id : keys[0]);
+    room && area && solve(room, area, layout, rows, panel, isPanel);
+  const places = all.map((pane, i) => {
+    const rects = solved?.islands.get(pane.id);
     return {
       pane,
       key: keys[i],
       place: {
-        paneId: pane?.id,
+        paneId: pane.id,
         row: rects?.row ? rectStyle(rects.row) : undefined,
         sheet: rects && rectStyle(rects.sheet),
         whole: rects && rectStyle(rects.whole),
@@ -107,17 +97,9 @@ export function IslandArea({
     };
   });
   const placed: PlacedIsland[] = places.flatMap(({ pane, key }) => {
-    const rects = box(pane ? pane.id : keys[0]);
+    const rects = solved?.islands.get(pane.id);
     return rects
-      ? [
-          {
-            key,
-            paneId: pane?.id ?? null,
-            rects,
-            tabs: pane ? pane.tabs : tabs,
-            front: pane ? pane.front : front,
-          },
-        ]
+      ? [{ key, paneId: pane.id, rects, tabs: pane.tabs, front: pane.front }]
       : [];
   });
   useIslandFrame(ref, room, area, solved, placed);
@@ -126,7 +108,7 @@ export function IslandArea({
   const shape = places
     .map(
       ({ pane, key, place }) =>
-        `${key}:${pane?.id ?? ""}:${pane?.front ?? ""}:${pane?.tabs.join(",") ?? ""}:${place.inner}:${place.plain}:${!!place.sheet}`,
+        `${key}:${pane.id}:${pane.front ?? ""}:${pane.tabs.join(",")}:${place.inner}:${place.plain}:${!!place.sheet}`,
     )
     .join(" ");
   // eslint-disable-next-line react-hooks/exhaustive-deps -- by shape alone
@@ -135,12 +117,7 @@ export function IslandArea({
   const need =
     room &&
     leastWidth({
-      root: layout?.root ?? {
-        kind: "pane",
-        id: keys[0],
-        tabs: [...tabs],
-        front,
-      },
+      root: layout.root,
       gap: room.gap,
       rowHeight: 0,
       rule: (pane, direction) => islandRule(isPanel(pane), direction, panel),
@@ -152,14 +129,13 @@ export function IslandArea({
   return (
     <main
       ref={ref}
-      className={layout ? "main-pane main-pane-split" : "main-pane"}
-      data-split={layout?.root.direction}
+      className={split ? "main-pane main-pane-split" : "main-pane"}
+      data-split={split ? layout.root.direction : undefined}
     >
       <div ref={probe} className="frame-probe" aria-hidden="true" />
       {drawn}
       <IslandNumbers />
-      {layout &&
-        solved?.dividers.map(({ line, rect, before, after }) => (
+      {solved?.dividers.map(({ line, rect, before, after }) => (
           <SplitDivider
             key={dividerKey(line.path, line.index)}
             frame={dividerKey(line.path, line.index)}
@@ -193,15 +169,13 @@ function boxOf(room: IslandRoom, rows: boolean): Rect {
 function solve(
   room: IslandRoom,
   box: Rect,
-  layout: SplitLayout | null,
-  single: string,
+  layout: SplitLayout,
   rows: boolean,
   panel: number,
   isPanel: (pane: Pane) => boolean,
 ): IslandsLayout {
   return solveIslands({
-    root: layout?.root ?? null,
-    single,
+    root: layout.root,
     box,
     gap: room.gap,
     rowHeight: rows ? room.bar : 0,

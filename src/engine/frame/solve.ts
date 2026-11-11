@@ -34,9 +34,7 @@ export interface IslandsLayout {
 }
 
 export interface IslandsInput {
-  /** The layout; null is one island, known as `single`. */
-  root: LayoutNode | null;
-  single: string;
+  root: LayoutNode;
   box: Rect;
   gap: number;
   /** A row of tabs' height; 0 with no rows. */
@@ -53,20 +51,13 @@ export interface IslandsInput {
 
 export function solveIslands(input: IslandsInput): IslandsLayout {
   const out: IslandsLayout = { islands: new Map(), dividers: [] };
-  if (!input.root) {
-    out.islands.set(input.single, island(input, input.box, true));
-    return out;
-  }
   place(input, input.root, input.box, [], out);
   return out;
 }
 
 /** The least width the islands keep side by side: every island at its
  *  minimum, the gaps between them. */
-export function leastWidth(
-  input: Omit<IslandsInput, "box" | "single">,
-): number {
-  if (!input.root) return 0;
+export function leastWidth(input: Omit<IslandsInput, "box">): number {
   return ruleOf(input as IslandsInput, input.root, "row", 1).min;
 }
 

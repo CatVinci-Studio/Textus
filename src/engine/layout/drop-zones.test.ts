@@ -9,7 +9,6 @@ const geometry: DropGeometry = {
     { rect: new DOMRect(0, 0, 400, 600), tabId: "a" },
     { rect: new DOMRect(400, 0, 400, 600), tabId: "b" },
   ],
-  single: null,
   bars: [],
 };
 const at = (x: number, y: number, held?: ReturnType<typeof dropTargetAt>) =>

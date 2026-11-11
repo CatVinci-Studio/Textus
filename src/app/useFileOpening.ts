@@ -230,12 +230,7 @@ export function useFileOpening(opts: {
             placeOnArrival(id, (now) => besideLayout(now, id, from) ?? now);
           else openBeside(id, from);
         } else if (drop)
-          splitForDrop(
-            id,
-            drop,
-            [...new Set([...tabsRef.current.map((tab) => tab.id), id])],
-            arriving,
-          );
+          splitForDrop(id, drop, arriving);
       };
       const existing = tabsRef.current.find(
         (tab) =>

@@ -7,9 +7,11 @@ import {
 } from "./tree";
 import {
   arrange,
+  asRoot,
   focusOn,
+  isSplit,
   moveTab,
-  pairLayout,
+  oneIsland,
   reorderTab,
   splitOff,
   type Arrival,
@@ -43,7 +45,8 @@ let active = "";
 let documentId = "";
 /** A blank tab, for a split asked for with no other tab to take. */
 let blankTab: (() => TabRecord) | null = null;
-let layout: SplitLayout | null = null;
+/** Its islands: one, a branch of one pane, when the window is unsplit. */
+let layout: SplitLayout = oneIsland([], null);
 let request: SplitRequest | null = null;
 let preview: SplitLayout | null = null;
 const arriving = new Map<string, Arrival>();
@@ -99,12 +102,18 @@ export function activateTab(id: string): void {
   change();
 }
 
-export function splitLayout(): SplitLayout | null {
+/** The window's islands, unsplit or split. */
+export function windowLayout(): SplitLayout {
   return layout;
 }
 
+/** The islands when there is more than one, else null. */
+export function splitLayout(): SplitLayout | null {
+  return isSplit(layout) ? layout : null;
+}
+
 /** A drop in progress, shown before it is made: drawn in the committed
- *  layout's place (useSplitPanes) and never stored, so letting go of the
+ *  layout's place (useIslands) and never stored, so letting go of the
  *  drag elsewhere, or Escape, leaves the layout as it was. */
 export function splitPreview(): SplitLayout | null {
   return preview;
@@ -116,24 +125,21 @@ export function previewSplit(next: SplitLayout | null): void {
   publish();
 }
 
-/** Island `paneId` (null: the one island unsplit) as it is drawn - a drag's
- *  preview, else the split, else the window's tabs: its tabs in order and
- *  the one in front. */
+/** Island `paneId` (null: the window's first) as it is drawn - a drag's
+ *  preview, else the layout: its tabs in order and the one in front. */
 export function shownIsland(
   paneId: string | null,
 ): { tabs: readonly string[]; front: string | null } | null {
   const shown = preview ?? layout;
-  if (paneId === null)
-    return shown ? null : { tabs: records.map((t) => t.id), front: active };
-  const pane = shown && panesOf(shown.root).find((p) => p.id === paneId);
+  const pane =
+    paneId === null
+      ? panesOf(shown.root)[0]
+      : panesOf(shown.root).find((p) => p.id === paneId);
   return pane ? { tabs: pane.tabs, front: pane.front } : null;
 }
 
-/** The id of the pane `tabId` is in, or null when not split or in none. */
-export function paneOf(
-  current: SplitLayout | null,
-  tabId: string,
-): string | null {
+/** The id of the island `tabId` is in, or null when in none. */
+export function paneOf(current: SplitLayout | null, tabId: string): string | null {
   return (current && paneWithTab(current.root, tabId)?.id) ?? null;
 }
 
@@ -153,45 +159,31 @@ function commit(next: SplitLayout | null) {
 
 /** A pane's tab bar reordered: `tabId` to `index` among its tabs. */
 export function reorderInPane(id: string, tabId: string, index: number): void {
-  if (layout) commit(reorderTab(layout, id, tabId, index));
+  commit(reorderTab(layout, id, tabId, index));
 }
 
 /** The pane a tab opened next joins. */
 export function focusPane(id: string): void {
-  if (layout) setSplitLayout(focusOn(layout, id));
+  setSplitLayout(focusOn(layout, id));
 }
 
 /**
- * `layout` with `tabId` beside `from`: in the pane to its right (or below,
- * on `bottom`) if there is one, else in a new pane there; the window split
- * when it isn't. Null when there is nothing to do.
+ * `layout` with `tabId` beside `from`: in the island to its right (or
+ * below, on `bottom`) if there is one, else in a new island there - beside
+ * the whole window, taking `share` of it, when it is unsplit. Null when
+ * there is nothing to do.
  */
 export function besideLayout(
-  layout: SplitLayout | null,
+  layout: SplitLayout,
   tabId: string,
   from: string | null,
   side: "right" | "bottom" = "right",
-  /** The new pane's share of the window, when it splits it (half). */
   share = 0.5,
-  /** The window's tabs in their order, when it splits it: they stay on
-   *  `from`'s side, `from` in front. */
-  windowTabs: readonly string[] = [],
 ): SplitLayout | null {
   if (!from || from === tabId) return null;
-  const home = layout && paneWithTab(layout.root, from);
-  if (!layout || !home) {
-    const pair = pairLayout(
-      side === "right" ? "row" : "column",
-      from,
-      tabId,
-      0,
-      1 - share,
-    );
-    const stay = windowTabs.filter((id) => id !== tabId);
-    const [first] = pair.root.kind === "split" ? pair.root.children : [];
-    if (first?.kind === "pane" && stay.includes(from)) first.tabs = stay;
-    return pair;
-  }
+  const home = paneWithTab(layout.root, from);
+  if (!home) return null;
+  if (!isSplit(layout)) return splitOff(layout, tabId, null, side, share);
   const next = paneBeside(layout.root, home.id, side);
   return next
     ? moveTab(layout, tabId, next.id)
@@ -204,9 +196,8 @@ export function openBeside(
   from: string | null,
   side: "right" | "bottom" = "right",
   share = 0.5,
-  windowTabs: readonly string[] = [],
 ): void {
-  const next = besideLayout(layout, tabId, from, side, share, windowTabs);
+  const next = besideLayout(layout, tabId, from, side, share);
   if (next) setSplitLayout(next);
 }
 
@@ -230,14 +221,22 @@ export function arrangeBranch(
   path: Path,
   change: { index: number; share: number },
 ): void {
-  if (layout) commit(arrange(layout, path, change));
+  commit(arrange(layout, path, change));
 }
 
-/** Back to one document: the one in front. */
+/** Back to one island: every tab in the window's order, the one in use in
+ *  front, in the island it was in (so that island stays as it is drawn). */
 export function closeSplit(): void {
   request = null;
-  if (!layout) return;
-  layout = null;
+  if (!isSplit(layout)) return;
+  const home =
+    paneWithTab(layout.root, active) ?? panesOf(layout.root)[0];
+  const only = {
+    ...home,
+    tabs: records.map((tab) => tab.id),
+    front: active || null,
+  };
+  layout = { root: asRoot(only), focus: only.id };
   change();
 }
 
@@ -282,7 +281,7 @@ function settle() {
   request = null;
   for (const id of ids) arriving.delete(id);
   if (!ids.includes(active)) active = fallback(ids);
-  if (layout) records = inIslandOrder(records, layout);
+  records = inIslandOrder(records, layout);
   const isDocument = (id: string) =>
     records.some((tab) => tab.id === id && !tab.view);
   if (isDocument(active)) documentId = active;
@@ -299,7 +298,7 @@ export function documentInFront(): string {
  *  away together): the first island's front tab, else the last - never
  *  none, or keys and zoom have nowhere to go. */
 function fallback(ids: readonly string[]): string {
-  const fronts = layout ? panesOf(layout.root).map((p) => p.front) : [];
+  const fronts = panesOf(layout.root).map((p) => p.front);
   return fronts.find((f) => f && ids.includes(f)) ?? ids[ids.length - 1] ?? "";
 }
 
@@ -322,7 +321,7 @@ export function resetWindowModelForTests(): void {
   active = "";
   documentId = "";
   blankTab = null;
-  layout = null;
+  layout = oneIsland([], null);
   request = null;
   preview = null;
   arriving.clear();

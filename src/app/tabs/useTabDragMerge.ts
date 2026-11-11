@@ -24,7 +24,7 @@ import { flushPendingWrites } from "../../storage/pending-writes";
 import { useLatest } from "../../utils/hooks/useLatest";
 import { canUseWindows } from "../../platform/capabilities";
 import { arrivalPreview, splitForDrop } from "../islands/split-drop";
-import { dropGeometry, tabRectOf } from "../../engine/layout/drop-zones";
+import { dropGeometry } from "../../engine/layout/drop-zones";
 import { placeOnArrival } from "../../engine/layout/store";
 import { moveTab } from "../../engine/layout/ops";
 
@@ -80,8 +80,8 @@ export function useTabDragMerge(opts: {
   // A tab from another window over the documents: room made where it
   // will open.
   const arrival = useMemo(
-    () => arrivalPreview(() => tabsRef.current.map((tab) => tab.id)),
-    [tabsRef],
+    () => arrivalPreview(),
+    [],
   );
 
   const hitTestWindow = useCallback(
@@ -227,8 +227,7 @@ export function useTabDragMerge(opts: {
       const corner = previewWinRef.current;
       const at = corner && { x: x - corner.left, y: y - corner.top };
       const split = !row && at ? arrival.take(at.x, at.y) : null;
-      // Onto a split's row: that island's, at the slot under the pointer.
-      // Unsplit: the window's one row.
+      // Onto a row: that island's, at the slot under the pointer.
       const bar =
         row && at
           ? dropGeometry().bars.find(
@@ -237,29 +236,18 @@ export function useTabDragMerge(opts: {
           : undefined;
       if (bar && at) {
         const slot = bar.pills.filter((pill) => pill.center < at.x).length;
-        placeOnArrival(newTab.id, (now) =>
-          now ? moveTab(now, newTab.id, bar.pane, slot) : now,
+        placeOnArrival(
+          newTab.id,
+          (now) => moveTab(now, newTab.id, bar.pane, slot) ?? now,
         );
-      }
-      let index = tabsRef.current.length;
-      if (row && at && !bar) {
-        index = tabsRef.current.filter((tab) => {
-          const rect = tabRectOf(null, tab.id);
-          return !!rect && rect.left + rect.width / 2 < at.x;
-        }).length;
       }
       previewWinRef.current = null;
       setDragHoverPreview(null);
       arrival.clear();
-      const ids = [...tabsRef.current.map((tab) => tab.id), newTab.id];
-      setTabs((prev) => {
-        const next = [...prev];
-        next.splice(index, 0, newTab);
-        return next;
-      });
+      setTabs((prev) => [...prev, newTab]);
       setActiveTabId(newTab.id);
       // Its island taken as it arrives, in the same update.
-      if (split) splitForDrop(newTab.id, split, ids, true);
+      if (split) splitForDrop(newTab.id, split, true);
     });
     return unlistenAll(unlisten);
   }, [arrival, setActiveTabId, setTabs, tabsRef]);
