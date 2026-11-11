@@ -14,8 +14,9 @@
   align-items: flex-end;
 }
 
+/* After the rail, never over its buttons. */
 .corner-stack[data-corner="start"] {
-  left: 16px;
+  left: calc(var(--rail-width, 0px) + 16px);
   align-items: flex-start;
 }
 
@@ -66,7 +67,9 @@
   white-space: nowrap;
 }
 
-.corner-toast[data-open] .corner-toast-line {
+/* Opened, or with nothing more to open: its words whole, wrapping. */
+.corner-toast[data-open] .corner-toast-line,
+.corner-toast:not(:has(button.corner-toast-summary)) .corner-toast-line {
   white-space: normal;
 }
 

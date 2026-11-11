@@ -1,5 +1,6 @@
 /* Short notes and progress bars at the bottom of the window, clear of the
-   status bar. Only opacity and transform move. */
+   status bar, and above a corner's toasts while one shows, so the two
+   never cover each other. Only opacity and transform move. */
 .notice-stack {
   position: fixed;
   left: 50%;
@@ -16,6 +17,10 @@
   overflow: hidden;
   transform: translateX(-50%);
   pointer-events: none;
+}
+
+body:has(.corner-stack .corner-toast) .notice-stack {
+  bottom: calc(16px + var(--control-height) + var(--space-4) + 8px);
 }
 
 .notice {
