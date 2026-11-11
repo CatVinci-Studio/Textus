@@ -1,4 +1,4 @@
-import type { DocumentSnapshot } from "../doc-markdown";
+import type { DocumentSnapshot } from "../../editor/markdown/doc-markdown";
 import type { MessageQueueLabels } from "./MessageQueue";
 import type { AgentConversation } from "./conversation/conversation-types";
 import type { AgentMode, PanelMode } from "../../prefs/SettingsContext";

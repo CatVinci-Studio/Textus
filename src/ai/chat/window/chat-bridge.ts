@@ -1,4 +1,4 @@
-import type { DocumentSnapshot } from "../../doc-markdown";
+import type { DocumentSnapshot } from "../../../editor/markdown/doc-markdown";
 import { emitToWindow } from "../../../platform/events";
 import { listenToThisWindow } from "../../../platform/events";
 import type { AgentTurn, EditProposal } from "../../types";

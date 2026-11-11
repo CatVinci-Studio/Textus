@@ -1,6 +1,6 @@
 import type { CompletionHints } from "../../platform/ipc";
 import { cjkChunk, isCjk, isCjkLetter } from "../../utils/cjk";
-import { headingTrail } from "../doc-markdown";
+import { headingTrail } from "../../editor/markdown/doc-markdown";
 import type { Node as ProseNode, ResolvedPos } from "@milkdown/kit/prose/model";
 
 /** What a completion is asked with and how its reply is tidied and split:

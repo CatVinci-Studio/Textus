@@ -8,7 +8,7 @@ import {
   caretContext,
   headingAt,
   readSelection,
-} from "../ai/doc-markdown";
+} from "../editor/markdown/doc-markdown";
 import { useDetachedChat } from "../ai/chat/window/useDetachedChat";
 import { readChatContext } from "../ai/chat/live-context";
 import type { useInlineChat } from "../ai/chat/quick-ask/useInlineChat";

@@ -1,9 +1,9 @@
-import { resolveBlockEdit } from "../../ai/doc-blocks";
+import { resolveBlockEdit } from "../../editor/markdown/doc-blocks";
+import type { EditProposal } from "../../ai/types";
 import {
   EDIT_ACTIONS,
   type EditAction,
-  type EditProposal,
-} from "../../ai/types";
+} from "../../editor/markdown/edit-actions";
 import {
   keyHolder,
   releaseKeys,

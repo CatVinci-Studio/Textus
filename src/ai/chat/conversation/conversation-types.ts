@@ -1,5 +1,5 @@
 import type { AgentMode, Settings } from "../../../prefs/SettingsContext";
-import type { DocumentSnapshot } from "../../doc-markdown";
+import type { DocumentSnapshot } from "../../../editor/markdown/doc-markdown";
 import type { AgentTurn, ImageAttachment, ThinkingLevel } from "../../types";
 import type { StreamingState } from "../stream-step";
 import type { Thought } from "../thought";

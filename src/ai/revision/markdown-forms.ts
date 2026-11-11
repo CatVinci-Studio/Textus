@@ -1,4 +1,4 @@
-import { isPicture } from "../doc-blocks";
+import { isPicture } from "../../editor/markdown/doc-blocks";
 import { markdownBlockKind } from "./block-reader";
 
 /** The Markdown forms a revision is compared and found by: the editor and

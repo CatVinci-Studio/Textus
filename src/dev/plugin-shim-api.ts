@@ -1,5 +1,5 @@
 import { fnv1a } from "../utils/hash";
-import { blockIds } from "../ai/doc-blocks";
+import { blockIds } from "../editor/markdown/doc-blocks";
 
 /** Each folder's documents at the last metadata look, for what changed. */
 const lastLook = new Map<string, Map<string, string>>();

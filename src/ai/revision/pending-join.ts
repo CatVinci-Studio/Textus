@@ -1,7 +1,10 @@
 import { editorViewCtx } from "@milkdown/kit/core";
 import { editedText } from "./joined-edit";
 import { placeProposals } from "./pending-place";
-import { documentMarkdown, serializeBlocks } from "../doc-markdown";
+import {
+  documentMarkdown,
+  serializeBlocks,
+} from "../../editor/markdown/doc-markdown";
 import { pendingEditKey } from "./pending-edit-plugin";
 import { recordStatuses } from "./proposal-lifecycle";
 import { joinedText } from "./generated-images";

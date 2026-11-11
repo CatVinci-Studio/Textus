@@ -1,4 +1,4 @@
-import type { DocumentSnapshot } from "../doc-markdown";
+import type { DocumentSnapshot } from "../../editor/markdown/doc-markdown";
 import { useFollowBottom } from "./useFollowBottom";
 import { pictureSrc } from "../revision/generated-images";
 import { MessageQueue } from "./MessageQueue";

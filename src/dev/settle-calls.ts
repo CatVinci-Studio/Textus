@@ -2,7 +2,7 @@ import {
   resolveBlockEdit,
   resolveBlockTarget,
   type SentBlock,
-} from "../ai/doc-blocks";
+} from "../editor/markdown/doc-blocks";
 
 /**
  * The dev shim's stand-in for the backend's step settling, for e2e: a scripted

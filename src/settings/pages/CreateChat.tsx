@@ -3,7 +3,7 @@ import { ai } from "../../platform/ipc";
 import { resolveSkillMessage } from "../../ai/chat/proposal";
 import type { Strings } from "../../i18n/strings";
 import { useSettings } from "../../prefs/SettingsContext";
-import type { DocumentSnapshot } from "../../ai/doc-markdown";
+import type { DocumentSnapshot } from "../../editor/markdown/doc-markdown";
 import type { AgentSkill } from "../../ai/types";
 import { ChatBody } from "../../ai/chat/ChatBody";
 import type { ChatComposerHandle } from "../../ai/chat/ChatComposer";

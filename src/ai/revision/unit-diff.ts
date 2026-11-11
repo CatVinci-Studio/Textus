@@ -1,4 +1,4 @@
-import { textParagraphs } from "../doc-blocks";
+import { textParagraphs } from "../../editor/markdown/doc-blocks";
 import { formKey, wholeBlockKind } from "./markdown-forms";
 import { diffSentenceLists, type SentenceHunk } from "./sentence-diff";
 import { ENDS_PARAGRAPH } from "./paragraph-align";

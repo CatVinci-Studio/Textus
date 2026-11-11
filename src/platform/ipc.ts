@@ -1,7 +1,7 @@
 import { Channel } from "@tauri-apps/api/core";
 import type { ProviderCatalogEntry } from "../ai/provider-catalog";
 import type { ImageModel, ImageProviderEntry } from "../ai/image-models";
-import type { SentBlock } from "../ai/doc-blocks";
+import type { SentBlock } from "../editor/markdown/doc-blocks";
 import type { AgentTurn, ImageAttachment, ThinkingLevel } from "../ai/types";
 import type { GrammarIssue } from "../ai/writing/grammar-check-plugin";
 import type { AgentMode_Serialize as AgentMode } from "./bindings/ai-skills";

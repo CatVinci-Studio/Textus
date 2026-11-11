@@ -33,7 +33,10 @@ import type { Settings } from "../prefs/SettingsContext";
 import { prefersReducedMotion } from "../engine/motion/motion";
 import { storeImage } from "../editor/images/image-plugin";
 import { showMessage } from "../engine/controls/app-dialog";
-import { cachedDocument, cachedDocumentMarkdown } from "../ai/doc-markdown";
+import {
+  cachedDocument,
+  cachedDocumentMarkdown,
+} from "../editor/markdown/doc-markdown";
 import { offerOldPictureTrash } from "../ai/revision/old-picture";
 import {
   generatedIdsIn,
@@ -303,7 +306,7 @@ export function useEditorProposals({
   const discardRefused = pendingEdits.discard;
   // Reduced motion renders widgets instantly: the typewriter's entries
   // would never be revealed (or settle).
-  const animated = useCallback(() => !prefersReducedMotion(), [settingsRef]);
+  const animated = useCallback(() => !prefersReducedMotion(), []);
   const proposalStream = useMemo(() => {
     // Pictures written into the text show as their frames.
     const canvas: ProposalCanvas = {

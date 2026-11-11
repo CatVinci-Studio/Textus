@@ -6,7 +6,7 @@ import {
   type EditorView,
 } from "@milkdown/kit/prose/view";
 import { $prose } from "@milkdown/kit/utils";
-import { cachedDocument } from "../../ai/doc-markdown";
+import { cachedDocument } from "../../editor/markdown/doc-markdown";
 import {
   decorate,
   hasDecorationProviders,

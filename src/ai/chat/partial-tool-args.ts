@@ -1,6 +1,13 @@
 import { withoutCitationMarkers } from "../citation-markers";
-import { resolveBlockEdit, type SentBlock } from "../doc-blocks";
-import { EDIT_ACTIONS, type EditAction, type EditProposal } from "../types";
+import {
+  resolveBlockEdit,
+  type SentBlock,
+} from "../../editor/markdown/doc-blocks";
+import type { EditProposal } from "../types";
+import {
+  EDIT_ACTIONS,
+  type EditAction,
+} from "../../editor/markdown/edit-actions";
 
 /** A string field scanned out of an incomplete JSON fragment: what has
  *  arrived of its value, and whether the closing quote has been seen. */

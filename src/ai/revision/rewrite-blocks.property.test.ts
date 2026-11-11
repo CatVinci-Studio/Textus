@@ -3,7 +3,7 @@ import { afterEach, describe, expect, it } from "vitest";
 import type { Editor } from "@milkdown/kit/core";
 import { editorViewCtx } from "@milkdown/kit/core";
 import { createTestEditor } from "../../document-view/editor-test-harness";
-import { cachedDocument } from "../doc-markdown";
+import { cachedDocument } from "../../editor/markdown/doc-markdown";
 import { placeProposals } from "./pending-place";
 import { diffSentences, splitUnits } from "./unit-diff";
 import { formKey, wholeBlockKind } from "./markdown-forms";

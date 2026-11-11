@@ -1,7 +1,8 @@
 import type { ApplySuggestion } from "./CommentCard";
 import type { BlockNames } from "../revision/markdown-forms";
 import { type AgentTurnLabels } from "./AgentTurnView";
-import type { AgentTurn, EditAction, EditProposal } from "../types";
+import type { AgentTurn, EditProposal } from "../types";
+import type { EditAction } from "../../editor/markdown/edit-actions";
 import type { PendingStatus } from "../revision/usePendingEdits";
 import type { StreamingState } from "./stream-step";
 import type { Thought } from "./thought";

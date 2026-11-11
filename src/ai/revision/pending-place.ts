@@ -10,7 +10,7 @@ import {
   serializeRange,
   type MarkdownBlock,
   type MarkdownMatch,
-} from "../doc-markdown";
+} from "../../editor/markdown/doc-markdown";
 import type { EditProposal } from "../types";
 import { hasGeneratedImage } from "./generated-images";
 import {

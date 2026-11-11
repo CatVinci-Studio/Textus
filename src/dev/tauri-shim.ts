@@ -17,7 +17,7 @@ import type { GalleryTheme_Serialize } from "../platform/bindings/app";
 import type { CustomEndpointStatus_Serialize } from "../platform/bindings/auth";
 import type { PluginsState_Serialize } from "../platform/bindings/plugins";
 import type { FsEntry_Serialize } from "../platform/bindings/plugin-access";
-import type { SentBlock } from "../ai/doc-blocks";
+import type { SentBlock } from "../editor/markdown/doc-blocks";
 import { namedCall, settledArguments, settledTurns } from "./settle-calls";
 import { forgetShimSecrets, pluginApiShim } from "./plugin-shim-api";
 import { webPageCommand } from "./native-web-pages";

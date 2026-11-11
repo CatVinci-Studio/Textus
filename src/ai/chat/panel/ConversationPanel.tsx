@@ -1,5 +1,5 @@
 import { useEffect, useRef, useState } from "react";
-import type { DocumentSnapshot } from "../../doc-markdown";
+import type { DocumentSnapshot } from "../../../editor/markdown/doc-markdown";
 import { MODES } from "../../modes";
 import { ChatBody } from "../ChatBody";
 import type { ChatComposerHandle } from "../ChatComposer";

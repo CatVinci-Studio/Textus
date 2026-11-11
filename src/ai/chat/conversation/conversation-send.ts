@@ -5,7 +5,7 @@ import { resolveStrings } from "../../../i18n/strings";
 import { reportAiState } from "../../../plugins/ai-state";
 import { externalAgent } from "../../../plugins/contributions/agents";
 import type { Settings } from "../../../prefs/SettingsContext";
-import type { DocumentSnapshot } from "../../doc-markdown";
+import type { DocumentSnapshot } from "../../../editor/markdown/doc-markdown";
 import { imageModelOf } from "../../image-models";
 import { annotateProposalStatuses } from "../../revision/proposal-status";
 import type { AgentTurn, ImageAttachment } from "../../types";

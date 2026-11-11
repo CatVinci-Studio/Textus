@@ -8,7 +8,7 @@ import {
   documentMarkdown,
   matchTarget,
   serializeBlocks,
-} from "../doc-markdown";
+} from "../../editor/markdown/doc-markdown";
 import { applyEditRange, replaceWithMarkdown } from "./apply-edit";
 import {
   citationsAsFootnotes,

@@ -5,7 +5,7 @@ import { afterEach, describe, expect, it, vi } from "vitest";
 import type { Editor } from "@milkdown/kit/core";
 import { editorViewCtx } from "@milkdown/kit/core";
 import { createTestEditor } from "../document-view/editor-test-harness";
-import { documentMarkdown, serializeBlocks } from "../ai/doc-markdown";
+import { documentMarkdown, serializeBlocks } from "./markdown/doc-markdown";
 
 // The live AI evaluation sends these documents to the model as the editor
 // shows them, so each must come back byte-exact from opening it in the full

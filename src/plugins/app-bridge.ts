@@ -2,7 +2,7 @@ import { splitLayout, subscribeSplit } from "../engine/layout/store";
 import type { PanelsState } from "./panels-state";
 import type { AiState } from "./ai-state";
 import type { FloatingChange, FloatingTouch } from "./views/floating-views";
-import type { SentBlock } from "../ai/doc-blocks";
+import type { SentBlock } from "../editor/markdown/doc-blocks";
 import { moveDocumentData } from "./store/document-data";
 import { undoFiles } from "../platform/ipc-files";
 import type { EditProposal } from "../ai/types";

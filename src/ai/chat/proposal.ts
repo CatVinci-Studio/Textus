@@ -3,12 +3,11 @@ import { withoutCitationMarkers } from "../citation-markers";
 import { skillBlock } from "./user-message";
 import { SKILL_COMMAND } from "./skill-syntax";
 import { parseImageProposal } from "../revision/generated-images";
+import type { AgentSkill, EditProposal } from "../types";
 import {
   EDIT_ACTIONS,
-  type AgentSkill,
   type EditAction,
-  type EditProposal,
-} from "../types";
+} from "../../editor/markdown/edit-actions";
 
 /**
  * A propose_edit tool call's arguments as a validated EditProposal, or null

@@ -3,7 +3,7 @@ import { afterEach, describe, expect, it, vi } from "vitest";
 import { editorViewCtx, serializerCtx } from "@milkdown/kit/core";
 import type { Editor } from "@milkdown/kit/core";
 import { createTestEditor } from "./editor-test-harness";
-import { serializeBlocks } from "../ai/doc-markdown";
+import { serializeBlocks } from "../editor/markdown/doc-markdown";
 import { blockMarkdown } from "../editor/markdown/block-markdown";
 
 let editor: Editor | null = null;

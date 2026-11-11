@@ -1,6 +1,9 @@
 import { editorViewCtx } from "@milkdown/kit/core";
 import type { EditorRunner } from "../../editor/useEditorRunner";
-import { cachedDocument, readSelection } from "../doc-markdown";
+import {
+  cachedDocument,
+  readSelection,
+} from "../../editor/markdown/doc-markdown";
 import type { SelectionTarget } from "../revision/usePendingEdits";
 import type { ChatContext } from "./window/chat-bridge";
 

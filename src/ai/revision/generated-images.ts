@@ -1,6 +1,10 @@
 import { fnv1a } from "../../utils/hash";
 import { ai, type GeneratedImageData } from "../../platform/ipc";
-import { EDIT_ACTIONS, type EditAction, type EditProposal } from "../types";
+import type { EditProposal } from "../types";
+import {
+  EDIT_ACTIONS,
+  type EditAction,
+} from "../../editor/markdown/edit-actions";
 import { explainAiError } from "../error-messages";
 import { currentStrings } from "../../i18n/current";
 

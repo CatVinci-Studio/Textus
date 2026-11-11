@@ -8,7 +8,7 @@ import {
   readSelection,
   serializeRange,
   type DocumentSnapshot,
-} from "../../doc-markdown";
+} from "../../../editor/markdown/doc-markdown";
 import { chatSelectionRange } from "./chat-selection-plugin";
 import type { EditorRunner } from "../../../editor/useEditorRunner";
 

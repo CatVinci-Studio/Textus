@@ -6,7 +6,7 @@ import {
   cachedDocument,
   readSelection,
   serializeRange,
-} from "../ai/doc-markdown";
+} from "../editor/markdown/doc-markdown";
 import { selectedTextBlock } from "../ai/chat/user-message";
 import { proposalsFromTurns } from "../ai/chat/ChatBody";
 import type { useAgentPanel } from "../ai/chat/panel/agent-panel";

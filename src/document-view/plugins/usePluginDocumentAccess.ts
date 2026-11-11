@@ -5,7 +5,7 @@ import {
   cachedDocument,
   caretContext,
   readSelection,
-} from "../../ai/doc-markdown";
+} from "../../editor/markdown/doc-markdown";
 import {
   setActiveDocument,
   setOpenDocument,

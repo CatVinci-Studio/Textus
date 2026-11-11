@@ -1,10 +1,10 @@
 import type { Node as ProseNode } from "@milkdown/kit/prose/model";
-import { isCjk } from "../utils/cjk";
+import { isCjk } from "../../utils/cjk";
 import { serializerCtx } from "@milkdown/kit/core";
 import type { Ctx } from "@milkdown/kit/ctx";
 import { Selection, type EditorState } from "@milkdown/kit/prose/state";
-import { blockMarkdown } from "../editor/markdown/block-markdown";
-import type { EditAction } from "./types";
+import { blockMarkdown } from "./block-markdown";
+import type { EditAction } from "./edit-actions";
 import {
   blockIds,
   blockKind,

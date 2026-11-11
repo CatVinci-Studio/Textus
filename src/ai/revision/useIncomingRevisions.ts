@@ -3,7 +3,7 @@ import { editorViewCtx } from "@milkdown/kit/core";
 import type { EditorRunner } from "../../editor/useEditorRunner";
 import { parseMarkdownSource } from "../../editor/markdown/parse-markdown-source";
 import { useWindowEvent } from "../../utils/hooks/useWindowEvent";
-import { serializeBlocks } from "../doc-markdown";
+import { serializeBlocks } from "../../editor/markdown/doc-markdown";
 import {
   FILE_REVISIONS_EVENT,
   revisionProposals,

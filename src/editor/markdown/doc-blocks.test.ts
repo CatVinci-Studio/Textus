@@ -9,7 +9,7 @@ import {
   type BlockKind,
   type SentBlock,
 } from "./doc-blocks";
-import keepCases from "./keep-pictures-cases.json";
+import keepCases from "../../ai/keep-pictures-cases.json";
 
 /** Blocks as serializeBlocks sends them: `[kind, markdown]` each. */
 function sent(...blocks: [BlockKind, string][]): SentBlock[] {

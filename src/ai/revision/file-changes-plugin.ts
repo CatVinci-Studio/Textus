@@ -7,7 +7,10 @@ import {
   type EditorView,
 } from "@milkdown/kit/prose/view";
 import { $prose } from "@milkdown/kit/utils";
-import { serializeBlocks, type MarkdownBlock } from "../doc-markdown";
+import {
+  serializeBlocks,
+  type MarkdownBlock,
+} from "../../editor/markdown/doc-markdown";
 import {
   changesSettled,
   onChangedFiles,

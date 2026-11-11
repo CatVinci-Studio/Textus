@@ -3,8 +3,8 @@ import type { AgentTurn } from "../types";
 import type { StreamEvent } from "../../platform/ipc";
 import { thinkingDone, thinkingEvent, type Thought } from "./thought";
 import { parsePartialToolArgs } from "./partial-tool-args";
-import { resolveBlockTarget } from "../doc-blocks";
-import type { DocumentSnapshot } from "../doc-markdown";
+import { resolveBlockTarget } from "../../editor/markdown/doc-blocks";
+import type { DocumentSnapshot } from "../../editor/markdown/doc-markdown";
 
 /** What has streamed in so far for the in-flight exchange: landed turns plus
  *  the prose being generated. Display only; the resolved turns enter

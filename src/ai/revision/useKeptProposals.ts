@@ -3,7 +3,10 @@ import { editorViewCtx } from "@milkdown/kit/core";
 import type { EditorRunner } from "../../editor/useEditorRunner";
 import { ai } from "../../platform/ipc";
 import { fnv1a } from "../../utils/hash";
-import { cachedDocumentMarkdown, serializeRange } from "../doc-markdown";
+import {
+  cachedDocumentMarkdown,
+  serializeRange,
+} from "../../editor/markdown/doc-markdown";
 import { onPictureSettled, pictureState } from "./generated-images";
 import { keptFrom, picturesOf, readKept, restorable } from "./kept-proposals";
 import type { SelectionTarget } from "./pending-place";

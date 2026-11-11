@@ -16,7 +16,7 @@ import {
   type EditorView,
 } from "@milkdown/kit/prose/view";
 import { $prose } from "@milkdown/kit/utils";
-import { cachedDocument } from "../../ai/doc-markdown";
+import { cachedDocument } from "../../editor/markdown/doc-markdown";
 import { drawWhileNear } from "../../editor/draw-when-visible";
 import { currentStrings } from "../../i18n/current";
 import {

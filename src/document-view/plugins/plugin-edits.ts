@@ -6,7 +6,7 @@ import { closeHistory } from "@milkdown/kit/prose/history";
 import { Selection, TextSelection } from "@milkdown/kit/prose/state";
 import type { Node as ProseNode } from "@milkdown/kit/prose/model";
 import type { EditProposal } from "../../ai/types";
-import { serializeBlocks } from "../../ai/doc-markdown";
+import { serializeBlocks } from "../../editor/markdown/doc-markdown";
 import { resolveAnchored } from "../../ai/revision/pending-place";
 import { replaceWithMarkdown } from "../../ai/revision/apply-edit";
 import { locatePlainText } from "../../ai/revision/text-locate";

@@ -1,6 +1,6 @@
 import { IconButton } from "../../../engine/controls/IconButton";
 import { PanelHeader } from "../../../engine/controls/PanelHeader";
-import type { DocumentSnapshot } from "../../doc-markdown";
+import type { DocumentSnapshot } from "../../../editor/markdown/doc-markdown";
 import { useRef } from "react";
 import type { AgentConversation } from "../conversation/conversation-types";
 import type { PendingStatus } from "../../revision/usePendingEdits";
