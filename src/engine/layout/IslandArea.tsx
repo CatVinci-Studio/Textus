@@ -1,5 +1,4 @@
 import {
-  useEffect,
   useMemo,
   useRef,
   type CSSProperties,
@@ -13,7 +12,6 @@ import { SplitDivider } from "./SplitDivider";
 import type { Strings } from "../../i18n/strings";
 import { rectStyle, type Rect } from "../frame/rect";
 import { leastWidth, solveIslands, type IslandsLayout } from "../frame/solve";
-import { setIslandsNeed } from "../frame/islands-need";
 import { dividerKey, type PlacedIsland } from "../frame/island-parts";
 import { useIslandRoom, type IslandRoom } from "../frame/useIslandRoom";
 import { usePanelWidth } from "../frame/panel-width";
@@ -69,11 +67,10 @@ export function IslandArea({
   t: Strings;
 }) {
   const ref = useRef<HTMLElement>(null);
-  const probe = useRef<HTMLDivElement>(null);
   const keyed = useRef(new Map<string, string>());
   const panel = usePanelWidth();
   const split = isSplit(layout);
-  const room = useIslandRoom(ref, probe, `${split} ${rows} ${plain}`);
+  const room = useIslandRoom(ref, `${split} ${rows} ${plain}`);
   const all = panesOf(layout.root);
   const { keys, byTab } = islandKeys(all, keyed.current);
   keyed.current = byTab;
@@ -102,7 +99,6 @@ export function IslandArea({
       ? [{ key, paneId: pane.id, rects, tabs: pane.tabs, front: pane.front }]
       : [];
   });
-  useIslandFrame(ref, room, area, solved, placed);
   // Drawn again when an island comes, goes or changes its tabs - not as
   // they only move or resize: the window's clock places them (useIslandFrame).
   const shape = places
@@ -123,16 +119,13 @@ export function IslandArea({
       rule: (pane, direction) => islandRule(isPanel(pane), direction, panel),
     }) +
       2 * room.inset;
-  useEffect(() => {
-    if (need) setIslandsNeed(need);
-  }, [need]);
+  useIslandFrame(ref, room, area, solved, placed, need || 0);
   return (
     <main
       ref={ref}
       className={split ? "main-pane main-pane-split" : "main-pane"}
       data-split={split ? layout.root.direction : undefined}
     >
-      <div ref={probe} className="frame-probe" aria-hidden="true" />
       {drawn}
       <IslandNumbers />
       {solved?.dividers.map(({ line, rect, before, after }) => (

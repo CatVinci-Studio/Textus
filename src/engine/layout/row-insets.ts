@@ -1,3 +1,4 @@
+import { tokenPx } from "../tokens/token-px";
 import { shownIsland } from "./store";
 import { onAppearance } from "../tokens/appearance";
 import { useSyncExternalStore } from "react";
@@ -66,16 +67,6 @@ const LEAD =
 const ENDS = ".window-bar-status, .window-bar .window-caption";
 const BAR = ".window-bar, .chat-window-header";
 
-/** A length custom property, `name`, in px as the page lays it out. */
-function lengthOf(name: string): number {
-  const probe = document.createElement("span");
-  probe.style.cssText = `position:absolute;visibility:hidden;width:var(${name}, 0px)`;
-  document.body.append(probe);
-  const px = probe.getBoundingClientRect().width;
-  probe.remove();
-  return px;
-}
-
 /** The window bar's controls, measured: they are outside the islands,
  *  placed by their own stylesheet - the rows' inputs, not their layout. */
 function barSides() {
@@ -97,7 +88,7 @@ function measure(): BarObstacles {
     leadEnd: Math.max(-Infinity, ...boxes(LEAD).map((box) => box.right)),
     ends: boxes(ENDS).map((box) => box.left),
     ...barSides(),
-    corner: lengthOf("--island-radius") + lengthOf("--tab-radius"),
+    corner: tokenPx("--island-radius") + tokenPx("--tab-radius"),
   };
 }
 

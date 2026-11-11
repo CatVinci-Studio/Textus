@@ -1,3 +1,4 @@
+import { tokenPx } from "../tokens/token-px";
 import { onAppearance } from "../tokens/appearance";
 /**
  * Timing for motion CSS can't express on its own (FLIP, the AI sheet under a
@@ -150,8 +151,9 @@ export function duration(token: DurationToken): number {
 export function length(
   token: "--motion-distance-sm" | "--motion-distance-md",
 ): number {
-  const value = parseFloat(readToken(token));
-  if (Number.isFinite(value)) return value;
+  // Resolved by the page: calc() and the interface's scale included.
+  const px = tokenPx(token);
+  if (px > 0 || readToken(token) !== "") return px;
   return token === "--motion-distance-sm" ? 4 : 8;
 }
 

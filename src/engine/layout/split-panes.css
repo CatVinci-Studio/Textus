@@ -1,15 +1,3 @@
-/* The islands' parts lie where the area places them (frame/solve.ts):
-   their rows, sheets, views and the lines between them, each placed
-   absolutely. The probe resolves the layout's spacings for it. */
-.frame-probe {
-  position: absolute;
-  visibility: hidden;
-  pointer-events: none;
-  width: var(--island-inset, 0px);
-  height: var(--window-bar-height);
-  margin-left: var(--island-gap, 0px);
-}
-
 /* A phone's split (no islands): a pane's own tab bar, over its document;
    one below another pane keeps no room for the window bar. */
 .main-pane-split > .tab-bar {

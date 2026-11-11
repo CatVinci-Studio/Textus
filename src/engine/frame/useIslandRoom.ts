@@ -1,3 +1,4 @@
+import { tokenPx } from "../tokens/token-px";
 import { useLayoutEffect, useState, type RefObject } from "react";
 import { flushSync } from "react-dom";
 
@@ -38,43 +39,40 @@ const same = (a: IslandRoom | null, b: IslandRoom) =>
  */
 export function useIslandRoom(
   area: RefObject<HTMLElement | null>,
-  probe: RefObject<HTMLElement | null>,
   key: string,
 ): IslandRoom | null {
   const [room, setRoom] = useState<IslandRoom | null>(null);
   useLayoutEffect(() => {
-    const next = measure(area.current, probe.current);
+    const next = measure(area.current);
     if (next) setRoom((was) => (same(was, next) ? was : next));
-  }, [area, probe, key]);
+  }, [area, key]);
   useLayoutEffect(() => {
     const el = area.current;
     if (!el) return;
     const observer = new ResizeObserver(() => {
-      const next = measure(area.current, probe.current);
+      const next = measure(area.current);
       if (next)
         flushSync(() => setRoom((was) => (same(was, next) ? was : next)));
     });
     observer.observe(el);
     return () => observer.disconnect();
-  }, [area, probe]);
+  }, [area]);
   return room;
 }
 
-function measure(
-  el: HTMLElement | null,
-  probe: HTMLElement | null,
-): IslandRoom | null {
-  if (!el || !probe) return null;
+function measure(el: HTMLElement | null): IslandRoom | null {
+  if (!el) return null;
   const shell = el.offsetParent as HTMLElement | null;
-  const style = getComputedStyle(probe);
   const at = shell?.getBoundingClientRect();
+  // Read again: a Layout or text size switch may not be told yet.
+  const fresh = { fresh: true };
   return {
     w: el.clientWidth,
     h: el.clientHeight,
     origin: { x: el.offsetLeft, y: el.offsetTop },
-    inset: parseFloat(style.width) || 0,
-    gap: parseFloat(style.marginLeft) || 0,
-    bar: parseFloat(style.height) || 0,
+    inset: tokenPx("--island-inset", fresh),
+    gap: tokenPx("--island-gap", fresh),
+    bar: tokenPx("--window-bar-height", fresh),
     shell: { w: shell?.clientWidth ?? 0, h: shell?.clientHeight ?? 0 },
     shellAt: { x: at?.left ?? 0, y: at?.top ?? 0 },
   };

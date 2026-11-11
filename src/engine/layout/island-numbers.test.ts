@@ -75,6 +75,7 @@ describe("the hold in a window", () => {
       dividers: [],
       area: { x: 0, y: 40, w: 800, h: 600 },
       origin: { x: 0, y: 0 },
+      need: 0,
     });
     stop = watchIslandNumbers(false, picked);
   });

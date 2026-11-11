@@ -23,6 +23,8 @@ export function useIslandFrame(
   box: Rect | null,
   solved: IslandsLayout | null,
   islands: readonly PlacedIsland[],
+  /** The width they need at the least (frame-store's need). */
+  need: number,
 ): void {
   const last = useRef<{
     shell: IslandRoom["shell"];
@@ -50,7 +52,7 @@ export function useIslandFrame(
       .map(([k, p]) => `${k}:${p.rect.x},${p.rect.y},${p.rect.w},${p.rect.h}`)
       .join(" ");
     // What the islands hold, which the published layout carries too.
-    const held = `${room.origin.x},${room.origin.y},${room.shellAt.x},${room.shellAt.y} ${islands
+    const held = `${need} ${room.origin.x},${room.origin.y},${room.shellAt.x},${room.shellAt.y} ${islands
       .map((i) => `${i.key}:${i.paneId}:${i.front}:${i.tabs.join(",")}`)
       .join(" ")}`;
     const was = last.current;
@@ -67,7 +69,7 @@ export function useIslandFrame(
     for (const key of attached.current)
       if (!found.has(key)) frameClock.attach(key, null);
     attached.current = found;
-    publish(room, box, solved, islands);
+    publish(room, box, solved, islands, need);
     const resized =
       was && (was.shell.w !== room.shell.w || was.shell.h !== room.shell.h);
     const animate = !!was && !resized && !gripHeld();
@@ -90,6 +92,7 @@ function publish(
   box: Rect,
   solved: IslandsLayout,
   islands: readonly PlacedIsland[],
+  need: number,
 ) {
   const dx = room.origin.x + room.shellAt.x;
   const dy = room.origin.y + room.shellAt.y;
@@ -113,5 +116,6 @@ function publish(
     }),
     area: at(box),
     origin: { x: dx, y: dy },
+    need: Math.round(need),
   });
 }

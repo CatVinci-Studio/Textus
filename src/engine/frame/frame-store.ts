@@ -25,6 +25,9 @@ interface FrameLayout {
   area: Rect;
   /** Where the area's own (0, 0) is: what its parts are placed from. */
   origin: { x: number; y: number };
+  /** The width the islands need at the least (their minimums, the gaps
+   *  and insets): what the docks beside them leave room for; 0 unknown. */
+  need: number;
 }
 
 const EMPTY: FrameLayout = {
@@ -32,6 +35,7 @@ const EMPTY: FrameLayout = {
   dividers: [],
   area: { x: 0, y: 0, w: 0, h: 0 },
   origin: { x: 0, y: 0 },
+  need: 0,
 };
 
 let current: FrameLayout = EMPTY;
@@ -56,6 +60,14 @@ function onFrameLayout(listener: () => void): () => void {
 /** The islands as placed, kept current in a component. */
 export function useFrameLayout(): FrameLayout {
   return useSyncExternalStore(onFrameLayout, frameLayout);
+}
+
+const needNow = () => current.need;
+
+/** The width the islands need, kept current: told only when it changes,
+ *  not as islands move. */
+export function useIslandsNeed(): number {
+  return useSyncExternalStore(onFrameLayout, needNow);
 }
 
 /** The island whose box holds the viewport point, if any. */

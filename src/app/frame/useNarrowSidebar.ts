@@ -1,5 +1,5 @@
 import { useEffect, useRef, type Dispatch, type SetStateAction } from "react";
-import { useIslandsNeed } from "../../engine/frame/islands-need";
+import { useIslandsNeed } from "../../engine/frame/frame-store";
 
 /**
  * The sidebar steps aside when the window grows too narrow for it and the
