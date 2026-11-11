@@ -18,39 +18,23 @@
   background: var(--ui-frame-fill);
 }
 
-.app-shell[data-tabs="bar"] .window-bar-glass {
-  display: none;
-}
-
 /* The tabs name the documents; the title gives way to them. */
 .app-shell[data-tabs="bar"] .window-bar-title {
   visibility: hidden;
 }
 
-/* A clean sheet: the bar is the page's own top, in its paper (glass of
-   it, when frosted), so the window reads as one sheet. */
+/* A clean sheet: the bar is the page's own top, in its paper, so the
+   window reads as one sheet. */
 :root:not([data-window-chrome="mobile"])
   .app-shell:not([data-tabs])
   .window-bar {
   background: var(--doc-bg);
 }
 
-@supports (
-  (backdrop-filter: blur(1px)) or (-webkit-backdrop-filter: blur(1px))
-) {
-  :root:root[data-frosted-title-bar]:not([data-window-chrome="mobile"])
-    .app-shell:not([data-tabs])
-    .window-bar {
-    background: color-mix(in srgb, var(--doc-bg) 74%, transparent);
-  }
-}
-
 /* ---- Docks --------------------------------------------------------- */
 
 /* On the frame, solid, their edge against the islands the layout's. */
 .app-shell[data-tabs="bar"] :is(.activity-rail, .sidebar) {
-  -webkit-backdrop-filter: none;
-  backdrop-filter: none;
   border-right-color: var(--dock-edge);
 }
 

@@ -93,12 +93,6 @@ export function WindowBar({
   );
   return (
     <>
-      {/* The frosted bar's glass, layered under it: see window-bar.css. */}
-      <div className="window-bar-glass" aria-hidden>
-        <i />
-        <i />
-        <i />
-      </div>
       <header className="window-bar" data-tauri-drag-region>
         {bar.lead.map((item) => {
           switch (item) {

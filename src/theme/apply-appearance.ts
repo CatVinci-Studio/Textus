@@ -1,4 +1,3 @@
-import { isIOSPlatform, isMacPlatform } from "../platform/os";
 import { useEffect } from "react";
 import { useLatest } from "../utils/hooks/useLatest";
 import { themes } from "../platform/ipc";
@@ -108,14 +107,6 @@ function useApplyAppearance(
   useEffect(() => {
     document.documentElement.dataset.layout = settings.layout;
   }, [settings.layout]);
-
-  // The window bar is frosted - the document seen through it as it scrolls
-  // under - where the engine blurs on the GPU: macOS and iOS. WebKitGTK
-  // blurs on the main thread, every frame a scroll draws.
-  useEffect(() => {
-    if (isMacPlatform() || isIOSPlatform())
-      document.documentElement.setAttribute("data-frosted-title-bar", "");
-  }, []);
 
   useEffect(() => {
     const root = document.documentElement;

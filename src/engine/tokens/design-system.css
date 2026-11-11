@@ -971,31 +971,6 @@ input[type="checkbox"].ui-check:checked {
   column-rule-color: transparent;
 }
 
-/* Materials: translucent, blurred surfaces only where content scrolls under
-   chrome, and only on macOS and iOS: WebKitGTK blurs on the main thread, and
-   Windows matches its title bar. The doubled :root outranks the phone's fills. */
-@supports (
-  (backdrop-filter: blur(1px)) or (-webkit-backdrop-filter: blur(1px))
-) {
-  :root:root:is([data-platform="macos"], [data-platform="ios"])
-    :is(
-      .floating-surface,
-      .app-menu-list,
-      .ui-select-menu,
-      .context-menu,
-      .chat-history-menu,
-      .grammar-popover,
-      .info-tip-card,
-      .find-replace-bar,
-      .keyboard-toolbar,
-      .quick-ask-dock .inline-chat-shell
-    ) {
-    background: color-mix(in srgb, var(--ui-bg) 72%, transparent);
-    -webkit-backdrop-filter: saturate(180%) blur(20px);
-    backdrop-filter: saturate(180%) blur(20px);
-  }
-}
-
 /* Continuous corners where the engine draws them (Chromium 139+, so
    WebView2); elsewhere the plain radius stands. Capsules and circles stay
    round. */

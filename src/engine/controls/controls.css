@@ -436,8 +436,6 @@ input[type="range"].tx-slider {
   height: var(--tail-size);
   border: 0 solid var(--ui-border);
   background: inherit;
-  -webkit-backdrop-filter: inherit;
-  backdrop-filter: inherit;
   rotate: 45deg;
   pointer-events: none;
 }

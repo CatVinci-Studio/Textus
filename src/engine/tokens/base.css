@@ -128,9 +128,8 @@
   /* The frame a step further back, under a floating page (several
      documents). */
   --ui-frame-sunk: color-mix(in srgb, var(--ui-frame-tint) 8%, var(--ui-bg));
-  /* What the frame is filled with: the frame's colour, or frosted - the same
-     colour a little clear, over the page - when the title bar is. One fill
-     for the bar, the rail and the sidebar, so they never differ. */
+  /* What the frame is filled with: one fill for the bar, the rail and the
+     sidebar, so they never differ. */
   --ui-frame-fill: var(--ui-frame);
   /* The one line the frame draws: where it meets the page, a hairline
      softer than a card's border. Inside the frame, nothing. */
