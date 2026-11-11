@@ -1073,7 +1073,6 @@ export default {
     "Не удалось подключиться к галерее тем. Проверьте соединение или посмотрите темы на сайте.",
   themeGalleryRetry: "Повторить",
   themeGalleryWebsite: "Открыть сайт",
-  themeGalleryBy: "автор: {author}",
   themeGalleryInstall: "Установить",
   themeGalleryInstalled: "Установлена",
   themeGalleryUpdate: "Обновить",

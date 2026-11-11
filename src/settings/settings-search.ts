@@ -39,7 +39,9 @@ function groupOf(el: Element): string {
   if (fixed) return labelText(fixed.querySelector(".shortcut-fixed-title"));
   const group = el.closest(".settings-group");
   return labelText(
-    group?.querySelector(":scope > .settings-group-head > .settings-group-title"),
+    group?.querySelector(
+      ":scope > .settings-group-head > .settings-group-title",
+    ),
   );
 }
 

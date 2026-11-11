@@ -1055,7 +1055,6 @@ Habilidades ficam na pasta skills/ ao lado deste arquivo, um arquivo
     "Não foi possível acessar a galeria de temas. Verifique sua conexão ou veja os temas no site.",
   themeGalleryRetry: "Tentar novamente",
   themeGalleryWebsite: "Abrir site",
-  themeGalleryBy: "por {author}",
   themeGalleryInstall: "Instalar",
   themeGalleryInstalled: "Instalado",
   themeGalleryUpdate: "Atualizar",

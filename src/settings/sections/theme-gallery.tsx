@@ -1,3 +1,4 @@
+import { Byline } from "../pages/CatalogRow";
 import { fill } from "../../i18n/fill";
 import { useSettingsIndexing } from "../indexing";
 import {
@@ -284,14 +285,8 @@ export function galleryCopies(
 
 /** Who made a gallery theme and how often it was installed. */
 export function ThemeByline({ t, theme }: { t: Strings; theme: GalleryTheme }) {
-  const installs = installsText(theme, t);
   return (
-    <span className="plugin-byline">
-      {theme.author && (
-        <span>{fill(t.themeGalleryBy, { author: theme.author })}</span>
-      )}
-      {installs && <span className="plugin-installs">{installs}</span>}
-    </span>
+    <Byline t={t} author={theme.author} installs={installsText(theme, t)} />
   );
 }
 

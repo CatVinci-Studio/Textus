@@ -1041,7 +1041,6 @@ Skills liegen im Ordner skills/ neben dieser Datei, je Skill eine
     "Die Theme-Galerie ist nicht erreichbar. Prüfe deine Verbindung oder sieh dir die Themes auf der Website an.",
   themeGalleryRetry: "Erneut versuchen",
   themeGalleryWebsite: "Website öffnen",
-  themeGalleryBy: "von {author}",
   themeGalleryInstall: "Installieren",
   themeGalleryInstalled: "Installiert",
   themeGalleryUpdate: "Aktualisieren",

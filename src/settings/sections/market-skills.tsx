@@ -1,3 +1,4 @@
+import { Byline, CatalogRow } from "../pages/CatalogRow";
 import { explainError } from "../../utils/error-explain";
 import { fill } from "../../i18n/fill";
 import { useEffect, useState } from "react";
@@ -117,41 +118,30 @@ export function AvailableSkills({
         const words =
           skill.labels?.[settings.language] ?? skill.labels?.en ?? null;
         return (
-          <div
+          <CatalogRow
             key={skill.name}
-            className="settings-row plugin-card"
             data-skill={skill.name}
-          >
-            <div className="plugin-card-open">
-              <span className="settings-row-label plugin-card-name">
-                {words?.label ?? `/${skill.name}`}
-              </span>
-              <span className="settings-row-hint plugin-card-description">
-                {words ? `/${skill.name} · ${words.hint}` : skill.description}
-              </span>
-              {(skill.official || skill.author) && (
-                <span className="plugin-byline">
+            name={words?.label ?? `/${skill.name}`}
+            description={
+              words ? `/${skill.name} · ${words.hint}` : skill.description
+            }
+            byline={
+              <Byline
+                t={t}
+                lead={
                   <span className="market-skill-modes">
                     {(skill.modes ?? ["write"])
                       .map((m) => t[MODES[m].label])
                       .join(" · ")}
                   </span>
-                  {skill.official && (
-                    <span className="tx-badge" data-tone="strong">
-                      {t.pluginOfficial}
-                    </span>
-                  )}
-                  {skill.author &&
-                    fill(t.themeGalleryBy, { author: skill.author })}
-                  {installsText(skill, t) && (
-                    <span className="plugin-installs">
-                      {installsText(skill, t)}
-                    </span>
-                  )}
-                </span>
-              )}
-            </div>
-            <div className="settings-row-control plugin-action">
+                }
+                official={skill.official}
+                author={skill.author}
+                installs={installsText(skill, t)}
+              />
+            }
+            actionClass="plugin-action"
+            action={
               <button
                 type="button"
                 className="text-button plugin-action-main"
@@ -160,8 +150,8 @@ export function AvailableSkills({
               >
                 {busy === skill.name ? t.pluginInstalling : t.pluginInstall}
               </button>
-            </div>
-          </div>
+            }
+          />
         );
       })}
     />

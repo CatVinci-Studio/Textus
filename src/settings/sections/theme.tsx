@@ -1,3 +1,4 @@
+import { Byline } from "../pages/CatalogRow";
 import { Segmented } from "../../engine/controls/Segmented";
 import { fill } from "../../i18n/fill";
 import { requestCreate } from "../../ai/chat/create-request";
@@ -381,11 +382,7 @@ export function ThemesTab({ t }: { t: Strings }) {
                     <ThemeByline t={t} theme={copy} />
                   ) : (
                     madeByAi(settings.creations, "theme", theme.id) && (
-                      <span className="plugin-byline">
-                        <span className="tx-badge" data-tone="strong">
-                          {t.madeByTextusAi}
-                        </span>
-                      </span>
+                      <Byline t={t} madeHere />
                     )
                   )
                 }

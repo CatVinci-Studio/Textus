@@ -1012,7 +1012,6 @@ type /name in a conversation to use one.
     "Couldn't reach the theme gallery. Check your connection, or see the themes on the website.",
   themeGalleryRetry: "Try again",
   themeGalleryWebsite: "Open website",
-  themeGalleryBy: "by {author}",
   themeGalleryInstall: "Install",
   themeGalleryInstalled: "Installed",
   themeGalleryUpdate: "Update",

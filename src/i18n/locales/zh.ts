@@ -932,7 +932,6 @@ export default {
   themeGalleryUnreachable: "无法连接主题库。请检查网络，或在网站上查看主题。",
   themeGalleryRetry: "重试",
   themeGalleryWebsite: "打开网站",
-  themeGalleryBy: "作者：{author}",
   themeGalleryInstall: "安装",
   themeGalleryInstalled: "已安装",
   themeGalleryUpdate: "更新",

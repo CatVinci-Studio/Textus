@@ -1,3 +1,4 @@
+import { CatalogRow } from "../pages/CatalogRow";
 import { Tooltip } from "../../engine/controls/Tooltip";
 import { Segmented } from "../../engine/controls/Segmented";
 import { counted } from "../../i18n/current";
@@ -199,58 +200,63 @@ function ServerCard({
 }) {
   const failed = server.enabled && status?.state === "failed";
   return (
-    <div className="settings-row plugin-card mcp-card" data-mcp={server.id}>
-      <div className="plugin-card-open">
-        <span className="settings-row-label plugin-card-name">
-          {server.name || server.id}
-        </span>
-        <span className="settings-row-hint plugin-card-description mcp-endpoint">
-          {server.url || joinCommandLine([server.command, ...server.args])}
-        </span>
-        <span
-          className={`settings-row-hint mcp-state${failed ? " mcp-state-failed" : ""}`}
-          role="status"
-        >
-          {stateText(t, server, status)}
-        </span>
-        {server.enabled && status?.state === "ready" && (
-          <ToolList tools={status.tools} />
-        )}
-        <span className="mcp-actions">
-          <button
-            type="button"
-            className="text-button settings-inline-button"
-            onClick={onEdit}
+    <CatalogRow
+      className="mcp-card"
+      data-mcp={server.id}
+      name={server.name || server.id}
+      description={
+        server.url || joinCommandLine([server.command, ...server.args])
+      }
+      descriptionClass="mcp-endpoint"
+      extra={
+        <>
+          <span
+            className={`settings-row-hint mcp-state${failed ? " mcp-state-failed" : ""}`}
+            role="status"
           >
-            {t.mcpEdit}
-          </button>
-          {server.enabled && (
+            {stateText(t, server, status)}
+          </span>
+          {server.enabled && status?.state === "ready" && (
+            <ToolList tools={status.tools} />
+          )}
+          <span className="mcp-actions">
             <button
               type="button"
               className="text-button settings-inline-button"
-              onClick={onRestart}
+              onClick={onEdit}
             >
-              {t.mcpRestart}
+              {t.mcpEdit}
             </button>
-          )}
-          <button
-            type="button"
-            className="text-button settings-inline-button"
-            onClick={onRemove}
-          >
-            {t.mcpRemove}
-          </button>
-        </span>
-      </div>
-      <div className="settings-row-control">
-        <input
-          type="checkbox"
-          aria-label={server.name || server.id}
-          checked={server.enabled}
-          onChange={(e) => onEnable(e.target.checked)}
-        />
-      </div>
-    </div>
+            {server.enabled && (
+              <button
+                type="button"
+                className="text-button settings-inline-button"
+                onClick={onRestart}
+              >
+                {t.mcpRestart}
+              </button>
+            )}
+            <button
+              type="button"
+              className="text-button settings-inline-button"
+              onClick={onRemove}
+            >
+              {t.mcpRemove}
+            </button>
+          </span>
+        </>
+      }
+      action={
+        <>
+          <input
+            type="checkbox"
+            aria-label={server.name || server.id}
+            checked={server.enabled}
+            onChange={(e) => onEnable(e.target.checked)}
+          />
+        </>
+      }
+    />
   );
 }
 

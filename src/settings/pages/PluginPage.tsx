@@ -1,5 +1,5 @@
+import { Byline } from "./CatalogRow";
 import { fill } from "../../i18n/fill";
-import type { ReactNode } from "react";
 import { SettingsGroup } from "./SettingsGroup";
 import { SettingRow, LinkRow } from "../sections/controls";
 import { PluginSettingRows } from "./PluginSettings";
@@ -29,7 +29,6 @@ import { permissionLabel } from "../../plugins/store/permissions";
 import { canSwitch } from "../../plugins/store/lifecycle";
 import { PluginReadme } from "./PluginArt";
 import { PluginSettingsWebview } from "../../plugins/views/plugin-views";
-import type { PluginManifest } from "../../plugins/store/manifest";
 import { exportPluginForPublishing } from "../../plugins/store/plugin-export";
 
 export type Attempt = (work: () => Promise<unknown>) => Promise<void>;
@@ -53,48 +52,6 @@ export function statusText(
     default:
       return null;
   }
-}
-
-/** Who made it, and whether it is CatVinci's own. */
-export function Byline({
-  manifest,
-  official,
-  dev,
-  madeHere,
-  t,
-  children,
-}: {
-  manifest: PluginManifest;
-  official: boolean;
-  dev?: boolean;
-  /** Made by Textus AI in Create. */
-  madeHere?: boolean;
-  t: Strings;
-  /** More about it after the version: its installs. */
-  children?: ReactNode;
-}) {
-  return (
-    <div className="plugin-byline">
-      {official && (
-        <span className="tx-badge" data-tone="strong">
-          {t.pluginOfficial}
-        </span>
-      )}
-      {madeHere && (
-        <span className="tx-badge" data-tone="strong">
-          {t.madeByTextusAi}
-        </span>
-      )}
-      <span>
-        {fill(t.pluginBy, { author: manifest.author || manifest.publisher })}
-      </span>
-      <span className="plugin-version" data-search-ignore>
-        {manifest.version}
-        {dev ? ` · ${t.pluginDevTag}` : ""}
-      </span>
-      {children}
-    </div>
-  );
 }
 
 /** One plugin's own page: about it, what it needs, its settings, what it
@@ -155,10 +112,11 @@ export function PluginPage({
             label={fill(t.pluginVersionLabel, { version: manifest.version })}
             hint={
               <Byline
-                manifest={manifest}
-                official={record.official}
-                dev={record.origin === "dev"}
                 t={t}
+                official={record.official}
+                author={manifest.author || manifest.publisher}
+                version={manifest.version}
+                dev={record.origin === "dev"}
               />
             }
           >

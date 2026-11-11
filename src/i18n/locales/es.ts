@@ -1070,7 +1070,6 @@ para usar una.
     "No se pudo conectar con la galería de temas. Revisa tu conexión o mira los temas en el sitio web.",
   themeGalleryRetry: "Reintentar",
   themeGalleryWebsite: "Abrir sitio web",
-  themeGalleryBy: "de {author}",
   themeGalleryInstall: "Instalar",
   themeGalleryInstalled: "Instalado",
   themeGalleryUpdate: "Actualizar",

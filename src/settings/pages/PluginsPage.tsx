@@ -9,7 +9,8 @@ import {
 } from "react";
 import { requestCreate } from "../../ai/chat/create-request";
 import type { SettingsPageProps } from "./types";
-import { Byline, PluginPage, statusText } from "./PluginPage";
+import { PluginPage, statusText } from "./PluginPage";
+import { Byline, CatalogRow } from "./CatalogRow";
 import { ExtensionsTabLayout } from "./ExtensionsTabLayout";
 import { usePluginActions } from "./PluginAction";
 import { SettingRow, ToggleRow } from "../sections/controls";
@@ -280,38 +281,33 @@ function PluginCard({
   // All turned off: every card quieter, the switch above says why.
   const status = statusText(record, true, t);
   return (
-    <div
-      className={`settings-row plugin-card${record.status === "on" || !allOn ? "" : " is-off"}`}
+    <CatalogRow
       data-plugin={record.id}
-    >
-      <button
-        type="button"
-        className="plugin-card-open plugin-card-with-icon"
-        aria-label={fill(t.pluginOpenDetails, { name })}
-        onClick={onOpen}
-      >
+      off={record.status !== "on" && allOn}
+      name={name}
+      description={
+        manifest?.description && pluginText(record, manifest.description)
+      }
+      icon={
         <PluginIcon id={record.id} manifest={manifest} origin={record.origin} />
-        <span className="plugin-card-text">
-          <span className="settings-row-label plugin-card-name">{name}</span>
-          {manifest?.description && (
-            <span className="settings-row-hint plugin-card-description">
-              {pluginText(record, manifest.description)}
-            </span>
-          )}
-          {manifest && (
-            <Byline
-              manifest={manifest}
-              official={record.official}
-              dev={record.origin === "dev"}
-              madeHere={madeHere}
-              t={t}
-            />
-          )}
-          {status && <span className="settings-error">{status}</span>}
-        </span>
-      </button>
-      <div className="settings-row-control">{action}</div>
-    </div>
+      }
+      byline={
+        manifest && (
+          <Byline
+            t={t}
+            official={record.official}
+            madeHere={madeHere}
+            author={manifest.author || manifest.publisher}
+            version={manifest.version}
+            dev={record.origin === "dev"}
+          />
+        )
+      }
+      status={status}
+      openLabel={fill(t.pluginOpenDetails, { name })}
+      onOpen={onOpen}
+      action={action}
+    />
   );
 }
 

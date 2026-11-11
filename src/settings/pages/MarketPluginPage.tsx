@@ -1,5 +1,5 @@
 import { fill } from "../../i18n/fill";
-import { Byline } from "./PluginPage";
+import { Byline } from "./CatalogRow";
 import { PluginIcon, PluginReadme } from "./PluginArt";
 import type { ReactNode } from "react";
 import { installsText } from "./installs-text";
@@ -49,8 +49,13 @@ export function MarketPluginPage({
           <div className="settings-row-hint">
             {pluginText(record, item.manifest.description)}
           </div>
-          <Byline manifest={item.manifest} official={item.official} t={t}>
-            {installs && <span className="plugin-installs">{installs}</span>}
+          <Byline
+            t={t}
+            official={item.official}
+            author={item.manifest.author || item.manifest.publisher}
+            version={item.manifest.version}
+            installs={installs}
+          >
             {item.updated && (
               <span>{fill(t.pluginUpdatedOn, { date: item.updated })}</span>
             )}

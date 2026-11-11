@@ -1077,7 +1077,6 @@ utiliser une.
     "Impossible de joindre la galerie de thèmes. Vérifiez votre connexion ou consultez les thèmes sur le site web.",
   themeGalleryRetry: "Réessayer",
   themeGalleryWebsite: "Ouvrir le site",
-  themeGalleryBy: "par {author}",
   themeGalleryInstall: "Installer",
   themeGalleryInstalled: "Installé",
   themeGalleryUpdate: "Mettre à jour",

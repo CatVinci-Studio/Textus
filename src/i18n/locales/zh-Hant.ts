@@ -934,7 +934,6 @@ export default {
   themeGalleryUnreachable: "無法連線到主題庫。請檢查網路，或到網站上查看主題。",
   themeGalleryRetry: "重試",
   themeGalleryWebsite: "開啟網站",
-  themeGalleryBy: "作者：{author}",
   themeGalleryInstall: "安裝",
   themeGalleryInstalled: "已安裝",
   themeGalleryUpdate: "更新",

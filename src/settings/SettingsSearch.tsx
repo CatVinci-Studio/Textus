@@ -170,9 +170,7 @@ export function SettingsSearchResults({
     <>
       <h1 className="settings-category-title">{t.settingsSearchResults}</h1>
       {empty ? (
-        <div className="tx-list-note">
-          {t.settingsSearchNoMatches}
-        </div>
+        <div className="tx-list-note">{t.settingsSearchNoMatches}</div>
       ) : (
         <div id={listId} role="listbox" aria-label={t.settingsSearchResults}>
           {groups.map((group) => (

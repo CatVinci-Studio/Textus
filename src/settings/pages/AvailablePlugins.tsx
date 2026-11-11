@@ -1,7 +1,7 @@
 import { explainError } from "../../utils/error-explain";
 import { fill } from "../../i18n/fill";
 import { useState, type ReactNode } from "react";
-import { Byline } from "./PluginPage";
+import { Byline, CatalogRow } from "./CatalogRow";
 import { PluginIcon } from "./PluginArt";
 import type { Strings } from "../../i18n/strings";
 import { pluginName, pluginText } from "../../plugins/store/plugin-records";
@@ -148,25 +148,28 @@ function CatalogCard({
   const name = pluginName({ id: item.id, manifest: item.manifest });
   const installs = installsText(item, t);
   return (
-    <div className="settings-row plugin-card" data-catalog={item.id}>
-      <button
-        type="button"
-        className="plugin-card-open plugin-card-with-icon"
-        aria-label={fill(t.pluginOpenDetails, { name })}
-        onClick={onOpen}
-      >
+    <CatalogRow
+      data-catalog={item.id}
+      name={name}
+      description={pluginText(
+        { manifest: item.manifest },
+        item.manifest.description,
+      )}
+      icon={
         <PluginIcon id={item.id} manifest={item.manifest} url={item.icon} />
-        <span className="plugin-card-text">
-          <span className="settings-row-label plugin-card-name">{name}</span>
-          <span className="settings-row-hint plugin-card-description">
-            {pluginText({ manifest: item.manifest }, item.manifest.description)}
-          </span>
-          <Byline manifest={item.manifest} official={item.official} t={t}>
-            {installs && <span className="plugin-installs">{installs}</span>}
-          </Byline>
-        </span>
-      </button>
-      <div className="settings-row-control">{action}</div>
-    </div>
+      }
+      byline={
+        <Byline
+          t={t}
+          official={item.official}
+          author={item.manifest.author || item.manifest.publisher}
+          version={item.manifest.version}
+          installs={installs}
+        />
+      }
+      openLabel={fill(t.pluginOpenDetails, { name })}
+      onOpen={onOpen}
+      action={action}
+    />
   );
 }
