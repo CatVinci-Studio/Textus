@@ -87,25 +87,10 @@ pub(crate) fn root_in(
         let from = paper_dir(scratch, id)?;
         let to = paper_dir(&root, id)?;
         if from.is_dir() && !to.exists() {
-            move_paper(&from, &to).map_err(|e| e.to_string())?;
+            crate::atomic::move_or_copy(&from, &to).map_err(|e| e.to_string())?;
         }
     }
     Ok(root)
-}
-
-/// A paper's folder moved whole; copied where it can't be renamed (the
-/// temporary folder on another volume).
-fn move_paper(from: &Path, to: &Path) -> std::io::Result<()> {
-    if let Some(parent) = to.parent() {
-        std::fs::create_dir_all(parent)?;
-    }
-    if std::fs::rename(from, to).is_ok() {
-        return Ok(());
-    }
-    crate::ai::project_data::copy_dir(from, to)?;
-    // The copy is whole; what is left is Textus's own scratch copy.
-    let _ = std::fs::remove_dir_all(from);
-    Ok(())
 }
 
 /// Writes the paper's files under `root`, each whole or not at
@@ -216,7 +201,7 @@ pub(crate) fn keep_attachments(
             .map(|c| c.join(ATTACHED))
             .filter(|f| f.is_dir())
         {
-            crate::ai::project_data::copy_dir(&from, &attached).map_err(|e| e.to_string())?;
+            crate::atomic::copy_dir(&from, &attached).map_err(|e| e.to_string())?;
         }
     }
     write_out_materials(&dir, &attached)?;

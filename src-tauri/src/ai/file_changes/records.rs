@@ -91,25 +91,12 @@ pub(super) fn set(record: &Path, change: &mut FileChange, on: bool) -> Result<()
         // back; set aside in the record where there is none.
         (false, None) => {
             // Tests' files, and a phone's, go aside in the record.
-            #[cfg(all(desktop, not(test)))]
-            let trashed = trash::delete(file).is_ok();
-            #[cfg(any(not(desktop), test))]
-            let trashed = false;
-            if !trashed {
-                set_aside(file, &record.join(format!("{}.removed", change.id)))?
+            if !crate::atomic::try_trash(file) {
+                crate::atomic::move_or_copy(file, &record.join(format!("{}.removed", change.id)))
+                    .map_err(|e| e.to_string())?
             }
         }
     }
     change.applied = on;
     Ok(())
-}
-
-/// Moves `file` to `to`; across disks (a scratch folder in memory), a copy
-/// kept there first.
-fn set_aside(file: &Path, to: &Path) -> Result<(), String> {
-    if std::fs::rename(file, to).is_ok() {
-        return Ok(());
-    }
-    std::fs::copy(file, to).map_err(|e| e.to_string())?;
-    std::fs::remove_file(file).map_err(|e| e.to_string())
 }

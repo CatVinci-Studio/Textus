@@ -255,6 +255,52 @@ impl Drop for TempDir {
 #[cfg(test)]
 mod tests;
 
+/// `from` (a file or a folder) moved to `to`, its folder made first; where
+/// it can't be renamed (another volume), copied whole, then the original
+/// removed.
+pub(crate) fn move_or_copy(from: &std::path::Path, to: &std::path::Path) -> std::io::Result<()> {
+    if let Some(parent) = to.parent() {
+        std::fs::create_dir_all(parent)?;
+    }
+    if std::fs::rename(from, to).is_ok() {
+        return Ok(());
+    }
+    if from.is_dir() {
+        copy_dir(from, to)?;
+        std::fs::remove_dir_all(from)
+    } else {
+        std::fs::copy(from, to)?;
+        std::fs::remove_file(from)
+    }
+}
+
+/// Folder `from` copied into `to`, its files and folders.
+pub(crate) fn copy_dir(from: &std::path::Path, to: &std::path::Path) -> std::io::Result<()> {
+    std::fs::create_dir_all(to)?;
+    for entry in std::fs::read_dir(from)? {
+        let entry = entry?;
+        let kind = entry.file_type()?;
+        if kind.is_dir() {
+            copy_dir(&entry.path(), &to.join(entry.file_name()))?;
+        } else if kind.is_file() {
+            std::fs::copy(entry.path(), to.join(entry.file_name()))?;
+        }
+    }
+    Ok(())
+}
+
+/// Whether `path` went to the Trash; false where there is none (and in
+/// tests, whose files aren't the user's).
+pub(crate) fn try_trash(path: &std::path::Path) -> bool {
+    #[cfg(all(desktop, not(test)))]
+    return trash::delete(path).is_ok();
+    #[cfg(any(not(desktop), test))]
+    {
+        let _ = path;
+        false
+    }
+}
+
 /// `path` (a file or a folder) out of the way the user can get it back:
 /// to the Trash where the system has one, else removed - for what may hold
 /// the user's own work (a plugin's notes, a skill they edited, a theme).
