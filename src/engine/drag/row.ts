@@ -37,8 +37,9 @@ export function clearSlides(items: readonly RowItem[]): void {
 
 /**
  * One item dragged along a row or column of its siblings, the others
- * making room as it passes them - the sidebar's tabs, plugin lists (a row
- * of document tabs is the tab strip's; the rail's one column, rail-drag). Measured once when the drag begins (layout values,
+ * making room as it passes them - the sidebar's tabs (a row of document
+ * tabs is the tab strip's; the rail's one column, rail-drag, slides by
+ * the same steps). Measured once when the drag begins (layout values,
  * untouched by transforms in flight); each move finds the place by binary
  * search and restyles only the items whose shift changed.
  */

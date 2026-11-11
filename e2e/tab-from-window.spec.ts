@@ -1,5 +1,5 @@
 import { expect, test, type Page } from "@playwright/test";
-import { emit, openApp } from "./helpers";
+import { emit, openApp, pasteMarkdown } from "./helpers";
 
 // A tab dragged in from another window: the native side sends where the
 // pointer is (drag-hover) and then the tab itself (receive-detached-tab).
@@ -118,4 +118,32 @@ test("in a split, let go over an island's row, it joins that island at that slot
   await expect(
     page.locator('[data-active-tab="true"] .ProseMirror'),
   ).toContainText("Elsewhere");
+});
+
+test("a tab dragged along its row swaps places when let go, and stays with Esc", async ({
+  page,
+}) => {
+  await open(page);
+  await pasteMarkdown(page, "# One\n");
+  await emit(page, "menu-new-file");
+  const pills = page.locator(".tab-pill");
+  await expect(pills).toHaveCount(2);
+  const ids = () =>
+    pills.evaluateAll((els) => els.map((el) => el.getAttribute("data-tab")));
+  const before = await ids();
+  const drag = async (escape: boolean) => {
+    const a = (await pills.nth(0).boundingBox())!;
+    const b = (await pills.nth(1).boundingBox())!;
+    await page.mouse.move(a.x + a.width / 2, a.y + a.height / 2);
+    await page.mouse.down();
+    await page.mouse.move(b.x + b.width * 0.8, a.y + a.height / 2, {
+      steps: 8,
+    });
+    if (escape) await page.keyboard.press("Escape");
+    await page.mouse.up();
+  };
+  await drag(true);
+  await expect.poll(ids).toEqual(before);
+  await drag(false);
+  await expect.poll(ids).toEqual([before[1], before[0]]);
 });

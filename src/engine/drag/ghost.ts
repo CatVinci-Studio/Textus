@@ -69,3 +69,38 @@ export function dragGhost(text: string, className: string): DragGhost {
     },
   };
 }
+
+/** A copy of `node` lifted where it is, carried by the pointer `dx, dy`
+ *  from there: for an item its own clipping box would hide (a rail icon),
+ *  the item itself left hidden until `remove`. */
+export function liftedCopy(node: HTMLElement): {
+  moveBy(dx: number, dy: number): void;
+  remove(): void;
+} {
+  const box = node.getBoundingClientRect();
+  const copy = node.cloneNode(true) as HTMLElement;
+  for (const attr of [...copy.attributes])
+    if (attr.name.startsWith("data-") || attr.name === "id")
+      copy.removeAttribute(attr.name);
+  copy.setAttribute("aria-hidden", "true");
+  copy.classList.add("tx-drag-ghost", "is-lifted");
+  Object.assign(copy.style, {
+    left: "0",
+    top: "0",
+    width: `${box.width}px`,
+    height: `${box.height}px`,
+  });
+  const moveBy = (dx: number, dy: number) => {
+    copy.style.translate = `${box.left + dx}px ${box.top + dy}px`;
+  };
+  moveBy(0, 0);
+  document.body.append(copy);
+  node.style.visibility = "hidden";
+  return {
+    moveBy,
+    remove() {
+      copy.remove();
+      node.style.visibility = "";
+    },
+  };
+}

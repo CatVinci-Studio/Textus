@@ -1,5 +1,6 @@
 import { clearSlides, passedCount, slideAside } from "../../engine/drag/row";
 import { trackDrag } from "../../engine/drag/pointer-drag";
+import { liftedCopy } from "../../engine/drag/ghost";
 
 /** The line between Textus's own (and pinned) icons and the plugins'. */
 export const RAIL_DIVIDER = "rail-divider";
@@ -39,9 +40,7 @@ export function railDrag(
     from: number;
     room: number;
     shown: number[];
-    copy: HTMLElement;
-    dragged: HTMLElement;
-    box: DOMRect;
+    copy: ReturnType<typeof liftedCopy>;
   } | null = null;
 
   const indexAt = (y: number) => {
@@ -65,19 +64,7 @@ export function railDrag(
         return r.top + r.height / 2;
       };
       const gap = parseFloat(getComputedStyle(dragged.parentElement!).rowGap);
-      const copy = dragged.cloneNode(true) as HTMLElement;
-      copy.removeAttribute("data-rail-id");
-      copy.setAttribute("aria-hidden", "true");
-      copy.classList.add("tx-drag-ghost", "is-lifted");
-      Object.assign(copy.style, {
-        left: "0",
-        top: "0",
-        width: `${box.width}px`,
-        height: `${box.height}px`,
-        translate: `${box.left}px ${box.top}px`,
-      });
-      document.body.append(copy);
-      dragged.style.visibility = "hidden";
+      const copy = liftedCopy(dragged);
       rail.classList.add("is-reordering");
       state = {
         items,
@@ -88,22 +75,19 @@ export function railDrag(
         room: box.height + (gap || 0),
         shown: new Array<number>(others.length).fill(0),
         copy,
-        dragged,
-        box,
       };
     },
     move: (_x, y) => {
       if (!state) return;
-      const { box, copy, others, shown, from, room } = state;
-      copy.style.translate = `${box.left}px ${box.top + (y - down.clientY)}px`;
+      const { copy, others, shown, from, room } = state;
+      copy.moveBy(0, y - down.clientY);
       slideAside(others, shown, from, indexAt(y), room, "y");
     },
     end: (_x, y, dropped) => {
       if (!state) return;
-      const { items, others, copy, dragged, from } = state;
+      const { items, others, copy, from } = state;
       const to = indexAt(y);
       copy.remove();
-      dragged.style.visibility = "";
       rail.classList.remove("is-reordering");
       clearSlides(items);
       state = null;

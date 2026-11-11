@@ -70,6 +70,16 @@ export function useIslandsNeed(): number {
   return useSyncExternalStore(onFrameLayout, needNow);
 }
 
+/** The island whose row of tabs holds the viewport point, if any. */
+export function rowIslandAt(x: number, y: number): FrameIsland | null {
+  return (
+    current.islands.find(
+      ({ row: r }) =>
+        !!r && x >= r.x && x <= r.x + r.w && y >= r.y && y <= r.y + r.h,
+    ) ?? null
+  );
+}
+
 /** The island whose box holds the viewport point, if any. */
 export function islandAt(x: number, y: number): FrameIsland | null {
   return (

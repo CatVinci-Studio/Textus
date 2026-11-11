@@ -1,6 +1,7 @@
 import { DRAG_START_PX, TOUCH_SLOP_PX } from "../../../utils/gesture";
 import { scaledPx } from "../../tokens/chrome-scale";
-import { frameLayout } from "../../frame/frame-store";
+import { rowIslandAt } from "../../frame/frame-store";
+import { trackDrag } from "../../drag/pointer-drag";
 import { useEffect, useRef } from "react";
 import { CloseIcon, LockIcon } from "../icons";
 import { Tooltip } from "../Tooltip";
@@ -38,15 +39,8 @@ const LIFT_MS = 300;
 
 /** Another island's row than pane `own`'s under (x, y), as placed. */
 function rowAt(x: number, y: number, own: string | null): boolean {
-  return frameLayout().islands.some(
-    ({ paneId, row }) =>
-      paneId !== own &&
-      !!row &&
-      x >= row.x &&
-      x <= row.x + row.w &&
-      y >= row.y &&
-      y <= row.y + row.h,
-  );
+  const island = rowIslandAt(x, y);
+  return !!island && island.paneId !== own;
 }
 
 export function TabPill({
@@ -162,6 +156,10 @@ export function TabPill({
     elRef.current?.classList.remove("tab-pill-lifted");
   }
 
+  // A mouse's drag goes by trackDrag (Esc puts the tab back); a finger's
+  // waits to be lifted first, then follows the same way.
+  const tracked = useRef<{ cancel: () => void } | null>(null);
+
   function handlePointerDown(e: React.PointerEvent<HTMLDivElement>) {
     if (e.button !== 0) return;
     const touch = e.pointerType === "touch";
@@ -172,12 +170,47 @@ export function TabPill({
       reordering: false,
       waiting: touch ? setTimeout(lift, LIFT_MS) : undefined,
     };
-    if (!touch) e.currentTarget.setPointerCapture(e.pointerId);
+    if (touch) return;
+    tracked.current = trackDrag(e.nativeEvent, {
+      move: (x, y, ev) => follow(x, y, ev),
+      end: (x, _y, dropped) => {
+        const g = gesture.current;
+        gesture.current = null;
+        tracked.current = null;
+        carry(0);
+        if (g?.reordering) onDrop(tab.id, dropped ? x - g.startX : 0);
+      },
+    });
+  }
+
+  /** The tab follows the pointer at (x, y): along its row, or out of it
+   *  (pulled off, or across onto another island's row) as the caller's. */
+  function follow(x: number, y: number, native: PointerEvent) {
+    const g = gesture.current;
+    if (!g) return;
+    const pulled =
+      onPullOut &&
+      (Math.abs(y - g.startY) > scaledPx(PULL_OUT_PX) || rowAt(x, y, pane));
+    if (pulled) {
+      // Neighbours slide home, and the drag is the caller's from here.
+      gesture.current = null;
+      carry(0);
+      tracked.current?.cancel();
+      onPullOut(tab.id, title, native);
+      return;
+    }
+    const dx = x - g.startX;
+    if (!g.reordering) {
+      if (Math.abs(dx) < DRAG_START_PX) return;
+      g.reordering = true;
+    }
+    carry(dx);
+    onDrag(tab.id, dx);
   }
 
   function handlePointerMove(e: React.PointerEvent<HTMLDivElement>) {
     const g = gesture.current;
-    if (!g) return;
+    if (!g || e.pointerType !== "touch") return;
     if (g.waiting) {
       // Moved before it lifted: a scroll of the bar, not a drag.
       if (
@@ -188,35 +221,13 @@ export function TabPill({
       }
       return;
     }
-
-    if (onPullOut && Math.abs(e.clientY - g.startY) > scaledPx(PULL_OUT_PX)) {
-      // Pulled out of the bar: neighbours slide home, and the drag is the
-      // caller's from here.
-      gesture.current = null;
-      carry(0);
-      onPullOut(tab.id, title, e.nativeEvent);
-      return;
-    }
-
-    // Across onto another pane's bar: it goes on as a pull, let go there.
-    if (onPullOut && rowAt(e.clientX, e.clientY, pane)) {
-      gesture.current = null;
-      carry(0);
-      onPullOut(tab.id, title, e.nativeEvent);
-      return;
-    }
-
-    const dx = e.clientX - g.startX;
-    if (!g.reordering) {
-      if (Math.abs(dx) < DRAG_START_PX) return;
-      g.reordering = true;
-    }
-    carry(dx);
-    onDrag(tab.id, dx);
+    follow(e.clientX, e.clientY, e.nativeEvent);
   }
 
   function handlePointerUp(e: React.PointerEvent<HTMLDivElement>) {
     const g = gesture.current;
+    // A mouse's drag ends in trackDrag; a press that never moved is a click.
+    if (e.pointerType !== "touch" && g?.reordering) return;
     letGo();
     gesture.current = null;
     if (!g) return;
@@ -249,7 +260,8 @@ export function TabPill({
       onPointerDown={handlePointerDown}
       onPointerMove={handlePointerMove}
       onPointerUp={handlePointerUp}
-      onPointerCancel={() => {
+      onPointerCancel={(e) => {
+        if (e.pointerType !== "touch") return;
         const g = gesture.current;
         letGo();
         gesture.current = null;
