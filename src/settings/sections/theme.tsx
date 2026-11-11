@@ -183,10 +183,10 @@ export function ThemeSection({ t }: { t: Strings }) {
       )}
       {/* Independent of the theme below: that picks the palette, this picks
           which of its two forms is shown. Every theme defines both. */}
-      <SettingRow label={t.appearanceLabel}>
+      <SettingRow label={t.appearanceModeLabel}>
         <Segmented
           kind="choice"
-          label={t.appearanceLabel}
+          label={t.appearanceModeLabel}
           value={settings.theme}
           onChange={(theme) => setSettings({ theme })}
           options={THEME_MODES.map((mode) => ({

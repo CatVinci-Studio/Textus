@@ -159,7 +159,7 @@ export function PluginPage({
                     className="text-button settings-inline-button"
                     onClick={() => setSettings(turnOnRequirement(need))}
                   >
-                    {t.pluginRequiresTurnOn}
+                    {t.pluginTurnOn}
                   </button>
                 )}
               </SettingRow>

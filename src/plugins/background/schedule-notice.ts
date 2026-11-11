@@ -74,7 +74,7 @@ function tellOfScheduling(
     {
       source: name,
       action: {
-        label: t.pluginRequiresTurnOn,
+        label: t.pluginTurnOn,
         run: () => setSettings(turnOnRequirement(BACKGROUND)),
       },
     },

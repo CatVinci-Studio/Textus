@@ -139,7 +139,7 @@ async function askForRequirements(
       }),
       {
         title: pluginName(record),
-        okLabel: t.pluginRequiresTurnOn,
+        okLabel: t.pluginTurnOn,
         cancelLabel: t.pluginRequiresLater,
       },
     );
