@@ -283,7 +283,7 @@ type /name in a conversation to use one.
   learnRemember: "Remember",
   learnNotNow: "Not now",
   learnNever: "Never ask for this",
-  learnSaved: "Remembered. See or delete it under Memory in the AI panel.",
+  learnSaved: "Remembered. See or delete it in Memory (right-click an AI tab).",
   learnLabel: "Learned from your revision choices",
   composerSuggestionTab: "Tab",
   composerFollowUps: "Suggested next messages",
@@ -294,7 +294,7 @@ type /name in a conversation to use one.
   researchCheckClaimsHint:
     "Before Research revises its draft, every sentence that cites a source is compared with the notes on that source, and one that says more than they do is rewritten. More careful, with one more model call per section.",
   rememberAutomaticallyLabel: "Turn on memory",
-  rememberAutomaticallyHint: `${AI_NAME} keeps what you ask for and how you write, for later conversations. See, change or undo it under Memory in the AI panel. After each reply it asks the same model once more, briefly, what to keep.`,
+  rememberAutomaticallyHint: `${AI_NAME} keeps what you ask for and how you write, for later conversations. See, change or undo it in Memory (right-click an AI tab). After each reply it asks the same model once more, briefly, what to keep.`,
   toolRemember: "Remembering this",
   agentGeneratingImage: "Generating an image…",
   toolGenerateImage: "Generating an image",
@@ -1374,8 +1374,8 @@ type /name in a conversation to use one.
   tutorialWriteTitle: "AI writing",
   tutorialWriteBody: `In General mode, ${AI_NAME} adds and changes text, shown in green until you accept it.`,
   tutorialWriteOpen:
-    "Open the AI panel: the quill icon at the top right ({shortcut})",
-  tutorialWriteOpenPhone: "Open the AI panel: tap the quill icon at the top",
+    "Open Textus AI: the sparkles at the top right ({shortcut})",
+  tutorialWriteOpenPhone: "Open Textus AI: switch to it at the top",
   tutorialWriteSend:
     "Send `Continue my notes with one more paragraph`, then click Accept",
   tutorialContinuationTitle: "Continuation",
@@ -1387,7 +1387,7 @@ type /name in a conversation to use one.
   tutorialDoneTitle: "All done",
   tutorialDoneBody:
     "Now start writing your own; tables, formulas, themes, review and the rest are in the Online Tutorials.",
-  tutorialDoneMemory: `${AI_NAME} remembers your requirements and style over time; see Memory in the AI panel.`,
+  tutorialDoneMemory: `${AI_NAME} remembers your requirements and style over time; see Memory (right-click an AI tab).`,
   closePromptNamed: "“{name}” has unsaved changes.",
   closePromptMessage: "This document has unsaved changes.",
   closePromptSave: "Save",
