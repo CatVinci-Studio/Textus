@@ -12,26 +12,40 @@ pub(super) const EDIT_PROPOSED: &str = "Edit proposed";
 /// one: the original stays in it, and the new one is the picture tool's.
 const PICTURE_KEPT_NOTE: &str = " A picture of the document you rewrote is kept as it was in it: text edits never change a picture. To change that picture, call generate_image with its block, in this reply.";
 
-/// The edit operations the frontend knows how to apply. Keep in step with the
-/// frontend's `EditAction`, or proposals validate but can't be applied.
-pub(crate) const EDIT_ACTIONS: [&str; 7] = [
-    "replace",
-    "replace_selection",
-    "insert_before",
-    "insert_after",
-    "delete",
-    "append",
-    "insert_at_cursor",
-];
+/// The edit operations the frontend applies, and what each needs: one list
+/// with the frontend's (src/editor/markdown/edit-actions.json), so a
+/// proposal that validates here can be applied there.
+#[derive(serde::Deserialize)]
+struct EditRule {
+    action: String,
+    /// Found by an anchor in the document; the others act on the user's
+    /// captured selection (which may not be unique), the caret or the end.
+    anchored: bool,
+    text: bool,
+}
+
+static EDIT_RULES: std::sync::LazyLock<Vec<EditRule>> = std::sync::LazyLock::new(|| {
+    serde_json::from_str(include_str!(
+        "../../../../src/editor/markdown/edit-actions.json"
+    ))
+    .expect("src/editor/markdown/edit-actions.json is the edit actions' list")
+});
+
+/// The actions, as the tool's schema offers them.
+pub(crate) fn edit_actions() -> Vec<&'static str> {
+    EDIT_RULES.iter().map(|r| r.action.as_str()).collect()
+}
+
+fn rule(action: &str) -> Option<&'static EditRule> {
+    EDIT_RULES.iter().find(|r| r.action == action)
+}
 
 pub(super) fn needs_anchor(action: &str) -> bool {
-    // replace_selection targets the user's captured selection, so there is no
-    // anchor to locate (and the selection may not be unique in the document).
-    action != "append" && action != "replace_selection" && action != "insert_at_cursor"
+    rule(action).is_none_or(|r| r.anchored)
 }
 
 pub(super) fn needs_text(action: &str) -> bool {
-    action != "delete"
+    rule(action).is_none_or(|r| r.text)
 }
 
 /// Changes nothing itself: the document only changes when the user accepts.
@@ -43,10 +57,10 @@ pub(super) fn propose_edit(ctx: &ToolContext, arguments: &str) -> String {
         Err(_) => return "Invalid arguments - expected JSON with an `action` string.".to_string(),
     };
     let action = parsed.get("action").and_then(|v| v.as_str()).unwrap_or("");
-    if !EDIT_ACTIONS.contains(&action) {
+    if rule(action).is_none() {
         return format!(
             "Unknown action `{action}`. Use one of: {}.",
-            EDIT_ACTIONS.join(", ")
+            edit_actions().join(", ")
         );
     }
 

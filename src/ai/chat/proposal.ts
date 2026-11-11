@@ -6,6 +6,8 @@ import { parseImageProposal } from "../revision/generated-images";
 import type { AgentSkill, EditProposal } from "../types";
 import {
   EDIT_ACTIONS,
+  needsAnchor,
+  needsText,
   type EditAction,
 } from "../../editor/markdown/edit-actions";
 
@@ -31,14 +33,8 @@ export function parseProposal(argumentsJson: string): EditProposal | null {
     const id = (v: unknown) => (typeof v === "string" && v ? v : undefined);
     const block = id(parsed.block);
     const lastBlock = id(parsed.last_block);
-    if (
-      action !== "append" &&
-      action !== "replace_selection" &&
-      action !== "insert_at_cursor" &&
-      !anchor
-    )
-      return null;
-    if (action !== "delete" && text === undefined) return null;
+    if (needsAnchor(action) && !anchor) return null;
+    if (needsText(action) && text === undefined) return null;
     const reason =
       typeof parsed.reason === "string" && parsed.reason.trim()
         ? parsed.reason.trim()

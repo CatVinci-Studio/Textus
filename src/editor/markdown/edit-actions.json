@@ -1,0 +1,9 @@
+[
+  { "action": "replace", "anchored": true, "text": true },
+  { "action": "replace_selection", "anchored": false, "text": true },
+  { "action": "insert_before", "anchored": true, "text": true },
+  { "action": "insert_after", "anchored": true, "text": true },
+  { "action": "delete", "anchored": true, "text": false },
+  { "action": "append", "anchored": false, "text": true },
+  { "action": "insert_at_cursor", "anchored": false, "text": true }
+]

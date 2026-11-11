@@ -187,7 +187,7 @@ pub(super) fn document_tools<'a>() -> Vec<Tool<'a>> {
                             "properties": {
                                 "action": {
                                     "type": "string",
-                                    "enum": EDIT_ACTIONS,
+                                    "enum": super::edits::edit_actions(),
                                     "description": "What kind of edit this is"
                                 },
                                 "block": {
