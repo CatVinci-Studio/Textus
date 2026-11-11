@@ -17,6 +17,10 @@ import type { GrammarPopoverInfo } from "./GrammarPopover";
 import type { EditorRunner } from "../../editor/useEditorRunner";
 import { markChangeSource } from "../../editor/change-source";
 
+/** The pointer leaving an underline may be on its way to the card: it
+ *  stays this long. */
+const HOVER_GRACE_MS = 150;
+
 /** The popover for one underline, placed at (x, y), with where it stands
  *  among the paragraph's other underlines. */
 function popoverFor(
@@ -126,7 +130,7 @@ export function useGrammarPopover(
     if (!target) return;
     const related = e.relatedTarget as HTMLElement | null;
     if (related?.closest?.(".grammar-popover")) return;
-    hideTimer.current = setTimeout(() => setPopover(null), 150);
+    hideTimer.current = setTimeout(() => setPopover(null), HOVER_GRACE_MS);
   }, []);
 
   // The caret entering an underline opens the popover; leaving closes one

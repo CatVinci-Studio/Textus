@@ -1,5 +1,5 @@
 import { currentStrings } from "../i18n/current";
-import { motionAllowed } from "../engine/motion/motion";
+import { motionAllowed, duration } from "../engine/motion/motion";
 import "./diagram-zoom.css";
 
 /** How far a diagram can be zoomed out and in. */
@@ -187,8 +187,8 @@ export function openDiagramViewer(
     if (motionAllowed()) {
       layer.classList.add("diagram-viewer-leaving");
       layer.addEventListener("animationend", done, { once: true });
-      // In case the animation never runs (a hidden window).
-      setTimeout(done, 400);
+      // In case the animation never runs (a hidden window): its length.
+      setTimeout(done, duration("--dur-fast") + 50);
     } else done();
     previous?.focus?.();
   }
