@@ -108,7 +108,6 @@ export function ChatWindowApp({ tabs }: { tabs?: ChatTabs }) {
           workspaceRoot={settings.agentWorkspaceRoot || null}
           conversation={conversation}
           defaultMode={START_MODE}
-          defaultWebSearch={settings.enableWebSearch}
           labels={labels}
           proposalStatus={bridge.proposalStatus}
           pendingCount={bridge.pendingCount}

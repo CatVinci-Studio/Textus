@@ -68,9 +68,9 @@ export function ChatComposer({
   selectionChip,
   selectionPerMessage = false,
   compact = false,
+  startWebSearch,
   onlyMode,
   focusOnOpen = true,
-  defaultWebSearch,
   dockActions,
   switchModels = false,
   onSend,
@@ -103,7 +103,7 @@ export function ChatComposer({
     offered: modeValues,
     onModeChange,
   });
-  const options = useRequestOptions(defaultWebSearch, compact);
+  const options = useRequestOptions(compact, startWebSearch);
   // Create always searches and thinks deeper, where the model can.
   const webSearch = autoTools || options.webSearch;
   const thinking =

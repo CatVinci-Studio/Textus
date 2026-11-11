@@ -1,3 +1,4 @@
+import { webSearchOn } from "../web-search-on";
 import { errorText } from "../../../utils/error-text";
 import { ai, AI_CANCELLED, IpcError } from "../../../platform/ipc";
 import { resolveStrings } from "../../../i18n/strings";
@@ -42,7 +43,7 @@ export async function sendMessage(
   const { settings, port, docPath, workspaceRoot } = env;
   const sent = options ?? {
     mode: "review",
-    webSearch: settings.enableWebSearch,
+    webSearch: webSearchOn(),
   };
   const trimmed = message.trim();
   const { busy, history, conversationId } = model.snapshot();
@@ -152,12 +153,7 @@ export async function sendMessage(
       const after = [...history, ...newTurns];
       void rememberAfter(model, env, after, at + newTurns.length);
       void offerSkillAfter(model, env, after, at + newTurns.length);
-      model.next.suggestAfter(
-        after,
-        provider,
-        chosen,
-        settings.suggestNextMessage && settings.textusAi,
-      );
+      model.next.suggestAfter(after, provider, chosen, settings.textusAi);
     }
     ended = "done";
     return newTurns;

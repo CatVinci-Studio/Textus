@@ -812,15 +812,15 @@ export async function launch(page: Page, options: Launch) {
       remember: true,
     },
   });
+  // Edits land whole, as with reduced motion.
+  await page.emulateMedia({ reducedMotion: "reduce" });
   await openApp(page, {
     settings: {
       language: LANGUAGES[options.lang].ui,
       theme: "light",
       themeId: "default",
       aiProvider: "anthropic",
-      agentDefaultMode: "write",
       enableCompletion: false,
-      enableEditAnimation: false,
       ...options.settings,
     },
     storage: options.storage,

@@ -45,7 +45,7 @@ export function ComposerToggles({
           aria-label={labels.webSearch}
           aria-pressed={webSearch}
           {...holdFocus}
-          onClick={() => setWebSearch((value) => !value)}
+          onClick={() => setWebSearch(!webSearch)}
         >
           <SearchIcon />
         </button>

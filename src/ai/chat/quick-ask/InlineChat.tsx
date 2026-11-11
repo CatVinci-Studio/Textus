@@ -47,7 +47,6 @@ interface InlineChatProps {
    *  only the explicit New Conversation action resets it. */
   conversation: AgentConversation;
   defaultMode: AgentMode;
-  defaultWebSearch: boolean;
   /** The composer's selection chip handlers. */
   selectionChip?: SelectionChipHandlers;
   labels: InlineChatLabels;
@@ -97,7 +96,6 @@ export function InlineChat({
   workspaceRoot,
   conversation,
   defaultMode,
-  defaultWebSearch,
   selectionChip,
   labels,
   onProposals,
@@ -190,7 +188,6 @@ export function InlineChat({
           conversation={conversation}
           // Quick Ask has no Create: a default of Create starts in Write.
           defaultMode={defaultMode === "create" ? "write" : defaultMode}
-          defaultWebSearch={defaultWebSearch}
           labels={labels}
           proposalStatus={proposalStatus}
           pendingCount={pendingCount}

@@ -100,9 +100,6 @@ export interface Settings {
   /// "automatic", or a profile such as "zh-Hans-CN/fiction" the AI and the
   /// checks follow for that language. A project's style profile overrides it.
   writingConventions: string;
-  /// The composer's Web search button starts on. The provider's own
-  /// search where it has one, else Textus's web_search on `searchService`.
-  enableWebSearch: boolean;
   /// Textus AI's changes as revisions to review (the default) or written
   /// straight in - the open document and the folder's other files alike.
   /// Other agents (Claude Code, Codex) go their own way.
@@ -134,12 +131,6 @@ export interface Settings {
   /// Each plugin's settings, by plugin id; a project's `.textus/settings.json`
   /// holds the same, over these.
   plugins: Record<string, Record<string, unknown>>;
-  /// After each reply, a likely next message, grey in the empty box for Tab
-  /// to take.
-  suggestNextMessage: boolean;
-  /// Whether an agent edit's in-document preview types itself in or appears
-  /// complete at once.
-  enableEditAnimation: boolean;
   /// Whether the detached Agent window floats above other windows. Kept
   /// here rather than per-window so the choice survives closing it.
   pinAgentWindow: boolean;
@@ -300,7 +291,6 @@ export const DEFAULT_SETTINGS: Settings = {
   revisionDisplay: "final",
   completionTone: "default",
   writingConventions: "automatic",
-  enableWebSearch: false,
   aiChangeMode: "revision",
   imageModelProvider: "chat",
   imageModel: "",
@@ -314,8 +304,6 @@ export const DEFAULT_SETTINGS: Settings = {
   researchCheckClaims: false,
   mcpServers: [],
   plugins: {},
-  suggestNextMessage: true,
-  enableEditAnimation: true,
   pinAgentWindow: false,
   agentWorkspaceRoot: "",
   proxyType: "none",

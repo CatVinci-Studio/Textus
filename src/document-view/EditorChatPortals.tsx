@@ -90,7 +90,6 @@ export function EditorChatPortals({
             // Write first: Quick Ask is opened on a passage to change it.
             defaultMode="write"
             selectionChip={chat.quickChipHandlers}
-            defaultWebSearch={settings.enableWebSearch}
             labels={chatLabels(t, settings.language)}
             onProposals={chat.proposals.showProposals}
             proposalStatus={pendingEdits.status}

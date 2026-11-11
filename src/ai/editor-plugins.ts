@@ -19,6 +19,7 @@ import {
 import { ownRevisionPlugin } from "./margin/own-revision-plugin";
 import { paperRegionPlugin } from "./paper/paper-region-plugin";
 import { resolveStrings } from "../i18n/strings";
+import { prefersReducedMotion } from "../engine/motion/motion";
 import { sendTourSignal, type TourAi } from "../utils/events";
 import type { RevisionDisplay, Settings } from "../prefs/SettingsContext";
 import { aiFeatures } from "../settings/textus-ai";
@@ -108,7 +109,7 @@ export function withAiPlugins(
       .use(
         createPendingEditPlugin({
           ...pendingEdits,
-          animationEnabled: () => settings.current.enableEditAnimation,
+          animationEnabled: () => !prefersReducedMotion(),
           sentenceLabels: () => {
             const t = resolveStrings(settings.current.language);
             return {

@@ -87,7 +87,6 @@ function renderComposer(
       busy={false}
       labels={labels}
       defaultMode="write"
-      defaultWebSearch={false}
       onSend={onSend}
       onStop={() => {}}
       onEscape={() => {}}

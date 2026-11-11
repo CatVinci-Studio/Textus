@@ -47,7 +47,6 @@ export function ChatBody({
   conversation,
   defaultMode,
   tourMode,
-  defaultWebSearch,
   labels,
   proposalStatus,
   pendingCount,
@@ -74,6 +73,7 @@ export function ChatBody({
   fillHeight,
   variant = "full",
   onlyMode,
+  startWebSearch,
   refreshContext,
   onRevealPending,
   quickReview,
@@ -447,10 +447,10 @@ export function ChatBody({
         selectionChip={selectionChip}
         selectionPerMessage={variant !== "quick"}
         compact={variant === "quick"}
+        startWebSearch={startWebSearch}
         focusOnOpen={variant === "quick" || !phone}
         dockActions={dockActions}
         switchModels={variant !== "quick"}
-        defaultWebSearch={defaultWebSearch}
         onSend={handleSend}
         onStop={stopAll}
         onEscape={onEscape ?? (() => {})}

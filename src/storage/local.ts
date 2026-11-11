@@ -12,6 +12,7 @@ export const LOCAL_KEYS = {
   settings: "catvinci-settings",
   /** Deep thinking left on in the composer. */
   deepThinking: "textus-agent-deep-thinking",
+  webSearch: "textus-agent-web-search",
   /** The Agent mode last picked, with the default it was picked under. */
   lastMode: "textus-agent-last-mode",
   /** A provider's last fetched model list, by provider id. */

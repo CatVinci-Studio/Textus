@@ -11,6 +11,7 @@ import { ai } from "../../platform/ipc";
 import { useActiveProvider, useWebSearchStatus } from "../provider-catalog";
 import type { AgentMode, PanelMode } from "../../prefs/SettingsContext";
 import { initialMode, rememberMode } from "./last-mode";
+import { rememberWebSearch, webSearchOn } from "./web-search-on";
 import { deepThinkingOn, useCanThinkDeeper } from "./deep-thinking";
 import { useLatest } from "../../utils/hooks/useLatest";
 import type {
@@ -142,11 +143,18 @@ export function useComposerMode({
 /** The request's options: the web, and how hard the model thinks. With search
  *  on but nothing to search with, the button says so (`searchUnavailable`).
  *  Deep shows only where it changes something; Quick Ask always asks fast. */
-export function useRequestOptions(defaultWebSearch: boolean, compact: boolean) {
+export function useRequestOptions(compact: boolean, startWebSearch?: boolean) {
   const searchStatus = useWebSearchStatus();
   const searchUnavailable =
     !!searchStatus && !searchStatus.native && !searchStatus.service;
-  const [webSearch, setWebSearch] = useState(defaultWebSearch);
+  const [webSearch, setWebSearchState] = useState(
+    () => startWebSearch ?? webSearchOn(),
+  );
+  // Remembered for the next composer, unless this one starts its own way.
+  const setWebSearch = (on: boolean) => {
+    if (startWebSearch === undefined) rememberWebSearch(on);
+    setWebSearchState(on);
+  };
   const [deepThinking, setDeepThinking] = useState(deepThinkingOn);
   const canThinkDeeper = useCanThinkDeeper(!compact);
   const thinking: ThinkingLevel = compact

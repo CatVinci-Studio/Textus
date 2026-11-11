@@ -122,7 +122,6 @@ export function ConversationPanel({
         workspaceRoot={settings.agentWorkspaceRoot || null}
         conversation={conversation}
         defaultMode={START_MODE}
-        defaultWebSearch={settings.enableWebSearch}
         labels={labels}
         fillHeight
         pendingBar={false}

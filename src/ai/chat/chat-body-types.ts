@@ -50,9 +50,10 @@ export interface ChatBodyProps {
   workspaceRoot: string | null;
   conversation: AgentConversation;
   defaultMode: AgentMode;
+  /** Web search to start with, its own way (Create looks things up first). */
+  startWebSearch?: boolean;
   /** The tour's lesson's mode. */
   tourMode?: AgentMode | null;
-  defaultWebSearch: boolean;
   labels: ChatBodyLabels;
   proposalStatus: (callId: string) => PendingStatus;
   pendingCount: number;

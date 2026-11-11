@@ -123,7 +123,7 @@ export function CreateChat({ t }: { t: Strings }) {
           conversation={conversation}
           defaultMode="create"
           onlyMode="create"
-          defaultWebSearch
+          startWebSearch
           autoTools
           labels={{ ...labels, placeholder: t.createPlaceholder }}
           composerRef={composer}

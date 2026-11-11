@@ -303,10 +303,7 @@ export function useEditorProposals({
   const discardRefused = pendingEdits.discard;
   // Reduced motion renders widgets instantly: the typewriter's entries
   // would never be revealed (or settle).
-  const animated = useCallback(
-    () => settingsRef.current.enableEditAnimation && !prefersReducedMotion(),
-    [settingsRef],
-  );
+  const animated = useCallback(() => !prefersReducedMotion(), [settingsRef]);
   const proposalStream = useMemo(() => {
     // Pictures written into the text show as their frames.
     const canvas: ProposalCanvas = {
