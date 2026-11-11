@@ -1503,6 +1503,7 @@ export default {
   pluginsTitle: "插件",
   pluginsCatalogLoading: "正在读取列表…",
   pluginsCatalogFailed: "没能读取列表：{reason}",
+  pluginsReadFailed: "读不到已安装的插件：{reason}",
   pluginsCatalogRetry: "重试",
   pluginOnLabel: "启用",
   navEditText: "正文",

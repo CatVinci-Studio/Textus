@@ -1662,6 +1662,7 @@ para usar una.
   pluginsTitle: "Complementos",
   pluginsCatalogLoading: "Cargando la lista…",
   pluginsCatalogFailed: "No se pudo cargar la lista: {reason}",
+  pluginsReadFailed: "No se pudieron leer los plugins instalados: {reason}",
   pluginsCatalogRetry: "Reintentar",
   pluginOnLabel: "Activado",
   navEditText: "Texto",

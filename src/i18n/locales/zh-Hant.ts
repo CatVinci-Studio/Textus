@@ -1508,6 +1508,7 @@ export default {
   pluginsTitle: "外掛程式",
   pluginsCatalogLoading: "正在讀取清單…",
   pluginsCatalogFailed: "無法讀取清單：{reason}",
+  pluginsReadFailed: "讀不到已安裝的外掛：{reason}",
   pluginsCatalogRetry: "重試",
   pluginOnLabel: "On",
   navEditText: "Text",

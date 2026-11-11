@@ -1,3 +1,4 @@
+import { explainError } from "../utils/error-explain";
 // What plugins add to the editor registers before any editor is made.
 import "./contributions/editor-extensions";
 import { logPluginError } from "./store/plugin-log";
@@ -127,12 +128,22 @@ const runsAlike = (a: PluginRecord, b: PluginRecord) =>
 export function loadPlugins(reload = false): Promise<void> {
   if (loading && !reload) return loading;
   loading = (async () => {
-    const [state, installed] = await Promise.all([
-      pluginsIpc
-        .state()
-        .catch(() => ({ allOn: true, plugins: {} }) as PluginsState),
-      pluginsIpc.installed().catch(() => []),
-    ]);
+    let state: PluginsState;
+    let installed: Awaited<ReturnType<typeof pluginsIpc.installed>>;
+    try {
+      [state, installed] = await Promise.all([
+        pluginsIpc.state(),
+        pluginsIpc.installed(),
+      ]);
+    } catch (err) {
+      // Not "none installed": what runs keeps running, and the user hears.
+      const t = windowInfo().strings();
+      void showMessage(
+        t.pluginsReadFailed.replace("{reason}", explainError(err, t)),
+      );
+      if (!pluginsSnapshot().loaded) publish({ loaded: true });
+      return;
+    }
     const records: PluginRecord[] = [];
     for (const p of installed)
       records.push(

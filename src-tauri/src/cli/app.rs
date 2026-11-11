@@ -44,7 +44,27 @@ const EXPORT_FORMATS: &[(&str, &str)] = &[
 pub struct CliBridge {
     /// Windows whose frontend takes requests, by label.
     listening: Mutex<Vec<String>>,
-    waiting: Mutex<HashMap<String, oneshot::Sender<Answer>>>,
+    /// Requests waiting for an answer: the window asked, and where to send.
+    waiting: Mutex<HashMap<String, (String, oneshot::Sender<Answer>)>>,
+}
+
+/// Window `label` is gone: it takes no more requests, and those it had
+/// end now rather than at the time limit.
+pub fn window_gone(app: &AppHandle, label: &str) {
+    let Some(bridge) = app.try_state::<CliBridge>() else {
+        return;
+    };
+    bridge
+        .listening
+        .lock()
+        .unwrap_or_else(|e| e.into_inner())
+        .retain(|l| l != label);
+    // Dropping a request's sender ends its wait.
+    bridge
+        .waiting
+        .lock()
+        .unwrap_or_else(|e| e.into_inner())
+        .retain(|_, (window, _)| window != label);
 }
 
 /// A request for a window. Shape shared with src/app/cli-requests.ts.
@@ -80,7 +100,7 @@ pub fn cli_respond(app: AppHandle, id: String, out: String, err: String, exit: i
         .lock()
         .unwrap_or_else(|e| e.into_inner())
         .remove(&id);
-    if let Some(sender) = sender {
+    if let Some((_, sender)) = sender {
         let _ = sender.send(Answer { out, err, exit });
     }
 }
@@ -282,7 +302,7 @@ async fn in_window(app: &AppHandle, request: Request) -> Answer {
     let (send, answer) = oneshot::channel();
     let bridge = app.state::<CliBridge>();
     let waiting = || bridge.waiting.lock().unwrap_or_else(|e| e.into_inner());
-    waiting().insert(id.clone(), send);
+    waiting().insert(id.clone(), (window.clone(), send));
     let event = CliRequestEvent {
         id: id.clone(),
         command: request.command,
@@ -296,7 +316,8 @@ async fn in_window(app: &AppHandle, request: Request) -> Answer {
     }
     match tokio::time::timeout(WINDOW_ANSWERS_WITHIN, answer).await {
         Ok(Ok(answer)) => answer,
-        _ => {
+        Ok(Err(_)) => Answer::fail("The Textus window closed.", 1),
+        Err(_) => {
             waiting().remove(&id);
             Answer::fail("Textus didn't answer in time.", 1)
         }

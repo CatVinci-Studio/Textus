@@ -1587,6 +1587,7 @@ ${AI_NAME}への執筆の指示です。すべての文書に適用されます�
   pluginsTitle: "プラグイン",
   pluginsCatalogLoading: "一覧を読み込み中…",
   pluginsCatalogFailed: "一覧を読み込めませんでした: {reason}",
+  pluginsReadFailed: "インストール済みのプラグインを読み込めません：{reason}",
   pluginsCatalogRetry: "再試行",
   pluginOnLabel: "有効",
   navEditText: "本文",

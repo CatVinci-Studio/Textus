@@ -1683,6 +1683,7 @@ utiliser une.
   pluginsTitle: "Extensions",
   pluginsCatalogLoading: "Chargement de la liste…",
   pluginsCatalogFailed: "Impossible de charger la liste : {reason}",
+  pluginsReadFailed: "Impossible de lire les plugins installés : {reason}",
   pluginsCatalogRetry: "Réessayer",
   pluginOnLabel: "Activé",
   navEditText: "Texte",

@@ -99,6 +99,8 @@ fn desktop_builder(builder: tauri::Builder<tauri::Wry>) -> tauri::Builder<tauri:
                 commands::floating_window::close_owned_by(app, window.label());
                 #[cfg(desktop)]
                 agents::stop_for_window(app, window.label());
+                #[cfg(desktop)]
+                cli::app::window_gone(app, window.label());
                 // File > Quit closes every window so dirty editors can cancel; macOS would
                 // otherwise stay alive windowless, so exit once the final window is gone.
                 if no_other_windows && commands::session::app_quitting() {

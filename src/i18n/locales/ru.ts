@@ -1655,6 +1655,7 @@ export default {
   pluginsTitle: "Плагины",
   pluginsCatalogLoading: "Загрузка списка…",
   pluginsCatalogFailed: "Не удалось загрузить список: {reason}",
+  pluginsReadFailed: "Не удалось прочитать установленные плагины: {reason}",
   pluginsCatalogRetry: "Повторить",
   pluginOnLabel: "Включён",
   navEditText: "Текст",

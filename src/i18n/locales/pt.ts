@@ -1643,6 +1643,7 @@ Habilidades ficam na pasta skills/ ao lado deste arquivo, um arquivo
   pluginsTitle: "Plugins",
   pluginsCatalogLoading: "Carregando a lista…",
   pluginsCatalogFailed: "Não foi possível carregar a lista: {reason}",
+  pluginsReadFailed: "Não foi possível ler os plugins instalados: {reason}",
   pluginsCatalogRetry: "Tentar de novo",
   pluginOnLabel: "Ativado",
   navEditText: "Texto",

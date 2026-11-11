@@ -1616,6 +1616,7 @@ type /name in a conversation to use one.
   pluginsTitle: "Plugins",
   pluginsCatalogLoading: "Loading the list…",
   pluginsCatalogFailed: "Couldn’t load the list: {reason}",
+  pluginsReadFailed: "Couldn’t read your plugins: {reason}",
   pluginsCatalogRetry: "Try again",
   pluginOnLabel: "On",
   navEditText: "Text",

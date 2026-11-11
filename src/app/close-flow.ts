@@ -13,7 +13,7 @@ import { flushPendingWrites } from "../storage/pending-writes";
 import { useModalDialog } from "../engine/controls/useModalDialog";
 import { useLatest } from "../utils/hooks/useLatest";
 import type { TabState } from "./tabs/useTabState";
-import { undecidedIn } from "../document/undecided";
+import { forgetUndecided, undecidedIn } from "../document/undecided";
 import { showNotice } from "../engine/controls/notices";
 import { basename } from "../utils/path";
 import type { Strings } from "../i18n/strings";
@@ -27,6 +27,7 @@ function tellKept(path: string, t: Strings) {
         .replace("{name}", basename(path))
         .replace("{n}", String(n)),
     );
+  forgetUndecided(path);
 }
 
 // What the save/discard/cancel prompt is guarding: a tab or the whole window.
