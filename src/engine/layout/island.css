@@ -72,7 +72,7 @@
 
 /* In the window bar's row, over the bar. */
 .island-row:not([data-inner]) {
-  z-index: 46;
+  z-index: var(--z-dock);
 }
 
 /* Its tabs scroll under its ends: they show only between them (and the

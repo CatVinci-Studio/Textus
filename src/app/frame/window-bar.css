@@ -7,7 +7,7 @@
   left: 0;
   right: 0;
   height: var(--window-bar-height);
-  z-index: 45;
+  z-index: var(--z-bar);
   display: flex;
   align-items: center;
   /* Left inset is room for the macOS traffic lights, which float over the

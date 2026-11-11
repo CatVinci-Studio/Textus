@@ -4,7 +4,7 @@
   inset: 0;
   border: 1px solid var(--ui-border);
   pointer-events: none;
-  z-index: 2100;
+  z-index: var(--z-edges);
 }
 
 /* 6px: wide enough to find without hunting, narrow enough that the
@@ -12,7 +12,7 @@
    Corners get a larger square, the way native frames do. */
 .window-edge {
   position: fixed;
-  z-index: 2101;
+  z-index: calc(var(--z-edges) + 1);
   --edge: 6px;
   --corner: 12px;
 }

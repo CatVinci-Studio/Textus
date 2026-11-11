@@ -5,7 +5,7 @@
   top: calc(100% + 4px);
   left: 8px;
   right: 8px;
-  z-index: 30;
+  z-index: var(--z-popover);
   max-height: min(420px, 60vh);
   overflow-y: auto;
   overscroll-behavior: contain;

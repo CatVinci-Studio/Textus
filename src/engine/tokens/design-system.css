@@ -25,7 +25,16 @@
   --pane-edge: 4px;
   --pane-row-inset: calc(var(--pane-inset) - var(--pane-edge));
   /* Layers, low to high, so an entrance and an exit stack predictably. */
+  /* The phone's own stack under its title row: the keyboard's bar, the AI
+     page, Quick Ask docked over it. */
+  --z-phone-toolbar: 35;
+  --z-phone-page: 40;
+  --z-phone-dock: 41;
   --z-bar: 45;
+  /* The rail and the sidebar, over the bar's edge. */
+  --z-dock: 46;
+  /* Over the frame while it moves: a lifted island, Zen's way out. */
+  --z-lift: 60;
   --z-floating: 200;
   --z-popover: 250;
   --z-toast: 300;
@@ -34,6 +43,8 @@
   --z-alert: 450;
   --z-sheet: 500;
   --z-select: 1000;
+  /* The window's resize edges, over everything. */
+  --z-edges: 2100;
   /* Layout sizes the shared controls and plugin pages take (5.6): a tab
      view's bar, the room a document block leaves its source button, a
      board's list, a find field, a slider, a progress ring, a bubble. */

@@ -8,9 +8,9 @@
   right: 0;
   bottom: 0;
   left: 0;
-  /* Over the AI sheet (40), the newer of the two, and under the title row (45)
-     and the sidebar drawer (44). */
-  z-index: 41;
+  /* Over the AI page, the newer of the two, and under the title row and the
+     sidebar drawer. */
+  z-index: var(--z-phone-dock);
   max-width: none;
   margin: 0;
   font-family: var(--font-sans);

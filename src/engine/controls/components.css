@@ -428,7 +428,7 @@ textarea.tx-input {
    the place the item will land, kept as an empty outline. */
 .tx-drag-ghost {
   position: fixed;
-  z-index: 1000;
+  z-index: var(--z-select);
   margin: 0;
   pointer-events: none;
 }
