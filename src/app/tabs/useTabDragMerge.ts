@@ -1,3 +1,4 @@
+import { dragPillLook } from "./drag-pill-look";
 import { scaledPx } from "../../engine/tokens/chrome-scale";
 import {
   useCallback,
@@ -109,6 +110,7 @@ export function useTabDragMerge(opts: {
         await windowIpc.startFloatingTabDrag(
           floatingDragArgs(tab, t, false),
           rowStrip(),
+          dragPillLook(),
         );
       } catch {
         return; // drag couldn't start (unsupported platform / one already active) - keep the tab
@@ -164,6 +166,7 @@ export function useTabDragMerge(opts: {
       void windowIpc.startFloatingTabDrag(
         floatingDragArgs(tab, latest.current.t, true),
         rowStrip(),
+        dragPillLook(),
       );
     }
 

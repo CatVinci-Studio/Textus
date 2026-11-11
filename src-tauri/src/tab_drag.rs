@@ -167,10 +167,11 @@ pub fn start_floating_tab_drag(
     dirty: bool,
     destroy_source: bool,
     row_height: f64,
+    look: String,
 ) -> Result<(), String> {
     #[cfg(not(any(target_os = "macos", windows)))]
     {
-        let _ = (window, tab, title, dirty, destroy_source, row_height);
+        let _ = (window, tab, title, dirty, destroy_source, row_height, look);
         Err("floating tab drags need global cursor tracking".to_string())
     }
     #[cfg(any(target_os = "macos", windows))]
@@ -216,7 +217,7 @@ pub fn start_floating_tab_drag(
                             } else {
                                 pill_exists = true;
                                 pill_parked = false;
-                                create_drag_pill(&app, &title, dirty, x, y);
+                                create_drag_pill(&app, &title, dirty, &look, x, y);
                             }
                         }
                         if hover.as_deref() != Some(label.as_str()) {
@@ -256,7 +257,7 @@ pub fn start_floating_tab_drag(
                         } else {
                             pill_exists = true;
                             pill_parked = false;
-                            create_drag_pill(&app, &title, dirty, x, y);
+                            create_drag_pill(&app, &title, dirty, &look, x, y);
                         }
                     }
                 }

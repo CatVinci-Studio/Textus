@@ -27,11 +27,19 @@ fn url_encode(s: &str) -> String {
 /// Create the floating pill centered under the cursor (global logical points),
 /// click-through and never focused. Window creation must be on the main thread.
 #[cfg(any(target_os = "macos", windows))]
-pub(super) fn create_drag_pill(app: &tauri::AppHandle, title: &str, dirty: bool, x: f64, y: f64) {
+pub(super) fn create_drag_pill(
+    app: &tauri::AppHandle,
+    title: &str,
+    dirty: bool,
+    look: &str,
+    x: f64,
+    y: f64,
+) {
     let url = format!(
-        "dragpill.html?title={}&dirty={}",
+        "dragpill.html?title={}&dirty={}&look={}",
         url_encode(title),
-        if dirty { 1 } else { 0 }
+        if dirty { 1 } else { 0 },
+        url_encode(look)
     );
     let app = app.clone();
     let _ = app.clone().run_on_main_thread(move || {

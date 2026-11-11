@@ -41,6 +41,8 @@ export const windowIpc = {
   startFloatingTabDrag: (
     { tab, title, dirty, destroySource }: FloatingDragArgs,
     rowHeight: number,
+    /** The pill's look, as CSS declarations (drag-pill-look.ts). */
+    look: string,
   ) =>
     desktopActionCommand(
       "start_floating_tab_drag",
@@ -49,6 +51,7 @@ export const windowIpc = {
       dirty,
       destroySource,
       rowHeight,
+      look,
     ),
   startWindowDragTracking: () =>
     desktopQueryCommand("start_window_drag_tracking", false),
