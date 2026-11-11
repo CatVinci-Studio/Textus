@@ -69,23 +69,7 @@
   line-height: 1.55;
 }
 
-/* Drawn by the editor (preview-editor), as a card, not a page: no theme's
-   page padding or width. Its links are for reading, not following. */
-.hover-card-body .milkdown,
-.hover-card-body .milkdown .ProseMirror {
-  max-width: none;
-  margin: 0;
-  padding: 0;
-}
-
-.hover-card-body .ProseMirror > :first-child {
-  margin-top: 0;
-}
-
-.hover-card-body .ProseMirror > :last-child {
-  margin-bottom: 0;
-}
-
+/* Its links are for reading, not following. */
 .hover-card-body a {
   pointer-events: none;
 }

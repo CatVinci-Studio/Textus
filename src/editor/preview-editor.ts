@@ -4,6 +4,7 @@ import { parseMarkdownSource } from "./markdown/parse-markdown-source";
 import { pastReadOnly, setReadOnly } from "./read-only-plugin";
 import { loadSettings } from "../prefs/settings-store";
 import type { Settings } from "../prefs/SettingsContext";
+import "./preview-editor.css";
 import { normalizeMathDelimiters } from "../utils/markdown-math";
 import type { Node as ProseNode } from "@milkdown/kit/prose/model";
 import type { Transaction } from "@milkdown/kit/prose/state";
@@ -35,9 +36,12 @@ export async function drawPreview(
   label: () => string,
   /** The settings it draws by, live; else as stored now. */
   settings: { readonly current: Settings } = { current: loadSettings() },
+  /** A page of its own (the split view's), not part of one. */
+  page = false,
 ): Promise<PreviewHandle> {
   const docPathRef = { current: docPath };
   root.classList.add("editor-preview");
+  root.classList.toggle("editor-preview-inline", !page);
   const core = withEditorCore(
     Editor.make().config((ctx) =>
       configureEditorRoot(ctx, root, normalizeMathDelimiters(markdown), label),

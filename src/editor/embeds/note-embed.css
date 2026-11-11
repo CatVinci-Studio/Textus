@@ -61,24 +61,6 @@
   white-space: normal;
 }
 
-/* The note drawn by its own editor (preview-editor): the page's flow, not
-   a page of its own - no theme's page padding or width, no first or last
-   block's outer margin. */
-.note-embed-body .milkdown,
-.note-embed-body .milkdown .ProseMirror {
-  max-width: none;
-  margin: 0;
-  padding: 0;
-}
-
-.note-embed-body .ProseMirror > :first-child {
-  margin-top: 0;
-}
-
-.note-embed-body .ProseMirror > :last-child {
-  margin-bottom: 0;
-}
-
 /* An embed drawn as its name: too deep, a loop, or not found. */
 .note-embed-chip:not(.wikilink-missing) {
   color: var(--doc-accent-text);

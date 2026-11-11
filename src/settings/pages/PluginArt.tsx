@@ -94,10 +94,12 @@ function catalogIcon(id: string): Promise<string | null> {
   });
 }
 
-// The Markdown renderer (and KaTeX behind it) only once a README shows: a
-// list of plugins has none.
-const MarkdownText = lazy(() =>
-  import("../../ai/MarkdownText").then((m) => ({ default: m.MarkdownText })),
+// Drawn by the editor, as documents are, only once a README shows: a list
+// of plugins has none.
+const EditorPreview = lazy(() =>
+  import("../../editor/EditorPreview").then((m) => ({
+    default: m.EditorPreview,
+  })),
 );
 
 /** Plugin `id`'s README - its own once installed, the catalog's before -
@@ -127,7 +129,11 @@ export function PluginReadme({
   return (
     <section className="plugin-readme" aria-label={label}>
       <Suspense fallback={null}>
-        <MarkdownText text={text.replace(/^\s*#\s[^\n]*\n/, "")} />
+        <EditorPreview
+          markdown={text.replace(/^\s*#\s[^\n]*\n/, "")}
+          docPath={null}
+          label={label}
+        />
       </Suspense>
     </section>
   );
