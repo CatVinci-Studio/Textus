@@ -1,4 +1,4 @@
-import { useRef, useState } from "react";
+import { useEffect, useRef, useState } from "react";
 import { holdGrip } from "../frame/grip";
 import "./resize-handle.css";
 
@@ -39,6 +39,19 @@ export function ResizeHandle({
     setDragging(false);
     onResize(d.last, true);
   };
+  // Gone while held (⌘B put the sidebar away mid-drag): let go all the same,
+  // the width where it was.
+  const resize = useRef(onResize);
+  resize.current = onResize;
+  useEffect(
+    () => () => {
+      const d = drag.current;
+      if (!d) return;
+      holdGrip(false);
+      resize.current(d.last, true);
+    },
+    [],
+  );
   return (
     <div
       className={`resize-handle tx-grip ${className}${dragging ? " resize-handle-active" : ""}`}

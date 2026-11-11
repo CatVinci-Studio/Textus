@@ -115,20 +115,35 @@ export function useSplitRestore(
   saved.current ??= readSavedSplit(getUiState("splitLayout"));
 
   useEffect(() => {
-    const settle = () => (settled.current = true);
+    // This window's split as saved: written only when it changes. Every
+    // change of the model (a keystroke) isn't one, and another window's
+    // split, saved by that window, stays until this one makes its own.
+    const current = () => {
+      const layout = splitLayout();
+      const pathOf = (id: string) =>
+        tabsRef.current.find((tab) => tab.id === id)?.path ?? null;
+      const tree = layout && saveNode(layout.root, pathOf);
+      return tree && !("path" in tree) ? { tree } : null;
+    };
+    let written = "";
+    const settle = () => {
+      if (settled.current) return;
+      settled.current = true;
+      written = JSON.stringify(current());
+    };
     let frame = 0;
     let timer: ReturnType<typeof setTimeout> | undefined;
     const stopWaiting = afterStartupRestore(() => {
       frame = requestAnimationFrame(() => (timer = setTimeout(settle)));
     });
     const stop = subscribeSplit(() => {
-      const layout = splitLayout();
-      if (layout) settle();
+      if (splitLayout()) settle();
       if (!settled.current) return;
-      const pathOf = (id: string) =>
-        tabsRef.current.find((tab) => tab.id === id)?.path ?? null;
-      const tree = layout && saveNode(layout.root, pathOf);
-      setUiState("splitLayout", tree && !("path" in tree) ? { tree } : null);
+      const value = current();
+      const json = JSON.stringify(value);
+      if (json === written) return;
+      written = json;
+      setUiState("splitLayout", value);
     });
     return () => {
       stopWaiting();

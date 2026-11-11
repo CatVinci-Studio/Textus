@@ -15,21 +15,8 @@ export function useSidebarFrame(open: boolean, on: boolean, width: number) {
   useLayoutEffect(() => {
     const el = aside.current;
     if (!el || !on) return;
-    // Its own stylesheet places it; only clipped, to the islands' room
-    // before them as it is drawn.
-    const box = { x: 0, y: 0, w: el.offsetLeft + width, h: 0 };
     frameClock.attach("sidebar", el);
-    frameClock.set(
-      "sidebar",
-      new Map([
-        [
-          "sidebar",
-          { rect: box, follow: BEFORE_ISLANDS, still: true, own: true },
-        ],
-      ]),
-      { x: 0, y: 0 },
-      false,
-    );
+    placeSidebar(el, width);
   }, [open, on, width]);
   // Off (an iPhone's drawer) or gone: the clock lets it go.
   useLayoutEffect(() => {
@@ -45,4 +32,22 @@ export function useSidebarFrame(open: boolean, on: boolean, width: number) {
     [],
   );
   return aside;
+}
+
+/** The sidebar at `width` on the clock: its own stylesheet places it; it is
+ *  only clipped, to the islands' room before them as it is drawn. Also as
+ *  its edge is held, at the width held. */
+export function placeSidebar(el: HTMLElement, width: number): void {
+  const box = { x: 0, y: 0, w: el.offsetLeft + width, h: 0 };
+  frameClock.set(
+    "sidebar",
+    new Map([
+      [
+        "sidebar",
+        { rect: box, follow: BEFORE_ISLANDS, still: true, own: true },
+      ],
+    ]),
+    { x: 0, y: 0 },
+    false,
+  );
 }

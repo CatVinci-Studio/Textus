@@ -274,9 +274,14 @@ export function useZoom(
       persistTimer = undefined;
       const root = document.documentElement;
       const was = contentZoom(root);
-      for (const tab of document.querySelectorAll<HTMLElement>("[data-tab-id]"))
-        if (tabZoom(tab.dataset.tabId!) === undefined)
-          setTabZoom(tab.dataset.tabId!, was);
+      // Each on its own: the tabs on the old default keep it. Together, the
+      // window's one zoom is every tab's.
+      if (!togetherRef.current)
+        for (const tab of document.querySelectorAll<HTMLElement>(
+          "[data-tab-id]",
+        ))
+          if (tabZoom(tab.dataset.tabId!) === undefined)
+            setTabZoom(tab.dataset.tabId!, was);
       root.style.setProperty("--content-zoom", String(zoomRef.current));
       persistRef.current(zoomRef.current);
     };

@@ -1,7 +1,7 @@
 import { frameLayout } from "../frame/frame-store";
 import { holdGrip } from "../frame/grip";
 import "../controls/resize-handle.css";
-import { useRef, useState, type CSSProperties } from "react";
+import { useEffect, useRef, useState, type CSSProperties } from "react";
 import { ContextMenu } from "../controls/ContextMenu";
 import type { Strings } from "../../i18n/strings";
 import { Presence } from "../motion/usePresence";
@@ -58,11 +58,15 @@ export function SplitDivider({
   const { before, after } = sides;
   // The divider at `at` (the area's pixels): a panel takes its width from
   // it, two documents their shares.
+  // A panel's width is drawn as the pointer moves, kept once let go.
   const moveTo = (at: number) => {
     if (fixed === "after")
-      setPanelWidth((after.end - at - gapHalf(sides)) / chromeScale());
+      setPanelWidth((after.end - at - gapHalf(sides)) / chromeScale(), false);
     else if (fixed === "before")
-      setPanelWidth((at - before.start - gapHalf(sides)) / chromeScale());
+      setPanelWidth(
+        (at - before.start - gapHalf(sides)) / chromeScale(),
+        false,
+      );
     else share((at - before.start) / (after.end - before.start));
   };
   const step = (sign: number) => {
@@ -73,10 +77,19 @@ export function SplitDivider({
     else share(current + sign * KEY_STEP);
   };
   const end = () => {
-    if (drag.current) holdGrip(false);
+    if (drag.current) letGo(fixed);
     drag.current = null;
     setDragging(false);
   };
+  // Gone while held (its island closed mid-drag): let go all the same.
+  const side = useRef(fixed);
+  side.current = fixed;
+  useEffect(
+    () => () => {
+      if (drag.current) letGo(side.current);
+    },
+    [],
+  );
   return (
     <>
       <div
@@ -140,3 +153,9 @@ export function SplitDivider({
 /** Half the gap between the two sides: the divider sits in its middle. */
 const gapHalf = ({ before, after }: { before: Span; after: Span }) =>
   (after.start - before.end) / 2;
+
+/** A drag ends: the grip is let go, a panel's width kept. */
+function letGo(fixed: "before" | "after" | null): void {
+  holdGrip(false);
+  if (fixed) setPanelWidth(panelWidth(), true);
+}

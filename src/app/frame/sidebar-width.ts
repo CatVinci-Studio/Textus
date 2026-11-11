@@ -1,4 +1,5 @@
 import { chromeScale } from "../../engine/tokens/chrome-scale";
+import { placeSidebar } from "./useSidebarFrame";
 import { useCallback, useState } from "react";
 import { getUiState, setUiState } from "../../storage/ui-state";
 import {
@@ -86,4 +87,5 @@ function holdWidth(width: number | null): void {
     `var(--rail-width, 0px) ${width}px minmax(0, 1fr)`,
   );
   sidebar?.style.setProperty("width", `${width}px`);
+  if (sidebar) placeSidebar(sidebar, width);
 }

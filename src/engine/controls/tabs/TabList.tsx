@@ -34,6 +34,9 @@ export function useTabFit(
   const [room, setRoom] = useState<TabRoom | null>(null);
   const shapes = useRef(tabs);
   shapes.current = tabs;
+  // The row's measures as last read, which the fit uses; the state above
+  // only draws again when the fit changed.
+  const latest = useRef<TabRoom | null>(null);
   // What the row's measures are read from: a tab, and each part one has.
   const parts = `${tabs.length > 0}${tabs.some((tab) => tab.dirty)}${tabs.some((tab) => tab.readOnly)}${tabs.some((tab) => tab.waiting)}`;
   useLayoutEffect(() => {
@@ -46,6 +49,7 @@ export function useTabFit(
       const key = `${el.className}|${parts}`;
       const next = readTabRoom(el, PILLS.get(key));
       if (next) PILLS.set(key, next.pill);
+      latest.current = next;
       setRoom((was) =>
         sameRoom(was, next) || sameFit(was, next) ? was : next,
       );
@@ -83,11 +87,12 @@ export function useTabFit(
       !a.overflow && !b.overflow && JSON.stringify(a) === JSON.stringify(b)
     );
   }
+  const now = room && (latest.current ?? room);
   return (
-    room && {
-      ...fitTabs(tabs, room),
-      available: room.available,
-      between: room.between,
+    now && {
+      ...fitTabs(tabs, now),
+      available: now.available,
+      between: now.between,
     }
   );
 }
