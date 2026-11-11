@@ -15,12 +15,14 @@ import { isIOSApp } from "../platform/capabilities";
 import { SHOW_SIDEBAR_TAB_EVENT } from "../utils/events";
 import {
   OPEN_SETTINGS_PAGE_EVENT,
-  settingsPageShown,
   showSettingsList,
   type SettingsPageRequest,
 } from "../settings/settings-nav";
 import { pluginName, pluginRecord } from "../plugins/store/plugin-records";
-import { showPage, type PageRequest } from "./tabs/page-tabs";
+import { pageOf, showPage, type PageRequest } from "./tabs/page-tabs";
+import { placeOnArrival, tabInUse } from "../engine/layout/store";
+import { moveTab } from "../engine/layout/ops";
+import { panesOf } from "../engine/layout/tree";
 import { namePageTabs } from "../document/doc-tabs";
 import { settingsPage } from "../settings/settings-pages";
 
@@ -32,6 +34,20 @@ namePageTabs("settings", (state, t) => {
 });
 import type { TabState } from "./tabs/useTabState";
 import type { Strings } from "../i18n/strings";
+
+/** Settings asked for from the AI's column: its new tab goes to an island
+ *  of documents, not the AI's narrow one. */
+function showSettings(tabs: TabState, to?: string, jump?: unknown): void {
+  const isAi = (id: string) =>
+    pageOf(tabs.tabsRef.current.find((tab) => tab.id === id)) === "ai";
+  const fromAi = isAi(tabInUse());
+  const made = showPage(tabs, "settings", to, undefined, jump);
+  if (made && fromAi)
+    placeOnArrival(made, (now) => {
+      const home = now && panesOf(now.root).find((p) => !p.tabs.some(isAi));
+      return (home && moveTab(now, made, home.id)) || now;
+    });
+}
 
 /** Settings and Plugins as tabs: everywhere but the iPhone and iPad. */
 const inTabs = !isIOSApp;
@@ -104,7 +120,7 @@ export function useSettingsOpening(tabs: TabState) {
     // A page picked in the sidebar's list, or a search result there.
     const page = (e: Event) => {
       const { page, jump } = (e as CustomEvent<SettingsPageRequest>).detail;
-      showPage(tabs, "settings", page, undefined, jump);
+      showSettings(tabs, page, jump);
     };
     window.addEventListener(OPEN_SETTINGS_PAGE_EVENT, page);
     return () => {
@@ -118,12 +134,16 @@ export function useSettingsOpening(tabs: TabState) {
     openSettings: () => {
       if (!inTabs) return request("general");
       showSettingsList();
-      showPage(tabs, "settings", settingsPageShown());
+      // Not open: at General. Open: brought forward where it was.
+      const open = tabs.tabsRef.current.some(
+        (tab) => pageOf(tab) === "settings",
+      );
+      showSettings(tabs, open ? undefined : "general");
     },
     openUpdates: () => {
       if (!inTabs) return request("updates");
       showSettingsList();
-      showPage(tabs, "settings", "updates");
+      showSettings(tabs, "updates");
     },
     openPluginSettings: (id?: string) => {
       // A plugin's page in its tab; the list itself is the sidebar's.

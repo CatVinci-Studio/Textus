@@ -1,9 +1,6 @@
 import { createContext, useContext, type ReactNode } from "react";
 import { makeBlankTab, type DocTab } from "../../document/doc-tabs";
 import type { TabState } from "./useTabState";
-import { placeOnArrival, tabInUse } from "../../engine/layout/store";
-import { moveTab } from "../../engine/layout/ops";
-import { panesOf } from "../../engine/layout/tree";
 import "./page-tabs.css";
 
 /**
@@ -30,37 +27,29 @@ export function pageOf(tab: DocTab | undefined): AppPage | null {
 }
 
 /** Brings `page`'s tab to the front, opening it where tabs open if there
- *  is none; `to` is where in it to go, `title` what the tab is called
- *  there (a plugin's name). */
+ *  is none (its id then, else null); `to` is where in it to go, `title`
+ *  what the tab is called there (a plugin's name). */
 export function showPage(
   tabs: TabState,
   page: AppPage,
   to?: string,
   title?: string,
   jump?: unknown,
-): void {
+): string | null {
   const state: PageRequest = { to, at: Date.now(), jump };
   const open = tabs.tabsRef.current.find((tab) => pageOf(tab) === page);
   if (open) {
     if (to) tabs.updateTab(open.id, { view: { ...open.view!, state, title } });
     tabs.setActiveTabId(open.id);
-    return;
+    return null;
   }
   const made: DocTab = {
     ...makeBlankTab(),
     view: { plugin: "textus", view: page, kind: "page", state, title },
   };
-  // Asked for from the AI's column: into an island of documents, not the
-  // AI's narrow one.
-  const isAi = (id: string) =>
-    pageOf(tabs.tabsRef.current.find((tab) => tab.id === id)) === "ai";
-  if (page !== "ai" && isAi(tabInUse()))
-    placeOnArrival(made.id, (now) => {
-      const home = now && panesOf(now.root).find((p) => !p.tabs.some(isAi));
-      return (home && moveTab(now, made.id, home.id)) || now;
-    });
   tabs.setTabs((prev) => [...prev, made]);
   tabs.setActiveTabId(made.id);
+  return made.id;
 }
 
 type RenderPage = (

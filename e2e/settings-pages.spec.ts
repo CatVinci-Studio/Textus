@@ -44,6 +44,16 @@ test("⌘, opens the list in the sidebar and the Settings tab; the gear toggles 
   await expect(tabs(page)).toHaveText(["未命名", "设置：通用"]);
   await gear(page).click();
   await expect(sidebarTitle(page)).toHaveText("设置");
+  // Open: ⌘, brings it forward where it was. Closed: back at General.
+  await page.getByRole("button", { name: "外观" }).first().click();
+  await expect(tabs(page).nth(1)).toHaveText("设置：外观");
+  await tabs(page).first().click();
+  await emit(page, "menu-settings");
+  await expect(tabs(page).nth(1)).toHaveText("设置：外观");
+  await emit(page, "menu-close-tab");
+  await expect(tabs(page)).toHaveText(["未命名"]);
+  await emit(page, "menu-settings");
+  await expect(tabs(page)).toHaveText(["未命名", "设置：通用"]);
 });
 
 test("every page draws, in the one tab, without an error", async ({ page }) => {
