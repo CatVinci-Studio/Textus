@@ -12,7 +12,7 @@ import {
   type HelpDoc,
 } from "./doc-tabs";
 import { setTabJump } from "../editor/tab-jump";
-import { lastCaret } from "./last-carets";
+import { lastCaret } from "./last-places";
 import { keptTabsRestored, readKeptTabs, type KeptTab } from "./reload-tabs";
 import { takeWindowSession } from "./launch-window";
 

@@ -20,11 +20,13 @@ import {
 } from "../engine/layout/store";
 import {
   lastCaret,
+  lastScroll,
   mergeCarets,
   rememberCaret,
-  resetLastCaretsForTests,
-  useLastCarets,
-} from "./last-carets";
+  rememberScroll,
+  resetLastPlacesForTests,
+  useLastPlaces,
+} from "./last-places";
 
 const KEY = "textus-last-carets";
 const stored = () => JSON.parse(localStorage.getItem(KEY) ?? "null");
@@ -32,7 +34,7 @@ const stored = () => JSON.parse(localStorage.getItem(KEY) ?? "null");
 beforeAll(installTestLocalStorage);
 beforeEach(() => {
   localStorage.clear();
-  resetLastCaretsForTests();
+  resetLastPlacesForTests();
 });
 afterEach(() => vi.useRealTimers());
 
@@ -101,7 +103,7 @@ describe("the last caret of a document", () => {
   });
 });
 
-describe("useLastCarets", () => {
+describe("useLastPlaces", () => {
   const tab = (id: string, path: string | null): DocTab => ({
     ...makeBlankTab(),
     id,
@@ -114,7 +116,7 @@ describe("useLastCarets", () => {
   });
 
   it("remembers the caret a tab's editor reports as it leaves", () => {
-    renderHook(() => useLastCarets([tab("t", "/a.md")], true));
+    renderHook(() => useLastPlaces([tab("t", "/a.md")], true));
     reportTabCaret("t", { offset: 4 });
     expect(lastCaret("/a.md", 5)).toEqual({ offset: 4 });
   });
@@ -122,7 +124,7 @@ describe("useLastCarets", () => {
   it("writes the active tab's caret at once when the window closes", async () => {
     setWindowTabs(() => [tab("t", "/a.md")]);
     activateTab("t");
-    renderHook(() => useLastCarets([tab("t", "/a.md")], true));
+    renderHook(() => useLastPlaces([tab("t", "/a.md")], true));
     const stop = registerTabEditor("t", "caret", () => ({ offset: 12 }));
     await flushPendingWrites();
     expect(stored()).toEqual({ "/a.md": { offset: 12, mtime: 5 } });
@@ -134,7 +136,7 @@ describe("useLastCarets", () => {
     let tabs = [tab("a", "/a.md"), tab("b", "/b.md"), tab("c", "/c.md")];
     setWindowTabs(() => tabs);
     activateTab("b");
-    const { rerender } = renderHook(() => useLastCarets(tabs, true));
+    const { rerender } = renderHook(() => useLastPlaces(tabs, true));
     reportTabCaret("a", { offset: 4 });
     tabs = [{ ...tabs[0], diskMtime: 6 }, tabs[1], tabs[2]];
     rerender();
@@ -150,16 +152,32 @@ describe("useLastCarets", () => {
   });
 
   it("remembers nothing for a document without a file", () => {
-    renderHook(() => useLastCarets([tab("t", null)], true));
+    renderHook(() => useLastPlaces([tab("t", null)], true));
     reportTabCaret("t", { offset: 4 });
     expect(stored()).toBeNull();
   });
 
   it("remembers nothing with Restore Previous Session off", async () => {
-    renderHook(() => useLastCarets([tab("t", "/a.md")], false));
+    renderHook(() => useLastPlaces([tab("t", "/a.md")], false));
     reportTabCaret("t", { offset: 4 });
     await flushPendingWrites();
     expect(lastCaret("/a.md", 5)).toBeNull();
     expect(stored()).toBeNull();
+  });
+
+  it("keeps the reading place with the caret, for the file as it was", () => {
+    renderHook(() => useLastPlaces([tab("t", "/a.md")], true));
+    rememberCaret("/a.md", { offset: 4 }, 5);
+    rememberScroll("/a.md", { block: 3, into: 12 }, 5);
+    expect(lastCaret("/a.md", 5)).toEqual({ offset: 4 });
+    expect(lastScroll("/a.md", 5)).toEqual({ block: 3, into: 12 });
+    // Changed since: neither comes back.
+    expect(lastScroll("/a.md", 6)).toBeNull();
+  });
+
+  it("keeps no reading place with Restore Previous Session off", () => {
+    renderHook(() => useLastPlaces([tab("t", "/a.md")], false));
+    rememberScroll("/a.md", { block: 3, into: 12 }, 5);
+    expect(lastScroll("/a.md", 5)).toBeNull();
   });
 });

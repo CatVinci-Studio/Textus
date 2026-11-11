@@ -18,7 +18,6 @@ export const LOCAL_KEYS = {
   /** A provider's last fetched model list, by provider id. */
   fetchedModels: (provider: string) => `textus-fetched-models:${provider}`,
   /** Where each file was last being read. */
-  readingPlaces: "textus-reading-places",
   /** Web page tabs' address bar folded away. */
   webPageBarHidden: "textus.webPageBarHidden",
   /** Plugins' floating views: where each was and whether it was open. */

@@ -11,12 +11,10 @@ import { MilkdownProvider } from "@milkdown/react";
 import { useSettings, type AgentMode } from "../prefs/SettingsContext";
 import { KatexFirst } from "../editor/math/KatexFirst";
 import { elasticOverscroll } from "../engine/controls/elastic-overscroll";
-import {
-  keepReadingPlace,
-  placeIn,
-  readingPlace,
-  scrollToPlace,
-} from "./reading-place";
+import { placeIn, scrollToPlace } from "./reading-place";
+import { lastScroll, rememberScroll } from "../document/last-places";
+import { windowTabs } from "../engine/layout/store";
+import type { DocTab } from "../document/doc-tabs";
 import type { TourAi } from "../utils/events";
 import { lazyModule } from "../lazy/lazy-module";
 import { lazyComponent } from "../lazy/lazy-component";
@@ -58,19 +56,29 @@ function sameProps(prev: EditorPaneProps, next: EditorPaneProps): boolean {
   );
 }
 
+/** The modified time of tab `tabId`'s file as it was read, or null. */
+const mtimeOf = (tabId: string) =>
+  windowTabs<DocTab>().find((tab) => tab.id === tabId)?.diskMtime ?? null;
+
 /**
  * Restores the tab's scroll when it comes back to the front: WebKit resets
  * a display: none scroller to the top. Also returns a reopened file to where
  * it was last read, unless the reader or a link moved it first.
  */
-function useKeptScroll(isActive: boolean | undefined, filePath: string | null) {
+function useKeptScroll(
+  isActive: boolean | undefined,
+  tabId: string,
+  filePath: string | null,
+) {
   const el = useRef<HTMLDivElement | null>(null);
   const kept = useRef(0);
   // The path now, for the scroll handler: a saved draft gets one.
   const path = useRef(filePath);
   path.current = filePath;
   // Read once, as the pane mounts with its document.
-  const [lastRead] = useState(() => (filePath ? readingPlace(filePath) : null));
+  const [lastRead] = useState(() =>
+    filePath ? lastScroll(filePath, mtimeOf(tabId)) : null,
+  );
   const pending = useRef(lastRead);
   useEffect(() => {
     const scroller = el.current;
@@ -81,7 +89,8 @@ function useKeptScroll(isActive: boolean | undefined, filePath: string | null) {
       const root = scroller.querySelector(".ProseMirror");
       if (!root || !path.current || scroller.clientHeight === 0) return;
       const place = placeIn(scroller, root);
-      if (place) keepReadingPlace(path.current, place);
+      const mtime = mtimeOf(tabId);
+      if (place && mtime !== null) rememberScroll(path.current, place, mtime);
     };
     // Only while it is shown: a hidden one has nothing to say.
     const keep = () => {
@@ -100,7 +109,7 @@ function useKeptScroll(isActive: boolean | undefined, filePath: string | null) {
         save();
       }
     };
-  }, []);
+  }, [tabId]);
   useLayoutEffect(() => {
     const scroller = el.current;
     if (!isActive || !scroller) return;
@@ -151,7 +160,7 @@ export const EditorPane = memo(function EditorPane({
     (markdown: string) => onChange(tabId, markdown),
     [onChange, tabId],
   );
-  const scrollRef = useKeptScroll(isActive, filePath);
+  const scrollRef = useKeptScroll(isActive, tabId, filePath);
 
   return (
     <div className="editor-scroll tx-scroll-reveal" ref={scrollRef}>

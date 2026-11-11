@@ -26,7 +26,7 @@ import {
   type OpenFileInTab,
 } from "../utils/events";
 import { setTabJump, type TabJump } from "../editor/tab-jump";
-import { lastCaret } from "../document/last-carets";
+import { lastCaret } from "../document/last-places";
 import { lastViewMode } from "../editor/modes/view-mode";
 import { isIOSApp } from "../platform/capabilities";
 import { isWindowsPlatform } from "../platform/os";

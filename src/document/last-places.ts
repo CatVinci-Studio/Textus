@@ -7,16 +7,19 @@ import type { DocTab } from "./doc-tabs";
 import { tabInUse } from "../engine/layout/store";
 
 /**
- * Where the caret was in each recently left document, keyed by path with
- * the file's mtime: a file changed since opens at its top. Off when session
- * restore is off.
+ * Where each recently left document was: its caret and the place it was
+ * being read at (a block and how far into it, as scrollTop moves with the
+ * window's width), keyed by path with the file's mtime - a file changed
+ * since opens at its top. Off when session restore is off.
  */
 
 type Stored = UiState["lastCarets"];
 type Entry = Stored[string];
+/** A place a document was being read at. */
+export type ScrollPlace = { block: number; into: number };
 
 /** The documents remembered; the least recently left go first. */
-const LIMIT = 50;
+const LIMIT = 100;
 /** Carets reported in a burst (tab after tab) are written together. */
 const WRITE_DELAY_MS = 1000;
 
@@ -24,13 +27,22 @@ const WRITE_DELAY_MS = 1000;
 const local = new Map<string, Entry>();
 const unwritten = new Set<string>();
 let writeTimer: ReturnType<typeof setTimeout> | null = null;
+/** Session restore is on: places are kept (useLastPlaces). */
+let keeping = false;
+
+const whole = (n: unknown) =>
+  typeof n === "number" && Number.isInteger(n) && n >= 0;
 
 function isEntry(value: unknown): value is Entry {
   if (typeof value !== "object" || value === null) return false;
-  const { mtime, offset, pos } = value as Record<string, unknown>;
-  const place = (n: unknown) =>
-    typeof n === "number" && Number.isInteger(n) && n >= 0;
-  return typeof mtime === "number" && (place(offset) || place(pos));
+  const { mtime, offset, pos, scroll } = value as Record<string, unknown>;
+  const read = scroll as Record<string, unknown> | undefined;
+  return (
+    typeof mtime === "number" &&
+    (whole(offset) ||
+      whole(pos) ||
+      (!!read && whole(read.block) && typeof read.into === "number"))
+  );
 }
 
 /** A stored map, untrusted: what is valid. */
@@ -67,16 +79,45 @@ function writeCarets(): void {
   updateUiState("lastCarets", (stored) => mergeCarets(stored, newer));
 }
 
+/** `path`'s entry as it is now kept, here or stored. */
+function entryOf(path: string): Entry | undefined {
+  return local.get(path) ?? validEntries(getUiState("lastCarets")).get(path);
+}
+
+/** `path`, as it was at `mtime`, remembered with `part` over what was
+ *  kept of it then (a different mtime keeps nothing). */
+function remember(path: string, mtime: number, part: Partial<Entry>): void {
+  const was = entryOf(path);
+  const kept = was && was.mtime === mtime ? was : { mtime };
+  local.delete(path);
+  local.set(path, { ...kept, ...part, mtime } as Entry);
+  unwritten.add(path);
+  writeTimer ??= setTimeout(writeCarets, WRITE_DELAY_MS);
+}
+
 /** Remembers that `path`, as it was at `mtime`, was left at `caret`. */
 export function rememberCaret(
   path: string,
   caret: CaretPlace,
   mtime: number,
 ): void {
-  local.delete(path);
-  local.set(path, { ...caret, mtime });
-  unwritten.add(path);
-  writeTimer ??= setTimeout(writeCarets, WRITE_DELAY_MS);
+  const part =
+    "pos" in caret
+      ? { pos: caret.pos, offset: undefined }
+      : { offset: caret.offset, pos: undefined };
+  remember(path, mtime, part);
+}
+
+/** Remembers where `path`, as it was at `mtime`, was being read; its top
+ *  is no place to remember. */
+export function rememberScroll(
+  path: string,
+  place: ScrollPlace,
+  mtime: number,
+): void {
+  if (!keeping) return;
+  const top = place.block === 0 && place.into < 1;
+  remember(path, mtime, { scroll: top ? undefined : place });
 }
 
 /** Where `path` was left, if the file is still as it was then. */
@@ -84,11 +125,19 @@ export function lastCaret(
   path: string,
   mtime: number | null,
 ): CaretPlace | null {
-  if (mtime === null) return null;
-  const entry =
-    local.get(path) ?? validEntries(getUiState("lastCarets")).get(path);
+  const entry = mtime === null ? undefined : entryOf(path);
   if (!entry || entry.mtime !== mtime) return null;
-  return "pos" in entry ? { pos: entry.pos } : { offset: entry.offset };
+  if (whole(entry.pos)) return { pos: entry.pos! };
+  return whole(entry.offset) ? { offset: entry.offset! } : null;
+}
+
+/** Where `path` was being read, if the file is still as it was then. */
+export function lastScroll(
+  path: string,
+  mtime: number | null,
+): ScrollPlace | null {
+  const entry = mtime === null || !keeping ? undefined : entryOf(path);
+  return (entry && entry.mtime === mtime && entry.scroll) || null;
 }
 
 /**
@@ -96,7 +145,7 @@ export function lastCaret(
  * shown tab on close: a tab autosaved since was remembered against the old
  * file.
  */
-export function useLastCarets(tabs: DocTab[], enabled: boolean): void {
+export function useLastPlaces(tabs: DocTab[], enabled: boolean): void {
   // The tabs as of the last commit: a closed tab's editor reports its
   // caret as it unmounts, after the tab has left `tabs`.
   const known = useRef(new Map<string, DocTab>());
@@ -105,6 +154,7 @@ export function useLastCarets(tabs: DocTab[], enabled: boolean): void {
   }, [tabs]);
 
   useEffect(() => {
+    keeping = enabled;
     if (!enabled) return;
     // Tabs never shown keep what was stored: their caret isn't placed yet.
     const shown = new Set<string>();
@@ -129,7 +179,7 @@ export function useLastCarets(tabs: DocTab[], enabled: boolean): void {
 }
 
 /** Forgets what wasn't written yet, for tests. */
-export function resetLastCaretsForTests(): void {
+export function resetLastPlacesForTests(): void {
   if (writeTimer) clearTimeout(writeTimer);
   writeTimer = null;
   local.clear();

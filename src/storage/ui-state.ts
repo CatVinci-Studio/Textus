@@ -38,11 +38,17 @@ export interface UiState {
   /** The AI project folder that Open Folder set, so a later Open or Close
    *  Folder may change it but leaves one the user chose alone. */
   agentRootFromFolder: string;
-  /** Where the caret was in each recent document, by path, least recent
-   *  first, with the file's modified time then. */
+  /** Where each recent document was left (its caret, the place it was
+   *  read at), by path, least recent first, with the file's modified time
+   *  then. */
   lastCarets: Record<
     string,
-    { mtime: number } & ({ offset: number } | { pos: number })
+    {
+      mtime: number;
+      offset?: number;
+      pos?: number;
+      scroll?: { block: number; into: number };
+    }
   >;
   /** The Files tab's filter: documents only, or every file. */
   fileSearchScope: string;

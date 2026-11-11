@@ -7,7 +7,7 @@ import {
 } from "../files/note-completion";
 import { useTabDragMerge } from "./tabs/useTabDragMerge";
 import { useAutosave } from "../document/autosave";
-import { useLastCarets } from "../document/last-carets";
+import { useLastPlaces } from "../document/last-places";
 import { useActiveDocument } from "./useActiveDocument";
 import { useOpenFolder } from "./useOpenFolder";
 import { useWindowSession } from "./islands/window-session";
@@ -91,7 +91,7 @@ export function useWindowDocuments({
     t,
     onWordDocumentOpened: shell.wordImported.opened,
   });
-  useLastCarets(tabs, settings.restoreSessionOnStartup);
+  useLastPlaces(tabs, settings.restoreSessionOnStartup);
   const folderRoot = openFolder.folder ?? openFolder.treeRoot;
   // `[[` lists the folder's notes while no plugin completes it.
   useEffect(() => {
