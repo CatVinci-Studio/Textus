@@ -1,3 +1,4 @@
+import { eachLine } from "./markdown-lines";
 import { onMemoryIdle } from "./memory-idle";
 
 interface WordCount {
@@ -75,7 +76,6 @@ export function countWords(markdown: string): WordCount {
   let words = 0;
   let characters = 0;
   let paragraph = "";
-  let inFence = false;
   const paragraphs: string[] = [];
   const flush = () => {
     if (paragraph) {
@@ -86,16 +86,10 @@ export function countWords(markdown: string): WordCount {
     }
     paragraph = "";
   };
-  for (const line of markdown.split("\n")) {
-    if (/^\s*(```|~~~)/.test(line)) {
-      inFence = !inFence;
-      flush();
-      continue;
-    }
-    if (inFence) continue;
-    if (line.trim() === "") flush();
+  eachLine(markdown, (line, _index, code) => {
+    if (code || line.trim() === "") flush();
     else paragraph += line + "\n";
-  }
+  });
   flush();
   if (paragraphCounts.size > Math.max(PARAGRAPHS_KEPT, 2 * paragraphs.length)) {
     const kept = paragraphs.map(
