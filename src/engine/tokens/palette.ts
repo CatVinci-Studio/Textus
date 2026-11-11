@@ -1,3 +1,4 @@
+import { DOC_DEFAULTS } from "./doc-defaults";
 /** Derive application colors from an imported document theme. */
 type RGB = readonly [number, number, number];
 const WHITE: RGB = [255, 255, 255];
@@ -108,7 +109,8 @@ export function applyThemeChrome(css: string, dark: boolean): string | null {
     if (!doc || !view) return null;
     doc.documentElement.dataset.theme = dark ? "dark" : "light";
     const base = doc.createElement("style");
-    base.textContent = `body { background: var(--bg-color, var(--ui-surface, var(--ui-bg, ${dark ? "#1c1c1e" : "#fff"}))); color: var(--text-color, var(--ui-text, ${dark ? "#f5f5f7" : "#24272e"})); } a { color: var(--primary-color, var(--ui-accent, #315ed1)); }`;
+    const ink = DOC_DEFAULTS[dark ? "dark" : "light"];
+    base.textContent = `body { background: var(--bg-color, var(--ui-surface, var(--ui-bg, ${ink.bg}))); color: var(--text-color, var(--ui-text, ${ink.text})); } a { color: var(--primary-color, var(--ui-accent, ${ink.accent})); }`;
     const theme = doc.createElement("style");
     theme.textContent = css;
     doc.head.append(base, theme);
