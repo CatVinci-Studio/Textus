@@ -1,12 +1,6 @@
 .tutorial-backdrop {
-  position: fixed;
-  inset: 0;
   z-index: var(--z-popover);
-  display: flex;
-  align-items: center;
-  justify-content: center;
   padding: 24px;
-  background: var(--ui-overlay);
 }
 
 .tutorial-surface.floating-surface {

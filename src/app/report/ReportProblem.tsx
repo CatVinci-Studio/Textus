@@ -74,7 +74,7 @@ export function ReportProblemDialog({
       ref={presence.ref}
       data-state={presence.state}
       inert={presence.state === "closing" || undefined}
-      className="close-prompt-overlay"
+      className="tx-backdrop"
       onMouseDown={(e) => {
         if (e.target === e.currentTarget) close();
       }}

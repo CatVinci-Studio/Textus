@@ -54,7 +54,7 @@ export function ClosePrompt({
       </Presence>
       <Presence show={open && !phone}>
         {open && !phone && (
-          <PresenceDiv className="close-prompt-overlay">
+          <PresenceDiv className="tx-backdrop">
             <div
               className="close-prompt"
               {...dialogProps}

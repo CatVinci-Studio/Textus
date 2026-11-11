@@ -20,7 +20,7 @@ export function LanguageWelcome({
   // Continue fades it out over the tutorial arriving.
   const presence = usePresenceProps<HTMLDivElement>();
   return (
-    <div {...presence} className="language-welcome-backdrop">
+    <div {...presence} className="tx-backdrop language-welcome-backdrop">
       <div
         {...modal}
         className="language-welcome"

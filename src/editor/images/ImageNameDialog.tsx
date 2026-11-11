@@ -39,7 +39,7 @@ export function ImageNameDialog({
   return (
     <div
       {...presence}
-      className="close-prompt-overlay image-name-overlay"
+      className="tx-backdrop image-name-overlay"
       onClick={() => onClose(null)}
     >
       <div

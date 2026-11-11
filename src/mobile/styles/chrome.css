@@ -22,7 +22,7 @@
     .tutorial-backdrop,
     .insert-table-overlay,
     .image-name-overlay,
-    .close-prompt-overlay
+    .tx-backdrop
   ) {
   /* The whole screen: on iOS the title row has nothing to drag or close, and
      an iPad's Settings left it live above the dimming. */
@@ -34,7 +34,7 @@
 
   /* An alert takes the whole screen, title row included: nothing behind
      it answers until it is dismissed. */
-  :root[data-window-chrome="mobile"] .close-prompt-overlay {
+  :root[data-window-chrome="mobile"] .tx-backdrop {
     top: 0;
   }
 
@@ -52,7 +52,7 @@
 
   /* Dismissed, it only fades - with the dimming behind it. */
   :root[data-window-chrome="mobile"]
-    .close-prompt-overlay[data-state="closing"]
+    .tx-backdrop[data-state="closing"]
     > .app-dialog {
     animation: none;
   }

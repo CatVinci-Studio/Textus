@@ -1,13 +1,7 @@
+/* Modal tier: above the find bar, popovers and toasts, which would
+   otherwise draw over the backdrop and take clicks. */
 .settings-backdrop {
-  position: fixed;
-  inset: 0;
-  background: var(--ui-overlay);
-  /* Modal tier: above the find bar, popovers and toasts (200-300), which
-     would otherwise draw over the backdrop and take clicks. */
   z-index: var(--z-modal);
-  display: flex;
-  align-items: center;
-  justify-content: center;
 }
 
 .settings-panel {

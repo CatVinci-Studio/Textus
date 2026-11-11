@@ -310,7 +310,7 @@ export function TutorialOverlay({
   );
 
   if (layout === "overlay") {
-    return <div className="tutorial-backdrop">{card}</div>;
+    return <div className="tx-backdrop tutorial-backdrop">{card}</div>;
   }
 
   return card;

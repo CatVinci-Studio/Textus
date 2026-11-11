@@ -45,7 +45,7 @@ export function InsertTableDialog({
   return (
     <div
       {...presence}
-      className="close-prompt-overlay insert-table-overlay"
+      className="tx-backdrop insert-table-overlay"
       onClick={onClose}
     >
       <div

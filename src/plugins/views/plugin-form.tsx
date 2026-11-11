@@ -125,7 +125,7 @@ function PluginForm({ request }: { request: Request }) {
     setValues((v) => ({ ...v, [key]: value }));
   return (
     <div
-      className="close-prompt-overlay"
+      className="tx-backdrop"
       onMouseDown={(e) => {
         if (e.target === e.currentTarget) answer(request, null);
       }}

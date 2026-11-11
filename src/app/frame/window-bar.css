@@ -161,7 +161,7 @@
     .tutorial-backdrop,
     .insert-table-overlay,
     .image-name-overlay,
-    .close-prompt-overlay
+    .tx-backdrop
   ) {
   top: var(--window-bar-height);
 }
@@ -173,7 +173,7 @@
     .tutorial-backdrop,
     .insert-table-overlay,
     .image-name-overlay,
-    .close-prompt-overlay
+    .tx-backdrop
   )::before {
   content: "";
   position: absolute;

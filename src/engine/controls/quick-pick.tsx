@@ -183,7 +183,7 @@ function QuickPick({
   }, [index]);
   return (
     <div
-      className="close-prompt-overlay quick-pick-overlay"
+      className="tx-backdrop quick-pick-overlay"
       onMouseDown={(e) => {
         if (e.target === e.currentTarget) answer(request, null);
       }}

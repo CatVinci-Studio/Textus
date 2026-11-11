@@ -16,7 +16,7 @@
   .sidebar,
   .tab-bar,
   .window-bar,
-  .close-prompt-overlay,
+  .tx-backdrop,
   .corner-stack,
   .pdf-export-overlay {
     display: none !important;
@@ -114,13 +114,7 @@
 
 /* "Preparing PDF…" overlay while the offscreen render runs. */
 .pdf-export-overlay {
-  position: fixed;
-  inset: 0;
-  z-index: 2000;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  background: var(--ui-overlay);
+  z-index: var(--z-modal);
 }
 
 .pdf-export-card {

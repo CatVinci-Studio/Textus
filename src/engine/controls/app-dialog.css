@@ -1,7 +1,8 @@
-/* The Save/Don't Save/Cancel prompt for a window with unsaved changes. Above
-   every other layer: the window stays open until it is answered, so a prompt
-   drawn behind something would make the close look ignored. */
-.close-prompt-overlay {
+/* The one backdrop of a modal: the window dimmed, the dialog in its middle.
+   Above every other layer by default - the unsaved-changes prompt keeps the
+   window open until it is answered, so a prompt drawn behind something
+   would make the close look ignored; a modal of a lower tier says so. */
+.tx-backdrop {
   position: fixed;
   inset: 0;
   z-index: var(--z-alert);

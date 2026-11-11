@@ -325,7 +325,7 @@ export function SettingsPanel({
     </div>
   );
   return (
-    <div {...presence} className="settings-backdrop" onClick={onClose}>
+    <div {...presence} className="tx-backdrop settings-backdrop" onClick={onClose}>
       <div
         {...modal}
         role="dialog"

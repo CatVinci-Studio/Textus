@@ -735,7 +735,7 @@
 /* Dialogs: the dimming fades in while the card grows out of the middle;
    closing, both go together, a little faster. */
 :is(
-  .close-prompt-overlay,
+  .tx-backdrop,
   .image-name-overlay,
   .insert-table-overlay,
   .settings-backdrop
@@ -748,7 +748,7 @@
 }
 
 :is(
-  .close-prompt-overlay,
+  .tx-backdrop,
   .image-name-overlay,
   .insert-table-overlay,
   .settings-backdrop
@@ -757,7 +757,7 @@
 }
 
 :is(
-    .close-prompt-overlay,
+    .tx-backdrop,
     .image-name-overlay,
     .insert-table-overlay,
     .settings-backdrop

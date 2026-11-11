@@ -1,14 +1,8 @@
 .language-welcome-backdrop {
-  position: fixed;
-  inset: 0;
   /* Below the unsaved-changes prompt, which a close during the first launch
      still has to show. */
   z-index: var(--z-modal);
-  display: flex;
-  align-items: center;
-  justify-content: center;
   padding: 24px;
-  background: var(--ui-overlay);
   animation: motion-fade-in var(--dur-slow) var(--ease-standard);
 }
 
