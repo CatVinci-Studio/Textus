@@ -21,6 +21,7 @@ mod ext_stats;
 mod extract;
 #[cfg(desktop)]
 mod mcp;
+mod media;
 #[cfg(desktop)]
 mod menu;
 mod net;

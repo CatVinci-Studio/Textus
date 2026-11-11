@@ -407,7 +407,9 @@ pub(super) async fn migrate_images(
             let Some(from) = source_dir.map(|dir| dir.join(path)) else {
                 continue;
             };
-            if !is_image_file(&from) || !fs::metadata(&from).await.is_ok_and(|m| m.is_file()) {
+            if !crate::media::is_picture(&from)
+                || !fs::metadata(&from).await.is_ok_and(|m| m.is_file())
+            {
                 continue;
             }
             copy_image(&from, &folder.dir).await

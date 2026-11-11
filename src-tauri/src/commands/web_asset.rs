@@ -116,7 +116,7 @@ fn shaped(kind: WebAssetKind, url: &str, bytes: &[u8]) -> Result<String, String>
         WebAssetKind::Font => font_mime(bytes, url)
             .map(data)
             .ok_or_else(|| "not a font".into()),
-        WebAssetKind::Image => image_mime(bytes)
+        WebAssetKind::Image => crate::media::sniff(bytes)
             .map(data)
             .ok_or_else(|| "not a picture".into()),
     }
@@ -133,22 +133,6 @@ fn font_mime(bytes: &[u8], url: &str) -> Option<&'static str> {
         Some("font/ttf")
     } else if url.to_ascii_lowercase().contains(".eot") && bytes.len() > 34 {
         Some("application/vnd.ms-fontobject")
-    } else {
-        None
-    }
-}
-
-fn image_mime(bytes: &[u8]) -> Option<&'static str> {
-    if bytes.starts_with(b"\x89PNG\r\n\x1a\n") {
-        Some("image/png")
-    } else if bytes.starts_with(&[0xFF, 0xD8, 0xFF]) {
-        Some("image/jpeg")
-    } else if bytes.starts_with(b"GIF8") {
-        Some("image/gif")
-    } else if bytes.len() > 12 && &bytes[..4] == b"RIFF" && &bytes[8..12] == b"WEBP" {
-        Some("image/webp")
-    } else if bytes.len() > 12 && &bytes[4..12] == b"ftypavif" {
-        Some("image/avif")
     } else {
         None
     }

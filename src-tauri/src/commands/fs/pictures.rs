@@ -167,19 +167,6 @@ pub struct ImageMigration {
     pub(crate) new: Option<String>,
 }
 
-/// The picture formats Save As carries along with a document. A relative link
-/// to any other kind of file is left as written.
-pub(crate) fn is_image_file(path: &Path) -> bool {
-    let ext = path
-        .extension()
-        .map(|e| e.to_string_lossy().to_ascii_lowercase())
-        .unwrap_or_default();
-    matches!(
-        ext.as_str(),
-        "png" | "jpg" | "jpeg" | "gif" | "webp" | "bmp" | "svg" | "tif" | "tiff"
-    )
-}
-
 /// Copies `from` into `dest_dir` under its own name (numbered when another
 /// picture has it) and returns the name used.
 pub(crate) async fn copy_image(from: &Path, dest_dir: &Path) -> Option<String> {
@@ -189,11 +176,6 @@ pub(crate) async fn copy_image(from: &Path, dest_dir: &Path) -> Option<String> {
     write_new_file(dest_dir, &name, &bytes, true).await.ok()
 }
 
-/// The extensions a picture moved to the Trash may have.
-#[cfg(desktop)]
-pub(crate) const PICTURE_EXTENSIONS: [&str; 8] =
-    ["png", "jpg", "jpeg", "webp", "gif", "svg", "avif", "bmp"];
-
 /// Whether `path`, a picture an accepted AI picture replaced, may go to the
 /// Trash: a picture file in or under the document's folder, or among the drafts' images.
 #[cfg(desktop)]
@@ -202,11 +184,7 @@ pub(crate) fn may_trash_picture(
     doc_path: Option<&Path>,
     path: &Path,
 ) -> Result<PathBuf, String> {
-    let is_picture = path
-        .extension()
-        .and_then(|e| e.to_str())
-        .is_some_and(|e| PICTURE_EXTENSIONS.contains(&e.to_ascii_lowercase().as_str()));
-    if !is_picture {
+    if !crate::media::is_picture(path) {
         return Err("Only a picture file goes to the Trash this way.".into());
     }
     let file =
