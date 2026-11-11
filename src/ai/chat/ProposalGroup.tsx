@@ -1,3 +1,4 @@
+import { HeadRow } from "../../engine/controls/HeadRow";
 import { DropIcon, TakeIcon } from "../../engine/controls/icons";
 import { counted } from "../../i18n/current";
 import { fill } from "../../i18n/fill";
@@ -210,18 +211,23 @@ export function ProposalGroup({
       style={style}
     >
       <FlipOnChange watch={shape} targets={() => following(ref.current)} />
-      <div className="agent-proposal-head">
-        <span className="agent-proposal-icon" aria-hidden="true">
-          <TakeIcon />
-        </span>
-        <span className="agent-proposal-title">
-          {labels.proposalTitle}
-          <span className="agent-proposal-kind">
-            {" · "}
-            {counted(labels.proposalChangeCount, items.length)}
+      <HeadRow
+        className="agent-proposal-head"
+        mark={
+          <span className="agent-proposal-icon" aria-hidden="true">
+            <TakeIcon />
           </span>
-        </span>
-      </div>
+        }
+        title={
+          <span className="agent-proposal-title">
+            {labels.proposalTitle}
+            <span className="agent-proposal-kind">
+              {" · "}
+              {counted(labels.proposalChangeCount, items.length)}
+            </span>
+          </span>
+        }
+      />
       {done && !unfolded ? (
         <button
           type="button"

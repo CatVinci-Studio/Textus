@@ -1,3 +1,4 @@
+import { HeadRow } from "../../engine/controls/HeadRow";
 import { openDocument } from "../../utils/open-document";
 import { useEffect, useState, type CSSProperties } from "react";
 import { ai } from "../../platform/ipc";
@@ -104,12 +105,15 @@ export function FileChangesCard({
       className={`agent-comment agent-file-changes${reveal ? " turn-reveal" : ""}`}
       style={style}
     >
-      <div className="agent-proposal-head">
-        <span className="agent-proposal-title">
-          {on ? labels.filesChangedTitle : labels.filesKeptTitle}
-          <span className="agent-proposal-kind"> · {files.length}</span>
-        </span>
-      </div>
+      <HeadRow
+        className="agent-proposal-head"
+        title={
+          <span className="agent-proposal-title">
+            {on ? labels.filesChangedTitle : labels.filesKeptTitle}
+            <span className="agent-proposal-kind"> · {files.length}</span>
+          </span>
+        }
+      />
       <ul className="agent-file-changes-rows">
         {files.map((c) => (
           <li key={c.file}>

@@ -724,12 +724,10 @@
   border-color: color-mix(in srgb, var(--ui-success) 40%, var(--ui-border));
 }
 
-/* What it is (an icon and "Revision · 2 changes") on the left; the
-   "+X −Y" size (the diff toggle) and "Show in text" on the right. */
+/* What it is (an icon and "Revision · 2 changes"), then the "+X −Y" size
+   (the diff toggle) and "Show in text" as its tools (HeadRow). */
 .agent-proposal-head {
-  display: flex;
-  align-items: center;
-  gap: 8px;
+  --head-mark-size: 18px;
 }
 
 .agent-proposal-icon {
@@ -743,27 +741,11 @@
   color: var(--ui-success);
 }
 
-.agent-proposal-head .agent-diff-summary {
-  margin-left: auto;
-}
-
-.agent-proposal-head .agent-diff-summary + .agent-proposal-show {
-  margin-left: 4px;
-}
-
-.agent-proposal-title {
-  min-width: 0;
-}
-
 .agent-proposal-kind {
   font-weight: 500;
 }
 
 .agent-proposal .agent-proposal-show {
-  margin-left: auto;
-  padding-left: 4px;
-  white-space: nowrap;
-  align-self: center;
   font-size: var(--text-caption);
   color: var(--ui-accent-text);
 }
@@ -1448,7 +1430,6 @@ li[data-state="kept"] .agent-proposal-sentence-text {
 }
 
 .agent-comment .agent-proposal-show {
-  margin-left: auto;
   font-size: var(--text-caption);
   color: var(--ui-accent-text);
 }

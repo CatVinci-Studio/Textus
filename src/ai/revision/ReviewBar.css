@@ -2,7 +2,14 @@
 .review-bar {
   position: absolute;
   left: 50%;
-  bottom: calc(18px + var(--status-bar-height, 0px));
+  bottom: calc(
+    var(--document-corner-room) + var(--space-2) + var(--status-bar-height, 0px)
+  );
+  /* Never wider than its page: short of room it drops its name and the
+     view's words, then puts its buttons on a line of their own
+     (useFitSteps). */
+  max-width: calc(100% - 2 * var(--space-4));
+  box-sizing: border-box;
   z-index: var(--z-toast);
   display: flex;
   align-items: center;
@@ -41,6 +48,28 @@
 
 .review-bar-label {
   opacity: 0.72;
+}
+
+.review-bar:is([data-fit="compact"], [data-fit="stacked"])
+  :is(.review-bar-label:not(.review-bar-working), .review-bar-view-name) {
+  display: none;
+}
+
+.review-bar:is([data-fit="compact"], [data-fit="stacked"])
+  .review-bar-view-waiting {
+  padding: 0;
+  width: 24px;
+}
+
+.review-bar[data-fit="stacked"] {
+  flex-direction: column;
+  gap: 8px;
+  padding: 8px;
+  border-radius: var(--shape-l);
+}
+
+.review-bar[data-fit="stacked"] .review-bar-sep {
+  display: none;
 }
 
 /* "Writing the edit" and its dots, in the bar's own type and colour. */
@@ -195,6 +224,7 @@
   left: 0;
   right: 0;
   bottom: 0;
+  max-width: none;
   flex-direction: column;
   align-items: stretch;
   gap: 12px;

@@ -57,6 +57,9 @@
   --find-field-width: 180px;
   --slider-width: 104px;
   --progress-ring-size: 32px;
+  /* A document's readouts (word count) at its page's foot: their line
+     and the gap under it, which a bar over the page keeps clear of. */
+  --document-corner-room: 32px;
   --progress-ring-line: 4px;
   --bubble-width: 240px;
   /* Surfaces that are what they show, whatever the theme: a sheet of

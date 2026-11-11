@@ -1,3 +1,4 @@
+import { useFitSteps } from "../../engine/controls/fit-steps";
 import { counted as inWords } from "../../i18n/current";
 import type { Plural } from "../../i18n/plural";
 import { fill } from "../../i18n/fill";
@@ -80,6 +81,10 @@ interface BarNotes {
  * the changes, and mark the notes done or pick some to ask about. On a
  * phone, the AI sheet's collapsed form.
  */
+/** Short of room: without its words, then its buttons below. */
+const FIT_STEPS = ["compact", "stacked"] as const;
+const NO_STEPS: readonly string[] = [];
+
 export function ReviewBar({
   labels,
   phone,
@@ -105,6 +110,7 @@ export function ReviewBar({
 }) {
   const rootRef = useRef<HTMLDivElement>(null);
   const presence = usePresenceProps(rootRef);
+  useFitSteps(rootRef, phone ? NO_STEPS : FIT_STEPS);
   // A phone lists only the views needing no margin. Elsewhere margin views
   // stay listed without room, unpickable, and a chosen one waits.
   const modes = phone

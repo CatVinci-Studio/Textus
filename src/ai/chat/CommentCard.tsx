@@ -1,3 +1,4 @@
+import { HeadRow } from "../../engine/controls/HeadRow";
 import { CommentIcon } from "../../engine/controls/icons";
 import { counted } from "../../i18n/current";
 import type { Plural } from "../../i18n/plural";
@@ -74,27 +75,34 @@ export function CommentCard({
       className={`agent-comment${reveal ? " turn-reveal" : ""}`}
       style={style}
     >
-      <div className="agent-proposal-head">
-        {/* Where the text shows the note as a numbered badge, the card
-            wears the same number in its place. */}
-        {num !== null ? (
-          <span className="agent-comment-num">{num}</span>
-        ) : (
-          <span className="agent-comment-icon" aria-hidden="true">
-            <CommentIcon />
-          </span>
-        )}
-        <span className="agent-proposal-title">{labels.commentTitle}</span>
-        {onLocateText && (
-          <button
-            type="button"
-            className="agent-proposal-link agent-proposal-show"
-            onClick={() => onLocateText(comment.anchor, comment.block)}
-          >
-            {labels.commentLocate}
-          </button>
-        )}
-      </div>
+      <HeadRow
+        className="agent-proposal-head"
+        // Where the text shows the note as a numbered badge, the card
+        // wears the same number in its place.
+        mark={
+          num !== null ? (
+            <span className="agent-comment-num">{num}</span>
+          ) : (
+            <span className="agent-comment-icon" aria-hidden="true">
+              <CommentIcon />
+            </span>
+          )
+        }
+        title={
+          <span className="agent-proposal-title">{labels.commentTitle}</span>
+        }
+        tools={
+          onLocateText && (
+            <button
+              type="button"
+              className="agent-proposal-link agent-proposal-show"
+              onClick={() => onLocateText(comment.anchor, comment.block)}
+            >
+              {labels.commentLocate}
+            </button>
+          )
+        }
+      />
       <blockquote className="agent-comment-quote">{comment.anchor}</blockquote>
       <div className="agent-comment-text">
         <InlineMarkdownText text={comment.comment} />
@@ -162,18 +170,23 @@ export function CommentGroup({
         watch={`${unfolded}:${items.length}`}
         targets={() => following(ref.current)}
       />
-      <div className="agent-proposal-head">
-        <span className="agent-comment-icon" aria-hidden="true">
-          <CommentIcon />
-        </span>
-        <span className="agent-proposal-title">
-          {labels.commentTitle}
-          <span className="agent-proposal-kind">
-            {" · "}
-            {counted(labels.commentCount, items.length)}
+      <HeadRow
+        className="agent-proposal-head"
+        mark={
+          <span className="agent-comment-icon" aria-hidden="true">
+            <CommentIcon />
           </span>
-        </span>
-      </div>
+        }
+        title={
+          <span className="agent-proposal-title">
+            {labels.commentTitle}
+            <span className="agent-proposal-kind">
+              {" · "}
+              {counted(labels.commentCount, items.length)}
+            </span>
+          </span>
+        }
+      />
       <ol className="agent-comment-rows">
         {rows.map(({ id, comment, num }) => (
           <li key={id} className="agent-comment-row">

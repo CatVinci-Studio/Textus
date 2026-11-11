@@ -134,6 +134,39 @@ textarea.tx-input {
   outline-offset: 2px;
 }
 
+/* A card's or a group's head (HeadRow): a mark, the title, the tools at
+   its end. Short of room the tools wrap below as one, under the title's
+   start, never under the mark; the mark keeps to the first line. */
+.tx-head-row {
+  display: flex;
+  align-items: flex-start;
+  gap: var(--space-2);
+}
+.tx-head-row > :not(.tx-head-main) {
+  flex: none;
+}
+.tx-head-main {
+  display: flex;
+  flex: 1 1 0;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: var(--space-1) var(--space-2);
+  min-width: 0;
+  /* The first line as tall as the mark, so the two centre on each other. */
+  min-height: var(--head-mark-size, 0px);
+}
+.tx-head-main > :first-child {
+  flex: 1 1 auto;
+  overflow-wrap: anywhere;
+}
+.tx-head-tools {
+  display: flex;
+  flex: none;
+  align-items: center;
+  gap: var(--space-1);
+  white-space: nowrap;
+}
+
 /* A bar over a view: navigation and view switching first, actions last. */
 .tx-bar {
   display: flex;

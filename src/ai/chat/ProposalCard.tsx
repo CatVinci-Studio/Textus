@@ -1,3 +1,4 @@
+import { HeadRow } from "../../engine/controls/HeadRow";
 import { DropIcon, TakeIcon } from "../../engine/controls/icons";
 import { counted } from "../../i18n/current";
 import { fill } from "../../i18n/fill";
@@ -162,57 +163,68 @@ export function ProposalCard({
       data-status={status}
       style={style}
     >
-      <div className="agent-proposal-head">
-        <span className="agent-proposal-icon" aria-hidden="true">
-          <TakeIcon />
-        </span>
-        <span className="agent-proposal-title">
-          {labels.proposalTitle}
-          <span className="agent-proposal-kind">
-            {" · "}
-            {proposal.image
-              ? labels.proposalImage
-              : sentences && sentences.length > 1
-                ? counted(labels.proposalChangeCount, sentences.length)
-                : labels.actionNames[proposal.action]}
+      <HeadRow
+        className="agent-proposal-head"
+        mark={
+          <span className="agent-proposal-icon" aria-hidden="true">
+            <TakeIcon />
           </span>
-        </span>
-        {/* Listed sentence by sentence below, the size chips would only
+        }
+        title={
+          <span className="agent-proposal-title">
+            {labels.proposalTitle}
+            <span className="agent-proposal-kind">
+              {" · "}
+              {proposal.image
+                ? labels.proposalImage
+                : sentences && sentences.length > 1
+                  ? counted(labels.proposalChangeCount, sentences.length)
+                  : labels.actionNames[proposal.action]}
+            </span>
+          </span>
+        }
+        tools={
+          <>
+            {/* Listed sentence by sentence below, the size chips would only
             crowd the head. */}
-        {!(sentences && sentences.length > 1) && !proposal.image && (
-          <Tooltip text={diffOpen ? labels.diffCollapse : labels.diffShow}>
-            <button
-              type="button"
-              className="agent-diff-summary"
-              aria-expanded={diffOpen}
-              onClick={() => setDiffOpen(!diffOpen)}
-            >
-              {added > 0 && (
-                <span className="agent-diff-chip agent-diff-add">+{added}</span>
-              )}
-              {removed > 0 && (
-                <span className="agent-diff-chip agent-diff-remove">
-                  {"\u2212"}
-                  {removed}
-                </span>
-              )}
-              <span
-                className="disclosure-caret agent-diff-caret"
-                aria-hidden="true"
-              />
-            </button>
-          </Tooltip>
-        )}
-        {status === "pending" && onReveal && (
-          <button
-            type="button"
-            className="agent-proposal-link agent-proposal-show"
-            onClick={() => onReveal(callId, -1)}
-          >
-            {labels.proposalShowInText}
-          </button>
-        )}
-      </div>
+            {!(sentences && sentences.length > 1) && !proposal.image && (
+              <Tooltip text={diffOpen ? labels.diffCollapse : labels.diffShow}>
+                <button
+                  type="button"
+                  className="agent-diff-summary"
+                  aria-expanded={diffOpen}
+                  onClick={() => setDiffOpen(!diffOpen)}
+                >
+                  {added > 0 && (
+                    <span className="agent-diff-chip agent-diff-add">
+                      +{added}
+                    </span>
+                  )}
+                  {removed > 0 && (
+                    <span className="agent-diff-chip agent-diff-remove">
+                      {"\u2212"}
+                      {removed}
+                    </span>
+                  )}
+                  <span
+                    className="disclosure-caret agent-diff-caret"
+                    aria-hidden="true"
+                  />
+                </button>
+              </Tooltip>
+            )}
+            {status === "pending" && onReveal && (
+              <button
+                type="button"
+                className="agent-proposal-link agent-proposal-show"
+                onClick={() => onReveal(callId, -1)}
+              >
+                {labels.proposalShowInText}
+              </button>
+            )}
+          </>
+        }
+      />
       {proposal.reason && (
         <div className="agent-proposal-reason">{proposal.reason}</div>
       )}
