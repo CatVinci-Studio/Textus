@@ -253,19 +253,6 @@ function rewriteWith(
   return { text: out, count };
 }
 
-/**
- * `text`, the document that was at `doc`, with its links following `move`:
- * links to files that moved, and, when the document moved itself, its own
- * relative links. `count` is how many links changed.
- */
-export function rewriteMovedLinks(
-  text: string,
-  doc: string,
-  move: LinkMove,
-): { text: string; count: number } {
-  return rewriteWith(text, doc, contextOf(move));
-}
-
 /** Where `path` went when `from` became `to` (a file, or a folder and all in it). */
 export function movedBy(from: string, to: string) {
   const a = slashed(from);
@@ -317,14 +304,4 @@ export function linkPlanner(
     const { text, count } = rewriteWith(doc.text, oldPath, ctx);
     return count > 0 ? { path: doc.path, text, count } : null;
   };
-}
-
-/** The documents whose links must follow `from` becoming `to`. */
-export function planLinkUpdates(
-  documents: { path: string; text: string }[],
-  files: string[],
-  plan: LinkPlan,
-): LinkUpdate[] {
-  const planner = linkPlanner(files, plan);
-  return documents.flatMap((doc) => planner(doc) ?? []);
 }

@@ -1,5 +1,5 @@
 import { describe, expect, it } from "vitest";
-import { movedBy, planLinkUpdates, rewriteMovedLinks } from "./link-rewrite";
+import { linkPlanner, movedBy } from "./link-rewrite";
 
 const FILES = [
   "/v/index.md",
@@ -11,8 +11,32 @@ const FILES = [
   "/v/docs/guide.md",
 ];
 
+/** A move of `from` to `to` in the folder of FILES. */
 function move(from: string, to: string) {
-  return { root: "/v", files: FILES, moved: movedBy(from, to) };
+  return { root: "/v", from, to };
+}
+
+/** `text`, the document at `doc` before `m`, as the move leaves it - asked
+ *  as the app asks, after the move. */
+function rewriteMovedLinks(
+  text: string,
+  doc: string,
+  m: { root: string; from: string; to: string; files?: string[] },
+): { text: string; count: number } {
+  const moved = movedBy(m.from, m.to);
+  const after = (m.files ?? FILES).map((f) => moved(f) ?? f);
+  const done = linkPlanner(after, m)({ path: moved(doc) ?? doc, text });
+  return done ?? { text, count: 0 };
+}
+
+/** The documents whose links must follow the move. */
+function planLinkUpdates(
+  documents: { path: string; text: string }[],
+  files: string[],
+  plan: { root: string; from: string; to: string },
+) {
+  const planner = linkPlanner(files, plan);
+  return documents.flatMap((doc) => planner(doc) ?? []);
 }
 
 describe("links follow a rename by the file they lead to", () => {
@@ -67,7 +91,7 @@ describe("links follow a rename by the file they lead to", () => {
 
   it("keeps links inside a moved folder and follows links into it", () => {
     const files = ["/v/f/a.md", "/v/f/img/p.png", "/v/out.md"];
-    const m = { root: "/v", files, moved: movedBy("/v/f", "/v/g/f") };
+    const m = { ...move("/v/f", "/v/g/f"), files };
     expect(
       rewriteMovedLinks("![](img/p.png) [o](../out.md)", "/v/f/a.md", m).text,
     ).toBe("![](img/p.png) [o](../../out.md)");
