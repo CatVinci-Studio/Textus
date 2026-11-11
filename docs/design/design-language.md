@@ -403,7 +403,8 @@ A plugin MUST NOT ship its own copy of any of these, and MUST NOT restyle a `tx-
 The list of controls a plugin page may use, with their markup, is
 [docs/dev/plugins/ui.md](../dev/plugins/ui.md) › Controls - one list, for
 the app and plugins alike; the styles are `src/engine/controls/components.css`,
-`src/engine/controls/icon-masks.css` and `src/engine/controls/controls.css`. Class names are public API (2.1): write them exactly
+`src/engine/controls/icon-masks.css`, `src/engine/controls/controls.css`,
+`src/engine/controls/progress.css` and `src/engine/controls/bubble.css`. Class names are public API (2.1): write them exactly
 as there; combine only the modifiers listed. Icons (`<span class="tx-icon"
 data-icon="…">`): `text`, `number`, `select`, `multi`, `date`, `checkbox`,
 `url`, `page`, `filter`, `sort`, `plus`, `more`, `table`, `board`,

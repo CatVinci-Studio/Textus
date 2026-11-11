@@ -453,6 +453,13 @@
   }
 }
 
+/* Work of unknown length, in a circle: a ring turning. */
+@keyframes motion-spin {
+  to {
+    transform: rotate(1turn);
+  }
+}
+
 @keyframes motion-probe {
   to {
     opacity: 1;
@@ -516,7 +523,8 @@
   .agent-thinking-dots span,
   .pending-insert-typing::after,
   .ghost-text::before,
-  .pdf-export-spinner {
+  .tx-progress.is-indeterminate::after,
+  .tx-progress.ring.is-indeterminate {
     animation: none !important;
   }
 }

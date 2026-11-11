@@ -3,6 +3,8 @@ import webviewRuntime from "./runtime/webview.js?raw";
 import componentsCss from "../../engine/controls/components.css?inline";
 import iconMasksCss from "../../engine/controls/icon-masks.css?inline";
 import controlsCss from "../../engine/controls/controls.css?inline";
+import progressCss from "../../engine/controls/progress.css?inline";
+import bubbleCss from "../../engine/controls/bubble.css?inline";
 import designSystemCss from "../../engine/tokens/design-system.css?inline";
 import motionCss from "../../engine/motion/motion.css?inline";
 // Processed as the app's own are, their lengths scaled (vite.chrome-scale.ts).
@@ -16,6 +18,8 @@ const SHARED_CSS = [
   componentsCss,
   iconMasksCss,
   controlsCss,
+  progressCss,
+  bubbleCss,
 ].join("\n");
 import { createEndpoint, type Endpoint, type Handlers } from "./rpc";
 

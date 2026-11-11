@@ -16,8 +16,6 @@ const OWN_KEYFRAMES: Record<string, string> = {
   "editor/milkdown-theme.css ghost-caret-blink": "caret before a suggestion",
   "ai/revision/pending-picture.css pending-picture-drift": "picture being made",
   "ai/revision/pending-picture.css pending-picture-sheen": "picture being made",
-  "export/print.css pdf-export-spin": "export spinner",
-  "ai/paper/outline-card.css paper-spin": "paper being written",
   // A state shown by colour or a stroke, not a part arriving.
   "settings/SettingsPanel.css settings-search-hit": "tint fading as read",
   "ai/margin/ReviewMargin.css review-link-draw": "connector drawn",

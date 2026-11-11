@@ -101,7 +101,7 @@ const HTML_LAYOUT_CSS =
 function showPdfOverlay(t: Strings): HTMLElement {
   const el = document.createElement("div");
   el.className = "tx-backdrop pdf-export-overlay";
-  el.innerHTML = `<div class="pdf-export-card"><div class="pdf-export-spinner" aria-hidden="true"></div><div class="pdf-export-text">${escapeHtml(t.pdfPreparing)}</div></div>`;
+  el.innerHTML = `<div class="pdf-export-card"><div class="tx-progress ring is-indeterminate pdf-export-spinner" aria-hidden="true"></div><div class="pdf-export-text">${escapeHtml(t.pdfPreparing)}</div></div>`;
   document.body.appendChild(el);
   return el;
 }

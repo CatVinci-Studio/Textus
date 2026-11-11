@@ -233,45 +233,6 @@ input[type="range"].tx-slider {
   accent-color: var(--ui-accent-fill);
 }
 
-/* Progress: a bar (role="progressbar", --value from 0 to 1) or, with
-   .ring, a circle; .is-indeterminate when how far isn't known. */
-.tx-progress {
-  --value: 0;
-  position: relative;
-  height: 3px;
-  overflow: hidden;
-  border-radius: var(--shape-pill);
-  corner-shape: round;
-  background: color-mix(in srgb, var(--ui-text) 10%, transparent);
-}
-.tx-progress::after {
-  content: "";
-  position: absolute;
-  inset: 0;
-  background: var(--ui-accent);
-  transform: scaleX(var(--value));
-  transform-origin: left center;
-  transition: transform var(--dur-base) var(--ease-out);
-}
-.tx-progress.is-indeterminate::after {
-  width: 40%;
-  transform: none;
-  animation: motion-sweep var(--dur-pulse) var(--ease-in-out) infinite;
-}
-.tx-progress.ring {
-  width: var(--progress-ring-size);
-  height: var(--progress-ring-size);
-  border-radius: 50%;
-  background: conic-gradient(
-    var(--ui-accent) calc(var(--value) * 1turn),
-    color-mix(in srgb, var(--ui-text) 10%, transparent) 0
-  );
-  mask: radial-gradient(farthest-side, transparent calc(100% - 4px), #000 0);
-}
-.tx-progress.ring::after {
-  content: none;
-}
-
 /* Text edited where it is shown: a cell, a card's title. No frame of its
    own; the place it sits in is the field. */
 .tx-inline-input {
@@ -386,92 +347,6 @@ input[type="range"].tx-slider {
 .tx-rating > .tx-value {
   color: var(--ui-text);
   font-variant-numeric: tabular-nums;
-}
-
-/* A speech bubble beside something on screen: a floating view's line. */
-.tx-bubble {
-  max-width: var(--bubble-width);
-  padding: var(--space-2) var(--space-3);
-  border: 1px solid var(--ui-border);
-  border-radius: var(--shape-m);
-  background: var(--ui-surface);
-  color: var(--ui-text);
-  font-size: var(--text-secondary);
-  box-shadow: var(--shadow-popover);
-}
-
-/* A bubble's tail (Bubble.tsx, or any surface, a plugin's too):
-   data-bubble-tail names the edge it leaves from, the one facing what it
-   points at; --tail-at moves it along that edge, the middle by default. A
-   turned square in the bubble's own fill and edge: its outer half, and a
-   sliver inside that covers the bubble's edge under it. The bubble grows
-   out of it. */
-[data-bubble-tail] {
-  --tail-size: 10px;
-}
-/* On a side edge, which in a one-line bubble is short: the bubble's
-   corners a step tighter, so the tail's base sits on the straight run
-   between them and meets the edge cleanly. */
-:is([data-bubble-tail="left"], [data-bubble-tail="right"])[data-bubble-tail] {
-  --tail-size: 8px;
-  border-radius: var(--shape-xs);
-}
-[data-bubble-tail="top"] {
-  transform-origin: var(--tail-at, 50%) 0;
-}
-[data-bubble-tail="bottom"] {
-  transform-origin: var(--tail-at, 50%) 100%;
-}
-[data-bubble-tail="left"] {
-  transform-origin: 0 var(--tail-at, 50%);
-}
-[data-bubble-tail="right"] {
-  transform-origin: 100% var(--tail-at, 50%);
-}
-[data-bubble-tail]::after {
-  content: "";
-  position: absolute;
-  box-sizing: border-box;
-  width: var(--tail-size);
-  height: var(--tail-size);
-  border: 0 solid var(--ui-border);
-  background: inherit;
-  rotate: 45deg;
-  pointer-events: none;
-}
-:is([data-bubble-tail="top"], [data-bubble-tail="bottom"])::after {
-  left: var(--tail-at, 50%);
-  translate: -50% 0;
-}
-:is([data-bubble-tail="left"], [data-bubble-tail="right"])::after {
-  top: var(--tail-at, 50%);
-  translate: 0 -50%;
-}
-[data-bubble-tail="top"]::after {
-  top: calc(var(--tail-size) / -2 - 1px);
-  border-width: 1px 0 0 1px;
-  clip-path: polygon(0 0, 100% 0, 100% 3px, 3px 100%, 0 100%);
-}
-[data-bubble-tail="bottom"]::after {
-  bottom: calc(var(--tail-size) / -2 - 1px);
-  border-width: 0 1px 1px 0;
-  clip-path: polygon(
-    100% 0,
-    100% 100%,
-    0 100%,
-    0 calc(100% - 3px),
-    calc(100% - 3px) 0
-  );
-}
-[data-bubble-tail="left"]::after {
-  left: calc(var(--tail-size) / -2 - 1px);
-  border-width: 0 0 1px 1px;
-  clip-path: polygon(0 0, 0 100%, 100% 100%, 100% calc(100% - 3px), 3px 0);
-}
-[data-bubble-tail="right"]::after {
-  right: calc(var(--tail-size) / -2 - 1px);
-  border-width: 1px 1px 0 0;
-  clip-path: polygon(0 0, 100% 0, 100% 100%, calc(100% - 3px) 100%, 0 3px);
 }
 
 /* Down a column (useScrollFade): the same fade at its top and foot. */

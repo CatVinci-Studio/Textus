@@ -132,19 +132,10 @@
 }
 
 .pdf-export-spinner {
-  width: 28px;
-  height: 28px;
-  border-radius: 50%;
-  corner-shape: round;
-  border: 3px solid var(--doc-border);
-  border-top-color: var(--doc-accent);
-  animation: pdf-export-spin var(--dur-spin) linear infinite;
-}
-
-@keyframes pdf-export-spin {
-  to {
-    transform: rotate(360deg);
-  }
+  --progress-ring-size: 28px;
+  --progress-ring-line: 3px;
+  --progress-fill: var(--doc-accent);
+  --progress-track: var(--doc-border);
 }
 
 .pdf-export-text {

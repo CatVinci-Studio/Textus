@@ -1,4 +1,4 @@
-import { useEffect, useState } from "react";
+import { useEffect, useState, type CSSProperties } from "react";
 import "./notices.css";
 
 /** Short notes at the bottom of the window that go by themselves, and
@@ -188,7 +188,12 @@ export function NoticeHost() {
           </div>
           {notice.progress && (
             <div
-              className="notice-bar"
+              className={`tx-progress notice-bar${notice.progress.fraction === null ? " is-indeterminate" : ""}`}
+              style={
+                notice.progress.fraction === null
+                  ? undefined
+                  : ({ "--value": notice.progress.fraction } as CSSProperties)
+              }
               role="progressbar"
               aria-label={notice.text}
               aria-valuemin={0}
@@ -198,16 +203,7 @@ export function NoticeHost() {
                   ? undefined
                   : Math.round(notice.progress.fraction * 100)
               }
-            >
-              <div
-                className={`notice-bar-fill${notice.progress.fraction === null ? " is-indeterminate" : ""}`}
-                style={
-                  notice.progress.fraction === null
-                    ? undefined
-                    : { transform: `scaleX(${notice.progress.fraction})` }
-                }
-              />
-            </div>
+            />
           )}
           {notice.action && (
             <button

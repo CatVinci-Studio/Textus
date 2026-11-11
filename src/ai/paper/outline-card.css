@@ -387,13 +387,8 @@
    while it is being worked on, and new lines that slide in. Transform and
    opacity only. */
 .paper-card-spinner {
-  flex: none;
-  width: 10px;
-  height: 10px;
-  border: 1.5px solid var(--ui-border);
-  border-top-color: var(--ui-accent, var(--ui-text));
-  border-radius: 50%;
-  animation: paper-spin var(--dur-spin) linear infinite;
+  --progress-ring-size: 10px;
+  --progress-ring-line: 1.5px;
 }
 
 .paper-card-mark {
@@ -476,14 +471,7 @@
   white-space: pre-wrap;
 }
 
-@keyframes paper-spin {
-  to {
-    transform: rotate(360deg);
-  }
-}
-
 @media (prefers-reduced-motion: reduce) {
-  .paper-card-spinner,
   .paper-card-mark,
   .paper-card-enter,
   .paper-card-thinking,

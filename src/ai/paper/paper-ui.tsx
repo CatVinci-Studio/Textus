@@ -343,7 +343,12 @@ export function PaperCard({ info }: { info: PaperCardInfo }) {
       ) : (
         line && (
           <p className="paper-card-progress">
-            {busy && <span className="paper-card-spinner" aria-hidden />}
+            {busy && (
+              <span
+                className="tx-progress ring is-indeterminate paper-card-spinner"
+                aria-hidden
+              />
+            )}
             <span aria-live="polite">{line}</span>
             {busy && <span className="paper-card-elapsed">{elapsed}</span>}
           </p>

@@ -55,23 +55,6 @@
 
 .notice-bar {
   flex-basis: 100%;
-  height: 3px;
-  overflow: hidden;
-  border-radius: var(--shape-pill);
-  corner-shape: round;
-  background: color-mix(in srgb, var(--ui-text) 10%, transparent);
-}
-
-.notice-bar-fill {
-  height: 100%;
-  background: var(--ui-accent);
-  transform-origin: left center;
-  transition: transform var(--dur-base) var(--ease-out);
-}
-
-.notice-bar-fill.is-indeterminate {
-  width: 40%;
-  animation: motion-sweep var(--dur-pulse) var(--ease-in-out) infinite;
 }
 
 .notice-cancel {
@@ -86,10 +69,4 @@
 
 .notice-cancel:hover {
   color: var(--ui-text);
-}
-
-@media (prefers-reduced-motion: reduce) {
-  .notice-bar-fill.is-indeterminate {
-    animation: none;
-  }
 }

@@ -3,6 +3,8 @@
 @import "../controls/components.css";
 @import "../controls/icon-masks.css";
 @import "../controls/controls.css";
+@import "../controls/progress.css";
+@import "../controls/bubble.css";
 
 :root {
   /* Shape (docs/design/design-language.md). Containers are rounded rectangles in
@@ -55,6 +57,7 @@
   --find-field-width: 180px;
   --slider-width: 104px;
   --progress-ring-size: 32px;
+  --progress-ring-line: 4px;
   --bubble-width: 240px;
   /* Surfaces that are what they show, whatever the theme: a sheet of
      paper (a PDF's page), a stage (slides shown full screen). */
