@@ -24,6 +24,7 @@ mod export_formats;
 mod ext_stats;
 mod extract;
 mod ids;
+mod json_file;
 #[cfg(desktop)]
 mod mcp;
 mod media;

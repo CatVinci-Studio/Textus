@@ -58,10 +58,8 @@ pub fn load_custom_endpoint(app: &AppHandle) -> Result<Option<CustomEndpointConf
     if !path.exists() {
         return Ok(None);
     }
-    let text = fs::read_to_string(&path).map_err(|e| e.to_string())?;
-    serde_json::from_str(&text)
-        .map(Some)
-        .map_err(|e| e.to_string())
+    // A broken one is kept aside: the endpoint is entered again, not stuck.
+    Ok(crate::json_file::read_or_set_aside(&path))
 }
 
 #[tauri::command(async)]

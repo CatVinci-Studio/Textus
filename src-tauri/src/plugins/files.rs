@@ -176,11 +176,9 @@ fn secrets_path(app: &tauri::AppHandle) -> Result<std::path::PathBuf, String> {
 
 fn read_secrets(app: &tauri::AppHandle) -> Result<Secrets, String> {
     let path = secrets_path(app)?;
-    match std::fs::read_to_string(&path) {
+    match std::fs::read(&path) {
         // A file that doesn't parse is kept aside, not written over.
-        Ok(text) => {
-            Ok(crate::auth::keys::parse_json_or_set_aside(&path, &text).unwrap_or_default())
-        }
+        Ok(bytes) => Ok(crate::json_file::parse_or_set_aside(&path, &bytes).unwrap_or_default()),
         Err(e) if e.kind() == std::io::ErrorKind::NotFound => Ok(Secrets::new()),
         Err(e) => Err(e.to_string()),
     }

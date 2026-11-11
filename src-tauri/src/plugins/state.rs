@@ -74,12 +74,11 @@ impl PluginsState {
 }
 
 /// The state on disk; the default (every plugin off, the switch on) when
-/// there is none yet or it can't be read.
+/// there is none yet, or when it is broken - kept aside for recovery.
 pub fn read(app: &tauri::AppHandle) -> PluginsState {
     plugins_root(app)
         .ok()
-        .and_then(|root| std::fs::read(root.join("state.json")).ok())
-        .and_then(|bytes| serde_json::from_slice(&bytes).ok())
+        .and_then(|root| crate::json_file::read_or_set_aside(&root.join("state.json")))
         .unwrap_or_default()
 }
 

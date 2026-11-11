@@ -32,12 +32,7 @@ fn save_credential(app: &AppHandle, cred: &ClaudeCredential) -> Result<(), Strin
 }
 
 fn load_credential(app: &AppHandle) -> Result<Option<ClaudeCredential>, String> {
-    let path = auth_file_path(app)?;
-    if !path.exists() {
-        return Ok(None);
-    }
-    let text = fs::read_to_string(&path).map_err(|e| e.to_string())?;
-    Ok(super::keys::parse_json_or_set_aside(&path, &text))
+    Ok(crate::json_file::read_or_set_aside(&auth_file_path(app)?))
 }
 
 /// Runs the Claude (Anthropic Pro/Max) OAuth login against Anthropic's own

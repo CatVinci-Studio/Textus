@@ -271,25 +271,7 @@ pub(crate) fn parse(raw: &str, key: &str, empty: &Value) -> Option<(Value, u64)>
     Some((payload, schema))
 }
 
-pub(crate) fn move_aside(path: &Path) {
-    let stamp = std::time::SystemTime::now()
-        .duration_since(std::time::UNIX_EPOCH)
-        .map(|d| d.as_secs())
-        .unwrap_or(0);
-    let name = path
-        .file_name()
-        .and_then(|n| n.to_str())
-        .unwrap_or("settings.json");
-    let aside = path.with_file_name(format!("{name}.corrupt-{stamp}"));
-    match std::fs::rename(path, &aside) {
-        Ok(()) => eprintln!(
-            "textus: {} was unreadable; moved to {} and starting from defaults",
-            path.display(),
-            aside.display()
-        ),
-        Err(e) => eprintln!("textus: cannot move aside {}: {e}", path.display()),
-    }
-}
+use crate::json_file::move_aside;
 
 pub(crate) fn merge_top_level(payload: &mut Value, patch: &Map<String, Value>) {
     if !payload.is_object() {

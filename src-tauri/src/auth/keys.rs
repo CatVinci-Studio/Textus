@@ -3,7 +3,7 @@
 
 use std::collections::HashMap;
 use std::fs;
-use std::path::{Path, PathBuf};
+use std::path::PathBuf;
 use tauri::{AppHandle, Manager};
 
 /// This file, in the app's config folder.
@@ -16,60 +16,23 @@ fn keys_file_path(app: &AppHandle) -> Result<PathBuf, String> {
 }
 
 fn read_keys(app: &AppHandle) -> Result<HashMap<String, String>, String> {
-    let path = keys_file_path(app)?;
-    if !path.exists() {
-        return Ok(HashMap::new());
-    }
-    let text = fs::read_to_string(&path).map_err(|e| e.to_string())?;
-    Ok(parse_or_set_aside(&path, &text))
+    Ok(crate::json_file::read_or_set_aside(&keys_file_path(app)?).unwrap_or_default())
 }
 
-/// Parses the keys file; when it doesn't parse, moves it aside and starts from
-/// no keys, so one bad byte can't lock out every provider.
-fn parse_or_set_aside(path: &Path, text: &str) -> HashMap<String, String> {
-    parse_json_or_set_aside(path, text).unwrap_or_default()
-}
+/// One change at a time: two saves at once would each drop the other's key.
+static WRITING: std::sync::Mutex<()> = std::sync::Mutex::new(());
 
-/// Parses a stored JSON file, or moves it aside as `.corrupt-<n>` for hand
-/// recovery and returns None, as if it had never been written.
-pub(crate) fn parse_json_or_set_aside<T: serde::de::DeserializeOwned>(
-    path: &Path,
-    text: &str,
-) -> Option<T> {
-    match serde_json::from_str(text) {
-        Ok(value) => Some(value),
-        Err(parse_error) => {
-            match set_aside(path) {
-                Ok(moved) => eprintln!(
-                    "auth: {} is not valid JSON ({parse_error}); moved it to {}",
-                    path.display(),
-                    moved.display()
-                ),
-                Err(e) => eprintln!(
-                    "auth: {} is not valid JSON ({parse_error}) and could not be moved aside: {e}",
-                    path.display()
-                ),
-            }
-            None
-        }
+/// Reads the keys, changes them and writes them back, as one step.
+fn update_keys(
+    app: &AppHandle,
+    change: impl FnOnce(&mut HashMap<String, String>) -> bool,
+) -> Result<(), String> {
+    let _guard = WRITING.lock().unwrap_or_else(|e| e.into_inner());
+    let mut keys = read_keys(app)?;
+    if change(&mut keys) {
+        write_keys(app, &keys)?;
     }
-}
-
-/// Renames `path` to the first free `<name>.corrupt-<n>` beside it.
-fn set_aside(path: &Path) -> std::io::Result<PathBuf> {
-    let name = path
-        .file_name()
-        .map(|n| n.to_string_lossy().into_owned())
-        .unwrap_or_default();
-    let mut n = 1u32;
-    loop {
-        let candidate = path.with_file_name(format!("{name}.corrupt-{n}"));
-        if !candidate.exists() {
-            fs::rename(path, &candidate)?;
-            return Ok(candidate);
-        }
-        n += 1;
-    }
+    Ok(())
 }
 
 fn write_keys(app: &AppHandle, keys: &HashMap<String, String>) -> Result<(), String> {
@@ -86,9 +49,10 @@ pub fn load_provider_key(app: &AppHandle, provider: &str) -> Result<Option<Strin
 #[tauri::command(async)]
 #[cfg_attr(test, specta::specta)]
 pub fn set_provider_api_key(app: AppHandle, provider: String, key: String) -> Result<(), String> {
-    let mut keys = read_keys(&app)?;
-    keys.insert(provider, key);
-    write_keys(&app, &keys)
+    update_keys(&app, |keys| {
+        keys.insert(provider, key);
+        true
+    })
 }
 
 #[tauri::command(async)]
@@ -100,58 +64,19 @@ pub fn provider_api_key_status(app: AppHandle, provider: String) -> Result<bool,
 #[tauri::command(async)]
 #[cfg_attr(test, specta::specta)]
 pub fn clear_provider_api_key(app: AppHandle, provider: String) -> Result<(), String> {
-    let mut keys = read_keys(&app)?;
-    if keys.remove(&provider).is_some() {
-        write_keys(&app, &keys)?;
-    }
-    Ok(())
+    update_keys(&app, |keys| keys.remove(&provider).is_some())
 }
 
 #[cfg(test)]
 mod tests {
-    use super::*;
-
-    #[test]
-    fn a_corrupt_keys_file_is_moved_aside_not_fatal() {
-        let dir = std::env::temp_dir().join(format!("textus-keys-{}", std::process::id()));
-        let _ = fs::remove_dir_all(&dir);
-        fs::create_dir_all(&dir).unwrap();
-        let path = dir.join("provider_keys.json");
-        // An earlier casualty already holds the first slot.
-        fs::write(dir.join("provider_keys.json.corrupt-1"), "old").unwrap();
-        fs::write(&path, "{\"openai\": \"sk-").unwrap();
-
-        let keys = parse_or_set_aside(&path, &fs::read_to_string(&path).unwrap());
-
-        assert!(keys.is_empty());
-        assert!(!path.exists());
-        assert_eq!(
-            fs::read_to_string(dir.join("provider_keys.json.corrupt-2")).unwrap(),
-            "{\"openai\": \"sk-"
-        );
-        let _ = fs::remove_dir_all(&dir);
-    }
-
     #[test]
     fn a_corrupt_sign_in_file_reads_as_signed_out() {
-        let dir = std::env::temp_dir().join(format!("textus-signin-{}", std::process::id()));
-        let _ = fs::remove_dir_all(&dir);
-        fs::create_dir_all(&dir).unwrap();
-        let path = dir.join("auth-codex.json");
-        fs::write(&path, "{").unwrap();
-
+        let dir = tempfile::tempdir().unwrap();
+        let path = dir.path().join("auth-codex.json");
+        std::fs::write(&path, "{").unwrap();
         let cred: Option<aicompat::providers::openai_codex::CodexCredential> =
-            parse_json_or_set_aside(&path, "{");
-
+            crate::json_file::read_or_set_aside(&path);
         assert!(cred.is_none());
-        assert!(!path.exists());
-        assert!(dir.join("auth-codex.json.corrupt-1").exists());
-        let _ = fs::remove_dir_all(&dir);
-    }
-
-    #[test]
-    fn a_valid_keys_file_parses() {
-        let keys = parse_or_set_aside(Path::new("unused"), r#"{"openai":"sk-1"}"#);
-        assert_eq!(keys.get("openai").map(String::as_str), Some("sk-1"));
+        assert!(dir.path().join("auth-codex.json.corrupt-1").exists());
     }
 }

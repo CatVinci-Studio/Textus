@@ -32,12 +32,7 @@ fn save_credential(app: &AppHandle, cred: &CodexCredential) -> Result<(), String
 }
 
 fn load_credential(app: &AppHandle) -> Result<Option<CodexCredential>, String> {
-    let path = auth_file_path(app)?;
-    if !path.exists() {
-        return Ok(None);
-    }
-    let text = fs::read_to_string(&path).map_err(|e| e.to_string())?;
-    Ok(super::keys::parse_json_or_set_aside(&path, &text))
+    Ok(crate::json_file::read_or_set_aside(&auth_file_path(app)?))
 }
 
 /// Runs the Codex (ChatGPT Plus/Pro) OAuth login and stores the credential in
