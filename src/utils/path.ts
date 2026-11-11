@@ -1,3 +1,4 @@
+import { MARKDOWN_EXTENSIONS } from "../platform/bindings/files";
 // OS-path string math. Documents opened on Windows arrive with "\", so both
 // separators are treated as separators here.
 
@@ -80,9 +81,6 @@ export function hasUrlScheme(src: string): boolean {
 /** `path` with "/" between its parts, as links and the folder index keep it. */
 export const slashed = (path: string): string => path.replace(/\\/g, "/");
 
-/** A Markdown document's extensions: what Textus opens and plugins read as
- *  one. The backend's list (extract::MARKDOWN_EXTENSIONS) is the same. */
-const MARKDOWN_EXTENSIONS = ["md", "markdown"] as const;
 const NOTE_FILE = new RegExp(`\\.(${MARKDOWN_EXTENSIONS.join("|")})$`, "i");
 
 /** A note: a Markdown file, which a wikilink names without its extension. */

@@ -211,6 +211,9 @@ export const commands = {
 	chat_history_move_document: (from: string, to: string) => __TAURI_INVOKE<void>("chat_history_move_document", { from, to }),
 };
 
+/* Constants */
+export const MARKDOWN_EXTENSIONS = ["md","markdown"] as const;
+
 /* Types */
 export type AiRecords = {
 	/**  Whole conversations, turns included, as the chat history keeps them. */
