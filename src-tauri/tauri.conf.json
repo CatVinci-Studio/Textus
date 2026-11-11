@@ -89,7 +89,7 @@
           "textus-plugin:",
           "http://textus-plugin.localhost"
         ],
-        "frame-src": ["'self'", "https:", "http:"],
+        "frame-src": ["'self'", "https:"],
         "object-src": ["'none'"],
         "base-uri": ["'self'"]
       },
@@ -98,6 +98,21 @@
         "enable": true,
         "scope": {
           "allow": ["**"],
+          "deny": [
+            "$APPCONFIG/*.json",
+            "$HOME/.ssh/**",
+            "$HOME/.gnupg/**",
+            "$HOME/.aws/**",
+            "$HOME/.azure/**",
+            "$HOME/.kube/**",
+            "$HOME/.docker/**",
+            "$HOME/.config/gcloud/**",
+            "$HOME/.config/gh/**",
+            "$HOME/.netrc",
+            "$HOME/.npmrc",
+            "$HOME/.git-credentials",
+            "$HOME/Library/Keychains/**"
+          ],
           "requireLiteralLeadingDot": false
         }
       }

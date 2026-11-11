@@ -75,6 +75,10 @@ describe("the window's Content Security Policy", () => {
         ).toBe(false);
   });
 
+  it("frames only HTTPS pages: a web page tab never loads over plain HTTP", () => {
+    expect(windowSources("frame-src")).not.toContain("http:");
+  });
+
   it("is not given hashes, which would switch 'unsafe-inline' off in plugin frames", () => {
     expect(security.dangerousDisableAssetCspModification).toEqual(
       expect.arrayContaining(["script-src", "style-src"]),

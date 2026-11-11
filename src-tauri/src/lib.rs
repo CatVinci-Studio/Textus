@@ -33,6 +33,7 @@ mod walk;
 #[cfg(windows)]
 mod webview_memory;
 mod window_frame;
+mod window_guard;
 
 use std::sync::atomic::{AtomicBool, Ordering};
 use std::sync::Mutex;

@@ -178,14 +178,16 @@ pub(crate) fn user_theme_css(app: &AppHandle, settings: &Value) -> Value {
     json!({ "light": light, "dark": dark })
 }
 
-/// Adds the boot script to a webview that shows the app, and on Linux builds the
-/// window in a pinned appearance's background. Other webviews go without.
+/// Adds the boot script and the navigation guard to a webview that shows the
+/// app, and on Linux builds the window in a pinned appearance's background.
+/// Other webviews go without.
 pub fn with_boot<'a, R: tauri::Runtime, M: Manager<R>>(
     builder: tauri::WebviewWindowBuilder<'a, R, M>,
     app: &AppHandle,
     label: &str,
 ) -> tauri::WebviewWindowBuilder<'a, R, M> {
-    let builder = builder.initialization_script(boot_script(app, label));
+    let builder =
+        crate::window_guard::guard(builder.initialization_script(boot_script(app, label)), app);
     #[cfg(target_os = "linux")]
     let builder = match app
         .try_state::<Stores>()
