@@ -19,8 +19,7 @@ const KEY_PIXELS = 24;
 type Span = { start: number; end: number };
 
 /** The line between two panes (or groups of them): drag or arrow keys
- *  resize the two, double click evens them, right-click turns their
- *  branch, swaps them or closes the split. */
+ *  resize the two; right-click closes the split. */
 export function SplitDivider({
   layout,
   line,
@@ -69,15 +68,19 @@ export function SplitDivider({
       );
     else share((at - before.start) / (after.end - before.start));
   };
+  // A panel's width as the solver drew it, in interface pixels: what a key
+  // steps from and a drag keeps, so a width it can't draw is never stored.
+  const drawn = () => {
+    const span = fixed === "after" ? after : before;
+    return (span.end - span.start) / chromeScale();
+  };
   const step = (sign: number) => {
     if (fixed)
-      setPanelWidth(
-        panelWidth() + (fixed === "after" ? -sign : sign) * KEY_PIXELS,
-      );
+      setPanelWidth(drawn() + (fixed === "after" ? -sign : sign) * KEY_PIXELS);
     else share(current + sign * KEY_STEP);
   };
   const end = () => {
-    if (drag.current) letGo(fixed);
+    if (drag.current) letGo(fixed, drawn());
     drag.current = null;
     setDragging(false);
   };
@@ -86,7 +89,7 @@ export function SplitDivider({
   side.current = fixed;
   useEffect(
     () => () => {
-      if (drag.current) letGo(side.current);
+      if (drag.current) letGo(side.current, panelWidth());
     },
     [],
   );
@@ -154,8 +157,8 @@ export function SplitDivider({
 const gapHalf = ({ before, after }: { before: Span; after: Span }) =>
   (after.start - before.end) / 2;
 
-/** A drag ends: the grip is let go, a panel's width kept. */
-function letGo(fixed: "before" | "after" | null): void {
+/** A drag ends: the grip is let go, a panel's width kept as drawn. */
+function letGo(fixed: "before" | "after" | null, width: number): void {
   holdGrip(false);
-  if (fixed) setPanelWidth(panelWidth(), true);
+  if (fixed) setPanelWidth(width, true);
 }

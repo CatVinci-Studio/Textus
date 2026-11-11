@@ -158,3 +158,24 @@ test("a file dragged onto a folder moves into it; with Esc it stays", async ({
   await drag(false);
   await expect.poll(files).toContain("/proj/notes/a.md");
 });
+
+test("the AI's edge stepped past what the window can show stops there, and steps back at once", async ({
+  page,
+}) => {
+  await page.setViewportSize({ width: 1100, height: 760 });
+  await openApp(page);
+  await page.getByRole("button", { name: "Textus AI" }).first().click();
+  await expect(page.locator("section.island")).toHaveCount(2);
+  const ai = () =>
+    page.evaluate(() =>
+      [...document.querySelectorAll("section.island")]
+        .map((e) => e.getBoundingClientRect().width)
+        .at(-1)!,
+    );
+  const divider = page.getByRole("separator").first();
+  await divider.focus();
+  for (let i = 0; i < 20; i++) await page.keyboard.press("ArrowLeft");
+  const widest = await ai();
+  await page.keyboard.press("ArrowRight");
+  await expect.poll(ai).toBeLessThan(widest - 10);
+});
