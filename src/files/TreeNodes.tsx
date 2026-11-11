@@ -132,7 +132,7 @@ export const DirNode = memo(function DirNode({
           // A double click folds or unfolds it once, as a click does; going
           // into it is the row's menu's Show Only This Folder.
           onClick={(e) => {
-            if (e.detail > 1 || tree.takeDragClick()) return;
+            if (e.detail > 1) return;
             setOpen(!open);
           }}
           onContextMenu={
@@ -246,7 +246,6 @@ const FileNode = memo(function FileNode({
         data-drop-dir={parentDir(entry.path) ?? undefined}
         style={{ "--depth": depth } as CSSProperties}
         onClick={(e) => {
-          if (tree.takeDragClick()) return;
           if ((e.metaKey || e.ctrlKey) && tree.openInNewWindow)
             return tree.openInNewWindow(entry.path);
           // A click looks (the preview tab); a double click keeps it.

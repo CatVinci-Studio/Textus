@@ -5,14 +5,44 @@ import { trackDrag } from "./pointer-drag";
 const SLIDE =
   "transform calc(var(--dur-settle) * var(--motion-travel)) var(--ease-settle)";
 
+/** The items making way for one dragged from `from` to `to`: each moved
+ *  `room` along `axis` as its shift changes from `shown` (kept up to date). */
+export function slideAside(
+  others: readonly RowItem[],
+  shown: number[],
+  from: number,
+  to: number,
+  room: number,
+  axis: "x" | "y",
+): void {
+  const translate = axis === "x" ? "translateX" : "translateY";
+  others.forEach((item, i) => {
+    const shift = shiftAt(i, from, to, room);
+    if (shift === shown[i]) return;
+    shown[i] = shift;
+    item.node.style.transition = SLIDE;
+    item.node.style.transform = shift ? `${translate}(${shift}px)` : "";
+  });
+}
+
+/** Every item back where it is laid out. */
+export function clearSlides(items: readonly RowItem[]): void {
+  for (const item of items) {
+    item.node.style.transition = "";
+    item.node.style.transform = "";
+    item.node.style.translate = "";
+    item.node.style.zIndex = "";
+  }
+}
+
 /**
  * One item dragged along a row or column of its siblings, the others
- * making room as it passes them - the activity rail, the sidebar's tabs,
- * plugin lists (a row of document tabs is the tab strip's). Measured once when the drag begins (layout values,
+ * making room as it passes them - the sidebar's tabs, plugin lists (a row
+ * of document tabs is the tab strip's; the rail's one column, rail-drag). Measured once when the drag begins (layout values,
  * untouched by transforms in flight); each move finds the place by binary
  * search and restyles only the items whose shift changed.
  */
-interface RowItem {
+export interface RowItem {
   id: string;
   node: HTMLElement;
 }
@@ -69,7 +99,6 @@ function row(
     gap;
   const from = Math.max(0, at);
   const shown = new Array<number>(others.length).fill(0);
-  const translate = horizontal ? "translateX" : "translateY";
   const index = (offset: number) => passedCount(centers, mine + offset);
   return {
     from,
@@ -81,22 +110,17 @@ function row(
       // the offset too, and the item drift off the pointer.
       dragged.style.translate = horizontal ? `${offset}px 0` : `0 ${offset}px`;
       dragged.style.zIndex = "10";
-      const to = index(offset);
-      others.forEach((item, i) => {
-        const shift = shiftAt(i, from, to, room);
-        if (shift === shown[i]) return;
-        shown[i] = shift;
-        item.node.style.transition = SLIDE;
-        item.node.style.transform = shift ? `${translate}(${shift}px)` : "";
-      });
+      slideAside(
+        others,
+        shown,
+        from,
+        index(offset),
+        room,
+        horizontal ? "x" : "y",
+      );
     },
     clear() {
-      for (const item of items) {
-        item.node.style.transition = "";
-        item.node.style.transform = "";
-        item.node.style.translate = "";
-        item.node.style.zIndex = "";
-      }
+      clearSlides(items);
       shown.fill(0);
     },
   };

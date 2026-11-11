@@ -46,8 +46,6 @@ export interface TreeShared {
     | null;
   /** ⌘/Ctrl-click on a file opens it in a window of its own. Desktop only. */
   openInNewWindow: ((path: string) => void) | null;
-  /** True once, for the click that ends a drag. */
-  takeDragClick: () => boolean;
   /** A new document or folder being named in place, in `dir`. */
   draft: TreeDraft | null;
   /** Its name, or null when it was given up. */

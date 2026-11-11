@@ -1,7 +1,7 @@
 import { Tooltip } from "../../engine/controls/Tooltip";
 import { fill } from "../../i18n/fill";
-import { DRAG_START_PX } from "../../utils/gesture";
-import { useEffect, useRef, useState, useSyncExternalStore } from "react";
+import { trackDrag } from "../../engine/drag/pointer-drag";
+import { useEffect, useState, useSyncExternalStore } from "react";
 import { useChromeScale } from "../../engine/controls/useChromeScale";
 import { scaledPx } from "../../engine/tokens/chrome-scale";
 import { windowInfo } from "../store/plugin-records";
@@ -96,17 +96,10 @@ function FloatingBox({
   desktop: boolean;
 }) {
   const t = windowInfo().strings();
-  const [drag, setDrag] = useState<{
-    dx: number;
-    dy: number;
-    x: number;
-    y: number;
-  } | null>(null);
   const [live, setLive] = useState<{ left: number; top: number } | null>(null);
   const [menu, setMenu] = useState<{ x: number; y: number } | null>(null);
   /** The scale while the user resizes it. */
   const [sizing, setSizing] = useState<number | null>(null);
-  const moved = useRef(false);
   const chrome = useChromeScale();
   const [fullWidth, fullHeight] = floatingSize(
     { ...view, scale: sizing ?? view.scale },
@@ -132,47 +125,33 @@ function FloatingBox({
     };
   }
 
+  // Dragged anywhere, it moves (trackDrag's threshold: a tremor is still
+  // a click); let go, it lands; Esc puts it back.
   const start = (event: React.PointerEvent) => {
-    if (event.button !== 0) return;
-    event.currentTarget.setPointerCapture(event.pointerId);
-    moved.current = false;
-    setDrag({
-      dx: event.clientX - at.left,
-      dy: event.clientY - at.top,
-      x: event.clientX,
-      y: event.clientY,
+    const dx = event.clientX - at.left;
+    const dy = event.clientY - at.top;
+    let to: { left: number; top: number } | null = null;
+    trackDrag(event.nativeEvent, {
+      move: (x, y) => {
+        to = {
+          left: clamp(x - dx, width, window.innerWidth),
+          top: clamp(y - dy, height, window.innerHeight),
+        };
+        setLive(to);
+      },
+      end: (_x, _y, dropped) => {
+        if (dropped && to) {
+          moveFloating(view.view, {
+            x: snap(to.left, width, window.innerWidth) / window.innerWidth,
+            y: snap(to.top, height, window.innerHeight) / window.innerHeight,
+          });
+          touchFloating(view.view, "moved");
+        }
+        setLive(null);
+      },
     });
   };
-  const move = (event: React.PointerEvent) => {
-    if (!drag) return;
-    // A hand's tremor is still a click.
-    if (
-      Math.hypot(event.clientX - drag.x, event.clientY - drag.y) < DRAG_START_PX
-    )
-      return;
-    moved.current = true;
-    setLive({
-      left: clamp(event.clientX - drag.dx, width, window.innerWidth),
-      top: clamp(event.clientY - drag.dy, height, window.innerHeight),
-    });
-  };
-  const end = () => {
-    if (drag && live) {
-      moveFloating(view.view, {
-        x: snap(live.left, width, window.innerWidth) / window.innerWidth,
-        y: snap(live.top, height, window.innerHeight) / window.innerHeight,
-      });
-      touchFloating(view.view, "moved");
-    } else if (drag && !view.folded) touchFloating(view.view, "poke");
-    setDrag(null);
-    setLive(null);
-  };
-  const dragHandlers = {
-    onPointerDown: start,
-    onPointerMove: move,
-    onPointerUp: end,
-    onPointerCancel: end,
-  };
+  const dragHandlers = { onPointerDown: start };
 
   if (view.folded)
     return (
@@ -183,9 +162,7 @@ function FloatingBox({
           style={{ left: at.left, top: at.top }}
           aria-label={fill(t.floatingUnfold, { name: view.title })}
           {...dragHandlers}
-          onClick={() => {
-            if (!moved.current) moveFloating(view.view, { folded: false });
-          }}
+          onClick={() => moveFloating(view.view, { folded: false })}
         >
           {view.icon ? <img src={view.icon} alt="" /> : view.title.slice(0, 1)}
         </button>
@@ -219,7 +196,7 @@ function FloatingBox({
     <div
       className="floating-view"
       data-floating-view={view.view}
-      data-dragging={drag ? "" : undefined}
+      data-dragging={live ? "" : undefined}
       role="dialog"
       aria-label={view.title}
       style={{ left: at.left, top: at.top, width, height }}
@@ -234,6 +211,8 @@ function FloatingBox({
       <div
         className="floating-view-handle"
         {...dragHandlers}
+        // A click, no drag: the page is poked (a pet's reaction).
+        onClick={() => touchFloating(view.view, "poke")}
         onContextMenu={(e) => {
           e.preventDefault();
           setMenu({ x: e.clientX, y: e.clientY });

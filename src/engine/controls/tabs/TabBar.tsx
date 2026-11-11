@@ -17,7 +17,7 @@ interface TabBarProps {
   onAdd: () => void;
   /** Fired once when a pill is pulled down out of the bar; the rest of the
    *  drag is the caller's. Omitted, a pull down stays a reorder. */
-  onPullOut?: (id: string, title: string) => void;
+  onPullOut?: (id: string, title: string, e: PointerEvent) => void;
   // Move the tab so it sits at `index` among the OTHER tabs.
   onReorder: (id: string, index: number) => void;
   /** A preview tab kept (double-clicked). */
@@ -170,9 +170,9 @@ export function TabBar({
             onClose={onClose}
             onPullOut={
               onPullOut &&
-              ((id, title) => {
+              ((id, title, e) => {
                 strip.dragEnd(id, 0);
-                onPullOut(id, title);
+                onPullOut(id, title, e);
               })
             }
             onDrag={strip.dragTo}

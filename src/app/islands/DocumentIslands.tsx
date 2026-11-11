@@ -158,8 +158,8 @@ export function DocumentIslands({
       }}
       // Pulled over the documents it splits; out of the window it tears
       // off where the platform gives global cursor positions.
-      onPullOut={(id, title) =>
-        pullTab(id, title, {
+      onPullOut={(id, title, e) =>
+        pullTab(e, id, title, {
           activate: onActivate,
           detach: canDragTabsBetweenWindows ? onDetach : undefined,
           releaseOutside:

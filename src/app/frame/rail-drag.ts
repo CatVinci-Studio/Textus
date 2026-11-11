@@ -1,12 +1,8 @@
-import { passedCount, shiftAt } from "../../engine/drag/row";
+import { clearSlides, passedCount, slideAside } from "../../engine/drag/row";
 import { trackDrag } from "../../engine/drag/pointer-drag";
 
 /** The line between Textus's own (and pinned) icons and the plugins'. */
 export const RAIL_DIVIDER = "rail-divider";
-
-/** One slide for every icon making way: the settle spring (motion.css). */
-const SLIDE =
-  "transform calc(var(--dur-settle) * var(--motion-travel)) var(--ease-settle)";
 
 /**
  * An icon dragged along the whole rail, both groups and the line between
@@ -100,14 +96,7 @@ export function railDrag(
       if (!state) return;
       const { box, copy, others, shown, from, room } = state;
       copy.style.translate = `${box.left}px ${box.top + (y - down.clientY)}px`;
-      const to = indexAt(y);
-      others.forEach((item, i) => {
-        const shift = shiftAt(i, from, to, room);
-        if (shift === shown[i]) return;
-        shown[i] = shift;
-        item.node.style.transition = SLIDE;
-        item.node.style.transform = shift ? `translateY(${shift}px)` : "";
-      });
+      slideAside(others, shown, from, indexAt(y), room, "y");
     },
     end: (_x, y, dropped) => {
       if (!state) return;
@@ -116,10 +105,7 @@ export function railDrag(
       copy.remove();
       dragged.style.visibility = "";
       rail.classList.remove("is-reordering");
-      for (const item of items) {
-        item.node.style.transition = "";
-        item.node.style.transform = "";
-      }
+      clearSlides(items);
       state = null;
       if (!dropped || to === from) return;
       const order = others.map((o) => o.id);

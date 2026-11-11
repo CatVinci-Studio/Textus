@@ -1,8 +1,5 @@
-import { DRAG_START_PX } from "../utils/gesture";
 import {
   useCallback,
-  useEffect,
-  useRef,
   useState,
   type PointerEvent as ReactPointerEvent,
   type RefObject,
@@ -14,22 +11,36 @@ import { documentDrop, setDragging } from "../engine/controls/document-drop";
 import { basename, parentDir } from "../utils/path";
 import { updateLinksAfterMove } from "./move-links";
 import { canMoveInto, failureText } from "./tree-shared";
-import { dragGhost, type DragGhost } from "../engine/drag/ghost";
+import { dragGhost } from "../engine/drag/ghost";
+import { trackDrag } from "../engine/drag/pointer-drag";
+import { useLatest } from "../utils/hooks/useLatest";
 
 /** A row being dragged, and the folder under the pointer. */
 interface Drag {
   path: string;
-  name: string;
   isDir: boolean;
-  x: number;
-  y: number;
   /** The folder it would go into; null over nowhere it can go. */
   into: string | null;
 }
 
+/** No text selected while a row is held: dragged over the documents, the
+ *  press would otherwise select everything it passes. */
+function holdSelection(): void {
+  const stop = (e: Event) => e.preventDefault();
+  const done = () => {
+    window.removeEventListener("selectstart", stop);
+    window.removeEventListener("pointerup", done);
+    window.removeEventListener("pointercancel", done);
+  };
+  window.addEventListener("selectstart", stop);
+  window.addEventListener("pointerup", done);
+  window.addEventListener("pointercancel", done);
+}
+
 /** A row dragged onto a folder moves into it; a file dragged over the
- *  documents opens there. Pointer events, not HTML drag and drop, which the
- *  OS file drop takes over on Windows. */
+ *  documents opens there; Esc or a cancelled pointer drops nothing.
+ *  Pointer events, not HTML drag and drop, which the OS file drop takes
+ *  over on Windows. */
 export function useRowDrag(
   treeRef: RefObject<HTMLDivElement | null>,
   reload: (...dirs: string[]) => void,
@@ -39,135 +50,77 @@ export function useRowDrag(
   t: Strings,
 ) {
   const [drag, setDrag] = useState<Drag | null>(null);
-  const dragClick = useRef(false);
-  const pressed = useRef<{
-    path: string;
-    name: string;
-    isDir: boolean;
-    x: number;
-    y: number;
-  } | null>(null);
+  const latest = useLatest({ reload, onEntryMoved, linkBase, t });
+
   const onRowPointerDown = useCallback(
     (e: ReactPointerEvent, path: string, name: string, isDir: boolean) => {
       if (e.button !== 0 || e.pointerType === "touch") return;
-      pressed.current = { path, name, isDir, x: e.clientX, y: e.clientY };
-    },
-    [],
-  );
-  useEffect(() => {
-    /** The tree's box as the drag began: off it, nothing to hit-test. */
-    let treeBox: DOMRect | null = null;
-    const targetAt = (x: number, y: number, path: string, isDir: boolean) => {
-      treeBox ??= treeRef.current?.getBoundingClientRect() ?? null;
-      const over =
-        treeBox &&
-        x >= treeBox.left &&
-        x <= treeBox.right &&
-        y >= treeBox.top &&
-        y <= treeBox.bottom;
-      if (!over) return null;
-      const el = document
-        .elementFromPoint(x, y)
-        ?.closest<HTMLElement>("[data-drop-dir]");
-      const into = el?.dataset.dropDir;
-      return into &&
-        treeRef.current?.contains(el) &&
-        canMoveInto(path, isDir, into)
-        ? into
-        : null;
-    };
-    let current: Drag | null = null;
-    let ghost: DragGhost | null = null;
-    const show = (next: Drag | null) => {
-      if (!current !== !next) setDragging(!!next);
-      // The tree redraws only when where it would land changes; the copy
-      // follows the pointer by itself.
-      const redraw = !current !== !next || current?.into !== next?.into;
-      current = next;
-      if (redraw) setDrag(next);
-      if (!next) treeBox = null;
-      // The copy under the pointer, as every drag elsewhere has it.
-      if (next && !ghost)
-        ghost = dragGhost(next.name, "tree-drag-ghost floating-surface");
-      if (next) ghost?.move(next.x, next.y);
-      else {
-        ghost?.remove();
-        ghost = null;
-      }
-    };
-    const onMove = (e: PointerEvent) => {
-      const start = pressed.current;
-      if (!start) return;
-      if (
-        !current &&
-        Math.hypot(e.clientX - start.x, e.clientY - start.y) < DRAG_START_PX
-      )
-        return;
-      const into = targetAt(e.clientX, e.clientY, start.path, start.isDir);
-      show({
-        path: start.path,
-        name: start.name,
-        isDir: start.isDir,
-        x: e.clientX,
-        y: e.clientY,
-        into,
+      holdSelection();
+      /** The tree's box as the drag began: off it, nothing to hit-test. */
+      let treeBox: DOMRect | null = null;
+      let into: string | null = null;
+      const ghost = { current: null as ReturnType<typeof dragGhost> | null };
+      const targetAt = (x: number, y: number) => {
+        treeBox ??= treeRef.current?.getBoundingClientRect() ?? null;
+        const over =
+          treeBox &&
+          x >= treeBox.left &&
+          x <= treeBox.right &&
+          y >= treeBox.top &&
+          y <= treeBox.bottom;
+        if (!over) return null;
+        const el = document
+          .elementFromPoint(x, y)
+          ?.closest<HTMLElement>("[data-drop-dir]");
+        const dir = el?.dataset.dropDir;
+        return dir &&
+          treeRef.current?.contains(el) &&
+          canMoveInto(path, isDir, dir)
+          ? dir
+          : null;
+      };
+      trackDrag(e.nativeEvent, {
+        start: () => {
+          setDragging(true);
+          // The copy under the pointer, as every drag elsewhere has it.
+          ghost.current = dragGhost(name, "tree-drag-ghost floating-surface");
+          setDrag({ path, isDir, into: null });
+        },
+        move: (x, y, m) => {
+          ghost.current?.move(x, y);
+          const next = targetAt(x, y);
+          // The tree redraws only when where it would land changes.
+          if (next !== into) setDrag({ path, isDir, into: next });
+          into = next;
+          if (!into && !isDir) documentDrop()?.over(x, y, m.shiftKey);
+          else documentDrop()?.leave();
+        },
+        end: (x, y, dropped, up) => {
+          ghost.current?.remove();
+          setDragging(false);
+          setDrag(null);
+          documentDrop()?.leave();
+          if (!dropped) return;
+          if (!into && !isDir)
+            documentDrop()?.drop(path, x, y, up?.shiftKey ?? false);
+          if (into) void move(path, into);
+        },
       });
-      if (!into && !start.isDir)
-        documentDrop()?.over(e.clientX, e.clientY, e.shiftKey);
-      else documentDrop()?.leave();
-    };
-    const end = (e: PointerEvent) => {
-      pressed.current = null;
-      const dropped = current;
-      if (!dropped) return;
-      show(null);
-      documentDrop()?.leave();
-      if (!dropped.into && !dropped.isDir && e.type === "pointerup")
-        documentDrop()?.drop(dropped.path, e.clientX, e.clientY, e.shiftKey);
-      dragClick.current = true;
-      // A click may not follow (released outside the row).
-      window.setTimeout(() => (dragClick.current = false), 0);
-      if (dropped.into) void move(dropped.path, dropped.into);
-    };
-    const onKey = (e: KeyboardEvent) => {
-      if (e.key !== "Escape" || !pressed.current) return;
-      pressed.current = null;
-      show(null);
-      documentDrop()?.leave();
-    };
-    const move = async (from: string, into: string) => {
-      try {
-        const to = await fs.moveEntry(from, into);
-        reload(parentDir(from) ?? into, into);
-        onEntryMoved(from, to);
-        void updateLinksAfterMove(from, to, linkBase, t);
-      } catch (err) {
-        await showMessage(failureText(t, err, basename(from)));
-      }
-    };
-    // No text selected while a row is held: dragged over the documents, the
-    // press would otherwise select everything it passes.
-    const onSelectStart = (e: Event) => {
-      if (pressed.current) e.preventDefault();
-    };
-    window.addEventListener("selectstart", onSelectStart);
-    window.addEventListener("pointermove", onMove);
-    window.addEventListener("pointerup", end);
-    window.addEventListener("pointercancel", end);
-    window.addEventListener("keydown", onKey);
-    return () => {
-      window.removeEventListener("selectstart", onSelectStart);
-      window.removeEventListener("pointermove", onMove);
-      window.removeEventListener("pointerup", end);
-      window.removeEventListener("pointercancel", end);
-      window.removeEventListener("keydown", onKey);
-    };
-  }, [treeRef, reload, onEntryMoved, linkBase, t]);
+    },
+    // eslint-disable-next-line react-hooks/exhaustive-deps -- move reads latest
+    [treeRef],
+  );
 
-  const takeDragClick = useCallback(() => {
-    const taken = dragClick.current;
-    dragClick.current = false;
-    return taken;
-  }, []);
-  return { drag, onRowPointerDown, takeDragClick };
+  const move = async (from: string, into: string) => {
+    const { reload, onEntryMoved, linkBase, t } = latest.current;
+    try {
+      const to = await fs.moveEntry(from, into);
+      reload(parentDir(from) ?? into, into);
+      onEntryMoved(from, to);
+      void updateLinksAfterMove(from, to, linkBase, t);
+    } catch (err) {
+      await showMessage(failureText(t, err, basename(from)));
+    }
+  };
+  return { drag, onRowPointerDown };
 }

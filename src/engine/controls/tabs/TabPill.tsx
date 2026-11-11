@@ -89,7 +89,8 @@ export function TabPill({
   };
   onActivate: (id: string) => void;
   onClose: (id: string) => void;
-  onPullOut?: (id: string, title: string) => void;
+  /** Pulled out of its row: the drag, from `e` on, is the caller's. */
+  onPullOut?: (id: string, title: string, e: PointerEvent) => void;
   /** Dragged `dx` along the row, and let go there: the strip makes room
    *  and moves it on. */
   onDrag: (id: string, dx: number) => void;
@@ -193,7 +194,7 @@ export function TabPill({
       // caller's from here.
       gesture.current = null;
       carry(0);
-      onPullOut(tab.id, title);
+      onPullOut(tab.id, title, e.nativeEvent);
       return;
     }
 
@@ -201,7 +202,7 @@ export function TabPill({
     if (onPullOut && rowAt(e.clientX, e.clientY, pane)) {
       gesture.current = null;
       carry(0);
-      onPullOut(tab.id, title);
+      onPullOut(tab.id, title, e.nativeEvent);
       return;
     }
 

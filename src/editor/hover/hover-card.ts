@@ -1,3 +1,4 @@
+import { trackDrag } from "../../engine/drag/pointer-drag";
 import { scaledPx } from "../../engine/tokens/chrome-scale";
 import { EDGE, clampLeft, opensBelow } from "../../engine/controls/placement";
 import { currentStrings } from "../../i18n/current";
@@ -144,18 +145,20 @@ function movable(el: HTMLElement, handle: HTMLElement) {
   handle.addEventListener("pointerdown", (e) => {
     if (e.button !== 0 || (e.target as Element).closest("button")) return;
     e.preventDefault();
-    handle.setPointerCapture(e.pointerId);
-    const start = { x: e.clientX, y: e.clientY };
     const from = { x: el.offsetLeft, y: el.offsetTop };
-    const move = (m: PointerEvent) => {
-      el.style.left = `${from.x + m.clientX - start.x}px`;
-      el.style.top = `${from.y + m.clientY - start.y}px`;
+    const place = (x: number, y: number) => {
+      el.style.left = `${from.x + x - e.clientX}px`;
+      el.style.top = `${from.y + y - e.clientY}px`;
     };
-    const up = () => {
-      handle.removeEventListener("pointermove", move);
-      handle.removeEventListener("pointerup", up);
-    };
-    handle.addEventListener("pointermove", move);
-    handle.addEventListener("pointerup", up);
+    // Moved from the first step; Esc puts it back.
+    trackDrag(
+      e,
+      {
+        move: place,
+        end: (x, y, dropped) =>
+          dropped ? place(x, y) : place(e.clientX, e.clientY),
+      },
+      { started: true },
+    );
   });
 }

@@ -116,3 +116,37 @@ test("the folder's tools coming on hover move none of the tree's rows", async ({
   await expect(page.locator(".tree-tool").first()).toBeVisible();
   expect((await row.boundingBox())!.y).toBe(before);
 });
+
+test("a file dragged onto a folder moves into it; with Esc it stays", async ({
+  page,
+}) => {
+  await page.addInitScript(() => {
+    const w = window as unknown as Record<string, unknown>;
+    w.__devFs = { "/proj/a.md": "# A\n", "/proj/notes/n.md": "# N\n" };
+    w.__devPickFolder = "/proj";
+  });
+  await openApp(page);
+  await emit(page, "menu-open-folder");
+  const row = (name: string) => page.locator(".tree-row", { hasText: name });
+  await expect(row("a.md")).toBeVisible();
+  const drag = async (escape: boolean) => {
+    const from = (await row("a.md").boundingBox())!;
+    const to = (await row("notes").boundingBox())!;
+    await page.mouse.move(from.x + 20, from.y + from.height / 2);
+    await page.mouse.down();
+    await page.mouse.move(to.x + 20, to.y + to.height / 2, { steps: 8 });
+    if (escape) await page.keyboard.press("Escape");
+    await page.mouse.up();
+  };
+  const files = () =>
+    page.evaluate(() =>
+      Object.keys(
+        (window as unknown as { __devFs: Record<string, string> }).__devFs,
+      ),
+    );
+  await drag(true);
+  await page.waitForTimeout(200);
+  expect(await files()).toContain("/proj/a.md");
+  await drag(false);
+  await expect.poll(files).toContain("/proj/notes/a.md");
+});

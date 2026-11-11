@@ -23,11 +23,17 @@ it("moves each passed item one slot the other way", () => {
   expect([0, 1, 2].map((i) => shiftAt(i, 3, back, 40))).toEqual([0, 0, 40]);
 });
 
-const pointer = (type: string, x: number, y = 0) =>
+// A held button while moving, none after (WebView2 may skip the release).
+const pointer = (type: string, x: number, y = 0, buttons = 1) =>
   window.dispatchEvent(
-    Object.assign(new MouseEvent(type, { clientX: x, clientY: y }), {
-      pointerId: 1,
-    }),
+    Object.assign(
+      new MouseEvent(type, {
+        clientX: x,
+        clientY: y,
+        buttons: type === "pointerup" ? 0 : buttons,
+      }),
+      { pointerId: 1 },
+    ),
   );
 
 it("starts only past the threshold, drops on release, not on Esc", () => {
@@ -38,13 +44,13 @@ it("starts only past the threshold, drops on release, not on Esc", () => {
   expect(move).not.toHaveBeenCalled();
   pointer("pointermove", 30);
   pointer("pointerup", 30);
-  expect(end).toHaveBeenCalledWith(30, 0, true);
+  expect(end).toHaveBeenCalledWith(30, 0, true, expect.any(MouseEvent));
 
   const end2 = vi.fn();
   trackDrag({ button: 0, clientX: 0, clientY: 0 }, { move, end: end2 });
   pointer("pointermove", 30);
   window.dispatchEvent(new KeyboardEvent("keydown", { key: "Escape" }));
-  expect(end2).toHaveBeenCalledWith(0, 0, false);
+  expect(end2).toHaveBeenCalledWith(0, 0, false, undefined);
 });
 
 it("swallows the click a drag's release sends", () => {
@@ -56,4 +62,30 @@ it("swallows the click a drag's release sends", () => {
   document.body.click();
   expect(clicked).not.toHaveBeenCalled();
   document.body.removeEventListener("click", clicked);
+});
+
+it("drops when the buttons are found up, and from the first move once handed over", () => {
+  const end = vi.fn();
+  const move = vi.fn();
+  const handle = trackDrag(
+    { button: -1, clientX: 0, clientY: 0 },
+    { move, end },
+    { started: true },
+  );
+  pointer("pointermove", 1);
+  expect(move).toHaveBeenCalledWith(1, 0, expect.any(MouseEvent));
+  pointer("pointermove", 9, 0, 0);
+  expect(end).toHaveBeenCalledWith(9, 0, true, expect.any(MouseEvent));
+  // Over already: cancelling does nothing more.
+  handle.cancel();
+  expect(end).toHaveBeenCalledTimes(1);
+  const end2 = vi.fn();
+  const again = trackDrag(
+    { button: 0, clientX: 0, clientY: 0 },
+    { move: () => {}, end: end2 },
+    { started: true },
+  );
+  pointer("pointermove", 4);
+  again.cancel();
+  expect(end2).toHaveBeenCalledWith(4, 0, false, undefined);
 });

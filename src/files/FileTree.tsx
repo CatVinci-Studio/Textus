@@ -91,7 +91,7 @@ export function FileTree({
     setDraft,
     folder ? null : onRootChange,
   );
-  const { drag, onRowPointerDown, takeDragClick } = useRowDrag(
+  const { drag, onRowPointerDown } = useRowDrag(
     treeRef,
     reload,
     onEntryMoved,
@@ -110,7 +110,6 @@ export function FileTree({
       onRowMenu: desktop ? onRowMenu : null,
       onRowPointerDown: desktop ? onRowPointerDown : null,
       openInNewWindow: desktop ? openInNewWindow : null,
-      takeDragClick,
       draft,
       finishDraft,
       newDocument: desktop
@@ -132,7 +131,6 @@ export function FileTree({
       desktop,
       onRowMenu,
       onRowPointerDown,
-      takeDragClick,
       draft,
       finishDraft,
       setDraft,

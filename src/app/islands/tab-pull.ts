@@ -1,3 +1,4 @@
+import { trackDrag } from "../../engine/drag/pointer-drag";
 import { dragGhost } from "../../engine/drag/ghost";
 import { dropIntent } from "../../engine/drag/drop-intent";
 import { scaledPx } from "../../engine/tokens/chrome-scale";
@@ -45,11 +46,12 @@ interface Place {
  * pill at the pointer; its place stays until it has travelled a little,
  * then closes; the islands make room where it is aimed (dropIntent), the
  * room a dashed outline; let go, it lands there and opens out. Out of the
- * window it tears off where possible; Escape puts it back. With Alt held -
- * or for the AI's tabs, `island` - the whole island goes instead, following
- * the hand at its size.
+ * window it tears off where possible; Escape puts it back. With Alt held
+ * the whole island goes instead, following the hand at its size. A drag
+ * from `e` on (trackDrag), handed over mid-move by the tab's row.
  */
 export function pullTab(
+  e: PointerEvent,
   tabId: string,
   title: string,
   opts: {
@@ -57,8 +59,6 @@ export function pullTab(
     detach?: (id: string) => void;
     /** Let go outside the window, where `detach` can't follow the pointer. */
     releaseOutside?: (id: string) => void;
-    /** The island this tab moves whole (the AI's, whose tabs stay in it). */
-    island?: string;
   },
 ): void {
   const ghost = dragGhost(title, "tab-pull-ghost");
@@ -78,7 +78,7 @@ export function pullTab(
   let last = { x: 0, y: 0, alt: false };
 
   const wholeIsland = (alt: boolean) =>
-    opts.island ?? (alt && isSplit(base) ? paneOf(base, tabId) : null);
+    alt && isSplit(base) ? paneOf(base, tabId) : null;
 
   /** The place under (x, y). */
   const placeAt = (x: number, y: number, alt: boolean): Place | null => {
@@ -185,66 +185,10 @@ export function pullTab(
     show(current);
   };
 
-  const outside = (e: PointerEvent) =>
-    e.clientX < 0 ||
-    e.clientY < 0 ||
-    e.clientX > window.innerWidth ||
-    e.clientY > window.innerHeight;
-
-  const move = (e: PointerEvent) => {
-    // Let go where no pointerup reached the page (WebView2 can lose it).
-    if (e.buttons === 0) {
-      up(e);
-      return;
-    }
-    if (opts.detach && !wholeIsland(e.altKey) && outside(e)) {
-      stop();
-      opts.detach(tabId);
-      return;
-    }
-    start ??= { x: e.clientX, y: e.clientY };
-    if (
-      !left &&
-      Math.hypot(e.clientX - start.x, e.clientY - start.y) >
-        scaledPx(LEAVE_DISTANCE)
-    )
-      left = true;
-    last = { x: e.clientX, y: e.clientY, alt: e.altKey };
-    follow(e.clientX, e.clientY, e.altKey);
-    aim();
-  };
-
-  const up = (e: PointerEvent) => {
-    if (opts.releaseOutside && outside(e)) {
-      stop();
-      opts.releaseOutside(tabId);
-      return;
-    }
-    const place = current;
-    if (place && place.next !== undefined) {
-      opts.activate(tabId);
-      // The layout it showed, made: the same panes, so nothing jumps;
-      // the pill lands where its room was.
-      commitDrop(place.next);
-      const room = marks.room();
-      if (room && !lift) {
-        ghost.land(room);
-        stop(true);
-        return;
-      }
-    }
-    stop();
-  };
-
-  const key = (e: KeyboardEvent) => {
-    if (e.key === "Escape") stop();
-  };
+  const outside = (x: number, y: number) =>
+    x < 0 || y < 0 || x > window.innerWidth || y > window.innerHeight;
 
   function stop(landing = false) {
-    window.removeEventListener("pointermove", move);
-    window.removeEventListener("pointerup", up);
-    window.removeEventListener("pointercancel", cancel);
-    window.removeEventListener("keydown", key, true);
     window.clearTimeout(timer);
     if (!landing) ghost.remove();
     lift?.piece.remove();
@@ -252,11 +196,51 @@ export function pullTab(
     setDragging(false);
     previewSplit(null);
   }
-  const cancel = () => stop();
-  window.addEventListener("pointermove", move);
-  window.addEventListener("pointerup", up);
-  window.addEventListener("pointercancel", cancel);
-  window.addEventListener("keydown", key, true);
+
+  const drag = trackDrag(
+    e,
+    {
+      move: (x, y, m) => {
+        if (opts.detach && !wholeIsland(m.altKey) && outside(x, y)) {
+          drag.cancel();
+          opts.detach(tabId);
+          return;
+        }
+        start ??= { x, y };
+        if (
+          !left &&
+          Math.hypot(x - start.x, y - start.y) > scaledPx(LEAVE_DISTANCE)
+        )
+          left = true;
+        last = { x, y, alt: m.altKey };
+        follow(x, y, m.altKey);
+        aim();
+      },
+      end: (x, y, dropped) => {
+        if (!dropped) return stop();
+        if (opts.releaseOutside && outside(x, y)) {
+          stop();
+          opts.releaseOutside(tabId);
+          return;
+        }
+        const place = current;
+        if (place && place.next !== undefined) {
+          opts.activate(tabId);
+          // The layout it showed, made: the same panes, so nothing jumps;
+          // the pill lands where its room was.
+          commitDrop(place.next);
+          const room = marks.room();
+          if (room && !lift) {
+            ghost.land(room);
+            stop(true);
+            return;
+          }
+        }
+        stop();
+      },
+    },
+    { started: true },
+  );
 }
 
 /**
