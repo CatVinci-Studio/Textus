@@ -113,6 +113,45 @@ describe.each(LANGS.filter((lang) => lang !== "en"))("%s", (lang) => {
     }
   });
 
+  // Names that stay as written in every language: brands, file formats,
+  // placeholders.
+  const AS_WRITTEN = new Set([
+    "phonePageAi",
+    "apiKeyPlaceholder",
+    "customBaseUrlPlaceholder",
+    "chatHistoryByAi",
+    "reportAreaAi",
+    "floatingOpenAi",
+    "quickAskPosition",
+    "acpAgentsGroup",
+    "agentPanelTitle",
+    "menuTextusAi",
+    "navAi",
+    "chatWindowTitle",
+    "tutorialChapterAi",
+    "navMarkdown",
+    "extensionsTabMcp",
+    "authTabApiKey",
+    "imageImgurClientIdLabel",
+    "searchServiceZhipu",
+    "searchServiceBocha",
+    "providerDoubao",
+    "mcpFormUrl",
+    "mcpFormKindUrl",
+  ]);
+  if (["zh", "zh-Hant", "ja", "ko"].includes(lang))
+    it("leaves no interface words in English", () => {
+      const english = entries.filter(
+        ([key, value]) =>
+          typeof value === "string" &&
+          value === LOCALES.en.default[key as StringKey] &&
+          /[a-z]{3,}/i.test(value.replace(/\{\w+\}|\$\{\w+\}/g, "")) &&
+          !AS_WRITTEN.has(key) &&
+          !key.startsWith("menuExport"),
+      );
+      expect(english.map(([key]) => key)).toEqual([]);
+    });
+
   if (complete)
     it("translates every key (its file says it is complete)", () => {
       const missing = (Object.keys(english) as StringKey[]).filter(
