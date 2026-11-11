@@ -3,6 +3,7 @@ import { useHoldScrollOnReturn } from "../document-view/hold-scroll-on-return";
 import { useEffect } from "react";
 import { links } from "../platform/ipc";
 import { useGlobalShortcuts } from "./useGlobalShortcuts";
+import type { AppActionHandlers } from "./menu/app-actions";
 import { useIslandNumbers } from "./islands/useIslandNumbers";
 import { useNavHistory } from "./useNavHistory";
 import { useExternalChangeReload } from "../document/useExternalChangeReload";
@@ -54,19 +55,25 @@ export function useWindowWiring({
   const { activeTab, openFolder, openFile, openPathInTab } = docs;
 
   useSettingsCommands(settings, setSettings);
+  // What the actions a key and a menu item both run work with.
+  const appActions: AppActionHandlers = {
+    onToggleSidebar: panels.toggleSidebar,
+    onToggleAgentPanel: panels.toggleAgentPanel,
+    onToggleSplitView: docs.toggleSplitView,
+    onToggleZenMode: docs.toggleZenMode,
+    onToggleTextusAi: textusAi.toggle,
+    onToggleTypewriter: () =>
+      setSettings({ typewriterMode: !settings.typewriterMode }),
+    toggleSourceMode: docs.toggleSourceMode,
+  };
   useGlobalShortcuts({
     tabsRef,
     activeTabId,
     setActiveTabId,
     saveTab: docs.saveTab,
     requestCloseTab: docs.requestCloseTab,
-    toggleSourceMode: docs.toggleSourceMode,
-    toggleSidebar: panels.toggleSidebar,
-    toggleAgentPanel: panels.toggleAgentPanel,
-    toggleSplitView: docs.toggleSplitView,
-    toggleZenMode: docs.toggleZenMode,
+    actions: appActions,
     searchFiles: docs.searchFiles,
-    toggleTextusAi: textusAi.toggle,
   });
 
   useIslandNumbers(setActiveTabId);
@@ -161,6 +168,7 @@ export function useWindowWiring({
   useNativeMenuAccelerators(settings.shortcuts);
 
   useMenuBridge({
+    ...appActions,
     activeTabId,
     shortcuts: settings.shortcuts,
     liveTabs,
@@ -173,22 +181,15 @@ export function useWindowWiring({
     onCheckUpdates: shell.settingsOpening.openUpdates,
     onOpenPluginSettings: shell.settingsOpening.openPluginSettings,
     onToggleFormatBar: () => setSettings({ formatBar: !settings.formatBar }),
-    onToggleTypewriter: () =>
-      setSettings({ typewriterMode: !settings.typewriterMode }),
-    onToggleSidebar: panels.toggleSidebar,
     showSidebarTab: (id: string) => {
       panels.setPanelMode(id);
       panels.setPanelOpen(true);
     },
-    onToggleAgentPanel: panels.toggleAgentPanel,
     onOpenAgentPanel: () => {
       if (!panels.agentPanel.open) panels.toggleAgentPanel();
     },
-    onToggleTextusAi: textusAi.toggle,
-    onToggleSplitView: docs.toggleSplitView,
     onToggleReadOnly: () => docs.chooseViewMode("read-only"),
     onViewModeDefault: () => docs.chooseViewMode("default"),
-    onToggleZenMode: docs.toggleZenMode,
     addBlankTab: tabState.addBlankTab,
     openFileDialog: docs.openFileDialog,
     openRecentFile: docs.openRecentFile,
@@ -197,7 +198,6 @@ export function useWindowWiring({
     closeFolder: openFolder.closeFolder,
     saveTab: docs.saveTab,
     saveTabAs: docs.saveTabAs,
-    toggleSourceMode: docs.toggleSourceMode,
     requestCloseTab: docs.requestCloseTab,
     reopenClosedTab: () => {
       const path = takeClosedPath((p) =>

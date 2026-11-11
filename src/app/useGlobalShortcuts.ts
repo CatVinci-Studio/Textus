@@ -1,5 +1,6 @@
 import { heldByPlugin } from "../plugins/contributions/editor-input";
 import { useEffect } from "react";
+import { useLatest } from "../utils/hooks/useLatest";
 import { cycleRegion, trackRegionFocus } from "./regions";
 import { useSettings, type HeadingAction } from "../prefs/SettingsContext";
 import { adjacentTabId, type DocTab } from "../document/doc-tabs";
@@ -19,14 +20,12 @@ import {
   TRIGGER_COMPLETION_EVENT,
   TRIGGER_GRAMMAR_CHECK_EVENT,
   TOGGLE_FLOATING_CHAT_EVENT,
-  TOGGLE_FIND_REPLACE_EVENT,
   SHOW_REPLACE_EVENT,
   FIND_NEXT_EVENT,
   INSERT_BLOCK_EVENT,
 } from "../utils/events";
-import { splitEditor } from "../engine/layout/store";
+import { actionForCombo, type AppActionHandlers } from "./menu/app-actions";
 import { pickIsland } from "../engine/layout/island-numbers";
-import { openCommandPalette } from "./command-palette-entry";
 import { isImeKeydown } from "../utils/ime";
 
 /** The heading shortcuts, by the block kind they apply. */
@@ -82,14 +81,10 @@ export function useGlobalShortcuts(opts: {
   setActiveTabId: (id: string) => void;
   saveTab: (tabId: string) => Promise<boolean>;
   requestCloseTab: (tabId: string) => void;
-  toggleSourceMode: () => void;
-  toggleSidebar: () => void;
-  toggleAgentPanel: () => void;
-  toggleSplitView: () => void;
-  toggleZenMode: () => void;
+  /** What the actions a menu item runs too work with (app-actions.ts). */
+  actions: AppActionHandlers;
   /** Opens the sidebar on its Files tab with the search box focused. */
   searchFiles: () => void;
-  toggleTextusAi: () => void;
 }): void {
   const {
     tabsRef,
@@ -97,15 +92,12 @@ export function useGlobalShortcuts(opts: {
     setActiveTabId,
     saveTab,
     requestCloseTab,
-    toggleSourceMode,
-    toggleSidebar,
-    toggleAgentPanel,
-    toggleSplitView,
-    toggleZenMode,
+    actions,
     searchFiles,
-    toggleTextusAi,
   } = opts;
-  const { settings, setSettings } = useSettings();
+  const { settings } = useSettings();
+  // Read when a key runs one: a new object each render would resubscribe.
+  const actionsNow = useLatest(actions);
 
   useEffect(() => {
     function onKeyDown(e: KeyboardEvent) {
@@ -212,6 +204,13 @@ export function useGlobalShortcuts(opts: {
         );
         return;
       }
+      // An action a menu item runs too, as that item does.
+      const action = actionForCombo(combo, shortcuts);
+      if (action) {
+        e.preventDefault();
+        action.run(actionsNow.current);
+        return;
+      }
       if (combo === shortcuts.triggerCompletion) {
         e.preventDefault();
         window.dispatchEvent(new CustomEvent(TRIGGER_COMPLETION_EVENT));
@@ -221,40 +220,9 @@ export function useGlobalShortcuts(opts: {
       } else if (combo === shortcuts.toggleFloatingChat) {
         e.preventDefault();
         window.dispatchEvent(new CustomEvent(TOGGLE_FLOATING_CHAT_EVENT));
-      } else if (combo === shortcuts.toggleTextusAi) {
-        e.preventDefault();
-        toggleTextusAi();
-      } else if (combo === shortcuts.findReplace) {
-        e.preventDefault();
-        window.dispatchEvent(new CustomEvent(TOGGLE_FIND_REPLACE_EVENT));
-      } else if (combo === shortcuts.toggleSidebar) {
-        e.preventDefault();
-        toggleSidebar();
-      } else if (combo === shortcuts.toggleAgentPanel) {
-        e.preventDefault();
-        toggleAgentPanel();
-      } else if (combo === shortcuts.toggleSplitView) {
-        e.preventDefault();
-        toggleSplitView();
-      } else if (combo === shortcuts.toggleZenMode) {
-        e.preventDefault();
-        toggleZenMode();
-      } else if (combo === shortcuts.commandPalette) {
-        e.preventDefault();
-        void openCommandPalette();
-      } else if (combo === shortcuts.splitEditor) {
-        // As View > Split Right does (on the Mac the menu takes the keys).
-        e.preventDefault();
-        splitEditor("row");
       } else if (canOpenFolder && combo === shortcuts.searchFiles) {
         e.preventDefault();
         searchFiles();
-      } else if (combo === shortcuts.toggleSourceMode) {
-        e.preventDefault();
-        toggleSourceMode();
-      } else if (combo === shortcuts.toggleTypewriterMode) {
-        e.preventDefault();
-        setSettings({ typewriterMode: !settings.typewriterMode });
       } else {
         // A command added from outside, on a combo the app hasn't taken.
         const command = commandForCombo(combo, settings.commandShortcuts);
@@ -278,13 +246,7 @@ export function useGlobalShortcuts(opts: {
     activeTabId,
     setActiveTabId,
     settings,
-    toggleSourceMode,
-    toggleSidebar,
-    toggleAgentPanel,
-    toggleSplitView,
-    toggleZenMode,
+    actionsNow,
     searchFiles,
-    toggleTextusAi,
-    setSettings,
   ]);
 }
