@@ -575,7 +575,6 @@
     .window-bar-sidebar-toggle,
     .window-menu-button,
     .tree-tool,
-    .icon-button,
     .tx-icon-button,
     .inline-chat-header-button,
     .inline-chat-attach,
@@ -596,7 +595,6 @@
   .inline-chat-header-button,
   .quick-ask-pending-nav-button,
   .tree-tool,
-  .icon-button,
   .tx-icon-button,
   .inline-chat-attach,
   .inline-chat-toggle
@@ -627,11 +625,6 @@
   height: var(--icon-button-s);
 }
 
-.icon-button {
-  width: calc(30px * var(--chrome-scale));
-  height: calc(30px * var(--chrome-scale));
-}
-
 /* They grow with the window as the chrome's other icons do. */
 :is(.inline-chat-attach, .inline-chat-toggle) {
   width: var(--control-height-sm);
@@ -643,7 +636,6 @@
     .inline-chat-header-button,
     .quick-ask-pending-nav-button,
     .tree-tool,
-    .icon-button,
     .tx-icon-button,
     .inline-chat-attach,
     .inline-chat-toggle
@@ -657,7 +649,6 @@
     .inline-chat-header-button,
     .quick-ask-pending-nav-button,
     .tree-tool,
-    .icon-button,
     .tx-icon-button,
     .inline-chat-attach,
     .inline-chat-toggle
@@ -682,7 +673,6 @@
       .inline-chat-header-button,
       .quick-ask-pending-nav-button,
       .tree-tool,
-      .icon-button,
       .tx-icon-button,
       .inline-chat-attach,
       .inline-chat-toggle,

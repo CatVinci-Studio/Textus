@@ -413,10 +413,6 @@ button.plugin-card-open:hover .plugin-card-name {
   border-bottom: 1px solid var(--ui-border);
   background: var(--ui-bg);
 }
-.web-page-button {
-  width: 26px;
-  height: 26px;
-}
 .web-page-address {
   flex: 1;
   min-width: 0;

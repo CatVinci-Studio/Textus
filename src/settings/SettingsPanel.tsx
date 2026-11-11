@@ -1,3 +1,4 @@
+import { IconButton } from "../engine/controls/IconButton";
 import { SettingsIndexing } from "./indexing";
 import { AboutSection } from "./sections/about";
 import { pageComponent } from "./builtin-pages";
@@ -335,14 +336,13 @@ export function SettingsPanel({
       >
         <div className="settings-header">
           {pushed && (
-            <button
-              type="button"
-              className="icon-button settings-bar-back"
-              aria-label={backLabel}
+            <IconButton
+              className="tx-icon-button settings-bar-back"
+              label={backLabel ?? t.settingsTitle}
               onClick={nav.back}
             >
               <ChevronIcon className="settings-back-chevron" />
-            </button>
+            </IconButton>
           )}
           <span>
             {pushed
@@ -351,13 +351,13 @@ export function SettingsPanel({
                 : categoryLabel
               : t.settingsTitle}
           </span>
-          <button
-            className="icon-button settings-close-button"
-            aria-label={t.windowClose}
+          <IconButton
+            className="tx-icon-button settings-close-button"
+            label={t.windowClose}
             onClick={onClose}
           >
             <CloseIcon />
-          </button>
+          </IconButton>
         </div>
 
         {layout}
