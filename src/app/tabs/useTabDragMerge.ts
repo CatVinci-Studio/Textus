@@ -23,8 +23,9 @@ import { flushPendingWrites } from "../../storage/pending-writes";
 import { useLatest } from "../../utils/hooks/useLatest";
 import { canUseWindows } from "../../platform/capabilities";
 import { arrivalPreview, splitForDrop } from "../islands/split-drop";
-import { tabRectOf } from "../../engine/layout/drop-zones";
-import { paneOf, splitLayout } from "../../engine/layout/store";
+import { dropGeometry, tabRectOf } from "../../engine/layout/drop-zones";
+import { placeOnArrival } from "../../engine/layout/store";
+import { moveTab } from "../../engine/layout/ops";
 
 // Moving tabs between windows, as drag source (handed to Rust's floating
 // drag) and as merge target. Within-bar reordering lives in the tab bar.
@@ -223,10 +224,24 @@ export function useTabDragMerge(opts: {
       const corner = previewWinRef.current;
       const at = corner && { x: x - corner.left, y: y - corner.top };
       const split = !row && at ? arrival.take(at.x, at.y) : null;
+      // Onto a split's row: that island's, at the slot under the pointer.
+      // Unsplit: the window's one row.
+      const bar =
+        row && at
+          ? dropGeometry().bars.find(
+              (b) => at.x >= b.row.left && at.x <= b.row.right,
+            )
+          : undefined;
+      if (bar && at) {
+        const slot = bar.pills.filter((pill) => pill.center < at.x).length;
+        placeOnArrival(newTab.id, (now) =>
+          now ? moveTab(now, newTab.id, bar.pane, slot) : now,
+        );
+      }
       let index = tabsRef.current.length;
-      if (row && at) {
+      if (row && at && !bar) {
         index = tabsRef.current.filter((tab) => {
-          const rect = tabRectOf(paneOf(splitLayout(), tab.id), tab.id);
+          const rect = tabRectOf(null, tab.id);
           return !!rect && rect.left + rect.width / 2 < at.x;
         }).length;
       }
