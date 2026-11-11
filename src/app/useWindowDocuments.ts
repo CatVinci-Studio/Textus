@@ -10,8 +10,8 @@ import { useAutosave } from "../document/autosave";
 import { useLastCarets } from "../document/last-carets";
 import { useActiveDocument } from "./useActiveDocument";
 import { useOpenFolder } from "./useOpenFolder";
-import { useSplitRestore } from "./islands/restore";
-import { useSessionPaths, useWindowTitle } from "./useWindowSession";
+import { useWindowSession } from "./islands/window-session";
+import { useWindowTitle } from "./useWindowSession";
 import { useFileOpening } from "./useFileOpening";
 import { useHelpTabs } from "./useHelpTabs";
 import { useSaveTabs } from "./useSaveTabs";
@@ -69,13 +69,12 @@ export function useWindowDocuments({
     if (hasTree) setSearchFocusRequest(true);
   }, [setPanelOpen, setPanelMode, hasTree]);
   useWindowTitle(activeTitle);
-  useSessionPaths(tabs);
   useProjectTabs(
     openFolder.folder,
     tabs.map((tab) => tab.path),
     activeTab.path,
   );
-  useSplitRestore(tabs, setActiveTabId);
+  useWindowSession(tabs, openFolder.folder, setActiveTabId);
 
   const dialogFilters = useMemo(
     () => ({

@@ -2,11 +2,12 @@
 //! things a window picks up once it has mounted.
 
 use super::*;
+use crate::commands::session::WindowSession;
 
 /// Files handed to the app from the OS queue here, in the windows they open
 /// in; each window drains one on mount. A queue, not an event: the request
 /// usually arrives before any listener.
-pub(crate) struct PendingOpenPaths(pub(crate) Mutex<Vec<Vec<String>>>);
+pub(crate) struct PendingOpenPaths(pub(crate) Mutex<Vec<WindowSession>>);
 
 /// Whether any window's frontend has mounted. Before that the initial window
 /// drains the queue; after it, an OS open needs a fresh window per file.
@@ -20,17 +21,17 @@ pub(crate) static LAUNCH_OPENED: Mutex<Option<Vec<String>>> = Mutex::new(Some(Ve
 
 /// Park paths for the next window to drain as it mounts.
 pub(crate) fn queue_pending(app: &tauri::AppHandle, paths: Vec<String>) {
-    app.state::<PendingOpenPaths>()
-        .0
-        .lock()
-        .unwrap()
-        .extend(paths.into_iter().map(|path| vec![path]));
+    app.state::<PendingOpenPaths>().0.lock().unwrap().extend(
+        paths
+            .into_iter()
+            .map(|path| WindowSession::of_paths(vec![path])),
+    );
 }
 
 /// The last session's windows, each with its documents as tabs: a window
 /// a tab was dragged out into comes back as its own window.
 #[cfg(desktop)]
-pub(crate) fn queue_windows_to_open(app: &tauri::AppHandle, windows: Vec<Vec<String>>) {
+pub(crate) fn queue_windows_to_open(app: &tauri::AppHandle, windows: Vec<WindowSession>) {
     if windows.is_empty() {
         return;
     }
@@ -81,7 +82,7 @@ pub(crate) fn queue_paths_to_open(app: &tauri::AppHandle, paths: Vec<String>) {
         .0
         .lock()
         .unwrap()
-        .push(paths);
+        .push(WindowSession::of_paths(paths));
     if ui_ready {
         let _ = crate::editor_windows::open_new_window(app);
     }
@@ -102,7 +103,7 @@ pub(crate) fn queue_paths_to_open(app: &tauri::AppHandle, paths: Vec<String>) {
             .0
             .lock()
             .unwrap_or_else(|e| e.into_inner())
-            .push(paths);
+            .push(WindowSession::of_paths(paths));
     }
 }
 
@@ -175,16 +176,14 @@ pub(crate) async fn open_path_in_new_window(app: tauri::AppHandle, path: String)
     let _ = crate::editor_windows::open_new_window(&app);
 }
 
+/// What the window mounting now opens: a session's window (its documents,
+/// islands and folder), or files the system handed over.
 #[tauri::command]
 #[cfg_attr(test, specta::specta)]
-pub(crate) fn take_pending_window_paths(pending: State<PendingOpenPaths>) -> Vec<String> {
+pub(crate) fn take_pending_window(pending: State<PendingOpenPaths>) -> Option<WindowSession> {
     UI_READY.store(true, Ordering::Relaxed);
     let mut windows = pending.0.lock().unwrap();
-    if windows.is_empty() {
-        Vec::new()
-    } else {
-        windows.remove(0)
-    }
+    (!windows.is_empty()).then(|| windows.remove(0))
 }
 
 /// Files the system asked to open: Finder's "Open With" on macOS (never

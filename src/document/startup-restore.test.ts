@@ -13,7 +13,7 @@ import type { DocTab } from "./doc-tabs";
 const ipc = vi.hoisted(() => ({
   takeDetachedTab: vi.fn(),
   takePendingShowHelp: vi.fn(),
-  takePendingWindowPaths: vi.fn(),
+  takePendingWindow: vi.fn(),
   takeDraftSnapshots: vi.fn(),
   /** Files gone since the last session. */
   gone: new Set<string>(),
@@ -23,7 +23,7 @@ vi.mock("../platform/ipc", () => ({
   windowIpc: {
     takeDetachedTab: ipc.takeDetachedTab,
     takePendingShowHelp: ipc.takePendingShowHelp,
-    takePendingWindowPaths: ipc.takePendingWindowPaths,
+    takePendingWindow: ipc.takePendingWindow,
   },
   fs: {
     fileMtimeMs: async (path: string) => (ipc.gone.has(path) ? null : 1),
@@ -126,8 +126,7 @@ beforeEach(() => {
   lastIOSDocument.mockResolvedValue(null);
   ipc.takeDetachedTab.mockResolvedValue(null);
   ipc.takePendingShowHelp.mockResolvedValue(null);
-  ipc.takePendingWindowPaths.mockResolvedValue([]);
-  ipc.takePendingWindowPaths.mockResolvedValue([]);
+  ipc.takePendingWindow.mockResolvedValue(null);
   ipc.takeDraftSnapshots.mockResolvedValue([]);
 });
 afterEach(cleanup);
@@ -141,7 +140,7 @@ describe("startup restore into the initial tab", () => {
   });
 
   it("but not over a document opened at launch", async () => {
-    ipc.takePendingWindowPaths.mockResolvedValue(["/docs/a.md"]);
+    ipc.takePendingWindow.mockResolvedValue({ paths: ["/docs/a.md"] });
     const { tabs } = await restore(true, true);
     await waitFor(() =>
       expect(tabs()).toEqual([expect.objectContaining({ path: "/docs/a.md" })]),
@@ -152,7 +151,7 @@ describe("startup restore into the initial tab", () => {
   // Opened as any file is (a board a plugin claims, a Word document, the
   // recent list, its last caret), into the initial tab.
   it("opens the first document as any file opens, the rest in tabs", async () => {
-    ipc.takePendingWindowPaths.mockResolvedValue(["/docs/a.md", "/docs/b.md"]);
+    ipc.takePendingWindow.mockResolvedValue({ paths: ["/docs/a.md", "/docs/b.md"] });
     const { tabs, openPathInTab, replaceTabWithFile } = await restore();
     await waitFor(() =>
       expect(openPathInTab).toHaveBeenCalledWith("/docs/b.md", {
@@ -169,11 +168,11 @@ describe("startup restore into the initial tab", () => {
 
   it("skips a first document deleted since, and still opens the rest", async () => {
     ipc.gone.add("/docs/a.md");
-    ipc.takePendingWindowPaths.mockResolvedValue([
+    ipc.takePendingWindow.mockResolvedValue({ paths: [
       "/docs/a.md",
       "/docs/b.md",
       "/docs/c.md",
-    ]);
+    ] });
     const { tabs, openPathInTab } = await restore();
     await waitFor(() =>
       expect(openPathInTab).toHaveBeenCalledWith("/docs/c.md", {
@@ -188,7 +187,7 @@ describe("startup restore into the initial tab", () => {
 
   it("leaves the blank tab when the last document is gone too", async () => {
     ipc.gone.add("/docs/a.md");
-    ipc.takePendingWindowPaths.mockResolvedValue(["/docs/a.md"]);
+    ipc.takePendingWindow.mockResolvedValue({ paths: ["/docs/a.md"] });
     const { tabs, replaceTabWithFile } = await restore();
     await waitFor(() => expect(ipc.takeDraftSnapshots).toHaveBeenCalled());
     await new Promise((r) => setTimeout(r, 20));
@@ -266,11 +265,11 @@ describe("startup restore into the initial tab", () => {
   // After a crash, each reopened document opens once, with its recovered
   // edits.
   it("opens a reopened session file once, with its recovered edits", async () => {
-    ipc.takePendingWindowPaths.mockResolvedValue([
+    ipc.takePendingWindow.mockResolvedValue({ paths: [
       "/docs/a.md",
       "/docs/b.md",
       "/docs/c.md",
-    ]);
+    ] });
     ipc.takeDraftSnapshots.mockResolvedValue([
       { tabId: "old-a", path: "/docs/a.md", content: "a, unsaved" },
       { tabId: "old-b", path: "/docs/b.md", content: "b, unsaved" },

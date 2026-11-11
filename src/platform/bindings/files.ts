@@ -119,7 +119,8 @@ export const commands = {
 	upload_image: (host: ImageHost, dataBase64: string, mime: string, filename: string, endpoint: string, urlField: string) => __TAURI_INVOKE<UploadedImage>("upload_image", { host, dataBase64, mime, filename, endpoint, urlField }),
 	/**  Where `host`'s token is kept, for Settings to save or clear it. */
 	image_host_key_id: (host: ImageHost) => __TAURI_INVOKE<string>("image_host_key_id", { host }),
-	update_session_paths: (paths: string[]) => __TAURI_INVOKE<void>("update_session_paths", { paths }),
+	/**  This window's session as it now stands. */
+	update_window_session: (session: WindowSession_Deserialize) => __TAURI_INVOKE<void>("update_window_session", { session }),
 	/**
 	 *  A dirty-window prompt cancelled File > Quit after other windows closed:
 	 *  resume ordinary bookkeeping and persist only the windows still alive.
@@ -538,6 +539,35 @@ export type UploadedImage = {
 };
 
 export type Value = null | boolean | number | string | Value[] | { [key in string]: Value };
+
+/**
+ *  One window as the next launch brings it back: its documents' paths, how
+ *  its islands were laid out (the frontend's own shape, by path), and the
+ *  folder it had open. Untitled tabs are not kept.
+ */
+export type WindowSession = WindowSession_Serialize | WindowSession_Deserialize;
+
+/**
+ *  One window as the next launch brings it back: its documents' paths, how
+ *  its islands were laid out (the frontend's own shape, by path), and the
+ *  folder it had open. Untitled tabs are not kept.
+ */
+export type WindowSession_Deserialize = {
+	paths: string[],
+	layout?: Value | null,
+	folder?: string | null,
+};
+
+/**
+ *  One window as the next launch brings it back: its documents' paths, how
+ *  its islands were laid out (the frontend's own shape, by path), and the
+ *  folder it had open. Untitled tabs are not kept.
+ */
+export type WindowSession_Serialize = {
+	paths: string[],
+	layout: Value | null,
+	folder: string | null,
+};
 
 /**  What `open_word_document` hands the frontend. */
 export type WordDocument = {

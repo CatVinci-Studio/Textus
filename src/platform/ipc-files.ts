@@ -1,4 +1,4 @@
-import { type DirEntryInfo } from "./bindings/files";
+import { type DirEntryInfo, type WindowSession_Deserialize } from "./bindings/files";
 import type { ImageHost } from "../prefs/SettingsContext";
 import type * as Generated from "./bindings/files";
 import { isIOSApp } from "./capabilities";
@@ -157,8 +157,9 @@ export const fs = {
 // Session and recents
 
 export const session = {
-  updateSessionPaths: (paths: string[]) =>
-    desktopQueryCommand("update_session_paths", undefined, paths),
+  /** This window as the next launch brings it back. */
+  updateWindow: (window: WindowSession_Deserialize) =>
+    desktopQueryCommand("update_window_session", undefined, window),
   cancelQuit: () => desktopQueryCommand("cancel_session_quit", undefined),
   addRecentFile: (path: string) => command("add_recent_file", path),
   /** A folder opened in the sidebar, for File > Open Recent. */

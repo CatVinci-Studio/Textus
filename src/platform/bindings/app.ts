@@ -8,7 +8,11 @@ import { invoke as __TAURI_INVOKE } from "@tauri-apps/api/core";
 
 /** Commands */
 export const commands = {
-	take_pending_window_paths: () => __TAURI_INVOKE<string[]>("take_pending_window_paths"),
+	/**
+	 *  What the window mounting now opens: a session's window (its documents,
+	 *  islands and folder), or files the system handed over.
+	 */
+	take_pending_window: () => __TAURI_INVOKE<WindowSession_Serialize | null>("take_pending_window"),
 	take_pending_show_help: () => __TAURI_INVOKE<string | null>("take_pending_show_help"),
 	take_pending_menu_event: () => __TAURI_INVOKE<string | null>("take_pending_menu_event"),
 	take_pending_open_folder: () => __TAURI_INVOKE<string | null>("take_pending_open_folder"),
@@ -556,5 +560,34 @@ export type WindowBounds = {
 	 *  different-DPI display. Always finite, so specta types it `number`.
 	 */
 	scaleFactor: number,
+};
+
+/**
+ *  One window as the next launch brings it back: its documents' paths, how
+ *  its islands were laid out (the frontend's own shape, by path), and the
+ *  folder it had open. Untitled tabs are not kept.
+ */
+export type WindowSession = WindowSession_Serialize | WindowSession_Deserialize;
+
+/**
+ *  One window as the next launch brings it back: its documents' paths, how
+ *  its islands were laid out (the frontend's own shape, by path), and the
+ *  folder it had open. Untitled tabs are not kept.
+ */
+export type WindowSession_Deserialize = {
+	paths: string[],
+	layout?: Value | null,
+	folder?: string | null,
+};
+
+/**
+ *  One window as the next launch brings it back: its documents' paths, how
+ *  its islands were laid out (the frontend's own shape, by path), and the
+ *  folder it had open. Untitled tabs are not kept.
+ */
+export type WindowSession_Serialize = {
+	paths: string[],
+	layout: Value | null,
+	folder: string | null,
 };
 

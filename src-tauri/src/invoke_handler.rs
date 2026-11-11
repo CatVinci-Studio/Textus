@@ -33,14 +33,14 @@ use commands::image_host::{image_host_key_id, upload_image};
 #[cfg(desktop)]
 use commands::linked_file::open_linked_file;
 #[cfg(desktop)]
-use commands::session::{cancel_session_quit, update_session_paths};
+use commands::session::{cancel_session_quit, update_window_session};
 use commands::theme_gallery::{theme_gallery_catalog, theme_gallery_css, theme_gallery_preview};
 use commands::themes::{delete_theme, load_theme_css, save_theme_css};
 
 pub(crate) fn handler() -> impl Fn(tauri::ipc::Invoke<tauri::Wry>) -> bool + Send + Sync + 'static {
     crate::with_plugin_commands![
         // Shared: desktop and iOS.
-        take_pending_window_paths,
+        take_pending_window,
         settings::settings_get,
         settings::settings_patch,
         settings::settings_fill_defaults,
@@ -299,7 +299,7 @@ pub(crate) fn handler() -> impl Fn(tauri::ipc::Invoke<tauri::Wry>) -> bool + Sen
         #[cfg(desktop)]
         schedule::app_state::app_state,
         #[cfg(desktop)]
-        update_session_paths,
+        update_window_session,
         #[cfg(desktop)]
         cancel_session_quit,
         #[cfg(desktop)]

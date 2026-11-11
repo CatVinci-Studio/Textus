@@ -14,6 +14,7 @@ import {
 import { setTabJump } from "../editor/tab-jump";
 import { lastCaret } from "./last-carets";
 import { keptTabsRestored, readKeptTabs, type KeptTab } from "./reload-tabs";
+import { takeWindowSession } from "./launch-window";
 
 // Module-scoped, not a ref: StrictMode runs mount effects twice, and this
 // drain is a destructive pull from shared queues. Each window is its own
@@ -228,7 +229,7 @@ export function useStartupRestore(options: StartupRestoreOptions): void {
       };
       // This window's documents: ones opened from outside, or the tabs it had
       // last session (a window a tab was dragged out into is one of its own).
-      const paths = await windowIpc.takePendingWindowPaths();
+      const paths = (await takeWindowSession())?.paths ?? [];
       if (paths.length > 0) {
         opts.stopTutorial();
         // One moved or deleted since gives its place to the next: the

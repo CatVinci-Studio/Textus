@@ -1,3 +1,4 @@
+use serde::{Deserialize, Serialize};
 use std::collections::{HashMap, HashSet};
 use std::fs;
 use std::path::PathBuf;
@@ -5,10 +6,32 @@ use std::sync::atomic::{AtomicBool, Ordering};
 use std::sync::Mutex;
 use tauri::{AppHandle, Manager};
 
-/// Every window's open on-disk tab paths, written to disk window by window so
-/// a relaunch brings each window back with its tabs; untitled tabs are dropped. Closing the last
-/// editor window leaves the file alone, so the next launch brings those back.
-pub struct SessionTabsState(pub Mutex<HashMap<String, Vec<String>>>);
+/// One window as the next launch brings it back: its documents' paths, how
+/// its islands were laid out (the frontend's own shape, by path), and the
+/// folder it had open. Untitled tabs are not kept.
+#[derive(Serialize, Deserialize, Clone, Default, PartialEq, Debug)]
+#[cfg_attr(test, derive(specta::Type))]
+pub struct WindowSession {
+    pub paths: Vec<String>,
+    #[serde(default)]
+    pub layout: Option<serde_json::Value>,
+    #[serde(default)]
+    pub folder: Option<String>,
+}
+
+impl WindowSession {
+    pub fn of_paths(paths: Vec<String>) -> Self {
+        Self {
+            paths,
+            ..Self::default()
+        }
+    }
+}
+
+/// Every window's session, written to disk window by window. Closing the
+/// last editor window leaves the file alone, so the next launch brings it
+/// back.
+pub struct SessionTabsState(pub Mutex<HashMap<String, WindowSession>>);
 
 /// Set while File > Quit is closing every window, so their Destroyed events
 /// don't shrink the snapshot taken at the start.
@@ -21,8 +44,8 @@ fn session_file(app: &AppHandle) -> Option<PathBuf> {
         .map(|dir| dir.join("session.json"))
 }
 
-/// The last session's windows, each its documents' paths.
-pub fn read_session_windows(app: &AppHandle) -> Vec<Vec<String>> {
+/// The last session's windows.
+pub fn read_session_windows(app: &AppHandle) -> Vec<WindowSession> {
     let Some(path) = session_file(app) else {
         return Vec::new();
     };
@@ -32,75 +55,99 @@ pub fn read_session_windows(app: &AppHandle) -> Vec<Vec<String>> {
         .unwrap_or_default()
 }
 
-/// Up to 1.3.0-beta.6 the file was one flat list, each path a window.
-fn parse_session(raw: &str) -> Vec<Vec<String>> {
-    if let Ok(windows) = serde_json::from_str::<Vec<Vec<String>>>(raw) {
-        return windows.into_iter().filter(|w| !w.is_empty()).collect();
-    }
-    serde_json::from_str::<Vec<String>>(raw)
-        .map(|paths| paths.into_iter().map(|p| vec![p]).collect())
-        .unwrap_or_default()
+/// The file as each version wrote it: windows' sessions; up to 1.3.12 each
+/// window's paths; up to 1.3.0-beta.6 one flat list, each path a window.
+fn parse_session(raw: &str) -> Vec<WindowSession> {
+    let windows = if let Ok(windows) = serde_json::from_str::<Vec<WindowSession>>(raw) {
+        windows
+    } else if let Ok(windows) = serde_json::from_str::<Vec<Vec<String>>>(raw) {
+        windows.into_iter().map(WindowSession::of_paths).collect()
+    } else {
+        serde_json::from_str::<Vec<String>>(raw)
+            .map(|paths| {
+                paths
+                    .into_iter()
+                    .map(|p| WindowSession::of_paths(vec![p]))
+                    .collect()
+            })
+            .unwrap_or_default()
+    };
+    windows.into_iter().filter(kept).collect()
 }
 
-fn write_session_paths(app: &AppHandle, paths: &[Vec<String>]) {
+/// A window worth bringing back: one with documents or a folder.
+fn kept(window: &WindowSession) -> bool {
+    !window.paths.is_empty() || window.folder.is_some()
+}
+
+fn write_session(app: &AppHandle, windows: &[WindowSession]) {
     let Some(path) = session_file(app) else {
         return;
     };
     if let Some(parent) = path.parent() {
         let _ = fs::create_dir_all(parent);
     }
-    if let Ok(json) = serde_json::to_string(paths) {
+    if let Ok(json) = serde_json::to_string(windows) {
         let _ = crate::atomic::write_sync(&path, json);
     }
 }
 
-/// Every window's paths, the main window first, each path in one window
-/// only; windows left with none are dropped.
-fn merge_paths(map: &HashMap<String, Vec<String>>) -> Vec<Vec<String>> {
+/// Every window's session, the main window first, each path in one window
+/// only; windows left with nothing are dropped.
+fn merge_windows(map: &HashMap<String, WindowSession>) -> Vec<WindowSession> {
     let mut labels: Vec<&String> = map.keys().collect();
     labels.sort_by_key(|label| (label.as_str() != "main", label.as_str()));
     let mut seen = HashSet::new();
     labels
         .into_iter()
         .map(|label| {
-            map[label]
-                .iter()
-                .filter(|path| seen.insert((*path).clone()))
-                .cloned()
-                .collect::<Vec<_>>()
+            let window = &map[label];
+            WindowSession {
+                paths: window
+                    .paths
+                    .iter()
+                    .filter(|path| seen.insert((*path).clone()))
+                    .cloned()
+                    .collect(),
+                ..window.clone()
+            }
         })
-        .filter(|window| !window.is_empty())
+        .filter(kept)
         .collect()
 }
 
+/// This window's session as it now stands.
 #[tauri::command]
 #[cfg_attr(test, specta::specta)]
-pub fn update_session_paths(
+pub fn update_window_session(
     app: AppHandle,
     window: tauri::Window,
-    paths: Vec<String>,
+    session: WindowSession,
     state: tauri::State<SessionTabsState>,
 ) {
     let merged = {
         let mut map = state.0.lock().unwrap();
-        map.insert(window.label().to_string(), paths);
-        merge_paths(&map)
+        if map.get(window.label()) == Some(&session) {
+            return;
+        }
+        map.insert(window.label().to_string(), session);
+        merge_windows(&map)
     };
-    write_session_paths(&app, &merged);
+    write_session(&app, &merged);
 }
 
 /// Captures the complete session before File > Quit starts closing windows.
 pub fn begin_app_quit(app: &AppHandle, state: &SessionTabsState) {
     APP_QUITTING.store(true, Ordering::SeqCst);
-    if let Some(paths) = quit_snapshot(&state.0.lock().unwrap()) {
-        write_session_paths(app, &paths);
+    if let Some(windows) = quit_snapshot(&state.0.lock().unwrap()) {
+        write_session(app, &windows);
     }
 }
 
 /// What File > Quit writes before it closes the windows. `None` with no editor
-/// window open (macOS): the file already holds the last window's documents.
-fn quit_snapshot(map: &HashMap<String, Vec<String>>) -> Option<Vec<Vec<String>>> {
-    (!map.is_empty()).then(|| merge_paths(map))
+/// window open (macOS): the file already holds the last window's session.
+fn quit_snapshot(map: &HashMap<String, WindowSession>) -> Option<Vec<WindowSession>> {
+    (!map.is_empty()).then(|| merge_windows(map))
 }
 
 pub fn app_quitting() -> bool {
@@ -113,33 +160,34 @@ pub fn app_quitting() -> bool {
 #[cfg_attr(test, specta::specta)]
 pub fn cancel_session_quit(app: AppHandle, state: tauri::State<SessionTabsState>) {
     APP_QUITTING.store(false, Ordering::SeqCst);
-    let paths = merge_paths(&state.0.lock().unwrap());
-    write_session_paths(&app, &paths);
+    let windows = merge_windows(&state.0.lock().unwrap());
+    write_session(&app, &windows);
 }
 
-/// Removes a destroyed editor from the live map and returns the paths that
-/// should replace the disk snapshot. `None` keeps the snapshot: the window never
-/// reported, the app is quitting, or this was the last editor window.
-fn remove_window_paths(
-    map: &mut HashMap<String, Vec<String>>,
+/// Removes a destroyed editor from the live map and returns the session
+/// that should replace the disk snapshot. `None` keeps the snapshot: the
+/// window never reported, the app is quitting, or this was the last editor
+/// window.
+fn remove_window(
+    map: &mut HashMap<String, WindowSession>,
     label: &str,
     app_quitting: bool,
-) -> Option<Vec<Vec<String>>> {
+) -> Option<Vec<WindowSession>> {
     map.remove(label)?;
     if app_quitting || map.is_empty() {
         None
     } else {
-        Some(merge_paths(map))
+        Some(merge_windows(map))
     }
 }
 
 pub fn forget_window(app: &AppHandle, label: &str, state: &SessionTabsState) {
     let merged = {
         let mut map = state.0.lock().unwrap();
-        remove_window_paths(&mut map, label, APP_QUITTING.load(Ordering::SeqCst))
+        remove_window(&mut map, label, APP_QUITTING.load(Ordering::SeqCst))
     };
-    if let Some(paths) = merged {
-        write_session_paths(app, &paths);
+    if let Some(windows) = merged {
+        write_session(app, &windows);
     }
 }
 
@@ -147,91 +195,92 @@ pub fn forget_window(app: &AppHandle, label: &str, state: &SessionTabsState) {
 mod tests {
     use super::*;
 
-    fn paths(entries: &[(&str, &[&str])]) -> HashMap<String, Vec<String>> {
+    fn windows(entries: &[(&str, &[&str])]) -> HashMap<String, WindowSession> {
         entries
             .iter()
             .map(|(label, paths)| {
                 (
                     (*label).to_string(),
-                    paths.iter().map(|path| (*path).to_string()).collect(),
+                    WindowSession::of_paths(paths.iter().map(|p| (*p).to_string()).collect()),
                 )
             })
             .collect()
+    }
+
+    fn of(paths: &[&str]) -> WindowSession {
+        WindowSession::of_paths(paths.iter().map(|p| (*p).to_string()).collect())
     }
 
     #[test]
     fn closing_the_last_window_keeps_its_session_for_the_next_launch() {
         // Windows/Linux exit with it; macOS keeps running windowless. Either
         // way the documents it had open are what comes back.
-        let mut map = paths(&[("main", &["one.md"])]);
-
-        assert_eq!(remove_window_paths(&mut map, "main", false), None);
+        let mut map = windows(&[("main", &["one.md"])]);
+        assert_eq!(remove_window(&mut map, "main", false), None);
         assert!(map.is_empty());
     }
 
     #[test]
     fn quitting_from_the_menu_bar_with_no_window_keeps_the_last_session() {
-        // macOS: the last window was closed earlier, then Quit with none
-        // open. The snapshot on disk is that window's; nothing replaces it.
         assert_eq!(quit_snapshot(&HashMap::new()), None);
         assert_eq!(
-            quit_snapshot(&paths(&[("main", &["one.md"]), ("window-1", &[])])),
-            Some(vec![vec!["one.md".to_string()]])
+            quit_snapshot(&windows(&[("main", &["one.md"]), ("window-1", &[])])),
+            Some(vec![of(&["one.md"])])
         );
     }
 
     #[test]
     fn closing_one_of_multiple_windows_persists_the_remainder() {
-        let mut map = paths(&[("main", &["one.md"]), ("window-1", &["two.md"])]);
-
+        let mut map = windows(&[("main", &["one.md"]), ("window-1", &["two.md"])]);
         assert_eq!(
-            remove_window_paths(&mut map, "main", false),
-            Some(vec![vec!["two.md".to_string()]])
+            remove_window(&mut map, "main", false),
+            Some(vec![of(&["two.md"])])
         );
     }
 
     #[test]
     fn app_quit_never_shrinks_the_captured_snapshot() {
-        let mut map = paths(&[("main", &["one.md"]), ("window-1", &["two.md"])]);
-
-        assert_eq!(remove_window_paths(&mut map, "main", true), None);
-        assert_eq!(remove_window_paths(&mut map, "window-1", true), None);
+        let mut map = windows(&[("main", &["one.md"]), ("window-1", &["two.md"])]);
+        assert_eq!(remove_window(&mut map, "main", true), None);
+        assert_eq!(remove_window(&mut map, "window-1", true), None);
     }
 
     #[test]
-    fn each_window_keeps_its_own_documents() {
-        let map = paths(&[
-            ("window-2", &["three.md", "one.md"]),
-            ("main", &["one.md", "two.md"]),
-        ]);
-        assert_eq!(
-            merge_paths(&map),
-            vec![
-                vec!["one.md".to_string(), "two.md".to_string()],
-                vec!["three.md".to_string()],
-            ]
-        );
+    fn each_window_keeps_its_own_documents_layout_and_folder() {
+        let mut map = windows(&[("window-2", &["three.md", "one.md"])]);
+        let main = WindowSession {
+            paths: vec!["one.md".into(), "two.md".into()],
+            layout: Some(serde_json::json!({"direction": "row"})),
+            folder: Some("/notes".into()),
+        };
+        map.insert("main".into(), main.clone());
+        assert_eq!(merge_windows(&map), vec![main, of(&["three.md"])]);
     }
 
     #[test]
-    fn an_earlier_flat_session_opens_a_window_per_document() {
-        let windows = |raw| parse_session(raw);
+    fn every_earlier_session_file_still_opens() {
         assert_eq!(
-            windows(r#"["a.md","b.md"]"#),
-            vec![vec!["a.md".to_string()], vec!["b.md".to_string()]]
+            parse_session(r#"["a.md","b.md"]"#),
+            vec![of(&["a.md"]), of(&["b.md"])]
         );
         assert_eq!(
-            windows(r#"[["a.md","b.md"],[]]"#),
-            vec![vec!["a.md".to_string(), "b.md".to_string()]]
+            parse_session(r#"[["a.md","b.md"],[]]"#),
+            vec![of(&["a.md", "b.md"])]
         );
-        assert!(windows("nonsense").is_empty());
+        assert_eq!(
+            parse_session(r#"[{"paths":[],"folder":"/n"},{"paths":[]}]"#),
+            vec![WindowSession {
+                folder: Some("/n".into()),
+                ..WindowSession::default()
+            }]
+        );
+        assert!(parse_session("nonsense").is_empty());
     }
 
     #[test]
     fn unrelated_window_does_not_rewrite_the_session() {
-        let mut map = paths(&[("main", &["one.md"])]);
-
-        assert_eq!(remove_window_paths(&mut map, "chat-main", false), None);
+        let mut map = windows(&[("main", &["one.md"])]);
+        assert_eq!(remove_window(&mut map, "chat-main", false), None);
         assert_eq!(map.len(), 1);
     }
 }
