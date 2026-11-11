@@ -225,6 +225,9 @@ export const commands = {
 	release_instance: () => __TAURI_INVOKE<void>("release_instance"),
 };
 
+/* Constants */
+export const BACKGROUND_STATUS = "background-status" as const;
+
 /* Types */
 /**
  *  Everything a detached chat window needs to carry on where the window's

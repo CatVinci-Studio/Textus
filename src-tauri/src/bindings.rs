@@ -146,7 +146,8 @@ fn groups() -> Vec<(&'static str, Builder<tauri::Wry>)> {
                 crate::distribution::app_distribution,
                 crate::commands::update::check_for_update::<tauri::Wry>,
                 crate::commands::update::release_instance::<tauri::Wry>,
-            ]),
+            ])
+            .constant("BACKGROUND_STATUS", crate::background::STATUS_EVENT),
         ),
         (
             "auth.ts",
@@ -264,7 +265,8 @@ fn groups() -> Vec<(&'static str, Builder<tauri::Wry>)> {
                 // Commands reading their inputs as one struct can't be generated; their
                 // input types are.
                 .typ::<crate::ai::client::CompletionRequest>()
-                .typ::<crate::ai::client::GrammarRequest>(),
+                .typ::<crate::ai::client::GrammarRequest>()
+                .constant("TEXTUS_AI_OFF", crate::ai::TEXTUS_AI_OFF),
         ),
         (
             "ai-agent.ts",

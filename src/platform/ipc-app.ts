@@ -329,8 +329,8 @@ export const cli = {
 
 // Background mode (desktop only)
 
-/** Rust -> every window: the tray changed. Keep in step with the Rust side. */
-export const BACKGROUND_STATUS = "background-status";
+/** Rust -> every window: the tray changed. */
+export { BACKGROUND_STATUS } from "./bindings/app";
 export interface BackgroundStatus extends Generated.Status {
   /** "unavailable": Linux without libayatana-appindicator; the process
    *  still stays in the background. */

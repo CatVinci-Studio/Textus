@@ -32,6 +32,9 @@ export const commands = {
 	suggest_doc_title: (provider: string, model: string | null, excerpt: string) => __TAURI_INVOKE<string | null>("suggest_doc_title", { provider, model, excerpt }),
 };
 
+/* Constants */
+export const TEXTUS_AI_OFF = "textus-ai-off" as const;
+
 /* Types */
 /**  One search service. The ids are what Settings stores. */
 export type Backend = "deepseek" | "zhipu" | "kimi" | "bocha" | "tavily" | "brave" | "exa" | "searxng";
