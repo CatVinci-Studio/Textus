@@ -1471,5 +1471,8 @@
   };
   // For code that reaches for the API without the wrapper's argument.
   window.textus = textus;
-  window.parent.postMessage({ textus: "ready" }, "*");
+  window.parent.postMessage(
+    { textus: "ready", key: "__TEXTUS_FRAME_KEY__" },
+    "*",
+  );
 })();

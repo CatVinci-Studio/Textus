@@ -13,6 +13,15 @@
 // Plain JavaScript with no imports: it is injected as a string.
 window.__textusBoot = function (boot, themeCss) {
   delete window.__textusBoot;
+  // Only the app's own pages get the settings: the script runs on every
+  // page load in the window, wherever it has been sent.
+  var at = window.location;
+  var own =
+    at.protocol === "tauri:" ||
+    at.hostname === "tauri.localhost" ||
+    at.hostname === "localhost" ||
+    at.hostname === "127.0.0.1";
+  if (!own) return;
   window.__BOOT__ = boot;
   var settings = boot.settings || {};
 

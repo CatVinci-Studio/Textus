@@ -187,7 +187,7 @@ pub fn with_boot<'a, R: tauri::Runtime, M: Manager<R>>(
     label: &str,
 ) -> tauri::WebviewWindowBuilder<'a, R, M> {
     let builder =
-        crate::window_guard::guard(builder.initialization_script(boot_script(app, label)), app);
+        crate::window_guard::guard(builder.initialization_script(boot_script(app, label)));
     #[cfg(target_os = "linux")]
     let builder = match app
         .try_state::<Stores>()

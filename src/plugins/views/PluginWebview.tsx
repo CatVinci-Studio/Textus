@@ -14,6 +14,7 @@ import type { CodeBlockSeen } from "../manager";
 import { windowInfo } from "../store/plugin-records";
 import { watchTheme, webviewThemeCss, windowIsDark } from "./theme-vars";
 import { pageMenuEntries } from "./webview-menu";
+import { openPageLink } from "./page-links";
 import {
   clipboardText,
   textFieldItems,
@@ -123,8 +124,8 @@ export function PluginWebview({
     const frame = sandboxedFrame(page.srcdoc, page.title);
     frame.className = "plugin-webview-frame";
     let endpoint: Parameters<typeof webviewConnected>[1] = null;
-    // The clipboard is the page's only through the window's own menu: a
-    // Cut, Copy or Paste the user just picked there, once.
+    // The clipboard is the page's only through the window's own text menu:
+    // a Cut, Copy or Paste the user just picked there, once.
     let picked: { action: unknown; until: number } | null = null;
     const pickedNow = (...actions: string[]) => {
       const ok =
@@ -135,13 +136,13 @@ export function PluginWebview({
       return ok;
     };
     // A menu the page asks for, at its point in the page: the value picked.
-    const askMenu = (items: unknown, x: unknown, y: unknown) =>
+    const askMenu = (items: unknown, x: unknown, y: unknown, clip = false) =>
       new Promise<unknown>((resolve) => {
         let done = false;
         const finish = (value: unknown) => {
           if (done) return;
           done = true;
-          picked = { action: value, until: Date.now() + PICK_MS };
+          picked = clip ? { action: value, until: Date.now() + PICK_MS } : null;
           setMenu(null);
           resolve(value);
         };
@@ -177,6 +178,7 @@ export function PluginWebview({
             textFieldItems(windowInfo().strings(), selected === true),
             x,
             y,
+            true,
           ),
         textItems: ({ selected }: { selected: unknown }) =>
           textFieldItems(windowInfo().strings(), selected === true),
@@ -186,6 +188,7 @@ export function PluginWebview({
             : false,
         clipboardRead: () => (pickedNow("paste") ? clipboardText() : ""),
         menuClose: () => closeMenuRef.current?.(),
+        openLink: openPageLink,
         // Told on as a right-click on the frame, for the menu around it.
         contextMenu: ({ x, y }: { x: unknown; y: unknown }) => {
           const at = frame.getBoundingClientRect();

@@ -478,9 +478,23 @@
     window.addEventListener("DOMContentLoaded", watchSize);
   else watchSize();
 
+  // A link never takes the page away: a web link opens in the browser.
+  document.addEventListener("click", function (event) {
+    var link =
+      event.target instanceof Element && event.target.closest("a[href]");
+    if (!link || event.defaultPrevented) return;
+    var href = link.getAttribute("href") || "";
+    if (href.charAt(0) === "#") return;
+    event.preventDefault();
+    call("openLink", { url: link.href });
+  });
+
   window.textus = api;
   window.acquireTextusApi = function () {
     return api;
   };
-  window.parent.postMessage({ textus: "ready" }, "*");
+  window.parent.postMessage(
+    { textus: "ready", key: "__TEXTUS_FRAME_KEY__" },
+    "*",
+  );
 })();

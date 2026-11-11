@@ -127,12 +127,21 @@ export function webviewDocument(
   );
 }
 
+/** Stands in the runtimes' `ready` for the key of the frame they run in. */
+const FRAME_KEY = "__TEXTUS_FRAME_KEY__";
+/** Each frame's key: what says `ready` comes from the page the app put
+ *  there, not one the frame was sent to since. */
+const frameKeys = new WeakMap<HTMLIFrameElement, string>();
+
 /** A sandboxed frame, not yet in the page. */
 export function sandboxedFrame(
   srcdoc: string,
   title: string,
 ): HTMLIFrameElement {
   const frame = document.createElement("iframe");
+  const key = crypto.randomUUID();
+  frameKeys.set(frame, key);
+  srcdoc = srcdoc.split(FRAME_KEY).join(key);
   frame.setAttribute("sandbox", "allow-scripts");
   frame.setAttribute("title", title);
   // Referrers name the app's page; a plugin's frame of a web page
@@ -156,8 +165,8 @@ export function connectFrame(
   let endpoint: Endpoint | null = null;
   const receive = (event: MessageEvent) => {
     if (event.source !== frame.contentWindow) return;
-    const data = event.data as { textus?: string } | null;
-    if (data?.textus !== "ready") return;
+    const data = event.data as { textus?: string; key?: string } | null;
+    if (data?.textus !== "ready" || data.key !== frameKeys.get(frame)) return;
     endpoint?.close();
     const channel = new MessageChannel();
     endpoint = createEndpoint(channel.port1, handlers, timeoutMs);

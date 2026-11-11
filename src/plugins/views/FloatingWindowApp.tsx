@@ -1,3 +1,4 @@
+import { openPageLink } from "./page-links";
 import { useEffect, useRef, useState } from "react";
 import { connectFrame, sandboxedFrame } from "../host/frames";
 import type { Endpoint } from "../host/rpc";
@@ -87,6 +88,7 @@ export function FloatingWindowApp() {
               menu: () => null,
               menuClose: () => {},
               height: () => {},
+              openLink: openPageLink,
             },
             () => payload.init,
             (connected) => {

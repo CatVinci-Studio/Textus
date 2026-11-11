@@ -12,6 +12,7 @@ import { watchMemoryIdle } from "./utils/memory-idle";
 import { publishWindowChrome } from "./platform/window-chrome";
 import { WindowEdges } from "./app/frame/WindowEdges";
 import { installWebviewGuards } from "./engine/controls/webview-guards";
+import { installLinkGuard } from "./app/link-guard";
 import { installTextFieldMenu } from "./engine/controls/text-field-menu";
 import { installScrollReveal } from "./engine/controls/scroll-reveal";
 import { restoreFolderAccess } from "./platform/ios-files";
@@ -26,6 +27,7 @@ import { AppErrorBoundary } from "./app/report/AppErrorBoundary";
 installPolyfills();
 installDevTauriShim();
 installWebviewGuards();
+installLinkGuard();
 installTextFieldMenu();
 installScrollReveal();
 // Held-back storage writes go out when iOS sends the app to the background.

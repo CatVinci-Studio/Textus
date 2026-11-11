@@ -1,8 +1,10 @@
 //! What a window showing the app may load: its own pages and the plugins'
 //! and pictures it serves, and HTTPS (the webviews ask this of every frame,
 //! a plugin page's embeds too, and can't say which one is asking). Anything
-//! else - plain HTTP elsewhere, file:, other schemes - goes to the browser
-//! or nowhere; a page without the app's origin gets no IPC either way.
+//! else - plain HTTP elsewhere, file:, other schemes - goes nowhere: the
+//! links a user clicks open in the browser from the page's own handlers, so
+//! what arrives here unasked (a frame sending itself away) isn't opened for
+//! it. A page without the app's origin gets no IPC either way.
 
 use tauri::{AppHandle, Url};
 
@@ -34,16 +36,8 @@ pub(crate) fn open_outside(app: &AppHandle, url: &Url) {
 
 pub(crate) fn guard<'a, R: tauri::Runtime, M: tauri::Manager<R>>(
     builder: tauri::WebviewWindowBuilder<'a, R, M>,
-    app: &AppHandle,
 ) -> tauri::WebviewWindowBuilder<'a, R, M> {
-    let app = app.clone();
-    builder.on_navigation(move |url| {
-        if may_load(url, tauri::is_dev()) {
-            return true;
-        }
-        open_outside(&app, url);
-        false
-    })
+    builder.on_navigation(|url| may_load(url, tauri::is_dev()))
 }
 
 #[cfg(test)]
