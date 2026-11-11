@@ -80,7 +80,10 @@ export function hasUrlScheme(src: string): boolean {
 /** `path` with "/" between its parts, as links and the folder index keep it. */
 export const slashed = (path: string): string => path.replace(/\\/g, "/");
 
-const NOTE_FILE = /\.(md|markdown)$/i;
+/** A Markdown document's extensions: what Textus opens and plugins read as
+ *  one. The backend's list (extract::MARKDOWN_EXTENSIONS) is the same. */
+export const MARKDOWN_EXTENSIONS = ["md", "markdown"] as const;
+const NOTE_FILE = new RegExp(`\\.(${MARKDOWN_EXTENSIONS.join("|")})$`, "i");
 
 /** A note: a Markdown file, which a wikilink names without its extension. */
 export const isNoteFile = (path: string): boolean => NOTE_FILE.test(path);

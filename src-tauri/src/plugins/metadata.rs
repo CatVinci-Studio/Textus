@@ -11,8 +11,7 @@ use std::collections::{HashMap, HashSet};
 use std::path::Path;
 use std::sync::{Arc, Mutex, OnceLock};
 
-/// A document larger than this is left out of the index: no note is.
-const MAX_DOCUMENT_BYTES: u64 = 4 * 1024 * 1024;
+use super::workspace::MAX_DOCUMENT_BYTES;
 
 #[derive(Serialize, Clone, Debug, PartialEq)]
 #[cfg_attr(test, derive(specta::Type))]
@@ -298,16 +297,9 @@ fn modified_of(meta: &std::fs::Metadata) -> Option<u128> {
         .map(|d| d.as_millis())
 }
 
-fn is_markdown(path: &Path) -> bool {
-    matches!(
-        crate::extract::extension_of(path).as_str(),
-        "md" | "markdown"
-    )
-}
-
 /// Brings `root`'s index up to date: the paths added, changed or gone.
 fn refresh(index: &MetadataIndex, root: &Path) -> Vec<String> {
-    let walk = crate::walk::walk(root, &crate::walk::LIMITS, is_markdown);
+    let walk = crate::walk::walk(root, &crate::walk::LIMITS, crate::extract::is_markdown);
     let key = root.to_string_lossy().to_string();
     let mut all = index.0.lock().unwrap_or_else(|e| e.into_inner());
     let known = all.entry(key).or_default();

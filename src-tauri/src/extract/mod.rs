@@ -48,6 +48,15 @@ pub(crate) fn image_mime(ext: &str) -> Option<&'static str> {
     }
 }
 
+/// A Markdown document's extensions: what Textus opens and plugins read as
+/// one. The front end's list (utils/path.ts) is the same.
+pub(crate) const MARKDOWN_EXTENSIONS: [&str; 2] = ["md", "markdown"];
+
+/// Whether `path` is a Markdown document, by its extension.
+pub(crate) fn is_markdown(path: &Path) -> bool {
+    MARKDOWN_EXTENSIONS.contains(&extension_of(path).as_str())
+}
+
 /// The lowercase extension of `path` ("" without one).
 pub(crate) fn extension_of(path: &Path) -> String {
     path.extension()

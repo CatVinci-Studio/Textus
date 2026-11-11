@@ -9,20 +9,13 @@ use std::path::Path;
 use std::time::{Duration, Instant};
 
 /// A document larger than this is left out: no notes file is.
-const MAX_DOCUMENT_BYTES: u64 = 4 * 1024 * 1024;
+pub(super) const MAX_DOCUMENT_BYTES: u64 = 4 * 1024 * 1024;
 /// The most text `plugin_fs_documents` hands over at once.
 const MAX_TOTAL_BYTES: u64 = 64 * 1024 * 1024;
 /// The most matching lines a search returns, whatever it asks.
 pub(crate) const MAX_SEARCH_HITS: usize = 1000;
 /// How long a search reads before it stops.
 pub(crate) const SEARCH_TIME: Duration = Duration::from_secs(5);
-
-fn is_markdown(path: &Path) -> bool {
-    matches!(
-        crate::extract::extension_of(path).as_str(),
-        "md" | "markdown"
-    )
-}
 
 fn checked_root(app: &tauri::AppHandle, id: &str, root: &str) -> Result<(), String> {
     if !state::read(app).allows(id, "files.read") {
@@ -55,7 +48,7 @@ pub struct WorkspaceDocuments {
 }
 
 pub(crate) fn documents_in(root: &Path) -> WorkspaceDocuments {
-    let walk = crate::walk::walk(root, &crate::walk::LIMITS, is_markdown);
+    let walk = crate::walk::walk(root, &crate::walk::LIMITS, crate::extract::is_markdown);
     let mut truncated = walk.truncated;
     let mut total = 0;
     let mut documents = Vec::new();
@@ -129,7 +122,7 @@ pub(crate) fn search_in(root: &Path, query: &str, limit: usize, deadline: Instan
             truncated: false,
         };
     }
-    let walk = crate::walk::walk(root, &crate::walk::LIMITS, is_markdown);
+    let walk = crate::walk::walk(root, &crate::walk::LIMITS, crate::extract::is_markdown);
     let mut truncated = walk.truncated;
     'files: for file in walk.files {
         if Instant::now() >= deadline {

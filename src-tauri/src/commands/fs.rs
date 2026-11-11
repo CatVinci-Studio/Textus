@@ -64,7 +64,7 @@ fn open_document_filters(
         return Vec::new();
     }
     vec![
-        ("Markdown".to_string(), &["md", "markdown"]),
+        ("Markdown".to_string(), &crate::extract::MARKDOWN_EXTENSIONS),
         (text.to_string(), &["txt", "text"]),
         (word.to_string(), &["docx"]),
         // rfd writes it out as the any-file pattern each dialog takes.

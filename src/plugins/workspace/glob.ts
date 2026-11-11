@@ -1,3 +1,4 @@
+import { isNoteFile } from "../../utils/path";
 /**
  * A glob over `/`-separated paths in the folder: `*` within one name, `**`
  * across folders, `?` one character, `{a,b}` either. Case is ignored.
@@ -32,7 +33,5 @@ export function globToRegExp(glob: string): RegExp {
   return new RegExp(`^${out}$`, "i");
 }
 
-/** Whether a document: Markdown by its name. */
-export function isDocumentPath(path: string): boolean {
-  return /\.(md|markdown|mdown|mkd)$/i.test(path);
-}
+/** Whether a document: Markdown by its name, as the backend reads one. */
+export const isDocumentPath = isNoteFile;
