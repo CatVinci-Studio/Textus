@@ -284,10 +284,17 @@ function PluginRow({
         <span className="plugins-panel-text">
           <span className="plugins-panel-name">{name}</span>
           {line && <span className="plugins-panel-line">{line}</span>}
-          {by && <span className="plugins-panel-by">{by}</span>}
         </span>
       </button>
-      {end && <span className="plugins-panel-end">{end}</span>}
+      {/* Its author and its button on a line of their own, under the text:
+          the name and what it does keep the row's width, a long label
+          (Installieren) cutting neither. */}
+      {(by || end) && (
+        <div className="plugins-panel-foot">
+          <span className="plugins-panel-by">{by}</span>
+          {end && <span className="plugins-panel-end">{end}</span>}
+        </div>
+      )}
     </div>
   );
 }
