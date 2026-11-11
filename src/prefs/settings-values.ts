@@ -1,3 +1,5 @@
+import SEARCH_SERVICE_LIST from "./search-services.json";
+import type { Backend } from "../platform/bindings/ai";
 import TABLES from "./appearance-tables.json";
 import type { AgentMode_Serialize as AgentMode } from "../platform/bindings/ai-skills";
 /** Each setting's possible values: the modes, sizes, services and kinds a
@@ -117,28 +119,12 @@ export const COMPLETION_TONES: CompletionTone[] = [
 ];
 
 /// What Textus's own web_search uses when the chat model can't search.
-/// "auto" takes the first of the DeepSeek, Zhipu and Kimi keys saved.
-export type SearchService =
-  | "auto"
-  | "deepseek"
-  | "zhipu"
-  | "kimi"
-  | "bocha"
-  | "tavily"
-  | "brave"
-  | "exa"
-  | "searxng";
+/// "auto" takes the first saved key of those search-services.json marks.
+export type SearchService = "auto" | Backend;
 
 export const SEARCH_SERVICES: SearchService[] = [
   "auto",
-  "deepseek",
-  "zhipu",
-  "kimi",
-  "bocha",
-  "tavily",
-  "brave",
-  "exa",
-  "searxng",
+  ...SEARCH_SERVICE_LIST.map((service) => service.id as Backend),
 ];
 
 export type GrammarStrictness = "typos" | "standard" | "strict";

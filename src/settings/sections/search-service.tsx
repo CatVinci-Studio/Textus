@@ -1,3 +1,4 @@
+import SERVICE_LIST from "../../prefs/search-services.json";
 import { useEffect, useState } from "react";
 import { explainError } from "../../utils/error-explain";
 import {
@@ -17,40 +18,24 @@ import { SecretInput, SettingRow, VERBATIM_INPUT } from "./controls";
 /** Settings › Textus AI › Web search: the service Textus searches with when
  *  the model has none of its own, and its key. */
 
-/** Where each search service's key is kept: the AI provider's own key for
- *  the three that share it. Keep in step with the backend's `key_id`. */
-const SEARCH_KEY_IDS: Partial<Record<SearchService, string>> = {
-  deepseek: "deepseek",
-  zhipu: "zhipu",
-  kimi: "moonshot",
-  bocha: "search-bocha",
-  tavily: "search-tavily",
-  brave: "search-brave",
-  exa: "search-exa",
-};
-
 /** A search service's name as the UI shows it - brand names, but for the
  *  ones with a name of their own in Chinese, and Automatic. */
-const SEARCH_SERVICE_NAMES: Record<
-  string,
-  { brand: string } | { key: TextKey }
-> = {
-  auto: { key: "searchServiceAuto" },
-  zhipu: { key: "searchServiceZhipu" },
-  bocha: { key: "searchServiceBocha" },
-  deepseek: { brand: "DeepSeek" },
-  kimi: { brand: "Kimi" },
-  tavily: { brand: "Tavily" },
-  brave: { brand: "Brave Search" },
-  exa: { brand: "Exa" },
-  searxng: { brand: "SearXNG" },
-};
-
 function searchServiceName(t: Strings, id: string): string {
-  const name = SEARCH_SERVICE_NAMES[id];
-  if (!name) return id;
-  return "key" in name ? t[name.key] : name.brand;
+  if (id === "auto") return t.searchServiceAuto;
+  const entry = entryOf(id);
+  if (!entry) return id;
+  return entry.nameKey ? t[entry.nameKey as TextKey] : entry.name;
 }
+
+const entryOf = (id: string) =>
+  (
+    SERVICE_LIST as {
+      id: string;
+      name: string;
+      nameKey?: string;
+      key?: string;
+    }[]
+  ).find((entry) => entry.id === id);
 
 /** Settings › Textus AI › Search service: what web_search uses when the chat
  *  model can't search itself. Shown only when that matters, or when a service
@@ -68,7 +53,7 @@ export function SearchServiceSection({ t }: { t: Strings }) {
           searchServiceName(t, status.service),
         )
       : t.searchServiceNone;
-  const keyId = SEARCH_KEY_IDS[chosen];
+  const keyId = entryOf(chosen)?.key;
   return (
     <>
       <SettingRow label={t.searchServiceLabel} hint={hint}>

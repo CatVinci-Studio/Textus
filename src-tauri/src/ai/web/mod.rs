@@ -71,9 +71,7 @@ pub(crate) fn resolve_service(
             .filter(|u| u.starts_with("http://") || u.starts_with("https://"))
             .map(|u| Service::new(Backend::Searxng, u.to_string())),
         Some(backend) => key(backend).map(|k| Service::new(backend, k)),
-        None => [Backend::Deepseek, Backend::Zhipu, Backend::Kimi]
-            .into_iter()
-            .find_map(|b| key(b).map(|k| Service::new(b, k))),
+        None => Backend::automatic().find_map(|b| key(b).map(|k| Service::new(b, k))),
     }
 }
 

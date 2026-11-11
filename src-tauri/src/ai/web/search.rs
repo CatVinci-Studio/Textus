@@ -31,48 +31,53 @@ impl Backend {
         serde_json::from_value(Value::String(id.to_string())).ok()
     }
 
+    fn entry(self) -> &'static ServiceEntry {
+        let id = serde_json::to_value(self).ok();
+        SERVICES
+            .iter()
+            .find(|entry| id.as_ref().and_then(Value::as_str) == Some(entry.id.as_str()))
+            .expect("search-services.json lists every backend")
+    }
+
     /// The name the model and the error messages use.
     pub(crate) fn label(self) -> &'static str {
-        match self {
-            Backend::Deepseek => "DeepSeek",
-            Backend::Zhipu => "Zhipu",
-            Backend::Kimi => "Kimi",
-            Backend::Bocha => "Bocha",
-            Backend::Tavily => "Tavily",
-            Backend::Brave => "Brave Search",
-            Backend::Exa => "Exa",
-            Backend::Searxng => "SearXNG",
-        }
+        &self.entry().name
     }
 
     /// Where its key is kept: the AI provider's own for the three that share it,
     /// `search-<id>` for the rest. SearXNG takes an address instead.
     pub(crate) fn key_id(self) -> Option<&'static str> {
-        Some(match self {
-            Backend::Deepseek => "deepseek",
-            Backend::Zhipu => "zhipu",
-            Backend::Kimi => "moonshot",
-            Backend::Bocha => "search-bocha",
-            Backend::Tavily => "search-tavily",
-            Backend::Brave => "search-brave",
-            Backend::Exa => "search-exa",
-            Backend::Searxng => return None,
-        })
+        self.entry().key.as_deref()
     }
 
     fn endpoint(self) -> &'static str {
-        match self {
-            Backend::Deepseek => "https://api.deepseek.com/v1/tools/search",
-            Backend::Zhipu => "https://open.bigmodel.cn/api/paas/v4/web_search",
-            Backend::Kimi => "https://api.moonshot.cn/v1/tools/search",
-            Backend::Bocha => "https://api.bochaai.com/v1/web-search",
-            Backend::Tavily => "https://api.tavily.com/search",
-            Backend::Brave => "https://api.search.brave.com/res/v1/web/search",
-            Backend::Exa => "https://api.exa.ai/search",
-            Backend::Searxng => "",
-        }
+        self.entry().endpoint.as_deref().unwrap_or_default()
+    }
+
+    /// Those "auto" tries, in order: the AI providers' own search.
+    pub(crate) fn automatic() -> impl Iterator<Item = Backend> {
+        SERVICES
+            .iter()
+            .filter(|entry| entry.auto)
+            .filter_map(|entry| Backend::from_id(&entry.id))
     }
 }
+
+/// One service as src/prefs/search-services.json lists it, which Settings reads too.
+#[derive(Deserialize)]
+struct ServiceEntry {
+    id: String,
+    name: String,
+    key: Option<String>,
+    #[serde(default)]
+    auto: bool,
+    endpoint: Option<String>,
+}
+
+static SERVICES: std::sync::LazyLock<Vec<ServiceEntry>> = std::sync::LazyLock::new(|| {
+    serde_json::from_str(include_str!("../../../../src/prefs/search-services.json"))
+        .expect("search-services.json")
+});
 
 /// One search result.
 #[derive(Clone, Debug, PartialEq)]
