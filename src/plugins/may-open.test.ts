@@ -15,6 +15,14 @@ describe("mayOpen", () => {
     expect(mayOpen("a.b", read, "/notes", "/etc/passwd")).toBe(false);
     expect(mayOpen("a.b", [], "/notes", "/notes/x.md")).toBe(false);
     expect(mayOpen("a.b", read, null, "/notes/x.md")).toBe(false);
+    // Nothing hidden there, but the folder's own .textus.
+    expect(
+      mayOpen("a.b", read, "/notes", "/notes/.obsidian/plugins/x/data.json"),
+    ).toBe(false);
+    expect(mayOpen("a.b", read, "/notes", "/notes/sub/.env")).toBe(false);
+    expect(mayOpen("a.b", read, "/notes", "/notes/.textus/agent.md")).toBe(
+      true,
+    );
     // Writing includes reading.
     expect(mayOpen("a.b", ["files.write"], "/notes", "/notes/x.md")).toBe(true);
   });

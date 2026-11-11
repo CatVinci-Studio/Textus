@@ -62,6 +62,11 @@ fn sealed(was: &Kept, servers: &mut Value) -> Kept {
                     Some("") | None => None,
                     Some(typed) => Some(typed.to_string()),
                 };
+                // A mask with nothing behind it (its name changed): empty, to
+                // be typed again, never the dots sent as the value.
+                if secret.is_none() && value.as_str() == Some(MASK) {
+                    *value = Value::String(String::new());
+                }
                 if let Some(secret) = secret {
                     kept.entry(id.clone())
                         .or_default()
@@ -132,5 +137,10 @@ mod tests {
         let mut again = servers.clone();
         assert_eq!(sealed(&kept, &mut again), kept);
         assert!(sealed(&kept, &mut json!([])).is_empty());
+
+        // Its name changed: the mask has nothing behind it, so it is emptied.
+        let mut renamed = json!([{ "id": "a", "env": { "API_TOKEN": MASK } }]);
+        sealed(&kept, &mut renamed);
+        assert_eq!(renamed[0]["env"]["API_TOKEN"], "");
     }
 }

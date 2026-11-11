@@ -45,6 +45,10 @@ async fn file(app: &tauri::AppHandle, path: &str) -> Result<(Vec<u8>, &'static s
         .decode_utf8()
         .map_err(|e| e.to_string())?;
     let (id, rel) = path.split_once('/').ok_or("No file named.")?;
+    // A folder in development holds its .env and .git too.
+    if super::access::hidden_part(Path::new(rel)) {
+        return Err("Hidden files aren't served.".to_string());
+    }
     let home = plugin_home(app, &state::read(app), id)?;
     let file = inside(&home, Path::new(rel))?;
     let bytes = tokio::fs::read(&file).await.map_err(|e| e.to_string())?;

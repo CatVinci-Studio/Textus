@@ -1,4 +1,5 @@
 import { notesRoot } from "../../files/link-style";
+import { inOpenFolder } from "../may-open";
 import { fs, plugins as pluginsIpc, type StoreScope } from "../../platform/ipc";
 import { basename, isInside, slashed } from "../../utils/path";
 import { FILE_WRITTEN_EVENT } from "../../utils/events";
@@ -62,7 +63,7 @@ export function fileHandlers(p: PluginScope) {
   const writeVersion = async (path: string, text: string, token: string) => {
     const root = write();
     if (token.startsWith(TAB_TOKEN)) {
-      const doc = getWindowAccess()?.documentAt(path);
+      const doc = openDocument(root, path);
       return !!doc && doc.replaceText(text, token.slice(TAB_TOKEN.length));
     }
     const ok = await pluginsIpc.fsWriteIf(p.id, root, path, text, token);
@@ -71,7 +72,7 @@ export function fileHandlers(p: PluginScope) {
   };
   const readVersion = async (path: string) => {
     const root = p.root();
-    const doc = getWindowAccess()?.documentAt(path);
+    const doc = openDocument(root, path);
     if (doc)
       return { text: doc.text(), token: `${TAB_TOKEN}${doc.revision()}` };
     return pluginsIpc.fsReadVersioned(p.id, root, path);
@@ -230,7 +231,7 @@ export function fileHandlers(p: PluginScope) {
       pluginsIpc.fsMkdir(p.id, write(), str(path, "path")),
     "files.frontmatterGet": async ({ path }: Params) => {
       const target = str(path, "path");
-      const doc = getWindowAccess()?.documentAt(target);
+      const doc = openDocument(p.root(), target);
       const text = doc
         ? doc.text()
         : new TextDecoder().decode(
@@ -340,6 +341,20 @@ function relOf(root: string, path: string): string {
   const r = slashed(root).replace(/\/$/, "");
   const full = slashed(path);
   return full.startsWith(`${r}/`) ? full.slice(r.length + 1) : basename(full);
+}
+
+/** The tab open on `path` (as given or under `root`), when it is one a
+ *  plugin may reach as it may the file: in the open folder, and in nothing
+ *  hidden there but the folder's own .textus - the backend's rule
+ *  (access.rs in_folder). Else null, and the call goes to the backend,
+ *  which says no where it should. */
+export function openDocument(root: string, path: string) {
+  const full = /^([\\/]|[A-Za-z]:)/.test(path)
+    ? path
+    : `${root.replace(/[\\/]+$/, "")}/${path}`;
+  return inOpenFolder(root, full)
+    ? (getWindowAccess()?.documentAt(full) ?? null)
+    : null;
 }
 
 /** `path` as a full path, as given or under `root`; refused when it isn't

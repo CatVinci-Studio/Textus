@@ -1,5 +1,5 @@
 import { grants } from "./api-permissions";
-import { isInside } from "../utils/path";
+import { isInside, slashed } from "../utils/path";
 import { webviewsOf } from "./views/webviews";
 
 /** Whether plugin `id`, holding `granted`, may open `path`: a file its own
@@ -15,6 +15,20 @@ export function mayOpen(
   return (
     grants(granted, "files.read") &&
     !!root &&
-    (path === root || isInside(path, root))
+    (path === root || inOpenFolder(root, path))
   );
+}
+
+/** Whether `path` is one of the open folder's own files a plugin may reach:
+ *  under `root`, and in nothing hidden there but the folder's .textus -
+ *  the backend's rule (access.rs in_folder), for what the window hands out
+ *  itself (an open tab, a file opened in a plugin's editor). */
+export function inOpenFolder(root: string, path: string): boolean {
+  if (!isInside(path, root)) return false;
+  const rel = slashed(path).slice(slashed(root).replace(/\/$/, "").length + 1);
+  return !rel
+    .split("/")
+    .some(
+      (part, i) => part.startsWith(".") && !(i === 0 && part === ".textus"),
+    );
 }

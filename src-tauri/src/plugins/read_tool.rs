@@ -141,6 +141,10 @@ fn walk(root: &Path, dir: &Path, out: &mut Vec<String>) {
 /// A file's text, when `rel` is a text file inside `dir`.
 fn read_file(dir: &Path, rel: &str) -> Result<String, String> {
     let rel = rel.split(" (").next().unwrap_or(rel);
+    // As the listing (walk) leaves them out: a .env is no file of the plugin.
+    if crate::plugins::access::hidden_part(Path::new(rel)) {
+        return Err(format!("`{rel}` isn't a file of this plugin."));
+    }
     let target: PathBuf = dir.join(rel);
     let inside = match (dir.canonicalize(), target.canonicalize()) {
         (Ok(root), Ok(file)) => file.starts_with(root) && file.is_file(),
@@ -198,6 +202,10 @@ mod tests {
             answer(&all, r#"{"id":"catvinci.tasks","path":"../mine/host.js"}"#)
                 .contains("isn't a file of this plugin")
         );
+        // Hidden, as the listing leaves it out.
+        std::fs::write(tmp.path().join("tasks/.env"), "TOKEN=1").unwrap();
+        assert!(answer(&all, r#"{"id":"catvinci.tasks","path":".env"}"#)
+            .contains("isn't a file of this plugin"));
         assert!(answer(&all, r#"{"id":"x.y"}"#).starts_with("No plugin `x.y`"));
     }
 }

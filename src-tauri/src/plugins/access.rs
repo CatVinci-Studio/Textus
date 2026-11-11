@@ -55,6 +55,15 @@ pub(crate) fn in_folder(root: &Path, path: &Path) -> Result<PathBuf, String> {
     Ok(resolved)
 }
 
+/// Whether `rel` passes through anything hidden (`.env`, `.git/config`) or
+/// node_modules: what a plugin's own folder serves and lists leaves out.
+pub(crate) fn hidden_part(rel: &Path) -> bool {
+    rel.components().any(|c| {
+        matches!(c, Component::Normal(n)
+            if n.to_string_lossy().starts_with('.') || n == "node_modules")
+    })
+}
+
 /// `path` resolved inside `root`: no `..`, and still under `root` after
 /// following links in the part that exists; the rest is kept as named.
 pub(crate) fn inside(root: &Path, path: &Path) -> Result<PathBuf, String> {
