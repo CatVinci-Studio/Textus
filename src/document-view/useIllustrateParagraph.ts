@@ -8,7 +8,7 @@ import {
   serializeRange,
 } from "../editor/markdown/doc-markdown";
 import { selectedTextBlock } from "../ai/chat/user-message";
-import { proposalsFromTurns } from "../ai/chat/ChatBody";
+import { proposalsFromTurns } from "../ai/chat/chat-body-types";
 import type { useAgentPanel } from "../ai/chat/panel/agent-panel";
 import type { Strings } from "../i18n/strings";
 

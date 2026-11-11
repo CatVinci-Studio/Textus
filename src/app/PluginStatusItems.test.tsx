@@ -9,7 +9,7 @@ import {
 } from "../plugins/contributions/status-items";
 
 vi.mock("../registry/commands", () => ({ runCommand: vi.fn() }));
-vi.mock("../plugins/manager", () => {
+vi.mock("../plugins/store/plugin-records", () => {
   const snapshot = {
     loaded: true,
     allOn: true,

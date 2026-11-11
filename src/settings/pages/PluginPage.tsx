@@ -12,7 +12,7 @@ import {
   pluginName,
   pluginText,
   type PluginRecord,
-} from "../../plugins/manager";
+} from "../../plugins/store/plugin-records";
 import {
   reloadPlugin,
   revokePermission,

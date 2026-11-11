@@ -2,7 +2,8 @@
 import { readdirSync, readFileSync } from "node:fs";
 import { join } from "node:path";
 import { describe, expect, it, vi } from "vitest";
-import { hashString, roundTripFile } from "./save-roundtrip";
+import { roundTripFile } from "./save-roundtrip";
+import { fnv1a as hashString } from "../utils/hash";
 
 // The save round trip on this repository's own docs: real Markdown, some long
 // enough to take seconds on a CI runner.

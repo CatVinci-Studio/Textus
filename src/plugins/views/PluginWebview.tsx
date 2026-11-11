@@ -3,11 +3,10 @@ import { connectFrame, sandboxedFrame, webviewDocument } from "../host/frames";
 import {
   codeBlockChanged,
   disposeWebview,
-  pluginName,
-  pluginRecord,
   resolveWebview,
   webviewMessage,
 } from "../manager";
+import { pluginName, pluginRecord } from "../store/plugin-records";
 import { grantedHosts } from "../store/permissions";
 import { trackCodeBlock, untrackCodeBlock } from "../contributions/code-blocks";
 import type { CodeBlockSeen } from "../manager";

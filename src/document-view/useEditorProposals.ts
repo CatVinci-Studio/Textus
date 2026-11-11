@@ -11,13 +11,13 @@ import type { DocumentPort } from "../ai/chat/conversation/document-port";
 import {
   usePendingEdits,
   type CitationStyle,
-  type DecidedChange,
-  type SelectionTarget,
 } from "../ai/revision/usePendingEdits";
 import {
-  pendingEditKey,
-  stoppedRewrite,
-} from "../ai/revision/pending-edit-plugin";
+  type DecidedChange,
+  type SelectionTarget,
+} from "../ai/revision/pending-place";
+import { pendingEditKey } from "../ai/revision/pending-types";
+import { stoppedRewrite } from "../ai/revision/pending-animation";
 import { ProposalStream } from "../ai/revision/proposal-stream";
 import {
   drawn,
@@ -31,7 +31,7 @@ import type { EditProposal } from "../ai/types";
 import type { GeneratedImageData, StreamEvent } from "../platform/ipc";
 import type { Settings } from "../prefs/SettingsContext";
 import { prefersReducedMotion } from "../engine/motion/motion";
-import { storeImage } from "../editor/images/image-plugin";
+import { storeImage } from "../editor/images/image-store";
 import { showMessage } from "../engine/controls/app-dialog";
 import {
   cachedDocument,

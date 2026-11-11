@@ -5,7 +5,7 @@ import { installsText } from "./installs-text";
 import { SettingsGroup } from "./SettingsGroup";
 import { SettingRow } from "../sections/controls";
 import type { Strings } from "../../i18n/strings";
-import { pluginName, pluginText } from "../../plugins/manager";
+import { pluginName, pluginText } from "../../plugins/store/plugin-records";
 import { permissionLabel } from "../../plugins/store/permissions";
 import type { CatalogItem } from "../../plugins/store/catalog";
 

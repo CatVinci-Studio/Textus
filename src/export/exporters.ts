@@ -35,6 +35,7 @@ import {
   linkRenderer,
   nextFrame,
 } from "./standalone-html";
+// eslint-disable-next-line no-restricted-syntax -- a lazy chunk's entry passes these on
 export {
   type ExportImages,
   cloneEditorContent,

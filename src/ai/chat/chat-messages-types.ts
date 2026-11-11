@@ -8,7 +8,7 @@ import type { StreamingState } from "./stream-step";
 import type { Thought } from "./thought";
 import { type ThoughtRowLabels } from "./ThoughtRow";
 import type { AiErrorKind } from "../error-messages";
-import type { PendingSentence } from "../revision/pending-edit-plugin";
+import { type PendingSentence } from "../revision/pending-types";
 import { type MemoryChipLabels } from "./MemoryChip";
 
 /** What ChatMessages is given: its words and its props. */

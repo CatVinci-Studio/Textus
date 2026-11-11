@@ -7,7 +7,7 @@ import {
 } from "react";
 import { useSettings } from "../prefs/SettingsContext";
 import { aiFeatures } from "../prefs/ai-features";
-import type { TableAction } from "../editor/editor-menu";
+import { type TableAction } from "../editor/editor-menu-tables";
 import {
   BulletListIcon,
   MoreIcon,

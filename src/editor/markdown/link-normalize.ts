@@ -11,7 +11,7 @@ import {
 } from "@milkdown/kit/prose/state";
 import { $prose } from "@milkdown/kit/utils";
 import { changedRanges } from "../changed-ranges";
-import { cursorTouches } from "../marks/enclosure";
+import { cursorTouches } from "../marks/enclosure-runs";
 import { definedLabels, definitionsIn } from "./link-reveal";
 import { LINK } from "./link-source";
 import {

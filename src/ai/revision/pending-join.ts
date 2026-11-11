@@ -5,7 +5,7 @@ import {
   documentMarkdown,
   serializeBlocks,
 } from "../../editor/markdown/doc-markdown";
-import { pendingEditKey } from "./pending-edit-plugin";
+import { pendingEditKey } from "./pending-types";
 import { recordStatuses } from "./proposal-lifecycle";
 import { joinedText } from "./generated-images";
 import type { EditProposal } from "../types";

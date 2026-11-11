@@ -1,10 +1,6 @@
 import { useSyncExternalStore } from "react";
-import {
-  splitLayout,
-  splitPreview,
-  subscribeSplit,
-  type SplitLayout,
-} from "./store";
+import { splitLayout, splitPreview, subscribeSplit } from "./store";
+import { type SplitLayout } from "./ops";
 import { panesOf } from "./tree";
 
 /** The window's split as the model holds it (store.ts settles it with the

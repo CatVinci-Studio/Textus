@@ -18,7 +18,7 @@ import {
   showSettingsList,
   type SettingsPageRequest,
 } from "../settings/settings-nav";
-import { pluginName, pluginRecord } from "../plugins/manager";
+import { pluginName, pluginRecord } from "../plugins/store/plugin-records";
 import { showPage, type PageRequest } from "./tabs/page-tabs";
 import { namePageTabs } from "../document/doc-tabs";
 import { settingsPage } from "../settings/settings-pages";

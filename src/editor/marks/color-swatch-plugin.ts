@@ -16,7 +16,7 @@ import {
   COLOR_SWATCH_CLASS,
   COLOR_SWATCH_TEXT_CLASS,
 } from "./color-swatch-classes";
-import { COMPOSE_RELOCATE_DELAY_MS } from "./enclosure";
+import { COMPOSE_RELOCATE_DELAY_MS } from "./enclosure-caret";
 
 interface SwatchState {
   mode: ColorSwatchMode;

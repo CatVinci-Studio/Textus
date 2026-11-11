@@ -1,9 +1,6 @@
 import { describe, expect, it, vi } from "vitest";
-import {
-  imageStemForMode,
-  resolveImageSrc,
-  safeImageStem,
-} from "./image-plugin";
+import { resolveImageSrc } from "./image-plugin";
+import { imageStemForMode, safeImageStem } from "./image-store";
 
 // Tauri's own convertFileSrc percent-encodes the whole path the same way.
 vi.mock("@tauri-apps/api/core", async (importOriginal) => ({

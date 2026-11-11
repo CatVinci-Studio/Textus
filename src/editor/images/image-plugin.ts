@@ -54,13 +54,6 @@ import {
   swapStoredBlobs,
 } from "./image-store";
 import { openDiagramViewer, zoomButton } from "../diagram-zoom";
-export {
-  safeImageStem,
-  imageStemForMode,
-  storeImage,
-  copyToImageFolder,
-  pickImageFile,
-} from "./image-store";
 /**
  * Image paste (stored in the document's image folder, relative src) and
  * render (local srcs rewritten to asset: URLs; the document keeps the original).

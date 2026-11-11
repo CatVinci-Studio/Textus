@@ -1,6 +1,7 @@
 // @vitest-environment jsdom
 import { describe, expect, it, vi } from "vitest";
-import { hashString, roundTripFile } from "./save-roundtrip";
+import { roundTripFile } from "./save-roundtrip";
+import { fnv1a as hashString } from "../utils/hash";
 import { snippetDocuments } from "./save-roundtrip-snippets";
 
 // The save round trip on a fixed CI set: snippets of every construct and

@@ -6,7 +6,8 @@ import type { Strings } from "../../i18n/strings";
 import { Presence } from "../motion/usePresence";
 import { chromeScale } from "../tokens/chrome-scale";
 import { panelWidth, setPanelWidth } from "../frame/panel-width";
-import { arrangeBranch, closeSplit, type SplitLayout } from "./store";
+import { arrangeBranch, closeSplit } from "./store";
+import { type SplitLayout } from "./ops";
 import { nodeAt, type Divider } from "./tree";
 
 /** How far one arrow key press moves the divider: a share of the two

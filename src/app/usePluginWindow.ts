@@ -21,15 +21,13 @@ import {
   type PluginTabView,
 } from "../plugins/app-bridge";
 import type { Where } from "../plugins/app-bridge";
+import { askPlugin, loadPlugins, runPluginAiTool } from "../plugins/manager";
 import {
-  askPlugin,
   configurePlugins,
-  loadPlugins,
   pluginsSnapshot,
-  runPluginAiTool,
   subscribePlugins,
   type PluginsSnapshot,
-} from "../plugins/manager";
+} from "../plugins/store/plugin-records";
 import { setPluginProject } from "../plugins/plugin-setting-values";
 import { watchTheme, windowIsDark } from "../plugins/views/theme-vars";
 import { usePluginMenuSync } from "../plugins/contributions/usePluginMenu";

@@ -13,8 +13,6 @@ import {
   text,
 } from "./manifest-parse";
 
-export { ManifestError } from "./manifest-parse";
-
 /** The permissions without a host, and the platforms: one list with the
  *  backend's (plugins/manifest.rs reads permissions.json too). */
 const PLAIN_PERMISSIONS = PERMISSIONS.plain as readonly PlainPermission[];

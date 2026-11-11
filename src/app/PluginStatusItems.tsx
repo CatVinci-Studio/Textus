@@ -16,7 +16,7 @@ import {
   pluginName,
   pluginsSnapshot,
   subscribePlugins,
-} from "../plugins/manager";
+} from "../plugins/store/plugin-records";
 import { pluginMenuEntries } from "../plugins/store/plugin-lookup";
 
 /**

@@ -26,8 +26,6 @@ interface FloatingDragArgs {
   destroySource: boolean;
 }
 
-export type { WindowBounds } from "./bindings/app";
-
 export const windowIpc = {
   // Rust carries the tab's help guide as a string; it is a HelpDoc id.
   takeDetachedTab: () =>
@@ -330,7 +328,6 @@ export const cli = {
 // Background mode (desktop only)
 
 /** Rust -> every window: the tray changed. */
-export { BACKGROUND_STATUS } from "./bindings/app";
 export interface BackgroundStatus extends Generated.Status {
   /** "unavailable": Linux without libayatana-appindicator; the process
    *  still stays in the background. */
@@ -346,8 +343,6 @@ export const background = {
 };
 
 // Default editor (desktop only)
-
-export type { CliStatus, DefaultEditorStatus } from "./bindings/app";
 
 export const defaultEditor = {
   status: () => desktopQueryCommand("default_editor_status", null),

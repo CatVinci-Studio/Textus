@@ -46,16 +46,6 @@ import {
  * code starts on first use, or at startup if it asks.
  */
 
-export {
-  configurePlugins,
-  pluginName,
-  pluginRecord,
-  pluginsSnapshot,
-  pluginText,
-  subscribePlugins,
-  type PluginRecord,
-  type PluginsSnapshot,
-} from "./store/plugin-records";
 import { compareNames } from "../utils/name-order";
 import { pluginPlatform, runsHere } from "./plugin-platform";
 import { hosts, stopHost } from "./running-hosts";

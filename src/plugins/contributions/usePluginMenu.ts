@@ -3,7 +3,7 @@ import { menuIpc } from "../../platform/ipc";
 import { hasNativeMenuBar, isDesktopApp } from "../../platform/capabilities";
 import { runCommand } from "../../registry/commands";
 import type { PluginMenuEntry } from "../../registry/menu/plugin-menu";
-import { pluginsSnapshot, subscribePlugins } from "../manager";
+import { pluginsSnapshot, subscribePlugins } from "../store/plugin-records";
 import { pluginMenuEntries } from "../store/plugin-lookup";
 
 /** What the Plugins menu lists now. */

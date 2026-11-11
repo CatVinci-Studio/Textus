@@ -202,6 +202,30 @@ export default tseslint.config(
     rules: above([]),
   },
   {
+    // One import path per name: only these facades pass on what other
+    // modules export (they stand for their folder).
+    files: ["src/**/*.{ts,tsx}"],
+    ignores: [
+      "**/*.test.*",
+      "src/platform/ipc.ts",
+      "src/platform/bindings/**",
+      "src/prefs/SettingsContext.tsx",
+      "src/editor/extension-points.ts",
+      "src/i18n/strings.ts",
+    ],
+    rules: {
+      "no-restricted-syntax": [
+        "error",
+        {
+          selector:
+            "ExportNamedDeclaration[source.value=/^\\./], ExportAllDeclaration[source.value=/^\\./]",
+          message:
+            "Import the name from the module that declares it; only the folder facades re-export.",
+        },
+      ],
+    },
+  },
+  {
     // The entry files aren't layered, but they still reach Tauri only
     // through src/platform/.
     files: ["src/*.{ts,tsx}"],

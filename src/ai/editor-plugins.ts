@@ -3,10 +3,8 @@ import type { Editor } from "@milkdown/kit/core";
 import { createGhostTextPlugin } from "./writing/ghost-text-plugin";
 import { buildCompletionStyle } from "./writing/completion-style";
 import { createGrammarCheckPlugin } from "./writing/grammar-check-plugin";
-import {
-  createPendingEditPlugin,
-  type PendingPreview,
-} from "./revision/pending-edit-plugin";
+import { createPendingEditPlugin } from "./revision/pending-edit-plugin";
+import { type PendingPreview } from "./revision/pending-types";
 import { chatSelectionPlugin } from "./chat/quick-ask/chat-selection-plugin";
 import { blockReader } from "./revision/block-reader";
 import { createAiFileChangesPlugin } from "./revision/file-changes-plugin";

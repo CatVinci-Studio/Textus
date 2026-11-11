@@ -14,7 +14,6 @@ import type {
 } from "../engine/controls/ContextMenu";
 import { contributedMenuItems } from "./editor-menu-items";
 import { linkMenuItems, menuLinkAt, type MenuLink } from "./editor-menu-links";
-export {} from "./editor-menu-items";
 import { imageLocation, type ImageLocation } from "./images/missing-image";
 import { embedFileAt } from "./images/obsidian-embed-preview";
 import {
@@ -44,14 +43,6 @@ import {
   imageFileItems,
   imageTurnItems,
   imageWidthItems,
-} from "./editor-menu-images";
-export { type TableAction, runTableAction } from "./editor-menu-tables";
-export {
-  selectedImagePos,
-  selectImage,
-  deleteImage,
-  setImageWidth,
-  rotateImage,
 } from "./editor-menu-images";
 // The editor commands behind the right-click, Format and Edit menus, and
 // the right-click menu itself.

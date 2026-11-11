@@ -19,7 +19,7 @@ vi.mock("../../storage/ui-state", () => ({
     state.offered = value;
   },
 }));
-vi.mock("../manager", () => ({
+vi.mock("./plugin-records", () => ({
   pluginRecord: () => (state.installed ? { status: "on" } : undefined),
 }));
 vi.mock("./catalog", () => ({

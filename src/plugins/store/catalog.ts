@@ -11,7 +11,8 @@ import {
 } from "./manifest";
 import { version as APP_VERSION } from "../../../package.json";
 import { currentStrings } from "../../i18n/current";
-import { loadPlugins, pluginName, pluginRecord } from "../manager";
+import { loadPlugins } from "../manager";
+import { pluginName, pluginRecord } from "./plugin-records";
 import { setPluginEnabled } from "../plugin-switches";
 import { runsHere } from "../plugin-platform";
 import { pluginMatches } from "./plugin-records";

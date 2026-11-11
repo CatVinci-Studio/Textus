@@ -15,7 +15,7 @@ import {
   type ChoiceLog,
   type LearnLabels,
 } from "./revision-learning";
-import type { DecidedChange } from "./usePendingEdits";
+import { type DecidedChange } from "./pending-place";
 import "./ReviewBar.css";
 
 interface RevisionLearningLabels extends LearnLabels {

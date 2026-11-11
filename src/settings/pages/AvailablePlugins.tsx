@@ -2,7 +2,7 @@ import { useState, type ReactNode } from "react";
 import { Byline } from "./PluginPage";
 import { PluginIcon } from "./PluginArt";
 import type { Strings } from "../../i18n/strings";
-import { pluginName, pluginText } from "../../plugins/manager";
+import { pluginName, pluginText } from "../../plugins/store/plugin-records";
 import {
   loadCatalog,
   searchCatalog,

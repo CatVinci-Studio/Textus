@@ -2,11 +2,11 @@ import { useEffect, useReducer, useState } from "react";
 import { SettingRow, ToggleRow, VERBATIM_INPUT } from "../sections/controls";
 import { Select } from "../../engine/controls/Select";
 import type { Strings } from "../../i18n/strings";
+import { runPluginCommand } from "../../plugins/manager";
 import {
   pluginText,
-  runPluginCommand,
   type PluginRecord,
-} from "../../plugins/manager";
+} from "../../plugins/store/plugin-records";
 import {
   pluginSetting,
   setPluginSetting,

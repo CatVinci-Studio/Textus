@@ -9,6 +9,7 @@ import {
 import { useLiveConversationId } from "../conversation/useConversation";
 import { ConversationPanel } from "./ConversationPanel";
 
+// eslint-disable-next-line no-restricted-syntax -- a lazy chunk's entry passes these on
 export { stopConversations } from "../conversation/conversation-model";
 
 /**

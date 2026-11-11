@@ -25,9 +25,9 @@ import type {
 } from "./ipc-ai-types";
 export { IpcError } from "./ipc-call";
 export * from "./ipc-plugins";
+export type { InstalledPlugin } from "./bindings/plugins";
 export type { UpdateChannel } from "./update-channel";
 export {
-  type IndexedFile,
   fs,
   session,
   type HistoryKind,
@@ -35,8 +35,8 @@ export {
   drafts,
   ownNotes,
 } from "./ipc-files";
+export { type IndexedFile } from "./bindings/files";
 export {
-  type WindowBounds,
   windowIpc,
   menuIpc,
   clipboardIpc,
@@ -48,15 +48,18 @@ export {
   themes,
   themeGallery,
   cli,
-  BACKGROUND_STATUS,
   type BackgroundStatus,
   background,
-  type CliStatus,
-  type DefaultEditorStatus,
   defaultEditor,
   distribution,
   updater,
 } from "./ipc-app";
+export {
+  type WindowBounds,
+  BACKGROUND_STATUS,
+  type CliStatus,
+  type DefaultEditorStatus,
+} from "./bindings/app";
 export { type CustomEndpointConfig, auth, imageHostAuth } from "./ipc-auth";
 export {
   AI_CANCELLED,

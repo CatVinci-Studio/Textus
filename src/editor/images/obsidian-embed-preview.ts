@@ -22,7 +22,8 @@ import {
   type Reveal,
   type RevealState,
 } from "../reveal-state";
-import { copyToImageFolder, pickImageFile, showDocImage } from "./image-plugin";
+import { showDocImage } from "./image-plugin";
+import { copyToImageFolder, pickImageFile } from "./image-store";
 import {
   MISSING_IMAGE_CLASS,
   isMissingCardAction,

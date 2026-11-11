@@ -11,7 +11,8 @@ const resolveSplit = (
   ]
 ) =>
   resolveWith(args[0], args[1], args[2], args[3], args[4] ?? (() => undefined));
-import { besideLayout, type SplitLayout } from "./store";
+import { besideLayout } from "./store";
+import { type SplitLayout } from "./ops";
 import { pairLayout } from "./ops";
 import { panesOf } from "./tree";
 

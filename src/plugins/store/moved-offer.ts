@@ -1,7 +1,7 @@
 import type { Strings } from "../../i18n/strings";
 import { storage } from "../../platform/ipc";
 import { getUiState, setUiState } from "../../storage/ui-state";
-import { pluginRecord } from "../manager";
+import { pluginRecord } from "./plugin-records";
 import { catalogSnapshot, loadCatalog } from "./catalog";
 import { takeUp } from "./open-offer";
 import { showPluginCard, type CardRequest } from "./plugin-card";

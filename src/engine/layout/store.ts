@@ -27,9 +27,6 @@ import { resolveSplit } from "./resolve";
  * broker and menus reach it; React and the frame read it.
  */
 
-export type { SplitDirection } from "./tree";
-export type { Arrival, SplitLayout, SplitRequest } from "./ops";
-
 /** A tab as the model knows it; the window's records are its own. */
 interface TabRecord {
   id: string;

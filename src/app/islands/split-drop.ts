@@ -4,9 +4,9 @@ import {
   previewSplit,
   setSplitLayout,
   splitLayout,
-  type SplitDirection,
   placeOnArrival,
 } from "../../engine/layout/store";
+import { type SplitDirection } from "../../engine/layout/tree";
 import { pairLayout } from "../../engine/layout/ops";
 import { moveTab, splitOff, type SplitLayout } from "../../engine/layout/ops";
 import { paneById } from "../../engine/layout/tree";

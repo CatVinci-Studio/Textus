@@ -1,5 +1,5 @@
 import { useEffect, useRef, useState, type CSSProperties } from "react";
-import type { DirEntryInfo } from "../platform/fs-types";
+import { type DirEntryInfo } from "../platform/bindings/files";
 import { useSettings } from "../prefs/SettingsContext";
 import { FolderIcon } from "../engine/controls/icons";
 import { fileIconFor } from "../engine/controls/file-icons";

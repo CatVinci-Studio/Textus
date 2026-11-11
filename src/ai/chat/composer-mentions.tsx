@@ -11,7 +11,7 @@ import {
 import type { ChatAttachment } from "../types";
 import { basename } from "../../utils/path";
 import { prepareList, rankList } from "../../utils/list-filter";
-import { MENTION_TRIGGER } from "./skill-picker";
+import { MENTION_TRIGGER } from "./skill-syntax";
 import { useProjectFiles } from "./useComposerState";
 import { FILE_LIMIT } from "./composer-types";
 

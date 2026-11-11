@@ -1,6 +1,6 @@
 import { describe, expect, it } from "vitest";
 import { nextFocusAfterChange, orderForReview } from "./pending-edit-focus";
-import type { PendingPreview } from "./pending-edit-plugin";
+import { type PendingPreview } from "./pending-types";
 
 function preview(callId: string, from: number, streaming?: boolean) {
   return {

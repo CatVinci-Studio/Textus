@@ -28,7 +28,8 @@ import {
 } from "../../engine/controls/icons";
 import { getWindowAccess } from "../app-bridge";
 import { mayOpen } from "../may-open";
-import { askPlugin, pluginRecord } from "../manager";
+import { askPlugin } from "../manager";
+import { pluginRecord } from "../store/plugin-records";
 import {
   listView,
   listViewsVersion,

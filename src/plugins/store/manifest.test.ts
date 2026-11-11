@@ -5,9 +5,9 @@ import {
   isPermission,
   localize,
   matchesFilename,
-  ManifestError,
   parseManifest,
 } from "./manifest";
+import { ManifestError } from "./manifest-parse";
 
 const base = {
   id: "catvinci.example",

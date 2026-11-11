@@ -8,7 +8,7 @@ import {
   loadCatalog,
   type CatalogItem,
 } from "./catalog";
-import { pluginRecord, pluginsSnapshot } from "../manager";
+import { pluginRecord, pluginsSnapshot } from "./plugin-records";
 import { setPluginEnabled } from "../plugin-switches";
 import { matchesFilename, type SuggestKind } from "./manifest";
 import { SUGGEST_KINDS } from "./manifest-parse";

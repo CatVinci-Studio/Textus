@@ -8,9 +8,8 @@ import {
   CommandShortcutRow,
   ShortcutRow,
   FixedShortcutList,
-  headingLabels,
-  plain,
 } from "../sections/shortcut-rows";
+import { headingLabels, plain } from "../../prefs/key-owner";
 
 /** Shortcuts: the ones that can be changed, by group - the plugins'
  *  commands last among them - then the fixed ones. */

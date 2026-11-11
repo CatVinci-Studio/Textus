@@ -11,7 +11,6 @@ import { localizedLabel } from "../../ai/provider-connection";
 import { ProviderAuthPanel } from "./provider-auth";
 import { CustomProviderPanel } from "./custom-provider";
 import { isImeKeydown } from "../../utils/ime";
-export { ApiKeyProviderPanel } from "./provider-auth";
 
 /// Two compact rows: a searchable provider list, then the active provider's
 /// credentials. The tutorial's connect lesson embeds this same panel.

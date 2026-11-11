@@ -11,7 +11,9 @@ const ipc = {
 vi.mock("../../platform/ipc", () => ({ plugins: ipc }));
 vi.mock("../manager", () => ({
   loadPlugins: vi.fn(() => Promise.resolve()),
-  runsHere: () => true,
+}));
+vi.mock("./plugin-records", async (actual) => ({
+  ...(await actual<typeof import("./plugin-records")>()),
   pluginName: (r: { id: string }) => r.id,
   pluginText: (_r: unknown, text: string) => text,
   pluginRecord: (id: string) =>

@@ -1,6 +1,7 @@
 import { invoke } from "@tauri-apps/api/core";
 import { isDesktopApp } from "./capabilities";
-import { AI_OFF, aiRequestsAllowed } from "./ai-gate";
+import { aiRequestsAllowed } from "./ai-gate";
+import { TEXTUS_AI_OFF as AI_OFF } from "./bindings/ai";
 import { commands as aiCommands } from "./bindings/ai";
 import { commands as aiAgentCommands } from "./bindings/ai-agent";
 import { commands as aiMemoryCommands } from "./bindings/ai-memory";

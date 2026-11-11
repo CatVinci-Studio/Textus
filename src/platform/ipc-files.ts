@@ -1,4 +1,4 @@
-import type { DirEntryInfo } from "./fs-types";
+import { type DirEntryInfo } from "./bindings/files";
 import type { ImageHost } from "../prefs/SettingsContext";
 import type * as Generated from "./bindings/files";
 import { isIOSApp } from "./capabilities";
@@ -10,7 +10,6 @@ import { command, desktopActionCommand, desktopQueryCommand } from "./ipc-call";
  * folders, pictures, the session, stored history and drafts.
  */
 
-export type { IndexedFile, Conventions } from "./bindings/files";
 export type HistoryKind = Generated.HistoryKind;
 
 export const fs = {

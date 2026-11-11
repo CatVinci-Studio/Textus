@@ -4,13 +4,11 @@ import type { GeneratedImageData } from "../../platform/ipc";
 import { useLatest } from "../../utils/hooks/useLatest";
 import type { WebSource } from "../types";
 import { makePendingActions } from "./pending-actions";
-import type { PendingPreview } from "./pending-edit-plugin";
+import { type PendingPreview } from "./pending-types";
 import type { DecidedChange } from "./pending-place";
 import { useReviewNavigation } from "./pending-review";
 import { liveStatus, type RecordedStatus } from "./proposal-lifecycle";
 import { usePicturesState } from "./usePicturesState";
-export { locateTarget } from "./pending-place";
-export type { DecidedChange, SelectionTarget } from "./pending-place";
 
 /** `streaming`: the proposal exists but can't be decided yet. */
 export type PendingStatus =

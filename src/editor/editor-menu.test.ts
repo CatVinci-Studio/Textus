@@ -11,12 +11,14 @@ import type { Ctx } from "@milkdown/kit/ctx";
 import {
   buildContextMenuItems,
   buildPhoneMoreItems,
-  rotateImage,
-  runTableAction,
-  selectedImagePos,
-  setImageWidth,
   type ContextMenuOptions,
 } from "./editor-menu";
+import {
+  rotateImage,
+  selectedImagePos,
+  setImageWidth,
+} from "./editor-menu-images";
+import { runTableAction } from "./editor-menu-tables";
 import type { EditorRunner } from "./useEditorRunner";
 import type { ContextMenuItem } from "../engine/controls/ContextMenu";
 import { resolveStrings } from "../i18n/strings";

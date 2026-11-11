@@ -12,7 +12,7 @@ import { aiFeatures } from "../prefs/ai-features";
 import type { Strings } from "../i18n/strings";
 import type { ImageLocation } from "../editor/images/missing-image";
 import { useImageService } from "../ai/image-models";
-import { selectImage } from "../editor/editor-menu";
+import { selectImage } from "../editor/editor-menu-images";
 import type { MenuLink } from "../editor/editor-menu-links";
 import type { DrawnBlockActions } from "../editor/drawn-block-actions";
 

@@ -4,7 +4,7 @@
 import { useFileMark } from "../registry/file-marks";
 import { plural } from "../i18n/plural";
 import { useEffect, useMemo, useState, type CSSProperties } from "react";
-import type { DirEntryInfo } from "../platform/fs-types";
+import { type DirEntryInfo } from "../platform/bindings/files";
 import {
   ChevronIcon,
   FolderIcon,

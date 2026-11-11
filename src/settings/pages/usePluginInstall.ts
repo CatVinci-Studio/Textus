@@ -7,7 +7,7 @@ import {
   pluginText,
   pluginsSnapshot,
   type PluginRecord,
-} from "../../plugins/manager";
+} from "../../plugins/store/plugin-records";
 import {
   setPluginEnabled,
   uninstallPlugin,

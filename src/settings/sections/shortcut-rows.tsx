@@ -16,8 +16,6 @@ import { isImeKeydown } from "../../utils/ime";
 import { modIsMeta } from "../../platform/os";
 import { keyOwner } from "../../prefs/key-owner";
 
-export { headingLabels, plain } from "../../prefs/key-owner";
-
 // Settings › Shortcuts' rows: one that records a key combination, for the
 // app's own actions and for the commands plugins add.
 

@@ -1,7 +1,7 @@
 import type { Node as ProseNode, Schema } from "@milkdown/kit/prose/model";
 import type { EditorState, Transaction } from "@milkdown/kit/prose/state";
 import type { EditorView } from "@milkdown/kit/prose/view";
-import { findRunClose, findRunOpen, literalTextAfter } from "./enclosure";
+import { findRunClose, findRunOpen, literalTextAfter } from "./enclosure-runs";
 import { caretAt } from "../live-selection";
 
 /** The spans a typed delimiter pairs, and the text run a closing one turns

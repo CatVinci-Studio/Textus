@@ -23,7 +23,7 @@ import {
   pluginsSnapshot,
   subscribePlugins,
   type PluginRecord,
-} from "../../plugins/manager";
+} from "../../plugins/store/plugin-records";
 import {
   installPlugin,
   loadDevPlugin,

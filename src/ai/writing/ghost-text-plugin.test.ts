@@ -10,8 +10,8 @@ import {
   splitCandidates,
   stripEcho,
   tidySuggestion,
-  typedThrough,
-} from "./ghost-text-plugin";
+} from "./ghost-context";
+import { typedThrough } from "./ghost-state";
 
 describe("stripEcho", () => {
   it("drops a repeated tail of the before-text", () => {

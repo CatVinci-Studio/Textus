@@ -1,5 +1,5 @@
 import { fs } from "../platform/ipc";
-import type { Conventions } from "../platform/ipc-files";
+import { type Conventions } from "../platform/bindings/files";
 import { DEFAULT_LINK_STYLE, type LinkStyle } from "./link-resolve";
 
 /** How links are written where `conventions` hold: the folder's own choice,

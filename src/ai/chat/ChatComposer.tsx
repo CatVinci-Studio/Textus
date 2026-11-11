@@ -4,12 +4,11 @@ import { resolveSkillMessage } from "./proposal";
 import { ai } from "../../platform/ipc";
 import { ComposerPicker } from "./ComposerPicker";
 import {
-  MENTION_TOKEN,
-  SKILL_COMMAND,
   rememberSkill,
   resolveSkillName,
   type PickerSkill,
 } from "./skill-picker";
+import { MENTION_TOKEN, SKILL_COMMAND } from "./skill-syntax";
 import type { PanelMode } from "../../prefs/SettingsContext";
 import {
   ArrowUpIcon,
@@ -41,6 +40,7 @@ function mobileChrome() {
   return document.documentElement.dataset.windowChrome === "mobile";
 }
 
+// eslint-disable-next-line no-restricted-syntax -- a lazy chunk's entry passes these on
 export type {
   ChatComposerHandle,
   ChatComposerLabels,

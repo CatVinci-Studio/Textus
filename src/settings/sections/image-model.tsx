@@ -4,7 +4,7 @@ import type { Strings, TextKey } from "../../i18n/strings";
 import { auth } from "../../platform/ipc";
 import { Select } from "../../engine/controls/Select";
 import { SettingRow, VERBATIM_INPUT } from "./controls";
-import { ApiKeyProviderPanel } from "./providers";
+import { ApiKeyProviderPanel } from "./provider-auth";
 import { openSettingsPage } from "../settings-nav";
 import {
   FOLLOW_CHAT,

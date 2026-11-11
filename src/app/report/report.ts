@@ -1,5 +1,5 @@
 import { version as APP_VERSION } from "../../../package.json";
-import { pluginsSnapshot } from "../../plugins/manager";
+import { pluginsSnapshot } from "../../plugins/store/plugin-records";
 import type { Settings } from "../../prefs/settings-types";
 import { recentErrors } from "./recent-errors";
 

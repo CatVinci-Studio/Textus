@@ -38,7 +38,6 @@ export function random(seed: number): () => number {
 }
 
 /** A file's seed for random(), from its name. */
-export { fnv1a as hashString } from "../utils/hash";
 
 const pick = <T>(rand: () => number, list: readonly T[]): T =>
   list[Math.floor(rand() * list.length)];

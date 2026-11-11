@@ -31,11 +31,6 @@ import {
   useRevealedStream,
   useStreamedProposals,
 } from "./useChatBodyState";
-export {
-  type ChatBodyLabels,
-  proposalsFromTurns,
-  quickReplyExpands,
-} from "./chat-body-types";
 
 export function ChatBody({
   document,

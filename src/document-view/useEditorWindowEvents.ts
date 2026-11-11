@@ -12,15 +12,13 @@ import {
 import { undoCommand, redoCommand } from "@milkdown/kit/plugin/history";
 import type { EditorRunner } from "../editor/useEditorRunner";
 import type { EditorClipboard } from "../editor/clipboard/useEditorClipboard";
+import { insertHeading, insertList, runCommand } from "../editor/editor-menu";
 import {
   deleteImage,
-  insertHeading,
-  insertList,
-  runCommand,
-  runTableAction,
   selectedImagePos,
   setImageWidth,
-} from "../editor/editor-menu";
+} from "../editor/editor-menu-images";
+import { runTableAction } from "../editor/editor-menu-tables";
 import { toggleSpan } from "../editor/marks/span-commands";
 import {
   HIGHLIGHT,

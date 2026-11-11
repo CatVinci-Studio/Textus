@@ -1,6 +1,9 @@
 import { useSyncExternalStore } from "react";
 import { requestCreate } from "../../ai/chat/create-request";
-import { pluginsSnapshot, subscribePlugins } from "../../plugins/manager";
+import {
+  pluginsSnapshot,
+  subscribePlugins,
+} from "../../plugins/store/plugin-records";
 import {
   catalogSnapshot,
   subscribeCatalog,

@@ -4,12 +4,9 @@ import { $prose } from "@milkdown/kit/utils";
 import type { Node as ProseNode } from "@milkdown/kit/prose/model";
 import type { EditorView } from "@milkdown/kit/prose/view";
 import { fenceLineToBlock } from "../markdown/fence-line";
-import {
-  COMPOSE_RELOCATE_DELAY_MS,
-  hasPendingRunOpen,
-  literalTextBefore,
-  redirectMisattributedInput,
-} from "./enclosure";
+import { redirectMisattributedInput } from "./enclosure";
+import { COMPOSE_RELOCATE_DELAY_MS } from "./enclosure-caret";
+import { hasPendingRunOpen, literalTextBefore } from "./enclosure-runs";
 import { caretAt, stateWithLiveSelection } from "../live-selection";
 import { isImeKeyEvent } from "../keys/ime";
 import {
@@ -34,7 +31,6 @@ import {
   paragraphToBulletItem,
   paragraphToRule,
 } from "./md-span-blocks";
-export { convertRunClosedBeforeCaret } from "./md-span-blocks";
 
 /**
  * After a typed delimiter steps out of a filled span, the rest of its

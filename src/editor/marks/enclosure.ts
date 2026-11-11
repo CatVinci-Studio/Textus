@@ -33,17 +33,6 @@ import { caretAt, setCaret, stateWithLiveSelection } from "../live-selection";
 import { isImeKeyEvent } from "../keys/ime";
 import { revealMoved, revealSelection } from "../pointer-hold";
 import { LINK } from "../markdown/link-source";
-export {
-  isEnclosureName,
-  cursorTouches,
-  literalTextBefore,
-  literalTextAfter,
-  findRunOpen,
-  findRunClose,
-  hasPendingRunOpen,
-} from "./enclosure-runs";
-export { computeCharDeleteBesideEnclosure } from "./enclosure-moves";
-export { COMPOSE_RELOCATE_DELAY_MS } from "./enclosure-caret";
 /**
  * Shared model for delimiter-enclosed syntax (md_span, md_code_span, math):
  * real nodes with editable text, their delimiters synthesized as widgets.

@@ -4,7 +4,7 @@ import {
   reviewChanges,
   sentenceTake,
   type PendingPreview,
-} from "./pending-edit-plugin";
+} from "./pending-types";
 
 /** Going through the proposals one by one: the review bar's stops and count,
  *  and Quick Ask's per-proposal pointer. */

@@ -11,22 +11,20 @@ import {
   reviewNotesKey,
   type ReviewNote,
 } from "./review-notes-plugin";
-import type { MarginItem } from "./ReviewMargin";
+import { type MarginItem } from "./margin-layout";
 import { setMarginAvailable } from "./margin-room";
 import { blockAt, holdBlock } from "../../engine/controls/hold-line";
 import type { AgentConversation } from "../chat/conversation/conversation-types";
 import type { AgentPanelFrame } from "../chat/panel/agent-panel";
-import {
-  locateTarget,
-  type usePendingEdits,
-} from "../revision/usePendingEdits";
+import { type usePendingEdits } from "../revision/usePendingEdits";
+import { locateTarget } from "../revision/pending-place";
 import {
   pendingEditKey,
   reviewChanges,
   type HotSentence,
   type PendingPreview,
   type PendingSentence,
-} from "../revision/pending-edit-plugin";
+} from "../revision/pending-types";
 import type { RevisionDisplay } from "../../prefs/SettingsContext";
 import type { Strings } from "../../i18n/strings";
 import { useLatest } from "../../utils/hooks/useLatest";

@@ -22,7 +22,7 @@ import {
   pluginText,
   pluginsSnapshot,
   subscribePlugins,
-} from "../../plugins/manager";
+} from "../../plugins/store/plugin-records";
 import {
   catalogSnapshot,
   loadCatalog,

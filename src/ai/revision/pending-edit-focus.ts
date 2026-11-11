@@ -1,4 +1,4 @@
-import type { PendingPreview } from "./pending-edit-plugin";
+import { type PendingPreview } from "./pending-types";
 
 /** The decidable previews (not streaming), in document order so "next"
  *  reads top to bottom. */

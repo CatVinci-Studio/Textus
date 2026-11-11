@@ -17,7 +17,6 @@ import {
   random,
 } from "./save-roundtrip-edits";
 import { LINK } from "../editor/markdown/link-source";
-export { type EditKind, random, hashString } from "./save-roundtrip-edits";
 // Test-only: opens a file in the full editor, makes one seeded edit, and
 // checks the save: (a) untouched blocks byte for byte, (b) the text reads
 // back the same, (c) nothing threw. A failure reproduces from file and seed.

@@ -4,7 +4,7 @@ import {
   cachedDocument,
   readSelection,
 } from "../../editor/markdown/doc-markdown";
-import type { SelectionTarget } from "../revision/usePendingEdits";
+import { type SelectionTarget } from "../revision/pending-place";
 import type { ChatContext } from "./window/chat-bridge";
 
 /**

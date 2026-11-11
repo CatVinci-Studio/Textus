@@ -16,12 +16,6 @@ import { CJK_SCRIPT } from "../../utils/cjk";
 
 /** The composer's two pickers: when they open, what they list, and what a
  *  typed `/word` means. */
-export {
-  MENTION_TOKEN,
-  MENTION_TRIGGER,
-  SKILL_COMMAND,
-  SKILL_TRIGGER,
-} from "./skill-syntax";
 import { compareNames } from "../../utils/name-order";
 
 /** How many recently used skills lead the menu. */

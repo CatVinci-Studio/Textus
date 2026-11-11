@@ -21,7 +21,7 @@ import {
   pendingEditKey,
   sentenceTake,
   type PendingPreview,
-} from "./pending-edit-plugin";
+} from "./pending-types";
 import { composeSentences, trimBreaks } from "./sentence-diff";
 import { findInOrder } from "./sentence-locate";
 import type { CitationStyle } from "./usePendingEdits";

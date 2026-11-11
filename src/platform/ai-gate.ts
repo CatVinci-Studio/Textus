@@ -1,5 +1,4 @@
 /** What an AI request is refused with while Textus AI is off. */
-export { TEXTUS_AI_OFF as AI_OFF } from "./bindings/ai";
 
 let allowed: () => boolean = () => true;
 
