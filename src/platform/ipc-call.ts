@@ -75,7 +75,8 @@ export async function command<K extends Command>(
   }
 }
 
-/** `aiCall` for a generated command. */
+/** A command that sends something to an AI service, refused here while
+ *  Textus AI is off: the backstop for an entry point that missed the switch. */
 export function aiCommand<K extends Command>(
   name: K,
   ...args: Args<K>
