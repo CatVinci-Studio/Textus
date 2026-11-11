@@ -2,7 +2,6 @@
 import { describe, expect, it } from "vitest";
 import {
   findEntryElement,
-  foldText,
   harvestPage,
   matchEntries,
 } from "./settings-search";
@@ -43,12 +42,6 @@ function page() {
 }
 
 describe("settings search", () => {
-  it("folds case, accents and full-width forms but keeps kana voicing", () => {
-    expect(foldText("Résumé")).toBe("resume");
-    expect(foldText("ＣＳＳ")).toBe("css");
-    expect(foldText("が")).not.toBe(foldText("か"));
-  });
-
   it("reads rows, group titles and the hidden ? text from a page", () => {
     const entries = harvestPage(page(), "editor");
     expect(entries).toEqual([

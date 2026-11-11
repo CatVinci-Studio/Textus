@@ -1,3 +1,4 @@
+import { searchFold } from "../../utils/search-fold";
 import type { SkillListItem } from "../../platform/ipc";
 import type { Lang } from "../../i18n/langs";
 import { LANGS } from "../../i18n/langs";
@@ -44,12 +45,6 @@ export interface PickerSkill {
   /** What a typed `/word` resolves by: every language's labels and
    *  aliases, so `/续写` works whatever the UI is in. */
   allTerms: string[];
-}
-
-/** Case- and width-insensitive form for matching (NFKC folds full-width
- *  Latin typed with a CJK IME on). */
-export function fold(text: string): string {
-  return text.normalize("NFKC").toLowerCase();
 }
 
 const ORDER = new Map<string, number>(
@@ -149,10 +144,10 @@ function unique(values: string[]): string[] {
 /** How well `skill` matches the folded query: lower is better, -1 none. */
 function score(skill: PickerSkill, query: string): number {
   if (!query) return 0;
-  const terms = skill.terms.map(fold);
-  if (terms.includes(query) || skill.allTerms.map(fold).includes(query))
+  const terms = skill.terms.map(searchFold);
+  if (terms.includes(query) || skill.allTerms.map(searchFold).includes(query))
     return 0;
-  if (fold(skill.name).startsWith(query)) return 1;
+  if (searchFold(skill.name).startsWith(query)) return 1;
   const words = (term: string) => term.split(/[\s\-·・、,]+/);
   if (
     terms.some(
@@ -163,7 +158,7 @@ function score(skill: PickerSkill, query: string): number {
   // CJK labels have no spaces to start a word at: 写 should find 接着写.
   if (CJK_SCRIPT.test(query) && terms.some((t) => t.includes(query))) return 3;
   // Another language's word - a bilingual user typing /続き in English.
-  if (skill.allTerms.some((t) => fold(t).startsWith(query))) return 4;
+  if (skill.allTerms.some((t) => searchFold(t).startsWith(query))) return 4;
   return -1;
 }
 
@@ -178,7 +173,7 @@ export function matchSkills(
   query: string,
   recent: string[],
 ): PickerSkill[] {
-  const q = fold(query);
+  const q = searchFold(query);
   const rank = (name: string) => {
     const i = recent.indexOf(name);
     return i < 0 ? RECENT_LIMIT + 1 : i;
@@ -249,10 +244,10 @@ export function resolveSkillName(
 ): string | null {
   const exact = skills.find((s) => s.name === token);
   if (exact) return exact.name;
-  const q = fold(token);
+  const q = searchFold(token);
   return (
-    skills.find((s) => fold(s.name) === q)?.name ??
-    skills.find((s) => s.allTerms.some((t) => fold(t) === q))?.name ??
+    skills.find((s) => searchFold(s.name) === q)?.name ??
+    skills.find((s) => s.allTerms.some((t) => searchFold(t) === q))?.name ??
     null
   );
 }

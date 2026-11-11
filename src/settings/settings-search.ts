@@ -1,3 +1,4 @@
+import { searchFold } from "../utils/search-fold";
 // Settings' search. The index is read from the rendered pages themselves, so
 // a row added to a page is found with no list here to keep in step.
 
@@ -13,15 +14,6 @@ export interface SearchEntry {
   help: string;
 }
 
-/** Folded for matching: case, Latin accents and full- or half-width forms
- *  set aside, so "resume" finds "Résumé". A Japanese voicing mark stays. */
-export function foldText(text: string): string {
-  return text
-    .normalize("NFKD")
-    .replace(/[̀-ͯ]/g, "")
-    .normalize("NFC")
-    .toLowerCase();
-}
 
 const FINDABLE =
   ".settings-group-title, .settings-advanced > summary, .settings-row, .shortcut-fixed-row";
@@ -103,13 +95,13 @@ export function matchEntries(
   entries: SearchEntry[],
   query: string,
 ): SearchMatch[] {
-  const q = foldText(query.trim());
+  const q = searchFold(query.trim());
   if (!q) return [];
   const matches: SearchMatch[] = [];
   for (const entry of entries) {
-    if (foldText(entry.label).includes(q))
+    if (searchFold(entry.label).includes(q))
       matches.push({ entry, byHelp: false });
-    else if (entry.help && foldText(entry.help).includes(q))
+    else if (entry.help && searchFold(entry.help).includes(q))
       matches.push({ entry, byHelp: true });
   }
   return matches;
