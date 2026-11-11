@@ -34,6 +34,8 @@ type Stdin = Arc<tokio::sync::Mutex<tokio::process::ChildStdin>>;
 struct Running {
     stdin: Stdin,
     child: Arc<Mutex<tokio::process::Child>>,
+    /// The window that started it: it ends when that window closes.
+    window: String,
 }
 
 /// The agents running in this app, by handle.
@@ -87,6 +89,7 @@ fn launch(manifest: &Value, agent: &str, home: &str) -> Result<Launch, String> {
 #[cfg_attr(test, specta::specta)]
 pub async fn agent_start(
     app: tauri::AppHandle,
+    window: tauri::WebviewWindow,
     plugin: String,
     agent: String,
     cwd: Option<String>,
@@ -121,6 +124,7 @@ pub async fn agent_start(
             Running {
                 stdin: Arc::new(tokio::sync::Mutex::new(stdin)),
                 child: child.clone(),
+                window: window.label().to_string(),
             },
         );
     tauri::async_runtime::spawn(async move {
@@ -175,15 +179,29 @@ pub async fn agent_send(app: tauri::AppHandle, handle: u64, line: String) -> Res
 
 /// Ends every agent: a child process outlives the app that started it.
 pub fn stop_all(app: &tauri::AppHandle) {
-    let running: Vec<Running> = app
-        .state::<Agents>()
-        .running
-        .lock()
-        .unwrap_or_else(|e| e.into_inner())
-        .drain()
-        .map(|(_, r)| r)
-        .collect();
-    for r in running {
+    stop_where(app, |_| true);
+}
+
+/// Ends the agents window `label` started, as it closes.
+pub fn stop_for_window(app: &tauri::AppHandle, label: &str) {
+    stop_where(app, |r| r.window == label);
+}
+
+fn stop_where(app: &tauri::AppHandle, matches: impl Fn(&Running) -> bool) {
+    let agents = app.state::<Agents>();
+    let stopped: Vec<Running> = {
+        let mut running = agents.running.lock().unwrap_or_else(|e| e.into_inner());
+        let handles: Vec<u64> = running
+            .iter()
+            .filter(|(_, r)| matches(r))
+            .map(|(h, _)| *h)
+            .collect();
+        handles
+            .into_iter()
+            .filter_map(|h| running.remove(&h))
+            .collect()
+    };
+    for r in stopped {
         let _ = r
             .child
             .lock()

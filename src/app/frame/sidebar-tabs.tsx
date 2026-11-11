@@ -34,7 +34,7 @@ export interface SidebarTabProps {
   /** The tab in front, for a jump inside its document. */
   activeTabId: string;
   /** `beside`: in a split beside the document in front. */
-  onOpenFile: (path: string, how?: FileOpenHow) => void;
+  onOpenFile: (path: string, how?: FileOpenHow, line?: number) => void;
   /** Closes the sidebar (the phone's drawer, once a file is opened). */
   onClose: () => void;
   /** A file or folder was dragged into another folder in the tree. */
@@ -123,7 +123,7 @@ const BUILT_IN: SidebarTabDef[] = [
       openFolder.treeRoot ? (
         <SearchPanel
           root={openFolder.folder ?? openFolder.treeRoot}
-          onOpen={(path) => onOpenFile(path)}
+          onOpen={(path, line) => onOpenFile(path, undefined, line)}
           focusRequest={searchFocusRequest}
           onFocusHandled={onSearchFocusHandled}
         />

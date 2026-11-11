@@ -1446,6 +1446,8 @@ para usar una.
   wordImportNotice:
     "{name} se abrió como un documento Markdown nuevo. Parte del formato puede verse distinto que en Word; el archivo de Word no cambia.",
   wordImportDismiss: "Entendido",
+  openFileFailed:
+    "No se puede abrir {name}: no es un documento de texto y ningún complemento abre archivos de este tipo.",
   wordImportFailed: "No se pudo abrir {name}.",
   wordSaveRefused:
     "Un documento Markdown no se puede guardar sobre un documento de Word. Elige un nombre que termine en .md.",

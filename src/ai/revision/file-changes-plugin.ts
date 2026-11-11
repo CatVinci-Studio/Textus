@@ -70,7 +70,24 @@ function revert(view: EditorView, review: Review, hunk: Hunk) {
   view.dispatch(tr);
 }
 
-function decorate(view: EditorView, review: Review): DecorationSet {
+/** The hunk as the document is now: the widget's button outlives the
+ *  review it was drawn from, and typing moves what it points at. */
+function hunkNow(now: Review | null, hunk: Hunk): Hunk | null {
+  return (
+    now?.hunks.find(
+      (h) =>
+        h.baseFrom === hunk.baseFrom &&
+        h.baseTo === hunk.baseTo &&
+        h.to - h.from === hunk.to - hunk.from,
+    ) ?? null
+  );
+}
+
+function decorate(
+  view: EditorView,
+  review: Review,
+  current: () => Review | null,
+): DecorationSet {
   const { blocks } = review;
   const label = currentStrings().aiChangeRevert;
   const decorations: Decoration[] = [];
@@ -92,7 +109,11 @@ function decorate(view: EditorView, review: Review): DecorationSet {
           button.className = "tx-button small";
           button.textContent = label;
           button.addEventListener("mousedown", (e) => e.preventDefault());
-          button.addEventListener("click", () => revert(view, review, hunk));
+          button.addEventListener("click", () => {
+            const now = current();
+            const place = hunkNow(now, hunk);
+            if (now && place) revert(view, now, place);
+          });
           mark.append(button);
           return mark;
         },
@@ -117,6 +138,13 @@ export function createAiFileChangesPlugin(docPath: () => string | null) {
         view(view) {
           let frame = 0;
           let shown = false;
+          const current = () => {
+            const path = docPath();
+            const base = path ? textBeforeChanges(path) : undefined;
+            return base === undefined
+              ? null
+              : reviewOf(ctx, view.state.doc, base ?? "");
+          };
           const check = () => {
             cancelAnimationFrame(frame);
             frame = requestAnimationFrame(() => {
@@ -134,7 +162,9 @@ export function createAiFileChangesPlugin(docPath: () => string | null) {
               if (!review) return;
               // Every place put back: nothing of Textus AI's left here.
               if (review.hunks.length === 0 && path) changesSettled(path);
-              view.dispatch(view.state.tr.setMeta(key, decorate(view, review)));
+              view.dispatch(
+                view.state.tr.setMeta(key, decorate(view, review, current)),
+              );
               shown = true;
             });
           };

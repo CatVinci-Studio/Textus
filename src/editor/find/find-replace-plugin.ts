@@ -9,8 +9,30 @@ export const findReplaceKey = new PluginKey<FindReplaceState>("find-replace");
 export interface FindReplaceMatch {
   from: number;
   to: number;
-  /** The exact matched text, so regex-mode replace can re-run capture groups. */
+  /** The exact matched text. */
   text: string;
+  /** What the query captured, as found in its text block: a regex
+   *  replacement's $1, $<name>. */
+  groups: (string | undefined)[];
+  named?: Record<string, string | undefined>;
+}
+
+/** A regex replacement for one match: $1, $<name>, $& and $$ written out
+ *  from what was captured where it was found. */
+export function expandReplacement(
+  replacement: string,
+  match: FindReplaceMatch,
+): string {
+  return replacement.replace(
+    /\$(\$|&|<([^>]+)>|\d{1,2})/g,
+    (all, token: string, name?: string) => {
+      if (token === "$") return "$";
+      if (token === "&") return match.text;
+      if (name !== undefined) return match.named?.[name] ?? "";
+      const n = Number(token);
+      return n >= 1 && n < match.groups.length ? (match.groups[n] ?? "") : all;
+    },
+  );
 }
 
 export interface FindReplaceState {
@@ -97,6 +119,8 @@ export function computeMatches(
         // that aren't matched.
         to: end > start ? posMap[end - 1] + 1 : posMap[start],
         text: m[0],
+        groups: [...m],
+        named: m.groups,
       });
       // Zero-width matches would otherwise spin forever.
       regex.lastIndex = end > start ? end : end + 1;

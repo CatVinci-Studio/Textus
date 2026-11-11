@@ -3,7 +3,11 @@ import { editorViewCtx } from "@milkdown/kit/core";
 import { closeHistory } from "@milkdown/kit/prose/history";
 import { TextSelection } from "@milkdown/kit/prose/state";
 import type { EditorView } from "@milkdown/kit/prose/view";
-import { compileQuery, findReplaceKey } from "./find-replace-plugin";
+import {
+  expandReplacement,
+  findReplaceKey,
+  type FindReplaceMatch,
+} from "./find-replace-plugin";
 import { scrollBehavior } from "../../engine/motion/motion";
 import type { EditorRunner } from "../useEditorRunner";
 import { isImeKeydown } from "../../utils/ime";
@@ -125,15 +129,15 @@ export function useFindReplace(run: EditorRunner) {
   const next = useCallback(() => step(1), [step]);
   const prev = useCallback(() => step(-1), [step]);
 
-  /** Regex mode re-applies the query's capture groups to the match's text;
+  /** Regex mode writes out what each match captured where it was found;
    *  plain mode is a literal swap. */
-  const makeReplacer = useCallback((): ((matchText: string) => string) => {
-    if (!useRegex) return () => replacement;
-    const regex = compileQuery(query, caseSensitive, true, false);
-    return regex
-      ? (text) => text.replace(regex, replacement)
-      : () => replacement;
-  }, [useRegex, query, caseSensitive, replacement]);
+  const makeReplacer = useCallback(
+    (): ((match: FindReplaceMatch) => string) =>
+      useRegex
+        ? (match) => expandReplacement(replacement, match)
+        : () => replacement,
+    [useRegex, replacement],
+  );
 
   const replaceOne = useCallback(() => {
     run((ctx) => {
@@ -144,11 +148,7 @@ export function useFindReplace(run: EditorRunner) {
       // A replacement is an undo step of its own, as in Word.
       view.dispatch(
         closeHistory(
-          view.state.tr.insertText(
-            makeReplacer()(match.text),
-            match.from,
-            match.to,
-          ),
+          view.state.tr.insertText(makeReplacer()(match), match.from, match.to),
         ),
       );
       view.focus();
@@ -166,7 +166,7 @@ export function useFindReplace(run: EditorRunner) {
       // Reverse order, so a replacement never shifts matches still to come.
       for (let i = s.matches.length - 1; i >= 0; i--) {
         const match = s.matches[i];
-        tr = tr.insertText(replace(match.text), match.from, match.to);
+        tr = tr.insertText(replace(match), match.from, match.to);
       }
       view.dispatch(closeHistory(tr));
       view.focus();
@@ -230,17 +230,24 @@ export function useFindReplace(run: EditorRunner) {
     else show();
   }, [query, show, step]);
 
-  // Escape closes the bar even once focus has moved to the editor.
+  // Escape closes the bar from it or from its document, once focus has
+  // moved there; one pressed in a dialog, a menu or another island is
+  // theirs.
   useEffect(() => {
     if (!open) return;
     const onKeyDown = (e: KeyboardEvent) => {
       // Escape mid-composition cancels the IME candidate, not the bar.
-      if (isImeKeydown(e)) return;
-      if (e.key === "Escape") close();
+      if (isImeKeydown(e) || e.key !== "Escape") return;
+      const at = e.target instanceof Element ? e.target : null;
+      let ours = !!at?.closest(".find-replace-bar");
+      run((ctx) => {
+        ours ||= !!at && ctx.get(editorViewCtx).dom.contains(at);
+      });
+      if (ours) close();
     };
     window.addEventListener("keydown", onKeyDown);
     return () => window.removeEventListener("keydown", onKeyDown);
-  }, [open, close]);
+  }, [open, close, run]);
 
   return {
     open,

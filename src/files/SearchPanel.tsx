@@ -35,7 +35,7 @@ export function SearchPanel({
   onFocusHandled,
 }: {
   root: string;
-  onOpen: (path: string) => void;
+  onOpen: (path: string, line?: number) => void;
   focusRequest: boolean;
   onFocusHandled: () => void;
 }) {
@@ -107,7 +107,7 @@ function TextMatches({
 }: {
   root: string;
   query: string;
-  onOpen: (path: string) => void;
+  onOpen: (path: string, line?: number) => void;
 }) {
   const { t } = useSettings();
   const state = useTextSearch(root, query);
@@ -150,7 +150,7 @@ function TextMatches({
                 key={hit.line}
                 type="button"
                 className="tree-row search-text-line"
-                onClick={() => onOpen(hit.path)}
+                onClick={() => onOpen(hit.path, hit.line)}
               >
                 <span className="search-text-snippet">
                   {marked(hit.text, needle)}

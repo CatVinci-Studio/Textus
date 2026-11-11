@@ -1306,6 +1306,7 @@ export default {
   wordImportNotice:
     "已将 {name} 转换为新的 Markdown 文档。部分格式可能与 Word 中不同，原 Word 文件不会被改动。",
   wordImportDismiss: "知道了",
+  openFileFailed: "无法打开 {name}：它不是文本文档，也没有插件能打开这类文件。",
   wordImportFailed: "无法打开 {name}。",
   wordSaveRefused:
     "Markdown 文档不能保存到 Word 文档上。请选择以 .md 结尾的文件名。",

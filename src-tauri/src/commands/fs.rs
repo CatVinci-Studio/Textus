@@ -210,6 +210,32 @@ pub(crate) fn with_default_extension(path: String, ext: &str) -> String {
     }
 }
 
+/// The files the app keeps keys and sign-ins in: never read or written
+/// through the page's file commands.
+const SECRET_FILES: [&str; 5] = [
+    "provider_keys.json",
+    "auth-claude.json",
+    "auth-codex.json",
+    "custom_endpoint.json",
+    "plugin_secrets.json",
+];
+
+fn not_a_secret(app: &tauri::AppHandle, path: &str) -> Result<(), String> {
+    use tauri::Manager;
+    let path = Path::new(path);
+    let named = path
+        .file_name()
+        .is_some_and(|n| SECRET_FILES.iter().any(|s| n == *s));
+    let Ok(config) = app.path().app_config_dir() else {
+        return Ok(());
+    };
+    let beside = |p: &Path| p.parent().and_then(|d| std::fs::canonicalize(d).ok());
+    if named && beside(path) == std::fs::canonicalize(&config).ok() {
+        return Err("This file holds Textus's keys; it isn't opened here.".into());
+    }
+    Ok(())
+}
+
 pub(crate) fn require_non_empty(path: &str) -> Result<(), String> {
     if path.trim().is_empty() {
         return Err("empty path".to_string());
@@ -280,8 +306,9 @@ pub async fn file_mtime_ms(path: String) -> Result<Option<f64>, String> {
 
 #[tauri::command]
 #[cfg_attr(test, specta::specta)]
-pub async fn read_text_file(path: String) -> Result<String, String> {
+pub async fn read_text_file(app: tauri::AppHandle, path: String) -> Result<String, String> {
     require_non_empty(&path)?;
+    not_a_secret(&app, &path)?;
     fs::read_to_string(&path).await.map_err(|e| e.to_string())
 }
 
@@ -289,9 +316,13 @@ pub async fn read_text_file(path: String) -> Result<String, String> {
 /// runtime `<style>` tag has no base to resolve relative paths against.
 #[tauri::command]
 #[cfg_attr(test, specta::specta)]
-pub async fn read_binary_file_base64(path: String) -> Result<String, String> {
+pub async fn read_binary_file_base64(
+    app: tauri::AppHandle,
+    path: String,
+) -> Result<String, String> {
     use base64::{engine::general_purpose::STANDARD, Engine};
     require_non_empty(&path)?;
+    not_a_secret(&app, &path)?;
     let bytes = fs::read(&path).await.map_err(|e| e.to_string())?;
     Ok(STANDARD.encode(bytes))
 }
@@ -415,8 +446,13 @@ pub(super) async fn migrate_images(
 
 #[tauri::command]
 #[cfg_attr(test, specta::specta)]
-pub async fn write_text_file(path: String, contents: String) -> Result<(), String> {
+pub async fn write_text_file(
+    app: tauri::AppHandle,
+    path: String,
+    contents: String,
+) -> Result<(), String> {
     require_non_empty(&path)?;
+    not_a_secret(&app, &path)?;
     if let Some(parent) = Path::new(&path).parent() {
         if !parent.as_os_str().is_empty() {
             fs::create_dir_all(parent)

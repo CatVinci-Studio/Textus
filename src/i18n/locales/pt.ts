@@ -1430,6 +1430,8 @@ Habilidades ficam na pasta skills/ ao lado deste arquivo, um arquivo
   wordImportNotice:
     "{name} foi aberto como um novo documento Markdown. Parte da formatação pode ficar diferente do Word; o próprio arquivo do Word não é alterado.",
   wordImportDismiss: "Entendi",
+  openFileFailed:
+    "Não é possível abrir {name}: não é um documento de texto e nenhum plugin abre arquivos deste tipo.",
   wordImportFailed: "Não foi possível abrir {name}.",
   wordSaveRefused:
     "Um documento Markdown não pode ser salvo por cima de um documento do Word. Escolha um nome terminado em .md.",

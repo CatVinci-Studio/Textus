@@ -110,10 +110,11 @@ export function makeProposalJoins(
           !carriers.has(p.callId)
         )
           gone.push(p.callId);
-      let tr = view.state.tr;
+      // One step each: a meta set twice keeps only the last.
       for (const callId of gone)
-        tr = tr.setMeta(pendingEditKey, { type: "remove", callId });
-      if (gone.length > 0) view.dispatch(tr);
+        view.dispatch(
+          view.state.tr.setMeta(pendingEditKey, { type: "remove", callId }),
+        );
     });
     if (gone.length > 0)
       env.setStatuses((prev) =>

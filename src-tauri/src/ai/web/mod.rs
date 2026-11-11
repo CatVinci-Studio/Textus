@@ -334,5 +334,22 @@ pub fn web_search_status(
     }
 }
 
+/// What came from outside - a page, results, an abstract - in the block the
+/// prompt calls material, never instructions: nothing in it can close the
+/// block early (any case), nor the source its quotes.
+pub(crate) fn external_content(source: &str, body: &str) -> String {
+    let source = source.replace('"', "'");
+    let body = unclosing(body);
+    format!("<external-content source=\"{source}\">\n{body}\n</external-content>")
+}
+
+/// Text for inside an `<external-content>` block, its closing tag broken.
+pub(crate) fn unclosing(body: &str) -> std::borrow::Cow<'_, str> {
+    static CLOSING: std::sync::LazyLock<regex::Regex> = std::sync::LazyLock::new(|| {
+        regex::Regex::new(r"(?i)</\s*external-content").expect("valid")
+    });
+    CLOSING.replace_all(body, "</external_content")
+}
+
 #[cfg(test)]
 mod tests;

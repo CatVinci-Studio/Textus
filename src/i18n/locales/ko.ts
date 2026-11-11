@@ -1359,6 +1359,8 @@ ${AI_NAME}에게 주는 글쓰기 지침으로, 모든 문서에 적용됩니다
   wordImportNotice:
     "{name}을(를) 새 Markdown 문서로 열었습니다. 일부 서식은 Word와 다르게 보일 수 있으며, 원본 Word 파일은 바뀌지 않습니다.",
   wordImportDismiss: "확인",
+  openFileFailed:
+    "{name}을(를) 열 수 없습니다. 텍스트 문서가 아니며 이런 파일을 여는 플러그인도 없습니다.",
   wordImportFailed: "{name}을(를) 열 수 없습니다.",
   wordSaveRefused:
     "Markdown 문서는 Word 문서에 덮어써서 저장할 수 없습니다. .md로 끝나는 이름을 고르세요.",

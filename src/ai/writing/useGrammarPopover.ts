@@ -220,12 +220,16 @@ export function useGrammarPopover(
 
       // The hover-time range goes stale on any edit. A surviving live
       // decoration is trustworthy: the plugin drops ones whose text changed.
-      const live = (grammarKey.getState(state)?.find() ?? []).find(
-        (deco: Decoration) => {
+      // The same slip may be written twice: the one nearest the card's.
+      const live = (grammarKey.getState(state)?.find() ?? [])
+        .filter((deco: Decoration) => {
           const spec = deco.spec as GrammarDecorationSpec;
           return spec.original === original && spec.suggestion === suggestion;
-        },
-      );
+        })
+        .sort(
+          (a: Decoration, b: Decoration) =>
+            Math.abs(a.from - popover.from) - Math.abs(b.from - popover.from),
+        )[0];
       let range = live ? { from: live.from, to: live.to } : null;
 
       // Else the text itself, if it occurs exactly once.

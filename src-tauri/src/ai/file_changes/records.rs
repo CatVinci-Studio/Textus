@@ -61,8 +61,7 @@ pub(crate) fn forget_old_records(data: &Path) {
             .and_then(|at| now.duration_since(at).ok())
             .is_some_and(|age| age > KEPT_FOR);
         if old && entry.path().is_dir() {
-            #[cfg(desktop)]
-            let _ = trash::delete(entry.path());
+            let _ = crate::atomic::to_trash(&entry.path());
         }
     }
 }
@@ -93,7 +92,12 @@ pub(super) fn set(record: &Path, change: &mut FileChange, on: bool) -> Result<()
         // A file it made, discarded: to the Trash, where the user can get it
         // back; set aside in the record where there is none.
         (false, None) => {
-            if trash::delete(file).is_err() {
+            // Tests' files, and a phone's, go aside in the record.
+            #[cfg(all(desktop, not(test)))]
+            let trashed = trash::delete(file).is_ok();
+            #[cfg(any(not(desktop), test))]
+            let trashed = false;
+            if !trashed {
                 set_aside(file, &record.join(format!("{}.removed", change.id)))?
             }
         }

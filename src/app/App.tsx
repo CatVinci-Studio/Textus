@@ -211,13 +211,13 @@ function App() {
             activeTabId={activeTab.id}
             onToggle={toggleSidebar}
             onClose={() => setPanelOpen(false)}
-            onOpenFile={(path, how) =>
-              void openFile(
-                path,
-                how === "beside"
+            onOpenFile={(path, how, line) =>
+              void openFile(path, {
+                ...(how === "beside"
                   ? { where: "beside" }
-                  : { preview: how === "preview" },
-              )
+                  : { preview: how === "preview" }),
+                ...(line ? { place: { line } } : {}),
+              })
             }
             onEntryMoved={entryMoved}
             searchFocusRequest={searchFocusRequest}

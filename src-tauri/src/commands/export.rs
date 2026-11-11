@@ -119,16 +119,24 @@ pub async fn export_via_pandoc(
     reference_doc: Option<String>,
     options: pandoc_options::PandocOptions,
 ) -> Result<(), String> {
+    // Only a Pandoc found where detect_pandoc looks: the page names which,
+    // never a program of its own.
+    if !pandoc_candidates()
+        .iter()
+        .any(|c| c.to_string_lossy() == pandoc_path)
+    {
+        return Err(format!("{pandoc_path} isn't a Pandoc Textus found."));
+    }
     tauri::async_runtime::spawn_blocking(move || {
         if let Some(arg) = pandoc_options::owned_arg(&options.extra_args) {
             return Err(format!("The Pandoc argument {arg} is set by Textus."));
         }
         let mut args = pandoc_args(&format, &title);
         args[1].push_str(breaks_extension(resource_dir.as_deref()));
-        let filter = pandoc_options::lua_filter_path().map_err(|e| e.to_string())?;
+        let filter = pandoc_options::lua_filter().map_err(|e| e.to_string())?;
         let mut cmd = Command::new(&pandoc_path);
         cmd.arg("--lua-filter")
-            .arg(filter)
+            .arg(filter.path())
             .args(&options.extra_args)
             .args(args)
             .args(pandoc_options::settings_args(&options))

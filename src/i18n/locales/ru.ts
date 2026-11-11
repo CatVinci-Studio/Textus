@@ -1442,6 +1442,8 @@ export default {
   wordImportNotice:
     "{name} открыт как новый документ Markdown. Часть оформления может выглядеть иначе, чем в Word; сам файл Word не изменён.",
   wordImportDismiss: "Понятно",
+  openFileFailed:
+    "Не удаётся открыть {name}: это не текстовый документ, и ни один плагин не открывает такие файлы.",
   wordImportFailed: "Не удалось открыть {name}.",
   wordSaveRefused:
     "Документ Markdown нельзя сохранить поверх документа Word. Выберите имя, оканчивающееся на .md.",

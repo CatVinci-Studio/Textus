@@ -266,34 +266,41 @@ export async function exportHtml(tab: DocTab, t: Strings): Promise<void> {
     "html",
   );
   if (!picked) return;
-  await drawPending(editor);
-  const besideDocument = !!tab.path && dirname(tab.path) === dirname(picked);
-  const renderLink = await linkRenderer(editor);
-  const noteLinks = await pageNoteLinks(editor, tab, picked);
-  const unmark = await markDrawnPictures(
-    editor,
-    appearanceIsDark() ? "dark" : "light",
-  );
-  const copy = cloneEditorContent(
-    editor,
-    besideDocument ? "document" : "inline",
-    renderLink,
-    noteLinks,
-  );
-  unmark();
-  const content = besideDocument ? copy : await inlineImages(copy, tab.path);
-  const finished = await finishExportPage({
-    format: "html",
-    path: tab.path,
-    html: content,
-  });
-  const html = buildStandaloneHtml(
-    base,
-    finished.html,
-    HTML_LAYOUT_CSS + finished.css,
-  );
-  await fs.writeTextFile(picked, html);
-  void exportDoc.revealInDir(picked);
+  try {
+    await drawPending(editor);
+    const besideDocument = !!tab.path && dirname(tab.path) === dirname(picked);
+    const renderLink = await linkRenderer(editor);
+    const noteLinks = await pageNoteLinks(editor, tab, picked);
+    const unmark = await markDrawnPictures(
+      editor,
+      appearanceIsDark() ? "dark" : "light",
+    );
+    const copy = cloneEditorContent(
+      editor,
+      besideDocument ? "document" : "inline",
+      renderLink,
+      noteLinks,
+    );
+    unmark();
+    const content = besideDocument ? copy : await inlineImages(copy, tab.path);
+    const finished = await finishExportPage({
+      format: "html",
+      path: tab.path,
+      html: content,
+    });
+    const html = buildStandaloneHtml(
+      base,
+      finished.html,
+      HTML_LAYOUT_CSS + finished.css,
+    );
+    await fs.writeTextFile(picked, html);
+    void exportDoc.revealInDir(picked);
+  } catch (err) {
+    await showMessage(explainError(err, t), {
+      title: t.exportFailedTitle,
+      tone: "error",
+    });
+  }
 }
 
 // The drawn blocks' pictures in the active editor, for a pandoc export.

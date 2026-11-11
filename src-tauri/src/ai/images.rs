@@ -56,7 +56,9 @@ pub async fn ai_generated_image(id: String) -> Result<GeneratedImageData, String
 /// waits for it as for any picture.
 #[tauri::command]
 #[cfg_attr(test, specta::specta)]
-pub fn ai_retry_generated_image(id: String) -> Result<(), String> {
+pub fn ai_retry_generated_image(app: tauri::AppHandle, id: String) -> Result<(), String> {
+    // A new picture is paid for: not while Textus AI is off.
+    crate::ai::ensure_on(&app)?;
     retry(&id)
 }
 
@@ -73,7 +75,12 @@ pub fn ai_generated_image_prompt(id: String) -> Option<String> {
 /// picture.
 #[tauri::command]
 #[cfg_attr(test, specta::specta)]
-pub fn ai_redraw_generated_image(id: String, prompt: String) -> Result<(), String> {
+pub fn ai_redraw_generated_image(
+    app: tauri::AppHandle,
+    id: String,
+    prompt: String,
+) -> Result<(), String> {
+    crate::ai::ensure_on(&app)?;
     redraw(&id, prompt)
 }
 

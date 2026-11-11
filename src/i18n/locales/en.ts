@@ -1402,6 +1402,8 @@ type /name in a conversation to use one.
   wordImportNotice:
     "Opened {name} as a new Markdown document. Some formatting may look different than in Word; the Word file itself is unchanged.",
   wordImportDismiss: "Got it",
+  openFileFailed:
+    "Textus can't open {name}: it isn't a text document, and no plugin opens files like it.",
   wordImportFailed: "{name} couldn't be opened.",
   wordSaveRefused:
     "A Markdown document can't be saved over a Word document. Choose a name ending in .md.",

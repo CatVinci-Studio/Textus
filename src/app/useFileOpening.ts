@@ -158,8 +158,9 @@ export function useFileOpening(opts: {
       try {
         disk = await readDocFromDisk(path);
       } catch (err) {
-        // Not text: offer a market plugin that may open it.
-        if (asDocument) throw err;
+        // Not text: offer a market plugin that may open it. A folder is
+        // the caller's to open.
+        if (asDocument || (await isFolder(path))) throw err;
         const { offerPluginToOpen } =
           await import("../plugins/store/open-offer");
         const offered = await offerPluginToOpen(path, t);
@@ -169,7 +170,11 @@ export function useFileOpening(opts: {
         }
         const now = offered === "on" ? customEditorFor(path) : null;
         if (now) return pluginTab(path, now, place);
-        throw err;
+        if (offered === "none")
+          void showMessage(t.openFileFailed.replace("{name}", basename(path)), {
+            tone: "error",
+          });
+        return null;
       }
       const { content, diskMtime } = disk;
       // A Markdown document a plugin claims by its front matter (a board).

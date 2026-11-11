@@ -1,9 +1,9 @@
-/* Under the window bar, and left of a docked Textus AI panel rather than
-   over its header and close button. */
+/* At the top right of its own island's document, under its format bar:
+   each island's bar over its own text. */
 .find-replace-bar {
-  position: fixed;
-  top: 40px;
-  right: 24px;
+  position: absolute;
+  top: var(--space-2);
+  right: var(--space-4);
   z-index: var(--z-toast);
   display: flex;
   flex-direction: column;
@@ -11,6 +11,10 @@
   padding: 4px 8px;
   font-size: var(--text-control);
   animation: motion-drop-in var(--dur-base) var(--ease-out);
+}
+
+.split-pane:has(> .format-bar) .find-replace-bar {
+  top: calc(var(--format-bar-height) + var(--space-2));
 }
 
 .find-replace-bar[data-state="closing"] {

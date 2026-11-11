@@ -1464,6 +1464,8 @@ utiliser une.
   wordImportNotice:
     "{name} a été ouvert comme un nouveau document Markdown. Une partie de la mise en forme peut différer de Word ; le fichier Word lui-même reste inchangé.",
   wordImportDismiss: "OK",
+  openFileFailed:
+    "Impossible d’ouvrir {name} : ce n’est pas un document texte, et aucun plugin n’ouvre ce type de fichier.",
   wordImportFailed: "Impossible d'ouvrir {name}.",
   wordSaveRefused:
     "Un document Markdown ne peut pas être enregistré à la place d'un document Word. Choisissez un nom qui se termine par .md.",

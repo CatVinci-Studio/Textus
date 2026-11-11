@@ -312,7 +312,7 @@ pub(super) fn source_passage(note: &Note) -> String {
     };
     let cited: String = note.sources.iter().map(|n| format!("[{n}]")).collect();
     // A page can't close the block early.
-    let excerpt = excerpt.replace("</external-content", "</external_content");
+    let excerpt = crate::ai::web::unclosing(excerpt);
     format!("\n  <external-content source=\"{cited}\">\n  {excerpt}\n  </external-content>")
 }
 

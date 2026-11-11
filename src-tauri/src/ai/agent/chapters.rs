@@ -306,12 +306,18 @@ impl ChapterRun<'_, '_> {
             };
             channel.send(event);
         };
+        // As the main loop steps: the model sees its lists as it made them
+        // (settle_step splits them into one call per item), and the window
+        // sees each item's call as it streams.
         let step = |turns: Vec<AgentTurn>| {
             let (instructions, specs, sink) = (&instructions, &specs, &sink);
             async move {
+                let lists = super::lists::ListStream::default();
+                let fed = |e: ProviderEvent<'_>| lists.feed(e, sink);
+                let turns = super::lists::join_calls(&turns);
                 let result = self
                     .agent
-                    .step_watched(instructions, &turns, specs, sink)
+                    .step_watched(instructions, &turns, specs, &fed)
                     .await;
                 result.map(|step| settle_step(step, self.document, self.conventions, None).0)
             }

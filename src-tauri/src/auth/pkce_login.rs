@@ -71,8 +71,14 @@ async fn wait_for_callback(
     )
     .map_err(|e| e.to_string())?;
 
-    tauri::async_runtime::spawn_blocking(move || rx.recv_timeout(Duration::from_secs(timeout_secs)))
-        .await
-        .map_err(|e| e.to_string())?
-        .map_err(|_| "login timed out or was cancelled".to_string())
+    let got = tauri::async_runtime::spawn_blocking(move || {
+        rx.recv_timeout(Duration::from_secs(timeout_secs))
+    })
+    .await
+    .map_err(|e| e.to_string())?;
+    // Not answered: the port is let go, or the next sign-in can't take it.
+    if got.is_err() {
+        let _ = tauri_plugin_oauth::cancel(port);
+    }
+    got.map_err(|_| "login timed out or was cancelled".to_string())
 }

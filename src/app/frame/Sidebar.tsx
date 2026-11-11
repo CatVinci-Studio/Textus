@@ -51,7 +51,8 @@ export function Sidebar({
   onToggle: () => void;
   onClose: () => void;
   /** `beside`: in a split beside the document in front. */
-  onOpenFile: (path: string, how?: FileOpenHow) => void;
+  /** `line`: a line found in it, to go to (1-based). */
+  onOpenFile: (path: string, how?: FileOpenHow, line?: number) => void;
   /** A file or folder was dragged into another folder in the tree. */
   onEntryMoved: (from: string, to: string) => void;
   /** The search shortcut asked for the Files tab's search box. */

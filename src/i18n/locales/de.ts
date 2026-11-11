@@ -1434,6 +1434,8 @@ Skills liegen im Ordner skills/ neben dieser Datei, je Skill eine
   wordImportNotice:
     "{name} wurde als neues Markdown-Dokument geöffnet. Manche Formatierung kann anders aussehen als in Word; die Word-Datei selbst bleibt unverändert.",
   wordImportDismiss: "Verstanden",
+  openFileFailed:
+    "{name} lässt sich nicht öffnen: Es ist kein Textdokument, und kein Plugin öffnet solche Dateien.",
   wordImportFailed: "{name} konnte nicht geöffnet werden.",
   wordSaveRefused:
     "Ein Markdown-Dokument kann nicht über ein Word-Dokument gespeichert werden. Wähle einen Namen, der auf .md endet.",

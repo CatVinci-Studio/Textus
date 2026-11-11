@@ -147,10 +147,9 @@ impl WebPlan {
                 Err(e) => sections.push(format!("The search for \"{query}\" failed: {e}")),
             }
         }
-        format!(
-            "<external-content source=\"web search ({})\">\n{}\n</external-content>",
-            service.backend.label(),
-            sections.join("\n\n")
+        super::external_content(
+            &format!("web search ({})", service.backend.label()),
+            &sections.join("\n\n"),
         )
     }
 
@@ -186,10 +185,7 @@ impl WebPlan {
                 paper.describe(n)
             })
             .collect();
-        format!(
-            "<external-content source=\"scholarly search\">\n{}\n</external-content>",
-            results.join("\n\n")
-        )
+        super::external_content("scholarly search", &results.join("\n\n"))
     }
 
     async fn web_fetch(&self, args: &Value) -> String {
@@ -235,9 +231,9 @@ impl WebPlan {
             .lock()
             .unwrap()
             .read(&page.url, &title, &page.text);
-        let mut out = format!(
-            "<external-content source=\"{}\">\n[{n}] {title}\n{}\n\n{}\n</external-content>",
-            page.url, page.url, page.text
+        let mut out = super::external_content(
+            &page.url,
+            &format!("[{n}] {title}\n{}\n\n{}", page.url, page.text),
         );
         if page.truncated {
             out.push_str(&format!(
