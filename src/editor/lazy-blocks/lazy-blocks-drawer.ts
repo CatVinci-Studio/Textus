@@ -176,29 +176,6 @@ export function drawAround(view: EditorView, pos: number, glideMs = 0): void {
   drawer.pause(glideMs);
 }
 
-/**
- * For a jump to a top-level block found in the DOM (the outline's
- * headings): `el` itself when it is drawn, else its block drawn and
- * returned, either way with the blocks around it drawn and the drawer held
- * off for the `glideMs` of the scroll there (see drawAround).
- */
-export function drawnForJump(el: Element, glideMs: number): Element | null {
-  const root = el.parentElement;
-  const drawer = root && drawers.get(root);
-  const node = blockNodes.get(el);
-  if (!drawer || !node) return el;
-  const { view } = drawer;
-  const children = view.dom.children;
-  const index = blockIndexOf(
-    view.state.doc,
-    Array.prototype.indexOf.call(children, el),
-    node,
-  );
-  if (index === null) return el;
-  drawAround(view, topLevelStarts(view.state.doc)[index], glideMs);
-  return elementOf(view.dom.children, index, node);
-}
-
 /** Every block of the editor `editorDom` drawn, for an export that copies
  *  the page; kept drawn until the user next scrolls or types. */
 export function drawAllBlocks(editorDom: Element): void {
