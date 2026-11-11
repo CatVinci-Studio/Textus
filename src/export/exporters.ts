@@ -4,8 +4,6 @@ import { escapeHtml } from "../utils/html";
 import { showConfirm, showMessage } from "../engine/controls/app-dialog";
 import type { Strings } from "../i18n/strings";
 import { basename, dirname } from "../utils/path";
-import { katexLoaded, loadKatex } from "../editor/math/katex-loader";
-import { drawEverything } from "../editor/draw-when-visible";
 import { tabTitle, type DocTab } from "../document/doc-tabs";
 import { exportDoc, fs } from "../platform/ipc";
 import { isMacPlatform, isWindowsPlatform } from "../platform/os";
@@ -14,13 +12,9 @@ import { toPandocMarkdown } from "./pandoc-markdown";
 import { numberedHeadings } from "./pandoc-headings";
 import { pandocOptions, type PandocSettings } from "./pandoc-options";
 import { noteLinkSources, resolveNoteLinks } from "./note-links";
-import {
-  diagramsToImages,
-  drawnBlocksToImages,
-  lightDiagrams,
-} from "./diagram-images";
-import { drawnPicturesByLanguage, markDrawnPictures } from "./drawn-blocks";
-import { finishExportPage } from "./export-step";
+import { drawPending, preparePage } from "./export-page";
+import { diagramsToImages, drawnBlocksToImages } from "./diagram-images";
+import { drawnPicturesByLanguage } from "./drawn-blocks";
 import { appearanceIsDark } from "../editor/diagram-engine";
 import type { DiagramEngine } from "../prefs/SettingsContext";
 import {
@@ -29,14 +23,7 @@ import {
   paginateHtml,
   type PageGeometry,
 } from "./paginate";
-import {
-  WIKILINK_SELECTOR,
-  buildStandaloneHtml,
-  cloneEditorContent,
-  inlineImages,
-  linkRenderer,
-  nextFrame,
-} from "./standalone-html";
+import { buildStandaloneHtml, nextFrame } from "./standalone-html";
 // eslint-disable-next-line no-restricted-syntax -- a lazy chunk's entry passes these on
 export {
   type ExportImages,
@@ -119,50 +106,6 @@ function showPdfOverlay(t: Strings): HTMLElement {
   return el;
 }
 
-// Draws everything still pending first, since the export copies the page as
-// it is: formulas waiting for KaTeX, and blocks waiting to come on screen.
-async function drawPending(editor: Element): Promise<void> {
-  if (
-    !katexLoaded() &&
-    editor.querySelector('[data-type="math_inline"], [data-type="math_block"]')
-  ) {
-    try {
-      await loadKatex();
-      await nextFrame();
-    } catch {
-      // Exported as source rather than not at all.
-    }
-  }
-  await drawEverything(editor);
-}
-
-// Lets web fonts and images settle before serializing.
-async function settleRender(editor: Element): Promise<void> {
-  await drawPending(editor);
-  try {
-    await document.fonts.ready;
-  } catch {
-    // Font loading API unavailable or rejected - continue with what's loaded.
-  }
-  const images = Array.from(editor.querySelectorAll("img"));
-  await Promise.all(
-    images.map((img) =>
-      img.complete && img.naturalWidth > 0
-        ? Promise.resolve()
-        : img.decode().catch(() => undefined),
-    ),
-  );
-  await nextFrame();
-}
-
-/** Where the editor's wikilinks lead, for a page saved as `from`. */
-function pageNoteLinks(editor: Element, tab: DocTab, from: string) {
-  const sources = [...editor.querySelectorAll(WIKILINK_SELECTOR)].map(
-    (el) => el.textContent ?? "",
-  );
-  return resolveNoteLinks(sources, tab.path, from);
-}
-
 // File > Export as PDF. Needs the WYSIWYG view; unsaved edits included.
 export async function exportPdf(
   tab: DocTab,
@@ -181,34 +124,20 @@ export async function exportPdf(
   const overlay = showPdfOverlay(t);
   try {
     await nextFrame();
-    await settleRender(editor);
     // macOS keeps the theme's page colour unless asked for light colours.
     const whitePage = !isMac || lightColors;
-    const unmark = await markDrawnPictures(
-      editor,
-      whitePage || !appearanceIsDark() ? "light" : "dark",
-    );
-    // The page renders from the document's folder; a link's href too.
-    const copy = cloneEditorContent(
-      editor,
-      "inline",
-      await linkRenderer(editor),
-      await pageNoteLinks(editor, tab, tab.path ?? picked),
-    );
-    unmark();
-    let content = await inlineImages(copy, tab.path);
-    if (whitePage && appearanceIsDark()) {
-      const style = getComputedStyle(editor);
-      content = await lightDiagrams(
-        content,
-        editor.clientWidth - 40,
-        style.fontFamily,
-      );
-    }
-    const finished = await finishExportPage({
+    const style = getComputedStyle(editor);
+    const finished = await preparePage(editor, tab, {
       format: "pdf",
-      path: tab.path,
-      html: content,
+      // The page renders from the document's folder; a link's href too.
+      from: tab.path ?? picked,
+      images: "inline",
+      drawn: whitePage || !appearanceIsDark() ? "light" : "dark",
+      settle: true,
+      light:
+        whitePage && appearanceIsDark()
+          ? { width: editor.clientWidth - 40, font: style.fontFamily }
+          : undefined,
     });
     const page = platformPage();
     const standalone = buildStandaloneHtml(
@@ -260,26 +189,13 @@ export async function exportHtml(tab: DocTab, t: Strings): Promise<void> {
   );
   if (!picked) return;
   try {
-    await drawPending(editor);
     const besideDocument = !!tab.path && dirname(tab.path) === dirname(picked);
-    const renderLink = await linkRenderer(editor);
-    const noteLinks = await pageNoteLinks(editor, tab, picked);
-    const unmark = await markDrawnPictures(
-      editor,
-      appearanceIsDark() ? "dark" : "light",
-    );
-    const copy = cloneEditorContent(
-      editor,
-      besideDocument ? "document" : "inline",
-      renderLink,
-      noteLinks,
-    );
-    unmark();
-    const content = besideDocument ? copy : await inlineImages(copy, tab.path);
-    const finished = await finishExportPage({
+    const finished = await preparePage(editor, tab, {
       format: "html",
-      path: tab.path,
-      html: content,
+      from: picked,
+      images: besideDocument ? "document" : "inline",
+      drawn: appearanceIsDark() ? "dark" : "light",
+      settle: false,
     });
     const html = buildStandaloneHtml(
       base,
