@@ -41,26 +41,12 @@ export function useSidePanels(aiOn: boolean) {
   const [panelOpen, setPanelOpen] = useState(
     () => !isIOSApp && getUiState("sidebarOpen") === true,
   );
-  const { settings, setSettings } = useSettings();
-  // The rail hidden, the sidebar is put away with it, down to the window
-  // bar's one button, which opens both together.
-  const railOff = !isIOSApp && !settings.activityRail;
-  const open = panelOpen && !railOff;
-  const toggleSidebar = useCallback(() => {
-    if (railOff) {
-      setSettings({ activityRail: true });
-      setPanelOpen(true);
-    } else setPanelOpen((v) => !v);
-  }, [railOff, setSettings]);
-  // Asked to show a panel (a folder opened, search, a plugin's tab): the
-  // rail comes back with it.
-  const showPanel = useCallback(
-    (show: boolean) => {
-      if (show && railOff) setSettings({ activityRail: true });
-      setPanelOpen(show);
-    },
-    [railOff, setSettings],
-  );
+  const { settings } = useSettings();
+  // With the rail turned off the sidebar keeps its own tabs at its top, and
+  // the window bar's button opens and folds it whole; the rail stays off.
+  const open = panelOpen;
+  const toggleSidebar = useCallback(() => setPanelOpen((v) => !v), []);
+  const showPanel = setPanelOpen;
   useEffect(() => {
     if (!isIOSApp) setUiState("sidebarOpen", panelOpen);
   }, [panelOpen]);

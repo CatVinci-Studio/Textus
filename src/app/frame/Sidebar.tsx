@@ -75,9 +75,9 @@ export function Sidebar({
     [presenceRef, frame],
   );
   // The phone opens the sidebar from its own bar; there is no rail there.
-  // On the desktop the sidebar is only open beside the rail.
+  // Without the rail (an iPad's drawer, or the rail turned off) the
+  // sidebar's tabs are a row at its top, and the bar's button folds it all.
   const rail = settings.activityRail && !isIOSApp;
-  const drawer = isIOSApp;
   const move = (id: string, target: string) => {
     moveSidebarTab(id, target);
     moved();
@@ -117,11 +117,10 @@ export function Sidebar({
               {/* With the rail holding the tabs, the header is the panel's
                   name, on the window bar's line; the panel's own first row
                   (its search, its tools) starts under it, level with the
-                  islands' tops. An iPhone's or iPad's drawer has no rail: its tabs
-                  are here. */}
+                  islands' tops. Without the rail its tabs are here. */}
               {/* A plugin's buttons for its panel (menus "view/title")
                   end the name's line: no row of their own. */}
-              {!drawer && (
+              {rail && (
                 <>
                   <h2 className="tx-pane-title sidebar-title">
                     {shown.label(t)}
@@ -129,7 +128,7 @@ export function Sidebar({
                   <ViewTitleActions view={shown.id} />
                 </>
               )}
-              {drawer && (
+              {!rail && (
                 <SidebarTabBar
                   tabs={sidebarTabs()}
                   shownId={shown.id}
@@ -140,7 +139,7 @@ export function Sidebar({
               )}
             </div>
             <div className="sidebar-body" inert={closing || undefined}>
-              {drawer && <ViewTitleActions view={shown.id} />}
+              {!rail && <ViewTitleActions view={shown.id} />}
               <shown.Panel
                 t={t}
                 openFolder={openFolder}
