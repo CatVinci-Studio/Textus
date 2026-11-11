@@ -1,3 +1,4 @@
+import { Segmented } from "../../engine/controls/Segmented";
 import { fill } from "../../i18n/fill";
 import { requestCreate } from "../../ai/chat/create-request";
 import { useId, useRef, useState } from "react";
@@ -168,7 +169,6 @@ function useThemeAction() {
  *  theme, and whether the title bar frosts what scrolls beneath it. */
 export function ThemeSection({ t }: { t: Strings }) {
   const { settings, setSettings } = useSettings();
-  const appearanceId = useId();
   const latest = useLatest(settings);
   const { busy, error, run } = useThemeAction();
   const importTheme = useImportTheme(run);
@@ -205,31 +205,21 @@ export function ThemeSection({ t }: { t: Strings }) {
       {/* Independent of the theme below: that picks the palette, this picks
           which of its two forms is shown. Every theme defines both. */}
       <SettingRow label={t.appearanceLabel}>
-        <div
-          className="appearance-options"
-          role="radiogroup"
-          aria-label={t.appearanceLabel}
-        >
-          {THEME_MODES.map((mode) => (
-            <label
-              key={mode}
-              className={`appearance-option${settings.theme === mode ? " is-selected" : ""}`}
-            >
-              <input
-                type="radio"
-                name={appearanceId}
-                value={mode}
-                checked={settings.theme === mode}
-                onChange={() => setSettings({ theme: mode })}
-              />
-              {mode === "system"
+        <Segmented
+          kind="choice"
+          label={t.appearanceLabel}
+          value={settings.theme}
+          onChange={(theme) => setSettings({ theme })}
+          options={THEME_MODES.map((mode) => ({
+            id: mode,
+            label:
+              mode === "system"
                 ? t.appearanceSystem
                 : mode === "light"
                   ? t.appearanceLight
-                  : t.appearanceDark}
-            </label>
-          ))}
-        </div>
+                  : t.appearanceDark,
+          }))}
+        />
       </SettingRow>
 
       <SettingRow label={t.contentThemeLabel}>

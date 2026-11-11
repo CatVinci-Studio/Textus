@@ -213,7 +213,7 @@
   /* Controls a finger can hit: 36pt tall, in the body's 15pt type. */
   :root[data-window-chrome="mobile"]
     .settings-panel
-    :is(.settings-select, button.settings-inline-button, .appearance-option) {
+    :is(.settings-select, button.settings-inline-button, .tx-segment) {
     min-height: 36px;
     font-size: var(--text-secondary);
   }

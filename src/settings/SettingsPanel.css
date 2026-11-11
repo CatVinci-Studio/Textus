@@ -890,13 +890,6 @@ button.settings-inline-button {
   white-space: nowrap;
 }
 
-.appearance-option input {
-  position: absolute;
-  opacity: 0;
-  width: 1px;
-  height: 1px;
-}
-
 /* A row whose control needs the full width (Custom CSS): label above,
    control below, actions under that. */
 .settings-row.settings-row-stacked {

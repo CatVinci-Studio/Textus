@@ -1,3 +1,4 @@
+import { Segmented } from "../engine/controls/Segmented";
 import { splitFrontmatter } from "../utils/frontmatter";
 import { fill } from "../i18n/fill";
 import { useCallback, useEffect, useRef, useState } from "react";
@@ -270,26 +271,17 @@ export function DocumentList({
             ? plural(t.docCount, entries.length, settings.language)
             : ""}
         </span>
-        <div className="document-list-views" role="radiogroup" data-view={view}>
-          {(
-            [
-              ["list", t.docViewList, <ListViewIcon key="l" />],
-              ["grid", t.docViewGrid, <GridViewIcon key="g" />],
-            ] as const
-          ).map(([v, label, icon]) => (
-            <button
-              key={v}
-              type="button"
-              role="radio"
-              aria-checked={view === v}
-              aria-label={label}
-              className="document-list-view-button"
-              onClick={() => switchView(v)}
-            >
-              {icon}
-            </button>
-          ))}
-        </div>
+        <Segmented
+          kind="choice"
+          equal
+          label={t.menuView}
+          value={view}
+          onChange={switchView}
+          options={[
+            { id: "list", label: t.docViewList, icon: <ListViewIcon /> },
+            { id: "grid", label: t.docViewGrid, icon: <GridViewIcon /> },
+          ]}
+        />
       </div>
       <div ref={bodyRef} className={`document-list-body document-list-${view}`}>
         {/* A deleted document fades out where it was while the rest move

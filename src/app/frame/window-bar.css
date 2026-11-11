@@ -286,3 +286,9 @@
   font-size: var(--text-caption);
   font-weight: 600;
 }
+
+/* The phone's two pages, the document and Textus AI, in the title row. */
+.page-switch {
+  min-width: 132px;
+  pointer-events: auto;
+}

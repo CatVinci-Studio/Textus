@@ -88,7 +88,6 @@ textarea.tx-input {
 
 /* A segmented control: the segments' corners concentric with the track's,
    its radius theirs plus the inset and the border. */
-.appearance-options,
 .tx-segmented {
   --segment-inset: 2px;
   display: flex;
@@ -103,7 +102,6 @@ textarea.tx-input {
   background: color-mix(in srgb, var(--ui-text) 6%, transparent);
 }
 
-.appearance-option,
 .tx-segment {
   border: none;
   background: transparent;
@@ -121,7 +119,6 @@ textarea.tx-input {
   cursor: pointer;
 }
 
-.appearance-option.is-selected,
 .tx-segment.is-selected,
 .tx-segment[aria-selected="true"],
 .tx-segment[aria-checked="true"] {
@@ -130,10 +127,44 @@ textarea.tx-input {
   box-shadow: var(--shadow-raised);
 }
 
-.appearance-option:focus-within,
 .tx-segment:focus-visible {
   outline: 2px solid var(--ui-accent);
   outline-offset: 2px;
+}
+/* An icon alone: a square-ish segment, the icon centred. */
+.tx-segment.is-icon {
+  justify-content: center;
+  padding: 0 var(--space-2);
+}
+/* Segments of one width (Segmented equal): one thumb under them that
+   slides to the chosen one. */
+.tx-segmented.is-equal {
+  position: relative;
+  display: grid;
+  grid-auto-flow: column;
+  grid-auto-columns: 1fr;
+  gap: 0;
+}
+.tx-segmented.is-equal::before {
+  content: "";
+  position: absolute;
+  inset-block: var(--segment-inset);
+  left: var(--segment-inset);
+  width: calc((100% - 2 * var(--segment-inset)) / var(--segment-count, 2));
+  border-radius: var(--shape-pill);
+  corner-shape: round;
+  background: var(--ui-surface);
+  box-shadow: var(--shadow-raised);
+  transform: translateX(calc(100% * var(--segment-at, 0)));
+  transition: transform var(--dur-base) var(--ease-spring);
+}
+.tx-segmented.is-equal > .tx-segment {
+  justify-content: center;
+}
+.tx-segmented.is-equal
+  > .tx-segment:is([aria-selected="true"], [aria-checked="true"]) {
+  background: none;
+  box-shadow: none;
 }
 
 /* A path on one line (PathText): its folders give way first, then its

@@ -380,3 +380,18 @@
     background: none;
   }
 }
+
+/* A segmented switch under a finger: taller, the unchosen quieter. */
+:root[data-window-chrome="mobile"] .tx-segment {
+  min-height: 32px;
+  font-size: var(--text-secondary);
+  color: var(--ui-muted);
+}
+:root[data-window-chrome="mobile"]
+  .tx-segment:is([aria-selected="true"], [aria-checked="true"]) {
+  color: var(--ui-text);
+  font-weight: 600;
+}
+:root[data-window-chrome="mobile"] .tx-segment.is-icon {
+  min-width: 44px;
+}

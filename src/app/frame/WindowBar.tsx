@@ -13,7 +13,7 @@ import { LockIcon, SidebarToggleIcon } from "../../engine/controls/icons";
 import { useBarLayout } from "../../engine/layout/useBarLayout";
 import { useTitleRoom } from "./useTitleRoom";
 import { usePhoneLayout } from "../../engine/controls/usePhoneLayout";
-import { PageSwitch } from "../../mobile/PageSwitch";
+import { Segmented } from "../../engine/controls/Segmented";
 import { usePageSwipe } from "../../mobile/usePageSwipe";
 import { lazyModule } from "../../lazy/lazy-module";
 import { lazyComponent } from "../../lazy/lazy-component";
@@ -167,11 +167,16 @@ export function WindowBar({
           {/* Struck through while Textus AI is off; right-click pauses or
           turns it off. */}
           {pages ? (
-            <PageSwitch
-              ai={agentOpen}
-              onChange={(ai) => {
-                if (ai !== agentOpen) onToggleAgent();
-              }}
+            <Segmented
+              equal
+              className="page-switch"
+              label={t.phonePages}
+              value={agentOpen ? "ai" : "write"}
+              onChange={onToggleAgent}
+              options={[
+                { id: "write", label: t.phonePageWrite },
+                { id: "ai", label: t.phonePageAi },
+              ]}
             />
           ) : (
             <>
