@@ -12,7 +12,7 @@ import { SettingsIcon } from "../../engine/controls/icons";
 import { RailUpdate } from "./RailUpdate";
 import { emitToThisWindow } from "../../platform/menu-events";
 import type { Strings } from "../../i18n/strings";
-import { isOwnTab, type SidebarTabDef } from "./sidebar-tabs";
+import { isOwnTab, railOrder, type SidebarTabDef } from "./sidebar-tabs";
 
 /** The rail's width in interface px (activity-rail.css draws the same). */
 export const RAIL_WIDTH = 44;
@@ -38,7 +38,8 @@ export function ActivityRail({
   onSelect: (id: string) => void;
   onCloseSidebar: () => void;
   /** The rail's icons dragged into a new order. */
-  onReorder: (shown: string[]) => void;
+  /** Its order or pinned set changed (kept in the settings). */
+  onReorder: () => void;
   t: Strings;
 }) {
   const { settings, setSettings } = useSettings();
@@ -67,8 +68,9 @@ export function ActivityRail({
         ...above.filter((x) => !isOwnTab(x)),
         ...pinned.filter((x) => !onRail.has(x)),
       ],
+      activityRailOrder: railOrder(ids),
     });
-    onReorder(ids);
+    onReorder();
   };
   const drag = (e: React.PointerEvent<HTMLElement>, id: string) => {
     const rail = e.currentTarget.closest<HTMLElement>(".activity-rail");

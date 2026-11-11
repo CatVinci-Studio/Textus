@@ -16,7 +16,6 @@ import { ActivityRail } from "./ActivityRail";
 import { useSettings } from "../../prefs/SettingsContext";
 import {
   moveSidebarTab,
-  orderSidebarTabs,
   railTabs,
   sidebarTab,
   sidebarTabs,
@@ -100,10 +99,7 @@ export function Sidebar({
             if (!open) onToggle();
           }}
           onCloseSidebar={onToggle}
-          onReorder={(shown) => {
-            orderSidebarTabs(shown);
-            moved();
-          }}
+          onReorder={moved}
           t={t}
         />
       )}

@@ -1,4 +1,5 @@
 import { setUiState, uiList } from "../../storage/ui-state";
+import { loadSettings } from "../../prefs/settings-store";
 import {
   addedSidebarTabs,
   reserveSidebarTabIds,
@@ -212,9 +213,11 @@ export function sidebarTabs(): SidebarTabDef[] {
 
 /** The tabs as the rail shows them: plugins' pinned among Textus's own. */
 export function railTabs(): SidebarTabDef[] {
+  // Kept in the settings since 1.3.13; before, in this window's UI state.
+  const order = loadSettings().activityRailOrder;
   return orderTabs(
     [...BUILT_IN, ...pluginsTab(), ...settingsTab(), ...addedSidebarTabs()],
-    uiList("sidebarTabOrder"),
+    order.length ? order : uiList("sidebarTabOrder"),
   );
 }
 
@@ -247,15 +250,12 @@ export function moveSidebarTab(id: string, target: string): void {
   setUiState("sidebarTabOrder", ids);
 }
 
-/** The tabs shown in `shown`'s order (a rail dragged), those not shown
- *  (hidden from the rail) kept where they were. */
-export function orderSidebarTabs(shown: readonly string[]): void {
+/** The rail's order with the tabs shown in `shown`'s order (a rail
+ *  dragged), those not shown (hidden from the rail) kept where they were. */
+export function railOrder(shown: readonly string[]): string[] {
   const keep = new Set(shown);
   let next = 0;
-  const ids = railTabs().map((tab) =>
-    keep.has(tab.id) ? shown[next++] : tab.id,
-  );
-  setUiState("sidebarTabOrder", ids);
+  return railTabs().map((tab) => (keep.has(tab.id) ? shown[next++] : tab.id));
 }
 
 /** The tab with this id, or Files for one no longer there. */
