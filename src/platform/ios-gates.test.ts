@@ -22,8 +22,8 @@ const ALLOWED: Record<string, string> = {
   "app/islands/useWindowAi.ts": "the AI is a panel of its own, not tabs",
   "engine/controls/tabs/TabPill.tsx": "a haptic tap as a tab lifts",
   "app/useFileOpening.ts": "no files dropped on the window",
-  "app/frame/useSidePanels.ts":
-    "a drawer that starts closed, a sheet over the keyboard",
+  "app/frame/useSidePanels.ts": "a drawer that starts closed",
+  "app/frame/useAgentDock.ts": "a sheet over the keyboard",
   "document-view/useQuickAskReview.ts": "the keyboard and the review's focus",
   "document/ios-recents.ts": "the document list's recent documents",
   "document/startup-restore.ts": "reopens the last document; no shortcut tour",

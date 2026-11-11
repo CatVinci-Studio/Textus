@@ -1,19 +1,15 @@
-import { AI_PRESS_EVENT } from "../islands/ai-tabs";
 import {
   useCallback,
   useEffect,
-  useRef,
   useState,
   useSyncExternalStore,
 } from "react";
 import { isIOSApp } from "../../platform/capabilities";
-import { keyboardUp, whenKeyboardDown } from "../../mobile/keyboard";
 import { usePresence } from "../../engine/motion/usePresence";
 import { CLOSE_FIND_REPLACE_EVENT } from "../../utils/events";
-import {
-  useAgentPanelOpen,
-  useAgentPanelState,
-} from "../../ai/chat/panel/agent-panel";
+import { useAgentPanelOpen } from "../../ai/chat/panel/agent-panel";
+import { useAgentDock } from "./useAgentDock";
+import { storeSidebarTab, storedSidebarTab } from "./sidebar-tab";
 import { getUiState, setUiState } from "../../storage/ui-state";
 import { useNarrowSidebar } from "./useNarrowSidebar";
 import { useSidebarWidth } from "./sidebar-width";
@@ -21,7 +17,6 @@ import { RAIL_WIDTH } from "./ActivityRail";
 import { chromeScale } from "../../engine/tokens/chrome-scale";
 import { useSettings, type Settings } from "../../prefs/SettingsContext";
 import { PANEL_FLOOR } from "../../engine/controls/side-panel-width";
-import { storeSidebarTab, storedSidebarTab } from "./sidebar-tab";
 
 /** A sidebar tab's id. */
 export type SidebarTabId = string;
@@ -100,60 +95,14 @@ export function useSidePanels(aiOn: boolean) {
     isIOSApp ? Infinity : windowWidth - rail,
     sidebarWidth.width,
   );
-  const agentPanel = useAgentPanelState(
-    windowWidth,
-    rail + (open ? sidebarWidth.width : 0),
-  );
-  // On a phone, the document gives up focus here and the AI page's input
-  // doesn't take it, so the keyboard goes away in one movement. With the
-  // keyboard up, the page comes once it has gone, or its bottom jumps.
-  const pendingAgentOpen = useRef<(() => void) | null>(null);
-  const setAgentOpen = agentPanel.setOpen;
-  useEffect(() => {
-    if (!aiOn) setAgentOpen(false);
-  }, [aiOn, setAgentOpen]);
-  const toggleAgentPanel = useCallback(() => {
-    if (!aiOn) return;
-    if (pendingAgentOpen.current) {
-      // A second tap while it waits: it stays closed.
-      pendingAgentOpen.current();
-      pendingAgentOpen.current = null;
-      return;
-    }
-    if (isIOSApp && !agentPanel.open) {
-      const active = document.activeElement;
-      if (active instanceof HTMLElement) active.blur();
-      if (keyboardUp()) {
-        pendingAgentOpen.current = whenKeyboardDown(() => {
-          pendingAgentOpen.current = null;
-          agentPanel.setOpen(true);
-        });
-        return;
-      }
-    }
-    // Shown on the desktop: what a press does is the AI tabs' to decide -
-    // bring theirs to the front, or hide the AI (useAiTabs).
-    if (!isIOSApp && agentPanel.open) {
-      window.dispatchEvent(new Event(AI_PRESS_EVENT));
-      return;
-    }
-    agentPanel.toggle();
-  }, [aiOn, agentPanel]);
+  const { agentPanel, toggleAgentPanel, agentPresence, agentClosing } =
+    useAgentDock(aiOn, windowWidth, rail + (open ? sidebarWidth.width : 0));
   // Both side panels play their way out before their contents go; the
   // editor makes or takes back its room at once.
   // Out on the islands' clock (sidebar-frame.css).
   const sidebarPresence = usePresence(open);
   const sidebarClosing = sidebarPresence.state === "closing";
-  const agentPresence = usePresence(agentPanel.open);
-  const agentClosing = agentPresence.state === "closing";
-  // Remembered on the desktop like the open state; on iOS it starts on
-  // Files.
-  const [panelMode, setPanelMode] = useState<SidebarTabId>(() =>
-    isIOSApp ? "tree" : storedSidebarTab(),
-  );
-  useEffect(() => {
-    if (!isIOSApp) storeSidebarTab(panelMode);
-  }, [panelMode]);
+  const [panelMode, setPanelMode] = useSidebarTab();
 
   return {
     panelOpen: open,
@@ -169,4 +118,17 @@ export function useSidePanels(aiOn: boolean) {
     panelMode,
     setPanelMode,
   };
+}
+
+/** The sidebar's tab: remembered on the desktop like its open state; on
+ *  iOS it starts on Files. */
+function useSidebarTab() {
+  const [panelMode, setPanelMode] = useState<SidebarTabId>(() =>
+    isIOSApp ? "tree" : storedSidebarTab(),
+  );
+  useEffect(() => {
+    if (!isIOSApp) storeSidebarTab(panelMode);
+  }, [panelMode]);
+
+  return [panelMode, setPanelMode] as const;
 }
