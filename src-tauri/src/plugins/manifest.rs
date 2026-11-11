@@ -229,6 +229,27 @@ mod tests {
     }
 
     #[test]
+    fn the_shared_cases_are_judged_as_the_frontend_judges_them() {
+        let cases: Value = serde_json::from_str(include_str!(
+            "../../../src/plugins/store/manifest-cases.json"
+        ))
+        .unwrap();
+        let manifest = |extra: &Value| {
+            let mut m = cases["base"].clone();
+            for (k, v) in extra.as_object().unwrap() {
+                m[k] = v.clone();
+            }
+            m.to_string()
+        };
+        for extra in cases["valid"].as_array().unwrap() {
+            assert!(check(&manifest(extra)).is_ok(), "refused {extra}");
+        }
+        for extra in cases["invalid"].as_array().unwrap() {
+            assert!(check(&manifest(extra)).is_err(), "took {extra}");
+        }
+    }
+
+    #[test]
     fn a_permission_is_judged_as_the_frontend_judges_it() {
         let cases: Value =
             serde_json::from_str(include_str!("../../../src/plugins/store/permissions.json"))

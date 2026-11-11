@@ -1,5 +1,6 @@
 import { describe, expect, it } from "vitest";
 import { pluginString } from "../host/plugin-string";
+import CASES from "./manifest-cases.json";
 import {
   compareVersions,
   engineSatisfied,
@@ -428,5 +429,15 @@ describe("a plugin's floating views", () => {
     expect(() =>
       withViews([{ id: "catvinci.example.pet", title: "Pet", place: "dock" }]),
     ).toThrow(/"desktop", "window" or "either"/);
+  });
+});
+
+describe("the manifest cases Rust's check reads too", () => {
+  const manifest = (extra: object) => ({ ...CASES.base, ...extra });
+  it.each(CASES.valid)("takes %j", (extra) => {
+    expect(() => parseManifest(manifest(extra))).not.toThrow();
+  });
+  it.each(CASES.invalid)("refuses %j", (extra) => {
+    expect(() => parseManifest(manifest(extra))).toThrow();
   });
 });
