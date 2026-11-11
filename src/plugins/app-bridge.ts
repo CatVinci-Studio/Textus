@@ -1,3 +1,4 @@
+import { splitLayout, subscribeSplit } from "../engine/layout/store";
 import type { PanelsState } from "./panels-state";
 import type { AiState } from "./ai-state";
 import type { FloatingChange, FloatingTouch } from "./views/floating-views";
@@ -264,3 +265,12 @@ export function onPluginEvent<K extends keyof PluginEventMap>(
   set.add(listener as Listener<never>);
   return () => set.delete(listener as Listener<never>);
 }
+
+// The islands' arrangement changed: told to plugins as `layout`.
+let lastLayout = splitLayout();
+subscribeSplit(() => {
+  const now = splitLayout();
+  if (now === lastLayout) return;
+  lastLayout = now;
+  emitPluginEvent("layout", null);
+});

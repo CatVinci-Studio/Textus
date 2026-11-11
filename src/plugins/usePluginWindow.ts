@@ -15,6 +15,7 @@ import {
   emitPluginEvent,
   openDocumentAt,
   setWindowAccess,
+  getWindowAccess,
   type PluginTabInfo,
   type PluginTabView,
 } from "./app-bridge";
@@ -293,6 +294,10 @@ export function usePluginWindow({
   useEffect(
     () => emitPluginEvent("activeDocument", { path: activePath }),
     [activePath],
+  );
+  useEffect(
+    () => emitPluginEvent("activeTab", getWindowAccess()?.activeTab() ?? null),
+    [tabState.activeTabId],
   );
   useEffect(() => emitPluginEvent("language", language), [language]);
   useEffect(() => onCopied((copied) => emitPluginEvent("copy", copied)), []);

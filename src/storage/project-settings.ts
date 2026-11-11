@@ -24,6 +24,24 @@ export async function readProjectSettings(
   }
 }
 
+/** The file to change: {} only when there is none yet. One that is there
+ *  but doesn't read as settings stops the write - it would lose its keys. */
+async function settingsToChange(
+  root: string,
+): Promise<Record<string, unknown>> {
+  const path = projectSettingsFile(root);
+  let text: string;
+  try {
+    text = await fs.readTextFile(path);
+  } catch (err) {
+    if ((await fs.fileMtimeMs(path).catch(() => null)) === null) return {};
+    throw err;
+  }
+  const parsed: unknown = JSON.parse(text);
+  if (!isRecord(parsed)) throw new Error(`${path} isn't a settings file.`);
+  return parsed;
+}
+
 /** Each project's settings writes, one after another: two at once read the
  *  same file and the second's write dropped the first's key. */
 const queues = new Map<string, Promise<void>>();
@@ -37,7 +55,7 @@ export function updateProjectSettings(
   change: (value: Record<string, unknown>) => Record<string, unknown>,
 ): Promise<void> {
   const next = (queues.get(root) ?? Promise.resolve()).then(async () => {
-    const file = await readProjectSettings(root);
+    const file = await settingsToChange(root);
     const current = isRecord(file[key]) ? file[key] : {};
     await fs.writeTextFile(
       projectSettingsFile(root),

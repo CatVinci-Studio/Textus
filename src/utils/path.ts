@@ -33,9 +33,26 @@ export function parentDir(path: string): string | null {
   return parent;
 }
 
+/** Whether `path` lies under `dir`, its "." and ".." walked first: a path
+ *  climbing out with ".." is outside, however it starts. */
 export function isInside(path: string, dir: string): boolean {
-  if (!path.startsWith(dir) || path.length === dir.length) return false;
-  return /[\\/]$/.test(dir) || /[\\/]/.test(path[dir.length]);
+  const inner = walked(path);
+  const outer = walked(dir);
+  if (inner === null || outer === null || inner === outer) return false;
+  return inner.startsWith(outer.endsWith("/") ? outer : `${outer}/`);
+}
+
+/** A path with "/" for each separator and its "." and ".." walked; null
+ *  when ".." climbs above its root. */
+function walked(path: string): string | null {
+  const root = /^(?:[A-Za-z]:)?[\\/]*/.exec(path)![0].replace(/\\/g, "/");
+  const parts: string[] = [];
+  for (const part of path.slice(root.length).split(/[\\/]+/)) {
+    if (part === "" || part === ".") continue;
+    if (part !== "..") parts.push(part);
+    else if (parts.pop() === undefined) return null;
+  }
+  return root + parts.join("/");
 }
 
 // A Markdown image or link destination is a URL, so "%20" names a space in

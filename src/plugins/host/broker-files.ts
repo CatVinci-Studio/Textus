@@ -1,6 +1,6 @@
 import { notesRoot } from "../../files/link-style";
 import { fs, plugins as pluginsIpc, type StoreScope } from "../../platform/ipc";
-import { basename, slashed } from "../../utils/path";
+import { basename, isInside, slashed } from "../../utils/path";
 import { FILE_WRITTEN_EVENT } from "../../utils/events";
 import { fromBase64, toBase64 } from "../store/files";
 import {
@@ -342,10 +342,14 @@ export function relOf(root: string, path: string): string {
   return full.startsWith(`${r}/`) ? full.slice(r.length + 1) : basename(full);
 }
 
-/** `path` as a full path: as given, or under `root`. */
+/** `path` as a full path, as given or under `root`; refused when it isn't
+ *  in the open folder. */
 function within(root: string, path: string | undefined): string {
   if (!path) return root;
-  return /^([\\/]|[A-Za-z]:)/.test(path)
+  const full = /^([\\/]|[A-Za-z]:)/.test(path)
     ? path
     : `${root.replace(/[\\/]+$/, "")}/${path}`;
+  if (full !== root && !isInside(full, root))
+    throw new Error(`${path} isn't in the open folder.`);
+  return full;
 }

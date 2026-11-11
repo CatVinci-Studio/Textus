@@ -106,6 +106,16 @@ describe("a plugin's manifest", () => {
     expect(bad({ contributes: { menus: { "window/title": [] } } })).toThrow(
       /no menu/,
     );
+    // As the window compiles it, unicode: "\\-" would throw there and take
+    // every plugin's links down with it.
+    expect(
+      bad({
+        contributes: {
+          commands: [{ command: "catvinci.example.x", title: "x" }],
+          links: [{ pattern: "a\\-b", command: "catvinci.example.x" }],
+        },
+      }),
+    ).toThrow(/not a regular expression/);
     expect(bad({ engines: {} })).toThrow(/engines.textus/);
     expect(() => parseManifest("{nope")).toThrow(/not JSON/);
   });

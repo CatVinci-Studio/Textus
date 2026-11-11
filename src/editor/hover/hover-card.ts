@@ -103,11 +103,14 @@ function build(card: HoverCard): HTMLElement {
   head.append(pin);
   const body = document.createElement("div");
   body.className = "hover-card-body milkdown";
-  body.innerHTML = renderMarkdownHtml(card.markdown);
-  // No pictures: a card loads nothing from the network.
-  for (const img of body.querySelectorAll("img")) img.remove();
+  // Parsed inert, so no picture starts loading: a card loads nothing.
+  const parsed = document.createElement("template");
+  parsed.innerHTML = renderMarkdownHtml(card.markdown);
+  for (const img of parsed.content.querySelectorAll("img")) img.remove();
   // Links in the card are for reading, not following from here.
-  for (const a of body.querySelectorAll("a")) a.removeAttribute("href");
+  for (const a of parsed.content.querySelectorAll("a"))
+    a.removeAttribute("href");
+  body.append(parsed.content);
   el.append(head, body);
   return el;
 }

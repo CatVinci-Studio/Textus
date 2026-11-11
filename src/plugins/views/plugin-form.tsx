@@ -65,7 +65,12 @@ export function showPluginForm(
         "choice",
         "date",
         "color",
-      ].includes(f.type),
+      ].includes(f.type) &&
+      // A choice needs its options: without them it can't be drawn.
+      (f.type !== "choice" ||
+        (Array.isArray(f.options) &&
+          f.options.length > 0 &&
+          f.options.every((o) => o && typeof o.value === "string"))),
   );
   return new Promise((resolve) => {
     queue = [...queue, { ...request, fields, id: nextId++, resolve }];

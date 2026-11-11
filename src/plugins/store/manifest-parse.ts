@@ -368,8 +368,9 @@ export function parseContributes(raw: unknown, id: string): Contributes {
       if (where !== "math" && where !== "text" && where !== "any")
         throw new ManifestError(`${at}.where must be "math", "text" or "any".`);
       const pattern = text(o.pattern, `${at}.pattern`);
+      // As it is compiled: unicode, at the caret's end.
       try {
-        new RegExp(pattern);
+        new RegExp(`(?:${pattern})$`, "u");
       } catch {
         throw new ManifestError(`${at}.pattern is not a regular expression.`);
       }
@@ -387,8 +388,9 @@ export function parseContributes(raw: unknown, id: string): Contributes {
     const at = `contributes.links[${i}]`;
     const o = object(x, at);
     const pattern = text(o.pattern, `${at}.pattern`);
+    // As it is compiled, unicode.
     try {
-      new RegExp(pattern);
+      new RegExp(pattern, "u");
     } catch {
       throw new ManifestError(`${at}.pattern is not a regular expression.`);
     }

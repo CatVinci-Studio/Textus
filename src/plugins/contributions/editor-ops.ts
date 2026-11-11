@@ -295,12 +295,10 @@ export function runEditorOp(plugin: string, action: EditorOp): EditorOpResult {
         "\n",
         "\n",
       );
-      if (next && next !== "\n")
-        dispatch(
-          state.tr
-            .insertText(action.char, head, head + 1)
-            .setSelection(TextSelection.create(state.doc, head)),
-        );
+      if (next && next !== "\n") {
+        const tr = state.tr.insertText(action.char, head, head + 1);
+        dispatch(tr.setSelection(TextSelection.create(tr.doc, head)));
+      }
       break;
     }
     case "collapse": {

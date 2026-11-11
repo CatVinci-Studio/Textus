@@ -1,5 +1,6 @@
 import { fs, themes } from "../platform/ipc";
 import { withWebFonts } from "./web-fonts";
+import { isInside } from "../utils/path";
 import type { UserThemeMeta } from "../prefs/SettingsContext";
 
 /// Typora themes often `@import` a sibling stylesheet and use relative
@@ -44,9 +45,10 @@ function resolvePath(baseDir: string, rel: string): string {
   return stack.join("/");
 }
 
-function guessMime(path: string): string {
+/** A font or picture's type by its extension; null for anything else. */
+function mimeOf(path: string): string | null {
   const ext = path.slice(path.lastIndexOf(".") + 1).toLowerCase();
-  return MIME_BY_EXT[ext] ?? "application/octet-stream";
+  return MIME_BY_EXT[ext] ?? null;
 }
 
 async function inlineLocalUrls(css: string, baseDir: string): Promise<string> {
@@ -63,10 +65,17 @@ async function inlineLocalUrls(css: string, baseDir: string): Promise<string> {
       result += m[0];
       continue;
     }
+    const resolved = resolvePath(baseDir, target);
+    const mime = mimeOf(resolved);
+    // Only the theme's own fonts and pictures, beside it: a url() naming
+    // any other file is left as written, not copied into the theme.
+    if (!mime || !isInside(resolved, baseDir)) {
+      result += m[0];
+      continue;
+    }
     try {
-      const resolved = resolvePath(baseDir, target);
       const base64 = await fs.readBinaryFileBase64(resolved);
-      result += `url("data:${guessMime(resolved)};base64,${base64}")`;
+      result += `url("data:${mime};base64,${base64}")`;
     } catch {
       result += m[0]; // asset missing/unreadable - leave the original reference (best effort)
     }

@@ -1,5 +1,5 @@
 import { Marked, Renderer, type TokenizerAndRendererExtension } from "marked";
-import DOMPurify from "dompurify";
+import createDOMPurify from "dompurify";
 import { escapeHtml } from "../../utils/html";
 import { normalizeMathDelimiters } from "../../utils/markdown-math";
 import { sanitizeNodes } from "../html/html-policy";
@@ -93,6 +93,28 @@ const chatMarked = new Marked({
   extensions: [...mathExtensions(mathHtml), wikilink],
 });
 
+/**
+ * The cleaner for what Textus AI and plugins write (chat replies, hover
+ * cards): no styles or forms, and nothing that loads from the web as it
+ * shows - a remote picture is a link to it, a style naming a URL goes - so
+ * text an injected prompt puts in an address never leaves on its own.
+ */
+const purify = createDOMPurify(window);
+purify.addHook("afterSanitizeAttributes", (node) => {
+  if (/url\(/i.test(node.getAttribute("style") ?? ""))
+    node.removeAttribute("style");
+  if (node.tagName !== "IMG") return;
+  const src = node.getAttribute("src") ?? "";
+  if (!/^https?:/i.test(src)) return;
+  const link = node.ownerDocument.createElement("a");
+  link.href = src;
+  link.textContent = node.getAttribute("alt") || src;
+  node.replaceWith(link);
+});
+const AUTHORED = {
+  FORBID_TAGS: ["style", "form", "button", "textarea", "select"],
+};
+
 /** Markdown source -> sanitized, block-aware HTML, for the chat reply. */
 export function renderMarkdownHtml(markdown: string): string {
   // `\(`/`\[` are folded to `$`/`$$` first, so markdown's backslash escaping
@@ -100,7 +122,7 @@ export function renderMarkdownHtml(markdown: string): string {
   const parsed = chatMarked.parse(normalizeMathDelimiters(markdown), {
     async: false,
   });
-  return DOMPurify.sanitize(parsed);
+  return purify.sanitize(parsed, AUTHORED);
 }
 
 // Footnotes, which marked has no syntax for: a reference `[^2]` as its
@@ -166,7 +188,7 @@ const documentMarked = new Marked({
   breaks: false,
   extensions: [
     ...mathExtensions((source, display, block) => {
-      mathSlots.push(DOMPurify.sanitize(mathHtml(source, display, block)));
+      mathSlots.push(purify.sanitize(mathHtml(source, display, block)));
       return `<${MATH_SLOT_TAG} data-slot="${mathSlots.length - 1}"></${MATH_SLOT_TAG}>`;
     }),
     ...footnotes,
@@ -227,5 +249,5 @@ export function renderMarkdownInlineHtml(markdown: string): string {
   const parsed = inlineMarked.parseInline(normalizeMathDelimiters(markdown), {
     async: false,
   });
-  return DOMPurify.sanitize(parsed);
+  return purify.sanitize(parsed, AUTHORED);
 }

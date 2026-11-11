@@ -77,3 +77,13 @@ it("lets one plugin hold the keyboard; another can neither take it nor reset its
   releaseKeys("q");
   view.destroy();
 });
+
+it("replaceChar puts a character in place of the one at the caret", () => {
+  const view = heldEditor();
+  view.dispatch(
+    view.state.tr.setSelection(TextSelection.create(view.state.doc, 1)),
+  );
+  runEditorOp("p", { op: "replaceChar", char: "A" });
+  expect(view.state.doc.textContent).toBe("Alpha");
+  expect(view.state.selection.head).toBe(1);
+});

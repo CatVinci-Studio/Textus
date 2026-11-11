@@ -47,7 +47,8 @@ function renderKatex(value: string, displayMode: boolean): string | null {
       displayMode,
     });
   } catch {
-    html = value;
+    // Shown as its source, escaped; tried again next time.
+    return mathSourceHtml(value);
   }
   if (renderCache.size >= RENDER_CACHE_LIMIT) renderCache.clear();
   renderCache.set(cacheKey, html);

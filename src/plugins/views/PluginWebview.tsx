@@ -63,6 +63,9 @@ export function webviewPage(record: WebviewRecord, html: string) {
 /** The tallest a code block's frame grows: at most 70% of the window, so a
  *  long table or board scrolls inside and the note around it stays in
  *  view. */
+/** How long a Cut, Copy or Paste picked in the window's menu lets the page
+ *  reach the clipboard (ms). */
+const PICK_MS = 2000;
 /** How long a page asked for too early waits to be asked again (ms). */
 const RETRY_MS = 600;
 const MAX_CODE_BLOCK_HEIGHT = 1200;
@@ -120,6 +123,17 @@ export function PluginWebview({
     const frame = sandboxedFrame(page.srcdoc, page.title);
     frame.className = "plugin-webview-frame";
     let endpoint: Parameters<typeof webviewConnected>[1] = null;
+    // The clipboard is the page's only through the window's own menu: a
+    // Cut, Copy or Paste the user just picked there, once.
+    let picked: { action: unknown; until: number } | null = null;
+    const pickedNow = (...actions: string[]) => {
+      const ok =
+        !!picked &&
+        actions.includes(String(picked.action)) &&
+        Date.now() < picked.until;
+      picked = null;
+      return ok;
+    };
     // A menu the page asks for, at its point in the page: the value picked.
     const askMenu = (items: unknown, x: unknown, y: unknown) =>
       new Promise<unknown>((resolve) => {
@@ -127,6 +141,7 @@ export function PluginWebview({
         const finish = (value: unknown) => {
           if (done) return;
           done = true;
+          picked = { action: value, until: Date.now() + PICK_MS };
           setMenu(null);
           resolve(value);
         };
@@ -166,8 +181,10 @@ export function PluginWebview({
         textItems: ({ selected }: { selected: unknown }) =>
           textFieldItems(windowInfo().strings(), selected === true),
         clipboardWrite: ({ text }: { text: unknown }) =>
-          navigator.clipboard.writeText(String(text ?? "")).then(() => true),
-        clipboardRead: () => clipboardText(),
+          pickedNow("copy", "cut")
+            ? navigator.clipboard.writeText(String(text ?? "")).then(() => true)
+            : false,
+        clipboardRead: () => (pickedNow("paste") ? clipboardText() : ""),
         menuClose: () => closeMenuRef.current?.(),
         // Told on as a right-click on the frame, for the menu around it.
         contextMenu: ({ x, y }: { x: unknown; y: unknown }) => {
