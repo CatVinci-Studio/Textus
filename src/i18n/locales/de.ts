@@ -502,7 +502,6 @@ Skills liegen im Ordner skills/ neben dieser Datei, je Skill eine
   commandPalettePlaceholder: "Befehl eingeben…",
   menuSplitDown: "Unten teilen",
   menuCloseSplit: "Teilung schließen",
-  shortcutSplitEditor: "Teilen oder Teilung aufheben",
   toolbarLabel: "Formatierung",
   toolbarHeading: "Überschrift",
   toolbarBold: "Fett",

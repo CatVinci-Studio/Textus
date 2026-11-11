@@ -161,7 +161,7 @@ pub(crate) fn handler() -> impl Fn(tauri::ipc::Invoke<tauri::Wry>) -> bool + Sen
         clear_all_drafts,
         commands::undo_files::undo_file_save,
         commands::undo_files::undo_file_load,
-        commands::undo_files::undo_file_move,
+        commands::doc_data::document_data_move,
         commands::own_notes::own_notes_read,
         commands::own_notes::own_notes_write,
         distribution::app_distribution,

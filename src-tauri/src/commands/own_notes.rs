@@ -1,6 +1,6 @@
 //! A writer's own notes and tracked changes for a document, kept in the app's
-//! data folder (named by a hash of the path), never in the Markdown. A file
-//! renamed outside Textus loses them.
+//! data folder (named by a hash of the path), never in the Markdown. They
+//! follow a move made in Textus (doc_data); one made outside loses them.
 
 use sha2::{Digest, Sha256};
 use std::path::PathBuf;
@@ -17,6 +17,12 @@ pub enum OwnPart {
 }
 
 fn part_file(app: &AppHandle, path: &str, part: OwnPart) -> Result<PathBuf, String> {
+    let data = app.path().app_data_dir().map_err(|e| e.to_string())?;
+    Ok(part_file_in(&data, path, part))
+}
+
+/// The file `part` of `path` is kept in, under the app's data folder.
+pub(crate) fn part_file_in(data: &std::path::Path, path: &str, part: OwnPart) -> PathBuf {
     let hash: String = Sha256::digest(path.as_bytes())
         .iter()
         .map(|b| format!("{b:02x}"))
@@ -25,12 +31,7 @@ fn part_file(app: &AppHandle, path: &str, part: OwnPart) -> Result<PathBuf, Stri
         OwnPart::Notes => format!("{hash}.json"),
         OwnPart::Revisions => format!("{hash}.revisions.json"),
     };
-    Ok(app
-        .path()
-        .app_data_dir()
-        .map_err(|e| e.to_string())?
-        .join("own-notes")
-        .join(name))
+    data.join("own-notes").join(name)
 }
 
 /// What is kept of `part` for the document at `path`, as the JSON it was

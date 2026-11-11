@@ -293,7 +293,7 @@ export function installDevTauriShim(): void {
         const [hash, history] = kept[String(args.path)] ?? [];
         return Promise.resolve(hash === args.hash ? history : null);
       }
-      case "undo_file_move": {
+      case "document_data_move": {
         const kept = (w.__devUndoFiles ??= {}) as Record<string, string[]>;
         const from = String(args.from);
         if (kept[from]) kept[String(args.to)] = kept[from];
@@ -614,7 +614,7 @@ export function installDevTauriShim(): void {
           kept && kept.hash === String(args.hash) ? kept.history : null,
         );
       }
-      case "undo_file_move": {
+      case "document_data_move": {
         const kept = undoKept.get(String(args.from));
         if (kept) undoKept.set(String(args.to), kept);
         undoKept.delete(String(args.from));

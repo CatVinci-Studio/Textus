@@ -149,8 +149,8 @@ export const commands = {
 	undo_file_save: (path: string, hash: string, history: string) => __TAURI_INVOKE<null>("undo_file_save", { path, hash, history }),
 	/**  The history kept for `path`, if it ends at the text hashing to `hash`. */
 	undo_file_load: (path: string, hash: string) => __TAURI_INVOKE<string | null>("undo_file_load", { path, hash }),
-	/**  The history kept for `from` follows the document to `to`. */
-	undo_file_move: (from: string, to: string) => __TAURI_INVOKE<null>("undo_file_move", { from, to }),
+	/**  What is kept for `from` follows it to `to` (both already moved on disk). */
+	document_data_move: (from: string, to: string) => __TAURI_INVOKE<null>("document_data_move", { from, to }),
 	/**
 	 *  What is kept of `part` for the document at `path`, as the JSON it was
 	 *  written as - none when nothing is.

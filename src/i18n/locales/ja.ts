@@ -479,7 +479,6 @@ ${AI_NAME}への執筆の指示です。すべての文書に適用されます�
   commandPalettePlaceholder: "コマンドを入力…",
   menuSplitDown: "下に分割",
   menuCloseSplit: "分割を閉じる",
-  shortcutSplitEditor: "分割 / 分割を解除",
   toolbarLabel: "書式",
   toolbarHeading: "見出し",
   toolbarBold: "太字",

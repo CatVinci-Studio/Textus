@@ -240,7 +240,12 @@ export const undoFiles = {
   save: (path: string, hash: string, history: string) =>
     command("undo_file_save", path, hash, history),
   load: (path: string, hash: string) => command("undo_file_load", path, hash),
-  move: (from: string, to: string) => command("undo_file_move", from, to),
+};
+
+/** What is kept beside the app's data for a document or a folder's
+ *  documents (notes, tracked changes, proposals, undo) follows a move. */
+export const keptForDocuments = {
+  move: (from: string, to: string) => command("document_data_move", from, to),
 };
 
 /** What the writer keeps on a document beside the app's data, as JSON:

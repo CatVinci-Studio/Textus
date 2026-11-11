@@ -21,7 +21,7 @@ struct UndoFile {
     history: String,
 }
 
-fn undo_dir(app: &AppHandle) -> Result<PathBuf, String> {
+pub(crate) fn undo_dir(app: &AppHandle) -> Result<PathBuf, String> {
     app.path()
         .app_data_dir()
         .map_err(|e| e.to_string())
@@ -138,16 +138,6 @@ pub async fn undo_file_load(
     tauri::async_runtime::spawn_blocking(move || load_in(&dir, &path, &hash))
         .await
         .map_err(|e| e.to_string())
-}
-
-/// The history kept for `from` follows the document to `to`.
-#[tauri::command]
-#[cfg_attr(test, specta::specta)]
-pub async fn undo_file_move(app: AppHandle, from: String, to: String) -> Result<(), String> {
-    let dir = undo_dir(&app)?;
-    tauri::async_runtime::spawn_blocking(move || move_in(&dir, &from, &to))
-        .await
-        .map_err(|e| e.to_string())?
 }
 
 #[cfg(test)]

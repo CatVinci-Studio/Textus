@@ -493,7 +493,6 @@ type /name in a conversation to use one.
   commandPalettePlaceholder: "Type a command…",
   menuSplitDown: "Split Down",
   menuCloseSplit: "Close Split",
-  shortcutSplitEditor: "Split or Unsplit",
   toolbarLabel: "Formatting",
   toolbarHeading: "Heading",
   toolbarBold: "Bold",

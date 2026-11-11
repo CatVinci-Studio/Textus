@@ -38,7 +38,7 @@ export function actionLabels(t: Strings): Record<ShortcutAction, string> {
     toggleAgentPanel: t.menuToggleAgentPanel,
     toggleSplitView: t.menuToggleSplitView,
     toggleZenMode: t.menuToggleZenMode,
-    splitEditor: t.shortcutSplitEditor,
+    splitEditor: t.menuSplitRight,
     commandPalette: t.shortcutCommandPalette,
     toggleSourceMode: t.menuToggleSourceMode,
     toggleTypewriterMode: t.menuToggleTypewriterMode,

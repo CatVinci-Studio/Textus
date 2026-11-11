@@ -524,7 +524,6 @@ export default {
   commandPalettePlaceholder: "Введите команду…",
   menuSplitDown: "Разделить вниз",
   menuCloseSplit: "Закрыть разделение",
-  shortcutSplitEditor: "Разделить или объединить",
   toolbarLabel: "Форматирование",
   toolbarHeading: "Заголовок",
   toolbarBold: "Жирный",

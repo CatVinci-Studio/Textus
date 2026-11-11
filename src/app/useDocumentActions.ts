@@ -29,17 +29,6 @@ export function useDocumentActions(opts: {
     },
     [openFile],
   );
-  // A renamed document stays open under its new name; a deleted one keeps
-  // its text in the tab, unsaved.
-  const documentRenamed = useCallback(
-    (from: string, to: string) => {
-      setTabs((prev) =>
-        prev.map((tab) => (tab.path === from ? { ...tab, path: to } : tab)),
-      );
-      moveConversations(from, to);
-    },
-    [setTabs],
-  );
   // A file or folder moved in the tree: every open tab in it follows.
   const entryMoved = useCallback(
     (from: string, to: string) => {
@@ -63,6 +52,9 @@ export function useDocumentActions(opts: {
     },
     [tabsRef, setTabs],
   );
+  // A renamed document stays open under its new name, like any move; a
+  // deleted one keeps its text in the tab, unsaved.
+  const documentRenamed = entryMoved;
   // A plugin moving a page (the page tree making it a folder for its
   // sub-pages): its tab saved first, then following it.
   useEffect(() => {

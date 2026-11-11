@@ -448,7 +448,6 @@ export default {
   commandPalettePlaceholder: "输入命令…",
   menuSplitDown: "向下分屏",
   menuCloseSplit: "关闭分屏",
-  shortcutSplitEditor: "分屏 / 取消分屏",
   toolbarLabel: "格式",
   toolbarHeading: "标题",
   toolbarBold: "加粗",

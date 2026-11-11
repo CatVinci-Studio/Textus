@@ -50,6 +50,25 @@ function headingLabel(text: string): string {
     .replace(/([*_])(?=\S)(.+?)(?<=\S)\1/g, "$2");
 }
 
+/** The anchor a link to heading `index` takes: the id the editor gave it
+ *  (repeats numbered), or, out of sight, the same rule on its source. */
+function headingAnchor(tabId: string, texts: string[], index: number): string {
+  const root = tabElement(tabId)?.querySelector(".editor-content .ProseMirror");
+  const id = root?.querySelectorAll(HEADINGS)[index]?.id;
+  if (id) return id;
+  const shown = (text: string) =>
+    headingLabel(text).replace(/\$+[^$]+\$+/g, "");
+  const seen = new Map<string, number>();
+  let anchor = "";
+  texts.slice(0, index + 1).forEach((text) => {
+    const slug = headingSlug(shown(text));
+    const repeat = seen.get(slug) ?? 0;
+    seen.set(slug, repeat + 1);
+    anchor = repeat ? `${slug}-${repeat}` : slug;
+  });
+  return anchor;
+}
+
 export function Outline({ content, tabId }: OutlineProps) {
   const { t } = useSettings();
   // The editor scrolls there as every jump does (revealPosition).
@@ -82,7 +101,9 @@ export function Outline({ content, tabId }: OutlineProps) {
         label: t.outlineCopyLink,
         onSelect: () =>
           void navigator.clipboard
-            .writeText(`[${label}](#${headingSlug(label)})`)
+            .writeText(
+              `[${label}](#${headingAnchor(tabId, headings.map((h) => h.text), index)})`,
+            )
             .catch(() => {}),
       },
       {

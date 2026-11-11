@@ -11,6 +11,7 @@ pub mod cli;
 pub mod clipboard;
 #[cfg(desktop)]
 pub mod default_editor;
+pub mod doc_data;
 #[cfg(mobile)]
 pub mod documents;
 pub mod drafts;

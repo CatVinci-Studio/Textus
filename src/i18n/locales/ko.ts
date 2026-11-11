@@ -470,7 +470,6 @@ ${AI_NAME}에게 주는 글쓰기 지침으로, 모든 문서에 적용됩니다
   commandPalettePlaceholder: "명령 입력…",
   menuSplitDown: "아래로 분할",
   menuCloseSplit: "분할 닫기",
-  shortcutSplitEditor: "분할 / 분할 해제",
   toolbarLabel: "서식",
   toolbarHeading: "제목",
   toolbarBold: "굵게",

@@ -522,7 +522,6 @@ para usar una.
   commandPalettePlaceholder: "Escribe un comando…",
   menuSplitDown: "Dividir hacia abajo",
   menuCloseSplit: "Cerrar la división",
-  shortcutSplitEditor: "Dividir o unir",
   toolbarLabel: "Formato",
   toolbarHeading: "Encabezado",
   toolbarBold: "Negrita",

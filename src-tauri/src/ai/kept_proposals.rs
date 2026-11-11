@@ -18,9 +18,7 @@ fn kept_file(doc_path: &str, workspace_root: Option<&str>, app_data: &Path) -> O
     if !doc.is_absolute() {
         return None;
     }
-    let hash = Sha256::digest(doc_path.as_bytes());
-    let name: String = hash.iter().take(16).map(|b| format!("{b:02x}")).collect();
-    let file = app_data.join(PENDING_FOLDER).join(format!("{name}.json"));
+    let file = pending_file_in(app_data, doc_path);
     if let Some(old) = older_kept_file(doc, workspace_root) {
         if old.is_file() && !file.exists() {
             if let Some(parent) = file.parent() {
@@ -31,6 +29,13 @@ fn kept_file(doc_path: &str, workspace_root: Option<&str>, app_data: &Path) -> O
         }
     }
     Some(file)
+}
+
+/// The file `doc_path`'s proposals are kept in, by a hash of the path.
+pub(crate) fn pending_file_in(app_data: &Path, doc_path: &str) -> PathBuf {
+    let hash = Sha256::digest(doc_path.as_bytes());
+    let name: String = hash.iter().take(16).map(|b| format!("{b:02x}")).collect();
+    app_data.join(PENDING_FOLDER).join(format!("{name}.json"))
 }
 
 /// Where an older Textus kept them: the project's `.textus/pending/`,
@@ -50,7 +55,7 @@ fn older_kept_file(doc: &Path, workspace_root: Option<&str>) -> Option<PathBuf> 
 }
 
 /// The folder beside `file` its pictures are kept in.
-fn pictures_dir(file: &Path) -> PathBuf {
+pub(crate) fn pictures_dir(file: &Path) -> PathBuf {
     let mut name = file.as_os_str().to_os_string();
     name.push(".pictures");
     PathBuf::from(name)

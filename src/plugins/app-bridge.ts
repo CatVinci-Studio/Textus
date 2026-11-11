@@ -5,7 +5,7 @@ import type { AiState } from "./ai-state";
 import type { FloatingChange, FloatingTouch } from "./views/floating-views";
 import type { SentBlock } from "../editor/markdown/doc-blocks";
 import { moveDocumentData } from "./store/document-data";
-import { undoFiles } from "../platform/ipc-files";
+import { keptForDocuments } from "../platform/ipc-files";
 import type { EditProposal } from "../ai/types";
 import type { ChangeSource } from "../editor/change-source";
 import type { AppState } from "../platform/ipc-schedule";
@@ -220,7 +220,7 @@ export async function pluginMovedPath(from: string, to: string): Promise<void> {
 
 export async function notePathMoved(from: string, to: string): Promise<void> {
   emitPluginEvent("fileRename", { from, to });
-  void undoFiles.move(from, to).catch(() => {});
+  void keptForDocuments.move(from, to).catch(() => {});
   await moveDocumentData(from, to);
 }
 

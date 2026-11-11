@@ -59,7 +59,7 @@ fn groups() -> Vec<(&'static str, Builder<tauri::Wry>)> {
                     crate::commands::drafts::clear_all_drafts,
                     crate::commands::undo_files::undo_file_save,
                     crate::commands::undo_files::undo_file_load,
-                    crate::commands::undo_files::undo_file_move,
+                    crate::commands::doc_data::document_data_move,
                     crate::commands::own_notes::own_notes_read,
                     crate::commands::own_notes::own_notes_write,
                     crate::settings::settings_get,

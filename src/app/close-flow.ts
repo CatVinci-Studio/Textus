@@ -10,6 +10,11 @@ import {
   type DocTab,
 } from "../document/doc-tabs";
 import { drafts, session } from "../platform/ipc";
+import {
+  paneOf,
+  shownIsland,
+  splitLayout,
+} from "../engine/layout/store";
 import { flushPendingWrites } from "../storage/pending-writes";
 import { useModalDialog } from "../engine/controls/useModalDialog";
 import { useLatest } from "../utils/hooks/useLatest";
@@ -98,6 +103,12 @@ export function useTabRemoval(opts: {
         if (prevActive !== id) return prevActive;
         const remaining = tabsRef.current.filter((tb) => tb.id !== id);
         if (remaining.length === 0) return start?.id ?? prevActive;
+        // Split: a neighbor in the same island while it has one.
+        const island = shownIsland(paneOf(splitLayout(), id))?.tabs ?? [];
+        const at = island.indexOf(id);
+        const near = island.filter((tabId) => tabId !== id);
+        if (at >= 0 && near.length > 0)
+          return near[Math.min(at, near.length - 1)];
         return remaining[Math.min(closedIndex, remaining.length - 1)].id;
       });
     },

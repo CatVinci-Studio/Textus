@@ -512,7 +512,6 @@ Habilidades ficam na pasta skills/ ao lado deste arquivo, um arquivo
   commandPalettePlaceholder: "Digite um comando…",
   menuSplitDown: "Dividir para baixo",
   menuCloseSplit: "Fechar a divisão",
-  shortcutSplitEditor: "Dividir ou juntar",
   toolbarLabel: "Formatação",
   toolbarHeading: "Título",
   toolbarBold: "Negrito",

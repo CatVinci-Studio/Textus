@@ -24,7 +24,7 @@ import {
   FIND_NEXT_EVENT,
   INSERT_BLOCK_EVENT,
 } from "../utils/events";
-import { closeSplit, splitEditor, splitLayout } from "../engine/layout/store";
+import { splitEditor } from "../engine/layout/store";
 import { pickIsland } from "../engine/layout/island-numbers";
 import { openCommandPalette } from "./command-palette-entry";
 import { isImeKeydown } from "../utils/ime";
@@ -243,10 +243,9 @@ export function useGlobalShortcuts(opts: {
         e.preventDefault();
         void openCommandPalette();
       } else if (combo === shortcuts.splitEditor) {
-        // Split side by side, and the same keys go back to one.
+        // As View > Split Right does (on the Mac the menu takes the keys).
         e.preventDefault();
-        if (splitLayout()) closeSplit();
-        else splitEditor("row");
+        splitEditor("row");
       } else if (canOpenFolder && combo === shortcuts.searchFiles) {
         e.preventDefault();
         searchFiles();

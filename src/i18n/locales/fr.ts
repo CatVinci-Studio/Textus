@@ -524,7 +524,6 @@ utiliser une.
   commandPalettePlaceholder: "Tapez une commande…",
   menuSplitDown: "Partager en bas",
   menuCloseSplit: "Fermer le partage",
-  shortcutSplitEditor: "Diviser ou réunir",
   toolbarLabel: "Mise en forme",
   toolbarHeading: "Titre",
   toolbarBold: "Gras",
