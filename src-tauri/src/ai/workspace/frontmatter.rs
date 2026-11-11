@@ -16,25 +16,11 @@ pub(crate) struct Frontmatter {
 /// unterminated one) means the whole file is the body. Tolerates a BOM and
 /// CRLF line ends.
 pub(crate) fn split_frontmatter(content: &str) -> (Option<Frontmatter>, String) {
-    let content = content.strip_prefix('\u{feff}').unwrap_or(content);
-    let lines: Vec<&str> = content.split('\n').collect();
-    let is_fence = |line: &str| line.trim_end_matches('\r').trim_end() == "---";
-    if lines.first().is_none_or(|l| !is_fence(l)) {
-        return (None, content.to_string());
-    }
-    let Some(close) = lines
-        .iter()
-        .skip(1)
-        .position(|l| is_fence(l) || l.trim_end_matches('\r').trim_end() == "...")
-        .map(|i| i + 1)
-    else {
-        return (None, content.to_string());
+    let Some(front) = crate::frontmatter::split(content) else {
+        return (None, crate::frontmatter::without_bom(content).to_string());
     };
-    let header: Vec<String> = lines[1..close]
-        .iter()
-        .map(|l| l.trim_end_matches('\r').to_string())
-        .collect();
-    let body = lines[close + 1..].join("\n");
+    let header: Vec<String> = front.lines.iter().map(|l| l.to_string()).collect();
+    let body = front.body.to_string();
     let mut fm = Frontmatter::default();
     for (key, value) in parse_yaml_map(&header) {
         match value {

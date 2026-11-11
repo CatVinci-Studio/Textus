@@ -308,15 +308,7 @@ pub(crate) fn with_metadata(raw: &str, key: &str, value: &str) -> String {
     let field = format!("{META_PREFIX}-{key}:");
     let entry = |indent: &str| format!("{indent}{field} \"{value}\"");
     let mut lines: Vec<String> = raw.lines().map(str::to_string).collect();
-    let closing = (lines.first().map(|l| l.trim_end()) == Some("---"))
-        .then(|| {
-            lines
-                .iter()
-                .skip(1)
-                .position(|l| l.trim_end() == "---")
-                .map(|i| i + 1)
-        })
-        .flatten();
+    let closing = crate::frontmatter::split(raw).map(|front| front.lines.len() + 1);
     let indent_of = |l: &str| l[..l.len() - l.trim_start().len()].to_string();
     match closing {
         Some(end) => {

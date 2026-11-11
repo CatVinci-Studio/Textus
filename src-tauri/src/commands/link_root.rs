@@ -13,13 +13,10 @@ const FRONT_MATTER_BYTES: usize = 8 * 1024;
 pub(crate) fn front_matter_value(doc_path: &Path, key: &str) -> Option<String> {
     let bytes = std::fs::read(doc_path).ok()?;
     let text = String::from_utf8_lossy(&bytes[..bytes.len().min(FRONT_MATTER_BYTES)]).into_owned();
-    let text = text.strip_prefix('\u{feff}').unwrap_or(&text);
-    let mut lines = text.lines();
-    if lines.next()?.trim_end() != "---" {
-        return None;
-    }
-    let value = lines
-        .take_while(|l| l.trim_end() != "---")
+    let front = crate::frontmatter::split(&text)?;
+    let value = front
+        .lines
+        .iter()
         .find_map(|l| l.strip_prefix(key)?.strip_prefix(':'))?
         .trim()
         .trim_matches(['"', '\'']);

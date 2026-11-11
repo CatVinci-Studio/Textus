@@ -22,6 +22,7 @@ mod distribution;
 mod export_formats;
 mod ext_stats;
 mod extract;
+mod frontmatter;
 mod ids;
 mod json_file;
 #[cfg(desktop)]
