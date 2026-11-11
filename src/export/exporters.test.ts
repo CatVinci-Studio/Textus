@@ -399,3 +399,13 @@ describe("exportHtml", () => {
     expect(html).not.toContain("assets/my");
   });
 });
+
+describe("what an export drops", () => {
+  it("is the same for a printed page as for an HTML file", async () => {
+    const { readFileSync } = await import("node:fs");
+    const { EDITOR_CHROME_SELECTOR } = await import("./standalone-html");
+    const print = readFileSync("src/export/print.css", "utf8");
+    for (const selector of EDITOR_CHROME_SELECTOR.split(", "))
+      expect(print, selector).toContain(selector);
+  });
+});

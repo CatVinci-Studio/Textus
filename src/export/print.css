@@ -43,7 +43,9 @@
   .pending-insert,
   .image-resize-handle,
   .frontmatter-block,
-  .missing-image-card {
+  .missing-image-card,
+  .md-emoji-source,
+  [data-editor-chrome] {
     display: none !important;
   }
 

@@ -61,7 +61,7 @@ function collectInlinedCss(): string {
 
 // Editing affordances in the editor DOM that aren't document content. Keep
 // in step with print.css's @media print list.
-const EDITOR_CHROME_SELECTOR = [
+export const EDITOR_CHROME_SELECTOR = [
   ".heading-marker",
   `.${EMOJI_SOURCE_CLASS}`,
   ".enclosure-delimiter",
