@@ -2,7 +2,7 @@
 import { afterEach, beforeEach, expect, it, vi } from "vitest";
 import en from "../../i18n/locales/en";
 import type { Strings } from "../../i18n/strings";
-import { registerCommand } from "../../app/commands";
+import { registerCommand } from "../../registry/commands";
 import { defaultShortcuts } from "../../prefs/SettingsContext";
 
 const notices = vi.hoisted(() => ({ showNotice: vi.fn() }));

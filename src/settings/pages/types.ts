@@ -1,5 +1,5 @@
 import type { Strings } from "../../i18n/strings";
-import type { FixedShortcutGroup } from "../../app/fixed-shortcuts";
+import type { FixedShortcutGroup } from "../../registry/fixed-shortcuts";
 import type { Settings, useSettings } from "../../prefs/SettingsContext";
 
 /** A page's own page within its category (General › About Textus; on the

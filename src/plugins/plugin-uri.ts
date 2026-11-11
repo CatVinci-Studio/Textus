@@ -1,4 +1,4 @@
-import { commands, runCommand } from "../app/commands";
+import { commands, runCommand } from "../registry/commands";
 import { currentStrings } from "../i18n/current";
 import { plugins as pluginsIpc } from "../platform/ipc";
 import { showConfirm, showMessage } from "../engine/controls/app-dialog";

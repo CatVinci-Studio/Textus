@@ -4,7 +4,7 @@ import type {
   ShortcutAction,
   Shortcuts,
 } from "./SettingsContext";
-import type { FixedShortcutGroup } from "../app/fixed-shortcuts";
+import type { FixedShortcutGroup } from "../registry/fixed-shortcuts";
 import { isMacSystemCombo } from "../utils/system-keys";
 
 /** The heading shortcuts' names: the Format menu's own, and Paragraph. */

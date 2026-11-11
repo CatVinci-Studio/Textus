@@ -1,6 +1,6 @@
 import { pluginsSnapshot, windowInfo } from "../store/plugin-records";
 import { localize } from "../store/manifest";
-import { runCommand } from "../../app/commands";
+import { runCommand } from "../../registry/commands";
 import type {
   CompletionAnswer,
   CompletionContext,

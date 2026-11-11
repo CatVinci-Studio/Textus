@@ -5,7 +5,7 @@ import {
   type Shortcuts,
 } from "../../prefs/SettingsContext";
 import type { Strings } from "../../i18n/strings";
-import type { FixedShortcutGroup } from "../../app/fixed-shortcuts";
+import type { FixedShortcutGroup } from "../../registry/fixed-shortcuts";
 import {
   comboFromEvent,
   isBindableCombo,

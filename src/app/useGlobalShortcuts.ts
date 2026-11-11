@@ -4,7 +4,7 @@ import { cycleRegion, trackRegionFocus } from "./regions";
 import { useSettings, type HeadingAction } from "../prefs/SettingsContext";
 import { adjacentTabId, type DocTab } from "../document/doc-tabs";
 import { modIsMeta } from "../platform/os";
-import { macTabStep } from "./fixed-shortcuts";
+import { macTabStep } from "../registry/fixed-shortcuts";
 import {
   appDrawsWindowFrame,
   ownsMenuAccelerators,
@@ -14,7 +14,7 @@ import { canOpenFolder } from "../platform/capabilities";
 import { comboFromEvent } from "../utils/shortcuts";
 import { menuIpc } from "../platform/ipc";
 import { runMenuItemHere } from "../platform/menu-events";
-import { commandForCombo } from "./commands";
+import { commandForCombo } from "../registry/commands";
 import {
   TRIGGER_COMPLETION_EVENT,
   TRIGGER_GRAMMAR_CHECK_EVENT,

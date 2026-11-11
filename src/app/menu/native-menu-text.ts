@@ -1,6 +1,10 @@
 import { APP_NAME, type Strings } from "../../i18n/strings";
 import type { HeadingAction, Shortcuts } from "../../prefs/SettingsContext";
-import { buildAppMenu, NO_RECENTS, type MenuNode } from "./app-menu-model";
+import {
+  buildAppMenu,
+  NO_RECENTS,
+  type MenuNode,
+} from "../../registry/menu/app-menu-model";
 
 /**
  * The macOS menu bar's labels, which is native and English unless sent

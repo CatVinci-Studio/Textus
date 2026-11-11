@@ -1,4 +1,4 @@
-import { runCommand } from "../../app/commands";
+import { runCommand } from "../../registry/commands";
 import { pluginsSnapshot } from "../store/plugin-records";
 
 /**

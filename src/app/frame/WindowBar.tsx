@@ -1,7 +1,7 @@
 import { Fragment, Suspense, useSyncExternalStore } from "react";
 import { useSettings } from "../../prefs/SettingsContext";
 import { WindowCaptionButtons } from "../../engine/controls/WindowCaptionButtons";
-import type { MenuChecks } from "../menu/app-menu-model";
+import type { MenuChecks } from "../../registry/menu/app-menu-model";
 import { AppMenuButton } from "./WindowControls";
 import { MenuBar } from "../menu/MenuBar";
 import { Tooltip } from "../../engine/controls/Tooltip";

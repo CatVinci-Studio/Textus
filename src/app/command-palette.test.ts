@@ -1,6 +1,6 @@
 import { describe, expect, it } from "vitest";
 import { paletteEntries } from "./command-palette";
-import type { MenuNode } from "./menu/app-menu-model";
+import type { MenuNode } from "../registry/menu/app-menu-model";
 
 const MENU: MenuNode[] = [
   {

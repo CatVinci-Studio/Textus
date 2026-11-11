@@ -1,4 +1,4 @@
-import { PLUGIN_SETTINGS } from "./plugin-menu";
+import { PLUGIN_SETTINGS } from "../../registry/menu/plugin-menu";
 import { useEffect, useLayoutEffect, useRef } from "react";
 import { useSyncExternalStore } from "react";
 import {
@@ -13,10 +13,13 @@ import {
 import { menuIpc, windowIpc } from "../../platform/ipc";
 import { editInFocus } from "../../engine/controls/edit-in-focus";
 import { hasNativeMenuBar } from "../../platform/capabilities";
-import { nativeMenuChecks, type MenuChecks } from "./app-menu-model";
+import {
+  nativeMenuChecks,
+  type MenuChecks,
+} from "../../registry/menu/app-menu-model";
 import { nativeMenuAccelerators, nativeMenuLabels } from "./native-menu-text";
 import { listenToThisWindow, unlistenAll } from "../../platform/events";
-import { runCommand } from "../commands";
+import { runCommand } from "../../registry/commands";
 import { lazyModule } from "../../lazy/lazy-module";
 import {
   EDIT_ACTION_EVENT,

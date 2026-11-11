@@ -1,7 +1,10 @@
 import { thisWindow } from "../../platform/this-window";
 import { editInFocus } from "../../engine/controls/edit-in-focus";
 import { EDIT_ACTION_EVENT } from "../../utils/events";
-import type { LocalMenuAction, MenuAction } from "./app-menu-model";
+import type {
+  LocalMenuAction,
+  MenuAction,
+} from "../../registry/menu/app-menu-model";
 import { canToggleFullscreen, hasAppMenu } from "../../platform/capabilities";
 import { emitMenuEvent, runMenuItemHere } from "../../platform/menu-events";
 

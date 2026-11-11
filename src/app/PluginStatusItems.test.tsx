@@ -2,13 +2,13 @@
 import { cleanup, fireEvent, render, screen } from "@testing-library/react";
 import { afterEach, expect, it, vi } from "vitest";
 import { PluginStatusItems } from "./PluginStatusItems";
-import { runCommand } from "./commands";
+import { runCommand } from "../registry/commands";
 import {
   removeStatusItem,
   setStatusItem,
 } from "../plugins/contributions/status-items";
 
-vi.mock("./commands", () => ({ runCommand: vi.fn() }));
+vi.mock("../registry/commands", () => ({ runCommand: vi.fn() }));
 vi.mock("../plugins/manager", () => {
   const snapshot = {
     loaded: true,

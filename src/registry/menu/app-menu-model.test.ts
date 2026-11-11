@@ -16,7 +16,10 @@ import {
   nativeMenuChecks,
   type MenuNode,
 } from "./app-menu-model";
-import { nativeMenuAccelerators, nativeMenuLabels } from "./native-menu-text";
+import {
+  nativeMenuAccelerators,
+  nativeMenuLabels,
+} from "../../app/menu/native-menu-text";
 import { pluginMenuNodes } from "./plugin-menu";
 import { readdirSync, readFileSync } from "node:fs";
 

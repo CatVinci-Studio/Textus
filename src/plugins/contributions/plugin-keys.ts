@@ -1,6 +1,6 @@
 import { APP_NAME } from "../../i18n/strings";
-import { commandShortcut, commands } from "../../app/commands";
-import { fixedShortcutGroups } from "../../app/fixed-shortcuts";
+import { commandShortcut, commands } from "../../registry/commands";
+import { fixedShortcutGroups } from "../../registry/fixed-shortcuts";
 import { keyOwner } from "../../prefs/key-owner";
 import { defaultShortcuts } from "../../prefs/SettingsContext";
 import { platformName } from "../../platform/window-chrome";

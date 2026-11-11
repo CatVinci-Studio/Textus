@@ -1,4 +1,12 @@
-import { closeSplit, paneOf, previewSplit, setSplitLayout, splitLayout, type SplitDirection, placeOnArrival } from "../../engine/layout/store";
+import {
+  closeSplit,
+  paneOf,
+  previewSplit,
+  setSplitLayout,
+  splitLayout,
+  type SplitDirection,
+  placeOnArrival,
+} from "../../engine/layout/store";
 import { pairLayout } from "../../engine/layout/ops";
 import { moveTab, splitOff, type SplitLayout } from "../../engine/layout/ops";
 import { paneById } from "../../engine/layout/tree";

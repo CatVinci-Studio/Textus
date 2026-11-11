@@ -2,7 +2,7 @@ import { Suspense, useCallback, useRef, useState } from "react";
 import { useSettings } from "../../prefs/SettingsContext";
 import { useCloseOnOutsideClick } from "../../utils/hooks/useCloseOnOutsideClick";
 import { AppMenu } from "../menu/app-menu-lazy";
-import type { MenuChecks } from "../menu/app-menu-model";
+import type { MenuChecks } from "../../registry/menu/app-menu-model";
 import { HamburgerIcon } from "../../engine/controls/icons";
 import { appDrawsWindowFrame } from "../../platform/window-chrome";
 import { Presence } from "../../engine/motion/usePresence";

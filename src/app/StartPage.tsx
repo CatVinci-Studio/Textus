@@ -1,6 +1,6 @@
 import { useEffect, useState, type ReactNode } from "react";
 import { emitToThisWindow } from "../platform/menu-events";
-import { NO_RECENTS, type RecentLists } from "./menu/app-menu-model";
+import { NO_RECENTS, type RecentLists } from "../registry/menu/app-menu-model";
 import { readRecents } from "./menu/recents";
 import { menuIpc } from "../platform/ipc-app";
 import { basename, dirname } from "../utils/path";

@@ -14,7 +14,7 @@ import {
 } from "react";
 import { ContextMenu } from "../../engine/controls/ContextMenu";
 import { useLatest } from "../../utils/hooks/useLatest";
-import { runCommand } from "../../app/commands";
+import { runCommand } from "../../registry/commands";
 import {
   BulletListIcon,
   CheckIcon,

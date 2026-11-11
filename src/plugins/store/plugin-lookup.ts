@@ -1,5 +1,5 @@
 import { currentStrings } from "../../i18n/current";
-import { PLUGIN_SETTINGS } from "../../app/menu/plugin-menu";
+import { PLUGIN_SETTINGS } from "../../registry/menu/plugin-menu";
 import { basename } from "../../utils/path";
 import { localize, matchesFilename } from "./manifest";
 import { claimKey, frontMatterClaim, ownerOf } from "../contributions/owners";

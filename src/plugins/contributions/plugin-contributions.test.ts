@@ -4,7 +4,7 @@ const { run, showMessage } = vi.hoisted(() => ({
   run: new Map<string, () => void>(),
   showMessage: vi.fn(async () => {}),
 }));
-vi.mock("../../app/commands", () => ({
+vi.mock("../../registry/commands", () => ({
   registerCommand: (c: { id: string; run: () => void }) => {
     run.set(c.id, c.run);
     return () => run.delete(c.id);

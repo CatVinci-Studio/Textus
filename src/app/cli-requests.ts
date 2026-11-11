@@ -8,7 +8,7 @@ import { pluginName, pluginsSnapshot } from "../plugins/store/plugin-records";
 import { installFromCatalog, loadCatalog } from "../plugins/store/catalog";
 import { emitToWindow } from "../platform/events";
 import { thisWindow } from "../platform/this-window";
-import { runCommand } from "./commands";
+import { runCommand } from "../registry/commands";
 import { runMenuAction } from "./menu/app-menu-actions";
 import { paletteNow, type PaletteEntry } from "./command-palette";
 

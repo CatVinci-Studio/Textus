@@ -1,7 +1,7 @@
 import { pluginPlatform } from "../plugin-platform";
 import { createElement } from "react";
-import { registerCommand, runCommand } from "../../app/commands";
-import { registerSidebarTab } from "../../app/frame/sidebar-tabs";
+import { registerCommand, runCommand } from "../../registry/commands";
+import { registerSidebarTab } from "../../registry/sidebar-tabs";
 import { registerEditorMenuItems } from "../../editor/editor-menu-items";
 import { showMessage } from "../../engine/controls/app-dialog";
 import { currentStrings } from "../../i18n/current";

@@ -10,7 +10,7 @@ import {
   menuBarSections,
   NO_RECENTS,
   type MenuChecks,
-} from "./app-menu-model";
+} from "../../registry/menu/app-menu-model";
 
 /**
  * The app menu's top level laid out along the window bar, where the app

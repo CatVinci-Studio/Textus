@@ -3,8 +3,7 @@ import "./contributions/editor-extensions";
 import { logPluginError } from "./store/plugin-log";
 import { version as APP_VERSION } from "../../package.json";
 import { plugins as pluginsIpc, type PluginsState } from "../platform/ipc";
-import { registerCommand, runCommand } from "../app/commands";
-import { pickWithCommands } from "../app/command-palette-entry";
+import { registerCommand, runCommand } from "../registry/commands";
 import { showMessage } from "../engine/controls/app-dialog";
 import { getActiveDocument } from "./app-bridge";
 import type { PluginHost } from "./host/broker";
@@ -199,7 +198,9 @@ async function host(record: PluginRecord): Promise<PluginHost> {
         platform: pluginPlatform(),
         setting: async (id, key) => pluginSetting(id, key),
         setSetting: (id, key, value) => setPluginSetting(id, key, value),
-        pickWithCommands,
+        pickWithCommands: (items, query, placeholder) =>
+          windowInfo().pickWithCommands?.(items, query, placeholder) ??
+          Promise.resolve(null),
         runCommand: async (command, args) => {
           const owner = pluginsSnapshot().records.find(
             (r) => r.status === "on" && command.startsWith(`${r.id}.`),

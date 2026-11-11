@@ -21,7 +21,7 @@ import { useSourceModes } from "./useSourceModes";
 import { useTabRemoval } from "./close-flow";
 import { folderTabsToClose } from "./close-folder";
 import { usePracticeTab } from "./onboarding-wiring";
-import { usePluginWindow } from "../plugins/usePluginWindow";
+import { usePluginWindow } from "./usePluginWindow";
 import type { WindowShell } from "./useWindowShell";
 import type { Settings } from "../prefs/SettingsContext";
 import type { Strings } from "../i18n/strings";

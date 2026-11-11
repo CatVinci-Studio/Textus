@@ -1,4 +1,8 @@
 import { getUiState, setUiState } from "../../storage/ui-state";
+import {
+  addedSidebarTabs,
+  reserveSidebarTabIds,
+} from "../../registry/sidebar-tabs";
 import { StartActions } from "../StartActions";
 import "../start-page.css";
 import type { ComponentType } from "react";
@@ -182,22 +186,8 @@ const SETTINGS_TAB: SidebarTabDef = {
 };
 const settingsTab = () => (isIOSApp ? [] : [SETTINGS_TAB]);
 
-const added: SidebarTabDef[] = [];
-
 /** The first tab, Files: where the sidebar opens with nothing remembered. */
 export const DEFAULT_SIDEBAR_TAB = "tree";
-
-/** Adds a tab after the built-in ones; the returned function takes it
- *  away again. An id already taken is refused. */
-export function registerSidebarTab(tab: SidebarTabDef): () => void {
-  if (sidebarTabs().some((t) => t.id === tab.id))
-    throw new Error(`A sidebar tab "${tab.id}" is already registered.`);
-  added.push(tab);
-  return () => {
-    const at = added.indexOf(tab);
-    if (at >= 0) added.splice(at, 1);
-  };
-}
 
 /** Textus's own tabs (Files, Outline, Search, Plugins): always first,
  *  apart from the ones plugins add. */
@@ -208,13 +198,14 @@ export function isOwnTab(id: string): boolean {
     BUILT_IN.some((tab) => tab.id === id)
   );
 }
+reserveSidebarTabIds(isOwnTab);
 
 /** The tabs, in the header's order: as the user dragged them, a tab new
  *  since then where it comes - Textus's own before any a plugin adds. */
 export function sidebarTabs(): SidebarTabDef[] {
   const kept = getUiState("sidebarTabOrder");
   const all = orderTabs(
-    [...BUILT_IN, ...pluginsTab(), ...settingsTab(), ...added],
+    [...BUILT_IN, ...pluginsTab(), ...settingsTab(), ...addedSidebarTabs()],
     Array.isArray(kept) ? kept : [],
   );
   return [

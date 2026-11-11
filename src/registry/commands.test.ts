@@ -5,11 +5,8 @@ import {
   registerCommand,
   runCommand,
 } from "./commands";
-import {
-  registerSidebarTab,
-  sidebarTab,
-  sidebarTabs,
-} from "./frame/sidebar-tabs";
+import { sidebarTab, sidebarTabs } from "../app/frame/sidebar-tabs";
+import { registerSidebarTab } from "./sidebar-tabs";
 import { resolveStrings } from "../i18n/strings";
 
 describe("commands", () => {

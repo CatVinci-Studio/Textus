@@ -1,16 +1,17 @@
-import { watchConventions } from "./contributions/conventions-watch";
+import { pickWithCommands } from "./command-palette-entry";
+import { watchConventions } from "../plugins/contributions/conventions-watch";
 import { useEffect, useSyncExternalStore } from "react";
 import { onCopied } from "../clipboard/copied";
-import { offerMovedFeatures } from "./store/moved-offer";
-import { watchDevPlugins } from "./store/dev-reload";
-import { watchPluginAiTools } from "./contributions/ai-tools";
-import { setCompletionAsker } from "./contributions/completion-sources";
+import { offerMovedFeatures } from "../plugins/store/moved-offer";
+import { watchDevPlugins } from "../plugins/store/dev-reload";
+import { watchPluginAiTools } from "../plugins/contributions/ai-tools";
+import { setCompletionAsker } from "../plugins/contributions/completion-sources";
 import { makeBlankTab, tabTitle, type DocTab } from "../document/doc-tabs";
 import type { Strings } from "../i18n/strings";
 import { useLatest } from "../utils/hooks/useLatest";
-import { registerCommand } from "../app/commands";
-import type { TabState } from "../app/tabs/useTabState";
-import type { OpenOptions } from "../app/useFileOpening";
+import { registerCommand } from "../registry/commands";
+import type { TabState } from "./tabs/useTabState";
+import type { OpenOptions } from "./useFileOpening";
 import {
   emitPluginEvent,
   openDocumentAt,
@@ -18,8 +19,8 @@ import {
   getWindowAccess,
   type PluginTabInfo,
   type PluginTabView,
-} from "./app-bridge";
-import type { Where } from "./app-bridge";
+} from "../plugins/app-bridge";
+import type { Where } from "../plugins/app-bridge";
 import {
   askPlugin,
   configurePlugins,
@@ -28,17 +29,17 @@ import {
   runPluginAiTool,
   subscribePlugins,
   type PluginsSnapshot,
-} from "./manager";
-import { setPluginProject } from "./plugin-setting-values";
-import { watchTheme, windowIsDark } from "./views/theme-vars";
-import { usePluginMenuSync } from "./contributions/usePluginMenu";
+} from "../plugins/manager";
+import { setPluginProject } from "../plugins/plugin-setting-values";
+import { watchTheme, windowIsDark } from "../plugins/views/theme-vars";
+import { usePluginMenuSync } from "../plugins/contributions/usePluginMenu";
 import {
   besideLayout,
   openBeside,
   placeOnArrival,
 } from "../engine/layout/store";
-import { takePluginUris } from "./plugin-uri";
-import { migrateOfficialPlugins } from "./store/migrate-official";
+import { takePluginUris } from "../plugins/plugin-uri";
+import { migrateOfficialPlugins } from "../plugins/store/migrate-official";
 import { listenToThisWindow, unlistenAll } from "../platform/events";
 import {
   INSERT_BLOCK_EVENT,
@@ -101,6 +102,7 @@ export function usePluginWindow({
         shortcuts: settingsRef.current.settings.shortcuts,
         overrides: settingsRef.current.settings.commandShortcuts,
       }),
+      pickWithCommands,
     });
     // Then, once, move the official plugins from before API 1.0 to their rewrites.
     // And offer, once, the plugins features of the core became.
@@ -325,7 +327,7 @@ export function usePluginWindow({
   useEffect(() => {
     let stop: (() => void) | undefined;
     let ended = false;
-    void import("./background/schedule-window").then((m) => {
+    void import("../plugins/background/schedule-window").then((m) => {
       if (!ended)
         stop = m.connectScheduleWindow(languageRef, settingsRef, openRef);
     });

@@ -8,7 +8,7 @@ import { useSettings } from "../prefs/SettingsContext";
 import { useMarginAvailable } from "../ai/margin/margin-room";
 import { usePhoneLayout } from "../engine/controls/usePhoneLayout";
 import { localeOf } from "../i18n/strings";
-import type { FixedShortcutGroup } from "../app/fixed-shortcuts";
+import type { FixedShortcutGroup } from "../registry/fixed-shortcuts";
 import { ChevronIcon, CloseIcon } from "../engine/controls/icons";
 import { ThemesTab } from "./sections/theme";
 import { openExtensionsTab, type ExtensionsTab } from "./pages/extensions-tab";

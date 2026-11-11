@@ -10,7 +10,7 @@ import {
 } from "../prefs/SettingsContext";
 import { isBindableCombo, isReservedCombo } from "../utils/shortcuts";
 import { buildAppMenu, NO_RECENTS, type MenuNode } from "./menu/app-menu-model";
-import { nativeAccelerators } from "./native-menu-keys";
+import { nativeAccelerators } from "../app/native-menu-keys";
 import {
   fixedShortcutGroups,
   macTabStep,

@@ -14,7 +14,7 @@ import {
   type MenuChecks,
   type MenuEntry,
   type MenuNode,
-} from "./app-menu-model";
+} from "../../registry/menu/app-menu-model";
 import { thisWindow } from "../../platform/this-window";
 import {
   canToggleFullscreen,

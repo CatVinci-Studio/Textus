@@ -17,7 +17,7 @@ import {
 } from "../settings-nav";
 import { AboutPage } from "../pages/AboutPage";
 import type { SettingsPageProps, ShortcutCommand } from "../pages/types";
-import type { FixedShortcutGroup } from "../../app/fixed-shortcuts";
+import type { FixedShortcutGroup } from "../../registry/fixed-shortcuts";
 import "../SettingsPanel.css";
 import "./settings-tab.css";
 

@@ -1,3 +1,4 @@
+import type { QuickPickItem } from "../../engine/controls/quick-pick";
 import { matchesWords } from "../../utils/match-words";
 import type { Strings } from "../../i18n/strings";
 import type { Shortcuts } from "../../prefs/SettingsContext";
@@ -40,6 +41,13 @@ interface WindowInfo {
   /** The app's shortcuts and the user's keys for commands, as Settings has
    *  them; the defaults when left out. */
   keys?: () => { shortcuts: Shortcuts; overrides: Record<string, string> };
+  /** The command palette, offering `items` (a plugin's ui.pick): the
+   *  window's own. */
+  pickWithCommands?: (
+    items: QuickPickItem[],
+    query: string,
+    placeholder?: string,
+  ) => Promise<unknown>;
 }
 
 let info: WindowInfo = {

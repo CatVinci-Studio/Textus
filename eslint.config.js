@@ -51,8 +51,12 @@ const FEATURES = [
   "files",
   "mobile",
   "onboarding",
+  "plugins",
   "settings",
   "theme",
+  // What the shell and the features both register into or read: commands,
+  // menus, shortcuts, sidebar tabs. Below the features, above the engine.
+  "registry",
 ];
 const SHELL = ["app", "document-view"];
 
@@ -165,10 +169,15 @@ export default tseslint.config(
   },
   {
     files: [
-      "src/{ai,clipboard,document,export,files,mobile,onboarding,settings,theme}/**/*.{ts,tsx}",
+      "src/{ai,clipboard,document,export,files,mobile,onboarding,plugins,settings,theme}/**/*.{ts,tsx}",
     ],
     ignores: ["**/*.test.*"],
     rules: above(SHELL),
+  },
+  {
+    files: ["src/registry/**/*.{ts,tsx}"],
+    ignores: ["**/*.test.*"],
+    rules: above([...SHELL, ...FEATURES.filter((f) => f !== "registry")]),
   },
   {
     // The window's shell is the top layer: it may import anything but the
@@ -178,9 +187,9 @@ export default tseslint.config(
     rules: above([]),
   },
   {
-    // The plugin system and the entry files aren't layered, but they still
-    // reach Tauri only through src/platform/.
-    files: ["src/plugins/**/*.{ts,tsx}", "src/*.{ts,tsx}"],
+    // The entry files aren't layered, but they still reach Tauri only
+    // through src/platform/.
+    files: ["src/*.{ts,tsx}"],
     ignores: ["**/*.test.*"],
     rules: {
       "@typescript-eslint/no-restricted-imports": [
