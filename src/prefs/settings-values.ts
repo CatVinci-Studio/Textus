@@ -1,3 +1,4 @@
+import TABLES from "./appearance-tables.json";
 import type { AgentMode_Serialize as AgentMode } from "../platform/bindings/ai-skills";
 /** Each setting's possible values: the modes, sizes, services and kinds a
  *  setting chooses among, with the lists Settings offers. */
@@ -22,8 +23,9 @@ export type ProxyType = "none" | "http" | "https" | "socks5";
 export const THEME_MODES: ThemeMode[] = ["system", "light", "dark"];
 
 /// Interface Text Size, as a factor on the UI's type scale.
-export const UI_TEXT_SCALES = [0.9, 1, 1.1, 1.25] as const;
-export type UiTextScale = (typeof UI_TEXT_SCALES)[number];
+export type UiTextScale = 0.9 | 1 | 1.1 | 1.25;
+/** One table with the boot script's (appearance-tables.json). */
+export const UI_TEXT_SCALES = TABLES.uiTextScales as readonly UiTextScale[];
 /** The document's text size in px, or "auto" for the theme's own. */
 export const DOC_TEXT_SIZES = [
   "auto",
@@ -58,11 +60,7 @@ export type DocLineSpacing = (typeof DOC_LINE_SPACINGS)[number];
 export const DOC_LINE_HEIGHTS: Record<
   Exclude<DocLineSpacing, "auto">,
   number
-> = {
-  compact: 1.55,
-  standard: 1.8,
-  relaxed: 2.05,
-};
+> = TABLES.docLineHeights;
 
 /** Character spacing as Word sets it: the theme's, normal, or expanded or
  *  condensed by `docLetterSpacingBy` points. */

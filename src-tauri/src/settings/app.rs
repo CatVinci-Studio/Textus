@@ -148,6 +148,12 @@ pub fn boot_script(app: &AppHandle, label: &str) -> String {
         "label": label,
         "titlebarHeight": titlebar_height,
         "aiUnavailable": ai_unavailable,
+        // The settings' values the boot script turns into the page's look:
+        // the frontend's own tables, one file.
+        "tables": serde_json::from_str::<Value>(include_str!(
+            "../../../src/prefs/appearance-tables.json"
+        ))
+        .unwrap_or(Value::Null),
     });
     format!(
         "{}\n;window.__textusBoot({boot}, {theme_css});",

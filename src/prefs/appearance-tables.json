@@ -1,0 +1,8 @@
+{
+  "langs": ["en", "zh", "zh-Hant", "ja", "ko", "es", "fr", "de", "ru", "pt"],
+  "locales": { "zh": "zh-CN", "zh-Hant": "zh-TW" },
+  "uiTextScales": [0.9, 1, 1.1, 1.25],
+  "docLineHeights": { "compact": 1.55, "standard": 1.8, "relaxed": 2.05 },
+  "contentThemes": ["paper", "slate", "forest"],
+  "contentWidths": ["standard", "full"]
+}

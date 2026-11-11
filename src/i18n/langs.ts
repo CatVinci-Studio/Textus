@@ -1,3 +1,4 @@
+import TABLES from "../prefs/appearance-tables.json";
 /**
  * The UI languages, in the order the language pickers list them. "zh" is
  * Simplified Chinese, kept as the code saved settings already use.
@@ -32,12 +33,10 @@ export const LANG_NAMES: Record<Lang, string> = {
 };
 
 /** The BCP 47 tag for a UI language: `<html lang>`, which the CSS :lang()
- *  font stacks key off, and the locale for dates and numbers. The boot
- *  script has a copy of this mapping. */
+ *  font stacks key off, and the locale for dates and numbers. One table
+ *  with the boot script's (prefs/appearance-tables.json). */
 export function localeOf(lang: Lang): string {
-  if (lang === "zh") return "zh-CN";
-  if (lang === "zh-Hant") return "zh-TW";
-  return lang;
+  return (TABLES.locales as Partial<Record<Lang, string>>)[lang] ?? lang;
 }
 
 export function isLang(value: unknown): value is Lang {

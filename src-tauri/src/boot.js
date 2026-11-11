@@ -24,33 +24,28 @@ window.__textusBoot = function (boot, themeCss) {
   if (!own) return;
   window.__BOOT__ = boot;
   var settings = boot.settings || {};
+  // The settings' values as the frontend has them (prefs/appearance-tables.json).
+  var tables = boot.tables || {};
 
   function apply(root) {
-    // Same mapping as localeOf() in src/i18n/langs.ts: a code of LANGS,
-    // with Chinese given the region that picks its glyphs.
-    var lang = {
-      en: "en",
-      zh: "zh-CN",
-      "zh-Hant": "zh-TW",
-      ja: "ja",
-      ko: "ko",
-      es: "es",
-      fr: "fr",
-      de: "de",
-      ru: "ru",
-      pt: "pt",
-    }[settings.language];
-    if (lang) root.setAttribute("lang", lang);
+    // As localeOf() in src/i18n/langs.ts: a UI language, with Chinese given
+    // the region that picks its glyphs.
+    var langs = tables.langs || [];
+    if (langs.indexOf(settings.language) >= 0)
+      root.setAttribute(
+        "lang",
+        (tables.locales || {})[settings.language] || settings.language,
+      );
     if (settings.theme === "light" || settings.theme === "dark")
       root.setAttribute("data-theme", settings.theme);
-    if (
-      settings.contentWidth === "standard" ||
-      settings.contentWidth === "full"
-    )
+    if ((tables.contentWidths || []).indexOf(settings.contentWidth) >= 0)
       root.setAttribute("data-content-width", settings.contentWidth);
-    // UI_TEXT_SCALES in SettingsContext.tsx, minus 1 (the stylesheet's own
-    // default); theme/apply-appearance.ts sets the same property.
-    if ([0.9, 1.1, 1.25].indexOf(settings.uiTextScale) >= 0)
+    // But 1, the stylesheet's own default; theme/apply-appearance.ts sets
+    // the same property.
+    if (
+      settings.uiTextScale !== 1 &&
+      (tables.uiTextScales || []).indexOf(settings.uiTextScale) >= 0
+    )
       root.style.setProperty("--ui-text-scale", String(settings.uiTextScale));
     // The reader's document size and spacing (DOC_TEXT_SIZES and
     // DOC_LINE_HEIGHTS in prefs/settings-types.ts; apply-appearance.ts).
@@ -58,16 +53,13 @@ window.__textusBoot = function (boot, themeCss) {
       root.style.setProperty("--doc-font-size", settings.docTextSize + "px");
       root.setAttribute("data-doc-size", "");
     }
-    var leading = { compact: 1.55, standard: 1.8, relaxed: 2.05 }[
-      settings.docLineSpacing
-    ];
+    var leading = (tables.docLineHeights || {})[settings.docLineSpacing];
     if (leading) {
       root.style.setProperty("--doc-line-height", String(leading));
       root.setAttribute("data-doc-leading", "");
     }
-    // BUILTIN_CONTENT_THEMES in theme/builtin-themes.ts, minus "default"
-    // (which is the absence of the attribute).
-    var builtin = ["paper", "slate", "forest"];
+    // The built-in themes but "default" (the absence of the attribute).
+    var builtin = tables.contentThemes || [];
     if (builtin.indexOf(settings.themeId) >= 0)
       root.setAttribute("data-content-theme", settings.themeId);
     else if (themeCss) root.setAttribute("data-user-theme", "");

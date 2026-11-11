@@ -1,4 +1,4 @@
-import { readFileSync } from "node:fs";
+import TABLES from "../prefs/appearance-tables.json";
 import { describe, expect, it } from "vitest";
 import { pluralCategories } from "./plural";
 import {
@@ -6,7 +6,6 @@ import {
   LANG_NAMES,
   loadLocale,
   localeLoaded,
-  localeOf,
   resolveStrings,
   type Lang,
   type Plural,
@@ -45,11 +44,9 @@ describe("the languages", () => {
   it("are registered everywhere they are listed", () => {
     expect(Object.keys(LOCALES).sort()).toEqual([...LANGS].sort());
     expect(Object.keys(LANG_NAMES).sort()).toEqual([...LANGS].sort());
-    // The boot script sets <html lang> before React does, from its own copy
-    // of localeOf().
-    const boot = readFileSync("src-tauri/src/boot.js", "utf8");
-    for (const lang of LANGS)
-      expect(boot).toMatch(new RegExp(`"?${lang}"?: "${localeOf(lang)}",`));
+    // The boot script sets <html lang> before React does, from the same
+    // table localeOf() reads.
+    expect(TABLES.langs).toEqual([...LANGS]);
   });
 
   it("are all fully translated, so none ships half in English", () => {

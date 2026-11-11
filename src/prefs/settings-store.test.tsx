@@ -1,4 +1,6 @@
 // @vitest-environment jsdom
+import TABLES from "./appearance-tables.json";
+import { BUILTIN_CONTENT_THEMES } from "../theme/builtin-themes";
 import { act, cleanup, render, screen } from "@testing-library/react";
 import { useEffect, useLayoutEffect } from "react";
 import {
@@ -20,7 +22,6 @@ import {
   UI_TEXT_SCALES,
   useSettings,
 } from "./SettingsContext";
-import { readFileSync } from "node:fs";
 import { AppearanceSync } from "../theme/apply-appearance";
 import { storage } from "../platform/ipc";
 import { resetBootForTests } from "../storage/boot";
@@ -365,12 +366,12 @@ describe("interface text size", () => {
   });
 
   it("is applied by the boot script for the same sizes", () => {
-    const script = readFileSync("src-tauri/src/boot.js", "utf8");
-    const list = /\[([\d., ]+)\]\.indexOf\(settings\.uiTextScale\)/.exec(
-      script,
-    );
-    expect(list?.[1].split(",").map(Number)).toEqual(
-      UI_TEXT_SCALES.filter((scale) => scale !== 1),
+    // The table the boot script is handed (settings/app.rs) is this one.
+    expect(TABLES.uiTextScales).toEqual([...UI_TEXT_SCALES]);
+    expect(TABLES.contentThemes).toEqual(
+      BUILTIN_CONTENT_THEMES.map((theme) => theme.id).filter(
+        (id) => id !== "default",
+      ),
     );
   });
 });
