@@ -148,7 +148,9 @@ export function createMermaidPreviewPlugin(options: {
           to,
           (view: EditorView, getPos: () => number | undefined) => {
             const container = document.createElement("div");
-            container.className = "mermaid-preview";
+            // A fence's box, as in Typora: a theme's rule for code boxes
+            // (.md-fences) dresses the drawing alike.
+            container.className = "mermaid-preview md-fences";
             container.innerHTML = svg;
             keepReadable(container);
             container.append(zoomButton(container));
