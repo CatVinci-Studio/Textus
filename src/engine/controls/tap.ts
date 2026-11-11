@@ -1,8 +1,5 @@
+import { TOUCH_SLOP_PX } from "../../utils/gesture";
 import type { MouseEvent, PointerEvent, TouchEvent } from "react";
-
-/** How far a finger may travel and still be tapping rather than scrolling
- *  the list under it (UIKit's own slop is about this). */
-const TAP_SLOP = 10;
 
 /** Where each touch began, per element: kept outside the props so a
  *  re-render while the finger is down doesn't forget it. */
@@ -22,7 +19,8 @@ function endedAsTap(e: TouchEvent): boolean {
   const touch = e.changedTouches[0];
   if (!start || !touch) return false;
   return (
-    Math.hypot(touch.clientX - start.x, touch.clientY - start.y) <= TAP_SLOP
+    Math.hypot(touch.clientX - start.x, touch.clientY - start.y) <=
+    TOUCH_SLOP_PX
   );
 }
 

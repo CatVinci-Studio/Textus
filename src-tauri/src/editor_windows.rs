@@ -244,8 +244,8 @@ fn build_editor_window(
     Ok(())
 }
 
-/// Below this the window bar's controls run into each other. Keep in step with
-/// the config window's minWidth/minHeight.
+/// Below this the window bar's controls run into each other. The first
+/// window's (tauri.conf.json) is held to it by a test.
 #[cfg(desktop)]
 pub(crate) const EDITOR_MIN_SIZE: (f64, f64) = (480.0, 320.0);
 
@@ -347,4 +347,16 @@ pub(crate) fn build_main_window(app: &tauri::App) -> tauri::Result<()> {
     #[cfg(not(any(target_os = "linux", target_os = "macos")))]
     let _ = window;
     Ok(())
+}
+
+#[cfg(all(test, desktop))]
+mod min_size_tests {
+    #[test]
+    fn the_first_window_has_every_window_s_least_size() {
+        let conf: serde_json::Value =
+            serde_json::from_str(include_str!("../tauri.conf.json")).unwrap();
+        let window = &conf["app"]["windows"][0];
+        assert_eq!(window["minWidth"].as_f64(), Some(super::EDITOR_MIN_SIZE.0));
+        assert_eq!(window["minHeight"].as_f64(), Some(super::EDITOR_MIN_SIZE.1));
+    }
 }

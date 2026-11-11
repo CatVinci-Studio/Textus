@@ -1,3 +1,4 @@
+import { DRAG_START_PX } from "../../utils/gesture";
 import { useEffect, useRef, useState, useSyncExternalStore } from "react";
 import { useChromeScale } from "../../engine/controls/useChromeScale";
 import { scaledPx } from "../../engine/tokens/chrome-scale";
@@ -143,7 +144,10 @@ function FloatingBox({
   const move = (event: React.PointerEvent) => {
     if (!drag) return;
     // A hand's tremor is still a click.
-    if (Math.hypot(event.clientX - drag.x, event.clientY - drag.y) < 4) return;
+    if (
+      Math.hypot(event.clientX - drag.x, event.clientY - drag.y) < DRAG_START_PX
+    )
+      return;
     moved.current = true;
     setLive({
       left: clamp(event.clientX - drag.dx, width, window.innerWidth),

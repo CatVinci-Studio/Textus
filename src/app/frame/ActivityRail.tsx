@@ -1,3 +1,4 @@
+import { DRAG_START_PX } from "../../utils/gesture";
 import { useScrollFade } from "../../engine/controls/scroll-fade";
 import { useRef, useState } from "react";
 import { Tooltip } from "../../engine/controls/Tooltip";
@@ -126,9 +127,7 @@ export function ActivityRail({
           // Like every rail icon: opens the sidebar on Settings' pages, or
           // closes it (the Settings tab comes to the front as it opens).
           onClick={() =>
-            settingsOn
-              ? onCloseSidebar()
-              : emitToThisWindow("menu-settings")
+            settingsOn ? onCloseSidebar() : emitToThisWindow("menu-settings")
           }
         >
           <SettingsIcon />
@@ -209,7 +208,7 @@ function RailGroup({
               window.addEventListener(
                 "pointerup",
                 (up) => {
-                  if (Math.abs(up.clientY - startY) < 8) return;
+                  if (Math.abs(up.clientY - startY) < DRAG_START_PX) return;
                   const box = group.getBoundingClientRect();
                   if (up.clientY < box.top) onDropBeyond(id, "before");
                   else if (up.clientY > box.bottom) onDropBeyond(id, "after");

@@ -1,3 +1,4 @@
+import { DRAG_START_PX, TOUCH_SLOP_PX } from "../../../utils/gesture";
 import { scaledPx } from "../../tokens/chrome-scale";
 import { frameLayout } from "../../frame/frame-store";
 import { useEffect, useRef } from "react";
@@ -28,14 +29,12 @@ export interface TabInfo {
   waiting?: number;
 }
 
-// Drag distances to leave the bar (vertical) or start a reorder
-// (horizontal). dy always wins, like Chrome.
+// How far a tab is dragged off the bar to leave it; dy always wins, like
+// Chrome. A reorder starts at DRAG_START_PX.
 const PULL_OUT_PX = 40;
-const REORDER_THRESHOLD_PX = 5;
 // A finger holds a tab this long, this still, to lift it: before that, a
 // move scrolls the bar.
 const LIFT_MS = 300;
-const LIFT_SLOP_PX = 8;
 
 /** Another island's row than pane `own`'s under (x, y), as placed. */
 function rowAt(x: number, y: number, own: string | null): boolean {
@@ -181,7 +180,7 @@ export function TabPill({
     if (g.waiting) {
       // Moved before it lifted: a scroll of the bar, not a drag.
       if (
-        Math.hypot(e.clientX - g.startX, e.clientY - g.startY) > LIFT_SLOP_PX
+        Math.hypot(e.clientX - g.startX, e.clientY - g.startY) > TOUCH_SLOP_PX
       ) {
         letGo();
         gesture.current = null;
@@ -208,7 +207,7 @@ export function TabPill({
 
     const dx = e.clientX - g.startX;
     if (!g.reordering) {
-      if (Math.abs(dx) < REORDER_THRESHOLD_PX) return;
+      if (Math.abs(dx) < DRAG_START_PX) return;
       g.reordering = true;
     }
     carry(dx);

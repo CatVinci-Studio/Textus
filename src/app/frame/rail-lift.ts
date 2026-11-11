@@ -1,3 +1,4 @@
+import { DRAG_START_PX } from "../../utils/gesture";
 /**
  * A rail icon carried out of its group toward the other (pinned ↔ the
  * plugins under the line): the scrolling group would clip the icon itself,
@@ -37,7 +38,8 @@ export function liftBeyondGroup(
   const move = (e: PointerEvent) => {
     const own = group.getBoundingClientRect();
     const out = e.clientY < own.top || e.clientY > own.bottom;
-    if (out && !copy && Math.abs(e.clientY - down.clientY) >= 8) lift();
+    if (out && !copy && Math.abs(e.clientY - down.clientY) >= DRAG_START_PX)
+      lift();
     else if (!out && copy) settle();
     if (copy)
       copy.style.translate = `${e.clientX - box.width / 2}px ${e.clientY - box.height / 2}px`;

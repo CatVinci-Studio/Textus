@@ -1,9 +1,8 @@
+import { DRAG_START_PX } from "../../utils/gesture";
 // Dragging with pointer events, not HTML drag and drop: the window's own
 // file drop takes that over (macOS shows a copy cursor, nothing lands). A
 // press becomes a drag once it moves DRAG_START_PX; letting go ends it, Esc
 // or a cancelled pointer drops nothing. What the drag means is the caller's.
-
-export const DRAG_START_PX = 5;
 
 interface DragHandlers {
   /** The press moved far enough: the drag begins. */
