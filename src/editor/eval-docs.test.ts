@@ -4,7 +4,7 @@ import { join } from "node:path";
 import { afterEach, describe, expect, it, vi } from "vitest";
 import type { Editor } from "@milkdown/kit/core";
 import { editorViewCtx } from "@milkdown/kit/core";
-import { createTestEditor } from "../document-view/editor-test-harness";
+import { createTestEditor } from "./editor-test-kit";
 import { documentMarkdown, serializeBlocks } from "./markdown/doc-markdown";
 
 // The live AI evaluation sends these documents to the model as the editor

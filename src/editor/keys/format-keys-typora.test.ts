@@ -4,7 +4,7 @@ import {
   closeViews,
   openView,
   type TestView,
-} from "../../document-view/editor-view-kit";
+} from "../editor-view-kit";
 
 // Typora's keys for what Format had none for: Ctrl+` inline code,
 // Ctrl+Shift+` strikethrough, Cmd/Ctrl+K a link.

@@ -4,7 +4,7 @@ import { editorViewCtx, type Editor } from "@milkdown/kit/core";
 import { undo } from "@milkdown/kit/prose/history";
 import { TextSelection } from "@milkdown/kit/prose/state";
 import type { EditorView } from "@milkdown/kit/prose/view";
-import { createTestEditor } from "../../document-view/editor-test-harness";
+import { createTestEditor } from "../editor-test-kit";
 
 vi.mock("mermaid", () => ({
   default: { initialize() {}, render: () => new Promise(() => {}) },

@@ -7,7 +7,7 @@ import { DOMParser, DOMSerializer } from "@milkdown/kit/prose/model";
 import type { Node as ProseNode } from "@milkdown/kit/prose/model";
 import { TextSelection } from "@milkdown/kit/prose/state";
 import type { EditorView } from "@milkdown/kit/prose/view";
-import { createTestEditor } from "../../document-view/editor-test-harness";
+import { createTestEditor } from "../editor-test-kit";
 import { clearSpans, toggleSpan } from "../marks/span-commands";
 import { unwrittenImageSrcs } from "./markdown-output";
 import { withImageWidth } from "../images/image-html";

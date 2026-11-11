@@ -4,7 +4,7 @@ import type { Editor } from "@milkdown/kit/core";
 import { editorViewCtx, serializerCtx } from "@milkdown/kit/core";
 import { DOMParser } from "@milkdown/kit/prose/model";
 import type { EditorView } from "@milkdown/kit/prose/view";
-import { createTestEditor } from "../../document-view/editor-test-harness";
+import { createTestEditor } from "../editor-test-kit";
 
 const editors: Editor[] = [];
 afterEach(async () => {

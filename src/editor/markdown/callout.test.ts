@@ -4,7 +4,7 @@ import type { Editor } from "@milkdown/kit/core";
 import { editorViewCtx, serializerCtx } from "@milkdown/kit/core";
 import { Selection } from "@milkdown/kit/prose/state";
 import type { EditorView } from "@milkdown/kit/prose/view";
-import { createTestEditor } from "../../document-view/editor-test-harness";
+import { createTestEditor } from "../editor-test-kit";
 import { readCalloutLine } from "./callout-syntax";
 
 const editors: Editor[] = [];

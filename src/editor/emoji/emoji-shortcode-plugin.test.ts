@@ -4,7 +4,7 @@ import {
   closeViews,
   openView,
   type TestView,
-} from "../../document-view/editor-view-kit";
+} from "../editor-view-kit";
 import { emojiNames } from "./emoji-shortcode-plugin";
 
 afterEach(closeViews);

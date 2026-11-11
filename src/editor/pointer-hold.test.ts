@@ -4,7 +4,7 @@ import {
   closeViews,
   openView,
   type TestView,
-} from "../document-view/editor-view-kit";
+} from "./editor-view-kit";
 
 // A drag selection begun on bold text or a heading selected nothing: the
 // caret arriving drew the span's `**` or the heading's `#` under the

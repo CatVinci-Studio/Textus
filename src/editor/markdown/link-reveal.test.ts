@@ -3,7 +3,7 @@ import { afterEach, beforeAll, describe, expect, it } from "vitest";
 import type { Node as ProseNode } from "@milkdown/kit/prose/model";
 import { TextSelection } from "@milkdown/kit/prose/state";
 import type { EditorView } from "@milkdown/kit/prose/view";
-import { closeViews, openView } from "../../document-view/editor-view-kit";
+import { closeViews, openView } from "../editor-view-kit";
 import { headingPos } from "./heading-jump";
 import { arrowPastLinkEdge, linkHrefAt } from "./link-reveal";
 import { tocEntries } from "./toc-plugin";

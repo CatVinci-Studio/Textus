@@ -1,6 +1,6 @@
 // @vitest-environment jsdom
 import { afterEach, beforeAll, describe, expect, it } from "vitest";
-import { closeViews, openView } from "../../document-view/editor-view-kit";
+import { closeViews, openView } from "../editor-view-kit";
 import { htmlTableToMarkdown } from "./html-table-markdown";
 import { htmlTableItems } from "../editor-menu-tables";
 import { resolveStrings } from "../../i18n/strings";

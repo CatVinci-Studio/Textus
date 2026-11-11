@@ -5,7 +5,7 @@ import { editorViewCtx, serializerCtx } from "@milkdown/kit/core";
 import { Schema } from "@milkdown/kit/prose/model";
 import { EditorState, TextSelection } from "@milkdown/kit/prose/state";
 import type { EditorView } from "@milkdown/kit/prose/view";
-import { createTestEditor } from "../../document-view/editor-test-harness";
+import { createTestEditor } from "../editor-test-kit";
 import { indentCodeLines } from "./tab-extend-plugin";
 
 const schema = new Schema({

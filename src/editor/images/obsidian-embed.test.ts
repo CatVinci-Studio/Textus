@@ -2,7 +2,7 @@
 import { afterEach, describe, expect, it } from "vitest";
 import type { Editor } from "@milkdown/kit/core";
 import { editorViewCtx, serializerCtx } from "@milkdown/kit/core";
-import { createTestEditor } from "../../document-view/editor-test-harness";
+import { createTestEditor } from "../editor-test-kit";
 import { readFileSync } from "node:fs";
 import {
   IMAGE_EXTENSIONS,

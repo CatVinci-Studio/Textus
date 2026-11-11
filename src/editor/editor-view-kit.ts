@@ -5,9 +5,9 @@ import type { EditorView } from "@milkdown/kit/prose/view";
 import {
   readSourceBlocks,
   writePreservingSource,
-} from "../editor/markdown/source-preserving";
+} from "./markdown/source-preserving";
 import type { Settings } from "../prefs/SettingsContext";
-import { createTestEditor } from "./editor-test-harness";
+import { createTestEditor } from "./editor-test-kit";
 
 // Test-only: the editor of createTestEditor driven as a keyboard drives it,
 // for key and typing tests that need no real browser. Keys reach the editor
@@ -54,14 +54,17 @@ export async function closeViews(): Promise<void> {
   await Promise.all(opened.splice(0).map((editor) => editor.destroy()));
 }
 
-/** `markdown` opened as a file is, the caret at its end. `ai` lets the AI
- *  features run, as they do outside the tutorial. */
+/** `markdown` opened as a file is, the caret at its end. */
 export async function openView(
   markdown = "",
   settings: Partial<Settings> = {},
-  options: { ai?: boolean } = {},
+  /** Another editor than the editor on its own (the app's, with the AI). */
+  make: (
+    markdown: string,
+    settings: Partial<Settings>,
+  ) => Promise<Editor> = createTestEditor,
 ): Promise<TestView> {
-  const editor = await createTestEditor(markdown, settings, options);
+  const editor = await make(markdown, settings);
   opened.push(editor);
   const view = editor.ctx.get(editorViewCtx);
   const source = editor.action((ctx) =>

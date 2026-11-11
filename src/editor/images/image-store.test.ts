@@ -1,6 +1,6 @@
 // @vitest-environment jsdom
 import { afterEach, expect, it, vi } from "vitest";
-import { closeViews, openView } from "../../document-view/editor-view-kit";
+import { closeViews, openView } from "../editor-view-kit";
 import { DEFAULT_SETTINGS } from "../../prefs/settings-types";
 import { fs } from "../../platform/ipc";
 import { saveAndInsertImages } from "./image-store";
