@@ -29,14 +29,15 @@ export interface DropTarget {
 }
 
 /** How near an island's side (a share of its width) a tab must be to open
- *  a new island beside it; its top or bottom (of its height) to stack one,
- *  a narrower band, as stacking is the rarer wish. Inside that, it joins
+ *  a new island beside it; its top or bottom (of its height) to stack one
+ *  in that island's column alone - wider than the window's outer band
+ *  under it, which stacks one under all of them. Inside that, it joins
  *  the island. */
 const EDGE: Record<DropZone, number> = {
   left: 0.2,
   right: 0.2,
-  top: 0.05,
-  bottom: 0.05,
+  top: 0.15,
+  bottom: 0.15,
   center: 0,
 };
 /** The place already aimed at holds a little past its line, so a pointer

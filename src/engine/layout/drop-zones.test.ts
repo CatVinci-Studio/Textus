@@ -16,12 +16,22 @@ const at = (x: number, y: number, held?: ReturnType<typeof dropTargetAt>) =>
   dropTargetAt(x, y, geometry, false, held)?.zone;
 
 describe("dropTargetAt", () => {
-  it("an island's outer fifth opens beside it, its top or bottom twentieth stacks one, the rest joins it", () => {
+  it("an island's outer fifth opens beside it, its top or bottom stacks one, the rest joins it", () => {
     expect(at(400 + 75, 300)).toBe("left");
     expect(at(400 + 85, 300)).toBe("center");
-    expect(at(400 + 200, 40)).toBe("center");
-    expect(at(400 + 200, 25)).toBe("top");
-    expect(at(400 + 200, 580)).toBe("bottom");
+    expect(at(400 + 200, 100)).toBe("center");
+    expect(at(400 + 200, 80)).toBe("top");
+    expect(at(400 + 200, 520)).toBe("bottom");
+  });
+
+  it("stacks under one column above the window's foot, under all of them at it", () => {
+    const column = dropTargetAt(400 + 200, 520, geometry);
+    expect(column).toMatchObject({ zone: "bottom", tabId: "b" });
+    expect(column?.whole).toBeUndefined();
+    expect(dropTargetAt(400 + 200, 595, geometry)).toMatchObject({
+      zone: "bottom",
+      whole: true,
+    });
   });
 
   it("the place aimed at holds a little past its line", () => {
