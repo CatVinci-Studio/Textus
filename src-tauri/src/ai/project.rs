@@ -142,7 +142,7 @@ pub async fn ensure_project_file(
 pub async fn pick_text_files(window: tauri::WebviewWindow) -> Vec<String> {
     tauri::async_runtime::spawn_blocking(move || {
         crate::dialogs::window_file_dialog(&window)
-            .add_filter("Text", &["md", "markdown", "txt"])
+            .add_filter("Text", &crate::extract::TEXT_DOCUMENT_EXTENSIONS)
             .blocking_pick_files()
             .unwrap_or_default()
             .into_iter()
@@ -178,7 +178,7 @@ pub async fn import_references_picked(
             one.into_iter().collect::<Vec<_>>()
         } else {
             let mut kinds: Vec<&str> = vec!["zip"];
-            kinds.extend(crate::extract::DOCUMENT_EXTENSIONS);
+            kinds.extend(crate::extract::TEXT_DOCUMENT_EXTENSIONS);
             kinds.extend(TEXT_EXTENSIONS);
             dialog
                 .add_filter("References", &kinds)

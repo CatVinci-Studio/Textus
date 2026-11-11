@@ -10,9 +10,6 @@ pub(crate) const TEXT_EXTENSIONS: &[&str] = &[
     "toml", "html", "htm", "xml",
 ];
 
-/// What the sidebar lists first as a document; find_files does the same.
-pub(crate) const SIDEBAR_DOCUMENT_EXTENSIONS: &[&str] = &["md", "markdown", "txt", "text"];
-
 /// Most an @-mention inlines: the whole file goes into the message.
 pub(crate) const MAX_FILE_BYTES: u64 = 100 * 1024;
 

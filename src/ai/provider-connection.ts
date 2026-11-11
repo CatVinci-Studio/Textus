@@ -58,7 +58,7 @@ export interface ConnectedState {
  *  after a sign-in changes (not while `check` is off: Settings drawn only
  *  for its search); the selected one's is also reported. */
 export function useConnectedProviders(
-  catalog: ProviderCatalogEntry[],
+  catalog: readonly ProviderCatalogEntry[],
   activeId: AiProvider,
   onActiveConnectedChange?: (connected: boolean) => void,
   check = true,

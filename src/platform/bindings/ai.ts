@@ -8,7 +8,6 @@ import { invoke as __TAURI_INVOKE } from "@tauri-apps/api/core";
 
 /** Commands */
 export const commands = {
-	list_providers: () => __TAURI_INVOKE<ProviderCatalogEntry_Serialize[]>("list_providers"),
 	/**
 	 *  Whether the chat composer offers Deep thinking for this provider and
 	 *  Agent model (None: the provider's agent default).
@@ -33,6 +32,8 @@ export const commands = {
 };
 
 /* Constants */
+export const PROVIDER_CATALOG = [{"agentDefaultModel":"gpt-6.1-sol","auth":["oauth","api_key"],"baseUrl":null,"defaultModel":"gpt-6-luna","dialect":"openai-responses","id":"openai","keyOptional":false,"knownModels":["gpt-6.1-sol","gpt-6-luna"],"label":"OpenAI","oauthUnofficial":false,"supportsVision":true},{"agentDefaultModel":"claude-sonnet-5-5","auth":["oauth","api_key"],"baseUrl":null,"defaultModel":"claude-haiku-5-5","dialect":"anthropic-messages","id":"anthropic","keyOptional":false,"knownModels":["claude-sonnet-5-5","claude-haiku-5-5"],"label":"Anthropic","oauthUnofficial":true,"supportsVision":true},{"agentDefaultModel":"gemini-3.8-flash","auth":["api_key"],"baseUrl":"https://generativelanguage.googleapis.com/v1beta/openai","defaultModel":"gemini-3.5-flash-lite","dialect":"openai-chat-completions","id":"google","keyOptional":false,"knownModels":["gemini-3.8-flash","gemini-3.5-flash-lite"],"label":"Google Gemini","oauthUnofficial":false,"supportsVision":true},{"agentDefaultModel":"deepseek-v4-pro","auth":["api_key"],"baseUrl":"https://api.deepseek.com/v1","defaultModel":"deepseek-flash","dialect":"openai-chat-completions","id":"deepseek","keyOptional":false,"knownModels":["deepseek-v4-pro","deepseek-flash"],"label":"DeepSeek","oauthUnofficial":false,"supportsVision":false},{"agentDefaultModel":"grok-4.7","auth":["api_key"],"baseUrl":"https://api.x.ai/v1","defaultModel":"grok-4.3","dialect":"openai-chat-completions","id":"xai","keyOptional":false,"knownModels":["grok-4.7","grok-4.3"],"label":"xAI Grok","oauthUnofficial":false,"supportsVision":true},{"agentDefaultModel":"mistral-large-latest","auth":["api_key"],"baseUrl":"https://api.mistral.ai/v1","defaultModel":"mistral-small-latest","dialect":"openai-chat-completions","id":"mistral","keyOptional":false,"knownModels":["mistral-large-latest","mistral-small-latest"],"label":"Mistral","oauthUnofficial":false,"supportsVision":true},{"agentDefaultModel":"openai/gpt-oss-120b","auth":["api_key"],"baseUrl":"https://api.groq.com/openai/v1","defaultModel":"openai/gpt-oss-20b","dialect":"openai-chat-completions","id":"groq","keyOptional":false,"knownModels":["openai/gpt-oss-120b","openai/gpt-oss-20b"],"label":"Groq","oauthUnofficial":false,"supportsVision":true},{"agentDefaultModel":"openrouter/auto","auth":["api_key"],"baseUrl":"https://openrouter.ai/api/v1","defaultModel":"openrouter/free","dialect":"openai-chat-completions","id":"openrouter","keyOptional":false,"knownModels":["openrouter/auto","openrouter/free"],"label":"OpenRouter","oauthUnofficial":false,"supportsVision":true},{"agentDefaultModel":"deepseek-v4-pro","auth":["api_key"],"baseUrl":"https://opencode.ai/zen/go/v1","defaultModel":"deepseek-v4.1-flash","dialect":"openai-chat-completions","id":"opencode-go","keyOptional":false,"knownModels":["deepseek-v4-pro","deepseek-v4.1-flash","kimi-k2.7-code","glm-5.2"],"label":"OpenCode Go","oauthUnofficial":false,"supportsVision":true},{"agentDefaultModel":"kimi-k3","auth":["api_key"],"baseUrl":"https://api.moonshot.cn/v1","defaultModel":"kimi-k2.6","dialect":"openai-chat-completions","id":"moonshot","keyOptional":false,"knownModels":["kimi-k3","kimi-k2.6"],"label":"Moonshot Kimi","oauthUnofficial":false,"supportsVision":true},{"agentDefaultModel":"glm-5.3","auth":["api_key"],"baseUrl":"https://open.bigmodel.cn/api/paas/v4","defaultModel":"glm-4.7-flash","dialect":"openai-chat-completions","id":"zhipu","keyOptional":false,"knownModels":["glm-5.3","glm-4.7-flash"],"label":"Zhipu GLM","oauthUnofficial":false,"supportsVision":true},{"agentDefaultModel":"qwen3.7-plus","auth":["api_key"],"baseUrl":"https://dashscope.aliyuncs.com/compatible-mode/v1","defaultModel":"qwen3.8-flash","dialect":"openai-chat-completions","id":"qwen","keyOptional":false,"knownModels":["qwen3.7-plus","qwen3.8-flash"],"label":"Alibaba Qwen","oauthUnofficial":false,"supportsVision":true},{"agentDefaultModel":"doubao-seed-2-1-pro-260628","auth":["api_key"],"baseUrl":"https://ark.cn-beijing.volces.com/api/v3","defaultModel":"doubao-seed-2-1-turbo-260628","dialect":"openai-chat-completions","id":"doubao","keyOptional":false,"knownModels":["doubao-seed-2-1-pro-260628","doubao-seed-2-1-turbo-260628","doubao-seed-evolving"],"label":"Doubao (Volcengine)","oauthUnofficial":false,"supportsVision":true},{"agentDefaultModel":"MiniMax-M3","auth":["api_key"],"baseUrl":"https://api.minimaxi.com/v1","defaultModel":"MiniMax-M3.1-Flash","dialect":"openai-chat-completions","id":"minimax","keyOptional":false,"knownModels":["MiniMax-M3","MiniMax-M3.1-Flash"],"label":"MiniMax (China)","oauthUnofficial":false,"supportsVision":false},{"agentDefaultModel":"MiniMax-M3","auth":["api_key"],"baseUrl":"https://api.minimax.io/v1","defaultModel":"MiniMax-M3.1-Flash","dialect":"openai-chat-completions","id":"minimax-intl","keyOptional":false,"knownModels":["MiniMax-M3","MiniMax-M3.1-Flash"],"label":"MiniMax (Global)","oauthUnofficial":false,"supportsVision":false},{"agentDefaultModel":null,"auth":["api_key"],"baseUrl":"http://localhost:11434/v1","defaultModel":null,"dialect":"openai-chat-completions","id":"ollama","keyOptional":true,"knownModels":[],"label":"Ollama (local)","oauthUnofficial":false,"supportsVision":true},{"agentDefaultModel":null,"auth":["custom"],"baseUrl":null,"defaultModel":null,"dialect":"openai-chat-completions","id":"custom","keyOptional":true,"knownModels":[],"label":"Custom Endpoint","oauthUnofficial":false,"supportsVision":true}] as const;
+
 export const TEXTUS_AI_OFF = "textus-ai-off" as const;
 
 /* Types */
@@ -158,106 +159,6 @@ export type GrammarRequest_Serialize = {
 	docPath: string | null,
 	workspaceRoot: string | null,
 	uiLanguage: string | null,
-};
-
-export type ProviderCatalogEntry = ProviderCatalogEntry_Serialize | ProviderCatalogEntry_Deserialize;
-
-export type ProviderCatalogEntry_Deserialize = {
-	/**
-	 *  Matches `Settings.aiProvider` and the `provider` string every ai_*
-	 *  command dispatches on.
-	 */
-	id: string,
-	label: string,
-	/**
-	 *  The wire format this provider speaks: "openai-responses",
-	 *  "anthropic-messages", or "openai-chat-completions".
-	 */
-	dialect: string,
-	/**
-	 *  Auth methods in preference order: "oauth" (browser PKCE login),
-	 *  "api_key", "custom" (user-supplied endpoint config).
-	 */
-	auth: string[],
-	/**
-	 *  Fixed endpoint for chat-completions providers; None when the dialect
-	 *  implies it (OpenAI/Anthropic) or the user supplies it ("custom").
-	 */
-	baseUrl?: string | null,
-	/**
-	 *  Low-cost model for writing completion and grammar checking until the user
-	 *  picks one. Agent chat has its own default below.
-	 */
-	defaultModel?: string | null,
-	/**
-	 *  Model used by Agent chat until the user picks one. Kept apart so inline
-	 *  helpers don't silently inherit a more expensive model.
-	 */
-	agentDefaultModel?: string | null,
-	/**  True for local servers (Ollama) that work without a key. */
-	keyOptional: boolean,
-	/**  Its "oauth" sign-in isn't offered to other apps; Settings says so. */
-	oauthUnofficial: boolean,
-	/**
-	 *  Whether this provider's API accepts image parts at all, which gates chat
-	 *  attachments. Provider-level on purpose: false only where the API rejects the
-	 *  request shape; a model that can't see says so in its own error.
-	 */
-	supportsVision: boolean,
-	/**
-	 *  The model ids offered before the user fetches the provider's own list:
-	 *  just the two defaults (agent first), checked weekly by a script.
-	 */
-	knownModels: string[],
-};
-
-export type ProviderCatalogEntry_Serialize = {
-	/**
-	 *  Matches `Settings.aiProvider` and the `provider` string every ai_*
-	 *  command dispatches on.
-	 */
-	id: string,
-	label: string,
-	/**
-	 *  The wire format this provider speaks: "openai-responses",
-	 *  "anthropic-messages", or "openai-chat-completions".
-	 */
-	dialect: string,
-	/**
-	 *  Auth methods in preference order: "oauth" (browser PKCE login),
-	 *  "api_key", "custom" (user-supplied endpoint config).
-	 */
-	auth: string[],
-	/**
-	 *  Fixed endpoint for chat-completions providers; None when the dialect
-	 *  implies it (OpenAI/Anthropic) or the user supplies it ("custom").
-	 */
-	baseUrl: string | null,
-	/**
-	 *  Low-cost model for writing completion and grammar checking until the user
-	 *  picks one. Agent chat has its own default below.
-	 */
-	defaultModel: string | null,
-	/**
-	 *  Model used by Agent chat until the user picks one. Kept apart so inline
-	 *  helpers don't silently inherit a more expensive model.
-	 */
-	agentDefaultModel: string | null,
-	/**  True for local servers (Ollama) that work without a key. */
-	keyOptional: boolean,
-	/**  Its "oauth" sign-in isn't offered to other apps; Settings says so. */
-	oauthUnofficial: boolean,
-	/**
-	 *  Whether this provider's API accepts image parts at all, which gates chat
-	 *  attachments. Provider-level on purpose: false only where the API rejects the
-	 *  request shape; a model that can't see says so in its own error.
-	 */
-	supportsVision: boolean,
-	/**
-	 *  The model ids offered before the user fetches the provider's own list:
-	 *  just the two defaults (agent first), checked weekly by a script.
-	 */
-	knownModels: string[],
 };
 
 /**

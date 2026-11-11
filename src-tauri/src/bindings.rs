@@ -78,7 +78,11 @@ fn groups() -> Vec<(&'static str, Builder<tauri::Wry>)> {
                     crate::settings::chat_history_search,
                     crate::settings::chat_history_move_document,
                 ])
-                .constant("MARKDOWN_EXTENSIONS", crate::extract::MARKDOWN_EXTENSIONS),
+                .constant("MARKDOWN_EXTENSIONS", crate::extract::MARKDOWN_EXTENSIONS)
+                .constant(
+                    "TEXT_DOCUMENT_EXTENSIONS",
+                    crate::extract::TEXT_DOCUMENT_EXTENSIONS,
+                ),
         ),
         (
             "app.ts",
@@ -268,7 +272,6 @@ fn groups() -> Vec<(&'static str, Builder<tauri::Wry>)> {
             "ai.ts",
             builder()
                 .commands(collect_commands![
-                    crate::ai::catalog::list_providers,
                     crate::ai::catalog::ai_can_think_deeper,
                     crate::ai::client::fetch_agent_models,
                     crate::ai::web::web_search_status,
@@ -279,7 +282,8 @@ fn groups() -> Vec<(&'static str, Builder<tauri::Wry>)> {
                 // input types are.
                 .typ::<crate::ai::client::CompletionRequest>()
                 .typ::<crate::ai::client::GrammarRequest>()
-                .constant("TEXTUS_AI_OFF", crate::ai::TEXTUS_AI_OFF),
+                .constant("TEXTUS_AI_OFF", crate::ai::TEXTUS_AI_OFF)
+                .constant("PROVIDER_CATALOG", crate::ai::catalog::PROVIDER_CATALOG),
         ),
         (
             "ai-agent.ts",

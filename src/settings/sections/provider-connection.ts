@@ -6,7 +6,7 @@ import { useSettingsIndexing } from "../indexing";
 /** The providers' connections as Settings shows them: not checked while
  *  Settings is only drawn for its search. */
 export function useSettingsConnected(
-  catalog: ProviderCatalogEntry[],
+  catalog: readonly ProviderCatalogEntry[],
   activeId: AiProvider,
   onActiveConnectedChange?: (connected: boolean) => void,
 ) {

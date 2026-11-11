@@ -52,6 +52,10 @@ pub(crate) fn image_mime(ext: &str) -> Option<&'static str> {
 /// one. The front end's list (utils/path.ts) is the same.
 pub(crate) const MARKDOWN_EXTENSIONS: [&str; 2] = ["md", "markdown"];
 
+/// What Textus treats as a document: Markdown and plain text, listed before
+/// other files in the sidebar and its searches (front end: file-search.ts).
+pub(crate) const TEXT_DOCUMENT_EXTENSIONS: [&str; 4] = ["md", "markdown", "txt", "text"];
+
 /// Whether `path` is a Markdown document, by its extension.
 pub(crate) fn is_markdown(path: &Path) -> bool {
     MARKDOWN_EXTENSIONS.contains(&extension_of(path).as_str())

@@ -215,6 +215,8 @@ export const commands = {
 /* Constants */
 export const MARKDOWN_EXTENSIONS = ["md","markdown"] as const;
 
+export const TEXT_DOCUMENT_EXTENSIONS = ["md","markdown","txt","text"] as const;
+
 /* Types */
 export type AiRecords = {
 	/**  Whole conversations, turns included, as the chat history keeps them. */

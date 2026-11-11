@@ -1,59 +1,26 @@
 import { useEffect, useState } from "react";
 import { ai, type WebSearchStatus } from "../platform/ipc";
 import { useSettings } from "../prefs/SettingsContext";
-import type { ProviderCatalogEntry_Serialize } from "../platform/bindings/ai";
+import { PROVIDER_CATALOG } from "../platform/bindings/ai";
 
-/** Structural facts about each AI provider, from the backend catalog, so
- *  Settings doesn't hardcode them a second time: its generated type. */
-export type ProviderCatalogEntry = ProviderCatalogEntry_Serialize;
-
-function fetchProviderCatalog(): Promise<ProviderCatalogEntry[]> {
-  return ai.listProviders();
+/** Structural facts about each AI provider, as the backend's catalog
+ *  (ai/catalog.rs) has them, generated with the bindings. */
+export interface ProviderCatalogEntry {
+  id: string;
+  label: string;
+  dialect: string;
+  auth: readonly string[];
+  baseUrl: string | null;
+  defaultModel: string | null;
+  agentDefaultModel: string | null;
+  keyOptional: boolean;
+  oauthUnofficial: boolean;
+  supportsVision: boolean;
+  knownModels: readonly string[];
 }
 
-/// A subset of the backend catalog for the first render and the dev shim,
-/// where `list_providers` resolves to null. Entries must match the backend's.
-export const FALLBACK_CATALOG: ProviderCatalogEntry[] = [
-  {
-    id: "openai",
-    label: "OpenAI",
-    dialect: "openai-responses",
-    auth: ["oauth", "api_key"],
-    baseUrl: null,
-    defaultModel: "gpt-6-luna",
-    agentDefaultModel: "gpt-6.1-sol",
-    keyOptional: false,
-    oauthUnofficial: false,
-    supportsVision: true,
-    knownModels: ["gpt-6.1-sol", "gpt-6-luna"],
-  },
-  {
-    id: "anthropic",
-    label: "Anthropic",
-    dialect: "anthropic-messages",
-    auth: ["oauth", "api_key"],
-    baseUrl: null,
-    defaultModel: "claude-haiku-5-5",
-    agentDefaultModel: "claude-sonnet-5-5",
-    keyOptional: false,
-    oauthUnofficial: true,
-    supportsVision: true,
-    knownModels: ["claude-sonnet-5-5", "claude-haiku-5-5"],
-  },
-  {
-    id: "custom",
-    label: "Custom Endpoint",
-    dialect: "openai-chat-completions",
-    auth: ["custom"],
-    baseUrl: null,
-    defaultModel: null,
-    agentDefaultModel: null,
-    keyOptional: true,
-    oauthUnofficial: false,
-    supportsVision: true,
-    knownModels: [],
-  },
-];
+/** The catalog, checked against that shape here. */
+const CATALOG: readonly ProviderCatalogEntry[] = PROVIDER_CATALOG;
 
 /// The catalog entry for the provider selected in Settings, or undefined while
 /// loading. A component that already holds the catalog should `find` itself
@@ -64,20 +31,9 @@ export function useActiveProvider(): ProviderCatalogEntry | undefined {
   return catalog.find((entry) => entry.id === settings.aiProvider);
 }
 
-/// The shared catalog fetch: the fallback, then the real list once it resolves.
-export function useProviderCatalog(): ProviderCatalogEntry[] {
-  const [catalog, setCatalog] =
-    useState<ProviderCatalogEntry[]>(FALLBACK_CATALOG);
-
-  useEffect(() => {
-    fetchProviderCatalog()
-      .then((list) => {
-        if (list?.length) setCatalog(list);
-      })
-      .catch(() => {});
-  }, []);
-
-  return catalog;
+/// The providers, in the catalog's order.
+export function useProviderCatalog(): readonly ProviderCatalogEntry[] {
+  return CATALOG;
 }
 
 /** Fired when a search service's key is saved or cleared; a key isn't a

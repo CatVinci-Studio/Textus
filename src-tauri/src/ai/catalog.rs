@@ -320,12 +320,6 @@ pub fn find(id: &str) -> Option<&'static ProviderCatalogEntry> {
     PROVIDER_CATALOG.iter().find(|e| e.id == id)
 }
 
-#[tauri::command]
-#[cfg_attr(test, specta::specta)]
-pub fn list_providers() -> Vec<ProviderCatalogEntry> {
-    PROVIDER_CATALOG.to_vec()
-}
-
 /// Whether the chat composer offers Deep thinking for this provider and
 /// Agent model (None: the provider's agent default).
 #[tauri::command]

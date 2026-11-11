@@ -1,3 +1,4 @@
+import { TEXT_DOCUMENT_EXTENSIONS } from "../platform/bindings/files";
 import type { IndexedFile } from "../platform/ipc";
 import {
   preparePinyin,
@@ -14,7 +15,9 @@ const MAX_SHOWN_MATCHES = 200;
 export type SearchScope = "all" | "documents";
 
 /** What Textus opens as a document, listed before every other file. */
-const DOCUMENT_EXTENSIONS = new Set(["md", "markdown", "txt", "text"]);
+const DOCUMENT_EXTENSIONS: ReadonlySet<string> = new Set(
+  TEXT_DOCUMENT_EXTENSIONS,
+);
 
 export function isDocumentName(name: string): boolean {
   const dot = name.lastIndexOf(".");

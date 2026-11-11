@@ -1,5 +1,4 @@
 import { Channel } from "@tauri-apps/api/core";
-import type { ProviderCatalogEntry } from "../ai/provider-catalog";
 import type { ImageModel, ImageProviderEntry } from "../ai/image-models";
 import type { SentBlock } from "../editor/markdown/doc-blocks";
 import type { AgentTurn, ImageAttachment, ThinkingLevel } from "../ai/types";
@@ -87,8 +86,6 @@ import { aiWorkspace } from "./ipc-ai-workspace";
 
 export const ai = {
   // Rust sends the dialect and auth methods as plain strings from fixed sets.
-  listProviders: () =>
-    command("list_providers") as Promise<ProviderCatalogEntry[]>,
   /** Whether Deep thinking changes anything for this provider and Agent
    *  model (null: the provider's default). */
   canThinkDeeper: (provider: string, model: string | null) =>

@@ -102,7 +102,6 @@ pub(crate) fn handler() -> impl Fn(tauri::ipc::Invoke<tauri::Wry>) -> bool + Sen
         crate::ai::paper::figures::ai_paper_figures_drawn,
         crate::ai::paper::status::ai_paper_status,
         fetch_agent_models,
-        crate::ai::catalog::list_providers,
         crate::ai::catalog::ai_can_think_deeper,
         crate::ai::images::list_image_providers,
         crate::ai::images::ai_generated_image,

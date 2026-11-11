@@ -8,8 +8,7 @@ use tokio::fs;
 /// A new document's file name: what was typed, with `.md` added unless it
 /// already names a Markdown file.
 fn document_name(name: &str) -> String {
-    let lower = name.to_lowercase();
-    if lower.ends_with(".md") || lower.ends_with(".markdown") {
+    if crate::extract::is_markdown(Path::new(name)) {
         name.to_string()
     } else {
         format!("{name}.md")
