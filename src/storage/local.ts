@@ -19,6 +19,13 @@ export const LOCAL_KEYS = {
   fetchedModels: (provider: string) => `textus-fetched-models:${provider}`,
   /** Where each file was last being read. */
   readingPlaces: "textus-reading-places",
+  /** Web page tabs' address bar folded away. */
+  webPageBarHidden: "textus.webPageBarHidden",
+  /** Plugins' floating views: where each was and whether it was open. */
+  floatingViews: "textus.floatingViews",
+  /** Before a folder's scope: its live conversation, its open ones. */
+  liveConversation: "textus-ai-live:",
+  openConversations: "textus-ai-open:",
 } as const;
 
 /** The value under `key`, or null when it is absent or can't be read. */

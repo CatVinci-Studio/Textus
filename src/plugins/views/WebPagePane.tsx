@@ -1,3 +1,4 @@
+import { LOCAL_KEYS, readLocal, writeLocal } from "../../storage/local";
 import { IconButton } from "../../engine/controls/IconButton";
 import { useRef, useState } from "react";
 import { Tooltip } from "../../engine/controls/Tooltip";
@@ -12,26 +13,16 @@ import type { Strings } from "../../i18n/strings";
 import { useNativeWebPage } from "./useNativeWebPage";
 import { webPageUrl } from "./web-page-url";
 
-/** Whether the address bar is folded away: one choice for every web page tab. */
-const BAR_HIDDEN_KEY = "textus.webPageBarHidden";
-
 function useBarHidden(): [boolean, (hidden: boolean) => void] {
-  const [hidden, setHidden] = useState(() => {
-    try {
-      return localStorage.getItem(BAR_HIDDEN_KEY) === "1";
-    } catch {
-      return false;
-    }
-  });
+  // One choice for every web page tab.
+  const [hidden, setHidden] = useState(
+    () => readLocal(LOCAL_KEYS.webPageBarHidden) === "1",
+  );
   return [
     hidden,
     (next) => {
       setHidden(next);
-      try {
-        localStorage.setItem(BAR_HIDDEN_KEY, next ? "1" : "0");
-      } catch {
-        // Not kept; this tab still folds it.
-      }
+      writeLocal(LOCAL_KEYS.webPageBarHidden, next ? "1" : "0");
     },
   ];
 }

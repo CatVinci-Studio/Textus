@@ -5,7 +5,8 @@
  * storage event tells the other windows; an unsaved draft has no scope and
  * keeps its own.
  */
-const PREFIX = "textus-ai-live:";
+import { LOCAL_KEYS } from "../../storage/local";
+const PREFIX = LOCAL_KEYS.liveConversation;
 
 /** The conversation not yet sent: no id of its own until it is. */
 export const DRAFT = "draft";
@@ -64,7 +65,7 @@ export function conversationScope(
  * every one made live joins them; closing one takes it out (it stays in the
  * history). Kept beside the live one, in every window.
  */
-const OPEN = "textus-ai-open:";
+const OPEN = LOCAL_KEYS.openConversations;
 const openListeners = new Set<() => void>();
 const openCache = new Map<string, string[]>();
 // Another window's change: never this window's stale copy written back.

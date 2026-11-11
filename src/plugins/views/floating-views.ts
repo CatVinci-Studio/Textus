@@ -1,3 +1,4 @@
+import { LOCAL_KEYS, readLocalJson, writeLocal } from "../../storage/local";
 import { emitPluginEvent } from "../app-bridge";
 import { windowIpc } from "../../platform/ipc";
 import { thisWindow } from "../../platform/this-window";
@@ -68,7 +69,6 @@ export interface FloatingChange {
 /** A click, a few quick ones (petting), or a drag that moved it. */
 export type FloatingTouch = "poke" | "pet" | "moved";
 
-const KEY = "textus.floatingViews";
 const open = new Map<string, FloatingView>();
 const listeners = new Set<() => void>();
 let version = 0;
@@ -79,19 +79,17 @@ type Saved = Pick<FloatingView, "place" | "x" | "y" | "folded"> & {
 };
 
 function saved(): Record<string, Saved> {
-  try {
-    return JSON.parse(localStorage.getItem(KEY) ?? "{}") ?? {};
-  } catch {
-    return {};
-  }
+  const kept = readLocalJson(LOCAL_KEYS.floatingViews);
+  return kept && typeof kept === "object"
+    ? (kept as Record<string, Saved>)
+    : {};
 }
 
 function save(view: string, value: Saved) {
-  try {
-    localStorage.setItem(KEY, JSON.stringify({ ...saved(), [view]: value }));
-  } catch {
-    // Private mode or full storage: the view still works, unremembered.
-  }
+  writeLocal(
+    LOCAL_KEYS.floatingViews,
+    JSON.stringify({ ...saved(), [view]: value }),
+  );
 }
 
 /** The screen's left edge among several (WebKit and Chromium know it). */
