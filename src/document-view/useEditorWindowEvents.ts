@@ -47,7 +47,7 @@ import type { AgentPanelFrame } from "../ai/chat/panel/agent-panel";
 import { claimChatRestore } from "../ai/chat/chat-restore";
 import { useLatest } from "../utils/hooks/useLatest";
 import type { Settings } from "../prefs/SettingsContext";
-import { aiFeatures } from "../settings/textus-ai";
+import { aiFeatures } from "../prefs/ai-features";
 import { useWindowEvent } from "../utils/hooks/useWindowEvent";
 import {
   TRIGGER_COMPLETION_EVENT,

@@ -3,7 +3,7 @@ import { SettingRow } from "../sections/controls";
 import { useProviderCatalog } from "../../ai/provider-catalog";
 import { useSettings } from "../../prefs/SettingsContext";
 import type { Strings } from "../../i18n/strings";
-import { localizedLabel } from "../sections/provider-connection";
+import { localizedLabel } from "../../ai/provider-connection";
 import { ImageModelSection } from "../sections/image-model";
 import { AgentModelSection, WritingModelSection } from "../sections/agent";
 import { Select } from "../../engine/controls/Select";

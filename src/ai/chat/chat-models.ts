@@ -4,10 +4,7 @@ import {
   type ProviderCatalogEntry,
 } from "../provider-catalog";
 import { readFetchedModels } from "../model-info";
-import {
-  localizedLabel,
-  useConnectedProviders,
-} from "../../settings/sections/provider-connection";
+import { localizedLabel, useConnectedProviders } from "../provider-connection";
 import { useExternalAgents } from "../../plugins/contributions/agents";
 
 /** The models menu's group of external agents (plugins' `contributes.agents`). */

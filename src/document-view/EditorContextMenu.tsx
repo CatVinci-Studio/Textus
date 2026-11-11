@@ -8,7 +8,7 @@ import {
 import { ContextMenu } from "../engine/controls/ContextMenu";
 import { Presence } from "../engine/motion/usePresence";
 import type { Settings } from "../prefs/SettingsContext";
-import { aiFeatures } from "../settings/textus-ai";
+import { aiFeatures } from "../prefs/ai-features";
 import type { Strings } from "../i18n/strings";
 import type { ImageLocation } from "../editor/images/missing-image";
 import { useImageService } from "../ai/image-models";

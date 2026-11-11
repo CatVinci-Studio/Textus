@@ -6,13 +6,11 @@ import { ProviderLogo } from "../../ai/provider-logos/ProviderLogo";
 import type { Strings } from "../../i18n/strings";
 import {
   localizedLabel,
-  useConnectedProviders,
   type ConnectedState,
-} from "../sections/provider-connection";
-import {
-  CustomProviderPanel,
-  ProviderAuthPanel,
-} from "../sections/provider-auth";
+} from "../../ai/provider-connection";
+import { useSettingsConnected } from "../sections/provider-connection";
+import { ProviderAuthPanel } from "../sections/provider-auth";
+import { CustomProviderPanel } from "../sections/custom-provider";
 import { ModelListRow } from "../sections/agent";
 import { SettingsGroup } from "./SettingsGroup";
 import "./providers-page.css";
@@ -27,7 +25,7 @@ import { ModelChoices } from "./ModelChoices";
 export function ProvidersPage({ t, settings }: SettingsPageProps) {
   const catalog = useProviderCatalog();
   const [picked, setPicked] = useState<string>(settings.aiProvider);
-  const { connected, refreshConnected } = useConnectedProviders(
+  const { connected, refreshConnected } = useSettingsConnected(
     catalog,
     settings.aiProvider,
   );

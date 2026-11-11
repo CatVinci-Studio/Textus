@@ -30,7 +30,7 @@ import { platformName } from "../platform/window-chrome";
 import { Presence } from "../engine/motion/usePresence";
 import { FlipOnChange } from "../engine/motion/flip";
 import { AgentPanelProvider } from "../ai/chat/panel/agent-panel";
-import { aiFeatures } from "../settings/textus-ai";
+import { aiFeatures } from "../prefs/ai-features";
 import { useWindowShell } from "./useWindowShell";
 import { useWindowDocuments } from "./useWindowDocuments";
 import { useWindowWiring } from "./useWindowWiring";

@@ -6,12 +6,10 @@ import { useCloseOnOutsideClick } from "../../utils/hooks/useCloseOnOutsideClick
 import { useProviderCatalog } from "../../ai/provider-catalog";
 import { ChevronIcon } from "../../engine/controls/icons";
 import { isIOSApp } from "../../platform/capabilities";
-import {
-  localizedLabel,
-  useConnectedProviders,
-  useProviderSearch,
-} from "./provider-connection";
-import { CustomProviderPanel, ProviderAuthPanel } from "./provider-auth";
+import { useProviderSearch, useSettingsConnected } from "./provider-connection";
+import { localizedLabel } from "../../ai/provider-connection";
+import { ProviderAuthPanel } from "./provider-auth";
+import { CustomProviderPanel } from "./custom-provider";
 import { isImeKeydown } from "../../utils/ime";
 export { ApiKeyProviderPanel } from "./provider-auth";
 
@@ -37,7 +35,7 @@ export function ProviderListPanel({
     true,
     open,
   );
-  const { connected, refreshConnected, isConnected } = useConnectedProviders(
+  const { connected, refreshConnected, isConnected } = useSettingsConnected(
     catalog,
     settings.aiProvider,
     onActiveConnectedChange,

@@ -22,7 +22,7 @@ import { resolveStrings } from "../i18n/strings";
 import { prefersReducedMotion } from "../engine/motion/motion";
 import { sendTourSignal, type TourAi } from "../utils/events";
 import type { RevisionDisplay, Settings } from "../prefs/SettingsContext";
-import { aiFeatures } from "../settings/textus-ai";
+import { aiFeatures } from "../prefs/ai-features";
 
 export interface PendingEditCallbacks {
   onAccept: (callId: string) => void;

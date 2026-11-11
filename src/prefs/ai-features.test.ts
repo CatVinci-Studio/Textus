@@ -1,5 +1,5 @@
 import { describe, expect, it } from "vitest";
-import { aiFeatures } from "./textus-ai";
+import { aiFeatures } from "./ai-features";
 
 const all = {
   textusAi: true,
