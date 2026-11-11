@@ -19,6 +19,10 @@ import {
   WebPagePane,
 } from "../../plugins/views/plugin-views";
 import { withPluginBlocks } from "../../document-view/plugins/plugin-code-blocks";
+import { setPreviewExtras } from "../../editor/preview-editor";
+
+// Every preview draws what plugins draw (a chart, a board), as documents do.
+setPreviewExtras(withPluginBlocks);
 
 // Its Markdown renderer loads when a tab first shows it, not with the window.
 // Shown only when the user chose it, so kept out of the startup chunk.
@@ -145,7 +149,6 @@ export function DocumentViews({
                   typewriter={typewriter}
                   onChange={(markdown) => onChange(tab.id, markdown)}
                   readOnly={tabReadOnly(tab)}
-                  previewExtras={withPluginBlocks}
                 />
               </Suspense>
             ) : tab.sourceMode ? (

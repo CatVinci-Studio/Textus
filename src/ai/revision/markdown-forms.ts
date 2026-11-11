@@ -1,15 +1,10 @@
-import { isPicture } from "../../editor/markdown/doc-blocks";
+import { isPicture, PICTURES_IN_TEXT } from "../../editor/markdown/doc-blocks";
 import { markdownBlockKind } from "./block-reader";
 
 /** The Markdown forms a revision is compared and found by: the editor and
  *  the model write the same thing differently (`***` vs `---`). */
 
-export { isPicture };
-
-/** Every picture inside a text, with its description and address (an
- *  address in `<>` keeps its brackets). */
-export const PICTURES_IN_TEXT =
-  /!\[([^\]]*)\]\((<[^>]*>|[^)\s]*)(?:\s+"[^"]*")?\)/g;
+export { isPicture, PICTURES_IN_TEXT };
 
 /** The kinds of block a rewrite changes whole (wholeBlockKind). */
 type WholeBlockKind =

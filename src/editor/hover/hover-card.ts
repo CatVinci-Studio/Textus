@@ -2,7 +2,8 @@ import { scaledPx } from "../../engine/tokens/chrome-scale";
 import { EDGE, clampLeft, opensBelow } from "../../engine/controls/placement";
 import { currentStrings } from "../../i18n/current";
 import type { HoverCard } from "../extension-points";
-import { renderMarkdownHtml } from "../markdown/render-html";
+import { drawPreview, type PreviewHandle } from "../preview-editor";
+import { PICTURES_IN_TEXT } from "../markdown/doc-blocks";
 import { readEscapes } from "../markdown/link-syntax";
 import "./hover-card.css";
 import { duration } from "../../engine/motion/motion";
@@ -13,6 +14,15 @@ import { duration } from "../../engine/motion/motion";
  */
 
 const GAP = 6;
+
+const previews = new WeakMap<HTMLElement, PreviewHandle>();
+
+/** A card gone, the editor drawing it let go. */
+function removeCard(el: HTMLElement) {
+  previews.get(el)?.destroy();
+  previews.delete(el);
+  el.remove();
+}
 
 /** The card on screen and not pinned, if any. */
 let floating: { el: HTMLElement; key: string } | null = null;
@@ -52,11 +62,11 @@ export function hideHoverCard(now = false) {
   floating = null;
   if (!el) return;
   if (now) {
-    el.remove();
+    removeCard(el);
     return;
   }
   el.classList.remove("hover-card-open");
-  setTimeout(() => el.remove(), duration("--dur-fast"));
+  setTimeout(() => removeCard(el), duration("--dur-fast"));
 }
 
 function build(card: HoverCard): HTMLElement {
@@ -83,7 +93,7 @@ function build(card: HoverCard): HTMLElement {
     }
     el.classList.add("hover-card-pinned");
     pin.textContent = t.hoverClose;
-    pin.onclick = () => el.remove();
+    pin.onclick = () => removeCard(el);
     movable(el, head);
   });
   head.append(title);
@@ -94,7 +104,7 @@ function build(card: HoverCard): HTMLElement {
     open.textContent = t.hoverOpen;
     const go = card.open;
     open.addEventListener("click", () => {
-      el.remove();
+      removeCard(el);
       if (floating?.el === el) floating = null;
       go();
     });
@@ -102,15 +112,18 @@ function build(card: HoverCard): HTMLElement {
   }
   head.append(pin);
   const body = document.createElement("div");
-  body.className = "hover-card-body milkdown";
-  // Parsed inert, so no picture starts loading: a card loads nothing.
-  const parsed = document.createElement("template");
-  parsed.innerHTML = renderMarkdownHtml(card.markdown);
-  for (const img of parsed.content.querySelectorAll("img")) img.remove();
-  // Links in the card are for reading, not following from here.
-  for (const a of parsed.content.querySelectorAll("a"))
-    a.removeAttribute("href");
-  body.append(parsed.content);
+  body.className = "hover-card-body";
+  // Drawn by the editor, as the note shows; without pictures, so a card
+  // loads nothing.
+  void drawPreview(
+    body,
+    card.markdown.replace(PICTURES_IN_TEXT, ""),
+    null,
+    () => named ?? t.hoverCard,
+  ).then((preview) => {
+    if (el.isConnected) previews.set(el, preview);
+    else preview.destroy();
+  });
   el.append(head, body);
   return el;
 }

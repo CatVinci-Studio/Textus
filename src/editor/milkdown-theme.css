@@ -29,11 +29,14 @@
 }
 
 /* A click below the text still lands in it: the page height less the
-   column's padding, divided by the zoom. flow-root keeps the last block's
-   margin inside, which WebKit on macOS let collapse out into a scrollbar. */
+   column's padding, divided by the zoom - a document's page, not a preview
+   drawn in it (an embed, a card). flow-root keeps the last block's margin
+   inside, which WebKit on macOS let collapse out into a scrollbar. */
 .milkdown .ProseMirror {
   display: flow-root;
   outline: none;
+}
+.milkdown .ProseMirror:not(.editor-preview .ProseMirror) {
   min-height: calc((100vh - 9rem) / var(--content-zoom, 1));
 }
 

@@ -1,5 +1,5 @@
 import { useDeferredValue, useEffect, useRef } from "react";
-import { SplitPreview, type PreviewExtras } from "./SplitPreview";
+import { SplitPreview } from "./SplitPreview";
 import { useVaultLineBreaks } from "./useVaultLineBreaks";
 import { DocSourceEditor } from "./lazy-doc-source-editor";
 import { elasticOverscroll } from "../../engine/controls/elastic-overscroll";
@@ -16,14 +16,12 @@ export function SplitView({
   typewriter,
   onChange,
   readOnly,
-  previewExtras,
 }: {
   content: string;
   filePath: string | null;
   typewriter: boolean;
   onChange: (markdown: string) => void;
   readOnly: boolean;
-  previewExtras?: PreviewExtras;
 }) {
   const rootRef = useRef<HTMLDivElement>(null);
   const previewRef = useRef<HTMLDivElement>(null);
@@ -89,11 +87,7 @@ export function SplitView({
           if (source) follow(e.currentTarget, source, "preview");
         }}
       >
-        <SplitPreview
-          markdown={deferred}
-          filePath={filePath}
-          extras={previewExtras}
-        />
+        <SplitPreview markdown={deferred} filePath={filePath} />
       </div>
     </div>
   );

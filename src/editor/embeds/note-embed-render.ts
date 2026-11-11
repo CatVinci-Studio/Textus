@@ -5,13 +5,10 @@ import { currentStrings } from "../../i18n/current";
 import {
   parseNoteLink,
   type NoteLink,
-  WIKILINK_SOURCE,
 } from "../../utils/note-link";
 import { basename, isNoteFile, noteStem } from "../../utils/path";
-import { showDocImage } from "../images/image-plugin";
-import { renderDocumentHtml } from "../markdown/render-html";
+import { drawPreview, type PreviewHandle } from "../preview-editor";
 import { embedProvider, type EmbedKind } from "./embed-sources";
-import { drawEmbeddedBlocks } from "./embed-plugin-blocks";
 
 /**
  * A note's, a section's or a block's `![[embed]]`, drawn read-only from what
@@ -24,8 +21,6 @@ const MAX_DEPTH = 5;
 const ANSWER_MS = 3000;
 /** `![[x.pdf]]`, `![[pic.png]]`: files, not notes ("v1.2" is a note). */
 const OTHER_FILE = /\.(?!md$|markdown$)[a-z][a-z0-9]{1,4}$/i;
-const EMBED = new RegExp(`!${WIKILINK_SOURCE}`, "g");
-const WIKILINK = new RegExp(`(?<!!)${WIKILINK_SOURCE}`, "g");
 
 interface EmbedPlace {
   /** The document the embed is written in. */
@@ -79,39 +74,7 @@ function withTimeout<T>(promise: Promise<T>, signal: AbortSignal) {
   ]);
 }
 
-/** Text nodes of `root` outside code, where `[[...]]` is no link. */
-function textNodes(root: HTMLElement): Text[] {
-  const walker = document.createTreeWalker(root, NodeFilter.SHOW_TEXT);
-  const found: Text[] = [];
-  for (let n = walker.nextNode(); n; n = walker.nextNode())
-    if (!n.parentElement?.closest("pre, code")) found.push(n as Text);
-  return found;
-}
 
-/** Each match of `pattern` in `root`'s text replaced by `make(match)`. */
-function replaceText(
-  root: HTMLElement,
-  pattern: RegExp,
-  make: (source: string) => HTMLElement,
-): HTMLElement[] {
-  const made: HTMLElement[] = [];
-  for (const node of textNodes(root)) {
-    const text = node.data;
-    const parts: (string | HTMLElement)[] = [];
-    let last = 0;
-    for (const m of text.matchAll(pattern)) {
-      parts.push(text.slice(last, m.index));
-      const el = make(m[0]);
-      made.push(el);
-      parts.push(el);
-      last = m.index + m[0].length;
-    }
-    if (!parts.length) continue;
-    parts.push(text.slice(last));
-    node.replaceWith(...parts);
-  }
-  return made;
-}
 
 /** Draws the embed `link` into `el`, asking its kind's owner. */
 export async function fillEmbed(
@@ -160,26 +123,11 @@ export async function fillEmbed(
   open.textContent = "↗";
   open.setAttribute("aria-label", currentStrings().hoverOpen);
   open.title = content.title || name;
-  const body = document.createElement("span");
+  const body = document.createElement("div");
   body.className = "note-embed-body";
-  body.innerHTML = renderDocumentHtml(content.markdown);
-  for (const img of body.querySelectorAll("img")) {
-    const src = img.getAttribute("src");
-    if (src) showDocImage(img, src, found.path);
-  }
-  drawEmbeddedBlocks(body, found.path, place.signal);
-  replaceText(body, WIKILINK, (source) => {
-    const span = document.createElement("span");
-    span.className = "wikilink";
-    span.dataset.type = "wikilink";
-    span.textContent = source;
-    return span;
-  });
-  const nested = replaceText(body, EMBED, (source) => {
-    const span = document.createElement("span");
-    span.dataset.source = source;
-    return span;
-  });
+  // Embeds in it are drawn one level down, never one already on the way.
+  body.dataset.embedChain = JSON.stringify([...place.chain, key]);
+  body.dataset.embedDepth = String(place.depth + 1);
   el.className = "note-embed";
   el.dataset.path = found.path;
   el.dataset.anchor = link.block ? `^${link.block}` : (heading ?? "");
@@ -188,21 +136,33 @@ export async function fillEmbed(
   el.replaceChildren(open, body);
   addBlockFoldMarkup(el, content.title || name, foldKey);
   showBlockFold(el, embedFolded(foldKey));
-  const below = {
-    ...place,
-    docPath: found.path,
-    depth: place.depth + 1,
-    chain: [...place.chain, key],
-  };
-  await Promise.all(
-    nested.map((span) => {
-      const inner = noteEmbedOf(span.dataset.source ?? "");
-      if (!inner) {
-        chip(span, span.dataset.source ?? "", false);
-        return null;
-      }
-      span.className = "note-embed";
-      return fillEmbed(span, inner, below);
-    }),
+  // Drawn by the editor itself, as the note shows when open.
+  const preview = await drawPreview(
+    body,
+    content.markdown,
+    found.path,
+    () => content.title || name,
   );
+  if (place.signal.aborted || !el.isConnected) return preview.destroy();
+  previews.get(el)?.destroy();
+  previews.set(el, preview);
+}
+
+const previews = new WeakMap<HTMLElement, PreviewHandle>();
+
+/** Lets go of the editor drawing the embed in `el`, as it leaves. */
+export function releaseEmbed(el: HTMLElement): void {
+  previews.get(el)?.destroy();
+  previews.delete(el);
+}
+
+/** Where an embed drawn inside another embed's body stands: one level
+ *  down, after the parts on the way. */
+export function embedDepthOf(dom: Element): { depth: number; chain: string[] } {
+  const outer = dom.closest<HTMLElement>("[data-embed-chain]");
+  if (!outer) return { depth: 1, chain: [] };
+  return {
+    depth: Number(outer.dataset.embedDepth) || 1,
+    chain: JSON.parse(outer.dataset.embedChain ?? "[]") as string[],
+  };
 }

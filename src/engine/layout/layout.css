@@ -82,7 +82,10 @@
   padding-top: 1.5rem;
 }
 
-.app-shell[data-tabs="bar"] .main-pane .milkdown .ProseMirror {
+.app-shell[data-tabs="bar"]
+  .main-pane
+  .milkdown
+  .ProseMirror:not(.editor-preview .ProseMirror) {
   min-height: calc(
     (100vh - var(--window-bar-height) - var(--island-inset) - 7.5rem) /
       var(--content-zoom, 1)

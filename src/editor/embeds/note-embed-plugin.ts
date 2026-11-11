@@ -9,10 +9,12 @@ import { isScopedUrl } from "../../platform/ios-files";
 import { windowFolder } from "../../platform/window-folder";
 import { OPEN_FILE_IN_TAB_EVENT, type OpenFileInTab } from "../../utils/events";
 import {
+  embedDepthOf,
   embedKey,
   embedKind,
   fillEmbed,
   noteEmbedOf,
+  releaseEmbed,
 } from "./note-embed-render";
 import { embedFolded, setEmbedFolded } from "./embed-folds";
 import { embedProvider, onEmbedsChange } from "./embed-sources";
@@ -76,11 +78,13 @@ function embedWidget(state: EmbedView, source: string, docPath: string) {
       if (key) showBlockFold(el, embedFolded(key));
     }
     const link = noteEmbedOf(source)!;
+    // Inside another embed's drawing: one level down from it.
+    const outer = embedDepthOf(view.dom);
     void fillEmbed(el, link, {
       docPath,
       folder: windowFolder(),
-      depth: 1,
-      chain: [embedKey(docPath)],
+      depth: outer.depth,
+      chain: [...outer.chain, embedKey(docPath)],
       signal: state.asks.signal,
       read: (path) => state.read.add(slashed(path)),
     }).then(() => {
@@ -135,6 +139,7 @@ function embedReveal(state: EmbedView): Reveal {
         Decoration.widget(to, embedWidget(state, source, docPath), {
           side: -1,
           key: `${docPath}\n${source}\n${state.generation}`,
+          destroy: (el) => releaseEmbed(el as HTMLElement),
         }),
       ];
     },

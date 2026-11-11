@@ -177,6 +177,11 @@ export function resolveBlockEdit(
   };
 }
 
+/** Every picture inside a text, with its description and address (an
+ *  address in `<>` keeps its brackets). */
+export const PICTURES_IN_TEXT =
+  /!\[([^\]]*)\]\((<[^>]*>|[^)\s]*)(?:\s+"[^"]*")?\)/g;
+
 /** Whether `block` is a picture and nothing else: `![alt](path)` or an
  *  `<img>`. Must match the backend's; keep-pictures-cases.json holds both. */
 export function isPicture(block: string): boolean {

@@ -10,10 +10,9 @@ vi.mock("../../platform/ipc", () => ({
     }),
   },
 }));
-vi.mock("../images/image-plugin", () => ({ showDocImage: () => {} }));
 
 const { addEmbedProvider } = await import("./embed-sources");
-const { embedKey, fillEmbed, noteEmbedOf } =
+const { embedKey, fillEmbed, noteEmbedOf, releaseEmbed } =
   await import("./note-embed-render");
 
 const notes: Record<string, string> = {
@@ -23,7 +22,13 @@ const notes: Record<string, string> = {
 };
 
 let remove = () => {};
-afterEach(() => remove());
+const drawn: HTMLElement[] = [];
+// Each embed's editor let go, with the embeds it drew, before the next.
+afterEach(() => {
+  remove();
+  for (const el of drawn.splice(0)) releaseEmbed(el);
+  document.body.replaceChildren();
+});
 
 type Target = { path: string; heading?: string };
 const byPath = (t: Target) =>
@@ -42,6 +47,8 @@ async function draw(
     provide,
   });
   const el = document.createElement("span");
+  document.body.append(el);
+  drawn.push(el);
   await fillEmbed(el, noteEmbedOf(source)!, {
     docPath,
     folder: "/v",
@@ -65,8 +72,10 @@ describe("a note embed", () => {
 
   it("stops a loop: a note already on the way down shows as its name", async () => {
     const { el, provide } = await draw("![[A]]", "/v/Doc.md");
-    // A shows B, whose ![[A]] is a chip.
-    expect(el.querySelectorAll(".note-embed-chip")).toHaveLength(1);
+    // A shows B (drawn by A's editor a moment later), whose ![[A]] is a chip.
+    await vi.waitFor(() =>
+      expect(el.querySelectorAll(".note-embed-chip")).toHaveLength(1),
+    );
     expect(el.querySelector(".note-embed-chip")?.textContent).toBe("A");
     expect(provide).toHaveBeenCalledTimes(2);
   });
@@ -84,8 +93,14 @@ describe("a note embed", () => {
         ? { markdown: `Level ![[Deep#H${Number(t.heading.slice(1)) + 1}]]` }
         : null,
     );
+    await vi.waitFor(
+      () =>
+        expect(el.querySelector(".note-embed-chip")?.textContent).toBe(
+          "Deep › H6",
+        ),
+      { timeout: 4000 },
+    );
     expect(provide).toHaveBeenCalledTimes(5);
-    expect(el.querySelector(".note-embed-chip")?.textContent).toBe("Deep › H6");
   });
 
   it("shows a missing note's name, dimmed", async () => {
