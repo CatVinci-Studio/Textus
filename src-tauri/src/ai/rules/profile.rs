@@ -232,17 +232,10 @@ impl ProjectConventions {
     /// `key: value` lines at column 0. Unknown keys are ignored.
     pub fn from_style(style: &str) -> ProjectConventions {
         let mut pc = ProjectConventions::default();
-        let text = style.trim_start_matches('\u{feff}');
-        let Some(rest) = text
-            .strip_prefix("---\n")
-            .or_else(|| text.strip_prefix("---\r\n"))
-        else {
+        let Some(front) = crate::frontmatter::split(style) else {
             return pc;
         };
-        let Some(end) = rest.find("\n---") else {
-            return pc;
-        };
-        for line in rest[..end].lines() {
+        for line in front.lines {
             if line.starts_with([' ', '\t']) {
                 continue;
             }
