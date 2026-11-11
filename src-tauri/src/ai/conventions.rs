@@ -22,4 +22,3 @@ pub(crate) fn library_names(ws: &AgentWorkspace) -> Vec<String> {
         .flat_map(|e| std::iter::once(e.name.clone()).chain(e.aliases.iter().cloned()))
         .collect()
 }
-

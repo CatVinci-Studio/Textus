@@ -1,34 +1,11 @@
 import { useEffect, useState } from "react";
 import { ai, type WebSearchStatus } from "../platform/ipc";
 import { useSettings } from "../prefs/SettingsContext";
+import type { ProviderCatalogEntry_Serialize } from "../platform/bindings/ai";
 
-/**
- * Structural facts about each AI provider, fetched from the backend catalog
- * so Settings doesn't hardcode them a second time. Fields kept in step by hand.
- */
-export interface ProviderCatalogEntry {
-  id: string;
-  label: string;
-  dialect:
-    "openai-responses" | "anthropic-messages" | "openai-chat-completions";
-  /** Auth methods this provider supports, in preference order. */
-  auth: ("oauth" | "api_key" | "custom")[];
-  baseUrl: string | null;
-  /** Low-cost default shared by completion and grammar checking. */
-  defaultModel: string | null;
-  /** Stronger default used only by Agent chat. */
-  agentDefaultModel: string | null;
-  keyOptional: boolean;
-  /** Its account sign-in isn't one the provider offers other apps. */
-  oauthUnofficial: boolean;
-  /** Whether the provider's API accepts image parts at all, which gates the
-   *  chat's image attachments. A provider-level claim, not a model-level one. */
-  supportsVision: boolean;
-  /** False when a live model-list fetch is known not to work. */
-  modelsListable: boolean;
-  /** A few current model ids that seed the picker before, or instead of, a live fetch. */
-  knownModels: string[];
-}
+/** Structural facts about each AI provider, from the backend catalog, so
+ *  Settings doesn't hardcode them a second time: its generated type. */
+export type ProviderCatalogEntry = ProviderCatalogEntry_Serialize;
 
 function fetchProviderCatalog(): Promise<ProviderCatalogEntry[]> {
   return ai.listProviders();
@@ -48,7 +25,6 @@ export const FALLBACK_CATALOG: ProviderCatalogEntry[] = [
     keyOptional: false,
     oauthUnofficial: false,
     supportsVision: true,
-    modelsListable: true,
     knownModels: ["gpt-6.1-sol", "gpt-6-luna"],
   },
   {
@@ -62,7 +38,6 @@ export const FALLBACK_CATALOG: ProviderCatalogEntry[] = [
     keyOptional: false,
     oauthUnofficial: true,
     supportsVision: true,
-    modelsListable: true,
     knownModels: ["claude-sonnet-5-5", "claude-haiku-5-5"],
   },
   {
@@ -76,7 +51,6 @@ export const FALLBACK_CATALOG: ProviderCatalogEntry[] = [
     keyOptional: true,
     oauthUnofficial: false,
     supportsVision: true,
-    modelsListable: true,
     knownModels: [],
   },
 ];

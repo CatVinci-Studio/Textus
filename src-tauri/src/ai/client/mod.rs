@@ -72,12 +72,6 @@ pub(crate) async fn call(
 pub async fn fetch_agent_models(app: AppHandle, provider: String) -> Result<Vec<String>, String> {
     crate::ai::ensure_on(&app)?;
     let entry = catalog::find(&provider).ok_or_else(|| format!("unknown provider: {provider}"))?;
-    if !entry.models_listable {
-        return Err(format!(
-            "{} doesn't support listing models - pick one from the preset list.",
-            entry.label
-        ));
-    }
     match entry.dialect {
         "anthropic-messages" => {
             let auth = route::resolve_anthropic_auth(&app).await?;

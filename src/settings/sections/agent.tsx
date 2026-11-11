@@ -225,15 +225,13 @@ export function ModelListRow({
   const { settings } = useSettings();
   const provider = given ?? settings.aiProvider;
   const signIn = useSignInModels(provider);
-  const entry = useProviderCatalog().find((e) => e.id === provider);
   const { at } = useFetchedModels(provider);
   const [error, setError] = useState<string | null>(null);
   const [loading, setLoading] = useState(false);
   // A failed fetch belongs to the provider it was tried against.
   useEffect(() => setError(null), [provider]);
 
-  const canFetch =
-    provider !== "custom" && !signIn && (entry?.modelsListable ?? true);
+  const canFetch = provider !== "custom" && !signIn;
   if (!canFetch) return null;
 
   async function fetchModels() {

@@ -37,7 +37,6 @@ const providerMocks = vi.hoisted(() => ({
       keyOptional: false,
       oauthUnofficial: false,
       supportsVision: true,
-      modelsListable: true,
       knownModels: [],
     },
   ],
@@ -201,7 +200,7 @@ describe("the lessons' copy", () => {
     render(<Harness />);
     expect(
       screen.getByText(
-        "Open the AI panel: the quill icon at the top right (Ctrl+Shift+L)",
+        "Open Textus AI: the sparkles at the top right (Ctrl+Shift+L)",
       ),
     ).toBeVisible();
   });

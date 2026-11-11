@@ -40,9 +40,6 @@ pub struct ProviderCatalogEntry {
     /// attachments. Provider-level on purpose: false only where the API rejects the
     /// request shape; a model that can't see says so in its own error.
     pub supports_vision: bool,
-    /// False when a live GET /models is known not to work for this provider: the
-    /// frontend then hides "Fetch Models" and relies on `known_models`.
-    pub models_listable: bool,
     /// The model ids offered before the user fetches the provider's own list:
     /// just the two defaults (agent first), checked weekly by a script.
     pub known_models: &'static [&'static str],
@@ -61,7 +58,6 @@ pub const PROVIDER_CATALOG: &[ProviderCatalogEntry] = &[
         paper_at_once: 6,
         oauth_unofficial: false,
         supports_vision: true,
-        models_listable: true,
         known_models: &["gpt-6.1-sol", "gpt-6-luna"],
     },
     ProviderCatalogEntry {
@@ -78,7 +74,6 @@ pub const PROVIDER_CATALOG: &[ProviderCatalogEntry] = &[
         paper_at_once: 4,
         oauth_unofficial: true,
         supports_vision: true,
-        models_listable: true,
         known_models: &["claude-sonnet-5-5", "claude-haiku-5-5"],
     },
     ProviderCatalogEntry {
@@ -95,7 +90,6 @@ pub const PROVIDER_CATALOG: &[ProviderCatalogEntry] = &[
         supports_vision: true,
         // Gemini's OpenAI compatibility API now implements GET /models with
         // the standard OpenAI list shape, so the generic model fetch works.
-        models_listable: true,
         known_models: &["gemini-3.8-flash", "gemini-3.5-flash-lite"],
     },
     ProviderCatalogEntry {
@@ -110,7 +104,6 @@ pub const PROVIDER_CATALOG: &[ProviderCatalogEntry] = &[
         paper_at_once: 6,
         oauth_unofficial: false,
         supports_vision: false,
-        models_listable: true,
         known_models: &["deepseek-v4-pro", "deepseek-flash"],
     },
     ProviderCatalogEntry {
@@ -125,7 +118,6 @@ pub const PROVIDER_CATALOG: &[ProviderCatalogEntry] = &[
         paper_at_once: 4,
         oauth_unofficial: false,
         supports_vision: true,
-        models_listable: true,
         known_models: &["grok-4.7", "grok-4.3"],
     },
     ProviderCatalogEntry {
@@ -140,7 +132,6 @@ pub const PROVIDER_CATALOG: &[ProviderCatalogEntry] = &[
         paper_at_once: 3,
         oauth_unofficial: false,
         supports_vision: true,
-        models_listable: true,
         known_models: &["mistral-large-latest", "mistral-small-latest"],
     },
     ProviderCatalogEntry {
@@ -155,7 +146,6 @@ pub const PROVIDER_CATALOG: &[ProviderCatalogEntry] = &[
         paper_at_once: 3,
         oauth_unofficial: false,
         supports_vision: true,
-        models_listable: true,
         known_models: &["openai/gpt-oss-120b", "openai/gpt-oss-20b"],
     },
     ProviderCatalogEntry {
@@ -172,7 +162,6 @@ pub const PROVIDER_CATALOG: &[ProviderCatalogEntry] = &[
         supports_vision: true,
         // The one third-party catalog with a public /models list, still seeded
         // for the instant render before that request resolves.
-        models_listable: true,
         known_models: &["openrouter/auto", "openrouter/free"],
     },
     ProviderCatalogEntry {
@@ -190,7 +179,6 @@ pub const PROVIDER_CATALOG: &[ProviderCatalogEntry] = &[
         paper_at_once: 4,
         oauth_unofficial: false,
         supports_vision: true,
-        models_listable: true,
         known_models: &[
             "deepseek-v4-pro",
             "deepseek-v4.1-flash",
@@ -210,7 +198,6 @@ pub const PROVIDER_CATALOG: &[ProviderCatalogEntry] = &[
         paper_at_once: 3,
         oauth_unofficial: false,
         supports_vision: true,
-        models_listable: true,
         known_models: &["kimi-k3", "kimi-k2.6"],
     },
     ProviderCatalogEntry {
@@ -225,7 +212,6 @@ pub const PROVIDER_CATALOG: &[ProviderCatalogEntry] = &[
         paper_at_once: 3,
         oauth_unofficial: false,
         supports_vision: true,
-        models_listable: true,
         known_models: &["glm-5.3", "glm-4.7-flash"],
     },
     ProviderCatalogEntry {
@@ -240,7 +226,6 @@ pub const PROVIDER_CATALOG: &[ProviderCatalogEntry] = &[
         paper_at_once: 4,
         oauth_unofficial: false,
         supports_vision: true,
-        models_listable: true,
         known_models: &["qwen3.7-plus", "qwen3.8-flash"],
     },
     ProviderCatalogEntry {
@@ -260,7 +245,6 @@ pub const PROVIDER_CATALOG: &[ProviderCatalogEntry] = &[
         oauth_unofficial: false,
         // Every current Seed model reads images.
         supports_vision: true,
-        models_listable: true,
         // Plus Ark's rolling id, which always serves the newest Seed model
         // without a date-suffixed name to chase.
         known_models: &[
@@ -284,7 +268,6 @@ pub const PROVIDER_CATALOG: &[ProviderCatalogEntry] = &[
         oauth_unofficial: false,
         // Its Chat Completions takes text only.
         supports_vision: false,
-        models_listable: true,
         known_models: &["MiniMax-M3", "MiniMax-M3.1-Flash"],
     },
     ProviderCatalogEntry {
@@ -299,7 +282,6 @@ pub const PROVIDER_CATALOG: &[ProviderCatalogEntry] = &[
         paper_at_once: 4,
         oauth_unofficial: false,
         supports_vision: false,
-        models_listable: true,
         known_models: &["MiniMax-M3", "MiniMax-M3.1-Flash"],
     },
     ProviderCatalogEntry {
@@ -316,7 +298,6 @@ pub const PROVIDER_CATALOG: &[ProviderCatalogEntry] = &[
         supports_vision: true,
         // Whatever's installed locally: no fixed seed list, but the local
         // /v1/models route works.
-        models_listable: true,
         known_models: &[],
     },
     ProviderCatalogEntry {
@@ -331,7 +312,6 @@ pub const PROVIDER_CATALOG: &[ProviderCatalogEntry] = &[
         paper_at_once: 3,
         oauth_unofficial: false,
         supports_vision: true,
-        models_listable: true,
         known_models: &[],
     },
 ];

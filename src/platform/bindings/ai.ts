@@ -202,11 +202,6 @@ export type ProviderCatalogEntry_Deserialize = {
 	 */
 	supportsVision: boolean,
 	/**
-	 *  False when a live GET /models is known not to work for this provider: the
-	 *  frontend then hides "Fetch Models" and relies on `known_models`.
-	 */
-	modelsListable: boolean,
-	/**
 	 *  The model ids offered before the user fetches the provider's own list:
 	 *  just the two defaults (agent first), checked weekly by a script.
 	 */
@@ -255,11 +250,6 @@ export type ProviderCatalogEntry_Serialize = {
 	 *  request shape; a model that can't see says so in its own error.
 	 */
 	supportsVision: boolean,
-	/**
-	 *  False when a live GET /models is known not to work for this provider: the
-	 *  frontend then hides "Fetch Models" and relies on `known_models`.
-	 */
-	modelsListable: boolean,
 	/**
 	 *  The model ids offered before the user fetches the provider's own list:
 	 *  just the two defaults (agent first), checked weekly by a script.
