@@ -4,6 +4,7 @@ import { cleanup, render } from "@testing-library/react";
 import { afterEach, describe, expect, it, vi } from "vitest";
 import { SourceEditor } from "./SourceEditor";
 import { sourceViewAt } from "./source-view-registry";
+import { flushEditor } from "../tab-editor";
 import { editInFocus } from "../../engine/controls/edit-in-focus";
 import { runScopeHandlers } from "@codemirror/view";
 
@@ -25,15 +26,31 @@ describe("SourceEditor", () => {
     expect(classes.size).toBeGreaterThan(1);
   });
 
-  it("reports edits and takes a new value from outside", () => {
+  it("reports edits after a pause or a flush, and takes a new value from outside", () => {
+    vi.useFakeTimers();
     const onChange = vi.fn();
     const { container, rerender } = render(
-      <SourceEditor value={markdown} onChange={onChange} typewriter={false} />,
+      <SourceEditor
+        tabId="t"
+        value={markdown}
+        onChange={onChange}
+        typewriter={false}
+      />,
     );
     const source = sourceViewAt(container);
     expect(source).not.toBeNull();
     source!.view.dispatch({ changes: { from: 0, insert: "X" } });
-    expect(onChange).toHaveBeenCalledWith(`X${markdown}`);
+    source!.view.dispatch({ changes: { from: 0, insert: "Y" } });
+    expect(onChange).not.toHaveBeenCalled();
+    vi.advanceTimersByTime(250);
+    expect(onChange).toHaveBeenCalledTimes(1);
+    expect(onChange).toHaveBeenCalledWith(`YX${markdown}`);
+    // A save pulls in what was typed a moment before.
+    source!.view.dispatch({ changes: { from: 0, insert: "Z" } });
+    expect(flushEditor("t")).toBe(`ZYX${markdown}`);
+    expect(onChange).toHaveBeenLastCalledWith(`ZYX${markdown}`);
+    expect(flushEditor("t")).toBeNull();
+    vi.useRealTimers();
     rerender(
       <SourceEditor value="# New" onChange={onChange} typewriter={false} />,
     );
@@ -84,12 +101,19 @@ describe("SourceEditor", () => {
   it("keeps an undo made before its own earlier text comes back", () => {
     const onChange = vi.fn();
     const at = (value: string) => (
-      <SourceEditor value={value} onChange={onChange} typewriter={false} />
+      <SourceEditor
+        tabId="t"
+        value={value}
+        onChange={onChange}
+        typewriter={false}
+      />
     );
     const { container, rerender } = render(at("Before after."));
     const { view, edit } = sourceViewAt(container)!;
     view.dispatch({ changes: { from: 7, insert: "![](a.png)" } });
+    flushEditor("t");
     edit("undo");
+    flushEditor("t");
     expect(view.state.doc.toString()).toBe("Before after.");
     // The paste's text reaches the tab only now, then the undo's.
     rerender(at("Before ![](a.png)after."));

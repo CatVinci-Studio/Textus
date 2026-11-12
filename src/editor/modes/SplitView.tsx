@@ -11,12 +11,14 @@ import "./SplitView.css";
  * the side the user scrolls leads.
  */
 export function SplitView({
+  tabId,
   content,
   filePath,
   typewriter,
   onChange,
   readOnly,
 }: {
+  tabId: string;
   content: string;
   filePath: string | null;
   typewriter: boolean;
@@ -71,6 +73,7 @@ export function SplitView({
       <div className="split-view-panes">
         <DocSourceEditor
           className="split-source"
+          tabId={tabId}
           value={content}
           docPath={filePath}
           typewriter={typewriter}
