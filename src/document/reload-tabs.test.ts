@@ -28,7 +28,7 @@ describe("keptTabs", () => {
       true,
     );
     expect(kept.active).toBe(1);
-    expect(kept.tabs[0]).toEqual({ path: "/n/a.md" });
+    expect(kept.tabs[0]).toEqual({ id: "a", path: "/n/a.md" });
     expect(kept.tabs[1].text?.content).toBe("edited");
     expect(kept.tabs[2]).toMatchObject({
       path: null,
@@ -36,16 +36,18 @@ describe("keptTabs", () => {
     });
   });
 
-  it("keeps no text with draft recovery off, and no plugin views", () => {
+  it("keeps no text with draft recovery off, and a plugin view by what it shows", () => {
+    const view = { plugin: "pdf", view: "reader", kind: "view" } as const;
     const kept = keptTabs(
-      [
-        tab({ content: "edited" }),
-        tab({ id: "pdf", view: {} as unknown as DocTab["view"] }),
-      ],
-      "a",
+      [tab({ content: "edited" }), tab({ id: "pdf", path: null, view })],
+      "pdf",
       false,
     );
-    expect(kept.tabs).toEqual([{ path: "/n/a.md" }]);
+    expect(kept.tabs).toEqual([
+      { id: "a", path: "/n/a.md" },
+      { id: "pdf", path: null, view },
+    ]);
+    expect(kept.active).toBe(1);
   });
 });
 

@@ -60,6 +60,7 @@ async function keptTab(
     draftTitle: kept.draftTitle,
     sourceMode: kept.sourceMode ?? false,
   };
+  if (kept.view) return { ...shape, view: kept.view };
   if (kept.text) return { ...shape, ...kept.text };
   if (kept.helpDoc) {
     const content = await helpDocContent(kept.helpDoc, language);
@@ -72,6 +73,25 @@ async function keptTab(
   } catch {
     return null;
   }
+}
+
+/** The drafts of tabs a reload gave new ids, kept under the new ones before
+ *  the old go, so a draft dropped since doesn't come back next launch. */
+async function moveDrafts(
+  kept: KeptTab[],
+  newId: (i: number) => string | undefined,
+): Promise<void> {
+  await Promise.all(
+    kept.map((tab, i) => {
+      const id = newId(i);
+      return id && tab.text && tab.text.content !== tab.text.savedContent
+        ? drafts.saveDraftSnapshot(id, tab.path, tab.text.content)
+        : null;
+    }),
+  ).catch(() => {});
+  await Promise.all(
+    kept.map((tab) => tab.id && drafts.clearDraftSnapshot(tab.id)),
+  ).catch(() => {});
 }
 
 /**
@@ -112,6 +132,9 @@ export function useStartupRestore(options: StartupRestoreOptions): void {
         );
         const active = docs[kept.active];
         if (active?.path) restoreCaret(active.path, active.diskMtime ?? null);
+        const made = docs.map((doc, i) =>
+          doc && i !== kept.active ? { ...makeBlankTab(), ...doc } : null,
+        );
         opts.setTabs((prev) => {
           const initial = prev.find((tab) => tab.id === opts.activeTabId);
           if (!initial) return prev;
@@ -124,9 +147,12 @@ export function useStartupRestore(options: StartupRestoreOptions): void {
                   reloadKey: initial.reloadKey + 1,
                 },
               ];
-            return doc ? [{ ...makeBlankTab(), ...doc }] : [];
+            return made[i] ? [made[i]] : [];
           });
         });
+        void moveDrafts(kept.tabs, (i) =>
+          i === kept.active ? opts.activeTabId : made[i]?.id,
+        );
         return;
       }
       // A tab dragged out of another window. Checked first: the draft drain

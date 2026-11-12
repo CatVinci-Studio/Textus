@@ -18,6 +18,8 @@ const ipc = vi.hoisted(() => ({
   takeDraftSnapshots: vi.fn(),
   /** Files gone since the last session. */
   gone: new Set<string>(),
+  saveDraftSnapshot: vi.fn(() => Promise.resolve()),
+  clearDraftSnapshot: vi.fn(() => Promise.resolve()),
 }));
 
 vi.mock("../platform/ipc", () => ({
@@ -32,7 +34,8 @@ vi.mock("../platform/ipc", () => ({
   },
   drafts: {
     takeDraftSnapshots: ipc.takeDraftSnapshots,
-    saveDraftSnapshot: () => Promise.resolve(),
+    saveDraftSnapshot: ipc.saveDraftSnapshot,
+    clearDraftSnapshot: ipc.clearDraftSnapshot,
     finishDraftRestore: () => Promise.resolve(),
   },
 }));
@@ -151,6 +154,40 @@ describe("startup restore into the initial tab", () => {
       expect(tabs()).toEqual([expect.objectContaining({ path: "/docs/a.md" })]),
     );
     expect(ipc.takePendingWindow).not.toHaveBeenCalled();
+  });
+
+  it("a reloaded page keeps its plugin tabs, and its drafts under the new tabs only", async () => {
+    const view = { plugin: "pdf", view: "reader", kind: "view" } as const;
+    sessionStorage.setItem(
+      "textus-reload-tabs",
+      JSON.stringify({
+        active: 0,
+        tabs: [
+          {
+            id: "old-draft",
+            path: null,
+            text: { content: "typed", savedContent: "", diskMtime: null },
+          },
+          { id: "old-pdf", path: null, view },
+        ],
+      }),
+    );
+    const { tabs } = await restore(true, true);
+    await waitFor(() =>
+      expect(tabs()).toEqual([
+        expect.objectContaining({ content: "typed" }),
+        expect.objectContaining({ view }),
+      ]),
+    );
+    await waitFor(() =>
+      expect(ipc.clearDraftSnapshot).toHaveBeenCalledWith("old-draft"),
+    );
+    expect(ipc.saveDraftSnapshot).toHaveBeenCalledWith(
+      tabs()[0].id,
+      null,
+      "typed",
+    );
+    expect(ipc.clearDraftSnapshot).toHaveBeenCalledWith("old-pdf");
   });
 
   it("but not over a document opened at launch", async () => {

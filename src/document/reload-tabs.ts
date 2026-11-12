@@ -1,5 +1,6 @@
 import { useEffect, useRef } from "react";
 import { tabIsDirty, type DocTab, type HelpDoc } from "./doc-tabs";
+import type { PluginTabView } from "../plugins/app-bridge";
 
 /**
  * What a window has open, kept in its sessionStorage: a reload of the page
@@ -15,9 +16,13 @@ const KEY = "textus-reload-tabs";
 const WRITE_MS = 1000;
 
 /** One tab as kept: a saved document by its path alone, read again from
- *  disk; one with unsaved text, or none of its own, with its text. */
+ *  disk; one with unsaved text, or none of its own, with its text; a
+ *  plugin's view by what it shows. */
 export interface KeptTab {
+  /** The tab's id before the reload, whose draft is then let go. */
+  id?: string;
   path: string | null;
+  view?: PluginTabView;
   helpDoc?: HelpDoc;
   draftTitle?: string;
   sourceMode?: boolean;
@@ -29,17 +34,18 @@ interface KeptTabs {
   active: number;
 }
 
-/** The tabs worth keeping, plugin views aside; `withText` false keeps paths
- *  only (draft recovery switched off). */
+/** The window's tabs; `withText` false keeps paths only (draft recovery
+ *  switched off). */
 export function keptTabs(
   tabs: DocTab[],
   activeTabId: string,
   withText: boolean,
 ): KeptTabs {
-  const shown = tabs.filter((tab) => !tab.view);
-  const kept = shown.map((tab): KeptTab => {
+  const kept = tabs.map((tab): KeptTab => {
+    if (tab.view) return { id: tab.id, path: tab.path, view: tab.view };
     const needsText = !tab.path || tabIsDirty(tab);
     return {
+      id: tab.id,
       path: tab.path,
       ...(tab.helpDoc && { helpDoc: tab.helpDoc }),
       ...(tab.draftTitle && { draftTitle: tab.draftTitle }),
@@ -59,7 +65,7 @@ export function keptTabs(
     tabs: kept,
     active: Math.max(
       0,
-      shown.findIndex((tab) => tab.id === activeTabId),
+      tabs.findIndex((tab) => tab.id === activeTabId),
     ),
   };
 }
