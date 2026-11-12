@@ -255,8 +255,9 @@ export const PluginListPane = memo(function PluginListPane({
         tabIndex={0}
         onKeyDown={onKey}
       >
-        {/* A message the plugin set stands in for the empty text. */}
-        {items && rows.length === 0 && (query || !info?.message) && (
+        {/* A message the plugin set, or its error, stands in for the
+            empty text. */}
+        {!error && items && rows.length === 0 && (query || !info?.message) && (
           <div className="tx-list-note">
             {query ? t.pluginQuickPickEmpty : (info?.emptyText ?? "")}
           </div>

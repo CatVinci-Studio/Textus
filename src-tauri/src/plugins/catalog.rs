@@ -319,7 +319,9 @@ pub async fn skill_install_catalog(app: tauri::AppHandle, name: String) -> Resul
         kind: ext_stats::Kind::Skill,
         id: &entry.name,
         version: &entry.version,
-        update: present.is_some(),
+        update: present
+            .as_ref()
+            .is_some_and(|v| is_newer(&v.to_string(), &entry.version)),
         present: present.is_some(),
         direct: &entry.url,
     };
@@ -335,6 +337,18 @@ pub async fn skill_install_catalog(app: tauri::AppHandle, name: String) -> Resul
     let path = install_skill_in(&skills, &entry.name, &text)?;
     ext_stats::installed(&app, ext_stats::Kind::Skill, &entry.name);
     Ok(path.to_string_lossy().into_owned())
+}
+
+/// Whether `offered` is a later version than `have`, both semver; a version
+/// either can't be read as is never newer.
+fn is_newer(have: &str, offered: &str) -> bool {
+    match (
+        semver::Version::parse(have.trim()),
+        semver::Version::parse(offered.trim()),
+    ) {
+        (Ok(have), Ok(offered)) => offered > have,
+        _ => false,
+    }
 }
 
 /// The version of the catalog skill `name` installed in `dir`, when one of
@@ -368,14 +382,8 @@ fn install_skill_in(
             |_| text.to_string(),
         );
     };
-    let newer = match (
-        installed_skill_version(dir, &skill.name),
-        skill
-            .version
-            .as_deref()
-            .and_then(|v| semver::Version::parse(v.trim()).ok()),
-    ) {
-        (Some(have), Some(offered)) => offered > have,
+    let newer = match (installed_skill_version(dir, &skill.name), &skill.version) {
+        (Some(have), Some(offered)) => is_newer(&have.to_string(), offered),
         _ => false,
     };
     if !newer {
@@ -410,7 +418,9 @@ pub async fn plugin_install_catalog(
         kind: ext_stats::Kind::Plugin,
         id: &id,
         version: &entry.version,
-        update: present.as_ref().is_some_and(|v| *v != entry.version),
+        update: present
+            .as_ref()
+            .is_some_and(|v| is_newer(v, &entry.version)),
         present: present.is_some(),
         direct: &entry.url,
     };

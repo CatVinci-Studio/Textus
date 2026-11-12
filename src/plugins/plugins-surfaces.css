@@ -228,15 +228,10 @@
   gap: 4px;
   margin-top: 2px;
 }
+/* A tool's name: the shared badge, in code type. */
 .mcp-tool {
-  padding: 0 4px;
-  border-radius: var(--shape-pill);
-  corner-shape: round;
-  background: var(--ui-subtle);
-  color: var(--ui-muted);
   font-family: var(--font-mono);
-  font-size: var(--text-caption);
-  line-height: 18px;
+  font-weight: 400;
 }
 .mcp-actions {
   display: flex;

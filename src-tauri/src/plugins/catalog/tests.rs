@@ -78,6 +78,11 @@ fn a_newer_catalog_skill_updates_its_older_self_but_not_the_users_own() {
     install_skill_in(dir.path(), "mine", own).unwrap();
     let offered = "---\nname: mine\ndescription: Mine.\nmetadata:\n  textus-version: \"2.0.0\"\n---\n\nTheirs.";
     assert!(install_skill_in(dir.path(), "mine", offered).is_err());
+    // An older one offered, or one that isn't semver, is no update either: a
+    // build ahead of the catalog isn't counted as updating.
+    assert!(install_skill_in(dir.path(), "tone", &at("1.0.5")).is_err());
+    assert!(!is_newer("0.2.0-dev", "0.1.0") && !is_newer("x", "1.0.0"));
+    assert!(is_newer("0.1.0", "0.1.1"));
 }
 
 fn entry(bytes: &[u8]) -> CatalogEntry {

@@ -88,6 +88,7 @@
   display: flex;
   flex-wrap: wrap;
   gap: var(--space-2);
+  padding: var(--space-4) 0 var(--space-2);
 }
 .plugin-card {
   align-items: center;
@@ -285,9 +286,6 @@ button.plugin-card-open:hover .plugin-card-name {
 .plugin-requirement-met {
   color: var(--ui-muted);
   font-size: var(--text-footnote);
-}
-.plugin-detail-actions {
-  padding: var(--space-4) 0 var(--space-2);
 }
 /* A plugin's own settings page, on the plugin's page between its groups:
    it draws its own. */

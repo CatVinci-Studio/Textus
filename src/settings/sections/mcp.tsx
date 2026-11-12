@@ -269,7 +269,7 @@ function ToolList({ tools }: { tools: McpToolInfo[] }) {
     <span className="mcp-tools" data-search-ignore>
       {tools.map((tool) => (
         <Tooltip key={tool.name} text={tool.description || tool.name}>
-          <span className="mcp-tool">{tool.name}</span>
+          <span className="tx-badge mcp-tool">{tool.name}</span>
         </Tooltip>
       ))}
     </span>
