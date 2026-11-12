@@ -39,3 +39,39 @@ export function useFitSteps(
     };
   }, [el, key]);
 }
+
+/**
+ * A row that keeps as many of its items (`[data-fit-item]`) as fit, in
+ * order, and folds the rest, from its end, behind `more` (a selector in
+ * it): `data-fit-hidden` on each folded one, and on `more` while nothing
+ * is. Read again as its container resizes or the interface restyles.
+ */
+export function useFitItems(
+  el: RefObject<HTMLElement | null>,
+  more: string,
+): void {
+  useLayoutEffect(() => {
+    const row = el.current;
+    if (!row) return;
+    const fit = () => {
+      const items = [...row.querySelectorAll<HTMLElement>("[data-fit-item]")];
+      const button = row.querySelector<HTMLElement>(more);
+      for (const item of items) item.removeAttribute("data-fit-hidden");
+      button?.setAttribute("data-fit-hidden", "");
+      if (row.scrollWidth <= row.clientWidth) return;
+      button?.removeAttribute("data-fit-hidden");
+      for (let i = items.length - 1; i >= 0; i--) {
+        if (row.scrollWidth <= row.clientWidth) return;
+        items[i].setAttribute("data-fit-hidden", "");
+      }
+    };
+    fit();
+    const resized = new ResizeObserver(fit);
+    resized.observe(row.offsetParent ?? row);
+    const restyled = onAppearance(fit);
+    return () => {
+      resized.disconnect();
+      restyled();
+    };
+  }, [el, more]);
+}

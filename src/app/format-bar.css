@@ -26,19 +26,14 @@
   background: var(--doc-bg, var(--ui-bg));
 }
 
-/* Its buttons, scrolling sideways when the island is narrower. */
+/* Its buttons; what doesn't fit folds into "⋯" (FormatBar). */
 .format-bar-row {
   display: flex;
   align-items: center;
   gap: var(--space-2);
   min-width: 0;
   height: 100%;
-  overflow-x: auto;
-  scrollbar-width: none;
-}
-
-.format-bar-row::-webkit-scrollbar {
-  display: none;
+  overflow: hidden;
 }
 
 .format-bar-group {
@@ -59,27 +54,13 @@
   display: contents;
 }
 
-/* Its steps as it narrows (FormatBar's FIT): tighter, then the blocks
-   fold into "⋯", then the rare marks join them. */
+/* What the row has no room for, behind "⋯" at its end (useFitItems); a
+   group folded whole takes its hairline with it. */
 .format-bar-more {
-  display: none;
   flex: none;
 }
-.format-bar-row[data-fit="tight"],
-.format-bar-row[data-fit="tight"] .format-bar-group + .format-bar-group {
-  gap: 0;
-}
-.format-bar-row[data-fit="tight"] .format-bar-group + .format-bar-group {
-  padding-left: var(--space-1);
-}
-.format-bar-row:is([data-fit="blocks"], [data-fit="rare"])
-  .format-bar-group
-  + .format-bar-group,
-.format-bar-row[data-fit="rare"] .format-bar-item[data-rare] {
+.format-bar-group:not(:has(> :not([data-fit-hidden]))) {
   display: none;
-}
-.format-bar-row:is([data-fit="blocks"], [data-fit="rare"]) .format-bar-more {
-  display: inline-flex;
 }
 
 .format-bar .tx-icon-button[aria-pressed="true"] {

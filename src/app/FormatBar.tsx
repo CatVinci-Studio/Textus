@@ -1,4 +1,3 @@
-import { useScrollFade } from "../engine/controls/scroll-fade";
 import { tabElement } from "../engine/layout/tab-element";
 import { tabInUse } from "../engine/layout/store";
 import { useEffect, useRef, useState, type ComponentType } from "react";
@@ -6,7 +5,7 @@ import type { Strings } from "../i18n/strings";
 import { caretBlock, NO_BLOCK, type CaretBlock } from "../editor/caret-block";
 import { IconButton } from "../engine/controls/IconButton";
 import { Tooltip } from "../engine/controls/Tooltip";
-import { useFitSteps } from "../engine/controls/fit-steps";
+import { useFitItems } from "../engine/controls/fit-steps";
 import { useMenuButton } from "../engine/controls/useMenuButton";
 import {
   BoldIcon,
@@ -40,8 +39,6 @@ import "./format-bar.css";
  */
 interface Button {
   label: (t: Strings) => string;
-  /** Rarely used: among the first to fold into "⋯" in a narrow island. */
-  rare?: boolean;
   keys?: string;
   Icon: ComponentType<{ className?: string }>;
   event: string;
@@ -79,7 +76,6 @@ const GROUPS: Button[][] = [
       keys: "ctrl+shift+`",
       Icon: StrikeIcon,
       event: TOGGLE_MARK_EVENT,
-      rare: true,
       detail: "strikethrough",
       on: (b) => b.strike,
     },
@@ -88,7 +84,6 @@ const GROUPS: Button[][] = [
       keys: "mod+shift+h",
       Icon: HighlightIcon,
       event: TOGGLE_MARK_EVENT,
-      rare: true,
       detail: "highlight",
       on: (b) => b.highlight,
     },
@@ -97,7 +92,6 @@ const GROUPS: Button[][] = [
       keys: "ctrl+`",
       Icon: InlineCodeIcon,
       event: TOGGLE_MARK_EVENT,
-      rare: true,
       detail: "code",
       on: (b) => b.code,
     },
@@ -146,15 +140,15 @@ const GROUPS: Button[][] = [
   ],
 ];
 
-/** Narrower than its buttons: tighter, then the blocks fold into "⋯",
- *  then the rare marks join them; past that the row scrolls. */
-const FIT = ["tight", "blocks", "rare"] as const;
+/** Every button, in the row's order: the ones folded into "⋯" go by it. */
+const ALL: Button[] = GROUPS.flat();
 
-/** The buttons folded into "⋯" at the row's present step. */
-function folded(step: string | undefined): Button[] {
-  if (step !== "blocks" && step !== "rare") return [];
-  const rare = step === "rare" ? GROUPS[0].filter((b) => b.rare) : [];
-  return [...rare, ...GROUPS[1]];
+/** The buttons `row` has folded away. */
+function folded(row: HTMLElement | null): Button[] {
+  if (!row) return [];
+  return [
+    ...row.querySelectorAll<HTMLElement>("[data-fit-hidden][data-fit-item]"),
+  ].map((el) => ALL[Number(el.dataset.fitItem)]);
 }
 
 /** A button's press: its document first, then the menu's event. */
@@ -205,14 +199,13 @@ export function FormatBar({
   tabId: string;
 }) {
   const block = useCaretBlock(tabId);
-  // Narrower than its buttons, it gives way (FIT), and at last scrolls, its
-  // edge fading where more are.
+  // Narrower than its buttons, it keeps as many as fit and folds the rest,
+  // from the end, into "⋯".
   const row = useRef<HTMLDivElement>(null);
-  useFitSteps(row, FIT);
-  useScrollFade(row, "x");
+  useFitItems(row, ".format-bar-more");
   const more = useMenuButton(
     () =>
-      folded(row.current?.dataset.fit).map((b) => ({
+      folded(row.current).map((b) => ({
         label: b.label(t),
         onSelect: () => press(tabId, b),
       })),
@@ -226,7 +219,7 @@ export function FormatBar({
       // A press leaves the caret where it was, in the document.
       onMouseDown={(e) => e.preventDefault()}
     >
-      <div ref={row} className="format-bar-row tx-scroll-fade">
+      <div ref={row} className="format-bar-row">
         {GROUPS.map((group, g) => (
           <div key={g} className="format-bar-group">
             {group.map((b) => {
@@ -235,7 +228,7 @@ export function FormatBar({
                 <span
                   key={label}
                   className="format-bar-item"
-                  data-rare={b.rare || undefined}
+                  data-fit-item={ALL.indexOf(b)}
                 >
                   <IconButton
                     label={label}

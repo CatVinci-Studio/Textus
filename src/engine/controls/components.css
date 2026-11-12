@@ -214,6 +214,11 @@ textarea.tx-input {
   }
 }
 
+/* Folded away by a row short of room (useFitItems). */
+[data-fit-hidden] {
+  display: none !important;
+}
+
 /* Text cut short: on one line with "…", or after `--lines` lines (2). */
 .tx-truncate {
   min-width: 0;
