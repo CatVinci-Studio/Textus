@@ -72,13 +72,15 @@ test("too narrow for the islands at their least, the sidebar steps aside, then t
   await emit(page, "menu-toggle-sidebar");
   await page.waitForTimeout(300);
   await expect(sidebar).not.toHaveClass(/sidebar-collapsed/);
-  // Opening the AI where it leaves too little room puts nothing away.
+  // Opening the AI where it leaves too little room puts nothing away, and
+  // splits nothing: it joins the document's island as a tab.
   await page.setViewportSize({ width: 1200, height: 760 });
   await page.getByRole("button", { name: "Textus AI" }).first().click();
   await expect(page.locator("section.island")).toHaveCount(1);
   await page.setViewportSize({ width: 1000, height: 760 });
   await page.getByRole("button", { name: "Textus AI" }).first().click();
-  await expect(page.locator("section.island")).toHaveCount(2);
+  await expect(page.locator(".tab-pill")).toHaveCount(2);
+  await expect(page.locator("section.island")).toHaveCount(1);
   await page.waitForTimeout(300);
   await expect(sidebar).not.toHaveClass(/sidebar-collapsed/);
 });
