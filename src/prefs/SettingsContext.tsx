@@ -91,14 +91,18 @@ export function SettingsProvider({ children }: { children: ReactNode }) {
     // launch reads the same, not a partial write's.
     if (!readBoot() && readLocalSettings() === null)
       writeLocalSettings({ ...loadSettings() });
-    // Another window changed something; this window's own fields stay
-    // (settings-store's WINDOW_OWN).
+    // Another window changed something. The file store keeps this window's
+    // own fields (WINDOW_OWN) itself; localStorage, shared by all, doesn't.
     const adopt = () => {
       const incoming = loadSettings();
-      setSettingsState((prev) => ({
-        ...incoming,
-        ...Object.fromEntries(WINDOW_OWN.map((key) => [key, prev[key]])),
-      }));
+      setSettingsState((prev) =>
+        readBoot()
+          ? incoming
+          : {
+              ...incoming,
+              ...Object.fromEntries(WINDOW_OWN.map((key) => [key, prev[key]])),
+            },
+      );
     };
     // Another window's language, once its strings are here too.
     const adoptStore = () => {

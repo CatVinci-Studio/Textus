@@ -23,6 +23,7 @@ import {
   useSettings,
 } from "./SettingsContext";
 import { AppearanceSync } from "../theme/apply-appearance";
+import { changeSettings } from "./settings-store";
 import { storage } from "../platform/ipc";
 import { resetBootForTests } from "../storage/boot";
 import {
@@ -196,6 +197,9 @@ describe("file-backed settings", () => {
     expect(loadSettings().zoom).toBe(1.5);
     // What a conversation reads (the store), too: not the other window's.
     expect(loadSettings().agentWorkspaceRoot).toBe("/a");
+    // Its own, changed from outside React, reaches the window.
+    act(() => changeSettings({ agentWorkspaceRoot: "/c" }));
+    expect(probe.textContent).toContain("|/c");
   });
 
   it("corrects a stale boot snapshot once the live values arrive", async () => {
