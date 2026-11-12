@@ -42,7 +42,7 @@ export async function drawPreview(
       preview: true,
     },
   );
-  const extras = previewExtras();
+  const extras = await previewExtras();
   const editor = extras ? extras(core, docPathRef) : core;
   await editor.create();
   editor.action((ctx) => setReadOnly(ctx.get(editorViewCtx), true));

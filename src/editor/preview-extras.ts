@@ -7,13 +7,14 @@ export type PreviewExtras = (
   docPath: { readonly current: string | null },
 ) => Editor;
 
-let extras: PreviewExtras | null = null;
+let extras: (() => Promise<PreviewExtras>) | null = null;
 
-/** What the app adds to every preview (its plugins' blocks), told once. */
-export function setPreviewExtras(add: PreviewExtras): void {
-  extras = add;
+/** What the app adds to every preview (its plugins' blocks), told once:
+ *  loaded with the first preview, not with the window. */
+export function setPreviewExtras(load: () => Promise<PreviewExtras>): void {
+  extras = load;
 }
 
-export function previewExtras(): PreviewExtras | null {
-  return extras;
+export function previewExtras(): Promise<PreviewExtras | null> {
+  return extras ? extras() : Promise.resolve(null);
 }

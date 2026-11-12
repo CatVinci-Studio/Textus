@@ -1,12 +1,8 @@
 import { useEffect } from "react";
 import { useLatest } from "../../utils/hooks/useLatest";
 import type { EditorRunner } from "../useEditorRunner";
-import {
-  applyEditorCaret,
-  readEditorCaret,
-  registerCaretReporter,
-  takePendingCaret,
-} from "./mode-switch";
+import { applyEditorCaret, readEditorCaret } from "./mode-switch";
+import { registerCaretReporter, takePendingCaret } from "./mode-caret";
 
 /** Source/WYSIWYG switches keep the caret: on screen this editor reports its
  *  caret, and on mounting it takes the caret the source view left. */

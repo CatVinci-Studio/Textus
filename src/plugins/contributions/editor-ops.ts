@@ -19,11 +19,11 @@ import { findFlash } from "./editor-flash";
 import {
   ACT_WITHIN_MS,
   NO_FLASH,
-  held,
   inputKey,
   setCursorStyle,
   visualSelection,
 } from "./editor-input-state";
+import { held } from "./key-holder";
 /**
  * The editing actions a plugin holding the keyboard asks for (Vim's
  * motions, operators, flash), each taken only just after one of its keys.

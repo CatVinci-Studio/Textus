@@ -22,7 +22,7 @@ import {
   standardKeymap,
   undo,
 } from "@codemirror/commands";
-import { centerSourceCaret } from "./mode-switch";
+import { centerSourceCaret } from "./mode-caret";
 import { sourceHighlighting } from "./source-highlight";
 import { sourceEscapes } from "./source-escapes";
 import {

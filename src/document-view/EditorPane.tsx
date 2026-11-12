@@ -7,7 +7,6 @@ import {
   useRef,
   useState,
 } from "react";
-import { MilkdownProvider } from "@milkdown/react";
 import { useSettings, type AgentMode } from "../prefs/SettingsContext";
 import { KatexFirst } from "../editor/math/KatexFirst";
 import { elasticOverscroll } from "../engine/controls/elastic-overscroll";
@@ -22,7 +21,7 @@ import { lazyComponent } from "../lazy/lazy-component";
 // The editor loads with the first document shown.
 const MilkdownEditor = lazyComponent(
   lazyModule("editor", () => import("./MilkdownEditor")),
-  (m) => m.MilkdownEditor,
+  (m) => m.ProvidedEditor,
 );
 
 interface EditorPaneProps {
@@ -169,19 +168,17 @@ export const EditorPane = memo(function EditorPane({
       >
         <Suspense fallback={null}>
           <KatexFirst markdown={initialValue}>
-            <MilkdownProvider>
-              <MilkdownEditor
-                tabId={tabId}
-                filePath={filePath}
-                docTitle={docTitle}
-                initialValue={initialValue}
-                onChange={handleChange}
-                isActive={isActive}
-                tour={tour}
-                tourMode={tourMode}
-                readOnly={readOnly}
-              />
-            </MilkdownProvider>
+            <MilkdownEditor
+              tabId={tabId}
+              filePath={filePath}
+              docTitle={docTitle}
+              initialValue={initialValue}
+              onChange={handleChange}
+              isActive={isActive}
+              tour={tour}
+              tourMode={tourMode}
+              readOnly={readOnly}
+            />
           </KatexFirst>
         </Suspense>
       </div>

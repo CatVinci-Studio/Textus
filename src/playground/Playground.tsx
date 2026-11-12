@@ -13,13 +13,7 @@ import { APP_NAME, resolveStrings, type Lang } from "../i18n/strings";
 import type { Settings } from "../prefs/SettingsContext";
 import { SourceEditor } from "../editor/modes/lazy-source-editor";
 import { sourceViewAt } from "../editor/modes/source-view-registry";
-import {
-  applySourceCaret,
-  captureEditorCaret,
-  readSourceCaret,
-  setPendingCaret,
-  takePendingCaret,
-} from "../editor/modes/mode-switch";
+import { applySourceCaret, captureEditorCaret, readSourceCaret, setPendingCaret, takePendingCaret } from "../editor/modes/mode-caret";
 import { modIsMeta } from "../platform/os";
 import { type EditorHandle, PlaygroundEditor } from "./PlaygroundEditor";
 import {

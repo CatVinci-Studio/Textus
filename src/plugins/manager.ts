@@ -1,8 +1,6 @@
 import { grants } from "./grants";
 import { fill } from "../i18n/fill";
 import { explainError } from "../utils/error-explain";
-// What plugins add to the editor registers before any editor is made.
-import "./contributions/editor-extensions";
 import { logPluginError } from "./store/plugin-log";
 import { version as APP_VERSION } from "../../package.json";
 import { plugins as pluginsIpc, type PluginsState } from "../platform/ipc";

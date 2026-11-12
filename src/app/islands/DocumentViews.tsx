@@ -18,11 +18,14 @@ import {
   PluginTabPane,
   WebPagePane,
 } from "../../plugins/views/plugin-views";
-import { withPluginBlocks } from "../../document-view/plugins/plugin-code-blocks";
 import { setPreviewExtras } from "../../editor/preview-extras";
 
 // Every preview draws what plugins draw (a chart, a board), as documents do.
-setPreviewExtras(withPluginBlocks);
+setPreviewExtras(() =>
+  import("../../document-view/plugins/plugin-code-blocks").then(
+    (m) => m.withPluginBlocks,
+  ),
+);
 
 // Its Markdown renderer loads when a tab first shows it, not with the window.
 // Shown only when the user chose it, so kept out of the startup chunk.

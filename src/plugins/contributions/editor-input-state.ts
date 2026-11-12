@@ -1,40 +1,13 @@
 import { PluginKey, TextSelection } from "@milkdown/kit/prose/state";
 import type { EditorState } from "@milkdown/kit/prose/state";
-import type { EditorView } from "@milkdown/kit/prose/view";
 import type { FlashLabel } from "./editor-flash";
+import { held } from "./key-holder";
 
 /**
  * What the keyboard plugin's capture (editor-input.ts) and its editing
  * actions (editor-ops.ts) share: who holds the keys, the editor, Visual
  * mode, the cursor and flash's marks.
  */
-
-export interface KeyCapture {
-  /** "all": every key but the app's shortcuts (unless named in `keys`) and an
-   *  input method's; "some": only `keys`. */
-  mode: "all" | "some";
-  keys: string[];
-}
-
-interface Owner {
-  plugin: string;
-  name: string;
-  capture: KeyCapture;
-  deliver: (key: string) => void;
-  lastKeyAt: number;
-}
-
-/** What the plugin with the keys and its editor share: who holds them, the
- *  editor that last had them, Visual mode's ends (characters: where it
- *  started and where the cursor is, both in the selection), the column
- *  up/down moves keep, and the cursor it asked for. */
-export const held: {
-  owner: Owner | null;
-  view: EditorView | null;
-  visual: { anchor: number; head: number } | null;
-  goalX: number | null;
-  cursorStyle: "bar" | "block";
-} = { owner: null, view: null, visual: null, goalX: null, cursorStyle: "bar" };
 
 /** The selection from character `anchor` to character `head`, both in. */
 export function visualSelection(

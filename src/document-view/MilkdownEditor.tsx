@@ -1,3 +1,4 @@
+import { MilkdownProvider } from "@milkdown/react";
 import { useEditorSetup } from "./useEditorSetup";
 import { useAskAi } from "../ai/chat/ask-ai";
 import { useEditorChat } from "./useEditorChat";
@@ -34,6 +35,16 @@ interface MilkdownEditorProps {
   tourMode?: AgentMode | null;
   /** Nothing may change the document (View › Read Only). */
   readOnly?: boolean;
+}
+
+/** The editor in its own Milkdown context: what the window's lazy pane
+ *  draws, so nothing of Milkdown loads before a document does. */
+export function ProvidedEditor(props: MilkdownEditorProps) {
+  return (
+    <MilkdownProvider>
+      <MilkdownEditor {...props} />
+    </MilkdownProvider>
+  );
 }
 
 /**
