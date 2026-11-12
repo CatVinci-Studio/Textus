@@ -98,7 +98,8 @@ export function pluginCodeBlocks(docPath: { readonly current: string | null }) {
       const seen = new Map<string, number>();
       const out: Decoration[] = [];
       state.doc.descendants((node, pos) => {
-        if (node.type.name !== "code_block") return true;
+        // A paragraph's or heading's words hold no code block.
+        if (node.type.name !== "code_block") return !node.isTextblock;
         const language = String(node.attrs.language ?? "").toLowerCase();
         const plugin = language && codeBlockPlugin(language);
         if (!plugin) return false;

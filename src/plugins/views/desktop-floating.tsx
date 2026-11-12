@@ -16,7 +16,7 @@ import {
   webview,
   webviewConnected,
   webviewState,
-  webviewsVersion,
+  webviewHtml,
 } from "./webviews";
 import {
   closeFloating,
@@ -79,9 +79,8 @@ export function DesktopFloating({ view }: { view: FloatingView }) {
     `${view.plugin}:${view.view}`,
     { view: view.view },
   );
-  useSyncExternalStore(subscribeWebviews, webviewsVersion);
-  const html = record ? (webview(record.id)?.html ?? null) : null;
   const id = record?.id ?? null;
+  const html = useSyncExternalStore(subscribeWebviews, () => webviewHtml(id));
   const label = useFloatingWindow(view);
   const chrome = useChromeScale();
 
