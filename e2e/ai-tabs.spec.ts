@@ -58,6 +58,16 @@ test("a conversation keeps its turns when the document in front is closed and an
   await emit(page, "menu-new-file");
   await expect(doc).toHaveCount(1);
   await kept();
+  // With no document, the island's own menu still starts a new one.
+  await doc.hover();
+  await doc.locator(".tab-pill-close").click();
+  await expect(tabs(page)).toHaveText(["新对话"]);
+  const paper = await page.locator(".ai-tab").boundingBox();
+  await page.mouse.click(paper!.x + paper!.width / 2, paper!.y + 40, {
+    button: "right",
+  });
+  await page.getByRole("menuitem", { name: "新对话" }).click();
+  await expect(turns).not.toContainText("第三章写了什么？");
 });
 
 test("pressed again in front of its own island, it collapses; again, it comes back", async ({

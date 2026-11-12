@@ -13,7 +13,6 @@ import { useAgentPanel } from "../ai/chat/panel/agent-panel";
 import { useRevisionLearning } from "../ai/revision/RevisionLearning";
 import type { Settings } from "../prefs/SettingsContext";
 import type { Strings } from "../i18n/strings";
-import { AGENT_TABS_EVENT } from "../utils/events";
 
 /**
  * One tab's editor and Textus AI's chats: their proposals, what each chat
@@ -154,19 +153,6 @@ export function useEditorChat({
     handleDetachChat();
     agentPanel.setOpen(false);
   }
-
-  // The AI island's row of conversations asks the editor on screen.
-  const actions = useRef({ startPanelConversation });
-  actions.current = { startPanelConversation };
-  useEffect(() => {
-    if (!isActive) return;
-    const onAsk = (e: Event) => {
-      if ((e as CustomEvent<"new">).detail === "new")
-        actions.current.startPanelConversation();
-    };
-    window.addEventListener(AGENT_TABS_EVENT, onAsk);
-    return () => window.removeEventListener(AGENT_TABS_EVENT, onAsk);
-  }, [isActive]);
 
   return {
     learning,

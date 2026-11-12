@@ -1,4 +1,4 @@
-import { useEffect } from "react";
+import { useEffect, useRef } from "react";
 import { AgentIslandTools } from "./AgentTabs";
 import { TextusAiOffNote } from "../../ai/TextusAiSwitch";
 import {
@@ -16,6 +16,7 @@ import "./ai-tab.css";
 export function AiTab({ conversation }: { conversation: string }) {
   const { settings, t } = useSettings();
   const on = settings.textusAi;
+  const newSlot = useRef<(() => void) | null>(null);
   // Nothing draws the conversations while off: what runs stops here.
   useEffect(() => {
     if (!on) windowConversation.peek()?.stopConversations();
@@ -24,9 +25,9 @@ export function AiTab({ conversation }: { conversation: string }) {
   return (
     <div className="ai-tab">
       <div className="agent-panel-mount">
-        <WindowConversation conversation={conversation} />
+        <WindowConversation conversation={conversation} newSlot={newSlot} />
       </div>
-      <AgentIslandTools t={t} />
+      <AgentIslandTools t={t} onNew={() => newSlot.current?.()} />
     </div>
   );
 }

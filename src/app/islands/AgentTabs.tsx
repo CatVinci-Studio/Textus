@@ -24,7 +24,6 @@ import {
   type ContextMenuItem,
 } from "../../engine/controls/ContextMenu";
 import { Presence } from "../../engine/motion/usePresence";
-import { AGENT_TABS_EVENT } from "../../utils/events";
 import type { Strings } from "../../i18n/strings";
 
 const NONE: string[] = [];
@@ -43,10 +42,6 @@ function useLive(scope: string | null): string | null {
     () => (scope ? liveConversation(scope) : null),
   );
 }
-
-/** Asks the document in front: its undecided edits come first. */
-const ask = (what: "new") =>
-  window.dispatchEvent(new CustomEvent(AGENT_TABS_EVENT, { detail: what }));
 
 /**
  * The AI island's tabs, for its row (IslandRow), in the window bar's row
@@ -121,7 +116,7 @@ export function AgentTabs({
 function agentIslandMenu(
   t: Strings,
   setTab: (tab: "chat" | "memory") => void,
-  onNew: () => void = () => ask("new"),
+  onNew: () => void,
 ): ContextMenuItem[] {
   return [
     {
@@ -138,7 +133,13 @@ function agentIslandMenu(
 /** Inside the island: its history at the top right, and its menu on a
  *  right-click on its paper (not on a message, a control or a selection,
  *  which keep their own). */
-export function AgentIslandTools({ t }: { t: Strings }) {
+export function AgentIslandTools({
+  t,
+  onNew,
+}: {
+  t: Strings;
+  onNew: () => void;
+}) {
   const panel = useAgentPanel();
   const ref = useRef<HTMLDivElement>(null);
   const [menu, setMenu] = useState<{ x: number; y: number } | null>(null);
@@ -169,7 +170,7 @@ export function AgentIslandTools({ t }: { t: Strings }) {
           <ContextMenu
             x={menu.x}
             y={menu.y}
-            items={agentIslandMenu(t, panel.setTab)}
+            items={agentIslandMenu(t, panel.setTab, onNew)}
             onClose={() => setMenu(null)}
           />
         )}

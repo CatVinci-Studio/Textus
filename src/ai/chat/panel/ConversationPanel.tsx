@@ -52,9 +52,12 @@ const NO_DOCUMENT_CHAT: DocumentPanel["chat"] = {
 export function ConversationPanel({
   model,
   document,
+  newSlot,
 }: {
   model: ConversationModel;
   document: AttachedDocument | null;
+  /** Filled with this panel's New conversation, for its island's menu. */
+  newSlot?: { current: (() => void) | null };
 }) {
   const { settings, t } = useSettings();
   const agentPanel = useAgentPanel();
@@ -78,6 +81,9 @@ export function ConversationPanel({
   const chat = doc?.chat ?? NO_DOCUMENT_CHAT;
   const docPath = port?.docPath ?? null;
   const labels = chatLabels(t, settings.language);
+  // The document's own, which waits on its undecided edits.
+  const startNew = doc?.onNewConversation ?? (() => conversation.reset());
+  if (newSlot) newSlot.current = startNew;
   return (
     <AgentPanelView
       labels={{
@@ -86,7 +92,7 @@ export function ConversationPanel({
         popOut: t.agentPanelPopOut,
         project: t.agentTabProject,
       }}
-      onNewConversation={doc?.onNewConversation ?? (() => conversation.reset())}
+      onNewConversation={startNew}
       onPopOut={canDetachChat ? doc?.onPopOut : undefined}
       history={
         <ChatHistoryMenu

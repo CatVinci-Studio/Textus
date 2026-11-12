@@ -20,8 +20,10 @@ export { stopConversations } from "../conversation/conversation-model";
  */
 export function WindowConversation({
   conversation = DRAFT,
+  newSlot,
 }: {
   conversation?: string;
+  newSlot?: { current: (() => void) | null };
 }) {
   const document = useSyncExternalStore(onAttachedDocument, attachedDocument);
   const { settings } = useSettings();
@@ -34,6 +36,11 @@ export function WindowConversation({
   const id = conversation === DRAFT ? (live ?? DRAFT) : conversation;
   const model = conversationFor(id, scope);
   return (
-    <ConversationPanel key={model.key} model={model} document={document} />
+    <ConversationPanel
+      key={model.key}
+      model={model}
+      document={document}
+      newSlot={newSlot}
+    />
   );
 }
