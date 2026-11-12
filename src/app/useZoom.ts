@@ -287,10 +287,12 @@ export function useZoom(
     ): boolean => {
       // Not a document (the start page, Settings, a conversation): no zoom.
       if (!tab) return false;
+      // Steps that come before the next frame build on each other.
+      const pending = raf !== 0 && target === tab;
       target = tab;
       anchorClientX = point?.clientX ?? null;
       anchorClientY = point?.clientY ?? null;
-      const zoom = to(contentZoom(tab));
+      const zoom = to(pending ? zoomRef.current : contentZoom(tab));
       zoomRef.current = snapped ? snap(zoom) : clamp(zoom);
       if (!raf) raf = requestAnimationFrame(applyFrame);
       clearTimeout(persistTimer);
@@ -333,14 +335,21 @@ export function useZoom(
     // level. Chromium reports trackpad pinch as ctrl+wheel too. As in VS
     // Code, a gesture that began as a scroll stays one: Cmd pressed while
     // the page still moves (a trackpad's glide) doesn't turn it into a zoom.
+    // Only a real scroll marks one: a skipped zoom step must not, or a
+    // pinch begun just after a scroll would be skipped to its end.
+    // Chromium's pinch (Windows' trackpad) is ctrl+wheel in fractions of a
+    // line, a mouse wheel's whole steps; a pinch is never a scroll's tail.
     let lastScroll = -Infinity;
     const onWheel = (e: WheelEvent) => {
       const modified = e.metaKey || e.ctrlKey;
-      if (!modified || e.timeStamp - lastScroll < SCROLL_GESTURE_MS) {
+      if (!modified) {
         lastScroll = e.timeStamp;
         return;
       }
-      if (setZoom((z) => z * Math.exp(-e.deltaY * 0.0015), true, e))
+      const pinch = e.ctrlKey && !Number.isInteger(e.deltaY);
+      if (!pinch && e.timeStamp - lastScroll < SCROLL_GESTURE_MS) return;
+      // A pinch moves in small steps: snapped, each would fall back.
+      if (setZoom((z) => z * Math.exp(-e.deltaY * 0.0015), !pinch, e))
         e.preventDefault();
     };
 

@@ -67,15 +67,26 @@ export class Cascade {
 
   /** What a block draws besides its words (a list's bullet, a quote's
    *  bar, code's ground) comes in with its first word, never ahead of the
-   *  text before it; one with no word yet waits unseen. */
+   *  text before it; one with no word yet waits unseen. One pass over the
+   *  words: a long reply's every update stays linear. */
   private blocks(root: Element, words: WordAt[], now: number, fade: number) {
+    const first = new Map<Element, number>();
+    words.forEach((word, i) => {
+      for (
+        let at = word.node.parentElement?.closest(DECORATED) ?? null;
+        at && root.contains(at) && !first.has(at);
+        at = at.parentElement?.closest(DECORATED) ?? null
+      )
+        first.set(at, i);
+    });
     for (const block of root.querySelectorAll<HTMLElement>(DECORATED)) {
-      const first = words.findIndex((word) => block.contains(word.node));
-      const begun = first < 0 ? undefined : this.begun[first];
+      const i = first.get(block);
+      const begun = i === undefined ? undefined : this.begun[i];
       if (begun === undefined) {
         block.style.opacity = "0";
         continue;
       }
+      block.style.opacity = "";
       if (begun + fade <= now) continue;
       animate(block, [{ opacity: 0 }, { opacity: 1 }], {
         duration: fade,

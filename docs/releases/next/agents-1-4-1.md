@@ -6,5 +6,11 @@
 
 ### Fixed
 
+- A long reply streaming in no longer holds up the window: it is drawn block by block, only its growing end anew, so the conversation scrolls freely while Textus AI writes.
+
 - With Claude Code or Codex answering, Textus AI's own button no longer lights up beside theirs; pressed, it switches back to Textus AI.
 - A reply streaming in no longer shows a list's next bullet, a quote's bar or code's ground ahead of the words before it.
+
+### Platform notes
+
+- **Windows:** pinching on a trackpad zooms the document again, also right after scrolling.
