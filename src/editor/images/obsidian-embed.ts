@@ -1,3 +1,4 @@
+import IMAGE_TYPES from "./image-types.json";
 import { $inputRule, $nodeSchema, $remark } from "@milkdown/kit/utils";
 import { InputRule } from "@milkdown/kit/prose/inputrules";
 import type { RemarkPluginRaw } from "@milkdown/kit/transformer";
@@ -42,20 +43,11 @@ declare module "mdast" {
 }
 
 /** File types an embed shows as a picture. */
-export const IMAGE_EXTENSIONS = [
-  "png",
-  "jpg",
-  "jpeg",
-  "gif",
-  "webp",
-  "svg",
-  "avif",
-  "bmp",
-] as const;
+export const IMAGE_EXTENSIONS: readonly string[] = Object.keys(IMAGE_TYPES);
 
 function isImageFile(file: string): boolean {
   const ext = /\.([^./]+)$/.exec(file)?.[1].toLowerCase();
-  return (IMAGE_EXTENSIONS as readonly string[]).includes(ext ?? "");
+  return IMAGE_EXTENSIONS.includes(ext ?? "");
 }
 
 const EMBED_SOURCE = /^!\[\[([^[\]\n]+)\]\]$/;

@@ -9,9 +9,12 @@ use std::path::{Component, Path, PathBuf};
 use std::sync::{Arc, Mutex};
 use std::time::{Duration, Instant};
 
-/// Image types a vault embed shows; keep in step with the frontend's
-/// IMAGE_EXTENSIONS.
-const IMAGE_EXTENSIONS: &[&str] = &["png", "jpg", "jpeg", "gif", "webp", "svg", "avif", "bmp"];
+/// Image types a vault embed shows: the frontend's one list.
+static IMAGE_TYPES: std::sync::LazyLock<serde_json::Map<String, serde_json::Value>> =
+    std::sync::LazyLock::new(|| {
+        serde_json::from_str(include_str!("../../../src/editor/images/image-types.json"))
+            .expect("image-types.json")
+    });
 
 /// The walk that indexes a vault stops here: a vault this size is rare, and a
 /// "vault" that is really a home folder must not stall the editor.
@@ -42,7 +45,7 @@ fn vault_root(doc_path: &Path, folder: Option<&Path>) -> Option<PathBuf> {
 fn is_image(path: &Path) -> bool {
     path.extension()
         .and_then(|e| e.to_str())
-        .is_some_and(|e| IMAGE_EXTENSIONS.contains(&e.to_ascii_lowercase().as_str()))
+        .is_some_and(|e| IMAGE_TYPES.contains_key(&e.to_ascii_lowercase()))
 }
 
 fn is_note(path: &Path) -> bool {

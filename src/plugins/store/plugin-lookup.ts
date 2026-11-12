@@ -1,3 +1,4 @@
+import { splitFrontmatter } from "../../utils/frontmatter";
 import { fill } from "../../i18n/fill";
 import { currentStrings } from "../../i18n/current";
 import { PLUGIN_SETTINGS } from "../../registry/menu/plugin-menu";
@@ -40,11 +41,9 @@ export function customEditorFor(
 
 /** The keys of a Markdown document's front matter, none without one. */
 export function frontMatterKeys(content: string): string[] {
-  const m = /^\uFEFF?---\r?\n([\s\S]*?)\r?\n(?:---|\.\.\.)\s*(?:\r?\n|$)/.exec(
-    content,
-  );
-  if (!m) return [];
-  return [...m[1].matchAll(/^([\w-]+)\s*:/gm)].map((k) => k[1]);
+  const yaml = splitFrontmatter(content).yaml;
+  if (yaml === null) return [];
+  return [...yaml.matchAll(/^([\w-]+)\s*:/gm)].map((k) => k[1]);
 }
 
 /** The plugin that opens Markdown `path` in a tab of its own because of

@@ -3,9 +3,7 @@ import { afterEach, describe, expect, it } from "vitest";
 import type { Editor } from "@milkdown/kit/core";
 import { editorViewCtx, serializerCtx } from "@milkdown/kit/core";
 import { createTestEditor } from "../editor-test-kit";
-import { readFileSync } from "node:fs";
 import {
-  IMAGE_EXTENSIONS,
   embedForPicked,
   parseEmbed,
   withEmbedPath,
@@ -81,15 +79,6 @@ describe("parseEmbed", () => {
       expect(parseEmbed(`![[a.${ext}]]`)?.isImage).toBe(true);
     },
   );
-
-  it("takes the same file types for images as the backend searches for", () => {
-    const rust = readFileSync("src-tauri/src/commands/vault.rs", "utf8");
-    const list = /const IMAGE_EXTENSIONS: &\[&str\] = &\[([^\]]*)\]/.exec(rust);
-    const types = [...(list?.[1] ?? "").matchAll(/"([^"]+)"/g)].map(
-      (m) => m[1],
-    );
-    expect(types).toEqual([...IMAGE_EXTENSIONS]);
-  });
 
   it.each(["![[Note]]", "![[Note#Heading]]", "![[doc.pdf]]", "![[a.png#^b]]"])(
     "takes %s for something other than an image",

@@ -1,3 +1,4 @@
+import IMAGE_TYPES from "../editor/images/image-types.json";
 import { fs, themes } from "../platform/ipc";
 import { IMPORT_RE, withWebFonts } from "./web-fonts";
 import { isInside } from "../utils/path";
@@ -14,12 +15,7 @@ const MIME_BY_EXT: Record<string, string> = {
   woff: "font/woff",
   ttf: "font/ttf",
   otf: "font/otf",
-  png: "image/png",
-  jpg: "image/jpeg",
-  jpeg: "image/jpeg",
-  gif: "image/gif",
-  svg: "image/svg+xml",
-  webp: "image/webp",
+  ...IMAGE_TYPES,
 };
 
 function isRemoteOrData(target: string): boolean {

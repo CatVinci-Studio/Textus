@@ -1,3 +1,4 @@
+import IMAGE_TYPES from "../../editor/images/image-types.json";
 import { plugins as pluginsIpc } from "../../platform/ipc";
 import { pluginFilesBase } from "../../platform/file-src";
 import { scaleStylesheet } from "../../engine/tokens/scale-lengths";
@@ -42,17 +43,12 @@ const MIME: Record<string, string> = {
   css: "text/css",
   html: "text/html",
   json: "application/json",
-  svg: "image/svg+xml",
-  png: "image/png",
-  jpg: "image/jpeg",
-  jpeg: "image/jpeg",
-  gif: "image/gif",
-  webp: "image/webp",
   woff: "font/woff",
   woff2: "font/woff2",
   ttf: "font/ttf",
   wasm: "application/wasm",
   bcmap: "application/octet-stream",
+  ...IMAGE_TYPES,
 };
 
 function mimeOf(path: string): string {
