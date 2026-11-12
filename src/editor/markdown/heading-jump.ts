@@ -35,7 +35,8 @@ function nestedHeadingPos(doc: ProseNode, levels: string[]): number | null {
     if (node.type.name === "heading")
       headings.push({
         level: node.attrs.level as number,
-        slug: headingSlug(node.textContent),
+        // As the single-level path reads it: the heading as shown.
+        slug: headingSlug(shownText(node)),
         pos: pos + 1,
       });
     return node.type.name !== "heading" && !node.isTextblock;

@@ -10,6 +10,8 @@ import {
 // space is in angle brackets, as a macOS draft path ("Application Support").
 const IMAGE_SRC_RE =
   /(!\[[^\]]*\]\()(?:<([^>\n]+)>|([^)\s]+))((?:\s+"[^"]*")?\))/g;
+// <img src="...">, the form a resized picture is saved in.
+const IMG_TAG_SRC_RE = /(<img\b[^>]*?\bsrc=)(["'])([^"'\n]+)\2/gi;
 
 // A Windows drive path or a leading "/" is absolute; a URL scheme or a
 // plain relative path is not.
@@ -29,8 +31,11 @@ function extractImageSrcs(
   withRelative: boolean,
 ): Map<string, string> {
   const srcs = new Map<string, string>();
-  for (const match of content.matchAll(IMAGE_SRC_RE)) {
-    const written = match[2] ?? match[3];
+  const writtenSrcs = [
+    ...[...content.matchAll(IMAGE_SRC_RE)].map((m) => m[2] ?? m[3]),
+    ...[...content.matchAll(IMG_TAG_SRC_RE)].map((m) => m[3]),
+  ];
+  for (const written of writtenSrcs) {
     if (
       isAbsoluteLocalPath(written) ||
       (withRelative && isRelativePath(written))
@@ -43,16 +48,26 @@ function extractImageSrcs(
 /** Rewrites the src of every image whose src is in `moved`; the same words
  *  in the text stay. */
 function rewriteImageSrcs(content: string, moved: Map<string, string>): string {
-  return content.replace(
-    IMAGE_SRC_RE,
-    (whole, open: string, bracketed?: string, bare?: string, close = "") => {
-      const next = moved.get(bracketed ?? bare ?? "");
-      if (next === undefined) return whole;
-      return bracketed !== undefined
-        ? `${open}<${next}>${close}`
-        : `${open}${linkPath(next)}${close}`;
-    },
-  );
+  return content
+    .replace(
+      IMAGE_SRC_RE,
+      (whole, open: string, bracketed?: string, bare?: string, close = "") => {
+        const next = moved.get(bracketed ?? bare ?? "");
+        if (next === undefined) return whole;
+        return bracketed !== undefined
+          ? `${open}<${next}>${close}`
+          : `${open}${linkPath(next)}${close}`;
+      },
+    )
+    .replace(
+      IMG_TAG_SRC_RE,
+      (whole, open: string, quote: string, src: string) => {
+        const next = moved.get(src);
+        return next === undefined
+          ? whole
+          : `${open}${quote}${linkPath(next)}${quote}`;
+      },
+    );
 }
 
 /**
