@@ -35,7 +35,6 @@ pub mod pdf_page_numbers;
 #[cfg(desktop)]
 pub mod prefs;
 pub mod recents;
-#[cfg(desktop)]
 pub mod session;
 pub mod system_info;
 pub mod theme_gallery;
