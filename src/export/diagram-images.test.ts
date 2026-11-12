@@ -41,6 +41,13 @@ describe("replaceFencedBlocks", () => {
     expect(await replaceFencedBlocks(md, draw)).toBe(md);
   });
 
+  it("keeps a block inside a quote or list as source, and counts it", async () => {
+    const md = "> ```mermaid\n> graph LR\n> ```\n\n- ```mermaid\n  x\n  ```";
+    const nested = vi.fn();
+    expect(await replaceFencedBlocks(md, draw, nested)).toBe(md);
+    expect(nested.mock.calls).toEqual([["mermaid"], ["mermaid"]]);
+  });
+
   it("keeps the source when drawing throws", async () => {
     const md = "```mermaid\ngraph LR\n```";
     expect(

@@ -214,13 +214,17 @@ function useApplyAppearance(
     // In the document first: a <style> has a sheet to promote only there.
     document.head.appendChild(style);
     void show(settings.customCss);
-    // Its web fonts come a moment later, fetched by Rust.
-    void webFonts.load().then(async ({ withWebFonts }) => {
-      const css = await withWebFonts(settings.customCss);
-      if (current && css !== settings.customCss) void show(css);
-    });
+    // Its web fonts come a moment later, fetched by Rust, once typing
+    // pauses: not for every partial address.
+    const fetchFonts = window.setTimeout(() => {
+      void webFonts.load().then(async ({ withWebFonts }) => {
+        const css = await withWebFonts(settings.customCss);
+        if (current && css !== settings.customCss) void show(css);
+      });
+    }, 400);
     return () => {
       current = false;
+      window.clearTimeout(fetchFonts);
     };
   }, [settings.customCss]);
 
@@ -326,7 +330,8 @@ function useApplyAppearance(
           rememberThemeChrome({
             id: theme.id,
             dark,
-            sourceLength: (css ?? "").length,
+            // The file as stored: what the boot script measures.
+            sourceLength: (stored ?? "").length,
             css: chrome,
           });
       } catch {

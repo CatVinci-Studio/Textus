@@ -163,10 +163,22 @@ fn app_commands_start_the_app_and_carry_json_and_the_folder() {
 #[test]
 fn open_hands_absolute_paths_to_the_app() {
     let app = FakeApp::default();
-    let (code, _, _) = run_in(Path::new("/w"), &["open", "a.md", "/b.md"], &app);
+    let (code, _, _) = run_in(
+        Path::new("/w/x"),
+        &["open", "./a.md", "../b.md", "/c.md"],
+        &app,
+    );
     assert_eq!(code, 0);
-    let joined = Path::new("/w").join("a.md").to_string_lossy().into_owned();
-    assert_eq!(app.opened.borrow()[0], args(&[&joined, "/b.md"]));
+    let at = |p: &str| Path::new(p).to_string_lossy().into_owned();
+    let (a, b) = (Path::new("/w/x").join("a.md"), Path::new("/w").join("b.md"));
+    assert_eq!(
+        app.opened.borrow()[0],
+        vec![
+            at(&a.to_string_lossy()),
+            at(&b.to_string_lossy()),
+            at("/c.md")
+        ]
+    );
 }
 
 #[test]
@@ -225,7 +237,8 @@ fn an_export_is_checked_before_the_app_is_asked() {
         cwd: dir.path().to_string_lossy().into_owned(),
         json: false,
     };
-    let job = app::export_job(&request(&["a.md", "--to", "latex"])).unwrap();
+    let job = app::export_job(&request(&["./a.md", "--to", "latex"])).unwrap();
+    assert_eq!(job.file, dir.path().join("a.md"));
     assert_eq!(job.out, dir.path().join("a.tex"));
     assert!(app::export_job(&request(&["a.md", "--to", "doc"])).is_err());
     assert!(app::export_job(&request(&["a.md"])).is_err());

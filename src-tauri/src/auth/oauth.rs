@@ -111,6 +111,10 @@ pub(crate) async fn valid<P: OAuthProvider>(app: &AppHandle) -> Result<P::Cred, 
         return Ok(cred);
     }
     let refreshed = P::refresh(P::refresh_token(&cred).to_string()).await?;
+    // Signed out while it refreshed: stay signed out.
+    if load::<P>(app)?.is_none() {
+        return Err("not logged in".to_string());
+    }
     save::<P>(app, &refreshed)?;
     Ok(refreshed)
 }

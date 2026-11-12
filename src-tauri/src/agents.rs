@@ -106,6 +106,7 @@ pub async fn agent_start(
     )
     .map_err(|e| e.to_string())?;
     let launch = launch(&manifest, &agent, &home.to_string_lossy())?;
+    crate::mcp::path::ready_login_path().await;
     let crate::mcp::process::Piped {
         child,
         stdin,

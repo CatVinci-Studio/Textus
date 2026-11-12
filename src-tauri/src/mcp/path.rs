@@ -4,6 +4,12 @@
 use std::path::{Path, PathBuf};
 use std::sync::OnceLock;
 
+/// `login_path` asked off the async runtime: the first ask runs the login
+/// shell, which can take seconds.
+pub async fn ready_login_path() {
+    let _ = tokio::task::spawn_blocking(login_path).await;
+}
+
 /// The PATH a terminal would have, with the usual tool folders after it.
 pub fn login_path() -> String {
     static PATH: OnceLock<String> = OnceLock::new();
@@ -53,21 +59,21 @@ fn shell_path() -> Option<String> {
         .stderr(std::process::Stdio::null())
         .spawn()
         .ok()?;
-    let deadline = std::time::Instant::now() + std::time::Duration::from_secs(5);
-    loop {
-        match child.try_wait() {
-            Ok(Some(_)) => break,
-            Ok(None) if std::time::Instant::now() < deadline => {
-                std::thread::sleep(std::time::Duration::from_millis(50))
-            }
-            _ => {
-                let _ = child.kill();
-                return None;
-            }
-        }
-    }
-    let mut out = String::new();
-    std::io::Read::read_to_string(&mut child.stdout.take()?, &mut out).ok()?;
+    // Read while it runs: a chatty profile would otherwise fill the pipe and
+    // never exit.
+    let mut stdout = child.stdout.take()?;
+    let (tx, rx) = std::sync::mpsc::channel();
+    std::thread::spawn(move || {
+        let mut out = String::new();
+        let _ = std::io::Read::read_to_string(&mut stdout, &mut out);
+        let _ = tx.send(out);
+    });
+    let Ok(out) = rx.recv_timeout(std::time::Duration::from_secs(5)) else {
+        let _ = child.kill();
+        let _ = child.wait();
+        return None;
+    };
+    let _ = child.wait();
     // The last line: a profile may print greetings before it.
     out.lines()
         .rev()

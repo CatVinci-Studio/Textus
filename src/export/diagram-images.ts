@@ -4,6 +4,7 @@ import {
   type MermaidApi,
 } from "../editor/diagram-engine";
 import type { DiagramEngine } from "../prefs/SettingsContext";
+import { CONTAINER_PREFIX } from "../utils/markdown-lines";
 
 // Word, OpenDocument and EPUB don't know mermaid or chart blocks, so each is
 // drawn as a PNG data URL before pandoc. One that can't be drawn keeps its
@@ -21,17 +22,25 @@ interface DiagramImage {
 }
 
 /** Replaces each fenced block with what `draw` makes of its language
- *  (lowercased) and source; null or a throw keeps the block. */
+ *  (lowercased) and source; null or a throw keeps the block. One inside a
+ *  quote or list stays as it is, told to `nested` so a count in document
+ *  order still matches the editor's. */
 export async function replaceFencedBlocks(
   markdown: string,
   draw: (language: string, code: string) => Promise<DiagramImage | null>,
+  nested?: (language: string) => void,
 ): Promise<string> {
   const lines = markdown.split("\n");
   const out: string[] = [];
   for (let i = 0; i < lines.length; i++) {
     const open = FENCE.exec(lines[i]);
     if (!open) {
-      out.push(lines[i]);
+      const inner = FENCE.exec(lines[i].replace(CONTAINER_PREFIX, ""));
+      if (inner && CONTAINER_PREFIX.exec(lines[i])![0].trim())
+        i = skipNested(lines, i, inner[1], out, () =>
+          nested?.(inner[2].toLowerCase()),
+        );
+      else out.push(lines[i]);
       continue;
     }
     const fence = open[1];
@@ -64,6 +73,32 @@ export async function replaceFencedBlocks(
     }
   }
   return out.join("\n");
+}
+
+/** Copies a fenced block behind quote or list markers to `out` as it is;
+ *  the index of its last line. */
+function skipNested(
+  lines: string[],
+  start: number,
+  fence: string,
+  out: string[],
+  seen: () => void,
+): number {
+  seen();
+  out.push(lines[start]);
+  let i = start + 1;
+  for (; i < lines.length; i++) {
+    out.push(lines[i]);
+    const close = FENCE.exec(lines[i].replace(CONTAINER_PREFIX, ""));
+    if (
+      close &&
+      !close[2] &&
+      close[1][0] === fence[0] &&
+      close[1].length >= fence.length
+    )
+      return i;
+  }
+  return i - 1;
 }
 
 /** Draws an SVG onto a white canvas at twice its size. Throws when the SVG
@@ -166,14 +201,21 @@ export async function drawnBlocksToImages(
 ): Promise<string> {
   if (!pictures.size) return markdown;
   const seen = new Map<string, number>();
-  return replaceFencedBlocks(markdown, async (language) => {
-    const list = pictures.get(language);
-    if (!list) return null;
+  const next = (language: string) => {
     const n = seen.get(language) ?? 0;
     seen.set(language, n + 1);
-    const url = list[n];
-    return url ? pictureToImage(url) : null;
-  });
+    return n;
+  };
+  return replaceFencedBlocks(
+    markdown,
+    async (language) => {
+      const list = pictures.get(language);
+      if (!list) return null;
+      const url = list[next(language)];
+      return url ? pictureToImage(url) : null;
+    },
+    next,
+  );
 }
 
 /** Replaces the SVG of every rendered diagram in editor `html` with what

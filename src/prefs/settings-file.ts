@@ -98,7 +98,10 @@ function mergedThemes(
   css: ThemeCss,
   mine: UserThemeMeta[],
 ): UserThemeMeta[] {
-  const arriving = (incoming ?? []).filter((theme) => css[theme.id]);
+  // A dark look only where its CSS came along.
+  const arriving = (incoming ?? [])
+    .filter((theme) => css[theme.id])
+    .map((theme) => ({ ...theme, hasDark: css[theme.id].dark !== undefined }));
   const ids = new Set(arriving.map((theme) => theme.id));
   return [...mine.filter((theme) => !ids.has(theme.id)), ...arriving];
 }

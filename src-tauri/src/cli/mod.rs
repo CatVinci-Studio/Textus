@@ -13,7 +13,7 @@ pub mod tool_args;
 
 use ipc::{Reply, Request};
 use std::io::Write;
-use std::path::{Path, PathBuf};
+use std::path::{Component, Path, PathBuf};
 use table::Runs;
 
 pub use handoff::SCRIPT_ENV;
@@ -44,6 +44,22 @@ pub fn classify(args: &[String], exists: impl Fn(&str) -> bool) -> Mode {
     } else {
         Mode::Gui
     }
+}
+
+/// `arg` against `cwd` with `.` and `..` folded, so `./a.md` names the
+/// same file, and the same open tab, as its full path.
+pub(crate) fn resolve(cwd: &Path, arg: &str) -> PathBuf {
+    let mut out = PathBuf::new();
+    for part in cwd.join(arg).components() {
+        match part {
+            Component::CurDir => {}
+            Component::ParentDir => {
+                out.pop();
+            }
+            other => out.push(other),
+        }
+    }
+    out
 }
 
 /// Runs the command line if it is a command; its exit code. None: start
