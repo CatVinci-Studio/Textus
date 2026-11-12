@@ -227,14 +227,11 @@
 
 .paper-outline-tag {
   max-width: 100%;
-  overflow: hidden;
   padding: 1px 8px;
   border-radius: var(--shape-pill);
   background: var(--ui-subtle);
   color: var(--ui-muted);
   font-size: var(--text-footnote);
-  text-overflow: ellipsis;
-  white-space: nowrap;
 }
 
 .paper-outline-tag b {
@@ -320,14 +317,10 @@
 }
 
 .paper-card-thinking {
-  display: -webkit-box;
   margin: 0;
-  overflow: hidden;
   color: var(--ui-muted);
   font-size: var(--text-footnote);
   font-style: italic;
-  -webkit-box-orient: vertical;
-  -webkit-line-clamp: 2;
 }
 
 .paper-card-list,
@@ -352,10 +345,6 @@
 .paper-card-item-text,
 .paper-card-recent-detail {
   flex: 1;
-  min-width: 0;
-  overflow: hidden;
-  text-overflow: ellipsis;
-  white-space: nowrap;
 }
 
 .paper-card-item-status {

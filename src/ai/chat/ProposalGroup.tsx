@@ -105,7 +105,7 @@ function GroupRow({
             />
           </span>
           {ownReason && proposal.reason && (
-            <span className="agent-proposal-group-reason">
+            <span className="tx-truncate agent-proposal-group-reason">
               {proposal.reason}
             </span>
           )}

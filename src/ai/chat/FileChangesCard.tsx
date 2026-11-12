@@ -120,7 +120,7 @@ export function FileChangesCard({
           <li key={c.file}>
             <button
               type="button"
-              className="agent-file-changes-path"
+              className="tx-truncate agent-file-changes-path"
               disabled={!c.applied && c.before === null}
               onClick={() => openDocument(c.file)}
             >

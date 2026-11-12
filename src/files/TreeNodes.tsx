@@ -152,7 +152,7 @@ export const DirNode = memo(function DirNode({
             <FolderIcon className="tree-icon" />
           )}
           <Tooltip text={basename(path)} description={null} whenCut>
-            <span className="tree-label">{basename(path)}</span>
+            <span className="tx-truncate tree-label">{basename(path)}</span>
           </Tooltip>
         </div>
       )}
@@ -269,7 +269,7 @@ const FileNode = memo(function FileNode({
       >
         <Icon className="tree-icon" />
         <Tooltip text={entry.name} description={null} whenCut>
-          <span className="tree-label">{entry.name}</span>
+          <span className="tx-truncate tree-label">{entry.name}</span>
         </Tooltip>
         {waiting && <span className="tree-ai-waiting">{waiting}</span>}
       </div>

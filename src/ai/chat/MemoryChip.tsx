@@ -152,7 +152,7 @@ export function MemoryChip({
           focusMemory(current.id);
         }}
       >
-        <span className="agent-memory-chip-text">
+        <span className="tx-clamp agent-memory-chip-text">
           {before}
           {what}
         </span>

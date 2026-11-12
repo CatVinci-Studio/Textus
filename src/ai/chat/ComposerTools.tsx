@@ -91,7 +91,7 @@ export function KindChip({
 }) {
   return (
     <span className="inline-chat-selection-chip">
-      <span className="inline-chat-chip-label">{kind.label}</span>
+      <span className="tx-truncate inline-chat-chip-label">{kind.label}</span>
       <Tooltip text={kind.clearLabel} side="above">
         <button
           type="button"

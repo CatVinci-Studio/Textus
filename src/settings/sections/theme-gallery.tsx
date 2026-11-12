@@ -169,7 +169,7 @@ export function ThemeCard({
   children: ReactNode;
 } & HTMLAttributes<HTMLDivElement>) {
   const title = (
-    <span className="settings-row-label plugin-card-name theme-card-name">
+    <span className="settings-row-label plugin-card-name tx-truncate theme-card-name">
       {name}
     </span>
   );
@@ -202,7 +202,7 @@ export function ThemeCard({
         <div className="theme-card-actions">{children}</div>
       </div>
       {description && (
-        <span className="settings-row-hint plugin-card-description">
+        <span className="settings-row-hint tx-clamp plugin-card-description">
           {description}
         </span>
       )}

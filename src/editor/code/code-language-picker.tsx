@@ -153,7 +153,9 @@ function LanguageMenu({
         aria-label={label}
         onClick={() => show(!open)}
       >
-        <span className="ui-select-value">{optionLabel(value)}</span>
+        <span className="tx-truncate ui-select-value">
+          {optionLabel(value)}
+        </span>
       </button>
       {presence.mounted && (
         <SelectMenu

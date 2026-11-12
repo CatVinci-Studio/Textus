@@ -142,13 +142,6 @@
   user-select: none;
   white-space: nowrap;
 }
-
-.window-bar-title-text {
-  min-width: 0;
-  overflow: hidden;
-  text-overflow: ellipsis;
-}
-
 /* A read-only document's padlock: quiet, and the one part of the title
    that takes a click. */
 .window-bar-lock {

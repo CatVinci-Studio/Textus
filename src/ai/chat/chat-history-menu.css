@@ -31,9 +31,6 @@
   font-weight: 600;
   letter-spacing: 0.02em;
   color: var(--ui-muted);
-  overflow: hidden;
-  text-overflow: ellipsis;
-  white-space: nowrap;
 }
 
 /* Older conversations were moved to the trash folder (beyond the cap). */
@@ -78,19 +75,9 @@
   text-align: start;
   cursor: pointer;
 }
-
-.chat-history-entry-title {
-  overflow: hidden;
-  text-overflow: ellipsis;
-  white-space: nowrap;
-}
-
 .chat-history-entry-meta {
   font-size: var(--text-caption);
   color: var(--ui-muted);
-  overflow: hidden;
-  text-overflow: ellipsis;
-  white-space: nowrap;
 }
 
 .chat-history-entry-delete {
@@ -136,10 +123,6 @@
 }
 
 .chat-history-hit {
-  display: -webkit-box;
-  overflow: hidden;
-  -webkit-box-orient: vertical;
-  -webkit-line-clamp: 2;
   font-size: var(--text-secondary);
   color: var(--ui-text);
 }

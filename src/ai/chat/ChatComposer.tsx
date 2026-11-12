@@ -433,7 +433,7 @@ export function ChatComposer({
               >
                 <button
                   type="button"
-                  className="inline-chat-chip-label"
+                  className="tx-truncate inline-chat-chip-label"
                   title={labels.showSelection}
                   {...holdFocus}
                   onClick={() => selectionChip?.onReveal()}

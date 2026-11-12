@@ -47,7 +47,7 @@ export function ProvidersPage({ t, settings }: SettingsPageProps) {
                 onClick={() => setPicked(e.id)}
               >
                 <ProviderLogo id={e.id} label={localizedLabel(e, t)} />
-                <span className="providers-item-name">
+                <span className="tx-truncate providers-item-name">
                   {localizedLabel(e, t)}
                 </span>
                 {/* Set up by the user: a key or an account. A provider that

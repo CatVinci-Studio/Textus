@@ -93,7 +93,10 @@ export function ChatWindowHeader({
       actionsClassName="chat-window-actions"
       dragRegion
       title={
-        <span className="chat-window-doc" title={context?.docPath ?? undefined}>
+        <span
+          className="tx-truncate chat-window-doc"
+          title={context?.docPath ?? undefined}
+        >
           {context?.docTitle ?? ""}
         </span>
       }

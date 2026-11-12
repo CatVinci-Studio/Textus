@@ -168,9 +168,6 @@
 .start-page-name {
   flex-shrink: 0;
   max-width: 60%;
-  overflow: hidden;
-  text-overflow: ellipsis;
-  white-space: nowrap;
 }
 
 .start-page-where {

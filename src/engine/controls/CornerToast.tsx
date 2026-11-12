@@ -46,7 +46,7 @@ export function CornerToast({
   const head = (
     <>
       {icon}
-      <span className="corner-toast-line">{line}</span>
+      <span className="tx-truncate corner-toast-line">{line}</span>
     </>
   );
   return (

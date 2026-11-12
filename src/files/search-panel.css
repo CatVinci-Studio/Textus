@@ -44,9 +44,6 @@
 }
 
 .search-text-snippet {
-  overflow: hidden;
-  white-space: nowrap;
-  text-overflow: ellipsis;
   font-size: var(--text-secondary);
   color: var(--ui-muted);
 }

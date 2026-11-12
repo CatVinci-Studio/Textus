@@ -45,10 +45,6 @@
 }
 
 .chat-window-doc {
-  min-width: 0;
-  overflow: hidden;
-  white-space: nowrap;
-  text-overflow: ellipsis;
   font-size: var(--text-caption);
   color: var(--ui-muted);
   /* The row is the window's drag handle; the label must not swallow that. */

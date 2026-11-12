@@ -204,9 +204,11 @@ export function MemorySections({
                         ))}
                       </span>
                     )}
-                    <span className="memory-desc">{firstLine(entry.body)}</span>
+                    <span className="tx-clamp memory-desc">
+                      {firstLine(entry.body)}
+                    </span>
                     {entry.remembered && (
-                      <span className="memory-desc memory-by-ai">
+                      <span className="tx-clamp memory-desc memory-by-ai">
                         {[
                           t.memoryWrittenByAi,
                           rememberedDate(entry.remembered.updated, lang),

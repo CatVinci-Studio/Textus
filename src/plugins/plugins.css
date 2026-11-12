@@ -243,12 +243,6 @@ button.plugin-card-open:hover .plugin-card-name {
 * + .plugin-readme {
   margin-top: var(--space-6);
 }
-.plugin-card-description {
-  display: -webkit-box;
-  -webkit-line-clamp: 2;
-  -webkit-box-orient: vertical;
-  overflow: hidden;
-}
 .plugin-byline {
   display: flex;
   flex-wrap: wrap;
@@ -481,13 +475,9 @@ button.plugin-card-open:hover .plugin-card-name {
 .plugin-status-item {
   font-size: var(--text-footnote);
   color: var(--ui-muted);
-  white-space: nowrap;
   /* A long one (a deep page's path) is cut short, never run into the
      title beside it. */
   max-width: 24vw;
-  min-width: 0;
-  overflow: hidden;
-  text-overflow: ellipsis;
 }
 .plugin-status-button {
   /* The status group lets clicks through to the drag region; this one

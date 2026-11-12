@@ -103,7 +103,9 @@ export function CommentCard({
           )
         }
       />
-      <blockquote className="agent-comment-quote">{comment.anchor}</blockquote>
+      <blockquote className="tx-clamp agent-comment-quote">
+        {comment.anchor}
+      </blockquote>
       <div className="agent-comment-text">
         <InlineMarkdownText text={comment.comment} />
       </div>
@@ -200,7 +202,7 @@ export function CommentGroup({
                 {num !== null && (
                   <span className="agent-comment-num">{num}</span>
                 )}
-                <span className="agent-comment-row-anchor">
+                <span className="tx-truncate agent-comment-row-anchor">
                   {comment.anchor}
                 </span>
               </button>

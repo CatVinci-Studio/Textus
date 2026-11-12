@@ -168,7 +168,9 @@ function TextMatches({
               onClick={() => onOpen(hits[0].path)}
             >
               <Icon className="tree-icon" />
-              <span className="tree-label">{basename(hits[0].path)}</span>
+              <span className="tx-truncate tree-label">
+                {basename(hits[0].path)}
+              </span>
               <span className="found-count">{hits.length}</span>
             </button>
             {hits.map((hit) => (
@@ -178,7 +180,7 @@ function TextMatches({
                 className="tree-row search-text-line"
                 onClick={() => onOpen(hit.path, hit.line)}
               >
-                <span className="search-text-snippet">
+                <span className="tx-truncate search-text-snippet">
                   {marked(hit.text, needle)}
                 </span>
               </button>

@@ -272,8 +272,8 @@ function PluginRow({
       >
         {icon}
         <span className="plugins-panel-text">
-          <span className="plugins-panel-name">{name}</span>
-          {line && <span className="plugins-panel-line">{line}</span>}
+          <span className="tx-truncate plugins-panel-name">{name}</span>
+          {line && <span className="tx-clamp plugins-panel-line">{line}</span>}
         </span>
       </button>
       {/* Its author and its button on a line of their own, under the text:

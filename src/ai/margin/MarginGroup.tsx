@@ -98,7 +98,9 @@ export const MarginGroup = memo(function MarginGroup({
           {groupLabel(items, labels)}
         </span>
         {!open && (
-          <span className="review-note-chip-text">{groupGlimpse(items)}</span>
+          <span className="tx-truncate review-note-chip-text">
+            {groupGlimpse(items)}
+          </span>
         )}
       </button>
       {open && (

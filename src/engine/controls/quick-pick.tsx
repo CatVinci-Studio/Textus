@@ -173,9 +173,7 @@ function QuickPick({
           aria-multiselectable={request.multiple || undefined}
           ref={listRef}
         >
-          {shown.length === 0 && (
-            <li className="tx-list-note">{emptyLabel}</li>
-          )}
+          {shown.length === 0 && <li className="tx-list-note">{emptyLabel}</li>}
           {shown.map((item, i) => (
             <li
               key={`${i}-${item.label}`}
@@ -200,7 +198,7 @@ function QuickPick({
               )}
               <span className="quick-pick-label">{item.label}</span>
               {item.description && (
-                <span className="quick-pick-description">
+                <span className="tx-truncate quick-pick-description">
                   {item.description}
                 </span>
               )}

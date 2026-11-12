@@ -233,7 +233,7 @@ export function FileSearch({
               >
                 <Icon className="tree-icon" />
                 <span className="file-search-text">
-                  <span className="tree-label">{entry.name}</span>
+                  <span className="tx-truncate tree-label">{entry.name}</span>
                   {entry.folder && (
                     <span className="file-search-folder">
                       <PathText path={entry.folder} />

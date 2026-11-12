@@ -196,7 +196,7 @@ export function OwnSkillsList({
                   <span className="tx-badge">{t.madeByTextusAi}</span>
                 )}
               </span>
-              <span className="settings-skill-desc">
+              <span className="tx-truncate settings-skill-desc">
                 <span className="settings-builtin-skill-name">
                   /{skill.name}
                 </span>

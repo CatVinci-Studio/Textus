@@ -198,7 +198,7 @@ export function ModePicker({
       >
         {current && <span className="mode-picker-value">{current.label}</span>}
         {model && (
-          <span className="mode-picker-model" title={model}>
+          <span className="tx-truncate mode-picker-model" title={model}>
             {model}
           </span>
         )}

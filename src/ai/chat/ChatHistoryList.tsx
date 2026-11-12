@@ -89,7 +89,10 @@ export function ChatHistoryList({
       )}
       {groupByProject(entries).map((group) => (
         <section key={group.folder ?? ""} className="chat-history-group">
-          <div className="chat-history-group-title" title={group.folder ?? ""}>
+          <div
+            className="tx-truncate chat-history-group-title"
+            title={group.folder ?? ""}
+          >
             {group.folder
               ? basename(group.folder) || group.folder
               : t.chatHistoryUnsaved}
@@ -106,10 +109,10 @@ export function ChatHistoryList({
                 }
                 onClick={() => onReopen(entry)}
               >
-                <span className="chat-history-entry-title">
+                <span className="tx-truncate chat-history-entry-title">
                   {entry.title || t.untitledTab}
                 </span>
-                <span className="chat-history-entry-meta">
+                <span className="tx-truncate chat-history-entry-meta">
                   {new Date(entry.updatedAt).toLocaleString(locale)}
                   {entry.docPath ? ` · ${basename(entry.docPath)}` : ""}
                 </span>
@@ -167,14 +170,14 @@ function SearchHits({
             className="chat-history-entry-main"
             onClick={() => onReopen(hit)}
           >
-            <span className="chat-history-entry-title">
+            <span className="tx-truncate chat-history-entry-title">
               {hit.title || t.untitledTab}
             </span>
-            <span className="chat-history-hit">
+            <span className="tx-clamp chat-history-hit">
               {hit.role === "user" ? t.chatHistoryByYou : t.chatHistoryByAi}:{" "}
               {hit.snippet}
             </span>
-            <span className="chat-history-entry-meta">
+            <span className="tx-truncate chat-history-entry-meta">
               {new Date(hit.updatedAt).toLocaleString(locale)}
               {hit.docPath ? ` · ${basename(hit.docPath)}` : ""}
             </span>

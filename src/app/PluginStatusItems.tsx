@@ -62,14 +62,14 @@ function StatusEntry({ item }: { item: StatusItem }) {
   const shown = item.command ? (
     <button
       type="button"
-      className="plugin-status-item plugin-status-button"
+      className="tx-truncate plugin-status-item plugin-status-button"
       data-status={item.key}
       onClick={() => runCommand(item.command!)}
     >
       {item.text}
     </button>
   ) : (
-    <span className="plugin-status-item" data-status={item.key}>
+    <span className="tx-truncate plugin-status-item" data-status={item.key}>
       {item.text}
     </span>
   );
@@ -107,7 +107,7 @@ function StatusGroupButton({
       <Tooltip text={name}>
         <button
           type="button"
-          className="plugin-status-item plugin-status-button"
+          className="tx-truncate plugin-status-item plugin-status-button"
           data-status-plugin={group.plugin}
           {...button}
         >

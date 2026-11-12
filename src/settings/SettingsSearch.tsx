@@ -206,7 +206,7 @@ export function SettingsSearchResults({
                       <div className="settings-row-text">
                         <div className="settings-row-label">{entry.label}</div>
                         {context && (
-                          <div className="settings-row-hint settings-search-context">
+                          <div className="settings-row-hint tx-clamp settings-search-context">
                             {context}
                           </div>
                         )}

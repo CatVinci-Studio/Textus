@@ -160,14 +160,6 @@
   corner-shape: round;
   background: color-mix(in srgb, var(--ui-text) 7%, transparent);
 }
-
-.memory-desc {
-  display: -webkit-box;
-  -webkit-line-clamp: 2;
-  -webkit-box-orient: vertical;
-  overflow: hidden;
-}
-
 .memory-used {
   margin-top: 2px;
   font-weight: 600;

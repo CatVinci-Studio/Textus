@@ -47,7 +47,7 @@ export function CatalogRow({
       <span className="settings-row-label plugin-card-name">{name}</span>
       {description && (
         <span
-          className={`settings-row-hint plugin-card-description${descriptionClass ? ` ${descriptionClass}` : ""}`}
+          className={`settings-row-hint tx-clamp plugin-card-description${descriptionClass ? ` ${descriptionClass}` : ""}`}
         >
           {description}
         </span>

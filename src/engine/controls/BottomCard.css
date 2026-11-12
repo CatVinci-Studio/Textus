@@ -62,8 +62,4 @@
   border-left: 2px solid var(--review-note-line, var(--ui-accent));
   font-size: var(--text-secondary);
   color: var(--ui-muted);
-  display: -webkit-box;
-  -webkit-line-clamp: 2;
-  -webkit-box-orient: vertical;
-  overflow: hidden;
 }

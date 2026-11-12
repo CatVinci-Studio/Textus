@@ -85,14 +85,6 @@
   box-shadow: 0 0 0 8px var(--ui-hover);
   border-radius: var(--shape-s);
 }
-
-.settings-search-context {
-  display: -webkit-box;
-  -webkit-box-orient: vertical;
-  -webkit-line-clamp: 2;
-  overflow: hidden;
-}
-
 /* The row a result led to, tinted for a moment and fading back: opacity
    only, so reduced motion keeps it. */
 .settings-search-hit {
@@ -674,9 +666,6 @@ button.settings-inline-button {
 .settings-skill-desc {
   color: var(--ui-muted);
   font-size: var(--text-body);
-  white-space: nowrap;
-  overflow: hidden;
-  text-overflow: ellipsis;
 }
 
 /* Off for now: its name and modes step back; the switch stays clear. */
@@ -1156,9 +1145,6 @@ button.settings-inline-button {
   font-size: var(--text-caption);
 }
 .theme-card-name {
-  overflow: hidden;
-  text-overflow: ellipsis;
-  white-space: nowrap;
   font-weight: 600;
 }
 

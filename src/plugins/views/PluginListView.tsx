@@ -329,7 +329,7 @@ export const PluginListPane = memo(function PluginListPane({
                     </span>
                   )}
                   {item.description && (
-                    <span className="plugin-list-description">
+                    <span className="tx-truncate plugin-list-description">
                       {item.description}
                     </span>
                   )}

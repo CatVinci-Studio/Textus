@@ -94,7 +94,7 @@ function RecentList({
                 <span className="start-page-row-icon" aria-hidden="true">
                   {icon}
                 </span>
-                <span className="start-page-name">
+                <span className="tx-truncate start-page-name">
                   {basename(path.replace(/[\\/]+$/, "")) || path}
                 </span>
                 <span className="start-page-where">

@@ -212,7 +212,7 @@ export function ProjectBar({
         <Tooltip text={fill(t.projectFolderTitle, { path: root })}>
           <button type="button" className="project-bar-folder" {...menu.button}>
             <FolderIcon className="project-bar-icon" />
-            <span className="project-bar-name">{folderName}</span>
+            <span className="tx-truncate project-bar-name">{folderName}</span>
             <ChevronIcon className="project-bar-chevron" />
           </button>
         </Tooltip>

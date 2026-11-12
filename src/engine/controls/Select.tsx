@@ -120,7 +120,7 @@ function NativeSelect({
       className={`ui-select ui-select-native-frame ${className ?? ""}`}
       aria-disabled={disabled || undefined}
     >
-      <span className="ui-select-value" aria-hidden="true">
+      <span className="tx-truncate ui-select-value" aria-hidden="true">
         {closedLabel(current)}
       </span>
       <select
@@ -258,7 +258,9 @@ function DrawnSelect({
         onClick={() => (open ? close() : openMenu())}
         onKeyDown={onTriggerKey}
       >
-        <span className="ui-select-value">{closedLabel(current)}</span>
+        <span className="tx-truncate ui-select-value">
+          {closedLabel(current)}
+        </span>
       </button>
       {presence.mounted && (
         <SelectMenu

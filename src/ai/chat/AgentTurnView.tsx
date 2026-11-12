@@ -257,9 +257,11 @@ function SourceList({
             onClick={() => void links.openWebLink(source.url).catch(() => {})}
           >
             <span className="agent-source-num">{source.n}</span>
-            <span className="agent-source-site">{site}</span>
+            <span className="tx-truncate agent-source-site">{site}</span>
             {source.title && source.title !== site && (
-              <span className="agent-source-title">{source.title}</span>
+              <span className="tx-truncate agent-source-title">
+                {source.title}
+              </span>
             )}
           </button>
         );

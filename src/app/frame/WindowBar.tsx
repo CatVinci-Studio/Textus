@@ -162,7 +162,9 @@ export function WindowBar({
               (DocumentCorner); a phone or an iPad has one, up here. */}
           {!canUseWindows && largeDoc && (
             <Tooltip text={t.largeDocHint}>
-              <span className="tx-badge large-doc-badge">{t.largeDocBadge}</span>
+              <span className="tx-badge large-doc-badge">
+                {t.largeDocBadge}
+              </span>
             </Tooltip>
           )}
           {!canUseWindows && !pages && (
@@ -232,7 +234,7 @@ function WindowTitle({
           />
         </Tooltip>
       )}
-      <span className="window-bar-title-text">{title}</span>
+      <span className="tx-truncate window-bar-title-text">{title}</span>
       {readOnly && (
         <Tooltip text={t.readOnlyLock}>
           <button

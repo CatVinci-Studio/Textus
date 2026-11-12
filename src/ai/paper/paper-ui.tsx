@@ -190,7 +190,7 @@ function PaperActivityView({ run, t }: { run: PaperRunState; t: Strings }) {
   const activity = { toolActivity: toolActivityLabels(t) };
   if (run.phase === "starting" || run.phase === "planning") {
     return run.thinking ? (
-      <p className="paper-card-thinking">{run.thinking}</p>
+      <p className="tx-clamp paper-card-thinking">{run.thinking}</p>
     ) : null;
   }
   if (run.phase === "researching") {
@@ -213,7 +213,7 @@ function PaperActivityView({ run, t }: { run: PaperRunState; t: Strings }) {
           <ul className="paper-card-recent">
             {run.recent.map((a) => (
               <li key={a.id} className="paper-card-enter">
-                <span className="paper-card-recent-detail">
+                <span className="tx-truncate paper-card-recent-detail">
                   {toolActivityText(a.tool, a.arguments, activity)}
                 </span>
               </li>
@@ -235,7 +235,9 @@ function PaperActivityView({ run, t }: { run: PaperRunState; t: Strings }) {
         {draft?.thesis ? (
           <p className="paper-card-thesis paper-card-enter">{draft.thesis}</p>
         ) : (
-          run.thinking && <p className="paper-card-thinking">{run.thinking}</p>
+          run.thinking && (
+            <p className="tx-clamp paper-card-thinking">{run.thinking}</p>
+          )
         )}
         {draft && draft.titles.length > 0 && (
           <ol className="paper-card-list">

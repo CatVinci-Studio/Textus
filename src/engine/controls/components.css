@@ -196,6 +196,20 @@ textarea.tx-input {
   display: none;
 }
 
+/* Text cut short: on one line with "…", or after `--lines` lines (2). */
+.tx-truncate {
+  min-width: 0;
+  overflow: hidden;
+  white-space: nowrap;
+  text-overflow: ellipsis;
+}
+.tx-clamp {
+  display: -webkit-box;
+  overflow: hidden;
+  -webkit-box-orient: vertical;
+  -webkit-line-clamp: var(--lines, 2);
+}
+
 /* A path on one line (PathText): its folders give way first, then its
    last name. */
 .tx-path {

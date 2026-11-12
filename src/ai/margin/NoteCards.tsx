@@ -73,7 +73,7 @@ export const NoteCard = memo(function NoteCard({
             <NoteMark note={note} labels={labels} />
             {note.by === "me" ? labels.ownNoteBy : labels.reviewNoteBy}
           </div>
-          <div className="review-note-chip-text">
+          <div className="tx-truncate review-note-chip-text">
             <InlineMarkdownText text={note.comment} />
           </div>
         </>

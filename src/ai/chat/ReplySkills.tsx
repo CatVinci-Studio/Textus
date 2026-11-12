@@ -92,7 +92,7 @@ function ReplySkillChip({ skill }: { skill: ReplySkill }) {
     skill.labels[settings.language] ?? skill.labels.en ?? `/${skill.name}`;
   return (
     <div className="agent-memory-chip skill-offer-chip" data-skill={skill.name}>
-      <span className="agent-memory-chip-text">
+      <span className="tx-clamp agent-memory-chip-text">
         {state.kind === "saved"
           ? fill(t.skillOfferSaved, { name: `/${skill.name}` })
           : label}

@@ -76,7 +76,7 @@ export function SkillOfferChip({
   };
   return (
     <div className="agent-memory-chip skill-offer-chip" role="status">
-      <span className="agent-memory-chip-text">
+      <span className="tx-clamp agent-memory-chip-text">
         {state.kind === "saved"
           ? fill(t.skillOfferSaved, { name: `/${offer.name}` })
           : fill(t.skillOffer, { name: `/${offer.name}` })}

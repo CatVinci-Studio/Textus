@@ -111,11 +111,7 @@
 
 .plugin-list-description {
   flex: 1 1 8em;
-  min-width: 0;
   color: var(--ui-muted);
-  white-space: nowrap;
-  overflow: hidden;
-  text-overflow: ellipsis;
 }
 
 .plugin-list-detail {

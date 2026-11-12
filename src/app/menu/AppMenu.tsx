@@ -341,10 +341,10 @@ function MenuRow({
         {item.title ? (
           // Its whole path on hover, where WebKitGTK shows no title.
           <Tooltip text={item.title} description={null}>
-            <span className="app-menu-label">{item.label}</span>
+            <span className="tx-truncate app-menu-label">{item.label}</span>
           </Tooltip>
         ) : (
-          <span className="app-menu-label">{item.label}</span>
+          <span className="tx-truncate app-menu-label">{item.label}</span>
         )}
         {item.accel && (
           <span className="app-menu-accel">{formatCombo(item.accel)}</span>

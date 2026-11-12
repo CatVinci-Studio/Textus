@@ -201,7 +201,7 @@ export function FileTree({
                     aria-label={`${t.treeParentFolder}: ${basename(parent.replace(/[\\/]+$/, "")) || parent}`}
                   >
                     <ChevronIcon className="tree-crumb-back" />
-                    <span className="tree-crumb-name">
+                    <span className="tx-truncate tree-crumb-name">
                       {basename(parent.replace(/[\\/]+$/, "")) || parent}
                     </span>
                   </button>
@@ -211,7 +211,7 @@ export function FileTree({
                 </span>
               </>
             )}
-            <span className="tree-root-label" title={root}>
+            <span className="tx-truncate tree-root-label" title={root}>
               {basename(root.replace(/[\\/]+$/, "")) || root}
             </span>
             {desktop && (

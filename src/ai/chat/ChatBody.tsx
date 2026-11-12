@@ -266,7 +266,10 @@ export function ChatBody({
                 />
               )}
               {!quickExpanded && promptText && (
-                <div className="quick-ask-prompt" title={promptText}>
+                <div
+                  className="tx-truncate quick-ask-prompt"
+                  title={promptText}
+                >
                   {promptText}
                 </div>
               )}

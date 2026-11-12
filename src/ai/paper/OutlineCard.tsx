@@ -280,7 +280,11 @@ function SectionView({
       {section.figures.length > 0 && (
         <div className="paper-outline-figures">
           {section.figures.map((figure, f) => (
-            <span key={f} className="paper-outline-tag" title={figure.spec}>
+            <span
+              key={f}
+              className="tx-truncate paper-outline-tag"
+              title={figure.spec}
+            >
               <b>{kindLabel(t, figure.kind)}</b> {figure.spec}
             </span>
           ))}

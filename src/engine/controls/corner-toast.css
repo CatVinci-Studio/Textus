@@ -59,14 +59,6 @@
   width: 24px;
   height: 24px;
 }
-
-.corner-toast-line {
-  min-width: 0;
-  overflow: hidden;
-  text-overflow: ellipsis;
-  white-space: nowrap;
-}
-
 /* Opened, or with nothing more to open: its words whole, wrapping. */
 .corner-toast[data-open] .corner-toast-line,
 .corner-toast:not(:has(button.corner-toast-summary)) .corner-toast-line {

@@ -73,7 +73,7 @@ export function OpenReviewNote({
               </span>
               {own ? t.ownNoteBy : t.reviewNoteBy}
             </div>
-            <p className="bottom-card-quote">
+            <p className="tx-clamp bottom-card-quote">
               {editorView?.state.doc.textBetween(note.from, note.to, " ")}
             </p>
             {note.comment}

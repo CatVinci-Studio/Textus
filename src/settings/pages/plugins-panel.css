@@ -75,20 +75,11 @@
   color: var(--ui-text);
 }
 
+/* What it does, in two lines (tx-clamp): one cut it to a few words
+   beside its button. */
 .plugins-panel-line {
-  overflow: hidden;
-  white-space: nowrap;
-  text-overflow: ellipsis;
   font-size: var(--text-caption);
   color: var(--ui-muted);
-}
-
-/* What it does, in two lines: one cut it to a few words beside its button. */
-.plugins-panel-line {
-  display: -webkit-box;
-  -webkit-box-orient: vertical;
-  -webkit-line-clamp: 2;
-  white-space: normal;
 }
 
 /* Under the text, from its start: the open button's padding, the icon and
@@ -146,13 +137,6 @@
 .plugins-panel-text {
   flex: 1;
 }
-
-.plugins-panel-name {
-  overflow: hidden;
-  white-space: nowrap;
-  text-overflow: ellipsis;
-}
-
 .plugins-panel-update {
   height: auto;
   padding: 2px 8px;

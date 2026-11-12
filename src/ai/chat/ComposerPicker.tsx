@@ -156,7 +156,7 @@ export function ComposerPicker({
                       )}
                     </span>
                     {row.detail && (
-                      <span className="inline-chat-skill-preview">
+                      <span className="tx-truncate inline-chat-skill-preview">
                         {row.detail}
                       </span>
                     )}

@@ -57,9 +57,6 @@
 .quick-pick-description {
   color: var(--ui-muted);
   font-size: var(--text-secondary);
-  overflow: hidden;
-  text-overflow: ellipsis;
-  white-space: nowrap;
 }
 .quick-pick-keys {
   margin-left: auto;

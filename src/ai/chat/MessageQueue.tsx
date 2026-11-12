@@ -68,7 +68,7 @@ export function MessageQueue({
       </div>
       {queue.map((item) => (
         <div key={item.id} className="chat-queue-item" role="listitem">
-          <span className="chat-queue-text">{item.typed}</span>
+          <span className="tx-truncate chat-queue-text">{item.typed}</span>
           <button
             type="button"
             className="chat-queue-action"

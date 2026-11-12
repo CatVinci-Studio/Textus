@@ -349,7 +349,7 @@ function ChangeGlimpse({
   const g = changeGlimpse(plainLine(before), plainLine(after));
   if (!g.partial)
     return (
-      <div className="review-note-chip-text">
+      <div className="tx-truncate review-note-chip-text">
         {shows === "new" && before.trim() ? (
           <s>{plainLine(before)}</s>
         ) : (
@@ -358,7 +358,7 @@ function ChangeGlimpse({
       </div>
     );
   return (
-    <div className="review-note-chip-text">
+    <div className="tx-truncate review-note-chip-text">
       {g.cutLead && "…"}
       {g.lead}
       {g.removed && <del>{g.removed}</del>}

@@ -122,10 +122,6 @@
 
 .inline-chat-follow-up {
   max-width: 100%;
-  min-width: 0;
-  overflow: hidden;
-  text-overflow: ellipsis;
-  white-space: nowrap;
   color: var(--ui-text);
   animation: motion-enter var(--dur-fast) var(--ease-out);
 }
@@ -249,10 +245,6 @@
 }
 
 .inline-chat-chip-label {
-  min-width: 0;
-  overflow: hidden;
-  text-overflow: ellipsis;
-  white-space: nowrap;
   border: none;
   background: none;
   padding: 0;
@@ -320,15 +312,6 @@
   max-width: 100%;
   min-width: 0;
 }
-
-/* A long name ends in "…", never past the composer's edge. */
-.inline-chat-attachment-name {
-  min-width: 0;
-  overflow: hidden;
-  text-overflow: ellipsis;
-  white-space: nowrap;
-}
-
 .inline-chat-attachment-remove {
   display: flex;
   align-items: center;
@@ -405,9 +388,6 @@
 
 .inline-chat-skill-preview {
   color: var(--ui-muted);
-  white-space: nowrap;
-  overflow: hidden;
-  text-overflow: ellipsis;
 }
 
 /* The `/` and `@` picker: the list scrolls, the key hint under it stays. */
@@ -654,9 +634,6 @@
 /* What was asked, one quiet line above the answer. */
 .quick-ask-prompt {
   margin-bottom: 4px;
-  overflow: hidden;
-  white-space: nowrap;
-  text-overflow: ellipsis;
   font-size: var(--text-secondary);
   color: var(--ui-muted);
 }
@@ -1443,10 +1420,7 @@ li[data-state="kept"] .agent-proposal-sentence-text {
   border-left: 2px solid var(--review-note-line);
   font-size: var(--text-secondary);
   color: var(--ui-muted);
-  display: -webkit-box;
-  -webkit-line-clamp: 3;
-  -webkit-box-orient: vertical;
-  overflow: hidden;
+  --lines: 3;
 }
 
 .agent-comment-text {
@@ -1513,14 +1487,6 @@ li[data-state="kept"] .agent-proposal-sentence-text {
 .agent-comment-row-quote:disabled {
   cursor: default;
 }
-
-.agent-comment-row-anchor {
-  min-width: 0;
-  overflow: hidden;
-  white-space: nowrap;
-  text-overflow: ellipsis;
-}
-
 .agent-error-explanation {
   font-weight: 600;
 }
@@ -1557,10 +1523,6 @@ li[data-state="kept"] .agent-proposal-sentence-text {
 }
 .chat-queue-text {
   flex: 1;
-  min-width: 0;
-  overflow: hidden;
-  white-space: nowrap;
-  text-overflow: ellipsis;
 }
 button.chat-queue-action {
   padding: 0 4px;
@@ -1619,9 +1581,6 @@ button.chat-queue-action:hover {
 }
 
 .agent-proposal-group-reason {
-  overflow: hidden;
-  white-space: nowrap;
-  text-overflow: ellipsis;
   font-size: var(--text-caption);
   color: var(--ui-muted);
 }
@@ -1661,10 +1620,6 @@ button.chat-queue-action:hover {
 }
 
 .agent-file-changes-path {
-  min-width: 0;
-  overflow: hidden;
-  text-overflow: ellipsis;
-  white-space: nowrap;
   padding: 0;
   border: 0;
   background: none;

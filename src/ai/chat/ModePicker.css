@@ -10,9 +10,6 @@
 }
 
 .mode-picker-model {
-  min-width: 0;
-  overflow: hidden;
-  text-overflow: ellipsis;
   /* Muted, a step darker: it sits on the chip's tint, hovered too. */
   color: color-mix(in srgb, var(--ui-muted) 80%, var(--ui-text));
 }

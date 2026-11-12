@@ -38,7 +38,9 @@ export function AttachmentChips({
           ) : (
             <GenericFileIcon className="inline-chat-attachment-kind" />
           )}
-          <span className="inline-chat-attachment-name">{file.name}</span>
+          <span className="tx-truncate inline-chat-attachment-name">
+            {file.name}
+          </span>
           {/* A file cut at the extraction cap says so, or a partial answer
             looks like the model misread the document. */}
           {file.kind === "text" && file.truncated && (

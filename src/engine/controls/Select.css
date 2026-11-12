@@ -7,13 +7,6 @@
   text-align: left;
   white-space: nowrap;
 }
-
-.ui-select-value {
-  min-width: 0;
-  overflow: hidden;
-  text-overflow: ellipsis;
-}
-
 /* The open list: a menu, like the app's other menus. */
 .ui-select-menu {
   position: fixed;
