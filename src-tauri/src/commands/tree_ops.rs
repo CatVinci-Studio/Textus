@@ -128,7 +128,10 @@ pub async fn tree_move_entry(path: String, into: String) -> Result<String, Strin
 /// `to` (a canonical path) under the folder as the caller wrote it.
 fn spelled_as(given_dir: &str, to: &Path) -> String {
     match to.file_name() {
-        Some(name) => Path::new(given_dir).join(name).to_string_lossy().to_string(),
+        Some(name) => Path::new(given_dir)
+            .join(name)
+            .to_string_lossy()
+            .to_string(),
         None => to.to_string_lossy().to_string(),
     }
 }
@@ -248,7 +251,7 @@ mod tests {
             .await
             .unwrap();
         assert!(dated.ends_with("Meeting 11.11.md"));
-        let renamed = tree_rename_entry(dated, "Chapter 1".into()).await.unwrap();
+        tree_rename_entry(dated, "Chapter 1".into()).await.unwrap();
         let other = tree_create_document(root.clone(), "Other".into())
             .await
             .unwrap();
