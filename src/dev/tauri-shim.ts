@@ -1623,7 +1623,8 @@ export function installDevTauriShim(): void {
         ]);
       }
       // Nothing waiting to open in this window.
-      if (cmd === "take_pending_window") return Promise.resolve(null);
+      if (cmd === "take_pending_window" || cmd === "window_session_current")
+        return Promise.resolve(null);
       return Promise.resolve(null);
     },
     // As the real runtime: the callback is parked on window under `_<id>`.

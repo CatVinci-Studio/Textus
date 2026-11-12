@@ -128,6 +128,12 @@ export const commands = {
 	/**  This window's session as it now stands. */
 	update_window_session: (session: WindowSession_Deserialize) => __TAURI_INVOKE<void>("update_window_session", { session }),
 	/**
+	 *  This window's session as it last told it: what a reloaded page comes
+	 *  back to (its folder, its islands), where a first start takes what it was
+	 *  opened with.
+	 */
+	window_session_current: () => __TAURI_INVOKE<WindowSession_Serialize | null>("window_session_current"),
+	/**
 	 *  A dirty-window prompt cancelled File > Quit after other windows closed:
 	 *  resume ordinary bookkeeping and persist only the windows still alive.
 	 */

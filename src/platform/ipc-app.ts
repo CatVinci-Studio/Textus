@@ -73,6 +73,8 @@ export const windowIpc = {
   /** What this window was opened with: a session's window (its documents,
    *  islands, folder) or files handed over; asks once (window-session.ts). */
   takePendingWindow: () => command("take_pending_window"),
+  /** This window's session as it last told it, for a reloaded page. */
+  currentWindowSession: () => command("window_session_current"),
   /** Pops the chat panel into its own OS window and resolves to its label.
    *  One per editor window: if it exists it is focused, and `state` is
    *  parked for it to claim so the conversation is handed over again. */

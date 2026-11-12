@@ -33,7 +33,7 @@ use commands::image_host::{image_host_key_id, upload_image};
 #[cfg(desktop)]
 use commands::linked_file::open_linked_file;
 #[cfg(desktop)]
-use commands::session::{cancel_session_quit, update_window_session};
+use commands::session::{cancel_session_quit, update_window_session, window_session_current};
 use commands::theme_gallery::{theme_gallery_catalog, theme_gallery_css, theme_gallery_preview};
 use commands::themes::{delete_theme, load_theme_css, save_theme_css};
 
@@ -300,6 +300,8 @@ pub(crate) fn handler() -> impl Fn(tauri::ipc::Invoke<tauri::Wry>) -> bool + Sen
         schedule::app_state::app_state,
         #[cfg(desktop)]
         update_window_session,
+        #[cfg(desktop)]
+        window_session_current,
         #[cfg(desktop)]
         cancel_session_quit,
         #[cfg(desktop)]

@@ -14,6 +14,7 @@ const ipc = vi.hoisted(() => ({
   takeDetachedTab: vi.fn(),
   takePendingShowHelp: vi.fn(),
   takePendingWindow: vi.fn(),
+  currentWindowSession: vi.fn(),
   takeDraftSnapshots: vi.fn(),
   /** Files gone since the last session. */
   gone: new Set<string>(),
@@ -24,6 +25,7 @@ vi.mock("../platform/ipc", () => ({
     takeDetachedTab: ipc.takeDetachedTab,
     takePendingShowHelp: ipc.takePendingShowHelp,
     takePendingWindow: ipc.takePendingWindow,
+    currentWindowSession: ipc.currentWindowSession,
   },
   fs: {
     fileMtimeMs: async (path: string) => (ipc.gone.has(path) ? null : 1),
@@ -118,6 +120,8 @@ async function restore(restoreCarets = true, launchStartPage = false) {
 
 beforeEach(() => {
   vi.clearAllMocks();
+  // Each test a new window, not a reload of the last.
+  sessionStorage.clear();
   Object.assign(platform, {
     canUseWindows: true,
     hasAppMenu: true,
@@ -137,6 +141,16 @@ describe("startup restore into the initial tab", () => {
     await waitFor(() =>
       expect(tabs()).toEqual([expect.objectContaining({ start: true })]),
     );
+  });
+
+  it("a reloaded page comes back to the window's own session, not nothing", async () => {
+    sessionStorage.setItem("textus-window-started", "1");
+    ipc.currentWindowSession.mockResolvedValue({ paths: ["/docs/a.md"] });
+    const { tabs } = await restore(true, true);
+    await waitFor(() =>
+      expect(tabs()).toEqual([expect.objectContaining({ path: "/docs/a.md" })]),
+    );
+    expect(ipc.takePendingWindow).not.toHaveBeenCalled();
   });
 
   it("but not over a document opened at launch", async () => {

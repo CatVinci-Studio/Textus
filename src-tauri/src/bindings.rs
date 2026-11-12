@@ -49,6 +49,7 @@ fn groups() -> Vec<(&'static str, Builder<tauri::Wry>)> {
                     crate::commands::image_host::upload_image,
                     crate::commands::image_host::image_host_key_id,
                     crate::commands::session::update_window_session,
+                    crate::commands::session::window_session_current,
                     crate::commands::session::cancel_session_quit,
                     crate::commands::recents::add_recent_file,
                     crate::commands::recents::add_recent_folder,

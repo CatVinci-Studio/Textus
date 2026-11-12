@@ -123,6 +123,18 @@ fn merge_windows(map: &HashMap<String, WindowSession>) -> Vec<WindowSession> {
         .collect()
 }
 
+/// This window's session as it last told it: what a reloaded page comes
+/// back to (its folder, its islands), where a first start takes what it was
+/// opened with.
+#[tauri::command]
+#[cfg_attr(test, specta::specta)]
+pub fn window_session_current(
+    window: tauri::Window,
+    state: tauri::State<SessionTabsState>,
+) -> Option<WindowSession> {
+    state.0.lock().unwrap().get(window.label()).cloned()
+}
+
 /// This window's session as it now stands.
 #[tauri::command]
 #[cfg_attr(test, specta::specta)]
