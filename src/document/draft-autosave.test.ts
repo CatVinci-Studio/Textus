@@ -10,14 +10,6 @@ vi.mock("../platform/ipc", () => ({
     clearDraftSnapshot: vi.fn().mockResolvedValue(undefined),
   },
 }));
-const heard = new Map<string, () => void>();
-vi.mock("../platform/events", () => ({
-  listenToThisWindow: (event: string, handler: () => void) => {
-    heard.set(event, handler);
-    return Promise.resolve(() => {});
-  },
-  unlistenAll: () => () => {},
-}));
 const tab: DocTab = {
   id: "test",
   path: null,
@@ -105,16 +97,5 @@ describe("draft recovery scheduling", () => {
     advance(3000);
     expect(drafts.saveDraftSnapshot).not.toHaveBeenCalled();
     expect(drafts.clearDraftSnapshot).toHaveBeenCalledWith("test");
-  });
-  it("writes a waiting draft at once when an update is about to end the app", () => {
-    renderHook(() => useDraftAutosave([tab], true));
-    expect(drafts.saveDraftSnapshot).not.toHaveBeenCalled();
-    act(() => heard.get("flush-drafts")!());
-    expect(drafts.saveDraftSnapshot).toHaveBeenCalledWith(
-      "test",
-      null,
-      "draft",
-      null,
-    );
   });
 });

@@ -161,30 +161,58 @@ pub fn quit_and_relaunch(app: tauri::AppHandle) {
 #[cfg(desktop)]
 pub fn cancel_relaunch() {
     RELAUNCH.store(false, std::sync::atomic::Ordering::SeqCst);
+    if let Ok(mut pending) = PENDING_INSTALL.lock() {
+        *pending = None;
+    }
 }
 
-/// The end of a quit: exit, or start the installed version.
+/// An update downloaded and waiting for the quit to end: Windows installs by
+/// ending the app at once, so it runs once every window has closed.
+#[cfg(desktop)]
+static PENDING_INSTALL: std::sync::Mutex<
+    Option<(std::sync::Arc<tauri_plugin_updater::Update>, Vec<u8>)>,
+> = std::sync::Mutex::new(None);
+
+/// The end of a quit: exit, or install and start the new version.
 #[cfg(desktop)]
 pub fn exit_app(app: &tauri::AppHandle) {
     if RELAUNCH.load(std::sync::atomic::Ordering::SeqCst) {
         release_instance(app.clone());
+        let pending = PENDING_INSTALL.lock().ok().and_then(|mut p| p.take());
+        if let Some((update, bytes)) = pending {
+            // The installer ends this process and starts the new version.
+            if let Err(e) = update.install(bytes) {
+                eprintln!("textus: update install failed: {e}");
+            }
+        }
         app.restart();
     }
     app.exit(0);
 }
 
-/// Windows installs by ending the app at once: each window writes its
-/// unsaved drafts first.
+/// Windows: downloads `rid`'s update, then every window closes as at Quit
+/// (an unsaved document asks, or is kept as a draft) before it installs.
 #[cfg(desktop)]
 #[tauri::command]
 #[cfg_attr(test, specta::specta)]
-pub fn flush_drafts(app: tauri::AppHandle) {
-    use tauri::Emitter;
-    for label in app.webview_windows().into_keys() {
-        if crate::windows::is_editor_window(&label) {
-            let _ = app.emit_to(label.as_str(), "flush-drafts", ());
-        }
+pub async fn install_after_quit<R: Runtime>(
+    app: tauri::AppHandle,
+    webview: Webview<R>,
+    rid: tauri::ResourceId,
+) -> Result<(), String> {
+    let update = webview
+        .resources_table()
+        .get::<tauri_plugin_updater::Update>(rid)
+        .map_err(|e| e.to_string())?;
+    let bytes = update
+        .download(|_, _| {}, || {})
+        .await
+        .map_err(|e| e.to_string())?;
+    if let Ok(mut pending) = PENDING_INSTALL.lock() {
+        *pending = Some((update, bytes));
     }
+    quit_and_relaunch(app);
+    Ok(())
 }
 
 #[cfg(test)]

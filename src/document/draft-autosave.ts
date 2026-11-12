@@ -2,7 +2,6 @@ import { useEffect, useRef, useState } from "react";
 import { tabIsDirty, type DocTab } from "./doc-tabs";
 import { createTabIdleTimers } from "./tab-idle-timers";
 import { drafts } from "../platform/ipc";
-import { listenToThisWindow, unlistenAll } from "../platform/events";
 
 const DEBOUNCE_MS = 3000;
 const MAX_WAIT_MS = 30000;
@@ -32,11 +31,6 @@ export function useDraftAutosave(tabs: DocTab[], enabled: boolean): () => void {
   const cancel = timers.cancelAll;
 
   useEffect(() => cancel, [cancel]);
-  // An update about to end the app (Windows): what waits is written now.
-  useEffect(
-    () => unlistenAll(listenToThisWindow("flush-drafts", timers.flushAll)),
-    [timers],
-  );
 
   useEffect(() => {
     const seenIds = new Set(tabs.map((tab) => tab.id));

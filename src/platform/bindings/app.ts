@@ -238,10 +238,10 @@ export const commands = {
 	 */
 	quit_and_relaunch: () => __TAURI_INVOKE<void>("quit_and_relaunch"),
 	/**
-	 *  Windows installs by ending the app at once: each window writes its
-	 *  unsaved drafts first.
+	 *  Windows: downloads `rid`'s update, then every window closes as at Quit
+	 *  (an unsaved document asks, or is kept as a draft) before it installs.
 	 */
-	flush_drafts: () => __TAURI_INVOKE<void>("flush_drafts"),
+	install_after_quit: (rid: number) => __TAURI_INVOKE<null>("install_after_quit", { rid }),
 };
 
 /* Constants */

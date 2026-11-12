@@ -8,8 +8,6 @@ interface TabIdleTimers<S> {
   /** Drops a tab's timer and entry; true when it had one. */
   cancel: (id: string) => boolean;
   cancelAll: () => void;
-  /** Fires every pending write now. */
-  flushAll: () => void;
   ids: () => string[];
 }
 
@@ -55,12 +53,6 @@ export function createTabIdleTimers<S>(opts: {
     cancel,
     cancelAll() {
       for (const id of [...pending.keys()]) cancel(id);
-    },
-    flushAll() {
-      for (const [id, entry] of [...pending]) {
-        cancel(id);
-        entry.fire(entry.snapshot);
-      }
     },
     ids: () => [...pending.keys()],
   };

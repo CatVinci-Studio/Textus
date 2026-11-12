@@ -390,6 +390,8 @@ export const updater = {
   releaseInstance: () => desktopQueryCommand("release_instance", null),
   /** Every window closes as at Quit, then the installed version starts. */
   quitAndRelaunch: () => desktopQueryCommand("quit_and_relaunch", null),
-  /** Every window writes its unsaved drafts now. */
-  flushDrafts: () => desktopQueryCommand("flush_drafts", null),
+  /** Windows: downloads the update, then every window closes as at Quit
+   *  before it installs. */
+  installAfterQuit: (rid: number) =>
+    desktopQueryCommand("install_after_quit", null, rid),
 };
