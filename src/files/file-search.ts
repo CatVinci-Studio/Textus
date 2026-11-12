@@ -1,4 +1,4 @@
-import { TEXT_DOCUMENT_EXTENSIONS } from "../platform/bindings/files";
+import { isDocumentName } from "./document-name";
 import type { IndexedFile } from "../platform/ipc";
 import {
   preparePinyin,
@@ -13,16 +13,6 @@ const MAX_SHOWN_MATCHES = 200;
 
 /** The search box's filter beside it: every file, or documents only. */
 export type SearchScope = "all" | "documents";
-
-/** What Textus opens as a document, listed before every other file. */
-const DOCUMENT_EXTENSIONS: ReadonlySet<string> = new Set(
-  TEXT_DOCUMENT_EXTENSIONS,
-);
-
-export function isDocumentName(name: string): boolean {
-  const dot = name.lastIndexOf(".");
-  return dot > 0 && DOCUMENT_EXTENSIONS.has(name.slice(dot + 1).toLowerCase());
-}
 
 /** An indexed file with what its name is compared as, worked out once per
  *  index rather than on every keystroke. */

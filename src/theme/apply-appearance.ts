@@ -16,10 +16,17 @@ import {
 } from "../prefs/SettingsContext";
 import { BUILTIN_CONTENT_THEMES } from "./builtin-themes";
 import { applyThemeChrome, clearThemeChrome } from "../engine/tokens/palette";
-import { adaptTyporaCss, namedSystemFonts } from "./typora-compat";
 import { isIOSApp } from "../platform/capabilities";
-import { withCurrentVariables } from "./legacy-variables";
-import { withWebFonts } from "./web-fonts";
+import { lazyModule } from "../lazy/lazy-module";
+
+// What an imported theme or the user's own CSS is read through: loaded
+// when there is one, not with every window.
+const typora = lazyModule("typora-compat", () => import("./typora-compat"));
+const legacy = lazyModule(
+  "legacy-variables",
+  () => import("./legacy-variables"),
+);
+const webFonts = lazyModule("web-fonts", () => import("./web-fonts"));
 
 /** The CSS letter-spacing for Word's character spacing; null keeps the
  *  theme's. */
@@ -197,17 +204,20 @@ function useApplyAppearance(
       styleEl.id = CUSTOM_CSS_STYLE_ID;
     }
     const style = styleEl;
-    const show = (css: string) => {
+    let current = true;
+    const show = async (css: string) => {
+      const { withCurrentVariables } = await legacy.load();
+      if (!current) return;
       style.textContent = withCurrentVariables(css);
       if (style.sheet) promoteCustomProperties(style.sheet.cssRules);
     };
     // In the document first: a <style> has a sheet to promote only there.
     document.head.appendChild(style);
-    show(settings.customCss);
+    void show(settings.customCss);
     // Its web fonts come a moment later, fetched by Rust.
-    let current = true;
-    void withWebFonts(settings.customCss).then((css) => {
-      if (current && css !== settings.customCss) show(css);
+    void webFonts.load().then(async ({ withWebFonts }) => {
+      const css = await withWebFonts(settings.customCss);
+      if (current && css !== settings.customCss) void show(css);
     });
     return () => {
       current = false;
@@ -266,7 +276,13 @@ function useApplyAppearance(
       const variant =
         isEffectiveDark(settings.theme) && theme.hasDark ? "dark" : "light";
       try {
-        const stored = await themes.loadThemeCss(theme.id, variant);
+        const [stored, { withWebFonts }, { withCurrentVariables }, compat] =
+          await Promise.all([
+            themes.loadThemeCss(theme.id, variant),
+            webFonts.load(),
+            legacy.load(),
+            typora.load(),
+          ]);
         // One imported before web fonts were embedded still has them.
         const loaded = stored && (await withWebFonts(stored));
         if (cancelled || request !== revision) return;
@@ -278,8 +294,10 @@ function useApplyAppearance(
           styleEl = document.createElement("style");
           styleEl.id = STYLE_ID;
         }
-        const adapted = adaptTyporaCss(css ?? "");
-        styleEl.textContent = isIOSApp ? namedSystemFonts(adapted) : adapted;
+        const adapted = compat.adaptTyporaCss(css ?? "");
+        styleEl.textContent = isIOSApp
+          ? compat.namedSystemFonts(adapted)
+          : adapted;
         document.head.appendChild(styleEl);
         const dark = isEffectiveDark(settings.theme);
         let chrome: string | null;

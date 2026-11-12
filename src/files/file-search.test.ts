@@ -1,5 +1,6 @@
 import { describe, expect, it } from "vitest";
-import { isDocumentName, matchFiles, searchEntries } from "./file-search";
+import { matchFiles, searchEntries } from "./file-search";
+import { isDocumentName } from "./document-name";
 import { nameCollator } from "../utils/name-order";
 import { pinyinEngine } from "../utils/pinyin";
 

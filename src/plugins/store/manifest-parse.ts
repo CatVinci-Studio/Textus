@@ -1,5 +1,5 @@
 import { whenReadable } from "../contributions/when";
-import { DIAGRAM_LANGUAGES } from "../../editor/diagram-engine";
+import { DIAGRAM_LANGUAGES } from "../../editor/diagram-languages";
 import type {
   CompletionContribution,
   Contributes,

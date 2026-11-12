@@ -202,8 +202,6 @@ async function drawChart(
   return { svg: chart.renderChart(code, layout), engine: "chart" };
 }
 
-/** The fenced-block languages drawn as pictures. */
-export const DIAGRAM_LANGUAGES = ["mermaid", "chart"];
 
 /**
  * A drawing function for one render pass: a chart by its own renderer; a

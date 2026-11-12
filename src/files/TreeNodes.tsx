@@ -21,7 +21,7 @@ import { iosFiles } from "../platform/ios-files";
 import { ContextMenu } from "../engine/controls/ContextMenu";
 import { Presence } from "../engine/motion/usePresence";
 import { useLongPress } from "../utils/hooks/useLongPress";
-import { isDocumentName } from "./file-search";
+import { isDocumentName } from "./document-name";
 import { localeOf } from "../i18n/langs";
 import { compareEntries, nameCollator } from "../utils/name-order";
 import { useTree } from "./tree-shared";

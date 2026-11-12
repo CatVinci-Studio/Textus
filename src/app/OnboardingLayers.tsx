@@ -1,7 +1,6 @@
 import { Suspense } from "react";
 import { lazyModule } from "../lazy/lazy-module";
 import { lazyComponent } from "../lazy/lazy-component";
-import { LanguageWelcome } from "../onboarding/LanguageWelcome";
 import type { Tutorial } from "../onboarding/useTutorial";
 import type { Settings } from "../prefs/SettingsContext";
 import { formatCombo } from "../utils/shortcuts";
@@ -15,6 +14,12 @@ const TutorialExperience = lazyComponent(
     warm: true,
   }),
   (m) => m.TutorialExperience,
+);
+
+// The language welcome shows once, on first launch: loaded only then.
+const LanguageWelcome = lazyComponent(
+  lazyModule("language-welcome", () => import("../onboarding/LanguageWelcome")),
+  (m) => m.LanguageWelcome,
 );
 
 /** The first-run layers over the window: the onboarding tour, and before

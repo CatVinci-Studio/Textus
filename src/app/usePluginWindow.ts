@@ -1,10 +1,8 @@
+import { lazyModule } from "../lazy/lazy-module";
 import { pickWithCommands } from "./command-palette-entry";
 import { watchConventions } from "../plugins/contributions/conventions-watch";
 import { useEffect, useSyncExternalStore } from "react";
 import { onCopied } from "../clipboard/copied";
-import { offerMovedFeatures } from "../plugins/store/moved-offer";
-import { watchDevPlugins } from "../plugins/store/dev-reload";
-import { watchPluginAiTools } from "../plugins/contributions/ai-tools";
 import { setCompletionAsker } from "../plugins/contributions/completion-sources";
 import {
   makeBlankTab,
@@ -42,9 +40,6 @@ import {
   placeOnArrival,
   tabInUse,
 } from "../engine/layout/store";
-import { takePluginUris } from "../plugins/plugin-uri";
-import { migrateOfficialPlugins } from "../plugins/store/migrate-official";
-import { listenToThisWindow, unlistenAll } from "../platform/events";
 import {
   INSERT_BLOCK_EVENT,
   SHOW_FOLDER_EVENT,
@@ -52,6 +47,11 @@ import {
 } from "../utils/events";
 import { useSettings } from "../prefs/SettingsContext";
 import { setWindowFolderSource } from "../platform/window-folder";
+
+const windowTasks = lazyModule(
+  "plugin-window-tasks",
+  () => import("../plugins/window-tasks"),
+);
 
 /**
  * A window's side of the plugins: what it tells the manager, what plugins
@@ -110,8 +110,8 @@ export function usePluginWindow({
     // Then, once, move the official plugins from before API 1.0 to their rewrites.
     // And offer, once, the plugins features of the core became.
     void loadPlugins()
-      .then(() => migrateOfficialPlugins())
-      .then(() => offerMovedFeatures(tRef.current))
+      .then(() => windowTasks.load())
+      .then((tasks) => tasks.afterPluginsLoad(tRef.current))
       .catch(() => {});
   }, [tRef, languageRef, settingsRef]);
 
@@ -273,18 +273,19 @@ export function usePluginWindow({
     };
   }, [saveRef, closeRef]);
 
-  // A plugin a developer loaded from a folder, loaded again as it changes.
-  useEffect(() => watchDevPlugins(), []);
-  // textus:// links from outside: those that came before this window, then
-  // each as it comes.
+  // A folder in development reloaded, textus:// links, plugins' AI tools:
+  // started once the window is up (plugins/window-tasks.ts).
   useEffect(() => {
-    void takePluginUris();
-    return unlistenAll(
-      listenToThisWindow("plugin-uri", () => void takePluginUris()),
-    );
+    let stop: (() => void) | null = null;
+    let gone = false;
+    void windowTasks.load().then((tasks) => {
+      if (!gone) stop = tasks.startWindowTasks(runPluginAiTool);
+    });
+    return () => {
+      gone = true;
+      stop?.();
+    };
   }, []);
-  // Tools the plugins give Textus AI, told to Rust and run when called.
-  useEffect(() => watchPluginAiTools(runPluginAiTool), []);
   // The completions plugins suggest as you type, and calling off those the
   // panel no longer needs.
   useEffect(() => {

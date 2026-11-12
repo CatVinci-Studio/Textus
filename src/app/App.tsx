@@ -3,9 +3,7 @@ import { useTabsInBar } from "./islands/tabs-in-bar";
 import { tabElement } from "../engine/layout/tab-element";
 import { tabTitle } from "../document/doc-tabs";
 import { useWindowAi } from "./islands/useWindowAi";
-import { AiTab } from "./islands/AiTab";
 import { conversationIn } from "./islands/ai-tabs";
-import { SuggestCard } from "./SuggestCard";
 import { ConventionsCard } from "./ConventionsCard";
 import { CornerStack } from "../engine/controls/CornerToast";
 import { Suspense } from "react";
@@ -57,6 +55,17 @@ import { usePanelsReport } from "../plugins/panels-state";
 provideAiFileMarks();
 
 // The phone's own parts load on the phone, not with every desktop window.
+// An AI tab and the plugin suggestion card: drawn later than the window's
+// first frame, loaded while it is idle.
+const AiTab = lazyComponent(
+  lazyModule("ai-tab", () => import("./islands/AiTab"), { warm: true }),
+  (m) => m.AiTab,
+);
+const SuggestCard = lazyComponent(
+  lazyModule("suggest-card", () => import("./SuggestCard"), { warm: true }),
+  (m) => m.SuggestCard,
+);
+
 const phoneParts = lazyModule(
   "phone-parts",
   () => import("../mobile/phone-parts"),

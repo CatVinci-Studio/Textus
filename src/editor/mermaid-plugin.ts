@@ -1,3 +1,4 @@
+import { DIAGRAM_LANGUAGES } from "./diagram-languages";
 import { onAppearance } from "../engine/tokens/appearance";
 import { Plugin, PluginKey, TextSelection } from "@milkdown/kit/prose/state";
 import { Decoration } from "@milkdown/kit/prose/view";
@@ -18,7 +19,6 @@ import { registerDrawAll } from "./draw-when-visible";
 import {
   appearanceIsDark,
   diagramRenderer,
-  DIAGRAM_LANGUAGES,
   mermaidTheme,
   type DrawnDiagram,
 } from "./diagram-engine";
