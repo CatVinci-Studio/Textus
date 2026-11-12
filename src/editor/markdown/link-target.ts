@@ -86,13 +86,17 @@ function normalizePath(path: string, sep: "/" | "\\"): string {
  *  slug, a repeat numbered the way GitHub does ("intro", "intro-1"); -1 for
  *  none. Clicks, embeds, metadata and exports all match headings here. */
 export function headingIndex(texts: readonly string[], anchor: string): number {
-  const wanted = headingSlug(anchor);
+  return numberRepeats(texts.map(headingSlug)).indexOf(headingSlug(anchor));
+}
+
+/** Anchors in document order with repeats numbered as GitHub does: the
+ *  second "intro" is "intro-1". The one rule for headings' ids. */
+export function numberRepeats(slugs: readonly string[]): string[] {
   const seen = new Map<string, number>();
-  return texts.findIndex((text) => {
-    const slug = headingSlug(text);
+  return slugs.map((slug) => {
     const repeat = seen.get(slug) ?? 0;
     seen.set(slug, repeat + 1);
-    return (repeat ? `${slug}-${repeat}` : slug) === wanted;
+    return repeat ? `${slug}-${repeat}` : slug;
   });
 }
 

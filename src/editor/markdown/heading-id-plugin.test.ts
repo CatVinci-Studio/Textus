@@ -67,13 +67,15 @@ describe("withHeadingIds", () => {
       p,
       withIds.node("quote", null, [h("A")]),
       h("B"),
+      h("Constructor"),
     ]);
     const ids: string[] = [];
     withHeadingIds(doc, idOf).descendants((node) => {
       if (node.type.name === "heading") ids.push(node.attrs.id as string);
     });
     // Repeats as GitHub and headingIndex number them.
-    expect(ids).toEqual(["a", "a-1", "b"]);
+    // A name an object already has is a heading like any other.
+    expect(ids).toEqual(["a", "a-1", "b", "constructor"]);
   });
 
   it("keeps every block without a heading, and a document with its ids", () => {

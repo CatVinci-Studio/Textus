@@ -1,3 +1,4 @@
+import { numberRepeats } from "./link-target";
 import {
   ParserReady,
   editorStateTimerCtx,
@@ -51,17 +52,15 @@ function eachId(
   idOf: IdOf,
   visit: (node: ProseNode, pos: number, id: string) => void,
 ) {
-  const seen: Record<string, number> = {};
+  const found: { node: ProseNode; pos: number; id: string }[] = [];
   doc.descendants((node, pos) => {
     if (!isHeading(node)) return !node.isTextblock;
     if (node.textContent.trim().length === 0) return false;
-    let id = idOf(node);
-    const repeat = seen[id] ?? 0;
-    seen[id] = repeat + 1;
-    if (repeat) id += `-${repeat}`;
-    visit(node, pos, id);
+    found.push({ node, pos, id: idOf(node) });
     return false;
   });
+  const ids = numberRepeats(found.map((f) => f.id));
+  found.forEach(({ node, pos }, i) => visit(node, pos, ids[i]));
 }
 
 /** `doc` with its headings' ids written in, sharing every block that holds

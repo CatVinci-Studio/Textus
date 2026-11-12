@@ -4,6 +4,8 @@ import { countWords } from "./word-count";
 describe("countWords", () => {
   it("counts English by words", () => {
     expect(countWords("To be, or not to be.").words).toBe(6);
+    // The front matter is not the text.
+    expect(countWords("---\ntitle: A long title\n---\nTo be.").words).toBe(2);
   });
 
   it("counts every Chinese character, as 字数 does", () => {

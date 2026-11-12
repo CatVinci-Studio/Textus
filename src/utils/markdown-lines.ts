@@ -1,3 +1,4 @@
+import { FRONTMATTER } from "./frontmatter";
 /** Blockquote and list markers a fence may sit behind, as in `2. ```` or
  *  `> ~~~`; they are stripped before looking for the fence itself. */
 const CONTAINER_PREFIX =
@@ -6,7 +7,8 @@ const FENCE = /^(`{3,}|~{3,})(.*)$/;
 
 /**
  * Each line of `markdown` with whether it is code: inside a fenced block or
- * one of its fences. As in CommonMark, a fence closes only on a run of the
+ * one of its fences, or in the front matter at its top (YAML, whose `#`
+ * starts a comment, not a heading). As in CommonMark, a fence closes only on a run of the
  * same character at least as long as the one that opened it, with nothing
  * after it - so ``` inside ~~~ stays code.
  */
@@ -17,7 +19,10 @@ export function eachLine(
   { math = false } = {},
 ): void {
   let fence: string | null = null;
+  const head = FRONTMATTER.exec(markdown)?.[0] ?? "";
+  const yamlLines = head ? head.replace(/\n$/, "").split("\n").length : 0;
   markdown.split("\n").forEach((line, index) => {
+    if (index < yamlLines) return visit(line, index, true);
     const bare = line.replace(CONTAINER_PREFIX, "");
     if (math && (fence === "$$" || (!fence && bare.startsWith("$$")))) {
       const rest = bare.trimEnd();

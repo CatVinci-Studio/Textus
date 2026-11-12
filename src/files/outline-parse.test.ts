@@ -6,6 +6,8 @@ const texts = (md: string) => parseHeadings(md).map((h) => h.text);
 describe("parseHeadings", () => {
   it("skips headings inside fenced code", () => {
     expect(texts("# A\n```sh\n# comment\n```\n## B")).toEqual(["A", "B"]);
+    // Nor a comment in the front matter's YAML.
+    expect(texts("---\n# draft\ntitle: T\n---\n# A")).toEqual(["A"]);
   });
 
   it("finds headings after a fence opened in a list item", () => {

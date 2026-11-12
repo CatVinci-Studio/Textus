@@ -10,7 +10,7 @@ import { ContextMenu } from "../engine/controls/ContextMenu";
 import { Presence } from "../engine/motion/usePresence";
 import { noteJump } from "../editor/nav-history";
 import { setTabJump } from "../editor/tab-jump";
-import { headingSlug } from "../editor/markdown/link-target";
+import { headingSlug, numberRepeats } from "../editor/markdown/link-target";
 import "./FileTree.css";
 
 interface OutlineProps {
@@ -58,15 +58,7 @@ function headingAnchor(tabId: string, texts: string[], index: number): string {
   if (id) return id;
   const shown = (text: string) =>
     headingLabel(text).replace(/\$+[^$]+\$+/g, "");
-  const seen = new Map<string, number>();
-  let anchor = "";
-  texts.slice(0, index + 1).forEach((text) => {
-    const slug = headingSlug(shown(text));
-    const repeat = seen.get(slug) ?? 0;
-    seen.set(slug, repeat + 1);
-    anchor = repeat ? `${slug}-${repeat}` : slug;
-  });
-  return anchor;
+  return numberRepeats(texts.map((text) => headingSlug(shown(text))))[index];
 }
 
 export function Outline({ content, tabId }: OutlineProps) {

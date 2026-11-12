@@ -23,6 +23,9 @@ describe("numbered headings for Pandoc", () => {
     expect(numberedHeadings("# T\n- x\n  ```\n# not\n  ```\n## A")).toBe(
       "# T {.unnumbered .unlisted}\n- x\n  ```\n# not\n  ```\n# A",
     );
+    expect(numberedHeadings("---\n# draft\n---\n# A\n# B")).toBe(
+      "---\n# draft\n---\n# A\n# B",
+    );
     expect(numberedHeadings("# T\n```\n``` x\n# not\n```\n## A")).toBe(
       "# T {.unnumbered .unlisted}\n```\n``` x\n# not\n```\n# A",
     );
