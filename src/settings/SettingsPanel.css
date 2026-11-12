@@ -690,10 +690,8 @@ button.settings-inline-button {
 }
 
 .settings-builtin-category-title {
+  margin: 0;
   padding: 12px 0 2px;
-  color: var(--ui-muted);
-  font-size: var(--text-footnote);
-  font-weight: 600;
 }
 
 .settings-builtin-skill-name {
@@ -811,9 +809,6 @@ button.settings-inline-button {
 
 .shortcut-fixed-title {
   margin: 0 0 var(--space-1);
-  color: var(--ui-muted);
-  font-size: var(--text-footnote);
-  font-weight: 600;
 }
 
 .shortcut-fixed-list {

@@ -45,10 +45,8 @@
 
 /* An <optgroup>'s name, above its options. */
 .ui-select-group {
+  margin: 0;
   padding: 8px 8px 4px;
-  color: var(--ui-muted);
-  font-size: var(--text-caption);
-  font-weight: 600;
   white-space: nowrap;
   cursor: default;
 }

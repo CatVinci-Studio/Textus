@@ -215,7 +215,7 @@ export function ModePicker({
           onKeyDown={onListKey}
         >
           {groups.length > 0 && shownModes.length > 0 && (
-            <li role="presentation" className="ui-select-group">
+            <li role="presentation" className="tx-list-heading ui-select-group">
               {labels.mode}
             </li>
           )}
@@ -223,7 +223,7 @@ export function ModePicker({
           {groups.length > 0 && shownModes.length > 0 && (
             <li
               role="presentation"
-              className="ui-select-group mode-picker-models"
+              className="tx-list-heading ui-select-group mode-picker-models"
             >
               {labels.model}
             </li>

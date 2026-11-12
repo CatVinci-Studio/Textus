@@ -124,9 +124,6 @@
 
 .start-page-heading {
   margin: 0 0 var(--space-2);
-  color: var(--ui-muted);
-  font-size: var(--text-footnote);
-  font-weight: 600;
 }
 
 .start-page-row {

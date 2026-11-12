@@ -127,7 +127,10 @@ export function ComposerPicker({
               className="composer-picker-group"
             >
               {section.title && (
-                <div className="composer-picker-group-title" aria-hidden="true">
+                <div
+                  className="tx-list-heading composer-picker-group-title"
+                  aria-hidden="true"
+                >
                   {section.title}
                 </div>
               )}

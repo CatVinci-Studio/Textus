@@ -57,7 +57,7 @@ export function PluginSettingRows({
       {shownSettings(record).map(({ setting, heading }) => (
         <div key={setting.key} className="plugin-setting">
           {heading && (
-            <h4 className="plugin-setting-group">
+            <h4 className="tx-list-heading plugin-setting-group">
               {pluginText(record, heading)}
             </h4>
           )}

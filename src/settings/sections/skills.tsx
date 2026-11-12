@@ -313,7 +313,10 @@ export function BuiltinSkillsSection({
             aria-label={t[MODES[mode].label]}
             data-mode={mode}
           >
-            <div className="settings-builtin-category-title" aria-hidden="true">
+            <div
+              className="tx-list-heading settings-builtin-category-title"
+              aria-hidden="true"
+            >
               {t[MODES[mode].label]}
             </div>
             {names.map(({ name }) => {

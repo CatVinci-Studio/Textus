@@ -315,9 +315,6 @@ button.plugin-card-open:hover .plugin-card-name {
 /* A heading over a plugin's settings that share a group. */
 .plugin-setting-group {
   margin: var(--space-3) var(--space-3) var(--space-1);
-  color: var(--ui-muted);
-  font-size: var(--text-caption);
-  font-weight: 600;
 }
 .plugin-setting-color {
   width: 40px;
@@ -631,9 +628,6 @@ button.plugin-card-open:hover .plugin-card-name {
 .plugin-subgroup-title {
   margin: var(--space-3) 0 8px;
   padding-left: 4px;
-  color: var(--ui-muted);
-  font-size: var(--text-caption);
-  font-weight: 600;
 }
 .plugin-subgroup-title:first-child {
   margin-top: 0;

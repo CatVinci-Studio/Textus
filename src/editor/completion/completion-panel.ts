@@ -100,7 +100,7 @@ export class CompletionPanel {
   private row(row: PanelRow, i: number, take: (row: number) => void) {
     const el = document.createElement("div");
     if (row.kind === "heading") {
-      el.className = "completion-group";
+      el.className = "tx-list-heading completion-group";
       el.setAttribute("role", "presentation");
       el.textContent = row.title;
       return el;

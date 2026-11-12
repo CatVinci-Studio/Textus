@@ -78,7 +78,7 @@ function RecentList({
   if (paths.length === 0) return null;
   return (
     <section className="start-page-recent" aria-label={title}>
-      <h2 className="start-page-heading">{title}</h2>
+      <h2 className="tx-list-heading start-page-heading">{title}</h2>
       <ul>
         {paths.slice(0, RECENT_SHOWN).map((path) => (
           <li key={path} className="start-page-row">
@@ -131,7 +131,7 @@ function FolderChips({
   if (paths.length === 0) return null;
   return (
     <section className="start-page-recent" aria-label={title}>
-      <h2 className="start-page-heading">{title}</h2>
+      <h2 className="tx-list-heading start-page-heading">{title}</h2>
       <div className="start-page-chips">
         {paths.slice(0, RECENT_SHOWN).map((path) => (
           <Tooltip key={path} text={path} description={null}>

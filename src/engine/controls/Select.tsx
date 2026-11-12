@@ -275,7 +275,10 @@ function DrawnSelect({
           {runs(options).map((run, r) => (
             <Fragment key={`run-${r}`}>
               {run.group !== undefined && (
-                <li role="presentation" className="ui-select-group">
+                <li
+                  role="presentation"
+                  className="tx-list-heading ui-select-group"
+                >
                   {run.group}
                 </li>
               )}

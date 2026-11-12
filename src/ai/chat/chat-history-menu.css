@@ -26,11 +26,8 @@
 }
 
 .chat-history-group-title {
+  margin: 0;
   padding: 8px 8px 4px;
-  font-size: var(--text-caption);
-  font-weight: 600;
-  letter-spacing: 0.02em;
-  color: var(--ui-muted);
 }
 
 /* Older conversations were moved to the trash folder (beyond the cap). */

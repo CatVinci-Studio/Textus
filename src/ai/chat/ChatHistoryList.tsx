@@ -90,7 +90,7 @@ export function ChatHistoryList({
       {groupByProject(entries).map((group) => (
         <section key={group.folder ?? ""} className="chat-history-group">
           <div
-            className="tx-truncate chat-history-group-title"
+            className="tx-truncate tx-list-heading chat-history-group-title"
             title={group.folder ?? ""}
           >
             {group.folder

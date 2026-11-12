@@ -205,7 +205,9 @@ export function PluginsPage({ t }: SettingsPageProps) {
             {others.map(card)}
             {mine.length > 0 && (
               <>
-                <h4 className="plugin-subgroup-title">{t.pluginsMine}</h4>
+                <h4 className="tx-list-heading plugin-subgroup-title">
+                  {t.pluginsMine}
+                </h4>
                 {mine.map(card)}
               </>
             )}

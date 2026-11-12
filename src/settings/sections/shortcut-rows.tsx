@@ -31,7 +31,9 @@ export function FixedShortcutList({
     <div className="shortcut-fixed">
       {groups.map((group) => (
         <section key={group.title} className="shortcut-fixed-section">
-          <h3 className="shortcut-fixed-title">{group.title}</h3>
+          <h3 className="tx-list-heading shortcut-fixed-title">
+            {group.title}
+          </h3>
           <dl className="shortcut-fixed-list">
             {group.items.map((item) => (
               <div key={item.label} className="shortcut-fixed-row">

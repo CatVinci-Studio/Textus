@@ -38,11 +38,15 @@
 
 /* A heading between a list's items: a day, a group. */
 .tx-list-heading {
-  margin: 12px var(--pane-row-inset) 4px;
-  padding: 0;
   color: var(--ui-muted);
   font-size: var(--text-caption);
   font-weight: 600;
+}
+
+/* Its place, which a list with its own rhythm sets instead. */
+:where(.tx-list-heading) {
+  margin: 12px var(--pane-row-inset) 4px;
+  padding: 0;
 }
 
 .tx-list-item {
