@@ -87,17 +87,12 @@
 
 /* These sit under the header (on Windows it has the only close button), so
    they take the space left over, not the full viewport. */
-.chat-window-loading,
-.chat-window-lost {
+.chat-window-state {
   display: flex;
   flex: 1;
   min-height: 0;
   align-items: center;
   justify-content: center;
-  padding: 24px;
-  text-align: center;
-  font-size: var(--text-body);
-  color: var(--ui-muted);
   background: var(--ui-surface);
 }
 

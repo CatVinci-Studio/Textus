@@ -110,10 +110,8 @@
 }
 
 /* Nothing to list: what the key does, and how to get something here. */
+/* Nothing to list: the shared note, its first line what the key does. */
 .composer-picker-empty {
-  padding: 8px 12px;
-  color: var(--ui-muted);
-  font-size: var(--text-footnote);
   line-height: 1.5;
 }
 

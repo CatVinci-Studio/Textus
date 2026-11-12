@@ -79,8 +79,8 @@ export function ChatWindowApp({ tabs }: { tabs?: ChatTabs }) {
     return (
       <div className="chat-window">
         {header}
-        <IslandSheet ui className="chat-window-lost">
-          {t.chatWindowLost}
+        <IslandSheet ui className="chat-window-state">
+          <p className="tx-empty">{t.chatWindowLost}</p>
         </IslandSheet>
         {dialogs}
       </div>
@@ -89,8 +89,8 @@ export function ChatWindowApp({ tabs }: { tabs?: ChatTabs }) {
     return (
       <div className="chat-window">
         {header}
-        <IslandSheet ui className="chat-window-loading">
-          {t.agentThinking}
+        <IslandSheet ui className="chat-window-state">
+          <p className="tx-empty">{t.agentThinking}</p>
         </IslandSheet>
         {dialogs}
       </div>

@@ -107,7 +107,7 @@ export function ComposerPicker({
   return (
     <div className="inline-chat-skill-menu composer-picker" data-picker={kind}>
       {count === 0 ? (
-        <div className="composer-picker-empty" role="status">
+        <div className="tx-list-note composer-picker-empty" role="status">
           {empty.map((line, i) => (
             <p key={i}>{line}</p>
           ))}
