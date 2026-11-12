@@ -12,6 +12,12 @@ import {
   type ReactNode,
 } from "react";
 import { fs } from "../platform/ipc";
+import { onPluginEvent } from "../plugins/app-bridge";
+import {
+  ENTRY_TRASHED_EVENT,
+  FILE_CREATED_EVENT,
+  FILE_WRITTEN_EVENT,
+} from "../utils/events";
 import { useSettings } from "../prefs/SettingsContext";
 import { SearchField } from "../engine/controls/SearchField";
 import { PathText } from "../engine/controls/PathText";
@@ -24,9 +30,25 @@ import type { Strings } from "../i18n/strings";
 import { isImeKeydown } from "../utils/ime";
 import { listMove } from "../engine/controls/list-keys";
 
-/** An index older than this is built again the next time the box gains
- *  focus: files come and go while the box sits unused. */
-const INDEX_FRESH_MS = 5_000;
+/** An index is built again on the next focus of the box once files were
+ *  written, made, moved or trashed, or the window was away (another app
+ *  may have changed them); else once it is this old, for what goes
+ *  unannounced. Building it reads the whole folder. */
+const INDEX_FRESH_MS = 30_000;
+const CHANGE_EVENTS = [
+  "focus",
+  FILE_WRITTEN_EVENT,
+  FILE_CREATED_EVENT,
+  ENTRY_TRASHED_EVENT,
+];
+let filesChanged = true;
+const markChanged = () => {
+  filesChanged = true;
+};
+if (typeof window !== "undefined")
+  for (const name of CHANGE_EVENTS) window.addEventListener(name, markChanged);
+for (const name of ["fileCreate", "fileRename", "fileDelete"] as const)
+  onPluginEvent(name, markChanged);
 
 type IndexState =
   | { kind: "none" }
@@ -56,7 +78,8 @@ function useFolderIndex(
   }, [root, refreshKey, collator]);
 
   const ensure = useCallback(() => {
-    if (Date.now() - builtAt.current < INDEX_FRESH_MS) return;
+    if (!filesChanged && Date.now() - builtAt.current < INDEX_FRESH_MS) return;
+    filesChanged = false;
     builtAt.current = Date.now();
     const id = ++request.current;
     setIndex((prev) => (prev.kind === "ready" ? prev : { kind: "loading" }));
@@ -75,6 +98,7 @@ function useFolderIndex(
       (err: unknown) => {
         if (id !== request.current) return;
         builtAt.current = 0;
+        filesChanged = true;
         setIndex({
           kind: isError(err, "tooBroad") ? "tooBroad" : "failed",
         });
