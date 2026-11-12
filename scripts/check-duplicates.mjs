@@ -35,7 +35,6 @@ const COPIES_NOW = {
   "editor/images/obsidian-embed.ts | editor/markdown/wikilink.ts": 1,
   "editor/marks/enclosure-moves.ts | editor/marks/enclosure-moves.ts": 1,
   "plugins/metadata.rs | plugins/workspace.rs": 1,
-  "engine/controls/ContextMenu.tsx | engine/controls/ContextMenu.tsx": 1,
 };
 
 const out = mkdtempSync(join(tmpdir(), "textus-jscpd-"));

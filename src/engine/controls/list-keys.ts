@@ -22,3 +22,16 @@ export function listMove(
   if (ends && key === "End") return count - 1;
   return null;
 }
+
+/** The row of a menu (`rows` of `list`, the enabled ones) the keyboard's
+ *  `key` moves to from the focused one; null for a key that doesn't move. */
+export function menuKeyStep(
+  key: string,
+  list: HTMLElement | null,
+  rows: string,
+): HTMLElement | null {
+  const all = Array.from(list?.querySelectorAll<HTMLElement>(rows) ?? []);
+  const at = all.indexOf(document.activeElement as HTMLElement);
+  const moved = listMove(key, at, all.length);
+  return moved === null ? null : all[moved];
+}
