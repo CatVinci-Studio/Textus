@@ -1,3 +1,4 @@
+import { askForRequirements } from "./requirements";
 import { WIKILINK_SOURCE } from "../../utils/note-link";
 import { basename } from "../../utils/path";
 import type { Strings } from "../../i18n/strings";
@@ -49,6 +50,7 @@ export async function takeUp(
   try {
     if (request.installed) await setPluginEnabled(request.plugin, true);
     else await installFromCatalog(request.plugin);
+    await askForRequirements(request.plugin, t);
   } catch (error) {
     void showMessage(explainError(error, t), {
       title: t.pluginsTitle,

@@ -134,6 +134,13 @@ export function persist(patch: Partial<Settings>) {
   send(store.local(changed));
 }
 
+/** Saves `patch` from outside React (a plugin's offer, a background job):
+ *  this window's settings context takes it as it takes another window's. */
+export function changeSettings(patch: Partial<Settings>) {
+  persist(patch);
+  notifyRemote();
+}
+
 /** Calls `fn` whenever another window (or a re-read) changes the settings.
  *  Returns the unsubscribe. */
 export function subscribeRemote(fn: () => void): () => void {
