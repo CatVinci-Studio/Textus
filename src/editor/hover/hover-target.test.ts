@@ -41,4 +41,14 @@ describe("hoverSpot", () => {
       block: "ab12cd",
     });
   });
+
+  it("carries nested headings whole, as a click follows them", async () => {
+    const dom = document.createElement("div");
+    dom.innerHTML = '<p><span data-type="wikilink">[[Note#A#B]]</span></p>';
+    document.body.append(dom);
+    const link = dom.querySelector("span")!;
+    const view = { dom } as unknown as EditorView;
+    const spot = hoverSpot(view, { target: link } as never, "/v/Doc.md")!;
+    expect(await spot.resolve()).toMatchObject({ heading: "A#B" });
+  });
 });

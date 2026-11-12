@@ -59,8 +59,9 @@ function spotAt(
           windowFolder(),
           true,
         );
-        // A ^id is a block, never a heading's name.
-        const heading = parsed.block ? null : (parsed.headings.at(-1) ?? null);
+        // A ^id is a block, never a heading's name; nested headings come
+        // whole ("A#B"), as a click follows them.
+        const heading = parsed.block ? null : parsed.headings.join("#") || null;
         return found?.exists
           ? { type: "document", path: found.path, heading, block: parsed.block }
           : null;
