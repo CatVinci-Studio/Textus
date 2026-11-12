@@ -14,7 +14,7 @@ import {
   DOC_LINE_HEIGHTS,
   type DocLetterSpacing,
 } from "../prefs/SettingsContext";
-import { BUILTIN_CONTENT_THEMES } from "./builtin-themes";
+import { BUILTIN_CONTENT_THEMES } from "../prefs/builtin-themes";
 import { applyThemeChrome, clearThemeChrome } from "../engine/tokens/palette";
 import { isIOSApp } from "../platform/capabilities";
 import { lazyModule } from "../lazy/lazy-module";

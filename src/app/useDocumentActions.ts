@@ -5,6 +5,8 @@ import { makeBlankTab, statMtime, tabIsDirty } from "../document/doc-tabs";
 import type { TabState } from "./tabs/useTabState";
 import { isInside } from "../utils/path";
 import { notePathMoved, setPathMoveHooks } from "../plugins/app-bridge";
+import { useWindowEvent } from "../utils/hooks/useWindowEvent";
+import { ENTRY_TRASHED_EVENT } from "../utils/events";
 
 /**
  * What happens to open tabs when the app itself renames, moves or deletes
@@ -120,6 +122,20 @@ export function useDocumentActions(opts: {
     },
     [documentDeleted, removeTab, tabsRef, setTabs, setActiveTabId],
   );
+
+  // A file or folder trashed in the sidebar: its tabs go as a reset
+  // skill's do, never writing it back.
+  useWindowEvent(ENTRY_TRASHED_EVENT, (e) => {
+    const gone = (e as CustomEvent<string>).detail;
+    skillFilesDeleted(
+      tabsRef.current
+        .map((tab) => tab.path)
+        .filter(
+          (path): path is string =>
+            !!path && (path === gone || isInside(path, gone)),
+        ),
+    );
+  });
 
   // iPhone Share needs a file, so an unsaved document is saved first.
   const shareActiveTab = useCallback(async () => {

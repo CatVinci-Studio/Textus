@@ -1,7 +1,7 @@
 import { tabElement } from "../engine/layout/tab-element";
 import { currentStrings } from "../i18n/current";
 import type { Settings } from "../prefs/SettingsContext";
-import { BUILTIN_CONTENT_THEMES } from "../theme/builtin-themes";
+import { BUILTIN_CONTENT_THEMES } from "../prefs/builtin-themes";
 import { loadPlugins } from "../plugins/manager";
 import { installPlugin, setPluginEnabled } from "../plugins/plugin-switches";
 import { pluginName, pluginsSnapshot } from "../plugins/store/plugin-records";

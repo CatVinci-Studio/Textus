@@ -108,3 +108,11 @@ export function relativePath(fromDir: string, to: string): string {
   const up = a.slice(i).map(() => "..");
   return [...up, ...b.slice(i)].join("/") || ".";
 }
+
+/** `path` inside `dir` when it is relative (a plugin's folder-relative
+ *  path), with `dir`'s separator; an absolute path as it is. */
+export function absoluteIn(dir: string, path: string): string {
+  if (/^([\\/]|[A-Za-z]:)/.test(path)) return path;
+  const sep = dir.includes("\\") ? "\\" : "/";
+  return `${dir.replace(/[\\/]+$/, "")}${sep}${path}`;
+}

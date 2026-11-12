@@ -1,3 +1,4 @@
+import { ENTRY_TRASHED_EVENT } from "../utils/events";
 import { fill } from "../i18n/fill";
 import {
   useCallback,
@@ -72,6 +73,10 @@ export function useRowMenu(
       try {
         await fs.trashEntry(path, root);
         reload(parentDir(path) ?? root);
+        // Its open tabs let it go (useDocumentActions).
+        window.dispatchEvent(
+          new CustomEvent(ENTRY_TRASHED_EVENT, { detail: path }),
+        );
       } catch (err) {
         await showMessage(failureText(t, err, name));
       }

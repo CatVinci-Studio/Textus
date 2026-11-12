@@ -1,4 +1,4 @@
-import { headingIndex } from "../editor/markdown/link-target";
+import { headingIndex, headingSlug } from "../editor/markdown/link-target";
 import { hasUrlScheme } from "../utils/path";
 import { imageMimeForPath } from "../editor/images/pasted-files";
 import { rootedImagePath } from "../editor/images/rooted-image";
@@ -193,7 +193,10 @@ function exportedWikilink(
   const heading = link?.headings.at(-1);
   if (!href && link && !link.note && heading) {
     const headings = [...root.querySelectorAll("h1, h2, h3, h4, h5, h6")];
+    // By the id the editor gave it, which reads maths as shown; then by
+    // its text, as before.
     const target =
+      headings.find((h) => h.id === headingSlug(heading)) ??
       headings[
         headingIndex(
           headings.map((h) => h.textContent ?? ""),

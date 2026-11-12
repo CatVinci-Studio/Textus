@@ -1,3 +1,4 @@
+import { BUILTIN_CONTENT_THEMES } from "./builtin-themes";
 import type { AiRecords } from "../platform/bindings/files";
 import type { McpServer } from "./mcp";
 import { normaliseSettings } from "./settings-normalise";
@@ -183,7 +184,7 @@ export function settingsFromFile(
   // A theme whose CSS didn't come along can't be shown here.
   const themeId =
     incoming.themeId === undefined ||
-    incoming.themeId === "default" ||
+    BUILTIN_CONTENT_THEMES.some((theme) => theme.id === incoming.themeId) ||
     userThemes.some((theme) => theme.id === incoming.themeId)
       ? (incoming.themeId ?? current.themeId)
       : current.themeId;

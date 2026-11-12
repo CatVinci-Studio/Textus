@@ -79,6 +79,11 @@ describe("the settings file", () => {
     expect(imported?.settings.themeId).toBe("local");
   });
 
+  it("brings a built-in theme in use (Slate) along", () => {
+    const text = settingsFileText({ ...mine, themeId: "slate" }, {});
+    expect(settingsFromFile(text, mine)?.settings.themeId).toBe("slate");
+  });
+
   it("carries AI records only when asked, and only well-formed ones", () => {
     const ai = {
       conversations: [{ id: "c1", updatedAt: 1, turns: [] }],

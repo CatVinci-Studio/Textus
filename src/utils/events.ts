@@ -101,6 +101,9 @@ export const FILE_WRITTEN_EVENT = "textus:file-written";
  *  document, saved in its folder (detail: its path). */
 export const FILE_CREATED_EVENT = "textus:file-created";
 
+/** A file or folder the sidebar moved to the Trash; detail: its path. */
+export const ENTRY_TRASHED_EVENT = "textus:entry-trashed";
+
 /** A tab took its file's new text from disk (detail: its path). */
 export const FILE_RELOADED_EVENT = "textus:file-reloaded";
 
