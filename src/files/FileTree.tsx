@@ -1,5 +1,5 @@
 import { useLatestCallback } from "../utils/hooks/useLatest";
-import { useMemo, type MouseEvent as ReactMouseEvent } from "react";
+import type { MouseEvent as ReactMouseEvent } from "react";
 import {
   ChevronIcon,
   CloseIcon,
@@ -9,10 +9,7 @@ import {
   RefreshIcon,
   SortIcon,
 } from "../engine/controls/icons";
-import { windowIpc } from "../platform/ipc";
 
-const openInNewWindow = (path: string) =>
-  void windowIpc.openPathInNewWindow(path).catch(() => undefined);
 import { useSettings } from "../prefs/SettingsContext";
 import { basename, parentDir } from "../utils/path";
 import { canOpenFolder, isIOSApp } from "../platform/capabilities";
@@ -24,10 +21,9 @@ import { setUiState } from "../storage/ui-state";
 import {
   TreeContext,
   TreeRowActionsContext,
-  type TreeRowActions,
-  type TreeShared,
   type TreeSort,
 } from "./tree-shared";
+import { useTreeContexts } from "./useTreeContexts";
 import { useRowDrag } from "./useRowDrag";
 import { DirNode } from "./TreeNodes";
 import "./FileTree.css";
@@ -104,52 +100,24 @@ export function FileTree({
     folder ?? root,
     t,
   );
-  const rowActions = useMemo<TreeRowActions>(
-    () => ({
-      onRowMenu: desktop ? onRowMenu : null,
-      onRowPointerDown: desktop ? onRowPointerDown : null,
-      openInNewWindow: desktop ? openInNewWindow : null,
-    }),
-    [desktop, onRowMenu, onRowPointerDown],
-  );
-  const shared = useMemo<TreeShared>(
-    () => ({
-      sort,
-      scope,
-      showHidden,
-      versions,
-      stale: view.stale,
-      refreshed: view.refreshed,
-      dropInto: drag?.into ?? null,
-      ...rowActions,
-      draft,
-      finishDraft,
-      newDocument: desktop
-        ? {
-            label: t.treeNewDocument,
-            start: () => setDraft({ dir: root, kind: "document" }),
-          }
-        : null,
-      reveal,
-    }),
-    [
-      sort,
-      scope,
-      showHidden,
-      versions,
-      view.stale,
-      view.refreshed,
-      drag?.into,
-      desktop,
-      rowActions,
-      draft,
-      finishDraft,
-      setDraft,
-      root,
-      t,
-      reveal,
-    ],
-  );
+  const { rowActions, shared } = useTreeContexts({
+    sort,
+    scope,
+    showHidden,
+    versions,
+    stale: view.stale,
+    refreshed: view.refreshed,
+    dropInto: drag?.into,
+    desktop,
+    onRowMenu,
+    onRowPointerDown,
+    draft,
+    finishDraft,
+    newDocumentLabel: t.treeNewDocument,
+    setDraft,
+    root,
+    reveal,
+  });
 
   const openSortMenu = (e: ReactMouseEvent<HTMLButtonElement>) => {
     const box = e.currentTarget.getBoundingClientRect();

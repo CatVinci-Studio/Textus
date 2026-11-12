@@ -1,5 +1,11 @@
 ### Improved
 
+- A long Claude Code, Codex or Textus AI session uses far less memory and work as it runs: replies reach the window in batches instead of a message a word, an agent's steps come without the whole files and outputs the chat never shows, only the reply being written redraws as it comes in, and a very long conversation draws its newest part, with the earlier ones a click away.
+- Textus keeps as much loaded as the computer's memory allows: on a machine with little memory, or when the system runs short, pages out of sight are let go sooner and caches are given back at once.
+- The file tree stays quick in a big folder: coming back to the window, or Textus AI writing a file, redraws only the rows that changed.
+- Plugins that read the folder's notes (Two-way Links, Tasks, Tags, Graph, databases) get only what changed since they last asked, instead of every note at each save.
+- Pictures in a document load as they come near the screen, and switching between long documents does less work.
+
 - A plugin's block in a document can draw at the interface's text size, so a wider column shows more of it: Wiki bases and task queries now do, rather than growing with the document's text and zoom.
 - Switching back to a long document you edited is quicker: its undo history comes back without drawing the whole document again.
 - Only the tab in front keeps a source or split view: tabs behind it let theirs go after a while, as plugin pages do.
@@ -35,6 +41,8 @@
 - `textus open ./notes.md` and `textus export ./notes.md` use the tab already open for that file.
 - Signing out while Textus AI refreshes a sign-in keeps you signed out, and signing in again keeps the new account.
 - Starting an MCP server or external agent for the first time no longer holds up other work.
+- A file moved, renamed or put in the Trash in one window shows in every other window too, and their tabs follow it.
+- Heading numbers show in a document open beside another, not only in the one you are typing in.
 
 ### Platform notes
 

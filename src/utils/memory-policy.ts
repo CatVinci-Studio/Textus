@@ -4,9 +4,9 @@
  * One owner: the kept views (kept-loaded.ts) read their limits here, and a
  * tighter level lets go at once what no longer fits.
  */
-export type MemoryLevel = "roomy" | "normal" | "tight" | "critical";
+type MemoryLevel = "roomy" | "normal" | "tight" | "critical";
 
-export interface MemoryLimits {
+interface MemoryLimits {
   /** Views of one kind kept loaded, the one on screen among them. */
   keep: number;
   /** How long one out of sight stays loaded. */
@@ -24,7 +24,7 @@ const ORDER: MemoryLevel[] = ["roomy", "normal", "tight", "critical"];
 
 /** The level for a machine of `totalMb` with the system at `pressure`
  *  (0 none, 1 short, 2 very short). */
-export function levelOf(totalMb: number, pressure: number): MemoryLevel {
+function levelOf(totalMb: number, pressure: number): MemoryLevel {
   if (pressure >= 2) return "critical";
   if (pressure === 1) return "tight";
   if (totalMb > 0 && totalMb < 8 * 1024) return "tight";
@@ -36,10 +36,6 @@ const listeners = new Set<(level: MemoryLevel, tighter: boolean) => void>();
 
 export function memoryLimits(): MemoryLimits {
   return LIMITS[level];
-}
-
-export function memoryLevel(): MemoryLevel {
-  return level;
 }
 
 /** Told when the level moves, and whether it is tighter than it was. */
