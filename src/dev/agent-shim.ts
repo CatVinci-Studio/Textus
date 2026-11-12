@@ -15,8 +15,8 @@ let promptId: number | null = null;
 
 function emit(message: Message) {
   output?.onmessage?.({
-    type: "line",
-    text: JSON.stringify({ jsonrpc: "2.0", ...message }),
+    type: "lines",
+    lines: [JSON.stringify({ jsonrpc: "2.0", ...message })],
   });
 }
 
