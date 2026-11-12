@@ -301,9 +301,22 @@ pub async fn plugin_app_settings(
     }
 }
 
-/// A file's name at the top of the settings folder: no folders, nothing
-/// hidden.
+/// Obsidian plugins whose settings hold folders and templates, never a
+/// token, so a plugin doing the same job may follow them.
+const SHARED_PLUGIN_SETTINGS: [&str; 2] = [
+    "obsidian-zotero-desktop-connector",
+    "obsidian-citation-plugin",
+];
+
+/// A file's name at the top of the settings folder (no folders, nothing
+/// hidden), or the data.json of a plugin whose settings are shared.
 fn settings_file_name(name: &str) -> bool {
+    if let Some(id) = name
+        .strip_prefix("plugins/")
+        .and_then(|rest| rest.strip_suffix("/data.json"))
+    {
+        return SHARED_PLUGIN_SETTINGS.contains(&id);
+    }
     !name.is_empty()
         && !name.starts_with('.')
         && name
@@ -317,6 +330,12 @@ mod app_settings_tests {
     fn only_a_file_at_the_settings_folders_top_is_named() {
         assert!(super::settings_file_name("bookmarks.json"));
         assert!(!super::settings_file_name("plugins/x/data.json"));
+        assert!(super::settings_file_name(
+            "plugins/obsidian-citation-plugin/data.json"
+        ));
+        assert!(!super::settings_file_name(
+            "plugins/obsidian-citation-plugin/../x/data.json"
+        ));
         assert!(!super::settings_file_name("../.env"));
         assert!(!super::settings_file_name(".hidden"));
         assert!(!super::settings_file_name(""));

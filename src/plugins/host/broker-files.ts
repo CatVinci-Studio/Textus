@@ -116,7 +116,7 @@ export function fileHandlers(p: PluginScope) {
     // other apps' plugins keep (bookmarks.json, a plugin's data.json).
     "files.appSettings": async ({ app, file, path }: Params) => {
       const name = str(file, "file");
-      if (!/^[\w-][\w.-]*$/.test(name))
+      if (!/^([\w-][\w.-]*|plugins\/[\w-][\w.-]*\/data\.json)$/.test(name))
         throw new Error(`${name} isn't a settings file's name.`);
       if (str(app, "app") !== "obsidian") return null;
       const found = await fs.folderConventions(

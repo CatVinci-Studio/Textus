@@ -40,4 +40,4 @@
 
 - **Linux:** menus, Settings and dialogs no longer flash as they open (#640), web pages use less memory, and a web page tab out of sight is let go after a while.
 - **Windows:** Claude Code, Codex and MCP servers started with `npx` start; a name with `:` (`Meeting 10:30`) is refused instead of making a hidden stream; Textus AI's edits keep a file's Windows line endings; Export no longer flashes a console window and finds Pandoc where its installer puts it; F5, `Ctrl + R` and `Ctrl + P` no longer reload or print the window from Find or a new name in the sidebar; the menu bar's Undo, Redo and Select All act where you were typing.
-- **Obsidian vaults:** Vim reads `.obsidian.vimrc` and WakaTime reads `.wakatime-project` and the Git branch again.
+- **Obsidian vaults:** Vim reads `.obsidian.vimrc` and WakaTime reads `.wakatime-project` and the Git branch again; Zotero puts literature notes in the folder, and makes them from the template, that the vault's Zotero Integration or Citations plugin is set to.
