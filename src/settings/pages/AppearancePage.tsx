@@ -22,19 +22,6 @@ export function AppearancePage({
   return (
     <>
       <SettingsGroup title={t.navAppearance}>
-        <SettingRow label={t.layoutLabel}>
-          <Select
-            className="settings-select"
-            aria-label={t.layoutLabel}
-            value={settings.layout}
-            onChange={(e) =>
-              setSettings({ layout: e.target.value as Settings["layout"] })
-            }
-          >
-            <option value="islands">{t.layoutIslands}</option>
-            <option value="classic">{t.layoutClassic}</option>
-          </Select>
-        </SettingRow>
         <ThemeSection t={t} />
         <SettingRow label={t.uiTextScaleLabel}>
           <Select
@@ -52,6 +39,19 @@ export function AppearancePage({
                 {percent.format(scale)}
               </option>
             ))}
+          </Select>
+        </SettingRow>
+        <SettingRow label={t.layoutLabel}>
+          <Select
+            className="settings-select"
+            aria-label={t.layoutLabel}
+            value={settings.layout}
+            onChange={(e) =>
+              setSettings({ layout: e.target.value as Settings["layout"] })
+            }
+          >
+            <option value="islands">{t.layoutIslands}</option>
+            <option value="classic">{t.layoutClassic}</option>
           </Select>
         </SettingRow>
         <ToggleRow
