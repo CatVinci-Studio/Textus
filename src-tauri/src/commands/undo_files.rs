@@ -60,15 +60,15 @@ pub(crate) fn move_in(dir: &Path, from: &str, to: &str) -> Result<(), String> {
     let Ok(entries) = std::fs::read_dir(dir) else {
         return Ok(());
     };
-    let inside = format!("{}/", from.trim_end_matches('/'));
     for entry in entries.flatten() {
         let Some(mut kept) = read(&entry.path()) else {
             continue;
         };
+        // By path parts, so a Windows path's `\` counts as a separator too.
         let moved = if kept.path == from {
             to.to_string()
-        } else if let Some(rest) = kept.path.strip_prefix(&inside) {
-            format!("{}/{rest}", to.trim_end_matches('/'))
+        } else if let Ok(rest) = Path::new(&kept.path).strip_prefix(from) {
+            Path::new(to).join(rest).to_string_lossy().to_string()
         } else {
             continue;
         };

@@ -68,9 +68,15 @@ pub(crate) fn move_in(data: &Path, from: &str, to: &str) -> Result<(), String> {
 #[cfg_attr(test, specta::specta)]
 pub async fn document_data_move(app: AppHandle, from: String, to: String) -> Result<(), String> {
     let data = app.path().app_data_dir().map_err(|e| e.to_string())?;
-    tauri::async_runtime::spawn_blocking(move || move_in(&data, &from, &to))
-        .await
-        .map_err(|e| e.to_string())?
+    tauri::async_runtime::spawn_blocking(move || {
+        move_in(&data, &from, &to)?;
+        // Its conversations too, every document of a moved folder's.
+        let stores = app.state::<crate::settings::Stores>();
+        crate::settings::move_conversations(&app, &stores, &moved_pairs(&from, &to));
+        Ok(())
+    })
+    .await
+    .map_err(|e| e.to_string())?
 }
 
 #[cfg(test)]

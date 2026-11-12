@@ -310,9 +310,19 @@ pub fn chat_history_move_document(
     from: String,
     to: String,
 ) {
-    if stores.chat.move_document(&from, &to) {
+    move_conversations(&app, &stores, &[(from, to)]);
+}
+
+/// The conversations of each `(from, to)` document follow it; every window's
+/// history list is told once if any moved.
+pub fn move_conversations(app: &AppHandle, stores: &Stores, pairs: &[(String, String)]) {
+    let mut any = false;
+    for (from, to) in pairs {
+        any |= stores.chat.move_document(from, to);
+    }
+    if any {
         emit_to_all(
-            &app,
+            app,
             "history-changed",
             HistoryChanged {
                 kind: HistoryKind::Chat,
