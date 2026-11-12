@@ -1,5 +1,5 @@
 import { describe, expect, it } from "vitest";
-import { parseHeadings } from "./outline-parse";
+import { parseHeadings, sourceAnchors } from "./outline-parse";
 
 const texts = (md: string) => parseHeadings(md).map((h) => h.text);
 
@@ -46,5 +46,11 @@ describe("parseHeadings", () => {
 
   it("keeps a fence open when the would-be closer has an info string", () => {
     expect(texts("```\n``` js\n# inside\n```\n# After")).toEqual(["After"]);
+  });
+
+  it("gives the anchors the editor gives, math kept", () => {
+    expect(
+      sourceAnchors(["Energy $E=mc^2$", "`Code` *now*", "Energy $E=mc^2$"]),
+    ).toEqual(["energy-emc2", "code-now", "energy-emc2-1"]);
   });
 });

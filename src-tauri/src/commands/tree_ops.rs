@@ -101,26 +101,6 @@ fn itself(path: &str) -> Result<PathBuf, String> {
     Ok(me)
 }
 
-/// Whether `a` and `b` are one file (one name differing only in case on a
-/// disk that doesn't tell case apart).
-fn same_file(a: &std::path::Path, b: &std::path::Path) -> bool {
-    let (Ok(a), Ok(b)) = (std::fs::symlink_metadata(a), std::fs::symlink_metadata(b)) else {
-        // The other name isn't there at all: nothing to overwrite.
-        return true;
-    };
-    #[cfg(unix)]
-    {
-        use std::os::unix::fs::MetadataExt;
-        a.dev() == b.dev() && a.ino() == b.ino()
-    }
-    // Windows' disks don't tell case apart.
-    #[cfg(not(unix))]
-    {
-        let _ = (a, b);
-        true
-    }
-}
-
 /// Moves a file or folder into the folder `into`. Returns its new path.
 #[tauri::command]
 #[cfg_attr(test, specta::specta)]
@@ -134,7 +114,11 @@ pub async fn tree_move_entry(path: String, into: String) -> Result<String, Strin
     if fs::try_exists(&to).await.unwrap_or(true) {
         return Err(crate::errors::error("exists"));
     }
-    fs::rename(&from, &to).await.map_err(|e| e.to_string())?;
+    let (a, b) = (from.clone(), to.clone());
+    tokio::task::spawn_blocking(move || crate::atomic::move_entry(&a, &b))
+        .await
+        .map_err(|e| e.to_string())?
+        .map_err(|e| e.to_string())?;
     Ok(to.to_string_lossy().to_string())
 }
 
@@ -163,8 +147,8 @@ pub async fn tree_rename_entry(path: String, name: String) -> Result<String, Str
     // A change of case only (notes.md -> Notes.md) is the same file on
     // macOS and Windows, so it can't be checked for as taken - but on a
     // disk that tells case apart the other name is another file.
-    let case_only =
-        to.to_string_lossy().to_lowercase() == path.to_lowercase() && same_file(&from, &to);
+    let case_only = to.to_string_lossy().to_lowercase() == path.to_lowercase()
+        && crate::atomic::same_file(&from, &to);
     if !case_only && fs::try_exists(&to).await.unwrap_or(true) {
         return Err(crate::errors::error("exists"));
     }

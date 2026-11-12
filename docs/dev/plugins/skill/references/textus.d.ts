@@ -762,6 +762,8 @@ declare global {
       | {
           type: "document";
           path: string;
+          /** The heading linked to; from 1.3.13 a wikilink's nested
+           *  headings come whole, "A#B" (B inside A's section). */
           heading: string | null;
           /** From 1.3.9: a "^id" block the link points at, without "^". */
           block?: string | null;

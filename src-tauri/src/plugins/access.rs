@@ -297,7 +297,10 @@ pub async fn plugin_fs_rename(
     let to = in_folder(root, Path::new(&to))?;
     require_not_app_data(&app, &from)?;
     require_not_app_data(&app, &to)?;
-    if to.exists() {
+    // A change of case only is the same file on macOS and Windows.
+    let case_only = to.to_string_lossy().to_lowercase() == from.to_string_lossy().to_lowercase()
+        && crate::atomic::same_file(&from, &to);
+    if to.exists() && !case_only {
         return Err(format!("{} is already there.", to.display()));
     }
     if let Some(parent) = to.parent() {
@@ -305,8 +308,9 @@ pub async fn plugin_fs_rename(
             .await
             .map_err(|e| e.to_string())?;
     }
-    tokio::fs::rename(&from, &to)
+    tokio::task::spawn_blocking(move || crate::atomic::move_entry(&from, &to))
         .await
+        .map_err(|e| e.to_string())?
         .map_err(|e| e.to_string())
 }
 

@@ -274,6 +274,85 @@ pub(crate) fn move_or_copy(from: &std::path::Path, to: &std::path::Path) -> std:
     }
 }
 
+/// Whether `a` and `b` are one file (one name differing only in case on a
+/// disk that doesn't tell case apart).
+pub(crate) fn same_file(a: &std::path::Path, b: &std::path::Path) -> bool {
+    let (Ok(a), Ok(b)) = (std::fs::symlink_metadata(a), std::fs::symlink_metadata(b)) else {
+        // The other name isn't there at all: nothing to overwrite.
+        return true;
+    };
+    #[cfg(unix)]
+    {
+        use std::os::unix::fs::MetadataExt;
+        a.dev() == b.dev() && a.ino() == b.ino()
+    }
+    // Windows' disks don't tell case apart.
+    #[cfg(not(unix))]
+    {
+        let _ = (a, b);
+        true
+    }
+}
+
+/// A user's file or folder moved to `to`: renamed, or onto another disk
+/// copied (links as links) with the original then put in the Trash. With no
+/// Trash the copy is taken back and the original stays.
+pub(crate) fn move_entry(from: &std::path::Path, to: &std::path::Path) -> std::io::Result<()> {
+    let Err(error) = std::fs::rename(from, to) else {
+        return Ok(());
+    };
+    // Something already at `to` is never copied over, nor taken back.
+    if error.kind() != std::io::ErrorKind::CrossesDevices || std::fs::symlink_metadata(to).is_ok() {
+        return Err(error);
+    }
+    if let Err(copying) = copy_entry(from, to) {
+        take_back(to);
+        return Err(copying);
+    }
+    if try_trash(from) {
+        return Ok(());
+    }
+    take_back(to);
+    Err(error)
+}
+
+/// `from` copied to `to` as it is: a folder with all inside, a link as a link.
+fn copy_entry(from: &std::path::Path, to: &std::path::Path) -> std::io::Result<()> {
+    let kind = std::fs::symlink_metadata(from)?.file_type();
+    if kind.is_symlink() {
+        let target = std::fs::read_link(from)?;
+        #[cfg(unix)]
+        return std::os::unix::fs::symlink(target, to);
+        #[cfg(windows)]
+        return if from.is_dir() {
+            std::os::windows::fs::symlink_dir(target, to)
+        } else {
+            std::os::windows::fs::symlink_file(target, to)
+        };
+    }
+    if kind.is_dir() {
+        std::fs::create_dir(to)?;
+        for entry in std::fs::read_dir(from)? {
+            let entry = entry?;
+            copy_entry(&entry.path(), &to.join(entry.file_name()))?;
+        }
+        return Ok(());
+    }
+    std::fs::copy(from, to).map(|_| ())
+}
+
+/// A copy `move_entry` made itself, removed when the move can't finish.
+fn take_back(copy: &std::path::Path) {
+    let Ok(meta) = std::fs::symlink_metadata(copy) else {
+        return;
+    };
+    let _ = if meta.is_dir() {
+        std::fs::remove_dir_all(copy)
+    } else {
+        std::fs::remove_file(copy)
+    };
+}
+
 /// Folder `from` copied into `to`, its files and folders.
 pub(crate) fn copy_dir(from: &std::path::Path, to: &std::path::Path) -> std::io::Result<()> {
     std::fs::create_dir_all(to)?;

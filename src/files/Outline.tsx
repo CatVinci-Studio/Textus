@@ -1,6 +1,6 @@
 import { tabElement } from "../engine/layout/tab-element";
 import { useEffect, useMemo, useState, type CSSProperties } from "react";
-import { parseHeadings } from "./outline-parse";
+import { headingLabel, parseHeadings, sourceAnchors } from "./outline-parse";
 import { ChevronIcon } from "../engine/controls/icons";
 import { useSettings } from "../prefs/SettingsContext";
 import { HEADING_PLACEHOLDER } from "../editor/lazy-blocks/lazy-block-views";
@@ -10,7 +10,6 @@ import { ContextMenu } from "../engine/controls/ContextMenu";
 import { Presence } from "../engine/motion/usePresence";
 import { noteJump } from "../editor/nav-history";
 import { setTabJump } from "../editor/tab-jump";
-import { headingSlug, numberRepeats } from "../editor/markdown/link-target";
 import { escapeLabel } from "../editor/markdown/link-label";
 import "./FileTree.css";
 
@@ -41,25 +40,12 @@ function currentHeading(tabId: string): number {
   return current;
 }
 
-/** A heading's source as it reads in the document: inline code, emphasis
- *  and link syntax dropped, so "`text-spacing`" shows as text-spacing. */
-function headingLabel(text: string): string {
-  return text
-    .replace(/!?\[([^\]]*)\]\([^)]*\)/g, "$1")
-    .replace(/`+([^`]+)`+/g, "$1")
-    .replace(/(\*\*|__|~~|==)(?=\S)(.+?)(?<=\S)\1/g, "$2")
-    .replace(/([*_])(?=\S)(.+?)(?<=\S)\1/g, "$2");
-}
-
 /** The anchor a link to heading `index` takes: the id the editor gave it
  *  (repeats numbered), or, out of sight, the same rule on its source. */
 function headingAnchor(tabId: string, texts: string[], index: number): string {
   const root = tabElement(tabId)?.querySelector(".editor-content .ProseMirror");
   const id = root?.querySelectorAll(HEADINGS)[index]?.id;
-  if (id) return id;
-  const shown = (text: string) =>
-    headingLabel(text).replace(/\$+[^$]+\$+/g, "");
-  return numberRepeats(texts.map((text) => headingSlug(shown(text))))[index];
+  return id || sourceAnchors(texts)[index];
 }
 
 export function Outline({ content, tabId }: OutlineProps) {

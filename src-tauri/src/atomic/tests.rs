@@ -172,3 +172,42 @@ fn secrets_are_owner_only_and_replace_atomically() {
     assert_eq!(mode, 0o600);
     let _ = std::fs::remove_file(&path);
 }
+
+#[test]
+fn a_move_renames_and_never_goes_over_what_is_there() {
+    let dir = scratch_dir("move-entry");
+    let from = dir.join("notes");
+    std::fs::create_dir_all(from.join("inner")).unwrap();
+    std::fs::write(from.join("inner/a.md"), "a").unwrap();
+    let taken = dir.join("taken");
+    std::fs::create_dir(&taken).unwrap();
+    std::fs::write(taken.join("keep.md"), "keep").unwrap();
+    // A folder there already: nothing moves, nothing of it goes.
+    assert!(move_entry(&from, &taken).is_err());
+    assert_eq!(
+        std::fs::read_to_string(taken.join("keep.md")).unwrap(),
+        "keep"
+    );
+    assert!(from.join("inner/a.md").exists());
+    let to = dir.join("moved");
+    move_entry(&from, &to).unwrap();
+    assert_eq!(std::fs::read_to_string(to.join("inner/a.md")).unwrap(), "a");
+    assert!(!from.exists());
+    let _ = std::fs::remove_dir_all(&dir);
+}
+
+#[cfg(unix)]
+#[test]
+fn a_copy_across_disks_keeps_links_as_links() {
+    let dir = scratch_dir("copy-entry");
+    let from = dir.join("from");
+    std::fs::create_dir(&from).unwrap();
+    std::fs::write(from.join("a.md"), "a").unwrap();
+    std::os::unix::fs::symlink("a.md", from.join("link.md")).unwrap();
+    let to = dir.join("to");
+    copy_entry(&from, &to).unwrap();
+    assert_eq!(std::fs::read_to_string(to.join("a.md")).unwrap(), "a");
+    let link = std::fs::symlink_metadata(to.join("link.md")).unwrap();
+    assert!(link.file_type().is_symlink());
+    let _ = std::fs::remove_dir_all(&dir);
+}
