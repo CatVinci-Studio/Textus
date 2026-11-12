@@ -31,11 +31,14 @@ import { useIslands } from "../../engine/layout/useIslands";
 import { panesOf, type Pane } from "../../engine/layout/tree";
 import {
   focusPane,
+  placeOnArrival,
   reorderInPane,
   windowTabs,
 } from "../../engine/layout/store";
 import { useTabsInBar } from "./tabs-in-bar";
 import { pullTab } from "./tab-pull";
+import { addFromTabRow, newConversation } from "./ai-tabs";
+import { documentBesidePanels } from "./panel-add";
 import type { ContextMenuItem } from "../../engine/controls/ContextMenu";
 import { contributedContextItems } from "../../registry/context-menu-items";
 
@@ -79,7 +82,8 @@ export function DocumentIslands({
   showTabBar: boolean;
   onActivate: (tabId: string) => void;
   onClose: (tabId: string) => void;
-  onAdd: () => void;
+  /** A blank document added; its tab's id. */
+  onAdd: () => string;
   /** A tab pulled out of the window leaves for a window of its own (macOS). */
   onDetach: (tabId: string) => void;
   onMoveToNewWindow: (tabId: string) => void;
@@ -131,6 +135,20 @@ export function DocumentIslands({
     onToggleReadOnly,
     t,
   });
+  // The window's tabs as they are now: a tab arriving is checked for room
+  // before this renders it.
+  const isPanel = (p: Pane) =>
+    isPanelPane(
+      p,
+      (id) => windowTabs<DocTab>().find((tab) => tab.id === id)?.view,
+    );
+  // A document asked for from a panel's island opens apart from its pages.
+  const addDocument = (pane: string) => {
+    const from = panes.find((p) => p.id === pane);
+    const id = onAdd();
+    if (from && isPanel(from))
+      placeOnArrival(id, documentBesidePanels(id, isPanel));
+  };
   const tabBar = (
     list: DocTab[],
     active: string,
@@ -159,9 +177,14 @@ export function DocumentIslands({
       activeTabId={active}
       onActivate={onActivate}
       onClose={onClose}
+      // Over a conversation, + starts another rather than a document.
       onAdd={() => {
         focusPane(pane);
-        onAdd();
+        addFromTabRow(
+          byId.get(active),
+          () => addDocument(pane),
+          newConversation,
+        );
       }}
       // Pulled over the documents it splits; out of the window it tears
       // off where the platform gives global cursor positions.
@@ -281,14 +304,7 @@ export function DocumentIslands({
       rows={tabsInBar}
       plain={!tabsInBar}
       // A panel's island holds pages only (the AI, Settings, a plugin's).
-      // The window's tabs as they are now: a tab arriving is checked for
-      // room before this renders it.
-      isPanel={(pane) =>
-        isPanelPane(
-          pane,
-          (id) => windowTabs<DocTab>().find((tab) => tab.id === id)?.view,
-        )
-      }
+      isPanel={isPanel}
       content={documents}
       t={t}
     />
