@@ -172,10 +172,21 @@ test("the AI's edge stepped past what the window can show stops there, and steps
         .map((e) => e.getBoundingClientRect().width)
         .at(-1)!,
     );
+  // The composer takes the focus as the panel opens; the keys go to the
+  // divider after that.
+  await expect(page.locator(".inline-chat-input").first()).toBeFocused();
   const divider = page.getByRole("separator").first();
   await divider.focus();
   for (let i = 0; i < 20; i++) await page.keyboard.press("ArrowLeft");
-  const widest = await ai();
+  // Read once it has glided there.
+  let widest = 0;
+  await expect
+    .poll(async () => {
+      const was = widest;
+      widest = await ai();
+      return widest === was;
+    })
+    .toBe(true);
   await page.keyboard.press("ArrowRight");
   await expect.poll(ai).toBeLessThan(widest - 10);
 });
