@@ -16,9 +16,10 @@ import {
   setImageWidth,
 } from "../editor/editor-menu-images";
 import { runTableAction } from "../editor/editor-menu-tables";
-import { toggleSpan } from "../editor/marks/span-commands";
 import {
+  BOLD,
   HIGHLIGHT,
+  ITALIC,
   STRIKETHROUGH,
   insertLink,
   toggleCodeSpan,
@@ -81,8 +82,8 @@ const CLIPBOARD_ACTIONS: Record<string, (clipboard: EditorClipboard) => void> =
 
 /** The marks a menu or toolbar toggles by name. */
 const MARKS: Record<string, (view: EditorView) => unknown> = {
-  bold: (view) => toggleSpan(view, 2),
-  italic: (view) => toggleSpan(view, 1),
+  bold: (view) => toggleFormat(view, BOLD),
+  italic: (view) => toggleFormat(view, ITALIC),
   highlight: (view) => toggleFormat(view, HIGHLIGHT),
   strikethrough: (view) => toggleFormat(view, STRIKETHROUGH),
   code: toggleCodeSpan,
