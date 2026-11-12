@@ -1,6 +1,6 @@
 import { useSyncExternalStore } from "react";
 import { useSettings, useSettingsIfAny } from "../../prefs/SettingsContext";
-import { askingValue, modeOption, type AgentOption } from "./agent-mode";
+import { modeOption, unaskingName, type AgentOption } from "./agent-mode";
 import {
   offerOf,
   subscribeOffers,
@@ -32,7 +32,6 @@ export function useAgentOptions(agent: string | null): AgentOptionsMenu | null {
   }));
   const mode = modeOption(options);
   const modeValue = mode && options.find((o) => o.id === mode.id)?.value;
-  const asking = askingValue(offer.options);
   return {
     options,
     choose: (id, value) => {
@@ -44,10 +43,7 @@ export function useAgentOptions(agent: string | null): AgentOptionsMenu | null {
       });
       setAgentOption(agent, id, value);
     },
-    unasking:
-      mode && modeValue !== asking
-        ? (mode.choices.find((c) => c.value === modeValue)?.name ?? null)
-        : null,
+    unasking: unaskingName(offer.options, modeValue),
   };
 }
 

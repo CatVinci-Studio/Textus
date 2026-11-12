@@ -27,6 +27,8 @@ import { composeSentences, trimBreaks } from "./sentence-diff";
 import { findInOrder } from "./sentence-locate";
 import type { CitationStyle } from "./usePendingEdits";
 import { markChangeSource } from "../../editor/change-source";
+import type { Transaction } from "@milkdown/kit/prose/state";
+import type { EditorView } from "@milkdown/kit/prose/view";
 
 /** What an Accept did: written, not yet (streaming), or nothing because
  *  every sentence was kept; and the preview it settled. */
@@ -39,6 +41,33 @@ export interface AcceptOutcome {
 
 /** Writes `callId`'s proposal into the document in one undo step: the only
  *  path a reply takes into it. Only touches the editor; the caller records it. */
+/** Writes the accepted edit: the proposal goes, where its new text stands
+ *  is kept for its green to fade there, and it is its own undo step, so an
+ *  undo lands exactly on the replaced text and brings the proposal back. */
+function land(
+  ctx: Ctx,
+  view: EditorView,
+  tr: Transaction,
+  preview: { from: number; to: number },
+  callId: string,
+  written: readonly { after: string }[],
+) {
+  const landed = findInOrder(
+    tr.doc,
+    tr.mapping.map(preview.from, -1),
+    tr.mapping.map(preview.to, 1),
+    written.map(
+      ({ after }) =>
+        plainText(ctx, trimBreaks(withoutCitations(after)))
+          ?.replace(/\n/g, "")
+          .trim() ?? "",
+    ),
+  );
+  tr.setMeta(pendingEditKey, { type: "remove", callId, applied: true, landed });
+  closeHistory(tr);
+  view.dispatch(markChangeSource(tr, "ai").scrollIntoView());
+}
+
 export function writeAccept(
   ctx: Ctx,
   callId: string,
@@ -104,25 +133,7 @@ export function writeAccept(
         c.to,
         normalizeAiMarkdown(withoutCitations(c.after).replace(/\s+$/, "")),
       );
-    const landed = findInOrder(
-      tr.doc,
-      tr.mapping.map(preview.from, -1),
-      tr.mapping.map(preview.to, 1),
-      taken.map(
-        ({ after }) =>
-          plainText(ctx, trimBreaks(withoutCitations(after)))
-            ?.replace(/\n/g, "")
-            .trim() ?? "",
-      ),
-    );
-    tr.setMeta(pendingEditKey, {
-      type: "remove",
-      callId,
-      applied: true,
-      landed,
-    });
-    closeHistory(tr);
-    view.dispatch(markChangeSource(tr, "ai").scrollIntoView());
+    land(ctx, view, tr, preview, callId, taken);
     if (!isIOSApp) view.focus();
     ok = true;
     return done();
@@ -170,27 +181,7 @@ export function writeAccept(
     preview.sentences && take
       ? preview.sentences.changes.filter((_, i) => take[i])
       : [{ after: textOverride ?? preview.proposal.text ?? "" }];
-  const landed = findInOrder(
-    tr.doc,
-    tr.mapping.map(preview.from, -1),
-    tr.mapping.map(preview.to, 1),
-    written.map(
-      ({ after }) =>
-        plainText(ctx, trimBreaks(withoutCitations(after)))
-          ?.replace(/\n/g, "")
-          .trim() ?? "",
-    ),
-  );
-  tr.setMeta(pendingEditKey, {
-    type: "remove",
-    callId,
-    applied: true,
-    landed,
-  });
-  // Its own undo step, so an undo lands exactly on the replaced text and
-  // brings the proposal back.
-  closeHistory(tr);
-  view.dispatch(markChangeSource(tr, "ai").scrollIntoView());
+  land(ctx, view, tr, preview, callId, written);
   // Another proposal on the same block lost its text to this edit though
   // its words are still there: find them again.
   const after = pendingEditKey.getState(view.state)?.previews ?? [];

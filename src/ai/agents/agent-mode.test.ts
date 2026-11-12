@@ -1,5 +1,5 @@
 import { describe, expect, it } from "vitest";
-import { askingValue, readOptions } from "./agent-mode";
+import { askingValue, readOptions, unaskingName } from "./agent-mode";
 
 // Claude Agent's modes, as its ACP adapter (0.104) offers them.
 const claude = [
@@ -120,5 +120,17 @@ describe("the mode an agent starts in", () => {
     expect(askingValue(readOptions([codex]))).toBe("read-only");
     expect(askingValue(readOptions([opencode]))).toBeNull();
     expect(askingValue(readOptions([deepseek]))).toBeNull();
+  });
+});
+
+describe("the chip by the agent's name", () => {
+  it("names a mode that doesn't ask, only where the agent has one that does", () => {
+    const claudeOptions = readOptions(claude);
+    expect(unaskingName(claudeOptions, "default")).toBeNull();
+    expect(unaskingName(claudeOptions, "bypassPermissions")).toBe(
+      "Bypass permissions",
+    );
+    // OpenCode's build is how it works, not a choice to warn of.
+    expect(unaskingName(readOptions([opencode]), "build")).toBeNull();
   });
 });

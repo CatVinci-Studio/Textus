@@ -84,3 +84,16 @@ export function askingValue(options: readonly AgentOption[]): string | null {
   }
   return null;
 }
+
+/** The name of the mode `value` when it doesn't ask first, for the chip to
+ *  say; null when it does, or when the agent has no mode that asks (its
+ *  own mode is then just how it works, as OpenCode's build). */
+export function unaskingName(
+  options: readonly AgentOption[],
+  value: string | undefined,
+): string | null {
+  const mode = modeOption(options);
+  const asking = askingValue(options);
+  if (!mode || asking === null || value === asking) return null;
+  return mode.choices.find((c) => c.value === value)?.name ?? null;
+}
