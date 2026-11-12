@@ -7,6 +7,29 @@ pub(crate) fn hex(bytes: &[u8]) -> String {
     bytes.iter().map(|b| format!("{b:02x}")).collect()
 }
 
+/// `path` after `from` (itself, or a folder holding it) moved to `to`, in
+/// `to`'s spelling: its separator between the parts below it, so a moved
+/// document's key matches the path the window gives it on every system.
+pub(crate) fn moved_path(path: &str, from: &str, to: &str) -> Option<String> {
+    if path == from {
+        return Some(to.to_string());
+    }
+    let rest = std::path::Path::new(path).strip_prefix(from).ok()?;
+    let sep = to
+        .rfind(['/', '\\'])
+        .map(|i| &to[i..i + 1])
+        .unwrap_or(std::path::MAIN_SEPARATOR_STR);
+    let parts: Vec<_> = rest
+        .components()
+        .map(|c| c.as_os_str().to_string_lossy())
+        .collect();
+    Some(format!(
+        "{}{sep}{}",
+        to.trim_end_matches(['/', '\\']),
+        parts.join(sep)
+    ))
+}
+
 /// A file name for what is kept per path (a document's undo, its notes):
 /// the first `bytes` of the path's SHA-256, in hex.
 pub(crate) fn path_key(path: &str, bytes: usize) -> String {
@@ -69,6 +92,20 @@ pub(crate) fn typed_name(name: &str) -> Result<&str, String> {
 
 #[cfg(test)]
 mod tests {
+    #[test]
+    fn a_moved_path_takes_the_new_folders_spelling() {
+        use super::moved_path;
+        assert_eq!(
+            moved_path("/n/a.md", "/n/a.md", "/n/b.md").as_deref(),
+            Some("/n/b.md")
+        );
+        assert_eq!(
+            moved_path("/n/a/c.md", "/n/a", "/k/a").as_deref(),
+            Some("/k/a/c.md")
+        );
+        assert_eq!(moved_path("/n/ab.md", "/n/a", "/k/a"), None);
+    }
+
     use super::*;
 
     #[test]

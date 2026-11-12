@@ -64,12 +64,7 @@ pub(crate) fn move_in(dir: &Path, from: &str, to: &str) -> Result<(), String> {
         let Some(mut kept) = read(&entry.path()) else {
             continue;
         };
-        // By path parts, so a Windows path's `\` counts as a separator too.
-        let moved = if kept.path == from {
-            to.to_string()
-        } else if let Ok(rest) = Path::new(&kept.path).strip_prefix(from) {
-            Path::new(to).join(rest).to_string_lossy().to_string()
-        } else {
+        let Some(moved) = crate::ids::moved_path(&kept.path, from, to) else {
             continue;
         };
         let old = file_for(dir, &kept.path);

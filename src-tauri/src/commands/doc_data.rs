@@ -26,8 +26,14 @@ fn moved_pairs(from: &str, to: &str) -> Vec<(String, String)> {
             };
             if kind.is_dir() {
                 stack.push(path);
-            } else if let Some(rest) = path.to_str().and_then(|p| p.strip_prefix(to)) {
-                pairs.push((format!("{from}{rest}"), format!("{to}{rest}")));
+            } else if let Some(path) = path.to_str() {
+                // Each in the spelling the window gives its folder.
+                if let (Some(old), Some(new)) = (
+                    crate::ids::moved_path(path, to, from),
+                    crate::ids::moved_path(path, to, to),
+                ) {
+                    pairs.push((old, new));
+                }
             }
         }
     }

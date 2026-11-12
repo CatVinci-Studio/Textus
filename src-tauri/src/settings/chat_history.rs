@@ -157,19 +157,7 @@ impl ChatHistory {
     /// along - or every document under a moved folder, in one pass. Returns
     /// whether any did.
     pub fn move_document(&self, from: &str, to: &str) -> bool {
-        let moved = |path: &str| -> Option<String> {
-            if path == from {
-                return Some(to.to_string());
-            }
-            // By path parts, so a Windows path's `\` counts too.
-            let rest = std::path::Path::new(path).strip_prefix(from).ok()?;
-            Some(
-                std::path::Path::new(to)
-                    .join(rest)
-                    .to_string_lossy()
-                    .to_string(),
-            )
-        };
+        let moved = |path: &str| crate::ids::moved_path(path, from, to);
         let mut files = self.files.lock().unwrap();
         let ids: Vec<(String, String)> = self
             .list()
