@@ -96,6 +96,7 @@ for (const language of ["zh", "en", "de"])
       });
       await emit(page, "menu-settings");
       await emit(page, "menu-split-right");
+      await page.locator(".settings-tab").waitFor();
       for (const id of PAGES) {
         await page.evaluate(
           (p) =>

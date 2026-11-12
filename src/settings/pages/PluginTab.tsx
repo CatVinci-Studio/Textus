@@ -1,3 +1,5 @@
+import { useRef } from "react";
+import { useContentMin } from "../../engine/frame/content-min";
 import type { Strings } from "../../i18n/strings";
 import { PluginDetail } from "./PluginDetail";
 import "./plugin-tab.css";
@@ -8,8 +10,11 @@ import "./plugin-tab.css";
  * window, showing the plugin last opened.
  */
 export function PluginTab({ t, id }: { t: Strings; id: string | null }) {
+  // Its narrowest line, for its island to keep (content-min.ts).
+  const root = useRef<HTMLDivElement>(null);
+  useContentMin(root, ".plugin-page");
   return (
-    <div className="plugin-tab tx-scroll-reveal">
+    <div ref={root} className="plugin-tab tx-scroll-reveal">
       {id && <PluginDetail id={id} t={t} />}
     </div>
   );

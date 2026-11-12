@@ -62,12 +62,18 @@ function chromeAround(inner: Element, island: Element): number {
 const CUT_LINE_KEEPS = "6ch";
 
 /** `inner` laid out as narrow as it goes, its border box's width. A line
- *  cut short with "…" gives way down to a few characters rather than
- *  counting its whole text. */
+ *  cut short with "…", or a box that scrolls sideways, gives way down to a
+ *  few characters rather than counting its whole width. */
 function minContent(inner: HTMLElement): number {
+  // A box that scrolls sideways (a code block, a wide table) holds its own
+  // width: it gives way as a cut line does.
   const cut = [...inner.querySelectorAll<HTMLElement>("*")].filter((el) => {
     const s = getComputedStyle(el);
-    return s.textOverflow === "ellipsis" && s.overflowX !== "visible";
+    return (
+      (s.textOverflow === "ellipsis" && s.overflowX !== "visible") ||
+      s.overflowX === "auto" ||
+      s.overflowX === "scroll"
+    );
   });
   const kept = cut.map((el) => [el.style.contain, el.style.minWidth]);
   for (const el of cut) {
