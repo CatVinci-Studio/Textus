@@ -1813,6 +1813,7 @@ export default {
   pluginCardNever: "Больше не предлагать",
   pluginCardsMuted: "Отключённые предложения плагинов: {n}",
   pluginCardsRestore: "Показать снова",
+  pluginCardsRestoreAll: "Снова показывать скрытые предложения плагинов",
   pluginScreenshot: "{name} в работе",
   pluginsMine: "Созданные вами",
   pluginsInstalledNone: "Плагинов пока нет.",

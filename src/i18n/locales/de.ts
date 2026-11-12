@@ -1783,6 +1783,7 @@ Skills liegen im Ordner skills/ neben dieser Datei, je Skill eine
   pluginCardNever: "Nicht mehr vorschlagen",
   pluginCardsMuted: "Ausgeblendete Plugin-Vorschläge: {n}",
   pluginCardsRestore: "Wieder zeigen",
+  pluginCardsRestoreAll: "Ausgeblendete Plugin-Vorschläge wieder zeigen",
   pluginScreenshot: "{name} bei der Arbeit",
   pluginsMine: "Von dir erstellt",
   pluginsInstalledNone: "Noch keine Plugins installiert.",

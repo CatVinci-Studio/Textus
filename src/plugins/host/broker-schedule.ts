@@ -1,3 +1,4 @@
+import { grants } from "../api-permissions";
 import { aiState } from "../ai-state";
 import {
   schedule as scheduleIpc,
@@ -16,7 +17,7 @@ import { str, type Params, type PluginScope } from "./broker-scope";
  * run - given to Rust only with files.read.
  */
 export function scheduleHandlers(p: PluginScope, folder: () => string | null) {
-  const root = () => (p.info.granted.includes("files.read") ? folder() : null);
+  const root = () => (grants(p.info.granted, "files.read") ? folder() : null);
   return {
     "schedule.set": async ({ id, job }: Params) => {
       const spec = (job ?? {}) as JobSpec;

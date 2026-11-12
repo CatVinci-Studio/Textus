@@ -1,3 +1,5 @@
+import { useMutedCards } from "../../plugins/store/usePluginCard";
+import { setAllPlugins } from "../../plugins/plugin-switches";
 import { Byline } from "./CatalogRow";
 import { catalogMessage, catalogStatus } from "./CatalogStatus";
 import { fill } from "../../i18n/fill";
@@ -66,7 +68,10 @@ export function PluginsPanel({
   const catalog = useSyncExternalStore(subscribeCatalog, catalogSnapshot);
   const { actionFor, install, installing, attempt, updateAll } =
     usePluginActions(t);
-  const more = useMenuButton(() => moreMenu(t, attempt));
+  const muted = useMutedCards();
+  const more = useMenuButton(() =>
+    moreMenu(t, attempt, { allOn: plugins.allOn, muted }),
+  );
   const [query, setQuery] = useState("");
   const [folded, setFolded] = useState<ReadonlySet<string>>(new Set());
   const fold = (group: string) =>
@@ -323,20 +328,28 @@ function GroupHeading({
   );
 }
 
-/** The list's "⋯": add a plugin - from a file, by making one, or as a
- *  script. */
+/** The list's "⋯": add a plugin - from a file or a folder in development,
+ *  by making one, or as a script - and what acts on all of them: plugin
+ *  features on or off, suggestions put away brought back. */
 function moreMenu(
   t: Strings,
   attempt: (run: () => Promise<unknown>) => Promise<unknown>,
+  {
+    allOn,
+    muted,
+  }: { allOn: boolean; muted: { count: number; restore: () => void } },
 ): ContextMenuEntry[] {
-  const fromFile = () =>
+  const fromFiles = (folder: boolean) =>
     void attempt(async () => {
-      const opened = await installPluginFiles(t, false);
+      const opened = await installPluginFiles(t, folder);
       if (opened) openPage(opened);
     });
   return [
     ...(isDesktopApp
-      ? [{ label: t.pluginsInstallFile, onSelect: fromFile }]
+      ? [
+          { label: t.pluginsInstallFile, onSelect: () => fromFiles(false) },
+          { label: t.pluginsLoadFolder, onSelect: () => fromFiles(true) },
+        ]
       : []),
     { label: t.createMakePlugin, onSelect: () => requestCreate("", "plugin") },
     ...(isDesktopApp
@@ -346,6 +359,15 @@ function moreMenu(
             onSelect: () => void attempt(() => pluginsIpc.openScriptsDir()),
           },
         ]
+      : []),
+    "separator" as const,
+    {
+      label: t.pluginsAllLabel,
+      checked: allOn,
+      onSelect: () => void attempt(() => setAllPlugins(!allOn)),
+    },
+    ...(muted.count
+      ? [{ label: t.pluginCardsRestoreAll, onSelect: muted.restore }]
       : []),
   ];
 }

@@ -1629,6 +1629,7 @@ export default {
   pluginCardNever: "不再建議",
   pluginCardsMuted: "已關閉的外掛建議：{n} 則",
   pluginCardsRestore: "重新顯示",
+  pluginCardsRestoreAll: "重新顯示已關閉的外掛建議",
   pluginScreenshot: "{name} 使用截圖",
   pluginsMine: "我做的外掛",
   pluginsInstalledNone: "還沒有安裝外掛。",

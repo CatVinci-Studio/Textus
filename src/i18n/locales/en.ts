@@ -1740,6 +1740,7 @@ type /name in a conversation to use one.
   pluginCardNever: "Don't suggest this again",
   pluginCardsMuted: "Plugin suggestions you turned off: {n}",
   pluginCardsRestore: "Show again",
+  pluginCardsRestoreAll: "Show turned-off plugin suggestions again",
   pluginScreenshot: "{name} at work",
   pluginsMine: "Made by you",
   pluginsInstalledNone: "No plugins installed yet.",

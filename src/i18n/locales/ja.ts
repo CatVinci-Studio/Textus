@@ -1710,6 +1710,7 @@ ${AI_NAME}への執筆の指示です。すべての文書に適用されます�
   pluginCardNever: "今後は表示しない",
   pluginCardsMuted: "オフにしたプラグインの提案：{n} 件",
   pluginCardsRestore: "再び表示",
+  pluginCardsRestoreAll: "オフにしたプラグインの提案を再表示",
   pluginScreenshot: "{name} の画面",
   pluginsMine: "自分で作ったもの",
   pluginsInstalledNone: "インストールしたプラグインはまだありません。",

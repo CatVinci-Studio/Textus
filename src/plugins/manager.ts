@@ -1,3 +1,4 @@
+import { grants } from "./api-permissions";
 import { fill } from "../i18n/fill";
 import { explainError } from "../utils/error-explain";
 // What plugins add to the editor registers before any editor is made.
@@ -316,7 +317,7 @@ export async function askPlugin(
   const record = pluginRecord(id);
   if (!record || !canRun(record.status, pluginsSnapshot().allOn))
     throw new Error(`${id} is turned off.`);
-  if (needs && !record.granted.includes(needs))
+  if (needs && !grants(record.granted, needs))
     throw new Error(`${id} was not granted ${needs}.`);
   return (await host(record)).request(method, params);
 }

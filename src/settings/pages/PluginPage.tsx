@@ -120,7 +120,9 @@ export function PluginPage({
                 // The version is the row's own label: here only its source.
                 version={record.origin === "dev" ? manifest.version : undefined}
                 dev={record.origin === "dev"}
-              />
+              >
+                {manifest.license && <span>{manifest.license}</span>}
+              </Byline>
             }
           >
             {update && (
@@ -311,10 +313,6 @@ function PluginAbout({
         );
       })}
       <PluginData id={record.id} name={pluginName(record)} t={t} />
-      <SettingRow
-        label={fill(t.pluginVersionLabel, { version: manifest.version })}
-        hint={manifest.license}
-      />
     </SettingsGroup>
   );
 }

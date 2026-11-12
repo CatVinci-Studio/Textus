@@ -1693,6 +1693,7 @@ ${AI_NAME}에게 주는 글쓰기 지침으로, 모든 문서에 적용됩니다
   pluginCardNever: "다시 제안하지 않기",
   pluginCardsMuted: "끈 플러그인 제안: {n}개",
   pluginCardsRestore: "다시 표시",
+  pluginCardsRestoreAll: "끈 플러그인 제안 다시 표시",
   pluginScreenshot: "{name} 사용 화면",
   pluginsMine: "직접 만든 플러그인",
   pluginsInstalledNone: "설치한 플러그인이 없습니다.",

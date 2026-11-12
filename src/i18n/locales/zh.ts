@@ -1625,6 +1625,7 @@ export default {
   pluginCardNever: "不再建议",
   pluginCardsMuted: "已关闭的插件建议：{n} 条",
   pluginCardsRestore: "重新显示",
+  pluginCardsRestoreAll: "重新显示已关闭的插件建议",
   pluginScreenshot: "{name} 使用截图",
   pluginsMine: "我做的插件",
   pluginsInstalledNone: "还没有安装插件。",

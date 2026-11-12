@@ -1813,6 +1813,7 @@ para usar una.
   pluginCardNever: "No volver a sugerir",
   pluginCardsMuted: "Sugerencias de plugins desactivadas: {n}",
   pluginCardsRestore: "Mostrar de nuevo",
+  pluginCardsRestoreAll: "Mostrar de nuevo las sugerencias de plugins ocultas",
   pluginScreenshot: "{name} en uso",
   pluginsMine: "Hechos por ti",
   pluginsInstalledNone: "Aún no hay complementos instalados.",

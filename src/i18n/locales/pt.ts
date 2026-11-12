@@ -1794,6 +1794,7 @@ Habilidades ficam na pasta skills/ ao lado deste arquivo, um arquivo
   pluginCardNever: "Não sugerir de novo",
   pluginCardsMuted: "Sugestões de plugins desativadas: {n}",
   pluginCardsRestore: "Mostrar de novo",
+  pluginCardsRestoreAll: "Mostrar de novo as sugestões de plugins ocultas",
   pluginScreenshot: "{name} em uso",
   pluginsMine: "Feitos por você",
   pluginsInstalledNone: "Nenhum plugin instalado ainda.",
