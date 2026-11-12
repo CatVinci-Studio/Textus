@@ -3,17 +3,13 @@ import {
   Children,
   Fragment,
   isValidElement,
-  useId,
-  useState,
   type KeyboardEvent,
   type ReactElement,
   type ReactNode,
 } from "react";
 import { isIOSApp } from "../../platform/capabilities";
-import { useMergedRef, usePresence } from "../motion/usePresence";
-import { useFloatingList } from "./useFloatingList";
+import { useDropdown } from "./useDropdown";
 import "./Select.css";
-import { isImeKeydown } from "../../utils/ime";
 
 /** A drop-in for `<select>` whose list the app draws, in a portal marked
  *  `data-floating-select` so outside-click code treats it as inside its opener.
@@ -165,78 +161,40 @@ function DrawnSelect({
 }: SelectProps) {
   const options = collectOptions(children);
   const selectedIndex = options.findIndex((o) => o.value === value);
-  const [open, setOpen] = useState(false);
-  const [active, setActive] = useState(0);
-  const { triggerRef, listRef, place } = useFloatingList(open, active, () =>
-    setOpen(false),
-  );
-  const listId = useId();
-  // The list stays a moment after it closes, shrinking back into the
-  // trigger; the choice has already gone through by then.
-  const presence = usePresence(open);
-  const presenceRef = useMergedRef(listRef, presence.ref);
-
-  function openMenu() {
-    if (disabled || options.length === 0) return;
-    setActive(Math.max(0, selectedIndex));
-    setOpen(true);
-  }
-
-  function close(refocus = true) {
-    setOpen(false);
-    if (refocus) triggerRef.current?.focus();
-  }
-
-  function choose(index: number) {
-    const option = options[index];
-    if (!option || option.disabled) return;
-    close();
-    if (option.value !== value) onChange({ target: { value: option.value } });
-  }
-
-  function step(from: number, delta: number) {
-    for (let i = 1; i <= options.length; i++) {
-      const next = (from + delta * i + options.length) % options.length;
-      if (!options[next].disabled) return next;
-    }
-    return from;
-  }
-
-  function onTriggerKey(e: KeyboardEvent<HTMLButtonElement>) {
-    if (["ArrowDown", "ArrowUp", "Enter", " "].includes(e.key)) {
-      e.preventDefault();
-      openMenu();
-    }
-  }
+  const {
+    open,
+    active,
+    setActive,
+    triggerRef,
+    listRef,
+    place,
+    presence,
+    listId,
+    openMenu,
+    close,
+    choose,
+    onListKey: listKeys,
+    onTriggerKey,
+  } = useDropdown({
+    count: disabled ? 0 : options.length,
+    selected: () => selectedIndex,
+    isDisabled: (i) => !!options[i]?.disabled,
+    choose: (index) => {
+      const option = options[index];
+      if (option.value !== value) onChange({ target: { value: option.value } });
+    },
+  });
 
   function onListKey(e: KeyboardEvent<HTMLUListElement>) {
-    if (isImeKeydown(e)) return;
-    if (e.key === "ArrowDown" || e.key === "ArrowUp") {
-      e.preventDefault();
-      setActive((i) => step(i, e.key === "ArrowDown" ? 1 : -1));
-    } else if (e.key === "Home" || e.key === "End") {
-      e.preventDefault();
-      setActive(e.key === "Home" ? step(-1, 1) : step(0, -1));
-    } else if (e.key === "Enter" || e.key === " ") {
-      e.preventDefault();
-      choose(active);
-    } else if (e.key === "Escape") {
-      // Closes the list, not the dialog the select sits in.
-      e.preventDefault();
-      e.stopPropagation();
-      close();
-    } else if (e.key === "Tab") {
-      close();
-    } else if (e.key.length === 1) {
-      // Type-ahead: the next option starting with the typed character.
-      const ch = e.key.toLowerCase();
-      for (let i = 1; i <= options.length; i++) {
-        const index = (active + i) % options.length;
-        const text = textOf(options[index].label).toLowerCase();
-        if (!options[index].disabled && text.startsWith(ch)) {
-          setActive(index);
-          break;
-        }
+    if (listKeys(e) || e.key.length !== 1) return;
+    // Type-ahead: the next option starting with the typed character.
+    const ch = e.key.toLowerCase();
+    for (let i = 1; i <= options.length; i++) {
+      const index = (active + i) % options.length;
+      const text = textOf(options[index].label).toLowerCase();
+      if (!options[index].disabled && text.startsWith(ch)) {
+        setActive(index);
+        break;
       }
     }
   }
@@ -264,7 +222,7 @@ function DrawnSelect({
       </button>
       {presence.mounted && (
         <SelectMenu
-          listRef={presenceRef}
+          listRef={listRef}
           id={listId}
           state={presence.state}
           label={ariaLabel}

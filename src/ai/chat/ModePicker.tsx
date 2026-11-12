@@ -1,12 +1,9 @@
 import { SelectMenu } from "../../engine/controls/SelectMenu";
-import { Fragment, useId, useRef, useState, type KeyboardEvent } from "react";
+import { Fragment, useRef } from "react";
 import type { PanelMode } from "../../prefs/SettingsContext";
-import { useMergedRef, usePresence } from "../../engine/motion/usePresence";
-import { useFloatingList } from "../../engine/controls/useFloatingList";
+import { useDropdown } from "../../engine/controls/useDropdown";
 import { AGENTS_GROUP, useChatModels, type ChatModels } from "./chat-models";
 import "./ModePicker.css";
-import { isImeKeydown } from "../../utils/ime";
-import { listMove } from "../../engine/controls/list-keys";
 
 export interface ModeChoice {
   value: PanelMode;
@@ -73,79 +70,48 @@ export function ModePicker({
         ? agentOptions.some((o) => o.id === item.id && o.value === item.value)
         : item.provider === models?.provider && item.model === models.model;
 
-  const [open, setOpen] = useState(false);
-  const [active, setActive] = useState(0);
-  const { triggerRef, listRef, place } = useFloatingList(
-    open,
-    active,
-    () => setOpen(false),
-    // The modes and a few providers' models, without a scroll.
-    480,
-  );
-  const listId = useId();
-  const presence = usePresence(open);
-  const presenceRef = useMergedRef(listRef, presence.ref);
-
   // The list takes focus while open; with holdFocus it goes back to where
   // it was (the message), not to the trigger.
   const focusBefore = useRef<HTMLElement | null>(null);
-
-  function openMenu() {
-    focusBefore.current = document.activeElement as HTMLElement | null;
-    setActive(Math.max(0, items.findIndex(isSelected)));
-    setOpen(true);
-  }
-
-  function close(refocus = true) {
-    setOpen(false);
-    if (!refocus) return;
-    if (holdFocus) focusBefore.current?.focus({ preventScroll: true });
-    else triggerRef.current?.focus();
-  }
-
-  function choose(index: number) {
-    const item = items[index];
-    if (!item) return;
-    close();
-    if (isSelected(item)) return;
-    if (item.kind === "mode") onMode(item.choice.value);
-    else if (item.kind === "option")
-      models?.agentOptions?.choose(item.id, item.value);
-    else {
-      models?.choose(item.provider, item.model);
-      // An agent answers as itself: Research's paper isn't one of its modes.
-      if (item.provider === AGENTS_GROUP && mode === "research" && modes[0])
-        onMode(modes[0].value);
-    }
-  }
-
-  function onTriggerKey(e: KeyboardEvent<HTMLElement>) {
-    // Keys pressed before the open list has taken focus are its keys.
-    if (open) return onListKey(e);
-    if (["ArrowDown", "ArrowUp", "Enter", " "].includes(e.key)) {
-      e.preventDefault();
-      openMenu();
-    }
-  }
-
-  function onListKey(e: KeyboardEvent<HTMLElement>) {
-    if (isImeKeydown(e)) return;
-    const moved = listMove(e.key, active, items.length);
-    if (moved !== null) {
-      e.preventDefault();
-      setActive(moved);
-    } else if (e.key === "Enter" || e.key === " ") {
-      e.preventDefault();
-      choose(active);
-    } else if (e.key === "Escape") {
-      // Closes the list, not the panel or Quick Ask around it.
-      e.preventDefault();
-      e.stopPropagation();
-      close();
-    } else if (e.key === "Tab") {
-      close();
-    }
-  }
+  const {
+    open,
+    active,
+    setActive,
+    triggerRef,
+    listRef,
+    place,
+    presence,
+    listId,
+    openMenu,
+    close,
+    choose,
+    onListKey,
+    onTriggerKey,
+  } = useDropdown({
+    count: items.length,
+    selected: () => items.findIndex(isSelected),
+    // The modes and a few providers' models, without a scroll.
+    maxHeight: 480,
+    onOpen: () => {
+      focusBefore.current = document.activeElement as HTMLElement | null;
+    },
+    refocus: holdFocus
+      ? () => focusBefore.current?.focus({ preventScroll: true })
+      : undefined,
+    choose: (index) => {
+      const item = items[index];
+      if (isSelected(item)) return;
+      if (item.kind === "mode") onMode(item.choice.value);
+      else if (item.kind === "option")
+        models?.agentOptions?.choose(item.id, item.value);
+      else {
+        models?.choose(item.provider, item.model);
+        // An agent answers as itself: Research's paper isn't one of its modes.
+        if (item.provider === AGENTS_GROUP && mode === "research" && modes[0])
+          onMode(modes[0].value);
+      }
+    },
+  });
 
   const current = shownModes.find((m) => m.value === mode);
   const model = models?.model;
@@ -229,7 +195,7 @@ export function ModePicker({
       </button>
       {presence.mounted && (
         <SelectMenu
-          listRef={presenceRef}
+          listRef={listRef}
           id={listId}
           state={presence.state}
           className="mode-picker-menu"
