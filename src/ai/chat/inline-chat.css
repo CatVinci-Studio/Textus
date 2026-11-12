@@ -938,9 +938,11 @@
   font-size: var(--text-secondary);
 }
 
-/* Quick Ask's review-one-at-a-time bar, pinned like the full variant's bar. */
+/* Quick Ask's review-one-at-a-time bar, pinned like the full variant's bar.
+   Short of room, its buttons go under the stepping, from its start. */
 .quick-ask-pending-bar {
   display: flex;
+  flex-wrap: wrap;
   align-items: center;
   justify-content: space-between;
   gap: 8px;
@@ -971,6 +973,7 @@
 
 .quick-ask-pending-actions {
   display: flex;
+  flex-wrap: wrap;
   gap: 4px;
   flex-shrink: 0;
 }
