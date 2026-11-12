@@ -10,18 +10,8 @@ export const LOCAL_KEYS = {
   /** The settings blob from before settings.json: the settings store without
    *  Rust, and what the one-time import reads. */
   settings: "catvinci-settings",
-  /** Deep thinking left on in the composer. */
-  deepThinking: "textus-agent-deep-thinking",
-  webSearch: "textus-agent-web-search",
-  /** The Agent mode last picked, with the default it was picked under. */
-  lastMode: "textus-agent-last-mode",
   /** A provider's last fetched model list, by provider id. */
   fetchedModels: (provider: string) => `textus-fetched-models:${provider}`,
-  /** Where each file was last being read. */
-  /** Web page tabs' address bar folded away. */
-  webPageBarHidden: "textus.webPageBarHidden",
-  /** Plugins' floating views: where each was and whether it was open. */
-  floatingViews: "textus.floatingViews",
   /** Before a folder's scope: its live conversation, its open ones. */
   liveConversation: "textus-ai-live:",
   openConversations: "textus-ai-open:",

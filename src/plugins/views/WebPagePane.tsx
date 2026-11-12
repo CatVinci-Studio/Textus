@@ -1,4 +1,4 @@
-import { LOCAL_KEYS, readLocal, writeLocal } from "../../storage/local";
+import { getUiState, setUiState } from "../../storage/ui-state";
 import { IconButton } from "../../engine/controls/IconButton";
 import { useRef, useState } from "react";
 import { Tooltip } from "../../engine/controls/Tooltip";
@@ -16,13 +16,13 @@ import { webPageUrl } from "./web-page-url";
 function useBarHidden(): [boolean, (hidden: boolean) => void] {
   // One choice for every web page tab.
   const [hidden, setHidden] = useState(
-    () => readLocal(LOCAL_KEYS.webPageBarHidden) === "1",
+    () => getUiState("webPageBarHidden") === true,
   );
   return [
     hidden,
     (next) => {
       setHidden(next);
-      writeLocal(LOCAL_KEYS.webPageBarHidden, next ? "1" : "0");
+      setUiState("webPageBarHidden", next);
     },
   ];
 }

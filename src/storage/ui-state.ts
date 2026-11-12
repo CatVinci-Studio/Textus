@@ -98,6 +98,15 @@ export interface UiState {
   /** Each folder's plugin settings, by folder: used, or left out - asked
    *  the first time one is opened with any (plugins/store/plugin-settings). */
   pluginFolders: Record<string, "use" | "skip">;
+  /** The composer's Deep thinking and web search, as last left. */
+  deepThinking: boolean;
+  webSearch: boolean;
+  /** The Agent mode last picked, with the default it was picked under. */
+  lastAgentMode: { mode: string; under: string } | null;
+  /** Web page tabs' address bar folded away. */
+  webPageBarHidden: boolean;
+  /** Plugins' floating views: where each was and whether it was open. */
+  floatingViews: Record<string, unknown>;
 }
 
 export interface ThemeChromeCache {
@@ -268,7 +277,58 @@ const LOCAL: {
     decode: (raw) => JSON.parse(raw),
     encode: (value) => JSON.stringify(value),
   },
+  deepThinking: {
+    key: "textus-agent-deep-thinking",
+    decode: (raw) => raw === "1",
+    encode: (value) => (value ? "1" : "0"),
+  },
+  webSearch: {
+    key: "textus-agent-web-search",
+    decode: (raw) => raw === "1",
+    encode: (value) => (value ? "1" : "0"),
+  },
+  lastAgentMode: {
+    key: "textus-agent-last-mode",
+    decode: (raw) => JSON.parse(raw),
+    encode: (value) => JSON.stringify(value),
+  },
+  webPageBarHidden: {
+    key: "textus.webPageBarHidden",
+    decode: (raw) => raw === "1",
+    encode: (value) => (value ? "1" : "0"),
+  },
+  floatingViews: {
+    key: "textus.floatingViews",
+    decode: (raw) => JSON.parse(raw),
+    encode: (value) => JSON.stringify(value),
+  },
 };
+
+/** Fields once kept only in localStorage: carried into the file the first
+ *  time it lacks them, then let go there. */
+const FROM_LOCAL: UiStateKey[] = [
+  "deepThinking",
+  "webSearch",
+  "lastAgentMode",
+  "webPageBarHidden",
+  "floatingViews",
+];
+
+function carryFromLocal(file: Record<string, unknown>): void {
+  for (const key of FROM_LOCAL) {
+    if (file[key] !== undefined) continue;
+    const kept = readLocal(key);
+    if (kept === undefined) continue;
+    file[key] = kept;
+    written.add(key);
+    trackWrite(storage.uiStatePatch({ [key]: kept })).catch(() => {});
+    try {
+      localStorage.removeItem(LOCAL[key]!.key);
+    } catch {
+      // Left there: read again next time, harmlessly.
+    }
+  }
+}
 
 function readLocal(key: UiStateKey): unknown {
   const local = LOCAL[key];
@@ -291,6 +351,7 @@ function fileCache(): Record<string, unknown> | null {
   if (!boot) return null;
   if (!cache) {
     cache = { ...boot.uiState };
+    carryFromLocal(cache);
     refreshed = storage
       .uiStateGet()
       .then((live) => {

@@ -1,4 +1,4 @@
-import { LOCAL_KEYS, readLocalJson, writeLocal } from "../../storage/local";
+import { getUiState, updateUiState } from "../../storage/ui-state";
 import { emitPluginEvent } from "../app-bridge";
 import { windowIpc } from "../../platform/ipc";
 import { thisWindow } from "../../platform/this-window";
@@ -79,17 +79,17 @@ type Saved = Pick<FloatingView, "place" | "x" | "y" | "folded"> & {
 };
 
 function saved(): Record<string, Saved> {
-  const kept = readLocalJson(LOCAL_KEYS.floatingViews);
+  const kept = getUiState("floatingViews");
   return kept && typeof kept === "object"
     ? (kept as Record<string, Saved>)
     : {};
 }
 
 function save(view: string, value: Saved) {
-  writeLocal(
-    LOCAL_KEYS.floatingViews,
-    JSON.stringify({ ...saved(), [view]: value }),
-  );
+  updateUiState("floatingViews", (kept) => ({
+    ...(kept && typeof kept === "object" ? kept : {}),
+    [view]: value,
+  }));
 }
 
 /** The screen's left edge among several (WebKit and Chromium know it). */
