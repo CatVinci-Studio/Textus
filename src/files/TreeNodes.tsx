@@ -27,6 +27,7 @@ import { compareEntries, nameCollator } from "../utils/name-order";
 import { useTree, useTreeRowActions } from "./tree-shared";
 import { isWithin } from "./tree-root";
 import { DraftRow } from "./DraftRow";
+import { TreeRowsInSight } from "./TreeRowsInSight";
 import type { FileOpenHow } from "./tree-shared";
 import { fileIconFor } from "../engine/controls/file-icons";
 
@@ -215,26 +216,35 @@ export const DirNode = memo(function DirNode({
                 </button>
               </div>
             )}
-          {sorted.map((entry) =>
-            entry.is_dir ? (
-              <DirNode
-                key={entry.path}
-                path={entry.path}
-                depth={depth + 1}
-                ignored={entry.ignored}
-                activePath={activePath}
-                onFileSelect={onFileSelect}
-              />
-            ) : (
-              <FileNode
-                key={entry.path}
-                entry={entry}
-                depth={depth + 1}
-                active={entry.path === activePath}
-                onSelect={onFileSelect}
-              />
-            ),
-          )}
+          <TreeRowsInSight
+            entries={sorted}
+            needed={(entry) =>
+              (activePath !== null &&
+                (entry.path === activePath ||
+                  isInside(activePath, entry.path))) ||
+              (!!tree.reveal && isWithin(tree.reveal, entry.path))
+            }
+            row={(entry) =>
+              entry.is_dir ? (
+                <DirNode
+                  key={entry.path}
+                  path={entry.path}
+                  depth={depth + 1}
+                  ignored={entry.ignored}
+                  activePath={activePath}
+                  onFileSelect={onFileSelect}
+                />
+              ) : (
+                <FileNode
+                  key={entry.path}
+                  entry={entry}
+                  depth={depth + 1}
+                  active={entry.path === activePath}
+                  onSelect={onFileSelect}
+                />
+              )
+            }
+          />
         </div>
       )}
     </div>

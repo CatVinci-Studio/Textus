@@ -154,22 +154,27 @@ pub(crate) fn require_non_empty(path: &str) -> Result<(), String> {
 }
 
 /// Lists the immediate children of a directory; the frontend asks again per
-/// expanded folder. Async so a slow network mount doesn't stall the app.
+/// expanded folder. One blocking read off the async runtime, so a slow
+/// network mount doesn't stall the app.
 #[tauri::command]
 #[cfg_attr(test, specta::specta)]
 pub async fn list_dir(path: String) -> Result<Vec<DirEntryInfo>, String> {
     require_non_empty(&path)?;
-    let mut reader = fs::read_dir(&path).await.map_err(|e| e.to_string())?;
-    let mut items: Vec<DirEntryInfo> = Vec::new();
-    let dir = PathBuf::from(&path);
-    let ignored = tauri::async_runtime::spawn_blocking(move || crate::walk::ignored_children(&dir))
+    tauri::async_runtime::spawn_blocking(move || list_dir_now(Path::new(&path)))
         .await
-        .unwrap_or_default();
+        .map_err(|e| e.to_string())?
+}
 
-    while let Some(entry) = reader.next_entry().await.map_err(|e| e.to_string())? {
-        let file_type = entry.file_type().await.map_err(|e| e.to_string())?;
+fn list_dir_now(dir: &Path) -> Result<Vec<DirEntryInfo>, String> {
+    let reader = std::fs::read_dir(dir).map_err(|e| e.to_string())?;
+    let ignored = crate::walk::ignored_in(dir);
+    let mut items: Vec<DirEntryInfo> = Vec::new();
+    for entry in reader {
+        let entry = entry.map_err(|e| e.to_string())?;
+        let is_dir = entry.file_type().map_err(|e| e.to_string())?.is_dir();
         let name = entry.file_name().to_string_lossy().to_string();
-        let meta = entry.metadata().await.ok();
+        let path = entry.path();
+        let meta = entry.metadata().ok();
         let modified_ms = meta
             .as_ref()
             .and_then(|m| m.modified().ok())
@@ -178,19 +183,13 @@ pub async fn list_dir(path: String) -> Result<Vec<DirEntryInfo>, String> {
         items.push(DirEntryInfo {
             hidden: name.starts_with('.') || meta.as_ref().is_some_and(marked_hidden),
             name,
-            ignored: ignored.contains(&entry.path()),
-            path: entry.path().to_string_lossy().to_string(),
-            is_dir: file_type.is_dir(),
+            ignored: ignored(&path, is_dir),
+            path: path.to_string_lossy().to_string(),
+            is_dir,
             modified_ms,
         });
     }
-
-    items.sort_by(|a, b| match (a.is_dir, b.is_dir) {
-        (true, false) => std::cmp::Ordering::Less,
-        (false, true) => std::cmp::Ordering::Greater,
-        _ => a.name.to_lowercase().cmp(&b.name.to_lowercase()),
-    });
-
+    items.sort_by_cached_key(|item| (!item.is_dir, item.name.to_lowercase()));
     Ok(items)
 }
 
