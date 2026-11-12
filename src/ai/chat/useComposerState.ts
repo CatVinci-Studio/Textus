@@ -135,7 +135,7 @@ export function useComposerMode({
   const setMode = (next: PanelMode) => {
     setModeState(next);
     // A paper is one request; the next conversation starts in an agent mode.
-    if (carryMode && next !== "research") rememberMode(next, defaultMode);
+    if (carryMode && next !== "research") rememberMode(next);
   };
   return { mode, setMode };
 }

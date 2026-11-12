@@ -101,8 +101,8 @@ export interface UiState {
   /** The composer's Deep thinking and web search, as last left. */
   deepThinking: boolean;
   webSearch: boolean;
-  /** The Agent mode last picked, with the default it was picked under. */
-  lastAgentMode: { mode: string; under: string } | null;
+  /** The Agent mode last picked. */
+  lastAgentMode: { mode: string } | null;
   /** Web page tabs' address bar folded away. */
   webPageBarHidden: boolean;
   /** Plugins' floating views: where each was and whether it was open. */
