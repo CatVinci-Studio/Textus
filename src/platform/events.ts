@@ -4,7 +4,7 @@ import {
   type EventCallback,
   type UnlistenFn,
 } from "@tauri-apps/api/event";
-import { getCurrentWebviewWindow } from "@tauri-apps/api/webviewWindow";
+import { thisWindow } from "./this-window";
 import { inBrowser } from "./runtime";
 
 /**
@@ -19,7 +19,7 @@ export function listenToThisWindow<T>(
   if (inBrowser) return Promise.resolve(() => {});
   // Read per call: the dev shim installs the label at startup.
   return listen<T>(event, handler, {
-    target: getCurrentWebviewWindow().label,
+    target: thisWindow().label,
   });
 }
 
@@ -31,7 +31,7 @@ export function listenToThisWebview<T>(
 ): Promise<UnlistenFn> {
   if (inBrowser) return Promise.resolve(() => {});
   return listen<T>(event, handler, {
-    target: { kind: "Webview", label: getCurrentWebviewWindow().label },
+    target: { kind: "Webview", label: thisWindow().label },
   });
 }
 

@@ -1,5 +1,4 @@
 import { emitToWindow } from "./events";
-import { getCurrentWebviewWindow } from "@tauri-apps/api/webviewWindow";
 import { thisWindow } from "./this-window";
 import type { NativeMenuId } from "../registry/menu/app-menu-model";
 import { menuIpc } from "./ipc";
@@ -25,7 +24,8 @@ export function emitMenuEvent(id: NativeMenuId): void {
 export function emitToThisWindow(event: string, payload?: unknown): void {
   // Addressed to the WebviewWindow: a bare label is AnyLabel, which on iOS
   // delivered the event twice, so every toggle undid itself.
-  const { label } = getCurrentWebviewWindow();
+  // A window's one webview carries the window's label.
+  const { label } = thisWindow();
   void emitToWindow({ kind: "WebviewWindow", label }, event, payload);
 }
 
