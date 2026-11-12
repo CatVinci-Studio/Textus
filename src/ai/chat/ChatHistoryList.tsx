@@ -98,7 +98,7 @@ export function ChatHistoryList({
               : t.chatHistoryUnsaved}
           </div>
           {group.entries.map((entry) => (
-            <div key={entry.id} className="chat-history-entry">
+            <div key={entry.id} className="chat-history-entry tx-reveal-host">
               <button
                 type="button"
                 className="chat-history-entry-main"
@@ -119,7 +119,7 @@ export function ChatHistoryList({
               </button>
               <Tooltip text={t.chatHistoryDelete}>
                 <button
-                  className="chat-history-entry-delete"
+                  className="tx-reveal chat-history-entry-delete"
                   aria-label={t.chatHistoryDelete}
                   onClick={(e) => {
                     e.stopPropagation();
@@ -164,7 +164,7 @@ function SearchHits({
   return (
     <section className="chat-history-group">
       {hits.map((hit) => (
-        <div key={hit.id} className="chat-history-entry">
+        <div key={hit.id} className="chat-history-entry tx-reveal-host">
           <button
             type="button"
             className="chat-history-entry-main"

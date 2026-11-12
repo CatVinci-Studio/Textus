@@ -243,7 +243,7 @@ export function zoomButton(
 ): HTMLButtonElement {
   const button = document.createElement("button");
   button.type = "button";
-  button.className = "mermaid-zoom";
+  button.className = "tx-reveal mermaid-zoom";
   const t = currentStrings();
   const label = frame.querySelector(":scope > img")
     ? t.pictureZoom

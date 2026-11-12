@@ -174,21 +174,10 @@
   color: var(--ui-accent, var(--ui-text));
 }
 
-.paper-outline-edit:disabled {
+/* Dimmed by the shared disabled rule; a hidden one (tx-reveal) stays so. */
+.paper-outline-edit:disabled:not(.tx-reveal) {
   cursor: default;
   opacity: 0.5;
-}
-
-.paper-outline-section .paper-outline-row .paper-outline-edit,
-.paper-outline-thesis .paper-outline-edit {
-  opacity: 0;
-  transition: opacity var(--dur-fast);
-}
-
-.paper-outline-section:hover .paper-outline-edit,
-.paper-outline-thesis:hover .paper-outline-edit,
-.paper-outline-edit:focus-visible {
-  opacity: 1;
 }
 
 .paper-outline-more {
@@ -237,13 +226,6 @@
 .paper-outline-tag b {
   color: var(--ui-text);
   font-weight: 500;
-}
-
-@media (hover: none) {
-  .paper-outline-section .paper-outline-row .paper-outline-edit,
-  .paper-outline-thesis .paper-outline-edit {
-    opacity: 1;
-  }
 }
 
 /* The paper's card in the conversation, and the form that starts one. */

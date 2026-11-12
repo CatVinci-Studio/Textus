@@ -196,6 +196,24 @@ textarea.tx-input {
   display: none;
 }
 
+/* A tool shown on hover: its parent's, or its host's (.tx-reveal-host),
+   or while it or its host has the focus; always on a touch screen, which
+   has no hover to bring it out. */
+.tx-reveal {
+  opacity: 0;
+  transition: opacity var(--dur-fast) var(--ease-standard);
+}
+:is(:hover, :focus-within) > .tx-reveal,
+.tx-reveal-host:is(:hover, :focus-within) .tx-reveal,
+.tx-reveal:focus-visible {
+  opacity: 1;
+}
+@media (hover: none) {
+  .tx-reveal {
+    opacity: 1;
+  }
+}
+
 /* Text cut short: on one line with "…", or after `--lines` lines (2). */
 .tx-truncate {
   min-width: 0;

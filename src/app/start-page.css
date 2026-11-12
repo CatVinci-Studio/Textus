@@ -186,12 +186,7 @@
   border-radius: var(--shape-pill);
   background: none;
   color: var(--ui-muted);
-  opacity: 0;
   cursor: pointer;
-}
-
-.start-page-row:is(:hover, :focus-within) .start-page-remove {
-  opacity: 1;
 }
 
 .start-page-remove:hover {

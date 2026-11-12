@@ -140,7 +140,7 @@ export function pluginCodeBlocks(docPath: { readonly current: string | null }) {
       widget: string,
     ): HTMLElement {
       const el = document.createElement("div");
-      el.className = BLOCK_CLASS;
+      el.className = `${BLOCK_CLASS} tx-reveal-host`;
       if (codeBlockFrameless(language))
         el.classList.add(`${BLOCK_CLASS}-plain`);
       el.dataset.language = language;
@@ -357,7 +357,7 @@ function editButton(
 ): HTMLButtonElement {
   const button = document.createElement("button");
   button.type = "button";
-  button.className = "plugin-code-edit";
+  button.className = "tx-reveal plugin-code-edit";
   const label = currentStrings().codeBlockEditSource;
   button.setAttribute("aria-label", label);
   button.title = label;

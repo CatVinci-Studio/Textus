@@ -71,13 +71,6 @@
   color: var(--text-muted);
   font: 12px var(--font-mono);
   cursor: pointer;
-  opacity: 0;
-  transition: opacity var(--dur-fast) var(--ease-out);
-}
-
-.plugin-code-block:hover .plugin-code-edit,
-.plugin-code-edit:focus-visible {
-  opacity: 1;
 }
 
 .plugin-code-block .plugin-webview-problem {

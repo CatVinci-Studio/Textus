@@ -73,7 +73,7 @@ export function OutlineCard({
   const editButton = (target: Editing, label: string) => (
     <button
       type="button"
-      className="paper-outline-edit"
+      className="tx-reveal paper-outline-edit"
       aria-label={label}
       disabled={busy}
       onClick={() => setEditing(target)}
@@ -118,7 +118,7 @@ export function OutlineCard({
           </div>
         </div>
       ) : (
-        <div className="paper-outline-thesis">
+        <div className="paper-outline-thesis tx-reveal-host">
           <p>{outline.thesis}</p>
           {editButton(
             "thesis",
@@ -175,7 +175,7 @@ export function OutlineCard({
               </div>
             </li>
           ) : (
-            <li key={i} className="paper-outline-section">
+            <li key={i} className="paper-outline-section tx-reveal-host">
               <SectionView
                 section={section}
                 index={i}

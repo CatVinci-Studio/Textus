@@ -35,13 +35,6 @@
   font: inherit;
   font-size: 0.85em;
   cursor: pointer;
-  opacity: 0;
-  transition: opacity var(--dur-fast) var(--ease-standard);
-}
-
-.note-embed:hover > .note-embed-open,
-.note-embed-open:focus-visible {
-  opacity: 1;
 }
 
 .note-embed-open:hover {

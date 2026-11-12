@@ -21,12 +21,9 @@
   right: 0;
   top: 0;
   z-index: 2;
-  opacity: 0;
-  transition: opacity var(--dur-fast) var(--ease-standard);
 }
 
-.ai-change-mark:hover > button,
-.ai-change-mark > button:focus-visible,
+/* Also from the block it marks (tx-reveal). */
 .ai-change-mark:has(+ .ai-changed-block:hover) > button,
 .ai-change-removed:hover > button {
   opacity: 1;

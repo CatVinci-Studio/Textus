@@ -48,7 +48,7 @@ export function addBlockFoldMarkup(
   el.classList.add("block-foldable");
   const caret = document.createElement("button");
   caret.type = "button";
-  caret.className = "block-fold";
+  caret.className = "tx-reveal block-fold";
   caret.dataset.key = key;
   caret.append(caretSpan());
   const line = document.createElement("button");

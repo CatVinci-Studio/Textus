@@ -106,26 +106,30 @@ function madePicture(
   alt: string,
 ): HTMLElement {
   const box = document.createElement("span");
-  box.className = "pending-picture-made";
+  box.className = "pending-picture-made tx-reveal-host";
   const t = currentStrings();
-  const redraw = button("pending-picture-redraw", t.pictureRedraw, () => {
-    void (async () => {
-      const before = await generatedImagePrompt(id);
-      if (before === null) return;
-      const prompt = (
-        await showPrompt(t.pictureRedrawPrompt, before, {
-          title: t.pictureRedrawTitle,
-          okLabel: t.pictureRedrawOk,
-          cancelLabel: t.cancel,
-        })
-      )?.trim();
-      if (!prompt || prompt === before.trim() || !box.isConnected) return;
-      const again = frame(id, alt);
-      box.replaceWith(again);
-      const made = await redrawGeneratedImage(id, prompt);
-      settle(again, id, alt, made);
-    })();
-  });
+  const redraw = button(
+    "tx-reveal pending-picture-redraw",
+    t.pictureRedraw,
+    () => {
+      void (async () => {
+        const before = await generatedImagePrompt(id);
+        if (before === null) return;
+        const prompt = (
+          await showPrompt(t.pictureRedrawPrompt, before, {
+            title: t.pictureRedrawTitle,
+            okLabel: t.pictureRedrawOk,
+            cancelLabel: t.cancel,
+          })
+        )?.trim();
+        if (!prompt || prompt === before.trim() || !box.isConnected) return;
+        const again = frame(id, alt);
+        box.replaceWith(again);
+        const made = await redrawGeneratedImage(id, prompt);
+        settle(again, id, alt, made);
+      })();
+    },
+  );
   box.append(img, redraw);
   return box;
 }

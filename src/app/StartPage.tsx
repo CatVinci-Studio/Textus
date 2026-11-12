@@ -104,7 +104,7 @@ function RecentList({
             </Tooltip>
             <button
               type="button"
-              className="start-page-remove"
+              className="tx-reveal start-page-remove"
               aria-label={`${removeLabel}: ${basename(path)}`}
               onClick={() => onRemove(path)}
             >

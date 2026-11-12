@@ -90,24 +90,16 @@
   padding: 2px 4px;
   border-radius: var(--shape-pill);
   corner-shape: round;
-  opacity: 0;
   flex-shrink: 0;
-}
-
-.chat-history-entry:hover .chat-history-entry-delete,
-.chat-history-entry-delete:focus-visible {
-  opacity: 1;
 }
 
 .chat-history-entry-delete:hover {
   color: var(--ui-text);
 }
 
-/* A finger has no hover to bring the delete button out, and needs room
-   to hit it. */
+/* A finger needs room to hit it. */
 @media (pointer: coarse) {
   .chat-history-entry-delete {
-    opacity: 1;
     justify-content: center;
     min-width: 32px;
     min-height: 32px;

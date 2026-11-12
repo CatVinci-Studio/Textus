@@ -109,7 +109,7 @@ function decorate(
           mark.contentEditable = "false";
           const button = document.createElement("button");
           button.type = "button";
-          button.className = "tx-button small";
+          button.className = "tx-reveal tx-button small";
           button.textContent = label;
           button.addEventListener("mousedown", (e) => e.preventDefault());
           button.addEventListener("click", () => {

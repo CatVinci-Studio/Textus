@@ -2,10 +2,7 @@ import { addBlockFoldMarkup, showBlockFold } from "../fold/block-fold";
 import { fs } from "../../platform/ipc";
 import { embedFolded } from "./embed-folds";
 import { currentStrings } from "../../i18n/current";
-import {
-  parseNoteLink,
-  type NoteLink,
-} from "../../utils/note-link";
+import { parseNoteLink, type NoteLink } from "../../utils/note-link";
 import { basename, isNoteFile, noteStem } from "../../utils/path";
 import { drawPreview, type PreviewHandle } from "../preview-editor";
 import { embedProvider, type EmbedKind } from "./embed-sources";
@@ -74,8 +71,6 @@ function withTimeout<T>(promise: Promise<T>, signal: AbortSignal) {
   ]);
 }
 
-
-
 /** Draws the embed `link` into `el`, asking its kind's owner. */
 export async function fillEmbed(
   el: HTMLElement,
@@ -119,7 +114,7 @@ export async function fillEmbed(
   // To open where it comes from, on hover at its top right.
   const open = document.createElement("button");
   open.type = "button";
-  open.className = "note-embed-open";
+  open.className = "tx-reveal note-embed-open";
   open.textContent = "↗";
   open.setAttribute("aria-label", currentStrings().hoverOpen);
   open.title = content.title || name;

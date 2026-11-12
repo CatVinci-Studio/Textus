@@ -188,7 +188,7 @@ export function MemorySections({
               return (
                 <div
                   key={entry.file}
-                  className={`memory-entry${sent ? " memory-entry-used" : ""}`}
+                  className={`memory-entry tx-reveal-host${sent ? " memory-entry-used" : ""}`}
                   data-memory-id={`project/library/${stemOf(entry.file)}`}
                 >
                   <button
@@ -228,7 +228,7 @@ export function MemorySections({
                   <Tooltip text={t.memoryDelete}>
                     <button
                       type="button"
-                      className="memory-entry-delete"
+                      className="tx-reveal memory-entry-delete"
                       aria-label={`${t.memoryDelete} ${entry.name}`}
                       onClick={() => onDeleteEntry(entry)}
                     >

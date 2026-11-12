@@ -242,24 +242,11 @@
   font: inherit;
   line-height: 1;
   cursor: pointer;
-  opacity: 0;
-  transition: opacity var(--dur-fast) var(--ease-standard);
-}
-
-.memory-entry:hover .memory-entry-delete,
-.memory-entry-delete:focus-visible {
-  opacity: 1;
 }
 
 .memory-entry-delete:hover {
   background: color-mix(in srgb, var(--ui-text) 8%, transparent);
   color: var(--ui-text);
-}
-
-@media (hover: none) {
-  .memory-entry-delete {
-    opacity: 1;
-  }
 }
 
 /* "AI remembered": personal, then the project's, each item its text, a
