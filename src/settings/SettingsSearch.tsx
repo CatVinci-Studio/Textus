@@ -11,6 +11,7 @@ import { announce } from "../engine/controls/announce";
 import { scrollBehavior } from "../engine/motion/motion";
 import { useLatest } from "../utils/hooks/useLatest";
 import {
+  findEntryElement,
   harvestPage,
   type SearchEntry,
   type SearchMatch,
@@ -250,4 +251,30 @@ export function revealEntry(el: HTMLElement) {
     el.removeEventListener("animationend", done);
   };
   el.addEventListener("animationend", done);
+}
+
+/** Once the page is up, goes to the search result's row: one that waits on
+ *  the backend (a status, a list) can come a few frames late. */
+export function useReveal(
+  content: React.RefObject<HTMLDivElement | null>,
+  jump: SearchEntry | null,
+  /** Called once it has gone there, or given up. */
+  done?: () => void,
+) {
+  useEffect(() => {
+    if (!jump) return;
+    let frame = 0;
+    let tries = 0;
+    const go = () => {
+      const el = content.current && findEntryElement(content.current, jump);
+      if (el) revealEntry(el);
+      else if (++tries < 30) {
+        frame = requestAnimationFrame(go);
+        return;
+      }
+      done?.();
+    };
+    go();
+    return () => cancelAnimationFrame(frame);
+  }, [jump, content]);
 }

@@ -4,7 +4,7 @@ import { AboutSection } from "./sections/about";
 import { pageComponent } from "./builtin-pages";
 import { GuidesSection } from "./sections/guides";
 import { SettingsGroup } from "./pages/SettingsGroup";
-import { useEffect, useRef, useState } from "react";
+import { useRef, useState } from "react";
 import { useSettings } from "../prefs/SettingsContext";
 import { useMarginAvailable } from "../ai/margin/margin-room";
 import { usePhoneLayout } from "../engine/controls/usePhoneLayout";
@@ -14,17 +14,13 @@ import { ChevronIcon, CloseIcon } from "../engine/controls/icons";
 import { ThemesTab } from "./sections/theme";
 import { openExtensionsTab, type ExtensionsTab } from "./pages/extensions-tab";
 import {
-  revealEntry,
   SettingsSearchField,
   SettingsSearchIndex,
   SettingsSearchResults,
   type SearchablePage,
+  useReveal,
 } from "./SettingsSearch";
-import {
-  findEntryElement,
-  type SearchEntry,
-  type SearchMatch,
-} from "./settings-search";
+import type { SearchEntry, SearchMatch } from "./settings-search";
 import "./SettingsPanel.css";
 import { useSettingsSearch } from "./useSettingsSearch";
 import { settingsPage, settingsPages } from "./settings-pages";
@@ -384,24 +380,7 @@ function useSettingsNav(initialCategory: Category) {
   const [direction, setDirection] = useState<"push" | "pop" | null>(null);
   const content = useRef<HTMLDivElement>(null);
 
-  // Once the row's page is on screen, go to the row. A row that waits on
-  // the backend (a status, a list) can come a few frames late.
-  useEffect(() => {
-    if (!jump) return;
-    let frame = 0;
-    let tries = 0;
-    const go = () => {
-      const el = content.current && findEntryElement(content.current, jump);
-      if (el) revealEntry(el);
-      else if (++tries < 30) {
-        frame = requestAnimationFrame(go);
-        return;
-      }
-      setJump(null);
-    };
-    go();
-    return () => cancelAnimationFrame(frame);
-  }, [jump]);
+  useReveal(content, jump, () => setJump(null));
 
   const open = (id: Category, inner: Subpage | null = null) => {
     setCategory(id);

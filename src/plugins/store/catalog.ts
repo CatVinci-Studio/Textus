@@ -4,12 +4,8 @@ import {
   type PluginCatalogEntry,
 } from "../../platform/ipc";
 import type { SkillEntry_Serialize as SkillEntry } from "../../platform/bindings/plugins";
-import {
-  parseManifest,
-  compareVersions,
-  engineSatisfied,
-  type PluginManifest,
-} from "./manifest";
+import { parseManifest, type PluginManifest } from "./manifest";
+import { compareVersions, engineSatisfied } from "./versions";
 import { version as APP_VERSION } from "../../../package.json";
 import { currentStrings } from "../../i18n/current";
 import { loadPlugins } from "../manager";

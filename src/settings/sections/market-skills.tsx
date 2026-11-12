@@ -1,5 +1,5 @@
 import { useCatalogWork } from "../pages/useCatalogWork";
-import { compareVersions } from "../../plugins/store/manifest";
+import { compareVersions } from "../../plugins/store/versions";
 import { isError } from "../../utils/error-text";
 import { Byline, CatalogRow } from "../pages/CatalogRow";
 import { explainError } from "../../utils/error-explain";

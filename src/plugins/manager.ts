@@ -10,11 +10,8 @@ import { getActiveDocument } from "./app-bridge";
 import type { PluginHost } from "./host/broker";
 import { lazyModule } from "../lazy/lazy-module";
 import { type PluginOrigin } from "./store/files";
-import {
-  engineSatisfied,
-  parseManifest,
-  type Permission,
-} from "./store/manifest";
+import { parseManifest, type Permission } from "./store/manifest";
+import { engineSatisfied } from "./store/versions";
 import {
   addContribution,
   applyContributions,
