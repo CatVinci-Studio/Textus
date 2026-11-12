@@ -208,6 +208,10 @@ pub fn plugin_secret_get(
         .cloned())
 }
 
+/// One read-change-write of the secrets file at a time: two saves at once
+/// would each write over the other's.
+static SECRETS_WRITING: std::sync::Mutex<()> = std::sync::Mutex::new(());
+
 /// Keeps a secret of the plugin's; `None` forgets it.
 #[tauri::command(async)]
 #[cfg_attr(test, specta::specta)]
@@ -224,6 +228,7 @@ pub fn plugin_secret_set(
     if key.is_empty() || key.len() > 200 {
         return Err("A secret's key is 1 to 200 characters.".into());
     }
+    let _one = SECRETS_WRITING.lock().unwrap_or_else(|e| e.into_inner());
     let mut secrets = read_secrets(&app)?;
     match value {
         Some(value) => {
@@ -243,6 +248,7 @@ pub fn plugin_secret_set(
 
 /// An uninstalled plugin's secrets go with it.
 pub fn forget_secrets(app: &tauri::AppHandle, id: &str) -> Result<(), String> {
+    let _one = SECRETS_WRITING.lock().unwrap_or_else(|e| e.into_inner());
     let mut secrets = read_secrets(app)?;
     if secrets.remove(id).is_some() {
         write_secrets(app, &secrets)?;

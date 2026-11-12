@@ -356,6 +356,10 @@ fn unzip(file: &Path, to: &Path) -> Result<(), String> {
         let Some(rel) = entry.enclosed_name() else {
             return Err(crate::errors::error("pluginBadPackage"));
         };
+        // The folder Finder's Compress adds beside the plugin's own.
+        if rel.components().any(|c| c.as_os_str() == "__MACOSX") {
+            continue;
+        }
         let target = to.join(rel);
         if entry.is_dir() {
             std::fs::create_dir_all(&target).map_err(|e| e.to_string())?;

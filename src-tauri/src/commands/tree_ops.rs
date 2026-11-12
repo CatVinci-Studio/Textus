@@ -15,6 +15,19 @@ fn document_name(name: &str) -> String {
     }
 }
 
+/// Whether `name` ends in a file type (`.txt`, `.md`): letters after its
+/// last dot, not a date's or a version's digits (`Meeting 11.11`).
+fn names_a_type(name: &str) -> bool {
+    Path::new(name)
+        .extension()
+        .and_then(|e| e.to_str())
+        .is_some_and(|e| {
+            e.len() <= 8
+                && e.chars().all(|c| c.is_ascii_alphanumeric())
+                && e.chars().any(|c| c.is_ascii_alphabetic())
+        })
+}
+
 async fn existing_dir(dir: &str) -> Result<PathBuf, String> {
     let dir = PathBuf::from(dir);
     if !fs::metadata(&dir)
@@ -137,7 +150,7 @@ pub async fn tree_rename_entry(path: String, name: String) -> Result<String, Str
         .is_dir();
     let name = crate::ids::typed_name(&name)?;
     let was_doc = !is_dir && document_name(&path) == path;
-    let name = if was_doc && !name.contains('.') {
+    let name = if was_doc && !names_a_type(name) {
         document_name(name)
     } else {
         name.to_string()
@@ -234,6 +247,12 @@ mod tests {
             .unwrap();
         let renamed = tree_rename_entry(doc, "Chapter 1".into()).await.unwrap();
         assert!(renamed.ends_with("Chapter 1.md"));
+        // A dot in a date or a version isn't a file type.
+        let dated = tree_rename_entry(renamed, "Meeting 11.11".into())
+            .await
+            .unwrap();
+        assert!(dated.ends_with("Meeting 11.11.md"));
+        let renamed = tree_rename_entry(dated, "Chapter 1".into()).await.unwrap();
         let other = tree_create_document(root.clone(), "Other".into())
             .await
             .unwrap();
