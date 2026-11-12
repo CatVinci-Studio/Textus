@@ -1,6 +1,7 @@
 import { useSyncExternalStore } from "react";
 import type { Rect } from "./rect";
 import type { DividerRects } from "./solve";
+import type { LayoutNode } from "../layout/tree";
 
 /**
  * The islands as the solver last placed them, in the viewport's pixels:
@@ -87,4 +88,16 @@ export function islandAt(x: number, y: number): FrameIsland | null {
       ({ whole: r }) => x >= r.x && x < r.x + r.w && y >= r.y && y < r.y + r.h,
     ) ?? null
   );
+}
+
+let fits: ((root: LayoutNode) => boolean) | null = null;
+
+/** Whether a layout's islands, each at its least, fit the area as it
+ *  stands: told by the islands' area after each solve. */
+export function setLayoutFits(check: (root: LayoutNode) => boolean): void {
+  fits = check;
+}
+
+export function layoutFits(root: LayoutNode): boolean {
+  return fits ? fits(root) : true;
 }

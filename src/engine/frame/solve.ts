@@ -64,6 +64,11 @@ export function leastWidth(input: Omit<IslandsInput, "box">): number {
   return ruleOf(input as IslandsInput, input.root, "row", 1).min;
 }
 
+/** The least height, the same way down the column. */
+export function leastHeight(input: Omit<IslandsInput, "box">): number {
+  return ruleOf(input as IslandsInput, input.root, "column", 1).min;
+}
+
 function island(input: IslandsInput, box: Rect, top: boolean): IslandRects {
   const h = Math.min(input.rowHeight, box.h);
   const row = h ? { x: box.x, y: box.y, w: box.w, h } : null;

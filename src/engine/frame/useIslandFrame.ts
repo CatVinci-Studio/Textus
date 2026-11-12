@@ -1,3 +1,5 @@
+import { setLayoutFits } from "./frame-store";
+import type { LayoutNode } from "../layout/tree";
 import { useLayoutEffect, useRef, type RefObject } from "react";
 import { gripHeld } from "./grip";
 import { frameClock } from "./clock";
@@ -25,6 +27,8 @@ export function useIslandFrame(
   islands: readonly PlacedIsland[],
   /** The width they need at the least (frame-store's need). */
   need: number,
+  /** Whether another layout would fit this area (frame-store). */
+  fits: (root: LayoutNode) => boolean,
 ): void {
   const last = useRef<{
     shell: IslandRoom["shell"];
@@ -33,6 +37,7 @@ export function useIslandFrame(
   } | null>(null);
   const attached = useRef(new Set<string>());
   useLayoutEffect(() => {
+    setLayoutFits(fits);
     const main = area.current;
     if (!main || !room || !box || !solved) return;
     const parts = islandParts(

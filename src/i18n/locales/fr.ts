@@ -173,6 +173,8 @@ utiliser une.
   revisionDisplayOriginal:
     "Original dans le texte, modifications dans la marge",
   revisionDisplayFinal: "Résultat seul, original dans la marge",
+  splitNoRoom:
+    "Pas assez de place pour partager : élargissez la fenêtre, ou fermez la barre latérale ou un partage",
   revisionDisplayNoRoom:
     "Pas assez de place : fermez la barre latérale ou le panneau IA",
   proposalDeletedSentence: "Original",

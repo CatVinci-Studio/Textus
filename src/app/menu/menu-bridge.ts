@@ -1,3 +1,4 @@
+import { splitHere } from "./split-here";
 import { PLUGIN_SETTINGS } from "../../registry/menu/plugin-menu";
 import { useEffect, useLayoutEffect, useRef } from "react";
 import { useSyncExternalStore } from "react";
@@ -33,7 +34,7 @@ import type { DocTab, HelpDoc } from "../../document/doc-tabs";
 import type { Strings } from "../../i18n/strings";
 import type { PandocSettings } from "../../export/pandoc-options";
 import type { DiagramEngine, Shortcuts } from "../../prefs/SettingsContext";
-import { closeSplit, splitEditor } from "../../engine/layout/store";
+import { closeSplit } from "../../engine/layout/store";
 import { pickIsland } from "../../engine/layout/island-numbers";
 import { islandKeyOf } from "./island-key";
 import { APP_ACTIONS, type AppActionHandlers } from "./app-actions";
@@ -203,7 +204,7 @@ export function useMenuBridge(handlers: MenuBridgeHandlers): void {
       listenToThisWindow("menu-view-mode-default", () =>
         h().onViewModeDefault(),
       ),
-      listenToThisWindow("menu-split-down", () => splitEditor("column")),
+      listenToThisWindow("menu-split-down", () => splitHere("column")),
       listenToThisWindow("menu-close-split", () => closeSplit()),
       // Edit > Copy and Paste as Plain Text run in the editor on screen.
       listenToThisWindow("menu-select-all", () => editInFocus("select-all")),

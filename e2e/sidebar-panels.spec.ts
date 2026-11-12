@@ -190,3 +190,15 @@ test("the AI's edge stepped past what the window can show stops there, and steps
   await page.keyboard.press("ArrowRight");
   await expect.poll(ai).toBeLessThan(widest - 10);
 });
+
+test("a split the window has no room for is not made, and says why", async ({
+  page,
+}) => {
+  await page.setViewportSize({ width: 900, height: 600 });
+  await openApp(page, { settings: { menuBarShown: false } });
+  await emit(page, "menu-split-right");
+  await expect(page.locator("section.island")).toHaveCount(2);
+  await emit(page, "menu-split-right");
+  await expect(page.locator(".app-dialog")).toBeVisible();
+  await expect(page.locator("section.island")).toHaveCount(2);
+});

@@ -18,6 +18,7 @@ import {
   type SplitLayout,
   type SplitRequest,
 } from "./ops";
+import { layoutFits } from "../frame/frame-store";
 import { resolveSplit } from "./resolve";
 
 /**
@@ -144,10 +145,22 @@ export function paneOf(current: SplitLayout, tabId: string): string | null {
 }
 
 /** Splits the pane in use (or the window) this way, a document of its
- *  tabs, or a blank one, going into the new pane. */
-export function splitEditor(direction: SplitDirection): void {
+ *  tabs, or a blank one, going into the new pane - when the islands, the
+ *  new one too, fit the window at their least; false when they don't and
+ *  nothing changed. */
+export function splitEditor(direction: SplitDirection): boolean {
+  const next = resolveSplit(
+    layout,
+    { direction },
+    records.map((tab) => tab.id),
+    active,
+    () => undefined,
+  );
+  const root = "blank" in next ? next.blank.root : next.root;
+  if (!layoutFits(root)) return false;
   request = { direction };
   change();
+  return true;
 }
 
 /** A layout an operation (ops.ts) gave back: null, one pane left,

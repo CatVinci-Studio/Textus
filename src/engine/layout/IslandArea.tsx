@@ -5,14 +5,24 @@ import {
   type CSSProperties,
   type ReactNode,
 } from "react";
-import { panesOf, type Pane, type SplitDirection } from "./tree";
+import {
+  panesOf,
+  type LayoutNode,
+  type Pane,
+  type SplitDirection,
+} from "./tree";
 import { isSplit, type SplitLayout } from "./ops";
 import { islandKeys } from "./island-keys";
 import { IslandNumbers } from "./IslandNumbers";
 import { SplitDivider } from "./SplitDivider";
 import type { Strings } from "../../i18n/strings";
 import { rectStyle, type Rect } from "../frame/rect";
-import { leastWidth, solveIslands, type IslandsLayout } from "../frame/solve";
+import {
+  leastHeight,
+  leastWidth,
+  solveIslands,
+  type IslandsLayout,
+} from "../frame/solve";
 import { dividerKey, type PlacedIsland } from "../frame/island-parts";
 import { useIslandRoom, type IslandRoom } from "../frame/useIslandRoom";
 import { usePanelWidth } from "../frame/panel-width";
@@ -130,7 +140,22 @@ export function IslandArea({
       rule: ruleFor(panel, isPanel),
     }) +
       2 * room.inset;
-  useIslandFrame(ref, room, area, solved, placed, need || 0);
+  // A layout fits when its islands at their least do: a split that
+  // doesn't is not made (store.ts).
+  const fits = (root: LayoutNode) => {
+    if (!room || !area) return true;
+    const input = {
+      root,
+      gap: room.gap,
+      rowHeight: 0,
+      rule: ruleFor(panel, isPanel),
+    };
+    return (
+      leastWidth(input) <= area.w + 0.5 &&
+      leastHeight(input) + (rows ? room.bar : 0) <= area.h + 0.5
+    );
+  };
+  useIslandFrame(ref, room, area, solved, placed, need || 0, fits);
   return (
     <main
       ref={ref}

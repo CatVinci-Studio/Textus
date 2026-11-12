@@ -1,5 +1,5 @@
 import type { ShortcutAction } from "../../prefs/shortcut-defaults";
-import { splitEditor } from "../../engine/layout/store";
+import { splitHere } from "./split-here";
 import { openCommandPalette } from "../command-palette-entry";
 import { TOGGLE_FIND_REPLACE_EVENT } from "../../utils/events";
 
@@ -64,7 +64,7 @@ export const APP_ACTIONS: readonly AppAction[] = [
     key: "toggleSourceMode",
     run: (h) => h.toggleSourceMode(),
   },
-  { menu: "split-right", key: "splitEditor", run: () => splitEditor("row") },
+  { menu: "split-right", key: "splitEditor", run: () => splitHere("row") },
   {
     menu: "command-palette",
     key: "commandPalette",

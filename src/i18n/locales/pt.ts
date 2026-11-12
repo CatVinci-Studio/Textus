@@ -165,6 +165,8 @@ Habilidades ficam na pasta skills/ ao lado deste arquivo, um arquivo
   revisionDisplayInline: "Tudo no texto",
   revisionDisplayOriginal: "Original no texto, alterações na margem",
   revisionDisplayFinal: "Só o resultado, original na margem",
+  splitNoRoom:
+    "Sem espaço para dividir: alargue a janela ou feche a barra lateral ou uma divisão",
   revisionDisplayNoRoom: "Sem espaço: feche a barra lateral ou o painel de IA",
   proposalDeletedSentence: "Original",
   proposalAddedSentence: "Adicionado",

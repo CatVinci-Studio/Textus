@@ -1,3 +1,4 @@
+import { layoutFits } from "../../engine/frame/frame-store";
 import { trackDrag } from "../../engine/drag/pointer-drag";
 import { dragGhost } from "../../engine/drag/ghost";
 import { dropIntent } from "../../engine/drag/drop-intent";
@@ -113,6 +114,8 @@ export function pullTab(
     if (!target) return null;
     const next = dropLayout(base, tabId, target);
     if (next === undefined) return null;
+    // An edge that would split the window past its room isn't one.
+    if (target.zone !== "center" && next && !layoutFits(next.root)) return null;
     const pane = target.zone === "center" ? paneOf(base, target.tabId) : null;
     // Its own island's middle: where it came from.
     if (pane && pane === paneOf(base, tabId)) return null;

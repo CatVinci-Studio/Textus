@@ -141,6 +141,8 @@ export default {
   revisionDisplayInline: "全部在正文中",
   revisionDisplayOriginal: "原文在正文，修改在页边",
   revisionDisplayFinal: "只看结果，原文在页边",
+  splitNoRoom:
+    "空间不够，无法再分屏：把窗口拉宽，或关掉侧边栏、某个分屏",
   revisionDisplayNoRoom: "空间不够：关掉侧边栏或 AI 面板即可",
   proposalDeletedSentence: "原文",
   proposalAddedSentence: "新增",
