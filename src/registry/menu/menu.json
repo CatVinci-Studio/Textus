@@ -10,7 +10,7 @@
           "id": "check-updates",
           "label": "updateCheckButton",
           "suffix": "…",
-          "en": "Check for Updates…",
+          "en": "Check for Updates",
           "on": ["mac"],
           "orOpen": true
         },
@@ -310,21 +310,21 @@
             {
               "id": "toggle-source-mode",
               "label": "menuToggleSourceMode",
-              "en": "Source Code Mode",
+              "en": "Source Mode",
               "setting": "toggleSourceMode",
               "check": true
             },
             {
               "id": "toggle-split-view",
               "label": "menuToggleSplitView",
-              "en": "Split View",
+              "en": "Source and Preview",
               "setting": "toggleSplitView",
               "check": true
             },
             {
               "id": "toggle-read-only",
               "label": "menuToggleReadOnly",
-              "en": "Read Only",
+              "en": "Reading Mode",
               "check": true
             }
           ]
@@ -479,7 +479,7 @@
     {
       "key": "plugin-commands-none",
       "label": "menuNoPluginCommands",
-      "en": "No Plugin Commands"
+      "en": "No plugin commands"
     },
     {
       "key": "manage-plugins",

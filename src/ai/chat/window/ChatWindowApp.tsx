@@ -1,4 +1,5 @@
-import { useMemo } from "react";
+import { useMemo, useState } from "react";
+import { CloseConfirmBar } from "../CloseConfirm";
 import { conversationScope } from "../conversation-scope";
 import type { ChatTabs } from "./ChatWindowHeader";
 import { useSettings } from "../../../prefs/SettingsContext";
@@ -39,6 +40,14 @@ export function ChatWindowApp({ tabs }: { tabs?: ChatTabs }) {
     () => chatLabels(t, settings.language),
     [t, settings.language],
   );
+  // A new conversation with edits still undecided asks first, as the panel
+  // does.
+  const [asking, setAsking] = useState(false);
+  const startOver = () => {
+    setAsking(false);
+    proposalDocs.current.clear();
+    conversation.reset();
+  };
 
   const header = (
     <ChatWindowHeader
@@ -51,10 +60,9 @@ export function ChatWindowApp({ tabs }: { tabs?: ChatTabs }) {
       busy={conversation.busy}
       pinned={pinned}
       reopenTarget={bridge.reopenTarget}
-      onNewConversation={() => {
-        proposalDocs.current.clear();
-        conversation.reset();
-      }}
+      onNewConversation={() =>
+        bridge.pendingCount > 0 ? setAsking(true) : startOver()
+      }
       onPin={() => setSettings({ pinAgentWindow: !pinned })}
       t={t}
     />
@@ -129,6 +137,18 @@ export function ChatWindowApp({ tabs }: { tabs?: ChatTabs }) {
           }
           onAcceptAll={() => sendScoped(CHAT_TO_EDITOR.acceptAll, {})}
           onRejectAll={() => sendScoped(CHAT_TO_EDITOR.rejectAll, {})}
+          footer={
+            asking && (
+              <CloseConfirmBar
+                labels={labels}
+                pendingCount={bridge.pendingCount}
+                onAcceptAll={() => sendScoped(CHAT_TO_EDITOR.acceptAll, {})}
+                onRejectAll={() => sendScoped(CHAT_TO_EDITOR.rejectAll, {})}
+                onClose={startOver}
+                onCancel={() => setAsking(false)}
+              />
+            )
+          }
           selectionChip={{
             onChange: (chip) =>
               sendScoped(CHAT_TO_EDITOR.selectionChip, { chip }),
