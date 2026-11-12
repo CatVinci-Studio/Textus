@@ -60,7 +60,7 @@ export const NoteCard = memo(function NoteCard({
       {picked !== null && (
         <input
           type="checkbox"
-          className="review-note-pick"
+          className="ui-check review-note-pick"
           checked={picked}
           aria-label={labels.reviewNotesPickOne}
           onChange={() => onPick(note.id)}

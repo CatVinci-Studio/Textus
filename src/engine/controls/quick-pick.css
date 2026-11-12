@@ -46,8 +46,7 @@
   background: var(--ui-selected);
   color: var(--ui-selected-text);
 }
-.quick-pick-item > input[type="checkbox"] {
-  margin: 0;
+.quick-pick-item > .ui-check {
   pointer-events: none;
 }
 .quick-pick-detail {

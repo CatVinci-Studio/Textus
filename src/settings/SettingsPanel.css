@@ -967,7 +967,8 @@ button.settings-inline-button {
 
 .theme-gallery-preview {
   flex-shrink: 0;
-  width: 112px;
+  /* A quarter of its row, between a thumbnail and a small preview. */
+  width: clamp(64px, 25%, 112px);
   aspect-ratio: 16 / 10;
   overflow: hidden;
   border: 1px solid color-mix(in srgb, var(--ui-border) 75%, transparent);
@@ -991,12 +992,6 @@ button.settings-inline-button {
   height: 100%;
   object-fit: cover;
   object-position: top left;
-}
-
-@media (max-width: 520px) {
-  .theme-gallery-preview {
-    width: 80px;
-  }
 }
 
 /* Back from a page inside a category (General › About Textus). */

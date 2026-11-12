@@ -1,4 +1,5 @@
 import { fill } from "../i18n/fill";
+import { PathText } from "../engine/controls/PathText";
 import { useEffect, useState, type ReactNode } from "react";
 import { emitToThisWindow } from "../platform/menu-events";
 import { NO_RECENTS, type RecentLists } from "../registry/menu/app-menu-model";
@@ -45,17 +46,14 @@ function useRecents(): [RecentLists, (path: string) => void] {
   return [recents, remove];
 }
 
-/** Where a recent item is, short: the home folder as ~ and only the last
- *  two folders, so the name stays readable. */
+/** Where a recent item is: the home folder as ~ (PathText gives way in
+ *  its middle). */
 export function shortPlace(path: string): string {
   const parent = dirname(path.replace(/[\\/]+$/, ""));
-  const home = parent.replace(
+  return parent.replace(
     /^(\/Users\/[^/]+|\/home\/[^/]+|[A-Za-z]:\\Users\\[^\\]+)/,
     "~",
   );
-  const sep = home.includes("\\") && !home.includes("/") ? "\\" : "/";
-  const parts = home.split(sep).filter(Boolean);
-  return parts.length > 3 ? `…${sep}${parts.slice(-2).join(sep)}` : home;
 }
 
 function RecentList({
@@ -99,7 +97,9 @@ function RecentList({
                 <span className="start-page-name">
                   {basename(path.replace(/[\\/]+$/, "")) || path}
                 </span>
-                <span className="start-page-where">{shortPlace(path)}</span>
+                <span className="start-page-where">
+                  <PathText path={shortPlace(path)} tip={false} />
+                </span>
               </button>
             </Tooltip>
             <button

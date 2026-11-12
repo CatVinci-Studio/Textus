@@ -56,17 +56,15 @@
   justify-content: center;
 }
 
-/* Too narrow for the titles: the ☰ is back. */
+/* Too narrow for the titles (WindowBar's fit step): the ☰ is back. */
 .window-menu-fallback {
   display: none;
 }
 
-@media (max-width: 719px) {
-  .window-menu-bar {
-    display: none;
-  }
+.window-bar[data-fit="menu"] .window-menu-bar {
+  display: none;
+}
 
-  .window-menu-fallback {
-    display: contents;
-  }
+.window-bar[data-fit="menu"] .window-menu-fallback {
+  display: contents;
 }

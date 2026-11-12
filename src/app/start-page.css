@@ -175,11 +175,8 @@
 
 .start-page-where {
   min-width: 0;
-  overflow: hidden;
   color: var(--ui-muted);
   font-size: var(--text-footnote);
-  text-overflow: ellipsis;
-  white-space: nowrap;
 }
 
 /* Off the list: shown on the row under the pointer or the keys. */

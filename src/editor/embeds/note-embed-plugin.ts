@@ -110,7 +110,7 @@ function embedWidget(state: EmbedView, source: string, docPath: string) {
         (event as MouseEvent).metaKey ||
         (event as MouseEvent).ctrlKey ||
         !!(event.target as Element).closest?.(
-          ".block-fold, .block-folded-line, .note-embed-open, .note-embed-block",
+          ".block-fold, .block-folded-line, .note-embed-open",
         ),
     );
     return el;

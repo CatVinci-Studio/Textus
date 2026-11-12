@@ -244,9 +244,8 @@
   position: absolute;
   top: 8px;
   right: 10px;
-  margin: 0;
-  accent-color: var(--review-note-line);
-  cursor: pointer;
+  /* Ticked in its note's own colour. */
+  --ui-accent-fill: var(--review-note-line);
 }
 
 .review-note:has(> .review-note-pick) {

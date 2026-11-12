@@ -1,5 +1,6 @@
 import { counted } from "../../i18n/current";
-import { Fragment, Suspense, useSyncExternalStore } from "react";
+import { Fragment, Suspense, useRef, useSyncExternalStore } from "react";
+import { useFitSteps } from "../../engine/controls/fit-steps";
 import { useSettings } from "../../prefs/SettingsContext";
 import { WindowCaptionButtons } from "../../engine/controls/WindowCaptionButtons";
 import type { MenuChecks } from "../../registry/menu/app-menu-model";
@@ -28,6 +29,8 @@ const PluginStatusItems = lazyComponent(
   lazyModule("plugin-status", () => import("../PluginStatusItems")),
   (m) => m.PluginStatusItems,
 );
+
+const MENU_FOLDS = ["menu"] as const;
 
 /**
  * The window's one top strip: a real layout row (an overlay title bar hides
@@ -89,9 +92,12 @@ export function WindowBar({
     agentOpen,
     onToggleAgent,
   );
+  // Too narrow for the menu bar's titles: the ☰ instead (window-controls.css).
+  const header = useRef<HTMLElement>(null);
+  useFitSteps(header, MENU_FOLDS);
   return (
     <>
-      <header className="window-bar" data-tauri-drag-region>
+      <header ref={header} className="window-bar" data-tauri-drag-region>
         {bar.lead.map((item) => {
           switch (item) {
             case "lights":

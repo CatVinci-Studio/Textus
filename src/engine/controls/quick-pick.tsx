@@ -191,6 +191,7 @@ function QuickPick({
               {request.multiple && (
                 <input
                   type="checkbox"
+                  className="ui-check"
                   tabIndex={-1}
                   aria-hidden="true"
                   checked={ticked.has(item)}
