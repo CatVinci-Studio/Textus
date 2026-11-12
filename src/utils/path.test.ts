@@ -2,9 +2,11 @@ import { describe, expect, it } from "vitest";
 import {
   absoluteIn,
   basename,
+  folderName,
   hasUrlScheme,
   isDrivePath,
   isInside,
+  joinPath,
   parentDir,
 } from "./path";
 
@@ -77,5 +79,19 @@ describe("absoluteIn", () => {
     expect(absoluteIn("/notes/", "Inbox.md")).toBe("/notes/Inbox.md");
     expect(absoluteIn("C:\\notes", "a\\b.md")).toBe("C:\\notes\\a\\b.md");
     expect(absoluteIn("/notes", "/elsewhere/c.md")).toBe("/elsewhere/c.md");
+  });
+});
+
+describe("joinPath and folderName", () => {
+  it("join with the folder's own separator, one between them", () => {
+    expect(joinPath("/v/", "/a.md")).toBe("/v/a.md");
+    expect(joinPath("C:\\v\\", "a.md")).toBe("C:\\v\\a.md");
+    // Written with both: "/" wins, as a Windows path given that way works.
+    expect(joinPath("C:\\v/w", "a.md")).toBe("C:\\v/w/a.md");
+  });
+  it("name a folder by its last part, a disk's root by itself", () => {
+    expect(folderName("/Users/me/Notes/")).toBe("Notes");
+    expect(folderName("C:\\Work")).toBe("Work");
+    expect(folderName("/")).toBe("/");
   });
 });

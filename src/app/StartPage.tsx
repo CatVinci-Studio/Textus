@@ -5,7 +5,7 @@ import { emitToThisWindow } from "../platform/menu-events";
 import { NO_RECENTS, type RecentLists } from "../registry/menu/app-menu-model";
 import { readRecents } from "./menu/recents";
 import { menuIpc } from "../platform/ipc-app";
-import { basename, dirname } from "../utils/path";
+import { basename, dirname, folderName } from "../utils/path";
 import {
   CloseIcon,
   FolderIcon,
@@ -95,7 +95,7 @@ function RecentList({
                   {icon}
                 </span>
                 <span className="tx-truncate start-page-name">
-                  {basename(path.replace(/[\\/]+$/, "")) || path}
+                  {folderName(path)}
                 </span>
                 <span className="start-page-where">
                   <PathText path={shortPlace(path)} tip={false} />
@@ -141,7 +141,7 @@ function FolderChips({
               onClick={() => onOpen(path)}
             >
               <FolderIcon />
-              {basename(path.replace(/[\\/]+$/, "")) || path}
+              {folderName(path)}
             </button>
           </Tooltip>
         ))}
@@ -172,7 +172,7 @@ export function StartPage({ t }: { t: Strings }) {
       >
         <div className="tx-empty">
           {fill(t.startPagePickDocument, {
-            folder: basename(empty.replace(/[\\/]+$/, "")),
+            folder: folderName(empty),
           })}
         </div>
       </div>

@@ -11,6 +11,7 @@ import { thisWindow } from "../platform/this-window";
 import { runCommand } from "../registry/commands";
 import { runMenuAction } from "./menu/app-menu-actions";
 import { paletteNow, type PaletteEntry } from "./command-palette";
+import { absoluteIn } from "../utils/path";
 
 /**
  * The `textus` commands a window answers: the command palette, plugins,
@@ -126,9 +127,7 @@ const theme: Handler = async (request, window) => {
 
 /** A path the user typed, against the terminal's folder. */
 export function againstCwd(path: string, cwd: string): string {
-  if (/^([a-zA-Z]:)?[\\/]/.test(path)) return path;
-  const sep = cwd.includes("\\") && !cwd.includes("/") ? "\\" : "/";
-  return `${cwd.replace(/[\\/]+$/, "")}${sep}${path}`;
+  return absoluteIn(cwd, path);
 }
 
 const plugin: Handler = async (request) => {

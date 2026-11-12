@@ -8,6 +8,7 @@ import { useSettings } from "../../../prefs/SettingsContext";
 import { showConfirm } from "../../../engine/controls/app-dialog";
 import { libraryEntryId } from "./memory-text";
 import { chosenModel } from "../../chosen-model";
+import { joinPath } from "../../../utils/path";
 
 const openInTab = (path: string) => openDocument(path);
 
@@ -155,10 +156,7 @@ export function useProjectActions({
     onOpenFile: openInTab,
     onRevealFile: (path: string) => void exportDoc.revealInDir(path),
     onOpenEntry: (entry: LibraryEntry) =>
-      root &&
-      openInTab(
-        `${root.replace(/[\\/]+$/, "")}/${entry.file.replace(/^[\\/]+/, "")}`,
-      ),
+      root && openInTab(joinPath(root, entry.file)),
     onDeleteMemory: (m: Memory) => void remove(m.id, t.memoryDeleteConfirm),
     onDeleteEntry: (entry: LibraryEntry) =>
       void remove(

@@ -11,7 +11,7 @@ import {
 } from "../engine/controls/icons";
 
 import { useSettings } from "../prefs/SettingsContext";
-import { basename, parentDir } from "../utils/path";
+import { folderName, parentDir } from "../utils/path";
 import { canOpenFolder, isIOSApp } from "../platform/capabilities";
 import { ContextMenu } from "../engine/controls/ContextMenu";
 import { Presence } from "../engine/motion/usePresence";
@@ -178,11 +178,11 @@ export function FileTree({
                       type="button"
                       className="tree-crumb"
                       onClick={() => onRootChange(parent)}
-                      aria-label={`${t.treeParentFolder}: ${basename(parent.replace(/[\\/]+$/, "")) || parent}`}
+                      aria-label={`${t.treeParentFolder}: ${folderName(parent)}`}
                     >
                       <ChevronIcon className="tree-crumb-back" />
                       <span className="tx-truncate tree-crumb-name">
-                        {basename(parent.replace(/[\\/]+$/, "")) || parent}
+                        {folderName(parent)}
                       </span>
                     </button>
                   </Tooltip>
@@ -192,7 +192,7 @@ export function FileTree({
                 </>
               )}
               <span className="tx-truncate tree-root-label" title={root}>
-                {basename(root.replace(/[\\/]+$/, "")) || root}
+                {folderName(root)}
               </span>
               {desktop && (
                 <>

@@ -363,9 +363,7 @@ function relOf(root: string, path: string): string {
  *  (access.rs in_folder). Else null, and the call goes to the backend,
  *  which says no where it should. */
 export function openDocument(root: string, path: string) {
-  const full = /^([\\/]|[A-Za-z]:)/.test(path)
-    ? path
-    : `${root.replace(/[\\/]+$/, "")}/${path}`;
+  const full = absoluteIn(root, path);
   return inOpenFolder(root, full)
     ? (getWindowAccess()?.documentAt(full) ?? null)
     : null;
@@ -375,9 +373,7 @@ export function openDocument(root: string, path: string) {
  *  in the open folder. */
 function within(root: string, path: string | undefined): string {
   if (!path) return root;
-  const full = /^([\\/]|[A-Za-z]:)/.test(path)
-    ? path
-    : `${root.replace(/[\\/]+$/, "")}/${path}`;
+  const full = absoluteIn(root, path);
   if (full !== root && !isInside(full, root))
     throw new Error(`${path} isn't in the open folder.`);
   return full;
