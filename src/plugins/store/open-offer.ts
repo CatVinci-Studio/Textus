@@ -132,11 +132,5 @@ export const offerPlugin = pluginOffer({
   },
   status: (id) => pluginRecord(id)?.status,
   card: showPluginCard,
-  install: installFromCatalog,
-  turnOn: (id) => setPluginEnabled(id, true),
-  failed: (error, t) =>
-    void showMessage(explainError(error, t), {
-      title: t.pluginsTitle,
-      tone: "error",
-    }),
+  takeUp,
 });
