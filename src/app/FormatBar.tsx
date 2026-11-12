@@ -4,7 +4,6 @@ import { useEffect, useRef, useState, type ComponentType } from "react";
 import type { Strings } from "../i18n/strings";
 import { caretBlock, NO_BLOCK, type CaretBlock } from "../editor/caret-block";
 import { IconButton } from "../engine/controls/IconButton";
-import { Tooltip } from "../engine/controls/Tooltip";
 import { useFitItems } from "../engine/controls/fit-steps";
 import { useMenuButton } from "../engine/controls/useMenuButton";
 import type {
@@ -267,43 +266,28 @@ export function FormatBar({
                   className="format-bar-item"
                   data-fit-item={ALL.indexOf(b)}
                 >
-                  {b.picksHeading ? (
-                    <Tooltip text={label}>
-                      <button
-                        type="button"
-                        className="tx-icon-button"
-                        aria-label={label}
-                        aria-pressed={b.on?.(block)}
-                        {...heading.button}
-                      >
-                        <b.Icon />
-                      </button>
-                    </Tooltip>
-                  ) : (
-                    <IconButton
-                      label={label}
-                      hint={b.keys ? `${label}  ${formatCombo(b.keys)}` : label}
-                      pressed={b.on ? b.on(block) : undefined}
-                      onClick={() => press(tabId, b)}
-                    >
-                      <b.Icon />
-                    </IconButton>
-                  )}
+                  <IconButton
+                    label={label}
+                    hint={b.keys ? `${label}  ${formatCombo(b.keys)}` : label}
+                    // A menu's button says it opens one, not that it is on.
+                    pressed={b.on && !b.picksHeading ? b.on(block) : undefined}
+                    onClick={b.picksHeading ? undefined : () => press(tabId, b)}
+                    opens={b.picksHeading ? heading.button : undefined}
+                  >
+                    <b.Icon />
+                  </IconButton>
                 </span>
               );
             })}
           </div>
         ))}
-        <Tooltip text={t.toolbarMore}>
-          <button
-            type="button"
-            className="tx-icon-button format-bar-more"
-            aria-label={t.toolbarMore}
-            {...more.button}
-          >
-            <MoreIcon />
-          </button>
-        </Tooltip>
+        <IconButton
+          label={t.toolbarMore}
+          className="tx-icon-button format-bar-more"
+          opens={more.button}
+        >
+          <MoreIcon />
+        </IconButton>
       </div>
       {heading.menu}
       {more.menu}

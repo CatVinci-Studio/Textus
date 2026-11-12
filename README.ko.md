@@ -44,14 +44,14 @@
 
 <p align="center">
   <a href="https://www.anthropic.com/">
-    <picture>
-      <source media="(prefers-color-scheme: dark)" srcset="docs/images/readme/sponsors/anthropic-logo-ivory.png">
-      <img src="docs/images/readme/sponsors/anthropic-logo-slate.png" alt="Anthropic" width="240">
-    </picture>
+    <img src="docs/images/readme/sponsors/anthropic-logo-slate.png#gh-light-mode-only" alt="Anthropic" width="240">
+    <img src="docs/images/readme/sponsors/anthropic-logo-ivory.png#gh-dark-mode-only" alt="Anthropic" width="240">
   </a>
 </p>
 
 <p align="center"><sub>Anthropic Startup Program을 통해</sub></p>
+
+<p align="center"><sub>후원자: <a href="https://github.com/jzzzzh"><img src="https://github.com/jzzzzh.png?size=40" alt="" width="20" height="20" align="center"> Jiang Zhuohang</a></sub></p>
 
 <p align="center">
   <img src="docs/images/readme/ko/hero.webp" alt="「메밀꽃 필 무렵」의 첫 대목과 그에 대한 독서 메모를 나란히 연 Textus. Textus AI가 메모의 수정안을 여백에 보여 주고, 소설 옆에 검토 댓글을 남겼습니다." width="860" /><br>
@@ -118,6 +118,8 @@ MIT 라이선스로 공개된 무료 오픈 소스입니다.
 ## 후원
 
 **프리미어 후원사:** [Anthropic](https://www.anthropic.com/), Anthropic Startup Program을 통해.
+
+**후원자:** [Jiang Zhuohang](https://github.com/jzzzzh)
 
 Textus는 무료 오픈 소스입니다. 개발을 응원하고 싶다면 [후원해 주세요](https://github.com/CatVinci-Studio/Textus/issues/648).
 

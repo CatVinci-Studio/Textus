@@ -16,11 +16,21 @@ it("keeps a conversation in the window's folder with no saved document in front"
 
 it("opens a reopened conversation in a tab of its own where there are tabs", () => {
   expect(openConversationTab("past")).toBe(false);
-  const asked: [string | null, string | undefined][] = [];
-  setConversationOpener((from, id) => {
-    asked.push([from, id]);
+  const asked: [
+    string | null,
+    string | undefined,
+    string | null | undefined,
+  ][] = [];
+  setConversationOpener((from, id, docPath) => {
+    asked.push([from, id, docPath]);
     return true;
   });
   expect(openConversationTab("past")).toBe(true);
-  expect(asked).toEqual([[null, "past"]]);
+  // Reopened from History: with the document it belongs to, whose
+  // conversations it joins where they are kept per document.
+  expect(openConversationTab("b's", undefined, "/b.md")).toBe(true);
+  expect(asked).toEqual([
+    [null, "past", undefined],
+    [null, "b's", "/b.md"],
+  ]);
 });

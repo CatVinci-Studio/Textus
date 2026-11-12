@@ -43,8 +43,9 @@ export function FindReplaceBar({ findReplace, labels }: FindReplaceBarProps) {
     findInput.current?.select();
   }, [findReplace.focusRequest]);
 
+  // Enter that confirms an input method's word is the IME's, not Find's.
   function onFindKeyDown(e: React.KeyboardEvent) {
-    if (e.key === "Enter") {
+    if (e.key === "Enter" && !isImeKeydown(e)) {
       e.preventDefault();
       if (e.shiftKey) findReplace.prev();
       else findReplace.next();
@@ -52,7 +53,7 @@ export function FindReplaceBar({ findReplace, labels }: FindReplaceBarProps) {
   }
 
   function onReplaceKeyDown(e: React.KeyboardEvent) {
-    if (e.key === "Enter") {
+    if (e.key === "Enter" && !isImeKeydown(e)) {
       e.preventDefault();
       findReplace.replaceOne();
     }

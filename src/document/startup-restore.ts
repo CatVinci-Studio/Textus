@@ -85,7 +85,7 @@ async function moveDrafts(
     kept.map((tab, i) => {
       const id = newId(i);
       return id && tab.text && tab.text.content !== tab.text.savedContent
-        ? drafts.saveDraftSnapshot(id, tab.path, tab.text.content)
+        ? drafts.saveDraftSnapshot(id, tab.path, tab.text.content, null)
         : null;
     }),
   ).catch(() => {});
@@ -190,10 +190,18 @@ export function useStartupRestore(options: StartupRestoreOptions): void {
               path: draft.path,
               content: draft.content,
               savedContent: diskContent,
-              diskMtime,
+              // The time its edits began from: a file changed since then
+              // asks before this is saved over it.
+              diskMtime: draft.diskMtime ?? diskMtime,
             });
           } catch {
-            continue; // file gone or unreadable since the snapshot was taken
+            // Its file is gone (renamed, or on a drive not mounted): the
+            // edits come back untitled rather than not at all.
+            restored.push({
+              ...makeBlankTab(),
+              content: draft.content,
+              savedContent: "",
+            });
           }
         }
         if (restored.length > 0) {
@@ -204,7 +212,12 @@ export function useStartupRestore(options: StartupRestoreOptions): void {
         // crash in between brings them back next time.
         void Promise.all(
           restored.map((tab) =>
-            drafts.saveDraftSnapshot(tab.id, tab.path, tab.content),
+            drafts.saveDraftSnapshot(
+              tab.id,
+              tab.path,
+              tab.content,
+              tab.diskMtime,
+            ),
           ),
         )
           .then(() => drafts.finishDraftRestore())
@@ -243,6 +256,7 @@ export function useStartupRestore(options: StartupRestoreOptions): void {
             opts.activeTabId,
             recovered.path,
             recovered.content,
+            recovered.diskMtime,
           )
           .catch(() => undefined);
         loadIntoInitialTab({

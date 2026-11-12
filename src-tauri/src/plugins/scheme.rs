@@ -11,12 +11,24 @@ use tauri::UriSchemeResponder;
 
 pub const SCHEME: &str = "textus-plugin";
 
-/// Answers one request off the main thread.
-pub fn handle(app: &tauri::AppHandle, request: Request<Vec<u8>>, responder: UriSchemeResponder) {
+/// Answers one request off the main thread. A web page in a tab
+/// (`crate::commands::web_page`) gets nothing: plugins' files are the app's.
+pub fn handle(
+    app: &tauri::AppHandle,
+    webview: &str,
+    request: Request<Vec<u8>>,
+    responder: UriSchemeResponder,
+) {
     let app = app.clone();
     let path = request.uri().path().to_string();
+    let from_page = crate::commands::web_page::is_page(webview);
     tauri::async_runtime::spawn(async move {
-        let response = match file(&app, &path).await {
+        let found = if from_page {
+            Err("Not for web pages.".to_string())
+        } else {
+            file(&app, &path).await
+        };
+        let response = match found {
             Ok((bytes, mime)) => Response::builder()
                 .header(header::CONTENT_TYPE, mime)
                 .body(bytes),

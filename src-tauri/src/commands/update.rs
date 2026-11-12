@@ -143,6 +143,50 @@ pub fn release_instance<R: Runtime>(app: tauri::AppHandle<R>) {
     let _ = app;
 }
 
+/// Set once an update is installed: the app starts again after the quit.
+#[cfg(desktop)]
+static RELAUNCH: std::sync::atomic::AtomicBool = std::sync::atomic::AtomicBool::new(false);
+
+/// After an update is installed: every window closes as at Quit (an unsaved
+/// document asks, or is kept as a draft), then the new version starts.
+#[cfg(desktop)]
+#[tauri::command]
+#[cfg_attr(test, specta::specta)]
+pub fn quit_and_relaunch(app: tauri::AppHandle) {
+    RELAUNCH.store(true, std::sync::atomic::Ordering::SeqCst);
+    crate::menu::quit(&app);
+}
+
+/// A window's prompt cancelled the quit: no relaunch either.
+#[cfg(desktop)]
+pub fn cancel_relaunch() {
+    RELAUNCH.store(false, std::sync::atomic::Ordering::SeqCst);
+}
+
+/// The end of a quit: exit, or start the installed version.
+#[cfg(desktop)]
+pub fn exit_app(app: &tauri::AppHandle) {
+    if RELAUNCH.load(std::sync::atomic::Ordering::SeqCst) {
+        release_instance(app.clone());
+        app.restart();
+    }
+    app.exit(0);
+}
+
+/// Windows installs by ending the app at once: each window writes its
+/// unsaved drafts first.
+#[cfg(desktop)]
+#[tauri::command]
+#[cfg_attr(test, specta::specta)]
+pub fn flush_drafts(app: tauri::AppHandle) {
+    use tauri::Emitter;
+    for label in app.webview_windows().into_keys() {
+        if crate::windows::is_editor_window(&label) {
+            let _ = app.emit_to(label.as_str(), "flush-drafts", ());
+        }
+    }
+}
+
 #[cfg(test)]
 mod tests {
     use super::*;

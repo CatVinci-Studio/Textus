@@ -232,6 +232,16 @@ export const commands = {
 	 *  hand its launch to this dying one. Windows and Linux only.
 	 */
 	release_instance: () => __TAURI_INVOKE<void>("release_instance"),
+	/**
+	 *  After an update is installed: every window closes as at Quit (an unsaved
+	 *  document asks, or is kept as a draft), then the new version starts.
+	 */
+	quit_and_relaunch: () => __TAURI_INVOKE<void>("quit_and_relaunch"),
+	/**
+	 *  Windows installs by ending the app at once: each window writes its
+	 *  unsaved drafts first.
+	 */
+	flush_drafts: () => __TAURI_INVOKE<void>("flush_drafts"),
 };
 
 /* Constants */

@@ -5,6 +5,8 @@ import { makeBlankTab, statMtime, tabIsDirty } from "../document/doc-tabs";
 import type { TabState } from "./tabs/useTabState";
 import { isInside } from "../utils/path";
 import { notePathMoved, setPathMoveHooks } from "../plugins/app-bridge";
+import { useWindowEvent } from "../utils/hooks/useWindowEvent";
+import { ENTRY_TRASHED_EVENT } from "../utils/events";
 
 /**
  * What happens to open tabs when the app itself renames, moves or deletes
@@ -46,8 +48,22 @@ export function useDocumentActions(opts: {
           return next ? { ...tab, path: next } : tab;
         }),
       );
+      // Read again where it is now (a move to another disk is a copy, with
+      // a new time), so its next save isn't taken for a change made behind
+      // its back.
+      for (const tab of tabsRef.current) {
+        const at = moved(tab.path);
+        if (!at) continue;
+        void statMtime(at).then(
+          (diskMtime) =>
+            setTabs((prev) =>
+              prev.map((t) => (t.path === at ? { ...t, diskMtime } : t)),
+            ),
+          () => undefined,
+        );
+      }
     },
-    [setTabs],
+    [setTabs, tabsRef],
   );
   // A renamed document stays open under its new name, like any move; a
   // deleted one keeps its text in the tab, unsaved.
@@ -67,28 +83,10 @@ export function useDocumentActions(opts: {
           )
             await saveTab(tab.id);
       },
-      after(from, to) {
-        entryMoved(from, to);
-        // Read again where it is now, so its next save isn't taken for a
-        // change made on disk behind its back.
-        for (const tab of tabsRef.current) {
-          const at =
-            tab.path === from
-              ? to
-              : tab.path && isInside(tab.path, from)
-                ? to + tab.path.slice(from.length)
-                : null;
-          if (!at) continue;
-          void statMtime(at).then((diskMtime) =>
-            setTabs((prev) =>
-              prev.map((t) => (t.path === at ? { ...t, diskMtime } : t)),
-            ),
-          );
-        }
-      },
+      after: entryMoved,
     });
     return () => setPathMoveHooks(null);
-  }, [tabsRef, liveTabs, setTabs, saveTab, entryMoved]);
+  }, [liveTabs, saveTab, entryMoved]);
   const documentDeleted = useCallback(
     (path: string) => {
       setTabs((prev) =>
@@ -120,6 +118,20 @@ export function useDocumentActions(opts: {
     },
     [documentDeleted, removeTab, tabsRef, setTabs, setActiveTabId],
   );
+
+  // A file or folder trashed in the sidebar: its tabs go as a reset
+  // skill's do, never writing it back.
+  useWindowEvent(ENTRY_TRASHED_EVENT, (e) => {
+    const gone = (e as CustomEvent<string>).detail;
+    skillFilesDeleted(
+      tabsRef.current
+        .map((tab) => tab.path)
+        .filter(
+          (path): path is string =>
+            !!path && (path === gone || isInside(path, gone)),
+        ),
+    );
+  });
 
   // iPhone Share needs a file, so an unsaved document is saved first.
   const shareActiveTab = useCallback(async () => {

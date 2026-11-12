@@ -44,14 +44,14 @@
 
 <p align="center">
   <a href="https://www.anthropic.com/">
-    <picture>
-      <source media="(prefers-color-scheme: dark)" srcset="docs/images/readme/sponsors/anthropic-logo-ivory.png">
-      <img src="docs/images/readme/sponsors/anthropic-logo-slate.png" alt="Anthropic" width="240">
-    </picture>
+    <img src="docs/images/readme/sponsors/anthropic-logo-slate.png#gh-light-mode-only" alt="Anthropic" width="240">
+    <img src="docs/images/readme/sponsors/anthropic-logo-ivory.png#gh-dark-mode-only" alt="Anthropic" width="240">
   </a>
 </p>
 
 <p align="center"><sub>dans le cadre de l’Anthropic Startup Program</sub></p>
+
+<p align="center"><sub>Sponsors: <a href="https://github.com/jzzzzh"><img src="https://github.com/jzzzzh.png?size=40" alt="" width="20" height="20" align="center"> Jiang Zhuohang</a></sub></p>
 
 <p align="center">
   <img src="docs/images/readme/fr/hero.webp" alt="Textus avec le Livre premier des Misérables à côté des notes du lecteur. Textus AI propose des retouches aux notes dans la marge et épingle un commentaire de relecture à côté du roman." width="860" /><br>
@@ -118,6 +118,8 @@ Plus d’extensions et de thèmes : [textus.md/extensions](https://textus.md/fr/
 ## Sponsors
 
 **Sponsor principal :** [Anthropic](https://www.anthropic.com/), dans le cadre de l’Anthropic Startup Program.
+
+**Sponsors :** [Jiang Zhuohang](https://github.com/jzzzzh)
 
 Textus est gratuit et open source. [Soutenez-nous](https://github.com/CatVinci-Studio/Textus/issues/648) pour aider son développement.
 

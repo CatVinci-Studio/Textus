@@ -12,6 +12,7 @@ import type {
   SuggestKind,
   ViewType,
 } from "./manifest";
+import { ManifestError, list, object, text, type Json } from "./manifest-json";
 
 /** Where a plugin's menu items may go. */
 export const MENU_IDS: readonly MenuId[] = [
@@ -30,32 +31,8 @@ export const MENU_IDS: readonly MenuId[] = [
  * wrong, for the plugin's author.
  */
 
-/** Why a manifest was refused, in English: shown as is in Settings, for its author. */
-export class ManifestError extends Error {}
-
 /** A contributed id: the plugin's own namespace, then a name. */
 const LOCAL_ID = /^[a-z0-9][a-z0-9.-]*$/i;
-
-type Json = Record<string, unknown>;
-
-export function object(value: unknown, what: string): Json {
-  if (!value || typeof value !== "object" || Array.isArray(value))
-    throw new ManifestError(`${what} must be an object.`);
-  return value as Json;
-}
-
-export function list(value: unknown, what: string): unknown[] {
-  if (value === undefined) return [];
-  if (!Array.isArray(value)) throw new ManifestError(`${what} must be a list.`);
-  return value;
-}
-
-export function text(value: unknown, what: string, optional = false): string {
-  if (optional && value === undefined) return "";
-  if (typeof value !== "string" || !value.trim())
-    throw new ManifestError(`${what} must be a string.`);
-  return value;
-}
 
 /** A contributed id must start with the plugin's id, so two plugins can't
  *  take each other's commands or views. */
@@ -408,12 +385,17 @@ export function parseContributes(raw: unknown, id: string): Contributes {
         throw new ManifestError(
           `${at}.language "${language}" is drawn by Textus itself.`,
         );
-      if (o.frame !== undefined && o.frame !== "none")
-        throw new ManifestError(`${at}.frame can only be "none".`);
+      for (const [key, only] of [
+        ["frame", "none"],
+        ["size", "interface"],
+      ])
+        if (o[key] !== undefined && o[key] !== only)
+          throw new ManifestError(`${at}.${key} can only be "${only}".`);
       return {
         language,
         title: text(o.title, `${at}.title`, true) || undefined,
-        frame: o.frame === "none" ? ("none" as const) : undefined,
+        frame: o.frame as "none" | undefined,
+        size: o.size as "interface" | undefined,
       };
     },
   );

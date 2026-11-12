@@ -190,8 +190,8 @@ pub(crate) fn quote_style(t: &Text, ctx: &Ctx, out: &mut Out) {
             }
         }
     } else if minority(s.dq_curly, s.dq_straight) {
-        for i in 0..t.len() {
-            if matches!(t.chars[i], '“' | '”') {
+        for (i, &c) in t.chars.iter().enumerate() {
+            if matches!(c, '“' | '”') {
                 out.fix(
                     "en.punct.quote-style",
                     i,
@@ -206,8 +206,8 @@ pub(crate) fn quote_style(t: &Text, ctx: &Ctx, out: &mut Out) {
         t.before(i).is_some_and(char::is_alphabetic) && t.at(i + 1).is_some_and(char::is_alphabetic)
     };
     if minority(s.apos_straight, s.apos_curly) {
-        for i in 0..t.len() {
-            if t.chars[i] == '\'' && apostrophe(i) {
+        for (i, &c) in t.chars.iter().enumerate() {
+            if c == '\'' && apostrophe(i) {
                 out.fix(
                     "en.punct.quote-style",
                     i,
@@ -218,8 +218,8 @@ pub(crate) fn quote_style(t: &Text, ctx: &Ctx, out: &mut Out) {
             }
         }
     } else if minority(s.apos_curly, s.apos_straight) {
-        for i in 0..t.len() {
-            if t.chars[i] == '’' && apostrophe(i) {
+        for (i, &c) in t.chars.iter().enumerate() {
+            if c == '’' && apostrophe(i) {
                 out.fix(
                     "en.punct.quote-style",
                     i,

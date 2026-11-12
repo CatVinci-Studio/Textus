@@ -1,3 +1,4 @@
+import { BUILTIN_CONTENT_THEMES } from "./builtin-themes";
 import type { AiRecords } from "../platform/bindings/files";
 import type { McpServer } from "./mcp";
 import { normaliseSettings } from "./settings-normalise";
@@ -97,7 +98,10 @@ function mergedThemes(
   css: ThemeCss,
   mine: UserThemeMeta[],
 ): UserThemeMeta[] {
-  const arriving = (incoming ?? []).filter((theme) => css[theme.id]);
+  // A dark look only where its CSS came along.
+  const arriving = (incoming ?? [])
+    .filter((theme) => css[theme.id])
+    .map((theme) => ({ ...theme, hasDark: css[theme.id].dark !== undefined }));
   const ids = new Set(arriving.map((theme) => theme.id));
   return [...mine.filter((theme) => !ids.has(theme.id)), ...arriving];
 }
@@ -183,7 +187,7 @@ export function settingsFromFile(
   // A theme whose CSS didn't come along can't be shown here.
   const themeId =
     incoming.themeId === undefined ||
-    incoming.themeId === "default" ||
+    BUILTIN_CONTENT_THEMES.some((theme) => theme.id === incoming.themeId) ||
     userThemes.some((theme) => theme.id === incoming.themeId)
       ? (incoming.themeId ?? current.themeId)
       : current.themeId;

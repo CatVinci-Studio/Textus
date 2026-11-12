@@ -1,6 +1,6 @@
 # Welcome to Textus
 
-Textus is a Markdown editor that shows your writing as it will look. Click anywhere and type: the Markdown marks appear only where the caret is, so **bold**, _italic_, ==highlight==, ~~strikethrough~~ and `inline code` stay readable while you write.
+Textus is an Integrated Writing Environment: your documents and Textus AI side by side, your writing shown as it will look. Click anywhere and type: the Markdown marks appear only where the caret is, so **bold**, _italic_, ==highlight==, ~~strikethrough~~ and `inline code` stay readable while you write.
 
 ## Lists and tasks
 

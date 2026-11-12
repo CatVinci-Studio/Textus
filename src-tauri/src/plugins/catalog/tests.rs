@@ -12,6 +12,11 @@ fn a_readme_is_in_the_language_asked_for_its_base_or_english() {
     assert_eq!(readme_for(&readme, "zh").as_deref(), Some("zh.md"));
     assert_eq!(readme_for(&readme, "ja").as_deref(), Some("en.md"));
     assert_eq!(readme_for(&Default::default(), "en"), None);
+    let no_hant: std::collections::BTreeMap<String, String> = [("en", "en.md"), ("zh", "zh.md")]
+        .into_iter()
+        .map(|(k, v)| (k.to_string(), v.to_string()))
+        .collect();
+    assert_eq!(readme_for(&no_hant, "zh-Hant").as_deref(), Some("en.md"));
 }
 
 #[test]

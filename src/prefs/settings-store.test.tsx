@@ -1,7 +1,7 @@
 // @vitest-environment jsdom
 import { localeOf } from "../i18n/strings";
 import TABLES from "./appearance-tables.json";
-import { BUILTIN_CONTENT_THEMES } from "../theme/builtin-themes";
+import { BUILTIN_CONTENT_THEMES } from "./builtin-themes";
 import { act, cleanup, render, screen } from "@testing-library/react";
 import { useEffect, useLayoutEffect } from "react";
 import {

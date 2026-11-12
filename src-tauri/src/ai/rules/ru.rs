@@ -56,8 +56,8 @@ fn quote_style(t: &Text, _ctx: &Ctx, out: &mut Out) {
     // «…«…»…»: the inner pair becomes „…“.
     let mut depth = 0;
     let mut inner_open: Option<usize> = None;
-    for i in 0..t.len() {
-        match t.chars[i] {
+    for (i, &c) in t.chars.iter().enumerate() {
+        match c {
             '«' => {
                 depth += 1;
                 if depth == 2 {

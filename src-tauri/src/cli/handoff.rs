@@ -87,7 +87,7 @@ pub fn absolute(args: &[String], cwd: &Path) -> Vec<String> {
             if a.starts_with('-') || crate::plugins::uri::is_textus_uri(a) {
                 a.clone()
             } else {
-                cwd.join(a).to_string_lossy().into_owned()
+                super::resolve(cwd, a).to_string_lossy().into_owned()
             }
         })
         .collect()

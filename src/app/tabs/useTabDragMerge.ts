@@ -19,7 +19,7 @@ import {
   type DetachedTabDoc,
   type DocTab,
 } from "../../document/doc-tabs";
-import { windowIpc, type WindowBounds } from "../../platform/ipc";
+import { drafts, windowIpc, type WindowBounds } from "../../platform/ipc";
 import { flushPendingWrites } from "../../storage/pending-writes";
 import { useLatest } from "../../utils/hooks/useLatest";
 import { canUseWindows } from "../../platform/capabilities";
@@ -158,8 +158,10 @@ export function useTabDragMerge(opts: {
       if (!tab) return;
       windowDragRef.current = "handed-off";
       // Rust destroys this window at once; held-back storage writes are sent
-      // first and land before the drag command.
+      // first and land before the drag command. The tab's draft goes with
+      // it: left here, it would come back as "recovered" at the next start.
       void flushPendingWrites();
+      await drafts.clearDraftSnapshot(tab.id).catch(() => undefined);
       void windowIpc.startFloatingTabDrag(
         floatingDragArgs(tab, latest.current.t, true),
         rowStrip(),

@@ -74,14 +74,20 @@ fn draw_at_full_frame_rate(window: &tauri::WebviewWindow) {
 
 /// Linux: a window's web process ends with the window. WebKitGTK otherwise
 /// keeps ~150 MB per closed window running, which background mode exposed.
+/// Its caches are sized for documents, too.
 #[cfg(target_os = "linux")]
 pub(crate) fn end_web_process_with_window(window: &tauri::WebviewWindow) {
     let _ = window.with_webview(|webview| {
         use gtk::prelude::WidgetExt;
         use webkit2gtk::WebViewExt;
-        webview
-            .inner()
-            .connect_destroy(|view| view.terminate_web_process());
+        let view = webview.inner();
+        // A document viewer's caches, not a browser's: WebKitGTK otherwise
+        // grows its memory caches with every page a tab loads.
+        if let Some(context) = view.context() {
+            use webkit2gtk::WebContextExt;
+            context.set_cache_model(webkit2gtk::CacheModel::DocumentViewer);
+        }
+        view.connect_destroy(|view| view.terminate_web_process());
     });
 }
 

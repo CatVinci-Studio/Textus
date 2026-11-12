@@ -10,7 +10,6 @@ import {
   ignoreGrammarIssue,
   type GrammarDecorationSpec,
 } from "./grammar-check-plugin";
-import { findUniqueTextRange } from "../doc-text";
 import { grammarKind } from "./grammar-kind";
 import type { EditorState } from "@milkdown/kit/prose/state";
 import type { GrammarPopoverInfo } from "./GrammarPopover";
@@ -232,10 +231,9 @@ export function useGrammarPopover(
           (a: Decoration, b: Decoration) =>
             Math.abs(a.from - popover.from) - Math.abs(b.from - popover.from),
         )[0];
-      let range = live ? { from: live.from, to: live.to } : null;
-
-      // Else the text itself, if it occurs exactly once.
-      if (!range && original) range = findUniqueTextRange(state.doc, original);
+      // Only the underline itself: with it gone the words changed, and the
+      // same words elsewhere (or inside the new ones) aren't the slip.
+      const range = live ? { from: live.from, to: live.to } : null;
 
       // Last line of defense against replacing the wrong text: the range
       // must still say exactly what the model was fixing.

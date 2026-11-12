@@ -120,4 +120,19 @@ describe("what Textus AI writes", () => {
     expect(html).not.toContain("<style");
     expect(html).not.toContain("url(");
   });
+
+  it("drops every other way a tag loads an address: srcset, poster, background, media", () => {
+    const html = renderMarkdownHtml(
+      [
+        '<img srcset="https://e.x/a?d=1 1x">',
+        '<video poster="https://e.x/p" src="https://e.x/v"></video>',
+        '<audio src="https://e.x/a"></audio>',
+        '<input type="image" src="https://e.x/i">',
+        '<table background="https://e.x/b"><tr><td>x</td></tr></table>',
+        '<picture><source srcset="https://e.x/s"><img alt="a"></picture>',
+      ].join("\n\n"),
+    );
+    expect(html).not.toContain("e.x");
+    expect(renderMarkdownHtml("- [x] done")).toContain('type="checkbox"');
+  });
 });

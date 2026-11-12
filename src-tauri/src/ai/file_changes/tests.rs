@@ -133,3 +133,28 @@ fn asked_first_a_change_waits_and_an_edited_file_is_left_alone() {
     assert_eq!(problems.len(), 1);
     assert_eq!(std::fs::read_to_string(&a).unwrap(), "Mine.\n");
 }
+
+#[test]
+fn a_windows_file_is_edited_as_read_and_keeps_its_line_endings() {
+    let (dir, conversation) = folder();
+    let open = dir.path().join("open.md");
+    let edits = FileEdits::new(Some(dir.path()), Some(&conversation), Some(&open), false).unwrap();
+    let file = dir.path().join("w.md");
+    std::fs::write(&file, "First line.\r\nSecond line.\r\n").unwrap();
+    edits.run(
+        &call(
+            "edit_file",
+            json!({"path": "w.md", "old": "First line.\nSecond", "new": "One.\nTwo"}),
+        ),
+        edit_file,
+    );
+    assert_eq!(
+        std::fs::read_to_string(&file).unwrap(),
+        "One.\r\nTwo line.\r\n"
+    );
+    edits.run(
+        &call("write_file", json!({"path": "w.md", "content": "A\nB\n"})),
+        write_file,
+    );
+    assert_eq!(std::fs::read_to_string(&file).unwrap(), "A\r\nB\r\n");
+}

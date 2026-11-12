@@ -5,6 +5,7 @@ import { afterEach, describe, expect, it, vi } from "vitest";
 import { SourceEditor } from "./SourceEditor";
 import { sourceViewAt } from "./source-view-registry";
 import { editInFocus } from "../../engine/controls/edit-in-focus";
+import { runScopeHandlers } from "@codemirror/view";
 
 afterEach(cleanup);
 
@@ -129,5 +130,23 @@ describe("SourceEditor", () => {
     vi.spyOn(document, "hasFocus").mockReturnValue(true);
     editInFocus("undo");
     expect(view.state.doc.toString()).toBe("abc");
+  });
+
+  it("indents with Tab instead of letting the keyboard leave", () => {
+    const { container } = render(
+      <SourceEditor value={"- a"} onChange={vi.fn()} typewriter={false} />,
+    );
+    const { view } = sourceViewAt(container)!;
+    view.dispatch({ selection: { anchor: 0 } });
+    const press = (shiftKey: boolean) =>
+      runScopeHandlers(
+        view,
+        new KeyboardEvent("keydown", { key: "Tab", shiftKey }),
+        "editor",
+      );
+    expect(press(false)).toBe(true);
+    expect(view.state.doc.toString()).toBe("\t- a");
+    press(true);
+    expect(view.state.doc.toString()).toBe("- a");
   });
 });

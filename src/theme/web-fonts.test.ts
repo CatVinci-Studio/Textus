@@ -53,4 +53,12 @@ describe("withWebFonts", () => {
     expect(await withWebFonts(plain)).toBe(plain);
     expect(get).not.toHaveBeenCalled();
   });
+
+  it("tries again a stylesheet nothing could be fetched for (offline at launch)", async () => {
+    const css = `@import url("${GOOGLE}?retry");`;
+    get.mockRejectedValueOnce(new Error("offline"));
+    expect(await withWebFonts(css)).toBe(css);
+    get.mockResolvedValueOnce(SHEET);
+    expect(await withWebFonts(css)).not.toContain("@import");
+  });
 });

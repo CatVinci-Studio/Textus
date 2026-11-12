@@ -6,7 +6,7 @@ use super::state::{self, PluginsState};
 use super::{plugins_root, require_id};
 use serde::{Deserialize, Serialize};
 use std::collections::BTreeMap;
-use std::path::{Component, Path, PathBuf};
+use std::path::{Path, PathBuf};
 use std::time::Duration;
 use tauri::ipc::Response;
 use tauri::Manager;
@@ -29,75 +29,6 @@ fn running(state: &PluginsState, id: &str) -> Result<(), String> {
     }
 }
 
-/// `path` resolved inside the open folder `root`: as [`inside`], and in no
-/// hidden folder or file of it - .git's hooks and config, an editor's or
-/// another app's settings, .env - which hold tokens, or which a write could
-/// turn into code that runs. The folder's own .textus is the user's writing
-/// (instructions, library, memory, skills), which a sync carries; nothing
-/// hidden inside it.
-pub(crate) fn in_folder(root: &Path, path: &Path) -> Result<PathBuf, String> {
-    let resolved = inside(root, path)?;
-    let base = std::fs::canonicalize(root).map_err(|e| e.to_string())?;
-    let hidden = resolved
-        .strip_prefix(&base)
-        .map(|rel| {
-            rel.components().enumerate().any(|(i, c)| {
-                matches!(c, Component::Normal(n)
-                    if n.to_string_lossy().starts_with('.') && !(i == 0 && n == ".textus"))
-            })
-        })
-        .unwrap_or(true);
-    if hidden {
-        return Err(
-            "Files and folders whose names start with \".\" aren't open to plugins.".to_string(),
-        );
-    }
-    Ok(resolved)
-}
-
-/// Whether `rel` passes through anything hidden (`.env`, `.git/config`) or
-/// node_modules: what a plugin's own folder serves and lists leaves out.
-pub(crate) fn hidden_part(rel: &Path) -> bool {
-    rel.components().any(|c| {
-        matches!(c, Component::Normal(n)
-            if n.to_string_lossy().starts_with('.') || n == "node_modules")
-    })
-}
-
-/// `path` resolved inside `root`: no `..`, and still under `root` after
-/// following links in the part that exists; the rest is kept as named.
-pub(crate) fn inside(root: &Path, path: &Path) -> Result<PathBuf, String> {
-    let root = std::fs::canonicalize(root).map_err(|e| format!("{}: {e}", root.display()))?;
-    let path = if path.is_absolute() {
-        path.to_path_buf()
-    } else {
-        root.join(path)
-    };
-    if path.components().any(|c| matches!(c, Component::ParentDir)) {
-        return Err("A path with \"..\" is refused.".to_string());
-    }
-    let mut existing = path.clone();
-    let mut missing: Vec<std::ffi::OsString> = Vec::new();
-    while !existing.exists() {
-        match existing.file_name() {
-            Some(name) => missing.push(name.to_os_string()),
-            None => break,
-        }
-        if !existing.pop() {
-            break;
-        }
-    }
-    let mut resolved = std::fs::canonicalize(&existing).map_err(|e| e.to_string())?;
-    for name in missing.into_iter().rev() {
-        resolved.push(name);
-    }
-    if resolved.starts_with(&root) {
-        Ok(resolved)
-    } else {
-        Err(format!("{} is outside the folder.", path.display()))
-    }
-}
-
 /// The app's own folders (other plugins' storage, settings, keys), which no
 /// plugin reaches through the workspace calls.
 /// `path` for plugin `id` to use with `permission`: granted, inside `root`
@@ -112,7 +43,11 @@ pub(super) fn granted_path(
     if !state::read(app).allows(id, permission) {
         return Err(refused(id, permission));
     }
-    let path = in_folder(Path::new(root), Path::new(path))?;
+    let path = if permission == "files.read" && paths::read_only_hidden(root, path) {
+        inside(Path::new(root), Path::new(path))?
+    } else {
+        plugin_path(Path::new(root), Path::new(path), id)?
+    };
     require_not_app_data(app, &path)?;
     Ok(path)
 }
@@ -221,7 +156,7 @@ pub async fn plugin_fs_list(
     if !state::read(&app).allows(&id, "files.read") {
         return Err(refused(&id, "files.read"));
     }
-    let dir = in_folder(Path::new(&root), Path::new(&path))?;
+    let dir = plugin_path(Path::new(&root), Path::new(&path), &id)?;
     require_not_app_data(&app, &dir)?;
     let mut reader = tokio::fs::read_dir(&dir).await.map_err(|e| e.to_string())?;
     let mut out = Vec::new();
@@ -293,8 +228,8 @@ pub async fn plugin_fs_rename(
         return Err(refused(&id, "files.write"));
     }
     let root = Path::new(&root);
-    let from = in_folder(root, Path::new(&from))?;
-    let to = in_folder(root, Path::new(&to))?;
+    let from = plugin_path(root, Path::new(&from), &id)?;
+    let to = plugin_path(root, Path::new(&to), &id)?;
     require_not_app_data(&app, &from)?;
     require_not_app_data(&app, &to)?;
     // A change of case only is the same file on macOS and Windows.
@@ -492,6 +427,9 @@ pub async fn plugin_http(
         body: STANDARD.encode(body),
     })
 }
+
+mod paths;
+pub(crate) use paths::{hidden_part, in_folder, inside, plugin_path};
 
 #[cfg(test)]
 mod tests;

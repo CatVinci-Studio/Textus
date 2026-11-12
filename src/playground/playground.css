@@ -1,5 +1,6 @@
 /* The browser playground's page: the app's palette, type and document
-   column, and a slim bar of its own. */
+   column, framed as Textus 1.4 frames a document - its tab in the window's
+   bar, joined to the page, the page an island on the window's frame. */
 @import "../engine/tokens/base.css";
 @import "../app/editor-column.css";
 
@@ -11,7 +12,7 @@ body,
 }
 
 body {
-  background: var(--ui-bg);
+  background: var(--ui-frame);
 }
 
 .playground {
@@ -23,12 +24,15 @@ body {
 .playground-bar {
   display: flex;
   flex-wrap: wrap;
-  align-items: center;
+  align-items: flex-end;
   gap: var(--space-2) var(--space-4);
-  padding: var(--space-2) var(--space-4);
-  border-bottom: 1px solid var(--ui-border);
+  padding: var(--space-2) var(--space-4) 0;
   color: var(--ui-text);
   font-size: var(--text-control);
+}
+
+.playground-bar > :not(.playground-documents) {
+  align-self: center;
 }
 
 .playground-brand {
@@ -99,22 +103,34 @@ body {
   background: color-mix(in srgb, var(--ui-primary) 85%, var(--ui-bg));
 }
 
-.editor-scroll {
+/* The page: an island on the frame, as in the app. */
+.editor-scroll,
+.playground .source-view {
   flex: 1;
-  overflow-y: auto;
+  min-height: 0;
+  margin: 0 var(--space-2) var(--space-2);
+  border: 1px solid var(--ui-frame-edge);
+  border-radius: var(--shape-m);
+  corner-shape: round;
   background: var(--ui-surface);
 }
 
-/* Source mode fills the rest of the page, as the editor does. */
-.playground .source-view {
-  min-height: 0;
+.editor-scroll {
+  overflow-y: auto;
 }
 
 /* A phone: the note gets a line of its own under the brand and buttons,
    and the column gives the text the width. */
+@media (max-width: 900px) {
+  /* Where the bar wraps, the tab goes last: on the page it opens. */
+  .playground .playground-documents {
+    order: 9;
+  }
+}
+
 @media (max-width: 640px) {
   .playground-bar {
-    padding: var(--space-2) var(--space-3);
+    padding: var(--space-2) var(--space-3) 0;
   }
 
   .playground-note {
@@ -128,14 +144,21 @@ body {
   }
 }
 
-/* The document's name, opening the list of documents. */
-.playground-documents {
+/* The document's tab, rising out of its page: its name opens the list of
+   documents. */
+.playground .playground-documents {
+  position: relative;
+  bottom: -1px;
   display: inline-flex;
   align-items: center;
   gap: 8px;
   min-height: var(--control-height-sm);
-  padding: 0 8px 0 12px;
   max-width: 260px;
+  padding: 0 8px 4px 12px;
+  border: 1px solid var(--ui-frame-edge);
+  border-bottom: none;
+  border-radius: var(--shape-s) var(--shape-s) 0 0;
+  background: var(--ui-surface);
   color: inherit;
 }
 
@@ -143,4 +166,16 @@ body {
   flex-shrink: 0;
   transform: rotate(90deg);
   opacity: 0.6;
+}
+
+/* The language: a pill like the buttons beside it. */
+.playground .playground-language {
+  min-height: var(--control-height-sm);
+  padding: 0 12px;
+  border: 1px solid var(--ui-border);
+  border-radius: var(--shape-pill);
+  corner-shape: round;
+  background: none;
+  color: inherit;
+  font: inherit;
 }

@@ -1,8 +1,8 @@
 import { notesRoot } from "../../files/link-style";
 import { inOpenFolder } from "../may-open";
 import { fs, plugins as pluginsIpc, type StoreScope } from "../../platform/ipc";
-import { basename, isInside, slashed } from "../../utils/path";
-import { FILE_WRITTEN_EVENT } from "../../utils/events";
+import { absoluteIn, basename, isInside, slashed } from "../../utils/path";
+import { ENTRY_TRASHED_EVENT, FILE_WRITTEN_EVENT } from "../../utils/events";
 import { fromBase64, toBase64 } from "../store/files";
 import {
   beforePluginMove,
@@ -33,9 +33,14 @@ export async function written(
   path: string,
   write: Promise<unknown>,
   change: "fileCreate" | "fileChange" = "fileChange",
+  /** The plugin's folder, for a path given relative to it. */
+  root?: string,
 ): Promise<void> {
   await write;
-  window.dispatchEvent(new CustomEvent(FILE_WRITTEN_EVENT, { detail: path }));
+  // The window compares whole paths (an embed of the note); plugins hear
+  // the path as it was given.
+  const full = root ? absoluteIn(root, path) : path;
+  window.dispatchEvent(new CustomEvent(FILE_WRITTEN_EVENT, { detail: full }));
   emitPluginEvent(change, { path });
 }
 
@@ -67,7 +72,7 @@ export function fileHandlers(p: PluginScope) {
       return !!doc && doc.replaceText(text, token.slice(TAB_TOKEN.length));
     }
     const ok = await pluginsIpc.fsWriteIf(p.id, root, path, text, token);
-    if (ok) await written(path, Promise.resolve());
+    if (ok) await written(path, Promise.resolve(), "fileChange", root);
     return ok;
   };
   const readVersion = async (path: string) => {
@@ -143,6 +148,8 @@ export function fileHandlers(p: PluginScope) {
       return written(
         target,
         pluginsIpc.fsWrite(p.id, write(), target, str(text, "text")),
+        "fileChange",
+        write(),
       );
     },
     "files.write": ({ path, data }: Params) => {
@@ -151,6 +158,8 @@ export function fileHandlers(p: PluginScope) {
       return written(
         target,
         pluginsIpc.fsWrite(p.id, write(), target, toBase64(data), true),
+        "fileChange",
+        write(),
       );
     },
     "files.create": ({ path, text }: Params) => {
@@ -159,6 +168,7 @@ export function fileHandlers(p: PluginScope) {
         target,
         pluginsIpc.fsCreate(p.id, write(), target, optionalStr(text) ?? ""),
         "fileCreate",
+        write(),
       );
     },
     "files.processRead": ({ path }: Params) => {
@@ -183,14 +193,11 @@ export function fileHandlers(p: PluginScope) {
       const source = str(from, "from");
       const target = str(to, "to");
       // A plugin may name the files from the folder.
-      const abs = (path: string) =>
-        /^([\\/]|[A-Za-z]:)/.test(path)
-          ? path
-          : `${root.replace(/[\\/]+$/, "")}/${path}`;
+      const abs = (path: string) => absoluteIn(root, path);
       await beforePluginMove(abs(source));
       await pluginsIpc.fsRename(p.id, root, source, target);
       window.dispatchEvent(
-        new CustomEvent(FILE_WRITTEN_EVENT, { detail: source }),
+        new CustomEvent(FILE_WRITTEN_EVENT, { detail: abs(source) }),
       );
       await pluginMovedPath(abs(source), abs(target));
       if (updateLinks !== true) return;
@@ -222,9 +229,15 @@ export function fileHandlers(p: PluginScope) {
     },
     "files.trash": async ({ path }: Params) => {
       const target = str(path, "path");
-      await pluginsIpc.fsTrash(p.id, write(), target);
+      const root = write();
+      await pluginsIpc.fsTrash(p.id, root, target);
+      const full = absoluteIn(root, target);
       window.dispatchEvent(
-        new CustomEvent(FILE_WRITTEN_EVENT, { detail: target }),
+        new CustomEvent(FILE_WRITTEN_EVENT, { detail: full }),
+      );
+      // Its tabs let go, as for a file trashed in the sidebar.
+      window.dispatchEvent(
+        new CustomEvent(ENTRY_TRASHED_EVENT, { detail: full }),
       );
       emitPluginEvent("fileDelete", { path: target });
     },

@@ -2,6 +2,7 @@
 import { afterEach, expect, it } from "vitest";
 import {
   addCodeBlockLanguage,
+  codeBlockAtInterfaceSize,
   codeBlockFrameless,
   codeBlockPlugin,
   onCodeBlockLanguages,
@@ -31,13 +32,15 @@ afterEach(() => {
 it("lets the first plugin draw a language, and hands it over when it goes", () => {
   let redraws = 0;
   undo.push(onCodeBlockLanguages(() => redraws++));
-  const offA = addCodeBlockLanguage("Chart", "a.chart", "none");
+  const offA = addCodeBlockLanguage("Chart", "a.chart", "none", "interface");
   undo.push(addCodeBlockLanguage("chart", "b.chart"));
   expect(codeBlockPlugin("chart")).toBe("a.chart");
   expect(codeBlockFrameless("chart")).toBe(true);
+  expect(codeBlockAtInterfaceSize("chart")).toBe(true);
   offA();
   expect(codeBlockPlugin("CHART")).toBe("b.chart");
   expect(codeBlockFrameless("chart")).toBe(false);
+  expect(codeBlockAtInterfaceSize("chart")).toBe(false);
   expect(redraws).toBe(3);
 });
 

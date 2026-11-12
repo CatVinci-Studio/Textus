@@ -17,11 +17,14 @@ import {
 import {
   history,
   historyKeymap,
+  indentLess,
+  insertTab,
   redo,
   selectAll,
   standardKeymap,
   undo,
 } from "@codemirror/commands";
+import { indentUnit } from "@codemirror/language";
 import { centerSourceCaret } from "./mode-caret";
 import { sourceHighlighting } from "./source-highlight";
 import { sourceEscapes } from "./source-escapes";
@@ -107,6 +110,7 @@ export function SourceEditor({
           // Source mode edits as plain text does, with colours: no line or
           // word highlights, multiple carets, auto-indent or code keys.
           history(),
+          indentUnit.of("\t"),
           drawSelection(),
           dropCursor(),
           EditorView.lineWrapping,
@@ -116,11 +120,13 @@ export function SourceEditor({
             autocapitalize: "off",
           }),
           // The plain-text keys only: no searchKeymap (Ctrl/Cmd+F is
-          // Textus's own find bar), and Tab moves the focus as in any field.
-          // Bold and italic write their Markdown, as in the rendered view.
+          // Textus's own find bar). Tab indents as in a text editor; Escape
+          // then Tab still moves the focus on. Bold and italic write their
+          // Markdown, as in the rendered view.
           keymap.of([
             { key: "Mod-b", run: (v) => formatSource(v, "bold") },
             { key: "Mod-i", run: (v) => formatSource(v, "italic") },
+            { key: "Tab", run: insertTab, shift: indentLess },
             ...standardKeymap,
             ...historyKeymap,
           ]),

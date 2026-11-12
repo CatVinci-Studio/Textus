@@ -9,7 +9,7 @@ import {
   matchesFilename,
   parseManifest,
 } from "./manifest";
-import { ManifestError } from "./manifest-parse";
+import { ManifestError } from "./manifest-json";
 
 const base = {
   id: "catvinci.example",
@@ -75,8 +75,9 @@ describe("a plugin's manifest", () => {
       frontMatter: ["kanban-plugin"],
     });
     expect(() => board({})).toThrow(/filenamePatterns/);
+    // Traditional Chinese reads the English, not the Simplified.
     expect(localize(m, m.contributes.commands[0].title, "zh-Hant")).toBe(
-      "打个招呼",
+      "Say hello",
     );
     expect(localize(m, "%hello%", "fr")).toBe("Say hello");
     expect(localize(m, "Plain", "zh")).toBe("Plain");

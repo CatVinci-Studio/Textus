@@ -1,5 +1,6 @@
 import { describe, expect, it } from "vitest";
 import {
+  absoluteIn,
   basename,
   hasUrlScheme,
   isDrivePath,
@@ -68,5 +69,13 @@ describe("isInside, walking dots", () => {
     expect(isInside("/notes/a/./b.md", "/notes")).toBe(true);
     expect(isInside("C:\\notes\\..\\win.ini", "C:\\notes")).toBe(false);
     expect(isInside("C:\\notes\\a\\b.md", "C:\\notes\\")).toBe(true);
+  });
+});
+
+describe("absoluteIn", () => {
+  it("puts a relative path inside the folder, in the folder's spelling", () => {
+    expect(absoluteIn("/notes/", "Inbox.md")).toBe("/notes/Inbox.md");
+    expect(absoluteIn("C:\\notes", "a\\b.md")).toBe("C:\\notes\\a\\b.md");
+    expect(absoluteIn("/notes", "/elsewhere/c.md")).toBe("/elsewhere/c.md");
   });
 });

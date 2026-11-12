@@ -1,4 +1,5 @@
 // @vitest-environment jsdom
+import { readDocFromDisk } from "./doc-tabs";
 import { cleanup, renderHook, waitFor } from "@testing-library/react";
 import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
 import type { DocTab } from "./doc-tabs";
@@ -179,6 +180,7 @@ describe("startup restore into the initial tab", () => {
       tabs()[0].id,
       null,
       "typed",
+      null,
     );
     expect(ipc.clearDraftSnapshot).toHaveBeenCalledWith("old-pdf");
   });
@@ -314,7 +316,13 @@ describe("startup restore into the initial tab", () => {
     });
     ipc.takeDraftSnapshots.mockResolvedValue([
       { tabId: "old-a", path: "/docs/a.md", content: "a, unsaved" },
-      { tabId: "old-b", path: "/docs/b.md", content: "b, unsaved" },
+      // Begun from an older copy of b: saving it asks first.
+      {
+        tabId: "old-b",
+        path: "/docs/b.md",
+        content: "b, unsaved",
+        diskMtime: 5,
+      },
     ]);
     const { tabs, openPathInTab } = await restore();
     await waitFor(() =>
@@ -331,22 +339,28 @@ describe("startup restore into the initial tab", () => {
         savedContent: "# /docs/a.md\n",
         reloadKey: 1,
       }),
-      expect.objectContaining({ path: "/docs/b.md", content: "b, unsaved" }),
+      expect.objectContaining({
+        path: "/docs/b.md",
+        content: "b, unsaved",
+        diskMtime: 5,
+      }),
     ]);
   });
 
   // A crash with nothing reopened: what was recovered fills the window, not
   // an empty "Untitled" beside it.
   it("puts the first recovered draft in the initial tab", async () => {
+    // b's file is gone (a drive not mounted): its edits come back untitled.
+    vi.mocked(readDocFromDisk).mockRejectedValueOnce(new Error("gone"));
     ipc.takeDraftSnapshots.mockResolvedValue([
       { tabId: "old-a", path: null, content: "draft a" },
-      { tabId: "old-b", path: null, content: "draft b" },
+      { tabId: "old-b", path: "/gone/b.md", content: "draft b" },
     ]);
     const { tabs } = await restore();
     await waitFor(() => expect(tabs()[0].content).toBe("draft a"));
     expect(tabs()).toEqual([
       expect.objectContaining({ id: "initial", content: "draft a" }),
-      expect.objectContaining({ content: "draft b" }),
+      expect.objectContaining({ content: "draft b", path: null }),
     ]);
   });
 });

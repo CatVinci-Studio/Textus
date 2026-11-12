@@ -85,9 +85,11 @@
 /* Under the text, from its start: the open button's padding, the icon and
    the gap after it. Short of room, the button goes under the maker, from
    the same start, rather than cutting the name to a letter. */
+/* One line however narrow: the byline gives way (cut short), never the
+   button, which would otherwise drop to a line of its own. */
 .plugins-panel-foot {
   display: flex;
-  flex-wrap: wrap;
+  flex-wrap: nowrap;
   align-items: center;
   gap: 4px 8px;
   min-height: var(--control-height-sm);
@@ -98,6 +100,15 @@
 
 .plugins-panel-foot > .plugin-byline {
   flex: 1 1 auto;
+  flex-wrap: nowrap;
+  min-width: 0;
+  overflow: hidden;
+}
+.plugins-panel-foot > .plugin-byline > span:not(.tx-badge) {
+  min-width: 0;
+  overflow: hidden;
+  white-space: nowrap;
+  text-overflow: ellipsis;
 }
 
 .plugins-panel-end {

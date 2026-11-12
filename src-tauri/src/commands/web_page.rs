@@ -33,6 +33,11 @@ struct Navigated {
 #[cfg(target_os = "macos")]
 const SAFARI_USER_AGENT: &str = "Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) AppleWebKit/605.1.15 (KHTML, like Gecko) Version/18.6 Safari/605.1.15";
 
+/// Where a page's webview starts before going to its address. Tauri's
+/// `asset:` files answer the origin a webview was made with; one no site can
+/// have keeps every page from reading them.
+const FIRST_ADDRESS: &str = "https://page.textus.invalid/";
+
 /// The event a window's tabs hear their pages' addresses by.
 const NAVIGATED: &str = "web-page-navigated";
 
@@ -49,6 +54,11 @@ fn label(window: &Window, id: &str) -> String {
         })
         .collect();
     format!("page-{}-{id}", window.label())
+}
+
+/// Whether webview `label` is a web page in a tab.
+pub(crate) fn is_page(label: &str) -> bool {
+    label.starts_with("page-")
 }
 
 /// `url` if a page may show it: HTTPS.
@@ -85,7 +95,8 @@ pub fn web_page_show(
     let url = https(&url)?;
     let app = window.app_handle().clone();
     let (navigated_app, window_label, tab) = (app.clone(), window.label().to_string(), id.clone());
-    let builder = WebviewBuilder::new(&label, WebviewUrl::External(url))
+    let first = Url::parse(FIRST_ADDRESS).map_err(|e| e.to_string())?;
+    let builder = WebviewBuilder::new(&label, WebviewUrl::External(first))
         .on_navigation({
             let app = app.clone();
             move |url| {
@@ -104,6 +115,9 @@ pub fn web_page_show(
             }
         })
         .on_page_load(move |_, payload| {
+            if payload.url().as_str() == FIRST_ADDRESS {
+                return;
+            }
             let _ = navigated_app.emit_to(
                 window_label.as_str(),
                 NAVIGATED,
@@ -116,10 +130,10 @@ pub fn web_page_show(
         });
     #[cfg(target_os = "macos")]
     let builder = builder.user_agent(SAFARI_USER_AGENT);
-    window
+    let page = window
         .add_child(builder, position, size)
-        .map(|_| ())
-        .map_err(|e| e.to_string())
+        .map_err(|e| e.to_string())?;
+    page.navigate(url).map_err(|e| e.to_string())
 }
 
 /// Hides tab `id`'s page: its tab went out of sight, or a menu or dialog is
@@ -169,6 +183,12 @@ pub fn web_page_reload(window: Window, id: String) -> Result<(), String> {
 #[cfg(test)]
 mod tests {
     use super::https;
+
+    #[test]
+    fn a_page_starts_at_an_origin_no_site_has() {
+        let first = super::Url::parse(super::FIRST_ADDRESS).unwrap();
+        assert!(first.host_str().unwrap().ends_with(".invalid"));
+    }
 
     #[test]
     fn only_an_https_page_opens() {

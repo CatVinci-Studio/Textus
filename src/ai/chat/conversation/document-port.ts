@@ -14,6 +14,9 @@ export interface DocumentPort {
   /** Raw stream events beyond the reply, e.g. propose_edit fragments that
    *  grow the in-document preview. */
   onStreamEvent: (event: StreamEvent) => void;
+  /** A reply sent about this document ended, whatever is on screen now:
+   *  its edits still being written are finished or, on failure, dropped. */
+  onReplyEnd?: (failed: boolean) => void;
   /** Per-callId status of every proposal so far, annotated onto the history
    *  at send so the model doesn't assume an undecided proposal was applied. */
   proposalStatuses: () => Record<string, PendingStatus>;

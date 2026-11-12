@@ -1,8 +1,24 @@
+/** Keys only the engine's own action was kept from: Textus's shortcuts
+ *  still take them (a user's own Ctrl+R binding). */
+const guarded = new WeakSet<Event>();
+
+export function keptFromEngineOnly(event: Event): boolean {
+  return guarded.has(event);
+}
+
+/** F5 / Ctrl+R reload the window, discarding unsaved edits; Ctrl+P prints
+ *  it (WebView2). */
+function isEngineKey(event: KeyboardEvent): boolean {
+  const key = event.key.toLowerCase();
+  const ctrl = (event.ctrlKey || event.metaKey) && !event.altKey;
+  return key === "f5" || (ctrl && (key === "r" || key === "p"));
+}
+
 /**
  * Turns off the engine's own right-click menu (text fields take Textus's own,
- * text-field-menu.tsx) and the
- * F5 / Ctrl+R reload, which would discard unsaved edits. Release builds only.
- * Bubble phase, so a user's own Ctrl+R binding still runs.
+ * text-field-menu.tsx) and its reload and print keys. Release builds only.
+ * Caught first, so a field that keeps its keys to itself (Find, a new
+ * name in the tree) can't let one through.
  */
 export function installWebviewGuards(): void {
   if (import.meta.env.DEV) return;
@@ -13,11 +29,13 @@ export function installWebviewGuards(): void {
     event.preventDefault();
   });
 
-  window.addEventListener("keydown", (event) => {
-    const key = event.key.toLowerCase();
-    const reload =
-      key === "f5" ||
-      (key === "r" && (event.ctrlKey || event.metaKey) && !event.altKey);
-    if (reload) event.preventDefault();
-  });
+  window.addEventListener(
+    "keydown",
+    (event) => {
+      if (!isEngineKey(event) || event.defaultPrevented) return;
+      event.preventDefault();
+      guarded.add(event);
+    },
+    true,
+  );
 }

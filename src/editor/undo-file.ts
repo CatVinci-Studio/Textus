@@ -1,3 +1,4 @@
+import { replaceChanged } from "./replace-changed";
 import { closeHistory, undo, undoDepth } from "@milkdown/kit/prose/history";
 import type { Node as ProseNode, Schema } from "@milkdown/kit/prose/model";
 import {
@@ -81,11 +82,13 @@ export function restoreHistory(view: EditorView, undos: Kept): boolean {
   const replayed = replay(state.schema, state.doc, undos);
   if (!replayed) return false;
   const { from, to } = state.selection;
+  // Only what differs is replaced, so blocks the history never touched keep
+  // their nodes and aren't drawn again (a long document took seconds).
+  const toBase =
+    replaceChanged(state.tr, state.doc.content, replayed.base.content) ??
+    state.tr;
   let next = state.apply(
-    state.tr
-      .replaceWith(0, state.doc.content.size, replayed.base.content)
-      .setMeta("addToHistory", false)
-      .setMeta(undoFileKey, true),
+    toBase.setMeta("addToHistory", false).setMeta(undoFileKey, true),
   );
   for (const steps of replayed.redos) {
     const tr = next.tr;

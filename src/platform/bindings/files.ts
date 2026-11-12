@@ -142,7 +142,7 @@ export const commands = {
 	add_recent_folder: (path: string) => __TAURI_INVOKE<void>("add_recent_folder", { path }),
 	/**  One entry taken off both lists: the start page's × beside it. */
 	remove_recent: (path: string) => __TAURI_INVOKE<void>("remove_recent", { path }),
-	save_draft_snapshot: (tabId: string, path: string | null, content: string) => __TAURI_INVOKE<null>("save_draft_snapshot", { tabId, path, content }),
+	save_draft_snapshot: (tabId: string, path: string | null, content: string, diskMtime: number | null) => __TAURI_INVOKE<null>("save_draft_snapshot", { tabId, path, content, diskMtime }),
 	/**
 	 *  Takes every pending draft, so at most one window claims each: each is
 	 *  moved aside into `restoring/` (kept until the window says they are
@@ -387,12 +387,22 @@ export type DraftSnapshot_Deserialize = {
 	tabId: string,
 	path?: string | null,
 	content: string,
+	/**
+	 *  The file's time when its edits began: a restored draft whose file has
+	 *  changed since asks before it is saved over it.
+	 */
+	diskMtime?: number | null,
 };
 
 export type DraftSnapshot_Serialize = {
 	tabId: string,
 	path: string | null,
 	content: string,
+	/**
+	 *  The file's time when its edits began: a restored draft whose file has
+	 *  changed since asks before it is saved over it.
+	 */
+	diskMtime: number | null,
 };
 
 export type FolderIndex = {

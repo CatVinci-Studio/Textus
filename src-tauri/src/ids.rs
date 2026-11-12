@@ -82,8 +82,17 @@ pub(crate) fn lower_alnum(c: char) -> bool {
 /// can't walk out of the folder it is meant for; None otherwise.
 pub(crate) fn one_name(name: &str) -> Option<&str> {
     let name = name.trim();
-    (!name.is_empty() && name != "." && name != ".." && !name.contains(['/', '\\'])).then_some(name)
+    (!name.is_empty()
+        && name != "."
+        && name != ".."
+        && !name.contains(['/', '\\'])
+        && !(cfg!(windows) && name.contains(WINDOWS_REFUSED)))
+    .then_some(name)
 }
+
+/// What Windows can't have in a name: `a:b` would make a hidden stream of
+/// a file `a`, not a file `a:b`.
+const WINDOWS_REFUSED: [char; 7] = ['<', '>', ':', '"', '|', '?', '*'];
 
 /// `one_name`, or the error a typed name gets.
 pub(crate) fn typed_name(name: &str) -> Result<&str, String> {
@@ -92,6 +101,12 @@ pub(crate) fn typed_name(name: &str) -> Result<&str, String> {
 
 #[cfg(test)]
 mod tests {
+    #[test]
+    fn a_name_windows_cant_have_is_refused_there() {
+        assert_eq!(super::one_name("Meeting 10:30").is_none(), cfg!(windows));
+        assert_eq!(super::one_name(" notes ").unwrap(), "notes");
+    }
+
     #[test]
     fn a_moved_path_takes_the_new_folders_spelling() {
         use super::moved_path;

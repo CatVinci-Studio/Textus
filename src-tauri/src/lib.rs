@@ -113,7 +113,7 @@ fn desktop_builder(builder: tauri::Builder<tauri::Wry>) -> tauri::Builder<tauri:
                 // File > Quit closes every window so dirty editors can cancel; macOS would
                 // otherwise stay alive windowless, so exit once the final window is gone.
                 if no_other_windows && commands::session::app_quitting() {
-                    app.exit(0);
+                    commands::update::exit_app(app);
                 }
             }
             // Remember a window's size and place on Close, since after Destroyed they can
@@ -206,7 +206,9 @@ pub fn run() {
     let builder = builder
         .register_asynchronous_uri_scheme_protocol(
             plugins::scheme::SCHEME,
-            |ctx, request, responder| plugins::scheme::handle(ctx.app_handle(), request, responder),
+            |ctx, request, responder| {
+                plugins::scheme::handle(ctx.app_handle(), ctx.webview_label(), request, responder)
+            },
         )
         .manage(plugins::uri::PendingUris::default())
         .manage(plugins::ai_tools::PluginAiTools::default())

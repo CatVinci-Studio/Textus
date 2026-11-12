@@ -1,7 +1,7 @@
 import { FRONTMATTER } from "./frontmatter";
 /** Blockquote and list markers a fence may sit behind, as in `2. ```` or
  *  `> ~~~`; they are stripped before looking for the fence itself. */
-const CONTAINER_PREFIX =
+export const CONTAINER_PREFIX =
   /^(?:[ \t]*(?:>|[-+*]|\d{1,9}[.)])(?=[ \t]|$)[ \t]?)*[ \t]*/;
 const FENCE = /^(`{3,}|~{3,})(.*)$/;
 

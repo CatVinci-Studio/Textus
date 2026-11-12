@@ -1,3 +1,4 @@
+import { keptFromEngineOnly } from "../engine/controls/webview-guards";
 import { heldByPlugin } from "../plugins/contributions/key-holder";
 import { useEffect } from "react";
 import { useLatest } from "../utils/hooks/useLatest";
@@ -101,7 +102,8 @@ export function useGlobalShortcuts(opts: {
 
   useEffect(() => {
     function onKeyDown(e: KeyboardEvent) {
-      if (e.defaultPrevented || isImeKeydown(e)) return;
+      if ((e.defaultPrevented && !keptFromEngineOnly(e)) || isImeKeydown(e))
+        return;
       if (heldByPlugin(e)) return;
       const combo = comboFromEvent(e);
       if (!combo) return;

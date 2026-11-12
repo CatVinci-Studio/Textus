@@ -4,6 +4,12 @@
 use std::path::{Path, PathBuf};
 use std::sync::OnceLock;
 
+/// `login_path` asked off the async runtime: the first ask runs the login
+/// shell, which can take seconds.
+pub async fn ready_login_path() {
+    let _ = tokio::task::spawn_blocking(login_path).await;
+}
+
 /// The PATH a terminal would have, with the usual tool folders after it.
 pub fn login_path() -> String {
     static PATH: OnceLock<String> = OnceLock::new();
@@ -53,21 +59,21 @@ fn shell_path() -> Option<String> {
         .stderr(std::process::Stdio::null())
         .spawn()
         .ok()?;
-    let deadline = std::time::Instant::now() + std::time::Duration::from_secs(5);
-    loop {
-        match child.try_wait() {
-            Ok(Some(_)) => break,
-            Ok(None) if std::time::Instant::now() < deadline => {
-                std::thread::sleep(std::time::Duration::from_millis(50))
-            }
-            _ => {
-                let _ = child.kill();
-                return None;
-            }
-        }
-    }
-    let mut out = String::new();
-    std::io::Read::read_to_string(&mut child.stdout.take()?, &mut out).ok()?;
+    // Read while it runs: a chatty profile would otherwise fill the pipe and
+    // never exit.
+    let mut stdout = child.stdout.take()?;
+    let (tx, rx) = std::sync::mpsc::channel();
+    std::thread::spawn(move || {
+        let mut out = String::new();
+        let _ = std::io::Read::read_to_string(&mut stdout, &mut out);
+        let _ = tx.send(out);
+    });
+    let Ok(out) = rx.recv_timeout(std::time::Duration::from_secs(5)) else {
+        let _ = child.kill();
+        let _ = child.wait();
+        return None;
+    };
+    let _ = child.wait();
     // The last line: a profile may print greetings before it.
     out.lines()
         .rev()
@@ -87,8 +93,10 @@ pub fn find_program(program: &str, path: &str) -> Option<PathBuf> {
     if given.components().count() > 1 {
         return given.is_file().then(|| given.to_path_buf());
     }
+    // Windows: a runnable file first. Node puts an extensionless `npx` shell
+    // script beside `npx.cmd`, which Windows can't start.
     let extensions: &[&str] = if cfg!(windows) {
-        &["", ".exe", ".cmd", ".bat"]
+        &[".exe", ".cmd", ".bat", ""]
     } else {
         &[""]
     };
@@ -115,5 +123,16 @@ mod tests {
         assert_eq!(find_program("tool", &path), Some(tool.clone()));
         assert_eq!(find_program("missing", &path), None);
         assert_eq!(find_program(&tool.to_string_lossy(), ""), Some(tool));
+    }
+
+    #[cfg(windows)]
+    #[test]
+    fn windows_takes_npx_cmd_over_the_shell_script_beside_it() {
+        let dir = std::env::temp_dir().join(format!("textus-mcp-npx-{}", std::process::id()));
+        std::fs::create_dir_all(&dir).unwrap();
+        std::fs::write(dir.join("npx"), "").unwrap();
+        std::fs::write(dir.join("npx.cmd"), "").unwrap();
+        let path = dir.to_string_lossy().into_owned();
+        assert_eq!(find_program("npx", &path), Some(dir.join("npx.cmd")));
     }
 }
