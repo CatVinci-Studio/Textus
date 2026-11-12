@@ -26,6 +26,13 @@ vi.mock("../../../platform/ipc", async () => {
     },
   };
 });
+const agentRequest = vi.fn();
+vi.mock("../../agents/agent-request", async () => ({
+  ...(await vi.importActual<typeof import("../../agents/agent-request")>(
+    "../../agents/agent-request",
+  )),
+  agentRequest: (...args: unknown[]) => agentRequest(...args),
+}));
 vi.mock("../chat-history", async () => ({
   ...(await vi.importActual<typeof import("../chat-history")>(
     "../chat-history",
@@ -43,6 +50,8 @@ const { DRAFT, closeConversation, liveConversation, setLiveConversation } =
   await import("../conversation-scope");
 const { normaliseSettings } = await import("../../../prefs/SettingsContext");
 const { IpcError, AI_CANCELLED } = await import("../../../platform/ipc");
+const { addAgents } = await import("../../../plugins/contributions/agents");
+const { aiState } = await import("../../../plugins/ai-state");
 
 const settings = { ...normaliseSettings(null), textusAi: true };
 const NO_DOCUMENT = { markdown: "", blocks: [] };
@@ -107,6 +116,25 @@ describe("a conversation's model", () => {
     expect(state.history).toEqual(reply("你好"));
     expect(seen).toContain(true);
     expect(seen.at(-1)).toBe(false);
+  });
+
+  it("tells plugins an external agent is at work, by its provider and name", async () => {
+    const remove = addAgents("catvinci.claude-code", [
+      { id: "claude", name: "Claude Code", provider: "anthropic" },
+    ]);
+    let during: unknown = null;
+    agentRequest.mockImplementation(() => {
+      during = aiState().model;
+      return Promise.resolve(reply("hi"));
+    });
+    const model = modelAt({
+      docPath: "/notes/a.md",
+      workspaceRoot: "/notes",
+      settings: { ...settings, chatAgent: "catvinci.claude-code/claude" },
+    });
+    await model.actions.send(NO_DOCUMENT, "hi");
+    expect(during).toEqual({ provider: "anthropic", id: "Claude Code" });
+    remove();
   });
 
   it("is saved under the document it was sent from, and is its scope's live one", async () => {

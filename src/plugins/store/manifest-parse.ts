@@ -120,7 +120,6 @@ const SETTING_TYPES: readonly SettingType[] = [
   "button",
 ];
 
-
 /** What a setting's default must be, by its type. */
 function checkDefault(s: Json, type: SettingType, at: string): void {
   const fallback = s.default;
@@ -466,6 +465,7 @@ export function parseContributes(raw: unknown, id: string): Contributes {
         ]),
       ),
       setup: text(o.setup, `${at}.setup`, true) || undefined,
+      provider: text(o.provider, `${at}.provider`, true) || undefined,
     };
   });
   const hovers = known(

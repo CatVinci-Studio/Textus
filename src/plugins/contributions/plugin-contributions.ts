@@ -183,6 +183,7 @@ export function applyContributions(
           id: a.id,
           name: text(a.name),
           setup: a.setup && text(a.setup),
+          provider: a.provider,
         })),
       ),
     );

@@ -87,7 +87,11 @@ export async function sendMessage(
   const requestId = (agent ? AGENT_REQUEST : "") + crypto.randomUUID();
   const generation = model.generation;
   const current = () => generation === model.generation;
-  reportAiState("thinking", provider, chosen);
+  // Plugins are told who answers: an agent's provider and name, if it says.
+  const [aiProvider, aiModel] = agent
+    ? [agent.provider ?? agent.key, agent.name]
+    : [provider, chosen];
+  reportAiState("thinking", aiProvider, aiModel);
   let ended: "done" | "failed" | "stopped" = "stopped";
   model.requestId = requestId;
   // add_comment arguments streaming in, by call id.
@@ -141,7 +145,7 @@ export async function sendMessage(
               Date.now(),
             );
             if (!step) return;
-            if (step.phase) reportAiState(step.phase, provider, chosen);
+            if (step.phase) reportAiState(step.phase, aiProvider, aiModel);
             model.setStreaming(step.next, { textOnly: step.textOnly });
           },
         });
@@ -187,7 +191,7 @@ export async function sendMessage(
     });
     return undefined;
   } finally {
-    reportAiState("idle", provider, chosen, ended);
+    reportAiState("idle", aiProvider, aiModel, ended);
     if (current()) {
       model.requestId = null;
       model.setStreaming(null);

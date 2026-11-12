@@ -511,6 +511,10 @@
               "setup": {
                 "type": "string",
                 "description": "How to install it and sign in, shown when it can't start; may be %key% for l10n."
+              },
+              "provider": {
+                "type": "string",
+                "description": "The provider whose models it runs (\"anthropic\", \"openai\"), told to plugins as the AI at work."
               }
             },
             "additionalProperties": false

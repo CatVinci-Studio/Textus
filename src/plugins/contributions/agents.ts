@@ -14,6 +14,8 @@ export interface ExternalAgent {
   name: string;
   /** How to install it and sign in, for when it can't start. */
   setup?: string;
+  /** The provider whose models it runs, if it says. */
+  provider?: string;
 }
 
 let agents: ExternalAgent[] = [];

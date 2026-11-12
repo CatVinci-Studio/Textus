@@ -244,6 +244,9 @@ export interface AgentContribution {
   env: Record<string, string>;
   /** How to install it and sign in, shown when it can't start. */
   setup?: string;
+  /** The provider whose models it runs ("anthropic", "openai"), told to
+   *  plugins as the AI at work. */
+  provider?: string;
 }
 
 export interface Contributes {
