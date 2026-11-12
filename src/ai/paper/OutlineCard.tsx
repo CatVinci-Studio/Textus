@@ -1,3 +1,4 @@
+import { HeadRow } from "../../engine/controls/HeadRow";
 import { fill } from "../../i18n/fill";
 import { useState, type ReactNode } from "react";
 import type { Strings } from "../../i18n/strings";
@@ -237,18 +238,26 @@ function SectionView({
     : section.keyPoints.slice(0, POINTS_SHOWN);
   return (
     <>
-      <div className="paper-outline-row">
-        {!NUMBERED.test(section.title) && (
-          <span className="paper-outline-num" aria-hidden="true">
-            {index + 1}
-          </span>
-        )}
-        <span className="paper-outline-heading">{section.title}</span>
-        <span className="paper-outline-words">
-          {section.targetWords} {unit}
-        </span>
-        {edit}
-      </div>
+      {/* Short of room, its length and Edit go under the title. */}
+      <HeadRow
+        className="paper-outline-row"
+        mark={
+          !NUMBERED.test(section.title) && (
+            <span className="paper-outline-num" aria-hidden="true">
+              {index + 1}
+            </span>
+          )
+        }
+        title={<span className="paper-outline-heading">{section.title}</span>}
+        tools={
+          <>
+            <span className="paper-outline-words">
+              {section.targetWords} {unit}
+            </span>
+            {edit}
+          </>
+        }
+      />
       {points.length > 0 && (
         <ul className="paper-outline-points" data-open={open || undefined}>
           {points.map((point, p) => (
