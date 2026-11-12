@@ -40,6 +40,10 @@ export function useComposerInput(handle?: Ref<ChatComposerHandle | null>) {
         setInput((now) => (now.trim() ? `${text}\n\n${now}` : text));
         inputRef.current?.focus();
       },
+      shown: () => {
+        const el = inputRef.current;
+        return !!el && el.getClientRects().length > 0;
+      },
     }),
     [],
   );

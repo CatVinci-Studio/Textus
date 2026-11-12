@@ -5,13 +5,14 @@
 <h1 align="center">Textus</h1>
 
 <p align="center">
-  <strong>Der Markdown-Editor der nächsten Generation.</strong><br>
-  Du führst die Feder. Die KI reicht die Tinte.
+  <strong>Die integrierte Schreibumgebung der nächsten Generation.</strong><br>
+  Die KI hält die Tinte im Fluss. Die Feder führst du.
 </p>
 
 <p align="center">
   <a href="https://textus.md"><strong>Website</strong></a> ·
-  <a href="https://github.com/CatVinci-Studio/Textus/releases/latest"><strong>Download</strong></a>
+  <a href="https://github.com/CatVinci-Studio/Textus/releases/latest"><strong>Download</strong></a> ·
+  <a href="https://github.com/CatVinci-Studio/Textus/issues/648"><strong>Unterstützen</strong></a>
 </p>
 
 <p align="center">
@@ -39,125 +40,134 @@
   <a href="https://trendshift.io/repositories/307610?utm_source=trendshift-badge&amp;utm_medium=badge&amp;utm_campaign=badge-trendshift-307610" target="_blank" rel="noopener noreferrer"><img src="https://trendshift.io/api/badge/trendshift/repositories/307610/daily?language=TypeScript" alt="CatVinci-Studio%2FTextus | Trendshift" width="250" height="55"/></a>
 </p>
 
-https://github.com/user-attachments/assets/f366f282-e3f9-43d9-9a29-edb6d1ace3f5
+<p align="center"><strong>Hauptsponsor</strong></p>
 
 <p align="center">
-  <a href="https://www.youtube.com/watch?v=k_ew9TRljz0">Auf YouTube ansehen</a> ·
-  <a href="https://www.bilibili.com/video/BV19LJb6WEWb">Bilibili</a>
+  <a href="https://www.anthropic.com/">
+    <picture>
+      <source media="(prefers-color-scheme: dark)" srcset="docs/images/readme/sponsors/anthropic-logo-ivory.png">
+      <img src="docs/images/readme/sponsors/anthropic-logo-slate.png" alt="Anthropic" width="240">
+    </picture>
+  </a>
 </p>
 
+<p align="center"><sub>über das Anthropic Startup Program</sub></p>
+
 <p align="center">
-  <img src="docs/images/readme/de/hero.png" alt="Textus mit Kafkas »Die Verwandlung« und den Notizen dazu. Textus AI strafft die Notizen Satz für Satz, jede Änderung am Rand, und heftet einen Kommentar neben den Text." width="860" /><br>
-  <sub><i>Die Verwandlung</i>, Franz Kafka</sub>
+  <img src="docs/images/readme/de/hero.webp" alt="Textus mit dem ersten Kapitel der Verwandlung neben den Notizen des Lesers dazu. Textus AI schlägt am Rand Überarbeitungen der Notizen vor und heftet einen Kommentar neben die Erzählung." width="860" /><br>
+  <sub><i>Die Verwandlung</i>, Franz Kafka (1915)</sub>
 </p>
 
 ## Hol dir Textus
 
-Kostenlos und quelloffen, unter MIT-Lizenz.
+Kostenlos und Open Source, unter der MIT-Lizenz.
 
-| Plattform | Download | Weitere Installationswege |
-| --- | --- | --- |
-| macOS · Apple Silicon | [.dmg laden](https://github.com/CatVinci-Studio/Textus/releases/latest) | Homebrew: `brew install --cask textus` |
-| macOS · Intel | [.dmg laden](https://github.com/CatVinci-Studio/Textus/releases/latest) | Homebrew: `brew install --cask textus` |
-| Windows · x64 | [.exe laden](https://github.com/CatVinci-Studio/Textus/releases/latest) | — |
-| Linux · x64 | [.AppImage laden](https://github.com/CatVinci-Studio/Textus/releases/latest) · Auch als .deb · .rpm | Arch Linux: das [Repository `[catvinci]`](https://github.com/CatVinci-Studio/arch-repo) |
+| Plattform             | Download                                                                                                | Weitere Installationswege                                                       |
+| --------------------- | ------------------------------------------------------------------------------------------------------- | ------------------------------------------------------------------------------- |
+| macOS · Apple Silicon | [.dmg herunterladen](https://github.com/CatVinci-Studio/Textus/releases/latest)                         | Homebrew: `brew install --cask textus`                                          |
+| macOS · Intel         | [.dmg herunterladen](https://github.com/CatVinci-Studio/Textus/releases/latest)                         | Homebrew: `brew install --cask textus`                                          |
+| Windows · x64         | [.exe herunterladen](https://github.com/CatVinci-Studio/Textus/releases/latest)                         | —                                                                               |
+| Linux · x64           | [.AppImage herunterladen](https://github.com/CatVinci-Studio/Textus/releases/latest) · Auch als .deb · .rpm | Arch Linux: das [`[catvinci]`-Repository](https://github.com/CatVinci-Studio/arch-repo) |
 
-> iPhone und iPad: bald im App Store (vorerst nicht in Festlandchina).
+> iPhone und iPad: bald im App Store.
 
 Beta: Stell unter **Einstellungen › Über** den **Update-Kanal** auf **Beta**.
 
+## Warum Textus
+
+Programmierer haben IDEs: einen Ort, an dem Code schreiben, prüfen und ihre Werkzeuge zusammenkommen. Wer schreibt, leiht sich meist einen Code-Editor oder wechselt zwischen mehreren Apps hin und her. Textus bringt den ganzen Schreibprozess an einen Ort.
+
+- **Markdown als gemeinsame Sprache.** Im KI-Zeitalter ist Markdown mehr als ein Dateiformat: Menschen, KI und andere Werkzeuge lesen es gleichermaßen, deine Texte wandern frei zwischen ihnen.
+- **Fürs Schreiben gebaut, nicht für Code.** Entwerfen, Prüfen und Überarbeiten stehen im Mittelpunkt, nicht als Zusatzfunktionen eines Code-Editors.
+- **KI fürs Schreiben.** Vorschläge beim Schreiben, Kommentare beim Prüfen und Änderungen, die du einzeln annimmst oder ablehnst.
+- **So zusammengestellt, wie du willst.** WYSIWYG-Bearbeitung, ein umfangreiches Plugin-System, Sync, sogar deine Tagesplanung: Nimm, was du brauchst, und lass den Rest weg.
+- **Deine Notizen kommen mit.** Öffne einen Obsidian-Vault so, wie er ist, importiere aus Notion und nutze Typora-Themes.
+
 ## Schreiben
 
-Was du siehst, ist, was du bekommst – Markdown, gesetzt schon beim Tippen. Export als PDF, Word, HTML und mehr.
+Was du siehst, ist, was du bekommst: Markdown wird beim Tippen gesetzt, mit Tabellen, Code, Formeln und Diagrammen, und Entwürfe, Notizen und Quellen liegen nebeneinander. Export nach PDF, Word, HTML und mehr.
 
 <p align="center">
-  <img src="docs/images/readme/de/markdown.webp" alt="Ein Dokument mit allen Markdown-Auszeichnungen – Überschriften, fett und kursiv, Zitate, Listen, Aufgaben, Links, eine Notiz – fertig gesetzt" width="860" />
+  <img src="docs/images/readme/de/writing.webp" alt="Textus mit mehreren Dokumenten nebeneinander: Tabellen, ein Codeblock, Formeln und ein Diagramm, beim Tippen gesetzt" width="860" />
 </p>
-
-| Codeblöcke | Tabellen |
-| :---: | :---: |
-| <img src="docs/images/readme/de/code.webp" alt="Ein Codeblock, eingefärbt nach seiner Sprache" width="420" /> | <img src="docs/images/readme/de/table.webp" alt="Eine Tabelle mit ausgerichteten Spalten" width="420" /> |
-| **Mathematik** | **Diagramme** |
-| <img src="docs/images/readme/de/formula.webp" alt="Formeln, gezeichnet während du tippst" width="420" /> | <img src="docs/images/readme/de/diagram.webp" alt="Ein Mermaid-Flussdiagramm" width="420" /> |
 
 ## Textus AI
 
-Arbeitet mit Online- und lokalen LLMs gleichermaßen – KI, die dein Schreiben voranbringt.
+Funktioniert mit Online- und lokalen Modellen und schreibt selbst mit.
 
-| Fortsetzung | Tippfehler und Grammatik | Änderungsvorschläge |
-| :---: | :---: | :---: |
-| <img src="docs/images/readme/de/ai-continue.webp" alt="Die nächsten Worte in Grau, wenn du innehältst; Tab übernimmt sie" width="280" /> | <img src="docs/images/readme/de/ai-grammar.webp" alt="Ein Fehler unterstrichen, mit Alt+Enter behoben" width="280" /> | <img src="docs/images/readme/de/ai-revise.webp" alt="Änderungen Satz für Satz, jede mit Begründung" width="280" /> |
-| **Anmerkungen** | **Slash-Skills** | **Jedes Modell** |
-| <img src="docs/images/readme/de/ai-review.webp" alt="Ein Kommentar, an seinen Satz geheftet" width="280" /> | <img src="docs/images/readme/de/ai-skills.webp" alt="Das Skill-Menü, geöffnet mit /" width="280" /> | <img src="docs/images/readme/de/ai-models.webp" alt="Einen Anbieter in den Einstellungen wählen" width="280" /> |
+| Fortsetzung | Tippfehler und Grammatik |
+| :---: | :---: |
+| <img src="docs/images/readme/de/ai-continue.webp" alt="Die nächsten Wörter in Grau, sobald du innehältst; Tab übernimmt sie" width="420" /> | <img src="docs/images/readme/de/ai-grammar.webp" alt="Ein Fehler unterstrichen, mit Alt+Enter behoben" width="420" /> |
+| **Änderungsvorschläge** | **Anmerkungen** |
+| <img src="docs/images/readme/de/ai-revise.webp" alt="Änderungen Satz für Satz, jede mit ihrer Begründung" width="420" /> | <img src="docs/images/readme/de/ai-review.webp" alt="Ein Kommentar, an seinen Satz geheftet" width="420" /> |
+| **Slash-Skills** | **Jedes Modell** |
+| <img src="docs/images/readme/de/ai-skills.webp" alt="Das Skill-Menü, mit / geöffnet" width="420" /> | <img src="docs/images/readme/de/ai-models.webp" alt="Einen Anbieter in den Einstellungen wählen" width="420" /> |
+
+Für Fortgeschrittene: MCP-Server anbinden oder Claude Code und Codex als Agenten ins KI-Panel holen.
 
 ## Plugins
 
-Nicht nur Schreiben: Plugins ergänzen alles, was du sonst noch brauchst.
-
-| Graphansicht | Vim |
+| Graphansicht | Versionsverlauf |
 | :---: | :---: |
-| <img src="docs/images/readme/de/plugin-graph.webp" alt="Notizen und ihre Links als Graph" width="420" /> | <img src="docs/images/readme/de/plugin-vim.webp" alt="Die Sprungmarken von Vim und sein Modus in der Fensterleiste" width="420" /> |
-| **Schnellvorschau** | **Versionsverlauf** |
-| <img src="docs/images/readme/de/plugin-preview.webp" alt="Bleibt der Zeiger auf einem Link, zeigt eine Karte die Notiz" width="420" /> | <img src="docs/images/readme/de/plugin-history.webp" alt="Die früheren Versionen einer Notiz daneben" width="420" /> |
+| <img src="docs/images/readme/de/plugin-graph.webp" alt="Notizen und ihre Links als Graph gezeichnet" width="420" /> | <img src="docs/images/readme/de/plugin-history.webp" alt="Frühere Versionen einer Notiz neben ihr" width="420" /> |
+| **Schnellvorschau** | **Wissensdatenbank** |
+| <img src="docs/images/readme/de/plugin-preview.webp" alt="Verweilt der Zeiger auf einem Link, zeigt eine Karte die Notiz" width="420" /> | <img src="docs/images/readme/de/plugin-database.webp" alt="Eine Seite wie in Notion: ihre Einträge als Tabelle, jeder eine Notiz mit ihren Eigenschaften" width="420" /> |
 
-Mindmaps, Marp-Folien, Kanban-Boards, PDF und Word im Tab, Zotero-Zitate, Diagramme aller Art und mehr findest du am Computer im Bereich **Plugins** (das Puzzle in der linken Leiste) und auf iPhone und iPad unter **Einstellungen › Erweiterungen**.
+Weitere Plugins und Themes: [textus.md/extensions](https://textus.md/de/extensions/).
 
-Viele Plugins geben Textus AI auch ihre eigenen Werkzeuge, sodass du es einfach im Gespräch darum bitten kannst. Die Plugins liegen in [textus-plugins](https://github.com/CatVinci-Studio/textus-plugins), die Themes in [textus-themes](https://github.com/CatVinci-Studio/textus-themes), wo du auch deine eigenen teilen kannst.
+## Sponsoren
+
+**Hauptsponsor:** [Anthropic](https://www.anthropic.com/), über das Anthropic Startup Program.
+
+Textus ist kostenlos und Open Source. [Unterstütze uns](https://github.com/CatVinci-Studio/Textus/issues/648), um die Entwicklung zu fördern.
+
+## Community
+
+Komm zu uns auf Discord, QQ oder WeChat: [textus.md/community](https://textus.md/de/community/). Fehlerberichte und Wünsche sind in den [GitHub Issues](https://github.com/CatVinci-Studio/Textus/issues) willkommen. Wenn du Code beitragen möchtest, fang mit [CONTRIBUTING.md](CONTRIBUTING.md) (auf Englisch) an.
 
 ## Gut zu wissen
 
 <details>
 <summary><strong>Ist Textus kostenlos?</strong></summary>
 
-Ja. Textus ist kostenlos und quelloffen unter der MIT-Lizenz, ohne Konto und ohne Abo. Nutzt du Textus AI, rechnet dein Anbieter direkt mit dir ab – oder gar nicht, wenn du ein lokales Modell verwendest.
+Ja, und das bleibt auch so. Es ist Open Source unter der MIT-Lizenz, ohne Konto und ohne Abo. Wenn du Textus AI nutzt, rechnet dein Anbieter direkt mit dir ab, mit einem lokalen Modell gar nicht.
 
 </details>
 
 <details>
-<summary><strong>Auf welchen Systemen läuft Textus?</strong></summary>
+<summary><strong>Auf welchen Plattformen läuft es?</strong></summary>
 
-Auf macOS (Apple Silicon und Intel), Windows und Linux, dazu auf iPhone und iPad aus dem App Store (vorerst nicht in Festlandchina).
+macOS (Apple Silicon und Intel), Windows und Linux, dazu iPhone und iPad über den App Store.
 
 </details>
 
 <details>
-<summary><strong>Wie viel Arbeitsspeicher braucht Textus?</strong></summary>
+<summary><strong>Wie viel Arbeitsspeicher braucht es?</strong></summary>
 
-Arbeitsspeicher ist uns sehr wichtig, und wir messen ihn in jeder Version. Ein Fenster belegt etwa 110 MB, jedes weitere etwa 55 MB mehr. Plugins werden erst geladen, wenn du sie nutzt, und eine Webseite im Hintergrund wird freigegeben und neu geladen, sobald du zu ihr zurückkehrst.
+Speicher ist uns sehr wichtig, und wir messen ihn in jeder Version. Ein Fenster braucht etwa 110 MB, jedes weitere etwa 55 MB mehr. Plugins werden erst geladen, wenn du sie nutzt, und eine Webseite im Hintergrund wird freigegeben und lädt neu, wenn du zu ihr zurückkehrst.
 
 </details>
 
 <details>
 <summary><strong>Brauche ich ein KI-Konto?</strong></summary>
 
-Nein. Der Editor funktioniert vollständig ohne KI. Für Textus AI verbindest du deinen eigenen Anbieter: Anmeldung mit ChatGPT oder Claude, ein API-Schlüssel oder ein lokales Modell mit Ollama.
+Nein. Der Editor funktioniert vollständig ohne KI. Für Textus AI verbindest du einen eigenen Anbieter: mit ChatGPT oder Claude anmelden, einen API-Schlüssel eintragen oder ein lokales Modell mit Ollama betreiben.
 
 </details>
 
 <details>
-<summary><strong>Funktioniert Textus offline?</strong></summary>
+<summary><strong>Funktioniert es offline?</strong></summary>
 
-Der Editor ja, vollständig. Textus AI braucht eine Verbindung zu deinem Anbieter – außer du nutzt ein lokales Modell. Dann verlässt nichts deinen Rechner.
+Der Editor schon, vollständig. Textus AI braucht deinen Anbieter, außer du nutzt ein lokales Modell.
 
 </details>
 
 <details>
 <summary><strong>Ist das normales Markdown? Wohin kann ich exportieren?</strong></summary>
 
-Ja: ganz normale .md-Dateien, mit Tabellen, Aufgabenlisten, Fußnoten, Formeln und Mermaid. Exportieren kannst du als PDF, Word, HTML und mehr.
+Ja: einfache .md-Dateien, mit Tabellen, Aufgabenlisten, Fußnoten, Formeln und Mermaid. Export nach PDF, Word, HTML und mehr.
 
 </details>
-
-## Community
-
-- [Discord](https://textus.md/discord): Neuigkeiten, Hilfe und Feedback, auf Englisch.
-- Auf Chinesisch: [QQ-Gruppe](https://textus.md/qq) (1128285004) · [WeChat-Gruppe](https://textus.md/wechat)
-
-Fehlerberichte und Wünsche gern in den [GitHub Issues](https://github.com/CatVinci-Studio/Textus/issues).
-
-## Roadmap und Mitwirken
-
-[ROADMAP.md](ROADMAP.md) (Englisch) zeigt, wohin sich Textus entwickelt. Zum Bauen, für die Prüfungen und für Pull Requests beginnst du mit [CONTRIBUTING.md](CONTRIBUTING.md) (Englisch); KI-Programmierassistenten folgen [AGENTS.md](AGENTS.md). Diskutiert wird auf Englisch oder Chinesisch.
 
 ## Sterne im Verlauf
 

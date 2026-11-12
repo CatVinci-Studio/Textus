@@ -87,7 +87,12 @@ export function writeKeptTabs(kept: KeptTabs): void {
     storage.setItem(KEY, JSON.stringify(kept));
   } catch {
     try {
-      const paths = kept.tabs.map((tab) => ({ ...tab, text: undefined }));
+      // Without their ids too, so their drafts stay for the next launch.
+      const paths = kept.tabs.map((tab) => ({
+        ...tab,
+        id: undefined,
+        text: undefined,
+      }));
       storage.setItem(KEY, JSON.stringify({ ...kept, tabs: paths }));
     } catch {
       storage.removeItem(KEY);

@@ -5,13 +5,14 @@
 <h1 align="center">Textus</h1>
 
 <p align="center">
-  <strong>新一代 Markdown 編輯器</strong><br>
-  下筆成章，AI 研墨
+  <strong>下一代整合寫作環境</strong><br>
+  AI 研墨，下筆成章
 </p>
 
 <p align="center">
   <a href="https://textus.md"><strong>官網</strong></a> ·
-  <a href="https://github.com/CatVinci-Studio/Textus/releases/latest"><strong>下載</strong></a>
+  <a href="https://github.com/CatVinci-Studio/Textus/releases/latest"><strong>下載</strong></a> ·
+  <a href="https://github.com/CatVinci-Studio/Textus/issues/648"><strong>贊助</strong></a>
 </p>
 
 <p align="center">
@@ -40,84 +41,104 @@
   <a href="https://trendshift.io/repositories/307610?utm_source=trendshift-badge&amp;utm_medium=badge&amp;utm_campaign=badge-trendshift-307610" target="_blank" rel="noopener noreferrer"><img src="https://trendshift.io/api/badge/trendshift/repositories/307610/daily?language=TypeScript" alt="CatVinci-Studio%2FTextus | Trendshift" width="250" height="55"/></a>
 </p>
 
-https://github.com/user-attachments/assets/f366f282-e3f9-43d9-9a29-edb6d1ace3f5
+<p align="center"><strong>首席贊助</strong></p>
 
 <p align="center">
-  <a href="https://www.bilibili.com/video/BV19LJb6WEWb">在 B 站觀看</a> ·
-  <a href="https://www.youtube.com/watch?v=k_ew9TRljz0">YouTube</a>
+  <a href="https://www.anthropic.com/">
+    <picture>
+      <source media="(prefers-color-scheme: dark)" srcset="docs/images/readme/sponsors/anthropic-logo-ivory.png">
+      <img src="docs/images/readme/sponsors/anthropic-logo-slate.png" alt="Anthropic" width="240">
+    </picture>
+  </a>
 </p>
 
+<p align="center"><sub>透過 Anthropic Startup Program</sub></p>
+
 <p align="center">
-  <img src="docs/images/readme/zh-hant/hero.png" alt="Textus 開著《西遊記》和一段讀書筆記，Textus AI 逐句精簡筆記，每處修改都在頁邊，並在原文旁留下審閱註解" width="860" /><br>
-  <sub>吳承恩《西遊記》</sub>
+  <img src="docs/images/readme/zh-hant/hero.webp" alt="Textus 開著《西遊記》和一段讀書筆記，Textus AI 逐句精簡筆記，每處修改都在頁邊，並在原文旁釘上審閱註解" width="860" /><br>
+  <sub>《西遊記》吳承恩</sub>
 </p>
 
 ## 取得 Textus
 
 免費開源，採用 MIT 授權。
 
-| 平台 | 下載 | 其他安裝方式 |
-| --- | --- | --- |
-| macOS · Apple 晶片 | [下載 .dmg](https://github.com/CatVinci-Studio/Textus/releases/latest) | Homebrew：`brew install --cask textus` |
-| macOS · Intel | [下載 .dmg](https://github.com/CatVinci-Studio/Textus/releases/latest) | Homebrew：`brew install --cask textus` |
-| Windows · x64 | [下載 .exe](https://github.com/CatVinci-Studio/Textus/releases/latest) | — |
-| Linux · x64 | [下載 .AppImage](https://github.com/CatVinci-Studio/Textus/releases/latest) · 另提供 .deb · .rpm | Arch Linux：[`[catvinci]` 軟體庫](https://github.com/CatVinci-Studio/arch-repo) |
+| 平台                | 下載                                                                                          | 其他安裝方式                                                                  |
+| ----------------- | ------------------------------------------------------------------------------------------- | ----------------------------------------------------------------------- |
+| macOS · Apple 晶片  | [下載 .dmg](https://github.com/CatVinci-Studio/Textus/releases/latest)                        | Homebrew：`brew install --cask textus`                                   |
+| macOS · Intel     | [下載 .dmg](https://github.com/CatVinci-Studio/Textus/releases/latest)                        | Homebrew：`brew install --cask textus`                                   |
+| Windows · x64     | [下載 .exe](https://github.com/CatVinci-Studio/Textus/releases/latest)                        | —                                                                       |
+| Linux · x64       | [下載 .AppImage](https://github.com/CatVinci-Studio/Textus/releases/latest) · 另提供 .deb · .rpm | Arch Linux：[`[catvinci]` 軟體庫](https://github.com/CatVinci-Studio/arch-repo) |
 
-> iPhone 與 iPad 版即將在 App Store 上架（暫不支援中國大陸）。
+> iPhone 與 iPad 版即將在 App Store 上架。
 
 測試版：在 **設定 › 關於** 中把 **更新通道** 改為 **測試版**。
 
+## 為什麼選擇 Textus
+
+程式設計師有 IDE：寫程式、檢查程式和各種工具都集中在一個地方。寫作者卻往往只能借用程式碼編輯器，或在好幾個軟體之間來回切換。Textus 把整個寫作流程放在一起。
+
+- **Markdown 是共同的語言。** 在 AI 時代，Markdown 不只是檔案格式：人、AI 和其他工具都讀得懂，你的文字可以在它們之間自由流動。
+- **圍繞寫作，而不是程式碼。** 起草、審閱、修改才是主角，而不是程式碼編輯器上額外加的功能。
+- **為寫作設計的 AI。** 寫作時給建議，審閱時留註解，修改時逐條決定是否採納。
+- **依你的方式組合。** 所見即所得的編輯、豐富的外掛程式、同步，甚至每天的計畫安排：需要什麼就用什麼。
+- **帶上你的筆記。** 直接開啟 Obsidian 庫，從 Notion 匯入，使用 Typora 主題。
+
 ## 寫作
 
-所見即所得，用 Markdown 快速排版。支援多種匯出格式，包括 PDF、Word、HTML。
+所見即所得，邊寫邊用 Markdown 排好版：表格、程式碼、公式、圖表都在其中，草稿、筆記和資料可以並排擺開。支援匯出 PDF、Word、HTML 等多種格式。
 
 <p align="center">
-  <img src="docs/images/readme/zh-hant/markdown.webp" alt="一篇文件用到了全部 Markdown 標記：標題、粗體斜體、引用、清單、待辦事項、連結、註腳，都已排好" width="860" />
+  <img src="docs/images/readme/zh-hant/writing.webp" alt="Textus 裡並排開著幾篇文件：表格、程式碼區塊、公式和圖表都邊寫邊排好" width="860" />
 </p>
-
-| 程式碼區塊 | 表格 |
-| :---: | :---: |
-| <img src="docs/images/readme/zh-hant/code.webp" alt="依程式語言上色的程式碼區塊" width="420" /> | <img src="docs/images/readme/zh-hant/table.webp" alt="欄位自動對齊的表格" width="420" /> |
-| **數學公式** | **圖表** |
-| <img src="docs/images/readme/zh-hant/formula.webp" alt="邊打邊出現的數學公式" width="420" /> | <img src="docs/images/readme/zh-hant/diagram.webp" alt="Mermaid 流程圖" width="420" /> |
 
 ## Textus AI
 
-支援線上、本機等多種 LLM 模型服務，讓 AI 加速你的寫作。
+線上模型和本機模型都能用，並且參與到寫作本身。
 
-| 續寫 | 錯字與語病 | 修改提議 |
-| :---: | :---: | :---: |
-| <img src="docs/images/readme/zh-hant/ai-continue.webp" alt="停筆時出現灰色的下文，按 Tab 接受" width="280" /> | <img src="docs/images/readme/zh-hant/ai-grammar.webp" alt="錯字和語病被標出，按 Alt+Enter 修正" width="280" /> | <img src="docs/images/readme/zh-hant/ai-revise.webp" alt="逐句的修改提議，各附理由" width="280" /> |
-| **審閱註解** | **斜線技能** | **任選模型** |
-| <img src="docs/images/readme/zh-hant/ai-review.webp" alt="註解釘在對應的句子旁" width="280" /> | <img src="docs/images/readme/zh-hant/ai-skills.webp" alt="輸入 / 叫出技能選單" width="280" /> | <img src="docs/images/readme/zh-hant/ai-models.webp" alt="在設定裡選擇服務供應商" width="280" /> |
+| 續寫 | 錯字與語病 |
+| :---: | :---: |
+| <img src="docs/images/readme/zh-hant/ai-continue.webp" alt="停筆時出現灰色的下文，按 Tab 接受" width="420" /> | <img src="docs/images/readme/zh-hant/ai-grammar.webp" alt="錯字和語病被標出，按 Alt+Enter 修正" width="420" /> |
+| **修改提議** | **審閱註解** |
+| <img src="docs/images/readme/zh-hant/ai-revise.webp" alt="逐句的修改提議，各附理由" width="420" /> | <img src="docs/images/readme/zh-hant/ai-review.webp" alt="註解釘在對應的句子旁" width="420" /> |
+| **斜線技能** | **任選模型** |
+| <img src="docs/images/readme/zh-hant/ai-skills.webp" alt="輸入 / 叫出技能選單" width="420" /> | <img src="docs/images/readme/zh-hant/ai-models.webp" alt="在設定裡選擇服務供應商" width="420" /> |
+
+進階用法：連接 MCP 伺服器，或把 Claude Code、Codex 作為 Agent 放進 AI 面板。
 
 ## 外掛程式
 
-不只是寫作，透過外掛程式實現更多功能。
-
-| 知識圖譜 | Vim |
+| 知識圖譜 | 版本紀錄 |
 | :---: | :---: |
-| <img src="docs/images/readme/zh-hant/plugin-graph.webp" alt="筆記和連結畫成的知識圖譜" width="420" /> | <img src="docs/images/readme/zh-hant/plugin-vim.webp" alt="Vim 的跳轉標記，視窗列顯示目前模式" width="420" /> |
-| **快速預覽** | **版本紀錄** |
-| <img src="docs/images/readme/zh-hant/plugin-preview.webp" alt="停在連結上，卡片顯示那篇筆記" width="420" /> | <img src="docs/images/readme/zh-hant/plugin-history.webp" alt="一篇筆記的歷史版本並排在旁" width="420" /> |
+| <img src="docs/images/readme/zh-hant/plugin-graph.webp" alt="筆記和連結畫成的知識圖譜" width="420" /> | <img src="docs/images/readme/zh-hant/plugin-history.webp" alt="一篇筆記的歷史版本並排在旁" width="420" /> |
+| **快速預覽** | **知識庫** |
+| <img src="docs/images/readme/zh-hant/plugin-preview.webp" alt="停在連結上，卡片顯示那篇筆記" width="420" /> | <img src="docs/images/readme/zh-hant/plugin-database.webp" alt="像 Notion 一樣的頁面：條目列成表格，每個條目是一篇帶屬性的筆記" width="420" /> |
 
-還有思維導圖、Marp 投影片、看板、在分頁中閱讀 PDF 與 Word、Zotero 引用、各類圖表等，電腦上在左側圖示列的拼圖 **外掛程式** 面板裡，iPhone、iPad 上在 **設定 › 擴充功能**。
+更多外掛程式和主題：[textus.md/extensions](https://textus.md/zh-hant/extensions/)。
 
-不少外掛還會把自己的功能交給 Textus AI，在對話裡直接讓它去做就行。外掛在 [textus-plugins](https://github.com/CatVinci-Studio/textus-plugins)，主題在 [textus-themes](https://github.com/CatVinci-Studio/textus-themes)，也歡迎分享你自己的主題。
+## 贊助
+
+**首席贊助：** [Anthropic](https://www.anthropic.com/)，透過 Anthropic Startup Program。
+
+Textus 免費開源。歡迎[贊助我們](https://github.com/CatVinci-Studio/Textus/issues/648)，支持它的開發。
+
+## 社群
+
+加入 Discord、QQ 群或微信群：[textus.md/community](https://textus.md/zh-hant/community/)。歡迎在 [GitHub Issues](https://github.com/CatVinci-Studio/Textus/issues) 回報問題、提出建議；想參與開發，請先看 [CONTRIBUTING.md](CONTRIBUTING.md)。
 
 ## 常見問題
 
 <details>
 <summary><strong>Textus 免費嗎？</strong></summary>
 
-免費。Textus 以 MIT 授權開源，不需帳號，也沒有訂閱。使用 Textus AI 時，費用由你選擇的服務供應商直接收取；改用本機模型則完全免費。
+免費，而且會一直免費。Textus 以 MIT 授權開源，不需帳號，也沒有訂閱。使用 Textus AI 時，費用由你選擇的服務供應商直接收取；改用本機模型則完全免費。
 
 </details>
 
 <details>
 <summary><strong>支援哪些平台？</strong></summary>
 
-支援 macOS（Apple 晶片與 Intel）、Windows 與 Linux，iPhone 與 iPad 版在 App Store 提供（暫不支援中國大陸）。
+支援 macOS（Apple 晶片與 Intel）、Windows 與 Linux，iPhone 與 iPad 版在 App Store 提供。
 
 </details>
 
@@ -143,23 +164,11 @@ https://github.com/user-attachments/assets/f366f282-e3f9-43d9-9a29-edb6d1ace3f5
 </details>
 
 <details>
-<summary><strong>是標準的 Markdown 嗎？能⁠匯⁠出⁠哪⁠些⁠格⁠式⁠？</strong></summary>
+<summary><strong>是標準的 Markdown 嗎？能匯出哪些格式？</strong></summary>
 
 是。檔案就是一般的 .md 檔，支援表格、待辦清單、註腳、數學公式與 Mermaid，也能匯出為 PDF、Word、HTML 等格式。
 
 </details>
-
-## 社群
-
-- [QQ 群](https://textus.md/qq)：1128285004
-- [微信群](https://textus.md/wechat)：掃碼加入
-- [Discord](https://textus.md/discord)：英文交流
-
-錯誤回報與功能建議也歡迎提到 [GitHub Issues](https://github.com/CatVinci-Studio/Textus/issues)。
-
-## 路線圖與參與開發
-
-Textus 接下來的方向見 [ROADMAP.md](ROADMAP.md)（英文）。想自行建置 Textus、執行檢查或提交 PR，請從 [CONTRIBUTING.md](CONTRIBUTING.md)（英文）開始；AI 程式助手請遵循 [AGENTS.md](AGENTS.md)。討論可以用中文或英文。
 
 ## Star 成長趨勢
 

@@ -332,21 +332,21 @@ What `![[...]]` points at, as `metadata.resolveNote` resolves it.
 
 ## ListItem
 
-| Member                                                                           |                                                                                                                          |
-| -------------------------------------------------------------------------------- | ------------------------------------------------------------------------------------------------------------------------ |
-| `id?: string`                                                                    | Kept across refreshes: an open item stays open, a selected one selected.                                                 |
-| `label: string`                                                                  |                                                                                                                          |
-| `description?: string`                                                           |                                                                                                                          |
-| `detail?: string`                                                                |                                                                                                                          |
-| `group?: string`                                                                 | A group's heading above the items that share it.                                                                         |
-| `icon?: string`                                                                  | One of the app's icons ("file", "folder", "task", "link", "tag", "calendar", "clock", "star") or an SVG of the plugin's. |
-| `checkbox?: boolean`                                                             |                                                                                                                          |
-| `badge?: { text: string; tone?: "accent" \| "warning" \| "danger" \| "muted"; }` | A small mark after the label: "due", "overdue", "new".                                                                   |
-| `location?: Location`                                                            |                                                                                                                          |
-| `command?: { id: string; args?: unknown[] }`                                     |                                                                                                                          |
-| `children?: boolean`                                                             | Items under it, asked for when it is opened.                                                                             |
-| `actions?: { label: string; command: string; args?: unknown[] }[]`               | Right-click actions.                                                                                                     |
-| `data?: unknown`                                                                 | Anything of the plugin's; given back as is.                                                                              |
+| Member                                                                           |                                                                                                                                                               |
+| -------------------------------------------------------------------------------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| `id?: string`                                                                    | Kept across refreshes: an open item stays open, a selected one selected.                                                                                      |
+| `label: string`                                                                  |                                                                                                                                                               |
+| `description?: string`                                                           |                                                                                                                                                               |
+| `detail?: string`                                                                |                                                                                                                                                               |
+| `group?: string`                                                                 | A group's heading above the items that share it.                                                                                                              |
+| `icon?: string`                                                                  | One of the app's icons ("file", "folder", "task", "link", "tag", "calendar", "clock", "star"), or any other text, such as a page's emoji, drawn in its place. |
+| `checkbox?: boolean`                                                             |                                                                                                                                                               |
+| `badge?: { text: string; tone?: "accent" \| "warning" \| "danger" \| "muted"; }` | A small mark after the label: "due", "overdue", "new".                                                                                                        |
+| `location?: Location`                                                            |                                                                                                                                                               |
+| `command?: { id: string; args?: unknown[] }`                                     |                                                                                                                                                               |
+| `children?: boolean`                                                             | Items under it, asked for when it is opened.                                                                                                                  |
+| `actions?: { label: string; command: string; args?: unknown[] }[]`               | Right-click actions.                                                                                                                                          |
+| `data?: unknown`                                                                 | Anything of the plugin's; given back as is.                                                                                                                   |
 
 ## ListView
 

@@ -351,6 +351,27 @@ fn stopping_a_request_stops_its_pictures_still_being_made() {
 }
 
 #[test]
+fn stopping_a_request_keeps_a_picture_already_made() {
+    let service = std::net::TcpListener::bind("127.0.0.1:0").unwrap();
+    let run = run_at(&format!("http://{}", service.local_addr().unwrap())).for_request("r3");
+    let (id, _) = run.start("a harbour".into(), Aspect::Square, None);
+    std::thread::sleep(std::time::Duration::from_millis(200));
+    // In before the Stop, its task not yet tidied away.
+    finish(
+        &id,
+        Slot::Ready(GeneratedImage {
+            bytes: vec![1, 2, 3],
+            mime: "image/png",
+            ext: "png",
+            width: 4,
+            height: 3,
+        }),
+    );
+    stop_request("r3");
+    assert_eq!(picture(&id).unwrap().width, 4);
+}
+
+#[test]
 fn a_send_makes_at_most_two_pictures() {
     let run = run();
     let args = json!({"prompt": "nets", "alt": "Nets", "action": "append"});

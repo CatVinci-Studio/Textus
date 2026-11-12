@@ -41,16 +41,18 @@ export function imageFolderExample(
 /** Whether `name`, as typed, is a subfolder of the document's folder (and
  *  not that folder itself, which is the other choice). */
 export function isImageSubfolder(name: string): boolean {
-  return !!imageFolderPrefix(name);
+  const prefix = imageFolderPrefix(name);
+  return !!prefix && storedImageFolder(name) === prefix;
 }
 
 /** A stored `imageFolder` as one of Settings' two choices: the document's
- *  folder, or one plain subfolder name; anything else becomes "assets". */
+ *  folder, or a subfolder inside it (img, img/shots); a name pattern or
+ *  anything outside becomes "assets". */
 export function storedImageFolder(stored: unknown): string {
   if (typeof stored !== "string") return DEFAULT_IMAGE_SUBFOLDER;
   const prefix = imageFolderPrefix(stored);
   if (prefix === "") return SAME_FOLDER;
-  if (prefix && !prefix.includes("/") && !prefix.includes("${")) return prefix;
+  if (prefix && !prefix.includes("${")) return prefix;
   return DEFAULT_IMAGE_SUBFOLDER;
 }
 

@@ -1,4 +1,5 @@
 import { askForRequirements } from "./requirements";
+import { canRun, canSwitch } from "./lifecycle";
 import { WIKILINK_SOURCE } from "../../utils/note-link";
 import { basename } from "../../utils/path";
 import type { Strings } from "../../i18n/strings";
@@ -57,7 +58,8 @@ export async function takeUp(
       tone: "error",
     });
   }
-  return pluginRecord(request.plugin)?.status === "on";
+  const status = pluginRecord(request.plugin)?.status;
+  return !!status && canRun(status, pluginsSnapshot().allOn);
 }
 
 /** Suggests the plugin that opens `path` on the card: "on" when it is on
@@ -73,7 +75,11 @@ export async function offerPluginToOpen(
   if (catalog.status !== "ready") return "none";
   const item = catalogEditorFor(path, catalog.items);
   if (!item) return "none";
-  const installed = !!pluginRecord(item.id);
+  const record = pluginRecord(item.id);
+  // Installed but unable to switch on here (it needs a newer Textus): no
+  // offer that can't be kept.
+  if (record && !canSwitch(record.status)) return "none";
+  const installed = !!record;
   const request: CardRequest = {
     plugin: item.id,
     situation: { type: "open", path },

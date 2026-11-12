@@ -1,3 +1,4 @@
+import { openConversationTab } from "../app/islands/ai-tabs";
 import { useEffect, useState } from "react";
 import { editorViewCtx } from "@milkdown/kit/core";
 import type { EditorRunner } from "../editor/useEditorRunner";
@@ -115,9 +116,10 @@ export function useQuickAskControls({
   // saved to History. Not mid-reply: the turns would be incomplete.
   function expandQuickAsk() {
     if (quickConversation.busy || conversation.busy) return;
-    if (quickConversation.history.length > 0) {
-      conversation.restore(crypto.randomUUID(), quickConversation.history);
-    }
+    const turns = quickConversation.history;
+    // A tab of its own where the AI has tabs, never over the one in front.
+    if (turns.length > 0 && !openConversationTab(crypto.randomUUID(), turns))
+      conversation.restore(crypto.randomUUID(), turns);
     quickConversation.reset();
     inlineChat.close();
     agentPanel.setOpen(true);

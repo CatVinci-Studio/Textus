@@ -13,18 +13,16 @@ import { currentStrings } from "../../i18n/current";
 import { explainError } from "../../utils/error-explain";
 import { LINK } from "../markdown/link-source";
 import { FILE_CREATED_EVENT } from "../../utils/events";
+import IMAGE_TYPES from "./image-types.json";
 
 /** Pictures pasted, dropped or picked, saved where the writer keeps them. */
 
-const EXT_BY_MIME: Record<string, string> = {
-  "image/png": "png",
-  "image/jpeg": "jpg",
-  "image/gif": "gif",
-  "image/webp": "webp",
-  "image/bmp": "bmp",
-  "image/svg+xml": "svg",
-  "image/tiff": "tiff",
-};
+/** The extension a picture is saved under, by its type: the first of
+ *  image-types.json's names for it (jpg, tif). */
+const EXT_BY_MIME: Record<string, string> = Object.entries(IMAGE_TYPES).reduce(
+  (by, [ext, mime]) => ({ [mime]: ext, ...by }),
+  {} as Record<string, string>,
+);
 
 function blobToBase64(blob: Blob): Promise<string> {
   return new Promise((resolve, reject) => {

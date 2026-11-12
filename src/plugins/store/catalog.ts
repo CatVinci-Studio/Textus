@@ -160,8 +160,6 @@ export function neededTextus(item: CatalogItem): string | null {
   return range.replace(/^(>=|\^)/, "").trim();
 }
 
-/** The catalog's newer version of an installed plugin, if it has one that
- *  runs on this Textus; one that needs a newer Textus waits for it. */
 /** The catalog's item `id`, once the catalog is read. */
 export function catalogItem(
   id: string | null | undefined,
@@ -172,12 +170,17 @@ export function catalogItem(
     : undefined;
 }
 
+/** The catalog's newer version of an installed plugin, if it has one that
+ *  runs on this Textus; one that needs a newer Textus waits for it, and a
+ *  developer's loaded folder is never replaced. */
 export function updateFor(
   id: string,
   from: CatalogState = state,
 ): string | null {
   if (from.status !== "ready") return null;
-  const installed = pluginRecord(id)?.manifest?.version;
+  const record = pluginRecord(id);
+  if (record?.origin !== "installed") return null;
+  const installed = record.manifest?.version;
   const offered = catalogItem(id, from);
   return installed &&
     offered &&

@@ -535,7 +535,8 @@ declare global {
       /** A group's heading above the items that share it. */
       group?: string;
       /** One of the app's icons ("file", "folder", "task", "link", "tag",
-       *  "calendar", "clock", "star") or an SVG of the plugin's. */
+       *  "calendar", "clock", "star"), or any other text, such as a page's
+       *  emoji, drawn in its place. */
       icon?: string;
       checkbox?: boolean;
       /** A small mark after the label: "due", "overdue", "new". */
@@ -1149,6 +1150,7 @@ declare global {
         query: string,
         options?: { limit?: number },
       ): Promise<{
+        /** `line` counts from 1 here, unlike a Location's (from 0). */
         hits: (Location & { rel: string; line: number; text: string })[];
         truncated: boolean;
       }>;

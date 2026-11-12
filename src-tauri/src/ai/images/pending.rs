@@ -147,7 +147,15 @@ pub(crate) fn stop_request(request_id: &str) {
             .collect()
     };
     for id in stopped {
-        finish(&id, Slot::Failed(STOPPED.into()));
+        fail_if_making(&id);
+    }
+}
+
+/// Marks `id` stopped while it is still being made: a picture that came in
+/// before the stop (and is paid for) stays.
+fn fail_if_making(id: &str) {
+    if let Some((_, slot @ Slot::Making)) = pending().iter_mut().find(|(i, _)| i == id) {
+        *slot = Slot::Failed(STOPPED.into());
     }
 }
 

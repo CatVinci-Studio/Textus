@@ -434,7 +434,27 @@ export function compareVersions(a: string, b: string): number {
   if (x[3] === y[3]) return 0;
   if (!x[3]) return 1;
   if (!y[3]) return -1;
-  return x[3] < y[3] ? -1 : 1;
+  return comparePre(x[3], y[3]);
+}
+
+/** Pre-release tags, part by part: numbers as numbers (rc.12 after rc.2),
+ *  a number before a word, fewer parts first. */
+function comparePre(a: string, b: string): number {
+  const x = a.split(".");
+  const y = b.split(".");
+  for (let i = 0; i < Math.max(x.length, y.length); i++) {
+    if (x[i] === undefined) return -1;
+    if (y[i] === undefined) return 1;
+    if (x[i] === y[i]) continue;
+    const [m, n] = [x[i], y[i]].map((part) =>
+      /^\d+$/.test(part) ? Number(part) : null,
+    );
+    if (m !== null && n !== null) return m < n ? -1 : 1;
+    if (m !== null) return -1;
+    if (n !== null) return 1;
+    return x[i] < y[i] ? -1 : 1;
+  }
+  return 0;
 }
 
 /**

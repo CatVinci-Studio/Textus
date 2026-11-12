@@ -10,28 +10,13 @@ import {
   useSyncExternalStore,
   type PointerEvent as ReactPointerEvent,
   type KeyboardEvent,
-  type ReactNode,
   type CSSProperties,
 } from "react";
 import { ContextMenu } from "../../engine/controls/ContextMenu";
 import { useLatest } from "../../utils/hooks/useLatest";
 import { runCommand } from "../../registry/commands";
-import {
-  BulletListIcon,
-  CalendarIcon,
-  ClockIcon,
-  LinkIcon,
-  StarIcon,
-  TagIcon,
-  CheckIcon,
-  ChevronIcon,
-  FolderIcon,
-  GenericFileIcon,
-  HistoryIcon,
-  ImageFileIcon,
-  PinIcon,
-  SearchIcon,
-} from "../../engine/controls/icons";
+import { ChevronIcon } from "../../engine/controls/icons";
+import { ListRowIcon } from "./list-row-icon";
 import { getWindowAccess } from "../app-bridge";
 import { mayOpen } from "../may-open";
 import { askPlugin } from "../manager";
@@ -70,22 +55,6 @@ export interface PluginListItem {
   actions?: { label: string; command: string; args?: unknown[] }[];
   data?: unknown;
 }
-
-const ICONS: Record<string, (props: { className?: string }) => ReactNode> = {
-  file: GenericFileIcon,
-  folder: FolderIcon,
-  image: ImageFileIcon,
-  task: CheckIcon,
-  history: HistoryIcon,
-  pin: PinIcon,
-  search: SearchIcon,
-  list: BulletListIcon,
-  star: StarIcon,
-  tag: TagIcon,
-  clock: ClockIcon,
-  calendar: CalendarIcon,
-  link: LinkIcon,
-};
 
 /** Whether every word typed is in the item's words. */
 export function listItemMatches(item: PluginListItem, query: string): boolean {
@@ -278,7 +247,6 @@ export const PluginListPane = memo(function PluginListPane({
               ? item.group
               : null;
           if (depth === 0) lastGroup = item.group;
-          const Icon = item.icon ? ICONS[item.icon] : undefined;
           return (
             // The row's place too: two items a plugin gave one id still draw.
             <div key={`${key}@${index}`} className="plugin-list-entry">
@@ -328,7 +296,7 @@ export const PluginListPane = memo(function PluginListPane({
                     onChange={() => check(item)}
                   />
                 )}
-                {Icon && <Icon className="plugin-list-icon" />}
+                <ListRowIcon icon={item.icon} />
                 <span className="plugin-list-text">
                   <span className="plugin-list-label">{item.label}</span>
                   {item.badge && (

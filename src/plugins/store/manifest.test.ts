@@ -357,6 +357,11 @@ describe("versions", () => {
     expect(compareVersions("1.3.0-beta.1", "1.3.0")).toBe(-1);
     expect(compareVersions("1.10.0", "1.9.9")).toBe(1);
     expect(compareVersions("1.3.0", "1.3.0")).toBe(0);
+    // Pre-release numbers count as numbers: rc.12 comes after rc.2.
+    expect(compareVersions("1.3.13-rc.12", "1.3.13-rc.2")).toBe(1);
+    expect(compareVersions("1.3.0-rc.1", "1.3.0-rc.beta")).toBe(-1);
+    expect(compareVersions("1.3.0-rc", "1.3.0-rc.1")).toBe(-1);
+    expect(engineSatisfied(">=1.3.13-rc.2", "1.3.13-rc.12")).toBe(true);
   });
 
   it("match a plugin's engine range, a beta counting as its release", () => {

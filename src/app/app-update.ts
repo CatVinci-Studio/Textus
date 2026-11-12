@@ -1,8 +1,7 @@
 import { useEffect, useSyncExternalStore } from "react";
 import type { Update } from "../platform/app-info";
-import { relaunchApp } from "../platform/app-info";
 import { checkChannel, selfUpdateAllowed } from "../platform/distribution";
-import { flushPendingWrites } from "../storage/pending-writes";
+import { installAndRelaunch } from "../platform/install-update";
 import { canAutoUpdate } from "../platform/capabilities";
 import { updater, type UpdateChannel } from "../platform/ipc";
 import { currentStrings } from "../i18n/current";
@@ -82,14 +81,7 @@ export async function installUpdate(): Promise<void> {
   if (!canAutoUpdate || !found || !(await selfUpdateAllowed())) return;
   set({ status: "downloading", error: null });
   try {
-    // On Windows downloadAndInstall exits the process without Rust's
-    // exit-time flush, so held-back writes go now.
-    await flushPendingWrites();
-    await found.downloadAndInstall();
-    // macOS and Linux: anything changed during the download.
-    await flushPendingWrites();
-    await updater.releaseInstance();
-    await relaunchApp();
+    await installAndRelaunch(found);
   } catch (err) {
     set({ status: "error", error: explainError(err, currentStrings()) });
   }

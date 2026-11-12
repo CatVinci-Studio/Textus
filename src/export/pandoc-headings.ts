@@ -35,7 +35,7 @@ export function numberedHeadings(markdown: string): string {
     const text = lines[line].replace(HEADING, "");
     lines[line] =
       line === title
-        ? `#${text.replace(/[ \t#]*$/, "")} {.unnumbered .unlisted}`
+        ? `#${text.replace(/(?:[ \t]+#+)?[ \t]*$/, "")} {.unnumbered .unlisted}`
         : `${"#".repeat(level - start + 1)}${text}`;
   }
   return lines.join("\n");

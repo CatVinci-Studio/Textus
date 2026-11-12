@@ -8,6 +8,7 @@ import type { EditorRunner } from "../../editor/useEditorRunner";
 import type { Settings } from "../../prefs/SettingsContext";
 import type { Strings, TextKey } from "../../i18n/strings";
 import { explainAiError } from "../error-messages";
+import { endProgress, startProgress } from "../../engine/controls/notices";
 import {
   AiNoticeError,
   errorText,
@@ -36,17 +37,18 @@ export function useAiActions(
   run: EditorRunner,
   getSettings: () => Settings,
   getT: () => Strings,
-  onNotice: (message: string | null) => void,
+  onNotice: (message: string) => void,
   getDocPath: () => string | null = () => null,
 ): AiActions {
-  // A manual trigger can take a few seconds: say it's working, then clear
-  // that or replace it with what happened.
+  // A manual trigger can take a few seconds: a bar while it works, gone when
+  // it ends, with a note of what happened if it failed.
   const report = useCallback(
     (work: Promise<void>, working: string) => {
-      onNotice(working);
+      const bar = startProgress(working);
       work.then(
-        () => onNotice(null),
+        () => endProgress(bar),
         (err) => {
+          endProgress(bar);
           const t = getT();
           onNotice(
             err instanceof AiNoticeError

@@ -50,14 +50,14 @@ export function onLiveConversation(listener: Listener): () => void {
   };
 }
 
-/** The scope a conversation belongs to: the folder (the chosen one, else
- *  the document's own), or a file opened on its own; null for a draft never
- *  saved, which keeps its own. */
+/** The scope a conversation belongs to: the window's folder, whatever is
+ *  in front, else a file opened on its own; null with neither, a draft
+ *  that keeps its own. */
 export function conversationScope(
   docPath: string | null,
   workspaceRoot: string | null,
 ): string | null {
-  return docPath ? (workspaceRoot ?? docPath) : null;
+  return workspaceRoot ?? docPath;
 }
 
 /**

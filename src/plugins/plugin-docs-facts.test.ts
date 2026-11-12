@@ -67,7 +67,7 @@ it("gives every permission a row on the permissions page", () => {
 });
 
 it("names only list icons the list view draws", () => {
-  const view = read("src/plugins/views/PluginListView.tsx");
+  const view = read("src/plugins/views/list-row-icon.tsx");
   const drawn = /const ICONS:[^\n]* = \{([^}]*)\}/.exec(view)![1];
   const named = /One of the app's icons \(([^)]*)\)/.exec(
     read("docs/dev/textus.d.ts").replace(/\s*\*\s*/g, " "),

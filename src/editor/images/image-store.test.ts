@@ -23,6 +23,10 @@ it("inserts a pasted picture as the vault's ![[…]] embed when it writes wiki l
   const t = await openView("Text ");
   await saveAndInsertImages(t.view, [image], store);
   expect(t.markdown()).toContain("![[p.png]]");
+  // Every picture type the paste takes is saved, .avif too.
+  save.mockResolvedValue({ src: "assets/a.avif", embed: null, path: null });
+  await saveAndInsertImages(t.view, [{ ...image, type: "image/avif" }], store);
+  expect(save.mock.calls.at(-1)?.[2]).toBe("avif");
   save.mockResolvedValue({ src: "assets/q.png", embed: null, path: null });
   await saveAndInsertImages(t.view, [image], store);
   expect(t.markdown()).toContain("![](assets/q.png)");

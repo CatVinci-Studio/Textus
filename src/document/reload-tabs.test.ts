@@ -58,6 +58,23 @@ describe("the kept tabs in sessionStorage", () => {
     expect(readKeptTabs()).toEqual(kept);
   });
 
+  it("past the quota, go without text or id, so no draft is moved away", () => {
+    const kept = keptTabs([tab({ content: "edited" })], "a", true);
+    const set = Storage.prototype.setItem;
+    let calls = 0;
+    Storage.prototype.setItem = function (key: string, value: string) {
+      if (calls++ === 0) throw new DOMException("full", "QuotaExceededError");
+      set.call(this, key, value);
+    };
+    try {
+      writeKeptTabs(kept);
+    } finally {
+      Storage.prototype.setItem = set;
+    }
+    const back = readKeptTabs()!.tabs[0];
+    expect([back.id, back.text]).toEqual([undefined, undefined]);
+  });
+
   it("are none in a new window", () => {
     expect(readKeptTabs()).toBeNull();
   });

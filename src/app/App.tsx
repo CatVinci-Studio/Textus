@@ -221,7 +221,7 @@ function App() {
                 ...(how === "beside"
                   ? { where: "beside" }
                   : { preview: how === "preview" }),
-                ...(line ? { place: { line } } : {}),
+                ...(line !== undefined ? { place: { line } } : {}),
               })
             }
             onEntryMoved={entryMoved}

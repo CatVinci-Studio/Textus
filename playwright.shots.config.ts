@@ -9,6 +9,8 @@ export default defineConfig({
   ...base,
   testDir: "./e2e/shots",
   testIgnore: [],
+  // A shot that misses its moment under load is taken again.
+  retries: 1,
   projects: [
     {
       name: "readme",

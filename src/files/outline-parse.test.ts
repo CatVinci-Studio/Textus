@@ -1,5 +1,5 @@
 import { describe, expect, it } from "vitest";
-import { parseHeadings, sourceAnchors } from "./outline-parse";
+import { parseHeadings, sourceAnchors, headingLabel } from "./outline-parse";
 
 const texts = (md: string) => parseHeadings(md).map((h) => h.text);
 
@@ -52,5 +52,12 @@ describe("parseHeadings", () => {
     expect(
       sourceAnchors(["Energy $E=mc^2$", "`Code` *now*", "Energy $E=mc^2$"]),
     ).toEqual(["energy-emc2", "code-now", "energy-emc2-1"]);
+  });
+
+  it("keeps underscores inside words, code and maths", () => {
+    expect(headingLabel("get_user_name and _this_")).toBe("get_user_name and this");
+    expect(headingLabel("Use `a_b_c` here")).toBe("Use a_b_c here");
+    expect(headingLabel("Sum $a_1 + b_2$")).toBe("Sum $a_1 + b_2$");
+    expect(sourceAnchors(["snake_case_name"])).toEqual(["snake_case_name"]);
   });
 });

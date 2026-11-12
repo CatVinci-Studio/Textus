@@ -189,7 +189,8 @@
 .table-add-row-btn {
   left: 0;
   right: 0;
-  bottom: -11px;
+  /* Under the table's edge, clear of a wide table's scrollbar. */
+  bottom: -19px;
   height: 16px;
   width: 100%;
 }

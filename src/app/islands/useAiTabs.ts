@@ -174,17 +174,27 @@ export function useAiTabs({
       setLiveConversation(scope, frontConversation);
   }, [scope, frontConversation]);
 
-  // A +: a conversation of its own, open in the folder's AI from now on.
+  // A + (or History, Quick Ask): a conversation in a tab of its own, open
+  // in the folder's AI from now on; one already open comes to the front.
+  const liveRef = useRef(live);
+  liveRef.current = live;
   useEffect(() => {
-    setConversationOpener((from) => {
+    setConversationOpener((from, id = crypto.randomUUID()) => {
       if (!scope) return false;
-      const id = crypto.randomUUID();
-      asked.current = { id, beside: from };
+      const open = tabsRef.current.find(
+        (tab) => isAiTab(tab) && conversationOf(tab) === id,
+      );
+      if (open) {
+        tabs.setActiveTabId(open.id);
+        return true;
+      }
+      asked.current = { id, beside: from ?? liveRef.current ?? DRAFT };
       setLiveConversation(scope, id);
+      setShown(true);
       return true;
     });
     return () => setConversationOpener(null);
-  }, [scope]);
+  }, [scope, tabs, tabsRef, setShown]);
 
   // The AI button, while shown.
   useEffect(() => {

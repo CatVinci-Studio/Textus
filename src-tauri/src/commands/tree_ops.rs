@@ -106,7 +106,8 @@ fn itself(path: &str) -> Result<PathBuf, String> {
 #[cfg_attr(test, specta::specta)]
 pub async fn tree_move_entry(path: String, into: String) -> Result<String, String> {
     let from = itself(&path)?;
-    let into = existing_dir(&into)
+    let given = into;
+    let into = existing_dir(&given)
         .await?
         .canonicalize()
         .map_err(|e| e.to_string())?;
@@ -119,7 +120,17 @@ pub async fn tree_move_entry(path: String, into: String) -> Result<String, Strin
         .await
         .map_err(|e| e.to_string())?
         .map_err(|e| e.to_string())?;
-    Ok(to.to_string_lossy().to_string())
+    // In the window's spelling of the folder, not the canonical one (on
+    // Windows `\\?\C:\…`), so its tabs and links still match.
+    Ok(spelled_as(&given, &to))
+}
+
+/// `to` (a canonical path) under the folder as the caller wrote it.
+fn spelled_as(given_dir: &str, to: &Path) -> String {
+    match to.file_name() {
+        Some(name) => Path::new(given_dir).join(name).to_string_lossy().to_string(),
+        None => to.to_string_lossy().to_string(),
+    }
 }
 
 /// Gives a file or folder a new name in its folder. A document renamed without
@@ -213,7 +224,8 @@ mod tests {
             .await
             .is_err());
         let moved = tree_move_entry(doc.clone(), sub.clone()).await.unwrap();
-        assert!(Path::new(&moved).ends_with("Sub/Notes.md"));
+        // In the folder's spelling as given (a temp dir is a symlink on macOS).
+        assert_eq!(Path::new(&moved), Path::new(&sub).join("Notes.md"));
         // A second Notes.md at the top can't be moved onto the first.
         let again = tree_create_document(root.clone(), "Notes".into())
             .await

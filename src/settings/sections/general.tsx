@@ -3,7 +3,6 @@ import { useEffect, useRef, useState } from "react";
 import { appVersion } from "../../platform/app-info";
 import { showConfirm } from "../../engine/controls/app-dialog";
 import type { Update } from "../../platform/app-info";
-import { relaunchApp } from "../../platform/app-info";
 import type { Strings } from "../../i18n/strings";
 import {
   cli,
@@ -13,7 +12,7 @@ import {
   type DefaultEditorStatus,
   type UpdateChannel,
 } from "../../platform/ipc";
-import { flushPendingWrites } from "../../storage/pending-writes";
+import { installAndRelaunch } from "../../platform/install-update";
 import { checkChannel, selfUpdateAllowed } from "../../platform/distribution";
 import { canAutoUpdate } from "../../platform/capabilities";
 import { useSettings } from "../../prefs/SettingsContext";
@@ -123,18 +122,6 @@ export function UpdateButton({
       )}
     </>
   );
-}
-
-/** Downloads `update`, installs it and starts the new Textus. On Windows
- *  downloadAndInstall never returns (the updater calls process::exit, skipping
- *  Rust's exit flush), so pending writes go now, while the download runs. */
-async function installAndRelaunch(update: Update) {
-  await flushPendingWrites();
-  await update.downloadAndInstall();
-  // macOS and Linux: anything changed during the download, then the
-  // relaunch (which does flush Rust's files on its way out).
-  await flushPendingWrites();
-  await relaunchApp();
 }
 
 /**

@@ -304,6 +304,13 @@ async function pluginFailed(id: string, reason: string) {
   );
 }
 
+/** The plugin's record, once the window's first read of the plugins is
+ *  done: a tab restored by a reload asks before that read ends. */
+async function loadedRecord(id: string) {
+  if (!pluginRecord(id) && loading) await loading;
+  return pluginRecord(id);
+}
+
 /** Asks a plugin's code, starting it first; `needs` is the permission
  *  the call is for, if any. */
 export async function askPlugin(
@@ -312,7 +319,7 @@ export async function askPlugin(
   params: unknown,
   needs?: Permission,
 ): Promise<unknown> {
-  const record = pluginRecord(id);
+  const record = await loadedRecord(id);
   if (!record || !canRun(record.status, pluginsSnapshot().allOn))
     throw new Error(`${id} is turned off.`);
   if (needs && !grants(record.granted, needs))
@@ -349,7 +356,7 @@ export async function resolveWebview(
     codeBlock?: CodeBlockSeen;
   },
 ): Promise<void> {
-  const plugin = pluginRecord(record.plugin);
+  const plugin = await loadedRecord(record.plugin);
   if (!plugin || plugin.status !== "on")
     throw new Error(`${record.plugin} is turned off.`);
   const running = await host(plugin);

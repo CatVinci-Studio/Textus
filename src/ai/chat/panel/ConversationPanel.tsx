@@ -70,7 +70,11 @@ export function ConversationPanel({
   // What is asked into the AI from elsewhere lands in this composer.
   const composer = useRef<ChatComposerHandle>(null);
   useEffect(
-    () => takeComposerAsks((text) => composer.current?.restore(text)),
+    () =>
+      takeComposerAsks(
+        (text) => composer.current?.restore(text),
+        () => composer.current?.shown() ?? false,
+      ),
     [],
   );
   const port = document?.port ?? null;

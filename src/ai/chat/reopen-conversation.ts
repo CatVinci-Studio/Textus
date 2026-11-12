@@ -6,6 +6,7 @@ import {
   type ChatSummary,
 } from "./chat-history";
 import { requestChatRestore, type ChatRestore } from "./chat-restore";
+import { openConversationTab } from "./conversation-tabs";
 import { fs } from "../../platform/ipc";
 import { showConfirm } from "../../engine/controls/app-dialog";
 import { basename } from "../../utils/path";
@@ -21,7 +22,10 @@ export interface ReopenTarget {
 /** The docked panel's: the editor of the conversation's document claims it,
  *  in a tab of this window. */
 const PANEL_REOPEN: ReopenTarget = {
-  restore: requestChatRestore,
+  // In a tab of its own where the AI has tabs, never over the one in front.
+  restore: (restore) => {
+    if (!openConversationTab(restore.id)) requestChatRestore(restore);
+  },
   openDocument: (path) => openDocument(path),
 };
 

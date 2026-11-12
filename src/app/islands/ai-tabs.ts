@@ -9,16 +9,10 @@ export function conversationIn(state: unknown): string {
   return (state as { conversation?: string } | null)?.conversation ?? DRAFT;
 }
 
-/** Opens a new conversation in a tab beside `from`'s (useAiTabs); false
- *  where conversations have no place to be kept (no folder, no file). */
-let opener: ((from: string) => boolean) | null = null;
-
-export function setConversationOpener(open: typeof opener): void {
-  opener = open;
-}
-
-/** An AI tab's +: a new conversation in a tab of its own beside it, or,
- *  with nowhere to keep more than one, `startOver` in its own. */
-export function newConversation(from: string, startOver: () => void): void {
-  if (!opener?.(from)) startOver();
-}
+// The tabs' opener lives with the conversations, which History reaches.
+// eslint-disable-next-line no-restricted-syntax -- re-exported for the window's hooks
+export {
+  newConversation,
+  openConversationTab,
+  setConversationOpener,
+} from "../../ai/chat/conversation-tabs";

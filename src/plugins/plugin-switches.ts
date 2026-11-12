@@ -20,12 +20,14 @@ import { apply, loadPlugins, withdraw } from "./manager";
  */
 
 /** Settings' switch for one plugin. Turning it on asks for its
- *  permissions first; refused, it stays off. */
+ *  permissions first; refused, it stays or goes off. */
 export async function setPluginEnabled(id: string, on: boolean): Promise<void> {
   const record = pluginRecord(id);
   if (!record || !record.manifest) return;
   if (!canSwitch(record.status)) return;
-  if (!on) {
+  const granted = on ? await askPermissions(record) : null;
+  // Refused: off, even one already on (an update asking for more).
+  if (!on || (!granted && record.status === "on")) {
     stopHost(id);
     withdraw(id);
     await pluginsIpc.set(id, false, record.granted);
@@ -35,7 +37,6 @@ export async function setPluginEnabled(id: string, on: boolean): Promise<void> {
     });
     return;
   }
-  const granted = await askPermissions(record);
   if (!granted) return;
   await pluginsIpc.set(id, true, granted);
   const next = {

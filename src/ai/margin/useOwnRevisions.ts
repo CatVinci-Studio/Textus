@@ -1,7 +1,8 @@
 import { useEffect, useRef, useState } from "react";
 import { editorViewCtx, serializerCtx } from "@milkdown/kit/core";
-import { Slice, type Node as ProseNode } from "@milkdown/kit/prose/model";
+import type { Node as ProseNode } from "@milkdown/kit/prose/model";
 import { Transform } from "@milkdown/kit/prose/transform";
+import { rejectChanges } from "./own-change-spans";
 import type { EditorRunner } from "../../editor/useEditorRunner";
 import { parseMarkdownSource } from "../../editor/markdown/parse-markdown-source";
 import { ownNotes as ownNotesIpc } from "../../platform/ipc";
@@ -169,15 +170,11 @@ export function useOwnRevisions({
   }
 
   function rejectAll() {
-    const base = state()?.base;
-    if (!view || !base) return;
-    view.dispatch(
-      view.state.tr.replace(
-        0,
-        view.state.doc.content.size,
-        new Slice(base.content, 0, 0),
-      ),
-    );
+    const s = state();
+    if (!view || !s?.base) return;
+    const tr = view.state.tr;
+    rejectChanges(tr, s.shown, s.base);
+    if (tr.docChanged) view.dispatch(tr);
   }
 
   async function toggle() {

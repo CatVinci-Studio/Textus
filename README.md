@@ -1,6 +1,5 @@
 <!-- The English README is the reference: every README.<lang>.md follows its
-     structure section by section (scripts/check-readmes.mjs): hero, download,
-     writing, Textus AI, plugins, questions. -->
+     structure section by section (scripts/check-readmes.mjs). -->
 
 <p align="center">
   <img src="src-tauri/icons/icon.png" alt="Textus" width="120" height="120" />
@@ -9,13 +8,14 @@
 <h1 align="center">Textus</h1>
 
 <p align="center">
-  <strong>The next-generation Markdown editor.</strong><br>
-  You hold the pen. AI keeps your ink flowing.
+  <strong>The next-generation Integrated Writing Environment.</strong><br>
+  AI keeps your ink flowing. You hold the pen.
 </p>
 
 <p align="center">
   <a href="https://textus.md"><strong>Website</strong></a> ·
-  <a href="https://github.com/CatVinci-Studio/Textus/releases/latest"><strong>Download</strong></a>
+  <a href="https://github.com/CatVinci-Studio/Textus/releases/latest"><strong>Download</strong></a> ·
+  <a href="https://github.com/CatVinci-Studio/Textus/issues/648"><strong>Sponsor</strong></a>
 </p>
 
 <p align="center">
@@ -43,16 +43,22 @@
   <a href="https://trendshift.io/repositories/307610?utm_source=trendshift-badge&amp;utm_medium=badge&amp;utm_campaign=badge-trendshift-307610" target="_blank" rel="noopener noreferrer"><img src="https://trendshift.io/api/badge/trendshift/repositories/307610/daily?language=TypeScript" alt="CatVinci-Studio%2FTextus | Trendshift" width="250" height="55"/></a>
 </p>
 
-https://github.com/user-attachments/assets/f366f282-e3f9-43d9-9a29-edb6d1ace3f5
+<p align="center"><strong>Premier Sponsor</strong></p>
 
 <p align="center">
-  <a href="https://www.youtube.com/watch?v=k_ew9TRljz0">Watch on YouTube</a> ·
-  <a href="https://www.bilibili.com/video/BV19LJb6WEWb">Bilibili</a>
+  <a href="https://www.anthropic.com/">
+    <picture>
+      <source media="(prefers-color-scheme: dark)" srcset="docs/images/readme/sponsors/anthropic-logo-ivory.png">
+      <img src="docs/images/readme/sponsors/anthropic-logo-slate.png" alt="Anthropic" width="240">
+    </picture>
+  </a>
 </p>
 
+<p align="center"><sub>through the Anthropic Startup Program</sub></p>
+
 <p align="center">
-  <img src="docs/images/readme/en/hero.png" alt="Textus with Hamlet and the reader’s notes on it open. Textus AI tightens the notes sentence by sentence, each change in the margin, and pins a review note beside the play." width="860" /><br>
-  <sub><i>Hamlet</i>, William Shakespeare</sub>
+  <img src="docs/images/readme/en/hero.webp" alt="Textus with the first chapter of A Study in Scarlet beside the reader’s notes on it. Textus AI suggests revisions to the notes in the margin and pins a review comment beside the novel." width="860" /><br>
+  <sub><i>A Study in Scarlet</i>, Arthur Conan Doyle (1887)</sub>
 </p>
 
 ## Get Textus
@@ -66,61 +72,75 @@ Free and open source, under the MIT license.
 | Windows · x64         | [Download .exe](https://github.com/CatVinci-Studio/Textus/releases/latest)                            | —                                                                                   |
 | Linux · x64           | [Download .AppImage](https://github.com/CatVinci-Studio/Textus/releases/latest) · Also as .deb · .rpm | Arch Linux: the [`[catvinci]` repository](https://github.com/CatVinci-Studio/arch-repo) |
 
-> iPhone and iPad: on the App Store soon (not yet in mainland China).
+> iPhone and iPad: on the App Store soon.
 
 Beta: in **Settings › About**, set **Update channel** to **Beta**.
 
+## Why Textus
+
+Programmers have IDEs: one place where writing code, checking it and their tools come together. Writers usually borrow a code editor or juggle several apps. Textus brings the whole writing process into one place.
+
+- **Markdown as the common language.** In the AI era, Markdown is more than a file format: people, AI and other tools all read it, so your work moves freely between them.
+- **Built around writing, not code.** Drafting, reviewing and revising come first, not features added to a code editor.
+- **AI made for writing.** Suggestions while you write, comments while you review, and revisions you accept or reject one by one.
+- **Arranged your way.** WYSIWYG editing, a rich plugin system, sync, even your daily plans: take what you need and leave the rest.
+- **Comes with your notes.** Open an Obsidian vault as it is, import from Notion, and use Typora themes.
+
 ## Writing
 
-What you see is what you get, laid out with Markdown as you type. Export to PDF, Word, HTML and more.
+What you see is what you get: Markdown laid out as you type, with tables, code, math and diagrams, and drafts, notes and sources side by side. Export to PDF, Word, HTML and more.
 
 <p align="center">
-  <img src="docs/images/readme/en/markdown.webp" alt="A document using every kind of Markdown mark - headings, bold and italic, quotes, lists, tasks, links, a note - all laid out" width="860" />
+  <img src="docs/images/readme/en/writing.webp" alt="Textus with several documents side by side: tables, a code block, math and a diagram laid out as they are typed" width="860" />
 </p>
-
-| Code blocks | Tables |
-| :---: | :---: |
-| <img src="docs/images/readme/en/code.webp" alt="A code block, coloured for its language" width="420" /> | <img src="docs/images/readme/en/table.webp" alt="A table, its columns lined up" width="420" /> |
-| **Math** | **Diagrams** |
-| <img src="docs/images/readme/en/formula.webp" alt="Formulas drawn as you type them" width="420" /> | <img src="docs/images/readme/en/diagram.webp" alt="A Mermaid flowchart" width="420" /> |
 
 ## Textus AI
 
-Works with online and local LLMs alike - AI that speeds your writing along.
+Works with online and local models, and joins the writing itself.
 
-| Continuation | Typos and grammar | Proposed edits |
-| :---: | :---: | :---: |
-| <img src="docs/images/readme/en/ai-continue.webp" alt="The next words in grey when you pause; Tab takes them" width="280" /> | <img src="docs/images/readme/en/ai-grammar.webp" alt="A slip underlined, fixed with Alt+Enter" width="280" /> | <img src="docs/images/readme/en/ai-revise.webp" alt="Edits sentence by sentence, each with its reason" width="280" /> |
-| **Review comments** | **Slash skills** | **Any model** |
-| <img src="docs/images/readme/en/ai-review.webp" alt="A comment pinned to its sentence" width="280" /> | <img src="docs/images/readme/en/ai-skills.webp" alt="The skills menu, opened with /" width="280" /> | <img src="docs/images/readme/en/ai-models.webp" alt="Choosing a provider in Settings" width="280" /> |
+| Continuation | Typos and grammar |
+| :---: | :---: |
+| <img src="docs/images/readme/en/ai-continue.webp" alt="The next words in grey when you pause; Tab takes them" width="420" /> | <img src="docs/images/readme/en/ai-grammar.webp" alt="A slip underlined, fixed with Alt+Enter" width="420" /> |
+| **Proposed edits** | **Review comments** |
+| <img src="docs/images/readme/en/ai-revise.webp" alt="Edits sentence by sentence, each with its reason" width="420" /> | <img src="docs/images/readme/en/ai-review.webp" alt="A comment pinned to its sentence" width="420" /> |
+| **Slash skills** | **Any model** |
+| <img src="docs/images/readme/en/ai-skills.webp" alt="The skills menu, opened with /" width="420" /> | <img src="docs/images/readme/en/ai-models.webp" alt="Choosing a provider in Settings" width="420" /> |
+
+For advanced use, connect MCP servers, or bring Claude Code and Codex into the AI panel as agents.
 
 ## Plugins
 
-Not just writing: plugins add whatever else you need.
-
-| Graph View | Vim |
+| Graph View | Version History |
 | :---: | :---: |
-| <img src="docs/images/readme/en/plugin-graph.webp" alt="Notes and their links drawn as a graph" width="420" /> | <img src="docs/images/readme/en/plugin-vim.webp" alt="Vim's flash labels and its mode in the window bar" width="420" /> |
-| **Quick Preview** | **Version History** |
-| <img src="docs/images/readme/en/plugin-preview.webp" alt="Resting on a link shows that note in a card" width="420" /> | <img src="docs/images/readme/en/plugin-history.webp" alt="A note's earlier versions beside it" width="420" /> |
+| <img src="docs/images/readme/en/plugin-graph.webp" alt="Notes and their links drawn as a graph" width="420" /> | <img src="docs/images/readme/en/plugin-history.webp" alt="A note's earlier versions beside it" width="420" /> |
+| **Quick Preview** | **Knowledge Base** |
+| <img src="docs/images/readme/en/plugin-preview.webp" alt="Resting on a link shows that note in a card" width="420" /> | <img src="docs/images/readme/en/plugin-database.webp" alt="A Notion-style page: its entries as a table, each a note with its properties" width="420" /> |
 
-Mind maps, Marp slides, Kanban boards, PDF and Word in a tab, Zotero citations, charts of every kind and more are in the **Plugins** panel on the computer (the puzzle in the left column), and in **Settings › Extensions** on iPhone and iPad.
+More plugins and themes: [textus.md/extensions](https://textus.md/extensions/).
 
-Many plugins also hand Textus AI their own tools, so you can ask for what they do in a conversation. The plugins are in [textus-plugins](https://github.com/CatVinci-Studio/textus-plugins) and the themes in [textus-themes](https://github.com/CatVinci-Studio/textus-themes), where you can share your own.
+## Sponsors
+
+**Premier Sponsor:** [Anthropic](https://www.anthropic.com/), through the Anthropic Startup Program.
+
+Textus is free and open source. [Sponsor us](https://github.com/CatVinci-Studio/Textus/issues/648) to support its development.
+
+## Community
+
+Join us on Discord, QQ or WeChat: [textus.md/community](https://textus.md/community/). Bug reports and feature requests are welcome in [GitHub Issues](https://github.com/CatVinci-Studio/Textus/issues). To contribute code, start with [CONTRIBUTING.md](CONTRIBUTING.md).
 
 ## Questions
 
 <details>
 <summary><strong>Is Textus free?</strong></summary>
 
-Yes. It is free and open source under the MIT license, with no account and no subscription. If you use Textus AI, your provider bills you directly, or not at all with a local model.
+Yes, and it always will be. It is open source under the MIT license, with no account and no subscription. If you use Textus AI, your provider bills you directly, or not at all with a local model.
 
 </details>
 
 <details>
 <summary><strong>Which platforms does it run on?</strong></summary>
 
-macOS (Apple Silicon and Intel), Windows and Linux, and iPhone and iPad from the App Store (not yet in mainland China).
+macOS (Apple Silicon and Intel), Windows and Linux, and iPhone and iPad from the App Store.
 
 </details>
 
@@ -151,17 +171,6 @@ The editor does, completely. Textus AI needs your provider, unless you run a loc
 Yes: plain .md files, with tables, task lists, footnotes, math and Mermaid. You can export to PDF, Word, HTML and more.
 
 </details>
-
-## Community
-
-- [Discord](https://textus.md/discord): announcements, help and feedback, in English.
-- Chinese-speaking: [QQ group](https://textus.md/qq) (1128285004) · [WeChat group](https://textus.md/wechat)
-
-Bug reports and feature requests are welcome in [GitHub Issues](https://github.com/CatVinci-Studio/Textus/issues).
-
-## Roadmap and contributing
-
-[ROADMAP.md](ROADMAP.md) shows where Textus is heading. To build Textus, run the checks or open a pull request, start with [CONTRIBUTING.md](CONTRIBUTING.md); AI coding assistants follow [AGENTS.md](AGENTS.md). Discussions are welcome in English or Chinese.
 
 ## Star history
 

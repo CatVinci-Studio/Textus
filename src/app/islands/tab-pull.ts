@@ -18,7 +18,12 @@ import {
   reorderTab,
   type SplitLayout,
 } from "../../engine/layout/ops";
-import { paneOf, previewSplit, windowLayout } from "../../engine/layout/store";
+import {
+  ifRoom,
+  paneOf,
+  previewSplit,
+  windowLayout,
+} from "../../engine/layout/store";
 import { paneById } from "../../engine/layout/tree";
 import { frameLayout } from "../../engine/frame/frame-store";
 import { setDragging } from "../../engine/controls/document-drop";
@@ -90,7 +95,9 @@ export function pullTab(
       if (!target || target.zone === "center") return null;
       const beside = target.whole ? null : paneOf(base, target.tabId);
       if (beside === whole) return null;
-      const next = movePane(base, whole, beside, target.zone);
+      // Not past the room, as any split.
+      const next = ifRoom(movePane(base, whole, beside, target.zone));
+      if (!next) return null;
       return {
         key: `island:${beside ?? "whole"}:${target.zone}`,
         opens: true,

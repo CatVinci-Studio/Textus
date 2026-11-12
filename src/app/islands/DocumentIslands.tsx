@@ -29,7 +29,11 @@ import { tabMenuItems } from "../tabs/tab-menu-items";
 import { FormatBar } from "../FormatBar";
 import { useIslands } from "../../engine/layout/useIslands";
 import { panesOf, type Pane } from "../../engine/layout/tree";
-import { focusPane, reorderInPane } from "../../engine/layout/store";
+import {
+  focusPane,
+  reorderInPane,
+  windowTabs,
+} from "../../engine/layout/store";
 import { useTabsInBar } from "./tabs-in-bar";
 import { pullTab } from "./tab-pull";
 import type { ContextMenuItem } from "../../engine/controls/ContextMenu";
@@ -277,7 +281,14 @@ export function DocumentIslands({
       rows={tabsInBar}
       plain={!tabsInBar}
       // A panel's island holds pages only (the AI, Settings, a plugin's).
-      isPanel={(pane) => isPanelPane(pane, (id) => byId.get(id)?.view)}
+      // The window's tabs as they are now: a tab arriving is checked for
+      // room before this renders it.
+      isPanel={(pane) =>
+        isPanelPane(
+          pane,
+          (id) => windowTabs<DocTab>().find((tab) => tab.id === id)?.view,
+        )
+      }
       content={documents}
       t={t}
     />

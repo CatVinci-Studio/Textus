@@ -89,6 +89,11 @@
   margin-top: 2px;
   color: var(--ui-muted);
 }
+.plugin-list-icon.is-glyph {
+  font-size: 13px;
+  line-height: 15px;
+  text-align: center;
+}
 
 .plugin-list-text {
   display: flex;

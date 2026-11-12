@@ -11,12 +11,8 @@ import type { AgentMode, PanelMode } from "../../prefs/SettingsContext";
 export interface ChatComposerHandle {
   /** Puts `text` in the box, before what is there, and focuses it. */
   restore: (text: string) => void;
-}
-
-/** What ChatBody may do to the composer. */
-export interface ChatComposerHandle {
-  /** Puts `text` in the box, before what is there, and focuses it. */
-  restore: (text: string) => void;
+  /** Whether the box is on screen: its tab in front. */
+  shown: () => boolean;
 }
 
 export interface ChatComposerLabels {

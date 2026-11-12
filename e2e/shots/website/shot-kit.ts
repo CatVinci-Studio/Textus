@@ -1,3 +1,4 @@
+import { fileURLToPath } from "node:url";
 /**
  * What the website's and the README's screenshots share: each language's
  * sample texts, and a Mac-like window of the app opened on one of them.
@@ -67,43 +68,41 @@ function mindmapColours(doc: string): string {
 
 const BUILT_IN: Record<string, Sample> = {
   en: {
-    title: "Hamlet",
-    folder: "Shakespeare",
-    library: ["Hamlet", "Ophelia", "Claudius", "Elsinore"],
-    doc: `# Hamlet
+    title: "A Study in Scarlet",
+    folder: "Sherlock Holmes",
+    library: ["Sherlock Holmes", "Dr. Watson", "Baker Street", "Lestrade"],
+    doc: `# A Study in Scarlet
 
-## Act III, Scene 1
+## Chapter I, Mr. Sherlock Holmes
 
-*A room in the castle.* Enter **Hamlet**.
+*The chemical laboratory at Bart's.* Stamford brings **Watson** to meet Holmes.
 
-> To be, or not to be, that is the question:\\
-> Whether 'tis nobler in the mind to suffer\\
-> The slings and arrows of outrageous fortune,\\
-> Or to take arms against a sea of troubles\\
-> And by opposing end them.
+> “Dr. Watson, Mr. Sherlock Holmes,” said Stamford, introducing us.\\
+> “How are you?” he said cordially, gripping my hand with a strength for which I should hardly have given him credit. “You have been in Afghanistan, I perceive.”\\
+> “How on earth did you know that?” I asked in astonishment.
 
 ## Notes
 
-Hamlet's question is not really only about whether to live or to die, if you think about it. He is weighing whether it is nobler to endure what fortune sends or to fight it. In the end, it seems to be the fear of what might come after death that is the thing that keeps him from acting.
+Holmes's first line is not really just a party trick, if you think about it. He is reading Watson the way he will read every crime scene in the book. In the end, it seems to be the habit of noticing small things that is what the whole novel is built on.
 
-| Line | Image             | Reading                   |
-| ---- | ----------------- | ------------------------- |
-| 3    | Slings and arrows | Fortune as an archer      |
-| 4    | A sea of troubles | A fight no one can win    |
-| 5    | End them          | The troubles, or his life |
+| Clue          | What Holmes sees         | What he concludes |
+| ------------- | ------------------------ | ----------------- |
+| Tanned face   | Not his natural colour   | Back from the tropics |
+| Haggard look  | Hardship and sickness    | War service       |
+| Stiff arm     | An old wound             | Afghanistan       |
 `,
     ask: "Tighten my note",
     anchor:
-      "Hamlet's question is not really only about whether to live or to die, if you think about it. He is weighing whether it is nobler to endure what fortune sends or to fight it. In the end, it seems to be the fear of what might come after death that is the thing that keeps him from acting.",
+      "Holmes's first line is not really just a party trick, if you think about it. He is reading Watson the way he will read every crime scene in the book. In the end, it seems to be the habit of noticing small things that is what the whole novel is built on.",
     edited:
-      "Hamlet's question is not only whether to live or die. He is weighing whether it is nobler to endure what fortune sends or to fight it. In the end, the fear of what comes after death keeps him from acting.",
+      "Holmes's first line is not just a party trick. He is reading Watson the way he will read every crime scene in the book. The habit of noticing small things is what the whole novel is built on.",
     reason:
       "Cut the hedges (“really”, “if you think about it”, “it seems to be”); the reading is unchanged.",
-    commentAnchor: "Or to take arms against a sea of troubles",
+    commentAnchor: "You have been in Afghanistan, I perceive.",
     comment:
-      "A mixed metaphor on purpose: no one can take arms against the sea. Worth a line in your note.",
-    reply: "Tightened your note, and left a comment on the fourth line.",
-    zenFocus: "To be, or not to be",
+      "His first deduction, given before any explanation: Holmes explains it only in Chapter II. Worth a line in your note.",
+    reply: "Tightened your note, and left a comment on Holmes's first deduction.",
+    zenFocus: "You have been in Afghanistan",
     mathTitle: "Euler",
     mathDoc: `# Euler's formula
 
@@ -134,79 +133,78 @@ mindmap
       Nothing
 \`\`\`
 `,
-    tourTitle: "Hamlet, Act III",
-    tourDoc: `# Hamlet
+    tourTitle: "A Study in Scarlet, Chapter II",
+    tourDoc: `# A Study in Scarlet
 
-## Act III, Scene 1
+## Chapter II, The Science of Deduction
 
-> To be, or not to be, that is the question:\\
-> Whether 'tis nobler in the mind to suffer
+> “I have a turn both for observation and for deduction.”
 
 ### Reading notes
 
-The speech turns on **one choice**, *to suffer* or *to take arms*, and ==the dread of something after death== settles it. Not ~~despair~~ but <u>conscience</u> makes cowards of us all. Search the play for \`sea of troubles\`, or read it at [Folger Shakespeare](https://www.folger.edu/explore/shakespeares-works/hamlet/).
+The method turns on **observation**, *then* deduction, and ==small details== settle it. Not ~~guesswork~~ but <u>reasoning</u> solves the case. Search the novel for \`deduction\`, or read it at [Project Gutenberg](https://www.gutenberg.org/ebooks/244).
 
 > [!NOTE]
-> Claudius and Polonius are hiding nearby, listening.
+> Watson does not yet know what Holmes does for a living.
 
-- Fortune as an archer
-- Troubles as a sea
+- Observe first
+- Deduce second
 
-1. Read the speech aloud
-2. Mark every question
+1. Read the chapter
+2. List every clue
 
-- [x] Learn the first five lines
-- [ ] Compare the First Quarto
+- [x] Read Chapter I
+- [ ] Compare Holmes's article
 
 \`\`\`python
-speech = open("hamlet-3-1.txt").read()
-print(speech.count("?"), "questions")
+text = open("a-study-in-scarlet.txt").read()
+print(text.count("Holmes"), "mentions")
 \`\`\`
 
 ---
 `,
-    tourCaret: "The speech turns on",
+    tourCaret: "The method turns on",
     notes: {
-      Hamlet: `# Hamlet
+      "Sherlock Holmes": `# Sherlock Holmes
 
-Prince of Denmark, called home from [[Wittenberg]] by his father's death. His uncle [[Claudius]] has taken the throne and married his mother, [[Gertrude]], within the month.
+A consulting detective who shares rooms with [[Dr. Watson]] at [[Baker Street]]. The police, [[Lestrade]] and [[Gregson]], bring him the cases they cannot solve.
 
-## What drives him
+## How he works
 
-- [[The Ghost]]'s charge to avenge a murder he can't yet prove
-- Doubt: he stages [[The Mousetrap]] to be sure
-- [[Horatio]], the one friend he trusts
+- Observation first, as he shows by reading Watson at their first meeting
+- Chemistry at the hospital lab where [[Stamford]] introduces them
+- The [[Baker Street Irregulars]], street boys who find what the police miss
 
-He plays mad at [[Elsinore]] and pushes away [[Ophelia]], and he thinks more than he acts - until there is no time left to think.
+He takes the case of the body in [[Lauriston Gardens]], and the trail leads to [[Jefferson Hope]] - and he asks [[Dr. Watson]] to come along.
 `,
-      Ophelia: `# Ophelia
+      "Dr. Watson": `# Dr. Watson
 
-Daughter of [[Polonius]], sister of [[Laertes]]. She loves [[Hamlet]] and is told by her father to return his letters.
+An army doctor back from the war in Afghanistan, wounded and short of money. [[Stamford]] introduces him to [[Sherlock Holmes]], and they take rooms together at [[Baker Street]].
 
-After her father's death she sings of flowers and loss, and drowns in a brook.
+He tells the story, and keeps a list of what Holmes knows and does not know.
 `,
-      Claudius: `# Claudius
+      "Baker Street": `# Baker Street
 
-King of Denmark, [[Hamlet]]'s uncle. He killed his brother - now [[The Ghost]] - with poison in the ear and married [[Gertrude]]. He plots with [[Laertes]] to end it with a poisoned blade. [[The Mousetrap]] shows him his own crime.
+The rooms at 221B that [[Sherlock Holmes]] and [[Dr. Watson]] share, kept by their landlady. The [[Baker Street Irregulars]] report there.
 `,
-      Gertrude: `# Gertrude
+      Lestrade: `# Lestrade
 
-Queen of Denmark, [[Hamlet]]'s mother, now [[Claudius]]'s wife. She drinks the poisoned cup meant for her son.
+A Scotland Yard detective, rival of [[Gregson]]. He finds a word written in blood at [[Lauriston Gardens]] and is sure of the wrong answer.
 `,
-      Polonius: `# Polonius
+      Gregson: `# Gregson
 
-Lord Chamberlain, father of [[Ophelia]] and [[Laertes]]. He hides behind the arras to spy on [[Hamlet]] and is stabbed through it.
+A Scotland Yard detective who asks [[Sherlock Holmes]] for help, then claims the credit with [[Lestrade]].
 `,
-      Elsinore: `# Elsinore
+      "Lauriston Gardens": `# Lauriston Gardens
 
-The castle where the play takes place, on the coast of Denmark. [[Hamlet]] and [[Horatio]] meet [[The Ghost]] on its battlements; [[Claudius]] holds court in its halls, and [[Fortinbras]] takes it at the end.
+The empty house where the first body is found. [[Sherlock Holmes]] reads the floor, the wall and the street before the police do.
 `,
-      "The Mousetrap": `# The Mousetrap
+      "Jefferson Hope": `# Jefferson Hope
 
-The play within the play, in Act III. [[Hamlet]] has the players act out a murder like his father's and watches [[Claudius]]'s face.
+The man [[Sherlock Holmes]] catches at [[Baker Street]], with the help of the [[Baker Street Irregulars]]. The second part of the novel tells his story.
 `,
     },
-    previewLink: "Ophelia",
+    previewLink: "Dr. Watson",
   },
   zh: {
     title: "红楼梦",
@@ -500,6 +498,18 @@ for (const lang of LANGS) {
 }
 
 /** The built-in texts, with SAMPLES_JSON's over them. */
+/** The hero document with its illustration under the first quoted passage
+ *  (the language's own picture, served by `launch`). */
+function withIllustration(doc: string, title = ""): string {
+  const quote = /(^>.*\n)+/m.exec(doc);
+  if (!quote) return doc;
+  const end = quote.index + quote[0].length;
+  return `${doc.slice(0, end)}\n<img src="${ILLUSTRATION}" alt="${title}" width="80%">\n${doc.slice(end)}`;
+}
+
+/** The illustration's file name in a sample's folder. */
+const ILLUSTRATION = "illustration.webp";
+
 function loadSamples(): Record<string, Partial<Sample>> {
   const file = process.env.SAMPLES_JSON;
   const extra: Record<string, Partial<Sample>> = {};
@@ -515,6 +525,7 @@ function loadSamples(): Record<string, Partial<Sample>> {
     LANGS.map((lang) => {
       const sample: Partial<Sample> = { ...BUILT_IN[lang], ...extra[lang] };
       if (sample.mathDoc) sample.mathDoc = mindmapColours(sample.mathDoc);
+      if (sample.doc) sample.doc = withIllustration(sample.doc, sample.title);
       return [lang, sample];
     }),
   );
@@ -738,6 +749,18 @@ interface Launch {
 export async function launch(page: Page, options: Launch) {
   await page.addInitScript(() => {
     Object.defineProperty(navigator, "platform", { get: () => "MacIntel" });
+  });
+  // The sample's illustration, as Tauri's asset protocol would serve it.
+  await page.route(/^http:\/\/asset\.localhost\//, (route) => {
+    const file = decodeURIComponent(new URL(route.request().url()).pathname);
+    const picture = path.join(
+      path.dirname(fileURLToPath(import.meta.url)),
+      "illustrations",
+      `${options.lang}.webp`,
+    );
+    return file.endsWith(`/${ILLUSTRATION}`) && existsSync(picture)
+      ? route.fulfill({ path: picture, contentType: "image/webp" })
+      : route.continue();
   });
   // Vite refuses to serve KaTeX's fonts when node_modules is a link outside
   // its root, as in a worktree.

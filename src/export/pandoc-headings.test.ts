@@ -10,6 +10,15 @@ describe("numbered headings for Pandoc", () => {
     );
   });
 
+  it("keeps a # that ends the title's words, dropping only a closing run", () => {
+    expect(numberedHeadings("# Learning C#\n\n## A")).toBe(
+      "# Learning C# {.unnumbered .unlisted}\n\n# A",
+    );
+    expect(numberedHeadings("# Title ##\n\n## A")).toBe(
+      "# Title {.unnumbered .unlisted}\n\n# A",
+    );
+  });
+
   it("numbers every heading of the top level when there are several", () => {
     expect(numberedHeadings("## A\n### a\n## B")).toBe("# A\n## a\n# B");
     expect(numberedHeadings("# A\n# B")).toBe("# A\n# B");

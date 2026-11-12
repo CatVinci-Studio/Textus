@@ -5,13 +5,14 @@
 <h1 align="center">Textus</h1>
 
 <p align="center">
-  <strong>Markdown-редактор нового поколения.</strong><br>
-  Перо в ваших руках. Чернила готовит ИИ.
+  <strong>Интегрированная среда для письма нового поколения.</strong><br>
+  ИИ подливает чернила. Перо — в ваших руках.
 </p>
 
 <p align="center">
   <a href="https://textus.md"><strong>Сайт</strong></a> ·
-  <a href="https://github.com/CatVinci-Studio/Textus/releases/latest"><strong>Скачать</strong></a>
+  <a href="https://github.com/CatVinci-Studio/Textus/releases/latest"><strong>Скачать</strong></a> ·
+  <a href="https://github.com/CatVinci-Studio/Textus/issues/648"><strong>Поддержать</strong></a>
 </p>
 
 <p align="center">
@@ -39,125 +40,134 @@
   <a href="https://trendshift.io/repositories/307610?utm_source=trendshift-badge&amp;utm_medium=badge&amp;utm_campaign=badge-trendshift-307610" target="_blank" rel="noopener noreferrer"><img src="https://trendshift.io/api/badge/trendshift/repositories/307610/daily?language=TypeScript" alt="CatVinci-Studio%2FTextus | Trendshift" width="250" height="55"/></a>
 </p>
 
-https://github.com/user-attachments/assets/f366f282-e3f9-43d9-9a29-edb6d1ace3f5
+<p align="center"><strong>Главный спонсор</strong></p>
 
 <p align="center">
-  <a href="https://www.youtube.com/watch?v=k_ew9TRljz0">Смотреть на YouTube</a> ·
-  <a href="https://www.bilibili.com/video/BV19LJb6WEWb">Bilibili</a>
+  <a href="https://www.anthropic.com/">
+    <picture>
+      <source media="(prefers-color-scheme: dark)" srcset="docs/images/readme/sponsors/anthropic-logo-ivory.png">
+      <img src="docs/images/readme/sponsors/anthropic-logo-slate.png" alt="Anthropic" width="240">
+    </picture>
+  </a>
 </p>
 
+<p align="center"><sub>по программе Anthropic Startup Program</sub></p>
+
 <p align="center">
-  <img src="docs/images/readme/ru/hero.png" alt="Textus с открытым романом «Анна Каренина» и заметками читателя. Textus AI сокращает заметки по предложениям, каждая правка на полях, и оставляет комментарий рядом с текстом." width="860" /><br>
-  <sub><i>«Анна Каренина»</i>, Лев Толстой</sub>
+  <img src="docs/images/readme/ru/hero.webp" alt="Textus с первой частью «Анны Карениной» рядом с заметками читателя о ней. Textus AI предлагает на полях правки к заметкам и прикрепляет комментарий рядом с романом." width="860" /><br>
+  <sub>«Анна Каренина», Лев Толстой (1878)</sub>
 </p>
 
 ## Установите Textus
 
-Бесплатно и с открытым кодом, по лицензии MIT.
+Бесплатно и с открытым исходным кодом, по лицензии MIT.
 
-| Платформа | Скачать | Другие способы установки |
-| --- | --- | --- |
-| macOS · Apple Silicon | [Скачать .dmg](https://github.com/CatVinci-Studio/Textus/releases/latest) | Homebrew: `brew install --cask textus` |
-| macOS · Intel | [Скачать .dmg](https://github.com/CatVinci-Studio/Textus/releases/latest) | Homebrew: `brew install --cask textus` |
-| Windows · x64 | [Скачать .exe](https://github.com/CatVinci-Studio/Textus/releases/latest) | — |
-| Linux · x64 | [Скачать .AppImage](https://github.com/CatVinci-Studio/Textus/releases/latest) · А также .deb · .rpm | Arch Linux: [репозиторий `[catvinci]`](https://github.com/CatVinci-Studio/arch-repo) |
+| Платформа             | Скачать                                                                                                   | Другие способы установки                                                              |
+| --------------------- | --------------------------------------------------------------------------------------------------------- | ------------------------------------------------------------------------------------- |
+| macOS · Apple Silicon | [Скачать .dmg](https://github.com/CatVinci-Studio/Textus/releases/latest)                                 | Homebrew: `brew install --cask textus`                                                |
+| macOS · Intel         | [Скачать .dmg](https://github.com/CatVinci-Studio/Textus/releases/latest)                                 | Homebrew: `brew install --cask textus`                                                |
+| Windows · x64         | [Скачать .exe](https://github.com/CatVinci-Studio/Textus/releases/latest)                                 | —                                                                                     |
+| Linux · x64           | [Скачать .AppImage](https://github.com/CatVinci-Studio/Textus/releases/latest) · Также .deb · .rpm        | Arch Linux: [репозиторий `[catvinci]`](https://github.com/CatVinci-Studio/arch-repo) |
 
-> iPhone и iPad — скоро в App Store (пока не в материковом Китае).
+> iPhone и iPad: скоро в App Store.
 
 Бета-версии: в **Настройки › О программе** переключите **Канал обновлений** на **Бета**.
 
+## Почему Textus
+
+У программистов есть IDE: одно место, где пишут код, проверяют его и работают со своими инструментами. Авторы же обычно берут взаймы редактор кода или переключаются между несколькими приложениями. Textus собирает весь процесс письма в одном месте.
+
+- **Markdown как общий язык.** В эпоху ИИ Markdown — больше чем формат файлов: его читают и люди, и ИИ, и другие инструменты, так что ваши тексты свободно переходят между ними.
+- **Создан для письма, а не для кода.** Черновик, вычитка и правка здесь главное, а не функции, добавленные к редактору кода.
+- **ИИ для письма.** Подсказки, пока вы пишете, комментарии, пока вы вычитываете, и правки, которые вы принимаете или отклоняете по одной.
+- **Устроен так, как удобно вам.** Визуальное редактирование, богатая система плагинов, синхронизация, даже планы на день: берите нужное, остальное оставьте.
+- **Ваши заметки — с вами.** Откройте хранилище Obsidian как есть, импортируйте из Notion и используйте темы Typora.
+
 ## Редактор
 
-Что видите, то и получаете: Markdown оформляется прямо по ходу набора. Экспорт в PDF, Word, HTML и другие форматы.
+Что видите, то и получаете: Markdown оформляется прямо при наборе, с таблицами, кодом, формулами и диаграммами, а черновики, заметки и источники можно открыть рядом. Экспорт в PDF, Word, HTML и другие форматы.
 
 <p align="center">
-  <img src="docs/images/readme/ru/markdown.webp" alt="Документ со всеми видами разметки Markdown — заголовки, жирный и курсив, цитаты, списки, задачи, ссылки, сноска — уже оформлен" width="860" />
+  <img src="docs/images/readme/ru/writing.webp" alt="Textus с несколькими документами рядом: таблицы, блок кода, формулы и диаграмма оформляются прямо при наборе" width="860" />
 </p>
-
-| Блоки кода | Таблицы |
-| :---: | :---: |
-| <img src="docs/images/readme/ru/code.webp" alt="Блок кода с подсветкой по языку" width="420" /> | <img src="docs/images/readme/ru/table.webp" alt="Таблица с выровненными столбцами" width="420" /> |
-| **Формулы** | **Диаграммы** |
-| <img src="docs/images/readme/ru/formula.webp" alt="Формулы отрисовываются по мере набора" width="420" /> | <img src="docs/images/readme/ru/diagram.webp" alt="Блок-схема Mermaid" width="420" /> |
 
 ## Textus AI
 
-Работает и с онлайн-, и с локальными LLM — ИИ, который ускоряет ваше письмо.
+Работает с онлайн- и локальными моделями и участвует в самом письме.
 
-| Продолжение текста | Опечатки и грамматика | Предложенные правки |
-| :---: | :---: | :---: |
-| <img src="docs/images/readme/ru/ai-continue.webp" alt="Следующие слова серым, когда вы остановились; Tab их принимает" width="280" /> | <img src="docs/images/readme/ru/ai-grammar.webp" alt="Ошибка подчёркнута, исправляется по Alt+Enter" width="280" /> | <img src="docs/images/readme/ru/ai-revise.webp" alt="Правки по предложениям, у каждой своя причина" width="280" /> |
-| **Комментарии** | **Навыки через /** | **Любая модель** |
-| <img src="docs/images/readme/ru/ai-review.webp" alt="Комментарий, прикреплённый к своему предложению" width="280" /> | <img src="docs/images/readme/ru/ai-skills.webp" alt="Меню навыков, открытое через /" width="280" /> | <img src="docs/images/readme/ru/ai-models.webp" alt="Выбор провайдера в настройках" width="280" /> |
+| Продолжение текста | Опечатки и грамматика |
+| :---: | :---: |
+| <img src="docs/images/readme/ru/ai-continue.webp" alt="Продолжение серым, когда вы делаете паузу; Tab принимает его" width="420" /> | <img src="docs/images/readme/ru/ai-grammar.webp" alt="Ошибка подчёркнута и исправляется по Alt+Enter" width="420" /> |
+| **Предложенные правки** | **Комментарии** |
+| <img src="docs/images/readme/ru/ai-revise.webp" alt="Правки по предложениям, у каждой своя причина" width="420" /> | <img src="docs/images/readme/ru/ai-review.webp" alt="Комментарий, прикреплённый к своему предложению" width="420" /> |
+| **Навыки через /** | **Любая модель** |
+| <img src="docs/images/readme/ru/ai-skills.webp" alt="Меню навыков, открытое через /" width="420" /> | <img src="docs/images/readme/ru/ai-models.webp" alt="Выбор провайдера в настройках" width="420" /> |
+
+Для продвинутых: подключайте MCP-серверы или добавляйте Claude Code и Codex в панель ИИ как агентов.
 
 ## Плагины
 
-Не только письмо: плагины добавят всё остальное, что вам нужно.
-
-| Граф заметок | Vim |
+| Граф заметок | История версий |
 | :---: | :---: |
-| <img src="docs/images/readme/ru/plugin-graph.webp" alt="Заметки и связи между ними в виде графа" width="420" /> | <img src="docs/images/readme/ru/plugin-vim.webp" alt="Метки перехода Vim и его режим в строке окна" width="420" /> |
-| **Быстрый просмотр** | **История версий** |
-| <img src="docs/images/readme/ru/plugin-preview.webp" alt="Задержите курсор на ссылке — заметка откроется в карточке" width="420" /> | <img src="docs/images/readme/ru/plugin-history.webp" alt="Прежние версии заметки рядом с ней" width="420" /> |
+| <img src="docs/images/readme/ru/plugin-graph.webp" alt="Заметки и связи между ними в виде графа" width="420" /> | <img src="docs/images/readme/ru/plugin-history.webp" alt="Прежние версии заметки рядом с ней" width="420" /> |
+| **Быстрый просмотр** | **База знаний** |
+| <img src="docs/images/readme/ru/plugin-preview.webp" alt="Если задержать курсор на ссылке, заметка появится в карточке" width="420" /> | <img src="docs/images/readme/ru/plugin-database.webp" alt="Страница в духе Notion: записи в виде таблицы, каждая — заметка со своими свойствами" width="420" /> |
 
-Карты мыслей, слайды Marp, канбан-доски, PDF и Word во вкладке, цитаты из Zotero, всевозможные диаграммы и многое другое — на компьютере в панели **Плагины** (пазл в левой колонке), а на iPhone и iPad — в **Настройки › Расширения**.
+Больше плагинов и тем: [textus.md/extensions](https://textus.md/ru/extensions/).
 
-Многие плагины передают свои инструменты и Textus AI, так что достаточно попросить об этом в разговоре. Плагины лежат в [textus-plugins](https://github.com/CatVinci-Studio/textus-plugins), темы — в [textus-themes](https://github.com/CatVinci-Studio/textus-themes), где можно поделиться и своими.
+## Спонсоры
+
+**Главный спонсор:** [Anthropic](https://www.anthropic.com/), по программе Anthropic Startup Program.
+
+Textus бесплатен и открыт. [Поддержите нас](https://github.com/CatVinci-Studio/Textus/issues/648), чтобы помочь его развитию.
+
+## Сообщество
+
+Присоединяйтесь к нам в Discord, QQ или WeChat: [textus.md/community](https://textus.md/ru/community/). Сообщения об ошибках и пожелания ждём в [GitHub Issues](https://github.com/CatVinci-Studio/Textus/issues). Чтобы помочь с кодом, начните с [CONTRIBUTING.md](CONTRIBUTING.md) (на английском).
 
 ## Вопросы и ответы
 
 <details>
 <summary><strong>Textus бесплатный?</strong></summary>
 
-Да. Textus бесплатен, его код открыт (лицензия MIT), аккаунт и подписка не нужны. За Textus AI вы платите своему провайдеру — или никому, если модель локальная.
+Да, и всегда будет бесплатным. Это открытый проект под лицензией MIT, без аккаунта и без подписки. Если вы пользуетесь Textus AI, счёт выставляет ваш провайдер напрямую, а с локальной моделью платить не нужно вовсе.
 
 </details>
 
 <details>
-<summary><strong>На каких платформах работает Textus?</strong></summary>
+<summary><strong>На каких платформах он работает?</strong></summary>
 
-На macOS (Apple Silicon и Intel), Windows и Linux, а также на iPhone и iPad из App Store (пока не в материковом Китае).
+macOS (Apple Silicon и Intel), Windows и Linux, а также iPhone и iPad через App Store.
 
 </details>
 
 <details>
-<summary><strong>Сколько памяти занимает Textus?</strong></summary>
+<summary><strong>Сколько памяти он занимает?</strong></summary>
 
-Мы очень внимательно следим за памятью и измеряем её в каждом выпуске. Одно окно занимает около 110 МБ, каждое следующее — примерно ещё 55 МБ. Плагины загружаются, только когда они нужны, а веб-страница, оставленная в фоне, выгружается и загружается снова, когда вы к ней возвращаетесь.
+Мы очень внимательно относимся к памяти и измеряем её в каждой версии. Одно окно занимает около 110 МБ, каждое следующее — примерно на 55 МБ больше. Плагины загружаются, только когда они нужны, а веб-страница, оставленная в фоне, выгружается и загружается снова, когда вы к ней возвращаетесь.
 
 </details>
 
 <details>
 <summary><strong>Нужен ли аккаунт для ИИ?</strong></summary>
 
-Нет. Редактор полностью работает и без ИИ. Чтобы включить Textus AI, подключите провайдера: войдите через ChatGPT или Claude, вставьте API-ключ или запустите локальную модель через Ollama.
+Нет. Редактор полностью работает без ИИ. Для Textus AI подключите своего провайдера: войдите через ChatGPT или Claude, добавьте API-ключ или запустите локальную модель через Ollama.
 
 </details>
 
 <details>
-<summary><strong>Работает ли Textus без интернета?</strong></summary>
+<summary><strong>Работает ли он офлайн?</strong></summary>
 
-Редактор — полностью. Textus AI нужен доступ к провайдеру, если только модель не локальная: тогда ничего не покидает ваш компьютер.
+Редактор — полностью. Textus AI нужен доступ к вашему провайдеру, если только вы не запускаете локальную модель.
 
 </details>
 
 <details>
-<summary><strong>Это обычный Markdown? В какие форматы можно экспортировать?</strong></summary>
+<summary><strong>Это обычный Markdown? Во что можно экспортировать?</strong></summary>
 
-Да, это обычные файлы .md — с таблицами, списками задач, сносками, формулами и диаграммами Mermaid. Экспорт — в PDF, Word, HTML и другие форматы.
+Да: обычные файлы .md с таблицами, списками задач, сносками, формулами и Mermaid. Экспорт в PDF, Word, HTML и другие форматы.
 
 </details>
-
-## Сообщество
-
-- [Discord](https://textus.md/discord): новости, помощь и отзывы, на английском.
-- На китайском: [группа QQ](https://textus.md/qq) (1128285004) · [группа WeChat](https://textus.md/wechat)
-
-Об ошибках и пожеланиях пишите в [GitHub Issues](https://github.com/CatVinci-Studio/Textus/issues).
-
-## Планы и участие в разработке
-
-Куда движется Textus, описано в [ROADMAP.md](ROADMAP.md) (на английском). Чтобы собрать Textus, запустить проверки или открыть pull request, начните с [CONTRIBUTING.md](CONTRIBUTING.md) (на английском); ИИ-ассистенты для программирования следуют [AGENTS.md](AGENTS.md). Обсуждение — на английском или китайском.
 
 ## История звёзд
 

@@ -1,6 +1,7 @@
 import { LCS_MAX_CELLS, lcsSteps, wholeChange } from "../../utils/lcs";
 import type { Node as ProseNode } from "@milkdown/kit/prose/model";
 import { simplifyChanges, type Change } from "@milkdown/kit/prose/changeset";
+import type { Transform } from "@milkdown/kit/prose/transform";
 
 /** A change as shown: where it was in the original (A) and is now (B). */
 export interface ChangeSpan {
@@ -73,4 +74,16 @@ export function charChanges(a: string, b: string): ChangeSpan[] {
   }
   if (open) out.push({ ...open, toA: i, toB: j });
   return out;
+}
+
+/** Puts back each change's original in `tr`, last first, so the text that
+ *  wasn't changed (and whatever is anchored on it) is never touched. */
+export function rejectChanges(
+  tr: Transform,
+  shown: readonly ChangeSpan[],
+  base: ProseNode,
+): Transform {
+  for (const c of [...shown].sort((a, b) => b.fromB - a.fromB))
+    tr.replace(c.fromB, c.toB, base.slice(c.fromA, c.toA));
+  return tr;
 }

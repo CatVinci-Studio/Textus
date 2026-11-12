@@ -178,7 +178,8 @@ function TextMatches({
                 key={hit.line}
                 type="button"
                 className="tree-row search-text-line"
-                onClick={() => onOpen(hit.path, hit.line)}
+                // Search counts lines from 1, a place from 0.
+                onClick={() => onOpen(hit.path, hit.line - 1)}
               >
                 <span className="tx-truncate search-text-snippet">
                   {marked(hit.text, needle)}
