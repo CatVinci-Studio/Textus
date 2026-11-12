@@ -100,6 +100,8 @@ export function PluginPage({
         <SettingRow label={t.pluginOnLabel}>
           <input
             type="checkbox"
+            className="tx-switch"
+            role="switch"
             aria-label={fill(t.pluginEnableLabel, { name })}
             disabled={!switchable}
             checked={on}

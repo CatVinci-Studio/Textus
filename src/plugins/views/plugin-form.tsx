@@ -76,6 +76,7 @@ function PluginForm({ request }: { request: Request }) {
                   <input
                     id={id}
                     type="checkbox"
+                    className="ui-check"
                     checked={value === true}
                     onChange={(e) => set(field.key, e.target.checked)}
                   />

@@ -142,6 +142,8 @@ export function ToggleRow({
       <input
         id={id}
         type="checkbox"
+        className="tx-switch"
+        role="switch"
         aria-labelledby={`${id}-label`}
         checked={checked}
         onChange={(e) => onChange(e.target.checked)}

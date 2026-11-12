@@ -253,6 +253,8 @@ function ServerCard({
         <>
           <input
             type="checkbox"
+            className="tx-switch"
+            role="switch"
             aria-label={server.name || server.id}
             checked={server.enabled}
             onChange={(e) => onEnable(e.target.checked)}

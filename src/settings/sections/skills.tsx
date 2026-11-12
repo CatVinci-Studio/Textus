@@ -222,6 +222,8 @@ export function OwnSkillsList({
             {/* Off for now, its modes kept for when it comes back on. */}
             <input
               type="checkbox"
+              className="tx-switch"
+              role="switch"
               aria-label={words?.label ?? skill.name}
               checked={!skill.off}
               onChange={(e) => void setOff(skill, !e.target.checked)}
