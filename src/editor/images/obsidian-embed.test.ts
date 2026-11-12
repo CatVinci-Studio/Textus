@@ -40,6 +40,16 @@ describe("parseEmbed", () => {
     });
   });
 
+  it("reads one in a table cell, its bar written \\|", () => {
+    expect(parseEmbed("![[pic.png\\|300]]")).toMatchObject({
+      path: "pic.png",
+      width: 300,
+    });
+    expect(withEmbedPath("![[pic.png\\|300]]", "img/pic.png")).toBe(
+      "![[img/pic.png\\|300]]",
+    );
+  });
+
   it("reads a bare file name with spaces", () => {
     expect(parseEmbed("![[Pasted image 2024.png]]")?.path).toBe(
       "Pasted image 2024.png",

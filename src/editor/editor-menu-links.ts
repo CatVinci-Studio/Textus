@@ -51,7 +51,8 @@ export function linkMenuItems(
     },
     {
       label: t.menuCopyLink,
-      onSelect: () => void navigator.clipboard.writeText(link.href),
+      onSelect: () =>
+        void navigator.clipboard.writeText(link.href).catch(() => {}),
     },
     // Its source shown with the destination selected, to type over.
     {

@@ -26,5 +26,9 @@ describe("how a link is written", () => {
       wiki: false,
     });
     expect(linkStyleIn("only [the web](https://x.org)")).toBeNull();
+    // Pictures are not links to notes.
+    expect(linkStyleIn("![a](a.png) ![b](b.png) and [[Nov 5]]")).toMatchObject({
+      wiki: true,
+    });
   });
 });

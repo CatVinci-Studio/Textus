@@ -19,9 +19,9 @@ let stopOpening = () => {};
 
 beforeEach(() => {
   opened = [];
-  stopOpening = setDocumentOpener((path, request) =>
-    opened.push({ path, ...request }),
-  );
+  stopOpening = setDocumentOpener((path, request) => {
+    opened.push({ path, ...request });
+  });
   fs.fileMtimeMs.mockResolvedValue(1);
   fs.createDocument.mockResolvedValue("ok");
   fs.createFolder.mockResolvedValue("ok");

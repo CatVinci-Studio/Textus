@@ -51,7 +51,7 @@ export function useDocumentOpener(
     };
     return setDocumentOpener(
       (path, { linked, ...open }) =>
-        void (linked ? openLinkedFile(path) : openPathInTab(path, open)),
+        linked ? openLinkedFile(path) : openPathInTab(path, open),
     );
   }, [openPathInTab, t]);
   useFilesFromChat();

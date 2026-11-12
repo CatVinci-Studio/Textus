@@ -1,5 +1,5 @@
 import { fs, themes } from "../platform/ipc";
-import { withWebFonts } from "./web-fonts";
+import { IMPORT_RE, withWebFonts } from "./web-fonts";
 import { isInside } from "../utils/path";
 import type { UserThemeMeta } from "../prefs/SettingsContext";
 
@@ -7,8 +7,6 @@ import type { UserThemeMeta } from "../prefs/SettingsContext";
 /// `url(...)` assets, neither of which resolves in a runtime `<style>`. So
 /// imports are inlined recursively and local assets embedded as data URIs.
 
-const IMPORT_RE =
-  /@import\s+(?:url\(\s*["']?([^"')]+)["']?\s*\)|["']([^"']+)["'])\s*;/g;
 const URL_RE = /url\(\s*["']?([^"')]+)["']?\s*\)/g;
 
 const MIME_BY_EXT: Record<string, string> = {
@@ -93,18 +91,21 @@ async function inlineFile(path: string, seen: Set<string>): Promise<string> {
 
   let withImports = "";
   let lastIndex = 0;
-  IMPORT_RE.lastIndex = 0;
-  let m: RegExpExecArray | null;
-  while ((m = IMPORT_RE.exec(raw))) {
+  // matchAll reads its own copy: an import inlined meanwhile can't move
+  // this loop's place.
+  for (const m of raw.matchAll(IMPORT_RE)) {
     const target = m[1] ?? m[2];
     withImports += raw.slice(lastIndex, m.index);
-    lastIndex = IMPORT_RE.lastIndex;
+    lastIndex = m.index + m[0].length;
 
     if (!target || isRemoteOrData(target)) {
       withImports += m[0];
       continue;
     }
-    withImports += await inlineFile(resolvePath(baseDir, target), seen);
+    const text = await inlineFile(resolvePath(baseDir, target), seen);
+    // `@import "x.css" print;`: the sheet for those media only.
+    const media = m[3].trim();
+    withImports += media ? `@media ${media} {\n${text}\n}` : text;
   }
   withImports += raw.slice(lastIndex);
 

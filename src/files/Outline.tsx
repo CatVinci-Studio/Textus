@@ -11,6 +11,7 @@ import { Presence } from "../engine/motion/usePresence";
 import { noteJump } from "../editor/nav-history";
 import { setTabJump } from "../editor/tab-jump";
 import { headingSlug, numberRepeats } from "../editor/markdown/link-target";
+import { escapeLabel } from "../editor/markdown/link-label";
 import "./FileTree.css";
 
 interface OutlineProps {
@@ -94,7 +95,7 @@ export function Outline({ content, tabId }: OutlineProps) {
         onSelect: () =>
           void navigator.clipboard
             .writeText(
-              `[${label}](#${headingAnchor(
+              `[${escapeLabel(label)}](#${headingAnchor(
                 tabId,
                 headings.map((h) => h.text),
                 index,

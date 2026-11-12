@@ -18,7 +18,8 @@ export function folderLinkStyle(
 }
 
 const WIKI_LINK = /\[\[[^\]\n]+\]\]/g;
-const NOTE_LINK = /\]\((?![a-z][a-z0-9+.-]*:|#)[^)\s]+\)/gi;
+// A link, not a picture: `![alt](x.png)` says nothing about how notes link.
+const NOTE_LINK = /(?<!!\[[^\]\n]*)\]\((?![a-z][a-z0-9+.-]*:|#)[^)\s]+\)/gi;
 
 /** The way `text` already links to notes, by count; null for neither. */
 export function linkStyleIn(text: string): LinkStyle | null {

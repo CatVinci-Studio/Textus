@@ -15,7 +15,7 @@ export interface OpenRequest {
   restoreCaret?: boolean;
 }
 
-type Opener = (path: string, request: OpenRequest) => void;
+type Opener = (path: string, request: OpenRequest) => void | Promise<void>;
 
 let opener: Opener | null = null;
 const opened = new Set<(path: string) => void>();
@@ -28,11 +28,16 @@ export function setDocumentOpener(open: Opener): () => void {
   };
 }
 
-/** Opens `path` in a tab of its own, never in place of the one in use. */
-export function openDocument(path: string, request: OpenRequest = {}): void {
+/** Opens `path` in a tab of its own, never in place of the one in use;
+ *  done once its tab is there, so several open in order. */
+export async function openDocument(
+  path: string,
+  request: OpenRequest = {},
+): Promise<void> {
   if (!path) return;
-  opener?.(path, request);
+  const done = opener?.(path, request);
   for (const tell of opened) tell(path);
+  await done;
 }
 
 /** Calls `told` with each file asked to open; returns the stop. */

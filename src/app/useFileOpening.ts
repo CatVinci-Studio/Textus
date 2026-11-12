@@ -369,8 +369,10 @@ export function useOpenPathsPush(
     const unlisten = listenToThisWindow<string[]>(
       "open-paths-as-tabs",
       async (event) => {
-        // Open Recent from a non-empty window arrives this way too.
-        for (const p of event.payload) openDocument(p, { restoreCaret: true });
+        // Open Recent from a non-empty window arrives this way too. In
+        // order: the last one in front.
+        for (const p of event.payload)
+          await openDocument(p, { restoreCaret: true });
       },
     );
     return unlistenAll(unlisten);
