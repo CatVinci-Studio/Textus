@@ -15,6 +15,7 @@ import { setTabJump } from "../editor/tab-jump";
 import { lastCaret } from "./last-places";
 import { keptTabsRestored, readKeptTabs, type KeptTab } from "./reload-tabs";
 import { takeWindowSession } from "./launch-window";
+import { savedFront } from "../engine/layout/saved";
 
 // Module-scoped, not a ref: StrictMode runs mount effects twice, and this
 // drain is a destructive pull from shared queues. Each window is its own
@@ -33,6 +34,8 @@ interface StartupRestoreOptions {
     path: string,
     open?: { restoreCaret?: boolean },
   ) => Promise<void>;
+  /** The tabs `paths` open into, read side by side, not yet added. */
+  tabsForPaths: (paths: string[]) => Promise<DocTab[]>;
   openFile: (path: string, open?: { restoreCaret?: boolean }) => Promise<void>;
   /** Opens `path` in tab `tabId`, in place of what it holds. */
   replaceTabWithFile: (
@@ -269,19 +272,27 @@ export function useStartupRestore(options: StartupRestoreOptions): void {
       };
       // This window's documents: ones opened from outside, or the tabs it had
       // last session (a window a tab was dragged out into is one of its own).
-      const paths = (await takeWindowSession())?.paths ?? [];
+      const taken = await takeWindowSession();
+      const paths = taken?.paths ?? [];
+      // The one that ends up in front opens first, in the tab already
+      // shown: nothing swaps in after it.
+      const front = savedFront(taken?.layout);
+      const firstUp =
+        front && paths.includes(front)
+          ? [front, ...paths.filter((p) => p !== front)]
+          : paths;
       if (paths.length > 0) {
         opts.stopTutorial();
         // One moved or deleted since gives its place to the next: the
         // others still open.
         let at = 0;
         while (
-          at < paths.length - 1 &&
-          !recoveredFor(paths[at]) &&
-          !(await fileThere(paths[at]))
+          at < firstUp.length - 1 &&
+          !recoveredFor(firstUp[at]) &&
+          !(await fileThere(firstUp[at]))
         )
           at++;
-        const [first, ...rest] = paths.slice(at);
+        const [first, ...rest] = firstUp.slice(at);
         const recovered = recoveredFor(first);
         if (recovered) {
           loadRecoveredIntoInitialTab(recovered);
@@ -292,12 +303,13 @@ export function useStartupRestore(options: StartupRestoreOptions): void {
             restoreCaret: true,
           });
         }
-        // Gone too, the last of them: the blank tab stays.
-        for (const p of rest) {
-          // Its recovered tab is already open: that is this document.
-          if (recoveredFor(p)) continue;
-          await opts.openPathInTab(p, { restoreCaret: true });
-        }
+        // Gone too, the last of them: the blank tab stays. The rest come
+        // in at once behind it, so the window doesn't flick through each;
+        // its recovered tab is already open.
+        const behind = await opts.tabsForPaths(
+          rest.filter((p) => !recoveredFor(p)),
+        );
+        opts.setTabs((prev) => inSessionOrder([...prev, ...behind], paths));
         return;
       }
       // iOS: the document that was open last time.
@@ -352,4 +364,20 @@ export function useStartupRestore(options: StartupRestoreOptions): void {
 /** Whether a file is still where the last session left it. */
 async function fileThere(path: string): Promise<boolean> {
   return (await fs.fileMtimeMs(path).catch(() => null)) !== null;
+}
+
+/** `tabs` with the session's documents, which arrive in any order, back in
+ *  `paths`' order, in the places they took; the others stay put. */
+export function inSessionOrder(tabs: DocTab[], paths: string[]): DocTab[] {
+  const rank = new Map(paths.map((p, i) => [p, i]));
+  const rankOf = (tab: DocTab) => {
+    const path = tab.path ?? tab.view?.resource ?? tab.importedFrom;
+    return path ? (rank.get(path) ?? -1) : -1;
+  };
+  const sorted = tabs
+    .filter((tab) => rankOf(tab) >= 0)
+    .sort((a, b) => rankOf(a) - rankOf(b));
+  let next = 0;
+  const out = tabs.map((tab) => (rankOf(tab) >= 0 ? sorted[next++] : tab));
+  return out.every((tab, i) => tab === tabs[i]) ? tabs : out;
 }

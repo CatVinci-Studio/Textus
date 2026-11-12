@@ -78,6 +78,10 @@ async function restore(restoreCarets = true, launchStartPage = false) {
   const { useStartupRestore } = await import("./startup-restore");
   let tabs: DocTab[] = [{ ...INITIAL }];
   const openPathInTab = vi.fn(async () => {});
+  // Made into tabs, not added: the restore adds them in one update.
+  const tabsForPaths = vi.fn(async (paths: string[]) =>
+    paths.map((path) => ({ ...INITIAL, id: `tab:${path}`, path })),
+  );
   const openFile = vi.fn(async () => {});
   // As the window's own: the tab takes the file, its editor remounted.
   const replaceTabWithFile = vi.fn(async (id: string, path: string) => {
@@ -97,6 +101,7 @@ async function restore(restoreCarets = true, launchStartPage = false) {
       setDraftsRestoredCount: vi.fn(),
       markOnboardingShown: vi.fn(),
       openPathInTab,
+      tabsForPaths,
       openFile,
       replaceTabWithFile,
       restoreCarets,
@@ -109,6 +114,7 @@ async function restore(restoreCarets = true, launchStartPage = false) {
   return {
     tabs: () => tabs,
     openPathInTab,
+    tabsForPaths,
     openFile,
     replaceTabWithFile,
     takeTabJump,
@@ -196,21 +202,45 @@ describe("startup restore into the initial tab", () => {
 
   // Opened as any file is (a board a plugin claims, a Word document, the
   // recent list, its last caret), into the initial tab.
-  it("opens the first document as any file opens, the rest in tabs", async () => {
+  it("opens the first document as any file opens, the rest behind it at once", async () => {
     ipc.takePendingWindow.mockResolvedValue({
-      paths: ["/docs/a.md", "/docs/b.md"],
+      paths: ["/docs/a.md", "/docs/b.md", "/docs/c.md"],
     });
-    const { tabs, openPathInTab, replaceTabWithFile } = await restore();
-    await waitFor(() =>
-      expect(openPathInTab).toHaveBeenCalledWith("/docs/b.md", {
-        restoreCaret: true,
-      }),
-    );
+    const { tabs, openPathInTab, tabsForPaths, replaceTabWithFile } =
+      await restore();
+    await waitFor(() => expect(tabs()).toHaveLength(3));
     expect(replaceTabWithFile).toHaveBeenCalledWith("initial", "/docs/a.md", {
       restoreCaret: true,
     });
-    expect(tabs()).toEqual([
-      expect.objectContaining({ id: "initial", path: "/docs/a.md" }),
+    expect(tabsForPaths).toHaveBeenCalledWith(["/docs/b.md", "/docs/c.md"]);
+    // None is brought to the front one by one.
+    expect(openPathInTab).not.toHaveBeenCalled();
+    expect(tabs().map((tab) => tab.path)).toEqual([
+      "/docs/a.md",
+      "/docs/b.md",
+      "/docs/c.md",
+    ]);
+  });
+
+  it("opens the document that was in front first, the tabs in their order", async () => {
+    ipc.takePendingWindow.mockResolvedValue({
+      paths: ["/docs/a.md", "/docs/b.md", "/docs/c.md"],
+      layout: {
+        tree: {
+          paths: ["/docs/a.md", "/docs/b.md", "/docs/c.md"],
+          front: "/docs/b.md",
+        },
+      },
+    });
+    const { tabs, replaceTabWithFile } = await restore();
+    await waitFor(() => expect(tabs()).toHaveLength(3));
+    expect(replaceTabWithFile).toHaveBeenCalledWith("initial", "/docs/b.md", {
+      restoreCaret: true,
+    });
+    expect(tabs().map((tab) => [tab.id, tab.path])).toEqual([
+      ["tab:/docs/a.md", "/docs/a.md"],
+      ["initial", "/docs/b.md"],
+      ["tab:/docs/c.md", "/docs/c.md"],
     ]);
   });
 
@@ -219,15 +249,12 @@ describe("startup restore into the initial tab", () => {
     ipc.takePendingWindow.mockResolvedValue({
       paths: ["/docs/a.md", "/docs/b.md", "/docs/c.md"],
     });
-    const { tabs, openPathInTab } = await restore();
-    await waitFor(() =>
-      expect(openPathInTab).toHaveBeenCalledWith("/docs/c.md", {
-        restoreCaret: true,
-      }),
-    );
-    expect(tabs()).toEqual([
+    const { tabs, tabsForPaths } = await restore();
+    await waitFor(() => expect(tabs()).toHaveLength(2));
+    expect(tabsForPaths).toHaveBeenCalledWith(["/docs/c.md"]);
+    expect(tabs()[0]).toEqual(
       expect.objectContaining({ id: "initial", path: "/docs/b.md" }),
-    ]);
+    );
     ipc.gone.clear();
   });
 
@@ -324,13 +351,9 @@ describe("startup restore into the initial tab", () => {
         diskMtime: 5,
       },
     ]);
-    const { tabs, openPathInTab } = await restore();
-    await waitFor(() =>
-      expect(openPathInTab).toHaveBeenCalledWith("/docs/c.md", {
-        restoreCaret: true,
-      }),
-    );
-    expect(openPathInTab).toHaveBeenCalledTimes(1);
+    const { tabs, tabsForPaths } = await restore();
+    await waitFor(() => expect(tabs()).toHaveLength(3));
+    expect(tabsForPaths).toHaveBeenCalledWith(["/docs/c.md"]);
     expect(tabs()).toEqual([
       expect.objectContaining({
         id: "initial",
@@ -344,6 +367,7 @@ describe("startup restore into the initial tab", () => {
         content: "b, unsaved",
         diskMtime: 5,
       }),
+      expect.objectContaining({ path: "/docs/c.md" }),
     ]);
   });
 

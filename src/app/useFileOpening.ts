@@ -289,6 +289,35 @@ export function useFileOpening(opts: {
     [tabsRef, setTabs, setActiveTabId, restoreCarets, readDocument, justOpened],
   );
 
+  // A session's documents coming back: read side by side and made into
+  // tabs at their last caret, for the caller to add in one update.
+  const tabsForPaths = useCallback(
+    async (paths: string[]): Promise<DocTab[]> => {
+      const docs = await Promise.all(
+        paths.map((path) => readDocument(path).catch(() => null)),
+      );
+      return docs.flatMap((doc, i) => {
+        if (!doc) return [];
+        const tab: DocTab = {
+          ...makeBlankTab(),
+          ...(doc.view ? {} : lastViewMode()),
+          ...doc,
+        };
+        const jump =
+          tab.path &&
+          openingJump(
+            { restoreCaret: true },
+            paths[i],
+            tab.diskMtime,
+            restoreCarets,
+          );
+        if (jump) setTabJump(tab.id, jump);
+        return [tab];
+      });
+    },
+    [restoreCarets, readDocument],
+  );
+
   // Window mode's replace step, shared by the clean path and the save
   // prompt's resolution.
   const replaceTabWithFile = useCallback(
@@ -365,6 +394,7 @@ export function useFileOpening(opts: {
 
   return {
     openPathInTab,
+    tabsForPaths,
     replaceTabWithFile,
     openFile,
     openFileDialog,

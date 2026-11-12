@@ -99,6 +99,7 @@ export function useWindowWiring({
     setDraftsRestoredCount: shell.setDraftsRestoredCount,
     markOnboardingShown: () => setSettings({ onboardingShown: true }),
     openPathInTab,
+    tabsForPaths: docs.tabsForPaths,
     openFile,
     replaceTabWithFile: docs.replaceTabWithFile,
     restoreCarets: settings.restoreSessionOnStartup,
