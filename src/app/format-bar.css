@@ -54,6 +54,34 @@
   border-left: 1px solid var(--ui-frame-edge);
 }
 
+/* A button's place in its group; it folds away with the row's steps. */
+.format-bar-item {
+  display: contents;
+}
+
+/* Its steps as it narrows (FormatBar's FIT): tighter, then the blocks
+   fold into "⋯", then the rare marks join them. */
+.format-bar-more {
+  display: none;
+  flex: none;
+}
+.format-bar-row[data-fit="tight"],
+.format-bar-row[data-fit="tight"] .format-bar-group + .format-bar-group {
+  gap: 0;
+}
+.format-bar-row[data-fit="tight"] .format-bar-group + .format-bar-group {
+  padding-left: var(--space-1);
+}
+.format-bar-row:is([data-fit="blocks"], [data-fit="rare"])
+  .format-bar-group
+  + .format-bar-group,
+.format-bar-row[data-fit="rare"] .format-bar-item[data-rare] {
+  display: none;
+}
+.format-bar-row:is([data-fit="blocks"], [data-fit="rare"]) .format-bar-more {
+  display: inline-flex;
+}
+
 .format-bar .tx-icon-button[aria-pressed="true"] {
   background: var(--ui-hover);
   color: var(--ui-text);

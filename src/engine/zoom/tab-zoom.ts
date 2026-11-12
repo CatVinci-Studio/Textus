@@ -11,9 +11,17 @@ let windowZoom = 1;
 const zooms = new Map<string, number>();
 const listeners = new Set<() => void>();
 
+let version = 0;
+
 const told = () => {
+  version++;
   for (const tell of listeners) tell();
 };
+
+/** Changes on every zoom change, for useSyncExternalStore. */
+export function zoomVersion(): number {
+  return version;
+}
 
 /** Calls `changed` after any zoom changes; returns the stop. */
 export function onZoom(changed: () => void): () => void {

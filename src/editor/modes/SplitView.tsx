@@ -68,26 +68,28 @@ export function SplitView({
 
   return (
     <div ref={rootRef} className="split-view">
-      <DocSourceEditor
-        className="split-source"
-        value={content}
-        docPath={filePath}
-        typewriter={typewriter}
-        onChange={onChange}
-        readOnly={readOnly}
-        onScroll={(scroller) =>
-          previewRef.current && follow(scroller, previewRef.current, "source")
-        }
-      />
-      <div
-        ref={previewRef}
-        className={`split-preview tx-scroll-reveal${breaks ? " split-preview-breaks" : ""}`}
-        onScroll={(e) => {
-          const source = sourceScroller();
-          if (source) follow(e.currentTarget, source, "preview");
-        }}
-      >
-        <SplitPreview markdown={deferred} filePath={filePath} />
+      <div className="split-view-panes">
+        <DocSourceEditor
+          className="split-source"
+          value={content}
+          docPath={filePath}
+          typewriter={typewriter}
+          onChange={onChange}
+          readOnly={readOnly}
+          onScroll={(scroller) =>
+            previewRef.current && follow(scroller, previewRef.current, "source")
+          }
+        />
+        <div
+          ref={previewRef}
+          className={`split-preview tx-scroll-reveal${breaks ? " split-preview-breaks" : ""}`}
+          onScroll={(e) => {
+            const source = sourceScroller();
+            if (source) follow(e.currentTarget, source, "preview");
+          }}
+        >
+          <SplitPreview markdown={deferred} filePath={filePath} />
+        </div>
       </div>
     </div>
   );

@@ -1,10 +1,20 @@
 import type { SplitDirection } from "../layout/tree";
 import { scaledPx } from "../tokens/chrome-scale";
+import { tokenPx } from "../tokens/token-px";
 import type { SizeRule } from "./distribute";
 
-/** The least an island keeps: a document's column of text, a panel's
- *  settings rows; stacked, room for a few lines. */
+/** The least an island keeps: a document's column of text (at the
+ *  document's least type size, DOC_FONT), a panel's settings rows;
+ *  stacked, room for a few lines. */
 export const DOC_MIN = 360;
+const DOC_FONT = 16.5;
+
+/** A document's column at its own type size and zoom: the text it is
+ *  read in, not the interface's, sets how narrow it may go. */
+export function docMin(zoom = 1): number {
+  const font = tokenPx("--doc-font-size") || DOC_FONT;
+  return Math.round((DOC_MIN * font * zoom) / DOC_FONT);
+}
 const PANEL_MIN = 320;
 const STACKED_MIN = 160;
 
@@ -17,6 +27,7 @@ export function islandRule(
   direction: SplitDirection,
   width: number,
   content = 0,
+  zoom = 1,
 ): Omit<SizeRule, "size"> & { pixels: number } {
   if (direction === "column")
     return {
@@ -33,7 +44,7 @@ export function islandRule(
         priority: "low",
       }
     : {
-        min: Math.max(scaledPx(DOC_MIN), content),
+        min: Math.max(docMin(zoom), content),
         pixels: 0,
         fixed: false,
         priority: "high",

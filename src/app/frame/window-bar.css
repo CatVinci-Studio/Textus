@@ -264,14 +264,12 @@
 
 /* Shown while ghost text, grammar check and live Mermaid preview are paused
    for a large document. */
+/* The shared badge, outlined: a state of the document, not a count. */
 .large-doc-badge {
-  font-size: var(--text-caption);
-  color: var(--ui-muted);
-  white-space: nowrap;
-  padding: 2px 8px;
-  border-radius: var(--shape-pill);
-  corner-shape: round;
+  padding: 1px 8px;
   border: 1px solid var(--ui-border);
+  background: none;
+  font-weight: 400;
   cursor: default;
 }
 

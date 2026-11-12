@@ -1,10 +1,14 @@
 import { listMove } from "./list-keys";
+import { useFitSteps } from "./fit-steps";
 import {
   useRef,
   type CSSProperties,
   type KeyboardEvent,
   type ReactNode,
 } from "react";
+
+const FIT_EQUAL = ["unequal"] as const;
+const NO_STEPS = [] as const;
 
 /**
  * One of a few choices side by side (components.css .tx-segmented), one
@@ -32,6 +36,8 @@ export function Segmented<T extends string>({
   className?: string;
 }) {
   const row = useRef<HTMLDivElement>(null);
+  // Too narrow for equal segments: each its own width, then labels cut.
+  useFitSteps(row, equal ? FIT_EQUAL : NO_STEPS);
   const at = options.findIndex((o) => o.id === value);
   const onKeyDown = (e: KeyboardEvent<HTMLDivElement>) => {
     const moved = listMove(e.key, at, options.length, true, "row");
@@ -78,7 +84,9 @@ export function Segmented<T extends string>({
               if (!on) onChange(option.id);
             }}
           >
-            {option.icon ?? option.label}
+            {option.icon ?? (
+              <span className="tx-segment-label">{option.label}</span>
+            )}
           </button>
         );
       })}

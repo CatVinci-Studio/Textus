@@ -105,6 +105,7 @@ textarea.tx-input {
   --segment-inset: 2px;
   display: flex;
   width: fit-content;
+  max-width: 100%;
   /* One row always: a switch stacked into a column reads as a list. */
   flex-wrap: nowrap;
   white-space: nowrap;
@@ -122,6 +123,7 @@ textarea.tx-input {
   position: relative;
   display: inline-flex;
   align-items: center;
+  min-width: 0;
   min-height: calc(var(--control-height-sm) - 2 * var(--segment-inset));
   padding: 0 var(--space-3);
   border-radius: var(--shape-pill);
@@ -130,6 +132,11 @@ textarea.tx-input {
   font-size: var(--text-footnote);
   font-weight: 500;
   cursor: pointer;
+}
+
+.tx-segment-label {
+  overflow: hidden;
+  text-overflow: ellipsis;
 }
 
 .tx-segment.is-selected,
@@ -174,10 +181,19 @@ textarea.tx-input {
 .tx-segmented.is-equal > .tx-segment {
   justify-content: center;
 }
-.tx-segmented.is-equal
+.tx-segmented.is-equal:not([data-fit="unequal"])
   > .tx-segment:is([aria-selected="true"], [aria-checked="true"]) {
   background: none;
   box-shadow: none;
+}
+/* Too narrow for equal segments (useFitSteps): each its own width, the
+   chosen one lit as an unequal row's is. */
+.tx-segmented.is-equal[data-fit="unequal"] {
+  display: flex;
+  gap: 2px;
+}
+.tx-segmented.is-equal[data-fit="unequal"]::before {
+  display: none;
 }
 
 /* A path on one line (PathText): its folders give way first, then its

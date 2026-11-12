@@ -5,9 +5,13 @@ import { useEffect, useRef, useState, type ComponentType } from "react";
 import type { Strings } from "../i18n/strings";
 import { caretBlock, NO_BLOCK, type CaretBlock } from "../editor/caret-block";
 import { IconButton } from "../engine/controls/IconButton";
+import { Tooltip } from "../engine/controls/Tooltip";
+import { useFitSteps } from "../engine/controls/fit-steps";
+import { useMenuButton } from "../engine/controls/useMenuButton";
 import {
   BoldIcon,
   CodeBlockIcon,
+  MoreIcon,
   HeadingIcon,
   HighlightIcon,
   InlineCodeIcon,
@@ -36,6 +40,8 @@ import "./format-bar.css";
  */
 interface Button {
   label: (t: Strings) => string;
+  /** Rarely used: among the first to fold into "⋯" in a narrow island. */
+  rare?: boolean;
   keys?: string;
   Icon: ComponentType<{ className?: string }>;
   event: string;
@@ -73,6 +79,7 @@ const GROUPS: Button[][] = [
       keys: "ctrl+shift+`",
       Icon: StrikeIcon,
       event: TOGGLE_MARK_EVENT,
+      rare: true,
       detail: "strikethrough",
       on: (b) => b.strike,
     },
@@ -81,6 +88,7 @@ const GROUPS: Button[][] = [
       keys: "mod+shift+h",
       Icon: HighlightIcon,
       event: TOGGLE_MARK_EVENT,
+      rare: true,
       detail: "highlight",
       on: (b) => b.highlight,
     },
@@ -89,6 +97,7 @@ const GROUPS: Button[][] = [
       keys: "ctrl+`",
       Icon: InlineCodeIcon,
       event: TOGGLE_MARK_EVENT,
+      rare: true,
       detail: "code",
       on: (b) => b.code,
     },
@@ -137,6 +146,23 @@ const GROUPS: Button[][] = [
   ],
 ];
 
+/** Narrower than its buttons: tighter, then the blocks fold into "⋯",
+ *  then the rare marks join them; past that the row scrolls. */
+const FIT = ["tight", "blocks", "rare"] as const;
+
+/** The buttons folded into "⋯" at the row's present step. */
+function folded(step: string | undefined): Button[] {
+  if (step !== "blocks" && step !== "rare") return [];
+  const rare = step === "rare" ? GROUPS[0].filter((b) => b.rare) : [];
+  return [...rare, ...GROUPS[1]];
+}
+
+/** A button's press: its document first, then the menu's event. */
+function press(tabId: string, b: Button) {
+  focusDocument(tabId);
+  window.dispatchEvent(new CustomEvent(b.event, { detail: b.detail }));
+}
+
 /** What is on at the caret of one document, kept current: nothing while
  *  the caret is in another. */
 function useCaretBlock(tabId: string): CaretBlock {
@@ -179,9 +205,19 @@ export function FormatBar({
   tabId: string;
 }) {
   const block = useCaretBlock(tabId);
-  // Narrower than its buttons, it scrolls, its edge fading where more are.
+  // Narrower than its buttons, it gives way (FIT), and at last scrolls, its
+  // edge fading where more are.
   const row = useRef<HTMLDivElement>(null);
+  useFitSteps(row, FIT);
   useScrollFade(row, "x");
+  const more = useMenuButton(
+    () =>
+      folded(row.current?.dataset.fit).map((b) => ({
+        label: b.label(t),
+        onSelect: () => press(tabId, b),
+      })),
+    { alignEnd: true },
+  );
   return (
     <div
       className="format-bar"
@@ -196,25 +232,36 @@ export function FormatBar({
             {group.map((b) => {
               const label = b.label(t);
               return (
-                <IconButton
+                <span
                   key={label}
-                  label={label}
-                  hint={b.keys ? `${label}  ${formatCombo(b.keys)}` : label}
-                  pressed={b.on ? b.on(block) : undefined}
-                  onClick={() => {
-                    focusDocument(tabId);
-                    window.dispatchEvent(
-                      new CustomEvent(b.event, { detail: b.detail }),
-                    );
-                  }}
+                  className="format-bar-item"
+                  data-rare={b.rare || undefined}
                 >
-                  <b.Icon />
-                </IconButton>
+                  <IconButton
+                    label={label}
+                    hint={b.keys ? `${label}  ${formatCombo(b.keys)}` : label}
+                    pressed={b.on ? b.on(block) : undefined}
+                    onClick={() => press(tabId, b)}
+                  >
+                    <b.Icon />
+                  </IconButton>
+                </span>
               );
             })}
           </div>
         ))}
+        <Tooltip text={t.toolbarMore}>
+          <button
+            type="button"
+            className="tx-icon-button format-bar-more"
+            aria-label={t.toolbarMore}
+            {...more.button}
+          >
+            <MoreIcon />
+          </button>
+        </Tooltip>
       </div>
+      {more.menu}
     </div>
   );
 }

@@ -4,6 +4,9 @@
 .document-corner {
   z-index: 3;
   display: flex;
+  /* Short of room the badge goes over the count, not past the island. */
+  flex-wrap: wrap;
+  align-content: flex-end;
   align-items: flex-end;
   justify-content: flex-end;
   gap: var(--space-2);

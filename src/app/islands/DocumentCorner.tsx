@@ -62,7 +62,7 @@ function DocumentCorner({
     >
       {large && (
         <Tooltip text={t.largeDocHint}>
-          <span className="large-doc-badge">{t.largeDocBadge}</span>
+          <span className="tx-badge large-doc-badge">{t.largeDocBadge}</span>
         </Tooltip>
       )}
       {shown > 0 && (

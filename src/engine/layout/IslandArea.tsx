@@ -17,6 +17,7 @@ import { dividerKey, type PlacedIsland } from "../frame/island-parts";
 import { useIslandRoom, type IslandRoom } from "../frame/useIslandRoom";
 import { usePanelWidth } from "../frame/panel-width";
 import { islandRule } from "../frame/island-rules";
+import { onZoom, zoomOf, zoomVersion } from "../zoom/tab-zoom";
 import {
   contentMinOf,
   contentMinVersion,
@@ -77,6 +78,8 @@ export function IslandArea({
   const panel = usePanelWidth();
   // Solved again as an island's content measures a new least width.
   useSyncExternalStore(onContentMin, contentMinVersion);
+  // And as a document's zoom changes its column's least.
+  useSyncExternalStore(onZoom, zoomVersion);
   const split = isSplit(layout);
   const room = useIslandRoom(ref, `${split} ${rows} ${plain}`);
   const all = panesOf(layout.root);
@@ -125,7 +128,13 @@ export function IslandArea({
       gap: room.gap,
       rowHeight: 0,
       rule: (pane, direction) =>
-        islandRule(isPanel(pane), direction, panel, contentMinOf(pane.id)),
+        islandRule(
+          isPanel(pane),
+          direction,
+          panel,
+          contentMinOf(pane.id),
+          zoomOf(pane.front),
+        ),
     }) +
       2 * room.inset;
   useIslandFrame(ref, room, area, solved, placed, need || 0);
@@ -182,7 +191,13 @@ function solve(
     gap: room.gap,
     rowHeight: rows ? room.bar : 0,
     rule: (pane, direction) =>
-      islandRule(isPanel(pane), direction, panel, contentMinOf(pane.id)),
+      islandRule(
+        isPanel(pane),
+        direction,
+        panel,
+        contentMinOf(pane.id),
+        zoomOf(pane.front),
+      ),
   });
 }
 

@@ -1,4 +1,4 @@
-import { DOC_MIN } from "../frame/island-rules";
+import { docMin } from "../frame/island-rules";
 /**
  * The one rule both side panels follow - the sidebar on the left and the AI
  * panel on the right: each keeps the width it was dragged to, but a window
@@ -39,7 +39,7 @@ export function sidePanelMax(
     Math.min(
       limits.max * scale,
       Math.floor(windowWidth * PANEL_SHARE),
-      windowWidth - beside - Math.max(keep, DOC_MIN * scale),
+      windowWidth - beside - Math.max(keep, docMin()),
     ),
   );
 }
