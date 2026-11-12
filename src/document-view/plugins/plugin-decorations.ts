@@ -57,7 +57,7 @@ export const pluginDecorations = $prose((ctx) => {
           Math.max(0, first - AROUND),
           Math.min(all.length, last + AROUND + 1),
         );
-        const marks = await decorate(sent);
+        const marks = await decorate(sent, all);
         // Asked again meanwhile, or the text moved on: that answer wins.
         if (turn !== asked || view.isDestroyed) return;
         if (view.state.doc !== doc) {

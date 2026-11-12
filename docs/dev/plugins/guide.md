@@ -239,10 +239,11 @@ the window bar that runs a command when clicked).
   `replace_selection` without one; `anchor` quotes a few words inside the
   block to change only those. Read the blocks, then change them: an id
   from before an edit finds nothing rather than the wrong block.
-- Mark it: `registerDecorations({ decorate(blocks) })` is asked for the
-  blocks in sight once typing pauses, and answers marks - a highlight, an
-  underline, muted text or a badge - on a block or the `anchor` words in
-  it. Start it with `onEditor`.
+- Mark it: `registerDecorations({ decorate(blocks, document) })` is asked
+  for the blocks in sight once typing pauses, with the whole `document`
+  they're of (it can be beside the one in front), and answers marks - a
+  highlight, an underline, muted text or a badge - on a block or the
+  `anchor` words in it. Start it with `onEditor`.
 - Help with it: `registerCompletion(id, provider)` for completions as you
   type, `registerHover({ provideHover(target) })` for a card over a link,
   a wikilink or a citation.

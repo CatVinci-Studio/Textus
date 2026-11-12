@@ -644,9 +644,14 @@ declare global {
         ): HoverCard | null | Promise<HoverCard | null>;
       }): Disposable;
       /** Marks over the text (editor.read), asked for the blocks in sight
-       *  and again when they change. */
+       *  and again when they change. 1.4.1: `document` is the whole
+       *  document those blocks are of, which can be one beside the
+       *  document in front; read it rather than `getBlocks`. */
       registerDecorations(provider: {
-        decorate(blocks: Block[]): Decoration[] | Promise<Decoration[]>;
+        decorate(
+          blocks: Block[],
+          document?: { blocks: Block[] },
+        ): Decoration[] | Promise<Decoration[]>;
       }): Disposable;
       /** Another document came to the front (or none). */
       onDidChangeActive: Event<{ path: string | null }>;

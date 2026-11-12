@@ -37,7 +37,6 @@ import {
 import { imageRotationView } from "./image-rotation";
 import { DROP_IMAGE_FILES_EVENT } from "../../utils/events";
 import { decorateAll, redecorateChanged } from "../changed-ranges";
-import { isLargeDoc } from "../large-doc";
 import {
   type ImageStore,
   blobImageSrcs,
@@ -162,9 +161,9 @@ function createImageView(
   const dom = document.createElement("span");
   dom.className = "image-view";
   const img = document.createElement("img");
-  // In a large document, loaded only as it comes near the screen (set
-  // before the src, or it loads at once).
-  if (isLargeDoc(view.state.doc)) img.loading = "lazy";
+  // Loaded only as it comes near the screen (set before the src, or it
+  // loads at once): a short note can hold many large photos.
+  img.loading = "lazy";
   const handle = document.createElement("span");
   handle.className = "image-resize-handle";
   handle.setAttribute("aria-hidden", "true");
