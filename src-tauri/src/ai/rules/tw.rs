@@ -128,8 +128,8 @@ fn hk_mix(t: &Text, ctx: &Ctx, out: &mut Out, region: &str) {
     if !(ctx.profile.explicit || has_own) {
         return;
     }
-    for i in 0..t.len() {
-        if let Some(k) = other.iter().position(|&c| c == t.chars[i]) {
+    for (i, &c) in t.chars.iter().enumerate() {
+        if let Some(k) = other.iter().position(|&o| o == c) {
             let msg = if hk {
                 format!("香港用字作「{}」。", own[k])
             } else {

@@ -1,6 +1,6 @@
 # Willkommen bei Textus
 
-Textus ist ein Markdown-Editor, der Ihren Text so zeigt, wie er aussehen wird. Klicken Sie irgendwo hin und tippen Sie: Die Markdown-Zeichen erscheinen nur dort, wo der Cursor steht, sodass **Fett**, _Kursiv_, ==Markierung==, ~~Durchgestrichen~~ und `Inline-Code` beim Schreiben lesbar bleiben.
+Textus ist eine integrierte Schreibumgebung: Ihre Dokumente und Textus AI nebeneinander, Ihr Text so, wie er aussehen wird. Klicken Sie irgendwo hin und tippen Sie: Die Markdown-Zeichen erscheinen nur dort, wo der Cursor steht, sodass **Fett**, _Kursiv_, ==Markierung==, ~~Durchgestrichen~~ und `Inline-Code` beim Schreiben lesbar bleiben.
 
 ## Listen und Aufgaben
 
