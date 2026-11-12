@@ -116,7 +116,9 @@ export function pluginCodeBlocks(docPath: { readonly current: string | null }) {
             class: pos === open ? OPEN_SOURCE_CLASS : HIDDEN_SOURCE_CLASS,
           }),
         );
-        const widget = `${plugin}:${language}:${n}`;
+        // The document's own: another note's block of this place keeps
+        // its own state (the view a database block shows) and fold.
+        const widget = `${docPath.current ?? ""}\n${plugin}:${language}:${n}`;
         out.push(
           Decoration.widget(
             end,
@@ -187,7 +189,7 @@ export function pluginCodeBlocks(docPath: { readonly current: string | null }) {
       addBlockFold(
         el,
         blockName(plugin),
-        `${docPath.current ?? ""}\n${widget}`,
+        widget,
         view.dom.clientWidth > 0 && view.dom.clientWidth < NARROW_COLUMN,
       );
       // A plugin's frame is heavy: drawn near the screen, let go far from
