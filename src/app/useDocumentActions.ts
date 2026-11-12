@@ -30,8 +30,9 @@ export function useDocumentActions(opts: {
     },
     [openFile],
   );
-  // A file or folder moved in the tree: every open tab in it follows.
-  const entryMoved = useCallback(
+  // A file or folder moved, here or in another window: every open tab in
+  // it follows.
+  const followMove = useCallback(
     (from: string, to: string) => {
       const moved = (path: string | null) =>
         path === from
@@ -39,9 +40,6 @@ export function useDocumentActions(opts: {
           : path && isInside(path, from)
             ? to + path.slice(from.length)
             : null;
-      // Its conversations and what is kept for it follow too (the backend,
-      // for every document under a moved folder).
-      void notePathMoved(from, to);
       setTabs((prev) =>
         prev.map((tab) => {
           const next = moved(tab.path);
@@ -64,6 +62,15 @@ export function useDocumentActions(opts: {
       }
     },
     [setTabs, tabsRef],
+  );
+  // Moved here: its conversations and what is kept for it follow too (the
+  // backend, for every document under a moved folder), once.
+  const entryMoved = useCallback(
+    (from: string, to: string) => {
+      void notePathMoved(from, to);
+      followMove(from, to);
+    },
+    [followMove],
   );
   // A renamed document stays open under its new name, like any move; a
   // deleted one keeps its text in the tab, unsaved.
@@ -150,6 +157,7 @@ export function useDocumentActions(opts: {
     openFromDocuments,
     documentRenamed,
     entryMoved,
+    followMove,
     documentDeleted,
     skillFilesDeleted,
     shareActiveTab,

@@ -101,10 +101,45 @@ fn itself(path: &str) -> Result<PathBuf, String> {
     Ok(me)
 }
 
+/// What a window did to the folder, for the other windows: their trees
+/// read the folders again and their tabs follow a move.
+#[derive(Clone, serde::Serialize)]
+struct EntriesChanged {
+    from: String,
+    moved: Option<(String, String)>,
+    trashed: Option<String>,
+}
+
+fn tell_windows(
+    window: &tauri::WebviewWindow,
+    moved: Option<(String, String)>,
+    trashed: Option<String>,
+) {
+    crate::settings::emit_to_all(
+        tauri::Manager::app_handle(window),
+        "entries-changed",
+        EntriesChanged {
+            from: window.label().to_string(),
+            moved,
+            trashed,
+        },
+    );
+}
+
 /// Moves a file or folder into the folder `into`. Returns its new path.
 #[tauri::command]
 #[cfg_attr(test, specta::specta)]
-pub async fn tree_move_entry(path: String, into: String) -> Result<String, String> {
+pub async fn tree_move_entry(
+    window: tauri::WebviewWindow,
+    path: String,
+    into: String,
+) -> Result<String, String> {
+    let to = move_entry(path.clone(), into).await?;
+    tell_windows(&window, Some((path, to.clone())), None);
+    Ok(to)
+}
+
+async fn move_entry(path: String, into: String) -> Result<String, String> {
     let from = itself(&path)?;
     let given = into;
     let into = existing_dir(&given)
@@ -140,7 +175,19 @@ fn spelled_as(given_dir: &str, to: &Path) -> String {
 /// an extension gets `.md`; a folder takes the name as typed. Returns its new path.
 #[tauri::command]
 #[cfg_attr(test, specta::specta)]
-pub async fn tree_rename_entry(path: String, name: String) -> Result<String, String> {
+pub async fn tree_rename_entry(
+    window: tauri::WebviewWindow,
+    path: String,
+    name: String,
+) -> Result<String, String> {
+    let to = rename_entry(path.clone(), name).await?;
+    if to != path {
+        tell_windows(&window, Some((path, to.clone())), None);
+    }
+    Ok(to)
+}
+
+async fn rename_entry(path: String, name: String) -> Result<String, String> {
     let from = PathBuf::from(&path);
     let is_dir = fs::metadata(&from)
         .await
@@ -174,7 +221,17 @@ pub async fn tree_rename_entry(path: String, name: String) -> Result<String, Str
 /// deleting it, and refuses the folder the tree is showing.
 #[tauri::command]
 #[cfg_attr(test, specta::specta)]
-pub async fn tree_trash_entry(path: String, root: String) -> Result<(), String> {
+pub async fn tree_trash_entry(
+    window: tauri::WebviewWindow,
+    path: String,
+    root: String,
+) -> Result<(), String> {
+    trash_entry(path.clone(), root).await?;
+    tell_windows(&window, None, Some(path));
+    Ok(())
+}
+
+async fn trash_entry(path: String, root: String) -> Result<(), String> {
     let target = itself(&path)?;
     tauri::async_runtime::spawn_blocking(move || {
         crate::atomic::user_file_to_trash(&target, Some(std::path::Path::new(&root)))
@@ -226,15 +283,15 @@ mod tests {
         assert!(tree_create_folder(root.clone(), "Sub".into())
             .await
             .is_err());
-        let moved = tree_move_entry(doc.clone(), sub.clone()).await.unwrap();
+        let moved = move_entry(doc.clone(), sub.clone()).await.unwrap();
         // In the folder's spelling as given (a temp dir is a symlink on macOS).
         assert_eq!(Path::new(&moved), Path::new(&sub).join("Notes.md"));
         // A second Notes.md at the top can't be moved onto the first.
         let again = tree_create_document(root.clone(), "Notes".into())
             .await
             .unwrap();
-        assert!(tree_move_entry(again, sub.clone()).await.is_err());
-        assert!(tree_move_entry(sub.clone(), sub).await.is_err());
+        assert!(move_entry(again, sub.clone()).await.is_err());
+        assert!(move_entry(sub.clone(), sub).await.is_err());
     }
 
     #[tokio::test]
@@ -244,30 +301,26 @@ mod tests {
         let doc = tree_create_document(root.clone(), "Draft".into())
             .await
             .unwrap();
-        let renamed = tree_rename_entry(doc, "Chapter 1".into()).await.unwrap();
+        let renamed = rename_entry(doc, "Chapter 1".into()).await.unwrap();
         assert!(renamed.ends_with("Chapter 1.md"));
         // A dot in a date or a version isn't a file type.
-        let dated = tree_rename_entry(renamed, "Meeting 11.11".into())
-            .await
-            .unwrap();
+        let dated = rename_entry(renamed, "Meeting 11.11".into()).await.unwrap();
         assert!(dated.ends_with("Meeting 11.11.md"));
-        tree_rename_entry(dated, "Chapter 1".into()).await.unwrap();
+        rename_entry(dated, "Chapter 1".into()).await.unwrap();
         let other = tree_create_document(root.clone(), "Other".into())
             .await
             .unwrap();
-        assert!(tree_rename_entry(other.clone(), "Chapter 1".into())
+        assert!(rename_entry(other.clone(), "Chapter 1".into())
             .await
             .is_err());
-        assert!(tree_rename_entry(other.clone(), "../out".into())
-            .await
-            .is_err());
-        let as_text = tree_rename_entry(other, "notes.txt".into()).await.unwrap();
+        assert!(rename_entry(other.clone(), "../out".into()).await.is_err());
+        let as_text = rename_entry(other, "notes.txt".into()).await.unwrap();
         assert!(as_text.ends_with("notes.txt"));
         let sub = tree_create_folder(root.clone(), "Sub".into())
             .await
             .unwrap();
-        let folder = tree_rename_entry(sub, "Part One".into()).await.unwrap();
+        let folder = rename_entry(sub, "Part One".into()).await.unwrap();
         assert!(folder.ends_with("Part One"));
-        assert!(tree_trash_entry(root.clone(), root).await.is_err());
+        assert!(trash_entry(root.clone(), root).await.is_err());
     }
 }

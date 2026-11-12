@@ -5,21 +5,15 @@ import { aiFileMarksNow, onAiFileMarks } from "./file-revisions";
 /** Textus AI's marks on the folder's files, for their rows: what it
  *  changed, and what waits for the writer there. */
 export function provideAiFileMarks(): void {
-  let version = 0;
   provideFileMarks({
     subscribe: (listener) => {
-      const bump = () => {
-        version++;
-        listener();
-      };
-      const a = onChangedFiles(bump);
-      const b = onAiFileMarks(bump);
+      const a = onChangedFiles(listener);
+      const b = onAiFileMarks(listener);
       return () => {
         a();
         b();
       };
     },
-    version: () => version,
     markOf: (path): FileMark | null => {
       const mark = aiFileMarksNow()[path];
       const changed = changedFilesNow().has(path) || !!mark;

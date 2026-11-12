@@ -24,7 +24,7 @@ import { useLongPress } from "../utils/hooks/useLongPress";
 import { isDocumentName } from "./document-name";
 import { localeOf } from "../i18n/langs";
 import { compareEntries, nameCollator } from "../utils/name-order";
-import { useTree } from "./tree-shared";
+import { useTree, useTreeRowActions } from "./tree-shared";
 import { isWithin } from "./tree-root";
 import { DraftRow } from "./DraftRow";
 import type { FileOpenHow } from "./tree-shared";
@@ -37,6 +37,30 @@ interface DirNodeProps {
   ignored?: boolean;
   activePath: string | null;
   onFileSelect: (path: string, how?: FileOpenHow) => void;
+}
+
+/** `next`, keeping each entry of `was` that is unchanged, and `was` itself
+ *  when none changed: a folder read again as the window comes to the front
+ *  draws none of its rows again. */
+function keptEntries(
+  was: DirEntryInfo[] | undefined,
+  next: DirEntryInfo[],
+): DirEntryInfo[] {
+  if (!was) return next;
+  const known = new Map(was.map((e) => [e.path, e]));
+  const same = (a: DirEntryInfo, b: DirEntryInfo) =>
+    (Object.keys(b) as (keyof DirEntryInfo)[]).every((k) => a[k] === b[k]);
+  let changed = was.length !== next.length;
+  const kept = next.map((entry, i) => {
+    const old = known.get(entry.path);
+    if (old && same(old, entry)) {
+      if (was[i] !== old) changed = true;
+      return old;
+    }
+    changed = true;
+    return entry;
+  });
+  return changed ? kept : was;
 }
 
 /** Newest first; one the system gave no date for goes last. */
@@ -86,7 +110,12 @@ export const DirNode = memo(function DirNode({
     if (!open || loaded?.listing === listing) return;
     let cancelled = false;
     fs.listDir(path).then(
-      (entries) => !cancelled && setLoaded({ listing, entries }),
+      (entries) =>
+        !cancelled &&
+        setLoaded((was) => ({
+          listing,
+          entries: keptEntries(was?.entries, entries),
+        })),
       // Unreadable (permissions, vanished): said so, not shown empty with a
       // New Document that would fail too.
       (err: unknown) =>
@@ -226,7 +255,7 @@ const FileNode = memo(function FileNode({
 }) {
   const { t, settings } = useSettings();
   const lang = settings.language;
-  const tree = useTree();
+  const tree = useTreeRowActions();
   const Icon = fileIconFor(entry.name);
   const press = useLongPress();
   const mark = useFileMark(entry.path);

@@ -1,3 +1,4 @@
+import { useEntriesFromOtherWindows } from "./useEntriesFromOtherWindows";
 import { linkToFile } from "./islands/link-to-file";
 import { useHoldScrollOnReturn } from "../document-view/hold-scroll-on-return";
 import { useEffect } from "react";
@@ -149,6 +150,7 @@ export function useWindowWiring({
     removeTab: docs.removeTab,
     saveTab: docs.saveTab,
   });
+  useEntriesFromOtherWindows(actions.followMove);
 
   // Which View items are on: the check marks in the app-drawn menu and in
   // the macOS menu bar.
