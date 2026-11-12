@@ -20,7 +20,7 @@ import {
   styleSummary,
   ruleLines,
   firstLine,
-  stemOf,
+  libraryEntryId,
 } from "./memory-text";
 
 /**
@@ -189,7 +189,7 @@ export function MemorySections({
                 <div
                   key={entry.file}
                   className={`memory-entry tx-reveal-host${sent ? " memory-entry-used" : ""}`}
-                  data-memory-id={`project/library/${stemOf(entry.file)}`}
+                  data-memory-id={libraryEntryId(entry)}
                 >
                   <button
                     type="button"

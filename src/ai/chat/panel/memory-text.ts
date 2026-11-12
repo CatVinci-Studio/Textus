@@ -70,10 +70,5 @@ export function firstLine(body: string): string {
   );
 }
 
-/** A file's name without its folder or extension - its id's last part. */
-export function stemOf(path: string): string {
-  return (path.split(/[\\/]/).pop() ?? "").replace(/\.[^.]*$/, "");
-}
-
 /** From this share of the memory budget on, the tab says how much is used. */
 export const NEAR_CAP = 0.8;
