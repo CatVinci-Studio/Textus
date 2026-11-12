@@ -44,14 +44,12 @@
 
 <p align="center">
   <a href="https://www.anthropic.com/">
-    <img src="docs/images/readme/sponsors/anthropic-logo-slate.png#gh-light-mode-only" alt="Anthropic" width="240">
-    <img src="docs/images/readme/sponsors/anthropic-logo-ivory.png#gh-dark-mode-only" alt="Anthropic" width="240">
+    <picture>
+      <source media="(prefers-color-scheme: dark)" srcset="docs/images/readme/sponsors/anthropic-logo-ivory.png">
+      <img src="docs/images/readme/sponsors/anthropic-logo-slate.png" alt="Anthropic" width="240">
+    </picture>
   </a>
 </p>
-
-<p align="center"><sub>Anthropic Startup Program を通じて</sub></p>
-
-<p align="center"><sub>スポンサー: <a href="https://github.com/jzzzzh"><img src="https://github.com/jzzzzh.png?size=40" alt="" width="20" height="20" align="center"> Jiang Zhuohang</a></sub></p>
 
 <p align="center">
   <img src="docs/images/readme/ja/hero.webp" alt="『吾輩は猫である』の冒頭と読書メモを並べて開いたTextus。Textus AIがメモの修正案を余白に示し、小説の横にレビューのコメントを付けている。" width="860" /><br>
@@ -117,11 +115,11 @@
 
 ## スポンサー
 
+Textusは無料のオープンソースです。開発を支えていただけるなら、[スポンサーになってください](https://github.com/CatVinci-Studio/Textus/issues/648)。
+
 **プレミアスポンサー：** [Anthropic](https://www.anthropic.com/)（Anthropic Startup Program を通じて）。
 
-**スポンサー：** [Jiang Zhuohang](https://github.com/jzzzzh)
-
-Textusは無料のオープンソースです。開発を支えていただけるなら、[スポンサーになってください](https://github.com/CatVinci-Studio/Textus/issues/648)。
+<p align="center"><img src="docs/images/readme/sponsors/sponsors.svg" alt="Sponsors" width="800"></p>
 
 ## コミュニティ
 

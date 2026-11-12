@@ -44,14 +44,12 @@
 
 <p align="center">
   <a href="https://www.anthropic.com/">
-    <img src="docs/images/readme/sponsors/anthropic-logo-slate.png#gh-light-mode-only" alt="Anthropic" width="240">
-    <img src="docs/images/readme/sponsors/anthropic-logo-ivory.png#gh-dark-mode-only" alt="Anthropic" width="240">
+    <picture>
+      <source media="(prefers-color-scheme: dark)" srcset="docs/images/readme/sponsors/anthropic-logo-ivory.png">
+      <img src="docs/images/readme/sponsors/anthropic-logo-slate.png" alt="Anthropic" width="240">
+    </picture>
   </a>
 </p>
-
-<p align="center"><sub>a través del Anthropic Startup Program</sub></p>
-
-<p align="center"><sub>Patrocinadores: <a href="https://github.com/jzzzzh"><img src="https://github.com/jzzzzh.png?size=40" alt="" width="20" height="20" align="center"> Jiang Zhuohang</a></sub></p>
 
 <p align="center">
   <img src="docs/images/readme/es/hero.webp" alt="Textus con el primer capítulo de Don Quijote junto a las notas del lector sobre él. Textus AI propone cambios a las notas en el margen y fija un comentario de revisión junto a la novela." width="860" /><br>
@@ -117,11 +115,11 @@ Más complementos y temas: [textus.md/extensions](https://textus.md/es/extension
 
 ## Patrocinadores
 
+Textus es gratuito y de código abierto. [Patrocínanos](https://github.com/CatVinci-Studio/Textus/issues/648) para apoyar su desarrollo.
+
 **Patrocinador principal:** [Anthropic](https://www.anthropic.com/), a través del Anthropic Startup Program.
 
-**Patrocinadores:** [Jiang Zhuohang](https://github.com/jzzzzh)
-
-Textus es gratuito y de código abierto. [Patrocínanos](https://github.com/CatVinci-Studio/Textus/issues/648) para apoyar su desarrollo.
+<p align="center"><img src="docs/images/readme/sponsors/sponsors.svg" alt="Sponsors" width="800"></p>
 
 ## Comunidad
 
