@@ -18,6 +18,11 @@ import { useLatest } from "../../utils/hooks/useLatest";
 import { runCommand } from "../../registry/commands";
 import {
   BulletListIcon,
+  CalendarIcon,
+  ClockIcon,
+  LinkIcon,
+  StarIcon,
+  TagIcon,
   CheckIcon,
   ChevronIcon,
   FolderIcon,
@@ -75,6 +80,11 @@ const ICONS: Record<string, (props: { className?: string }) => ReactNode> = {
   pin: PinIcon,
   search: SearchIcon,
   list: BulletListIcon,
+  star: StarIcon,
+  tag: TagIcon,
+  clock: ClockIcon,
+  calendar: CalendarIcon,
+  link: LinkIcon,
 };
 
 /** Whether every word typed is in the item's words. */

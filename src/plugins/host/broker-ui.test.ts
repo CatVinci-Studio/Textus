@@ -39,3 +39,25 @@ describe("commands.execute", () => {
     );
   });
 });
+
+describe("ui.pick as a command line", () => {
+  it("counts its Enter as a key pressed, for the editor ops that follow", async () => {
+    const { held } = await import("../contributions/key-holder");
+    held.owner = {
+      plugin: "catvinci.vim",
+      name: "Vim",
+      capture: { mode: "some", keys: [] },
+      deliver: () => {},
+      lastKeyAt: 0,
+    };
+    const scope = {
+      id: "catvinci.vim",
+      name: () => "Vim",
+      need: () => {},
+      deps: { pickWithCommands: () => Promise.resolve("12") },
+    } as unknown as PluginScope;
+    await uiHandlers(scope)["ui.pick"]({ items: [], commands: true });
+    expect(Date.now() - held.owner.lastKeyAt).toBeLessThan(1000);
+    held.owner = null;
+  });
+});

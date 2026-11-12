@@ -52,9 +52,9 @@ a {
 }
 
 /* The app's small button (design-system.css .tx-button.small): a capsule
-   of the text's colour, its hover a tint of it. */
-button,
-.button {
+   of the text's colour, its hover a tint of it. Weightless (:where), so a
+   page's own class for a button wins. */
+:where(button, .button) {
   display: inline-flex;
   align-items: center;
   justify-content: center;
@@ -70,8 +70,7 @@ button,
   color: var(--ui-text);
   cursor: pointer;
 }
-button:not(:disabled):hover,
-.button:hover {
+:where(button:not(:disabled), .button):hover {
   background: color-mix(in srgb, currentColor 8%, transparent);
 }
 /* The primary action is ink, as the app's: text colour as fill. */

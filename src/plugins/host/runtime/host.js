@@ -354,9 +354,10 @@
           return call("secrets.get", { key: String(key) });
         },
         set: function (key, value) {
+          // Nothing to keep is the secret gone, not the word "null".
           return call("secrets.set", {
             key: String(key),
-            value: String(value),
+            value: value == null ? null : String(value),
           });
         },
         delete: function (key) {

@@ -65,3 +65,35 @@ it("gives every permission a row on the permissions page", () => {
   expect(names.length).toBeGreaterThan(5);
   for (const name of names) expect(page, name).toContain(`| \`${name}\``);
 });
+
+it("names only list icons the list view draws", () => {
+  const view = read("src/plugins/views/PluginListView.tsx");
+  const drawn = /const ICONS:[^\n]* = \{([^}]*)\}/.exec(view)![1];
+  const named = /One of the app's icons \(([^)]*)\)/.exec(
+    read("docs/dev/textus.d.ts").replace(/\s*\*\s*/g, " "),
+  )![1];
+  for (const [, icon] of named.matchAll(/"(\w+)"/g))
+    expect(drawn, icon).toMatch(new RegExp(`\\b${icon}:`));
+});
+
+it("names only classes a plugin page's stylesheets draw", () => {
+  const given = [
+    "src/engine/tokens/design-system.css",
+    "src/engine/controls/components.css",
+    "src/engine/controls/controls.css",
+    "src/engine/controls/pane.css",
+    "src/engine/controls/progress.css",
+    "src/engine/controls/bubble.css",
+    "src/engine/controls/icon-masks.css",
+    "src/plugins/host/runtime/plugin-ui.css",
+  ]
+    .map(readCss)
+    .join("\n");
+  const frames = read("src/plugins/host/frames.ts");
+  for (const css of ["pane.css", "controls.css", "components.css"])
+    expect(frames, css).toContain(`controls/${css}?inline`);
+  for (const [name] of new Set(
+    read("docs/dev/plugins/ui.md").match(/tx-[a-z][a-z-]*/g),
+  ).entries())
+    expect(given, name).toMatch(new RegExp(`\\.${name}(?![\\w-])`));
+});

@@ -24,6 +24,7 @@ import {
   type Params,
   type PluginScope,
 } from "./broker-scope";
+import { held } from "../contributions/key-holder";
 
 function tone(value: unknown): "info" | "warning" | "error" {
   return value === "warning" || value === "error" ? value : "info";
@@ -106,13 +107,18 @@ export function uiHandlers(p: PluginScope) {
           ? { label: item, value: item }
           : (item as QuickPickItem),
       );
-      // A command line: the items among the palette's (Vim's ":").
-      if (commands === true)
-        return p.deps.pickWithCommands(
+      // A command line: the items among the palette's (Vim's ":"). Its
+      // Enter is a key the user pressed, which the editor ops that follow
+      // (":12", ":u") may act on.
+      if (commands === true) {
+        const picked = await p.deps.pickWithCommands(
           list,
           optionalStr(value) ?? "",
           optionalStr(placeholder),
         );
+        if (held.owner?.plugin === p.id) held.owner.lastKeyAt = Date.now();
+        return picked;
+      }
       return showQuickPick(list, optionalStr(placeholder) ?? "", {
         multiple: multiple === true,
         query: optionalStr(value),

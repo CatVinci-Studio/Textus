@@ -8,6 +8,7 @@ import {
   BetweenVerticalEnd,
   BetweenVerticalStart,
   Bold,
+  Calendar,
   Book,
   BookMarked,
   BookOpenText,
@@ -15,6 +16,7 @@ import {
   ChevronDown,
   ChevronLeft,
   ChevronRight,
+  Clock,
   Code,
   Columns2,
   Download,
@@ -68,8 +70,10 @@ import {
   Square,
   SquareArrowOutUpRight,
   SquareCode,
+  Star,
   Strikethrough,
   Table,
+  Tag,
   Telescope,
   TextQuote,
   Trash2,
@@ -179,6 +183,11 @@ export const CloseIcon = lucide(X, 12);
 export const DetachIcon = lucide(SquareArrowOutUpRight, 13);
 /** Keep the detached chat window above the editor. */
 export const PinIcon = lucide(Pin, 13);
+/** A plugin's list rows: a bookmark, a tag, a time, a day. */
+export const StarIcon = lucide(Star, 15);
+export const TagIcon = lucide(Tag, 15);
+export const ClockIcon = lucide(Clock, 15);
+export const CalendarIcon = lucide(Calendar, 15);
 export const PlusIcon = lucide(Plus, 13);
 export const SearchIcon = lucide(Search, 13);
 /** The composer's Deep thinking toggle. */
