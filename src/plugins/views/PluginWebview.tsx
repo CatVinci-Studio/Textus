@@ -76,6 +76,16 @@ const codeBlockMax = () =>
     Math.round(window.innerHeight * CODE_BLOCK_SHARE),
   );
 
+/** A page's own zoom, kept current, and the way to tell the page when it
+ *  changes (set once the page is up). */
+function useZoomTeller(zoom: number) {
+  const ownZoom = useRef(zoom);
+  ownZoom.current = zoom;
+  const tellZoom = useRef<(() => void) | null>(null);
+  useEffect(() => tellZoom.current?.(), [zoom]);
+  return { ownZoom, tellZoom };
+}
+
 /**
  * Where a plugin's webview is drawn: a sandboxed frame rebuilt on new HTML,
  * kept in the window's theme, its messages passed both ways.
@@ -108,10 +118,7 @@ export function PluginWebview({
   } | null>(null);
 
   // The size the page draws at: its own times the document's.
-  const ownZoom = useRef(zoom);
-  ownZoom.current = zoom;
-  const tellZoom = useRef<(() => void) | null>(null);
-  useEffect(() => tellZoom.current?.(), [zoom]);
+  const { ownZoom, tellZoom } = useZoomTeller(zoom);
   useEffect(() => {
     const box = boxRef.current;
     const current = webview(id);
@@ -250,7 +257,7 @@ export function PluginWebview({
       webviewConnected(id, null);
       frame.remove();
     };
-  }, [id, html, fitHeight]);
+  }, [id, html, fitHeight, ownZoom, tellZoom]);
 
   return (
     <>

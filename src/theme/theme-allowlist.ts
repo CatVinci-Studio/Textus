@@ -1,9 +1,9 @@
 /// What a theme from an AI reply may contain, checked on the webview's own
 /// CSS parser rather than on the text: a positive list of selectors and
-/// properties (docs/design/design-language.md, section 14.1, and the theme
-/// skill's rules), so CSS the list doesn't know is dropped instead of having to
-/// be foreseen. The same engine applies the theme later, so what was checked is
-/// what runs, and the saved file is the checked rules written out again.
+/// properties (the theme skill's rules), so CSS the list doesn't know is
+/// dropped instead of having to be foreseen. The same engine applies the
+/// theme later, so what was checked is what runs, and the saved file is the
+/// checked rules written out again.
 
 /** `:root`, `html` or `body`, with attribute qualifiers
  *  (`:root[data-theme="dark"]`). */
@@ -21,7 +21,7 @@ const DOCUMENT_SELECTOR = new RegExp(
 
 /** The variables a theme may set: the document's, the interface colours
  *  derived from them, the tones and revision colours. Sizes, spacing, radii and
- *  motion tokens are the app's (section 14.1). */
+ *  motion tokens are the app's. */
 const VARIABLE = /^--(?:doc|ui|tone|revision)-/;
 
 /** What `:root`, `html` and `body` rules may set besides variables. */

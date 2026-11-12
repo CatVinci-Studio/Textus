@@ -2,8 +2,8 @@
 // run in the plugin's hidden, sandboxed frame (frames.ts) before its code.
 // Every call goes to the window as JSON-RPC (rpc.ts's createEndpoint, put
 // in front of this file); the window checks it against what the plugin was
-// granted. The API is docs/dev/textus.d.ts, which
-// src/plugins/host/textus-types.test.ts keeps in step with this file.
+// granted. Its declared types are kept in step with this file by
+// src/plugins/host/textus-types.test.ts.
 //
 // Plain JavaScript, put into the frame as is: no imports, nothing of the
 // app's build.
