@@ -69,6 +69,11 @@ interface FolderIndex {
   documents: MetaDocument[];
   byPath: Map<string, MetaDocument>;
   paths: PathIndex;
+  /** What the backend had read when this was made: the next ask gets
+   *  only what changed after it. */
+  generation: number;
+  /** Each document as the backend sent it, by path. */
+  sent: Map<string, PluginDocumentMeta>;
 }
 
 /** `resolveTarget`'s path, for a target that exists. `wiki`: `link` is a
@@ -159,21 +164,19 @@ export async function folderIndex(
 ): Promise<FolderIndex> {
   if (pending) return pending;
   pending = (async () => {
-    const { documents, changed } = await pluginsIpc.metadataAll(asker, root);
-    const paths = pathIndex(
+    const was = current?.root === root ? current : null;
+    const got = await pluginsIpc.metadataAll(
+      asker,
       root,
-      documents.map((d) => d.path),
+      was?.generation ?? null,
     );
-    const docs = documents.map((d) => documentOf(d, paths));
-    const first = current?.root !== root;
-    current = {
-      root,
-      documents: docs,
-      byPath: new Map(docs.map((d) => [slashed(d.path), d])),
-      paths,
-    };
-    if (!first && changed.length)
-      emitPluginEvent("metadata", { paths: changed });
+    current = updated(root, was, got);
+    const changed = got.whole
+      ? was
+        ? [...current.sent.keys()]
+        : []
+      : [...got.documents.map((d) => d.path), ...got.gone];
+    if (changed.length) emitPluginEvent("metadata", { paths: changed });
     return current;
   })().finally(() => {
     pending = null;
@@ -181,10 +184,56 @@ export async function folderIndex(
   return pending;
 }
 
+/** `was` with what the backend sent: only the changed documents read
+ *  again while no document came or went (their links resolve as before);
+ *  nothing new, `was` itself. */
+function updated(
+  root: string,
+  was: FolderIndex | null,
+  got: Awaited<ReturnType<typeof pluginsIpc.metadataAll>>,
+): FolderIndex {
+  if (was && !got.whole && !got.documents.length && !got.gone.length)
+    return { ...was, generation: got.generation };
+  const sent = new Map(got.whole || !was ? [] : was.sent);
+  for (const path of got.whole ? [] : got.gone) sent.delete(path);
+  const fresh = new Set<string>();
+  for (const d of got.documents) {
+    fresh.add(d.path);
+    sent.set(d.path, d);
+  }
+  const same =
+    !!was &&
+    !got.whole &&
+    !got.gone.length &&
+    got.documents.every((d) => was.sent.has(d.path));
+  const metas = [...sent.values()].sort((a, b) =>
+    a.rel.toLowerCase() < b.rel.toLowerCase() ? -1 : 1,
+  );
+  const paths = same
+    ? was.paths
+    : pathIndex(
+        root,
+        metas.map((d) => d.path),
+      );
+  const documents = metas.map((m) =>
+    same && !fresh.has(m.path)
+      ? was.byPath.get(slashed(m.path))!
+      : documentOf(m, paths),
+  );
+  return {
+    root,
+    documents,
+    byPath: new Map(documents.map((d) => [slashed(d.path), d])),
+    paths,
+    generation: got.generation,
+    sent,
+  };
+}
+
 /** The line of a resolved link's heading or block in its note, as the
  *  index knows it; null for its top or one not found. */
 export function targetLine(
-  index: FolderIndex,
+  index: Pick<FolderIndex, "byPath">,
   target: NoteTarget,
 ): number | null {
   const doc = index.byPath.get(slashed(target.path));

@@ -275,11 +275,30 @@ struct Cached {
     modified: Option<u128>,
     size: u64,
     meta: DocumentMeta,
+    /// The generation it was last read in.
+    generation: u64,
 }
 
-/// The index of every folder a plugin asked about in this run, by root.
+/// One folder's index, and what changed in it by generation, so a window
+/// is sent only what changed since it last asked.
 #[derive(Default)]
-pub struct MetadataIndex(Arc<Mutex<HashMap<String, HashMap<String, Cached>>>>);
+struct RootIndex {
+    docs: HashMap<String, Cached>,
+    generation: u64,
+    /// Paths gone, each with the generation it went in; the oldest let go.
+    removed: Vec<(u64, String)>,
+    /// A caller behind this has missed removals: it is sent the whole index.
+    floor: u64,
+}
+
+/// Removals kept for callers catching up; past it, they get the whole index.
+const REMOVALS_KEPT: usize = 4096;
+/// Folders kept indexed at once: a window's folder, and another window's.
+const ROOTS_KEPT: usize = 2;
+
+/// The index of the folders plugins ask about, by root.
+#[derive(Default)]
+pub struct MetadataIndex(Arc<Mutex<HashMap<String, RootIndex>>>);
 
 fn modified_of(meta: &std::fs::Metadata) -> Option<u128> {
     meta.modified()
@@ -288,13 +307,18 @@ fn modified_of(meta: &std::fs::Metadata) -> Option<u128> {
         .map(|d| d.as_millis())
 }
 
-/// Brings `root`'s index up to date: the paths added, changed or gone.
-fn refresh(index: &MetadataIndex, root: &Path) -> Vec<String> {
+/// Brings `root`'s index up to date: what was added, changed or gone gets
+/// the next generation.
+fn refresh(index: &MetadataIndex, root: &Path) {
     let walk = crate::walk::walk(root, &crate::walk::LIMITS, crate::extract::is_markdown);
     let key = root.to_string_lossy().to_string();
     let mut all = index.0.lock().unwrap_or_else(|e| e.into_inner());
+    if !all.contains_key(&key) && all.len() >= ROOTS_KEPT {
+        all.clear();
+    }
     let known = all.entry(key).or_default();
-    let mut changed = Vec::new();
+    let next = known.generation + 1;
+    let mut any = false;
     let mut present = HashSet::new();
     for file in walk.files {
         let path = file.path.to_string_lossy().to_string();
@@ -306,7 +330,7 @@ fn refresh(index: &MetadataIndex, root: &Path) -> Vec<String> {
             continue;
         }
         let modified = modified_of(&stat);
-        if let Some(cached) = known.get(&path) {
+        if let Some(cached) = known.docs.get(&path) {
             if cached.modified == modified && cached.size == stat.len() {
                 continue;
             }
@@ -316,26 +340,66 @@ fn refresh(index: &MetadataIndex, root: &Path) -> Vec<String> {
         };
         let mut meta = parse_document(&path, &file.rel, &text);
         meta.modified_ms = modified.map(|m| m as f64);
-        known.insert(
-            path.clone(),
+        known.docs.insert(
+            path,
             Cached {
                 modified,
                 size: stat.len(),
                 meta,
+                generation: next,
             },
         );
-        changed.push(path);
+        any = true;
     }
     let gone: Vec<String> = known
+        .docs
         .keys()
         .filter(|p| !present.contains(*p))
         .cloned()
         .collect();
     for path in gone {
-        known.remove(&path);
-        changed.push(path);
+        known.docs.remove(&path);
+        known.removed.push((next, path));
+        any = true;
     }
-    changed
+    if known.removed.len() > REMOVALS_KEPT {
+        let cut = known.removed.len() - REMOVALS_KEPT / 2;
+        known.floor = known.removed[cut - 1].0;
+        known.removed.drain(..cut);
+    }
+    if any {
+        known.generation = next;
+    }
+}
+
+/// What a caller at generation `since` hasn't seen: everything when it has
+/// seen nothing of this index, or missed removals no longer kept.
+fn since(known: &RootIndex, since: Option<u64>) -> MetadataAll {
+    let whole = since.is_none_or(|s| s < known.floor || s > known.generation);
+    let after = if whole { 0 } else { since.unwrap_or(0) };
+    let mut documents: Vec<DocumentMeta> = known
+        .docs
+        .values()
+        .filter(|c| c.generation > after)
+        .map(|c| c.meta.clone())
+        .collect();
+    documents.sort_by_key(|d| d.rel.to_lowercase());
+    let gone = if whole {
+        Vec::new()
+    } else {
+        known
+            .removed
+            .iter()
+            .filter(|(g, _)| *g > after)
+            .map(|(_, p)| p.clone())
+            .collect()
+    };
+    MetadataAll {
+        generation: known.generation,
+        whole,
+        documents,
+        gone,
+    }
 }
 
 fn checked_root(app: &tauri::AppHandle, id: &str, root: &str) -> Result<(), String> {
@@ -348,13 +412,16 @@ fn checked_root(app: &tauri::AppHandle, id: &str, root: &str) -> Result<(), Stri
     require_not_app_data(app, Path::new(root))
 }
 
-/// Every document of the folder and what it holds (blocks left out), and
-/// the paths that changed since the index was last brought up to date.
+/// The folder's documents and what they hold (blocks left out): every one
+/// when `whole`, else those changed since the caller's generation, with the
+/// paths gone since.
 #[derive(Serialize)]
 #[cfg_attr(test, derive(specta::Type))]
 pub struct MetadataAll {
+    generation: u64,
+    whole: bool,
     documents: Vec<DocumentMeta>,
-    changed: Vec<String>,
+    gone: Vec<String>,
 }
 
 #[tauri::command]
@@ -364,21 +431,25 @@ pub async fn plugin_metadata_all(
     index: tauri::State<'_, MetadataIndex>,
     id: String,
     root: String,
+    after: Option<u64>,
 ) -> Result<MetadataAll, String> {
     checked_root(&app, &id, &root)?;
     let shared = MetadataIndex(index.0.clone());
     let root_path = std::path::PathBuf::from(&root);
     // The walk and the reads are blocking file work.
-    let changed = tauri::async_runtime::spawn_blocking(move || refresh(&shared, &root_path))
+    tauri::async_runtime::spawn_blocking(move || refresh(&shared, &root_path))
         .await
         .map_err(|e| e.to_string())?;
     let all = index.0.lock().unwrap_or_else(|e| e.into_inner());
-    let mut documents: Vec<DocumentMeta> = all
+    Ok(all
         .get(&root)
-        .map(|docs| docs.values().map(|c| c.meta.clone()).collect())
-        .unwrap_or_default();
-    documents.sort_by_key(|d| d.rel.to_lowercase());
-    Ok(MetadataAll { documents, changed })
+        .map(|known| since(known, after))
+        .unwrap_or(MetadataAll {
+            generation: 0,
+            whole: true,
+            documents: Vec::new(),
+            gone: Vec::new(),
+        }))
 }
 
 /// What one document holds now, its blocks with it - read afresh.
