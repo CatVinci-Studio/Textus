@@ -3,6 +3,7 @@
  * browser. Commands resolve to null; `window.__devEmitTauriEvent(name,
  * payload)` fires tracked listeners.
  */
+import { agentShim } from "./agent-shim";
 import type {
   DirEntryInfo_Serialize,
   FolderIndex,
@@ -16,12 +17,16 @@ import type { GalleryTheme_Serialize } from "../platform/bindings/app";
 import type { CustomEndpointStatus_Serialize } from "../platform/bindings/auth";
 import type { PluginsState_Serialize } from "../platform/bindings/plugins";
 import type { FsEntry_Serialize } from "../platform/bindings/plugin-access";
-import type { SentBlock } from "../ai/doc-blocks";
+import type { SentBlock } from "../editor/markdown/doc-blocks";
 import { namedCall, settledArguments, settledTurns } from "./settle-calls";
 import { forgetShimSecrets, pluginApiShim } from "./plugin-shim-api";
 import { webPageCommand } from "./native-web-pages";
 import { makeDevSchedule } from "./schedule-shim";
-import { pathIndex, resolveTarget } from "../links/link-resolve";
+import { pathIndex, resolveTarget } from "../files/link-resolve";
+
+/** The backend's "too broad a folder", as errors.rs words it. */
+const TOO_BROAD = "This folder is too broad to open. [tooBroad]";
+import { ownError } from "../utils/error-text";
 
 /** The built-in skills as `list_skills` reports them (descriptions abridged). */
 const DEV_BUILTIN_SKILLS: [string, string, string, string, string][] = [
@@ -291,7 +296,7 @@ export function installDevTauriShim(): void {
         const [hash, history] = kept[String(args.path)] ?? [];
         return Promise.resolve(hash === args.hash ? history : null);
       }
-      case "undo_file_move": {
+      case "document_data_move": {
         const kept = (w.__devUndoFiles ??= {}) as Record<string, string[]>;
         const from = String(args.from);
         if (kept[from]) kept[String(args.to)] = kept[from];
@@ -573,6 +578,7 @@ export function installDevTauriShim(): void {
   // (files only). `__devPickFolder` answers the folder picker ("TOO_BROAD"
   // refuses); `__devRecents` are the recent lists.
   const recents = { files: [] as string[], folders: [] as string[] };
+  const undoKept = new Map<string, { hash: string; history: string }>();
   w.__devRecents = recents;
   const pushRecent = (list: string[], path: string) => {
     const at = list.indexOf(path);
@@ -585,10 +591,23 @@ export function installDevTauriShim(): void {
   ): Promise<unknown> | null {
     const files = w.__devFs as Record<string, string> | undefined;
     switch (cmd) {
+      case "project_settings_read": {
+        // As the backend reads it, less its comment tolerance.
+        const root = String(args.root ?? "").replace(/[\\/]+$/, "");
+        const text = files?.[`${root}/.textus/settings.json`];
+        try {
+          const parsed: unknown = text ? JSON.parse(text) : {};
+          return Promise.resolve(
+            parsed && typeof parsed === "object" ? parsed : {},
+          );
+        } catch {
+          return Promise.resolve({});
+        }
+      }
       case "pick_open_folder": {
         const picked = w.__devPickFolder ?? null;
         return picked === "TOO_BROAD"
-          ? Promise.reject("TOO_BROAD")
+          ? Promise.reject(TOO_BROAD)
           : Promise.resolve(picked);
       }
       case "add_recent_file":
@@ -596,6 +615,32 @@ export function installDevTauriShim(): void {
         return Promise.resolve(null);
       case "add_recent_folder":
         pushRecent(recents.folders, String(args.path));
+        return Promise.resolve(null);
+      // Undo files (undo_files.rs), in memory: a history kept per path and
+      // given back only at the text it ends at.
+      case "undo_file_save":
+        undoKept.set(String(args.path), {
+          hash: String(args.hash),
+          history: String(args.history),
+        });
+        return Promise.resolve(null);
+      case "undo_file_load": {
+        const kept = undoKept.get(String(args.path));
+        return Promise.resolve(
+          kept && kept.hash === String(args.hash) ? kept.history : null,
+        );
+      }
+      case "document_data_move": {
+        const kept = undoKept.get(String(args.from));
+        if (kept) undoKept.set(String(args.to), kept);
+        undoKept.delete(String(args.from));
+        return Promise.resolve(null);
+      }
+      case "remove_recent":
+        for (const list of [recents.files, recents.folders]) {
+          const at = list.indexOf(String(args.path));
+          if (at >= 0) list.splice(at, 1);
+        }
         return Promise.resolve(null);
       // `window.__devSystem` stands in for the system a report names.
       case "system_info":
@@ -606,24 +651,29 @@ export function installDevTauriShim(): void {
         return Promise.resolve([...recents.files]);
       case "list_recent_folders":
         return Promise.resolve([...recents.folders]);
-      // Files opened from outside before the window was ready: none here. The
-      // native side always answers with a list.
-      case "take_pending_open_paths":
-        return Promise.resolve([]);
+      // Files opened from outside while the window runs: the native side
+      // hands them to the focused window as tabs - this one.
+      case "open_paths":
+        emitSoon("open-paths-as-tabs", args.paths);
+        return Promise.resolve(null);
     }
     // No fake folder: the folder of a document opened anyway (dropped in,
     // `__devFiles`) lists as empty, as the native side never answers null.
     if (!files) return cmd === "list_dir" ? Promise.resolve([]) : null;
     const path = String(args.path ?? args.root ?? "");
+    const times = (w.__devFsTimes ??= {}) as Record<string, number>;
     switch (cmd) {
       case "read_text_file":
         return path in files ? Promise.resolve(files[path]) : null;
       // A save into the folder lands in it, so a test reads it back there.
+      // Each write moves the file's time on, as a disk's does, so an open
+      // tab of it sees the change.
       case "write_text_file":
         files[path] = String(args.contents);
+        times[path] = (times[path] ?? 1) + 1;
         return Promise.resolve(null);
       case "file_mtime_ms":
-        return Promise.resolve(path in files ? 1 : null);
+        return Promise.resolve(path in files ? (times[path] ?? 1) : null);
       case "list_dir": {
         const entries = new Map<string, boolean>();
         for (const file of Object.keys(files)) {
@@ -660,7 +710,8 @@ export function installDevTauriShim(): void {
       case "tree_create_document":
       case "tree_create_folder": {
         const name = String(args.name).trim();
-        if (!name || name.includes("/")) return Promise.reject("Invalid name");
+        if (!name || name.includes("/"))
+          return Promise.reject(ownError("badName"));
         const doc = cmd === "tree_create_document";
         const target = `${String(args.dir)}/${doc && !/\.(md|markdown)$/i.test(name) ? `${name}.md` : name}`;
         if (
@@ -668,7 +719,7 @@ export function installDevTauriShim(): void {
             (f) => f === target || f.startsWith(`${target}/`),
           )
         )
-          return Promise.reject("Already exists");
+          return Promise.reject(ownError("exists"));
         files[doc ? target : `${target}/.keep`] = "";
         return Promise.resolve(target);
       }
@@ -684,7 +735,7 @@ export function installDevTauriShim(): void {
         const into = String(args.into);
         const target = `${into}/${path.split("/").pop()}`;
         if (into === path.slice(0, path.lastIndexOf("/")))
-          return Promise.reject("Already there");
+          return Promise.reject(ownError("alreadyThere"));
         if (into === path || into.startsWith(`${path}/`))
           return Promise.reject("A folder can't move into itself");
         if (
@@ -692,7 +743,7 @@ export function installDevTauriShim(): void {
             (f) => f === target || f.startsWith(`${target}/`),
           )
         )
-          return Promise.reject("Already exists");
+          return Promise.reject(ownError("exists"));
         for (const file of Object.keys(files)) {
           if (file !== path && !file.startsWith(`${path}/`)) continue;
           files[target + file.slice(path.length)] = files[file];
@@ -702,7 +753,8 @@ export function installDevTauriShim(): void {
       }
       case "tree_rename_entry": {
         const name = String(args.name).trim();
-        if (!name || name.includes("/")) return Promise.reject("Invalid name");
+        if (!name || name.includes("/"))
+          return Promise.reject(ownError("badName"));
         const isDoc =
           /\.(md|markdown)$/i.test(path) && !(`${path}/.keep` in files);
         const leaf = isDoc && !name.includes(".") ? `${name}.md` : name;
@@ -713,7 +765,7 @@ export function installDevTauriShim(): void {
             (f) => f === target || f.startsWith(`${target}/`),
           )
         )
-          return Promise.reject("Already exists");
+          return Promise.reject(ownError("exists"));
         for (const file of Object.keys(files)) {
           if (file !== path && !file.startsWith(`${path}/`)) continue;
           files[target + file.slice(path.length)] = files[file];
@@ -866,7 +918,7 @@ export function installDevTauriShim(): void {
       case "index_folder": {
         // The backend refuses these; the shim's "home" is /home/me.
         if (path === "/" || path === "/home/me")
-          return Promise.reject("TOO_BROAD");
+          return Promise.reject(TOO_BROAD);
         const indexed = Object.keys(files)
           .filter(
             (file) =>
@@ -1071,7 +1123,10 @@ export function installDevTauriShim(): void {
       case "skill_install_catalog": {
         const had = (w.__devInstalledSkills ??= []) as string[];
         const name = String(args.name);
-        if (had.includes(name)) return Promise.reject("SKILL_EXISTS");
+        if (had.includes(name))
+          return Promise.reject(
+            "A skill of that name is already there. [skillExists]",
+          );
         had.push(name);
         return Promise.resolve(`/config/skills/${name}.md`);
       }
@@ -1110,7 +1165,8 @@ export function installDevTauriShim(): void {
         );
       }
       case "plugin_fs_documents":
-      case "plugin_fs_search": {
+      case "plugin_fs_search":
+      case "search_folder_text": {
         const root = String(args.root).replace(/\/$/, "");
         const docs = Object.keys(folder)
           .filter(
@@ -1126,7 +1182,9 @@ export function installDevTauriShim(): void {
         if (cmd === "plugin_fs_documents")
           return Promise.resolve({ documents: docs, truncated: false });
         const needle = String(args.query).trim().toLowerCase();
-        const limit = Number(args.limit ?? 200);
+        const limit = Number(
+          args.limit ?? (cmd === "search_folder_text" ? 1000 : 200),
+        );
         const hits = docs.flatMap((doc) =>
           doc.text.split("\n").flatMap((text, at) =>
             needle && text.toLowerCase().includes(needle)
@@ -1357,6 +1415,11 @@ export function installDevTauriShim(): void {
       args?: { event?: string; handler?: number; target?: { kind?: string } },
     ) => {
       log(cmd);
+      // The window's place on screen: the page's own (a native drag's
+      // pointer comes in screen points), at a scale of 1.
+      if (cmd === "plugin:window|outer_position")
+        return Promise.resolve({ x: window.screenX, y: window.screenY });
+      if (cmd === "plugin:window|scale_factor") return Promise.resolve(1);
       // Pages and links opened in the browser: `window.__devLinks`.
       if (cmd.startsWith("open_") && /_(page|link)$/.test(cmd))
         ((w.__devLinks ??= []) as unknown[]).push({ cmd, ...args });
@@ -1412,8 +1475,9 @@ export function installDevTauriShim(): void {
         } | null;
         // Settled against the request's blocks, as the backend settles a model's.
         if (cmd === "ai_agent_message") {
-          const blocks = ((args as { blocks?: SentBlock[] } | undefined)
-            ?.blocks ?? []) as SentBlock[];
+          const blocks = ((
+            args as { request?: { blocks?: SentBlock[] } } | undefined
+          )?.request?.blocks ?? []) as SentBlock[];
           value =
             value && typeof value === "object" && "__hold" in value
               ? { ...value, value: settledTurns(blocks, value.value) }
@@ -1500,7 +1564,8 @@ export function installDevTauriShim(): void {
       // One canned issue, so the underline and hover popover can be tried.
       if (cmd === "ai_grammar_check") {
         const paragraph =
-          (args as unknown as { paragraph?: string })?.paragraph ?? "";
+          (args as unknown as { request?: { paragraph?: string } })?.request
+            ?.paragraph ?? "";
         return Promise.resolve(
           paragraph.length > 0
             ? [
@@ -1514,14 +1579,17 @@ export function installDevTauriShim(): void {
             : [],
         );
       }
+      if (cmd.startsWith("agent_"))
+        return Promise.resolve(agentShim(cmd, args ?? {}));
       // Null here crashes the tree when the reply is spread into turns. The reply
       // is drip-fed through `onEvent` (the live Channel here) to exercise streaming.
       if (cmd === "ai_agent_message") {
-        const { message = "", onEvent } =
+        const { request, onEvent } =
           (args as unknown as {
-            message?: string;
+            request?: { message?: string };
             onEvent?: { onmessage?: (event: unknown) => void };
           }) ?? {};
+        const message = request?.message ?? "";
         const reply = `Canned dev-shim reply to: ${message}`;
         return new Promise((resolve) => {
           let sent = 0;
@@ -1555,7 +1623,8 @@ export function installDevTauriShim(): void {
         ]);
       }
       // Nothing waiting to open in this window.
-      if (cmd === "take_pending_window_paths") return Promise.resolve([]);
+      if (cmd === "take_pending_window" || cmd === "window_session_current")
+        return Promise.resolve(null);
       return Promise.resolve(null);
     },
     // As the real runtime: the callback is parked on window under `_<id>`.

@@ -51,7 +51,7 @@ export function liveCaretPos(view: EditorView): number | null {
 
 /** The browser's selection as document positions, anchor then head: null
  *  for a caret, no selection, or one outside what the editor knows. */
-export function liveRange(view: EditorView): [number, number] | null {
+function liveRange(view: EditorView): [number, number] | null {
   const root = view.root as {
     getSelection?: () => globalThis.Selection | null;
   };

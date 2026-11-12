@@ -2,7 +2,7 @@ import { describe, expect, it } from "vitest";
 import { Schema, type Node as ProseNode } from "@milkdown/kit/prose/model";
 import { Transform } from "@milkdown/kit/prose/transform";
 import { ChangeSet } from "@milkdown/kit/prose/changeset";
-import { charChanges, shownChanges } from "./own-change-spans";
+import { charChanges, rejectChanges, shownChanges } from "./own-change-spans";
 
 const schema = new Schema({
   nodes: {
@@ -59,5 +59,22 @@ describe("charChanges", () => {
     expect(charChanges("", "新")).toEqual([
       { fromA: 0, toA: 0, fromB: 0, toB: 1 },
     ]);
+  });
+});
+
+describe("rejectChanges", () => {
+  it("puts back only the changed text, leaving the rest's positions as they were", () => {
+    const base = schema.node("doc", null, [
+      schema.node("paragraph", null, [schema.text("one two")]),
+      schema.node("paragraph", null, [schema.text("three four")]),
+    ]);
+    // "four" (14..18) typed over as "five".
+    const tr = new Transform(base).replaceWith(14, 18, schema.text("five"));
+    const set = ChangeSet.create(base).addSteps(tr.doc, tr.mapping.maps, null);
+    const undo = new Transform(tr.doc);
+    rejectChanges(undo, shownChanges(set.changes, base, tr.doc), base);
+    expect(undo.doc.eq(base)).toBe(true);
+    // A note on "one" (1..4) keeps its range.
+    expect([undo.mapping.map(1, 1), undo.mapping.map(4, -1)]).toEqual([1, 4]);
   });
 });

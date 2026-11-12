@@ -34,14 +34,16 @@ pub fn floating_label(view: &str) -> String {
 /// Opens `view`'s floating window for the calling editor window, at `x`, `y`
 /// (screen points), or by the bottom-right corner of its screen; an open one
 /// stays where it is. Answers the window's label.
-#[tauri::command]
+// Async: a window built on the main thread inside a sync command stalls
+// WebView2 (chat_window.rs).
+#[tauri::command(async)]
 #[cfg_attr(test, specta::specta)]
 pub fn open_floating_window(
     app: tauri::AppHandle,
     window: tauri::WebviewWindow,
     view: String,
-    x: Option<f64>,
-    y: Option<f64>,
+    title: String,
+    at: Option<(f64, f64)>,
     width: f64,
     height: f64,
 ) -> Result<String, String> {
@@ -49,17 +51,16 @@ pub fn open_floating_window(
     if app.get_webview_window(&label).is_some() {
         return Ok(label);
     }
-    let (x, y) = match (x, y) {
-        (Some(x), Some(y)) => (x, y),
-        _ => corner_of(&window, width, height),
-    };
+    let (x, y) = at.unwrap_or_else(|| corner_of(&window, width, height));
     let url = format!(
         "index.html?view=floating&owner={}&key={}",
         window.label(),
         view
     );
     let builder = WebviewWindowBuilder::new(&app, &label, WebviewUrl::App(url.into()))
-        .title(view.as_str())
+        // Its title as the plugin names it, for the system (Mission Control,
+        // a screen reader); the id stays in the label.
+        .title(&title)
         .decorations(false)
         .transparent(true)
         .always_on_top(true)
@@ -88,6 +89,20 @@ fn corner_of(window: &tauri::WebviewWindow, width: f64, height: f64) -> (f64, f6
     let right = (area.position.x as f64 + area.size.width as f64) / scale;
     let bottom = (area.position.y as f64 + area.size.height as f64) / scale;
     (right - width - 32.0, bottom - height - 32.0)
+}
+
+/// Closes the floating windows editor window `owner` opened, as it closes.
+pub fn close_owned_by(app: &tauri::AppHandle, owner: &str) {
+    for (label, window) in app.webview_windows() {
+        let owned = label.starts_with(FLOATING_LABEL_PREFIX)
+            && window.url().is_ok_and(|url| {
+                url.query_pairs()
+                    .any(|(key, value)| key == "owner" && value == owner)
+            });
+        if owned {
+            let _ = window.destroy();
+        }
+    }
 }
 
 #[tauri::command]
@@ -144,10 +159,10 @@ pub fn floating_window_position(app: tauri::AppHandle, view: String) -> Option<(
 #[tauri::command]
 #[cfg_attr(test, specta::specta)]
 pub fn show_floating_owner(app: tauri::AppHandle, owner: String) {
-    if !crate::commands::chat_window::is_editor_window(&owner) {
+    if !crate::windows::is_editor_window(&owner) {
         return;
     }
-    if let Some(window) = app.get_webview_window(&owner) {
+    if let Some(window) = app.get_window(&owner) {
         let _ = window.unminimize();
         let _ = window.show();
         let _ = window.set_focus();

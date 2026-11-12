@@ -1,0 +1,306 @@
+/* Global skills as read-only rows: /name + description. They are managed as
+   files; this list is a mirror. */
+.settings-skill-list {
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+  margin: 0 0 12px;
+  padding: 0;
+  border-top: none;
+}
+
+/* Laid out as a built-in's row: its name, then its command and what it
+   does. */
+.settings-skill-item {
+  display: flex;
+  align-items: center;
+  gap: 24px;
+  min-height: 48px;
+  padding: 8px 0;
+  min-width: 0;
+}
+
+.settings-skill-text {
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+  min-width: 0;
+  flex: 1;
+}
+
+.settings-skill-title {
+  display: flex;
+  align-items: baseline;
+  min-width: 0;
+}
+
+.settings-skill-name {
+  flex-shrink: 0;
+  color: var(--ui-text);
+  font-size: var(--text-body-large);
+}
+
+.settings-skill-desc {
+  color: var(--ui-muted);
+  font-size: var(--text-body);
+}
+
+/* Off for now: its name and modes step back; the switch stays clear. */
+.settings-skill-item[data-off]
+  :is(.settings-skill-text, .settings-skill-modes) {
+  opacity: 0.5;
+}
+
+/* The modes a skill of the user's works in, at the end of its line. */
+.settings-skill-modes {
+  display: flex;
+  flex: none;
+}
+
+/* "Replaces a built-in skill", "This project", "Customized": after the
+   name, or under it from the name's start when there's no room. */
+:is(.settings-skill-title, .settings-row-label:has(> .tx-badge)) {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: baseline;
+  column-gap: 8px;
+}
+
+.settings-builtin-category-title {
+  margin: 0;
+  padding: 12px 0 2px;
+}
+
+.settings-builtin-skill-name {
+  font-family: var(--font-mono);
+  font-size: var(--text-secondary);
+}
+
+.settings-builtin-skill .settings-row-control {
+  flex-wrap: nowrap;
+  gap: 4px;
+}
+
+.settings-skill-actions {
+  display: flex;
+  gap: var(--space-1);
+}
+
+.settings-builtin-skill input[type="checkbox"] {
+  margin-left: 8px;
+}
+
+/* The skills list continues its header row - no hairline between them. */
+.settings-group-body > .settings-skill-list {
+  border-top: none;
+}
+
+.custom-model-row {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 8px;
+  flex: 1 1 16ch;
+  min-width: 0;
+}
+
+.custom-model-row select,
+.custom-model-row input {
+  flex: 1;
+  min-width: 0;
+  width: 100%;
+}
+
+.custom-actions-row {
+  display: flex;
+  align-items: center;
+  flex-wrap: wrap;
+  gap: 8px;
+  padding: 12px 0;
+}
+
+@media (max-width: 760px) {
+  .settings-layout {
+    flex-direction: column;
+  }
+
+  /* The search box across the top, the tabs under it. */
+  .settings-sidebar {
+    width: auto;
+    min-width: 0;
+    max-width: none;
+  }
+
+  .settings-search {
+    margin: 8px 8px 0;
+  }
+
+  /* One row of tabs that scrolls sideways rather than wrapping. */
+  .settings-nav {
+    flex-direction: row;
+    flex-wrap: nowrap;
+    overflow-x: auto;
+    overflow-y: hidden;
+    -webkit-overflow-scrolling: touch;
+    scrollbar-width: none;
+    padding: 8px;
+    gap: 4px;
+  }
+
+  .settings-nav::-webkit-scrollbar {
+    display: none;
+  }
+
+  .settings-nav-item {
+    flex: none;
+    width: auto;
+    padding: 8px 8px;
+    white-space: nowrap;
+  }
+}
+
+.settings-category-title {
+  margin: 0 0 24px;
+  font-size: var(--text-large-title);
+  font-weight: 600;
+  line-height: 1.3;
+  color: var(--ui-text);
+}
+
+.shortcut-setting {
+  min-width: 0;
+}
+
+.shortcut-setting .settings-error {
+  margin-top: 0;
+}
+
+/* The fixed shortcuts: a reference list, so rows are denser than the
+   settings above them, and the keys read as keys, not buttons. */
+.shortcut-fixed {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-3);
+  padding: var(--space-2) 0;
+}
+
+.shortcut-fixed-title {
+  margin: 0 0 var(--space-1);
+}
+
+.shortcut-fixed-list {
+  margin: 0;
+}
+
+.shortcut-fixed-row {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: var(--space-4);
+  min-height: var(--control-height);
+  font-size: var(--text-body-large);
+}
+
+.shortcut-fixed-row dt {
+  min-width: 0;
+  overflow-wrap: anywhere;
+}
+
+.shortcut-fixed-row dd {
+  display: flex;
+  flex-wrap: wrap;
+  justify-content: flex-end;
+  gap: var(--space-1);
+  margin: 0;
+}
+
+.shortcut-fixed-row kbd {
+  padding: 1px 4px;
+  border-radius: var(--shape-xs);
+  background: color-mix(in srgb, var(--ui-muted) 12%, transparent);
+  color: var(--ui-text);
+  font-family: var(--font-mono);
+  font-size: var(--text-footnote);
+  white-space: nowrap;
+}
+
+/* A row whose control needs the full width (Custom CSS): label above,
+   control below, actions under that. */
+.settings-row.settings-row-stacked {
+  flex-direction: column;
+  align-items: stretch;
+  gap: 8px;
+}
+
+.settings-code-input {
+  width: 100%;
+  min-height: 7.5em;
+  resize: vertical;
+  box-sizing: border-box;
+  padding: 8px 12px;
+  border: 1px solid var(--ui-border);
+  border-radius: var(--shape-s);
+  background: var(--ui-bg);
+  color: var(--ui-text);
+  font-family: var(--font-mono);
+  font-size: var(--text-body);
+  line-height: 1.5;
+  tab-size: 2;
+}
+
+/* Settings › About: the app on its own, centred. */
+.settings-about {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 8px;
+  padding: 32px 0 24px;
+  text-align: center;
+}
+
+.settings-about-icon {
+  width: 88px;
+  height: 88px;
+  margin-bottom: 8px;
+}
+
+.settings-about-name {
+  font-size: var(--text-large-title);
+  font-weight: 600;
+  color: var(--ui-text);
+}
+
+.settings-about-version {
+  font-size: var(--text-body);
+  color: var(--ui-muted);
+  cursor: default;
+  user-select: none;
+  -webkit-user-select: none;
+  font-variant-numeric: tabular-nums;
+}
+
+.settings-about-links {
+  display: flex;
+  flex-wrap: wrap;
+  justify-content: center;
+  gap: 8px;
+  margin-top: 16px;
+}
+
+.settings-about .settings-about-link {
+  padding-inline: 16px;
+}
+
+/* Update channel: an ordinary settings row, under the update button. */
+.settings-about-channel {
+  width: 100%;
+  max-width: 420px;
+  margin-top: 8px;
+  text-align: start;
+}
+
+.settings-about-credit {
+  margin-top: 4px;
+  font-size: var(--text-footnote);
+  color: var(--ui-muted);
+}

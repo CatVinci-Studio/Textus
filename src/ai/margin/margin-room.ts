@@ -1,4 +1,4 @@
-import { scaledPx } from "../../ui/chrome-scale";
+import { scaledPx } from "../../engine/tokens/chrome-scale";
 import { useSyncExternalStore } from "react";
 
 /** A card's width and the air between it and the text. */
@@ -9,7 +9,7 @@ const MIN_LEFT = 16;
 /** The air kept between a card and the editor's right edge. */
 const RIGHT_EDGE = 16;
 
-export interface MarginRoom {
+interface MarginRoom {
   /** Where the column's left edge sits on its own, centred. */
   natural: number;
   /** The text's right edge, in the scroller's coordinates. */
@@ -40,6 +40,23 @@ export function marginRoom(
     shift,
     available: natural + padding / 2 - shift >= MIN_LEFT,
   };
+}
+
+/** The share of its own width the column keeps when it narrows for cards:
+ *  its own width already follows the window, the theme and the zoom. */
+export const NARROWEST_SHARE = 0.8;
+
+/** The widest the column may be for a margin to fit beside it in
+ *  `scrollWidth`, its text inset by `padding`: wider, the column would have
+ *  to move past MIN_LEFT. Null where a column of `narrowest` leaves none. */
+export function columnForMargin(
+  scrollWidth: number,
+  padding: number,
+  narrowest: number,
+): number | null {
+  const need = scaledPx(CARD_WIDTH + GAP + RIGHT_EDGE);
+  const widest = scrollWidth + padding - need - MIN_LEFT;
+  return widest >= narrowest ? Math.floor(widest) : null;
 }
 
 // Whether the active document has room for a margin, for Settings. One value

@@ -1,10 +1,6 @@
 // @vitest-environment jsdom
 import { afterEach, beforeAll, describe, expect, it } from "vitest";
-import {
-  closeViews,
-  openView,
-  type TestView,
-} from "../../document-view/editor-view-kit";
+import { closeViews, openView, type TestView } from "../editor-view-kit";
 import { emojiNames } from "./emoji-shortcode-plugin";
 
 afterEach(closeViews);

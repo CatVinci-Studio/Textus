@@ -15,11 +15,18 @@ import {
   type DocLetterSpacing,
 } from "../prefs/SettingsContext";
 import { BUILTIN_CONTENT_THEMES } from "./builtin-themes";
-import { applyThemeChrome, clearThemeChrome } from "./theme-chrome";
-import { adaptTyporaCss, namedSystemFonts } from "./typora-compat";
+import { applyThemeChrome, clearThemeChrome } from "../engine/tokens/palette";
 import { isIOSApp } from "../platform/capabilities";
-import { withCurrentVariables } from "./legacy-variables";
-import { withWebFonts } from "./web-fonts";
+import { lazyModule } from "../lazy/lazy-module";
+
+// What an imported theme or the user's own CSS is read through: loaded
+// when there is one, not with every window.
+const typora = lazyModule("typora-compat", () => import("./typora-compat"));
+const legacy = lazyModule(
+  "legacy-variables",
+  () => import("./legacy-variables"),
+);
+const webFonts = lazyModule("web-fonts", () => import("./web-fonts"));
 
 /** The CSS letter-spacing for Word's character spacing; null keeps the
  *  theme's. */
@@ -84,7 +91,7 @@ export function isEffectiveDark(themeMode: ThemeMode): boolean {
   return systemPrefersDark();
 }
 
-export function useApplyAppearance(
+function useApplyAppearance(
   settings: Settings,
   setSettings: (patch: Partial<Settings>) => void,
 ): void {
@@ -102,19 +109,19 @@ export function useApplyAppearance(
     }
   }, [settings.theme]);
 
+  // The layout on <html> too: its lengths (layout-tokens.css) reach what
+  // is drawn outside the window's shell - a lifted island, a menu.
   useEffect(() => {
-    const root = document.documentElement;
-    if (settings.frostedTitleBar)
-      root.setAttribute("data-frosted-title-bar", "");
-    else root.removeAttribute("data-frosted-title-bar");
-  }, [settings.frostedTitleBar]);
+    document.documentElement.dataset.layout = settings.layout;
+  }, [settings.layout]);
 
   useEffect(() => {
     const root = document.documentElement;
     if (settings.contentWidth === "auto")
       root.removeAttribute("data-content-width");
     else root.setAttribute("data-content-width", settings.contentWidth);
-  }, [settings.contentWidth]);
+    root.toggleAttribute("data-first-line-indent", settings.firstLineIndent);
+  }, [settings.contentWidth, settings.firstLineIndent]);
 
   useEffect(() => {
     const root = document.documentElement;
@@ -197,17 +204,20 @@ export function useApplyAppearance(
       styleEl.id = CUSTOM_CSS_STYLE_ID;
     }
     const style = styleEl;
-    const show = (css: string) => {
+    let current = true;
+    const show = async (css: string) => {
+      const { withCurrentVariables } = await legacy.load();
+      if (!current) return;
       style.textContent = withCurrentVariables(css);
       if (style.sheet) promoteCustomProperties(style.sheet.cssRules);
     };
     // In the document first: a <style> has a sheet to promote only there.
     document.head.appendChild(style);
-    show(settings.customCss);
+    void show(settings.customCss);
     // Its web fonts come a moment later, fetched by Rust.
-    let current = true;
-    void withWebFonts(settings.customCss).then((css) => {
-      if (current && css !== settings.customCss) show(css);
+    void webFonts.load().then(async ({ withWebFonts }) => {
+      const css = await withWebFonts(settings.customCss);
+      if (current && css !== settings.customCss) void show(css);
     });
     return () => {
       current = false;
@@ -266,7 +276,13 @@ export function useApplyAppearance(
       const variant =
         isEffectiveDark(settings.theme) && theme.hasDark ? "dark" : "light";
       try {
-        const stored = await themes.loadThemeCss(theme.id, variant);
+        const [stored, { withWebFonts }, { withCurrentVariables }, compat] =
+          await Promise.all([
+            themes.loadThemeCss(theme.id, variant),
+            webFonts.load(),
+            legacy.load(),
+            typora.load(),
+          ]);
         // One imported before web fonts were embedded still has them.
         const loaded = stored && (await withWebFonts(stored));
         if (cancelled || request !== revision) return;
@@ -278,8 +294,10 @@ export function useApplyAppearance(
           styleEl = document.createElement("style");
           styleEl.id = STYLE_ID;
         }
-        const adapted = adaptTyporaCss(css ?? "");
-        styleEl.textContent = isIOSApp ? namedSystemFonts(adapted) : adapted;
+        const adapted = compat.adaptTyporaCss(css ?? "");
+        styleEl.textContent = isIOSApp
+          ? compat.namedSystemFonts(adapted)
+          : adapted;
         document.head.appendChild(styleEl);
         const dark = isEffectiveDark(settings.theme);
         let chrome: string | null;

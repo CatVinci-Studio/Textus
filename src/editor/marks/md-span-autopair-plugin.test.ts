@@ -5,9 +5,9 @@ import { editorViewCtx, serializerCtx } from "@milkdown/kit/core";
 import { TextSelection } from "@milkdown/kit/prose/state";
 import type { EditorView } from "@milkdown/kit/prose/view";
 import type { Settings } from "../../prefs/SettingsContext";
-import { createTestEditor } from "../../document-view/editor-test-harness";
-import { convertRunClosedBeforeCaret } from "./md-span-autopair-plugin";
-import { COMPOSE_RELOCATE_DELAY_MS } from "./enclosure";
+import { createTestEditor } from "../editor-test-kit";
+import { convertRunClosedBeforeCaret } from "./md-span-blocks";
+import { COMPOSE_RELOCATE_DELAY_MS } from "./enclosure-caret";
 
 const editors: Editor[] = [];
 afterEach(async () => {

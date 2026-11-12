@@ -70,6 +70,11 @@ export type AgentRequest_Deserialize = {
 	requestId: string,
 	/**  The image model; None for none. */
 	imageModel?: ImageModel_Deserialize | null,
+	/**
+	 *  General mode's changes to the folder's files wait for the user to
+	 *  apply them.
+	 */
+	askBeforeFileChanges?: boolean,
 };
 
 /**
@@ -95,6 +100,11 @@ export type AgentRequest_Serialize = {
 	requestId: string,
 	/**  The image model; None for none. */
 	imageModel: ImageModel_Serialize | null,
+	/**
+	 *  General mode's changes to the folder's files wait for the user to
+	 *  apply them.
+	 */
+	askBeforeFileChanges: boolean,
 };
 
 /**  A count of each thing research spends. */

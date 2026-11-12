@@ -5,11 +5,22 @@ import type { WebSource } from "./types";
  * its source's number as a link, `[2](https://…)`. On accept they become
  * footnotes or are left out, per settings.sourcesAsFootnotes.
  */
-const CITATION = /[ \t]?\[(\d{1,3})\]\((https?:\/\/[^)\s]+)\)/g;
+const WEB = String.raw`https?:\/\/[^)\s]+`;
+/** A file the writer cites, as Rust's `cited_link` takes one. */
+const LOCAL = String.raw`[^)\s:#/][^)\s:]*`;
+
+/** A citation `[n](address)`, n its source's number: a web page's
+ *  address, or with `local` a file too, as a paper cites. */
+export function citationPattern(local = false): RegExp {
+  const address = local ? `${WEB}|${LOCAL}` : WEB;
+  return new RegExp(String.raw`\[(\d{1,3})\]\((${address})\)`, "g");
+}
+
+/** A citation with the space before it, to leave out whole. */
+const CITATION = new RegExp(`[ \\t]?${citationPattern().source}`, "g");
 
 export function hasCitations(text: string): boolean {
-  CITATION.lastIndex = 0;
-  return CITATION.test(text);
+  return citationPattern().test(text);
 }
 
 /** The text with its citations left out. */

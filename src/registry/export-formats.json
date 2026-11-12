@@ -1,0 +1,74 @@
+[
+  {
+    "format": "docx",
+    "ext": "docx",
+    "name": "Word",
+    "menu": "Word (.docx)…",
+    "key": "menuExportDocx",
+    "embedsImages": true
+  },
+  {
+    "format": "odt",
+    "ext": "odt",
+    "name": "OpenDocument",
+    "menu": "OpenDocument (.odt)…",
+    "key": "menuExportOdt",
+    "embedsImages": true
+  },
+  {
+    "format": "rtf",
+    "ext": "rtf",
+    "name": "RTF",
+    "menu": "RTF…",
+    "key": "menuExportRtf",
+    "embedsImages": true
+  },
+  {
+    "format": "epub",
+    "ext": "epub",
+    "name": "EPUB",
+    "menu": "EPUB…",
+    "key": "menuExportEpub",
+    "embedsImages": true
+  },
+  {
+    "format": "latex",
+    "ext": "tex",
+    "name": "LaTeX",
+    "menu": "LaTeX…",
+    "key": "menuExportLatex",
+    "embedsImages": false
+  },
+  {
+    "format": "mediawiki",
+    "ext": "wiki",
+    "name": "MediaWiki",
+    "menu": "MediaWiki…",
+    "key": "menuExportMediawiki",
+    "embedsImages": false
+  },
+  {
+    "format": "rst",
+    "ext": "rst",
+    "name": "reStructuredText",
+    "menu": "reStructuredText…",
+    "key": "menuExportRst",
+    "embedsImages": false
+  },
+  {
+    "format": "textile",
+    "ext": "textile",
+    "name": "Textile",
+    "menu": "Textile…",
+    "key": "menuExportTextile",
+    "embedsImages": false
+  },
+  {
+    "format": "opml",
+    "ext": "opml",
+    "name": "OPML",
+    "menu": "OPML…",
+    "key": "menuExportOpml",
+    "embedsImages": false
+  }
+]

@@ -1,13 +1,14 @@
+import { fill } from "../../i18n/fill";
 import { APP_NAME } from "../../i18n/strings";
-import { commandShortcut, commands } from "../../app/commands";
-import { fixedShortcutGroups } from "../../app/fixed-shortcuts";
+import { commandShortcut, commands } from "../../registry/commands";
+import { fixedShortcutGroups } from "../../registry/fixed-shortcuts";
 import { keyOwner } from "../../prefs/key-owner";
 import { defaultShortcuts } from "../../prefs/SettingsContext";
 import { platformName } from "../../platform/window-chrome";
 import { modIsMeta } from "../../platform/os";
 import { formatCombo, isReservedCombo } from "../../utils/shortcuts";
-import { getUiState, setUiState } from "../../storage/ui-state";
-import { showNotice } from "../../ui/notices";
+import { keepInList, uiList } from "../../storage/ui-state";
+import { showNotice } from "../../engine/controls/notices";
 import { logPluginMessage } from "../store/plugin-log";
 import { windowInfo } from "../store/plugin-records";
 
@@ -45,17 +46,16 @@ export function pluginKey(
   if (!owner) return key;
   logPluginMessage(plugin.id, "warn", `${key} is ${owner}'s: not bound.`);
   const pair = `${plugin.id} ${key}`;
-  const saved = getUiState("pluginKeysTold");
-  const list = Array.isArray(saved) ? (saved as string[]) : [];
-  if (!told.has(pair) && !list.includes(pair)) {
+  if (!told.has(pair) && !uiList("pluginKeysTold").includes(pair)) {
     told.add(pair);
-    setUiState("pluginKeysTold", [...list, pair]);
+    keepInList("pluginKeysTold", pair, true);
     showNotice(
-      t.pluginKeyTaken
-        .replace("{name}", plugin.name)
-        .replace("{key}", formatCombo(key))
-        .replace("{owner}", owner)
-        .replace("{command}", command.title),
+      fill(t.pluginKeyTaken, {
+        name: plugin.name,
+        key: formatCombo(key),
+        owner,
+        command: command.title,
+      }),
       { tone: "warning" },
     );
   }

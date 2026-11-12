@@ -17,7 +17,7 @@ export function panelsState(): PanelsState {
   return current;
 }
 
-export function reportPanels(next: PanelsState): void {
+function reportPanels(next: PanelsState): void {
   if (JSON.stringify(next) === JSON.stringify(current)) return;
   current = next;
   emitPluginEvent("panels", next);

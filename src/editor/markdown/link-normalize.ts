@@ -11,7 +11,7 @@ import {
 } from "@milkdown/kit/prose/state";
 import { $prose } from "@milkdown/kit/utils";
 import { changedRanges } from "../changed-ranges";
-import { cursorTouches } from "../marks/enclosure";
+import { cursorTouches } from "../marks/enclosure-runs";
 import { definedLabels, definitionsIn } from "./link-reveal";
 import { LINK } from "./link-source";
 import {
@@ -33,7 +33,7 @@ const key = new PluginKey<number[]>("link-normalize");
 /** What `source` reads as on its own: the inline content of the one
  *  paragraph it makes, or else itself as text. `definitions` are the
  *  document's `[ref]: url` lines, for a reference link. */
-export function parseLinkSource(
+function parseLinkSource(
   parse: (markdown: string) => ProseNode,
   schema: Schema,
   source: string,

@@ -3,7 +3,7 @@ import { editorViewCtx } from "@milkdown/kit/core";
 import type { EditorView } from "@milkdown/kit/prose/view";
 import type { EditorRunner } from "../../editor/useEditorRunner";
 import { ownNotes as ownNotesIpc } from "../../platform/ipc";
-import { showPrompt } from "../../ui/app-dialog";
+import { showPrompt } from "../../engine/controls/app-dialog";
 import type { Strings } from "../../i18n/strings";
 import { useLatest } from "../../utils/hooks/useLatest";
 import {
@@ -63,10 +63,9 @@ export function useOwnNotes({
       return;
     }
     let alive = true;
-    void ownNotesIpc
-      .read(filePath, "notes")
-      .catch(() => null)
-      .then((text) => {
+    // Notes that can't be read stay unloaded: none is written over them.
+    void ownNotesIpc.read(filePath, "notes").then(
+      (text) => {
         if (!alive) return;
         const kept = parseOwnNotes(text);
         run((ctx) => {
@@ -89,7 +88,9 @@ export function useOwnNotes({
         });
         written.current = text;
         loadedFor.current = filePath;
-      });
+      },
+      () => {},
+    );
     return () => {
       alive = false;
     };

@@ -205,7 +205,7 @@ function linkReveal(
 }
 
 /** `slice` with each reference link written out as an inline one. */
-export function inlineReferences(slice: Slice, doc: ProseNode): Slice {
+function inlineReferences(slice: Slice, doc: ProseNode): Slice {
   const definitions = () => definitionsIn(doc);
   const map = (content: Fragment): Fragment => {
     const nodes: ProseNode[] = [];
@@ -298,7 +298,7 @@ const DELETES: Record<string, 1 | -1> = { Backspace: -1, Delete: 1 };
 
 /** The escape run (`%20`, shown as a space) the caret steps or deletes
  *  over toward `dir`, as document positions; null where there is none. */
-export function escapeRunAt(
+function escapeRunAt(
   state: EditorState,
   dir: 1 | -1,
 ): { from: number; to: number } | null {

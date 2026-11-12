@@ -1,11 +1,13 @@
-import { scaledPx } from "../../ui/chrome-scale";
-import { EDGE, clampLeft, opensBelow } from "../../ui/placement";
+import { trackDrag } from "../../engine/drag/pointer-drag";
+import { scaledPx } from "../../engine/tokens/chrome-scale";
+import { EDGE, clampLeft, opensBelow } from "../../engine/controls/placement";
 import { currentStrings } from "../../i18n/current";
 import type { HoverCard } from "../extension-points";
-import { renderMarkdownHtml } from "../markdown/render-html";
+import { drawPreview, type PreviewHandle } from "../preview-editor";
+import { PICTURES_IN_TEXT } from "../markdown/doc-blocks";
 import { readEscapes } from "../markdown/link-syntax";
 import "./hover-card.css";
-import { duration } from "../../ui/motion";
+import { duration } from "../../engine/motion/motion";
 
 /**
  * The card a plugin's hover provider gives: beside the link until the
@@ -13,6 +15,15 @@ import { duration } from "../../ui/motion";
  */
 
 const GAP = 6;
+
+const previews = new WeakMap<HTMLElement, PreviewHandle>();
+
+/** A card gone, the editor drawing it let go. */
+function removeCard(el: HTMLElement) {
+  previews.get(el)?.destroy();
+  previews.delete(el);
+  el.remove();
+}
 
 /** The card on screen and not pinned, if any. */
 let floating: { el: HTMLElement; key: string } | null = null;
@@ -52,11 +63,11 @@ export function hideHoverCard(now = false) {
   floating = null;
   if (!el) return;
   if (now) {
-    el.remove();
+    removeCard(el);
     return;
   }
   el.classList.remove("hover-card-open");
-  setTimeout(() => el.remove(), duration("--dur-fast"));
+  setTimeout(() => removeCard(el), duration("--dur-fast"));
 }
 
 function build(card: HoverCard): HTMLElement {
@@ -83,7 +94,7 @@ function build(card: HoverCard): HTMLElement {
     }
     el.classList.add("hover-card-pinned");
     pin.textContent = t.hoverClose;
-    pin.onclick = () => el.remove();
+    pin.onclick = () => removeCard(el);
     movable(el, head);
   });
   head.append(title);
@@ -94,7 +105,7 @@ function build(card: HoverCard): HTMLElement {
     open.textContent = t.hoverOpen;
     const go = card.open;
     open.addEventListener("click", () => {
-      el.remove();
+      removeCard(el);
       if (floating?.el === el) floating = null;
       go();
     });
@@ -102,12 +113,18 @@ function build(card: HoverCard): HTMLElement {
   }
   head.append(pin);
   const body = document.createElement("div");
-  body.className = "hover-card-body milkdown";
-  body.innerHTML = renderMarkdownHtml(card.markdown);
-  // No pictures: a card loads nothing from the network.
-  for (const img of body.querySelectorAll("img")) img.remove();
-  // Links in the card are for reading, not following from here.
-  for (const a of body.querySelectorAll("a")) a.removeAttribute("href");
+  body.className = "hover-card-body";
+  // Drawn by the editor, as the note shows; without pictures, so a card
+  // loads nothing.
+  void drawPreview(
+    body,
+    card.markdown.replace(PICTURES_IN_TEXT, ""),
+    null,
+    () => named ?? t.hoverCard,
+  ).then((preview) => {
+    if (el.isConnected) previews.set(el, preview);
+    else preview.destroy();
+  });
   el.append(head, body);
   return el;
 }
@@ -128,18 +145,20 @@ function movable(el: HTMLElement, handle: HTMLElement) {
   handle.addEventListener("pointerdown", (e) => {
     if (e.button !== 0 || (e.target as Element).closest("button")) return;
     e.preventDefault();
-    handle.setPointerCapture(e.pointerId);
-    const start = { x: e.clientX, y: e.clientY };
     const from = { x: el.offsetLeft, y: el.offsetTop };
-    const move = (m: PointerEvent) => {
-      el.style.left = `${from.x + m.clientX - start.x}px`;
-      el.style.top = `${from.y + m.clientY - start.y}px`;
+    const place = (x: number, y: number) => {
+      el.style.left = `${from.x + x - e.clientX}px`;
+      el.style.top = `${from.y + y - e.clientY}px`;
     };
-    const up = () => {
-      handle.removeEventListener("pointermove", move);
-      handle.removeEventListener("pointerup", up);
-    };
-    handle.addEventListener("pointermove", move);
-    handle.addEventListener("pointerup", up);
+    // Moved from the first step; Esc puts it back.
+    trackDrag(
+      e,
+      {
+        move: place,
+        end: (x, y, dropped) =>
+          dropped ? place(x, y) : place(e.clientX, e.clientY),
+      },
+      { started: true },
+    );
   });
 }

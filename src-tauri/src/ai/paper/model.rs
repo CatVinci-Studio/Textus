@@ -66,9 +66,5 @@ const DETAIL_CHARS: usize = 120;
 
 pub(crate) fn clip(text: &str) -> String {
     let text = text.split_whitespace().collect::<Vec<_>>().join(" ");
-    if text.chars().count() <= DETAIL_CHARS {
-        return text;
-    }
-    let cut: String = text.chars().take(DETAIL_CHARS - 1).collect();
-    format!("{cut}…")
+    crate::ai::clip(&text, DETAIL_CHARS - 1)
 }

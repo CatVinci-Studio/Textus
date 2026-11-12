@@ -8,12 +8,8 @@ import {
 } from "node:fs";
 import { join } from "node:path";
 import { afterAll, describe, expect, it, vi } from "vitest";
-import {
-  hashString,
-  roundTripFile,
-  type Failure,
-  type FileReport,
-} from "./save-roundtrip";
+import { roundTripFile, type Failure, type FileReport } from "./save-roundtrip";
+import { fnv1a as hashString } from "../utils/hash";
 
 // The save round trip on the real-document corpus and this repository's own
 // docs. Runs only when asked (`npm run test:roundtrip`).

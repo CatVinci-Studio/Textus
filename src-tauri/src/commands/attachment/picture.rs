@@ -30,7 +30,7 @@ pub(super) fn picture(path: &Path, ext: &str) -> Result<Picture, String> {
     let decoded = match ext {
         "heic" | "heif" | "avif" => system_decode(path)?,
         _ => image::load_from_memory(&bytes)
-            .map_err(|_| "Textus couldn't read that picture.".to_string())?,
+            .map_err(|_| crate::errors::error("pictureUnreadable"))?,
     };
     encode(decoded)
 }
@@ -57,7 +57,7 @@ fn encode(picture: DynamicImage) -> Result<Picture, String> {
         .write_to(&mut Cursor::new(&mut bytes), format)
         .map_err(|e| e.to_string())?;
     if bytes.len() as u64 > MAX_IMAGE_BYTES {
-        return Err("That picture is too large to send, even made smaller.".to_string());
+        return Err(crate::errors::error("pictureTooLarge"));
     }
     Ok(Picture { mime, bytes })
 }
@@ -76,14 +76,14 @@ fn system_decode(path: &Path) -> Result<DynamicImage, String> {
         .output()
         .map_err(|e| e.to_string())?;
     if !status.status.success() {
-        return Err("Textus couldn't read that picture.".to_string());
+        return Err(crate::errors::error("pictureUnreadable"));
     }
-    image::open(out.path()).map_err(|_| "Textus couldn't read that picture.".to_string())
+    image::open(out.path()).map_err(|_| crate::errors::error("pictureUnreadable"))
 }
 
 #[cfg(not(target_os = "macos"))]
 fn system_decode(_path: &Path) -> Result<DynamicImage, String> {
-    Err("Textus can't read HEIC or AVIF pictures on this system yet. Save it as JPEG or PNG and attach that.".to_string())
+    Err(crate::errors::error("pictureFormat"))
 }
 
 #[cfg(test)]

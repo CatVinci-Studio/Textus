@@ -1,17 +1,17 @@
+import { pluginPlatform } from "../plugin-platform";
 import { createElement } from "react";
-import { registerCommand, runCommand } from "../../app/commands";
-import { registerSidebarTab } from "../../app/sidebar-tabs";
+import { registerCommand, runCommand } from "../../registry/commands";
+import { registerSidebarTab } from "../../registry/sidebar-tabs";
 import { registerEditorMenuItems } from "../../editor/editor-menu-items";
-import { showMessage } from "../../ui/app-dialog";
+import { showMessage } from "../../engine/controls/app-dialog";
 import { currentStrings } from "../../i18n/current";
 import { explainError } from "../../utils/error-explain";
-import { isMacPlatform } from "../../platform/os";
 import { extname } from "../../utils/path";
 import { getActiveDocument, getWindowAccess } from "../app-bridge";
 import {
   registerContextItems,
   type ContextMenuPlace,
-} from "../../ui/context-menu-items";
+} from "../../registry/context-menu-items";
 import { setHoverStarter } from "./hover-providers";
 import { startOnEmbed } from "./embeds";
 import { localize, type MenuContribution } from "../store/manifest";
@@ -30,6 +30,7 @@ import { addCodeBlockLanguage } from "./code-blocks";
 import { addSlashItems } from "./slash-commands";
 import { pluginKey } from "./plugin-keys";
 import { claim, ownedClaims } from "./owners";
+import { addAgents } from "./agents";
 
 /**
  * What an on plugin adds to the window, registered from its manifest alone;
@@ -54,7 +55,7 @@ export function addContribution(id: string, undo: () => void): void {
 }
 
 /** The keys a menu item's `when` reads, as the window is now. */
-export function whenContext(extra: WhenContext = {}): WhenContext {
+function whenContext(extra: WhenContext = {}): WhenContext {
   const doc = getActiveDocument();
   const path = (extra.resourcePath as string | undefined) ?? doc?.path ?? null;
   return {
@@ -63,7 +64,8 @@ export function whenContext(extra: WhenContext = {}): WhenContext {
     folderOpen: !!getWindowAccess()?.rootPath(),
     fileExtension: path ? extname(path).toLowerCase() : undefined,
     resourceFilename: path ? path.split(/[\\/]/).pop() : undefined,
-    isMac: isMacPlatform(),
+    // As plugins are told the system (an iPad reports itself as a Mac).
+    isMac: pluginPlatform() === "macos",
     ...extra,
   };
 }
@@ -173,6 +175,18 @@ export function applyContributions(
       ),
     );
   }
+  if (record.granted.includes("agents") && manifest.contributes.agents.length)
+    undo.push(
+      addAgents(
+        id,
+        manifest.contributes.agents.map((a) => ({
+          id: a.id,
+          name: text(a.name),
+          setup: a.setup && text(a.setup),
+          provider: a.provider,
+        })),
+      ),
+    );
   for (const tab of sidebarTabs)
     undo.push(
       registerSidebarTab({

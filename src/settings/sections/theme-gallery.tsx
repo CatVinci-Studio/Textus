@@ -1,4 +1,14 @@
-import { useEffect, useRef, useState } from "react";
+import { useCatalogWork } from "../pages/useCatalogWork";
+import { catalogMessage } from "../pages/CatalogStatus";
+import { Byline } from "../pages/CatalogRow";
+import { useSettingsIndexing } from "../indexing";
+import {
+  useEffect,
+  useRef,
+  useState,
+  type HTMLAttributes,
+  type ReactNode,
+} from "react";
 import type { Strings } from "../../i18n/strings";
 import { links, themeGallery } from "../../platform/ipc";
 import {
@@ -48,29 +58,20 @@ export function galleryUpdates(
 export function useGalleryInstall(t: Strings) {
   const { settings, setSettings } = useSettings();
   const latest = useLatest(settings);
-  const [busy, setBusy] = useState(false);
-  const [error, setError] = useState<string | null>(null);
-  const working = useRef(false);
-
-  async function install(theme: GalleryTheme) {
-    if (working.current) return;
-    working.current = true;
-    setBusy(true);
-    setError(null);
-    try {
-      const installed = installedCopy(theme, latest.current.userThemes);
-      const meta = await installGalleryTheme(theme, installed);
-      setSettings({
-        userThemes: withUserTheme(latest.current.userThemes, meta),
-        ...(installed ? {} : { themeId: meta.id }),
-      });
-    } catch (err) {
-      setError(`${t.themeGalleryInstallFailed} ${explainError(err, t)}`);
-    } finally {
-      working.current = false;
-      setBusy(false);
-    }
-  }
+  const { busy, error, run } = useCatalogWork();
+  const install = (theme: GalleryTheme) =>
+    run(
+      theme.id,
+      async () => {
+        const installed = installedCopy(theme, latest.current.userThemes);
+        const meta = await installGalleryTheme(theme, installed);
+        setSettings({
+          userThemes: withUserTheme(latest.current.userThemes, meta),
+          ...(installed ? {} : { themeId: meta.id }),
+        });
+      },
+      (err) => `${t.themeGalleryInstallFailed} ${explainError(err, t)}`,
+    );
   return { busy, error, install };
 }
 
@@ -90,19 +91,27 @@ export function AvailableThemes({
   onOpen: (theme: GalleryTheme) => void;
 }) {
   const { settings } = useSettings();
-  const { catalog, unreachable, retry } = gallery;
+  const { catalog, failed, retry } = gallery;
   const shown = (catalog ? searchThemes(catalog, query) : []).filter(
     (theme) => !installedCopy(theme, settings.userThemes),
   );
-  const message = unreachable ? (
-    <GalleryUnreachable t={t} retry={retry} />
-  ) : !catalog ? (
-    <GalleryLoading t={t} />
-  ) : query.trim() && !shown.length ? (
-    <p className="plugin-empty">
-      {t.pluginsSearchNone.replace("{query}", query.trim())}
-    </p>
-  ) : undefined;
+  const message = catalogMessage({
+    t,
+    status: failed !== null ? "failed" : catalog ? "ready" : "loading",
+    error: failed,
+    retry,
+    extra: (
+      <button
+        type="button"
+        className="text-button settings-inline-button"
+        onClick={() => void links.openAboutLink("themes")}
+      >
+        {t.themeGalleryWebsite}
+      </button>
+    ),
+    query,
+    shown: shown.length,
+  });
   return (
     <AvailableSection
       t={t}
@@ -121,7 +130,7 @@ export function AvailableThemes({
           key={theme.id}
           t={t}
           theme={theme}
-          busy={install.busy}
+          busy={install.busy === theme.id}
           onInstall={() => void install.install(theme)}
           onOpen={() => onOpen(theme)}
         />
@@ -130,40 +139,71 @@ export function AvailableThemes({
   );
 }
 
-function GalleryLoading({ t }: { t: Strings }) {
-  return (
-    <div className="theme-gallery-message settings-row-hint" role="status">
-      {t.themeGalleryLoading}
-    </div>
+/** A theme's card, installed or in the gallery alike: its screenshot (an
+ *  empty sample when it has none), its name, line and byline - opening its
+ *  page when it has one - and its buttons. */
+export function ThemeCard({
+  t,
+  name,
+  description,
+  previews,
+  byline,
+  onOpen,
+  children,
+  ...rest
+}: {
+  t: Strings;
+  name: string;
+  description?: string;
+  previews?: string[];
+  byline?: ReactNode;
+  onOpen?: () => void;
+  children: ReactNode;
+} & HTMLAttributes<HTMLDivElement>) {
+  const title = (
+    <span className="settings-row-label plugin-card-name tx-truncate theme-card-name">
+      {name}
+    </span>
   );
-}
-
-function GalleryUnreachable({ t, retry }: { t: Strings; retry: () => void }) {
   return (
-    <div className="theme-gallery-message" role="status">
-      <div className="settings-row-hint">{t.themeGalleryUnreachable}</div>
-      <div className="theme-gallery-message-actions">
-        <button
-          type="button"
-          className="text-button settings-inline-button"
-          onClick={retry}
-        >
-          {t.themeGalleryRetry}
-        </button>
-        <button
-          type="button"
-          className="text-button settings-inline-button"
-          onClick={() => void links.openAboutLink("themes")}
-        >
-          {t.themeGalleryWebsite}
-        </button>
+    <div
+      {...rest}
+      className="theme-gallery-item"
+      aria-label={name}
+      role="group"
+    >
+      {previews?.length ? (
+        <GalleryPreview
+          paths={previews}
+          label={`${t.themePreviewEnlarge}: ${name}`}
+        />
+      ) : (
+        <div className="theme-gallery-preview theme-sample" aria-hidden>
+          Aa
+        </div>
+      )}
+      {/* Its name and its buttons on one line; what it is under them. */}
+      <div className="theme-card-head">
+        {onOpen ? (
+          <button type="button" className="theme-card-open" onClick={onOpen}>
+            {title}
+          </button>
+        ) : (
+          title
+        )}
+        <div className="theme-card-actions">{children}</div>
       </div>
+      {description && (
+        <span className="settings-row-hint tx-clamp plugin-card-description">
+          {description}
+        </span>
+      )}
+      {byline}
     </div>
   );
 }
 
-/** A gallery theme's row: its screenshot, then its name, line and byline,
- *  opening its page; Install beside it. */
+/** A gallery theme's card: Install beside it. */
 function GalleryItem({
   t,
   theme,
@@ -178,46 +218,43 @@ function GalleryItem({
   onOpen: () => void;
 }) {
   return (
-    <div className="theme-gallery-item" aria-label={theme.name} role="group">
-      <GalleryPreview
-        paths={theme.previews}
-        label={`${t.themePreviewEnlarge}: ${theme.name}`}
-      />
-      <button type="button" className="plugin-card-open" onClick={onOpen}>
-        <span className="settings-row-label plugin-card-name">
-          {theme.name}
-        </span>
-        {theme.description && (
-          <span className="settings-row-hint plugin-card-description">
-            {theme.description}
-          </span>
-        )}
-        <ThemeByline t={t} theme={theme} />
+    <ThemeCard
+      t={t}
+      name={theme.name}
+      description={theme.description}
+      previews={theme.previews}
+      byline={<ThemeByline t={t} theme={theme} />}
+      onOpen={onOpen}
+    >
+      <button
+        type="button"
+        className="text-button settings-inline-button"
+        disabled={busy}
+        onClick={onInstall}
+      >
+        {t.themeGalleryInstall}
       </button>
-      <div className="settings-row-control">
-        <button
-          type="button"
-          className="text-button settings-inline-button"
-          disabled={busy}
-          onClick={onInstall}
-        >
-          {t.themeGalleryInstall}
-        </button>
-      </div>
-    </div>
+    </ThemeCard>
   );
+}
+
+/** The gallery's entry for each installed theme, by the installed id. */
+export function galleryCopies(
+  catalog: GalleryTheme[] | null,
+  userThemes: Parameters<typeof installedCopy>[1],
+): Map<string, GalleryTheme> {
+  const out = new Map<string, GalleryTheme>();
+  for (const theme of catalog ?? []) {
+    const installed = installedCopy(theme, userThemes);
+    if (installed) out.set(installed.id, theme);
+  }
+  return out;
 }
 
 /** Who made a gallery theme and how often it was installed. */
 export function ThemeByline({ t, theme }: { t: Strings; theme: GalleryTheme }) {
-  const installs = installsText(theme, t);
   return (
-    <span className="plugin-byline">
-      {theme.author && (
-        <span>{t.themeGalleryBy.replace("{author}", theme.author)}</span>
-      )}
-      {installs && <span className="plugin-installs">{installs}</span>}
-    </span>
+    <Byline t={t} author={theme.author} installs={installsText(theme, t)} />
   );
 }
 
@@ -317,27 +354,29 @@ export function GalleryPreview({
 }
 
 /** The gallery's catalog, fetched as the page opens and again on `retry`;
- *  `unreachable` when the fetch failed. */
+ *  `failed` the error when the fetch failed. */
 export function useGalleryCatalog() {
   const { settings } = useSettings();
   const [themes, setCatalog] = useState<GalleryTheme[] | null>(null);
   const catalog =
     themes?.map((theme) => localizedTheme(theme, settings.language)) ?? null;
-  const [unreachable, setUnreachable] = useState(false);
+  const [failed, setFailed] = useState<unknown>(null);
   const [attempt, setAttempt] = useState(0);
 
+  const indexing = useSettingsIndexing();
   useEffect(() => {
+    if (indexing) return;
     let cancelled = false;
     setCatalog(null);
-    setUnreachable(false);
+    setFailed(null);
     themeGallery
       .catalog()
       .then((themes) => !cancelled && setCatalog(themes))
-      .catch(() => !cancelled && setUnreachable(true));
+      .catch((error: unknown) => !cancelled && setFailed(error ?? "?"));
     return () => {
       cancelled = true;
     };
-  }, [attempt]);
+  }, [attempt, indexing]);
 
-  return { catalog, unreachable, retry: () => setAttempt((n) => n + 1) };
+  return { catalog, failed, retry: () => setAttempt((n) => n + 1) };
 }

@@ -85,12 +85,19 @@ export function createEndpoint(
     Promise.resolve()
       .then(() => handler(m.params))
       .then(
-        (result) =>
-          send({
-            jsonrpc: "2.0",
-            id,
-            result: result === undefined ? null : result,
-          }),
+        (result) => {
+          // A reply that can't be sent (one that can't be cloned) is told
+          // as a failure, not left unanswered.
+          try {
+            send({
+              jsonrpc: "2.0",
+              id,
+              result: result === undefined ? null : result,
+            });
+          } catch (e) {
+            fail(id, e);
+          }
+        },
         (err) => fail(id, err),
       );
   };
@@ -109,7 +116,13 @@ export function createEndpoint(
           reject,
           timer,
         });
-        send({ jsonrpc: "2.0", id, method, params });
+        try {
+          send({ jsonrpc: "2.0", id, method, params });
+        } catch (e) {
+          pending.delete(id);
+          clearTimeout(timer);
+          reject(e instanceof Error ? e : new Error(String(e)));
+        }
       });
     },
     notify(method: string, params?: unknown) {

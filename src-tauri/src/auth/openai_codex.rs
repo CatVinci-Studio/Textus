@@ -1,136 +1,74 @@
-use super::pkce_login::{run_pkce_login, PkceLoginRequest};
+//! ChatGPT (Plus/Pro) sign-in, with the Codex CLI's own OAuth client id.
+
+use super::oauth::{self, OAuthProvider};
 use aicompat::providers::openai_codex::{self, CodexCredential};
-use serde::Serialize;
-use std::fs;
-use std::path::PathBuf;
-use tauri::{AppHandle, Manager};
+use tauri::AppHandle;
 
-const LOGIN_TIMEOUT_SECS: u64 = 5 * 60;
+pub(crate) const FILE: &str = "auth-codex.json";
 
-/// Held while a token refresh is in flight (see get_valid_credential).
-static REFRESH_LOCK: tokio::sync::Mutex<()> = tokio::sync::Mutex::const_new(());
+pub(crate) struct ChatGpt;
 
-/// Whether a token expiring at `expires` (ms since the epoch) is due for a
-/// refresh: a minute's margin, so it doesn't lapse mid-request.
-fn expires_soon(expires: i64) -> bool {
-    expires - aicompat::pkce::now_ms() < 60_000
-}
+static REFRESHING: tokio::sync::Mutex<()> = tokio::sync::Mutex::const_new(());
 
-#[derive(Serialize)]
-#[cfg_attr(test, derive(specta::Type))]
-pub struct AuthStatus {
-    configured: bool,
-    account_id: Option<String>,
-}
+impl OAuthProvider for ChatGpt {
+    const FILE: &'static str = FILE;
+    const NAME: &'static str = "ChatGPT";
+    const CALLBACK_PORT: u16 = openai_codex::CALLBACK_PORT;
+    type Cred = CodexCredential;
 
-fn auth_file_path(app: &AppHandle) -> Result<PathBuf, String> {
-    let dir = app.path().app_config_dir().map_err(|e| e.to_string())?;
-    fs::create_dir_all(&dir).map_err(|e| e.to_string())?;
-    Ok(dir.join("auth-codex.json"))
-}
-
-fn save_credential(app: &AppHandle, cred: &CodexCredential) -> Result<(), String> {
-    let path = auth_file_path(app)?;
-    let json = serde_json::to_string_pretty(cred).map_err(|e| e.to_string())?;
-    crate::atomic::write_secret_sync(&path, json).map_err(|e| e.to_string())?;
-    Ok(())
-}
-
-fn load_credential(app: &AppHandle) -> Result<Option<CodexCredential>, String> {
-    let path = auth_file_path(app)?;
-    if !path.exists() {
-        return Ok(None);
+    fn authorize() -> Result<(String, String, String), String> {
+        openai_codex::build_authorize_request(crate::app_identity::ORIGINATOR)
     }
-    let text = fs::read_to_string(&path).map_err(|e| e.to_string())?;
-    Ok(super::keys::parse_json_or_set_aside(&path, &text))
+    async fn exchange(
+        code: String,
+        _state: String,
+        verifier: String,
+    ) -> Result<CodexCredential, String> {
+        openai_codex::exchange_code(&code, &verifier).await
+    }
+    async fn refresh(token: String) -> Result<CodexCredential, String> {
+        openai_codex::refresh(&token).await
+    }
+    fn expires(cred: &CodexCredential) -> i64 {
+        cred.expires
+    }
+    fn refresh_token(cred: &CodexCredential) -> &str {
+        &cred.refresh
+    }
+    fn refreshing() -> &'static tokio::sync::Mutex<()> {
+        &REFRESHING
+    }
 }
 
-/// Runs the Codex (ChatGPT Plus/Pro) OAuth login and stores the credential in
-/// the app config dir (0600). Uses the Codex CLI's own OAuth client id.
 #[tauri::command]
 #[cfg_attr(test, specta::specta)]
 pub async fn codex_login(
     app: AppHandle,
     on_url: tauri::ipc::Channel<String>,
-) -> Result<AuthStatus, String> {
-    let (authorize_url, verifier, state) =
-        openai_codex::build_authorize_request(crate::app_identity::ORIGINATOR)?;
-
-    let code = run_pkce_login(
-        &app,
-        PkceLoginRequest {
-            authorize_url,
-            callback_port: openai_codex::CALLBACK_PORT,
-            response_html: aicompat::success_page_html("ChatGPT", crate::app_identity::APP_NAME),
-            expected_state: state,
-            timeout_secs: LOGIN_TIMEOUT_SECS,
-            on_authorize_url: Some(Box::new(move |url| {
-                let _ = on_url.send(url.to_string());
-            })),
-        },
-    )
-    .await?;
-
-    let credential = openai_codex::exchange_code(&code, &verifier).await?;
-    let account_id = credential.account_id.clone();
-    save_credential(&app, &credential)?;
-
-    Ok(AuthStatus {
-        configured: true,
-        account_id: Some(account_id),
-    })
+) -> Result<super::AuthStatus, String> {
+    oauth::login::<ChatGpt>(&app, on_url).await
 }
 
 #[tauri::command]
 #[cfg_attr(test, specta::specta)]
-pub fn codex_auth_status(app: AppHandle) -> Result<AuthStatus, String> {
-    match load_credential(&app)? {
-        Some(cred) => Ok(AuthStatus {
-            configured: true,
-            account_id: Some(cred.account_id),
-        }),
-        None => Ok(AuthStatus {
-            configured: false,
-            account_id: None,
-        }),
-    }
+pub fn codex_auth_status(app: AppHandle) -> Result<super::AuthStatus, String> {
+    oauth::status::<ChatGpt>(&app)
 }
 
 /// Whether a ChatGPT sign-in is stored (it may still need refreshing).
 pub fn signed_in(app: &AppHandle) -> bool {
-    matches!(load_credential(app), Ok(Some(_)))
+    oauth::signed_in::<ChatGpt>(app)
 }
 
 #[tauri::command]
 #[cfg_attr(test, specta::specta)]
 pub fn codex_logout(app: AppHandle) -> Result<(), String> {
-    let path = auth_file_path(&app)?;
-    if path.exists() {
-        fs::remove_file(&path).map_err(|e| e.to_string())?;
-    }
-    Ok(())
+    oauth::logout::<ChatGpt>(&app)
 }
 
-/// Returns a valid (access_token, account_id) pair, refreshing the token
-/// first if it's expired or close to expiring.
+/// A valid (access token, account id) pair, refreshed first when it is
+/// about to lapse.
 pub async fn get_valid_credential(app: &AppHandle) -> Result<(String, String), String> {
-    let cred = load_credential(app)?.ok_or_else(|| "not logged in".to_string())?;
-
-    if !expires_soon(cred.expires) {
-        return Ok((cred.access, cred.account_id));
-    }
-
-    // One refresh at a time: the refresh token rotates, so two racing requests
-    // leave the loser with invalid_grant. A waiter re-reads the stored token.
-    let _refreshing = REFRESH_LOCK.lock().await;
-    let cred = load_credential(app)?.ok_or_else(|| "not logged in".to_string())?;
-    if !expires_soon(cred.expires) {
-        return Ok((cred.access, cred.account_id));
-    }
-
-    let refreshed = openai_codex::refresh(&cred.refresh).await?;
-    let access = refreshed.access.clone();
-    let account_id = refreshed.account_id.clone();
-    save_credential(app, &refreshed)?;
-    Ok((access, account_id))
+    let cred = oauth::valid::<ChatGpt>(app).await?;
+    Ok((cred.access, cred.account_id))
 }

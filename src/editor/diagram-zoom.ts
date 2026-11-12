@@ -1,5 +1,5 @@
 import { currentStrings } from "../i18n/current";
-import { motionAllowed } from "../ui/motion";
+import { motionAllowed, duration } from "../engine/motion/motion";
 import "./diagram-zoom.css";
 
 /** How far a diagram can be zoomed out and in. */
@@ -12,7 +12,7 @@ export function nextScale(scale: number, deltaY: number): number {
   return clampScale(scale * Math.exp(-deltaY * 0.0015));
 }
 
-export const clampScale = (scale: number) =>
+const clampScale = (scale: number) =>
   Math.min(MAX_SCALE, Math.max(MIN_SCALE, scale));
 
 /** WebKit's pinch: the zoom since the fingers went down, and where. */
@@ -26,7 +26,7 @@ const ARROW_STEPS: Record<string, number> = { ArrowLeft: -1, ArrowRight: 1 };
 
 /** Pictures to page through with ← and →, the one shown at `at`; each a
  *  URL, or one still loading. */
-export interface PictureSet {
+interface PictureSet {
   pictures: (string | Promise<string | null>)[];
   at: number;
 }
@@ -187,8 +187,8 @@ export function openDiagramViewer(
     if (motionAllowed()) {
       layer.classList.add("diagram-viewer-leaving");
       layer.addEventListener("animationend", done, { once: true });
-      // In case the animation never runs (a hidden window).
-      setTimeout(done, 400);
+      // In case the animation never runs (a hidden window): its length.
+      setTimeout(done, duration("--dur-fast") + 50);
     } else done();
     previous?.focus?.();
   }
@@ -243,7 +243,7 @@ export function zoomButton(
 ): HTMLButtonElement {
   const button = document.createElement("button");
   button.type = "button";
-  button.className = "mermaid-zoom";
+  button.className = "tx-reveal mermaid-zoom";
   const t = currentStrings();
   const label = frame.querySelector(":scope > img")
     ? t.pictureZoom

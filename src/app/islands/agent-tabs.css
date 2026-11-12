@@ -1,0 +1,41 @@
+/* The AI's row parts (AgentTabs): the chat window's row of conversations
+   and its buttons, and the iPad's docked panel. */
+
+/* The row's own buttons after its tabs (the chat window's history, pin). */
+.agent-tabs-actions {
+  display: flex;
+  align-items: center;
+  gap: 2px;
+  flex-shrink: 0;
+}
+
+/* The iPad's docked panel holds its conversation the same way. */
+.agent-island {
+  position: relative;
+  flex: 1;
+  min-width: 0;
+  min-height: 0;
+  display: flex;
+  flex-direction: column;
+}
+
+.agent-island > .agent-panel-mount {
+  flex: 1;
+}
+
+/* Its history, at the top right, over the conversation's top air. */
+.agent-island-tools {
+  display: flex;
+  gap: var(--space-1);
+  position: absolute;
+  top: var(--space-2);
+  right: var(--space-2);
+  z-index: 2;
+}
+
+/* Its tools are its History list's box: the list spans the tab instead. */
+.agent-island-tools .chat-history-menu {
+  left: auto;
+  right: 0;
+  width: calc(100cqi - 2 * var(--space-2));
+}

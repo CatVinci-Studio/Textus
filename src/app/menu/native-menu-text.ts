@@ -1,58 +1,59 @@
+import { fill } from "../../i18n/fill";
 import { APP_NAME, type Strings } from "../../i18n/strings";
 import type { HeadingAction, Shortcuts } from "../../prefs/SettingsContext";
-import { buildAppMenu, NO_RECENTS, type MenuNode } from "./app-menu-model";
+import {
+  headingEntries,
+  pandocEntries,
+} from "../../registry/menu/app-menu-sections";
+import {
+  MENU_TABLE,
+  isMenu,
+  isSection,
+  isSeparator,
+  labelKey,
+  menuText,
+  type TableItem,
+  type TableNode,
+} from "../../registry/menu/menu-table";
 
 /**
  * The macOS menu bar's labels, which is native and English unless sent
- * these: the app-drawn menu's labels by native id, plus "menu:<name>" for
- * submenus and "predefined:<name>" for muda's items.
+ * these: every item of the menu table by its label key, "menu:<name>" for
+ * submenus, and the texts no item has.
  */
 export function nativeMenuLabels(t: Strings): Record<string, string> {
+  const named = (text: string) => fill(text, { name: APP_NAME });
   const labels: Record<string, string> = {};
-  const collect = (nodes: MenuNode[]) => {
+  const collect = (nodes: readonly TableNode[]) => {
     for (const node of nodes) {
-      if (node === "separator") continue;
-      if (node.action && "native" in node.action)
-        labels[node.action.native] = node.label;
-      if (node.submenu) collect(node.submenu);
+      if (isSeparator(node)) continue;
+      if (isSection(node)) {
+        const entries =
+          node.section === "headings"
+            ? headingEntries(t, {} as Shortcuts)
+            : node.section === "pandoc"
+              ? pandocEntries(t)
+              : [];
+        for (const entry of entries)
+          if (entry !== "separator" && entry.action && "native" in entry.action)
+            labels[entry.action.native] = entry.label;
+      } else if (isMenu(node)) {
+        if (node.label) labels[`menu:${node.menu}`] = menuText(t, node.label);
+        collect(node.items);
+      } else {
+        const item = node as TableItem;
+        labels[labelKey(item)] =
+          named(menuText(t, item.label)) + (item.suffix ?? "");
+      }
     }
   };
-  // Accelerators play no part in a label.
-  collect(buildAppMenu(t, {} as Shortcuts, NO_RECENTS));
-  const named = (template: string) => template.replace("{name}", APP_NAME);
-  return {
-    ...labels,
-    // macOS says Quit where Windows says Exit.
-    quit: named(t.menuQuit),
-    "recent-none": t.menuRecentNone,
-    "recent-clear": t.menuRecentClear,
-    "menu:file": t.menuFile,
-    "menu:open-recent": t.menuOpenRecent,
-    "menu:export": t.menuExport,
-    "menu:edit": t.menuEdit,
-    "menu:format": t.menuFormat,
-    "menu:view": t.menuView,
-    "menu:view-mode": t.menuViewMode,
-    "menu:plugins": t.menuPlugins,
-    "plugin-commands-none": t.menuNoPluginCommands,
-    "menu:window": t.menuWindow,
-    "menu:help": t.menuHelp,
-    "predefined:about": named(t.menuAbout),
-    "check-updates": `${t.updateCheckButton}…`,
-    "predefined:hide": named(t.menuHide),
-    "predefined:hide-others": t.menuHideOthers,
-    "predefined:show-all": t.menuShowAll,
-    "predefined:undo": t.menuUndo,
-    "predefined:redo": t.menuRedo,
-    "predefined:cut": t.cut,
-    "predefined:copy": t.copy,
-    "predefined:paste": t.paste,
-    "predefined:select-all": t.selectAll,
-    "predefined:fullscreen": t.menuFullscreen,
-    "predefined:minimize": t.windowMinimize,
-    "predefined:maximize": t.menuZoomWindow,
-    "predefined:bring-all-to-front": t.menuBringAllToFront,
-  };
+  for (const menu of MENU_TABLE.bar) {
+    if (menu.label) labels[`menu:${menu.menu}`] = menuText(t, menu.label);
+    collect(menu.items);
+  }
+  for (const text of MENU_TABLE.texts)
+    labels[text.key] = menuText(t, text.label);
+  return labels;
 }
 
 /**

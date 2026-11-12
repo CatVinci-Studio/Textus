@@ -1,3 +1,4 @@
+import { fill } from "../../i18n/fill";
 import { useState } from "react";
 import { ai } from "../../platform/ipc";
 import type { SkillOffer } from "../../platform/bindings/ai-memory";
@@ -41,7 +42,7 @@ export function SkillOfferChip({
    *  project's skill goes. */
   docPath: string | null;
 }) {
-  const { t } = useSettings();
+  const { settings, t } = useSettings();
   const [modes, setModes] = useState<AgentMode[]>(["write"]);
   const [state, setState] = useState<
     | { kind: "offered" }
@@ -54,7 +55,14 @@ export function SkillOfferChip({
     modes,
   );
   const save = (scope: "personal" | "project") => {
-    ai.saveOfferedSkill(offer, scope, docPath, null, modes, !!confirming).then(
+    ai.saveOfferedSkill(
+      offer,
+      scope,
+      docPath,
+      settings.agentWorkspaceRoot || null,
+      modes,
+      !!confirming,
+    ).then(
       () => setState({ kind: "saved" }),
       (err: unknown) => {
         const warnings = warningsIn(err);
@@ -68,10 +76,10 @@ export function SkillOfferChip({
   };
   return (
     <div className="agent-memory-chip skill-offer-chip" role="status">
-      <span className="agent-memory-chip-text">
+      <span className="tx-clamp agent-memory-chip-text">
         {state.kind === "saved"
-          ? t.skillOfferSaved.replace("{name}", `/${offer.name}`)
-          : t.skillOffer.replace("{name}", `/${offer.name}`)}
+          ? fill(t.skillOfferSaved, { name: `/${offer.name}` })
+          : fill(t.skillOffer, { name: `/${offer.name}` })}
       </span>
       <span className="skill-offer-description">{offer.description}</span>
       {state.kind === "failed" && (

@@ -2,15 +2,15 @@
 // run in the plugin's hidden, sandboxed frame (frames.ts) before its code.
 // Every call goes to the window as JSON-RPC (rpc.ts's createEndpoint, put
 // in front of this file); the window checks it against what the plugin was
-// granted. The API is docs/dev/textus.d.ts, which
-// src/plugins/host/textus-types.test.ts keeps in step with this file.
+// granted. Its declared types are kept in step with this file by
+// src/plugins/host/textus-types.test.ts.
 //
 // Plain JavaScript, put into the frame as is: no imports, nothing of the
 // app's build.
-/* global createEndpoint, __textusText */
+/* global createEndpoint, localized, __textusText */
 (function () {
   "use strict";
-  var API_VERSION = "1.4";
+  var API_VERSION = "1.5";
   var app = null;
   var waiting = [];
   var module = { exports: {} };
@@ -133,28 +133,8 @@
     return value === undefined || value === null ? "" : String(value);
   }
 
-  // A string of the plugin's manifest (`l10n`) in the UI's language: its
-  // own, then its base language's ("zh-Hant" -> "zh"), then English, then
-  // any language that has it, then the key. "{0}", "{1}"... are the
-  // arguments after it.
-  function localized(l10n, language, key, args) {
-    var base = String(language).split("-")[0];
-    var value =
-      (l10n[language] && l10n[language][key]) ||
-      (l10n[base] && l10n[base][key]) ||
-      (l10n.en && l10n.en[key]) ||
-      anyLanguage(l10n, key) ||
-      key;
-    return value.replace(/\{(\d+)\}/g, function (all, n) {
-      return args[n] === undefined ? all : String(args[n]);
-    });
-  }
-
-  function anyLanguage(l10n, key) {
-    for (var language in l10n)
-      if (l10n[language] && l10n[language][key]) return l10n[language][key];
-    return undefined;
-  }
+  // localized(l10n, language, key, args): the frame is given it
+  // (plugin-string.ts).
 
   // ---------------------------------------------------------------
   // Webviews and the files and blocks they show
@@ -374,9 +354,10 @@
           return call("secrets.get", { key: String(key) });
         },
         set: function (key, value) {
+          // Nothing to keep is the secret gone, not the word "null".
           return call("secrets.set", {
             key: String(key),
-            value: String(value),
+            value: value == null ? null : String(value),
           });
         },
         delete: function (key) {
@@ -640,6 +621,9 @@
       },
       showSidebarTab: function (id) {
         return call("layout.showSidebarTab", { id: String(id) });
+      },
+      openSettings: function () {
+        return call("layout.openSettings", {});
       },
       openWebPage: function (url, options) {
         return call("layout.openWebPage", {
@@ -1468,5 +1452,8 @@
   };
   // For code that reaches for the API without the wrapper's argument.
   window.textus = textus;
-  window.parent.postMessage({ textus: "ready" }, "*");
+  window.parent.postMessage(
+    { textus: "ready", key: "__TEXTUS_FRAME_KEY__" },
+    "*",
+  );
 })();

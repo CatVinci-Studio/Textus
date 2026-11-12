@@ -16,7 +16,7 @@ import {
 } from "../ai/chat/quick-ask/useInlineChat";
 import { setQuickAskWidget } from "../ai/chat/quick-ask/quick-ask-widget-plugin";
 import { keepClearOfDock } from "../ai/chat/quick-ask/quick-ask-dock";
-import type { PendingPreview } from "../ai/revision/pending-edit-plugin";
+import { type PendingPreview } from "../ai/revision/pending-types";
 import { isIOSApp } from "../platform/capabilities";
 
 /** Whether document position `pos` shows inside its editor's scroller. */

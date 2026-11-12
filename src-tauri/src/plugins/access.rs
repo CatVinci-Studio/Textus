@@ -12,7 +12,7 @@ use tauri::ipc::Response;
 use tauri::Manager;
 
 /// The most a read hands over at once.
-const MAX_READ_BYTES: u64 = 256 * 1024 * 1024;
+pub(super) const MAX_READ_BYTES: u64 = 256 * 1024 * 1024;
 /// The most a response from the network may be.
 const MAX_HTTP_BYTES: usize = 32 * 1024 * 1024;
 
@@ -27,6 +27,41 @@ fn running(state: &PluginsState, id: &str) -> Result<(), String> {
     } else {
         Err(format!("{id} is turned off."))
     }
+}
+
+/// `path` resolved inside the open folder `root`: as [`inside`], and in no
+/// hidden folder or file of it - .git's hooks and config, an editor's or
+/// another app's settings, .env - which hold tokens, or which a write could
+/// turn into code that runs. The folder's own .textus is the user's writing
+/// (instructions, library, memory, skills), which a sync carries; nothing
+/// hidden inside it.
+pub(crate) fn in_folder(root: &Path, path: &Path) -> Result<PathBuf, String> {
+    let resolved = inside(root, path)?;
+    let base = std::fs::canonicalize(root).map_err(|e| e.to_string())?;
+    let hidden = resolved
+        .strip_prefix(&base)
+        .map(|rel| {
+            rel.components().enumerate().any(|(i, c)| {
+                matches!(c, Component::Normal(n)
+                    if n.to_string_lossy().starts_with('.') && !(i == 0 && n == ".textus"))
+            })
+        })
+        .unwrap_or(true);
+    if hidden {
+        return Err(
+            "Files and folders whose names start with \".\" aren't open to plugins.".to_string(),
+        );
+    }
+    Ok(resolved)
+}
+
+/// Whether `rel` passes through anything hidden (`.env`, `.git/config`) or
+/// node_modules: what a plugin's own folder serves and lists leaves out.
+pub(crate) fn hidden_part(rel: &Path) -> bool {
+    rel.components().any(|c| {
+        matches!(c, Component::Normal(n)
+            if n.to_string_lossy().starts_with('.') || n == "node_modules")
+    })
 }
 
 /// `path` resolved inside `root`: no `..`, and still under `root` after
@@ -65,6 +100,23 @@ pub(crate) fn inside(root: &Path, path: &Path) -> Result<PathBuf, String> {
 
 /// The app's own folders (other plugins' storage, settings, keys), which no
 /// plugin reaches through the workspace calls.
+/// `path` for plugin `id` to use with `permission`: granted, inside `root`
+/// and none of the app's own data.
+pub(super) fn granted_path(
+    app: &tauri::AppHandle,
+    id: &str,
+    permission: &str,
+    root: &str,
+    path: &str,
+) -> Result<PathBuf, String> {
+    if !state::read(app).allows(id, permission) {
+        return Err(refused(id, permission));
+    }
+    let path = in_folder(Path::new(root), Path::new(path))?;
+    require_not_app_data(app, &path)?;
+    Ok(path)
+}
+
 pub(super) fn require_not_app_data(app: &tauri::AppHandle, path: &Path) -> Result<(), String> {
     let own = [app.path().app_data_dir(), app.path().app_config_dir()];
     for dir in own.into_iter().flatten() {
@@ -98,7 +150,7 @@ pub(super) async fn read_bytes(path: PathBuf) -> Result<Response, String> {
         .await
         .map_err(|e| e.to_string())?;
     if meta.len() > MAX_READ_BYTES {
-        return Err("The file is too big to open here.".to_string());
+        return Err(crate::errors::error("fileTooBig"));
     }
     let bytes = tokio::fs::read(&path).await.map_err(|e| e.to_string())?;
     Ok(Response::new(bytes))
@@ -141,11 +193,7 @@ pub async fn plugin_fs_read(
     root: String,
     path: String,
 ) -> Result<Response, String> {
-    if !state::read(&app).allows(&id, "files.read") {
-        return Err(refused(&id, "files.read"));
-    }
-    let path = inside(Path::new(&root), Path::new(&path))?;
-    require_not_app_data(&app, &path)?;
+    let path = granted_path(&app, &id, "files.read", &root, &path)?;
     read_bytes(path).await
 }
 
@@ -173,7 +221,7 @@ pub async fn plugin_fs_list(
     if !state::read(&app).allows(&id, "files.read") {
         return Err(refused(&id, "files.read"));
     }
-    let dir = inside(Path::new(&root), Path::new(&path))?;
+    let dir = in_folder(Path::new(&root), Path::new(&path))?;
     require_not_app_data(&app, &dir)?;
     let mut reader = tokio::fs::read_dir(&dir).await.map_err(|e| e.to_string())?;
     let mut out = Vec::new();
@@ -213,11 +261,7 @@ pub async fn plugin_fs_write(
     contents: String,
     base64: Option<bool>,
 ) -> Result<(), String> {
-    if !state::read(&app).allows(&id, "files.write") {
-        return Err(refused(&id, "files.write"));
-    }
-    let path = inside(Path::new(&root), Path::new(&path))?;
-    require_not_app_data(&app, &path)?;
+    let path = granted_path(&app, &id, "files.write", &root, &path)?;
     let bytes = if base64.unwrap_or(false) {
         use base64::{engine::general_purpose::STANDARD, Engine};
         STANDARD.decode(contents).map_err(|e| e.to_string())?
@@ -249,11 +293,14 @@ pub async fn plugin_fs_rename(
         return Err(refused(&id, "files.write"));
     }
     let root = Path::new(&root);
-    let from = inside(root, Path::new(&from))?;
-    let to = inside(root, Path::new(&to))?;
+    let from = in_folder(root, Path::new(&from))?;
+    let to = in_folder(root, Path::new(&to))?;
     require_not_app_data(&app, &from)?;
     require_not_app_data(&app, &to)?;
-    if to.exists() {
+    // A change of case only is the same file on macOS and Windows.
+    let case_only = to.to_string_lossy().to_lowercase() == from.to_string_lossy().to_lowercase()
+        && crate::atomic::same_file(&from, &to);
+    if to.exists() && !case_only {
         return Err(format!("{} is already there.", to.display()));
     }
     if let Some(parent) = to.parent() {
@@ -261,8 +308,9 @@ pub async fn plugin_fs_rename(
             .await
             .map_err(|e| e.to_string())?;
     }
-    tokio::fs::rename(&from, &to)
+    tokio::task::spawn_blocking(move || crate::atomic::move_entry(&from, &to))
         .await
+        .map_err(|e| e.to_string())?
         .map_err(|e| e.to_string())
 }
 
@@ -276,26 +324,12 @@ pub async fn plugin_fs_trash(
     root: String,
     path: String,
 ) -> Result<(), String> {
-    if !state::read(&app).allows(&id, "files.write") {
-        return Err(refused(&id, "files.write"));
-    }
-    let path = inside(Path::new(&root), Path::new(&path))?;
-    require_not_app_data(&app, &path)?;
-    if std::fs::canonicalize(&root).is_ok_and(|r| r == path) {
-        return Err("The folder itself can't be moved to the Trash.".into());
-    }
-    // The trash crate is desktop-only; the iPhone has no Trash.
-    #[cfg(desktop)]
-    return tauri::async_runtime::spawn_blocking(move || {
-        trash::delete(&path).map_err(|e| e.to_string())
+    let path = granted_path(&app, &id, "files.write", &root, &path)?;
+    tauri::async_runtime::spawn_blocking(move || {
+        crate::atomic::user_file_to_trash(&path, Some(Path::new(&root)))
     })
     .await
-    .map_err(|e| e.to_string())?;
-    #[cfg(not(desktop))]
-    Err(format!(
-        "{} can't be moved to the Trash here.",
-        path.display()
-    ))
+    .map_err(|e| e.to_string())?
 }
 
 /// Makes a folder (and the folders it is in) in the folder.
@@ -307,11 +341,7 @@ pub async fn plugin_fs_mkdir(
     root: String,
     path: String,
 ) -> Result<(), String> {
-    if !state::read(&app).allows(&id, "files.write") {
-        return Err(refused(&id, "files.write"));
-    }
-    let path = inside(Path::new(&root), Path::new(&path))?;
-    require_not_app_data(&app, &path)?;
+    let path = granted_path(&app, &id, "files.write", &root, &path)?;
     tokio::fs::create_dir_all(&path)
         .await
         .map_err(|e| e.to_string())
@@ -411,7 +441,7 @@ pub async fn plugin_http(
     }
     // A redirect must stay within what was granted too.
     let redirect_grants = granted.clone();
-    let client = crate::net::client(Duration::from_secs(10), Duration::from_secs(60))
+    let client = crate::net::public_client(Duration::from_secs(10), Duration::from_secs(60))?
         .redirect(reqwest::redirect::Policy::custom(move |attempt| {
             if attempt.previous().len() > 5 || !url_allowed(&redirect_grants, attempt.url()) {
                 attempt.stop()

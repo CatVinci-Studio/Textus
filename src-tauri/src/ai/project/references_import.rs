@@ -31,19 +31,14 @@ fn readable(name: &str) -> bool {
 
 /// `want`, or `want (2)`, `want (3)`… - whichever is free.
 fn free_path(want: &Path) -> PathBuf {
-    if !want.exists() {
+    let (Some(dir), Some(name)) = (want.parent(), want.file_name().and_then(|n| n.to_str())) else {
         return want.to_path_buf();
-    }
-    let stem = want.file_stem().and_then(|s| s.to_str()).unwrap_or("file");
-    let ext = want
-        .extension()
-        .and_then(|e| e.to_str())
-        .map(|e| format!(".{e}"))
-        .unwrap_or_default();
-    (2..)
-        .map(|n| want.with_file_name(format!("{stem} ({n}){ext}")))
-        .find(|p| !p.exists())
-        .unwrap_or_else(|| want.to_path_buf())
+    };
+    dir.join(crate::ids::free_name(
+        dir,
+        name,
+        crate::ids::Numbered::Paren,
+    ))
 }
 
 /// `name` as one safe path component.

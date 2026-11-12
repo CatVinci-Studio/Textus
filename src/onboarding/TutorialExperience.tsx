@@ -1,4 +1,6 @@
-import { useCallback, type ReactNode } from "react";
+import { fill } from "../i18n/fill";
+import { setTourLineHint } from "../editor/line-hint";
+import { useCallback, useEffect, type ReactNode } from "react";
 import type { Lang, Strings } from "../i18n/strings";
 import { links } from "../platform/ipc";
 import { isMacPlatform } from "../platform/os";
@@ -57,14 +59,29 @@ export function TutorialExperience({
 
   const mac = isMacPlatform();
   const lineText = (task: TutorialTask) =>
-    t[(phone && task.phoneKey) || (mac && task.macKey) || task.key]
-      .replace("{title}", notes.title)
-      .replace("{shortcut}", lessonShortcut(step.id, shortcuts));
+    fill(t[(phone && task.phoneKey) || (mac && task.macKey) || task.key], {
+      title: notes.title,
+      shortcut: lessonShortcut(step.id, shortcuts),
+    });
   const tasks = step.tasks?.map((task) => ({
     text: lineText(task),
     done:
       !watching && step.layout === "card" && isTaskDone(step, task.part, phase),
   }));
+
+  // The writing lesson's next thing to type, gray on the practice tab's
+  // empty line, where it is to be typed.
+  const nextHint =
+    step.id === "wysiwyg" && !watching
+      ? (tasks?.find((task) => !task.done)?.text.replace(/`/g, "") ?? null)
+      : null;
+  const practiceTab = tutorial.tabId;
+  useEffect(() => {
+    setTourLineHint(
+      nextHint && practiceTab ? { tabId: practiceTab, text: nextHint } : null,
+    );
+  }, [nextHint, practiceTab]);
+  useEffect(() => () => setTourLineHint(null), []);
 
   const complete = isLessonComplete(step, phase);
   const watch = step.clip
@@ -73,11 +90,11 @@ export function TutorialExperience({
         onClick: () => void links.openTutorialsPage(language, step.clip),
       }
     : null;
-  const settingsPath = `${t.settingsTitle} › ${t.navAi}`;
+  const settingsPath = `${t.settingsTitle} › ${t.navAi} › ${t.navProvidersModels}`;
 
   let status: string | null = null;
   let note: string | null = watching
-    ? t.tutorialWatchNote.replace("{path}", settingsPath)
+    ? fill(t.tutorialWatchNote, { path: settingsPath })
     : null;
   let controls: ReactNode = null;
   if (step.id === "connect") {
@@ -146,7 +163,9 @@ export function TutorialExperience({
       totalSteps={tutorial.totalSteps}
       chapters={chapters}
       title={t[step.titleKey]}
-      body={t[step.bodyKey]}
+      body={fill(t[step.bodyKey], {
+        shortcut: lessonShortcut(step.id, shortcuts),
+      })}
       tasks={tasks}
       status={status}
       complete={step.id !== "connect" && !watching && complete}

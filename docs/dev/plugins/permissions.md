@@ -26,7 +26,9 @@ step by a test.
 | `notifications`  | Show system notifications                                              | `notify.show`, a job's `notify`                                                                                                                                                                                                                                                                                                        |
 | `ai.tools`       | Give Textus AI tools to call                                           | `ai.registerTool`                                                                                                                                                                                                                                                                                                                      |
 | `background`     | Run its `background` code on a schedule, also with every window closed | the manifest's `background` file, a job's `run`                                                                                                                                                                                                                                                                                        |
+| `agents`         | Run the AI agents it names in `contributes.agents`                     | Textus AI's model menu offering them; Textus starts each one itself                                                                                                                                                                                                                                                                    |
 | `network:<host>` | HTTPS requests to that host (`network:*` for a host the user enters)   | `net.fetch`                                                                                                                                                                                                                                                                                                                            |
+| `commands:<id>`  | Run the commands another plugin lists in its manifest                  | `commands.execute` with that plugin's command                                                                                                                                                                                                                                                                                          |
 
 ## Events
 
@@ -45,5 +47,6 @@ log says so; nothing else does.
 
 - A completion (`editor.registerCompletion`) without `editor.read` is left
   out with no error.
-- A webview's `textus-resource:` files are the plugin's own; a page reaches
-  nothing else and has no network.
+- A webview's `textus-resource:` files are the plugin's own; from the
+  network a page shows only pictures and frames of the hosts its plugin's
+  `network:` permissions name.

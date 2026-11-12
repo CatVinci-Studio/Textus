@@ -1,4 +1,4 @@
-import { hasUrlScheme, isDrivePath, isNoteFile } from "./path";
+import { decodeUrlPath, hasUrlScheme, isDrivePath, isNoteFile } from "./path";
 
 /**
  * What a link to a note says, read one way for every reader: a click, a
@@ -27,13 +27,8 @@ const WIKI = /^(!?)\[\[([^[\]\n]+)\]\]$/;
  *  "[" inside, and not `[[x]](url)`. Put "!" before it for an embed. */
 export const WIKILINK_SOURCE = String.raw`\[\[[^[\]\n]+\]\](?!\()`;
 
-function decode(text: string, whole: boolean): string {
-  try {
-    return whole ? decodeURIComponent(text) : decodeURI(text);
-  } catch {
-    return text;
-  }
-}
+// As a click reads a path (decodeUrlPath): `%23` is a "#" in the name.
+const decode = decodeUrlPath;
 
 /** `#A#B` or `#^id` split into heading levels and a block id. */
 function anchorParts(anchor: string): Pick<NoteLink, "headings" | "block"> {
@@ -77,8 +72,8 @@ export function parseNoteLink(written: string): NoteLink | null {
     text.startsWith("<") && text.endsWith(">") ? text.slice(1, -1) : text;
   if (!bare || (!isDrivePath(bare) && hasUrlScheme(bare))) return null;
   const hash = bare.indexOf("#");
-  const note = decode(hash < 0 ? bare : bare.slice(0, hash), false);
-  const parts = anchorParts(hash < 0 ? "" : decode(bare.slice(hash + 1), true));
+  const note = decode(hash < 0 ? bare : bare.slice(0, hash));
+  const parts = anchorParts(hash < 0 ? "" : decode(bare.slice(hash + 1)));
   if (!note && !parts.headings.length && !parts.block) return null;
   return { wiki: false, embed: false, note, ...parts, alias: null };
 }

@@ -1,39 +1,49 @@
-import { SuggestCard } from "./SuggestCard";
+import { provideAiFileMarks } from "../ai/revision/file-marks";
+import { useTabsInBar } from "./islands/tabs-in-bar";
+import { tabElement } from "../engine/layout/tab-element";
+import { tabTitle } from "../document/doc-tabs";
+import { useWindowAi } from "./islands/useWindowAi";
+import { conversationIn } from "./islands/ai-tabs";
 import { ConventionsCard } from "./ConventionsCard";
-import { CornerStack } from "../ui/CornerToast";
+import { CornerStack } from "../engine/controls/CornerToast";
 import { Suspense } from "react";
-import { AppDialogHost } from "../ui/app-dialog";
-import { WindowBar } from "./WindowBar";
+import { AppDialogHost } from "../engine/controls/app-dialog";
+import { WindowBar } from "./frame/WindowBar";
 import { isIOSApp } from "../platform/capabilities";
-import { SettingsLayer } from "./SettingsLayer";
-import { usePhoneLayout } from "../ui/usePhoneLayout";
+import {
+  CreateTabPage,
+  PluginTabPage,
+  SettingsLayer,
+  SettingsTabPage,
+} from "./SettingsLayer";
+import {
+  PageTabProvider,
+  type AppPage,
+  type PageRequest,
+} from "./tabs/page-tabs";
+import { usePhoneLayout } from "../engine/controls/usePhoneLayout";
 import { useSettings } from "../prefs/SettingsContext";
 import { formatCombo } from "../utils/shortcuts";
-import { fixedShortcutGroups } from "./fixed-shortcuts";
-import { commands } from "./commands";
+import { fixedShortcutGroups } from "../registry/fixed-shortcuts";
+import { commands } from "../registry/commands";
 import { platformName } from "../platform/window-chrome";
-import { Presence } from "../ui/usePresence";
-import { FlipOnChange } from "../ui/flip";
+import { Presence } from "../engine/motion/usePresence";
+import { FlipOnChange } from "../engine/motion/flip";
 import { AgentPanelProvider } from "../ai/chat/panel/agent-panel";
-import { aiFeatures } from "../settings/textus-ai";
+import { aiFeatures } from "../prefs/ai-features";
 import { useWindowShell } from "./useWindowShell";
 import { useWindowDocuments } from "./useWindowDocuments";
 import { useWindowWiring } from "./useWindowWiring";
-import { Sidebar } from "./Sidebar";
-import { MainPane } from "./MainPane";
-import { AgentPanelDock } from "./AgentPanelDock";
+import { Sidebar } from "./frame/Sidebar";
+import { DocumentIslands } from "./islands/DocumentIslands";
+import { AgentPanelDock } from "./islands/AgentPanelDock";
 import { ClosePrompt } from "./ClosePrompt";
-import {
-  DraftRestoredToast,
-  UpdateToast,
-  WordImportNotice,
-  ZenHint,
-} from "./AppNotices";
+import { DraftRestoredToast, WordImportNotice, ZenExit } from "./AppNotices";
 import { OnboardingLayers } from "./OnboardingLayers";
-import { QuickPickHost } from "../ui/quick-pick";
-import { PluginFormHost } from "../plugins/views/plugin-form";
+import { QuickPickSlot } from "../engine/controls/QuickPickSlot";
+import { PluginFormSlot } from "../plugins/views/PluginFormSlot";
 import { FloatingViewsHost } from "../plugins/views/floating-views-host";
-import { NoticeHost } from "../ui/notices";
+import { NoticeHost } from "../engine/controls/notices";
 import "../plugins/plugins.css";
 import "./App.css";
 import { ReportProblemHost } from "./report/report-open";
@@ -41,7 +51,21 @@ import { lazyModule } from "../lazy/lazy-module";
 import { lazyComponent } from "../lazy/lazy-component";
 import { usePanelsReport } from "../plugins/panels-state";
 
+// The folder's rows show what Textus AI changed in their files.
+provideAiFileMarks();
+
 // The phone's own parts load on the phone, not with every desktop window.
+// An AI tab and the plugin suggestion card: drawn later than the window's
+// first frame, loaded while it is idle.
+const AiTab = lazyComponent(
+  lazyModule("ai-tab", () => import("./islands/AiTab"), { warm: true }),
+  (m) => m.AiTab,
+);
+const SuggestCard = lazyComponent(
+  lazyModule("suggest-card", () => import("./SuggestCard"), { warm: true }),
+  (m) => m.SuggestCard,
+);
+
 const phoneParts = lazyModule(
   "phone-parts",
   () => import("../mobile/phone-parts"),
@@ -60,14 +84,11 @@ function App() {
   const wiring = useWindowWiring({ shell, docs, settings, setSettings, t });
   const phone = usePhoneLayout();
 
-  const { textusAi, tutorial, settingsOpening, appUpdate, pendingClose } =
-    shell;
+  const { textusAi, tutorial, settingsOpening, pendingClose } = shell;
   const { draftsRestoredCount, setDraftsRestoredCount, wordImported } = shell;
-  const { tabs, activeTabId, setActiveTabId, addBlankTab, reorderTab } =
-    shell.tabState;
+  const { tabs, activeTabId, setActiveTabId, addBlankTab } = shell.tabState;
   const { panelOpen, setPanelOpen, toggleSidebar, sidebarWidth } = shell.panels;
-  const { agentPanel, agentPanelEl, setAgentPanelEl, toggleAgentPanel } =
-    shell.panels;
+  const { agentPanel, toggleAgentPanel } = shell.panels;
   const { sidebarPresence, sidebarClosing, agentPresence, agentClosing } =
     shell.panels;
   const { panelMode, setPanelMode } = shell.panels;
@@ -79,6 +100,8 @@ function App() {
     docs;
   const { moveTabToNewWindow, toggleReadOnly } = docs;
   const { toggleSourceMode, zenMode, setZenMode } = docs;
+  // Zen puts the sidebar away as a close does, on the window's clock.
+  const sidebarShown = panelOpen && !zenMode;
   const { menuChecks, entryMoved, skillFilesDeleted } = wiring;
   const { documentsOpen, setDocumentsOpen, openFromDocuments } = wiring;
   const { documentRenamed, documentDeleted } = wiring;
@@ -91,220 +114,250 @@ function App() {
     zen: zenMode,
   });
 
+  useWindowAi({
+    tabs: shell.tabState,
+    workspaceRoot: settings.agentWorkspaceRoot || null,
+    shown: agentPanel.open,
+    setShown: agentPanel.setOpen,
+  });
+
+  // Whether the tabs are in the window bar's row (with the menu bar spelled
+  // out, in the row under it), or none: a clean sheet; the phone's own bar.
+  const tabsInBar = useTabsInBar(zenMode, showTabBar);
+  const tabRow = tabsInBar && !isIOSApp ? "bar" : undefined;
+
+  // What Settings needs, as a sheet or as a tab.
+  const settingsProps = {
+    onOpenFile: (path: string) => void openFile(path),
+    onFilesDeleted: skillFilesDeleted,
+    docPath: activeTab.path,
+    fixedShortcuts: fixedShortcutGroups(t, platformName()),
+    pluginCommands: commands()
+      // Textus's own (Save, Close Tab) have their keys under File.
+      .filter((c) => !c.id.startsWith("textus."))
+      .map((c) => ({ id: c.id, title: c.title(t), shortcut: c.shortcut })),
+  };
+  const renderPage = (page: AppPage, request: PageRequest | null) =>
+    page === "ai" ? (
+      <AiTab conversation={conversationIn(request)} />
+    ) : page === "settings" ? (
+      <SettingsTabPage request={request} {...settingsProps} />
+    ) : page === "create" ? (
+      <CreateTabPage t={t} />
+    ) : (
+      <PluginTabPage request={request} t={t} />
+    );
+
   return (
-    <AgentPanelProvider
-      // The conversation stays in the panel while it plays its exit.
-      open={agentPresence.mounted}
-      setOpen={agentPanel.setOpen}
-      container={agentPanelEl}
-      tab={agentPanel.tab}
-      setTab={agentPanel.setTab}
-    >
-      <FlipOnChange
-        watch={`${panelOpen} ${agentPresence.mounted} ${zenMode}`}
-        targets={() =>
-          document.querySelectorAll(
-            '[data-active-tab="true"] > .editor-scroll > .editor-content, [data-active-tab="true"] > .source-view, .tab-bar > [data-flip-id]',
-          )
-        }
-        duration="--dur-slow"
-        easing="--ease-spring"
-      />
-      <div
-        className="app-shell"
-        style={
-          {
-            // The sidebar's dragged width; an iPad's sidebar has no handle.
-            ...(!isIOSApp && {
-              "--sidebar-width": `${sidebarWidth.width}px`,
-            }),
-            // The document column is half the sidebar's width right of the
-            // window's centre, and half the AI panel's width left of it. The
-            // window bar's title follows both to stay over the column. The
-            // sidebar's half is kept apart so it can ride the sidebar's
-            // slide; the panel's so it can follow the room the editor makes
-            // or takes back, at the page's pace.
-            "--window-bar-title-slide": `${
-              panelOpen ? sidebarWidth.width / 2 : 0
-            }px`,
-            "--window-bar-title-shift": `${
-              agentPresence.mounted ? -(agentPanel.width / 2) : 0
-            }px`,
-          } as React.CSSProperties
-        }
+    <PageTabProvider render={renderPage}>
+      <AgentPanelProvider
+        // The conversation stays in the panel while it plays its exit.
+        open={agentPresence.mounted}
+        setOpen={agentPanel.setOpen}
+        tab={agentPanel.tab}
+        setTab={agentPanel.setTab}
       >
-        <WindowBar
-          menuChecks={menuChecks}
-          title={activeTitle}
-          dirty={activeDirty}
-          largeDoc={featuresPaused}
-          words={wordCount.words}
-          sidebarOpen={panelOpen}
-          sidebarShortcut={formatCombo(settings.shortcuts.toggleSidebar)}
-          onToggleSidebar={toggleSidebar}
-          showAgentToggle={aiFeatures(settings, tutorial.active).chat}
-          agentOpen={agentPanel.open}
-          agentShortcut={formatCombo(settings.shortcuts.toggleAgentPanel)}
-          onToggleAgent={toggleAgentPanel}
-          onToggleReadOnly={() => toggleReadOnly()}
-        />
-        <Sidebar
-          open={panelOpen}
-          presence={sidebarPresence}
-          closing={sidebarClosing}
-          mode={panelMode}
-          onModeChange={setPanelMode}
-          width={sidebarWidth}
-          openFolder={openFolder}
-          activePath={activeTab.path}
-          activeContent={activeTab.content}
-          activeTabId={activeTab.id}
-          onToggle={toggleSidebar}
-          onClose={() => setPanelOpen(false)}
-          onOpenFile={(path, how) =>
-            void openFile(
-              path,
-              how === "beside"
-                ? { where: "beside" }
-                : { preview: how === "preview" },
-            )
-          }
-          onEntryMoved={entryMoved}
-          searchFocusRequest={searchFocusRequest}
-          onSearchFocusHandled={clearSearchFocusRequest}
-          t={t}
-        />
-
-        <MainPane
-          tabs={tabs}
-          activeTabId={activeTabId}
-          showTabBar={showTabBar}
-          onActivate={setActiveTabId}
-          onClose={requestCloseTab}
-          onAdd={addBlankTab}
-          onDetach={handleTabDetach}
-          onMoveToNewWindow={moveTabToNewWindow}
-          onToggleReadOnly={toggleReadOnly}
-          onReorder={reorderTab}
-          onKeep={(id) => shell.tabState.updateTab(id, { preview: false })}
-          previewTab={dragHoverPreview}
-          onChange={handleChange}
-          typewriter={settings.typewriterMode}
-          tour={
-            tutorial.active && tutorial.tabId
-              ? {
-                  tabId: tutorial.tabId,
-                  ai: tutorial.practiceAi,
-                  mode: tutorial.agentMode,
-                }
-              : null
-          }
-          t={t}
-        />
-
-        {agentPresence.mounted && (
-          <AgentPanelDock
-            presence={agentPresence}
-            closing={agentClosing}
-            width={agentPanel.width}
-            min={agentPanel.min}
-            max={agentPanel.max}
-            onResize={agentPanel.setWidth}
-            mountRef={setAgentPanelEl}
-            sourceMode={!!activeTab.sourceMode}
-            onToggleSourceMode={toggleSourceMode}
-            aiOn={textusAi.on}
-            t={t}
+        {/* An iPad's AI panel makes room by sliding the page; the
+            desktop's islands move on the frame's clock (IslandArea). */}
+        {isIOSApp && (
+          <FlipOnChange
+            watch={agentPresence.mounted}
+            targets={() => [
+              ...(tabElement()?.querySelectorAll(
+                ":scope > .editor-scroll > .editor-content, :scope > .source-view",
+              ) ?? []),
+            ]}
+            duration="--dur-settle"
+            easing="--ease-settle"
           />
         )}
+        <div
+          className="app-shell"
+          // The layout's switches for the styles (layout/layout*.css): floating islands or classic, and the tabs in the
+          // window bar's row, in a row of their own under the menu bar, or
+          // none.
+          data-tabs={tabRow}
+          // Its column open: the grid and the rail's edge follow the model.
+          data-sidebar={sidebarShown ? "open" : undefined}
+          style={
+            {
+              // The sidebar's dragged width; an iPad's sidebar has no handle.
+              ...(!isIOSApp && {
+                "--sidebar-width": `${sidebarWidth.width}px`,
+              }),
+            } as React.CSSProperties
+          }
+        >
+          <WindowBar
+            menuChecks={menuChecks}
+            title={activeTitle}
+            dirty={activeDirty}
+            largeDoc={featuresPaused}
+            words={wordCount.words}
+            sidebarOpen={panelOpen}
+            sidebarShortcut={formatCombo(settings.shortcuts.toggleSidebar)}
+            onToggleSidebar={toggleSidebar}
+            showAgentToggle={aiFeatures(settings, tutorial.active).chat}
+            agentOpen={agentPanel.open}
+            agentShortcut={formatCombo(settings.shortcuts.toggleAgentPanel)}
+            onToggleAgent={toggleAgentPanel}
+            onToggleReadOnly={() => toggleReadOnly()}
+          />
+          <Sidebar
+            open={sidebarShown}
+            presence={sidebarPresence}
+            closing={sidebarClosing}
+            mode={panelMode}
+            onModeChange={setPanelMode}
+            width={sidebarWidth}
+            openFolder={openFolder}
+            activePath={activeTab.path}
+            activeContent={activeTab.content}
+            activeTabId={activeTab.id}
+            onToggle={toggleSidebar}
+            onClose={() => setPanelOpen(false)}
+            onOpenFile={(path, how, line) =>
+              void openFile(path, {
+                ...(how === "beside"
+                  ? { where: "beside" }
+                  : { preview: how === "preview" }),
+                ...(line !== undefined ? { place: { line } } : {}),
+              })
+            }
+            onEntryMoved={entryMoved}
+            searchFocusRequest={searchFocusRequest}
+            onSearchFocusHandled={clearSearchFocusRequest}
+            t={t}
+          />
 
-        <SettingsLayer
-          opening={settingsOpening}
-          onOpenFile={(path) => void openFile(path)}
-          onFilesDeleted={skillFilesDeleted}
-          docPath={activeTab.path}
-          fixedShortcuts={fixedShortcutGroups(t, platformName())}
-          pluginCommands={commands()
-            // Textus's own (Save, Close Tab) have their keys under File.
-            .filter((c) => !c.id.startsWith("textus."))
-            .map((c) => ({
-              id: c.id,
-              title: c.title(t),
-              shortcut: c.shortcut,
-            }))}
-        />
+          <DocumentIslands
+            tabs={tabs}
+            activeTabId={activeTabId}
+            showTabBar={showTabBar}
+            onActivate={setActiveTabId}
+            onClose={requestCloseTab}
+            onAdd={addBlankTab}
+            onDetach={handleTabDetach}
+            onMoveToNewWindow={moveTabToNewWindow}
+            onToggleReadOnly={toggleReadOnly}
+            onKeep={(id) => shell.tabState.updateTab(id, { preview: false })}
+            previewTab={dragHoverPreview}
+            onChange={handleChange}
+            typewriter={settings.typewriterMode}
+            formatBar={settings.formatBar}
+            tour={
+              tutorial.active && tutorial.tabId
+                ? {
+                    tabId: tutorial.tabId,
+                    ai: tutorial.practiceAi,
+                    mode: tutorial.agentMode,
+                  }
+                : null
+            }
+            zen={zenMode}
+            lang={settings.language}
+            t={t}
+          />
 
-        <ClosePrompt
-          open={!!pendingClose}
-          phone={phone}
-          dialogProps={closePrompt}
-          onSave={() => void closeSaving()}
-          onDiscard={() => void closeDiscarding()}
-          onCancel={cancelClose}
-          t={t}
-        />
+          {/* The desktop's conversations are tabs (useAiTabs); an iPhone or iPad
+            keeps its own panel. */}
+          {isIOSApp && agentPresence.mounted && (
+            <AgentPanelDock
+              presence={agentPresence}
+              closing={agentClosing}
+              width={agentPanel.width}
+              min={agentPanel.min}
+              max={agentPanel.max}
+              onResize={agentPanel.setWidth}
+              sourceMode={!!activeTab.sourceMode}
+              onToggleSourceMode={toggleSourceMode}
+              aiOn={textusAi.on}
+              t={t}
+            />
+          )}
 
-        {isIOSApp && (
-          <Suspense fallback={null}>
-            <KeyboardToolbar />
-          </Suspense>
-        )}
-        <Presence show={isIOSApp && documentsOpen} exitMs={320}>
-          {isIOSApp && documentsOpen && (
+          <SettingsLayer opening={settingsOpening} {...settingsProps} />
+
+          <ClosePrompt
+            open={!!pendingClose}
+            phone={phone}
+            dialogProps={closePrompt}
+            onSave={() => void closeSaving()}
+            onDiscard={() => void closeDiscarding()}
+            onCancel={cancelClose}
+            name={
+              pendingClose?.kind === "tab"
+                ? tabTitle(
+                    tabs.find((tab) => tab.id === pendingClose.tabId) ??
+                      tabs[0],
+                    t,
+                  )
+                : null
+            }
+            t={t}
+          />
+
+          {isIOSApp && (
             <Suspense fallback={null}>
-              <DocumentList
-                activePath={activeTab.path}
-                onClose={() => setDocumentsOpen(false)}
-                onOpen={openFromDocuments}
-                onRenamed={documentRenamed}
-                onDeleted={documentDeleted}
-                onOpenOther={() => {
-                  setDocumentsOpen(false);
-                  void openFileDialog();
-                }}
-              />
+              <KeyboardToolbar />
             </Suspense>
           )}
-        </Presence>
-        <AppDialogHost okLabel={t.dialogOk} />
-        <ReportProblemHost t={t} settings={settings} />
-        <QuickPickHost
-          emptyLabel={t.pluginQuickPickEmpty}
-          okLabel={t.pluginOk}
-        />
-        <PluginFormHost />
-        <FloatingViewsHost />
-        <NoticeHost />
+          <Presence show={isIOSApp && documentsOpen}>
+            {isIOSApp && documentsOpen && (
+              <Suspense fallback={null}>
+                <DocumentList
+                  activePath={activeTab.path}
+                  onClose={() => setDocumentsOpen(false)}
+                  onOpen={openFromDocuments}
+                  onRenamed={documentRenamed}
+                  onDeleted={documentDeleted}
+                  onOpenOther={() => {
+                    setDocumentsOpen(false);
+                    void openFileDialog();
+                  }}
+                />
+              </Suspense>
+            )}
+          </Presence>
+          <AppDialogHost okLabel={t.dialogOk} />
+          <ReportProblemHost t={t} settings={settings} />
+          <QuickPickSlot
+            emptyLabel={t.pluginQuickPickEmpty}
+            okLabel={t.pluginOk}
+          />
+          <PluginFormSlot />
+          <FloatingViewsHost />
+          <NoticeHost />
 
-        {zenMode && <ZenHint onExit={() => setZenMode(false)} t={t} />}
+          {zenMode && <ZenExit onExit={() => setZenMode(false)} t={t} />}
 
-        <CornerStack corner="start">
-          <WordImportNotice
-            path={wordImported.path}
-            onDismiss={wordImported.dismiss}
+          <CornerStack corner="start">
+            <WordImportNotice
+              path={wordImported.path}
+              onDismiss={wordImported.dismiss}
+              t={t}
+            />
+            <DraftRestoredToast
+              count={draftsRestoredCount}
+              onDismiss={() => setDraftsRestoredCount(0)}
+              t={t}
+            />
+          </CornerStack>
+
+          <CornerStack corner="end">
+            <SuggestCard t={t} />
+            <ConventionsCard path={activeTab.path} settings={settings} t={t} />
+          </CornerStack>
+
+          <OnboardingLayers
+            tutorial={tutorial}
+            settings={settings}
+            setSettings={setSettings}
             t={t}
           />
-          <DraftRestoredToast
-            count={draftsRestoredCount}
-            onDismiss={() => setDraftsRestoredCount(0)}
-            t={t}
-          />
-        </CornerStack>
-
-        <CornerStack corner="end">
-          <SuggestCard t={t} />
-          <ConventionsCard path={activeTab.path} settings={settings} t={t} />
-          <UpdateToast appUpdate={appUpdate} t={t} />
-        </CornerStack>
-
-        <OnboardingLayers
-          tutorial={tutorial}
-          settings={settings}
-          setSettings={setSettings}
-          t={t}
-        />
-      </div>
-    </AgentPanelProvider>
+        </div>
+      </AgentPanelProvider>
+    </PageTabProvider>
   );
 }
 

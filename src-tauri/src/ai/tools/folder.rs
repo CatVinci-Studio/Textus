@@ -168,9 +168,18 @@ pub(super) fn read_file(ctx: &ToolContext, arguments: &str) -> ToolOutput {
         start: line("start_line"),
         end: line("end_line"),
     };
-    crate::ai::project::read_part(root, path, range)
-        .unwrap_or_else(|err| err)
-        .into()
+    let text = match crate::ai::project::read_part(root, path, range) {
+        Ok(text) => text,
+        // Refused (outside the folder, hidden) or unread: nothing of it.
+        Err(err) => return err.into(),
+    };
+    // What it left waiting there: its revisions, a change that met edits.
+    // Named from the folder as the editor names it, as file changes are.
+    let file = root.join(path.trim_start_matches('@'));
+    match crate::ai::kept_proposals::waiting_note(&file) {
+        Some(note) => format!("{text}\n\n{note}").into(),
+        None => text.into(),
+    }
 }
 
 /// An image from the project folder, for a model that sees images

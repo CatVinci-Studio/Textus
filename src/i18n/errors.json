@@ -1,0 +1,170 @@
+{
+  "pdfFailed": {
+    "en": "PDF export failed",
+    "text": null
+  },
+  "pdfTimeout": {
+    "en": "PDF export timed out",
+    "text": "errorTimeout"
+  },
+  "pdfUnsupported": {
+    "en": "PDF export is not supported on this platform",
+    "text": "errorPdfUnsupported"
+  },
+  "fileTooBig": {
+    "en": "The file is too big to open here.",
+    "text": "errorFileTooBig"
+  },
+  "notDocument": {
+    "en": "It isn't a document Textus can read.",
+    "text": "errorNotDocument"
+  },
+  "wordOnly": {
+    "en": "Only Word documents (.docx) can be opened this way.",
+    "text": "errorNotDocument"
+  },
+  "noText": {
+    "en": "It has no readable text.",
+    "text": "errorNoText"
+  },
+  "unreadable": {
+    "en": "This file can't be read.",
+    "text": "errorUnreadable"
+  },
+  "badName": {
+    "en": "Invalid name.",
+    "text": "errorBadName"
+  },
+  "exists": {
+    "en": "Already exists.",
+    "text": "errorExists"
+  },
+  "alreadyThere": {
+    "en": "Already there.",
+    "text": "errorAlreadyThere"
+  },
+  "moveIntoItself": {
+    "en": "A folder can't move into itself.",
+    "text": "errorMoveIntoItself"
+  },
+  "notFolder": {
+    "en": "Not a folder.",
+    "text": "errorNotFolder"
+  },
+  "trashShownFolder": {
+    "en": "The folder the tree shows can't be moved to the Trash.",
+    "text": "errorTrashShownFolder"
+  },
+  "outsideDocuments": {
+    "en": "Outside the Textus folder.",
+    "text": "errorOutsideDocuments"
+  },
+  "noFolder": {
+    "en": "No folder is open.",
+    "text": "errorNoFolder"
+  },
+  "pluginTooBig": {
+    "en": "The plugin is too big.",
+    "text": "errorPluginTooBig"
+  },
+  "pluginNoManifest": {
+    "en": "The package has no textus-plugin.json.",
+    "text": "errorPluginBadPackage"
+  },
+  "pluginBadPackage": {
+    "en": "The package names a file outside itself.",
+    "text": "errorPluginBadPackage"
+  },
+  "catalogNewer": {
+    "en": "The plugin catalog is for a newer Textus - update Textus to see it.",
+    "text": "errorCatalogNewer"
+  },
+  "imageTooBig": {
+    "en": "The image is empty or exceeds the 25 MB limit.",
+    "text": "errorImageTooBig"
+  },
+  "pictureTooLarge": {
+    "en": "That picture is too large to send, even made smaller.",
+    "text": "errorPictureTooLarge"
+  },
+  "pictureUnreadable": {
+    "en": "Textus couldn't read that picture.",
+    "text": "errorPictureUnreadable"
+  },
+  "pictureFormat": {
+    "en": "Textus can't read HEIC or AVIF pictures on this system yet. Save it as JPEG or PNG and attach that.",
+    "text": "errorPictureFormat"
+  },
+  "archiveTooLarge": {
+    "en": "That archive is too large to unpack.",
+    "text": "errorArchiveTooLarge"
+  },
+  "secretsFile": {
+    "en": "This file holds Textus's keys; it isn't opened here.",
+    "text": "errorSecretsFile"
+  },
+  "httpsOnly": {
+    "en": "Only an https:// page opens in a tab.",
+    "text": "errorHttpsOnly"
+  },
+  "imageServiceTimeout": {
+    "en": "The image service didn't send the picture in time.",
+    "text": "errorTimeout"
+  },
+  "skillName": {
+    "en": "That skill's name can't be used as a file name.",
+    "text": "errorBadName"
+  },
+  "skillTooLong": {
+    "en": "That skill is too long to save.",
+    "text": "errorSkillTooLong"
+  },
+  "notSkill": {
+    "en": "That isn't a skill file: it needs a name and instructions.",
+    "text": "errorNotSkill"
+  },
+  "skillNoMode": {
+    "en": "A skill needs at least one mode.",
+    "text": "errorSkillNoMode"
+  },
+  "agentRefused": {
+    "en": "The agent refused.",
+    "text": "errorAgentRefused"
+  },
+  "agentStopped": {
+    "en": "The agent was stopped.",
+    "text": "errorAgentStopped"
+  },
+  "tooBroad": {
+    "en": "This folder is too broad to open (your home folder or a whole drive). Choose a more specific folder.",
+    "text": "folderTooBroad"
+  },
+  "noProject": {
+    "en": "Save this document first - the AI works in its folder.",
+    "text": "projectNeedsSave"
+  },
+  "noSamples": {
+    "en": "None of the picked files could be read as text.",
+    "text": "projectNoSamples"
+  },
+  "notRemembered": {
+    "en": "That file isn't one Textus AI remembered.",
+    "text": null
+  },
+  "unknownBuiltin": {
+    "en": "This version has no built-in skill by that name.",
+    "text": "agentSkillsUnknownBuiltin"
+  },
+  "notACopy": {
+    "en": "This skill is your own, not a copy of the built-in, so there's nothing to reset.",
+    "text": "agentSkillsNotACopy"
+  },
+  "skillExists": {
+    "en": "A skill of that name is already there.",
+    "text": "errorExists"
+  },
+  "sendLimit": {
+    "en": "You've sent several reports today. Try again tomorrow, or submit it on GitHub.",
+    "text": "reportLimit"
+  }
+}

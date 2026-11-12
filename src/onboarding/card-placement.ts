@@ -1,5 +1,6 @@
+import { tabInUse } from "../engine/layout/store";
 import { useEffect, useRef, useState, type RefObject } from "react";
-import { phoneTitleRowBottom } from "../ui/usePhoneLayout";
+import { phoneTitleRowBottom } from "../engine/controls/usePhoneLayout";
 
 /**
  * Places a lesson card so it never hides what the lesson is about, folding
@@ -17,7 +18,7 @@ export interface Box {
 }
 
 /** What a card must stay off, by the elements that show it. */
-export const CARD_OBSTACLES = [
+const CARD_OBSTACLES = [
   ".pending-insert",
   ".pending-edit",
   ".pending-delete",
@@ -28,6 +29,7 @@ export const CARD_OBSTACLES = [
   ".grammar-popover",
   ".ghost-text",
   ".agent-panel",
+  ".ai-tab",
 ].join(", ");
 
 export function placedBox(
@@ -97,7 +99,10 @@ function visibleObstacles(card: HTMLElement): Box[] {
   if (selection && selection.rangeCount > 0) {
     const range = selection.getRangeAt(0);
     const host = range.startContainer.parentElement;
-    if (host?.closest('[data-active-tab="true"] .ProseMirror')) {
+    if (
+      host?.closest(".ProseMirror") &&
+      host.closest<HTMLElement>("[data-tab-id]")?.dataset.tabId === tabInUse()
+    ) {
       const rect = range.getBoundingClientRect();
       const line = rect.height > 0 ? rect : host.getBoundingClientRect();
       if (line.height > 0)
@@ -149,9 +154,6 @@ export function useCardPlacement(
       // Never out from under the pointer or the keyboard: a button the
       // learner is about to press must stay where it is.
       if (card.matches(":hover, :focus-within")) return;
-      const css = getComputedStyle(card);
-      const docked =
-        parseFloat(css.getPropertyValue("--docked-panel-width")) || 0;
       // A phone's title row, status bar included; none on the desktop.
       const bar = phoneTitleRowBottom();
       const narrow = window.innerWidth <= 720;
@@ -159,7 +161,7 @@ export function useCardPlacement(
       const area: Box = {
         left: gap,
         top: narrow ? bar + gap : 48,
-        right: window.innerWidth - gap - (narrow ? 0 : docked),
+        right: window.innerWidth - gap,
         bottom: window.innerHeight - gap,
       };
       const width = card.offsetWidth;

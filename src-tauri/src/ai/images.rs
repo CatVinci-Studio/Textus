@@ -45,7 +45,7 @@ pub async fn ai_generated_image(id: String) -> Result<GeneratedImageData, String
             return found;
         }
         if std::time::Instant::now() >= deadline {
-            return Err("The image service didn't send the picture in time.".to_string());
+            return Err(crate::errors::error("imageServiceTimeout"));
         }
         tokio::time::sleep(std::time::Duration::from_millis(250)).await;
     }
@@ -56,7 +56,9 @@ pub async fn ai_generated_image(id: String) -> Result<GeneratedImageData, String
 /// waits for it as for any picture.
 #[tauri::command]
 #[cfg_attr(test, specta::specta)]
-pub fn ai_retry_generated_image(id: String) -> Result<(), String> {
+pub fn ai_retry_generated_image(app: tauri::AppHandle, id: String) -> Result<(), String> {
+    // A new picture is paid for: not while Textus AI is off.
+    crate::ai::ensure_on(&app)?;
     retry(&id)
 }
 
@@ -73,15 +75,27 @@ pub fn ai_generated_image_prompt(id: String) -> Option<String> {
 /// picture.
 #[tauri::command]
 #[cfg_attr(test, specta::specta)]
-pub fn ai_redraw_generated_image(id: String, prompt: String) -> Result<(), String> {
+pub fn ai_redraw_generated_image(
+    app: tauri::AppHandle,
+    id: String,
+    prompt: String,
+) -> Result<(), String> {
+    crate::ai::ensure_on(&app)?;
     redraw(&id, prompt)
 }
 
+/// Stops the pictures request `request_id` asked for and are still being
+/// made (its Stop).
+pub(crate) fn stop_request(request_id: &str) {
+    pending::stop_request(request_id);
+}
+
 /// Lets a picture go: its proposal was rejected, or it was saved. One
-/// still being made is let go too; what it makes is thrown away.
+/// still being made is stopped, and nothing more is paid for it.
 #[tauri::command]
 #[cfg_attr(test, specta::specta)]
 pub fn ai_discard_generated_image(id: String) {
+    pending::stop(&id);
     pending().retain(|(i, _)| *i != id);
 }
 

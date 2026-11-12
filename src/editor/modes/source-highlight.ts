@@ -1,3 +1,4 @@
+import { docVar } from "../../engine/tokens/doc-defaults";
 import type { Extension } from "@codemirror/state";
 import { HighlightStyle, syntaxHighlighting } from "@codemirror/language";
 import { markdown, markdownLanguage } from "@codemirror/lang-markdown";
@@ -8,16 +9,16 @@ import { tags as t } from "@lezer/highlight";
 /** Fallbacks keep the colours readable when only the base theme's variables
  *  are around (the playground loads content CSS without the editor theme). */
 const v = (name: string, fallback: string) => `var(${name}, ${fallback})`;
-const text = v("--doc-text", "#24272e");
-const muted = v("--doc-muted", "#6b6b6b");
-const accent = v("--doc-accent", "#315ed1");
+const text = docVar("text");
+const muted = docVar("muted");
+const accent = docVar("accent");
 
 /**
  * Colours for raw Markdown. Markup characters, headings, links, emphasis and
  * fenced code each get their own; the values come from the document theme so
  * source mode follows light/dark and imported themes with no second palette.
  */
-export const sourceHighlightStyle = HighlightStyle.define([
+const sourceHighlightStyle = HighlightStyle.define([
   {
     tag: t.processingInstruction,
     color: v("--src-marker", muted),

@@ -6,7 +6,7 @@ import { gfm } from "micromark-extension-gfm";
 import { math } from "micromark-extension-math";
 import { frontmatter } from "micromark-extension-frontmatter";
 import type { RootContent } from "mdast";
-import { blockIds, type BlockKind } from "../../ai/doc-blocks";
+import { blockIds, type BlockKind } from "../../editor/markdown/doc-blocks";
 
 /**
  * A document's blocks as they sit in its text, for plugins that change it
@@ -24,7 +24,7 @@ export interface TextBlock {
   to: number;
 }
 
-export interface BlockEdit {
+interface BlockEdit {
   block: string;
   markdown: string;
 }

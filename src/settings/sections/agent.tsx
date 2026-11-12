@@ -1,3 +1,6 @@
+import { PathText } from "../../engine/controls/PathText";
+import { fill } from "../../i18n/fill";
+import { useSettingsIndexing } from "../indexing";
 import {
   formatContext,
   modelInfo,
@@ -9,9 +12,10 @@ import { useCallback, useEffect, useState } from "react";
 import { useSettings } from "../../prefs/SettingsContext";
 import { localeOf, type Strings } from "../../i18n/strings";
 import { SIGN_IN_MODELS, type SignInModels } from "../agent-models";
-import { useActiveProvider } from "../../ai/provider-catalog";
+import { useProviderCatalog } from "../../ai/provider-catalog";
+import { writingProviderOf } from "../../prefs/settings-types";
 import { ai, auth } from "../../platform/ipc";
-import { Select } from "../../ui/Select";
+import { Select } from "../../engine/controls/Select";
 import { SettingRow, VERBATIM_INPUT } from "./controls";
 import { explainError } from "../../utils/error-explain";
 
@@ -69,12 +73,19 @@ function useFetchedModels(provider: string) {
 function ProviderModelRow({
   t,
   kind,
+  provider: given,
+  label: givenLabel,
 }: {
   t: Strings;
   kind: "writing" | "agent";
+  /** Whose models; else the one this kind uses now. */
+  provider?: string;
+  label?: string;
 }) {
   const { settings, setSettings } = useSettings();
-  const provider = settings.aiProvider;
+  const provider =
+    given ??
+    (kind === "agent" ? settings.aiProvider : writingProviderOf(settings));
   const signIn = useSignInModels(provider);
   const { models: fetched } = useFetchedModels(provider);
 
@@ -95,17 +106,18 @@ function ProviderModelRow({
     },
     [kind, provider, setSettings, settings.agentModels, settings.writingModels],
   );
-  const entry = useActiveProvider();
+  const entry = useProviderCatalog().find((e) => e.id === provider);
 
   // The OAuth backend only accepts its preset family, so a saved API model id
   // becomes that mode's default rather than a blank select.
+  const indexing = useSettingsIndexing();
   useEffect(() => {
-    if (!signIn || !current) return;
+    if (indexing || !signIn || !current) return;
     const presets = kind === "agent" ? signIn.agent : signIn.writing;
     if (!presets.some((option) => option.value === current)) {
       setCurrent("");
     }
-  }, [signIn, current, kind, setCurrent]);
+  }, [signIn, current, kind, setCurrent, indexing]);
 
   const knownAndFetched = [
     ...(entry?.knownModels ?? []),
@@ -161,7 +173,8 @@ function ProviderModelRow({
           .filter((m) => m !== defaultModel)
           .map((m) => ({ value: m, label: describe(m) })),
       ];
-  const label = kind === "agent" ? t.agentModelLabel : t.writingModelLabel;
+  const label =
+    givenLabel ?? (kind === "agent" ? t.agentModelLabel : t.writingModelLabel);
 
   return (
     <SettingRow
@@ -204,21 +217,23 @@ export function AgentModelSection({ t }: { t: Strings }) {
   return <ProviderModelRow t={t} kind="agent" />;
 }
 
-/// One fetch for both pickers: the provider's live model list, on top of the
-/// catalog's. Absent where listing can't work.
-export function ModelListRow({ t }: { t: Strings }) {
+export function ModelListRow({
+  t,
+  provider: given,
+}: {
+  t: Strings;
+  provider?: string;
+}) {
   const { settings } = useSettings();
-  const provider = settings.aiProvider;
+  const provider = given ?? settings.aiProvider;
   const signIn = useSignInModels(provider);
-  const entry = useActiveProvider();
   const { at } = useFetchedModels(provider);
   const [error, setError] = useState<string | null>(null);
   const [loading, setLoading] = useState(false);
   // A failed fetch belongs to the provider it was tried against.
   useEffect(() => setError(null), [provider]);
 
-  const canFetch =
-    provider !== "custom" && !signIn && (entry?.modelsListable ?? true);
+  const canFetch = provider !== "custom" && !signIn;
   if (!canFetch) return null;
 
   async function fetchModels() {
@@ -240,10 +255,11 @@ export function ModelListRow({ t }: { t: Strings }) {
       label={t.modelListLabel}
       hint={
         at
-          ? t.modelFetchedAt.replace(
-              "{date}",
-              new Date(at).toLocaleDateString(localeOf(settings.language)),
-            )
+          ? fill(t.modelFetchedAt, {
+              date: new Date(at).toLocaleDateString(
+                localeOf(settings.language),
+              ),
+            })
           : undefined
       }
       error={error}
@@ -307,7 +323,7 @@ export function AgentWorkspaceRootSection({ t }: { t: Strings }) {
   return (
     <SettingRow
       label={t.agentWorkspaceRootLabel}
-      hint={root || t.agentWorkspaceRootDefault}
+      hint={root ? <PathText path={root} /> : t.agentWorkspaceRootDefault}
       error={error}
     >
       <div className="settings-inline-buttons">

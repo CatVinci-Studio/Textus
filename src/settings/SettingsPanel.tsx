@@ -1,20 +1,16 @@
+import { IconButton } from "../engine/controls/IconButton";
+import { SettingsIndexing } from "./indexing";
 import { AboutSection } from "./sections/about";
+import { pageComponent } from "./builtin-pages";
 import { GuidesSection } from "./sections/guides";
-import {
-  useCallback,
-  useDeferredValue,
-  useEffect,
-  useId,
-  useMemo,
-  useRef,
-  useState,
-} from "react";
+import { SettingsGroup } from "./pages/SettingsGroup";
+import { useEffect, useRef, useState } from "react";
 import { useSettings } from "../prefs/SettingsContext";
 import { useMarginAvailable } from "../ai/margin/margin-room";
-import { usePhoneLayout } from "../ui/usePhoneLayout";
+import { usePhoneLayout } from "../engine/controls/usePhoneLayout";
 import { localeOf } from "../i18n/strings";
-import type { FixedShortcutGroup } from "../app/fixed-shortcuts";
-import { ChevronIcon, CloseIcon } from "../ui/icons";
+import type { FixedShortcutGroup } from "../registry/fixed-shortcuts";
+import { ChevronIcon, CloseIcon } from "../engine/controls/icons";
 import { ThemesTab } from "./sections/theme";
 import { openExtensionsTab, type ExtensionsTab } from "./pages/extensions-tab";
 import {
@@ -26,24 +22,18 @@ import {
 } from "./SettingsSearch";
 import {
   findEntryElement,
-  matchEntries,
   type SearchEntry,
   type SearchMatch,
 } from "./settings-search";
-import { comboFromEvent } from "../utils/shortcuts";
-import { useWindowEvent } from "../utils/hooks/useWindowEvent";
-import { TOGGLE_FIND_REPLACE_EVENT } from "../utils/events";
 import "./SettingsPanel.css";
+import { useSettingsSearch } from "./useSettingsSearch";
 import { settingsPage, settingsPages } from "./settings-pages";
-import type {
-  SettingsPageProps,
-  ShortcutCommand,
-  HelpGuide,
-  Subpage,
-} from "./pages/types";
-import { useModalDialog } from "../ui/useModalDialog";
-import { usePresenceProps } from "../ui/usePresence";
+import { pageProps } from "./pages/types";
+import type { ShortcutCommand, HelpGuide, Subpage } from "./pages/types";
+import { useModalDialog } from "../engine/controls/useModalDialog";
+import { usePresenceProps } from "../engine/motion/usePresence";
 import { emitMenuEvent } from "../platform/menu-events";
+import { listMove } from "../engine/controls/list-keys";
 
 // The settings dialog shell: navigation, search and subpages, for every
 // platform. On a phone the same panel fills the screen as iOS's Settings
@@ -146,7 +136,7 @@ export function SettingsPanel({
     guides: t.navGuides,
   };
 
-  const pageProps: SettingsPageProps = {
+  const props = pageProps({
     t,
     settings,
     setSettings,
@@ -163,10 +153,16 @@ export function SettingsPanel({
     onClose,
     fixedShortcuts,
     pluginCommands,
-  };
+  });
   const renderCategory = (c: Category, indexing = false) => {
     const page = settingsPage(c);
-    return page ? <page.Page {...pageProps} indexing={indexing} /> : null;
+    if (!page) return null;
+    const Page = pageComponent(page);
+    return (
+      <SettingsIndexing.Provider value={indexing}>
+        <Page {...props} indexing={indexing} />
+      </SettingsIndexing.Provider>
+    );
   };
   const tabTitles: Partial<Record<ExtensionsTab, string>> = {
     themes: t.extensionsTabThemes,
@@ -178,7 +174,13 @@ export function SettingsPanel({
     ) : (
       <>
         <h1 className="settings-category-title">{subpageTitles[s]}</h1>
-        <GuidesSection t={t} language={settings.language} openHelp={openHelp} />
+        <SettingsGroup>
+          <GuidesSection
+            t={t}
+            language={settings.language}
+            openHelp={openHelp}
+          />
+        </SettingsGroup>
       </>
     );
 
@@ -223,8 +225,107 @@ export function SettingsPanel({
   // The phone's list leads to pages; it has no current one.
   const current = (id: Category) => !phone && !searching && category === id;
 
+  const layout = (
+    <div className="settings-layout" data-nav={nav.direction ?? undefined}>
+      {!pushed && (
+        <div className="settings-sidebar" key={atHome ? "home" : "side"}>
+          <SettingsSearchField
+            t={t}
+            inputRef={searchInput}
+            query={query}
+            listId={listId}
+            activeId={flatMatches.length ? optionId(activeIndex) : undefined}
+            onQueryChange={(next) => {
+              setQuery(next);
+              setActive(0);
+            }}
+            onMove={(key) => {
+              const moved = listMove(key, activeIndex, flatMatches.length);
+              if (moved !== null) setActive(moved);
+            }}
+            onPick={() => pick(flatMatches[activeIndex])}
+          />
+          {(!phone || !searching) && (
+            <nav className="settings-nav">
+              {categories.map((c) => (
+                <button
+                  key={c.id}
+                  aria-current={current(c.id) ? "page" : undefined}
+                  data-label={c.label}
+                  className={`settings-nav-item ${current(c.id) ? "settings-nav-item-active" : ""}`}
+                  onClick={() => {
+                    setQuery("");
+                    nav.open(c.id);
+                  }}
+                >
+                  <span className="settings-nav-label" data-label={c.label}>
+                    {c.label}
+                  </span>
+                  {phone && <ChevronIcon className="settings-nav-chevron" />}
+                </button>
+              ))}
+            </nav>
+          )}
+        </div>
+      )}
+
+      {searching ? (
+        <div
+          className="settings-content"
+          key="search"
+          role="region"
+          aria-label={t.settingsSearchResults}
+        >
+          <SettingsSearchResults
+            t={t}
+            groups={resultGroups}
+            listId={listId}
+            optionId={optionId}
+            active={activeIndex}
+            onPick={pick}
+          />
+        </div>
+      ) : atHome ? null : subpage ? (
+        <div
+          ref={content}
+          className="settings-content"
+          key={subpage}
+          role="region"
+          aria-label={subpageTitles[subpage]}
+        >
+          <button
+            type="button"
+            className="text-button settings-back-button"
+            onClick={nav.back}
+          >
+            <ChevronIcon className="settings-back-chevron" />
+            {categories.find((c) => c.id === category)?.label}
+          </button>
+          {renderSubpage(subpage)}
+        </div>
+      ) : (
+        <div
+          ref={content}
+          className="settings-content"
+          key={category}
+          role="region"
+          aria-label={categoryLabel}
+        >
+          <h1 className="settings-category-title">{categoryLabel}</h1>
+          {renderCategory(category)}
+        </div>
+      )}
+      {searching && (
+        <SettingsSearchIndex pages={searchPages} onEntries={setEntries} />
+      )}
+    </div>
+  );
   return (
-    <div {...presence} className="settings-backdrop" onClick={onClose}>
+    <div
+      {...presence}
+      className="tx-backdrop settings-backdrop"
+      onClick={onClose}
+    >
       <div
         {...modal}
         role="dialog"
@@ -235,14 +336,13 @@ export function SettingsPanel({
       >
         <div className="settings-header">
           {pushed && (
-            <button
-              type="button"
-              className="icon-button settings-bar-back"
-              aria-label={backLabel}
+            <IconButton
+              className="tx-icon-button settings-bar-back"
+              label={backLabel ?? t.settingsTitle}
               onClick={nav.back}
             >
               <ChevronIcon className="settings-back-chevron" />
-            </button>
+            </IconButton>
           )}
           <span>
             {pushed
@@ -251,113 +351,16 @@ export function SettingsPanel({
                 : categoryLabel
               : t.settingsTitle}
           </span>
-          <button
-            className="icon-button settings-close-button"
-            aria-label={t.windowClose}
+          <IconButton
+            className="tx-icon-button settings-close-button"
+            label={t.windowClose}
             onClick={onClose}
           >
             <CloseIcon />
-          </button>
+          </IconButton>
         </div>
 
-        <div className="settings-layout" data-nav={nav.direction ?? undefined}>
-          {!pushed && (
-            <div className="settings-sidebar" key={atHome ? "home" : "side"}>
-              <SettingsSearchField
-                t={t}
-                inputRef={searchInput}
-                query={query}
-                listId={listId}
-                activeId={
-                  flatMatches.length ? optionId(activeIndex) : undefined
-                }
-                onQueryChange={(next) => {
-                  setQuery(next);
-                  setActive(0);
-                }}
-                onMove={(step) =>
-                  flatMatches.length &&
-                  setActive(
-                    (activeIndex + step + flatMatches.length) %
-                      flatMatches.length,
-                  )
-                }
-                onPick={() => pick(flatMatches[activeIndex])}
-              />
-              {(!phone || !searching) && (
-                <nav className="settings-nav">
-                  {categories.map((c) => (
-                    <button
-                      key={c.id}
-                      aria-current={current(c.id) ? "page" : undefined}
-                      data-label={c.label}
-                      className={`settings-nav-item ${current(c.id) ? "settings-nav-item-active" : ""}`}
-                      onClick={() => {
-                        setQuery("");
-                        nav.open(c.id);
-                      }}
-                    >
-                      {c.label}
-                      {phone && (
-                        <ChevronIcon className="settings-nav-chevron" />
-                      )}
-                    </button>
-                  ))}
-                </nav>
-              )}
-            </div>
-          )}
-
-          {searching ? (
-            <div
-              className="settings-content"
-              key="search"
-              role="region"
-              aria-label={t.settingsSearchResults}
-            >
-              <SettingsSearchResults
-                t={t}
-                groups={resultGroups}
-                listId={listId}
-                optionId={optionId}
-                active={activeIndex}
-                onPick={pick}
-              />
-            </div>
-          ) : atHome ? null : subpage ? (
-            <div
-              ref={content}
-              className="settings-content"
-              key={subpage}
-              role="region"
-              aria-label={subpageTitles[subpage]}
-            >
-              <button
-                type="button"
-                className="text-button settings-back-button"
-                onClick={nav.back}
-              >
-                <ChevronIcon className="settings-back-chevron" />
-                {categories.find((c) => c.id === category)?.label}
-              </button>
-              {renderSubpage(subpage)}
-            </div>
-          ) : (
-            <div
-              ref={content}
-              className="settings-content"
-              key={category}
-              role="region"
-              aria-label={categoryLabel}
-            >
-              <h1 className="settings-category-title">{categoryLabel}</h1>
-              {renderCategory(category)}
-            </div>
-          )}
-          {searching && (
-            <SettingsSearchIndex pages={searchPages} onEntries={setEntries} />
-          )}
-        </div>
+        {layout}
       </div>
     </div>
   );
@@ -426,57 +429,5 @@ function useSettingsNav(initialCategory: Category) {
     direction,
     open,
     back,
-  };
-}
-
-/** The search box: while it holds a query its results stand in for the page,
- *  and picking one goes to the row. */
-function useSettingsSearch() {
-  const [query, setQuery] = useState("");
-  const searching = query.trim() !== "";
-  const deferredQuery = useDeferredValue(query);
-  const [entries, setEntries] = useState<SearchEntry[]>([]);
-  const [active, setActive] = useState(0);
-  const searchInput = useRef<HTMLInputElement>(null);
-  const listId = useId();
-  const matches = useMemo(
-    () => matchEntries(entries, deferredQuery),
-    [entries, deferredQuery],
-  );
-
-  const focusSearch = useCallback(() => {
-    searchInput.current?.focus();
-    searchInput.current?.select();
-  }, []);
-  // Ctrl/⌘+F finds in Settings while it is open, not in the document behind
-  // it; on a Mac the Edit › Find menu takes the keys first.
-  useEffect(() => {
-    const onKeyDown = (e: KeyboardEvent) => {
-      if (comboFromEvent(e) !== "mod+f") return;
-      // A shortcut being recorded takes the keys as they are.
-      if (
-        e.target instanceof Element &&
-        e.target.closest(".shortcut-capture-active")
-      )
-        return;
-      e.preventDefault();
-      e.stopPropagation();
-      focusSearch();
-    };
-    window.addEventListener("keydown", onKeyDown, true);
-    return () => window.removeEventListener("keydown", onKeyDown, true);
-  }, [focusSearch]);
-  useWindowEvent(TOGGLE_FIND_REPLACE_EVENT, focusSearch);
-
-  return {
-    query,
-    setQuery,
-    searching,
-    setEntries,
-    active,
-    setActive,
-    matches,
-    searchInput,
-    listId,
   };
 }

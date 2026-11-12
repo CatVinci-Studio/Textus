@@ -1,3 +1,7 @@
+import { showConfirm } from "../../engine/controls/app-dialog";
+import { Byline } from "../pages/CatalogRow";
+import { Segmented } from "../../engine/controls/Segmented";
+import { fill } from "../../i18n/fill";
 import { requestCreate } from "../../ai/chat/create-request";
 import { useId, useRef, useState } from "react";
 import { useSettings, THEME_MODES } from "../../prefs/SettingsContext";
@@ -10,14 +14,17 @@ import {
 } from "../../theme/theme-import";
 import { ornamentRules } from "../../theme/theme-export";
 import { basename } from "../../utils/path";
-import { showMessage } from "../../ui/app-dialog";
+import { showMessage } from "../../engine/controls/app-dialog";
 import { exportDoc, fs, themes } from "../../platform/ipc";
 import { useLatest } from "../../utils/hooks/useLatest";
-import { Select } from "../../ui/Select";
-import { LinkRow, RowHelp, SettingRow, ToggleRow } from "./controls";
+import { Select } from "../../engine/controls/Select";
+import { RowHelp, SettingRow } from "./controls";
 import {
   AvailableThemes,
+  galleryCopies,
   galleryUpdates,
+  ThemeByline,
+  ThemeCard,
   useGalleryCatalog,
   useGalleryInstall,
 } from "./theme-gallery";
@@ -128,7 +135,7 @@ ${customCss.trim() ? `\n/* Custom CSS */\n${customCss}\n` : ""}`;
   if (!picked) return;
   try {
     await fs.writeTextFile(picked, css);
-    void exportDoc.revealInDir(picked);
+    void exportDoc.revealInDir(picked).catch(() => undefined);
   } catch (err) {
     await showMessage(
       `${t.exportFailed} ${explainError(err, currentStrings())}`,
@@ -162,39 +169,10 @@ function useThemeAction() {
 
 /** Settings › Editor & Appearance › Theme: which form (light, dark), which
  *  theme, and whether the title bar frosts what scrolls beneath it. */
-export function ThemeSection({
-  t,
-  onMore,
-}: {
-  t: Strings;
-  onMore: () => void;
-}) {
+export function ThemeSection({ t }: { t: Strings }) {
   const { settings, setSettings } = useSettings();
-  const appearanceId = useId();
-  const latest = useLatest(settings);
   const { busy, error, run } = useThemeAction();
-
-  // Beside the picker, as it removes the theme picked there.
-  const deleteCurrentTheme = () =>
-    run(async () => {
-      const current = latest.current.userThemes.find(
-        (th) => th.id === latest.current.themeId,
-      );
-      if (!current) return;
-      await themes.deleteTheme(current.id);
-      setSettings({
-        userThemes: latest.current.userThemes.filter(
-          (th) => th.id !== current.id,
-        ),
-        ...(latest.current.themeId === current.id
-          ? { themeId: "default" }
-          : {}),
-      });
-    });
-
-  const isUserThemeSelected = settings.userThemes.some(
-    (th) => th.id === settings.themeId,
-  );
+  const importTheme = useImportTheme(run);
 
   return (
     <>
@@ -205,40 +183,23 @@ export function ThemeSection({
       )}
       {/* Independent of the theme below: that picks the palette, this picks
           which of its two forms is shown. Every theme defines both. */}
-      <SettingRow label={t.appearanceLabel}>
-        <div
-          className="appearance-options"
-          role="radiogroup"
-          aria-label={t.appearanceLabel}
-        >
-          {THEME_MODES.map((mode) => (
-            <label
-              key={mode}
-              className={`appearance-option${settings.theme === mode ? " is-selected" : ""}`}
-            >
-              <input
-                type="radio"
-                name={appearanceId}
-                value={mode}
-                checked={settings.theme === mode}
-                onChange={() => setSettings({ theme: mode })}
-              />
-              {mode === "system"
+      <SettingRow label={t.appearanceModeLabel}>
+        <Segmented
+          kind="choice"
+          label={t.appearanceModeLabel}
+          value={settings.theme}
+          onChange={(theme) => setSettings({ theme })}
+          options={THEME_MODES.map((mode) => ({
+            id: mode,
+            label:
+              mode === "system"
                 ? t.appearanceSystem
                 : mode === "light"
                   ? t.appearanceLight
-                  : t.appearanceDark}
-            </label>
-          ))}
-        </div>
+                  : t.appearanceDark,
+          }))}
+        />
       </SettingRow>
-
-      <ToggleRow
-        label={t.frostedTitleBarLabel}
-        help={t.frostedTitleBarHelp}
-        checked={settings.frostedTitleBar}
-        onChange={(on) => setSettings({ frostedTitleBar: on })}
-      />
 
       <SettingRow label={t.contentThemeLabel}>
         <Select
@@ -259,22 +220,18 @@ export function ThemeSection({
             </option>
           ))}
         </Select>
-        {isUserThemeSelected && (
-          <button
-            className="text-button settings-inline-button"
-            disabled={busy}
-            onClick={() => void deleteCurrentTheme()}
-          >
-            {t.themeDeleteButton}
-          </button>
-        )}
       </SettingRow>
 
-      <LinkRow
-        label={t.themeGetMore}
-        onOpen={onMore}
-        className="theme-more-entry"
-      />
+      <SettingRow label={t.themeImportLabel}>
+        <button
+          type="button"
+          className="text-button settings-inline-button"
+          disabled={busy}
+          onClick={() => void importTheme()}
+        >
+          {t.chooseFile}
+        </button>
+      </SettingRow>
     </>
   );
 }
@@ -300,7 +257,7 @@ function useImportTheme(run: (action: () => Promise<void>) => Promise<void>) {
 }
 
 /** The user's own CSS, on top of whichever theme is picked. */
-function CustomCssRow({ t }: { t: Strings }) {
+export function CustomCssRow({ t }: { t: Strings }) {
   const { settings, setSettings } = useSettings();
   const labelId = useId();
   return (
@@ -334,11 +291,19 @@ export function ThemesTab({ t }: { t: Strings }) {
   const gallery = useGalleryCatalog();
   const install = useGalleryInstall(t);
   const updates = galleryUpdates(gallery.catalog, settings.userThemes);
+  const copies = galleryCopies(gallery.catalog, settings.userThemes);
   const mine = settings.userThemes.filter((theme) =>
     matchesWords(theme.name, query),
   );
-  const remove = (id: string) =>
+  // Asked first, as a plugin's or a skill's removal is.
+  const remove = (id: string, name: string) =>
     run(async () => {
+      const ok = await showConfirm(fill(t.themeDeleteAsk, { name }), {
+        okLabel: t.themeDeleteButton,
+        cancelLabel: t.cancel,
+        danger: true,
+      });
+      if (!ok) return;
       await themes.deleteTheme(id);
       setSettings({
         userThemes: latest.current.userThemes.filter((th) => th.id !== id),
@@ -377,38 +342,39 @@ export function ThemesTab({ t }: { t: Strings }) {
       installedCount={settings.userThemes.length}
       installed={
         mine.length ? (
-          mine.map((theme) => (
-            <div
-              key={theme.id}
-              className="settings-row plugin-card"
-              data-user-theme={theme.id}
-            >
-              <div className="plugin-card-open">
-                <span className="settings-row-label plugin-card-name">
-                  {theme.name}
-                </span>
-                {madeByAi(settings.creations, "theme", theme.id) && (
-                  <span className="plugin-byline">
-                    <span className="plugin-official">{t.madeByTextusAi}</span>
-                  </span>
-                )}
-              </div>
-              <div className="settings-row-control">
+          mine.map((theme) => {
+            const copy = copies.get(theme.id);
+            return (
+              <ThemeCard
+                key={theme.id}
+                t={t}
+                data-user-theme={theme.id}
+                data-in-use={settings.themeId === theme.id || undefined}
+                name={theme.name}
+                description={copy?.description}
+                previews={copy?.previews}
+                byline={
+                  copy ? (
+                    <ThemeByline t={t} theme={copy} />
+                  ) : (
+                    madeByAi(settings.creations, "theme", theme.id) && (
+                      <Byline t={t} madeHere />
+                    )
+                  )
+                }
+                onOpen={copy ? () => setOpenTheme(copy.id) : undefined}
+              >
                 {updates.has(theme.id) && (
                   <button
                     type="button"
                     className="text-button settings-inline-button"
-                    disabled={install.busy}
+                    disabled={install.busy === theme.id}
                     onClick={() => void install.install(updates.get(theme.id)!)}
                   >
                     {t.themeGalleryUpdate}
                   </button>
                 )}
-                {settings.themeId === theme.id ? (
-                  <span className="settings-row-value">
-                    {t.themeGalleryInUse}
-                  </span>
-                ) : (
+                {settings.themeId !== theme.id && (
                   <button
                     type="button"
                     className="text-button settings-inline-button"
@@ -422,18 +388,18 @@ export function ThemesTab({ t }: { t: Strings }) {
                   type="button"
                   className="text-button settings-inline-button"
                   disabled={busy}
-                  onClick={() => void remove(theme.id)}
+                  onClick={() => void remove(theme.id, theme.name)}
                 >
                   {t.themeDeleteButton}
                 </button>
-              </div>
-            </div>
-          ))
+              </ThemeCard>
+            );
+          })
         ) : (
-          <p className="plugin-empty">
+          <p className="tx-list-note">
             {query.trim()
-              ? t.pluginsSearchNone.replace("{query}", query.trim())
-              : t.extensionsThemesNone.replace("{page}", t.navEditor)}
+              ? fill(t.pluginsSearchNone, { query: query.trim() })
+              : t.extensionsThemesNone}
           </p>
         )
       }
@@ -446,7 +412,6 @@ export function ThemesTab({ t }: { t: Strings }) {
           onOpen={(theme) => setOpenTheme(theme.id)}
         />
       }
-      advanced={<CustomCssRow t={t} />}
     />
   );
 }

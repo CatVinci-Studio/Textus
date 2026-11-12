@@ -1,4 +1,4 @@
-import { scaledPx } from "../../../ui/chrome-scale";
+import { scaledPx } from "../../../engine/tokens/chrome-scale";
 import { useEffect, type RefObject } from "react";
 
 /** Breathing room kept between the panel's edge and the viewport edge. */

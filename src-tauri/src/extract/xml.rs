@@ -38,7 +38,18 @@ pub(crate) struct Pull<'a> {
     reader: Reader<&'a [u8]>,
     /// The Close owed for an empty element, handed out by the next `next`.
     owed_close: bool,
+    /// Elements open now: past MAX_DEPTH the part reads as ended, as the
+    /// readers walking it nest a call per element.
+    depth: usize,
 }
+
+/// Deeper than any real document nests; a crafted one stops here, not in a
+/// stack overflow.
+const MAX_DEPTH: usize = 256;
+
+/// The most one part of a package unpacks to: a small file can't unpack to
+/// gigabytes.
+const MAX_PART_BYTES: u64 = 128 * 1024 * 1024;
 
 impl<'a> Pull<'a> {
     pub fn new(xml: &'a [u8]) -> Self {
@@ -47,6 +58,7 @@ impl<'a> Pull<'a> {
         Self {
             reader,
             owed_close: false,
+            depth: 0,
         }
     }
 
@@ -56,12 +68,21 @@ impl<'a> Pull<'a> {
         }
         loop {
             match self.reader.read_event() {
-                Ok(Event::Start(e)) => return Node::Open(tag(&e)),
+                Ok(Event::Start(e)) => {
+                    self.depth += 1;
+                    if self.depth > MAX_DEPTH {
+                        return Node::End;
+                    }
+                    return Node::Open(tag(&e));
+                }
                 Ok(Event::Empty(e)) => {
                     self.owed_close = true;
                     return Node::Open(tag(&e));
                 }
-                Ok(Event::End(_)) => return Node::Close,
+                Ok(Event::End(_)) => {
+                    self.depth = self.depth.saturating_sub(1);
+                    return Node::Close;
+                }
                 Ok(Event::Text(e)) => {
                     if let Ok(text) = e.decode() {
                         return Node::Text(text.into_owned());
@@ -231,15 +252,30 @@ pub(super) fn zip_entry<R: std::io::Read + std::io::Seek>(
     name: &str,
 ) -> Option<Vec<u8>> {
     use std::io::Read;
-    let mut entry = zip.by_name(name).ok()?;
+    let entry = zip.by_name(name).ok()?;
     let mut bytes = Vec::new();
-    entry.read_to_end(&mut bytes).ok()?;
-    Some(bytes)
+    entry
+        .take(MAX_PART_BYTES + 1)
+        .read_to_end(&mut bytes)
+        .ok()?;
+    (bytes.len() as u64 <= MAX_PART_BYTES).then_some(bytes)
 }
 
 #[cfg(test)]
 mod tests {
     use super::*;
+
+    #[test]
+    fn a_part_nested_past_any_real_document_reads_as_ended() {
+        let xml = "<a>".repeat(100_000);
+        let mut pull = Pull::new(xml.as_bytes());
+        let opened = std::iter::from_fn(|| match pull.next() {
+            Node::End => None,
+            node => Some(node),
+        })
+        .count();
+        assert_eq!(opened, MAX_DEPTH);
+    }
 
     #[test]
     fn escaped_characters_are_kept() {

@@ -1,14 +1,17 @@
+import { askForRequirements } from "./requirements";
+import { canRun, canSwitch } from "./lifecycle";
 import { WIKILINK_SOURCE } from "../../utils/note-link";
 import { basename } from "../../utils/path";
 import type { Strings } from "../../i18n/strings";
-import { showMessage } from "../../ui/app-dialog";
+import { showMessage } from "../../engine/controls/app-dialog";
 import {
   catalogSnapshot,
   installFromCatalog,
   loadCatalog,
   type CatalogItem,
 } from "./catalog";
-import { pluginRecord, pluginsSnapshot, setPluginEnabled } from "../manager";
+import { pluginRecord, pluginsSnapshot } from "./plugin-records";
+import { setPluginEnabled } from "../plugin-switches";
 import { matchesFilename, type SuggestKind } from "./manifest";
 import { SUGGEST_KINDS } from "./manifest-parse";
 import { pluginOffer } from "./offer-plugin";
@@ -21,7 +24,7 @@ import { explainError } from "../../utils/error-explain";
  */
 
 /** The official plugin in the catalog whose custom editor opens `path`. */
-export function catalogEditorFor(
+function catalogEditorFor(
   path: string,
   items: CatalogItem[],
 ): CatalogItem | null {
@@ -48,13 +51,15 @@ export async function takeUp(
   try {
     if (request.installed) await setPluginEnabled(request.plugin, true);
     else await installFromCatalog(request.plugin);
+    await askForRequirements(request.plugin, t);
   } catch (error) {
     void showMessage(explainError(error, t), {
       title: t.pluginsTitle,
       tone: "error",
     });
   }
-  return pluginRecord(request.plugin)?.status === "on";
+  const status = pluginRecord(request.plugin)?.status;
+  return !!status && canRun(status, pluginsSnapshot().allOn);
 }
 
 /** Suggests the plugin that opens `path` on the card: "on" when it is on
@@ -70,7 +75,11 @@ export async function offerPluginToOpen(
   if (catalog.status !== "ready") return "none";
   const item = catalogEditorFor(path, catalog.items);
   if (!item) return "none";
-  const installed = !!pluginRecord(item.id);
+  const record = pluginRecord(item.id);
+  // Installed but unable to switch on here (it needs a newer Textus): no
+  // offer that can't be kept.
+  if (record && !canSwitch(record.status)) return "none";
+  const installed = !!record;
   const request: CardRequest = {
     plugin: item.id,
     situation: { type: "open", path },
@@ -129,11 +138,5 @@ export const offerPlugin = pluginOffer({
   },
   status: (id) => pluginRecord(id)?.status,
   card: showPluginCard,
-  install: installFromCatalog,
-  turnOn: (id) => setPluginEnabled(id, true),
-  failed: (error, t) =>
-    void showMessage(explainError(error, t), {
-      title: t.pluginsTitle,
-      tone: "error",
-    }),
+  takeUp,
 });

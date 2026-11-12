@@ -1,3 +1,6 @@
+import { CJK_SCRIPT } from "../../utils/cjk";
+import { focusInPlace } from "../../editor/focus-in-place";
+import { TextSelection } from "@milkdown/kit/prose/state";
 import { useCallback, useRef, useState, type MouseEvent } from "react";
 import { editorViewCtx } from "@milkdown/kit/core";
 import type { Decoration } from "@milkdown/kit/prose/view";
@@ -13,6 +16,10 @@ import type { EditorState } from "@milkdown/kit/prose/state";
 import type { GrammarPopoverInfo } from "./GrammarPopover";
 import type { EditorRunner } from "../../editor/useEditorRunner";
 import { markChangeSource } from "../../editor/change-source";
+
+/** The pointer leaving an underline may be on its way to the card: it
+ *  stays this long. */
+const HOVER_GRACE_MS = 150;
 
 /** The popover for one underline, placed at (x, y), with where it stands
  *  among the paragraph's other underlines. */
@@ -44,9 +51,6 @@ function popoverFor(
   };
 }
 
-const CJK_CHAR =
-  /^[\p{Script=Han}\p{Script=Hiragana}\p{Script=Katakana}\p{Script=Hangul}]$/u;
-
 /** A one-character CJK fix (必 -> 毕 for 必竟) shown with its neighbour on
  *  the card, while Apply still changes only the one. */
 function withContext(
@@ -55,16 +59,16 @@ function withContext(
   spec: GrammarDecorationSpec,
 ): { original: string; suggestion: string } | null {
   const original = spec.original ?? "";
-  if ([...original].length !== 1 || !CJK_CHAR.test(original)) return null;
+  if ([...original].length !== 1 || !CJK_SCRIPT.test(original)) return null;
   const $pos = state.doc.resolve(deco.from);
   const end = $pos.end();
   const start = $pos.start();
   const next = deco.to < end ? state.doc.textBetween(deco.to, deco.to + 1) : "";
-  if (CJK_CHAR.test(next))
+  if (CJK_SCRIPT.test(next))
     return { original: original + next, suggestion: spec.suggestion + next };
   const prev =
     deco.from > start ? state.doc.textBetween(deco.from - 1, deco.from) : "";
-  if (CJK_CHAR.test(prev))
+  if (CJK_SCRIPT.test(prev))
     return { original: prev + original, suggestion: prev + spec.suggestion };
   return null;
 }
@@ -126,7 +130,7 @@ export function useGrammarPopover(
     if (!target) return;
     const related = e.relatedTarget as HTMLElement | null;
     if (related?.closest?.(".grammar-popover")) return;
-    hideTimer.current = setTimeout(() => setPopover(null), 150);
+    hideTimer.current = setTimeout(() => setPopover(null), HOVER_GRACE_MS);
   }, []);
 
   // The caret entering an underline opens the popover; leaving closes one
@@ -218,12 +222,16 @@ export function useGrammarPopover(
 
       // The hover-time range goes stale on any edit. A surviving live
       // decoration is trustworthy: the plugin drops ones whose text changed.
-      const live = (grammarKey.getState(state)?.find() ?? []).find(
-        (deco: Decoration) => {
+      // The same slip may be written twice: the one nearest the card's.
+      const live = (grammarKey.getState(state)?.find() ?? [])
+        .filter((deco: Decoration) => {
           const spec = deco.spec as GrammarDecorationSpec;
           return spec.original === original && spec.suggestion === suggestion;
-        },
-      );
+        })
+        .sort(
+          (a: Decoration, b: Decoration) =>
+            Math.abs(a.from - popover.from) - Math.abs(b.from - popover.from),
+        )[0];
       let range = live ? { from: live.from, to: live.to } : null;
 
       // Else the text itself, if it occurs exactly once.
@@ -238,13 +246,14 @@ export function useGrammarPopover(
       ) {
         return;
       }
-      view.dispatch(
-        markChangeSource(
-          state.tr.insertText(suggestion, range.from, range.to),
-          "ai",
-        ),
+      // The caret after the fixed words, where the reader is, and the page
+      // kept still as the editor takes the focus back.
+      const tr = state.tr.insertText(suggestion, range.from, range.to);
+      tr.setSelection(
+        TextSelection.create(tr.doc, range.from + suggestion.length),
       );
-      view.focus();
+      view.dispatch(markChangeSource(tr, "ai"));
+      focusInPlace(view);
       applied = true;
     });
     if (applied) {

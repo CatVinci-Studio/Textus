@@ -1,6 +1,9 @@
 import { draftProposal, parsePartialToolArgs } from "../chat/partial-tool-args";
 import { draftPictureProposal } from "./generated-images";
-import { resolveBlockTarget, type SentBlock } from "../doc-blocks";
+import {
+  resolveBlockTarget,
+  type SentBlock,
+} from "../../editor/markdown/doc-blocks";
 import type { PartialString } from "../chat/partial-tool-args";
 import { parseProposal } from "../chat/proposal";
 import type { EditProposal } from "../types";

@@ -37,7 +37,6 @@ const providerMocks = vi.hoisted(() => ({
       keyOptional: false,
       oauthUnofficial: false,
       supportsVision: true,
-      modelsListable: true,
       knownModels: [],
     },
   ],
@@ -139,7 +138,7 @@ describe("the connect lesson", () => {
     fireEvent.click(screen.getByRole("button", { name: "Skip for now" }));
     const write = screen.getByRole("dialog", { name: t.tutorialWriteTitle });
     expect(write).toHaveTextContent(
-      "Connect an AI later in Settings › Textus AI to try it yourself.",
+      "Connect an AI later in Settings › Textus AI › Models to try it yourself.",
     );
   });
 
@@ -161,7 +160,7 @@ describe("the connect lesson", () => {
   it("turns Connected on when a key is saved from the lesson", async () => {
     resumeAt("connect");
     render(<Harness />);
-    fireEvent.click(screen.getByRole("button", { name: t.authTabApiKey }));
+    fireEvent.click(screen.getByRole("tab", { name: t.authTabApiKey }));
     fireEvent.change(screen.getByPlaceholderText(t.apiKeyPlaceholder), {
       target: { value: "sk-test" },
     });
@@ -201,7 +200,7 @@ describe("the lessons' copy", () => {
     render(<Harness />);
     expect(
       screen.getByText(
-        "Open the AI panel: the quill icon at the top right (Ctrl+Shift+L)",
+        "Open Textus AI: the sparkles at the top right (Ctrl+Shift+L)",
       ),
     ).toBeVisible();
   });
@@ -210,9 +209,7 @@ describe("the lessons' copy", () => {
     resumeAt("palette");
     render(<Harness />);
     expect(
-      screen.getByText(
-        "Press Ctrl+Shift+P, type a few letters, then Enter to run a command",
-      ),
+      screen.getByText('Press Ctrl+Shift+P, type "export", press Return'),
     ).toBeVisible();
   });
 
@@ -238,7 +235,7 @@ describe("the lessons' copy", () => {
   });
 
   it("never locks the optional tips", () => {
-    resumeAt("plugins");
+    resumeAt("palette");
     render(<Harness />);
     expect(screen.getByRole("button", { name: t.tutorialNext })).toBeEnabled();
     expect(

@@ -1,6 +1,6 @@
 // @vitest-environment jsdom
 import { afterEach, beforeAll, expect, it, vi } from "vitest";
-import { closeViews, openView } from "../../document-view/editor-view-kit";
+import { closeViews, openView } from "../editor-view-kit";
 import "../../plugins/contributions/editor-extensions";
 import { setKeyCapture } from "../../plugins/contributions/editor-input";
 import { addCompletionSource, type CompletionSource } from "./sources";

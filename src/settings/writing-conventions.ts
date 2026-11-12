@@ -1,4 +1,8 @@
 import { localeOf, type Lang, type Strings } from "../i18n/strings";
+import {
+  WRITING_CONVENTIONS,
+  WRITING_CONVENTIONS_AUTOMATIC,
+} from "../platform/ipc-ai-types";
 
 /**
  * Writing conventions: which house rules the AI and checks follow for
@@ -6,60 +10,27 @@ import { localeOf, type Lang, type Strings } from "../i18n/strings";
  * they never change; only their names are localised.
  */
 
-export const AUTOMATIC_CONVENTIONS = "automatic";
-
-/** The profiles, by document language, in the order the picker lists them. */
-export const CONVENTION_PROFILES: { language: string; profiles: string[] }[] = [
-  {
-    language: "zh-Hans",
-    profiles: [
-      "zh-Hans-CN",
-      "zh-Hans-CN/tech",
-      "zh-Hans-CN/gongwen",
-      "zh-Hans-CN/academic",
-      "zh-Hans-CN/fiction",
-      "zh-Hans-CN/newmedia",
-    ],
-  },
-  {
-    language: "zh-Hant",
-    profiles: ["zh-Hant-TW", "zh-Hant-TW/gongwen", "zh-Hant-HK", "zh-Hant-CN"],
-  },
-  {
-    language: "en",
-    profiles: [
-      "en-US/general",
-      "en-US/news",
-      "en-US/tech-google",
-      "en-US/tech-microsoft",
-      "en-US/apa",
-      "en-US/mla",
-      "en-US/army",
-      "en-GB/govuk",
-      "en-GB/oxford",
-      "en-AU",
-    ],
-  },
-  {
-    language: "ja",
-    profiles: ["ja/jtf", "ja/koyobun", "ja/fiction", "ja/tech"],
-  },
-  { language: "ko", profiles: ["ko", "ko/official"] },
-  { language: "es", profiles: ["es-ES", "es-419", "es/eu"] },
-  { language: "fr", profiles: ["fr-FR", "fr-CA", "fr-CH", "fr/eu"] },
-  {
-    language: "de",
-    profiles: ["de-DE", "de-DE/din5008", "de-AT", "de-CH", "de/eu"],
-  },
-  { language: "ru", profiles: ["ru", "ru/gost"] },
-  { language: "pt", profiles: ["pt-BR", "pt-BR/official", "pt-PT", "pt/eu"] },
-];
+/** The profiles, by document language, in the order the picker lists them:
+ *  the backend's list (WRITING_CONVENTIONS), each profile under the language
+ *  its name says - Traditional Chinese with mainland rules is Traditional. */
+export const CONVENTION_PROFILES: { language: string; profiles: string[] }[] =
+  (() => {
+    const all = Object.values(WRITING_CONVENTIONS).flatMap((l) => l.profiles);
+    const languageOf = (profile: string) =>
+      profile.startsWith("zh-")
+        ? profile.slice(0, 7)
+        : profile.split(/[-/]/)[0];
+    return Object.keys(WRITING_CONVENTIONS).map((language) => ({
+      language,
+      profiles: all.filter((p) => languageOf(p) === language),
+    }));
+  })();
 
 const ALL_PROFILES = new Set(CONVENTION_PROFILES.flatMap((g) => g.profiles));
 
 export function isConventionsValue(value: unknown): value is string {
   return (
-    value === AUTOMATIC_CONVENTIONS ||
+    value === WRITING_CONVENTIONS_AUTOMATIC ||
     (typeof value === "string" && ALL_PROFILES.has(value))
   );
 }

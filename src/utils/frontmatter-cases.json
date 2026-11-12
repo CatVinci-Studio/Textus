@@ -1,0 +1,62 @@
+[
+  {
+    "name": "LF",
+    "text": "---\ntitle: A\n---\nBody\n",
+    "yaml": "title: A",
+    "body": "Body\n"
+  },
+  {
+    "name": "CRLF",
+    "text": "---\r\ntitle: A\r\n---\r\nBody\r\n",
+    "yaml": "title: A",
+    "body": "Body\r\n"
+  },
+  {
+    "name": "byte-order mark",
+    "text": "﻿---\ntitle: A\n---\nBody",
+    "yaml": "title: A",
+    "body": "Body"
+  },
+  {
+    "name": "empty block",
+    "text": "---\n---\nBody",
+    "yaml": "",
+    "body": "Body"
+  },
+  {
+    "name": "closed by ...",
+    "text": "---\ntitle: A\n...\nBody",
+    "yaml": "title: A",
+    "body": "Body"
+  },
+  {
+    "name": "spaces after the fences",
+    "text": "--- \ntitle: A\n---  \nBody",
+    "yaml": "title: A",
+    "body": "Body"
+  },
+  {
+    "name": "nothing after it",
+    "text": "---\ntitle: A\n---",
+    "yaml": "title: A",
+    "body": ""
+  },
+  {
+    "name": "never closed",
+    "text": "---\ntitle: A\nBody",
+    "yaml": null,
+    "body": "---\ntitle: A\nBody"
+  },
+  {
+    "name": "not on the first line",
+    "text": "\n---\ntitle: A\n---\n",
+    "yaml": null,
+    "body": "\n---\ntitle: A\n---\n"
+  },
+  {
+    "name": "none",
+    "text": "# Title\n",
+    "yaml": null,
+    "body": "# Title\n"
+  }
+]

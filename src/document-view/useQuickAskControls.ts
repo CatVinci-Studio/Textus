@@ -1,14 +1,13 @@
+import { openConversationTab } from "../app/islands/ai-tabs";
 import { useEffect, useState } from "react";
 import { editorViewCtx } from "@milkdown/kit/core";
 import type { EditorRunner } from "../editor/useEditorRunner";
 import type { PendingEdits } from "./useEditorProposals";
-import type { AgentConversation } from "../ai/chat/useAgentConversation";
+import type { AgentConversation } from "../ai/chat/conversation/conversation-types";
 import type { useInlineChat } from "../ai/chat/quick-ask/useInlineChat";
 import { setQuickAskWidget } from "../ai/chat/quick-ask/quick-ask-widget-plugin";
 import { keepClearOfDock } from "../ai/chat/quick-ask/quick-ask-dock";
 import type { AgentPanelFrame } from "../ai/chat/panel/agent-panel";
-import { canDetachChat } from "../platform/capabilities";
-import type { Settings } from "../prefs/SettingsContext";
 
 /** Opening, closing and handing on Quick Ask, from every entry point (the
  *  shortcut, the context menu, its own buttons). */
@@ -21,9 +20,7 @@ export function useQuickAskControls({
   quickAskEl,
   phone,
   isActive,
-  settings,
   agentPanel,
-  handleDetachChat,
 }: {
   run: EditorRunner;
   inlineChat: ReturnType<typeof useInlineChat>;
@@ -33,9 +30,7 @@ export function useQuickAskControls({
   quickAskEl: HTMLElement | null;
   phone: boolean;
   isActive: boolean;
-  settings: Settings;
   agentPanel: AgentPanelFrame;
-  handleDetachChat: () => void;
 }) {
   // Quick Ask opens at the caret whatever the panel is doing: it has its own
   // conversation. Closing or starting anew with undecided edits asks first.
@@ -121,16 +116,12 @@ export function useQuickAskControls({
   // saved to History. Not mid-reply: the turns would be incomplete.
   function expandQuickAsk() {
     if (quickConversation.busy || conversation.busy) return;
-    if (quickConversation.history.length > 0) {
-      conversation.restore(crypto.randomUUID(), quickConversation.history);
-    }
+    const turns = quickConversation.history;
+    // A tab of its own where the AI has tabs, never over the one in front.
+    if (turns.length > 0 && !openConversationTab(crypto.randomUUID(), turns))
+      conversation.restore(crypto.randomUUID(), turns);
     quickConversation.reset();
     inlineChat.close();
-    if (settings.agentExpandToWindow && canDetachChat) {
-      // After the restore has rendered, so the window gets the new turns.
-      requestAnimationFrame(() => handleDetachChat());
-      return;
-    }
     agentPanel.setOpen(true);
   }
 

@@ -6,6 +6,14 @@ takes seconds, and can fail because a machine was busy.
 
 ## Which layer a test belongs in
 
+**Extend before you add.** Before writing a new test, look for one that
+already sets up the same surface or flow (search `e2e/` and `*.test.ts` for
+the component, its class names and the flow) and add your step or check to
+it. A new test is for a case no existing one can carry without becoming
+unclear; then split by behaviour, not by bug. Say in the commit which test
+you extended. Fewer, broader tests keep CI fast. Checks are about behaviour
+(stays on one row, wraps, nothing hidden), not exact pixels.
+
 | Layer                 | Where                                         | Catches                                                                                    |
 | --------------------- | --------------------------------------------- | ------------------------------------------------------------------------------------------ |
 | 1. Unit               | `src/**/*.test.ts`, next to the code          | Pure logic: a function's answer for its inputs                                             |
@@ -62,7 +70,6 @@ a key the macOS menu takes reaches nothing.
 | `npm run check`: types, lint, unit tests, formats               | locally, CI                        | every change; every pull request                        | yes                            |
 | e2e flows in Chromium (`npm run test:e2e`)                      | locally (4 workers), CI (4 shards) | before a push; every pull request touching the frontend | yes                            |
 | e2e flows in WebKit (`E2E_WEBKIT=1`)                            | CI                                 | after a merge to `main`                                 | no: looked at before a release |
-| Screenshots (`e2e/visual.spec.ts`)                              | Linux only                         | before a release; after a change to the look            | no                             |
 | Stopwatch flows (`@perf`, `npm run test:perf`)                  | locally                            | when timing is the point                                | never                          |
 | Benchmarks (`bench:large-doc`, `bench:plugins`, `bench:motion`) | one machine                        | before a release that touches speed                     | never: compared by hand        |
 
@@ -120,7 +127,7 @@ instead).
 | `pasteMarkdown(page, md)`           | Pastes text into the active editor and waits for it to land.                                                                                                                                                                                                                  |
 | `sourceOf(page)`                    | The active document's Markdown, read by switching to source mode and back.                                                                                                                                                                                                    |
 | `swallowHtmlDrop(page)`             | Before `openApp`: swallows HTML drag and drop as the app's window does (its file drop takes `dragover` and `drop`), so a drag that works here works there.                                                                                                                    |
-| `dragWithMouse(page, from, to, dx)` | Presses on `from`, moves in steps onto `to`, lets go: a drag made of pointer events, as `src/ui/pointer-drag.ts` reads them.                                                                                                                                                  |
+| `dragWithMouse(page, from, to, dx)` | Presses on `from`, moves in steps onto `to`, lets go: a drag made of pointer events, as `src/engine/drag/pointer-drag.ts` reads them.                                                                                                                                         |
 
 Files on disk are in memory: `window.__devFs` (a folder, path to text) and
 `window.__devFiles` (single documents), set from an init script before
@@ -163,7 +170,6 @@ three CI runs, the same commands on every platform;
 holds. The rest are run by hand:
 
 ```sh
-npm run test:visual                    # the e2e flows plus screenshot comparison (Linux baselines)
 E2E_WEBKIT=1 npm run test:e2e          # adds the WebKit project (npx playwright install webkit once)
 npm run test:perf                      # the stopwatch flows (@perf: frame budgets, slides) - never in CI
 npm run bench:motion                   # frame timing of every animation and scroll (e2e/bench/)
@@ -191,9 +197,11 @@ saving; the native jobs' `npm test` skips it with
 help guides in English, Chinese and Japanese, all ten languages with
 `TEXTUS_ROUNDTRIP_ALL=1`.
 
-`npm run test:visual` compares `e2e/visual.spec.ts` against Linux baselines
-(they depend on the fonts of the machine that took them). The WebKit
-project covers the few flows where WebKit differs (`WEBKIT_SPECS` in
+Layout and motion are checked as numbers in the engine's unit tests (the
+solver, the tab strip, the row insets, the drop zones): an e2e flow checks
+what a user sees happen - where a tab lands, which island it joins - not
+pixels or styles. There are no screenshot baselines. The WebKit project
+covers the few flows where WebKit differs (`WEBKIT_SPECS` in
 `playwright.config.ts`); CI runs it after a merge, in the `e2e-webkit`
 job. `playwright.webview.config.ts` runs the flows in an old Chromium you
 point it at, the oldest WebView2 Textus supports
@@ -210,7 +218,7 @@ compare. `BENCH_CPU=1` runs it at full speed, `BENCH_TRACE=1` also saves a
 Chromium trace of each scenario; the header of `e2e/bench/motion.bench.ts`
 has the rest. Animations only move `opacity` and `transform`
 ([design-language.md](../design/design-language.md#10-motion---in-force)); the unit test
-`src/ui/motion-properties.test.ts` reads every stylesheet and fails on
+`src/engine/motion/motion-properties.test.ts` reads every stylesheet and fails on
 anything else.
 
 CI also builds the iOS app for the simulator, unsigned, on macOS (the `ios`
@@ -223,28 +231,32 @@ device is a manual step on a Mac.
 
 ## How CI is laid out
 
-`.github/workflows/ci.yml` runs these jobs on a pull request and on every
-push to `main` and `stable`. The required checks are `check`, `e2e`,
-`native` and `ci-config`; `e2e` and `native` are one-line jobs that pass
-when every job they stand for passed, or when all of them were skipped.
+`.github/workflows/ci.yml` runs at two depths. A pull request into `main`
+and a push to `main` run the quick suite: `check`, and `native` on Linux
+when the change reaches Rust. The full suite - every job below on every
+platform, whatever changed - runs on the tagged commit before a release is
+built (`release.yml` calls `ci.yml`), on a pull request into `stable`, and
+by hand (Run workflow). Run the e2e flows locally before a pull request
+that reaches the browser. The required checks are `check`, `e2e`, `native`
+and `ci-config`; `e2e` and `native` are one-line jobs that pass when every
+job they stand for passed, or when all of them were skipped.
 
-| Job                                 | Runs                                                                      | When                                                      |
-| ----------------------------------- | ------------------------------------------------------------------------- | --------------------------------------------------------- |
-| `changes`                           | `scripts/ci-changes.mjs`: which of the jobs below to run                  | always                                                    |
-| `ci-config`                         | `scripts/guard-ci-config.mjs`: fails a change to CI or test configuration | a pull request from a fork; skipped (passed) otherwise    |
-| `check`                             | `npm run check`, then `vite build` of the app and of the playground       | always                                                    |
-| `e2e (1/4)` to `e2e (4/4)`          | `npm run test:e2e -- --shard=N/4`, with a pinned textus-plugins checkout  | the change reaches the browser                            |
-| `e2e-webkit`                        | the `WEBKIT_SPECS` flows in WebKit (not required)                         | a push after a merge, when the change reaches the browser |
-| `native (ubuntu-22.04)`             | `npm run check:native`                                                    | the change reaches Rust                                   |
-| `native (macos-26)`                 | `npm test`, then `npm run check:native` when the change reaches Rust      | the change reaches platform code                          |
-| `native (windows-2025)`             | `npm run check:native`                                                    | the change reaches Rust and platform code                 |
-| `native (windows-2025, unit tests)` | `npm test`                                                                | the change reaches platform code                          |
-| `ios`                               | the unsigned iOS simulator build, started in the simulator (not required) | the change reaches Rust and platform code                 |
+| Job                                 | Runs                                                                      | When                                                   |
+| ----------------------------------- | ------------------------------------------------------------------------- | ------------------------------------------------------ |
+| `changes`                           | `scripts/ci-changes.mjs`: which of the jobs below to run                  | always                                                 |
+| `ci-config`                         | `scripts/guard-ci-config.mjs`: fails a change to CI or test configuration | a pull request from a fork; skipped (passed) otherwise |
+| `check`                             | `npm run check`, then `vite build` of the app and of the playground       | always                                                 |
+| `e2e (1/4)` to `e2e (4/4)`          | `npm run test:e2e -- --shard=N/4`, with a pinned textus-plugins checkout  | the full suite                                         |
+| `e2e-webkit`                        | the `WEBKIT_SPECS` flows in WebKit (not required)                         | the full suite                                         |
+| `native (ubuntu-22.04)`             | `npm run check:native`                                                    | the change reaches Rust                                |
+| `native (macos-26)`                 | `npm test`, then `npm run check:native` when the change reaches Rust      | the change reaches platform code                       |
+| `native (windows-2025)`             | `npm run check:native`                                                    | the change reaches Rust and platform code              |
+| `native (windows-2025, unit tests)` | `npm test`                                                                | the change reaches platform code                       |
+| `ios`                               | the unsigned iOS simulator build, started in the simulator (not required) | the change reaches Rust and platform code              |
 
-On a pull request, macOS, Windows and iOS run only when the change reaches
-code that differs between platforms; otherwise `native` is the Linux job
-alone. A push to `main` or `stable` runs everything, and a release waits
-for that run ([releasing.md](releasing.md#what-the-workflow-does)).
+macOS, Windows and iOS run only in the full suite; in the quick one
+`native` is the Linux job alone. A release builds only once the full suite
+passed on its tag ([releasing.md](releasing.md#what-the-workflow-does)).
 
 `scripts/ci-changes.mjs` has the rules for "reaches"; the header of
 `ci.yml` sums them up. Some choices that keep a pull request's checks short:
@@ -431,18 +443,9 @@ export's page margins around blocks taller than a page (#151).
 **Interface scale and alignment** (design standard 5.6). The numbers live
 in one place each and their tests sit beside them: the build plugin that
 scales lengths (`vite.chrome-scale.test.ts`), the panel width rule
-(`src/ui/side-panel-width.test.ts`, `src/app/sidebar-width.test.ts`) and a
+(`src/engine/controls/side-panel-width.test.ts`, `src/app/frame/sidebar-width.test.ts`) and a
 floating view's size (`floating-views.test.ts`). Changing the scale curve
-(`src/ui/window-scale.ts`) means updating those numbers, not adding cases.
-`e2e/panel-alignment.spec.ts` checks the one header line at three widths;
-`e2e/database.spec.ts` checks that a dragged copy stays under the pointer,
-zoomed or not. Screenshots in `visual.spec.ts` are taken at the window
-widths where the scale is 1 or a known step, so they change only when the
-look does.
-
-Baselines are per platform. After an intended UI change:
-`npm run test:visual -- --update-snapshots`, then look at every changed
-image before keeping it - a baseline happily records a bug.
+(`src/engine/tokens/chrome-scale.ts`) means updating those numbers, not adding cases.
 
 ### 6. Built app (`scripts/smoke-linux.sh`)
 

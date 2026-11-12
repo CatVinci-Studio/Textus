@@ -153,35 +153,41 @@ impl ChatHistory {
         }
     }
 
-    /// A document saved under a new path takes its conversations along. Returns
+    /// A document moved or saved under a new path takes its conversations
+    /// along - or every document under a moved folder, in one pass. Returns
     /// whether any did.
     pub fn move_document(&self, from: &str, to: &str) -> bool {
+        let moved = |path: &str| crate::ids::moved_path(path, from, to);
         let mut files = self.files.lock().unwrap();
-        let belongs = |e: &Value| e.get("docPath").and_then(Value::as_str) == Some(from);
-        let ids: Vec<String> = self
+        let ids: Vec<(String, String)> = self
             .list()
             .as_array()
             .into_iter()
             .flatten()
-            .filter(|e| belongs(e))
-            .filter_map(|e| id_str(e).map(str::to_owned))
+            .filter_map(|e| {
+                let next = moved(e.get("docPath").and_then(Value::as_str)?)?;
+                Some((id_str(e)?.to_owned(), next))
+            })
             .collect();
         if ids.is_empty() {
             return false;
         }
         self.index.update(|p| {
-            for entry in super::as_list(p).iter_mut().filter(|e| belongs(e)) {
-                entry["docPath"] = json!(to);
+            for entry in super::as_list(p).iter_mut() {
+                let next = entry.get("docPath").and_then(Value::as_str).and_then(moved);
+                if let Some(next) = next {
+                    entry["docPath"] = json!(next);
+                }
             }
         });
-        for id in ids.iter().filter(|id| safe_id(id)) {
+        for (id, next) in ids.iter().filter(|(id, _)| safe_id(id)) {
             let store = self.file_store(&mut files, id);
             // A file that's gone has nothing to move; don't create a stub.
             if store.snapshot().0.get("turns").is_none() {
                 files.remove(id.as_str());
                 continue;
             }
-            store.update(|p| p["docPath"] = json!(to));
+            store.update(|p| p["docPath"] = json!(next));
         }
         true
     }

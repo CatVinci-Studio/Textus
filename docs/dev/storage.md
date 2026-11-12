@@ -57,8 +57,9 @@ Settings > Textus AI > Writing conventions stores; it applies to documents in
 that profile's language, the others stay Automatic), or `{ "zh-Hans": "zh-Hans-CN/tech", "en":
 "en-GB/govuk", "options": { "cjk-latin-space": "on" } }` - one profile per
 language key, `"automatic"` or a missing language meaning Automatic. The
-allowed values are `writing_conventions_options` (`platform/ipc.ts`:
-`WRITING_CONVENTIONS`).
+allowed values are Rust's `rules::profile::LANGUAGE_PROFILES`, mirrored by
+`WRITING_CONVENTIONS` in `platform/ipc-ai-types.ts` (a Rust test keeps the two
+in step).
 
 `settings.json`'s `runInBackground` is **Settings › General › Application
 › Keep running in the background**, off by default, and Rust reads it
@@ -181,7 +182,7 @@ in `src/storage/local.ts`.
   right (`src-tauri/src/boot.js`, `src/storage/boot.ts`). For an imported
   theme that includes the app's chrome colours derived from it: working
   them out takes a CSS engine (`applyThemeChrome` in
-  `src/theme/theme-chrome.ts`), so the frontend remembers the result in
+  `src/engine/tokens/palette.ts`), so the frontend remembers the result in
   `ui-state.json` (`themeChrome`, per theme and appearance) and the boot
   script applies it when it matches.
 - Until its page first paints, a window shows the platform's own

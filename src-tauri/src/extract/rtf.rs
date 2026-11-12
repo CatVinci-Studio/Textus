@@ -9,7 +9,7 @@ use std::path::Path;
 pub(super) fn rtf_markdown(path: &Path) -> Result<String, String> {
     let bytes = std::fs::read(path).map_err(|e| e.to_string())?;
     if !bytes.starts_with(b"{\\rtf") {
-        return Err("This .rtf is not a readable RTF file.".to_string());
+        return Err(crate::errors::error("unreadable"));
     }
     Ok(rtf_to_markdown(&bytes))
 }

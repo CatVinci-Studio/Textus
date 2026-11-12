@@ -280,6 +280,8 @@ export async function paginateHtml(
 ): Promise<string> {
   const frame = document.createElement("iframe");
   frame.setAttribute("aria-hidden", "true");
+  // Read from here, never run: a plugin's export may have changed the page.
+  frame.setAttribute("sandbox", "allow-same-origin");
   frame.tabIndex = -1;
   frame.style.cssText = `position:fixed;left:-${page.width * 4}px;top:0;width:${page.width}px;height:${page.height}px;border:0;visibility:hidden;pointer-events:none`;
   try {

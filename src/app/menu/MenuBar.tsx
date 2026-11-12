@@ -3,14 +3,14 @@ import { useWindowEvent } from "../../utils/hooks/useWindowEvent";
 import { useSettings } from "../../prefs/SettingsContext";
 import { useCloseOnOutsideClick } from "../../utils/hooks/useCloseOnOutsideClick";
 import { usePluginMenuEntries } from "../../plugins/contributions/usePluginMenu";
-import { Presence } from "../../ui/usePresence";
+import { Presence } from "../../engine/motion/usePresence";
 import { AppMenu } from "./app-menu-lazy";
 import {
   buildAppMenu,
   menuBarSections,
   NO_RECENTS,
   type MenuChecks,
-} from "./app-menu-model";
+} from "../../registry/menu/app-menu-model";
 
 /**
  * The app menu's top level laid out along the window bar, where the app
@@ -93,7 +93,7 @@ export function MenuBar({ checks }: { checks?: MenuChecks }) {
           {title}
         </button>
       ))}
-      <Presence show={open !== null} exitMs={120}>
+      <Presence show={open !== null}>
         {open && (
           // A list of its own per title, so the arrow keys start on its
           // first row each time.

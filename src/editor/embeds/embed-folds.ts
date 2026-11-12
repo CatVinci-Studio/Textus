@@ -1,4 +1,4 @@
-import { getUiState, setUiState } from "../../storage/ui-state";
+import { keepInList, uiList } from "../../storage/ui-state";
 import { loadSettings } from "../../prefs/settings-store";
 
 // Which embeds the user folded, on this machine only: the file keeps its
@@ -9,12 +9,7 @@ const KEPT = 300;
 
 type Kept = "foldedEmbeds" | "openedEmbeds";
 
-function kept(name: Kept): string[] {
-  const list = getUiState(name);
-  return Array.isArray(list)
-    ? list.filter((k): k is string => typeof k === "string")
-    : [];
-}
+const kept = uiList;
 
 /** The list that says otherwise than the setting: folded ones, or opened cards. */
 const exceptions = (): Kept =>
@@ -28,6 +23,5 @@ export function embedFolded(key: string): boolean {
 export function setEmbedFolded(key: string, folded: boolean): void {
   const name = exceptions();
   const listed = folded === (name === "foldedEmbeds");
-  const rest = kept(name).filter((k) => k !== key);
-  setUiState(name, listed ? [...rest, key].slice(-KEPT) : rest);
+  keepInList(name, key, listed, { max: KEPT });
 }

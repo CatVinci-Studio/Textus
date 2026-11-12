@@ -8,7 +8,6 @@ import {
   LazyBlocksDrawer,
   drawAllBlocks,
   drawAround,
-  drawnForJump,
   plan,
 } from "./lazy-blocks-drawer";
 import { lazyBlockNodeViews, rememberHeight } from "./lazy-block-views";
@@ -226,15 +225,6 @@ describe("a jump or an export reaching blocks out of sight", () => {
     expect(view.dom.children[1486].nodeName).toBe("P");
     expect(view.dom.children[1514].nodeName).toBe("P");
     expect(view.dom.children[1520].className).toBe("lazy-block");
-  });
-
-  it("gives the outline a heading's drawn block for its placeholder", () => {
-    vi.stubGlobal("requestAnimationFrame", () => 1);
-    const view = open(2000, true);
-    const placeholder = view.dom.children[1200];
-    const drawn = drawnForJump(placeholder, 0);
-    expect(drawn?.textContent).toBe(line(1200));
-    expect(drawn?.isConnected).toBe(true);
   });
 
   it("draws every block for an export, until the user scrolls again", () => {

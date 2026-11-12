@@ -1,6 +1,6 @@
 import { useEffect } from "react";
 import { useLatest } from "../utils/hooks/useLatest";
-import { drafts, windowIpc } from "../platform/ipc";
+import { drafts, fs, windowIpc } from "../platform/ipc";
 import { canUseWindows, hasAppMenu, isIOSApp } from "../platform/capabilities";
 import { lastIOSDocument } from "./ios-recents";
 import {
@@ -11,29 +11,19 @@ import {
   type DocTab,
   type HelpDoc,
 } from "./doc-tabs";
-import type { NewDocumentMode } from "../prefs/SettingsContext";
 import { setTabJump } from "../editor/tab-jump";
-import { lastCaret } from "./last-carets";
-import { isWordDocument } from "./word-import";
-import { loadPlugins } from "../plugins/manager";
-import { customEditorFor } from "../plugins/store/plugin-lookup";
+import { lastCaret } from "./last-places";
 import { keptTabsRestored, readKeptTabs, type KeptTab } from "./reload-tabs";
-
-/** Whether a plugin opens `path` in a tab of its own (a PDF). */
-async function opensInPlugin(path: string): Promise<boolean> {
-  await loadPlugins().catch(() => {});
-  return customEditorFor(path) !== null;
-}
+import { takeWindowSession } from "./launch-window";
 
 // Module-scoped, not a ref: StrictMode runs mount effects twice, and this
 // drain is a destructive pull from shared queues. Each window is its own
 // webview, so each still drains exactly once.
 let drained = false;
 
-export interface StartupRestoreOptions {
+interface StartupRestoreOptions {
   activeTabId: string;
   enableDraftRecovery: boolean;
-  newDocumentMode: NewDocumentMode;
   language: string;
   onboardingShown: boolean;
   setTabs: (updater: (prev: DocTab[]) => DocTab[]) => void;
@@ -45,7 +35,11 @@ export interface StartupRestoreOptions {
   ) => Promise<void>;
   openFile: (path: string, open?: { restoreCaret?: boolean }) => Promise<void>;
   /** Opens `path` in tab `tabId`, in place of what it holds. */
-  replaceTabWithFile: (tabId: string, path: string) => Promise<void>;
+  replaceTabWithFile: (
+    tabId: string,
+    path: string,
+    open?: { restoreCaret?: boolean },
+  ) => Promise<void>;
   /** Reopened documents come back at the caret they were left at. */
   restoreCarets: boolean;
   /** Nothing to open: the start page instead of a blank document. */
@@ -66,6 +60,7 @@ async function keptTab(
     draftTitle: kept.draftTitle,
     sourceMode: kept.sourceMode ?? false,
   };
+  if (kept.view) return { ...shape, view: kept.view };
   if (kept.text) return { ...shape, ...kept.text };
   if (kept.helpDoc) {
     const content = await helpDocContent(kept.helpDoc, language);
@@ -78,6 +73,25 @@ async function keptTab(
   } catch {
     return null;
   }
+}
+
+/** The drafts of tabs a reload gave new ids, kept under the new ones before
+ *  the old go, so a draft dropped since doesn't come back next launch. */
+async function moveDrafts(
+  kept: KeptTab[],
+  newId: (i: number) => string | undefined,
+): Promise<void> {
+  await Promise.all(
+    kept.map((tab, i) => {
+      const id = newId(i);
+      return id && tab.text && tab.text.content !== tab.text.savedContent
+        ? drafts.saveDraftSnapshot(id, tab.path, tab.text.content)
+        : null;
+    }),
+  ).catch(() => {});
+  await Promise.all(
+    kept.map((tab) => tab.id && drafts.clearDraftSnapshot(tab.id)),
+  ).catch(() => {});
 }
 
 /**
@@ -118,6 +132,9 @@ export function useStartupRestore(options: StartupRestoreOptions): void {
         );
         const active = docs[kept.active];
         if (active?.path) restoreCaret(active.path, active.diskMtime ?? null);
+        const made = docs.map((doc, i) =>
+          doc && i !== kept.active ? { ...makeBlankTab(), ...doc } : null,
+        );
         opts.setTabs((prev) => {
           const initial = prev.find((tab) => tab.id === opts.activeTabId);
           if (!initial) return prev;
@@ -130,9 +147,12 @@ export function useStartupRestore(options: StartupRestoreOptions): void {
                   reloadKey: initial.reloadKey + 1,
                 },
               ];
-            return doc ? [{ ...makeBlankTab(), ...doc }] : [];
+            return made[i] ? [made[i]] : [];
           });
         });
+        void moveDrafts(kept.tabs, (i) =>
+          i === kept.active ? opts.activeTabId : made[i]?.id,
+        );
         return;
       }
       // A tab dragged out of another window. Checked first: the draft drain
@@ -180,6 +200,15 @@ export function useStartupRestore(options: StartupRestoreOptions): void {
           opts.setTabs((prev) => [...prev, ...restored]);
           opts.setDraftsRestoredCount(restored.length);
         }
+        // Kept again under their new tabs before the taken copies go: a
+        // crash in between brings them back next time.
+        void Promise.all(
+          restored.map((tab) =>
+            drafts.saveDraftSnapshot(tab.id, tab.path, tab.content),
+          ),
+        )
+          .then(() => drafts.finishDraftRestore())
+          .catch(() => undefined);
       }
       // A Help doc clicked with no window open: this window was spawned to
       // show it in the blank tab. "welcome" starts the tutorial there.
@@ -207,6 +236,15 @@ export function useStartupRestore(options: StartupRestoreOptions): void {
       const recoveredFor = (path: string) =>
         restored.find((tab) => tab.path === path);
       const loadRecoveredIntoInitialTab = (recovered: DocTab) => {
+        // Kept under the tab it moves into before its own goes: a crash in
+        // between still brings it back.
+        void drafts
+          .saveDraftSnapshot(
+            opts.activeTabId,
+            recovered.path,
+            recovered.content,
+          )
+          .catch(() => undefined);
         loadIntoInitialTab({
           path: recovered.path,
           content: recovered.content,
@@ -215,49 +253,38 @@ export function useStartupRestore(options: StartupRestoreOptions): void {
         });
         opts.setTabs((prev) => prev.filter((tab) => tab.id !== recovered.id));
       };
-      if (opts.newDocumentMode === "tab") {
-        const paths = await windowIpc.takePendingOpenPaths();
-        if (paths.length > 0) {
-          opts.stopTutorial();
-          const [first, ...rest] = paths;
-          const recovered = recoveredFor(first);
-          if (recovered) {
-            loadRecoveredIntoInitialTab(recovered);
-          } else if (isWordDocument(first) || (await opensInPlugin(first))) {
-            // Converted into the initial tab, or shown there by a plugin.
-            await opts.replaceTabWithFile(opts.activeTabId, first);
-          } else {
-            const { content: text, diskMtime } = await readDocFromDisk(first);
-            restoreCaret(first, diskMtime);
-            loadIntoInitialTab({
-              path: first,
-              content: text,
-              savedContent: text,
-              diskMtime,
-            });
-          }
-          for (const p of rest) {
-            // Its recovered tab is already open: that is this document.
-            if (recoveredFor(p)) continue;
-            await opts.openPathInTab(p, { restoreCaret: true });
-          }
-          return;
+      // This window's documents: ones opened from outside, or the tabs it had
+      // last session (a window a tab was dragged out into is one of its own).
+      const paths = (await takeWindowSession())?.paths ?? [];
+      if (paths.length > 0) {
+        opts.stopTutorial();
+        // One moved or deleted since gives its place to the next: the
+        // others still open.
+        let at = 0;
+        while (
+          at < paths.length - 1 &&
+          !recoveredFor(paths[at]) &&
+          !(await fileThere(paths[at]))
+        )
+          at++;
+        const [first, ...rest] = paths.slice(at);
+        const recovered = recoveredFor(first);
+        if (recovered) {
+          loadRecoveredIntoInitialTab(recovered);
+        } else if (await fileThere(first)) {
+          // Opened as any file is: a plugin's file or board, a Word
+          // document, the recent list, its last caret.
+          await opts.replaceTabWithFile(opts.activeTabId, first, {
+            restoreCaret: true,
+          });
         }
-      } else {
-        // This window's documents: one opened from outside, or the tabs it
-        // had last session.
-        const [pending, ...rest] = await windowIpc.takePendingWindowPaths();
-        if (pending) {
-          opts.stopTutorial();
-          const recovered = recoveredFor(pending);
-          if (recovered) loadRecoveredIntoInitialTab(recovered);
-          else await opts.openFile(pending, { restoreCaret: true });
-          for (const p of rest) {
-            if (recoveredFor(p)) continue;
-            await opts.openPathInTab(p, { restoreCaret: true });
-          }
-          return;
+        // Gone too, the last of them: the blank tab stays.
+        for (const p of rest) {
+          // Its recovered tab is already open: that is this document.
+          if (recoveredFor(p)) continue;
+          await opts.openPathInTab(p, { restoreCaret: true });
         }
+        return;
       }
       // iOS: the document that was open last time.
       const last = isIOSApp ? await lastIOSDocument() : null;
@@ -306,4 +333,9 @@ export function useStartupRestore(options: StartupRestoreOptions): void {
       }
     })().finally(keptTabsRestored);
   }, [latest]);
+}
+
+/** Whether a file is still where the last session left it. */
+async function fileThere(path: string): Promise<boolean> {
+  return (await fs.fileMtimeMs(path).catch(() => null)) !== null;
 }

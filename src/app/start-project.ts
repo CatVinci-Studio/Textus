@@ -10,7 +10,7 @@ import { getUiState, setUiState } from "../storage/ui-state";
  */
 
 /** A project's tabs as it was left: their paths, the one in front last. */
-export type ProjectTabs = Record<string, string[]>;
+type ProjectTabs = Record<string, string[]>;
 
 const PROJECTS_KEPT = 20;
 const TABS_KEPT = 20;
@@ -56,7 +56,7 @@ export function useProjectTabs(
 }
 
 /** The README a project opens with when nothing was open in it. */
-export function projectReadme(
+function projectReadme(
   entries: readonly { name: string; path: string; is_dir: boolean }[],
 ): string | null {
   const readme = entries.find(

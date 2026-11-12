@@ -24,27 +24,31 @@ const WINDOW_READY_WITHIN: Duration = Duration::from_secs(30);
 /// How long the export has to reach its save dialog.
 const EXPORT_STARTS_WITHIN: Duration = Duration::from_secs(30);
 
-/// `--to` formats and their files' extensions: PDF, HTML and the pandoc
-/// writers of src/export/exporters.ts.
-const EXPORT_FORMATS: &[(&str, &str)] = &[
-    ("pdf", "pdf"),
-    ("html", "html"),
-    ("docx", "docx"),
-    ("odt", "odt"),
-    ("rtf", "rtf"),
-    ("epub", "epub"),
-    ("latex", "tex"),
-    ("mediawiki", "wiki"),
-    ("rst", "rst"),
-    ("textile", "textile"),
-    ("opml", "opml"),
-];
-
 #[derive(Default)]
 pub struct CliBridge {
     /// Windows whose frontend takes requests, by label.
     listening: Mutex<Vec<String>>,
-    waiting: Mutex<HashMap<String, oneshot::Sender<Answer>>>,
+    /// Requests waiting for an answer: the window asked, and where to send.
+    waiting: Mutex<HashMap<String, (String, oneshot::Sender<Answer>)>>,
+}
+
+/// Window `label` is gone: it takes no more requests, and those it had
+/// end now rather than at the time limit.
+pub fn window_gone(app: &AppHandle, label: &str) {
+    let Some(bridge) = app.try_state::<CliBridge>() else {
+        return;
+    };
+    bridge
+        .listening
+        .lock()
+        .unwrap_or_else(|e| e.into_inner())
+        .retain(|l| l != label);
+    // Dropping a request's sender ends its wait.
+    bridge
+        .waiting
+        .lock()
+        .unwrap_or_else(|e| e.into_inner())
+        .retain(|_, (window, _)| window != label);
 }
 
 /// A request for a window. Shape shared with src/app/cli-requests.ts.
@@ -80,7 +84,7 @@ pub fn cli_respond(app: AppHandle, id: String, out: String, err: String, exit: i
         .lock()
         .unwrap_or_else(|e| e.into_inner())
         .remove(&id);
-    if let Some(sender) = sender {
+    if let Some((_, sender)) = sender {
         let _ = sender.send(Answer { out, err, exit });
     }
 }
@@ -282,7 +286,7 @@ async fn in_window(app: &AppHandle, request: Request) -> Answer {
     let (send, answer) = oneshot::channel();
     let bridge = app.state::<CliBridge>();
     let waiting = || bridge.waiting.lock().unwrap_or_else(|e| e.into_inner());
-    waiting().insert(id.clone(), send);
+    waiting().insert(id.clone(), (window.clone(), send));
     let event = CliRequestEvent {
         id: id.clone(),
         command: request.command,
@@ -296,7 +300,8 @@ async fn in_window(app: &AppHandle, request: Request) -> Answer {
     }
     match tokio::time::timeout(WINDOW_ANSWERS_WITHIN, answer).await {
         Ok(Ok(answer)) => answer,
-        _ => {
+        Ok(Err(_)) => Answer::fail("The Textus window closed.", 1),
+        Err(_) => {
             waiting().remove(&id);
             Answer::fail("Textus didn't answer in time.", 1)
         }
@@ -309,7 +314,7 @@ async fn listening_window(app: &AppHandle) -> Option<String> {
     let deadline = Instant::now() + WINDOW_READY_WITHIN;
     let mut opened = false;
     loop {
-        let windows = app.webview_windows();
+        let windows = app.windows();
         let listening: Vec<String> = app
             .state::<CliBridge>()
             .listening
@@ -325,7 +330,7 @@ async fn listening_window(app: &AppHandle) -> Option<String> {
         }
         let any_editor = windows
             .keys()
-            .any(|label| crate::commands::chat_window::is_editor_window(label));
+            .any(|label| crate::windows::is_editor_window(label));
         if !opened && !any_editor {
             let _ = crate::editor_windows::open_new_window(app);
             opened = true;
@@ -344,7 +349,7 @@ async fn export(app: &AppHandle, request: Request) -> Answer {
         Ok(job) => job,
         Err(why) => return Answer::fail(why, 2),
     };
-    let pandoc = !matches!(job.format, "pdf" | "html");
+    let pandoc = !matches!(job.format.as_str(), "pdf" | "html");
     if pandoc && crate::commands::export::detect_pandoc().await.is_none() {
         return Answer::fail(
             format!(
@@ -360,7 +365,7 @@ async fn export(app: &AppHandle, request: Request) -> Answer {
         app,
         Request {
             command: "export".into(),
-            args: vec![job.file.to_string_lossy().into_owned(), job.format.into()],
+            args: vec![job.file.to_string_lossy().into_owned(), job.format],
             ..request
         },
     )
@@ -382,7 +387,7 @@ async fn export(app: &AppHandle, request: Request) -> Answer {
 #[derive(Debug)]
 pub(super) struct ExportJob {
     file: PathBuf,
-    format: &'static str,
+    format: String,
     pub(super) out: PathBuf,
 }
 
@@ -400,10 +405,9 @@ pub(super) fn export_job(request: &Request) -> Result<ExportJob, String> {
         return Err(format!("{} isn't a file.", file.display()));
     }
     let to = to.ok_or("Say which format with --to (pdf, html, docx, ...).")?;
-    let &(format, ext) = EXPORT_FORMATS
-        .iter()
-        .find(|(name, _)| *name == to)
+    let ext = crate::export_formats::export_extension(&to)
         .ok_or_else(|| format!("Textus doesn't export to '{to}'. See 'textus help export'."))?;
+    let format = to.clone();
     let out = match out {
         Some(out) => cwd.join(out),
         None => file.with_extension(ext),

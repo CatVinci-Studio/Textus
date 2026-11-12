@@ -4,14 +4,14 @@ const { run, showMessage } = vi.hoisted(() => ({
   run: new Map<string, () => void>(),
   showMessage: vi.fn(async () => {}),
 }));
-vi.mock("../../app/commands", () => ({
+vi.mock("../../registry/commands", () => ({
   registerCommand: (c: { id: string; run: () => void }) => {
     run.set(c.id, c.run);
     return () => run.delete(c.id);
   },
   runCommand: vi.fn(),
 }));
-vi.mock("../../ui/app-dialog", () => ({ showMessage }));
+vi.mock("../../engine/controls/app-dialog", () => ({ showMessage }));
 vi.mock("../../i18n/current", async () => {
   const zh = (await import("../../i18n/locales/zh")).default;
   return { currentStrings: () => zh };
@@ -47,7 +47,8 @@ it("says a plugin command's failure in the user's language, under the plugin's n
       official: false,
     } as never,
     {
-      runPluginCommand: () => Promise.reject(new Error("No folder is open.")),
+      runPluginCommand: () =>
+        Promise.reject(new Error("No folder is open. [noFolder]")),
       start: async () => {},
     },
   );

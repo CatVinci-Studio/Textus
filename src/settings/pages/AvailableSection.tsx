@@ -1,15 +1,17 @@
+import { SettingsGroup } from "./SettingsGroup";
 import { useEffect, useRef, useState, type ReactNode } from "react";
 import type { Strings } from "../../i18n/strings";
-import { getUiState, setUiState } from "../../storage/ui-state";
+import { keepInList, uiList } from "../../storage/ui-state";
 
 /** Rows shown at first, and how many more come as the list's end
  *  scrolls into sight. */
 const FIRST = 8;
 const MORE = 12;
+/** A list this short or shorter shows no fold button. */
+const FOLD_FROM = 3;
 
 function foldedKinds(): string[] {
-  const kinds = getUiState("extensionsFolded");
-  return Array.isArray(kinds) ? kinds : [];
+  return uiList("extensionsFolded");
 }
 
 /** Below what is installed: what could be. Folds away, remembered per
@@ -39,8 +41,7 @@ export function AvailableSection({
   const toggle = () => {
     const next = !folded;
     setFolded(next);
-    const others = foldedKinds().filter((k) => k !== kind);
-    setUiState("extensionsFolded", next ? [...others, kind] : others);
+    keepInList("extensionsFolded", kind, next);
   };
   const shown = searching ? rows : rows.slice(0, limit);
   const left = rows.length - shown.length;
@@ -55,31 +56,36 @@ export function AvailableSection({
     return () => observer.disconnect();
   }, [left, folded]);
   return (
-    <section className="settings-group extensions-available">
-      <div className="extensions-available-head">
-        <h2 className="settings-group-title">
-          {t.extensionsAvailable}
-          {!message && <span className="extensions-count">{rows.length}</span>}
-        </h2>
-        {!folded && head}
-        <button
-          type="button"
-          className="text-button settings-inline-button"
-          aria-expanded={!folded}
-          onClick={toggle}
-        >
-          {folded ? t.extensionsUnfold : t.extensionsFold}
-        </button>
-      </div>
+    <SettingsGroup
+      className="extensions-available"
+      title={t.extensionsAvailable}
+      count={message ? undefined : rows.length}
+      actions={
+        <>
+          {!folded && head}
+          {/* A short list has nothing to fold away. */}
+          {(folded || rows.length > FOLD_FROM) && (
+            <button
+              type="button"
+              className="text-button settings-inline-button"
+              aria-expanded={!folded}
+              onClick={toggle}
+            >
+              {folded ? t.extensionsUnfold : t.extensionsFold}
+            </button>
+          )}
+        </>
+      }
+    >
       {!folded && (
-        <div className="settings-group-body">
+        <>
           {!message && note}
           {message ?? shown}
           {!message && left > 0 && (
             <div ref={end} className="extensions-more-rows" aria-hidden />
           )}
-        </div>
+        </>
       )}
-    </section>
+    </SettingsGroup>
   );
 }

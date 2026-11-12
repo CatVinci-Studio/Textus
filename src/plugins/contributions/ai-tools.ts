@@ -4,6 +4,7 @@ import { listenToThisWindow } from "../../platform/events";
 import {
   pluginsSnapshot,
   pluginText,
+  runningPlugins,
   subscribePlugins,
 } from "../store/plugin-records";
 import { appVersion } from "../../platform/app-info";
@@ -23,10 +24,8 @@ interface ToolCallEvent {
 
 /** The tools offered now, from the plugins' records. */
 export function offered() {
-  const { allOn, records } = pluginsSnapshot();
-  if (!allOn) return [];
-  return records.flatMap((r) =>
-    r.status === "on" && r.manifest && r.granted.includes("ai.tools")
+  return runningPlugins(pluginsSnapshot()).flatMap((r) =>
+    r.granted.includes("ai.tools")
       ? r.manifest.contributes.aiTools.map((tool) => ({
           plugin: r.id,
           name: tool.name,

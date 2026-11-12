@@ -2,7 +2,7 @@
  * Blocks drawn by a plugin's code, which only their drawer can turn into a
  * picture for an export. A block with no picture exports as its source.
  */
-export interface DrawnBlocks {
+interface DrawnBlocks {
   /** The drawings' elements in the editor, each just after its source. */
   selector: string;
   /** The class that hides a source while its drawing shows. */

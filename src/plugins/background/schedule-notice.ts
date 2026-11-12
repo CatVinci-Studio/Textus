@@ -1,7 +1,8 @@
+import { fill } from "../../i18n/fill";
 import type { Settings } from "../../prefs/SettingsContext";
 import type { Strings } from "../../i18n/strings";
-import { showNotice } from "../../ui/notices";
-import { getUiState, setUiState } from "../../storage/ui-state";
+import { showNotice } from "../../engine/controls/notices";
+import { keepInList, uiList } from "../../storage/ui-state";
 import type { Requirement } from "../store/manifest";
 import { pluginName, pluginRecord, windowInfo } from "../store/plugin-records";
 import {
@@ -61,19 +62,19 @@ function tellOfScheduling(
   setSettings: (patch: Partial<Settings>) => void,
 ): void {
   if (requirementMet(BACKGROUND, settings)) return;
-  const told = getUiState("pluginsToldOfSchedule");
-  const list = Array.isArray(told) ? (told as string[]) : [];
-  if (list.includes(plugin) || toldNow.has(plugin)) return;
+  if (uiList("pluginsToldOfSchedule").includes(plugin) || toldNow.has(plugin))
+    return;
   toldNow.add(plugin);
-  setUiState("pluginsToldOfSchedule", [...list, plugin]);
+  keepInList("pluginsToldOfSchedule", plugin, true);
   showNotice(
-    t.pluginScheduleNotice
-      .replace("{name}", name)
-      .replace("{setting}", requirementLabel(BACKGROUND, t)),
+    fill(t.pluginScheduleNotice, {
+      name,
+      setting: requirementLabel(BACKGROUND, t),
+    }),
     {
       source: name,
       action: {
-        label: t.pluginRequiresTurnOn,
+        label: t.pluginTurnOn,
         run: () => setSettings(turnOnRequirement(BACKGROUND)),
       },
     },

@@ -1,82 +1,120 @@
+import { HeadRow } from "../../engine/controls/HeadRow";
+import { CommentIcon } from "../../engine/controls/icons";
+import { counted } from "../../i18n/current";
+import type { Plural } from "../../i18n/plural";
+import { fill } from "../../i18n/fill";
 import { useRef, useState, type CSSProperties } from "react";
-import { Tooltip } from "../../ui/Tooltip";
-import { FlipOnChange } from "../../ui/flip";
+import { Tooltip } from "../../engine/controls/Tooltip";
+import { FlipOnChange } from "../../engine/motion/flip";
 import { InlineMarkdownText } from "../MarkdownText";
 import type { AgentTurn } from "../types";
+import { parseComment, type Comment } from "./comment-args";
 
-export interface Comment {
-  anchor: string;
-  comment: string;
-  block?: string;
-}
+export type { Comment };
 
-/** An add_comment call's arguments: one of a reply's comments, each a call
- *  of its own. */
-export function parseComment(argumentsJson: string): Comment | null {
-  try {
-    const parsed = JSON.parse(argumentsJson);
-    if (typeof parsed.anchor !== "string" || typeof parsed.comment !== "string")
-      return null;
-    return {
-      anchor: parsed.anchor,
-      comment: parsed.comment,
-      block: typeof parsed.block === "string" ? parsed.block : undefined,
-    };
-  } catch {
-    return null;
-  }
+/** What a comment's suggested fix calls back with. */
+export type ApplySuggestion = (callId: string, comment: Comment) => void;
+
+/** A note's suggested fix, and the button that proposes it. */
+function SuggestedFix({
+  id,
+  comment,
+  labels,
+  onApply,
+}: {
+  id: string;
+  comment: Comment;
+  labels: { commentApplySuggestion: string };
+  onApply?: ApplySuggestion;
+}) {
+  if (!comment.suggestion) return null;
+  return (
+    <div className="agent-comment-suggestion">
+      <InlineMarkdownText text={comment.suggestion} />
+      {onApply && (
+        <button
+          type="button"
+          className="tx-button small"
+          onClick={() => onApply(id, comment)}
+        >
+          {labels.commentApplySuggestion}
+        </button>
+      )}
+    </div>
+  );
 }
 
 /** A review note in the conversation: the passage it is about, the note,
  *  and the way to it in the document. */
 export function CommentCard({
+  id,
   comment,
   num,
   reveal,
   style,
   labels,
   onLocateText,
+  onApplySuggestion,
 }: {
+  id: string;
   comment: Comment;
   /** Its badge's number where the text shows notes as badges. */
   num: number | null;
   reveal: boolean;
   style: CSSProperties | undefined;
-  labels: { commentTitle: string; commentLocate: string };
+  labels: {
+    commentTitle: string;
+    commentLocate: string;
+    commentApplySuggestion: string;
+  };
   onLocateText?: (anchor: string, block?: string) => void;
+  onApplySuggestion?: ApplySuggestion;
 }) {
   return (
     <div
       className={`agent-comment${reveal ? " turn-reveal" : ""}`}
       style={style}
     >
-      <div className="agent-proposal-head">
-        {/* Where the text shows the note as a numbered badge, the card
-            wears the same number in its place. */}
-        {num !== null ? (
-          <span className="agent-comment-num">{num}</span>
-        ) : (
-          <span className="agent-comment-icon" aria-hidden="true">
-            <svg viewBox="0 0 16 16">
-              <path d="M3 3.5h10v7H7l-3 2.5v-2.5H3z" />
-            </svg>
-          </span>
-        )}
-        <span className="agent-proposal-title">{labels.commentTitle}</span>
-        {onLocateText && (
-          <button
-            type="button"
-            className="agent-proposal-link agent-proposal-show"
-            onClick={() => onLocateText(comment.anchor, comment.block)}
-          >
-            {labels.commentLocate}
-          </button>
-        )}
-      </div>
-      <blockquote className="agent-comment-quote">{comment.anchor}</blockquote>
+      <HeadRow
+        className="agent-proposal-head"
+        // Where the text shows the note as a numbered badge, the card
+        // wears the same number in its place.
+        mark={
+          num !== null ? (
+            <span className="agent-comment-num">{num}</span>
+          ) : (
+            <span className="agent-comment-icon" aria-hidden="true">
+              <CommentIcon />
+            </span>
+          )
+        }
+        title={
+          <span className="agent-proposal-title">{labels.commentTitle}</span>
+        }
+        tools={
+          onLocateText && (
+            <button
+              type="button"
+              className="agent-proposal-link agent-proposal-show"
+              onClick={() => onLocateText(comment.anchor, comment.block)}
+            >
+              {labels.commentLocate}
+            </button>
+          )
+        }
+      />
+      <blockquote className="tx-clamp agent-comment-quote">
+        {comment.anchor}
+      </blockquote>
       <div className="agent-comment-text">
         <InlineMarkdownText text={comment.comment} />
       </div>
+      <SuggestedFix
+        id={id}
+        comment={comment}
+        labels={labels}
+        onApply={onApplySuggestion}
+      />
     </div>
   );
 }
@@ -102,6 +140,7 @@ export function CommentGroup({
   style,
   labels,
   onLocateText,
+  onApplySuggestion,
 }: {
   items: { id: string; comment: Comment; num: number | null }[];
   reveal: boolean;
@@ -109,11 +148,13 @@ export function CommentGroup({
   labels: {
     commentTitle: string;
     commentLocate: string;
-    commentCount: string;
+    commentCount: Plural;
     commentGroupMore: string;
     proposalGroupLess: string;
+    commentApplySuggestion: string;
   };
   onLocateText?: (anchor: string, block?: string) => void;
+  onApplySuggestion?: ApplySuggestion;
 }) {
   const [unfolded, setUnfolded] = useState(false);
   // A note arriving, or the card opening, slides what is below it to its
@@ -131,20 +172,23 @@ export function CommentGroup({
         watch={`${unfolded}:${items.length}`}
         targets={() => following(ref.current)}
       />
-      <div className="agent-proposal-head">
-        <span className="agent-comment-icon" aria-hidden="true">
-          <svg viewBox="0 0 16 16">
-            <path d="M3 3.5h10v7H7l-3 2.5v-2.5H3z" />
-          </svg>
-        </span>
-        <span className="agent-proposal-title">
-          {labels.commentTitle}
-          <span className="agent-proposal-kind">
-            {" · "}
-            {labels.commentCount.replace("{n}", String(items.length))}
+      <HeadRow
+        className="agent-proposal-head"
+        mark={
+          <span className="agent-comment-icon" aria-hidden="true">
+            <CommentIcon />
           </span>
-        </span>
-      </div>
+        }
+        title={
+          <span className="agent-proposal-title">
+            {labels.commentTitle}
+            <span className="agent-proposal-kind">
+              {" · "}
+              {counted(labels.commentCount, items.length)}
+            </span>
+          </span>
+        }
+      />
       <ol className="agent-comment-rows">
         {rows.map(({ id, comment, num }) => (
           <li key={id} className="agent-comment-row">
@@ -158,7 +202,7 @@ export function CommentGroup({
                 {num !== null && (
                   <span className="agent-comment-num">{num}</span>
                 )}
-                <span className="agent-comment-row-anchor">
+                <span className="tx-truncate agent-comment-row-anchor">
                   {comment.anchor}
                 </span>
               </button>
@@ -166,6 +210,12 @@ export function CommentGroup({
             <div className="agent-comment-text">
               <InlineMarkdownText text={comment.comment} />
             </div>
+            <SuggestedFix
+              id={id}
+              comment={comment}
+              labels={labels}
+              onApply={onApplySuggestion}
+            />
           </li>
         ))}
       </ol>
@@ -178,7 +228,7 @@ export function CommentGroup({
         >
           {unfolded
             ? labels.proposalGroupLess
-            : labels.commentGroupMore.replace("{n}", String(hidden))}
+            : fill(labels.commentGroupMore, { n: String(hidden) })}
         </button>
       )}
     </div>

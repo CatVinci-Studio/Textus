@@ -1,6 +1,6 @@
 // @vitest-environment jsdom
 import { describe, expect, it } from "vitest";
-import { inElement } from "./frames";
+import { inElement, sandboxedFrame } from "./frames";
 
 /** What the HTML parser makes of `<script>code</script>`: the text it hands
  *  the script, and whether the element ended where it should. */
@@ -28,5 +28,14 @@ describe("code inside a script element", () => {
     // Still the same program: the escapes read as what they replaced.
     const [a, b, c] = new Function(`${text}; return [a, b, c];`)();
     expect([a, b.test("<SCRIPT src>"), c]).toEqual(["<!--", true, "</script>"]);
+  });
+});
+
+describe("a sandboxed frame", () => {
+  it("may fill the screen only when it is a page, not a plugin's host", () => {
+    expect(
+      sandboxedFrame("", "page", { fullscreen: true }).getAttribute("allow"),
+    ).toBe("fullscreen");
+    expect(sandboxedFrame("", "host").getAttribute("allow")).toBeNull();
   });
 });

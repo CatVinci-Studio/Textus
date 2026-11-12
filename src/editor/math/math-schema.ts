@@ -24,7 +24,7 @@ interface MdastNode {
  * the closing one. So "$5 and $6" stay prices; a pair breaking it goes back
  * to text.
  */
-export function revertCurrencyDollars(tree: MdastNode, source: string): void {
+function revertCurrencyDollars(tree: MdastNode, source: string): void {
   const walk = (node: MdastNode) => {
     if (!node.children) return;
     node.children = node.children.map((child) => {

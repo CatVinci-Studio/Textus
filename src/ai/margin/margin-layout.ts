@@ -1,13 +1,15 @@
-import { scaledPx } from "../../ui/chrome-scale";
+import type { Plural } from "../../i18n/plural";
+import { scaledPx } from "../../engine/tokens/chrome-scale";
+import { watchContentZoom } from "../../plugins/views/frame-zoom";
 import { useCallback, useLayoutEffect, useMemo, useState } from "react";
 import { useCloseOnOutsideClick } from "../../utils/hooks/useCloseOnOutsideClick";
 import type { EditorView } from "@milkdown/kit/prose/view";
 import type { ReviewNote } from "./review-notes-plugin";
 import { useLatest } from "../../utils/hooks/useLatest";
-import { flip } from "../../ui/flip";
-import { marginRoom } from "./margin-room";
+import { flip } from "../../engine/motion/flip";
+import { columnForMargin, marginRoom, NARROWEST_SHARE } from "./margin-room";
 import "./ReviewMargin.css";
-import { zoomedRectScale } from "../../ui/zoomed-rects";
+import { zoomedRectScale } from "../../engine/controls/zoomed-rects";
 import { noteAnchorClass } from "./review-notes-plugin";
 
 /** Where the margin goes and its cards stand, each level with its passage
@@ -16,11 +18,11 @@ import { noteAnchorClass } from "./review-notes-plugin";
 export interface ReviewMarginLabels {
   reviewNoteBy: string;
   /** "{n} notes": a run of them as one chip. */
-  reviewGroupNotes: string;
+  reviewGroupNotes: Plural;
   /** A note's box while picking on the notes bar. */
   reviewNotesPickOne: string;
   /** "{n} changes", likewise. */
-  proposalChangeCount: string;
+  proposalChangeCount: Plural;
   reviewNoteAsk: string;
   reviewNoteDone: string;
   /** An own note's mark, by-line and actions. */
@@ -76,7 +78,7 @@ export const LINE_DRIFT = 20;
 export const CHIP_HEIGHT = 35;
 /** The least room a cut card is given - its heading and a line; with less,
  *  it is a chip. */
-export const MIN_CUT = 88;
+const MIN_CUT = 88;
 /** How far a run of cards may push one of its own below its passage
  *  before the whole run is cut to fit beside its passages. */
 export const CROWDED_DRIFT = 120;
@@ -121,7 +123,8 @@ export function measureRoom(
 
 /** Sets the column's left edge to `marginLeft` ("" for centred) at once and
  *  glides it there on its transform, as a margin-left transition would lay
- *  the document out on every frame. */
+ *  the document out on every frame - on the frame clock's span and curve,
+ *  so it moves as the islands around it do. */
 export function placeColumn(contentEl: HTMLElement, marginLeft: string) {
   if (contentEl.style.marginLeft === marginLeft) return;
   flip(
@@ -129,7 +132,7 @@ export function placeColumn(contentEl: HTMLElement, marginLeft: string) {
     () => {
       contentEl.style.marginLeft = marginLeft;
     },
-    { duration: "--dur-slow", easing: "--ease-spring" },
+    { duration: "--dur-settle", easing: "--ease-settle" },
   );
 }
 
@@ -145,6 +148,10 @@ export function stackCards(
   // Drawn at the interface's size, as the cards' stylesheet is.
   const gap = scaledPx(STACK_GAP);
   const chip = scaledPx(CHIP_HEIGHT);
+  const minCut = scaledPx(MIN_CUT);
+  const crowded = scaledPx(CROWDED_DRIFT);
+  const grouped = scaledPx(GROUP_DRIFT);
+  const tight = scaledPx(2);
   let floor = -Infinity;
   // One run from `start` of cards that push each other; `end` keeps the same
   // cards when cut, so a crowded paragraph doesn't end on one whole card.
@@ -158,11 +165,16 @@ export function stackCards(
       const whole = heightOf(p.item.key);
       const next = end === undefined || i + 1 >= end ? Infinity : want[i + 1];
       const room = next - p.top - gap;
-      const height = room >= whole ? whole : room < MIN_CUT ? chip : room;
+      const height = room >= whole ? whole : room < minCut ? chip : room;
       p.cut = height < whole ? height : null;
       p.chip = p.cut === chip;
       p.group = null;
-      below = p.top + height + gap;
+      // A chip closes up to keep pace with passages set closer than a chip
+      // and its gap, never tighter than the least air; chips for one line
+      // keep the gap and drift, so they become a group.
+      const spare = next - p.top - chip;
+      const after = p.chip && spare >= tight && spare < gap ? spare : gap;
+      below = p.top + height + after;
       i++;
     } while (
       i < placed.length &&
@@ -175,8 +187,8 @@ export function stackCards(
     let run = lay(start);
     const most = () =>
       Math.max(...placed.slice(start, run.end).map((p) => p.drift));
-    if (most() > CROWDED_DRIFT) run = lay(start, run.end);
-    if (most() > GROUP_DRIFT) {
+    if (most() > crowded) run = lay(start, run.end);
+    if (most() > grouped) {
       let below = floor;
       for (let from = start; from < run.end;) {
         let to = from + 1;
@@ -239,6 +251,8 @@ export function useMarginRoom(
   scrollEl: HTMLElement,
   contentEl: HTMLElement,
   onNoMargin: (noMargin: boolean) => void,
+  /** There are cards: the column may narrow to keep them beside it. */
+  cards: boolean,
 ) {
   const [noMargin, setNoMargin] = useState(false);
   const onNoMarginRef = useLatest(onNoMargin);
@@ -249,7 +263,32 @@ export function useMarginRoom(
     if (!view) return;
     let last: boolean | null = null;
     const check = () => {
-      const next = !measureRoom(scrollEl, contentEl, view).available;
+      // Cards that don't fit beside the column at its own width get room
+      // from it, down to a readable line; none, it keeps its width. Each
+      // check starts from its own width: the window or the zoom changed.
+      contentEl.style.maxWidth = "";
+      let room = measureRoom(scrollEl, contentEl, view);
+      // Only the adaptive width gives way; one the user set stays as set.
+      const adaptive =
+        !document.documentElement.hasAttribute("data-content-width");
+      if (cards && adaptive && !room.available) {
+        const pm = view.dom as HTMLElement;
+        const padding =
+          contentEl.getBoundingClientRect().width -
+          pm.getBoundingClientRect().width * zoomedRectScale(pm);
+        // It keeps most of its own width, which already follows the window,
+        // the theme and the zoom.
+        const widest = columnForMargin(
+          scrollEl.clientWidth,
+          padding,
+          contentEl.getBoundingClientRect().width * NARROWEST_SHARE,
+        );
+        if (widest !== null) {
+          contentEl.style.maxWidth = `${widest}px`;
+          room = measureRoom(scrollEl, contentEl, view);
+        }
+      }
+      const next = !room.available;
       if (next === last) return;
       last = next;
       setNoMargin(next);
@@ -260,8 +299,14 @@ export function useMarginRoom(
     ro.observe(scrollEl);
     ro.observe(contentEl);
     ro.observe(view.dom);
-    return () => ro.disconnect();
-  }, [view, scrollEl, contentEl, onNoMarginRef]);
+    // A column held to a width for cards keeps its size through a zoom, so
+    // no resize says the zoom changed.
+    const stopZoom = watchContentZoom(check);
+    return () => {
+      ro.disconnect();
+      stopZoom();
+    };
+  }, [view, scrollEl, contentEl, onNoMarginRef, cards]);
   return noMargin;
 }
 

@@ -2,7 +2,7 @@
 //! them, every figure numbered and captioned in reading order, and the list
 //! of the sources the text cites below them, in the paper's language.
 
-use super::draft::WEB_FIGURE_MARK;
+use super::checks::WEB_FIGURE_MARK;
 use super::genre::Frame;
 use super::prompts;
 use super::{Dossier, Genre, Outline, Paper};
@@ -55,7 +55,7 @@ fn picture_line() -> &'static Regex {
 }
 
 fn cited() -> &'static Regex {
-    super::draft::cited_link()
+    super::checks::cited_link()
 }
 
 /// `sections` with a numbered caption under every figure, counted through
@@ -341,7 +341,7 @@ pub(crate) fn plain_citations(section: &str) -> String {
 }
 
 fn cited_number() -> &'static Regex {
-    super::draft::cited_link()
+    super::checks::cited_link()
 }
 
 /// The whole paper: its opening, its sections and its reference list, one

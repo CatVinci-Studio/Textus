@@ -1,4 +1,3 @@
-import { useRef, useState } from "react";
 import { ai } from "../../platform/ipc";
 import type { AgentTurn } from "../types";
 import { passExchange } from "./memory-pass";
@@ -11,33 +10,37 @@ const NONE: string[] = [];
  * the empty message box (Tab takes it), all of them as buttons over it. A
  * failed request only means no suggestions.
  */
-export function useNextMessage(provider: string, model: string, on: boolean) {
-  const [suggestions, setSuggestions] = useState<string[]>(NONE);
+export class NextMessage {
   // Each ask's number: an answer counts only if no later ask, or `clear`,
   // came after it.
-  const asked = useRef(0);
+  private asked = 0;
 
-  /** Asks after `conversation`'s last exchange. */
-  function suggestAfter(conversation: AgentTurn[]) {
-    const ask = ++asked.current;
-    setSuggestions(NONE);
+  constructor(private readonly show: (suggestions: string[]) => void) {}
+
+  /** Asks after `conversation`'s last exchange, where `on`. */
+  suggestAfter(
+    conversation: AgentTurn[],
+    provider: string,
+    model: string | null,
+    on: boolean,
+  ) {
+    const ask = ++this.asked;
+    this.show(NONE);
     if (!on) return;
     void ai
       .suggestNextMessage({
         provider,
-        model: model || null,
+        model,
         exchange: passExchange(conversation),
       })
       .then((next) => {
-        if (ask === asked.current) setSuggestions(followUps(next));
+        if (ask === this.asked) this.show(followUps(next));
       })
       .catch(() => {});
   }
 
-  function clear() {
-    asked.current++;
-    setSuggestions(NONE);
+  clear() {
+    this.asked++;
+    this.show(NONE);
   }
-
-  return { suggestions, suggestAfter, clear };
 }

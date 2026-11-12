@@ -6,6 +6,9 @@ use super::{catalog_url, CatalogEntry};
 use crate::ext_stats;
 use sha2::{Digest, Sha256};
 
+/// The most the catalog's index may be.
+const MAX_CATALOG_BYTES: usize = 8 * 1024 * 1024;
+
 /// The site's address, and the one it had before (which still serves).
 const DOWNLOAD_HOSTS: [&str; 2] = ["textus.md", "textus.catvinci.com"];
 
@@ -54,12 +57,11 @@ pub(super) async fn fetch() -> Result<String, String> {
                 response.status()
             ));
         }
-        response.text().await.map_err(|e| {
-            format!(
-                "The plugin catalog broke off: {}",
-                crate::net::error_text(&e)
-            )
-        })
+        let body = crate::net::read_limited(response, MAX_CATALOG_BYTES)
+            .await
+            .map_err(|e| format!("The plugin catalog broke off: {e}"))?
+            .ok_or_else(|| "The plugin catalog is too large to read.".to_string())?;
+        String::from_utf8(body).map_err(|e| e.to_string())
     })
     .await
 }
@@ -96,9 +98,7 @@ pub(super) fn checked(entry: &CatalogEntry, bytes: &[u8]) -> Result<(), String> 
     Ok(())
 }
 
-pub(super) fn hex(bytes: &[u8]) -> String {
-    bytes.iter().map(|b| format!("{b:02x}")).collect()
-}
+pub(super) use crate::ids::hex;
 
 /// Downloads `url` from the catalog's own address.
 pub(super) async fn download(url: &str, what: &str) -> Result<Vec<u8>, String> {
@@ -142,13 +142,10 @@ pub(super) async fn download_with(
                 response.status()
             ));
         }
-        let bytes = response.bytes().await.map_err(|e| {
-            format!(
-                "The download of {what} broke off: {}",
-                crate::net::error_text(&e)
-            )
-        })?;
-        Ok(bytes.to_vec())
+        crate::net::read_limited(response, super::MAX_PACKAGE as usize)
+            .await
+            .map_err(|e| format!("The download of {what} broke off: {e}"))?
+            .ok_or_else(|| format!("The download of {what} is too large."))
     })
     .await
 }

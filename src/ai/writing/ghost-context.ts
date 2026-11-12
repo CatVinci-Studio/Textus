@@ -1,15 +1,15 @@
 import type { CompletionHints } from "../../platform/ipc";
 import { cjkChunk, isCjk, isCjkLetter } from "../../utils/cjk";
-import { headingTrail } from "../doc-markdown";
+import { headingTrail } from "../../editor/markdown/doc-markdown";
 import type { Node as ProseNode, ResolvedPos } from "@milkdown/kit/prose/model";
 
 /** What a completion is asked with and how its reply is tidied and split:
  *  pure functions of the document. */
 
 // More context costs on every request and barely changes the suggestion.
-export const MAX_CONTEXT_CHARS = 1500;
+const MAX_CONTEXT_CHARS = 1500;
 // Enough to lead into what follows mid-document without dominating the prompt.
-export const MAX_AFTER_CONTEXT_CHARS = 300;
+const MAX_AFTER_CONTEXT_CHARS = 300;
 
 /** Strips the leading space models often add after CJK text, which doesn't
  *  separate words with spaces. After Latin text the space is kept. */
@@ -46,7 +46,7 @@ export function stripEcho(before: string, suggestion: string): string {
   return suggestion;
 }
 
-export const BLOCK_NAMES: Record<string, string> = {
+const BLOCK_NAMES: Record<string, string> = {
   heading: "heading",
   list_item: "list item",
   blockquote: "blockquote",

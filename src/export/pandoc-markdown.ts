@@ -1,10 +1,12 @@
+import { eachLine } from "../utils/markdown-lines";
 // The Markdown handed to pandoc for export, rewritten where the editor's
 // syntax has no pandoc equivalent: highlights, sized images, callouts,
 // `[[links]]` and embeds, `~sub~`/`^sup^`, citations; `%%comments%%` go.
 // Code and math are left untouched.
 
 import { WIKILINK_SOURCE } from "../utils/note-link";
-import { parseImageTag } from "../editor/images/image-html";
+import { parseImageTag, splitAltSize } from "../editor/images/image-html";
+import { splitImageTitle } from "../editor/images/image-rotation";
 import { parseEmbed } from "../editor/images/obsidian-embed";
 import { shownWikilink } from "../editor/markdown/wikilink-reveal";
 import {
@@ -15,11 +17,8 @@ import {
 import { OBJECT, findInlineSyntax } from "../editor/markdown/inline-syntax";
 import type { NoteLinkOut } from "./note-links";
 
-const FENCE = /^ {0,3}(`{3,}|~{3,})/;
-const MATH_FENCE = /^\s*\$\$/;
 const IMG_TAG = /<img\b(?:[^<>"']|"[^"]*"|'[^']*')*>/gi;
-const IMAGE_WIDTH =
-  /!\[([^\]]*)\]\((\S+?)\s+"([^"]*?)\s*\{textus-width=(\d{1,3})%\}"\)/g;
+const IMAGE = /!\[([^\]]*)\]\((\S+?)(?:\s+"([^"]*)")?\)/g;
 const QUOTE = /^(?:[ \t]*>)+[ \t]?/;
 // A block a comment can't run on into: a list item, heading or table row.
 const BLOCK_START = /^\s*(?:[-+*]\s|\d{1,9}[.)]\s|#{1,6}\s|\|)/;
@@ -55,9 +54,9 @@ function between(
   return out + outside(text.slice(at));
 }
 
-export type AlertLabels = Record<AlertType, string>;
+type AlertLabels = Record<AlertType, string>;
 
-export interface PandocRewrite {
+interface PandocRewrite {
   /** The editor's labels for GitHub's alerts; without them a callout stays. */
   alertLabels?: AlertLabels;
   /** Where each `[[link]]` and `![[embed]]` leads; any other is its text. */
@@ -83,6 +82,25 @@ function imageTag(tag: string): string {
     : "";
   const width = /^\d+$/.test(image.width) ? `${image.width}px` : image.width;
   return `![${alt}](${src}${title})${width ? `{width=${width}}` : ""}`;
+}
+
+/** A Markdown image with Textus's size or turn in its title, or
+ *  Obsidian's size in its alt, as pandoc writes a width; any other as is. */
+function sizedImage(
+  whole: string,
+  alt: string,
+  src: string,
+  title: string | undefined,
+): string {
+  const kept = splitImageTitle(title);
+  const sized = splitAltSize(alt);
+  if (kept.title === (title ?? "") && !sized.width) return whole;
+  const width =
+    kept.widthPercent !== null
+      ? `${kept.widthPercent}%`
+      : sized.width && `${sized.width}px`;
+  const shown = kept.title.trim() ? ` "${kept.title.trim()}"` : "";
+  return `![${sized.alt}](${src}${shown})${width ? `{width=${width}}` : ""}`;
 }
 
 function noteLink(source: string, options: PandocRewrite): string {
@@ -118,15 +136,7 @@ function rewriteText(text: string, options: PandocRewrite): string {
 function rewriteProse(line: string, options: PandocRewrite): string {
   return between(line, CODE_MATH, (prose) =>
     between(
-      prose
-        .replace(IMG_TAG, imageTag)
-        .replace(
-          IMAGE_WIDTH,
-          (_m, alt: string, src: string, title: string, w) => {
-            const kept = title.trim() ? ` "${title.trim()}"` : "";
-            return `![${alt}](${src}${kept}){width=${w}%}`;
-          },
-        ),
+      prose.replace(IMG_TAG, imageTag).replace(IMAGE, sizedImage),
       LINKS,
       (words) => rewriteText(words, options),
       (span) => (span.endsWith("]]") ? noteLink(span, options) : span),
@@ -187,37 +197,27 @@ function callout(
 /** Splits `markdown` into runs of code lines and runs of prose paragraphs. */
 function blocks(markdown: string): { code: boolean; text: string }[] {
   const out: { code: boolean; text: string }[] = [];
-  let fence: string | null = null;
-  let math = false;
   const push = (code: boolean, line: string, joins: boolean) => {
     const last = out.at(-1);
     if (last && last.code === code && joins) last.text += `\n${line}`;
     else out.push({ code, text: line });
   };
-  for (const line of markdown.split("\n")) {
-    const match = FENCE.exec(line);
-    if (fence || math) {
-      if (
-        fence &&
-        match?.[1][0] === fence[0] &&
-        match[1].length >= fence.length
-      )
-        fence = null;
-      if (math && line.includes("$$")) math = false;
-      push(true, line, true);
-    } else if (match || (MATH_FENCE.test(line) && !/\$\$.*\$\$/.test(line))) {
-      if (match) fence = match[1];
-      else math = true;
-      push(true, line, true);
-    } else {
-      const joins =
-        !!line.trim() &&
-        !!out.at(-1)?.text.split("\n").at(-1)?.trim() &&
-        !BLOCK_START.test(line) &&
-        quoteDepth(line) === quoteDepth(out.at(-1)!.text.split("\n").at(-1)!);
-      push(false, line, joins);
-    }
-  }
+  eachLine(
+    markdown,
+    (line, _index, code) => {
+      if (code) {
+        push(true, line, true);
+      } else {
+        const joins =
+          !!line.trim() &&
+          !!out.at(-1)?.text.split("\n").at(-1)?.trim() &&
+          !BLOCK_START.test(line) &&
+          quoteDepth(line) === quoteDepth(out.at(-1)!.text.split("\n").at(-1)!);
+        push(false, line, joins);
+      }
+    },
+    { math: true, frontMatter: true },
+  );
   return out;
 }
 

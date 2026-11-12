@@ -18,23 +18,28 @@
         -webkit-user-select: none;
         cursor: grabbing;
       }
+      /* The look the window that started the drag draws a lifted tab
+         with (?look=, drag-pill-look.ts): a capsule on its surface. */
       .pill {
         box-sizing: border-box;
         display: flex;
         align-items: center;
         gap: 6px;
-        height: 30px;
+        height: 28px;
         margin: 2px;
-        padding: 0 14px;
-        border-radius: 8px;
-        border: 1px solid rgba(0, 0, 0, 0.15);
-        background: #f5f4f0;
-        color: #333;
-        font:
-          13px -apple-system,
+        padding: 0 12px;
+        border-radius: 999px;
+        border: 1px solid var(--pill-edge, rgba(0, 0, 0, 0.15));
+        background: var(--pill-bg, #f5f4f0);
+        color: var(--pill-fg, #333);
+        font-family: var(
+          --pill-font,
+          -apple-system,
           BlinkMacSystemFont,
-          sans-serif;
-        box-shadow: 0 4px 14px rgba(0, 0, 0, 0.25);
+          sans-serif
+        );
+        font-size: var(--pill-size, 13px);
+        box-shadow: var(--pill-shadow, 0 4px 14px rgba(0, 0, 0, 0.25));
       }
       .title {
         overflow: hidden;
@@ -43,17 +48,10 @@
       }
       .dot {
         flex: none;
-        width: 7px;
-        height: 7px;
+        width: 6px;
+        height: 6px;
         border-radius: 50%;
-        background: #d98a3d;
-      }
-      @media (prefers-color-scheme: dark) {
-        .pill {
-          background: #3a3a3a;
-          color: #ddd;
-          border-color: rgba(255, 255, 255, 0.15);
-        }
+        background: currentColor;
       }
     </style>
   </head>
@@ -64,6 +62,7 @@
     </div>
     <script>
       const params = new URLSearchParams(location.search);
+      document.documentElement.style.cssText = params.get("look") || "";
       document.getElementById("title").textContent = params.get("title") || "";
       if (params.get("dirty") === "1")
         document.getElementById("dot").style.display = "";

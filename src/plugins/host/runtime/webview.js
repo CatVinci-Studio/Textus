@@ -4,7 +4,7 @@
 // plugin's host only, through the window - as a VS Code webview does.
 //
 // Plain JavaScript, put into the frame as is.
-/* global createEndpoint */
+/* global createEndpoint, localized */
 (function () {
   "use strict";
   var app = null;
@@ -49,11 +49,30 @@
   window.addEventListener("keydown", closeMenu, true);
 
   // A pinch or a mod+wheel over the page zooms the document around it, as
-  // it does anywhere else in the window: passed on, not kept here.
+  // it does anywhere else in the window: passed on, not kept here, unless
+  // the page zoomed itself (a PDF). A scroll still moving when the key goes
+  // down stays a scroll (useZoom.ts).
+  var lastScroll = -Infinity;
+  var synthetic = false;
+  var pinch = null;
   window.addEventListener(
     "wheel",
     function (event) {
-      if (!event.ctrlKey && !event.metaKey) return;
+      if (synthetic) return;
+      // A pinch's own ctrl+wheel twin, where the engine sends one: the
+      // page takes it or the pinch's gesture events zoom the document.
+      if (pinch && event.ctrlKey) {
+        pinch.twins = true;
+        if (event.defaultPrevented) pinch.owner = pinch.owner || "page";
+        else event.preventDefault();
+        return;
+      }
+      if (event.defaultPrevented) return;
+      var modified = event.ctrlKey || event.metaKey;
+      if (!modified || event.timeStamp - lastScroll < 250) {
+        lastScroll = event.timeStamp;
+        return;
+      }
       event.preventDefault();
       send("zoomWheel", {
         deltaY: event.deltaY,
@@ -133,16 +152,62 @@
       document.execCommand(action);
     });
   }
-  ["gesturestart", "gesturechange", "gestureend"].forEach(function (type) {
-    window.addEventListener(type, function (event) {
-      event.preventDefault();
-      send("zoomGesture", {
-        type: type,
-        scale: event.scale,
-        x: event.clientX,
-        y: event.clientY,
-      });
+  // A trackpad pinch in WebKit comes as gesture events, which pages rarely
+  // know: each step is offered to the page as the ctrl+wheel Chromium sends
+  // for a pinch. A page that zooms itself (a PDF, a canvas) keeps the whole
+  // pinch; else it zooms the document.
+  function gesture(type, event, scale) {
+    send("zoomGesture", {
+      type: type,
+      scale: scale,
+      x: event.clientX,
+      y: event.clientY,
     });
+  }
+  function offerToPage(event, ratio) {
+    var target = document.elementFromPoint(event.clientX, event.clientY);
+    if (!target) return false;
+    var step = new WheelEvent("wheel", {
+      deltaY: -100 * Math.log(ratio),
+      ctrlKey: true,
+      clientX: event.clientX,
+      clientY: event.clientY,
+      bubbles: true,
+      cancelable: true,
+    });
+    synthetic = true;
+    try {
+      return !target.dispatchEvent(step);
+    } finally {
+      synthetic = false;
+    }
+  }
+  window.addEventListener("gesturestart", function (event) {
+    if (event.defaultPrevented) return;
+    event.preventDefault();
+    pinch = { last: 1, owner: null };
+  });
+  window.addEventListener("gesturechange", function (event) {
+    if (event.defaultPrevented || !pinch || !(event.scale > 0)) return;
+    event.preventDefault();
+    var ratio = event.scale / pinch.last;
+    pinch.last = event.scale;
+    if (!pinch.twins && pinch.owner !== "window" && offerToPage(event, ratio)) {
+      pinch.owner = "page";
+      return;
+    }
+    if (pinch.owner === "page") return;
+    if (!pinch.owner) {
+      pinch.owner = "window";
+      gesture("gesturestart", event, 1);
+    }
+    gesture("gesturechange", event, event.scale);
+  });
+  window.addEventListener("gestureend", function (event) {
+    if (event.defaultPrevented || !pinch) return;
+    event.preventDefault();
+    if (pinch.owner === "window") gesture("gestureend", event, event.scale);
+    pinch = null;
   });
 
   // Where a menu opens: under an element, or at a point of the page.
@@ -168,28 +233,8 @@
     document.documentElement.dataset.theme = dark ? "dark" : "light";
   }
 
-  // A string of the plugin's manifest (`l10n`) in the UI's language: its
-  // own, then its base language's ("zh-Hant" -> "zh"), then English, then
-  // any language that has it, then the key. "{0}", "{1}"... are the
-  // arguments after it.
-  function localized(l10n, language, key, args) {
-    var base = String(language).split("-")[0];
-    var text =
-      (l10n[language] && l10n[language][key]) ||
-      (l10n[base] && l10n[base][key]) ||
-      (l10n.en && l10n.en[key]) ||
-      anyLanguage(l10n, key) ||
-      key;
-    return text.replace(/\{(\d+)\}/g, function (all, n) {
-      return args[n] === undefined ? all : String(args[n]);
-    });
-  }
-
-  function anyLanguage(l10n, key) {
-    for (var language in l10n)
-      if (l10n[language] && l10n[language][key]) return l10n[language][key];
-    return undefined;
-  }
+  // localized(l10n, language, key, args): the frame is given it
+  // (plugin-string.ts).
 
   // The language and the plugin's strings, written into the page ahead of
   // this script (frames.ts), so the page's own scripts have them at once.
@@ -343,16 +388,46 @@
     told = height;
     send("height", { height: height });
   }
+  // Once a frame: or after a moment, as a frame not yet on screen may hold
+  // its animation frames back, and every later change would wait on it.
   var pending = false;
   function soon() {
     if (pending) return;
     pending = true;
-    requestAnimationFrame(function () {
+    var done = false;
+    var run = function () {
+      if (done) return;
+      done = true;
       pending = false;
       tellHeight();
       contain();
-    });
+    };
+    requestAnimationFrame(run);
+    setTimeout(run, 100);
   }
+  // A scroller marked tx-scroll-fade (a board's lists, a wide table) fades
+  // at an edge with more past it (controls.css), so it reads as going on.
+  function edges() {
+    var all = document.querySelectorAll(".tx-scroll-fade");
+    for (var i = 0; i < all.length; i++) {
+      var el = all[i];
+      el.toggleAttribute("data-more-left", el.scrollLeft > 1);
+      el.toggleAttribute(
+        "data-more-right",
+        el.scrollWidth - el.clientWidth - el.scrollLeft > 1,
+      );
+    }
+  }
+  document.addEventListener("scroll", edges, { capture: true, passive: true });
+  window.addEventListener("resize", edges);
+  window.addEventListener("DOMContentLoaded", function () {
+    edges();
+    new MutationObserver(edges).observe(document.body, {
+      childList: true,
+      subtree: true,
+    });
+  });
+
   // A page taller than its frame scrolls in it, and its scrolling stops at
   // its ends instead of carrying on into the document around it. One that
   // fits passes the wheel on, as the rest of the document does.
@@ -363,24 +438,43 @@
     root.style.overscrollBehaviorY = scrolls ? "contain" : "";
   }
   window.addEventListener("resize", soon);
-  if (typeof ResizeObserver === "function")
-    window.addEventListener("DOMContentLoaded", function () {
-      new ResizeObserver(soon).observe(document.documentElement);
-      if (document.body) {
-        new ResizeObserver(soon).observe(document.body);
-        // Content that shrinks leaves the body, held to the frame, as tall.
-        new MutationObserver(soon).observe(document.body, {
-          childList: true,
-          subtree: true,
-          attributes: true,
-          characterData: true,
-        });
-      }
+  // Watched from when the page is parsed - at once if it already is - and
+  // told once then, as nothing may change after.
+  function watchSize() {
+    soon();
+    if (typeof ResizeObserver !== "function") return;
+    new ResizeObserver(soon).observe(document.documentElement);
+    if (!document.body) return;
+    new ResizeObserver(soon).observe(document.body);
+    // Content that shrinks leaves the body, held to the frame, as tall.
+    new MutationObserver(soon).observe(document.body, {
+      childList: true,
+      subtree: true,
+      attributes: true,
+      characterData: true,
     });
+  }
+  if (document.readyState === "loading")
+    window.addEventListener("DOMContentLoaded", watchSize);
+  else watchSize();
+
+  // A link never takes the page away: a web link opens in the browser.
+  document.addEventListener("click", function (event) {
+    var link =
+      event.target instanceof Element && event.target.closest("a[href]");
+    if (!link || event.defaultPrevented) return;
+    var href = link.getAttribute("href") || "";
+    if (href.charAt(0) === "#") return;
+    event.preventDefault();
+    call("openLink", { url: link.href });
+  });
 
   window.textus = api;
   window.acquireTextusApi = function () {
     return api;
   };
-  window.parent.postMessage({ textus: "ready" }, "*");
+  window.parent.postMessage(
+    { textus: "ready", key: "__TEXTUS_FRAME_KEY__" },
+    "*",
+  );
 })();

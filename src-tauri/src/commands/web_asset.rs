@@ -10,7 +10,6 @@ use sha2::{Digest, Sha256};
 use std::path::PathBuf;
 use std::time::Duration;
 
-const CONNECT_TIMEOUT: Duration = Duration::from_secs(8);
 const REQUEST_TIMEOUT: Duration = Duration::from_secs(30);
 const MAX_BYTES: usize = 20 * 1024 * 1024;
 /// Font services pick the format by browser: this one gets woff2.
@@ -53,7 +52,7 @@ pub async fn web_asset(
         if let Some(dir) = path.parent() {
             let _ = std::fs::create_dir_all(dir);
         }
-        let _ = std::fs::write(path, &answer);
+        let _ = crate::atomic::write_sync(&path, &answer);
     }
     Ok(answer)
 }
@@ -65,22 +64,11 @@ fn public_url(url: &str) -> Option<reqwest::Url> {
     if !matches!(parsed.scheme(), "https" | "http") {
         return None;
     }
-    let host = parsed
-        .host_str()?
-        .trim_matches(['[', ']'])
-        .to_ascii_lowercase();
-    let local = match host.parse::<std::net::IpAddr>() {
-        Ok(std::net::IpAddr::V4(ip)) => {
-            ip.is_loopback() || ip.is_private() || ip.is_link_local() || ip.is_unspecified()
-        }
-        Ok(std::net::IpAddr::V6(ip)) => {
-            ip.is_loopback() || ip.is_unspecified() || (ip.segments()[0] & 0xfe00) == 0xfc00
-        }
-        Err(_) => {
-            let name = host.trim_end_matches('.');
-            name == "localhost" || name.ends_with(".localhost") || name.ends_with(".local")
-        }
-    };
+    let host = parsed.host_str()?.trim_matches(['[', ']']);
+    let local = aicompat::public_address::is_local_name(host)
+        || host
+            .parse::<std::net::IpAddr>()
+            .is_ok_and(|ip| !aicompat::public_address::is_public(ip));
     (!local).then_some(parsed)
 }
 
@@ -96,13 +84,15 @@ fn cache_path(app: &tauri::AppHandle, url: &str) -> Option<PathBuf> {
     )
 }
 
+/// Only a public host, its addresses checked and pinned, no redirect
+/// followed: an asset named in a theme or a document reaches nothing on
+/// this machine or its network (web_fetch's client).
 async fn fetch(url: reqwest::Url) -> Result<Vec<u8>, String> {
-    let client = crate::net::public_client(CONNECT_TIMEOUT, REQUEST_TIMEOUT)?
-        .user_agent(BROWSER_AGENT)
-        .build()
-        .map_err(|e| e.to_string())?;
+    let client = crate::ai::web::fetch::client_for(&url, Default::default()).await?;
     let response = client
         .get(url)
+        .header(reqwest::header::USER_AGENT, BROWSER_AGENT)
+        .timeout(REQUEST_TIMEOUT)
         .send()
         .await
         .map_err(|e| crate::net::error_text(&e))?;
@@ -131,7 +121,7 @@ fn shaped(kind: WebAssetKind, url: &str, bytes: &[u8]) -> Result<String, String>
         WebAssetKind::Font => font_mime(bytes, url)
             .map(data)
             .ok_or_else(|| "not a font".into()),
-        WebAssetKind::Image => image_mime(bytes)
+        WebAssetKind::Image => crate::media::sniff(bytes)
             .map(data)
             .ok_or_else(|| "not a picture".into()),
     }
@@ -148,22 +138,6 @@ fn font_mime(bytes: &[u8], url: &str) -> Option<&'static str> {
         Some("font/ttf")
     } else if url.to_ascii_lowercase().contains(".eot") && bytes.len() > 34 {
         Some("application/vnd.ms-fontobject")
-    } else {
-        None
-    }
-}
-
-fn image_mime(bytes: &[u8]) -> Option<&'static str> {
-    if bytes.starts_with(b"\x89PNG\r\n\x1a\n") {
-        Some("image/png")
-    } else if bytes.starts_with(&[0xFF, 0xD8, 0xFF]) {
-        Some("image/jpeg")
-    } else if bytes.starts_with(b"GIF8") {
-        Some("image/gif")
-    } else if bytes.len() > 12 && &bytes[..4] == b"RIFF" && &bytes[8..12] == b"WEBP" {
-        Some("image/webp")
-    } else if bytes.len() > 12 && &bytes[4..12] == b"ftypavif" {
-        Some("image/avif")
     } else {
         None
     }
@@ -187,6 +161,10 @@ mod tests {
             "http://[::1]/x.css",
             "http://printer.local/x.css",
             "asset://localhost/x.css",
+            // What only the shared check knew: CGNAT, internal names.
+            "http://100.64.0.1/x.css",
+            "http://nas.internal/x.css",
+            "http://router.home.arpa/x.css",
         ] {
             assert!(public_url(refused).is_none(), "{refused}");
         }

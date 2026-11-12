@@ -99,7 +99,7 @@ pub async fn export(
             .await
             {
                 Ok(Ok(result)) => result,
-                Ok(Err(_)) => Err("PDF export timed out".to_string()),
+                Ok(Err(_)) => Err(crate::errors::error("pdfTimeout")),
                 Err(e) => Err(e.to_string()),
             }
         }
@@ -145,7 +145,7 @@ fn render_to_file(window: &tauri::WebviewWindow, output_path: &str, done: Done) 
                     PrintToPdfCompletedHandler::create(Box::new(move |result, succeeded| {
                         let _ = done.send(match result {
                             Ok(()) if succeeded => Ok(()),
-                            Ok(()) => Err("PDF export failed".to_string()),
+                            Ok(()) => Err(crate::errors::error("pdfFailed")),
                             Err(e) => Err(e.message()),
                         });
                         Ok(())

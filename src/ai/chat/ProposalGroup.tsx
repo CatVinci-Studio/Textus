@@ -1,11 +1,15 @@
+import { HeadRow } from "../../engine/controls/HeadRow";
+import { DropIcon, TakeIcon } from "../../engine/controls/icons";
+import { counted } from "../../i18n/current";
+import { fill } from "../../i18n/fill";
 import { useMemo, useRef, useState, type CSSProperties } from "react";
-import { FlipOnChange } from "../../ui/flip";
+import { FlipOnChange } from "../../engine/motion/flip";
 import type { AgentTurn, EditProposal } from "../types";
 import type { PendingStatus } from "../revision/usePendingEdits";
 import { isProposalTool } from "./proposal";
-import { Tooltip } from "../../ui/Tooltip";
-import { diffLines } from "./line-diff";
-import { CHECK, CROSS, ChangeText } from "./ProposalCard";
+import { Tooltip } from "../../engine/controls/Tooltip";
+import { diffLines, lineCounts, proposalSides } from "./line-diff";
+import { ChangeText } from "./ProposalCard";
 import type { ChatMessagesLabels } from "./chat-messages-types";
 
 /**
@@ -61,6 +65,7 @@ function GroupRow({
   callId,
   proposal,
   status,
+  selectedText,
   ownReason,
   labels,
   actions,
@@ -71,6 +76,8 @@ function GroupRow({
   callId: string;
   proposal: EditProposal;
   status: PendingStatus;
+  /** What replace_selection targets: the selection sent. */
+  selectedText?: string | null;
   /** Its reason, under it - the group's reasons differ. */
   ownReason: boolean;
   labels: ChatMessagesLabels;
@@ -79,11 +86,9 @@ function GroupRow({
   onReject: (callId: string) => void;
   onReveal?: (callId: string, index: number) => void;
 }) {
-  const before = proposal.anchor ?? "";
-  const after = proposal.action === "delete" ? "" : (proposal.text ?? "");
+  const { before, after } = proposalSides(proposal, selectedText);
   const lines = useMemo(() => diffLines(before, after), [before, after]);
-  const added = lines.filter((line) => line.kind === "add").length;
-  const removed = lines.filter((line) => line.kind === "remove").length;
+  const { added, removed } = lineCounts(lines);
   const pending = status === "pending";
   return (
     <li data-state={status}>
@@ -101,7 +106,7 @@ function GroupRow({
             />
           </span>
           {ownReason && proposal.reason && (
-            <span className="agent-proposal-group-reason">
+            <span className="tx-truncate agent-proposal-group-reason">
               {proposal.reason}
             </span>
           )}
@@ -129,7 +134,7 @@ function GroupRow({
                   aria-label={labels.proposalAccept}
                   onClick={() => onAccept(callId)}
                 >
-                  {CHECK}
+                  <TakeIcon />
                 </button>
               </Tooltip>
               <Tooltip text={labels.proposalReject}>
@@ -139,7 +144,7 @@ function GroupRow({
                   aria-label={labels.proposalReject}
                   onClick={() => onReject(callId)}
                 >
-                  {CROSS}
+                  <DropIcon />
                 </button>
               </Tooltip>
             </span>
@@ -167,8 +172,10 @@ export function ProposalGroup({
   onAccept,
   onReject,
   onReveal,
+  selectedText,
 }: {
   items: { callId: string; proposal: EditProposal; status: PendingStatus }[];
+  selectedText?: string | null;
   reveal: boolean;
   style: CSSProperties | undefined;
   labels: ChatMessagesLabels;
@@ -207,18 +214,23 @@ export function ProposalGroup({
       style={style}
     >
       <FlipOnChange watch={shape} targets={() => following(ref.current)} />
-      <div className="agent-proposal-head">
-        <span className="agent-proposal-icon" aria-hidden="true">
-          {CHECK}
-        </span>
-        <span className="agent-proposal-title">
-          {labels.proposalTitle}
-          <span className="agent-proposal-kind">
-            {" · "}
-            {labels.proposalChangeCount.replace("{n}", String(items.length))}
+      <HeadRow
+        className="agent-proposal-head"
+        mark={
+          <span className="agent-proposal-icon" aria-hidden="true">
+            <TakeIcon />
           </span>
-        </span>
-      </div>
+        }
+        title={
+          <span className="agent-proposal-title">
+            {labels.proposalTitle}
+            <span className="agent-proposal-kind">
+              {" · "}
+              {counted(labels.proposalChangeCount, items.length)}
+            </span>
+          </span>
+        }
+      />
       {done && !unfolded ? (
         <button
           type="button"
@@ -236,6 +248,7 @@ export function ProposalGroup({
               <GroupRow
                 key={item.callId}
                 {...item}
+                selectedText={selectedText}
                 ownReason={!shared}
                 labels={labels}
                 actions={actions}
@@ -254,7 +267,7 @@ export function ProposalGroup({
             >
               {unfolded
                 ? labels.proposalGroupLess
-                : labels.proposalGroupMore.replace("{n}", String(hidden))}
+                : fill(labels.proposalGroupMore, { n: String(hidden) })}
             </button>
           )}
         </>

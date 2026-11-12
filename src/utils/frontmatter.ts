@@ -14,16 +14,20 @@ export type FrontmatterValue =
 
 export type Frontmatter = Record<string, FrontmatterValue>;
 
-const FENCE = /^---[ \t]*\r?\n([\s\S]*?)\r?\n---[ \t]*(?:\r?\n|$)/;
+/** Front matter: a first `---` line (after a byte-order mark, if any) and
+ *  a `---` or `...` line below, with or without lines between; LF or CRLF.
+ *  The backend reads it by the same cases (frontmatter-cases.json). */
+export const FRONTMATTER =
+  /^\uFEFF?---[ \t]*\r?\n(?:([\s\S]*?)\r?\n)?(?:---|\.\.\.)[ \t]*(?:\r?\n|$)/;
 
 /** The front matter block and what follows it. */
 export function splitFrontmatter(text: string): {
   yaml: string | null;
   body: string;
 } {
-  const m = FENCE.exec(text);
+  const m = FRONTMATTER.exec(text);
   if (!m) return { yaml: null, body: text };
-  return { yaml: m[1], body: text.slice(m[0].length) };
+  return { yaml: m[1] ?? "", body: text.slice(m[0].length) };
 }
 
 function scalar(raw: string): FrontmatterValue {
@@ -123,7 +127,7 @@ export function parseYaml(yaml: string): Frontmatter {
 function quote(value: string): string {
   if (
     value === "" ||
-    /^[\s-?:,[\]{}#&*!|>'"%@`]|[:#]\s|\s$|^(true|false|null|~|-?\d+(\.\d+)?)$/.test(
+    /^[\s-?:,[\]{}#&*!|>'"%@`]|[:#]\s|[,[\]{}]|\s$|^(true|false|null|~|-?\d+(\.\d+)?)$/.test(
       value,
     ) ||
     value.includes("\n")
@@ -141,20 +145,61 @@ function inline(value: FrontmatterValue): string {
   return JSON.stringify(value);
 }
 
+/** One key's lines, as written. */
+function keyLines(key: string, value: FrontmatterValue): string[] {
+  if (value && typeof value === "object" && !Array.isArray(value))
+    return [
+      `${key}:`,
+      ...Object.entries(value).map(([k, v]) =>
+        `  ${k}: ${inline(v)}`.trimEnd(),
+      ),
+    ];
+  if (Array.isArray(value) && value.length > 3)
+    return [`${key}:`, ...value.map((v) => `  - ${inline(v)}`.trimEnd())];
+  return [`${key}: ${inline(value)}`.trimEnd()];
+}
+
 export function stringifyYaml(data: Frontmatter): string {
-  const lines: string[] = [];
-  for (const [key, value] of Object.entries(data)) {
-    if (value === undefined) continue;
-    if (value && typeof value === "object" && !Array.isArray(value)) {
-      lines.push(`${key}:`);
-      for (const [k, v] of Object.entries(value))
-        lines.push(`  ${k}: ${inline(v)}`.trimEnd());
-    } else if (Array.isArray(value) && value.length > 3) {
-      lines.push(`${key}:`);
-      for (const v of value) lines.push(`  - ${inline(v)}`.trimEnd());
-    } else lines.push(`${key}: ${inline(value)}`.trimEnd());
+  return Object.entries(data)
+    .filter(([, value]) => value !== undefined)
+    .flatMap(([key, value]) => keyLines(key, value))
+    .join("\n");
+}
+
+/** `yaml`'s lines in runs: what comes before the first key, then each
+ *  top-level key with every line under it (its block, list, map, the
+ *  comments among them). */
+function keyRuns(yaml: string): { key: string | null; lines: string[] }[] {
+  const runs: { key: string | null; lines: string[] }[] = [
+    { key: null, lines: [] },
+  ];
+  for (const line of yaml.split(/\r?\n/)) {
+    const top = /^([^\s:#-][^:]*):(\s|$)/.exec(line);
+    if (top) runs.push({ key: top[1].trim(), lines: [line] });
+    else runs[runs.length - 1].lines.push(line);
   }
-  return lines.join("\n");
+  return runs;
+}
+
+const same = (a: FrontmatterValue | undefined, b: FrontmatterValue) =>
+  JSON.stringify(a) === JSON.stringify(b);
+
+/** `yaml` with `data` written in: a key whose value didn't change keeps its
+ *  lines as written (a block of text, a list of maps, comments - what this
+ *  reader doesn't follow), a changed one is written anew in its place, a
+ *  gone one goes, a new one is added at the end. */
+function updateYaml(yaml: string, data: Frontmatter): string {
+  const was = parseYaml(yaml);
+  const out: string[] = [];
+  for (const run of keyRuns(yaml)) {
+    if (run.key === null) out.push(...run.lines);
+    else if (!(run.key in data) || data[run.key] === undefined) continue;
+    else if (same(was[run.key], data[run.key])) out.push(...run.lines);
+    else out.push(...keyLines(run.key, data[run.key]));
+  }
+  for (const [key, value] of Object.entries(data))
+    if (value !== undefined && !(key in was)) out.push(...keyLines(key, value));
+  return out.join("\n").replace(/^\n+|\n+$/g, "");
 }
 
 /** `text` with its front matter set to `data`: added at the top if it
@@ -163,7 +208,7 @@ export function withFrontmatter(text: string, data: Frontmatter): string {
   const { yaml, body } = splitFrontmatter(text);
   const keys = Object.keys(data).filter((k) => data[k] !== undefined);
   if (!keys.length) return yaml === null ? text : body;
-  const block = `---\n${stringifyYaml(data)}\n---\n`;
+  const block = `---\n${yaml === null ? stringifyYaml(data) : updateYaml(yaml, data)}\n---\n`;
   return yaml === null
     ? `${block}${text.length ? `\n${text}` : ""}`
     : block + body;

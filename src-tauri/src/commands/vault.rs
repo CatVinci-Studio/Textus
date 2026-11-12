@@ -3,15 +3,18 @@
 //! folder holding `.obsidian/`, else the folder open in the window when the
 //! document is in it, else the document's own folder). A wikilink with a
 //! folder is from the vault root. The rules are `link-resolve.ts`'s; both
-//! run `src/links/link-resolve.cases.json`.
+//! run `src/files/link-resolve.cases.json`.
 
 use std::path::{Component, Path, PathBuf};
 use std::sync::{Arc, Mutex};
 use std::time::{Duration, Instant};
 
-/// Image types a vault embed shows; keep in step with the frontend's
-/// IMAGE_EXTENSIONS.
-const IMAGE_EXTENSIONS: &[&str] = &["png", "jpg", "jpeg", "gif", "webp", "svg", "avif", "bmp"];
+/// Image types a vault embed shows: the frontend's one list.
+static IMAGE_TYPES: std::sync::LazyLock<serde_json::Map<String, serde_json::Value>> =
+    std::sync::LazyLock::new(|| {
+        serde_json::from_str(include_str!("../../../src/editor/images/image-types.json"))
+            .expect("image-types.json")
+    });
 
 /// The walk that indexes a vault stops here: a vault this size is rare, and a
 /// "vault" that is really a home folder must not stall the editor.
@@ -42,7 +45,7 @@ fn vault_root(doc_path: &Path, folder: Option<&Path>) -> Option<PathBuf> {
 fn is_image(path: &Path) -> bool {
     path.extension()
         .and_then(|e| e.to_str())
-        .is_some_and(|e| IMAGE_EXTENSIONS.contains(&e.to_ascii_lowercase().as_str()))
+        .is_some_and(|e| IMAGE_TYPES.contains_key(&e.to_ascii_lowercase()))
 }
 
 fn is_note(path: &Path) -> bool {
@@ -398,23 +401,18 @@ fn new_note_path(
     join_within(&root, &base, &name)
 }
 
-/// The folder an Obsidian vault puts new notes in, read from `app.json`
-/// (never written); None outside a vault, or for "beside the current note".
+/// The folder new notes go in, as the folder's conventions say (Textus's
+/// own, else the app's detected - Obsidian's `newFileLocation`); None for
+/// "beside the current note".
 fn new_note_folder(root: &Path) -> Option<PathBuf> {
-    if !root.join(".obsidian").is_dir() {
-        return None;
-    }
-    let json: serde_json::Value = std::fs::read_to_string(root.join(".obsidian/app.json"))
-        .ok()
-        .and_then(|t| serde_json::from_str(&t).ok())
-        .unwrap_or_default();
-    match json.get("newFileLocation").and_then(|v| v.as_str()) {
-        Some("current") => None,
-        Some("folder") => {
-            let sub = json.get("newFileFolderPath").and_then(|v| v.as_str())?;
-            join_within(root, root, sub)
-        }
-        _ => Some(root.to_path_buf()),
+    let found = crate::conventions::of_folder(root);
+    let setting = found
+        .new_notes
+        .or_else(|| found.detected.and_then(|d| d.new_notes))?;
+    match setting.value.as_str() {
+        "./" => None,
+        "/" | "" => Some(root.to_path_buf()),
+        sub => join_within(root, root, sub.trim_start_matches('/')),
     }
 }
 

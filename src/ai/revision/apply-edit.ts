@@ -1,9 +1,10 @@
-import type { EditorState, Transaction } from "@milkdown/kit/prose/state";
+import type { EditorState } from "@milkdown/kit/prose/state";
 import type { Ctx } from "@milkdown/kit/ctx";
 import { Fragment, type Node as ProseNode } from "@milkdown/kit/prose/model";
 import {
   openToText,
   parseMarkdownSource,
+  replaceWithMarkdown,
 } from "../../editor/markdown/parse-markdown-source";
 
 /** Models often bullet lists with "•" and the like, which Markdown keeps as
@@ -48,20 +49,4 @@ export function applyEditRange(
     }
   }
   return replaceWithMarkdown(state.tr, ctx, from, to, text);
-}
-
-/** `[from, to)` of `tr`'s document replaced by `rawText` parsed as
- *  Markdown, as one of several writes in one transaction. */
-export function replaceWithMarkdown(
-  tr: Transaction,
-  ctx: Ctx,
-  from: number,
-  to: number,
-  rawText: string,
-): Transaction {
-  const text = normalizeAiMarkdown(rawText);
-  const parsed = parseMarkdownSource(ctx, text);
-  return parsed
-    ? tr.replaceRange(from, to, openToText(parsed.content))
-    : tr.insertText(text, from, to);
 }

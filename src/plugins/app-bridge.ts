@@ -1,12 +1,16 @@
+import { splitLayout, subscribeSplit } from "../engine/layout/store";
+import type { SplitLayout } from "../engine/layout/ops";
+import type { OpenDocumentAccess } from "../registry/open-documents";
 import type { PanelsState } from "./panels-state";
 import type { AiState } from "./ai-state";
 import type { FloatingChange, FloatingTouch } from "./views/floating-views";
-import type { SentBlock } from "../ai/doc-blocks";
+import type { SentBlock } from "../editor/markdown/doc-blocks";
 import { moveDocumentData } from "./store/document-data";
-import { undoFiles } from "../platform/ipc-files";
+import { keptForDocuments } from "../platform/ipc-files";
 import type { EditProposal } from "../ai/types";
 import type { ChangeSource } from "../editor/change-source";
 import type { AppState } from "../platform/ipc-schedule";
+import { FILE_CREATED_EVENT } from "../utils/events";
 
 /** Where something opens: a tab of its own, beside the front tab, or in its place. */
 export type Where = "tab" | "beside" | "current";
@@ -59,22 +63,14 @@ export interface ActiveDocumentAccess {
   reveal(place: DocumentPlace): boolean;
 }
 
-/** A document open in a tab, in front or not. */
-export interface OpenDocumentAccess {
-  text(): string;
-  /** Names its version: changes whenever its text does. */
-  revision(): string;
-  /** Replaces its text, as one undo step, if it is still at `revision`;
-   *  false otherwise. */
-  replaceText(text: string, revision: string): boolean;
-}
-
 /** A tab a plugin's view or custom editor is shown in. */
 export interface PluginTabView {
   plugin: string;
   /** A view's id (contributes.views) or a custom editor's viewType. */
   view: string;
-  kind: "view" | "list" | "editor" | "web";
+  /** "page": one of Textus's own (app/tabs/page-tabs.tsx), `plugin`
+   *  "textus" and `view` the page. */
+  kind: "view" | "list" | "editor" | "web" | "page";
   /** The file a custom editor shows; a web page's address. */
   resource?: string;
   title?: string;
@@ -84,7 +80,7 @@ export interface PluginTabView {
   target?: PluginLocation;
 }
 
-export interface WindowAccess {
+interface WindowAccess {
   /** The folder the sidebar shows, if any. */
   rootPath(): string | null;
   /** Opens a file in a tab - `where` it says - at `place` if given;
@@ -108,28 +104,14 @@ export interface WindowAccess {
   /** A document open with unsaved changes, by its path: files.process edits it
    *  in the editor so nothing typed is lost. A saved one is changed on disk. */
   documentAt(path: string): OpenDocumentAccess | null;
+  /** Saves the tab of `path`, if one is open; whether it was saved. */
+  saveAt(path: string): Promise<boolean>;
   /** The window's tabs, and the one in front. */
   tabs(): PluginTabInfo[];
   activeTab(): PluginTabInfo | null;
 }
 
 let activeDocument: ActiveDocumentAccess | null = null;
-/** Every document open in a tab, by its path (an editor sets its own). */
-const openDocuments = new Map<string, OpenDocumentAccess>();
-
-export function setOpenDocument(
-  path: string,
-  access: OpenDocumentAccess | null,
-  owner?: OpenDocumentAccess,
-): void {
-  if (access) openDocuments.set(path, access);
-  else if (!owner || openDocuments.get(path) === owner)
-    openDocuments.delete(path);
-}
-
-export function openDocumentAt(path: string): OpenDocumentAccess | null {
-  return openDocuments.get(path) ?? null;
-}
 let windowAccess: WindowAccess | null = null;
 
 /** The active tab's editor sets itself; null when it goes. Only the
@@ -240,7 +222,7 @@ export async function pluginMovedPath(from: string, to: string): Promise<void> {
 
 export async function notePathMoved(from: string, to: string): Promise<void> {
   emitPluginEvent("fileRename", { from, to });
-  void undoFiles.move(from, to).catch(() => {});
+  void keptForDocuments.move(from, to).catch(() => {});
   await moveDocumentData(from, to);
 }
 
@@ -260,3 +242,28 @@ export function onPluginEvent<K extends keyof PluginEventMap>(
   set.add(listener as Listener<never>);
   return () => set.delete(listener as Listener<never>);
 }
+
+// A file the app made for the user (a picture pasted): plugins hear of it
+// as of one they made.
+globalThis.window?.addEventListener(FILE_CREATED_EVENT, (event) =>
+  emitPluginEvent("fileCreate", {
+    path: (event as CustomEvent<string>).detail,
+  }),
+);
+
+/** The islands' arrangement: which tabs where, in front and in use; not
+ *  their sizes, which change on every move of a divider. */
+export function arrangementOf(layout: SplitLayout | null): string {
+  return JSON.stringify(layout, (key, value: unknown) =>
+    key === "sizes" ? undefined : value,
+  );
+}
+
+// The islands' arrangement changed: told to plugins as `layout`.
+let lastLayout = arrangementOf(splitLayout());
+subscribeSplit(() => {
+  const now = arrangementOf(splitLayout());
+  if (now === lastLayout) return;
+  lastLayout = now;
+  emitPluginEvent("layout", null);
+});

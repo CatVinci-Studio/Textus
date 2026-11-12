@@ -59,6 +59,19 @@ describe("migrateDraftImages", () => {
     expect(result.content).toBe("![](<assets/image-1.png>)\n");
   });
 
+  it("moves a resized picture, saved as <img>, too", async () => {
+    const pasted = "/data/assets/image-2.png";
+    migrate.mockResolvedValue([{ old: pasted, new: "assets/image-2.png" }]);
+    const result = await migrateDraftImages(
+      "/B/b.md",
+      `<img src="${pasted}" width="300">\n`,
+      "assets",
+      null,
+    );
+    expect(migrate).toHaveBeenCalledWith("/B/b.md", [pasted], "assets", null);
+    expect(result.content).toBe('<img src="assets/image-2.png" width="300">\n');
+  });
+
   it("reads a percent-encoded name as the file's and writes a new one encoded", async () => {
     migrate.mockResolvedValue([
       { old: "my pic (1).png", new: "assets/my pic (1).png" },

@@ -1,88 +1,18 @@
-import { useEffect, useId, useState } from "react";
-import { useModalDialog } from "../../ui/useModalDialog";
-import { Select } from "../../ui/Select";
+import { useId, useState, useSyncExternalStore } from "react";
+import {
+  answer,
+  pluginFormNow,
+  subscribePluginForm,
+  type PluginFormField,
+  type Request,
+} from "./plugin-form-queue";
+import { useModalDialog } from "../../engine/controls/useModalDialog";
+import { Select } from "../../engine/controls/Select";
 import { ColorField, DateField } from "./plugin-form-fields";
 import "./plugin-form.css";
 
-/**
- * textus.ui.form: a few fields in one dialog, drawn as Textus draws its own, so
- * a plugin needs no webview to ask for them. Requests queue.
- */
-export type PluginFormField =
-  | {
-      key: string;
-      type: "text" | "multiline";
-      label: string;
-      value?: string;
-      placeholder?: string;
-    }
-  | { key: string; type: "number"; label: string; value?: number }
-  | { key: string; type: "boolean"; label: string; value?: boolean }
-  | { key: string; type: "date" | "color"; label: string; value?: string }
-  | {
-      key: string;
-      type: "choice";
-      label: string;
-      value?: string;
-      options: { value: string; label: string }[];
-    };
-
-export interface PluginFormRequest {
-  title: string;
-  okLabel: string;
-  cancelLabel: string;
-  fields: PluginFormField[];
-}
-
-interface Request extends PluginFormRequest {
-  id: number;
-  resolve: (values: Record<string, unknown> | null) => void;
-}
-
-let nextId = 1;
-let queue: Request[] = [];
-const listeners = new Set<(queue: Request[]) => void>();
-
-function publish() {
-  for (const listener of listeners) listener(queue);
-}
-
-/** The fields' values by key, or null when cancelled. A field the plugin
- *  got wrong (no key, an unknown type) is left out. */
-export function showPluginForm(
-  request: PluginFormRequest,
-): Promise<Record<string, unknown> | null> {
-  const fields = request.fields.filter(
-    (f) =>
-      f &&
-      typeof f.key === "string" &&
-      typeof f.label === "string" &&
-      [
-        "text",
-        "multiline",
-        "number",
-        "boolean",
-        "choice",
-        "date",
-        "color",
-      ].includes(f.type),
-  );
-  return new Promise((resolve) => {
-    queue = [...queue, { ...request, fields, id: nextId++, resolve }];
-    publish();
-  });
-}
-
-function answer(request: Request, values: Record<string, unknown> | null) {
-  queue = queue.filter((r) => r.id !== request.id);
-  publish();
-  request.resolve(values);
-}
-
 /** Each field's starting value. */
-export function initialValues(
-  fields: PluginFormField[],
-): Record<string, unknown> {
+function initialValues(fields: PluginFormField[]): Record<string, unknown> {
   const values: Record<string, unknown> = {};
   for (const f of fields) {
     if (f.type === "boolean") values[f.key] = f.value === true;
@@ -96,14 +26,7 @@ export function initialValues(
 }
 
 export function PluginFormHost() {
-  const [pending, setPending] = useState<Request[]>(queue);
-  useEffect(() => {
-    listeners.add(setPending);
-    return () => {
-      listeners.delete(setPending);
-    };
-  }, []);
-  const current = pending[0];
+  const current = useSyncExternalStore(subscribePluginForm, pluginFormNow);
   if (!current) return null;
   return <PluginForm key={current.id} request={current} />;
 }
@@ -120,7 +43,7 @@ function PluginForm({ request }: { request: Request }) {
     setValues((v) => ({ ...v, [key]: value }));
   return (
     <div
-      className="close-prompt-overlay"
+      className="tx-backdrop"
       onMouseDown={(e) => {
         if (e.target === e.currentTarget) answer(request, null);
       }}
@@ -136,6 +59,9 @@ function PluginForm({ request }: { request: Request }) {
           answer(request, values);
         }}
       >
+        {request.title !== request.from && (
+          <p className="plugin-form-from">{request.from}</p>
+        )}
         <h2 className="app-dialog-title app-dialog-info">{request.title}</h2>
         {request.fields.map((field, i) => {
           const id = `${base}-${i}`;
@@ -150,6 +76,7 @@ function PluginForm({ request }: { request: Request }) {
                   <input
                     id={id}
                     type="checkbox"
+                    className="ui-check"
                     checked={value === true}
                     onChange={(e) => set(field.key, e.target.checked)}
                   />

@@ -54,7 +54,7 @@ pub(crate) fn rebuild_recent_menu(app: &tauri::AppHandle) {
         if list.is_empty() && folders.is_empty() {
             if let Ok(item) = MenuItemBuilder::with_id(
                 "recent-none",
-                label(&labels, "recent-none", "No Recent Files"),
+                label(&labels, "recent-none", super::table::text_en("recent-none")),
             )
             .enabled(false)
             .build(&app)
@@ -93,7 +93,11 @@ pub(crate) fn rebuild_recent_menu(app: &tauri::AppHandle) {
         }
         if let Ok(item) = MenuItemBuilder::with_id(
             RECENT_CLEAR_ID,
-            label(&labels, RECENT_CLEAR_ID, "Clear Menu"),
+            label(
+                &labels,
+                RECENT_CLEAR_ID,
+                super::table::text_en("recent-clear"),
+            ),
         )
         .build(&app)
         {

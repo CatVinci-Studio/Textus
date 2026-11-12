@@ -1,6 +1,6 @@
 // @vitest-environment jsdom
 import { afterEach, expect, it } from "vitest";
-import { closeViews, openView } from "../../document-view/editor-view-kit";
+import { closeViews, openView } from "../editor-view-kit";
 
 // What a paste of text or HTML puts in the Markdown: links, lists from
 // Word, and text pasted over words, into cells and into lines.

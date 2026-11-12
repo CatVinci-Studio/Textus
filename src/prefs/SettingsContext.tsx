@@ -1,3 +1,4 @@
+import { localeOf } from "../i18n/strings";
 import {
   createContext,
   useContext,
@@ -13,10 +14,8 @@ import {
   resolveStrings,
   type Strings,
 } from "../i18n/strings";
-import { ai } from "../platform/ipc";
 import { readBoot } from "../storage/boot";
 import type { Settings } from "./settings-types";
-import { htmlLang } from "./settings-normalise";
 import { setCurrentLanguage } from "../i18n/current";
 import {
   loadSettings,
@@ -24,6 +23,7 @@ import {
   readLocalSettings,
   remoteVersion,
   subscribeRemote,
+  WINDOW_OWN,
   writeLocalSettings,
 } from "./settings-store";
 export {
@@ -36,7 +36,6 @@ export { type Settings } from "./settings-types";
 export {
   type ThemeMode,
   type AiProvider,
-  type NewDocumentMode,
   type ContentWidth,
   type ImageAlign,
   type EmbedDisplay,
@@ -52,28 +51,25 @@ export {
   type DocTextSize,
   type DocLineSpacing,
   type UiTextScale,
-  DIAGRAM_ENGINES,
   type DiagramEngine,
-  COLOR_SWATCH_MODES,
   type ColorSwatchMode,
   REVISION_DISPLAYS,
   type RevisionDisplay,
+  type AiChangeMode,
   type CompletionTone,
   COMPLETION_TONES,
   type SearchService,
   SEARCH_SERVICES,
   type GrammarStrictness,
   type UserThemeMeta,
-  type GalleryOrigin,
   type ImageStorageMode,
   type ImageHost,
   type ImageNamingMode,
   type AgentMode,
   type PanelMode,
-  AGENT_MODES,
   storedAgentMode,
 } from "./settings-values";
-export { htmlLang, normaliseSettings } from "./settings-normalise";
+export { normaliseSettings } from "./settings-normalise";
 export { loadSettings, resetSettingsStoreForTests } from "./settings-store";
 
 interface SettingsContextValue {
@@ -88,16 +84,25 @@ export function SettingsProvider({ children }: { children: ReactNode }) {
   const [settings, setSettingsState] = useState<Settings>(loadSettings);
   // Read in the same render as the state above.
   const renderedVersion = useRef(remoteVersion);
+  const wantedLanguage = useRef<string | null>(null);
 
   useEffect(() => {
     // A first launch writes the whole set of defaults at once, so the next
     // launch reads the same, not a partial write's.
     if (!readBoot() && readLocalSettings() === null)
       writeLocalSettings({ ...loadSettings() });
-    // Another window changed something. `zoom` stays this window's own.
+    // Another window changed something. The file store keeps this window's
+    // own fields (WINDOW_OWN) itself; localStorage, shared by all, doesn't.
     const adopt = () => {
       const incoming = loadSettings();
-      setSettingsState((prev) => ({ ...incoming, zoom: prev.zoom }));
+      setSettingsState((prev) =>
+        readBoot()
+          ? incoming
+          : {
+              ...incoming,
+              ...Object.fromEntries(WINDOW_OWN.map((key) => [key, prev[key]])),
+            },
+      );
     };
     // Another window's language, once its strings are here too.
     const adoptStore = () => {
@@ -115,23 +120,13 @@ export function SettingsProvider({ children }: { children: ReactNode }) {
     return unsubscribe;
   }, []);
 
+  // Read as the tree draws (counted(), the numbers' format): set before it
+  // does, not after, or a switch draws plurals in the language left.
+  setCurrentLanguage(settings.language);
   useEffect(() => {
-    document.documentElement.lang = htmlLang(settings.language);
-    setCurrentLanguage(settings.language);
+    // The CSS :lang() font stacks key off it; the boot script sets the same.
+    document.documentElement.lang = localeOf(settings.language);
   }, [settings.language]);
-
-  // An unparseable proxy is rejected by the backend (and requests fall back
-  // to a direct connection), so a half-typed host while editing the setting
-  // can't wedge anything.
-  useEffect(() => {
-    const host = settings.proxyHost.trim();
-    const port = settings.proxyPort.trim();
-    const proxy =
-      settings.proxyType !== "none" && host
-        ? `${settings.proxyType}://${host}${port ? `:${port}` : ""}`
-        : null;
-    ai.setAiProxy(proxy).catch(() => {});
-  }, [settings.proxyType, settings.proxyHost, settings.proxyPort]);
 
   function setSettings(patch: Partial<Settings>) {
     const apply = () => {
@@ -139,12 +134,18 @@ export function SettingsProvider({ children }: { children: ReactNode }) {
       persist(patch);
     };
     // A language switched to takes effect once its strings have loaded, so
-    // nothing draws in it meanwhile with English. One that fails shows in English.
-    if (patch.language && !localeLoaded(patch.language))
-      void loadLocale(patch.language)
+    // nothing draws in it meanwhile with English. One that fails shows in
+    // English. Only the last one picked: an earlier one loading late
+    // doesn't take its place.
+    if (patch.language) wantedLanguage.current = patch.language;
+    if (patch.language && !localeLoaded(patch.language)) {
+      const lang = patch.language;
+      void loadLocale(lang)
         .catch(() => {})
-        .then(apply);
-    else apply();
+        .then(() => {
+          if (wantedLanguage.current === lang) apply();
+        });
+    } else apply();
   }
 
   const t = resolveStrings(settings.language);

@@ -52,7 +52,7 @@ Milkdown/ProseMirror, source mode CodeMirror 6) and a Rust backend in
   (`npm run bindings`), `docs/dev/plugins/reference.md`
   (`node scripts/plugin-reference.mjs`). The checks fail while they are
   stale.
-- **Drag with pointer events** (`src/ui/pointer-drag.ts`), never HTML drag
+- **Drag with pointer events** (`src/engine/drag/pointer-drag.ts`), never HTML drag
   and drop: the window's file drop swallows it.
 - **The e2e plugin flows need a textus-plugins checkout** beside the
   repository or at `TEXTUS_PLUGINS_DIR`; without one the catalog is empty

@@ -4,14 +4,14 @@ import {
   reviewChanges,
   sentenceTake,
   type PendingPreview,
-} from "./pending-edit-plugin";
+} from "./pending-types";
 
 /** Going through the proposals one by one: the review bar's stops and count,
  *  and Quick Ask's per-proposal pointer. */
 
 /** One stop of the review bar: a changed sentence, or a whole proposal
  *  that isn't shown sentence by sentence (`index` -1). */
-export interface ReviewStop {
+interface ReviewStop {
   callId: string;
   index: number;
   from: number;
@@ -19,7 +19,7 @@ export interface ReviewStop {
 
 /** What the review bar and the margin go through, top to bottom: decidable
  *  previews, and streaming rewrites whose completed changes can be looked at. */
-export function reviewedPreviews(previews: PendingPreview[]): PendingPreview[] {
+function reviewedPreviews(previews: PendingPreview[]): PendingPreview[] {
   return previews
     .filter((p) => !p.streaming || p.streamChanges)
     .sort((a, b) => a.from - b.from);
@@ -27,7 +27,7 @@ export function reviewedPreviews(previews: PendingPreview[]): PendingPreview[] {
 
 /** Every changed sentence of a proposal shown that way, or the proposal
  *  itself otherwise, top to bottom. */
-export function reviewStopsOf(reviewed: PendingPreview[]): ReviewStop[] {
+function reviewStopsOf(reviewed: PendingPreview[]): ReviewStop[] {
   return reviewed
     .flatMap((p) => {
       const changes = reviewChanges(p);
@@ -40,7 +40,7 @@ export function reviewStopsOf(reviewed: PendingPreview[]): ReviewStop[] {
 
 /** How much an Accept-everything would take: changed sentences (a whole
  *  proposal counting as one) taken of all of them. */
-export function reviewCountOf(reviewed: PendingPreview[]): {
+function reviewCountOf(reviewed: PendingPreview[]): {
   taken: number;
   total: number;
 } {

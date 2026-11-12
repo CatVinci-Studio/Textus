@@ -1,3 +1,5 @@
+import { DIAGRAM_LANGUAGES } from "./diagram-languages";
+import { onAppearance } from "../engine/tokens/appearance";
 import { Plugin, PluginKey, TextSelection } from "@milkdown/kit/prose/state";
 import { Decoration } from "@milkdown/kit/prose/view";
 import { $prose } from "@milkdown/kit/utils";
@@ -17,7 +19,6 @@ import { registerDrawAll } from "./draw-when-visible";
 import {
   appearanceIsDark,
   diagramRenderer,
-  DIAGRAM_LANGUAGES,
   mermaidTheme,
   type DrawnDiagram,
 } from "./diagram-engine";
@@ -148,7 +149,9 @@ export function createMermaidPreviewPlugin(options: {
           to,
           (view: EditorView, getPos: () => number | undefined) => {
             const container = document.createElement("div");
-            container.className = "mermaid-preview";
+            // A fence's box, as in Typora: a theme's rule for code boxes
+            // (.md-fences) dresses the drawing alike.
+            container.className = "mermaid-preview md-fences";
             container.innerHTML = svg;
             keepReadable(container);
             container.append(zoomButton(container));
@@ -384,19 +387,25 @@ export function createMermaidPreviewPlugin(options: {
           if (collectMermaidBlocks(editorView.state.doc).length > 0)
             void renderAll();
         };
-        const appearance = new MutationObserver(restyle);
-        appearance.observe(document.documentElement, {
-          attributes: true,
-          attributeFilter: [
-            "data-theme",
-            "data-content-theme",
-            "data-light-page",
-          ],
+        // Only a change of colours: every diagram is drawn again.
+        const colours = () => {
+          const root = document.documentElement.dataset;
+          const dark = window.matchMedia?.("(prefers-color-scheme: dark)");
+          return `${root.theme}|${root.contentTheme}|${root.lightPage}|${dark?.matches}`;
+        };
+        let drawnIn = colours();
+        const stopAppearance = onAppearance(() => {
+          const now = colours();
+          if (now === drawnIn) return;
+          drawnIn = now;
+          restyle();
         });
-        const systemDark = window.matchMedia?.("(prefers-color-scheme: dark)");
-        systemDark?.addEventListener("change", restyle);
 
-        void renderAll();
+        // The first pass waits for the observer's first call, made once the
+        // browser has laid the new editor out: asking its width now would
+        // lay the whole document out in the middle of opening it.
+        if (shown) waitingToBeShown = true;
+        else void renderAll();
         registerDrawAll(editorView.dom, () => renderAll(true));
 
         return {
@@ -435,8 +444,7 @@ export function createMermaidPreviewPlugin(options: {
             registerDrawAll(editorView.dom, null);
             registerPendingDrawer(editorView.dom, null);
             shown?.disconnect();
-            appearance.disconnect();
-            systemDark?.removeEventListener("change", restyle);
+            stopAppearance();
           },
         };
       },

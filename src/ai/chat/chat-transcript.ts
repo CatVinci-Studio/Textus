@@ -9,6 +9,7 @@ import { memoryRunsOf } from "./memory-pass";
 import { OFFER_SKILL, parseSkillOffer } from "./SkillOfferChip";
 import { PAPER_TURN, parsePaperCard } from "../paper/paper-store";
 import { OUT_OF_STEPS } from "./out-of-steps";
+import { fileRunsOf, type FileChangeCall } from "./file-changes";
 
 /**
  * A conversation's turns read for the panel: which tool calls are edit
@@ -38,6 +39,9 @@ export interface Transcript {
   noteRuns: ReturnType<typeof noteRunsOf>;
   /** The picture requests, by call: the arguments a failed one is told by. */
   imageCalls: Map<string, string>;
+  /** A reply's changes to the folder's files, as one card under its first
+   *  (an empty list under the others). */
+  fileRuns: Map<string, FileChangeCall[]>;
 }
 
 export function readTranscript(
@@ -78,6 +82,7 @@ export function readTranscript(
     proposalRuns: proposalRuns(turns, proposals, refused),
     noteRuns: noteRunsOf(turns, noteNumber),
     imageCalls,
+    fileRuns: fileRunsOf(turns),
   };
 }
 
@@ -100,6 +105,7 @@ export type ChatItem =
     }
   | { kind: "paper"; info: NonNullable<ReturnType<typeof parsePaperCard>> }
   | { kind: "memories"; callIds: string[] }
+  | { kind: "files"; run: FileChangeCall[] }
   /** The model stopped at its step limit. */
   | { kind: "stopped" }
   /** A plain turn: the user's, a reply, a step. */
@@ -129,13 +135,18 @@ export function itemOf(turn: AgentTurn, t: Transcript): ChatItem {
       const run = t.noteRuns.get(id)!;
       return run.length ? { kind: "notes", run } : NONE;
     }
+    if (t.fileRuns.has(id)) {
+      const run = t.fileRuns.get(id)!;
+      return run.length ? { kind: "files", run } : NONE;
+    }
     // Shown by their results.
     if ([OFFER_SKILL, PAPER_TURN, "remember"].includes(turn.name)) return NONE;
   }
   if (turn.kind === "ToolResult") {
     const id = turn.call_id;
     // A proposal's or a note's card is its result.
-    if (t.proposals.has(id) || t.noteRuns.has(id)) return NONE;
+    if (t.proposals.has(id) || t.noteRuns.has(id) || t.fileRuns.has(id))
+      return NONE;
     const offer =
       id.startsWith(`${OFFER_SKILL}-`) && parseSkillOffer(turn.output);
     if (offer) return { kind: "skillOffer", offer };

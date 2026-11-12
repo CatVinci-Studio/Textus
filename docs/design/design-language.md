@@ -33,7 +33,7 @@ These are decision rules, used to settle cases the sections below don't cover.
 | Component | unprefixed or component-named custom properties inside one component's CSS (`--tag`)                                                                   | That component only                      | Private                                                                                       |
 
 - Plugins and themes MUST use only role tokens. The list a plugin page receives is `src/plugins/views/theme-vars.ts`; a token not on that list does not exist inside a plugin page.
-- A stylesheet outside `src/theme/` MUST NOT write a literal colour or shadow (`src/ui/theme-reach.test.ts`). Exceptions: a fallback inside `var()`, a mask (alpha only), a token mixed toward black or white with `color-mix()`, and Windows' caption buttons.
+- A stylesheet outside `src/theme/` MUST NOT write a literal colour or shadow (`src/engine/controls/theme-reach.test.ts`). Exceptions: a fallback inside `var()`, a mask (alpha only), a token mixed toward black or white with `color-mix()`, and Windows' caption buttons.
 
 ### 2.2 Naming new tokens
 
@@ -50,7 +50,7 @@ Existing names stay as they are. A new name MUST be built from this vocabulary; 
 
 ### 3.1 Inputs and derivation
 
-A theme sets the document's colours; the interface's are derived from them in `src/ui/base.css`, so one theme recolours the whole window:
+A theme sets the document's colours; the interface's are derived from them in `src/engine/tokens/base.css`, so one theme recolours the whole window:
 
 | Input (theme sets) | Derived (interface)                                                                                    |
 | ------------------ | ------------------------------------------------------------------------------------------------------ |
@@ -59,7 +59,7 @@ A theme sets the document's colours; the interface's are derived from them in `s
 | `--doc-muted`      | `--ui-muted`                                                                                           |
 | `--doc-accent`     | `--ui-accent`; `--ui-selected` = accent 13%                                                            |
 
-A theme MAY also set any `--ui-*` directly; its value wins over the derived one. Imported Typora themes that set no variables are sampled by `src/theme/theme-chrome.ts`.
+A theme MAY also set any `--ui-*` directly; its value wins over the derived one. Imported Typora themes that set no variables are sampled by `src/engine/tokens/palette.ts`.
 
 ### 3.2 One job per colour
 
@@ -74,7 +74,9 @@ Each interface colour has exactly one job. A new surface MUST pick its colours f
 | `--ui-selected`, `--ui-selected-text`         | A chosen row, tab or chip                                          |
 | `--ui-border`                                 | Hairlines                                                          |
 | `--ui-text` / `--ui-muted`                    | Text / secondary text                                              |
-| `--ui-accent`                                 | The focus ring, links, the chosen item, a rule in force            |
+| `--ui-accent`                                 | The focus ring, the chosen item, a rule in force (as a mark)       |
+| `--ui-accent-text`, `--doc-accent-text`       | The accent as words: links, a chosen label (a step towards text)   |
+| `--doc-mark`                                  | "Here" and "now": highlights, find matches, review notes           |
 | `--ui-accent-fill`, `--ui-on-fill`            | The accent as a fill (a checked box) and the label on it           |
 | `--ui-primary`, `--ui-on-primary`             | The primary button: ink (text colour as fill, background as label) |
 | `--ui-danger`, `--ui-warning`, `--ui-success` | Status only, never decoration                                      |
@@ -82,6 +84,10 @@ Each interface colour has exactly one job. A new surface MUST pick its colours f
 
 - The accent MUST NOT be used as a large fill or as the primary button. A primary button is ink (`--ui-primary`), so any theme recolours it and a dark theme gets a light button.
 - Status colours MUST appear with an icon or text that says the same thing.
+
+### 3.2a One palette
+
+The default theme is Apple's system palette (Textus 1.3.13). A theme gives base colours - paper, ink, muted, line, accent, mark and the tones - and everything else is derived from them at fixed ratios: frames, selections, highlights (mark over paper), alerts (note = accent, tip = green, important = purple, warning = mark, caution = red), syntax tokens, find matches, review notes. A colour used as words steps towards the text so a bright base colour still reads. No surface MAY keep a palette of its own.
 
 ### 3.3 Contrast
 
@@ -98,7 +104,7 @@ Tags, board columns, graph groups, chart series, timelines and mind-map branches
 
 Rules:
 
-1. **The theme's palette comes first.** A theme with a signature palette (Dracula, Nord, Catppuccin, One Dark…) SHOULD set the tones from it, so everything in the window - tags, charts, the graph - speaks its colours. A theme that sets none gets the defaults in `src/ui/base.css`: fixed hues at one lightness for light appearances and another for dark. The `-text` and `-tint` forms are derived from the tone (mixed toward `--ui-text`, and 16% over the background), so a theme sets only the nine `--tone-{name}` values.
+1. **The theme's palette comes first.** A theme with a signature palette (Dracula, Nord, Catppuccin, One Dark…) SHOULD set the tones from it, so everything in the window - tags, charts, the graph - speaks its colours. A theme that sets none gets the defaults in `src/engine/tokens/base.css`: fixed hues at one lightness for light appearances and another for dark. The `-text` and `-tint` forms are derived from the tone (mixed toward `--ui-text`, and 16% over the background), so a theme sets only the nine `--tone-{name}` values.
 2. **Order is fixed**: blue, green, orange, purple, red, teal, yellow, pink, gray. Series 1 and 2 always differ strongly. A plugin assigns tones in that order (an option's tone is its position among the property's options), not by hashing names.
 3. Chart plugins MUST pass the tones to their library as its default palette, and the interface text, border and muted colours as its axis, grid and label colours.
 
@@ -115,19 +121,21 @@ Rules:
 
 ### 4.2 Interface type roles
 
-Text names a role, never a size. Sizes are set in `src/ui/design-system.css` and follow **Interface text size** (`--ui-text-scale`, 90–125%).
+Text names a role, never a size. Sizes are set in `src/engine/tokens/design-system.css` and follow **Interface text size** (`--ui-text-scale`, 90–125%).
 
 | Role (`--text-…`) | Desktop | Phone | Line height | Weight  | Used for                                                                          |
 | ----------------- | ------- | ----- | ----------- | ------- | --------------------------------------------------------------------------------- |
-| `caption`         | 11      | 12    | 1.2         | 400/500 | Badges, counts, keycaps                                                           |
+| `caption`         | 12      | 12    | 1.2         | 400/500 | Badges, counts, keycaps                                                           |
 | `footnote`        | 12      | 13    | 1.4         | 400     | Hints, group titles, empty states                                                 |
-| `secondary`       | 12      | 15    | 1.4         | 400     | Text beside the main text in a dense surface (a card, a list entry's second line) |
-| `control`         | 13      | 15    | 1.2         | 400/500 | A control's label                                                                 |
-| `body`            | 13      | 17    | 1.5         | 400     | The main text of a panel, menu, list or field                                     |
+| `list`            | 13      | 17    | 1.35        | 400     | A long list read at a glance (the file tree)                                      |
+| `secondary`       | 14      | 15    | 1.4         | 400     | Text beside the main text in a dense surface (a card, a list entry's second line) |
+| `control`         | 14      | 15    | 1.2         | 400/500 | A control's label                                                                 |
+| `body`            | 14      | 17    | 1.5         | 400     | The main text of a panel, menu, list or field                                     |
 | `body-large`      | 14      | 17    | 1.5         | 400     | Main text where there is room: Settings' rows, dialogs                            |
-| `title`           | 17      | 17    | 1.3         | 600     | A sheet's, panel's or navigation bar's title                                      |
-| `large-title`     | 22      | 34    | 1.2         | 600     | A page's own title                                                                |
+| `title`           | 18      | 17    | 1.3         | 600     | A sheet's, panel's or navigation bar's title                                      |
+| `large-title`     | 24      | 34    | 1.2         | 600     | A page's own title                                                                |
 
+- `--text-mark` (9) is not a text size: the digit in a count badge or a numbered mark.
 - Weights are 400, 500 and 600 only.
 - The line heights and weights in the table are the rule for new work; they become tokens later (Planned). Today the base sets 1.5 for text and 1.2 for controls.
 - A size written in px instead of a role MUST be `calc(Npx * var(--ui-text-scale, 1))`, and a fixed box around text scales with it.
@@ -143,11 +151,11 @@ Themes SHOULD keep: a measure of 60–75 Latin characters (about 35–40 CJK cha
 
 ### 5.1 The 4 px grid
 
-Every radius, padding, margin, gap and component size MUST be a multiple of 4 px. Exceptions: 1–2 px hairlines and insets, and the document's own typography (themes, the editor's content, print). `src/ui/spacing-grid.test.ts` checks every stylesheet.
+Every radius, padding, margin, gap and component size MUST be a multiple of 4 px. Exceptions: 1–2 px hairlines and insets, and the document's own typography (themes, the editor's content, print). `src/engine/controls/spacing-grid.test.ts` checks every stylesheet.
 
 ### 5.2 Spacing scale and use
 
-`--space-1` 4 · `--space-2` 8 · `--space-3` 12 · `--space-4` 16 · `--space-5` 20 · `--space-6` 24 · `--space-8` 32.
+`--space-1` 4 · `--space-2` 8 · `--space-3` 12 · `--space-4` 16 · `--space-6` 24 · `--space-8` 32. (`--space-5` is kept for plugins and draws 24.) `scripts/check-design-values.mjs` (in `npm run check`) fails on spacing off this scale, a radius not from `--shape-*` and a blurred shadow not from `--shadow-*`; a line that must differ says why with `design: allow`.
 
 | Between                                          | Use   |
 | ------------------------------------------------ | ----- |
@@ -155,7 +163,7 @@ Every radius, padding, margin, gap and component size MUST be a multiple of 4 px
 | Controls in a row; rows of a dense list          | 8     |
 | A panel's edge and its content; a card's padding | 12    |
 | Groups in a panel or page                        | 16–24 |
-| A dialog's edge and its content                  | 20–24 |
+| A dialog's edge and its content                  | 24    |
 
 ### 5.3 Control heights
 
@@ -181,17 +189,17 @@ Two heights: `--control-height` 28 (36) for forms, dialogs and a Settings row's 
 
 Every surface that appears in the window is one of these. Each row says where it sits, when it comes and goes, what it may hold, and the one thing to use for it. A new surface takes a row; if none fits, this table is extended first - never a new box.
 
-| Surface                                                                                                  | Where                                                                                         | Comes and goes                                                                                                                       | May hold                                                                                                                                                                      | Use                                                                                                                                                                                                                   | Must not                                                                                                   |
-| -------------------------------------------------------------------------------------------------------- | --------------------------------------------------------------------------------------------- | ------------------------------------------------------------------------------------------------------------------------------------ | ----------------------------------------------------------------------------------------------------------------------------------------------------------------------------- | --------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- | ---------------------------------------------------------------------------------------------------------- |
-| Window regions: title bar (with status items), tab bar, sidebar panel, tab view, AI panel, review margin | Fixed regions, flat                                                                           | Always, or toggled by the user                                                                                                       | Their own bars and lists; status items as buttons                                                                                                                             | Sidebar: `views.registerList` or a webview; tab view: `layout.openView`; status: `ui.setStatusItem` (a plugin with several items gets one button opening `useMenuButton`)                                             | Shadows; a header row of their own making (icon buttons are `ui/IconButton.tsx`)                           |
-| Corner card                                                                                              | Bottom right (`CornerStack corner="end"`), bottom left for start-up notes, `--z-toast`        | Something to act on: an update, a plugin suggestion, drafts brought back. Stays until answered; never takes the focus                | One line, at most two buttons (one primary), ×, optional details opened from the line                                                                                         | `ui/CornerToast.tsx` (`CornerToast` in a `CornerStack`); plugins only through `textus.offerPlugin`                                                                                                                    | Closing itself; a second card style                                                                        |
-| Note                                                                                                     | Bottom centre, `--z-toast`                                                                    | Says something and goes by itself (4.5 s, 12 s with an action); a pointer resting on it holds it; the same note said again stays one | Text, its source, at most one action, or a progress bar with Cancel                                                                                                           | `showNotice`, `startProgress` (`ui/notices.tsx`); plugins `ui.notice`, `ui.progress*`                                                                                                                                 | A note system of its own                                                                                   |
-| Bar over the document                                                                                    | Find bar (top end), review bar (bottom centre)                                                | While its task lasts; Escape closes the find bar                                                                                     | Fields and pill buttons                                                                                                                                                       | Their components                                                                                                                                                                                                      | Blur outside macOS and iOS (7)                                                                             |
-| Popover                                                                                                  | Next to what opened it, `--z-popover`; menus `--z-menu`                                       | Hover, a click or a key; a press outside or Escape closes it (not while an input method composes)                                    | Menu rows (`ContextMenu`, at the pointer or hung from a button with `useMenuButton`); a select (`Select`); a typing list (the `/` panel); a hover card; an InfoTip or Tooltip | `.floating-surface` for the box; `useCloseOnOutsideClick` for closing; `ui/placement.ts` (`clampLeft`, `opensBelow`) or `useViewportClamp` for placing                                                                | Its own border, radius, background or shadow; its own outside-click or Escape listener; a hard-coded layer |
-| Dialog                                                                                                   | Centred over a dimmed window, `--z-modal` (`--z-alert` for one that must be answered first)   | Asks and waits; Escape and the dimming cancel                                                                                        | A title, a message or fields, buttons at the end (primary last)                                                                                                               | `showMessage`, `showConfirm`, `showPrompt` (`ui/app-dialog.tsx`), `showPluginForm` for fields; a dialog of its own takes the `.close-prompt` box; plugins `ui.message/confirm/input/form`; `showQuickPick` for a list | Native `alert`, `confirm` or `<select>`; a box of its own                                                  |
-| Phone sheet                                                                                              | From the bottom edge, `--z-sheet`                                                             | What a menu (`ActionSheet`) or a popover card (`BottomCard`) becomes on a phone; a tap outside or Escape closes it                   | Rows, or content and two big buttons                                                                                                                                          | `ui/Sheet.tsx` with its two bodies                                                                                                                                                                                    | Its own dimming, motion or Escape                                                                          |
-| AI panel and Quick Ask                                                                                   | The AI panel beside the document (or its own window); Quick Ask under the paragraph or docked | Opened by the user; Escape in Quick Ask asks to close                                                                                | One `ChatBody` (messages and composer) shared by both, a header of `IconButton`s, the pending-edits bar                                                                       | `ai/chat/ChatBody`, `IconButton`; plugins add tools and skills, not panels                                                                                                                                            | A second message list or composer                                                                          |
-| Floating view                                                                                            | Over the document, `--z-floating`                                                             | Opened by a plugin; moved, folded to a dot and closed by the user                                                                    | A plugin's page                                                                                                                                                               | `layout.openFloating`                                                                                                                                                                                                 | Covering a popover or a dialog                                                                             |
+| Surface                                                                                                  | Where                                                                                         | Comes and goes                                                                                                                       | May hold                                                                                                                                                                      | Use                                                                                                                                                                                                                                | Must not                                                                                                   |
+| -------------------------------------------------------------------------------------------------------- | --------------------------------------------------------------------------------------------- | ------------------------------------------------------------------------------------------------------------------------------------ | ----------------------------------------------------------------------------------------------------------------------------------------------------------------------------- | ---------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- | ---------------------------------------------------------------------------------------------------------- |
+| Window regions: title bar (with status items), tab bar, sidebar panel, tab view, AI panel, review margin | Fixed regions, flat                                                                           | Always, or toggled by the user                                                                                                       | Their own bars and lists; status items as buttons                                                                                                                             | Sidebar: `views.registerList` or a webview; tab view: `layout.openView`; status: `ui.setStatusItem` (a plugin with several items gets one button opening `useMenuButton`)                                                          | Shadows; a header row of their own making (icon buttons are `engine/controls/IconButton.tsx`)              |
+| Corner card                                                                                              | Bottom right (`CornerStack corner="end"`), bottom left for start-up notes, `--z-toast`        | Something to act on: an update, a plugin suggestion, drafts brought back. Stays until answered; never takes the focus                | One line, at most two buttons (one primary), ×, optional details opened from the line                                                                                         | `engine/controls/CornerToast.tsx` (`CornerToast` in a `CornerStack`); plugins only through `textus.offerPlugin`                                                                                                                    | Closing itself; a second card style                                                                        |
+| Note                                                                                                     | Bottom centre, `--z-toast`                                                                    | Says something and goes by itself (4.5 s, 12 s with an action); a pointer resting on it holds it; the same note said again stays one | Text, its source, at most one action, or a progress bar with Cancel                                                                                                           | `showNotice`, `startProgress` (`engine/controls/notices.tsx`); plugins `ui.notice`, `ui.progress*`                                                                                                                                 | A note system of its own                                                                                   |
+| Bar over the document                                                                                    | Find bar (top end), review bar (bottom centre)                                                | While its task lasts; Escape closes the find bar                                                                                     | Fields and pill buttons                                                                                                                                                       | Their components                                                                                                                                                                                                                   | Blur (7)                                                                                                   |
+| Popover                                                                                                  | Next to what opened it, `--z-popover`; menus `--z-menu`                                       | Hover, a click or a key; a press outside or Escape closes it (not while an input method composes)                                    | Menu rows (`ContextMenu`, at the pointer or hung from a button with `useMenuButton`); a select (`Select`); a typing list (the `/` panel); a hover card; an InfoTip or Tooltip | `.floating-surface` for the box; `useCloseOnOutsideClick` for closing; `engine/controls/placement.ts` (`clampLeft`, `clampTop`, `opensBelow`) or `usePlacement` for placing                                                        | Its own border, radius, background or shadow; its own outside-click or Escape listener; a hard-coded layer |
+| Dialog                                                                                                   | Centred over a dimmed window, `--z-modal` (`--z-alert` for one that must be answered first)   | Asks and waits; Escape and the dimming cancel                                                                                        | A title, a message or fields, buttons at the end (primary last)                                                                                                               | `showMessage`, `showConfirm`, `showPrompt` (`engine/controls/app-dialog.tsx`), `showPluginForm` for fields; a dialog of its own takes the `.close-prompt` box; plugins `ui.message/confirm/input/form`; `showQuickPick` for a list | Native `alert`, `confirm` or `<select>`; a box of its own                                                  |
+| Phone sheet                                                                                              | From the bottom edge, `--z-sheet`                                                             | What a menu (`ActionSheet`) or a popover card (`BottomCard`) becomes on a phone; a tap outside or Escape closes it                   | Rows, or content and two big buttons                                                                                                                                          | `engine/controls/Sheet.tsx` with its two bodies                                                                                                                                                                                    | Its own dimming, motion or Escape                                                                          |
+| AI panel and Quick Ask                                                                                   | The AI panel beside the document (or its own window); Quick Ask under the paragraph or docked | Opened by the user; Escape in Quick Ask asks to close                                                                                | One `ChatBody` (messages and composer) shared by both, a header of `IconButton`s, the pending-edits bar                                                                       | `ai/chat/ChatBody`, `IconButton`; plugins add tools and skills, not panels                                                                                                                                                         | A second message list or composer                                                                          |
+| Floating view                                                                                            | Over the document, `--z-floating`                                                             | Opened by a plugin; moved, folded to a dot and closed by the user                                                                    | A plugin's page                                                                                                                                                               | `layout.openFloating`                                                                                                                                                                                                              | Covering a popover or a dialog                                                                             |
 
 **Layers**, low to high: `--z-bar` (45) bars → `--z-floating` (200) floating views → `--z-popover` (250) popovers, hover cards, the tutorial → `--z-toast` (300) corner cards, notes, the find bar → `--z-menu` (310) menus → `--z-modal` (400) Settings and dialogs → `--z-alert` (450) dialogs that must be answered → `--z-sheet` (500) phone sheets → `--z-select` (1000) a select's list. A surface MUST take its layer from these tokens.
 
@@ -203,18 +211,18 @@ Every surface that appears in the window is one of these. Each row says where it
 
 Every size in the interface is written once, in **interface pixels** on the 4 px grid, and drawn at the interface's size. Nothing - the app, a plugin, a script - draws a fixed number of screen pixels.
 
-**The scale.** `--chrome-scale` = Interface Text Size × the window's step (1 up to 1200 px wide, then a straight line to 1.35 at 2320 px). The phone's chrome is 1. Hairlines (1–2 px) never scale; the document's typography doesn't either - it has the document's zoom.
+**The scale.** `--chrome-scale` = the desktop's base (1.1, one step up from the first design) × Interface Text Size, the same on every desktop platform. It never follows the window's size: a bigger window shows more, not bigger (as VS Code, Obsidian and Typora). `--window-scale` stays 1 for plugins that read it. Icons take one step more (`--icon-scale`, 1.15). The phone's chrome is 1. Hairlines (1–2 px) never scale; the document's typography doesn't either - it has the document's zoom.
 
 **Where a size is written, and how it scales:**
 
-| Written in                                                       | Write                                                                            | Scaled by                                                                                                                                                         |
-| ---------------------------------------------------------------- | -------------------------------------------------------------------------------- | ----------------------------------------------------------------------------------------------------------------------------------------------------------------- |
-| An app stylesheet                                                | Plain px on the grid, or a token (`--space-*`, `--control-height*`, `--shape-*`) | The build (`vite.chrome-scale.ts`): every length of 3 px and up becomes `calc(Npx * var(--chrome-scale, 1))`. Don't wrap by hand.                                 |
-| The document's stylesheets (themes, the editor's content, print) | Plain px, `em`, `rem`                                                            | The document's zoom, not the chrome scale                                                                                                                         |
-| Script (a width, a gap, a threshold, a margin)                   | A named constant in interface px                                                 | `scaledPx(n)` (`src/ui/chrome-scale.ts`), or in React `useChromeScale()`. MUST NOT use a bare number. `npm run check` fails on a size constant that isn't scaled. |
-| A side panel's width                                             | Its limits in interface px (`{ min, max }`)                                      | `src/ui/side-panel-width.ts`: shown = chosen × scale, stored in interface px                                                                                      |
-| A plugin page's stylesheet                                       | Tokens, `%`, `vw`, `clamp()`; px on the grid where nothing else fits             | Its `<style>`s and own sheets are scaled as the page loads (`src/ui/scale-lengths.ts`), the same rule as the build's                                              |
-| A plugin page's script                                           | Read sizes from layout (`getBoundingClientRect`), never assume them              | -                                                                                                                                                                 |
+| Written in                                                       | Write                                                                            | Scaled by                                                                                                                                                                    |
+| ---------------------------------------------------------------- | -------------------------------------------------------------------------------- | ---------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| An app stylesheet                                                | Plain px on the grid, or a token (`--space-*`, `--control-height*`, `--shape-*`) | The build (`vite.chrome-scale.ts`): every length of 3 px and up becomes `calc(Npx * var(--chrome-scale, 1))`. Don't wrap by hand.                                            |
+| The document's stylesheets (themes, the editor's content, print) | Plain px, `em`, `rem`                                                            | The document's zoom, not the chrome scale                                                                                                                                    |
+| Script (a width, a gap, a threshold, a margin)                   | A named constant in interface px                                                 | `scaledPx(n)` (`src/engine/tokens/chrome-scale.ts`), or in React `useChromeScale()`. MUST NOT use a bare number. `npm run check` fails on a size constant that isn't scaled. |
+| A side panel's width                                             | Its limits in interface px (`{ min, max }`)                                      | `src/engine/controls/side-panel-width.ts`: shown = chosen × scale, stored in interface px                                                                                    |
+| A plugin page's stylesheet                                       | Tokens, `%`, `vw`, `clamp()`; px on the grid where nothing else fits             | Its `<style>`s and own sheets are scaled as the page loads (`src/engine/tokens/scale-lengths.ts`), the same rule as the build's                                              |
+| A plugin page's script                                           | Read sizes from layout (`getBoundingClientRect`), never assume them              | -                                                                                                                                                                            |
 
 **Layout rules that follow from it:**
 
@@ -224,13 +232,28 @@ Every size in the interface is written once, in **interface pixels** on the 4 px
 - **A block in the document** grows with its page up to 70% of the window's height, then scrolls inside.
 - **Floating views** are their manifest's size × the user's resize × scale; folded, a 36 × scale dot.
 
-**Reusing it.** The pieces live together and are the only way in: `src/ui/chrome-scale.ts` (`chromeScaleAt`, `scaledPx`), `src/ui/useChromeScale.ts`, `src/ui/side-panel-width.ts`, `src/ui/scale-lengths.ts`, `vite.chrome-scale.ts`. A new surface uses them; it doesn't measure the window or the text size itself.
+**Reusing it.** The pieces live together and are the only way in: `src/engine/tokens/chrome-scale.ts` (`chromeScale`, `scaledPx`), `src/engine/controls/useChromeScale.ts`, `src/engine/controls/side-panel-width.ts`, `src/engine/tokens/scale-lengths.ts`, `vite.chrome-scale.ts`. A new surface uses them; it doesn't measure the window or the text size itself.
+
+### 5.7 Islands and tabs - In force (Textus 1.3.13)
+
+- **A window holds islands; an island holds tabs.** An island is only layout: a row of tabs over a rounded sheet (`src/engine/layout/`). Tabs are the content - documents, plugin views, web pages, the start page, Textus AI's conversations, Settings' page and a plugin's page - and any island takes any tab. An island its last tab leaves goes away.
+- **Dragging moves tabs.** A tab dragged out of its row joins the island it is let go over, in its row or anywhere in its middle; within an island's outer tenth at its sides, or a twentieth at its top or bottom (stacking is the rarer wish), it makes a new island there. The zones are read from the layout as the drag began, and the one aimed at holds a little past its line, so the islands making room never move the target under the pointer; the move is made only on release. A whole island moves only with Alt (Option) held. Whatever a drag does has no menu item.
+- **Numbers.** With ⌘ (Ctrl) held alone for half a second and two or more islands in the window, each island shows its number at its middle, in reading order; ⌘1–⌘6 then goes to that island's tab in front instead of making a heading. They leave when ⌘ is let go, at any other key, a press of the pointer, or the window losing the focus; nothing of them stays on screen (`src/engine/layout/island-numbers.ts`).
+- **Tab widths.** A tab is as wide as its name and its fixed parts - the ×'s room always among them, shown or not, so no tab changes width as it opens or another closes - between the narrowest and the widest a tab may be. When the row can't hold them the widest give way first, a name that no longer fits fading out at its end; once even the narrowest don't fit, the row scrolls and lists every tab. One pure function decides it (`src/engine/controls/tabs/tab-widths.ts`).
+- **Textus AI.** Its button opens the conversation's tab in an island of its own on the right; pressed again while that tab is in front of an island of AI tabs only, it closes them; in front of an island it shares, it does nothing; anywhere else it brings the tab to the front. Closing a conversation's tab closes the conversation (it stays in History).
+- **Settings.** The rail's gear (and ⌘,) opens the sidebar on Settings' list of pages, grouped and folded, with the one settings search; picking a page replaces the page in the one Settings tab. A page has no title or description line - the list and the tab say which it is.
+- **Plugins.** The rail's puzzle opens the sidebar on the plugin list (search, ⋯); a plugin opens its own page in a tab named "Plugin: name", so it never reads as a tab the plugin opens itself.
+- **Sidebar panels.** Row 1 is the panel's name on the window bar's line; row 2, level with the islands' top edge, is its search - only for a panel that searches - with the panel's actions (⋯) beside it. A sidebar panel holds what is used at a glance; forms and setup go on a page in a tab.
+- **One level of box.** Groups are boxes on the page; nothing inside a group is boxed again, and no group repeats the title above it.
+- **Zen** shows the tab in use alone, nothing else; the split comes back when Zen ends. An × at the top right leaves it.
+- **Documents always open as tabs** (no new-window choice); a tab dragged out of the window opens a window of its own.
 
 ## 6. Shape - In force
 
-- **Containers** are rounded rectangles in three sizes: `--shape-l` 16 (dialogs, sheets, Settings), `--shape-m` 12 (cards, Settings' groups, menus, popovers, the AI composer, code blocks), `--shape-s` 8 (a box inside a card, a highlighted row, tooltips, multi-line fields). Nothing is rounder than its level; nothing is under `--shape-xs` 4.
+- **Containers** are rounded rectangles in three sizes: `--shape-m` 12 (islands, dialogs, sheets, cards, Settings' groups, menus, popovers, the AI composer, code blocks), `--shape-s` 8 (a box inside a card, a highlighted row, tooltips, multi-line fields), `--shape-xs` 4 (the smallest inner box). `--shape-l` is kept for plugins and draws 12. Nothing is rounder than its level; nothing is under `--shape-xs` 4.
 - **Nesting** is concentric: a box inside another takes the outer radius less the padding between them (r = R − p). Boxes on one level share one radius. A large container keeps its radius and keeps its capsules at least one padding from its edge.
-- **Controls** are capsules (`--shape-pill`): buttons, selects, one-line fields and search boxes, segmented controls (track and thumb), tabs, chips, tags and switches. A button with only an icon is a circle.
+- **Controls** are capsules (`--shape-pill`): buttons, selects, segmented controls (track and thumb), chips, tags and switches. A button with only an icon is a circle.
+- **Fields** - one-line, search and multi-line, in the app and in plugin pages - are rounded rectangles (`--shape-s`). `scripts/check-field-shapes.mjs` (in `npm run check`) fails on a field drawn as a capsule.
 - **Character-level marks are square**: the caret, Vim's block cursor, the selection, find and flash highlights - radius 0–2 px.
 - Where the engine supports it (Chromium 139+, so WebView2), container corners are continuous (`corner-shape: superellipse(1.25)`); capsules and circles stay `round`.
 - Radii are lengths like any other: they grow with `--chrome-scale` (5.6), so the concentric rule holds at every size.
@@ -243,15 +266,16 @@ Every size in the interface is written once, in **interface pixels** on the 4 px
 | Grouped | A `--ui-border` hairline, no shadow                                                       | Cards, board columns, tables, Settings groups |
 | Overlay | `--ui-surface` + its one shadow (`--shadow-popover`, `--shadow-dialog`, `--shadow-sheet`) | Menus, popovers, dialogs, sheets              |
 
+- **Three shadows**, by how far a surface stands off what is under it: `--shadow-1` resting on it (a switch's thumb, a selected segment, a margin card, a picture), `--shadow-2` floating over it (menus, popovers, a card under the pointer, the review bar), `--shadow-3` over everything (dialogs, sheets, drawers). The older names (`--shadow-popover`, `--shadow-card`…) stay, each one of the three.
+
 - Shadows MUST appear only on overlays, each paired with its surface.
-- Blur materials are only for overlays with content scrolling underneath, and only on macOS and iOS (`<html data-platform>`). Overlays only darken what is under them; they never blur it. The title bar's opt-in frosted option is the exception: the user may turn it on wherever the engine can blur, because they asked for that surface to be one.
+- No blur materials anywhere: every surface is solid, the frame, menus and popovers alike. Overlays only darken what is under them; they never blur it.
 
 ## 8. Icons - In force
 
-- One set (`src/ui/icons.tsx`): stroked line art on a 16-unit grid, 1.4 stroke, round caps and joins, `currentColor`.
-- File types (`src/ui/file-icons.tsx`): Markdown, pictures and other files are ours; the rest are Lucide's (ISC), stroked thinner to match. A new kind of file takes a Lucide icon before one of our own.
-- Sizes follow the text role beside them: 16 with `body`, 14 with `secondary`, 12 with `caption`.
-- A new icon is added to the set on the same grid and stroke; a surface MUST NOT draw a one-off icon for something the set has.
+- One set: Lucide's (ISC, `lucide-react`), one weight for every icon - a line as thick at every size (`ICON_STROKE`), round caps and joins, `currentColor` - drawn at each icon's design size and grown with the interface (`iconSize`, `--icon-scale`). `src/engine/controls/icons.tsx` names them for the app; file types (`file-icons.tsx`) and plugins' `tx-icon` names (`icon-masks.css`) use the same set and weight; a node view built outside React takes an icon's markup from `iconMarkup`.
+- Only the Windows caption buttons are drawn by hand: they follow the system's 10×10 glyphs.
+- A new icon takes a Lucide one, added to `icons.tsx`; a surface MUST NOT draw a one-off icon.
 - Plugins name icons (`icon: "calendar"` in a list item; `<span class="tx-icon" data-icon="filter">` in a page, names in 15.4) instead of drawing their own.
 - Emoji are content, not icons; the interface MUST NOT use emoji as icons.
 
@@ -264,32 +288,32 @@ Every size in the interface is written once, in **interface pixels** on the 4 px
 
 ## 10. Motion - In force
 
-- Durations, curves, offsets and scales come only from `src/ui/motion.css`. `src/ui/motion-tokens.test.ts` fails on a new keyframe or a raw time elsewhere.
-- Everything that moves is one of these moves: **enter** (`motion-enter`, `enter()`), **exit** (`motion-exit`, `exit()`), **mark** (`.motion-mark`, `land()`), **glide** (FLIP, `ui/flip.ts`), **beat** (`startBeat` / `enterOnBeat` / `joinBeat`: the parts of one change appear as one), **crossfade** (`crossfade()`), with **presence** (`ui/usePresence.ts`) keeping an element mounted while it exits.
-- Durations: `--dur-instant` 80 ms (press, hover colour), `--dur-fast` 120 ms (small exits, fades), `--dur-base` 200 ms (menus, popovers, dialogs), `--dur-medium` 250 ms, `--dur-slow` 320 ms (sidebar, AI panel, Settings, Zen mode), `--dur-sheet` 450 ms (phone sheets). An exit takes about 70% of its entry. Loops (`--dur-blink`, `--dur-pulse`, `--dur-spin`, `--dur-sheen`, `--dur-drift`) are only for "working" indicators.
+- Durations, curves, offsets and scales come only from `src/engine/motion/motion.css`. `src/engine/motion/motion-tokens.test.ts` fails on a new keyframe or a raw time elsewhere.
+- Everything that moves is one of these moves: **enter** (`motion-enter`, `enter()`), **exit** (`motion-exit`, `exit()`), **mark** (`.motion-mark`, `land()`), **glide** (FLIP, `engine/motion/flip.ts`), **beat** (`startBeat` / `enterOnBeat` / `joinBeat`: the parts of one change appear as one), **crossfade** (`crossfade()`), with **presence** (`engine/motion/usePresence.ts`) keeping an element mounted while it exits.
+- Durations: `--dur-instant` 80 ms (press, hover colour), `--dur-fast` 120 ms (small exits, fades), `--dur-base` 200 ms (menus, popovers, dialogs), `--dur-medium` 250 ms (_Planned, 1.3.13_: folded into 200 or 320), `--dur-slow` 320 ms (sidebar, AI panel, Settings, Zen mode), `--dur-sheet` 450 ms (phone sheets). An exit takes about 70% of its entry. Loops (`--dur-blink`, `--dur-pulse`, `--dur-spin`, `--dur-sheen`, `--dur-drift`) are only for "working" indicators.
 - Curves: `--ease-standard` (in place), `--ease-out` (entry), `--ease-in` (exit), `--ease-in-out` (movement), `--ease-spring-bouncy` (about 3% overshoot) only for a finger release.
-- Only `opacity` and `transform` animate (`src/ui/motion-properties.test.ts`). Size changes use FLIP or a crossfade.
+- Only `opacity` and `transform` animate (`src/engine/motion/motion-properties.test.ts`). Size changes use FLIP or a crossfade.
 - Toggles (sidebar, panels, switches, arrows) use transitions so they can reverse; keyframes are only for one-time entries. An exiting element is `inert`; animations never block input.
 - Space is consistent: a surface grows from its anchor and shrinks back into it, enters and leaves the same way, one direction per surface.
 - **Dragging** looks the same everywhere: the copy under the pointer is lifted - `scale: 1.06`, `--ui-surface`, `--shadow-popover` (`.tx-drag-ghost`, `.tree-drag-ghost`, `.tab-pull-ghost`, `.tab-pill-lifted`, `.is-drag-lifted`) - and the place it left, where it stays, is a dashed outline (`.tx-drag-source`). The copy stays exactly under the point it was taken by, zoomed or not.
 - Nothing moves while the user types: input, the caret, the selection, completions, typewriter scrolling, find highlights and counts change instantly.
-- Under reduced motion, offsets and scales become 0, springs become the standard curve, slow motion becomes a 150 ms fade, loops stop and smooth scrolling is instant (`ui/motion.ts`: `prefersReducedMotion()`, `motionAllowed()`).
+- Under reduced motion, offsets and scales become 0, springs become the standard curve, slow motion becomes a 150 ms fade, loops stop and smooth scrolling is instant (`engine/motion/motion.ts`: `prefersReducedMotion()`, `motionAllowed()`).
 
 ## 11. Components - In force
 
 | Component                | Rule                                                                                                                                                                                                                                                                                                                     |
 | ------------------------ | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------ |
 | Buttons                  | Solid **primary** (ink, one per group), **secondary** (light border), **text** button for the next level down. One action appears as one button in one place. Size, radius and states are defined once in `design-system.css`; a component sets only layout and text colour                                              |
-| Icon button              | A 24 circle, no border in headers, toolbars and inline; named with `aria-label`, hinted with `ui/Tooltip.tsx`, never `title`                                                                                                                                                                                             |
-| Fields                   | One-line fields and search boxes are capsules; multi-line fields are `--shape-s` boxes. The focus ring is inside                                                                                                                                                                                                         |
-| Select                   | `ui/Select.tsx` with the drawn arrow, in the two control heights. Native dropdowns MUST NOT be used                                                                                                                                                                                                                      |
+| Icon button              | A 24 circle, no border in headers, toolbars and inline; named with `aria-label`, hinted with `engine/controls/Tooltip.tsx`, never `title`. _Planned (Textus 1.3.13)_: a tooltip is a callout beside what it names, with a small arrow pointing at it, its shortcut after the name                                        |
+| Fields                   | Every text field is a `--shape-s` rounded rectangle (6). The focus ring is inside                                                                                                                                                                                                                                        |
+| Select                   | `engine/controls/Select.tsx` with the drawn arrow, in the two control heights. Native dropdowns MUST NOT be used                                                                                                                                                                                                         |
 | Checkbox                 | `.ui-check`: 15 px, `--shape-xs`, accent fill when checked                                                                                                                                                                                                                                                               |
 | Switch                   | 1.5 times its row's text tall (em-based) on every platform and text size                                                                                                                                                                                                                                                 |
-| Segmented control / tabs | Capsule track and thumb; the chosen one `--ui-selected`                                                                                                                                                                                                                                                                  |
+| Segmented control / tabs | Capsule track and thumb; the chosen one a raised `--ui-surface` thumb                                                                                                                                                                                                                                                    |
 | Tags, chips, badges      | Capsules at 20–24; tags take a tone (3.4); a chip shows a rule in force and opens it                                                                                                                                                                                                                                     |
 | Menus                    | Every menu is `ContextMenu` - at the pointer, or hung from a button with `useMenuButton` - with one panel padding (4), one item size (4×8 padding, `body`), one hover, separators (1 px, 4×8 margin). A menu that stays open while its checks are changed, or holds a note, keeps its own rows on the same surface (5.5) |
-| Dialogs                  | `ui/app-dialog.tsx` (`showMessage`, `showConfirm`); native alert and confirm MUST NOT be used                                                                                                                                                                                                                            |
-| Popups                   | See 5.5: one surface (`.floating-surface`), one way to close (`useCloseOnOutsideClick`, active only while open), one way to place (`ui/placement.ts`)                                                                                                                                                                    |
+| Dialogs                  | `engine/controls/app-dialog.tsx` (`showMessage`, `showConfirm`); native alert and confirm MUST NOT be used                                                                                                                                                                                                               |
+| Popups                   | See 5.5: one surface (`.floating-surface`), one way to close (`useCloseOnOutsideClick`, active only while open), one way to place (`engine/controls/placement.ts`)                                                                                                                                                       |
 | Tables                   | The document's own table look: a rounded frame (`--doc-radius`), a header tinted `--doc-code-bg`, `--doc-border` hairlines                                                                                                                                                                                               |
 | Cards                    | Grouped level (section 7): hairline, no shadow, `--shape-m`                                                                                                                                                                                                                                                              |
 
@@ -300,7 +324,7 @@ Only the open and save file dialogs and the macOS system menu bar stay native.
 - Group headings in Title Case ("Fixed Shortcuts"); row labels in sentence case ("Save automatically"); a menu item's own name as it is ("Source Mode").
 - A switch is named by what it turns on, without "Enable" (except one that turns on a whole AI feature).
 - A row's label says what the setting does on its own ("Show page numbers in exports", not "PDF page numbers" with a line under it).
-- A "?" after a label (`ui/InfoTip.tsx`) is for a label that can't be understood without it and whose explanation matters (a trade-off between choices, outside setup). It shows on hover, click or tap, never as grey text under the row.
+- A "?" after a label (`engine/controls/InfoTip.tsx`) is for a label that can't be understood without it and whose explanation matters (a trade-off between choices, outside setup). It shows on hover, click or tap, never as grey text under the row.
 - What is live stays visible under the row: a value or a status.
 - In Settings, a page's groups go from the most used to the least, links out last. A row that only means something with another setting on is hidden while it is off and comes right after it.
 - Every string is localized (`src/i18n/`); interface text never hard-codes a language.
@@ -309,7 +333,7 @@ Only the open and save file dialogs and the macOS system menu bar stay native.
 
 - Every control has a name in the interface language; an icon-only button has `aria-label`.
 - Landmarks: the window bar is `header`, the document column `main`, the sidebar and AI panel labelled `aside`s; the editor is a `textbox` named Document.
-- Status that appears without focus moving goes through `announce()` (`src/ui/announce.ts`), one polite live region; no other live regions.
+- Status that appears without focus moving goes through `announce()` (`src/engine/controls/announce.ts`), one polite live region; no other live regions.
 - Every action works from the keyboard. `F6` / `Shift+F6` move between regions (`src/app/regions.ts`); a list of like items is one tab stop walked with the arrow keys (trees, tab lists, menus).
 - Esc closes the topmost surface only and returns focus to what opened it.
 - Information never rests on colour alone.
@@ -367,7 +391,7 @@ A plugin MUST use the lowest tier that can do the job.
 Every plugin page (a sidebar tab, a tab view, a code block, a settings page) gets, before its own HTML and with no setup:
 
 1. **The tokens**: every role token on the list in `src/plugins/views/theme-vars.ts` - colours (tones included), type roles, spacing, shapes, control heights, durations and curves, the popover shadow - kept current when the theme or appearance changes.
-2. **The app's own stylesheets**: `src/ui/motion.css`, `src/ui/design-system.css` and `src/ui/components.css`, the same files the window loads. A `tx-` class in a page is the app's control from the same rule, not a copy.
+2. **The app's own stylesheets**: `src/engine/motion/motion.css`, `src/engine/tokens/design-system.css` and `src/engine/controls/components.css`, the same files the window loads. A `tx-` class in a page is the app's control from the same rule, not a copy.
 3. **Base element styles** (`src/plugins/host/runtime/plugin-ui.css`): bare `button`, `input`, `select`, `textarea`, headings, links, `.toolbar`, `.list`, `.empty` already look like Textus.
 4. **Attributes on `<html>`**: `data-theme` (`light` | `dark`), `data-platform`, and `data-window-chrome="mobile"` on a phone, so controls take the phone's sizes there.
 5. **The page API** from `acquireTextusApi()` (or `textus`): `t()`, `postMessage`, `onMessage`, `getState` / `setState`, `onExport`, and `menu()` (15.5).
@@ -378,8 +402,9 @@ A plugin MUST NOT ship its own copy of any of these, and MUST NOT restyle a `tx-
 
 The list of controls a plugin page may use, with their markup, is
 [docs/dev/plugins/ui.md](../dev/plugins/ui.md) › Controls - one list, for
-the app and plugins alike; the styles are `src/ui/components.css` and
-`src/ui/controls.css`. Class names are public API (2.1): write them exactly
+the app and plugins alike; the styles are `src/engine/controls/components.css`,
+`src/engine/controls/icon-masks.css`, `src/engine/controls/controls.css`,
+`src/engine/controls/progress.css` and `src/engine/controls/bubble.css`. Class names are public API (2.1): write them exactly
 as there; combine only the modifiers listed. Icons (`<span class="tx-icon"
 data-icon="…">`): `text`, `number`, `select`, `multi`, `date`, `checkbox`,
 `url`, `page`, `filter`, `sort`, `plus`, `more`, `table`, `board`,
@@ -460,6 +485,15 @@ Planned: `api.select()` for a field's dropdown and `data-tooltip` for the app's 
 ```
 
 No `<style>` is needed for any of it. A page's own CSS is for layout only (grid, flex, widths), with token values.
+
+### 15.8 Where a plugin puts things - In force (Textus 1.3.13)
+
+One rule for every plugin:
+
+1. **Content** - a board, a database, a reader - opens in a tab (`layout.openView`).
+2. **Settings and setup** - a server address, keys, options - go on the plugin's own page, which Textus draws from its declared settings and opens in a tab (`layout.openSettings()`).
+3. **Quick or frequent things** - a status, a list to pick from, "sync now" - go in a sidebar panel: simple, at a glance, no forms.
+4. **An AI plugin** (an outside agent, `contributes.agents`) gets a button at the window bar's end, beside Textus AI's, drawn from the plugin's icon: a press opens the AI with that agent; pressed again while it is in use, it acts as the AI button does. The plugin draws nothing there itself.
 
 ## 16. Front-end architecture
 

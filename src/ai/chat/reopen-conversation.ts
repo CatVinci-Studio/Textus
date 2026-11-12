@@ -1,12 +1,14 @@
+import { openDocument } from "../../utils/open-document";
+import { fill } from "../../i18n/fill";
 import {
   deleteConversation,
   loadConversationTurns,
   type ChatSummary,
 } from "./chat-history";
 import { requestChatRestore, type ChatRestore } from "./chat-restore";
+import { openConversationTab } from "./conversation-tabs";
 import { fs } from "../../platform/ipc";
-import { showConfirm } from "../../ui/app-dialog";
-import { OPEN_FILE_IN_TAB_EVENT } from "../../utils/events";
+import { showConfirm } from "../../engine/controls/app-dialog";
 import { basename } from "../../utils/path";
 import type { Strings } from "../../i18n/strings";
 
@@ -19,12 +21,12 @@ export interface ReopenTarget {
 
 /** The docked panel's: the editor of the conversation's document claims it,
  *  in a tab of this window. */
-export const PANEL_REOPEN: ReopenTarget = {
-  restore: requestChatRestore,
-  openDocument: (path) =>
-    window.dispatchEvent(
-      new CustomEvent(OPEN_FILE_IN_TAB_EVENT, { detail: path }),
-    ),
+const PANEL_REOPEN: ReopenTarget = {
+  // In a tab of its own where the AI has tabs, never over the one in front.
+  restore: (restore) => {
+    if (!openConversationTab(restore.id)) requestChatRestore(restore);
+  },
+  openDocument: (path) => openDocument(path),
 };
 
 /**
@@ -53,7 +55,7 @@ export async function reopenConversation(
     return;
   }
   const continueHere = await showConfirm(
-    t.chatHistoryMissingText.replace("{name}", basename(docPath)),
+    fill(t.chatHistoryMissingText, { name: basename(docPath) }),
     {
       title: t.chatHistoryMissingTitle,
       okLabel: t.chatHistoryContinueHere,

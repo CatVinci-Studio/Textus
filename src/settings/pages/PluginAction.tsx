@@ -1,4 +1,6 @@
-import { useMenuButton } from "../../ui/useMenuButton";
+import { ChevronDownIcon } from "../../engine/controls/icons";
+import { fill } from "../../i18n/fill";
+import { useMenuButton } from "../../engine/controls/useMenuButton";
 import { useSyncExternalStore } from "react";
 import type { Strings } from "../../i18n/strings";
 import {
@@ -6,12 +8,13 @@ import {
   pluginsSnapshot,
   subscribePlugins,
   type PluginRecord,
-} from "../../plugins/manager";
+} from "../../plugins/store/plugin-records";
 import {
   catalogSnapshot,
   subscribeCatalog,
   updateFor,
   neededTextus,
+  catalogItem,
 } from "../../plugins/store/catalog";
 import { canSwitch } from "../../plugins/store/lifecycle";
 import { usePluginInstall } from "./usePluginInstall";
@@ -25,10 +28,7 @@ export function usePluginActions(t: Strings) {
   const { installing, install, enable, uninstall } = actions;
   const actionFor = (id: string) => {
     const record = plugins.records.find((r) => r.id === id);
-    const item =
-      catalog.status === "ready"
-        ? catalog.items.find((i) => i.id === id)
-        : undefined;
+    const item = catalogItem(id, catalog);
     return (
       <PluginAction
         t={t}
@@ -60,7 +60,7 @@ interface Action {
  * in the installed list: Install; once installed, Update when there is
  * one, else Turn Off or Turn On; the rest, and Uninstall, in the menu.
  */
-export function PluginAction({
+function PluginAction({
   t,
   name,
   record,
@@ -90,7 +90,7 @@ export function PluginAction({
   const menu: Action[] = [];
   if (!record && needs) {
     main = {
-      label: t.pluginNeedsTextus.replace("{version}", needs),
+      label: fill(t.pluginNeedsTextus, { version: needs }),
       run: () => {},
       unavailable: true,
     };
@@ -117,7 +117,7 @@ export function PluginAction({
       main = {
         label: installing
           ? t.pluginInstalling
-          : t.pluginUpdate.replace("{version}", update),
+          : fill(t.pluginUpdate, { version: update }),
         run: onUpdate,
       };
       if (toggle) menu.push(toggle);
@@ -143,13 +143,11 @@ export function PluginAction({
         <button
           type="button"
           className="text-button plugin-action-more"
-          aria-label={t.pluginMoreFor.replace("{name}", name)}
+          aria-label={fill(t.pluginMoreFor, { name })}
           disabled={installing}
           {...more.button}
         >
-          <svg viewBox="0 0 16 16" aria-hidden="true">
-            <path d="M4 6l4 4 4-4" />
-          </svg>
+          <ChevronDownIcon />
         </button>
       )}
       {more.menu}

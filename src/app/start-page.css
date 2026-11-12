@@ -1,7 +1,7 @@
-/* The start page: the window's empty state, in the interface's own type
-   and the theme's colours. The logo and name over three actions, the
-   recent projects and files beside each other below; the whole block in
-   the middle of the window. */
+/* The start page (design-language.md 5.7): two columns centred as one
+   block. On the left the mark, the name and three text rows to begin with;
+   on the right the recent folders and files. The columns share their top
+   and bottom edges; a narrow window stacks them. */
 .start-page {
   display: flex;
   align-items: center;
@@ -10,47 +10,78 @@
   overflow-y: auto;
   background: var(--ui-bg);
   color: var(--ui-text);
+  container-type: inline-size;
 }
 
+/* One column, in the middle: the mark and the name, the ways to begin,
+   then what was open lately. */
 .start-page-body {
-  width: min(720px, 100% - 32px);
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-6);
+  width: min(520px, 100% - 2 * var(--space-6));
   padding: var(--space-8) 0;
 }
 
-.start-page-title {
+.start-page-brand {
   display: flex;
-  flex-direction: column;
   align-items: center;
-  gap: var(--space-3);
-  margin: 0 0 var(--space-8);
-  font-size: var(--text-large-title);
-  font-weight: 600;
+  gap: var(--space-4);
+}
+
+/* The mark and the name, the page's one large thing. */
+.start-page-mark {
+  width: calc(72px * var(--chrome-scale));
+  height: auto;
+}
+
+.start-page-title {
+  margin: 0;
+  font-family: var(--font-brand);
+  font-size: calc(var(--text-large-title) * 1.6);
+  font-weight: 500;
   letter-spacing: 0.01em;
 }
 
-.start-page-title img {
-  width: 64px;
-  height: 64px;
+/* New, Open, Open Folder: capsules in a row, New the primary. */
+.start-page-buttons {
+  display: flex;
+  flex-wrap: wrap;
+  gap: var(--space-2);
 }
 
-/* Three cards in a row: a hairline, no shadow, the hover tint. */
-.start-page-actions {
-  display: grid;
-  grid-template-columns: repeat(3, 1fr);
-  gap: var(--space-3);
-  margin-bottom: var(--space-8);
+/* The recent folders as capsules. */
+.start-page-chips {
+  display: flex;
+  flex-wrap: wrap;
+  gap: var(--space-2);
 }
 
-.start-page-action {
+:is(.start-page-actions, .start-page-recent ul) {
   display: flex;
   flex-direction: column;
-  align-items: flex-start;
+  margin: 0;
+  padding: 0;
+  list-style: none;
+}
+
+.start-page-actions {
+  align-self: stretch;
+  margin-top: var(--space-6);
+}
+
+/* A row to begin with: an icon, its name, its keys - no frame. */
+.start-page-action {
+  display: flex;
+  align-items: center;
   gap: var(--space-2);
-  min-height: 112px;
-  padding: var(--space-4);
-  border: 1px solid var(--ui-border);
-  border-radius: var(--shape-m);
-  background: var(--ui-surface);
+  width: calc(100% + 2 * var(--space-2));
+  min-height: var(--control-height);
+  margin: 0 calc(-1 * var(--space-2));
+  padding: 0 var(--space-2);
+  border: 0;
+  border-radius: var(--shape-s);
+  background: none;
   color: var(--ui-text);
   font: inherit;
   font-size: var(--text-body);
@@ -62,67 +93,60 @@
 
 .start-page-action:hover {
   background: var(--ui-hover);
+  transition-duration: var(--dur-instant);
 }
 
 .start-page-action-icon {
   display: inline-flex;
-  align-items: center;
-  justify-content: center;
-  width: 32px;
-  height: 32px;
-  border-radius: var(--shape-s);
-  background: color-mix(in srgb, var(--ui-accent) 12%, transparent);
-  color: var(--ui-accent);
-  font-size: var(--text-title);
+  flex-shrink: 0;
+  color: var(--ui-muted);
 }
 
 .start-page-action-label {
-  margin-top: var(--space-1);
-  font-weight: 600;
+  flex: 1;
+  min-width: 0;
 }
 
 .start-page-action-keys {
-  margin-top: auto;
+  flex-shrink: 0;
   color: var(--ui-muted);
   font-family: inherit;
   font-size: var(--text-footnote);
+  font-variant-numeric: tabular-nums;
 }
 
-/* The recent projects and files side by side; one over the other where
-   the window is narrow. */
 .start-page-recents {
-  display: grid;
-  grid-template-columns: repeat(auto-fit, minmax(260px, 1fr));
-  gap: var(--space-3);
-}
-
-.start-page-recent {
   display: flex;
   flex-direction: column;
+  gap: var(--space-5);
   min-width: 0;
-  padding: var(--space-3) var(--space-4) var(--space-2);
-  border: 1px solid var(--ui-border);
-  border-radius: var(--shape-m);
-  background: var(--ui-surface);
 }
 
 .start-page-heading {
   margin: 0 0 var(--space-2);
-  color: var(--ui-muted);
-  font-size: var(--text-footnote);
-  font-weight: 600;
 }
 
 .start-page-row {
   display: flex;
   align-items: center;
+  min-width: 0;
+  margin: 0 calc(-1 * var(--space-2));
+  border-radius: var(--shape-s);
+}
+
+.start-page-row:hover {
+  background: var(--ui-hover);
+}
+
+.start-page-open {
+  display: flex;
+  flex: 1;
+  align-items: center;
   gap: var(--space-2);
   min-width: 0;
-  min-height: 28px;
-  padding: var(--space-1) var(--space-2);
-  margin: 0 calc(-1 * var(--space-2));
+  min-height: var(--control-height);
+  padding: 0 var(--space-2);
   border: none;
-  border-radius: var(--shape-s);
   background: none;
   color: var(--ui-text);
   font: inherit;
@@ -130,10 +154,6 @@
   text-align: start;
   cursor: pointer;
   user-select: none;
-}
-
-.start-page-row:hover {
-  background: var(--ui-hover);
 }
 
 .start-page-row-icon {
@@ -145,35 +165,40 @@
 .start-page-name {
   flex-shrink: 0;
   max-width: 60%;
-  overflow: hidden;
-  text-overflow: ellipsis;
-  white-space: nowrap;
 }
 
 .start-page-where {
   min-width: 0;
-  overflow: hidden;
   color: var(--ui-muted);
   font-size: var(--text-footnote);
-  text-overflow: ellipsis;
-  white-space: nowrap;
 }
 
-/* A phone-narrow window: the actions stack too. */
-@media (max-width: 520px) {
-  .start-page-actions {
-    grid-template-columns: 1fr;
-  }
+/* Off the list: shown on the row under the pointer or the keys. */
+.start-page-remove {
+  display: inline-flex;
+  flex-shrink: 0;
+  margin-right: var(--space-1);
+  padding: var(--space-1);
+  border: 0;
+  border-radius: var(--shape-pill);
+  background: none;
+  color: var(--ui-muted);
+  cursor: pointer;
+}
 
-  .start-page-action {
-    min-height: 0;
-    flex-direction: row;
-    align-items: center;
-  }
+.start-page-remove:hover {
+  background: var(--ui-hover);
+  color: var(--ui-text);
+}
 
-  .start-page-action-label,
-  .start-page-action-keys {
-    margin-top: 0;
-    margin-left: auto;
-  }
+/* The sidebar with no folder: the same three rows. */
+/* In the sidebar: rows as every list's, their fill from the body's edge,
+   their icons on the title's line. */
+.sidebar-start .start-page-actions {
+  margin-top: 0;
+}
+.sidebar-start .start-page-action {
+  width: 100%;
+  margin: 0;
+  padding: 0 var(--pane-row-inset);
 }

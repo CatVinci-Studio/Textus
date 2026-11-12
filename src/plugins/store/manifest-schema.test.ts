@@ -1,4 +1,6 @@
 import { readFileSync } from "node:fs";
+import PERMISSIONS from "./permissions.json";
+import { PERMISSION_LABELS } from "./permissions";
 import { join } from "node:path";
 import { describe, expect, it } from "vitest";
 import { REQUIRED_SETTINGS, isPermission } from "./manifest";
@@ -32,12 +34,16 @@ describe("textus-plugin.schema.json", () => {
     const plain: string[] = props.permissions.items.anyOf[0].enum;
     for (const p of plain) expect(isPermission(p)).toBe(true);
     expect(isPermission("network:api.example.com")).toBe(true);
-    // Every plain permission manifest.ts knows is in the schema.
-    const known = /const PLAIN_PERMISSIONS = \[([\s\S]*?)\]/
-      .exec(MANIFEST_TS)![1]
-      .match(/"[^"]+"/g)!
-      .map((s) => s.slice(1, -1));
-    expect([...plain].sort()).toEqual([...known].sort());
+    // The schema's are the one list (permissions.json), each with its
+    // words; and the host rule judges the shared cases as Rust does.
+    expect([...plain].sort()).toEqual([...PERMISSIONS.plain].sort());
+    expect(Object.keys(PERMISSION_LABELS).sort()).toEqual(
+      [...PERMISSIONS.plain].sort(),
+    );
+    for (const p of PERMISSIONS.hosts.valid)
+      expect(isPermission(p), p).toBe(true);
+    for (const p of PERMISSIONS.hosts.invalid)
+      expect(isPermission(p), p).toBe(false);
   });
 
   it("names the menus and the settings a plugin can need", () => {

@@ -112,7 +112,7 @@ export function mapPreviews(
 /** A preview whose text the writer changed, carried on where that leaves
  *  their edit alone; null otherwise. A change whose original they edited is
  *  parked until it reads so again. */
-export function rebase(
+function rebase(
   p: PendingPreview,
   doc: ProseNode,
   text: string,
@@ -162,10 +162,7 @@ export function withStreamChanges(
   return out ?? previews;
 }
 
-export function sameChanges(
-  a: PendingSentence[],
-  b: PendingSentence[] | undefined,
-) {
+function sameChanges(a: PendingSentence[], b: PendingSentence[] | undefined) {
   return (
     b !== undefined &&
     a.length === b.length &&

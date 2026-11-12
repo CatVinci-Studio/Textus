@@ -4,8 +4,8 @@ import { reopenConversation } from "./reopen-conversation";
 import { claimChatRestore } from "./chat-restore";
 import { deleteConversation } from "./chat-history";
 import { fs } from "../../platform/ipc";
-import { showConfirm } from "../../ui/app-dialog";
-import { OPEN_FILE_IN_TAB_EVENT } from "../../utils/events";
+import { showConfirm } from "../../engine/controls/app-dialog";
+import { setDocumentOpener } from "../../utils/open-document";
 import type { Strings } from "../../i18n/strings";
 
 const turns = [{ kind: "User", text: "hello" }];
@@ -17,7 +17,7 @@ vi.mock("./chat-history", () => ({
   deleteConversation: vi.fn(),
 }));
 vi.mock("../../platform/ipc", () => ({ fs: { readTextFile: vi.fn() } }));
-vi.mock("../../ui/app-dialog", () => ({ showConfirm: vi.fn() }));
+vi.mock("../../engine/controls/app-dialog", () => ({ showConfirm: vi.fn() }));
 
 const t = {
   chatHistoryMissingText: "{name} is gone",
@@ -37,9 +37,7 @@ let opened: string[];
 beforeEach(() => {
   vi.clearAllMocks();
   opened = [];
-  window.addEventListener(OPEN_FILE_IN_TAB_EVENT, (e) =>
-    opened.push((e as CustomEvent<string>).detail),
-  );
+  setDocumentOpener((path) => void opened.push(path));
   // Nothing left over from the previous case.
   claimChatRestore(null, () => true);
 });

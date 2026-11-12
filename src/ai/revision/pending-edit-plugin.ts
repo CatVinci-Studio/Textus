@@ -13,7 +13,6 @@ import type {
   PendingState,
 } from "./pending-types";
 import { pendingEditKey } from "./pending-types";
-export { pendingEditKey } from "./pending-types";
 import { dropAnimation, stillRevealing } from "./pending-animation";
 import type { SentencePickLabels } from "./pending-widgets";
 import {
@@ -32,23 +31,8 @@ import {
   withStreamChanges,
 } from "./pending-mapping";
 
-export {
-  type PendingSentence,
-  type PendingPreview,
-  sentenceTake,
-  reviewChanges,
-  type HotSentence,
-} from "./pending-types";
-export {
-  streamPendingInsertText,
-  stopRewrite,
-  stoppedRewrite,
-} from "./pending-animation";
-export { type SentencePickLabels } from "./pending-widgets";
-export { REVISION_DISPLAY_ATTR } from "./pending-decorations";
-
 /** The call ids accepted and not undone - what the cards show as applied. */
-export function appliedCallIds(state: EditorState): string[] {
+function appliedCallIds(state: EditorState): string[] {
   return (pendingEditKey.getState(state)?.applied ?? [])
     .filter((entry) => !entry.undone)
     .map((entry) => entry.preview.callId);

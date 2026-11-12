@@ -2,6 +2,7 @@ import { describe, expect, it } from "vitest";
 import { explainError } from "./error-explain";
 import en from "../i18n/locales/en";
 import zh from "../i18n/locales/zh";
+import ERRORS from "../i18n/errors.json";
 
 describe("explainError", () => {
   it.each([
@@ -21,13 +22,18 @@ describe("explainError", () => {
     expect(explainError(new Error(raw), en)).toBe(`${lead}\n${raw}`);
   });
 
-  it("replaces Textus' own English", () => {
-    expect(explainError("Invalid name", zh)).toBe(zh.errorBadName);
-    expect(explainError("The file is too big to open here.", zh)).toBe(
-      zh.errorFileTooBig,
+  it("says Textus' own errors by their code, in the user's language", () => {
+    expect(explainError("Invalid name. [badName]", zh)).toBe(zh.errorBadName);
+    expect(explainError("Already exists. [exists]", zh)).toBe(zh.errorExists);
+    expect(explainError("PDF export failed [pdfFailed]", zh)).toBe("");
+    expect(explainError("PDF export timed out [pdfTimeout]", zh)).toBe(
+      zh.errorTimeout,
     );
-    expect(explainError("PDF export failed", zh)).toBe("");
-    expect(explainError("PDF export timed out", zh)).toBe(zh.errorTimeout);
+  });
+
+  it("has words for every code the backend gives", () => {
+    for (const [code, { text }] of Object.entries(ERRORS))
+      if (text !== null) expect(en, code).toHaveProperty(text);
   });
 
   it("leaves a broken pipe and anything unknown as they came", () => {

@@ -42,7 +42,7 @@ function pauseResolved(tab: DocTab, pause: AutosavePause): boolean {
 
 /** What becomes of untitled drafts: with a folder open (`toFile`) they get
  *  a file there, except the tour's practice tab. */
-export interface DraftRule {
+interface DraftRule {
   toFile: boolean;
   practiceTabId: string | null;
 }

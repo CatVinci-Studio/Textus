@@ -1,13 +1,13 @@
 import type { Node as ProseNode, Schema } from "@milkdown/kit/prose/model";
 import type { EditorState, Transaction } from "@milkdown/kit/prose/state";
 import type { EditorView } from "@milkdown/kit/prose/view";
-import { findRunClose, findRunOpen, literalTextAfter } from "./enclosure";
+import { findRunClose, findRunOpen, literalTextAfter } from "./enclosure-runs";
 import { caretAt } from "../live-selection";
 
 /** The spans a typed delimiter pairs, and the text run a closing one turns
  *  into its node. */
 
-export interface SpanSpec {
+interface SpanSpec {
   char: string;
   nodeType: "md_span" | "md_code_span";
   minRung: number;
@@ -24,7 +24,7 @@ export const SPECS: SpanSpec[] = [
   { char: "`", nodeType: "md_code_span", minRung: 1, maxRung: 1 },
 ];
 
-export function isOurNode(name: string): boolean {
+function isOurNode(name: string): boolean {
   return name === "md_span" || name === "md_code_span";
 }
 
@@ -55,7 +55,7 @@ export function spanNode(
 
 /** The node `spec` makes at `rung` around `from`..`to` in one parent: a span
  *  keeps the code, maths and links in it; code takes it as text. */
-export function spanAround(
+function spanAround(
   state: EditorState,
   spec: SpanSpec,
   rung: number,
@@ -148,7 +148,7 @@ export function openRunBeforeContent(
 
 /** Italic written with underscores, only ever closed, never opened as an
  *  empty shell. */
-export const UNDERSCORE: SpanSpec = {
+const UNDERSCORE: SpanSpec = {
   char: "_",
   nodeType: "md_span",
   minRung: 1,
@@ -190,7 +190,7 @@ export function closeTightRun(
   return closeOpenRun(view, spec, textBefore, runStart, to);
 }
 
-export const LETTER_OR_DIGIT = /^[\p{L}\p{N}]$/u;
+const LETTER_OR_DIGIT = /^[\p{L}\p{N}]$/u;
 /** Closing brackets and quotes, and nothing else. */
 export const ONLY_CLOSERS = /^[)\]}"'」』）】》”’]+$/u;
 

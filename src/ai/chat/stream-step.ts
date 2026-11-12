@@ -1,9 +1,10 @@
+import type { PendingPermission } from "../agents/agent-exchange";
 import type { AgentTurn } from "../types";
 import type { StreamEvent } from "../../platform/ipc";
 import { thinkingDone, thinkingEvent, type Thought } from "./thought";
 import { parsePartialToolArgs } from "./partial-tool-args";
-import { resolveBlockTarget } from "../doc-blocks";
-import type { DocumentSnapshot } from "../doc-markdown";
+import { resolveBlockTarget } from "../../editor/markdown/doc-blocks";
+import type { DocumentSnapshot } from "../../editor/markdown/doc-markdown";
 
 /** What has streamed in so far for the in-flight exchange: landed turns plus
  *  the prose being generated. Display only; the resolved turns enter
@@ -19,9 +20,11 @@ export interface StreamingState {
   /** add_comment calls whose passage and note have streamed in, before their
    *  ToolCall lands, so the margin shows each as it is written. */
   comments?: AgentTurn[];
+  /** A step an external agent asks the user to allow. */
+  permission?: PendingPermission | null;
 }
 
-export interface StreamStep {
+interface StreamStep {
   next: StreamingState;
   /** Only text grew: drawn once a frame, not on every event. */
   textOnly?: boolean;

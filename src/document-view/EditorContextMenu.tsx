@@ -5,14 +5,15 @@ import {
   buildPhoneMoreItems,
   type ContextMenuOptions,
 } from "../editor/editor-menu";
-import { ContextMenu } from "../ui/ContextMenu";
-import { Presence } from "../ui/usePresence";
+import { ContextMenu } from "../engine/controls/ContextMenu";
+import { Presence } from "../engine/motion/usePresence";
 import type { Settings } from "../prefs/SettingsContext";
-import { aiFeatures } from "../settings/textus-ai";
+import { aiFeatures } from "../prefs/ai-features";
 import type { Strings } from "../i18n/strings";
 import type { ImageLocation } from "../editor/images/missing-image";
 import { useImageService } from "../ai/image-models";
-import { selectImage } from "../editor/editor-menu";
+import { selectImage } from "../editor/editor-menu-images";
+import type { MenuLink } from "../editor/editor-menu-links";
 import type { DrawnBlockActions } from "../editor/drawn-block-actions";
 
 /** Where the editor's menu is open, and on what. */
@@ -24,6 +25,8 @@ export type EditorMenuState = {
   imageLocation?: ImageLocation | null;
   /** The plugin's drawing right-clicked, if any. */
   drawnBlock?: DrawnBlockActions | null;
+  /** The link right-clicked, if any. */
+  link?: MenuLink | null;
   /** Opened by the iPhone keyboard toolbar's "More", as an action sheet. */
   phone?: boolean;
   /** Opened from the keyboard, at the caret. */
@@ -70,7 +73,7 @@ export function EditorContextMenu({
   const ai = aiFeatures(settings);
   const imageService = useImageService(settings);
   return (
-    <Presence show={!!menu} exitMs={250}>
+    <Presence show={!!menu}>
       {menu && (
         <ContextMenu
           x={menu.x}
@@ -83,6 +86,7 @@ export function EditorContextMenu({
               imagePos: menu.imagePos,
               imageLocation: menu.imageLocation,
               drawnBlock: menu.drawnBlock,
+              link: menu.link,
               // A picture is changed by asking for a new one in its place,
               // while there is an image service.
               pictureAiItems:

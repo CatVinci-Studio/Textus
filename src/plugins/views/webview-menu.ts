@@ -1,4 +1,7 @@
-import type { ContextMenuEntry, ContextMenuItem } from "../../ui/ContextMenu";
+import type {
+  ContextMenuEntry,
+  ContextMenuItem,
+} from "../../engine/controls/ContextMenu";
 
 /** An item of a plugin page's menu (`textus.menu(items, at)`), as the page
  *  sends it: untrusted, so read field by field. */

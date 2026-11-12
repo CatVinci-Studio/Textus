@@ -1,0 +1,151 @@
+import { expect, test, type Page } from "@playwright/test";
+import { emit, openApp, pasteMarkdown } from "./helpers";
+
+// Settings: the list of pages in the sidebar (the gear, ⌘,), one page at a
+// time in the one Settings tab; every way in lands there.
+
+const PAGES = [
+  "general",
+  "look-basic",
+  "edit-text",
+  "edit-img",
+  "edit-export",
+  "providers",
+  "chat",
+  "memory",
+  "mcp",
+  "shortcuts",
+  "privacy",
+  "about",
+];
+
+const gear = (page: Page) => page.locator(".activity-rail-settings");
+const tabs = (page: Page) => page.locator(".tab-pill");
+const sidebarTitle = (page: Page) => page.locator(".sidebar-title");
+
+async function open(page: Page) {
+  const errors: string[] = [];
+  page.on("pageerror", (e) => errors.push(e.message));
+  await page.setViewportSize({ width: 1200, height: 760 });
+  await openApp(page, { settings: { menuBarShown: false } });
+  return errors;
+}
+
+test("⌘, opens the list in the sidebar and the Settings tab; the gear toggles the list", async ({
+  page,
+}) => {
+  await open(page);
+  await emit(page, "menu-settings");
+  await expect(tabs(page)).toHaveText(["未命名", "设置：通用"]);
+  await expect(sidebarTitle(page)).toHaveText("设置");
+  await expect(gear(page)).toHaveAttribute("aria-pressed", "true");
+  await gear(page).click();
+  await expect(gear(page)).toHaveAttribute("aria-pressed", "false");
+  await expect(tabs(page)).toHaveText(["未命名", "设置：通用"]);
+  await gear(page).click();
+  await expect(sidebarTitle(page)).toHaveText("设置");
+  // Open: ⌘, brings it forward where it was. Closed: back at General.
+  await page.getByRole("button", { name: "外观" }).first().click();
+  await expect(tabs(page).nth(1)).toHaveText("设置：外观");
+  await tabs(page).first().click();
+  await emit(page, "menu-settings");
+  await expect(tabs(page).nth(1)).toHaveText("设置：外观");
+  await emit(page, "menu-close-tab");
+  await expect(tabs(page)).toHaveText(["未命名"]);
+  await emit(page, "menu-settings");
+  await expect(tabs(page)).toHaveText(["未命名", "设置：通用"]);
+});
+
+test("every page draws, in the one tab, without an error", async ({ page }) => {
+  const errors = await open(page);
+  await emit(page, "menu-settings");
+  for (const id of PAGES) {
+    await page.evaluate(
+      (page) =>
+        window.dispatchEvent(
+          new CustomEvent("textus:open-settings-page", { detail: { page } }),
+        ),
+      id,
+    );
+    await expect(page.locator(".settings-tab-page > *").first()).toBeVisible();
+    await expect(tabs(page)).toHaveCount(2);
+  }
+  expect(errors).toEqual([]);
+});
+
+test("groups fold, and open on the page shown", async ({ page }) => {
+  await open(page);
+  await emit(page, "menu-settings");
+  const nav = page.locator(".sidebar");
+  await expect(nav.getByText("图片", { exact: true })).toHaveCount(0);
+  await nav.getByText("编辑", { exact: true }).click();
+  await nav.getByText("图片", { exact: true }).click();
+  await expect(nav.getByText("图片", { exact: true })).toBeVisible();
+});
+
+test("Check for Updates opens About; a plugin's settings open its page's tab", async ({
+  page,
+}) => {
+  await open(page);
+  await emit(page, "menu-check-updates");
+  await expect(page.locator(".settings-about-card-icon")).toBeVisible();
+  await emit(page, "menu-plugin-command", "plugin-settings:cloud-sync");
+  await expect(tabs(page).last()).toContainText("插件：");
+  await emit(page, "menu-manage-plugins");
+  await expect(sidebarTitle(page)).toHaveText("插件");
+});
+
+test("the list's last item goes to the plugins panel", async ({ page }) => {
+  await open(page);
+  await emit(page, "menu-settings");
+  await page.locator(".settings-nav-away").click();
+  await expect(sidebarTitle(page)).toHaveText("插件");
+});
+
+test("installed themes show as the store's do", async ({ page }) => {
+  await page.setViewportSize({ width: 1200, height: 760 });
+  await openApp(page, {
+    settings: {
+      menuBarShown: false,
+      userThemes: [{ id: "mine", name: "我的主题", file: "mine.css" }],
+      themeId: "mine",
+    },
+  });
+  await page.evaluate(() =>
+    window.dispatchEvent(
+      new CustomEvent("textus:open-settings-page", {
+        detail: { page: "look-basic" },
+      }),
+    ),
+  );
+  const mine = page.locator('[data-user-theme="mine"]');
+  await expect(mine).toHaveClass(/theme-gallery-item/);
+  await expect(mine.locator(".theme-gallery-preview")).toBeVisible();
+});
+
+test("squeezed beside a document in a small window, Settings still shows its page", async ({
+  page,
+}) => {
+  // Its list open in the sidebar by hand: nothing steps aside for it.
+  await page.setViewportSize({ width: 900, height: 700 });
+  await openApp(page, { settings: { menuBarShown: false } });
+  await emit(page, "menu-settings");
+  await emit(page, "menu-split-right");
+  await expect(page.locator(".settings-tab-page")).toBeVisible();
+  await expect(page.locator(".settings-row").first()).toBeVisible();
+});
+
+test("first-line indent sets in the document's paragraphs, not a list's", async ({
+  page,
+}) => {
+  await openApp(page, { settings: { firstLineIndent: true } });
+  await pasteMarkdown(page, "One.\n\nTwo.\n\n- item\n");
+  const editor = page.locator('[data-active-tab="true"] .ProseMirror');
+  const indent = (sel: string) =>
+    editor
+      .locator(sel)
+      .first()
+      .evaluate((e) => parseFloat(getComputedStyle(e).textIndent));
+  await expect.poll(() => indent(":scope > p")).toBeGreaterThan(0);
+  expect(await indent("li p")).toBe(0);
+});

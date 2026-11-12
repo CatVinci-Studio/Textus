@@ -1,11 +1,10 @@
 import { describe, expect, it } from "vitest";
-import { createKinds, createMessage } from "./create-studio";
+import { CREATE_KINDS, createMessage } from "./create-studio";
 import { resolveSkillMessage } from "../../ai/chat/proposal";
 
 describe("Settings › Extensions › Create", () => {
   it("offers plugins only where the app shows them", () => {
-    expect(createKinds(true)).toEqual(["plugin", "theme", "skill"]);
-    expect(createKinds(false)).toEqual(["theme", "skill"]);
+    expect(CREATE_KINDS).toEqual(["plugin", "theme", "skill"]);
   });
 
   it("starts with the kind's skill loaded, the request after it", () => {

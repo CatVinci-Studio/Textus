@@ -1,0 +1,8 @@
+/* A page tab (Settings, Plugins) fills its island; its own parts scroll. */
+.page-tab {
+  display: flex;
+  flex-direction: column;
+  height: 100%;
+  min-height: 0;
+  overflow: hidden;
+}

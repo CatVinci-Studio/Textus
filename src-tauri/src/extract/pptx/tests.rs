@@ -116,6 +116,6 @@ fn slides_are_numbered_by_file_and_empty_ones_dropped() {
     );
     assert_eq!(
         convert(&[&empty], &[]).unwrap_err(),
-        "This presentation has no extractable text."
+        crate::errors::error("noText")
     );
 }

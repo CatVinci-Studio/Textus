@@ -3,7 +3,7 @@ use crate::ai::doc_blocks::{self, Document};
 use crate::ai::images::InlinePictures;
 use crate::ai::rules::Conventions;
 use crate::ai::tools::{self, ToolContext, ToolRegistry};
-use crate::ai::ui_language::{UiLanguage, UiNames};
+use crate::ai::ui_language::UiNames;
 use crate::ai::web::{self, WebPlan};
 use crate::ai::workspace::AgentWorkspace;
 use aicompat::agent::{
@@ -22,7 +22,8 @@ pub(crate) use settle::*;
 
 mod chapters;
 mod context;
-mod history;
+mod flat;
+pub(crate) mod history;
 pub(crate) mod lists;
 mod model;
 mod past;
@@ -30,6 +31,7 @@ mod prompt;
 mod session;
 pub(crate) use chapters::*;
 pub(crate) use context::*;
+use flat::flattened_chat_turn;
 pub(crate) use history::*;
 pub(crate) use model::*;
 pub(crate) use past::*;
@@ -48,47 +50,76 @@ fn with_web_section(instructions: String, web: &WebPlan) -> String {
 /// Skill loads, file reads, and web searches all consume steps.
 pub(crate) const MAX_STEPS: usize = 12;
 
-/// Sends one user message and returns the new turns for the frontend's
-/// history, racing the request against its cancel signal (`ai::cancel`).
-// Each parameter is a distinct invoke() payload key.
-#[allow(clippy::too_many_arguments)]
-#[tauri::command]
-pub async fn ai_agent_message(
-    app: AppHandle,
-    window: tauri::Window,
+/// One user message for the agent, as the frontend sends it.
+#[derive(Deserialize)]
+#[cfg_attr(test, derive(specta::Type))]
+#[serde(rename_all = "camelCase")]
+pub struct MessageRequest {
     provider: String,
-    // The document, block by block as the editor has it.
+    /// The document, block by block as the editor has it.
     blocks: Vec<doc_blocks::SentBlock>,
     doc_path: Option<String>,
-    // The chosen project folder, or None.
+    /// The chosen project folder, or None.
     workspace_root: Option<String>,
-    // The conversation, whose scratch folder holds its attached files. None
-    // from an older frontend.
+    /// The conversation, whose scratch folder holds its attached files.
     conversation: Option<String>,
     history: Vec<AgentTurn>,
     message: String,
-    // Attachments with no text to extract; text-shaped ones were already
-    // inlined into `message` by the frontend.
+    /// Attachments with no text to extract; text-shaped ones were already
+    /// inlined into `message` by the frontend.
     images: Vec<ImageAttachment>,
     web_search: bool,
-    // How hard the model thinks. None (an older frontend) is Auto.
+    /// How hard the model thinks. None is Auto.
     thinking: Option<ThinkingLevel>,
-    // "auto" (None from an older frontend) or a service id, and the SearXNG
-    // address: what web_search uses when the model has no search of its own.
+    /// "auto" (None) or a service id, and the SearXNG address: what
+    /// web_search uses when the model has no search of its own.
     search_service: Option<String>,
     searxng_url: Option<String>,
     mode: AgentMode,
     model: Option<String>,
     request_id: String,
-    // Heading of the section the user is working in.
+    /// Heading of the section the user is working in.
     focus_heading: Option<String>,
-    // The UI language, for the names the agent is told the app uses.
-    // None (an older frontend) is English.
+    /// The UI language, for the names the agent is told the app uses. None
+    /// is English.
     ui_language: Option<String>,
-    // The image model; None for none, and from an older frontend.
+    /// The image model; None for none.
     image_model: Option<crate::ai::images::ImageModel>,
+    /// General mode's file changes wait to be applied. None writes them.
+    ask_before_file_changes: Option<bool>,
+}
+
+/// Sends one user message and returns the new turns for the frontend's
+/// history, racing the request against its cancel signal (`ai::cancel`).
+#[tauri::command]
+#[cfg_attr(test, specta::specta)]
+pub async fn ai_agent_message(
+    app: AppHandle,
+    window: tauri::Window,
+    request: MessageRequest,
     on_event: Channel<StreamEvent>,
 ) -> Result<Vec<AgentTurn>, String> {
+    let MessageRequest {
+        provider,
+        blocks,
+        doc_path,
+        workspace_root,
+        conversation,
+        history,
+        message,
+        images,
+        web_search,
+        thinking,
+        search_service,
+        searxng_url,
+        mode,
+        model,
+        request_id,
+        focus_heading,
+        ui_language,
+        image_model,
+        ask_before_file_changes,
+    } = request;
     // What every request names, as Research's requests carry it too.
     let request = AgentRequest {
         provider,
@@ -100,6 +131,8 @@ pub async fn ai_agent_message(
         searxng_url,
         request_id,
         image_model,
+        // Revisions unless told otherwise: the app's own default.
+        ask_before_file_changes: ask_before_file_changes.unwrap_or(true),
     };
     let web_service = web_search.then(|| request.search_service(&app)).flatten();
     let ui_language = ui_language.unwrap_or_else(|| "en".to_string());
@@ -197,13 +230,17 @@ async fn ai_agent_message_inner(
         focus_heading.as_deref(),
     );
     crate::ai::project::record_library_use(doc_path, &sent_library);
-    let user_turn = AgentTurn::User {
-        text: request_message(&workspace, mode, &ui_language, &context, &message),
-        images,
+    let text = request_message(&workspace, mode, &ui_language, &context, &message);
+    // Written straight in: said before all else in the request.
+    let text = if request.ask_before_file_changes || mode != AgentMode::Write {
+        text
+    } else {
+        format!("{}\n\n{text}", prompt::CHANGES_WRITTEN_IN)
     };
+    let user_turn = AgentTurn::User { text, images };
     let plain_message = message.clone();
     // generate_image, while an image model is set.
-    let image_run = session.pictures(request.image_model.as_ref());
+    let image_run = session.pictures(request);
 
     let agent = session.provider(thinking, web.native).await?;
     let result = match agent {
@@ -238,6 +275,13 @@ async fn ai_agent_message_inner(
             let helper_tools = ToolRegistry::builtin(false, false, mode, entry.supports_vision)
                 .only(tools::PROPOSE_EDIT_TOOL_NAME);
             let helpers = HelperTurns::default();
+            crate::ai::kept_proposals::know_app_data(&app);
+            let file_edits = crate::ai::file_changes::FileEdits::new(
+                workspace.root.as_deref().map(Path::new),
+                request.conversation.as_deref(),
+                doc_path.map(Path::new),
+                request.ask_before_file_changes,
+            );
             let chapter_run = ChapterRun {
                 agent: &agent,
                 workspace: &workspace,
@@ -256,6 +300,10 @@ async fn ai_agent_message_inner(
                 mode,
                 entry.supports_vision,
             );
+            // The folder's other files, in General mode.
+            if let Some(edits) = &file_edits {
+                tools.extend(edits.tools());
+            }
             if helper_tools.edits() && offers_chapters(&document) {
                 let run = &chapter_run;
                 tools.add(tools::Tool {
@@ -334,8 +382,10 @@ async fn ai_agent_message_inner(
             .await
             {
                 // A server that doesn't implement `tools` properly gets a single
-                // tool-less completion instead of failing the request.
-                Err(_) if agent.falls_back_to_plain_chat() => {
+                // tool-less completion instead of failing the request. Only
+                // that: a rate limit, a key refused or a timeout is said as it
+                // is, not hidden behind a second request.
+                Err(e) if agent.falls_back_to_plain_chat() && refuses_tools(&e) => {
                     let instructions = build_instructions(
                         &workspace,
                         &document,
@@ -400,75 +450,6 @@ pub(crate) async fn installed_tools<'a>(app: &AppHandle, window: &str) -> Vec<to
     installed
 }
 
-/// A turn as the frontend keeps it: a tool result without the images it
-/// showed the model, which would grow the saved history by megabytes.
-fn for_history(turn: AgentTurn) -> AgentTurn {
-    match turn {
-        // The step's reasoning was for this exchange's own requests: no
-        // provider wants it back in a later one, and it never shows.
-        AgentTurn::ToolCall {
-            call_id,
-            name,
-            arguments,
-            reasoning: Some(_),
-        } => AgentTurn::ToolCall {
-            call_id,
-            name,
-            arguments,
-            reasoning: None,
-        },
-        AgentTurn::ToolResult {
-            call_id,
-            output,
-            images,
-        } if !images.is_empty() => AgentTurn::ToolResult {
-            call_id,
-            output: format!(
-                "{output}\n[The image was shown for that request only - call read_file again to look at it.]"
-            ),
-            images: Vec::new(),
-        },
-        turn => turn,
-    }
-}
-
-/// Providers without tool calling get the conversation flattened into one
-/// plain-text turn and a single completion.
-async fn flattened_chat_turn(
-    app: &AppHandle,
-    provider: &str,
-    instructions: &str,
-    history: Vec<AgentTurn>,
-    message: String,
-    model: Option<&str>,
-) -> Result<Vec<AgentTurn>, String> {
-    fn turn_to_plain_text(turn: &AgentTurn) -> Option<String> {
-        match turn {
-            // Images are dropped on purpose: the command already refused an
-            // image-carrying message for these providers.
-            AgentTurn::User { text, .. } => Some(format!("User: {text}")),
-            AgentTurn::Assistant { text, .. } => Some(format!("Assistant: {text}")),
-            _ => None,
-        }
-    }
-
-    let user_turn = AgentTurn::user(message);
-    let mut transcript: Vec<String> = history.iter().filter_map(turn_to_plain_text).collect();
-    if let Some(t) = turn_to_plain_text(&user_turn) {
-        transcript.push(t);
-    }
-
-    let text = crate::ai::client::call(
-        app,
-        provider,
-        instructions.to_string(),
-        transcript.join("\n\n"),
-        model,
-    )
-    .await?;
-    Ok(vec![user_turn, AgentTurn::assistant(text)])
-}
-
 /// The picture a message's selection is, when it is one picture and nothing
 /// else, in the document's folder, and PNG, JPEG, GIF or WebP.
 fn selected_picture(message: &str, doc_path: Option<&str>) -> Option<ImageAttachment> {
@@ -485,3 +466,17 @@ fn selected_picture(message: &str, doc_path: Option<&str>) -> Option<ImageAttach
 
 #[cfg(test)]
 mod tests;
+
+/// Whether a request's error says the server can't take tools (it names
+/// them in refusing the request), rather than any other failure.
+fn refuses_tools(error: &str) -> bool {
+    let lower = error.to_ascii_lowercase();
+    ["tool", "function call", "function_call", "functions"]
+        .iter()
+        .any(|word| lower.contains(word))
+        && !lower.contains("403")
+        && !matches!(
+            crate::ai::error_kind::kind(error),
+            Some("rateLimit" | "timeout" | "auth" | "balance")
+        )
+}

@@ -1,4 +1,4 @@
-import { describe, expect, it } from "vitest";
+import { describe, expect, it, vi } from "vitest";
 import { settingShown } from "./plugin-settings";
 
 describe("settingShown", () => {
@@ -19,11 +19,52 @@ describe("settingShown", () => {
     expect(settingShown("grid", value)).toBe(false);
     expect(settingShown("!grid", value)).toBe(true);
     expect(settingShown("words", value)).toBe(false);
+    // Joined as a menu's when clause is.
+    expect(settingShown("style == dark && legend", value)).toBe(true);
+    expect(settingShown("style == light || grid", value)).toBe(false);
   });
 
   it("compares a key with a value", () => {
     expect(settingShown("style == dark", value)).toBe(true);
     expect(settingShown("style != dark", value)).toBe(false);
     expect(settingShown("style == light", value)).toBe(false);
+  });
+});
+
+describe("a folder's plugin settings", () => {
+  it("are used only once the user says so, asked once per folder", async () => {
+    vi.resetModules();
+    const ask = vi.fn(async () => false);
+    const kept: Record<string, unknown> = {};
+    vi.doMock("../../engine/controls/app-dialog", () => ({ showConfirm: ask }));
+    vi.doMock("../../storage/ui-state", () => ({
+      getUiState: (key: string) => kept[key],
+      setUiState: (key: string, value: unknown) => (kept[key] = value),
+    }));
+    vi.doMock("../../storage/project-settings", () => ({
+      readProjectSettings: async () => ({
+        plugins: { "a.sync": { server: "https://elsewhere" } },
+      }),
+      updateProjectSettings: async () => {},
+    }));
+    vi.doMock("../../prefs/settings-store", () => ({
+      loadSettings: () => ({
+        plugins: { "a.sync": { server: "https://mine" } },
+      }),
+      persist: () => {},
+      subscribeRemote: () => () => {},
+    }));
+    const settings = await import("./plugin-settings");
+    await settings.loadProjectPluginSettings("/cloned");
+    expect(ask).toHaveBeenCalledTimes(1);
+    // Refused: the user's own value stands.
+    expect(settings.pluginValue("a.sync", "server")).toEqual({
+      value: "https://mine",
+      from: "global",
+    });
+    await settings.loadProjectPluginSettings(null);
+    await settings.loadProjectPluginSettings("/cloned");
+    expect(ask).toHaveBeenCalledTimes(1);
+    expect(kept.pluginFolders).toEqual({ "/cloned": "skip" });
   });
 });

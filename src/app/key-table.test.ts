@@ -14,7 +14,7 @@
 import { readdirSync, readFileSync, statSync } from "node:fs";
 import { join } from "node:path";
 import { afterAll, describe, expect, it } from "vitest";
-import { closeViews, openView } from "../document-view/editor-view-kit";
+import { closeViews, openView } from "../editor/editor-view-kit";
 import { defaultShortcuts } from "../prefs/shortcut-defaults";
 import {
   eventOf,

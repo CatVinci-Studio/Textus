@@ -5,7 +5,7 @@
 //! kept comes back as the call's answer, so the researcher doesn't note it
 //! again.
 
-use super::research::clip;
+use super::model::clip;
 use super::Note;
 use aicompat::agent::ToolSpec;
 use serde_json::{json, Value};

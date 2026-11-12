@@ -17,12 +17,6 @@ import {
   random,
 } from "./save-roundtrip-edits";
 import { LINK } from "../editor/markdown/link-source";
-export {
-  EDIT_KINDS,
-  type EditKind,
-  random,
-  hashString,
-} from "./save-roundtrip-edits";
 // Test-only: opens a file in the full editor, makes one seeded edit, and
 // checks the save: (a) untouched blocks byte for byte, (b) the text reads
 // back the same, (c) nothing threw. A failure reproduces from file and seed.
@@ -68,7 +62,7 @@ export interface FileReport {
 /** The document's content as text, one textblock per line, with link, image
  *  and footnote targets. Leaves out formatting and whitespace Markdown can't
  *  hold or writes differently but reads the same. */
-export function contentText(doc: ProseNode): string {
+function contentText(doc: ProseNode): string {
   const lines: string[] = [];
   doc.descendants((node) => {
     if (node.type.name === "hr") lines.push("⟨hr⟩");
@@ -137,7 +131,7 @@ const blockKinds = (doc: ProseNode) => {
 };
 
 /** Where two texts first differ, with a little context. */
-export function firstDifference(a: string, b: string, context = 60): string {
+function firstDifference(a: string, b: string, context = 60): string {
   let i = 0;
   while (i < a.length && i < b.length && a[i] === b[i]) i++;
   const from = Math.max(0, i - context);

@@ -1,3 +1,4 @@
+import { replaceChanged } from "../../editor/replace-changed";
 import type { Ctx } from "@milkdown/kit/ctx";
 import type { Node as ProseNode } from "@milkdown/kit/prose/model";
 import { Fragment, Slice } from "@milkdown/kit/prose/model";
@@ -82,9 +83,8 @@ function between(doc: ProseNode, pos: number): boolean {
 
 /**
  * The paper's place rewritten to `markdown`, out of the undo history.
- * Only the top-level blocks that differ are replaced: a section being
- * written changes its own paragraphs, and the rest - charts among them -
- * stay as drawn. One parse of the paper, a few times a second at most.
+ * Only what differs is replaced: a section being written changes its own
+ * paragraphs, and the rest - charts among them - stay as drawn. One parse of the paper, a few times a second at most.
  */
 export function writePaper(view: EditorView, ctx: Ctx, markdown: string) {
   const { state } = view;
@@ -104,31 +104,8 @@ export function writePaper(view: EditorView, ctx: Ctx, markdown: string) {
     return;
   }
   const old = state.doc.slice(region.from, region.to).content;
-  let start = 0;
-  while (
-    start < old.childCount &&
-    start < next.childCount &&
-    old.child(start).eq(next.child(start))
-  )
-    start++;
-  let endOld = old.childCount;
-  let endNew = next.childCount;
-  while (
-    endOld > start &&
-    endNew > start &&
-    old.child(endOld - 1).eq(next.child(endNew - 1))
-  ) {
-    endOld--;
-    endNew--;
-  }
-  if (start === endOld && start === endNew) return;
-  let from = region.from;
-  for (let i = 0; i < start; i++) from += old.child(i).nodeSize;
-  let to = from;
-  for (let i = start; i < endOld; i++) to += old.child(i).nodeSize;
-  const blocks: ProseNode[] = [];
-  for (let i = start; i < endNew; i++) blocks.push(next.child(i));
-  const tr = state.tr.replaceWith(from, to, blocks);
+  const tr = replaceChanged(state.tr, old, next, region.from);
+  if (!tr) return;
   setPaperRegion(tr, { from: region.from, to: region.from + next.size });
   view.dispatch(tr.setMeta("addToHistory", false));
 }

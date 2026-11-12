@@ -17,6 +17,13 @@ describe("keepPastedLines", () => {
     const md =
       "# Title\nText\n- a\n- b\n\n```\nx\ny\n```\n| a | b |\n| - | - |";
     expect(keepPastedLines(md)).toBe(md);
+    // A shorter fence inside a longer one is still code; `$$x$$` closes
+    // itself.
+    const nested = "````\n```\nx\ny\n````\nA\nB";
+    expect(keepPastedLines(nested)).toBe("````\n```\nx\ny\n````\nA  \nB");
+    expect(keepPastedLines("$$x$$\nA\nB")).toBe("$$x$$\nA  \nB");
+    // A fragment's leading rules aren't a document's front matter.
+    expect(keepPastedLines("---\nA\nB\n---")).toBe("---\nA  \nB\n---");
   });
 
   it("makes a quote drawn with bars a Markdown quote", () => {

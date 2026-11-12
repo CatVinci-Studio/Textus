@@ -1,3 +1,4 @@
+import { openDocument } from "../../utils/open-document";
 import { foldButtonKey, showBlockFold } from "../fold/block-fold";
 import { onMemoryIdle } from "../../utils/memory-idle";
 import { slashed } from "../../utils/path";
@@ -7,12 +8,13 @@ import { Decoration, type EditorView } from "@milkdown/kit/prose/view";
 import { $prose } from "@milkdown/kit/utils";
 import { isScopedUrl } from "../../platform/ios-files";
 import { windowFolder } from "../../platform/window-folder";
-import { OPEN_FILE_IN_TAB_EVENT, type OpenFileInTab } from "../../utils/events";
 import {
+  embedDepthOf,
   embedKey,
   embedKind,
   fillEmbed,
   noteEmbedOf,
+  releaseEmbed,
 } from "./note-embed-render";
 import { embedFolded, setEmbedFolded } from "./embed-folds";
 import { embedProvider, onEmbedsChange } from "./embed-sources";
@@ -55,11 +57,7 @@ function openSource(el: HTMLElement): void {
   const path = el.closest<HTMLElement>(".note-embed")?.dataset.path;
   if (!path) return;
   const anchor = el.closest<HTMLElement>(".note-embed")?.dataset.anchor;
-  window.dispatchEvent(
-    new CustomEvent<OpenFileInTab>(OPEN_FILE_IN_TAB_EVENT, {
-      detail: { path, ...(anchor ? { anchor } : {}) },
-    }),
-  );
+  openDocument(path, anchor ? { anchor } : {});
 }
 
 function embedWidget(state: EmbedView, source: string, docPath: string) {
@@ -76,11 +74,13 @@ function embedWidget(state: EmbedView, source: string, docPath: string) {
       if (key) showBlockFold(el, embedFolded(key));
     }
     const link = noteEmbedOf(source)!;
+    // Inside another embed's drawing: one level down from it.
+    const outer = embedDepthOf(view.dom);
     void fillEmbed(el, link, {
       docPath,
       folder: windowFolder(),
-      depth: 1,
-      chain: [embedKey(docPath)],
+      depth: outer.depth,
+      chain: [...outer.chain, embedKey(docPath)],
       signal: state.asks.signal,
       read: (path) => state.read.add(slashed(path)),
     }).then(() => {
@@ -110,7 +110,7 @@ function embedWidget(state: EmbedView, source: string, docPath: string) {
         (event as MouseEvent).metaKey ||
         (event as MouseEvent).ctrlKey ||
         !!(event.target as Element).closest?.(
-          ".block-fold, .block-folded-line, .note-embed-open, .note-embed-block",
+          ".block-fold, .block-folded-line, .note-embed-open",
         ),
     );
     return el;
@@ -135,6 +135,7 @@ function embedReveal(state: EmbedView): Reveal {
         Decoration.widget(to, embedWidget(state, source, docPath), {
           side: -1,
           key: `${docPath}\n${source}\n${state.generation}`,
+          destroy: (el) => releaseEmbed(el as HTMLElement),
         }),
       ];
     },

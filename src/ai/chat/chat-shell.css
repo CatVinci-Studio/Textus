@@ -1,0 +1,345 @@
+/* Quick Ask: the in-document chat bar, a block in the document flow after
+   the block it was opened on. Closing is explicit (X or Escape), never an
+   outside click: reading the document is why people click away. */
+
+/* The chat surfaces' own two tones, set where they are drawn (the editor
+   palette can be redefined below :root). */
+:is(.agent-panel-view, .chat-window, .inline-chat) {
+  --chat-card-bg: color-mix(in srgb, var(--ui-text) 4%, var(--ui-surface));
+  --chat-hairline: color-mix(in srgb, var(--ui-border) 80%, transparent);
+}
+
+.inline-chat {
+  /* A command bar, not a second text column: on a wide column it stays at a
+     comfortable width instead of stretching past 1000px. */
+  max-width: min(100%, 720px);
+  margin: var(--doc-gap-box, 1.1em) auto;
+  /* Room the first text row leaves for Quick Ask's floating header buttons:
+     4px edge + three 22px buttons with 2px gaps, plus 6px of air. */
+  --quick-ask-actions-width: 80px;
+  /* The panel sits inside the editable root, whose pre-wrap would show the
+     newlines between the reply's blocks as blank lines. */
+  white-space: normal;
+  /* Nor is it document text: no editor line height or caret colour. */
+  line-height: 1.5;
+}
+
+/* A selection that shows in both palettes: the dark one's default was hardly
+   apart from the panel. */
+.inline-chat ::selection {
+  background: color-mix(in srgb, var(--ui-accent) 35%, var(--ui-surface));
+}
+
+/* It hangs below its paragraph and grows down out of it. */
+.inline-chat:not(.quick-ask-dock) > .inline-chat-shell {
+  transform-origin: top center;
+  --enter-y: calc(var(--motion-distance-sm) * -1);
+  --enter-scale: calc(var(--scale-enter) + (1 - var(--scale-enter)) * 0.25);
+  animation: motion-enter var(--dur-base) var(--ease-out);
+}
+
+/* Just the pop-out and close buttons, floated in the panel's top-right
+   corner rather than given a row of their own. The input reserves width. */
+.inline-chat-header {
+  position: absolute;
+  top: 0;
+  right: 0;
+  display: flex;
+  align-items: center;
+  padding: 4px 4px;
+}
+
+.inline-chat-header-actions {
+  display: flex;
+  align-items: center;
+  gap: 2px;
+  flex-shrink: 0;
+}
+
+.inline-chat-header-button {
+  flex-shrink: 0;
+  font-size: var(--text-caption);
+  line-height: 1;
+}
+
+/* Asked before closing while proposals are still undecided: the previews
+   stay in the document, and closing silently would strand them. */
+.inline-chat-confirm {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+  padding: 8px;
+}
+
+.inline-chat-confirm-message {
+  font-size: var(--text-secondary);
+  color: var(--ui-text);
+}
+
+.inline-chat-confirm-actions {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+}
+
+/* The message list, skill menu and composer share this one card.
+   Positioned: the header buttons float in its corner. */
+.inline-chat-shell {
+  position: relative;
+  display: flex;
+  flex-direction: column;
+}
+
+/* One rule frames every section boundary inside the shell. */
+.inline-chat-shell > * + * {
+  border-top: 1px solid var(--ui-border);
+}
+
+/* ...except right below the header. Said from the shell: a bare
+   ".inline-chat-header + *" made Chromium restyle every following sibling,
+   so Enter in a large document recalculated all its blocks. */
+.inline-chat-shell > .inline-chat-header + * {
+  border-top: none;
+}
+
+.inline-chat-bar {
+  display: flex;
+  flex-direction: column;
+  /* Room between the text and the controls under it, and around both. */
+  gap: 8px;
+  padding: 8px 8px 8px;
+}
+
+/* The suggested next messages, between the last reply and the box: small
+   capsules that wrap, each cut short rather than widening the panel. */
+.inline-chat-follow-ups {
+  flex: 0 0 auto;
+  display: flex;
+  flex-wrap: wrap;
+  gap: 4px;
+  padding: 8px 8px 0;
+}
+
+.inline-chat-follow-up {
+  max-width: 100%;
+  color: var(--ui-text);
+  animation: motion-enter var(--dur-fast) var(--ease-out);
+}
+
+.inline-chat-field {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+  min-width: 0;
+}
+
+/* In the panel and the detached window the field is one rounded box on the
+   panel's foot, lit at its edge on focus. Quick Ask keeps the open layout. */
+:is(.agent-panel-body, .chat-window-body, .create-studio) .inline-chat-field {
+  /* A medium container with capsule controls, kept a padding clear of its
+     corners. */
+  gap: var(--space-2);
+  padding: var(--space-2);
+  border: 1px solid var(--ui-border);
+  border-radius: var(--shape-m);
+  background: var(--ui-surface);
+  box-shadow: var(--shadow-raised);
+  transition:
+    border-color var(--dur-fast) var(--ease-standard),
+    box-shadow var(--dur-fast) var(--ease-standard);
+}
+
+:is(.agent-panel-body, .chat-window-body, .create-studio)
+  .inline-chat-field:focus-within {
+  border-color: color-mix(in srgb, var(--ui-accent) 55%, var(--ui-border));
+  box-shadow: 0 0 0 3px color-mix(in srgb, var(--ui-accent) 14%, transparent);
+}
+
+:is(.agent-panel-body, .chat-window-body, .create-studio)
+  :is(.inline-chat-input, .inline-chat-mentions) {
+  padding: 2px 2px 0;
+}
+
+/* Inside the box the tools go frameless - one frame (the field's) is
+   enough; the mode reads as a quiet chip, the icons as plain glyphs. */
+:is(.agent-panel-body, .chat-window-body, .create-studio)
+  :is(.inline-chat-attach, .inline-chat-toggle) {
+  border-color: transparent;
+}
+
+:is(.agent-panel-body, .chat-window-body, .create-studio)
+  .inline-chat-toggle.is-active {
+  border-color: transparent;
+}
+
+:is(.agent-panel-body, .chat-window-body, .create-studio) .inline-chat-toolbar {
+  gap: 4px;
+}
+
+:is(.agent-panel-body, .chat-window-body, .create-studio)
+  .ui-select.inline-chat-mode {
+  min-width: 0;
+  border-color: transparent;
+  /* The colour only: the chevron is the background image. */
+  background-color: color-mix(in srgb, var(--ui-text) 6%, transparent);
+}
+
+:is(.agent-panel-body, .chat-window-body, .create-studio)
+  .ui-select.inline-chat-mode:not(:disabled):hover {
+  background-color: color-mix(in srgb, var(--ui-text) 10%, transparent);
+}
+
+/* Input on top, tool row below, always on one row: the chip gives way
+   first, then the mode's name. Send, + and search never shrink. Not tuned
+   to one font's widths, which differ across machines. */
+.inline-chat-toolbar {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  min-width: 0;
+}
+
+.inline-chat-toolbar > * {
+  flex-shrink: 0;
+}
+
+.inline-chat-mode {
+  min-width: 72px;
+}
+
+/* How much text rides along as context, and a way to drop it. Tinted like
+   the passage it stands for, highlighted in the document, so the two read
+   as one. */
+.inline-chat-selection-chip {
+  display: inline-flex;
+  align-items: center;
+  gap: 4px;
+  font-size: var(--text-caption);
+  color: var(--ui-text);
+  border: 1px solid color-mix(in srgb, var(--ui-accent) 30%, transparent);
+  border-radius: var(--shape-pill);
+  corner-shape: round;
+  background: color-mix(in srgb, var(--ui-accent) 12%, transparent);
+  padding: 2px 4px;
+  white-space: nowrap;
+  overflow: hidden;
+  transition: background-color var(--dur-fast) var(--ease-out);
+}
+
+.inline-chat-toolbar > .inline-chat-selection-chip {
+  /* Shrinks long before the mode does: shrink is shared out by weight. */
+  flex: 0 1000 auto;
+  /* Never past its x: padding, border and the 12px button. */
+  min-width: 26px;
+}
+
+/* The last resort: the mode's name ellipsizes down to its chevron, so
+   Send keeps its words in a narrow window at a large size. */
+.inline-chat-toolbar > .inline-chat-mode {
+  flex-shrink: 1;
+  min-width: 28px;
+}
+
+.inline-chat-selection-chip:hover {
+  background: color-mix(in srgb, var(--ui-accent) 22%, transparent);
+}
+
+.inline-chat-chip-label {
+  border: none;
+  background: none;
+  padding: 0;
+  font: inherit;
+  color: inherit;
+  cursor: pointer;
+}
+
+.inline-chat-chip-remove {
+  flex-shrink: 0;
+  display: flex;
+  align-items: center;
+  border: none;
+  background: none;
+  padding: 0;
+  color: inherit;
+  opacity: 0.6;
+  cursor: pointer;
+}
+
+.inline-chat-chip-remove:hover {
+  opacity: 1;
+}
+
+.inline-chat-toggle.is-active {
+  border-color: var(--ui-accent);
+  background: color-mix(in srgb, var(--ui-accent) 14%, transparent);
+  color: var(--ui-accent-text);
+}
+
+/* On, but nothing can search: a dot on the button, its tooltip says why. */
+.inline-chat-web-search.needs-setup {
+  position: relative;
+}
+
+.inline-chat-web-search.needs-setup::after {
+  content: "";
+  position: absolute;
+  top: 3px;
+  right: 3px;
+  width: 6px;
+  height: 6px;
+  border-radius: 50%;
+  corner-shape: round;
+  background: var(--ui-danger);
+}
+
+.inline-chat-attachments {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 4px;
+  padding: 2px 4px 4px;
+}
+
+.inline-chat-attachment {
+  display: inline-flex;
+  align-items: center;
+  gap: 4px;
+  padding: 2px 4px;
+  border: 1px solid var(--ui-border);
+  border-radius: var(--shape-pill);
+  corner-shape: round;
+  font-size: var(--text-caption);
+  color: var(--ui-muted);
+  max-width: 100%;
+  min-width: 0;
+}
+.inline-chat-attachment-remove {
+  display: flex;
+  align-items: center;
+  border: none;
+  background: transparent;
+  color: var(--ui-muted);
+  cursor: pointer;
+  padding: 0;
+}
+
+/* Document vs image reach the model differently, so the chip says which. */
+.inline-chat-attachment-kind {
+  flex-shrink: 0;
+  width: 12px;
+  height: 12px;
+  opacity: 0.8;
+}
+
+/* Only part of the file reached the model, said so a partial answer doesn't
+   look like a misreading. */
+.inline-chat-attachment-note {
+  opacity: 0.75;
+  font-style: italic;
+}
+
+/* Why an attachment could not be used. */
+.inline-chat-attach-error {
+  padding: 4px 8px;
+  font-size: var(--text-caption);
+  color: var(--ui-danger);
+}

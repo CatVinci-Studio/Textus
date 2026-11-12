@@ -15,9 +15,9 @@ export function useEditorPane() {
   const [scrollEl, setScrollEl] = useState<HTMLElement | null>(null);
   const [contentEl, setContentEl] = useState<HTMLElement | null>(null);
   useEffect(() => {
-    setPaneEl(
-      (rootRef.current?.closest(".main-pane") as HTMLElement | null) ?? null,
-    );
+    // The document's own place: its tab's view (the bars centred on it,
+    // not on the AI's beside it).
+    setPaneEl(rootRef.current?.closest<HTMLElement>("[data-tab-id]") ?? null);
     setScrollEl(
       (rootRef.current?.closest(".editor-scroll") as HTMLElement | null) ??
         null,
@@ -38,7 +38,7 @@ export function useReviewBar({
   isActive,
   phone,
   quickAskVisible,
-  panelContainer,
+  panelShown,
   agentPanel,
 }: {
   run: EditorRunner;
@@ -46,23 +46,23 @@ export function useReviewBar({
   isActive: boolean;
   phone: boolean;
   quickAskVisible: boolean;
-  panelContainer: HTMLElement | null;
+  panelShown: boolean;
   agentPanel: AgentPanelFrame;
 }) {
   const reviewBarShown =
     isActive &&
     pendingEdits.reviewed.length > 0 &&
     !quickAskVisible &&
-    !(phone && panelContainer);
+    !(phone && panelShown);
   // On a phone, arriving edits fold the AI sheet away and scroll to the
   // first of them.
   const hadDecidable = useRef(false);
   const decidable = pendingEdits.decidable.length;
-  const now = useLatest({ pendingEdits, phone, panelContainer, isActive });
+  const now = useLatest({ pendingEdits, phone, panelShown, isActive });
   useEffect(() => {
-    const { pendingEdits, phone, panelContainer, isActive } = now.current;
+    const { pendingEdits, phone, panelShown, isActive } = now.current;
     const has = decidable > 0;
-    if (has && !hadDecidable.current && phone && panelContainer && isActive) {
+    if (has && !hadDecidable.current && phone && panelShown && isActive) {
       agentPanel.setOpen(false);
       const first = pendingEdits.reviewStops[0];
       if (first) {

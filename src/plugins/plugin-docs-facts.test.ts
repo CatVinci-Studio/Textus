@@ -1,3 +1,4 @@
+import { readCss } from "../dev/read-css";
 import { readFileSync } from "node:fs";
 import { expect, it } from "vitest";
 import { WHEN_KEYS } from "./contributions/when";
@@ -39,24 +40,60 @@ it("names only style variables a plugin page is given", () => {
   // The theme's, and what the stylesheets a page shares with the window define.
   const given = new Set<string>(WEBVIEW_THEME_VARS);
   for (const css of [
-    "src/ui/design-system.css",
-    "src/ui/components.css",
-    "src/ui/controls.css",
-    "src/ui/motion.css",
+    "src/engine/tokens/design-system.css",
+    "src/engine/controls/components.css",
+    "src/engine/controls/controls.css",
+    "src/engine/controls/progress.css",
+    "src/engine/controls/bubble.css",
+    "src/engine/controls/icon-masks.css",
+    "src/engine/motion/motion.css",
   ])
-    for (const m of read(css).matchAll(/(--[a-z][\w-]*)\s*:/g)) given.add(m[1]);
+    for (const m of readCss(css).matchAll(/(--[a-z][\w-]*)\s*:/g))
+      given.add(m[1]);
   for (const doc of DOCS)
     for (const m of read(doc).matchAll(/`(--[a-z][\w-]*)`/g))
       expect(given.has(m[1]), `${doc}: ${m[1]}`).toBe(true);
 });
 
 it("gives every permission a row on the permissions page", () => {
-  const manifest = read("src/plugins/store/manifest.ts");
-  const list = manifest.slice(manifest.indexOf("const PLAIN_PERMISSIONS"));
-  const names = [
-    ...list.slice(0, list.indexOf("] as const")).matchAll(/"([\w.]+)"/g),
-  ].map((m) => m[1]);
+  const names = (
+    JSON.parse(read("src/plugins/store/permissions.json")) as {
+      plain: string[];
+    }
+  ).plain;
   const page = read("docs/dev/plugins/permissions.md");
   expect(names.length).toBeGreaterThan(5);
   for (const name of names) expect(page, name).toContain(`| \`${name}\``);
+});
+
+it("names only list icons the list view draws", () => {
+  const view = read("src/plugins/views/list-row-icon.tsx");
+  const drawn = /const ICONS:[^\n]* = \{([^}]*)\}/.exec(view)![1];
+  const named = /One of the app's icons \(([^)]*)\)/.exec(
+    read("docs/dev/textus.d.ts").replace(/\s*\*\s*/g, " "),
+  )![1];
+  for (const [, icon] of named.matchAll(/"(\w+)"/g))
+    expect(drawn, icon).toMatch(new RegExp(`\\b${icon}:`));
+});
+
+it("names only classes a plugin page's stylesheets draw", () => {
+  const given = [
+    "src/engine/tokens/design-system.css",
+    "src/engine/controls/components.css",
+    "src/engine/controls/controls.css",
+    "src/engine/controls/pane.css",
+    "src/engine/controls/progress.css",
+    "src/engine/controls/bubble.css",
+    "src/engine/controls/icon-masks.css",
+    "src/plugins/host/runtime/plugin-ui.css",
+  ]
+    .map(readCss)
+    .join("\n");
+  const frames = read("src/plugins/host/frames.ts");
+  for (const css of ["pane.css", "controls.css", "components.css"])
+    expect(frames, css).toContain(`controls/${css}?inline`);
+  for (const [name] of new Set(
+    read("docs/dev/plugins/ui.md").match(/tx-[a-z][a-z-]*/g),
+  ).entries())
+    expect(given, name).toMatch(new RegExp(`\\.${name}(?![\\w-])`));
 });

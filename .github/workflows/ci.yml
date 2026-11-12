@@ -6,37 +6,27 @@ name: CI
 #   check    npm run check         types, lint, unit tests, formatting,
 #                                  README/version/updater checks; and the build
 #   e2e      npm run test:e2e      the Playwright flows in Chromium, split by
-#                                  test across four machines; e2e-webkit runs
-#                                  the WebKit ones after a merge (not required);
-#                                  stopwatch tests (@perf) run only locally,
-#                                  with npm run test:perf
+#                                  test across four machines, and e2e-webkit
+#                                  the WebKit ones (not required); stopwatch
+#                                  tests (@perf) run only locally, with npm
+#                                  run test:perf
 #   native   npm run check:native  rustfmt, clippy, Rust tests - on Linux,
 #                                  macOS and Windows; and npm test on macOS
-#                                  and Windows. A pull request runs macOS,
-#                                  Windows and ios only for platform code
+#                                  and Windows
 #   ios      the iOS simulator build
 #
-# `check` always runs. Its save round trip (src/document-view/
-# save-roundtrip*.test.ts, platform-independent) runs there alone, not in
-# the native jobs, and on a pull request only when the change can reach
-# saving: the editor, src/document*/, the Markdown helpers, the documents
-# it reads, the npm dependencies or CI. A pull request runs the other jobs
-# only where its change can reach them (scripts/ci-changes.mjs decides;
-# skipped jobs count as passed for branch protection):
+# Two depths. A pull request into main, and a push to main, run the quick
+# suite: `check`, and the Rust checks on Linux where the change reaches
+# Rust (scripts/ci-changes.mjs decides; skipped jobs count as passed). The
+# full suite - every job, every platform, whatever changed - runs before a
+# tag is built (release.yml calls this workflow on the tagged commit), on a
+# pull request into stable, and by hand (Run workflow).
 #
-#   documentation, or a version bump      check alone
-#   the frontend only                     check, e2e
-#   the Rust backend only                 check, native, ios
-#   both; a workflow, .nvmrc, or the npm
-#   dependencies                          everything
-#
-# The e2e flows run the frontend against a mocked backend, so Rust can't
-# change their result; native and ios embed only a few frontend files, which
-# the script finds. Markdown under src/, e2e/ or src-tauri/ (help guides,
-# the AI skills) is code, not documentation. A version bump changes only the
-# version lines of the five
-# files scripts/check-versions.mjs keeps in step. A push to main or a release
-# branch runs everything, except a version bump's.
+# `check`'s save round trip (src/document-view/save-roundtrip*.test.ts)
+# runs only when the change can reach saving: the editor, src/document*/,
+# the Markdown helpers, the npm dependencies or CI. Markdown under src/,
+# e2e/ or src-tauri/ (help guides, the AI skills) is code, not
+# documentation.
 #
 # Caches: Rust builds and the Playwright browser are saved from main only.
 # Pull requests restore main's and write none, so they don't evict main's
@@ -46,6 +36,14 @@ on:
   pull_request:
   push:
     branches: [main, stable]
+  # By hand, or from the release workflow before it builds a tag: the full
+  # suite, whatever changed.
+  workflow_dispatch:
+  workflow_call:
+    inputs:
+      full:
+        type: boolean
+        default: true
 
 permissions:
   contents: read
@@ -56,7 +54,7 @@ permissions:
 # branch, a pending run was replaced by the next merge and v1.0.5-rc.3 waited
 # for a CI result that never came.
 concurrency:
-  group: ci-${{ github.event_name == 'pull_request' && github.ref || github.sha }}
+  group: ci-${{ inputs.full && 'full-' || '' }}${{ github.event_name == 'pull_request' && github.ref || github.sha }}
   cancel-in-progress: ${{ github.event_name == 'pull_request' }}
 
 jobs:
@@ -70,6 +68,10 @@ jobs:
       native: ${{ steps.diff.outputs.native }}
       platforms: ${{ steps.diff.outputs.platforms }}
       roundtrip: ${{ steps.diff.outputs.roundtrip }}
+      # The full suite: before a tag (the release workflow calls this one),
+      # on a pull request into stable, or by hand. Otherwise the quick one:
+      # check, and Rust on Linux where Rust changed.
+      full: ${{ steps.diff.outputs.full }}
     steps:
       - uses: actions/checkout@v7
         with:
@@ -81,8 +83,11 @@ jobs:
         env:
           PR_BASE: ${{ github.event.pull_request.base.sha }}
           PUSH_BASE: ${{ github.event.before }}
+          FULL: ${{ inputs.full || github.event_name == 'workflow_dispatch' || github.base_ref == 'stable' }}
         run: |
-          if [ "$GITHUB_EVENT_NAME" = pull_request ]; then
+          if [ "$FULL" = true ]; then
+            printf 'e2e=true\nnative=true\nplatforms=true\nroundtrip=true\nfull=true\n' >> "$GITHUB_OUTPUT"
+          elif [ "$GITHUB_EVENT_NAME" = pull_request ]; then
             node scripts/ci-changes.mjs --base "$PR_BASE" >> "$GITHUB_OUTPUT"
           else
             node scripts/ci-changes.mjs --base "$PUSH_BASE" --push >> "$GITHUB_OUTPUT"
@@ -148,17 +153,16 @@ jobs:
           npx vite build --config vite.playground.config.ts 2>&1 | tee build-playground.log
           ! grep -q 'css-syntax-error' build-playground.log
 
-  # On one machine with one worker the flows took fifteen minutes; --shard
-  # splits them by test across four, each running two workers
-  # (playwright.config.ts).
+  # The flows split by test across two machines, each running two workers
+  # (playwright.config.ts): a few minutes each.
   e2e-shard:
     needs: changes
-    if: needs.changes.outputs.e2e == 'true'
-    name: e2e (${{ matrix.shard }}/4)
+    if: needs.changes.outputs.e2e == 'true' && needs.changes.outputs.full == 'true'
+    name: e2e (${{ matrix.shard }}/2)
     strategy:
       fail-fast: false
       matrix:
-        shard: [1, 2, 3, 4]
+        shard: [1, 2]
     runs-on: ubuntu-22.04
     timeout-minutes: 30
     steps:
@@ -176,7 +180,7 @@ jobs:
       - uses: actions/checkout@v7
         with:
           repository: CatVinci-Studio/textus-plugins
-          ref: ce3b77e7a6b821615c6820130e202bddd9d39af7
+          ref: 9e3728a2c8b93afbc56060fda5726f0aae1b766e
           path: textus-plugins
       - run: npm ci --prefix textus-plugins
       # Chromium comes from the cache when this Playwright version's is there;
@@ -198,7 +202,7 @@ jobs:
         with:
           path: ~/.cache/ms-playwright
           key: ${{ steps.browser.outputs.cache-primary-key }}
-      - run: npm run test:e2e -- --shard=${{ matrix.shard }}/4
+      - run: npm run test:e2e -- --shard=${{ matrix.shard }}/2
       # A failed flow's error context (the page as it was) and any
       # screenshots and traces it left.
       - if: failure()
@@ -230,7 +234,10 @@ jobs:
   # merge to main or stable, not on every pull request.
   e2e-webkit:
     needs: changes
-    if: needs.changes.outputs.e2e == 'true' && github.event_name == 'push'
+    if: needs.changes.outputs.e2e == 'true' && needs.changes.outputs.full == 'true'
+    # Not required: its failure shows here without failing the run (or
+    # the release that calls it).
+    continue-on-error: true
     runs-on: ubuntu-22.04
     timeout-minutes: 30
     steps:
@@ -243,11 +250,11 @@ jobs:
       - uses: actions/checkout@v7
         with:
           repository: CatVinci-Studio/textus-plugins
-          ref: ce3b77e7a6b821615c6820130e202bddd9d39af7
+          ref: 9e3728a2c8b93afbc56060fda5726f0aae1b766e
           path: textus-plugins
       - run: npm ci --prefix textus-plugins
       - run: npx playwright install --with-deps webkit
-      - run: npx playwright test --project=webkit --ignore-snapshots
+      - run: npx playwright test --project=webkit --ignore-snapshots --pass-with-no-tests
         env:
           E2E_WEBKIT: "1"
       - if: failure()
@@ -264,7 +271,7 @@ jobs:
   # and the release waits for that run on the tagged commit.
   native-platform:
     needs: changes
-    if: needs.changes.outputs.native == 'true' || (needs.changes.outputs.e2e == 'true' && needs.changes.outputs.platforms == 'true')
+    if: needs.changes.outputs.native == 'true' || needs.changes.outputs.full == 'true'
     name: native (${{ matrix.name }})
     strategy:
       fail-fast: false
@@ -280,7 +287,7 @@ jobs:
         # release workflows) so an image switch is a deliberate change.
         #
         # Linux alone, or all of them when `platforms` (see above).
-        include: ${{ fromJSON(needs.changes.outputs.platforms == 'true' && '[{"name":"ubuntu-22.04","os":"ubuntu-22.04","rust":true},{"name":"macos-26","os":"macos-26","rust":true,"unit":true},{"name":"windows-2025","os":"windows-2025","rust":true},{"name":"windows-2025, unit tests","os":"windows-2025","unit":true}]' || '[{"name":"ubuntu-22.04","os":"ubuntu-22.04","rust":true}]') }}
+        include: ${{ fromJSON(needs.changes.outputs.platforms == 'true' && needs.changes.outputs.full == 'true' && '[{"name":"ubuntu-22.04","os":"ubuntu-22.04","rust":true},{"name":"macos-26","os":"macos-26","rust":true,"unit":true},{"name":"windows-2025","os":"windows-2025","rust":true},{"name":"windows-2025, unit tests","os":"windows-2025","unit":true}]' || '[{"name":"ubuntu-22.04","os":"ubuntu-22.04","rust":true}]') }}
     runs-on: ${{ matrix.os }}
     timeout-minutes: 60
     env:
@@ -346,7 +353,10 @@ jobs:
   # iOS port is young.
   ios:
     needs: changes
-    if: needs.changes.outputs.native == 'true' && needs.changes.outputs.platforms == 'true'
+    if: needs.changes.outputs.native == 'true' && needs.changes.outputs.platforms == 'true' && needs.changes.outputs.full == 'true'
+    # Not required: its failure shows here without failing the run (or
+    # the release that calls it).
+    continue-on-error: true
     runs-on: macos-26
     timeout-minutes: 60
     env:

@@ -6,7 +6,7 @@
   right: 0;
   bottom: 0;
   left: 0;
-  z-index: 35;
+  z-index: var(--z-phone-toolbar);
   display: flex;
   align-items: center;
   gap: 2px;
@@ -79,7 +79,7 @@
 /* A block toggle that is on where the caret is. */
 .keyboard-toolbar-button[aria-pressed="true"] {
   background: color-mix(in srgb, var(--ui-accent) 14%, transparent);
-  color: var(--ui-accent);
+  color: var(--ui-accent-text);
 }
 
 .kbt-bold {
@@ -93,7 +93,7 @@
 
 .kbt-code {
   font-family: var(--font-mono);
-  font-size: 14px;
+  font-size: var(--text-body);
 }
 
 /* An image's widths, written out. */
@@ -108,7 +108,7 @@
 }
 
 .keyboard-toolbar-ai {
-  color: var(--ui-accent);
+  color: var(--ui-accent-text);
   font-size: var(--text-secondary);
   font-weight: 600;
   white-space: nowrap;
@@ -117,5 +117,6 @@
 /* The document's scroller ends at the strip: the editor keeps the caret inside
    its scroller, so a line being typed would otherwise stop behind the strip. */
 :root.has-keyboard-toolbar .editor-scroll {
+  /* design: allow - the keyboard toolbar's touch height. */
   margin-bottom: 44px;
 }

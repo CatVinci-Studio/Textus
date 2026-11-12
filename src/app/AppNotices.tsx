@@ -1,23 +1,19 @@
+import { fill } from "../i18n/fill";
 import { useCallback, useEffect, useState } from "react";
-import { isIOSApp } from "../platform/capabilities";
-import { announce } from "../ui/announce";
-import { CornerToast } from "../ui/CornerToast";
+import { IconButton } from "../engine/controls/IconButton";
+import { CloseIcon } from "../engine/controls/icons";
+import { announce } from "../engine/controls/announce";
+import { CornerToast } from "../engine/controls/CornerToast";
 import { basename } from "../utils/path";
 import type { Strings } from "../i18n/strings";
-import type { useAppUpdate } from "./useAppUpdate";
 
-/** Zen mode's way out, shown while it is on. */
-export function ZenHint({ onExit, t }: { onExit: () => void; t: Strings }) {
-  return isIOSApp ? (
-    // No Esc key on a phone: the hint is the way out, so it stays and takes
-    // a tap.
-    <button type="button" className="zen-hint zen-hint-button" onClick={onExit}>
-      {t.zenExitButton}
-    </button>
-  ) : (
-    <div className="zen-hint" role="status">
-      {t.zenExitHint}
-    </div>
+/** Zen mode's way out while it is on: a quiet × at the top right (Esc
+ *  doesn't leave it - Esc closes what is open in the text). */
+export function ZenExit({ onExit, t }: { onExit: () => void; t: Strings }) {
+  return (
+    <IconButton label={t.zenExitButton} onClick={onExit} className="zen-exit">
+      <CloseIcon />
+    </IconButton>
   );
 }
 
@@ -63,7 +59,7 @@ export function WordImportNotice({
   onDismiss: () => void;
   t: Strings;
 }) {
-  const notice = path && t.wordImportNotice.replace("{name}", basename(path));
+  const notice = path && fill(t.wordImportNotice, { name: basename(path) });
   useEffect(() => {
     if (notice) announce(notice);
   }, [notice]);
@@ -78,45 +74,6 @@ export function WordImportNotice({
       name="word-import-toast"
       line={notice}
       actions={[{ label: t.wordImportDismiss, onSelect: onDismiss }]}
-    />
-  );
-}
-
-/** The update banner: available, downloading, failed. */
-export function UpdateToast({
-  appUpdate,
-  t,
-}: {
-  appUpdate: ReturnType<typeof useAppUpdate>;
-  t: Strings;
-}) {
-  const later = { label: t.updateLater, onSelect: appUpdate.dismiss };
-  const state = {
-    idle: null,
-    available: {
-      line: `${t.updateAvailable} v${appUpdate.version}${
-        appUpdate.selfUpdate ? "" : ` · ${t.updateViaPackageManager}`
-      }`,
-      actions: appUpdate.selfUpdate
-        ? [
-            {
-              label: t.updateInstall,
-              onSelect: () => void appUpdate.install(),
-              primary: true,
-            },
-            later,
-          ]
-        : [later],
-    },
-    downloading: { line: t.updateDownloading, actions: [] },
-    error: { line: `${t.updateFailed} ${appUpdate.error}`, actions: [later] },
-  }[appUpdate.status];
-  return (
-    <CornerToast
-      show={state !== null}
-      name="update-toast"
-      line={state?.line ?? ""}
-      actions={state?.actions ?? []}
     />
   );
 }

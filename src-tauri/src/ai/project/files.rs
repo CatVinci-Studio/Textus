@@ -10,9 +10,6 @@ pub(crate) const TEXT_EXTENSIONS: &[&str] = &[
     "toml", "html", "htm", "xml",
 ];
 
-/// What the sidebar lists first as a document; find_files does the same.
-pub(crate) const SIDEBAR_DOCUMENT_EXTENSIONS: &[&str] = &["md", "markdown", "txt", "text"];
-
 /// Most an @-mention inlines: the whole file goes into the message.
 pub(crate) const MAX_FILE_BYTES: u64 = 100 * 1024;
 
@@ -229,9 +226,9 @@ pub(crate) fn document_text(path: &Path) -> Result<Arc<String>, String> {
     // Extracted outside the lock: a slow PDF holds up no other read.
     let ext = crate::extract::extension_of(path);
     let text = crate::extract::document_text(path, &ext)
-        .unwrap_or_else(|| Err("It isn't a document Textus can read.".to_string()))?;
+        .unwrap_or_else(|| Err(crate::errors::error("notDocument")))?;
     if text.trim().is_empty() {
-        return Err("It has no readable text.".to_string());
+        return Err(crate::errors::error("noText"));
     }
     let text = Arc::new(text);
     let mut cache = EXTRACTED.lock().unwrap();

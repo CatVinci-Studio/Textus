@@ -59,7 +59,7 @@ current one, before and after:
   container, so the editor's context menu, find bar, Insert Table and
   image dialogs were placed against the column, not the window; the AI
   panel's empty state is one, and its text and icon pulsed.
-  `ui/engine-quirks.ts` measures this at startup and marks `<html>`;
+  `engine/controls/engine-quirks.ts` measures this at startup and marks `<html>`;
   neither is a container there. The document's type then stays at the
   standard 16.5px instead of growing with a wide column, and the empty
   state keeps its spark and hint when room is short.
@@ -97,7 +97,7 @@ Still different in Chromium 107, not fixed yet:
 
 ## Keeping it working
 
-`src/ui/engine-support.test.ts`, part of `npm run check`, reads the app's
+`src/engine/controls/engine-support.test.ts`, part of `npm run check`, reads the app's
 stylesheets and code and fails on:
 
 - CSS newer than Chromium 105 that isn't inside an `@supports` testing for

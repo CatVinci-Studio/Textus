@@ -1,6 +1,6 @@
 import { useEffect, useRef, useState } from "react";
 import { StreamReveal } from "../stream-reveal";
-import { motionAllowed } from "../../ui/motion";
+import { motionAllowed } from "../../engine/motion/motion";
 
 /**
  * A streamed reply as it is drawn: while `live`, `text` revealed at a steady

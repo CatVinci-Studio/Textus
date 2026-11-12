@@ -149,11 +149,9 @@ pub struct CompletionRequest {
 }
 
 #[tauri::command]
-pub async fn ai_complete(
-    app: AppHandle,
-    request: Args<CompletionRequest>,
-) -> Result<String, String> {
-    let Args(CompletionRequest {
+#[cfg_attr(test, specta::specta)]
+pub async fn ai_complete(app: AppHandle, request: CompletionRequest) -> Result<String, String> {
+    let CompletionRequest {
         provider,
         before,
         after,
@@ -162,7 +160,7 @@ pub async fn ai_complete(
         hints,
         doc_path,
         workspace_root,
-    }) = request;
+    } = request;
     crate::ai::ensure_on(&app)?;
     let hints = hints.unwrap_or_default();
     let (mut instructions, user_text) =

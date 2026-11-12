@@ -1,6 +1,7 @@
+import { fill } from "../i18n/fill";
 import { useEffect } from "react";
-import { announce } from "../ui/announce";
-import { CornerToast } from "../ui/CornerToast";
+import { announce } from "../engine/controls/announce";
+import { CornerToast } from "../engine/controls/CornerToast";
 import { usePluginCard } from "../plugins/store/usePluginCard";
 import { pluginName, pluginText } from "../plugins/store/plugin-records";
 import { PluginIcon } from "../settings/pages/PluginArt";
@@ -25,11 +26,12 @@ export function SuggestCard({ t }: { t: Strings }) {
   const name = item
     ? pluginName({ id: item.id, manifest: item.manifest })
     : (request?.plugin ?? "");
-  const line = (
+  const line = fill(
     request?.situation.type === "moved"
       ? t.pluginCardMovedLine
-      : t.pluginCardLine
-  ).replace("{name}", name);
+      : t.pluginCardLine,
+    { name },
+  );
   useEffect(() => {
     if (request) announce(line);
   }, [request, line]);

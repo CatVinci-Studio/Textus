@@ -1,12 +1,13 @@
+import { fill } from "../../i18n/fill";
 import { useEffect, useReducer, useState } from "react";
 import { SettingRow, ToggleRow, VERBATIM_INPUT } from "../sections/controls";
-import { Select } from "../../ui/Select";
+import { Select } from "../../engine/controls/Select";
 import type { Strings } from "../../i18n/strings";
+import { runPluginCommand } from "../../plugins/manager";
 import {
   pluginText,
-  runPluginCommand,
   type PluginRecord,
-} from "../../plugins/manager";
+} from "../../plugins/store/plugin-records";
 import {
   pluginSetting,
   setPluginSetting,
@@ -48,7 +49,7 @@ export function PluginSettingRows({
           >
             <option value="global">{t.pluginSettingsScopeGlobal}</option>
             <option value="project">
-              {t.pluginSettingsScopeProject.replace("{name}", basename(root))}
+              {fill(t.pluginSettingsScopeProject, { name: basename(root) })}
             </option>
           </Select>
         </SettingRow>
@@ -56,7 +57,7 @@ export function PluginSettingRows({
       {shownSettings(record).map(({ setting, heading }) => (
         <div key={setting.key} className="plugin-setting">
           {heading && (
-            <h4 className="plugin-setting-group">
+            <h4 className="tx-list-heading plugin-setting-group">
               {pluginText(record, heading)}
             </h4>
           )}

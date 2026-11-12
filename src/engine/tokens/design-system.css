@@ -1,0 +1,4 @@
+/* design-system.css: its parts, in cascade order. */
+@import "./ds-base.css";
+@import "./ds-buttons.css";
+@import "./ds-surfaces.css";

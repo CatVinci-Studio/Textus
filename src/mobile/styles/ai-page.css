@@ -9,9 +9,9 @@
     .window-bar-title {
     position: static;
     flex: 1 1 auto;
+    width: auto;
     min-width: 0;
     max-width: none;
-    transform: none;
     gap: 4px;
     color: var(--ui-text);
     font-weight: 500;
@@ -42,7 +42,7 @@
     right: 0;
     bottom: 0;
     left: 0;
-    z-index: 40;
+    z-index: var(--z-phone-page);
     width: auto !important;
     max-width: none;
     padding-top: 0;

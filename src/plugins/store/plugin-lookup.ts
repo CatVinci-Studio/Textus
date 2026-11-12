@@ -1,10 +1,13 @@
+import { splitFrontmatter } from "../../utils/frontmatter";
+import { fill } from "../../i18n/fill";
 import { currentStrings } from "../../i18n/current";
-import { PLUGIN_SETTINGS } from "../../app/menu/plugin-menu";
-import { basename } from "../../utils/path";
+import { PLUGIN_SETTINGS } from "../../registry/menu/plugin-menu";
+import { basename, isNoteFile } from "../../utils/path";
 import { localize, matchesFilename } from "./manifest";
 import { claimKey, frontMatterClaim, ownerOf } from "../contributions/owners";
 import {
   pluginsSnapshot,
+  runningPlugins,
   windowInfo,
   type PluginsSnapshot,
 } from "./plugin-records";
@@ -19,10 +22,8 @@ import {
 export function customEditorFor(
   path: string,
 ): { plugin: string; viewType: string; title: string } | null {
-  if (!pluginsSnapshot().allOn) return null;
   const name = basename(path);
-  for (const record of pluginsSnapshot().records) {
-    if (record.status !== "on" || !record.manifest) continue;
+  for (const record of runningPlugins(pluginsSnapshot())) {
     for (const editor of record.manifest.contributes.customEditors)
       if (
         editor.priority === "default" &&
@@ -39,11 +40,9 @@ export function customEditorFor(
 
 /** The keys of a Markdown document's front matter, none without one. */
 export function frontMatterKeys(content: string): string[] {
-  const m = /^\uFEFF?---\r?\n([\s\S]*?)\r?\n(?:---|\.\.\.)\s*(?:\r?\n|$)/.exec(
-    content,
-  );
-  if (!m) return [];
-  return [...m[1].matchAll(/^([\w-]+)\s*:/gm)].map((k) => k[1]);
+  const yaml = splitFrontmatter(content).yaml;
+  if (yaml === null) return [];
+  return [...yaml.matchAll(/^([\w-]+)\s*:/gm)].map((k) => k[1]);
 }
 
 /** The plugin that opens Markdown `path` in a tab of its own because of
@@ -52,11 +51,10 @@ export function customEditorForContent(
   path: string,
   content: string,
 ): { plugin: string; viewType: string; title: string } | null {
-  if (!pluginsSnapshot().allOn || !/\.(md|markdown)$/i.test(path)) return null;
+  if (!isNoteFile(path)) return null;
   const keys = frontMatterKeys(content);
   if (!keys.length) return null;
-  for (const record of pluginsSnapshot().records) {
-    if (record.status !== "on" || !record.manifest) continue;
+  for (const record of runningPlugins(pluginsSnapshot())) {
     for (const editor of record.manifest.contributes.customEditors)
       if (
         editor.priority === "default" &&
@@ -82,10 +80,8 @@ export function pluginMenuEntries(
   menu: "app/plugins" | "app/tray" = "app/plugins",
   language: string = windowInfo().language(),
 ): { command: string; label: string; group: string }[] {
-  if (!from.allOn) return [];
-  return from.records.flatMap((record) => {
+  return runningPlugins(from).flatMap((record) => {
     const manifest = record.manifest;
-    if (record.status !== "on" || !manifest) return [];
     // Each command under its plugin's name, for a submenu of its own.
     const group = localize(manifest, manifest.name, language);
     const commands = (manifest.contributes.menus[menu] ?? []).map((item) => {
@@ -111,7 +107,7 @@ export function pluginMenuEntries(
             command: PLUGIN_SETTINGS + record.id,
             label: commands.length
               ? t.menuPluginSettings
-              : t.menuPluginSettingsOf.replace("{name}", group),
+              : fill(t.menuPluginSettingsOf, { name: group }),
             group,
           },
         ]

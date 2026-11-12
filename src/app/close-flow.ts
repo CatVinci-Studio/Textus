@@ -1,3 +1,4 @@
+import { fill } from "../i18n/fill";
 import { useCallback, useEffect } from "react";
 import { thisWindow } from "../platform/this-window";
 import { canUseWindows } from "../platform/capabilities";
@@ -9,12 +10,14 @@ import {
   type DocTab,
 } from "../document/doc-tabs";
 import { drafts, session } from "../platform/ipc";
+import { forgetTabZoom } from "../engine/zoom/tab-zoom";
+import { paneOf, shownIsland, windowLayout } from "../engine/layout/store";
 import { flushPendingWrites } from "../storage/pending-writes";
-import { useModalDialog } from "../ui/useModalDialog";
+import { useModalDialog } from "../engine/controls/useModalDialog";
 import { useLatest } from "../utils/hooks/useLatest";
 import type { TabState } from "./tabs/useTabState";
-import { undecidedIn } from "../document/undecided";
-import { showNotice } from "../ui/notices";
+import { forgetUndecided, undecidedIn } from "../document/undecided";
+import { showNotice } from "../engine/controls/notices";
 import { basename } from "../utils/path";
 import type { Strings } from "../i18n/strings";
 
@@ -23,10 +26,9 @@ function tellKept(path: string, t: Strings) {
   const n = undecidedIn(path);
   if (n > 0)
     showNotice(
-      t.closedWithUndecided
-        .replace("{name}", basename(path))
-        .replace("{n}", String(n)),
+      fill(t.closedWithUndecided, { name: basename(path), n: String(n) }),
     );
+  forgetUndecided(path);
 }
 
 // What the save/discard/cancel prompt is guarding: a tab or the whole window.
@@ -76,27 +78,35 @@ export function useTabRemoval(opts: {
         !showsStartPage(closing)
           ? makeStartTab()
           : null;
+      const last = tabsRef.current.every((tb) => tb.id === id);
+      // The last one closes the window - none on iOS, where it simply stays
+      // - decided here, as the window's own state says, not in an updater.
+      if (last && !start) {
+        if (!canUseWindows) return;
+        // Destroying the window skips the draft cleanup effect, so clear
+        // the snapshot here or a discarded tab returns as a draft.
+        cancelDraftFlushes();
+        void Promise.allSettled([
+          drafts.clearDraftSnapshot(id),
+          flushPendingWrites(),
+        ]).then(() => void thisWindow().destroy());
+        return;
+      }
+      forgetTabZoom(id);
       setTabs((prev) => {
         const next = prev.filter((tb) => tb.id !== id);
-        if (next.length === 0) {
-          if (start) return [start];
-          // No window to close on iOS: the last tab simply stays.
-          if (!canUseWindows) return prev;
-          // Destroying the window skips the draft cleanup effect, so clear
-          // the snapshot here or a discarded tab returns as a draft.
-          cancelDraftFlushes();
-          void Promise.allSettled([
-            drafts.clearDraftSnapshot(id),
-            flushPendingWrites(),
-          ]).then(() => void thisWindow().destroy());
-          return prev;
-        }
-        return next;
+        return next.length === 0 && start ? [start] : next;
       });
       setActiveTabId((prevActive) => {
         if (prevActive !== id) return prevActive;
         const remaining = tabsRef.current.filter((tb) => tb.id !== id);
         if (remaining.length === 0) return start?.id ?? prevActive;
+        // Split: a neighbor in the same island while it has one.
+        const island = shownIsland(paneOf(windowLayout(), id))?.tabs ?? [];
+        const at = island.indexOf(id);
+        const near = island.filter((tabId) => tabId !== id);
+        if (at >= 0 && near.length > 0)
+          return near[Math.min(at, near.length - 1)];
         return remaining[Math.min(closedIndex, remaining.length - 1)].id;
       });
     },
@@ -138,17 +148,24 @@ export function useWindowCloseGuard(
       await flushAutosave();
       const dirty = liveTabs().filter(tabIsDirty);
       if (dirty.length > 0 && keep.current) {
-        await Promise.all(
+        // A draft that can't be kept (a full disk): asked about instead,
+        // never a window that can no longer close.
+        const kept = await Promise.allSettled(
           dirty.map((tab) =>
             drafts.saveDraftSnapshot(tab.id, tab.path, tab.content),
           ),
         );
+        if (kept.some((result) => result.status === "rejected")) {
+          event.preventDefault();
+          setPendingClose({ kind: "window" });
+          return;
+        }
       } else if (dirty.length > 0) {
         event.preventDefault();
         setPendingClose({ kind: "window" });
         return;
       }
-      await flushPendingWrites();
+      await flushPendingWrites().catch(() => undefined);
     });
     return unlistenAll(unlisten);
   }, [liveTabs, flushAutosave, setPendingClose, keep]);

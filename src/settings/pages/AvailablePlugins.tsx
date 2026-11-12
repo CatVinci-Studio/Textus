@@ -1,10 +1,12 @@
+import { explainError } from "../../utils/error-explain";
+import { fill } from "../../i18n/fill";
 import { useState, type ReactNode } from "react";
-import { Byline } from "./PluginPage";
+import { Byline, CatalogRow } from "./CatalogRow";
+import { CatalogProblem, catalogMessage, catalogStatus } from "./CatalogStatus";
 import { PluginIcon } from "./PluginArt";
 import type { Strings } from "../../i18n/strings";
-import { pluginName, pluginText } from "../../plugins/manager";
+import { pluginName, pluginText } from "../../plugins/store/plugin-records";
 import {
-  loadCatalog,
   searchCatalog,
   sortCatalog,
   type CatalogItem,
@@ -12,7 +14,7 @@ import {
   type CatalogState,
   offeredItems,
 } from "../../plugins/store/catalog";
-import { Select } from "../../ui/Select";
+import { Select } from "../../engine/controls/Select";
 import { AvailableSection } from "./AvailableSection";
 import { installsText } from "./installs-text";
 
@@ -49,19 +51,13 @@ export function AvailablePlugins({
         installed,
       )
     : [];
-  const message =
-    catalog.status === "failed" ? (
-      <CatalogProblem
-        t={t}
-        text={t.pluginsCatalogFailed.replace("{reason}", catalog.error)}
-      />
-    ) : !ready ? (
-      <p className="plugin-empty">{t.pluginsCatalogLoading}</p>
-    ) : query.trim() && !shown.length ? (
-      <p className="plugin-empty">
-        {t.pluginsSearchNone.replace("{query}", query.trim())}
-      </p>
-    ) : undefined;
+  const message = catalogMessage({
+    t,
+    status: catalogStatus(catalog),
+    error: catalog.status === "failed" ? catalog.error : undefined,
+    query,
+    shown: shown.length,
+  });
   return (
     <AvailableSection
       t={t}
@@ -89,7 +85,9 @@ export function AvailablePlugins({
         catalog.error && (
           <CatalogProblem
             t={t}
-            text={t.pluginsCatalogKept.replace("{reason}", catalog.error)}
+            text={fill(t.pluginsCatalogKept, {
+              reason: explainError(catalog.error, t),
+            })}
           />
         )
       }
@@ -103,26 +101,6 @@ export function AvailablePlugins({
         />
       ))}
     />
-  );
-}
-
-/** Why the catalog couldn't be read, with a button to try again. */
-export function CatalogProblem({ t, text }: { t: Strings; text: string }) {
-  return (
-    <div className="settings-row plugin-catalog-problem">
-      <div className="settings-row-text">
-        <div className="settings-error">{text}</div>
-      </div>
-      <div className="settings-row-control">
-        <button
-          type="button"
-          className="text-button settings-inline-button"
-          onClick={() => void loadCatalog(true)}
-        >
-          {t.pluginsCatalogRetry}
-        </button>
-      </div>
-    </div>
   );
 }
 
@@ -142,25 +120,28 @@ function CatalogCard({
   const name = pluginName({ id: item.id, manifest: item.manifest });
   const installs = installsText(item, t);
   return (
-    <div className="settings-row plugin-card" data-catalog={item.id}>
-      <button
-        type="button"
-        className="plugin-card-open plugin-card-with-icon"
-        aria-label={t.pluginOpenDetails.replace("{name}", name)}
-        onClick={onOpen}
-      >
+    <CatalogRow
+      data-catalog={item.id}
+      name={name}
+      description={pluginText(
+        { manifest: item.manifest },
+        item.manifest.description,
+      )}
+      icon={
         <PluginIcon id={item.id} manifest={item.manifest} url={item.icon} />
-        <span className="plugin-card-text">
-          <span className="settings-row-label plugin-card-name">{name}</span>
-          <span className="settings-row-hint plugin-card-description">
-            {pluginText({ manifest: item.manifest }, item.manifest.description)}
-          </span>
-          <Byline manifest={item.manifest} official={item.official} t={t}>
-            {installs && <span className="plugin-installs">{installs}</span>}
-          </Byline>
-        </span>
-      </button>
-      <div className="settings-row-control">{action}</div>
-    </div>
+      }
+      byline={
+        <Byline
+          t={t}
+          official={item.official}
+          author={item.manifest.author || item.manifest.publisher}
+          version={item.manifest.version}
+          installs={installs}
+        />
+      }
+      openLabel={fill(t.pluginOpenDetails, { name })}
+      onOpen={onOpen}
+      action={action}
+    />
   );
 }

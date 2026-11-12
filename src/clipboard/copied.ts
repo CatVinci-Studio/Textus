@@ -4,7 +4,7 @@
  * clipboard permission (a clipboard history is one). Settings fields, API
  * keys among them, never get here.
  */
-export interface Copied {
+interface Copied {
   text: string;
   cut: boolean;
 }

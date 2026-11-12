@@ -1,0 +1,28 @@
+/* A document's readouts at its page's bottom right (DocumentCorner): laid
+   over its island's sheet, over its editor, quiet - the page's own paper
+   behind them so text scrolling under stays clear of them. */
+.document-corner {
+  z-index: 3;
+  display: flex;
+  /* Short of room the badge goes over the count, not past the island. */
+  flex-wrap: wrap;
+  align-content: flex-end;
+  align-items: flex-end;
+  justify-content: flex-end;
+  gap: var(--space-2);
+  padding: 0 var(--space-3) var(--space-2) 0;
+  box-sizing: border-box;
+  pointer-events: none;
+}
+
+.document-corner > * {
+  pointer-events: auto;
+}
+
+.document-corner .word-count {
+  padding: 2px 8px;
+  border-radius: var(--shape-pill);
+  corner-shape: round;
+  background: color-mix(in srgb, var(--doc-bg) 88%, transparent);
+  cursor: default;
+}

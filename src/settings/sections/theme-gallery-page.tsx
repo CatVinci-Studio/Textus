@@ -27,7 +27,7 @@ export function ThemeGalleryPage({
     <button
       type="button"
       className="text-button settings-inline-button"
-      disabled={install.busy}
+      disabled={install.busy === theme.id}
       onClick={() => void install.install(theme)}
     >
       {t.themeGalleryInstall}

@@ -4,7 +4,7 @@ import { cleanup, render } from "@testing-library/react";
 import { afterEach, describe, expect, it, vi } from "vitest";
 import { SourceEditor } from "./SourceEditor";
 import { sourceViewAt } from "./source-view-registry";
-import { editInFocus } from "../../ui/edit-in-focus";
+import { editInFocus } from "../../engine/controls/edit-in-focus";
 
 afterEach(cleanup);
 

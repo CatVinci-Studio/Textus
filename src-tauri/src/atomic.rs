@@ -254,3 +254,170 @@ impl Drop for TempDir {
 
 #[cfg(test)]
 mod tests;
+
+/// `from` (a file or a folder) moved to `to`, its folder made first; where
+/// it can't be renamed (another volume), copied whole, then the original
+/// removed.
+pub(crate) fn move_or_copy(from: &std::path::Path, to: &std::path::Path) -> std::io::Result<()> {
+    if let Some(parent) = to.parent() {
+        std::fs::create_dir_all(parent)?;
+    }
+    if std::fs::rename(from, to).is_ok() {
+        return Ok(());
+    }
+    if from.is_dir() {
+        copy_dir(from, to)?;
+        std::fs::remove_dir_all(from)
+    } else {
+        std::fs::copy(from, to)?;
+        std::fs::remove_file(from)
+    }
+}
+
+/// Whether `a` and `b` are one file (one name differing only in case on a
+/// disk that doesn't tell case apart).
+pub(crate) fn same_file(a: &std::path::Path, b: &std::path::Path) -> bool {
+    let (Ok(a), Ok(b)) = (std::fs::symlink_metadata(a), std::fs::symlink_metadata(b)) else {
+        // The other name isn't there at all: nothing to overwrite.
+        return true;
+    };
+    #[cfg(unix)]
+    {
+        use std::os::unix::fs::MetadataExt;
+        a.dev() == b.dev() && a.ino() == b.ino()
+    }
+    // Windows' disks don't tell case apart.
+    #[cfg(not(unix))]
+    {
+        let _ = (a, b);
+        true
+    }
+}
+
+/// A user's file or folder moved to `to`: renamed, or onto another disk
+/// copied (links as links) with the original then put in the Trash. With no
+/// Trash the copy is taken back and the original stays.
+pub(crate) fn move_entry(from: &std::path::Path, to: &std::path::Path) -> std::io::Result<()> {
+    let Err(error) = std::fs::rename(from, to) else {
+        return Ok(());
+    };
+    // Something already at `to` is never copied over, nor taken back.
+    if error.kind() != std::io::ErrorKind::CrossesDevices || std::fs::symlink_metadata(to).is_ok() {
+        return Err(error);
+    }
+    if let Err(copying) = copy_entry(from, to) {
+        take_back(to);
+        return Err(copying);
+    }
+    if try_trash(from) {
+        return Ok(());
+    }
+    take_back(to);
+    Err(error)
+}
+
+/// `from` copied to `to` as it is: a folder with all inside, a link as a link.
+fn copy_entry(from: &std::path::Path, to: &std::path::Path) -> std::io::Result<()> {
+    let kind = std::fs::symlink_metadata(from)?.file_type();
+    if kind.is_symlink() {
+        let target = std::fs::read_link(from)?;
+        #[cfg(unix)]
+        return std::os::unix::fs::symlink(target, to);
+        #[cfg(windows)]
+        return if from.is_dir() {
+            std::os::windows::fs::symlink_dir(target, to)
+        } else {
+            std::os::windows::fs::symlink_file(target, to)
+        };
+    }
+    if kind.is_dir() {
+        std::fs::create_dir(to)?;
+        for entry in std::fs::read_dir(from)? {
+            let entry = entry?;
+            copy_entry(&entry.path(), &to.join(entry.file_name()))?;
+        }
+        return Ok(());
+    }
+    std::fs::copy(from, to).map(|_| ())
+}
+
+/// A copy `move_entry` made itself, removed when the move can't finish.
+fn take_back(copy: &std::path::Path) {
+    let Ok(meta) = std::fs::symlink_metadata(copy) else {
+        return;
+    };
+    let _ = if meta.is_dir() {
+        std::fs::remove_dir_all(copy)
+    } else {
+        std::fs::remove_file(copy)
+    };
+}
+
+/// Folder `from` copied into `to`, its files and folders.
+pub(crate) fn copy_dir(from: &std::path::Path, to: &std::path::Path) -> std::io::Result<()> {
+    std::fs::create_dir_all(to)?;
+    for entry in std::fs::read_dir(from)? {
+        let entry = entry?;
+        let kind = entry.file_type()?;
+        if kind.is_dir() {
+            copy_dir(&entry.path(), &to.join(entry.file_name()))?;
+        } else if kind.is_file() {
+            std::fs::copy(entry.path(), to.join(entry.file_name()))?;
+        }
+    }
+    Ok(())
+}
+
+/// Whether `path` went to the Trash; false where there is none (and in
+/// tests, whose files aren't the user's).
+pub(crate) fn try_trash(path: &std::path::Path) -> bool {
+    #[cfg(all(desktop, not(test)))]
+    return trash::delete(path).is_ok();
+    #[cfg(any(not(desktop), test))]
+    {
+        let _ = path;
+        false
+    }
+}
+
+/// `path` (a file or a folder) out of the way the user can get it back:
+/// to the Trash where the system has one, else removed - for what may hold
+/// the user's own work (a plugin's notes, a skill they edited, a theme).
+pub(crate) fn to_trash(path: &std::path::Path) -> Result<(), String> {
+    if !path.exists() {
+        return Ok(());
+    }
+    // Tests' own temporary files aren't sent to the user's Trash.
+    #[cfg(all(desktop, not(test)))]
+    return trash::delete(path).map_err(|e| e.to_string());
+    #[cfg(any(not(desktop), test))]
+    {
+        if path.is_dir() {
+            std::fs::remove_dir_all(path)
+        } else {
+            std::fs::remove_file(path)
+        }
+        .map_err(|e| e.to_string())
+    }
+}
+
+/// A file of the user's to the Trash, never deleted: refused where the
+/// system has no Trash (the iPhone). The folder `shown` (the tree's root,
+/// a plugin's folder) and any folder holding it are refused too.
+pub(crate) fn user_file_to_trash(
+    path: &std::path::Path,
+    shown: Option<&std::path::Path>,
+) -> Result<(), String> {
+    if let Some(root) = shown.and_then(|r| std::fs::canonicalize(r).ok()) {
+        if root.starts_with(path) {
+            return Err(crate::errors::error("trashShownFolder"));
+        }
+    }
+    #[cfg(desktop)]
+    return trash::delete(path).map_err(|e| e.to_string());
+    #[cfg(not(desktop))]
+    Err(format!(
+        "{} can't be moved to the Trash here.",
+        path.display()
+    ))
+}

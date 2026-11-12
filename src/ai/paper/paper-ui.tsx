@@ -1,3 +1,7 @@
+import { citationPattern } from "../citations";
+import { counted } from "../../i18n/current";
+import { explainAiError } from "../error-messages";
+import { fill } from "../../i18n/fill";
 import { useEffect, useState } from "react";
 import { plural, type Lang, type Strings } from "../../i18n/strings";
 import { useSettings } from "../../prefs/SettingsContext";
@@ -70,9 +74,7 @@ export function concurrencyLine(
         ? t.paperRevisingAtOnce
         : t.paperSectionsAtOnce;
   const text = c.active > 1 ? plural(forms, c.active, lang) : t.paperDoneOf;
-  return text
-    .replace("{done}", String(c.done))
-    .replace("{of}", String(c.total));
+  return fill(text, { done: String(c.done), of: String(c.total) });
 }
 
 /** One line of what the run is doing now. */
@@ -83,10 +85,11 @@ function progressLine(run: PaperRunState, t: Strings, lang: Lang): string {
     case "planning":
       return t.paperPlanning;
     case "researching":
-      return t.paperResearching
-        .replace("{searches}", String(run.used?.searches ?? 0))
-        .replace("{pages}", String(run.used?.fetches ?? 0))
-        .replace("{papers}", String(run.used?.paperLookups ?? 0));
+      return fill(t.paperResearching, {
+        searches: String(run.used?.searches ?? 0),
+        pages: String(run.used?.fetches ?? 0),
+        papers: String(run.used?.paperLookups ?? 0),
+      });
     case "outlining":
       return t.paperOutlining;
     case "awaitingOutline":
@@ -94,9 +97,10 @@ function progressLine(run: PaperRunState, t: Strings, lang: Lang): string {
     case "drafting": {
       const c = paperConcurrency(run);
       if (c && c.active > 1) return concurrencyLine(c, run.phase, t, lang);
-      return t.paperDrafting
-        .replace("{n}", String(c?.done ?? 0))
-        .replace("{of}", String(c?.total ?? 0));
+      return fill(t.paperDrafting, {
+        n: String(c?.done ?? 0),
+        of: String(c?.total ?? 0),
+      });
     }
     case "reviewing":
       return t.paperReviewing;
@@ -105,7 +109,7 @@ function progressLine(run: PaperRunState, t: Strings, lang: Lang): string {
     case "done":
       if (!run.written) return t.paperFinishing;
       return run.picturesLeft > 0
-        ? t.paperAddingPictures.replace("{n}", String(run.picturesLeft))
+        ? fill(t.paperAddingPictures, { n: String(run.picturesLeft) })
         : t.paperWrittenCard;
   }
 }
@@ -133,7 +137,7 @@ function questionStatus(q: QuestionState, t: Strings): string {
     case "done":
       return q.state === "active" && q.notes === 0
         ? t.paperQuestionActive
-        : t.paperQuestionNotes.replace("{n}", String(q.notes));
+        : counted(t.paperQuestionNotes, q.notes);
   }
 }
 
@@ -165,7 +169,7 @@ export function previewText(
 ): string {
   return markdown
     .replace(
-      /\[(\d+)\]\([^)\s]*\)/g,
+      citationPattern(true),
       (_, n: string) => `[${order.get(Number(n)) ?? n}]`,
     )
     .replace(/^#{1,6}\s+/gm, "")
@@ -186,7 +190,7 @@ function PaperActivityView({ run, t }: { run: PaperRunState; t: Strings }) {
   const activity = { toolActivity: toolActivityLabels(t) };
   if (run.phase === "starting" || run.phase === "planning") {
     return run.thinking ? (
-      <p className="paper-card-thinking">{run.thinking}</p>
+      <p className="tx-clamp paper-card-thinking">{run.thinking}</p>
     ) : null;
   }
   if (run.phase === "researching") {
@@ -209,7 +213,7 @@ function PaperActivityView({ run, t }: { run: PaperRunState; t: Strings }) {
           <ul className="paper-card-recent">
             {run.recent.map((a) => (
               <li key={a.id} className="paper-card-enter">
-                <span className="paper-card-recent-detail">
+                <span className="tx-truncate paper-card-recent-detail">
                   {toolActivityText(a.tool, a.arguments, activity)}
                 </span>
               </li>
@@ -225,13 +229,15 @@ function PaperActivityView({ run, t }: { run: PaperRunState; t: Strings }) {
       <>
         {draft && draft.attempt > 1 && (
           <p className="paper-card-note">
-            {t.paperOutlineRetry.replace("{n}", String(draft.attempt))}
+            {fill(t.paperOutlineRetry, { n: String(draft.attempt) })}
           </p>
         )}
         {draft?.thesis ? (
           <p className="paper-card-thesis paper-card-enter">{draft.thesis}</p>
         ) : (
-          run.thinking && <p className="paper-card-thinking">{run.thinking}</p>
+          run.thinking && (
+            <p className="tx-clamp paper-card-thinking">{run.thinking}</p>
+          )
         )}
         {draft && draft.titles.length > 0 && (
           <ol className="paper-card-list">
@@ -334,12 +340,17 @@ export function PaperCard({ info }: { info: PaperCardInfo }) {
       )}
       {run?.error ? (
         <p className="paper-card-error" role="alert">
-          {run.error}
+          {explainAiError(run.error, t)}
         </p>
       ) : (
         line && (
           <p className="paper-card-progress">
-            {busy && <span className="paper-card-spinner" aria-hidden />}
+            {busy && (
+              <span
+                className="tx-progress ring is-indeterminate paper-card-spinner"
+                aria-hidden
+              />
+            )}
             <span aria-live="polite">{line}</span>
             {busy && <span className="paper-card-elapsed">{elapsed}</span>}
           </p>

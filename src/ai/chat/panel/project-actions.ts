@@ -1,18 +1,15 @@
+import { openDocument } from "../../../utils/open-document";
+import { explainError } from "../../../utils/error-explain";
+import { fill } from "../../../i18n/fill";
 import { useState } from "react";
 import { ai, exportDoc } from "../../../platform/ipc";
 import type { LibraryEntry, Memory, MemoryScope } from "../../../platform/ipc";
 import { useSettings } from "../../../prefs/SettingsContext";
-import { useActiveProvider } from "../../provider-catalog";
-import { errorText } from "../../../utils/error-text";
-import { OPEN_FILE_IN_TAB_EVENT } from "../../../utils/events";
-import { showConfirm } from "../../../ui/app-dialog";
+import { showConfirm } from "../../../engine/controls/app-dialog";
 import { libraryEntryId } from "./memory-text";
+import { chosenModel } from "../../chosen-model";
 
-function openInTab(path: string) {
-  window.dispatchEvent(
-    new CustomEvent(OPEN_FILE_IN_TAB_EVENT, { detail: path }),
-  );
-}
+const openInTab = (path: string) => openDocument(path);
 
 /** A library entry's file name: the name as typed, minus characters no
  *  file system accepts. Kept readable (CJK and all) - it is what the user
@@ -36,40 +33,27 @@ export function useProjectActions({
   docPath,
   root,
   reload,
-  closeMenu,
   endNaming,
 }: {
   docPath: string | null;
   root: string | null;
   /** Re-reads the project once an action ends. */
   reload: () => void;
-  closeMenu: () => void;
   endNaming: () => void;
 }) {
   const { t, settings, setSettings } = useSettings();
-  const provider = useActiveProvider();
   const workspaceRoot = settings.agentWorkspaceRoot || null;
   const [busy, setBusy] = useState<string | null>(null);
   const [message, setMessage] = useState<string | null>(null);
 
   /** `label`: what to show while it runs; null for something instant. */
   async function run(label: string | null, work: () => Promise<void>) {
-    closeMenu();
     setBusy(label);
     setMessage(null);
     try {
       await work();
     } catch (err) {
-      const text = errorText(err);
-      setMessage(
-        text === "TOO_BROAD"
-          ? t.projectTooBroad
-          : text === "NO_SAMPLES"
-            ? t.projectNoSamples
-            : text === "NO_PROJECT"
-              ? t.projectNeedsSave
-              : text,
-      );
+      setMessage(explainError(err, t));
     } finally {
       setBusy(null);
       reload();
@@ -88,10 +72,7 @@ export function useProjectActions({
       if (!files || files.length === 0) return;
       const path = await ai.learnStyle({
         provider: settings.aiProvider,
-        model:
-          settings.agentModels[settings.aiProvider] ||
-          provider?.agentDefaultModel ||
-          null,
+        model: chosenModel(settings),
         docPath,
         workspaceRoot,
         files,
@@ -105,12 +86,12 @@ export function useProjectActions({
       const done = await ai.importReferences(docPath, workspaceRoot, folder);
       if (!done) return;
       setMessage(
-        (done.skipped > 0
-          ? t.projectReferencesImportedSkipped
-          : t.projectReferencesImported
-        )
-          .replace("{n}", String(done.imported))
-          .replace("{skipped}", String(done.skipped)),
+        fill(
+          done.skipped > 0
+            ? t.projectReferencesImportedSkipped
+            : t.projectReferencesImported,
+          { n: String(done.imported), skipped: String(done.skipped) },
+        ),
       );
     });
 
@@ -182,7 +163,7 @@ export function useProjectActions({
     onDeleteEntry: (entry: LibraryEntry) =>
       void remove(
         libraryEntryId(entry),
-        t.memoryDeleteEntryConfirm.replace("{name}", entry.name),
+        fill(t.memoryDeleteEntryConfirm, { name: entry.name }),
       ),
     onRestoreForgotten: (id: string) =>
       void run(null, async () => {

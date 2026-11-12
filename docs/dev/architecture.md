@@ -25,24 +25,39 @@ held to it.
 
 ```
 shell     app/  document-view/  lazy/  playground/  help/       may import anything
-features  ai/  clipboard/  document/  editor/  export/  links/
-          mobile/  onboarding/  settings/  sidebar/  theme/     each other, ui/ and base; never the shell
-ui        ui/                                                   base only
-base      platform/  utils/  i18n/  storage/  prefs/            each other; never ui/, a feature or the shell
--         plugins/, the entry files src/*.ts(x), dev/            not layered (below)
+features  ai/  clipboard/  document/  editor/  export/  files/
+          mobile/  onboarding/  plugins/  settings/  theme/     each other, registry/, engine/ and base; never the shell
+registry  registry/                                             engine/ and base
+engine    engine/ (tokens, motion, frame, drag, controls, layout)   base only
+base      platform/  utils/  i18n/  storage/  prefs/            each other; nothing above
+-         the entry files src/*.ts(x), dev/                      not layered (below)
 ```
 
 What the lint enforces:
 
 - **Base** (`platform/`, `utils/`, `i18n/`, `storage/`, `prefs/`) imports
-  no `ui/`, feature or shell folder. The five are one layer to the lint:
-  nothing stops `utils/` importing `storage/` or `prefs/`.
-- **`ui/`** imports no feature or shell folder.
+  no `engine/`, `registry/`, feature or shell folder. The five are one
+  layer to the lint.
+- **`engine/`** imports no feature, registry or shell folder; inside it
+  each part uses only those before it - `tokens/`, `motion/`, `frame/`
+  (the solver and the clock), `drag/`, `controls/`, `layout/` - and
+  `controls/` never the layout.
+- **`registry/`** holds what the shell and the features both register into
+  or read: commands (`commands.ts`), the menu model (`menu/`), the fixed
+  shortcuts, the sidebar tabs and context-menu items plugins add, the file
+  marks a feature puts on the tree's rows. It imports only the engine and
+  base, so `plugins/` and the features reach these without the shell.
 - **Features** import no shell folder (`app/`, `document-view/`). They may
   import each other, with one exception: **`editor/`** never imports
-  `ai/`, `document/`, `export/`, `links/`, `mobile/`, `onboarding/`,
-  `sidebar/` or `plugins/`. The Markdown editor works on its own; features
-  and plugins attach to it, plugins through `editor/extension-points.ts`.
+  `ai/`, `document/`, `export/`, `files/`, `mobile/`, `onboarding/` or
+  `plugins/`. The Markdown editor works on its own - its block model
+  (`editor/markdown/doc-blocks.ts`, `doc-markdown.ts`, `edit-actions.ts`)
+  included, which the AI and plugins build on; plugins attach through
+  `editor/extension-points.ts`.
+- **`plugins/`** is a feature like the others: what the window lends it
+  comes through `plugins/app-bridge.ts` and `configurePlugins` (its
+  window info: strings, keys, the command palette), set by
+  `app/usePluginWindow.ts`.
 - **The shell** (`app/`, `document-view/`, `lazy/`, `playground/`,
   `help/`) may import anything except the plugin system's insides.
 - **Nothing outside `plugins/` imports `plugins/host/`**: the sandbox, the
@@ -53,15 +68,6 @@ What the lint enforces:
 
 What is only convention:
 
-- **`plugins/`, `src/*.ts(x)` and `dev/` are not layered.** Their own
-  imports are limited only by the Tauri rule, and any folder but `editor/`
-  may import `plugins/`. Features do: Settings' plugin pages use
-  `plugins/store/*` (catalog, manifest, permissions, lifecycle), the chat
-  uses `plugins/chat-plugin.ts` and `plugins/ai-state.ts`, `document/` and
-  `sidebar/` use `plugins/manager.ts` and `plugins/app-bridge.ts`. Prefer
-  `manager.ts` (records, install, on and off), `app-bridge.ts` (what the
-  window lends plugins and the events they hear) and `store/` over
-  anything deeper.
 - **`lazy/` and `help/`** are linted as shell but are used from every
   layer: `lazy/lazy-module.ts` is how anything loads on first use, and
   `help/` is only the bundled guides.
@@ -70,6 +76,12 @@ What is only convention:
   window, the detached chat, a floating plugin view, the background host);
   `plugin-api.ts` is the in-process registry API (`window.__textusPlugins`
   in a development build); `test-setup.ts` is vitest's.
+
+**The window's model has one owner**: `engine/layout/store.ts` holds the
+tabs, the tab in use and the islands, and settles the layout with every
+change. React reads it (`app/tabs/useTabState.ts`), the frame store keeps
+only geometry, and code that needs the tab in use asks it
+(`tabInUse()`, `engine/layout/tab-element.ts`), never the DOM.
 
 The other checks `npm run check` runs (cycles, copies, dead code, code
 shape) are listed in [CONTRIBUTING.md](../../CONTRIBUTING.md#before-you-push).
@@ -81,21 +93,21 @@ components → patterns → features**. A layer never re-defines a value an
 earlier one defines, and never imports from a later one. The design rules
 for each are in [design-language.md](../design/design-language.md).
 
-| Layer      | Today                                                                                   | Holds                                   |
-| ---------- | --------------------------------------------------------------------------------------- | --------------------------------------- |
-| Tokens     | `src/ui/base.css`, `design-system.css` (variables), `motion.css`                        | Role tokens and their derivation        |
-| Styles     | `src/ui/design-system.css` (controls, states), `src/plugins/host/runtime/plugin-ui.css` | Control looks and states, once          |
-| Components | `src/ui/*.tsx` (`Select`, `Tooltip`, `ContextMenu`, `app-dialog`, `InfoTip`, `icons`)   | React wrappers; no own colours or sizes |
-| Patterns   | Settings rows, the sidebar, menus, the command palette                                  | Arrangements of components              |
-| Features   | `src/editor`, `src/ai`, `src/sidebar`, `src/settings`, `src/plugins`…                   | Compose the layers above                |
+| Layer      | Today                                                                                              | Holds                                   |
+| ---------- | -------------------------------------------------------------------------------------------------- | --------------------------------------- |
+| Tokens     | `src/engine/tokens/base.css`, `design-system.css` (variables), `motion.css`                        | Role tokens and their derivation        |
+| Styles     | `src/engine/tokens/design-system.css` (controls, states), `src/plugins/host/runtime/plugin-ui.css` | Control looks and states, once          |
+| Components | `src/engine/controls/*.tsx` (`Select`, `Tooltip`, `ContextMenu`, `app-dialog`, `InfoTip`, `icons`) | React wrappers; no own colours or sizes |
+| Patterns   | Settings rows, the sidebar, menus, the command palette                                             | Arrangements of components              |
+| Features   | `src/editor`, `src/ai`, `src/files`, `src/settings`, `src/plugins`…                                | Compose the layers above                |
 
-Held by tests: `src/ui/spacing-grid.test.ts`, `theme-reach.test.ts`,
-`motion-tokens.test.ts`, `motion-properties.test.ts`,
+Held by tests: `src/engine/controls/theme-reach.test.ts`,
+`engine/motion/motion-tokens.test.ts`, `motion-properties.test.ts`,
 `style-invalidation.test.ts`, `e2e/a11y.spec.ts`, and the contrast tests in
-`src/theme/theme-chrome.test.ts`.
+`src/engine/tokens/palette.test.ts`.
 
 Planned, not built: a layout that gives each layer a folder of its own
-(`src/ui/tokens/`, `styles/`, `icons/`, `components/`, `patterns/`, with
+(`src/engine/tokens/`, `styles/`, `icons/`, `components/`, `patterns/`, with
 `plugins/host/` injecting tokens, styles and icons into plugin pages),
 moved file by file as files are touched; a Stylelint configuration banning
 literal colours, px font sizes, off-grid spacing, raw radii and raw
@@ -107,25 +119,25 @@ that is also the visual regression target.
 
 | Folder           | Holds                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                    |
 | ---------------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------ |
-| `app/`           | The editor window. `App.tsx` composes it from the window hooks (`useWindowShell`, `useWindowDocuments`, `useWindowWiring`, `useFileOpening`, `useSaveTabs`, `close-flow.ts`, `ClosePrompt.tsx`), `WindowBar`, `StartPage`, the sidebar frame and its draggable tabs (`sidebar-tabs.tsx`, `SidebarTabBar.tsx`), the command palette, global shortcuts, zoom, F6 regions (`regions.ts`), plugins' status items.                                                                                                            |
-| `app/tabs/`      | The tab bar, the tabs' state (`useTabState`), tab drag between windows (`useTabDragMerge`).                                                                                                                                                                                                                                                                                                                                                                                                                              |
-| `app/split/`     | Two documents at once: the layout tree, the divider, drag to split, restoring it.                                                                                                                                                                                                                                                                                                                                                                                                                                        |
-| `app/menu/`      | The menu model (`app-menu-model.ts`, drawn by `AppMenu.tsx` and `MenuBar.tsx` on Windows, Linux and iPad, and on the phone), native menu events (`menu-bridge.ts`), the macOS bar's labels (`native-menu-text.ts`), plugins' items (`plugin-menu.ts`), Open Recent (`recents.ts`).                                                                                                                                                                                                                                       |
+| `app/`           | The editor window. `App.tsx` composes it from the window hooks (`useWindowShell`, `useWindowDocuments`, `useWindowWiring`, `useFileOpening`, `useSaveTabs`, `close-flow.ts`, `ClosePrompt.tsx`), `WindowBar`, `StartPage`, the command palette, global shortcuts, zoom, F6 regions (`regions.ts`), plugins' status items.                                                                                                                                                                                                |
+| `app/tabs/`      | The tabs' state (`useTabState`), tabs that show a page - Settings, a plugin's page, Create, an AI conversation (`page-tabs.tsx`) - and tab drag between windows (`useTabDragMerge`).                                                                                                                                                                                                                                                                                                                                     |
+| `app/frame/`     | The window's frame: the window bar (`WindowBar`), the activity rail, the sidebar with Textus's own tabs (`sidebar-tabs.tsx`, the iPhone's `SidebarTabBar.tsx`) and the panels' state.                                                                                                                                                                                                                                                                                                                                    |
+| `app/islands/`   | What this window's islands show (the layout itself is `engine/layout/`): the documents' islands, Textus AI's conversations as tabs (`useAiTabs`), a tab pulled out of its row (`tab-pull.ts`), the split saved and restored.                                                                                                                                                                                                                                                                                             |
+| `app/menu/`      | The menu drawn (`AppMenu.tsx` and `MenuBar.tsx` on Windows, Linux and iPad, and on the phone) from the model in `registry/menu/`, native menu events (`menu-bridge.ts`), the macOS bar's labels (`native-menu-text.ts`), Open Recent (`recents.ts`).                                                                                                                                                                                                                                                                     |
 | `app/report/`    | The error boundary and **Help › Report a Problem**.                                                                                                                                                                                                                                                                                                                                                                                                                                                                      |
 | `document-view/` | One tab's document on screen. `MilkdownEditor.tsx` is the editor with everything attached (AI panel, Quick Ask, review margin, grammar card, tutorial hooks), split into `use*.ts` hooks beside it. `editor-extensions.ts` puts the editor core and the AI plugins together. `EditorPane` switches between the rich editor, source and split view. `plugins/` is what plugins do in the editor. The editor test harnesses live here too.                                                                                 |
 | `document/`      | A document's life outside the editor ([documents.md](documents.md)): the tab model (`doc-tabs.ts`), autosave, draft recovery, reload after an outside change, the session and reload restore, read-only, line endings (`file-format.ts`), Word import, last carets, the iPhone's recent documents.                                                                                                                                                                                                                       |
 | `editor/`        | The Markdown editor. Core plugins register in `editor-extensions.ts`, in load order. Subfolders by feature: `markdown/` (parse, save, paste, front matter, render to HTML), `marks/`, `math/`, `code/`, `tables/`, `images/`, `html/`, `find/`, `embeds/`, `chart/`, `emoji/`, `hover/`, `completion/`, `clipboard/`, `lazy-blocks/`, `keys/` (key handling per platform), `modes/` (source in CodeMirror, split, typewriter, zen; `view-mode.ts` is **View › Mode**). `extension-points.ts` is where plugins add to it. |
 | `ai/`            | Textus AI. `editor-plugins.ts` registers its plugins on the editor. `chat/` is the conversation the three chat surfaces share, with `quick-ask/`, `panel/` and `window/`; `revision/` turns a proposed edit into decided sentences; `margin/` draws revisions and notes beside the text; `writing/` is completion and the grammar check; `paper/` the long-form paper writer ([ai-paper.md](../design/ai-paper.md)); `skills/` the built-in skills and their translations; `citations.ts` sources as footnotes.          |
 | `export/`        | **File › Export**: PDF and HTML from the rendered page, everything else through pandoc.                                                                                                                                                                                                                                                                                                                                                                                                                                  |
-| `theme/`         | How documents look and how themes are read: the built-in themes, the document CSS (`content-base.css`), importing a Typora theme, the theme gallery, window colours from a theme (`theme-chrome.ts`), putting the appearance settings on the page.                                                                                                                                                                                                                                                                       |
+| `theme/`         | How documents look and how themes are read: the built-in themes, the document CSS (`content-base.css`), importing a Typora theme, the theme gallery, window colours from a theme (`engine/tokens/palette.ts`), putting the appearance settings on the page.                                                                                                                                                                                                                                                              |
 | `settings/`      | The Settings window: `pages/` (General, Editor, AI, Extensions with the plugin pages, Create), `sections/` (the rows; `controls.tsx` holds `SettingRow` and `ToggleRow`), search over the pages (`settings-search.ts`).                                                                                                                                                                                                                                                                                                  |
-| `links/`         | Notes and the links between them: one resolver for every way a link is followed (`link-resolve.ts`, its cases shared with Rust `resolve_note_link`), writing a link the way the folder does, rewriting links when a note moves, block ids.                                                                                                                                                                                                                                                                               |
-| `sidebar/`       | The file tree, file search, the outline, moving files with their links.                                                                                                                                                                                                                                                                                                                                                                                                                                                  |
+| `files/`         | The folder and its notes: the file tree, file search, the outline panel, moving files with their links, and the links between notes - one resolver for every way a link is followed (`link-resolve.ts`, its cases shared with Rust `resolve_note_link`), writing a link the way the folder does.                                                                                                                                                                                                                         |
 | `clipboard/`     | What a copy tells plugins (`copied.ts`, `copied-plugin.ts`) and Copy Path. The clipboard history itself is the official Clipboard History plugin.                                                                                                                                                                                                                                                                                                                                                                        |
 | `mobile/`        | Phone-only screens: the document list, the keyboard toolbar, page swipes; `styles/` holds the phone layout's CSS ([ios-code-map.md](ios-code-map.md)).                                                                                                                                                                                                                                                                                                                                                                   |
 | `onboarding/`    | The first-run language picker and the tutorial.                                                                                                                                                                                                                                                                                                                                                                                                                                                                          |
 | `plugins/`       | The plugin system ([below](#the-plugin-system)).                                                                                                                                                                                                                                                                                                                                                                                                                                                                         |
-| `ui/`            | Widgets and helpers any feature may use: dialogs, `Select`, `ContextMenu`, `Tooltip`, `InfoTip`, `PanelHeader`, `ResizeHandle`, `Sheet`, `CornerToast`, notices, the quick pick, icons and file icons (`file-icons.tsx`), presence and FLIP motion, dragging (`pointer-drag.ts`), Mac-style overscroll (`elastic-overscroll.ts`), engine quirks and guards, `usePhoneLayout`. And the base stylesheets: `base.css`, `design-system.css`, `motion.css`. [reuse.md](reuse.md) says which to use for what.                  |
+| `engine/`        | What every surface is drawn and moved with, knowing no document, AI or plugin, each part using only those before it: `tokens/` (sizes, the interface scale, the one palette a theme's base colours derive into, `palette.ts`), `motion/` (timing, FLIP, presence), `drag/` (a drag, a row making room, the floating copy), `controls/` (dialogs, `Select`, `ContextMenu`, `Tooltip`, `InfoTip`, `PanelHeader`, `ResizeHandle`, `Sheet`, `CornerToast`, notices, the quick pick, icons), `layout/` (the island control).  |
 | `prefs/`         | The settings model: the `Settings` type and defaults (`settings-types.ts`), reading a stored file back (`settings-normalise.ts`), the store and its sync between windows, `SettingsProvider` / `useSettings` (`SettingsContext.tsx`), the rebindable shortcuts (`shortcut-defaults.ts`).                                                                                                                                                                                                                                 |
 | `storage/`       | Persisted state through the backend: the boot snapshot, pending writes, UI state, persisted lists, a project's `.textus/settings.json` (`project-settings.ts`), the webview's own localStorage (`local.ts`).                                                                                                                                                                                                                                                                                                             |
 | `platform/`      | The backend bridge ([below](#talking-to-the-backend)), OS and capability facts (`os.ts`, `capabilities.ts`), window chrome, events, iOS file access, menu events on iOS.                                                                                                                                                                                                                                                                                                                                                 |
@@ -143,7 +155,7 @@ flows are in `e2e/`.
 
 `src/plugins/` runs plugins in sandboxed frames and registers what they
 add into the app's own registries (`app/commands.ts`,
-`app/sidebar-tabs.tsx`, `app/split/split-layout.ts`, the editor's extension
+`app/frame/sidebar-tabs.tsx`, `engine/layout/store.ts`, the editor's extension
 points). Its folders, by job:
 
 | `plugins/`       | Holds                                                                                                                                                                      |
@@ -210,7 +222,7 @@ end to end.
 - An imported theme is CSS text: `theme-import.ts` inlines its `@import`s
   and assets, `typora-compat.ts` adapts Typora selectors,
   `legacy-variables.ts` reads pre-1.3 variable names under today's, and
-  `theme-chrome.ts` reads its colours to tint the window around it.
+  `engine/tokens/palette.ts` reads its colours to tint the window around it.
 
 ## Backend (`src-tauri/`)
 
@@ -251,10 +263,10 @@ both together. Desktop-only code is `#[cfg(desktop)]`;
 attached to it) and `app/App.tsx` (the window) are where everything meets,
 and are kept as compositions: each calls hooks and renders components that
 live beside it (`document-view/use*.ts`, `app/useWindow*.ts`,
-`app/Sidebar.tsx`, `app/MainPane.tsx`) or in the feature's own folder
+`app/frame/Sidebar.tsx`, `app/islands/DocumentIslands.tsx`) or in the feature's own folder
 (`ai/margin/useReviewNotes.ts`, `editor/modes/...`). When you add to them,
 add a hook or a component the same way - as `WindowBar`,
-`useDraftAutosave` or `useApplyAppearance` are - rather than more code in
+`useSidePanels` or `useUpdateChecks` are - rather than more code in
 the file itself, and keep the hooks' call order.
 
 ## The window's Content Security Policy
@@ -280,7 +292,7 @@ below.
 | `media-src`   | `'self'`, `data:`, `blob:`, the asset protocol, the plugins' files                                  | What a plugin's page may play.                                                                                                                       |
 | `connect-src` | `'self'`, `ipc:` / `http://ipc.localhost`, `data:`, `blob:`, the asset protocol, the plugins' files | Tauri's IPC, and reading a picture's bytes back for export and copy. No `fetch` to the web.                                                          |
 | `worker-src`  | `'self'`, `data:`, `blob:`, the plugins' files                                                      | A plugin's page may start a worker from its own files.                                                                                               |
-| `frame-src`   | `'self'`, `https:`, `http:`                                                                         | The framed web page on Linux and phones, and a plugin page's frames of the hosts the user granted (`webviewCsp` narrows them per plugin).            |
+| `frame-src`   | `'self'`, `https:`                                                                                  | The framed web page on Linux and phones, and a plugin page's frames of the hosts the user granted (`webviewCsp` narrows them per plugin).            |
 | `object-src`  | `'none'`                                                                                            | No plugins of the old kind.                                                                                                                          |
 | `base-uri`    | `'self'`                                                                                            | A `<base>` can't move where relative URLs go.                                                                                                        |
 

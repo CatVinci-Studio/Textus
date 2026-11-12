@@ -1,10 +1,10 @@
 import type { Ctx } from "@milkdown/kit/ctx";
 import type { EditorView } from "@milkdown/kit/prose/view";
-import { replaceWithMarkdown } from "../revision/apply-edit";
+import { replaceWithMarkdown } from "../../editor/markdown/parse-markdown-source";
 
 /** One of a finished paper's pictures: its id in the picture store, its alt
  *  text, and the caption under it, which says where it goes. */
-export interface PaperPicture {
+interface PaperPicture {
   id: string;
   alt: string;
   caption: string;

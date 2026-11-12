@@ -4,15 +4,13 @@ import { LANGS } from "../../i18n/langs";
 import { BUILTIN_SKILLS } from "../skills/builtin";
 import { SKILL_TEXTS } from "../skills/texts";
 import {
-  MENTION_TRIGGER,
-  SKILL_COMMAND,
-  SKILL_TRIGGER,
   groupSkills,
   listFromWorkspace,
   matchSkills,
   pickerSkills,
   resolveSkillName,
 } from "./skill-picker";
+import { MENTION_TRIGGER, SKILL_COMMAND, SKILL_TRIGGER } from "./skill-syntax";
 
 const builtins: SkillListItem[] = BUILTIN_SKILLS.map((skill) => ({
   name: skill.name,

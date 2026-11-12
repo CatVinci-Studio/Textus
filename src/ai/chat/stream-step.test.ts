@@ -1,7 +1,7 @@
 import { describe, expect, it } from "vitest";
 import { streamStep, type StreamingState } from "./stream-step";
 import type { StreamEvent } from "../../platform/ipc";
-import type { DocumentSnapshot } from "../doc-markdown";
+import type { DocumentSnapshot } from "../../editor/markdown/doc-markdown";
 
 const blocks = [
   { id: "b1", markdown: "The cat sat on the mat.", kind: "paragraph" },

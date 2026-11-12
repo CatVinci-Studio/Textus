@@ -10,9 +10,7 @@ export interface ExportPage {
   html: string;
 }
 
-export type ExportStep = (
-  page: ExportPage,
-) => Promise<{ html: string; css: string }>;
+type ExportStep = (page: ExportPage) => Promise<{ html: string; css: string }>;
 
 let current: ExportStep | null = null;
 

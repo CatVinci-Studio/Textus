@@ -46,13 +46,12 @@ export async function writeRevisions(
   if (base === null && !keptBeside.has(path)) return;
   if (base === null) keptBeside.delete(path);
   else keptBeside.add(path);
-  await ownNotes
-    .write(
-      path,
-      "revisions",
-      base === null ? "{}" : JSON.stringify({ base, revised: content }),
-    )
-    .catch(() => {});
+  // A write that fails fails the save: the file holds only the original.
+  await ownNotes.write(
+    path,
+    "revisions",
+    base === null ? "{}" : JSON.stringify({ base, revised: content }),
+  );
 }
 
 /** The text a document opens with: its revised text when the file still

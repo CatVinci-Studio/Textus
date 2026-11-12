@@ -72,10 +72,7 @@ const SOURCE_EDGES: Record<
  *  but in it: where it belongs, after or before the node; null elsewhere.
  *  With `hidden`, the brackets weren't drawn, so the shown text's own ends
  *  count. */
-export function outsideBrackets(
-  $pos: ResolvedPos,
-  hidden = false,
-): number | null {
+function outsideBrackets($pos: ResolvedPos, hidden = false): number | null {
   const node = $pos.parent;
   const edges = SOURCE_EDGES[node.type.name];
   if (!edges) return null;

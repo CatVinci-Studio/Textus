@@ -1,0 +1,491 @@
+{
+  "bar": [
+    {
+      "menu": "app",
+      "en": "{name}",
+      "drawn": false,
+      "items": [
+        { "predefined": "about", "label": "menuAbout", "en": "About {name}" },
+        {
+          "id": "check-updates",
+          "label": "updateCheckButton",
+          "suffix": "…",
+          "en": "Check for Updates",
+          "on": ["mac"],
+          "orOpen": true
+        },
+        "-",
+        {
+          "id": "settings",
+          "label": "menuSettings",
+          "en": "Settings…",
+          "keys": "mod+,",
+          "orOpen": true,
+          "drawn": { "in": "end" }
+        },
+        { "sep": true, "on": ["mac"] },
+        {
+          "predefined": "hide",
+          "label": "menuHide",
+          "en": "Hide {name}",
+          "on": ["mac"]
+        },
+        {
+          "predefined": "hide-others",
+          "label": "menuHideOthers",
+          "en": "Hide Others",
+          "on": ["mac"]
+        },
+        {
+          "predefined": "show-all",
+          "label": "menuShowAll",
+          "en": "Show All",
+          "on": ["mac"]
+        },
+        "-",
+        {
+          "id": "quit",
+          "label": "menuQuit",
+          "en": "Quit {name}",
+          "keys": "mod+q",
+          "keysOff": ["windows"],
+          "drawn": { "label": "menuExit", "keys": "alt+f4", "in": "end" }
+        }
+      ]
+    },
+    {
+      "menu": "file",
+      "label": "menuFile",
+      "en": "File",
+      "items": [
+        {
+          "id": "new-file",
+          "label": "menuNewTab",
+          "en": "New Tab",
+          "keys": "mod+n",
+          "keysOff": ["windows"]
+        },
+        {
+          "id": "new-window",
+          "label": "menuNewWindow",
+          "en": "New Window",
+          "keys": "mod+shift+n"
+        },
+        {
+          "id": "open-file",
+          "label": "menuOpenFile",
+          "en": "Open…",
+          "keys": "mod+o",
+          "keysOff": ["windows"],
+          "orOpen": true
+        },
+        {
+          "id": "open-folder",
+          "label": "menuOpenFolder",
+          "en": "Open Folder…",
+          "orOpen": true
+        },
+        {
+          "menu": "open-recent",
+          "label": "menuOpenRecent",
+          "en": "Open Recent",
+          "items": [{ "section": "recent" }]
+        },
+        {
+          "id": "close-folder",
+          "label": "menuCloseFolder",
+          "en": "Close Folder"
+        },
+        "-",
+        {
+          "id": "save-file",
+          "label": "menuSave",
+          "en": "Save",
+          "keys": "mod+s"
+        },
+        {
+          "id": "save-file-as",
+          "label": "menuSaveAs",
+          "en": "Save As…",
+          "keys": "mod+shift+s"
+        },
+        "-",
+        {
+          "menu": "export",
+          "label": "menuExport",
+          "en": "Export",
+          "items": [
+            {
+              "id": "export-pdf",
+              "label": "menuExportPdf",
+              "en": "PDF…",
+              "keys": "mod+p"
+            },
+            { "id": "export-html", "label": "menuExportHtml", "en": "HTML…" },
+            "-",
+            { "section": "pandoc" }
+          ]
+        },
+        { "id": "copy-path", "label": "menuCopyPath", "en": "Copy Path" },
+        "-",
+        {
+          "id": "close-tab",
+          "label": "menuCloseTab",
+          "en": "Close Tab",
+          "keys": "mod+w"
+        },
+        {
+          "id": "reopen-closed-tab",
+          "label": "menuReopenClosedTab",
+          "en": "Reopen Closed Tab",
+          "keys": "mod+shift+t"
+        }
+      ]
+    },
+    {
+      "menu": "edit",
+      "label": "menuEdit",
+      "en": "Edit",
+      "items": [
+        {
+          "predefined": "undo",
+          "label": "menuUndo",
+          "en": "Undo",
+          "keys": "mod+z",
+          "macOwn": true
+        },
+        {
+          "predefined": "redo",
+          "label": "menuRedo",
+          "en": "Redo",
+          "keys": "mod+shift+z",
+          "macOwn": true,
+          "drawn": { "keys": "mod+y" }
+        },
+        "-",
+        { "predefined": "cut", "label": "cut", "en": "Cut", "keys": "mod+x" },
+        {
+          "predefined": "copy",
+          "label": "copy",
+          "en": "Copy",
+          "keys": "mod+c"
+        },
+        {
+          "id": "copy-as-plain-text",
+          "label": "copyAsPlainText",
+          "en": "Copy as Plain Text"
+        },
+        {
+          "predefined": "paste",
+          "label": "paste",
+          "en": "Paste",
+          "keys": "mod+v"
+        },
+        {
+          "id": "paste-as-plain-text",
+          "label": "pasteAsPlainText",
+          "en": "Paste as Plain Text",
+          "keys": "mod+shift+v"
+        },
+        {
+          "predefined": "select-all",
+          "label": "selectAll",
+          "en": "Select All",
+          "keys": "mod+a",
+          "macOwn": true
+        },
+        "-",
+        {
+          "id": "find-replace",
+          "label": "menuFindReplace",
+          "en": "Find & Replace…",
+          "setting": "findReplace"
+        },
+        {
+          "id": "replace",
+          "label": "menuReplace",
+          "en": "Replace…",
+          "keys": "mod+alt+f"
+        },
+        {
+          "id": "find-next",
+          "label": "menuFindNext",
+          "en": "Find Next",
+          "keys": "mod+g"
+        }
+      ]
+    },
+    {
+      "menu": "format",
+      "label": "menuFormat",
+      "en": "Format",
+      "items": [
+        {
+          "id": "toggle-mark:highlight",
+          "label": "toolbarHighlight",
+          "en": "Highlight",
+          "keys": "mod+shift+h"
+        },
+        {
+          "id": "toggle-mark:strikethrough",
+          "label": "menuStrikethrough",
+          "en": "Strikethrough",
+          "keys": "ctrl+shift+`"
+        },
+        {
+          "id": "toggle-mark:code",
+          "label": "menuInlineCode",
+          "en": "Inline Code",
+          "keys": "ctrl+`"
+        },
+        {
+          "id": "insert-link",
+          "label": "menuInsertLink",
+          "en": "Link",
+          "keys": "mod+k"
+        },
+        "-",
+        { "section": "headings" },
+        "-",
+        {
+          "id": "insert-block:bullet-list",
+          "label": "menuBulletList",
+          "en": "Bullet List"
+        },
+        {
+          "id": "insert-block:ordered-list",
+          "label": "menuOrderedList",
+          "en": "Numbered List"
+        },
+        {
+          "id": "insert-block:blockquote",
+          "label": "menuBlockquote",
+          "en": "Blockquote"
+        },
+        {
+          "id": "insert-block:code-block",
+          "label": "menuCodeBlock",
+          "en": "Code Block"
+        },
+        { "id": "insert-block:table", "label": "menuTable", "en": "Table" }
+      ]
+    },
+    {
+      "menu": "view",
+      "label": "menuView",
+      "en": "View",
+      "items": [
+        {
+          "id": "toggle-sidebar",
+          "label": "menuToggleSidebar",
+          "en": "Sidebar",
+          "setting": "toggleSidebar",
+          "check": true
+        },
+        {
+          "id": "toggle-agent-panel",
+          "label": "menuToggleAgentPanel",
+          "en": "AI Panel",
+          "setting": "toggleAgentPanel",
+          "check": true
+        },
+        {
+          "id": "toggle-format-bar",
+          "label": "menuFormatBar",
+          "en": "Format Bar",
+          "check": true
+        },
+        "-",
+        {
+          "menu": "view-mode",
+          "label": "menuViewMode",
+          "en": "Mode",
+          "items": [
+            {
+              "id": "view-mode-default",
+              "label": "menuViewModeDefault",
+              "en": "Default",
+              "check": true
+            },
+            {
+              "id": "toggle-source-mode",
+              "label": "menuToggleSourceMode",
+              "en": "Source Mode",
+              "setting": "toggleSourceMode",
+              "check": true
+            },
+            {
+              "id": "toggle-split-view",
+              "label": "menuToggleSplitView",
+              "en": "Source and Preview",
+              "setting": "toggleSplitView",
+              "check": true
+            },
+            {
+              "id": "toggle-read-only",
+              "label": "menuToggleReadOnly",
+              "en": "Reading Mode",
+              "check": true
+            }
+          ]
+        },
+        {
+          "id": "track-changes",
+          "label": "menuTrackChanges",
+          "en": "Track My Changes",
+          "check": true
+        },
+        {
+          "id": "toggle-zen-mode",
+          "label": "menuToggleZenMode",
+          "en": "Zen Mode",
+          "setting": "toggleZenMode",
+          "check": true
+        },
+        {
+          "id": "toggle-typewriter-mode",
+          "label": "menuToggleTypewriterMode",
+          "en": "Typewriter Mode",
+          "setting": "toggleTypewriterMode",
+          "check": true
+        },
+        "-",
+        {
+          "id": "command-palette",
+          "label": "menuCommandPalette",
+          "en": "Command Palette…",
+          "setting": "commandPalette"
+        },
+        "-",
+        {
+          "id": "split-right",
+          "label": "menuSplitRight",
+          "en": "Split Right",
+          "setting": "splitEditor"
+        },
+        { "id": "split-down", "label": "menuSplitDown", "en": "Split Down" },
+        { "id": "close-split", "label": "menuCloseSplit", "en": "Close Split" },
+        "-",
+        {
+          "id": "zoom-in",
+          "label": "menuZoomIn",
+          "en": "Zoom In",
+          "keys": "mod+="
+        },
+        {
+          "id": "zoom-out",
+          "label": "menuZoomOut",
+          "en": "Zoom Out",
+          "keys": "mod+-"
+        },
+        {
+          "id": "zoom-reset",
+          "label": "menuZoomReset",
+          "en": "Actual Size",
+          "keys": "mod+0"
+        },
+        { "sep": true, "on": ["mac"] },
+        {
+          "predefined": "fullscreen",
+          "label": "menuFullscreen",
+          "en": "Full Screen",
+          "on": ["mac"],
+          "drawn": { "keys": "f11", "check": true }
+        }
+      ]
+    },
+    {
+      "menu": "plugins",
+      "label": "menuPlugins",
+      "en": "Plugins",
+      "items": [{ "section": "plugins" }]
+    },
+    {
+      "menu": "window",
+      "label": "menuWindow",
+      "en": "Window",
+      "drawn": false,
+      "items": [
+        {
+          "predefined": "minimize",
+          "label": "windowMinimize",
+          "en": "Minimize"
+        },
+        { "predefined": "maximize", "label": "menuZoomWindow", "en": "Zoom" },
+        "-",
+        {
+          "id": "close-window",
+          "label": "menuCloseWindow",
+          "en": "Close Window",
+          "keys": "mod+shift+w",
+          "drawn": { "in": "file" }
+        },
+        { "sep": true, "on": ["mac"] },
+        {
+          "predefined": "bring-all-to-front",
+          "label": "menuBringAllToFront",
+          "en": "Bring All to Front",
+          "on": ["mac"]
+        }
+      ]
+    },
+    {
+      "menu": "help",
+      "label": "menuHelp",
+      "en": "Help",
+      "items": [
+        {
+          "id": "help-doc:welcome",
+          "label": "menuHelpWelcome",
+          "en": "Welcome and Tutorial"
+        },
+        "-",
+        {
+          "id": "help-doc:markdown",
+          "label": "menuHelpMarkdown",
+          "en": "Markdown Guide"
+        },
+        {
+          "id": "help-doc:agent",
+          "label": "menuHelpAgent",
+          "en": "AI Features Guide"
+        },
+        {
+          "id": "help-tutorials",
+          "label": "menuHelpTutorials",
+          "en": "Online Tutorials"
+        },
+        "-",
+        {
+          "id": "help-community",
+          "label": "menuHelpCommunity",
+          "en": "Join the Community"
+        },
+        {
+          "id": "help-report",
+          "label": "menuHelpReport",
+          "en": "Report a Problem…"
+        }
+      ]
+    }
+  ],
+  "texts": [
+    {
+      "key": "recent-none",
+      "label": "menuRecentNone",
+      "en": "No Recent Files"
+    },
+    { "key": "recent-clear", "label": "menuRecentClear", "en": "Clear Menu" },
+    {
+      "key": "plugin-commands-none",
+      "label": "menuNoPluginCommands",
+      "en": "No plugin commands"
+    },
+    {
+      "key": "manage-plugins",
+      "label": "menuManagePlugins",
+      "en": "Manage Plugins…"
+    },
+    { "key": "heading", "label": "menuHeadingTemplate", "en": "Heading {n}" }
+  ]
+}

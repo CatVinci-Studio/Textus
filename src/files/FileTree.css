@@ -1,0 +1,275 @@
+/* The whole height of the sidebar, so a right-click or drop on the empty
+   space below the tree goes to its root. */
+.file-tree {
+  display: flex;
+  flex-direction: column;
+  min-height: 100%;
+  /* Many names at a glance: list-size text, icons at their design size. */
+  font-size: var(--text-list);
+  line-height: 1.35;
+  --icon-scale: 1;
+  color: var(--ui-text);
+  user-select: none;
+}
+
+.tree-main {
+  display: flex;
+  flex: 1;
+  flex-direction: column;
+}
+
+.tree-main[hidden] {
+  display: none;
+}
+
+/* Each level in by its depth; a file by its folder's chevron too, so its
+   icon stands under the folders' icons. The step and the chevron are the
+   tree's measures, not spacing. */
+.tree-row {
+  --tree-chevron: calc(10px * var(--icon-scale, 1));
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  width: 100%;
+  /* The small control height: a long list stays dense. */
+  min-height: 24px;
+  padding: 2px 8px 2px var(--tree-indent);
+  background: none;
+  border: none;
+  color: inherit;
+  text-align: left;
+  cursor: pointer;
+  border-radius: var(--shape-s);
+  white-space: nowrap;
+}
+
+/* Inside the ring: the sidebar scrolls, and clips what lies outside it. */
+:is(.tree-row, .outline-row):focus-visible {
+  outline-offset: -2px;
+}
+
+.tree-row-file {
+  padding-left: calc(var(--tree-indent) + var(--tree-chevron) + 8px);
+}
+
+.tree-row:hover {
+  background: var(--ui-hover);
+}
+
+.tree-row-active {
+  background: var(--ui-selected);
+  color: var(--ui-selected-text);
+}
+
+.tree-icon {
+  flex-shrink: 0;
+  opacity: 0.85;
+}
+.chevron {
+  flex-shrink: 0;
+  transition: transform var(--dur-fast) var(--ease-standard);
+  opacity: 0.6;
+}
+
+.chevron-open {
+  transform: rotate(90deg);
+}
+
+/* The folder's name in line with the panel's title above it. */
+.tree-toolbar {
+  display: flex;
+  align-items: center;
+  gap: 4px;
+  /* The tools' height whether shown or not: their coming on hover moves
+     nothing below. */
+  min-height: var(--icon-button-s);
+  margin-bottom: 4px;
+  padding: 0 2px 0 8px;
+}
+
+.tree-root-label {
+  flex: 1 1 auto;
+  min-width: min(4em, 100%);
+  font-weight: 600;
+  opacity: 0.9;
+}
+
+.tree-tool {
+  flex-shrink: 0;
+  opacity: 0.7;
+  transition: opacity var(--dur-fast) var(--ease-standard);
+}
+
+/* Out of the way until wanted: shown while the pointer is over the panel
+   or focus is in it, as VS Code's explorer does. Touch has no hover. */
+@media (hover: hover) {
+  /* Hidden, they take no room: the folder's name has the whole line. */
+  .file-tree:not(:hover, :focus-within) .tree-tool {
+    display: none;
+  }
+}
+
+.tree-tool:disabled {
+  cursor: default;
+  opacity: 0.3;
+}
+
+/* The way up: the parent folder by name, before the current one. */
+.tree-crumb {
+  display: inline-flex;
+  align-items: center;
+  gap: 2px;
+  /* Gives way as the folder's name does, never to a letter or two: a
+     short parent ("work") stays whole. */
+  flex-shrink: 1;
+  min-width: 0;
+  max-width: 45%;
+  padding: 2px 4px;
+  border: none;
+  border-radius: var(--shape-pill);
+  corner-shape: round;
+  background: none;
+  color: var(--ui-muted);
+  font: inherit;
+  cursor: pointer;
+  opacity: 0.8;
+}
+
+.tree-crumb:hover {
+  background: var(--ui-hover);
+  opacity: 1;
+}
+
+.tree-crumb-back {
+  flex-shrink: 0;
+  transform: rotate(180deg);
+}
+
+.tree-crumb-name {
+  min-width: min(4em, 100%);
+}
+
+.tree-crumb-sep {
+  flex-shrink: 0;
+  opacity: 0.4;
+}
+
+/* Dragging a row: the folder it would go into, and the name under the
+   pointer. */
+.tree-body {
+  flex: 1;
+  border-radius: var(--shape-s);
+}
+
+.file-tree-dragging,
+.file-tree-dragging .tree-row {
+  cursor: grabbing;
+}
+
+.tree-row-drop,
+.tree-body-drop {
+  background: var(--ui-selected);
+  box-shadow: inset 0 0 0 1px var(--ui-accent);
+}
+
+/* Outline: the disclosure triangle sits in its own gutter so headings
+   without children still line up with their siblings. */
+.outline-row {
+  display: flex;
+  align-items: center;
+  padding-left: var(--tree-indent);
+}
+
+.outline-toggle {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  flex-shrink: 0;
+  width: 16px;
+  height: 22px;
+  padding: 0;
+  background: none;
+  border: none;
+  color: inherit;
+  cursor: pointer;
+}
+
+.outline-toggle-spacer {
+  flex-shrink: 0;
+  width: 16px;
+}
+
+.outline-row .tree-row {
+  flex: 1;
+  min-width: 0;
+  padding-left: 2px;
+}
+
+/* The heading the reader is at: its whole row, its triangle too. */
+.outline-row[aria-current] {
+  border-radius: var(--shape-s);
+  background: var(--ui-selected);
+  color: var(--ui-selected-text);
+}
+
+.outline-row[aria-current] > .tree-row-active {
+  background: none;
+}
+
+/* Left out by a .gitignore or as build output, as the search leaves it. */
+.tree-row-ignored .tree-label,
+.tree-row-ignored .tree-icon {
+  opacity: 0.5;
+}
+
+/* A new entry's name, typed in place: the row stays a row, the field
+   is its label. */
+.tree-row-draft,
+.tree-row-draft:hover {
+  cursor: default;
+  background: none;
+}
+
+.tree-draft-input {
+  flex: 1;
+  min-width: 0;
+  margin: 0;
+  padding: 0 4px;
+  border: 1px solid var(--ui-accent);
+  border-radius: var(--shape-xs);
+  background: var(--ui-bg);
+  color: inherit;
+  font: inherit;
+  outline: none;
+}
+
+.tree-empty {
+  padding-block: var(--space-4);
+}
+
+/* A file Textus AI changed: its name in the accent, as on its tab. */
+.tree-row[data-ai-changed] .tree-label {
+  color: var(--ui-accent-text);
+}
+
+/* What waits there for the writer: after the name, quiet, never cut. */
+.tree-ai-waiting {
+  flex: none;
+  margin-left: auto;
+  padding-left: var(--space-2);
+  font-size: var(--text-footnote);
+  color: var(--ui-accent-text);
+  white-space: nowrap;
+}
+
+/* A heading's level before its words: small, quiet, the same width for
+   H1 to H6 so the words line up within a level. */
+.outline-level {
+  flex: none;
+  min-width: 2em;
+  margin-inline-end: 4px;
+  color: var(--ui-muted);
+  font-size: var(--text-caption);
+  font-variant-numeric: tabular-nums;
+  opacity: 0.8;
+}

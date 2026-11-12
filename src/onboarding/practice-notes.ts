@@ -5,7 +5,7 @@ import type { Lang } from "../i18n/strings";
  * verbatim, then the learner's own wordy notes. AI lessons only ever rework
  * the notes, never the classic.
  */
-export interface PracticeNotes {
+interface PracticeNotes {
   /** The level-one heading the WYSIWYG lesson has the learner type. */
   title: string;
   /** Everything under it. No level-one heading, list, table, inline mark or

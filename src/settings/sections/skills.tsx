@@ -1,3 +1,5 @@
+import { fill } from "../../i18n/fill";
+import { SettingsGroup } from "../pages/SettingsGroup";
 import { useCallback, useEffect, useState } from "react";
 import { MODES } from "../../ai/modes";
 import { useSettings } from "../../prefs/SettingsContext";
@@ -9,21 +11,20 @@ import { AGENT_MODES, type AgentMode } from "../../prefs/settings-values";
 import { ModeChoice } from "../../ai/chat/ModeChoice";
 import type { AgentSkill } from "../../ai/types";
 import { ai, type SkillListItem } from "../../platform/ipc";
-import { showConfirm } from "../../ui/app-dialog";
-import { IconButton } from "../../ui/IconButton";
-import { TrashIcon } from "../../ui/icons";
+import { showConfirm } from "../../engine/controls/app-dialog";
+import { IconButton } from "../../engine/controls/IconButton";
+import { TrashIcon } from "../../engine/controls/icons";
 import { canTrashFiles } from "../../platform/capabilities";
 import { withoutCreation } from "../../ai/chat/creations";
-import { Select } from "../../ui/Select";
+import { Select } from "../../engine/controls/Select";
 import { SettingRow } from "./controls";
 import {
-  AUTOMATIC_CONVENTIONS,
   CONVENTION_PROFILES,
   conventionsLanguageName,
   conventionsProfileName,
   isConventionsValue,
 } from "../writing-conventions";
-import { errorText } from "../../utils/error-text";
+import { WRITING_CONVENTIONS_AUTOMATIC } from "../../platform/ipc-ai-types";
 import { matchesWords } from "../../utils/match-words";
 import { explainError } from "../../utils/error-explain";
 
@@ -136,10 +137,9 @@ export function OwnSkillsList({
   async function remove(skill: SkillListItem, label: string) {
     setError(null);
     const ok = await showConfirm(
-      (canTrashFiles ? t.skillDeleteAsk : t.skillDeleteAskMobile).replace(
-        "{name}",
-        label,
-      ),
+      fill(canTrashFiles ? t.skillDeleteAsk : t.skillDeleteAskMobile, {
+        name: label,
+      }),
       { okLabel: t.skillDelete, cancelLabel: t.cancel, danger: true },
     );
     if (!ok) return;
@@ -158,10 +158,10 @@ export function OwnSkillsList({
 
   if (own.length === 0)
     return (
-      <p className="plugin-empty">
+      <p className="tx-list-note">
         {query.trim()
-          ? t.skillPickerNoMatch.replace("{query}", query.trim())
-          : t.skillsInstalledNone.replace("{section}", t.extensionsAvailable)}
+          ? fill(t.skillPickerNoMatch, { query: query.trim() })
+          : fill(t.skillsInstalledNone, { section: t.extensionsAvailable })}
       </p>
     );
   return (
@@ -188,15 +188,15 @@ export function OwnSkillsList({
                   {words?.label ?? skill.name}
                 </span>
                 {(shadows || skill.source === "project") && (
-                  <span className="settings-skill-tag">
+                  <span className="tx-badge">
                     {shadows ? t.agentSkillsShadows : t.skillGroupProject}
                   </span>
                 )}
                 {madeHere(skill.name) && (
-                  <span className="settings-skill-tag">{t.madeByTextusAi}</span>
+                  <span className="tx-badge">{t.madeByTextusAi}</span>
                 )}
               </span>
-              <span className="settings-skill-desc">
+              <span className="tx-truncate settings-skill-desc">
                 <span className="settings-builtin-skill-name">
                   /{skill.name}
                 </span>
@@ -222,6 +222,8 @@ export function OwnSkillsList({
             {/* Off for now, its modes kept for when it comes back on. */}
             <input
               type="checkbox"
+              className="tx-switch"
+              role="switch"
               aria-label={words?.label ?? skill.name}
               checked={!skill.off}
               onChange={(e) => void setOff(skill, !e.target.checked)}
@@ -240,8 +242,11 @@ export function BuiltinSkillsSection({
   onOpenFile,
   onFilesDeleted,
   onClose,
+  bare = false,
 }: {
   t: Strings;
+  /** Its rows only, for a section that lists them with others. */
+  bare?: boolean;
   onOpenFile: (path: string) => void;
   onFilesDeleted?: (paths: string[]) => void;
   onClose: () => void;
@@ -250,17 +255,7 @@ export function BuiltinSkillsSection({
   const lang = settings.language;
   const { list } = useSkillList();
   const [error, setError] = useState<string | null>(null);
-  // The backend's error codes in the user's words.
-  const failed = (err: unknown) => {
-    const text = errorText(err);
-    setError(
-      text === "NOT_A_COPY"
-        ? t.agentSkillsNotACopy
-        : text === "UNKNOWN_BUILTIN"
-          ? t.agentSkillsUnknownBuiltin
-          : explainError(err, t),
-    );
-  };
+  const failed = (err: unknown) => setError(explainError(err, t));
 
   // One item per name: the built-in, a Customize… copy (`basedOn`), or the
   // user's own skill that replaces it outright.
@@ -285,7 +280,7 @@ export function BuiltinSkillsSection({
   async function reset(name: string, label: string) {
     setError(null);
     const ok = await showConfirm(
-      t.agentSkillsResetConfirm.replace("{name}", label),
+      fill(t.agentSkillsResetConfirm, { name: label }),
       { okLabel: t.agentSkillsReset, cancelLabel: t.cancel, danger: true },
     );
     if (!ok) return;
@@ -320,7 +315,10 @@ export function BuiltinSkillsSection({
             aria-label={t[MODES[mode].label]}
             data-mode={mode}
           >
-            <div className="settings-builtin-category-title" aria-hidden="true">
+            <div
+              className="tx-list-heading settings-builtin-category-title"
+              aria-hidden="true"
+            >
               {t[MODES[mode].label]}
             </div>
             {names.map(({ name }) => {
@@ -339,7 +337,7 @@ export function BuiltinSkillsSection({
                   <div className="settings-row-text">
                     <div className="settings-row-label">
                       {text.label}
-                      <span className="settings-skill-tag" data-search-ignore>
+                      <span className="tx-badge" data-search-ignore>
                         {customized
                           ? t.agentSkillsCustomized
                           : own
@@ -348,7 +346,8 @@ export function BuiltinSkillsSection({
                       </span>
                       {outdated && (
                         <span
-                          className="settings-skill-tag settings-skill-tag-notice"
+                          className="tx-badge"
+                          data-tone="accent"
                           data-search-ignore
                         >
                           {t.agentSkillsBuiltinUpdated}
@@ -372,7 +371,7 @@ export function BuiltinSkillsSection({
                     <span className="settings-skill-actions">
                       {own || customized ? (
                         <button
-                          className="settings-skill-action"
+                          className="text-button settings-inline-button"
                           aria-label={`${t.agentSkillsOpen}: ${text.label}`}
                           onClick={() => openCopy(name)}
                         >
@@ -380,7 +379,7 @@ export function BuiltinSkillsSection({
                         </button>
                       ) : (
                         <button
-                          className="settings-skill-action"
+                          className="text-button settings-inline-button"
                           aria-label={`${t.agentSkillsCustomize}: ${text.label}`}
                           onClick={() => openCopy(name)}
                         >
@@ -389,7 +388,7 @@ export function BuiltinSkillsSection({
                       )}
                       {customized && (
                         <button
-                          className="settings-skill-action"
+                          className="text-button settings-inline-button"
                           aria-label={`${t.agentSkillsReset}: ${text.label}`}
                           onClick={() => reset(name, text.label)}
                         >
@@ -405,16 +404,8 @@ export function BuiltinSkillsSection({
         ))}
     </>
   );
-  return (
-    <details className="disclosure settings-advanced settings-builtin-skills">
-      <summary>
-        <span className="settings-builtin-skills-title">
-          {t.agentSkillsBuiltin}
-        </span>
-      </summary>
-      <div className="settings-advanced-body">{rows}</div>
-    </details>
-  );
+  if (bare) return rows;
+  return <SettingsGroup title={t.agentSkillsBuiltin}>{rows}</SettingsGroup>;
 }
 
 /// Writing conventions: Automatic, or one profile, grouped by document
@@ -432,7 +423,7 @@ export function WritingConventionsRow({ t }: { t: Strings }) {
         value={value}
         onChange={(e) => setSettings({ writingConventions: e.target.value })}
       >
-        <option value={AUTOMATIC_CONVENTIONS}>
+        <option value={WRITING_CONVENTIONS_AUTOMATIC}>
           {t.writingConventionsAuto}
         </option>
         {/* A newer build's profile stays selectable, by its own name. */}

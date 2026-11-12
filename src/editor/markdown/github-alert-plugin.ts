@@ -30,10 +30,8 @@ import {
 
 const githubAlertKey = new PluginKey("github-alert");
 
-export type { AlertType };
-
 /** The badge's words: the UI's language, not always English. */
-export type AlertLabel = (type: AlertType) => string;
+type AlertLabel = (type: AlertType) => string;
 
 // Octicon paths (16x16 viewBox), one per kind.
 const ICONS: Record<CalloutKind, string> = {
@@ -123,7 +121,7 @@ function firstLine(para: ProseNode): {
   return { text, end: offset, breakSize: 0 };
 }
 
-export interface AlertMarker {
+interface AlertMarker {
   callout: CalloutLine;
   /** The marker's length, `[!faq]-`. */
   length: number;

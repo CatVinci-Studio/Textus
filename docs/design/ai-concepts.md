@@ -49,7 +49,7 @@ there, and the project's own settings live in its `.textus/` folder.**
   it too, but only while the AI has no folder of its own (none chosen, or
   the one an earlier Open Folder set); **Close Folder** then puts the
   default back. A folder chosen for the AI is never replaced by the
-  sidebar's (`sidebar/tree-root.ts`'s `agentRootOnOpen`).
+  sidebar's (`files/tree-root.ts`'s `agentRootOnOpen`).
 - **Textus AI uses it:** conversations find, list, read and search its
   text files and the text of its PDF, Word, PowerPoint, spreadsheet, EPUB
   and RTF files (`find_files`, which lists them all without a name,

@@ -1,0 +1,416 @@
+/* Pending agent edits: removed text struck in red, new text ghost-style in
+   green. Only accept/reject commits them. Colours are the themable --revision-*. */
+.pending-delete {
+  color: var(--revision-delete-text);
+  text-decoration: line-through;
+  text-decoration-color: var(--revision-delete-strike);
+  background: var(--revision-delete-bg);
+  transition: background var(--dur-instant) var(--ease-standard);
+}
+
+.pending-insert {
+  color: var(--revision-insert-text);
+  background: var(--revision-insert-bg);
+  border-radius: var(--doc-radius-sm);
+  padding: 0 2px;
+  /* Renders real markdown, so the root's pre-wrap would double the spacing. */
+  white-space: normal;
+  user-select: none;
+  animation: motion-fade-in var(--dur-base) var(--ease-out);
+  transition: background var(--dur-instant) var(--ease-standard);
+}
+
+/* With more contrast or forced colours, the tint may be faint or gone: new
+   text is underlined too and the strike is thicker. */
+@media (prefers-contrast: more), (forced-colors: active) {
+  .pending-insert {
+    text-decoration: underline;
+    text-decoration-thickness: 2px;
+    text-underline-offset: 3px;
+  }
+
+  .pending-delete {
+    text-decoration-thickness: 2px;
+  }
+}
+
+/* Multi-line new text: the tint is per line span, so line ends and empty
+   lines get no stray padding. */
+.pending-insert.pending-insert-lines {
+  background: none;
+  padding: 0;
+  border-radius: 0;
+}
+
+.pending-insert-lines > .pending-line {
+  background: var(--revision-insert-bg);
+  border-radius: var(--doc-radius-sm);
+  padding: 0 2px;
+  -webkit-box-decoration-break: clone;
+  box-decoration-break: clone;
+  transition: background var(--dur-instant) var(--ease-standard);
+}
+
+.ProseMirror
+  .pending-insert.pending-insert-lines:is(
+    .pending-sentence-hot,
+    .pending-sentence-focus
+  ):not(.pending-sentence-kept) {
+  background: none;
+}
+
+.ProseMirror
+  .pending-insert.pending-insert-lines:is(
+    .pending-sentence-hot,
+    .pending-sentence-focus
+  ):not(.pending-sentence-kept)
+  > .pending-line {
+  background: var(--revision-insert-hover-bg);
+}
+
+.pending-sentence-new.pending-sentence-kept > .pending-line,
+.ProseMirror[data-revision-display="final"]
+  .pending-insert-lines
+  > .pending-line {
+  background: none;
+  padding: 0;
+}
+
+/* A line break inside a struck original is struck and hidden with it. */
+br:is(.pending-delete, .pending-sentence-hot) {
+  background: none;
+}
+
+/* New text between two blocks, in one tinted box. */
+.pending-insert.pending-blocks {
+  display: block;
+  /* The tint reaches past the column; the content keeps its accepted width. */
+  margin-inline: -6px;
+  padding: 2px 8px;
+}
+
+.pending-blocks > :first-child {
+  margin-top: 0;
+}
+
+.pending-blocks > :last-child {
+  margin-bottom: 0;
+}
+
+.ProseMirror[data-revision-display="final"] .pending-insert.pending-blocks {
+  /* No tint, so no extra room either, or new blocks would jump when taken. */
+  margin-inline: 0;
+  padding: 0;
+}
+
+.pending-insert code {
+  font-family: var(--font-mono);
+  font-size: 0.9em;
+}
+
+/* A proposed picture at the size it takes once accepted. */
+.pending-insert img {
+  max-width: 100%;
+  height: auto;
+  vertical-align: bottom;
+  border-radius: var(--doc-radius);
+}
+
+/* A rewrite shown sentence by sentence: each changed sentence struck, its
+   replacement after, then ✓ / ✕. The entrance staggers by --i; a streamed
+   rewrite has --i 0, as its sentences came in as written. */
+.pending-sentence {
+  border-radius: var(--doc-radius-sm);
+  transition:
+    color var(--dur-instant) var(--ease-standard),
+    background var(--dur-instant) var(--ease-standard);
+}
+
+.pending-sentence-open,
+.pending-sentence-taken {
+  animation: pending-strike-in var(--dur-base) var(--ease-out) both;
+  animation-delay: calc(min(var(--i, 0), 8) * var(--dur-instant));
+}
+
+/* Streamed in: the plugin draws the strike once, since ProseMirror may
+   redraw the span mid-stream. */
+.pending-sentence.pending-streamed {
+  animation: none;
+}
+
+.pending-sentence.pending-sentence-kept {
+  color: inherit;
+  background: none;
+  text-decoration-color: transparent;
+}
+
+.pending-sentence-new.pending-sentence-open,
+.pending-sentence-new.pending-sentence-taken {
+  animation: motion-fade-in var(--dur-base) var(--ease-out) both;
+  animation-delay: calc((min(var(--i, 0), 8) + 1) * var(--dur-instant));
+}
+
+.pending-sentence-new.pending-sentence-kept {
+  background: none;
+  opacity: 0.45;
+  text-decoration: line-through;
+  text-decoration-color: color-mix(in srgb, var(--doc-text) 40%, transparent);
+  animation: pending-fade-kept var(--dur-fast) var(--ease-standard);
+}
+
+/* The hot pair (review bar pointer or mouse): tints a shade darker. Hover
+   never hides or previews anything. */
+:is(.pending-sentence-focus, .pending-sentence-hot):not(.pending-pick) {
+  border-radius: var(--doc-radius-sm);
+  -webkit-box-decoration-break: clone;
+  box-decoration-break: clone;
+}
+
+.pending-delete:is(.pending-sentence-hot, .pending-sentence-focus):not(
+    .pending-sentence-kept
+  ) {
+  background: var(--revision-delete-hover-bg);
+}
+
+.ProseMirror
+  .pending-insert:is(.pending-sentence-hot, .pending-sentence-focus):not(
+    .pending-sentence-kept
+  ) {
+  background: var(--revision-insert-hover-bg);
+}
+
+@keyframes pending-strike-in {
+  from {
+    color: inherit;
+    background: transparent;
+    text-decoration-color: transparent;
+  }
+}
+
+/* Just-accepted text fades out its green, so the eye follows it. */
+.pending-landed {
+  border-radius: var(--doc-radius-sm);
+  animation: pending-landed var(--dur-slow) var(--ease-out) both;
+}
+
+@keyframes pending-landed {
+  from {
+    background: var(--revision-insert-bg);
+  }
+  to {
+    background: transparent;
+  }
+}
+
+@keyframes pending-fade-kept {
+  from {
+    opacity: 1;
+  }
+}
+
+/* Revision views (data-revision-display): inline, original (new text in
+   the margin), final (result, faintly marked). Every view's parts are always
+   drawn; hidden ones use visibility, since display: none replays entrances. */
+.ProseMirror[data-revision-display]:not([data-revision-display="inline"])
+  .pending-pick,
+.pending-insert-mark,
+.pending-delete-mark,
+.ProseMirror[data-revision-display="original"] .pending-sentence-new,
+.ProseMirror[data-revision-display="final"]
+  .pending-sentence-new.pending-sentence-kept {
+  display: none;
+}
+
+.ProseMirror[data-revision-display="final"]
+  .pending-delete:not(.pending-sentence-kept) {
+  font-size: 0;
+  padding: 0;
+  background: none;
+  box-shadow: none;
+}
+
+/* A block whose text is all hidden (a paragraph a rewrite joins to the
+   previous): out of the flow, so it doesn't leave a blank line. */
+.ProseMirror[data-revision-display="final"]
+  .pending-struck-block:not(.pending-struck-marked) {
+  position: absolute;
+  visibility: hidden;
+  pointer-events: none;
+}
+
+/* An inline atom (an image, a formula) in a hidden original. */
+.ProseMirror[data-revision-display="final"]
+  .pending-delete:not(span, .pending-sentence-kept) {
+  display: none;
+}
+
+.ProseMirror[data-revision-display="final"] .pending-insert {
+  background: none;
+  padding: 0;
+  text-decoration: underline dotted;
+  text-decoration-color: color-mix(in srgb, var(--ui-success) 55%, transparent);
+  text-underline-offset: 0.2em;
+}
+
+/* The original's view: new text waits in its card. In place of new text
+   alone, a mark where it goes; hidden by size, not display, so switching
+   views replays no entrance. */
+.ProseMirror[data-revision-display="original"]
+  .pending-insert.pending-replaces {
+  display: none;
+}
+
+.ProseMirror[data-revision-display="original"]
+  .pending-insert.pending-whole:not(.pending-replaces) {
+  display: inline-block;
+  width: 2px;
+  height: 1.1em;
+  margin: 0 1px;
+  padding: 0;
+  overflow: hidden;
+  color: transparent;
+  vertical-align: -0.15em;
+  border-radius: var(--shape-pill);
+  corner-shape: round;
+  background: var(--ui-success);
+}
+
+/* Where a pure insertion goes or a deleted sentence was. */
+.ProseMirror[data-revision-display="original"] .pending-insert-mark,
+.ProseMirror[data-revision-display="final"]
+  .pending-delete-mark:not(.pending-sentence-kept) {
+  display: inline-block;
+}
+
+.pending-delete-mark {
+  width: 2px;
+  height: 1.1em;
+  margin: 0 1px;
+  vertical-align: -0.15em;
+  border-radius: var(--shape-pill);
+  corner-shape: round;
+  background: var(--ui-danger);
+}
+
+/* A view switch shows nothing new: no entrance. */
+.ProseMirror .ProseMirror-widget.pending-settled {
+  animation: none;
+}
+
+/* The ✓ / ✕ pair: outlined while undecided; the choice made fills in. */
+.pending-pick {
+  display: inline-flex;
+  gap: 4px;
+  margin: 0 2px 0 4px;
+  vertical-align: 0.12em;
+  white-space: nowrap;
+  user-select: none;
+  --enter-scale: var(--scale-enter);
+  animation: motion-enter var(--dur-base) var(--ease-out) both;
+  animation-delay: calc((min(var(--i, 0), 8) + 2) * var(--dur-instant));
+}
+
+.pending-pick-kept,
+.pending-pick-taken {
+  animation: none;
+}
+
+/* A rewrite still streaming: completed sentences' ✓ / ✕ wait faint and
+   inert, and in "original" only complete sentences show in the card. */
+.pending-pick.pending-streaming {
+  opacity: 0.35;
+  pointer-events: none;
+}
+
+:is(.pending-pick, .agent-proposal-pick) button {
+  display: inline-grid;
+  place-items: center;
+  width: 20px;
+  height: 20px;
+  padding: 0;
+  border-radius: 50%;
+  corner-shape: round;
+  border: 1px solid var(--doc-border, var(--ui-border));
+  background: var(--doc-bg, var(--ui-bg));
+  cursor: pointer;
+  transition:
+    background var(--dur-fast) var(--ease-standard),
+    border-color var(--dur-fast) var(--ease-standard),
+    color var(--dur-fast) var(--ease-standard),
+    transform var(--dur-instant) var(--ease-standard);
+}
+
+:is(.pending-pick, .agent-proposal-pick) button svg {
+  width: 11px;
+  height: 11px;
+}
+
+:is(.pending-pick, .agent-proposal-pick) .pending-pick-take {
+  color: var(--ui-success);
+}
+
+:is(.pending-pick, .agent-proposal-pick) .pending-pick-keep {
+  color: var(--doc-muted);
+}
+
+:is(.pending-pick, .agent-proposal-pick) button:hover {
+  transform: scale(1.12);
+  border-color: currentColor;
+}
+
+:is(.pending-pick, .agent-proposal-pick)
+  .pending-pick-take[aria-pressed="true"] {
+  background: var(--ui-success);
+  border-color: var(--ui-success);
+  color: var(--ui-on-fill);
+}
+
+:is(.pending-pick, .agent-proposal-pick)
+  .pending-pick-keep[aria-pressed="true"] {
+  background: var(--doc-text);
+  border-color: var(--doc-text);
+  color: var(--doc-bg, var(--ui-bg));
+}
+
+:is(.pending-pick, .agent-proposal-pick) button:focus-visible {
+  outline: 2px solid var(--doc-accent);
+  outline-offset: 1px;
+}
+
+/* Fingers, not a pointer: room to hit each one. */
+[data-platform="ios"] .pending-pick button {
+  width: 28px;
+  height: 28px;
+}
+
+[data-platform="ios"] .pending-pick button svg {
+  width: 13px;
+  height: 13px;
+}
+
+/* Reduced motion: fades, all at once, no stagger or growth. */
+@media (prefers-reduced-motion: reduce) {
+  .pending-sentence,
+  .pending-sentence-new,
+  .pending-pick {
+    animation-delay: 0s !important;
+  }
+}
+
+/* The progress cursor: the sentence a streaming rewrite is at, tinted even
+   when kept unchanged. A tint, since motion here is opacity and transform only. */
+.pending-reading {
+  border-radius: var(--doc-radius-sm);
+  -webkit-box-decoration-break: clone;
+  box-decoration-break: clone;
+  background: var(--revision-reading-bg);
+  transition: background var(--dur-instant) var(--ease-standard);
+}
+
+/* A blinking caret at the typewriter's growth point. */
+.pending-insert-typing::after {
+  content: "\200b";
+  border-left: 1.5px solid var(--diff-caret);
+  margin-left: 1px;
+  animation: ghost-caret-blink var(--dur-blink) step-end infinite;
+}

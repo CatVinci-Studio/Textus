@@ -2,7 +2,7 @@ import { useEffect, useRef } from "react";
 import type { DocTab } from "../document/doc-tabs";
 import { modIsMeta } from "../platform/os";
 import { comboFromEvent } from "../utils/shortcuts";
-import { frontPlace, navHistory, tabScroller } from "../utils/nav-history";
+import { frontPlace, navHistory, tabScroller } from "../editor/nav-history";
 
 /** Back: Ctrl+- on a Mac, as in Xcode and VS Code (⌘[ outdents a list item
  *  there); Alt+Left elsewhere. Forward adds Shift, or is Alt+Right. */

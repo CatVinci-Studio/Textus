@@ -132,7 +132,7 @@ pub(crate) fn watch_fullscreen(app: &tauri::AppHandle) {
                 return;
             };
             let window = objc2::rc::Retained::as_ptr(&window) as *mut std::ffi::c_void;
-            for (label, webview) in app.webview_windows() {
+            for (label, webview) in app.windows() {
                 if webview.ns_window().ok() == Some(window) {
                     let _ = app.emit_to(label.as_str(), "window-fullscreen", fullscreen);
                 }
@@ -199,14 +199,44 @@ pub(crate) fn build_window(
     label: &str,
     position: Option<(f64, f64)>,
 ) -> tauri::Result<()> {
+    build_editor_window(app, label, position, false)
+}
+
+/// A small window, as VS Code's for an editor moved out: its documents and
+/// a slim bar, no activity rail or sidebar until asked for, smaller.
+#[cfg(desktop)]
+pub(crate) fn build_small_window(
+    app: &tauri::AppHandle,
+    label: &str,
+    position: Option<(f64, f64)>,
+) -> tauri::Result<()> {
+    build_editor_window(app, label, position, true)
+}
+
+/// A small window's size: room for a page of text, not a workspace.
+#[cfg(desktop)]
+const SMALL_WINDOW_SIZE: (f64, f64) = (640.0, 720.0);
+
+#[cfg(desktop)]
+fn build_editor_window(
+    app: &tauri::AppHandle,
+    label: &str,
+    position: Option<(f64, f64)>,
+    small: bool,
+) -> tauri::Result<()> {
     // Another window opens where the system puts it, no bigger than the main screen.
-    let (_, (width, height)) = window_frame::place(
-        None,
-        commands::prefs::read_editor_window_size(app).unwrap_or((800.0, 600.0)),
-        &screens(app),
-        EDITOR_MIN_SIZE,
-    );
-    let builder = WebviewWindowBuilder::new(app, label, WebviewUrl::App("index.html".into()))
+    let wanted = if small {
+        SMALL_WINDOW_SIZE
+    } else {
+        commands::prefs::read_editor_window_size(app).unwrap_or((800.0, 600.0))
+    };
+    let (_, (width, height)) = window_frame::place(None, wanted, &screens(app), EDITOR_MIN_SIZE);
+    let url = if small {
+        "index.html?window=small"
+    } else {
+        "index.html"
+    };
+    let builder = WebviewWindowBuilder::new(app, label, WebviewUrl::App(url.into()))
         .title(app_identity::APP_NAME)
         .inner_size(width, height)
         .min_inner_size(EDITOR_MIN_SIZE.0, EDITOR_MIN_SIZE.1);
@@ -214,8 +244,8 @@ pub(crate) fn build_window(
     Ok(())
 }
 
-/// Below this the window bar's controls run into each other. Keep in step with
-/// the config window's minWidth/minHeight.
+/// Below this the window bar's controls run into each other. The first
+/// window's (tauri.conf.json) is held to it by a test.
 #[cfg(desktop)]
 pub(crate) const EDITOR_MIN_SIZE: (f64, f64) = (480.0, 320.0);
 
@@ -251,9 +281,9 @@ pub(crate) fn open_new_window(app: &tauri::AppHandle) -> tauri::Result<()> {
 #[cfg(desktop)]
 pub(crate) fn reopen_without_windows(app: &tauri::AppHandle) {
     let existing = app
-        .webview_windows()
+        .windows()
         .into_iter()
-        .find(|(label, _)| commands::chat_window::is_editor_window(label))
+        .find(|(label, _)| crate::windows::is_editor_window(label))
         .map(|(_, window)| window);
     if let Some(window) = existing {
         let _ = window.unminimize();
@@ -288,7 +318,6 @@ pub(crate) fn build_main_window(app: &tauri::App) -> tauri::Result<()> {
         return Ok(());
     };
     let builder = tauri::WebviewWindowBuilder::from_config(app.handle(), &config)?;
-    #[cfg(desktop)]
     // Where the last window closed, if still on a screen, else centred on the main
     // one; no bigger than its screen.
     #[cfg(desktop)]
@@ -310,9 +339,24 @@ pub(crate) fn build_main_window(app: &tauri::App) -> tauri::Result<()> {
         }
     };
     let window = settings::with_boot(builder, app.handle(), "main").build()?;
+    // As every other window built with the app's chrome.
+    #[cfg(target_os = "macos")]
+    draw_at_full_frame_rate(&window);
     #[cfg(target_os = "linux")]
     end_web_process_with_window(&window);
-    #[cfg(not(target_os = "linux"))]
+    #[cfg(not(any(target_os = "linux", target_os = "macos")))]
     let _ = window;
     Ok(())
+}
+
+#[cfg(all(test, desktop))]
+mod min_size_tests {
+    #[test]
+    fn the_first_window_has_every_window_s_least_size() {
+        let conf: serde_json::Value =
+            serde_json::from_str(include_str!("../tauri.conf.json")).unwrap();
+        let window = &conf["app"]["windows"][0];
+        assert_eq!(window["minWidth"].as_f64(), Some(super::EDITOR_MIN_SIZE.0));
+        assert_eq!(window["minHeight"].as_f64(), Some(super::EDITOR_MIN_SIZE.1));
+    }
 }

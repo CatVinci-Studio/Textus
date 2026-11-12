@@ -2,8 +2,8 @@
 import { describe, expect, it } from "vitest";
 import { editorViewCtx } from "@milkdown/kit/core";
 import { createTestEditor } from "../../document-view/editor-test-harness";
-import { cachedDocument } from "../doc-markdown";
-import { resolveBlockEdit } from "../doc-blocks";
+import { cachedDocument } from "../../editor/markdown/doc-markdown";
+import { resolveBlockEdit } from "../../editor/markdown/doc-blocks";
 import { placeProposals } from "./pending-place";
 import { reviewChanges } from "./pending-types";
 import CASES from "./rewrite-blocks-cases.json";

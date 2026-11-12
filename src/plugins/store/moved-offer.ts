@@ -1,7 +1,7 @@
 import type { Strings } from "../../i18n/strings";
 import { storage } from "../../platform/ipc";
-import { getUiState, setUiState } from "../../storage/ui-state";
-import { pluginRecord } from "../manager";
+import { keepInList, uiList } from "../../storage/ui-state";
+import { pluginRecord } from "./plugin-records";
 import { catalogSnapshot, loadCatalog } from "./catalog";
 import { takeUp } from "./open-offer";
 import { showPluginCard, type CardRequest } from "./plugin-card";
@@ -22,16 +22,14 @@ const MOVED: Record<string, { plugin: string; used: () => Promise<boolean> }> =
  *  those who used the feature and haven't the plugin. */
 export async function offerMovedFeatures(t: Strings): Promise<void> {
   for (const [feature, { plugin, used }] of Object.entries(MOVED)) {
-    const offered = getUiState("movedToPluginsOffered");
-    const done = Array.isArray(offered) ? (offered as string[]) : [];
-    if (done.includes(feature)) continue;
+    if (uiList("movedToPluginsOffered").includes(feature)) continue;
     if (!pluginRecord(plugin) && (await used())) {
       await loadCatalog().catch(() => {});
       const catalog = catalogSnapshot();
       // Offline: ask again next time.
       if (catalog.status !== "ready") continue;
       if (!catalog.items.some((i) => i.official && i.id === plugin)) continue;
-      setUiState("movedToPluginsOffered", [...done, feature]);
+      keepInList("movedToPluginsOffered", feature, true);
       const request: CardRequest = {
         plugin,
         situation: { type: "moved", feature },
@@ -39,6 +37,6 @@ export async function offerMovedFeatures(t: Strings): Promise<void> {
       };
       if ((await showPluginCard(request)) === "install")
         await takeUp(request, t);
-    } else setUiState("movedToPluginsOffered", [...done, feature]);
+    } else keepInList("movedToPluginsOffered", feature, true);
   }
 }

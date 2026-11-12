@@ -1,7 +1,10 @@
+import { counted, currentLanguage } from "../../i18n/current";
+import { localeOf } from "../../i18n/strings";
+import { fill } from "../../i18n/fill";
 import type { Strings } from "../../i18n/strings";
 
 /** An extension's counts as the catalog has them; absent when uncounted. */
-export interface InstallCounts {
+interface InstallCounts {
   installs?: number | null;
   installs30?: number | null;
 }
@@ -10,8 +13,9 @@ export interface InstallCounts {
  *  month left out when nothing came in it; nothing when uncounted. */
 export function installsText(counts: InstallCounts, t: Strings): string | null {
   if (counts.installs === undefined || counts.installs === null) return null;
-  const all = t.pluginInstalls.replace("{n}", counts.installs.toLocaleString());
+  const locale = localeOf(currentLanguage());
+  const all = counted(t.pluginInstalls, counts.installs);
   return counts.installs30
-    ? `${all} · ${t.pluginInstalls30.replace("{n}", counts.installs30.toLocaleString())}`
+    ? `${all} · ${fill(t.pluginInstalls30, { n: counts.installs30.toLocaleString(locale) })}`
     : all;
 }

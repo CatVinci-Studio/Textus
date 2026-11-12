@@ -51,21 +51,16 @@ interface Extra {
 
 const EXTRA: Record<string, Extra> = {
   en: {
-    table: `| Act | Scenes | Lines |
-|---|---:|---:|
-| I | 5 | 846 |
-| II | 2 | 640 |
-| III | 4 | 920 |`,
-    flow: `A[Read the scene] --> B{Anything unclear?}
-  B -- Yes --> C[Look up the notes]
-  B -- No --> D[Write it down]
-  C --> D`,
-    continuation: " His delay is less doubt than dread.",
+    flow: `A[Observe] --> B{Does it fit every fact?}
+  B -- Yes --> C[Deduce]
+  B -- No --> D[Look again]
+  D --> A`,
+    continuation: " Every case after it follows the same method.",
     slip: {
-      sentence: "Hamlet and Horatio was watching the ghost from the wall.",
+      sentence: "Holmes and Watson was sharing the rooms at Baker Street.",
       wrong: "was",
       right: "were",
-      issue: "“Hamlet and Horatio” takes “were”.",
+      issue: "“Holmes and Watson” takes “were”.",
     },
   },
   zh: {
@@ -255,7 +250,12 @@ async function filmCard(
   name: string,
   targets: (after: boolean) => Locator[],
   act: () => Promise<void>,
-  { margin = 20, inset = 18 }: { margin?: number; inset?: number } = {},
+  {
+    margin = 20,
+    inset = 18,
+    aspect = CARD,
+    width = 640,
+  }: { margin?: number; inset?: number; aspect?: number; width?: number } = {},
 ) {
   await page.evaluate(() => document.fonts.ready);
   await scrollIn(targets(false)[0]);
@@ -264,50 +264,46 @@ async function filmCard(
     cardFile(lang, name),
     targets,
     act,
-    {
-      aspect: CARD,
-      width: 640,
-      inset,
-    },
+    { aspect, width, inset },
     margin,
   );
 }
 
-/** Leaves only the document's blocks that hold `targets` in sight: the
- *  rest, the window's bars and the caret go, so a card's margin is page.
- *  By position: the app rewrites its elements' classes. */
-async function isolate(targets: Locator[]): Promise<() => Promise<void>> {
-  const kept = await Promise.all(
-    targets.map((target) =>
-      target.evaluate((el) => {
-        const root = el.closest(".ProseMirror")!;
-        let block: Element = el;
-        while (block.parentElement !== root) block = block.parentElement!;
-        return Array.from(root.children).indexOf(block) + 1;
-      }),
-    ),
-  );
-  const keep = [...new Set(kept)].map((n) => `:not(:nth-child(${n}))`).join("");
-  const style = await targets[0].page().addStyleTag({
-    content: `
-      [data-active-tab="true"] .ProseMirror > *${keep},
-      .window-bar, .tab-bar, .shots-traffic-lights,
-      [class*="review-bar"], [class*="notes-bar"] { visibility: hidden !important; }
-      .ProseMirror { caret-color: transparent !important; }
-    `,
+/** Every README picture is the whole window, 16:9, framed alike. */
+const WINDOW = { width: 1440, height: 810 };
+const WIDE = { margin: 0, frame: 1200, aspect: 16 / 9, inset: 0 };
+
+/** The whole window as it is now. */
+function windowCard(page: Page, lang: string, name: string) {
+  return card(page, lang, name, [page.locator(".app-shell")], WIDE);
+}
+
+/** The whole window while `act` plays. */
+function windowFilm(
+  page: Page,
+  lang: string,
+  name: string,
+  act: () => Promise<void>,
+) {
+  return filmCard(page, lang, name, () => [page.locator(".app-shell")], act, {
+    margin: 0,
+    inset: 0,
+    aspect: 16 / 9,
+    width: 1200,
   });
-  return () => style.evaluate((el) => (el as Element).remove());
 }
 
 /** The app opened as shot-kit's launch does, with this Mac's code font. */
 async function start(page: Page, options: Parameters<typeof launch>[1]) {
-  // The note that offers Backlinks for a document with [[links]] is seen.
+  // The card that offers Two-way Links for a document with [[links]] is put away.
   await launch(page, {
     ...options,
     // Large words in a small card; the tour's window keeps its own.
     settings: { zoom: 1.35, ...options.settings },
     storage: {
-      "textus-plugins-offered-for": JSON.stringify(["wikilinks"]),
+      "textus-plugin-card-answers": JSON.stringify({
+        "content:wikilinks": "never",
+      }),
       ...options.storage,
     },
   });
@@ -325,6 +321,90 @@ function pluginWord(id: string, key: string, ui: string): string {
   return manifest.l10n[ui]?.[key] ?? manifest.l10n.en[key];
 }
 
+/** The knowledge-base page of the database card: its title and a line. */
+const BASE_PAGE: Record<string, [string, string]> = {
+  en: ["Knowledge base", "Every note on the book, one entry each."],
+  zh: ["知识库", "关于这本书的每篇笔记，一篇一个条目。"],
+  "zh-hant": ["知識庫", "關於這本書的每篇筆記，一篇一個條目。"],
+  ja: ["ナレッジベース", "この本についてのノートを、一件ずつ。"],
+  ko: ["지식 베이스", "이 책에 관한 노트를 하나씩 정리합니다."],
+  es: [
+    "Base de conocimiento",
+    "Cada nota sobre el libro, una entrada cada una.",
+  ],
+  fr: ["Base de connaissances", "Chaque note sur le livre, une fiche chacune."],
+  de: ["Wissensbasis", "Jede Notiz zum Buch, ein Eintrag pro Notiz."],
+  ru: ["База знаний", "Каждая заметка о книге — отдельная запись."],
+  pt: [
+    "Base de conhecimento",
+    "Cada nota sobre o livro, uma entrada para cada.",
+  ],
+};
+
+/** A base's property keys in each README language: status, words, links. */
+const BASE_KEYS: Record<string, [string, string, string]> = {
+  en: ["Status", "Words", "Links"],
+  zh: ["状态", "字数", "链接"],
+  "zh-hant": ["狀態", "字數", "連結"],
+  ja: ["ステータス", "文字数", "リンク"],
+  ko: ["상태", "단어 수", "링크"],
+  es: ["Estado", "Palabras", "Enlaces"],
+  fr: ["Statut", "Mots", "Liens"],
+  de: ["Status", "Wörter", "Links"],
+  ru: ["Статус", "Слова", "Ссылки"],
+  pt: ["Status", "Palavras", "Links"],
+};
+
+/** Skills from the store as `list_skills` answers once they are
+ *  installed: each file's name, category, modes and labels per language. */
+const STORE_SKILLS = [
+  "continue-story",
+  "describe",
+  "dialogue",
+  "tighten",
+  "translate",
+  "de-ai",
+  "summarize",
+  "headline",
+];
+function storeSkills(names: string[]) {
+  const root = pluginsCheckout();
+  if (!root)
+    throw new Error("no textus-plugins checkout: set TEXTUS_PLUGINS_DIR");
+  return names.map((name) => {
+    const text = readFileSync(path.join(root, "skills", `${name}.md`), "utf8");
+    const meta = (key: string) =>
+      new RegExp(`^ {2}textus-${key}: "([^"]*)"`, "m").exec(text)?.[1];
+    const labels: Record<
+      string,
+      { label: string; hint: string; aliases: string[] }
+    > = {};
+    for (const m of text.matchAll(/^ {2}textus-label-([\w-]+): "([^"]*)"/gm))
+      labels[m[1]] = {
+        label: m[2],
+        hint: meta(`hint-${m[1]}`) ?? "",
+        aliases: [],
+      };
+    return {
+      name,
+      description: labels.en?.hint ?? name,
+      prompt: "",
+      category: meta("category") ?? null,
+      invocation: meta("invocation") ?? "both",
+      modes: (meta("modes") ?? "write").split(/,\s*/),
+      source: "global",
+      overridesBuiltin: false,
+      packs: [],
+      version: meta("version") ?? "1.0.0",
+      basedOn: null,
+      builtinUpdated: false,
+      off: false,
+      aliases: {},
+      labels,
+    };
+  });
+}
+
 const emitTo = (page: Page, name: string, payload?: unknown) =>
   page.evaluate(
     ([n, p]) =>
@@ -336,8 +416,9 @@ const emitTo = (page: Page, name: string, payload?: unknown) =>
     [name, payload] as const,
   );
 
-const doc = (page: Page) =>
-  page.locator('[data-active-tab="true"] .ProseMirror');
+/** The document's editor: the one in sight, whichever tab is in use (the
+ *  AI's, once a request is sent). */
+const doc = (page: Page) => page.locator(".ProseMirror:visible").first();
 
 for (const lang of LANGS) {
   const sample = SAMPLES[lang] as Sample;
@@ -346,148 +427,179 @@ for (const lang of LANGS) {
   test.describe(`README pictures (${lang})`, () => {
     test.use({ locale: LANGUAGES[lang].locale });
 
-    /** A narrow window for the writing cards: a short line, large words. */
-    async function open(
-      page: Page,
-      title: string,
-      content: string,
-      height = 820,
-    ) {
-      await page.setViewportSize({ width: 680, height });
-      await start(page, {
-        lang,
-        file: { path: fileIn(sample.folder, title), content },
-      });
-    }
-
     test("writing", async ({ page }) => {
+      // Two islands of one window, words large: the sample's notes with a
+      // table and code on the left, math and a diagram on the right.
+      const table =
+        /^\|.*\|\n\|[-:| ]+\|\n(?:\|.*\|\n?)+/m.exec(sample.doc)?.[0] ??
+        extra?.table ??
+        "";
+      // The tour's reading notes: every kind of mark, a callout, lists and code.
+      const tour = sample.tourDoc;
+      const reading = tour.includes("\n### ")
+        ? tour.slice(tour.indexOf("\n### ") + 1).replace(/\n---\n*$/, "\n")
+        : /```[\s\S]*?\n```/.exec(tour)![0];
+      // Left: the marks, the picture and the table, a list last. Right: the
+      // math, then the callout and code, then the diagram.
+      const code = /```[\s\S]*?\n```\n/.exec(reading)?.[0] ?? "";
+      const callout = /^> \[![\s\S]*?\n(?!>)/m.exec(reading)?.[0] ?? "";
+      const rest = reading.replace(code, "").replace(callout, "");
+      const lists = rest.search(/^(?:- |1\. )/m);
+      const head = lists < 0 ? rest : rest.slice(0, lists);
+      // One numbered list of three: the steps, then the open to-dos.
+      const steps = [
+        ...rest.matchAll(/^\d+\. (.*)$/gm),
+        ...rest.matchAll(/^- \[ \] (.*)$/gm),
+      ].map((m) => m[1]);
+      const tail = steps
+        .slice(0, 3)
+        .map((s, i) => `${i + 1}. ${s}`)
+        .join("\n");
+      const picture = `<img src="illustration.webp" alt="${sample.title}" width="64%">`;
+      const notes = `# ${sample.title}\n\n${head.trimEnd()}\n\n${picture}\n\n${table}\n\n${tail}`;
+      // The math without its closing remark, so the diagram fits too.
+      const formula = sample.mathDoc.split("```mermaid")[0].trimEnd();
+      const last = formula.lastIndexOf("\n\n");
+      const math = `${/\$/.test(formula.slice(last)) ? formula : formula.slice(0, last)}\n\n${callout}\n${code}`;
+      const flow = extra
+        ? `\n\n\`\`\`mermaid\nflowchart LR\n  ${extra.flow}\n\`\`\`\n`
+        : "\n";
+      const left = fileIn(sample.folder, sample.title);
+      const right = fileIn(sample.folder, sample.mathTitle);
+      await page.setViewportSize(WINDOW);
       await start(page, {
         lang,
-        file: {
-          path: fileIn(sample.folder, sample.tourTitle),
-          content: sample.tourDoc,
+        file: { path: left, content: notes },
+        plugins: {
+          plugins: {},
+          folder: { [left]: notes, [right]: math + flow },
         },
         settings: { zoom: 1 },
       });
-      await expect(doc(page).locator("blockquote.md-alert")).toHaveCount(1);
-      await caretAfter(page, sample.tourCaret);
-      await card(page, lang, "markdown", [page.locator(".app-shell")], {
-        margin: 0,
-        frame: 1200,
-        aspect: 16 / 10,
-        inset: 0,
-      });
+      await emitTo(page, "menu-split-right");
+      await emitTo(page, "open-paths-as-tabs", [right]);
+      // The blank tab the split opened with goes.
+      const blank = page.locator(".tab-pill").filter({ hasNotText: /\.md$/ });
+      await expect(page.locator(".tab-pill")).toHaveCount(3);
+      await blank.hover();
+      await blank.locator(".tab-pill-close").click();
+      await expect(page.locator(".tab-pill")).toHaveCount(2);
+      await expect(page.locator(".katex-display").first()).toBeVisible();
+      if (extra)
+        await expect(
+          page.locator(".mermaid-preview svg").first(),
+        ).toBeVisible();
+      await expect(page.locator(".ProseMirror table").first()).toBeVisible();
+      await page.locator(".ProseMirror").first().click();
+      await page.keyboard.press("ControlOrMeta+Home");
+      // The pointer off the page: a picture under it shows its handles.
+      await page.mouse.move(2, 2);
+      await page.waitForTimeout(600);
+      await windowCard(page, lang, "writing");
     });
 
-    test("code", async ({ page }) => {
-      // The tour's code block, on a page of its own: at the tour's end it
-      // sits too low to be centred.
-      const code = /```[\s\S]*?\n```/.exec(sample.tourDoc)![0];
-      await open(page, sample.tourTitle, `# ${sample.tourTitle}\n\n${code}\n`);
-      const block = doc(page).locator("pre").first();
-      await expect(block).toBeVisible();
-      await isolate([block]);
-      await card(page, lang, "code", [block]);
-    });
-
-    test("table", async ({ page }) => {
-      // The sample's own table; English's sample has none.
-      const table =
-        /^\|.*\|\n\|[-:| ]+\|\n(?:\|.*\|\n?)+/m.exec(sample.doc)?.[0] ??
-        extra?.table;
-      test.skip(!table, `no table for ${lang}`);
-      await open(page, sample.tourTitle, `# ${sample.tourTitle}\n\n${table}\n`);
-      const shown = doc(page).locator("table").first();
-      await expect(shown).toBeVisible();
-      await isolate([shown]);
-      await card(page, lang, "table", [shown]);
-    });
-
-    /** A narrow window: the note's lines wrap short, its words stay large
-     *  in a small card. */
-    const NARROW = { width: 520, height: 820 };
+    /** The sample with its picture moved under the note, so the passage
+     *  and the note the AI works on come first; the lines between the title
+     *  and the passage go, so the picture fits under them. */
+    const noteFirst = (text: string) => {
+      const picture = /\n<img [^>]*>\n/.exec(text)?.[0] ?? "";
+      const rest = text
+        .replace(picture, "\n")
+        .replace(/^(# .*\n)[\s\S]*?(?=^> )/m, "$1\n");
+      const at = rest.indexOf("\n", rest.indexOf(sample.anchor));
+      return `${rest.slice(0, at)}\n${picture}${rest.slice(at)}`;
+    };
 
     async function openNote(page: Page, panel = false) {
-      if (!panel) await page.setViewportSize(NARROW);
+      await page.setViewportSize(WINDOW);
       await start(page, {
         lang,
         file: {
           path: fileIn(sample.folder, sample.title),
-          content: sample.doc,
+          content: noteFirst(sample.doc),
         },
         project: {
           root: `/Users/me/Documents/${sample.folder}`,
           library: sample.library,
         },
-        // Larger words for a small card.
-        settings: { enableCompletion: true },
-        storage: panel ? { "textus-agent-panel-open": "1" } : {},
+        settings: { enableCompletion: true, zoom: panel ? 1 : 1.2 },
       });
+      // The AI's conversation, opened as a person opens it.
+      if (panel) {
+        await page.getByRole("button", { name: "Textus AI" }).first().click();
+        // The document back in use beside it, as after clicking into it.
+        await page
+          .locator(".tab-pill", { hasText: sample.title })
+          .first()
+          .click();
+      }
     }
 
     /** The note's paragraph the edit rewrites. */
     const note = (page: Page) =>
       doc(page).locator(":scope > p", { hasText: sample.anchor.slice(0, 8) });
 
+    /** The AI's answer to the sample's ask: an edit to the note and a
+     *  comment on the passage. */
+    const exchange = () => [
+      { kind: "User", text: sample.ask },
+      {
+        kind: "ToolCall",
+        call_id: "e1",
+        name: "propose_edit",
+        arguments: JSON.stringify({
+          action: "replace",
+          anchor: sample.anchor,
+          text: sample.edited,
+          reason: sample.reason,
+        }),
+      },
+      { kind: "ToolResult", call_id: "e1", output: "Edit proposed" },
+      {
+        kind: "ToolCall",
+        call_id: "c1",
+        name: "add_comment",
+        arguments: JSON.stringify({
+          anchor: sample.commentAnchor,
+          comment: sample.comment,
+        }),
+      },
+      { kind: "ToolResult", call_id: "c1", output: "Comment added" },
+      { kind: "Assistant", text: sample.reply },
+    ];
+
     test("ai: edits and a comment", async ({ page }) => {
-      await page.setViewportSize({ width: 1000, height: 820 });
       await openNote(page, true);
-      await canned(page, {
-        ai_agent_message: [
-          { kind: "User", text: sample.ask },
-          {
-            kind: "ToolCall",
-            call_id: "e1",
-            name: "propose_edit",
-            arguments: JSON.stringify({
-              action: "replace",
-              anchor: sample.anchor,
-              text: sample.edited,
-              reason: sample.reason,
-            }),
-          },
-          { kind: "ToolResult", call_id: "e1", output: "Edit proposed" },
-          {
-            kind: "ToolCall",
-            call_id: "c1",
-            name: "add_comment",
-            arguments: JSON.stringify({
-              anchor: sample.commentAnchor,
-              comment: sample.comment,
-            }),
-          },
-          { kind: "ToolResult", call_id: "c1", output: "Comment added" },
-          { kind: "Assistant", text: sample.reply },
-        ],
-      });
+      await canned(page, { ai_agent_message: exchange() });
       const composer = page.locator(".agent-panel-view textarea");
       const comment = page.locator(".agent-comment").first();
-      const paragraph = note(page);
-      const rewritten = doc(page).locator(":scope > p", {
-        has: page.locator(".pending-sentence"),
+      // The request going and the edits coming in, the note in sight.
+      await note(page).evaluate((p) => p.scrollIntoView({ block: "center" }));
+      await windowFilm(page, lang, "ai-revise", async () => {
+        await composer.fill(sample.ask);
+        await composer.press("Enter");
+        await expect(comment).toBeVisible();
+        await expect(
+          doc(page).locator(".pending-sentence").first(),
+        ).toBeAttached();
+        await page.waitForTimeout(1200);
       });
-      // The paragraph as the request goes and the edits come in.
-      const restore = await isolate([paragraph]);
-      await filmCard(
-        page,
-        lang,
-        "ai-revise",
-        (after) => [after ? rewritten : paragraph],
-        async () => {
-          await composer.fill(sample.ask);
-          await composer.press("Enter");
-          await expect(comment).toBeVisible();
-          await expect(
-            doc(page).locator(".pending-sentence").first(),
-          ).toBeVisible();
-          await page.waitForTimeout(1200);
-        },
-      );
-      await restore();
       await composer.blur();
-      await card(page, lang, "ai-review", [comment], {
-        margin: 4,
-      });
+      await page.mouse.move(2, 2);
+      // The hero: the document from its top, the passage and its comment.
+      await doc(page).evaluate((d) =>
+        d.closest(".editor-scroll")?.scrollTo(0, 0),
+      );
+      await page.waitForTimeout(400);
+      await windowCard(page, lang, "hero");
+      // The edits taken: the review comment beside its sentence is left.
+      await page.locator(".agent-proposal-actions button").first().click();
+      await expect(doc(page).locator(".pending-sentence")).toHaveCount(0);
+      await doc(page)
+        .locator("h1")
+        .evaluate((h) => h.scrollIntoView({ block: "start" }));
+      await page.waitForTimeout(400);
+      await windowCard(page, lang, "ai-review");
     });
 
     test("ai: continuation", async ({ page }) => {
@@ -497,25 +609,19 @@ for (const lang of LANGS) {
       const paragraph = note(page);
       const text = (await paragraph.innerText()).trim();
       await caretAfter(page, text.slice(-8), true);
-      await isolate([paragraph]);
+      await paragraph.evaluate((p) => p.scrollIntoView({ block: "center" }));
       // Mid-document, a continuation comes on request; Tab takes it.
-      await filmCard(
-        page,
-        lang,
-        "ai-continue",
-        () => [paragraph],
-        async () => {
-          await page.keyboard.press("ControlOrMeta+Shift+Space");
-          await expect(page.locator(".ghost-text")).toHaveAttribute(
-            "data-suggestion",
-            extra.continuation,
-          );
-          await page.waitForTimeout(1400);
-          await page.keyboard.press("Tab");
-          await expect(page.locator(".ghost-text")).toHaveCount(0);
-          await page.waitForTimeout(300);
-        },
-      );
+      await windowFilm(page, lang, "ai-continue", async () => {
+        await page.keyboard.press("ControlOrMeta+Shift+Space");
+        await expect(page.locator(".ghost-text")).toHaveAttribute(
+          "data-suggestion",
+          extra.continuation,
+        );
+        await page.waitForTimeout(1400);
+        await page.keyboard.press("Tab");
+        await expect(page.locator(".ghost-text")).toHaveCount(0);
+        await page.waitForTimeout(300);
+      });
     });
 
     test("ai: grammar", async ({ page }) => {
@@ -526,9 +632,9 @@ for (const lang of LANGS) {
         lang,
         file: {
           path: fileIn(sample.folder, sample.title),
-          content: `# ${sample.title}\n\n`,
+          content: `# ${sample.title}\n\n${sample.anchor}\n\n`,
         },
-        settings: { enableGrammarCheck: true },
+        settings: { enableGrammarCheck: true, zoom: 1.2 },
       });
       await canned(page, {
         ai_grammar_check: [
@@ -541,7 +647,7 @@ for (const lang of LANGS) {
           },
         ],
       });
-      await page.setViewportSize(NARROW);
+      await page.setViewportSize(WINDOW);
       await doc(page).locator(":scope > *").last().click();
       // The document's end: End on a Mac scrolls.
       await page.keyboard.press("ControlOrMeta+ArrowDown");
@@ -551,50 +657,56 @@ for (const lang of LANGS) {
       const paragraph = doc(page).locator(":scope > *").nth(index);
       const underline = doc(page).locator(".grammar-issue");
       const popover = page.locator(".grammar-popover");
-      await isolate([paragraph]);
-      await filmCard(
-        page,
-        lang,
-        "ai-grammar",
-        (after) => (after ? [paragraph, popover] : [paragraph]),
-        async () => {
-          await page.keyboard.type(sentence, { delay: 45 });
-          await expect(underline).toHaveText(wrong);
-          await page.waitForTimeout(500);
-          await underline.hover();
-          await expect(popover).toBeVisible();
-          await page.waitForTimeout(400);
-        },
-      );
+      void paragraph;
+      await windowFilm(page, lang, "ai-grammar", async () => {
+        await page.keyboard.type(sentence, { delay: 45 });
+        await expect(underline).toHaveText(wrong);
+        await page.waitForTimeout(500);
+        await underline.hover();
+        await expect(popover).toBeVisible();
+        await page.waitForTimeout(400);
+      });
     });
 
     test("ai: skills", async ({ page }) => {
+      // The whole window: the AI in Write mode, / listing skills from the store.
+      await page.setViewportSize(WINDOW);
       await start(page, {
         lang,
         file: {
           path: fileIn(sample.folder, sample.title),
-          content: sample.doc,
+          content: noteFirst(sample.doc).replace(sample.anchor, sample.edited),
+        },
+        settings: { zoom: 1 },
+        storage: {
+          "textus-agent-last-mode": JSON.stringify({ mode: "write" }),
         },
       });
-      // Create, in Settings › Extensions: its / menu holds what it makes.
-      await page.evaluate(() =>
-        window.dispatchEvent(new Event("textus-open-create")),
-      );
-      const composer = page.locator(".create-studio textarea");
+      // The conversation after the edit was taken: the note tightened, the
+      // comment beside the passage.
+      await canned(page, {
+        list_skills: storeSkills(STORE_SKILLS),
+        ai_agent_message: exchange().filter(
+          (m) => !("call_id" in m) || m.call_id !== "e1",
+        ),
+      });
+      await page.getByRole("button", { name: "Textus AI" }).first().click();
+      const composer = page.locator(".ai-tab:visible textarea");
+      // A conversation under way, then / for a skill.
+      await composer.fill(sample.ask);
+      await composer.press("Enter");
+      await expect(page.locator(".ai-tab:visible")).toContainText(sample.reply);
       await composer.fill("/");
-      const picker = page.locator(".composer-picker");
-      await expect(picker.getByRole("option")).toHaveCount(3);
-      await card(
-        page,
-        lang,
-        "ai-skills",
-        [picker, page.locator(".create-studio .inline-chat-bar")],
-        { margin: 12 },
-      );
+      const picker = page.locator(".ai-tab:visible .composer-picker");
+      await expect(picker.getByRole("option")).toHaveCount(STORE_SKILLS.length);
+      await picker
+        .locator(".composer-picker-list")
+        .evaluate((list) => list.scrollTo(0, 0));
+      await windowCard(page, lang, "ai-skills");
     });
 
     test("ai: models", async ({ page }) => {
-      await page.setViewportSize({ width: 860, height: 900 });
+      await page.setViewportSize(WINDOW);
       await start(page, {
         lang,
         file: {
@@ -607,21 +719,28 @@ for (const lang of LANGS) {
           window as unknown as {
             __devEmitTauriEvent: (name: string) => void;
           }
-        ).__devEmitTauriEvent("menu-open-settings"),
+        ).__devEmitTauriEvent("menu-settings"),
       );
-      await page
-        .locator(".settings-nav-item", { hasText: "Textus AI" })
-        .click();
-      await page.locator(".provider-picker .combobox-trigger").click();
-      const list = page.locator(".combobox-list");
-      await expect(list).toBeVisible();
-      await card(
-        page,
-        lang,
-        "ai-models",
-        [page.locator(".provider-picker .combobox-trigger"), list],
-        { margin: 0 },
+      // Textus AI › Models: the model choice over the
+      // providers, list and picked one side by side.
+      await page.evaluate(() =>
+        window.dispatchEvent(
+          new CustomEvent("textus:open-settings-page", {
+            detail: { page: "providers" },
+          }),
+        ),
       );
+      // The providers, list and picked one side by side.
+      const providers = page.locator(".providers-page");
+      // The providers' group from its title, nothing above it cut.
+      await providers.evaluate((el) =>
+        (el.closest(".settings-group") ?? el).scrollIntoView({
+          block: "start",
+        }),
+      );
+      await expect(providers.locator(".providers-detail")).toBeVisible();
+      await page.waitForTimeout(400);
+      await windowCard(page, lang, "ai-models");
     });
 
     /** The plugin cards' notes: the sample's linked notes, on disk. */
@@ -629,47 +748,57 @@ for (const lang of LANGS) {
       page: Page,
       plugins: Record<string, string[]>,
       settings: Record<string, Record<string, unknown>> = {},
+      /** The first note as it stands on disk, when not as written. */
+      first?: string,
     ) {
       const titles = Object.keys(sample.notes);
+      const text = (t: string) =>
+        t === titles[0] && first !== undefined ? first : sample.notes[t];
       await start(page, {
         lang,
         file: { path: fileIn(sample.folder, titles[0]), content: "" },
         plugins: {
           plugins,
           folder: Object.fromEntries(
-            titles.map((t) => [fileIn(sample.folder, t), sample.notes[t]]),
+            titles.map((t) => [fileIn(sample.folder, t), text(t)]),
           ),
           settings,
         },
-        settings: { plugins: settings },
+        settings: { plugins: settings, zoom: 1 },
       });
       await expect(doc(page).locator("h1")).toContainText(titles[0]);
     }
 
     test("plugin: graph", async ({ page }) => {
-      await page.setViewportSize({ width: 720, height: 600 });
+      await page.setViewportSize(WINDOW);
       await openNotes(page, {
         "catvinci.graph": ["files.read", "editor.read"],
       });
+      // The note on the left, its graph in an island beside it.
+      await emitTo(page, "menu-split-right");
       await emitTo(page, "menu-plugin-command", "catvinci.graph.open");
+      const blank = page.locator(".tab-pill").filter({
+        hasNotText: /\.md$|Graph|图|圖|グラフ|그래프|Grafo|Graphe|Graph|Граф/,
+      });
+      if (await blank.count()) {
+        await blank.first().hover();
+        await blank.first().locator(".tab-pill-close").click();
+      }
       const graph = tabFrame(page);
       await expect(graph.locator("canvas")).toBeVisible();
       await expect(graph.locator("#stats")).toHaveText(/\d/);
       // The layout settles, then fills the tab as Fit does.
       await page.waitForTimeout(5000);
       await graph.locator("#fit").click();
-      await page.waitForTimeout(800);
-      await card(
-        page,
-        lang,
-        "plugin-graph",
-        [page.locator('[data-active-tab="true"] .plugin-webview-frame')],
-        { margin: 0, inset: 0 },
-      );
+      await page.waitForTimeout(1500);
+      // Once more, the layout settled at this size.
+      await graph.locator("#fit").click();
+      await page.waitForTimeout(1200);
+      await windowCard(page, lang, "plugin-graph");
     });
 
     test("plugin: quick preview", async ({ page }) => {
-      await page.setViewportSize({ width: 600, height: 760 });
+      await page.setViewportSize(WINDOW);
       await openNotes(page, {
         "catvinci.quick-preview": ["editor.read", "files.read"],
       });
@@ -690,83 +819,117 @@ for (const lang of LANGS) {
         return Array.from(root.children).indexOf(block);
       });
       const paragraph = doc(page).locator(":scope > *").nth(index);
-      await isolate([paragraph]);
-      await page.mouse.move(0, 400);
-      await filmCard(
-        page,
-        lang,
-        "plugin-preview",
-        (after) => (after ? [paragraph, preview] : [paragraph]),
-        async () => {
-          await expect(async () => {
-            await page.mouse.move(0, 400);
-            await link.hover();
-            await expect(preview).toBeVisible({ timeout: 1500 });
-          }).toPass();
-          await page.waitForTimeout(600);
-        },
-      );
+      await paragraph.evaluate((p) => p.scrollIntoView({ block: "center" }));
+      await page.mouse.move(2, 2);
+      await windowFilm(page, lang, "plugin-preview", async () => {
+        await expect(async () => {
+          await page.mouse.move(2, 2);
+          await link.hover();
+          await expect(preview).toBeVisible({ timeout: 1500 });
+        }).toPass();
+        await page.waitForTimeout(600);
+      });
     });
 
-    test("plugin: vim", async ({ page }) => {
-      // Tall enough for the whole note: a scroll to the caret would cut
-      // its first line.
-      await page.setViewportSize({ width: 680, height: 640 });
-      await openNotes(page, { "catvinci.vim": ["editor.input"] });
-      const status = page.locator(".plugin-status-item");
-      await expect(status).toContainText("--");
-      // Flash: s and a letter, every place it is on screen labelled with
-      // the key that jumps there - and the mode in the window bar.
-      // The block cursor at the note's last line's end, off its links; the
-      // note from its title.
-      await doc(page).locator(":scope > p").last().click();
-      await page.keyboard.press("Escape");
-      await page.keyboard.press("$");
-      await doc(page)
-        .locator("h1")
-        .evaluate((h1) => h1.scrollIntoView({ block: "start" }));
-      const letter = await doc(page).evaluate((root) => {
-        const counts = new Map<string, number>();
-        for (const ch of (root as HTMLElement).innerText.toLowerCase())
-          if (/\p{L}/u.test(ch)) counts.set(ch, (counts.get(ch) ?? 0) + 1);
-        return [...counts].sort((a, b) => b[1] - a[1])[0][0];
-      });
-      const shell = page.locator(".app-shell");
-      const label = page.locator(".plugin-flash-label");
-      await filmCard(
-        page,
-        lang,
-        "plugin-vim",
-        () => [shell],
-        async () => {
-          await page.keyboard.press("s");
-          // A key no keyboard layout here names: its keydown, as an
-          // IME-free layout of that script sends it.
-          await doc(page).evaluate((root, key) => {
-            root.dispatchEvent(
-              new KeyboardEvent("keydown", {
-                key,
-                bubbles: true,
-                cancelable: true,
-              }),
-            );
-          }, letter);
-          await expect(label.first()).toBeVisible();
-          await page.waitForTimeout(1400);
-          // The label's key jumps there.
-          const key = (await label.nth(2).innerText()).trim();
-          await page.keyboard.press(key);
-          await expect(label).toHaveCount(0);
-          await page.waitForTimeout(300);
-        },
-        { margin: 0, inset: 0 },
+    test("plugin: database", async ({ page }) => {
+      // A base of the sample's notes: each note a row, its properties the
+      // columns, the keys and values in the language.
+      const ui = LANGUAGES[lang].ui;
+      const [status, words, links] = BASE_KEYS[lang] ?? BASE_KEYS.en;
+      const states = ["todo", "doing", "done"].map((key) =>
+        pluginWord("catvinci.kanban", key, ui),
       );
+      const titles = Object.keys(sample.notes);
+      const cjk = /[\u3040-\u30ff\u3400-\u9fff\uac00-\ud7af]/;
+      const folder: Record<string, string> = {};
+      titles.forEach((title, i) => {
+        const body = sample.notes[title];
+        const text = body.replace(/^#.*$/gm, "").replace(/\[\[|\]\]/g, "");
+        const count = cjk.test(text)
+          ? text.replace(/\s/g, "").length
+          : text.split(/\s+/).filter(Boolean).length;
+        const linked = (body.match(/\[\[/g) ?? []).length;
+        folder[fileIn(sample.folder, title)] =
+          `---\n${status}: ${states[i % 3]}\n${words}: ${count}\n${links}: ${linked}\n---\n\n${body}`;
+      });
+      // A Notion-style page: an icon, and its entries as a table in it; the
+      // entries are its sub-pages, beside it in its folder.
+      const [pageTitle, intro] = BASE_PAGE[lang] ?? BASE_PAGE.en;
+      const dir = `${sample.folder}/${pageTitle}`;
+      const entries: Record<string, string> = {};
+      for (const [path0, text] of Object.entries(folder))
+        entries[fileIn(dir, path0.split("/").pop()!.slice(0, -3))] = text;
+      const pagePath = fileIn(dir, pageTitle);
+      const pageDoc = `# ${pageTitle}\n\n${intro}\n\n\`\`\`base
+filters:
+  and:
+    - file.inFolder(this.file.folder)
+    - file.path != this.file.path
+views:
+  - type: table
+    name: ${pluginWord("catvinci.database", "table", ui)}
+    order:
+      - file.name
+      - ${status}
+      - ${words}
+      - ${links}
+\`\`\`
+`;
+      entries[pagePath] = pageDoc;
+      await page.setViewportSize(WINDOW);
+      await start(page, {
+        lang,
+        file: { path: pagePath, content: pageDoc },
+        plugins: {
+          plugins: {
+            "catvinci.database": [
+              "files.read",
+              "files.write",
+              "editor.read",
+              "editor.write",
+            ],
+          },
+          folder: entries,
+        },
+        settings: { zoom: 1 },
+      });
+      const table = page
+        .frameLocator(".ProseMirror .plugin-webview-frame")
+        .first();
+      await expect(
+        table.locator("tbody tr", { hasText: titles[1] }),
+      ).toBeVisible();
+      // The sidebar's Pages tab: the page and its entries as a tree.
+      await page
+        .getByRole("button", {
+          name: pluginWord("catvinci.database", "pages.name", ui),
+        })
+        .first()
+        .click()
+        .catch(() => {});
+      await page.waitForTimeout(800);
+      await windowCard(page, lang, "plugin-database");
     });
 
     test("plugin: version history", async ({ page }) => {
-      await page.setViewportSize({ width: 760, height: 560 });
+      await page.setViewportSize(WINDOW);
       // A morning's work: saves a quarter of an hour apart are versions.
       await page.clock.install({ time: new Date("2026-10-27T09:12:00") });
+      // The note's last paragraph written in three sittings, each saved.
+      const titles = Object.keys(sample.notes);
+      const whole = sample.notes[titles[0]].trimEnd();
+      const cut = whole.lastIndexOf("\n\n");
+      // Three parts by length, typed as plain words: a link typed whole
+      // keeps the caret inside it.
+      const last = whole.slice(cut + 2).replace(/\[\[|\]\]/g, "");
+      const ends = [1, 2].map((k) => {
+        let at = Math.round((last.length * k) / 3);
+        while (at < last.length && !/[\s，、,]/.test(last[at - 1])) at++;
+        return at;
+      });
+      const parts = [0, ...ends, last.length]
+        .slice(0, 3)
+        .map((from, i) => last.slice(from, [...ends, last.length][i]));
       await openNotes(
         page,
         {
@@ -777,14 +940,19 @@ for (const lang of LANGS) {
           ],
         },
         { "catvinci.version-history": { every: "0" } },
+        `${whole.slice(0, cut)}\n`,
       );
-      // Two saves, each after a line of links at the note's end.
-      const titles = Object.keys(sample.notes);
-      for (const title of titles.slice(1, 4)) {
-        await doc(page).locator(":scope > p").last().click();
-        await page.keyboard.press("ControlOrMeta+ArrowDown");
-        await page.keyboard.press("Enter");
-        await page.keyboard.type(`[[${title}]]`);
+      for (let i = 0; i < 3; i++) {
+        if (i === 0) {
+          // Out of the list above, into a paragraph of its own.
+          await doc(page).locator(":scope > *").last().click();
+          await page.keyboard.press("ControlOrMeta+ArrowDown");
+          await page.keyboard.press("Enter");
+          await page.keyboard.press("Enter");
+        } else {
+          await caretAfter(page, parts[i - 1].slice(-8), true);
+        }
+        await page.keyboard.type(parts[i]);
         await emitTo(page, "menu-save-file");
         await page.clock.runFor(1500);
         await page.clock.fastForward(16 * 60_000);
@@ -798,7 +966,7 @@ for (const lang of LANGS) {
       if (await page.locator(".sidebar.sidebar-collapsed").count())
         await emitTo(page, "menu-toggle-sidebar");
       await page
-        .locator(".sidebar-tabs")
+        .locator(".activity-rail")
         .getByRole("button", {
           name: pluginWord(
             "catvinci.version-history",
@@ -812,43 +980,7 @@ for (const lang of LANGS) {
         history.locator("#versions > li:not(.day-head)").first(),
       ).toBeVisible();
       await page.waitForTimeout(500);
-      await card(page, lang, "plugin-history", [page.locator(".app-shell")], {
-        margin: 0,
-        inset: 0,
-      });
-    });
-
-    test("diagram", async ({ page }) => {
-      test.skip(!extra, `no README texts for ${lang}`);
-      await open(
-        page,
-        sample.mathTitle,
-        `# ${sample.mathTitle}\n\n\`\`\`mermaid\nflowchart LR\n  ${extra.flow}\n\`\`\`\n`,
-      );
-      const diagram = doc(page).locator(".mermaid-preview").first();
-      await expect(diagram.locator("svg")).toBeVisible();
-      await isolate([diagram]);
-      await card(page, lang, "diagram", [diagram.locator("svg")], {
-        margin: 12,
-      });
-    });
-
-    test("formula", async ({ page }) => {
-      await open(page, sample.mathTitle, sample.mathDoc);
-      await expect(doc(page).locator(".katex-display").first()).toBeVisible();
-      // The paragraphs with formulas, and the display formula between.
-      const inline = doc(page).locator(":scope > p", {
-        has: page.locator(".katex"),
-      });
-      const formula = [
-        inline.first(),
-        doc(page).locator(":scope > *", {
-          has: page.locator(".katex-display"),
-        }),
-        inline.nth(1),
-      ];
-      await isolate(formula);
-      await card(page, lang, "formula", formula);
+      await windowCard(page, lang, "plugin-history");
     });
   });
 }

@@ -1,5 +1,5 @@
 import type { EditorView } from "@milkdown/kit/prose/view";
-import { animate, duration, glideScroll } from "../ui/motion";
+import { animate, duration, glideScroll } from "../engine/motion/motion";
 import { drawAround } from "./lazy-blocks/lazy-blocks-drawer";
 import { unfoldRange } from "./html/details-fold";
 

@@ -1,3 +1,5 @@
+import { fill } from "../../../i18n/fill";
+import { SearchField } from "../../../engine/controls/SearchField";
 import { useMemo, useState } from "react";
 import type {
   AgentWorkspaceInfo,
@@ -7,7 +9,7 @@ import type {
   MemoryScope,
 } from "../../../platform/ipc";
 import { localeOf, type Lang, type Strings } from "../../../i18n/strings";
-import { Tooltip } from "../../../ui/Tooltip";
+import { Tooltip } from "../../../engine/controls/Tooltip";
 import { useMemoryFocus } from "./memory-focus";
 import "./MemoryView.css";
 import { RememberedSection } from "./RememberedSection";
@@ -18,7 +20,7 @@ import {
   styleSummary,
   ruleLines,
   firstLine,
-  stemOf,
+  libraryEntryId,
 } from "./memory-text";
 
 /**
@@ -84,8 +86,7 @@ export function MemorySections({
   return (
     <div className="memory-sections" ref={setRoot}>
       {searchable && (
-        <input
-          type="search"
+        <SearchField
           className="memory-search"
           placeholder={t.memorySearch}
           aria-label={t.memorySearch}
@@ -106,7 +107,6 @@ export function MemorySections({
             </button>
           )}
         </h4>
-        <p className="memory-hint">{t.memoryStyleHint}</p>
         {styleLines.length > 0 ? (
           <ul className="memory-card memory-lines">
             {styleLines.map((line, i) => (
@@ -141,7 +141,6 @@ export function MemorySections({
             {t.memoryEdit}
           </button>
         </h4>
-        <p className="memory-hint">{t.memoryInstructionsHint}</p>
         {projectRules.length > 0 || globalRules.length > 0 ? (
           <ul className="memory-card memory-lines">
             {projectRules.map((line, i) => (
@@ -178,7 +177,6 @@ export function MemorySections({
             {t.memoryNew}
           </button>
         </h4>
-        <p className="memory-hint">{t.memoryLibraryHint}</p>
         {info.library.length > 0 && library.length === 0 ? (
           <div className="memory-empty">
             <p>{t.memoryNoMatch}</p>
@@ -190,8 +188,8 @@ export function MemorySections({
               return (
                 <div
                   key={entry.file}
-                  className={`memory-entry${sent ? " memory-entry-used" : ""}`}
-                  data-memory-id={`project/library/${stemOf(entry.file)}`}
+                  className={`memory-entry tx-reveal-host${sent ? " memory-entry-used" : ""}`}
+                  data-memory-id={libraryEntryId(entry)}
                 >
                   <button
                     type="button"
@@ -206,9 +204,11 @@ export function MemorySections({
                         ))}
                       </span>
                     )}
-                    <span className="memory-desc">{firstLine(entry.body)}</span>
+                    <span className="tx-clamp memory-desc">
+                      {firstLine(entry.body)}
+                    </span>
                     {entry.remembered && (
-                      <span className="memory-desc memory-by-ai">
+                      <span className="tx-clamp memory-desc memory-by-ai">
                         {[
                           t.memoryWrittenByAi,
                           rememberedDate(entry.remembered.updated, lang),
@@ -228,7 +228,7 @@ export function MemorySections({
                   <Tooltip text={t.memoryDelete}>
                     <button
                       type="button"
-                      className="memory-entry-delete"
+                      className="tx-reveal memory-entry-delete"
                       aria-label={`${t.memoryDelete} ${entry.name}`}
                       onClick={() => onDeleteEntry(entry)}
                     >
@@ -246,12 +246,10 @@ export function MemorySections({
         )}
         {leftOut.length > 0 && (
           <p className="memory-note" role="note">
-            {t.memoryLibraryLeftOut
-              .replace("{names}", leftOut.map((e) => e.name).join(", "))
-              .replace(
-                "{cap}",
-                (libraryUse?.cap ?? 0).toLocaleString(localeOf(lang)),
-              )}
+            {fill(t.memoryLibraryLeftOut, {
+              names: leftOut.map((e) => e.name).join(", "),
+              cap: (libraryUse?.cap ?? 0).toLocaleString(localeOf(lang)),
+            })}
           </p>
         )}
       </section>

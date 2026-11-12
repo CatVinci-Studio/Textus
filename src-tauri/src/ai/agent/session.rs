@@ -35,6 +35,10 @@ pub struct AgentRequest {
     /// The image model; None for none.
     #[serde(default)]
     pub image_model: Option<ImageModel>,
+    /// General mode's changes to the folder's files wait for the user to
+    /// apply them.
+    #[serde(default)]
+    pub ask_before_file_changes: bool,
 }
 
 impl AgentRequest {
@@ -140,9 +144,12 @@ impl<'a> Session<'a> {
         super::writing_guidance(&mut self.workspace(), topic)
     }
 
-    /// The pictures' run with `model`, made beside the document; None
-    /// without one.
-    pub(crate) fn pictures(&self, model: Option<&ImageModel>) -> Option<ImageRun> {
-        ImageRun::resolve(self.app, model, self.entry.id).map(|run| run.in_folder(self.doc_path))
+    /// The pictures' run with the request's model, made beside the
+    /// document and stopped with the request; None without one.
+    pub(crate) fn pictures(&self, request: &AgentRequest) -> Option<ImageRun> {
+        ImageRun::resolve(self.app, request.image_model.as_ref(), self.entry.id).map(|run| {
+            run.in_folder(self.doc_path)
+                .for_request(&request.request_id)
+        })
     }
 }

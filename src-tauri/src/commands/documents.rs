@@ -27,19 +27,9 @@ fn inside_documents(
         parent.canonicalize().map_err(|e| e.to_string())?.join(name)
     };
     if resolved == docs || !resolved.starts_with(&docs) {
-        return Err("Outside the Textus folder".into());
+        return Err(crate::errors::error("outsideDocuments"));
     }
     Ok(resolved)
-}
-
-/// A file name the user typed: one path component, nothing that
-/// walks out of the folder it is meant for.
-fn check_name(name: &str) -> Result<(), String> {
-    let name = name.trim();
-    if name.is_empty() || name == "." || name == ".." || name.contains(['/', '\\']) {
-        return Err("Invalid name".into());
-    }
-    Ok(())
 }
 
 /// Renames in place (same folder). Returns the new path.
@@ -49,12 +39,12 @@ pub async fn rename_entry(
     path: String,
     name: String,
 ) -> Result<String, String> {
-    check_name(&name)?;
+    crate::ids::typed_name(&name)?;
     let from = inside_documents(&app, &path, true)?;
     let to = from.with_file_name(name.trim());
     let to = inside_documents(&app, &to.to_string_lossy(), false)?;
     if fs::try_exists(&to).await.unwrap_or(false) {
-        return Err("Already exists".into());
+        return Err(crate::errors::error("exists"));
     }
     fs::rename(&from, &to).await.map_err(|e| e.to_string())?;
     Ok(to.to_string_lossy().to_string())
@@ -70,21 +60,7 @@ pub async fn delete_entry(app: tauri::AppHandle, path: String) -> Result<(), Str
         .map_err(|e| e.to_string())?
         .is_dir()
     {
-        return Err("Not a document".into());
+        return Err(crate::errors::error("notDocument"));
     }
     fs::remove_file(&target).await.map_err(|e| e.to_string())
-}
-
-#[cfg(test)]
-mod tests {
-    use super::check_name;
-
-    #[test]
-    fn names_stay_one_component() {
-        assert!(check_name("Notes").is_ok());
-        assert!(check_name("笔记 2.md").is_ok());
-        for bad in ["", "  ", ".", "..", "a/b", "a\\b", "../x"] {
-            assert!(check_name(bad).is_err(), "{bad:?} should be rejected");
-        }
-    }
 }

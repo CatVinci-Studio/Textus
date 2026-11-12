@@ -54,7 +54,9 @@ fn the_frontend_list_mirrors_this_one() {
         let listed: Vec<&str> = list.split('"').skip(1).step_by(2).collect();
         assert_eq!(listed, *profiles, "{}", lang.code());
     }
-    assert!(ipc.contains(&format!("WRITING_CONVENTIONS_KEY = \"{SETTING_KEY}\"")));
+    // The setting the frontend keeps the profile under, by the same name.
+    let settings = include_str!("../../../../../src/prefs/settings-types.ts");
+    assert!(settings.contains(&format!("  {SETTING_KEY}: string;")));
     assert!(ipc.contains(&format!("WRITING_CONVENTIONS_AUTOMATIC = \"{AUTOMATIC}\"")));
 }
 

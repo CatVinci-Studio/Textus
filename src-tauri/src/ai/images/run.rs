@@ -25,6 +25,8 @@ pub struct ImageRun {
     pub(crate) limit: usize,
     /// The document's folder, where a picture being redone is read from.
     pub(crate) folder: Option<std::path::PathBuf>,
+    /// The request it belongs to: stopping it stops its pictures.
+    pub(crate) request: Option<String>,
 }
 
 impl ImageRun {
@@ -57,6 +59,7 @@ impl ImageRun {
                 made: AtomicUsize::new(0),
                 limit: per_send(choice.limit),
                 folder: None,
+                request: None,
             });
         }
         let model = Some(choice.model.trim())
@@ -91,6 +94,7 @@ impl ImageRun {
             made: AtomicUsize::new(0),
             limit: per_send(choice.limit),
             folder: None,
+            request: None,
         })
     }
 }
@@ -111,12 +115,18 @@ impl ImageRun {
             made: AtomicUsize::new(0),
             limit,
             folder: None,
+            request: None,
         }
     }
 }
 
 impl ImageRun {
     /// Pictures redone in this request are read from `doc_path`'s folder.
+    pub fn for_request(mut self, request_id: &str) -> Self {
+        self.request = Some(request_id.to_string());
+        self
+    }
+
     pub fn in_folder(mut self, doc_path: Option<&str>) -> Self {
         self.folder = doc_path
             .and_then(|p| std::path::Path::new(p).parent())
@@ -223,6 +233,7 @@ impl ImageRun {
                 aspect,
                 reference,
             }),
+            self.request.clone(),
         );
         (id, nominal_size(aspect))
     }

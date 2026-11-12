@@ -1,7 +1,7 @@
+import { TOUCH_SLOP_PX } from "../gesture";
 import { useRef, useState } from "react";
 
 const LONG_PRESS_MS = 450;
-const LONG_PRESS_SLOP = 10;
 
 /**
  * A touch held still on a row, and where. iOS fires no contextmenu for a long
@@ -43,7 +43,7 @@ export function useLongPress() {
         if (
           from &&
           Math.hypot(touch.clientX - from.x, touch.clientY - from.y) >
-            LONG_PRESS_SLOP
+            TOUCH_SLOP_PX
         )
           cancel();
       },

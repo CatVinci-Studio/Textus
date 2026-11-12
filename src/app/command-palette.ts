@@ -2,16 +2,19 @@ import { currentStrings } from "../i18n/current";
 import type { Strings } from "../i18n/strings";
 import type { Settings } from "../prefs/SettingsContext";
 import { loadSettings } from "../prefs/settings-store";
-import { showQuickPick, type QuickPickItem } from "../ui/quick-pick";
+import {
+  showQuickPick,
+  type QuickPickItem,
+} from "../engine/controls/quick-pick-queue";
 import { sendTourSignal } from "../utils/events";
-import { commands, commandShortcut, runCommand } from "./commands";
+import { commands, commandShortcut, runCommand } from "../registry/commands";
 import { runMenuAction } from "./menu/app-menu-actions";
 import {
   buildAppMenu,
   NO_RECENTS,
   type MenuAction,
   type MenuNode,
-} from "./menu/app-menu-model";
+} from "../registry/menu/app-menu-model";
 
 /**
  * The command palette: every menu item and plugin command, found by typing.

@@ -89,14 +89,13 @@ export type AgentWorkspaceInfo = AgentWorkspace_Serialize;
 /** The settings.json key of the writing conventions default. Unread here,
  *  but a Rust test checks it against the backend's key.
  *  @public */
-export const WRITING_CONVENTIONS_KEY = "writingConventions";
 /** Its default value, and the per-language value meaning "no choice";
  *  checked by the same test.
  *  @public */
 export const WRITING_CONVENTIONS_AUTOMATIC = "automatic";
 
 /** A document language as the rules engine names it. */
-export type ConventionsLang = Lang;
+type ConventionsLang = Lang;
 
 /**
  * The profiles each language offers, the first being Automatic's (null: no

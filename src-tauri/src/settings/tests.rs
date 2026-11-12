@@ -260,7 +260,7 @@ fn a_pinned_appearance_gives_windows_the_page_background() {
     // Checked against the page itself: a window must open in exactly the colour
     // index.html paints first and ui/base.css's --doc-bg (--ui-bg follows it) keeps.
     let index = include_str!("../../../index.html");
-    let app_css = include_str!("../../../src/ui/base.css");
+    let app_css = include_str!("../../../src/engine/tokens/base.css");
     for (theme, app_css_rule) in [
         ("dark", ":root[data-theme=\"dark\"] {"),
         ("light", ":root {"),
@@ -350,4 +350,25 @@ fn invalid_history_entries_are_rejected() {
     let long = "x".repeat(MAX_CLIPBOARD_TEXT + 1);
     assert!(!HistoryKind::Clipboard.valid(&json!({ "text": long, "at": 1 })));
     assert!(HistoryKind::Clipboard.valid(&json!({ "text": "ok", "at": 1 })));
+}
+
+#[test]
+fn the_proxy_follows_the_settings() {
+    proxy_changed(
+        &json!({ "proxyType": "socks5", "proxyHost": " 127.0.0.1 ", "proxyPort": "7890" }),
+    );
+    assert_eq!(
+        aicompat::http::proxy_url().as_deref(),
+        Some("socks5://127.0.0.1:7890")
+    );
+    proxy_changed(&json!({ "proxyType": "http", "proxyHost": "proxy.lan" }));
+    assert_eq!(
+        aicompat::http::proxy_url().as_deref(),
+        Some("http://proxy.lan")
+    );
+    // None, or no host: direct.
+    proxy_changed(&json!({ "proxyType": "none", "proxyHost": "proxy.lan" }));
+    assert_eq!(aicompat::http::proxy_url(), None);
+    proxy_changed(&json!({ "proxyType": "http", "proxyHost": "" }));
+    assert_eq!(aicompat::http::proxy_url(), None);
 }

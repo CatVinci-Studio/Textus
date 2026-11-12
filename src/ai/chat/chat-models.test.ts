@@ -6,7 +6,7 @@ const entry = {
   id: "openai",
   agentDefaultModel: "gpt-6.1-sol",
   knownModels: ["gpt-6.1-sol", "gpt-6-luna"],
-} as ProviderCatalogEntry;
+} as unknown as ProviderCatalogEntry;
 
 describe("the composer's model", () => {
   it("is the one chosen for the provider, else its default", () => {

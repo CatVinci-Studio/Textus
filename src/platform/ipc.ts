@@ -1,21 +1,12 @@
 import { Channel } from "@tauri-apps/api/core";
-import type { ProviderCatalogEntry } from "../ai/provider-catalog";
 import type { ImageModel, ImageProviderEntry } from "../ai/image-models";
-import type { SentBlock } from "../ai/doc-blocks";
+import type { SentBlock } from "../editor/markdown/doc-blocks";
 import type { AgentTurn, ImageAttachment, ThinkingLevel } from "../ai/types";
 import type { GrammarIssue } from "../ai/writing/grammar-check-plugin";
-import type { AgentMode } from "../prefs/SettingsContext";
-import type {
-  CompletionRequest_Deserialize as CompletionRequest,
-  GrammarRequest_Deserialize as GrammarRequest,
-} from "./bindings/ai";
-import type { AgentTurn_Deserialize as AgentTurnInput } from "./bindings/ai-agent";
-import type {
-  PassRequest_Deserialize as PassRequest,
-  Value,
-  SkillOffer,
-} from "./bindings/ai-memory";
-import { aiCall, aiCommand, command } from "./ipc-call";
+import type { AgentMode_Serialize as AgentMode } from "./bindings/ai-skills";
+import type { StreamEvent_Deserialize } from "./bindings/ai-agent";
+import type { Value, SkillOffer } from "./bindings/ai-memory";
+import { aiCommand, command } from "./ipc-call";
 import type {
   CompletionHints,
   MemoryKind,
@@ -25,23 +16,18 @@ import type {
 } from "./ipc-ai-types";
 export { IpcError } from "./ipc-call";
 export * from "./ipc-plugins";
+export type { InstalledPlugin } from "./bindings/plugins";
 export type { UpdateChannel } from "./update-channel";
 export {
-  type SavedImage,
-  type IndexedFile,
-  type FolderIndex,
-  type WordDocument,
   fs,
   session,
-  type StoredSnapshot,
   type HistoryKind,
   storage,
   drafts,
   ownNotes,
 } from "./ipc-files";
+export { type IndexedFile } from "./bindings/files";
 export {
-  type FloatingDragArgs,
-  type WindowBounds,
   windowIpc,
   menuIpc,
   clipboardIpc,
@@ -53,22 +39,19 @@ export {
   themes,
   themeGallery,
   cli,
-  BACKGROUND_STATUS,
   type BackgroundStatus,
   background,
-  type CliStatus,
-  type DefaultEditorStatus,
   defaultEditor,
-  type Distribution,
   distribution,
   updater,
 } from "./ipc-app";
 export {
-  type OauthStatus,
-  type CustomEndpointConfig,
-  auth,
-  imageHostAuth,
-} from "./ipc-auth";
+  type WindowBounds,
+  BACKGROUND_STATUS,
+  type CliStatus,
+  type DefaultEditorStatus,
+} from "./bindings/app";
+export { type CustomEndpointConfig, auth, imageHostAuth } from "./ipc-auth";
 export {
   AI_CANCELLED,
   type GeneratedImageData,
@@ -79,12 +62,8 @@ export {
   type Remembered,
   type Memory,
   type MemoryScope,
-  type MemoryKind,
   type LibraryUse,
   type AgentWorkspaceInfo,
-  WRITING_CONVENTIONS_KEY,
-  WRITING_CONVENTIONS_AUTOMATIC,
-  type ConventionsLang,
   WRITING_CONVENTIONS,
   type SkillListItem,
   type RememberedChange,
@@ -99,8 +78,6 @@ import { aiWorkspace } from "./ipc-ai-workspace";
 
 export const ai = {
   // Rust sends the dialect and auth methods as plain strings from fixed sets.
-  listProviders: () =>
-    command("list_providers") as Promise<ProviderCatalogEntry[]>,
   /** Whether Deep thinking changes anything for this provider and Agent
    *  model (null: the provider's default). */
   canThinkDeeper: (provider: string, model: string | null) =>
@@ -141,7 +118,6 @@ export const ai = {
     ),
   fetchAgentModels: (provider: string) =>
     aiCommand("fetch_agent_models", provider),
-  setAiProxy: (proxy: string | null) => command("set_ai_proxy", proxy),
   complete: (
     provider: string,
     before: string,
@@ -155,8 +131,7 @@ export const ai = {
       workspaceRoot: null,
     },
   ) =>
-    // Rust reads these keys as one struct the generated bindings can't call.
-    aiCall<string>("ai_complete", {
+    aiCommand("ai_complete", {
       provider,
       before,
       after,
@@ -165,7 +140,7 @@ export const ai = {
       hints,
       docPath: project.docPath,
       workspaceRoot: project.workspaceRoot,
-    } satisfies CompletionRequest),
+    }),
   grammarCheck: (
     provider: string,
     paragraph: string,
@@ -180,8 +155,7 @@ export const ai = {
     /** The app's language: the explanations are written in it. */
     uiLanguage: string | null = null,
   ) =>
-    // One struct in Rust, as ai_complete's.
-    aiCall<GrammarIssue[]>("ai_grammar_check", {
+    aiCommand("ai_grammar_check", {
       provider,
       paragraph,
       strictness,
@@ -189,7 +163,7 @@ export const ai = {
       docPath: project.docPath,
       workspaceRoot: project.workspaceRoot,
       uiLanguage,
-    } satisfies GrammarRequest),
+    }) as Promise<GrammarIssue[]>,
   agentMessage: ({
     onEvent,
     ...args
@@ -230,12 +204,11 @@ export const ai = {
   }) => {
     const channel = new Channel<StreamEvent>();
     if (onEvent) channel.onmessage = onEvent;
-    // More parameters than the generated bindings take, so typed by hand.
-    return aiCall<AgentTurn[]>("ai_agent_message", {
-      ...args,
-      history: args.history satisfies AgentTurnInput[],
-      onEvent: channel,
-    });
+    return aiCommand(
+      "ai_agent_message",
+      args,
+      channel as Channel<StreamEvent_Deserialize>,
+    ) as Promise<AgentTurn[]>;
   },
   /** What the Web search button can do with this provider and model: its
    *  own search, or the search service Textus would use (none: needs setup). */
@@ -250,32 +223,6 @@ export const ai = {
 
   loadAgentWorkspace: (docPath: string | null, rootOverride: string | null) =>
     command("load_agent_workspace", docPath, rootOverride),
-  /** The writing conventions setting's allowed values. */
-  writingConventionsOptions: () => command("writing_conventions_options"),
-  /** The profile a document follows, and each language's in its project. */
-  writingConventionsEffective: (
-    docPath: string | null,
-    workspaceRoot: string | null,
-    document: string | null = null,
-  ) =>
-    command("writing_conventions_effective", docPath, workspaceRoot, document),
-  /** Checks a document's writing conventions offline (no AI provider). */
-  checkConventions: (
-    document: string,
-    docPath: string | null,
-    workspaceRoot: string | null,
-    strictness: string | null = null,
-  ) =>
-    command(
-      "conventions_check_document",
-      document,
-      docPath,
-      workspaceRoot,
-      strictness,
-    ),
-  /** Exact platform counts: "x_weighted", "bluesky", "wechat_title"... */
-  measureText: (text: string, metric: string) =>
-    command("measure_text", text, metric),
   /** The project folder's text files, for @-mentions. */
   listProjectFiles: (docPath: string | null, workspaceRoot: string | null) =>
     command("list_project_files", docPath, workspaceRoot),
@@ -284,6 +231,11 @@ export const ai = {
     workspaceRoot: string | null,
     path: string,
   ) => command("read_project_file", docPath, workspaceRoot, path),
+  /** General mode's kept file changes, and putting them on disk or back. */
+  fileChanges: (conversation: string, ids: string[]) =>
+    command("ai_file_changes", conversation, ids),
+  setFileChanges: (conversation: string, ids: string[], on: boolean) =>
+    command("ai_set_file_changes", conversation, ids, on),
   /** Creates `.textus/<rel>` from `template` if missing; returns its path. */
   ensureProjectFile: (
     docPath: string | null,
@@ -312,9 +264,7 @@ export const ai = {
     /** Recorded with what is remembered. */
     conversation: { id: string; title: string };
     exchange: { messages: string[]; reply: string };
-  }) =>
-    // One struct in Rust, as ai_complete's.
-    aiCall<RememberedChange[]>("memory_pass", args satisfies PassRequest),
+  }) => aiCommand("memory_pass", args) as Promise<RememberedChange[]>,
   /** After an exchange, its request offered as a skill to save, or null. */
   offerSkill: (args: {
     provider: string;
@@ -322,7 +272,7 @@ export const ai = {
     docPath: string | null;
     workspaceRoot: string | null;
     exchange: { messages: string[]; reply: string };
-  }) => aiCall<SkillOffer | null>("ai_offer_skill", args),
+  }) => aiCommand("ai_offer_skill", args),
   /** An offered skill saved, for every document or this project's, in
    *  `modes`; checked as saveWrittenSkill is. */
   saveOfferedSkill: (

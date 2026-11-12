@@ -87,9 +87,6 @@ Before either kind, in the release's pull request:
 - **What CI doesn't block on.** Look at the latest `main` run's WebKit job
   and at any test reported flaky (testing.md › Flaky tests); fix or file
   each.
-- **Screenshots.** Run `npm run test:visual -- e2e/visual.spec.ts` on Linux
-  (testing.md › Which tests run when); look at each changed image, and
-  update the baseline only for a change you meant.
 - **Speed.** When the release touches the editor, large documents or plugin
   loading, run the benchmarks on the same machine as last time and compare.
 
@@ -156,15 +153,15 @@ Release notes aren't required for a pre-release: the fragments stay in
 
 ### What the workflow does
 
-1. `release.yml` checks that the tag matches the version files and that CI
-   (`check`, `e2e`, `native`) passed on the tagged commit - it waits if CI is
-   still running, and stops if it failed, so the builds don't run the tests
-   again. A pull request runs macOS, Windows and the iOS build only for
-   platform code, so this run after the merge is the first to run all of
-   them: before tagging, look at it whole, `e2e-webkit` and `ios` included,
-   which the gate doesn't wait for. A flaky job is rerun alone
-   (`gh run rerun <run> --failed`); a real failure is fixed on `main`,
-   brought to `stable` again, and the unpublished tag moved to the new
+1. `release.yml` checks that the tag matches the version files and runs
+   the full CI suite on the tagged commit (`ci.yml`, every job on every
+   platform); the builds start only once it passed. Pull requests into
+   `main` run only the quick checks, so this is where e2e, macOS, Windows
+   and iOS first run together - look at the run whole, `e2e-webkit` and
+   `ios` included, which the builds don't wait for. To see it before
+   tagging, run CI by hand on the commit (Run workflow). A flaky job is
+   rerun alone (`gh run rerun <run> --failed`); a real failure is fixed on
+   `main`, brought to `stable` again, and the unpublished tag moved to the new
    commit. Run `npm run test:perf` once and compare its numbers with the
    last release's: a reference, not a gate. Then it builds,
    signs and notarizes for macOS (Apple silicon and Intel), Windows and Linux

@@ -1,30 +1,39 @@
+import { openDocument, type OpenRequest } from "../../utils/open-document";
 import type { EditorView } from "@milkdown/kit/prose/view";
 import { fs } from "../../platform/ipc";
-import { OPEN_FILE_IN_TAB_EVENT, type OpenFileInTab } from "../../utils/events";
-import { noteJump } from "../../utils/nav-history";
+import { noteJump } from "../nav-history";
 import { basename, dirname, isNoteFile } from "../../utils/path";
 import { parseNoteLink, type NoteLink } from "../../utils/note-link";
 import { revealHeading } from "./heading-jump";
 
 /** Where in a note a link points: `^id` for a block, `A#B` for nested
  *  headings; undefined for its top. */
-export function linkAnchor(link: NoteLink): string | undefined {
+function linkAnchor(link: NoteLink): string | undefined {
   if (link.block) return `^${link.block}`;
   return link.headings.join("#") || undefined;
 }
 
-function open(detail: OpenFileInTab): void {
-  window.dispatchEvent(
-    new CustomEvent<OpenFileInTab>(OPEN_FILE_IN_TAB_EVENT, { detail }),
-  );
+function open({ path, ...request }: { path: string } & OpenRequest): void {
+  openDocument(path, request);
 }
+
+/** The most folders a followed link makes on its way to a new note. */
+const MAX_NEW_FOLDERS = 8;
 
 /** A note a link names that isn't there yet, made empty so the link leads
  *  somewhere; never over a file (the backend refuses a taken name). */
 async function createNote(path: string): Promise<boolean> {
   const dir = dirname(path);
-  if ((await fs.fileMtimeMs(dir)) === null)
-    await fs.createFolder(dirname(dir), basename(dir)).catch(() => {});
+  // The folders it names that aren't there, made from the top down.
+  const missing: string[] = [];
+  for (
+    let at = dir;
+    missing.length < MAX_NEW_FOLDERS && (await fs.fileMtimeMs(at)) === null;
+    at = dirname(at)
+  )
+    missing.unshift(at);
+  for (const folder of missing)
+    await fs.createFolder(dirname(folder), basename(folder)).catch(() => {});
   return fs.createDocument(dir, basename(path)).then(
     () => true,
     () => false,

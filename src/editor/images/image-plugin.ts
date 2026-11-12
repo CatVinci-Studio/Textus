@@ -1,3 +1,5 @@
+import { editorInUse } from "../editor-in-use";
+import { islandAt } from "../../engine/frame/frame-store";
 import { Plugin, PluginKey, TextSelection } from "@milkdown/kit/prose/state";
 import { Decoration, DecorationSet } from "@milkdown/kit/prose/view";
 import { $prose } from "@milkdown/kit/utils";
@@ -5,12 +7,7 @@ import type { Node as ProseNode } from "@milkdown/kit/prose/model";
 import type { EditorView } from "@milkdown/kit/prose/view";
 import { fileSrc } from "../../platform/file-src";
 import { resolveStrings } from "../../i18n/strings";
-import {
-  decodeUrlPath,
-  dirname,
-  hasUrlScheme,
-  isDrivePath,
-} from "../../utils/path";
+import { decodeUrlPath, dirname, hasUrlScheme } from "../../utils/path";
 import {
   canPickImageFile,
   canRevealInFileManager,
@@ -27,6 +24,7 @@ import {
 } from "./missing-image";
 import { parseEmbed } from "./obsidian-embed";
 import { rootedImagePath } from "./rooted-image";
+import { imageSource } from "./image-source";
 import { LINK } from "../markdown/link-source";
 import { parseLink } from "../markdown/link-syntax";
 import { clipboardImageSources } from "./pasted-files";
@@ -53,30 +51,27 @@ import {
   swapStoredBlobs,
 } from "./image-store";
 import { openDiagramViewer, zoomButton } from "../diagram-zoom";
-export {
-  safeImageStem,
-  imageStemForMode,
-  type PastedImage,
-  type ImageStore,
-  storeImage,
-  copyToImageFolder,
-  pickImageFile,
-} from "./image-store";
 /**
  * Image paste (stored in the document's image folder, relative src) and
  * render (local srcs rewritten to asset: URLs; the document keeps the original).
  */
 
 export function resolveImageSrc(src: string, docPath: string | null): string {
-  // A Windows drive path ("C:\..." / "C:/...") would otherwise read as a
-  // single-letter URL scheme to the test below.
-  if (isDrivePath(src)) return fileSrc(decodeUrlPath(src));
-  if (!src || hasUrlScheme(src)) return src; // http(s), data:, asset:, file:, ...
-  if (src.startsWith("/")) return fileSrc(decodeUrlPath(src));
-  // Unsaved: left as written (shows missing). The sidebar folder is no
-  // stand-in, since the document may be saved elsewhere.
-  if (!docPath) return src;
-  return fileSrc(`${dirname(docPath)}/${decodeUrlPath(src)}`);
+  const source = imageSource(src, docPath);
+  switch (source.kind) {
+    case "web":
+      return source.url;
+    case "file":
+      return fileSrc(source.path);
+    case "share":
+      return "";
+    case "scoped":
+      return fileSrc(`${dirname(docPath!)}/${decodeUrlPath(src)}`);
+    // Unsaved: left as written (shows missing). The sidebar folder is no
+    // stand-in, since the document may be saved elsewhere.
+    default:
+      return src;
+  }
 }
 
 /**
@@ -336,17 +331,25 @@ export function createImagePlugin(options: ImageStore) {
         trs.some((tr) => tr.docChanged)
           ? swapStoredBlobs(state.tr, storedBlobs, changedRanges(trs))
           : null,
-      // Tauri hands drops to the app, so they arrive as a window event. Every
-      // tab's editor stays mounted; only the visible one takes them.
+      // Tauri hands drops to the app, so they arrive as a window event, to
+      // every island's editor: the one under the point takes them, else
+      // (dropped on the sidebar) the one in use.
       view: (view) => {
         const onDrop = (e: Event) => {
-          if (view.dom.offsetParent === null) return;
           const { paths, point } = (
             e as CustomEvent<{
               paths: string[];
               point: { x: number; y: number };
             }>
           ).detail;
+          const under = islandAt(point.x, point.y)?.paneId;
+          if (
+            under
+              ? under !==
+                view.dom.closest<HTMLElement>("[data-pane-id]")?.dataset.paneId
+              : !editorInUse(view.dom)
+          )
+            return;
           const at = view.posAtCoords({ left: point.x, top: point.y });
           // Off the text (the sidebar, the margins): at the caret instead.
           if (at)

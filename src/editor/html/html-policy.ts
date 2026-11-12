@@ -136,7 +136,7 @@ function sanitizeSpan(value: string): string | null {
 const ALLOWED_URL_PROTOCOLS = new Set(["http:", "https:", "mailto:"]);
 /** Rejects javascript:/data:/file: etc.; relative URLs resolve against the
  *  dummy base as "http:" and pass. */
-export function sanitizeUrl(value: string): string | null {
+function sanitizeUrl(value: string): string | null {
   try {
     const resolved = new URL(value, "http://localhost/");
     return ALLOWED_URL_PROTOCOLS.has(resolved.protocol) ? value : null;
@@ -380,7 +380,7 @@ const ATTR_RULES: Record<string, Record<string, AttrRule>> = {
   },
 };
 
-export interface PolicyOptions {
+interface PolicyOptions {
   /** Links open outside the editor (WYSIWYG widgets). */
   linkTarget?: boolean;
   /** Lets the caller put trusted output of its own in place of an element it

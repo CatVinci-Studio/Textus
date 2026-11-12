@@ -1,7 +1,7 @@
 /** The snapshot Rust hands every webview before the page loads, so settings
  *  and UI state are there synchronously. A reload replays an old one, so stores
  *  re-read live values; with no snapshot they fall back to localStorage. */
-export interface Boot {
+interface Boot {
   settings: Record<string, unknown>;
   rev: number;
   uiState: Record<string, unknown>;

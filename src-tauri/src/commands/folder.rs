@@ -40,16 +40,19 @@ fn index(root: &Path, limits: &Limits) -> FolderIndex {
 }
 
 /// `read` on the folder `root`, off the main thread. Refuses the home folder
-/// and a drive root ("TOO_BROAD"): a walk there is everything the user owns.
-async fn read_folder<T: Send + 'static>(root: String, read: fn(&Path) -> T) -> Result<T, String> {
+/// and a drive root ("tooBroad"): a walk there is everything the user owns.
+async fn read_folder<T: Send + 'static>(
+    root: String,
+    read: impl FnOnce(&Path) -> T + Send + 'static,
+) -> Result<T, String> {
     crate::commands::fs::require_non_empty(&root)?;
     tauri::async_runtime::spawn_blocking(move || {
         let root = PathBuf::from(root);
         if is_too_broad(&root) {
-            return Err("TOO_BROAD".to_string());
+            return Err(crate::errors::error("tooBroad"));
         }
         if !root.is_dir() {
-            return Err("NOT_A_FOLDER".to_string());
+            return Err(crate::errors::error("notFolder"));
         }
         Ok(read(&root))
     })
@@ -58,7 +61,7 @@ async fn read_folder<T: Send + 'static>(root: String, read: fn(&Path) -> T) -> R
 }
 
 /// The files under `root`, for the sidebar's file-name search. Refuses the home
-/// folder and a drive root ("TOO_BROAD"): a walk there is everything the user owns.
+/// folder and a drive root ("tooBroad"): a walk there is everything the user owns.
 #[tauri::command]
 #[cfg_attr(test, specta::specta)]
 pub async fn index_folder(root: String) -> Result<FolderIndex, String> {
@@ -75,14 +78,34 @@ pub async fn folder_documents(
     read_folder(root, crate::plugins::workspace::documents_in).await
 }
 
+/// The lines of the documents under `root` holding `query`, ignoring case,
+/// for the Search page. Refuses what `index_folder` refuses.
+#[tauri::command]
+#[cfg_attr(test, specta::specta)]
+pub async fn search_folder_text(
+    root: String,
+    query: String,
+) -> Result<crate::plugins::workspace::SearchResult, String> {
+    use crate::plugins::workspace::{search_in, MAX_SEARCH_HITS, SEARCH_TIME};
+    read_folder(root, move |root| {
+        search_in(
+            root,
+            &query,
+            MAX_SEARCH_HITS,
+            std::time::Instant::now() + SEARCH_TIME,
+        )
+    })
+    .await
+}
+
 /// File > Open Folder…: a folder picker. The home folder or a drive root is
-/// refused with "TOO_BROAD" for the frontend to explain.
+/// refused as tooBroad for the frontend to explain.
 #[cfg(desktop)]
 #[tauri::command]
 #[cfg_attr(test, specta::specta)]
 pub async fn pick_open_folder(window: tauri::WebviewWindow) -> Result<Option<String>, String> {
     let picked = tauri::async_runtime::spawn_blocking(move || {
-        crate::commands::fs::window_file_dialog(&window).blocking_pick_folder()
+        crate::dialogs::window_file_dialog(&window).blocking_pick_folder()
     })
     .await
     .map_err(|e| e.to_string())?
@@ -91,7 +114,7 @@ pub async fn pick_open_folder(window: tauri::WebviewWindow) -> Result<Option<Str
         .as_deref()
         .is_some_and(|p| is_too_broad(Path::new(p)))
     {
-        return Err("TOO_BROAD".to_string());
+        return Err(crate::errors::error("tooBroad"));
     }
     Ok(picked)
 }
@@ -139,12 +162,12 @@ mod tests {
     #[test]
     fn refuses_a_root_that_is_too_broad() {
         let err = tauri::async_runtime::block_on(index_folder("/".to_string())).unwrap_err();
-        assert_eq!(err, "TOO_BROAD");
+        assert_eq!(err, crate::errors::error("tooBroad"));
         if let Some(home) = std::env::var_os(if cfg!(windows) { "USERPROFILE" } else { "HOME" }) {
             let err =
                 tauri::async_runtime::block_on(index_folder(home.to_string_lossy().into_owned()))
                     .unwrap_err();
-            assert_eq!(err, "TOO_BROAD");
+            assert_eq!(err, crate::errors::error("tooBroad"));
         }
     }
 

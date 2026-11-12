@@ -14,7 +14,7 @@ const FENCE = /^ {0,3}(`{3,}|~{3,})\s*([^\s`]*)/;
 /** The widest a diagram is placed, in CSS px: about a page's text column. */
 const MAX_WIDTH = 600;
 
-export interface DiagramImage {
+interface DiagramImage {
   dataUrl: string;
   /** Width to place it at, in CSS px. */
   width: number;

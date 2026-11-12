@@ -2,6 +2,7 @@
 
 import { beforeAll, beforeEach, describe, expect, it } from "vitest";
 import { loadSettings } from "./SettingsContext";
+import { DEFAULT_SETTINGS } from "./settings-types";
 import { installTestLocalStorage } from "../dev/test-local-storage";
 
 const SETTINGS_KEY = "catvinci-settings";
@@ -108,6 +109,19 @@ describe("settings from a build with features since taken out", () => {
     );
     expect(loadSettings().revisionDisplay).toBe("final");
   });
+
+  it("turn on the format bar once for a profile that kept the old default", () => {
+    localStorage.setItem(
+      SETTINGS_KEY,
+      JSON.stringify({ language: "zh", formatBar: false }),
+    );
+    expect(loadSettings().formatBar).toBe(true);
+    localStorage.setItem(
+      SETTINGS_KEY,
+      JSON.stringify({ language: "zh", formatBar: false, formatBarOnce: true }),
+    );
+    expect(loadSettings().formatBar).toBe(false);
+  });
 });
 
 describe("colour swatches", () => {
@@ -128,43 +142,6 @@ describe("colour swatches", () => {
     expect(load({ colorSwatches: "code" })).toBe("code");
     expect(load({ colorSwatches: "sometimes" })).toBe("off");
     expect(load({ colorSwatches: true })).toBe("off");
-  });
-});
-
-describe("the default Agent mode", () => {
-  beforeAll(installTestLocalStorage);
-  beforeEach(() => localStorage.clear());
-
-  it("starts new conversations in Review mode", () => {
-    expect(loadSettings().agentDefaultMode).toBe("review");
-  });
-
-  it("keeps a saved mode", () => {
-    for (const mode of ["write", "review"]) {
-      localStorage.setItem(
-        SETTINGS_KEY,
-        JSON.stringify({ agentDefaultMode: mode }),
-      );
-      expect(loadSettings().agentDefaultMode).toBe(mode);
-    }
-  });
-
-  it("reads 1.2.0's Revise mode as Write", () => {
-    localStorage.setItem(
-      SETTINGS_KEY,
-      JSON.stringify({ agentDefaultMode: "revise" }),
-    );
-    expect(loadSettings().agentDefaultMode).toBe("write");
-  });
-
-  it("rejects a mode it doesn't know", () => {
-    for (const saved of ["destroy", "ask", 3]) {
-      localStorage.setItem(
-        SETTINGS_KEY,
-        JSON.stringify({ agentDefaultMode: saved }),
-      );
-      expect(loadSettings().agentDefaultMode).toBe("review");
-    }
   });
 });
 
@@ -279,5 +256,23 @@ describe("where images go", () => {
     expect(settings.imageUploadEndpoint).toBe(
       "https://images.example.com/upload",
     );
+  });
+});
+
+describe("a setting of the wrong kind", () => {
+  beforeAll(installTestLocalStorage);
+  beforeEach(() => localStorage.clear());
+
+  it("reads as its default, so nothing that reads it breaks", () => {
+    localStorage.setItem(
+      SETTINGS_KEY,
+      JSON.stringify({ activityRailHidden: 5, proxyHost: 7, zoom: "big" }),
+    );
+    const settings = loadSettings();
+    expect(settings.activityRailHidden).toEqual(
+      DEFAULT_SETTINGS.activityRailHidden,
+    );
+    expect(settings.proxyHost).toBe(DEFAULT_SETTINGS.proxyHost);
+    expect(settings.zoom).toBe(DEFAULT_SETTINGS.zoom);
   });
 });

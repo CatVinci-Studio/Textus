@@ -1,3 +1,4 @@
+import { fill } from "../../i18n/fill";
 import { useEffect, useMemo, useState } from "react";
 import { ai } from "../../platform/ipc";
 import { useSettings } from "../../prefs/SettingsContext";
@@ -91,9 +92,9 @@ function ReplySkillChip({ skill }: { skill: ReplySkill }) {
     skill.labels[settings.language] ?? skill.labels.en ?? `/${skill.name}`;
   return (
     <div className="agent-memory-chip skill-offer-chip" data-skill={skill.name}>
-      <span className="agent-memory-chip-text">
+      <span className="tx-clamp agent-memory-chip-text">
         {state.kind === "saved"
-          ? t.skillOfferSaved.replace("{name}", `/${skill.name}`)
+          ? fill(t.skillOfferSaved, { name: `/${skill.name}` })
           : label}
       </span>
       {skill.description && (

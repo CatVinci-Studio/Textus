@@ -56,7 +56,7 @@
 
 .hover-card-button:hover {
   border-color: var(--ui-accent);
-  color: var(--ui-accent);
+  color: var(--ui-accent-text);
 }
 
 /* Positioned: the list bullets, drawn out of the flow, scroll and clip with
@@ -69,12 +69,9 @@
   line-height: 1.55;
 }
 
-.hover-card-body > :first-child {
-  margin-top: 0;
-}
-
-.hover-card-body > :last-child {
-  margin-bottom: 0;
+/* Its links are for reading, not following. */
+.hover-card-body a {
+  pointer-events: none;
 }
 
 .hover-card-body :is(h1, h2, h3, h4, h5, h6) {

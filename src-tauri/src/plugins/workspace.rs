@@ -9,27 +9,20 @@ use std::path::Path;
 use std::time::{Duration, Instant};
 
 /// A document larger than this is left out: no notes file is.
-const MAX_DOCUMENT_BYTES: u64 = 4 * 1024 * 1024;
+pub(super) const MAX_DOCUMENT_BYTES: u64 = 4 * 1024 * 1024;
 /// The most text `plugin_fs_documents` hands over at once.
 const MAX_TOTAL_BYTES: u64 = 64 * 1024 * 1024;
 /// The most matching lines a search returns, whatever it asks.
-const MAX_SEARCH_HITS: usize = 1000;
+pub(crate) const MAX_SEARCH_HITS: usize = 1000;
 /// How long a search reads before it stops.
-const SEARCH_TIME: Duration = Duration::from_secs(5);
-
-fn is_markdown(path: &Path) -> bool {
-    matches!(
-        crate::extract::extension_of(path).as_str(),
-        "md" | "markdown"
-    )
-}
+pub(crate) const SEARCH_TIME: Duration = Duration::from_secs(5);
 
 fn checked_root(app: &tauri::AppHandle, id: &str, root: &str) -> Result<(), String> {
     if !state::read(app).allows(id, "files.read") {
         return Err(refused(id, "files.read"));
     }
     if root.is_empty() || !Path::new(root).is_dir() {
-        return Err("No folder is open.".to_string());
+        return Err(crate::errors::error("noFolder"));
     }
     Ok(())
 }
@@ -55,7 +48,7 @@ pub struct WorkspaceDocuments {
 }
 
 pub(crate) fn documents_in(root: &Path) -> WorkspaceDocuments {
-    let walk = crate::walk::walk(root, &crate::walk::LIMITS, is_markdown);
+    let walk = crate::walk::walk(root, &crate::walk::LIMITS, crate::extract::is_markdown);
     let mut truncated = walk.truncated;
     let mut total = 0;
     let mut documents = Vec::new();
@@ -108,6 +101,7 @@ pub struct SearchHit {
     rel: String,
     /// 1-based.
     line: u32,
+    /// The line around the match: a long one cut, with "…".
     text: String,
 }
 
@@ -120,7 +114,7 @@ pub struct SearchResult {
     truncated: bool,
 }
 
-fn search_in(root: &Path, query: &str, limit: usize, deadline: Instant) -> SearchResult {
+pub(crate) fn search_in(root: &Path, query: &str, limit: usize, deadline: Instant) -> SearchResult {
     let needle = query.trim().to_lowercase();
     let mut hits = Vec::new();
     if needle.is_empty() {
@@ -129,7 +123,7 @@ fn search_in(root: &Path, query: &str, limit: usize, deadline: Instant) -> Searc
             truncated: false,
         };
     }
-    let walk = crate::walk::walk(root, &crate::walk::LIMITS, is_markdown);
+    let walk = crate::walk::walk(root, &crate::walk::LIMITS, crate::extract::is_markdown);
     let mut truncated = walk.truncated;
     'files: for file in walk.files {
         if Instant::now() >= deadline {
@@ -144,7 +138,8 @@ fn search_in(root: &Path, query: &str, limit: usize, deadline: Instant) -> Searc
             continue;
         };
         for (at, line) in text.lines().enumerate() {
-            if !line.to_lowercase().contains(&needle) {
+            let lower = line.to_lowercase();
+            if !lower.contains(&needle) {
                 continue;
             }
             if hits.len() == limit {
@@ -155,7 +150,7 @@ fn search_in(root: &Path, query: &str, limit: usize, deadline: Instant) -> Searc
                 path: file.path.to_string_lossy().to_string(),
                 rel: file.rel.clone(),
                 line: at as u32 + 1,
-                text: line.trim().chars().take(300).collect(),
+                text: crate::excerpt::around(line, &lower, &needle),
             });
         }
     }

@@ -48,7 +48,7 @@ pub(crate) fn terms(text: &str) -> Vec<String> {
     let mut word = String::new();
     let mut prev_cjk: Option<char> = None;
     for c in text.chars().flat_map(char::to_lowercase) {
-        if is_cjk(c) {
+        if crate::ai::rules::text::is_cjk(c) {
             if word.chars().count() >= 2 {
                 out.push(std::mem::take(&mut word));
             }
@@ -73,10 +73,6 @@ pub(crate) fn terms(text: &str) -> Vec<String> {
         out.push(word);
     }
     out
-}
-
-fn is_cjk(c: char) -> bool {
-    matches!(c as u32, 0x3040..=0x30FF | 0x3400..=0x4DBF | 0x4E00..=0x9FFF | 0xAC00..=0xD7AF | 0xF900..=0xFAFF)
 }
 
 /// `text` cut into passages of whole lines, numbered from 1 as read_file

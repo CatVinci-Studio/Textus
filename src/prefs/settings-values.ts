@@ -1,3 +1,8 @@
+import SEARCH_SERVICE_LIST from "./search-services.json";
+import type { Backend } from "../platform/bindings/ai";
+import type { ImageHost } from "../platform/bindings/files";
+import TABLES from "./appearance-tables.json";
+import type { AgentMode_Serialize as AgentMode } from "../platform/bindings/ai-skills";
 /** Each setting's possible values: the modes, sizes, services and kinds a
  *  setting chooses among, with the lists Settings offers. */
 
@@ -7,7 +12,6 @@ export type ThemeMode = "system" | "light" | "dark";
 /// A provider catalog id ("openai", "anthropic", "custom", ...). Not a closed
 /// union: the catalog, fetched at runtime, decides which exist.
 export type AiProvider = string;
-export type NewDocumentMode = "window" | "tab";
 /** How wide the text column runs: "auto" widens with the window, "standard"
  *  keeps the classic fixed measure, "full" uses the whole pane. */
 export type ContentWidth = "auto" | "standard" | "full";
@@ -22,8 +26,9 @@ export type ProxyType = "none" | "http" | "https" | "socks5";
 export const THEME_MODES: ThemeMode[] = ["system", "light", "dark"];
 
 /// Interface Text Size, as a factor on the UI's type scale.
-export const UI_TEXT_SCALES = [0.9, 1, 1.1, 1.25] as const;
-export type UiTextScale = (typeof UI_TEXT_SCALES)[number];
+export type UiTextScale = 0.9 | 1 | 1.1 | 1.25;
+/** One table with the boot script's (appearance-tables.json). */
+export const UI_TEXT_SCALES = TABLES.uiTextScales as readonly UiTextScale[];
 /** The document's text size in px, or "auto" for the theme's own. */
 export const DOC_TEXT_SIZES = [
   "auto",
@@ -58,11 +63,7 @@ export type DocLineSpacing = (typeof DOC_LINE_SPACINGS)[number];
 export const DOC_LINE_HEIGHTS: Record<
   Exclude<DocLineSpacing, "auto">,
   number
-> = {
-  compact: 1.55,
-  standard: 1.8,
-  relaxed: 2.05,
-};
+> = TABLES.docLineHeights;
 
 /** Character spacing as Word sets it: the theme's, normal, or expanded or
  *  condensed by `docLetterSpacingBy` points. */
@@ -99,6 +100,10 @@ export type ColorSwatchMode = (typeof COLOR_SWATCH_MODES)[number];
 
 /// In the order the menus list them, the default first.
 export const REVISION_DISPLAYS = ["final", "original", "inline"] as const;
+/** How Textus AI's changes land: as revisions to review (the open document
+ *  and the folder's other files alike), or written straight in. */
+export const AI_CHANGE_MODES = ["revision", "direct"] as const;
+export type AiChangeMode = (typeof AI_CHANGE_MODES)[number];
 export type RevisionDisplay = (typeof REVISION_DISPLAYS)[number];
 
 /// Tone presets for AI completion, each resolved to an English style
@@ -115,28 +120,12 @@ export const COMPLETION_TONES: CompletionTone[] = [
 ];
 
 /// What Textus's own web_search uses when the chat model can't search.
-/// "auto" takes the first of the DeepSeek, Zhipu and Kimi keys saved.
-export type SearchService =
-  | "auto"
-  | "deepseek"
-  | "zhipu"
-  | "kimi"
-  | "bocha"
-  | "tavily"
-  | "brave"
-  | "exa"
-  | "searxng";
+/// "auto" takes the first saved key of those search-services.json marks.
+export type SearchService = "auto" | Backend;
 
 export const SEARCH_SERVICES: SearchService[] = [
   "auto",
-  "deepseek",
-  "zhipu",
-  "kimi",
-  "bocha",
-  "tavily",
-  "brave",
-  "exa",
-  "searxng",
+  ...SEARCH_SERVICE_LIST.map((service) => service.id as Backend),
 ];
 
 export type GrammarStrictness = "typos" | "standard" | "strict";
@@ -180,13 +169,12 @@ export interface GalleryOrigin {
 }
 
 export type ImageStorageMode = "local" | "image-host";
-/** Keep in step with the Rust `ImageHost`. */
-export type ImageHost = "picgo" | "smms" | "imgur" | "custom";
+export type { ImageHost };
 export const IMAGE_HOSTS: ImageHost[] = ["picgo", "smms", "imgur", "custom"];
 export type ImageNamingMode = "auto" | "original" | "ask";
 /** The AI conversation's mode: Write adds and changes text, Review only
  *  reads and comments, Create makes a theme, plugin or skill. In composer order. */
-export type AgentMode = "write" | "review" | "create";
+export type { AgentMode };
 export const AGENT_MODES: readonly AgentMode[] = ["write", "review", "create"];
 /** The AI panel's modes: the agent's, then Research, which researches a
  *  topic and writes a paper (docs/design/ai-paper.md). Research never

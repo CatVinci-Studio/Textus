@@ -1,8 +1,8 @@
 import { useDeferredValue, useEffect, useRef } from "react";
-import { SplitPreview, type PreviewExtras } from "./SplitPreview";
+import { SplitPreview } from "./SplitPreview";
 import { useVaultLineBreaks } from "./useVaultLineBreaks";
 import { DocSourceEditor } from "./lazy-doc-source-editor";
-import { elasticOverscroll } from "../../ui/elastic-overscroll";
+import { elasticOverscroll } from "../../engine/controls/elastic-overscroll";
 import "./SplitView.css";
 
 /**
@@ -16,14 +16,12 @@ export function SplitView({
   typewriter,
   onChange,
   readOnly,
-  previewExtras,
 }: {
   content: string;
   filePath: string | null;
   typewriter: boolean;
   onChange: (markdown: string) => void;
   readOnly: boolean;
-  previewExtras?: PreviewExtras;
 }) {
   const rootRef = useRef<HTMLDivElement>(null);
   const previewRef = useRef<HTMLDivElement>(null);
@@ -70,30 +68,28 @@ export function SplitView({
 
   return (
     <div ref={rootRef} className="split-view">
-      <DocSourceEditor
-        className="split-source"
-        value={content}
-        docPath={filePath}
-        typewriter={typewriter}
-        onChange={onChange}
-        readOnly={readOnly}
-        onScroll={(scroller) =>
-          previewRef.current && follow(scroller, previewRef.current, "source")
-        }
-      />
-      <div
-        ref={previewRef}
-        className={`split-preview${breaks ? " split-preview-breaks" : ""}`}
-        onScroll={(e) => {
-          const source = sourceScroller();
-          if (source) follow(e.currentTarget, source, "preview");
-        }}
-      >
-        <SplitPreview
-          markdown={deferred}
-          filePath={filePath}
-          extras={previewExtras}
+      <div className="split-view-panes">
+        <DocSourceEditor
+          className="split-source"
+          value={content}
+          docPath={filePath}
+          typewriter={typewriter}
+          onChange={onChange}
+          readOnly={readOnly}
+          onScroll={(scroller) =>
+            previewRef.current && follow(scroller, previewRef.current, "source")
+          }
         />
+        <div
+          ref={previewRef}
+          className={`split-preview tx-scroll-reveal${breaks ? " split-preview-breaks" : ""}`}
+          onScroll={(e) => {
+            const source = sourceScroller();
+            if (source) follow(e.currentTarget, source, "preview");
+          }}
+        >
+          <SplitPreview markdown={deferred} filePath={filePath} />
+        </div>
       </div>
     </div>
   );

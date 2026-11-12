@@ -1,7 +1,7 @@
 import { useEffect, useState } from "react";
 import { invoke } from "@tauri-apps/api/core";
 import { documentDir, join } from "@tauri-apps/api/path";
-import type { DirEntryInfo } from "./fs-types";
+import { type DirEntryInfo } from "./bindings/files";
 import { isIOSApp } from "./capabilities";
 
 /**

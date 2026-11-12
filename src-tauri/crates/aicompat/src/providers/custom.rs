@@ -122,7 +122,7 @@ pub async fn agent_step_streaming(
         ..Default::default()
     };
     crate::http::read_sse(res, "Custom endpoint", |data| acc.apply(data, on_event)).await?;
-    if let Some(error) = acc.error {
+    if let Some(error) = acc.error.take().or_else(|| acc.cut_off()) {
         return Err(error);
     }
     let usage = acc.usage;

@@ -8,7 +8,7 @@ import { GrammarSuggestion } from "../ai/writing/GrammarSuggestion";
 import { InsertTableDialog } from "../editor/tables/InsertTableDialog";
 import { ImageNameDialog } from "../editor/images/ImageNameDialog";
 import { FindReplaceBar } from "../editor/find/FindReplaceBar";
-import { Presence } from "../ui/usePresence";
+import { Presence } from "../engine/motion/usePresence";
 import type { Settings } from "../prefs/SettingsContext";
 import type { Strings } from "../i18n/strings";
 
@@ -38,7 +38,7 @@ export function EditorOverlays({
   const { findReplace, tableDialogOpen, setTableDialogOpen } = popups;
   return (
     <>
-      <Presence show={findReplace.open} exitMs={120}>
+      <Presence show={findReplace.open}>
         {findReplace.open && (
           <FindReplaceBar findReplace={findReplace} labels={t} />
         )}
@@ -59,20 +59,20 @@ export function EditorOverlays({
         own={review.notes.menu}
         onClose={() => popups.setMenu(null)}
       />
-      <Presence show={tableDialogOpen} exitMs={120}>
+      <Presence show={tableDialogOpen}>
         {tableDialogOpen && (
           <InsertTableDialog
             title={t.insertTable}
             rowsLabel={t.insertTableRowsLabel}
             columnsLabel={t.insertTableColumnsLabel}
             confirmLabel={t.insertTableConfirm}
-            cancelLabel={t.closePromptCancel}
+            cancelLabel={t.cancel}
             onInsert={(rows, cols) => insertTable(run, rows, cols)}
             onClose={() => setTableDialogOpen(false)}
           />
         )}
       </Presence>
-      <Presence show={!!imageNameRequest} exitMs={120}>
+      <Presence show={!!imageNameRequest}>
         {imageNameRequest && (
           <ImageNameDialog
             request={imageNameRequest}
@@ -80,7 +80,7 @@ export function EditorOverlays({
             label={t.imageNameDialogLabel}
             invalidLabel={t.imageNameDialogInvalid}
             uploadLabel={t.imageNameDialogUpload}
-            cancelLabel={t.closePromptCancel}
+            cancelLabel={t.cancel}
             onClose={closeImageNameDialog}
           />
         )}

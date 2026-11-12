@@ -179,4 +179,46 @@ describe("the runtime in background code", () => {
     expect(typeof textus.notify.show).toBe("function");
     delete w.__textusBackground;
   });
+
+  it("deletes a secret set to nothing, never keeping the word null", async () => {
+    const host = readFileSync(join(__dirname, "runtime", "host.js"), "utf8");
+    const w = window as unknown as Record<string, unknown>;
+    w.__textusBackground = true;
+    const calls: [string, unknown][] = [];
+    let handlers: Record<string, (params: unknown) => Promise<unknown>> = {};
+    w.createEndpoint = (_port: unknown, given: typeof handlers) => {
+      handlers = given;
+      return {
+        call: (name: string, params: unknown) => {
+          calls.push([name, params]);
+          return Promise.resolve();
+        },
+        notify() {},
+      };
+    };
+    new Function("createEndpoint", host)(w.createEndpoint);
+    window.dispatchEvent(
+      new MessageEvent("message", {
+        source: window,
+        data: { textus: "init", env: {} },
+        ports: [new MessageChannel().port1],
+      }),
+    );
+    (w.__textusDefine as (f: (m: { exports: object }) => void) => void)(
+      (module) => {
+        module.exports = {
+          run: (
+            _job: unknown,
+            ctx: { secrets: { set: (key: string, value: null) => unknown } },
+          ) => ctx.secrets.set("apiKey", null),
+        };
+      },
+    );
+    await handlers.$runJob({ run: "run", job: "a", due: 0 });
+    expect(calls).toContainEqual([
+      "secrets.set",
+      { key: "apiKey", value: null },
+    ]);
+    delete w.__textusBackground;
+  });
 });

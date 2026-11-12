@@ -122,13 +122,9 @@ for (const lang of LANGS) {
           root: `/Users/me/Documents/${s.folder}`,
           library: s.library,
         },
-        storage: {
-          "textus-agent-panel-open": "1",
-          ...(s.panelWidth
-            ? { "textus-agent-panel-width": String(s.panelWidth) }
-            : {}),
-        },
       });
+      // The AI's conversation, opened as a person opens it.
+      await page.getByRole("button", { name: "Textus AI" }).first().click();
       await canned(page, {
         ai_agent_message: [
           { kind: "User", text: s.ask },
@@ -297,7 +293,7 @@ for (const lang of LANGS) {
       const s = textsFor("settings");
       await launch(page, { lang, file: heroFile(s) });
       await caretAtEnd(page);
-      await emit(page, "menu-open-settings");
+      await emit(page, "menu-settings");
       await page
         .locator(".settings-nav-item", { hasText: "Textus AI" })
         .click();

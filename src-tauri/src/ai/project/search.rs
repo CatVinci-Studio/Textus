@@ -193,7 +193,7 @@ pub fn find(root: &Path, query: &str, images: bool) -> String {
             2
         };
         let ext = crate::extract::extension_of(Path::new(rel));
-        let other = !SIDEBAR_DOCUMENT_EXTENSIONS.contains(&ext.as_str());
+        let other = !crate::extract::TEXT_DOCUMENT_EXTENSIONS.contains(&ext.as_str());
         groups[usize::from(other) * 3 + class].push(rel);
     }
     let found = groups.concat();

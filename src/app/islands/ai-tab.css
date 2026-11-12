@@ -1,0 +1,36 @@
+/* An AI tab fills its island; its conversation fills the tab. */
+.ai-tab {
+  position: relative;
+  container: ai-tab / inline-size;
+  display: flex;
+  flex-direction: column;
+  height: 100%;
+  min-height: 0;
+}
+
+.ai-tab > .agent-panel-mount {
+  flex: 1;
+  min-height: 0;
+  display: flex;
+  flex-direction: column;
+}
+
+/* The tab's row names the conversation: its own header gives way. */
+.ai-tab .agent-panel-header {
+  display: none;
+}
+
+/* Memory starts under the history button, not beneath it. */
+.ai-tab .agent-panel-memory {
+  padding-top: 40px;
+}
+
+/* Its cards on the paper take a tint. */
+.ai-tab .agent-panel-view {
+  --chat-card-bg: color-mix(in srgb, var(--ui-text) 4%, var(--ui-surface));
+}
+
+/* The conversation starts under the history button, not beneath it. */
+.ai-tab .agent-panel-body {
+  padding-top: calc(var(--control-height-sm) + var(--space-3));
+}

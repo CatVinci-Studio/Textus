@@ -1,0 +1,323 @@
+/* Tabs: a document's and the sidebar's share one look - a capsule that takes
+   the chosen fill - so each bar sets only its layout and type. */
+:is(.tab-pill, .sidebar-tab) {
+  border-radius: var(--shape-pill);
+  corner-shape: round;
+  background: transparent;
+  color: var(--ui-muted);
+  cursor: pointer;
+  transition:
+    background-color var(--dur-fast) var(--ease-standard),
+    color var(--dur-fast) var(--ease-standard);
+}
+
+:is(.tab-pill, .sidebar-tab):hover {
+  background: var(--ui-hover);
+}
+
+:is(.tab-pill-active, .sidebar-tab-active) {
+  background: var(--ui-selected);
+  color: var(--ui-selected-text);
+}
+
+/* Selects: one look - a drawn chevron in place of the native arrow - in
+   two sizes like the buttons. */
+:is(.settings-select, .inline-chat-mode, .paper-outline-kind) {
+  appearance: none;
+  -webkit-appearance: none;
+  min-height: var(--control-height);
+  padding: 0 24px 0 8px;
+  border: 1px solid var(--ui-border);
+  border-radius: var(--shape-pill);
+  corner-shape: round;
+  position: relative;
+  background-color: var(--ui-surface);
+  color: var(--ui-text);
+  font: inherit;
+  font-size: var(--text-control);
+  cursor: pointer;
+  transition: border-color var(--dur-fast) var(--ease-standard);
+}
+
+:root {
+  /* A select's chevron, drawn by a mask in the text's muted colour. */
+  --select-chevron: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='10' height='10' viewBox='0 0 10 10'%3E%3Cpath d='M2 3.8L5 6.8L8 3.8' stroke='black' stroke-width='1.4' fill='none' stroke-linecap='round' stroke-linejoin='round'/%3E%3C/svg%3E");
+}
+
+:is(.settings-select, .inline-chat-mode, .paper-outline-kind)::after {
+  content: "";
+  position: absolute;
+  top: 50%;
+  right: 8px;
+  width: 10px;
+  height: 10px;
+  translate: 0 -50%;
+  background: var(--ui-muted);
+  -webkit-mask: var(--select-chevron) center / contain no-repeat;
+  mask: var(--select-chevron) center / contain no-repeat;
+  pointer-events: none;
+}
+
+:is(.inline-chat-mode, .paper-outline-kind) {
+  min-height: var(--control-height-sm);
+  padding-left: 8px;
+  font-size: var(--text-secondary);
+}
+
+:is(.settings-select, .inline-chat-mode, .paper-outline-kind):hover {
+  border-color: color-mix(in srgb, var(--ui-muted) 45%, var(--ui-border));
+}
+
+/* Over the pointer cursor above, the one every disabled button has. */
+:is(
+  .ui-select,
+  .settings-select,
+  .inline-chat-mode,
+  .paper-outline-kind
+):disabled {
+  cursor: default;
+  opacity: 0.5;
+}
+
+/* Dialogs: the dimming fades in while the card grows out of the middle;
+   closing, both go together, a little faster. */
+:is(
+  .tx-backdrop,
+  .image-name-overlay,
+  .insert-table-overlay,
+  .settings-backdrop
+) {
+  animation: motion-fade-in var(--dur-base) var(--ease-standard);
+}
+
+:is(.close-prompt, .image-name-dialog, .insert-table-dialog, .settings-panel) {
+  animation: motion-dialog-in var(--dur-base) var(--ease-out);
+}
+
+:is(
+  .tx-backdrop,
+  .image-name-overlay,
+  .insert-table-overlay,
+  .settings-backdrop
+)[data-state="closing"] {
+  animation: motion-fade-out var(--dur-fast) var(--ease-in) forwards;
+}
+
+:is(
+    .tx-backdrop,
+    .image-name-overlay,
+    .insert-table-overlay,
+    .settings-backdrop
+  )[data-state="closing"]
+  > * {
+  animation: motion-shrink-out var(--dur-fast) var(--ease-in) forwards;
+}
+
+/* Toasts rise from the bottom edge they live on and sink back into it. */
+:is(.corner-toast) {
+  animation: motion-rise-in var(--dur-base) var(--ease-out);
+}
+
+:is(.corner-toast)[data-state="closing"] {
+  animation: motion-sink-out var(--dur-fast) var(--ease-in) forwards;
+}
+
+/* Rows in menus and lists: the highlight arrives in 80ms and leaves at
+   once, so a pointer running down a list leaves no trail behind it. */
+:is(
+  .app-menu-item,
+  .context-menu-item,
+  .ui-select-option,
+  .inline-chat-skill-item,
+  .completion-item,
+  .tree-row,
+  .chat-history-entry,
+  .settings-nav-item
+) {
+  transition: background-color 0s;
+}
+
+:is(
+  .app-menu-item,
+  .context-menu-item,
+  .ui-select-option,
+  .inline-chat-skill-item,
+  .tree-row,
+  .chat-history-entry,
+  .settings-nav-item
+):is(:hover, :focus-visible, .is-active, .inline-chat-skill-item-active) {
+  transition: background-color var(--dur-instant) var(--ease-standard);
+}
+
+/* Menus: one panel padding, one item size, one hover. */
+:is(.app-menu-list, .context-menu) {
+  padding: 4px;
+  font-size: var(--text-body);
+}
+
+:is(.app-menu-item, .context-menu-item) {
+  width: 100%;
+  padding: 4px 8px;
+  border: none;
+  border-radius: var(--shape-s);
+  background: transparent;
+  color: var(--ui-text);
+  font: inherit;
+  text-align: left;
+  cursor: pointer;
+}
+
+:is(.app-menu-item, .context-menu-item):not(:disabled):is(
+    :hover,
+    :focus-visible
+  ) {
+  background: var(--ui-hover);
+  outline: none;
+}
+
+/* On its way to an open submenu, the pointer lights no row it crosses. */
+:is(
+    .app-menu-list[data-aiming] > .app-menu-row > .app-menu-item,
+    .context-menu[data-aiming] > .context-menu-item
+  ):hover:not([aria-expanded="true"], :focus-visible) {
+  background: transparent;
+}
+
+:is(.app-menu-separator, .context-menu-separator) {
+  height: 1px;
+  margin: 4px 8px;
+  background: var(--ui-border);
+}
+
+:is(.corner-toast button):is(.corner-toast-secondary) {
+  border-color: transparent;
+  color: var(--ui-muted, inherit);
+}
+
+:where(
+    .settings-panel,
+    .find-replace-bar,
+    .image-name-dialog,
+    .insert-table-dialog
+  )
+  input:not([type="checkbox"]):not([type="radio"]),
+:where(.settings-panel) select,
+:where(.settings-panel) textarea {
+  background-color: var(--ui-bg);
+}
+
+.find-replace-field:focus-within {
+  border-color: var(--ui-accent);
+}
+
+/* Text fields: one focus look - the border takes the accent - instead of
+   a mix of rings and borders. */
+:is(
+  .settings-text-input,
+  .settings-code-input,
+  .image-name-input-row input,
+  .insert-table-fields input
+):focus-visible {
+  outline: none;
+  border-color: var(--ui-accent);
+}
+
+/* Number fields type their number; the native spin arrows were the one
+   square, grey control left in the dialogs. */
+.insert-table-fields input {
+  appearance: textfield;
+  -moz-appearance: textfield;
+}
+
+.insert-table-fields input::-webkit-inner-spin-button,
+.insert-table-fields input::-webkit-outer-spin-button {
+  appearance: none;
+  -webkit-appearance: none;
+  margin: 0;
+}
+
+/* Checkboxes: drawn, so they match the buttons rather than the platform. */
+input[type="checkbox"].ui-check {
+  appearance: none;
+  -webkit-appearance: none;
+  flex-shrink: 0;
+  width: 15px;
+  height: 15px;
+  margin: 0;
+  border: 1px solid color-mix(in srgb, var(--ui-muted) 55%, var(--ui-border));
+  border-radius: var(--shape-xs);
+  background: var(--ui-surface);
+  cursor: pointer;
+  transition:
+    background-color var(--dur-fast) var(--ease-standard),
+    border-color var(--dur-fast) var(--ease-standard);
+}
+
+input[type="checkbox"].ui-check:checked {
+  border-color: var(--ui-accent-fill);
+  background: var(--ui-accent-fill)
+    url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 12 12'%3E%3Cpath d='M2.5 6.2l2.3 2.3 4.7-5' fill='none' stroke='white' stroke-width='1.7' stroke-linecap='round' stroke-linejoin='round'/%3E%3C/svg%3E")
+    center / 11px no-repeat;
+}
+
+/* Scrollbars: thin, rounded and quiet everywhere (the sidebar goes further
+   and shows its own only on hover). */
+::-webkit-scrollbar {
+  width: 10px;
+  height: 10px;
+}
+
+::-webkit-scrollbar-track {
+  background: transparent;
+}
+
+::-webkit-scrollbar-thumb {
+  border: 3px solid transparent;
+  border-radius: var(--shape-pill);
+  corner-shape: round;
+  background: color-mix(in srgb, var(--ui-muted) 35%, transparent) padding-box;
+}
+
+::-webkit-scrollbar-thumb:hover {
+  background-color: color-mix(in srgb, var(--ui-muted) 55%, transparent);
+}
+
+::-webkit-scrollbar-corner {
+  background: transparent;
+}
+
+/* A page's own bar (a document, Settings: marked tx-scroll-reveal) shows
+   only while it scrolls or under the pointer, so it doesn't run down the
+   middle of the window beside another island. */
+:is(.tx-scroll-reveal, .tx-scroll-reveal .cm-scroller):not(
+    .is-scrolling
+  )::-webkit-scrollbar-thumb:not(:hover) {
+  background-color: transparent;
+}
+
+/* WebKit restyles a scrollbar only when its element's own style changes; a
+   property with no visible effect here (no columns) makes the change real. */
+:is(.tx-scroll-reveal, .tx-scroll-reveal .cm-scroller).is-scrolling {
+  column-rule-color: transparent;
+}
+
+/* Continuous corners where the engine draws them (Chromium 139+, so
+   WebView2); elsewhere the plain radius stands. Capsules and circles stay
+   round. */
+@supports (corner-shape: superellipse(1.25)) {
+  :where(*) {
+    corner-shape: superellipse(1.25);
+  }
+}
+
+/* Text on whole pixels where the engine can round: a size times the
+   interface's step lands between pixels and blurs. */
+@supports (width: round(1px, 1px)) {
+  :root:not([data-window-chrome="mobile"]) {
+    --text-caption: round(calc(12px * var(--chrome-scale, 1)), 1px);
+    --text-body: round(calc(14px * var(--chrome-scale, 1)), 1px);
+    --text-title: round(calc(18px * var(--chrome-scale, 1)), 1px);
+    --text-large-title: round(calc(24px * var(--chrome-scale, 1)), 1px);
+    --text-mark: round(calc(9px * var(--chrome-scale, 1)), 1px);
+  }
+}

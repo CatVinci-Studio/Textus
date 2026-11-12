@@ -1,7 +1,10 @@
+import { linkToFile } from "./islands/link-to-file";
+import { useHoldScrollOnReturn } from "../document-view/hold-scroll-on-return";
 import { useEffect } from "react";
-import { setReadOnlyShown } from "../document/read-only-state";
 import { links } from "../platform/ipc";
 import { useGlobalShortcuts } from "./useGlobalShortcuts";
+import type { AppActionHandlers } from "./menu/app-actions";
+import { useIslandNumbers } from "./islands/useIslandNumbers";
 import { useNavHistory } from "./useNavHistory";
 import { useExternalChangeReload } from "../document/useExternalChangeReload";
 import { tabReadOnly } from "../document/read-only";
@@ -25,12 +28,13 @@ import {
   useTutorialTabRecovery,
   useWriteLesson,
 } from "./onboarding-wiring";
-import { setDocumentDrop } from "../ui/document-drop";
-import { fileDropOnDocuments } from "./split/split-drop";
+import { setDocumentDrop } from "../engine/controls/document-drop";
+import { fileDropOnDocuments } from "./islands/split-drop";
 import type { WindowShell } from "./useWindowShell";
 import type { WindowDocuments } from "./useWindowDocuments";
 import type { Settings, useSettings } from "../prefs/SettingsContext";
 import type { Strings } from "../i18n/strings";
+import { tabInUse } from "../engine/layout/store";
 
 /** Everything that reaches a window from outside its own controls. */
 export function useWindowWiring({
@@ -51,21 +55,28 @@ export function useWindowWiring({
   const { activeTab, openFolder, openFile, openPathInTab } = docs;
 
   useSettingsCommands(settings, setSettings);
+  // What the actions a key and a menu item both run work with.
+  const appActions: AppActionHandlers = {
+    onToggleSidebar: panels.toggleSidebar,
+    onToggleAgentPanel: panels.toggleAgentPanel,
+    onToggleSplitView: docs.toggleSplitView,
+    onToggleZenMode: docs.toggleZenMode,
+    onToggleTextusAi: textusAi.toggle,
+    onToggleTypewriter: () =>
+      setSettings({ typewriterMode: !settings.typewriterMode }),
+    toggleSourceMode: docs.toggleSourceMode,
+  };
   useGlobalShortcuts({
     tabsRef,
     activeTabId,
     setActiveTabId,
     saveTab: docs.saveTab,
     requestCloseTab: docs.requestCloseTab,
-    toggleSourceMode: docs.toggleSourceMode,
-    toggleSidebar: panels.toggleSidebar,
-    toggleAgentPanel: panels.toggleAgentPanel,
-    toggleSplitView: docs.toggleSplitView,
-    toggleZenMode: docs.toggleZenMode,
+    actions: appActions,
     searchFiles: docs.searchFiles,
-    toggleTextusAi: textusAi.toggle,
   });
 
+  useIslandNumbers(setActiveTabId);
   useNavHistory({ tabsRef, activeTabId, setActiveTabId });
 
   useTutorialTabRecovery(tutorial, tabState, docs.claimPracticeTab);
@@ -81,7 +92,6 @@ export function useWindowWiring({
   useStartupRestore({
     activeTabId,
     enableDraftRecovery: settings.enableDraftRecovery,
-    newDocumentMode: settings.newDocumentMode,
     language: settings.language,
     onboardingShown: settings.onboardingShown,
     setTabs,
@@ -110,10 +120,18 @@ export function useWindowWiring({
   // let go.
   useEffect(() => {
     setDocumentDrop(
-      fileDropOnDocuments((path, drop) => void openPathInTab(path, { drop })),
+      fileDropOnDocuments((path, drop) => void openPathInTab(path, { drop }), {
+        // With Shift: a link to it in the document in use (one never
+        // saved has no place to link from: it opens instead).
+        link: (path) => {
+          const from = liveTabs().find((tab) => tab.id === tabInUse())?.path;
+          if (from) void linkToFile(path, from, openFolder.folder);
+          else void openPathInTab(path);
+        },
+      }),
     );
     return () => setDocumentDrop(null);
-  }, [openPathInTab]);
+  }, [openPathInTab, liveTabs, openFolder.folder]);
 
   useWindowCloseGuard(
     liveTabs,
@@ -123,6 +141,7 @@ export function useWindowWiring({
   );
 
   useExternalChangeReload(liveTabs, tabState.updateTab);
+  useHoldScrollOnReturn();
 
   const actions = useDocumentActions({
     tabState,
@@ -140,16 +159,18 @@ export function useWindowWiring({
     sourceMode: !!activeTab.sourceMode && !activeTab.splitView,
     splitView: !!activeTab.sourceMode && !!activeTab.splitView,
     typewriter: settings.typewriterMode,
+    formatBar: settings.formatBar,
     zen: docs.zenMode,
     readOnly: tabReadOnly(activeTab),
     folderOpen: openFolder.folder !== null,
   };
   useNativeMenuChecks(menuChecks);
-  useEffect(() => setReadOnlyShown(menuChecks.readOnly), [menuChecks.readOnly]);
   useNativeMenuAccelerators(settings.shortcuts);
 
   useMenuBridge({
+    ...appActions,
     activeTabId,
+    shortcuts: settings.shortcuts,
     liveTabs,
     t,
     pdfPageNumbers: settings.pdfPageNumbers,
@@ -159,22 +180,16 @@ export function useWindowWiring({
     onOpenSettings: shell.settingsOpening.openSettings,
     onCheckUpdates: shell.settingsOpening.openUpdates,
     onOpenPluginSettings: shell.settingsOpening.openPluginSettings,
-    onToggleTypewriter: () =>
-      setSettings({ typewriterMode: !settings.typewriterMode }),
-    onToggleSidebar: panels.toggleSidebar,
+    onToggleFormatBar: () => setSettings({ formatBar: !settings.formatBar }),
     showSidebarTab: (id: string) => {
       panels.setPanelMode(id);
       panels.setPanelOpen(true);
     },
-    onToggleAgentPanel: panels.toggleAgentPanel,
     onOpenAgentPanel: () => {
       if (!panels.agentPanel.open) panels.toggleAgentPanel();
     },
-    onToggleTextusAi: textusAi.toggle,
-    onToggleSplitView: docs.toggleSplitView,
     onToggleReadOnly: () => docs.chooseViewMode("read-only"),
     onViewModeDefault: () => docs.chooseViewMode("default"),
-    onToggleZenMode: docs.toggleZenMode,
     addBlankTab: tabState.addBlankTab,
     openFileDialog: docs.openFileDialog,
     openRecentFile: docs.openRecentFile,
@@ -183,7 +198,6 @@ export function useWindowWiring({
     closeFolder: openFolder.closeFolder,
     saveTab: docs.saveTab,
     saveTabAs: docs.saveTabAs,
-    toggleSourceMode: docs.toggleSourceMode,
     requestCloseTab: docs.requestCloseTab,
     reopenClosedTab: () => {
       const path = takeClosedPath((p) =>

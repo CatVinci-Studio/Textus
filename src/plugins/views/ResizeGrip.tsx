@@ -1,4 +1,4 @@
-import { useRef } from "react";
+import { useGrip } from "../../engine/frame/useGrip";
 import { clampScale } from "./floating-views";
 
 /**
@@ -22,38 +22,36 @@ export function ResizeGrip({
   onResize: (scale: number) => void;
   onDone: (scale: number) => void;
 }) {
-  const start = useRef<{ x: number; y: number; scale: number } | null>(null);
   // Screen points: the view, or its window, moves under the pointer.
-  const next = (event: React.PointerEvent) => {
-    const from = start.current!;
+  const next = (
+    event: React.PointerEvent,
+    from: { x: number; y: number; scale: number },
+  ) => {
     const dx = event.screenX - from.x;
     const inward = (side === "left" ? dx : -dx) / (width * from.scale);
     const up = (from.y - event.screenY) / (height * from.scale);
     return clampScale(from.scale * (1 + (inward + up) / 2));
   };
+  const grip = useGrip({
+    start: (event) => {
+      event.stopPropagation();
+      return { x: event.screenX, y: event.screenY, scale, last: scale };
+    },
+    move: (event, held) => {
+      held.last = next(event, held);
+      onResize(held.last);
+    },
+    end: (held, how) => {
+      if (how === "cancelled") onResize(scale);
+      else onDone(held.last);
+    },
+  });
   return (
     <div
       className="floating-view-grip"
       data-side={side}
       aria-hidden
-      onPointerDown={(event) => {
-        if (event.button !== 0) return;
-        event.stopPropagation();
-        event.currentTarget.setPointerCapture(event.pointerId);
-        start.current = { x: event.screenX, y: event.screenY, scale };
-      }}
-      onPointerMove={(event) => {
-        if (start.current) onResize(next(event));
-      }}
-      onPointerUp={(event) => {
-        if (!start.current) return;
-        onDone(next(event));
-        start.current = null;
-      }}
-      onPointerCancel={() => {
-        start.current = null;
-        onResize(scale);
-      }}
+      {...grip.props}
     />
   );
 }

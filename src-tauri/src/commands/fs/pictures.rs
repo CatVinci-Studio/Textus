@@ -50,12 +50,31 @@ impl ImageFolder {
 
     /// The src the markdown gets for the file `name` in this folder.
     pub(crate) fn src(&self, name: &str) -> String {
-        if self.src_prefix.is_empty() {
+        markdown_path(&if self.src_prefix.is_empty() {
             name.to_string()
         } else {
             format!("{}/{name}", self.src_prefix)
+        })
+    }
+}
+
+/// A path as a Markdown link's destination: a space as %20, and what would
+/// end the link or be read as an escape or a fragment (`(`, `)`, `%`, `#`)
+/// escaped too, so it needs no angle brackets and reads back as written.
+/// The frontend's linkPath writes the same.
+pub(crate) fn markdown_path(path: &str) -> String {
+    let mut out = String::with_capacity(path.len());
+    for c in path.chars() {
+        match c {
+            '%' => out.push_str("%25"),
+            ' ' => out.push_str("%20"),
+            '(' => out.push_str("%28"),
+            ')' => out.push_str("%29"),
+            '#' => out.push_str("%23"),
+            _ => out.push(c),
         }
     }
+    out
 }
 
 #[derive(Serialize)]
@@ -67,6 +86,9 @@ pub struct SavedImage {
     /// In an Obsidian vault that writes wiki links: the `![[…]]` to insert
     /// instead of a Markdown image.
     pub(crate) embed: Option<String>,
+    /// The file written, where it is the user's (in the document's folder),
+    /// for plugins to hear of; none for a draft's, kept by the app.
+    pub(crate) path: Option<String>,
 }
 
 /// Where the images of a document with no file yet are kept. They move into
@@ -81,13 +103,7 @@ pub(crate) fn draft_assets_dir(app: &tauri::AppHandle) -> Result<PathBuf, String
 
 /// `name` with "-n" before its extension: "a.png", "a-1.png", "a-2.png"...
 pub(crate) fn numbered_name(name: &str, n: usize) -> String {
-    if n == 0 {
-        return name.to_string();
-    }
-    match name.rsplit_once('.') {
-        Some((stem, ext)) if !stem.is_empty() => format!("{stem}-{n}.{ext}"),
-        _ => format!("{name}-{n}"),
-    }
+    crate::ids::numbered(name, n, crate::ids::Numbered::Dash)
 }
 
 /// Writes `bytes` into `dir` as `name`, or the first free `numbered_name`, and
@@ -150,19 +166,6 @@ pub struct ImageMigration {
     pub(crate) new: Option<String>,
 }
 
-/// The picture formats Save As carries along with a document. A relative link
-/// to any other kind of file is left as written.
-pub(crate) fn is_image_file(path: &Path) -> bool {
-    let ext = path
-        .extension()
-        .map(|e| e.to_string_lossy().to_ascii_lowercase())
-        .unwrap_or_default();
-    matches!(
-        ext.as_str(),
-        "png" | "jpg" | "jpeg" | "gif" | "webp" | "bmp" | "svg" | "tif" | "tiff"
-    )
-}
-
 /// Copies `from` into `dest_dir` under its own name (numbered when another
 /// picture has it) and returns the name used.
 pub(crate) async fn copy_image(from: &Path, dest_dir: &Path) -> Option<String> {
@@ -172,11 +175,6 @@ pub(crate) async fn copy_image(from: &Path, dest_dir: &Path) -> Option<String> {
     write_new_file(dest_dir, &name, &bytes, true).await.ok()
 }
 
-/// The extensions a picture moved to the Trash may have.
-#[cfg(desktop)]
-pub(crate) const PICTURE_EXTENSIONS: [&str; 8] =
-    ["png", "jpg", "jpeg", "webp", "gif", "svg", "avif", "bmp"];
-
 /// Whether `path`, a picture an accepted AI picture replaced, may go to the
 /// Trash: a picture file in or under the document's folder, or among the drafts' images.
 #[cfg(desktop)]
@@ -185,11 +183,7 @@ pub(crate) fn may_trash_picture(
     doc_path: Option<&Path>,
     path: &Path,
 ) -> Result<PathBuf, String> {
-    let is_picture = path
-        .extension()
-        .and_then(|e| e.to_str())
-        .is_some_and(|e| PICTURE_EXTENSIONS.contains(&e.to_ascii_lowercase().as_str()));
-    if !is_picture {
+    if !crate::media::is_picture(path) {
         return Err("Only a picture file goes to the Trash this way.".into());
     }
     let file =

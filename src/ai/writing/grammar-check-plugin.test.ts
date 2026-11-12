@@ -3,6 +3,7 @@ import { Schema, type Mark } from "@milkdown/kit/prose/model";
 import {
   checkedText,
   issuesToDecorations,
+  paragraphUnchanged,
   touchesCode,
 } from "./grammar-check-plugin";
 
@@ -84,5 +85,21 @@ describe("issuesToDecorations", () => {
       1,
     );
     expect(decorations.map((d) => d.spec.suggestion)).toEqual(["official"]);
+  });
+});
+
+describe("paragraphUnchanged", () => {
+  it("refuses a reply once text above has moved the paragraph", () => {
+    const p = (t: string) =>
+      schema.nodes.paragraph.create(null, schema.text(t));
+    const at = (doc: ReturnType<typeof schema.node>) =>
+      ({ state: { doc } }) as unknown as Parameters<
+        typeof paragraphUnchanged
+      >[0];
+    const before = schema.node("doc", null, [p("abcdef"), p("teh cat sat")]);
+    // The second paragraph's text starts at 9.
+    expect(paragraphUnchanged(at(before), 9, "teh cat sat")).toBe(true);
+    const after = schema.node("doc", null, [p("abc"), p("teh cat sat")]);
+    expect(paragraphUnchanged(at(after), 9, "teh cat sat")).toBe(false);
   });
 });

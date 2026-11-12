@@ -57,6 +57,8 @@ pub fn ai_cancel(request_id: String) {
     {
         let _ = tx.send(()); // receiver may already be gone if the request just finished on its own
     }
+    // Its pictures still being made are paid for by the picture: stopped too.
+    crate::ai::images::stop_request(&request_id);
 }
 
 #[cfg(test)]

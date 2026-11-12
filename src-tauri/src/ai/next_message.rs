@@ -15,26 +15,21 @@ const LONGEST: usize = 80;
 
 /// As many as fit as buttons over the message box.
 const MOST: usize = 3;
+/// What is sent of each message, and of the reply.
+const MESSAGE_CHARS: usize = 600;
+const REPLY_CHARS: usize = 1500;
 
 fn input(exchange: &Exchange) -> String {
     let start = exchange.messages.len().saturating_sub(MESSAGES_SENT);
     let mut text = String::from("The writer's messages, oldest first:\n");
     for message in &exchange.messages[start..] {
-        text.push_str(&format!("- {}\n", clip(message, 600)));
+        text.push_str(&format!("- {}\n", crate::ai::clip(message, MESSAGE_CHARS)));
     }
     text.push_str(&format!(
         "\nThe assistant's reply to the last one (what it wrote or changed is already in the document):\n{}\n\nTheir next messages:",
-        clip(&exchange.reply, 1500)
+        crate::ai::clip(&exchange.reply, REPLY_CHARS)
     ));
     text
-}
-
-fn clip(text: &str, chars: usize) -> String {
-    let text = text.trim();
-    match text.char_indices().nth(chars) {
-        Some((at, _)) => format!("{}…", &text[..at]),
-        None => text.to_string(),
-    }
 }
 
 /// One line of the answer as a message to offer, or None: NONE, nothing,

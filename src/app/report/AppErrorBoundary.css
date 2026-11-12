@@ -29,7 +29,7 @@
 
 .app-error-reload {
   min-height: 36px;
-  padding: 0 20px;
+  padding: 0 24px;
   border: none;
   border-radius: var(--shape-pill);
   background: var(--ui-text);

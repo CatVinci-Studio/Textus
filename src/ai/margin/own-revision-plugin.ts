@@ -9,11 +9,8 @@ import { StepMap } from "@milkdown/kit/prose/transform";
 import { ChangeSet } from "@milkdown/kit/prose/changeset";
 import { $prose } from "@milkdown/kit/utils";
 import { shownChanges, type ChangeSpan } from "./own-change-spans";
-import {
-  CHECK_SVG,
-  CROSS_SVG,
-  type SentencePickLabels,
-} from "../revision/pending-widgets";
+import { type SentencePickLabels } from "../revision/pending-widgets";
+import { CHECK_ICON_HTML, CROSS_ICON_HTML } from "../../engine/controls/icons";
 
 /** Track My Changes: the writer's edits shown against the text as tracking
  *  began. The document holds the new text; the original never enters it. */
@@ -50,7 +47,7 @@ type Meta =
 export const ownRevisionKey = new PluginKey<OwnRevisionState>("own-revisions");
 
 /** The changes from `base` to `doc`, word by word. */
-export function diff(base: ProseNode, doc: ProseNode): ChangeSet {
+function diff(base: ProseNode, doc: ProseNode): ChangeSet {
   return ChangeSet.create(base).addSteps(
     doc,
     [new StepMap([0, base.content.size, doc.content.size])],
@@ -58,7 +55,7 @@ export function diff(base: ProseNode, doc: ProseNode): ChangeSet {
   );
 }
 
-export function ownChanges(
+function ownChanges(
   base: ProseNode,
   shown: readonly ChangeSpan[],
   doc: ProseNode,
@@ -124,7 +121,7 @@ function build(
 }
 
 /** How a change's ✓ / ✕ in the text decide it, by editor. */
-export interface OwnPicker {
+interface OwnPicker {
   labels: SentencePickLabels;
   decide: (index: number, take: boolean) => void;
 }
@@ -148,7 +145,7 @@ function pick(view: EditorView, index: number): HTMLElement {
     const b = document.createElement("button");
     b.type = "button";
     b.className = take ? "pending-pick-take" : "pending-pick-keep";
-    b.innerHTML = take ? CHECK_SVG : CROSS_SVG;
+    b.innerHTML = take ? CHECK_ICON_HTML : CROSS_ICON_HTML;
     const picker = pickers.get(view);
     const label = picker ? picker.labels[take ? "take" : "keep"] : "";
     b.title = label;

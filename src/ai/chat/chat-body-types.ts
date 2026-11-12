@@ -1,6 +1,6 @@
-import type { DocumentSnapshot } from "../doc-markdown";
+import type { DocumentSnapshot } from "../../editor/markdown/doc-markdown";
 import type { MessageQueueLabels } from "./MessageQueue";
-import type { AgentConversation } from "./useAgentConversation";
+import type { AgentConversation } from "./conversation/conversation-types";
 import type { AgentMode, PanelMode } from "../../prefs/SettingsContext";
 import type { PendingStatus } from "../revision/usePendingEdits";
 import type { AgentTurn, EditProposal } from "../types";
@@ -50,9 +50,10 @@ export interface ChatBodyProps {
   workspaceRoot: string | null;
   conversation: AgentConversation;
   defaultMode: AgentMode;
+  /** Web search to start with, its own way (Create looks things up first). */
+  startWebSearch?: boolean;
   /** The tour's lesson's mode. */
   tourMode?: AgentMode | null;
-  defaultWebSearch: boolean;
   labels: ChatBodyLabels;
   proposalStatus: (callId: string) => PendingStatus;
   pendingCount: number;

@@ -6,11 +6,7 @@ import {
   stringifyYaml,
   withFrontmatter,
 } from "../../utils/frontmatter";
-import {
-  movedBy,
-  planLinkUpdates,
-  rewriteMovedLinks,
-} from "../../links/link-rewrite";
+import { linkPlanner } from "../../files/link-rewrite";
 import { relativePath } from "../../utils/path";
 
 describe("a glob", () => {
@@ -105,11 +101,9 @@ function rw(
   linkRoot: string | null = null,
 ) {
   const paths = [doc, to, ...others];
-  const [update] = planLinkUpdates([{ path: doc, text }], paths, {
-    root: "/r",
-    from,
-    to,
-    linkRoot,
+  const update = linkPlanner(paths, { root: "/r", from, to, linkRoot })({
+    path: doc,
+    text,
   });
   return update?.text ?? text;
 }
@@ -242,13 +236,9 @@ describe("a moved document's own links", () => {
   it("lead where they led before, wiki links and links from / untouched", () => {
     const text =
       "![](assets/a.png) [b](../b.md#x) [[Note]] [r](/r.md) [w](https://e.com)";
-    const from = "/r/notes/x.md";
-    const move = {
-      root: "/r",
-      files: [from],
-      moved: movedBy(from, "/r/archive/2024/x.md"),
-    };
-    expect(rewriteMovedLinks(text, from, move).text).toBe(
+    const to = "/r/archive/2024/x.md";
+    const plan = { root: "/r", from: "/r/notes/x.md", to };
+    expect(linkPlanner([to], plan)({ path: to, text })?.text).toBe(
       "![](../../notes/assets/a.png) [b](../../b.md#x) [[Note]] [r](/r.md) [w](https://e.com)",
     );
   });

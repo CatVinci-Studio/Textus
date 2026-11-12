@@ -37,7 +37,7 @@ export function markChangeSource<T extends Transaction>(
 
 /** A transaction's source; null for one that isn't a change of its own:
  *  no change, the follow-up of another, or bookkeeping kept out of undo. */
-export function transactionSource(tr: Transaction): ChangeSource | null {
+function transactionSource(tr: Transaction): ChangeSource | null {
   if (!tr.docChanged || tr.getMeta("appendedTransaction")) return null;
   const marked = tr.getMeta(META) as ChangeSource | undefined;
   if (marked) return marked;
@@ -46,7 +46,7 @@ export function transactionSource(tr: Transaction): ChangeSource | null {
   return "user";
 }
 
-export function strongerSource(
+function strongerSource(
   a: ChangeSource | null,
   b: ChangeSource | null,
 ): ChangeSource | null {

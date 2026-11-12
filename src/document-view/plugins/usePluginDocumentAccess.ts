@@ -5,13 +5,15 @@ import {
   cachedDocument,
   caretContext,
   readSelection,
-} from "../../ai/doc-markdown";
+} from "../../editor/markdown/doc-markdown";
 import {
   setActiveDocument,
-  setOpenDocument,
   type ActiveDocumentAccess,
-  type OpenDocumentAccess,
 } from "../../plugins/app-bridge";
+import {
+  setOpenDocument,
+  type OpenDocumentAccess,
+} from "../../registry/open-documents";
 import {
   applyPluginEdits,
   documentRevision,

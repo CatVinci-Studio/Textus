@@ -1,9 +1,15 @@
-import { useEffect, useRef, useState, useSyncExternalStore } from "react";
-import { useChromeScale } from "../../ui/useChromeScale";
-import { scaledPx } from "../../ui/chrome-scale";
+import { Tooltip } from "../../engine/controls/Tooltip";
+import { fill } from "../../i18n/fill";
+import { trackDrag } from "../../engine/drag/pointer-drag";
+import { useEffect, useState, useSyncExternalStore } from "react";
+import { useChromeScale } from "../../engine/controls/useChromeScale";
+import { scaledPx } from "../../engine/tokens/chrome-scale";
 import { windowInfo } from "../store/plugin-records";
-import { ContextMenu, type ContextMenuEntry } from "../../ui/ContextMenu";
-import { Presence } from "../../ui/usePresence";
+import {
+  ContextMenu,
+  type ContextMenuEntry,
+} from "../../engine/controls/ContextMenu";
+import { Presence } from "../../engine/motion/usePresence";
 import { PluginWebviewPanel } from "./PluginWebview";
 import { DesktopFloating, DOT_SIZE as DOT } from "./desktop-floating";
 import { ResizeGrip } from "./ResizeGrip";
@@ -31,8 +37,16 @@ const SNAP = 48;
  * size over the editor, dragged anywhere to move it, folded to a dot or
  * closed from its right-click menu.
  */
+const onResize = (changed: () => void) => {
+  window.addEventListener("resize", changed);
+  return () => window.removeEventListener("resize", changed);
+};
+const windowSize = () => `${window.innerWidth}x${window.innerHeight}`;
+
 export function FloatingViews() {
   useSyncExternalStore(subscribeFloating, floatingVersion);
+  // Placed again as the window resizes: kept inside it.
+  useSyncExternalStore(onResize, windowSize);
   const [canFloat, setCanFloat] = useState(false);
   useEffect(() => {
     void floatingOnDesktop().then(setCanFloat);
@@ -90,24 +104,23 @@ function FloatingBox({
   desktop: boolean;
 }) {
   const t = windowInfo().strings();
-  const [drag, setDrag] = useState<{
-    dx: number;
-    dy: number;
-    x: number;
-    y: number;
-  } | null>(null);
   const [live, setLive] = useState<{ left: number; top: number } | null>(null);
   const [menu, setMenu] = useState<{ x: number; y: number } | null>(null);
   /** The scale while the user resizes it. */
   const [sizing, setSizing] = useState<number | null>(null);
-  const moved = useRef(false);
   const chrome = useChromeScale();
   const [fullWidth, fullHeight] = floatingSize(
     { ...view, scale: sizing ?? view.scale },
     chrome,
   );
-  const width = view.folded ? DOT * chrome : fullWidth;
-  const height = view.folded ? DOT * chrome : fullHeight;
+  // Never larger than the window, its margins kept.
+  const room = (n: number) => n - 2 * scaledPx(MARGIN);
+  const width = view.folded
+    ? DOT * chrome
+    : Math.min(fullWidth, room(window.innerWidth));
+  const height = view.folded
+    ? DOT * chrome
+    : Math.min(fullHeight, room(window.innerHeight));
   const side = floatingSide(view);
   const at =
     live ??
@@ -126,60 +139,48 @@ function FloatingBox({
     };
   }
 
+  // Dragged anywhere, it moves (trackDrag's threshold: a tremor is still
+  // a click); let go, it lands; Esc puts it back.
   const start = (event: React.PointerEvent) => {
-    if (event.button !== 0) return;
-    event.currentTarget.setPointerCapture(event.pointerId);
-    moved.current = false;
-    setDrag({
-      dx: event.clientX - at.left,
-      dy: event.clientY - at.top,
-      x: event.clientX,
-      y: event.clientY,
+    const dx = event.clientX - at.left;
+    const dy = event.clientY - at.top;
+    let to: { left: number; top: number } | null = null;
+    trackDrag(event.nativeEvent, {
+      move: (x, y) => {
+        to = {
+          left: clamp(x - dx, width, window.innerWidth),
+          top: clamp(y - dy, height, window.innerHeight),
+        };
+        setLive(to);
+      },
+      end: (_x, _y, dropped) => {
+        if (dropped && to) {
+          moveFloating(view.view, {
+            x: snap(to.left, width, window.innerWidth) / window.innerWidth,
+            y: snap(to.top, height, window.innerHeight) / window.innerHeight,
+          });
+          touchFloating(view.view, "moved");
+        }
+        setLive(null);
+      },
     });
   };
-  const move = (event: React.PointerEvent) => {
-    if (!drag) return;
-    // A hand's tremor is still a click.
-    if (Math.hypot(event.clientX - drag.x, event.clientY - drag.y) < 4) return;
-    moved.current = true;
-    setLive({
-      left: clamp(event.clientX - drag.dx, width, window.innerWidth),
-      top: clamp(event.clientY - drag.dy, height, window.innerHeight),
-    });
-  };
-  const end = () => {
-    if (drag && live) {
-      moveFloating(view.view, {
-        x: snap(live.left, width, window.innerWidth) / window.innerWidth,
-        y: snap(live.top, height, window.innerHeight) / window.innerHeight,
-      });
-      touchFloating(view.view, "moved");
-    } else if (drag && !view.folded) touchFloating(view.view, "poke");
-    setDrag(null);
-    setLive(null);
-  };
-  const dragHandlers = {
-    onPointerDown: start,
-    onPointerMove: move,
-    onPointerUp: end,
-    onPointerCancel: end,
-  };
+  const dragHandlers = { onPointerDown: start };
 
   if (view.folded)
     return (
-      <button
-        type="button"
-        className="floating-view-dot"
-        style={{ left: at.left, top: at.top }}
-        aria-label={t.floatingUnfold.replace("{name}", view.title)}
-        title={view.title}
-        {...dragHandlers}
-        onClick={() => {
-          if (!moved.current) moveFloating(view.view, { folded: false });
-        }}
-      >
-        {view.icon ? <img src={view.icon} alt="" /> : view.title.slice(0, 1)}
-      </button>
+      <Tooltip text={view.title} description={null}>
+        <button
+          type="button"
+          className="floating-view-dot"
+          style={{ left: at.left, top: at.top }}
+          aria-label={fill(t.floatingUnfold, { name: view.title })}
+          {...dragHandlers}
+          onClick={() => moveFloating(view.view, { folded: false })}
+        >
+          {view.icon ? <img src={view.icon} alt="" /> : view.title.slice(0, 1)}
+        </button>
+      </Tooltip>
     );
 
   const own = floatingMenuItems(view);
@@ -189,18 +190,18 @@ function FloatingBox({
     ...(view.allowed === "either" && desktop
       ? [
           {
-            label: t.floatingToDesktop.replace("{name}", view.title),
+            label: fill(t.floatingToDesktop, { name: view.title }),
             onSelect: () => moveFloating(view.view, { place: "desktop" }),
           },
         ]
       : []),
     {
-      label: t.floatingFold.replace("{name}", view.title),
+      label: fill(t.floatingFold, { name: view.title }),
       onSelect: () => moveFloating(view.view, { folded: true }),
     },
     "separator",
     {
-      label: t.floatingClose.replace("{name}", view.title),
+      label: fill(t.floatingClose, { name: view.title }),
       onSelect: () => closeFloating(view.view),
     },
   ];
@@ -209,7 +210,7 @@ function FloatingBox({
     <div
       className="floating-view"
       data-floating-view={view.view}
-      data-dragging={drag ? "" : undefined}
+      data-dragging={live ? "" : undefined}
       role="dialog"
       aria-label={view.title}
       style={{ left: at.left, top: at.top, width, height }}
@@ -224,6 +225,8 @@ function FloatingBox({
       <div
         className="floating-view-handle"
         {...dragHandlers}
+        // A click, no drag: the page is poked (a pet's reaction).
+        onClick={() => touchFloating(view.view, "poke")}
         onContextMenu={(e) => {
           e.preventDefault();
           setMenu({ x: e.clientX, y: e.clientY });
@@ -245,7 +248,7 @@ function FloatingBox({
           });
         }}
       />
-      <Presence show={menu !== null} exitMs={120}>
+      <Presence show={menu !== null}>
         {menu && (
           <ContextMenu
             x={menu.x}

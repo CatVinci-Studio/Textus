@@ -11,14 +11,16 @@ import type { Ctx } from "@milkdown/kit/ctx";
 import {
   buildContextMenuItems,
   buildPhoneMoreItems,
-  rotateImage,
-  runTableAction,
-  selectedImagePos,
-  setImageWidth,
   type ContextMenuOptions,
 } from "./editor-menu";
+import {
+  rotateImage,
+  selectedImagePos,
+  setImageWidth,
+} from "./editor-menu-images";
+import { runTableAction } from "./editor-menu-tables";
 import type { EditorRunner } from "./useEditorRunner";
-import type { ContextMenuItem } from "../ui/ContextMenu";
+import type { ContextMenuItem } from "../engine/controls/ContextMenu";
 import { resolveStrings } from "../i18n/strings";
 
 // The node names commonmark/gfm register, with just enough spec for the
@@ -130,7 +132,7 @@ describe("the editor menu", () => {
       t.paste,
       `${t.menuPlainText} › ${t.copyAsPlainText} | ${t.pasteAsPlainText}`,
       "-",
-      `${t.menuFormat} › ${t.toolbarBold} | ${t.toolbarItalic} | ${t.toolbarHighlight}`,
+      `${t.menuFormat} › ${t.toolbarBold} | ${t.toolbarItalic} | ${t.menuStrikethrough} | ${t.toolbarHighlight} | ${t.menuInlineCode} | - | ${t.menuClearFormatting}`,
     ]);
   });
 
@@ -163,7 +165,10 @@ describe("the editor menu", () => {
       t.paste,
       `${t.menuPlainText} › ${t.copyAsPlainText} | ${t.pasteAsPlainText}`,
       "-",
-      `${t.menuFormat} › ${t.toolbarBold} | ${t.toolbarItalic} | ${t.toolbarHighlight} | - | ${[1, 2, 3].map((n) => t.menuHeadingTemplate.replace("{n}", String(n))).join(" | ")} | - | ${t.insertBulletList} | ${t.insertOrderedList} | ${t.insertBlockquote} | ${t.insertCodeBlock} | ${t.insertTable}`,
+      // Obsidian's three: inline styles, the block, and what goes in.
+      `${t.menuFormat} › ${t.toolbarBold} | ${t.toolbarItalic} | ${t.menuStrikethrough} | ${t.toolbarHighlight} | ${t.menuInlineCode} | - | ${t.menuClearFormatting}`,
+      `${t.menuParagraph} › ${[1, 2, 3].map((n) => t.menuHeadingTemplate.replace("{n}", String(n))).join(" | ")} | - | ${t.menuBulletList} | ${t.menuOrderedList} | ${t.menuTaskList} | ${t.menuBlockquote}`,
+      `${t.menuInsertGroup} › ${t.menuTable} | ${t.menuCodeBlock} | ${t.menuMathBlock} | ${t.menuDivider}`,
       `${t.menuTextusAi} › Ask | Continue`,
     ]);
   });
@@ -247,7 +252,7 @@ describe("the editor menu", () => {
       buildPhoneMoreItems(editorAt(caretIn("text")).run, options(null)),
     );
     expect(inText).toContain(t.insertTable);
-    expect(inText).not.toContain(t.insertBulletList);
+    expect(inText).not.toContain(t.menuBulletList);
 
     const onImage = labels(
       buildPhoneMoreItems(editorAt(imageSelected).run, options(imagePos)),

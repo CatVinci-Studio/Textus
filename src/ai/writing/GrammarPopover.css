@@ -41,7 +41,7 @@
 .grammar-kind-punctuation,
 .grammar-kind-rules {
   background: color-mix(in srgb, var(--ui-accent) 12%, transparent);
-  color: var(--ui-accent);
+  color: var(--ui-accent-text);
 }
 
 .grammar-popover-fix {
@@ -86,7 +86,7 @@
 }
 
 .grammar-popover-nav button:hover {
-  background: color-mix(in srgb, var(--ui-text) 8%, transparent);
+  background: var(--ui-hover);
   color: var(--ui-text);
 }
 

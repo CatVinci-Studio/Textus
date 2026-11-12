@@ -1,3 +1,5 @@
+import { sourceFind } from "../find/cm-find";
+import { useSourceFind } from "../find/useSourceFind";
 import { useEffect, useRef } from "react";
 import {
   Annotation,
@@ -20,7 +22,7 @@ import {
   standardKeymap,
   undo,
 } from "@codemirror/commands";
-import { centerSourceCaret } from "./mode-switch";
+import { centerSourceCaret } from "./mode-caret";
 import { sourceHighlighting } from "./source-highlight";
 import { sourceEscapes } from "./source-escapes";
 import {
@@ -29,8 +31,9 @@ import {
   type SourceEdit,
 } from "./source-view-registry";
 import { SOURCE_EDIT_EVENT } from "../../utils/events";
+import { followFormatMenu, formatSource } from "./source-format-events";
 import { tellCopied } from "../../clipboard/copied";
-import { elasticOverscroll } from "../../ui/elastic-overscroll";
+import { elasticOverscroll } from "../../engine/controls/elastic-overscroll";
 import "./source-editor.css";
 
 /** A change the tab's markdown made, not the user. */
@@ -114,7 +117,14 @@ export function SourceEditor({
           }),
           // The plain-text keys only: no searchKeymap (Ctrl/Cmd+F is
           // Textus's own find bar), and Tab moves the focus as in any field.
-          keymap.of([...standardKeymap, ...historyKeymap]),
+          // Bold and italic write their Markdown, as in the rendered view.
+          keymap.of([
+            { key: "Mod-b", run: (v) => formatSource(v, "bold") },
+            { key: "Mod-i", run: (v) => formatSource(v, "italic") },
+            ...standardKeymap,
+            ...historyKeymap,
+          ]),
+          sourceFind,
           sourceHighlighting(),
           sourceEscapes(),
           // A caller's paste handler (a document's source stores pictures);
@@ -156,6 +166,7 @@ export function SourceEditor({
         edit(action);
     };
     host.addEventListener(SOURCE_EDIT_EVENT, onEdit);
+    const stopFormat = followFormatMenu(view);
     const scroller = view.scrollDOM;
     const onScrollEvent = () => latest.current.onScroll?.(scroller);
     scroller.addEventListener("scroll", onScrollEvent, { passive: true });
@@ -163,6 +174,7 @@ export function SourceEditor({
     const stopElastic = elasticOverscroll(scroller, view.dom);
     return () => {
       stopElastic();
+      stopFormat();
       host.removeEventListener(SOURCE_EDIT_EVENT, onEdit);
       scroller.removeEventListener("scroll", onScrollEvent);
       unregisterSourceView(host);
@@ -172,7 +184,27 @@ export function SourceEditor({
     };
   }, []);
 
-  // The tab's markdown can change from outside: open, reload, an AI edit.
+  useFollowProps(viewRef, readOnlyRef, value, readOnly);
+  const findBar = useSourceFind(viewRef);
+  return (
+    <>
+      <div
+        ref={hostRef}
+        className={`source-view tx-scroll-reveal ${className}${typewriter ? " typewriter-source" : ""}`}
+      />
+      {findBar}
+    </>
+  );
+}
+
+/** The view follows its props: the tab's markdown changed from outside
+ *  (open, reload, an AI edit), and read-only switched. */
+function useFollowProps(
+  viewRef: React.RefObject<EditorView | null>,
+  readOnlyRef: React.RefObject<Compartment | null>,
+  value: string,
+  readOnly: boolean,
+) {
   useEffect(() => {
     const view = viewRef.current;
     if (!view) return;
@@ -203,7 +235,7 @@ export function SourceEditor({
       },
       annotations: [Transaction.addToHistory.of(false), outside.of(true)],
     });
-  }, [value]);
+  }, [value, viewRef]);
 
   useEffect(() => {
     const view = viewRef.current;
@@ -212,12 +244,5 @@ export function SourceEditor({
       view.dispatch({
         effects: compartment.reconfigure(readOnlyOf(readOnly)),
       });
-  }, [readOnly]);
-
-  return (
-    <div
-      ref={hostRef}
-      className={`source-view ${className}${typewriter ? " typewriter-source" : ""}`}
-    />
-  );
+  }, [readOnly, viewRef, readOnlyRef]);
 }

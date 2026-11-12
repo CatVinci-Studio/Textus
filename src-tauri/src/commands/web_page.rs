@@ -4,7 +4,7 @@
 
 use serde::{Deserialize, Serialize};
 use tauri::webview::{NewWindowResponse, PageLoadEvent, WebviewBuilder};
-use tauri::{AppHandle, Emitter, LogicalPosition, LogicalSize, Manager, Url, WebviewUrl, Window};
+use tauri::{Emitter, LogicalPosition, LogicalSize, Manager, Url, WebviewUrl, Window};
 
 /// Where the page goes in its window, in CSS pixels from the window's
 /// content's top left.
@@ -55,21 +55,15 @@ fn label(window: &Window, id: &str) -> String {
 fn https(url: &str) -> Result<Url, String> {
     let url = Url::parse(url).map_err(|e| e.to_string())?;
     if url.scheme() != "https" {
-        return Err("Only an https:// page opens in a tab.".into());
+        return Err(crate::errors::error("httpsOnly"));
     }
     Ok(url)
 }
 
-fn open_outside(app: &AppHandle, url: &Url) {
-    use tauri_plugin_opener::OpenerExt;
-    if matches!(url.scheme(), "http" | "https" | "mailto") {
-        let _ = app.opener().open_url(url.as_str(), None::<&str>);
-    }
-}
-
 /// Shows tab `id`'s page at `bounds`, making it the first time; an existing
 /// page is moved and shown again where it was left.
-#[tauri::command]
+// Async, as a window's child webview is built (chat_window.rs).
+#[tauri::command(async)]
 #[cfg_attr(test, specta::specta)]
 pub fn web_page_show(
     window: Window,
@@ -98,14 +92,14 @@ pub fn web_page_show(
                 if url.scheme() == "https" || url.scheme() == "about" {
                     return true;
                 }
-                open_outside(&app, url);
+                crate::window_guard::open_outside(&app, url);
                 false
             }
         })
         .on_new_window({
             let app = app.clone();
             move |url, _| {
-                open_outside(&app, &url);
+                crate::window_guard::open_outside(&app, &url);
                 NewWindowResponse::Deny
             }
         })

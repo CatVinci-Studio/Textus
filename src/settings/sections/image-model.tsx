@@ -1,10 +1,11 @@
+import { fill } from "../../i18n/fill";
 import { useEffect, useState } from "react";
 import { useSettings } from "../../prefs/SettingsContext";
 import type { Strings, TextKey } from "../../i18n/strings";
 import { auth } from "../../platform/ipc";
-import { Select } from "../../ui/Select";
+import { Select } from "../../engine/controls/Select";
 import { SettingRow, VERBATIM_INPUT } from "./controls";
-import { ApiKeyProviderPanel } from "./providers";
+import { ApiKeyProviderPanel } from "./provider-auth";
 import {
   FOLLOW_CHAT,
   useChatGptSignedIn,
@@ -80,7 +81,11 @@ export function ImageModelSection({ t }: { t: Strings }) {
             ? t.imageServiceFollowNoPictures
             : chatGptWithoutSignIn
               ? t.imageChatGptSignInHint
-              : undefined
+              : entry &&
+                askKey &&
+                entry.id !== "custom" &&
+                // The key is the provider's one, kept on Providers.
+                fill(t.imageServiceNoKey, { name: label(entry, t) })
         }
       >
         <Select
@@ -93,7 +98,7 @@ export function ImageModelSection({ t }: { t: Strings }) {
         >
           <option value={FOLLOW_CHAT}>
             {followed
-              ? t.imageServiceFollowChat.replace("{name}", followed)
+              ? fill(t.imageServiceFollowChat, { name: followed })
               : t.imageServiceFollowChatBare}
           </option>
           <option value="">{t.imageModelNone}</option>
@@ -169,12 +174,12 @@ export function ImageModelSection({ t }: { t: Strings }) {
           </SettingRow>
         </>
       )}
-      {entry && askKey && (
+      {entry?.id === "custom" && askKey && (
         <ApiKeyProviderPanel
           t={t}
           providerId={entry.keyId}
           label={label(entry, t)}
-          keyOptional={entry.id === "custom"}
+          keyOptional
         />
       )}
     </>

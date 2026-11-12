@@ -1,3 +1,5 @@
+import { SearchField } from "../../engine/controls/SearchField";
+import { PluginProblem } from "./PluginProblem";
 import {
   memo,
   useCallback,
@@ -8,24 +10,17 @@ import {
   useSyncExternalStore,
   type PointerEvent as ReactPointerEvent,
   type KeyboardEvent,
-  type ReactNode,
+  type CSSProperties,
 } from "react";
-import { ContextMenu } from "../../ui/ContextMenu";
+import { ContextMenu } from "../../engine/controls/ContextMenu";
 import { useLatest } from "../../utils/hooks/useLatest";
-import { runCommand } from "../../app/commands";
-import {
-  BulletListIcon,
-  CheckIcon,
-  ChevronIcon,
-  FolderIcon,
-  GenericFileIcon,
-  HistoryIcon,
-  ImageFileIcon,
-  PinIcon,
-  SearchIcon,
-} from "../../ui/icons";
+import { runCommand } from "../../registry/commands";
+import { ChevronIcon } from "../../engine/controls/icons";
+import { ListRowIcon } from "./list-row-icon";
 import { getWindowAccess } from "../app-bridge";
-import { askPlugin, pluginRecord } from "../manager";
+import { mayOpen } from "../may-open";
+import { askPlugin } from "../manager";
+import { pluginRecord } from "../store/plugin-records";
 import {
   listView,
   listViewsVersion,
@@ -34,7 +29,8 @@ import {
 import { pluginName, windowInfo } from "../store/plugin-records";
 import "./PluginListView.css";
 import { isImeKeydown } from "../../utils/ime";
-import { trackDrag } from "../../ui/pointer-drag";
+import { trackDrag } from "../../engine/drag/pointer-drag";
+import { listMove } from "../../engine/controls/list-keys";
 
 /** A list item as a plugin gives it. */
 export interface PluginListItem {
@@ -60,17 +56,6 @@ export interface PluginListItem {
   data?: unknown;
 }
 
-const ICONS: Record<string, (props: { className?: string }) => ReactNode> = {
-  file: GenericFileIcon,
-  folder: FolderIcon,
-  image: ImageFileIcon,
-  task: CheckIcon,
-  history: HistoryIcon,
-  pin: PinIcon,
-  search: SearchIcon,
-  list: BulletListIcon,
-};
-
 /** Whether every word typed is in the item's words. */
 export function listItemMatches(item: PluginListItem, query: string): boolean {
   const haystack =
@@ -87,11 +72,14 @@ function keyOf(item: PluginListItem, index: number): string {
 }
 
 /** What a click on an item does when the plugin doesn't take it: its
- *  place opens, or its command runs. */
-function defaultSelect(item: PluginListItem) {
+ *  place opens - one the plugin may open - or its command runs. */
+function defaultSelect(plugin: string, item: PluginListItem) {
   if (item.location) {
     const { path, ...place } = item.location;
-    getWindowAccess()?.openFile(path, { place, preview: true });
+    const access = getWindowAccess();
+    const granted = pluginRecord(plugin)?.granted ?? [];
+    if (access && mayOpen(plugin, granted, access.rootPath(), path))
+      access.openFile(path, { place, preview: true });
   } else if (item.command) runCommand(item.command.id, item.command.args ?? []);
 }
 
@@ -108,7 +96,7 @@ export const PluginListPane = memo(function PluginListPane({
   view: string;
   className?: string;
 }) {
-  const { info, items, setItems, children, open, toggleOpen, error } =
+  const { info, items, setItems, children, open, toggleOpen, error, fail } =
     usePluginListItems(plugin, view);
   const [query, setQuery] = useState("");
   const [active, setActive] = useState(0);
@@ -121,22 +109,23 @@ export const PluginListPane = memo(function PluginListPane({
 
   const select = (item: PluginListItem) => {
     if (info?.select)
-      void askPlugin(plugin, "$listSelect", { view, item }).catch(() => {});
-    else defaultSelect(item);
+      void askPlugin(plugin, "$listSelect", { view, item }).catch(fail);
+    else defaultSelect(plugin, item);
   };
 
   const check = (item: PluginListItem) => {
     // Ticked at once; the plugin's refresh has the last word.
-    setItems(
-      (all) =>
-        all?.map((i) => (i === item ? { ...i, checkbox: !i.checkbox } : i)) ??
-        all,
-    );
+    const ticked = { ...item, checkbox: !item.checkbox };
+    setItems((all) => all?.map((i) => (i === item ? ticked : i)) ?? all);
     void askPlugin(plugin, "$listCheck", {
       view,
       item,
       checked: !item.checkbox,
-    }).catch(() => {});
+    }).catch((err: unknown) => {
+      // Not ticked after all.
+      setItems((all) => all?.map((i) => (i === ticked ? item : i)) ?? all);
+      fail(err);
+    });
   };
 
   // A row dragged onto another: the plugin moves it there (onMove).
@@ -169,7 +158,7 @@ export const PluginListPane = memo(function PluginListPane({
             view,
             item,
             target: target.item,
-          }).catch(() => {});
+          }).catch(fail);
         },
       });
     },
@@ -194,12 +183,10 @@ export const PluginListPane = memo(function PluginListPane({
   const onKey = (e: KeyboardEvent<HTMLDivElement>) => {
     if (isImeKeydown(e) || !rows.length) return;
     const row = rows[Math.min(active, rows.length - 1)];
-    if (e.key === "ArrowDown") {
+    const moved = listMove(e.key, active, rows.length, false);
+    if (moved !== null) {
       e.preventDefault();
-      setActive((i) => Math.min(i + 1, rows.length - 1));
-    } else if (e.key === "ArrowUp") {
-      e.preventDefault();
-      setActive((i) => Math.max(i - 1, 0));
+      setActive(moved);
     } else if (e.key === "Enter") {
       e.preventDefault();
       select(row.item);
@@ -222,22 +209,24 @@ export const PluginListPane = memo(function PluginListPane({
   return (
     <div className={`plugin-list ${className ?? ""}`}>
       {info?.filterPlaceholder !== undefined && (
-        <input
-          className="plugin-list-filter settings-text-input"
-          placeholder={info.filterPlaceholder}
-          aria-label={info.filterPlaceholder}
-          value={query}
-          onChange={(e) => {
-            setQuery(e.target.value);
-            setActive(0);
-          }}
-          onKeyDown={onKey}
-        />
+        // The sidebar's second row, as every panel's search is.
+        <div className="tx-pane-row">
+          <SearchField
+            placeholder={info.filterPlaceholder}
+            aria-label={info.filterPlaceholder}
+            value={query}
+            onChange={(e) => {
+              setQuery(e.target.value);
+              setActive(0);
+            }}
+            onKeyDown={onKey}
+          />
+        </div>
       )}
       {info?.message && (
         <div className="plugin-list-message">{info.message}</div>
       )}
-      {error && <div className="plugin-webview-problem">{error}</div>}
+      {error && <PluginProblem error={error} />}
       <div
         className="plugin-list-rows"
         role="tree"
@@ -245,8 +234,10 @@ export const PluginListPane = memo(function PluginListPane({
         tabIndex={0}
         onKeyDown={onKey}
       >
-        {items && rows.length === 0 && (
-          <div className="plugin-list-empty">
+        {/* A message the plugin set, or its error, stands in for the
+            empty text. */}
+        {!error && items && rows.length === 0 && (query || !info?.message) && (
+          <div className="tx-list-note">
             {query ? t.pluginQuickPickEmpty : (info?.emptyText ?? "")}
           </div>
         )}
@@ -256,11 +247,10 @@ export const PluginListPane = memo(function PluginListPane({
               ? item.group
               : null;
           if (depth === 0) lastGroup = item.group;
-          const Icon = item.icon ? ICONS[item.icon] : undefined;
           return (
             // The row's place too: two items a plugin gave one id still draw.
             <div key={`${key}@${index}`} className="plugin-list-entry">
-              {heading && <div className="plugin-list-group">{heading}</div>}
+              {heading && <div className="tx-list-heading">{heading}</div>}
               <div
                 role="treeitem"
                 aria-level={depth + 1}
@@ -269,7 +259,7 @@ export const PluginListPane = memo(function PluginListPane({
                 className={`plugin-list-row${index === active ? " is-active" : ""}${
                   item.checkbox ? " is-done" : ""
                 }`}
-                style={{ paddingInlineStart: `${8 + depth * 14}px` }}
+                style={{ "--depth": depth } as CSSProperties}
                 onMouseEnter={() => setActive(index)}
                 onClick={() => select(item)}
                 {...(info?.move ? dragHandlers(item, key) : {})}
@@ -299,18 +289,26 @@ export const PluginListPane = memo(function PluginListPane({
                 {item.checkbox !== undefined && (
                   <input
                     type="checkbox"
-                    className="plugin-list-check"
+                    className="ui-check plugin-list-check"
                     checked={item.checkbox}
                     aria-label={item.label}
                     onClick={(e) => e.stopPropagation()}
                     onChange={() => check(item)}
                   />
                 )}
-                {Icon && <Icon className="plugin-list-icon" />}
+                <ListRowIcon icon={item.icon} />
                 <span className="plugin-list-text">
                   <span className="plugin-list-label">{item.label}</span>
+                  {item.badge && (
+                    <span
+                      className="tx-badge"
+                      data-tone={item.badge.tone ?? "muted"}
+                    >
+                      {item.badge.text}
+                    </span>
+                  )}
                   {item.description && (
-                    <span className="plugin-list-description">
+                    <span className="tx-truncate plugin-list-description">
                       {item.description}
                     </span>
                   )}
@@ -318,14 +316,6 @@ export const PluginListPane = memo(function PluginListPane({
                     <span className="plugin-list-detail">{item.detail}</span>
                   )}
                 </span>
-                {item.badge && (
-                  <span
-                    className="plugin-list-badge"
-                    data-tone={item.badge.tone ?? "muted"}
-                  >
-                    {item.badge.text}
-                  </span>
-                )}
               </div>
             </div>
           );
@@ -397,6 +387,10 @@ function usePluginListItems(plugin: string, view: string) {
   );
   const [open, setOpen] = useState<Set<string>>(() => new Set());
   const [error, setError] = useState<string | null>(null);
+  const fail = useCallback(
+    (err: unknown) => setError(String((err as Error)?.message ?? err)),
+    [],
+  );
 
   const ask = useCallback(
     (parent?: PluginListItem) =>
@@ -409,10 +403,8 @@ function usePluginListItems(plugin: string, view: string) {
   // Started on first show: the plugin registers its list as it activates.
   useEffect(() => {
     if (info) return;
-    askPlugin(plugin, "$ping", {}).catch((err) =>
-      setError(String((err as Error)?.message ?? err)),
-    );
-  }, [plugin, info]);
+    askPlugin(plugin, "$ping", {}).catch(fail);
+  }, [plugin, info, fail]);
 
   // Read as they are when the list refreshes, not a reason to refresh.
   const state = useLatest({ open, items, children });
@@ -437,14 +429,14 @@ function usePluginListItems(plugin: string, view: string) {
             .then(
               (kids) => live && setChildren((m) => new Map(m).set(id, kids)),
             )
-            .catch(() => {});
+            .catch((err: unknown) => live && fail(err));
         }
       })
-      .catch((err) => live && setError(String((err as Error)?.message ?? err)));
+      .catch((err: unknown) => live && fail(err));
     return () => {
       live = false;
     };
-  }, [ask, version, state]);
+  }, [ask, version, state, fail]);
 
   const toggleOpen = (item: PluginListItem, key: string) => {
     const next = new Set(open);
@@ -456,10 +448,10 @@ function usePluginListItems(plugin: string, view: string) {
     setOpen(next);
     void ask(item)
       .then((got) => setChildren((m) => new Map(m).set(key, got)))
-      .catch(() => {});
+      .catch(fail);
   };
 
-  return { info, items, setItems, children, open, toggleOpen, error };
+  return { info, items, setItems, children, open, toggleOpen, error, fail };
 }
 
 function findItem(

@@ -30,11 +30,11 @@ pub async fn open_word_document(
 
 fn convert(path: &Path, assets: &Path) -> Result<String, String> {
     if extension_of(path) != "docx" {
-        return Err("Only Word documents (.docx) can be opened this way.".to_string());
+        return Err(crate::errors::error("wordOnly"));
     }
     let size = std::fs::metadata(path).map_err(|e| e.to_string())?.len();
     if size > MAX_SOURCE_BYTES {
-        return Err("This Word document is too large to open.".to_string());
+        return Err(crate::errors::error("fileTooBig"));
     }
     // One stamp for the whole document: image-<stamp>.png, image-<stamp>-1.jpeg...
     let stamp = std::time::SystemTime::now()

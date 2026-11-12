@@ -19,11 +19,11 @@ import { findFlash } from "./editor-flash";
 import {
   ACT_WITHIN_MS,
   NO_FLASH,
-  held,
   inputKey,
   setCursorStyle,
   visualSelection,
 } from "./editor-input-state";
+import { held } from "./key-holder";
 /**
  * The editing actions a plugin holding the keyboard asks for (Vim's
  * motions, operators, flash), each taken only just after one of its keys.
@@ -71,7 +71,7 @@ export type EditorOp =
     }
   | { op: "flashClear" };
 
-export interface EditorOpResult {
+interface EditorOpResult {
   /** What a delete or copy took; a line copy ends with "\n". */
   text?: string;
   /** For flash: how many places it found. */
@@ -295,12 +295,10 @@ export function runEditorOp(plugin: string, action: EditorOp): EditorOpResult {
         "\n",
         "\n",
       );
-      if (next && next !== "\n")
-        dispatch(
-          state.tr
-            .insertText(action.char, head, head + 1)
-            .setSelection(TextSelection.create(state.doc, head)),
-        );
+      if (next && next !== "\n") {
+        const tr = state.tr.insertText(action.char, head, head + 1);
+        dispatch(tr.setSelection(TextSelection.create(tr.doc, head)));
+      }
       break;
     }
     case "collapse": {

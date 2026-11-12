@@ -4,7 +4,7 @@ import type { Node as ProseNode } from "@milkdown/kit/prose/model";
 import {
   animate as animateElement,
   prefersReducedMotion,
-} from "../../ui/motion";
+} from "../../engine/motion/motion";
 import { pictureState } from "./generated-images";
 import type { RevisionDisplay } from "../../prefs/SettingsContext";
 import {
@@ -41,13 +41,13 @@ export interface SentenceHooks {
 
 /** The revision view as an attribute on the editor; the stylesheet shows
  *  each view's parts. */
-export const REVISION_DISPLAY_ATTR = "data-revision-display";
+const REVISION_DISPLAY_ATTR = "data-revision-display";
 
 /** The parts a view switch can show or hide. */
-export const REVISION_PARTS =
+const REVISION_PARTS =
   ".pending-delete, .pending-insert, .pending-pick, .pending-insert-mark, .pending-delete-mark";
 
-export function shown(el: HTMLElement): boolean {
+function shown(el: HTMLElement): boolean {
   // Hidden text stays in the document, out of the flow: display:none would
   // restart its entrance when it comes back.
   const style = getComputedStyle(el);
@@ -78,7 +78,7 @@ export function syncDisplay(view: EditorView, display: RevisionDisplay) {
 // Only actions that actually remove text get the strikethrough; an
 // insert_before/insert_after keeps the anchor blocks verbatim, so striking
 // them through would wrongly read as "this is being deleted".
-export function removesTextOf(p: PendingPreview): boolean {
+function removesTextOf(p: PendingPreview): boolean {
   return (
     p.proposal.action === "replace" ||
     p.proposal.action === "replace_selection" ||
@@ -87,9 +87,7 @@ export function removesTextOf(p: PendingPreview): boolean {
 }
 
 /** What a proposal shown whole strikes - null for new text alone. */
-export function wholeStrike(
-  p: PendingPreview,
-): { from: number; to: number } | null {
+function wholeStrike(p: PendingPreview): { from: number; to: number } | null {
   const from = p.strikeFrom ?? p.from;
   const to = p.strikeTo ?? p.to;
   return removesTextOf(p) && from < to ? { from, to } : null;
@@ -97,10 +95,7 @@ export function wholeStrike(
 
 /** A streaming rewrite's sentence layout, started when first drawn; null
  *  where it streams in whole. A settled one keeps it until its sentences come. */
-export function streamFor(
-  p: PendingPreview,
-  animate: boolean,
-): StreamState | null {
+function streamFor(p: PendingPreview, animate: boolean): StreamState | null {
   if (!animate || prefersReducedMotion()) return null;
   let anim = animations.get(p.callId);
   if (!p.streaming) return anim?.stream ?? null;
@@ -127,7 +122,7 @@ export function streamFor(
   return anim.stream;
 }
 
-export function decorationsFor(
+function decorationsFor(
   doc: ProseNode,
   p: PendingPreview,
   animate: boolean,
@@ -182,7 +177,7 @@ export function decorationsFor(
 /** Where a proposal shown whole draws its new text: right after the strike,
  *  or by the words an insertion names, as Accept writes it. One next to a
  *  whole block goes between blocks, decided by the anchor. */
-export function insertAt(p: PendingPreview): number {
+function insertAt(p: PendingPreview): number {
   const { action } = p.proposal;
   if (action === "insert_before") return p.strikeFrom ?? p.from;
   if (action === "insert_after") return p.strikeTo ?? p.to;
@@ -192,9 +187,7 @@ export function insertAt(p: PendingPreview): number {
 
 /** The old picture's node, while the picture that redoes it is still being
  *  made. */
-export function redrawing(
-  p: PendingPreview,
-): { from: number; to: number } | null {
+function redrawing(p: PendingPreview): { from: number; to: number } | null {
   const { image, action } = p.proposal;
   if (!image || action !== "replace" || pictureState(image.id) !== "painting")
     return null;
@@ -215,10 +208,7 @@ export function buildDecorations(
 /** Blocks wholly struck and holding no new text, which the "final" view
  *  takes out of the flow so they leave no blank gaps. Read off each
  *  decoration's `part`. */
-export function struckBlocks(
-  doc: ProseNode,
-  decos: Decoration[],
-): Decoration[] {
+function struckBlocks(doc: ProseNode, decos: Decoration[]): Decoration[] {
   const part = (d: Decoration) => (d.spec as { part?: string }).part;
   const struck = decos
     .filter((d) => part(d) === "struck" && d.from < d.to)
@@ -306,7 +296,7 @@ export function hotDecorations(
 
 /** The runs of text in [from, to) without inline leaves between them: a
  *  tinted line break paints a box at the line's end. */
-export function textRuns(
+function textRuns(
   doc: ProseNode,
   from: number,
   to: number,
@@ -359,11 +349,7 @@ export function syncStreaming(view: EditorView, previews: PendingPreview[]) {
 /** Draws in the strike of an original the stream just reached, only the
  *  first time, as ProseMirror redraws spans. A Web Animation, as the span
  *  is ProseMirror's. */
-export function drawStrikesIn(
-  view: EditorView,
-  callId: string,
-  s: StreamState,
-) {
+function drawStrikesIn(view: EditorView, callId: string, s: StreamState) {
   // Every colour is read before any animation starts: an animation started
   // makes the next read recalculate the page's style, once per sentence.
   const strikes: { el: HTMLElement; from: Keyframe; to: Keyframe }[] = [];

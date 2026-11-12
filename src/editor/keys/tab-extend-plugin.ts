@@ -58,7 +58,7 @@ export function indentCodeLines(
  * Tab / Shift+Tab in a table: the next / previous cell, the caret at the end
  * of its text. prosemirror-tables' own command selects the whole cell.
  */
-export const moveToCell =
+const moveToCell =
   (direction: 1 | -1): Command =>
   (state, dispatch) => {
     let moved: Transaction | undefined;

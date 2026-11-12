@@ -1,10 +1,12 @@
+import { NextIcon, PreviousIcon } from "../../engine/controls/icons";
 import { useState } from "react";
+import { announce } from "../../engine/controls/announce";
 import { currentStrings } from "../../i18n/current";
 
 /**
  * The form's date and colour fields (textus.ui.pickDate, pickColor, and
  * `date` / `color` in textus.ui.form), drawn with the shared controls a
- * plugin page has too (src/ui/controls.css).
+ * plugin page has too (src/engine/controls/controls.css).
  */
 
 const DAY = /^(\d{4})-(\d{2})-(\d{2})$/;
@@ -19,7 +21,7 @@ function monthOf(value: string): Date {
 }
 
 /** The 42 days a month's grid shows, Monday first. */
-export function monthDays(month: Date): Date[] {
+function monthDays(month: Date): Date[] {
   const start = new Date(month);
   start.setDate(1 - ((month.getDay() + 6) % 7));
   return Array.from({ length: 42 }, (_, i) => {
@@ -42,8 +44,16 @@ export function DateField({
   const [month, setMonth] = useState(() => monthOf(value));
   const lang = document.documentElement.lang || undefined;
   const today = iso(new Date());
-  const shift = (n: number) =>
-    setMonth(new Date(month.getFullYear(), month.getMonth() + n, 1));
+  const monthName = (at: Date) =>
+    new Intl.DateTimeFormat(lang, { year: "numeric", month: "long" }).format(
+      at,
+    );
+  // The month a step lands on, said as it shows.
+  const shift = (n: number) => {
+    const next = new Date(month.getFullYear(), month.getMonth() + n, 1);
+    setMonth(next);
+    announce(monthName(next));
+  };
   const days = monthDays(month);
   return (
     <div className="plugin-form-date">
@@ -54,21 +64,16 @@ export function DateField({
           aria-label={t.pluginFormPrevMonth}
           onClick={() => shift(-1)}
         >
-          <span className="tx-icon" data-icon="left" />
+          <PreviousIcon />
         </button>
-        <span className="tx-value" aria-live="polite">
-          {new Intl.DateTimeFormat(lang, {
-            year: "numeric",
-            month: "long",
-          }).format(month)}
-        </span>
+        <span className="tx-value">{monthName(month)}</span>
         <button
           type="button"
           className="tx-icon-button"
           aria-label={t.pluginFormNextMonth}
           onClick={() => shift(1)}
         >
-          <span className="tx-icon" data-icon="right" />
+          <NextIcon />
         </button>
       </div>
       <div className="tx-calendar" role="grid">

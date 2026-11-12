@@ -7,7 +7,8 @@ import { revealNearest, type ImageLocation } from "./images/missing-image";
 import { canRevealInFileManager } from "../platform/capabilities";
 import type { EditorRunner } from "./useEditorRunner";
 import type { Strings } from "../i18n/strings";
-import type { MenuEntry } from "./editor-menu";
+
+import type { ContextMenuEntry } from "../engine/controls/ContextMenu";
 
 /** Pictures in the editor's menus. */
 
@@ -76,7 +77,7 @@ export function imageWidthItems(
   run: EditorRunner,
   t: Strings,
   imagePos: number,
-): MenuEntry[] {
+): ContextMenuEntry[] {
   const currentWidth =
     run((ctx) => {
       const node = ctx.get(editorViewCtx).state.doc.nodeAt(imagePos);
@@ -120,7 +121,7 @@ export function imageTurnItems(
   run: EditorRunner,
   t: Strings,
   imagePos: number,
-): MenuEntry[] {
+): ContextMenuEntry[] {
   const shown =
     run((ctx) => {
       const dom = ctx.get(editorViewCtx).nodeDOM(imagePos);
@@ -157,8 +158,8 @@ export function imageTurnItems(
 export function imageFileItems(
   t: Strings,
   location: ImageLocation | null,
-): MenuEntry[] {
-  const items: MenuEntry[] = [];
+): ContextMenuEntry[] {
+  const items: ContextMenuEntry[] = [];
   if (location?.kind === "local" && canRevealInFileManager)
     items.push({
       label: t.imageReveal,

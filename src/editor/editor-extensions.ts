@@ -94,7 +94,11 @@ import {
 import { syntaxHighlightPlugin } from "./code/syntax-highlight-plugin";
 import { createCodeBlockView } from "./code/code-block-language-view";
 import { createCodeLineNumbersPlugin } from "./code/code-line-numbers-plugin";
-import { tableColumnResizing, tableHoverView } from "./tables/table-hover-view";
+import {
+  tableColumnFreeze,
+  tableColumnResizing,
+  tableHoverView,
+} from "./tables/table-hover-view";
 import { createMermaidPreviewPlugin } from "./mermaid-plugin";
 import { blockKeysPlugin } from "./keys/block-keys-plugin";
 import { blockJoinPlugin } from "./keys/block-join-plugin";
@@ -215,6 +219,9 @@ export function withEditorCore(
 ): Editor {
   const { settings, docPath } = options;
   const disk = !("noDiskImages" in options);
+  // Only for writing: a preview, read and drawn, goes without them.
+  const editing = (plugin: MilkdownPlugin | MilkdownPlugin[]) =>
+    options.preview ? [] : plugin;
   addEmojiCompletion(
     () => resolveStrings(settings.current.language).completionEmoji,
   );
@@ -231,20 +238,20 @@ export function withEditorCore(
       .use(openedParseRecorder)
       // The open / panel takes the arrows, Enter, Tab and Esc first, even
       // from a plugin holding the keyboard (Vim's normal mode).
-      .use(createCompletionPlugin(() => docPath.current))
-      .use(editorExtensions().keyInput)
-      .use(macNavigationPlugin)
+      .use(editing(createCompletionPlugin(() => docPath.current)))
+      .use(editing(editorExtensions().keyInput))
+      .use(editing(macNavigationPlugin))
       // Before the margin's clicks: held before they move the selection.
-      .use(pointerHoldPlugin)
-      .use(dragAutoscrollPlugin)
-      .use(marginClickPlugin)
-      .use(linuxImeEnterPlugin)
-      .use(compositionPruneGuardPlugin)
+      .use(editing(pointerHoldPlugin))
+      .use(editing(dragAutoscrollPlugin))
+      .use(editing(marginClickPlugin))
+      .use(editing(linuxImeEnterPlugin))
+      .use(editing(compositionPruneGuardPlugin))
       // Commonmark/GFM with bold/italic/strike marks stripped: those are nodes.
       .use(commonmarkWithoutMarks)
-      .use(headingInputRule)
-      .use(ruleInputRule)
-      .use(orderedListInputRule)
+      .use(editing(headingInputRule))
+      .use(editing(ruleInputRule))
+      .use(editing(orderedListInputRule))
       .use(headingIdsOnParse)
       .use(headingIdPlugin)
       // `[TOC]`: its Enter ahead of the block keys.
@@ -257,7 +264,7 @@ export function withEditorCore(
         }),
       )
       // Ahead of gfm's table keys.
-      .use(tableEdgeArrowPlugin)
+      .use(editing(tableEdgeArrowPlugin))
       .use(gfmWithoutStrikethrough)
 
       // Before anything else can misread its "---" lines as setext headings.
@@ -280,10 +287,10 @@ export function withEditorCore(
 
       .use(remarkObsidianEmbedPlugin)
       .use(obsidianEmbedSchema)
-      .use(obsidianEmbedInputRule)
+      .use(editing(obsidianEmbedInputRule))
       .use(remarkWikilinkPlugin)
       .use(wikilinkSchema)
-      .use(wikilinkInputRule)
+      .use(editing(wikilinkInputRule))
       .use(wikilinkRevealPlugin)
       .use(createMissingLinksPlugin(() => docPath.current))
       .use(
@@ -334,13 +341,15 @@ export function withEditorCore(
         }),
       )
       .use(
-        createBracketAutopairPlugin({
-          enabled: () => settings.current.autoCloseBrackets,
-        }),
+        editing(
+          createBracketAutopairPlugin({
+            enabled: () => settings.current.autoCloseBrackets,
+          }),
+        ),
       )
-      .use(formatShortcutPlugin)
-      .use(selectAllKeyPlugin)
-      .use(enclosurePlugin)
+      .use(editing(formatShortcutPlugin))
+      .use(editing(selectAllKeyPlugin))
+      .use(editing(enclosurePlugin))
       .use(
         createColorSwatchPlugin({
           mode: () => settings.current.colorSwatches,
@@ -352,8 +361,8 @@ export function withEditorCore(
       .use(remarkMathPlugin)
       .use(mathInlineSchema)
       .use(mathBlockSchema)
-      .use(mathInlineInputRule)
-      .use(mathAutopairPlugin)
+      .use(editing(mathInlineInputRule))
+      .use(editing(mathAutopairPlugin))
       .use(
         createMathPreviewPlugin({ enabled: () => settings.current.enableMath }),
       )
@@ -361,7 +370,7 @@ export function withEditorCore(
       .use(headingMarkerPlugin)
       .use(remarkEmptyTaskItems)
       .use(taskListClickPlugin)
-      .use(cjkTaskInputPlugin)
+      .use(editing(cjkTaskInputPlugin))
       .use(syntaxHighlightPlugin)
       .use(
         createCodeBlockView(() => {
@@ -381,7 +390,9 @@ export function withEditorCore(
         }),
       )
       .use(tableHoverView)
-      .use(tableColumnResizing)
+      // Before the resize plugin: its press holds every column first.
+      .use(editing(tableColumnFreeze))
+      .use(editing(tableColumnResizing))
       .use(
         createMermaidPreviewPlugin({
           enabled: () => settings.current.enableMermaid,
@@ -391,10 +402,10 @@ export function withEditorCore(
 
       // handlePaste props run in registration order: images first, then a lone
       // URL, then markdown source, then milkdown's own clipboard plugin.
-      .use(history)
-      .use(disk ? createUndoFilePlugin(() => docPath.current) : [])
-      .use(ownUndoStepPlugin)
-      .use(changeSourcePlugin)
+      .use(editing(history))
+      .use(editing(disk ? createUndoFilePlugin(() => docPath.current) : []))
+      .use(editing(ownUndoStepPlugin))
+      .use(editing(changeSourcePlugin))
       .use(
         "noDiskImages" in options
           ? options.noDiskImages
@@ -405,20 +416,20 @@ export function withEditorCore(
               onError: options.onImagePasteError,
             }),
       )
-      .use(linkInputRule)
+      .use(editing(linkInputRule))
       .use(createLinkRevealPlugin(() => docPath.current))
-      .use(linkNormalizePlugin)
-      .use(imageInputRule)
-      .use(linkSettlePlugin)
-      .use(htmlTagInputRule)
-      .use(footnoteInputRule)
-      .use(pasteUrlPlugin)
-      .use(pasteMarkdownSourcePlugin)
-      .use(copyTextPlugin)
-      .use(pictureCopyPlugin)
-      .use(pastePlainTextKeyPlugin)
-      .use(clipboard)
-      .use(copiedPlugin)
+      .use(editing(linkNormalizePlugin))
+      .use(editing(imageInputRule))
+      .use(editing(linkSettlePlugin))
+      .use(editing(htmlTagInputRule))
+      .use(editing(footnoteInputRule))
+      .use(editing(pasteUrlPlugin))
+      .use(editing(pasteMarkdownSourcePlugin))
+      .use(editing(copyTextPlugin))
+      .use(editing(pictureCopyPlugin))
+      .use(editing(pastePlainTextKeyPlugin))
+      .use(editing(clipboard))
+      .use(editing(copiedPlugin))
       // The playground leaves links to the browser it runs in.
       .use(disk ? createLinkClickPlugin(() => docPath.current) : [])
       .use(disk ? createLinkHoverPlugin(() => docPath.current) : [])
@@ -426,27 +437,35 @@ export function withEditorCore(
       // The block keys: after the inline ones above (enclosures, autopairs,
       // headings, callouts), ahead of the preset keymaps, which Milkdown adds
       // last. The order is pinned in editor-extensions.test.ts.
-      .use(blockKeysPlugin)
-      .use(tabExtendPlugin)
-      .use(tabStaysPlugin)
-      .use(moveBlockPlugin)
-      .use(escapeTrailingBlockPlugin)
-      .use(blockJoinPlugin)
-      .use(inlineSourcePlugin)
-      .use(findReplacePlugin)
+      .use(editing(blockKeysPlugin))
+      .use(editing(tabExtendPlugin))
+      .use(editing(tabStaysPlugin))
+      .use(editing(moveBlockPlugin))
+      .use(editing(escapeTrailingBlockPlugin))
+      .use(editing(blockJoinPlugin))
+      .use(editing(inlineSourcePlugin))
+      .use(editing(findReplacePlugin))
       // A long document's blocks out of sight are placeholders.
       .use(lazyBlocksPlugin)
       .use(readOnlyPlugin)
-      .use(zenFocusPlugin)
-      .use(keyboardRevealPlugin)
+      .use(editing(zenFocusPlugin))
+      .use(editing(keyboardRevealPlugin))
       .use(
-        createTypewriterPlugin({
-          enabled: () => settings.current.typewriterMode,
-        }),
+        editing(
+          createTypewriterPlugin({
+            enabled: () => settings.current.typewriterMode,
+          }),
+        ),
       )
       .use(
-        createPlaceholderPlugin(
-          () => resolveStrings(settings.current.language).emptyDocPlaceholder,
+        editing(
+          createPlaceholderPlugin(
+            () => resolveStrings(settings.current.language).emptyDocPlaceholder,
+            () =>
+              settings.current.emptyLineHint
+                ? resolveStrings(settings.current.language).emptyLineHint
+                : null,
+          ),
         ),
       )
   );

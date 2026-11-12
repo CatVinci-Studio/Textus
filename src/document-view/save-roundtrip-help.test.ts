@@ -2,7 +2,8 @@
 import { readdirSync, readFileSync } from "node:fs";
 import { join } from "node:path";
 import { describe, expect, it, vi } from "vitest";
-import { hashString, roundTripFile } from "./save-roundtrip";
+import { roundTripFile } from "./save-roundtrip";
+import { fnv1a as hashString } from "../utils/hash";
 
 // The save round trip on the help guides in English, Chinese and Japanese,
 // which cover the alphabet, CJK and its punctuation. TEXTUS_ROUNDTRIP_ALL=1

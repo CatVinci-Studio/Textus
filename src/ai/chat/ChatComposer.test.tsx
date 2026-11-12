@@ -115,7 +115,6 @@ function composer({ selectedText = null, onSend = () => {} }: ComposerOptions) {
       busy={false}
       labels={labels}
       defaultMode="review"
-      defaultWebSearch={false}
       onSend={onSend}
       onStop={() => {}}
       onEscape={() => {}}
@@ -215,7 +214,6 @@ describe("ChatComposer selection chip", () => {
         busy={false}
         labels={labels}
         defaultMode="review"
-        defaultWebSearch={false}
         selectionChip={{ onChange, onReveal }}
         selectionPerMessage
         onSend={() => {}}
@@ -272,7 +270,6 @@ describe("ChatComposer selection chip", () => {
         busy={false}
         labels={labels}
         defaultMode="review"
-        defaultWebSearch={false}
         onSend={() => {}}
         onStop={() => {}}
         onEscape={() => {}}
@@ -341,7 +338,6 @@ describe("ChatComposer selection chip", () => {
         busy={false}
         labels={labels}
         defaultMode="review"
-        defaultWebSearch={false}
         onSend={onSend}
         onResearch={onResearch}
         onStop={() => {}}
@@ -386,7 +382,6 @@ describe("ChatComposer selection chip", () => {
         busy={false}
         labels={labels}
         defaultMode="review"
-        defaultWebSearch={false}
         onSend={() => {}}
         onResearch={onResearch}
         kinds={[
@@ -424,7 +419,6 @@ describe("ChatComposer selection chip", () => {
       busy: false,
       labels,
       defaultMode: "review" as const,
-      defaultWebSearch: false,
       onSend: () => {},
       onResearch: () => {},
       onStop: () => {},
@@ -529,7 +523,6 @@ describe("ChatComposer Deep thinking", () => {
         labels={labels}
         defaultMode="write"
         compact
-        defaultWebSearch={false}
         onSend={onSend}
         onStop={() => {}}
         onEscape={() => {}}
@@ -658,7 +651,6 @@ describe("ChatComposer pickers", () => {
         // Create's skills, as its tab in Settings › Extensions lists them.
         defaultMode="create"
         onlyMode="create"
-        defaultWebSearch={false}
         onSend={onSend}
         onStop={() => {}}
         onEscape={onEscape}
@@ -755,9 +747,9 @@ describe("ChatComposer pickers", () => {
       type(`看看 ${key}`);
       const empty = await screen.findByRole("status");
       await waitFor(() =>
-        expect(empty).toHaveTextContent("保存文档或选择项目文件夹"),
+        expect(empty).toHaveTextContent("保存文档或选择文件夹"),
       );
-      expect(empty).toHaveTextContent("输入 @ 引用项目文件夹中的文件");
+      expect(empty).toHaveTextContent("输入 @ 引用文件夹中的文件");
     },
   );
 
@@ -782,7 +774,6 @@ describe("ChatComposer suggested next message", () => {
         busy={false}
         labels={labels}
         defaultMode="review"
-        defaultWebSearch={false}
         suggestions={["Translate the next chapter too"]}
         onSend={() => {}}
         onStop={() => {}}
@@ -808,7 +799,6 @@ describe("ChatComposer suggested next message", () => {
         busy={true}
         labels={labels}
         defaultMode="review"
-        defaultWebSearch={false}
         suggestions={["Translate the next chapter too"]}
         onSend={() => {}}
         onStop={() => {}}
@@ -832,7 +822,6 @@ describe("ChatComposer suggested follow-ups", () => {
       selectedText: null,
       labels,
       defaultMode: "write" as const,
-      defaultWebSearch: false,
       compact,
       suggestions: ["Shorten this section", "Add a summary at the top"],
       onSend,
@@ -910,7 +899,6 @@ describe("ChatComposer and Create", () => {
         busy={false}
         labels={labels}
         defaultMode="create"
-        defaultWebSearch={false}
         onSend={onSend}
         onStop={() => {}}
         onEscape={() => {}}

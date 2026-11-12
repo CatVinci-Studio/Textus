@@ -6,6 +6,8 @@ pub mod client;
 pub mod conventions;
 pub mod doc_blocks;
 pub mod doc_title;
+pub(crate) mod error_kind;
+pub mod file_changes;
 pub mod images;
 pub(crate) mod json_reply;
 pub mod kept_proposals;
@@ -29,32 +31,39 @@ pub mod workspace;
 pub(crate) const TEXTUS_AI_SETTING: &str = "textusAi";
 
 /// What a request to an AI service is refused with while Textus AI is off.
-/// Keep in step with the frontend's `AI_OFF`.
 pub(crate) const TEXTUS_AI_OFF: &str = "textus-ai-off";
 
 /// Refuses a command that would send something to an AI service while Textus
 /// AI is off. The frontend checks too; this is the backstop.
 pub(crate) fn ensure_on(app: &tauri::AppHandle) -> Result<(), String> {
-    allows(crate::settings::read_setting(app, TEXTUS_AI_SETTING))
+    if crate::settings::read_flag(app, TEXTUS_AI_SETTING) {
+        Ok(())
+    } else {
+        Err(TEXTUS_AI_OFF.to_string())
+    }
 }
 
-fn allows(setting: Option<serde_json::Value>) -> Result<(), String> {
-    match setting.and_then(|v| v.as_bool()) {
-        Some(false) => Err(TEXTUS_AI_OFF.to_string()),
-        _ => Ok(()),
+/// `text` trimmed and cut to at most `most` characters, an ellipsis where
+/// it was cut: what the model or a card is shown of something long.
+pub(crate) fn clip(text: &str, most: usize) -> String {
+    let text = text.trim();
+    match text.char_indices().nth(most) {
+        Some((at, _)) => format!("{}…", text[..at].trim_end()),
+        None => text.to_string(),
     }
 }
 
 #[cfg(test)]
 mod tests {
-    use super::*;
+    use super::TEXTUS_AI_SETTING;
     use serde_json::json;
 
     #[test]
-    fn requests_are_refused_only_while_textus_ai_is_off() {
-        assert_eq!(allows(Some(json!(false))), Err(TEXTUS_AI_OFF.to_string()));
-        assert_eq!(allows(Some(json!(true))), Ok(()));
+    fn textus_ai_is_off_only_when_switched_off() {
+        use crate::settings::flag;
+        assert!(!flag(Some(json!(false)), TEXTUS_AI_SETTING));
+        assert!(flag(Some(json!(true)), TEXTUS_AI_SETTING));
         // Saved by a build from before the switch: on.
-        assert_eq!(allows(None), Ok(()));
+        assert!(flag(None, TEXTUS_AI_SETTING));
     }
 }

@@ -1,7 +1,8 @@
+import { fill } from "../../i18n/fill";
 import { useCallback, useEffect, useRef, useState } from "react";
 import { ai } from "../../platform/ipc";
-import { announce } from "../../ui/announce";
-import { usePresenceProps } from "../../ui/usePresence";
+import { announce } from "../../engine/controls/announce";
+import { usePresenceProps } from "../../engine/motion/usePresence";
 import { parseKindKey } from "./change-kind";
 import {
   answer,
@@ -15,10 +16,10 @@ import {
   type ChoiceLog,
   type LearnLabels,
 } from "./revision-learning";
-import type { DecidedChange } from "./usePendingEdits";
+import { type DecidedChange } from "./pending-place";
 import "./ReviewBar.css";
 
-export interface RevisionLearningLabels extends LearnLabels {
+interface RevisionLearningLabels extends LearnLabels {
   learnSuggestion: string;
   learnRemember: string;
   learnNotNow: string;
@@ -112,7 +113,7 @@ export function useRevisionLearning({
   };
 }
 
-export type RevisionLearning = ReturnType<typeof useRevisionLearning>;
+type RevisionLearning = ReturnType<typeof useRevisionLearning>;
 
 /** The suggestion to remember a repeated choice as a personal memory, shown
  *  in the review bar's place only after a review is finished. */
@@ -169,9 +170,7 @@ export function RevisionLearningBar({
       <span className="learn-bar-text">
         {saved === "failed"
           ? labels.memoryActionFailed
-          : labels.learnSuggestion
-              .replace("{what}", what)
-              .replace("{rule}", rule)}
+          : fill(labels.learnSuggestion, { what, rule })}
       </span>
       <div className="review-bar-actions">
         <button

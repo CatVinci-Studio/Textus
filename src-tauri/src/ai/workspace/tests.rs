@@ -317,7 +317,10 @@ fn customize_copies_and_reset_deletes_only_copies() {
         &skills.join("mine.md"),
         "---\nname: proofread\n---\nMy proofreading rules.",
     );
-    assert_eq!(reset_in(&skills, "proofread").unwrap_err(), NOT_A_COPY);
+    assert_eq!(
+        reset_in(&skills, "proofread").unwrap_err(),
+        crate::errors::error(NOT_A_COPY)
+    );
     assert!(skills.join("mine.md").exists());
     assert_eq!(
         customize_in(&skills, "proofread").unwrap(),
@@ -329,8 +332,14 @@ fn customize_copies_and_reset_deletes_only_copies() {
         customize_in(&skills, "theme").unwrap(),
         skills.join("theme-2.md")
     );
-    assert_eq!(customize_in(&skills, "nope").unwrap_err(), UNKNOWN_BUILTIN);
-    assert_eq!(reset_in(&skills, "nope").unwrap_err(), UNKNOWN_BUILTIN);
+    assert_eq!(
+        customize_in(&skills, "nope").unwrap_err(),
+        crate::errors::error(UNKNOWN_BUILTIN)
+    );
+    assert_eq!(
+        reset_in(&skills, "nope").unwrap_err(),
+        crate::errors::error(UNKNOWN_BUILTIN)
+    );
     std::fs::remove_dir_all(&root).ok();
 }
 
@@ -548,4 +557,61 @@ fn deleting_a_skill_finds_every_file_of_that_name() {
     );
     assert!(skill_files_named(&skills, "missing").is_err());
     std::fs::remove_dir_all(&root).ok();
+}
+
+#[test]
+fn a_skills_switch_keeps_its_name_its_keys_and_one_front_matter() {
+    // No front matter: the file's own name stands, none is written.
+    let plain = with_metadata("Proofread it.\n", "off", "true");
+    assert!(!plain.contains("name:"), "{plain}");
+    assert_eq!(parse_skill_file("proofread", &plain).name, "proofread");
+    // A BOM before the front matter: still the one front matter.
+    let bom = with_metadata("\u{feff}---\nname: tidy\n---\nTidy.\n", "off", "true");
+    assert_eq!(bom.matches("---").count(), 2, "{bom}");
+    assert_eq!(parse_skill_file("x", &bom).name, "tidy");
+    // Four-space keys: the new one beside them, the others kept.
+    let four = "---\nname: four\nmetadata:\n    textus-category: \"write\"\n---\nBody.\n";
+    let changed = with_metadata(four, "off", "true");
+    assert!(changed.contains("    textus-off: \"true\""), "{changed}");
+    assert!(
+        changed.contains("    textus-category: \"write\""),
+        "{changed}"
+    );
+    let again = with_metadata(&changed, "off", "false");
+    assert!(
+        again.contains("    textus-off: \"false\"") && !again.contains("\"true\""),
+        "{again}"
+    );
+}
+
+/// The front matter cases the app's own reader takes too.
+pub(crate) fn frontmatter_cases() -> Vec<(String, String, Option<String>, String)> {
+    let cases: Vec<serde_json::Value> =
+        serde_json::from_str(include_str!("../../../../src/utils/frontmatter-cases.json")).unwrap();
+    cases
+        .iter()
+        .map(|c| {
+            (
+                c["name"].as_str().unwrap().to_string(),
+                c["text"].as_str().unwrap().to_string(),
+                c["yaml"].as_str().map(str::to_string),
+                c["body"].as_str().unwrap().to_string(),
+            )
+        })
+        .collect()
+}
+
+#[test]
+fn frontmatter_splits_as_the_app_does() {
+    for (name, text, yaml, body) in frontmatter_cases() {
+        let (front, rest) = split_frontmatter(&text);
+        assert_eq!(front.is_some(), yaml.is_some(), "{name}");
+        // Without front matter the whole file is the body, less a BOM.
+        let want = if yaml.is_some() {
+            body
+        } else {
+            text.trim_start_matches('\u{feff}').to_string()
+        };
+        assert_eq!(rest, want, "{name}");
+    }
 }

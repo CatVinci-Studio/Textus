@@ -28,7 +28,9 @@ describe("one size for the whole interface", () => {
       "calc(28px * var(--chrome-scale))",
     );
     expect(isDocumentSheet("/a/src/theme/content-base.css")).toBe(true);
-    expect(isDocumentSheet("/a/src/ui/ContextMenu.css")).toBe(false);
+    expect(isDocumentSheet("/a/src/engine/controls/ContextMenu.css")).toBe(
+      false,
+    );
   });
 
   it("touches declarations, never a media query", async () => {

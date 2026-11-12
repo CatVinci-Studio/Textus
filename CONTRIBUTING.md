@@ -67,8 +67,7 @@ npm run build:playground   # dist-playground/playground/, built for /playground/
 ```
 
 Its entry is `playground.html` and its Vite config `vite.playground.config.ts`,
-so `npm run build` and `dist/` are unaffected. CI builds it in the `check` job;
-`e2e/playground.spec.ts` runs as the `playground` project of `npm run test:e2e`.
+so `npm run build` and `dist/` are unaffected. CI builds it in the `check` job.
 It is deployed after each newest stable release, not from `main`
 (`deploy-playground.yml`, called by `release.yml`;
 [infrastructure.md](docs/dev/infrastructure.md#playground)).
@@ -132,9 +131,10 @@ passes 1.25 MB) and CSS syntax. Run `npx vite build` if you changed what
 loads at startup. The Rust tests fail while the generated bindings in
 `src/platform/bindings/` are stale: `npm run bindings` writes them.
 
-CI runs `check` on every pull request, and the other jobs where the change
-can reach them; [testing.md](docs/dev/testing.md#how-ci-is-laid-out) has
-the table.
+CI runs the quick checks on a pull request (`check`, and Rust on Linux
+when the change reaches it) and the full suite before every release; run
+the e2e flows yourself when your change reaches the browser.
+[testing.md](docs/dev/testing.md#how-ci-is-laid-out) has the table.
 
 ## Tests
 

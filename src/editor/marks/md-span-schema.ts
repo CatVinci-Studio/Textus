@@ -302,7 +302,7 @@ export const mdSpanSchema = $nodeSchema("md_span", () => ({
 }));
 
 /** A span with no text in it, or only empty spans: written as nothing. */
-export function isEmptySpan(node: ProseNode): boolean {
+function isEmptySpan(node: ProseNode): boolean {
   if (node.type.name === "md_code_span") return node.textContent === "";
   if (node.type.name !== "md_span") return false;
   let empty = true;

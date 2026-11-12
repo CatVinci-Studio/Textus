@@ -1,4 +1,4 @@
-import { textParagraphs } from "../doc-blocks";
+import { textParagraphs } from "../../editor/markdown/doc-blocks";
 import { formKey, wholeBlockKind } from "./markdown-forms";
 import { diffSentenceLists, type SentenceHunk } from "./sentence-diff";
 import { ENDS_PARAGRAPH } from "./paragraph-align";
@@ -42,7 +42,7 @@ export function splitUnits(text: string): string[] {
 
 /** Aligns the run of changed units that ends what a stream has reached:
  *  `before` are originals from `start` on. */
-export type AlignTail = (
+type AlignTail = (
   before: string[],
   after: string[],
   start: number,

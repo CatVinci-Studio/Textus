@@ -1,6 +1,6 @@
 // @vitest-environment jsdom
 import { afterEach, expect, it } from "vitest";
-import { closeViews, openView } from "../../document-view/editor-view-kit";
+import { closeViews, openView } from "../editor-view-kit";
 
 // Pasted text keeps its line breaks, a quote copied with its bars ("▎ ")
 // comes in as a quote, and blocks pasted into others land sensibly.

@@ -45,10 +45,6 @@
 }
 
 .chat-window-doc {
-  min-width: 0;
-  overflow: hidden;
-  white-space: nowrap;
-  text-overflow: ellipsis;
   font-size: var(--text-caption);
   color: var(--ui-muted);
   /* The row is the window's drag handle; the label must not swallow that. */
@@ -60,7 +56,7 @@
    like the docked one. Pinned shows by colour; the icon never changes. */
 .chat-window-pin-on,
 .chat-window-pin-on:not(:disabled):hover {
-  color: var(--ui-accent);
+  color: var(--ui-accent-text);
 }
 
 .chat-window-body {
@@ -91,17 +87,12 @@
 
 /* These sit under the header (on Windows it has the only close button), so
    they take the space left over, not the full viewport. */
-.chat-window-loading,
-.chat-window-lost {
+.chat-window-state {
   display: flex;
   flex: 1;
   min-height: 0;
   align-items: center;
   justify-content: center;
-  padding: 24px;
-  text-align: center;
-  font-size: var(--text-body);
-  color: var(--ui-muted);
   background: var(--ui-surface);
 }
 
@@ -110,4 +101,48 @@
   flex: 1;
   min-height: 0;
   background: var(--ui-surface);
+}
+
+/* With its row of conversations (ChatWindowRoot) the window is the editor's
+   AI island alone: the frame, the row over the island, the island inset in
+   it (island.css). */
+:root[data-layout] .chat-window {
+  --ui-frame: var(--ui-frame-sunk);
+  --ui-frame-fill: var(--ui-frame);
+  background: var(--ui-frame-fill);
+}
+
+.chat-window-tabs {
+  justify-content: flex-start;
+  gap: 0;
+  padding: 0 4px 0 var(--island-inset);
+}
+
+.chat-window-tabs > .island-row {
+  flex: 1;
+  min-width: 0;
+  align-self: stretch;
+}
+
+/* Clear of the traffic lights, which float over the top-left corner. */
+.chat-window-lights {
+  position: absolute;
+  top: 0;
+  left: 0;
+  width: 0;
+  height: 1px;
+}
+
+:root[data-window-chrome="native"]:not([data-window-fullscreen])
+  .chat-window-lights {
+  width: 70px;
+}
+
+:root[data-layout] .chat-window > [data-island] {
+  margin: 0 var(--island-inset) var(--island-inset);
+  overflow: hidden;
+}
+
+:root[data-layout] .chat-window .chat-window-body {
+  --chat-card-bg: color-mix(in srgb, var(--ui-text) 4%, var(--ui-surface));
 }

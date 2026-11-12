@@ -10,7 +10,7 @@ import {
   pendingEditKey,
   sentenceTake,
   type PendingPreview,
-} from "./pending-edit-plugin";
+} from "./pending-types";
 import { recordStatuses, type RecordedStatus } from "./proposal-lifecycle";
 import type { EditProposal } from "../types";
 import {

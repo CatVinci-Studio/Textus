@@ -1,5 +1,7 @@
+import { LCS_MAX_CELLS, lcsSteps, wholeChange } from "../../utils/lcs";
 import type { Node as ProseNode } from "@milkdown/kit/prose/model";
 import { simplifyChanges, type Change } from "@milkdown/kit/prose/changeset";
+import type { Transform } from "@milkdown/kit/prose/transform";
 
 /** A change as shown: where it was in the original (A) and is now (B). */
 export interface ChangeSpan {
@@ -12,9 +14,6 @@ export interface ChangeSpan {
 // Scripts written without spaces between words, where each character
 // stands on its own.
 const UNSPACED = /[぀-ヿ㐀-䶿一-鿿豈-﫿]/;
-
-// Past this many character pairs a span is left as simplifyChanges grew it.
-const MAX_CELLS = 250_000;
 
 /** The changes to show: grown to whole words (simplifyChanges), except in
  *  Chinese and Japanese, whose characters it reads as one long word, so a
@@ -33,7 +32,8 @@ function narrowed(c: ChangeSpan, base: ProseNode, doc: ProseNode) {
   const after = blockText(doc, c.fromB, c.toB);
   if (before === null || after === null) return [c];
   if (!UNSPACED.test(before) && !UNSPACED.test(after)) return [c];
-  if (before.length * after.length > MAX_CELLS) return [c];
+  // Past the diff's budget a span is left as simplifyChanges grew it.
+  if (before.length * after.length > LCS_MAX_CELLS) return [c];
   return charChanges(before, after).map((d) => ({
     fromA: c.fromA + d.fromA,
     toA: c.fromA + d.toA,
@@ -53,31 +53,37 @@ function blockText(doc: ProseNode, from: number, to: number) {
 /** The runs where `a` and `b` differ, by a longest common subsequence of
  *  their characters. */
 export function charChanges(a: string, b: string): ChangeSpan[] {
-  const n = a.length;
-  const m = b.length;
-  // lcs[i][j]: the common length of a[i..] and b[j..].
-  const lcs = Array.from({ length: n + 1 }, () => new Uint32Array(m + 1));
-  for (let i = n - 1; i >= 0; i--)
-    for (let j = m - 1; j >= 0; j--)
-      lcs[i][j] =
-        a[i] === b[j]
-          ? lcs[i + 1][j + 1] + 1
-          : Math.max(lcs[i + 1][j], lcs[i][j + 1]);
+  const steps =
+    lcsSteps(a.length, b.length, (i, j) => a[i] === b[j], "delete") ??
+    wholeChange(a.length, b.length);
   const out: ChangeSpan[] = [];
   let i = 0;
   let j = 0;
-  while (i < n || j < m) {
-    if (i < n && j < m && a[i] === b[j]) {
+  let open: { fromA: number; fromB: number } | null = null;
+  for (const step of steps) {
+    if (step === "same") {
+      if (open) out.push({ ...open, toA: i, toB: j });
+      open = null;
       i++;
       j++;
       continue;
     }
-    const start = { fromA: i, fromB: j };
-    while ((i < n || j < m) && !(i < n && j < m && a[i] === b[j])) {
-      if (j >= m || (i < n && lcs[i + 1][j] >= lcs[i][j + 1])) i++;
-      else j++;
-    }
-    out.push({ ...start, toA: i, toB: j });
+    open ??= { fromA: i, fromB: j };
+    if (step === "delete") i++;
+    else j++;
   }
+  if (open) out.push({ ...open, toA: i, toB: j });
   return out;
+}
+
+/** Puts back each change's original in `tr`, last first, so the text that
+ *  wasn't changed (and whatever is anchored on it) is never touched. */
+export function rejectChanges(
+  tr: Transform,
+  shown: readonly ChangeSpan[],
+  base: ProseNode,
+): Transform {
+  for (const c of [...shown].sort((a, b) => b.fromB - a.fromB))
+    tr.replace(c.fromB, c.toB, base.slice(c.fromA, c.toA));
+  return tr;
 }

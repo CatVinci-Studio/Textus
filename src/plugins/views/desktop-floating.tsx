@@ -1,6 +1,6 @@
 import { useEffect, useState, useSyncExternalStore } from "react";
 import { windowIpc } from "../../platform/ipc";
-import { useChromeScale } from "../../ui/useChromeScale";
+import { useChromeScale } from "../../engine/controls/useChromeScale";
 import {
   emitToWindow,
   listenToThisWindow,
@@ -156,7 +156,9 @@ function useFloatingWindow(view: FloatingView): string | null {
     : floatingSize(view, chrome);
   useEffect(() => {
     if (!label) return;
-    void windowIpc.resizeFloatingWindow(view.view, width, height);
+    void windowIpc
+      .resizeFloatingWindow(view.view, width, height)
+      .catch(() => undefined);
     void emitToWindow(label, FLOATING_DOWN, {
       view: view.view,
       kind: "folded",
@@ -202,12 +204,17 @@ function useWindowLabel(view: FloatingView): string | null {
     const at =
       view.x === null || view.y === null ? null : { x: view.x, y: view.y };
     windowIpc
-      .openFloatingWindow(view.view, at, ...floatingSize(view, chrome))
+      .openFloatingWindow(
+        view.view,
+        view.title,
+        at,
+        ...floatingSize(view, chrome),
+      )
       .then((opened) => live && setLabel(opened))
       .catch(() => live && moveFloating(view.view, { place: "window" }));
     return () => {
       live = false;
-      void windowIpc.closeFloatingWindow(view.view);
+      void windowIpc.closeFloatingWindow(view.view).catch(() => undefined);
     };
     // Opened once; moving it is the user's, on the desktop.
     // eslint-disable-next-line react-hooks/exhaustive-deps

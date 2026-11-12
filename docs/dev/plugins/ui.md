@@ -39,22 +39,23 @@ and its colours from the theme, so it follows light, dark and every theme.
 
 ### Buttons and fields
 
-| Control        | Markup                                                                                                                      | Notes                                                      |
-| -------------- | --------------------------------------------------------------------------------------------------------------------------- | ---------------------------------------------------------- |
-| Button         | `<button class="tx-button">Cancel</button>`                                                                                 | `small` in bars and cards                                  |
-| Primary button | `<button class="tx-button primary">Save</button>`                                                                           | at most one per group, last                                |
-| Icon button    | `<button class="tx-icon-button" aria-label="Filter"><span class="tx-icon" data-icon="filter"></span></button>`              | a circle; `aria-label` required                            |
-| Icon           | `<span class="tx-icon" data-icon="calendar"></span>`                                                                        | names in design-language.md §15.4                          |
-| Field          | `<input class="tx-input">`                                                                                                  | a capsule; `<textarea class="tx-input">` a box             |
-| Field in place | `<input class="tx-inline-input">`                                                                                           | no frame: the cell or card it sits in is the field         |
-| Square corners | add `tx-square` to a button, field or select                                                                                | capsules by default; square where a grid or table wants it |
-| Checkbox       | `<input type="checkbox" class="ui-check">`                                                                                  | ticking things off                                         |
-| Switch         | `<input type="checkbox" role="switch" class="tx-switch">`                                                                   | turning a setting on and off                               |
-| Select         | `<button class="tx-select">Week<span class="tx-icon" data-icon="chevron"></span></button>`                                  | opens Textus's menu: `api.menu(items, button)`             |
-| Slider         | `<input type="range" class="tx-slider">`                                                                                    | `var(--slider-width)` wide                                 |
-| Segmented      | `<div class="tx-segmented" role="tablist"><button class="tx-segment" role="tab" aria-selected="true">Table</button>…</div>` | 2–5 views or modes                                         |
-| Chip           | `<button class="tx-chip">Status is Done</button>`                                                                           | a rule in force; opens it                                  |
-| Tag            | `<span class="tx-tag" data-tone="green">Done</span>`                                                                        | `status` adds a dot; tones in their order                  |
+| Control        | Markup                                                                                                                      | Notes                                                        |
+| -------------- | --------------------------------------------------------------------------------------------------------------------------- | ------------------------------------------------------------ |
+| Button         | `<button class="tx-button">Cancel</button>`                                                                                 | `small` in bars and cards                                    |
+| Primary button | `<button class="tx-button primary">Save</button>`                                                                           | at most one per group, last                                  |
+| Icon button    | `<button class="tx-icon-button" aria-label="Filter"><span class="tx-icon" data-icon="filter"></span></button>`              | a circle; `aria-label` required                              |
+| Icon           | `<span class="tx-icon" data-icon="calendar"></span>`                                                                        | names in design-language.md §15.4                            |
+| Field          | `<input class="tx-input">`                                                                                                  | a capsule; `<textarea class="tx-input">` a box               |
+| Field in place | `<input class="tx-inline-input">`                                                                                           | no frame: the cell or card it sits in is the field           |
+| Square corners | add `tx-square` to a button, field or select                                                                                | capsules by default; square where a grid or table wants it   |
+| Checkbox       | `<input type="checkbox" class="ui-check">`                                                                                  | ticking things off                                           |
+| Switch         | `<input type="checkbox" role="switch" class="tx-switch">`                                                                   | turning a setting on and off                                 |
+| Select         | `<button class="tx-select">Week<span class="tx-icon" data-icon="chevron"></span></button>`                                  | opens Textus's menu: `api.menu(items, button)`               |
+| Slider         | `<input type="range" class="tx-slider">`                                                                                    | `var(--slider-width)` wide                                   |
+| Segmented      | `<div class="tx-segmented" role="tablist"><button class="tx-segment" role="tab" aria-selected="true">Table</button>…</div>` | 2–5 views or modes                                           |
+| Chip           | `<button class="tx-chip">Status is Done</button>`                                                                           | a rule in force; opens it                                    |
+| Tag            | `<span class="tx-tag" data-tone="green">Done</span>`                                                                        | `status` adds a dot; tones in their order                    |
+| Badge          | `<span class="tx-badge" data-tone="accent">New</span>`                                                                      | beside a name; tones `accent`, `warning`, `danger`, `strong` |
 
 ### Bars and navigation
 
@@ -79,13 +80,14 @@ and its colours from the theme, so it follows light, dark and every theme.
 
 ### Records and progress
 
-| Control  | Markup                                                                                                                                                           | Notes                                 |
-| -------- | ---------------------------------------------------------------------------------------------------------------------------------------------------------------- | ------------------------------------- |
-| Calendar | `<div class="tx-calendar"><span class="tx-calendar-weekday">M</span>…<button class="tx-calendar-day is-today is-marked" aria-selected="false">8</button>…</div>` | `is-other` for days outside the month |
-| Board    | `<div class="tx-board"><div class="tx-lane"><div class="tx-lane-head">…</div>…cards…</div></div>`                                                                | lanes `var(--board-lane-width)` wide  |
-| Rating   | `<span class="tx-rating">★★★☆☆</span>`, or `★ <span class="tx-value">7.5</span>` past five                                                                       | one look down a whole column          |
-| Progress | `<div class="tx-progress" role="progressbar" style="--value: 0.4"></div>`; `is-indeterminate`; `ring` for a circle `var(--progress-ring-size)` across            |                                       |
-| Bubble   | `<div class="tx-bubble">…</div>`                                                                                                                                 | a floating view's line, beside it     |
+| Control   | Markup                                                                                                                                                                                                                         | Notes                                 |
+| --------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------ | ------------------------------------- |
+| Calendar  | `<div class="tx-calendar"><span class="tx-calendar-weekday">M</span>…<button class="tx-calendar-day is-today is-marked" aria-selected="false">8</button>…</div>`                                                               | `is-other` for days outside the month |
+| Board     | `<div class="tx-board"><div class="tx-lane"><div class="tx-lane-head">…</div>…cards…</div></div>`                                                                                                                              | lanes `var(--board-lane-width)` wide  |
+| Rating    | `<span class="tx-rating">★★★☆☆</span>`, or `★ <span class="tx-value">7.5</span>` past five                                                                                                                                     | one look down a whole column          |
+| Progress  | `<div class="tx-progress" role="progressbar" style="--value: 0.4"></div>`; `is-indeterminate`; `ring` for a circle `var(--progress-ring-size)` across, its line `--progress-ring-line`; a ring `is-indeterminate` is a spinner |                                       |
+| Bubble    | `<div class="tx-bubble" data-bubble-tail="bottom">…</div>`; the tail `top`, `bottom`, `left` or `right`, placed along it by `style="--tail-at: 30%"`                                                                           | a floating view's line, beside it     |
+| Edge fade | `<div class="tx-scroll-fade">…</div>` on a scroller                                                                                                                                                                            | its edges fade where there is more    |
 
 ### Dragging
 
@@ -102,6 +104,7 @@ under the point it was taken by, in a zoomed document too.
   `--control-height*` and `--bar-height`, corners with `--shape-*`, widths
   with `%`, `vw`, `clamp()` or the layout tokens (`--board-lane-width`,
   `--find-field-width`, `--slider-width`, `--progress-ring-size`,
+  `--progress-ring-line`,
   `--bubble-width`, `--block-source-room`). Textus scales a page's own
   stylesheets as they load (design-language.md §5.6), but that is a safety
   net, not a way to write sizes.

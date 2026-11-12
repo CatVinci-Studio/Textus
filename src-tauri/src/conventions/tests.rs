@@ -204,7 +204,7 @@ fn follows_typora_copy_images_to_before_the_vault() {
     let (folder, c) = attachment_folder(&doc).unwrap();
     assert_eq!(c.attachments.unwrap().app, "typora");
     assert_eq!(folder.dir, vault.path().join("img/My Doc.assets"));
-    assert_eq!(folder.src("p.png"), "../img/My Doc.assets/p.png");
+    assert_eq!(folder.src("p.png"), "../img/My%20Doc.assets/p.png");
     let outside = tempfile::tempdir().unwrap();
     let plain = outside.path().join("a.md");
     fs::write(&plain, "no front matter\ntypora-copy-images-to: x").unwrap();

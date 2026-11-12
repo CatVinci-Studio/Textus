@@ -1,6 +1,7 @@
 // A ```chart block drawn as SVG, by hand: a charting library would outweigh
 // the rest of the editor. Loaded on first use (diagram-engine.ts).
 
+import { docVar } from "../../engine/tokens/doc-defaults";
 import { parseChartSpec, type ChartSpec } from "./chart-spec";
 
 export { parseChartSpec };
@@ -40,13 +41,11 @@ const SERIES = {
 // Ink is the document's, so a theme recolours it; the fallbacks are base.css's
 // defaults, used where no stylesheet reaches (an exported PNG).
 function ink(dark: boolean) {
-  const v = (name: string, light: string, darkValue: string) =>
-    `var(--doc-${name}, ${dark ? darkValue : light})`;
   return {
-    text: v("text", "#24272e", "#e4e7ed"),
-    muted: v("muted", "#6b6b6b", "#989da6"),
-    grid: v("border", "#e1e4ea", "#333230"),
-    surface: v("bg", "#ffffff", "#1b1e24"),
+    text: docVar("text", dark),
+    muted: docVar("muted", dark),
+    grid: docVar("border", dark),
+    surface: docVar("bg", dark),
   };
 }
 

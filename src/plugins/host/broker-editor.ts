@@ -1,9 +1,10 @@
-import { resolveBlockEdit } from "../../ai/doc-blocks";
+import { fill } from "../../i18n/fill";
+import { resolveBlockEdit } from "../../editor/markdown/doc-blocks";
+import type { EditProposal } from "../../ai/types";
 import {
   EDIT_ACTIONS,
   type EditAction,
-  type EditProposal,
-} from "../../ai/types";
+} from "../../editor/markdown/edit-actions";
 import {
   keyHolder,
   releaseKeys,
@@ -24,7 +25,7 @@ import {
 } from "../contributions/decorations";
 import { optionalStr, type Params, type PluginScope } from "./broker-scope";
 import { FILE_RELOADED_EVENT } from "../../utils/events";
-import { showNotice } from "../../ui/notices";
+import { showNotice } from "../../engine/controls/notices";
 import { logPluginMessage } from "../store/plugin-log";
 import { emitPluginEvent } from "../app-bridge";
 
@@ -49,10 +50,7 @@ function keysTaken(p: PluginScope) {
   if (toldKeysTaken.has(p.id)) return;
   toldKeysTaken.add(p.id);
   showNotice(
-    p
-      .t()
-      .pluginKeysTaken.replace("{name}", p.name())
-      .replace("{holder}", holder.name),
+    fill(p.t().pluginKeysTaken, { name: p.name(), holder: holder.name }),
     { tone: "warning" },
   );
 }

@@ -1,5 +1,10 @@
 import { logPluginMessage } from "../store/plugin-log";
-import { mergeWholeText, textBlocks, type TextBlock } from "./save-blocks";
+import type { TextBlock } from "./save-blocks";
+import { lazyModule } from "../../lazy/lazy-module";
+
+// The Markdown reader it gives a plugin blocks with: loaded once a plugin
+// listens, not with the window.
+const saveBlocks = lazyModule("save-blocks", () => import("./save-blocks"));
 
 /**
  * Plugins that may change a document just before it is saved. Each is asked
@@ -8,7 +13,7 @@ import { mergeWholeText, textBlocks, type TextBlock } from "./save-blocks";
  * blocks it changed are written back, and a change that would change again
  * on a second run is dropped.
  */
-export interface WillSaveRequest {
+interface WillSaveRequest {
   path: string;
   text: string;
   trigger: "manual" | "auto";
@@ -21,11 +26,13 @@ type Ask = (request: WillSaveRequest) => Promise<string | null>;
 const listeners = new Map<string, Ask>();
 
 /** How long a save waits for one plugin. */
-export const WILL_SAVE_MS = 1000;
+const WILL_SAVE_MS = 1000;
 
 export function setWillSave(plugin: string, on: boolean, ask: Ask): void {
-  if (on) listeners.set(plugin, ask);
-  else listeners.delete(plugin);
+  if (on) {
+    listeners.set(plugin, ask);
+    void saveBlocks.load();
+  } else listeners.delete(plugin);
 }
 
 /** Every listener, by plugin id: the order never depends on which started first. */
@@ -38,6 +45,7 @@ async function answer(
   request: Omit<WillSaveRequest, "blocks">,
   until: number,
 ): Promise<string> {
+  const { textBlocks } = await saveBlocks.load();
   const reply = await Promise.race([
     ask({ ...request, blocks: textBlocks(request.text) }).catch(() => null),
     new Promise<null>((resolve) =>
@@ -66,6 +74,7 @@ export async function runWillSave(
       log("its change changes again when it runs a second time");
       continue;
     }
+    const { mergeWholeText } = await saveBlocks.load();
     current = mergeWholeText(current, once, log);
   }
   return current;

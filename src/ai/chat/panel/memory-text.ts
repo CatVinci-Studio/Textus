@@ -1,3 +1,4 @@
+import { splitFrontmatter } from "../../../utils/frontmatter";
 import type { LibraryEntry } from "../../../platform/ipc";
 import { localeOf, type Lang } from "../../../i18n/strings";
 import { basename } from "../../../utils/path";
@@ -39,7 +40,7 @@ export function matches(query: string, ...texts: string[]): boolean {
  *  lines, without the front matter, headings or comments. */
 export function styleSummary(style: string | null): string[] {
   if (!style) return [];
-  const body = style.replace(/^---\n[\s\S]*?\n---\n?/, "");
+  const { body } = splitFrontmatter(style);
   return body
     .replace(/<!--[\s\S]*?-->/g, "")
     .split("\n")
@@ -62,17 +63,11 @@ export function ruleLines(text: string): string[] {
 
 export function firstLine(body: string): string {
   return (
-    body
-      .replace(/^---\n[\s\S]*?\n---\n?/, "")
-      .split("\n")
+    splitFrontmatter(body)
+      .body.split("\n")
       .map((l) => l.trim())
       .find((l) => l && !l.startsWith("#")) ?? ""
   );
-}
-
-/** A file's name without its folder or extension - its id's last part. */
-export function stemOf(path: string): string {
-  return (path.split(/[\\/]/).pop() ?? "").replace(/\.[^.]*$/, "");
 }
 
 /** From this share of the memory budget on, the tab says how much is used. */

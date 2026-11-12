@@ -1,8 +1,13 @@
+import { pluginString } from "./plugin-string";
 import webviewRuntime from "./runtime/webview.js?raw";
-import componentsCss from "../../ui/components.css?inline";
-import controlsCss from "../../ui/controls.css?inline";
-import designSystemCss from "../../ui/design-system.css?inline";
-import motionCss from "../../ui/motion.css?inline";
+import componentsCss from "../../engine/controls/components.css?inline";
+import iconMasksCss from "../../engine/controls/icon-masks.css?inline";
+import controlsCss from "../../engine/controls/controls.css?inline";
+import paneCss from "../../engine/controls/pane.css?inline";
+import progressCss from "../../engine/controls/progress.css?inline";
+import bubbleCss from "../../engine/controls/bubble.css?inline";
+import designSystemCss from "../../engine/tokens/design-system.css?inline";
+import motionCss from "../../engine/motion/motion.css?inline";
 // Processed as the app's own are, their lengths scaled (vite.chrome-scale.ts).
 import pluginUiCss from "./runtime/plugin-ui.css?inline";
 
@@ -12,7 +17,11 @@ const SHARED_CSS = [
   motionCss,
   designSystemCss.replace(/^@import [^;]+;$/gm, ""),
   componentsCss,
+  iconMasksCss,
   controlsCss,
+  paneCss,
+  progressCss,
+  bubbleCss,
 ].join("\n");
 import { createEndpoint, type Endpoint, type Handlers } from "./rpc";
 
@@ -23,7 +32,7 @@ import { createEndpoint, type Endpoint, type Handlers } from "./rpc";
  */
 
 /** The RPC endpoint as source, for the frames' runtimes. */
-export const RPC_SOURCE = `var createEndpoint = ${createEndpoint.toString()};`;
+export const RPC_SOURCE = `var createEndpoint = ${createEndpoint.toString()};\nvar localized = ${pluginString.toString()};`;
 
 /** Text inside a `<script>`/`<style>` element can't hold its end tag; a
  *  script can't hold "<!--" and "<script" either, which take the HTML
@@ -38,19 +47,18 @@ export function inElement(code: string, tag: "script" | "style"): string {
 const PLUGIN_FILES = "textus-plugin: http://textus-plugin.localhost";
 
 /** A webview's CSP: its own inline and `data:`/`blob:` content and the
- *  plugins' files, no network, except frames from the HTTPS hosts in
- *  `frameHosts`. */
-export function webviewCsp(frameHosts: readonly string[]): string {
-  const frames = frameHosts.length
-    ? frameHosts
-        .map((host) => (host === "*" ? "https:" : `https://${host}`))
-        .join(" ")
-    : "'none'";
+ *  plugins' files; from the HTTPS hosts its plugin was granted
+ *  (`network:`), pictures and frames. Its requests go through its plugin. */
+export function webviewCsp(hosts: readonly string[]): string {
+  const granted = hosts
+    .map((host) => (host === "*" ? "https:" : `https://${host}`))
+    .join(" ");
+  const frames = granted || "'none'";
   return [
     "default-src 'none'",
     `script-src 'unsafe-inline' 'wasm-unsafe-eval' data: blob: ${PLUGIN_FILES}`,
     `style-src 'unsafe-inline' data: ${PLUGIN_FILES}`,
-    `img-src data: blob: ${PLUGIN_FILES}`,
+    `img-src data: blob: ${PLUGIN_FILES} ${granted}`.trimEnd(),
     `font-src data: ${PLUGIN_FILES}`,
     `media-src data: blob: ${PLUGIN_FILES}`,
     `connect-src data: blob: ${PLUGIN_FILES}`,
@@ -81,9 +89,14 @@ export function webviewDocument(
     language: options.language,
     l10n: options.l10n,
   });
-  const head = [
+  // The policy first of all, ahead of any of the plugin's bytes: put after
+  // its <head>, a <head> in a comment or after a script kept it out of the
+  // page's head, where it applies.
+  const policy = [
     "<meta charset='utf-8'>",
     `<meta http-equiv="Content-Security-Policy" content="${webviewCsp(options.frameHosts)}">`,
+  ].join("\n");
+  const head = [
     `<style id="textus-theme">${inElement(options.themeCss, "style")}</style>`,
     `<style id="textus-ui">${inElement(pluginUiCss, "style")}</style>`,
     `<style id="textus-shared">${inElement(SHARED_CSS, "style")}</style>`,
@@ -94,11 +107,17 @@ export function webviewDocument(
   // Into the plugin's own <head> if it has one, so its <meta> and styles
   // come after ours; else ahead of everything.
   const at = /<head(\s[^>]*)?>/i.exec(html);
-  const page = at
+  const inner = at
     ? html.slice(0, at.index + at[0].length) +
       head +
       html.slice(at.index + at[0].length)
-    : `<!doctype html><html><head>${head}</head><body>${html}</body></html>`;
+    : `<html><head>${head}</head><body>${html}</body></html>`;
+  // After a doctype of its own (before it, the page would lose standards
+  // mode); else one of ours.
+  const doctype = /^\s*<!doctype[^>]*>/i.exec(inner);
+  const page = doctype
+    ? doctype[0] + policy + inner.slice(doctype[0].length)
+    : `<!doctype html>${policy}${inner}`;
   // The window's platform too, so the shared controls take the phone's
   // sizes on a phone.
   const { windowChrome, platform } = document.documentElement.dataset;
@@ -116,13 +135,25 @@ export function webviewDocument(
   );
 }
 
+/** Stands in the runtimes' `ready` for the key of the frame they run in. */
+const FRAME_KEY = "__TEXTUS_FRAME_KEY__";
+/** Each frame's key: what says `ready` comes from the page the app put
+ *  there, not one the frame was sent to since. */
+const frameKeys = new WeakMap<HTMLIFrameElement, string>();
+
 /** A sandboxed frame, not yet in the page. */
 export function sandboxedFrame(
   srcdoc: string,
   title: string,
+  { fullscreen = false } = {},
 ): HTMLIFrameElement {
   const frame = document.createElement("iframe");
+  const key = crypto.randomUUID();
+  frameKeys.set(frame, key);
+  srcdoc = srcdoc.split(FRAME_KEY).join(key);
   frame.setAttribute("sandbox", "allow-scripts");
+  // A page may fill the screen (a deck presented); the user leaves with Esc.
+  if (fullscreen) frame.setAttribute("allow", "fullscreen");
   frame.setAttribute("title", title);
   // Referrers name the app's page; a plugin's frame of a web page
   // shouldn't tell that page where it is shown.
@@ -145,8 +176,8 @@ export function connectFrame(
   let endpoint: Endpoint | null = null;
   const receive = (event: MessageEvent) => {
     if (event.source !== frame.contentWindow) return;
-    const data = event.data as { textus?: string } | null;
-    if (data?.textus !== "ready") return;
+    const data = event.data as { textus?: string; key?: string } | null;
+    if (data?.textus !== "ready" || data.key !== frameKeys.get(frame)) return;
     endpoint?.close();
     const channel = new MessageChannel();
     endpoint = createEndpoint(channel.port1, handlers, timeoutMs);

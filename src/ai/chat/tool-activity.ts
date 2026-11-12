@@ -1,3 +1,4 @@
+import { fill } from "../../i18n/fill";
 import type { Strings } from "../../i18n/strings";
 import { siteOf } from "../citations";
 
@@ -63,10 +64,13 @@ export function toolActivityText(
         .join("”, “")
     : undefined;
   const site = typeof args.url === "string" ? siteOf(args.url) : undefined;
+  // An external agent's step, in its own words.
+  if (name === "agent_tool" && typeof args.title === "string" && args.title)
+    return args.title;
   // An MCP server's tool, named as the model knows it (mcp_<server>_<tool>),
   // which says whose tool it is.
   if (name.startsWith("mcp_") && labels.toolActivity.mcp)
-    return labels.toolActivity.mcp.replace("{arg}", name.slice(4));
+    return fill(labels.toolActivity.mcp, { arg: name.slice(4) });
   const arg =
     [
       args.query,
@@ -88,5 +92,5 @@ export function toolActivityText(
     labels.toolActivity[name] ??
     labels.toolActivity["*"];
   if (!template) return name;
-  return template.replace("{arg}", arg);
+  return fill(template, { arg });
 }

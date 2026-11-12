@@ -1,5 +1,5 @@
 import { useSettings } from "../../prefs/SettingsContext";
-import { Presence } from "../../ui/usePresence";
+import { Presence } from "../../engine/motion/usePresence";
 import { useLatest } from "../../utils/hooks/useLatest";
 import { ImageNameDialog } from "../images/ImageNameDialog";
 import type { ImageStore } from "../images/image-store";
@@ -12,7 +12,7 @@ export function imageMarkdown(src: string): string {
 }
 
 /** Where a stored picture's `![](src)` goes: the source editor's caret. */
-export type InsertImageMarkdown = (markdown: string) => void;
+type InsertImageMarkdown = (markdown: string) => void;
 
 /** What a paste event has to offer, as React's and the DOM's both do. */
 interface PasteEvent {
@@ -67,7 +67,7 @@ export function useSourceImagePaste(
   };
 
   const dialog = (
-    <Presence show={!!imageNameRequest} exitMs={120}>
+    <Presence show={!!imageNameRequest}>
       {imageNameRequest && (
         <ImageNameDialog
           request={imageNameRequest}
@@ -75,7 +75,7 @@ export function useSourceImagePaste(
           label={t.imageNameDialogLabel}
           invalidLabel={t.imageNameDialogInvalid}
           uploadLabel={t.imageNameDialogUpload}
-          cancelLabel={t.closePromptCancel}
+          cancelLabel={t.cancel}
           onClose={closeImageNameDialog}
         />
       )}

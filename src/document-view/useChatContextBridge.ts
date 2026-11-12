@@ -8,11 +8,11 @@ import {
   caretContext,
   headingAt,
   readSelection,
-} from "../ai/doc-markdown";
+} from "../editor/markdown/doc-markdown";
 import { useDetachedChat } from "../ai/chat/window/useDetachedChat";
 import { readChatContext } from "../ai/chat/live-context";
 import type { useInlineChat } from "../ai/chat/quick-ask/useInlineChat";
-import type { SelectionTarget } from "../ai/revision/usePendingEdits";
+import { type SelectionTarget } from "../ai/revision/pending-place";
 import type { SelectionChipHandlers } from "../ai/chat/ChatComposer";
 import type { Settings } from "../prefs/SettingsContext";
 import type { Strings } from "../i18n/strings";

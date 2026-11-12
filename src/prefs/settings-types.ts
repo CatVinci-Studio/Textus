@@ -1,3 +1,4 @@
+import BACKEND_DEFAULTS from "./backend-defaults.json";
 import type { Lang } from "../i18n/strings";
 import type { McpServer } from "./mcp";
 import type { UpdateChannel } from "../platform/update-channel";
@@ -6,7 +7,6 @@ import { DEFAULT_SHORTCUTS, type Shortcuts } from "./shortcut-defaults";
 import {
   type ThemeMode,
   type AiProvider,
-  type NewDocumentMode,
   type ContentWidth,
   type ImageAlign,
   type EmbedDisplay,
@@ -20,6 +20,7 @@ import {
   type PandocArgsFormat,
   type ColorSwatchMode,
   type RevisionDisplay,
+  type AiChangeMode,
   type CompletionTone,
   type SearchService,
   type GrammarStrictness,
@@ -28,7 +29,6 @@ import {
   type ImageStorageMode,
   type ImageHost,
   type ImageNamingMode,
-  type AgentMode,
 } from "./settings-values";
 
 /** Every setting's type and choices, and the defaults a new install starts from. */
@@ -39,8 +39,6 @@ export interface Settings {
   languageChosen: boolean;
   /// Appearance: follow the OS, or pin light/dark.
   theme: ThemeMode;
-  /// Show the document through the window bar, blurred, as it scrolls under.
-  frostedTitleBar: boolean;
   /** Off, Textus AI makes no request to any AI service, whatever the
    *  features below are set to; they keep their values. Rust reads it too. */
   textusAi: boolean;
@@ -80,6 +78,9 @@ export interface Settings {
   /** Dot-separated path to the public URL in the endpoint's JSON response. */
   imageUploadUrlField: string;
   aiProvider: AiProvider;
+  /** The provider completion and grammar checking use; "" follows the
+   *  chat's (aiProvider), so changing the chat's leaves them be. */
+  writingProvider: string;
   /// Shared model for inline completion and grammar checking, per provider.
   /// Missing/"" keeps the provider's low-cost writing default.
   writingModels: Record<string, string>;
@@ -87,8 +88,10 @@ export interface Settings {
   /// default. Keyed by catalog id, so adding a provider needs no Settings
   /// shape change.
   agentModels: Record<string, string>;
-  /** Initial mode shown in a newly mounted Agent composer. */
-  agentDefaultMode: AgentMode;
+  /** The external agent ("<plugin>/<agent id>", a plugin's
+   *  `contributes.agents`) Textus AI's chat talks to instead of a model;
+   *  "" for none. */
+  chatAgent: string;
   /// How a pending rewrite shows, as Word's markup views: "final" (result in
   /// the text, removals in the margin), "original" (struck original, new text
   /// in the margin; "inline" where no room) or "inline". Legacy "new" reads as "final".
@@ -98,9 +101,10 @@ export interface Settings {
   /// "automatic", or a profile such as "zh-Hans-CN/fiction" the AI and the
   /// checks follow for that language. A project's style profile overrides it.
   writingConventions: string;
-  /// The composer's Web search button starts on. The provider's own
-  /// search where it has one, else Textus's web_search on `searchService`.
-  enableWebSearch: boolean;
+  /// Textus AI's changes as revisions to review (the default) or written
+  /// straight in - the open document and the folder's other files alike.
+  /// Other agents (Claude Code, Codex) go their own way.
+  aiChangeMode: AiChangeMode;
   /// The image service ("" for none, the default: a picture costs money), its
   /// model ("" for its default) and, for an OpenAI-compatible endpoint, its address.
   imageModelProvider: string;
@@ -128,15 +132,6 @@ export interface Settings {
   /// Each plugin's settings, by plugin id; a project's `.textus/settings.json`
   /// holds the same, over these.
   plugins: Record<string, Record<string, unknown>>;
-  /// After each reply, a likely next message, grey in the empty box for Tab
-  /// to take.
-  suggestNextMessage: boolean;
-  /// Whether an agent edit's in-document preview types itself in or appears
-  /// complete at once.
-  enableEditAnimation: boolean;
-  /// Where Quick Ask's "open full conversation" goes: the docked panel
-  /// (default) or the detached window.
-  agentExpandToWindow: boolean;
   /// Whether the detached Agent window floats above other windows. Kept
   /// here rather than per-window so the choice survives closing it.
   pinAgentWindow: boolean;
@@ -150,17 +145,43 @@ export interface Settings {
   proxyHost: string;
   proxyPort: string;
   typewriterMode: boolean;
+  /** The formatting row under the title bar. */
+  formatBar: boolean;
+  /** formatBar has been turned on once for a profile from before it was
+   *  on by default (settings-normalise.ts). */
+  formatBarOnce: boolean;
+  /** Every document zoomed together, not each tab its own (documents
+   *  only: Settings, plugin pages and the AI aren't zoomed). */
+  zoomTogether: boolean;
   /** The view every document is in, in every window. */
   viewMode: ViewMode;
   /** Zen mode in every window. */
   zenMode: boolean;
   contentWidth: ContentWidth;
+  /** Each body paragraph's first line set in by two characters. */
+  firstLineIndent: boolean;
+  /** A gray "type / to insert" on the empty line the caret is on. */
+  emptyLineHint: boolean;
   /** How an image on a line of its own sits. Display only: the file is
    *  not changed. */
   imageAlign: ImageAlign;
   /// Windows and Linux: the menus along the app-drawn window bar instead of
   /// behind ☰. On, the bar has no sidebar button.
   menuBarShown: boolean;
+  /// The column of icons at the window's left edge (Files, Outline, plugins'
+  /// pages). Off, the sidebar shows its tabs along its own top again.
+  activityRail: boolean;
+  /// Floating islands (the page and panels as rounded sheets on the frame)
+  /// or classic (flush, square, hairlines).
+  layout: "islands" | "classic";
+  /// Sidebar tabs the user took off the rail, by id.
+  activityRailHidden: string[];
+  /// Plugins' sidebar tabs the user pinned among Textus's own at the rail's
+  /// top, by id, in order.
+  activityRailPinned: string[];
+  /// The rail's icons in the order they were dragged to, by id; kept with
+  /// the pinned ones, so every window has both.
+  activityRailOrder: string[];
   /// ![[note]] embeds drawn in full, or folded to a card each until opened.
   embedDisplay: EmbedDisplay;
   /// Typing "*", "**", "~~", "==" or "`" puts the closing mark in at once. Off,
@@ -198,9 +219,6 @@ export interface Settings {
   userThemes: UserThemeMeta[];
   /** What Create made, newest first (see `Creation`). */
   creations: Creation[];
-  /// "window" (default): another document opens a new OS window; "tab": a
-  /// tab in this one. Rust reads it from the settings file, often before any webview exists.
-  newDocumentMode: NewDocumentMode;
   /// Whether startup reopens last session's documents. Rust reads it before
   /// any webview exists; it also lets an update relaunch reopen what was open.
   restoreSessionOnStartup: boolean;
@@ -252,11 +270,11 @@ export interface Settings {
 }
 
 export const DEFAULT_SETTINGS: Settings = {
+  // The defaults Rust reads too.
+  ...(BACKEND_DEFAULTS as Pick<Settings, keyof typeof BACKEND_DEFAULTS>),
   language: "en",
   languageChosen: false,
   theme: "system",
-  frostedTitleBar: false,
-  textusAi: true,
   textusAiResumeAt: null,
   enableCompletion: true,
   enableGrammarCheck: true,
@@ -275,13 +293,14 @@ export const DEFAULT_SETTINGS: Settings = {
   imageUploadEndpoint: "",
   imageUploadUrlField: "url",
   aiProvider: "openai",
+  writingProvider: "",
   writingModels: {},
   agentModels: {},
-  agentDefaultMode: "review",
+  chatAgent: "",
   revisionDisplay: "final",
   completionTone: "default",
   writingConventions: "automatic",
-  enableWebSearch: false,
+  aiChangeMode: "revision",
   imageModelProvider: "chat",
   imageModel: "",
   imagesPerRequest: 2,
@@ -289,25 +308,31 @@ export const DEFAULT_SETTINGS: Settings = {
   searchService: "auto",
   searxngUrl: "",
   sourcesAsFootnotes: false,
-  rememberAutomatically: true,
   researchSubHelpers: false,
   researchCheckClaims: false,
   mcpServers: [],
   plugins: {},
-  suggestNextMessage: true,
-  enableEditAnimation: true,
-  agentExpandToWindow: false,
   pinAgentWindow: false,
   agentWorkspaceRoot: "",
   proxyType: "none",
   proxyHost: "",
   proxyPort: "",
   typewriterMode: false,
+  formatBar: true,
+  formatBarOnce: true,
+  zoomTogether: false,
   viewMode: "rich",
   zenMode: false,
   contentWidth: "auto",
+  firstLineIndent: false,
+  emptyLineHint: false,
   imageAlign: "center",
   menuBarShown: false,
+  activityRail: true,
+  layout: "islands",
+  activityRailHidden: [],
+  activityRailPinned: [],
+  activityRailOrder: [],
   embedDisplay: "expand",
   autoCloseMarks: true,
   autoCloseBrackets: true,
@@ -325,8 +350,6 @@ export const DEFAULT_SETTINGS: Settings = {
   themeId: "default",
   userThemes: [],
   creations: [],
-  newDocumentMode: "window",
-  restoreSessionOnStartup: true,
   startPageOnLaunch: false,
   closeLastToStartPage: false,
   autoSuggestFilename: true,
@@ -344,5 +367,11 @@ export const DEFAULT_SETTINGS: Settings = {
   enableChatHistory: true,
   enableDraftRecovery: true,
   keepUnsavedOnClose: false,
-  runInBackground: false,
 };
+
+/** The provider writing assistance uses: its own, else the chat's. */
+export function writingProviderOf(
+  settings: Pick<Settings, "writingProvider" | "aiProvider">,
+): string {
+  return settings.writingProvider || settings.aiProvider;
+}

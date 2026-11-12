@@ -8,7 +8,7 @@ import type { PendingPreview } from "./pending-types";
 
 export const KEPT_VERSION = 1;
 
-export interface KeptProposal {
+interface KeptProposal {
   callId: string;
   proposal: EditProposal;
   /** What replace_selection or insert_at_cursor wrote to. */
@@ -17,7 +17,7 @@ export interface KeptProposal {
   takes?: (boolean | null)[];
 }
 
-export interface KeptProposals {
+interface KeptProposals {
   version: number;
   /** A hash of the document's markdown when they were kept: where a
    *  position-bound proposal may come back. */

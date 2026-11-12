@@ -1,3 +1,5 @@
+import { splitFrontmatter } from "../utils/frontmatter";
+import { eachLine } from "../utils/markdown-lines";
 const WINDOWS_RESERVED_NAME = /^(con|prn|aux|nul|com[1-9]|lpt[1-9])(?:\..*)?$/i;
 
 function plainMarkdownText(text: string): string {
@@ -11,33 +13,30 @@ function plainMarkdownText(text: string): string {
     .trim();
 }
 
+/** The lines after any front matter, each with whether it is code. */
+function bodyLines(markdown: string): { line: string; code: boolean }[] {
+  const { body } = splitFrontmatter(markdown.replace(/\r\n?/g, "\n"));
+  const lines: { line: string; code: boolean }[] = [];
+  eachLine(body, (line, _index, code) => lines.push({ line, code }));
+  return lines;
+}
+
 /** Finds the first real Markdown level-one heading, excluding fenced code. */
 export function firstLevelOneHeading(markdown: string): string | null {
-  const lines = markdown.split(/\r?\n/);
-  let fence: { marker: "`" | "~"; length: number } | null = null;
-
-  for (let index = 0; index < lines.length; index += 1) {
-    const line = lines[index];
-    const fenceMatch = /^ {0,3}(`{3,}|~{3,})/.exec(line);
-    if (fenceMatch) {
-      const marker = fenceMatch[1][0] as "`" | "~";
-      if (!fence) fence = { marker, length: fenceMatch[1].length };
-      else if (fence.marker === marker && fenceMatch[1].length >= fence.length)
-        fence = null;
-      continue;
-    }
-    if (fence) continue;
-
+  const lines = bodyLines(markdown);
+  for (const [index, { line, code }] of lines.entries()) {
+    if (code) continue;
     const atx = /^ {0,3}#(?:[ \t]+|$)(.*)$/.exec(line);
     if (atx) {
       const heading = plainMarkdownText(atx[1]);
       if (heading) return heading;
     }
-
+    const next = lines[index + 1];
     if (
       line.trim() &&
-      index + 1 < lines.length &&
-      /^ {0,3}=+[ \t]*$/.test(lines[index + 1])
+      next &&
+      !next.code &&
+      /^ {0,3}=+[ \t]*$/.test(next.line)
     ) {
       const heading = plainMarkdownText(line.trim());
       if (heading) return heading;
@@ -48,24 +47,9 @@ export function firstLevelOneHeading(markdown: string): string | null {
 
 /** Finds the first visible, non-empty body line when no H1 is available. */
 export function firstContentLine(markdown: string): string | null {
-  const lines = markdown.split(/\r?\n/);
-  let fence: { marker: "`" | "~"; length: number } | null = null;
-  let frontmatter = false;
   let htmlComment = false;
-
-  for (let index = 0; index < lines.length; index += 1) {
-    const line = lines[index];
+  for (const { line, code } of bodyLines(markdown)) {
     const trimmed = line.trim();
-
-    if (index === 0 && trimmed === "---") {
-      frontmatter = true;
-      continue;
-    }
-    if (frontmatter) {
-      if (trimmed === "---" || trimmed === "...") frontmatter = false;
-      continue;
-    }
-
     if (htmlComment) {
       if (line.includes("-->")) htmlComment = false;
       continue;
@@ -74,16 +58,7 @@ export function firstContentLine(markdown: string): string | null {
       if (!trimmed.includes("-->")) htmlComment = true;
       continue;
     }
-
-    const fenceMatch = /^ {0,3}(`{3,}|~{3,})/.exec(line);
-    if (fenceMatch) {
-      const marker = fenceMatch[1][0] as "`" | "~";
-      if (!fence) fence = { marker, length: fenceMatch[1].length };
-      else if (fence.marker === marker && fenceMatch[1].length >= fence.length)
-        fence = null;
-      continue;
-    }
-    if (fence || !trimmed) continue;
+    if (code || !trimmed) continue;
     if (/^ {0,3}(?:={2,}|-{3,}|\*{3,}|_{3,})[ \t]*$/.test(line)) continue;
     if (/^\s*\|?(?:\s*:?-{3,}:?\s*\|)+\s*$/.test(line)) continue;
 

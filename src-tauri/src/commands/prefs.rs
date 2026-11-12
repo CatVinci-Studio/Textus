@@ -8,48 +8,34 @@ fn prefs_path(app: &AppHandle) -> Result<PathBuf, String> {
     app.path()
         .app_config_dir()
         .map_err(|e| e.to_string())
-        .map(|p| p.join("prefs.json"))
+        .map(|p| p.join(crate::settings::file_name("prefs")))
 }
 
 fn read_prefs(app: &AppHandle) -> serde_json::Value {
     let Ok(path) = prefs_path(app) else {
         return serde_json::json!({});
     };
-    let Ok(raw) = std::fs::read_to_string(path) else {
-        return serde_json::json!({});
-    };
-    serde_json::from_str(&raw).unwrap_or_else(|_| serde_json::json!({}))
+    crate::json_file::read_or_set_aside(&path).unwrap_or_else(|| serde_json::json!({}))
 }
 
-/// Merges `value` into the existing prefs.json under `key` instead of
-/// overwriting the whole file, which still holds the old mirrored keys.
+/// Merges `value` into prefs.json under `key`, keeping its other keys; a
+/// file that isn't an object (edited by hand) starts again empty.
 fn write_pref(app: &AppHandle, key: &str, value: serde_json::Value) -> Result<(), String> {
     let path = prefs_path(app)?;
     if let Some(dir) = path.parent() {
         std::fs::create_dir_all(dir).map_err(|e| e.to_string())?;
     }
     let mut prefs = read_prefs(app);
+    if !prefs.is_object() {
+        prefs = serde_json::json!({});
+    }
     prefs[key] = value;
     crate::atomic::write_sync(&path, prefs.to_string()).map_err(|e| e.to_string())
 }
 
-/// Internal helper for window-spawning decisions. Defaults to "window" on
-/// anything but an explicit "tab".
-pub fn read_new_document_mode(app: &AppHandle) -> String {
-    match crate::settings::read_setting(app, "newDocumentMode")
-        .as_ref()
-        .and_then(|v| v.as_str())
-    {
-        Some("tab") => "tab".to_string(),
-        _ => "window".to_string(),
-    }
-}
-
 /// Whether to reopen last session's documents (default) or start blank.
 pub fn read_restore_session_on_startup(app: &AppHandle) -> bool {
-    crate::settings::read_setting(app, "restoreSessionOnStartup")
-        .and_then(|v| v.as_bool())
-        .unwrap_or(true)
+    crate::settings::read_flag(app, "restoreSessionOnStartup")
 }
 
 /// The inner size (logical px) the last closed editor window had, for the next

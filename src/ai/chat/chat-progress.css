@@ -1,0 +1,163 @@
+/* Busy indicator: a label plus three staggered pulsing dots, not a fake
+   progress bar. */
+.agent-thinking {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  font-size: var(--text-secondary);
+  color: var(--ui-muted);
+}
+
+/* How long the model thought: one grey line under the question, which opens
+   to the reasoning when the provider shared it. */
+.agent-thought {
+  font-size: var(--text-secondary);
+  color: var(--ui-muted);
+}
+
+.agent-thought-toggle {
+  display: inline-flex;
+  align-items: center;
+  gap: 4px;
+  border: none;
+  background: none;
+  padding: 0;
+  font: inherit;
+  color: inherit;
+  cursor: pointer;
+}
+
+.agent-thought-toggle:hover {
+  color: var(--ui-text);
+}
+
+.agent-thought-chevron {
+  transition: transform var(--dur-fast) var(--ease-standard);
+}
+
+.agent-thought-toggle[aria-expanded="true"] .agent-thought-chevron {
+  transform: rotate(90deg);
+}
+
+.agent-thought-text {
+  margin-top: 4px;
+  padding-left: 8px;
+  border-left: 2px solid var(--ui-border);
+  font-size: var(--text-caption);
+  line-height: 1.55;
+  white-space: pre-wrap;
+  overflow-wrap: anywhere;
+  /* A long thought opened in full scrolls in its own box. */
+  max-height: 320px;
+  overflow-y: auto;
+}
+
+/* The seconds tick without the label changing width. */
+.agent-thought-label {
+  font-variant-numeric: tabular-nums;
+}
+
+/* Under a reply still streaming: it waits, and shows only if the reply
+   pauses (re-keyed on every delta). */
+.agent-thinking-after {
+  animation: motion-fade-in var(--dur-base) var(--ease-out) var(--delay-pause)
+    both;
+}
+
+/* Before anything has come back: a quick answer never flashes the dots. */
+.agent-thinking-soon {
+  animation: motion-fade-in var(--dur-base) var(--ease-out) var(--delay-soon)
+    both;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .agent-thinking-after,
+  .agent-thinking-soon {
+    animation-duration: 1ms;
+  }
+}
+
+.agent-thinking-dots {
+  display: inline-flex;
+  gap: 4px;
+}
+
+/* How long nothing has moved: after the dots, quieter than the label, its
+   digits one width so the count doesn't jiggle as it ticks. */
+.agent-thinking-waited {
+  margin-left: 2px;
+  font-size: var(--text-caption);
+  font-variant-numeric: tabular-nums;
+  opacity: 0.75;
+}
+
+.agent-thinking-dots span {
+  width: 4px;
+  height: 4px;
+  border-radius: 50%;
+  corner-shape: round;
+  background: currentColor;
+  animation: agent-thinking-pulse var(--dur-pulse) var(--ease-in-out) infinite;
+}
+
+.agent-thinking-dots span:nth-child(2) {
+  animation-delay: calc(var(--dur-pulse) / 6);
+}
+
+.agent-thinking-dots span:nth-child(3) {
+  animation-delay: calc(var(--dur-pulse) / 3);
+}
+
+@keyframes agent-thinking-pulse {
+  0%,
+  80%,
+  100% {
+    opacity: 0.25;
+  }
+  40% {
+    opacity: 1;
+  }
+}
+
+/* Prose still arriving ends in a soft caret, so a pause reads as "still
+   writing". Not after a list, code block or table. */
+.agent-streaming
+  .agent-markdown
+  > :last-child:not(ul, ol, pre, table, .agent-math)::after {
+  content: "";
+  display: inline-block;
+  width: 2px;
+  height: 1.05em;
+  margin-left: 2px;
+  vertical-align: -0.15em;
+  border-radius: var(--shape-pill);
+  corner-shape: round;
+  background: var(--ui-accent);
+  animation: agent-caret-pulse var(--dur-blink) var(--ease-standard) infinite;
+}
+
+@keyframes agent-caret-pulse {
+  50% {
+    opacity: 0.2;
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .agent-streaming .agent-markdown > :last-child::after {
+    animation: none;
+  }
+}
+
+/* Each new turn's entrance is staggered (--reveal-delay is set inline).
+   Streamed text itself never animates, or it would be unreadable. */
+.turn-reveal {
+  --enter-y: var(--motion-distance-sm);
+  animation: motion-enter var(--dur-base) var(--ease-out) both;
+  animation-delay: var(--reveal-delay, 0ms);
+}
+
+/* A proposed edit arrives as a card: it also grows out of its top edge. */
+.agent-proposal.turn-reveal {
+  transform-origin: top center;
+  --enter-scale: var(--scale-enter-dialog);
+}

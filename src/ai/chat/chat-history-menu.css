@@ -5,7 +5,7 @@
   top: calc(100% + 4px);
   left: 8px;
   right: 8px;
-  z-index: 30;
+  z-index: var(--z-popover);
   max-height: min(420px, 60vh);
   overflow-y: auto;
   overscroll-behavior: contain;
@@ -17,12 +17,6 @@
   animation: motion-pop-out var(--dur-fast) var(--ease-in) forwards;
 }
 
-.chat-history-empty {
-  padding: 16px 12px;
-  font-size: var(--text-footnote);
-  color: var(--ui-muted);
-}
-
 /* Entries are hairline-separated: a title and a date line per entry would
    otherwise run together. */
 .chat-history {
@@ -32,15 +26,8 @@
 }
 
 .chat-history-group-title {
+  margin: 0;
   padding: 8px 8px 4px;
-  font-size: var(--text-caption);
-  font-weight: 600;
-  text-transform: uppercase;
-  letter-spacing: 0.02em;
-  color: var(--ui-muted);
-  overflow: hidden;
-  text-overflow: ellipsis;
-  white-space: nowrap;
 }
 
 /* Older conversations were moved to the trash folder (beyond the cap). */
@@ -70,26 +57,24 @@
   background: var(--ui-hover);
 }
 
+/* The row's own button: the whole entry reopens, by pointer or key. */
 .chat-history-entry-main {
   flex: 1;
   min-width: 0;
   display: flex;
   flex-direction: column;
   gap: 1px;
+  padding: 0;
+  border: 0;
+  background: none;
+  color: inherit;
+  font: inherit;
+  text-align: start;
+  cursor: pointer;
 }
-
-.chat-history-entry-title {
-  overflow: hidden;
-  text-overflow: ellipsis;
-  white-space: nowrap;
-}
-
 .chat-history-entry-meta {
   font-size: var(--text-caption);
   color: var(--ui-muted);
-  overflow: hidden;
-  text-overflow: ellipsis;
-  white-space: nowrap;
 }
 
 .chat-history-entry-delete {
@@ -102,24 +87,16 @@
   padding: 2px 4px;
   border-radius: var(--shape-pill);
   corner-shape: round;
-  opacity: 0;
   flex-shrink: 0;
-}
-
-.chat-history-entry:hover .chat-history-entry-delete,
-.chat-history-entry-delete:focus-visible {
-  opacity: 1;
 }
 
 .chat-history-entry-delete:hover {
   color: var(--ui-text);
 }
 
-/* A finger has no hover to bring the delete button out, and needs room
-   to hit it. */
+/* A finger needs room to hit it. */
 @media (pointer: coarse) {
   .chat-history-entry-delete {
-    opacity: 1;
     justify-content: center;
     min-width: 32px;
     min-height: 32px;
@@ -130,27 +107,11 @@
 /* Searching what was said: the field on top, and each conversation found
    with the words it was found by. */
 .chat-history-search {
+  flex: none;
   margin: 4px 4px 8px;
-  padding: 4px 8px;
-  border: 1px solid var(--ui-border);
-  border-radius: var(--shape-pill);
-  corner-shape: round;
-  background: var(--ui-bg);
-  color: var(--ui-text);
-  font: inherit;
-  font-size: var(--text-secondary);
-}
-
-.chat-history-search:focus-visible {
-  outline: none;
-  border-color: var(--ui-accent);
 }
 
 .chat-history-hit {
-  display: -webkit-box;
-  overflow: hidden;
-  -webkit-box-orient: vertical;
-  -webkit-line-clamp: 2;
   font-size: var(--text-secondary);
   color: var(--ui-text);
 }

@@ -2,7 +2,9 @@
 import { describe, expect, it, vi } from "vitest";
 import type { EditorView } from "@milkdown/kit/prose/view";
 
-vi.mock("../../ui/zoomed-rects", () => ({ zoomedRectScale: () => 1.5 }));
+vi.mock("../../engine/controls/zoomed-rects", () => ({
+  zoomedRectScale: () => 1.5,
+}));
 vi.mock("../../platform/ipc", () => ({
   fs: {
     resolveNoteLink: async () => ({ path: "/v/Note.md", exists: true }),
@@ -38,5 +40,15 @@ describe("hoverSpot", () => {
       heading: null,
       block: "ab12cd",
     });
+  });
+
+  it("carries nested headings whole, as a click follows them", async () => {
+    const dom = document.createElement("div");
+    dom.innerHTML = '<p><span data-type="wikilink">[[Note#A#B]]</span></p>';
+    document.body.append(dom);
+    const link = dom.querySelector("span")!;
+    const view = { dom } as unknown as EditorView;
+    const spot = hoverSpot(view, { target: link } as never, "/v/Doc.md")!;
+    expect(await spot.resolve()).toMatchObject({ heading: "A#B" });
   });
 });

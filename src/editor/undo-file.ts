@@ -110,7 +110,7 @@ export function restoreHistory(view: EditorView, undos: Kept): boolean {
   return true;
 }
 
-export const undoFileKey = new PluginKey("undo-file");
+const undoFileKey = new PluginKey("undo-file");
 
 /** Keeps the document's undo history when its editor goes, and gives it
  *  back when it opens at the same text. Nothing for a draft with no file. */

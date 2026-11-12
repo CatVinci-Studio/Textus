@@ -1,13 +1,14 @@
-import { SelectMenu } from "../../ui/SelectMenu";
+import { SelectMenu } from "../../engine/controls/SelectMenu";
 import { useEffect, useId, useRef, useState, type KeyboardEvent } from "react";
 import { createRoot, type Root } from "react-dom/client";
 import { isIOSApp } from "../../platform/capabilities";
-import { Select } from "../../ui/Select";
-import { usePresence, useMergedRef } from "../../ui/usePresence";
-import { useFloatingList } from "../../ui/useFloatingList";
+import { Select } from "../../engine/controls/Select";
+import { usePresence, useMergedRef } from "../../engine/motion/usePresence";
+import { useFloatingList } from "../../engine/controls/useFloatingList";
 import { isImeKeydown } from "../../utils/ime";
+import { listMove } from "../../engine/controls/list-keys";
 
-export interface LanguagePickerProps {
+interface LanguagePickerProps {
   /** "" for plain text. */
   value: string;
   languages: readonly string[];
@@ -76,7 +77,7 @@ export function mountLanguagePicker(container: HTMLElement) {
 
 function useFloatingMenu(open: boolean, active: number, dismiss: () => void) {
   const floating = useFloatingList(open, active, dismiss);
-  const presence = usePresence(open, { exitMs: 120 });
+  const presence = usePresence(open);
   const listRef = useMergedRef(floating.listRef, presence.ref);
   return { ...floating, listRef, presence };
 }
@@ -122,10 +123,10 @@ function LanguageMenu({
 
   function onKey(e: KeyboardEvent<HTMLInputElement>) {
     if (isImeKeydown(e)) return;
+    const moved = listMove(e.key, active, shown.length, false);
     if (e.key === "ArrowDown" || e.key === "ArrowUp") {
       e.preventDefault();
-      const step = e.key === "ArrowDown" ? 1 : -1;
-      setActive((i) => (i + step + shown.length) % Math.max(1, shown.length));
+      if (moved !== null) setActive(moved);
     } else if (e.key === "Enter") {
       e.preventDefault();
       choose(shown[active]);
@@ -152,7 +153,9 @@ function LanguageMenu({
         aria-label={label}
         onClick={() => show(!open)}
       >
-        <span className="ui-select-value">{optionLabel(value)}</span>
+        <span className="tx-truncate ui-select-value">
+          {optionLabel(value)}
+        </span>
       </button>
       {presence.mounted && (
         <SelectMenu

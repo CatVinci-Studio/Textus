@@ -1,6 +1,6 @@
 // @vitest-environment jsdom
 import { afterEach, expect, it } from "vitest";
-import { closeViews, openView } from "../../document-view/editor-view-kit";
+import { closeViews, openView } from "../editor-view-kit";
 
 // Inline code inside bold, italic and strikethrough: typed, made with
 // Mod+B, pasted, and saved as written.

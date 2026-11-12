@@ -3,7 +3,7 @@
 //! iOS, where the frontend never calls them.
 
 use super::*;
-use ai::client::{ai_complete, ai_grammar_check, fetch_agent_models, set_ai_proxy};
+use ai::client::{ai_complete, ai_grammar_check, fetch_agent_models};
 use ai::{agent::ai_agent_message, cancel::ai_cancel};
 use auth::claude::{claude_auth_status, claude_login, claude_logout};
 use auth::custom_endpoint::{
@@ -16,30 +16,31 @@ use commands::attachment::pick_attachment_files;
 #[cfg(desktop)]
 use commands::cli::{cli_command_status, install_cli_command};
 use commands::drafts::{
-    clear_all_drafts, clear_draft_snapshot, save_draft_snapshot, take_draft_snapshots,
+    clear_all_drafts, clear_draft_snapshot, finish_draft_restore, save_draft_snapshot,
+    take_draft_snapshots,
 };
 use commands::export::export_save_dialog;
 #[cfg(desktop)]
 use commands::export::{
-    detect_pandoc, export_pdf_native, export_via_pandoc, open_linked_file,
-    open_pandoc_install_page, reveal_in_dir,
+    detect_pandoc, export_pdf_native, export_via_pandoc, open_pandoc_install_page, reveal_in_dir,
 };
 use commands::fs::{
     file_mtime_ms, list_dir, migrate_draft_images, open_css_file_dialog, open_file_dialog,
     open_image_file_dialog, open_settings_file_dialog, read_binary_file_base64, read_text_file,
     save_file_dialog, save_pasted_image, save_settings_file_dialog, write_text_file,
 };
-use commands::image_host::upload_image;
+use commands::image_host::{image_host_key_id, upload_image};
 #[cfg(desktop)]
-use commands::session::{cancel_session_quit, update_session_paths};
+use commands::linked_file::open_linked_file;
+#[cfg(desktop)]
+use commands::session::{cancel_session_quit, update_window_session, window_session_current};
 use commands::theme_gallery::{theme_gallery_catalog, theme_gallery_css, theme_gallery_preview};
 use commands::themes::{delete_theme, load_theme_css, save_theme_css};
 
 pub(crate) fn handler() -> impl Fn(tauri::ipc::Invoke<tauri::Wry>) -> bool + Send + Sync + 'static {
     crate::with_plugin_commands![
         // Shared: desktop and iOS.
-        take_pending_window_paths,
-        take_pending_open_paths,
+        take_pending_window,
         settings::settings_get,
         settings::settings_patch,
         settings::settings_fill_defaults,
@@ -64,6 +65,7 @@ pub(crate) fn handler() -> impl Fn(tauri::ipc::Invoke<tauri::Wry>) -> bool + Sen
         save_file_dialog,
         list_dir,
         commands::folder::index_folder,
+        commands::folder::search_folder_text,
         commands::folder::folder_documents,
         read_text_file,
         commands::word_import::open_word_document,
@@ -75,7 +77,9 @@ pub(crate) fn handler() -> impl Fn(tauri::ipc::Invoke<tauri::Wry>) -> bool + Sen
         commands::vault::resolve_note_link,
         commands::link_root::document_link_root,
         conventions::folder_conventions,
+        conventions::project_settings_read,
         upload_image,
+        image_host_key_id,
         migrate_draft_images,
         save_theme_css,
         load_theme_css,
@@ -99,8 +103,6 @@ pub(crate) fn handler() -> impl Fn(tauri::ipc::Invoke<tauri::Wry>) -> bool + Sen
         crate::ai::paper::figures::ai_paper_figures_drawn,
         crate::ai::paper::status::ai_paper_status,
         fetch_agent_models,
-        set_ai_proxy,
-        crate::ai::catalog::list_providers,
         crate::ai::catalog::ai_can_think_deeper,
         crate::ai::images::list_image_providers,
         crate::ai::images::ai_generated_image,
@@ -110,10 +112,6 @@ pub(crate) fn handler() -> impl Fn(tauri::ipc::Invoke<tauri::Wry>) -> bool + Sen
         crate::ai::images::ai_redraw_generated_image,
         crate::ai::web::web_search_status,
         crate::ai::workspace::load_agent_workspace,
-        crate::ai::conventions::writing_conventions_options,
-        crate::ai::conventions::writing_conventions_effective,
-        crate::ai::conventions::conventions_check_document,
-        crate::ai::conventions::measure_text,
         crate::ai::workspace::ensure_global_agent_md,
         crate::ai::workspace::import_agent_skill,
         crate::ai::workspace::list_skills,
@@ -123,9 +121,10 @@ pub(crate) fn handler() -> impl Fn(tauri::ipc::Invoke<tauri::Wry>) -> bool + Sen
         crate::ai::workspace::set_skill_modes,
         crate::ai::workspace::set_skill_off,
         crate::ai::workspace::save_written_skill,
-        crate::ai::builtin::builtin_skills_attribution,
         crate::ai::project::list_project_files,
         crate::ai::project::read_project_file,
+        crate::ai::file_changes::ai_file_changes,
+        crate::ai::file_changes::ai_set_file_changes,
         crate::ai::project::ensure_project_file,
         crate::ai::project::pick_text_files,
         crate::ai::project::import_references_picked,
@@ -157,11 +156,12 @@ pub(crate) fn handler() -> impl Fn(tauri::ipc::Invoke<tauri::Wry>) -> bool + Sen
         export_save_dialog,
         save_draft_snapshot,
         take_draft_snapshots,
+        finish_draft_restore,
         clear_draft_snapshot,
         clear_all_drafts,
         commands::undo_files::undo_file_save,
         commands::undo_files::undo_file_load,
-        commands::undo_files::undo_file_move,
+        commands::doc_data::document_data_move,
         commands::own_notes::own_notes_read,
         commands::own_notes::own_notes_write,
         distribution::app_distribution,
@@ -195,6 +195,12 @@ pub(crate) fn handler() -> impl Fn(tauri::ipc::Invoke<tauri::Wry>) -> bool + Sen
         #[cfg(desktop)]
         plugins::scripts::plugin_open_scripts_dir,
         #[cfg(desktop)]
+        crate::agents::agent_start,
+        #[cfg(desktop)]
+        crate::agents::agent_send,
+        #[cfg(desktop)]
+        crate::agents::agent_stop,
+        #[cfg(desktop)]
         menu::set_plugin_menu,
         #[cfg(desktop)]
         commands::tree_ops::tree_create_document,
@@ -208,6 +214,8 @@ pub(crate) fn handler() -> impl Fn(tauri::ipc::Invoke<tauri::Wry>) -> bool + Sen
         commands::tree_ops::tree_trash_entry,
         #[cfg(desktop)]
         commands::recents::add_recent_folder,
+        #[cfg(desktop)]
+        commands::recents::remove_recent,
         #[cfg(desktop)]
         menu::list_recent_folders,
         #[cfg(desktop)]
@@ -251,7 +259,6 @@ pub(crate) fn handler() -> impl Fn(tauri::ipc::Invoke<tauri::Wry>) -> bool + Sen
         #[cfg(desktop)]
         commands::chat_window::take_chat_handoff,
         #[cfg(desktop)]
-        commands::chat_window::close_chat_window,
         #[cfg(desktop)]
         commands::web_page::web_page_show,
         #[cfg(desktop)]
@@ -263,7 +270,6 @@ pub(crate) fn handler() -> impl Fn(tauri::ipc::Invoke<tauri::Wry>) -> bool + Sen
         #[cfg(desktop)]
         commands::web_page::web_page_reload,
         #[cfg(desktop)]
-        commands::chat_window::focus_chat_window,
         #[cfg(desktop)]
         commands::chat_window::current_chat_window,
         #[cfg(desktop)]
@@ -293,11 +299,12 @@ pub(crate) fn handler() -> impl Fn(tauri::ipc::Invoke<tauri::Wry>) -> bool + Sen
         #[cfg(desktop)]
         schedule::app_state::app_state,
         #[cfg(desktop)]
-        update_session_paths,
+        update_window_session,
+        #[cfg(desktop)]
+        window_session_current,
         #[cfg(desktop)]
         cancel_session_quit,
         #[cfg(desktop)]
-        crate::ai::workspace::pick_workspace_root,
         #[cfg(desktop)]
         crate::ai::workspace::open_global_agent_dir,
         #[cfg(desktop)]

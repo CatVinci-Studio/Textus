@@ -1,21 +1,23 @@
+import { useCatalogWork } from "../pages/useCatalogWork";
+import { compareVersions } from "../../plugins/store/manifest";
+import { isError } from "../../utils/error-text";
+import { Byline, CatalogRow } from "../pages/CatalogRow";
+import { explainError } from "../../utils/error-explain";
+import { fill } from "../../i18n/fill";
 import { useEffect, useState } from "react";
 import { MODES } from "../../ai/modes";
 import type { Strings } from "../../i18n/strings";
 import { ai, plugins as pluginsIpc } from "../../platform/ipc";
 import type { CatalogState, SkillEntry } from "../../plugins/store/catalog";
-import { errorText } from "../../utils/error-text";
 import { useSettings } from "../../prefs/SettingsContext";
 import { AvailableSection } from "../pages/AvailableSection";
-import { CatalogProblem } from "../pages/AvailablePlugins";
+import { catalogMessage, catalogStatus } from "../pages/CatalogStatus";
 import { installsText } from "../pages/installs-text";
 import { SKILLS_CHANGED_EVENT, announceChange } from "./skills";
 
-/** The error the backend gives for a skill of that name the user already has. */
-const SKILL_EXISTS = "SKILL_EXISTS";
-
 /** The catalog's skills whose name, description, author or names in any
  *  language hold every word of `query`. */
-export function searchSkills(list: SkillEntry[], query: string): SkillEntry[] {
+function searchSkills(list: SkillEntry[], query: string): SkillEntry[] {
   const words = query.toLowerCase().split(/\s+/).filter(Boolean);
   if (!words.length) return list;
   return list.filter((s) => {
@@ -30,8 +32,9 @@ export function searchSkills(list: SkillEntry[], query: string): SkillEntry[] {
   });
 }
 
-/** Under the user's skills: the catalog's skills not installed yet, each
- *  installed with a click into the global skills folder. */
+/** Under the user's skills: the catalog's skills not installed yet, or
+ *  installed at an older version (then updated), each a click into the
+ *  global skills folder. */
 export function AvailableSkills({
   t,
   catalog,
@@ -41,9 +44,9 @@ export function AvailableSkills({
   catalog: CatalogState;
   query: string;
 }) {
-  const [have, setHave] = useState<Set<string> | null>(null);
-  const [busy, setBusy] = useState<string | null>(null);
-  const [error, setError] = useState<string | null>(null);
+  // The user's skills by name: their version when it came from the catalog.
+  const [have, setHave] = useState<Map<string, string | null> | null>(null);
+  const { busy, error, run } = useCatalogWork();
   const { settings } = useSettings();
   useEffect(() => {
     let live = true;
@@ -52,9 +55,13 @@ export function AvailableSkills({
         .listSkills(null, null)
         .then((list) => {
           if (live && Array.isArray(list))
-            setHave(new Set(list.map((s) => s.name.toLowerCase())));
+            setHave(
+              new Map(
+                list.map((s) => [s.name.toLowerCase(), s.version ?? null]),
+              ),
+            );
         })
-        .catch(() => live && setHave(new Set()));
+        .catch(() => live && setHave(new Map()));
     load();
     window.addEventListener(SKILLS_CHANGED_EVENT, load);
     return () => {
@@ -63,39 +70,39 @@ export function AvailableSkills({
     };
   }, []);
   const ready = catalog.status === "ready" && have !== null;
+  /** An older version of it installed: what the button updates. */
+  const older = (skill: SkillEntry) => {
+    const installed = have?.get(skill.name.toLowerCase());
+    return !!installed && compareVersions(skill.version, installed) > 0;
+  };
   const shown = ready
     ? searchSkills(catalog.skills, query).filter(
-        (s) => !have.has(s.name.toLowerCase()),
+        (s) => !have.has(s.name.toLowerCase()) || older(s),
       )
     : [];
   const install = async (skill: SkillEntry) => {
-    setBusy(skill.name);
-    setError(null);
-    try {
-      await pluginsIpc.installSkillFromCatalog(skill.name);
-    } catch (err) {
-      if (errorText(err) !== SKILL_EXISTS)
-        setError(`${t.marketSkillFailed} ${errorText(err)}`);
-    } finally {
-      setBusy(null);
-    }
+    await run(
+      skill.name,
+      async () => {
+        await pluginsIpc.installSkillFromCatalog(skill.name);
+      },
+      (err) =>
+        isError(err, "skillExists")
+          ? explainError(err, t)
+          : `${t.marketSkillFailed} ${explainError(err, t)}`,
+    );
     announceChange();
   };
-  const message =
-    catalog.status === "failed" ? (
-      <CatalogProblem
-        t={t}
-        text={t.pluginsCatalogFailed.replace("{reason}", catalog.error)}
-      />
-    ) : !ready ? (
-      <p className="plugin-empty">{t.pluginsCatalogLoading}</p>
-    ) : !catalog.skills.length ? (
-      <p className="plugin-empty">{t.marketSkillsNone}</p>
-    ) : query.trim() && !shown.length ? (
-      <p className="plugin-empty">
-        {t.pluginsSearchNone.replace("{query}", query.trim())}
-      </p>
-    ) : undefined;
+  const message = catalogMessage({
+    t,
+    // Its list is ready once the user's skills are read too.
+    status:
+      catalog.status === "ready" && !ready ? "loading" : catalogStatus(catalog),
+    error: catalog.status === "failed" ? catalog.error : undefined,
+    none: ready && !catalog.skills.length ? t.marketSkillsNone : undefined,
+    query,
+    shown: shown.length,
+  });
   return (
     <AvailableSection
       t={t}
@@ -113,49 +120,44 @@ export function AvailableSkills({
         const words =
           skill.labels?.[settings.language] ?? skill.labels?.en ?? null;
         return (
-          <div
+          <CatalogRow
             key={skill.name}
-            className="settings-row plugin-card"
             data-skill={skill.name}
-          >
-            <div className="plugin-card-open">
-              <span className="settings-row-label plugin-card-name">
-                {words?.label ?? `/${skill.name}`}
-              </span>
-              <span className="settings-row-hint plugin-card-description">
-                {words ? `/${skill.name} · ${words.hint}` : skill.description}
-              </span>
-              {(skill.official || skill.author) && (
-                <span className="plugin-byline">
+            name={words?.label ?? `/${skill.name}`}
+            description={
+              words ? `/${skill.name} · ${words.hint}` : skill.description
+            }
+            byline={
+              <Byline
+                t={t}
+                lead={
                   <span className="market-skill-modes">
                     {(skill.modes ?? ["write"])
                       .map((m) => t[MODES[m].label])
                       .join(" · ")}
                   </span>
-                  {skill.official && (
-                    <span className="plugin-official">{t.pluginOfficial}</span>
-                  )}
-                  {skill.author &&
-                    t.themeGalleryBy.replace("{author}", skill.author)}
-                  {installsText(skill, t) && (
-                    <span className="plugin-installs">
-                      {installsText(skill, t)}
-                    </span>
-                  )}
-                </span>
-              )}
-            </div>
-            <div className="settings-row-control">
+                }
+                official={skill.official}
+                author={skill.author}
+                installs={installsText(skill, t)}
+              />
+            }
+            actionClass="plugin-action"
+            action={
               <button
                 type="button"
-                className="plugin-install"
+                className="text-button plugin-action-main"
                 disabled={busy === skill.name}
                 onClick={() => void install(skill)}
               >
-                {busy === skill.name ? t.pluginInstalling : t.pluginInstall}
+                {busy === skill.name
+                  ? t.pluginInstalling
+                  : older(skill)
+                    ? fill(t.pluginUpdate, { version: skill.version })
+                    : t.pluginInstall}
               </button>
-            </div>
-          </div>
+            }
+          />
         );
       })}
     />

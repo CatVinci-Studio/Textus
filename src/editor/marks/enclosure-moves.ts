@@ -9,7 +9,7 @@ import { isEnclosure, isEnclosureName } from "./enclosure-runs";
  * pure functions of the editor state.
  */
 
-export interface ArrowMove {
+interface ArrowMove {
   pos: number;
 }
 

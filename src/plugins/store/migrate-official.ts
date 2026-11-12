@@ -1,6 +1,7 @@
 import { plugins as pluginsIpc } from "../../platform/ipc";
 import { installFromCatalog, loadCatalog, catalogSnapshot } from "./catalog";
-import { loadPlugins, uninstallPlugin } from "../manager";
+import { loadPlugins } from "../manager";
+import { uninstallPlugin } from "../plugin-switches";
 
 /**
  * Moves the official plugins written for the pre-1.0 plugin API to their
@@ -9,7 +10,7 @@ import { loadPlugins, uninstallPlugin } from "../manager";
  */
 
 /** Permissions as the API before 1.0 named them. */
-export const RENAMED_PERMISSIONS: Record<string, string> = {
+const RENAMED_PERMISSIONS: Record<string, string> = {
   "document.read": "editor.read",
   "document.propose": "editor.propose",
   "workspace.read": "files.read",
@@ -17,7 +18,7 @@ export const RENAMED_PERMISSIONS: Record<string, string> = {
 };
 
 /** Official plugins no longer offered: what they did is Textus's own. */
-export const DELISTED = ["catvinci.split-panes"];
+const DELISTED = ["catvinci.split-panes"];
 
 const major = (version: unknown) =>
   typeof version === "string" ? Number(version.split(".")[0]) : NaN;

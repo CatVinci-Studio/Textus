@@ -28,7 +28,7 @@ describe("keptTabs", () => {
       true,
     );
     expect(kept.active).toBe(1);
-    expect(kept.tabs[0]).toEqual({ path: "/n/a.md" });
+    expect(kept.tabs[0]).toEqual({ id: "a", path: "/n/a.md" });
     expect(kept.tabs[1].text?.content).toBe("edited");
     expect(kept.tabs[2]).toMatchObject({
       path: null,
@@ -36,16 +36,18 @@ describe("keptTabs", () => {
     });
   });
 
-  it("keeps no text with draft recovery off, and no plugin views", () => {
+  it("keeps no text with draft recovery off, and a plugin view by what it shows", () => {
+    const view = { plugin: "pdf", view: "reader", kind: "view" } as const;
     const kept = keptTabs(
-      [
-        tab({ content: "edited" }),
-        tab({ id: "pdf", view: {} as unknown as DocTab["view"] }),
-      ],
-      "a",
+      [tab({ content: "edited" }), tab({ id: "pdf", path: null, view })],
+      "pdf",
       false,
     );
-    expect(kept.tabs).toEqual([{ path: "/n/a.md" }]);
+    expect(kept.tabs).toEqual([
+      { id: "a", path: "/n/a.md" },
+      { id: "pdf", path: null, view },
+    ]);
+    expect(kept.active).toBe(1);
   });
 });
 
@@ -54,6 +56,23 @@ describe("the kept tabs in sessionStorage", () => {
     const kept = keptTabs([tab({ content: "edited" })], "a", true);
     writeKeptTabs(kept);
     expect(readKeptTabs()).toEqual(kept);
+  });
+
+  it("past the quota, go without text or id, so no draft is moved away", () => {
+    const kept = keptTabs([tab({ content: "edited" })], "a", true);
+    const set = Storage.prototype.setItem;
+    let calls = 0;
+    Storage.prototype.setItem = function (key: string, value: string) {
+      if (calls++ === 0) throw new DOMException("full", "QuotaExceededError");
+      set.call(this, key, value);
+    };
+    try {
+      writeKeptTabs(kept);
+    } finally {
+      Storage.prototype.setItem = set;
+    }
+    const back = readKeptTabs()!.tabs[0];
+    expect([back.id, back.text]).toEqual([undefined, undefined]);
   });
 
   it("are none in a new window", () => {

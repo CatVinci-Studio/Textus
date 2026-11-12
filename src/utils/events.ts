@@ -9,6 +9,9 @@ export const SHOW_REPLACE_EVENT = "textus:show-replace";
 export const FIND_NEXT_EVENT = "textus:find-next";
 /** Format › Link: a link around the selection. */
 export const INSERT_LINK_EVENT = "textus:insert-link";
+/// detail: Markdown put in at the caret of the document on screen (an AI
+/// reply's Insert at Cursor).
+export const INSERT_MARKDOWN_EVENT = "textus:insert-markdown";
 /// detail: a sidebar tab's id - a plugin asked for it to be shown
 /// (layout.showSidebarTab); the sidebar opens on it.
 export const SHOW_SIDEBAR_TAB_EVENT = "textus:show-sidebar-tab";
@@ -40,7 +43,7 @@ export type TrackChangesAction = "toggle" | "accept-all" | "reject-all";
 /// "math-block", "rule" or "table".
 export const INSERT_BLOCK_EVENT = "textus:insert-block";
 /** A folder inside the open one to show in the sidebar (detail: its path),
- *  as a double click on it does: a plugin's import going into what it made. */
+ *  as its Show Only This Folder does: a plugin's import going into what it made. */
 export const SHOW_FOLDER_EVENT = "textus:show-folder";
 export const INSERT_BLOCK_KINDS: readonly string[] = [
   ...["h1", "h2", "h3", "h4", "h5", "h6", "paragraph"],
@@ -87,24 +90,16 @@ export function sendTourSignal(signal: TourSignal): void {
   );
 }
 
-/** Open a file in a new tab. detail: the absolute path, or an OpenFileInTab. */
-export const OPEN_FILE_IN_TAB_EVENT = "textus:open-file-in-tab";
-
-/** A link into a file: the heading it names is scrolled to once it's on screen. */
-export interface OpenFileInTab {
-  path: string;
-  anchor?: string;
-  /** A link to a file of any type: one Textus can't show is offered to the
-   *  system's app for it instead, after asking. */
-  linked?: boolean;
-}
-
 /** Zen mode turned on/off (detail: boolean). */
 export const ZEN_MODE_EVENT = "textus:zen-mode";
 
 /** A file was written from inside the window, not by its tab's save
  *  (detail: its path); open tabs of it check the disk. */
 export const FILE_WRITTEN_EVENT = "textus:file-written";
+
+/** The app made a file of the user's: a picture pasted or dropped into a
+ *  document, saved in its folder (detail: its path). */
+export const FILE_CREATED_EVENT = "textus:file-created";
 
 /** A tab took its file's new text from disk (detail: its path). */
 export const FILE_RELOADED_EVENT = "textus:file-reloaded";

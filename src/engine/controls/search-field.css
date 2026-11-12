@@ -1,0 +1,65 @@
+/* SearchField: the one search box. */
+.tx-search {
+  display: flex;
+  flex: 1;
+  min-width: 0;
+  align-items: center;
+  gap: 8px;
+  height: var(--control-height-sm);
+  padding: 0 calc(var(--pane-row-inset) - 1px);
+  border: 1px solid var(--ui-border);
+  border-radius: var(--shape-s);
+  background: var(--ui-bg);
+}
+
+/* The ring is drawn on the field, inside its border, not around the bare
+   input. */
+.tx-search:focus-within {
+  border-color: var(--ui-accent);
+  box-shadow: inset 0 0 0 1px var(--ui-accent);
+}
+
+.tx-search-icon {
+  flex-shrink: 0;
+  opacity: 0.6;
+}
+
+.tx-search-input {
+  flex: 1;
+  min-width: 0;
+  text-overflow: ellipsis;
+  padding: 0;
+  border: none;
+  background: transparent;
+  color: var(--ui-selected-text);
+  font: inherit;
+  font-size: var(--pane-text, var(--text-secondary));
+}
+
+.tx-search-input:focus,
+.tx-search-input:focus-visible {
+  outline: none;
+}
+
+.tx-search-input::-webkit-search-cancel-button {
+  display: none;
+}
+
+/* A filtered list's small titles and its notes (nothing found, still
+   reading), under the box. */
+/* .tx-list-heading: pane.css. */
+
+/* A list's one line about itself: nothing here yet, nothing found,
+   loading. Inside a card, the card already keeps it off the edge. */
+.tx-list-note {
+  margin: 0;
+  padding: var(--space-2) var(--pane-row-inset);
+  color: var(--ui-muted);
+  font-size: var(--text-footnote);
+  user-select: text;
+}
+:is(.settings-group-body, .settings-tab-page) .tx-list-note {
+  padding: var(--space-3) 0;
+}
+
+/* A pane's top line is pane.css's (.tx-pane-top). */

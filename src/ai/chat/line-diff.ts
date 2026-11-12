@@ -1,13 +1,10 @@
+import { lcsSteps, wholeChange } from "../../utils/lcs";
 type DiffKind = "context" | "add" | "remove";
 
-export interface DiffLine {
+interface DiffLine {
   kind: DiffKind;
   text: string;
 }
-
-/** Above this many lines on either side, the LCS table costs more than the
- *  diff is worth; the pair shows as remove-all/add-all instead. */
-const MAX_LCS_LINES = 400;
 
 /**
  * Line-level diff of two markdown snippets, for the proposal card. Plain
@@ -21,43 +18,55 @@ export function diffLines(before: string, after: string): DiffLine[] {
   if (a.length === 0) return b.map((text) => ({ kind: "add" as const, text }));
   if (b.length === 0)
     return a.map((text) => ({ kind: "remove" as const, text }));
-  if (a.length > MAX_LCS_LINES || b.length > MAX_LCS_LINES) {
-    return [
-      ...a.map((text) => ({ kind: "remove" as const, text })),
-      ...b.map((text) => ({ kind: "add" as const, text })),
-    ];
-  }
-
-  // lcs[i][j] = length of the longest common subsequence of a[i:] and b[j:].
-  const lcs: number[][] = Array.from({ length: a.length + 1 }, () =>
-    new Array<number>(b.length + 1).fill(0),
-  );
-  for (let i = a.length - 1; i >= 0; i--) {
-    for (let j = b.length - 1; j >= 0; j--) {
-      lcs[i][j] =
-        a[i] === b[j]
-          ? lcs[i + 1][j + 1] + 1
-          : Math.max(lcs[i + 1][j], lcs[i][j + 1]);
-    }
-  }
-
+  // Too large to diff: shown as remove-all, add-all.
+  const steps =
+    lcsSteps(a.length, b.length, (i, j) => a[i] === b[j], "delete") ??
+    wholeChange(a.length, b.length);
   const out: DiffLine[] = [];
   let i = 0;
   let j = 0;
-  while (i < a.length && j < b.length) {
-    if (a[i] === b[j]) {
-      out.push({ kind: "context", text: a[i] });
-      i++;
+  for (const step of steps) {
+    if (step === "same") {
+      out.push({ kind: "context", text: a[i++] });
       j++;
-    } else if (lcs[i + 1][j] >= lcs[i][j + 1]) {
-      out.push({ kind: "remove", text: a[i] });
-      i++;
-    } else {
-      out.push({ kind: "add", text: b[j] });
-      j++;
-    }
+    } else if (step === "delete") out.push({ kind: "remove", text: a[i++] });
+    else out.push({ kind: "add", text: b[j++] });
   }
-  while (i < a.length) out.push({ kind: "remove", text: a[i++] });
-  while (j < b.length) out.push({ kind: "add", text: b[j++] });
   return out;
+}
+
+/** A proposal's two sides to compare: what it targets and what it leaves.
+ *  `append` has nothing to compare against; replace_selection targets the
+ *  selection, not a quoted anchor; an insertion keeps its anchor. */
+export function proposalSides(
+  proposal: { action: string; anchor?: string | null; text?: string | null },
+  selectedText?: string | null,
+): { before: string; after: string } {
+  const before =
+    proposal.action === "append"
+      ? ""
+      : proposal.action === "replace_selection"
+        ? (selectedText ?? "")
+        : (proposal.anchor ?? "");
+  const text = proposal.text ?? "";
+  const after =
+    proposal.action === "delete"
+      ? ""
+      : proposal.action === "insert_before"
+        ? `${text}\n${before}`
+        : proposal.action === "insert_after"
+          ? `${before}\n${text}`
+          : text;
+  return { before, after };
+}
+
+/** How many lines a diff adds and takes away. */
+export function lineCounts(lines: readonly { kind: string }[]): {
+  added: number;
+  removed: number;
+} {
+  return {
+    added: lines.filter((line) => line.kind === "add").length,
+    removed: lines.filter((line) => line.kind === "remove").length,
+  };
 }

@@ -99,11 +99,15 @@
               "project.data",
               "ai.tools",
               "notifications",
-              "background"
+              "background",
+              "agents"
             ]
           },
           {
             "pattern": "^network:.+"
+          },
+          {
+            "pattern": "^commands:[a-z0-9][a-z0-9-]*\\.[a-z0-9][a-z0-9-]*$"
           }
         ]
       }
@@ -473,6 +477,47 @@
                 "items": { "type": "string" }
               }
             }
+          }
+        },
+        "agents": {
+          "type": "array",
+          "description": "AI agents on the user's computer that Textus AI's model menu offers (Agent Client Protocol over stdio): Claude Agent, Codex... Needs the agents permission; desktop only. Textus starts the command itself, from this manifest.",
+          "items": {
+            "type": "object",
+            "required": ["id", "name", "command"],
+            "properties": {
+              "id": {
+                "type": "string",
+                "description": "Starts with the plugin's id and a dot."
+              },
+              "name": {
+                "type": "string",
+                "description": "As the model menu lists it; may be %key% for l10n."
+              },
+              "command": {
+                "type": "string",
+                "description": "The program, found on the PATH a terminal would have (npx, gemini...) or a path; {pluginDir} is the plugin's folder."
+              },
+              "args": {
+                "type": "array",
+                "items": { "type": "string" },
+                "description": "Its arguments; {pluginDir} is the plugin's folder."
+              },
+              "env": {
+                "type": "object",
+                "additionalProperties": { "type": "string" },
+                "description": "Extra environment variables."
+              },
+              "setup": {
+                "type": "string",
+                "description": "How to install it and sign in, shown when it can't start; may be %key% for l10n."
+              },
+              "provider": {
+                "type": "string",
+                "description": "The provider whose models it runs (\"anthropic\", \"openai\"), told to plugins as the AI at work."
+              }
+            },
+            "additionalProperties": false
           }
         },
         "hovers": {

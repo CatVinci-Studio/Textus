@@ -557,7 +557,7 @@ fn the_workspace_section_says_which_folder_and_why() {
     assert_eq!(chosen.root_source, RootSource::Chosen);
     let text = workspace_section(&chosen, "en");
     assert!(text.contains("chosen by the user") && text.contains("click the folder name"));
-    assert!(text.contains("Use no project folder"));
+    assert!(text.contains("Use no folder"));
     // Attached files are named wherever there are some.
     let with_files = AgentWorkspace {
         attached: true,
@@ -574,7 +574,7 @@ fn the_workspace_section_says_which_folder_and_why() {
     // the user's UI language - only that one.
     assert!(text.contains("Learn my style") && !text.contains("English |"));
     let chinese = workspace_section(&too_broad, "zh");
-    assert!(chinese.contains("English | 中文\nproject folder | 项目文件夹\n"));
+    assert!(chinese.contains("English | 简体中文\nfolder | 文件夹\n"));
     assert!(chinese.contains("not \"style profile (文风档案)\", not \"资料库 (library)\""));
     assert!(!chinese.contains("日本語"));
     // A language whose names aren't translated yet gets the English
@@ -584,11 +584,11 @@ fn the_workspace_section_says_which_folder_and_why() {
     let prompt = build_instructions(&with_files, &md("draft"), false, AgentMode::Write, "", "en");
     assert!(!prompt.contains("---project---"));
     let review = request_preamble(&chosen, AgentMode::Review, "en");
-    assert!(review.contains("Review mode:") && review.contains("Write mode you"));
+    assert!(review.contains("Review mode:") && review.contains("General mode you"));
     let review = request_preamble(&chosen, AgentMode::Review, "ja");
     assert!(
         review.contains("Review mode (レビュー in their Japanese UI)")
-            && review.contains("Write mode (執筆)")
+            && review.contains("General mode (汎用)")
     );
 }
 
@@ -664,7 +664,7 @@ fn the_prompt_names_things_exactly_as_the_ui_does() {
             "ui-names/{code}.txt names every line of en.txt, in its order"
         );
         let prompt = build_instructions(&chosen, &md("draft"), true, AgentMode::Review, "", code);
-        assert!(prompt.contains(&format!("\nEnglish | {}\n", language.native)));
+        assert!(prompt.contains(&format!("\nEnglish | {}\n", language.native())));
         for (en, name) in &pairs {
             assert!(
                 prompt.contains(&format!("{en} | {name}")),
@@ -682,16 +682,21 @@ fn the_prompt_names_things_exactly_as_the_ui_does() {
     let prompt = build_instructions(&chosen, &md("draft"), true, AgentMode::Review, "", "en");
     let en_ts = read("src/i18n/locales/en.ts");
     for label in [
-        "Choose project folder…",
-        "Use no project folder",
+        "Choose folder…",
+        "Use no folder",
         "Learn my style from samples…",
         "Create style profile",
         "Open style profile",
         "New library entry…",
-        "Edit project writing instructions",
+        "Edit the folder's writing instructions",
         "Writing Instructions (agent.md)",
         "Edit agent.md",
         "Import Skill…",
+        // The Settings pages and groups its paths go through.
+        "Agent",
+        "Writing assist",
+        "Continue & Check",
+        "Memory",
     ] {
         assert!(prompt.contains(label), "the prompt lacks {label}");
         assert!(
@@ -704,17 +709,11 @@ fn the_prompt_names_things_exactly_as_the_ui_does() {
         read("src/i18n/locales/ja.ts"),
     );
     for (strings, entry) in [
-        (&en_ts, "projectStyleChip: \"Style\""),
-        (&zh_ts, "projectStyleChip: \"文风\""),
-        (&ja_ts, "projectStyleChip: \"文体\""),
-        (&en_ts, "agentWorkspaceRootLabel: \"Project Folder\""),
-        (&zh_ts, "agentWorkspaceRootLabel: \"项目文件夹\""),
-        (
-            &ja_ts,
-            "agentWorkspaceRootLabel: \"プロジェクトフォルダー\"",
-        ),
-        (&zh_ts, "agentSkillsLabel: \"技能\""),
-        (&ja_ts, "agentSkillsLabel: \"スキル\""),
+        (&en_ts, "agentWorkspaceRootLabel: \"Folder\""),
+        (&zh_ts, "agentWorkspaceRootLabel: \"文件夹\""),
+        (&ja_ts, "agentWorkspaceRootLabel: \"フォルダー\""),
+        (&zh_ts, "navSkills: \"技能\""),
+        (&ja_ts, "navSkills: \"スキル\""),
         (&zh_ts, "settingsTitle: \"设置\""),
         (&ja_ts, "settingsTitle: \"設定\""),
         (&zh_ts, "tutorialContinuationTitle: \"续写\""),
@@ -726,7 +725,7 @@ fn the_prompt_names_things_exactly_as_the_ui_does() {
     ] {
         assert!(strings.contains(entry), "the UI has no {entry}");
     }
-    assert!(prompt.contains(&format!("Settings > {AI_NAME} > Project Folder")));
+    assert!(prompt.contains(&format!("Settings > {AI_NAME} > Agent > Folder")));
     // The backend's own pointer to Settings names the same page.
     assert!(crate::ai::route::NOT_CONFIGURED.contains(&format!("Settings > {AI_NAME}.")));
 }
@@ -751,7 +750,7 @@ fn create_mode_is_told_its_tools_and_turns_document_changes_away() {
         "Make a skill for 500-word posts.",
     );
     assert!(message.contains("interaction mode: create"));
-    assert!(message.contains("switch to Write mode"), "{message}");
+    assert!(message.contains("switch to General mode"), "{message}");
     // The length note points at propose_edit, which only Write has.
     assert!(!message.contains(LENGTH_TARGET_NOTE));
     assert!(
@@ -766,6 +765,10 @@ fn interaction_mode_is_explicit_in_every_message() {
     let message = |mode| request_message(&workspace, mode, "en", "---document---\ndraft", "Go.");
     let review = message(AgentMode::Review);
     assert!(review.contains("interaction mode: review"));
+    // Review covers the selection when there is one, and a concrete fix
+    // goes with its note as a suggestion.
+    assert!(review.contains("the <selected-text> block when there is one"));
+    assert!(review.contains("`suggestion`"));
     assert!(
         build_instructions(&workspace, &md("draft"), true, AgentMode::Review, "", "en")
             .contains("No document edit tool is available")
@@ -830,17 +833,22 @@ fn the_cached_prefix_survives_a_new_memory() {
 fn project_writing_instructions_follow_and_override_the_global_ones() {
     let global = "Always reply in English.";
     let project = "Reply in Chinese.";
+    let agents = "Keep British spelling.";
     let both = AgentWorkspace {
         instructions: vec![global.into()],
         project_instructions: Some(project.into()),
+        agents_md: Some(agents.into()),
         ..AgentWorkspace::default()
     };
     let prompt = build_instructions(&both, &md("draft"), true, AgentMode::Write, "", "en");
     let global_at = prompt.find(global).unwrap();
     let project_at = prompt.find(project).unwrap();
     assert!(global_at < project_at, "global first, project after");
+    // The folder's AGENTS.md after both, which win over it.
+    assert!(prompt.find(agents).unwrap() > project_at);
+    assert!(prompt.contains("---the folder's AGENTS.md"));
     assert!(prompt.contains(
-        "---user instructions for this project (where they conflict with the ones above, follow these)---\nReply in Chinese."
+        "---user instructions for this folder (where they conflict with the ones above, follow these)---\nReply in Chinese."
     ));
 
     // One layer alone keeps the plain header, whichever layer it is.

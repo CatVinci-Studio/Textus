@@ -1,20 +1,23 @@
 import { createPortal } from "react-dom";
-import { EditorAgentPanel } from "./EditorAgentPanel";
+import { editorViewCtx } from "@milkdown/kit/core";
 import type { EditorSetup } from "./useEditorSetup";
 import type { EditorChat } from "./useEditorChat";
 import type { EditorReview } from "./useEditorReview";
 import { InlineChat } from "../ai/chat/quick-ask/InlineChat";
+import { useAttachDocument } from "../ai/chat/conversation/useAttachDocument";
 import { chatLabels } from "../ai/chat/chat-labels";
 import type { AgentMode, Settings } from "../prefs/SettingsContext";
 import type { Strings } from "../i18n/strings";
 
-/** Where one tab's chats are drawn: the docked AI panel while active, and
- *  Quick Ask in the document's flow or, on a phone, above the keyboard. */
+/** One tab's part in Textus AI's chats: in front, its document is what the
+ *  window's conversations work on; Quick Ask is drawn in the document's
+ *  flow or, on a phone, above the keyboard. */
 export function EditorChatPortals({
   setup,
   chat,
   review,
   filePath,
+  isActive,
   phone,
   tourMode,
   settings,
@@ -24,52 +27,53 @@ export function EditorChatPortals({
   chat: EditorChat;
   review: EditorReview;
   filePath: string | null;
+  isActive: boolean;
   phone: boolean;
+  /** The mode the tour's lesson sets in the composer. */
   tourMode: AgentMode | null;
   settings: Settings;
   t: Strings;
 }) {
   const { run, inlineChat } = setup;
-  const { pendingEdits, panelContainer, controls } = chat;
+  const { pendingEdits, controls } = chat;
   const { chatGuard } = controls;
   const { notes } = review;
   const { handleFocusNext } = chat.review;
+  useAttachDocument(isActive, chat.proposals.port, {
+    chat: {
+      selectedText: chat.panelSelection?.text ?? null,
+      selectionIsPicture: chat.panelSelection?.picture ?? false,
+      selectionChip: chat.panelChipHandlers,
+      tourMode,
+      refreshContext: chat.bridge.panelSendContext,
+      proposalStatus: pendingEdits.status,
+      pendingCount: pendingEdits.decidable.length,
+      onProposals: chat.proposals.showProposals,
+      onAcceptProposal: pendingEdits.accept,
+      proposalSentences: pendingEdits.sentences,
+      onDecideSentence: pendingEdits.decide,
+      onRevealProposal: review.revealProposal,
+      onLocateText: notes.locateText,
+      noteNumber: (id) =>
+        notes.noMargin
+          ? (notes.notes.find((n) => n.id === id)?.num ?? null)
+          : null,
+      onRejectProposal: pendingEdits.reject,
+      onAcceptAll: pendingEdits.acceptAll,
+      onRejectAll: pendingEdits.rejectAll,
+      onRevealPending: handleFocusNext,
+    },
+    documentText: () =>
+      run((ctx) => ctx.get(editorViewCtx).state.doc.textContent) ?? "",
+    onNewConversation: chat.startPanelConversation,
+    onPopOut: chat.popOutPanel,
+    guard: chat.panelGuard.asking,
+    proceed: chat.panelGuard.proceed,
+    cancelGuard: chat.panelGuard.cancel,
+    writePaper: review.writePaper,
+  });
   return (
     <>
-      {/* Off, the panel shows that instead. */}
-      {panelContainer &&
-        settings.textusAi &&
-        createPortal(
-          <EditorAgentPanel
-            run={run}
-            t={t}
-            settings={settings}
-            filePath={filePath}
-            tourMode={tourMode}
-            agentPanel={chat.agentPanel}
-            conversation={chat.conversation}
-            pendingEdits={pendingEdits}
-            selectedText={chat.panelSelection?.text ?? null}
-            selectionIsPicture={chat.panelSelection?.picture ?? false}
-            selectionChip={chat.panelChipHandlers}
-            panelSendContext={chat.bridge.panelSendContext}
-            showProposals={chat.proposals.showProposals}
-            onRevealProposal={review.revealProposal}
-            onLocateText={notes.locateText}
-            noteNumber={(id) =>
-              notes.noMargin
-                ? (notes.notes.find((n) => n.id === id)?.num ?? null)
-                : null
-            }
-            onRevealPending={handleFocusNext}
-            onNewConversation={chat.startPanelConversation}
-            onPopOut={chat.popOutPanel}
-            guard={chat.panelGuard}
-            setGuard={chat.setPanelGuard}
-            writePaper={review.writePaper}
-          />,
-          panelContainer,
-        )}
       {inlineChat.chatInfo &&
         inlineChat.visible &&
         controls.quickAskHost &&
@@ -87,7 +91,6 @@ export function EditorChatPortals({
             // Write first: Quick Ask is opened on a passage to change it.
             defaultMode="write"
             selectionChip={chat.quickChipHandlers}
-            defaultWebSearch={settings.enableWebSearch}
             labels={chatLabels(t, settings.language)}
             onProposals={chat.proposals.showProposals}
             proposalStatus={pendingEdits.status}

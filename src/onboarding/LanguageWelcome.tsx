@@ -1,6 +1,6 @@
-import { useModalDialog } from "../ui/useModalDialog";
-import { Select } from "../ui/Select";
-import { usePresenceProps } from "../ui/usePresence";
+import { useModalDialog } from "../engine/controls/useModalDialog";
+import { Select } from "../engine/controls/Select";
+import { usePresenceProps } from "../engine/motion/usePresence";
 import appIcon from "../../src-tauri/icons/128x128@2x.png";
 import { LANGS, LANG_NAMES, resolveStrings, type Lang } from "../i18n/strings";
 import "./LanguageWelcome.css";
@@ -20,7 +20,7 @@ export function LanguageWelcome({
   // Continue fades it out over the tutorial arriving.
   const presence = usePresenceProps<HTMLDivElement>();
   return (
-    <div {...presence} className="language-welcome-backdrop">
+    <div {...presence} className="tx-backdrop language-welcome-backdrop">
       <div
         {...modal}
         className="language-welcome"

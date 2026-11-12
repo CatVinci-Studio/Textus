@@ -6,7 +6,7 @@
 //! image model to make instead: a real picture first, a generated one only
 //! where none is found.
 
-use super::draft::WEB_FIGURE_MARK;
+use super::checks::WEB_FIGURE_MARK;
 use crate::ai::images::{begin, finish as finish_picture, placeholder_src, Slot};
 use crate::ai::web::commons;
 use aicompat::images::GeneratedImage;

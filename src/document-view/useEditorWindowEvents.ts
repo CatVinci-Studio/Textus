@@ -1,4 +1,6 @@
+import { editorInUse } from "../editor/editor-in-use";
 import { useCallback, useEffect } from "react";
+import { insertMarkdown } from "../editor/markdown/parse-markdown-source";
 import { editorViewCtx } from "@milkdown/kit/core";
 import {
   wrapInBlockquoteCommand,
@@ -7,15 +9,13 @@ import {
 import { undoCommand, redoCommand } from "@milkdown/kit/plugin/history";
 import type { EditorRunner } from "../editor/useEditorRunner";
 import type { EditorClipboard } from "../editor/clipboard/useEditorClipboard";
+import { insertHeading, insertList, runCommand } from "../editor/editor-menu";
 import {
   deleteImage,
-  insertHeading,
-  insertList,
-  runCommand,
-  runTableAction,
   selectedImagePos,
   setImageWidth,
-} from "../editor/editor-menu";
+} from "../editor/editor-menu-images";
+import { runTableAction } from "../editor/editor-menu-tables";
 import { toggleSpan } from "../editor/marks/span-commands";
 import {
   HIGHLIGHT,
@@ -37,12 +37,12 @@ import {
 } from "../editor/keys/block-toggles";
 import type { FindReplace } from "../editor/find/useFindReplace";
 import type { EditorMenuState } from "./EditorContextMenu";
-import type { AgentConversation } from "../ai/chat/useAgentConversation";
+import type { AgentConversation } from "../ai/chat/conversation/conversation-types";
 import type { AgentPanelFrame } from "../ai/chat/panel/agent-panel";
 import { claimChatRestore } from "../ai/chat/chat-restore";
 import { useLatest } from "../utils/hooks/useLatest";
 import type { Settings } from "../prefs/SettingsContext";
-import { aiFeatures } from "../settings/textus-ai";
+import { aiFeatures } from "../prefs/ai-features";
 import { useWindowEvent } from "../utils/hooks/useWindowEvent";
 import {
   TRIGGER_COMPLETION_EVENT,
@@ -52,6 +52,7 @@ import {
   CLOSE_FIND_REPLACE_EVENT,
   RESTORE_CHAT_EVENT,
   INSERT_BLOCK_EVENT,
+  INSERT_MARKDOWN_EVENT,
   TOGGLE_BLOCK_EVENT,
   TOGGLE_MARK_EVENT,
   SHOW_REPLACE_EVENT,
@@ -99,6 +100,7 @@ export function useEditorWindowEvents({
   openTableDialog,
   setMenu,
   conversation,
+  guardConversation,
   agentPanel,
   docPath,
 }: {
@@ -114,16 +116,18 @@ export function useEditorWindowEvents({
   openTableDialog: () => void;
   setMenu: (menu: EditorMenuState) => void;
   conversation: AgentConversation;
+  /** Replacing the conversation, asked first while edits are undecided. */
+  guardConversation: (replace: () => void) => void;
   agentPanel: AgentPanelFrame;
   /** This editor's document; null for one never saved. */
   docPath: string | null;
 }) {
-  // Every tab's editor stays mounted, hidden with display:none, but these
-  // events mean the editor on screen; without this guard each fires in
-  // every tab.
+  // Every tab's editor stays mounted, hidden with display:none, and a split
+  // shows several: these events mean the one in use - the one with focus,
+  // else the one in the island in use. Without this guard each fired in
+  // every editor shown, and the last took the selection.
   const isOnScreen = useCallback(
-    () =>
-      run((ctx) => ctx.get(editorViewCtx).dom.offsetParent !== null) ?? false,
+    () => run((ctx) => editorInUse(ctx.get(editorViewCtx).dom)) ?? false,
     [run],
   );
 
@@ -234,6 +238,17 @@ export function useEditorWindowEvents({
       view.focus();
     });
   });
+  useWindowEvent(INSERT_MARKDOWN_EVENT, (e) => {
+    if (!isOnScreen()) return;
+    const markdown = (e as CustomEvent<string>).detail;
+    run((ctx) => {
+      const view = ctx.get(editorViewCtx);
+      view.dispatch(
+        insertMarkdown(view.state.tr, ctx, markdown).scrollIntoView(),
+      );
+      view.focus();
+    });
+  });
   useWindowEvent(INSERT_LINK_EVENT, () => {
     if (!isOnScreen()) return;
     run((ctx) => {
@@ -295,8 +310,8 @@ export function useEditorWindowEvents({
   const claimRestore = useLatest(() => {
     const restore = claimChatRestore(docPath, isOnScreen);
     if (!restore) return;
-    conversation.restore(restore.id, restore.turns);
     agentPanel.setOpen(true);
+    guardConversation(() => conversation.restore(restore.id, restore.turns));
   });
   useWindowEvent(RESTORE_CHAT_EVENT, () => claimRestore.current());
   useEffect(() => claimRestore.current(), [docPath, claimRestore]);

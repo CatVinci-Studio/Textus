@@ -8,6 +8,11 @@ describe("searchFold", () => {
     expect(searchFold("Über España")).toBe("uber espana");
   });
 
+  it("folds full- and half-width forms, as an IME types them", () => {
+    expect(searchFold("ＣＳＳ")).toBe("css");
+    expect(searchFold("ﾃｷｽﾄ")).toBe("テキスト");
+  });
+
   it("keeps the marks of other scripts", () => {
     expect(searchFold("が")).toBe("が");
     expect(searchFold("한국")).toBe("한국");

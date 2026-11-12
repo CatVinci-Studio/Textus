@@ -1,0 +1,90 @@
+/* The format bar (design-language.md 5.7): the top of the sheet of the
+   document in use, on the page's own surface, riding with its view as the
+   islands move; the page scrolls beneath it. */
+.split-pane {
+  /* A little room over its buttons, clear of the island's top edge. */
+  --format-bar-bleed: var(--space-1);
+  --format-bar-height: calc(
+    32px * var(--chrome-scale) + var(--format-bar-bleed)
+  );
+}
+
+.format-bar {
+  position: absolute;
+  top: 0;
+  left: 0;
+  right: 0;
+  z-index: 2;
+  display: flex;
+  align-items: center;
+  gap: var(--space-2);
+  height: var(--format-bar-height);
+  padding: var(--format-bar-bleed) var(--space-3) 0;
+  border-bottom: 1px solid var(--ui-border);
+  /* The sheet's paper, inside its rounded top. */
+  border-radius: var(--island-radius) var(--island-radius) 0 0;
+  background: var(--doc-bg, var(--ui-bg));
+}
+
+/* Its buttons; what doesn't fit folds into "⋯" (FormatBar). */
+.format-bar-row {
+  display: flex;
+  align-items: center;
+  gap: var(--space-2);
+  min-width: 0;
+  height: 100%;
+  overflow: hidden;
+}
+
+.format-bar-group {
+  display: flex;
+  flex: none;
+  align-items: center;
+  gap: 2px;
+}
+
+/* A hairline between the text styles and the blocks. */
+.format-bar-group + .format-bar-group {
+  padding-left: var(--space-2);
+  border-left: 1px solid var(--ui-frame-edge);
+}
+
+/* A button's place in its group; it folds away with the row's steps. */
+.format-bar-item {
+  display: contents;
+}
+
+/* What the row has no room for, behind "⋯" at its end (useFitItems); a
+   group folded whole takes its hairline with it. */
+.format-bar-more {
+  flex: none;
+}
+.format-bar-group:not(:has(> :not([data-fit-hidden]))) {
+  display: none;
+}
+
+.format-bar .tx-icon-button[aria-pressed="true"] {
+  background: var(--ui-hover);
+  color: var(--ui-text);
+}
+
+/* With no row of tabs the sheet reaches up under the window bar: the bar
+   sits below it. */
+.app-shell:not([data-tabs="bar"]) .split-pane > .format-bar {
+  top: var(--window-bar-height);
+  border-radius: 0;
+}
+
+/* The page's text starts below the bar, not under it. */
+.main-pane
+  .split-pane:has(> .format-bar)
+  .editor-content:not(.typewriter-active) {
+  padding-top: calc(1.5rem + var(--format-bar-height));
+}
+
+.app-shell:not([data-tabs="bar"])
+  .main-pane
+  .split-pane:has(> .format-bar)
+  .editor-content:not(.typewriter-active) {
+  padding-top: calc(3rem + var(--format-bar-height));
+}

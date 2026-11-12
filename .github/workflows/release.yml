@@ -32,9 +32,7 @@ jobs:
   # stable tag needs its release notes.
   preflight:
     runs-on: ubuntu-22.04
-    # Longer than the 45-minute wait for CI below: the job's own limit must
-    # never cut that wait short (it did, for v1.0.5-rc.2, at 10 minutes).
-    timeout-minutes: 50
+    timeout-minutes: 15
     steps:
       - name: Validate version tag
         run: '[[ "$RELEASE_TAG" =~ ^v[0-9]+\.[0-9]+\.[0-9]+(-[0-9A-Za-z.-]+)?$ ]]'
@@ -75,37 +73,6 @@ jobs:
           fi
           echo "::warning::$notes is missing at $RELEASE_TAG; the release keeps its current notes."
 
-      # The tests ran in CI on the tagged commit (it reached main or
-      # stable through a pull request); the builds below don't run
-      # them again. Waits while that CI is still going, and stops the release
-      # if any of the required jobs failed. A rebuild of an old tag
-      # (workflow_dispatch) predates these job names and skips the gate.
-      - name: CI passed on the tagged commit
-        if: github.event_name == 'push'
-        env:
-          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
-        run: |
-          sha=$(git -C tagged rev-parse HEAD)
-          echo "Tagged commit: $sha"
-          for attempt in $(seq 1 90); do
-            runs=$(gh api "repos/$GITHUB_REPOSITORY/commits/$sha/check-runs?per_page=100" \
-              --jq '[.check_runs[] | select(.name == "check" or .name == "e2e" or .name == "native")]')
-            failed=$(jq -r '[.[] | select(.status == "completed" and (.conclusion != "success" and .conclusion != "skipped")) | .name] | join(", ")' <<< "$runs")
-            if [ -n "$failed" ]; then
-              echo "::error::CI failed on $sha: $failed. Fix it on main and tag again."
-              exit 1
-            fi
-            passed=$(jq '[.[] | select(.status == "completed")] | map(.name) | unique | length' <<< "$runs")
-            if [ "$passed" -eq 3 ]; then
-              echo "check, e2e and native passed on $sha."
-              exit 0
-            fi
-            echo "Waiting for CI on $sha ($passed of 3 done)..."
-            sleep 30
-          done
-          echo "::error::CI on $sha did not finish within 45 minutes (or never ran: was this commit pushed to main or stable?)."
-          exit 1
-
       # The builds each upload to the tag's draft, made by whichever found
       # none; two starting together made two and split the files between
       # them (v1.2.5). Made here once, before any build, they share it.
@@ -118,8 +85,18 @@ jobs:
             --title "$PRODUCT_NAME $RELEASE_TAG" --notes "" \
             $([[ "$RELEASE_TAG" == *-* ]] && echo --prerelease)
 
+  # The full suite, once, on the tagged commit: pull requests into main run
+  # only the quick checks (ci.yml). A rebuild of an older tag by hand skips
+  # it, as its commit's suite ran when it was tagged.
+  ci:
+    if: github.event_name == 'push'
+    uses: ./.github/workflows/ci.yml
+    with:
+      full: true
+
   build:
-    needs: preflight
+    needs: [preflight, ci]
+    if: ${{ !cancelled() && needs.preflight.result == 'success' && (needs.ci.result == 'success' || needs.ci.result == 'skipped') }}
     name: build (${{ matrix.target || matrix.platform }})
     timeout-minutes: 90
     # The signing keys live in the release environment, which only
@@ -195,6 +172,16 @@ jobs:
           key: ${{ matrix.target || 'host' }}
           # Saved from a tag no later tag can read: it only crowds out main's.
           save-if: false
+
+      # The Linux bundlers (linuxdeploy, the AppImage plugin and runtime)
+      # Tauri downloads on every build otherwise; kept per architecture.
+      - name: Linux bundler cache
+        if: startsWith(matrix.platform, 'ubuntu')
+        uses: actions/cache@v4
+        with:
+          path: ~/.cache/tauri
+          key: tauri-bundlers-${{ matrix.platform }}-${{ hashFiles('src-tauri/Cargo.lock') }}
+          restore-keys: tauri-bundlers-${{ matrix.platform }}-
 
       # ring (rustls, under reqwest) assembles its ARM64 Windows code with
       # clang, which must be on PATH. The windows-11-arm image ships LLVM;

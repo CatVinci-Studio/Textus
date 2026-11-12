@@ -111,7 +111,7 @@ function MarkdownEditor({
 
 export function PlaygroundEditor(props: Props) {
   return (
-    <div className="editor-scroll">
+    <div className="editor-scroll tx-scroll-reveal">
       <div className="editor-content">
         <Suspense fallback={null}>
           <KatexFirst markdown={props.initialValue}>

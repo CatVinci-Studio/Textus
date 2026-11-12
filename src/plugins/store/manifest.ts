@@ -1,3 +1,5 @@
+import { pluginString } from "../host/plugin-string";
+import PERMISSIONS from "./permissions.json";
 /**
  * A plugin's manifest, `textus-plugin.json`, read and checked before any of
  * the plugin runs. User-facing strings may be `%key%`, looked up in `l10n`.
@@ -12,44 +14,37 @@ import {
   text,
 } from "./manifest-parse";
 
-export { ManifestError } from "./manifest-parse";
+/** The permissions without a host, and the platforms: one list with the
+ *  backend's (plugins/manifest.rs reads permissions.json too). */
+const PLAIN_PERMISSIONS = PERMISSIONS.plain as readonly PlainPermission[];
+const PLUGIN_PLATFORMS = PERMISSIONS.platforms as readonly PluginPlatform[];
 
-/** A permission, as the manifest names it. `network:<host>` names one
- *  host (`*.domain` for its subdomains, `host:port`, or `*` for any). */
-export type Permission =
+type PlainPermission =
   | "editor.read"
   | "editor.write"
   | "editor.propose"
+  | "editor.input"
   | "files.read"
   | "files.write"
   | "clipboard"
-  | "editor.input"
   | "project.data"
   | "ai.tools"
   | "notifications"
   | "background"
-  | `network:${string}`;
+  | "agents";
+export type PluginPlatform = "desktop" | "ios";
 
-export const PLUGIN_PLATFORMS = ["desktop", "ios"] as const;
-export type PluginPlatform = (typeof PLUGIN_PLATFORMS)[number];
-
-const PLAIN_PERMISSIONS = [
-  "editor.read",
-  "editor.write",
-  "editor.propose",
-  "files.read",
-  "files.write",
-  "clipboard",
-  "editor.input",
-  "project.data",
-  "ai.tools",
-  "notifications",
-  "background",
-] as const;
+/** A permission, as the manifest names it. `network:<host>` names one
+ *  host (`*.domain` for its subdomains, `host:port`, or `*` for any);
+ *  `commands:<plugin id>` lets it run that plugin's listed commands. */
+export type Permission =
+  PlainPermission | `network:${string}` | `commands:${string}`;
 
 export function isPermission(value: unknown): value is Permission {
   if (typeof value !== "string") return false;
   if ((PLAIN_PERMISSIONS as readonly string[]).includes(value)) return true;
+  if (value.startsWith("commands:"))
+    return ID.test(value.slice("commands:".length));
   const host = value.startsWith("network:") && value.slice("network:".length);
   return !!host && /^(\*|(\*\.)?[a-z0-9.-]+(:\d{1,5})?)$/i.test(host);
 }
@@ -238,6 +233,22 @@ export interface EmbedContribution {
 /** The hover cards a plugin gives. */
 export type HoverContribution = "document" | "link" | "citation";
 
+/** An AI agent on the user's computer that Textus AI's panel can talk to
+ *  (Agent Client Protocol over stdio): Claude Code, Codex… Needs `agents`.
+ *  `{pluginDir}` in `args` and `env` is the plugin's own folder. */
+export interface AgentContribution {
+  id: string;
+  name: string;
+  command: string;
+  args: string[];
+  env: Record<string, string>;
+  /** How to install it and sign in, shown when it can't start. */
+  setup?: string;
+  /** The provider whose models it runs ("anthropic", "openai"), told to
+   *  plugins as the AI at work. */
+  provider?: string;
+}
+
 export interface Contributes {
   commands: CommandContribution[];
   keybindings: KeybindingContribution[];
@@ -256,6 +267,7 @@ export interface Contributes {
   links: LinkContribution[];
   codeBlocks: CodeBlockContribution[];
   floatingViews: FloatingViewContribution[];
+  agents: AgentContribution[];
   /** Suggested, once, for a document with these. */
   suggestFor: SuggestKind[];
 }
@@ -335,9 +347,11 @@ export function parseManifest(raw: string | unknown): PluginManifest {
   // Background code, or Textus kept running in the background: the desktop's.
   const inBackground =
     !!background || requires.some((r) => r.setting === "runInBackground");
+  // An agent is a program on the computer: the desktop's too.
+  const agents = permissions.includes("agents");
   const platforms: readonly PluginPlatform[] =
     m.platforms === undefined
-      ? inBackground
+      ? inBackground || agents
         ? ["desktop"]
         : PLUGIN_PLATFORMS
       : list(m.platforms, "platforms").map((p) => {
@@ -350,6 +364,10 @@ export function parseManifest(raw: string | unknown): PluginManifest {
   if (inBackground && platforms.includes("ios"))
     throw new ManifestError(
       "The background is the desktop's only: platforms can't name ios.",
+    );
+  if (agents && platforms.includes("ios"))
+    throw new ManifestError(
+      "Agents are the desktop's only: platforms can't name ios.",
     );
   const l10n: PluginManifest["l10n"] = {};
   if (m.l10n !== undefined)
@@ -364,6 +382,8 @@ export function parseManifest(raw: string | unknown): PluginManifest {
   const contributes = parseContributes(m.contributes, id);
   if (contributes.embeds.length && !permissions.includes("files.read"))
     throw new ManifestError("contributes.embeds needs files.read.");
+  if (contributes.agents.length && !permissions.includes("agents"))
+    throw new ManifestError("contributes.agents needs agents.");
   return {
     id,
     name: text(m.name, "name"),
@@ -388,22 +408,15 @@ export function parseManifest(raw: string | unknown): PluginManifest {
   };
 }
 
-/** `%key%` looked up for `lang` (its own, then its base language's, then
- *  English, then any language that has it); anything else as written. */
+/** `%key%` looked up for `lang` (pluginString's order); anything else as
+ *  written. */
 export function localize(
   manifest: Pick<PluginManifest, "l10n">,
   value: string,
   lang: string,
 ): string {
   const key = /^%([^%]+)%$/.exec(value)?.[1];
-  if (!key) return value;
-  return (
-    manifest.l10n[lang]?.[key] ??
-    manifest.l10n[lang.split("-")[0]]?.[key] ??
-    manifest.l10n.en?.[key] ??
-    Object.values(manifest.l10n).find((table) => key in table)?.[key] ??
-    key
-  );
+  return key ? pluginString(manifest.l10n, lang, key) : value;
 }
 
 function versionParts(version: string): [number, number, number, string] {
@@ -421,7 +434,27 @@ export function compareVersions(a: string, b: string): number {
   if (x[3] === y[3]) return 0;
   if (!x[3]) return 1;
   if (!y[3]) return -1;
-  return x[3] < y[3] ? -1 : 1;
+  return comparePre(x[3], y[3]);
+}
+
+/** Pre-release tags, part by part: numbers as numbers (rc.12 after rc.2),
+ *  a number before a word, fewer parts first. */
+function comparePre(a: string, b: string): number {
+  const x = a.split(".");
+  const y = b.split(".");
+  for (let i = 0; i < Math.max(x.length, y.length); i++) {
+    if (x[i] === undefined) return -1;
+    if (y[i] === undefined) return 1;
+    if (x[i] === y[i]) continue;
+    const [m, n] = [x[i], y[i]].map((part) =>
+      /^\d+$/.test(part) ? Number(part) : null,
+    );
+    if (m !== null && n !== null) return m < n ? -1 : 1;
+    if (m !== null) return -1;
+    if (n !== null) return 1;
+    return x[i] < y[i] ? -1 : 1;
+  }
+  return 0;
 }
 
 /**

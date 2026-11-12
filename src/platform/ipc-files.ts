@@ -1,4 +1,7 @@
-import type { DirEntryInfo } from "./fs-types";
+import {
+  type DirEntryInfo,
+  type WindowSession_Deserialize,
+} from "./bindings/files";
 import type { ImageHost } from "../prefs/SettingsContext";
 import type * as Generated from "./bindings/files";
 import { isIOSApp } from "./capabilities";
@@ -10,14 +13,6 @@ import { command, desktopActionCommand, desktopQueryCommand } from "./ipc-call";
  * folders, pictures, the session, stored history and drafts.
  */
 
-export type {
-  NoteLinkTarget,
-  SavedImage,
-  IndexedFile,
-  Conventions,
-  FolderIndex,
-  WordDocument,
-} from "./bindings/files";
 export type HistoryKind = Generated.HistoryKind;
 
 export const fs = {
@@ -80,6 +75,10 @@ export const fs = {
   /** Every document under `root`, for the sidebar's file-name search.
    *  Rejects with "TOO_BROAD" as the picker does. */
   indexFolder: (root: string) => command("index_folder", root),
+  /** The lines of the documents under `root` holding `query`, ignoring
+   *  case, for the Search page. Rejects as `indexFolder` does. */
+  searchFolderText: (root: string, query: string) =>
+    command("search_folder_text", root, query),
   /** Every Markdown document under `root` with its text, for the links a
    *  rename updates. Rejects as `indexFolder` does. */
   folderDocuments: (root: string) => command("folder_documents", root),
@@ -144,6 +143,9 @@ export const fs = {
    *  made it: links, pictures, line breaks, templates, daily notes. Read
    *  only; a field no app sets is left to Textus's settings. */
   folderConventions: (path: string) => command("folder_conventions", path),
+  /** A project's .textus/settings.json as a whole, comments allowed; {}
+   *  when there is none. */
+  projectSettings: (root: string) => command("project_settings_read", root),
   /** `sourceDocPath`: the file a Save As started from, whose relative
    *  images are copied along. */
   migrateDraftImages: (
@@ -161,8 +163,9 @@ export const fs = {
 // Session and recents
 
 export const session = {
-  updateSessionPaths: (paths: string[]) =>
-    desktopQueryCommand("update_session_paths", undefined, paths),
+  /** This window as the next launch brings it back. */
+  updateWindow: (window: WindowSession_Deserialize) =>
+    desktopQueryCommand("update_window_session", undefined, window),
   cancelQuit: () => desktopQueryCommand("cancel_session_quit", undefined),
   addRecentFile: (path: string) => command("add_recent_file", path),
   /** A folder opened in the sidebar, for File > Open Recent. */
@@ -174,7 +177,7 @@ export const session = {
 // Only called when Rust booted this window; otherwise the stores use localStorage.
 
 /** A settings snapshot and its revision. */
-export interface StoredSnapshot {
+interface StoredSnapshot {
   value: Record<string, unknown>;
   rev: number;
 }
@@ -232,6 +235,8 @@ export const drafts = {
   saveDraftSnapshot: (tabId: string, path: string | null, content: string) =>
     command("save_draft_snapshot", tabId, path, content),
   takeDraftSnapshots: () => command("take_draft_snapshots"),
+  /** The taken drafts are back, kept again under their new tabs. */
+  finishDraftRestore: () => command("finish_draft_restore"),
   clearDraftSnapshot: (tabId: string) => command("clear_draft_snapshot", tabId),
   clearAllDrafts: () => command("clear_all_drafts"),
 };
@@ -242,7 +247,12 @@ export const undoFiles = {
   save: (path: string, hash: string, history: string) =>
     command("undo_file_save", path, hash, history),
   load: (path: string, hash: string) => command("undo_file_load", path, hash),
-  move: (from: string, to: string) => command("undo_file_move", from, to),
+};
+
+/** What is kept beside the app's data for a document or a folder's
+ *  documents (notes, tracked changes, proposals, undo) follows a move. */
+export const keptForDocuments = {
+  move: (from: string, to: string) => command("document_data_move", from, to),
 };
 
 /** What the writer keeps on a document beside the app's data, as JSON:

@@ -17,7 +17,7 @@ export function onMemoryIdle(release: () => void): () => void {
 
 /** Runs every release now (the window went idle, or the system is short of
  *  memory). */
-export function releaseIdleMemory(): void {
+function releaseIdleMemory(): void {
   for (const release of releases) {
     try {
       release();

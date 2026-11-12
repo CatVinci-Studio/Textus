@@ -11,7 +11,10 @@ vi.mock("../../platform/ipc", () => ({
   ai: { saveOfferedSkill: vi.fn() },
 }));
 vi.mock("../../prefs/SettingsContext", () => ({
-  useSettings: () => ({ t: resolveStrings("en") }),
+  useSettings: () => ({
+    t: resolveStrings("en"),
+    settings: { agentWorkspaceRoot: "" },
+  }),
 }));
 
 afterEach(cleanup);

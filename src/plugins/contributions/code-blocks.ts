@@ -66,7 +66,7 @@ export function parseFenceMeta(meta: string): Record<string, string> {
 }
 
 /** A drawn block's way back into the document. */
-export interface DrawnCodeBlock {
+interface DrawnCodeBlock {
   plugin: string;
   /** Replaces the block's source as one undo step; false when it is gone. */
   setSource(source: string): boolean;

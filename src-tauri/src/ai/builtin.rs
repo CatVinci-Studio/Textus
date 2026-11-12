@@ -66,14 +66,10 @@ pub(crate) const PACK_FILES: &[(&str, &str)] = bundled!("skills/packs/";
     "standards-pt",
 );
 
-/// Credits for the adapted texts in the skills and packs.
+/// Credits for the adapted texts in the skills and packs; tests check each
+/// adapted source is credited.
+#[cfg(test)]
 pub(crate) const ATTRIBUTION: &str = include_str!("skills/ATTRIBUTION.md");
-
-/// ATTRIBUTION.md as Markdown, for Help > Acknowledgements.
-#[tauri::command]
-pub fn builtin_skills_attribution() -> &'static str {
-    ATTRIBUTION
-}
 
 /// The `/` menu's groups, in menu order (`textus-category`).
 pub(crate) const CATEGORY_ORDER: &[&str] = &["write", "revise", "check", "format", "create"];

@@ -1,6 +1,5 @@
 use crate::ai::catalog;
 use crate::ai::route::{self, OpenaiAuth, NOT_CONFIGURED};
-use crate::commands::args::Args;
 use aicompat::providers::{anthropic, custom, openai_api_key, openai_codex};
 use serde::{Deserialize, Serialize};
 use tauri::AppHandle;
@@ -72,12 +71,6 @@ pub(crate) async fn call(
 pub async fn fetch_agent_models(app: AppHandle, provider: String) -> Result<Vec<String>, String> {
     crate::ai::ensure_on(&app)?;
     let entry = catalog::find(&provider).ok_or_else(|| format!("unknown provider: {provider}"))?;
-    if !entry.models_listable {
-        return Err(format!(
-            "{} doesn't support listing models - pick one from the preset list.",
-            entry.label
-        ));
-    }
     match entry.dialect {
         "anthropic-messages" => {
             let auth = route::resolve_anthropic_auth(&app).await?;
@@ -102,15 +95,6 @@ pub async fn fetch_agent_models(app: AppHandle, provider: String) -> Result<Vec<
         }
         _ => Err(format!("models can't be listed for provider: {provider}")),
     }
-}
-
-/// Mirrors the frontend's proxy setting into aicompat's shared HTTP client:
-/// Rust can't read localStorage, so the frontend re-sends it on startup and on
-/// every change. Rejects unparseable proxy URLs.
-#[tauri::command]
-#[cfg_attr(test, specta::specta)]
-pub fn set_ai_proxy(proxy: Option<String>) -> Result<(), String> {
-    aicompat::http::set_proxy(proxy)
 }
 
 #[cfg(test)]

@@ -51,13 +51,33 @@ export function PluginIcon({
       className={`plugin-icon${large ? " plugin-icon-large" : ""}`}
       aria-hidden="true"
     >
-      {src ? (
+      {src && inTextColour(src) ? (
+        <span
+          className="plugin-icon-mask"
+          style={{
+            maskImage: `url("${src}")`,
+            WebkitMaskImage: `url("${src}")`,
+          }}
+        />
+      ) : src ? (
         <img src={src} alt="" onError={() => setBroken(true)} />
       ) : (
         <span className="plugin-icon-letter">{letter}</span>
       )}
     </span>
   );
+}
+
+/** An SVG drawn in `currentColor`: as an <img> it can't take the text's
+ *  colour and draws black on a dark theme, so it is drawn as a mask. */
+function inTextColour(src: string): boolean {
+  const svg = /^data:image\/svg\+xml;base64,(.*)$/.exec(src);
+  if (!svg) return false;
+  try {
+    return atob(svg[1]).includes("currentColor");
+  } catch {
+    return false;
+  }
 }
 
 /** Catalog icons by plugin id, fetched once a session: through Rust, since
@@ -74,10 +94,12 @@ function catalogIcon(id: string): Promise<string | null> {
   });
 }
 
-// The Markdown renderer (and KaTeX behind it) only once a README shows: a
-// list of plugins has none.
-const MarkdownText = lazy(() =>
-  import("../../ai/MarkdownText").then((m) => ({ default: m.MarkdownText })),
+// Drawn by the editor, as documents are, only once a README shows: a list
+// of plugins has none.
+const EditorPreview = lazy(() =>
+  import("../../editor/EditorPreview").then((m) => ({
+    default: m.EditorPreview,
+  })),
 );
 
 /** Plugin `id`'s README - its own once installed, the catalog's before -
@@ -107,7 +129,11 @@ export function PluginReadme({
   return (
     <section className="plugin-readme" aria-label={label}>
       <Suspense fallback={null}>
-        <MarkdownText text={text.replace(/^\s*#\s[^\n]*\n/, "")} />
+        <EditorPreview
+          markdown={text.replace(/^\s*#\s[^\n]*\n/, "")}
+          docPath={null}
+          label={label}
+        />
       </Suspense>
     </section>
   );

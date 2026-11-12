@@ -1,10 +1,14 @@
+import { grants } from "../grants";
+import type { PluginTabInfo } from "../app-bridge";
+import { mayOpen } from "../may-open";
+import { emitToThisWindow } from "../../platform/menu-events";
 import { SHOW_SIDEBAR_TAB_EVENT } from "../../utils/events";
 import { links } from "../../platform/ipc";
-import { splitLayout } from "../../app/split/split-layout";
-import { panesOf } from "../../app/split/split-tree";
+import { splitLayout } from "../../engine/layout/store";
+import { panesOf } from "../../engine/layout/tree";
 import { getWindowAccess, type PluginLocation } from "../app-bridge";
 import { localize } from "../store/manifest";
-import { webviewsOf } from "../views/webviews";
+import { hostAllowed } from "../store/permissions";
 import {
   closeFloating,
   floatingSide,
@@ -22,7 +26,7 @@ import {
 } from "./broker-scope";
 
 /** A location as the runtime sends it, checked. */
-export function locationOf(value: unknown): PluginLocation {
+function locationOf(value: unknown): PluginLocation {
   if (!value || typeof value !== "object")
     throw new Error("A location is { path, ... }.");
   const v = value as Record<string, unknown>;
@@ -39,25 +43,24 @@ export function locationOf(value: unknown): PluginLocation {
   };
 }
 
-/** Whether `host` is one the plugin may reach (`network:<host>`). */
-export function hostGranted(p: PluginScope, host: string): boolean {
-  const granted = p.info.granted;
-  return (
-    granted.includes("network:*") ||
-    granted.includes(`network:${host}`) ||
-    granted.some(
-      (g) =>
-        g.startsWith("network:*.") &&
-        host.endsWith(g.slice("network:*".length)),
-    )
-  );
-}
-
 /**
  * A plugin's calls about tabs and panes: opening a file, a view, a web page or
  * a new document, and what the window shows. Opening a file needs files.read,
  * except the file a view of the plugin's already shows.
  */
+/** A tab as plugin `id` may see it: what file or page it shows, and its
+ *  name, only with a permission to read documents - its own views always. */
+export function seenBy<T extends PluginTabInfo | null>(
+  id: string,
+  granted: readonly string[],
+  tab: T,
+): T {
+  if (!tab || tab.plugin === id) return tab;
+  const reads =
+    grants(granted, "files.read") || granted.includes("editor.read");
+  return reads ? tab : { ...tab, path: null, title: "" };
+}
+
 export function layoutHandlers(p: PluginScope) {
   const access = () => {
     const w = getWindowAccess();
@@ -67,8 +70,15 @@ export function layoutHandlers(p: PluginScope) {
   return {
     "layout.open": ({ location, where, asDocument }: Params) => {
       const place = locationOf(location);
-      if (!webviewsOf(p.id).some((view) => view.resource === place.path))
-        p.need("files.read");
+      if (
+        !mayOpen(
+          p.id,
+          p.info.granted,
+          getWindowAccess()?.rootPath() ?? null,
+          place.path,
+        )
+      )
+        throw new Error("Only its own files and the folder's open.");
       const { path, ...rest } = place;
       access().openFile(path, {
         place: rest,
@@ -93,6 +103,11 @@ export function layoutHandlers(p: PluginScope) {
         whereOf(where),
       );
     },
+    // The plugin's own page - its settings, version, permissions - in its
+    // tab: where a form that has no place in a sidebar goes.
+    "layout.openSettings": () => {
+      emitToThisWindow("menu-plugin-command", `plugin-settings:${p.id}`);
+    },
     // A sidebar tab - any plugin's, or Files and Outline - shown.
     "layout.showSidebarTab": ({ id }: Params) => {
       window.dispatchEvent(
@@ -102,8 +117,8 @@ export function layoutHandlers(p: PluginScope) {
     "layout.openWebPage": ({ url, where, title }: Params) => {
       const address = webPageUrl(str(url, "url"));
       if (!address) throw new Error("Only an https:// page opens in a tab.");
-      const host = new URL(address).hostname;
-      if (!hostGranted(p, host))
+      const { hostname: host, port } = new URL(address);
+      if (!hostAllowed(p.info.granted, host, Number(port || 443)))
         throw new Error(`${p.id} was not granted network:${host}.`);
       access().openPluginTab(
         {
@@ -156,8 +171,12 @@ export function layoutHandlers(p: PluginScope) {
           place: v.place,
           side: floatingSide(v),
         })),
-    "layout.activeTab": () => access().activeTab(),
-    "layout.tabs": () => access().tabs(),
+    "layout.activeTab": () =>
+      seenBy(p.id, p.info.granted, access().activeTab()),
+    "layout.tabs": () =>
+      access()
+        .tabs()
+        .map((tab) => seenBy(p.id, p.info.granted, tab)),
     "layout.panels": () => panelsState(),
     "layout.split": () => {
       // The outermost way the panes run, and each pane's tab in front.

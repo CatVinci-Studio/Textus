@@ -1,0 +1,141 @@
+/* The sidebar lies over its column at its own width (app-shell.css): the
+   window's clock reveals it on the desktop, a phone's drawer slides on its
+   transform. */
+/* --sidebar-width stays an ordinary inherited property: registered as
+   non-inherited, WebKit never restyled the sidebar and its edge couldn't drag. */
+.sidebar {
+  position: absolute;
+  top: 0;
+  bottom: 0;
+  /* Beside the activity rail, from under which it slides. */
+  left: var(--rail-width, 0px);
+  /* Over the editor while it slides away across it. */
+  z-index: 1;
+  width: var(--sidebar-width, 240px);
+  background: var(--ui-frame-fill);
+  border-right: 1px solid var(--ui-frame-edge);
+  display: flex;
+  flex-direction: column;
+  /* Its labels and notes are the app's, not text to copy: a drag across
+     them, or WebKit's Select All, selected them along with the page. */
+  user-select: none;
+  -webkit-user-select: none;
+}
+
+/* A phone's or iPad's drawer slides on its own. The desktop's sidebar is
+   revealed on the window's clock instead (useSidebarFrame): clipped to its
+   column, it needs no hiding. */
+:root[data-window-chrome="mobile"] .sidebar {
+  transition:
+    transform var(--dur-settle) var(--ease-settle),
+    opacity var(--dur-settle) var(--ease-out),
+    visibility 0s;
+}
+
+:root[data-window-chrome="mobile"] .sidebar-collapsed {
+  transform: translateX(calc(-100% * var(--motion-travel)));
+  opacity: var(--motion-travel-fade);
+  visibility: hidden;
+  transition:
+    transform var(--dur-settle) var(--ease-settle),
+    opacity var(--dur-settle) var(--ease-in),
+    visibility 0s linear var(--dur-settle);
+}
+
+/* Below the window bar: the bar's own row stays the window's to drag. */
+/* Astride its edge: the line it moves at its middle, so a press either
+   side of it takes. */
+.sidebar-resizer {
+  top: var(--window-bar-height);
+  right: -5px;
+}
+
+/* Thin, unobtrusive sidebar scrollbar: invisible until the pointer is over
+   the sidebar, so it reads like a macOS overlay scrollbar. A plugin's list
+   scrolls inside the body and wears the same one. */
+:is(.sidebar-body, .sidebar-body .plugin-list-rows)::-webkit-scrollbar {
+  width: 5px;
+}
+
+:is(.sidebar-body, .sidebar-body .plugin-list-rows)::-webkit-scrollbar-track {
+  background: transparent;
+}
+
+:is(.sidebar-body, .sidebar-body .plugin-list-rows)::-webkit-scrollbar-thumb {
+  border: 0;
+  background: transparent;
+  border-radius: var(--shape-pill);
+  corner-shape: round;
+}
+
+.sidebar-body:hover::-webkit-scrollbar-thumb,
+.sidebar-body:hover .plugin-list-rows::-webkit-scrollbar-thumb {
+  background: color-mix(in srgb, var(--ui-text) 28%, transparent);
+}
+
+:is(
+    .sidebar-body,
+    .sidebar-body .plugin-list-rows
+  )::-webkit-scrollbar-thumb:hover {
+  background: color-mix(in srgb, var(--ui-text) 45%, transparent);
+}
+
+.text-button {
+  color: var(--ui-text);
+}
+
+.sidebar-tabs {
+  display: flex;
+  align-items: center;
+  gap: 2px;
+  height: 100%;
+}
+
+.sidebar-tab {
+  flex: 1;
+  min-width: 0;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: calc(4px * var(--chrome-scale)) 4px;
+  border: none;
+}
+
+.sidebar-view-actions {
+  display: flex;
+  justify-content: flex-end;
+  gap: 2px;
+  padding: 0 8px 4px;
+}
+
+/* On the name's line: at its end, the line's height. */
+.sidebar-header > .sidebar-view-actions {
+  margin-inline-start: auto;
+  padding: 0;
+}
+
+.sidebar-view-action {
+  display: flex;
+  align-items: center;
+  padding: 4px 4px;
+  border: none;
+  border-radius: var(--shape-pill);
+  corner-shape: round;
+  background: transparent;
+  color: var(--ui-muted);
+  font: inherit;
+  font-size: var(--text-secondary);
+  cursor: pointer;
+}
+
+.sidebar-view-action:hover {
+  background: var(--ui-hover);
+}
+
+:root[data-window-chrome="mobile"] .main-pane {
+  flex: 1;
+  position: relative;
+  display: flex;
+  flex-direction: column;
+  min-width: 0;
+}

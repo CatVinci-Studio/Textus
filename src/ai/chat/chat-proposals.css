@@ -1,0 +1,300 @@
+/* One propose_edit tool call from the agent: what it replaces and with what.
+   The only place the before/after is spelled out. */
+.agent-proposal {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+  padding: 8px 12px 12px;
+  /* No frame: a card is a quiet fill under the reply; only a decided one
+     colours its edge. */
+  border: 1px solid transparent;
+  border-radius: var(--shape-m);
+  background: var(--chat-card-bg, transparent);
+  font-size: var(--text-secondary);
+  transition: border-color var(--dur-fast) var(--ease-standard);
+}
+
+/* Decided: the card keeps its diff and says what became of it - the edge
+   takes the outcome's colour as the status line fades in. */
+.agent-proposal[data-status="accepted"] {
+  border-color: color-mix(in srgb, var(--ui-success) 40%, var(--ui-border));
+}
+
+/* What it is (an icon and "Revision · 2 changes"), then the "+X −Y" size
+   (the diff toggle) and "Show in text" as its tools (HeadRow). */
+.agent-proposal-head {
+  --head-mark-size: 18px;
+}
+
+.agent-proposal-icon {
+  flex: none;
+  display: inline-grid;
+  place-items: center;
+  width: 18px;
+  height: 18px;
+  border-radius: var(--shape-xs);
+  background: color-mix(in srgb, var(--ui-success) 14%, transparent);
+  color: var(--ui-success);
+}
+
+.agent-proposal-kind {
+  font-weight: 500;
+}
+
+.agent-proposal .agent-proposal-show {
+  font-size: var(--text-caption);
+  color: var(--ui-accent-text);
+}
+
+.agent-proposal-title {
+  font-size: var(--text-caption);
+  font-weight: 600;
+  letter-spacing: 0.02em;
+  color: var(--ui-muted);
+}
+
+/* Line-by-line diff: a +/- gutter, tinted rows, and monospace so markdown
+   syntax like `##` and `**` lines up. */
+.agent-proposal-diff {
+  display: flex;
+  flex-direction: column;
+  padding: 4px 0;
+  border: 1px solid var(--chat-hairline, var(--ui-border));
+  border-radius: var(--shape-s);
+  background: var(--ui-surface);
+  overflow: hidden;
+  animation: motion-disclose-in var(--dur-fast) var(--ease-out);
+  font-family: var(--doc-mono-font, var(--font-mono));
+  font-size: var(--text-secondary);
+  line-height: 1.5;
+}
+
+.agent-diff-line {
+  display: flex;
+  gap: 8px;
+  padding: 1px 8px;
+  white-space: pre-wrap;
+  word-break: break-word;
+}
+
+.agent-diff-marker {
+  flex-shrink: 0;
+  width: 0.6em;
+  opacity: 0.55;
+  user-select: none;
+}
+
+.agent-diff-text {
+  flex: 1;
+  min-width: 0;
+}
+
+.agent-diff-remove {
+  background: var(--diff-delete-bg);
+  color: var(--ui-text);
+}
+
+.agent-diff-add {
+  background: var(--diff-insert-bg);
+  color: var(--ui-text);
+}
+
+/* The size chips double as the full diff's toggle - the document already
+   paints the change itself, so the card shows it only on demand. */
+.agent-diff-summary {
+  align-self: center;
+  display: flex;
+  align-items: center;
+  gap: 4px;
+  flex-shrink: 0;
+  border: none;
+  background: none;
+  padding: 2px 0;
+  font-family: var(--doc-mono-font, var(--font-mono));
+  font-size: var(--text-caption);
+  cursor: pointer;
+  color: var(--ui-muted);
+}
+
+.agent-diff-chip {
+  padding: 1px 4px;
+  line-height: 1.4;
+  border-radius: var(--shape-pill);
+  corner-shape: round;
+  /* Counts change in place without their digits shifting. */
+  font-variant-numeric: tabular-nums;
+}
+
+.agent-diff-caret {
+  margin-left: 2px;
+}
+
+.agent-diff-summary:hover {
+  color: var(--ui-text);
+}
+
+.agent-proposal button {
+  align-self: flex-start;
+}
+
+/* Once resolved, the buttons give way to a compact status line; the diff
+   stays, so scrolling back still shows what each edit did. */
+.agent-proposal-status {
+  font-size: var(--text-footnote);
+  color: var(--ui-muted);
+  animation: motion-fade-in var(--dur-fast) var(--ease-out);
+}
+
+/* Not decidable yet: arguments still streaming or the text still being
+   revealed. Upright: a slanted CJK label is a faked italic. */
+.agent-proposal-status-streaming {
+  opacity: 0.85;
+}
+
+.agent-proposal-status-accepted {
+  color: var(--ui-accent-text);
+}
+
+.agent-proposal-status-invalid {
+  color: var(--ui-danger);
+}
+
+.agent-proposal-actions {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 8px;
+  margin-top: 2px;
+}
+
+/* Secondary, text-only controls at the end of a card's action row. */
+.agent-proposal-link {
+  margin-left: auto;
+  border: none;
+  background: none;
+  padding: 2px 0;
+  font: inherit;
+  font-size: var(--text-secondary);
+  color: var(--ui-muted);
+  cursor: pointer;
+}
+
+.agent-proposal-link:hover,
+.agent-proposal-link[aria-expanded="true"] {
+  color: var(--ui-text);
+}
+
+.agent-proposal-link:hover {
+  text-decoration: underline;
+}
+
+/* Pinned above the composer whenever anything is undecided, since the cards
+   scroll away and unresolved edits get forgotten. */
+.inline-chat-pending-bar {
+  animation: motion-sheet-in var(--dur-base) var(--ease-out);
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 4px 8px;
+  padding: 4px 8px 4px 12px;
+  font-size: var(--text-secondary);
+  color: var(--ui-text);
+  /* Over the panel's own colour rather than see-through: on the phone the
+     sheet's composer area passes over the message list while it moves. */
+  background: color-mix(in srgb, var(--ui-accent) 10%, var(--ui-surface));
+}
+
+.inline-chat-pending-bar[data-state="closing"] {
+  animation: motion-sheet-out var(--dur-fast) var(--ease-in) forwards;
+}
+
+/* What follows the bar paints over it while it moves. */
+.inline-chat-pending-bar ~ :is(.inline-chat-bar, .inline-chat-skill-menu) {
+  position: relative;
+  background: var(--ui-surface);
+}
+
+/* The buttons drop to a second line before the label gets squeezed into
+   a word per line (longer languages, a narrow panel). */
+.inline-chat-pending-count {
+  flex: 1 1 10em;
+  font-weight: 500;
+  /* Counts change in place without their digits shifting. */
+  font-variant-numeric: tabular-nums;
+}
+
+.inline-chat-pending-actions {
+  display: flex;
+  gap: 4px;
+  flex-shrink: 0;
+}
+
+.inline-chat-pending-actions .inline-chat-action {
+  padding: 2px 8px;
+  font-size: var(--text-secondary);
+}
+
+/* Quick Ask's review-one-at-a-time bar, pinned like the full variant's bar.
+   Short of room, its buttons go under the stepping, from its start. */
+.quick-ask-pending-bar {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  justify-content: space-between;
+  gap: 8px;
+  padding: 4px 8px;
+  font-size: var(--text-secondary);
+  color: var(--ui-text);
+  background: color-mix(in srgb, var(--ui-accent) 10%, transparent);
+}
+
+.quick-ask-pending-nav {
+  display: flex;
+  align-items: center;
+  gap: 4px;
+  min-width: 0;
+}
+
+.quick-ask-pending-nav-button {
+  flex-shrink: 0;
+  font-size: var(--text-control);
+  line-height: 1;
+}
+
+.quick-ask-pending-position {
+  font-variant-numeric: tabular-nums;
+  color: var(--ui-muted);
+  white-space: nowrap;
+}
+
+.quick-ask-pending-actions {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 4px;
+  flex-shrink: 0;
+}
+
+/* Split button: a primary action plus a chevron that opens a one-item menu
+   for the bulk variant of the same action. */
+.quick-ask-split-button {
+  position: relative;
+  display: flex;
+}
+
+.quick-ask-split-main {
+  border-top-right-radius: 0;
+  border-bottom-right-radius: 0;
+}
+
+.quick-ask-split-chevron {
+  padding: 4px 4px;
+  border-left: none;
+  border-top-left-radius: 0;
+  border-bottom-left-radius: 0;
+  margin-left: -1px;
+}
+
+.quick-ask-split-chevron-icon {
+  transform: rotate(90deg);
+  opacity: 0.7;
+}

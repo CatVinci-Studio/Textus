@@ -1,8 +1,11 @@
 import { editorViewCtx } from "@milkdown/kit/core";
 import { editedText } from "./joined-edit";
 import { placeProposals } from "./pending-place";
-import { documentMarkdown, serializeBlocks } from "../doc-markdown";
-import { pendingEditKey } from "./pending-edit-plugin";
+import {
+  documentMarkdown,
+  serializeBlocks,
+} from "../../editor/markdown/doc-markdown";
+import { pendingEditKey } from "./pending-types";
 import { recordStatuses } from "./proposal-lifecycle";
 import { joinedText } from "./generated-images";
 import type { EditProposal } from "../types";
@@ -110,10 +113,11 @@ export function makeProposalJoins(
           !carriers.has(p.callId)
         )
           gone.push(p.callId);
-      let tr = view.state.tr;
+      // One step each: a meta set twice keeps only the last.
       for (const callId of gone)
-        tr = tr.setMeta(pendingEditKey, { type: "remove", callId });
-      if (gone.length > 0) view.dispatch(tr);
+        view.dispatch(
+          view.state.tr.setMeta(pendingEditKey, { type: "remove", callId }),
+        );
     });
     if (gone.length > 0)
       env.setStatuses((prev) =>

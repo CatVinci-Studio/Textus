@@ -176,7 +176,7 @@ fn a_memory_moves_between_personal_and_project() {
     let alone = MemoryDirs::new(Some(&base.join("agent")), None);
     assert_eq!(
         alone.move_to(&personal, Scope::Project).unwrap_err(),
-        "NO_PROJECT"
+        crate::errors::error("noProject")
     );
     std::fs::remove_dir_all(&base).ok();
 }
@@ -300,7 +300,7 @@ fn facts_go_to_the_library_and_never_change_the_users_entries() {
         .contains("user's own"));
     assert_eq!(
         dirs.undo("project/library/harbour", None).unwrap_err(),
-        "NOT_REMEMBERED"
+        crate::errors::error("notRemembered")
     );
     // No project: no library.
     let alone = MemoryDirs::new(Some(&base.join("agent")), None);
@@ -420,10 +420,12 @@ fn the_revision_choices_log_sits_beside_the_personal_memories_unlisted() {
 }
 
 #[test]
-fn the_setting_is_the_field_settings_writes_on_by_default() {
-    let repo = Path::new(env!("CARGO_MANIFEST_DIR")).join("..");
-    let settings = std::fs::read_to_string(repo.join("src/prefs/settings-types.ts")).unwrap();
-    assert!(settings.contains(&format!("  {REMEMBER_SETTING}: true,\n")));
+fn every_flag_rust_reads_has_its_shared_default() {
+    use crate::settings::flag_default;
+    assert!(flag_default(REMEMBER_SETTING));
+    assert!(flag_default(crate::ai::TEXTUS_AI_SETTING));
+    assert!(flag_default("restoreSessionOnStartup"));
+    assert!(!flag_default(crate::background::ENABLED_SETTING));
 }
 
 #[test]

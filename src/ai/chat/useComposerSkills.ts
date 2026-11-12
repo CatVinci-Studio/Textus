@@ -4,12 +4,12 @@ import { ai, type SkillListItem } from "../../platform/ipc";
 import type { PickerLabels } from "./ComposerPicker";
 import type { AgentMode } from "../../prefs/settings-values";
 import {
-  SKILL_TRIGGER,
   listFromWorkspace,
   pickerSkills,
   recentSkills,
   type PickerSkill,
 } from "./skill-picker";
+import { SKILL_TRIGGER } from "./skill-syntax";
 
 /**
  * The skills the composer offers, and whether `input` has the `/` menu open.

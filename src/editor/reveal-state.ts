@@ -12,7 +12,7 @@ import {
   redrawBlocks,
   touchedBlocks,
 } from "./changed-ranges";
-import { cursorTouches } from "./marks/enclosure";
+import { cursorTouches } from "./marks/enclosure-runs";
 import { revealMoved, revealSelection } from "./pointer-hold";
 
 /**

@@ -8,9 +8,8 @@ import {
   CommandShortcutRow,
   ShortcutRow,
   FixedShortcutList,
-  headingLabels,
-  plain,
 } from "../sections/shortcut-rows";
+import { actionLabels, headingLabels } from "../../prefs/key-owner";
 
 /** Shortcuts: the ones that can be changed, by group - the plugins'
  *  commands last among them - then the fixed ones. */
@@ -21,6 +20,7 @@ export function ShortcutsPage({
   fixedShortcuts,
   pluginCommands,
 }: SettingsPageProps) {
+  const labels = actionLabels(t);
   const keyOf = (command: ShortcutCommand) =>
     settings.commandShortcuts[command.id] ?? command.shortcut ?? "";
   return (
@@ -32,41 +32,41 @@ export function ShortcutsPage({
           [
             t.shortcutEditorGroupLabel,
             [
-              ["commandPalette", t.shortcutCommandPalette],
-              ["findReplace", plain(t.menuFindReplace)],
-              ["searchFiles", t.shortcutSearchFiles],
-              ["nextTab", t.shortcutNextTab],
-              ["previousTab", t.shortcutPreviousTab],
+              "commandPalette",
+              "findReplace",
+              "searchFiles",
+              "nextTab",
+              "previousTab",
             ],
           ],
           [
             t.settingsViewGroup,
             [
-              ["toggleSidebar", t.menuToggleSidebar],
-              ["toggleAgentPanel", t.menuToggleAgentPanel],
-              ["toggleSplitView", t.menuToggleSplitView],
-              ["toggleSourceMode", t.menuViewSource],
-              ["toggleTypewriterMode", t.menuViewTypewriter],
-              ["toggleZenMode", t.menuToggleZenMode],
-              ["splitEditor", t.shortcutSplitEditor],
+              "toggleSidebar",
+              "toggleAgentPanel",
+              "toggleSplitView",
+              "toggleSourceMode",
+              "toggleTypewriterMode",
+              "toggleZenMode",
+              "splitEditor",
             ],
           ],
           [
             t.shortcutAiGroupLabel,
             [
-              ["toggleTextusAi", t.shortcutToggleTextusAi],
-              ["triggerCompletion", t.shortcutTriggerCompletion],
-              ["triggerGrammarCheck", t.shortcutTriggerGrammarCheck],
-              ["toggleFloatingChat", t.shortcutToggleFloatingChat],
+              "toggleTextusAi",
+              "triggerCompletion",
+              "triggerGrammarCheck",
+              "toggleFloatingChat",
             ],
           ],
-        ] satisfies [string, [ShortcutAction, string][]][]
+        ] satisfies [string, ShortcutAction[]][]
       ).map(([title, rows]) => (
         <SettingsGroup key={title} title={title}>
-          {rows.map(([action, label]) => (
+          {rows.map((action) => (
             <ShortcutRow
               key={action}
-              label={label}
+              label={labels[action]}
               action={action}
               shortcuts={settings.shortcuts}
               setSettings={setSettings}

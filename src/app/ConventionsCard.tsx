@@ -1,8 +1,9 @@
+import { fill } from "../i18n/fill";
 import { useEffect, useState } from "react";
 import { fs } from "../platform/ipc";
-import type { Conventions } from "../platform/ipc-files";
+import { type Conventions } from "../platform/bindings/files";
 import { updateProjectSettings } from "../storage/project-settings";
-import { CornerToast } from "../ui/CornerToast";
+import { CornerToast } from "../engine/controls/CornerToast";
 import {
   SAME_FOLDER,
   attachmentsFolderName,
@@ -90,9 +91,7 @@ export function ConventionsCard({
   };
   const app = offer ? conventionsAppName(offer.app) : "";
   const line = offer
-    ? t.conventionsCardLine
-        .replace("{app}", app)
-        .replace("{folder}", offer.theirs)
+    ? fill(t.conventionsCardLine, { app, folder: offer.theirs })
     : "";
   return (
     <CornerToast
@@ -100,9 +99,7 @@ export function ConventionsCard({
       name="conventions-card"
       label={line}
       line={line}
-      details={
-        offer && t.conventionsCardDetails.replace("{current}", offer.ours)
-      }
+      details={offer && fill(t.conventionsCardDetails, { current: offer.ours })}
       actions={[
         {
           label: t.conventionsFollow,

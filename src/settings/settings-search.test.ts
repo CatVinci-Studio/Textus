@@ -1,15 +1,10 @@
 // @vitest-environment jsdom
 import { describe, expect, it } from "vitest";
-import {
-  findEntryElement,
-  foldText,
-  harvestPage,
-  matchEntries,
-} from "./settings-search";
+import { findEntryElement, harvestPage, matchEntries } from "./settings-search";
 
 const PAGE = `
   <section class="settings-group">
-    <h2 class="settings-group-title">Theme</h2>
+    <div class="settings-group-head"><h2 class="settings-group-title">Theme</h2></div>
     <div class="settings-group-body">
       <div class="settings-row">
         <div class="settings-row-text">
@@ -43,12 +38,6 @@ function page() {
 }
 
 describe("settings search", () => {
-  it("folds case, accents and full-width forms but keeps kana voicing", () => {
-    expect(foldText("Résumé")).toBe("resume");
-    expect(foldText("ＣＳＳ")).toBe("css");
-    expect(foldText("が")).not.toBe(foldText("か"));
-  });
-
   it("reads rows, group titles and the hidden ? text from a page", () => {
     const entries = harvestPage(page(), "editor");
     expect(entries).toEqual([

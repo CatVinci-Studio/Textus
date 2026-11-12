@@ -11,7 +11,7 @@ import { normaliseSettings } from "./settings-normalise";
 /** Where the settings live: the shared settings file, a local copy for a
  *  fast start, and changes to and from other windows. */
 
-export const STORAGE_KEY = LOCAL_KEYS.settings;
+const STORAGE_KEY = LOCAL_KEYS.settings;
 
 /** The settings blob in localStorage: the store without Rust (the browser
  *  dev shim, vitest). */
@@ -29,18 +29,18 @@ export function writeLocalSettings(patch: Raw) {
 // read from the boot snapshot, changed by sending only changed fields, and
 // synced across windows by "settings-changed". Without it, localStorage.
 
-export interface SettingsChanged {
+interface SettingsChanged {
   rev: number;
   patch: Raw;
   from: string;
 }
 
-export let sync: SettingsSync | null = null;
-export let normalised: { raw: Raw; settings: Settings } | null = null;
-export const remoteListeners = new Set<() => void>();
+let sync: SettingsSync | null = null;
+let normalised: { raw: Raw; settings: Settings } | null = null;
+const remoteListeners = new Set<() => void>();
 
 /** The file-backed store, set up on first use; null without Rust. */
-export function fileStore(): SettingsSync | null {
+function fileStore(): SettingsSync | null {
   if (sync) return sync;
   const boot = readBoot();
   if (!boot) return null;
@@ -66,19 +66,25 @@ export function fileStore(): SettingsSync | null {
   void listenToThisWindow<SettingsChanged>("settings-changed", (event) => {
     const { rev, patch, from } = event.payload;
     if (from === boot.label || !sync) return;
-    // Zoom is each window's own: saved for the next window, never pushed to open ones.
+    // A window's own fields: saved for the next window, never pushed to
+    // open ones.
     const shared = { ...patch };
-    delete shared.zoom;
+    for (const key of WINDOW_OWN) delete shared[key];
     if (sync.remote(shared, rev)) notifyRemote();
   });
   return sync;
 }
 
-/** Adopts a full snapshot from Rust, keeping this window's zoom. */
-export function adopt(value: Raw, rev: number) {
+/** Settings each window keeps its own: its zoom, and the folder its AI
+ *  works in (each window works in the folder it opened). */
+export const WINDOW_OWN = ["zoom", "agentWorkspaceRoot"] as const;
+
+/** Adopts a full snapshot from Rust, keeping this window's own fields. */
+function adopt(value: Raw, rev: number) {
   if (!sync) return;
   const next = { ...value };
-  if (sync.raw.zoom !== undefined) next.zoom = sync.raw.zoom;
+  for (const key of WINDOW_OWN)
+    if (sync.raw[key] !== undefined) next[key] = sync.raw[key];
   if (sync.snapshot(next, rev)) notifyRemote();
 }
 
@@ -86,12 +92,12 @@ export function adopt(value: Raw, rev: number) {
  *  whether one came between its first render and its subscription. */
 export let remoteVersion = 0;
 
-export function notifyRemote() {
+function notifyRemote() {
   remoteVersion += 1;
   for (const fn of remoteListeners) fn();
 }
 
-export function send(ticket: Map<string, number>) {
+function send(ticket: Map<string, number>) {
   const store = sync;
   if (!store) return;
   const patch: Raw = {};
@@ -108,7 +114,9 @@ export function send(ticket: Map<string, number>) {
 export function persist(patch: Partial<Settings>) {
   const store = fileStore();
   if (!store) {
-    writeLocalSettings(patch);
+    writeLocalSettings(
+      "formatBar" in patch ? { ...patch, formatBarOnce: true } : patch,
+    );
     return;
   }
   // A field not stored at all reads as its default, so setting it to the
@@ -120,7 +128,17 @@ export function persist(patch: Partial<Settings>) {
       changed[key] = value;
   }
   if (Object.keys(changed).length === 0) return;
+  // The format bar as the user leaves it is kept from now on: written with
+  // the mark that says so, which a profile from before 1.3.13 lacks.
+  if ("formatBar" in changed) changed.formatBarOnce = true;
   send(store.local(changed));
+}
+
+/** Saves `patch` from outside React (a plugin's offer, a background job):
+ *  this window's settings context takes it as it takes another window's. */
+export function changeSettings(patch: Partial<Settings>) {
+  persist(patch);
+  notifyRemote();
 }
 
 /** Calls `fn` whenever another window (or a re-read) changes the settings.

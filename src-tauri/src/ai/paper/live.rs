@@ -182,7 +182,7 @@ fn live_paper() {
                 eprintln!(
                     "live_paper: section {} written ({} long)",
                     i + 1,
-                    draft::prose_length(md, &paper.language)
+                    checks::prose_length(md, &paper.language)
                 );
                 Ok(())
             },
@@ -254,7 +254,10 @@ fn live_paper() {
         stats.insert("figures".into(), json!(figures));
         stats.insert(
             "length".into(),
-            json!(draft::prose_length(&sections.join("\n\n"), &paper.language)),
+            json!(checks::prose_length(
+                &sections.join("\n\n"),
+                &paper.language
+            )),
         );
         stats.insert(
             "commons_pictures".into(),

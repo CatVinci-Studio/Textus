@@ -50,30 +50,28 @@ pub fn parse_library_entry(file: &str, stem: &str, content: &str) -> LibraryEntr
         body: strip_html_comments(content).trim().to_string(),
         remembered: Remembered::from_file(content),
     };
-    if let Some(rest) = content.strip_prefix("---") {
-        if let Some(end) = rest.find("\n---") {
-            for line in rest[..end].lines() {
-                let Some((key, value)) = line.split_once(':') else {
-                    continue;
-                };
-                let value = value.trim();
-                match key.trim() {
-                    "name" if !value.is_empty() => {
-                        entry.name = value.trim_matches('"').trim_matches('\'').to_string()
-                    }
-                    "aliases" => entry.aliases = parse_list(value),
-                    "include" => {
-                        entry.include = match value.trim_matches('"') {
-                            "always" => LibraryInclude::Always,
-                            "never" => LibraryInclude::Never,
-                            _ => LibraryInclude::Detected,
-                        }
-                    }
-                    _ => {}
+    if let Some(front) = crate::frontmatter::split(content) {
+        for line in &front.lines {
+            let Some((key, value)) = line.split_once(':') else {
+                continue;
+            };
+            let value = value.trim();
+            match key.trim() {
+                "name" if !value.is_empty() => {
+                    entry.name = value.trim_matches('"').trim_matches('\'').to_string()
                 }
+                "aliases" => entry.aliases = parse_list(value),
+                "include" => {
+                    entry.include = match value.trim_matches('"') {
+                        "always" => LibraryInclude::Always,
+                        "never" => LibraryInclude::Never,
+                        _ => LibraryInclude::Detected,
+                    }
+                }
+                _ => {}
             }
-            entry.body = strip_html_comments(&rest[end + 4..]).trim().to_string();
         }
+        entry.body = strip_html_comments(front.body).trim().to_string();
     }
     entry
 }

@@ -55,13 +55,16 @@ pub struct PluginEntry {
 
 impl PluginsState {
     /// Whether `id` is on and was granted `permission` - what every
-    /// privileged call checks first.
+    /// privileged call checks first. Writing files includes reading them,
+    /// as the window's own check (api-permissions.ts grants) has it.
     pub fn allows(&self, id: &str, permission: &str) -> bool {
         self.all_on
-            && self
-                .plugins
-                .get(id)
-                .is_some_and(|p| p.enabled && p.granted.iter().any(|g| g == permission))
+            && self.plugins.get(id).is_some_and(|p| {
+                p.enabled
+                    && p.granted.iter().any(|g| {
+                        g == permission || (permission == "files.read" && g == "files.write")
+                    })
+            })
     }
 
     /// Whether `id` is on at all.
@@ -71,12 +74,11 @@ impl PluginsState {
 }
 
 /// The state on disk; the default (every plugin off, the switch on) when
-/// there is none yet or it can't be read.
+/// there is none yet, or when it is broken - kept aside for recovery.
 pub fn read(app: &tauri::AppHandle) -> PluginsState {
     plugins_root(app)
         .ok()
-        .and_then(|root| std::fs::read(root.join("state.json")).ok())
-        .and_then(|bytes| serde_json::from_slice(&bytes).ok())
+        .and_then(|root| crate::json_file::read_or_set_aside(&root.join("state.json")))
         .unwrap_or_default()
 }
 
@@ -89,12 +91,13 @@ pub fn update<T>(
     let mut state = read(app);
     let out = change(&mut state);
     let root = plugins_root(app)?;
-    std::fs::create_dir_all(&root).map_err(|e| e.to_string())?;
-    let json = serde_json::to_vec_pretty(&state).map_err(|e| e.to_string())?;
-    crate::atomic::write_sync(&root.join("state.json"), json).map_err(|e| e.to_string())?;
+    crate::json_file::save_pretty(&root.join("state.json"), &state).map_err(|e| e.to_string())?;
     // A plugin switched on again: its paused jobs may be due.
     #[cfg(desktop)]
     crate::schedule::rearm(app);
+    // Every window reloads, so a plugin turned off anywhere stops everywhere.
+    use tauri::Emitter;
+    let _ = app.emit("plugins-changed", ());
     Ok(out)
 }
 
@@ -113,7 +116,7 @@ pub fn plugins_set_all(app: tauri::AppHandle, on: bool) -> Result<(), String> {
 
 /// Turns a plugin on or off with the permissions the user granted it. A
 /// developer-mode folder is kept.
-#[tauri::command]
+#[tauri::command(async)]
 #[cfg_attr(test, specta::specta)]
 pub fn plugin_set(
     app: tauri::AppHandle,
@@ -185,6 +188,9 @@ mod tests {
         assert!(!state(true, false, &["files.read"]).allows("a.b", "files.read"));
         assert!(!state(false, true, &["files.read"]).allows("a.b", "files.read"));
         assert!(!state(true, true, &["files.read"]).allows("c.d", "files.read"));
+        // Writing includes reading, as the window's check has it.
+        assert!(state(true, true, &["files.write"]).allows("a.b", "files.read"));
+        assert!(!state(true, true, &["files.write"]).allows("a.b", "net"));
     }
 
     #[test]

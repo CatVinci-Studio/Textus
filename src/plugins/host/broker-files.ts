@@ -1,6 +1,7 @@
-import { notesRoot } from "../../links/link-style";
+import { notesRoot } from "../../files/link-style";
+import { inOpenFolder } from "../may-open";
 import { fs, plugins as pluginsIpc, type StoreScope } from "../../platform/ipc";
-import { basename, slashed } from "../../utils/path";
+import { basename, isInside, slashed } from "../../utils/path";
 import { FILE_WRITTEN_EVENT } from "../../utils/events";
 import { fromBase64, toBase64 } from "../store/files";
 import {
@@ -15,8 +16,8 @@ import {
   withFrontmatter,
   type Frontmatter,
 } from "../../utils/frontmatter";
-import { linkPlanner } from "../../links/link-rewrite";
-import { blockIdAt } from "../../links/block-id";
+import { linkRewrite } from "../../files/link-rewrite-lazy";
+import { blockIdAt } from "../../files/block-id";
 import { setWillExport } from "../contributions/will-export";
 import { setWillSave } from "../contributions/will-save";
 import {
@@ -62,7 +63,7 @@ export function fileHandlers(p: PluginScope) {
   const writeVersion = async (path: string, text: string, token: string) => {
     const root = write();
     if (token.startsWith(TAB_TOKEN)) {
-      const doc = getWindowAccess()?.documentAt(path);
+      const doc = openDocument(root, path);
       return !!doc && doc.replaceText(text, token.slice(TAB_TOKEN.length));
     }
     const ok = await pluginsIpc.fsWriteIf(p.id, root, path, text, token);
@@ -71,7 +72,7 @@ export function fileHandlers(p: PluginScope) {
   };
   const readVersion = async (path: string) => {
     const root = p.root();
-    const doc = getWindowAccess()?.documentAt(path);
+    const doc = openDocument(root, path);
     if (doc)
       return { text: doc.text(), token: `${TAB_TOKEN}${doc.revision()}` };
     return pluginsIpc.fsReadVersioned(p.id, root, path);
@@ -110,7 +111,7 @@ export function fileHandlers(p: PluginScope) {
     // other apps' plugins keep (bookmarks.json, a plugin's data.json).
     "files.appSettings": async ({ app, file, path }: Params) => {
       const name = str(file, "file");
-      if (!/^[\w.-]+(\/[\w.-]+)*$/.test(name) || name.includes(".."))
+      if (!/^[\w-][\w.-]*$/.test(name))
         throw new Error(`${name} isn't a settings file's name.`);
       if (str(app, "app") !== "obsidian") return null;
       const found = await fs.folderConventions(
@@ -120,12 +121,12 @@ export function fileHandlers(p: PluginScope) {
         (s) => s.app === "obsidian",
       )?.root;
       if (!vault) return null;
-      const read = await pluginsIpc
-        .fsReadVersioned(p.id, vault, `.obsidian/${name}`)
+      const text = await pluginsIpc
+        .appSettings(p.id, vault, name)
         .catch(() => null);
-      if (!read) return null;
+      if (!text) return null;
       try {
-        return JSON.parse(read.text) as unknown;
+        return JSON.parse(text) as unknown;
       } catch {
         return null;
       }
@@ -200,6 +201,7 @@ export function fileHandlers(p: PluginScope) {
           fs.folderConventions(root).catch(() => null),
           fs.documentLinkRoot(abs(target), root).catch(() => null),
         ]);
+      const { linkPlanner } = await linkRewrite.load();
       const planner = linkPlanner(
         files.map((f) => f.path),
         {
@@ -230,7 +232,7 @@ export function fileHandlers(p: PluginScope) {
       pluginsIpc.fsMkdir(p.id, write(), str(path, "path")),
     "files.frontmatterGet": async ({ path }: Params) => {
       const target = str(path, "path");
-      const doc = getWindowAccess()?.documentAt(target);
+      const doc = openDocument(p.root(), target);
       const text = doc
         ? doc.text()
         : new TextDecoder().decode(
@@ -336,16 +338,34 @@ export function fileHandlers(p: PluginScope) {
 }
 
 /** `path` in the folder `root`, `/`-separated. */
-export function relOf(root: string, path: string): string {
+function relOf(root: string, path: string): string {
   const r = slashed(root).replace(/\/$/, "");
   const full = slashed(path);
   return full.startsWith(`${r}/`) ? full.slice(r.length + 1) : basename(full);
 }
 
-/** `path` as a full path: as given, or under `root`. */
-function within(root: string, path: string | undefined): string {
-  if (!path) return root;
-  return /^([\\/]|[A-Za-z]:)/.test(path)
+/** The tab open on `path` (as given or under `root`), when it is one a
+ *  plugin may reach as it may the file: in the open folder, and in nothing
+ *  hidden there but the folder's own .textus - the backend's rule
+ *  (access.rs in_folder). Else null, and the call goes to the backend,
+ *  which says no where it should. */
+export function openDocument(root: string, path: string) {
+  const full = /^([\\/]|[A-Za-z]:)/.test(path)
     ? path
     : `${root.replace(/[\\/]+$/, "")}/${path}`;
+  return inOpenFolder(root, full)
+    ? (getWindowAccess()?.documentAt(full) ?? null)
+    : null;
+}
+
+/** `path` as a full path, as given or under `root`; refused when it isn't
+ *  in the open folder. */
+function within(root: string, path: string | undefined): string {
+  if (!path) return root;
+  const full = /^([\\/]|[A-Za-z]:)/.test(path)
+    ? path
+    : `${root.replace(/[\\/]+$/, "")}/${path}`;
+  if (full !== root && !isInside(full, root))
+    throw new Error(`${path} isn't in the open folder.`);
+  return full;
 }

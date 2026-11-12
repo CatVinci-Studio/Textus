@@ -1,4 +1,5 @@
 // @vitest-environment jsdom
+import { docVar } from "../../engine/tokens/doc-defaults";
 import { describe, expect, it } from "vitest";
 import { parseChartSpec } from "./chart-spec";
 import { niceTicks, renderChart, wrapText } from "./chart-svg";
@@ -87,11 +88,9 @@ describe("renderChart", () => {
   });
 
   it("uses the document's ink, with fallbacks for each appearance", () => {
-    expect(renderChart(BAR, { width: 600 })).toContain(
-      "var(--doc-text, #24272e)",
-    );
+    expect(renderChart(BAR, { width: 600 })).toContain(docVar("text"));
     const dark = renderChart(BAR, { width: 600, dark: true });
-    expect(dark).toContain("var(--doc-text, #e4e7ed)");
+    expect(dark).toContain(docVar("text", true));
     expect(dark).toContain("#3987e5");
   });
 

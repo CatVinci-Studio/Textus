@@ -1,6 +1,7 @@
 import { useEffect, useState } from "react";
 import type { AgentMode } from "../../prefs/settings-values";
 import { requestCreate } from "./create-request";
+import { askInComposer } from "./composer-asks";
 
 /**
  * The AI panel asked for from outside the editor (a plugin's "Edit with AI"):
@@ -38,27 +39,10 @@ export function useAskAi(
       // Set once: asked again, it is set again.
       window.setTimeout(() => setMode(null), 400);
       setPanelOpen(true);
-      // Once the panel - and the composer in the mode asked for - is up.
-      window.setTimeout(() => fillComposer(text), 80);
+      askInComposer(text);
     };
     window.addEventListener(ASK_AI_EVENT, onAsk);
     return () => window.removeEventListener(ASK_AI_EVENT, onAsk);
   }, [isActive, setPanelOpen]);
   return mode;
-}
-
-/** `text` into the AI panel's composer, the caret after it. */
-function fillComposer(text: string) {
-  const box = document.querySelector<HTMLTextAreaElement>(
-    ".agent-panel-view textarea",
-  );
-  if (!box) return;
-  // React's own setter, so the composer's state hears the change.
-  Object.getOwnPropertyDescriptor(
-    HTMLTextAreaElement.prototype,
-    "value",
-  )?.set?.call(box, text);
-  box.dispatchEvent(new Event("input", { bubbles: true }));
-  box.focus();
-  box.setSelectionRange(text.length, text.length);
 }

@@ -7,13 +7,13 @@ import {
 import type { Node as ProseNode } from "@milkdown/kit/prose/model";
 import type { EditorView } from "@milkdown/kit/prose/view";
 import { $prose } from "@milkdown/kit/utils";
-import { isEnclosureName } from "../marks/enclosure";
+import { isEnclosureName } from "../marks/enclosure-runs";
 import { wrapInLinkSource } from "../marks/span-commands";
 import { caretAt, stateWithLiveSelection } from "../live-selection";
 import { isImeKeyEvent } from "./ime";
 import { LINK } from "../markdown/link-source";
 
-export interface FormatSpec {
+interface FormatSpec {
   delim: string;
   rung: number;
 }

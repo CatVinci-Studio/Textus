@@ -1,4 +1,5 @@
-import type { AgentRequestOptions } from "./useAgentConversation";
+import { fill } from "../../i18n/fill";
+import type { AgentRequestOptions } from "./conversation/conversation-types";
 import type { ImageAttachment } from "../types";
 
 /** A message sent while a reply was still coming; it goes once the replies
@@ -44,13 +45,16 @@ export function MessageQueue({
 }) {
   if (queue.length === 0) return null;
   return (
-    <div className="chat-queue" role="list" aria-label={labels.queued}>
+    <div
+      className="chat-queue"
+      role="list"
+      aria-label={fill(labels.queued, { n: String(queue.length) })}
+    >
       <div className="chat-queue-title">
         <span>
-          {(paused ? labels.queuedPaused : labels.queued).replace(
-            "{n}",
-            String(queue.length),
-          )}
+          {fill(paused ? labels.queuedPaused : labels.queued, {
+            n: String(queue.length),
+          })}
         </span>
         {paused && (
           <button
@@ -64,7 +68,7 @@ export function MessageQueue({
       </div>
       {queue.map((item) => (
         <div key={item.id} className="chat-queue-item" role="listitem">
-          <span className="chat-queue-text">{item.typed}</span>
+          <span className="tx-truncate chat-queue-text">{item.typed}</span>
           <button
             type="button"
             className="chat-queue-action"

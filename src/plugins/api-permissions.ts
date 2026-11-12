@@ -49,6 +49,7 @@ const API_PERMISSIONS: readonly {
       "files.find",
       "files.stat",
       "files.read",
+      "files.frontmatterGet",
       "metadata.get",
       "metadata.all",
       "metadata.backlinks",
@@ -145,15 +146,3 @@ export const PERMISSION_CALLS: readonly [RegExp, Permission][] =
     );
     return [new RegExp(`\\.(?:${names.join("|")})`), permission];
   });
-
-/** Whether `granted` covers `permission`: writing files includes reading
- *  them, as every write goes through the folder's root. */
-export function grants(
-  granted: readonly string[],
-  permission: Permission,
-): boolean {
-  return (
-    granted.includes(permission) ||
-    (permission === "files.read" && granted.includes("files.write"))
-  );
-}

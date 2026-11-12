@@ -5,6 +5,7 @@
  */
 
 import { escapeHtml } from "../../utils/html";
+import type { ChatAttachment, ImageAttachment } from "../types";
 
 /** Wraps the selection the message rode out with. */
 export function selectedTextBlock(markdown: string): string {
@@ -14,7 +15,7 @@ export function selectedTextBlock(markdown: string): string {
 /** Marks where the cursor is when nothing is selected: the text just
  *  before and after it, with ⟦cursor⟧ at the spot - what "write a
  *  transition here" refers to (and where insert_at_cursor writes). */
-export function cursorBlock(before: string, after: string): string {
+function cursorBlock(before: string, after: string): string {
   return `<cursor>\n${before}⟦cursor⟧${after}\n</cursor>`;
 }
 
@@ -58,7 +59,7 @@ export function userMessageBody(text: string): string {
   return parseUserMessage(text).body;
 }
 
-export interface ParsedUserMessage {
+interface ParsedUserMessage {
   /** What the user actually typed, with the context blocks removed - a
    *  skill's expanded instructions folded back into the /name they typed. */
   body: string;
@@ -98,4 +99,46 @@ export function parseUserMessage(text: string): ParsedUserMessage {
   }
 
   return { body: body.trim(), selection, attachments };
+}
+
+/** The message as sent: the selection (or the caret's surroundings) and
+ *  text attachments tagged in front of what was typed; images apart. */
+export function composeMessage(
+  {
+    selectionMarkdown: selection,
+    cursor,
+  }: {
+    selectionMarkdown: string | null;
+    cursor?: { before: string; after: string } | null;
+  },
+  message: string,
+  attachments: ChatAttachment[],
+  includeSelection: boolean,
+): { message: string; images?: ImageAttachment[] } {
+  // The tag carries the selection's markdown so formatting survives the
+  // trip; with nothing selected, the caret's surroundings say where "here" is.
+  const tagged =
+    selection && includeSelection
+      ? `${selectedTextBlock(selection)}\n\n${message}`
+      : cursor
+        ? `${cursorBlock(cursor.before, cursor.after)}\n\n${message}`
+        : message;
+  // Text attachments were extracted in Rust and ride inside the prompt;
+  // images go as provider image parts.
+  const attachmentBlocks = attachments
+    .filter((f) => f.kind === "text")
+    .map((f) => attachedFileBlock(f.name, f.content, f.path))
+    .join("\n\n");
+  return {
+    message: attachmentBlocks ? `${attachmentBlocks}\n\n${tagged}` : tagged,
+    // Not filtered on vision here: the composer and the backend both refuse
+    // an image the provider can't read; dropping it would be a third policy.
+    images: attachments
+      .filter((f) => f.kind === "image")
+      .map((f) => ({
+        name: f.name,
+        mime: f.mime,
+        dataBase64: f.dataBase64,
+      })),
+  };
 }

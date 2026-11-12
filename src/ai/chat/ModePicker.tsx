@@ -1,11 +1,12 @@
-import { SelectMenu } from "../../ui/SelectMenu";
+import { SelectMenu } from "../../engine/controls/SelectMenu";
 import { Fragment, useId, useRef, useState, type KeyboardEvent } from "react";
 import type { PanelMode } from "../../prefs/SettingsContext";
-import { useMergedRef, usePresence } from "../../ui/usePresence";
-import { useFloatingList } from "../../ui/useFloatingList";
-import { useChatModels, type ChatModels } from "./chat-models";
+import { useMergedRef, usePresence } from "../../engine/motion/usePresence";
+import { useFloatingList } from "../../engine/controls/useFloatingList";
+import { AGENTS_GROUP, useChatModels, type ChatModels } from "./chat-models";
 import "./ModePicker.css";
 import { isImeKeydown } from "../../utils/ime";
+import { listMove } from "../../engine/controls/list-keys";
 
 export interface ModeChoice {
   value: PanelMode;
@@ -41,7 +42,9 @@ export function ModePicker({
   holdFocus?: boolean;
 }) {
   const groups = models?.groups ?? [];
-  const shownModes = modes.length > 1 ? modes : [];
+  // An external agent works its own way: Textus AI's modes are for models.
+  const shownModes =
+    modes.length > 1 && models?.provider !== AGENTS_GROUP ? modes : [];
   const items: Item[] = [
     ...shownModes.map((choice) => ({ kind: "mode" as const, choice })),
     ...groups.flatMap((g) =>
@@ -67,7 +70,7 @@ export function ModePicker({
     480,
   );
   const listId = useId();
-  const presence = usePresence(open, { exitMs: 120 });
+  const presence = usePresence(open);
   const presenceRef = useMergedRef(listRef, presence.ref);
 
   // The list takes focus while open; with holdFocus it goes back to where
@@ -93,7 +96,12 @@ export function ModePicker({
     close();
     if (isSelected(item)) return;
     if (item.kind === "mode") onMode(item.choice.value);
-    else models?.choose(item.provider, item.model);
+    else {
+      models?.choose(item.provider, item.model);
+      // An agent answers as itself: Research's paper isn't one of its modes.
+      if (item.provider === AGENTS_GROUP && mode === "research" && modes[0])
+        onMode(modes[0].value);
+    }
   }
 
   function onTriggerKey(e: KeyboardEvent<HTMLElement>) {
@@ -107,14 +115,10 @@ export function ModePicker({
 
   function onListKey(e: KeyboardEvent<HTMLElement>) {
     if (isImeKeydown(e)) return;
-    const n = items.length;
-    if (e.key === "ArrowDown" || e.key === "ArrowUp") {
+    const moved = listMove(e.key, active, items.length);
+    if (moved !== null) {
       e.preventDefault();
-      const delta = e.key === "ArrowDown" ? 1 : -1;
-      setActive((i) => (i + delta + n) % n);
-    } else if (e.key === "Home" || e.key === "End") {
-      e.preventDefault();
-      setActive(e.key === "Home" ? 0 : n - 1);
+      setActive(moved);
     } else if (e.key === "Enter" || e.key === " ") {
       e.preventDefault();
       choose(active);
@@ -194,7 +198,7 @@ export function ModePicker({
       >
         {current && <span className="mode-picker-value">{current.label}</span>}
         {model && (
-          <span className="mode-picker-model" title={model}>
+          <span className="tx-truncate mode-picker-model" title={model}>
             {model}
           </span>
         )}
@@ -211,7 +215,7 @@ export function ModePicker({
           onKeyDown={onListKey}
         >
           {groups.length > 0 && shownModes.length > 0 && (
-            <li role="presentation" className="ui-select-group">
+            <li role="presentation" className="tx-list-heading ui-select-group">
               {labels.mode}
             </li>
           )}
@@ -219,7 +223,7 @@ export function ModePicker({
           {groups.length > 0 && shownModes.length > 0 && (
             <li
               role="presentation"
-              className="ui-select-group mode-picker-models"
+              className="tx-list-heading ui-select-group mode-picker-models"
             >
               {labels.model}
             </li>

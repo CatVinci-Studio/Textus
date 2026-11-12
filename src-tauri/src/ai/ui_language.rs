@@ -8,17 +8,15 @@
 pub(crate) struct UiLanguage {
     pub code: &'static str,
     pub english: &'static str,
-    pub native: &'static str,
     pub names: &'static str,
     pub style_headings: &'static str,
 }
 
 macro_rules! ui_language {
-    ($code:literal, $english:literal, $native:literal) => {
+    ($code:literal, $english:literal) => {
         UiLanguage {
             code: $code,
             english: $english,
-            native: $native,
             names: include_str!(concat!("ui-names/", $code, ".txt")),
             style_headings: include_str!(concat!("style-headings/", $code, ".txt")),
         }
@@ -26,17 +24,31 @@ macro_rules! ui_language {
 }
 
 pub(crate) const UI_LANGUAGES: &[UiLanguage] = &[
-    ui_language!("en", "English", "English"),
-    ui_language!("zh", "Chinese", "中文"),
-    ui_language!("zh-Hant", "Traditional Chinese", "繁體中文"),
-    ui_language!("ja", "Japanese", "日本語"),
-    ui_language!("ko", "Korean", "한국어"),
-    ui_language!("es", "Spanish", "Español"),
-    ui_language!("fr", "French", "Français"),
-    ui_language!("de", "German", "Deutsch"),
-    ui_language!("ru", "Russian", "Русский"),
-    ui_language!("pt", "Portuguese", "Português"),
+    ui_language!("en", "English"),
+    ui_language!("zh", "Chinese"),
+    ui_language!("zh-Hant", "Traditional Chinese"),
+    ui_language!("ja", "Japanese"),
+    ui_language!("ko", "Korean"),
+    ui_language!("es", "Spanish"),
+    ui_language!("fr", "French"),
+    ui_language!("de", "German"),
+    ui_language!("ru", "Russian"),
+    ui_language!("pt", "Portuguese"),
 ];
+
+impl UiLanguage {
+    /// Its name in itself, as the language menu shows it
+    /// (src/prefs/appearance-tables.json).
+    pub fn native(&self) -> &'static str {
+        static NAMES: std::sync::LazyLock<serde_json::Value> = std::sync::LazyLock::new(|| {
+            serde_json::from_str(include_str!("../../../src/prefs/appearance-tables.json"))
+                .expect("appearance-tables.json")
+        });
+        NAMES["langNames"][self.code]
+            .as_str()
+            .unwrap_or(self.english)
+    }
+}
 
 /// A file's entries: its lines, less comments and blank ones.
 pub(crate) fn entries(text: &str) -> impl Iterator<Item = &str> {

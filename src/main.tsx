@@ -10,14 +10,14 @@ import { installDevTauriShim } from "./dev/tauri-shim";
 import { installPolyfills } from "./utils/polyfills";
 import { watchMemoryIdle } from "./utils/memory-idle";
 import { publishWindowChrome } from "./platform/window-chrome";
-import { WindowEdges } from "./app/WindowEdges";
-import { installWebviewGuards } from "./ui/webview-guards";
-import { installTextFieldMenu } from "./ui/text-field-menu";
-import { installScrollReveal } from "./ui/scroll-reveal";
+import { WindowEdges } from "./app/frame/WindowEdges";
+import { installWebviewGuards } from "./engine/controls/webview-guards";
+import { installLinkGuard } from "./app/link-guard";
+import { installTextFieldMenu } from "./engine/controls/text-field-menu";
+import { installScrollReveal } from "./engine/controls/scroll-reveal";
 import { restoreFolderAccess } from "./platform/ios-files";
 import { installMobileViewport } from "./platform/mobile-viewport";
-import { markEngineQuirks } from "./ui/engine-quirks";
-import { installWindowScale } from "./ui/window-scale";
+import { markEngineQuirks } from "./engine/controls/engine-quirks";
 import { flushWhenHidden } from "./storage/pending-writes";
 import { exposePluginApiForDevelopment } from "./plugin-api";
 import "./mobile/styles/index.css";
@@ -27,6 +27,7 @@ import { AppErrorBoundary } from "./app/report/AppErrorBoundary";
 installPolyfills();
 installDevTauriShim();
 installWebviewGuards();
+installLinkGuard();
 installTextFieldMenu();
 installScrollReveal();
 // Held-back storage writes go out when iOS sends the app to the background.
@@ -39,7 +40,6 @@ void restoreFolderAccess().catch(() => {});
 publishWindowChrome();
 installMobileViewport();
 markEngineQuirks();
-installWindowScale();
 // The plugin API draft, on the window in a development build.
 exposePluginApiForDevelopment();
 
@@ -49,8 +49,8 @@ const view = new URLSearchParams(window.location.search).get("view");
 
 // The detached chat's own view, loaded only in that window.
 const ChatWindowApp = lazyComponent(
-  lazyModule("chat-window", () => import("./ai/chat/window/ChatWindowApp")),
-  (m) => m.ChatWindowApp,
+  lazyModule("chat-window", () => import("./app/ChatWindowRoot")),
+  (m) => m.ChatWindowRoot,
 );
 
 // A plugin's floating view over the desktop, in a window of its own.

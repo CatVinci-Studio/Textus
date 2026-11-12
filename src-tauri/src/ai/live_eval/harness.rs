@@ -823,6 +823,8 @@ pub fn run_conversation(
         let helper_tools = tools::ToolRegistry::builtin(false, false, setup.mode, sees_images())
             .only(tools::PROPOSE_EDIT_TOOL_NAME);
         let helpers = crate::ai::agent::HelperTurns::default();
+        let file_edits =
+            crate::ai::file_changes::FileEdits::new(root, Some("live-eval"), None, false);
         let chapter_run = crate::ai::agent::ChapterRun {
             agent: &agent,
             workspace: ws,
@@ -843,6 +845,10 @@ pub fn run_conversation(
             setup.mode,
             sees_images(),
         );
+        // The folder's other files, written as the app writes them.
+        if let Some(edits) = &file_edits {
+            tool_set.extend(edits.tools());
+        }
         if let Some(pictures) = setup.pictures {
             tool_set.add(pictures.tool(
                 &document,

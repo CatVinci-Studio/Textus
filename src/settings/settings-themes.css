@@ -1,0 +1,227 @@
+/* Extensions › Themes › Get themes: each theme is a card like a catalog
+   plugin's, with its screenshot in front. */
+.theme-gallery-item {
+  display: flex;
+  align-items: center;
+  gap: 16px;
+  padding: 12px 0;
+}
+
+/* A theme's page: its screenshots, light then dark, one above the other. */
+.theme-gallery-shots {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-3);
+  margin-bottom: var(--space-4);
+}
+
+.theme-gallery-preview.is-large {
+  width: 100%;
+}
+
+.theme-gallery-preview {
+  flex-shrink: 0;
+  /* A quarter of its row, between a thumbnail and a small preview. */
+  width: clamp(64px, 25%, 112px);
+  aspect-ratio: 16 / 10;
+  overflow: hidden;
+  border: 1px solid color-mix(in srgb, var(--ui-border) 75%, transparent);
+  border-radius: var(--shape-s);
+  background: var(--ui-bg);
+}
+
+.theme-gallery-enlarge {
+  display: block;
+  width: 100%;
+  height: 100%;
+  padding: 0;
+  border: 0;
+  background: none;
+  cursor: zoom-in;
+}
+
+.theme-gallery-preview img {
+  display: block;
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+  object-position: top left;
+}
+
+/* Back from a page inside a category (General › About Textus). */
+.settings-content .settings-back-button {
+  border-color: transparent;
+  display: inline-flex;
+  align-items: center;
+  gap: 2px;
+  width: auto;
+  padding-inline: 4px 8px;
+}
+
+.settings-back-chevron {
+  transform: rotate(180deg);
+}
+
+.settings-about-status {
+  flex-basis: 100%;
+  font-size: var(--text-footnote);
+  color: var(--ui-muted);
+}
+
+/* Character spacing: the kind, then Word's "By" in points beside it. */
+.settings-letter-spacing {
+  display: flex;
+  align-items: center;
+  gap: var(--space-2);
+}
+.settings-letter-spacing-by {
+  display: flex;
+  align-items: center;
+  gap: var(--space-1);
+  color: var(--ui-muted);
+}
+.settings-letter-spacing-by .settings-text-input {
+  width: 4.5em;
+  text-align: right;
+}
+
+/* On the desktop, the frame's way (design-language.md 5.7): the sections
+   run the panel's full height in the frame's colour with the search at
+   their top, the page beside them; of the header only Close stays, over
+   the page's top right. The phone keeps its bar (mobile/styles). */
+:root:not([data-window-chrome="mobile"]) .settings-panel {
+  position: relative;
+}
+
+:root:not([data-window-chrome="mobile"]) .settings-header {
+  position: absolute;
+  top: var(--space-2);
+  right: var(--space-2);
+  z-index: 2;
+  padding: 0;
+  border: 0;
+  background: none;
+}
+
+:root:not([data-window-chrome="mobile"]) .settings-header > span {
+  position: absolute;
+  width: 1px;
+  height: 1px;
+  overflow: hidden;
+  clip-path: inset(50%);
+}
+
+:root:not([data-window-chrome="mobile"]) .settings-sidebar {
+  padding-top: var(--space-3);
+  border-right: 1px solid var(--ui-frame-edge);
+  background: var(--ui-frame);
+}
+
+/* A theme with no screenshot (one's own, an imported one): a quiet sample
+   in the same frame. */
+.theme-gallery-preview.theme-sample {
+  display: grid;
+  place-items: center;
+  font-family: var(--doc-font, inherit);
+  font-size: var(--text-lg);
+  color: var(--ui-muted);
+}
+
+/* Themes, installed and in the store: in their group's grey frame, a
+   grid of cards of one size - the screenshot, the name (a tag when in
+   use), two lines about it, who made it, then the buttons. Hover tints a
+   card; the one in use rings its screenshot. */
+.settings-group-body:has(> .theme-gallery-item) {
+  display: grid;
+  /* As many as fit, sharing the row: four in a full page, two in a narrow
+     one, one in the narrowest. */
+  grid-template-columns: repeat(auto-fill, minmax(150px, 1fr));
+  gap: var(--space-3);
+  padding: var(--space-3);
+}
+.settings-group-body:has(> .theme-gallery-item) > * + * {
+  border-top: 0;
+}
+.settings-group-body:has(> .theme-gallery-item) > :not(.theme-gallery-item) {
+  grid-column: 1 / -1;
+}
+.settings-group-body > .theme-gallery-item {
+  flex-direction: column;
+  align-items: stretch;
+  gap: var(--space-2);
+  padding: var(--space-2);
+  border-radius: var(--shape-s);
+  transition: background-color var(--dur-fast) var(--ease-standard);
+}
+.settings-group-body > .theme-gallery-item:hover {
+  background: var(--ui-hover);
+}
+.settings-group-body > .theme-gallery-item > .theme-gallery-preview {
+  width: 100%;
+  border-radius: var(--shape-xs);
+}
+.settings-group-body
+  > .theme-gallery-item[data-in-use]
+  > .theme-gallery-preview {
+  box-shadow: 0 0 0 2px var(--ui-accent);
+}
+.settings-group-body > .theme-gallery-item .plugin-card-description {
+  display: -webkit-box;
+  -webkit-line-clamp: 2;
+  -webkit-box-orient: vertical;
+  overflow: hidden;
+  font-size: var(--text-caption);
+}
+.settings-group-body > .theme-gallery-item .plugin-byline {
+  font-size: var(--text-caption);
+}
+/* The name, then its small buttons at the line's end. */
+.theme-card-head {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: var(--space-2);
+  min-width: 0;
+}
+/* The name keeps a few words' room: its buttons go under it before it is
+   cut to a few letters. */
+.theme-card-open {
+  flex: 1 1 8em;
+  min-width: 0;
+  padding: 0;
+  border: 0;
+  background: none;
+  color: inherit;
+  font: inherit;
+  text-align: start;
+  cursor: pointer;
+}
+.theme-card-head > .theme-card-name {
+  flex: 1 1 auto;
+}
+.theme-card-actions {
+  display: flex;
+  flex: none;
+  gap: var(--space-1);
+}
+.theme-card-actions > .settings-inline-button {
+  min-height: var(--control-height-sm);
+  padding-inline: var(--space-2);
+  font-size: var(--text-caption);
+}
+.theme-card-name {
+  font-weight: 600;
+}
+
+/* Appearance's advanced fold, then the store's groups: a group's gap. */
+.settings-advanced + .settings-group,
+.settings-advanced + * > .settings-group:first-child {
+  margin-top: var(--space-6);
+}
+
+/* An agent's row: its plugin's icon before its name. */
+.settings-agent-name {
+  display: inline-flex;
+  align-items: center;
+  gap: var(--space-2);
+}

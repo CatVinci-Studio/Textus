@@ -3,8 +3,8 @@
 
 use super::*;
 
-/// One service Settings offers as Image model. Keep in step with the frontend's
-/// `ImageProviderEntry`.
+/// One service Settings offers as Image model; the frontend uses its
+/// generated type.
 #[derive(Serialize, Clone, Copy)]
 #[cfg_attr(test, derive(specta::Type))]
 #[serde(rename_all = "camelCase")]

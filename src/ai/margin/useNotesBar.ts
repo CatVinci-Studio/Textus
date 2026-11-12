@@ -15,15 +15,15 @@ export function useNotesBar({
 }: {
   notes: ReviewNote[];
   run: EditorRunner;
-  /** The review bar's own pointer, whatever it is: a new one takes over. */
-  revisionFocus: unknown;
+  /** The review bar's own pointer, by its key: a new one takes over. */
+  revisionFocus: string | null;
   onDone: (id: string) => void;
   /** Into the AI panel's composer, for the writer to finish. */
   onAsk: (picked: ReviewNote[]) => void;
 }) {
   const [pointer, setPointer] = useState<{
     id: string;
-    over: unknown;
+    over: string | null;
   } | null>(null);
   // Null while not picking.
   const [picked, setPicked] = useState<ReadonlySet<string> | null>(null);
@@ -35,17 +35,11 @@ export function useNotesBar({
       ? pointer.id
       : null;
 
-  function step(by: 1 | -1) {
-    if (ordered.length === 0) return;
-    const at = ordered.findIndex((n) => n.id === focused);
-    const next =
-      at < 0
-        ? by > 0
-          ? 0
-          : ordered.length - 1
-        : (at + by + ordered.length) % ordered.length;
-    const note = ordered[next];
-    setPointer({ id: note.id, over: revisionFocus });
+  /** Points at note `id` and brings it into view. */
+  function pointAt(id: string) {
+    const note = ordered.find((n) => n.id === id);
+    if (!note) return;
+    setPointer({ id, over: revisionFocus });
     run((ctx) => revealPosition(ctx.get(editorViewCtx), note.from));
   }
 
@@ -58,11 +52,15 @@ export function useNotesBar({
 
   return {
     count: ordered.length,
+    /** The notes, top to bottom. */
+    ordered,
+    pointAt,
+    /** The bar moved off the notes (to a change): none pointed at. */
+    clearPointer: () => setPointer(null),
     /** Where the pointer is among the notes, -1 before the first step. */
     position: ordered.findIndex((n) => n.id === focused),
     /** The key of the note's card it points at, for the margin. */
     focusedItem: focused ? `note:${focused}` : null,
-    step,
     /** Every AI note marked done. The writer's own notes stay: each is
      *  deleted on its card. */
     allDone() {

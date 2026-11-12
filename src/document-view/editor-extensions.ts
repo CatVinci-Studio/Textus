@@ -1,3 +1,6 @@
+// What plugins add to the editor registers with the editor itself, before
+// any editor is made: nothing of it rides in the window's first load.
+import "../plugins/contributions/editor-extensions";
 import type { Editor } from "@milkdown/kit/core";
 import { withEditorCore } from "../editor/editor-extensions";
 import { withAiPlugins, type PendingEditCallbacks } from "../ai/editor-plugins";

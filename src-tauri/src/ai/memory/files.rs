@@ -42,13 +42,11 @@ pub(crate) fn memory_stem(text: &str) -> String {
 
 /// `<dir>/<stem>.md`, or `<stem>-2.md` and on when that is taken.
 pub(crate) fn free_path(dir: &Path, stem: &str) -> PathBuf {
-    let mut path = dir.join(format!("{stem}.md"));
-    let mut n = 2;
-    while path.exists() {
-        path = dir.join(format!("{stem}-{n}.md"));
-        n += 1;
-    }
-    path
+    dir.join(crate::ids::free_name(
+        dir,
+        &format!("{stem}.md"),
+        crate::ids::Numbered::Dash,
+    ))
 }
 
 pub(crate) fn file_stem(path: &Path) -> String {

@@ -65,7 +65,7 @@ export const tocSchema = $nodeSchema("toc", () => ({
   },
 }));
 
-export interface TocEntry {
+interface TocEntry {
   level: number;
   text: string;
   id: string;
@@ -89,7 +89,7 @@ export function tocEntries(doc: ProseNode): TocEntry[] {
 }
 
 /** Where the `index`-th listed heading's text starts, or null. */
-export function tocEntryPos(doc: ProseNode, index: number): number | null {
+function tocEntryPos(doc: ProseNode, index: number): number | null {
   let seen = 0;
   let found: number | null = null;
   doc.descendants((node, pos) => {
@@ -101,7 +101,7 @@ export function tocEntryPos(doc: ProseNode, index: number): number | null {
   return found;
 }
 
-export interface TocStrings {
+interface TocStrings {
   label: string;
   empty: string;
 }

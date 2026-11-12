@@ -390,13 +390,13 @@ impl MemoryDirs {
             None => {
                 let current = std::fs::read_to_string(&loc.path).map_err(|_| "GONE".to_string())?;
                 if !ours(&current) {
-                    return Err("NOT_REMEMBERED".into());
+                    return Err(crate::errors::error("notRemembered"));
                 }
                 std::fs::remove_file(&loc.path).map_err(|e| e.to_string())
             }
             Some(previous) => {
                 if !ours(previous) {
-                    return Err("NOT_REMEMBERED".into());
+                    return Err(crate::errors::error("notRemembered"));
                 }
                 // A forget undone: the file is back, its forgotten copy
                 // goes.
@@ -416,7 +416,9 @@ impl MemoryDirs {
         if loc.scope == scope {
             return Ok(id.to_string());
         }
-        let dir = self.folder(scope, MEMORY_FOLDER).ok_or("NO_PROJECT")?;
+        let dir = self
+            .folder(scope, MEMORY_FOLDER)
+            .ok_or_else(|| crate::errors::error("noProject"))?;
         let content = std::fs::read_to_string(&loc.path).map_err(|_| "GONE".to_string())?;
         let target = free_path(&dir, &file_stem(&loc.path));
         write(&target, &content)?;

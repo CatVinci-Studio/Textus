@@ -1,12 +1,14 @@
+import { inlineSentence } from "../revision/sentence-diff";
+import { DropIcon, TakeIcon } from "../../engine/controls/icons";
 import { changeGlimpse } from "./change-glimpse";
-import { scaledPx } from "../../ui/chrome-scale";
+import { scaledPx } from "../../engine/tokens/chrome-scale";
 import { RevisionNoteText } from "./RevisionNoteText";
 import { OWN_CHANGES } from "./own-revision-plugin";
 import { memo, useLayoutEffect, useRef, type RefObject } from "react";
-import { animate } from "../../ui/motion";
-import { joinBeat } from "../../ui/moves";
+import { animate } from "../../engine/motion/motion";
+import { joinBeat } from "../../engine/controls/moves";
 import { CARD_WIDTH } from "./margin-room";
-import { Tooltip } from "../../ui/Tooltip";
+import { Tooltip } from "../../engine/controls/Tooltip";
 import "./ReviewMargin.css";
 import { type MarginItem, type ReviewMarginLabels } from "./margin-layout";
 import {
@@ -15,18 +17,9 @@ import {
   wholeBlockKind,
 } from "../revision/markdown-forms";
 
-/** A sentence as a card shows it on a line: a title's text without the
- *  `# ` that makes it one. */
-export function plainLine(text: string): string {
-  return text.trim().replace(/^#{1,6}\s+/, "");
-}
-
 /** A change's new text on its card: a whole block other than a picture by
  *  what it is. */
-export function revisionText(
-  after: string,
-  labels: ReviewMarginLabels,
-): string {
+function revisionText(after: string, labels: ReviewMarginLabels): string {
   const text = after.trim();
   if (wholeBlockKind(text) === "picture") return text;
   return blockSummary(text, blockNames(labels)) ?? text;
@@ -34,17 +27,6 @@ export function revisionText(
 
 /** The margin's cards: revisions, notes, and the note popover a phone shows
  *  instead. */
-
-export const CHECK = (
-  <svg viewBox="0 0 16 16" aria-hidden="true">
-    <path d="M3.5 8.5l3 3 6-7" />
-  </svg>
-);
-export const CROSS = (
-  <svg viewBox="0 0 16 16" aria-hidden="true">
-    <path d="M4 4l8 8M12 4l-8 8" />
-  </svg>
-);
 
 /** What a card is told by the margin: where it sits, and the margin's
  *  callbacks, which keep their identity across renders. */
@@ -154,7 +136,7 @@ export function useCardBox(
   return ref;
 }
 
-export type RevisionItem = Extract<MarginItem, { kind: "revision" }>;
+type RevisionItem = Extract<MarginItem, { kind: "revision" }>;
 
 /** A changed sentence in the margin: what replaces it, and ✓ / ✕ - the same
  *  decision as the AI card's. A kept one dims, its replacement struck. */
@@ -189,6 +171,8 @@ export const RevisionCard = memo(
     // What the card's text is, said in its heading; the text on the line
     // under it, a chip's too.
     const original = item.shows === "new" && !!item.before.trim();
+    // Result only, new text alone: it reads in the text, the card just says so.
+    const inText = item.shows === "new" && !item.before.trim();
     const what = original
       ? labels.proposalDeletedSentence
       : !item.before.trim() && item.after.trim()
@@ -245,7 +229,7 @@ export const RevisionCard = memo(
                   )
                 }
               >
-                {CHECK}
+                <TakeIcon />
               </button>
             </Tooltip>
             <Tooltip text={labels.proposalKeepSentence}>
@@ -263,7 +247,7 @@ export const RevisionCard = memo(
                   )
                 }
               >
-                {CROSS}
+                <DropIcon />
               </button>
             </Tooltip>
           </span>
@@ -274,12 +258,16 @@ export const RevisionCard = memo(
             after={item.after}
             shows={item.shows}
           />
+        ) : inText ? (
+          <span className="visually-hidden">
+            <RevisionNoteText text={revisionText(item.after, labels)} />
+          </span>
         ) : original ? (
           // Result only: the text reads as it will; the card keeps what
           // the change takes out of it.
           <div className="revision-note-text revision-note-original">
             <s>
-              <RevisionNoteText text={plainLine(item.before)} />
+              <RevisionNoteText text={inlineSentence(item.before)} />
             </s>
             {/* What it becomes is in the text; read out here too, so the
               card says what is replaced by what. */}
@@ -353,19 +341,19 @@ function ChangeGlimpse({
   after: string;
   shows: RevisionItem["shows"];
 }) {
-  const g = changeGlimpse(plainLine(before), plainLine(after));
+  const g = changeGlimpse(inlineSentence(before), inlineSentence(after));
   if (!g.partial)
     return (
-      <div className="review-note-chip-text">
+      <div className="tx-truncate review-note-chip-text">
         {shows === "new" && before.trim() ? (
-          <s>{plainLine(before)}</s>
+          <s>{inlineSentence(before)}</s>
         ) : (
-          plainLine(after)
+          inlineSentence(after)
         )}
       </div>
     );
   return (
-    <div className="review-note-chip-text">
+    <div className="tx-truncate review-note-chip-text">
       {g.cutLead && "…"}
       {g.lead}
       {g.removed && <del>{g.removed}</del>}

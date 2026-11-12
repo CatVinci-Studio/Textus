@@ -6,7 +6,9 @@ import { webAssets } from "../platform/ipc";
  *  data URL, both fetched by Rust. What can't be fetched stays as written. */
 
 const REMOTE = /^(https?:)?\/\//i;
-const IMPORT_RE =
+/** An `@import`: its address (url() or quoted), then its media, if any.
+ *  One pattern for local themes and web sheets alike. */
+export const IMPORT_RE =
   /@import\s+(?:url\(\s*["']?([^"')]+)["']?\s*\)|["']([^"']+)["'])([^;]*);/g;
 const FONT_FACE_RE = /@font-face\s*\{[^}]*\}/g;
 const URL_RE = /url\(\s*["']?([^"')]+)["']?\s*\)/g;

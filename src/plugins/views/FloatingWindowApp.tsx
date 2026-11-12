@@ -1,3 +1,5 @@
+import { fill } from "../../i18n/fill";
+import { openPageLink } from "./page-links";
 import { useEffect, useRef, useState } from "react";
 import { connectFrame, sandboxedFrame } from "../host/frames";
 import type { Endpoint } from "../host/rpc";
@@ -87,6 +89,7 @@ export function FloatingWindowApp() {
               menu: () => null,
               menuClose: () => {},
               height: () => {},
+              openLink: openPageLink,
             },
             () => payload.init,
             (connected) => {
@@ -130,7 +133,7 @@ export function FloatingWindowApp() {
       <button
         type="button"
         className="floating-view-dot"
-        aria-label={t.floatingUnfold.replace("{name}", title)}
+        aria-label={fill(t.floatingUnfold, { name: title })}
         title={title}
         onPointerDown={(e) => void drag(e)}
       >
@@ -167,22 +170,22 @@ export function FloatingWindowApp() {
       {
         label: t.floatingOpenAi,
         run: () => {
-          void windowIpc.showFloatingOwner(OWNER);
+          void windowIpc.showFloatingOwner(OWNER).catch(() => undefined);
           void emitToWindow(OWNER, OPEN_AGENT_PANEL_EVENT, null);
         },
       },
       "separator",
       {
-        label: t.floatingToWindow.replace("{name}", title),
+        label: fill(t.floatingToWindow, { name: title }),
         run: () => up({ kind: "toWindow" }),
       },
       {
-        label: t.floatingFold.replace("{name}", title),
+        label: fill(t.floatingFold, { name: title }),
         run: () => up({ kind: "fold" }),
       },
       "separator",
       {
-        label: t.floatingClose.replace("{name}", title),
+        label: fill(t.floatingClose, { name: title }),
         run: () => up({ kind: "close" }),
       },
     ]);

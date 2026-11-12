@@ -1,3 +1,4 @@
+import { fill } from "../../i18n/fill";
 import { useState } from "react";
 import { ai, type MemoryScope } from "../../platform/ipc";
 import { useSettings } from "../../prefs/SettingsContext";
@@ -132,7 +133,7 @@ export function MemoryChip({
   // short while where it is kept stays in view.
   const template = result.forgot ? labels.memoryForgot : labels.memorySaved;
   const [before, after = ""] = template.split("{text}");
-  const scope = after.replace("{scope}", scopeLabel);
+  const scope = fill(after, { scope: scopeLabel });
   const line = before + what + scope;
   return (
     <div
@@ -151,7 +152,7 @@ export function MemoryChip({
           focusMemory(current.id);
         }}
       >
-        <span className="agent-memory-chip-text">
+        <span className="tx-clamp agent-memory-chip-text">
           {before}
           {what}
         </span>

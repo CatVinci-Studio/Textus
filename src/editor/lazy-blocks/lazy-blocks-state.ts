@@ -18,7 +18,7 @@ import { drawsLazily, keepsDrawingLazily } from "../large-doc";
 // the blocks near the screen get DOM; every other one is a placeholder of
 // its height. This module only decides which; the view draws them.
 
-export interface LazyBlocksState {
+interface LazyBlocksState {
   /** Off for documents below the threshold: every block drawn, as before. */
   active: boolean;
   /** The top-level blocks drawn in full, each a node decoration; while

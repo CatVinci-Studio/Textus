@@ -1,0 +1,100 @@
+/*
+ * The parts every pane is made of (design-language.md, panes) - a
+ * sidebar panel, a list beside a page (Settings' pages, Providers), a
+ * plugin's list - one definition each, so no two panes differ:
+ *
+ * - its name on the window bar's line, its search (if it finds things) on
+ *   the second row;
+ * - a list item: one size of text, one padding, one hover and one
+ *   selection, whatever the list holds.
+ *
+ * A page beside such a list doesn't repeat the name the list has picked.
+ */
+:root {
+  /* The text of lists and their tops: the sidebar's own (Files, Outline). */
+  --pane-text: var(--text-body);
+}
+
+.tx-search-expanded {
+  display: flex;
+  flex: 1;
+  min-width: 0;
+}
+
+/* In a section's heading the field stays a field's width. */
+.settings-group-actions > .tx-search-expanded {
+  flex: 0 1 220px;
+}
+
+.tx-pane-title {
+  margin: 0;
+  overflow: hidden;
+  white-space: nowrap;
+  text-overflow: ellipsis;
+  font-size: var(--pane-text);
+  font-weight: 600;
+  color: var(--ui-text);
+}
+
+/* A heading between a list's items: a day, a group. */
+.tx-list-heading {
+  color: var(--ui-muted);
+  font-size: var(--text-caption);
+  font-weight: 600;
+}
+
+/* Its place, which a list with its own rhythm sets instead. */
+:where(.tx-list-heading) {
+  margin: 12px var(--pane-row-inset) 4px;
+  padding: 0;
+}
+
+.tx-list-item {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  min-width: 0;
+  padding: 4px var(--pane-row-inset);
+  border: 0;
+  border-radius: var(--shape-s);
+  background: none;
+  color: var(--ui-text);
+  font: inherit;
+  font-size: var(--pane-text);
+  text-align: start;
+  cursor: default;
+}
+
+/* A tree row's step in (files, outline, plugin lists): a level at a time,
+   at most a third of the row, so a deep name keeps its room. */
+:is(.tree-row, .outline-row, .plugin-list-row) {
+  --tree-indent: min(calc(var(--depth, 0) * var(--tree-step)), 35%);
+}
+
+.tx-list-item:hover {
+  background: var(--ui-hover);
+}
+
+/* Picked: the selection's fill, the text as it was (as the outline's and
+   the file tree's), so it reads on any theme. */
+.tx-list-item:is([aria-current], [aria-selected="true"]) {
+  background: var(--ui-selected);
+  color: var(--ui-text);
+}
+
+/* A sidebar panel's second row - level with the islands' tops - holds
+   its search, and what acts on the panel beside it (⋯, add). Only a panel
+   that finds things has one. */
+/* A pane's first row (its search): its box from the body's edge, the
+   magnifier on the title's line as every row's first mark is. */
+.tx-pane-row {
+  display: flex;
+  align-items: center;
+  gap: 4px;
+  padding: 0 0 8px;
+}
+
+.tx-pane-row > .tx-search {
+  flex: 1;
+  margin: 0;
+}

@@ -1,53 +1,16 @@
 import type { Strings, TextKey } from "../i18n/strings";
-import { errorText } from "./error-text";
+import ERRORS_JSON from "../i18n/errors.json";
+import { errorCode, errorText } from "./error-text";
+
+const ERRORS = ERRORS_JSON as Record<string, { text: string | null }>;
 
 /**
- * Failures recognized in an error's text, said in the user's language. A
- * system's message (which Windows writes in its own language, the others in
- * English) stays below; Textus' own English is replaced, or dropped where
- * the caller's heading already says it all (`null`).
+ * A system's failures recognized in an error's text, said in the user's
+ * language; the system's message (which Windows writes in its own
+ * language, the others in English) stays below. Textus' own errors come
+ * with a code (i18n/errors.json).
  */
-const KINDS: { text: TextKey | null; pattern: RegExp; own?: true }[] = [
-  {
-    text: null,
-    pattern:
-      /^(PDF export (failed|ended without a result)|Failed to render PDF)/,
-    own: true,
-  },
-  { text: "errorTimeout", pattern: /^PDF export timed out/, own: true },
-  {
-    text: "errorFileTooBig",
-    pattern:
-      /^(The file is too big to open here|This Word document is too large to open)/,
-    own: true,
-  },
-  {
-    text: "errorNotDocument",
-    pattern: /^(It isn't a document Textus can read\.|Not a document)$/,
-    own: true,
-  },
-  { text: "errorBadName", pattern: /^Invalid (file )?name\.?$/, own: true },
-  {
-    text: "errorMoveIntoItself",
-    pattern: /^A folder can't move into itself/,
-    own: true,
-  },
-  {
-    text: "errorPluginTooBig",
-    pattern: /too large to install\.$|^The plugin is too big/,
-    own: true,
-  },
-  {
-    text: "errorCatalogNewer",
-    pattern: /^The plugin catalog is for a newer Textus/,
-    own: true,
-  },
-  {
-    text: "errorImageTooBig",
-    pattern: /^image is empty or exceeds the 25 MB limit/,
-    own: true,
-  },
-  { text: "errorNoFolder", pattern: /^No folder is open\.$/, own: true },
+const KINDS: { text: TextKey; pattern: RegExp }[] = [
   {
     text: "errorPermission",
     pattern:
@@ -88,9 +51,14 @@ const KINDS: { text: TextKey | null; pattern: RegExp; own?: true }[] = [
  *  system's own words below it when they add something. */
 export function explainError(err: unknown, t: Strings): string {
   const raw = errorText(err);
+  // Textus' own, by its code: said in full in the user's language, or left
+  // to the caller's heading.
+  const code = errorCode(raw);
+  if (code) {
+    const text = ERRORS[code]?.text;
+    return text ? (t[text as TextKey] as string) : "";
+  }
   const kind = KINDS.find((k) => k.pattern.test(raw));
   if (!kind) return raw;
-  const lead = kind.text ? t[kind.text] : "";
-  if (kind.own) return lead;
-  return `${lead}\n${raw}`;
+  return `${t[kind.text]}\n${raw}`;
 }

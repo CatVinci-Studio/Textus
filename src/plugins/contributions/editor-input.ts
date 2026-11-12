@@ -1,20 +1,16 @@
 import { Plugin } from "@milkdown/kit/prose/state";
 import { Decoration, DecorationSet } from "@milkdown/kit/prose/view";
 import { $prose } from "@milkdown/kit/utils";
-import { isMacPlatform } from "../../platform/os";
-import { keyName } from "./editor-keys";
-import { isImeKeydown } from "../../utils/ime";
 import { inputSourceIpc } from "../../platform/ipc-app";
 
 import {
   NO_FLASH,
   clearFlash,
-  held,
   inputKey,
   setCursorStyle,
   type InputState,
-  type KeyCapture,
 } from "./editor-input-state";
+import { captures, held, type KeyCapture } from "./key-holder";
 /**
  * A plugin that takes over the editor's keyboard (Vim, Emacs). A sandboxed
  * plugin can't answer a keydown in time, so the editor holds back the keys it
@@ -71,27 +67,6 @@ export function releaseKeys(plugin: string): void {
   setCursorStyle("bar");
   clearFlash();
   syncRomanInput();
-}
-
-function captures(event: KeyboardEvent, capture: KeyCapture): string | null {
-  if (isImeKeydown(event)) return null;
-  if (["Shift", "Control", "Alt", "Meta", "CapsLock"].includes(event.key))
-    return null;
-  const name = keyName(event);
-  if (capture.mode === "some") return capture.keys.includes(name) ? name : null;
-  // The app's shortcuts stay its own unless named: ⌘ on a Mac, Ctrl elsewhere.
-  const mod = isMacPlatform() ? event.metaKey : event.ctrlKey || event.metaKey;
-  if (mod && !capture.keys.includes(name)) return null;
-  return name;
-}
-
-/** Whether a plugin holds this key in the focused editor, so the window's
- *  shortcuts leave it alone (Emacs's C-/ is undo, not Toggle Source Mode). */
-export function heldByPlugin(event: KeyboardEvent): boolean {
-  const view = held.view;
-  if (!held.owner || !view || view.isDestroyed || !view.hasFocus())
-    return false;
-  return captures(event, held.owner.capture) !== null;
 }
 
 export const createEditorInputPlugin = () =>

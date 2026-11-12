@@ -79,12 +79,7 @@ fn save_targets(app: &tauri::AppHandle, list: &VecDeque<Target>) {
     let Some(path) = targets_file(app) else {
         return;
     };
-    if let Some(dir) = path.parent() {
-        let _ = std::fs::create_dir_all(dir);
-    }
-    if let Ok(json) = serde_json::to_vec(list) {
-        let _ = crate::atomic::write_sync(&path, json);
-    }
+    let _ = crate::json_file::save(&path, list);
 }
 
 fn now_ms() -> i64 {
@@ -188,7 +183,7 @@ fn open_target(app: &tauri::AppHandle, open: NotificationOpen) {
         .pending
         .lock()
         .unwrap_or_else(|e| e.into_inner()) = Some(open);
-    let window = crate::menu::focused_editor_window(app).and_then(|l| app.get_webview_window(&l));
+    let window = crate::menu::focused_editor_window(app).and_then(|l| app.get_window(&l));
     match window {
         Some(window) => {
             let _ = window.unminimize();

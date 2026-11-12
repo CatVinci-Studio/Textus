@@ -1,6 +1,10 @@
-import { pluginsSnapshot, windowInfo } from "../store/plugin-records";
+import {
+  pluginsSnapshot,
+  windowInfo,
+  runningPlugins,
+} from "../store/plugin-records";
 import { localize } from "../store/manifest";
-import { runCommand } from "../../app/commands";
+import { runCommand } from "../../registry/commands";
 import type {
   CompletionAnswer,
   CompletionContext,
@@ -37,7 +41,7 @@ export function setCompletionAsker(
 const ICON = /^[a-z-]{1,24}$/;
 
 /** What a plugin's item may hold; anything else is dropped. */
-export function pluginItem(plugin: string, value: unknown): PanelItem | null {
+function pluginItem(plugin: string, value: unknown): PanelItem | null {
   const v = value as Record<string, unknown> | null;
   if (!v || typeof v.label !== "string" || typeof v.insert !== "string")
     return null;
@@ -64,7 +68,7 @@ export function pluginItem(plugin: string, value: unknown): PanelItem | null {
 
 /** A plugin's answer as the panel takes it: a whole list, or what it
  *  filtered itself. */
-export function pluginAnswer(plugin: string, value: unknown): CompletionAnswer {
+function pluginAnswer(plugin: string, value: unknown): CompletionAnswer {
   const v = value as { items?: unknown; complete?: unknown } | null;
   const whole = !!v && !Array.isArray(v) && v.complete === true;
   const raw = whole ? v.items : value;
@@ -85,40 +89,29 @@ export function pluginCompletionSources(): readonly CompletionSource[] {
   const snapshot = pluginsSnapshot();
   if (snapshot === cachedFor) return cached;
   cachedFor = snapshot;
-  cached = !snapshot.allOn
-    ? []
-    : snapshot.records.flatMap((r) => {
-        const manifest = r.manifest;
-        if (
-          r.status !== "on" ||
-          !manifest ||
-          !r.granted.includes("editor.read")
-        )
-          return [];
-        return manifest.contributes.completions.map((c): CompletionSource => ({
-          id: c.id,
-          owner: r.id,
-          where: c.where,
-          // Anchored at the caret: what is typed last.
-          pattern: new RegExp(`(?:${c.pattern})$`, "u"),
-          title: () =>
-            localize(
-              manifest,
-              c.title ?? manifest.name,
-              windowInfo().language(),
-            ),
-          provide: (context, signal) => {
-            if (!ask) return null;
-            const request = nextRequest++;
-            signal.addEventListener("abort", () => cancel?.(r.id, request), {
-              once: true,
-            });
-            return ask(r.id, c.id, { ...context, request }).then(
-              (value) => pluginAnswer(r.id, value),
-              () => null,
-            );
-          },
-        }));
-      });
+  cached = runningPlugins(snapshot).flatMap((r) => {
+    const manifest = r.manifest;
+    if (!r.granted.includes("editor.read")) return [];
+    return manifest.contributes.completions.map((c): CompletionSource => ({
+      id: c.id,
+      owner: r.id,
+      where: c.where,
+      // Anchored at the caret: what is typed last.
+      pattern: new RegExp(`(?:${c.pattern})$`, "u"),
+      title: () =>
+        localize(manifest, c.title ?? manifest.name, windowInfo().language()),
+      provide: (context, signal) => {
+        if (!ask) return null;
+        const request = nextRequest++;
+        signal.addEventListener("abort", () => cancel?.(r.id, request), {
+          once: true,
+        });
+        return ask(r.id, c.id, { ...context, request }).then(
+          (value) => pluginAnswer(r.id, value),
+          () => null,
+        );
+      },
+    }));
+  });
   return cached;
 }

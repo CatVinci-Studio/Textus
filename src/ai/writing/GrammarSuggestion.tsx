@@ -1,8 +1,8 @@
 import { useMemo } from "react";
 import { GrammarPopover, applyLabel } from "./GrammarPopover";
 import type { useGrammarPopover } from "./useGrammarPopover";
-import { BottomCard } from "../../ui/BottomCard";
-import { Presence } from "../../ui/usePresence";
+import { BottomCard } from "../../engine/controls/BottomCard";
+import { Presence } from "../../engine/motion/usePresence";
 import type { Strings } from "../../i18n/strings";
 
 /** The suggestion for the grammar issue under the pointer or caret: a
@@ -38,7 +38,7 @@ export function GrammarSuggestion({
 
   return (
     <>
-      <Presence show={!!grammar.popover && phone} exitMs={250}>
+      <Presence show={!!grammar.popover && phone}>
         {grammar.popover && phone && (
           // A fix that no longer fits the text says so in the notice, the
           // card having closed on the tap.
@@ -82,7 +82,7 @@ export function GrammarSuggestion({
           </BottomCard>
         )}
       </Presence>
-      <Presence show={!!grammar.popover && !phone} exitMs={120}>
+      <Presence show={!!grammar.popover && !phone}>
         {grammar.popover && !phone && (
           <GrammarPopover
             info={grammar.popover}

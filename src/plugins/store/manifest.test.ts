@@ -1,13 +1,15 @@
 import { describe, expect, it } from "vitest";
+import { pluginString } from "../host/plugin-string";
+import CASES from "./manifest-cases.json";
 import {
   compareVersions,
   engineSatisfied,
   isPermission,
   localize,
   matchesFilename,
-  ManifestError,
   parseManifest,
 } from "./manifest";
+import { ManifestError } from "./manifest-parse";
 
 const base = {
   id: "catvinci.example",
@@ -84,6 +86,13 @@ describe("a plugin's manifest", () => {
     });
     expect(localize(zhOnly, "%hello%", "fr")).toBe("打个招呼");
     expect(localize(zhOnly, "%missing%", "fr")).toBe("missing");
+    // The frames get the lookup as source: it stands alone.
+    const inFrame = new Function(
+      `return ${pluginString.toString()}`,
+    )() as typeof pluginString;
+    expect(inFrame({ en: { n: "{0} of {1}" } }, "de", "n", [1, 2])).toBe(
+      "1 of 2",
+    );
   });
 
   it("refuses what would let a plugin take another's place or reach more", () => {
@@ -106,6 +115,16 @@ describe("a plugin's manifest", () => {
     expect(bad({ contributes: { menus: { "window/title": [] } } })).toThrow(
       /no menu/,
     );
+    // As the window compiles it, unicode: "\\-" would throw there and take
+    // every plugin's links down with it.
+    expect(
+      bad({
+        contributes: {
+          commands: [{ command: "catvinci.example.x", title: "x" }],
+          links: [{ pattern: "a\\-b", command: "catvinci.example.x" }],
+        },
+      }),
+    ).toThrow(/not a regular expression/);
     expect(bad({ engines: {} })).toThrow(/engines.textus/);
     expect(() => parseManifest("{nope")).toThrow(/not JSON/);
   });
@@ -338,6 +357,11 @@ describe("versions", () => {
     expect(compareVersions("1.3.0-beta.1", "1.3.0")).toBe(-1);
     expect(compareVersions("1.10.0", "1.9.9")).toBe(1);
     expect(compareVersions("1.3.0", "1.3.0")).toBe(0);
+    // Pre-release numbers count as numbers: rc.12 comes after rc.2.
+    expect(compareVersions("1.3.13-rc.12", "1.3.13-rc.2")).toBe(1);
+    expect(compareVersions("1.3.0-rc.1", "1.3.0-rc.beta")).toBe(-1);
+    expect(compareVersions("1.3.0-rc", "1.3.0-rc.1")).toBe(-1);
+    expect(engineSatisfied(">=1.3.13-rc.2", "1.3.13-rc.12")).toBe(true);
   });
 
   it("match a plugin's engine range, a beta counting as its release", () => {
@@ -410,5 +434,15 @@ describe("a plugin's floating views", () => {
     expect(() =>
       withViews([{ id: "catvinci.example.pet", title: "Pet", place: "dock" }]),
     ).toThrow(/"desktop", "window" or "either"/);
+  });
+});
+
+describe("the manifest cases Rust's check reads too", () => {
+  const manifest = (extra: object) => ({ ...CASES.base, ...extra });
+  it.each(CASES.valid)("takes %j", (extra) => {
+    expect(() => parseManifest(manifest(extra))).not.toThrow();
+  });
+  it.each(CASES.invalid)("refuses %j", (extra) => {
+    expect(() => parseManifest(manifest(extra))).toThrow();
   });
 });

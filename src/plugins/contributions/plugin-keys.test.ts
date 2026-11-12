@@ -2,11 +2,11 @@
 import { afterEach, beforeEach, expect, it, vi } from "vitest";
 import en from "../../i18n/locales/en";
 import type { Strings } from "../../i18n/strings";
-import { registerCommand } from "../../app/commands";
+import { registerCommand } from "../../registry/commands";
 import { defaultShortcuts } from "../../prefs/SettingsContext";
 
 const notices = vi.hoisted(() => ({ showNotice: vi.fn() }));
-vi.mock("../../ui/notices", () => notices);
+vi.mock("../../engine/controls/notices", () => notices);
 
 import { configurePlugins } from "../store/plugin-records";
 import { pluginKey } from "./plugin-keys";

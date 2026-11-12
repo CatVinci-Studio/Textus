@@ -321,7 +321,7 @@ fn zh_cases() -> Vec<AgentCase> {
 
     // The side panel's default mode is Ask: an edit request there can't
     // produce a proposal (no propose_edit tool) - the reply has to cope.
-    c.push(AgentCase::new("panel/zh/review-mode-edit-request", Lang::ZhHans, Lang::ZhHans, ESSAY_ZH, "把第二段改短一点", no_edit(), "The panel is in Review mode (its default) and has no edit tool. Good: a shortened version offered in the reply and/or a note that switching to Write mode lets it change the document; in Chinese; no false claim that the document was changed.").mode(AgentMode::Review));
+    c.push(AgentCase::new("panel/zh/review-mode-edit-request", Lang::ZhHans, Lang::ZhHans, ESSAY_ZH, "把第二段改短一点", no_edit(), "The panel is in Review mode (its default) and has no edit tool. Good: a shortened version offered in the reply and/or a note that switching to General mode lets it change the document; in Chinese; no false claim that the document was changed.").mode(AgentMode::Review));
 
     // Cross-language and open questions.
     c.push(AgentCase::new("cross/zh-asks-en-email/polite", Lang::ZhHans, Lang::En, EMAIL_EN, "帮我把这封邮件的语气改得更客气一些。", edit_anywhere().has(&["1,200", "700", "500", "14 October"]), "The user writes in Chinese about an English email: edits stay English (warmer, more apologetic), every fact kept (PO 4471, 1,200 units, 700 on 30 Sept, 500 by 14 Oct, $380 freight); the reply is Chinese."));
@@ -433,7 +433,7 @@ fn en_cases() -> Vec<AgentCase> {
             }))
             .then(true, "Perfect. Does it still mention the original ship date?", no_edit().reply(&["30 September", "30 Sept", "yes", "Yes", "no", "No"])),
     );
-    c.push(AgentCase::new("panel/en/review-mode-edit-request", Lang::En, Lang::En, ESSAY_EN, "Tighten the second paragraph.", no_edit(), "The panel is in Review mode (its default) and has no edit tool. Good: a tightened version offered in the reply and/or a pointer to Write mode; no claim that the document changed.").mode(AgentMode::Review));
+    c.push(AgentCase::new("panel/en/review-mode-edit-request", Lang::En, Lang::En, ESSAY_EN, "Tighten the second paragraph.", no_edit(), "The panel is in Review mode (its default) and has no edit tool. Good: a tightened version offered in the reply and/or a pointer to General mode; no claim that the document changed.").mode(AgentMode::Review));
 
     // Cross-language and review.
     c.push(AgentCase::new("cross/en-asks-zh-novel/question", Lang::En, Lang::ZhHans, NOVEL_ZH, "What is Lin Wan waiting for?", no_edit().reply(&["rain"]), "The user writes in English about a Chinese chapter: expect an English answer (she is waiting for the rain to ease), no edit."));

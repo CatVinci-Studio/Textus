@@ -1,18 +1,29 @@
+import { Segmented } from "../engine/controls/Segmented";
+import { splitFrontmatter } from "../utils/frontmatter";
+import { fill } from "../i18n/fill";
 import { useCallback, useEffect, useRef, useState } from "react";
 import { useSettings } from "../prefs/SettingsContext";
 import { localeOf, plural } from "../i18n/strings";
-import { ContextMenu, type ContextMenuItem } from "../ui/ContextMenu";
-import { showConfirm, showMessage, showPrompt } from "../ui/app-dialog";
+import {
+  ContextMenu,
+  type ContextMenuItem,
+} from "../engine/controls/ContextMenu";
+import { useMenuButton } from "../engine/controls/useMenuButton";
+import {
+  showConfirm,
+  showMessage,
+  showPrompt,
+} from "../engine/controls/app-dialog";
 import {
   CloseIcon,
   FolderOpenIcon,
   GridViewIcon,
   ListViewIcon,
   MoreIcon,
-} from "../ui/icons";
-import { Presence, usePresenceProps } from "../ui/usePresence";
-import { animate } from "../ui/motion";
-import { ListMotion } from "../ui/flip";
+} from "../engine/controls/icons";
+import { Presence, usePresenceProps } from "../engine/motion/usePresence";
+import { animate } from "../engine/motion/motion";
+import { ListMotion } from "../engine/motion/flip";
 import { fs } from "../platform/ipc";
 import { getUiState, setUiState } from "../storage/ui-state";
 import { basename, dirname } from "../utils/path";
@@ -49,9 +60,8 @@ function loadView(): View {
 /** The first lines of a Markdown document with its syntax mostly gone -
  *  enough to recognise it by, not a rendering. */
 export function previewText(markdown: string): string {
-  return markdown
-    .replace(/^---\n[\s\S]*?\n---\n/, "")
-    .split("\n")
+  return splitFrontmatter(markdown)
+    .body.split("\n")
     .slice(0, 24)
     .map((line) =>
       line
@@ -67,7 +77,7 @@ export function previewText(markdown: string): string {
     .slice(0, 600);
 }
 
-export interface DocumentListProps {
+interface DocumentListProps {
   activePath: string | null;
   onClose: () => void;
   onOpen: (path: string) => void;
@@ -171,7 +181,7 @@ export function DocumentList({
     const name = await showPrompt(t.docRenamePrompt, basename(entry.path), {
       title: t.docRename,
       okLabel: t.docRenameOk,
-      cancelLabel: t.closePromptCancel,
+      cancelLabel: t.cancel,
     });
     if (!name || name === basename(entry.path)) return;
     try {
@@ -185,12 +195,12 @@ export function DocumentList({
 
   async function remove(entry: Entry) {
     const ok = await showConfirm(
-      t.docDeleteConfirm.replace("{name}", basename(entry.path)),
+      fill(t.docDeleteConfirm, { name: basename(entry.path) }),
       {
         title: t.docDelete,
         tone: "warning",
         okLabel: t.docDeleteOk,
-        cancelLabel: t.closePromptCancel,
+        cancelLabel: t.cancel,
         danger: true,
       },
     );
@@ -261,26 +271,17 @@ export function DocumentList({
             ? plural(t.docCount, entries.length, settings.language)
             : ""}
         </span>
-        <div className="document-list-views" role="radiogroup" data-view={view}>
-          {(
-            [
-              ["list", t.docViewList, <ListViewIcon key="l" />],
-              ["grid", t.docViewGrid, <GridViewIcon key="g" />],
-            ] as const
-          ).map(([v, label, icon]) => (
-            <button
-              key={v}
-              type="button"
-              role="radio"
-              aria-checked={view === v}
-              aria-label={label}
-              className="document-list-view-button"
-              onClick={() => switchView(v)}
-            >
-              {icon}
-            </button>
-          ))}
-        </div>
+        <Segmented
+          kind="choice"
+          equal
+          label={t.menuView}
+          value={view}
+          onChange={switchView}
+          options={[
+            { id: "list", label: t.docViewList, icon: <ListViewIcon /> },
+            { id: "grid", label: t.docViewGrid, icon: <GridViewIcon /> },
+          ]}
+        />
       </div>
       <div ref={bodyRef} className={`document-list-body document-list-${view}`}>
         {/* A deleted document fades out where it was while the rest move
@@ -293,7 +294,7 @@ export function DocumentList({
           ghostsUnder={false}
         />
         {entries !== null && entries.length === 0 && (
-          <p className="document-list-empty">{t.docListEmpty}</p>
+          <p className="tx-empty">{t.docListEmpty}</p>
         )}
         {entries?.map((entry) => (
           <DocumentItem
@@ -344,9 +345,9 @@ function DocumentItem({
   moreLabel: string;
 }) {
   const press = useLongPress();
-  const [menuAt, setMenuAt] = useState<{ x: number; y: number } | null>(null);
-  const at = menuAt ?? press.at;
   const name = basename(entry.path);
+  const more = useMenuButton(actions, { title: name });
+  const at = press.at;
   const page = (
     <span className="document-page" aria-hidden>
       <span className="document-page-text">{entry.preview}</span>
@@ -378,25 +379,20 @@ function DocumentItem({
           type="button"
           className="document-list-icon-button"
           aria-label={moreLabel}
-          onClick={(e) => {
-            const r = e.currentTarget.getBoundingClientRect();
-            setMenuAt({ x: r.left, y: r.bottom });
-          }}
+          {...more.button}
         >
           <MoreIcon />
         </button>
       )}
-      <Presence show={!!at} exitMs={250}>
+      {more.menu}
+      <Presence show={!!at}>
         {at && (
           <ContextMenu
             x={at.x}
             y={at.y}
             title={name}
             items={actions()}
-            onClose={() => {
-              setMenuAt(null);
-              press.close();
-            }}
+            onClose={press.close}
           />
         )}
       </Presence>

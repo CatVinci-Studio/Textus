@@ -40,20 +40,14 @@ export function EditorMarginLayer({
     isActive &&
     !reviewBarShown &&
     !quickAskVisible &&
-    !(phone && chat.panelContainer) &&
+    !(phone && chat.panelShown) &&
     changes.length > 0
       ? {
-          stops: changes.length,
+          froms: changes.map((c) => c.from),
           position,
-          step: (by) => {
-            const next =
-              position < 0
-                ? by > 0
-                  ? 0
-                  : changes.length - 1
-                : (position + by + changes.length) % changes.length;
-            setStepped(next);
-            notes.selectCard(ownKey(next));
+          pointAt: (i) => {
+            setStepped(i);
+            notes.selectCard(ownKey(i));
           },
           acceptAll: notes.revisions.acceptAll,
           rejectAll: notes.revisions.rejectAll,
@@ -101,7 +95,7 @@ export function EditorMarginLayer({
         noMargin={notes.noMargin}
         pendingEdits={pendingEdits}
         notes={notes.bar}
-        stepReview={review.stepReview}
+        revealProposal={review.revealProposal}
         onOpenChat={() => agentPanel.setOpen(true)}
         own={own}
       />
@@ -112,7 +106,7 @@ export function EditorMarginLayer({
         !own &&
         pendingEdits.reviewed.length === 0 &&
         !quickAskVisible &&
-        !(phone && chat.panelContainer) &&
+        !(phone && chat.panelShown) &&
         createPortal(
           <RevisionLearningBar
             learning={chat.learning}

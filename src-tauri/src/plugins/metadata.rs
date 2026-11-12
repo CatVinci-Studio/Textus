@@ -2,7 +2,7 @@
 //! matter, headings, links, tags and tasks, re-read only when a file's size or
 //! time changes. Built on the first request. Lines count from 0.
 
-use super::access::{inside, refused, require_not_app_data};
+use super::access::{in_folder, refused, require_not_app_data};
 use super::state;
 use crate::ai::doc_blocks::Document as DocBlocks;
 use regex::Regex;
@@ -11,8 +11,7 @@ use std::collections::{HashMap, HashSet};
 use std::path::Path;
 use std::sync::{Arc, Mutex, OnceLock};
 
-/// A document larger than this is left out of the index: no note is.
-const MAX_DOCUMENT_BYTES: u64 = 4 * 1024 * 1024;
+use super::workspace::MAX_DOCUMENT_BYTES;
 
 #[derive(Serialize, Clone, Debug, PartialEq)]
 #[cfg_attr(test, derive(specta::Type))]
@@ -115,18 +114,9 @@ fn without_comments(line: &str, open: &mut bool) -> String {
 
 /// The front matter's YAML and the line the rest starts on.
 fn front_matter(text: &str) -> (Option<String>, usize) {
-    let mut lines = text.split('\n');
-    if lines.next().map(|l| l.trim_end()) != Some("---") {
-        return (None, 0);
-    }
-    let mut yaml = Vec::new();
-    for (i, line) in lines.enumerate() {
-        if line.trim_end() == "---" {
-            return (Some(yaml.join("\n")), i + 2);
-        }
-        yaml.push(line.trim_end_matches('\r'));
-    }
-    (None, 0)
+    crate::frontmatter::split(text)
+        .map(|front| (Some(front.yaml()), front.body_line))
+        .unwrap_or((None, 0))
 }
 
 fn tags_in(text: &str) -> Vec<String> {
@@ -298,16 +288,9 @@ fn modified_of(meta: &std::fs::Metadata) -> Option<u128> {
         .map(|d| d.as_millis())
 }
 
-fn is_markdown(path: &Path) -> bool {
-    matches!(
-        crate::extract::extension_of(path).as_str(),
-        "md" | "markdown"
-    )
-}
-
 /// Brings `root`'s index up to date: the paths added, changed or gone.
 fn refresh(index: &MetadataIndex, root: &Path) -> Vec<String> {
-    let walk = crate::walk::walk(root, &crate::walk::LIMITS, is_markdown);
+    let walk = crate::walk::walk(root, &crate::walk::LIMITS, crate::extract::is_markdown);
     let key = root.to_string_lossy().to_string();
     let mut all = index.0.lock().unwrap_or_else(|e| e.into_inner());
     let known = all.entry(key).or_default();
@@ -360,7 +343,7 @@ fn checked_root(app: &tauri::AppHandle, id: &str, root: &str) -> Result<(), Stri
         return Err(refused(id, "files.read"));
     }
     if root.is_empty() || !Path::new(root).is_dir() {
-        return Err("No folder is open.".to_string());
+        return Err(crate::errors::error("noFolder"));
     }
     require_not_app_data(app, Path::new(root))
 }
@@ -408,7 +391,7 @@ pub async fn plugin_metadata_get(
     path: String,
 ) -> Result<Option<DocumentMeta>, String> {
     checked_root(&app, &id, &root)?;
-    let file = inside(Path::new(&root), Path::new(&path))?;
+    let file = in_folder(Path::new(&root), Path::new(&path))?;
     let Ok(text) = tokio::fs::read_to_string(&file).await else {
         return Ok(None);
     };

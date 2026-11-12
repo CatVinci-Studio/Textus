@@ -52,8 +52,7 @@ pub(crate) fn without_memory_turns(history: Vec<AgentTurn>) -> Vec<AgentTurn> {
 /// The name a memory chip's turns go by.
 pub(crate) const MEMORY_TURN: &str = "remember";
 
-/// The name a paper card's turns go by. Keep in step with the frontend's
-/// `PAPER_TURN`.
+/// The name a paper card's turns go by.
 pub(crate) const PAPER_TURN: &str = "write_paper";
 
 /// Shrinks the replayed conversation to what a writing agent still needs;
@@ -135,4 +134,36 @@ pub(crate) fn compact_history(history: Vec<AgentTurn>) -> Vec<AgentTurn> {
     }
     turns.drain(..cut);
     turns
+}
+
+/// A turn as the frontend keeps it: a tool result without the images it
+/// showed the model, which would grow the saved history by megabytes.
+pub(super) fn for_history(turn: AgentTurn) -> AgentTurn {
+    match turn {
+        // The step's reasoning was for this exchange's own requests: no
+        // provider wants it back in a later one, and it never shows.
+        AgentTurn::ToolCall {
+            call_id,
+            name,
+            arguments,
+            reasoning: Some(_),
+        } => AgentTurn::ToolCall {
+            call_id,
+            name,
+            arguments,
+            reasoning: None,
+        },
+        AgentTurn::ToolResult {
+            call_id,
+            output,
+            images,
+        } if !images.is_empty() => AgentTurn::ToolResult {
+            call_id,
+            output: format!(
+                "{output}\n[The image was shown for that request only - call read_file again to look at it.]"
+            ),
+            images: Vec::new(),
+        },
+        turn => turn,
+    }
 }

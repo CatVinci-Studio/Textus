@@ -2,7 +2,7 @@ import { describe, expect, it } from "vitest";
 import { LANGS } from "../../../i18n/langs";
 import { SKILL_TEXTS, skillText } from ".";
 import { BUILTIN_SKILLS } from "../builtin";
-import { fold } from "../../chat/skill-picker";
+import { searchFold as fold } from "../../../utils/search-fold";
 
 // The built-in skills' words in every UI language: what the `/` menu and
 // Settings show, and what people type after `/`.

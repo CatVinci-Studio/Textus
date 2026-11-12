@@ -9,7 +9,7 @@ import { windowInfo } from "../store/plugin-records";
  * with "/" - the core's `textus.slash` source of the / panel. Taking one
  * removes what was typed and runs the command.
  */
-export interface SlashItem {
+interface SlashItem {
   label: string;
   /** Whose it is, beside the label. */
   detail: string;

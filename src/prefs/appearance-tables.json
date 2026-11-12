@@ -1,0 +1,27 @@
+{
+  "langs": ["en", "zh", "zh-Hant", "ja", "ko", "es", "fr", "de", "ru", "pt"],
+  "langNames": {
+    "en": "English",
+    "zh": "简体中文",
+    "zh-Hant": "繁體中文",
+    "ja": "日本語",
+    "ko": "한국어",
+    "es": "Español",
+    "fr": "Français",
+    "de": "Deutsch",
+    "ru": "Русский",
+    "pt": "Português"
+  },
+  "locales": {
+    "zh": "zh-CN",
+    "zh-Hant": "zh-TW"
+  },
+  "uiTextScales": [0.9, 1, 1.1, 1.25],
+  "docLineHeights": {
+    "compact": 1.55,
+    "standard": 1.8,
+    "relaxed": 2.05
+  },
+  "contentThemes": ["paper", "slate", "forest"],
+  "contentWidths": ["standard", "full"]
+}

@@ -1,0 +1,430 @@
+/* The chat's context passage while the composer is focused: an accent tint
+   per line, in a layer over the text so backgrounds of code and cells tint too. */
+.chat-selection-layer {
+  position: absolute;
+  top: 0;
+  left: 0;
+  pointer-events: none;
+}
+
+.chat-selection {
+  position: absolute;
+  background: color-mix(in srgb, var(--doc-accent) 20%, transparent);
+  transition: background-color var(--dur-fast) var(--ease-out);
+}
+
+.chat-selection:first-child {
+  border-top-left-radius: var(--doc-radius-sm);
+  border-top-right-radius: var(--doc-radius-sm);
+}
+
+.chat-selection:last-child {
+  border-bottom-left-radius: var(--doc-radius-sm);
+  border-bottom-right-radius: var(--doc-radius-sm);
+}
+
+.chat-selection-layer.is-hot .chat-selection {
+  background: color-mix(in srgb, var(--doc-accent) 34%, transparent);
+}
+
+.empty-doc-placeholder::before {
+  position: absolute;
+  color: var(--doc-muted);
+  opacity: 0.65;
+  pointer-events: none;
+  height: 0;
+  content: attr(data-placeholder);
+}
+
+.grammar-issue {
+  text-decoration: underline wavy var(--ui-danger);
+  text-underline-offset: 3px;
+  cursor: pointer;
+}
+
+.frontmatter-block {
+  margin: 0 0 var(--doc-gap-box);
+  padding: 0.7em 1em;
+  border: 1px solid var(--doc-border);
+  border-radius: var(--doc-radius);
+  background: var(--doc-code-bg);
+  color: var(--doc-muted);
+  font-family: var(--font-mono);
+  font-size: 0.85em;
+  line-height: 1.6;
+  white-space: pre-wrap;
+}
+
+.mermaid-source-hidden {
+  display: none;
+}
+
+.raw-html-source {
+  color: var(--doc-muted);
+  font-family: var(--font-mono);
+  font-size: 0.85em;
+  white-space: pre-wrap;
+}
+
+.raw-html-source-hidden {
+  display: none;
+}
+
+/* Obsidian embeds: the source, quiet like raw HTML's. */
+.obsidian-embed-source {
+  color: var(--doc-muted);
+}
+
+.obsidian-embed-source-hidden {
+  display: none;
+}
+
+/* A reference link's definition, `[ref]: url`: quiet source. */
+.link-definition-source {
+  color: var(--doc-muted);
+  font-family: var(--font-mono);
+  font-size: 0.85em;
+}
+
+/* A link: its Markdown syntax hidden while the caret is away, muted while
+   it shows. */
+.link-source-hidden {
+  display: none;
+}
+
+.link-source-syntax {
+  color: var(--doc-muted);
+}
+
+/* `%20` in a link's destination, drawn as the space it stands for. */
+.link-source .link-source-decoded {
+  color: var(--doc-muted);
+}
+
+/* An image in a link's text, drawn while its source is hidden. */
+.link-image {
+  max-width: 100%;
+  vertical-align: middle;
+}
+
+/* `:smile:` drawn as its emoji; the caret on it shows the source. */
+.md-emoji-source {
+  display: none;
+}
+
+/* `[TOC]`: the headings as links, indented by level. */
+.md-toc {
+  margin: 0 0 var(--doc-gap-box);
+  padding: 0.5em 1em;
+  border-left: 2px solid var(--doc-border);
+  cursor: default;
+}
+
+.md-toc-item {
+  margin: 0.15em 0;
+  padding-inline-start: calc(var(--md-toc-depth, 0) * 1.25em);
+}
+
+.md-toc-item a {
+  color: var(--doc-accent-text);
+  text-decoration: none;
+  cursor: pointer;
+}
+
+.md-toc-item a:hover {
+  text-decoration: underline;
+}
+
+.md-toc-empty {
+  margin: 0;
+  color: var(--doc-muted);
+}
+
+.md-toc.ProseMirror-selectednode {
+  outline: 2px solid var(--doc-accent);
+  outline-offset: 2px;
+}
+
+/* An Obsidian wikilink: its source in the link colour. */
+.wikilink {
+  color: var(--doc-accent-text);
+}
+
+.wikilink-source-hidden {
+  display: none;
+}
+
+/* A link to a note that doesn't exist yet: a click makes it. */
+.wikilink-missing {
+  color: var(--doc-muted);
+}
+
+/* A picture that won't load: a card in place of the broken-image icon. The
+   picture's own parts stay in the DOM for export and print. */
+@media screen {
+  .milkdown .image-view.image-missing > :not(.missing-image-card) {
+    display: none;
+  }
+}
+
+/* A width set for the picture would squeeze the card. */
+.milkdown .image-view.image-missing {
+  width: auto !important;
+  line-height: inherit;
+}
+
+.missing-image-card,
+.image-missing-name {
+  border: 1px dashed var(--doc-muted);
+  color: var(--doc-muted);
+}
+
+/* An embed's name, as an export shows a missing one. */
+.image-missing-name {
+  padding: 0 0.4em;
+  font-size: 0.9em;
+}
+
+.missing-image-card {
+  display: inline-flex;
+  flex-direction: column;
+  align-items: flex-start;
+  gap: 2px;
+  box-sizing: border-box;
+  max-width: 100%;
+  padding: 8px 12px;
+  border-radius: var(--doc-radius);
+  font-family: var(--font-sans);
+  font-size: var(--text-body);
+  font-weight: 400;
+  line-height: 1.45;
+  text-align: left;
+  white-space: normal;
+  overflow-wrap: anywhere;
+  vertical-align: middle;
+  cursor: default;
+}
+
+.missing-image-head {
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  color: var(--doc-text);
+  font-weight: 600;
+}
+
+.missing-image-icon {
+  display: inline-flex;
+  flex: none;
+  color: var(--doc-muted);
+}
+
+.missing-image-alt {
+  font-style: italic;
+}
+
+.missing-image-reason {
+  font-size: var(--text-footnote);
+}
+
+.missing-image-actions {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+  margin-top: 8px;
+}
+
+.missing-image-actions button {
+  color: var(--doc-text);
+}
+
+/* An HTML comment while the caret is away. */
+.raw-html-source:has(> .raw-html-comment) {
+  font-family: inherit;
+  font-size: 0.92em;
+  font-style: italic;
+}
+
+.raw-html-rendered {
+  cursor: pointer;
+  /* Undo the root's pre-wrap, so HTML source whitespace collapses as in a browser. */
+  white-space: normal;
+}
+
+/* Markdown inside <div align="center"> and its kin, as GitHub aligns it. */
+.milkdown .html-align-center {
+  text-align: center;
+}
+.milkdown .html-align-right {
+  text-align: right;
+}
+/* The tag lines themselves, as on GitHub: out of sight until the caret is
+   on one. */
+.milkdown p.html-align-tag {
+  height: 0;
+  margin: 0;
+  overflow: hidden;
+}
+
+/* A README's <picture> of a light and a dark logo: Textus's theme picks
+   (an explicit one, else the system's), not the browser's own scheme.
+   Hidden with !important: image rules elsewhere set their display. */
+:root[data-theme="light"] img[data-scheme="dark"],
+:root[data-theme="dark"] img[data-scheme="light"] {
+  display: none !important;
+}
+@media (prefers-color-scheme: light) {
+  :root:not([data-theme]) img[data-scheme="dark"] {
+    display: none !important;
+  }
+}
+@media (prefers-color-scheme: dark) {
+  :root:not([data-theme]) img[data-scheme="light"] {
+    display: none !important;
+  }
+}
+
+/* A definition list's terms stand out from what they define, as on GitHub. */
+.milkdown .raw-html-rendered dt {
+  font-weight: 600;
+}
+
+/* Its words take a text cursor: a click there edits them in place. */
+.raw-html-edit-box {
+  cursor: text;
+  outline: none;
+}
+
+/* An HTML fragment with no block-level tags flows inline, like GitHub. */
+.raw-html-rendered-inline {
+  display: inline;
+}
+
+/* An inline-HTML <img> flows with its line (badge rows rely on it). */
+.milkdown .raw-html-rendered-inline img {
+  display: inline-block;
+  margin: 0;
+  vertical-align: text-bottom;
+  border-radius: 0;
+  box-shadow: none;
+}
+
+/* <details>: the body below the head folds by hiding it, and the closing
+   "</details>" line hides while the caret is away. */
+/* ProseMirror's caret helpers after a block widget add an empty line;
+   prosemirror.css shows the separator with !important, hence this one. */
+.milkdown
+  p:has(> .raw-html-rendered:not(.raw-html-rendered-inline))
+  > :is(br.ProseMirror-trailingBreak, img.ProseMirror-separator) {
+  display: none !important;
+}
+
+/* As wide as its text: the rest of the row edits the source on click. */
+.milkdown .raw-html-rendered summary {
+  width: fit-content;
+  cursor: pointer;
+}
+
+.raw-html-details-end,
+.raw-html-details-folded {
+  display: none;
+}
+
+/* Stand-ins for PAIRED inline tags: "<b>" and "</b>" are separate nodes, so
+   decorations mimic each tag's effect on the text between. */
+.rhtml-b {
+  font-weight: 600;
+}
+.rhtml-i {
+  font-style: italic;
+}
+.rhtml-u {
+  text-decoration: underline;
+}
+.rhtml-s {
+  text-decoration: line-through;
+}
+.rhtml-sub {
+  vertical-align: sub;
+  font-size: 0.8em;
+}
+.rhtml-sup {
+  vertical-align: super;
+  font-size: 0.8em;
+}
+.rhtml-mark {
+  background: var(--doc-highlight-bg, #fff8c5);
+  border-radius: var(--doc-radius-sm);
+}
+.rhtml-small {
+  font-size: 0.85em;
+}
+.rhtml-a {
+  color: var(--doc-accent-text);
+  text-decoration: underline;
+}
+.rhtml-code,
+.rhtml-kbd {
+  font-family: var(--code-font, var(--font-mono));
+  font-size: 0.85em;
+  background: var(--doc-code-bg);
+  border-radius: var(--doc-radius-sm);
+  padding: 0.1em 0.35em;
+}
+.rhtml-kbd {
+  border: 1px solid var(--ui-border);
+  border-bottom-width: 2px;
+}
+
+.mermaid-preview {
+  cursor: pointer;
+  margin: var(--doc-gap-box) 0;
+  padding: 1.1em;
+  border: 1px solid var(--doc-border);
+  border-radius: var(--doc-radius);
+  background: var(--doc-code-bg);
+  overflow-x: auto;
+  display: flex;
+}
+
+/* Centred by its margins, which a diagram wider than the box drops, so it
+   scrolls from its left edge instead of being cut off there. */
+.mermaid-preview svg {
+  max-width: 100%;
+  margin-inline: auto;
+}
+
+/* A diagram in proposed text: a green box; its source until drawn. */
+.pending-insert .pending-diagram {
+  cursor: default;
+  white-space: pre-wrap;
+  background: var(--revision-insert-bg);
+}
+.pending-insert .pending-diagram:not(.pending-diagram-drawn) {
+  justify-content: flex-start;
+}
+.ProseMirror[data-revision-display="final"] .pending-insert .pending-diagram {
+  background: var(--doc-code-bg);
+}
+
+/* The parts a growing diagram just gained. */
+.pending-diagram .diagram-part-enter {
+  animation: motion-fade-in var(--dur-base) var(--ease-out) both;
+}
+
+/* Pele diagrams take every colour from these, so they follow the theme
+   without a redraw. --pele-bg cuts edge labels out of the lines. */
+.mermaid-preview {
+  --pele-bg: var(--doc-code-bg);
+  --pele-fg: currentColor;
+  --pele-muted: color-mix(in srgb, currentColor 62%, var(--pele-bg));
+  --pele-line: color-mix(in srgb, currentColor 78%, var(--pele-bg));
+  --pele-surface: color-mix(in srgb, currentColor 6%, var(--pele-bg));
+  --pele-surface-alt: color-mix(in srgb, currentColor 11%, var(--pele-bg));
+  --pele-border: color-mix(in srgb, currentColor 38%, var(--pele-bg));
+  --pele-accent: var(--doc-accent);
+  --pele-critical: var(--ui-danger);
+  --pele-error: var(--ui-danger);
+  --pele-font-mono: var(--font-mono);
+  --pele-radius: var(--doc-radius-sm);
+}

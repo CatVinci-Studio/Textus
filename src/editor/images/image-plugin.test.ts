@@ -1,9 +1,6 @@
 import { describe, expect, it, vi } from "vitest";
-import {
-  imageStemForMode,
-  resolveImageSrc,
-  safeImageStem,
-} from "./image-plugin";
+import { resolveImageSrc } from "./image-plugin";
+import { imageStemForMode, safeImageStem } from "./image-store";
 
 // Tauri's own convertFileSrc percent-encodes the whole path the same way.
 vi.mock("@tauri-apps/api/core", async (importOriginal) => ({
@@ -60,7 +57,7 @@ describe("local image paths (#135)", () => {
     ).toBe("/home/a/笔记/图片 1/封 面.png");
     expect(
       pathOf(resolveImageSrc("../assets/a b.png", "/home/a/n/doc.md")),
-    ).toBe("/home/a/n/../assets/a b.png");
+    ).toBe("/home/a/assets/a b.png");
   });
 
   it("keeps a path whose % is not an escape instead of throwing", () => {
@@ -75,10 +72,10 @@ describe("local image paths (#135)", () => {
   it("resolves against a Windows document's folder", () => {
     const doc = "C:\\Users\\a\\My Notes\\doc.md";
     expect(pathOf(resolveImageSrc("img%20one.png", doc))).toBe(
-      "C:\\Users\\a\\My Notes/img one.png",
+      "C:\\Users\\a\\My Notes\\img one.png",
     );
     expect(pathOf(resolveImageSrc("..\\图片\\a%20b.png", doc))).toBe(
-      "C:\\Users\\a\\My Notes/..\\图片\\a b.png",
+      "C:\\Users\\a\\图片\\a b.png",
     );
     expect(pathOf(resolveImageSrc("C:\\pics\\my%20pic.png", null))).toBe(
       "C:\\pics\\my pic.png",

@@ -10,18 +10,15 @@ export const LOCAL_KEYS = {
   /** The settings blob from before settings.json: the settings store without
    *  Rust, and what the one-time import reads. */
   settings: "catvinci-settings",
-  /** Deep thinking left on in the composer. */
-  deepThinking: "textus-agent-deep-thinking",
-  /** The Agent mode last picked, with the default it was picked under. */
-  lastMode: "textus-agent-last-mode",
   /** A provider's last fetched model list, by provider id. */
   fetchedModels: (provider: string) => `textus-fetched-models:${provider}`,
-  /** Where each file was last being read. */
-  readingPlaces: "textus-reading-places",
+  /** Before a folder's scope: its live conversation, its open ones. */
+  liveConversation: "textus-ai-live:",
+  openConversations: "textus-ai-open:",
 } as const;
 
 /** The value under `key`, or null when it is absent or can't be read. */
-export function readLocal(key: string): string | null {
+function readLocal(key: string): string | null {
   try {
     return localStorage.getItem(key);
   } catch {
@@ -46,13 +43,5 @@ export function writeLocal(key: string, value: string): void {
     localStorage.setItem(key, value);
   } catch {
     // Storage unavailable: the value just isn't remembered.
-  }
-}
-
-export function removeLocal(key: string): void {
-  try {
-    localStorage.removeItem(key);
-  } catch {
-    // Storage unavailable: nothing was kept to remove.
   }
 }

@@ -1,3 +1,4 @@
+import { fill } from "../i18n/fill";
 import type { Strings } from "../i18n/strings";
 import { openedText } from "./tracked-file";
 import { basename } from "../utils/path";
@@ -80,10 +81,38 @@ export function helpDocContent(doc: HelpDoc, lang: string): Promise<string> {
   ).load();
 }
 
+/** A page tab's name from what it shows now (Settings: its page), given
+ *  by the layer that knows the page. */
+type PageTitle = (state: unknown, t: Strings) => string | null;
+const pageTitles = new Map<string, PageTitle>();
+
+export function namePageTabs(view: string, title: PageTitle): void {
+  pageTitles.set(view, title);
+}
+
 // A tab's display name everywhere one is shown.
+/** What a tab's name leaves out, on hover: an AI tab's conversation. */
+export function tabTip(tab: DocTab, t: Strings): string | undefined {
+  if (tab.view?.kind === "page" && tab.view.view === "ai")
+    return tab.view.title ?? t.chatNewConversation;
+  return undefined;
+}
+
 export function tabTitle(tab: DocTab, t: Strings): string {
   if (tab.path) return basename(tab.path);
   if (showsStartPage(tab)) return t.startPageTab;
+  // Textus's own pages, named in the window's language.
+  if (tab.view?.kind === "page")
+    return tab.view.view === "settings"
+      ? (pageTitles.get("settings")?.(tab.view.state, t) ?? t.settingsTitle)
+      : tab.view.view === "create"
+        ? t.extensionsTabCreate
+        : tab.view.view === "ai"
+          ? t.agentPanelTitle
+          : tab.view.title
+            ? // Told apart from a tab the plugin opens itself, of the same name.
+              fill(t.pluginPageTab, { name: tab.view.title })
+            : t.extensionsTabPlugins;
   if (tab.view)
     return (
       tab.view.title ??

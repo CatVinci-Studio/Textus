@@ -28,7 +28,7 @@ export interface SourceBlocks {
 
 /** A parse that knows which top-level blocks each child of the mdast root
  *  became, and where in the text that child was. */
-export interface BlockParse {
+interface BlockParse {
   text: string;
   doc: ProseNode;
   /** Per root child: its offsets (null without a position) and blocks. */
@@ -86,7 +86,7 @@ export interface SaveMemo {
   joins: WeakMap<ProseNode, WeakMap<ProseNode, JoinCheck>>;
 }
 
-export interface Positioned {
+interface Positioned {
   position?: { start?: { offset?: number }; end?: { offset?: number } };
 }
 
