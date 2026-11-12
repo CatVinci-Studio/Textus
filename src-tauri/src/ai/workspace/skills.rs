@@ -141,7 +141,7 @@ pub(crate) fn read_layer(dir: &Path, source: SkillSource) -> (Option<String>, Ve
 /// Every skill file in a skills/ folder with its path, in file-name order;
 /// files with no instructions are skipped.
 pub(crate) fn read_skill_files(skills_dir: &Path) -> Vec<(PathBuf, AgentSkill)> {
-    crate::frontmatter::md_files(skills_dir)
+    crate::frontmatter::md_files(skills_dir, true)
         .into_iter()
         .filter_map(|path| {
             let stem = path.file_stem().and_then(|s| s.to_str())?.to_string();

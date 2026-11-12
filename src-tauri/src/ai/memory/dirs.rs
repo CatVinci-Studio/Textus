@@ -119,7 +119,7 @@ impl MemoryDirs {
         let Some(dir) = self.folder(scope, MEMORY_FOLDER) else {
             return Vec::new();
         };
-        let mut items: Vec<Memory> = crate::frontmatter::md_files(&dir)
+        let mut items: Vec<Memory> = crate::frontmatter::md_files(&dir, false)
             .into_iter()
             .filter_map(|path| {
                 let stem = path.file_stem()?.to_str()?.to_string();

@@ -116,7 +116,7 @@ impl MemoryDirs {
 /// The `.md` files in a `.forgotten/` folder with their mtimes (seconds),
 /// newest first.
 fn forgotten_files(dir: &Path) -> Vec<(PathBuf, u64)> {
-    let mut files: Vec<(PathBuf, u64)> = crate::frontmatter::md_files(dir)
+    let mut files: Vec<(PathBuf, u64)> = crate::frontmatter::md_files(dir, false)
         .into_iter()
         .map(|p| {
             let secs = std::fs::metadata(&p)

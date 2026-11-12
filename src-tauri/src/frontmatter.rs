@@ -67,17 +67,45 @@ mod tests {
 }
 
 /// The `.md` files in `dir` (files only, no folder named so), in file-name
-/// order; none when it can't be read.
-pub(crate) fn md_files(dir: &std::path::Path) -> Vec<std::path::PathBuf> {
+/// order; none when it can't be read. `links`: a link to a file counts too
+/// (a skill kept in a dotfiles repo); memory folders take none.
+pub(crate) fn md_files(dir: &std::path::Path, links: bool) -> Vec<std::path::PathBuf> {
     let Ok(entries) = std::fs::read_dir(dir) else {
         return Vec::new();
     };
     let mut paths: Vec<_> = entries
         .flatten()
-        .filter(|e| e.file_type().is_ok_and(|t| t.is_file()))
+        .filter(|e| {
+            if links {
+                e.path().is_file()
+            } else {
+                e.file_type().is_ok_and(|t| t.is_file())
+            }
+        })
         .map(|e| e.path())
         .filter(|p| p.extension().and_then(|e| e.to_str()) == Some("md"))
         .collect();
     paths.sort();
     paths
+}
+
+#[cfg(all(test, unix))]
+mod md_files_tests {
+    #[test]
+    fn a_linked_file_counts_only_where_links_are_taken() {
+        let dir = tempfile::tempdir().unwrap();
+        let elsewhere = tempfile::tempdir().unwrap();
+        std::fs::write(dir.path().join("a.md"), "a").unwrap();
+        std::fs::write(elsewhere.path().join("b.md"), "b").unwrap();
+        std::os::unix::fs::symlink(elsewhere.path().join("b.md"), dir.path().join("b.md")).unwrap();
+        std::fs::create_dir(dir.path().join("c.md")).unwrap();
+        let names = |links| {
+            super::md_files(dir.path(), links)
+                .iter()
+                .map(|p| p.file_name().unwrap().to_string_lossy().into_owned())
+                .collect::<Vec<_>>()
+        };
+        assert_eq!(names(true), ["a.md", "b.md"]);
+        assert_eq!(names(false), ["a.md"]);
+    }
 }
