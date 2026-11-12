@@ -131,7 +131,8 @@ export function Outline({ content, tabId }: OutlineProps) {
     for (const h of headings) {
       if (h.level > hiddenBelow) continue;
       hiddenBelow = Infinity;
-      rows.push(h);
+      // An empty heading keeps its place in the count, not a row.
+      if (h.text.trim()) rows.push(h);
       if (h.hasChildren && collapsed.has(h.id)) hiddenBelow = h.level;
     }
     return rows;

@@ -10,6 +10,19 @@ describe("parseHeadings", () => {
     expect(texts("---\n# draft\ntitle: T\n---\n# A")).toEqual(["A"]);
   });
 
+  it("counts every heading the editor does: indented, empty and setext", () => {
+    expect(texts("# A\n  ## B\n\n##\n\nC\n===\n\nD\n---\n\n# E")).toEqual([
+      "A",
+      "B",
+      "",
+      "C",
+      "D",
+      "E",
+    ]);
+    // A rule after a blank line is a rule, not a heading.
+    expect(texts("A\n\n---\n# B")).toEqual(["B"]);
+  });
+
   it("finds headings after a fence opened in a list item", () => {
     const md =
       "### Lists\n\n1. Red\n2. ```\n   Green\n   ```\n3. Blue\n\n### Task List";

@@ -54,3 +54,48 @@ export function eachLine(
     visit(line, index, false);
   });
 }
+
+/** A heading as the editor reads it: its level, its text, its line. */
+export interface HeadingLine {
+  level: number;
+  text: string;
+  line: number;
+}
+
+const ATX = /^ {0,3}(#{1,6})(?:[ \t]+(.*?))?[ \t]*(?:[ \t]#+[ \t]*)?$/;
+const SETEXT = /^ {0,3}(=+|-+)[ \t]*$/;
+// A line that starts a block of its own can't be a setext heading's text.
+const NOT_TEXT = /^ {0,3}(?:[-+*>|]|\d+[.)]|#|$)/;
+
+/** A whole document's headings, in order, as the editor counts them: ATX
+ *  (indented up to three spaces, empty ones too) and setext (`Title` over
+ *  `===` or `---`), outside code and front matter. */
+export function headingsOf(markdown: string): HeadingLine[] {
+  const out: HeadingLine[] = [];
+  let previous: { text: string; index: number } | null = null;
+  eachLine(
+    markdown,
+    (line, index, code) => {
+      const before = previous;
+      previous = null;
+      if (code) return;
+      const atx = ATX.exec(line);
+      if (atx) {
+        out.push({ level: atx[1].length, text: atx[2] ?? "", line: index });
+        return;
+      }
+      const under = SETEXT.exec(line);
+      if (under && before && before.index === index - 1) {
+        out.push({
+          level: under[1][0] === "=" ? 1 : 2,
+          text: before.text.trim(),
+          line: before.index,
+        });
+        return;
+      }
+      if (!NOT_TEXT.test(line)) previous = { text: line, index };
+    },
+    { frontMatter: true },
+  );
+  return out;
+}
