@@ -1,3 +1,4 @@
+import { whenReadable } from "../contributions/when";
 import { DIAGRAM_LANGUAGES } from "../../editor/diagram-engine";
 import type {
   CompletionContribution,
@@ -119,8 +120,6 @@ const SETTING_TYPES: readonly SettingType[] = [
   "button",
 ];
 
-/** A setting's `when`: a key, maybe negated, or a key compared. */
-const SETTING_WHEN = /^\s*!?[\w.-]+\s*$|^\s*[\w.-]+\s*(==|!=)\s*\S.*$/;
 
 /** What a setting's default must be, by its type. */
 function checkDefault(s: Json, type: SettingType, at: string): void {
@@ -160,9 +159,9 @@ function parseSetting(raw: unknown, at: string): SettingContribution {
     );
   checkDefault(s, type, at);
   const when = text(s.when, `${at}.when`, true) || undefined;
-  if (when && !SETTING_WHEN.test(when))
+  if (when && !whenReadable(when))
     throw new ManifestError(
-      `${at}.when must be "key", "!key", "key == value" or "key != value".`,
+      `${at}.when must be a when clause: "key", "!key", "key == value", joined with && or ||.`,
     );
   const min = number(s.min, `${at}.min`);
   const max = number(s.max, `${at}.max`);

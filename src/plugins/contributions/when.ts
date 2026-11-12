@@ -73,6 +73,17 @@ export function evaluateWhen(
   context: WhenContext,
 ): boolean {
   if (!clause?.trim()) return true;
+  return run(clause, context) ?? true;
+}
+
+/** Whether `clause` reads as a when clause at all: what a manifest's is
+ *  checked by. */
+export function whenReadable(clause: string): boolean {
+  return run(clause, {}) !== null;
+}
+
+/** `clause`'s value in `context`; null when it can't be read. */
+function run(clause: string, context: WhenContext): boolean | null {
   const list = tokens(clause);
   let at = 0;
   const peek = () => list[at];
@@ -126,8 +137,8 @@ export function evaluateWhen(
 
   try {
     const result = or();
-    return at >= list.length ? result : true;
+    return at >= list.length ? result : null;
   } catch {
-    return true;
+    return null;
   }
 }

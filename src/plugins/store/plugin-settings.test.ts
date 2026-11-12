@@ -19,6 +19,9 @@ describe("settingShown", () => {
     expect(settingShown("grid", value)).toBe(false);
     expect(settingShown("!grid", value)).toBe(true);
     expect(settingShown("words", value)).toBe(false);
+    // Joined as a menu's when clause is.
+    expect(settingShown("style == dark && legend", value)).toBe(true);
+    expect(settingShown("style == light || grid", value)).toBe(false);
   });
 
   it("compares a key with a value", () => {

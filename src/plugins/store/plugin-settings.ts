@@ -1,3 +1,4 @@
+import { evaluateWhen, whenKeys, type WhenContext } from "../contributions/when";
 import { ownError } from "../../utils/error-text";
 import { fill } from "../../i18n/fill";
 import {
@@ -115,22 +116,25 @@ export function pluginValue(
   return { value: undefined, from: null };
 }
 
-/** Whether a setting with `when` shows given the other settings' values:
- *  "legend", "!legend", "style == dark", "style != dark". */
+/** Whether a setting with `when` shows given the other settings' values,
+ *  by the when clauses menus use: "legend", "!legend", "style == dark",
+ *  joined with && and ||. An empty list counts as off. */
 export function settingShown(
   when: string | undefined,
   value: (key: string) => unknown,
 ): boolean {
   if (!when) return true;
-  const m = /^\s*(!?)([\w.-]+)\s*(?:(==|!=)\s*(.+?))?\s*$/.exec(when);
-  if (!m) return true;
-  const [, not, key, op, expected] = m;
-  const current = value(key);
-  if (!op) {
-    const on = Array.isArray(current) ? current.length > 0 : !!current;
-    return not ? !on : on;
+  const context: WhenContext = {};
+  for (const key of whenKeys(when)) {
+    const v = value(key);
+    context[key] =
+      typeof v === "boolean" || v === undefined
+        ? v
+        : Array.isArray(v)
+          ? v.length > 0
+          : String(v);
   }
-  return (String(current) === expected) === (op === "==");
+  return evaluateWhen(when, context);
 }
 
 /** The value for every document alone, or undefined. */
