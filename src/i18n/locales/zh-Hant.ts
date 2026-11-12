@@ -997,6 +997,7 @@ export default {
   appMenu: "選單",
   activityRail: "圖示列",
   activityRailHide: "隱藏圖示列",
+  activityRailShow: "顯示圖示列",
   layoutLabel: "版面",
   layoutIslands: "浮動島",
   layoutClassic: "經典",

@@ -1136,6 +1136,7 @@ export default {
   appMenu: "Меню",
   activityRail: "Панель действий",
   activityRailHide: "Скрыть панель действий",
+  activityRailShow: "Показать панель действий",
   layoutLabel: "Макет",
   layoutIslands: "Плавающие острова",
   layoutClassic: "Классический",

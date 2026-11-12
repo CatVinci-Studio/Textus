@@ -995,6 +995,7 @@ export default {
   appMenu: "菜单",
   activityRail: "图标栏",
   activityRailHide: "隐藏图标栏",
+  activityRailShow: "显示图标栏",
   layoutLabel: "布局",
   layoutIslands: "浮动岛",
   layoutClassic: "经典",

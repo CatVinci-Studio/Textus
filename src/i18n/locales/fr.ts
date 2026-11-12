@@ -1140,6 +1140,7 @@ utiliser une.
   appMenu: "Menu",
   activityRail: "Barre d'activité",
   activityRailHide: "Masquer la barre d'activité",
+  activityRailShow: "Afficher la barre d'activité",
   layoutLabel: "Disposition",
   layoutIslands: "Îlots flottants",
   layoutClassic: "Classique",

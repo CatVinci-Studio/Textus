@@ -52,6 +52,9 @@ export function barLayout({
   if (platform === "ios") return { rows: 1, lead: ["menu"], ...none };
   const railShown = rail && !zen;
   const toggle: BarItem[] = railOff || zen ? ["sidebar-toggle"] : [];
+  // The rail turned off but shown with the sidebar: the bar keeps its
+  // place - its sidebar button stays where it was clicked to fold it again.
+  const toTop = railShown && !railOff;
   // In full screen the lights are gone: with the rail, the bar leaves the
   // left columns alone.
   if (platform === "macos")
@@ -59,8 +62,8 @@ export function barLayout({
       rows: 1,
       lead: [...(fullscreen ? [] : (["lights"] as BarItem[])), ...toggle],
       ...none,
-      sideToTop: fullscreen && railShown,
-      railToTop: fullscreen && railShown,
+      sideToTop: fullscreen && toTop,
+      railToTop: fullscreen && toTop,
     };
   // In Zen no tabs need a row under the menu bar.
   if (menuBar) return { rows: zen ? 1 : 2, lead: ["menu-bar"], ...none };
@@ -68,7 +71,7 @@ export function barLayout({
     rows: 1,
     lead: ["menu", ...toggle],
     ...none,
-    menuInRail: railShown,
-    sideToTop: railShown,
+    menuInRail: toTop,
+    sideToTop: toTop,
   };
 }

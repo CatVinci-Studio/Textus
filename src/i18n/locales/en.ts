@@ -1075,6 +1075,7 @@ type /name in a conversation to use one.
   appMenu: "Menu",
   activityRail: "Activity bar",
   activityRailHide: "Hide the Activity Bar",
+  activityRailShow: "Show the Activity Bar",
   layoutLabel: "Layout",
   layoutIslands: "Floating islands",
   layoutClassic: "Classic",

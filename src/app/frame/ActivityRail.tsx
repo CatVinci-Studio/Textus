@@ -83,10 +83,16 @@ export function ActivityRail({
     });
   };
   const menuItems: ContextMenuEntry[] = [
-    {
-      label: t.activityRailHide,
-      onSelect: () => setSettings({ activityRail: false }),
-    },
+    // Turned off, it still shows with the sidebar: then it offers to stay.
+    settings.activityRail
+      ? {
+          label: t.activityRailHide,
+          onSelect: () => setSettings({ activityRail: false }),
+        }
+      : {
+          label: t.activityRailShow,
+          onSelect: () => setSettings({ activityRail: true }),
+        },
     "separator",
     ...tabs
       .filter((tab) => !tab.railFoot)

@@ -1104,6 +1104,7 @@ Skills liegen im Ordner skills/ neben dieser Datei, je Skill eine
   appMenu: "Menü",
   activityRail: "Aktivitätsleiste",
   activityRailHide: "Aktivitätsleiste ausblenden",
+  activityRailShow: "Aktivitätsleiste einblenden",
   layoutLabel: "Layout",
   layoutIslands: "Schwebende Inseln",
   layoutClassic: "Klassisch",

@@ -28,10 +28,17 @@ describe("the window bar's start", () => {
   });
 
   it("keeps the sidebar button while the rail is turned off, open or not, and in Zen", () => {
-    // Turned off, the rail shows with the sidebar; the button folds both.
+    // Turned off, the rail shows with the sidebar; the button folds both,
+    // and the bar keeps it where it was clicked: nothing rises over it.
     expect(at("windows", { railOff: true })).toMatchObject({
       lead: ["menu", "sidebar-toggle"],
-      menuInRail: true,
+      menuInRail: false,
+      sideToTop: false,
+    });
+    expect(at("macos", { fullscreen: true, railOff: true })).toMatchObject({
+      lead: ["sidebar-toggle"],
+      railToTop: false,
+      sideToTop: false,
     });
     expect(at("windows", { rail: false, railOff: true }).lead).toEqual([
       "menu",

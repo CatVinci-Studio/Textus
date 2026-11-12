@@ -1041,6 +1041,7 @@ ${AI_NAME}에게 주는 글쓰기 지침으로, 모든 문서에 적용됩니다
   appMenu: "메뉴",
   activityRail: "활동 막대",
   activityRailHide: "활동 막대 숨기기",
+  activityRailShow: "활동 막대 표시",
   layoutLabel: "레이아웃",
   layoutIslands: "떠 있는 섬",
   layoutClassic: "클래식",

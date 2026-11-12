@@ -1118,6 +1118,7 @@ Habilidades ficam na pasta skills/ ao lado deste arquivo, um arquivo
   appMenu: "Menu",
   activityRail: "Barra de atividade",
   activityRailHide: "Ocultar a barra de atividade",
+  activityRailShow: "Mostrar a barra de atividade",
   layoutLabel: "Layout",
   layoutIslands: "Ilhas flutuantes",
   layoutClassic: "Clássico",

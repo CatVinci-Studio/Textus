@@ -1055,6 +1055,7 @@ ${AI_NAME}への執筆の指示です。すべての文書に適用されます�
   appMenu: "メニュー",
   activityRail: "アクティビティバー",
   activityRailHide: "アクティビティバーを隠す",
+  activityRailShow: "アクティビティバーを表示",
   layoutLabel: "レイアウト",
   layoutIslands: "フローティング",
   layoutClassic: "クラシック",
