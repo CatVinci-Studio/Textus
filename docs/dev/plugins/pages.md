@@ -34,9 +34,13 @@ textus.views.registerWebview("jane.board.view", {
 
 - `textus-resource:<path>` names one of the plugin's files
   (`webview.asWebviewUri(path)` writes the same).
-- A webview has no network and no storage of the browser's: it asks its
-  plugin, with `postMessage`. `api.getState()` / `api.setState(value)`
-  keep a little state while Textus runs.
+- A webview shows pictures (`<img>`, CSS) and frames from the HTTPS hosts
+  its plugin's `network:` permissions name, and nothing else from the
+  network. For data, and for storage, it asks its plugin with
+  `postMessage`. `api.getState()` / `api.setState(value)` keep a little
+  state while Textus runs.
+- From 1.3.13 a page may go full screen (`element.requestFullscreen()`);
+  Esc leaves it.
 - The theme's colours and sizes are CSS variables that follow the theme
   and dark mode, the same ones Textus draws with
   ([design-language.md](../../design/design-language.md)): the interface's

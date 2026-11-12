@@ -127,7 +127,7 @@ export function PluginWebview({
     // A code block's page is drawn in the document, at its text size and
     // zoom; a settings page is only as tall as its page, still interface.
     const inDocument = current.kind === "codeBlock";
-    const frame = sandboxedFrame(page.srcdoc, page.title);
+    const frame = sandboxedFrame(page.srcdoc, page.title, { fullscreen: true });
     frame.className = "plugin-webview-frame";
     let endpoint: Parameters<typeof webviewConnected>[1] = null;
     // The clipboard is the page's only through the window's own text menu:

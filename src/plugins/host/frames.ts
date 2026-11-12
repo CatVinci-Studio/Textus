@@ -3,6 +3,7 @@ import webviewRuntime from "./runtime/webview.js?raw";
 import componentsCss from "../../engine/controls/components.css?inline";
 import iconMasksCss from "../../engine/controls/icon-masks.css?inline";
 import controlsCss from "../../engine/controls/controls.css?inline";
+import paneCss from "../../engine/controls/pane.css?inline";
 import progressCss from "../../engine/controls/progress.css?inline";
 import bubbleCss from "../../engine/controls/bubble.css?inline";
 import designSystemCss from "../../engine/tokens/design-system.css?inline";
@@ -18,6 +19,7 @@ const SHARED_CSS = [
   componentsCss,
   iconMasksCss,
   controlsCss,
+  paneCss,
   progressCss,
   bubbleCss,
 ].join("\n");
@@ -45,19 +47,18 @@ export function inElement(code: string, tag: "script" | "style"): string {
 const PLUGIN_FILES = "textus-plugin: http://textus-plugin.localhost";
 
 /** A webview's CSP: its own inline and `data:`/`blob:` content and the
- *  plugins' files, no network, except frames from the HTTPS hosts in
- *  `frameHosts`. */
-export function webviewCsp(frameHosts: readonly string[]): string {
-  const frames = frameHosts.length
-    ? frameHosts
-        .map((host) => (host === "*" ? "https:" : `https://${host}`))
-        .join(" ")
-    : "'none'";
+ *  plugins' files; from the HTTPS hosts its plugin was granted
+ *  (`network:`), pictures and frames. Its requests go through its plugin. */
+export function webviewCsp(hosts: readonly string[]): string {
+  const granted = hosts
+    .map((host) => (host === "*" ? "https:" : `https://${host}`))
+    .join(" ");
+  const frames = granted || "'none'";
   return [
     "default-src 'none'",
     `script-src 'unsafe-inline' 'wasm-unsafe-eval' data: blob: ${PLUGIN_FILES}`,
     `style-src 'unsafe-inline' data: ${PLUGIN_FILES}`,
-    `img-src data: blob: ${PLUGIN_FILES}`,
+    `img-src data: blob: ${PLUGIN_FILES} ${granted}`.trimEnd(),
     `font-src data: ${PLUGIN_FILES}`,
     `media-src data: blob: ${PLUGIN_FILES}`,
     `connect-src data: blob: ${PLUGIN_FILES}`,
@@ -144,12 +145,15 @@ const frameKeys = new WeakMap<HTMLIFrameElement, string>();
 export function sandboxedFrame(
   srcdoc: string,
   title: string,
+  { fullscreen = false } = {},
 ): HTMLIFrameElement {
   const frame = document.createElement("iframe");
   const key = crypto.randomUUID();
   frameKeys.set(frame, key);
   srcdoc = srcdoc.split(FRAME_KEY).join(key);
   frame.setAttribute("sandbox", "allow-scripts");
+  // A page may fill the screen (a deck presented); the user leaves with Esc.
+  if (fullscreen) frame.setAttribute("allow", "fullscreen");
   frame.setAttribute("title", title);
   // Referrers name the app's page; a plugin's frame of a web page
   // shouldn't tell that page where it is shown.

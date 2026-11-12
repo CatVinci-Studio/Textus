@@ -47,5 +47,6 @@ log says so; nothing else does.
 
 - A completion (`editor.registerCompletion`) without `editor.read` is left
   out with no error.
-- A webview's `textus-resource:` files are the plugin's own; a page reaches
-  nothing else and has no network.
+- A webview's `textus-resource:` files are the plugin's own; from the
+  network a page shows only pictures and frames of the hosts its plugin's
+  `network:` permissions name.

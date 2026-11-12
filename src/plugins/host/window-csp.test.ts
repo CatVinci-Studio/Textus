@@ -49,6 +49,14 @@ describe("the window's Content Security Policy", () => {
     expectAllowedByWindow(webviewCsp(["example.com"]));
   });
 
+  it("lets a page show pictures only from the hosts its plugin was granted", () => {
+    expect(parse(webviewCsp(["example.com"]))["img-src"]).toContain(
+      "https://example.com",
+    );
+    expect(parse(webviewCsp([]))["img-src"]).not.toContain("https:");
+    expect(parse(webviewCsp(["*"]))["connect-src"]).not.toContain("https:");
+  });
+
   it("allows a plugin host's inline scripts", () => {
     const meta = /content="([^"]+)"/.exec(hostDocument(""))?.[1] ?? "";
     expect(meta).toContain("script-src");
