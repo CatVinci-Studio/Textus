@@ -20,6 +20,27 @@ export function changedRanges(tr: Transaction): [number, number][] {
   return ranges;
 }
 
+/** The ranges `trs` (an appendTransaction's, or those of them in `only`)
+ *  wrote, in the last one's document. */
+export function changedRangesOf(
+  trs: readonly Transaction[],
+  only: readonly Transaction[] = trs,
+): [number, number][] {
+  const ranges: [number, number][] = [];
+  const size = trs.length ? trs[trs.length - 1].doc.content.size : 0;
+  trs.forEach((tr, t) => {
+    if (!only.includes(tr)) return;
+    for (let [from, to] of changedRanges(tr)) {
+      for (const later of trs.slice(t + 1)) {
+        from = later.mapping.map(from, -1);
+        to = later.mapping.map(to, 1);
+      }
+      ranges.push([Math.min(from, size), Math.min(to, size)]);
+    }
+  });
+  return ranges;
+}
+
 /** The top-level blocks of `doc` that the ranges touch (or end beside),
  *  as [from, to], in document order and each once. */
 export function touchedBlocks(

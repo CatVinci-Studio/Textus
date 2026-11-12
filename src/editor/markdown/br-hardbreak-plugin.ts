@@ -1,7 +1,8 @@
 import type { Node as ProseNode } from "@milkdown/kit/prose/model";
-import { Plugin, PluginKey, type Transaction } from "@milkdown/kit/prose/state";
+import { Plugin, PluginKey } from "@milkdown/kit/prose/state";
 import { $prose, $remark } from "@milkdown/kit/utils";
 import { inTableCell, isTableCell } from "../tables/table-pos";
+import { changedRangesOf } from "../changed-ranges";
 
 // Attributed `<br clear="all">` too (Word/Notion paste); a bare `<br>` is
 // stripped earlier by Milkdown's remark-preserve-empty-line.
@@ -100,11 +101,7 @@ export const brToHardbreakPlugin = $prose(() => {
           targets.push({ from: pos, to });
         return true;
       };
-      for (const [from, to] of changedRanges(
-        transactions,
-        newState.doc,
-        pasted,
-      ))
+      for (const [from, to] of changedRangesOf(transactions, pasted))
         newState.doc.nodesBetween(from, to, visit);
       if (targets.length === 0) return null;
 
@@ -117,31 +114,3 @@ export const brToHardbreakPlugin = $prose(() => {
     },
   });
 });
-
-/** The ranges the transactions in `only` rewrote, in the final document's
- *  positions. */
-function changedRanges(
-  transactions: readonly Transaction[],
-  doc: ProseNode,
-  only: readonly Transaction[],
-): [number, number][] {
-  const ranges: [number, number][] = [];
-  transactions.forEach((tr, t) => {
-    if (!only.includes(tr)) return;
-    tr.mapping.maps.forEach((map, i) => {
-      map.forEach((_oldStart, _oldEnd, newStart, newEnd) => {
-        let from = tr.mapping.slice(i + 1).map(newStart, -1);
-        let to = tr.mapping.slice(i + 1).map(newEnd, 1);
-        for (const later of transactions.slice(t + 1)) {
-          from = later.mapping.map(from, -1);
-          to = later.mapping.map(to, 1);
-        }
-        ranges.push([
-          Math.max(0, Math.min(from, doc.content.size)),
-          Math.max(0, Math.min(to, doc.content.size)),
-        ]);
-      });
-    });
-  });
-  return ranges;
-}

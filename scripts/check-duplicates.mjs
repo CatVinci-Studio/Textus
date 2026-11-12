@@ -27,7 +27,6 @@ const IGNORE = [
 /** Copies there today, as "a | b" (sorted, from src/ or src-tauri/src/):
  *  how many each pair of files has. */
 const COPIES_NOW = {
-  "ai/chat/ChatBody.tsx | ai/chat/ChatBody.tsx": 1,
   "ai/revision/pending-accept.ts | ai/revision/pending-accept.ts": 1,
   "ai/rules/en/spelling.rs | ai/rules/shared.rs": 1,
   "ai/rules/ja/notation.rs | ai/rules/zh/spacing.rs": 1,

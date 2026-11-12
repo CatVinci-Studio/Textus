@@ -36,11 +36,14 @@ import {
 } from "./image-html";
 import { imageRotationView } from "./image-rotation";
 import { DROP_IMAGE_FILES_EVENT } from "../../utils/events";
-import { decorateAll, redecorateChanged } from "../changed-ranges";
+import {
+  changedRangesOf,
+  decorateAll,
+  redecorateChanged,
+} from "../changed-ranges";
 import {
   type ImageStore,
   blobImageSrcs,
-  changedRanges,
   pastedImages,
   fileImage,
   onlyLinkHrefs,
@@ -334,7 +337,7 @@ export function createImagePlugin(options: ImageStore) {
       },
       appendTransaction: (trs, _old, state) =>
         trs.some((tr) => tr.docChanged)
-          ? swapStoredBlobs(state.tr, storedBlobs, changedRanges(trs))
+          ? swapStoredBlobs(state.tr, storedBlobs, changedRangesOf(trs))
           : null,
       // Tauri hands drops to the app, so they arrive as a window event, to
       // every island's editor: the one under the point takes them, else

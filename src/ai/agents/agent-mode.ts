@@ -6,6 +6,8 @@
  * bypassPermissions).
  */
 
+import { isRecord } from "../../utils/is-record";
+
 interface AgentChoice {
   value: string;
   name: string;
@@ -21,8 +23,6 @@ export interface AgentOption {
   choices: AgentChoice[];
 }
 
-const isRecord = (v: unknown): v is Record<string, unknown> =>
-  typeof v === "object" && v !== null && !Array.isArray(v);
 const text = (v: unknown) => (typeof v === "string" ? v : undefined);
 
 /** A list's choices, a grouped list's (DeepSeek's `{group, options}`)

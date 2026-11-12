@@ -250,6 +250,36 @@ export function ChatBody({
   const quickHasMore = quick?.hasMore ?? false;
   const quickActivity = quick?.activity ?? null;
 
+  // The conversation, in Quick Ask's transcript or the inline panel; only
+  // the panel's proposals carry their own buttons.
+  const messages = (
+    <ChatMessages
+      proposalActions={variant !== "quick"}
+      history={history}
+      streaming={received}
+      onLiveGrow={follow.grow}
+      thoughts={conversation.thoughts}
+      busy={busy}
+      error={error}
+      selectedText={selectedText}
+      labels={labels}
+      proposalStatus={proposalStatus}
+      onAcceptProposal={onAcceptProposal}
+      proposalSentences={proposalSentences}
+      onDecideSentence={onDecideSentence}
+      onRevealProposal={onRevealProposal}
+      onLocateText={onLocateText}
+      onApplySuggestion={applySuggestion}
+      conversation={conversation.conversationId}
+      noteNumber={noteNumber}
+      onRejectProposal={onRejectProposal}
+      onRelocateProposal={handleRelocate}
+      canRetry={!!retryable}
+      onRetry={handleRetry}
+      onContinue={handleContinue}
+      docPath={docPath}
+    />
+  );
   return (
     <>
       {variant === "quick"
@@ -292,32 +322,7 @@ export function ChatBody({
                   ref={listRef}
                   onScroll={follow.onScroll}
                 >
-                  <ChatMessages
-                    proposalActions={false}
-                    history={history}
-                    streaming={received}
-                    onLiveGrow={follow.grow}
-                    thoughts={conversation.thoughts}
-                    busy={busy}
-                    error={error}
-                    selectedText={selectedText}
-                    labels={labels}
-                    proposalStatus={proposalStatus}
-                    onAcceptProposal={onAcceptProposal}
-                    proposalSentences={proposalSentences}
-                    onDecideSentence={onDecideSentence}
-                    onRevealProposal={onRevealProposal}
-                    onLocateText={onLocateText}
-                    onApplySuggestion={applySuggestion}
-                    conversation={conversation.conversationId}
-                    noteNumber={noteNumber}
-                    onRejectProposal={onRejectProposal}
-                    onRelocateProposal={handleRelocate}
-                    canRetry={!!retryable}
-                    onRetry={handleRetry}
-                    onContinue={handleContinue}
-                    docPath={docPath}
-                  />
+                  {messages}
                 </div>
               )}
               {(quickExpanded || quickHasMore) && (
@@ -338,31 +343,7 @@ export function ChatBody({
               ref={listRef}
               onScroll={follow.onScroll}
             >
-              <ChatMessages
-                history={history}
-                streaming={received}
-                onLiveGrow={follow.grow}
-                thoughts={conversation.thoughts}
-                busy={busy}
-                error={error}
-                selectedText={selectedText}
-                labels={labels}
-                proposalStatus={proposalStatus}
-                onAcceptProposal={onAcceptProposal}
-                proposalSentences={proposalSentences}
-                onDecideSentence={onDecideSentence}
-                onRevealProposal={onRevealProposal}
-                onLocateText={onLocateText}
-                onApplySuggestion={applySuggestion}
-                conversation={conversation.conversationId}
-                noteNumber={noteNumber}
-                onRejectProposal={onRejectProposal}
-                onRelocateProposal={handleRelocate}
-                canRetry={!!retryable}
-                onRetry={handleRetry}
-                onContinue={handleContinue}
-                docPath={docPath}
-              />
+              {messages}
             </div>
           )}
       {variant === "quick" ? (

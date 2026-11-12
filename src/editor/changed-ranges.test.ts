@@ -2,7 +2,12 @@ import { describe, expect, it } from "vitest";
 import { Schema, type Node as ProseNode } from "@milkdown/kit/prose/model";
 import { EditorState } from "@milkdown/kit/prose/state";
 import { Decoration, type DecorationSet } from "@milkdown/kit/prose/view";
-import { decorateAll, redecorateChanged, touchesNode } from "./changed-ranges";
+import {
+  changedRangesOf,
+  decorateAll,
+  redecorateChanged,
+  touchesNode,
+} from "./changed-ranges";
 
 const schema = new Schema({
   nodes: {
@@ -152,5 +157,19 @@ describe("touchesNode", () => {
     expect(
       touchesNode(state.tr.setNodeAttribute(codeAt, "language", "x"), isCode),
     ).toBe(true);
+  });
+});
+
+describe("changedRangesOf", () => {
+  it("maps each transaction's writes into the last document, only those asked", () => {
+    const { state } = start();
+    const first = state.tr.insertText("AB", 1);
+    const second = EditorState.create({ doc: first.doc }).tr.insertText("Z", 1);
+    // "AB" at 1, then "Z" before it: the first range grows over both.
+    expect(changedRangesOf([first, second])).toEqual([
+      [1, 4],
+      [1, 2],
+    ]);
+    expect(changedRangesOf([first, second], [first])).toEqual([[1, 4]]);
   });
 });

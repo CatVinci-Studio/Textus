@@ -1,13 +1,11 @@
 import { trackWrite } from "./pending-writes";
 import { fs } from "../platform/ipc";
+import { isRecord } from "../utils/is-record";
 
 /** A project's own settings, which go with the folder: plugin values under
  *  "plugins", the folder's conventions under "conventions". */
 export const projectSettingsFile = (root: string) =>
   `${root.replace(/[\\/]+$/, "")}/.textus/settings.json`;
-
-const isRecord = (value: unknown): value is Record<string, unknown> =>
-  !!value && typeof value === "object" && !Array.isArray(value);
 
 /** The project's settings file as a whole, read as the folder's
  *  conventions are (comments allowed); {} when it isn't there or can't be

@@ -269,19 +269,6 @@ export function swapStoredBlobs(
   return tr.docChanged ? tr.setMeta("addToHistory", false) : null;
 }
 
-/** The ranges of the final document that `trs` replaced. */
-export function changedRanges(trs: readonly Transaction[]): [number, number][] {
-  let ranges: [number, number][] = [];
-  for (const tr of trs)
-    for (const map of tr.mapping.maps) {
-      ranges = ranges.map(([from, to]) => [map.map(from, -1), map.map(to, 1)]);
-      map.forEach((_oldStart, _oldEnd, newStart, newEnd) => {
-        ranges.push([newStart, newEnd]);
-      });
-    }
-  return ranges;
-}
-
 /** The link targets of a slice that holds links and nothing else. */
 export function onlyLinkHrefs(slice: Slice): string[] {
   const hrefs: string[] = [];
