@@ -11,7 +11,7 @@ import type { Plugin } from "postcss";
 /** Stylesheets of the document's content, which follow the document's zoom. */
 const DOCUMENT = [
   /\/theme\/content-[^/]+\.css$/,
-  /\/editor\/milkdown-theme\.css$/,
+  /\/editor\/(milkdown-theme|editor-[a-z-]+)\.css$/,
   /\/app\/editor-column\.css$/,
   /\/editor\/modes\/source-editor\.css$/,
   /\/editor\/embeds\/note-embed\.css$/,

@@ -1,0 +1,345 @@
+/* Modal tier: above the find bar, popovers and toasts, which would
+   otherwise draw over the backdrop and take clicks. */
+.settings-backdrop {
+  z-index: var(--z-modal);
+}
+
+.settings-panel {
+  /* Settings belong to app chrome, independently of document themes. */
+  color: var(--ui-text);
+  width: calc(100% - 32px);
+  max-width: 840px;
+  /* vh and %, not dvh: an older WebView2 drops dvh lines entirely, and the
+     panel then grows past both window edges. The % keeps the header clear of
+     the window bar. */
+  height: min(82vh, 720px);
+  max-height: calc(100% - 32px);
+  display: flex;
+  flex-direction: column;
+  background: var(--ui-bg);
+  border: 1px solid var(--ui-border);
+  border-radius: var(--shape-l);
+  box-shadow: var(--shadow-dialog);
+  overflow: hidden;
+}
+
+.settings-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: var(--space-3) var(--space-5);
+  border-bottom: 1px solid var(--ui-border);
+  font-size: var(--text-title);
+  font-weight: 600;
+  flex-shrink: 0;
+}
+
+.settings-close-button {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  line-height: 1;
+  padding: 4px;
+}
+
+.settings-layout {
+  display: flex;
+  flex: 1;
+  min-height: 0;
+}
+
+/* As wide as the longest category name needs, within bounds; longer names
+   wrap inside the cap. */
+.settings-sidebar {
+  min-width: 176px;
+  max-width: 232px;
+  flex-shrink: 0;
+  display: flex;
+  flex-direction: column;
+  min-height: 0;
+  background: var(--ui-subtle);
+}
+
+.settings-nav {
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+  padding: 8px 12px 16px;
+  overflow-y: auto;
+}
+
+/* The search box above the categories: the shared field, in place. */
+.settings-search {
+  flex: none;
+  margin: 16px 12px 0;
+}
+
+/* A result is a row like the one it finds: its name, and under it the
+   group it is in or the "?" text that matched. */
+.settings-search-result {
+  cursor: pointer;
+}
+
+.settings-search-result.is-active {
+  background: var(--ui-hover);
+  box-shadow: 0 0 0 8px var(--ui-hover);
+  border-radius: var(--shape-s);
+}
+/* The row a result led to, tinted for a moment and fading back: opacity
+   only, so reduced motion keeps it. */
+.settings-search-hit {
+  position: relative;
+}
+
+.settings-search-hit::after {
+  content: "";
+  position: absolute;
+  inset: 0 -8px;
+  border-radius: var(--shape-s);
+  background: color-mix(in srgb, var(--ui-accent) 14%, transparent);
+  pointer-events: none;
+  opacity: 0;
+  animation: settings-search-hit var(--dur-linger) var(--ease-standard);
+}
+
+@keyframes settings-search-hit {
+  from,
+  40% {
+    opacity: 1;
+  }
+  to {
+    opacity: 0;
+  }
+}
+
+.settings-nav-item {
+  display: flex;
+  align-items: center;
+  gap: var(--space-2);
+  width: 100%;
+  text-align: left;
+  padding: 8px 12px;
+  font-size: var(--text-body);
+  border: none;
+  border-radius: var(--shape-s);
+  background: transparent;
+  color: var(--ui-text);
+  cursor: pointer;
+  overflow-wrap: anywhere;
+  hyphens: auto;
+}
+
+.settings-nav-item:hover {
+  background: var(--ui-hover);
+}
+
+.settings-nav-item-active {
+  background: var(--ui-selected);
+  color: var(--ui-selected-text);
+  font-weight: 500;
+}
+
+/* An invisible bold copy of the label holds each item at its active width,
+   so the nav doesn't grow when a label turns bold. */
+.settings-nav-label {
+  display: inline-grid;
+  min-width: 0;
+}
+
+.settings-nav-item .settings-nav-label::after {
+  content: attr(data-label);
+  height: 0;
+  overflow: hidden;
+  visibility: hidden;
+  font-weight: 500;
+}
+
+/* A new page fades in where the last one was; the nav's highlight moves
+   at once. */
+.settings-content {
+  animation: motion-settle-in var(--dur-fast) var(--ease-out);
+  overscroll-behavior: contain;
+  flex: 1;
+  min-width: 0;
+  /* Keeps the scrollbar's room so long and short pages are the same width.
+     The gutter alone isn't enough in WebKit with a ::-webkit-scrollbar style. */
+  scrollbar-gutter: stable;
+  overflow-y: scroll;
+  padding: 24px 24px 32px;
+}
+
+/* Each group is a quiet inset card: the title above it, rows inside, and the
+   only rules are the hairlines between rows of the same card. */
+/* A section's heading, and what acts on the whole section at its end. */
+.settings-group-head {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: flex-end;
+  gap: 4px 8px;
+  min-height: 28px;
+}
+
+/* The title whole; its tools move to a line of their own under it when
+   the two don't fit side by side (a long language, a narrow window). */
+.settings-group-head > .settings-group-title {
+  flex: 1 0 auto;
+  max-width: 100%;
+}
+
+/* How many a group lists, after its title. */
+.settings-group-count {
+  margin-left: 8px;
+  color: var(--ui-muted);
+  font-weight: 400;
+}
+
+/* Beside the title its end; wrapped under it, from the title's start. */
+.settings-group-actions {
+  display: flex;
+  flex: none;
+  align-items: center;
+  gap: 4px;
+  margin-bottom: 8px;
+}
+
+.settings-group + .settings-group {
+  margin-top: 24px;
+}
+
+.settings-advanced {
+  margin-top: 24px;
+  border: 1px solid color-mix(in srgb, var(--ui-border) 75%, transparent);
+  border-radius: var(--shape-m);
+  background: var(--ui-subtle);
+  overflow: hidden;
+}
+
+/* The triangle is drawn: iOS's font stack lacks the native marker's glyph. */
+.settings-advanced > summary {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  padding: 12px 16px;
+  color: var(--ui-muted);
+  font-size: var(--text-control);
+  font-weight: 600;
+  cursor: pointer;
+  list-style: none;
+}
+
+.settings-advanced[open] > summary {
+  border-bottom: 1px solid var(--ui-border);
+}
+
+.settings-advanced-body {
+  padding: 0 16px;
+}
+
+.settings-row-control {
+  display: flex;
+  align-items: center;
+  flex-wrap: wrap;
+  gap: 8px;
+  flex: 0 1 auto;
+  min-width: 0;
+  max-width: 100%;
+}
+
+/* A read-out beside a control (installed / not installed). */
+.settings-row-value {
+  color: var(--ui-muted);
+  font-size: var(--text-body);
+}
+
+/* A row that is itself the button (Help's guides). */
+button.settings-link-row {
+  width: 100%;
+  margin: 0;
+  border: none;
+  border-radius: 0;
+  background: none;
+  color: inherit;
+  font: inherit;
+  font-size: var(--text-body-large);
+  text-align: left;
+  cursor: pointer;
+}
+
+.settings-link-chevron {
+  flex: none;
+  color: var(--ui-muted);
+}
+
+/* A row that folds rarer rows under it (Text & Layout's body text): the
+   summary is a row like the others, its chevron turning as it opens. */
+.settings-fold > summary {
+  cursor: pointer;
+  list-style: none;
+}
+
+.settings-fold > summary::-webkit-details-marker {
+  display: none;
+}
+
+.settings-fold > summary > .settings-row-label {
+  flex: 1;
+}
+
+.settings-fold-chevron {
+  flex: none;
+  color: var(--ui-muted);
+  transition: transform var(--dur-fast) var(--ease-standard);
+}
+
+.settings-fold[open] .settings-fold-chevron {
+  transform: rotate(90deg);
+}
+
+/* Indented a step: they belong to the row above. */
+.settings-fold-body {
+  padding-left: 16px;
+}
+
+button.settings-danger-button {
+  color: var(--ui-danger);
+}
+
+/* Model ids carry their capabilities ("· vision · tools · 400K"), so the
+   picker may be wide - but not wider than the row can give it. */
+.settings-model-select {
+  max-width: 100%;
+}
+
+.settings-row-label {
+  color: var(--ui-text);
+  font-size: var(--text-body-large);
+}
+
+/* Only rows that show a value or a live status have a hint; explanations go
+   behind the row's "?". */
+.settings-row-hint {
+  color: var(--ui-muted);
+  font-size: var(--text-body);
+  line-height: 1.45;
+  margin-top: 2px;
+  max-width: 420px;
+  /* Running text, not a name: it breaks as text does. */
+  word-break: normal;
+  overflow-wrap: break-word;
+}
+
+/* The sign-in page's address, for when no browser opened: selectable, and
+   wrapping anywhere since it is one long word. */
+.settings-login-url {
+  display: block;
+  margin-top: 8px;
+  max-width: 420px;
+  max-height: 4.5em;
+  overflow: auto;
+  font-family: var(--font-mono);
+  font-size: var(--text-footnote);
+  color: var(--ui-text);
+  word-break: break-all;
+  user-select: text;
+  -webkit-user-select: text;
+}

@@ -1,0 +1,333 @@
+/* A failed request: the same card shape as a proposal or a comment, tinted
+   in the danger colour - what went wrong in words, the provider's own
+   message under it, and Retry. */
+.agent-error {
+  display: flex;
+  flex-direction: column;
+  align-items: flex-start;
+  gap: 8px;
+  margin: 8px 0;
+  padding: 8px 8px;
+  border: 1px solid color-mix(in srgb, var(--ui-danger) 30%, transparent);
+  border-radius: var(--shape-m);
+  background: color-mix(in srgb, var(--ui-danger) 7%, transparent);
+  font-size: var(--text-body);
+  line-height: 1.5;
+  color: var(--ui-text);
+  word-break: break-word;
+}
+
+/* An exchange that ran out of steps: not an error - the work so far
+   stands - with Continue under the last one. */
+.agent-stopped {
+  display: flex;
+  flex-direction: column;
+  align-items: flex-start;
+  gap: 8px;
+  margin: 8px 0;
+  padding: 8px 8px;
+  border: 1px solid var(--ui-border);
+  border-radius: var(--shape-m);
+  font-size: var(--text-body);
+  line-height: 1.5;
+  color: var(--ui-muted);
+}
+
+/* A remember chip: what was remembered, where, and the way back. A theme in
+   a reply gets the same chip. */
+/* What one exchange remembered or forgot: one list, a line each. */
+.agent-memory-group {
+  align-self: stretch;
+  display: flex;
+  flex-direction: column;
+  border-radius: var(--shape-m);
+  background: color-mix(in srgb, var(--ui-accent) 8%, transparent);
+}
+
+.agent-memory-group .agent-memory-chip {
+  align-self: stretch;
+  flex-wrap: nowrap;
+  border-radius: 0;
+  background: none;
+}
+
+.agent-memory-group .agent-memory-chip + .agent-memory-chip {
+  border-top: 1px solid color-mix(in srgb, var(--ui-accent) 12%, transparent);
+}
+
+.agent-memory-chip-line {
+  display: inline-flex;
+  min-width: 0;
+  /* A button: the memory in the Memory tab. */
+  padding: 0;
+  border: 0;
+  background: none;
+  color: inherit;
+  font: inherit;
+  text-align: start;
+  cursor: pointer;
+}
+
+.agent-memory-chip-line:hover:not(:disabled) .agent-memory-chip-text {
+  text-decoration: underline;
+  text-underline-offset: 0.15em;
+}
+
+.agent-memory-chip-line:disabled {
+  cursor: default;
+}
+
+.agent-memory-chip-scope {
+  flex: none;
+}
+
+.agent-memory-group .agent-memory-chip-line {
+  flex: 1;
+}
+
+.agent-memory-group .agent-memory-chip-text {
+  min-width: 0;
+  display: block;
+  white-space: nowrap;
+  text-overflow: ellipsis;
+}
+
+.agent-memory-group .agent-memory-chip-actions {
+  flex: none;
+}
+
+.agent-memory-chip.is-forgot .agent-memory-chip-text {
+  color: var(--ui-muted);
+}
+
+.agent-memory-chip,
+.agent-theme-chip {
+  align-self: flex-start;
+  display: flex;
+  flex-wrap: wrap;
+  align-items: baseline;
+  gap: 2px 8px;
+  max-width: 100%;
+  padding: 4px 8px;
+  border-radius: var(--shape-m);
+  background: color-mix(in srgb, var(--ui-accent) 8%, transparent);
+  color: var(--ui-muted);
+  font-size: var(--text-caption);
+  line-height: 1.45;
+}
+
+.agent-memory-chip-text {
+  color: var(--ui-text);
+}
+
+.agent-memory-chip-actions {
+  display: inline-flex;
+  gap: 8px;
+}
+
+/* Why a skill the reply wrote needs a second look before it is saved. */
+.skill-offer-warning {
+  color: var(--ui-warning);
+}
+
+/* What a plugin the reply wrote asks to do, before Install: one line each,
+   on a row of their own under the buttons. */
+.agent-plugin-permissions {
+  flex-basis: 100%;
+  color: var(--ui-muted);
+}
+
+.agent-plugin-permissions ul {
+  margin: 0;
+  padding-left: var(--space-4);
+  color: var(--ui-text);
+}
+
+.agent-memory-chip-actions > button,
+.agent-theme-chip button {
+  padding: 0;
+  border: 0;
+  background: none;
+  color: var(--ui-accent-text);
+  font: inherit;
+  cursor: pointer;
+}
+
+/* The modes a skill is saved in, before Save. */
+/* The modes a skill applies in, quiet until clicked; ticked in a menu
+   beside it, which stays open for another. */
+.skill-mode-choice {
+  position: relative;
+  display: inline-flex;
+  margin-right: 8px;
+}
+
+.skill-mode-choice-button {
+  display: inline-flex;
+  align-items: center;
+  gap: 4px;
+  padding: 2px 4px;
+  border: none;
+  border-radius: var(--shape-pill);
+  corner-shape: round;
+  background: transparent;
+  color: var(--ui-muted);
+  font: inherit;
+  font-size: var(--text-secondary);
+  cursor: pointer;
+}
+
+.skill-mode-choice-button:disabled {
+  cursor: default;
+}
+
+.skill-mode-choice-button:hover:not(:disabled),
+.skill-mode-choice-button[aria-expanded="true"] {
+  background: color-mix(in srgb, var(--ui-text) 6%, transparent);
+  color: var(--ui-text);
+}
+
+.skill-mode-choice-chevron {
+  transform: rotate(90deg);
+}
+
+.skill-mode-choice-menu {
+  position: absolute;
+  top: calc(100% + 4px);
+  left: 0;
+  z-index: var(--z-popover);
+  display: flex;
+  flex-direction: column;
+  min-width: 140px;
+  padding: 4px;
+}
+
+.skill-mode-choice-menu-up {
+  top: auto;
+  bottom: calc(100% + 4px);
+}
+
+.agent-memory-chip-actions > button + button::before,
+.agent-plugin-chip button + button::before {
+  content: "·";
+  margin-right: 8px;
+  color: var(--ui-muted);
+}
+
+.agent-memory-chip-actions > button:hover:not(:disabled),
+.agent-theme-chip button:hover:not(:disabled) {
+  text-decoration: underline;
+}
+
+.agent-memory-chip-actions > button:disabled,
+.agent-theme-chip button:disabled {
+  opacity: 0.5;
+  cursor: default;
+}
+
+/* Inside the reply, under the code block it installs. */
+.agent-theme-chip {
+  display: inline-flex;
+  margin-top: 8px;
+}
+
+.agent-theme-chip-name {
+  color: var(--ui-text);
+}
+
+.agent-memory-chip-error {
+  color: var(--ui-danger);
+}
+
+/* The pages a reply cites: a row of small chips under it, quiet enough to
+   read past, each opening its page. */
+.agent-sources {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 4px;
+  margin-top: 8px;
+  font-size: var(--text-caption);
+  color: var(--ui-muted);
+}
+
+.agent-sources-label {
+  margin-right: 2px;
+}
+
+.agent-source {
+  display: inline-flex;
+  align-items: center;
+  gap: 4px;
+  max-width: 100%;
+  padding: 2px 8px 2px 4px;
+  border: 1px solid var(--ui-border);
+  border-radius: var(--shape-pill);
+  corner-shape: round;
+  background: transparent;
+  color: var(--ui-text);
+  font: inherit;
+  cursor: pointer;
+  transition: background var(--dur-fast) var(--ease-standard);
+}
+
+.agent-source:hover {
+  background: var(--doc-code-bg);
+}
+
+.agent-source-num {
+  min-width: 16px;
+  padding: 0 4px;
+  border-radius: var(--shape-pill);
+  corner-shape: round;
+  background: var(--doc-code-bg);
+  color: var(--ui-muted);
+  text-align: center;
+}
+
+/* The title gives way first; the site keeps its name whole. */
+.agent-source-title {
+  flex: 1 1 0;
+  color: var(--ui-muted);
+}
+
+.agent-source-site {
+  flex: 0 1 auto;
+}
+
+/* What the plugin's code shows will go wrong, under its install chip. */
+.agent-plugin-problems {
+  flex-basis: 100%;
+  display: flex;
+  flex-direction: column;
+  align-items: flex-start;
+  gap: var(--space-1);
+  color: var(--ui-danger);
+}
+
+.agent-plugin-problems ul {
+  margin: 0;
+  padding-left: var(--space-4);
+}
+
+/* An external agent asking to take a step: the step, then its choices. */
+.agent-permission {
+  display: flex;
+  flex-direction: column;
+  align-items: flex-start;
+  gap: 8px;
+  margin: 8px 0;
+  padding: 8px;
+  border: 1px solid var(--ui-border);
+  border-radius: var(--shape-m);
+  font-size: var(--text-body);
+  line-height: 1.5;
+  color: var(--ui-text);
+  word-break: break-word;
+}
+
+.agent-permission-actions {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+}

@@ -1,0 +1,285 @@
+/* A bar over a view: navigation and view switching first, actions last. */
+.tx-bar {
+  display: flex;
+  align-items: center;
+  gap: var(--space-2);
+  min-height: var(--control-height);
+}
+.tx-bar > .tx-spacer {
+  flex: 1;
+}
+
+/* A rule in force - a filter, a sort - as a chosen capsule that opens it. */
+.tx-chip {
+  display: inline-flex;
+  align-items: center;
+  gap: var(--space-1);
+  min-height: var(--control-height-sm);
+  padding: 0 var(--space-2);
+  border: none;
+  border-radius: var(--shape-pill);
+  corner-shape: round;
+  background: var(--ui-selected);
+  color: var(--ui-selected-text);
+  font: inherit;
+  font-size: var(--text-control);
+  white-space: nowrap;
+  cursor: pointer;
+}
+.tx-chip:not(:disabled):hover {
+  background: color-mix(in srgb, var(--ui-selected) 80%, var(--ui-text) 6%);
+}
+
+/* A value of a few - a status, a label - in a tone (data-tone, in the
+   order plugins assign them), or neutral without one. .status adds a dot. */
+.tx-tag {
+  --tag: var(--ui-muted);
+  --tag-text: var(--ui-text);
+  --tag-tint: var(--ui-hover);
+  display: inline-flex;
+  align-items: center;
+  gap: var(--space-1);
+  max-width: 100%;
+  min-height: 20px;
+  padding: 0 var(--space-2);
+  border-radius: var(--shape-pill);
+  corner-shape: round;
+  background: var(--tag-tint);
+  color: var(--tag-text);
+  font-size: var(--text-secondary);
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+.tx-tag.status::before {
+  content: "";
+  flex: none;
+  width: 8px;
+  height: 8px;
+  border-radius: 50%;
+  background: var(--tag);
+}
+.tx-tag[data-tone="blue"] {
+  --tag: var(--tone-blue);
+  --tag-text: var(--tone-blue-text);
+  --tag-tint: var(--tone-blue-tint);
+}
+.tx-tag[data-tone="green"] {
+  --tag: var(--tone-green);
+  --tag-text: var(--tone-green-text);
+  --tag-tint: var(--tone-green-tint);
+}
+.tx-tag[data-tone="orange"] {
+  --tag: var(--tone-orange);
+  --tag-text: var(--tone-orange-text);
+  --tag-tint: var(--tone-orange-tint);
+}
+.tx-tag[data-tone="purple"] {
+  --tag: var(--tone-purple);
+  --tag-text: var(--tone-purple-text);
+  --tag-tint: var(--tone-purple-tint);
+}
+.tx-tag[data-tone="red"] {
+  --tag: var(--tone-red);
+  --tag-text: var(--tone-red-text);
+  --tag-tint: var(--tone-red-tint);
+}
+.tx-tag[data-tone="teal"] {
+  --tag: var(--tone-teal);
+  --tag-text: var(--tone-teal-text);
+  --tag-tint: var(--tone-teal-tint);
+}
+.tx-tag[data-tone="yellow"] {
+  --tag: var(--tone-yellow);
+  --tag-text: var(--tone-yellow-text);
+  --tag-tint: var(--tone-yellow-tint);
+}
+.tx-tag[data-tone="pink"] {
+  --tag: var(--tone-pink);
+  --tag-text: var(--tone-pink-text);
+  --tag-tint: var(--tone-pink-tint);
+}
+
+/* A word or two beside a name - Official, Built-in, a count - smaller than
+   a tag: neutral, or a status tone (data-tone accent, warning, danger), or
+   strong for who made it. */
+.tx-badge {
+  --badge: var(--ui-muted);
+  --badge-tint: color-mix(in srgb, var(--ui-text) 8%, transparent);
+  display: inline-block;
+  flex: none;
+  padding: 0 4px;
+  border-radius: var(--shape-pill);
+  corner-shape: round;
+  background: var(--badge-tint);
+  color: var(--badge);
+  font-size: var(--text-caption);
+  font-weight: 500;
+  line-height: calc(18px * var(--ui-text-scale, 1));
+  white-space: nowrap;
+}
+.tx-badge[data-tone="accent"] {
+  --badge: var(--ui-accent-text);
+  --badge-tint: color-mix(in srgb, var(--ui-accent) 14%, transparent);
+}
+.tx-badge[data-tone="warning"] {
+  --badge: var(--ui-warning);
+  --badge-tint: color-mix(in srgb, var(--ui-warning) 14%, transparent);
+}
+.tx-badge[data-tone="danger"] {
+  --badge: var(--ui-danger);
+  --badge-tint: color-mix(in srgb, var(--ui-danger) 14%, transparent);
+}
+.tx-badge[data-tone="strong"] {
+  --badge: var(--ui-primary);
+  --badge-tint: color-mix(in srgb, var(--ui-primary) 12%, transparent);
+  font-weight: 600;
+}
+.tx-tag[data-tone="gray"] {
+  --tag: var(--tone-gray);
+  --tag-text: var(--tone-gray-text);
+  --tag-tint: var(--tone-gray-tint);
+}
+
+/* A table of records drawn as the document's own tables are: a rounded
+   frame, a tinted header, hairlines between cells. */
+.tx-table-frame {
+  overflow-x: auto;
+  border: 1px solid var(--doc-border, var(--ui-border));
+  border-radius: var(--doc-radius, var(--shape-s));
+}
+.tx-table {
+  width: 100%;
+  border-collapse: separate;
+  border-spacing: 0;
+  font-size: var(--text-body);
+}
+.tx-table :is(th, td) {
+  height: 36px;
+  padding: 0 var(--space-3);
+  border-right: 1px solid var(--doc-border, var(--ui-border));
+  border-bottom: 1px solid var(--doc-border, var(--ui-border));
+  text-align: left;
+  vertical-align: middle;
+  white-space: nowrap;
+}
+.tx-table tr > :last-child {
+  border-right: none;
+}
+.tx-table tbody tr:last-child > * {
+  border-bottom: none;
+}
+.tx-table th {
+  height: 32px;
+  background: var(--doc-code-bg, var(--ui-subtle));
+  color: var(--ui-muted);
+  font-size: var(--text-secondary);
+  font-weight: 500;
+  word-break: keep-all;
+}
+.tx-table th .tx-icon {
+  margin-right: var(--space-1);
+}
+.tx-table tbody tr:hover > td {
+  background: var(--ui-hover);
+}
+
+/* A card: a record on a board, a tile in a gallery. Grouped, so a hairline
+   and no shadow. */
+.tx-card {
+  border: 1px solid var(--ui-border);
+  border-radius: var(--shape-m);
+  background: var(--ui-surface);
+}
+
+/* The copy that follows the pointer (drag-ghost.ts): one shape for a tab
+   pulled out and a file dragged in the tree. */
+.drag-ghost {
+  position: fixed;
+  top: 0;
+  left: 0;
+  z-index: var(--z-popover);
+  max-width: 220px;
+  padding: var(--space-1) var(--space-2);
+  border: 1px solid var(--ui-border);
+  border-radius: var(--shape-pill);
+  corner-shape: round;
+  font-size: var(--text-footnote);
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  pointer-events: none;
+}
+
+/* Anything dragged looks lifted the same way: a little larger, on the
+   popover's surface and shadow. A plugin's copy grows only once its
+   lib/drag.js has measured it (.is-lifted): an older one measures after. */
+.tx-drag-ghost,
+.drag-ghost,
+.tab-pill-lifted,
+.is-drag-lifted {
+  scale: 1.06;
+  background: var(--ui-surface);
+  color: var(--ui-text);
+  box-shadow: var(--shadow-popover);
+}
+.tx-drag-ghost:not(.is-lifted) {
+  scale: none;
+}
+
+/* Dragged on a plugin's page (lib/drag.js): the copy under the pointer, and
+   the place the item will land, kept as an empty outline. */
+.tx-drag-ghost {
+  position: fixed;
+  z-index: var(--z-select);
+  margin: 0;
+  pointer-events: none;
+}
+.tx-drag-source {
+  border-style: dashed;
+  background: transparent;
+  box-shadow: none;
+}
+.tx-drag-source > * {
+  visibility: hidden;
+}
+
+/* What will appear here and how to get it: one sentence, at most one
+   button. */
+.tx-empty {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: var(--space-3);
+  padding: var(--space-6) var(--space-4);
+  color: var(--ui-muted);
+  font-size: var(--text-footnote);
+  text-align: center;
+}
+
+/* The app's small disclosure caret: on a folding <details class="disclosure">
+   summary, or a .disclosure-caret in a button with aria-expanded. Each place
+   sets only its margin. */
+.disclosure > summary {
+  list-style: none;
+}
+
+.disclosure > summary::-webkit-details-marker {
+  display: none;
+}
+
+.disclosure > summary::before,
+.disclosure-caret {
+  content: "";
+  width: 0;
+  height: 0;
+  border-left: 4px solid currentColor;
+  border-top: 3.5px solid transparent;
+  border-bottom: 3.5px solid transparent;
+  transition: transform var(--dur-fast) var(--ease-standard);
+}
+
+.disclosure[open] > summary::before,
+[aria-expanded="true"] > .disclosure-caret {
+  transform: rotate(90deg);
+}

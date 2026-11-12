@@ -1,3 +1,4 @@
+import { readCss } from "../../dev/read-css";
 // @vitest-environment jsdom
 import { readFileSync } from "node:fs";
 import { describe, expect, it } from "vitest";
@@ -107,8 +108,8 @@ describe("the theme skill and its sample", () => {
       expect(skill).toContain(`\`${name}\``);
     const appCss = [
       readFileSync("src/theme/content-base.css", "utf8"),
-      readFileSync("src/engine/tokens/base.css", "utf8"),
-      readFileSync("src/editor/milkdown-theme.css", "utf8"),
+      readCss("src/engine/tokens/base.css"),
+      readCss("src/editor/milkdown-theme.css"),
     ].join("\n");
     for (const [, name] of skill.matchAll(/`(--[a-z-]+)`/g))
       expect(appCss, name).toContain(`var(${name}`);

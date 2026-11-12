@@ -1,3 +1,4 @@
+import { readCss } from "../dev/read-css";
 import { readFileSync } from "node:fs";
 import { expect, it } from "vitest";
 import { WHEN_KEYS } from "./contributions/when";
@@ -47,7 +48,8 @@ it("names only style variables a plugin page is given", () => {
     "src/engine/controls/icon-masks.css",
     "src/engine/motion/motion.css",
   ])
-    for (const m of read(css).matchAll(/(--[a-z][\w-]*)\s*:/g)) given.add(m[1]);
+    for (const m of readCss(css).matchAll(/(--[a-z][\w-]*)\s*:/g))
+      given.add(m[1]);
   for (const doc of DOCS)
     for (const m of read(doc).matchAll(/`(--[a-z][\w-]*)`/g))
       expect(given.has(m[1]), `${doc}: ${m[1]}`).toBe(true);

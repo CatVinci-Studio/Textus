@@ -1,0 +1,98 @@
+/* Plugins' floating views in the window: over the editor, under menus and
+   dialogs. The page is transparent and looked at, not clicked: a layer over
+   it moves the view and opens its menu. */
+.floating-views {
+  position: fixed;
+  inset: 0;
+  z-index: var(--z-floating);
+  pointer-events: none;
+}
+.floating-view,
+.floating-view-dot {
+  position: absolute;
+  pointer-events: auto;
+  /* Clicked and petted, never selected. */
+  -webkit-user-select: none;
+  user-select: none;
+}
+.floating-view .plugin-webview-frame,
+.sidebar .plugin-webview-frame {
+  background: transparent;
+}
+.floating-view-handle {
+  position: absolute;
+  inset: 0;
+  cursor: grab;
+  touch-action: none;
+}
+.floating-view[data-dragging] .floating-view-handle {
+  cursor: grabbing;
+}
+/* Resized from the top corner toward the middle; shown on hover. */
+.floating-view-grip {
+  position: absolute;
+  top: 0;
+  width: 16px;
+  height: 16px;
+  border: 0 solid var(--ui-muted);
+  border-top-width: 2px;
+  opacity: 0;
+  touch-action: none;
+  transition: opacity var(--dur-fast) var(--ease-standard);
+}
+.floating-view-grip[data-side="left"] {
+  right: 0;
+  border-right-width: 2px;
+  border-top-right-radius: var(--shape-xs);
+  cursor: nesw-resize;
+}
+.floating-view-grip[data-side="right"] {
+  left: 0;
+  border-left-width: 2px;
+  border-top-left-radius: var(--shape-xs);
+  cursor: nwse-resize;
+}
+.floating-view:hover .floating-view-grip,
+.floating-view-grip:active {
+  opacity: 1;
+}
+.floating-view-dot {
+  width: 36px;
+  height: 36px;
+  overflow: hidden;
+  padding: 0;
+  border: 1px solid var(--ui-border);
+  border-radius: 50%;
+  background: var(--ui-bg);
+  box-shadow: var(--shadow-popover);
+  color: var(--ui-text);
+  font: inherit;
+  font-weight: 600;
+  cursor: pointer;
+  touch-action: none;
+}
+.floating-view-dot img {
+  display: block;
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+  pointer-events: none;
+}
+
+/* A floating view's own window on the desktop: nothing but the view. */
+:root[data-floating-window],
+:root[data-floating-window] body {
+  background: transparent;
+  overflow: hidden;
+  -webkit-user-select: none;
+  user-select: none;
+}
+.floating-window {
+  inset: 0;
+}
+:root[data-floating-window] .floating-view-dot {
+  position: fixed;
+  inset: 0;
+  width: 100%;
+  height: 100%;
+}

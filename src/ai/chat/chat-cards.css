@@ -1,0 +1,282 @@
+/* add_comment: feedback pinned to a passage, the passage quoted at its head
+   behind the accent's rule. */
+.agent-comment {
+  padding: 8px 12px 12px;
+  border: 1px solid transparent;
+  border-radius: var(--shape-m);
+  background: var(--chat-card-bg, transparent);
+}
+
+.agent-comment {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+}
+
+.agent-comment-icon {
+  flex: none;
+  display: inline-grid;
+  place-items: center;
+  width: 18px;
+  height: 18px;
+  border-radius: var(--shape-xs);
+  background: var(--review-anchor-bg);
+  color: var(--review-note-line);
+}
+
+/* The note's badge in the text: same number, same disc. */
+.agent-comment-num {
+  flex: none;
+  display: inline-grid;
+  place-items: center;
+  box-sizing: border-box;
+  min-width: calc(18px * var(--ui-text-scale, 1));
+  height: calc(18px * var(--ui-text-scale, 1));
+  padding-inline: calc(4px * var(--ui-text-scale, 1));
+  border-radius: var(--shape-pill);
+  corner-shape: round;
+  background: var(--review-note-line);
+  color: var(--ui-on-fill);
+  font: 700 calc(10.5px * var(--ui-text-scale, 1)) / 1
+    var(--font-ui, sans-serif);
+}
+
+.agent-comment .agent-proposal-show {
+  font-size: var(--text-caption);
+  color: var(--ui-accent-text);
+}
+
+.agent-comment-quote {
+  margin: 0;
+  padding: 0 0 0 8px;
+  border-left: 2px solid var(--review-note-line);
+  font-size: var(--text-secondary);
+  color: var(--ui-muted);
+  --lines: 3;
+}
+
+.agent-comment-text {
+  font-size: var(--text-body);
+  line-height: 1.55;
+}
+
+/* A note's fix as it would read, set off like a quote, its button after. */
+.agent-comment-suggestion {
+  display: flex;
+  flex-direction: column;
+  align-items: flex-start;
+  gap: 8px;
+  margin-top: 8px;
+  padding-left: 12px;
+  border-left: 2px solid var(--ui-accent);
+  font-size: var(--text-body);
+  line-height: 1.55;
+}
+
+/* A reply's notes as one card: a row each, the words it is about, then the
+   note, set off by hairlines. */
+.agent-comment-rows {
+  margin: 0;
+  padding: 0;
+  list-style: none;
+}
+
+.agent-comment-row {
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+  padding: 8px 0;
+}
+
+.agent-comment-row + .agent-comment-row {
+  border-top: 1px solid var(--chat-hairline, var(--ui-border));
+}
+
+.agent-comment-row:first-child {
+  padding-top: 2px;
+}
+
+.agent-comment-row-quote {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  min-width: 0;
+  padding: 0 0 0 8px;
+  border: 0;
+  border-left: 2px solid var(--review-note-line);
+  background: none;
+  font: inherit;
+  font-size: var(--text-secondary);
+  color: var(--ui-muted);
+  text-align: start;
+  cursor: pointer;
+}
+
+.agent-comment-row-quote:hover:not(:disabled) {
+  color: var(--ui-text);
+}
+
+.agent-comment-row-quote:disabled {
+  cursor: default;
+}
+.agent-error-explanation {
+  font-weight: 600;
+}
+
+.agent-error-detail {
+  font-family: var(--doc-mono-font, var(--font-mono));
+  font-size: var(--text-caption);
+  color: var(--ui-muted);
+}
+
+/* Messages sent while a reply is coming, over the composer: a line each,
+   the oldest first. */
+.chat-queue {
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+  padding: 4px 8px 4px 12px;
+  font-size: var(--text-secondary);
+  color: var(--ui-text);
+  border-top: 1px solid var(--chat-hairline, var(--ui-border));
+}
+.chat-queue-title {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  color: var(--ui-muted);
+  font-size: var(--text-caption);
+}
+.chat-queue-item {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  min-width: 0;
+}
+.chat-queue-text {
+  flex: 1;
+}
+button.chat-queue-action {
+  padding: 0 4px;
+  border: 0;
+  background: none;
+  color: var(--ui-muted);
+  font: inherit;
+  cursor: pointer;
+}
+button.chat-queue-action:hover {
+  color: var(--ui-text);
+}
+
+/* A run of proposals as one card: a row each, and a decided one says how. */
+.agent-proposal-group-rows .agent-proposal-sentence-text {
+  overflow: hidden;
+  white-space: nowrap;
+  text-overflow: ellipsis;
+}
+
+/* Short of room, the size chips and the marks go under the words. */
+.agent-proposal-group-rows > li {
+  flex-wrap: wrap;
+  align-items: center;
+}
+
+.agent-proposal-group-rows .agent-proposal-sentence-text {
+  flex: 1 1 8ch;
+}
+
+.agent-proposal-group-rows .agent-diff-summary {
+  display: inline-flex;
+  gap: 4px;
+  flex: none;
+}
+
+.agent-proposal-group-status {
+  flex: none;
+  font-size: var(--text-caption);
+  color: var(--ui-muted);
+}
+
+.agent-proposal-group-rows
+  > li:not([data-state="pending"])
+  .agent-proposal-sentence-text {
+  color: var(--ui-muted);
+}
+
+/* A group's row text, and its own reason under it where the group's
+   reasons differ. */
+.agent-proposal-group-row-text {
+  flex: 1;
+  min-width: 0;
+  display: flex;
+  flex-direction: column;
+}
+
+.agent-proposal-group-reason {
+  font-size: var(--text-caption);
+  color: var(--ui-muted);
+}
+
+/* "Show N more", and a decided group's status line: quiet text buttons
+   that open it. */
+.agent-proposal-group-fold {
+  align-self: flex-start;
+  border: 0;
+  background: none;
+  padding: 2px 4px;
+  font: inherit;
+  font-size: var(--text-caption);
+  color: var(--ui-muted);
+  cursor: pointer;
+}
+
+.agent-proposal-group-fold:hover {
+  color: var(--ui-text);
+}
+
+/* A reply's changes to the folder's files: one row a file, which opens it. */
+.agent-file-changes-rows {
+  margin: 0;
+  padding: 0;
+  list-style: none;
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+}
+
+.agent-file-changes-rows > li {
+  display: flex;
+  align-items: baseline;
+  gap: 8px;
+  min-width: 0;
+}
+
+.agent-file-changes-path {
+  padding: 0;
+  border: 0;
+  background: none;
+  color: var(--ui-text);
+  font: inherit;
+  font-size: var(--text-body);
+  text-align: start;
+  cursor: pointer;
+}
+
+.agent-file-changes-path:hover:not(:disabled) {
+  color: var(--ui-accent-text);
+}
+
+.agent-file-changes-path:disabled {
+  color: var(--ui-muted);
+  cursor: default;
+}
+
+.agent-file-changes-problem {
+  color: var(--ui-muted);
+  font-size: var(--text-caption);
+}
+
+.agent-file-changes-actions {
+  display: flex;
+  justify-content: flex-end;
+}

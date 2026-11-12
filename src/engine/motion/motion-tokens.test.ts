@@ -11,17 +11,17 @@ const SRC = fileURLToPath(new URL("../..", import.meta.url));
 /** Keyframes of their own, and why the shared moves don't cover them. */
 const OWN_KEYFRAMES: Record<string, string> = {
   // "Working" loops.
-  "ai/chat/inline-chat.css agent-thinking-pulse": "thinking dots",
-  "ai/chat/inline-chat.css agent-caret-pulse": "caret while writing",
-  "editor/milkdown-theme.css ghost-caret-blink": "caret before a suggestion",
+  "ai/chat/chat-progress.css agent-thinking-pulse": "thinking dots",
+  "ai/chat/chat-progress.css agent-caret-pulse": "caret while writing",
+  "editor/editor-base.css ghost-caret-blink": "caret before a suggestion",
   "ai/revision/pending-picture.css pending-picture-drift": "picture being made",
   "ai/revision/pending-picture.css pending-picture-sheen": "picture being made",
   // A state shown by colour or a stroke, not a part arriving.
-  "settings/SettingsPanel.css settings-search-hit": "tint fading as read",
-  "ai/margin/ReviewMargin.css review-link-draw": "connector drawn",
-  "editor/milkdown-theme.css pending-strike-in": "strike arriving",
-  "editor/milkdown-theme.css pending-landed": "tint after landing",
-  "editor/milkdown-theme.css pending-fade-kept": "kept text settling",
+  "settings/settings-frame.css settings-search-hit": "tint fading as read",
+  "ai/margin/margin-cards.css review-link-draw": "connector drawn",
+  "editor/editor-pending.css pending-strike-in": "strike arriving",
+  "editor/editor-pending.css pending-landed": "tint after landing",
+  "editor/editor-pending.css pending-fade-kept": "kept text settling",
 };
 
 /** A time written out: 200ms, 1.2s. Zero and 1ms (a step, not a motion)
@@ -33,7 +33,7 @@ function stylesheets(): string[] {
     .filter(
       (file) =>
         file.endsWith(".css") &&
-        file !== join("engine", "motion", "motion.css"),
+        !file.startsWith(join("engine", "motion", "motion")),
     )
     .map((file) => relative(SRC, join(SRC, file)).split(sep).join("/"));
 }

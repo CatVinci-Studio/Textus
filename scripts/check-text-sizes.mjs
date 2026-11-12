@@ -1,5 +1,5 @@
 #!/usr/bin/env node
-// The interface's text is the type scale's (design-system.css --text-*), so
+// The interface's text is the type scale's (ds-base.css --text-*), so
 // a panel, a dialog or Settings reads at the size the rest does. A fixed
 // font-size (px, rem, pt) in a stylesheet must say why in ALLOWED: the
 // document's own text, a glyph sized to its badge, the phone's own rules.
@@ -12,10 +12,8 @@ const TOKEN = /var\(--text-/;
 
 /** Files (or folders, ending in /) whose fixed sizes are meant, with why. */
 const ALLOWED_FILES = {
-  "src/engine/tokens/design-system.css": "the type scale itself",
   "src/app/editor-column.css": "the document's text, at its zoom",
   "src/theme/content-base.css": "the document's text",
-  "src/editor/milkdown-theme.css": "the document's text",
   "src/engine/controls/Select.css":
     "an invisible native select: 16px keeps iOS from zooming",
   "src/mobile/": "the phone's own type (its --text-* follow Dynamic Type)",
@@ -50,7 +48,7 @@ for (const file of files("src")) {
       if (!value || TOKEN.test(value)) return;
       if (GLYPHS[file]?.includes(value)) return;
       problems.push(
-        `${file}:${at + 1}: font-size ${value} - use a --text-* size (design-system.css)`,
+        `${file}:${at + 1}: font-size ${value} - use a --text-* size (ds-base.css)`,
       );
     });
 }
