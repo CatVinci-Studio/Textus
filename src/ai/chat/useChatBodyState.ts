@@ -11,12 +11,16 @@ import {
 
 /** The chat body's state, one hook per concern. */
 
-/** The in-flight exchange as drawn, its prose paced onto the screen. The
- *  conversation keeps the text as received. */
+/** The in-flight exchange with its prose paced, while `paced`: Quick Ask's
+ *  one line. The list paces its live reply itself. */
 export function useRevealedStream(
   received: ChatBodyProps["conversation"]["streaming"],
+  paced: boolean,
 ) {
-  const revealedText = useRevealedText(received?.text ?? "", !!received);
+  const revealedText = useRevealedText(
+    received?.text ?? "",
+    !!received && paced,
+  );
   return useMemo(
     () => received && { ...received, text: revealedText },
     [received, revealedText],

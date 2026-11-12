@@ -94,8 +94,8 @@ export function ChatBody({
     stop,
     retry,
   } = conversation;
-  const streaming = useRevealedStream(received);
-  const follow = useFollowBottom(streaming);
+  const streaming = useRevealedStream(received, variant === "quick");
+  const follow = useFollowBottom(received);
   const listRef = follow.ref;
   const { quickExpanded, toggleQuickExpanded } = useQuickExpanded(
     variant,
@@ -104,7 +104,7 @@ export function ChatBody({
     conversation.conversationId,
   );
 
-  useStreamedProposals(streaming, onProposals);
+  useStreamedProposals(received, onProposals);
   const applySuggestion: ApplySuggestion = (id, note) =>
     onProposals([
       {
@@ -295,7 +295,8 @@ export function ChatBody({
                   <ChatMessages
                     proposalActions={false}
                     history={history}
-                    streaming={streaming}
+                    streaming={received}
+                    onLiveGrow={follow.grow}
                     thoughts={conversation.thoughts}
                     busy={busy}
                     error={error}
@@ -339,7 +340,8 @@ export function ChatBody({
             >
               <ChatMessages
                 history={history}
-                streaming={streaming}
+                streaming={received}
+                onLiveGrow={follow.grow}
                 thoughts={conversation.thoughts}
                 busy={busy}
                 error={error}

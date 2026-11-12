@@ -96,6 +96,8 @@ export interface ChatMessagesLabels
 
 export interface ChatMessagesProps {
   history: AgentTurn[];
+  /** The live reply drew more: keep it in view. */
+  onLiveGrow?: () => void;
   /** Live view of the in-flight exchange (turns landed so far + assistant
    *  prose being generated). Null when idle - and on providers without
    *  streaming, where the reply still arrives all at once via `history`. */

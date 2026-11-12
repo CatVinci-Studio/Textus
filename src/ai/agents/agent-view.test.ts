@@ -89,6 +89,13 @@ describe("an agent's updates as the chat shows them", () => {
       { kind: "ToolResult", call_id: "t2", output: "Failed." },
     ]);
     expect(finish(view)).toHaveLength(3);
+    // An update that changes nothing is the same view: nothing redraws.
+    const again = applyUpdate(view, {
+      sessionUpdate: "tool_call_update",
+      toolCallId: "t2",
+      status: "failed",
+    });
+    expect(again).toBe(view);
   });
 });
 

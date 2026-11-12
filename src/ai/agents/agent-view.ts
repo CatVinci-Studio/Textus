@@ -40,12 +40,16 @@ function args(fields: ToolCallFields, before?: string): string {
   });
 }
 
+/** How much of a step's output is kept: what its row can show. */
+const KEPT_OUTPUT = 4000;
+
 /** What a finished step says: its text content, else how it ended. */
 function output(fields: ToolCallFields): string {
   const text = (fields.content ?? [])
     .map((c) => (c.type === "content" ? textOf(c.content) : ""))
     .filter(Boolean)
-    .join("\n");
+    .join("\n")
+    .slice(0, KEPT_OUTPUT);
   return text || (fields.status === "failed" ? "Failed." : "Done.");
 }
 
@@ -87,19 +91,26 @@ export function applyUpdate(view: AgentView, update: SessionUpdate): AgentView {
     }
     case "tool_call_update": {
       const fields = update as ToolCallFields;
-      const turns = view.turns.map((t) =>
-        t.kind === "ToolCall" && t.call_id === fields.toolCallId
-          ? { ...t, arguments: args(fields, t.arguments) }
-          : t,
+      const at = view.turns.findIndex(
+        (t) => t.kind === "ToolCall" && t.call_id === fields.toolCallId,
       );
+      const call = view.turns[at];
+      let turns = view.turns;
+      if (call?.kind === "ToolCall") {
+        const line = args(fields, call.arguments);
+        if (line !== call.arguments) {
+          turns = [...view.turns];
+          turns[at] = { ...call, arguments: line };
+        }
+      }
       const done = fields.status === "completed" || fields.status === "failed";
       const answered = turns.some(
         (t) => t.kind === "ToolResult" && t.call_id === fields.toolCallId,
       );
-      return {
-        ...view,
-        turns: done && !answered ? [...turns, result(fields)] : turns,
-      };
+      if (done && !answered)
+        return { ...view, turns: [...turns, result(fields)] };
+      // Nothing new to show: the same view, so nothing draws again.
+      return turns === view.turns ? view : { ...view, turns };
     }
     default:
       return view;

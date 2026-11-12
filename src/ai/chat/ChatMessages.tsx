@@ -1,6 +1,15 @@
 import type { PendingStatus } from "../revision/usePendingEdits";
 import { withoutCitationMarkers } from "../citation-markers";
-import { useEffect, useMemo, useRef, type CSSProperties } from "react";
+import {
+  useEffect,
+  useLayoutEffect,
+  useMemo,
+  useRef,
+  type CSSProperties,
+  type RefObject,
+} from "react";
+import { useLatest } from "../../utils/hooks/useLatest";
+import { useRevealedText } from "./useRevealedText";
 import { AgentTurnView } from "./AgentTurnView";
 import type { AgentTurn } from "../types";
 import { isProposalTool } from "./proposal";
@@ -50,6 +59,7 @@ export function ChatMessages({
   onContinue,
   docPath = null,
   conversation = "",
+  onLiveGrow,
 }: ChatMessagesProps) {
   const revealFrom = useRef(0);
   const wasBusy = useRef(busy);
@@ -87,25 +97,44 @@ export function ChatMessages({
     () => readTranscript(shown, noteNumber),
     [shown, noteNumber],
   );
-  const items: ChatItemsContext = {
-    labels,
-    busy,
-    selectedText,
-    proposalStatus,
+  // The actions are read at the call, so the items keep while only a
+  // reply's text moves.
+  const latest = useLatest({
     onAcceptProposal,
     onRejectProposal,
     onRelocateProposal,
-    proposalSentences,
     onDecideSentence,
     onRevealProposal,
     onLocateText,
     onApplySuggestion,
     onContinue,
-    proposalActions,
-    docPath,
-    transcript,
-    conversation,
-  };
+  });
+  const items = useMemo<ChatItemsContext>(
+    () => ({
+      labels,
+      busy,
+      selectedText,
+      proposalStatus,
+      proposalSentences,
+      proposalActions,
+      docPath,
+      transcript,
+      conversation,
+      ...actionsOf(latest),
+    }),
+    [
+      labels,
+      busy,
+      selectedText,
+      proposalStatus,
+      proposalSentences,
+      proposalActions,
+      docPath,
+      transcript,
+      conversation,
+      latest,
+    ],
+  );
 
   // A decided card shrinks to its status line and what is under it slides
   // up. Only decisions count: an arriving card must not slide the
@@ -118,16 +147,12 @@ export function ChatMessages({
     })
     .join(" ");
 
-  return (
-    <>
-      <FlipOnChange
-        watch={decisions}
-        targets={() =>
-          document.querySelectorAll(
-            ":is(.inline-chat-messages, .quick-ask-transcript) > *",
-          )
-        }
-      />
+  const liveThought = streaming?.thought ?? null;
+  const historyLength = history.length;
+  // Drawn again when the turns or what they read change, not with each
+  // frame of a reply coming in.
+  const list = useMemo(
+    () => (
       <ChatItems.Provider value={items}>
         {shown.map((turn, i) => {
           const reveal = i >= revealFrom.current;
@@ -143,8 +168,8 @@ export function ChatMessages({
           const thought =
             turn.kind !== "User"
               ? null
-              : i === history.length
-                ? (streaming?.thought ?? null)
+              : i === historyLength
+                ? liveThought
                 : (thoughts?.[i] ?? null);
           return (
             <ChatItem
@@ -152,22 +177,28 @@ export function ChatMessages({
               item={itemOf(turn, transcript)}
               arrival={{ reveal, style }}
               thought={thought}
-              last={i === history.length - 1}
+              last={i === historyLength - 1}
             />
           );
         })}
       </ChatItems.Provider>
+    ),
+    [items, shown, transcript, thoughts, liveThought, historyLength],
+  );
+
+  return (
+    <>
+      <FlipOnChange
+        watch={decisions}
+        targets={() =>
+          document.querySelectorAll(
+            ":is(.inline-chat-messages, .quick-ask-transcript) > *",
+          )
+        }
+      />
+      {list}
       {streaming && streaming.text.length > 0 && (
-        <div className="turn-reveal agent-streaming">
-          <AgentTurnView
-            turn={{
-              kind: "Assistant",
-              text: withoutCitationMarkers(streaming.text, true),
-            }}
-            labels={labels}
-            live
-          />
-        </div>
+        <LiveReply text={streaming.text} labels={labels} onGrow={onLiveGrow} />
       )}
       {streaming?.permission && (
         <AgentPermission
@@ -207,4 +238,55 @@ export function ChatMessages({
       )}
     </>
   );
+}
+
+/** The reply still coming in, revealed at a steady pace: only this redraws
+ *  each frame, not the conversation above it. */
+function LiveReply({
+  text,
+  labels,
+  onGrow,
+}: {
+  text: string;
+  labels: ChatMessagesProps["labels"];
+  onGrow?: () => void;
+}) {
+  const shown = useRevealedText(text, true);
+  useLayoutEffect(() => onGrow?.(), [shown, onGrow]);
+  return (
+    <div className="turn-reveal agent-streaming">
+      <AgentTurnView
+        turn={{ kind: "Assistant", text: withoutCitationMarkers(shown, true) }}
+        labels={labels}
+        live
+      />
+    </div>
+  );
+}
+
+type Actions = Pick<
+  ChatItemsContext,
+  | "onAcceptProposal"
+  | "onRejectProposal"
+  | "onRelocateProposal"
+  | "onDecideSentence"
+  | "onRevealProposal"
+  | "onLocateText"
+  | "onApplySuggestion"
+  | "onContinue"
+>;
+type Call = (...args: unknown[]) => unknown;
+
+/** Each action as a call through `latest`, so the set keeps its identity;
+ *  one not given stays absent. */
+function actionsOf(latest: RefObject<Actions>): Actions {
+  const now = latest.current as unknown as Record<string, Call | undefined>;
+  const out: Record<string, Call> = {};
+  for (const name of Object.keys(now))
+    if (now[name])
+      out[name] = (...args) =>
+        (latest.current as unknown as Record<string, Call | undefined>)[name]?.(
+          ...args,
+        );
+  return out as unknown as Actions;
 }
