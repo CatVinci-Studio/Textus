@@ -481,6 +481,11 @@ export type SavedImage_Deserialize = {
 	 *  instead of a Markdown image.
 	 */
 	embed?: string | null,
+	/**
+	 *  The file written, where it is the user's (in the document's folder),
+	 *  for plugins to hear of; none for a draft's, kept by the app.
+	 */
+	path?: string | null,
 };
 
 export type SavedImage_Serialize = {
@@ -494,6 +499,11 @@ export type SavedImage_Serialize = {
 	 *  instead of a Markdown image.
 	 */
 	embed: string | null,
+	/**
+	 *  The file written, where it is the user's (in the document's folder),
+	 *  for plugins to hear of; none for a draft's, kept by the app.
+	 */
+	path: string | null,
 };
 
 /**  A line that holds what was searched for. */

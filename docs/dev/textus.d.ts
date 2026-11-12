@@ -966,6 +966,8 @@ declare global {
       trash(path: string): Promise<void>;
       createFolder(path: string): Promise<void>;
       frontmatter: Frontmatter;
+      /** A file a plugin made, and from 1.3.13 a picture pasted or dropped
+       *  into a document and saved in its folder. */
       onDidCreate: Event<{ path: string }>;
       onDidChange: Event<{ path: string }>;
       onDidRename: Event<{ from: string; to: string }>;

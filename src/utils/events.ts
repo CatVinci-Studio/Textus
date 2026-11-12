@@ -97,6 +97,10 @@ export const ZEN_MODE_EVENT = "textus:zen-mode";
  *  (detail: its path); open tabs of it check the disk. */
 export const FILE_WRITTEN_EVENT = "textus:file-written";
 
+/** The app made a file of the user's: a picture pasted or dropped into a
+ *  document, saved in its folder (detail: its path). */
+export const FILE_CREATED_EVENT = "textus:file-created";
+
 /** A tab took its file's new text from disk (detail: its path). */
 export const FILE_RELOADED_EVENT = "textus:file-reloaded";
 

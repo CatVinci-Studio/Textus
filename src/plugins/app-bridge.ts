@@ -1,4 +1,5 @@
 import { splitLayout, subscribeSplit } from "../engine/layout/store";
+import type { SplitLayout } from "../engine/layout/ops";
 import type { OpenDocumentAccess } from "../registry/open-documents";
 import type { PanelsState } from "./panels-state";
 import type { AiState } from "./ai-state";
@@ -9,6 +10,7 @@ import { keptForDocuments } from "../platform/ipc-files";
 import type { EditProposal } from "../ai/types";
 import type { ChangeSource } from "../editor/change-source";
 import type { AppState } from "../platform/ipc-schedule";
+import { FILE_CREATED_EVENT } from "../utils/events";
 
 /** Where something opens: a tab of its own, beside the front tab, or in its place. */
 export type Where = "tab" | "beside" | "current";
@@ -241,10 +243,26 @@ export function onPluginEvent<K extends keyof PluginEventMap>(
   return () => set.delete(listener as Listener<never>);
 }
 
+// A file the app made for the user (a picture pasted): plugins hear of it
+// as of one they made.
+globalThis.window?.addEventListener(FILE_CREATED_EVENT, (event) =>
+  emitPluginEvent("fileCreate", {
+    path: (event as CustomEvent<string>).detail,
+  }),
+);
+
+/** The islands' arrangement: which tabs where, in front and in use; not
+ *  their sizes, which change on every move of a divider. */
+export function arrangementOf(layout: SplitLayout | null): string {
+  return JSON.stringify(layout, (key, value: unknown) =>
+    key === "sizes" ? undefined : value,
+  );
+}
+
 // The islands' arrangement changed: told to plugins as `layout`.
-let lastLayout = splitLayout();
+let lastLayout = arrangementOf(splitLayout());
 subscribeSplit(() => {
-  const now = splitLayout();
+  const now = arrangementOf(splitLayout());
   if (now === lastLayout) return;
   lastLayout = now;
   emitPluginEvent("layout", null);

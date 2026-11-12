@@ -12,6 +12,7 @@ import { linkHref } from "../markdown/link-syntax";
 import { currentStrings } from "../../i18n/current";
 import { explainError } from "../../utils/error-explain";
 import { LINK } from "../markdown/link-source";
+import { FILE_CREATED_EVENT } from "../../utils/events";
 
 /** Pictures pasted, dropped or picked, saved where the writer keeps them. */
 
@@ -144,7 +145,14 @@ function saveToImageFolder(
         ext,
         store.settings().imageFolder,
       ),
-    );
+    )
+    .then((saved) => {
+      if (saved.path)
+        window.dispatchEvent(
+          new CustomEvent(FILE_CREATED_EVENT, { detail: saved.path }),
+        );
+      return saved;
+    });
 }
 
 /** Copies an image file into the image folder whatever the storage mode,

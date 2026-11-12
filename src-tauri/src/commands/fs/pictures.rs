@@ -86,6 +86,9 @@ pub struct SavedImage {
     /// In an Obsidian vault that writes wiki links: the `![[…]]` to insert
     /// instead of a Markdown image.
     pub(crate) embed: Option<String>,
+    /// The file written, where it is the user's (in the document's folder),
+    /// for plugins to hear of; none for a draft's, kept by the app.
+    pub(crate) path: Option<String>,
 }
 
 /// Where the images of a document with no file yet are kept. They move into

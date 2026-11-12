@@ -279,11 +279,12 @@ pub async fn save_pasted_image(
     let embed = conventions.as_ref().and_then(|c| {
         crate::conventions::wiki_embed(c, Path::new(doc_path.as_deref()?), &dir.join(&name))
     });
-    let src = match folder {
-        Some(folder) => folder.src(&name),
-        None => pictures::markdown_path(&dir.join(&name).to_string_lossy()),
+    let written = dir.join(&name).to_string_lossy().to_string();
+    let (src, path) = match folder {
+        Some(folder) => (folder.src(&name), Some(written)),
+        None => (pictures::markdown_path(&written), None),
     };
-    Ok(SavedImage { src, embed })
+    Ok(SavedImage { src, embed, path })
 }
 
 /// Brings a document's images into the image folder of the file it was just
