@@ -44,7 +44,9 @@ it("keeps one row in the tab order as rows come and go, each row reachable", asy
   // Nothing focused yet: the selected row leads.
   expect(stops()).toEqual(["c"]);
   expect(unreachable()).toBe(0);
-  act(() => (container.querySelector('[data-name="b"]') as HTMLElement).focus());
+  act(() =>
+    (container.querySelector('[data-name="b"]') as HTMLElement).focus(),
+  );
   expect(stops()).toEqual(["b"]);
   // The focused row goes: the selected one takes the stop.
   rerender(<Tree rows={["a", "c", "d"]} selected="c" />);

@@ -44,7 +44,10 @@ describe("Obsidian image sizes", () => {
     // A new size keeps the picture as it is shown: no second load.
     const img = box.querySelector("img")!;
     let loads = 0;
-    const own = Object.getOwnPropertyDescriptor(HTMLImageElement.prototype, "src")!;
+    const own = Object.getOwnPropertyDescriptor(
+      HTMLImageElement.prototype,
+      "src",
+    )!;
     Object.defineProperty(img, "src", {
       get: () => own.get!.call(img),
       set: (v) => (loads++, own.set!.call(img, v)),
@@ -53,9 +56,7 @@ describe("Obsidian image sizes", () => {
     view.state.doc.descendants((n, pos) => {
       if (n.type.name === "image") at = pos;
     });
-    view.dispatch(
-      view.state.tr.setNodeAttribute(at, "alt", "cat|200"),
-    );
+    view.dispatch(view.state.tr.setNodeAttribute(at, "alt", "cat|200"));
     expect(box.style.width).toBe("200px");
     expect(loads).toBe(0);
     view.dispatch(view.state.tr.setNodeAttribute(at, "src", "dog.png"));

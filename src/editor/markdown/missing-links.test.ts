@@ -28,9 +28,7 @@ it("dims only the links to missing notes, and sends nothing when that stays the 
   );
   editors.push(editor);
   const view = editor.action((ctx) => ctx.get(editorViewCtx));
-  await vi.waitFor(() =>
-    expect(dimmed(view.dom)).toEqual(["[[Gone]]"]),
-  );
+  await vi.waitFor(() => expect(dimmed(view.dom)).toEqual(["[[Gone]]"]));
   const sent = vi.spyOn(view, "dispatch");
   view.dispatch(view.state.tr.insertText("x", view.state.doc.content.size - 2));
   await new Promise((r) => setTimeout(r, 400));
