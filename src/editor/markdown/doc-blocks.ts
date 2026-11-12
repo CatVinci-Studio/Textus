@@ -1,3 +1,4 @@
+import { eachLine } from "../../utils/markdown-lines";
 import type { Node as ProseNode } from "@milkdown/kit/prose/model";
 
 /**
@@ -188,46 +189,30 @@ export function isPicture(block: string): boolean {
   return /^(?:!\[[^\]\n]*\]\([^)\n]*\)|<img\s[^>\n]*>)$/.test(block.trim());
 }
 
-/** The marker a fenced block opens with: ``` or ~~~ code, $$ maths. */
-function fenceOpening(line: string): string | null {
-  const t = line.trimStart();
-  for (const marker of ["```", "~~~", "$$"])
-    if (t.startsWith(marker)) return marker;
-  return null;
-}
-
 /** The model's text in paragraphs: runs of lines between blank lines, a
- *  fenced block whole, with where each is. */
+ *  fenced block (code or `$$` maths) whole, with where each is. */
 export function textParagraphs(
   text: string,
 ): { text: string; from: number; to: number }[] {
   const spans: [number, number][] = [];
   let start: number | null = null;
   let end = 0;
-  let fence: string | null = null;
   let offset = 0;
-  for (const raw of text.split(/(?<=\n)/)) {
-    const line = raw.replace(/\r?\n$/, "");
-    const lineEnd = offset + line.length;
-    if (fence) {
-      end = lineEnd;
-      if (line.trimStart().startsWith(fence)) fence = null;
-    } else if (line.trim() === "") {
-      if (start !== null) spans.push([start, end]);
-      start = null;
-    } else {
-      start ??= offset;
-      end = lineEnd;
-      const marker = fenceOpening(line);
-      // A one-line `$$x$$` closes itself.
-      if (
-        marker &&
-        !(marker === "$$" && line.trimStart().slice(2).trimEnd().endsWith("$$"))
-      )
-        fence = marker;
-    }
-    offset += raw.length;
-  }
+  eachLine(
+    text,
+    (line, _index, code) => {
+      const bare = line.replace(/\r$/, "");
+      if (code || bare.trim() !== "") {
+        start ??= offset;
+        end = offset + bare.length;
+      } else if (start !== null) {
+        spans.push([start, end]);
+        start = null;
+      }
+      offset += line.length + 1;
+    },
+    { math: true },
+  );
   if (start !== null) spans.push([start, end]);
   return spans.map(([from, to]) => ({ text: text.slice(from, to), from, to }));
 }

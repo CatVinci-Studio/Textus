@@ -13,10 +13,23 @@ const FENCE = /^(`{3,}|~{3,})(.*)$/;
 export function eachLine(
   markdown: string,
   visit: (line: string, index: number, code: boolean) => void,
+  /** `$$` blocks count as code too: maths, kept whole. */
+  { math = false } = {},
 ): void {
   let fence: string | null = null;
   markdown.split("\n").forEach((line, index) => {
-    const found = FENCE.exec(line.replace(CONTAINER_PREFIX, ""));
+    const bare = line.replace(CONTAINER_PREFIX, "");
+    if (math && (fence === "$$" || (!fence && bare.startsWith("$$")))) {
+      const rest = bare.trimEnd();
+      // Opened, closed on a line ending in $$; `$$x$$` closes itself.
+      if (fence) {
+        if (rest.endsWith("$$")) fence = null;
+      } else if (!(rest.length > 2 && rest.slice(2).endsWith("$$"))) {
+        fence = "$$";
+      }
+      return visit(line, index, true);
+    }
+    const found = FENCE.exec(bare);
     if (fence) {
       if (
         found &&

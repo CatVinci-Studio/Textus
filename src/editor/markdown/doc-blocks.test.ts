@@ -156,6 +156,15 @@ describe("keepPictures", () => {
     }
   });
 
+  it("keeps a fenced block whole: a shorter fence inside doesn't close it", () => {
+    const text = "A.\n\n````\n```\n\nstill code\n````\n\n$$\nx\n\ny\n$$";
+    expect(textParagraphs(text).map((p) => p.text)).toEqual([
+      "A.",
+      "````\n```\n\nstill code\n````",
+      "$$\nx\n\ny\n$$",
+    ]);
+  });
+
   it("is what a streaming rewrite of a run is drawn with", () => {
     const blocks = sent(
       ["paragraph", "One."],

@@ -19,5 +19,12 @@ describe("numbered headings for Pandoc", () => {
     expect(numberedHeadings("# T\n```\n# not\n```\n## A")).toBe(
       "# T {.unnumbered .unlisted}\n```\n# not\n```\n# A",
     );
+    // Code in a list item, and a fence that only closes on a bare run.
+    expect(numberedHeadings("# T\n- x\n  ```\n# not\n  ```\n## A")).toBe(
+      "# T {.unnumbered .unlisted}\n- x\n  ```\n# not\n  ```\n# A",
+    );
+    expect(numberedHeadings("# T\n```\n``` x\n# not\n```\n## A")).toBe(
+      "# T {.unnumbered .unlisted}\n```\n``` x\n# not\n```\n# A",
+    );
   });
 });
