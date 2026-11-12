@@ -620,12 +620,22 @@ button.agent-context-chip:hover {
   text-align: center;
 }
 
+/* The title gives way first; the site keeps its name whole. */
 .agent-source-title {
+  flex: 1 1 0;
+  min-width: 0;
   overflow: hidden;
-  max-width: 16em;
   text-overflow: ellipsis;
   white-space: nowrap;
   color: var(--ui-muted);
+}
+
+.agent-source-site {
+  flex: 0 1 auto;
+  min-width: 0;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
 }
 
 /* What the plugin's code shows will go wrong, under its install chip. */

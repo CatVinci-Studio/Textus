@@ -23,11 +23,26 @@
   padding: 0 0.4em;
 }
 
-/* Beside the composer's tools, it is what gives way, down to its chevron:
-   Send keeps its word in a narrow window at a large size. */
+/* Beside the composer's tools, whole until the last step: then it is cut,
+   down to its chevron. Its model goes first, whole. */
 .inline-chat-toolbar > .mode-picker {
+  flex: none;
+}
+
+.inline-chat-toolbar:not([data-fit=""]) .mode-picker-model {
+  display: none;
+}
+
+.inline-chat-toolbar[data-fit="short-mode"] > .mode-picker {
   flex: 0 1 auto;
   min-width: 28px;
+}
+
+.inline-chat-toolbar[data-fit="short-mode"] .mode-picker-value {
+  flex: 0 1 auto;
+  min-width: 0;
+  overflow: hidden;
+  text-overflow: ellipsis;
 }
 
 /* The list: the modes, each with a line on what it does, then the models

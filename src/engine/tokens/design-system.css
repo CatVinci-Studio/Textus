@@ -432,6 +432,10 @@
   background: transparent;
   font-size: var(--text-control);
   line-height: 1.2;
+  /* One line: a pill holds its label whole; short of room, its group
+     wraps instead. */
+  white-space: nowrap;
+  max-width: 100%;
   cursor: pointer;
   transition:
     background-color var(--dur-fast) var(--ease-standard),

@@ -1,3 +1,5 @@
+import { useRef, type ReactNode } from "react";
+import { useFitSteps } from "../../engine/controls/fit-steps";
 import { MentionLayer, useMentionPicker } from "./composer-mentions";
 import { AttachmentChips } from "./AttachmentChips";
 import { resolveSkillMessage } from "./proposal";
@@ -396,7 +398,7 @@ export function ChatComposer({
               autoFocus={focusOnOpen}
             />
           </div>
-          <div className="inline-chat-toolbar">
+          <ComposerToolbar>
             {switchModels && !mobileChrome() ? (
               <ModeAndModelPicker {...pickerProps} />
             ) : (
@@ -459,9 +461,24 @@ export function ChatComposer({
                 {busy ? labels.stop : labels.send}
               </span>
             </button>
-          </div>
+          </ComposerToolbar>
         </div>
       </div>
     </>
+  );
+}
+
+/** The composer's steps short of room, measured: the model's name goes
+ *  whole, then Send's word (its arrow stays), then the mode's name is cut. */
+const TOOLBAR_STEPS = ["no-model", "send-icon", "short-mode"] as const;
+
+/** The mode, the tools and Send, giving way in that order (useFitSteps). */
+function ComposerToolbar({ children }: { children: ReactNode }) {
+  const row = useRef<HTMLDivElement>(null);
+  useFitSteps(row, TOOLBAR_STEPS);
+  return (
+    <div ref={row} className="inline-chat-toolbar">
+      {children}
+    </div>
   );
 }

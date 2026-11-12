@@ -1,3 +1,4 @@
+import { PathText } from "../../engine/controls/PathText";
 import { HeadRow } from "../../engine/controls/HeadRow";
 import { openDocument } from "../../utils/open-document";
 import { useEffect, useState, type CSSProperties } from "react";
@@ -123,7 +124,7 @@ export function FileChangesCard({
               disabled={!c.applied && c.before === null}
               onClick={() => openDocument(c.file)}
             >
-              {c.path}
+              <PathText path={c.path} />
             </button>
             {revisions ? (
               <FileWaiting
@@ -135,7 +136,7 @@ export function FileChangesCard({
               />
             ) : (
               made.has(c.file) && (
-                <span className="agent-proposal-kind">{labels.filesNew}</span>
+                <span className="tx-badge">{labels.filesNew}</span>
               )
             )}
           </li>

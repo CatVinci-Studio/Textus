@@ -599,26 +599,26 @@
   display: none;
 }
 
-:is(.agent-panel-body, .chat-window-body) .inline-chat-field {
-  container-type: inline-size;
-}
-
-:root[data-early-containers]
-  :is(.agent-panel-body, .chat-window-body)
-  .inline-chat-field {
-  container-type: normal;
-}
-
-@container (max-width: 22em) {
+/* Short of room (ComposerToolbar's steps): the model's name goes whole,
+   then Send keeps only its arrow, then the mode's name is cut. */
+:is(
+    .inline-chat-toolbar[data-fit="send-icon"],
+    .inline-chat-toolbar[data-fit="short-mode"]
+  )
   .inline-chat-send-icon {
-    display: block;
-  }
+  display: block;
+}
+:is(
+    .inline-chat-toolbar[data-fit="send-icon"],
+    .inline-chat-toolbar[data-fit="short-mode"]
+  )
   .inline-chat-send-label {
-    display: none;
-  }
+  display: none;
 }
 
+/* A long word, link or path in any card breaks rather than run out of it. */
 .inline-chat-messages {
+  overflow-wrap: anywhere;
   padding: 8px 8px;
   max-height: 280px;
   overflow-y: auto;
@@ -1578,8 +1578,14 @@ button.chat-queue-action:hover {
   text-overflow: ellipsis;
 }
 
+/* Short of room, the size chips and the marks go under the words. */
 .agent-proposal-group-rows > li {
+  flex-wrap: wrap;
   align-items: center;
+}
+
+.agent-proposal-group-rows .agent-proposal-sentence-text {
+  flex: 1 1 8ch;
 }
 
 .agent-proposal-group-rows .agent-diff-summary {
