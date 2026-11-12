@@ -1,13 +1,10 @@
+import { lcsSteps, wholeChange } from "../../utils/lcs";
 type DiffKind = "context" | "add" | "remove";
 
 interface DiffLine {
   kind: DiffKind;
   text: string;
 }
-
-/** Above this many lines on either side, the LCS table costs more than the
- *  diff is worth; the pair shows as remove-all/add-all instead. */
-const MAX_LCS_LINES = 400;
 
 /**
  * Line-level diff of two markdown snippets, for the proposal card. Plain
@@ -21,43 +18,19 @@ export function diffLines(before: string, after: string): DiffLine[] {
   if (a.length === 0) return b.map((text) => ({ kind: "add" as const, text }));
   if (b.length === 0)
     return a.map((text) => ({ kind: "remove" as const, text }));
-  if (a.length > MAX_LCS_LINES || b.length > MAX_LCS_LINES) {
-    return [
-      ...a.map((text) => ({ kind: "remove" as const, text })),
-      ...b.map((text) => ({ kind: "add" as const, text })),
-    ];
-  }
-
-  // lcs[i][j] = length of the longest common subsequence of a[i:] and b[j:].
-  const lcs: number[][] = Array.from({ length: a.length + 1 }, () =>
-    new Array<number>(b.length + 1).fill(0),
-  );
-  for (let i = a.length - 1; i >= 0; i--) {
-    for (let j = b.length - 1; j >= 0; j--) {
-      lcs[i][j] =
-        a[i] === b[j]
-          ? lcs[i + 1][j + 1] + 1
-          : Math.max(lcs[i + 1][j], lcs[i][j + 1]);
-    }
-  }
-
+  // Too large to diff: shown as remove-all, add-all.
+  const steps =
+    lcsSteps(a.length, b.length, (i, j) => a[i] === b[j], "delete") ??
+    wholeChange(a.length, b.length);
   const out: DiffLine[] = [];
   let i = 0;
   let j = 0;
-  while (i < a.length && j < b.length) {
-    if (a[i] === b[j]) {
-      out.push({ kind: "context", text: a[i] });
-      i++;
+  for (const step of steps) {
+    if (step === "same") {
+      out.push({ kind: "context", text: a[i++] });
       j++;
-    } else if (lcs[i + 1][j] >= lcs[i][j + 1]) {
-      out.push({ kind: "remove", text: a[i] });
-      i++;
-    } else {
-      out.push({ kind: "add", text: b[j] });
-      j++;
-    }
+    } else if (step === "delete") out.push({ kind: "remove", text: a[i++] });
+    else out.push({ kind: "add", text: b[j++] });
   }
-  while (i < a.length) out.push({ kind: "remove", text: a[i++] });
-  while (j < b.length) out.push({ kind: "add", text: b[j++] });
   return out;
 }

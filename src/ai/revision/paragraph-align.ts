@@ -1,3 +1,4 @@
+import { lcsSteps, wholeChange } from "../../utils/lcs";
 import { MATCH, similarity } from "./sentence-similarity";
 import { splitSentences } from "./sentence-pairs";
 import { formKey } from "./markdown-forms";
@@ -386,15 +387,9 @@ export function sentencePairs(
   // `<https://…>` from the editor and `https://…` from a model are the same.
   const keyA = a.map(formKey);
   const keyB = b.map(formKey);
-  const lcs: number[][] = Array.from({ length: a.length + 1 }, () =>
-    new Array<number>(b.length + 1).fill(0),
-  );
-  for (let i = a.length - 1; i >= 0; i--)
-    for (let j = b.length - 1; j >= 0; j--)
-      lcs[i][j] =
-        keyA[i] === keyB[j]
-          ? lcs[i + 1][j + 1] + 1
-          : Math.max(lcs[i + 1][j], lcs[i][j + 1]);
+  const steps =
+    lcsSteps(a.length, b.length, (i, j) => keyA[i] === keyB[j], "insert") ??
+    wholeChange(a.length, b.length);
 
   const pairs: Pair[] = [];
   let pendingBefore: string[] = [];
@@ -409,20 +404,12 @@ export function sentencePairs(
   };
   let i = 0;
   let j = 0;
-  while (i < a.length || j < b.length) {
-    if (i < a.length && j < b.length && keyA[i] === keyB[j]) {
+  for (const step of steps) {
+    if (step === "same") {
       flush();
-      pairs.push({ same: true, before: a[i], after: b[j] });
-      i++;
-      j++;
-    } else if (
-      j < b.length &&
-      (i >= a.length || lcs[i][j + 1] >= lcs[i + 1][j])
-    ) {
-      pendingAfter.push(b[j++]);
-    } else {
-      pendingBefore.push(a[i++]);
-    }
+      pairs.push({ same: true, before: a[i++], after: b[j++] });
+    } else if (step === "insert") pendingAfter.push(b[j++]);
+    else pendingBefore.push(a[i++]);
   }
   flush(alignTail);
   return pairs;

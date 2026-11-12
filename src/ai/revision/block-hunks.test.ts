@@ -48,5 +48,11 @@ describe("a change to a file not open, as revisions", () => {
   it("counts the places a change makes before its file is read", () => {
     expect(placesChanged("A.\n\nB.\n\nC.", "A.\n\nb.\n\nC.\n\nD.")).toBe(2);
     expect(placesChanged("A.", "A.")).toBe(0);
+    // Too long to diff block by block: one place, read at once.
+    const many = (tag: string) =>
+      Array.from({ length: 600 }, (_, i) => `${i % 2 ? tag : "s"}${i}.`).join(
+        "\n\n",
+      );
+    expect(placesChanged(many("a"), many("b"))).toBe(1);
   });
 });
