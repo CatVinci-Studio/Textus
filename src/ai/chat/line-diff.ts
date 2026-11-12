@@ -34,3 +34,39 @@ export function diffLines(before: string, after: string): DiffLine[] {
   }
   return out;
 }
+
+/** A proposal's two sides to compare: what it targets and what it leaves.
+ *  `append` has nothing to compare against; replace_selection targets the
+ *  selection, not a quoted anchor; an insertion keeps its anchor. */
+export function proposalSides(
+  proposal: { action: string; anchor?: string | null; text?: string | null },
+  selectedText?: string | null,
+): { before: string; after: string } {
+  const before =
+    proposal.action === "append"
+      ? ""
+      : proposal.action === "replace_selection"
+        ? (selectedText ?? "")
+        : (proposal.anchor ?? "");
+  const text = proposal.text ?? "";
+  const after =
+    proposal.action === "delete"
+      ? ""
+      : proposal.action === "insert_before"
+        ? `${text}\n${before}`
+        : proposal.action === "insert_after"
+          ? `${before}\n${text}`
+          : text;
+  return { before, after };
+}
+
+/** How many lines a diff adds and takes away. */
+export function lineCounts(lines: readonly { kind: string }[]): {
+  added: number;
+  removed: number;
+} {
+  return {
+    added: lines.filter((line) => line.kind === "add").length,
+    removed: lines.filter((line) => line.kind === "remove").length,
+  };
+}

@@ -1,3 +1,4 @@
+import { textParagraphs } from "../../editor/markdown/doc-blocks";
 import { useSyncExternalStore } from "react";
 import { ai } from "../../platform/ipc";
 import {
@@ -191,11 +192,9 @@ export function useAiFileMarks(): Readonly<Record<string, AiFileMark>> {
 /** The places `before` and `after` differ, paragraph by paragraph: how
  *  many revisions a change makes, before its file's editor reads it. */
 export function placesChanged(before: string, after: string): number {
+  // A code or maths block with blank lines in it is one place.
   const blocks = (text: string) =>
-    text
-      .split(/\n\s*\n/)
-      .map((block) => block.trim())
-      .filter(Boolean);
+    textParagraphs(text).map((p) => p.text.trim());
   return blockHunks(blocks(before), blocks(after)).length;
 }
 

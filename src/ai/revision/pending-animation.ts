@@ -1,3 +1,4 @@
+import { SENTENCE_END } from "./sentence-pairs";
 import type { EditorView } from "@milkdown/kit/prose/view";
 import { enter, glideAfter } from "../../engine/controls/moves";
 import { measure, play } from "../../engine/motion/flip";
@@ -371,7 +372,7 @@ function keptOnStop(s: StreamState, text: string): string | null {
   const pieces = splitUnits(text);
   const last = pieces.at(-1) ?? "";
   // Stopped right after a sentence's stop: that one is complete.
-  if (!/[。！？!?.;；][”’"')）」』\]]*\s*$/.test(last)) pieces.pop();
+  if (!SENTENCE_END.test(last)) pieces.pop();
   if (pieces.length === 0) return null;
   const { reached } = alignCompleted(s.sentences, pieces, false, s.reached);
   const kept = pieces.join("");

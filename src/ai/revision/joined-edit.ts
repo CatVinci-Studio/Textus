@@ -1,3 +1,4 @@
+import { textParagraphs } from "../../editor/markdown/doc-blocks";
 import { isCjk } from "../../utils/cjk";
 import type { EditProposal } from "../types";
 import { joinedText } from "./generated-images";
@@ -62,11 +63,10 @@ export function reanchoredPicture(
     (picture.action !== "insert_after" && picture.action !== "insert_before")
   )
     return null;
-  const at = oldText.split(/\n{2,}/).findIndex((p) => p.includes(anchor));
+  const at = textParagraphs(oldText).findIndex((p) => p.text.includes(anchor));
   if (at < 0) return null;
-  const paragraphs = newText
-    .split(/\n{2,}/)
-    .map((p) => p.trim())
+  const paragraphs = textParagraphs(newText)
+    .map((p) => p.text.trim())
     .filter((p) => p && !isPicture(p));
   if (paragraphs.length === 0) return null;
   const paragraph = paragraphs[Math.min(at, paragraphs.length - 1)];

@@ -105,6 +105,7 @@ export function ChatItem({
           reveal={false}
           style={style}
           labels={labels}
+          selectedText={c.selectedText}
           actions={c.proposalActions}
           onAccept={c.onAcceptProposal}
           onReject={c.onRejectProposal}

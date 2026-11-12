@@ -9,7 +9,7 @@ import type { EditProposal } from "../types";
 import type { PendingStatus } from "../revision/usePendingEdits";
 import { hasCitations } from "../citations";
 import { useSettings } from "../../prefs/SettingsContext";
-import { diffLines } from "./line-diff";
+import { diffLines, lineCounts, proposalSides } from "./line-diff";
 import { type PendingSentence } from "../revision/pending-types";
 import { Tooltip } from "../../engine/controls/Tooltip";
 import type { ChatMessagesLabels } from "./chat-messages-types";
@@ -100,28 +100,11 @@ export function ProposalCard({
     if (status === "invalid") setDiffOpen(true);
   }, [status]);
 
-  // `append` has nothing to compare against; the others diff the text they
-  // target against the replacement. replace_selection targets the captured
-  // selection rather than a quoted anchor.
-  const before =
-    proposal.action === "append"
-      ? ""
-      : proposal.action === "replace_selection"
-        ? (selectedText ?? "")
-        : (proposal.anchor ?? "");
-  const after =
-    proposal.action === "delete"
-      ? ""
-      : proposal.action === "insert_before"
-        ? `${proposal.text ?? ""}\n${before}`
-        : proposal.action === "insert_after"
-          ? `${before}\n${proposal.text ?? ""}`
-          : (proposal.text ?? "");
-  // Memoized because this re-renders on every streaming delta while a later
-  // turn is still arriving, and the LCS diff is up to 400x400 lines.
+  const { before, after } = proposalSides(proposal, selectedText);
+  // Memoized: this re-renders on every streaming delta while a later turn
+  // is still arriving.
   const lines = useMemo(() => diffLines(before, after), [before, after]);
-  const added = lines.filter((line) => line.kind === "add").length;
-  const removed = lines.filter((line) => line.kind === "remove").length;
+  const { added, removed } = lineCounts(lines);
 
   const taken = sentences?.filter((s) => s.take !== false).length ?? 0;
   const partial = !!sentences && taken < sentences.length;
