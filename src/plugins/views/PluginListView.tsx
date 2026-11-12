@@ -310,7 +310,7 @@ export const PluginListPane = memo(function PluginListPane({
                 {item.checkbox !== undefined && (
                   <input
                     type="checkbox"
-                    className="plugin-list-check"
+                    className="ui-check plugin-list-check"
                     checked={item.checkbox}
                     aria-label={item.label}
                     onClick={(e) => e.stopPropagation()}
@@ -320,6 +320,14 @@ export const PluginListPane = memo(function PluginListPane({
                 {Icon && <Icon className="plugin-list-icon" />}
                 <span className="plugin-list-text">
                   <span className="plugin-list-label">{item.label}</span>
+                  {item.badge && (
+                    <span
+                      className="tx-badge"
+                      data-tone={item.badge.tone ?? "muted"}
+                    >
+                      {item.badge.text}
+                    </span>
+                  )}
                   {item.description && (
                     <span className="plugin-list-description">
                       {item.description}
@@ -329,14 +337,6 @@ export const PluginListPane = memo(function PluginListPane({
                     <span className="plugin-list-detail">{item.detail}</span>
                   )}
                 </span>
-                {item.badge && (
-                  <span
-                    className="tx-badge"
-                    data-tone={item.badge.tone ?? "muted"}
-                  >
-                    {item.badge.text}
-                  </span>
-                )}
               </div>
             </div>
           );

@@ -101,6 +101,7 @@ pub struct SearchHit {
     rel: String,
     /// 1-based.
     line: u32,
+    /// The line around the match: a long one cut, with "…".
     text: String,
 }
 
@@ -137,7 +138,8 @@ pub(crate) fn search_in(root: &Path, query: &str, limit: usize, deadline: Instan
             continue;
         };
         for (at, line) in text.lines().enumerate() {
-            if !line.to_lowercase().contains(&needle) {
+            let lower = line.to_lowercase();
+            if !lower.contains(&needle) {
                 continue;
             }
             if hits.len() == limit {
@@ -148,7 +150,7 @@ pub(crate) fn search_in(root: &Path, query: &str, limit: usize, deadline: Instan
                 path: file.path.to_string_lossy().to_string(),
                 rel: file.rel.clone(),
                 line: at as u32 + 1,
-                text: line.trim().chars().take(300).collect(),
+                text: crate::excerpt::around(line, &lower, &needle),
             });
         }
     }

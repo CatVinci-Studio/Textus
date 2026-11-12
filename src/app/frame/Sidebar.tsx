@@ -1,5 +1,6 @@
 import { useCallback, useReducer } from "react";
 import { useSidebarFrame } from "./useSidebarFrame";
+import { useSideToTop } from "../../engine/layout/useBarLayout";
 import { isIOSApp } from "../../platform/capabilities";
 import {
   Presence,
@@ -70,6 +71,9 @@ export function Sidebar({
   // A tab dragged: drawn again in its new order.
   const [, moved] = useReducer((n: number) => n + 1, 0);
   const { settings } = useSettings();
+  // Under the window bar the header's line is covered: a plugin's buttons
+  // for its panel go to the top of the panel instead.
+  const titleShown = useSideToTop();
   const frame = useSidebarFrame(open, !isIOSApp, width.width);
   const presenceRef = presence.ref;
   const asideRef = useCallback(
@@ -130,7 +134,7 @@ export function Sidebar({
                   <h2 className="tx-pane-title sidebar-title">
                     {shown.label(t)}
                   </h2>
-                  <ViewTitleActions view={shown.id} />
+                  {titleShown && <ViewTitleActions view={shown.id} />}
                 </>
               )}
               {isIOSApp && (
@@ -144,7 +148,9 @@ export function Sidebar({
               )}
             </div>
             <div className="sidebar-body" inert={closing || undefined}>
-              {isIOSApp && <ViewTitleActions view={shown.id} />}
+              {(isIOSApp || !titleShown) && (
+                <ViewTitleActions view={shown.id} />
+              )}
               <shown.Panel
                 t={t}
                 openFolder={openFolder}

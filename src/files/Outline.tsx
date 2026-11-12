@@ -215,7 +215,9 @@ export function Outline({ content, tabId }: OutlineProps) {
               <span className="outline-level" aria-hidden="true">
                 H{h.level}
               </span>
-              <span className="tree-label">{headingLabel(h.text)}</span>
+              <Tooltip text={headingLabel(h.text)} description={null} whenCut>
+                <span className="tree-label">{headingLabel(h.text)}</span>
+              </Tooltip>
             </span>
           </div>
         );

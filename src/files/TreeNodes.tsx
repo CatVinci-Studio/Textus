@@ -1,4 +1,5 @@
 import { explainError } from "../utils/error-explain";
+import { Tooltip } from "../engine/controls/Tooltip";
 import { currentStrings } from "../i18n/current";
 // The file tree's rows: a folder, which reads and lists its entries, and
 // a file.
@@ -150,7 +151,9 @@ export const DirNode = memo(function DirNode({
           ) : (
             <FolderIcon className="tree-icon" />
           )}
-          <span className="tree-label">{basename(path)}</span>
+          <Tooltip text={basename(path)} description={null} whenCut>
+            <span className="tree-label">{basename(path)}</span>
+          </Tooltip>
         </div>
       )}
       {open && sorted && (
@@ -265,7 +268,9 @@ const FileNode = memo(function FileNode({
         {...(isIOSApp ? press.handlers : {})}
       >
         <Icon className="tree-icon" />
-        <span className="tree-label">{entry.name}</span>
+        <Tooltip text={entry.name} description={null} whenCut>
+          <span className="tree-label">{entry.name}</span>
+        </Tooltip>
         {waiting && <span className="tree-ai-waiting">{waiting}</span>}
       </div>
       <Presence show={!!press.at}>

@@ -18,12 +18,7 @@
 }
 
 .file-search-folder {
-  overflow: hidden;
-  text-overflow: ellipsis;
-  text-align: left;
-  /* Cut from the start: the folder's end is the useful part. The <bdi>
-     inside keeps its text in order. */
-  direction: rtl;
+  min-width: 0;
   font-size: var(--text-caption);
   opacity: 0.9;
 }

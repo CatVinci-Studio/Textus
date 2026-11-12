@@ -11,6 +11,7 @@ mod background;
 pub mod cli;
 mod dialogs;
 mod errors;
+mod excerpt;
 // Checks src/platform/bindings/; desktop builds hold every command it lists.
 #[cfg(desktop)]
 mod agents;

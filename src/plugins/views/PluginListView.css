@@ -35,7 +35,7 @@
   align-items: flex-start;
   gap: 8px;
   padding: 4px 8px;
-  padding-inline-start: calc(8px + var(--depth, 0) * var(--tree-step));
+  padding-inline-start: calc(8px + var(--tree-indent));
   border-radius: var(--shape-s);
   cursor: pointer;
   user-select: none;
@@ -45,8 +45,10 @@
 /* Under the pointer; the keyboard's row only while the keys move it (the
    list or its filter focused from the keyboard), so the row the pointer
    left last doesn't stay lit. */
-.plugin-list-row:hover,
-.plugin-list-rows:focus-visible .plugin-list-row.is-active,
+.plugin-list-row:hover {
+  background: var(--ui-hover);
+}
+
 .plugin-list-rows:focus-visible .plugin-list-row.is-active {
   outline: 2px solid var(--focus-ring, var(--ui-accent));
   outline-offset: -2px;
@@ -77,8 +79,7 @@
 }
 
 .plugin-list-check {
-  flex: none;
-  margin: 4px 0 0;
+  margin-top: 2px;
 }
 
 .plugin-list-icon {
@@ -97,11 +98,20 @@
   min-width: 0;
 }
 
+/* Its badge follows the label, and drops under it from the label's start
+   rather than squeezing it; the description takes a line of its own
+   before it is cut to a letter. */
 .plugin-list-label {
-  overflow-wrap: anywhere;
+  overflow-wrap: break-word;
+}
+
+.plugin-list-text > .tx-badge {
+  align-self: center;
 }
 
 .plugin-list-description {
+  flex: 1 1 8em;
+  min-width: 0;
   color: var(--ui-muted);
   white-space: nowrap;
   overflow: hidden;

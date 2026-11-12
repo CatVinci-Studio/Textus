@@ -496,6 +496,7 @@ export type SearchHit = {
 	rel: string,
 	/**  1-based. */
 	line: number,
+	/**  The line around the match: a long one cut, with "…". */
 	text: string,
 };
 

@@ -14,6 +14,7 @@ import {
 import { fs } from "../platform/ipc";
 import { useSettings } from "../prefs/SettingsContext";
 import { SearchField } from "../engine/controls/SearchField";
+import { PathText } from "../engine/controls/PathText";
 import { fileIconFor } from "../engine/controls/file-icons";
 import { localeOf } from "../i18n/langs";
 import { nameCollator } from "../utils/name-order";
@@ -235,7 +236,7 @@ export function FileSearch({
                   <span className="tree-label">{entry.name}</span>
                   {entry.folder && (
                     <span className="file-search-folder">
-                      <bdi>{entry.folder}</bdi>
+                      <PathText path={entry.folder} />
                     </span>
                   )}
                 </span>

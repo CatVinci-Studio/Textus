@@ -61,6 +61,12 @@
   cursor: default;
 }
 
+/* A tree row's step in (files, outline, plugin lists): a level at a time,
+   at most a third of the row, so a deep name keeps its room. */
+:is(.tree-row, .outline-row, .plugin-list-row) {
+  --tree-indent: min(calc(var(--depth, 0) * var(--tree-step)), 35%);
+}
+
 .tx-list-item:hover {
   background: var(--ui-hover);
 }

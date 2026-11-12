@@ -49,10 +49,19 @@ interface TriggerProps {
 /** A screen with no pointer that hovers: a phone's. */
 const noHover = () => !!window.matchMedia?.("(hover: none)").matches;
 
+/** Its text, or a line inside it, cut short ("…" or clamped). */
+function isCut(el: Element): boolean {
+  return [el, ...el.querySelectorAll("*")].some(
+    (e) =>
+      e.scrollWidth > e.clientWidth + 1 || e.scrollHeight > e.clientHeight + 1,
+  );
+}
+
 export function Tooltip({
   text,
   description = text,
   side = "below",
+  whenCut = false,
   children,
 }: {
   text: string;
@@ -62,17 +71,24 @@ export function Tooltip({
   /** Where it prefers to sit; it moves to the other side when there is
    *  no room. "above" for buttons along the bottom (the composer). */
   side?: BubbleSide;
+  /** Only while its text is cut short: a name read whole on hover. */
+  whenCut?: boolean;
   children: ReactElement<TriggerProps>;
 }) {
   const [open, setOpenState] = useState(false);
   const shown = useRef(false);
-  const setOpen = useCallback((next: boolean) => {
-    if (shown.current && !next) markHidden();
-    shown.current = next;
-    setOpenState(next);
-  }, []);
-  const timerRef = useTipTimer();
   const anchor = useRef<HTMLElement | null>(null);
+  const setOpen = useCallback(
+    (next: boolean) => {
+      const at = anchor.current;
+      if (next && whenCut && at && !isCut(at)) return;
+      if (shown.current && !next) markHidden();
+      shown.current = next;
+      setOpenState(next);
+    },
+    [whenCut],
+  );
+  const timerRef = useTipTimer();
   const id = useId();
   const descriptionId = `${id}description`;
   const tipId = `${id}tip`;

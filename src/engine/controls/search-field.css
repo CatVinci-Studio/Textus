@@ -27,6 +27,7 @@
 .tx-search-input {
   flex: 1;
   min-width: 0;
+  text-overflow: ellipsis;
   padding: 0;
   border: none;
   background: transparent;
