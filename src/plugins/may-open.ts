@@ -1,4 +1,4 @@
-import { grants } from "./api-permissions";
+import { grants } from "./grants";
 import { isInside, slashed } from "../utils/path";
 import { webviewsOf } from "./views/webviews";
 

@@ -1,4 +1,4 @@
-import { grants } from "../api-permissions";
+import { grants } from "../grants";
 import { aiState } from "../ai-state";
 import {
   schedule as scheduleIpc,

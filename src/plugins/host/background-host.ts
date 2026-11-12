@@ -1,4 +1,4 @@
-import { grants } from "../api-permissions";
+import { grants } from "../grants";
 import { guarded } from "../api-permissions";
 import { connectFrame, hostsContainer, sandboxedFrame } from "./frames";
 import { hostDocument } from "./host-document";

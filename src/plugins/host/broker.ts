@@ -31,7 +31,8 @@ import { forgetWillSave } from "../contributions/will-save";
 import { unwatchMetadata, watchMetadata } from "../workspace/metadata-cache";
 import { str, type Params, type PluginScope } from "./broker-scope";
 import type { Endpoint, Handlers } from "./rpc";
-import { grants, guarded } from "../api-permissions";
+import { guarded } from "../api-permissions";
+import { grants } from "../grants";
 import { lazyModule, type LazyModule } from "../../lazy/lazy-module";
 import { webview } from "../views/webviews";
 

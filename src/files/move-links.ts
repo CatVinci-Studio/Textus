@@ -3,7 +3,7 @@ import { notesRoot, renameRule } from "./link-style";
 import { fs } from "../platform/ipc";
 import type { Strings } from "../i18n/strings";
 import { unsavedDocumentAt } from "../registry/open-documents";
-import { linkPlanner } from "./link-rewrite";
+import { linkRewrite } from "./link-rewrite-lazy";
 import { showConfirm, showMessage } from "../engine/controls/app-dialog";
 import { FILE_WRITTEN_EVENT } from "../utils/events";
 import { basename } from "../utils/path";
@@ -38,6 +38,7 @@ export async function updateLinksAfterMove(
   } catch {
     return; // too broad a folder, or gone: nothing to search
   }
+  const { linkPlanner } = await linkRewrite.load();
   const planner = linkPlanner(files, { root, from, to, linkRoot });
   // What is typed in a tab counts, not the copy on disk.
   const tab = unsavedDocumentAt;

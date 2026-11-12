@@ -1,4 +1,4 @@
-import { grants } from "../api-permissions";
+import { grants } from "../grants";
 import type { PluginTabInfo } from "../app-bridge";
 import { mayOpen } from "../may-open";
 import { emitToThisWindow } from "../../platform/menu-events";

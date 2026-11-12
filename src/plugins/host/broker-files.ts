@@ -16,7 +16,7 @@ import {
   withFrontmatter,
   type Frontmatter,
 } from "../../utils/frontmatter";
-import { linkPlanner } from "../../files/link-rewrite";
+import { linkRewrite } from "../../files/link-rewrite-lazy";
 import { blockIdAt } from "../../files/block-id";
 import { setWillExport } from "../contributions/will-export";
 import { setWillSave } from "../contributions/will-save";
@@ -201,6 +201,7 @@ export function fileHandlers(p: PluginScope) {
           fs.folderConventions(root).catch(() => null),
           fs.documentLinkRoot(abs(target), root).catch(() => null),
         ]);
+      const { linkPlanner } = await linkRewrite.load();
       const planner = linkPlanner(
         files.map((f) => f.path),
         {
