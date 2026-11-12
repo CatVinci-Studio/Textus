@@ -76,4 +76,7 @@ fn a_plugin_reaches_no_hidden_file_but_the_folders_own_settings() {
     }
     assert!(in_folder(root.path(), Path::new("notes/a.md")).is_ok());
     assert!(in_folder(root.path(), Path::new(".textus/sync.json")).is_ok());
+    std::fs::create_dir_all(root.path().join(".textus/plugins/a.b")).unwrap();
+    assert!(plugin_path(root.path(), Path::new(".textus/plugins/a.b/x.json"), "a.b").is_ok());
+    assert!(plugin_path(root.path(), Path::new(".textus/plugins/a.b/x.json"), "c.d").is_err());
 }

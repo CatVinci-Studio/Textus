@@ -2,6 +2,7 @@ import { useEffect, useRef, useState } from "react";
 import { tabIsDirty, type DocTab } from "./doc-tabs";
 import { createTabIdleTimers } from "./tab-idle-timers";
 import { drafts } from "../platform/ipc";
+import { listenToThisWindow, unlistenAll } from "../platform/events";
 
 const DEBOUNCE_MS = 3000;
 const MAX_WAIT_MS = 30000;
@@ -9,6 +10,7 @@ const MAX_WAIT_MS = 30000;
 interface Snapshot {
   content: string;
   path: string | null;
+  diskMtime: number | null;
 }
 
 /**
@@ -30,6 +32,11 @@ export function useDraftAutosave(tabs: DocTab[], enabled: boolean): () => void {
   const cancel = timers.cancelAll;
 
   useEffect(() => cancel, [cancel]);
+  // An update about to end the app (Windows): what waits is written now.
+  useEffect(
+    () => unlistenAll(listenToThisWindow("flush-drafts", timers.flushAll)),
+    [timers],
+  );
 
   useEffect(() => {
     const seenIds = new Set(tabs.map((tab) => tab.id));
@@ -53,9 +60,9 @@ export function useDraftAutosave(tabs: DocTab[], enabled: boolean): () => void {
       }
       timers.schedule(
         tab.id,
-        { content: tab.content, path: tab.path },
-        ({ content, path }) =>
-          void drafts.saveDraftSnapshot(tab.id, path, content),
+        { content: tab.content, path: tab.path, diskMtime: tab.diskMtime },
+        ({ content, path, diskMtime }) =>
+          void drafts.saveDraftSnapshot(tab.id, path, content, diskMtime),
       );
     }
   }, [tabs, enabled, cancel, timers]);

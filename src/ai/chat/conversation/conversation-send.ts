@@ -192,6 +192,7 @@ export async function sendMessage(
     return undefined;
   } finally {
     reportAiState("idle", aiProvider, aiModel, ended);
+    port?.onReplyEnd?.(ended === "failed");
     if (current()) {
       model.requestId = null;
       model.setStreaming(null);

@@ -157,6 +157,11 @@ export function setWebviewState(key: string, state: unknown): void {
   states.set(key, state);
 }
 
+/** A tab's page closed for good: its state goes with it. */
+export function forgetTabWebviewState(tabId: string): void {
+  states.delete(`tab:${tabId}`);
+}
+
 /** Forgets a webview; its state stays with its key. */
 export function removeWebview(id: string): WebviewRecord | undefined {
   const record = records.get(id);

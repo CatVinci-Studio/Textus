@@ -326,6 +326,10 @@ pub(crate) fn handler() -> impl Fn(tauri::ipc::Invoke<tauri::Wry>) -> bool + Sen
         #[cfg(desktop)]
         commands::update::release_instance,
         #[cfg(desktop)]
+        commands::update::quit_and_relaunch,
+        #[cfg(desktop)]
+        commands::update::flush_drafts,
+        #[cfg(desktop)]
         detect_pandoc,
         #[cfg(desktop)]
         export_via_pandoc,

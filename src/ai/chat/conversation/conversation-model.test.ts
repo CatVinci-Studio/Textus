@@ -60,12 +60,17 @@ const reply = (text: string): AgentTurn[] => [
   { kind: "Assistant", text: `Re: ${text}` },
 ];
 
-function port(docPath: string | null): DocumentPort & { events: unknown[] } {
+function port(
+  docPath: string | null,
+): DocumentPort & { events: unknown[]; ends: boolean[] } {
   const events: unknown[] = [];
+  const ends: boolean[] = [];
   return {
     docPath,
     events,
+    ends,
     onStreamEvent: (event) => events.push(event),
+    onReplyEnd: (failed) => ends.push(failed),
     proposalStatuses: () => ({}),
   };
 }
@@ -185,6 +190,9 @@ describe("a conversation's model", () => {
     await model.actions.send(NO_DOCUMENT, "一");
     expect(first.events).toEqual([event]);
     expect(second.events).toEqual([]);
+    // Its end too: the edits it was writing finish there, not in b.
+    expect(first.ends).toEqual([false]);
+    expect(second.ends).toEqual([]);
   });
 
   it("keeps a failed send to retry, and says why", async () => {

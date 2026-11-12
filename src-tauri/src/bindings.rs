@@ -156,6 +156,8 @@ fn groups() -> Vec<(&'static str, Builder<tauri::Wry>)> {
                     crate::distribution::app_distribution,
                     crate::commands::update::check_for_update::<tauri::Wry>,
                     crate::commands::update::release_instance::<tauri::Wry>,
+                    crate::commands::update::quit_and_relaunch,
+                    crate::commands::update::flush_drafts,
                 ])
                 .constant("BACKGROUND_STATUS", crate::background::STATUS_EVENT)
                 .constant(

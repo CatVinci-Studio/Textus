@@ -388,4 +388,8 @@ export const updater = {
   /** Right before the relaunch that applies an update, so the new process
    *  is the running Textus. */
   releaseInstance: () => desktopQueryCommand("release_instance", null),
+  /** Every window closes as at Quit, then the installed version starts. */
+  quitAndRelaunch: () => desktopQueryCommand("quit_and_relaunch", null),
+  /** Every window writes its unsaved drafts now. */
+  flushDrafts: () => desktopQueryCommand("flush_drafts", null),
 };

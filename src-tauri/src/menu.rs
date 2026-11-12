@@ -227,7 +227,7 @@ pub(crate) fn quit(app_handle: &tauri::AppHandle) {
     if windows.is_empty() {
         // No window open (macOS, or background mode): nothing to close,
         // nothing to ask.
-        app_handle.exit(0);
+        commands::update::exit_app(app_handle);
     }
     for (_, window) in windows {
         let _ = window.close();

@@ -287,53 +287,60 @@ function useApplyAppearance(
             legacy.load(),
             typora.load(),
           ]);
-        // One imported before web fonts were embedded still has them.
-        const loaded = stored && (await withWebFonts(stored));
-        if (cancelled || request !== revision) return;
-        const css = loaded && withCurrentVariables(loaded);
-        let styleEl = document.getElementById(
-          STYLE_ID,
-        ) as HTMLStyleElement | null;
-        if (!styleEl) {
-          styleEl = document.createElement("style");
-          styleEl.id = STYLE_ID;
-        }
-        const adapted = compat.adaptTyporaCss(css ?? "");
-        styleEl.textContent = isIOSApp
-          ? compat.namedSystemFonts(adapted)
-          : adapted;
-        document.head.appendChild(styleEl);
-        const dark = isEffectiveDark(settings.theme);
-        let chrome: string | null;
-        try {
-          // A one-design theme is that design's page in both appearances, its chrome
-          // derived as light: derived as dark, themes that pin dark text became unreadable.
-          chrome = applyThemeChrome(css ?? "", dark && theme.hasDark);
-          // ...and the document's own dark-only colours (syntax tokens,
-          // alert accents, mermaid) stand down on that light page.
-          if (dark && !theme.hasDark) root.setAttribute("data-light-page", "");
-          else root.removeAttribute("data-light-page");
-        } finally {
-          // The user's own CSS stays after the theme and its chrome, whenever they
-          // load - the order the boot script gives the first frame.
-          const custom = document.getElementById(
-            CUSTOM_CSS_STYLE_ID,
+        const current = () => !cancelled && request === revision;
+        const show = (loaded: string | null) => {
+          const css = loaded && withCurrentVariables(loaded);
+          let styleEl = document.getElementById(
+            STYLE_ID,
           ) as HTMLStyleElement | null;
-          if (custom) {
-            // Moved, a <style> is parsed again from its text: the
-            // promotion has to be redone on the new sheet.
-            document.head.appendChild(custom);
-            if (custom.sheet) promoteCustomProperties(custom.sheet.cssRules);
+          if (!styleEl) {
+            styleEl = document.createElement("style");
+            styleEl.id = STYLE_ID;
           }
-        }
-        if (typeof chrome === "string")
-          rememberThemeChrome({
-            id: theme.id,
-            dark,
-            // The file as stored: what the boot script measures.
-            sourceLength: (stored ?? "").length,
-            css: chrome,
-          });
+          const adapted = compat.adaptTyporaCss(css ?? "");
+          styleEl.textContent = isIOSApp
+            ? compat.namedSystemFonts(adapted)
+            : adapted;
+          document.head.appendChild(styleEl);
+          const dark = isEffectiveDark(settings.theme);
+          let chrome: string | null;
+          try {
+            // A one-design theme is that design's page in both appearances, its chrome
+            // derived as light: derived as dark, themes that pin dark text became unreadable.
+            chrome = applyThemeChrome(css ?? "", dark && theme.hasDark);
+            // ...and the document's own dark-only colours (syntax tokens,
+            // alert accents, mermaid) stand down on that light page.
+            if (dark && !theme.hasDark)
+              root.setAttribute("data-light-page", "");
+            else root.removeAttribute("data-light-page");
+          } finally {
+            // The user's own CSS stays after the theme and its chrome, whenever they
+            // load - the order the boot script gives the first frame.
+            const custom = document.getElementById(
+              CUSTOM_CSS_STYLE_ID,
+            ) as HTMLStyleElement | null;
+            if (custom) {
+              // Moved, a <style> is parsed again from its text: the
+              // promotion has to be redone on the new sheet.
+              document.head.appendChild(custom);
+              if (custom.sheet) promoteCustomProperties(custom.sheet.cssRules);
+            }
+          }
+          if (typeof chrome === "string")
+            rememberThemeChrome({
+              id: theme.id,
+              dark,
+              // The file as stored: what the boot script measures.
+              sourceLength: (stored ?? "").length,
+              css: chrome,
+            });
+        };
+        if (!current()) return;
+        show(stored);
+        // One imported before web fonts were embedded still has them: the
+        // theme shows at once, its fonts once fetched (or not, offline).
+        const fonted = stored && (await withWebFonts(stored));
+        if (fonted && fonted !== stored && current()) show(fonted);
       } catch {
         // Theme file missing/unreadable - leave whatever was there before.
       }

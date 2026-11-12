@@ -1,3 +1,4 @@
+import { useKeptLoaded } from "../../utils/kept-loaded";
 import { getUiState, setUiState } from "../../storage/ui-state";
 import { IconButton } from "../../engine/controls/IconButton";
 import { useRef, useState } from "react";
@@ -35,16 +36,20 @@ function useBarHidden(): [boolean, (hidden: boolean) => void] {
 export function WebPagePane({
   tabId,
   url,
+  shown,
   t,
 }: {
   tabId: string;
   url: string;
+  /** In front of its island. A frame out of sight is let go after a while,
+   *  as native pages are. */
+  shown: boolean;
   t: Strings;
 }) {
   return hasNativeWebPages ? (
     <NativeWebPage tabId={tabId} url={url} t={t} />
   ) : (
-    <FramedWebPage url={url} t={t} />
+    <KeptFrame shown={shown} url={url} t={t} />
   );
 }
 
@@ -189,6 +194,20 @@ function AddressBar({
       </IconButton>
     </form>
   );
+}
+
+function KeptFrame({
+  shown,
+  url,
+  t,
+}: {
+  shown: boolean;
+  url: string;
+  t: Strings;
+}) {
+  return useKeptLoaded("web-frame", shown) ? (
+    <FramedWebPage url={url} t={t} />
+  ) : null;
 }
 
 /** The page as a frame, where there are no native pages (Linux, a phone). */

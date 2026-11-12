@@ -380,9 +380,13 @@ export function useEditorProposals({
     (): DocumentPort => ({
       docPath: filePath,
       onStreamEvent: (event) => streamEvent.current(event),
+      // Drafts still open at the end: a stop keeps the typed text as a
+      // preview, a failure drops it so Retry doesn't write it twice.
+      onReplyEnd: (failed) =>
+        proposalStream.finish(failed ? "failed" : "stopped"),
       proposalStatuses: () => statuses.current,
     }),
-    [filePath, streamEvent, statuses],
+    [filePath, streamEvent, statuses, proposalStream],
   );
   // The window's, read here: it outlives this editor. In front, it is
   // followed as it streams.
@@ -414,23 +418,12 @@ export function useEditorProposals({
     conversation.history,
     quickConversation.history,
   ]);
-  // Start: arm the supersede flag. End with drafts open: a user stop keeps
-  // the typed text as a preview, a failure discards it so Retry doesn't
-  // duplicate the proposal.
+  // Start: arm the supersede flag. The end comes from the reply itself
+  // (port.onReplyEnd), not from whichever conversation is on screen.
   useEffect(() => {
-    if (conversation.busy) {
+    if (conversation.busy || quickConversation.busy)
       supersedePending.current = true;
-      return;
-    }
-    proposalStream.finish(conversation.error ? "failed" : "stopped");
-  }, [conversation.busy, conversation.error, proposalStream]);
-  useEffect(() => {
-    if (quickConversation.busy) {
-      supersedePending.current = true;
-      return;
-    }
-    proposalStream.finish(quickConversation.error ? "failed" : "stopped");
-  }, [quickConversation.busy, quickConversation.error, proposalStream]);
+  }, [conversation.busy, quickConversation.busy]);
   // Proposals resolve here whether the chat is embedded or detached.
   const showProposals = useCallback(
     (proposals: { callId: string; proposal: EditProposal }[]) => {

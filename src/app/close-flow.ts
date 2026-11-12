@@ -11,6 +11,7 @@ import {
 } from "../document/doc-tabs";
 import { drafts, session } from "../platform/ipc";
 import { forgetTabZoom } from "../engine/zoom/tab-zoom";
+import { forgetTabWebviewState } from "../plugins/views/webviews";
 import { paneOf, shownIsland, windowLayout } from "../engine/layout/store";
 import { flushPendingWrites } from "../storage/pending-writes";
 import { useModalDialog } from "../engine/controls/useModalDialog";
@@ -93,6 +94,7 @@ export function useTabRemoval(opts: {
         return;
       }
       forgetTabZoom(id);
+      forgetTabWebviewState(id);
       setTabs((prev) => {
         const next = prev.filter((tb) => tb.id !== id);
         return next.length === 0 && start ? [start] : next;
@@ -152,7 +154,12 @@ export function useWindowCloseGuard(
         // never a window that can no longer close.
         const kept = await Promise.allSettled(
           dirty.map((tab) =>
-            drafts.saveDraftSnapshot(tab.id, tab.path, tab.content),
+            drafts.saveDraftSnapshot(
+              tab.id,
+              tab.path,
+              tab.content,
+              tab.diskMtime,
+            ),
           ),
         );
         if (kept.some((result) => result.status === "rejected")) {
