@@ -27,8 +27,9 @@ export interface DividerRects {
   before: { start: number; end: number };
   after: { start: number; end: number };
   /** The side of a fixed width (a panel's island, or a column only of
-   *  them), which the divider resizes in pixels; null for two shares. */
-  fixed: "before" | "after" | null;
+   *  them), which the divider resizes in pixels; null for two shares;
+   *  "both" for two panels, which have nothing to share. */
+  fixed: "before" | "after" | "both" | null;
 }
 
 export interface IslandsLayout {
@@ -159,11 +160,13 @@ function place(
       before: { start, end },
       after: next,
       fixed:
-        rules[i].fixed === rules[i + 1].fixed
-          ? null
-          : rules[i].fixed
-            ? "before"
-            : "after",
+        rules[i].fixed && rules[i + 1].fixed
+          ? "both"
+          : rules[i].fixed === rules[i + 1].fixed
+            ? null
+            : rules[i].fixed
+              ? "before"
+              : "after",
     });
   });
 }

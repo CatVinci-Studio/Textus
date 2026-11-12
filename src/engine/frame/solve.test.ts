@@ -74,6 +74,14 @@ describe("solveIslands", () => {
       sizes: [0.5, 0.5],
     };
     expect(solveIslands(input(column)).dividers[0].fixed).toBe("after");
+    // Two panels side by side: nothing to share, the divider is a gap.
+    const panels: LayoutNode = {
+      kind: "split",
+      direction: "row",
+      children: [pane("ai"), pane("settings")],
+      sizes: [0.5, 0.5],
+    };
+    expect(solveIslands(input(panels)).dividers[0].fixed).toBe("both");
   });
 
   it("stacked islands: the lower one's row is inner, under the gap", () => {

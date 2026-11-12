@@ -40,7 +40,7 @@ export function SplitDivider({
   /** The two sides it parts, in the area's pixels (frame/solve.ts). */
   sides: { before: Span; after: Span };
   /** The side that is a panel's island, sized in pixels, not shares. */
-  fixed: "before" | "after" | null;
+  fixed: "before" | "after" | "both" | null;
   t: Strings;
 }) {
   const row = line.direction === "row";
@@ -52,10 +52,12 @@ export function SplitDivider({
   const share = (value: number) =>
     arrangeBranch(line.path, { index: line.index, share: value });
   const { before, after } = sides;
+  const still = fixed === "both";
   // The divider at `at` (the area's pixels): a panel takes its width from
   // it, two documents their shares.
   // A panel's width is drawn as the pointer moves, kept once let go.
   const moveTo = (at: number) => {
+    if (fixed === "both") return;
     if (fixed === "after")
       setPanelWidth((after.end - at - gapHalf(sides)) / chromeScale(), false);
     else if (fixed === "before")
@@ -78,6 +80,7 @@ export function SplitDivider({
     return (span.end - span.start) / chromeScale();
   };
   const step = (sign: number) => {
+    if (fixed === "both") return;
     if (fixed)
       setPanelWidth(
         drawn() + (fixed === "after" ? -sign : sign) * GRIP_KEY_STEP,
@@ -91,13 +94,15 @@ export function SplitDivider({
     },
     move: (e, held) => moveTo((row ? e.clientX : e.clientY) - held.origin),
     end: (_held, how) => {
-      if (fixed) setPanelWidth(how === "gone" ? panelWidth() : drawn(), true);
+      if (fixed === "before" || fixed === "after")
+        setPanelWidth(how === "gone" ? panelWidth() : drawn(), true);
     },
   });
   return (
     <>
       <div
-        className={`split-divider tx-grip split-divider-${line.direction}${grip.gripped ? " split-divider-active" : ""}`}
+        // Between two panels, each its own width: a gap, nothing to drag.
+        className={`split-divider${still ? "" : " tx-grip"} split-divider-${line.direction}${grip.gripped ? " split-divider-active" : ""}`}
         data-gripped={grip.gripped || undefined}
         data-reach={reach || undefined}
         style={style}
@@ -108,8 +113,8 @@ export function SplitDivider({
         aria-valuenow={Math.round(current * 100)}
         aria-valuemin={0}
         aria-valuemax={100}
-        tabIndex={0}
-        {...grip.props}
+        tabIndex={still ? -1 : 0}
+        {...(still ? {} : grip.props)}
         onContextMenu={(e) => {
           e.preventDefault();
           setMenu({ x: e.clientX, y: e.clientY });
