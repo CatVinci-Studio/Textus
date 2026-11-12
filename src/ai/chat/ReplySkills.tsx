@@ -3,11 +3,8 @@ import { useEffect, useMemo, useState } from "react";
 import { ai } from "../../platform/ipc";
 import { useSettings } from "../../prefs/SettingsContext";
 import { skillsInReply, type ReplySkill } from "./chat-skill";
-import type { AgentMode } from "../../prefs/settings-values";
-import { ModeChoice } from "./ModeChoice";
-import { explainError } from "../../utils/error-explain";
 import { ReplyFilesPreview } from "./ReplyFilesPreview";
-import { confirmedFor, SkillWarnings, warningsIn } from "./skill-warnings";
+import { SkillSaveChip, useSkillSave } from "./SkillSaveChip";
 import { useLatest } from "../../utils/hooks/useLatest";
 import { withCreation } from "./creations";
 
@@ -31,14 +28,8 @@ export function ReplySkills({ text }: { text: string }) {
 function ReplySkillChip({ skill }: { skill: ReplySkill }) {
   const { t, settings, setSettings } = useSettings();
   const latest = useLatest(settings);
-  const [modes, setModes] = useState(skill.modes);
+  const save = useSkillSave(t, skill.modes);
   const [had, setHad] = useState(false);
-  const [state, setState] = useState<
-    | { kind: "new" }
-    | { kind: "saved" }
-    | { kind: "failed"; why: string }
-    | { kind: "confirm"; warnings: string[]; modes: AgentMode[] }
-  >({ kind: "new" });
   // A skill of that name already: this one updates it.
   useEffect(() => {
     let live = true;
@@ -53,32 +44,21 @@ function ReplySkillChip({ skill }: { skill: ReplySkill }) {
       live = false;
     };
   }, [skill.name]);
-  const confirming = confirmedFor(
-    state.kind === "confirm" ? state : null,
-    modes,
-  );
-  const save = () =>
-    ai.saveWrittenSkill(skill.text, modes, confirming !== null).then(
-      () => {
-        setState({ kind: "saved" });
-        setSettings({
-          creations: withCreation(latest.current.creations, {
-            kind: "skill",
-            id: skill.name,
-            name: label,
-            at: Date.now(),
-          }),
-        });
-      },
-      (err: unknown) => {
-        const warnings = warningsIn(err);
-        setState(
-          warnings
-            ? { kind: "confirm", warnings, modes }
-            : { kind: "failed", why: explainError(err, t) },
-        );
-      },
-    );
+  const label =
+    skill.labels[settings.language] ?? skill.labels.en ?? `/${skill.name}`;
+  const { confirming, modes } = save;
+  const saveIt = () =>
+    save.run(async (modes, confirmed) => {
+      await ai.saveWrittenSkill(skill.text, modes, confirmed);
+      setSettings({
+        creations: withCreation(latest.current.creations, {
+          kind: "skill",
+          id: skill.name,
+          name: label,
+          at: Date.now(),
+        }),
+      });
+    });
   // Said before any click: Create is never ticked for it, and once it is,
   // what that lets the skill do.
   const createNote = confirming?.warnings.includes("create-mode")
@@ -88,43 +68,32 @@ function ReplySkillChip({ skill }: { skill: ReplySkill }) {
       : skill.asksForCreate
         ? t.skillWarnCreateAsked
         : null;
-  const label =
-    skill.labels[settings.language] ?? skill.labels.en ?? `/${skill.name}`;
   return (
-    <div className="agent-memory-chip skill-offer-chip" data-skill={skill.name}>
-      <span className="tx-clamp agent-memory-chip-text">
-        {state.kind === "saved"
+    <SkillSaveChip
+      t={t}
+      data-skill={skill.name}
+      title={
+        save.state.kind === "saved"
           ? fill(t.skillOfferSaved, { name: `/${skill.name}` })
-          : label}
-      </span>
-      {skill.description && (
-        <span className="skill-offer-description">{skill.description}</span>
-      )}
-      {state.kind === "failed" && (
-        <span className="skill-offer-description">{state.why}</span>
-      )}
-      {createNote && (
-        <span className="skill-offer-description skill-offer-warning">
-          {createNote}
-        </span>
-      )}
-      <SkillWarnings t={t} confirming={confirming} />
-      {state.kind !== "saved" && (
-        <span className="agent-memory-chip-actions">
-          <ModeChoice t={t} modes={modes} onChange={setModes} />
-          <button type="button" onClick={() => void save()}>
-            {confirming
-              ? t.skillSaveAnyway
-              : had
-                ? t.chatUpdateSkill
-                : t.chatSaveSkill}
-          </button>
-        </span>
-      )}
+          : label
+      }
+      description={skill.description}
+      note={createNote}
+      save={save}
+      actions={
+        <button type="button" onClick={() => void saveIt()}>
+          {confirming
+            ? t.skillSaveAnyway
+            : had
+              ? t.chatUpdateSkill
+              : t.chatSaveSkill}
+        </button>
+      }
+    >
       <ReplyFilesPreview
         label={t.chatShowSkill}
         files={[{ path: null, text: skill.text }]}
       />
-    </div>
+    </SkillSaveChip>
   );
 }

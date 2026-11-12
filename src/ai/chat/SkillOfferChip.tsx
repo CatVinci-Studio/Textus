@@ -1,12 +1,8 @@
 import { fill } from "../../i18n/fill";
-import { useState } from "react";
 import { ai } from "../../platform/ipc";
 import type { SkillOffer } from "../../platform/bindings/ai-memory";
 import { useSettings } from "../../prefs/SettingsContext";
-import type { AgentMode } from "../../prefs/settings-values";
-import { ModeChoice } from "./ModeChoice";
-import { explainError } from "../../utils/error-explain";
-import { confirmedFor, SkillWarnings, warningsIn } from "./skill-warnings";
+import { SkillSaveChip, useSkillSave } from "./SkillSaveChip";
 
 /** The call an offer stands in the conversation as. */
 export const OFFER_SKILL = "offer_skill";
@@ -43,62 +39,40 @@ export function SkillOfferChip({
   docPath: string | null;
 }) {
   const { settings, t } = useSettings();
-  const [modes, setModes] = useState<AgentMode[]>(["write"]);
-  const [state, setState] = useState<
-    | { kind: "offered" }
-    | { kind: "saved" }
-    | { kind: "failed"; why: string }
-    | { kind: "confirm"; warnings: string[]; modes: AgentMode[] }
-  >({ kind: "offered" });
-  const confirming = confirmedFor(
-    state.kind === "confirm" ? state : null,
-    modes,
-  );
-  const save = (scope: "personal" | "project") => {
-    ai.saveOfferedSkill(
-      offer,
-      scope,
-      docPath,
-      settings.agentWorkspaceRoot || null,
-      modes,
-      !!confirming,
-    ).then(
-      () => setState({ kind: "saved" }),
-      (err: unknown) => {
-        const warnings = warningsIn(err);
-        setState(
-          warnings
-            ? { kind: "confirm", warnings, modes }
-            : { kind: "failed", why: explainError(err, t) },
-        );
-      },
+  const save = useSkillSave(t, ["write"]);
+  const saveTo = (scope: "personal" | "project") =>
+    void save.run((modes, confirmed) =>
+      ai.saveOfferedSkill(
+        offer,
+        scope,
+        docPath,
+        settings.agentWorkspaceRoot || null,
+        modes,
+        confirmed,
+      ),
     );
-  };
   return (
-    <div className="agent-memory-chip skill-offer-chip" role="status">
-      <span className="tx-clamp agent-memory-chip-text">
-        {state.kind === "saved"
-          ? fill(t.skillOfferSaved, { name: `/${offer.name}` })
-          : fill(t.skillOffer, { name: `/${offer.name}` })}
-      </span>
-      <span className="skill-offer-description">{offer.description}</span>
-      {state.kind === "failed" && (
-        <span className="skill-offer-description">{state.why}</span>
+    <SkillSaveChip
+      t={t}
+      role="status"
+      title={fill(
+        save.state.kind === "saved" ? t.skillOfferSaved : t.skillOffer,
+        { name: `/${offer.name}` },
       )}
-      <SkillWarnings t={t} confirming={confirming} />
-      {state.kind !== "saved" && (
-        <span className="agent-memory-chip-actions">
-          <ModeChoice t={t} modes={modes} onChange={setModes} />
-          <button type="button" onClick={() => save("personal")}>
-            {confirming ? t.skillSaveAnyway : t.skillOfferSave}
+      description={offer.description}
+      save={save}
+      actions={
+        <>
+          <button type="button" onClick={() => saveTo("personal")}>
+            {save.confirming ? t.skillSaveAnyway : t.skillOfferSave}
           </button>
           {docPath && (
-            <button type="button" onClick={() => save("project")}>
+            <button type="button" onClick={() => saveTo("project")}>
               {t.skillOfferSaveProject}
             </button>
           )}
-        </span>
-      )}
-    </div>
+        </>
+      }
+    />
   );
 }
