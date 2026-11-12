@@ -1,11 +1,6 @@
-import { useLayoutEffect, useRef, useSyncExternalStore } from "react";
-import {
-  shownImageFailure,
-  generatedImageId,
-  generatedImageRatio,
-  generatedImageUrl,
-  onPictureSettled,
-} from "../revision/generated-images";
+import { useLayoutEffect, useRef } from "react";
+import { generatedImageId } from "../revision/generated-images";
+import { PictureFrame, useGeneratedPicture } from "../revision/PictureFrame";
 import { usePicturesState } from "../revision/usePicturesState";
 import { PICTURES_IN_TEXT } from "../revision/markdown-forms";
 
@@ -25,20 +20,11 @@ export function RevisionNoteText({ text }: { text: string }) {
   return <>{parts}</>;
 }
 
-const subscribe = (listener: () => void) => {
-  const stop = onPictureSettled(listener);
-  return () => {
-    stop();
-  };
-};
-
 function NotePicture({ src, alt }: { src: string; alt: string }) {
   const id = generatedImageId(src);
   // Asked for, so it comes whether or not its frame is on screen.
   usePicturesState(id ? `![](${src})` : "");
-  const made = useSyncExternalStore(subscribe, () =>
-    id ? generatedImageUrl(id) : null,
-  );
+  const { url: made, failure: why } = useGeneratedPicture(id);
   // One in the document: drawn from where its own document draws it (the
   // asset: URL its relative src resolves to), else as written.
   const own = useRef<HTMLImageElement>(null);
@@ -55,20 +41,9 @@ function NotePicture({ src, alt }: { src: string; alt: string }) {
   if (id) {
     if (made)
       return <img className="revision-note-picture" src={made} alt={alt} />;
-    const why = shownImageFailure(id);
     if (why) return <span className="revision-note-picture-why">{why}</span>;
     return (
-      <span
-        className="pending-picture revision-note-picture-frame"
-        role="img"
-        aria-busy="true"
-        aria-label={alt}
-        style={{ aspectRatio: generatedImageRatio(id) }}
-      >
-        <span className="pending-picture-blob" />
-        <span className="pending-picture-blob" />
-        <span className="pending-picture-blob" />
-      </span>
+      <PictureFrame id={id} alt={alt} className="revision-note-picture-frame" />
     );
   }
   return (

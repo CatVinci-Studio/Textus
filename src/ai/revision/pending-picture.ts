@@ -21,6 +21,11 @@ import "./pending-picture.css";
 // One shared phase, so a frame re-created as text streams in doesn't restart.
 const SHEEN_MS = 2400;
 
+/** Where the frames' sheen is now, for a frame drawn this moment. */
+export function sheenPhase(): string {
+  return `-${Date.now() % SHEEN_MS}ms`;
+}
+
 /** The frame for picture `id`, its alt text the label. */
 function frame(id: string, alt: string): HTMLElement {
   const el = document.createElement("span");
@@ -32,10 +37,7 @@ function frame(id: string, alt: string): HTMLElement {
   const size = generatedImageSize(id);
   if (size && size.width > 0 && size.height > 0)
     el.style.aspectRatio = `${size.width} / ${size.height}`;
-  el.style.setProperty(
-    "--pending-picture-phase",
-    `-${Date.now() % SHEEN_MS}ms`,
-  );
+  el.style.setProperty("--pending-picture-phase", sheenPhase());
   for (let i = 0; i < 3; i++) {
     const blob = document.createElement("span");
     blob.className = "pending-picture-blob";

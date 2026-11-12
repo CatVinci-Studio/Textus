@@ -1,14 +1,9 @@
+import { PictureFrame, useGeneratedPicture } from "../revision/PictureFrame";
 import { HeadRow } from "../../engine/controls/HeadRow";
 import { DropIcon, TakeIcon } from "../../engine/controls/icons";
 import { counted } from "../../i18n/current";
 import { fill } from "../../i18n/fill";
-import {
-  useEffect,
-  useMemo,
-  useState,
-  useSyncExternalStore,
-  type CSSProperties,
-} from "react";
+import { useEffect, useMemo, useState, type CSSProperties } from "react";
 import { usePicturesState } from "../revision/usePicturesState";
 import type { EditProposal } from "../types";
 import type { PendingStatus } from "../revision/usePendingEdits";
@@ -16,13 +11,6 @@ import { hasCitations } from "../citations";
 import { useSettings } from "../../prefs/SettingsContext";
 import { diffLines } from "./line-diff";
 import { type PendingSentence } from "../revision/pending-types";
-import {
-  shownImageFailure,
-  loadGeneratedImage,
-  generatedImageRatio,
-  generatedImageUrl,
-  onPictureSettled,
-} from "../revision/generated-images";
 import { Tooltip } from "../../engine/controls/Tooltip";
 import type { ChatMessagesLabels } from "./chat-messages-types";
 import { InlineMarkdownText } from "../MarkdownText";
@@ -51,33 +39,14 @@ export function notMadeLine(
 /** A proposed picture on its card, small: its frame while it is made,
  *  then the picture, or why it wasn't made. */
 function ProposedPicture({ id, alt }: { id: string; alt: string }) {
-  // Read again whenever a picture comes or goes: one redrawn in the
-  // document paints here too until the new one has come.
-  const url = useSyncExternalStore(onPictureSettled, () =>
-    generatedImageUrl(id),
-  );
-  const failure = useSyncExternalStore(onPictureSettled, () =>
-    shownImageFailure(id),
-  );
-  useEffect(() => {
-    if (!url && !failure) void loadGeneratedImage(id);
-  }, [id, url, failure]);
+  // One redrawn in the document paints here too until the new one has come.
+  const { url, failure } = useGeneratedPicture(id);
   if (url)
     return <img className="agent-proposal-picture" src={url} alt={alt} />;
   if (failure)
     return <span className="agent-proposal-picture-failed">{failure}</span>;
   return (
-    <span
-      className="pending-picture agent-proposal-picture-frame"
-      role="img"
-      aria-busy="true"
-      aria-label={alt}
-      style={{ aspectRatio: generatedImageRatio(id) }}
-    >
-      <span className="pending-picture-blob" />
-      <span className="pending-picture-blob" />
-      <span className="pending-picture-blob" />
-    </span>
+    <PictureFrame id={id} alt={alt} className="agent-proposal-picture-frame" />
   );
 }
 
