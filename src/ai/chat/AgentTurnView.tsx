@@ -23,6 +23,7 @@ import { Presence } from "../../engine/motion/usePresence";
 import { INSERT_MARKDOWN_EVENT } from "../../utils/events";
 import { normalizeAiMarkdown } from "../revision/apply-edit";
 import { CommandText } from "../agents/AgentPermission";
+import { currentStrings } from "../../i18n/current";
 
 /** A tool's note longer than this is cut to two lines until opened. */
 const LONG_ACTIVITY = 160;
@@ -166,12 +167,7 @@ export function AgentTurnView({
       );
     }
     case "ToolResult":
-      return (
-        <details className="disclosure agent-tool-result">
-          <summary>{labels.toolResult}</summary>
-          <pre>{turn.output}</pre>
-        </details>
-      );
+      return <ToolOutput output={turn.output} label={labels.toolResult} />;
     default:
       return null;
   }
@@ -278,5 +274,37 @@ function SourceList({
         );
       })}
     </div>
+  );
+}
+
+/** A step's output drawn in full past this, only when asked. */
+const LONG_OUTPUT = 4000;
+
+/**
+ * A step's output, folded: its text is drawn only while it is open, and a
+ * long one (a command reading many files) its start until asked, so a
+ * session of them doesn't weigh on the conversation.
+ */
+function ToolOutput({ output, label }: { output: string; label: string }) {
+  const [open, setOpen] = useState(false);
+  const [all, setAll] = useState(false);
+  const cut = !all && output.length > LONG_OUTPUT;
+  return (
+    <details
+      className="disclosure agent-tool-result"
+      onToggle={(e) => setOpen(e.currentTarget.open)}
+    >
+      <summary>{label}</summary>
+      {open && <pre>{cut ? `${output.slice(0, LONG_OUTPUT)}…` : output}</pre>}
+      {open && cut && (
+        <button
+          type="button"
+          className="text-button agent-command-more"
+          onClick={() => setAll(true)}
+        >
+          {currentStrings().chatAgentShowAll}
+        </button>
+      )}
+    </details>
   );
 }
