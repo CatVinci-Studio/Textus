@@ -27,6 +27,8 @@ export type EditorMenuState = {
   drawnBlock?: DrawnBlockActions | null;
   /** The link right-clicked, if any. */
   link?: MenuLink | null;
+  /** An embed's picture right-clicked. */
+  picture?: HTMLImageElement | null;
   /** Opened by the iPhone keyboard toolbar's "More", as an action sheet. */
   phone?: boolean;
   /** Opened from the keyboard, at the caret. */
@@ -87,6 +89,7 @@ export function EditorContextMenu({
               imageLocation: menu.imageLocation,
               drawnBlock: menu.drawnBlock,
               link: menu.link,
+              picture: menu.picture,
               // A picture is changed by asking for a new one in its place,
               // while there is an image service.
               pictureAiItems:

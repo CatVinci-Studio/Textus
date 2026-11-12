@@ -14,6 +14,8 @@
 
 ### Fixed
 
+- A picture embedded the Obsidian way (`![[image.png]]`) stays on show when clicked, as any picture does: its corner button or a double click enlarges it, and right-click offers View Image and Copy. The source comes up as the caret reaches it. (#659)
+- Reopening Textus brings its documents back as they were, the one in front first, without flicking through each tab.
 - `Tab` in source mode indents instead of leaving the document, and `Shift + Tab` takes an indent back; press `Esc` first to move on with `Tab`. (#652)
 - A draft recovered after a crash asks before it is saved over a file that changed since its edits began, and a draft whose file can't be found comes back untitled instead of being dropped.
 - Updating Textus closes its windows as Quit does, asking about unsaved documents or keeping them as drafts, before the new version starts.

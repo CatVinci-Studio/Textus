@@ -17,6 +17,8 @@ import { contributedMenuItems } from "./editor-menu-items";
 import { linkMenuItems, menuLinkAt, type MenuLink } from "./editor-menu-links";
 import { imageLocation, type ImageLocation } from "./images/missing-image";
 import { embedFileAt } from "./images/obsidian-embed-preview";
+import { openDiagramViewer } from "./diagram-zoom";
+import { pictureAsPng, writeClipboard } from "./images/picture-clipboard";
 import {
   drawnBlockActionsAt,
   type DrawnBlockActions,
@@ -82,6 +84,9 @@ interface ContextMenuTarget {
   drawnBlock?: DrawnBlockActions | null;
   /** The link right-clicked, if any. */
   link?: MenuLink | null;
+  /** An embed's picture on show (`![[a.png]]`): no node to select, so it
+   *  is enlarged and copied as itself. */
+  picture?: HTMLImageElement | null;
 }
 
 /**
@@ -122,11 +127,14 @@ export function contextMenuTarget(
         e.target instanceof Element ? e.target.closest(".image-view") : null;
       if (!target) return none;
       const embedFile = embedFileAt(target);
-      if (embedFile)
+      if (embedFile) {
+        const img = target.querySelector("img");
         return {
           imagePos: null,
           imageLocation: { kind: "local", path: embedFile },
+          picture: img && img.naturalWidth > 0 ? img : null,
         };
+      }
       try {
         const pos = view.posAtDOM(target, 0);
         const node = view.state.doc.nodeAt(pos);
@@ -158,6 +166,8 @@ export interface ContextMenuOptions {
   drawnBlock?: DrawnBlockActions | null;
   /** From contextMenuTarget: the link right-clicked, if any. */
   link?: MenuLink | null;
+  /** From contextMenuTarget: an embed's picture right-clicked. */
+  picture?: HTMLImageElement | null;
   /** Already filtered down to the AI features that are switched on. */
   aiItems: ContextMenuItem[];
   /** Textus AI's items for the image right-clicked. */
@@ -184,7 +194,9 @@ export function buildContextMenuItems(
   const imageItems = joinGroups(
     imagePos === null ? [] : imageWidthItems(run, t, imagePos),
     imageFileItems(t, options.imageLocation ?? null),
-    imagePos === null ? [] : imageTurnItems(run, t, imagePos),
+    imagePos === null
+      ? pictureItems(t, options.picture)
+      : imageTurnItems(run, t, imagePos),
     imagePos === null ? [] : (options.pictureAiItems ?? []),
   );
   const nothingSelected =
@@ -197,8 +209,11 @@ export function buildContextMenuItems(
     },
     {
       label: t.copy,
-      disabled: nothingSelected,
-      onSelect: () => options.copyOrCut(false),
+      disabled: nothingSelected && !options.picture,
+      onSelect: () =>
+        nothingSelected && options.picture
+          ? copyPicture(options.picture)
+          : options.copyOrCut(false),
     },
     { label: t.paste, onSelect: options.paste },
     ...(options.copyAsPlainText && options.pasteAsPlainText
@@ -458,4 +473,25 @@ function formatGroups(
       ],
     },
   ];
+}
+
+/** An embed's picture: enlarged, as an image's own items do. */
+function pictureItems(
+  t: Strings,
+  picture: HTMLImageElement | null | undefined,
+): ContextMenuEntry[] {
+  const frame = picture?.parentElement;
+  return picture && frame
+    ? [
+        {
+          label: t.imageViewLarge,
+          onSelect: () => openDiagramViewer(picture, frame),
+        },
+      ]
+    : [];
+}
+
+/** The picture itself to the clipboard, its file's address beside it. */
+function copyPicture(picture: HTMLImageElement): void {
+  void writeClipboard(picture.outerHTML, picture.alt, pictureAsPng(picture));
 }
