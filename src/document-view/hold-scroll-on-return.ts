@@ -37,8 +37,7 @@ export function useHoldScrollOnReturn(): void {
     };
     // The page's focus comes back before the window says so: from then on a
     // scroll is the webview's, not the reader's.
-    const unfollow = () =>
-      document.removeEventListener("scroll", follow, true);
+    const unfollow = () => document.removeEventListener("scroll", follow, true);
     window.addEventListener("focus", unfollow, true);
     const putBack = (el: HTMLElement) => {
       const top = kept.get(el);

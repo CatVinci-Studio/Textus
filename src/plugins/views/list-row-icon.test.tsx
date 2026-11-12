@@ -7,5 +7,7 @@ it("draws a named icon as the app's, and any other text as the row's glyph", () 
   const named = render(<ListRowIcon icon="file" />).container;
   expect(named.querySelector("svg.plugin-list-icon")).not.toBeNull();
   const glyph = render(<ListRowIcon icon="🔎" />).container;
-  expect(glyph.querySelector(".plugin-list-icon.is-glyph")?.textContent).toBe("🔎");
+  expect(glyph.querySelector(".plugin-list-icon.is-glyph")?.textContent).toBe(
+    "🔎",
+  );
 });

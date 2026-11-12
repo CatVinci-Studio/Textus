@@ -224,4 +224,3 @@ function ruleFor(panel: number, isPanel: (pane: Pane) => boolean) {
       zoomOf(pane.front),
     );
 }
-

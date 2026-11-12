@@ -3,11 +3,7 @@ import { afterEach, describe, expect, it } from "vitest";
 import type { Editor } from "@milkdown/kit/core";
 import { editorViewCtx, serializerCtx } from "@milkdown/kit/core";
 import { createTestEditor } from "../editor-test-kit";
-import {
-  embedForPicked,
-  parseEmbed,
-  withEmbedPath,
-} from "./obsidian-embed";
+import { embedForPicked, parseEmbed, withEmbedPath } from "./obsidian-embed";
 import { exportSrc } from "./obsidian-embed-preview";
 
 describe("an embed's src in an HTML export", () => {

@@ -90,7 +90,7 @@
   color: var(--ui-muted);
 }
 .plugin-list-icon.is-glyph {
-  font-size: 13px;
+  font-size: var(--text-list);
   line-height: 15px;
   text-align: center;
 }

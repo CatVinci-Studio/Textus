@@ -264,8 +264,7 @@ export const ai = {
     /** Recorded with what is remembered. */
     conversation: { id: string; title: string };
     exchange: { messages: string[]; reply: string };
-  }) =>
-    aiCommand("memory_pass", args) as Promise<RememberedChange[]>,
+  }) => aiCommand("memory_pass", args) as Promise<RememberedChange[]>,
   /** After an exchange, its request offered as a skill to save, or null. */
   offerSkill: (args: {
     provider: string;

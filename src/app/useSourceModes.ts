@@ -1,6 +1,12 @@
 import { tabElement } from "../engine/layout/tab-element";
 import { useCallback, useEffect, useLayoutEffect } from "react";
-import { applySourceCaret, captureEditorCaret, readSourceCaret, setPendingCaret, takePendingCaret } from "../editor/modes/mode-caret";
+import {
+  applySourceCaret,
+  captureEditorCaret,
+  readSourceCaret,
+  setPendingCaret,
+  takePendingCaret,
+} from "../editor/modes/mode-caret";
 import { sourceViewAt } from "../editor/modes/source-view-registry";
 import {
   setCurrentViewMode,

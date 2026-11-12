@@ -14,8 +14,7 @@ let waiting: string | null = null;
 const takers: Taker[] = [];
 
 export function askInComposer(text: string): void {
-  const taker =
-    [...takers].reverse().find((t) => t.shown()) ?? takers.at(-1);
+  const taker = [...takers].reverse().find((t) => t.shown()) ?? takers.at(-1);
   if (taker) taker.take(text);
   else waiting = text;
 }

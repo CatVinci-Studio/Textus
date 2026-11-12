@@ -202,7 +202,6 @@ async function drawChart(
   return { svg: chart.renderChart(code, layout), engine: "chart" };
 }
 
-
 /**
  * A drawing function for one render pass: a chart by its own renderer; a
  * diagram by Pele first when chosen and able, else Mermaid, loaded only when first needed. Throws when neither can draw.

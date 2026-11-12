@@ -43,7 +43,7 @@ export function clearSlides(items: readonly RowItem[]): void {
  * untouched by transforms in flight); each move finds the place by binary
  * search and restyles only the items whose shift changed.
  */
-export interface RowItem {
+interface RowItem {
   id: string;
   node: HTMLElement;
 }

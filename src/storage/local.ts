@@ -18,7 +18,7 @@ export const LOCAL_KEYS = {
 } as const;
 
 /** The value under `key`, or null when it is absent or can't be read. */
-export function readLocal(key: string): string | null {
+function readLocal(key: string): string | null {
   try {
     return localStorage.getItem(key);
   } catch {
@@ -43,13 +43,5 @@ export function writeLocal(key: string, value: string): void {
     localStorage.setItem(key, value);
   } catch {
     // Storage unavailable: the value just isn't remembered.
-  }
-}
-
-export function removeLocal(key: string): void {
-  try {
-    localStorage.removeItem(key);
-  } catch {
-    // Storage unavailable: nothing was kept to remove.
   }
 }

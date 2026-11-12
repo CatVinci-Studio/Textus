@@ -58,7 +58,7 @@ it("breaks the line at a single newline in a vault without strict line breaks", 
   await waitFor(() =>
     expect(pane()?.classList.contains("split-preview-breaks")).toBe(true),
   );
-  expect(pane()?.querySelector(SOFT_BREAK)).not.toBeNull();
+  await waitFor(() => expect(pane()?.querySelector(SOFT_BREAK)).not.toBeNull());
 });
 
 it("keeps one paragraph line where the vault asks for strict line breaks", async () => {
@@ -67,8 +67,7 @@ it("keeps one paragraph line where the vault asks for strict line breaks", async
   await waitFor(() =>
     expect(fs.folderConventions).toHaveBeenCalledWith("/v/b.md"),
   );
-  await new Promise((r) => setTimeout(r, 0));
-  expect(pane()?.querySelector(SOFT_BREAK)).not.toBeNull();
+  await waitFor(() => expect(pane()?.querySelector(SOFT_BREAK)).not.toBeNull());
   expect(pane()?.classList.contains("split-preview-breaks")).toBe(false);
   expect(pane()?.innerHTML).not.toContain("<br>");
 });

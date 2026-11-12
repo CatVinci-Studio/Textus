@@ -146,5 +146,3 @@ export const PERMISSION_CALLS: readonly [RegExp, Permission][] =
     );
     return [new RegExp(`\\.(?:${names.join("|")})`), permission];
   });
-
-

@@ -1831,7 +1831,8 @@ utiliser une.
   pluginCardNever: "Ne plus suggérer",
   pluginCardsMuted: "Suggestions de plugins désactivées : {n}",
   pluginCardsRestore: "Afficher à nouveau",
-  pluginCardsRestoreAll: "Afficher à nouveau les suggestions de plugins masquées",
+  pluginCardsRestoreAll:
+    "Afficher à nouveau les suggestions de plugins masquées",
   pluginScreenshot: "{name} en action",
   pluginsMine: "Créées par vous",
   pluginsInstalledNone: "Aucune extension installée.",

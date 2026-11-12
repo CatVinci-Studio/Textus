@@ -5,7 +5,7 @@ import { windowIpc } from "../platform/ipc";
  * its documents, how its islands were laid out, the folder it had open -
  * kept by the native side per window (commands/session.rs).
  */
-export interface WindowSession {
+interface WindowSession {
   paths: string[];
   layout?: unknown;
   folder?: string | null;

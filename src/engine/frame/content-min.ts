@@ -31,7 +31,7 @@ export function contentMinVersion(): number {
   return version;
 }
 
-export function setContentMin(id: string, px: number | null): void {
+function setContentMin(id: string, px: number | null): void {
   const was = mins.get(id) ?? null;
   if (px === was) return;
   if (px === null) mins.delete(id);

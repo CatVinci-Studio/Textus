@@ -22,6 +22,7 @@ pub(crate) use settle::*;
 
 mod chapters;
 mod context;
+mod flat;
 pub(crate) mod history;
 pub(crate) mod lists;
 mod model;
@@ -30,6 +31,7 @@ mod prompt;
 mod session;
 pub(crate) use chapters::*;
 pub(crate) use context::*;
+use flat::flattened_chat_turn;
 pub(crate) use history::*;
 pub(crate) use model::*;
 pub(crate) use past::*;
@@ -446,43 +448,6 @@ pub(crate) async fn installed_tools<'a>(app: &AppHandle, window: &str) -> Vec<to
     installed.extend(crate::mcp::tools_for_request(app).await);
     installed.extend(crate::plugins::ai_tools::tools_for_request(app, window));
     installed
-}
-
-/// Providers without tool calling get the conversation flattened into one
-/// plain-text turn and a single completion.
-async fn flattened_chat_turn(
-    app: &AppHandle,
-    provider: &str,
-    instructions: &str,
-    history: Vec<AgentTurn>,
-    message: String,
-    model: Option<&str>,
-) -> Result<Vec<AgentTurn>, String> {
-    fn turn_to_plain_text(turn: &AgentTurn) -> Option<String> {
-        match turn {
-            // Images are dropped on purpose: the command already refused an
-            // image-carrying message for these providers.
-            AgentTurn::User { text, .. } => Some(format!("User: {text}")),
-            AgentTurn::Assistant { text, .. } => Some(format!("Assistant: {text}")),
-            _ => None,
-        }
-    }
-
-    let user_turn = AgentTurn::user(message);
-    let mut transcript: Vec<String> = history.iter().filter_map(turn_to_plain_text).collect();
-    if let Some(t) = turn_to_plain_text(&user_turn) {
-        transcript.push(t);
-    }
-
-    let text = crate::ai::client::call(
-        app,
-        provider,
-        instructions.to_string(),
-        transcript.join("\n\n"),
-        model,
-    )
-    .await?;
-    Ok(vec![user_turn, AgentTurn::assistant(text)])
 }
 
 /// The picture a message's selection is, when it is one picture and nothing

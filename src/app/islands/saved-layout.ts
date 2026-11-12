@@ -6,7 +6,7 @@ import {
 
 /** A split as saved: its branches, and each island by its documents'
  *  paths and the one in front (earlier versions: that one alone). */
-export type SavedNode =
+type SavedNode =
   | { direction: SplitDirection; sizes: number[]; children: SavedNode[] }
   | { paths: string[]; front: string }
   | { path: string };

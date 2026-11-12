@@ -3,7 +3,7 @@ import { decodeUrlPath, hasUrlScheme, isDrivePath } from "../../utils/path";
 
 /** Where a document's image points: one reading for the editor, the
  *  missing-picture card and export. */
-export type ImageSource =
+type ImageSource =
   /** An http(s) address; `//host/x.png` is one without its scheme. */
   | { kind: "web"; url: string }
   /** A file on this computer. `rooted`: written from `/`, which the

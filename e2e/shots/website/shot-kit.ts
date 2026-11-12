@@ -101,7 +101,8 @@ Holmes's first line is not really just a party trick, if you think about it. He 
     commentAnchor: "You have been in Afghanistan, I perceive.",
     comment:
       "His first deduction, given before any explanation: Holmes explains it only in Chapter II. Worth a line in your note.",
-    reply: "Tightened your note, and left a comment on Holmes's first deduction.",
+    reply:
+      "Tightened your note, and left a comment on Holmes's first deduction.",
     zenFocus: "You have been in Afghanistan",
     mathTitle: "Euler",
     mathDoc: `# Euler's formula

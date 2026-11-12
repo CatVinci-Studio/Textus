@@ -5,8 +5,14 @@ const { set, updated } = vi.hoisted(() => ({
   updated: [] as unknown[],
 }));
 vi.mock("../platform/ipc", () => ({ plugins: { set } }));
-vi.mock("./store/ask-permissions", () => ({ askPermissions: async () => null }));
-vi.mock("./manager", () => ({ apply: () => {}, loadPlugins: async () => {}, withdraw: () => {} }));
+vi.mock("./store/ask-permissions", () => ({
+  askPermissions: async () => null,
+}));
+vi.mock("./manager", () => ({
+  apply: () => {},
+  loadPlugins: async () => {},
+  withdraw: () => {},
+}));
 vi.mock("./running-hosts", () => ({ hosts: new Map(), stopHost: () => {} }));
 vi.mock("./store/plugin-records", () => ({
   pluginRecord: () => ({

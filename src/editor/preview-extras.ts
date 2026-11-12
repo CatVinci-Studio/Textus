@@ -2,7 +2,7 @@ import type { Editor } from "@milkdown/kit/core";
 
 /** More for a preview to draw, from the layer above (plugins' blocks). Its
  *  own module: the window tells it at startup without loading the editor. */
-export type PreviewExtras = (
+type PreviewExtras = (
   editor: Editor,
   docPath: { readonly current: string | null },
 ) => Editor;

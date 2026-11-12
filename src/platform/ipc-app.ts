@@ -7,11 +7,7 @@ import type {
 import type { DetachedTabDoc, HelpDoc } from "../document/doc-tabs";
 import type { Lang } from "../i18n/langs";
 import type * as Generated from "./bindings/app";
-import {
-  command,
-  desktopActionCommand,
-  desktopQueryCommand,
-} from "./ipc-call";
+import { command, desktopActionCommand, desktopQueryCommand } from "./ipc-call";
 
 /**
  * Backend commands for the app around the document: windows, menu, links,

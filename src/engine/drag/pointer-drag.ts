@@ -40,12 +40,7 @@ export function trackDrag(
     e.preventDefault();
     handlers.move(e.clientX, e.clientY, e);
   };
-  const finish = (
-    x: number,
-    y: number,
-    dropped: boolean,
-    e?: PointerEvent,
-  ) => {
+  const finish = (x: number, y: number, dropped: boolean, e?: PointerEvent) => {
     if (done) return;
     done = true;
     window.removeEventListener("pointermove", move);

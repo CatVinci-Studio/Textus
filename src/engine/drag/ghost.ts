@@ -6,7 +6,7 @@ import { animate } from "../motion/motion";
  * the pill between windows is (tab_drag/pill.rs). Reordering within a row
  * moves the thing itself instead (pointer-drag.ts).
  */
-export interface DragGhost {
+interface DragGhost {
   move(x: number, y: number): void;
   /** Out of sight while something else follows the pointer instead. */
   hide(hidden: boolean): void;

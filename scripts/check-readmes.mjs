@@ -36,7 +36,9 @@ function outline(file) {
     // Badges may differ per language (the Chinese ones show the QQ and
     // WeChat groups instead of Discord), so their images are not compared.
     .filter((target) => !target.startsWith("https://img.shields.io/"))
-    .filter((target) => !/^https:\/\/textus\.md\/(discord|qq|wechat)$/.test(target))
+    .filter(
+      (target) => !/^https:\/\/textus\.md\/(discord|qq|wechat)$/.test(target),
+    )
     // Each README links to the other languages, and shows its own
     // language's screenshots.
     .filter((target) => !/^\.\/README/.test(target))
@@ -52,7 +54,10 @@ function outline(file) {
         // language the English one.
         .replace(/^ROADMAP\.zh\.md$/, "ROADMAP.md")
         // The website in the reader's language.
-        .replace(/^https:\/\/textus\.md\/[a-z]{2}(-[a-z]+)?\//i, "https://textus.md/"),
+        .replace(
+          /^https:\/\/textus\.md\/[a-z]{2}(-[a-z]+)?\//i,
+          "https://textus.md/",
+        ),
     );
   const images = [...prose.matchAll(/src="([^"]+\.png)"/g)].map((m) => m[1]);
   return { headings, code, tableRows, links, images };

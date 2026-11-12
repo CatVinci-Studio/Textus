@@ -43,7 +43,7 @@ declare module "mdast" {
 }
 
 /** File types an embed shows as a picture. */
-export const IMAGE_EXTENSIONS: readonly string[] = Object.keys(IMAGE_TYPES);
+const IMAGE_EXTENSIONS: readonly string[] = Object.keys(IMAGE_TYPES);
 
 function isImageFile(file: string): boolean {
   const ext = /\.([^./]+)$/.exec(file)?.[1].toLowerCase();

@@ -1,6 +1,6 @@
 /** One step through two sequences along their longest common subsequence:
  *  an item both keep, one only `a` has, or one only `b` has. */
-export type LcsStep = "same" | "delete" | "insert";
+type LcsStep = "same" | "delete" | "insert";
 
 /** The most cells a table may have (items of `a` times items of `b`): past
  *  that a diff costs more than it shows, and callers treat the whole as

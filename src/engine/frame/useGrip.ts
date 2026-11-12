@@ -6,7 +6,7 @@ export const GRIP_KEY_STEP = 24;
 
 /** How a hold ended: let go, cancelled by the system, or the grip gone
  *  from the page while held. */
-export type GripEnd = "done" | "cancelled" | "gone";
+type GripEnd = "done" | "cancelled" | "gone";
 
 /**
  * A grip held by the pointer (a divider, a panel's edge, a view's corner):

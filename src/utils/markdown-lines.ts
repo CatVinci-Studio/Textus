@@ -56,7 +56,7 @@ export function eachLine(
 }
 
 /** A heading as the editor reads it: its level, its text, its line. */
-export interface HeadingLine {
+interface HeadingLine {
   level: number;
   text: string;
   line: number;

@@ -587,7 +587,9 @@ for (const lang of LANGS) {
       await composer.blur();
       await page.mouse.move(2, 2);
       // The hero: the document from its top, the passage and its comment.
-      await doc(page).evaluate((d) => d.closest(".editor-scroll")?.scrollTo(0, 0));
+      await doc(page).evaluate((d) =>
+        d.closest(".editor-scroll")?.scrollTo(0, 0),
+      );
       await page.waitForTimeout(400);
       await windowCard(page, lang, "hero");
       // The edits taken: the review comment beside its sentence is left.
@@ -732,7 +734,9 @@ for (const lang of LANGS) {
       const providers = page.locator(".providers-page");
       // The providers' group from its title, nothing above it cut.
       await providers.evaluate((el) =>
-        (el.closest(".settings-group") ?? el).scrollIntoView({ block: "start" }),
+        (el.closest(".settings-group") ?? el).scrollIntoView({
+          block: "start",
+        }),
       );
       await expect(providers.locator(".providers-detail")).toBeVisible();
       await page.waitForTimeout(400);
@@ -773,7 +777,9 @@ for (const lang of LANGS) {
       // The note on the left, its graph in an island beside it.
       await emitTo(page, "menu-split-right");
       await emitTo(page, "menu-plugin-command", "catvinci.graph.open");
-      const blank = page.locator(".tab-pill").filter({ hasNotText: /\.md$|Graph|图|圖|グラフ|그래프|Grafo|Graphe|Graph|Граф/ });
+      const blank = page.locator(".tab-pill").filter({
+        hasNotText: /\.md$|Graph|图|圖|グラフ|그래프|Grafo|Graphe|Graph|Граф/,
+      });
       if (await blank.count()) {
         await blank.first().hover();
         await blank.first().locator(".tab-pill-close").click();

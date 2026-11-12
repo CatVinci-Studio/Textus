@@ -49,9 +49,8 @@ export function useDocumentOpener(
       );
       if (open) await exportDoc.openLinkedFile(path);
     };
-    return setDocumentOpener(
-      (path, { linked, ...open }) =>
-        linked ? openLinkedFile(path) : openPathInTab(path, open),
+    return setDocumentOpener((path, { linked, ...open }) =>
+      linked ? openLinkedFile(path) : openPathInTab(path, open),
     );
   }, [openPathInTab, t]);
   useFilesFromChat();

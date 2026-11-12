@@ -90,9 +90,12 @@ describe("issuesToDecorations", () => {
 
 describe("paragraphUnchanged", () => {
   it("refuses a reply once text above has moved the paragraph", () => {
-    const p = (t: string) => schema.nodes.paragraph.create(null, schema.text(t));
+    const p = (t: string) =>
+      schema.nodes.paragraph.create(null, schema.text(t));
     const at = (doc: ReturnType<typeof schema.node>) =>
-      ({ state: { doc } }) as unknown as Parameters<typeof paragraphUnchanged>[0];
+      ({ state: { doc } }) as unknown as Parameters<
+        typeof paragraphUnchanged
+      >[0];
     const before = schema.node("doc", null, [p("abcdef"), p("teh cat sat")]);
     // The second paragraph's text starts at 9.
     expect(paragraphUnchanged(at(before), 9, "teh cat sat")).toBe(true);

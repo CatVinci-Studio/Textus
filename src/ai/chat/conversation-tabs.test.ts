@@ -1,7 +1,10 @@
 // @vitest-environment jsdom
 import { afterEach, expect, it } from "vitest";
 import { conversationScope } from "./conversation-scope";
-import { openConversationTab, setConversationOpener } from "./conversation-tabs";
+import {
+  openConversationTab,
+  setConversationOpener,
+} from "./conversation-tabs";
 
 afterEach(() => setConversationOpener(null));
 

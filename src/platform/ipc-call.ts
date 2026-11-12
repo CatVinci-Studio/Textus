@@ -117,4 +117,3 @@ export async function call<T>(command: string, args?: object): Promise<T> {
     throw new IpcError(command, err);
   }
 }
-

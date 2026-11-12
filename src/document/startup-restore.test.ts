@@ -1,13 +1,6 @@
 // @vitest-environment jsdom
 import { cleanup, renderHook, waitFor } from "@testing-library/react";
-import {
-  afterEach,
-  beforeEach,
-  describe,
-  expect,
-  it,
-  vi,
-} from "vitest";
+import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
 import type { DocTab } from "./doc-tabs";
 
 const ipc = vi.hoisted(() => ({
@@ -202,7 +195,9 @@ describe("startup restore into the initial tab", () => {
   // Opened as any file is (a board a plugin claims, a Word document, the
   // recent list, its last caret), into the initial tab.
   it("opens the first document as any file opens, the rest in tabs", async () => {
-    ipc.takePendingWindow.mockResolvedValue({ paths: ["/docs/a.md", "/docs/b.md"] });
+    ipc.takePendingWindow.mockResolvedValue({
+      paths: ["/docs/a.md", "/docs/b.md"],
+    });
     const { tabs, openPathInTab, replaceTabWithFile } = await restore();
     await waitFor(() =>
       expect(openPathInTab).toHaveBeenCalledWith("/docs/b.md", {
@@ -219,11 +214,9 @@ describe("startup restore into the initial tab", () => {
 
   it("skips a first document deleted since, and still opens the rest", async () => {
     ipc.gone.add("/docs/a.md");
-    ipc.takePendingWindow.mockResolvedValue({ paths: [
-      "/docs/a.md",
-      "/docs/b.md",
-      "/docs/c.md",
-    ] });
+    ipc.takePendingWindow.mockResolvedValue({
+      paths: ["/docs/a.md", "/docs/b.md", "/docs/c.md"],
+    });
     const { tabs, openPathInTab } = await restore();
     await waitFor(() =>
       expect(openPathInTab).toHaveBeenCalledWith("/docs/c.md", {
@@ -316,11 +309,9 @@ describe("startup restore into the initial tab", () => {
   // After a crash, each reopened document opens once, with its recovered
   // edits.
   it("opens a reopened session file once, with its recovered edits", async () => {
-    ipc.takePendingWindow.mockResolvedValue({ paths: [
-      "/docs/a.md",
-      "/docs/b.md",
-      "/docs/c.md",
-    ] });
+    ipc.takePendingWindow.mockResolvedValue({
+      paths: ["/docs/a.md", "/docs/b.md", "/docs/c.md"],
+    });
     ipc.takeDraftSnapshots.mockResolvedValue([
       { tabId: "old-a", path: "/docs/a.md", content: "a, unsaved" },
       { tabId: "old-b", path: "/docs/b.md", content: "b, unsaved" },
