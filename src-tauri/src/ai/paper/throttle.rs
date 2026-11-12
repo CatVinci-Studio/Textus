@@ -18,21 +18,12 @@ const TRIES: u32 = 5;
 const FIRST_WAIT: Duration = Duration::from_secs(2);
 
 /// Whether `error` reads as the service being busy rather than the request
-/// being wrong: a 429, an overload, a gateway that couldn't get through.
-/// Error strings are the dialects' `"... request failed ({status}): {body}"`.
+/// being wrong: a rate limit or an overload, or the server failing.
 pub(crate) fn is_busy(error: &str) -> bool {
-    let lower = error.to_ascii_lowercase();
-    ["failed (429", "failed (502", "failed (503", "failed (529"]
-        .iter()
-        .any(|status| lower.contains(status))
-        || [
-            "overloaded",
-            "rate limit",
-            "rate_limit",
-            "too many requests",
-        ]
-        .iter()
-        .any(|said| lower.contains(said))
+    matches!(
+        crate::ai::error_kind::kind(error),
+        Some("rateLimit" | "server")
+    )
 }
 
 /// The wait before try `n` (1 for the first retry): doubling, with up to a

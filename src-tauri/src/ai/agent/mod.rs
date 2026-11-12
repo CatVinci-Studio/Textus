@@ -505,20 +505,13 @@ mod tests;
 /// Whether a request's error says the server can't take tools (it names
 /// them in refusing the request), rather than any other failure.
 fn refuses_tools(error: &str) -> bool {
-    let error = error.to_ascii_lowercase();
+    let lower = error.to_ascii_lowercase();
     ["tool", "function call", "function_call", "functions"]
         .iter()
-        .any(|word| error.contains(word))
-        && ![
-            "429",
-            "rate limit",
-            "timed out",
-            "timeout",
-            "401",
-            "403",
-            "quota",
-            "balance",
-        ]
-        .iter()
-        .any(|word| error.contains(word))
+        .any(|word| lower.contains(word))
+        && !lower.contains("403")
+        && !matches!(
+            crate::ai::error_kind::kind(error),
+            Some("rateLimit" | "timeout" | "auth" | "balance")
+        )
 }
