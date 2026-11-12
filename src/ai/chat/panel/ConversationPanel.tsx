@@ -164,11 +164,8 @@ export function ConversationPanel({
               pendingCount={chat.pendingCount}
               onAcceptAll={chat.onAcceptAll}
               onRejectAll={chat.onRejectAll}
-              onClose={() => {
-                doc.setGuard(false);
-                conversation.reset();
-              }}
-              onCancel={() => doc.setGuard(false)}
+              onClose={doc.proceed}
+              onCancel={doc.cancelGuard}
             />
           )
         }

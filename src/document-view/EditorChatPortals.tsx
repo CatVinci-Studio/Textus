@@ -67,8 +67,9 @@ export function EditorChatPortals({
       run((ctx) => ctx.get(editorViewCtx).state.doc.textContent) ?? "",
     onNewConversation: chat.startPanelConversation,
     onPopOut: chat.popOutPanel,
-    guard: chat.panelGuard,
-    setGuard: chat.setPanelGuard,
+    guard: chat.panelGuard.asking,
+    proceed: chat.panelGuard.proceed,
+    cancelGuard: chat.panelGuard.cancel,
     writePaper: review.writePaper,
   });
   return (

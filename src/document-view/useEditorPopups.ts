@@ -116,6 +116,7 @@ export function useEditorPopups({
     openTableDialog: () => setTableDialogOpen(true),
     setMenu,
     conversation: chat.conversation,
+    guardConversation: chat.panelGuard.guard,
     agentPanel: chat.agentPanel,
     docPath: filePath,
   });

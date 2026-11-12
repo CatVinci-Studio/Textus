@@ -100,6 +100,7 @@ export function useEditorWindowEvents({
   openTableDialog,
   setMenu,
   conversation,
+  guardConversation,
   agentPanel,
   docPath,
 }: {
@@ -115,6 +116,8 @@ export function useEditorWindowEvents({
   openTableDialog: () => void;
   setMenu: (menu: EditorMenuState) => void;
   conversation: AgentConversation;
+  /** Replacing the conversation, asked first while edits are undecided. */
+  guardConversation: (replace: () => void) => void;
   agentPanel: AgentPanelFrame;
   /** This editor's document; null for one never saved. */
   docPath: string | null;
@@ -307,8 +310,8 @@ export function useEditorWindowEvents({
   const claimRestore = useLatest(() => {
     const restore = claimChatRestore(docPath, isOnScreen);
     if (!restore) return;
-    conversation.restore(restore.id, restore.turns);
     agentPanel.setOpen(true);
+    guardConversation(() => conversation.restore(restore.id, restore.turns));
   });
   useWindowEvent(RESTORE_CHAT_EVENT, () => claimRestore.current());
   useEffect(() => claimRestore.current(), [docPath, claimRestore]);

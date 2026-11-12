@@ -49,9 +49,11 @@ export interface DocumentPanel {
   /** A new conversation, asked of the document: undecided edits first. */
   onNewConversation: () => void;
   onPopOut: () => void;
-  /** Starting a new conversation asked first (edits still undecided). */
+  /** Replacing the conversation asked first (edits still undecided):
+   *  whether it is asking, and going on or not. */
   guard: boolean;
-  setGuard: (guard: boolean) => void;
+  proceed: () => void;
+  cancelGuard: () => void;
   /** Starts a paper on a topic. */
   writePaper: (
     topic: string,

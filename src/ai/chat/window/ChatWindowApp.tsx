@@ -1,4 +1,5 @@
-import { useMemo, useState } from "react";
+import { useMemo } from "react";
+import { useConversationGuard } from "../useConversationGuard";
 import { CloseConfirmBar } from "../CloseConfirm";
 import { conversationScope } from "../conversation-scope";
 import type { ChatTabs } from "./ChatWindowHeader";
@@ -40,13 +41,17 @@ export function ChatWindowApp({ tabs }: { tabs?: ChatTabs }) {
     () => chatLabels(t, settings.language),
     [t, settings.language],
   );
-  // A new conversation with edits still undecided asks first, as the panel
-  // does.
-  const [asking, setAsking] = useState(false);
+  // A new or reopened conversation with edits still undecided asks first,
+  // as the panel does.
+  const guard = useConversationGuard(bridge.pendingCount);
   const startOver = () => {
-    setAsking(false);
     proposalDocs.current.clear();
     conversation.reset();
+  };
+  const reopenTarget = {
+    ...bridge.reopenTarget,
+    restore: (chat: Parameters<typeof bridge.reopenTarget.restore>[0]) =>
+      guard.guard(() => bridge.reopenTarget.restore(chat)),
   };
 
   const header = (
@@ -59,10 +64,8 @@ export function ChatWindowApp({ tabs }: { tabs?: ChatTabs }) {
       tabs={tabs}
       busy={conversation.busy}
       pinned={pinned}
-      reopenTarget={bridge.reopenTarget}
-      onNewConversation={() =>
-        bridge.pendingCount > 0 ? setAsking(true) : startOver()
-      }
+      reopenTarget={reopenTarget}
+      onNewConversation={() => guard.guard(startOver)}
       onPin={() => setSettings({ pinAgentWindow: !pinned })}
       t={t}
     />
@@ -138,14 +141,14 @@ export function ChatWindowApp({ tabs }: { tabs?: ChatTabs }) {
           onAcceptAll={() => sendScoped(CHAT_TO_EDITOR.acceptAll, {})}
           onRejectAll={() => sendScoped(CHAT_TO_EDITOR.rejectAll, {})}
           footer={
-            asking && (
+            guard.asking && (
               <CloseConfirmBar
                 labels={labels}
                 pendingCount={bridge.pendingCount}
                 onAcceptAll={() => sendScoped(CHAT_TO_EDITOR.acceptAll, {})}
                 onRejectAll={() => sendScoped(CHAT_TO_EDITOR.rejectAll, {})}
-                onClose={startOver}
-                onCancel={() => setAsking(false)}
+                onClose={guard.proceed}
+                onCancel={guard.cancel}
               />
             )
           }

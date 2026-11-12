@@ -1,4 +1,5 @@
-import { useEffect, useRef, useState } from "react";
+import { useConversationGuard } from "../ai/chat/useConversationGuard";
+import { useEffect, useRef } from "react";
 import { useEditorProposals } from "./useEditorProposals";
 import { useChatContextBridge } from "./useChatContextBridge";
 import { usePanelSelection } from "./usePanelSelection";
@@ -142,19 +143,11 @@ export function useEditorChat({
     agentPanel,
   });
 
-  // A new panel conversation waits while proposals are still undecided.
-  const decidableCount = pendingEdits.decidable.length;
-  const [panelGuard, setPanelGuard] = useState(false);
-  useEffect(() => {
-    if (decidableCount === 0) setPanelGuard(false);
-  }, [decidableCount]);
+  // A new or reopened panel conversation waits while proposals are still
+  // undecided.
+  const panelGuard = useConversationGuard(pendingEdits.decidable.length);
   function startPanelConversation() {
-    if (pendingEdits.decidable.length > 0) {
-      setPanelGuard(true);
-      return;
-    }
-    setPanelGuard(false);
-    conversation.reset();
+    panelGuard.guard(() => conversation.reset());
   }
 
   function popOutPanel() {
@@ -190,7 +183,6 @@ export function useEditorChat({
     review,
     controls,
     panelGuard,
-    setPanelGuard,
     startPanelConversation,
     popOutPanel,
   };
