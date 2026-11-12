@@ -33,8 +33,17 @@
   border-radius: var(--shape-m);
 }
 
-.settings-about-card-text {
+.settings-about-card-main {
+  display: flex;
   flex: 1;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 8px 12px;
+  min-width: 0;
+}
+
+.settings-about-card-text {
+  flex: 1 1 auto;
   min-width: 0;
 }
 
@@ -47,12 +56,16 @@
   font-size: var(--text-caption);
 }
 
-/* Where Textus lives and who made it: one quiet line, last. */
+/* Where Textus lives and who made it: one quiet line, last; wrapping,
+   each part whole, spaced rather than dotted. */
 .settings-about-links {
+  display: flex;
+  flex-wrap: wrap;
+  justify-content: center;
+  gap: 4px 16px;
   margin: 16px 0 0;
   color: var(--ui-muted);
   font-size: var(--text-caption);
-  text-align: center;
 }
 
 .settings-about-links > button {
@@ -69,7 +82,7 @@
 }
 
 /* The update button at the card's end, its answer under the card's text. */
-.settings-about-card > .settings-about-link {
+.settings-about-card-main > .settings-about-link {
   flex: none;
   width: auto;
   padding-inline: 12px;

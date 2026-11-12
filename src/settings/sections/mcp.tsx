@@ -1,3 +1,4 @@
+import { PathText } from "../../engine/controls/PathText";
 import { CatalogRow } from "../pages/CatalogRow";
 import { Tooltip } from "../../engine/controls/Tooltip";
 import { Segmented } from "../../engine/controls/Segmented";
@@ -205,7 +206,9 @@ function ServerCard({
       data-mcp={server.id}
       name={server.name || server.id}
       description={
-        server.url || joinCommandLine([server.command, ...server.args])
+        <PathText
+          path={server.url || joinCommandLine([server.command, ...server.args])}
+        />
       }
       descriptionClass="mcp-endpoint"
       extra={

@@ -207,17 +207,18 @@ button.plugin-card-open:hover .plugin-card-name {
 /* A catalog plugin's page: icon, name and Install in a row; its pictures,
    README and permissions below. */
 .market-plugin-head {
-  display: flex;
-  align-items: flex-start;
   gap: var(--space-3);
   margin-bottom: var(--space-4);
 }
 .market-plugin-title {
   display: flex;
-  flex: 1 1 0;
-  min-width: 0;
   flex-direction: column;
   gap: 4px;
+}
+/* What it does takes the title's width and adds none: Install goes under
+   only when the name and byline leave no room. */
+.market-plugin-title > .settings-row-hint {
+  contain: inline-size;
 }
 .market-plugin-title .plugin-page-title {
   margin: 0;
@@ -586,10 +587,13 @@ button.plugin-card-open:hover .plugin-card-name {
 }
 
 /* An MCP server's card: where it runs, how it is doing, its tools. */
+/* Where it runs, one line (PathText): no clamp or width cap of its own. */
 .mcp-endpoint {
+  display: block;
+  max-width: none;
+  -webkit-line-clamp: none;
   font-family: var(--font-mono);
   font-size: var(--text-caption);
-  word-break: break-all;
 }
 .mcp-state-failed {
   color: var(--ui-danger);
@@ -612,6 +616,7 @@ button.plugin-card-open:hover .plugin-card-name {
 }
 .mcp-actions {
   display: flex;
+  flex-wrap: wrap;
   gap: var(--space-2);
   margin-top: 4px;
 }

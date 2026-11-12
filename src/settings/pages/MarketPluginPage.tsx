@@ -1,3 +1,4 @@
+import { HeadRow } from "../../engine/controls/HeadRow";
 import { fill } from "../../i18n/fill";
 import { Byline } from "./CatalogRow";
 import { PluginIcon, PluginReadme } from "./PluginArt";
@@ -37,32 +38,37 @@ export function MarketPluginPage({
           ‹ {t.pluginBackToList}
         </button>
       )}
-      <div className="market-plugin-head">
-        <PluginIcon
-          id={item.id}
-          manifest={item.manifest}
-          url={item.icon}
-          large
-        />
-        <div className="market-plugin-title">
-          <h2 className="plugin-page-title">{name}</h2>
-          <div className="settings-row-hint">
-            {pluginText(record, item.manifest.description)}
+      <HeadRow
+        className="market-plugin-head"
+        mark={
+          <PluginIcon
+            id={item.id}
+            manifest={item.manifest}
+            url={item.icon}
+            large
+          />
+        }
+        tools={action}
+        title={
+          <div className="market-plugin-title">
+            <h2 className="plugin-page-title">{name}</h2>
+            <div className="settings-row-hint">
+              {pluginText(record, item.manifest.description)}
+            </div>
+            <Byline
+              t={t}
+              official={item.official}
+              author={item.manifest.author || item.manifest.publisher}
+              version={item.manifest.version}
+              installs={installs}
+            >
+              {item.updated && (
+                <span>{fill(t.pluginUpdatedOn, { date: item.updated })}</span>
+              )}
+            </Byline>
           </div>
-          <Byline
-            t={t}
-            official={item.official}
-            author={item.manifest.author || item.manifest.publisher}
-            version={item.manifest.version}
-            installs={installs}
-          >
-            {item.updated && (
-              <span>{fill(t.pluginUpdatedOn, { date: item.updated })}</span>
-            )}
-          </Byline>
-        </div>
-        {action}
-      </div>
+        }
+      />
       {item.screenshots.length > 0 && (
         <div className="market-plugin-shots">
           {item.screenshots.map((shot) => (

@@ -29,11 +29,15 @@ export function AboutPage({
     <>
       <div className="settings-about-card">
         <img className="settings-about-card-icon" src={appIcon} alt="" />
-        <div className="settings-about-card-text">
-          <div className="settings-about-card-name">Textus</div>
-          <div className="settings-about-card-version">{version}</div>
+        {/* The name, then the button: under the name, not the icon, when
+            the two don't fit side by side. */}
+        <div className="settings-about-card-main">
+          <div className="settings-about-card-text">
+            <div className="settings-about-card-name">Textus</div>
+            <div className="settings-about-card-version">{version}</div>
+          </div>
+          <UpdateButton t={t} checkOnOpen={checkUpdates} />
         </div>
-        <UpdateButton t={t} checkOnOpen={checkUpdates} />
       </div>
       <SettingsGroup title={t.settingsUpdatesGroup}>
         <UpdateChannelRow t={t} />
@@ -67,19 +71,16 @@ export function AboutPage({
         >
           GitHub
         </button>
-        {" · "}
         <button
           type="button"
           onClick={() => void links.openAboutLink("discord")}
         >
           Discord
         </button>
-        {" · "}
         <button type="button" onClick={() => void links.openAboutLink("qq")}>
           {t.aboutQq}
         </button>
-        {" · "}
-        {t.aboutMadeBy}
+        <span>{t.aboutMadeBy}</span>
       </p>
     </>
   );
