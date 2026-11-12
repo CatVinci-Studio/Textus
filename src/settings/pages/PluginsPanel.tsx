@@ -167,7 +167,7 @@ export function PluginsPanel({
                 catalog.status === "ready" && updateFor(record.id, catalog) ? (
                   <button
                     type="button"
-                    className="tx-button primary plugins-panel-update"
+                    className="text-button plugins-panel-update"
                     disabled={installing !== null}
                     onClick={() => {
                       const item = catalogItem(record.id, catalog);

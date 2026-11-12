@@ -48,6 +48,21 @@ pub(crate) fn plugin_path(root: &Path, path: &Path, id: &str) -> Result<PathBuf,
     Ok(resolved)
 }
 
+/// Hidden files other apps keep at a folder's top that hold no secrets and
+/// that plugins read for them: Obsidian Vim's settings, WakaTime's project
+/// name, the Git branch checked out. Read only; the rest of .git stays shut.
+const READ_ONLY_HIDDEN: [&str; 3] = [".obsidian.vimrc", ".wakatime-project", ".git/HEAD"];
+
+/// Whether `path` (from `root`, or whole) is one of READ_ONLY_HIDDEN.
+pub(crate) fn read_only_hidden(root: &str, path: &str) -> bool {
+    let slashed = path.replace('\\', "/");
+    let root = root.replace('\\', "/");
+    let rel = slashed
+        .strip_prefix(root.trim_end_matches('/'))
+        .map_or(slashed.as_str(), |rest| rest.trim_start_matches('/'));
+    READ_ONLY_HIDDEN.contains(&rel)
+}
+
 /// Whether `rel` passes through anything hidden (`.env`, `.git/config`) or
 /// node_modules: what a plugin's own folder serves and lists leaves out.
 pub(crate) fn hidden_part(rel: &Path) -> bool {

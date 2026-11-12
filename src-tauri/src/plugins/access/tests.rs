@@ -80,3 +80,13 @@ fn a_plugin_reaches_no_hidden_file_but_the_folders_own_settings() {
     assert!(plugin_path(root.path(), Path::new(".textus/plugins/a.b/x.json"), "a.b").is_ok());
     assert!(plugin_path(root.path(), Path::new(".textus/plugins/a.b/x.json"), "c.d").is_err());
 }
+
+#[test]
+fn three_secret_free_hidden_files_are_readable_and_nothing_else_in_git() {
+    assert!(paths::read_only_hidden("/v", ".obsidian.vimrc"));
+    assert!(paths::read_only_hidden("/v", "/v/.git/HEAD"));
+    assert!(paths::read_only_hidden("C:\\v", "C:\\v\\.wakatime-project"));
+    assert!(!paths::read_only_hidden("/v", ".git/config"));
+    assert!(!paths::read_only_hidden("/v", ".env"));
+    assert!(!paths::read_only_hidden("/v", "sub/.git/HEAD"));
+}

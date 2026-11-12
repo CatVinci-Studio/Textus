@@ -43,7 +43,11 @@ pub(super) fn granted_path(
     if !state::read(app).allows(id, permission) {
         return Err(refused(id, permission));
     }
-    let path = plugin_path(Path::new(root), Path::new(path), id)?;
+    let path = if permission == "files.read" && paths::read_only_hidden(root, path) {
+        inside(Path::new(root), Path::new(path))?
+    } else {
+        plugin_path(Path::new(root), Path::new(path), id)?
+    };
     require_not_app_data(app, &path)?;
     Ok(path)
 }
