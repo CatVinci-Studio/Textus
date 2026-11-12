@@ -9,10 +9,11 @@ import {
 } from "../memory-pass";
 import type { ConversationModel } from "./conversation-model";
 import type { ConversationEnv } from "./conversation-types";
+import { chosenModel } from "../../chosen-model";
 
-const chosenModel = ({ settings }: ConversationEnv) => ({
+const modelInUse = ({ settings }: ConversationEnv) => ({
   provider: settings.aiProvider,
-  model: settings.agentModels[settings.aiProvider] || null,
+  model: chosenModel(settings),
 });
 
 /** After an exchange, what is remembered is brought up to date, each
@@ -27,7 +28,7 @@ export async function rememberAfter(
   const generation = model.generation;
   try {
     const changes = await ai.memoryPass({
-      ...chosenModel(env),
+      ...modelInUse(env),
       docPath: env.docPath,
       workspaceRoot: env.workspaceRoot,
       conversation: {
@@ -55,7 +56,7 @@ export async function offerSkillAfter(
   const generation = model.generation;
   try {
     const offer = await ai.offerSkill({
-      ...chosenModel(env),
+      ...modelInUse(env),
       docPath: env.docPath,
       workspaceRoot: env.workspaceRoot,
       exchange: passExchange(conversation),

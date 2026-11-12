@@ -22,6 +22,7 @@ import { thinkingDone } from "../thought";
 import { offerSkillAfter, rememberAfter } from "./conversation-passes";
 import type { ConversationModel } from "./conversation-model";
 import type { AgentRequestOptions } from "./conversation-types";
+import { chosenModel } from "../../chosen-model";
 
 const requestPrefs = (settings: Settings) => ({
   searchService: settings.searchService,
@@ -49,7 +50,7 @@ export async function sendMessage(
   const { busy, history, conversationId } = model.snapshot();
   if (!trimmed || busy || !settings.textusAi) return undefined;
   const provider = settings.aiProvider;
-  const chosen = settings.agentModels[provider] || null;
+  const chosen = chosenModel(settings);
   model.lastOptions = sent;
   model.about = port;
   // What is said here is the folder's conversation from now on.

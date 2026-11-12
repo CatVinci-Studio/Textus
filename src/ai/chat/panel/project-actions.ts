@@ -5,9 +5,9 @@ import { useState } from "react";
 import { ai, exportDoc } from "../../../platform/ipc";
 import type { LibraryEntry, Memory, MemoryScope } from "../../../platform/ipc";
 import { useSettings } from "../../../prefs/SettingsContext";
-import { useActiveProvider } from "../../provider-catalog";
 import { showConfirm } from "../../../engine/controls/app-dialog";
 import { libraryEntryId } from "./memory-text";
+import { chosenModel } from "../../chosen-model";
 
 const openInTab = (path: string) => openDocument(path);
 
@@ -42,7 +42,6 @@ export function useProjectActions({
   endNaming: () => void;
 }) {
   const { t, settings, setSettings } = useSettings();
-  const provider = useActiveProvider();
   const workspaceRoot = settings.agentWorkspaceRoot || null;
   const [busy, setBusy] = useState<string | null>(null);
   const [message, setMessage] = useState<string | null>(null);
@@ -73,10 +72,7 @@ export function useProjectActions({
       if (!files || files.length === 0) return;
       const path = await ai.learnStyle({
         provider: settings.aiProvider,
-        model:
-          settings.agentModels[settings.aiProvider] ||
-          provider?.agentDefaultModel ||
-          null,
+        model: chosenModel(settings),
         docPath,
         workspaceRoot,
         files,

@@ -2,6 +2,7 @@ import { useEffect, useState } from "react";
 import { ai, type WebSearchStatus } from "../platform/ipc";
 import { useSettings } from "../prefs/SettingsContext";
 import { PROVIDER_CATALOG } from "../platform/bindings/ai";
+import { chosenModel } from "./chosen-model";
 
 /** Structural facts about each AI provider, as the backend's catalog
  *  (ai/catalog.rs) has them, generated with the bindings. */
@@ -49,7 +50,7 @@ export function notifyWebSearchSetup() {
 export function useWebSearchStatus(): WebSearchStatus | null {
   const { settings } = useSettings();
   const provider = settings.aiProvider;
-  const model = settings.agentModels[provider] || null;
+  const model = chosenModel(settings);
   const { searchService, searxngUrl } = settings;
   const [status, setStatus] = useState<WebSearchStatus | null>(null);
   const [setups, setSetups] = useState(0);
