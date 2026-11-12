@@ -144,6 +144,13 @@ export function paneOf(current: SplitLayout, tabId: string): string | null {
   return paneWithTab(current.root, tabId)?.id ?? null;
 }
 
+/** `next`, a layout a split asked for, when its islands fit the window at
+ *  their least; null when they don't. Every split a person or a plugin
+ *  asks for goes through it; a panel folded for room coming back doesn't. */
+export function ifRoom(next: SplitLayout | null): SplitLayout | null {
+  return next && layoutFits(next.root) ? next : null;
+}
+
 /** Splits the pane in use (or the window) this way, a document of its
  *  tabs, or a blank one, going into the new pane - when the islands, the
  *  new one too, fit the window at their least; false when they don't and
@@ -196,11 +203,12 @@ export function besideLayout(
   if (!from || from === tabId) return null;
   const home = paneWithTab(layout.root, from);
   if (!home) return null;
-  if (!isSplit(layout)) return splitOff(layout, tabId, null, side, share);
+  if (!isSplit(layout))
+    return ifRoom(splitOff(layout, tabId, null, side, share));
   const next = paneBeside(layout.root, home.id, side);
   return next
     ? moveTab(layout, tabId, next.id)
-    : splitOff(layout, tabId, home.id, side);
+    : ifRoom(splitOff(layout, tabId, home.id, side));
 }
 
 /** Shows `tabId` beside `from` (besideLayout), both tabs of the window. */

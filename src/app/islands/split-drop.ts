@@ -5,6 +5,7 @@ import {
   setSplitLayout,
   windowLayout,
   placeOnArrival,
+  ifRoom,
 } from "../../engine/layout/store";
 import { moveTab, splitOff, type SplitLayout } from "../../engine/layout/ops";
 import { paneById, paneWithTab } from "../../engine/layout/tree";
@@ -30,7 +31,7 @@ export function dropLayout(
   target: DropTarget,
 ): SplitLayout | null | undefined {
   if (target.whole && target.zone !== "center")
-    return splitOff(now, tabId, null, target.zone) ?? undefined;
+    return ifRoom(splitOff(now, tabId, null, target.zone)) ?? undefined;
   const pane = paneOf(now, target.tabId);
   if (pane === null) return undefined;
   const others = paneById(now.root, pane)?.tabs.some((id) => id !== tabId);
@@ -38,7 +39,11 @@ export function dropLayout(
     return pane === paneOf(now, tabId) ? undefined : moveTab(now, tabId, pane);
   // An island's only tab dropped on its own edge stays where it is.
   if (!others) return undefined;
-  return splitOff(now, tabId, pane, target.zone) ?? undefined;
+  // No room for another island: it joins this one instead.
+  return (
+    ifRoom(splitOff(now, tabId, pane, target.zone)) ??
+    (pane === paneOf(now, tabId) ? undefined : moveTab(now, tabId, pane))
+  );
 }
 
 /** Commits a layout dropLayout gave. */

@@ -10,7 +10,11 @@ import {
 } from "../../ai/chat/conversation-scope";
 import { useChatHistory } from "../../ai/chat/chat-history";
 import { makeBlankTab, type DocTab } from "../../document/doc-tabs";
-import { placeOnArrival, windowLayout } from "../../engine/layout/store";
+import {
+  ifRoom,
+  placeOnArrival,
+  windowLayout,
+} from "../../engine/layout/store";
 import { moveTab, splitOff } from "../../engine/layout/ops";
 import { paneWithTab } from "../../engine/layout/tree";
 import type { TabState } from "../tabs/useTabState";
@@ -119,7 +123,7 @@ export function useAiTabs({
         placeOnArrival(tab.id, (now) =>
           home
             ? (moveTab(now, tab.id, home.id) ?? now)
-            : (splitOff(now, tab.id, null, "right") ?? now),
+            : (ifRoom(splitOff(now, tab.id, null, "right")) ?? now),
         );
     }
     if (gone.length || made.length)
