@@ -13,10 +13,14 @@ interface HeadingInfo {
  */
 export function parseHeadings(markdown: string): HeadingInfo[] {
   const headings: HeadingInfo[] = [];
-  eachLine(markdown, (line, _index, code) => {
-    if (code) return;
-    const match = /^(#{1,6})\s+(.+?)\s*#*\s*$/.exec(line);
-    if (match) headings.push({ level: match[1].length, text: match[2] });
-  });
+  eachLine(
+    markdown,
+    (line, _index, code) => {
+      if (code) return;
+      const match = /^(#{1,6})\s+(.+?)\s*#*\s*$/.exec(line);
+      if (match) headings.push({ level: match[1].length, text: match[2] });
+    },
+    { frontMatter: true },
+  );
   return headings;
 }

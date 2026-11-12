@@ -216,7 +216,7 @@ function blocks(markdown: string): { code: boolean; text: string }[] {
         push(false, line, joins);
       }
     },
-    { math: true },
+    { math: true, frontMatter: true },
   );
   return out;
 }

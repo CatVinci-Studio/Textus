@@ -68,11 +68,15 @@ export function outlineOf(
   markdown: string,
 ): { level: number; text: string; line: number }[] {
   const out: { level: number; text: string; line: number }[] = [];
-  eachLine(markdown, (line, index, code) => {
-    if (code) return;
-    const heading = /^\s{0,3}(#{1,6})\s+(.*?)\s*#*\s*$/.exec(line);
-    if (heading)
-      out.push({ level: heading[1].length, text: heading[2], line: index });
-  });
+  eachLine(
+    markdown,
+    (line, index, code) => {
+      if (code) return;
+      const heading = /^\s{0,3}(#{1,6})\s+(.*?)\s*#*\s*$/.exec(line);
+      if (heading)
+        out.push({ level: heading[1].length, text: heading[2], line: index });
+    },
+    { frontMatter: true },
+  );
   return out;
 }

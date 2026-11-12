@@ -86,10 +86,14 @@ export function countWords(markdown: string): WordCount {
     }
     paragraph = "";
   };
-  eachLine(markdown, (line, _index, code) => {
-    if (code || line.trim() === "") flush();
-    else paragraph += line + "\n";
-  });
+  eachLine(
+    markdown,
+    (line, _index, code) => {
+      if (code || line.trim() === "") flush();
+      else paragraph += line + "\n";
+    },
+    { frontMatter: true },
+  );
   flush();
   if (paragraphCounts.size > Math.max(PARAGRAPHS_KEPT, 2 * paragraphs.length)) {
     const kept = paragraphs.map(

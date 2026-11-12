@@ -195,11 +195,15 @@ export function documentBreaks(markdown: string): "backslash" | "spaces" {
   let spaces = 0;
   let backslashes = 0;
   const lines = markdown.split(/\r?\n/);
-  eachLine(lines.join("\n"), (line, i, code) => {
-    if (code || !lines[i + 1]?.trim() || !line.trim()) return;
-    if (/\S {2,}$/.test(line)) spaces++;
-    else if (/(^|[^\\])(\\\\)*\\$/.test(line)) backslashes++;
-  });
+  eachLine(
+    lines.join("\n"),
+    (line, i, code) => {
+      if (code || !lines[i + 1]?.trim() || !line.trim()) return;
+      if (/\S {2,}$/.test(line)) spaces++;
+      else if (/(^|[^\\])(\\\\)*\\$/.test(line)) backslashes++;
+    },
+    { frontMatter: true },
+  );
   return spaces > backslashes ? "spaces" : "backslash";
 }
 

@@ -21,10 +21,14 @@ function numberingStart(levels: { line: number; level: number }[]) {
 export function numberedHeadings(markdown: string): string {
   const lines = markdown.split("\n");
   const headings: { line: number; level: number }[] = [];
-  eachLine(markdown, (line, i, code) => {
-    const h = code ? null : HEADING.exec(line);
-    if (h) headings.push({ line: i, level: h[1].length });
-  });
+  eachLine(
+    markdown,
+    (line, i, code) => {
+      const h = code ? null : HEADING.exec(line);
+      if (h) headings.push({ line: i, level: h[1].length });
+    },
+    { frontMatter: true },
+  );
   if (!headings.length) return markdown;
   const { start, title } = numberingStart(headings);
   for (const { line, level } of headings) {

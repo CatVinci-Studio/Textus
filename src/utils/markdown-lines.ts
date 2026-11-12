@@ -7,8 +7,9 @@ const FENCE = /^(`{3,}|~{3,})(.*)$/;
 
 /**
  * Each line of `markdown` with whether it is code: inside a fenced block or
- * one of its fences, or in the front matter at its top (YAML, whose `#`
- * starts a comment, not a heading). As in CommonMark, a fence closes only on a run of the
+ * one of its fences - and, for a whole document (`frontMatter`), in the
+ * front matter at its top (YAML, whose `#` starts a comment, not a
+ * heading); a fragment's leading `---` lines are its own. As in CommonMark, a fence closes only on a run of the
  * same character at least as long as the one that opened it, with nothing
  * after it - so ``` inside ~~~ stays code.
  */
@@ -16,10 +17,10 @@ export function eachLine(
   markdown: string,
   visit: (line: string, index: number, code: boolean) => void,
   /** `$$` blocks count as code too: maths, kept whole. */
-  { math = false } = {},
+  { math = false, frontMatter = false } = {},
 ): void {
   let fence: string | null = null;
-  const head = FRONTMATTER.exec(markdown)?.[0] ?? "";
+  const head = frontMatter ? (FRONTMATTER.exec(markdown)?.[0] ?? "") : "";
   const yamlLines = head ? head.replace(/\n$/, "").split("\n").length : 0;
   markdown.split("\n").forEach((line, index) => {
     if (index < yamlLines) return visit(line, index, true);
