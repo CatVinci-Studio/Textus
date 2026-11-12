@@ -34,8 +34,12 @@ describe("lazyModule", () => {
 
   it("warms a warm module once the window is idle, not before", async () => {
     vi.useFakeTimers();
-    const loader = vi.fn(async () => 1);
+    const order: string[] = [];
+    const loader = vi.fn(async () => order.push("warm"));
     lazyModule("test:warm", loader, { warm: true });
+    lazyModule("test:first", async () => order.push("first"), {
+      warm: "first",
+    });
     const cold = vi.fn(async () => 2);
     lazyModule("test:cold", cold);
     await vi.advanceTimersByTimeAsync(5000);
@@ -43,6 +47,7 @@ describe("lazyModule", () => {
     startWarming();
     await vi.advanceTimersByTimeAsync(5000);
     expect(loader).toHaveBeenCalledTimes(1);
+    expect(order).toEqual(["first", "warm"]);
     expect(cold).not.toHaveBeenCalled();
     vi.useRealTimers();
   });

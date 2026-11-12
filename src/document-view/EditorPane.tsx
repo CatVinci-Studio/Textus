@@ -18,9 +18,10 @@ import type { TourAi } from "../utils/events";
 import { lazyModule } from "../lazy/lazy-module";
 import { lazyComponent } from "../lazy/lazy-component";
 
-// The editor loads with the first document shown.
+// The editor loads with the first document shown, or first once the window
+// is idle, so opening a document doesn't wait on it.
 const MilkdownEditor = lazyComponent(
-  lazyModule("editor", () => import("./MilkdownEditor")),
+  lazyModule("editor", () => import("./MilkdownEditor"), { warm: "first" }),
   (m) => m.ProvidedEditor,
 );
 
