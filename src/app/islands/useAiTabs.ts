@@ -19,7 +19,11 @@ import { moveTab, splitOff } from "../../engine/layout/ops";
 import { paneWithTab } from "../../engine/layout/tree";
 import type { TabState } from "../tabs/useTabState";
 import { pageOf } from "../tabs/page-tabs";
-import { AI_PRESS_EVENT, conversationIn } from "./ai-tabs";
+import {
+  AI_PRESS_EVENT,
+  conversationIn,
+  setConversationOpener,
+} from "./ai-tabs";
 
 const NONE: string[] = [];
 
@@ -59,6 +63,8 @@ export function useAiTabs({
   const had = useRef<ReadonlySet<string>>(new Set());
   // The window's first tabs: shown as it opens, the document stays in use.
   const opening = useRef(true);
+  // A conversation a + asked for: its tab beside the asking one's, in front.
+  const asked = useRef<{ id: string; beside: string } | null>(null);
 
   const wanted = !shown ? NONE : open.length ? open : [live ?? DRAFT];
   const titles = new Map(history.map((entry) => [entry.id, entry.title]));
@@ -113,7 +119,12 @@ export function useAiTabs({
     const starting = opening.current;
     opening.current = false;
     // Each placed as it arrives: its place asked for before it is added.
-    const kept = current.find((tab) => !gone.includes(tab.id));
+    const ask = asked.current;
+    const beside =
+      ask && made.some((tab) => conversationOf(tab) === ask.id)
+        ? current.find((tab) => conversationOf(tab) === ask.beside)
+        : undefined;
+    const kept = beside ?? current.find((tab) => !gone.includes(tab.id));
     const home = kept && paneWithTab(windowLayout().root, kept.id);
     if (made.length) {
       // Beside the AI's other tabs; the first in an island of its own at
@@ -131,18 +142,24 @@ export function useAiTabs({
         ...prev.filter((tab) => !gone.includes(tab.id)),
         ...made,
       ]);
-    // Opened with the button, the AI is what is in use.
-    if (made.length && !home && !starting) tabs.setActiveTabId(made[0].id);
+    // Opened with the button, the AI is what is in use; so is one a + made.
+    const front = made.find((tab) => conversationOf(tab) === ask?.id);
+    if (front) {
+      asked.current = null;
+      tabs.setActiveTabId(front.id);
+    } else if (made.length && !home && !starting)
+      tabs.setActiveTabId(made[0].id);
     had.current = new Set(wanted);
     // eslint-disable-next-line react-hooks/exhaustive-deps -- the keys stand for the lists
   }, [aiKey, wantedKey, shown, scope]);
 
-  // Titles as History names them.
+  // Titles as History names them; a tab given a conversation not named yet
+  // keeps none of the last one's.
   useEffect(() => {
     for (const tab of tabsRef.current.filter(isAiTab)) {
       const id = conversationOf(tab);
-      const title = titles.get(id);
-      if (title && tab.view?.title !== title)
+      const title = titles.get(id) || undefined;
+      if (tab.view?.title !== title)
         updateTab(tab.id, { view: { ...tab.view!, title } });
     }
     // eslint-disable-next-line react-hooks/exhaustive-deps -- the keys stand for the lists
@@ -156,6 +173,18 @@ export function useAiTabs({
     if (scope && frontConversation && frontConversation !== DRAFT)
       setLiveConversation(scope, frontConversation);
   }, [scope, frontConversation]);
+
+  // A +: a conversation of its own, open in the folder's AI from now on.
+  useEffect(() => {
+    setConversationOpener((from) => {
+      if (!scope) return false;
+      const id = crypto.randomUUID();
+      asked.current = { id, beside: from };
+      setLiveConversation(scope, id);
+      return true;
+    });
+    return () => setConversationOpener(null);
+  }, [scope]);
 
   // The AI button, while shown.
   useEffect(() => {

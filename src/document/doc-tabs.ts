@@ -91,6 +91,13 @@ export function namePageTabs(view: string, title: PageTitle): void {
 }
 
 // A tab's display name everywhere one is shown.
+/** What a tab's name leaves out, on hover: an AI tab's conversation. */
+export function tabTip(tab: DocTab, t: Strings): string | undefined {
+  if (tab.view?.kind === "page" && tab.view.view === "ai")
+    return tab.view.title ?? t.chatNewConversation;
+  return undefined;
+}
+
 export function tabTitle(tab: DocTab, t: Strings): string {
   if (tab.path) return basename(tab.path);
   if (showsStartPage(tab)) return t.startPageTab;
@@ -101,7 +108,7 @@ export function tabTitle(tab: DocTab, t: Strings): string {
       : tab.view.view === "create"
         ? t.extensionsTabCreate
         : tab.view.view === "ai"
-          ? (tab.view.title ?? t.chatNewConversation)
+          ? t.agentPanelTitle
           : tab.view.title
             ? // Told apart from a tab the plugin opens itself, of the same name.
               fill(t.pluginPageTab, { name: tab.view.title })

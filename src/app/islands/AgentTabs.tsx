@@ -24,6 +24,8 @@ import {
   type ContextMenuItem,
 } from "../../engine/controls/ContextMenu";
 import { Presence } from "../../engine/motion/usePresence";
+import { IconButton } from "../../engine/controls/IconButton";
+import { PlusIcon } from "../../engine/controls/icons";
 import type { Strings } from "../../i18n/strings";
 
 const NONE: string[] = [];
@@ -130,7 +132,7 @@ function agentIslandMenu(
   ];
 }
 
-/** Inside the island: its history at the top right, and its menu on a
+/** Inside the island: New conversation and History at the top right, and its menu on a
  *  right-click on its paper (not on a message, a control or a selection,
  *  which keep their own). */
 export function AgentIslandTools({
@@ -161,6 +163,16 @@ export function AgentIslandTools({
   }, []);
   return (
     <div className="agent-island-tools" ref={ref}>
+      <IconButton
+        className="inline-chat-header-button"
+        label={t.chatNewConversation}
+        onClick={() => {
+          panel.setTab("chat");
+          onNew();
+        }}
+      >
+        <PlusIcon />
+      </IconButton>
       <ChatHistoryMenu
         buttonClassName="inline-chat-header-button"
         onReopen={(entry) => void reopenConversation(entry, t)}

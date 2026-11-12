@@ -1,5 +1,6 @@
 import { useEffect, useRef } from "react";
 import { AgentIslandTools } from "./AgentTabs";
+import { newConversation } from "./ai-tabs";
 import { TextusAiOffNote } from "../../ai/TextusAiSwitch";
 import {
   WindowConversation,
@@ -27,7 +28,10 @@ export function AiTab({ conversation }: { conversation: string }) {
       <div className="agent-panel-mount">
         <WindowConversation conversation={conversation} newSlot={newSlot} />
       </div>
-      <AgentIslandTools t={t} onNew={() => newSlot.current?.()} />
+      <AgentIslandTools
+        t={t}
+        onNew={() => newConversation(conversation, () => newSlot.current?.())}
+      />
     </div>
   );
 }

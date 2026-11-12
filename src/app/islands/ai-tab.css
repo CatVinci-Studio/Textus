@@ -1,6 +1,7 @@
 /* An AI tab fills its island; its conversation fills the tab. */
 .ai-tab {
   position: relative;
+  container: ai-tab / inline-size;
   display: flex;
   flex-direction: column;
   height: 100%;

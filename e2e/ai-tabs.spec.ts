@@ -24,7 +24,7 @@ test("the AI button opens a conversation tab in an island on the right", async (
 }) => {
   await open(page);
   await aiButton(page).click();
-  await expect(tabs(page)).toHaveText(["未命名", "新对话"]);
+  await expect(tabs(page)).toHaveText(["未命名", "Textus AI"]);
   await expect(islands(page)).toHaveCount(2);
   await expect(conversation(page)).toHaveCount(1);
   const [doc, ai] = await Promise.all(
@@ -53,7 +53,7 @@ test("a conversation keeps its turns when the document in front is closed and an
   const doc = tabs(page).filter({ hasText: "未命名" });
   await doc.hover();
   await doc.locator(".tab-pill-close").click();
-  await expect(tabs(page)).toHaveText(["新对话"]);
+  await expect(tabs(page)).toHaveText(["Textus AI"]);
   await kept();
   await emit(page, "menu-new-file");
   await expect(doc).toHaveCount(1);
@@ -61,7 +61,7 @@ test("a conversation keeps its turns when the document in front is closed and an
   // With no document, the island's own menu still starts a new one.
   await doc.hover();
   await doc.locator(".tab-pill-close").click();
-  await expect(tabs(page)).toHaveText(["新对话"]);
+  await expect(tabs(page)).toHaveText(["Textus AI"]);
   const paper = await page.locator(".ai-tab").boundingBox();
   await page.mouse.click(paper!.x + paper!.width / 2, paper!.y + 40, {
     button: "right",
@@ -84,7 +84,7 @@ test("pressed again in front of its own island, it collapses; again, it comes ba
     page.locator('[data-active-tab="true"] .ProseMirror'),
   ).toBeVisible();
   await aiButton(page).click();
-  await expect(tabs(page)).toHaveText(["未命名", "新对话"]);
+  await expect(tabs(page)).toHaveText(["未命名", "Textus AI"]);
   await expect(conversation(page)).toHaveCount(1);
 });
 
@@ -106,11 +106,11 @@ test("dragged into the document's island, it stays there and the button leaves i
   await page.waitForTimeout(500);
   await page.mouse.up();
   await expect(islands(page)).toHaveCount(1);
-  await expect(tabs(page)).toHaveText(["未命名", "新对话"]);
+  await expect(tabs(page)).toHaveText(["未命名", "Textus AI"]);
   await expect(conversation(page)).toHaveCount(1);
   // In front of an island it shares: the button does nothing.
   await aiButton(page).click();
-  await expect(tabs(page)).toHaveText(["未命名", "新对话"]);
+  await expect(tabs(page)).toHaveText(["未命名", "Textus AI"]);
 });
 
 test("Zen shows the tab in use alone, and the split comes back after", async ({
@@ -140,7 +140,7 @@ test("the window's other tabs stay with the document when the AI opens", async (
     "未命名",
     "设置：通用",
   ]);
-  await expect(rows.last().locator(".tab-pill")).toHaveText(["新对话"]);
+  await expect(rows.last().locator(".tab-pill")).toHaveText(["Textus AI"]);
 });
 
 test("with Alt held, a tab's drag moves its whole island", async ({ page }) => {
@@ -162,7 +162,7 @@ test("with Alt held, a tab's drag moves its whole island", async ({ page }) => {
   await page.waitForTimeout(500);
   await page.mouse.up();
   await page.keyboard.up("Alt");
-  await expect(rows.first().locator(".tab-pill")).toHaveText(["新对话"]);
+  await expect(rows.first().locator(".tab-pill")).toHaveText(["Textus AI"]);
   await expect(rows.last().locator(".tab-pill")).toHaveText([
     "未命名",
     "设置：通用",
@@ -253,7 +253,7 @@ test("let go in the middle of the document's island, it joins it; near its edge,
   };
   await drag(0.5);
   await expect(islands(page)).toHaveCount(1);
-  await expect(tabs(page)).toHaveText(["未命名", "新对话"]);
+  await expect(tabs(page)).toHaveText(["未命名", "Textus AI"]);
   // Near its top the room for a new island opens above; held over that
   // room it stays, and once the pointer leaves it upwards the island comes
   // back, the pointer over its row: let go there, the tab stays in it.
@@ -291,7 +291,7 @@ test("let go in the middle of the document's island, it joins it; near its edge,
   await expect(islands(page)).toHaveCount(2);
   await expect(
     page.locator(".island-row").first().locator(".tab-pill"),
-  ).toHaveText(["新对话"]);
+  ).toHaveText(["Textus AI"]);
 });
 
 test("in a window already split, the AI opens as a column of its own at the right of all of it", async ({
@@ -313,4 +313,48 @@ test("in a window already split, the AI opens as a column of its own at the righ
   const aiSheet = (await sheets.last().boundingBox())!;
   expect(aiSheet.height).toBeGreaterThan(500);
   for (const [, right] of docs.slice(0, 2)) expect(right).toBeLessThan(ai.x);
+});
+
+test("an unsaved document in front keeps the folder's conversation; + opens another beside it; History spans the tab", async ({
+  page,
+}) => {
+  await page.setViewportSize({ width: 1200, height: 760 });
+  await openApp(page, { settings: { menuBarShown: false } });
+  await emit(page, "receive-detached-tab", {
+    path: "/n/第三章.md",
+    content: "# 第三章\n\n雨下到第三天。\n",
+    savedContent: "# 第三章\n\n雨下到第三天。\n",
+    diskMtime: 1,
+    sourceMode: false,
+  });
+  await expect(tabs(page)).toHaveText(["未命名", "第三章.md"]);
+  await aiButton(page).click();
+  const box = page.locator(".ai-tab textarea").first();
+  await box.fill("第三章写了什么？");
+  await box.press("Enter");
+  const turns = page.locator(".ai-tab .inline-chat-messages");
+  await expect(turns).toContainText("Canned dev-shim reply to:");
+  await expect(page.locator(".ai-tab .agent-streaming")).toHaveCount(0);
+  // A new, unsaved document in front: the conversation stays.
+  await emit(page, "menu-new-file");
+  await expect(tabs(page)).toHaveCount(4);
+  const ai = tabs(page).filter({ hasText: "Textus AI" });
+  await ai.click();
+  await expect(turns).toContainText("第三章写了什么？");
+  // + beside History: a second conversation, a tab of its own, in front.
+  await page
+    .locator(".ai-tab .agent-island-tools")
+    .getByRole("button", { name: "新对话" })
+    .click();
+  await expect(ai).toHaveCount(2);
+  await expect(
+    page.locator(".ai-tab:visible .inline-chat-messages"),
+  ).not.toContainText("第三章写了什么？");
+  // History opens as wide as the tab, not a sliver.
+  await page
+    .locator(".ai-tab:visible .agent-island-tools [aria-haspopup=dialog]")
+    .click();
+  const menu = await page.locator(".chat-history-menu").boundingBox();
+  const tab = await page.locator(".ai-tab:visible").boundingBox();
+  expect(menu!.width).toBeGreaterThan(tab!.width - 40);
 });

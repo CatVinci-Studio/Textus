@@ -21,6 +21,8 @@ export interface TabInfo {
   preview?: boolean;
   /** The file, where it has one. */
   path?: string | null;
+  /** Said on hover: what the name leaves out. */
+  tip?: string;
   /** Its content's own mark (a file Textus AI changed): its name in the
    *  accent, as in the file tree. */
   marked?: boolean;
@@ -311,10 +313,10 @@ export function TabPill({
           </span>
         </Tooltip>
       )}
-      {cut ? (
+      {cut || tab.tip ? (
         // A name cut short reads whole on hover.
-        <Tooltip text={title} description={null}>
-          <span className="tab-pill-title" data-cut>
+        <Tooltip text={tab.tip ?? title} description={null}>
+          <span className="tab-pill-title" data-cut={cut || undefined}>
             {title}
           </span>
         </Tooltip>

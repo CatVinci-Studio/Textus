@@ -25,8 +25,17 @@
 
 /* Its history, at the top right, over the conversation's top air. */
 .agent-island-tools {
+  display: flex;
+  gap: var(--space-1);
   position: absolute;
   top: var(--space-2);
   right: var(--space-2);
   z-index: 2;
+}
+
+/* Its tools are its History list's box: the list spans the tab instead. */
+.agent-island-tools .chat-history-menu {
+  left: auto;
+  right: 0;
+  width: calc(100cqi - 2 * var(--space-2));
 }

@@ -17,6 +17,7 @@ import {
   showsStartPage,
   tabIsDirty,
   tabTitle,
+  tabTip,
   type DocTab,
 } from "../../document/doc-tabs";
 import { tabReadOnly } from "../../document/read-only";
@@ -141,6 +142,7 @@ export function DocumentIslands({
       tabs={list.map((tab) => ({
         id: tab.id,
         title: tabTitle(tab, t),
+        tip: tabTip(tab, t),
         dirty: tabIsDirty(tab),
         preview: tab.preview,
         path: tab.path,
