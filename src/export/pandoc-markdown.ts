@@ -1,3 +1,4 @@
+import { eachLine } from "../utils/markdown-lines";
 // The Markdown handed to pandoc for export, rewritten where the editor's
 // syntax has no pandoc equivalent: highlights, sized images, callouts,
 // `[[links]]` and embeds, `~sub~`/`^sup^`, citations; `%%comments%%` go.
@@ -16,8 +17,6 @@ import {
 import { OBJECT, findInlineSyntax } from "../editor/markdown/inline-syntax";
 import type { NoteLinkOut } from "./note-links";
 
-const FENCE = /^ {0,3}(`{3,}|~{3,})/;
-const MATH_FENCE = /^\s*\$\$/;
 const IMG_TAG = /<img\b(?:[^<>"']|"[^"]*"|'[^']*')*>/gi;
 const IMAGE = /!\[([^\]]*)\]\((\S+?)(?:\s+"([^"]*)")?\)/g;
 const QUOTE = /^(?:[ \t]*>)+[ \t]?/;
@@ -137,9 +136,7 @@ function rewriteText(text: string, options: PandocRewrite): string {
 function rewriteProse(line: string, options: PandocRewrite): string {
   return between(line, CODE_MATH, (prose) =>
     between(
-      prose
-        .replace(IMG_TAG, imageTag)
-        .replace(IMAGE, sizedImage),
+      prose.replace(IMG_TAG, imageTag).replace(IMAGE, sizedImage),
       LINKS,
       (words) => rewriteText(words, options),
       (span) => (span.endsWith("]]") ? noteLink(span, options) : span),
@@ -200,37 +197,27 @@ function callout(
 /** Splits `markdown` into runs of code lines and runs of prose paragraphs. */
 function blocks(markdown: string): { code: boolean; text: string }[] {
   const out: { code: boolean; text: string }[] = [];
-  let fence: string | null = null;
-  let math = false;
   const push = (code: boolean, line: string, joins: boolean) => {
     const last = out.at(-1);
     if (last && last.code === code && joins) last.text += `\n${line}`;
     else out.push({ code, text: line });
   };
-  for (const line of markdown.split("\n")) {
-    const match = FENCE.exec(line);
-    if (fence || math) {
-      if (
-        fence &&
-        match?.[1][0] === fence[0] &&
-        match[1].length >= fence.length
-      )
-        fence = null;
-      if (math && line.includes("$$")) math = false;
-      push(true, line, true);
-    } else if (match || (MATH_FENCE.test(line) && !/\$\$.*\$\$/.test(line))) {
-      if (match) fence = match[1];
-      else math = true;
-      push(true, line, true);
-    } else {
-      const joins =
-        !!line.trim() &&
-        !!out.at(-1)?.text.split("\n").at(-1)?.trim() &&
-        !BLOCK_START.test(line) &&
-        quoteDepth(line) === quoteDepth(out.at(-1)!.text.split("\n").at(-1)!);
-      push(false, line, joins);
-    }
-  }
+  eachLine(
+    markdown,
+    (line, _index, code) => {
+      if (code) {
+        push(true, line, true);
+      } else {
+        const joins =
+          !!line.trim() &&
+          !!out.at(-1)?.text.split("\n").at(-1)?.trim() &&
+          !BLOCK_START.test(line) &&
+          quoteDepth(line) === quoteDepth(out.at(-1)!.text.split("\n").at(-1)!);
+        push(false, line, joins);
+      }
+    },
+    { math: true },
+  );
   return out;
 }
 

@@ -1,3 +1,4 @@
+import { eachLine } from "../../utils/markdown-lines";
 import {
   defaultHandlers,
   type Handle,
@@ -193,15 +194,9 @@ export const hardBreakAsSpaces: Handle = (node, parent, state, info) => {
 export function documentBreaks(markdown: string): "backslash" | "spaces" {
   let spaces = 0;
   let backslashes = 0;
-  let fence: string | null = null;
   const lines = markdown.split(/\r?\n/);
-  lines.forEach((line, i) => {
-    const marker = /^\s{0,3}(`{3,}|~{3,})/.exec(line)?.[1];
-    if (marker && (!fence || marker.startsWith(fence))) {
-      fence = fence ? null : marker.slice(0, 3);
-      return;
-    }
-    if (fence || !lines[i + 1]?.trim() || !line.trim()) return;
+  eachLine(lines.join("\n"), (line, i, code) => {
+    if (code || !lines[i + 1]?.trim() || !line.trim()) return;
     if (/\S {2,}$/.test(line)) spaces++;
     else if (/(^|[^\\])(\\\\)*\\$/.test(line)) backslashes++;
   });
