@@ -1,5 +1,5 @@
 import { fill } from "../../i18n/fill";
-import { useState } from "react";
+import { useCatalogWork } from "./useCatalogWork";
 import { showConfirm, showMessage } from "../../engine/controls/app-dialog";
 import { useSettings } from "../../prefs/SettingsContext";
 import type { Strings } from "../../i18n/strings";
@@ -31,7 +31,9 @@ import { explainError } from "../../utils/error-explain";
  *  message. */
 export function usePluginInstall(t: Strings) {
   const { settings, setSettings } = useSettings();
-  const [installing, setInstalling] = useState<string | null>(null);
+  const { busy: installing, run } = useCatalogWork(
+    (text) => void showMessage(text, { title: t.pluginsTitle, tone: "error" }),
+  );
 
   const attempt: Attempt = async (work) => {
     try {
@@ -45,33 +47,36 @@ export function usePluginInstall(t: Strings) {
   };
 
   const install = (item: CatalogItem) =>
-    attempt(async () => {
-      setInstalling(item.id);
-      try {
+    run(
+      item.id,
+      async () => {
         await installFromCatalog(item.id);
         await askForRequirements(item.id, t, settings, setSettings);
-      } finally {
-        setInstalling(null);
-      }
-    });
+      },
+      (err) => explainError(err, t),
+    );
 
   /** Updates each of `items` in turn; one that fails is named at the end,
    *  the rest still update. */
   const updateAll = async (items: CatalogItem[]) => {
     const failed: string[] = [];
-    for (const item of items) {
-      setInstalling(item.id);
-      try {
-        await installFromCatalog(item.id);
-        await askForRequirements(item.id, t, settings, setSettings);
-      } catch {
-        const record = pluginsSnapshot().records.find((r) => r.id === item.id);
-        failed.push(
-          pluginName(record ?? { id: item.id, manifest: item.manifest }),
-        );
-      }
-    }
-    setInstalling(null);
+    for (const item of items)
+      await run(
+        item.id,
+        async () => {
+          await installFromCatalog(item.id);
+          await askForRequirements(item.id, t, settings, setSettings);
+        },
+        () => {
+          const record = pluginsSnapshot().records.find(
+            (r) => r.id === item.id,
+          );
+          failed.push(
+            pluginName(record ?? { id: item.id, manifest: item.manifest }),
+          );
+          return null;
+        },
+      );
     if (failed.length)
       void showMessage(
         fill(t.pluginsUpdateAllFailed, { names: failed.join(", ") }),

@@ -1,3 +1,4 @@
+import { useCatalogWork } from "../pages/useCatalogWork";
 import { catalogMessage } from "../pages/CatalogStatus";
 import { Byline } from "../pages/CatalogRow";
 import { useSettingsIndexing } from "../indexing";
@@ -57,29 +58,20 @@ export function galleryUpdates(
 export function useGalleryInstall(t: Strings) {
   const { settings, setSettings } = useSettings();
   const latest = useLatest(settings);
-  const [busy, setBusy] = useState(false);
-  const [error, setError] = useState<string | null>(null);
-  const working = useRef(false);
-
-  async function install(theme: GalleryTheme) {
-    if (working.current) return;
-    working.current = true;
-    setBusy(true);
-    setError(null);
-    try {
-      const installed = installedCopy(theme, latest.current.userThemes);
-      const meta = await installGalleryTheme(theme, installed);
-      setSettings({
-        userThemes: withUserTheme(latest.current.userThemes, meta),
-        ...(installed ? {} : { themeId: meta.id }),
-      });
-    } catch (err) {
-      setError(`${t.themeGalleryInstallFailed} ${explainError(err, t)}`);
-    } finally {
-      working.current = false;
-      setBusy(false);
-    }
-  }
+  const { busy, error, run } = useCatalogWork();
+  const install = (theme: GalleryTheme) =>
+    run(
+      theme.id,
+      async () => {
+        const installed = installedCopy(theme, latest.current.userThemes);
+        const meta = await installGalleryTheme(theme, installed);
+        setSettings({
+          userThemes: withUserTheme(latest.current.userThemes, meta),
+          ...(installed ? {} : { themeId: meta.id }),
+        });
+      },
+      (err) => `${t.themeGalleryInstallFailed} ${explainError(err, t)}`,
+    );
   return { busy, error, install };
 }
 
@@ -138,7 +130,7 @@ export function AvailableThemes({
           key={theme.id}
           t={t}
           theme={theme}
-          busy={install.busy}
+          busy={install.busy === theme.id}
           onInstall={() => void install.install(theme)}
           onOpen={() => onOpen(theme)}
         />

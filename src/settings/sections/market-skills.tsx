@@ -1,3 +1,4 @@
+import { useCatalogWork } from "../pages/useCatalogWork";
 import { compareVersions } from "../../plugins/store/manifest";
 import { isError } from "../../utils/error-text";
 import { Byline, CatalogRow } from "../pages/CatalogRow";
@@ -45,8 +46,7 @@ export function AvailableSkills({
 }) {
   // The user's skills by name: their version when it came from the catalog.
   const [have, setHave] = useState<Map<string, string | null> | null>(null);
-  const [busy, setBusy] = useState<string | null>(null);
-  const [error, setError] = useState<string | null>(null);
+  const { busy, error, run } = useCatalogWork();
   const { settings } = useSettings();
   useEffect(() => {
     let live = true;
@@ -81,19 +81,16 @@ export function AvailableSkills({
       )
     : [];
   const install = async (skill: SkillEntry) => {
-    setBusy(skill.name);
-    setError(null);
-    try {
-      await pluginsIpc.installSkillFromCatalog(skill.name);
-    } catch (err) {
-      setError(
+    await run(
+      skill.name,
+      async () => {
+        await pluginsIpc.installSkillFromCatalog(skill.name);
+      },
+      (err) =>
         isError(err, "skillExists")
           ? explainError(err, t)
           : `${t.marketSkillFailed} ${explainError(err, t)}`,
-      );
-    } finally {
-      setBusy(null);
-    }
+    );
     announceChange();
   };
   const message = catalogMessage({

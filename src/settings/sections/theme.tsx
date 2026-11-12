@@ -368,7 +368,7 @@ export function ThemesTab({ t }: { t: Strings }) {
                   <button
                     type="button"
                     className="text-button settings-inline-button"
-                    disabled={install.busy}
+                    disabled={install.busy === theme.id}
                     onClick={() => void install.install(updates.get(theme.id)!)}
                   >
                     {t.themeGalleryUpdate}
