@@ -48,6 +48,9 @@ pub(crate) struct Item {
     /// One of muda's own items (Cut, Hide, Minimize…), by name.
     pub(crate) predefined: Option<String>,
     pub(crate) en: String,
+    /// Added after the label in every language: "…" for an item that asks
+    /// more before it acts.
+    pub(crate) suffix: Option<String>,
     pub(crate) keys: Option<String>,
     #[serde(default)]
     keys_off: Vec<String>,

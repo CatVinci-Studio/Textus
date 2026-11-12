@@ -72,7 +72,7 @@ pub async fn document_data_move(app: AppHandle, from: String, to: String) -> Res
         move_in(&data, &from, &to)?;
         // Its conversations too, every document of a moved folder's.
         let stores = app.state::<crate::settings::Stores>();
-        crate::settings::move_conversations(&app, &stores, &moved_pairs(&from, &to));
+        crate::settings::move_conversations(&app, &stores, &[(from, to)]);
         Ok(())
     })
     .await

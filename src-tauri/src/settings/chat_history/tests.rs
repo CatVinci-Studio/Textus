@@ -171,6 +171,20 @@ fn a_moved_document_takes_its_conversations_along() {
     assert_eq!(read(&dir.join("a.json"))["entry"]["docPath"], "/new.md");
     assert_eq!(read(&dir.join("b.json"))["entry"]["docPath"], "/other.md");
     assert_eq!(history.list()[1]["docPath"], "/new.md");
+    // A folder moved: every document under it, in one pass; a sibling
+    // whose name only starts the same stays.
+    history.save(conversation("c", "/notes/a/c.md", 3));
+    history.save(conversation("d", "/notes/ab.md", 4));
+    assert!(history.move_document("/notes/a", "/kept/a"));
+    history.flush();
+    assert_eq!(
+        read(&dir.join("c.json"))["entry"]["docPath"],
+        "/kept/a/c.md"
+    );
+    assert_eq!(
+        read(&dir.join("d.json"))["entry"]["docPath"],
+        "/notes/ab.md"
+    );
 }
 
 #[test]

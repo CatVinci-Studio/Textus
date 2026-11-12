@@ -88,7 +88,12 @@ impl Builder<'_> {
     }
 
     fn item(&mut self, item: &Item) -> tauri::Result<Built> {
-        let text = self.text(&item.label_key(), &item.en);
+        let mut text = self.text(&item.label_key(), &item.en);
+        if let Some(suffix) = item.suffix.as_deref() {
+            if !text.ends_with(suffix) {
+                text.push_str(suffix);
+            }
+        }
         if let Some(name) = item.predefined.as_deref() {
             if !(item.mac_own && PLATFORM == "mac") {
                 return predefined(self.app, name, &text);

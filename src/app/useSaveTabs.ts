@@ -375,7 +375,6 @@ export function useSaveTabs(opts: {
       }
       autoNamed.current.set(tabId, moved);
       updateTab(tabId, { path: moved });
-      moveConversations(from, moved);
       void notePathMoved(from, moved);
       void session.addRecentFile(moved);
     },
