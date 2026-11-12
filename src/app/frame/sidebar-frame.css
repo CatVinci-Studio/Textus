@@ -81,9 +81,7 @@
 }
 
 .text-button {
-  width: 100%;
   color: var(--ui-text);
-  margin-bottom: 8px;
 }
 
 .sidebar-tabs {

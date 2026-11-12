@@ -173,8 +173,6 @@ button.plugin-card-open:hover .plugin-card-name {
   flex: none;
 }
 .plugin-action > .text-button {
-  width: auto;
-  margin: 0;
   white-space: nowrap;
 }
 /* One button in two halves. Through the parent: the buttons' shared rule
@@ -435,10 +433,6 @@ button.plugin-card-open:hover .plugin-card-name {
 .web-page-failed-actions {
   display: flex;
   gap: var(--space-2);
-}
-
-.web-page-failed .text-button {
-  width: auto;
 }
 
 /* Folded: the handle where the hide button was, at the bar's right end. */

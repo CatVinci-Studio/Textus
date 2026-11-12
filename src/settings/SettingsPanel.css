@@ -366,8 +366,6 @@ button.settings-danger-button {
 }
 
 button.settings-inline-button {
-  width: auto;
-  margin-bottom: 0;
   flex-shrink: 0;
   white-space: nowrap;
   background: var(--ui-bg);
@@ -928,9 +926,7 @@ button.settings-inline-button {
   margin-top: 16px;
 }
 
-/* Two classes: .text-button's own width (100%) comes later in the cascade. */
 .settings-about .settings-about-link {
-  width: auto;
   padding-inline: 16px;
 }
 
