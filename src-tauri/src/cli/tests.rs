@@ -169,15 +169,17 @@ fn open_hands_absolute_paths_to_the_app() {
         &app,
     );
     assert_eq!(code, 0);
-    let at = |p: &str| Path::new(p).to_string_lossy().into_owned();
-    let (a, b) = (Path::new("/w/x").join("a.md"), Path::new("/w").join("b.md"));
+    // Written with the platform's separators, as the resolved paths are.
+    let at = |p: &str| {
+        Path::new(p)
+            .components()
+            .collect::<std::path::PathBuf>()
+            .to_string_lossy()
+            .into_owned()
+    };
     assert_eq!(
         app.opened.borrow()[0],
-        vec![
-            at(&a.to_string_lossy()),
-            at(&b.to_string_lossy()),
-            at("/c.md")
-        ]
+        vec![at("/w/x/a.md"), at("/w/b.md"), at("/c.md")]
     );
 }
 

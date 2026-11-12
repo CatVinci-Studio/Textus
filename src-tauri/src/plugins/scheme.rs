@@ -21,7 +21,14 @@ pub fn handle(
 ) {
     let app = app.clone();
     let path = request.uri().path().to_string();
+    // Web page tabs are desktop-only.
+    #[cfg(desktop)]
     let from_page = crate::commands::web_page::is_page(webview);
+    #[cfg(not(desktop))]
+    let from_page = {
+        let _ = webview;
+        false
+    };
     tauri::async_runtime::spawn(async move {
         let found = if from_page {
             Err("Not for web pages.".to_string())
