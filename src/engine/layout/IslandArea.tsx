@@ -5,7 +5,7 @@ import {
   type CSSProperties,
   type ReactNode,
 } from "react";
-import { nodeAt, panesOf, type Pane } from "./tree";
+import { nodeAt, panesOf, type Pane, type SplitDirection } from "./tree";
 import { isSplit, type SplitLayout } from "./ops";
 import { islandKeys } from "./island-keys";
 import { IslandNumbers } from "./IslandNumbers";
@@ -127,14 +127,7 @@ export function IslandArea({
       root: layout.root,
       gap: room.gap,
       rowHeight: 0,
-      rule: (pane, direction) =>
-        islandRule(
-          isPanel(pane),
-          direction,
-          panel,
-          contentMinOf(pane.id),
-          zoomOf(pane.front),
-        ),
+      rule: ruleFor(panel, isPanel),
     }) +
       2 * room.inset;
   useIslandFrame(ref, room, area, solved, placed, need || 0);
@@ -190,15 +183,21 @@ function solve(
     box,
     gap: room.gap,
     rowHeight: rows ? room.bar : 0,
-    rule: (pane, direction) =>
-      islandRule(
-        isPanel(pane),
-        direction,
-        panel,
-        contentMinOf(pane.id),
-        zoomOf(pane.front),
-      ),
+    rule: ruleFor(panel, isPanel),
   });
+}
+
+/** Each island's rule: a panel's or a document's, raised to its front
+ *  tab's measured least and its document's zoom. */
+function ruleFor(panel: number, isPanel: (pane: Pane) => boolean) {
+  return (pane: Pane, direction: SplitDirection) =>
+    islandRule(
+      isPanel(pane),
+      direction,
+      panel,
+      contentMinOf(pane.front),
+      zoomOf(pane.front),
+    );
 }
 
 /** Which side of a divider is a panel's island, keeping its width. */

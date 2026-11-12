@@ -2,10 +2,11 @@ import { useEffect, type RefObject } from "react";
 import { onAppearance } from "../tokens/appearance";
 
 /**
- * The least width each island's content can be laid out in - its longest
+ * The least width each tab's content can be laid out in - its longest
  * unbreakable line: a setting's name with the smallest control, a word in
  * a long language - measured from the content, so the solver never gives
- * an island less (island-rules.ts). Its one owner, by pane.
+ * the island it is in front of less (island-rules.ts). Its one owner, by
+ * tab: a tab moved to another island takes its width along.
  */
 const mins = new Map<string, number>();
 const listeners = new Set<() => void>();
@@ -16,9 +17,9 @@ function told() {
   for (const tell of listeners) tell();
 }
 
-/** The measured least width of pane `id`'s content, 0 if none was. */
-export function contentMinOf(id: string): number {
-  return mins.get(id) ?? 0;
+/** The measured least width of tab `id`'s content, 0 if none was. */
+export function contentMinOf(id: string | null | undefined): number {
+  return (id && mins.get(id)) || 0;
 }
 
 export function onContentMin(changed: () => void): () => void {
@@ -92,8 +93,8 @@ function minContent(inner: HTMLElement): number {
 }
 
 /**
- * Reports the least width of the content under `root` for the island it
- * is in: `inner` (a selector under `root`) measured at its narrowest, plus
+ * Reports the least width of the content under `root` for the tab it is
+ * in: `inner` (a selector under `root`) measured at its narrowest, plus
  * what surrounds it. Measured again a frame after its content or the
  * interface changes; let go when it goes.
  */
@@ -103,8 +104,9 @@ export function useContentMin(
 ): void {
   useEffect(() => {
     const el = root.current;
-    const island = el?.closest<HTMLElement>("[data-pane-id]");
-    const id = island?.dataset.paneId;
+    // The tab's own view: what surrounds the content up to the island.
+    const island = el?.closest<HTMLElement>("[data-tab-id]");
+    const id = island?.dataset.tabId;
     if (!el || !island || !id) return;
     let frame = 0;
     const measure = () => {

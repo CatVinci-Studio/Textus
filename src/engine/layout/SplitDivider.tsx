@@ -63,7 +63,13 @@ export function SplitDivider({
         (at - before.start - gapHalf(sides)) / chromeScale(),
         false,
       );
-    else share((at - before.start) / (after.end - before.start));
+    // Two documents share the length less the gap the divider sits in, so
+    // grabbing it doesn't make it jump.
+    else
+      share(
+        (at - before.start - gapHalf(sides)) /
+          (after.end - before.start - 2 * gapHalf(sides)),
+      );
   };
   // A panel's width as the solver drew it, in interface pixels: what a key
   // steps from and a drag keeps, so a width it can't draw is never stored.
