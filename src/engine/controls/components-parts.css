@@ -256,30 +256,3 @@
   font-size: var(--text-footnote);
   text-align: center;
 }
-
-/* The app's small disclosure caret: on a folding <details class="disclosure">
-   summary, or a .disclosure-caret in a button with aria-expanded. Each place
-   sets only its margin. */
-.disclosure > summary {
-  list-style: none;
-}
-
-.disclosure > summary::-webkit-details-marker {
-  display: none;
-}
-
-.disclosure > summary::before,
-.disclosure-caret {
-  content: "";
-  width: 0;
-  height: 0;
-  border-left: 4px solid currentColor;
-  border-top: 3.5px solid transparent;
-  border-bottom: 3.5px solid transparent;
-  transition: transform var(--dur-fast) var(--ease-standard);
-}
-
-.disclosure[open] > summary::before,
-[aria-expanded="true"] > .disclosure-caret {
-  transform: rotate(90deg);
-}
