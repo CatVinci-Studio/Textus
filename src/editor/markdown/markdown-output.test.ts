@@ -8,7 +8,8 @@ import type { Node as ProseNode } from "@milkdown/kit/prose/model";
 import { TextSelection } from "@milkdown/kit/prose/state";
 import type { EditorView } from "@milkdown/kit/prose/view";
 import { createTestEditor } from "../editor-test-kit";
-import { clearSpans, toggleSpan } from "../marks/span-commands";
+import { clearSpans } from "../marks/span-commands";
+import { BOLD, toggleFormat } from "../keys/format-shortcut-plugin";
 import { unwrittenImageSrcs } from "./markdown-output";
 import { withImageWidth } from "../images/image-html";
 
@@ -428,7 +429,7 @@ describe("an edited block is saved so it reads back the same", () => {
         TextSelection.create(view.state.doc, at, at + word.length),
       ),
     );
-    toggleSpan(view, 2);
+    toggleFormat(view, BOLD);
   };
 
   it("clears every span the selection touches, the words kept", async () => {

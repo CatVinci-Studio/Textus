@@ -23,9 +23,11 @@ import {
 } from "./drawn-block-actions";
 import type { EditorRunner } from "./useEditorRunner";
 import { convertList } from "./keys/block-toggles";
-import { clearSpans, toggleSpan } from "./marks/span-commands";
+import { clearSpans } from "./marks/span-commands";
 import {
+  BOLD,
   HIGHLIGHT,
+  ITALIC,
   STRIKETHROUGH,
   toggleCodeSpan,
   toggleFormat,
@@ -395,8 +397,11 @@ function formatGroups(
   const format: ContextMenuEntry = {
     label: t.menuFormat,
     items: [
-      { label: t.toolbarBold, onSelect: onView((v) => toggleSpan(v, 2)) },
-      { label: t.toolbarItalic, onSelect: onView((v) => toggleSpan(v, 1)) },
+      { label: t.toolbarBold, onSelect: onView((v) => toggleFormat(v, BOLD)) },
+      {
+        label: t.toolbarItalic,
+        onSelect: onView((v) => toggleFormat(v, ITALIC)),
+      },
       {
         label: t.menuStrikethrough,
         onSelect: onView((v) => toggleFormat(v, STRIKETHROUGH)),
