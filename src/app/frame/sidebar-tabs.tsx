@@ -8,7 +8,6 @@ import { StartActions } from "../StartActions";
 import "../start-page.css";
 import type { ComponentType } from "react";
 import { FileTree } from "../../files/FileTree";
-import { Outline } from "../../files/Outline";
 import {
   TreeTabIcon,
   OutlineTabIcon,
@@ -20,12 +19,24 @@ import { Suspense } from "react";
 import { lazyModule } from "../../lazy/lazy-module";
 import { lazyComponent } from "../../lazy/lazy-component";
 import { isDesktopApp } from "../../platform/capabilities";
-import { SearchPanel } from "../../files/SearchPanel";
 import { canOpenFolder, isIOSApp } from "../../platform/capabilities";
 import { PHONE_QUERY } from "../../engine/controls/usePhoneLayout";
 import type { Strings } from "../../i18n/strings";
 import type { OpenFolder } from "../useOpenFolder";
 import type { FileOpenHow } from "../../files/tree-shared";
+
+// The Outline and Search panels load while the window is idle, not with
+// it: the Files panel is the one a window opens on.
+const Outline = lazyComponent(
+  lazyModule("outline", () => import("../../files/Outline"), { warm: true }),
+  (m) => m.Outline,
+);
+const SearchPanel = lazyComponent(
+  lazyModule("search-panel", () => import("../../files/SearchPanel"), {
+    warm: true,
+  }),
+  (m) => m.SearchPanel,
+);
 
 /** What every sidebar tab's panel is given: the window's document and
  *  folder, and its ways to open a file or close the sidebar. */

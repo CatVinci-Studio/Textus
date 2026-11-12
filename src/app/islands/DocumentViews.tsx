@@ -19,7 +19,7 @@ import {
   WebPagePane,
 } from "../../plugins/views/plugin-views";
 import { withPluginBlocks } from "../../document-view/plugins/plugin-code-blocks";
-import { setPreviewExtras } from "../../editor/preview-editor";
+import { setPreviewExtras } from "../../editor/preview-extras";
 
 // Every preview draws what plugins draw (a chart, a board), as documents do.
 setPreviewExtras(withPluginBlocks);

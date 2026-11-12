@@ -6,20 +6,9 @@ import { pastReadOnly, setReadOnly } from "./read-only-plugin";
 import { loadSettings } from "../prefs/settings-store";
 import type { Settings } from "../prefs/SettingsContext";
 import "./preview-editor.css";
+import { previewExtras } from "./preview-extras";
 import { normalizeMathDelimiters } from "../utils/markdown-math";
 
-/** More for a preview to draw, from the layer above (plugins' blocks). */
-export type PreviewExtras = (
-  editor: Editor,
-  docPath: { readonly current: string | null },
-) => Editor;
-
-let extras: PreviewExtras | null = null;
-
-/** What the app adds to every preview (its plugins' blocks), told once. */
-export function setPreviewExtras(add: PreviewExtras): void {
-  extras = add;
-}
 
 /**
  * Markdown drawn by the editor itself, read-only, every syntax drawn - an
@@ -53,6 +42,7 @@ export async function drawPreview(
       preview: true,
     },
   );
+  const extras = previewExtras();
   const editor = extras ? extras(core, docPathRef) : core;
   await editor.create();
   editor.action((ctx) => setReadOnly(ctx.get(editorViewCtx), true));
