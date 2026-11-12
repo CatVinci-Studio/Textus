@@ -1,4 +1,4 @@
-import { useSyncExternalStore } from "react";
+import { useLayoutEffect, useRef, useSyncExternalStore } from "react";
 import {
   shownImageFailure,
   generatedImageId,
@@ -39,6 +39,19 @@ function NotePicture({ src, alt }: { src: string; alt: string }) {
   const made = useSyncExternalStore(subscribe, () =>
     id ? generatedImageUrl(id) : null,
   );
+  // One in the document: drawn from where its own document draws it (the
+  // asset: URL its relative src resolves to), else as written.
+  const own = useRef<HTMLImageElement>(null);
+  useLayoutEffect(() => {
+    const img = own.current;
+    const shown = img
+      ?.closest("[data-tab-id]")
+      ?.querySelector<HTMLImageElement>(
+        `.ProseMirror img[data-doc-src="${CSS.escape(src)}"]`,
+      )
+      ?.getAttribute("src");
+    if (img && shown) img.src = shown;
+  }, [src]);
   if (id) {
     if (made)
       return <img className="revision-note-picture" src={made} alt={alt} />;
@@ -58,12 +71,7 @@ function NotePicture({ src, alt }: { src: string; alt: string }) {
       </span>
     );
   }
-  // One in the document: drawn from where the document draws it (the
-  // asset: URL its relative src resolves to), else as written.
-  const shown = document
-    .querySelector<HTMLImageElement>(
-      `.ProseMirror img[data-doc-src="${CSS.escape(src)}"]`,
-    )
-    ?.getAttribute("src");
-  return <img className="revision-note-picture" src={shown ?? src} alt={alt} />;
+  return (
+    <img ref={own} className="revision-note-picture" src={src} alt={alt} />
+  );
 }

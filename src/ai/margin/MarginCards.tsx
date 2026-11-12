@@ -1,3 +1,4 @@
+import { inlineSentence } from "../revision/sentence-diff";
 import { DropIcon, TakeIcon } from "../../engine/controls/icons";
 import { changeGlimpse } from "./change-glimpse";
 import { scaledPx } from "../../engine/tokens/chrome-scale";
@@ -15,12 +16,6 @@ import {
   blockSummary,
   wholeBlockKind,
 } from "../revision/markdown-forms";
-
-/** A sentence as a card shows it on a line: a title's text without the
- *  `# ` that makes it one. */
-function plainLine(text: string): string {
-  return text.trim().replace(/^#{1,6}\s+/, "");
-}
 
 /** A change's new text on its card: a whole block other than a picture by
  *  what it is. */
@@ -272,7 +267,7 @@ export const RevisionCard = memo(
           // the change takes out of it.
           <div className="revision-note-text revision-note-original">
             <s>
-              <RevisionNoteText text={plainLine(item.before)} />
+              <RevisionNoteText text={inlineSentence(item.before)} />
             </s>
             {/* What it becomes is in the text; read out here too, so the
               card says what is replaced by what. */}
@@ -346,14 +341,14 @@ function ChangeGlimpse({
   after: string;
   shows: RevisionItem["shows"];
 }) {
-  const g = changeGlimpse(plainLine(before), plainLine(after));
+  const g = changeGlimpse(inlineSentence(before), inlineSentence(after));
   if (!g.partial)
     return (
       <div className="tx-truncate review-note-chip-text">
         {shows === "new" && before.trim() ? (
-          <s>{plainLine(before)}</s>
+          <s>{inlineSentence(before)}</s>
         ) : (
-          plainLine(after)
+          inlineSentence(after)
         )}
       </div>
     );

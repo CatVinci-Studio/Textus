@@ -1,3 +1,4 @@
+import { PICTURES_IN_TEXT } from "../../editor/markdown/doc-blocks";
 import { fnv1a } from "../../utils/hash";
 import { ai, type GeneratedImageData } from "../../platform/ipc";
 import type { EditProposal } from "../types";
@@ -328,12 +329,12 @@ export function showGeneratedImages(markdown: string): string {
   );
 }
 
+const WHOLE_PICTURE = new RegExp(`^${PICTURES_IN_TEXT.source}$`);
+
 /** The src of `markdown` when it is one picture's whole Markdown,
  *  `![alt](src)` - `<...>` around it taken off - else null. */
 export function pictureSrc(markdown: string): string | null {
-  const m = /^!\[[^\]]*\]\((<[^>]*>|[^)\s]*)(?:\s+"[^"]*")?\)$/.exec(
-    markdown.trim(),
-  );
+  const m = WHOLE_PICTURE.exec(markdown.trim());
   if (!m) return null;
   const src = m[1].startsWith("<") ? m[1].slice(1, -1) : m[1];
   return src || null;

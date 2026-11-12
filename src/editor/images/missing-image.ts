@@ -9,7 +9,7 @@ import {
   isDrivePath,
   parentDir,
 } from "../../utils/path";
-import { localPath } from "../markdown/link-target";
+import { imageSource } from "./image-source";
 
 /**
  * The card a picture that won't load shows in its place: the file's name,
@@ -36,20 +36,15 @@ export function imageLocation(
   src: string,
   docPath: string | null,
 ): ImageLocation {
-  const value = src.trim();
-  if (!isDrivePath(value) && hasUrlScheme(value)) {
-    if (!/^https?:/i.test(value)) return { kind: "other" };
-    try {
-      return { kind: "remote", url: value, host: new URL(value).host };
-    } catch {
-      return { kind: "other" };
-    }
-  }
-  if (docPath && hasUrlScheme(docPath) && !isDrivePath(docPath))
+  const source = imageSource(src, docPath);
+  if (source.kind === "file") return { kind: "local", path: source.path };
+  if (source.kind === "unsaved") return { kind: "unsaved" };
+  if (source.kind !== "web") return { kind: "other" };
+  try {
+    return { kind: "remote", url: source.url, host: new URL(source.url).host };
+  } catch {
     return { kind: "other" };
-  const path = localPath(decodeUrlPath(value), docPath);
-  if (path) return { kind: "local", path };
-  return value ? { kind: "unsaved" } : { kind: "other" };
+  }
 }
 
 /** Why the picture didn't show. */

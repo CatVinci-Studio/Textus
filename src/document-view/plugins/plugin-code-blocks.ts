@@ -1,3 +1,4 @@
+import { widgetButton } from "../../editor/widget-button";
 import type { Editor } from "@milkdown/kit/core";
 import { createElement } from "react";
 import { createRoot, type Root } from "react-dom/client";
@@ -355,18 +356,12 @@ function editButton(
   view: EditorView,
   getPos: () => number | undefined,
 ): HTMLButtonElement {
-  const button = document.createElement("button");
-  button.type = "button";
-  button.className = "tx-reveal plugin-code-edit";
+  const button = widgetButton("tx-reveal plugin-code-edit", "</>", () =>
+    openSource(view, getPos),
+  );
   const label = currentStrings().codeBlockEditSource;
   button.setAttribute("aria-label", label);
   button.title = label;
-  button.textContent = "</>";
-  button.addEventListener("mousedown", (event) => event.preventDefault());
-  button.addEventListener("click", (event) => {
-    event.preventDefault();
-    openSource(view, getPos);
-  });
   return button;
 }
 

@@ -1,3 +1,4 @@
+import { widgetButton } from "../../editor/widget-button";
 import {
   shownImageFailure,
   generatedImageId,
@@ -70,7 +71,7 @@ function settle(el: HTMLElement, id: string, alt: string, made: boolean) {
   why.className = "pending-picture-why";
   why.textContent = shownImageFailure(id) ?? "";
   // This picture alone is asked for again; the frame paints meanwhile.
-  const retry = button(
+  const retry = widgetButton(
     "pending-picture-retry",
     currentStrings().agentRetry,
     () => {
@@ -80,21 +81,6 @@ function settle(el: HTMLElement, id: string, alt: string, made: boolean) {
     },
   );
   el.append(why, retry);
-}
-
-/** A button in the picture's frame that keeps the editor's selection. */
-function button(className: string, label: string, onClick: () => void) {
-  const b = document.createElement("button");
-  b.type = "button";
-  b.className = className;
-  b.textContent = label;
-  b.addEventListener("mousedown", (e) => e.preventDefault());
-  b.addEventListener("click", (e) => {
-    e.preventDefault();
-    e.stopPropagation();
-    onClick();
-  });
-  return b;
 }
 
 /** A made picture, with Redraw… over it: its description, changed by the
@@ -108,7 +94,7 @@ function madePicture(
   const box = document.createElement("span");
   box.className = "pending-picture-made tx-reveal-host";
   const t = currentStrings();
-  const redraw = button(
+  const redraw = widgetButton(
     "tx-reveal pending-picture-redraw",
     t.pictureRedraw,
     () => {

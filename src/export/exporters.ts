@@ -24,12 +24,6 @@ import {
   type PageGeometry,
 } from "./paginate";
 import { buildStandaloneHtml, nextFrame } from "./standalone-html";
-// eslint-disable-next-line no-restricted-syntax -- a lazy chunk's entry passes these on
-export {
-  type ExportImages,
-  cloneEditorContent,
-  buildStandaloneHtml,
-} from "./standalone-html";
 import { explainError } from "../utils/error-explain";
 import { pandocFormat } from "../registry/export-formats";
 // File > Export: HTML serializes the live editor DOM, PDF prints a themed
@@ -113,58 +107,53 @@ export async function exportPdf(
   { pageNumbers = false, lightColors = false } = {},
 ): Promise<void> {
   if (!canExportPdf) return;
-  const editor = editorOf(tab);
-  if (!editor) {
-    await showMessage(t.exportNeedsWysiwyg, { title: t.exportFailedTitle });
-    return;
-  }
-  const base = exportBaseName(tab, t);
-  const picked = await exportDoc.exportSaveDialog(`${base}.pdf`, "PDF", "pdf");
-  if (!picked) return;
-  const overlay = showPdfOverlay(t);
-  try {
-    await nextFrame();
-    // macOS keeps the theme's page colour unless asked for light colours.
-    const whitePage = !isMac || lightColors;
-    const style = getComputedStyle(editor);
-    const finished = await preparePage(editor, tab, {
-      format: "pdf",
-      // The page renders from the document's folder; a link's href too.
-      from: tab.path ?? picked,
-      images: "inline",
-      drawn: whitePage || !appearanceIsDark() ? "light" : "dark",
-      settle: true,
-      light:
-        whitePage && appearanceIsDark()
-          ? { width: editor.clientWidth - 40, font: style.fontFamily }
-          : undefined,
-    });
-    const page = platformPage();
-    const standalone = buildStandaloneHtml(
-      base,
-      finished.html,
-      pdfLayoutCss(page, whitePage) + finished.css,
-      whitePage,
-    );
-    const html = page ? await paginateHtml(standalone, page) : standalone;
-    await exportDoc.exportPdfNative({
-      html,
-      // Resolves relative image srcs (assets/...) against the document folder.
-      baseDir: tab.path ? dirname(tab.path) : null,
-      outputPath: picked,
-      pageNumbers,
-    });
-    void exportDoc.revealInDir(picked);
-  } catch (err) {
-    // Off before the message: the overlay sits above the app's dialogs.
-    overlay.remove();
-    await showMessage(`${t.pdfFailed} ${explainError(err, t)}`, {
-      title: t.exportFailedTitle,
-      tone: "error",
-    });
-  } finally {
-    overlay.remove();
-  }
+  const editor = await drawnEditor(tab, t);
+  if (!editor) return;
+  await runExport(
+    tab,
+    t,
+    ["pdf", "PDF"],
+    async (picked, base) => {
+      const overlay = showPdfOverlay(t);
+      try {
+        await nextFrame();
+        // macOS keeps the theme's page colour unless asked for light colours.
+        const whitePage = !isMac || lightColors;
+        const style = getComputedStyle(editor);
+        const finished = await preparePage(editor, tab, {
+          format: "pdf",
+          // The page renders from the document's folder; a link's href too.
+          from: tab.path ?? picked,
+          images: "inline",
+          drawn: whitePage || !appearanceIsDark() ? "light" : "dark",
+          settle: true,
+          light:
+            whitePage && appearanceIsDark()
+              ? { width: editor.clientWidth - 40, font: style.fontFamily }
+              : undefined,
+        });
+        const page = platformPage();
+        const standalone = buildStandaloneHtml(
+          base,
+          finished.html,
+          pdfLayoutCss(page, whitePage) + finished.css,
+          whitePage,
+        );
+        const html = page ? await paginateHtml(standalone, page) : standalone;
+        await exportDoc.exportPdfNative({
+          html,
+          // Resolves relative image srcs (assets/...) against the document folder.
+          baseDir: tab.path ? dirname(tab.path) : null,
+          outputPath: picked,
+          pageNumbers,
+        });
+      } finally {
+        // Off before any message: the overlay sits above the app's dialogs.
+        overlay.remove();
+      }
+    },
+    (err) => `${t.pdfFailed} ${explainError(err, t)}`,
+  );
 }
 
 /** The editor of the document being exported: its own, whatever tab is in
@@ -173,22 +162,44 @@ function editorOf(tab: DocTab): Element | null {
   return tabElement(tab.id)?.querySelector(".milkdown") ?? null;
 }
 
+/** The editor an HTML or PDF export copies; without one (source mode),
+ *  says so. */
+async function drawnEditor(tab: DocTab, t: Strings): Promise<Element | null> {
+  const editor = editorOf(tab);
+  if (!editor)
+    await showMessage(t.exportNeedsWysiwyg, { title: t.exportFailedTitle });
+  return editor;
+}
+
+/** An export's steps: the save dialog, `write` to the file picked, the
+ *  file shown in its folder - or what went wrong, said. */
+async function runExport(
+  tab: DocTab,
+  t: Strings,
+  [ext, kind]: [ext: string, kind: string],
+  write: (picked: string, base: string) => Promise<void>,
+  failed: (err: unknown) => string = (err) => explainError(err, t),
+): Promise<void> {
+  const base = exportBaseName(tab, t);
+  const picked = await exportDoc.exportSaveDialog(`${base}.${ext}`, kind, ext);
+  if (!picked) return;
+  try {
+    await write(picked, base);
+    void exportDoc.revealInDir(picked);
+  } catch (err) {
+    await showMessage(failed(err), {
+      title: t.exportFailedTitle,
+      tone: "error",
+    });
+  }
+}
+
 // Saved next to the document, relative image paths are kept as-is, like
 // Typora; anywhere else the pictures go inside the page.
 export async function exportHtml(tab: DocTab, t: Strings): Promise<void> {
-  const editor = editorOf(tab);
-  if (!editor) {
-    await showMessage(t.exportNeedsWysiwyg, { title: t.exportFailedTitle });
-    return;
-  }
-  const base = exportBaseName(tab, t);
-  const picked = await exportDoc.exportSaveDialog(
-    `${base}.html`,
-    "HTML",
-    "html",
-  );
-  if (!picked) return;
-  try {
+  const editor = await drawnEditor(tab, t);
+  if (!editor) return;
+  await runExport(tab, t, ["html", "HTML"], async (picked, base) => {
     const besideDocument = !!tab.path && dirname(tab.path) === dirname(picked);
     const finished = await preparePage(editor, tab, {
       format: "html",
@@ -203,13 +214,7 @@ export async function exportHtml(tab: DocTab, t: Strings): Promise<void> {
       HTML_LAYOUT_CSS + finished.css,
     );
     await fs.writeTextFile(picked, html);
-    void exportDoc.revealInDir(picked);
-  } catch (err) {
-    await showMessage(explainError(err, t), {
-      title: t.exportFailedTitle,
-      tone: "error",
-    });
-  }
+  });
 }
 
 // The drawn blocks' pictures in the document's editor, for a pandoc export.
@@ -251,57 +256,50 @@ export async function exportViaPandoc(
     if (goInstall) void exportDoc.openPandocInstallPage();
     return;
   }
-  const base = exportBaseName(tab, t);
-  const picked = await exportDoc.exportSaveDialog(
-    `${base}.${info.ext}`,
-    info.name,
-    info.ext,
+  await runExport(
+    tab,
+    t,
+    [info.ext, info.name],
+    async (picked, base) => {
+      const options = pandocOptions(settings, format);
+      // tab.content, not the file on disk - unsaved edits export too.
+      const source = options.numberSections
+        ? numberedHeadings(tab.content)
+        : tab.content;
+      const text = toPandocMarkdown(source, {
+        alertLabels: {
+          NOTE: t.alertNote,
+          TIP: t.alertTip,
+          IMPORTANT: t.alertImportant,
+          WARNING: t.alertWarning,
+          CAUTION: t.alertCaution,
+        },
+        noteLinks: await resolveNoteLinks(
+          noteLinkSources(source),
+          tab.path,
+          picked,
+        ),
+        citations: !!options.bibliography,
+      });
+      await exportDoc.exportViaPandoc({
+        pandocPath: pandoc,
+        markdown: info.embedsImages
+          ? await drawnBlocksToImages(
+              await diagramsToImages(text, diagramEngine),
+              await drawnPictures(tab),
+            )
+          : text,
+        outputPath: picked,
+        format,
+        resourceDir: tab.path ? dirname(tab.path) : null,
+        title: base,
+        referenceDoc:
+          format === "docx" && settings.docxReferenceDoc
+            ? settings.docxReferenceDoc
+            : null,
+        options,
+      });
+    },
+    (err) => pandocErrorText(err, t),
   );
-  if (!picked) return;
-  try {
-    const options = pandocOptions(settings, format);
-    // tab.content, not the file on disk - unsaved edits export too.
-    const source = options.numberSections
-      ? numberedHeadings(tab.content)
-      : tab.content;
-    const text = toPandocMarkdown(source, {
-      alertLabels: {
-        NOTE: t.alertNote,
-        TIP: t.alertTip,
-        IMPORTANT: t.alertImportant,
-        WARNING: t.alertWarning,
-        CAUTION: t.alertCaution,
-      },
-      noteLinks: await resolveNoteLinks(
-        noteLinkSources(source),
-        tab.path,
-        picked,
-      ),
-      citations: !!options.bibliography,
-    });
-    await exportDoc.exportViaPandoc({
-      pandocPath: pandoc,
-      markdown: info.embedsImages
-        ? await drawnBlocksToImages(
-            await diagramsToImages(text, diagramEngine),
-            await drawnPictures(tab),
-          )
-        : text,
-      outputPath: picked,
-      format,
-      resourceDir: tab.path ? dirname(tab.path) : null,
-      title: base,
-      referenceDoc:
-        format === "docx" && settings.docxReferenceDoc
-          ? settings.docxReferenceDoc
-          : null,
-      options,
-    });
-    void exportDoc.revealInDir(picked);
-  } catch (err) {
-    await showMessage(pandocErrorText(err, t), {
-      title: t.exportFailedTitle,
-      tone: "error",
-    });
-  }
 }

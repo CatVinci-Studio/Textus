@@ -40,6 +40,12 @@ describe("where a missing image was looked for", () => {
       url: "https://img.example.com:8080/a.png?x=1",
       host: "img.example.com:8080",
     });
+    // Without its scheme, as on the web: not an unsaved document's file.
+    expect(imageLocation("//cdn.example/a.png", null)).toEqual({
+      kind: "remote",
+      url: "https://cdn.example/a.png",
+      host: "cdn.example",
+    });
   });
 
   it("has nowhere to look for a relative src before the document is saved", () => {

@@ -1,3 +1,4 @@
+import { inlineSentence } from "../revision/sentence-diff";
 import { counted } from "../../i18n/current";
 import { scaledPx } from "../../engine/tokens/chrome-scale";
 import { memo } from "react";
@@ -31,9 +32,7 @@ function groupGlimpse(items: MarginItem[]): string {
   if (!first) return "";
   return first.kind === "note"
     ? first.note.comment
-    : (first.shows === "new" ? first.before : first.after)
-        .trim()
-        .replace(/^#{1,6}\s+/, "");
+    : inlineSentence(first.shows === "new" ? first.before : first.after);
 }
 
 /** A run with more notes than its paragraph has lines: one chip, "8 notes",

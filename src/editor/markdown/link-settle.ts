@@ -1,3 +1,4 @@
+import { TYPED_IMAGE, TYPED_LINK } from "./link-input-rule";
 import {
   closeHistory,
   isHistoryTransaction,
@@ -22,12 +23,13 @@ import { trimUrl } from "./link-syntax";
 
 const linkSettleKey = new PluginKey<[number, number][]>("link-settle");
 
-const LINK = /(?<!!)\[([^[\]\n\ufffc]+)\]\(([^()\s\ufffc]+)\)/g;
+// The typed link and image anywhere in the text, not only at its end.
+const LINK = new RegExp(TYPED_LINK.source.replace(/\$$/, ""), "g");
 /** A bare URL as GFM reads one: at the start or after a space (or `*`, `_`,
  *  `~`, `(`), `http(s)://` or `www.`. */
 const BARE_URL = /(?<=^|[\s*_~(])(?:https?:\/\/|www\.)[^\s<>\ufffc]+/gi;
 
-const IMAGE = /!\[([^[\]\n\ufffc]*)\]\(([^()\s\ufffc]+)\)/g;
+const IMAGE = new RegExp(TYPED_IMAGE.source.replace(/\$$/, ""), "g");
 
 /** Typing, as far as the steps tell: each puts in a few characters at most
  *  or takes some out. A paste puts in more. */

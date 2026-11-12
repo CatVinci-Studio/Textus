@@ -7,12 +7,7 @@ import type { Node as ProseNode } from "@milkdown/kit/prose/model";
 import type { EditorView } from "@milkdown/kit/prose/view";
 import { fileSrc } from "../../platform/file-src";
 import { resolveStrings } from "../../i18n/strings";
-import {
-  decodeUrlPath,
-  dirname,
-  hasUrlScheme,
-  isDrivePath,
-} from "../../utils/path";
+import { decodeUrlPath, dirname, hasUrlScheme } from "../../utils/path";
 import {
   canPickImageFile,
   canRevealInFileManager,
@@ -29,6 +24,7 @@ import {
 } from "./missing-image";
 import { parseEmbed } from "./obsidian-embed";
 import { rootedImagePath } from "./rooted-image";
+import { imageSource } from "./image-source";
 import { LINK } from "../markdown/link-source";
 import { parseLink } from "../markdown/link-syntax";
 import { clipboardImageSources } from "./pasted-files";
@@ -61,20 +57,21 @@ import { openDiagramViewer, zoomButton } from "../diagram-zoom";
  */
 
 export function resolveImageSrc(src: string, docPath: string | null): string {
-  // A Windows drive path ("C:\..." / "C:/...") would otherwise read as a
-  // single-letter URL scheme to the test below.
-  if (isDrivePath(src)) return fileSrc(decodeUrlPath(src));
-  if (!src || hasUrlScheme(src)) return src; // http(s), data:, asset:, file:, ...
-  // "//host/x.png" is a web address without its scheme, as on the web; and
-  // another machine's share isn't looked at: on Windows that alone sends
-  // the user's sign-in to it.
-  if (src.startsWith("//")) return `https:${src}`;
-  if (src.startsWith("\\\\")) return "";
-  if (src.startsWith("/")) return fileSrc(decodeUrlPath(src));
-  // Unsaved: left as written (shows missing). The sidebar folder is no
-  // stand-in, since the document may be saved elsewhere.
-  if (!docPath) return src;
-  return fileSrc(`${dirname(docPath)}/${decodeUrlPath(src)}`);
+  const source = imageSource(src, docPath);
+  switch (source.kind) {
+    case "web":
+      return source.url;
+    case "file":
+      return fileSrc(source.path);
+    case "share":
+      return "";
+    case "scoped":
+      return fileSrc(`${dirname(docPath!)}/${decodeUrlPath(src)}`);
+    // Unsaved: left as written (shows missing). The sidebar folder is no
+    // stand-in, since the document may be saved elsewhere.
+    default:
+      return src;
+  }
 }
 
 /**

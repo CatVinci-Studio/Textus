@@ -32,13 +32,8 @@ vi.mock("../engine/controls/app-dialog", () => ({
 
 import type { Strings } from "../i18n/strings";
 import type { DocTab } from "../document/doc-tabs";
-import {
-  buildStandaloneHtml,
-  cloneEditorContent,
-  exportHtml,
-  exportPdf,
-  pdfLayoutCss,
-} from "./exporters";
+import { exportHtml, exportPdf, pdfLayoutCss } from "./exporters";
+import { buildStandaloneHtml, cloneEditorContent } from "./standalone-html";
 import { MAC_PAGE, WINDOWS_PAGE } from "./paginate";
 
 function editor(html: string): HTMLElement {

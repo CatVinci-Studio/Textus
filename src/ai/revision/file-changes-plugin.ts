@@ -1,3 +1,4 @@
+import { widgetButton } from "../../editor/widget-button";
 import type { Ctx } from "@milkdown/kit/ctx";
 import type { Node as ProseNode } from "@milkdown/kit/prose/model";
 import { Plugin, PluginKey } from "@milkdown/kit/prose/state";
@@ -107,17 +108,13 @@ function decorate(
           const mark = document.createElement("div");
           mark.className = `ai-change-mark${removed ? " ai-change-removed" : ""}`;
           mark.contentEditable = "false";
-          const button = document.createElement("button");
-          button.type = "button";
-          button.className = "tx-reveal tx-button small";
-          button.textContent = label;
-          button.addEventListener("mousedown", (e) => e.preventDefault());
-          button.addEventListener("click", () => {
-            const now = current();
-            const place = hunkNow(now, hunk);
-            if (now && place) revert(view, now, place);
-          });
-          mark.append(button);
+          mark.append(
+            widgetButton("tx-reveal tx-button small", label, () => {
+              const now = current();
+              const place = hunkNow(now, hunk);
+              if (now && place) revert(view, now, place);
+            }),
+          );
           return mark;
         },
         { side: -1, key: `${hunk.from}:${hunk.baseFrom}:${removed}` },

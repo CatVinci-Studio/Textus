@@ -1,3 +1,4 @@
+import { widgetButton } from "../../editor/widget-button";
 import { Plugin, PluginKey } from "@milkdown/kit/prose/state";
 import { Decoration, DecorationSet } from "@milkdown/kit/prose/view";
 import type { Node as ProseNode } from "@milkdown/kit/prose/model";
@@ -68,18 +69,13 @@ function build(
         Decoration.widget(
           note.to,
           () => {
-            const badge = document.createElement("button");
-            badge.type = "button";
-            badge.className = "review-badge";
+            const badge = widgetButton(
+              "review-badge",
+              String(note.num),
+              (button) => onBadge(note.id, button),
+            );
             badge.contentEditable = "false";
             badge.dataset.note = note.id;
-            badge.textContent = String(note.num);
-            badge.addEventListener("mousedown", (e) => e.preventDefault());
-            badge.addEventListener("click", (e) => {
-              e.preventDefault();
-              e.stopPropagation();
-              onBadge(note.id, badge);
-            });
             return badge;
           },
           {

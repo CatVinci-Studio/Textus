@@ -1,12 +1,8 @@
 import { headingIndex } from "../editor/markdown/link-target";
-import {
-  decodeUrlPath,
-  dirname,
-  hasUrlScheme,
-  isDrivePath,
-} from "../utils/path";
+import { hasUrlScheme } from "../utils/path";
 import { imageMimeForPath } from "../editor/images/pasted-files";
 import { rootedImagePath } from "../editor/images/rooted-image";
+import { imageSource } from "../editor/images/image-source";
 import { linkHref, parseLink } from "../editor/markdown/link-syntax";
 import { fs } from "../platform/ipc";
 import { escapeHtml, styleText } from "../utils/html";
@@ -271,21 +267,17 @@ export function cloneEditorContent(
 }
 
 // The file a document image's src names, as the editor finds it (a `/` one
-// under the document's link root); null for a URL, a `//host` share, or a
-// relative src with no folder on disk.
+// under the document's link root); null for anything not a file.
 async function localImagePath(
   src: string,
   docPath: string | null,
 ): Promise<string | null> {
-  if (isDrivePath(src)) return decodeUrlPath(src);
-  if (!src || hasUrlScheme(src) || src.startsWith("//")) return null;
-  if (src.startsWith("/"))
-    return docPath && !hasUrlScheme(docPath)
-      ? rootedImagePath(src, docPath)
-      : decodeUrlPath(src);
+  const source = imageSource(src, docPath);
   // An iOS document picked in Files is a file: URL, its images no plain path.
-  if (!docPath || hasUrlScheme(docPath)) return null;
-  return `${dirname(docPath)}/${decodeUrlPath(src)}`;
+  if (source.kind !== "file") return null;
+  return source.rooted && docPath && !hasUrlScheme(docPath)
+    ? rootedImagePath(src, docPath)
+    : source.path;
 }
 
 function blobToDataUrl(blob: Blob): Promise<string> {
