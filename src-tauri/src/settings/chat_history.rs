@@ -58,10 +58,13 @@ fn id_str(entry: &Value) -> Option<&str> {
     entry.get("id")?.as_str()
 }
 
+/// How many conversation files stay loaded at once.
+const KEPT_FILES: usize = 4;
+
 pub struct ChatHistory {
     dir: PathBuf,
     index: Arc<Store>,
-    /// The conversation files saved or changed this session, each a `Store`. The
+    /// The conversation files in use, each a `Store` (at most `KEPT_FILES`). The
     /// lock is held through every whole operation, so a save never interleaves with a trim.
     files: Mutex<HashMap<String, Arc<Store>>>,
 }
@@ -207,8 +210,17 @@ impl ChatHistory {
         }
     }
 
-    /// The store of conversation `id`'s file, loaded once per session.
+    /// The store of conversation `id`'s file, loaded once while it's in use.
+    /// A few are kept; past that, the others are written and let go, so a
+    /// session's conversations don't all stay whole in memory.
     fn file_store(&self, files: &mut HashMap<String, Arc<Store>>, id: &str) -> Arc<Store> {
+        if !files.contains_key(id) && files.len() >= KEPT_FILES {
+            for (other, store) in files.drain() {
+                if let Err(e) = store.flush() {
+                    eprintln!("textus: cannot write {}: {e}", file_of(&other));
+                }
+            }
+        }
         let path = self.dir.join(file_of(id));
         let store = files
             .entry(id.to_owned())

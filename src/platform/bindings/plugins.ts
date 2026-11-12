@@ -175,15 +175,21 @@ export type AgentOutput = AgentOutput_Serialize | AgentOutput_Deserialize;
 
 /**  What an agent's process says, in order. */
 export type AgentOutput_Deserialize = 
-/**  One line of its stdout: a protocol message. */
-{ type: "line"; text: string } | 
+/**
+ *  Lines of its stdout, a protocol message each, gathered for a moment
+ *  so a stream of tokens reaches the window a few times a frame at most.
+ */
+{ type: "lines"; lines: string[] } | 
 /**  It ended; the end of its stderr says why. */
 { type: "exit"; code?: number | null; stderr: string };
 
 /**  What an agent's process says, in order. */
 export type AgentOutput_Serialize = 
-/**  One line of its stdout: a protocol message. */
-{ type: "line"; text: string } | 
+/**
+ *  Lines of its stdout, a protocol message each, gathered for a moment
+ *  so a stream of tokens reaches the window a few times a frame at most.
+ */
+{ type: "lines"; lines: string[] } | 
 /**  It ended; the end of its stderr says why. */
 { type: "exit"; code: number | null; stderr: string };
 

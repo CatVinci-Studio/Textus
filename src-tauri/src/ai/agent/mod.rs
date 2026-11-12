@@ -136,6 +136,7 @@ pub async fn ai_agent_message(
     };
     let web_service = web_search.then(|| request.search_service(&app)).flatten();
     let ui_language = ui_language.unwrap_or_else(|| "en".to_string());
+    let paced = events::Paced::new(&on_event);
     cancel::cancellable(
         request.request_id.clone(),
         ai_agent_message_inner(
@@ -152,7 +153,7 @@ pub async fn ai_agent_message(
             mode,
             focus_heading,
             ui_language,
-            &on_event,
+            &paced,
         ),
     )
     .await

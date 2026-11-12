@@ -7,7 +7,7 @@ const ipc = vi.hoisted(() => ({
   /** session/new left unanswered: an agent still signing in. */
   slowStart: false,
   answers: [] as { id?: number; result?: unknown; error?: unknown }[],
-  out: null as ((o: { type: "line"; text: string }) => void) | null,
+  out: null as ((o: { type: "lines"; lines: string[] }) => void) | null,
 }));
 vi.mock("../../platform/ipc-plugins", () => ({
   agentsIpc: {
@@ -24,8 +24,8 @@ vi.mock("../../platform/ipc-plugins", () => ({
       const result = method === "session/new" ? { sessionId: "s" } : {};
       queueMicrotask(() =>
         ipc.out!({
-          type: "line",
-          text: JSON.stringify({ jsonrpc: "2.0", id, result }),
+          type: "lines",
+          lines: [JSON.stringify({ jsonrpc: "2.0", id, result })],
         }),
       );
     },
@@ -84,13 +84,15 @@ describe("stopping an agent", () => {
       [92, "/w/.textus/agent.md"],
     ] as const)
       ipc.out!({
-        type: "line",
-        text: JSON.stringify({
-          jsonrpc: "2.0",
-          id,
-          method: "fs/read_text_file",
-          params: { sessionId: "s", path },
-        }),
+        type: "lines",
+        lines: [
+          JSON.stringify({
+            jsonrpc: "2.0",
+            id,
+            method: "fs/read_text_file",
+            params: { sessionId: "s", path },
+          }),
+        ],
       });
     await vi.advanceTimersByTimeAsync(0);
     expect(ipc.answers.map((a) => [a.id, !!a.error])).toEqual([

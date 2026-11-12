@@ -166,7 +166,8 @@ async function start(
     },
   );
   handle = agentsIpc.start(agent.plugin, agent.id, cwd, (out) => {
-    if (out.type === "line") session.connection.receive(out.text);
+    if (out.type === "lines")
+      for (const line of out.lines) session.connection.receive(line);
     else {
       session.connection.close(new Error(stoppedText(agent, out.stderr)));
       if (sessions.get(conversation) === session) sessions.delete(conversation);
