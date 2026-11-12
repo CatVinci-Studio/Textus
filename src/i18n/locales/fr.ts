@@ -972,6 +972,11 @@ utiliser une.
   agentDeepThinking: "Réflexion approfondie",
   agentDeepThinkingHint: `Réflexion approfondie\u00a0: une fois activée, ${AI_NAME} réfléchit plus longtemps avant de répondre\u00a0; désactivée, le modèle réfléchit autant que par défaut`,
   toggleOnHint: "{label} (Activée\u00a0: cliquez à nouveau pour la désactiver)",
+  chatShowEarlier: {
+    one: "Afficher {n} élément précédent",
+    many: "Afficher {n} d’éléments précédents",
+    other: "Afficher {n} éléments précédents",
+  },
   agentWaitedFor: {
     one: "{n} seconde",
     many: "{n} de secondes",

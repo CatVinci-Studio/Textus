@@ -5,6 +5,7 @@ import {
   useLayoutEffect,
   useMemo,
   useRef,
+  useState,
   type CSSProperties,
   type RefObject,
 } from "react";
@@ -61,12 +62,9 @@ export function ChatMessages({
   conversation = "",
   onLiveGrow,
 }: ChatMessagesProps) {
-  const revealFrom = useRef(0);
-  const wasBusy = useRef(busy);
-  useEffect(() => {
-    if (busy && !wasBusy.current) revealFrom.current = history.length;
-    wasBusy.current = busy;
-  }, [busy, history.length]);
+  const revealFrom = useArrival(busy, history.length);
+  // A long conversation draws its newest part; the rest when asked.
+  const [drawn, setDrawn] = useState(DRAWN_TURNS);
 
   // Memoized on the turn lists, NOT on `streaming` itself: text deltas
   // replace the streaming object many times a second while reusing the
@@ -148,13 +146,24 @@ export function ChatMessages({
     .join(" ");
 
   const liveThought = streaming?.thought ?? null;
+  const start = Math.max(0, shown.length - drawn);
   const historyLength = history.length;
   // Drawn again when the turns or what they read change, not with each
   // frame of a reply coming in.
   const list = useMemo(
     () => (
       <ChatItems.Provider value={items}>
-        {shown.map((turn, i) => {
+        {start > 0 && (
+          <button
+            type="button"
+            className="agent-proposal-link chat-earlier"
+            onClick={() => setDrawn((n) => n + DRAWN_TURNS)}
+          >
+            {labels.showEarlier(start)}
+          </button>
+        )}
+        {shown.slice(start).map((turn, at) => {
+          const i = start + at;
           const reveal = i >= revealFrom.current;
           // A CSS custom property, which CSSProperties doesn't type. The
           // stagger stops at the third turn.
@@ -183,7 +192,17 @@ export function ChatMessages({
         })}
       </ChatItems.Provider>
     ),
-    [items, shown, transcript, thoughts, liveThought, historyLength],
+    [
+      items,
+      shown,
+      start,
+      transcript,
+      thoughts,
+      liveThought,
+      historyLength,
+      labels,
+      revealFrom,
+    ],
   );
 
   return (
@@ -238,6 +257,21 @@ export function ChatMessages({
       )}
     </>
   );
+}
+
+/** How many of a conversation's newest turns are drawn, and how many more
+ *  each "show earlier" adds. */
+const DRAWN_TURNS = 80;
+
+/** Where this request's turns start: those fade in as they come. */
+function useArrival(busy: boolean, length: number) {
+  const revealFrom = useRef(0);
+  const wasBusy = useRef(busy);
+  useEffect(() => {
+    if (busy && !wasBusy.current) revealFrom.current = length;
+    wasBusy.current = busy;
+  }, [busy, length]);
+  return revealFrom;
 }
 
 /** The reply still coming in, revealed at a steady pace: only this redraws

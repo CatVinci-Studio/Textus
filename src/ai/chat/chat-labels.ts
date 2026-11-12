@@ -45,6 +45,7 @@ function buildLabels(t: Strings, lang: Lang): InlineChatLabels {
     thinking: t.agentThinking,
     thinkingFor: (n) => plural(t.agentThinkingFor, n, lang),
     waitedFor: (n) => plural(t.agentWaitedFor, n, lang),
+    showEarlier: (n) => plural(t.chatShowEarlier, n, lang),
     thoughtFor: (n) => plural(t.agentThoughtFor, n, lang),
     generatingImage: t.agentGeneratingImage,
     writingEdit: t.agentWritingEdit,

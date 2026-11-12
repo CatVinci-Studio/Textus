@@ -20,6 +20,8 @@ export interface ChatMessagesLabels
   /** "{n} seconds", after the indicator's label once nothing has moved
    *  for a while. */
   waitedFor: (seconds: number) => string;
+  /** "Show {n} earlier items", above a long conversation's newest part. */
+  showEarlier: (count: number) => string;
   proposalTitle: string;
   proposalStatus: Record<Exclude<PendingStatus, "pending">, string>;
   proposalAccept: string;

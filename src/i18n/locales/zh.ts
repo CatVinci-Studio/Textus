@@ -850,6 +850,7 @@ export default {
   agentDeepThinking: "深度思考",
   agentDeepThinkingHint: `深度思考：开启后 ${AI_NAME} 会先想得更久再回答；关闭时按模型默认的思考量`,
   toggleOnHint: "{label}（已开启，再点关闭）",
+  chatShowEarlier: { other: "显示更早的 {n} 项" },
   agentWaitedFor: { other: "{n} 秒" },
   agentThinkingFor: { other: "思考中 · {n} 秒" },
   agentThoughtFor: { other: "已思考 {n} 秒" },

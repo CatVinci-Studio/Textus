@@ -325,6 +325,7 @@ pub(crate) fn handler() -> impl Fn(tauri::ipc::Invoke<tauri::Wry>) -> bool + Sen
         commands::update::check_for_update,
         #[cfg(desktop)]
         commands::update::release_instance,
+        crate::memory_level::memory_state,
         #[cfg(desktop)]
         commands::update::quit_and_relaunch,
         #[cfg(desktop)]

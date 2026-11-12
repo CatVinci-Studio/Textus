@@ -298,3 +298,8 @@
   transform: rotate(90deg);
   opacity: 0.7;
 }
+
+/* Above a long conversation's newest part: the earlier ones, when asked. */
+.agent-proposal-link.chat-earlier {
+  margin: 0 auto;
+}

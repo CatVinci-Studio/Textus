@@ -154,6 +154,7 @@ fn groups() -> Vec<(&'static str, Builder<tauri::Wry>)> {
                     crate::commands::default_editor::default_editor_status,
                     crate::commands::default_editor::set_default_editor,
                     crate::distribution::app_distribution,
+                    crate::memory_level::memory_state,
                     crate::commands::update::check_for_update::<tauri::Wry>,
                     crate::commands::update::release_instance::<tauri::Wry>,
                     crate::commands::update::quit_and_relaunch,

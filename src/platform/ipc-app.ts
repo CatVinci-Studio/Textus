@@ -196,6 +196,8 @@ export const systemIpc = {
   fontFamilies: () => command("system_font_families"),
   sendReport: (report: Generated.ProblemReport_Deserialize) =>
     command("send_problem_report", report),
+  /** The machine's memory and how short of it the system is now. */
+  memoryState: () => desktopQueryCommand("memory_state", null),
 };
 
 /** Roman input sources only while a plugin takes every key as a command

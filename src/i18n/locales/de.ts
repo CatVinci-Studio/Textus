@@ -943,6 +943,10 @@ Skills liegen im Ordner skills/ neben dieser Datei, je Skill eine
   agentDeepThinking: "Gründlich nachdenken",
   agentDeepThinkingHint: `Gründlich nachdenken: Wenn es an ist, denkt ${AI_NAME} länger nach, bevor es antwortet; wenn es aus ist, so viel, wie das Modell von sich aus denkt`,
   toggleOnHint: "{label} (An – zum Ausschalten noch einmal klicken)",
+  chatShowEarlier: {
+    one: "{n} früheren Eintrag zeigen",
+    other: "{n} frühere Einträge zeigen",
+  },
   agentWaitedFor: { one: "{n} Sekunde", other: "{n} Sekunden" },
   agentThinkingFor: {
     one: "Denkt nach · {n} Sekunde",
