@@ -410,13 +410,15 @@ button.settings-inline-button {
   color: var(--ui-accent-text);
 }
 
+/* The key's field and its buttons: the buttons under the field when the
+   two don't fit. */
 .api-key-input-row {
   display: flex;
+  flex-wrap: wrap;
   align-items: center;
   gap: 8px;
   min-width: 0;
-  flex: 1;
-  justify-content: flex-end;
+  flex: 1 1 16ch;
 }
 
 .api-key-input {
@@ -593,11 +595,14 @@ button.settings-inline-button {
 
 /* ---- Label + control rows that aren't toggle rows ---- */
 
+/* As a row: short of room, the control goes under the label, from its
+   start (by the width it has, not the window's). */
 .settings-field {
   display: flex;
+  flex-wrap: wrap;
   align-items: center;
   justify-content: space-between;
-  gap: 16px;
+  gap: 8px 16px;
   padding: 12px 0;
 }
 
@@ -730,9 +735,10 @@ button.settings-inline-button {
 
 .custom-model-row {
   display: flex;
+  flex-wrap: wrap;
   align-items: center;
   gap: 8px;
-  flex: 1;
+  flex: 1 1 16ch;
   min-width: 0;
 }
 
@@ -788,39 +794,6 @@ button.settings-inline-button {
     width: auto;
     padding: 8px 8px;
     white-space: nowrap;
-  }
-
-  .settings-content {
-    padding: 16px 12px 24px;
-  }
-
-  .settings-field,
-  .custom-model-row {
-    flex-wrap: wrap;
-    min-width: 0;
-  }
-
-  .custom-model-row {
-    flex-basis: 100%;
-  }
-
-  .settings-field-label {
-    flex-shrink: 1;
-    overflow-wrap: anywhere;
-  }
-
-  .image-settings-input {
-    max-width: 100%;
-    width: 100%;
-    flex-basis: 100%;
-  }
-
-  .settings-panel .api-key-input {
-    max-width: none;
-  }
-
-  .settings-panel .api-key-input-row {
-    flex-basis: 100%;
   }
 }
 
@@ -1023,7 +996,6 @@ button.settings-inline-button {
   object-fit: cover;
   object-position: top left;
 }
-
 
 @media (max-width: 520px) {
   .theme-gallery-preview {

@@ -1,16 +1,18 @@
-/* Providers: the list on the left (the shared list-top search over it),
-   the picked one beside it; on a narrow page they stack. */
+/* Providers: the list, the picked one beside it; on a page too narrow for
+   both at their least, the picked one goes under the list (by its width,
+   not a breakpoint). */
 .providers-page {
-  display: grid;
-  grid-template-columns: minmax(160px, 220px) minmax(0, 1fr);
+  display: flex;
+  flex-wrap: wrap;
+  gap: var(--space-4) var(--space-6);
 }
 
 .providers-list {
   display: flex;
+  flex: 1 0 12em;
+  max-width: 16em;
   flex-direction: column;
   gap: 2px;
-  padding: 0 8px 8px 0;
-  border-inline-end: 1px solid var(--ui-border);
 }
 
 .providers-item-name {
@@ -22,24 +24,14 @@
 }
 
 .providers-detail {
+  flex: 999 1 20em;
   min-width: 0;
-  padding: 12px 0 0 24px;
+  padding-top: 12px;
 }
 
 .providers-note {
   color: var(--ui-muted);
   font-size: var(--text-caption);
-}
-
-@container settings-page (max-width: 600px) {
-  .providers-page {
-    grid-template-columns: 1fr;
-  }
-
-  .providers-list {
-    border-inline-end: 0;
-    border-bottom: 1px solid var(--ui-border);
-  }
 }
 
 /* The list and the picked provider: one panel, framed as a group is; the
@@ -55,9 +47,7 @@
   border-radius: var(--shape-m);
   background: var(--ui-subtle);
 }
-.providers-list {
-  padding-bottom: 0;
-}
+
 /* Its right side a sign-in panel: headings and rows, no boxes. */
 .providers-detail .settings-group-body {
   padding: 0;
