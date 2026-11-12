@@ -36,6 +36,7 @@ export function useWindowAi({
   useAiTabs({
     tabs,
     scope: scope.current,
+    workspaceRoot,
     shown: !isIOSApp && shown,
     setShown,
   });

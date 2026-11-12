@@ -317,11 +317,22 @@ describe("the window's conversations", () => {
     setLiveConversation("/notes", "c1");
     setLiveConversation("/notes", "c2");
     const model = conversationFor("c1", "/notes");
-    agentMessage.mockImplementation(() => new Promise(() => {}));
+    agentMessage.mockImplementation(
+      (args: { onEvent: (e: StreamEvent) => void }) => {
+        args.onEvent({ type: "delta", text: "答了一半" });
+        return new Promise(() => {});
+      },
+    );
     void model.actions.send(NO_DOCUMENT, "一");
     setLiveConversation("/notes", "c2");
     closeConversation("/notes", "c1");
     expect(cancelAgentMessage).toHaveBeenCalled();
     expect(conversationFor("c1", "/notes")).not.toBe(model);
+    // What streamed stays, as at Stop.
+    expect(saveConversation).toHaveBeenCalled();
+    expect(model.snapshot().history.map((turn) => turn.kind)).toEqual([
+      "User",
+      "Assistant",
+    ]);
   });
 });

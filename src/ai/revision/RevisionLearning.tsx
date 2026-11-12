@@ -1,6 +1,7 @@
 import { fill } from "../../i18n/fill";
 import { useCallback, useEffect, useRef, useState } from "react";
 import { ai } from "../../platform/ipc";
+import { errorText } from "../../utils/error-text";
 import { announce } from "../../engine/controls/announce";
 import { usePresenceProps } from "../../engine/motion/usePresence";
 import { parseKindKey } from "./change-kind";
@@ -90,7 +91,7 @@ export function useRevisionLearning({
           );
         } catch (err) {
           // Already remembered in these words: that is what was asked.
-          if (!String(err).startsWith("Already remembered")) {
+          if (!errorText(err).startsWith("Already remembered")) {
             setSaved("failed");
             return;
           }

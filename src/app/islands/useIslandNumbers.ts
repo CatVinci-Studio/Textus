@@ -1,5 +1,5 @@
 import { tabElement } from "../../engine/layout/tab-element";
-import { tabInUse } from "../../engine/layout/store";
+import { subscribeSplit, tabInUse } from "../../engine/layout/store";
 import { useEffect } from "react";
 import { watchIslandNumbers } from "../../engine/layout/island-numbers";
 import { modIsMeta } from "../../platform/os";
@@ -12,14 +12,15 @@ const TYPED_IN = ".ProseMirror, .cm-content, textarea";
  *  nothing to type in, on its tab. */
 function focusTab(tabId: string, tries = 10): void {
   requestAnimationFrame(() => {
-    const id = CSS.escape(tabId);
     const view = tabInUse() === tabId ? tabElement(tabId) : null;
     const target = view?.querySelector<HTMLElement>(TYPED_IN);
     if (target) target.focus({ preventScroll: true });
     else if (tries > 0) focusTab(tabId, tries - 1);
     else
       document
-        .querySelector<HTMLElement>(`.tab-pill[data-tab="${id}"]`)
+        .querySelector<HTMLElement>(
+          `.tab-pill[data-tab="${CSS.escape(tabId)}"]`,
+        )
         ?.focus({ preventScroll: true });
   });
 }
@@ -37,5 +38,30 @@ export function useIslandNumbers(setActiveTabId: (id: string) => void): void {
         focusTab(tabId);
       }),
     [setActiveTabId],
+  );
+  // Any other way a tab comes to the front (Ctrl+Tab, closing one, a new
+  // one): the focus follows where it would otherwise be lost with the view
+  // that went out of sight.
+  useEffect(() => {
+    let was = tabInUse();
+    return subscribeSplit(() => {
+      const now = tabInUse();
+      if (now === was) return;
+      was = now;
+      requestAnimationFrame(() => {
+        if (focusLost()) focusTab(now);
+      });
+    });
+  }, []);
+}
+
+/** Nothing has the keys, or what had them is gone from sight. */
+function focusLost(): boolean {
+  const at = document.activeElement;
+  return (
+    !at ||
+    at === document.body ||
+    !at.isConnected ||
+    (at as HTMLElement).offsetParent === null
   );
 }

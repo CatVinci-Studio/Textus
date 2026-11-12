@@ -56,6 +56,11 @@ pub(crate) const MARKDOWN_EXTENSIONS: [&str; 2] = ["md", "markdown"];
 /// other files in the sidebar and its searches (front end: file-search.ts).
 pub(crate) const TEXT_DOCUMENT_EXTENSIONS: [&str; 4] = ["md", "markdown", "txt", "text"];
 
+/// Whether `path` is a document Textus opens as text (Markdown or plain).
+pub(crate) fn is_text_document(path: &Path) -> bool {
+    TEXT_DOCUMENT_EXTENSIONS.contains(&extension_of(path).as_str())
+}
+
 /// Whether `path` is a Markdown document, by its extension.
 pub(crate) fn is_markdown(path: &Path) -> bool {
     MARKDOWN_EXTENSIONS.contains(&extension_of(path).as_str())

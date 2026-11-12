@@ -71,6 +71,8 @@ function swallowClick() {
     e.stopPropagation();
     e.preventDefault();
   };
-  window.addEventListener("click", stop, { capture: true, once: true });
-  window.setTimeout(() => window.removeEventListener("click", stop, true), 0);
+  // The window as it is now: the page may be gone by the time this runs.
+  const win = window;
+  win.addEventListener("click", stop, { capture: true, once: true });
+  win.setTimeout(() => win.removeEventListener("click", stop, true), 0);
 }

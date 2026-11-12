@@ -24,7 +24,8 @@ export interface ReopenTarget {
 const PANEL_REOPEN: ReopenTarget = {
   // In a tab of its own where the AI has tabs, never over the one in front.
   restore: (restore) => {
-    if (!openConversationTab(restore.id)) requestChatRestore(restore);
+    if (!openConversationTab(restore.id, undefined, restore.docPath))
+      requestChatRestore(restore);
   },
   openDocument: (path) => openDocument(path),
 };

@@ -48,8 +48,22 @@ export function useDocumentActions(opts: {
           return next ? { ...tab, path: next } : tab;
         }),
       );
+      // Read again where it is now (a move to another disk is a copy, with
+      // a new time), so its next save isn't taken for a change made behind
+      // its back.
+      for (const tab of tabsRef.current) {
+        const at = moved(tab.path);
+        if (!at) continue;
+        void statMtime(at).then(
+          (diskMtime) =>
+            setTabs((prev) =>
+              prev.map((t) => (t.path === at ? { ...t, diskMtime } : t)),
+            ),
+          () => undefined,
+        );
+      }
     },
-    [setTabs],
+    [setTabs, tabsRef],
   );
   // A renamed document stays open under its new name, like any move; a
   // deleted one keeps its text in the tab, unsaved.
@@ -69,28 +83,10 @@ export function useDocumentActions(opts: {
           )
             await saveTab(tab.id);
       },
-      after(from, to) {
-        entryMoved(from, to);
-        // Read again where it is now, so its next save isn't taken for a
-        // change made on disk behind its back.
-        for (const tab of tabsRef.current) {
-          const at =
-            tab.path === from
-              ? to
-              : tab.path && isInside(tab.path, from)
-                ? to + tab.path.slice(from.length)
-                : null;
-          if (!at) continue;
-          void statMtime(at).then((diskMtime) =>
-            setTabs((prev) =>
-              prev.map((t) => (t.path === at ? { ...t, diskMtime } : t)),
-            ),
-          );
-        }
-      },
+      after: entryMoved,
     });
     return () => setPathMoveHooks(null);
-  }, [tabsRef, liveTabs, setTabs, saveTab, entryMoved]);
+  }, [liveTabs, saveTab, entryMoved]);
   const documentDeleted = useCallback(
     (path: string) => {
       setTabs((prev) =>

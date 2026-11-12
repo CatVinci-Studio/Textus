@@ -213,7 +213,9 @@ export function applyContributions(
       }),
     );
   for (const block of codeBlocks)
-    undo.push(addCodeBlockLanguage(block.language, id, block.frame));
+    undo.push(
+      addCodeBlockLanguage(block.language, id, block.frame, block.size),
+    );
   for (const key of ownedClaims(manifest.contributes))
     undo.push(claim(key, id));
   // Floating views left open last time open again; turned off, they go.

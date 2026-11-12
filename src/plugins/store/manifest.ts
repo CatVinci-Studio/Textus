@@ -5,14 +5,8 @@ import PERMISSIONS from "./permissions.json";
  * the plugin runs. User-facing strings may be `%key%`, looked up in `l10n`.
  */
 
-import {
-  ManifestError,
-  list,
-  object,
-  parseContributes,
-  parseMain,
-  text,
-} from "./manifest-parse";
+import { parseContributes, parseMain } from "./manifest-parse";
+import { ManifestError, list, object, text } from "./manifest-json";
 
 /** The permissions without a host, and the platforms: one list with the
  *  backend's (plugins/manifest.rs reads permissions.json too). */
@@ -126,6 +120,10 @@ export interface CodeBlockContribution {
   /** "none": the block sits on the page without the box drawn round a
    *  figure - for one that reads as part of the document, such as a table. */
   frame?: "none";
+  /** "interface": drawn at the interface's text size, not the document's
+   *  and its zoom - an overview (a table, a board) that shows more as the
+   *  column widens rather than growing with the text. */
+  size?: "interface";
 }
 
 /** A file type the plugin opens in a tab. */

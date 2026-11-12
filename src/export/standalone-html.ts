@@ -1,5 +1,5 @@
 import { headingIndex, headingSlug } from "../editor/markdown/link-target";
-import { hasUrlScheme } from "../utils/path";
+import { dirname, hasUrlScheme, relativePath } from "../utils/path";
 import { imageMimeForPath } from "../editor/images/pasted-files";
 import { rootedImagePath } from "../editor/images/rooted-image";
 import { imageSource } from "../editor/images/image-source";
@@ -281,6 +281,30 @@ async function localImagePath(
   return source.rooted && docPath && !hasUrlScheme(docPath)
     ? rootedImagePath(src, docPath)
     : source.path;
+}
+
+/** A page saved beside its document: each picture named from the folder's
+ *  root (`/assets/x.png`, as Hugo or a vault writes it) named from the page
+ *  instead, which a browser opening the file reads from the disk's root. */
+export async function pageRelativeImages(
+  html: string,
+  docPath: string | null,
+  pagePath: string,
+): Promise<string> {
+  if (!docPath || hasUrlScheme(docPath)) return html;
+  const template = document.createElement("template");
+  template.innerHTML = html;
+  const rooted = Array.from(
+    template.content.querySelectorAll<HTMLImageElement>("img[src]"),
+  ).filter((img) => /^\/(?!\/)/.test(img.getAttribute("src") ?? ""));
+  if (rooted.length === 0) return html;
+  await Promise.all(
+    rooted.map(async (img) => {
+      const file = await rootedImagePath(img.getAttribute("src")!, docPath);
+      img.setAttribute("src", encodeURI(relativePath(dirname(pagePath), file)));
+    }),
+  );
+  return template.innerHTML;
 }
 
 function blobToDataUrl(blob: Blob): Promise<string> {

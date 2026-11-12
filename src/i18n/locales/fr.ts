@@ -325,16 +325,16 @@ utiliser une.
   imageServiceFollowChat: "Comme le chat ({name})",
   imageServiceFollowChatBare: "Comme le chat",
   imageServiceFollowNoPictures:
-    "Ton fournisseur de chat ne fait pas d’images : choisis un service pour elles.",
+    "Votre fournisseur de chat ne fait pas d’images : choisissez un service pour elles.",
   imageProviderChatGpt: "OpenAI · connexion ChatGPT (expérimental)",
   imageServiceNoKey: "Aucune clé API pour {name} pour l’instant.",
   imageChatGptSignInHint:
-    "Connecte-toi d’abord avec ChatGPT dans le fournisseur de chat ci-dessus.",
+    "Connectez-vous d’abord avec ChatGPT dans le fournisseur de chat ci-dessus.",
   imageChatGptHelp:
-    "Les images sont prises sur le quota d’images de ton abonnement ChatGPT, pas sur le crédit de l’API. Elles passent par le service qu’utilisent les applications de ChatGPT, qui n’est pas une API publiée et peut cesser de fonctionner sans prévenir ; une clé d’API OpenAI continue de fonctionner dans tous les cas.",
+    "Les images sont prises sur le quota d’images de votre abonnement ChatGPT, pas sur le crédit de l’API. Elles passent par le service qu’utilisent les applications de ChatGPT, qui n’est pas une API publiée et peut cesser de fonctionner sans prévenir ; une clé d’API OpenAI continue de fonctionner dans tous les cas.",
   imagesPerRequestLabel: "Images par demande",
   imagesPerRequestHelp:
-    "Le nombre maximal d’images que Textus AI crée pour une demande. Avec une clé d’API, chacune coûte de l’argent ; avec un abonnement, elle utilise son quota. Indique combien tu en veux, il en crée autant, jusqu’à ce nombre.",
+    "Le nombre maximal d’images que Textus AI crée pour une demande. Avec une clé d’API, chacune coûte de l’argent ; avec un abonnement, elle utilise son quota. Indiquez combien vous en voulez, il en crée autant, jusqu’à ce nombre.",
   changePictureWithAi: "Modifier cette image avec Textus AI…",
   oldPictureTrashQuestion:
     "La nouvelle image est en place. Mettre l’ancienne, « {name} », à la corbeille ?",

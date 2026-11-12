@@ -4,6 +4,8 @@ import { afterEach, describe, expect, it, vi } from "vitest";
 // being asked to cancel.
 const ipc = vi.hoisted(() => ({
   stop: vi.fn(),
+  /** session/new left unanswered: an agent still signing in. */
+  slowStart: false,
   answers: [] as { id?: number; result?: unknown; error?: unknown }[],
   out: null as ((o: { type: "line"; text: string }) => void) | null,
 }));
@@ -18,6 +20,7 @@ vi.mock("../../platform/ipc-plugins", () => ({
       const { id, method } = sent;
       if (!method) return void ipc.answers.push(sent);
       if (id === undefined || method === "session/prompt") return;
+      if (method === "session/new" && ipc.slowStart) return;
       const result = method === "session/new" ? { sessionId: "s" } : {};
       queueMicrotask(() =>
         ipc.out!({
@@ -102,5 +105,25 @@ describe("stopping an agent", () => {
     expect(ipc.stop).toHaveBeenCalledWith(1);
     // Ended as a stop, not as a failure to retry.
     expect(await settled).toBe("cancelled");
+  });
+
+  it("ends the exchange at once when stopped while the agent still starts", async () => {
+    ipc.slowStart = true;
+    const reply = runAgentExchange({
+      agent: { key: "p/a", plugin: "p", id: "a", name: "A" } as never,
+      conversation: "starting",
+      cwd: "/w",
+      docPath: null,
+      message: "hi",
+      events: { view: () => {}, thinking: () => {}, permission: () => {} },
+    });
+    const settled = reply.then(
+      () => "done",
+      (err: { cause?: unknown }) => err.cause,
+    );
+    await new Promise((done) => setTimeout(done, 0));
+    cancelAgentExchange("starting");
+    expect(await settled).toBe("cancelled");
+    ipc.slowStart = false;
   });
 });

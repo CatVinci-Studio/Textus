@@ -43,6 +43,8 @@ export function letterSpacing(
 // the content theme and the user's Custom CSS, in that cascade order.
 
 const CUSTOM_CSS_STYLE_ID = "textus-user-css";
+/** Custom CSS has had its web fonts asked for once (the start). */
+let customFontsAsked = false;
 
 /** Keeps an imported theme's chrome colours for the boot script, which
  *  paints the next window's first frame with them. Written only on change. */
@@ -215,13 +217,15 @@ function useApplyAppearance(
     document.head.appendChild(style);
     void show(settings.customCss);
     // Its web fonts come a moment later, fetched by Rust, once typing
-    // pauses: not for every partial address.
+    // pauses: not for every partial address. At start, at once.
+    const delay = customFontsAsked ? 400 : 0;
+    customFontsAsked = true;
     const fetchFonts = window.setTimeout(() => {
       void webFonts.load().then(async ({ withWebFonts }) => {
         const css = await withWebFonts(settings.customCss);
         if (current && css !== settings.customCss) void show(css);
       });
-    }, 400);
+    }, delay);
     return () => {
       current = false;
       window.clearTimeout(fetchFonts);

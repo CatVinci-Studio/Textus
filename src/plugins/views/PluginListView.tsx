@@ -96,7 +96,7 @@ export const PluginListPane = memo(function PluginListPane({
   view: string;
   className?: string;
 }) {
-  const { info, items, setItems, children, open, toggleOpen, error, fail } =
+  const { info, items, swapItem, children, open, toggleOpen, error, fail } =
     usePluginListItems(plugin, view);
   const [query, setQuery] = useState("");
   const [active, setActive] = useState(0);
@@ -116,14 +116,14 @@ export const PluginListPane = memo(function PluginListPane({
   const check = (item: PluginListItem) => {
     // Ticked at once; the plugin's refresh has the last word.
     const ticked = { ...item, checkbox: !item.checkbox };
-    setItems((all) => all?.map((i) => (i === item ? ticked : i)) ?? all);
+    swapItem(item, ticked);
     void askPlugin(plugin, "$listCheck", {
       view,
       item,
       checked: !item.checkbox,
     }).catch((err: unknown) => {
       // Not ticked after all.
-      setItems((all) => all?.map((i) => (i === ticked ? item : i)) ?? all);
+      swapItem(ticked, item);
       fail(err);
     });
   };
@@ -451,7 +451,19 @@ function usePluginListItems(plugin: string, view: string) {
       .catch(fail);
   };
 
-  return { info, items, setItems, children, open, toggleOpen, error, fail };
+  /** One item put in another's place, at the top or among children. */
+  const swapItem = (from: PluginListItem, to: PluginListItem) => {
+    const swap = (list: PluginListItem[]) =>
+      list.includes(from) ? list.map((i) => (i === from ? to : i)) : list;
+    setItems((all) => (all ? swap(all) : all));
+    setChildren((m) => {
+      const next = new Map(m);
+      for (const [key, list] of m) next.set(key, swap(list));
+      return next;
+    });
+  };
+
+  return { info, items, swapItem, children, open, toggleOpen, error, fail };
 }
 
 function findItem(

@@ -115,11 +115,14 @@ export function useQuickAskControls({
   // "Continue in the panel": the exchange becomes the full conversation,
   // saved to History. Not mid-reply: the turns would be incomplete.
   function expandQuickAsk() {
-    if (quickConversation.busy || conversation.busy) return;
+    if (quickConversation.busy) return;
     const turns = quickConversation.history;
-    // A tab of its own where the AI has tabs, never over the one in front.
-    if (turns.length > 0 && !openConversationTab(crypto.randomUUID(), turns))
+    // A tab of its own where the AI has tabs, never over the one in front;
+    // without tabs it takes the live conversation's place, not mid-reply.
+    if (turns.length > 0 && !openConversationTab(crypto.randomUUID(), turns)) {
+      if (conversation.busy) return;
       conversation.restore(crypto.randomUUID(), turns);
+    }
     quickConversation.reset();
     inlineChat.close();
     agentPanel.setOpen(true);

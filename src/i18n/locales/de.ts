@@ -162,7 +162,7 @@ Skills liegen im Ordner skills/ neben dieser Datei, je Skill eine
   splitNoRoom:
     "Zu wenig Platz zum Teilen – Fenster verbreitern oder Seitenleiste bzw. eine Teilung schließen",
   revisionDisplayNoRoom:
-    "Nicht genug Platz - schließen Sie die Seitenleiste oder den KI-Bereich",
+    "Nicht genug Platz - schließ die Seitenleiste oder den KI-Bereich",
   proposalDeletedSentence: "Original",
   proposalAddedSentence: "Neu",
   reviewBarLabel: "Überarbeitung",
@@ -172,10 +172,10 @@ Skills liegen im Ordner skills/ neben dieser Datei, je Skill eine
   reviewNoteDone: "Erledigt",
   ownNoteAdd: "Notiz hinzufügen",
   ownNoteEditTitle: "Notiz bearbeiten",
-  ownNotePrompt: "Ihre Notiz zu den markierten Wörtern:",
+  ownNotePrompt: "Deine Notiz zu den markierten Wörtern:",
   ownNoteSave: "Speichern",
   ownNoteMark: "Ich",
-  ownNoteBy: "Ihre Notiz",
+  ownNoteBy: "Deine Notiz",
   ownNoteEdit: "Bearbeiten",
   ownNoteDelete: "Löschen",
   menuTrackChanges: "Meine Änderungen nachverfolgen",
@@ -183,7 +183,7 @@ Skills liegen im Ordner skills/ neben dieser Datei, je Skill eine
   closedWithUndecided:
     "Offene Änderungen in {name}: {n}. Sie bleiben erhalten und sind beim nächsten Öffnen wieder da.",
   trackStopConfirm:
-    "Ihre Änderungen nicht mehr nachverfolgen? Sie bleiben im Text, nur ihre Markierungen verschwinden.",
+    "Deine Änderungen nicht mehr nachverfolgen? Sie bleiben im Text, nur ihre Markierungen verschwinden.",
   trackAcceptAll: "Alle meine Änderungen annehmen",
   trackRejectAll: "Alle meine Änderungen ablehnen",
   reviewGroupNotes: { one: "{n} Notiz", other: "{n} Notizen" },
@@ -366,13 +366,13 @@ Skills liegen im Ordner skills/ neben dieser Datei, je Skill eine
   chatUpdateSkill: "Fähigkeit aktualisieren",
   skillSaveAnyway: "Trotzdem speichern",
   skillWarnCreateAsked:
-    "Sie verlangt den Erstellen-Modus, in dem sie selbst Fähigkeiten schreiben könnte. Erstellen bleibt abgewählt: Wählen Sie es nur, wenn Sie jeder Zeile vertrauen.",
+    "Sie verlangt den Erstellen-Modus, in dem sie selbst Fähigkeiten schreiben könnte. Erstellen bleibt abgewählt: Wähl es nur, wenn du jeder Zeile vertraust.",
   skillWarnCreateMode:
-    "Im Erstellen-Modus könnte sie selbst Fähigkeiten schreiben oder ändern. Lassen Sie sie dort nur, wenn Sie jeder Zeile vertrauen.",
+    "Im Erstellen-Modus könnte sie selbst Fähigkeiten schreiben oder ändern. Lass sie dort nur, wenn du jeder Zeile vertraust.",
   skillWarnPromptInjection:
-    "Ihre Anweisungen wirken, als wollten sie die von Textus AI aushebeln („vorherige Anweisungen ignorieren“). Lesen Sie sie vor dem Speichern.",
+    "Ihre Anweisungen wirken, als wollten sie die von Textus AI aushebeln („vorherige Anweisungen ignorieren“). Lies sie vor dem Speichern.",
   skillWarnHiddenText:
-    "Sie enthält unsichtbare Zeichen, die Anweisungen verbergen können. Lesen Sie sie vor dem Speichern.",
+    "Sie enthält unsichtbare Zeichen, die Anweisungen verbergen können. Lies sie vor dem Speichern.",
   chatShowCode: "Code ansehen",
   chatShowSkill: "Fähigkeit ansehen",
   chatPluginCantInstall:
@@ -834,7 +834,7 @@ Skills liegen im Ordner skills/ neben dieser Datei, je Skill eine
   logoutButton: "Abmelden",
   loggingIn: "Warte auf die Anmeldung im Browser…",
   loginLinkHint:
-    "Kein Browser geöffnet? Öffnen Sie diesen Link in einem Browser auf diesem Computer:",
+    "Kein Browser geöffnet? Öffne diesen Link in einem Browser auf diesem Computer:",
   loginLinkCopy: "Link kopieren",
   authTabAccount: "Konto",
   authTabApiKey: "API-Schlüssel",
@@ -931,7 +931,7 @@ Skills liegen im Ordner skills/ neben dieser Datei, je Skill eine
   pictureRedraw: "Neu zeichnen…",
   pictureRedrawTitle: "Bild neu zeichnen",
   pictureRedrawPrompt:
-    "Was das Bild zeigt - ändern Sie es, und Textus zeichnet es neu:",
+    "Was das Bild zeigt - ändere es, und Textus zeichnet es neu:",
   pictureRedrawOk: "Neu zeichnen",
   agentThinking: "Denkt nach…",
   agentWritingEdit: "Änderung wird geschrieben…",
@@ -952,12 +952,12 @@ Skills liegen im Ordner skills/ neben dieser Datei, je Skill eine
   chatHistoryEmpty: "Keine früheren Unterhaltungen.",
   skillOffer: "Diese Vorgehensweise als Skill {name} behalten?",
   skillOfferSaved:
-    "Als {name} behalten: Tippen Sie es ins Eingabefeld, um es wieder zu tun.",
+    "Als {name} behalten: Tipp es ins Eingabefeld, um es wieder zu tun.",
   skillOfferSave: "Für alle Dokumente speichern",
   skillOfferSaveProject: "Nur für diesen Ordner",
   chatHistorySearch: "Unterhaltungen durchsuchen",
   chatHistorySearchNone: "Keine Unterhaltung enthält diese Wörter.",
-  chatHistoryByYou: "Sie",
+  chatHistoryByYou: "Du",
   chatHistoryByAi: "Textus AI",
   chatHistoryRestoreHint: "Diese Unterhaltung mit ihrem Dokument wieder öffnen",
   chatHistoryDelete: "Unterhaltung löschen",
@@ -1290,7 +1290,7 @@ Skills liegen im Ordner skills/ neben dieser Datei, je Skill eine
   defaultEditorIsDefault: `${APP_NAME} ist der Standard`,
   defaultEditorNotDefault: `${APP_NAME} ist nicht der Standard`,
   defaultEditorButton: "Als Standard festlegen",
-  defaultEditorChooseHint: `Wählen Sie unter Standard-Apps ${APP_NAME} für .md-Dateien.`,
+  defaultEditorChooseHint: `Wähl unter Standard-Apps ${APP_NAME} für .md-Dateien.`,
   defaultEditorUnsupported:
     "Nur ein installiertes Paket (.deb, .rpm oder AUR) kann der Standard sein, nicht das AppImage.",
   defaultEditorFailed: "Festlegen fehlgeschlagen:",
@@ -1349,7 +1349,7 @@ Skills liegen im Ordner skills/ neben dieser Datei, je Skill eine
   settingsFileExport: "Exportieren…",
   settingsFileImport: "Importieren…",
   settingsFileImportConfirm:
-    "Ihre Einstellungen durch die aus dieser Datei ersetzen? API-Schlüssel und MCP-Token auf diesem Computer bleiben erhalten.",
+    "Deine Einstellungen durch die aus dieser Datei ersetzen? API-Schlüssel und MCP-Token auf diesem Computer bleiben erhalten.",
   settingsFileImportReplace: "Ersetzen",
   settingsFileNotSettings: "Diese Datei enthält keine Textus-Einstellungen.",
   settingsFileWithAi:
@@ -1357,7 +1357,7 @@ Skills liegen im Ordner skills/ neben dieser Datei, je Skill eine
   settingsFileWithAiYes: "KI-Aufzeichnungen einschließen",
   settingsFileSettingsOnly: "Nur Einstellungen",
   settingsFileImportAi:
-    "Ihre KI-Gespräche und Erinnerungen kommen zu deinen hinzu; keine deiner wird durch eine ältere Kopie ersetzt.",
+    "Die KI-Gespräche und Erinnerungen der Datei kommen zu deinen hinzu; keine deiner wird durch eine ältere Kopie ersetzt.",
   untitledTab: "Unbenannt",
   markdownGuideTab: "Markdown-Anleitung",
   agentGuideTab: "Anleitung zu KI-Funktionen",
@@ -1540,7 +1540,7 @@ Skills liegen im Ordner skills/ neben dieser Datei, je Skill eine
   privacyKeepUnsavedToggle:
     "Ungespeicherte Änderungen beim Schließen behalten, ohne zu fragen",
   privacyKeepUnsavedHelp:
-    "Ein Fenster mit ungespeicherten Änderungen schließt ohne Nachfrage: Die Dokumente öffnen sich beim nächsten Start von Textus mit ihren Änderungen. Die Dateien selbst bleiben, wie sie waren, bis Sie speichern.",
+    "Ein Fenster mit ungespeicherten Änderungen schließt ohne Nachfrage: Die Dokumente öffnen sich beim nächsten Start von Textus mit ihren Änderungen. Die Dateien selbst bleiben, wie sie waren, bis du speicherst.",
   privacyDraftRecoveryClearHint:
     "Entfernt alle derzeit gespeicherten Zwischenstände. Das lässt sich nicht rückgängig machen.",
   privacyClearButton: "Löschen",
@@ -1823,7 +1823,7 @@ Skills liegen im Ordner skills/ neben dieser Datei, je Skill eine
     "Ihr Name als Herausgeber – Kleinbuchstaben, Ziffern und Bindestriche. Ihr GitHub-Name passt gut. Er ersetzt „local“ in der Plugin-ID.",
   pluginExportChooseFolder: "Ordner wählen…",
   pluginExportDone:
-    "Exportiert nach {path}.\n\nMachen Sie den Ordner zu einem GitHub-Repository und pushen Sie ein Tag wie v0.1.0: Sein Release-Workflow veröffentlicht das Plugin. Wie es in Textus gelistet wird, steht in der README darin.",
+    "Exportiert nach {path}.\n\nMach den Ordner zu einem GitHub-Repository und pushe ein Tag wie v0.1.0: Sein Release-Workflow veröffentlicht das Plugin. Wie es in Textus gelistet wird, steht in der README darin.",
   pluginUriNotTaken: "Kein eingeschaltetes Plugin öffnet diesen Link: {link}",
   uriCommandConfirm: "Ein Link möchte „{command}“ ausführen. Ausführen?",
   uriCommandRun: "Ausführen",

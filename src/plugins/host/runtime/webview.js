@@ -136,8 +136,9 @@
     return Promise.resolve().then(function () {
       if (action === "copy" || action === "cut") {
         var text = selectedText(field);
-        return call("clipboardWrite", { text: text }).then(function () {
-          if (action === "cut") document.execCommand("delete");
+        // Cut takes the text away only once it is on the clipboard.
+        return call("clipboardWrite", { text: text }).then(function (ok) {
+          if (action === "cut" && ok) document.execCommand("delete");
         });
       }
       if (action === "paste")

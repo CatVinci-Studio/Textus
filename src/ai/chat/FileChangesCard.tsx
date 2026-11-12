@@ -1,3 +1,4 @@
+import { errorText } from "../../utils/error-text";
 import { PathText } from "../../engine/controls/PathText";
 import { HeadRow } from "../../engine/controls/HeadRow";
 import { openDocument } from "../../utils/open-document";
@@ -83,7 +84,7 @@ export function FileChangesCard({
       setProblems(refused);
       filesChanged(now);
     } catch (err) {
-      setProblems([String(err)]);
+      setProblems([errorText(err)]);
     }
   }
 

@@ -1,6 +1,7 @@
 /**
  * A plugin's string `key` from its manifest's `l10n`, for `language`: its
- * own, then its base language's ("zh-Hant" -> "zh"), then English, then any
+ * own, then its base language's (not "zh" for "zh-Hant", which reads the
+ * English), then English, then any
  * language that has it, then the key; "{0}", "{1}"... filled from `args`.
  * Self-contained: the plugin frames are given its source (frames.ts).
  */
@@ -10,7 +11,8 @@ export function pluginString(
   key: string,
   args: readonly unknown[] = [],
 ): string {
-  const base = String(language).split("-")[0];
+  const base =
+    language === "zh-Hant" ? language : String(language).split("-")[0];
   let text =
     (l10n[language] && l10n[language][key]) ||
     (l10n[base] && l10n[base][key]) ||

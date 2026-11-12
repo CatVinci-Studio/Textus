@@ -16,6 +16,10 @@ import { lazyModule } from "../../lazy/lazy-module";
  */
 const webviews = lazyModule("plugin-webviews", () => import("./PluginWebview"));
 const lists = lazyModule("plugin-lists", () => import("./PluginListView"));
+const codeBlocks = lazyModule(
+  "plugin-code-blocks",
+  () => import("./PluginCodeBlock"),
+);
 const webPages = lazyModule("plugin-web-page", () => import("./WebPagePane"));
 
 /** A lazy component that waits by itself: nothing shows until it loads. */
@@ -39,7 +43,7 @@ export const PluginSettingsWebview = waiting(
   lazyComponent(webviews, (m) => m.PluginSettingsWebview),
 );
 export const PluginCodeBlock = waiting(
-  lazyComponent(webviews, (m) => m.PluginCodeBlock),
+  lazyComponent(codeBlocks, (m) => m.PluginCodeBlock),
 );
 export const PluginListPane = waiting(
   lazyComponent(lists, (m) => m.PluginListPane),

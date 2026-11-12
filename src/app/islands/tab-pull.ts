@@ -120,13 +120,20 @@ export function pullTab(
     if (!target) return null;
     const next = dropLayout(base, tabId, target);
     if (next === undefined) return null;
-    const pane = target.zone === "center" ? paneOf(base, target.tabId) : null;
+    const own = paneOf(base, tabId);
+    const middle = target.zone === "center" ? paneOf(base, target.tabId) : null;
     // Its own island's middle: where it came from.
-    if (pane && pane === paneOf(base, tabId)) return null;
+    if (middle && middle === own) return null;
+    // An edge with no room for a new island joins the one there: known by
+    // where the tab lands, an island that was there before.
+    const landed = next ? paneOf(next, tabId) : null;
+    const pane =
+      middle ??
+      (landed && landed !== own && paneById(base.root, landed) ? landed : null);
     const end = pane ? (paneById(base.root, pane)?.tabs.length ?? 0) : 0;
     return {
       key: `${target.whole ? "whole" : target.tabId}:${target.zone}`,
-      opens: target.zone !== "center",
+      opens: !pane,
       next,
       // Joining: its slot at the row's end, the row's document in front.
       shown: pane ? joined(base, tabId, pane, end) : next,

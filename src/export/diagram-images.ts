@@ -36,7 +36,8 @@ export async function replaceFencedBlocks(
     const open = FENCE.exec(lines[i]);
     if (!open) {
       const inner = FENCE.exec(lines[i].replace(CONTAINER_PREFIX, ""));
-      if (inner && CONTAINER_PREFIX.exec(lines[i])![0].trim())
+      // Behind a quote or list marker, or indented under a list item.
+      if (inner && CONTAINER_PREFIX.exec(lines[i])![0].length > 0)
         i = skipNested(lines, i, inner[1], out, () =>
           nested?.(inner[2].toLowerCase()),
         );

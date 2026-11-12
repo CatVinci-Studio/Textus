@@ -1,3 +1,5 @@
+import { keepCancelledTurns } from "../cancelled-turns";
+import { afterFileChanges } from "../file-changes";
 import { ai } from "../../../platform/ipc";
 import { announce } from "../../../engine/controls/announce";
 import { resolveStrings } from "../../../i18n/strings";
@@ -179,8 +181,19 @@ export class ConversationModel {
     else if (this.requestId) void ai.cancelAgentMessage(this.requestId);
   };
 
-  /** Nobody is left to show the reply: the request ends. */
+  /** Nobody is left to show the reply: the request ends. What already
+   *  streamed is kept, as at Stop, and files it changed are marked. */
   dispose() {
+    const partial = this.state.busy ? this.streamingNow : null;
+    if (partial) {
+      const kept = keepCancelledTurns(partial.turns, partial.text);
+      if (kept.length > 0) this.setHistory((prev) => [...prev, ...kept]);
+      void afterFileChanges(
+        this.id,
+        partial.turns,
+        this.env().settings.aiChangeMode === "revision",
+      );
+    }
     this.generation += 1;
     this.end();
     this.setStreaming(null);

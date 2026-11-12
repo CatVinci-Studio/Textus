@@ -60,9 +60,13 @@ interface Session {
 }
 
 const sessions = new Map<string, Session>();
+/** Conversations whose agent is still starting (or signing in): how to
+ *  give up on it. */
+const starting = new Map<string, () => void>();
 
 /** Ends a conversation's agent, if it has one. */
 export function endAgentSession(conversation: string): void {
+  starting.get(conversation)?.();
   const session = sessions.get(conversation);
   sessions.delete(conversation);
   session?.connection.stop();
@@ -74,6 +78,7 @@ const STOP_GRACE_MS = 5000;
 /** Stops the step the agent is on; what streamed so far stays. One that
  *  hasn't stopped by STOP_GRACE_MS is ended, its session with it. */
 export function cancelAgentExchange(conversation: string): void {
+  starting.get(conversation)?.();
   const session = sessions.get(conversation);
   if (!session) return;
   session.refuse?.();
@@ -282,7 +287,25 @@ export async function runAgentExchange(o: {
     session = undefined;
   }
   if (!session) {
-    session = await start(o.agent, o.conversation, o.cwd);
+    // Stop, Textus AI turned off or the tab closed while it starts: the
+    // exchange ends now, and the agent once it is up.
+    let giveUp = () => {};
+    const gaveUp = new Promise<never>((_, reject) => {
+      giveUp = () => reject(new IpcError("agent", AI_CANCELLED));
+    });
+    starting.set(o.conversation, giveUp);
+    const made = start(o.agent, o.conversation, o.cwd);
+    try {
+      session = await Promise.race([made, gaveUp]);
+    } catch (err) {
+      void made.then(
+        (late) => late.connection.stop(),
+        () => undefined,
+      );
+      throw err;
+    } finally {
+      starting.delete(o.conversation);
+    }
     sessions.set(o.conversation, session);
   }
   const user: AgentTurn = { kind: "User", text: o.message };

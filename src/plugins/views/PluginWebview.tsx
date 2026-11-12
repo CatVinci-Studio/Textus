@@ -1,14 +1,8 @@
 import { useEffect, useRef, useState, useSyncExternalStore } from "react";
 import { connectFrame, sandboxedFrame, webviewDocument } from "../host/frames";
-import {
-  codeBlockChanged,
-  disposeWebview,
-  resolveWebview,
-  webviewMessage,
-} from "../manager";
+import { disposeWebview, resolveWebview, webviewMessage } from "../manager";
 import { pluginName, pluginRecord } from "../store/plugin-records";
 import { grantedHosts } from "../store/permissions";
-import { trackCodeBlock, untrackCodeBlock } from "../contributions/code-blocks";
 import type { CodeBlockSeen } from "../manager";
 import { windowInfo } from "../store/plugin-records";
 import { watchTheme, webviewThemeCss, windowIsDark } from "./theme-vars";
@@ -44,11 +38,15 @@ import {
 } from "./webviews";
 
 /** A webview's whole page, in the window's theme, and its frame's title. */
-export function webviewPage(record: WebviewRecord, html: string) {
+export function webviewPage(
+  record: WebviewRecord,
+  html: string,
+  inDocument = record.kind === "codeBlock",
+) {
   const plugin = pluginRecord(record.plugin);
   return {
     srcdoc: webviewDocument(html, {
-      themeCss: webviewThemeCss(record.kind === "codeBlock"),
+      themeCss: webviewThemeCss(inDocument),
       dark: windowIsDark(),
       frameHosts: grantedHosts(plugin?.granted ?? []),
       language: windowInfo().language(),
@@ -67,14 +65,10 @@ export function webviewPage(record: WebviewRecord, html: string) {
  *  reach the clipboard (ms). */
 const PICK_MS = 2000;
 /** How long a page asked for too early waits to be asked again (ms). */
+/** The text items a page may put in its menu (api.textItems), its own
+ *  prefix before them ("text:cut"). */
+const CLIPBOARD_ITEMS = ["cut", "copy", "paste"];
 const RETRY_MS = 600;
-const MAX_CODE_BLOCK_HEIGHT = 1200;
-const CODE_BLOCK_SHARE = 0.7;
-const codeBlockMax = () =>
-  Math.min(
-    MAX_CODE_BLOCK_HEIGHT,
-    Math.round(window.innerHeight * CODE_BLOCK_SHARE),
-  );
 
 /** A page's own zoom, kept current, and the way to tell the page when it
  *  changes (set once the page is up). */
@@ -95,9 +89,13 @@ export function PluginWebview({
   className,
   fitHeight,
   zoom = 1,
+  interfaceSize = false,
 }: {
   id: string;
   className?: string;
+  /** A block in the document drawn at the interface's size, not the
+   *  document's text and zoom (an overview that widens instead). */
+  interfaceSize?: boolean;
   /** The frame as tall as its page, up to this many pixels (asked as it
    *  changes, when a function). */
   fitHeight?: number | (() => number);
@@ -123,15 +121,18 @@ export function PluginWebview({
     const box = boxRef.current;
     const current = webview(id);
     if (!box || html === null || !current) return;
-    const page = webviewPage(current, html);
     // A code block's page is drawn in the document, at its text size and
-    // zoom; a settings page is only as tall as its page, still interface.
+    // zoom (unless it asks for the interface's); a settings page is only as
+    // tall as its page, still interface.
     const inDocument = current.kind === "codeBlock";
+    const page = webviewPage(current, html, inDocument && !interfaceSize);
+    const docZoom = () => (interfaceSize ? 1 : contentZoom(frame));
     const frame = sandboxedFrame(page.srcdoc, page.title, { fullscreen: true });
     frame.className = "plugin-webview-frame";
     let endpoint: Parameters<typeof webviewConnected>[1] = null;
-    // The clipboard is the page's only through the window's own text menu:
-    // a Cut, Copy or Paste the user just picked there, once.
+    // The clipboard is the page's only through a menu the window drew: a
+    // Cut, Copy or Paste the user just picked there (the window's text menu,
+    // or the text items a page put in its own menu), once.
     let picked: { action: unknown; until: number } | null = null;
     const pickedNow = (...actions: string[]) => {
       const ok =
@@ -148,7 +149,11 @@ export function PluginWebview({
         const finish = (value: unknown) => {
           if (done) return;
           done = true;
-          picked = clip ? { action: value, until: Date.now() + PICK_MS } : null;
+          const action = String(value ?? "").replace(/^.*:/, "");
+          picked =
+            clip || CLIPBOARD_ITEMS.includes(action)
+              ? { action, until: Date.now() + PICK_MS }
+              : null;
           setMenu(null);
           resolve(value);
         };
@@ -229,7 +234,7 @@ export function PluginWebview({
         webviewConnected(id, connected);
         if (inDocument)
           connected?.notify("zoom", {
-            zoom: contentZoom(frame) * ownZoom.current,
+            zoom: docZoom() * ownZoom.current,
           });
       },
     );
@@ -237,7 +242,7 @@ export function PluginWebview({
     tellZoom.current = inDocument
       ? () =>
           endpoint?.notify("zoom", {
-            zoom: contentZoom(frame) * ownZoom.current,
+            zoom: docZoom() * ownZoom.current,
           })
       : null;
     const stopZoom = inDocument
@@ -257,7 +262,7 @@ export function PluginWebview({
       webviewConnected(id, null);
       frame.remove();
     };
-  }, [id, html, fitHeight, ownZoom, tellZoom]);
+  }, [id, html, fitHeight, ownZoom, tellZoom, interfaceSize]);
 
   return (
     <>
@@ -437,64 +442,5 @@ export function PluginTabPane({
         className="plugin-webview-tab"
       />
     </div>
-  );
-}
-
-/**
- * A code block a plugin draws in the document: made once in sight, told when
- * its source changes, and able to change it through `setSource`.
- */
-export function PluginCodeBlock({
-  plugin,
-  widget,
-  seen,
-  setSource,
-  zoom = 1,
-}: {
-  plugin: string;
-  /** The editor's widget it is drawn in: the same one while it lives. */
-  widget: string;
-  seen: CodeBlockSeen;
-  setSource: (source: string) => boolean;
-  /** The block's own size (its fence's `zoom=`), times the document's. */
-  zoom?: number;
-}) {
-  const { record, error } = useResolvedWebview(plugin, "codeBlock", widget, {
-    codeBlock: seen,
-  });
-  const latest = useRef(setSource);
-  latest.current = setSource;
-  useEffect(() => {
-    if (!record) return;
-    trackCodeBlock(record.id, {
-      plugin,
-      setSource: (source) => latest.current(source),
-    });
-    return () => untrackCodeBlock(record.id);
-  }, [record, plugin]);
-  // What it was made with is the plugin's already.
-  const meta = JSON.stringify(seen.meta);
-  const told = useRef({ source: seen.source, block: seen.block, meta });
-  useEffect(() => {
-    if (!record) return;
-    const now = { source: seen.source, block: seen.block, meta };
-    if (
-      told.current.source === now.source &&
-      told.current.block === now.block &&
-      told.current.meta === now.meta
-    )
-      return;
-    told.current = now;
-    codeBlockChanged(record, { ...now, meta: JSON.parse(meta) });
-  }, [record, seen.source, seen.block, meta]);
-  if (error) return <PluginProblem error={error} />;
-  if (!record) return null;
-  return (
-    <PluginWebview
-      id={record.id}
-      className="plugin-code-block-frame"
-      fitHeight={codeBlockMax}
-      zoom={zoom}
-    />
   );
 }

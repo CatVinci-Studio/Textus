@@ -23,7 +23,26 @@ fn pandoc_candidates() -> Vec<PathBuf> {
     if let Ok(home) = std::env::var("HOME") {
         candidates.push(PathBuf::from(home).join(".local/bin/pandoc"));
     }
+    // Windows: the installer's folders, for each user or for everyone.
+    for base in ["LOCALAPPDATA", "ProgramFiles"] {
+        if let Ok(dir) = std::env::var(base) {
+            candidates.push(PathBuf::from(dir).join("Pandoc").join("pandoc.exe"));
+        }
+    }
     candidates
+}
+
+/// Pandoc started without a console window flashing up (Windows).
+#[cfg(desktop)]
+fn pandoc_command(program: impl AsRef<std::ffi::OsStr>) -> Command {
+    #[allow(unused_mut)]
+    let mut command = Command::new(program);
+    #[cfg(windows)]
+    {
+        use std::os::windows::process::CommandExt;
+        command.creation_flags(0x0800_0000);
+    }
+    command
 }
 
 /// Returns the path of a working pandoc binary, or None. GUI apps launched
@@ -34,7 +53,7 @@ fn pandoc_candidates() -> Vec<PathBuf> {
 pub async fn detect_pandoc() -> Option<String> {
     tauri::async_runtime::spawn_blocking(|| {
         for candidate in pandoc_candidates() {
-            let works = Command::new(&candidate)
+            let works = pandoc_command(&candidate)
                 .arg("--version")
                 .stdin(Stdio::null())
                 .stdout(Stdio::null())
@@ -134,7 +153,7 @@ pub async fn export_via_pandoc(
         let mut args = pandoc_args(&format, &title);
         args[1].push_str(breaks_extension(resource_dir.as_deref()));
         let filter = pandoc_options::lua_filter().map_err(|e| e.to_string())?;
-        let mut cmd = Command::new(&pandoc_path);
+        let mut cmd = pandoc_command(&pandoc_path);
         cmd.arg("--lua-filter")
             .arg(filter.path())
             .args(&options.extra_args)

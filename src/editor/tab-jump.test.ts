@@ -26,3 +26,13 @@ describe("tab jumps", () => {
     takeTabJump("a");
   });
 });
+
+describe("a line asked for", () => {
+  it("is counted in the text as it was opened", async () => {
+    const { lineOffset } = await import("./useTabJump");
+    const text = "---\ntitle: a\n---\n\n- one\n- two\n\nEnd";
+    expect(text.slice(lineOffset(text, 5))).toBe("- two\n\nEnd");
+    expect(lineOffset(text, 0)).toBe(0);
+    expect(lineOffset(text, 99)).toBe(text.length);
+  });
+});

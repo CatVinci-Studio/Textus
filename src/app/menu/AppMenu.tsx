@@ -305,8 +305,10 @@ function MenuRow({
       return;
     }
     if (!item.action) return;
-    runMenuAction(item.action);
+    // Closed first: the focus goes back to where it was (source mode, the
+    // AI's box), which Undo, Redo and Select All act on.
     onDismiss();
+    runMenuAction(item.action);
   }
 
   return (

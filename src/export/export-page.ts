@@ -9,6 +9,7 @@ import {
   WIKILINK_SELECTOR,
   cloneEditorContent,
   inlineImages,
+  pageRelativeImages,
   linkRenderer,
   nextFrame,
   type ExportImages,
@@ -93,7 +94,9 @@ export async function preparePage(
     unmark();
   }
   let html =
-    options.images === "inline" ? await inlineImages(copy, tab.path) : copy;
+    options.images === "inline"
+      ? await inlineImages(copy, tab.path)
+      : await pageRelativeImages(copy, tab.path, options.from);
   if (options.light)
     html = await lightDiagrams(html, options.light.width, options.light.font);
   return finishExportPage({ format: options.format, path: tab.path, html });

@@ -269,7 +269,8 @@ export function FormatBar({
                   <IconButton
                     label={label}
                     hint={b.keys ? `${label}  ${formatCombo(b.keys)}` : label}
-                    pressed={b.on ? b.on(block) : undefined}
+                    // A menu's button says it opens one, not that it is on.
+                    pressed={b.on && !b.picksHeading ? b.on(block) : undefined}
                     onClick={b.picksHeading ? undefined : () => press(tabId, b)}
                     opens={b.picksHeading ? heading.button : undefined}
                   >

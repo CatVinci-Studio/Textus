@@ -318,11 +318,21 @@ fn edit_spec() -> ToolSpec {
     }
 }
 
-fn write_file(args: &serde_json::Value, _now: Option<&str>) -> Result<String, String> {
-    args["content"]
+fn write_file(args: &serde_json::Value, now: Option<&str>) -> Result<String, String> {
+    let content = args["content"]
         .as_str()
-        .map(str::to_string)
-        .ok_or_else(|| "`content` is required: the file's whole new text.".to_string())
+        .ok_or_else(|| "`content` is required: the file's whole new text.".to_string())?;
+    Ok(in_endings_of(now, &content.replace("\r\n", "\n")))
+}
+
+/// `text` (`\n` lines) with the line endings `now` has: a Windows file read
+/// to the model as `\n` keeps its `\r\n` when written back.
+fn in_endings_of(now: Option<&str>, text: &str) -> String {
+    if now.is_some_and(|now| now.contains("\r\n")) {
+        text.replace('\n', "\r\n")
+    } else {
+        text.to_string()
+    }
 }
 
 fn edit_file(args: &serde_json::Value, now: Option<&str>) -> Result<String, String> {
@@ -336,8 +346,15 @@ fn edit_file(args: &serde_json::Value, now: Option<&str>) -> Result<String, Stri
     if old.is_empty() {
         return Err("`old` is required: the text to replace, verbatim.".to_string());
     }
-    match now.matches(old).count() {
-        1 => Ok(now.replacen(old, new, 1)),
+    // Matched as the model read it, with `\n` lines; written back with the
+    // file's own.
+    let lf = |text: &str| text.replace("\r\n", "\n");
+    let (text, old, new) = (lf(now), lf(old), lf(new));
+    match text.matches(old.as_str()).count() {
+        1 => Ok(in_endings_of(
+            Some(now),
+            &text.replacen(old.as_str(), &new, 1),
+        )),
         0 => Err(
             "`old` isn't in the file as written - read_file it and copy the text exactly."
                 .to_string(),

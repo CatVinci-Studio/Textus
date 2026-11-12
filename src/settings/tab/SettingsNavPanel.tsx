@@ -1,4 +1,5 @@
 import { SettingsIndexing } from "../indexing";
+import { isImeKeydown } from "../../utils/ime";
 import { Fragment, useEffect, useState, useSyncExternalStore } from "react";
 import { pageComponent } from "../builtin-pages";
 import {
@@ -109,7 +110,8 @@ export function SettingsNavPanel() {
           aria-label={t.settingsSearchPlaceholder}
           onChange={(e) => search.setQuery(e.target.value)}
           onKeyDown={(e) => {
-            if (e.key === "Escape") search.setQuery("");
+            // Escape during an input method's word cancels the word only.
+            if (e.key === "Escape" && !isImeKeydown(e)) search.setQuery("");
           }}
         />
       </div>

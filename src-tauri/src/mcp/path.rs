@@ -93,8 +93,10 @@ pub fn find_program(program: &str, path: &str) -> Option<PathBuf> {
     if given.components().count() > 1 {
         return given.is_file().then(|| given.to_path_buf());
     }
+    // Windows: a runnable file first. Node puts an extensionless `npx` shell
+    // script beside `npx.cmd`, which Windows can't start.
     let extensions: &[&str] = if cfg!(windows) {
-        &["", ".exe", ".cmd", ".bat"]
+        &[".exe", ".cmd", ".bat", ""]
     } else {
         &[""]
     };
@@ -121,5 +123,16 @@ mod tests {
         assert_eq!(find_program("tool", &path), Some(tool.clone()));
         assert_eq!(find_program("missing", &path), None);
         assert_eq!(find_program(&tool.to_string_lossy(), ""), Some(tool));
+    }
+
+    #[cfg(windows)]
+    #[test]
+    fn windows_takes_npx_cmd_over_the_shell_script_beside_it() {
+        let dir = std::env::temp_dir().join(format!("textus-mcp-npx-{}", std::process::id()));
+        std::fs::create_dir_all(&dir).unwrap();
+        std::fs::write(dir.join("npx"), "").unwrap();
+        std::fs::write(dir.join("npx.cmd"), "").unwrap();
+        let path = dir.to_string_lossy().into_owned();
+        assert_eq!(find_program("npx", &path), Some(dir.join("npx.cmd")));
     }
 }

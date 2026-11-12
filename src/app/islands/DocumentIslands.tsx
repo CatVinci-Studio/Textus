@@ -31,14 +31,13 @@ import { useIslands } from "../../engine/layout/useIslands";
 import { panesOf, type Pane } from "../../engine/layout/tree";
 import {
   focusPane,
-  placeOnArrival,
   reorderInPane,
   windowTabs,
 } from "../../engine/layout/store";
 import { useTabsInBar } from "./tabs-in-bar";
 import { pullTab } from "./tab-pull";
 import { addFromTabRow, newConversation } from "./ai-tabs";
-import { documentBesidePanels } from "./panel-add";
+import { useDocumentsApart } from "./useDocumentsApart";
 import type { ContextMenuItem } from "../../engine/controls/ContextMenu";
 import { contributedContextItems } from "../../registry/context-menu-items";
 
@@ -142,13 +141,8 @@ export function DocumentIslands({
       p,
       (id) => windowTabs<DocTab>().find((tab) => tab.id === id)?.view,
     );
-  // A document asked for from a panel's island opens apart from its pages.
-  const addDocument = (pane: string) => {
-    const from = panes.find((p) => p.id === pane);
-    const id = onAdd();
-    if (from && isPanel(from))
-      placeOnArrival(id, documentBesidePanels(id, isPanel));
-  };
+  // A document opened from a panel's island goes apart from its pages.
+  useDocumentsApart(tabs, isPanel);
   const tabBar = (
     list: DocTab[],
     active: string,
@@ -180,11 +174,7 @@ export function DocumentIslands({
       // Over a conversation, + starts another rather than a document.
       onAdd={() => {
         focusPane(pane);
-        addFromTabRow(
-          byId.get(active),
-          () => addDocument(pane),
-          newConversation,
-        );
+        addFromTabRow(byId.get(active), () => void onAdd(), newConversation);
       }}
       // Pulled over the documents it splits; out of the window it tears
       // off where the platform gives global cursor positions.
