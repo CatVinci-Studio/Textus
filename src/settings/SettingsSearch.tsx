@@ -261,6 +261,7 @@ export function useReveal(
   /** Called once it has gone there, or given up. */
   done?: () => void,
 ) {
+  const doneRef = useLatest(done);
   useEffect(() => {
     if (!jump) return;
     let frame = 0;
@@ -272,9 +273,9 @@ export function useReveal(
         frame = requestAnimationFrame(go);
         return;
       }
-      done?.();
+      doneRef.current?.();
     };
     go();
     return () => cancelAnimationFrame(frame);
-  }, [jump, content]);
+  }, [jump, content, doneRef]);
 }
