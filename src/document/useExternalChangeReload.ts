@@ -7,6 +7,7 @@ import { unlistenAll } from "../platform/events";
 import { FILE_RELOADED_EVENT, FILE_WRITTEN_EVENT } from "../utils/events";
 import { fileTextFor } from "./tracked-file";
 import { openDocumentAt } from "../registry/open-documents";
+import { isInside, slashed } from "../utils/path";
 
 // On focus, or when something in the window wrote a file, clean tabs whose
 // file changed on disk take the new text (in place when open in an editor);
@@ -114,7 +115,17 @@ export function useExternalChangeReload(
     const unlisten = thisWindow().onFocusChanged(({ payload: focused }) => {
       if (focused) check();
     });
-    const checkAll = () => check();
+    // A write names its file (or a moved folder): only tabs there are read.
+    const checkAll = (event: Event) => {
+      const at = (event as CustomEvent<unknown>).detail;
+      if (typeof at !== "string") return check();
+      const there = liveTabs().filter(
+        (tab) =>
+          tab.path &&
+          (slashed(tab.path) === slashed(at) || isInside(tab.path, at)),
+      );
+      if (there.length) check(new Set(there.map((tab) => tab.id)));
+    };
     window.addEventListener(FILE_WRITTEN_EVENT, checkAll);
     const stopFocus = unlistenAll(unlisten);
     const watch = setInterval(() => {

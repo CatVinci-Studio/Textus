@@ -10,6 +10,20 @@ function visibleItems(root: HTMLElement): HTMLElement[] {
   );
 }
 
+/** The first row on screen that `wanted`, reading layout only up to it. */
+function firstShown(
+  root: HTMLElement,
+  wanted: (el: HTMLElement) => boolean,
+): HTMLElement | undefined {
+  for (const el of root.querySelectorAll<HTMLElement>(ITEM))
+    if (wanted(el) && el.getClientRects().length > 0) return el;
+  return undefined;
+}
+
+function setTabIndex(el: HTMLElement, value: "0" | "-1") {
+  if (el.getAttribute("tabindex") !== value) el.setAttribute("tabindex", value);
+}
+
 function level(el: HTMLElement): number {
   return Number(el.getAttribute("aria-level")) || 1;
 }
@@ -20,34 +34,50 @@ function level(el: HTMLElement): number {
 export function useTreeKeys<T extends HTMLElement>() {
   const ref = useRef<T>(null);
   const current = useRef<HTMLElement | null>(null);
+  const tabbable = useRef<HTMLElement | null>(null);
 
-  // Keeps exactly one row tabbable as rows come and go.
-  const rove = useCallback(() => {
-    const root = ref.current;
-    if (!root) return;
-    const items = visibleItems(root);
-    const keep =
-      (current.current?.isConnected &&
-        items.includes(current.current) &&
-        current.current) ||
-      items.find(
-        (el) =>
-          el.getAttribute("aria-selected") === "true" ||
-          el.hasAttribute("aria-current"),
-      ) ||
-      items[0];
-    for (const el of root.querySelectorAll<HTMLElement>(ITEM)) {
-      const tabIndex = el === keep ? "0" : "-1";
-      if (el.getAttribute("tabindex") !== tabIndex)
-        el.setAttribute("tabindex", tabIndex);
-    }
-  }, [ref]);
+  // Keeps exactly one row tabbable as rows come and go, for the cost of
+  // the rows that came: a big tree changes often.
+  const rove = useCallback(
+    (records?: MutationRecord[]) => {
+      const root = ref.current;
+      if (!root) return;
+      const rows = records
+        ? records.flatMap((r) =>
+            [...r.addedNodes].flatMap((n) =>
+              n instanceof HTMLElement
+                ? [
+                    ...(n.matches(ITEM) ? [n] : []),
+                    ...n.querySelectorAll<HTMLElement>(ITEM),
+                  ]
+                : [],
+            ),
+          )
+        : root.querySelectorAll<HTMLElement>(ITEM);
+      for (const el of rows) setTabIndex(el, "-1");
+      const was = current.current;
+      const keep =
+        (was?.isConnected && root.contains(was) && was) ||
+        firstShown(
+          root,
+          (el) =>
+            el.getAttribute("aria-selected") === "true" ||
+            el.hasAttribute("aria-current"),
+        ) ||
+        firstShown(root, () => true);
+      const old = tabbable.current;
+      if (old && old !== keep) setTabIndex(old, "-1");
+      if (keep) setTabIndex(keep, "0");
+      tabbable.current = keep || null;
+    },
+    [ref],
+  );
 
   useEffect(() => {
     const root = ref.current;
     if (!root) return;
     rove();
-    const observer = new MutationObserver(rove);
+    const observer = new MutationObserver((records) => rove(records));
     observer.observe(root, {
       childList: true,
       subtree: true,
@@ -58,7 +88,7 @@ export function useTreeKeys<T extends HTMLElement>() {
       const item = (e.target as HTMLElement).closest?.<HTMLElement>(ITEM);
       if (!item || !root.contains(item)) return;
       current.current = item;
-      rove();
+      rove([]);
     };
     root.addEventListener("focusin", onFocusIn);
     return () => {
