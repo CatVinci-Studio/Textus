@@ -12,6 +12,14 @@ export interface AgentView {
   turns: AgentTurn[];
   /** Prose still coming in. */
   text: string;
+  /** The agent's plan, as it last sent it whole. */
+  plan?: PlanEntry[];
+}
+
+export interface PlanEntry {
+  content: string;
+  /** "pending", "in_progress" or "completed". */
+  status: string;
 }
 
 /** The name an external agent's steps go under in the history. */
@@ -111,6 +119,19 @@ export function applyUpdate(view: AgentView, update: SessionUpdate): AgentView {
         return { ...view, turns: [...turns, result(fields)] };
       // Nothing new to show: the same view, so nothing draws again.
       return turns === view.turns ? view : { ...view, turns };
+    }
+    case "plan": {
+      // Each one is the whole plan again.
+      const entries = (update as { entries?: unknown }).entries;
+      if (!Array.isArray(entries)) return view;
+      return {
+        ...view,
+        plan: entries.flatMap((e) =>
+          typeof e?.content === "string"
+            ? [{ content: e.content, status: String(e.status ?? "pending") }]
+            : [],
+        ),
+      };
     }
     default:
       return view;

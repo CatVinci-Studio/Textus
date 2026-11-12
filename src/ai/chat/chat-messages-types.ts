@@ -22,6 +22,10 @@ export interface ChatMessagesLabels
   waitedFor: (seconds: number) => string;
   /** "Show {n} earlier items", above a long conversation's newest part. */
   showEarlier: (count: number) => string;
+  /** "Looked at {n} things", an agent's reads and searches folded. */
+  agentLooks: (count: number) => string;
+  /** The heading of an agent's plan: "Plan". */
+  agentPlan: string;
   proposalTitle: string;
   proposalStatus: Record<Exclude<PendingStatus, "pending">, string>;
   proposalAccept: string;

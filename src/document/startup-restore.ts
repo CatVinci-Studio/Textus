@@ -368,7 +368,7 @@ async function fileThere(path: string): Promise<boolean> {
 
 /** `tabs` with the session's documents, which arrive in any order, back in
  *  `paths`' order, in the places they took; the others stay put. */
-export function inSessionOrder(tabs: DocTab[], paths: string[]): DocTab[] {
+function inSessionOrder(tabs: DocTab[], paths: string[]): DocTab[] {
   const rank = new Map(paths.map((p, i) => [p, i]));
   const rankOf = (tab: DocTab) => {
     const path = tab.path ?? tab.view?.resource ?? tab.importedFrom;

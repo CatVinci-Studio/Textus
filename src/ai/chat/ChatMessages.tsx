@@ -22,6 +22,7 @@ import type { ChatMessagesProps } from "./chat-messages-types";
 import { itemOf, readTranscript } from "./chat-transcript";
 import { ChatItem, ChatItems, type ChatItemsContext } from "./ChatItem";
 import { AgentPermission } from "../agents/AgentPermission";
+import { AgentPlan } from "../agents/AgentPlan";
 
 /** The statuses a card reaches by being decided, which collapse it. */
 const DECIDED: ReadonlySet<PendingStatus> = new Set([
@@ -218,6 +219,9 @@ export function ChatMessages({
       {list}
       {streaming && streaming.text.length > 0 && (
         <LiveReply text={streaming.text} labels={labels} onGrow={onLiveGrow} />
+      )}
+      {streaming?.plan && streaming.plan.length > 0 && (
+        <AgentPlan entries={streaming.plan} label={labels.agentPlan} />
       )}
       {streaming?.permission && (
         <AgentPermission

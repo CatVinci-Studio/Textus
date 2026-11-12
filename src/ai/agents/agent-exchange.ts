@@ -23,7 +23,12 @@ import {
   type SessionUpdate,
 } from "./acp-client";
 import { applyUpdate, finish, thoughtOf, type AgentView } from "./agent-view";
-import { askingMode, type ConfigOption } from "./agent-mode";
+import {
+  applyChoices,
+  heardCommands,
+  heardOptions,
+  heardValue,
+} from "./agent-offers";
 
 /**
  * One exchange with an external agent, in a session kept for the
@@ -72,6 +77,26 @@ export function endAgentSession(conversation: string): void {
   const session = sessions.get(conversation);
   sessions.delete(conversation);
   session?.connection.stop();
+}
+
+/** Sets an option of `agent` the user just chose in every session of it
+ *  running in this window, so none goes on in a mode its menu no longer
+ *  shows. */
+export function setAgentOption(agent: string, configId: string, value: string) {
+  for (const session of new Set(sessions.values())) {
+    if (session.agent !== agent || !session.sessionId) continue;
+    void session.connection
+      .request<{ configOptions?: unknown } | null>(
+        "session/set_config_option",
+        { sessionId: session.sessionId, configId, value },
+      )
+      .then((answer) =>
+        answer?.configOptions
+          ? void heardOptions(agent, answer.configOptions)
+          : heardValue(agent, configId, value),
+      )
+      .catch(() => undefined);
+  }
 }
 
 /** How long an agent has to stop once asked before its process is ended. */
@@ -185,9 +210,9 @@ async function start(
     const open = () =>
       session.connection.request<{
         sessionId: string;
-        configOptions?: ConfigOption[];
+        configOptions?: unknown;
       }>("session/new", { cwd, mcpServers: [] });
-    let opened: { sessionId: string; configOptions?: ConfigOption[] };
+    let opened: { sessionId: string; configOptions?: unknown };
     try {
       opened = await open();
     } catch (err) {
@@ -200,13 +225,15 @@ async function start(
       opened = await open();
     }
     session.sessionId = opened.sessionId;
-    // Every change asks first, in Textus, whatever mode it was set to.
-    const asking = askingMode(opened.configOptions);
-    if (asking)
-      await session.connection.request("session/set_config_option", {
+    // What the user chose for this agent; a change asks first unless
+    // they chose a mode that doesn't, whatever the agent's own settings say.
+    await applyChoices(agent.key, opened.configOptions, (configId, value) =>
+      session.connection.request("session/set_config_option", {
         sessionId: opened.sessionId,
-        ...asking,
-      });
+        configId,
+        value,
+      }),
+    );
   } catch (err) {
     session.connection.stop();
     throw explain(agent, err);
@@ -242,6 +269,14 @@ function explain(agent: ExternalAgent, err: unknown): Error {
 }
 
 function deliver(session: Session, update: SessionUpdate) {
+  // What the agent offers comes between exchanges too.
+  const u = update as Record<string, unknown>;
+  if (u.sessionUpdate === "available_commands_update")
+    return heardCommands(session.agent, u.availableCommands);
+  if (u.sessionUpdate === "config_option_update")
+    return void heardOptions(session.agent, u.configOptions);
+  if (u.sessionUpdate === "current_mode_update")
+    return heardValue(session.agent, "mode", String(u.currentModeId ?? ""));
   const events = session.events;
   if (!events) return;
   const thought = thoughtOf(update);

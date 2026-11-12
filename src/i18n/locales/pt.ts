@@ -954,6 +954,12 @@ Habilidades ficam na pasta skills/ ao lado deste arquivo, um arquivo
   agentDeepThinking: "Raciocínio profundo",
   agentDeepThinkingHint: `Raciocínio profundo: quando ativado, ${AI_NAME} pensa por mais tempo antes de responder; desativado, o modelo pensa o quanto pensa por padrão`,
   toggleOnHint: "{label} (Ativado: clique de novo para desativar)",
+  chatAgentPlan: "Plano",
+  chatAgentLooks: {
+    one: "Consultou {n} item",
+    many: "Consultou {n} itens",
+    other: "Consultou {n} itens",
+  },
   chatShowEarlier: {
     one: "Mostrar {n} item anterior",
     many: "Mostrar {n} de itens anteriores",

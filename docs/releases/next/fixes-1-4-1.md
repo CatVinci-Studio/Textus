@@ -1,5 +1,7 @@
 ### Improved
 
+- Claude Code, Codex, OpenCode and other agents can be set from their menu in the chat: their mode, model and effort, as each offers them, remembered per agent. They still start in the mode that asks before each change; another, such as Bypass permissions, is shown by name beside the agent while it is on. Typing `/` lists the agent's own commands.
+- An agent's steps read at a glance: an icon for each kind (reading, searching, running a command, editing), its output a click on the step itself, paths inside the folder shortened, several reads and searches in a row folded into one line, and its plan shown as a checklist while it works.
 - A long Claude Code, Codex or Textus AI session uses far less memory and work as it runs: replies reach the window in batches instead of a message a word, an agent's steps come without the whole files and outputs the chat never shows, only the reply being written redraws as it comes in, and a very long conversation draws its newest part, with the earlier ones a click away.
 - Textus keeps as much loaded as the computer's memory allows: on a machine with little memory, or when the system runs short, pages out of sight are let go sooner and caches are given back at once.
 - The file tree stays quick in a big folder: coming back to the window, or Textus AI writing a file, redraws only the rows that changed.
@@ -16,6 +18,7 @@
 
 - A picture embedded the Obsidian way (`![[image.png]]`) stays on show when clicked, as any picture does: its corner button or a double click enlarges it, and right-click offers View Image and Copy. The source comes up as the caret reaches it. (#659)
 - Reopening Textus brings its documents back as they were, the one in front first, without flicking through each tab.
+- Codex starts in Read-only, its mode that asks before changes, rather than Workspace access.
 - `Tab` in source mode indents instead of leaving the document, and `Shift + Tab` takes an indent back; press `Esc` first to move on with `Tab`. (#652)
 - A draft recovered after a crash asks before it is saved over a file that changed since its edits began, and a draft whose file can't be found comes back untitled instead of being dropped.
 - Updating Textus closes its windows as Quit does, asking about unsaved documents or keeping them as drafts, before the new version starts.

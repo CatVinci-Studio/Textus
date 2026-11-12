@@ -17,7 +17,9 @@ export interface ModeChoice {
 
 type Item =
   | { kind: "mode"; choice: ModeChoice }
-  | { kind: "model"; provider: string; model: string };
+  | { kind: "model"; provider: string; model: string }
+  /** One value of an external agent's own option (its mode, model...). */
+  | { kind: "option"; id: string; value: string; name: string };
 
 /**
  * The composer's mode and model in one control: "Write · gpt-6.1-sol". One
@@ -45,6 +47,7 @@ export function ModePicker({
   // An external agent works its own way: Textus AI's modes are for models.
   const shownModes =
     modes.length > 1 && models?.provider !== AGENTS_GROUP ? modes : [];
+  const agentOptions = models?.agentOptions?.options ?? [];
   const items: Item[] = [
     ...shownModes.map((choice) => ({ kind: "mode" as const, choice })),
     ...groups.flatMap((g) =>
@@ -54,11 +57,21 @@ export function ModePicker({
         model,
       })),
     ),
+    ...agentOptions.flatMap((o) =>
+      o.choices.map((c) => ({
+        kind: "option" as const,
+        id: o.id,
+        value: c.value,
+        name: c.name,
+      })),
+    ),
   ];
   const isSelected = (item: Item) =>
     item.kind === "mode"
       ? item.choice.value === mode
-      : item.provider === models?.provider && item.model === models.model;
+      : item.kind === "option"
+        ? agentOptions.some((o) => o.id === item.id && o.value === item.value)
+        : item.provider === models?.provider && item.model === models.model;
 
   const [open, setOpen] = useState(false);
   const [active, setActive] = useState(0);
@@ -96,6 +109,8 @@ export function ModePicker({
     close();
     if (isSelected(item)) return;
     if (item.kind === "mode") onMode(item.choice.value);
+    else if (item.kind === "option")
+      models?.agentOptions?.choose(item.id, item.value);
     else {
       models?.choose(item.provider, item.model);
       // An agent answers as itself: Research's paper isn't one of its modes.
@@ -140,7 +155,9 @@ export function ModePicker({
       key={
         item.kind === "mode"
           ? item.choice.value
-          : `${item.provider}/${item.model}`
+          : item.kind === "option"
+            ? `${item.id}=${item.value}`
+            : `${item.provider}/${item.model}`
       }
       id={`${listId}-${index}`}
       data-index={index}
@@ -175,6 +192,8 @@ export function ModePicker({
             {item.choice.hint}
           </span>
         </span>
+      ) : item.kind === "option" ? (
+        item.name
       ) : (
         item.model
       )}
@@ -200,6 +219,11 @@ export function ModePicker({
         {model && (
           <span className="tx-truncate mode-picker-model" title={model}>
             {model}
+          </span>
+        )}
+        {models?.agentOptions?.unasking && (
+          <span className="mode-picker-unasking">
+            {models.agentOptions.unasking}
           </span>
         )}
       </button>
@@ -240,6 +264,27 @@ export function ModePicker({
                 {g.models.map((m, i) =>
                   option(
                     { kind: "model", provider: g.provider, model: m },
+                    start + i,
+                  ),
+                )}
+              </Fragment>
+            );
+          })}
+          {agentOptions.map((o) => {
+            const start = items.findIndex(
+              (item) => item.kind === "option" && item.id === o.id,
+            );
+            return (
+              <Fragment key={o.id}>
+                <li
+                  role="presentation"
+                  className="tx-list-heading ui-select-group mode-picker-models"
+                >
+                  {o.name}
+                </li>
+                {o.choices.map((c, i) =>
+                  option(
+                    { kind: "option", id: o.id, value: c.value, name: c.name },
                     start + i,
                   ),
                 )}

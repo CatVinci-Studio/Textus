@@ -922,6 +922,8 @@ type /name in a conversation to use one.
   agentDeepThinking: "Deep thinking",
   agentDeepThinkingHint: `Deep thinking: when it's on, ${AI_NAME} thinks longer before it answers; when it's off, the model thinks as much as it does by default`,
   toggleOnHint: "{label} (On - click again to turn it off)",
+  chatAgentPlan: "Plan",
+  chatAgentLooks: { one: "Looked at {n} thing", other: "Looked at {n} things" },
   chatShowEarlier: {
     one: "Show {n} earlier item",
     other: "Show {n} earlier items",

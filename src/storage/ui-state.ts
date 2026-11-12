@@ -32,6 +32,9 @@ export interface UiState {
   themeChrome: ThemeChromeCache;
   /** The skills last run from the composer, newest first. */
   recentSkills: string[];
+  /** What each external agent last offered to set and its commands, for
+   *  its menus before its session starts. A cache; validated on read. */
+  agentOffers: unknown;
   /** The folder last opened in the sidebar, or null after Close Folder; the
    *  session's first window opens it again. */
   openFolder: string | null;
@@ -199,6 +202,11 @@ const LOCAL: {
   },
   recentSkills: {
     key: "textus-recent-skills",
+    decode: (raw) => JSON.parse(raw),
+    encode: (value) => JSON.stringify(value),
+  },
+  agentOffers: {
+    key: "textus-agent-offers",
     decode: (raw) => JSON.parse(raw),
     encode: (value) => JSON.stringify(value),
   },

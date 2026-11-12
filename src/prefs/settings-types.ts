@@ -92,6 +92,9 @@ export interface Settings {
    *  `contributes.agents`) Textus AI's chat talks to instead of a model;
    *  "" for none. */
   chatAgent: string;
+  /** What the user set for each external agent (its mode, model, effort:
+   *  the agent's own config options), by agent key, then option id. */
+  agentOptions: Record<string, Record<string, string>>;
   /// How a pending rewrite shows, as Word's markup views: "final" (result in
   /// the text, removals in the margin), "original" (struck original, new text
   /// in the margin; "inline" where no room) or "inline". Legacy "new" reads as "final".
@@ -297,6 +300,7 @@ export const DEFAULT_SETTINGS: Settings = {
   writingModels: {},
   agentModels: {},
   chatAgent: "",
+  agentOptions: {},
   revisionDisplay: "final",
   completionTone: "default",
   writingConventions: "automatic",

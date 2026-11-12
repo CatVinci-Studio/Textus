@@ -146,6 +146,14 @@ function readSettings(parsed: Raw | null): Settings {
           : DEFAULT_SETTINGS.aiProvider,
       agentModels: stringMap(parsed.agentModels),
       chatAgent: typeof parsed.chatAgent === "string" ? parsed.chatAgent : "",
+      agentOptions: isRecord(parsed.agentOptions)
+        ? Object.fromEntries(
+            Object.entries(parsed.agentOptions).map(([agent, chosen]) => [
+              agent,
+              stringMap(chosen),
+            ]),
+          )
+        : {},
       writingProvider:
         typeof parsed.writingProvider === "string"
           ? parsed.writingProvider

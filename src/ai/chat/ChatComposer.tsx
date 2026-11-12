@@ -120,6 +120,8 @@ export function ChatComposer({
     refreshRecent,
     skillTrigger,
     skillMenuOpen,
+    passThrough,
+    agentName,
   } = useComposerSkills({
     docPath,
     workspaceRoot,
@@ -128,6 +130,7 @@ export function ChatComposer({
     lang: picker.lang,
     // Research has no skills: the message is a paper's topic.
     mode: mode === "research" ? null : mode,
+    agentAnswers: !compact && mode !== "create",
   });
 
   const mentionPicker = useMentionPicker({
@@ -175,6 +178,7 @@ export function ChatComposer({
   // dead key.
   const { sections: pickerSections, empty: pickerEmpty } = pickerContent({
     skillTrigger: skillMenuOpen ? skillTrigger : null,
+    commandsOf: agentName,
     mentionQuery: mentionMenuOpen ? mentionQuery : null,
     kinds,
     available,
@@ -211,7 +215,9 @@ export function ChatComposer({
       onResearch(typed, attachments);
       return;
     }
-    const message = resolveSkillMessage(typed, skills, resolveName);
+    const message = passThrough
+      ? typed
+      : resolveSkillMessage(typed, skills, resolveName);
     // While a reply is coming the message joins the queue.
     if (!message) return;
     if (message !== typed) {

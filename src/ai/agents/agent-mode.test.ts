@@ -1,5 +1,5 @@
 import { describe, expect, it } from "vitest";
-import { askingMode } from "./agent-mode";
+import { askingValue, readOptions } from "./agent-mode";
 
 // Claude Agent's modes, as its ACP adapter (0.104) offers them.
 const claude = [
@@ -84,19 +84,41 @@ const opencode = {
   ],
 };
 
+// DeepSeek's (dsh 0.2.2): its models in groups, each value a JSON string.
+const deepseek = {
+  id: "model",
+  name: "Model",
+  category: "model",
+  type: "select",
+  currentValue: '["deepseek-official","deepseek-v4-flash"]',
+  options: [
+    {
+      group: "deepseek-official",
+      name: "DeepSeek",
+      options: [
+        { value: '["deepseek-official","deepseek-v4-flash"]', name: "flash" },
+        { value: '["deepseek-official","deepseek-v4-pro"]', name: "pro" },
+      ],
+    },
+  ],
+};
+
+describe("what an agent offers", () => {
+  it("reads lists of two or more, a grouped one's choices in a row", () => {
+    const [model] = readOptions([deepseek]);
+    expect(model.choices.map((c) => c.name)).toEqual(["flash", "pro"]);
+    expect(model.current).toBe(deepseek.currentValue);
+    // One choice only, or not a list: nothing to pick.
+    expect(readOptions([claude[1], { id: "x", type: "boolean" }])).toEqual([]);
+    expect(readOptions(undefined)).toEqual([]);
+  });
+});
+
 describe("the mode an agent starts in", () => {
   it("is the one that asks, whatever the agent's own settings chose", () => {
-    expect(askingMode(claude)).toEqual({ configId: "mode", value: "default" });
-    expect(askingMode([codex])).toEqual({
-      configId: "mode",
-      value: "read-only",
-    });
-    expect(askingMode([opencode])).toBeNull();
-  });
-
-  it("is left alone when it asks already, or the agent has no modes", () => {
-    expect(askingMode([{ ...claude[0], currentValue: "default" }])).toBeNull();
-    expect(askingMode([claude[1]])).toBeNull();
-    expect(askingMode(undefined)).toBeNull();
+    expect(askingValue(readOptions(claude))).toBe("default");
+    expect(askingValue(readOptions([codex]))).toBe("read-only");
+    expect(askingValue(readOptions([opencode]))).toBeNull();
+    expect(askingValue(readOptions([deepseek]))).toBeNull();
   });
 });

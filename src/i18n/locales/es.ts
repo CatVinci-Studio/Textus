@@ -968,6 +968,12 @@ para usar una.
   agentDeepThinking: "Pensamiento profundo",
   agentDeepThinkingHint: `Pensamiento profundo: si está activado, ${AI_NAME} piensa más antes de responder; si no, el modelo piensa lo que piensa por defecto`,
   toggleOnHint: "{label} (Activado: haz clic otra vez para desactivar)",
+  chatAgentPlan: "Plan",
+  chatAgentLooks: {
+    one: "Revisó {n} cosa",
+    many: "Revisó {n} cosas",
+    other: "Revisó {n} cosas",
+  },
   chatShowEarlier: {
     one: "Mostrar {n} elemento anterior",
     many: "Mostrar {n} de elementos anteriores",

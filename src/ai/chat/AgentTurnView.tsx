@@ -1,5 +1,5 @@
 import { pictureSrc } from "../revision/generated-images";
-import { lazy, Suspense, useState } from "react";
+import { lazy, Suspense, useState, type ReactNode } from "react";
 import type { AgentTurn, ImageAttachment, WebSource } from "../types";
 import { links } from "../../platform/ipc";
 import { MarkdownText } from "../MarkdownText";
@@ -26,7 +26,7 @@ import { CommandText } from "../agents/AgentPermission";
 import { currentStrings } from "../../i18n/current";
 
 /** A tool's note longer than this is cut to two lines until opened. */
-const LONG_ACTIVITY = 160;
+export const LONG_ACTIVITY = 160;
 
 /** The main window, whose document a reply can go into. */
 const inEditorWindow = () =>
@@ -167,7 +167,7 @@ export function AgentTurnView({
       );
     }
     case "ToolResult":
-      return <ToolOutput output={turn.output} label={labels.toolResult} />;
+      return <ToolOutput output={turn.output} summary={labels.toolResult} />;
     default:
       return null;
   }
@@ -285,7 +285,17 @@ const LONG_OUTPUT = 4000;
  * long one (a command reading many files) its start until asked, so a
  * session of them doesn't weigh on the conversation.
  */
-function ToolOutput({ output, label }: { output: string; label: string }) {
+export function ToolOutput({
+  output = "",
+  summary,
+  parts,
+}: {
+  output?: string;
+  /** The line it opens from: "Result", or the step itself. */
+  summary: ReactNode;
+  /** Rows it holds instead of text: steps folded into it. */
+  parts?: ReactNode;
+}) {
   const [open, setOpen] = useState(false);
   const [all, setAll] = useState(false);
   const cut = !all && output.length > LONG_OUTPUT;
@@ -294,8 +304,11 @@ function ToolOutput({ output, label }: { output: string; label: string }) {
       className="disclosure agent-tool-result"
       onToggle={(e) => setOpen(e.currentTarget.open)}
     >
-      <summary>{label}</summary>
-      {open && <pre>{cut ? `${output.slice(0, LONG_OUTPUT)}…` : output}</pre>}
+      <summary>{summary}</summary>
+      {open && parts && <div className="agent-steps-folded">{parts}</div>}
+      {open && !parts && (
+        <pre>{cut ? `${output.slice(0, LONG_OUTPUT)}…` : output}</pre>
+      )}
       {open && cut && (
         <button
           type="button"

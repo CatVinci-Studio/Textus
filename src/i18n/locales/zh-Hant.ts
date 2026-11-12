@@ -852,6 +852,8 @@ export default {
   agentDeepThinking: "深度思考",
   agentDeepThinkingHint: `深度思考：開啟後 ${AI_NAME} 會先想得更久再回答；關閉時依模型預設的思考量`,
   toggleOnHint: "{label}（已開啟，再按一下關閉）",
+  chatAgentPlan: "計畫",
+  chatAgentLooks: { other: "查看與搜尋 {n} 次" },
   chatShowEarlier: { other: "顯示更早的 {n} 項" },
   agentWaitedFor: { other: "{n} 秒" },
   agentThinkingFor: { other: "思考中 · {n} 秒" },

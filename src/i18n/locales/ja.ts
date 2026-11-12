@@ -907,6 +907,8 @@ ${AI_NAME}への執筆の指示です。すべての文書に適用されます�
   agentDeepThinking: "じっくり考える",
   agentDeepThinkingHint: `じっくり考える：オンにすると、${AI_NAME} は時間をかけて考えてから答えます。オフのときはモデル既定の考え方です`,
   toggleOnHint: "{label}（オン・もう一度クリックでオフ）",
+  chatAgentPlan: "計画",
+  chatAgentLooks: { other: "{n} 件を確認・検索" },
   chatShowEarlier: { other: "前の {n} 件を表示" },
   agentWaitedFor: { other: "{n} 秒" },
   agentThinkingFor: { other: "考え中 · {n} 秒" },
