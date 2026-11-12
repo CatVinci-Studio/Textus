@@ -14,7 +14,12 @@ export interface ConfigOption {
 }
 
 /** Words an agent uses for its mode that asks first, best first. */
-const ASKING = [/always ask/i, /\bmanual\b/i, /\bask\b/i, /^default$/i];
+const ASKING = [
+  /always ask/i,
+  /requires approval/i,
+  /\bmanual\b/i,
+  /^default$/i,
+];
 
 /** The mode option and the value that asks, if the agent has one and isn't
  *  in it already. */
