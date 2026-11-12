@@ -26,6 +26,9 @@ export interface DividerRects {
   /** The extent of the two sides it parts, along its branch. */
   before: { start: number; end: number };
   after: { start: number; end: number };
+  /** The side of a fixed width (a panel's island, or a column only of
+   *  them), which the divider resizes in pixels; null for two shares. */
+  fixed: "before" | "after" | null;
 }
 
 export interface IslandsLayout {
@@ -118,12 +121,10 @@ function place(
   }
   const row = node.direction === "row";
   const gaps = input.gap * (node.children.length - 1);
-  const lengths = distribute(
-    node.children.map((c, i) =>
-      ruleOf(input, c, node.direction, node.sizes[i]),
-    ),
-    (row ? box.w : box.h) - gaps,
+  const rules = node.children.map((c, i) =>
+    ruleOf(input, c, node.direction, node.sizes[i]),
   );
+  const lengths = distribute(rules, (row ? box.w : box.h) - gaps);
   let at = row ? box.x : box.y;
   const parts = lengths.map((length) => {
     const start = at;
@@ -152,6 +153,12 @@ function place(
         : { x: box.x, y: end, w: box.w, h: next.start - end },
       before: { start, end },
       after: next,
+      fixed:
+        rules[i].fixed === rules[i + 1].fixed
+          ? null
+          : rules[i].fixed
+            ? "before"
+            : "after",
     });
   });
 }

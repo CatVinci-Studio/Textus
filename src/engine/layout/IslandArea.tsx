@@ -5,7 +5,7 @@ import {
   type CSSProperties,
   type ReactNode,
 } from "react";
-import { nodeAt, panesOf, type Pane, type SplitDirection } from "./tree";
+import { panesOf, type Pane, type SplitDirection } from "./tree";
 import { isSplit, type SplitLayout } from "./ops";
 import { islandKeys } from "./island-keys";
 import { IslandNumbers } from "./IslandNumbers";
@@ -139,7 +139,7 @@ export function IslandArea({
     >
       {drawn}
       <IslandNumbers />
-      {solved?.dividers.map(({ line, rect, before, after }) => (
+      {solved?.dividers.map(({ line, rect, before, after, fixed }) => (
         <SplitDivider
           key={dividerKey(line.path, line.index)}
           frame={dividerKey(line.path, line.index)}
@@ -150,7 +150,7 @@ export function IslandArea({
           // one lower down stops at the island above.
           reach={!!area && rect.y <= area.y + 0.5}
           sides={{ before, after }}
-          fixed={fixedSide(layout, line.path, line.index, isPanel)}
+          fixed={fixed}
           t={t}
         />
       ))}
@@ -200,18 +200,3 @@ function ruleFor(panel: number, isPanel: (pane: Pane) => boolean) {
     );
 }
 
-/** Which side of a divider is a panel's island, keeping its width. */
-function fixedSide(
-  layout: SplitLayout,
-  path: number[],
-  index: number,
-  isPanel: (pane: Pane) => boolean,
-): "before" | "after" | null {
-  const side = (i: number) => {
-    const node = nodeAt(layout.root, [...path, i]);
-    return node?.kind === "pane" && isPanel(node);
-  };
-  const before = side(index);
-  const after = side(index + 1);
-  return before === after ? null : before ? "before" : "after";
-}

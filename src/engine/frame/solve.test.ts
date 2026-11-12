@@ -57,6 +57,23 @@ describe("solveIslands", () => {
     expect(dividers[0].rect).toEqual({ x: 792, y: 0, w: 8, h: 800 });
     expect(dividers[0].before).toEqual({ start: 0, end: 792 });
     expect(dividers[0].after).toEqual({ start: 800, end: 1200 });
+    expect(dividers[0].fixed).toBe("after");
+    // A column only of panels is fixed as one: its divider sizes it too.
+    const column: LayoutNode = {
+      kind: "split",
+      direction: "row",
+      children: [
+        pane("doc"),
+        {
+          kind: "split",
+          direction: "column",
+          children: [pane("ai"), pane("settings")],
+          sizes: [0.5, 0.5],
+        },
+      ],
+      sizes: [0.5, 0.5],
+    };
+    expect(solveIslands(input(column)).dividers[0].fixed).toBe("after");
   });
 
   it("stacked islands: the lower one's row is inner, under the gap", () => {
