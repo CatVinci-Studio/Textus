@@ -194,6 +194,8 @@ describe("file-backed settings", () => {
     remote({ theme: "light" }, 11, "main");
     expect(probe.textContent).toContain("dark|");
     expect(loadSettings().zoom).toBe(1.5);
+    // What a conversation reads (the store), too: not the other window's.
+    expect(loadSettings().agentWorkspaceRoot).toBe("/a");
   });
 
   it("corrects a stale boot snapshot once the live values arrive", async () => {

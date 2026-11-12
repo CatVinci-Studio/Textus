@@ -23,6 +23,7 @@ import {
   readLocalSettings,
   remoteVersion,
   subscribeRemote,
+  WINDOW_OWN,
   writeLocalSettings,
 } from "./settings-store";
 export {
@@ -90,14 +91,13 @@ export function SettingsProvider({ children }: { children: ReactNode }) {
     // launch reads the same, not a partial write's.
     if (!readBoot() && readLocalSettings() === null)
       writeLocalSettings({ ...loadSettings() });
-    // Another window changed something. `zoom` stays this window's own, and
-    // so does the AI's folder: each window works in the folder it opened.
+    // Another window changed something; this window's own fields stay
+    // (settings-store's WINDOW_OWN).
     const adopt = () => {
       const incoming = loadSettings();
       setSettingsState((prev) => ({
         ...incoming,
-        zoom: prev.zoom,
-        agentWorkspaceRoot: prev.agentWorkspaceRoot,
+        ...Object.fromEntries(WINDOW_OWN.map((key) => [key, prev[key]])),
       }));
     };
     // Another window's language, once its strings are here too.

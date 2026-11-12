@@ -66,19 +66,25 @@ function fileStore(): SettingsSync | null {
   void listenToThisWindow<SettingsChanged>("settings-changed", (event) => {
     const { rev, patch, from } = event.payload;
     if (from === boot.label || !sync) return;
-    // Zoom is each window's own: saved for the next window, never pushed to open ones.
+    // A window's own fields: saved for the next window, never pushed to
+    // open ones.
     const shared = { ...patch };
-    delete shared.zoom;
+    for (const key of WINDOW_OWN) delete shared[key];
     if (sync.remote(shared, rev)) notifyRemote();
   });
   return sync;
 }
 
-/** Adopts a full snapshot from Rust, keeping this window's zoom. */
+/** Settings each window keeps its own: its zoom, and the folder its AI
+ *  works in (each window works in the folder it opened). */
+export const WINDOW_OWN = ["zoom", "agentWorkspaceRoot"] as const;
+
+/** Adopts a full snapshot from Rust, keeping this window's own fields. */
 function adopt(value: Raw, rev: number) {
   if (!sync) return;
   const next = { ...value };
-  if (sync.raw.zoom !== undefined) next.zoom = sync.raw.zoom;
+  for (const key of WINDOW_OWN)
+    if (sync.raw[key] !== undefined) next[key] = sync.raw[key];
   if (sync.snapshot(next, rev)) notifyRemote();
 }
 
