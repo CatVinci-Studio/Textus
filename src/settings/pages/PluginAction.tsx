@@ -14,6 +14,7 @@ import {
   subscribeCatalog,
   updateFor,
   neededTextus,
+  catalogItem,
 } from "../../plugins/store/catalog";
 import { canSwitch } from "../../plugins/store/lifecycle";
 import { usePluginInstall } from "./usePluginInstall";
@@ -27,10 +28,7 @@ export function usePluginActions(t: Strings) {
   const { installing, install, enable, uninstall } = actions;
   const actionFor = (id: string) => {
     const record = plugins.records.find((r) => r.id === id);
-    const item =
-      catalog.status === "ready"
-        ? catalog.items.find((i) => i.id === id)
-        : undefined;
+    const item = catalogItem(id, catalog);
     return (
       <PluginAction
         t={t}

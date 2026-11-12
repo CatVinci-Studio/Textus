@@ -4,7 +4,7 @@ import type { Strings } from "../../i18n/strings";
 import type { Shortcuts } from "../../prefs/SettingsContext";
 import type { PluginOrigin } from "./files";
 import { localize, type Permission, type PluginManifest } from "./manifest";
-import type { PluginStatus } from "./lifecycle";
+import { canRun, type PluginStatus } from "./lifecycle";
 
 /**
  * The plugins as the window draws them: one record per plugin, published to
@@ -82,6 +82,17 @@ export function update(id: string, change: Partial<PluginRecord>) {
 export function subscribePlugins(listener: () => void): () => void {
   listeners.add(listener);
   return () => listeners.delete(listener);
+}
+
+/** The plugins running now - each on, every plugin switched on - with
+ *  their manifests: what every contribution is read from. */
+export function runningPlugins(
+  from: PluginsSnapshot,
+): (PluginRecord & { manifest: PluginManifest })[] {
+  return from.records.filter(
+    (r): r is PluginRecord & { manifest: PluginManifest } =>
+      canRun(r.status, from.allOn) && !!r.manifest,
+  );
 }
 
 export function pluginsSnapshot(): PluginsSnapshot {

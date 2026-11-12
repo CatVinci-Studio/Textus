@@ -162,13 +162,23 @@ export function neededTextus(item: CatalogItem): string | null {
 
 /** The catalog's newer version of an installed plugin, if it has one that
  *  runs on this Textus; one that needs a newer Textus waits for it. */
+/** The catalog's item `id`, once the catalog is read. */
+export function catalogItem(
+  id: string | null | undefined,
+  from: CatalogState = state,
+): CatalogItem | undefined {
+  return id && from.status === "ready"
+    ? from.items.find((i) => i.id === id)
+    : undefined;
+}
+
 export function updateFor(
   id: string,
   from: CatalogState = state,
 ): string | null {
   if (from.status !== "ready") return null;
   const installed = pluginRecord(id)?.manifest?.version;
-  const offered = from.items.find((i) => i.id === id);
+  const offered = catalogItem(id, from);
   return installed &&
     offered &&
     !neededTextus(offered) &&
@@ -181,8 +191,7 @@ export function updateFor(
  *  which asks for its permissions; an update keeps it as it was. One that
  *  needs a newer Textus is refused before anything is fetched. */
 export async function installFromCatalog(id: string): Promise<void> {
-  const offered =
-    state.status === "ready" ? state.items.find((i) => i.id === id) : null;
+  const offered = catalogItem(id);
   const needs = offered && neededTextus(offered);
   if (needs)
     throw new Error(

@@ -36,6 +36,7 @@ import {
   loadCatalog,
   subscribeCatalog,
   updateFor,
+  catalogItem,
 } from "../../plugins/store/catalog";
 import { pluginMatches } from "../../plugins/store/plugin-records";
 import { PluginIcon } from "./PluginArt";
@@ -91,10 +92,7 @@ export function PluginsPage({ t }: SettingsPageProps) {
       onOpen={() => setOpen(record.id)}
     />
   );
-  const item =
-    openItem && catalog.status === "ready"
-      ? catalog.items.find((i) => i.id === openItem)
-      : undefined;
+  const item = catalogItem(openItem, catalog);
   const installed = new Set(snapshot.records.map((r) => r.id));
   // Two or more with updates: one button takes them all (one shows its own).
   const updates =
@@ -129,10 +127,7 @@ export function PluginsPage({ t }: SettingsPageProps) {
         onEditWithAi={() => requestCreate(editRequest(openRecord, t))}
         onEnable={(on) => void enable(openRecord, on)}
         onUpdate={() => {
-          const item =
-            catalog.status === "ready"
-              ? catalog.items.find((i) => i.id === openRecord.id)
-              : undefined;
+          const item = catalogItem(openRecord.id, catalog);
           if (item) void install(item);
         }}
         attempt={attempt}

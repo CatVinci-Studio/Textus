@@ -33,6 +33,7 @@ import {
   sortCatalog,
   subscribeCatalog,
   updateFor,
+  catalogItem,
 } from "../../plugins/store/catalog";
 import { pluginMatches } from "../../plugins/store/plugin-records";
 import type { PluginManifest } from "../../plugins/store/manifest";
@@ -169,9 +170,7 @@ export function PluginsPanel({
                     className="tx-button primary plugins-panel-update"
                     disabled={installing !== null}
                     onClick={() => {
-                      const item = catalog.items.find(
-                        (i) => i.id === record.id,
-                      );
+                      const item = catalogItem(record.id, catalog);
                       if (item) void install(item);
                     }}
                   >

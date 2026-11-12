@@ -7,6 +7,7 @@ import { localize, matchesFilename } from "./manifest";
 import { claimKey, frontMatterClaim, ownerOf } from "../contributions/owners";
 import {
   pluginsSnapshot,
+  runningPlugins,
   windowInfo,
   type PluginsSnapshot,
 } from "./plugin-records";
@@ -21,10 +22,8 @@ import {
 export function customEditorFor(
   path: string,
 ): { plugin: string; viewType: string; title: string } | null {
-  if (!pluginsSnapshot().allOn) return null;
   const name = basename(path);
-  for (const record of pluginsSnapshot().records) {
-    if (record.status !== "on" || !record.manifest) continue;
+  for (const record of runningPlugins(pluginsSnapshot())) {
     for (const editor of record.manifest.contributes.customEditors)
       if (
         editor.priority === "default" &&
@@ -52,11 +51,10 @@ export function customEditorForContent(
   path: string,
   content: string,
 ): { plugin: string; viewType: string; title: string } | null {
-  if (!pluginsSnapshot().allOn || !isNoteFile(path)) return null;
+  if (!isNoteFile(path)) return null;
   const keys = frontMatterKeys(content);
   if (!keys.length) return null;
-  for (const record of pluginsSnapshot().records) {
-    if (record.status !== "on" || !record.manifest) continue;
+  for (const record of runningPlugins(pluginsSnapshot())) {
     for (const editor of record.manifest.contributes.customEditors)
       if (
         editor.priority === "default" &&
@@ -82,10 +80,8 @@ export function pluginMenuEntries(
   menu: "app/plugins" | "app/tray" = "app/plugins",
   language: string = windowInfo().language(),
 ): { command: string; label: string; group: string }[] {
-  if (!from.allOn) return [];
-  return from.records.flatMap((record) => {
+  return runningPlugins(from).flatMap((record) => {
     const manifest = record.manifest;
-    if (record.status !== "on" || !manifest) return [];
     // Each command under its plugin's name, for a submenu of its own.
     const group = localize(manifest, manifest.name, language);
     const commands = (manifest.contributes.menus[menu] ?? []).map((item) => {

@@ -1,5 +1,5 @@
 import { runCommand } from "../../registry/commands";
-import { pluginsSnapshot } from "../store/plugin-records";
+import { pluginsSnapshot, runningPlugins } from "../store/plugin-records";
 
 /**
  * Links plugins open: a web link Ctrl/Cmd+clicked goes to the first plugin
@@ -18,16 +18,12 @@ function handlers(): Handler[] {
   const snapshot = pluginsSnapshot();
   if (snapshot === cachedFor) return cached;
   cachedFor = snapshot;
-  cached = snapshot.allOn
-    ? snapshot.records.flatMap((r) =>
-        r.status === "on" && r.manifest
-          ? r.manifest.contributes.links.map((l) => ({
-              pattern: new RegExp(l.pattern, "u"),
-              command: l.command,
-            }))
-          : [],
-      )
-    : [];
+  cached = runningPlugins(snapshot).flatMap((r) =>
+    r.manifest.contributes.links.map((l) => ({
+      pattern: new RegExp(l.pattern, "u"),
+      command: l.command,
+    })),
+  );
   return cached;
 }
 

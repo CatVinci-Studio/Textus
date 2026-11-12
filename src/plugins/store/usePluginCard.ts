@@ -1,5 +1,10 @@
 import { useSyncExternalStore } from "react";
-import { catalogSnapshot, subscribeCatalog, type CatalogItem } from "./catalog";
+import {
+  catalogSnapshot,
+  subscribeCatalog,
+  type CatalogItem,
+  catalogItem,
+} from "./catalog";
 import {
   answerPluginCard,
   currentPluginCard,
@@ -21,10 +26,7 @@ export function usePluginCard(): {
   const request = useSyncExternalStore(subscribePluginCard, currentPluginCard);
   const catalog = useSyncExternalStore(subscribeCatalog, catalogSnapshot);
   if (!request) return null;
-  const item =
-    catalog.status === "ready"
-      ? (catalog.items.find((i) => i.id === request.plugin) ?? null)
-      : null;
+  const item = catalogItem(request.plugin, catalog) ?? null;
   return { request, item, answer: answerPluginCard };
 }
 

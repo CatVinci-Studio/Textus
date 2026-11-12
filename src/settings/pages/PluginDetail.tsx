@@ -8,6 +8,7 @@ import {
   catalogSnapshot,
   subscribeCatalog,
   updateFor,
+  catalogItem,
 } from "../../plugins/store/catalog";
 import type { Strings } from "../../i18n/strings";
 import { MarketPluginPage } from "./MarketPluginPage";
@@ -35,10 +36,7 @@ export function PluginDetail({
   const { installing, install, enable, attempt, actionFor } =
     usePluginActions(t);
   const record = snapshot.records.find((r) => r.id === id);
-  const item =
-    catalog.status === "ready"
-      ? catalog.items.find((i) => i.id === id)
-      : undefined;
+  const item = catalogItem(id, catalog);
   if (record)
     return (
       <PluginPage
