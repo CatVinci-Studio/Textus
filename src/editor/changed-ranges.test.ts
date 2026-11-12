@@ -2,7 +2,7 @@ import { describe, expect, it } from "vitest";
 import { Schema, type Node as ProseNode } from "@milkdown/kit/prose/model";
 import { EditorState } from "@milkdown/kit/prose/state";
 import { Decoration, type DecorationSet } from "@milkdown/kit/prose/view";
-import { decorateAll, redecorateChanged } from "./changed-ranges";
+import { decorateAll, redecorateChanged, touchesNode } from "./changed-ranges";
 
 const schema = new Schema({
   nodes: {
@@ -128,5 +128,29 @@ describe("redecorateChanged, blocks side by side", () => {
     expect(ranges(redecorateChanged(set, tr, isCode, tokens))).toEqual([
       [4, 5],
     ]);
+  });
+});
+
+describe("touchesNode", () => {
+  it("tells an edit in or beside a code block, or one that removes it, from one elsewhere", () => {
+    const { state } = start();
+    const doc = state.doc;
+    const codeAt = doc.child(0).nodeSize;
+    const lastAt = codeAt + doc.child(1).nodeSize;
+    const far = schema.node("doc", null, [
+      ...[0, 1, 2].map((i) => doc.child(i)),
+      schema.node("paragraph", null, [schema.text("three")]),
+      schema.node("paragraph", null, [schema.text("four")]),
+    ]);
+    const farState = EditorState.create({ doc: far });
+    const typeIn = (s: EditorState, pos: number) => s.tr.insertText("z", pos);
+    // Typing in the last paragraph, two blocks after the code.
+    const farAt = far.content.size - 2;
+    expect(touchesNode(typeIn(farState, farAt), isCode)).toBe(false);
+    expect(touchesNode(typeIn(state, codeAt + 2), isCode)).toBe(true);
+    expect(touchesNode(state.tr.delete(codeAt, lastAt), isCode)).toBe(true);
+    expect(
+      touchesNode(state.tr.setNodeAttribute(codeAt, "language", "x"), isCode),
+    ).toBe(true);
   });
 });

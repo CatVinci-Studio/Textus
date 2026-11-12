@@ -5,6 +5,7 @@ import {
   drawEverything,
   drawWhenVisible,
   registerDrawAll,
+  stopDrawing,
 } from "./draw-when-visible";
 
 // A stand-in IntersectionObserver the test drives by hand.
@@ -63,6 +64,18 @@ describe("drawWhenVisible", () => {
     observed[0].fire(true);
     expect(draw).toHaveBeenCalledOnce();
     expect(el.hasAttribute(PENDING_ATTR)).toBe(false);
+    expect(observed).toHaveLength(0);
+  });
+
+  it("lets go of a placeholder taken out before it was ever near", () => {
+    vi.stubGlobal("IntersectionObserver", FakeObserver);
+    const editor = editorIn();
+    const el = document.createElement("span");
+    editor.append(el);
+    drawWhenVisible(el, editor, vi.fn());
+    expect(observed).toHaveLength(1);
+    el.remove();
+    stopDrawing(el);
     expect(observed).toHaveLength(0);
   });
 

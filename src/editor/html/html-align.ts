@@ -78,6 +78,7 @@ function draw(doc: ProseNode, selection: Selection): DecorationSet {
     .map(({ from, to }) =>
       Decoration.node(from, to, { class: "html-align-tag" }),
     );
+  if (!tags.length) return DecorationSet.empty;
   return DecorationSet.create(doc, [...blocks, ...hidden]);
 }
 
@@ -89,8 +90,9 @@ export const htmlAlignPlugin = $prose(
       key,
       state: {
         init: (_config, state) => draw(state.doc, state.selection),
+        // A caret move matters only where there are tags to show.
         apply: (tr, prev, _old, state) =>
-          tr.docChanged || tr.selectionSet
+          tr.docChanged || (tr.selectionSet && prev !== DecorationSet.empty)
             ? draw(state.doc, state.selection)
             : prev,
       },

@@ -226,6 +226,7 @@ function createImageView(
   });
   img.addEventListener("error", () => void showMissing());
 
+  let drawn: string | null = null;
   const apply = (n: ProseNode) => {
     const before = shown();
     current = n;
@@ -233,12 +234,17 @@ function createImageView(
     if (shown() !== before) clearMissing();
     const { title } = readImagePresentation(n.attrs.title as string);
     const width = shownImageWidth(n.attrs);
-    showDocImage(
-      img,
-      (n.attrs.src as string) ?? "",
-      docPath(),
-      () => current === n,
-    );
+    // Only another picture loads again: setting src anew blanked it.
+    const want = shown();
+    if (want !== drawn) {
+      drawn = want;
+      showDocImage(
+        img,
+        (n.attrs.src as string) ?? "",
+        docPath(),
+        () => shown() === want,
+      );
+    }
     img.alt = splitAltSize((n.attrs.alt as string) ?? "").alt;
     if (title) img.title = title;
     else img.removeAttribute("title");

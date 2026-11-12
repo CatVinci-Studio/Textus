@@ -40,6 +40,32 @@ export function touchedBlocks(
   return [...blocks].sort((a, b) => a[0] - b[0]);
 }
 
+/** Whether the blocks `tr` touched hold a node that `match`es, before or
+ *  after it: an edit elsewhere leaves such nodes' decorations as mapped. */
+export function touchesNode(
+  tr: Transaction,
+  match: (node: ProseNode) => boolean,
+): boolean {
+  const after = changedRanges(tr);
+  const back = tr.mapping.invert();
+  const before = after.map(
+    ([from, to]) => [back.map(from, -1), back.map(to, 1)] as const,
+  );
+  const holds = (
+    doc: ProseNode,
+    ranges: readonly (readonly [number, number])[],
+  ) =>
+    touchedBlocks(doc, ranges).some(([from, to]) => {
+      let found = false;
+      doc.nodesBetween(from, to, (node) => {
+        if (found || match(node)) found = true;
+        return !found && !node.isTextblock;
+      });
+      return found;
+    });
+  return holds(tr.doc, after) || holds(tr.before, before);
+}
+
 /** Whether `deco` is one of those drawn for the node at [from, to]: they
  *  lie inside it, but a widget at its very start is the node before's (a
  *  node's widget sits at its end, side -1 or 1). */
