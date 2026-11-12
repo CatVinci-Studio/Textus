@@ -9,12 +9,11 @@ import {
 } from "./tutorial-steps";
 
 describe("the tour", () => {
-  it("is eight steps: Markdown, the palette, the store, then the AI writing and continuing", () => {
+  it("is seven steps: Markdown, finding things, then the AI writing and continuing", () => {
     expect(TUTORIAL_STEPS.map((step) => step.id)).toEqual([
       "welcome",
       "wysiwyg",
       "palette",
-      "plugins",
       "connect",
       "write",
       "continuation",
@@ -36,7 +35,6 @@ describe("the tour", () => {
     expect(chapterOf).toMatchObject({
       welcome: "start",
       wysiwyg: "writing",
-      plugins: "writing",
       connect: "connect",
       write: "ai",
       continuation: "ai",
@@ -57,12 +55,10 @@ describe("the tour", () => {
     ).toEqual(["welcome", "connect", "done"]);
   });
 
-  it("gives every lesson things to do and, but the palette and plugins tips, an animation; the AI ones are AI", () => {
+  it("gives every lesson things to do and, but the finding-things tip, an animation; the AI ones are AI", () => {
     for (const step of TUTORIAL_STEPS) {
       const lesson = step.layout === "card";
-      expect(!!step.clip, step.id).toBe(
-        lesson && step.id !== "palette" && step.id !== "plugins",
-      );
+      expect(!!step.clip, step.id).toBe(lesson && step.id !== "palette");
       expect(!!step.ai, step.id).toBe(step.chapter === "ai");
       if (lesson) expect(step.tasks?.length, step.id).toBeGreaterThan(0);
     }
@@ -78,10 +74,10 @@ describe("the tour", () => {
     expect(modes).toEqual({ write: "write" });
   });
 
-  it("locks every lesson until it is done, except the palette and plugins tips", () => {
+  it("locks every lesson until it is done, except the finding-things tip", () => {
     expect(
       TUTORIAL_STEPS.filter((step) => step.optional).map((step) => step.id),
-    ).toEqual(["palette", "plugins"]);
+    ).toEqual(["palette"]);
   });
 
   it("links to the clips Rust lets it open, and only those", () => {

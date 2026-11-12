@@ -74,7 +74,7 @@
    box flush against the screen's edge. */
 :root[data-window-chrome="mobile"] .window-bar-toggle-on {
   background: none;
-  color: var(--ui-accent);
+  color: var(--ui-accent-text);
 }
 
 /* Focus rings are for keyboards. WebKit counts a focus the app moves itself

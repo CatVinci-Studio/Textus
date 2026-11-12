@@ -1,6 +1,6 @@
 import { useState } from "react";
-import { useModalDialog } from "../../ui/useModalDialog";
-import { usePresenceProps } from "../../ui/usePresence";
+import { useModalDialog } from "../../engine/controls/useModalDialog";
+import { usePresenceProps } from "../../engine/motion/usePresence";
 import "./InsertTableDialog.css";
 import { isImeKeydown } from "../../utils/ime";
 
@@ -45,7 +45,7 @@ export function InsertTableDialog({
   return (
     <div
       {...presence}
-      className="close-prompt-overlay insert-table-overlay"
+      className="tx-backdrop insert-table-overlay"
       onClick={onClose}
     >
       <div
@@ -69,6 +69,7 @@ export function InsertTableDialog({
           <label>
             {rowsLabel}
             <input
+              className="tx-input"
               type="number"
               min={1}
               max={50}
@@ -81,6 +82,7 @@ export function InsertTableDialog({
           <label>
             {columnsLabel}
             <input
+              className="tx-input"
               type="number"
               min={1}
               max={20}

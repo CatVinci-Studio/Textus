@@ -8,12 +8,11 @@ import { invoke as __TAURI_INVOKE } from "@tauri-apps/api/core";
 
 /** Commands */
 export const commands = {
-	take_pending_window_paths: () => __TAURI_INVOKE<string[]>("take_pending_window_paths"),
 	/**
-	 *  Tab-mode counterpart to take_pending_window_paths: drains the whole queue so
-	 *  one window opens every path as a tab.
+	 *  What the window mounting now opens: a session's window (its documents,
+	 *  islands and folder), or files the system handed over.
 	 */
-	take_pending_open_paths: () => __TAURI_INVOKE<string[]>("take_pending_open_paths"),
+	take_pending_window: () => __TAURI_INVOKE<WindowSession_Serialize | null>("take_pending_window"),
 	take_pending_show_help: () => __TAURI_INVOKE<string | null>("take_pending_show_help"),
 	take_pending_menu_event: () => __TAURI_INVOKE<string | null>("take_pending_menu_event"),
 	take_pending_open_folder: () => __TAURI_INVOKE<string | null>("take_pending_open_folder"),
@@ -22,15 +21,12 @@ export const commands = {
 	 *  a file manager's open does.
 	 */
 	open_paths: (paths: string[]) => __TAURI_INVOKE<void>("open_paths", { paths }),
-	/**
-	 *  ⌘/Ctrl-click in the sidebar's file tree: the file in a window of its own,
-	 *  whatever the tab setting.
-	 */
+	/**  ⌘/Ctrl-click in the sidebar's file tree: the file in a window of its own. */
 	open_path_in_new_window: (path: string) => __TAURI_INVOKE<void>("open_path_in_new_window", { path }),
 	take_detached_tab: () => __TAURI_INVOKE<DetachedTab_Serialize | null>("take_detached_tab"),
 	/**
 	 *  A tab's own right-click Move to New Window: the tab handed to a fresh
-	 *  window, which takes it as it opens.
+	 *  small window (build_small_window), which takes it as it opens.
 	 */
 	move_tab_to_new_window: (tab: DetachedTab_Deserialize) => __TAURI_INVOKE<null>("move_tab_to_new_window", { tab }),
 	/**
@@ -47,9 +43,10 @@ export const commands = {
 	/**
 	 *  The floating tab. Once a tab is in flight its document is handed to Rust and
 	 *  its source is gone (destroy is what macOS honors mid-drag). This thread polls
-	 *  the cursor until release: over a tab row the tab lands there, else in a new window.
+	 *  the cursor until release: over a tab row the tab lands there, over a
+	 *  window's documents it opens split there, else in a new window.
 	 */
-	start_floating_tab_drag: (tab: DetachedTab_Deserialize, title: string, dirty: boolean, destroySource: boolean) => __TAURI_INVOKE<null>("start_floating_tab_drag", { tab, title, dirty, destroySource }),
+	start_floating_tab_drag: (tab: DetachedTab_Deserialize, title: string, dirty: boolean, destroySource: boolean, rowHeight: number | null, look: string) => __TAURI_INVOKE<null>("start_floating_tab_drag", { tab, title, dirty, destroySource, rowHeight, look }),
 	/**
 	 *  Where a floating view can float over the desktop: the platforms whose
 	 *  windows can be transparent without a compositor to ask.
@@ -60,7 +57,7 @@ export const commands = {
 	 *  (screen points), or by the bottom-right corner of its screen; an open one
 	 *  stays where it is. Answers the window's label.
 	 */
-	open_floating_window: (view: string, x: number | null, y: number | null, width: number | null, height: number | null) => __TAURI_INVOKE<string>("open_floating_window", { view, x, y, width, height }),
+	open_floating_window: (view: string, title: string, at: [number | null, number | null] | null, width: number | null, height: number | null) => __TAURI_INVOKE<string>("open_floating_window", { view, title, at, width, height }),
 	close_floating_window: (view: string) => __TAURI_INVOKE<void>("close_floating_window", { view }),
 	/**
 	 *  The window takes the new size. Folded or unfolded, its top-left corner
@@ -80,8 +77,11 @@ export const commands = {
 	 *  CHAT_ADOPT_HANDOFF says another one is waiting. Destructive either way.
 	 */
 	take_chat_handoff: () => __TAURI_INVOKE<ChatHandoff | null>("take_chat_handoff"),
-	/**  Closes the detached chat serving this editor, if one is open (re-embedding the panel). */
-	close_chat_window: () => __TAURI_INVOKE<void>("close_chat_window"),
+	/**
+	 *  Pops this chat out of the editor into a real OS window. `command(async)` is
+	 *  required: a plain `#[command]` runs on the main thread, where WebView2 deadlocks.
+	 */
+	detach_chat_window: (request: DetachRequest_Deserialize) => __TAURI_INVOKE<string>("detach_chat_window", { request }),
 	/**
 	 *  Shows tab `id`'s page at `bounds`, making it the first time; an existing
 	 *  page is moved and shown again where it was left.
@@ -98,11 +98,6 @@ export const commands = {
 	web_page_navigate: (id: string, url: string) => __TAURI_INVOKE<null>("web_page_navigate", { id, url }),
 	/**  Loads tab `id`'s page again. */
 	web_page_reload: (id: string) => __TAURI_INVOKE<null>("web_page_reload", { id }),
-	/**
-	 *  Brings the detached chat serving this editor to the front without handing
-	 *  it anything, which would overwrite its newer conversation. Returns whether there was one.
-	 */
-	focus_chat_window: () => __TAURI_INVOKE<boolean>("focus_chat_window"),
 	/**
 	 *  The chat window serving the calling editor window, if any. Asked on mount
 	 *  and focus, so a reloaded webview never trusts a stale label.
@@ -126,7 +121,7 @@ export const commands = {
 	system_info: () => __TAURI_INVOKE<SystemInfo>("system_info"),
 	system_font_families: () => __TAURI_INVOKE<string[]>("system_font_families"),
 	/**
-	 *  Files `report`. "LIMIT" when this computer has sent its share today;
+	 *  Files `report`. sendLimit when this computer has sent its share today;
 	 *  otherwise the connection's or the service's error.
 	 */
 	send_problem_report: (report: ProblemReport_Deserialize) => __TAURI_INVOKE<SentReport>("send_problem_report", { report }),
@@ -239,10 +234,19 @@ export const commands = {
 	release_instance: () => __TAURI_INVOKE<void>("release_instance"),
 };
 
+/* Constants */
+export const BACKGROUND_STATUS = "background-status" as const;
+
+export const CHAT_WINDOWS_CHANGED = "chat:windows-changed" as const;
+
+export const MAX_CONVERSATIONS = 500 as const;
+
+export const TUTORIAL_CLIPS = ["wysiwyg","blocks","modes-themes","sidebar-export","ai-panel","continuation","grammar","revision","review","skills","memory"] as const;
+
 /* Types */
 /**
- *  Everything a detached chat window needs to carry on where the embedded
- *  panel left off. `state` is opaque JSON whose shape TypeScript defines.
+ *  Everything a detached chat window needs to carry on where the window's
+ *  own conversation left off. `state` is opaque JSON whose shape TypeScript defines.
  */
 export type ChatHandoff = {
 	/**
@@ -269,6 +273,25 @@ export type DefaultEditorStatus = {
 	 *  `set_default_editor` opens (Windows); elsewhere it is made outright.
 	 */
 	chooseInSettings: boolean,
+};
+
+/**  detach_chat_window's inputs. `state` is the handoff's opaque JSON. */
+export type DetachRequest = DetachRequest_Serialize | DetachRequest_Deserialize;
+
+/**  detach_chat_window's inputs. `state` is the handoff's opaque JSON. */
+export type DetachRequest_Deserialize = {
+	state: Value,
+	position?: [number | null, number | null] | null,
+	title: string,
+	pinned: boolean,
+};
+
+/**  detach_chat_window's inputs. `state` is the handoff's opaque JSON. */
+export type DetachRequest_Serialize = {
+	state: Value,
+	position: [number | null, number | null] | null,
+	title: string,
+	pinned: boolean,
 };
 
 /**
@@ -561,5 +584,34 @@ export type WindowBounds = {
 	 *  different-DPI display. Always finite, so specta types it `number`.
 	 */
 	scaleFactor: number,
+};
+
+/**
+ *  One window as the next launch brings it back: its documents' paths, how
+ *  its islands were laid out (the frontend's own shape, by path), and the
+ *  folder it had open. Untitled tabs are not kept.
+ */
+export type WindowSession = WindowSession_Serialize | WindowSession_Deserialize;
+
+/**
+ *  One window as the next launch brings it back: its documents' paths, how
+ *  its islands were laid out (the frontend's own shape, by path), and the
+ *  folder it had open. Untitled tabs are not kept.
+ */
+export type WindowSession_Deserialize = {
+	paths: string[],
+	layout?: Value | null,
+	folder?: string | null,
+};
+
+/**
+ *  One window as the next launch brings it back: its documents' paths, how
+ *  its islands were laid out (the frontend's own shape, by path), and the
+ *  folder it had open. Untitled tabs are not kept.
+ */
+export type WindowSession_Serialize = {
+	paths: string[],
+	layout: Value | null,
+	folder: string | null,
 };
 

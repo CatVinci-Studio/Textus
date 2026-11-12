@@ -128,7 +128,7 @@
 
 .pending-picture-retry:hover {
   border-color: var(--doc-accent);
-  color: var(--doc-accent);
+  color: var(--doc-accent-text);
 }
 
 /* A made picture, Redraw… over its corner while the pointer is on it. */
@@ -154,25 +154,11 @@
   font: inherit;
   font-size: var(--text-secondary);
   cursor: pointer;
-  opacity: 0;
-  transition: opacity var(--dur-fast) var(--ease-out);
-}
-
-.pending-picture-made:hover .pending-picture-redraw,
-.pending-picture-redraw:focus-visible {
-  opacity: 1;
 }
 
 .pending-picture-redraw:hover {
   border-color: var(--doc-accent);
-  color: var(--doc-accent);
-}
-
-/* No hover on a touch screen: the button stays. */
-@media (hover: none) {
-  .pending-picture-redraw {
-    opacity: 1;
-  }
+  color: var(--doc-accent-text);
 }
 
 /* The chat's proposal card shows it small, in the picture's own shape (its

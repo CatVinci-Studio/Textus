@@ -1,4 +1,4 @@
-import type { SentBlock } from "../../ai/doc-blocks";
+import type { SentBlock } from "../../editor/markdown/doc-blocks";
 
 /**
  * The plugins that mark the document's text: asked for the blocks in sight,

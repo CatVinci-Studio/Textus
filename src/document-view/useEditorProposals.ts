@@ -3,17 +3,21 @@ import { reportUndecided } from "../document/undecided";
 import { editorViewCtx } from "@milkdown/kit/core";
 import type { EditorRunner } from "../editor/useEditorRunner";
 import type { PendingEditCallbacks } from "./editor-extensions";
-import { useAgentConversation } from "../ai/chat/useAgentConversation";
+import {
+  useLiveConversation,
+  useOwnConversation,
+} from "../ai/chat/conversation/useConversation";
+import type { DocumentPort } from "../ai/chat/conversation/document-port";
 import {
   usePendingEdits,
   type CitationStyle,
-  type DecidedChange,
-  type SelectionTarget,
 } from "../ai/revision/usePendingEdits";
 import {
-  pendingEditKey,
-  stoppedRewrite,
-} from "../ai/revision/pending-edit-plugin";
+  type DecidedChange,
+  type SelectionTarget,
+} from "../ai/revision/pending-place";
+import { pendingEditKey } from "../ai/revision/pending-types";
+import { stoppedRewrite } from "../ai/revision/pending-animation";
 import { ProposalStream } from "../ai/revision/proposal-stream";
 import {
   drawn,
@@ -26,10 +30,13 @@ import { isProposalTool } from "../ai/chat/proposal";
 import type { EditProposal } from "../ai/types";
 import type { GeneratedImageData, StreamEvent } from "../platform/ipc";
 import type { Settings } from "../prefs/SettingsContext";
-import { prefersReducedMotion } from "../ui/motion";
-import { storeImage } from "../editor/images/image-plugin";
-import { showMessage } from "../ui/app-dialog";
-import { cachedDocument, cachedDocumentMarkdown } from "../ai/doc-markdown";
+import { prefersReducedMotion } from "../engine/motion/motion";
+import { storeImage } from "../editor/images/image-store";
+import { showMessage } from "../engine/controls/app-dialog";
+import {
+  cachedDocument,
+  cachedDocumentMarkdown,
+} from "../editor/markdown/doc-markdown";
 import { offerOldPictureTrash } from "../ai/revision/old-picture";
 import {
   generatedIdsIn,
@@ -38,14 +45,16 @@ import {
 } from "../ai/revision/generated-images";
 import { resolveStrings } from "../i18n/strings";
 import { useLatest } from "../utils/hooks/useLatest";
-import { announce } from "../ui/announce";
+import { announce } from "../engine/controls/announce";
 import { plural } from "../i18n/plural";
 import { usePluginDocumentAccess } from "./plugins/usePluginDocumentAccess";
+import { noteBase } from "../ai/chat/file-changes";
 import { useKeptProposals } from "../ai/revision/useKeptProposals";
 import { explainError } from "../utils/error-explain";
 
-/** The editor's side of AI edits: pending previews, the two conversations
- *  that propose them, and streaming proposals into the document. */
+/** The editor's side of AI edits: pending previews, the conversations that
+ *  propose them (the window's live one, and Quick Ask's own), and streaming
+ *  proposals into the document. */
 export function useEditorProposals({
   run,
   pendingEditActionsRef,
@@ -126,6 +135,26 @@ export function useEditorProposals({
   useEffect(() => {
     if (filePath) reportUndecided(filePath, "ai", undecided);
   }, [filePath, undecided]);
+  // Written straight in: each proposal Textus AI sends now taken once the
+  // backend has taken it whole, the text before the first kept for the
+  // marks. Restored or placed ones (from before the switch), and drafts a
+  // Stop cut off, stay for the writer to decide.
+  const direct = settings.aiChangeMode === "direct";
+  const sentNow = useRef(new Set<string>());
+  const { previews, accept } = pendingEdits;
+  useEffect(() => {
+    if (!direct) return;
+    const ready = previews.filter(
+      (p) => !p.streaming && sentNow.current.has(p.callId),
+    );
+    if (!ready.length) return;
+    const before = run((ctx) =>
+      cachedDocumentMarkdown(ctx, ctx.get(editorViewCtx).state.doc),
+    );
+    if (filePath && before !== undefined) noteBase(filePath, before);
+    for (const preview of ready)
+      if (accept(preview.callId)) sentNow.current.delete(preview.callId);
+  }, [direct, previews, accept, run, filePath]);
   // The document's undecided proposals outlive closing it.
   useKeptProposals({
     run,
@@ -277,15 +306,12 @@ export function useEditorProposals({
   const discardRefused = pendingEdits.discard;
   // Reduced motion renders widgets instantly: the typewriter's entries
   // would never be revealed (or settle).
-  const animated = useCallback(
-    () => settingsRef.current.enableEditAnimation && !prefersReducedMotion(),
-    [settingsRef],
-  );
+  const animated = useCallback(() => !prefersReducedMotion(), []);
   const proposalStream = useMemo(() => {
     // Pictures written into the text show as their frames.
     const canvas: ProposalCanvas = {
       text: withBegunPictures,
-      show: (callId, proposal, streaming) =>
+      show: (callId, proposal, streaming) => {
         addPreviews(
           [
             {
@@ -298,7 +324,8 @@ export function useEditorProposals({
             },
           ],
           requestTargetRef.current,
-        ),
+        );
+      },
       discard: discardRefused,
     };
     return new ProposalStream(
@@ -314,7 +341,7 @@ export function useEditorProposals({
     // requestTargetRef is a stable ref; addPreviews and discard are stable
     // per editor.
   }, [addPreviews, discardRefused, run, animated]);
-  // Not memoized: the conversations read it through a ref.
+  // Not memoized: the conversations reach it through `port`.
   const handleStreamEvent = (event: StreamEvent) => {
     // A picture written into a proposal's text is being made: show its frame.
     if (event.type === "picture") {
@@ -329,9 +356,13 @@ export function useEditorProposals({
       proposalStream.finish("failed");
       return;
     }
-    if (event.type === "turn" && event.turn.kind === "ToolResult")
-      proposalStream.result(event.turn.call_id, isRefusal(event.turn.output));
-    else if (event.type === "toolStart")
+    if (event.type === "turn" && event.turn.kind === "ToolResult") {
+      const refused = isRefusal(event.turn.output);
+      // Written straight in only once the backend took it whole: never a
+      // draft cut off by Stop, nor one it then refused.
+      if (!refused) sentNow.current.add(event.turn.call_id);
+      proposalStream.result(event.turn.call_id, refused);
+    } else if (event.type === "toolStart")
       proposalStream.toolStart(event.callId, event.name);
     else if (event.type === "toolArgsDelta")
       proposalStream.argsDelta(event.callId, event.delta);
@@ -342,28 +373,33 @@ export function useEditorProposals({
     )
       proposalStream.finalCall(event.turn.call_id, event.turn.arguments);
   };
-  // Owned here so a finished exchange is saved to history when the popup
-  // closes. Only sidebar history restoration resumes one.
-  const agentModel = settings.agentModels[settings.aiProvider] || undefined;
-  const conversation = useAgentConversation(
+  const streamEvent = useLatest(handleStreamEvent);
+  const statuses = useLatest(pendingEdits.allStatuses);
+  // This document as a conversation reaches it, whenever it sends.
+  const port = useMemo(
+    (): DocumentPort => ({
+      docPath: filePath,
+      onStreamEvent: (event) => streamEvent.current(event),
+      proposalStatuses: () => statuses.current,
+    }),
+    [filePath, streamEvent, statuses],
+  );
+  // The window's, read here: it outlives this editor. In front, it is
+  // followed as it streams.
+  const conversation = useLiveConversation(
     filePath,
     settings.agentWorkspaceRoot || null,
-    settings.aiProvider,
-    settings.enableWebSearch,
-    agentModel,
-    handleStreamEvent,
-    pendingEdits.allStatuses,
+    isActive,
   );
   // Quick Ask's one-off exchange, kept out of History. "Continue in the
   // panel" hands it to `conversation`.
-  const quickConversation = useAgentConversation(
-    filePath,
-    settings.agentWorkspaceRoot || null,
-    settings.aiProvider,
-    settings.enableWebSearch,
-    agentModel,
-    handleStreamEvent,
-    pendingEdits.allStatuses,
+  const quickConversation = useOwnConversation(
+    () => ({
+      docPath: filePath,
+      workspaceRoot: settingsRef.current.agentWorkspaceRoot || null,
+      settings: settingsRef.current,
+      port,
+    }),
     false,
   );
   useEffect(() => {
@@ -398,6 +434,7 @@ export function useEditorProposals({
   // Proposals resolve here whether the chat is embedded or detached.
   const showProposals = useCallback(
     (proposals: { callId: string; proposal: EditProposal }[]) => {
+      for (const { callId } of proposals) sentNow.current.add(callId);
       addPreviews(proposals, requestTargetRef.current);
     },
     [addPreviews],
@@ -409,6 +446,7 @@ export function useEditorProposals({
     pendingEdits,
     conversation,
     quickConversation,
+    port,
     supersedePending,
     requestTargetRef,
     detachedTargetRef,

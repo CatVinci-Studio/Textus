@@ -28,7 +28,7 @@ fn mirrored(url: &str) -> Option<String> {
 }
 
 /// A package this large is not a plugin.
-const MAX_PACKAGE: u64 = 200 * 1024 * 1024;
+use super::install::MAX_PACKAGE_BYTES as MAX_PACKAGE;
 
 /// One plugin in the catalog.
 #[derive(Serialize, Deserialize, Clone, Debug, Default)]
@@ -133,7 +133,7 @@ fn parse_all(text: &str) -> Result<(Vec<CatalogEntry>, Vec<SkillEntry>), String>
     let catalog: Catalog =
         serde_json::from_str(text).map_err(|e| format!("The plugin catalog can't be read: {e}"))?;
     if catalog.schema != 1 {
-        return Err("The plugin catalog is for a newer Textus - update Textus to see it.".into());
+        return Err(crate::errors::error("catalogNewer"));
     }
     let plugins = catalog
         .plugins
@@ -205,14 +205,14 @@ pub async fn plugin_catalog(app: tauri::AppHandle) -> Result<Vec<CatalogEntry>, 
         if let Some(dir) = path.parent() {
             let _ = std::fs::create_dir_all(dir);
         }
-        let _ = std::fs::write(path, text);
+        let _ = crate::atomic::write_sync(&path, text);
     }
     Ok(entries)
 }
 
 /// The catalog as last fetched, shown while a fresh one loads. Installing from
 /// it is safe: a version's package never changes, so its checksum holds.
-#[tauri::command]
+#[tauri::command(async)]
 #[cfg_attr(test, specta::specta)]
 pub fn plugin_catalog_cached(app: tauri::AppHandle) -> Option<Vec<CatalogEntry>> {
     let text = std::fs::read_to_string(cache_file(&app).ok()?).ok()?;
@@ -298,7 +298,8 @@ fn readme_for(
 }
 
 /// The error when a skill of that name exists already; it is never overwritten.
-pub const SKILL_EXISTS: &str = "SKILL_EXISTS";
+/// Its error code (errors.json).
+pub const SKILL_EXISTS: &str = "skillExists";
 
 /// Installs skill `name` from the catalog last fetched into the global skills/
 /// folder, after checking it. Returns its path.
@@ -312,12 +313,16 @@ pub async fn skill_install_catalog(app: tauri::AppHandle, name: String) -> Resul
         .find(|s| s.name == name)
         .cloned()
         .ok_or_else(|| format!("{name} isn't in the catalog."))?;
+    let skills = crate::ai::workspace::global_agent_dir(&app)?.join("skills");
+    let present = installed_skill_version(&skills, &entry.name);
     let package = ext_stats::Download {
         kind: ext_stats::Kind::Skill,
         id: &entry.name,
         version: &entry.version,
-        update: false,
-        present: false,
+        update: present
+            .as_ref()
+            .is_some_and(|v| is_newer(&v.to_string(), &entry.version)),
+        present: present.is_some(),
         direct: &entry.url,
     };
     let bytes = download_counted(&app, package, &name).await?;
@@ -329,16 +334,34 @@ pub async fn skill_install_catalog(app: tauri::AppHandle, name: String) -> Resul
         ));
     }
     let text = String::from_utf8(bytes).map_err(|_| format!("{name} isn't a skill file."))?;
-    let path = install_skill_in(
-        &crate::ai::workspace::global_agent_dir(&app)?.join("skills"),
-        &entry.name,
-        &text,
-    )?;
+    let path = install_skill_in(&skills, &entry.name, &text)?;
     ext_stats::installed(&app, ext_stats::Kind::Skill, &entry.name);
     Ok(path.to_string_lossy().into_owned())
 }
 
-/// Writes a skill file named `name` into `dir`, never over one there.
+/// Whether `offered` is a later version than `have`, both semver; a version
+/// either can't be read as is never newer.
+fn is_newer(have: &str, offered: &str) -> bool {
+    match (
+        semver::Version::parse(have.trim()),
+        semver::Version::parse(offered.trim()),
+    ) {
+        (Ok(have), Ok(offered)) => offered > have,
+        _ => false,
+    }
+}
+
+/// The version of the catalog skill `name` installed in `dir`, when one of
+/// that name is there with a version (one the user wrote has none).
+fn installed_skill_version(dir: &std::path::Path, name: &str) -> Option<semver::Version> {
+    crate::ai::workspace::read_skill_files(dir)
+        .into_iter()
+        .find(|(_, s)| s.name.eq_ignore_ascii_case(name))
+        .and_then(|(_, s)| semver::Version::parse(s.version?.trim()).ok())
+}
+
+/// Writes a skill file named `name` into `dir`: never over one there, but
+/// over an older version of the same catalog skill (an update).
 fn install_skill_in(
     dir: &std::path::Path,
     name: &str,
@@ -348,15 +371,25 @@ fn install_skill_in(
     if skill.prompt.is_empty() {
         return Err(format!("{name} isn't a skill file."));
     }
-    std::fs::create_dir_all(dir).map_err(|e| e.to_string())?;
-    let path = crate::ai::workspace::skill_file_path(dir, name)?;
     let taken = crate::ai::workspace::read_skill_files(dir)
-        .iter()
-        .any(|(_, s)| s.name.eq_ignore_ascii_case(&skill.name));
-    if path.exists() || taken {
-        return Err(SKILL_EXISTS.into());
+        .into_iter()
+        .find(|(_, s)| s.name.eq_ignore_ascii_case(&skill.name));
+    let Some((path, _)) = taken else {
+        return crate::ai::workspace::write_skill_file(
+            dir,
+            name,
+            crate::ai::workspace::OnTaken::Refuse(SKILL_EXISTS),
+            |_| text.to_string(),
+        );
+    };
+    let newer = match (installed_skill_version(dir, &skill.name), &skill.version) {
+        (Some(have), Some(offered)) => is_newer(&have.to_string(), offered),
+        _ => false,
+    };
+    if !newer {
+        return Err(crate::errors::error(SKILL_EXISTS));
     }
-    std::fs::write(&path, text).map_err(|e| e.to_string())?;
+    crate::atomic::write_sync(&path, text).map_err(|e| e.to_string())?;
     Ok(path)
 }
 
@@ -385,7 +418,9 @@ pub async fn plugin_install_catalog(
         kind: ext_stats::Kind::Plugin,
         id: &id,
         version: &entry.version,
-        update: present.as_ref().is_some_and(|v| *v != entry.version),
+        update: present
+            .as_ref()
+            .is_some_and(|v| is_newer(v, &entry.version)),
         present: present.is_some(),
         direct: &entry.url,
     };
@@ -397,9 +432,11 @@ pub async fn plugin_install_catalog(
     let installed = {
         let app = app.clone();
         let package = package.clone();
-        tauri::async_runtime::spawn_blocking(move || install::install_sync(&app, &package))
-            .await
-            .map_err(|e| e.to_string())?
+        tauri::async_runtime::spawn_blocking(move || {
+            install::install_sync(&app, &package, install::Origin::Catalog)
+        })
+        .await
+        .map_err(|e| e.to_string())?
     };
     let _ = std::fs::remove_file(&package);
     let installed = installed?;

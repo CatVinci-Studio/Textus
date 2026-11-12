@@ -14,10 +14,16 @@ pub(crate) const FLUSH_DELAY: Duration = Duration::from_millis(250);
 /// Debug builds get their own files: a dev build shares the installed app's
 /// config directory and must not rewrite the real settings.
 pub(crate) fn file_name(stem: &str) -> String {
+    format!("{}.json", dir_name(stem))
+}
+
+/// A folder of the app's own state, kept apart for debug builds as its
+/// files are (drafts: a dev build must not take the app's crash drafts).
+pub(crate) fn dir_name(stem: &str) -> String {
     if cfg!(debug_assertions) {
-        format!("{stem}.dev.json")
+        format!("{stem}.dev")
     } else {
-        format!("{stem}.json")
+        stem.to_string()
     }
 }
 
@@ -271,25 +277,7 @@ pub(crate) fn parse(raw: &str, key: &str, empty: &Value) -> Option<(Value, u64)>
     Some((payload, schema))
 }
 
-pub(crate) fn move_aside(path: &Path) {
-    let stamp = std::time::SystemTime::now()
-        .duration_since(std::time::UNIX_EPOCH)
-        .map(|d| d.as_secs())
-        .unwrap_or(0);
-    let name = path
-        .file_name()
-        .and_then(|n| n.to_str())
-        .unwrap_or("settings.json");
-    let aside = path.with_file_name(format!("{name}.corrupt-{stamp}"));
-    match std::fs::rename(path, &aside) {
-        Ok(()) => eprintln!(
-            "textus: {} was unreadable; moved to {} and starting from defaults",
-            path.display(),
-            aside.display()
-        ),
-        Err(e) => eprintln!("textus: cannot move aside {}: {e}", path.display()),
-    }
-}
+use crate::json_file::move_aside;
 
 pub(crate) fn merge_top_level(payload: &mut Value, patch: &Map<String, Value>) {
     if !payload.is_object() {

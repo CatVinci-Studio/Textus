@@ -232,17 +232,10 @@ impl ProjectConventions {
     /// `key: value` lines at column 0. Unknown keys are ignored.
     pub fn from_style(style: &str) -> ProjectConventions {
         let mut pc = ProjectConventions::default();
-        let text = style.trim_start_matches('\u{feff}');
-        let Some(rest) = text
-            .strip_prefix("---\n")
-            .or_else(|| text.strip_prefix("---\r\n"))
-        else {
+        let Some(front) = crate::frontmatter::split(style) else {
             return pc;
         };
-        let Some(end) = rest.find("\n---") else {
-            return pc;
-        };
-        for line in rest[..end].lines() {
+        for line in front.lines {
             if line.starts_with([' ', '\t']) {
                 continue;
             }
@@ -346,53 +339,6 @@ impl Conventions {
         map.iter()
             .filter(|(k, _)| k.as_str() != "options")
             .find_map(|(_, v)| parse(v))
-    }
-}
-
-/// The allowed values, for the frontend's settings row.
-#[derive(Serialize)]
-#[cfg_attr(test, derive(specta::Type))]
-#[serde(rename_all = "camelCase")]
-pub struct ConventionsOptions {
-    pub setting_key: &'static str,
-    pub automatic: &'static str,
-    pub languages: Vec<LanguageOptions>,
-    pub options: Vec<OptionValues>,
-}
-
-#[derive(Serialize)]
-#[cfg_attr(test, derive(specta::Type))]
-#[serde(rename_all = "camelCase")]
-pub struct LanguageOptions {
-    pub lang: Lang,
-    /// The profile Automatic uses for this language, if any.
-    pub automatic_profile: Option<&'static str>,
-    pub profiles: &'static [&'static str],
-}
-
-#[derive(Serialize)]
-#[cfg_attr(test, derive(specta::Type))]
-pub struct OptionValues {
-    pub key: &'static str,
-    pub values: &'static [&'static str],
-}
-
-pub fn options() -> ConventionsOptions {
-    ConventionsOptions {
-        setting_key: SETTING_KEY,
-        automatic: AUTOMATIC,
-        languages: LANGUAGE_PROFILES
-            .iter()
-            .map(|(lang, automatic_profile, profiles)| LanguageOptions {
-                lang: *lang,
-                automatic_profile: *automatic_profile,
-                profiles,
-            })
-            .collect(),
-        options: OPTIONS
-            .iter()
-            .map(|(key, values)| OptionValues { key, values })
-            .collect(),
     }
 }
 

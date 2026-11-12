@@ -7,7 +7,7 @@ import { LINK } from "../markdown/link-source";
  * the literal text runs beside the caret a typed delimiter may open or close.
  */
 
-export const ENCLOSURE_NODES = new Set([
+const ENCLOSURE_NODES = new Set([
   "md_span",
   "md_code_span",
   "math_inline",
@@ -54,13 +54,13 @@ export function cursorTouches(
  * whole, as `**a `b` c**` holds its code; left out, a "**" typed after the
  * code never paired with the one before it.
  */
-export const RUN_ATOMS = new Set(["md_code_span", "math_inline", LINK]);
+const RUN_ATOMS = new Set(["md_code_span", "math_inline", LINK]);
 
 /** A RUN_ATOMS node in a run: one character per position, so text offsets
  *  stay document offsets. Neither a delimiter nor a space. */
-export const ATOM_CHAR = "￼";
+const ATOM_CHAR = "￼";
 
-export function runText(node: ProseNode, withAtoms: boolean): string | null {
+function runText(node: ProseNode, withAtoms: boolean): string | null {
   if (node.isText) return node.text ?? "";
   if (withAtoms && RUN_ATOMS.has(node.type.name))
     return ATOM_CHAR.repeat(node.nodeSize);
@@ -112,7 +112,7 @@ export function literalTextAfter(
 
 /** The value a delimiter pair may enclose: non-empty, no whitespace at its
  *  edges, no delimiter characters inside. Shared by every pairing rule. */
-export function isValidRunValue(value: string, char: string): boolean {
+function isValidRunValue(value: string, char: string): boolean {
   return value.length > 0 && !/^\s|\s$/.test(value) && !value.includes(char);
 }
 

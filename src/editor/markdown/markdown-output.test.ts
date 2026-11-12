@@ -7,8 +7,8 @@ import { DOMParser, DOMSerializer } from "@milkdown/kit/prose/model";
 import type { Node as ProseNode } from "@milkdown/kit/prose/model";
 import { TextSelection } from "@milkdown/kit/prose/state";
 import type { EditorView } from "@milkdown/kit/prose/view";
-import { createTestEditor } from "../../document-view/editor-test-harness";
-import { toggleSpan } from "../marks/span-commands";
+import { createTestEditor } from "../editor-test-kit";
+import { clearSpans, toggleSpan } from "../marks/span-commands";
 import { unwrittenImageSrcs } from "./markdown-output";
 import { withImageWidth } from "../images/image-html";
 
@@ -430,6 +430,25 @@ describe("an edited block is saved so it reads back the same", () => {
     );
     toggleSpan(view, 2);
   };
+
+  it("clears every span the selection touches, the words kept", async () => {
+    const clearing = (from: string, to: string) => (view: EditorView) => {
+      const start = find(view.state.doc, from);
+      const end = find(view.state.doc, to) + to.length;
+      view.dispatch(
+        view.state.tr.setSelection(
+          TextSelection.create(view.state.doc, start, end),
+        ),
+      );
+      clearSpans(view);
+    };
+    expect(
+      await savedAfter(
+        "a **bold *both*** and ~~gone~~ ==lit== z\n",
+        clearing("bold", "lit"),
+      ),
+    ).toBe("a bold both and gone lit z\n");
+  });
 
   it("writes one link around bold made inside it", async () => {
     expect(await savedAfter("[a b c](u)\n", boldening("b"))).toBe(

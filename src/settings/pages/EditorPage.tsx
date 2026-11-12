@@ -4,58 +4,24 @@ import {
   type ContentWidth,
   type EmbedDisplay,
   type ImageAlign,
-  UI_TEXT_SCALES,
-  type UiTextScale,
   type ColorSwatchMode,
   type DiagramEngine,
 } from "../../prefs/SettingsContext";
 import type { ViewMode } from "../../prefs/settings-values";
 import { AdvancedFold, SettingRow, ToggleRow } from "../sections/controls";
-import { useSyncExternalStore } from "react";
-import {
-  subscribeTracking,
-  trackingShown,
-} from "../../ai/margin/track-changes-state";
-import {
-  readOnlyShown,
-  subscribeReadOnly,
-} from "../../document/read-only-state";
-import { emitMenuEvent } from "../../platform/menu-events";
-import { ThemeSection } from "../sections/theme";
 import { DocTextFold } from "../sections/text-font";
 import { ImageStorageSection } from "../sections/images";
 import { ExportFileRow } from "../sections/export-files";
 import { PandocArgsRows } from "../sections/pandoc-args";
-import { Select } from "../../ui/Select";
-import { appDrawsWindowFrame } from "../../platform/window-chrome";
+import { Select } from "../../engine/controls/Select";
 import { canExportPdf, canExportWithPandoc } from "../../platform/capabilities";
 import { isMacPlatform } from "../../platform/os";
-import { openExtensionsTab } from "./extensions-tab";
 
-/** Editor & Appearance: the theme, the window's layout and view modes, and how Markdown is typed and shown. */
-export function EditorPage({
-  t,
-  settings,
-  setSettings,
-  phone,
-  percent,
-  openPage,
-  docPath = null,
-}: SettingsPageProps) {
-  const tracking = useSyncExternalStore(subscribeTracking, trackingShown);
-  const readOnly = useSyncExternalStore(subscribeReadOnly, readOnlyShown);
+/** Editing › Text: how the text is set, and the view a document opens in. */
+export function EditTextPage({ t, settings, setSettings }: SettingsPageProps) {
   return (
     <>
-      <SettingsGroup title={t.navTheme}>
-        <ThemeSection
-          t={t}
-          onMore={() => {
-            openExtensionsTab("themes");
-            openPage("extensions");
-          }}
-        />
-      </SettingsGroup>
-      {/* How the text is set, and the window's own. */}
+      {/* How the text is set. */}
       <SettingsGroup title={t.settingsTextGroup}>
         <SettingRow label={t.contentWidthLabel}>
           <Select
@@ -73,36 +39,17 @@ export function EditorPage({
             <option value="full">{t.contentWidthFull}</option>
           </Select>
         </SettingRow>
+        <ToggleRow
+          label={t.firstLineIndentLabel}
+          checked={settings.firstLineIndent}
+          onChange={(v) => setSettings({ firstLineIndent: v })}
+        />
+        <ToggleRow
+          label={t.emptyLineHintLabel}
+          checked={settings.emptyLineHint}
+          onChange={(v) => setSettings({ emptyLineHint: v })}
+        />
         <DocTextFold t={t} settings={settings} setSettings={setSettings} />
-        {/* A phone's UI is sized by iOS's own text styles instead. */}
-        {!phone && (
-          <SettingRow label={t.uiTextScaleLabel}>
-            <Select
-              className="settings-select"
-              aria-label={t.uiTextScaleLabel}
-              value={String(settings.uiTextScale)}
-              onChange={(e) =>
-                setSettings({
-                  uiTextScale: Number(e.target.value) as UiTextScale,
-                })
-              }
-            >
-              {UI_TEXT_SCALES.map((scale) => (
-                <option key={scale} value={String(scale)}>
-                  {percent.format(scale)}
-                </option>
-              ))}
-            </Select>
-          </SettingRow>
-        )}
-        {appDrawsWindowFrame && (
-          <ToggleRow
-            label={t.menuBarLabel}
-            help={t.menuBarHelp}
-            checked={settings.menuBarShown}
-            onChange={(on) => setSettings({ menuBarShown: on })}
-          />
-        )}
       </SettingsGroup>
       {/* One view for every document in every window. */}
       <SettingsGroup title={t.settingsViewGroup}>
@@ -116,34 +63,39 @@ export function EditorPage({
             }
           >
             <option value="rich">{t.viewModeRich}</option>
-            <option value="source">{t.menuViewSource}</option>
+            <option value="source">{t.menuToggleSourceMode}</option>
             <option value="split">{t.menuToggleSplitView}</option>
           </Select>
         </SettingRow>
         <ToggleRow
-          label={t.menuViewTypewriter}
+          label={t.menuFormatBar}
+          checked={settings.formatBar}
+          onChange={(on) => setSettings({ formatBar: on })}
+        />
+        <ToggleRow
+          label={t.zoomTogetherLabel}
+          help={t.zoomTogetherHint}
+          checked={settings.zoomTogether}
+          onChange={(on) => setSettings({ zoomTogether: on })}
+        />
+        <ToggleRow
+          label={t.menuToggleTypewriterMode}
           checked={settings.typewriterMode}
           onChange={(v) => setSettings({ typewriterMode: v })}
         />
-        <ToggleRow
-          label={t.menuToggleZenMode}
-          checked={settings.zenMode}
-          onChange={(on) => setSettings({ zenMode: on })}
-        />
       </SettingsGroup>
-      {/* The document in front's, as the View menu's own. */}
-      <SettingsGroup title={t.settingsDocumentGroup}>
-        <ToggleRow
-          label={t.menuTrackChanges}
-          checked={tracking}
-          onChange={() => emitMenuEvent("track-changes")}
-        />
-        <ToggleRow
-          label={t.menuToggleReadOnly}
-          checked={readOnly}
-          onChange={() => emitMenuEvent("toggle-read-only")}
-        />
-      </SettingsGroup>
+    </>
+  );
+}
+
+/** Editing › Markdown: what the document shows and how typing behaves; diagrams, colour swatches, the ** and ` pairs under Advanced. */
+export function EditMarkdownPage({
+  t,
+  settings,
+  setSettings,
+}: SettingsPageProps) {
+  return (
+    <>
       {/* What the document shows, then how typing behaves. */}
       <SettingsGroup title={t.navMarkdown}>
         <ToggleRow
@@ -185,59 +137,6 @@ export function EditorPage({
           </Select>
         </SettingRow>
       </SettingsGroup>
-      <SettingsGroup title={t.imageStorageGroupLabel}>
-        <SettingRow label={t.imageAlignLabel}>
-          <Select
-            className="settings-select"
-            aria-label={t.imageAlignLabel}
-            value={settings.imageAlign}
-            onChange={(e) =>
-              setSettings({ imageAlign: e.target.value as ImageAlign })
-            }
-          >
-            <option value="center">{t.imageAlignCenter}</option>
-            <option value="left">{t.imageAlignLeft}</option>
-          </Select>
-        </SettingRow>
-        <ImageStorageSection t={t} docPath={docPath} />
-      </SettingsGroup>
-      {/* No PDF export on the phone, so no group there either. */}
-      {canExportPdf && (
-        <SettingsGroup title={t.menuExport}>
-          <ToggleRow
-            label={t.pdfPageNumbersLabel}
-            checked={settings.pdfPageNumbers}
-            onChange={(v) => setSettings({ pdfPageNumbers: v })}
-          />
-          {isMacPlatform() && (
-            <ToggleRow
-              label={t.pdfLightColorsLabel}
-              checked={settings.pdfLightColors}
-              onChange={(v) => setSettings({ pdfLightColors: v })}
-            />
-          )}
-          {canExportWithPandoc && (
-            <>
-              <ExportFileRow t={t} setting="docxReferenceDoc" />
-              <ToggleRow
-                label={t.exportTocLabel}
-                checked={settings.exportToc}
-                onChange={(v) => setSettings({ exportToc: v })}
-              />
-              <ToggleRow
-                label={t.exportNumberHeadingsLabel}
-                help={t.exportNumberHeadingsHelp}
-                checked={settings.exportNumberHeadings}
-                onChange={(v) => setSettings({ exportNumberHeadings: v })}
-              />
-              <ExportFileRow t={t} setting="exportBibliography" />
-              {settings.exportBibliography && (
-                <ExportFileRow t={t} setting="exportCsl" />
-              )}
-            </>
-          )}
-        </SettingsGroup>
-      )}
       {/* Rarely changed: how diagrams are drawn, colour swatches, and the
        ** and ` pairs. */}
       <AdvancedFold t={t}>
@@ -279,8 +178,90 @@ export function EditorPage({
           checked={settings.autoCloseMarks}
           onChange={(v) => setSettings({ autoCloseMarks: v })}
         />
-        {canExportWithPandoc && <PandocArgsRows t={t} />}
       </AdvancedFold>
+    </>
+  );
+}
+
+/** Editing › Images: how a picture on its own line sits, and where pasted images go. */
+export function EditImagesPage({
+  t,
+  settings,
+  setSettings,
+  docPath = null,
+}: SettingsPageProps) {
+  return (
+    <>
+      <SettingsGroup title={t.imageStorageGroupLabel}>
+        <SettingRow label={t.imageAlignLabel}>
+          <Select
+            className="settings-select"
+            aria-label={t.imageAlignLabel}
+            value={settings.imageAlign}
+            onChange={(e) =>
+              setSettings({ imageAlign: e.target.value as ImageAlign })
+            }
+          >
+            <option value="center">{t.imageAlignCenter}</option>
+            <option value="left">{t.imageAlignLeft}</option>
+          </Select>
+        </SettingRow>
+        <ImageStorageSection t={t} docPath={docPath} />
+      </SettingsGroup>
+    </>
+  );
+}
+
+/** Editing › Export: PDF and Word, Pandoc's arguments under Advanced. */
+export function EditExportPage({
+  t,
+  settings,
+  setSettings,
+}: SettingsPageProps) {
+  return (
+    <>
+      {/* No PDF export on the phone, so no group there either. */}
+      {canExportPdf && (
+        <SettingsGroup title={t.menuExport}>
+          <ToggleRow
+            label={t.pdfPageNumbersLabel}
+            checked={settings.pdfPageNumbers}
+            onChange={(v) => setSettings({ pdfPageNumbers: v })}
+          />
+          {isMacPlatform() && (
+            <ToggleRow
+              label={t.pdfLightColorsLabel}
+              checked={settings.pdfLightColors}
+              onChange={(v) => setSettings({ pdfLightColors: v })}
+            />
+          )}
+          {canExportWithPandoc && (
+            <>
+              <ExportFileRow t={t} setting="docxReferenceDoc" />
+              <ToggleRow
+                label={t.exportTocLabel}
+                checked={settings.exportToc}
+                onChange={(v) => setSettings({ exportToc: v })}
+              />
+              <ToggleRow
+                label={t.exportNumberHeadingsLabel}
+                help={t.exportNumberHeadingsHelp}
+                checked={settings.exportNumberHeadings}
+                onChange={(v) => setSettings({ exportNumberHeadings: v })}
+              />
+              <ExportFileRow t={t} setting="exportBibliography" />
+              {settings.exportBibliography && (
+                <ExportFileRow t={t} setting="exportCsl" />
+              )}
+            </>
+          )}
+        </SettingsGroup>
+      )}
+      {canExportWithPandoc && (
+        <AdvancedFold t={t}>
+          <PandocArgsRows t={t} />
+        </AdvancedFold>
+      )}
     </>
   );
 }

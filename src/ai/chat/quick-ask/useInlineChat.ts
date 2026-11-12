@@ -8,7 +8,7 @@ import {
   readSelection,
   serializeRange,
   type DocumentSnapshot,
-} from "../../doc-markdown";
+} from "../../../editor/markdown/doc-markdown";
 import { chatSelectionRange } from "./chat-selection-plugin";
 import type { EditorRunner } from "../../../editor/useEditorRunner";
 
@@ -23,7 +23,7 @@ export function blockPositionAfter(doc: ProseNode, pos: number): number {
   return next ? $pos.pos + next.nodeSize : doc.content.size;
 }
 
-export interface InlineChatInfo {
+interface InlineChatInfo {
   /** The whole document as markdown source. */
   document: DocumentSnapshot;
   /** The selection as plain text. Display only (the composer's "{n} chars

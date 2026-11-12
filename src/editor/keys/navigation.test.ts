@@ -90,6 +90,26 @@ describe("macOS navigation", () => {
     expect(view.state.doc).toBe(doc);
     view.destroy();
   });
+  it("Ctrl+Home and Ctrl+End (Cmd on a Mac) go to the document's ends, Shift extending", () => {
+    for (const [mac, mod] of [
+      [true, { metaKey: true }],
+      [false, { ctrlKey: true }],
+    ] as const) {
+      const { view, press } = fixture();
+      const plugin = createMacNavigationPlugin(() => mac);
+      expect(press(plugin, "End", mod)).toBe(true);
+      expect(view.state.selection.head).toBe(22);
+      expect(press(plugin, "Home", { ...mod, shiftKey: true })).toBe(true);
+      expect([view.state.selection.anchor, view.state.selection.head]).toEqual([
+        22, 1,
+      ]);
+      // The other platform's modifier is left to the browser.
+      expect(
+        press(plugin, "Home", mac ? { ctrlKey: true } : { metaKey: true }),
+      ).toBe(false);
+      view.destroy();
+    }
+  });
   it("preserves the anchor when extending and reversing a selection", () => {
     const { view, press } = fixture();
     const plugin = createMacNavigationPlugin(() => true);

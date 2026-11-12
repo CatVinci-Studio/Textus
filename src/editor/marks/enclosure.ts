@@ -33,21 +33,6 @@ import { caretAt, setCaret, stateWithLiveSelection } from "../live-selection";
 import { isImeKeyEvent } from "../keys/ime";
 import { revealMoved, revealSelection } from "../pointer-hold";
 import { LINK } from "../markdown/link-source";
-export {
-  isEnclosureName,
-  cursorTouches,
-  literalTextBefore,
-  literalTextAfter,
-  findRunOpen,
-  findRunClose,
-  hasPendingRunOpen,
-} from "./enclosure-runs";
-export {
-  type ArrowMove,
-  type DeleteAction,
-  computeCharDeleteBesideEnclosure,
-} from "./enclosure-moves";
-export { COMPOSE_RELOCATE_DELAY_MS } from "./enclosure-caret";
 /**
  * Shared model for delimiter-enclosed syntax (md_span, md_code_span, math):
  * real nodes with editable text, their delimiters synthesized as widgets.
@@ -182,7 +167,7 @@ const wordSegmenter: Intl.Segmenter | undefined =
  * would (Intl.Segmenter, so Chinese too); null outside a span of plain text
  * or on a space.
  */
-export function wordInEnclosureAt(
+function wordInEnclosureAt(
   doc: ProseNode,
   pos: number,
 ): { from: number; to: number } | null {

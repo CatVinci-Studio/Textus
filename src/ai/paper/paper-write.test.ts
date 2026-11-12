@@ -2,7 +2,8 @@
 
 import { afterEach, describe, expect, it } from "vitest";
 import { undo } from "@milkdown/kit/prose/history";
-import { closeViews, openView } from "../../document-view/editor-view-kit";
+import { closeViews, openView as openCore } from "../../editor/editor-view-kit";
+import { createTestEditor } from "../../document-view/editor-test-harness";
 import {
   beginPaper,
   settlePaper,
@@ -12,6 +13,10 @@ import {
 import { paperRegion } from "./paper-region-plugin";
 
 afterEach(closeViews);
+
+/** In the app's editor: the paper's region is one of the AI's plugins. */
+const openView = (markdown: string) =>
+  openCore(markdown, {}, (md, settings) => createTestEditor(md, settings));
 
 describe("a paper written into the document", () => {
   it("going on after a pause, takes back what was written of it", async () => {

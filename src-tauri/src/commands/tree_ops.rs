@@ -5,25 +5,27 @@
 use std::path::{Path, PathBuf};
 use tokio::fs;
 
-/// A name the user typed: one path component, nothing that walks out of the
-/// folder it is meant for.
-fn check_name(name: &str) -> Result<&str, String> {
-    let name = name.trim();
-    if name.is_empty() || name == "." || name == ".." || name.contains(['/', '\\']) {
-        return Err("Invalid name".into());
-    }
-    Ok(name)
-}
-
 /// A new document's file name: what was typed, with `.md` added unless it
 /// already names a Markdown file.
 fn document_name(name: &str) -> String {
-    let lower = name.to_lowercase();
-    if lower.ends_with(".md") || lower.ends_with(".markdown") {
+    if crate::extract::is_markdown(Path::new(name)) {
         name.to_string()
     } else {
         format!("{name}.md")
     }
+}
+
+/// Whether `name` ends in a file type (`.txt`, `.md`): letters after its
+/// last dot, not a date's or a version's digits (`Meeting 11.11`).
+fn names_a_type(name: &str) -> bool {
+    Path::new(name)
+        .extension()
+        .and_then(|e| e.to_str())
+        .is_some_and(|e| {
+            e.len() <= 8
+                && e.chars().all(|c| c.is_ascii_alphanumeric())
+                && e.chars().any(|c| c.is_ascii_alphabetic())
+        })
 }
 
 async fn existing_dir(dir: &str) -> Result<PathBuf, String> {
@@ -33,7 +35,7 @@ async fn existing_dir(dir: &str) -> Result<PathBuf, String> {
         .map_err(|e| e.to_string())?
         .is_dir()
     {
-        return Err("Not a folder".into());
+        return Err(crate::errors::error("notFolder"));
     }
     Ok(dir)
 }
@@ -43,14 +45,14 @@ async fn existing_dir(dir: &str) -> Result<PathBuf, String> {
 #[cfg_attr(test, specta::specta)]
 pub async fn tree_create_document(dir: String, name: String) -> Result<String, String> {
     let dir = existing_dir(&dir).await?;
-    let path = dir.join(document_name(check_name(&name)?));
+    let path = dir.join(document_name(crate::ids::typed_name(&name)?));
     fs::OpenOptions::new()
         .write(true)
         .create_new(true)
         .open(&path)
         .await
         .map_err(|e| match e.kind() {
-            std::io::ErrorKind::AlreadyExists => "Already exists".to_string(),
+            std::io::ErrorKind::AlreadyExists => crate::errors::error("exists"),
             _ => e.to_string(),
         })?;
     Ok(path.to_string_lossy().to_string())
@@ -61,9 +63,9 @@ pub async fn tree_create_document(dir: String, name: String) -> Result<String, S
 #[cfg_attr(test, specta::specta)]
 pub async fn tree_create_folder(dir: String, name: String) -> Result<String, String> {
     let dir = existing_dir(&dir).await?;
-    let path = dir.join(check_name(&name)?);
+    let path = dir.join(crate::ids::typed_name(&name)?);
     fs::create_dir(&path).await.map_err(|e| match e.kind() {
-        std::io::ErrorKind::AlreadyExists => "Already exists".to_string(),
+        std::io::ErrorKind::AlreadyExists => crate::errors::error("exists"),
         _ => e.to_string(),
     })?;
     Ok(path.to_string_lossy().to_string())
@@ -74,31 +76,64 @@ pub async fn tree_create_folder(dir: String, name: String) -> Result<String, Str
 fn move_target(path: &Path, into: &Path) -> Result<PathBuf, String> {
     let name = path.file_name().ok_or("No file name")?;
     if path.parent() == Some(into) {
-        return Err("Already there".into());
+        return Err(crate::errors::error("alreadyThere"));
     }
     if into.starts_with(path) {
-        return Err("A folder can't move into itself".into());
+        return Err(crate::errors::error("moveIntoItself"));
     }
     Ok(into.join(name))
+}
+
+/// `path` with its folder made canonical but not itself: a link is moved
+/// or trashed as the link, never as the file it points to.
+fn itself(path: &str) -> Result<PathBuf, String> {
+    let path = PathBuf::from(path);
+    let name = path.file_name().ok_or("No name")?;
+    let parent = path.parent().ok_or("No folder")?;
+    let parent = if parent.as_os_str().is_empty() {
+        std::path::Path::new(".")
+    } else {
+        parent
+    };
+    let folder = parent.canonicalize().map_err(|e| e.to_string())?;
+    let me = folder.join(name);
+    std::fs::symlink_metadata(&me).map_err(|e| e.to_string())?;
+    Ok(me)
 }
 
 /// Moves a file or folder into the folder `into`. Returns its new path.
 #[tauri::command]
 #[cfg_attr(test, specta::specta)]
 pub async fn tree_move_entry(path: String, into: String) -> Result<String, String> {
-    let from = PathBuf::from(&path)
-        .canonicalize()
-        .map_err(|e| e.to_string())?;
-    let into = existing_dir(&into)
+    let from = itself(&path)?;
+    let given = into;
+    let into = existing_dir(&given)
         .await?
         .canonicalize()
         .map_err(|e| e.to_string())?;
     let to = move_target(&from, &into)?;
     if fs::try_exists(&to).await.unwrap_or(true) {
-        return Err("Already exists".into());
+        return Err(crate::errors::error("exists"));
     }
-    fs::rename(&from, &to).await.map_err(|e| e.to_string())?;
-    Ok(to.to_string_lossy().to_string())
+    let (a, b) = (from.clone(), to.clone());
+    tokio::task::spawn_blocking(move || crate::atomic::move_entry(&a, &b))
+        .await
+        .map_err(|e| e.to_string())?
+        .map_err(|e| e.to_string())?;
+    // In the window's spelling of the folder, not the canonical one (on
+    // Windows `\\?\C:\…`), so its tabs and links still match.
+    Ok(spelled_as(&given, &to))
+}
+
+/// `to` (a canonical path) under the folder as the caller wrote it.
+fn spelled_as(given_dir: &str, to: &Path) -> String {
+    match to.file_name() {
+        Some(name) => Path::new(given_dir)
+            .join(name)
+            .to_string_lossy()
+            .to_string(),
+        None => to.to_string_lossy().to_string(),
+    }
 }
 
 /// Gives a file or folder a new name in its folder. A document renamed without
@@ -111,9 +146,9 @@ pub async fn tree_rename_entry(path: String, name: String) -> Result<String, Str
         .await
         .map_err(|e| e.to_string())?
         .is_dir();
-    let name = check_name(&name)?;
+    let name = crate::ids::typed_name(&name)?;
     let was_doc = !is_dir && document_name(&path) == path;
-    let name = if was_doc && !name.contains('.') {
+    let name = if was_doc && !names_a_type(name) {
         document_name(name)
     } else {
         name.to_string()
@@ -124,10 +159,12 @@ pub async fn tree_rename_entry(path: String, name: String) -> Result<String, Str
         return Ok(path);
     }
     // A change of case only (notes.md -> Notes.md) is the same file on
-    // macOS and Windows, so it can't be checked for as taken.
-    let case_only = to.to_string_lossy().to_lowercase() == path.to_lowercase();
+    // macOS and Windows, so it can't be checked for as taken - but on a
+    // disk that tells case apart the other name is another file.
+    let case_only = to.to_string_lossy().to_lowercase() == path.to_lowercase()
+        && crate::atomic::same_file(&from, &to);
     if !case_only && fs::try_exists(&to).await.unwrap_or(true) {
-        return Err("Already exists".into());
+        return Err(crate::errors::error("exists"));
     }
     fs::rename(&from, &to).await.map_err(|e| e.to_string())?;
     Ok(to.to_string_lossy().to_string())
@@ -138,36 +175,17 @@ pub async fn tree_rename_entry(path: String, name: String) -> Result<String, Str
 #[tauri::command]
 #[cfg_attr(test, specta::specta)]
 pub async fn tree_trash_entry(path: String, root: String) -> Result<(), String> {
-    let target = PathBuf::from(&path)
-        .canonicalize()
-        .map_err(|e| e.to_string())?;
-    if std::fs::canonicalize(&root).is_ok_and(|r| target == r || r.starts_with(&target)) {
-        return Err("The folder the tree shows can't be moved to the Trash".into());
-    }
-    #[cfg(desktop)]
-    return tauri::async_runtime::spawn_blocking(move || {
-        trash::delete(&target).map_err(|e| e.to_string())
+    let target = itself(&path)?;
+    tauri::async_runtime::spawn_blocking(move || {
+        crate::atomic::user_file_to_trash(&target, Some(std::path::Path::new(&root)))
     })
     .await
-    .map_err(|e| e.to_string())?;
-    #[cfg(not(desktop))]
-    Err(format!(
-        "{} can't be moved to the Trash here.",
-        target.display()
-    ))
+    .map_err(|e| e.to_string())?
 }
 
 #[cfg(test)]
 mod tests {
     use super::*;
-
-    #[test]
-    fn names_stay_one_component() {
-        assert_eq!(check_name("  笔记 ").unwrap(), "笔记");
-        for bad in ["", "  ", ".", "..", "a/b", "a\\b", "../x"] {
-            assert!(check_name(bad).is_err(), "{bad:?} should be rejected");
-        }
-    }
 
     #[test]
     fn documents_get_md() {
@@ -209,7 +227,8 @@ mod tests {
             .await
             .is_err());
         let moved = tree_move_entry(doc.clone(), sub.clone()).await.unwrap();
-        assert!(Path::new(&moved).ends_with("Sub/Notes.md"));
+        // In the folder's spelling as given (a temp dir is a symlink on macOS).
+        assert_eq!(Path::new(&moved), Path::new(&sub).join("Notes.md"));
         // A second Notes.md at the top can't be moved onto the first.
         let again = tree_create_document(root.clone(), "Notes".into())
             .await
@@ -227,6 +246,12 @@ mod tests {
             .unwrap();
         let renamed = tree_rename_entry(doc, "Chapter 1".into()).await.unwrap();
         assert!(renamed.ends_with("Chapter 1.md"));
+        // A dot in a date or a version isn't a file type.
+        let dated = tree_rename_entry(renamed, "Meeting 11.11".into())
+            .await
+            .unwrap();
+        assert!(dated.ends_with("Meeting 11.11.md"));
+        tree_rename_entry(dated, "Chapter 1".into()).await.unwrap();
         let other = tree_create_document(root.clone(), "Other".into())
             .await
             .unwrap();

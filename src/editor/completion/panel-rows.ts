@@ -77,8 +77,8 @@ export type PanelRow =
   | { kind: "loading" };
 
 /** Rows of each group when several have some, and of a lone group. */
-export const SHARED_ROWS = 8;
-export const LONE_ROWS = 50;
+const SHARED_ROWS = 8;
+const LONE_ROWS = 50;
 
 function rowsOf(group: Group, limit: number): PanelItem[] {
   return group.list
@@ -91,7 +91,7 @@ function rowsOf(group: Group, limit: number): PanelItem[] {
 export function panelRows(groups: readonly Group[]): PanelRow[] {
   const found = groups
     .map((group) => ({ group, items: rowsOf(group, LONE_ROWS) }))
-    .filter((g) => g.items.length > 0);
+    .filter((g) => g.items.length > 0 && !alreadyWritten(g.group, g.items));
   if (!found.length)
     return groups.some((g) => g.pending) ? [{ kind: "loading" }] : [];
   const shared = found.length > 1;
@@ -103,6 +103,15 @@ export function panelRows(groups: readonly Group[]): PanelRow[] {
       rows.push({ kind: "item", item, group });
   }
   return rows;
+}
+
+/** The one item left is what is already typed (just taken, or written out
+ *  whole): there is nothing to complete. */
+function alreadyWritten(group: Group, items: readonly PanelItem[]): boolean {
+  return (
+    items.length === 1 &&
+    items[0].insert.replace("$0", "").trimEnd() === group.match.match
+  );
 }
 
 /** After an arrow key the rows stay put: a group answering late goes

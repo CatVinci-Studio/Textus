@@ -12,7 +12,7 @@ import type {
 } from "@milkdown/kit/prose/model";
 import type { EditorView } from "@milkdown/kit/prose/view";
 import { $prose } from "@milkdown/kit/utils";
-import { COMPOSE_RELOCATE_DELAY_MS } from "../marks/enclosure";
+import { COMPOSE_RELOCATE_DELAY_MS } from "../marks/enclosure-caret";
 import { stateWithLiveSelection } from "../live-selection";
 import { isImeKeyEvent } from "./ime";
 import { typedLinkEndingAt } from "../markdown/link-input-rule";
@@ -142,7 +142,7 @@ function wrap(
 
 /** After an input method committed `committed`: what typing its last
  *  character would have done. `wrapped` is what the composition replaced. */
-export function pairAfterComposition(
+function pairAfterComposition(
   view: EditorView,
   committed: string,
   wrapped?: { from: number; content: Slice; sizeAfter: number },

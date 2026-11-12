@@ -1,14 +1,11 @@
 import { headingIndex } from "../editor/markdown/link-target";
-import {
-  decodeUrlPath,
-  dirname,
-  hasUrlScheme,
-  isDrivePath,
-} from "../utils/path";
+import { hasUrlScheme } from "../utils/path";
 import { imageMimeForPath } from "../editor/images/pasted-files";
+import { rootedImagePath } from "../editor/images/rooted-image";
+import { imageSource } from "../editor/images/image-source";
 import { linkHref, parseLink } from "../editor/markdown/link-syntax";
 import { fs } from "../platform/ipc";
-import { escapeHtml } from "../utils/html";
+import { escapeHtml, styleText } from "../utils/html";
 import { lazyModule } from "../lazy/lazy-module";
 import {
   DETAILS_CLASS_PREFIX,
@@ -44,7 +41,7 @@ export function nextFrame(): Promise<void> {
 }
 
 // Inlines every same-origin stylesheet's rules into one string.
-export function collectInlinedCss(): string {
+function collectInlinedCss(): string {
   let css = "";
   for (const sheet of Array.from(document.styleSheets)) {
     try {
@@ -85,11 +82,11 @@ export const EDITOR_CHROME_SELECTOR = [
 
 /** Marks over the text drawn for the editor alone (a plugin's highlight
  *  or underline): the copy keeps their text, not them. */
-export const EDITOR_MARK_SELECTOR = "[data-editor-mark]";
+const EDITOR_MARK_SELECTOR = "[data-editor-mark]";
 
 // A resized table carries pixel widths sized for the editor column, cut off
 // on a narrower page, so the export keeps each column's share instead.
-export function fitTablesToWidth(root: HTMLElement): void {
+function fitTablesToWidth(root: HTMLElement): void {
   root.querySelectorAll("table").forEach((table) => {
     table.style.width = "";
     table.style.minWidth = "";
@@ -112,7 +109,7 @@ export function fitTablesToWidth(root: HTMLElement): void {
 // Folded <details> are paragraphs hidden below a head widget in the editor;
 // a page puts them back inside one real <details>. Innermost first, so a
 // nested one moves into its parent whole.
-export function gatherDetails(root: HTMLElement): void {
+function gatherDetails(root: HTMLElement): void {
   const heads = Array.from(
     root.querySelectorAll<HTMLDetailsElement>(`details[${DETAILS_HEAD_ATTR}]`),
   ).reverse();
@@ -269,21 +266,21 @@ export function cloneEditorContent(
   return clone.outerHTML;
 }
 
-// The file a document image's src names; null for a URL, or a relative src
-// with no folder on disk.
-export function localImagePath(
+// The file a document image's src names, as the editor finds it (a `/` one
+// under the document's link root); null for anything not a file.
+async function localImagePath(
   src: string,
   docPath: string | null,
-): string | null {
-  if (isDrivePath(src)) return decodeUrlPath(src);
-  if (!src || hasUrlScheme(src)) return null;
-  if (src.startsWith("/")) return decodeUrlPath(src);
+): Promise<string | null> {
+  const source = imageSource(src, docPath);
   // An iOS document picked in Files is a file: URL, its images no plain path.
-  if (!docPath || hasUrlScheme(docPath)) return null;
-  return `${dirname(docPath)}/${decodeUrlPath(src)}`;
+  if (source.kind !== "file") return null;
+  return source.rooted && docPath && !hasUrlScheme(docPath)
+    ? rootedImagePath(src, docPath)
+    : source.path;
 }
 
-export function blobToDataUrl(blob: Blob): Promise<string> {
+function blobToDataUrl(blob: Blob): Promise<string> {
   return new Promise((resolve, reject) => {
     const reader = new FileReader();
     reader.onload = () => resolve(reader.result as string);
@@ -307,7 +304,7 @@ export async function inlineImages(
   );
   await Promise.all(
     images.map(async (img) => {
-      const path = localImagePath(img.dataset.docSrc ?? "", docPath);
+      const path = await localImagePath(img.dataset.docSrc ?? "", docPath);
       img.removeAttribute("data-doc-src");
       const mime = path && imageMimeForPath(path);
       if (path && mime) {
@@ -362,8 +359,8 @@ export function buildStandaloneHtml(
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1">
 <title>${escapeHtml(base)}</title>
-<style>${collectInlinedCss()}</style>
-<style>${layoutCss}</style>
+<style>${styleText(collectInlinedCss())}</style>
+<style>${styleText(layoutCss)}</style>
 </head>
 <body class="${document.body.className}">
 <div class="app-shell"><div class="main-pane"><div class="editor-scroll"><div class="editor-content">${contentHtml}</div></div></div></div>

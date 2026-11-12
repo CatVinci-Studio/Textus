@@ -2,6 +2,7 @@ import { beforeEach, describe, expect, it, vi } from "vitest";
 import { version as APP_VERSION } from "../../../package.json";
 
 const installed = new Map<string, string>();
+const dev = new Set<string>();
 const ipc = {
   catalog: vi.fn(),
   cachedCatalog: vi.fn(() => Promise.resolve(null)),
@@ -11,13 +12,22 @@ const ipc = {
 vi.mock("../../platform/ipc", () => ({ plugins: ipc }));
 vi.mock("../manager", () => ({
   loadPlugins: vi.fn(() => Promise.resolve()),
-  runsHere: () => true,
+}));
+vi.mock("./plugin-records", async (actual) => ({
+  ...(await actual<typeof import("./plugin-records")>()),
   pluginName: (r: { id: string }) => r.id,
   pluginText: (_r: unknown, text: string) => text,
   pluginRecord: (id: string) =>
     installed.has(id)
-      ? { id, status: "on", manifest: { version: installed.get(id) } }
+      ? {
+          id,
+          status: "on",
+          origin: dev.has(id) ? "dev" : "installed",
+          manifest: { version: installed.get(id) },
+        }
       : undefined,
+}));
+vi.mock("../plugin-switches", () => ({
   setPluginEnabled: vi.fn(() => Promise.resolve()),
 }));
 
@@ -67,6 +77,12 @@ describe("catalog versions this Textus can run", () => {
   it("offers an update only when the new version runs here", () => {
     expect(updateFor("catvinci.ok")).toBe("0.2.0");
     expect(updateFor("catvinci.old")).toBeNull();
+  });
+
+  it("never offers the catalog's build over a developer's loaded folder", () => {
+    dev.add("catvinci.ok");
+    expect(updateFor("catvinci.ok")).toBeNull();
+    dev.delete("catvinci.ok");
   });
 
   it("names the Textus a plugin needs, and refuses to install it", async () => {

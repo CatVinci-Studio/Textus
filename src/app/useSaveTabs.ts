@@ -1,8 +1,15 @@
+import { fill } from "../i18n/fill";
 import { useCallback, useEffect, useRef } from "react";
-import { showConfirm, showMessage } from "../ui/app-dialog";
+import {
+  showChoice,
+  showConfirm,
+  showMessage,
+} from "../engine/controls/app-dialog";
+import { takeDiskText } from "../document/useExternalChangeReload";
 import { migrateDraftImages } from "../editor/images/image-migration";
 import { basename, parentDir } from "../utils/path";
 import {
+  readDocText,
   statMtime,
   tabIsDirty,
   tabTitle,
@@ -26,11 +33,8 @@ import {
   markdownFilename,
 } from "../document/save-default-name";
 import { isWordDocument, wordSaveSuggestion } from "../document/word-import";
-import {
-  emitPluginEvent,
-  notePathMoved,
-  openDocumentAt,
-} from "../plugins/app-bridge";
+import { emitPluginEvent, notePathMoved } from "../plugins/app-bridge";
+import { openDocumentAt } from "../registry/open-documents";
 import { hasWillSave, runWillSave } from "../plugins/contributions/will-save";
 import type { Strings } from "../i18n/strings";
 import type { TabState } from "./tabs/useTabState";
@@ -68,7 +72,7 @@ export function useSaveTabs(opts: {
 }) {
   const { tabState, t, autoSuggestFilename, imageFolder, aiTitleFor } = opts;
   const folder = opts.folder ?? null;
-  const { liveTabs, updateTab, tabsRef } = tabState;
+  const { liveTabs, updateTab } = tabState;
 
   // Writes a document, or says why it couldn't and resolves false; the tab
   // stays dirty, so nothing is lost. A tracked document's file gets its
@@ -85,7 +89,7 @@ export function useSaveTabs(opts: {
         return true;
       } catch (err) {
         const lines = [
-          t.saveFailedMessage.replace("{name}", basename(path)),
+          fill(t.saveFailedMessage, { name: basename(path) }),
           /read-only|permission denied/i.test(errorText(err))
             ? t.saveReadOnlyHint
             : explainError(err, t),
@@ -133,22 +137,22 @@ export function useSaveTabs(opts: {
       } catch (err) {
         console.error("[image-migration] failed:", err);
       }
-      // Typing during an autosave stays: only an editor still showing what
-      // was written takes the rewritten text (and has to load it).
-      const typedOn =
-        liveTabs().find((tb) => tb.id === tab.id)?.content !== tab.content;
+      // Typing during an autosave stays, its pictures pointed where they
+      // moved to as well: the editor loads the rewritten text either way.
+      const live = liveTabs().find((tb) => tb.id === tab.id)?.content;
+      const shown =
+        live === undefined || live === tab.content
+          ? content
+          : movedPictures(tab.content, content, live);
       const patch: Partial<DocTab> = {
         path: picked,
         importedFrom: undefined,
         savedContent: content,
         diskMtime: await statMtime(picked),
-        ...(content !== tab.content && !typedOn
-          ? { content, reloadKey: tab.reloadKey + 1 }
+        ...(shown !== (live ?? tab.content)
+          ? { content: shown, reloadKey: tab.reloadKey + 1 }
           : {}),
       };
-      tabsRef.current = tabsRef.current.map((tb) =>
-        tb.id === tab.id ? { ...tb, ...patch } : tb,
-      );
       updateTab(tab.id, patch);
       // Its past conversations follow it to the new name.
       if (tab.path) moveConversations(tab.path, picked);
@@ -160,7 +164,7 @@ export function useSaveTabs(opts: {
       if (!auto) emitPluginEvent("activity", { kind: "saved" });
       return true;
     },
-    [updateTab, liveTabs, tabsRef, t, imageFolder, writeOrReport],
+    [updateTab, liveTabs, t, imageFolder, writeOrReport],
   );
 
   const suggestedName = useCallback(
@@ -210,14 +214,11 @@ export function useSaveTabs(opts: {
     [liveTabs, t, suggestedName, adoptFile, folder],
   );
 
-  // tabsRef is patched as well as the state, so a save right behind this one
-  // compares against this write's mtime and doesn't see it as external.
+  // Into the model at once, so a save right behind this one compares
+  // against this write's mtime and doesn't see it as external.
   const commitSaved = useCallback(
     async (tabId: string, path: string, content: string, auto: boolean) => {
       const patch = { savedContent: content, diskMtime: await statMtime(path) };
-      tabsRef.current = tabsRef.current.map((tb) =>
-        tb.id === tabId && tb.path === path ? { ...tb, ...patch } : tb,
-      );
       updateTab(tabId, patch);
       // Plugins listening for saves (version history) are told.
       emitPluginEvent("didSave", {
@@ -227,10 +228,11 @@ export function useSaveTabs(opts: {
       });
       if (!auto) emitPluginEvent("activity", { kind: "saved" });
     },
-    [tabsRef, updateTab],
+    [updateTab],
   );
 
-  // "conflict": the file changed on disk and the user kept that version.
+  // "conflict": the file changed on disk and the user didn't overwrite it
+  // (kept it, or took its text).
   // `auto`: the prompt starts on Cancel, since the user didn't ask to save.
   const saveToPath = useCallback(
     async (tabId: string, auto: boolean): Promise<SaveOutcome> => {
@@ -241,31 +243,53 @@ export function useSaveTabs(opts: {
       if (tab.diskMtime !== null) {
         const current = await statMtime(tab.path);
         if (current !== tab.diskMtime) {
-          const gone = current === null;
-          const overwrite = await showConfirm(
-            gone ? t.fileGoneOnDiskMessage : t.fileChangedOnDiskMessage,
-            {
-              title: gone ? t.fileGoneOnDiskTitle : t.fileChangedOnDiskTitle,
-              okLabel: gone
-                ? t.fileGoneOnDiskRecreate
-                : t.fileChangedOnDiskOverwrite,
-              cancelLabel: t.closePromptCancel,
+          if (current === null) {
+            const recreate = await showConfirm(t.fileGoneOnDiskMessage, {
+              title: t.fileGoneOnDiskTitle,
+              okLabel: t.fileGoneOnDiskRecreate,
+              cancelLabel: t.cancel,
               focusCancel: auto,
-            },
-          );
-          if (!overwrite) return "conflict";
+            });
+            if (!recreate) return "conflict";
+          } else {
+            // Overwrite it with this text, or take the other text instead.
+            const choice = await showChoice(t.fileChangedOnDiskMessage, {
+              title: t.fileChangedOnDiskTitle,
+              okLabel: t.fileChangedOnDiskOverwrite,
+              altLabel: t.fileChangedOnDiskReload,
+              cancelLabel: t.cancel,
+              focusCancel: auto,
+            });
+            if (choice === "alt") {
+              const disk = await readDocText(tab.path).catch(() => null);
+              const live = liveTabs().find((tb) => tb.id === tabId);
+              if (disk !== null && live)
+                takeDiskText(live, disk, current, liveTabs, updateTab);
+            }
+            if (choice !== "ok") return "conflict";
+          }
         }
       }
-      const content = await beforeSave(
+      // Changed by a plugin: what the editor now holds, as it writes files;
+      // with no rendered editor (source mode), the plugin's text, which the
+      // tab takes too.
+      const changed = await beforeSave(
         tab.path,
         tab.content,
         auto ? "auto" : "manual",
       );
+      const content =
+        changed === null
+          ? tab.content
+          : changed.inEditor
+            ? (liveTabs().find((tb) => tb.id === tabId)?.content ?? tab.content)
+            : changed.text;
+      if (changed && !changed.inEditor) updateTab(tabId, { content });
       if (!(await writeOrReport(tab.path, content))) return "failed";
       await commitSaved(tabId, tab.path, content, auto);
       return "saved";
     },
-    [liveTabs, t, writeOrReport, commitSaved],
+    [liveTabs, updateTab, t, writeOrReport, commitSaved],
   );
 
   // One save per tab at a time: a racing save would see our own write as external.
@@ -350,15 +374,11 @@ export function useSaveTabs(opts: {
         return;
       }
       autoNamed.current.set(tabId, moved);
-      tabsRef.current = tabsRef.current.map((tb) =>
-        tb.id === tabId ? { ...tb, path: moved } : tb,
-      );
       updateTab(tabId, { path: moved });
-      moveConversations(from, moved);
       void notePathMoved(from, moved);
       void session.addRecentFile(moved);
     },
-    [liveTabs, tabsRef, updateTab, suggestedName],
+    [liveTabs, updateTab, suggestedName],
   );
 
   /** Autosave: File > Save for a changed document that has a file, never a
@@ -396,18 +416,39 @@ export function useSaveTabs(opts: {
 }
 
 /**
- * The text to save once onWillSave plugins have changed it, put into the
- * editor first as one undo step so what is saved is what shows.
+ * Lets onWillSave plugins change the text to save, put into the rendered
+ * editor first as one undo step so what is saved is what shows. Null when
+ * unchanged; `inEditor` false when no rendered editor took it.
  */
 async function beforeSave(
   path: string,
   text: string,
   trigger: "manual" | "auto",
-): Promise<string> {
-  if (!hasWillSave()) return text;
+): Promise<{ text: string; inEditor: boolean } | null> {
+  if (!hasWillSave()) return null;
   const changed = await runWillSave(path, text, trigger);
-  if (changed === text) return text;
+  if (changed === text) return null;
   const doc = openDocumentAt(path);
-  if (!doc?.replaceText(changed, doc.revision())) return text;
-  return doc.text();
+  return {
+    text: changed,
+    inEditor: !!doc?.replaceText(changed, doc.revision()),
+  };
+}
+
+/** A picture's address in Markdown or HTML. */
+const PICTURE = /!\[[^\]]*\]\(\s*<?([^)\s>]+)|<img\b[^>]*\bsrc=["']([^"']+)/g;
+const pictures = (text: string) =>
+  [...text.matchAll(PICTURE)].map((m) => m[1] ?? m[2]);
+
+/** `live` with each picture `before` had pointed where `after` points it:
+ *  the addresses a save moved, applied to text typed since. */
+export function movedPictures(before: string, after: string, live: string) {
+  const from = pictures(before);
+  const to = pictures(after);
+  if (from.length !== to.length) return live;
+  let out = live;
+  from.forEach((src, i) => {
+    if (src !== to[i]) out = out.split(src).join(to[i]);
+  });
+  return out;
 }

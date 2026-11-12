@@ -1,5 +1,5 @@
 import type { Node as ProseNode } from "@milkdown/kit/prose/model";
-import { blockKind } from "../doc-blocks";
+import { blockKind } from "../../editor/markdown/doc-blocks";
 import { paragraphCount } from "./paragraph-align";
 
 /** A change of several whole paragraphs drawn as blocks, the new ones as the

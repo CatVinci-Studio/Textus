@@ -1,15 +1,19 @@
+import { fill } from "../i18n/fill";
 import { useEffect, useState, type MouseEvent } from "react";
 import { createPortal } from "react-dom";
 import { useSettings } from "../prefs/SettingsContext";
-import { announce } from "../ui/announce";
-import { AssistantIcon } from "../ui/icons";
-import { Tooltip } from "../ui/Tooltip";
-import { Presence } from "../ui/usePresence";
-import { ContextMenu, type ContextMenuItem } from "../ui/ContextMenu";
+import { announce } from "../engine/controls/announce";
+import { AssistantIcon } from "../engine/controls/icons";
+import { Tooltip } from "../engine/controls/Tooltip";
+import { Presence } from "../engine/motion/usePresence";
+import {
+  ContextMenu,
+  type ContextMenuItem,
+} from "../engine/controls/ContextMenu";
 import "./textus-ai-switch.css";
 
 /** How long "Pause for an hour" keeps Textus AI off. */
-export const TEXTUS_AI_PAUSE_MS = 60 * 60 * 1000;
+const TEXTUS_AI_PAUSE_MS = 60 * 60 * 1000;
 
 /** Textus AI's master switch and the ways to flip it. Turning it on or off
  *  clears a pause. `toggle` announces the new state, since nothing under the
@@ -101,7 +105,7 @@ export function TextusAiButton({
   const tip = ai.on
     ? `${t.agentPanelTitle} (${shortcut}) · ${t.textusAiMenuHint}`
     : until
-      ? t.textusAiPausedTooltip.replace("{time}", until)
+      ? fill(t.textusAiPausedTooltip, { time: until })
       : t.textusAiOffTooltip;
   const items: (ContextMenuItem | "separator")[] = ai.on
     ? [
@@ -135,7 +139,7 @@ export function TextusAiButton({
       </Tooltip>
       {/* On <body>: the bar's status group takes no pointer events. */}
       {createPortal(
-        <Presence show={menu !== null} exitMs={120}>
+        <Presence show={menu !== null}>
           {menu && (
             <ContextMenu
               x={menu.x}

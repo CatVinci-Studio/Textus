@@ -1,7 +1,7 @@
 // @vitest-environment jsdom
 import { afterEach, beforeAll, describe, expect, it } from "vitest";
 import type { EditorView } from "@milkdown/kit/prose/view";
-import { closeViews, openView } from "../../document-view/editor-view-kit";
+import { closeViews, openView } from "../editor-view-kit";
 
 // Typed text that reads as a link becomes one once the caret is past it,
 // as GFM would read the file on reopening; the Markdown stays as typed.

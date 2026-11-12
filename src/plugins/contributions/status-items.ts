@@ -1,3 +1,4 @@
+import { headingsOf } from "../../utils/markdown-lines";
 /**
  * What plugins show in the window bar's status area: a short text, its
  * tooltip, and a command a click runs. Gone with the plugin that set it.
@@ -61,24 +62,10 @@ export function removeStatusItem(plugin: string, id?: string): void {
   if (kept.length !== items.length) publish(kept);
 }
 
-/** A document's headings, from its Markdown: the ATX ones (`## Title`),
- *  outside code fences, with the line each is on (0-based). */
+/** A document's headings, from its Markdown, with the line each is on
+ *  (0-based): the editor's (headingsOf). */
 export function outlineOf(
   markdown: string,
 ): { level: number; text: string; line: number }[] {
-  const out: { level: number; text: string; line: number }[] = [];
-  let fence: string | null = null;
-  markdown.split("\n").forEach((line, index) => {
-    const open = /^\s{0,3}(`{3,}|~{3,})/.exec(line);
-    if (open) {
-      if (fence === null) fence = open[1][0];
-      else if (open[1][0] === fence) fence = null;
-      return;
-    }
-    if (fence !== null) return;
-    const heading = /^\s{0,3}(#{1,6})\s+(.*?)\s*#*\s*$/.exec(line);
-    if (heading)
-      out.push({ level: heading[1].length, text: heading[2], line: index });
-  });
-  return out;
+  return headingsOf(markdown);
 }

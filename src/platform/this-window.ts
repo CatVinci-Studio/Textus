@@ -4,7 +4,7 @@ import type { Event, UnlistenFn } from "@tauri-apps/api/event";
 import { inBrowser } from "./runtime";
 
 /** What the app asks of the window it runs in. */
-export type ThisWindow = Pick<
+type ThisWindow = Pick<
   Window,
   | "label"
   | "close"

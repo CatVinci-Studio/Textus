@@ -57,7 +57,7 @@ pub fn take_detached_tab(
 }
 
 /// A tab's own right-click Move to New Window: the tab handed to a fresh
-/// window, which takes it as it opens.
+/// small window (build_small_window), which takes it as it opens.
 #[tauri::command]
 #[cfg_attr(test, specta::specta)]
 pub async fn move_tab_to_new_window(
@@ -67,7 +67,7 @@ pub async fn move_tab_to_new_window(
 ) -> Result<(), String> {
     let label = format!("window-{}", crate::editor_windows::next_window_id());
     pending.0.lock().unwrap().insert(label.clone(), tab);
-    crate::editor_windows::build_window(&app, &label, None).map_err(|e| {
+    crate::editor_windows::build_small_window(&app, &label, None).map_err(|e| {
         pending.0.lock().unwrap().remove(&label);
         e.to_string()
     })
@@ -93,14 +93,12 @@ pub struct WindowBounds {
 #[tauri::command]
 #[cfg_attr(test, specta::specta)]
 pub fn list_window_bounds(app: tauri::AppHandle) -> Vec<WindowBounds> {
-    app.webview_windows()
+    app.windows()
         .iter()
         .filter_map(|(label, window)| {
             // Never a drop target: the pill being dragged, a detached chat (a dropped tab
             // would vanish), or a hidden window.
-            if !crate::commands::chat_window::is_editor_window(label)
-                || !window.is_visible().unwrap_or(false)
-            {
+            if !crate::windows::is_editor_window(label) || !window.is_visible().unwrap_or(false) {
                 return None;
             }
             let pos = window.outer_position().ok()?;
@@ -123,19 +121,15 @@ pub use pill::DRAG_PILL_LABEL;
 #[cfg(any(target_os = "macos", windows))]
 use pill::{create_drag_pill, destroy_drag_pill, move_drag_pill, park_drag_pill};
 
-/// Height of the strip along a window's top edge that counts as its tab row for
-/// drops. Keep in step with TAB_ROW_HEIGHT_LOGICAL in useTabDragMerge.ts.
+/// Which window (if any) is under the cursor, and whether over its tab row -
+/// the `row` logical points along its top, as the window measures it (the
+/// tab joins the row) - or its documents (it opens beside them, split).
+/// The pill and hidden windows never are; the drag source is, so a tab can
+/// drop back where it came from.
 #[cfg(any(target_os = "macos", windows))]
-const TAB_ROW_HEIGHT_LOGICAL: f64 = 72.0;
-
-/// Which window's tab row (if any) is under the cursor. The pill and hidden
-/// windows never are; the drag source is, so a tab can drop back where it came from.
-#[cfg(any(target_os = "macos", windows))]
-fn top_strip_hit(app: &tauri::AppHandle, x: f64, y: f64) -> Option<String> {
-    for (label, window) in app.webview_windows() {
-        if !crate::commands::chat_window::is_editor_window(&label)
-            || !window.is_visible().unwrap_or(false)
-        {
+fn window_hit(app: &tauri::AppHandle, x: f64, y: f64, row: f64) -> Option<(String, bool)> {
+    for (label, window) in app.windows() {
+        if !crate::windows::is_editor_window(&label) || !window.is_visible().unwrap_or(false) {
             continue;
         }
         let (Ok(pos), Ok(size), Ok(scale)) = (
@@ -148,8 +142,9 @@ fn top_strip_hit(app: &tauri::AppHandle, x: f64, y: f64) -> Option<String> {
         let wx = pos.x as f64 / scale;
         let wy = pos.y as f64 / scale;
         let ww = size.width as f64 / scale;
-        if x >= wx && x <= wx + ww && y >= wy && y <= wy + TAB_ROW_HEIGHT_LOGICAL {
-            return Some(label);
+        let wh = size.height as f64 / scale;
+        if x >= wx && x <= wx + ww && y >= wy && y <= wy + wh {
+            return Some((label, y <= wy + row));
         }
     }
     None
@@ -161,7 +156,8 @@ static FLOATING_DRAG_ACTIVE: AtomicBool = AtomicBool::new(false);
 
 /// The floating tab. Once a tab is in flight its document is handed to Rust and
 /// its source is gone (destroy is what macOS honors mid-drag). This thread polls
-/// the cursor until release: over a tab row the tab lands there, else in a new window.
+/// the cursor until release: over a tab row the tab lands there, over a
+/// window's documents it opens split there, else in a new window.
 #[tauri::command]
 #[cfg_attr(test, specta::specta)]
 pub fn start_floating_tab_drag(
@@ -170,10 +166,12 @@ pub fn start_floating_tab_drag(
     title: String,
     dirty: bool,
     destroy_source: bool,
+    row_height: f64,
+    look: String,
 ) -> Result<(), String> {
     #[cfg(not(any(target_os = "macos", windows)))]
     {
-        let _ = (window, tab, title, dirty, destroy_source);
+        let _ = (window, tab, title, dirty, destroy_source, row_height, look);
         Err("floating tab drags need global cursor tracking".to_string())
     }
     #[cfg(any(target_os = "macos", windows))]
@@ -189,28 +187,38 @@ pub fn start_floating_tab_drag(
             let mut pill_exists = false;
             let mut pill_parked = false;
             let mut hover: Option<String> = None;
-            let mut hit: Option<String> = None;
+            let mut hit: Option<(String, bool)> = None;
             let mut ticks: u32 = 0;
 
             let (x, y, final_hit) = loop {
                 let (x, y, down) = mouse::state();
                 if !down {
                     // Release: one fresh hit test decides; the cached one may be two ticks stale.
-                    break (x, y, top_strip_hit(&app, x, y));
+                    break (x, y, window_hit(&app, x, y, row_height));
                 }
                 // The pill moves every tick; the costly hit test runs every 3rd.
                 if ticks.is_multiple_of(3) {
-                    hit = top_strip_hit(&app, x, y);
+                    hit = window_hit(&app, x, y, row_height);
                 }
                 ticks += 1;
 
                 match &hit {
-                    Some(label) => {
+                    Some((label, row)) => {
                         // Snapped into a row: the target's preview pill stands for the tab, the
-                        // floating pill parks.
-                        if pill_exists && !pill_parked {
+                        // floating pill parks. Over the documents it rides on, the window
+                        // showing where the split would open.
+                        if *row && pill_exists && !pill_parked {
                             park_drag_pill(&app);
                             pill_parked = true;
+                        } else if !*row {
+                            if pill_exists {
+                                move_drag_pill(&app, x, y);
+                                pill_parked = false;
+                            } else {
+                                pill_exists = true;
+                                pill_parked = false;
+                                create_drag_pill(&app, &title, dirty, &look, x, y);
+                            }
                         }
                         if hover.as_deref() != Some(label.as_str()) {
                             if let Some(prev) = &hover {
@@ -230,6 +238,8 @@ pub fn start_floating_tab_drag(
                                 title: title.clone(),
                                 dirty,
                                 x,
+                                y,
+                                row: *row,
                             }),
                         );
                     }
@@ -247,7 +257,7 @@ pub fn start_floating_tab_drag(
                         } else {
                             pill_exists = true;
                             pill_parked = false;
-                            create_drag_pill(&app, &title, dirty, x, y);
+                            create_drag_pill(&app, &title, dirty, &look, x, y);
                         }
                     }
                 }
@@ -257,7 +267,7 @@ pub fn start_floating_tab_drag(
             // A preview on a window that isn't the landing one gets an explicit off; the
             // landing window swaps its preview for the tab itself, without a gap flash.
             if let Some(prev) = &hover {
-                if final_hit.as_deref() != Some(prev.as_str()) {
+                if final_hit.as_ref().map(|(l, _)| l.as_str()) != Some(prev.as_str()) {
                     let _ = app.emit_to(
                         EventTarget::webview_window(prev),
                         "drag-hover",
@@ -266,11 +276,11 @@ pub fn start_floating_tab_drag(
                 }
             }
             match final_hit {
-                Some(label) => {
+                Some((label, row)) => {
                     let _ = app.emit_to(
                         EventTarget::webview_window(&label),
                         "receive-detached-tab",
-                        DroppedTab { tab, x },
+                        DroppedTab { tab, x, y, row },
                     );
                 }
                 None => {
@@ -283,7 +293,11 @@ pub fn start_floating_tab_drag(
                     let app2 = app.clone();
                     let position = (x - 100.0, (y - 14.0).max(0.0));
                     let _ = app.run_on_main_thread(move || {
-                        let _ = crate::editor_windows::build_window(&app2, &label, Some(position));
+                        let _ = crate::editor_windows::build_small_window(
+                            &app2,
+                            &label,
+                            Some(position),
+                        );
                     });
                 }
             }
@@ -421,22 +435,28 @@ pub fn start_window_drag_tracking(
     }
 }
 
-/// Payload of "drag-hover", re-emitted every tick with the live cursor x so the
-/// receiver can slide the incoming tab along its bar. None on leave.
+/// Payload of "drag-hover", re-emitted every tick with the live cursor so the
+/// receiver can slide the incoming tab along its bar (`row`), or show where
+/// over its documents it would open. None on leave.
 #[cfg(any(target_os = "macos", windows))]
 #[derive(Clone, serde::Serialize)]
 struct DragHoverPreview {
     title: String,
     dirty: bool,
     x: f64,
+    y: f64,
+    row: bool,
 }
 
-/// Payload of "receive-detached-tab": the document and the drop's cursor x, so
-/// the tab lands at the slot it hovered.
+/// Payload of "receive-detached-tab": the document and the drop's cursor, so
+/// the tab lands at the slot it hovered, or opens split where it was let go
+/// over the documents (`row` false).
 #[cfg(any(target_os = "macos", windows))]
 #[derive(Clone, serde::Serialize)]
 struct DroppedTab {
     #[serde(flatten)]
     tab: DetachedTab,
     x: f64,
+    y: f64,
+    row: bool,
 }

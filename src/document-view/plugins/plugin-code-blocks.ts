@@ -1,3 +1,4 @@
+import { widgetButton } from "../../editor/widget-button";
 import type { Editor } from "@milkdown/kit/core";
 import { createElement } from "react";
 import { createRoot, type Root } from "react-dom/client";
@@ -16,7 +17,7 @@ import {
   type EditorView,
 } from "@milkdown/kit/prose/view";
 import { $prose } from "@milkdown/kit/utils";
-import { cachedDocument } from "../../ai/doc-markdown";
+import { cachedDocument } from "../../editor/markdown/doc-markdown";
 import { drawWhileNear } from "../../editor/draw-when-visible";
 import { currentStrings } from "../../i18n/current";
 import {
@@ -30,12 +31,17 @@ import type { CodeBlockSeen } from "../../plugins/manager";
 import { PluginCodeBlock } from "../../plugins/views/plugin-views";
 import { webviewPicture } from "../../plugins/views/webviews";
 import { setDrawnBlocks } from "../../export/drawn-blocks";
-import { setEmbeddedBlocks } from "../../editor/embeds/embed-plugin-blocks";
-import { drawPluginBlocksIn } from "./embedded-plugin-blocks";
 import "./plugin-code-blocks.css";
 import { markChangeSource } from "../../editor/change-source";
 import { addBlockFold } from "../../editor/fold/block-fold";
 import { setDrawnBlockActions } from "../../editor/drawn-block-actions";
+import {
+  BLOCK_ZOOMS,
+  followPaneWidth,
+  layoutOf,
+  setBlockLayout,
+  type BlockLayout,
+} from "./block-layout";
 import {
   pluginName,
   pluginsSnapshot,
@@ -81,7 +87,6 @@ interface Drawn {
  */
 export function pluginCodeBlocks(docPath: { readonly current: string | null }) {
   setDrawnBlocks(DRAWN_BLOCKS);
-  setEmbeddedBlocks(drawPluginBlocksIn);
   return $prose((ctx) => {
     const drawn = new Map<string, Drawn>();
 
@@ -136,15 +141,36 @@ export function pluginCodeBlocks(docPath: { readonly current: string | null }) {
       widget: string,
     ): HTMLElement {
       const el = document.createElement("div");
-      el.className = BLOCK_CLASS;
+      el.className = `${BLOCK_CLASS} tx-reveal-host`;
       if (codeBlockFrameless(language))
         el.classList.add(`${BLOCK_CLASS}-plain`);
       el.dataset.language = language;
       el.contentEditable = "false";
       el.append(editButton(view, getPos));
+      // Its width and size, as its fence says; kept up as the fence changes.
+      let layout = layoutOf({});
+      let stopWide = () => {};
+      const lay = (next: BlockLayout) => {
+        if (next.wide !== layout.wide) {
+          stopWide();
+          stopWide = next.wide ? followPaneWidth(el, view.dom) : () => {};
+          el.toggleAttribute("data-wide", next.wide);
+        }
+        layout = next;
+      };
+      const initial = blockAt(ctx, view, getPos, language);
+      if (initial) lay(layoutOf(initial.meta));
       setDrawnBlockActions(el, {
         editSource: () => openSource(view, getPos),
         remove: () => removeBlock(view, getPos),
+        get layout() {
+          return {
+            ...layout,
+            zooms: BLOCK_ZOOMS,
+            set: (patch: Partial<BlockLayout>) =>
+              setBlockLayout(view, getPos, patch, layout),
+          };
+        },
       });
       const holder = document.createElement("div");
       holder.className = "plugin-code-holder";
@@ -167,11 +193,13 @@ export function pluginCodeBlocks(docPath: { readonly current: string | null }) {
           const render = () => {
             const seen = blockAt(ctx, view, getPos, language);
             if (!seen) return;
+            lay(layoutOf(seen.meta));
             root.render(
               createElement(PluginCodeBlock, {
                 plugin,
                 widget,
                 seen,
+                zoom: layout.zoom,
                 setSource: (source: string) => setSource(view, getPos, source),
               }),
             );
@@ -328,18 +356,12 @@ function editButton(
   view: EditorView,
   getPos: () => number | undefined,
 ): HTMLButtonElement {
-  const button = document.createElement("button");
-  button.type = "button";
-  button.className = "plugin-code-edit";
+  const button = widgetButton("tx-reveal plugin-code-edit", "</>", () =>
+    openSource(view, getPos),
+  );
   const label = currentStrings().codeBlockEditSource;
   button.setAttribute("aria-label", label);
   button.title = label;
-  button.textContent = "</>";
-  button.addEventListener("mousedown", (event) => event.preventDefault());
-  button.addEventListener("click", (event) => {
-    event.preventDefault();
-    openSource(view, getPos);
-  });
   return button;
 }
 

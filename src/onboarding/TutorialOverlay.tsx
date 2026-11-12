@@ -1,13 +1,6 @@
-import {
-  useEffect,
-  useId,
-  useRef,
-  useState,
-  type CSSProperties,
-  type ReactNode,
-} from "react";
-import { useModalDialog } from "../ui/useModalDialog";
-import { useDockedPanelWidth } from "../utils/hooks/useDockedPanelWidth";
+import { fill } from "../i18n/fill";
+import { useEffect, useId, useRef, useState, type ReactNode } from "react";
+import { useModalDialog } from "../engine/controls/useModalDialog";
 import { useCardPlacement } from "./card-placement";
 import type { TutorialStepId } from "./tutorial-steps";
 import "./TutorialOverlay.css";
@@ -37,7 +30,7 @@ interface TutorialButton {
   onClick: () => void;
 }
 
-export interface TutorialTaskLine {
+interface TutorialTaskLine {
   text: string;
   done: boolean;
 }
@@ -76,7 +69,6 @@ interface TutorialOverlayProps {
 const STEP_GLYPHS: Record<Exclude<TutorialStepId, "welcome">, string> = {
   wysiwyg: "M↓",
   palette: "❯",
-  plugins: "⊞",
   connect: "⇄",
   write: "✦",
   continuation: "↹",
@@ -149,7 +141,6 @@ export function TutorialOverlay({
   const contentId = `${id}content`;
   const primaryRef = useRef<HTMLButtonElement>(null);
   const modal = useModalDialog(onSkip, layout === "overlay");
-  const dockedWidth = useDockedPanelWidth();
   // Keeps clear of what the lesson is about; with no room it folds to its
   // header, unless the learner opened or folded it on this lesson.
   const placement = useCardPlacement(
@@ -164,9 +155,10 @@ export function TutorialOverlay({
   } | null>(null);
   const collapsed =
     folded?.stepId === stepId ? folded.collapsed : !placement.roomy;
-  const progressLabel = labels.stepOfCount
-    .replace("{i}", String(stepIndex + 1))
-    .replace("{n}", String(totalSteps));
+  const progressLabel = fill(labels.stepOfCount, {
+    i: String(stepIndex + 1),
+    n: String(totalSteps),
+  });
 
   useEffect(() => {
     if (layout === "overlay") primaryRef.current?.focus();
@@ -176,12 +168,7 @@ export function TutorialOverlay({
     <div
       {...modal}
       className={`tutorial-surface tutorial-${layout} tutorial-step-${stepId} floating-surface`}
-      style={
-        {
-          ...placement.style,
-          "--docked-panel-width": `${dockedWidth}px`,
-        } as CSSProperties
-      }
+      style={placement.style}
       data-place={placement.place ?? undefined}
       role="dialog"
       aria-modal={layout === "overlay"}
@@ -324,7 +311,7 @@ export function TutorialOverlay({
   );
 
   if (layout === "overlay") {
-    return <div className="tutorial-backdrop">{card}</div>;
+    return <div className="tx-backdrop tutorial-backdrop">{card}</div>;
   }
 
   return card;

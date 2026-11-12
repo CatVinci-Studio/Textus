@@ -1,9 +1,10 @@
+import { fill } from "../../i18n/fill";
 import { useRef, type CSSProperties } from "react";
-import { useViewportClamp } from "../../utils/hooks/useViewportClamp";
-import { usePresenceProps } from "../../ui/usePresence";
-import { ChevronIcon } from "../../ui/icons";
+import { usePlacement } from "../../engine/controls/usePlacement";
+import { usePresenceProps } from "../../engine/motion/usePresence";
+import { ChevronIcon } from "../../engine/controls/icons";
 import type { GrammarKind } from "./grammar-kind";
-import { Tooltip } from "../../ui/Tooltip";
+import { Tooltip } from "../../engine/controls/Tooltip";
 import "./GrammarPopover.css";
 
 export interface GrammarPopoverInfo {
@@ -26,7 +27,7 @@ export interface GrammarPopoverInfo {
   count: number;
 }
 
-export interface GrammarPopoverLabels {
+interface GrammarPopoverLabels {
   grammarKinds: Record<GrammarKind, string>;
   /** "Change to “{s}”". */
   grammarApplyTo: string;
@@ -56,7 +57,7 @@ export function applyLabel(
 ): string {
   const s = suggestion.trim();
   return s && [...s].length <= 16
-    ? labels.grammarApplyTo.replace("{s}", s)
+    ? fill(labels.grammarApplyTo, { s })
     : labels.grammarApply;
 }
 
@@ -73,7 +74,7 @@ export function GrammarPopover({
   onMouseLeave,
 }: GrammarPopoverProps) {
   const rootRef = useRef<HTMLDivElement>(null);
-  const pos = useViewportClamp(rootRef, info.x, info.y);
+  const pos = usePlacement(rootRef, info.x, info.y);
   const presence = usePresenceProps(rootRef);
   // It grows out of the underline it explains: from its top edge, or its
   // bottom one when the window's edge pushed it up over the line.

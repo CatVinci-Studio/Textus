@@ -1,7 +1,7 @@
 // @vitest-environment jsdom
 import { afterEach, describe, expect, it } from "vitest";
 import { editorViewCtx, type Editor } from "@milkdown/kit/core";
-import { createTestEditor } from "../../document-view/editor-test-harness";
+import { createTestEditor } from "../editor-test-kit";
 import { definitionsIn } from "../markdown/link-reveal";
 import { plainTextOf } from "./plain-text";
 

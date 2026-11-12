@@ -18,6 +18,7 @@ fn run_at(base_url: &str) -> ImageRun {
         made: AtomicUsize::new(0),
         limit: PER_SEND,
         folder: None,
+        request: None,
     }
 }
 
@@ -337,6 +338,40 @@ fn a_picture_let_go_while_painting_stays_gone() {
 }
 
 #[test]
+fn stopping_a_request_stops_its_pictures_still_being_made() {
+    // A service that takes the request and never answers.
+    let service = std::net::TcpListener::bind("127.0.0.1:0").unwrap();
+    let run = run_at(&format!("http://{}", service.local_addr().unwrap())).for_request("r1");
+    let (id, _) = run.start("a lighthouse".into(), Aspect::Square, None);
+    std::thread::sleep(std::time::Duration::from_millis(200));
+    stop_request("r2");
+    assert!(look(&id).is_none(), "another request's Stop leaves it be");
+    stop_request("r1");
+    assert_eq!(picture(&id).unwrap_err(), pending::STOPPED);
+}
+
+#[test]
+fn stopping_a_request_keeps_a_picture_already_made() {
+    let service = std::net::TcpListener::bind("127.0.0.1:0").unwrap();
+    let run = run_at(&format!("http://{}", service.local_addr().unwrap())).for_request("r3");
+    let (id, _) = run.start("a harbour".into(), Aspect::Square, None);
+    std::thread::sleep(std::time::Duration::from_millis(200));
+    // In before the Stop, its task not yet tidied away.
+    finish(
+        &id,
+        Slot::Ready(GeneratedImage {
+            bytes: vec![1, 2, 3],
+            mime: "image/png",
+            ext: "png",
+            width: 4,
+            height: 3,
+        }),
+    );
+    stop_request("r3");
+    assert_eq!(picture(&id).unwrap().width, 4);
+}
+
+#[test]
 fn a_send_makes_at_most_two_pictures() {
     let run = run();
     let args = json!({"prompt": "nets", "alt": "Nets", "action": "append"});
@@ -527,13 +562,13 @@ fn a_picture_that_was_not_made_is_asked_for_again_by_itself() {
     let (other, _) = run.start("A blue boat".into(), Aspect::Square, None);
     finish(&failing, Slot::Failed("offline".into()));
     finish(&other, Slot::Failed("offline".into()));
-    ai_retry_generated_image(failing.clone()).expect("asked again");
+    retry(&failing).expect("asked again");
     // Being made again: retried twice at once, the second is refused.
     assert!(look(&failing).is_none());
-    assert!(ai_retry_generated_image(failing.clone()).is_err());
+    assert!(retry(&failing).is_err());
     // The other picture was left as it was.
     assert!(matches!(look(&other), Some(Err(_))));
-    assert!(ai_retry_generated_image("gone00".into()).is_err());
+    assert!(retry("gone00").is_err());
 }
 
 #[test]
@@ -548,16 +583,16 @@ fn a_picture_is_drawn_again_from_the_writers_description() {
         Some("A red boat")
     );
     // Still being made: not drawn again over it.
-    assert!(ai_redraw_generated_image(id.clone(), "A red boat at dawn".into()).is_err());
+    assert!(redraw(&id, "A red boat at dawn".into()).is_err());
     finish(&id, Slot::Failed("offline".into()));
     // An empty description draws nothing.
-    assert!(ai_redraw_generated_image(id.clone(), "  ".into()).is_err());
-    ai_redraw_generated_image(id.clone(), "A red boat at dawn".into()).expect("drawn again");
+    assert!(redraw(&id, "  ".into()).is_err());
+    redraw(&id, "A red boat at dawn".into()).expect("drawn again");
     assert_eq!(
         ai_generated_image_prompt(id.clone()).as_deref(),
         Some("A red boat at dawn")
     );
-    assert!(ai_redraw_generated_image("gone00".into(), "A boat".into()).is_err());
+    assert!(redraw("gone00", "A boat".into()).is_err());
     assert_eq!(ai_generated_image_prompt("gone00".into()), None);
 }
 

@@ -1,3 +1,4 @@
+import { ChevronIcon } from "../../engine/controls/icons";
 import { useEffect, useState } from "react";
 import { thoughtSeconds, type Thought } from "./thought";
 
@@ -43,13 +44,7 @@ export function ThoughtRow({
           onClick={() => setOpen(!open)}
         >
           <span className="agent-thought-label">{label}</span>
-          <svg
-            className="agent-thought-chevron"
-            viewBox="0 0 16 16"
-            aria-hidden="true"
-          >
-            <path d="M6 4l4 4-4 4" />
-          </svg>
+          <ChevronIcon className="agent-thought-chevron" />
         </button>
       ) : (
         <span className="agent-thought-label">{label}</span>

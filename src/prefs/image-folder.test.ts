@@ -57,13 +57,17 @@ describe("storedImageFolder", () => {
     expect(storedImageFolder("img-${filename}")).toBe("assets");
   });
 
-  it("keeps a folder of the user's own when it is one plain name", () => {
+  it("keeps a folder of the user's own inside the document's", () => {
     expect(storedImageFolder("img")).toBe("img");
     expect(storedImageFolder(" pictures/ ")).toBe("pictures");
+    // Accepted in Settings, kept on the next read too.
+    expect(isImageSubfolder("img/shots")).toBe(true);
+    expect(storedImageFolder("img/shots")).toBe("img/shots");
   });
 
-  it("turns a path, a climb out or a refused folder into assets", () => {
-    for (const stored of ["img/shots", "../images", "/tmp/img", "", 3, null])
+  it("refuses a pattern, and turns a climb out or a refused folder into assets", () => {
+    expect(isImageSubfolder("${filename}.assets")).toBe(false);
+    for (const stored of ["../images", "/tmp/img", "", 3, null])
       expect(storedImageFolder(stored)).toBe("assets");
   });
 });

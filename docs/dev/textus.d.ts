@@ -1,5 +1,5 @@
 /**
- * The Textus plugin API, 1.4: the `textus` object a plugin's code is given
+ * The Textus plugin API, 1.5: the `textus` object a plugin's code is given
  * (src/plugins/host/runtime/host.js), the context its `activate` receives, and
  * `acquireTextusApi()` in its webviews (runtime/webview.js). The one source
  * of truth: docs/dev/plugins/guide.md explains it, the reference pages are
@@ -163,7 +163,7 @@ declare global {
       /** Textus's UI language ("en", "zh", "zh-Hant", ...). */
       readonly language: string;
       readonly appVersion: string;
-      /** This API's version: "1.4" from Textus 1.3.10 ("1.3": 1.3.10-rc.1,
+      /** This API's version: "1.5" from Textus 1.3.12-rc.1 ("1.4": 1.3.10, "1.3": 1.3.10-rc.1,
        *  "1.2": 1.3.9, "1.1": 1.3.0-beta.8). Prefer engines.textus; compare
        *  it as numbers, not as text ("1.10" > "1.9"). */
       readonly apiVersion: string;
@@ -352,6 +352,9 @@ declare global {
       /** Opens the sidebar on a tab: a plugin's sidebar tab id, or `tree`
        *  (Files) or `outline`. From 1.3.10. */
       showSidebarTab(id: string): Promise<void>;
+      /** Opens the plugin's own page in its tab - its settings, version,
+       *  permissions: where setup forms go, not a sidebar. From 1.3.13. */
+      openSettings(): Promise<void>;
       /** A web page in a tab, for a host the plugin was granted. */
       openWebPage(
         url: string,
@@ -532,7 +535,8 @@ declare global {
       /** A group's heading above the items that share it. */
       group?: string;
       /** One of the app's icons ("file", "folder", "task", "link", "tag",
-       *  "calendar", "clock", "star") or an SVG of the plugin's. */
+       *  "calendar", "clock", "star"), or any other text, such as a page's
+       *  emoji, drawn in its place. */
       icon?: string;
       checkbox?: boolean;
       /** A small mark after the label: "due", "overdue", "new". */
@@ -759,6 +763,8 @@ declare global {
       | {
           type: "document";
           path: string;
+          /** The heading linked to; from 1.3.13 a wikilink's nested
+           *  headings come whole, "A#B" (B inside A's section). */
           heading: string | null;
           /** From 1.3.9: a "^id" block the link points at, without "^". */
           block?: string | null;
@@ -961,6 +967,8 @@ declare global {
       trash(path: string): Promise<void>;
       createFolder(path: string): Promise<void>;
       frontmatter: Frontmatter;
+      /** A file a plugin made, and from 1.3.13 a picture pasted or dropped
+       *  into a document and saved in its folder. */
       onDidCreate: Event<{ path: string }>;
       onDidChange: Event<{ path: string }>;
       onDidRename: Event<{ from: string; to: string }>;
@@ -998,7 +1006,8 @@ declare global {
       /** From 1.3.10: a settings file of the nearest Obsidian vault -
        *  `appSettings("obsidian", "bookmarks.json")` reads
        *  `.obsidian/bookmarks.json` - parsed as JSON, found above the open
-       *  folder too; null where there is none. Read only (files.read). */
+       *  folder too; null where there is none. A file at the settings
+       *  folder's top only. Read only (files.read). */
       appSettings(
         app: "obsidian",
         file: string,
@@ -1141,6 +1150,7 @@ declare global {
         query: string,
         options?: { limit?: number },
       ): Promise<{
+        /** `line` counts from 1 here, unlike a Location's (from 0). */
         hits: (Location & { rel: string; line: number; text: string })[];
         truncated: boolean;
       }>;

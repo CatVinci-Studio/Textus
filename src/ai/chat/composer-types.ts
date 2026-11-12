@@ -11,12 +11,8 @@ import type { AgentMode, PanelMode } from "../../prefs/SettingsContext";
 export interface ChatComposerHandle {
   /** Puts `text` in the box, before what is there, and focuses it. */
   restore: (text: string) => void;
-}
-
-/** What ChatBody may do to the composer. */
-export interface ChatComposerHandle {
-  /** Puts `text` in the box, before what is there, and focuses it. */
-  restore: (text: string) => void;
+  /** Whether the box is on screen: its tab in front. */
+  shown: () => boolean;
 }
 
 export interface ChatComposerLabels {
@@ -126,13 +122,15 @@ export interface ChatComposerProps {
   /** Quick Ask: no attach, web-search or Deep thinking buttons, and it asks
    *  for a fast answer. */
   compact?: boolean;
+  /** Web search on or off to start, its own way (Create looks things up
+   *  first); left out, as the button was last left. */
+  startWebSearch?: boolean;
   /** The one mode offered, and the mode it starts and stays in (Settings ›
    *  Extensions › Create: Create only). */
   onlyMode?: AgentMode;
   /** Focus the input as the composer appears (default). Off for the phone's
    *  AI sheet, where raising the keyboard right away flashes. */
   focusOnOpen?: boolean;
-  defaultWebSearch: boolean;
   /** The docked Quick Ask on a phone: its top row quotes what the request
    *  is about and carries these controls beside it. */
   dockActions?: ReactNode;

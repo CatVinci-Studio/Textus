@@ -1,7 +1,11 @@
+import { eachLine } from "./markdown-lines";
 import { onMemoryIdle } from "./memory-idle";
 
-export interface WordCount {
+interface WordCount {
   words: number;
+  /** Letters, digits and CJK punctuation - what 文字数 counts: no spaces,
+   *  no Markdown marks. */
+  characters: number;
 }
 
 const segmenter: Intl.Segmenter | undefined =
@@ -13,6 +17,10 @@ const segmenter: Intl.Segmenter | undefined =
  *  count length. Hangul is spaced and counts by word. */
 const CJK_CHAR =
   /[\p{Script=Han}\p{Script=Hiragana}\p{Script=Katakana}々〆〇]/gu;
+
+/** What a character count takes: letters (kana and Han included), digits
+ *  and the CJK punctuation a Japanese count keeps. */
+const COUNTED_CHAR = /[\p{L}\p{N}\u3000-\u303f\uff01-\uff0f\uff1a-\uff20]/gu;
 
 /** The words of a stretch of prose with no blank line in it. */
 function countText(text: string): number {
@@ -40,7 +48,7 @@ function countText(text: string): number {
 // a longer document was recounted whole on every edit; keeping only the last
 // count, switching back from another tab recounted it whole.)
 const PARAGRAPHS_KEPT = 50_000;
-const paragraphCounts = new Map<string, number>();
+const paragraphCounts = new Map<string, readonly [number, number]>();
 onMemoryIdle(() => paragraphCounts.clear());
 
 /** An image's turn or width kept in its title (`{textus-rotate=90}`,
@@ -48,41 +56,44 @@ onMemoryIdle(() => paragraphCounts.clear());
 const IMAGE_TITLE_METADATA =
   /\{(?:\s*(?:textus|levis)-(?:width|rotate)=[^\s}]*)+\s*\}/g;
 
-function countParagraph(text: string): number {
-  let words = paragraphCounts.get(text);
-  if (words === undefined) {
-    words = countText(text.replace(IMAGE_TITLE_METADATA, ""));
-    paragraphCounts.set(text, words);
+/** A paragraph's words and characters. */
+function countParagraph(text: string): readonly [number, number] {
+  let counts = paragraphCounts.get(text);
+  if (counts === undefined) {
+    const prose = text.replace(IMAGE_TITLE_METADATA, "");
+    counts = [countText(prose), prose.match(COUNTED_CHAR)?.length ?? 0];
+    paragraphCounts.set(text, counts);
   }
-  return words;
+  return counts;
 }
 
 /**
- * Counts words via Intl.Segmenter. Chinese and Japanese count each character
- * (红楼梦 is three); fenced code blocks are left out.
+ * Counts words via Intl.Segmenter - Chinese and Japanese count each
+ * character (红楼梦 is three) - and characters as 文字数 does; fenced code
+ * blocks are left out.
  */
 export function countWords(markdown: string): WordCount {
   let words = 0;
+  let characters = 0;
   let paragraph = "";
-  let inFence = false;
   const paragraphs: string[] = [];
   const flush = () => {
     if (paragraph) {
-      words += countParagraph(paragraph);
+      const [w, c] = countParagraph(paragraph);
+      words += w;
+      characters += c;
       paragraphs.push(paragraph);
     }
     paragraph = "";
   };
-  for (const line of markdown.split("\n")) {
-    if (/^\s*(```|~~~)/.test(line)) {
-      inFence = !inFence;
-      flush();
-      continue;
-    }
-    if (inFence) continue;
-    if (line.trim() === "") flush();
-    else paragraph += line + "\n";
-  }
+  eachLine(
+    markdown,
+    (line, _index, code) => {
+      if (code || line.trim() === "") flush();
+      else paragraph += line + "\n";
+    },
+    { frontMatter: true },
+  );
   flush();
   if (paragraphCounts.size > Math.max(PARAGRAPHS_KEPT, 2 * paragraphs.length)) {
     const kept = paragraphs.map(
@@ -91,5 +102,5 @@ export function countWords(markdown: string): WordCount {
     paragraphCounts.clear();
     for (const [text, count] of kept) paragraphCounts.set(text, count);
   }
-  return { words };
+  return { words, characters };
 }

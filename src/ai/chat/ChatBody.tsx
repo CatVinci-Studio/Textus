@@ -1,9 +1,10 @@
-import type { DocumentSnapshot } from "../doc-markdown";
+import { fill } from "../../i18n/fill";
+import type { DocumentSnapshot } from "../../editor/markdown/doc-markdown";
 import { useFollowBottom } from "./useFollowBottom";
 import { pictureSrc } from "../revision/generated-images";
 import { MessageQueue } from "./MessageQueue";
 import { useRef } from "react";
-import type { AgentRequestOptions } from "./useAgentConversation";
+import type { AgentRequestOptions } from "./conversation/conversation-types";
 import type {
   AgentTurn,
   ChatAttachment,
@@ -11,20 +12,19 @@ import type {
   ImageAttachment,
 } from "../types";
 import { ChatMessages } from "./ChatMessages";
+import type { ApplySuggestion } from "./CommentCard";
+import { afterFileChanges } from "./file-changes";
+import { loadSettings } from "../../prefs/settings-store";
 import { ErrorRow } from "./ErrorRow";
 import { ThinkingIndicator } from "./ThinkingIndicator";
 import { ChatComposer, type ChatComposerHandle } from "./ChatComposer";
 import { MarkdownText } from "../MarkdownText";
 import { QuickAskPendingBar } from "./quick-ask/QuickAskPendingBar";
 import { quickSummary } from "./quick-summary";
-import { usePhoneLayout } from "../../ui/usePhoneLayout";
-import { Presence, PresenceDiv } from "../../ui/usePresence";
-import { scrollBehavior } from "../../ui/motion";
-import {
-  attachedFileBlock,
-  selectedTextBlock,
-  cursorBlock,
-} from "./user-message";
+import { usePhoneLayout } from "../../engine/controls/usePhoneLayout";
+import { Presence, PresenceDiv } from "../../engine/motion/usePresence";
+import { scrollBehavior } from "../../engine/motion/motion";
+import { composeMessage } from "./user-message";
 import { type ChatBodyProps, proposalsFromTurns } from "./chat-body-types";
 import {
   useMessageQueue,
@@ -32,12 +32,6 @@ import {
   useRevealedStream,
   useStreamedProposals,
 } from "./useChatBodyState";
-export {
-  type ChatBodyLabels,
-  type ChatBodyProps,
-  proposalsFromTurns,
-  quickReplyExpands,
-} from "./chat-body-types";
 
 export function ChatBody({
   document,
@@ -49,7 +43,6 @@ export function ChatBody({
   conversation,
   defaultMode,
   tourMode,
-  defaultWebSearch,
   labels,
   proposalStatus,
   pendingCount,
@@ -76,6 +69,7 @@ export function ChatBody({
   fillHeight,
   variant = "full",
   onlyMode,
+  startWebSearch,
   refreshContext,
   onRevealPending,
   quickReview,
@@ -111,10 +105,28 @@ export function ChatBody({
   );
 
   useStreamedProposals(streaming, onProposals);
+  const applySuggestion: ApplySuggestion = (id, note) =>
+    onProposals([
+      {
+        callId: `${id}:suggestion`,
+        proposal: {
+          action: "replace",
+          block: note.block,
+          anchor: note.anchor || undefined,
+          text: note.suggestion,
+          reason: note.comment,
+        },
+      },
+    ]);
 
   function afterSend(newTurns: AgentTurn[] | undefined) {
     const proposals = proposalsFromTurns(newTurns ?? []);
     if (proposals.length > 0) onProposals(proposals);
+    void afterFileChanges(
+      conversation.conversationId,
+      newTurns ?? [],
+      loadSettings().aiChangeMode === "revision",
+    );
     follow.stick();
     requestAnimationFrame(() => {
       listRef.current?.scrollTo({
@@ -201,53 +213,13 @@ export function ChatBody({
     stop();
   }
 
-  function composeMessage(
-    {
-      selectionMarkdown: selection,
-      cursor,
-    }: {
-      selectionMarkdown: string | null;
-      cursor?: { before: string; after: string } | null;
-    },
-    message: string,
-    attachments: ChatAttachment[],
-    includeSelection: boolean,
-  ): { message: string; images?: ImageAttachment[] } {
-    // The tag carries the selection's markdown so formatting survives the
-    // trip; with nothing selected, the caret's surroundings say where "here" is.
-    const tagged =
-      selection && includeSelection
-        ? `${selectedTextBlock(selection)}\n\n${message}`
-        : cursor
-          ? `${cursorBlock(cursor.before, cursor.after)}\n\n${message}`
-          : message;
-    // Text attachments were extracted in Rust and ride inside the prompt;
-    // images go as provider image parts.
-    const attachmentBlocks = attachments
-      .filter((f) => f.kind === "text")
-      .map((f) => attachedFileBlock(f.name, f.content, f.path))
-      .join("\n\n");
-    return {
-      message: attachmentBlocks ? `${attachmentBlocks}\n\n${tagged}` : tagged,
-      // Not filtered on vision here: the composer and the backend both refuse
-      // an image the provider can't read; dropping it would be a third policy.
-      images: attachments
-        .filter((f) => f.kind === "image")
-        .map((f) => ({
-          name: f.name,
-          mime: f.mime,
-          dataBase64: f.dataBase64,
-        })),
-    };
-  }
-
   /** An anchor that no longer resolves: ask the model to re-issue the edit
    *  against the document as it now reads, rather than writing text whose
    *  target we can't locate. */
   function handleRelocate(proposal: EditProposal) {
     dispatchSend(
       () => ({
-        message: labels.relocateRequest.replace("{text}", proposal.text ?? ""),
+        message: fill(labels.relocateRequest, { text: proposal.text ?? "" }),
       }),
       { mode: "write", webSearch: false },
     );
@@ -294,7 +266,10 @@ export function ChatBody({
                 />
               )}
               {!quickExpanded && promptText && (
-                <div className="quick-ask-prompt" title={promptText}>
+                <div
+                  className="tx-truncate quick-ask-prompt"
+                  title={promptText}
+                >
                   {promptText}
                 </div>
               )}
@@ -332,6 +307,8 @@ export function ChatBody({
                     onDecideSentence={onDecideSentence}
                     onRevealProposal={onRevealProposal}
                     onLocateText={onLocateText}
+                    onApplySuggestion={applySuggestion}
+                    conversation={conversation.conversationId}
                     noteNumber={noteNumber}
                     onRejectProposal={onRejectProposal}
                     onRelocateProposal={handleRelocate}
@@ -356,7 +333,7 @@ export function ChatBody({
           )
         : showMessages && (
             <div
-              className="inline-chat-messages"
+              className="inline-chat-messages tx-scroll-reveal"
               ref={listRef}
               onScroll={follow.onScroll}
             >
@@ -374,6 +351,8 @@ export function ChatBody({
                 onDecideSentence={onDecideSentence}
                 onRevealProposal={onRevealProposal}
                 onLocateText={onLocateText}
+                onApplySuggestion={applySuggestion}
+                conversation={conversation.conversationId}
                 noteNumber={noteNumber}
                 onRejectProposal={onRejectProposal}
                 onRelocateProposal={handleRelocate}
@@ -401,11 +380,11 @@ export function ChatBody({
       ) : (
         // Rises from the composer's edge with the first undecided edit
         // and goes back down after the last.
-        <Presence show={pendingBar && pendingCount > 0} exitMs={150}>
+        <Presence show={pendingBar && pendingCount > 0}>
           {pendingBar && pendingCount > 0 && (
             <PresenceDiv className="inline-chat-pending-bar">
               <span className="inline-chat-pending-count">
-                {labels.pendingSummary.replace("{n}", String(pendingCount))}
+                {fill(labels.pendingSummary, { n: String(pendingCount) })}
               </span>
               <div className="inline-chat-pending-actions">
                 {onRevealPending && (
@@ -467,10 +446,10 @@ export function ChatBody({
         selectionChip={selectionChip}
         selectionPerMessage={variant !== "quick"}
         compact={variant === "quick"}
+        startWebSearch={startWebSearch}
         focusOnOpen={variant === "quick" || !phone}
         dockActions={dockActions}
         switchModels={variant !== "quick"}
-        defaultWebSearch={defaultWebSearch}
         onSend={handleSend}
         onStop={stopAll}
         onEscape={onEscape ?? (() => {})}

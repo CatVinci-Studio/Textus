@@ -8,6 +8,7 @@ import type { EditorMenuState } from "./EditorContextMenu";
 import type { EditorSetup } from "./useEditorSetup";
 import type { EditorChat } from "./useEditorChat";
 import { useFindReplace } from "../editor/find/useFindReplace";
+import { pmFind } from "../editor/find/pm-find";
 import { useModeSwitchCaret } from "../editor/modes/useModeSwitchCaret";
 import { useTabJump } from "../editor/useTabJump";
 import { useTabCaret } from "../editor/useTabCaret";
@@ -45,10 +46,10 @@ export function useEditorCarets({
 }
 
 /** Portals' text fields keep the native Cut/Copy/Paste menu, whose Paste
- *  would otherwise go into the document. */
+ *  would otherwise go into the document; the AI panel has its own. */
 const ownsMenu = (target: EventTarget | null) =>
   !(target as HTMLElement | null)?.closest?.(
-    ".inline-chat, .find-replace-bar, input, textarea, .cm-content",
+    ".inline-chat, .agent-panel, .ai-tab, .find-replace-bar, input, textarea, .cm-content",
   );
 
 /**
@@ -87,7 +88,7 @@ export function useEditorPopups({
     else if (Date.now() - lastTouchRef.current < 800)
       requestAnimationFrame(onGrammarCaret);
   };
-  const findReplace = useFindReplace(run);
+  const findReplace = useFindReplace(pmFind(run));
   useTextusAiOff(run, settings.textusAi, {
     quickAsk: inlineChat.hide,
     grammarCard: grammar.hide,
@@ -115,6 +116,7 @@ export function useEditorPopups({
     openTableDialog: () => setTableDialogOpen(true),
     setMenu,
     conversation: chat.conversation,
+    guardConversation: chat.panelGuard.guard,
     agentPanel: chat.agentPanel,
     docPath: filePath,
   });

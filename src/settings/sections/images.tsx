@@ -1,3 +1,4 @@
+import { fill } from "../../i18n/fill";
 import { useEffect, useId, useState } from "react";
 import { fs, imageHostAuth } from "../../platform/ipc";
 import type { Strings } from "../../i18n/strings";
@@ -15,7 +16,7 @@ import {
   imageFolderExample,
   isImageSubfolder,
 } from "../../prefs/image-folder";
-import { Select } from "../../ui/Select";
+import { Select } from "../../engine/controls/Select";
 import { RowHelp, SecretInput, SettingRow, VERBATIM_INPUT } from "./controls";
 import { explainError } from "../../utils/error-explain";
 
@@ -72,9 +73,10 @@ function useProjectPictures(docPath: string | null, t: Strings): string | null {
         const rule = c.attachments;
         if (current && rule)
           setFound(
-            t.imageFolderProjectNote
-              .replace("{folder}", attachmentsFolderName(rule.value, t))
-              .replace("{source}", conventionsAppName(rule.app)),
+            fill(t.imageFolderProjectNote, {
+              folder: attachmentsFolderName(rule.value, t),
+              source: conventionsAppName(rule.app),
+            }),
           );
       })
       .catch(() => {});

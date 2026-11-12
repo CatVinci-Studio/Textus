@@ -15,7 +15,7 @@ async function withoutAi() {
     normalise: await import("../prefs/settings-normalise"),
     pages: await import("../settings/settings-pages"),
     tour: await import("../onboarding/tutorial-steps"),
-    features: await import("../settings/textus-ai"),
+    features: await import("../prefs/ai-features"),
   };
 }
 

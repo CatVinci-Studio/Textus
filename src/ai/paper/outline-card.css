@@ -78,8 +78,7 @@
 
 .paper-outline input {
   min-height: var(--control-height-sm);
-  border-radius: var(--shape-pill);
-  corner-shape: round;
+  border-radius: var(--shape-s);
 }
 
 .paper-outline textarea {
@@ -175,26 +174,15 @@
   color: var(--ui-accent, var(--ui-text));
 }
 
-.paper-outline-edit:disabled {
+/* Dimmed by the shared disabled rule; a hidden one (tx-reveal) stays so. */
+.paper-outline-edit:disabled:not(.tx-reveal) {
   cursor: default;
   opacity: 0.5;
 }
 
-.paper-outline-section .paper-outline-row .paper-outline-edit,
-.paper-outline-thesis .paper-outline-edit {
-  opacity: 0;
-  transition: opacity var(--dur-fast);
-}
-
-.paper-outline-section:hover .paper-outline-edit,
-.paper-outline-thesis:hover .paper-outline-edit,
-.paper-outline-edit:focus-visible {
-  opacity: 1;
-}
-
 .paper-outline-more {
   align-self: flex-start;
-  padding: 0 0 0 20px;
+  padding: 0 0 0 24px;
 }
 
 .paper-outline-points {
@@ -202,7 +190,7 @@
   flex-direction: column;
   gap: 2px;
   margin: 0;
-  padding-left: 20px;
+  padding-left: 24px;
   color: var(--ui-muted);
   font-size: var(--text-footnote);
   line-height: 1.5;
@@ -223,31 +211,21 @@
   display: flex;
   flex-wrap: wrap;
   gap: 4px;
-  padding-left: 20px;
+  padding-left: 24px;
 }
 
 .paper-outline-tag {
   max-width: 100%;
-  overflow: hidden;
   padding: 1px 8px;
   border-radius: var(--shape-pill);
   background: var(--ui-subtle);
   color: var(--ui-muted);
   font-size: var(--text-footnote);
-  text-overflow: ellipsis;
-  white-space: nowrap;
 }
 
 .paper-outline-tag b {
   color: var(--ui-text);
   font-weight: 500;
-}
-
-@media (hover: none) {
-  .paper-outline-section .paper-outline-row .paper-outline-edit,
-  .paper-outline-thesis .paper-outline-edit {
-    opacity: 1;
-  }
 }
 
 /* The paper's card in the conversation, and the form that starts one. */
@@ -291,8 +269,10 @@
   color: var(--ui-muted);
 }
 
+/* What to do, then the service's own words on the next line. */
 .paper-card-error {
   color: var(--ui-danger);
+  white-space: pre-line;
 }
 
 .paper-card-actions {
@@ -319,14 +299,10 @@
 }
 
 .paper-card-thinking {
-  display: -webkit-box;
   margin: 0;
-  overflow: hidden;
   color: var(--ui-muted);
   font-size: var(--text-footnote);
   font-style: italic;
-  -webkit-box-orient: vertical;
-  -webkit-line-clamp: 2;
 }
 
 .paper-card-list,
@@ -351,10 +327,6 @@
 .paper-card-item-text,
 .paper-card-recent-detail {
   flex: 1;
-  min-width: 0;
-  overflow: hidden;
-  text-overflow: ellipsis;
-  white-space: nowrap;
 }
 
 .paper-card-item-status {
@@ -386,13 +358,8 @@
    while it is being worked on, and new lines that slide in. Transform and
    opacity only. */
 .paper-card-spinner {
-  flex: none;
-  width: 10px;
-  height: 10px;
-  border: 1.5px solid var(--ui-border);
-  border-top-color: var(--ui-accent, var(--ui-text));
-  border-radius: 50%;
-  animation: paper-spin var(--dur-spin) linear infinite;
+  --progress-ring-size: 10px;
+  --progress-ring-line: 1.5px;
 }
 
 .paper-card-mark {
@@ -409,7 +376,7 @@
 .paper-card-mark[data-state="revising"] {
   border-color: var(--ui-accent, var(--ui-text));
   background: var(--ui-accent, var(--ui-text));
-  animation: paper-breathe var(--dur-pulse) var(--ease-in-out) infinite;
+  animation: motion-breathe var(--dur-pulse) var(--ease-in-out) infinite;
 }
 
 .paper-card-mark[data-state="done"],
@@ -424,11 +391,11 @@
 }
 
 .paper-card-enter {
-  animation: motion-rise-in var(--dur-medium) var(--ease-out) both;
+  animation: motion-rise-in var(--dur-base) var(--ease-out) both;
 }
 
 .paper-card-thinking {
-  animation: motion-rise-in var(--dur-medium) var(--ease-out) both;
+  animation: motion-rise-in var(--dur-base) var(--ease-out) both;
 }
 
 .paper-card-thesis,
@@ -467,7 +434,7 @@
   font-size: var(--text-footnote);
   line-height: 1.5;
   mask-image: linear-gradient(to bottom, transparent, black 45%);
-  animation: motion-rise-in var(--dur-medium) var(--ease-out) both;
+  animation: motion-rise-in var(--dur-base) var(--ease-out) both;
 }
 
 .paper-card-preview p {
@@ -475,20 +442,7 @@
   white-space: pre-wrap;
 }
 
-@keyframes paper-spin {
-  to {
-    transform: rotate(360deg);
-  }
-}
-
-@keyframes paper-breathe {
-  50% {
-    opacity: 0.35;
-  }
-}
-
 @media (prefers-reduced-motion: reduce) {
-  .paper-card-spinner,
   .paper-card-mark,
   .paper-card-enter,
   .paper-card-thinking,

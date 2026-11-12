@@ -1,8 +1,8 @@
-import { useMenuButton } from "../ui/useMenuButton";
+import { useMenuButton } from "../engine/controls/useMenuButton";
 import { Fragment, useMemo, useSyncExternalStore } from "react";
-import { Tooltip } from "../ui/Tooltip";
-import { ChevronIcon } from "../ui/icons";
-import { runCommand } from "./commands";
+import { Tooltip } from "../engine/controls/Tooltip";
+import { ChevronIcon } from "../engine/controls/icons";
+import { runCommand } from "../registry/commands";
 import {
   statusItemsSnapshot,
   subscribeStatusItems,
@@ -16,7 +16,7 @@ import {
   pluginName,
   pluginsSnapshot,
   subscribePlugins,
-} from "../plugins/manager";
+} from "../plugins/store/plugin-records";
 import { pluginMenuEntries } from "../plugins/store/plugin-lookup";
 
 /**
@@ -62,14 +62,14 @@ function StatusEntry({ item }: { item: StatusItem }) {
   const shown = item.command ? (
     <button
       type="button"
-      className="plugin-status-item plugin-status-button"
+      className="tx-truncate plugin-status-item plugin-status-button"
       data-status={item.key}
       onClick={() => runCommand(item.command!)}
     >
       {item.text}
     </button>
   ) : (
-    <span className="plugin-status-item" data-status={item.key}>
+    <span className="tx-truncate plugin-status-item" data-status={item.key}>
       {item.text}
     </span>
   );
@@ -107,7 +107,7 @@ function StatusGroupButton({
       <Tooltip text={name}>
         <button
           type="button"
-          className="plugin-status-item plugin-status-button"
+          className="tx-truncate plugin-status-item plugin-status-button"
           data-status-plugin={group.plugin}
           {...button}
         >

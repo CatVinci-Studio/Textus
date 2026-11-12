@@ -1,20 +1,13 @@
+import IMAGE_TYPES from "./image-types.json";
 /**
  * Image files copied in a file manager: the clipboard holds their locations
  * (`text/uri-list`, GNOME's `x-special/gnome-copied-files`, or HTML that
  * WebKitGTK turns into `file://` links), not their bytes.
  */
 
-const MIME_BY_EXT: Record<string, string> = {
-  png: "image/png",
-  jpg: "image/jpeg",
-  jpeg: "image/jpeg",
-  gif: "image/gif",
-  webp: "image/webp",
-  bmp: "image/bmp",
-  svg: "image/svg+xml",
-  tif: "image/tiff",
-  tiff: "image/tiff",
-};
+/** Every picture type, by extension: one list for the editor, pasting,
+ *  embeds, themes, plugins' files and the backend's vault search. */
+const MIME_BY_EXT: Record<string, string> = IMAGE_TYPES;
 
 /** The image files the image store takes, for a file picker's filter. */
 export const IMAGE_FILE_EXTENSIONS = Object.keys(MIME_BY_EXT);

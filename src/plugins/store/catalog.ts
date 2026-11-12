@@ -1,3 +1,4 @@
+import { fill } from "../../i18n/fill";
 import {
   plugins as pluginsIpc,
   type PluginCatalogEntry,
@@ -11,12 +12,9 @@ import {
 } from "./manifest";
 import { version as APP_VERSION } from "../../../package.json";
 import { currentStrings } from "../../i18n/current";
-import {
-  loadPlugins,
-  pluginName,
-  pluginRecord,
-  setPluginEnabled,
-} from "../manager";
+import { loadPlugins } from "../manager";
+import { pluginName, pluginRecord } from "./plugin-records";
+import { setPluginEnabled } from "../plugin-switches";
 import { runsHere } from "../plugin-platform";
 import { pluginMatches } from "./plugin-records";
 import { errorText } from "../../utils/error-text";
@@ -162,15 +160,28 @@ export function neededTextus(item: CatalogItem): string | null {
   return range.replace(/^(>=|\^)/, "").trim();
 }
 
+/** The catalog's item `id`, once the catalog is read. */
+export function catalogItem(
+  id: string | null | undefined,
+  from: CatalogState = state,
+): CatalogItem | undefined {
+  return id && from.status === "ready"
+    ? from.items.find((i) => i.id === id)
+    : undefined;
+}
+
 /** The catalog's newer version of an installed plugin, if it has one that
- *  runs on this Textus; one that needs a newer Textus waits for it. */
+ *  runs on this Textus; one that needs a newer Textus waits for it, and a
+ *  developer's loaded folder is never replaced. */
 export function updateFor(
   id: string,
   from: CatalogState = state,
 ): string | null {
   if (from.status !== "ready") return null;
-  const installed = pluginRecord(id)?.manifest?.version;
-  const offered = from.items.find((i) => i.id === id);
+  const record = pluginRecord(id);
+  if (record?.origin !== "installed") return null;
+  const installed = record.manifest?.version;
+  const offered = catalogItem(id, from);
   return installed &&
     offered &&
     !neededTextus(offered) &&
@@ -183,12 +194,11 @@ export function updateFor(
  *  which asks for its permissions; an update keeps it as it was. One that
  *  needs a newer Textus is refused before anything is fetched. */
 export async function installFromCatalog(id: string): Promise<void> {
-  const offered =
-    state.status === "ready" ? state.items.find((i) => i.id === id) : null;
+  const offered = catalogItem(id);
   const needs = offered && neededTextus(offered);
   if (needs)
     throw new Error(
-      currentStrings().pluginNeedsTextus.replace("{version}", needs),
+      fill(currentStrings().pluginNeedsTextus, { version: needs }),
     );
   const before = pluginRecord(id);
   await pluginsIpc.installFromCatalog(id);

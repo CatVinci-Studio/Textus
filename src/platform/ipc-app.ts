@@ -7,26 +7,19 @@ import type {
 import type { DetachedTabDoc, HelpDoc } from "../document/doc-tabs";
 import type { Lang } from "../i18n/langs";
 import type * as Generated from "./bindings/app";
-import {
-  command,
-  desktopAction,
-  desktopActionCommand,
-  desktopQueryCommand,
-} from "./ipc-call";
+import { command, desktopActionCommand, desktopQueryCommand } from "./ipc-call";
 
 /**
  * Backend commands for the app around the document: windows, menu, links,
  * export, themes, background mode, the default editor and updates.
  */
 
-export interface FloatingDragArgs {
+interface FloatingDragArgs {
   tab: Generated.DetachedTab_Deserialize & { helpDoc: HelpDoc | null };
   title: string;
   dirty: boolean;
   destroySource: boolean;
 }
-
-export type { WindowBounds } from "./bindings/app";
 
 export const windowIpc = {
   // Rust carries the tab's help guide as a string; it is a HelpDoc id.
@@ -38,18 +31,22 @@ export const windowIpc = {
   listWindowBounds: () => desktopQueryCommand("list_window_bounds", []),
   moveTabToNewWindow: ({ tab }: FloatingDragArgs) =>
     desktopActionCommand("move_tab_to_new_window", tab),
-  startFloatingTabDrag: ({
-    tab,
-    title,
-    dirty,
-    destroySource,
-  }: FloatingDragArgs) =>
+  /** `rowHeight`: how far down a window its tab row reaches, for a drop -
+   *  the window's own measure, so Rust's test and the window's agree. */
+  startFloatingTabDrag: (
+    { tab, title, dirty, destroySource }: FloatingDragArgs,
+    rowHeight: number,
+    /** The pill's look, as CSS declarations (drag-pill-look.ts). */
+    look: string,
+  ) =>
     desktopActionCommand(
       "start_floating_tab_drag",
       tab,
       title,
       dirty,
       destroySource,
+      rowHeight,
+      look,
     ),
   startWindowDragTracking: () =>
     desktopQueryCommand("start_window_drag_tracking", false),
@@ -69,8 +66,11 @@ export const windowIpc = {
   /** One file in a window of its own, tab mode or not. */
   openPathInNewWindow: (path: string) =>
     desktopActionCommand("open_path_in_new_window", path),
-  takePendingWindowPaths: () => command("take_pending_window_paths"),
-  takePendingOpenPaths: () => command("take_pending_open_paths"),
+  /** What this window was opened with: a session's window (its documents,
+   *  islands, folder) or files handed over; asks once (window-session.ts). */
+  takePendingWindow: () => command("take_pending_window"),
+  /** This window's session as it last told it, for a reloaded page. */
+  currentWindowSession: () => command("window_session_current"),
   /** Pops the chat panel into its own OS window and resolves to its label.
    *  One per editor window: if it exists it is focused, and `state` is
    *  parked for it to claim so the conversation is handed over again. */
@@ -79,17 +79,17 @@ export const windowIpc = {
     position: [number, number] | null;
     title: string;
     pinned: boolean;
-    // Rust reads these keys as one struct the generated bindings can't type.
-  }) => desktopAction<string>("detach_chat_window", args),
+  }) =>
+    desktopActionCommand("detach_chat_window", {
+      ...args,
+      // Opaque to Rust: handed back to the chat window as it is.
+      state: args.state as unknown as Generated.Value,
+    }),
   takeChatHandoff: () =>
     desktopQueryCommand(
       "take_chat_handoff",
       null,
     ) as Promise<ChatHandoff | null>,
-  closeChatWindow: () => desktopQueryCommand("close_chat_window", undefined),
-  /** Brings the chat window serving this editor to the front, handing it
-   *  nothing; false when there is none. */
-  focusChatWindow: () => desktopQueryCommand("focus_chat_window", false),
   /** The chat window serving THIS editor window, if any. */
   currentChatWindow: () => desktopQueryCommand("current_chat_window", null),
   /** Whether a plugin's floating view can float over the desktop here. */
@@ -99,6 +99,7 @@ export const windowIpc = {
    *  label. */
   openFloatingWindow: (
     view: string,
+    title: string,
     at: { x: number; y: number } | null,
     width: number,
     height: number,
@@ -106,8 +107,8 @@ export const windowIpc = {
     desktopActionCommand(
       "open_floating_window",
       view,
-      at?.x ?? null,
-      at?.y ?? null,
+      title,
+      at ? [at.x, at.y] : null,
       width,
       height,
     ),
@@ -145,6 +146,9 @@ export const menuIpc = {
   listRecentFiles: () => desktopQueryCommand("list_recent_files", []),
   /** The folders listed above the files there. */
   listRecentFolders: () => desktopQueryCommand("list_recent_folders", []),
+  /** Takes one entry off the recent folders and files. */
+  removeRecent: (path: string) =>
+    desktopQueryCommand("remove_recent", undefined, path),
   /** Rebuilds the native (macOS) menu bar with these labels. */
   setMenuLabels: (labels: Record<string, string>) =>
     desktopQueryCommand("set_menu_labels", undefined, labels),
@@ -330,8 +334,7 @@ export const cli = {
 
 // Background mode (desktop only)
 
-/** Rust -> every window: the tray changed. Keep in step with the Rust side. */
-export const BACKGROUND_STATUS = "background-status";
+/** Rust -> every window: the tray changed. */
 export interface BackgroundStatus extends Generated.Status {
   /** "unavailable": Linux without libayatana-appindicator; the process
    *  still stays in the background. */
@@ -348,8 +351,6 @@ export const background = {
 
 // Default editor (desktop only)
 
-export type { CliStatus, DefaultEditorStatus } from "./bindings/app";
-
 export const defaultEditor = {
   status: () => desktopQueryCommand("default_editor_status", null),
   set: () => desktopActionCommand("set_default_editor"),
@@ -358,7 +359,7 @@ export const defaultEditor = {
 // Distribution
 
 /** The channel this build was installed through. */
-export type Distribution = "direct" | "homebrew" | "aur";
+type Distribution = "direct" | "homebrew" | "aur";
 
 export const distribution = {
   appDistribution: () => command("app_distribution") as Promise<Distribution>,
@@ -367,7 +368,7 @@ export const distribution = {
 // Update (desktop only)
 
 /** What the updater plugin's `Update` is made from. */
-export type UpdateMetadata = ConstructorParameters<typeof Update>[0];
+type UpdateMetadata = ConstructorParameters<typeof Update>[0];
 
 export const updater = {
   /** The plugin's `check()` on `channel`'s endpoints. `backToStable` offers

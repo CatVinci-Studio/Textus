@@ -10,10 +10,10 @@ describe("the mode a conversation starts in", () => {
   beforeAll(installTestLocalStorage);
   beforeEach(() => localStorage.clear());
 
-  it("carries the last pick over while the default is unchanged", () => {
-    rememberMode("write", "review");
-    expect(initialMode("review")).toBe("write");
-    expect(initialMode("write")).toBe("write");
+  it("carries the last pick over", () => {
+    expect(initialMode()).toBe("review");
+    rememberMode("write");
+    expect(initialMode()).toBe("write");
   });
 
   it("reads 1.2.0's Revise, kept as the last pick, as Write", () => {
@@ -29,8 +29,6 @@ describe("the mode a conversation starts in", () => {
       KEY,
       JSON.stringify({ mode: "destroy", under: "review" }),
     );
-    expect(initialMode("review")).toBe("review");
-    localStorage.setItem(KEY, JSON.stringify({ mode: "edit", under: "ask" }));
     expect(initialMode("review")).toBe("review");
     localStorage.setItem(KEY, "not json");
     expect(initialMode("write")).toBe("write");

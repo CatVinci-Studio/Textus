@@ -181,7 +181,7 @@ pub async fn ai_paper_draft(
         let mut sections = web_figures::resolve(&sections, web_figures::find_on_commons).await;
         // Pictures begun before the figures are numbered, so one that can't
         // be made leaves no caption behind.
-        let pictures = session.pictures(request.image_model.as_ref());
+        let pictures = session.pictures(&request);
         for section in &mut sections {
             *section = match &pictures {
                 Some(run) => crate::ai::images::place_pictures(run, section).0,

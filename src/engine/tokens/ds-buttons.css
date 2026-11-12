@@ -1,0 +1,303 @@
+/* Buttons. Size, shape and every state are defined here only; a component
+   keeps just layout and text colour. Two sizes, three kinds: secondary,
+   primary (one per group) and quiet. */
+:is(
+  .close-prompt-buttons button,
+  .image-name-buttons button,
+  .insert-table-buttons button,
+  .tutorial-btn,
+  .language-welcome-continue,
+  .text-button,
+  .tx-button,
+  .inline-chat-action,
+  .corner-toast button,
+  .project-bar-naming button,
+  .missing-image-actions button,
+  .inline-chat-send
+) {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 8px;
+  min-height: var(--control-height);
+  padding: 0 12px;
+  border: 1px solid var(--ui-border);
+  border-radius: var(--shape-pill);
+  corner-shape: round;
+  background: transparent;
+  font-size: var(--text-control);
+  line-height: 1.2;
+  /* One line: a pill holds its label whole; short of room, its group
+     wraps instead. */
+  white-space: nowrap;
+  max-width: 100%;
+  cursor: pointer;
+  transition:
+    background-color var(--dur-fast) var(--ease-standard),
+    border-color var(--dur-fast) var(--ease-standard),
+    color var(--dur-fast) var(--ease-standard);
+}
+
+:is(
+  .inline-chat-action,
+  .corner-toast button,
+  .project-bar-naming button,
+  .missing-image-actions button,
+  .inline-chat-send,
+  .tx-button.small
+) {
+  min-height: var(--control-height-sm);
+  padding: 0 8px;
+  font-size: var(--text-secondary);
+}
+
+/* The hover arrives in 80ms and leaves at the 120ms of the base rule. */
+:is(
+    .close-prompt-buttons button,
+    .image-name-buttons button,
+    .insert-table-buttons button,
+    .tutorial-btn,
+    .text-button,
+    .tx-button,
+    .inline-chat-action,
+    .corner-toast button,
+    .project-bar-naming button,
+    .missing-image-actions button
+  ):not(:disabled):hover {
+  background: color-mix(in srgb, currentColor 8%, transparent);
+  transition-duration: var(--dur-instant);
+}
+
+:is(
+  .close-prompt-buttons button,
+  .image-name-buttons button,
+  .insert-table-buttons button,
+  .tutorial-btn,
+  .language-welcome-continue,
+  .inline-chat-action,
+  .corner-toast button,
+  .inline-chat-send,
+  .tx-button
+):is(
+  .close-prompt-primary,
+  .image-name-primary,
+  .insert-table-primary,
+  .tutorial-btn-primary,
+  .language-welcome-continue,
+  .inline-chat-action-primary,
+  .corner-toast-primary,
+  .inline-chat-send,
+  .tx-button.primary
+) {
+  border-color: var(--ui-primary);
+  background: var(--ui-primary);
+  color: var(--ui-on-primary);
+  font-weight: 600;
+}
+
+:is(
+    .close-prompt-buttons button,
+    .image-name-buttons button,
+    .insert-table-buttons button,
+    .tutorial-btn,
+    .language-welcome-continue,
+    .inline-chat-action,
+    .corner-toast button,
+    .inline-chat-send,
+    .tx-button
+  ):is(
+    .close-prompt-primary,
+    .image-name-primary,
+    .insert-table-primary,
+    .tutorial-btn-primary,
+    .language-welcome-continue,
+    .inline-chat-action-primary,
+    .corner-toast-primary,
+    .inline-chat-send,
+    .tx-button.primary
+  ):not(:disabled):hover {
+  border-color: color-mix(in srgb, var(--ui-primary) 86%, var(--ui-on-primary));
+  background: color-mix(in srgb, var(--ui-primary) 86%, var(--ui-on-primary));
+  transition-duration: var(--dur-instant);
+}
+
+/* Pressed: a shade darker, at once - and no scale (macOS buttons don't
+   shrink). Let go, it eases back with the base rule's 120ms. */
+:is(
+    .close-prompt-buttons button,
+    .image-name-buttons button,
+    .insert-table-buttons button,
+    .tutorial-btn,
+    .text-button,
+    .tx-button,
+    .inline-chat-action,
+    .corner-toast button,
+    .project-bar-naming button,
+    .missing-image-actions button
+  ):not(:disabled):active {
+  background: color-mix(in srgb, currentColor 14%, transparent);
+  transition-duration: 0s;
+}
+
+:is(
+    .close-prompt-buttons button,
+    .image-name-buttons button,
+    .insert-table-buttons button,
+    .tutorial-btn,
+    .language-welcome-continue,
+    .inline-chat-action,
+    .corner-toast button,
+    .inline-chat-send,
+    .tx-button
+  ):is(
+    .close-prompt-primary,
+    .image-name-primary,
+    .insert-table-primary,
+    .tutorial-btn-primary,
+    .language-welcome-continue,
+    .inline-chat-action-primary,
+    .corner-toast-primary,
+    .inline-chat-send,
+    .tx-button.primary
+  ):not(:disabled):active {
+  border-color: color-mix(in srgb, var(--ui-primary) 78%, var(--ui-on-primary));
+  background: color-mix(in srgb, var(--ui-primary) 78%, var(--ui-on-primary));
+  transition-duration: 0s;
+}
+
+/* A destructive confirm: the primary in the danger fill. The fill is its own
+   token, as the dark palette's pale --ui-danger carries no white text. */
+.close-prompt-buttons button.close-prompt-primary.app-dialog-danger {
+  border-color: var(--ui-danger-fill);
+  background: var(--ui-danger-fill);
+  color: var(--ui-on-fill);
+}
+
+.close-prompt-buttons
+  button.close-prompt-primary.app-dialog-danger:not(:disabled):hover {
+  border-color: color-mix(in srgb, var(--ui-danger-fill) 86%, #000);
+  background: color-mix(in srgb, var(--ui-danger-fill) 86%, #000);
+}
+
+.close-prompt-buttons
+  button.close-prompt-primary.app-dialog-danger:not(:disabled):active {
+  border-color: color-mix(in srgb, var(--ui-danger-fill) 80%, #000);
+  background: color-mix(in srgb, var(--ui-danger-fill) 80%, #000);
+}
+
+/* Icons drawn at fixed pixel sizes grow as a picture, without moving what
+   is around it; the app's set sizes itself (icons.tsx iconSize) and is left
+   out. The buttons' own sizes are scaled below. */
+:root:not([data-window-chrome="mobile"])
+  :is(
+    .window-bar-toggle,
+    .window-bar-sidebar-toggle,
+    .window-menu-button,
+    .tree-tool,
+    .tx-icon-button,
+    .inline-chat-header-button,
+    .inline-chat-attach,
+    .inline-chat-toggle,
+    .tab-bar-add,
+    .sidebar-tab,
+    .window-caption-button,
+    .window-bar-lock,
+    .tree-row
+  )
+  > svg:not([style*="--icon-scale"]) {
+  scale: var(--chrome-scale);
+}
+
+/* Icon buttons: no frame, a muted glyph that darkens on hover; the composer
+   toolbar's are framed to match its 26px controls. */
+:is(
+  .inline-chat-header-button,
+  .quick-ask-pending-nav-button,
+  .tree-tool,
+  .tx-icon-button,
+  .inline-chat-attach,
+  .inline-chat-toggle
+) {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  flex-shrink: 0;
+  padding: 0;
+  border: none;
+  border-radius: var(--shape-pill);
+  corner-shape: round;
+  background: transparent;
+  color: var(--ui-muted);
+  cursor: pointer;
+  transition:
+    background-color var(--dur-fast) var(--ease-standard),
+    color var(--dur-fast) var(--ease-standard);
+}
+
+:is(
+  .inline-chat-header-button,
+  .quick-ask-pending-nav-button,
+  .tree-tool,
+  .tx-icon-button
+) {
+  width: var(--icon-button-s);
+  height: var(--icon-button-s);
+}
+
+/* They grow with the window as the chrome's other icons do. */
+:is(.inline-chat-attach, .inline-chat-toggle) {
+  width: var(--control-height-sm);
+  height: var(--control-height-sm);
+  border: 1px solid var(--ui-border);
+}
+
+:is(
+    .inline-chat-header-button,
+    .quick-ask-pending-nav-button,
+    .tree-tool,
+    .tx-icon-button,
+    .inline-chat-attach,
+    .inline-chat-toggle
+  ):not(:disabled):hover {
+  background: color-mix(in srgb, currentColor 10%, transparent);
+  color: var(--ui-text);
+  transition-duration: var(--dur-instant);
+}
+
+:is(
+    .inline-chat-header-button,
+    .quick-ask-pending-nav-button,
+    .tree-tool,
+    .tx-icon-button,
+    .inline-chat-attach,
+    .inline-chat-toggle
+  ):not(:disabled):active {
+  background: color-mix(in srgb, currentColor 16%, transparent);
+  transition-duration: 0s;
+}
+
+/* A touch screen has no hover to give way to: the pressed button also
+   dims, as an iOS button does while a finger is on it. */
+@media (hover: none) {
+  :is(
+      .close-prompt-buttons button,
+      .image-name-buttons button,
+      .insert-table-buttons button,
+      .tutorial-btn,
+      .text-button,
+      .tx-button,
+      .inline-chat-action,
+      .corner-toast button,
+      .project-bar-naming button,
+      .inline-chat-header-button,
+      .quick-ask-pending-nav-button,
+      .tree-tool,
+      .tx-icon-button,
+      .inline-chat-attach,
+      .inline-chat-toggle,
+      .inline-chat-send,
+      .language-welcome-continue
+    ):not(:disabled):active {
+    opacity: 0.6;
+  }
+}

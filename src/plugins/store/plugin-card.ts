@@ -65,7 +65,7 @@ function remember(key: string, value: number | "never" | undefined) {
 }
 
 /** Whether the user put this situation's cards away for good. */
-export function cardMuted(key: string): boolean {
+function cardMuted(key: string): boolean {
   const value = saved()[key];
   return (
     value === "never" || (typeof value === "number" && value >= LATER_LIMIT)

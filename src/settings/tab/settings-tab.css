@@ -1,0 +1,110 @@
+/* Settings in a tab: one page at a reading width, scrolling; its list is
+   the sidebar's (settings-nav.css). */
+.settings-tab {
+  height: 100%;
+  overflow-y: auto;
+  color: var(--ui-text);
+}
+
+.settings-tab .settings-tab-page {
+  max-width: 720px;
+  margin: 0 auto;
+  padding: 24px;
+  overflow: visible;
+  scrollbar-gutter: auto;
+}
+
+/* About's card: the app's icon, name and version, and checking for
+   updates at its end - the page's one row that isn't in a section. */
+.settings-about-card {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  margin-bottom: 24px;
+  padding: 12px;
+  border: 1px solid color-mix(in srgb, var(--ui-border) 75%, transparent);
+  border-radius: var(--shape-m);
+}
+
+.settings-about-card-icon {
+  width: 44px;
+  height: 44px;
+  border-radius: var(--shape-m);
+}
+
+.settings-about-card-main {
+  display: flex;
+  flex: 1;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 8px 12px;
+  min-width: 0;
+}
+
+.settings-about-card-text {
+  flex: 1 1 auto;
+  min-width: 0;
+}
+
+.settings-about-card-name {
+  font-weight: 600;
+}
+
+.settings-about-card-version {
+  color: var(--ui-muted);
+  font-size: var(--text-caption);
+}
+
+/* Where Textus lives and who made it: one quiet line, last; wrapping,
+   each part whole, spaced rather than dotted. */
+.settings-about-links {
+  display: flex;
+  flex-wrap: wrap;
+  justify-content: center;
+  gap: 4px 16px;
+  margin: 16px 0 0;
+  color: var(--ui-muted);
+  font-size: var(--text-caption);
+}
+
+.settings-about-links > button {
+  border: 0;
+  padding: 0;
+  background: none;
+  color: inherit;
+  font: inherit;
+  cursor: pointer;
+}
+
+.settings-about-links > button:hover {
+  color: var(--ui-text);
+}
+
+/* The update button at the card's end, its answer under the card's text. */
+.settings-about-card-main > .settings-about-link {
+  flex: none;
+  width: auto;
+  padding-inline: 12px;
+}
+
+/* Rows given in a wrapper of their own (the update channel's) sit in the
+   section's list as its own rows do. */
+.settings-group-body > .settings-about-channel {
+  display: contents;
+}
+
+/* A group's heading keeps its words whole; its buttons wrap under it. */
+.settings-group-head {
+  flex-wrap: wrap;
+}
+.settings-group-head > .settings-group-title {
+  white-space: nowrap;
+}
+
+/* Back to the sidebar's list of pages: its chevron on the page's left
+   edge, as the sections' titles under it. */
+.settings-tab .settings-back-button {
+  margin-inline-start: calc(-1 * var(--space-1));
+  margin-bottom: var(--space-2);
+  padding-inline: var(--space-1) var(--space-2);
+}

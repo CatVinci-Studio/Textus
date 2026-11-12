@@ -19,7 +19,7 @@ import { changeDecorations, sentenceStrike } from "./pending-widgets";
 
 /** A streaming rewrite's completed changes where they stand, drawn as the
  *  finished rewrite will draw them. */
-export function streamChanges(
+function streamChanges(
   doc: ProseNode,
   source: NonNullable<PendingPreview["streamSource"]>,
   s: StreamState,
@@ -131,7 +131,7 @@ export function streamDecorations(
 
 /** The progress cursor: a tint on the paragraph a streaming rewrite is at,
  *  which lands next all at once and shows nothing else until then. */
-export function readingDecoration(
+function readingDecoration(
   doc: ProseNode,
   callId: string,
   ranges: { from: number; to: number }[],

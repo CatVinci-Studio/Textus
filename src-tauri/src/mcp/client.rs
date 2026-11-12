@@ -20,8 +20,6 @@ pub const START_TIMEOUT: Duration = Duration::from_secs(90);
 const CALL_TIMEOUT: Duration = Duration::from_secs(30);
 /// How long one tool may run.
 pub const TOOL_TIMEOUT: Duration = Duration::from_secs(120);
-/// The most of a server's stderr kept, to say why it failed.
-const STDERR_KEEP: usize = 4_000;
 
 /// One tool a server offers.
 #[derive(Clone, Debug, serde::Serialize)]
@@ -89,7 +87,7 @@ impl Connection {
                 Transport::Stdio(Box::new(spawn(program, args, env)?))
             }
             Endpoint::Url { url, headers } => Transport::Http(Http {
-                client: crate::net::client(Duration::from_secs(15), TOOL_TIMEOUT)
+                client: crate::net::public_client(Duration::from_secs(15), TOOL_TIMEOUT)?
                     .build()
                     .map_err(|e| e.to_string())?,
                 url: url.clone(),
@@ -272,32 +270,13 @@ impl Connection {
 
 /// Starts `program`, found on the user's login PATH, and reads its answers.
 fn spawn(program: &str, args: &[String], env: &[(String, String)]) -> Result<Stdio, String> {
-    let path = super::path::login_path();
-    let resolved = super::path::find_program(program, &path).ok_or_else(|| {
-        format!("`{program}` isn't installed, or isn't on the PATH Textus sees ({path})")
-    })?;
-    let mut command = tokio::process::Command::new(resolved);
-    command
-        .args(args)
-        .env("PATH", &path)
-        .envs(env.iter().map(|(k, v)| (k.as_str(), v.as_str())))
-        .stdin(std::process::Stdio::piped())
-        .stdout(std::process::Stdio::piped())
-        .stderr(std::process::Stdio::piped())
-        .kill_on_drop(true);
-    #[cfg(windows)]
-    {
-        // No console window flashing up for the server.
-        command.creation_flags(0x0800_0000);
-    }
-    let mut child = command
-        .spawn()
-        .map_err(|e| format!("couldn't start `{program}`: {e}"))?;
-    let stdin = child.stdin.take().ok_or("no stdin")?;
-    let stdout = child.stdout.take().ok_or("no stdout")?;
-    let stderr = child.stderr.take().ok_or("no stderr")?;
+    let super::process::Piped {
+        child,
+        stdin,
+        stdout,
+        stderr: kept_stderr,
+    } = super::process::start(program, args, env, None)?;
     let waiting: Waiting = Arc::default();
-    let kept_stderr: Arc<Mutex<String>> = Arc::default();
     let stdin: Stdin = Arc::new(tokio::sync::Mutex::new(stdin));
     let stdio = Stdio {
         child: Mutex::new(child),
@@ -305,21 +284,6 @@ fn spawn(program: &str, args: &[String], env: &[(String, String)]) -> Result<Std
         waiting: waiting.clone(),
         stderr: kept_stderr.clone(),
     };
-    tauri::async_runtime::spawn(async move {
-        let mut lines = BufReader::new(stderr).lines();
-        while let Ok(Some(line)) = lines.next_line().await {
-            let mut kept = kept_stderr.lock().unwrap_or_else(|e| e.into_inner());
-            kept.push_str(&line);
-            kept.push('\n');
-            if kept.len() > STDERR_KEEP {
-                let cut = kept.len() - STDERR_KEEP;
-                let cut = (cut..kept.len())
-                    .find(|i| kept.is_char_boundary(*i))
-                    .unwrap_or(0);
-                kept.replace_range(..cut, "");
-            }
-        }
-    });
     tauri::async_runtime::spawn(async move {
         let mut lines = BufReader::new(stdout).lines();
         while let Ok(Some(line)) = lines.next_line().await {

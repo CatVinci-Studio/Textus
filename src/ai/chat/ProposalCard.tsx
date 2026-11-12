@@ -1,40 +1,21 @@
-import {
-  useEffect,
-  useMemo,
-  useState,
-  useSyncExternalStore,
-  type CSSProperties,
-} from "react";
+import { PictureFrame, useGeneratedPicture } from "../revision/PictureFrame";
+import { HeadRow } from "../../engine/controls/HeadRow";
+import { DropIcon, TakeIcon } from "../../engine/controls/icons";
+import { counted } from "../../i18n/current";
+import { fill } from "../../i18n/fill";
+import { useEffect, useMemo, useState, type CSSProperties } from "react";
 import { usePicturesState } from "../revision/usePicturesState";
 import type { EditProposal } from "../types";
 import type { PendingStatus } from "../revision/usePendingEdits";
 import { hasCitations } from "../citations";
 import { useSettings } from "../../prefs/SettingsContext";
-import { diffLines } from "./line-diff";
-import type { PendingSentence } from "../revision/pending-edit-plugin";
-import {
-  shownImageFailure,
-  loadGeneratedImage,
-  generatedImageRatio,
-  generatedImageUrl,
-  onPictureSettled,
-} from "../revision/generated-images";
-import { Tooltip } from "../../ui/Tooltip";
+import { diffLines, lineCounts, proposalSides } from "./line-diff";
+import { type PendingSentence } from "../revision/pending-types";
+import { Tooltip } from "../../engine/controls/Tooltip";
 import type { ChatMessagesLabels } from "./chat-messages-types";
 import { InlineMarkdownText } from "../MarkdownText";
 import { blockSummary, type BlockNames } from "../revision/markdown-forms";
 import { inlineSentence } from "../revision/sentence-diff";
-
-export const CHECK = (
-  <svg viewBox="0 0 16 16" aria-hidden="true">
-    <path d="M3.5 8.5l3 3 6-7" />
-  </svg>
-);
-export const CROSS = (
-  <svg viewBox="0 0 16 16" aria-hidden="true">
-    <path d="M4 4l8 8M12 4l-8 8" />
-  </svg>
-);
 
 /** What the user is told of a generate_image call that made no picture.
  *  Null for a call the model got wrong and sends again: the model's to fix. */
@@ -49,7 +30,7 @@ export function notMadeLine(
     return null;
   }
   if (typeof args.limit_reached === "number")
-    return labels.imageLimitReached.replace("{n}", String(args.limit_reached));
+    return fill(labels.imageLimitReached, { n: String(args.limit_reached) });
   if (args.not_generated === undefined && args.image === undefined)
     return labels.imageNoModel;
   return null;
@@ -57,34 +38,15 @@ export function notMadeLine(
 
 /** A proposed picture on its card, small: its frame while it is made,
  *  then the picture, or why it wasn't made. */
-export function ProposedPicture({ id, alt }: { id: string; alt: string }) {
-  // Read again whenever a picture comes or goes: one redrawn in the
-  // document paints here too until the new one has come.
-  const url = useSyncExternalStore(onPictureSettled, () =>
-    generatedImageUrl(id),
-  );
-  const failure = useSyncExternalStore(onPictureSettled, () =>
-    shownImageFailure(id),
-  );
-  useEffect(() => {
-    if (!url && !failure) void loadGeneratedImage(id);
-  }, [id, url, failure]);
+function ProposedPicture({ id, alt }: { id: string; alt: string }) {
+  // One redrawn in the document paints here too until the new one has come.
+  const { url, failure } = useGeneratedPicture(id);
   if (url)
     return <img className="agent-proposal-picture" src={url} alt={alt} />;
   if (failure)
     return <span className="agent-proposal-picture-failed">{failure}</span>;
   return (
-    <span
-      className="pending-picture agent-proposal-picture-frame"
-      role="img"
-      aria-busy="true"
-      aria-label={alt}
-      style={{ aspectRatio: generatedImageRatio(id) }}
-    >
-      <span className="pending-picture-blob" />
-      <span className="pending-picture-blob" />
-      <span className="pending-picture-blob" />
-    </span>
+    <PictureFrame id={id} alt={alt} className="agent-proposal-picture-frame" />
   );
 }
 
@@ -138,28 +100,11 @@ export function ProposalCard({
     if (status === "invalid") setDiffOpen(true);
   }, [status]);
 
-  // `append` has nothing to compare against; the others diff the text they
-  // target against the replacement. replace_selection targets the captured
-  // selection rather than a quoted anchor.
-  const before =
-    proposal.action === "append"
-      ? ""
-      : proposal.action === "replace_selection"
-        ? (selectedText ?? "")
-        : (proposal.anchor ?? "");
-  const after =
-    proposal.action === "delete"
-      ? ""
-      : proposal.action === "insert_before"
-        ? `${proposal.text ?? ""}\n${before}`
-        : proposal.action === "insert_after"
-          ? `${before}\n${proposal.text ?? ""}`
-          : (proposal.text ?? "");
-  // Memoized because this re-renders on every streaming delta while a later
-  // turn is still arriving, and the LCS diff is up to 400x400 lines.
+  const { before, after } = proposalSides(proposal, selectedText);
+  // Memoized: this re-renders on every streaming delta while a later turn
+  // is still arriving.
   const lines = useMemo(() => diffLines(before, after), [before, after]);
-  const added = lines.filter((line) => line.kind === "add").length;
-  const removed = lines.filter((line) => line.kind === "remove").length;
+  const { added, removed } = lineCounts(lines);
 
   const taken = sentences?.filter((s) => s.take !== false).length ?? 0;
   const partial = !!sentences && taken < sentences.length;
@@ -170,60 +115,68 @@ export function ProposalCard({
       data-status={status}
       style={style}
     >
-      <div className="agent-proposal-head">
-        <span className="agent-proposal-icon" aria-hidden="true">
-          {CHECK}
-        </span>
-        <span className="agent-proposal-title">
-          {labels.proposalTitle}
-          <span className="agent-proposal-kind">
-            {" · "}
-            {proposal.image
-              ? labels.proposalImage
-              : sentences && sentences.length > 1
-                ? labels.proposalChangeCount.replace(
-                    "{n}",
-                    String(sentences.length),
-                  )
-                : labels.actionNames[proposal.action]}
+      <HeadRow
+        className="agent-proposal-head"
+        mark={
+          <span className="agent-proposal-icon" aria-hidden="true">
+            <TakeIcon />
           </span>
-        </span>
-        {/* Listed sentence by sentence below, the size chips would only
+        }
+        title={
+          <span className="agent-proposal-title">
+            {labels.proposalTitle}
+            <span className="agent-proposal-kind">
+              {" · "}
+              {proposal.image
+                ? labels.proposalImage
+                : sentences && sentences.length > 1
+                  ? counted(labels.proposalChangeCount, sentences.length)
+                  : labels.actionNames[proposal.action]}
+            </span>
+          </span>
+        }
+        tools={
+          <>
+            {/* Listed sentence by sentence below, the size chips would only
             crowd the head. */}
-        {!(sentences && sentences.length > 1) && !proposal.image && (
-          <Tooltip text={diffOpen ? labels.diffCollapse : labels.diffShow}>
-            <button
-              type="button"
-              className="agent-diff-summary"
-              aria-expanded={diffOpen}
-              onClick={() => setDiffOpen(!diffOpen)}
-            >
-              {added > 0 && (
-                <span className="agent-diff-chip agent-diff-add">+{added}</span>
-              )}
-              {removed > 0 && (
-                <span className="agent-diff-chip agent-diff-remove">
-                  {"\u2212"}
-                  {removed}
-                </span>
-              )}
-              <span
-                className="disclosure-caret agent-diff-caret"
-                aria-hidden="true"
-              />
-            </button>
-          </Tooltip>
-        )}
-        {status === "pending" && onReveal && (
-          <button
-            type="button"
-            className="agent-proposal-link agent-proposal-show"
-            onClick={() => onReveal(callId, -1)}
-          >
-            {labels.proposalShowInText}
-          </button>
-        )}
-      </div>
+            {!(sentences && sentences.length > 1) && !proposal.image && (
+              <Tooltip text={diffOpen ? labels.diffCollapse : labels.diffShow}>
+                <button
+                  type="button"
+                  className="agent-diff-summary"
+                  aria-expanded={diffOpen}
+                  onClick={() => setDiffOpen(!diffOpen)}
+                >
+                  {added > 0 && (
+                    <span className="agent-diff-chip agent-diff-add">
+                      +{added}
+                    </span>
+                  )}
+                  {removed > 0 && (
+                    <span className="agent-diff-chip agent-diff-remove">
+                      {"\u2212"}
+                      {removed}
+                    </span>
+                  )}
+                  <span
+                    className="disclosure-caret agent-diff-caret"
+                    aria-hidden="true"
+                  />
+                </button>
+              </Tooltip>
+            )}
+            {status === "pending" && onReveal && (
+              <button
+                type="button"
+                className="agent-proposal-link agent-proposal-show"
+                onClick={() => onReveal(callId, -1)}
+              >
+                {labels.proposalShowInText}
+              </button>
+            )}
+          </>
+        }
+      />
       {proposal.reason && (
         <div className="agent-proposal-reason">{proposal.reason}</div>
       )}
@@ -277,7 +230,7 @@ export function ProposalCard({
                           onDecide(callId, k, s.take === true ? null : true)
                         }
                       >
-                        {CHECK}
+                        <TakeIcon />
                       </button>
                     </Tooltip>
                     <Tooltip text={labels.proposalKeepSentence}>
@@ -290,7 +243,7 @@ export function ProposalCard({
                           onDecide(callId, k, s.take === false ? null : false)
                         }
                       >
-                        {CROSS}
+                        <DropIcon />
                       </button>
                     </Tooltip>
                   </span>
@@ -325,9 +278,10 @@ export function ProposalCard({
                 {pictures === "painting"
                   ? labels.proposalPicturePainting
                   : partial && sentences
-                    ? labels.proposalAcceptSome
-                        .replace("{k}", String(taken))
-                        .replace("{n}", String(sentences.length))
+                    ? fill(labels.proposalAcceptSome, {
+                        k: String(taken),
+                        n: String(sentences.length),
+                      })
                     : labels.proposalAccept}
               </button>
             )}

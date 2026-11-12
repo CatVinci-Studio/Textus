@@ -1,6 +1,6 @@
 import { useState } from "react";
-import { useModalDialog } from "../../ui/useModalDialog";
-import { usePresenceProps } from "../../ui/usePresence";
+import { useModalDialog } from "../../engine/controls/useModalDialog";
+import { usePresenceProps } from "../../engine/motion/usePresence";
 import "./ImageNameDialog.css";
 import { isImeKeydown } from "../../utils/ime";
 
@@ -39,7 +39,7 @@ export function ImageNameDialog({
   return (
     <div
       {...presence}
-      className="close-prompt-overlay image-name-overlay"
+      className="tx-backdrop image-name-overlay"
       onClick={() => onClose(null)}
     >
       <div
@@ -66,6 +66,7 @@ export function ImageNameDialog({
           <span>{label}</span>
           <span className="image-name-input-row">
             <input
+              className="tx-input"
               aria-label={label}
               value={stem}
               aria-invalid={!valid}

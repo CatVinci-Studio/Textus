@@ -9,6 +9,17 @@ import { invoke as __TAURI_INVOKE } from "@tauri-apps/api/core";
 /** Commands */
 export const commands = {
 	/**
+	 *  After each exchange: what to remember, update or forget, decided by the
+	 *  conversation's own model, each change for a chip under the reply. Nothing
+	 *  while Remember automatically is off.
+	 */
+	memory_pass: (request: PassRequest_Deserialize) => __TAURI_INVOKE<Remembering_Serialize[]>("memory_pass", { request }),
+	/**
+	 *  After an exchange: its request offered as a skill to save, when it was a
+	 *  procedure of its own.
+	 */
+	ai_offer_skill: (request: OfferRequest_Deserialize) => __TAURI_INVOKE<SkillOffer | null>("ai_offer_skill", { request }),
+	/**
 	 *  The Memory tab's "used" marks: what the last request for the document
 	 *  carried, or before one, what the document's text brings in by itself.
 	 */
@@ -141,6 +152,27 @@ export type MemorySource_Deserialize = {
 export type MemorySource_Serialize = {
 	id: string | null,
 	title: string | null,
+};
+
+/**  ai_offer_skill's inputs, as memory_pass's. */
+export type OfferRequest = OfferRequest_Serialize | OfferRequest_Deserialize;
+
+/**  ai_offer_skill's inputs, as memory_pass's. */
+export type OfferRequest_Deserialize = {
+	provider: string,
+	model?: string | null,
+	docPath?: string | null,
+	workspaceRoot?: string | null,
+	exchange: Exchange,
+};
+
+/**  ai_offer_skill's inputs, as memory_pass's. */
+export type OfferRequest_Serialize = {
+	provider: string,
+	model: string | null,
+	docPath: string | null,
+	workspaceRoot: string | null,
+	exchange: Exchange,
 };
 
 /**  memory_pass's inputs, the keys of `ai.memoryPass`'s invoke. */

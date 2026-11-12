@@ -1,7 +1,8 @@
+import { SENTENCE_END } from "./sentence-pairs";
 import type { EditorView } from "@milkdown/kit/prose/view";
-import { enter, glideAfter } from "../../ui/moves";
-import { measure, play } from "../../ui/flip";
-import { Cascade } from "../../ui/cascade";
+import { enter, glideAfter } from "../../engine/controls/moves";
+import { measure, play } from "../../engine/motion/flip";
+import { Cascade } from "../../engine/controls/cascade";
 import { UnitReveal } from "./unit-reveal";
 import { inlineSentence } from "./sentence-diff";
 import { splitUnits } from "./unit-diff";
@@ -17,7 +18,7 @@ import { renderPendingHtml } from "./pending-fill";
  *  text it fills in. DOM side effects only, kept outside the editor state
  *  as streamed text can arrive before its widget exists. */
 
-export interface InsertAnimation {
+interface InsertAnimation {
   callId: string;
   /** Full text known so far - grows while the proposal streams. */
   target: string;
@@ -171,7 +172,7 @@ export function refreshStream(anim: InsertAnimation) {
 
 /** Rebuilds the decorations after the current dispatch (this runs inside
  *  decoration draws too) but before paint; the text below glides. */
-export function queueRelayout(anim: InsertAnimation) {
+function queueRelayout(anim: InsertAnimation) {
   const s = anim.stream;
   const view = anim.view;
   if (!s || !view || s.relayoutQueued) return;
@@ -186,7 +187,7 @@ export function queueRelayout(anim: InsertAnimation) {
         callId: anim.callId,
       }),
     );
-    play(before, { duration: "--dur-medium", easing: "--ease-out" });
+    play(before, { duration: "--dur-base", easing: "--ease-out" });
   });
 }
 
@@ -367,11 +368,11 @@ export function stoppedRewrite(callId: string): string | null | undefined {
   return animations.get(callId)?.stream?.stopped;
 }
 
-export function keptOnStop(s: StreamState, text: string): string | null {
+function keptOnStop(s: StreamState, text: string): string | null {
   const pieces = splitUnits(text);
   const last = pieces.at(-1) ?? "";
   // Stopped right after a sentence's stop: that one is complete.
-  if (!/[。！？!?.;；][”’"')）」』\]]*\s*$/.test(last)) pieces.pop();
+  if (!SENTENCE_END.test(last)) pieces.pop();
   if (pieces.length === 0) return null;
   const { reached } = alignCompleted(s.sentences, pieces, false, s.reached);
   const kept = pieces.join("");

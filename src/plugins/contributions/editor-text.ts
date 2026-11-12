@@ -5,7 +5,7 @@ import type { EditorView } from "@milkdown/kit/prose/view";
 // The text around the caret, flattened (a line per text block), and where a
 // keyboard-holding plugin's motions land in it.
 
-export interface Flat {
+interface Flat {
   text: string;
   /** The document position before each character; a block boundary's
    *  "\n" maps to the end of the block before it. */

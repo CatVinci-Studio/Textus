@@ -3,7 +3,6 @@
 //! the revision choices kept beside memory.
 
 use super::*;
-use crate::commands::args::Args;
 
 /// memory_pass's inputs, the keys of `ai.memoryPass`'s invoke.
 #[derive(Deserialize)]
@@ -22,18 +21,19 @@ pub struct PassRequest {
 /// conversation's own model, each change for a chip under the reply. Nothing
 /// while Remember automatically is off.
 #[tauri::command]
+#[cfg_attr(test, specta::specta)]
 pub async fn memory_pass(
     app: tauri::AppHandle,
-    request: Args<PassRequest>,
+    request: PassRequest,
 ) -> Result<Vec<Remembering>, String> {
-    let Args(PassRequest {
+    let PassRequest {
         provider,
         model,
         doc_path,
         workspace_root,
         conversation,
         exchange,
-    }) = request;
+    } = request;
     crate::ai::ensure_on(&app)?;
     if !remember_enabled(&app) {
         return Ok(Vec::new());
@@ -68,17 +68,18 @@ pub struct OfferRequest {
 /// After an exchange: its request offered as a skill to save, when it was a
 /// procedure of its own.
 #[tauri::command]
+#[cfg_attr(test, specta::specta)]
 pub async fn ai_offer_skill(
     app: tauri::AppHandle,
-    request: Args<OfferRequest>,
+    request: OfferRequest,
 ) -> Result<Option<SkillOffer>, String> {
-    let Args(OfferRequest {
+    let OfferRequest {
         provider,
         model,
         doc_path,
         workspace_root,
         exchange,
-    }) = request;
+    } = request;
     crate::ai::ensure_on(&app)?;
     if !may_offer(&exchange) {
         return Ok(None);

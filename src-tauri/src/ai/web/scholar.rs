@@ -6,6 +6,9 @@ use super::search::http_client;
 use crate::extract::xml::{Node, Pull};
 use serde_json::Value;
 
+/// The most an index's answer may be.
+const MAX_FEED_BYTES: usize = 8 * 1024 * 1024;
+
 pub(crate) const SEARCH_PAPERS_TOOL: &str = "search_papers";
 
 /// Works asked of each index per query.
@@ -211,7 +214,9 @@ async fn arxiv(query: &str) -> Result<Vec<Paper>, String> {
     if !response.status().is_success() {
         return Err(format!("arXiv answered {}", response.status()));
     }
-    let body = response.bytes().await.map_err(|e| e.to_string())?;
+    let body = crate::net::read_limited(response, MAX_FEED_BYTES)
+        .await?
+        .ok_or("arXiv's answer was too large.")?;
     Ok(arxiv_papers(&body))
 }
 

@@ -3,6 +3,7 @@ import type * as Access from "./bindings/plugin-access";
 
 /** A plugin file as text. */
 export type PluginFile = Generated.PluginFile;
+import { Channel } from "@tauri-apps/api/core";
 import { call, command, desktopActionCommand } from "./ipc-call";
 
 /** Plugins and MCP servers: the calls Settings › Extensions and the plugin broker make. */
@@ -12,7 +13,6 @@ import { call, command, desktopActionCommand } from "./ipc-call";
 
 export type PluginsState = Generated.PluginsState_Serialize;
 export type PluginCatalogEntry = Generated.CatalogEntry_Serialize;
-export type { InstalledPlugin } from "./bindings/plugins";
 export type StoreScope = Access.StoreScope;
 export type PluginDocumentMeta = Access.DocumentMeta_Serialize;
 
@@ -39,6 +39,26 @@ export const mcp = {
   /** Starts a server not saved yet, asks for its tools and stops it. The
    *  server is a settings entry, opaque JSON to Rust. */
   try: (server: unknown) => command("mcp_try", server as Generated.Value),
+};
+
+/** What an external agent's process says: a protocol line, or its end. */
+type AgentOutput = Generated.AgentOutput_Deserialize;
+
+/** External agents a plugin names, started by Rust from its manifest
+ *  (src-tauri/src/agents.rs). Desktop only. */
+export const agentsIpc = {
+  start: (
+    plugin: string,
+    agent: string,
+    cwd: string | null,
+    onOutput: (out: AgentOutput) => void,
+  ): Promise<number> => {
+    const channel = new Channel<AgentOutput>();
+    channel.onmessage = onOutput;
+    return command("agent_start", plugin, agent, cwd, channel);
+  },
+  send: (handle: number, line: string) => command("agent_send", handle, line),
+  stop: (handle: number) => command("agent_stop", handle),
 };
 
 export const plugins = {
@@ -108,6 +128,8 @@ export const plugins = {
   fsCreate: (id: string, root: string, path: string, text: string) =>
     command("plugin_fs_create", id, root, path, text),
   /** A text file and a token naming its version. */
+  appSettings: (id: string, vault: string, name: string) =>
+    command("plugin_app_settings", id, vault, name),
   fsReadVersioned: (id: string, root: string, path: string) =>
     command("plugin_fs_read_versioned", id, root, path),
   /** Writes only if the file is still the version `token` names. */

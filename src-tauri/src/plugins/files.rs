@@ -2,12 +2,11 @@
 //! no-overwrite create, a read-then-write that never loses a change), and the
 //! plugin's secrets. Each is checked against `state.json`.
 
-use super::access::{inside, refused, require_not_app_data};
+use super::access::granted_path;
 use super::{require_id, state};
 use serde::Serialize;
 use sha2::{Digest, Sha256};
 use std::collections::BTreeMap;
-use std::path::Path;
 use tauri::Manager;
 
 /// A file's details (textus.files.stat).
@@ -31,11 +30,7 @@ pub async fn plugin_fs_stat(
     root: String,
     path: String,
 ) -> Result<Option<FsStat>, String> {
-    if !state::read(&app).allows(&id, "files.read") {
-        return Err(refused(&id, "files.read"));
-    }
-    let path = inside(Path::new(&root), Path::new(&path))?;
-    require_not_app_data(&app, &path)?;
+    let path = granted_path(&app, &id, "files.read", &root, &path)?;
     let Ok(meta) = tokio::fs::metadata(&path).await else {
         return Ok(None);
     };
@@ -66,11 +61,7 @@ pub async fn plugin_fs_create(
     path: String,
     text: String,
 ) -> Result<(), String> {
-    if !state::read(&app).allows(&id, "files.write") {
-        return Err(refused(&id, "files.write"));
-    }
-    let path = inside(Path::new(&root), Path::new(&path))?;
-    require_not_app_data(&app, &path)?;
+    let path = granted_path(&app, &id, "files.write", &root, &path)?;
     if let Some(parent) = path.parent() {
         tokio::fs::create_dir_all(parent)
             .await
@@ -121,11 +112,13 @@ pub async fn plugin_fs_read_versioned(
     root: String,
     path: String,
 ) -> Result<VersionedText, String> {
-    if !state::read(&app).allows(&id, "files.read") {
-        return Err(refused(&id, "files.read"));
+    let path = granted_path(&app, &id, "files.read", &root, &path)?;
+    if tokio::fs::metadata(&path)
+        .await
+        .is_ok_and(|m| m.len() > super::access::MAX_READ_BYTES)
+    {
+        return Err(crate::errors::error("fileTooBig"));
     }
-    let path = inside(Path::new(&root), Path::new(&path))?;
-    require_not_app_data(&app, &path)?;
     let bytes = match tokio::fs::read(&path).await {
         Ok(bytes) => bytes,
         Err(e) if e.kind() == std::io::ErrorKind::NotFound => Vec::new(),
@@ -149,11 +142,7 @@ pub async fn plugin_fs_write_if(
     text: String,
     token: String,
 ) -> Result<bool, String> {
-    if !state::read(&app).allows(&id, "files.write") {
-        return Err(refused(&id, "files.write"));
-    }
-    let path = inside(Path::new(&root), Path::new(&path))?;
-    require_not_app_data(&app, &path)?;
+    let path = granted_path(&app, &id, "files.write", &root, &path)?;
     let now = match tokio::fs::read(&path).await {
         Ok(bytes) => bytes,
         Err(e) if e.kind() == std::io::ErrorKind::NotFound => Vec::new(),
@@ -173,19 +162,23 @@ pub async fn plugin_fs_write_if(
     Ok(true)
 }
 
+/// Where plugins' secrets are kept, in the app's config folder.
+pub(crate) const SECRETS_FILE: &str = "plugin_secrets.json";
+
 type Secrets = BTreeMap<String, BTreeMap<String, String>>;
 
 /// Every plugin's secrets, in one owner-only file apart from settings and storage.
 fn secrets_path(app: &tauri::AppHandle) -> Result<std::path::PathBuf, String> {
     let dir = app.path().app_config_dir().map_err(|e| e.to_string())?;
     std::fs::create_dir_all(&dir).map_err(|e| e.to_string())?;
-    Ok(dir.join("plugin_secrets.json"))
+    Ok(dir.join(SECRETS_FILE))
 }
 
 fn read_secrets(app: &tauri::AppHandle) -> Result<Secrets, String> {
     let path = secrets_path(app)?;
-    match std::fs::read_to_string(&path) {
-        Ok(text) => Ok(serde_json::from_str(&text).unwrap_or_default()),
+    match std::fs::read(&path) {
+        // A file that doesn't parse is kept aside, not written over.
+        Ok(bytes) => Ok(crate::json_file::parse_or_set_aside(&path, &bytes).unwrap_or_default()),
         Err(e) if e.kind() == std::io::ErrorKind::NotFound => Ok(Secrets::new()),
         Err(e) => Err(e.to_string()),
     }
@@ -198,7 +191,7 @@ fn write_secrets(app: &tauri::AppHandle, secrets: &Secrets) -> Result<(), String
 
 /// One of the plugin's own secrets; it needs no permission, and reaches no
 /// other plugin's.
-#[tauri::command]
+#[tauri::command(async)]
 #[cfg_attr(test, specta::specta)]
 pub fn plugin_secret_get(
     app: tauri::AppHandle,
@@ -215,8 +208,12 @@ pub fn plugin_secret_get(
         .cloned())
 }
 
+/// One read-change-write of the secrets file at a time: two saves at once
+/// would each write over the other's.
+static SECRETS_WRITING: std::sync::Mutex<()> = std::sync::Mutex::new(());
+
 /// Keeps a secret of the plugin's; `None` forgets it.
-#[tauri::command]
+#[tauri::command(async)]
 #[cfg_attr(test, specta::specta)]
 pub fn plugin_secret_set(
     app: tauri::AppHandle,
@@ -231,6 +228,7 @@ pub fn plugin_secret_set(
     if key.is_empty() || key.len() > 200 {
         return Err("A secret's key is 1 to 200 characters.".into());
     }
+    let _one = SECRETS_WRITING.lock().unwrap_or_else(|e| e.into_inner());
     let mut secrets = read_secrets(&app)?;
     match value {
         Some(value) => {
@@ -250,6 +248,7 @@ pub fn plugin_secret_set(
 
 /// An uninstalled plugin's secrets go with it.
 pub fn forget_secrets(app: &tauri::AppHandle, id: &str) -> Result<(), String> {
+    let _one = SECRETS_WRITING.lock().unwrap_or_else(|e| e.into_inner());
     let mut secrets = read_secrets(app)?;
     if secrets.remove(id).is_some() {
         write_secrets(app, &secrets)?;
@@ -266,5 +265,60 @@ mod tests {
         assert_eq!(token_of(b"a"), token_of(b"a"));
         assert_ne!(token_of(b"a"), token_of(b"b"));
         assert_eq!(token_of(b"").len(), 64);
+    }
+}
+
+/// An Obsidian vault's own settings file, `<vault>/.obsidian/<name>`, as
+/// text; None when it isn't there. The one hidden folder plugins may read
+/// from, and only a file at its top: a plugin's saved data lives deeper
+/// (plugins/<id>/data.json) and holds its tokens.
+#[tauri::command]
+#[cfg_attr(test, specta::specta)]
+pub async fn plugin_app_settings(
+    app: tauri::AppHandle,
+    id: String,
+    vault: String,
+    name: String,
+) -> Result<Option<String>, String> {
+    if !super::state::read(&app).allows(&id, "files.read") {
+        return Err(super::access::refused(&id, "files.read"));
+    }
+    if !settings_file_name(&name) {
+        return Err(format!("{name} isn't a settings file's name."));
+    }
+    let path = super::access::inside(
+        std::path::Path::new(&vault),
+        &std::path::Path::new(".obsidian").join(&name),
+    )?;
+    super::access::require_not_app_data(&app, &path)?;
+    match tokio::fs::read(&path).await {
+        Ok(bytes) if bytes.len() as u64 <= super::access::MAX_READ_BYTES => {
+            Ok(Some(String::from_utf8_lossy(&bytes).into_owned()))
+        }
+        Ok(_) => Err(crate::errors::error("fileTooBig")),
+        Err(e) if e.kind() == std::io::ErrorKind::NotFound => Ok(None),
+        Err(e) => Err(e.to_string()),
+    }
+}
+
+/// A file's name at the top of the settings folder: no folders, nothing
+/// hidden.
+fn settings_file_name(name: &str) -> bool {
+    !name.is_empty()
+        && !name.starts_with('.')
+        && name
+            .chars()
+            .all(|c| c.is_ascii_alphanumeric() || matches!(c, '_' | '-' | '.'))
+}
+
+#[cfg(test)]
+mod app_settings_tests {
+    #[test]
+    fn only_a_file_at_the_settings_folders_top_is_named() {
+        assert!(super::settings_file_name("bookmarks.json"));
+        assert!(!super::settings_file_name("plugins/x/data.json"));
+        assert!(!super::settings_file_name("../.env"));
+        assert!(!super::settings_file_name(".hidden"));
+        assert!(!super::settings_file_name(""));
     }
 }

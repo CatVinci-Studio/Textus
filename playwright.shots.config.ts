@@ -3,12 +3,14 @@ import base from "./playwright.config";
 
 /**
  * Screenshot generators, not tests: they write images for a person to look
- * at. The review shots skip unless TEXTUS_SHOTS_DIR is set.
+ * at (the README's, the website's).
  */
 export default defineConfig({
   ...base,
   testDir: "./e2e/shots",
   testIgnore: [],
+  // A shot that misses its moment under load is taken again.
+  retries: 1,
   projects: [
     {
       name: "readme",
@@ -29,23 +31,6 @@ export default defineConfig({
         viewport: { width: 1440, height: 900 },
         deviceScaleFactor: 2,
         colorScheme: "light",
-      },
-    },
-    {
-      name: "plugins",
-      testDir: "./e2e/shots/plugins",
-      use: {
-        ...devices["Desktop Chrome"],
-        viewport: { width: 1200, height: 750 },
-        colorScheme: "light",
-      },
-    },
-    {
-      name: "review",
-      testDir: "./e2e/shots/review",
-      use: {
-        ...devices["Desktop Chrome"],
-        viewport: { width: 1180, height: 780 },
       },
     },
   ],

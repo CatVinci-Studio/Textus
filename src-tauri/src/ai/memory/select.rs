@@ -13,7 +13,7 @@ fn words(text: &str) -> HashSet<String> {
     let mut word = String::new();
     let mut previous_cjk: Option<char> = None;
     for c in text.chars() {
-        if is_cjk(c) {
+        if crate::ai::rules::text::is_cjk(c) {
             if let Some(p) = previous_cjk {
                 found.insert(format!("{p}{c}"));
             }
@@ -21,7 +21,7 @@ fn words(text: &str) -> HashSet<String> {
         } else {
             previous_cjk = None;
         }
-        if c.is_alphanumeric() && !is_cjk(c) {
+        if c.is_alphanumeric() && !crate::ai::rules::text::is_cjk(c) {
             word.extend(c.to_lowercase());
         } else {
             if word.chars().count() >= 3 {
@@ -34,10 +34,6 @@ fn words(text: &str) -> HashSet<String> {
         found.insert(word);
     }
     found
-}
-
-fn is_cjk(c: char) -> bool {
-    matches!(c as u32, 0x3040..=0x30FF | 0x3400..=0x4DBF | 0x4E00..=0x9FFF | 0xAC00..=0xD7AF | 0xF900..=0xFAFF)
 }
 
 impl Memories {

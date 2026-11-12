@@ -48,11 +48,9 @@ fn private_dir(dir: &Path) -> Result<(), String> {
 /// Whether `id` is safe as one folder name: what the frontend's conversation
 /// and paper ids look like.
 pub(crate) fn valid_id(id: &str) -> bool {
-    !id.is_empty()
-        && id.len() <= 64
-        && id
-            .chars()
-            .all(|c| c.is_ascii_alphanumeric() || c == '-' || c == '_')
+    crate::ids::safe_id(id, 64, |c| {
+        c.is_ascii_alphanumeric() || c == '-' || c == '_'
+    })
 }
 
 /// A conversation's scratch folder, made on first use.

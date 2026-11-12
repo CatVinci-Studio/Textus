@@ -1,0 +1,17 @@
+/* Markdown drawn by the editor inside something else (an embed, a card, a
+   plugin's README): part of that, not a page - no theme's page padding or
+   width, no first or last block's outer margin. */
+.editor-preview-inline .milkdown,
+.editor-preview-inline .milkdown .ProseMirror {
+  max-width: none;
+  margin: 0;
+  padding: 0;
+}
+
+.editor-preview-inline .milkdown .ProseMirror > :first-child {
+  margin-top: 0;
+}
+
+.editor-preview-inline .milkdown .ProseMirror > :last-child {
+  margin-bottom: 0;
+}

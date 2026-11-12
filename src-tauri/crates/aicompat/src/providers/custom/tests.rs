@@ -253,6 +253,30 @@ fn chat_stream_assembles_tool_calls_from_indexed_fragments() {
     }
 }
 
+#[test]
+fn a_tool_call_cut_off_is_refused_not_run() {
+    let start = r#"{"choices":[{"delta":{"tool_calls":[{"index":0,"id":"c1","type":"function","function":{"name":"propose_edit","arguments":"{\"action\":"}}]}}]}"#;
+    // The output limit.
+    let (acc, _) = run_stream(&[
+        start,
+        r#"{"choices":[{"delta":{},"finish_reason":"length"}]}"#,
+    ]);
+    assert!(acc.cut_off().unwrap().contains("output limit"));
+    // The connection, before any end was said.
+    let (acc, _) = run_stream(&[start]);
+    assert!(acc.cut_off().unwrap().contains("connection"));
+    // Whole, or only text: nothing wrong.
+    let (acc, _) = run_stream(&[
+        r#"{"choices":[{"delta":{"tool_calls":[{"index":0,"id":"c1","type":"function","function":{"name":"x","arguments":"{}"}}]}}]}"#,
+    ]);
+    assert!(acc.cut_off().is_none());
+    let (acc, _) = run_stream(&[
+        r#"{"choices":[{"delta":{"content":"Hi"}}]}"#,
+        r#"{"choices":[{"delta":{},"finish_reason":"length"}]}"#,
+    ]);
+    assert!(acc.cut_off().is_none());
+}
+
 /// With `include_usage`, the usage comes in a last chunk with no
 /// choices; what the server read from its prompt cache is in it.
 #[test]

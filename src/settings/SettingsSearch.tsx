@@ -1,3 +1,4 @@
+import { SearchField } from "../engine/controls/SearchField";
 import {
   useEffect,
   useLayoutEffect,
@@ -6,9 +7,8 @@ import {
   type Ref,
 } from "react";
 import type { Strings } from "../i18n/strings";
-import { announce } from "../ui/announce";
-import { SearchIcon } from "../ui/icons";
-import { scrollBehavior } from "../ui/motion";
+import { announce } from "../engine/controls/announce";
+import { scrollBehavior } from "../engine/motion/motion";
 import { useLatest } from "../utils/hooks/useLatest";
 import {
   harvestPage,
@@ -99,17 +99,16 @@ export function SettingsSearchField({
   /** The option ↑/↓ have reached, announced as the box's active one. */
   activeId: string | undefined;
   onQueryChange: (query: string) => void;
-  onMove: (step: 1 | -1) => void;
+  /** An arrow key, for the highlight to move by. */
+  onMove: (key: string) => void;
   onPick: () => void;
 }) {
   const searching = query.trim() !== "";
   return (
-    <div className="settings-search" role="search">
-      <SearchIcon className="settings-search-icon" />
-      <input
+    <div role="search">
+      <SearchField
+        className="settings-search"
         ref={inputRef}
-        className="settings-search-input"
-        type="search"
         role="combobox"
         aria-autocomplete="list"
         aria-expanded={searching}
@@ -120,15 +119,13 @@ export function SettingsSearchField({
         // Its width comes from the column, not from a default size that
         // would widen the categories beside the page.
         size={1}
-        spellCheck={false}
-        autoComplete="off"
         value={query}
         onChange={(e) => onQueryChange(e.target.value)}
         onKeyDown={(e) => {
           if (isImeKeydown(e)) return;
           if (e.key === "ArrowDown" || e.key === "ArrowUp") {
             e.preventDefault();
-            onMove(e.key === "ArrowDown" ? 1 : -1);
+            onMove(e.key);
           } else if (e.key === "Enter") {
             e.preventDefault();
             onPick();
@@ -143,7 +140,7 @@ export function SettingsSearchField({
   );
 }
 
-export interface SearchResultGroup {
+interface SearchResultGroup {
   key: string;
   name: string;
   matches: SearchMatch[];
@@ -173,9 +170,7 @@ export function SettingsSearchResults({
     <>
       <h1 className="settings-category-title">{t.settingsSearchResults}</h1>
       {empty ? (
-        <div className="settings-row-hint settings-search-empty">
-          {t.settingsSearchNoMatches}
-        </div>
+        <div className="tx-list-note">{t.settingsSearchNoMatches}</div>
       ) : (
         <div id={listId} role="listbox" aria-label={t.settingsSearchResults}>
           {groups.map((group) => (
@@ -211,7 +206,7 @@ export function SettingsSearchResults({
                       <div className="settings-row-text">
                         <div className="settings-row-label">{entry.label}</div>
                         {context && (
-                          <div className="settings-row-hint settings-search-context">
+                          <div className="settings-row-hint tx-clamp settings-search-context">
                             {context}
                           </div>
                         )}

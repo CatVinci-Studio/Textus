@@ -1,6 +1,6 @@
 import { inBrowser } from "./runtime";
 
-export type NativeMenuEntry = { label: string; run: () => void } | "separator";
+type NativeMenuEntry = { label: string; run: () => void } | "separator";
 
 /** A menu of the system's own at the pointer: for a window too small to
  *  draw one in. Nothing in the browser build. */

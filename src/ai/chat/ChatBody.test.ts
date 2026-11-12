@@ -1,5 +1,5 @@
 import { describe, expect, it } from "vitest";
-import { quickReplyExpands } from "./ChatBody";
+import { quickReplyExpands } from "./chat-body-types";
 import type { AgentTurn } from "../types";
 
 describe("quickReplyExpands", () => {

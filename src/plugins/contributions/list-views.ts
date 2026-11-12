@@ -3,7 +3,7 @@
  * one, and a version each refresh moves on. The items themselves are asked of
  * the plugin each time, never kept here.
  */
-export interface ListViewInfo {
+interface ListViewInfo {
   plugin: string;
   view: string;
   select: boolean;

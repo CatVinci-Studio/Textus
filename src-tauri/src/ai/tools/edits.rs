@@ -12,41 +12,55 @@ pub(super) const EDIT_PROPOSED: &str = "Edit proposed";
 /// one: the original stays in it, and the new one is the picture tool's.
 const PICTURE_KEPT_NOTE: &str = " A picture of the document you rewrote is kept as it was in it: text edits never change a picture. To change that picture, call generate_image with its block, in this reply.";
 
-/// The edit operations the frontend knows how to apply. Keep in step with the
-/// frontend's `EditAction`, or proposals validate but can't be applied.
-pub(crate) const EDIT_ACTIONS: [&str; 7] = [
-    "replace",
-    "replace_selection",
-    "insert_before",
-    "insert_after",
-    "delete",
-    "append",
-    "insert_at_cursor",
-];
+/// The edit operations the frontend applies, and what each needs: one list
+/// with the frontend's (src/editor/markdown/edit-actions.json), so a
+/// proposal that validates here can be applied there.
+#[derive(serde::Deserialize)]
+struct EditRule {
+    action: String,
+    /// Found by an anchor in the document; the others act on the user's
+    /// captured selection (which may not be unique), the caret or the end.
+    anchored: bool,
+    text: bool,
+}
+
+static EDIT_RULES: std::sync::LazyLock<Vec<EditRule>> = std::sync::LazyLock::new(|| {
+    serde_json::from_str(include_str!(
+        "../../../../src/editor/markdown/edit-actions.json"
+    ))
+    .expect("src/editor/markdown/edit-actions.json is the edit actions' list")
+});
+
+/// The actions, as the tool's schema offers them.
+pub(crate) fn edit_actions() -> Vec<&'static str> {
+    EDIT_RULES.iter().map(|r| r.action.as_str()).collect()
+}
+
+fn rule(action: &str) -> Option<&'static EditRule> {
+    EDIT_RULES.iter().find(|r| r.action == action)
+}
 
 pub(super) fn needs_anchor(action: &str) -> bool {
-    // replace_selection targets the user's captured selection, so there is no
-    // anchor to locate (and the selection may not be unique in the document).
-    action != "append" && action != "replace_selection" && action != "insert_at_cursor"
+    rule(action).is_none_or(|r| r.anchored)
 }
 
 pub(super) fn needs_text(action: &str) -> bool {
-    action != "delete"
+    rule(action).is_none_or(|r| r.text)
 }
 
 /// Changes nothing itself: the document only changes when the user accepts.
 /// Validates the proposal by the frontend's rules, so the model gets feedback
-/// instead of the user getting a dead Apply button.
+/// instead of the user getting a revision that can't land.
 pub(super) fn propose_edit(ctx: &ToolContext, arguments: &str) -> String {
     let parsed: serde_json::Value = match serde_json::from_str(arguments) {
         Ok(v) => v,
         Err(_) => return "Invalid arguments - expected JSON with an `action` string.".to_string(),
     };
     let action = parsed.get("action").and_then(|v| v.as_str()).unwrap_or("");
-    if !EDIT_ACTIONS.contains(&action) {
+    if rule(action).is_none() {
         return format!(
             "Unknown action `{action}`. Use one of: {}.",
-            EDIT_ACTIONS.join(", ")
+            edit_actions().join(", ")
         );
     }
 
@@ -198,7 +212,7 @@ pub(super) fn propose_edit(ctx: &ToolContext, arguments: &str) -> String {
     } else {
         ""
     };
-    format!("{EDIT_PROPOSED} - the user now sees it with an Apply button.{into}{size}{unmade} (Counts here are for you, measured the way measure_text does; the user never sees this note, so don't refer to it.) This is your proposal for that passage in this reply - don't send another one for it, even if it falls short of a target: say so in your reply instead. In your reply, say in a sentence or two what you proposed and why; don't repeat the text or list what you kept.{pictures}")
+    format!("{EDIT_PROPOSED} - the user now sees it in the document.{into}{size}{unmade} (Counts here are for you, measured the way measure_text does; the user never sees this note, so don't refer to it.) This is your proposal for that passage in this reply - don't send another one for it, even if it falls short of a target: say so in your reply instead. In your reply, say in a sentence or two what you proposed and why; don't repeat the text or list what you kept.{pictures}")
 }
 
 /// Whether `anchor` is quoted from exactly one place in text proposed and
@@ -227,11 +241,14 @@ pub(super) fn text_size(text: &str) -> (usize, &'static str) {
     let text = without_pictures.as_str();
     let cjk = text
         .chars()
-        .filter(|c| matches!(c, '\u{3040}'..='\u{30ff}' | '\u{3400}'..='\u{4dbf}' | '\u{4e00}'..='\u{9fff}'))
+        .filter(|c| crate::ai::rules::text::is_cjk(*c))
         .count();
     let words = text
         .split_whitespace()
-        .filter(|w| w.chars().any(|c| c.is_alphanumeric() && !matches!(c, '\u{3040}'..='\u{30ff}' | '\u{3400}'..='\u{4dbf}' | '\u{4e00}'..='\u{9fff}')))
+        .filter(|w| {
+            w.chars()
+                .any(|c| c.is_alphanumeric() && !crate::ai::rules::text::is_cjk(c))
+        })
         .count();
     if cjk > words {
         (
@@ -243,10 +260,6 @@ pub(super) fn text_size(text: &str) -> (usize, &'static str) {
     }
 }
 
-pub(super) fn is_cjk_char(c: char) -> bool {
-    matches!(c, '\u{3040}'..='\u{30ff}' | '\u{3400}'..='\u{4dbf}' | '\u{4e00}'..='\u{9fff}' | '\u{ac00}'..='\u{d7af}')
-}
-
 /// A replacement that can't be what the model meant: a whole CJK clause
 /// replaced by one short Latin token. Refused so the model resends; the
 /// identical call sent again goes through ("replace the sentence with TBD").
@@ -254,12 +267,15 @@ pub(super) fn degenerate_replacement(action: &str, anchor: &str, text: &str) -> 
     if action != "replace" {
         return None;
     }
-    let anchor_cjk = anchor.chars().filter(|&c| is_cjk_char(c)).count();
+    let anchor_cjk = anchor
+        .chars()
+        .filter(|&c| crate::ai::rules::text::is_cjk(c))
+        .count();
     let text = text.trim();
     let latin_token = !text.is_empty()
         && text.chars().count() <= 12
         && !text.contains(char::is_whitespace)
-        && !text.chars().any(is_cjk_char);
+        && !text.chars().any(crate::ai::rules::text::is_cjk);
     (anchor_cjk >= 12 && latin_token).then(|| {
         format!("Not proposed: `text` is only \"{text}\", which looks cut off for a passage this long. Send the proposal again with the full new text - or, if the user really asked for exactly this text, send the same call again unchanged.")
     })

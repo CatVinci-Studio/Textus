@@ -8,8 +8,8 @@ import {
   tagsIn,
   tasksIn,
 } from "../workspace/metadata-cache";
-import { linkToTarget, type LinkToOptions } from "../../links/link-resolve";
-import { linkStyleAt } from "../../links/link-style";
+import { linkToTarget, type LinkToOptions } from "../../files/link-resolve";
+import { linkStyleAt } from "../../files/link-style";
 import {
   optionalStr,
   str,

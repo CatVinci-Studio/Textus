@@ -6,8 +6,9 @@
 }
 
 /* Zen mode: only the text. The window bar stays as an invisible drag strip
-   that shows on hover. Chrome leaves the layout at once and fades where it
-   was; visibility, switched after the fade, takes it out of clicks. */
+   that shows on hover; the sidebar goes as a close does (App). What is left
+   of the chrome fades; visibility, switched after the fade, takes it out
+   of clicks. */
 .tab-bar,
 .agent-panel,
 .window-bar-status,
@@ -17,7 +18,6 @@
     visibility 0s;
 }
 
-.zen .sidebar,
 .zen .agent-panel,
 .zen .tab-bar,
 .zen .window-bar-status,
@@ -28,15 +28,6 @@
   transition:
     opacity var(--dur-slow) var(--ease-in-out),
     visibility 0s linear var(--dur-slow);
-}
-
-.zen .tab-bar {
-  position: absolute;
-  top: 0;
-  left: 0;
-  right: 0;
-  z-index: 1;
-  background: var(--ui-surface);
 }
 
 /* A docked panel (the narrow and phone layouts already lie over the
@@ -61,35 +52,29 @@
   opacity: 1;
 }
 
-.zen-hint {
+/* Zen's way out: a quiet × at the top right, under the window bar's row
+   (its caption buttons, where it has them), clear when pointed at. */
+.zen-exit {
   position: fixed;
-  top: 14px;
-  left: 50%;
-  transform: translateX(-50%);
-  z-index: 60;
-  padding: 4px 12px;
+  top: calc(var(--window-bar-height) + 6px);
+  right: 12px;
+  z-index: var(--z-lift);
+  width: 28px;
+  height: 28px;
+  display: grid;
+  place-items: center;
+  border: none;
   border-radius: var(--shape-pill);
   corner-shape: round;
-  /* Opaque: it sits over the first line of text until it fades. */
-  background: color-mix(in srgb, var(--ui-text) 8%, var(--ui-surface));
+  background: none;
   color: var(--ui-muted);
-  font-size: var(--text-footnote);
-  pointer-events: none;
-  /* Held long enough to read (a pause, not a movement), then let go. */
-  animation: motion-fade-out var(--dur-sheet) var(--ease-in) var(--delay-read)
-    forwards;
+  opacity: 0.55;
+  transition:
+    opacity var(--dur-fast) var(--ease-standard),
+    background-color var(--dur-fast) var(--ease-standard);
 }
 
-.zen-hint-button {
-  padding: 8px 16px;
-  border: none;
-  font-family: var(--font-sans);
-  pointer-events: auto;
-  animation-name: zen-hint-dim;
-}
-
-@keyframes zen-hint-dim {
-  to {
-    opacity: 0.45;
-  }
+.zen-exit:is(:hover, :focus-visible) {
+  opacity: 1;
+  background: var(--ui-hover);
 }

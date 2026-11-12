@@ -1,0 +1,54 @@
+/* The Search page (SearchPanel): its box, the files whose names match,
+   then the lines holding the text. Rows are the tree's (FileTree.css). */
+/* The search's row is pane.css's (.tx-pane-row). */
+
+/* A result is two lines: the name, then its folder. */
+.file-search-row {
+  align-items: flex-start;
+}
+
+.file-search-row .tree-icon {
+  margin-top: 2px;
+}
+
+.file-search-text {
+  display: flex;
+  flex-direction: column;
+  min-width: 0;
+}
+
+.file-search-folder {
+  min-width: 0;
+  font-size: var(--text-caption);
+  opacity: 0.9;
+}
+
+/* A document holding the text, its count at the end; its lines under it,
+   indented to its name. */
+.search-text-name .tree-label {
+  flex: 1;
+}
+
+.found-count {
+  flex-shrink: 0;
+  padding: 0 8px;
+  border-radius: var(--shape-pill);
+  corner-shape: round;
+  background: var(--ui-hover);
+  font-size: var(--text-caption);
+  color: var(--ui-muted);
+}
+
+.search-text-line {
+  padding-left: 32px;
+}
+
+.search-text-snippet {
+  font-size: var(--text-secondary);
+  color: var(--ui-muted);
+}
+
+/* The last hits, while the next search runs. */
+.search-text[aria-busy="true"] .search-text-file {
+  color: var(--ui-muted);
+}

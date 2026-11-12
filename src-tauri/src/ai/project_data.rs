@@ -4,7 +4,7 @@
 //! what the user writes (agent.md, skills, style profile, library).
 
 use crate::ai::workspace::project_dir;
-use sha2::{Digest, Sha256};
+
 use std::path::{Path, PathBuf};
 
 pub(crate) const PROJECTS: &str = "projects";
@@ -19,8 +19,7 @@ pub(crate) fn key(root: &Path) -> String {
         .map(|c| if c.is_alphanumeric() { c } else { '-' })
         .collect();
     let readable: String = readable.trim_matches('-').chars().take(80).collect();
-    let hash = Sha256::digest(path.as_bytes());
-    let short: String = hash.iter().take(4).map(|b| format!("{b:02x}")).collect();
+    let short = crate::ids::path_key(&path, 4);
     format!("{readable}-{short}")
 }
 
@@ -36,7 +35,7 @@ pub(crate) fn adopt(global: &Path, root: &Path, sub: &str) -> PathBuf {
     let to = dir(global, root).join(sub);
     let from = project_dir(root).join(sub);
     if from.is_dir() && !to.exists() {
-        if let Err(e) = move_dir(&from, &to) {
+        if let Err(e) = crate::atomic::move_or_copy(&from, &to) {
             eprintln!(
                 "textus: could not move {} to {}: {e}",
                 from.display(),
@@ -45,30 +44,6 @@ pub(crate) fn adopt(global: &Path, root: &Path, sub: &str) -> PathBuf {
         }
     }
     to
-}
-
-fn move_dir(from: &Path, to: &Path) -> std::io::Result<()> {
-    if let Some(parent) = to.parent() {
-        std::fs::create_dir_all(parent)?;
-    }
-    if std::fs::rename(from, to).is_ok() {
-        return Ok(());
-    }
-    copy_dir(from, to)
-}
-
-pub(crate) fn copy_dir(from: &Path, to: &Path) -> std::io::Result<()> {
-    std::fs::create_dir_all(to)?;
-    for entry in std::fs::read_dir(from)? {
-        let entry = entry?;
-        let kind = entry.file_type()?;
-        if kind.is_dir() {
-            copy_dir(&entry.path(), &to.join(entry.file_name()))?;
-        } else if kind.is_file() {
-            std::fs::copy(entry.path(), to.join(entry.file_name()))?;
-        }
-    }
-    Ok(())
 }
 
 #[cfg(test)]

@@ -1,7 +1,7 @@
+import { openDocument } from "../../utils/open-document";
 import { Plugin } from "@milkdown/kit/prose/state";
 import { $prose } from "@milkdown/kit/utils";
 import { editorExtensions } from "../extension-points";
-import { OPEN_FILE_IN_TAB_EVENT, type OpenFileInTab } from "../../utils/events";
 import {
   floatingCardKey,
   hideHoverCard,
@@ -57,17 +57,9 @@ export function createLinkHoverPlugin(docPath: () => string | null) {
                   const open =
                     target.type === "document"
                       ? () =>
-                          window.dispatchEvent(
-                            new CustomEvent<OpenFileInTab>(
-                              OPEN_FILE_IN_TAB_EVENT,
-                              {
-                                detail: {
-                                  path: target.path,
-                                  anchor: target.heading ?? undefined,
-                                },
-                              },
-                            ),
-                          )
+                          openDocument(target.path, {
+                            anchor: target.heading ?? undefined,
+                          })
                       : undefined;
                   showHoverCard(key, spot.rect, { ...card, open });
                 })();

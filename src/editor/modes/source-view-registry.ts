@@ -10,7 +10,7 @@ const views = new WeakMap<HTMLElement, SourceView>();
 /** What the Edit menu asks of the editor that has the keyboard. */
 export type SourceEdit = "undo" | "redo" | "select-all";
 
-export interface SourceView {
+interface SourceView {
   host: HTMLElement;
   view: EditorView;
   /** Its own Undo, Redo and Select All: the system's do nothing in a

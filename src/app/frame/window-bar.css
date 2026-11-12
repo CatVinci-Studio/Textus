@@ -1,0 +1,285 @@
+/* The window's title strip, drawn by the app: the drag region, the filename
+   and the status readouts. Opaque, so scrolling text ends at it instead of
+   colliding with the title. Below every overlay so it never steals clicks. */
+.window-bar {
+  position: fixed;
+  top: 0;
+  left: 0;
+  right: 0;
+  height: var(--window-bar-height);
+  z-index: var(--z-bar);
+  display: flex;
+  align-items: center;
+  /* Left inset is room for the macOS traffic lights, which float over the
+     top-left corner. */
+  /* design: allow - clears macOS's window buttons. */
+  padding: 0 12px 0 76px;
+  background: var(--ui-frame-fill);
+}
+
+/* Where the app owns the frame, the menu button and caption buttons sit
+   flush to the edges. The height stays: other bars clear it with fixed
+   offsets. */
+:root[data-window-chrome="app"] .window-bar {
+  padding: 0 12px 0 12px;
+}
+
+/* macOS 26 centres the traffic lights in a 32pt title bar; the row keeps
+   its height and drops its contents to the lights' centre. */
+:root[data-window-chrome="native"] .window-bar {
+  padding-top: max(
+    0px,
+    var(--native-titlebar-height, 28px) - var(--window-bar-height)
+  );
+}
+
+/* In full screen the lights' corner is free, and the sidebar's toggle takes
+   it at once, with no slide: it never kept pace with the window's. */
+:root[data-window-chrome="native"][data-window-fullscreen] .window-bar {
+  padding-left: 12px;
+}
+
+/* The traffic lights' room (barLayout), for the tabs to clear. */
+.window-bar-lights {
+  position: absolute;
+  top: 0;
+  left: 0;
+  width: 70px;
+  height: 1px;
+}
+
+/* With the rail, the app menu is the rail's first icon (barLayout): in
+   its column, at its icons' size, a hairline between it and them. */
+:root[data-menu-in-rail] .window-menu-button {
+  width: 36px;
+  height: 28px;
+  /* Its centre on the rail's: past the bar's own start padding. */
+  /* design: allow - centres on the rail, from its button size. */
+  margin-left: calc((var(--rail-width) - 36px) / 2 - 12px);
+  border-radius: var(--shape-s);
+  color: var(--ui-muted);
+  opacity: 1;
+}
+
+:root[data-menu-in-rail] .window-menu-button svg {
+  width: 18px;
+  height: 18px;
+}
+
+:root[data-menu-in-rail] .activity-rail::before {
+  content: "";
+  align-self: stretch;
+  height: 1px;
+  margin: -4px 8px 0;
+  background: var(--ui-frame-edge);
+}
+
+/* The row's first control: the sidebar's toggle. */
+.window-bar-sidebar-toggle {
+  flex-shrink: 0;
+}
+
+.window-menu-anchor + .window-bar-sidebar-toggle,
+.window-menu-button + .window-bar-sidebar-toggle {
+  margin-left: 2px;
+}
+
+/* A modal dims the whole window, its bar too, but stops short of taking the
+   bar: the window still moves and closes while one is open. The bar's own
+   buttons and tabs rest meanwhile, so nothing dimmed answers a click.
+   `:root` beats each component's `inset: 0`. */
+:root
+  :is(
+    .settings-backdrop,
+    .language-welcome-backdrop,
+    .tutorial-backdrop,
+    .insert-table-overlay,
+    .image-name-overlay,
+    .tx-backdrop
+  ) {
+  top: var(--window-bar-height);
+}
+
+:root
+  :is(
+    .settings-backdrop,
+    .language-welcome-backdrop,
+    .tutorial-backdrop,
+    .insert-table-overlay,
+    .image-name-overlay,
+    .tx-backdrop
+  )::before {
+  content: "";
+  position: absolute;
+  left: 0;
+  right: 0;
+  bottom: 100%;
+  height: var(--window-bar-height);
+  background: inherit;
+  pointer-events: none;
+}
+
+:root[data-modal-open]
+  :is(.window-bar, .main-pane > .island-row)
+  *:not(.window-caption, .window-caption *) {
+  pointer-events: none;
+}
+
+/* Over the document it names, placed by the window's clock
+   (useTitleRoom.ts): its box spans the room it has, its words centred in
+   it. Centred on the window until placed. */
+.window-bar-title {
+  position: absolute;
+  left: 25%;
+  width: 50%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 8px;
+  font-size: var(--text-secondary);
+  color: var(--ui-muted);
+  pointer-events: none;
+  user-select: none;
+  white-space: nowrap;
+}
+/* A read-only document's padlock: quiet, and the one part of the title
+   that takes a click. */
+.window-bar-lock {
+  display: inline-flex;
+  flex-shrink: 0;
+  padding: 2px;
+  border: 0;
+  background: none;
+  color: var(--ui-muted);
+  pointer-events: auto;
+}
+
+.window-bar-lock:hover {
+  color: var(--ui-text);
+}
+
+.window-bar-status {
+  margin-left: auto;
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  flex-shrink: 0;
+  /* Non-interactive readouts - let the drag region have the whole bar. */
+  pointer-events: none;
+}
+
+/* The bar's own buttons - the app menu's at the start, the sidebar's beside
+   it, Textus AI's in the status group: one size, shape and hover, so none
+   reads as a different kind of thing from its neighbours. The sidebar's has
+   a class of its own, so the AI button is the one .window-bar-toggle. */
+.window-bar-toggle,
+.window-bar-agent,
+.window-bar-sidebar-toggle,
+.window-menu-button {
+  pointer-events: auto;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: calc(22px * var(--chrome-scale));
+  height: calc(20px * var(--chrome-scale));
+  padding: 0;
+  border: none;
+  border-radius: var(--shape-pill);
+  corner-shape: round;
+  background: none;
+  color: inherit;
+  opacity: 0.6;
+  cursor: pointer;
+}
+
+.window-bar-toggle:hover,
+.window-bar-agent:hover,
+.window-bar-sidebar-toggle:hover,
+.window-menu-button:hover,
+.window-bar-toggle-on {
+  opacity: 1;
+  background: var(--ui-hover);
+}
+
+/* Hover arrives in 80ms; turning on or off changes in 120ms. */
+.window-bar-toggle,
+.window-bar-agent,
+.window-bar-sidebar-toggle,
+.window-menu-button {
+  transition:
+    background-color var(--dur-fast) var(--ease-standard),
+    opacity var(--dur-fast) var(--ease-standard);
+}
+
+.window-bar-toggle:hover,
+.window-bar-sidebar-toggle:hover,
+.window-menu-button:hover {
+  transition-duration: var(--dur-instant);
+}
+
+.sidebar-header {
+  /* Clears the window bar floating over the top of the window. */
+  padding: 32px 8px 0;
+  border-bottom: 1px solid var(--ui-border);
+}
+
+/* Every column's top row ends on one line: the sidebar's, each pane's tab
+   bar and the AI panel's header (which starts below the window bar). The
+   header's own floor, for the phone, must not push its line lower. */
+:root {
+  --header-height: calc(var(--window-bar-height) + 36px * var(--chrome-scale));
+}
+
+:root:not([data-window-chrome="mobile"])
+  :is(.sidebar-header, :not(.island-row) > .tab-bar) {
+  box-sizing: border-box;
+  height: var(--header-height);
+}
+
+/* Its tabs centre on the document bar's: both clear the window bar and leave
+   the same 4px under the row. */
+:root:not([data-window-chrome="mobile"]) .sidebar-header {
+  padding-bottom: 4px;
+}
+
+:root:not([data-window-chrome="mobile"]) .agent-panel-header {
+  box-sizing: border-box;
+  height: calc(var(--header-height) - var(--window-bar-height));
+  min-height: 0;
+}
+
+/* Its content starts level with the islands' top. */
+.sidebar-body {
+  flex: 1;
+  overflow-y: auto;
+  padding: 0 var(--pane-edge) var(--pane-edge);
+}
+
+/* Shown while ghost text, grammar check and live Mermaid preview are paused
+   for a large document. */
+/* The shared badge, outlined: a state of the document, not a count. */
+.large-doc-badge {
+  padding: 1px 8px;
+  border: 1px solid var(--ui-border);
+  background: none;
+  font-weight: 400;
+  cursor: default;
+}
+
+.editor-scroll {
+  flex: 1;
+  overflow-y: auto;
+  background: var(--doc-bg);
+}
+
+/* An outside agent's button without an icon of its own: its first letter. */
+.window-bar-agent-letter {
+  font-size: var(--text-caption);
+  font-weight: 600;
+}
+
+/* The phone's two pages, the document and Textus AI, in the title row. */
+.page-switch {
+  min-width: 132px;
+  pointer-events: auto;
+}

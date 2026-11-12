@@ -1,0 +1,243 @@
+/* padding-top clears the floating window bar, or its drag region would
+   swallow clicks meant for the tabs. */
+.tab-bar {
+  /* What its strip and its + are laid out in. */
+  position: relative;
+  display: flex;
+  align-items: center;
+  gap: 2px;
+  padding: 32px 8px 4px;
+  overflow-x: auto;
+  /* A scrollbar would make the bar taller than its neighbours' rows; it
+     scrolls by trackpad or wheel all the same. */
+  scrollbar-width: none;
+  border-bottom: 1px solid var(--ui-border);
+  flex-shrink: 0;
+  /* Pill drags must never read as a text selection. */
+  user-select: none;
+  -webkit-user-select: none;
+}
+
+.tab-bar::-webkit-scrollbar {
+  display: none;
+}
+
+/* The tabs' strip: as long as its tabs, each placed along it by the
+   window's clock (useTabStrip), so the row scrolls over it. */
+.tab-strip {
+  position: relative;
+  flex: none;
+  align-self: stretch;
+}
+
+.tab-pill {
+  position: absolute;
+  top: 0;
+  bottom: 0;
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  /* Its width is set from tab-widths.ts, between min-width and max-width. */
+  box-sizing: border-box;
+  min-width: calc(56px * var(--chrome-scale));
+  max-width: 200px;
+  padding: 4px 8px;
+  /* The bar's text grows with a wide window, as its icons do. */
+  font-size: var(--text-secondary);
+  white-space: nowrap;
+  overflow: hidden;
+}
+
+/* Held by a finger until it lifts: it rises under it, ready to drag, and
+   no callout or selection comes up meanwhile. */
+.tab-pill {
+  -webkit-touch-callout: none;
+}
+
+.tab-pill-lifted {
+  transition:
+    scale var(--dur-fast) var(--ease-spring-bouncy),
+    background-color var(--dur-fast) var(--ease-standard);
+}
+
+/* Inside the ring: the bar scrolls, and clips what lies outside it. */
+.tab-pill:focus-visible {
+  outline-offset: -2px;
+}
+
+/* An incoming tab riding this bar mid-drag. */
+.tab-pill-preview {
+  pointer-events: none;
+}
+
+/* The pill following the cursor is its own tiny OS window, since nothing in
+   this webview can paint beyond the window's edge. */
+
+/* A title too long for its tab fades out over its last letters, as
+   Chrome's and Arc's do, with no ellipsis; a short one is untouched. */
+.tab-pill-title {
+  overflow: hidden;
+  white-space: nowrap;
+}
+
+.tab-pill-title[data-cut] {
+  -webkit-mask-image: linear-gradient(
+    to right,
+    #000 calc(100% - 1.5em),
+    transparent
+  );
+  mask-image: linear-gradient(to right, #000 calc(100% - 1.5em), transparent);
+}
+
+/* Opened to look: the next file looked at takes its place. Not
+   .tab-pill-preview, the pill a dragged-in tab shows, which takes no clicks. */
+.tab-pill-looking .tab-pill-title {
+  font-style: italic;
+}
+
+.tab-pill-dirty-dot {
+  width: 6px;
+  height: 6px;
+  border-radius: 50%;
+  corner-shape: round;
+  background: currentColor;
+  flex-shrink: 0;
+  opacity: 0.7;
+}
+
+/* Reading mode's padlock before the name; a click turns it off. */
+.tab-pill-lock {
+  display: inline-flex;
+  flex-shrink: 0;
+  opacity: 0.7;
+}
+
+.tab-pill-lock:hover {
+  opacity: 1;
+}
+
+.tab-pill-lock svg {
+  width: 12px;
+  height: 12px;
+}
+
+/* How many of Textus AI's revisions wait in it: a small count after its
+   name, in the accent its name takes. */
+.tab-pill-waiting {
+  flex: none;
+  min-width: 1.4em;
+  padding: 0 4px;
+  border-radius: var(--shape-pill);
+  corner-shape: round;
+  background: color-mix(in srgb, var(--ui-accent) 14%, transparent);
+  color: var(--ui-accent-text);
+  font-size: var(--text-footnote);
+  font-variant-numeric: tabular-nums;
+  line-height: 1.5;
+  text-align: center;
+}
+
+/* At the pill's end: a short name's tab is wider than its name, and a
+   click in its middle opens it, never closes it. */
+.tab-pill-close {
+  margin-left: auto;
+  border: none;
+  background: none;
+  cursor: pointer;
+  color: inherit;
+  opacity: 0.6;
+  display: flex;
+  align-items: center;
+  padding: 0 2px;
+  line-height: 1;
+  border-radius: var(--shape-pill);
+  corner-shape: round;
+}
+
+.tab-pill-close:hover {
+  opacity: 1;
+  background: color-mix(in srgb, currentColor 15%, transparent);
+}
+
+.tab-bar-add {
+  flex-shrink: 0;
+  border: none;
+  background: none;
+  cursor: pointer;
+  color: var(--ui-muted);
+  font-size: var(--text-body-large);
+  padding: 4px 8px;
+  border-radius: var(--shape-pill);
+  corner-shape: round;
+}
+
+.tab-bar-add:hover {
+  background: var(--ui-hover);
+}
+
+/* Every tab keeps its ×'s room, shown on the open tab and the one pointed
+   at: a tab never changes width as it opens or another closes. */
+.tab-pill:not(.tab-pill-active, :hover, :focus-visible) .tab-pill-close {
+  visibility: hidden;
+}
+
+/* Overflowing, the + stays beside the list at the row's end as the tabs
+   scroll under them. */
+.tab-bar[data-overflow] .tab-bar-add {
+  position: sticky;
+  right: calc(24px * var(--chrome-scale));
+  z-index: 2;
+  background: var(--ui-frame-fill, var(--ui-bg));
+}
+
+/* Every tab, listed: held at the row's end as the tabs scroll under it. */
+.tab-bar-list {
+  position: sticky;
+  right: 0;
+  flex-shrink: 0;
+  align-self: center;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  margin-left: auto;
+  width: var(--icon-button-s);
+  height: var(--icon-button-s);
+  padding: 0;
+  border: none;
+  border-radius: var(--shape-pill);
+  corner-shape: round;
+  background: var(--ui-frame-fill, var(--ui-bg));
+  /* design: allow - a fade over the overflowing tabs, not a shadow. */
+  box-shadow: -8px 0 8px var(--ui-frame-fill, var(--ui-bg));
+  color: var(--ui-muted);
+  cursor: pointer;
+  z-index: 2;
+}
+
+.tab-bar-list:hover {
+  background: color-mix(
+    in srgb,
+    var(--ui-text) 8%,
+    var(--ui-frame-fill, var(--ui-bg))
+  );
+  color: var(--ui-text);
+}
+
+.tab-bar-list svg {
+  rotate: 90deg;
+}
+
+.word-count {
+  font-size: var(--text-footnote);
+  color: var(--ui-muted);
+  white-space: nowrap;
+  min-width: 1px;
+  padding: 0 4px;
+  /* Counts change in place without their digits shifting. */
+  font-variant-numeric: tabular-nums;
+}
+
+/* A marked tab (a file Textus AI changed): its name in the accent. */
+.tab-pill[data-marked] .tab-pill-title {
+  color: var(--ui-accent-text);
+}

@@ -1,17 +1,18 @@
 import { describe, expect, it } from "vitest";
 import snapshot from "./models-snapshot.json";
-import { FALLBACK_CATALOG } from "./provider-catalog";
+import { PROVIDER_CATALOG } from "../platform/bindings/ai";
+import type { ProviderCatalogEntry } from "./provider-catalog";
 
 type Snapshot = {
   unmapped: string[];
   providers: Record<string, { models: Record<string, { status?: string }> }>;
 };
 
-// Checked against the same models.dev snapshot as the backend's catalog, so
-// neither drifts onto models that no longer exist.
-describe("provider catalog mirror", () => {
+// The backend's catalog, as generated, checked against the models.dev
+// snapshot so it never pins a model that no longer exists.
+describe("the provider catalog", () => {
   const data = snapshot as Snapshot;
-  for (const entry of FALLBACK_CATALOG) {
+  for (const entry of PROVIDER_CATALOG as readonly ProviderCatalogEntry[]) {
     if (data.unmapped.includes(entry.id)) continue;
     it(`pins only current ${entry.id} models`, () => {
       const models = data.providers[entry.id]?.models;

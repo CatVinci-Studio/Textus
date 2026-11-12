@@ -1,30 +1,19 @@
 import type { SettingsPageProps } from "./types";
 import { SettingsGroup } from "./SettingsGroup";
-import { type NewDocumentMode } from "../../prefs/SettingsContext";
 import { LANGS, LANG_NAMES, type Lang } from "../../i18n/strings";
-import { LinkRow, SettingRow, ToggleRow } from "../sections/controls";
+import { SettingRow, ToggleRow } from "../sections/controls";
 import { CliCommandSection, DefaultEditorSection } from "../sections/general";
 import { BackgroundSection } from "../sections/background";
-import { Select } from "../../ui/Select";
+import { Select } from "../../engine/controls/Select";
 import {
   canInstallCliCommand,
   canSetDefaultEditor,
   canUseWindows,
-  isDesktopApp,
 } from "../../platform/capabilities";
-import { emitMenuEvent } from "../../platform/menu-events";
-import { links } from "../../platform/ipc";
 
-/** General: language, documents and disk, system integrations, About, and
- *  the guides. */
-export function GeneralPage({
-  t,
-  settings,
-  setSettings,
-  setSubpage,
-  openHelp,
-  onClose,
-}: SettingsPageProps) {
+/** General: language, documents and disk, system integrations, and which
+ *  updates to take. */
+export function GeneralPage({ t, settings, setSettings }: SettingsPageProps) {
   return (
     <>
       <SettingsGroup title={t.generalBasicsLabel}>
@@ -46,21 +35,6 @@ export function GeneralPage({
         </SettingRow>
         {canUseWindows && (
           <>
-            <SettingRow label={t.newDocumentModeLabel}>
-              <Select
-                className="settings-select"
-                aria-label={t.newDocumentModeLabel}
-                value={settings.newDocumentMode}
-                onChange={(e) =>
-                  setSettings({
-                    newDocumentMode: e.target.value as NewDocumentMode,
-                  })
-                }
-              >
-                <option value="window">{t.newDocumentModeWindow}</option>
-                <option value="tab">{t.newDocumentModeTab}</option>
-              </Select>
-            </SettingRow>
             <SettingRow label={t.startupOpenLabel}>
               <Select
                 className="settings-select"
@@ -127,33 +101,6 @@ export function GeneralPage({
           {canInstallCliCommand && <CliCommandSection t={t} />}
         </SettingsGroup>
       )}
-
-      {/* Last: links out rather than settings. A phone's menu is kept short,
-            so there this is where they are. */}
-      <SettingsGroup title={t.settingsHelpGroup}>
-        {isDesktopApp && (
-          <LinkRow
-            label={t.menuHelpWelcome}
-            onOpen={() => openHelp("welcome")}
-          />
-        )}
-        <LinkRow label={t.navGuides} onOpen={() => setSubpage("guides")} />
-        {/* The dialog is the window's, behind this panel. */}
-        {isDesktopApp && (
-          <LinkRow
-            label={t.menuHelpReport}
-            onOpen={() => {
-              onClose();
-              emitMenuEvent("help-report");
-            }}
-          />
-        )}
-        <LinkRow
-          label={t.menuHelpCommunity}
-          onOpen={() => void links.openCommunityPage(settings.language)}
-        />
-        <LinkRow label={t.aboutTextus} onOpen={() => setSubpage("about")} />
-      </SettingsGroup>
     </>
   );
 }

@@ -64,9 +64,14 @@ export const commands = {
 	move_picture_to_trash: (docPath: string | null, path: string) => __TAURI_INVOKE<null>("move_picture_to_trash", { docPath, path }),
 	/**
 	 *  The files under `root`, for the sidebar's file-name search. Refuses the home
-	 *  folder and a drive root ("TOO_BROAD"): a walk there is everything the user owns.
+	 *  folder and a drive root ("tooBroad"): a walk there is everything the user owns.
 	 */
 	index_folder: (root: string) => __TAURI_INVOKE<FolderIndex>("index_folder", { root }),
+	/**
+	 *  The lines of the documents under `root` holding `query`, ignoring case,
+	 *  for the Search page. Refuses what `index_folder` refuses.
+	 */
+	search_folder_text: (root: string, query: string) => __TAURI_INVOKE<SearchResult>("search_folder_text", { root, query }),
 	/**
 	 *  Every Markdown document under `root` with its text, for the links a rename
 	 *  in the sidebar updates. Refuses what `index_folder` refuses.
@@ -74,7 +79,7 @@ export const commands = {
 	folder_documents: (root: string) => __TAURI_INVOKE<WorkspaceDocuments>("folder_documents", { root }),
 	/**
 	 *  File > Open Folder…: a folder picker. The home folder or a drive root is
-	 *  refused with "TOO_BROAD" for the frontend to explain.
+	 *  refused as tooBroad for the frontend to explain.
 	 */
 	pick_open_folder: () => __TAURI_INVOKE<string | null>("pick_open_folder"),
 	/**  Creates an empty Markdown document in `dir`. Returns its path. */
@@ -110,9 +115,24 @@ export const commands = {
 	document_link_root: (docPath: string, folder: string | null) => __TAURI_INVOKE<string | null>("document_link_root", { docPath, folder }),
 	/**  A document's or folder's conventions, for the editor and for plugins. */
 	folder_conventions: (path: string) => __TAURI_INVOKE<Conventions_Serialize>("folder_conventions", { path }),
+	/**
+	 *  A project's own settings file (`.textus/settings.json`) as a whole, read
+	 *  as the conventions read it (comments and trailing commas allowed); {}
+	 *  when it isn't there or isn't a settings file.
+	 */
+	project_settings_read: (root: string) => __TAURI_INVOKE<Value>("project_settings_read", { root }),
 	open_word_document: (path: string) => __TAURI_INVOKE<WordDocument>("open_word_document", { path }),
 	upload_image: (host: ImageHost, dataBase64: string, mime: string, filename: string, endpoint: string, urlField: string) => __TAURI_INVOKE<UploadedImage>("upload_image", { host, dataBase64, mime, filename, endpoint, urlField }),
-	update_session_paths: (paths: string[]) => __TAURI_INVOKE<void>("update_session_paths", { paths }),
+	/**  Where `host`'s token is kept, for Settings to save or clear it. */
+	image_host_key_id: (host: ImageHost) => __TAURI_INVOKE<string>("image_host_key_id", { host }),
+	/**  This window's session as it now stands. */
+	update_window_session: (session: WindowSession_Deserialize) => __TAURI_INVOKE<void>("update_window_session", { session }),
+	/**
+	 *  This window's session as it last told it: what a reloaded page comes
+	 *  back to (its folder, its islands), where a first start takes what it was
+	 *  opened with.
+	 */
+	window_session_current: () => __TAURI_INVOKE<WindowSession_Serialize | null>("window_session_current"),
 	/**
 	 *  A dirty-window prompt cancelled File > Quit after other windows closed:
 	 *  resume ordinary bookkeeping and persist only the windows still alive.
@@ -120,20 +140,30 @@ export const commands = {
 	cancel_session_quit: () => __TAURI_INVOKE<void>("cancel_session_quit"),
 	add_recent_file: (path: string) => __TAURI_INVOKE<void>("add_recent_file", { path }),
 	add_recent_folder: (path: string) => __TAURI_INVOKE<void>("add_recent_folder", { path }),
+	/**  One entry taken off both lists: the start page's × beside it. */
+	remove_recent: (path: string) => __TAURI_INVOKE<void>("remove_recent", { path }),
 	save_draft_snapshot: (tabId: string, path: string | null, content: string) => __TAURI_INVOKE<null>("save_draft_snapshot", { tabId, path, content }),
 	/**
-	 *  Takes every pending draft, removing its file, so at most one window claims
-	 *  each. Only the `main` window's first call gets anything (see DRAFTS_CLAIMED).
+	 *  Takes every pending draft, so at most one window claims each: each is
+	 *  moved aside into `restoring/` (kept until the window says they are
+	 *  back, finish_draft_restore), and one a crash left there last time comes
+	 *  back too. One that can't be read goes to `unreadable/`, never deleted.
+	 *  Only the `main` window's first call gets anything (see DRAFTS_CLAIMED).
 	 */
 	take_draft_snapshots: () => __TAURI_INVOKE<DraftSnapshot_Serialize[]>("take_draft_snapshots"),
+	/**
+	 *  The taken drafts are back in their window, each kept again under its
+	 *  new tab: the copies set aside go.
+	 */
+	finish_draft_restore: () => __TAURI_INVOKE<null>("finish_draft_restore"),
 	clear_draft_snapshot: (tabId: string) => __TAURI_INVOKE<null>("clear_draft_snapshot", { tabId }),
 	clear_all_drafts: () => __TAURI_INVOKE<null>("clear_all_drafts"),
 	/**  Keeps `history` for the document at `path` whose text hashes to `hash`. */
 	undo_file_save: (path: string, hash: string, history: string) => __TAURI_INVOKE<null>("undo_file_save", { path, hash, history }),
 	/**  The history kept for `path`, if it ends at the text hashing to `hash`. */
 	undo_file_load: (path: string, hash: string) => __TAURI_INVOKE<string | null>("undo_file_load", { path, hash }),
-	/**  The history kept for `from` follows the document to `to`. */
-	undo_file_move: (from: string, to: string) => __TAURI_INVOKE<null>("undo_file_move", { from, to }),
+	/**  What is kept for `from` follows it to `to` (both already moved on disk). */
+	document_data_move: (from: string, to: string) => __TAURI_INVOKE<null>("document_data_move", { from, to }),
 	/**
 	 *  What is kept of `part` for the document at `path`, as the JSON it was
 	 *  written as - none when nothing is.
@@ -193,6 +223,11 @@ export const commands = {
 	/**  A document saved under a new path: its conversations follow it. */
 	chat_history_move_document: (from: string, to: string) => __TAURI_INVOKE<void>("chat_history_move_document", { from, to }),
 };
+
+/* Constants */
+export const MARKDOWN_EXTENSIONS = ["md","markdown"] as const;
+
+export const TEXT_DOCUMENT_EXTENSIONS = ["md","markdown","txt","text"] as const;
 
 /* Types */
 export type AiRecords = {
@@ -446,6 +481,11 @@ export type SavedImage_Deserialize = {
 	 *  instead of a Markdown image.
 	 */
 	embed?: string | null,
+	/**
+	 *  The file written, where it is the user's (in the document's folder),
+	 *  for plugins to hear of; none for a draft's, kept by the app.
+	 */
+	path?: string | null,
 };
 
 export type SavedImage_Serialize = {
@@ -459,6 +499,27 @@ export type SavedImage_Serialize = {
 	 *  instead of a Markdown image.
 	 */
 	embed: string | null,
+	/**
+	 *  The file written, where it is the user's (in the document's folder),
+	 *  for plugins to hear of; none for a draft's, kept by the app.
+	 */
+	path: string | null,
+};
+
+/**  A line that holds what was searched for. */
+export type SearchHit = {
+	path: string,
+	rel: string,
+	/**  1-based. */
+	line: number,
+	/**  The line around the match: a long one cut, with "…". */
+	text: string,
+};
+
+export type SearchResult = {
+	hits: SearchHit[],
+	/**  There may be more: the limit or the time was reached first. */
+	truncated: boolean,
 };
 
 /**  One setting and where it came from. */
@@ -503,6 +564,35 @@ export type UploadedImage = {
 };
 
 export type Value = null | boolean | number | string | Value[] | { [key in string]: Value };
+
+/**
+ *  One window as the next launch brings it back: its documents' paths, how
+ *  its islands were laid out (the frontend's own shape, by path), and the
+ *  folder it had open. Untitled tabs are not kept.
+ */
+export type WindowSession = WindowSession_Serialize | WindowSession_Deserialize;
+
+/**
+ *  One window as the next launch brings it back: its documents' paths, how
+ *  its islands were laid out (the frontend's own shape, by path), and the
+ *  folder it had open. Untitled tabs are not kept.
+ */
+export type WindowSession_Deserialize = {
+	paths: string[],
+	layout?: Value | null,
+	folder?: string | null,
+};
+
+/**
+ *  One window as the next launch brings it back: its documents' paths, how
+ *  its islands were laid out (the frontend's own shape, by path), and the
+ *  folder it had open. Untitled tabs are not kept.
+ */
+export type WindowSession_Serialize = {
+	paths: string[],
+	layout: Value | null,
+	folder: string | null,
+};
 
 /**  What `open_word_document` hands the frontend. */
 export type WordDocument = {

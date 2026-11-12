@@ -72,8 +72,8 @@ pub async fn delete_theme(app: AppHandle, id: String) -> Result<(), String> {
         return Err("invalid theme id".to_string());
     }
     let dir = themes_dir(&app)?.join(&id);
-    if dir.exists() {
-        fs::remove_dir_all(&dir).await.map_err(|e| e.to_string())?;
-    }
-    Ok(())
+    // A theme the user imported or wrote: to the Trash.
+    tauri::async_runtime::spawn_blocking(move || crate::atomic::to_trash(&dir))
+        .await
+        .map_err(|e| e.to_string())?
 }

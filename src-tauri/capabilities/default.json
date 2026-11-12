@@ -5,8 +5,6 @@
   "windows": ["main", "window-*", "chat-*", "floating-*"],
   "permissions": [
     "core:default",
-    "opener:default",
-    "dialog:default",
     "core:event:allow-emit-to",
     "core:event:allow-emit",
     "core:event:allow-listen"

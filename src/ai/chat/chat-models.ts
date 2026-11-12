@@ -4,10 +4,11 @@ import {
   type ProviderCatalogEntry,
 } from "../provider-catalog";
 import { readFetchedModels } from "../model-info";
-import {
-  localizedLabel,
-  useConnectedProviders,
-} from "../../settings/sections/provider-connection";
+import { localizedLabel, useConnectedProviders } from "../provider-connection";
+import { useExternalAgents } from "../../plugins/contributions/agents";
+
+/** The models menu's group of external agents (plugins' `contributes.agents`). */
+export const AGENTS_GROUP = "agents";
 
 /** The model a provider's chat uses now: the one chosen for it, else its
  *  default. */
@@ -80,6 +81,8 @@ export function useChatModels(): ChatModels {
       (e.keyOptional && e.id !== "custom"),
   );
   const chosen = settings.agentModels;
+  const agents = useExternalAgents();
+  const agent = agents.find((a) => a.key === settings.chatAgent);
   // A provider with nothing to offer isn't listed, not even its name.
   const groups = ready
     .map((entry) => ({
@@ -93,14 +96,25 @@ export function useChatModels(): ChatModels {
       ),
     }))
     .filter((group) => group.models.length > 0);
+  if (agents.length)
+    groups.push({
+      provider: AGENTS_GROUP,
+      label: t.chatAgentsGroup,
+      models: agents.map((a) => a.name),
+    });
   return {
-    model: active ? chatModel(active, chosen) : "",
-    provider: settings.aiProvider,
+    model: agent ? agent.name : active ? chatModel(active, chosen) : "",
+    provider: agent ? AGENTS_GROUP : settings.aiProvider,
     groups: canSwitchModel(groups) ? groups : [],
     choose: (provider, model) =>
-      setSettings({
-        aiProvider: provider as typeof settings.aiProvider,
-        agentModels: { ...chosen, [provider]: model },
-      }),
+      setSettings(
+        provider === AGENTS_GROUP
+          ? { chatAgent: agents.find((a) => a.name === model)?.key ?? "" }
+          : {
+              chatAgent: "",
+              aiProvider: provider as typeof settings.aiProvider,
+              agentModels: { ...chosen, [provider]: model },
+            },
+      ),
   };
 }

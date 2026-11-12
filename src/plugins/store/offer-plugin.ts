@@ -11,11 +11,9 @@ export interface OfferDeps {
   status(id: string): PluginStatus | undefined;
   /** The suggestion card's answer (plugin-card.ts showPluginCard). */
   card(request: CardRequest): Promise<CardResult>;
-  /** Installs, or turns on, asking for its permissions first. */
-  install(id: string): Promise<void>;
-  turnOn(id: string): Promise<void>;
-  /** Install or turn-on failed after the user said yes. */
-  failed(error: unknown, t: Strings): void;
+  /** Installs the card's plugin or turns it on, asking for what it needs,
+   *  as any card does (open-offer.ts takeUp); whether it is on now. */
+  takeUp(request: CardRequest, t: Strings): Promise<boolean>;
 }
 
 /** The plugin that made the offer. */
@@ -43,17 +41,12 @@ export function pluginOffer(deps: OfferDeps) {
     const status = deps.status(id);
     if (status === "on") return true;
     if (status && !canSwitch(status)) return false;
-    const answer = await deps.card({
+    const card: CardRequest = {
       plugin: id,
       situation: { type: "offer", caller },
       installed: !!status,
-    });
-    if (answer !== "install") return false;
-    try {
-      await (status ? deps.turnOn(id) : deps.install(id));
-    } catch (error) {
-      deps.failed(error, t);
-    }
-    return deps.status(id) === "on";
+    };
+    if ((await deps.card(card)) !== "install") return false;
+    return deps.takeUp(card, t);
   };
 }

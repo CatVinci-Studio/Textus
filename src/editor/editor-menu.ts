@@ -1,3 +1,4 @@
+import { fill } from "../i18n/fill";
 import { commandsCtx, editorViewCtx, type CmdKey } from "@milkdown/kit/core";
 import {
   wrapInBulletListCommand,
@@ -8,13 +9,12 @@ import {
 } from "@milkdown/kit/preset/commonmark";
 import { insertTableCommand } from "@milkdown/kit/preset/gfm";
 import { NodeSelection } from "@milkdown/kit/prose/state";
-import type { ContextMenuEntry, ContextMenuItem } from "../ui/ContextMenu";
+import type {
+  ContextMenuEntry,
+  ContextMenuItem,
+} from "../engine/controls/ContextMenu";
 import { contributedMenuItems } from "./editor-menu-items";
-export {
-  registerEditorMenuItems,
-  type EditorMenuContext,
-  type EditorMenuProvider,
-} from "./editor-menu-items";
+import { linkMenuItems, menuLinkAt, type MenuLink } from "./editor-menu-links";
 import { imageLocation, type ImageLocation } from "./images/missing-image";
 import { embedFileAt } from "./images/obsidian-embed-preview";
 import {
@@ -23,8 +23,15 @@ import {
 } from "./drawn-block-actions";
 import type { EditorRunner } from "./useEditorRunner";
 import { convertList } from "./keys/block-toggles";
-import { toggleSpan } from "./marks/span-commands";
-import { HIGHLIGHT, toggleFormat } from "./keys/format-shortcut-plugin";
+import { clearSpans, toggleSpan } from "./marks/span-commands";
+import {
+  HIGHLIGHT,
+  STRIKETHROUGH,
+  toggleCodeSpan,
+  toggleFormat,
+} from "./keys/format-shortcut-plugin";
+import { INSERT_BLOCK_EVENT } from "../utils/events";
+import type { EditorView } from "@milkdown/kit/prose/view";
 import type { Strings } from "../i18n/strings";
 import {
   htmlTableItems,
@@ -38,22 +45,8 @@ import {
   imageTurnItems,
   imageWidthItems,
 } from "./editor-menu-images";
-export {
-  TABLE_ACTIONS,
-  type TableAction,
-  runTableAction,
-} from "./editor-menu-tables";
-export {
-  selectedImagePos,
-  selectImage,
-  deleteImage,
-  setImageWidth,
-  rotateImage,
-} from "./editor-menu-images";
 // The editor commands behind the right-click, Format and Edit menus, and
 // the right-click menu itself.
-
-export type MenuEntry = ContextMenuEntry;
 
 // CmdKey<any>: the preset command keys vary in payload type (some
 // unknown, some undefined) and all are called here without a payload.
@@ -78,13 +71,15 @@ export function insertHeading(run: EditorRunner, level: number) {
 }
 
 /** What a right-click landed on, for the menu's image items. */
-export interface ContextMenuTarget {
+interface ContextMenuTarget {
   /** The image node's doc position, for the width items. */
   imagePos: number | null;
   /** Where the picture's file is, for Show in folder and Copy image path. */
   imageLocation: ImageLocation | null;
   /** The plugin's drawing right-clicked (a database, a chart), if any. */
   drawnBlock?: DrawnBlockActions | null;
+  /** The link right-clicked, if any. */
+  link?: MenuLink | null;
 }
 
 /**
@@ -119,6 +114,8 @@ export function contextMenuTarget(
         // Not representable in the DOM right now.
       }
 
+      const link = menuLinkAt(view, e.target, docPath);
+      if (link) return { ...none, link };
       const target =
         e.target instanceof Element ? e.target.closest(".image-view") : null;
       if (!target) return none;
@@ -157,6 +154,8 @@ export interface ContextMenuOptions {
   imageLocation?: ImageLocation | null;
   /** From contextMenuTarget: the plugin's drawing right-clicked, if any. */
   drawnBlock?: DrawnBlockActions | null;
+  /** From contextMenuTarget: the link right-clicked, if any. */
+  link?: MenuLink | null;
   /** Already filtered down to the AI features that are switched on. */
   aiItems: ContextMenuItem[];
   /** Textus AI's items for the image right-clicked. */
@@ -178,7 +177,7 @@ export interface ContextMenuOptions {
 export function buildContextMenuItems(
   run: EditorRunner,
   options: ContextMenuOptions,
-): MenuEntry[] {
+): ContextMenuEntry[] {
   const { t, imagePos } = options;
   const imageItems = joinGroups(
     imagePos === null ? [] : imageWidthItems(run, t, imagePos),
@@ -188,7 +187,7 @@ export function buildContextMenuItems(
   );
   const nothingSelected =
     run((ctx) => ctx.get(editorViewCtx).state.selection.empty) ?? true;
-  const clipboard: MenuEntry[] = [
+  const clipboard: ContextMenuEntry[] = [
     {
       label: t.cut,
       disabled: nothingSelected,
@@ -222,7 +221,7 @@ export function buildContextMenuItems(
       ? [{ label: t.ownNoteAdd, onSelect: options.addNote }]
       : []),
   ];
-  const ownChanges: MenuEntry[] = options.ownChanges
+  const ownChanges: ContextMenuEntry[] = options.ownChanges
     ? [
         { label: t.trackAcceptAll, onSelect: options.ownChanges.acceptAll },
         { label: t.trackRejectAll, onSelect: options.ownChanges.rejectAll },
@@ -232,13 +231,12 @@ export function buildContextMenuItems(
   const first = inTable(run)
     ? tableMenuItems(run, t)
     : joinGroups(
+        options.link ? linkMenuItems(run, t, options.link) : [],
         htmlTableItems(run, t),
         imageItems,
         drawnBlockItems(t, options.drawnBlock ?? null),
       );
-  const format: MenuEntry[] = [
-    { label: t.menuFormat, items: formatItems(run, options, !inTable(run)) },
-  ];
+  const format = formatGroups(run, options, !inTable(run), nothingSelected);
   return joinGroups(
     first,
     clipboard,
@@ -256,10 +254,28 @@ export function buildContextMenuItems(
 function drawnBlockItems(
   t: Strings,
   block: DrawnBlockActions | null,
-): MenuEntry[] {
+): ContextMenuEntry[] {
   if (!block) return [];
+  const layout = block.layout;
   return [
     { label: t.codeBlockEditSource, onSelect: block.editSource },
+    ...(layout
+      ? [
+          {
+            label: t.menuBlockWide,
+            checked: layout.wide,
+            onSelect: () => layout.set({ wide: !layout.wide }),
+          },
+          {
+            label: t.menuBlockZoom,
+            items: layout.zooms.map((zoom) => ({
+              label: `${Math.round(zoom * 100)}%`,
+              checked: zoom === layout.zoom,
+              onSelect: () => layout.set({ zoom }),
+            })),
+          },
+        ]
+      : []),
     { label: t.codeBlockDelete, onSelect: block.remove },
   ];
 }
@@ -269,7 +285,7 @@ function grouped(
   label: string,
   items: ContextMenuItem[],
   max = 1,
-): MenuEntry[] {
+): ContextMenuEntry[] {
   return items.length > max ? [{ label, items }] : items;
 }
 
@@ -281,10 +297,10 @@ function grouped(
 export function buildPhoneMoreItems(
   run: EditorRunner,
   options: ContextMenuOptions,
-): MenuEntry[] {
+): ContextMenuEntry[] {
   const { t, imagePos } = options;
   // The phone has no Edit menu to offer the plain text.
-  const clipboard: MenuEntry[] = [
+  const clipboard: ContextMenuEntry[] = [
     { label: t.cut, onSelect: () => options.copyOrCut(true) },
     ...(options.copyAsPlainText
       ? [{ label: t.copyAsPlainText, onSelect: options.copyAsPlainText }]
@@ -308,7 +324,7 @@ export function buildPhoneMoreItems(
 }
 
 /** The groups that have items, a separator between each two. */
-function joinGroups(...groups: MenuEntry[][]): MenuEntry[] {
+function joinGroups(...groups: ContextMenuEntry[][]): ContextMenuEntry[] {
   return groups
     .filter((group) => group.length > 0)
     .flatMap((group, i) =>
@@ -330,13 +346,15 @@ function selectedText(run: EditorRunner): string {
 }
 
 /** Select All, Find, and the AI items: offered wherever the caret is. */
-function generalItems(options: ContextMenuOptions): MenuEntry[] {
+function generalItems(options: ContextMenuOptions): ContextMenuEntry[] {
   const { t, aiItems } = options;
   return [
     { label: t.selectAll, onSelect: options.selectAll },
     "separator",
     { label: t.findReplace, onSelect: options.openFindReplace },
-    ...(aiItems.length > 0 ? (["separator", ...aiItems] as MenuEntry[]) : []),
+    ...(aiItems.length > 0
+      ? (["separator", ...aiItems] as ContextMenuEntry[])
+      : []),
   ];
 }
 
@@ -355,56 +373,84 @@ export function insertList(
   );
 }
 
-/** Bold and italic, then (outside a table) the block the caret is in made
- *  a heading, list, quote or code, or a table put in. */
-function formatItems(
+/** The inline styles, then (outside a table) the block the caret is in
+ *  made a heading, list or quote, and blocks put in: Obsidian's Format,
+ *  Paragraph and Insert. */
+function formatGroups(
   run: EditorRunner,
   options: ContextMenuOptions,
   blocks: boolean,
-): (ContextMenuItem | "separator")[] {
+  nothingSelected: boolean,
+): ContextMenuEntry[] {
   const { t } = options;
-  const span = (rung: 1 | 2) => () =>
+  const onView = (act: (view: EditorView) => unknown) => () =>
     run((ctx) => {
       const view = ctx.get(editorViewCtx);
-      toggleSpan(view, rung);
+      act(view);
       view.focus();
     });
-  const highlight = () =>
-    run((ctx) => {
-      const view = ctx.get(editorViewCtx);
-      toggleFormat(view, HIGHLIGHT);
-      view.focus();
-    });
-  const marks: ContextMenuItem[] = [
-    { label: t.toolbarBold, onSelect: span(2) },
-    { label: t.toolbarItalic, onSelect: span(1) },
-    { label: t.toolbarHighlight, onSelect: highlight },
-  ];
-  if (!blocks) return marks;
+  // As the Format menu inserts them.
+  const insertBlock = (kind: string) => () =>
+    window.dispatchEvent(new CustomEvent(INSERT_BLOCK_EVENT, { detail: kind }));
+  const format: ContextMenuEntry = {
+    label: t.menuFormat,
+    items: [
+      { label: t.toolbarBold, onSelect: onView((v) => toggleSpan(v, 2)) },
+      { label: t.toolbarItalic, onSelect: onView((v) => toggleSpan(v, 1)) },
+      {
+        label: t.menuStrikethrough,
+        onSelect: onView((v) => toggleFormat(v, STRIKETHROUGH)),
+      },
+      {
+        label: t.toolbarHighlight,
+        onSelect: onView((v) => toggleFormat(v, HIGHLIGHT)),
+      },
+      { label: t.menuInlineCode, onSelect: onView(toggleCodeSpan) },
+      "separator",
+      {
+        label: t.menuClearFormatting,
+        disabled: nothingSelected,
+        onSelect: onView(clearSpans),
+      },
+    ],
+  };
+  if (!blocks) return [format];
   return [
-    ...marks,
-    "separator",
-    ...[1, 2, 3].map((level) => ({
-      label: t.menuHeadingTemplate.replace("{n}", String(level)),
-      onSelect: () => insertHeading(run, level),
-    })),
-    "separator",
+    format,
     {
-      label: t.insertBulletList,
-      onSelect: () => insertList(run, "bullet_list"),
+      label: t.menuParagraph,
+      items: [
+        ...[1, 2, 3].map((level) => ({
+          label: fill(t.menuHeadingTemplate, { n: String(level) }),
+          onSelect: () => insertHeading(run, level),
+        })),
+        "separator",
+        {
+          label: t.menuBulletList,
+          onSelect: () => insertList(run, "bullet_list"),
+        },
+        {
+          label: t.menuOrderedList,
+          onSelect: () => insertList(run, "ordered_list"),
+        },
+        { label: t.menuTaskList, onSelect: insertBlock("task-list") },
+        {
+          label: t.menuBlockquote,
+          onSelect: () => runCommand(run, wrapInBlockquoteCommand.key),
+        },
+      ],
     },
     {
-      label: t.insertOrderedList,
-      onSelect: () => insertList(run, "ordered_list"),
+      label: t.menuInsertGroup,
+      items: [
+        { label: t.menuTable, onSelect: options.openTableDialog },
+        {
+          label: t.menuCodeBlock,
+          onSelect: () => runCommand(run, createCodeBlockCommand.key),
+        },
+        { label: t.menuMathBlock, onSelect: insertBlock("math-block") },
+        { label: t.menuDivider, onSelect: insertBlock("rule") },
+      ],
     },
-    {
-      label: t.insertBlockquote,
-      onSelect: () => runCommand(run, wrapInBlockquoteCommand.key),
-    },
-    {
-      label: t.insertCodeBlock,
-      onSelect: () => runCommand(run, createCodeBlockCommand.key),
-    },
-    { label: t.insertTable, onSelect: options.openTableDialog },
   ];
 }

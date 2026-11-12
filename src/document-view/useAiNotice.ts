@@ -1,5 +1,5 @@
 import { useCallback } from "react";
-import { showNotice } from "../ui/notices";
+import { showNotice } from "../engine/controls/notices";
 
 /** What the editor says about an AI trigger that can't go ahead: a note at
  *  the bottom that goes by itself (the one NoticeHost), never alert(). */

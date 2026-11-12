@@ -5,13 +5,14 @@
 <h1 align="center">Textus</h1>
 
 <p align="center">
-  <strong>下一代 Markdown 编辑器</strong><br>
-  下笔成章，AI 研墨
+  <strong>下一代集成写作环境</strong><br>
+  AI 研墨，下笔成章
 </p>
 
 <p align="center">
   <a href="https://textus.md"><strong>官网</strong></a> ·
-  <a href="https://github.com/CatVinci-Studio/Textus/releases/latest"><strong>下载</strong></a>
+  <a href="https://github.com/CatVinci-Studio/Textus/releases/latest"><strong>下载</strong></a> ·
+  <a href="https://github.com/CatVinci-Studio/Textus/issues/648"><strong>赞助</strong></a>
 </p>
 
 <p align="center">
@@ -40,15 +41,21 @@
   <a href="https://trendshift.io/repositories/307610?utm_source=trendshift-badge&amp;utm_medium=badge&amp;utm_campaign=badge-trendshift-307610" target="_blank" rel="noopener noreferrer"><img src="https://trendshift.io/api/badge/trendshift/repositories/307610/daily?language=TypeScript" alt="CatVinci-Studio%2FTextus | Trendshift" width="250" height="55"/></a>
 </p>
 
-https://github.com/user-attachments/assets/56473ad9-5cb0-4608-b3c8-30882420edcd
+<p align="center"><strong>首席赞助</strong></p>
 
 <p align="center">
-  <a href="https://www.bilibili.com/video/BV19LJb6WEWb">在 B 站观看</a> ·
-  <a href="https://www.youtube.com/watch?v=k_ew9TRljz0">YouTube</a>
+  <a href="https://www.anthropic.com/">
+    <picture>
+      <source media="(prefers-color-scheme: dark)" srcset="docs/images/readme/sponsors/anthropic-logo-ivory.png">
+      <img src="docs/images/readme/sponsors/anthropic-logo-slate.png" alt="Anthropic" width="240">
+    </picture>
+  </a>
 </p>
 
+<p align="center"><sub>通过 Anthropic Startup Program</sub></p>
+
 <p align="center">
-  <img src="docs/images/readme/zh/hero.png" alt="Textus 打开着《红楼梦》和一段读书笔记，Textus AI 逐句精简笔记，每处修改都在页边，并在原文旁钉上审阅批注" width="860" /><br>
+  <img src="docs/images/readme/zh/hero.webp" alt="Textus 打开着《红楼梦》和一段读书笔记，Textus AI 逐句精简笔记，每处修改都在页边，并在原文旁钉上审阅批注" width="860" /><br>
   <sub>《红楼梦》曹雪芹</sub>
 </p>
 
@@ -63,61 +70,75 @@ https://github.com/user-attachments/assets/56473ad9-5cb0-4608-b3c8-30882420edcd
 | Windows · x64    | [下载 .exe](https://github.com/CatVinci-Studio/Textus/releases/latest)                       | —                                                                      |
 | Linux · x64      | [下载 .AppImage](https://github.com/CatVinci-Studio/Textus/releases/latest) · 另有 .deb · .rpm | Arch Linux：[`[catvinci]` 软件源](https://github.com/CatVinci-Studio/arch-repo) |
 
-> iPhone 与 iPad 版即将在 App Store 上架（暂不支持中国大陆）。
+> iPhone 与 iPad 版即将在 App Store 上架。
 
-测试版：在 **设置 › 通用 › 关于 Textus** 中把 **更新通道** 改为 **测试版**。
+测试版：在 **设置 › 关于** 中把 **更新通道** 改为 **测试版**。
+
+## 为什么选择 Textus
+
+程序员有 IDE：写代码、检查代码和各种工具都集中在一个地方。写作者却往往只能借用代码编辑器，或者在好几个软件之间来回切换。Textus 把整个写作流程放到了一起。
+
+- **Markdown 是共同的语言。** 在 AI 时代，Markdown 不只是文稿格式：人、AI 和其他工具都读得懂，你的文字可以在它们之间自由流动。
+- **围绕写作，而不是代码。** 起草、审阅、修改都是主角，而不是代码编辑器上外加的功能。
+- **为写作设计的 AI。** 写作时给建议，审阅时看批注，修改时逐条决定是否采纳修订。
+- **按你的方式组合。** 所见即所得的编辑、丰富的插件、同步，甚至日常的计划安排：需要什么就用什么。
+- **带上你的笔记。** 直接打开 Obsidian 库，从 Notion 导入，使用 Typora 主题。
 
 ## 写作
 
-所见即所得，使用 Markdown 快速排版。支持多种导出格式，包括 PDF、Word、HTML。
+所见即所得，边写边用 Markdown 排好版：表格、代码、公式、图表都在其中，草稿、笔记和资料可以并排摆开。支持导出 PDF、Word、HTML 等多种格式。
 
 <p align="center">
-  <img src="docs/images/readme/zh/markdown.webp" alt="一篇文档里用到了全部 Markdown 标记：标题、粗体斜体、引用、列表、任务、链接、脚注，都已排好" width="860" />
+  <img src="docs/images/readme/zh/writing.webp" alt="Textus 里并排打开几篇文档：表格、代码块、公式和图表都边写边排好" width="860" />
 </p>
-
-| 代码块 | 表格 |
-| :---: | :---: |
-| <img src="docs/images/readme/zh/code.webp" alt="带语言高亮和行号的代码块" width="420" /> | <img src="docs/images/readme/zh/table.webp" alt="自动对齐的表格" width="420" /> |
-| **数学公式** | **图像渲染** |
-| <img src="docs/images/readme/zh/formula.webp" alt="边打边出的数学公式" width="420" /> | <img src="docs/images/readme/zh/diagram.webp" alt="Mermaid 流程图和插图" width="420" /> |
 
 ## Textus AI
 
-支持在线、本地等多种 LLM 模型服务，让 AI 加速你的写作进程。
+在线模型和本地模型都能用，并且参与到写作本身。
 
-| 续写 | 错字与语病 | 修改提议 |
-| :---: | :---: | :---: |
-| <img src="docs/images/readme/zh/ai-continue.webp" alt="停笔时出现灰色的下文，按 Tab 收下" width="280" /> | <img src="docs/images/readme/zh/ai-grammar.webp" alt="错字和语病被标出，按 Alt+Enter 修正" width="280" /> | <img src="docs/images/readme/zh/ai-revise.webp" alt="逐句的修改提议，各附理由" width="280" /> |
-| **审阅批注** | **斜杠技能** | **任选模型** |
-| <img src="docs/images/readme/zh/ai-review.webp" alt="批注钉在对应的句子旁" width="280" /> | <img src="docs/images/readme/zh/ai-skills.webp" alt="输入 / 调出技能菜单" width="280" /> | <img src="docs/images/readme/zh/ai-models.webp" alt="在设置里选择模型服务" width="280" /> |
+| 续写 | 错字与语病 |
+| :---: | :---: |
+| <img src="docs/images/readme/zh/ai-continue.webp" alt="停笔时出现灰色的下文，按 Tab 收下" width="420" /> | <img src="docs/images/readme/zh/ai-grammar.webp" alt="错字和语病被标出，按 Alt+Enter 修正" width="420" /> |
+| **修改提议** | **审阅批注** |
+| <img src="docs/images/readme/zh/ai-revise.webp" alt="逐句的修改提议，各附理由" width="420" /> | <img src="docs/images/readme/zh/ai-review.webp" alt="批注钉在对应的句子旁" width="420" /> |
+| **斜杠技能** | **任选模型** |
+| <img src="docs/images/readme/zh/ai-skills.webp" alt="输入 / 调出技能菜单" width="420" /> | <img src="docs/images/readme/zh/ai-models.webp" alt="在设置里选择模型服务" width="420" /> |
+
+进阶用法：接入 MCP 服务，或者把 Claude Code、Codex 作为 Agent 放进 AI 面板。
 
 ## 插件
 
-不仅是写作，通过插件来实现更多功能。
-
-| 关系图谱 | Vim |
+| 关系图谱 | 版本历史 |
 | :---: | :---: |
-| <img src="docs/images/readme/zh/plugin-graph.webp" alt="笔记和链接画成的关系图谱" width="420" /> | <img src="docs/images/readme/zh/plugin-vim.webp" alt="Vim 的普通模式和命令面板" width="420" /> |
-| **浮动卡片** | **版本历史** |
-| <img src="docs/images/readme/zh/plugin-preview.webp" alt="停在链接上，卡片显示那篇笔记" width="420" /> | <img src="docs/images/readme/zh/plugin-history.webp" alt="一篇文档的历史版本和差异" width="420" /> |
+| <img src="docs/images/readme/zh/plugin-graph.webp" alt="笔记和链接画成的关系图谱" width="420" /> | <img src="docs/images/readme/zh/plugin-history.webp" alt="一篇文档的历史版本和差异" width="420" /> |
+| **浮动卡片** | **知识库** |
+| <img src="docs/images/readme/zh/plugin-preview.webp" alt="停在链接上，卡片显示那篇笔记" width="420" /> | <img src="docs/images/readme/zh/plugin-database.webp" alt="像 Notion 一样的页面：条目列成表格，每个条目是一篇带属性的笔记" width="420" /> |
 
-还有思维导图、Marp 幻灯片、看板、PDF 与 Word 阅读、Zotero 引用、各类图表等，都在 **设置 › 扩展**，电脑和 iPhone、iPad 上都能用。
+更多插件和主题：[textus.md/extensions](https://textus.md/zh/extensions/)。
 
-不少插件还会把自己的功能交给 Textus AI，在对话里直接让它去做就行。插件在 [textus-plugins](https://github.com/CatVinci-Studio/textus-plugins)，主题在 [textus-themes](https://github.com/CatVinci-Studio/textus-themes)，也欢迎分享你自己的主题。
+## 赞助
+
+**首席赞助：** [Anthropic](https://www.anthropic.com/)，通过 Anthropic Startup Program。
+
+Textus 免费开源。欢迎[赞助我们](https://github.com/CatVinci-Studio/Textus/issues/648)，支持它的开发。
+
+## 社区
+
+加入 Discord、QQ 群或微信群：[textus.md/community](https://textus.md/zh/community/)。欢迎在 [GitHub Issues](https://github.com/CatVinci-Studio/Textus/issues) 报告问题、提出建议；想参与开发，请先看 [CONTRIBUTING.md](CONTRIBUTING.md)。
 
 ## 常见问题
 
 <details>
 <summary><strong>Textus 免费吗？</strong></summary>
 
-免费。Textus 以 MIT 协议开源，不需要账号，也没有订阅。如果使用 Textus AI，费用由你选择的服务商直接结算；使用本地模型则完全免费。
+免费，而且会一直免费。Textus 以 MIT 协议开源，不需要账号，也没有订阅。如果使用 Textus AI，费用由你选择的服务商直接结算；使用本地模型则完全免费。
 
 </details>
 
 <details>
 <summary><strong>支持哪些平台？</strong></summary>
 
-支持 macOS（Apple 芯片和 Intel）、Windows 和 Linux，iPhone 与 iPad 版在 App Store 提供（暂不支持中国大陆）。
+支持 macOS（Apple 芯片和 Intel）、Windows 和 Linux，iPhone 与 iPad 版在 App Store 提供。
 
 </details>
 
@@ -148,18 +169,6 @@ https://github.com/user-attachments/assets/56473ad9-5cb0-4608-b3c8-30882420edcd
 是的，就是普通的 .md 文件，支持表格、任务列表、脚注、公式和 Mermaid。可以导出为 PDF、Word、HTML 等格式。
 
 </details>
-
-## 社区
-
-- [QQ 群](https://textus.md/qq)：1128285004
-- [微信群](https://textus.md/wechat)：扫码加入
-- [Discord](https://textus.md/discord)：英文交流
-
-bug 反馈和功能建议也欢迎提到 [GitHub Issues](https://github.com/CatVinci-Studio/Textus/issues)。
-
-## 路线图与参与开发
-
-Textus 接下来的方向见 [路线图](ROADMAP.zh.md)。想自己构建 Textus、运行检查或提交 PR，请从 [CONTRIBUTING.md](CONTRIBUTING.md)（英文）开始；AI 编程助手请遵循 [AGENTS.md](AGENTS.md)。讨论可以用中文或英文。
 
 ## Star 增长趋势
 

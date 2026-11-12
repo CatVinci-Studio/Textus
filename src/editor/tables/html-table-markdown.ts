@@ -7,7 +7,7 @@ import { escapeCellPipes } from "./cell-pipes";
 /** Why a table can't become Markdown, for the menu item's reason. */
 export type TableRefusal = "notTable" | "merged" | "blocks";
 
-export type TableConversion = { markdown: string } | { refused: TableRefusal };
+type TableConversion = { markdown: string } | { refused: TableRefusal };
 
 // How each inline tag is written; a tag not here (a <p>, a list) is block
 // content a cell can't hold.

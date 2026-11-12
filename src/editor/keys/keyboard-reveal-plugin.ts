@@ -2,12 +2,16 @@ import { Plugin } from "@milkdown/kit/prose/state";
 import type { EditorView } from "@milkdown/kit/prose/view";
 import { $prose } from "@milkdown/kit/utils";
 
+/** How long the system's keyboard takes to rise: the caret is shown again
+ *  once it is up. */
+const KEYBOARD_RISE_MS = 350;
+
 /** Room kept between the caret's line and the bottom of what shows. */
 const MARGIN = 12;
 
 /** Scrolls `view`'s caret up into view if the container's bottom has come
  *  down over it. Never down, never centred. */
-export function revealCaret(view: EditorView) {
+function revealCaret(view: EditorView) {
   const container = view.dom.closest(".editor-scroll");
   if (!container || view.dom.offsetParent === null) return;
   let coords: { bottom: number };
@@ -39,7 +43,7 @@ export const keyboardRevealPlugin = $prose(
             return;
           requestAnimationFrame(() => revealCaret(editorView));
           clearTimeout(timer);
-          timer = setTimeout(() => revealCaret(editorView), 350);
+          timer = setTimeout(() => revealCaret(editorView), KEYBOARD_RISE_MS);
         };
         window.addEventListener("resize", onResize);
         return {

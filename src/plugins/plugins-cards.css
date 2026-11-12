@@ -1,0 +1,354 @@
+/* Plugins in the window: hidden hosts, webview frames, sidebar tab icons,
+   the quick pick. */
+
+/* Out of sight, still running: a frame left out of the layout keeps its
+   timers going, which display: none would not promise. */
+.plugin-hosts {
+  position: fixed;
+  width: 0;
+  height: 0;
+  overflow: hidden;
+  visibility: hidden;
+  pointer-events: none;
+}
+.plugin-hosts iframe {
+  width: 0;
+  height: 0;
+  border: 0;
+}
+
+.plugin-webview {
+  display: flex;
+  flex: 1;
+  min-height: 0;
+  min-width: 0;
+}
+.plugin-webview-frame {
+  flex: 1;
+  width: 100%;
+  height: 100%;
+  border: 0;
+  background: var(--ui-bg);
+}
+.plugin-webview-panel {
+  height: 100%;
+}
+
+/* A plugin's view or custom editor, where a document's editor would be. */
+.plugin-tab-pane {
+  display: flex;
+  flex: 1;
+  min-height: 0;
+  min-width: 0;
+  /* Clear of the floating window bar, as the editor's page is, unless the tab
+     bar is there to do it. */
+  padding-top: var(--window-bar-height);
+}
+.tab-bar ~ * .plugin-tab-pane {
+  padding-top: 0;
+}
+.plugin-webview-tab {
+  height: 100%;
+}
+
+/* A page that couldn't be made: a quiet note and one way on. */
+.plugin-webview-problem {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: var(--space-3);
+  padding: var(--space-6) var(--space-4);
+  color: var(--ui-muted);
+  font-size: var(--text-footnote);
+  text-align: center;
+}
+
+.plugin-webview-problem > p {
+  margin: 0;
+}
+
+/* The plugin's SVG as a mask, filled with the text colour like the
+   built-in tabs' icons. */
+.plugin-tab-icon {
+  display: inline-block;
+  width: 16px;
+  height: 16px;
+  background-color: currentColor;
+  mask-size: contain;
+  mask-repeat: no-repeat;
+  mask-position: center;
+  -webkit-mask-size: contain;
+  -webkit-mask-repeat: no-repeat;
+  -webkit-mask-position: center;
+}
+
+/* Settings › Extensions › Plugins: a card per plugin opening its own page.
+   No icons: a list of names reads at a glance. */
+.plugin-detail-actions {
+  display: flex;
+  flex-wrap: wrap;
+  gap: var(--space-2);
+  padding: var(--space-4) 0 var(--space-2);
+}
+.plugin-card {
+  align-items: center;
+  gap: var(--space-3);
+}
+/* The card's text is its button: the whole of it opens the plugin's page,
+   the switch beside it stays a switch. */
+.plugin-card-open {
+  display: flex;
+  flex: 1;
+  min-width: 0;
+  flex-direction: column;
+  align-items: flex-start;
+  gap: 2px;
+  padding: 0;
+  border: 0;
+  background: none;
+  color: inherit;
+  font: inherit;
+  text-align: left;
+}
+button.plugin-card-open {
+  cursor: pointer;
+}
+button.plugin-card-open:hover .plugin-card-name {
+  text-decoration: underline;
+  text-underline-offset: 2px;
+}
+.plugin-card-name {
+  font-weight: 600;
+}
+/* With its icon: the icon, then the text in a column. */
+.plugin-card-with-icon {
+  flex-direction: row;
+  align-items: flex-start;
+  gap: var(--space-3);
+}
+.plugin-card-text {
+  display: flex;
+  flex: 1;
+  min-width: 0;
+  flex-direction: column;
+  align-items: flex-start;
+  gap: 2px;
+}
+/* A plugin's icon on a tile of one size, whatever its artwork. */
+.plugin-icon {
+  display: grid;
+  flex-shrink: 0;
+  place-items: center;
+  width: 40px;
+  height: 40px;
+  border: 1px solid var(--ui-border);
+  border-radius: var(--shape-m);
+  background: color-mix(in srgb, var(--ui-muted) 7%, var(--ui-bg));
+  overflow: hidden;
+}
+.plugin-icon img,
+.plugin-icon-mask {
+  width: 62%;
+  height: 62%;
+  object-fit: contain;
+}
+.plugin-icon-mask {
+  background: var(--ui-text);
+  mask: center / contain no-repeat;
+  -webkit-mask: center / contain no-repeat;
+}
+.plugin-icon-large {
+  width: 56px;
+  height: 56px;
+  border-radius: var(--shape-l);
+}
+.plugin-icon-letter {
+  color: var(--ui-muted);
+  font-size: var(--text-body-large);
+  font-weight: 600;
+}
+/* A plugin's button, and the menu beside it when it has one. */
+.plugin-action {
+  position: relative;
+  display: inline-flex;
+  flex: none;
+}
+.plugin-action > .text-button {
+  white-space: nowrap;
+}
+/* One button in two halves. Through the parent: the buttons' shared rule
+   (design-system.css) outranks a single class. */
+.plugin-action > .plugin-action-main.is-split {
+  border-top-right-radius: 0;
+  border-bottom-right-radius: 0;
+}
+.plugin-action > .plugin-action-more {
+  display: flex;
+  align-items: center;
+  margin-left: -1px;
+  padding: 0 8px;
+  border-top-left-radius: 0;
+  border-bottom-left-radius: 0;
+}
+/* Turned off: its words and icon quieter. */
+.plugin-card.is-off .plugin-card-open {
+  opacity: 0.6;
+}
+.plugin-installs {
+  font-variant-numeric: tabular-nums;
+}
+/* Get more's sort, over the list's right edge. */
+.market-sort {
+  display: flex;
+  justify-content: flex-end;
+  margin: 0 0 var(--space-2);
+}
+/* A catalog plugin's page: icon, name and Install in a row; its pictures,
+   README and permissions below. */
+.market-plugin-head {
+  gap: var(--space-3);
+  margin-bottom: var(--space-4);
+}
+.market-plugin-title {
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+}
+/* What it does takes the title's width and adds none: Install goes under
+   only when the name and byline leave no room. */
+.market-plugin-title > .settings-row-hint {
+  contain: inline-size;
+}
+.market-plugin-title .plugin-page-title {
+  margin: 0;
+}
+.market-plugin-shots {
+  display: flex;
+  gap: var(--space-2);
+  margin-bottom: var(--space-4);
+  overflow-x: auto;
+}
+.market-plugin-shots .plugin-card-shot {
+  margin-top: 0;
+  max-height: 220px;
+}
+.plugin-readme {
+  margin: 0 0 var(--space-4);
+  padding: var(--space-3) var(--space-4);
+  border: 1px solid var(--ui-border);
+  border-radius: var(--shape-m);
+  font-size: var(--text-body);
+  line-height: 1.6;
+}
+/* As far from the group above it as groups are from each other. */
+* + .plugin-readme {
+  margin-top: var(--space-6);
+}
+.plugin-byline {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: var(--space-2);
+  color: var(--ui-muted);
+  font-size: var(--text-caption);
+}
+.plugin-version {
+  font-variant-numeric: tabular-nums;
+}
+.plugin-group-help {
+  margin: 0;
+  padding: var(--space-2) 0;
+  color: var(--ui-muted);
+  font-size: var(--text-footnote);
+}
+
+/* One plugin's page. */
+/* Back to the page before: a button of its own, easy to find. */
+.plugin-back {
+  margin: var(--space-3) 0;
+  padding: 4px 12px 4px 8px;
+  border: 1px solid var(--ui-border);
+  border-radius: var(--shape-pill);
+  corner-shape: round;
+  background: none;
+  color: var(--ui-text);
+  font: inherit;
+  font-size: var(--text-control);
+  cursor: pointer;
+}
+.plugin-back:hover {
+  background: var(--ui-hover);
+}
+.plugin-page-title {
+  margin: 0 0 4px;
+  font-size: var(--text-body-large);
+}
+.plugin-requirement-met {
+  color: var(--ui-muted);
+  font-size: var(--text-footnote);
+}
+/* A plugin's own settings page, on the plugin's page between its groups:
+   it draws its own. */
+.plugin-settings-page {
+  display: flex;
+  flex-direction: column;
+}
+.plugin-webview-settings {
+  min-height: 120px;
+}
+.plugin-setting-input {
+  width: 220px;
+}
+/* A catalog plugin's picture of itself at work (Get more). */
+.plugin-card-shot {
+  display: block;
+  max-width: 100%;
+  max-height: 160px;
+  margin-top: var(--space-2);
+  border: 1px solid var(--ui-border);
+  border-radius: var(--shape-xs);
+  object-fit: cover;
+  object-position: top left;
+}
+/* A heading over a plugin's settings that share a group. */
+.plugin-setting-group {
+  margin: var(--space-3) var(--space-3) var(--space-1);
+}
+.plugin-setting-color {
+  width: 40px;
+  height: 24px;
+  padding: 0;
+  border: 1px solid var(--ui-border);
+  border-radius: var(--shape-pill);
+  corner-shape: round;
+  background: none;
+}
+/* A setting of several lines: its box under its title, the row's width. */
+.plugin-setting-lines {
+  padding-bottom: var(--space-3);
+}
+.plugin-setting-textarea {
+  display: block;
+  box-sizing: border-box;
+  width: calc(100% - 2 * var(--space-3));
+  margin: 0 var(--space-3);
+  font-family: var(--font-mono);
+  resize: vertical;
+}
+/* A plugin's recent errors. */
+.plugin-errors {
+  margin: 0;
+  font-family: var(--font-mono);
+  padding: var(--space-3);
+  max-height: 200px;
+  overflow: auto;
+  font-size: var(--text-caption);
+  white-space: pre-wrap;
+  word-break: break-word;
+  color: var(--ui-muted);
+}
+.plugin-errors-actions {
+  display: flex;
+  gap: var(--space-2);
+  padding: 0 var(--space-3) var(--space-3);
+}

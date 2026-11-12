@@ -141,6 +141,9 @@ export function htmlTextEditing(
   // The editor keeps the focus around text edited inside it, so leaving
   // is seen as the selection moving out.
   const left = () => {
+    // Its block gone meanwhile (the tab closed, the document replaced):
+    // nothing to write back to.
+    if (!box.isConnected) return stop();
     const at = getSelection()?.anchorNode;
     if (!at || !box.contains(at)) commit();
   };

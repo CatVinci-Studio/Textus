@@ -1,3 +1,5 @@
+import { Tooltip } from "../../engine/controls/Tooltip";
+import { fill } from "../../i18n/fill";
 import { useEffect, useState } from "react";
 import {
   defaultShortcuts,
@@ -5,7 +7,7 @@ import {
   type Shortcuts,
 } from "../../prefs/SettingsContext";
 import type { Strings } from "../../i18n/strings";
-import type { FixedShortcutGroup } from "../../app/fixed-shortcuts";
+import type { FixedShortcutGroup } from "../../registry/fixed-shortcuts";
 import {
   comboFromEvent,
   isBindableCombo,
@@ -15,8 +17,6 @@ import {
 import { isImeKeydown } from "../../utils/ime";
 import { modIsMeta } from "../../platform/os";
 import { keyOwner } from "../../prefs/key-owner";
-
-export { headingLabels, plain } from "../../prefs/key-owner";
 
 // Settings › Shortcuts' rows: one that records a key combination, for the
 // app's own actions and for the commands plugins add.
@@ -31,7 +31,9 @@ export function FixedShortcutList({
     <div className="shortcut-fixed">
       {groups.map((group) => (
         <section key={group.title} className="shortcut-fixed-section">
-          <h3 className="shortcut-fixed-title">{group.title}</h3>
+          <h3 className="tx-list-heading shortcut-fixed-title">
+            {group.title}
+          </h3>
           <dl className="shortcut-fixed-list">
             {group.items.map((item) => (
               <div key={item.label} className="shortcut-fixed-row">
@@ -150,7 +152,7 @@ function ShortcutRecorder({
   function bind(next: string): boolean {
     const owner = ownerOf(next);
     if (owner) {
-      setError(t.shortcutConflict.replace("{action}", owner));
+      setError(fill(t.shortcutConflict, { action: owner }));
       return false;
     }
     setError("");
@@ -173,7 +175,7 @@ function ShortcutRecorder({
       // Named where another owns the key, before the reserved ones.
       const owner = ownerOf(captured);
       if (owner) {
-        setError(t.shortcutConflict.replace("{action}", owner));
+        setError(fill(t.shortcutConflict, { action: owner }));
         return;
       }
       if (isReservedCombo(captured)) {
@@ -191,6 +193,32 @@ function ShortcutRecorder({
       <div className="settings-row">
         <span className="settings-row-label">{label}</span>
         <div className="shortcut-row-controls">
+          {/* The key last, so every row's lines up at the end; what acts
+              on it before it. */}
+
+          {combo && !recording && (
+            <button
+              className="text-button settings-inline-button shortcut-clear"
+              aria-label={`${t.shortcutClear}: ${label}`}
+              onClick={() => {
+                setError("");
+                onChange("");
+              }}
+            >
+              {t.shortcutClear}
+            </button>
+          )}
+          {fallback && combo !== fallback && !recording && (
+            <Tooltip text={formatCombo(fallback)}>
+              <button
+                className="text-button settings-inline-button"
+                aria-label={`${t.shortcutReset}: ${label}`}
+                onClick={() => bind(fallback)}
+              >
+                {t.shortcutReset}
+              </button>
+            </Tooltip>
+          )}
           <button
             className={`text-button settings-inline-button shortcut-capture-button ${recording ? "shortcut-capture-active" : ""}`}
             aria-label={`${label}: ${recording ? t.shortcutRecording : combo ? formatCombo(combo) : t.shortcutUnset}`}
@@ -207,33 +235,11 @@ function ShortcutRecorder({
                 ? formatCombo(combo)
                 : t.shortcutUnset}
           </button>
-          {combo && !recording && (
-            <button
-              className="text-button settings-inline-button"
-              aria-label={`${t.shortcutClear}: ${label}`}
-              onClick={() => {
-                setError("");
-                onChange("");
-              }}
-            >
-              {t.shortcutClear}
-            </button>
-          )}
-          {fallback && combo !== fallback && !recording && (
-            <button
-              className="text-button settings-inline-button"
-              aria-label={`${t.shortcutReset}: ${label}`}
-              title={formatCombo(fallback)}
-              onClick={() => bind(fallback)}
-            >
-              {t.shortcutReset}
-            </button>
-          )}
         </div>
       </div>
       {(error || taken) && (
         <div className="settings-error" role="alert">
-          {error || t.shortcutConflict.replace("{action}", taken!)}
+          {error || fill(t.shortcutConflict, { action: taken! })}
         </div>
       )}
     </div>

@@ -1,5 +1,5 @@
 import { currentStrings } from "../../i18n/current";
-import { getUiState, setUiState } from "../../storage/ui-state";
+import { keepInList, uiList } from "../../storage/ui-state";
 import "./block-fold.css";
 
 /**
@@ -12,29 +12,23 @@ import "./block-fold.css";
 /** Folds remembered at most; the oldest goes first. */
 const KEPT = 300;
 
-function kept(name: "foldedBlocks" | "openedBlocks"): string[] {
-  const list = getUiState(name);
-  return Array.isArray(list)
-    ? list.filter((k): k is string => typeof k === "string")
-    : [];
-}
+const kept = uiList;
 
 function keep(
   name: "foldedBlocks" | "openedBlocks",
   key: string,
   on: boolean,
 ): void {
-  const rest = kept(name).filter((k) => k !== key);
-  setUiState(name, on ? [...rest, key].slice(-KEPT) : rest);
+  keepInList(name, key, on, { max: KEPT });
 }
 
-export function blockFolded(key: string): boolean {
+function blockFolded(key: string): boolean {
   return kept("foldedBlocks").includes(key);
 }
 
 /** Folded or opened by the user, kept; an opened one is remembered too, so
  *  a block that starts folded in a narrow column stays open once opened. */
-export function setBlockFolded(key: string, on: boolean): void {
+function setBlockFolded(key: string, on: boolean): void {
   keep("foldedBlocks", key, on);
   keep("openedBlocks", key, !on);
 }
@@ -54,7 +48,7 @@ export function addBlockFoldMarkup(
   el.classList.add("block-foldable");
   const caret = document.createElement("button");
   caret.type = "button";
-  caret.className = "block-fold";
+  caret.className = "tx-reveal block-fold";
   caret.dataset.key = key;
   caret.append(caretSpan());
   const line = document.createElement("button");

@@ -1,5 +1,5 @@
-import { registerCommand, runCommand } from "./app/commands";
-import { registerSidebarTab } from "./app/sidebar-tabs";
+import { registerCommand, runCommand } from "./registry/commands";
+import { registerSidebarTab } from "./registry/sidebar-tabs";
 import { registerEditorMenuItems } from "./editor/editor-menu-items";
 import { registerSettingsPage } from "./settings/settings-pages";
 

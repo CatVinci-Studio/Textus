@@ -1,0 +1,42 @@
+[
+  {
+    "kind": "notConfigured",
+    "pattern": "isn't set up yet|not configured"
+  },
+  {
+    "kind": "contextLength",
+    "pattern": "context_length_exceeded|maximum context length|context length|prompt is too long|input (is )?too long|too many tokens"
+  },
+  {
+    "kind": "workspaceKey",
+    "pattern": "not scoped to a workspace|anthropic-workspace-id"
+  },
+  {
+    "kind": "balance",
+    "pattern": "failed \\(402|payment required|insufficient[_ ](balance|quota|credits?|funds)|credit balance is too low|exceeded your current quota|exceeded_current_quota|arrearage|overdue|quota or balance ran out|余额不足|欠费"
+  },
+  {
+    "kind": "auth",
+    "pattern": "failed \\(401|401 unauthorized|invalid[_ -]?(x-)?api[_ -]?key|incorrect api key|authentication_error|invalid_api_key|unauthorized"
+  },
+  {
+    "kind": "rateLimit",
+    "pattern": "failed \\(429|rate[_ ]limit|too many requests|overloaded|failed \\(529"
+  },
+  {
+    "kind": "model",
+    "pattern": "model_not_found|model .* (does not exist|not found)|unknown model|not supported when using"
+  },
+  {
+    "kind": "server",
+    "pattern": "failed \\(5\\d\\d|internal server error|bad gateway|service unavailable|gateway timeout"
+  },
+  {
+    "kind": "timeout",
+    "pattern": "timed out|timeout"
+  },
+  {
+    "kind": "network",
+    "pattern": "error sending request|connection (refused|reset)|failed to lookup|dns error|tcp connect|network"
+  }
+]

@@ -1,0 +1,93 @@
+/* The window's layout (design-language.md 5.7): the base - the frame and
+   the window bar's row - the docks on it (activity rail, sidebar), and
+   the islands' area: each pane an island, a row of
+   tabs over a sheet (Island, ui/island.css). One structure for both
+   layouts; layout-tokens.css holds what tells them apart, by <html>'s data-layout; App marks
+   the shell data-tabs ("bar": the tabs take the window bar's row; on the desktop
+   only). Without tabs, one document is a clean sheet under its title. */
+
+/* ---- Base ---------------------------------------------------------- */
+
+/* With tabs the frame sinks a step and stays solid (no glass). */
+.app-shell[data-tabs="bar"] {
+  --ui-frame: var(--ui-frame-sunk);
+  --ui-frame-fill: var(--ui-frame);
+}
+
+.app-shell[data-tabs="bar"] .window-bar {
+  background: var(--ui-frame-fill);
+}
+
+/* The tabs name the documents; the title gives way to them. */
+.app-shell[data-tabs="bar"] .window-bar-title {
+  visibility: hidden;
+}
+
+/* A clean sheet: the bar is the page's own top, in its paper, so the
+   window reads as one sheet. */
+:root:not([data-window-chrome="mobile"])
+  .app-shell:not([data-tabs])
+  .window-bar {
+  background: var(--doc-bg);
+}
+
+/* ---- Docks --------------------------------------------------------- */
+
+/* On the frame, solid, their edge against the islands the layout's. */
+.app-shell[data-tabs="bar"] :is(.activity-rail, .sidebar) {
+  border-right-color: var(--dock-edge);
+}
+
+/* ---- Islands ------------------------------------------------------- */
+
+/* The islands' area: what the solver places them in (IslandArea), every
+   part absolute in it; in the frame's fill with tabs in the bar. */
+.main-pane {
+  position: relative;
+  min-width: 0;
+}
+
+.app-shell[data-tabs="bar"] .main-pane {
+  background: var(--ui-frame-fill);
+}
+
+.app-shell[data-tabs="bar"] .main-pane-split > .split-divider {
+  background: transparent;
+}
+
+/* Dragged, a hairline down the middle of the gap, up through the islands'
+   rows of tabs - from the islands' top only, never into an island above. */
+.app-shell[data-tabs="bar"] .main-pane-split > .split-divider[data-reach] {
+  --grip-reach: var(--window-bar-height);
+}
+
+/* Every tab's view shows on its island, not under it: the editor, the
+   source, the start page, a plugin's or a web page. The page's own views
+   are the island's paper. */
+/* Weightless, so what floats over a view (the review bars) keeps its own. */
+:where(.app-shell[data-tabs="bar"] .main-pane [data-active-tab]) > * {
+  position: relative;
+}
+
+.app-shell[data-tabs="bar"]
+  .main-pane
+  [data-active-tab]
+  > :is(.editor-scroll, .source-view, .start-page) {
+  background: transparent;
+}
+
+/* Under a row of tabs the page needn't clear a bar over it; a click below
+   the text still lands in it, on the island's height. */
+.app-shell[data-tabs="bar"] .main-pane .editor-content {
+  padding-top: 1.5rem;
+}
+
+.app-shell[data-tabs="bar"]
+  .main-pane
+  .milkdown
+  .ProseMirror:not(.editor-preview .ProseMirror) {
+  min-height: calc(
+    (100vh - var(--window-bar-height) - var(--island-inset) - 7.5rem) /
+      var(--content-zoom, 1)
+  );
+}

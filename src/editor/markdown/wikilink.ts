@@ -28,7 +28,7 @@ declare module "micromark-util-types" {
 }
 
 /** A wikilink as mdast: `value` is its source, `[[` to `]]`. */
-export interface Wikilink extends Literal {
+interface Wikilink extends Literal {
   type: "wikilink";
 }
 

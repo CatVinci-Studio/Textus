@@ -7,10 +7,64 @@ import { parseUserMessage } from "./user-message";
 import { ReplyThemes, type ReplyThemeLabels } from "./ReplyThemes";
 import type { ReplyPluginLabels } from "./ReplyPlugins";
 import { ReplySkills } from "./ReplySkills";
-import { ChevronIcon, PaperclipIcon, SearchIcon } from "../../ui/icons";
+import {
+  ChevronIcon,
+  PaperclipIcon,
+  SearchIcon,
+} from "../../engine/controls/icons";
 import "./AgentTurnView.css";
 import { toolActivityText } from "./tool-activity";
 import { siteOf } from "../citations";
+import {
+  ContextMenu,
+  type ContextMenuItem,
+} from "../../engine/controls/ContextMenu";
+import { Presence } from "../../engine/motion/usePresence";
+import { INSERT_MARKDOWN_EVENT } from "../../utils/events";
+import { normalizeAiMarkdown } from "../revision/apply-edit";
+
+/** The main window, whose document a reply can go into. */
+const inEditorWindow = () =>
+  new URLSearchParams(window.location.search).get("view") !== "chat";
+
+const copyItem = (label: string, text: string): ContextMenuItem => ({
+  label,
+  onSelect: () => void navigator.clipboard.writeText(text).catch(() => {}),
+});
+
+/** A message's right-click menu: where it opened and what it offers. */
+function useMessageMenu() {
+  const [at, setAt] = useState<{
+    x: number;
+    y: number;
+    items: ContextMenuItem[];
+  } | null>(null);
+  return {
+    /** `items` for the whole message; with words of it selected, Copy
+     *  (the first item's label) copies those instead. */
+    open: (e: React.MouseEvent, items: ContextMenuItem[]) => {
+      e.preventDefault();
+      const selected = getSelection()?.toString() ?? "";
+      setAt({
+        x: e.clientX,
+        y: e.clientY,
+        items: selected ? [copyItem(items[0].label, selected)] : items,
+      });
+    },
+    element: (
+      <Presence show={at !== null}>
+        {at && (
+          <ContextMenu
+            x={at.x}
+            y={at.y}
+            items={at.items}
+            onClose={() => setAt(null)}
+          />
+        )}
+      </Presence>
+    ),
+  };
+}
 
 // A reply that wrote a plugin brings in the plugin manager: loaded only then.
 const ReplyPlugins = lazy(() =>
@@ -28,6 +82,10 @@ export interface AgentTurnLabels extends ReplyThemeLabels, ReplyPluginLabels {
   toolResult: string;
   /** The heading of the list of web pages under a reply. */
   sources: string;
+  /** A message's right-click menu. */
+  messageCopy: string;
+  messageCopyMarkdown: string;
+  messageInsert: string;
 }
 
 export function AgentTurnView({
@@ -40,6 +98,7 @@ export function AgentTurnView({
   /** An assistant reply still streaming in. */
   live?: boolean;
 }) {
+  const menu = useMessageMenu();
   switch (turn.kind) {
     case "User":
       return (
@@ -51,7 +110,29 @@ export function AgentTurnView({
       );
     case "Assistant":
       return (
-        <div className="agent-message agent-message-assistant">
+        <div
+          className="agent-message agent-message-assistant"
+          onContextMenu={(e) =>
+            menu.open(e, [
+              copyItem(labels.messageCopy, e.currentTarget.innerText),
+              copyItem(labels.messageCopyMarkdown, turn.text),
+              // Into the document in front; the detached window has none.
+              ...(inEditorWindow()
+                ? [
+                    {
+                      label: labels.messageInsert,
+                      onSelect: () =>
+                        window.dispatchEvent(
+                          new CustomEvent(INSERT_MARKDOWN_EVENT, {
+                            detail: normalizeAiMarkdown(turn.text),
+                          }),
+                        ),
+                    },
+                  ]
+                : []),
+            ])
+          }
+        >
           <MarkdownText text={turn.text} live={live} />
           {turn.sources && turn.sources.length > 0 && (
             <SourceList sources={turn.sources} label={labels.sources} />
@@ -63,6 +144,7 @@ export function AgentTurnView({
               <ReplyPlugins text={turn.text} labels={labels} />
             </Suspense>
           )}
+          {menu.element}
         </div>
       );
     case "ToolCall":
@@ -106,8 +188,15 @@ function UserMessage({
     ...images.map((image) => image.name),
   ];
 
+  const menu = useMessageMenu();
   return (
-    <div className="agent-message agent-message-user">
+    <div
+      className="agent-message agent-message-user"
+      onContextMenu={(e) =>
+        menu.open(e, [copyItem(labels.messageCopy, body ?? "")])
+      }
+    >
+      {menu.element}
       {(selection !== null || attachmentNames.length > 0) && (
         <div className="agent-message-context">
           {selection !== null && (
@@ -168,9 +257,11 @@ function SourceList({
             onClick={() => void links.openWebLink(source.url).catch(() => {})}
           >
             <span className="agent-source-num">{source.n}</span>
-            <span className="agent-source-site">{site}</span>
+            <span className="tx-truncate agent-source-site">{site}</span>
             {source.title && source.title !== site && (
-              <span className="agent-source-title">{source.title}</span>
+              <span className="tx-truncate agent-source-title">
+                {source.title}
+              </span>
             )}
           </button>
         );

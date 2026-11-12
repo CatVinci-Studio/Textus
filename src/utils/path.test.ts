@@ -60,3 +60,13 @@ describe("a drive path and a URL scheme", () => {
       expect(hasUrlScheme(path)).toBe(false);
   });
 });
+
+describe("isInside, walking dots", () => {
+  it("counts a path climbing out with .. as outside", () => {
+    expect(isInside("/notes/../etc/passwd", "/notes")).toBe(false);
+    expect(isInside("/notes/a/../../../etc", "/notes")).toBe(false);
+    expect(isInside("/notes/a/./b.md", "/notes")).toBe(true);
+    expect(isInside("C:\\notes\\..\\win.ini", "C:\\notes")).toBe(false);
+    expect(isInside("C:\\notes\\a\\b.md", "C:\\notes\\")).toBe(true);
+  });
+});

@@ -1,0 +1,112 @@
+/* A proposed picture on its card, small: the document shows it full size.
+   Its own shape, or as a flex item it shrank in width and kept its height. */
+.agent-proposal-picture {
+  display: block;
+  flex: none;
+  width: auto;
+  height: auto;
+  max-width: 100%;
+  max-height: 120px;
+  object-fit: contain;
+  border-radius: var(--shape-xs);
+}
+
+/* Proposal card: the model's one-line reason, and the per-sentence choice
+   list. */
+.agent-proposal-reason {
+  font-size: var(--text-body);
+  line-height: 1.5;
+  color: var(--ui-text);
+}
+
+/* A proposal that cites the web: how Accept writes its sources. */
+.agent-proposal-footnotes {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  font-size: var(--text-caption);
+  color: var(--ui-muted);
+  cursor: pointer;
+}
+
+/* The changed sentences, numbered as the text marks them, each with the
+   ✓ / ✕ it also has in the document: one decision, two places to make it.
+   A kept sentence shows its original, dimmed. */
+.agent-proposal-sentences {
+  list-style: none;
+  margin: 0;
+  padding: 0;
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+}
+
+.agent-proposal-sentences > li {
+  display: flex;
+  align-items: flex-start;
+  gap: 8px;
+  padding: 4px 4px 4px 4px;
+  border-radius: var(--shape-s);
+  transition: background var(--dur-fast) var(--ease-standard);
+}
+
+.agent-proposal-sentences > li:hover {
+  background: color-mix(in srgb, var(--ui-text) 4%, transparent);
+}
+
+.agent-proposal .agent-proposal-sentence {
+  flex: 1;
+  min-width: 0;
+  display: flex;
+  align-items: flex-start;
+  gap: 8px;
+  border: 0;
+  background: none;
+  padding: 0;
+  font: inherit;
+  font-size: var(--text-secondary);
+  line-height: 1.5;
+  color: var(--ui-text);
+  text-align: start;
+  cursor: pointer;
+}
+
+.agent-proposal-num {
+  flex: none;
+  display: inline-grid;
+  place-items: center;
+  box-sizing: border-box;
+  /* The disc grows with the number in it (Interface Text Size), and into
+     a pill past two digits. */
+  min-width: calc(18px * var(--ui-text-scale, 1));
+  height: calc(18px * var(--ui-text-scale, 1));
+  padding-inline: calc(4px * var(--ui-text-scale, 1));
+  margin-top: 1px;
+  border-radius: var(--shape-pill);
+  corner-shape: round;
+  background: var(--ui-success);
+  color: var(--ui-on-fill);
+  font-size: var(--text-mark);
+  font-weight: 600;
+  font-variant-numeric: tabular-nums;
+  transition: background var(--dur-fast) var(--ease-standard);
+}
+
+li[data-state="kept"] .agent-proposal-num {
+  background: color-mix(in srgb, var(--ui-muted) 70%, transparent);
+}
+
+li[data-state="kept"] .agent-proposal-sentence-text {
+  color: var(--ui-muted);
+}
+
+/* A change of whole paragraphs keeps them apart (as its margin card). */
+.agent-proposal-sentence-text {
+  white-space: pre-line;
+}
+
+.agent-proposal-pick {
+  flex: none;
+  display: inline-flex;
+  gap: 4px;
+}

@@ -1,0 +1,287 @@
+/* Islands (Island.tsx, design-language.md 5.7): a row of tabs over a
+   sheet, in the editor's window and the chat window alike. Every island rule lives here, keyed on the
+   island's own marks - data-island (its sheet), data-island-row (its
+   row), data-plain, data-inner; layout-tokens.css holds the values that
+   tell the two layouts apart. */
+
+/* ---- Sheet --------------------------------------------------------- */
+
+/* Its paper: the page's own (a theme's or the user's --doc-bg), the
+   interface's for a panel's (ui). Its row's open tab is the same. */
+[data-island],
+.island-row {
+  --island-paper: var(--ui-bg);
+}
+
+[data-island="documents"],
+.island-row[data-island-row="documents"] {
+  --island-paper: var(--doc-bg, var(--ui-bg));
+}
+
+[data-island] {
+  border-radius: var(--island-radius);
+  background: var(--island-paper);
+  box-shadow: var(--island-edge);
+}
+
+/* A documents island's sheet is paper under its editors, never a target. */
+[data-island="documents"] {
+  pointer-events: none;
+}
+
+/* Its first tab rising from its edge, open (row-insets.ts): the corner goes
+   square, the island's side running straight up into the tab. */
+[data-island][data-corner-joined] {
+  border-top-left-radius: 0;
+}
+
+/* Plain - beside a clean sheet, and in Zen: no island but the page's own
+   side, the same paper, a hairline between. */
+[data-island][data-plain] {
+  border-radius: 0;
+  background: var(--doc-bg);
+  box-shadow: none;
+}
+
+[data-island="ui"][data-plain],
+.island-row[data-island-row="ui"][data-plain] {
+  border-left: 1px solid var(--ui-frame-edge);
+}
+
+/* ---- Row ----------------------------------------------------------- */
+
+/* As tall as the window bar; its tabs from --tabs-inset-start on, its own
+   controls (the AI's) before --tabs-inset-end. Only its tabs and buttons
+   take a click: the rest of a top row is the window bar's, beneath. */
+.island-row {
+  display: flex;
+  align-items: stretch;
+  min-width: 0;
+  height: var(--window-bar-height);
+  /* Never squeezed by a tall view under it (the start page): its foot is
+     where its island starts. */
+  flex-shrink: 0;
+  padding-right: var(--tabs-inset-end, 8px);
+  box-sizing: border-box;
+  pointer-events: none;
+}
+
+.island-row > * {
+  pointer-events: auto;
+}
+
+/* In the window bar's row, over the bar. */
+.island-row:not([data-inner]) {
+  z-index: var(--z-dock);
+}
+
+/* Its tabs scroll under its ends: they show only between them (and the
+   first open tab's curve before them), and only there take a click, so the
+   bar's controls stay reachable. */
+:root .island-row > .tab-bar {
+  flex: 1;
+  min-width: 0;
+  height: auto;
+  /* A pixel out to the left, so the open tab's edge at the island's side
+     is inside what the bar shows, level with the island's own. */
+  margin-left: -1px;
+  padding: 0 0 0 calc(var(--tabs-inset-start, 8px) + 1px);
+  clip-path: inset(
+    -1px 0 0 calc(var(--tabs-inset-start, 8px) + 1px - var(--tab-radius))
+  );
+  align-items: flex-end;
+  gap: var(--tab-gap);
+  border-bottom: 0;
+  background: linear-gradient(var(--tab-row-line), var(--tab-row-line)) right
+    bottom / calc(100% - var(--tabs-inset-start, 0px) - 1px) 1px no-repeat;
+  overflow-y: hidden;
+  pointer-events: none;
+}
+
+.island-row > .tab-bar > * {
+  pointer-events: auto;
+}
+
+/* Scrolled, no sliver of a tab shows before its start. */
+:root .island-row > .tab-bar[data-overflow] {
+  clip-path: inset(-1px 0 0 calc(var(--tabs-inset-start, 8px) + 1px));
+}
+
+/* Tabs hidden before its start: the first ones in view fade in from it,
+   none cut off mid-name. */
+:root .island-row > .tab-bar[data-scrolled] {
+  -webkit-mask-image: linear-gradient(
+    to right,
+    transparent calc(var(--tabs-inset-start, 8px) + 1px),
+    #000 calc(var(--tabs-inset-start, 8px) + 1px + 3em)
+  );
+  mask-image: linear-gradient(
+    to right,
+    transparent calc(var(--tabs-inset-start, 8px) + 1px),
+    #000 calc(var(--tabs-inset-start, 8px) + 1px + 3em)
+  );
+}
+
+/* A tab: its words, its x and the + on the row's middle line, level with
+   the bar's own controls; the line between tabs the layout's. */
+:root .island-row > .tab-bar > .tab-strip > .tab-pill {
+  top: var(--tab-lift);
+  padding: 0 8px var(--tab-lift);
+  border-inline-end: 1px solid var(--tab-line);
+  border-radius: var(--tab-radius) var(--tab-radius) 0 0;
+  background: transparent;
+  /* Muted on the sunk frame would be too faint to read. */
+  color: color-mix(in srgb, var(--ui-text) 72%, var(--ui-frame-fill));
+}
+
+:root
+  .island-row
+  > .tab-bar
+  > .tab-strip
+  > .tab-pill:hover:not(.tab-pill-active) {
+  background: var(--ui-hover);
+}
+
+/* Between two tabs at rest, a short mark at their middle (as Chrome's):
+   none beside the open tab, the one pointed at, or after the last - their
+   order the strip's (data-place), not the page's. */
+:root
+  .island-row
+  > .tab-bar
+  > .tab-strip
+  > .tab-pill:not(
+    .tab-pill-active,
+    [data-place~="last"],
+    [data-place~="before-open"]
+  ) {
+  background: linear-gradient(var(--tab-divider), var(--tab-divider)) right
+    calc(50% - var(--tab-lift) / 2) / 1px 1.1em no-repeat;
+}
+
+:root
+  .island-row
+  > .tab-bar
+  > .tab-strip
+  > .tab-pill:is(:hover, :has(+ .tab-pill:hover)) {
+  background-image: none;
+}
+
+/* Open, it is its island's own top: the page's colour, over the row's
+   line. */
+:root .island-row > .tab-bar > .tab-strip > .tab-pill-active {
+  overflow: visible;
+  z-index: 1;
+  background: var(--island-paper);
+  color: var(--ui-text);
+  /* Its island's edge, up its sides and over its top: one outline from
+     the sheet round the tab, no step where they meet. Offset, not spread,
+     so no line falls across its foot. */
+  box-shadow:
+    -1px 0 0 0 var(--tab-edge),
+    1px 0 0 0 var(--tab-edge),
+    0 -1px 0 0 var(--tab-edge);
+}
+
+/* Where it meets its island's top edge, each side curves in to it (a
+   radius of 0 draws none). */
+:root .island-row > .tab-bar > .tab-strip > .tab-pill-active::before,
+:root .island-row > .tab-bar > .tab-strip > .tab-pill-active::after {
+  content: "";
+  position: absolute;
+  bottom: 0;
+  width: var(--tab-radius);
+  height: var(--tab-radius);
+  pointer-events: none;
+}
+
+:root .island-row > .tab-bar > .tab-strip > .tab-pill-active::before {
+  right: 100%;
+  background: radial-gradient(
+    circle at 0 0,
+    transparent calc(var(--tab-radius) - 1.5px),
+    var(--tab-edge) calc(var(--tab-radius) - 1px),
+    var(--tab-edge) calc(var(--tab-radius) - 0.5px),
+    var(--island-paper) var(--tab-radius)
+  );
+}
+
+:root .island-row > .tab-bar > .tab-strip > .tab-pill-active::after {
+  left: 100%;
+  background: radial-gradient(
+    circle at 100% 0,
+    transparent calc(var(--tab-radius) - 1.5px),
+    var(--tab-edge) calc(var(--tab-radius) - 1px),
+    var(--tab-edge) calc(var(--tab-radius) - 0.5px),
+    var(--island-paper) var(--tab-radius)
+  );
+}
+
+/* At its island's edge (data-at-corner) the first tab's side is the
+   island's, straight up: no curve there. */
+.island-row[data-at-corner]
+  > .tab-bar
+  > .tab-strip
+  > .tab-pill-active[data-place~="first"]::before {
+  display: none;
+}
+
+:root .island-row > .tab-bar > .tab-bar-add {
+  align-self: center;
+}
+
+/* Plain, its tabs are words on the page: the open one only darker. */
+:root .island-row[data-plain] > .tab-bar > .tab-strip > .tab-pill-active {
+  background: transparent;
+  box-shadow: none;
+}
+
+:root
+  .island-row[data-plain]
+  > .tab-bar
+  > .tab-strip
+  > .tab-pill-active::before,
+:root
+  .island-row[data-plain]
+  > .tab-bar
+  > .tab-strip
+  > .tab-pill-active::after {
+  display: none;
+}
+
+/* ---- Numbers ------------------------------------------------------- */
+
+/* While ⌘ is held (island-numbers.ts): each island's number at its
+   middle, over the window, taking no click. */
+.island-numbers {
+  position: fixed;
+  inset: 0;
+  z-index: var(--z-floating);
+  pointer-events: none;
+}
+
+.island-number {
+  --enter-scale: var(--scale-enter);
+  --exit-scale: var(--scale-enter);
+  position: absolute;
+  display: grid;
+  place-items: center;
+  width: 32px;
+  height: 32px;
+  translate: -50% -50%;
+  border: 1px solid var(--ui-border);
+  border-radius: var(--shape-pill);
+  corner-shape: round;
+  background: var(--ui-surface);
+  box-shadow: var(--shadow-popover);
+  color: var(--ui-text);
+  /* The app's face, not an imported theme's body font. */
+  font-family: var(--font-sans);
+  font-size: var(--text-body-large);
+  font-weight: 600;
+  font-variant-numeric: tabular-nums;
+  animation: motion-enter var(--dur-fast) var(--ease-out);
+}
+
+.island-numbers[data-state="closing"] > .island-number {
+  animation: motion-exit var(--dur-instant) var(--ease-in) forwards;
+}

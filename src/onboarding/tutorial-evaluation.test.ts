@@ -44,13 +44,7 @@ describe("isLessonComplete", () => {
   });
 
   it("never gates the opening, connecting, the end or the optional lessons", () => {
-    for (const id of [
-      "welcome",
-      "connect",
-      "done",
-      "palette",
-      "plugins",
-    ] as const)
+    for (const id of ["welcome", "connect", "done", "palette"] as const)
       expect(isLessonComplete(step(id), 0)).toBe(true);
   });
 

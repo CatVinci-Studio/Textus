@@ -8,10 +8,10 @@
 
 @media (max-width: 760px) {
   /* The sidebar slides over the page; the scrim behind closes it on a tap. Both
-     cover the title row (45) too, so the dimming reaches the status bar strip. */
+     cover the title row too, so the dimming reaches the status bar strip. */
   :root[data-window-chrome="mobile"] .sidebar {
     position: fixed;
-    z-index: 47;
+    z-index: calc(var(--z-dock) + 1);
     padding-bottom: env(safe-area-inset-bottom, 0px);
     width: min(320px, 85vw);
     box-shadow: var(--shadow-drawer);
@@ -34,7 +34,7 @@
   :root[data-window-chrome="mobile"] .sidebar-scrim {
     position: fixed;
     inset: 0;
-    z-index: 46;
+    z-index: var(--z-dock);
     background: var(--ui-overlay);
     animation: motion-fade-in var(--dur-slow) var(--ease-standard);
   }

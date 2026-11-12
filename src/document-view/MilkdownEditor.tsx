@@ -1,3 +1,4 @@
+import { MilkdownProvider } from "@milkdown/react";
 import { useEditorSetup } from "./useEditorSetup";
 import { useAskAi } from "../ai/chat/ask-ai";
 import { useEditorChat } from "./useEditorChat";
@@ -6,7 +7,7 @@ import { useEditorReview } from "./useEditorReview";
 import { EditorMarginLayer } from "./EditorMarginLayer";
 import { EditorOverlays } from "./EditorOverlays";
 import { EditorChatPortals } from "./EditorChatPortals";
-import { usePhoneLayout } from "../ui/usePhoneLayout";
+import { usePhoneLayout } from "../engine/controls/usePhoneLayout";
 import { useSettings, type AgentMode } from "../prefs/SettingsContext";
 import type { TourAi } from "../utils/events";
 import { Milkdown } from "@milkdown/react";
@@ -34,6 +35,16 @@ interface MilkdownEditorProps {
   tourMode?: AgentMode | null;
   /** Nothing may change the document (View › Read Only). */
   readOnly?: boolean;
+}
+
+/** The editor in its own Milkdown context: what the window's lazy pane
+ *  draws, so nothing of Milkdown loads before a document does. */
+export function ProvidedEditor(props: MilkdownEditorProps) {
+  return (
+    <MilkdownProvider>
+      <MilkdownEditor {...props} />
+    </MilkdownProvider>
+  );
 }
 
 /**
@@ -126,6 +137,7 @@ export function MilkdownEditor({
         chat={chat}
         review={review}
         filePath={filePath}
+        isActive={isActive}
         phone={phone}
         tourMode={tourMode ?? askedMode}
         settings={settings}

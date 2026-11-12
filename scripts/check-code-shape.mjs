@@ -19,7 +19,7 @@ const HOOKS_NOW = {};
 /** Not held to the line limit: tables, not logic. */
 const TABLES = [
   /^src\/i18n\/locales\//,
-  /^src\/ui\/icons\.tsx$/,
+  /^src\/engine\/controls\/icons\.tsx$/,
   // Written by src-tauri/src/bindings.rs.
   /^src\/platform\/bindings\//,
 ];

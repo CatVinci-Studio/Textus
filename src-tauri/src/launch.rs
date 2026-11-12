@@ -2,11 +2,12 @@
 //! things a window picks up once it has mounted.
 
 use super::*;
+use crate::commands::session::WindowSession;
 
 /// Files handed to the app from the OS queue here, in the windows they open
 /// in; each window drains one on mount. A queue, not an event: the request
 /// usually arrives before any listener.
-pub(crate) struct PendingOpenPaths(pub(crate) Mutex<Vec<Vec<String>>>);
+pub(crate) struct PendingOpenPaths(pub(crate) Mutex<Vec<WindowSession>>);
 
 /// Whether any window's frontend has mounted. Before that the initial window
 /// drains the queue; after it, an OS open needs a fresh window per file.
@@ -20,22 +21,18 @@ pub(crate) static LAUNCH_OPENED: Mutex<Option<Vec<String>>> = Mutex::new(Some(Ve
 
 /// Park paths for the next window to drain as it mounts.
 pub(crate) fn queue_pending(app: &tauri::AppHandle, paths: Vec<String>) {
-    app.state::<PendingOpenPaths>()
-        .0
-        .lock()
-        .unwrap()
-        .extend(paths.into_iter().map(|path| vec![path]));
+    app.state::<PendingOpenPaths>().0.lock().unwrap().extend(
+        paths
+            .into_iter()
+            .map(|path| WindowSession::of_paths(vec![path])),
+    );
 }
 
-/// The last session's windows, each with its documents as tabs; one window
-/// for them all in tab mode.
+/// The last session's windows, each with its documents as tabs: a window
+/// a tab was dragged out into comes back as its own window.
 #[cfg(desktop)]
-pub(crate) fn queue_windows_to_open(app: &tauri::AppHandle, windows: Vec<Vec<String>>) {
+pub(crate) fn queue_windows_to_open(app: &tauri::AppHandle, windows: Vec<WindowSession>) {
     if windows.is_empty() {
-        return;
-    }
-    if commands::prefs::read_new_document_mode(app) == "tab" {
-        queue_paths_to_open(app, windows.concat());
         return;
     }
     let ui_ready = UI_READY.load(Ordering::Relaxed);
@@ -57,44 +54,36 @@ pub(crate) fn queue_paths_to_open(app: &tauri::AppHandle, paths: Vec<String>) {
         return;
     }
     let ui_ready = UI_READY.load(Ordering::Relaxed);
-
-    if commands::prefs::read_new_document_mode(app) == "tab" {
-        // Already running: hand the whole batch to the focused window as tabs.
-        // Nothing is queued here, or the next window to mount would open them again.
-        let target = if ui_ready {
-            menu::focused_editor_window(app)
-        } else {
-            None
-        };
-        if let Some(label) = target {
-            let _ = app.emit_to(
-                EventTarget::webview_window(&label),
-                "open-paths-as-tabs",
-                paths,
-            );
-            // The open came from outside (a file manager, a second launch),
-            // so the window it landed in is probably behind something.
-            if let Some(window) = app.get_webview_window(&label) {
-                let _ = window.unminimize();
-                let _ = window.set_focus();
-            }
-            return;
-        }
-        // Still launching, or no window alive: park the whole batch for the window
-        // that mounts next.
-        queue_pending(app, paths);
-        if ui_ready {
-            let _ = crate::editor_windows::open_new_window(app);
+    // Documents open as tabs, always. Already running: hand the whole batch
+    // to the focused window. Nothing is queued then, or the next window to
+    // mount would open them again.
+    let target = if ui_ready {
+        menu::focused_editor_window(app)
+    } else {
+        None
+    };
+    if let Some(label) = target {
+        let _ = app.emit_to(
+            EventTarget::webview_window(&label),
+            "open-paths-as-tabs",
+            paths,
+        );
+        // The open came from outside (a file manager, a second launch),
+        // so the window it landed in is probably behind something.
+        if let Some(window) = app.get_window(&label) {
+            let _ = window.unminimize();
+            let _ = window.set_focus();
         }
         return;
     }
-
-    // "window" mode (default): one queued file rides the initial window while
-    // launching; everything else gets a window of its own.
-    let count = paths.len();
-    queue_pending(app, paths);
-    let extra_windows = if ui_ready { count } else { count - 1 };
-    for _ in 0..extra_windows {
+    // Still launching, or no window alive: park the whole batch, as one
+    // window's tabs, for the window that mounts next.
+    app.state::<PendingOpenPaths>()
+        .0
+        .lock()
+        .unwrap()
+        .push(WindowSession::of_paths(paths));
+    if ui_ready {
         let _ = crate::editor_windows::open_new_window(app);
     }
 }
@@ -109,7 +98,12 @@ pub(crate) fn queue_paths_to_open(app: &tauri::AppHandle, paths: Vec<String>) {
     if UI_READY.load(Ordering::Relaxed) {
         let _ = app.emit("open-paths-as-tabs", paths);
     } else {
-        queue_pending(app, paths);
+        // One batch: the one webview takes one, as its tabs.
+        app.state::<PendingOpenPaths>()
+            .0
+            .lock()
+            .unwrap_or_else(|e| e.into_inner())
+            .push(WindowSession::of_paths(paths));
     }
 }
 
@@ -173,8 +167,7 @@ pub(crate) async fn open_paths(app: tauri::AppHandle, paths: Vec<String>) {
     queue_paths_to_open(&app, paths);
 }
 
-/// ⌘/Ctrl-click in the sidebar's file tree: the file in a window of its own,
-/// whatever the tab setting.
+/// ⌘/Ctrl-click in the sidebar's file tree: the file in a window of its own.
 #[cfg(desktop)]
 #[tauri::command]
 #[cfg_attr(test, specta::specta)]
@@ -183,26 +176,14 @@ pub(crate) async fn open_path_in_new_window(app: tauri::AppHandle, path: String)
     let _ = crate::editor_windows::open_new_window(&app);
 }
 
+/// What the window mounting now opens: a session's window (its documents,
+/// islands and folder), or files the system handed over.
 #[tauri::command]
 #[cfg_attr(test, specta::specta)]
-pub(crate) fn take_pending_window_paths(pending: State<PendingOpenPaths>) -> Vec<String> {
+pub(crate) fn take_pending_window(pending: State<PendingOpenPaths>) -> Option<WindowSession> {
     UI_READY.store(true, Ordering::Relaxed);
     let mut windows = pending.0.lock().unwrap();
-    if windows.is_empty() {
-        Vec::new()
-    } else {
-        windows.remove(0)
-    }
-}
-
-/// Tab-mode counterpart to take_pending_window_paths: drains the whole queue so
-/// one window opens every path as a tab.
-#[tauri::command]
-#[cfg_attr(test, specta::specta)]
-pub(crate) fn take_pending_open_paths(pending: State<PendingOpenPaths>) -> Vec<String> {
-    UI_READY.store(true, Ordering::Relaxed);
-    let mut windows = pending.0.lock().unwrap();
-    std::mem::take(&mut *windows).concat()
+    (!windows.is_empty()).then(|| windows.remove(0))
 }
 
 /// Files the system asked to open: Finder's "Open With" on macOS (never

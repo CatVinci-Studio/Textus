@@ -8,7 +8,7 @@ import {
   type ThemeCss,
 } from "../../prefs/settings-file";
 import type { UserThemeMeta } from "../../prefs/settings-values";
-import { showConfirm } from "../../ui/app-dialog";
+import { showChoice, showConfirm } from "../../engine/controls/app-dialog";
 import { explainError } from "../../utils/error-explain";
 import { SettingRow } from "./controls";
 
@@ -33,10 +33,14 @@ export function SettingsFileSection({ t }: { t: Strings }) {
 
   async function exportFile() {
     setError(null);
-    const withAi = await showConfirm(t.settingsFileWithAi, {
+    // Esc or a click outside: no export at all, not "settings only".
+    const choice = await showChoice(t.settingsFileWithAi, {
       okLabel: t.settingsFileWithAiYes,
-      cancelLabel: t.settingsFileSettingsOnly,
+      altLabel: t.settingsFileSettingsOnly,
+      cancelLabel: t.cancel,
     });
+    if (choice === null) return;
+    const withAi = choice === "ok";
     const path = await fs.saveSettingsFileDialog("Textus Settings.json");
     if (!path) return;
     try {

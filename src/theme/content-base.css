@@ -135,7 +135,7 @@
   }
 
   .milkdown a {
-    color: var(--doc-accent);
+    color: var(--doc-accent-text);
     text-decoration: none;
   }
 
@@ -155,7 +155,7 @@
   .milkdown sup[data-type="footnote_reference"] {
     font-size: 0.75em;
     line-height: 0;
-    color: var(--doc-accent);
+    color: var(--doc-accent-text);
   }
 
   .milkdown dl[data-type="footnote_definition"] {

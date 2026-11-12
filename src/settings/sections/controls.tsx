@@ -1,8 +1,10 @@
+import { showConfirm } from "../../engine/controls/app-dialog";
+import { fill } from "../../i18n/fill";
 import { useEffect, useId, useRef, type ReactNode } from "react";
 import { useSettings } from "../../prefs/SettingsContext";
 import { resolveStrings, type Strings } from "../../i18n/strings";
-import { ChevronIcon } from "../../ui/icons";
-import { InfoTip } from "../../ui/InfoTip";
+import { ChevronIcon } from "../../engine/controls/icons";
+import { InfoTip } from "../../engine/controls/InfoTip";
 
 /** For a field that takes a machine-read value rather than prose: iOS would
  *  capitalise and autocorrect it into an id the provider rejects. */
@@ -59,7 +61,7 @@ export function RowHelp({
     <InfoTip
       label={
         typeof label === "string"
-          ? t.infoTipLabel.replace("{label}", label)
+          ? fill(t.infoTipLabel, { label })
           : t.infoTipLabelPlain
       }
     >
@@ -71,13 +73,17 @@ export function RowHelp({
 /** A page's rarely needed settings, folded away at its foot. */
 export function AdvancedFold({
   t,
+  className,
   children,
 }: {
   t: Strings;
+  className?: string;
   children: ReactNode;
 }) {
   return (
-    <details className="disclosure settings-advanced">
+    <details
+      className={`disclosure settings-advanced${className ? ` ${className}` : ""}`}
+    >
       <summary>{t.agentAdvancedGroupLabel}</summary>
       <div className="settings-advanced-body">{children}</div>
     </details>
@@ -136,6 +142,8 @@ export function ToggleRow({
       <input
         id={id}
         type="checkbox"
+        className="tx-switch"
+        role="switch"
         aria-labelledby={`${id}-label`}
         checked={checked}
         onChange={(e) => onChange(e.target.checked)}
@@ -146,7 +154,7 @@ export function ToggleRow({
 
 /** How a key reads in its field: its first six and last four characters
  *  around ***; a short one, still being typed, as dots. */
-export function maskKey(key: string): string {
+function maskKey(key: string): string {
   if (key.length <= 12) return "•".repeat(key.length);
   return `${key.slice(0, 6)}***${key.slice(-4)}`;
 }
@@ -251,7 +259,16 @@ export function SecretInput({
   return saved ? (
     <div className="api-key-configured">
       <span className="settings-row-hint">{t.apiKeyConfigured}</span>
-      <button className="text-button settings-inline-button" onClick={onClear}>
+      <button
+        className="text-button settings-inline-button"
+        onClick={() =>
+          void showConfirm(fill(t.apiKeyClearAsk, { name: label }), {
+            okLabel: t.apiKeyClear,
+            cancelLabel: t.cancel,
+            danger: true,
+          }).then((ok) => ok && onClear())
+        }
+      >
         {t.apiKeyClear}
       </button>
     </div>

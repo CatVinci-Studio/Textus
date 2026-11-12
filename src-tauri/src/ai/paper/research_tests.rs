@@ -2,7 +2,8 @@
 //! MCP servers' tools, and the attachments a paper keeps.
 
 use super::delegate::DELEGATE_TOOL;
-use super::research::{self, ADD_NOTE_TOOL};
+use super::notes::ADD_NOTE_TOOL;
+use super::research;
 use super::*;
 use crate::ai::tools::{Access, Run, Tool, ToolContext, ToolRegistry, EVERY_MODE};
 use aicompat::agent::{AgentTurn, StepResult, ToolSpec};
@@ -141,7 +142,7 @@ async fn a_researcher_reads_an_attached_file_with_read_file_and_cites_its_path()
     };
     section.key_points = vec!["logs".into()];
     let cited = format!("The tides were logged every hour, the notes say [1]({address}).");
-    let problems = draft::problems(&cited, &section, &[(1, address.clone())], "en");
+    let problems = checks::problems(&cited, &section, &[(1, address.clone())], "en");
     assert!(
         !problems
             .iter()
@@ -277,7 +278,7 @@ struct Halfway {
     second: bool,
 }
 
-impl research::Model for Halfway {
+impl crate::ai::agent::Model for Halfway {
     fn step<'a>(
         &'a self,
         _instructions: &'a str,
@@ -325,7 +326,7 @@ impl research::Model for Halfway {
 /// refused - then keeps a note of its own; each part's helper keeps one.
 struct Delegator;
 
-impl research::Model for Delegator {
+impl crate::ai::agent::Model for Delegator {
     fn step<'a>(
         &'a self,
         instructions: &'a str,
@@ -585,7 +586,7 @@ fn a_share_is_used_up_only_when_every_kind_is() {
 /// delegate_task, keeps one note.
 struct NoHanding;
 
-impl research::Model for NoHanding {
+impl crate::ai::agent::Model for NoHanding {
     fn step<'a>(
         &'a self,
         instructions: &'a str,

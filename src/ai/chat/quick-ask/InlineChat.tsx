@@ -1,16 +1,21 @@
-import { IconButton } from "../../../ui/IconButton";
-import { PanelHeader } from "../../../ui/PanelHeader";
-import type { DocumentSnapshot } from "../../doc-markdown";
+import { IconButton } from "../../../engine/controls/IconButton";
+import { PanelHeader } from "../../../engine/controls/PanelHeader";
+import type { DocumentSnapshot } from "../../../editor/markdown/doc-markdown";
 import { useRef } from "react";
-import type { AgentConversation } from "../useAgentConversation";
+import type { AgentConversation } from "../conversation/conversation-types";
 import type { PendingStatus } from "../../revision/usePendingEdits";
 import type { EditProposal } from "../../types";
-import { ChatBody, type ChatBodyLabels } from "../ChatBody";
+import { ChatBody } from "../ChatBody";
+import { type ChatBodyLabels } from "../chat-body-types";
 import type { SelectionChipHandlers } from "../ChatComposer";
 import { CloseConfirmBar, type CloseConfirmLabels } from "../CloseConfirm";
 import { useQuickAskReveal } from "./useQuickAskReveal";
 import { useQuickAskDock } from "./quick-ask-dock";
-import { CloseIcon, DetachIcon, PlusIcon } from "../../../ui/icons";
+import {
+  CloseIcon,
+  DetachIcon,
+  PlusIcon,
+} from "../../../engine/controls/icons";
 import type { AgentMode } from "../../../prefs/SettingsContext";
 import "../AgentTurnView.css";
 import "../inline-chat.css";
@@ -43,7 +48,6 @@ interface InlineChatProps {
    *  only the explicit New Conversation action resets it. */
   conversation: AgentConversation;
   defaultMode: AgentMode;
-  defaultWebSearch: boolean;
   /** The composer's selection chip handlers. */
   selectionChip?: SelectionChipHandlers;
   labels: InlineChatLabels;
@@ -93,7 +97,6 @@ export function InlineChat({
   workspaceRoot,
   conversation,
   defaultMode,
-  defaultWebSearch,
   selectionChip,
   labels,
   onProposals,
@@ -186,7 +189,6 @@ export function InlineChat({
           conversation={conversation}
           // Quick Ask has no Create: a default of Create starts in Write.
           defaultMode={defaultMode === "create" ? "write" : defaultMode}
-          defaultWebSearch={defaultWebSearch}
           labels={labels}
           proposalStatus={proposalStatus}
           pendingCount={pendingCount}

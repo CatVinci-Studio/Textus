@@ -42,7 +42,7 @@ export function useEditorReview({
     isActive,
     phone,
     quickAskVisible: inlineChat.visible,
-    panelContainer: chat.panelContainer,
+    panelShown: chat.panelShown,
     agentPanel,
   });
 
@@ -56,6 +56,7 @@ export function useEditorReview({
   });
 
   const notes = useReviewNotes({
+    isActive,
     run,
     reviewNotesRef: setup.reviewNotesRef,
     noMarginRef: setup.noMarginRef,

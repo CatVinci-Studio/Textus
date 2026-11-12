@@ -1,14 +1,10 @@
-import { useCallback, useEffect } from "react";
+import { fill } from "../i18n/fill";
+import { useCallback, useEffect, useRef } from "react";
 import {
   listenToThisWebview,
   listenToThisWindow,
   unlistenAll,
 } from "../platform/events";
-import {
-  CHAT_TO_EDITOR,
-  onWindowEvent,
-  type OpenDocumentMessage,
-} from "../ai/chat/window/chat-bridge";
 import {
   makeBlankTab,
   readDocFromDisk,
@@ -17,20 +13,17 @@ import {
   type DocTab,
 } from "../document/doc-tabs";
 import { exportDoc, fs, session, windowIpc } from "../platform/ipc";
-import { useWindowEvent } from "../utils/hooks/useWindowEvent";
-import {
-  DROP_IMAGE_FILES_EVENT,
-  OPEN_FILE_IN_TAB_EVENT,
-  type OpenFileInTab,
-} from "../utils/events";
+import { DROP_IMAGE_FILES_EVENT } from "../utils/events";
+import { openDocument } from "../utils/open-document";
+import { useDocumentOpener } from "./useDocumentOpener";
 import { setTabJump, type TabJump } from "../editor/tab-jump";
-import { lastCaret } from "../document/last-carets";
+import { lastCaret } from "../document/last-places";
 import { lastViewMode } from "../editor/modes/view-mode";
 import { isIOSApp } from "../platform/capabilities";
 import { isWindowsPlatform } from "../platform/os";
 import { dropPointInPage, sortDroppedPaths } from "./dropped-files";
 import { isWordDocument, wordDocumentTab } from "../document/word-import";
-import { showConfirm, showMessage } from "../ui/app-dialog";
+import { showMessage } from "../engine/controls/app-dialog";
 import { loadPlugins, revealInPluginTab } from "../plugins/manager";
 import type { DocumentPlace } from "../plugins/app-bridge";
 import type { Where } from "../plugins/app-bridge";
@@ -39,12 +32,17 @@ import {
   customEditorForContent,
 } from "../plugins/store/plugin-lookup";
 import { basename } from "../utils/path";
-import { useLatest } from "../utils/hooks/useLatest";
-import { openBeside } from "./split/split-layout";
+import {
+  besideLayout,
+  openBeside,
+  placeOnArrival,
+} from "../engine/layout/store";
 import type { Strings } from "../i18n/strings";
 import type { TabState } from "./tabs/useTabState";
-import { splitForDrop, type DropTarget } from "./split/split-drop";
+import { splitForDrop } from "./islands/split-drop";
+import type { DropTarget } from "../engine/layout/drop-zones";
 import { explainError } from "../utils/error-explain";
+import { tabInUse } from "../engine/layout/store";
 
 /** How a document opens, beyond which file. */
 export interface OpenOptions {
@@ -142,7 +140,7 @@ export function useFileOpening(opts: {
           return { ...doc, view: undefined };
         } catch (err) {
           void showMessage(
-            `${t.wordImportFailed.replace("{name}", basename(path))}\n${explainError(err, t)}`,
+            `${fill(t.wordImportFailed, { name: basename(path) })}\n${explainError(err, t)}`,
             { tone: "error" },
           );
           return null;
@@ -152,8 +150,9 @@ export function useFileOpening(opts: {
       try {
         disk = await readDocFromDisk(path);
       } catch (err) {
-        // Not text: offer a market plugin that may open it.
-        if (asDocument) throw err;
+        // Not text: offer a market plugin that may open it. A folder is
+        // the caller's to open.
+        if (asDocument || (await isFolder(path))) throw err;
         const { offerPluginToOpen } =
           await import("../plugins/store/open-offer");
         const offered = await offerPluginToOpen(path, t);
@@ -163,7 +162,11 @@ export function useFileOpening(opts: {
         }
         const now = offered === "on" ? customEditorFor(path) : null;
         if (now) return pluginTab(path, now, place);
-        throw err;
+        if (offered === "none")
+          void showMessage(fill(t.openFileFailed, { name: basename(path) }), {
+            tone: "error",
+          });
+        return null;
       }
       const { content, diskMtime } = disk;
       // A Markdown document a plugin claims by its front matter (a board).
@@ -185,24 +188,39 @@ export function useFileOpening(opts: {
     [t, onWordDocumentOpened],
   );
 
-  const activeIdRef = useLatest(activeTabId);
+  // Tabs made for a path, until they are among the window's tabs: an open
+  // of the same path meanwhile shows that one instead of making another.
+  const opened = useRef(new Map<string, { id: string; at: number }>());
+  const justOpened = useCallback(
+    (path: string): string | null => {
+      const made = opened.current.get(path);
+      if (!made) return null;
+      if (tabsRef.current.some((tab) => tab.id === made.id)) {
+        opened.current.delete(path);
+        return null;
+      }
+      // Still arriving (a moment), else closed before it did.
+      if (Date.now() - made.at < 2000) return made.id;
+      opened.current.delete(path);
+      return null;
+    },
+    [tabsRef],
+  );
   const openPathInTab = useCallback(
     async (path: string, open: OpenOptions = {}) => {
       // Beside the tab in front: once the tab is among the window's.
-      const from = activeIdRef.current;
+      const from = tabInUse();
       const show = (id: string) => {
         setActiveTabId(id);
         const { drop } = open;
-        if (open.where === "beside")
-          requestAnimationFrame(() => openBeside(id, from));
-        else if (drop)
-          requestAnimationFrame(() =>
-            splitForDrop(
-              id,
-              drop,
-              tabsRef.current.map((tab) => tab.id),
-            ),
-          );
+        // A tab just made takes its place as it arrives, in the same
+        // update: never drawn first in front where it doesn't stay.
+        const arriving = !tabsRef.current.some((tab) => tab.id === id);
+        if (open.where === "beside") {
+          if (arriving)
+            placeOnArrival(id, (now) => besideLayout(now, id, from) ?? now);
+          else openBeside(id, from);
+        } else if (drop) splitForDrop(id, drop, arriving);
       };
       const existing = tabsRef.current.find(
         (tab) =>
@@ -233,8 +251,13 @@ export function useFileOpening(opts: {
         show(existing.id);
         return;
       }
+      // Opened again while its first open still reads the file: one tab.
+      const already = justOpened(path);
+      if (already) return show(already);
       const doc = await readDocument(path, open.asDocument, open.place);
       if (!doc) return;
+      const meanwhile = justOpened(path);
+      if (meanwhile) return show(meanwhile);
       // A plugin's tab has no source to show.
       const newTab: DocTab = {
         ...makeBlankTab(),
@@ -245,17 +268,11 @@ export function useFileOpening(opts: {
       const jump =
         newTab.path && openingJump(open, path, newTab.diskMtime, restoreCarets);
       if (jump) setTabJump(newTab.id, jump);
+      opened.current.set(path, { id: newTab.id, at: Date.now() });
       setTabs((prev) => [...prev, newTab]);
       show(newTab.id);
     },
-    [
-      tabsRef,
-      activeIdRef,
-      setTabs,
-      setActiveTabId,
-      restoreCarets,
-      readDocument,
-    ],
+    [tabsRef, setTabs, setActiveTabId, restoreCarets, readDocument, justOpened],
   );
 
   // Window mode's replace step, shared by the clean path and the save
@@ -313,50 +330,8 @@ export function useFileOpening(opts: {
     [activeTabId, openPathInTab, replaceTabWithFile, liveTabs, setActiveTabId],
   );
 
-  // Project-bar entries and followed links always open in a new tab, never
-  // replacing the document being written.
-  useWindowEvent(OPEN_FILE_IN_TAB_EVENT, (e) => {
-    const detail = (e as CustomEvent<string | OpenFileInTab>).detail;
-    const { path, anchor, linked } =
-      typeof detail === "string" ? { path: detail } : detail;
-    if (typeof path !== "string" || !path) return;
-    if (linked) void openLinkedFile(path);
-    else void openPathInTab(path, { anchor });
-  });
-
-  // A linked file: in a tab when Textus shows it, or when an official plugin
-  // would and the user installs it; else, once the user agrees, in the
-  // system's app (a document's link shouldn't open things unseen; a program
-  // is only shown in its folder, which the backend decides).
-  const openLinkedFile = async (path: string) => {
-    await loadPlugins().catch(() => {});
-    if (isWordDocument(path) || customEditorFor(path)) {
-      await openPathInTab(path);
-      return;
-    }
-    const { offerPluginToOpen } = await import("../plugins/store/open-offer");
-    const offered = await offerPluginToOpen(path, t);
-    if (offered === "on") await openPathInTab(path);
-    // The card's "Open with system app" was the user's say-so.
-    if (offered === "system") await exportDoc.openLinkedFile(path);
-    if (offered !== "none") return;
-    const open = await showConfirm(
-      t.linkOpenFileConfirm.replace("{name}", basename(path)),
-      { okLabel: t.linkOpenFileOk, cancelLabel: t.closePromptCancel },
-    );
-    if (open) await exportDoc.openLinkedFile(path);
-  };
-  // The detached chat window reopened a past conversation.
-  useEffect(
-    () =>
-      unlistenAll(
-        onWindowEvent<OpenDocumentMessage>(
-          CHAT_TO_EDITOR.openDocument,
-          ({ path }) => void openPathInTab(path),
-        ),
-      ),
-    [openPathInTab],
-  );
+  // Links, cards, projects and the detached chat: each in a tab of its own.
+  useDocumentOpener(openPathInTab, t);
 
   const openFileDialog = useCallback(async () => {
     const picked = await fs.openFileDialog(dialogFilters);
@@ -394,9 +369,10 @@ export function useOpenPathsPush(
     const unlisten = listenToThisWindow<string[]>(
       "open-paths-as-tabs",
       async (event) => {
-        // Open Recent from a non-empty window arrives this way too.
+        // Open Recent from a non-empty window arrives this way too. In
+        // order: the last one in front.
         for (const p of event.payload)
-          await openPathInTab(p, { restoreCaret: true });
+          await openDocument(p, { restoreCaret: true });
       },
     );
     return unlistenAll(unlisten);

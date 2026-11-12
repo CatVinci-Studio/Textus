@@ -1,8 +1,8 @@
 // @vitest-environment jsdom
 import "@testing-library/jest-dom/vitest";
-import { act, cleanup, render, screen } from "@testing-library/react";
-import { Suspense } from "react";
-import { afterEach, expect, it } from "vitest";
+import { cleanup, render, screen } from "@testing-library/react";
+import { Component, Suspense, type ReactNode } from "react";
+import { afterEach, expect, it, vi } from "vitest";
 import { lazyComponent } from "./lazy-component";
 import { lazyModule } from "./lazy-module";
 
@@ -23,7 +23,7 @@ it("a module already loaded renders in the first frame, not the fallback", async
   expect(screen.queryByText("Loading")).toBeNull();
 });
 
-it("a module not yet loaded shows the fallback until it has", async () => {
+it("a module not yet loaded draws nothing until it has, then itself - no suspense held back", async () => {
   const module = lazyModule("test:later", async () => ({ Hello }));
   const Shown = lazyComponent(module, (m) => m.Hello);
   render(
@@ -31,7 +31,38 @@ it("a module not yet loaded shows the fallback until it has", async () => {
       <Shown name="later" />
     </Suspense>,
   );
-  expect(screen.getByText("Loading")).toBeInTheDocument();
-  await act(() => module.load());
+  expect(screen.queryByText("Loading")).toBeNull();
   expect(await screen.findByText("Hello later")).toBeInTheDocument();
+});
+
+it("a module that fails to load throws to the error boundary", async () => {
+  const module = lazyModule(
+    "test:broken",
+    async (): Promise<{
+      Hello: typeof Hello;
+    }> => {
+      throw new Error("gone");
+    },
+  );
+  const Shown = lazyComponent(module, (m) => m.Hello);
+  class Boundary extends Component<
+    { children: ReactNode },
+    { failed: boolean }
+  > {
+    state = { failed: false };
+    static getDerivedStateFromError() {
+      return { failed: true };
+    }
+    render() {
+      return this.state.failed ? <p>Failed</p> : this.props.children;
+    }
+  }
+  const quiet = vi.spyOn(console, "error").mockImplementation(() => {});
+  render(
+    <Boundary>
+      <Shown name="never" />
+    </Boundary>,
+  );
+  expect(await screen.findByText("Failed")).toBeInTheDocument();
+  quiet.mockRestore();
 });

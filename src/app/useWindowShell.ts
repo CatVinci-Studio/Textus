@@ -2,12 +2,12 @@ import { useState } from "react";
 import { useSettingsOpening } from "./SettingsLayer";
 import { useTutorial } from "../onboarding/useTutorial";
 import { useTutorialDocumentEvaluation } from "../onboarding/useTutorialDocumentEvaluation";
-import { useAppUpdate } from "./useAppUpdate";
+import { useUpdateChecks } from "./app-update";
 import { useZoom } from "./useZoom";
 import { useDraftAutosave } from "../document/draft-autosave";
 import { useTextusAi, useTextusAiResume } from "../ai/TextusAiSwitch";
 import { useTabState } from "./tabs/useTabState";
-import { useSidePanels } from "./useSidePanels";
+import { useSidePanels } from "./frame/useSidePanels";
 import { useWordImported } from "./AppNotices";
 import type { PendingClose } from "./close-flow";
 import { useKeepTabs } from "../document/reload-tabs";
@@ -30,9 +30,13 @@ export function useWindowShell({
   const textusAi = useTextusAi();
   useTextusAiResume();
   const panels = useSidePanels(textusAi.on);
-  const settingsOpening = useSettingsOpening();
-  const appUpdate = useAppUpdate(settings.updateChannel);
-  useZoom(settings.zoom, (zoom) => setSettings({ zoom }));
+  const settingsOpening = useSettingsOpening(tabState);
+  useUpdateChecks(settings.updateChannel);
+  useZoom(
+    settings.zoom,
+    (zoom) => setSettings({ zoom }),
+    settings.zoomTogether,
+  );
   const tutorial = useTutorial(textusAi.on);
   const evaluateTutorialDocumentChange =
     useTutorialDocumentEvaluation(tutorial);
@@ -55,7 +59,6 @@ export function useWindowShell({
     textusAi,
     panels,
     settingsOpening,
-    appUpdate,
     tutorial,
     evaluateTutorialDocumentChange,
     cancelDraftFlushes,

@@ -1,4 +1,4 @@
-import { markTime } from "../../ui/moves";
+import { markTime } from "../../engine/controls/moves";
 import { wholeBlockKind } from "./markdown-forms";
 import { splitUnits } from "./unit-diff";
 

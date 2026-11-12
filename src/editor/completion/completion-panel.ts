@@ -1,4 +1,4 @@
-import { clampLeft, opensBelow } from "../../ui/placement";
+import { clampLeft, opensBelow } from "../../engine/controls/placement";
 import "./completion-panel.css";
 import type { PanelRow } from "./panel-rows";
 
@@ -63,7 +63,7 @@ export class CompletionPanel {
     if (this.open) return;
     this.open = true;
     el.hidden = false;
-    document.documentElement.classList.add(OPEN_CLASS);
+    document.body.classList.add(OPEN_CLASS);
     this.place(el, at());
   }
 
@@ -88,7 +88,7 @@ export class CompletionPanel {
     if (!this.open) return;
     this.open = false;
     if (this.el) this.el.hidden = true;
-    document.documentElement.classList.remove(OPEN_CLASS);
+    document.body.classList.remove(OPEN_CLASS);
   }
 
   destroy(): void {
@@ -100,7 +100,7 @@ export class CompletionPanel {
   private row(row: PanelRow, i: number, take: (row: number) => void) {
     const el = document.createElement("div");
     if (row.kind === "heading") {
-      el.className = "completion-group";
+      el.className = "tx-list-heading completion-group";
       el.setAttribute("role", "presentation");
       el.textContent = row.title;
       return el;

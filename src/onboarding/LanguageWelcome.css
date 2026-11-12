@@ -1,14 +1,8 @@
 .language-welcome-backdrop {
-  position: fixed;
-  inset: 0;
   /* Below the unsaved-changes prompt, which a close during the first launch
      still has to show. */
   z-index: var(--z-modal);
-  display: flex;
-  align-items: center;
-  justify-content: center;
   padding: 24px;
-  background: var(--ui-overlay);
   animation: motion-fade-in var(--dur-slow) var(--ease-standard);
 }
 
@@ -36,7 +30,7 @@
   display: block;
   width: 48px;
   height: 48px;
-  margin-bottom: 20px;
+  margin-bottom: 24px;
 }
 
 .language-welcome-eyebrow {
@@ -66,18 +60,13 @@
 .language-welcome-continue {
   gap: 8px;
   width: 100%;
-  margin-top: 20px;
+  margin-top: 24px;
   font-size: var(--text-control);
   cursor: pointer;
 }
 
 @media (max-width: 520px) {
   .language-welcome {
-    padding: 24px 20px;
+    padding: 24px 24px;
   }
-}
-
-.language-welcome button:focus-visible {
-  outline: 2px solid var(--ui-accent);
-  outline-offset: 3px;
 }

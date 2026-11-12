@@ -1,6 +1,4 @@
-/** What an AI request is refused with while Textus AI is off; keep in step
- *  with the Rust constant. */
-export const AI_OFF = "textus-ai-off";
+/** What an AI request is refused with while Textus AI is off. */
 
 let allowed: () => boolean = () => true;
 

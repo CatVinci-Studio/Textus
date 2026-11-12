@@ -1,9 +1,10 @@
+import { Tooltip } from "../../engine/controls/Tooltip";
 import { useEffect, useRef, useState } from "react";
 import { createPortal } from "react-dom";
 import { useSettings } from "../../prefs/SettingsContext";
 import { readRecents } from "./recents";
 import { formatCombo } from "../../utils/shortcuts";
-import { useViewportClamp } from "../../utils/hooks/useViewportClamp";
+import { usePlacement } from "../../engine/controls/usePlacement";
 import { runMenuAction } from "./app-menu-actions";
 import {
   buildAppMenu,
@@ -14,17 +15,17 @@ import {
   type MenuChecks,
   type MenuEntry,
   type MenuNode,
-} from "./app-menu-model";
+} from "../../registry/menu/app-menu-model";
 import { thisWindow } from "../../platform/this-window";
 import {
   canToggleFullscreen,
   hasAppMenu,
   hasTextusAi,
 } from "../../platform/capabilities";
-import { useMenuAim } from "../../ui/menu-aim";
-import { CheckIcon, ChevronIcon } from "../../ui/icons";
-import { usePresenceProps } from "../../ui/usePresence";
-import { usePhoneLayout } from "../../ui/usePhoneLayout";
+import { useMenuAim } from "../../engine/controls/menu-aim";
+import { CheckIcon, ChevronIcon } from "../../engine/controls/icons";
+import { usePresenceProps } from "../../engine/motion/usePresence";
+import { usePhoneLayout } from "../../engine/controls/usePhoneLayout";
 import "./app-menu.css";
 import { usePluginMenuEntries } from "../../plugins/contributions/usePluginMenu";
 import { trackingShown } from "../../ai/margin/track-changes-state";
@@ -50,7 +51,7 @@ export function AppMenu({ x, y, onClose, checks, section }: AppMenuProps) {
   const { t, settings } = useSettings();
   const pluginEntries = usePluginMenuEntries(settings.language);
   const ref = useRef<HTMLDivElement>(null);
-  const pos = useViewportClamp(ref, x, y);
+  const pos = usePlacement(ref, x, y);
   const phone = usePhoneLayout();
   const presence = usePresenceProps(ref);
 
@@ -318,7 +319,6 @@ function MenuRow({
         role={item.checked === undefined ? "menuitem" : "menuitemcheckbox"}
         aria-checked={item.checked}
         className="app-menu-item"
-        title={item.title}
         disabled={item.disabled}
         aria-haspopup={hasSubmenu ? "menu" : undefined}
         aria-expanded={hasSubmenu ? open : undefined}
@@ -338,7 +338,14 @@ function MenuRow({
           }
         }}
       >
-        <span className="app-menu-label">{item.label}</span>
+        {item.title ? (
+          // Its whole path on hover, where WebKitGTK shows no title.
+          <Tooltip text={item.title} description={null}>
+            <span className="tx-truncate app-menu-label">{item.label}</span>
+          </Tooltip>
+        ) : (
+          <span className="tx-truncate app-menu-label">{item.label}</span>
+        )}
         {item.accel && (
           <span className="app-menu-accel">{formatCombo(item.accel)}</span>
         )}

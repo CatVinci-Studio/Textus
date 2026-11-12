@@ -8,16 +8,17 @@ import type { UserThemeMeta } from "./settings-values";
  * Settings as a file, to back them up or carry them to another computer;
  * the same payload a settings sync would carry. It holds what is shared
  * between computers and the CSS of imported themes, and, when asked, the AI
- * records: conversations and memories. API keys live in the
- * system keychain, never here; an MCP server's environment and header values
- * (its tokens) are left blank, and an import keeps this computer's own.
+ * records: conversations and memories. API keys live in owner-only files
+ * of the app's config, never here; an MCP server's environment and header
+ * values (its tokens) are left blank, and an import fills in this
+ * computer's own only for the same server as it is set up here.
  */
 
 const FORMAT = "textus-settings";
 
 /** Never leave this computer: they name its folders and network, or what
  *  it has already been through. */
-export const DEVICE_SETTINGS = [
+const DEVICE_SETTINGS = [
   "agentWorkspaceRoot",
   "onboardingShown",
   "languageChosen",
@@ -28,12 +29,23 @@ export const DEVICE_SETTINGS = [
   "zoom",
   "runInBackground",
   "updateChannel",
+  // Addresses a stored key or the user's pictures and searches go to: a
+  // shared file could name any server.
+  "imageStorageMode",
+  "imageHost",
+  "imagePicgoEndpoint",
+  "imageUploadEndpoint",
+  "imageUploadUrlField",
+  "imageModelProvider",
+  "imageModelEndpoint",
+  "searchService",
+  "searxngUrl",
 ] as const satisfies readonly (keyof Settings)[];
 
 /** An imported theme's CSS, by theme id. */
 export type ThemeCss = Record<string, { light: string; dark?: string }>;
 
-export interface SettingsFile {
+interface SettingsFile {
   settings: Settings;
   themes: ThemeCss;
   /** The conversations and memories, when the file has them. */
@@ -140,11 +152,27 @@ export function settingsFromFile(
   const mcpServers = Array.isArray(incoming.mcpServers)
     ? incoming.mcpServers.map((server: McpServer) => {
         const mine = current.mcpServers.find((m) => m.id === server.id);
-        return {
-          ...server,
-          env: filled(server.env ?? {}, mine?.env),
-          headers: filled(server.headers ?? {}, mine?.headers),
-        };
+        // The user's own server, as they set it up: its secrets filled in.
+        // Anything else a file brings starts nothing and gets no secret of
+        // theirs until they turn it on themselves - a shared file could
+        // name any program or address.
+        const same =
+          !!mine &&
+          mine.command === server.command &&
+          mine.url === server.url &&
+          JSON.stringify(mine.args) === JSON.stringify(server.args ?? []);
+        return same
+          ? {
+              ...server,
+              env: filled(server.env ?? {}, mine.env),
+              headers: filled(server.headers ?? {}, mine.headers),
+            }
+          : {
+              ...server,
+              enabled: false,
+              env: blanked(server.env ?? {}),
+              headers: blanked(server.headers ?? {}),
+            };
       })
     : current.mcpServers;
   const userThemes = mergedThemes(
@@ -167,6 +195,9 @@ export function settingsFromFile(
       ...current,
       ...incoming,
       mcpServers,
+      // Export's extra pandoc options stay this device's: a shared file's
+      // could run a filter program on the next export.
+      pandocArgs: current.pandocArgs,
       userThemes,
       themeId,
       ...kept,

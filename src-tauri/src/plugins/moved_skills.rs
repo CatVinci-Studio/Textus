@@ -71,7 +71,7 @@ pub async fn install_moved_skills(app: AppHandle) {
         for name in todo {
             match super::catalog::skill_install_catalog(app.clone(), name.to_string()).await {
                 Ok(_) => {}
-                Err(e) if e == super::catalog::SKILL_EXISTS => {}
+                Err(e) if crate::errors::is(&e, super::catalog::SKILL_EXISTS) => {}
                 Err(_) => return,
             }
         }

@@ -3,7 +3,9 @@ use std::path::{Component, Path, PathBuf};
 use tokio::fs;
 
 mod pictures;
+mod secrets;
 pub(crate) use pictures::*;
+use secrets::not_a_secret;
 
 #[derive(Serialize)]
 #[cfg_attr(test, derive(specta::Type))]
@@ -36,20 +38,6 @@ fn marked_hidden(_meta: &std::fs::Metadata) -> bool {
     false
 }
 
-/// A native file dialog owned by the window that asked for it. Unowned, a
-/// Windows dialog can open behind the app, and a macOS sheet can land on a hidden window.
-pub(crate) fn window_file_dialog(
-    window: &tauri::WebviewWindow,
-) -> tauri_plugin_dialog::FileDialogBuilder<tauri::Wry> {
-    use tauri_plugin_dialog::DialogExt;
-    let dialog = window.dialog().file();
-    // set_parent is desktop-only API; iOS presents the picker modally over
-    // its single window anyway.
-    #[cfg(desktop)]
-    let dialog = dialog.set_parent(window);
-    dialog
-}
-
 /// The file types File > Open offers: Markdown first, then text, Word and any
 /// file. None on macOS, where NSOpenPanel has no type menu, so no filter means
 /// "All files".
@@ -62,7 +50,7 @@ fn open_document_filters(
         return Vec::new();
     }
     vec![
-        ("Markdown".to_string(), &["md", "markdown"]),
+        ("Markdown".to_string(), &crate::extract::MARKDOWN_EXTENSIONS),
         (text.to_string(), &["txt", "text"]),
         (word.to_string(), &["docx"]),
         // rfd writes it out as the any-file pattern each dialog takes.
@@ -85,48 +73,29 @@ pub async fn open_file_dialog(
         word_filter.as_deref().unwrap_or("Word documents"),
         all_filter.as_deref().unwrap_or("All files"),
     );
-    tauri::async_runtime::spawn_blocking(move || {
-        filters
-            .iter()
-            .fold(window_file_dialog(&window), |dialog, (name, exts)| {
-                dialog.add_filter(name, exts)
-            })
-            .blocking_pick_file()
-            .map(|p| p.to_string())
-    })
-    .await
-    .ok()
-    .flatten()
+    let filters = filters
+        .into_iter()
+        .map(|(name, exts)| (name, exts.iter().map(|e| e.to_string()).collect()))
+        .collect();
+    crate::dialogs::pick_file(window, filters).await
+}
+
+fn one(name: &str, ext: &str) -> Vec<(String, Vec<String>)> {
+    vec![(name.to_string(), vec![ext.to_string()])]
 }
 
 /// Opens a native file picker for a CSS theme file.
 #[tauri::command]
 #[cfg_attr(test, specta::specta)]
 pub async fn open_css_file_dialog(window: tauri::WebviewWindow) -> Option<String> {
-    tauri::async_runtime::spawn_blocking(move || {
-        window_file_dialog(&window)
-            .add_filter("CSS", &["css"])
-            .blocking_pick_file()
-            .map(|p| p.to_string())
-    })
-    .await
-    .ok()
-    .flatten()
+    crate::dialogs::pick_file(window, one("CSS", "css")).await
 }
 
 /// Picks a settings file to import (Settings › General).
 #[tauri::command]
 #[cfg_attr(test, specta::specta)]
 pub async fn open_settings_file_dialog(window: tauri::WebviewWindow) -> Option<String> {
-    tauri::async_runtime::spawn_blocking(move || {
-        window_file_dialog(&window)
-            .add_filter("JSON", &["json"])
-            .blocking_pick_file()
-            .map(|p| p.to_string())
-    })
-    .await
-    .ok()
-    .flatten()
+    crate::dialogs::pick_file(window, one("JSON", "json")).await
 }
 
 /// Asks where to export the settings to, as `default_name`.
@@ -136,16 +105,7 @@ pub async fn save_settings_file_dialog(
     window: tauri::WebviewWindow,
     default_name: String,
 ) -> Option<String> {
-    tauri::async_runtime::spawn_blocking(move || {
-        window_file_dialog(&window)
-            .set_file_name(default_name)
-            .add_filter("JSON", &["json"])
-            .blocking_save_file()
-            .map(|p| with_default_extension(p.to_string(), "json"))
-    })
-    .await
-    .ok()
-    .flatten()
+    crate::dialogs::save_file(window, default_name, None, ("JSON".into(), "json".into())).await
 }
 
 /// Opens a native file picker for one image, for a missing image's card. The
@@ -157,16 +117,7 @@ pub async fn open_image_file_dialog(
     filter_name: String,
     extensions: Vec<String>,
 ) -> Option<String> {
-    tauri::async_runtime::spawn_blocking(move || {
-        let exts: Vec<&str> = extensions.iter().map(String::as_str).collect();
-        window_file_dialog(&window)
-            .add_filter(&filter_name, &exts)
-            .blocking_pick_file()
-            .map(|p| p.to_string())
-    })
-    .await
-    .ok()
-    .flatten()
+    crate::dialogs::pick_file(window, vec![(filter_name, extensions)]).await
 }
 
 /// Opens a native "Save As" dialog for a never-saved document, in `default_dir`
@@ -178,26 +129,11 @@ pub async fn save_file_dialog(
     default_name: String,
     default_dir: Option<String>,
 ) -> Option<String> {
-    tauri::async_runtime::spawn_blocking(move || {
-        let default_name = if default_name.trim().is_empty() {
-            "Untitled.md"
-        } else {
-            default_name.trim()
-        };
-        let dialog = window_file_dialog(&window);
-        let dialog = match default_dir.filter(|dir| Path::new(dir).is_dir()) {
-            Some(dir) => dialog.set_directory(dir),
-            None => dialog,
-        };
-        dialog
-            .set_file_name(default_name)
-            .add_filter("Markdown", &["md"])
-            .blocking_save_file()
-            .map(|p| with_default_extension(p.to_string(), "md"))
-    })
-    .await
-    .ok()
-    .flatten()
+    let name = match default_name.trim() {
+        "" => "Untitled.md".to_string(),
+        name => name.to_string(),
+    };
+    crate::dialogs::save_file(window, name, default_dir, ("Markdown".into(), "md".into())).await
 }
 
 /// GTK and the desktop portal return the name as typed ("notes"), where Windows
@@ -280,8 +216,9 @@ pub async fn file_mtime_ms(path: String) -> Result<Option<f64>, String> {
 
 #[tauri::command]
 #[cfg_attr(test, specta::specta)]
-pub async fn read_text_file(path: String) -> Result<String, String> {
+pub async fn read_text_file(app: tauri::AppHandle, path: String) -> Result<String, String> {
     require_non_empty(&path)?;
+    not_a_secret(&app, &path)?;
     fs::read_to_string(&path).await.map_err(|e| e.to_string())
 }
 
@@ -289,9 +226,13 @@ pub async fn read_text_file(path: String) -> Result<String, String> {
 /// runtime `<style>` tag has no base to resolve relative paths against.
 #[tauri::command]
 #[cfg_attr(test, specta::specta)]
-pub async fn read_binary_file_base64(path: String) -> Result<String, String> {
+pub async fn read_binary_file_base64(
+    app: tauri::AppHandle,
+    path: String,
+) -> Result<String, String> {
     use base64::{engine::general_purpose::STANDARD, Engine};
     require_non_empty(&path)?;
+    not_a_secret(&app, &path)?;
     let bytes = fs::read(&path).await.map_err(|e| e.to_string())?;
     Ok(STANDARD.encode(bytes))
 }
@@ -338,11 +279,12 @@ pub async fn save_pasted_image(
     let embed = conventions.as_ref().and_then(|c| {
         crate::conventions::wiki_embed(c, Path::new(doc_path.as_deref()?), &dir.join(&name))
     });
-    let src = match folder {
-        Some(folder) => folder.src(&name),
-        None => dir.join(&name).to_string_lossy().to_string(),
+    let written = dir.join(&name).to_string_lossy().to_string();
+    let (src, path) = match folder {
+        Some(folder) => (folder.src(&name), Some(written)),
+        None => (pictures::markdown_path(&written), None),
     };
-    Ok(SavedImage { src, embed })
+    Ok(SavedImage { src, embed, path })
 }
 
 /// Brings a document's images into the image folder of the file it was just
@@ -400,7 +342,9 @@ pub(super) async fn migrate_images(
             let Some(from) = source_dir.map(|dir| dir.join(path)) else {
                 continue;
             };
-            if !is_image_file(&from) || !fs::metadata(&from).await.is_ok_and(|m| m.is_file()) {
+            if !crate::media::is_picture(&from)
+                || !fs::metadata(&from).await.is_ok_and(|m| m.is_file())
+            {
                 continue;
             }
             copy_image(&from, &folder.dir).await
@@ -415,8 +359,13 @@ pub(super) async fn migrate_images(
 
 #[tauri::command]
 #[cfg_attr(test, specta::specta)]
-pub async fn write_text_file(path: String, contents: String) -> Result<(), String> {
+pub async fn write_text_file(
+    app: tauri::AppHandle,
+    path: String,
+    contents: String,
+) -> Result<(), String> {
     require_non_empty(&path)?;
+    not_a_secret(&app, &path)?;
     if let Some(parent) = Path::new(&path).parent() {
         if !parent.as_os_str().is_empty() {
             fs::create_dir_all(parent)
@@ -445,7 +394,8 @@ pub async fn move_picture_to_trash(
         doc_path.as_deref().map(Path::new),
         Path::new(&path),
     )?;
-    trash::delete(&file).map_err(|e| format!("Couldn't move the old picture to the Trash: {e}"))
+    crate::atomic::user_file_to_trash(&file, None)
+        .map_err(|e| format!("Couldn't move the old picture to the Trash: {e}"))
 }
 
 #[cfg(test)]

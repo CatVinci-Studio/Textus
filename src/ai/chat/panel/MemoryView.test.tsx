@@ -107,13 +107,6 @@ describe("the Project tab", () => {
       t.memoryLibrary,
       t.memoryRemembered,
     ]);
-    for (const hint of [
-      t.memoryStyleHint,
-      t.memoryInstructionsHint,
-      t.memoryLibraryHint,
-      t.memoryRememberedHint,
-    ])
-      expect(screen.getByText(hint)).toBeInTheDocument();
   });
 
   it("leaves the skills to the slash menu", () => {
@@ -353,5 +346,13 @@ describe("the Project tab's library", () => {
     );
     expect(on.onDeleteEntry).toHaveBeenCalledWith(lin);
     expect(libraryEntryId(lin)).toBe("project/library/Lin");
+  });
+
+  it("marks an entry with the id a memory chip focuses, whatever its file's type", () => {
+    const notes = entry({ file: ".textus/library/Lin.notes.txt" });
+    renderTab(workspace({ library: [notes] }));
+    expect(
+      document.querySelector(`[data-memory-id="${libraryEntryId(notes)}"]`),
+    ).not.toBeNull();
   });
 });

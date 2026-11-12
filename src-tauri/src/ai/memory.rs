@@ -58,9 +58,7 @@ const LIBRARY_FOLDER: &str = "library";
 
 /// Whether Textus AI may remember things by itself.
 pub fn remember_enabled(app: &tauri::AppHandle) -> bool {
-    crate::settings::read_setting(app, REMEMBER_SETTING)
-        .and_then(|v| v.as_bool())
-        .unwrap_or(true)
+    crate::settings::read_flag(app, REMEMBER_SETTING)
 }
 
 /// What a memory is about. Facts about the work are not a kind: they go into

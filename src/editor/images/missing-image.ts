@@ -1,4 +1,5 @@
-import { IMAGE_ICON_HTML } from "../../ui/icons";
+import { fill } from "../../i18n/fill";
+import { IMAGE_ICON_HTML } from "../../engine/controls/icons";
 import { exportDoc, fs } from "../../platform/ipc";
 import type { Strings } from "../../i18n/strings";
 import {
@@ -8,7 +9,7 @@ import {
   isDrivePath,
   parentDir,
 } from "../../utils/path";
-import { localPath } from "../markdown/link-target";
+import { imageSource } from "./image-source";
 
 /**
  * The card a picture that won't load shows in its place: the file's name,
@@ -35,20 +36,15 @@ export function imageLocation(
   src: string,
   docPath: string | null,
 ): ImageLocation {
-  const value = src.trim();
-  if (!isDrivePath(value) && hasUrlScheme(value)) {
-    if (!/^https?:/i.test(value)) return { kind: "other" };
-    try {
-      return { kind: "remote", url: value, host: new URL(value).host };
-    } catch {
-      return { kind: "other" };
-    }
-  }
-  if (docPath && hasUrlScheme(docPath) && !isDrivePath(docPath))
+  const source = imageSource(src, docPath);
+  if (source.kind === "file") return { kind: "local", path: source.path };
+  if (source.kind === "unsaved") return { kind: "unsaved" };
+  if (source.kind !== "web") return { kind: "other" };
+  try {
+    return { kind: "remote", url: source.url, host: new URL(source.url).host };
+  } catch {
     return { kind: "other" };
-  const path = localPath(decodeUrlPath(value), docPath);
-  if (path) return { kind: "local", path };
-  return value ? { kind: "unsaved" } : { kind: "other" };
+  }
 }
 
 /** Why the picture didn't show. */
@@ -134,7 +130,7 @@ export function revealNearest(path: string): void {
     .catch(() => {});
 }
 
-export interface MissingCardContent {
+interface MissingCardContent {
   name: string;
   alt: string;
   reason: MissingReason;
@@ -152,10 +148,9 @@ function reasonText(content: MissingCardContent, t: Strings): string {
     case "unsupported":
       return t.missingImageUnsupported;
     case "remote":
-      return t.missingImageRemote.replace(
-        "{host}",
-        content.location.kind === "remote" ? content.location.host : "",
-      );
+      return fill(t.missingImageRemote, {
+        host: content.location.kind === "remote" ? content.location.host : "",
+      });
     case "unsaved":
       return t.missingImageUnsaved;
     case "notInVault":
@@ -189,11 +184,12 @@ export function missingImageCard(
   const icon = document.createElement("span");
   icon.className = "missing-image-icon";
   icon.innerHTML = IMAGE_ICON_HTML;
-  const title = (
+  const title = fill(
     content.reason === "unsupported"
       ? t.missingImageUnsupportedTitle
-      : t.missingImageTitle
-  ).replace("{name}", content.name);
+      : t.missingImageTitle,
+    { name: content.name },
+  );
   head.append(icon, span("missing-image-title", title));
   card.append(head);
 

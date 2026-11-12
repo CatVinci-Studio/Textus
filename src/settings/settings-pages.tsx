@@ -1,49 +1,124 @@
 import type { ComponentType } from "react";
 import type { Strings } from "../i18n/strings";
 import { hasTextusAi, isIOSApp } from "../platform/capabilities";
-import { AiPage } from "./pages/AiPage";
-import { EditorPage } from "./pages/EditorPage";
-import { GeneralPage } from "./pages/GeneralPage";
-import { ExtensionsPage } from "./pages/ExtensionsPage";
-import { ShortcutsPage } from "./pages/ShortcutsPage";
+import { lucide } from "../engine/controls/icons";
+import {
+  Info,
+  Keyboard,
+  Palette,
+  PenLine,
+  ShieldCheck,
+  SlidersHorizontal,
+  Sparkles,
+} from "lucide-react";
 import type { SettingsPageProps } from "./pages/types";
-import { PrivacySection } from "./sections/privacy";
 
-/** A Settings page: its id, its name in the navigation, whether this
- *  platform shows it, and its component. Plugins add theirs the same way. */
+const NAV_ICON = 15;
+
+/** A Settings page: its id, its name in the list, its icon (a page of its
+ *  own's), the group it is listed under (Appearance's, Editing's, Textus
+ *  AI's), whether this platform shows it, and its component. Plugins add
+ *  theirs the same way. */
 export interface SettingsPageDef {
   id: string;
   label: (t: Strings) => string;
+  Icon?: ComponentType<{ className?: string }>;
+  group?: SettingsGroupId;
   /** Left out where it means nothing (Shortcuts on a phone). */
   available?: () => boolean;
-  Page: ComponentType<SettingsPageProps>;
+  /** A plugin's page; the built-in ones' are builtin-pages.tsx's, loaded
+   *  with Settings, not at startup. */
+  Page?: ComponentType<SettingsPageProps>;
 }
 
+export type SettingsGroupId = "edit" | "ai";
+
+/** The groups pages are listed under: a name and an icon, folded until
+ *  opened. */
+export const SETTINGS_GROUPS: Record<
+  SettingsGroupId,
+  { label: (t: Strings) => string; Icon: ComponentType<{ className?: string }> }
+> = {
+  edit: { label: (t) => t.navEditing, Icon: lucide(PenLine, NAV_ICON) },
+  ai: { label: (t) => t.navAi, Icon: lucide(Sparkles, NAV_ICON) },
+};
+
+const ai = () => hasTextusAi;
+
 const BUILT_IN: SettingsPageDef[] = [
-  { id: "general", label: (t) => t.navGeneral, Page: GeneralPage },
-  { id: "editor", label: (t) => t.navEditor, Page: EditorPage },
   {
-    id: "ai",
-    label: (t) => t.navAi,
-    available: () => hasTextusAi,
-    Page: AiPage,
+    id: "general",
+    label: (t) => t.navGeneral,
+    Icon: lucide(SlidersHorizontal, NAV_ICON),
   },
+  {
+    id: "look-basic",
+    label: (t) => t.navAppearance,
+    Icon: lucide(Palette, NAV_ICON),
+  },
+  {
+    id: "edit-text",
+    group: "edit",
+    label: (t) => t.navEditText,
+  },
+  {
+    id: "edit-img",
+    group: "edit",
+    label: (t) => t.navEditImages,
+  },
+  {
+    id: "edit-export",
+    group: "edit",
+    label: (t) => t.menuExport,
+  },
+  {
+    id: "providers",
+    group: "ai",
+    available: ai,
+    label: (t) => t.navProvidersModels,
+  },
+  {
+    id: "chat",
+    group: "ai",
+    available: ai,
+    label: (t) => t.navChatWriting,
+  },
+  {
+    id: "memory",
+    group: "ai",
+    available: ai,
+    label: (t) => t.navMemorySkills,
+  },
+  // MCP servers and external agents run on the desktop only.
+  {
+    id: "mcp",
+    group: "ai",
+    available: () => hasTextusAi && !isIOSApp,
+    label: (t) => t.navExternalTools,
+  },
+  // The iPhone's and iPad's: there plugins, themes and skills are managed
+  // in Settings; the desktop has the sidebar's plugins and these pages.
   {
     id: "extensions",
     label: (t) => t.navExtensions,
-    Page: ExtensionsPage,
+    available: () => isIOSApp,
   },
   {
     id: "shortcuts",
     label: (t) => t.navShortcuts,
+    Icon: lucide(Keyboard, NAV_ICON),
     // A phone has no keyboard to bind shortcuts on.
     available: () => !isIOSApp,
-    Page: ShortcutsPage,
   },
   {
     id: "privacy",
-    label: (t) => t.navPrivacy,
-    Page: ({ t }) => <PrivacySection t={t} />,
+    label: (t) => t.navPrivacyData,
+    Icon: lucide(ShieldCheck, NAV_ICON),
+  },
+  {
+    id: "about",
+    label: (t) => t.navAbout,
+    Icon: lucide(Info, NAV_ICON),
   },
 ];
 

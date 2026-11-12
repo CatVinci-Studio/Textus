@@ -4,7 +4,7 @@ import en from "../../i18n/locales/en";
 import type { Strings } from "../../i18n/strings";
 
 const notices = vi.hoisted(() => ({ showNotice: vi.fn() }));
-vi.mock("../../ui/notices", () => notices);
+vi.mock("../../engine/controls/notices", () => notices);
 
 import { editorHandlers, stopPluginEditor } from "./broker-editor";
 import type { PluginScope } from "./broker-scope";

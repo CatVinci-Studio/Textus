@@ -1,3 +1,4 @@
+import type { EditAction } from "../editor/markdown/edit-actions";
 import type {
   ChatAttachment as Attachment,
   ImageAttachment as Image,
@@ -5,27 +6,6 @@ import type {
   WebSource as Source,
 } from "../platform/bindings/ai-agent";
 import type { AgentMode } from "../prefs/settings-values";
-
-/** The operations a propose_edit call can carry. Keep in step with the
- *  backend's EDIT_ACTIONS, which validates proposals against it. */
-export type EditAction =
-  | "replace"
-  | "replace_selection"
-  | "insert_before"
-  | "insert_after"
-  | "delete"
-  | "append"
-  | "insert_at_cursor";
-
-export const EDIT_ACTIONS: readonly EditAction[] = [
-  "replace",
-  "replace_selection",
-  "insert_before",
-  "insert_after",
-  "delete",
-  "append",
-  "insert_at_cursor",
-];
 
 /** A validated propose_edit payload: what to do, where, and with what text. */
 export interface EditProposal {

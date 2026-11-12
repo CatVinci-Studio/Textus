@@ -1,12 +1,15 @@
+import type { Plural } from "../../i18n/plural";
+import type { ApplySuggestion } from "./CommentCard";
 import type { BlockNames } from "../revision/markdown-forms";
 import { type AgentTurnLabels } from "./AgentTurnView";
-import type { AgentTurn, EditAction, EditProposal } from "../types";
+import type { AgentTurn, EditProposal } from "../types";
+import type { EditAction } from "../../editor/markdown/edit-actions";
 import type { PendingStatus } from "../revision/usePendingEdits";
 import type { StreamingState } from "./stream-step";
 import type { Thought } from "./thought";
 import { type ThoughtRowLabels } from "./ThoughtRow";
 import type { AiErrorKind } from "../error-messages";
-import type { PendingSentence } from "../revision/pending-edit-plugin";
+import { type PendingSentence } from "../revision/pending-types";
 import { type MemoryChipLabels } from "./MemoryChip";
 
 /** What ChatMessages is given: its words and its props. */
@@ -35,11 +38,13 @@ export interface ChatMessagesLabels
   diffShow: string;
   actionNames: Record<EditAction, string>;
   retry: string;
+  /** An external agent's step that has no title of its own. */
+  agentPermission: string;
   /** The Accept button while some sentences are kept as written: "{k}" of
    *  "{n}". */
   proposalAcceptSome: string;
   /** How many sentences a rewrite changes: "{n} changes". */
-  proposalChangeCount: string;
+  proposalChangeCount: Plural;
   /** The ✓ / ✕ on a sentence (the card's and the text's). */
   proposalTakeSentence: string;
   proposalKeepSentence: string;
@@ -52,8 +57,23 @@ export interface ChatMessagesLabels
   /** An add_comment card's title and jump-to-passage link. */
   commentTitle: string;
   commentLocate: string;
+  commentApplySuggestion: string;
+  /** A reply's changes to the folder's files. */
+  filesChangedTitle: string;
+  filesKeptTitle: string;
+  filesNew: string;
+  filesUndo: string;
+  filesApply: string;
+  /** A file's revisions waiting, one whose change met other edits, a file
+   *  made waiting to be kept, and keeping or discarding it. */
+  filesWaiting: (n: number) => string;
+  filesConflict: string;
+  filesCreated: string;
+  filesKeep: string;
+  filesDiscard: string;
+  filesDismiss: string;
   /** "{n} notes", heading a reply's notes shown as one card. */
-  commentCount: string;
+  commentCount: Plural;
   commentGroupMore: string;
   /** Plain-language help per kind of provider failure. */
   aiErrors: Record<AiErrorKind, string>;
@@ -105,6 +125,11 @@ export interface ChatMessagesProps {
   /** Jumps to an add_comment card's passage in the document; absent where
    *  the document isn't reachable (the detached window). */
   onLocateText?: (anchor: string, block?: string) => void;
+  /** Turns a note's suggested fix into a pending edit; absent where edits
+   *  can't be proposed. */
+  onApplySuggestion?: ApplySuggestion;
+  /** The conversation, whose file changes the cards undo and apply. */
+  conversation?: string;
   /** The number on an add_comment note's badge in the text, for its card
    *  to show the same; null while the note has none (a margin has room
    *  for it, or it was never placed). */

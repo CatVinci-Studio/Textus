@@ -7,9 +7,9 @@
 
 use super::grounding::cited_sentences;
 use super::handover::{hand_over, Checked, Task};
-use super::research::Model;
 use super::review::Issue;
 use super::{checks::cited_link, Dossier, Grounding, Note, Paper};
+use crate::ai::agent::Model;
 use aicompat::agent::ToolSpec;
 use futures_util::stream::{self, StreamExt};
 use serde_json::{json, Value};

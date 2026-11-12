@@ -98,7 +98,7 @@ struct Case {
 #[test]
 fn links_resolve_as_the_shared_case_table_says() {
     let table: CaseTable = serde_json::from_str(include_str!(
-        "../../../../src/links/link-resolve.cases.json"
+        "../../../../src/files/link-resolve.cases.json"
     ))
     .unwrap();
     let dir = tempdir("links_resolve_as_the_shared_case_table_says");

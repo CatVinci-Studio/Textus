@@ -5,7 +5,7 @@ import { linkHrefAt } from "../markdown/link-reveal";
 import { linkTarget } from "../markdown/link-target";
 import { parseNoteLink } from "../../utils/note-link";
 import { windowFolder } from "../../platform/window-folder";
-import { zoomedRectScale } from "../../ui/zoomed-rects";
+import { zoomedRectScale } from "../../engine/controls/zoomed-rects";
 
 /** A citation as Pandoc and Zotero write it: `[@key]`, `[@key, p. 4]`,
  *  `[see @key]`, or several in one, `[@a; @b]`. */
@@ -13,7 +13,7 @@ const CITATION = /\[[^\]\n]*?@[^\]\n]*\]/g;
 const CITE_KEY = /@([\w:.#$%&+?<>~/-]+)/g;
 
 /** What the pointer is over and where it is on screen. */
-export interface HoverSpot {
+interface HoverSpot {
   /** What stays the same while the pointer moves within it. */
   key: string;
   /** As drawn on screen, inside the document's zoom or not. */
@@ -59,8 +59,9 @@ function spotAt(
           windowFolder(),
           true,
         );
-        // A ^id is a block, never a heading's name.
-        const heading = parsed.block ? null : (parsed.headings.at(-1) ?? null);
+        // A ^id is a block, never a heading's name; nested headings come
+        // whole ("A#B"), as a click follows them.
+        const heading = parsed.block ? null : parsed.headings.join("#") || null;
         return found?.exists
           ? { type: "document", path: found.path, heading, block: parsed.block }
           : null;

@@ -1,10 +1,9 @@
 //! Writing conventions as the app uses them: the effective profile for a
-//! document (style.md front matter, then the setting, then Automatic), and the
-//! commands for the Settings row, an offline check and platform counts.
+//! document (style.md front matter, then the setting, then Automatic), and
+//! platform counts.
 
-use crate::ai::rules::{self, measure, profile, Conventions, DocReport, Lang, Level, Profile};
-use crate::ai::workspace::{self, AgentWorkspace};
-use serde::Serialize;
+use crate::ai::rules::{profile, Conventions};
+use crate::ai::workspace::AgentWorkspace;
 use tauri::AppHandle;
 
 /// The conventions for documents in `ws`: the global setting as stored in
@@ -22,87 +21,4 @@ pub(crate) fn library_names(ws: &AgentWorkspace) -> Vec<String> {
         .iter()
         .flat_map(|e| std::iter::once(e.name.clone()).chain(e.aliases.iter().cloned()))
         .collect()
-}
-
-/// Everything the Settings row needs to offer the choice: the key, its
-/// "automatic" value, each language's profiles and the option keys.
-#[tauri::command]
-#[cfg_attr(test, specta::specta)]
-pub fn writing_conventions_options() -> profile::ConventionsOptions {
-    profile::options()
-}
-
-#[derive(Serialize)]
-#[cfg_attr(test, derive(specta::Type))]
-#[serde(rename_all = "camelCase")]
-pub struct EffectiveConventions {
-    /// The document's language, when a document was given and has enough
-    /// prose to tell.
-    pub lang: Option<Lang>,
-    /// The profile that document follows.
-    pub profile: Option<Profile>,
-    /// The profile each language would follow in this project.
-    pub by_language: Vec<Profile>,
-}
-
-/// The effective writing conventions for a document: per language, and
-/// for the document's own language when `document` is given.
-#[tauri::command]
-#[cfg_attr(test, specta::specta)]
-pub async fn writing_conventions_effective(
-    app: AppHandle,
-    doc_path: Option<String>,
-    workspace_root: Option<String>,
-    document: Option<String>,
-) -> EffectiveConventions {
-    let ws = tauri::async_runtime::spawn_blocking({
-        let app = app.clone();
-        move || workspace::load(&app, doc_path.as_deref(), workspace_root.as_deref())
-    })
-    .await
-    .unwrap_or_default();
-    let conv = for_workspace(&app, &ws);
-    let lang = document.as_deref().and_then(rules::detect::detect);
-    EffectiveConventions {
-        lang,
-        profile: lang.map(|l| conv.profile_for(l)),
-        by_language: Lang::ALL.iter().map(|&l| conv.profile_for(l)).collect(),
-    }
-}
-
-/// Checks a whole document against its writing conventions, offline, with
-/// offsets and lines into the Markdown.
-#[tauri::command]
-#[cfg_attr(test, specta::specta)]
-pub async fn conventions_check_document(
-    app: AppHandle,
-    document: String,
-    doc_path: Option<String>,
-    workspace_root: Option<String>,
-    strictness: Option<String>,
-) -> DocReport {
-    tauri::async_runtime::spawn_blocking(move || {
-        let ws = workspace::load(&app, doc_path.as_deref(), workspace_root.as_deref());
-        let conv = for_workspace(&app, &ws);
-        rules::check_document(
-            &document,
-            &conv,
-            Level::from_setting(strictness.as_deref()),
-            &library_names(&ws),
-        )
-    })
-    .await
-    .unwrap_or(DocReport {
-        lang: None,
-        profile: None,
-        findings: Vec::new(),
-    })
-}
-
-/// Exact platform counts (X weighted length, Bluesky graphemes...). None for
-/// an unknown metric.
-#[tauri::command]
-#[cfg_attr(test, specta::specta)]
-pub fn measure_text(text: String, metric: String) -> Option<measure::Measure> {
-    measure::measure(&text, &metric)
 }

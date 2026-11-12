@@ -10,14 +10,14 @@ import {
   serializeRange,
   type MarkdownBlock,
   type MarkdownMatch,
-} from "../doc-markdown";
+} from "../../editor/markdown/doc-markdown";
 import type { EditProposal } from "../types";
 import { hasGeneratedImage } from "./generated-images";
 import {
   pendingEditKey,
   type PendingPreview,
   type PendingSentence,
-} from "./pending-edit-plugin";
+} from "./pending-types";
 import { pairedPrefix, trimBreaks } from "./sentence-diff";
 import { splitSentences } from "./sentence-pairs";
 import { diffSentences, splitUnits } from "./unit-diff";

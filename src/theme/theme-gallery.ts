@@ -9,7 +9,7 @@ import { saveUserTheme } from "./theme-import";
 /** One theme of the gallery's catalog. */
 export type GalleryTheme = GalleryThemeAnswer;
 
-export type GalleryStatus = "install" | "installed" | "update";
+type GalleryStatus = "install" | "installed" | "update";
 
 /** A theme as the UI's language shows it: the catalog's words for that
  *  language, or its base's, over the English. Traditional Chinese reads the

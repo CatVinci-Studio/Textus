@@ -1,3 +1,5 @@
+import { textParagraphs } from "../../editor/markdown/doc-blocks";
+import { isCjk } from "../../utils/cjk";
 import type { EditProposal } from "../types";
 import { joinedText } from "./generated-images";
 import { isPicture } from "./markdown-forms";
@@ -31,9 +33,6 @@ export function editedText(text: string, edit: EditProposal): string | null {
   }
 }
 
-const CJK =
-  /[\u3000-\u303f\u3040-\u30ff\u3400-\u4dbf\u4e00-\u9fff\uff00-\uffef]/;
-
 /** The space between `left` and `right` run together: one between two
  *  words of a language that spaces them; none after CJK, before
  *  punctuation, or where either side has one already. */
@@ -41,8 +40,7 @@ function gap(left: string, right: string): string {
   const last = left.slice(-1);
   const first = right.charAt(0);
   if (!last || !first || /\s/.test(last) || /\s/.test(first)) return "";
-  if (CJK.test(last) || CJK.test(first) || /[.,;:!?)\]}]/.test(first))
-    return "";
+  if (isCjk(last) || isCjk(first) || /[.,;:!?)\]}]/.test(first)) return "";
   return " ";
 }
 
@@ -65,11 +63,10 @@ export function reanchoredPicture(
     (picture.action !== "insert_after" && picture.action !== "insert_before")
   )
     return null;
-  const at = oldText.split(/\n{2,}/).findIndex((p) => p.includes(anchor));
+  const at = textParagraphs(oldText).findIndex((p) => p.text.includes(anchor));
   if (at < 0) return null;
-  const paragraphs = newText
-    .split(/\n{2,}/)
-    .map((p) => p.trim())
+  const paragraphs = textParagraphs(newText)
+    .map((p) => p.text.trim())
     .filter((p) => p && !isPicture(p));
   if (paragraphs.length === 0) return null;
   const paragraph = paragraphs[Math.min(at, paragraphs.length - 1)];

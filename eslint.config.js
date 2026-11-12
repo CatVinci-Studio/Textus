@@ -48,12 +48,15 @@ const FEATURES = [
   "document",
   "editor",
   "export",
-  "links",
+  "files",
   "mobile",
   "onboarding",
+  "plugins",
   "settings",
-  "sidebar",
   "theme",
+  // What the shell and the features both register into or read: commands,
+  // menus, shortcuts, sidebar tabs. Below the features, above the engine.
+  "registry",
 ];
 const SHELL = ["app", "document-view"];
 
@@ -98,23 +101,71 @@ export default tseslint.config(
   {
     files: ["src/{utils,i18n,storage}/**/*.{ts,tsx}"],
     ignores: ["**/*.test.*"],
-    rules: above([...SHELL, ...FEATURES, "ui"]),
+    rules: above([...SHELL, ...FEATURES, "engine"]),
   },
   {
     files: ["src/platform/**/*.{ts,tsx}"],
     ignores: ["**/*.test.*"],
-    rules: above([...SHELL, ...FEATURES, "ui"], { tauri: true }),
+    rules: above([...SHELL, ...FEATURES, "engine"], { tauri: true }),
   },
   {
     // The settings model: what every layer above reads.
     files: ["src/prefs/**/*.{ts,tsx}"],
     ignores: ["**/*.test.*"],
-    rules: above([...SHELL, ...FEATURES, "ui"]),
+    rules: above([...SHELL, ...FEATURES, "engine"]),
   },
   {
-    files: ["src/ui/**/*.{ts,tsx}"],
+    // The engine: tokens and the colour system, motion, drag, controls,
+    // layout - what every surface is drawn and moved with. It knows no
+    // document, AI or plugin (docs/dev/architecture.md); inside it, each
+    // part uses only those before it.
+    files: ["src/engine/**/*.{ts,tsx}"],
     ignores: ["**/*.test.*"],
     rules: above([...SHELL, ...FEATURES]),
+  },
+  {
+    files: ["src/engine/tokens/**/*.{ts,tsx}"],
+    ignores: ["**/*.test.*"],
+    rules: above([
+      ...SHELL,
+      ...FEATURES,
+      "motion",
+      "frame",
+      "drag",
+      "controls",
+      "layout",
+    ]),
+  },
+  {
+    files: ["src/engine/motion/**/*.{ts,tsx}"],
+    ignores: ["**/*.test.*"],
+    rules: above([
+      ...SHELL,
+      ...FEATURES,
+      "frame",
+      "drag",
+      "controls",
+      "layout",
+    ]),
+  },
+  {
+    // The solver and the clock: what the drags, the controls and the
+    // islands are placed and moved by.
+    files: ["src/engine/frame/**/*.{ts,tsx}"],
+    ignores: ["**/*.test.*"],
+    rules: above([...SHELL, ...FEATURES, "drag", "controls", "layout"]),
+  },
+  {
+    files: ["src/engine/drag/**/*.{ts,tsx}"],
+    ignores: ["**/*.test.*"],
+    rules: above([...SHELL, ...FEATURES, "controls", "layout"]),
+  },
+  {
+    // Controls never need the islands: a page with a button doesn't bring
+    // the window's layout along.
+    files: ["src/engine/controls/**/*.{ts,tsx}"],
+    ignores: ["**/*.test.*"],
+    rules: above([...SHELL, ...FEATURES, "layout"]),
   },
   {
     files: ["src/editor/**/*.{ts,tsx}"],
@@ -125,19 +176,23 @@ export default tseslint.config(
       "ai",
       "document",
       "export",
-      "links",
+      "files",
       "mobile",
       "onboarding",
       "plugins",
-      "sidebar",
     ]),
   },
   {
     files: [
-      "src/{ai,clipboard,document,export,links,mobile,onboarding,settings,sidebar,theme}/**/*.{ts,tsx}",
+      "src/{ai,clipboard,document,export,files,mobile,onboarding,plugins,settings,theme}/**/*.{ts,tsx}",
     ],
     ignores: ["**/*.test.*"],
     rules: above(SHELL),
+  },
+  {
+    files: ["src/registry/**/*.{ts,tsx}"],
+    ignores: ["**/*.test.*"],
+    rules: above([...SHELL, ...FEATURES.filter((f) => f !== "registry")]),
   },
   {
     // The window's shell is the top layer: it may import anything but the
@@ -147,9 +202,39 @@ export default tseslint.config(
     rules: above([]),
   },
   {
-    // The plugin system and the entry files aren't layered, but they still
-    // reach Tauri only through src/platform/.
-    files: ["src/plugins/**/*.{ts,tsx}", "src/*.{ts,tsx}"],
+    // One import path per name: only these facades pass on what other
+    // modules export (they stand for their folder).
+    files: ["src/**/*.{ts,tsx}"],
+    ignores: [
+      "**/*.test.*",
+      "src/platform/ipc.ts",
+      "src/platform/bindings/**",
+      "src/prefs/SettingsContext.tsx",
+      "src/editor/extension-points.ts",
+      "src/i18n/strings.ts",
+    ],
+    rules: {
+      "no-restricted-syntax": [
+        "error",
+        {
+          selector:
+            "ExportNamedDeclaration[source.value=/^\\./], ExportAllDeclaration[source.value=/^\\./]",
+          message:
+            "Import the name from the module that declares it; only the folder facades re-export.",
+        },
+        {
+          selector:
+            "CallExpression[callee.property.name='replace'][arguments.0.value=/^\\{[a-zA-Z]+\\}$/]",
+          message:
+            "Fill a template with fill(template, { name }) (i18n/fill.ts).",
+        },
+      ],
+    },
+  },
+  {
+    // The entry files aren't layered, but they still reach Tauri only
+    // through src/platform/.
+    files: ["src/*.{ts,tsx}"],
     ignores: ["**/*.test.*"],
     rules: {
       "@typescript-eslint/no-restricted-imports": [

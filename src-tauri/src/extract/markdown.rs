@@ -115,10 +115,11 @@ pub(super) fn emphasize(text: &str, marks: Marks) -> String {
     format!("{lead}{open}{core}{close}{trail}")
 }
 
-/// `[text](url)`, or just the text when there is none to click.
+/// `[text](url)`, or just the text when there is none to click - or none
+/// safe to (`javascript:`, `data:`).
 pub(super) fn linked(text: &str, url: &str) -> String {
     let (lead, core, trail) = chomp(text);
-    if core.is_empty() || url.is_empty() {
+    if core.is_empty() || !super::html::followable(url) {
         return text.to_string();
     }
     format!("{lead}[{core}]({}){trail}", link_target(url))

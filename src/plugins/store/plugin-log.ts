@@ -3,7 +3,7 @@
  * developer reads why. In memory only, the last LIMIT of each.
  */
 
-export interface PluginLogEntry {
+interface PluginLogEntry {
   at: number;
   message: string;
   /** "error" for what went wrong; ctx.log's own lines say theirs. */

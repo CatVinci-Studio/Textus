@@ -1,6 +1,13 @@
 import { withoutCitationMarkers } from "../citation-markers";
-import { resolveBlockEdit, type SentBlock } from "../doc-blocks";
-import { EDIT_ACTIONS, type EditAction, type EditProposal } from "../types";
+import {
+  resolveBlockEdit,
+  type SentBlock,
+} from "../../editor/markdown/doc-blocks";
+import type { EditProposal } from "../types";
+import {
+  EDIT_ACTIONS,
+  type EditAction,
+} from "../../editor/markdown/edit-actions";
 
 /** A string field scanned out of an incomplete JSON fragment: what has
  *  arrived of its value, and whether the closing quote has been seen. */
@@ -98,7 +105,7 @@ export function parsePartialToolArgs(
 
 /** A streaming proposal that already knows where it lands: `proposal.text`
  *  holds what has arrived of the text so far (possibly empty). */
-export interface DraftProposal {
+interface DraftProposal {
   proposal: EditProposal;
   /** True once the `text` value's closing quote arrived. */
   textComplete: boolean;

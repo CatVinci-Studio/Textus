@@ -8,8 +8,8 @@ import { createTestEditor } from "../../document-view/editor-test-harness";
 import { usePendingEdits } from "./usePendingEdits";
 import { locateHunks } from "./sentence-locate";
 import { diffSentences } from "./unit-diff";
-import { pendingEditKey } from "./pending-edit-plugin";
-import { serializeBlocks } from "../doc-markdown";
+import { pendingEditKey } from "./pending-types";
+import { serializeBlocks } from "../../editor/markdown/doc-markdown";
 
 // Two of five sentences changed: decided sentence by sentence (a
 // paragraph most of whose sentences changed is one change).

@@ -9,7 +9,7 @@ use std::sync::Mutex;
 use std::time::Duration;
 use tauri::{Emitter, Manager, WebviewUrl, WebviewWindowBuilder};
 
-pub use super::HOST_LABEL as LABEL;
+use super::HOST_LABEL as LABEL;
 
 /// Rust -> an editor window: runs are waiting (`schedule_take_runs`).
 pub const RUN_EVENT: &str = "schedule-run";

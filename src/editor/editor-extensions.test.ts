@@ -36,9 +36,14 @@ const ORDER = [
 describe("the editor's key handlers", () => {
   it("are registered in the order they must see keys", () => {
     const source = readFileSync("src/editor/editor-extensions.ts", "utf8");
+    // A writing-only plugin is registered as `.use(editing(name))`.
+    const used = (name: string) =>
+      [`.use(${name}`, `.use(editing(${name}`]
+        .map((form) => source.indexOf(form))
+        .find((i) => i >= 0) ?? -1;
     const at = ORDER.map((name) =>
-      source.indexOf(`.use(${name}`) >= 0
-        ? source.indexOf(`.use(${name}`)
+      used(name) >= 0
+        ? used(name)
         : source.indexOf(`${name}(`, source.indexOf(".use(")),
     );
     expect(at.every((i) => i >= 0)).toBe(true);

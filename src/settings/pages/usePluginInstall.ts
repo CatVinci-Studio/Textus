@@ -1,24 +1,22 @@
-import { useState } from "react";
-import { showConfirm, showMessage } from "../../ui/app-dialog";
+import { fill } from "../../i18n/fill";
+import { useCatalogWork } from "./useCatalogWork";
+import { showConfirm, showMessage } from "../../engine/controls/app-dialog";
 import { useSettings } from "../../prefs/SettingsContext";
 import type { Strings } from "../../i18n/strings";
 import {
   pluginName,
-  pluginText,
   pluginsSnapshot,
+  type PluginRecord,
+} from "../../plugins/store/plugin-records";
+import {
   setPluginEnabled,
   uninstallPlugin,
-  type PluginRecord,
-} from "../../plugins/manager";
+} from "../../plugins/plugin-switches";
 import {
   installFromCatalog,
   type CatalogItem,
 } from "../../plugins/store/catalog";
-import {
-  requirementLabel,
-  requirementMet,
-  turnOnRequirement,
-} from "../../plugins/store/requirements";
+import { askForRequirements } from "../../plugins/store/requirements";
 import type { Attempt } from "./PluginPage";
 import { explainError } from "../../utils/error-explain";
 
@@ -28,7 +26,9 @@ import { explainError } from "../../utils/error-explain";
  *  message. */
 export function usePluginInstall(t: Strings) {
   const { settings, setSettings } = useSettings();
-  const [installing, setInstalling] = useState<string | null>(null);
+  const { busy: installing, run } = useCatalogWork(
+    (text) => void showMessage(text, { title: t.pluginsTitle, tone: "error" }),
+  );
 
   const attempt: Attempt = async (work) => {
     try {
@@ -42,36 +42,39 @@ export function usePluginInstall(t: Strings) {
   };
 
   const install = (item: CatalogItem) =>
-    attempt(async () => {
-      setInstalling(item.id);
-      try {
+    run(
+      item.id,
+      async () => {
         await installFromCatalog(item.id);
-        await askForRequirements(item.id, t, settings, setSettings);
-      } finally {
-        setInstalling(null);
-      }
-    });
+        await askForRequirements(item.id, t);
+      },
+      (err) => explainError(err, t),
+    );
 
   /** Updates each of `items` in turn; one that fails is named at the end,
    *  the rest still update. */
   const updateAll = async (items: CatalogItem[]) => {
     const failed: string[] = [];
-    for (const item of items) {
-      setInstalling(item.id);
-      try {
-        await installFromCatalog(item.id);
-        await askForRequirements(item.id, t, settings, setSettings);
-      } catch {
-        const record = pluginsSnapshot().records.find((r) => r.id === item.id);
-        failed.push(
-          pluginName(record ?? { id: item.id, manifest: item.manifest }),
-        );
-      }
-    }
-    setInstalling(null);
+    for (const item of items)
+      await run(
+        item.id,
+        async () => {
+          await installFromCatalog(item.id);
+          await askForRequirements(item.id, t);
+        },
+        () => {
+          const record = pluginsSnapshot().records.find(
+            (r) => r.id === item.id,
+          );
+          failed.push(
+            pluginName(record ?? { id: item.id, manifest: item.manifest }),
+          );
+          return null;
+        },
+      );
     if (failed.length)
       void showMessage(
-        t.pluginsUpdateAllFailed.replace("{names}", failed.join(", ")),
+        fill(t.pluginsUpdateAllFailed, { names: failed.join(", ") }),
         { title: t.pluginsTitle, tone: "error" },
       );
   };
@@ -80,7 +83,7 @@ export function usePluginInstall(t: Strings) {
   const enable = (record: PluginRecord, on: boolean) =>
     attempt(async () => {
       await setPluginEnabled(record.id, on);
-      if (on) await askForRequirements(record.id, t, settings, setSettings);
+      if (on) await askForRequirements(record.id, t);
     });
 
   /** Uninstalls a plugin, or unloads a folder loaded in development, once
@@ -89,11 +92,11 @@ export function usePluginInstall(t: Strings) {
     let gone = false;
     await attempt(async () => {
       const ok = await showConfirm(
-        t.pluginUninstallAsk.replace("{name}", pluginName(record)),
+        fill(t.pluginUninstallAsk, { name: pluginName(record) }),
         {
           title: t.pluginsTitle,
           okLabel: t.pluginUninstall,
-          cancelLabel: t.pluginCancel,
+          cancelLabel: t.cancel,
           danger: true,
         },
       );
@@ -114,34 +117,4 @@ export function usePluginInstall(t: Strings) {
     settings,
     setSettings,
   };
-}
-
-/** What a plugin needs that is off: asked to turn each on, once, in the
- *  plugin's words. */
-export async function askForRequirements(
-  id: string,
-  t: Strings,
-  settings: ReturnType<typeof useSettings>["settings"],
-  setSettings: ReturnType<typeof useSettings>["setSettings"],
-) {
-  const record = pluginsSnapshot().records.find((r) => r.id === id);
-  if (!record?.manifest || record.status !== "on") return;
-  for (const need of record.manifest.requires) {
-    if (requirementMet(need, settings)) continue;
-    const ok = await showConfirm(
-      t.pluginRequiresAsk
-        .replace("{name}", pluginName(record))
-        .replace("{setting}", requirementLabel(need, t))
-        .replace(
-          "{reason}",
-          need.reason ? pluginText(record, need.reason) : "",
-        ),
-      {
-        title: pluginName(record),
-        okLabel: t.pluginRequiresTurnOn,
-        cancelLabel: t.pluginRequiresLater,
-      },
-    );
-    if (ok) setSettings(turnOnRequirement(need));
-  }
 }

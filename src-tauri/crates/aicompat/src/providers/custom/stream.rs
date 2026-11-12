@@ -69,6 +69,9 @@ pub(crate) struct ChatStreamAccumulator {
     /// From the chunk that carries it - the last, with `include_usage`.
     pub(crate) usage: Option<StepUsage>,
     pub(crate) ids: CallIds,
+    /// Why the reply ended, from its last chunk: "length" when the output
+    /// limit cut it.
+    pub(crate) finish_reason: Option<String>,
 }
 
 impl ChatStreamAccumulator {
@@ -88,12 +91,17 @@ impl ChatStreamAccumulator {
         if let Some(usage) = chunk.get("usage").and_then(StepUsage::from_openai) {
             self.usage = Some(usage);
         }
-        let Some(delta) = chunk
+        let choice = chunk
             .get("choices")
             .and_then(|c| c.as_array())
-            .and_then(|c| c.first())
-            .and_then(|c| c.get("delta"))
-        else {
+            .and_then(|c| c.first());
+        if let Some(reason) = choice
+            .and_then(|c| c.get("finish_reason"))
+            .and_then(|r| r.as_str())
+        {
+            self.finish_reason = Some(reason.to_string());
+        }
+        let Some(delta) = choice.and_then(|c| c.get("delta")) else {
             self.search.take(&Value::Null, &chunk);
             return;
         };
@@ -204,5 +212,26 @@ impl ChatStreamAccumulator {
         } else {
             StepResult::Done(self.search.cite(&self.text, on_event))
         }
+    }
+}
+
+impl ChatStreamAccumulator {
+    /// Why the reply can't be used, if it was cut inside a tool call - by the
+    /// output limit, or by the connection ending first: its half-JSON
+    /// arguments would reach the tool as `{}` and send the model round in
+    /// circles.
+    pub(crate) fn cut_off(&self) -> Option<String> {
+        let last = self.calls.last()?;
+        if self.finish_reason.as_deref() == Some("length") {
+            return Some(
+                "The model hit its output limit in the middle of an edit. \
+                 Try asking for a smaller change at a time."
+                    .into(),
+            );
+        }
+        let whole =
+            last.args.trim().is_empty() || serde_json::from_str::<Value>(&last.args).is_ok();
+        (self.finish_reason.is_none() && !whole)
+            .then(|| "The connection ended in the middle of the reply. Try again.".into())
     }
 }

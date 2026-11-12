@@ -28,6 +28,16 @@ describe("toPandocMarkdown", () => {
     expect(toPandocMarkdown('![x](a.png "A caption {textus-width=50%}")')).toBe(
       '![x](a.png "A caption"){width=50%}',
     );
+    // A turn has no pandoc form: the caption reads without it.
+    expect(toPandocMarkdown('![x](a.png "Turned {textus-rotate=90}")')).toBe(
+      '![x](a.png "Turned")',
+    );
+    expect(
+      toPandocMarkdown('![x](a.png "{levis-width=40% levis-rotate=180}")'),
+    ).toBe("![x](a.png){width=40%}");
+    expect(toPandocMarkdown("![cat|300](a.png)")).toBe(
+      "![cat](a.png){width=300px}",
+    );
   });
 
   it("turns a sized <img> into an image with a width attribute", () => {

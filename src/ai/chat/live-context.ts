@@ -1,7 +1,10 @@
 import { editorViewCtx } from "@milkdown/kit/core";
 import type { EditorRunner } from "../../editor/useEditorRunner";
-import { cachedDocument, readSelection } from "../doc-markdown";
-import type { SelectionTarget } from "../revision/usePendingEdits";
+import {
+  cachedDocument,
+  readSelection,
+} from "../../editor/markdown/doc-markdown";
+import { type SelectionTarget } from "../revision/pending-place";
 import type { ChatContext } from "./window/chat-bridge";
 
 /**
@@ -9,7 +12,7 @@ import type { ChatContext } from "./window/chat-bridge";
  * window holds no snapshot of its own. Serializing is not free, so callers
  * push on selection, tab and file changes and before a send, never per key.
  */
-export interface LiveEditorState {
+interface LiveEditorState {
   /** What crosses the window boundary. */
   context: ChatContext;
   /** The selection, in THIS window's coordinates (ProseMirror positions mean

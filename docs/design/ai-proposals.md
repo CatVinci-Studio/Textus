@@ -188,7 +188,7 @@ moves: "Writing the edit…", "Writing notes…", "Generating an image…", or
 A note (`add_comment`) changes nothing, so it has no preview: the
 conversation draws it into `StreamingState.comments` as soon as its
 passage and its text are complete in the streaming arguments
-(`useAgentConversation`), and the margin shows it from there
+(`conversation/conversation-send.ts`), and the margin shows it from there
 (`useReviewNotes`). The completed call places it again, should its block
 or words have come out differently.
 
@@ -281,10 +281,10 @@ on to. The card selected - clicked last, or pointed at by a bar's
 step, whichever came last - stays lit with its passage while it is read,
 not only while pointed at, and its passage is brought into view in one
 eased stroke of a fixed length (`glideScroll`), with its block pulsed. A
-group draws one line, from its first passage. While there are notes, the notes bar (`NotesBar`) stands over the
-bottom of the document, above the review bar when both show: it steps
-through the notes in the order of the text, marks them all done, and picks
-some to ask about together in the AI panel. A card still pushed below its
+group draws one line, from its first passage. While there are notes, they
+share the review bar over the bottom of the document with the changes
+(`ReviewBars`): its arrows step through both in the order of the text; it
+marks the notes all done, and picks some to ask about together in the AI. A card still pushed below its
 passage draws a fainter line, at full strength while it is pointed at.
 
 **Streaming in place.** Such a rewrite is laid out sentence by sentence
@@ -381,7 +381,7 @@ fetch-fresh-document signal that precedes every detached send.
 
 ## Conversation layer
 
-`ai/chat/useAgentConversation.ts`, `ai/chat/cancelled-turns.ts`,
+`ai/chat/conversation/`, `ai/chat/cancelled-turns.ts`,
 `ai/revision/proposal-status.ts`, `ai/chat/useRevealedText.ts`; Rust side
 `src-tauri/src/ai/agent/` / `tools/`.
 
@@ -508,7 +508,10 @@ file goes once the last of them is decided.
 | `ai/revision/sentence-stream.ts`                                    | A rewrite's sentence layout while it streams in                                                      |
 | `ai/revision/proposal-status.ts`                                    | Status notes annotated onto history at send time                                                     |
 | `ai/chat/cancelled-turns.ts`                                        | What a stop keeps; dangling tool-call closure                                                        |
-| `ai/chat/useAgentConversation.ts`                                   | Conversation state: send/stop/retry/restore, history persistence                                     |
+| `ai/chat/conversation/conversation-model.ts`                        | Conversation state outside React: stop/retry/restore, history persistence                            |
+| `ai/chat/conversation/conversation-send.ts`                         | One exchange: the request, the reply streaming in, what it leaves                                    |
+| `ai/chat/conversation/conversation-registry.ts`                     | The window's conversations, one model each (`conversationFor`)                                       |
+| `ai/chat/conversation/document-port.ts`                             | The document in front as the conversations reach it                                                  |
 | `ai/stream-reveal.ts`                                               | The pace streamed text is revealed at: the typewriter and chat replies                               |
 | `ai/chat/useRevealedText.ts`                                        | A chat reply as drawn while it streams, paced by `StreamReveal`                                      |
 | `ai/chat/ChatBody.tsx`                                              | Shared conversation UI; streamed-turn → proposal, idempotent afterSend                               |

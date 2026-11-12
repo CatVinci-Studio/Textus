@@ -95,3 +95,32 @@ export function toggleSpan(view: EditorView, rung: 1 | 2): boolean {
   view.dispatch(tr);
   return true;
 }
+
+/** Clear Formatting: every span the selection touches (bold, italic,
+ *  strikethrough, highlight) taken off, its words kept. False with nothing
+ *  to clear. */
+export function clearSpans(view: EditorView): boolean {
+  const { state } = view;
+  const { from, to, empty } = state.selection;
+  const spanType = state.schema.nodes.md_span;
+  if (empty || !spanType) return false;
+  const starts: number[] = [];
+  state.doc.nodesBetween(from, to, (node, pos) => {
+    if (node.type === spanType) starts.push(pos);
+  });
+  if (starts.length === 0) return false;
+  const tr = state.tr;
+  // Inner spans first, so each outer one is unwrapped as it now stands.
+  for (const start of starts.reverse()) {
+    const at = tr.mapping.map(start);
+    const span = tr.doc.nodeAt(at);
+    if (span?.type === spanType)
+      tr.replaceWith(at, at + span.nodeSize, span.content);
+  }
+  view.dispatch(
+    tr.setSelection(
+      TextSelection.create(tr.doc, tr.mapping.map(from), tr.mapping.map(to)),
+    ),
+  );
+  return true;
+}

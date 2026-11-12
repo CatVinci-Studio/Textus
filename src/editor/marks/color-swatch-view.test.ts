@@ -1,6 +1,6 @@
 // @vitest-environment jsdom
 import { afterEach, expect, it } from "vitest";
-import { closeViews, openView } from "../../document-view/editor-view-kit";
+import { closeViews, openView } from "../editor-view-kit";
 import type { Settings } from "../../prefs/SettingsContext";
 
 // A colour code gets a swatch before it, per Settings: off (the default),

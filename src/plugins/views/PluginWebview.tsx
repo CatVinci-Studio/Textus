@@ -1,21 +1,23 @@
 import { useEffect, useRef, useState, useSyncExternalStore } from "react";
 import { connectFrame, sandboxedFrame, webviewDocument } from "../host/frames";
-import { dataUrl, readPluginFile, type PluginOrigin } from "../store/files";
 import {
   codeBlockChanged,
   disposeWebview,
-  pluginName,
-  pluginRecord,
   resolveWebview,
   webviewMessage,
 } from "../manager";
+import { pluginName, pluginRecord } from "../store/plugin-records";
 import { grantedHosts } from "../store/permissions";
 import { trackCodeBlock, untrackCodeBlock } from "../contributions/code-blocks";
 import type { CodeBlockSeen } from "../manager";
 import { windowInfo } from "../store/plugin-records";
 import { watchTheme, webviewThemeCss, windowIsDark } from "./theme-vars";
 import { pageMenuEntries } from "./webview-menu";
-import { clipboardText, textFieldItems } from "../../ui/text-field-menu";
+import { openPageLink } from "./page-links";
+import {
+  clipboardText,
+  textFieldItems,
+} from "../../engine/controls/text-field-menu";
 import {
   contentZoom,
   passZoomGesture,
@@ -23,8 +25,12 @@ import {
   watchContentZoom,
 } from "./frame-zoom";
 import { createPortal } from "react-dom";
-import { ContextMenu, type ContextMenuEntry } from "../../ui/ContextMenu";
-import { Presence } from "../../ui/usePresence";
+import { PluginProblem } from "./PluginProblem";
+import {
+  ContextMenu,
+  type ContextMenuEntry,
+} from "../../engine/controls/ContextMenu";
+import { Presence } from "../../engine/motion/usePresence";
 import {
   createWebview,
   setWebviewState,
@@ -57,6 +63,11 @@ export function webviewPage(record: WebviewRecord, html: string) {
 /** The tallest a code block's frame grows: at most 70% of the window, so a
  *  long table or board scrolls inside and the note around it stays in
  *  view. */
+/** How long a Cut, Copy or Paste picked in the window's menu lets the page
+ *  reach the clipboard (ms). */
+const PICK_MS = 2000;
+/** How long a page asked for too early waits to be asked again (ms). */
+const RETRY_MS = 600;
 const MAX_CODE_BLOCK_HEIGHT = 1200;
 const CODE_BLOCK_SHARE = 0.7;
 const codeBlockMax = () =>
@@ -64,6 +75,16 @@ const codeBlockMax = () =>
     MAX_CODE_BLOCK_HEIGHT,
     Math.round(window.innerHeight * CODE_BLOCK_SHARE),
   );
+
+/** A page's own zoom, kept current, and the way to tell the page when it
+ *  changes (set once the page is up). */
+function useZoomTeller(zoom: number) {
+  const ownZoom = useRef(zoom);
+  ownZoom.current = zoom;
+  const tellZoom = useRef<(() => void) | null>(null);
+  useEffect(() => tellZoom.current?.(), [zoom]);
+  return { ownZoom, tellZoom };
+}
 
 /**
  * Where a plugin's webview is drawn: a sandboxed frame rebuilt on new HTML,
@@ -73,12 +94,15 @@ export function PluginWebview({
   id,
   className,
   fitHeight,
+  zoom = 1,
 }: {
   id: string;
   className?: string;
   /** The frame as tall as its page, up to this many pixels (asked as it
    *  changes, when a function). */
   fitHeight?: number | (() => number);
+  /** A page in the document: its own size, times the document's zoom. */
+  zoom?: number;
 }) {
   useSyncExternalStore(subscribeWebviews, webviewsVersion);
   const record = webview(id);
@@ -93,6 +117,8 @@ export function PluginWebview({
     close: () => void;
   } | null>(null);
 
+  // The size the page draws at: its own times the document's.
+  const { ownZoom, tellZoom } = useZoomTeller(zoom);
   useEffect(() => {
     const box = boxRef.current;
     const current = webview(id);
@@ -101,16 +127,28 @@ export function PluginWebview({
     // A code block's page is drawn in the document, at its text size and
     // zoom; a settings page is only as tall as its page, still interface.
     const inDocument = current.kind === "codeBlock";
-    const frame = sandboxedFrame(page.srcdoc, page.title);
+    const frame = sandboxedFrame(page.srcdoc, page.title, { fullscreen: true });
     frame.className = "plugin-webview-frame";
     let endpoint: Parameters<typeof webviewConnected>[1] = null;
+    // The clipboard is the page's only through the window's own text menu:
+    // a Cut, Copy or Paste the user just picked there, once.
+    let picked: { action: unknown; until: number } | null = null;
+    const pickedNow = (...actions: string[]) => {
+      const ok =
+        !!picked &&
+        actions.includes(String(picked.action)) &&
+        Date.now() < picked.until;
+      picked = null;
+      return ok;
+    };
     // A menu the page asks for, at its point in the page: the value picked.
-    const askMenu = (items: unknown, x: unknown, y: unknown) =>
+    const askMenu = (items: unknown, x: unknown, y: unknown, clip = false) =>
       new Promise<unknown>((resolve) => {
         let done = false;
         const finish = (value: unknown) => {
           if (done) return;
           done = true;
+          picked = clip ? { action: value, until: Date.now() + PICK_MS } : null;
           setMenu(null);
           resolve(value);
         };
@@ -146,13 +184,17 @@ export function PluginWebview({
             textFieldItems(windowInfo().strings(), selected === true),
             x,
             y,
+            true,
           ),
         textItems: ({ selected }: { selected: unknown }) =>
           textFieldItems(windowInfo().strings(), selected === true),
         clipboardWrite: ({ text }: { text: unknown }) =>
-          navigator.clipboard.writeText(String(text ?? "")).then(() => true),
-        clipboardRead: () => clipboardText(),
+          pickedNow("copy", "cut")
+            ? navigator.clipboard.writeText(String(text ?? "")).then(() => true)
+            : false,
+        clipboardRead: () => (pickedNow("paste") ? clipboardText() : ""),
         menuClose: () => closeMenuRef.current?.(),
+        openLink: openPageLink,
         // Told on as a right-click on the frame, for the menu around it.
         contextMenu: ({ x, y }: { x: unknown; y: unknown }) => {
           const at = frame.getBoundingClientRect();
@@ -185,12 +227,21 @@ export function PluginWebview({
       (connected) => {
         endpoint = connected;
         webviewConnected(id, connected);
-        if (inDocument) connected?.notify("zoom", { zoom: contentZoom() });
+        if (inDocument)
+          connected?.notify("zoom", {
+            zoom: contentZoom(frame) * ownZoom.current,
+          });
       },
     );
     // A page in the document draws at the document's zoom itself.
+    tellZoom.current = inDocument
+      ? () =>
+          endpoint?.notify("zoom", {
+            zoom: contentZoom(frame) * ownZoom.current,
+          })
+      : null;
     const stopZoom = inDocument
-      ? watchContentZoom((zoom) => endpoint?.notify("zoom", { zoom }))
+      ? watchContentZoom(() => tellZoom.current?.(), frame)
       : () => {};
     const stopTheme = watchTheme(() =>
       endpoint?.notify("theme", {
@@ -206,7 +257,7 @@ export function PluginWebview({
       webviewConnected(id, null);
       frame.remove();
     };
-  }, [id, html, fitHeight]);
+  }, [id, html, fitHeight, ownZoom, tellZoom]);
 
   return (
     <>
@@ -218,7 +269,7 @@ export function PluginWebview({
       {/* On the body: a page in a document sits inside its zoom, which
           would scale the menu's window coordinates a second time. */}
       {createPortal(
-        <Presence show={menu !== null} exitMs={120}>
+        <Presence show={menu !== null}>
           {menu && (
             <ContextMenu
               x={menu.x}
@@ -248,9 +299,14 @@ export function useResolvedWebview(
     codeBlock?: CodeBlockSeen;
   },
   resource?: string,
-): { record: WebviewRecord | null; error: string | null } {
+): {
+  record: WebviewRecord | null;
+  error: string | null;
+  retry: () => void;
+} {
   const [record, setRecord] = useState<WebviewRecord | null>(null);
   const [error, setError] = useState<string | null>(null);
+  const [attempt, setAttempt] = useState(0);
   const { view, viewType } = target;
   // What the view was opened with counts only when it is made.
   const initialState = useRef(target.state);
@@ -258,6 +314,9 @@ export function useResolvedWebview(
   const initialBlock = useRef(target.codeBlock);
   useEffect(() => {
     const made = createWebview(plugin, kind, key, resource);
+    // An answer for a page already let go (remounted, moved) is not this
+    // one's: its "No webview" must not cover the page that replaced it.
+    let current = true;
     setRecord(made);
     setError(null);
     resolveWebview(made, {
@@ -266,22 +325,34 @@ export function useResolvedWebview(
       state: initialState.current,
       target: initialTarget.current,
       codeBlock: initialBlock.current,
-    }).catch((err) => setError(String((err as Error)?.message ?? err)));
-    return () => disposeWebview(made.id);
-  }, [plugin, kind, key, view, viewType, resource]);
-  return { record, error };
+    }).catch((err) => {
+      if (!current) return;
+      const message = String((err as Error)?.message ?? err);
+      // Asked before the plugin had set its page up: once more, quietly.
+      if (attempt === 0 && /No webview provider/.test(message))
+        window.setTimeout(() => setAttempt(1), RETRY_MS);
+      else setError(message);
+    });
+    return () => {
+      current = false;
+      disposeWebview(made.id);
+    };
+  }, [plugin, kind, key, view, viewType, resource, attempt]);
+  return { record, error, retry: () => setAttempt((n) => n + 1) };
 }
 
 function WebviewOrProblem({
   record,
   error,
+  retry,
   className,
 }: {
   record: WebviewRecord | null;
   error: string | null;
+  retry?: () => void;
   className?: string;
 }) {
-  if (error) return <div className="plugin-webview-problem">{error}</div>;
+  if (error) return <PluginProblem error={error} retry={retry} />;
   if (!record) return null;
   return <PluginWebview id={record.id} className={className} />;
 }
@@ -296,7 +367,7 @@ export function PluginWebviewPanel({
   view: string;
   kind: "sidebar" | "view" | "floating";
 }) {
-  const { record, error } = useResolvedWebview(
+  const { record, error, retry } = useResolvedWebview(
     plugin,
     kind,
     `${plugin}:${view}`,
@@ -306,6 +377,7 @@ export function PluginWebviewPanel({
     <WebviewOrProblem
       record={record}
       error={error}
+      retry={retry}
       className="plugin-webview-panel"
     />
   );
@@ -319,7 +391,7 @@ export function PluginSettingsWebview({ plugin }: { plugin: string }) {
     `${plugin}:settings`,
     {},
   );
-  if (error) return <div className="plugin-webview-problem">{error}</div>;
+  if (error) return <PluginProblem error={error} />;
   if (!record) return null;
   // As tall as the page: Settings scrolls, not a box inside it.
   return (
@@ -349,7 +421,7 @@ export function PluginTabPane({
   state?: unknown;
   target?: unknown;
 }) {
-  const { record, error } = useResolvedWebview(
+  const { record, error, retry } = useResolvedWebview(
     plugin,
     kind,
     `tab:${tabId}`,
@@ -361,43 +433,10 @@ export function PluginTabPane({
       <WebviewOrProblem
         record={record}
         error={error}
+        retry={retry}
         className="plugin-webview-tab"
       />
     </div>
-  );
-}
-
-/** A sidebar tab's icon: the plugin's SVG, drawn in the text colour. */
-export function PluginTabIcon({
-  plugin,
-  origin,
-  icon,
-}: {
-  plugin: string;
-  origin: PluginOrigin;
-  icon?: string;
-}) {
-  const [url, setUrl] = useState<string | null>(null);
-  useEffect(() => {
-    if (!icon) return;
-    let live = true;
-    readPluginFile(plugin, origin, icon)
-      .then((bytes) => live && setUrl(dataUrl(icon, bytes)))
-      .catch(() => {});
-    return () => {
-      live = false;
-    };
-  }, [plugin, origin, icon]);
-  return (
-    <span
-      className="plugin-tab-icon"
-      aria-hidden="true"
-      style={
-        url
-          ? { maskImage: `url("${url}")`, WebkitMaskImage: `url("${url}")` }
-          : undefined
-      }
-    />
   );
 }
 
@@ -410,12 +449,15 @@ export function PluginCodeBlock({
   widget,
   seen,
   setSource,
+  zoom = 1,
 }: {
   plugin: string;
   /** The editor's widget it is drawn in: the same one while it lives. */
   widget: string;
   seen: CodeBlockSeen;
   setSource: (source: string) => boolean;
+  /** The block's own size (its fence's `zoom=`), times the document's. */
+  zoom?: number;
 }) {
   const { record, error } = useResolvedWebview(plugin, "codeBlock", widget, {
     codeBlock: seen,
@@ -445,13 +487,14 @@ export function PluginCodeBlock({
     told.current = now;
     codeBlockChanged(record, { ...now, meta: JSON.parse(meta) });
   }, [record, seen.source, seen.block, meta]);
-  if (error) return <div className="plugin-webview-problem">{error}</div>;
+  if (error) return <PluginProblem error={error} />;
   if (!record) return null;
   return (
     <PluginWebview
       id={record.id}
       className="plugin-code-block-frame"
       fitHeight={codeBlockMax}
+      zoom={zoom}
     />
   );
 }

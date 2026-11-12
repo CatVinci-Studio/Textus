@@ -59,7 +59,7 @@ pub(super) fn pptx_markdown(path: &Path) -> Result<String, String> {
     }
 
     if out.is_empty() {
-        return Err("This presentation has no extractable text.".to_string());
+        return Err(crate::errors::error("noText"));
     }
     Ok(out.join("\n\n"))
 }

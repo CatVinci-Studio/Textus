@@ -1,3 +1,5 @@
+import { explainError } from "../../utils/error-explain";
+import { currentStrings } from "../../i18n/current";
 import { classifyAiError, type AiErrorKind } from "../error-messages";
 
 /** The error row, with a retry button when the failed send is resendable
@@ -22,7 +24,9 @@ export function ErrorRow({
         <div className="agent-error-explanation">{explanation}</div>
       )}
       <div className={explanation ? "agent-error-detail" : undefined}>
-        {error}
+        {/* Not a service's: Textus's own or the system's, in the UI's
+            language where it is known. */}
+        {explanation ? error : explainError(error, currentStrings())}
       </div>
       {onRetry && (
         <button

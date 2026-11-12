@@ -18,12 +18,14 @@ describe("writing conventions", () => {
     expect(new Set(all).size).toBe(all.length);
   });
 
-  it("offers exactly the profiles Rust accepts (rules::profile)", () => {
+  it("offers exactly the profiles Rust accepts, each under its language", () => {
     const ours = CONVENTION_PROFILES.flatMap((g) => g.profiles).sort();
     const rust = Object.values(WRITING_CONVENTIONS)
       .flatMap((l) => l.profiles)
       .sort();
     expect(ours).toEqual(rust);
+    const hant = CONVENTION_PROFILES.find((g) => g.language === "zh-Hant");
+    expect(hant?.profiles).toContain("zh-Hant-CN");
   });
 
   it("names each profile by region and variant", () => {

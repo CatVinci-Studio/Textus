@@ -1,13 +1,13 @@
+import { writingProviderOf } from "../prefs/settings-types";
 import type { Editor } from "@milkdown/kit/core";
 import { createGhostTextPlugin } from "./writing/ghost-text-plugin";
 import { buildCompletionStyle } from "./writing/completion-style";
 import { createGrammarCheckPlugin } from "./writing/grammar-check-plugin";
-import {
-  createPendingEditPlugin,
-  type PendingPreview,
-} from "./revision/pending-edit-plugin";
+import { createPendingEditPlugin } from "./revision/pending-edit-plugin";
+import { type PendingPreview } from "./revision/pending-types";
 import { chatSelectionPlugin } from "./chat/quick-ask/chat-selection-plugin";
 import { blockReader } from "./revision/block-reader";
+import { createAiFileChangesPlugin } from "./revision/file-changes-plugin";
 import { streamFollowPlugin } from "./revision/stream-follow-plugin";
 import { createQuickAskWidgetPlugin } from "./chat/quick-ask/quick-ask-widget-plugin";
 import {
@@ -17,9 +17,10 @@ import {
 import { ownRevisionPlugin } from "./margin/own-revision-plugin";
 import { paperRegionPlugin } from "./paper/paper-region-plugin";
 import { resolveStrings } from "../i18n/strings";
+import { prefersReducedMotion } from "../engine/motion/motion";
 import { sendTourSignal, type TourAi } from "../utils/events";
 import type { RevisionDisplay, Settings } from "../prefs/SettingsContext";
-import { aiFeatures } from "../settings/textus-ai";
+import { aiFeatures } from "../prefs/ai-features";
 
 export interface PendingEditCallbacks {
   onAccept: (callId: string) => void;
@@ -65,13 +66,16 @@ export function withAiPlugins(
   return (
     editor
       .use(blockReader)
+      .use(createAiFileChangesPlugin(() => docPath.current))
       .use(
         createGhostTextPlugin({
           enabled: () =>
             aiFeatures(settings.current).completion && tour.current !== "muted",
-          provider: () => settings.current.aiProvider,
+          provider: () => writingProviderOf(settings.current),
           model: () =>
-            settings.current.writingModels[settings.current.aiProvider] || null,
+            settings.current.writingModels[
+              writingProviderOf(settings.current)
+            ] || null,
           style: () => buildCompletionStyle(settings.current.completionTone),
           uiLanguage: () => settings.current.language,
           project: () => ({
@@ -87,9 +91,11 @@ export function withAiPlugins(
         createGrammarCheckPlugin({
           enabled: () =>
             aiFeatures(settings.current).grammar && tour.current !== "muted",
-          provider: () => settings.current.aiProvider,
+          provider: () => writingProviderOf(settings.current),
           model: () =>
-            settings.current.writingModels[settings.current.aiProvider] || null,
+            settings.current.writingModels[
+              writingProviderOf(settings.current)
+            ] || null,
           strictness: () => settings.current.grammarStrictness,
           uiLanguage: () => settings.current.language,
           project: () => ({
@@ -101,7 +107,7 @@ export function withAiPlugins(
       .use(
         createPendingEditPlugin({
           ...pendingEdits,
-          animationEnabled: () => settings.current.enableEditAnimation,
+          animationEnabled: () => !prefersReducedMotion(),
           sentenceLabels: () => {
             const t = resolveStrings(settings.current.language);
             return {

@@ -1,4 +1,3 @@
-import { getUiState, setUiState } from "../../storage/ui-state";
 import { logPluginMessage } from "../store/plugin-log";
 import type { PluginManifest } from "../store/manifest";
 
@@ -6,22 +5,12 @@ import type { PluginManifest } from "../store/manifest";
  * What only one plugin may do at a time - draw a code block language
  * ("codeBlock:chart"), give a kind of hover card ("hover:link"), open a
  * file pattern ("editor:*.pdf"), give an embed kind ("embed:note") - and
- * who does it now: the user's pick, else the plugin that claimed it first.
+ * who does it now: the plugin that claimed it first.
  * When the owner goes, the next claimant takes over at once.
  */
 
 const claimants = new Map<string, string[]>();
 const listeners = new Set<() => void>();
-/** The user's picks, read once; kept here too where UI state isn't. */
-let picked: Record<string, string> | null = null;
-
-function picks(): Record<string, string> {
-  if (picked) return picked;
-  const saved = getUiState("pluginOwners");
-  picked =
-    saved && typeof saved === "object" ? (saved as Record<string, string>) : {};
-  return picked;
-}
 
 function changed() {
   for (const listener of listeners) listener();
@@ -41,15 +30,7 @@ export const frontMatterClaim = (key: string) => `front-matter:${key}`;
 
 /** The plugin that does `claim` now, if any is on. */
 export function ownerOf(claim: string): string | null {
-  const list = claimants.get(claim);
-  if (!list?.length) return null;
-  const pick = picks()[claim];
-  return pick && list.includes(pick) ? pick : list[0];
-}
-
-/** Every plugin on that claims `claim`, the earliest first. */
-export function claimantsOf(claim: string): readonly string[] {
-  return claimants.get(claim) ?? [];
+  return claimants.get(claim)?.[0] ?? null;
 }
 
 /** Every claim held now, by its prefix ("codeBlock:"). */
@@ -74,13 +55,6 @@ export function claim(claim: string, plugin: string): () => void {
     else claimants.delete(claim);
     changed();
   };
-}
-
-/** The user's choice of who does `claim`, kept across restarts. */
-export function pickOwner(claim: string, plugin: string): void {
-  picked = { ...picks(), [claim]: plugin };
-  setUiState("pluginOwners", picked);
-  changed();
 }
 
 export function onOwnersChanged(listener: () => void): () => void {

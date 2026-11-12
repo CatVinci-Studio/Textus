@@ -1,6 +1,6 @@
 // @vitest-environment jsdom
 import { afterEach, beforeAll, describe, expect, it } from "vitest";
-import { closeViews, openView } from "../../document-view/editor-view-kit";
+import { closeViews, openView } from "../editor-view-kit";
 import {
   convertList,
   cycleHeading,
@@ -23,11 +23,19 @@ describe("Format › a list kind", () => {
     expect(convertList(t.view, "ordered_list")).toBe(false);
   });
 
-  it("makes a paragraph a list", async () => {
+  it("makes a paragraph a list, the caret in its text or in a span", async () => {
     const t = await openView("alone", { enableCompletion: false });
     t.caretAt("alone");
     toggleList(t.view, "bullet_list");
     expect(t.markdown()).toMatch(/^[-*] alone$/);
+    const styled = await openView("*one* two\n\n**three**", {
+      enableCompletion: false,
+    });
+    styled.caretAt("one");
+    toggleList(styled.view, "bullet_list");
+    styled.caretAt("three");
+    toggleBlockquote(styled.view);
+    expect(styled.markdown()).toMatch(/^[-*] \*one\* two\n\n> \*\*three\*\*$/);
   });
 });
 

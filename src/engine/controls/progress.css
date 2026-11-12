@@ -1,0 +1,52 @@
+/* Progress: a bar (role="progressbar", --value from 0 to 1) or, with
+   .ring, a circle; .is-indeterminate when how far isn't known (a ring
+   then turns, a spinner). A surface with colours of its own sets
+   --progress-fill and --progress-track. */
+.tx-progress {
+  --value: 0;
+  position: relative;
+  height: 3px;
+  overflow: hidden;
+  border-radius: var(--shape-pill);
+  corner-shape: round;
+  background: var(
+    --progress-track,
+    color-mix(in srgb, var(--ui-text) 10%, transparent)
+  );
+}
+.tx-progress::after {
+  content: "";
+  position: absolute;
+  inset: 0;
+  background: var(--progress-fill, var(--ui-accent));
+  transform: scaleX(var(--value));
+  transform-origin: left center;
+  transition: transform var(--dur-base) var(--ease-out);
+}
+.tx-progress.is-indeterminate::after {
+  width: 40%;
+  transform: none;
+  animation: motion-sweep var(--dur-pulse) var(--ease-in-out) infinite;
+}
+.tx-progress.ring {
+  flex: none;
+  width: var(--progress-ring-size);
+  height: var(--progress-ring-size);
+  border-radius: 50%;
+  background: conic-gradient(
+    var(--progress-fill, var(--ui-accent)) calc(var(--value) * 1turn),
+    var(--progress-track, color-mix(in srgb, var(--ui-text) 10%, transparent)) 0
+  );
+  mask: radial-gradient(
+    farthest-side,
+    transparent calc(100% - var(--progress-ring-line)),
+    #000 0
+  );
+}
+.tx-progress.ring::after {
+  content: none;
+}
+.tx-progress.ring.is-indeterminate {
+  --value: 0.25;
+  animation: motion-spin var(--dur-spin) linear infinite;
+}

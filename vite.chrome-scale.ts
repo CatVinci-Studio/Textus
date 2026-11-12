@@ -3,7 +3,7 @@ import type { Plugin } from "postcss";
 /**
  * One size for the whole interface: every length in its stylesheets grows
  * with `--chrome-scale` (Interface Text Size times the window's width step,
- * src/ui/window-scale.ts), so a control, its icon, its padding and its
+ * src/engine/tokens/window-scale.ts), so a control, its icon, its padding and its
  * corner grow together instead of a few of them. The document's own
  * typography is left alone: it has its zoom.
  */
@@ -11,7 +11,7 @@ import type { Plugin } from "postcss";
 /** Stylesheets of the document's content, which follow the document's zoom. */
 const DOCUMENT = [
   /\/theme\/content-[^/]+\.css$/,
-  /\/editor\/milkdown-theme\.css$/,
+  /\/editor\/(milkdown-theme|editor-[a-z-]+)\.css$/,
   /\/app\/editor-column\.css$/,
   /\/editor\/modes\/source-editor\.css$/,
   /\/editor\/embeds\/note-embed\.css$/,
@@ -22,7 +22,7 @@ const DOCUMENT = [
 ];
 
 /** A length worth scaling: 3px and up; hairlines stay crisp. Plugin pages
- *  are scaled by src/ui/scale-lengths.ts: keep the two in step. */
+ *  are scaled by src/engine/tokens/scale-lengths.ts: keep the two in step. */
 const LENGTH = /(^|[\s(,/+*])(-?\d*\.?\d+)px\b/g;
 const SCALED = /--(chrome-scale|ui-text-scale|window-scale)\b/;
 

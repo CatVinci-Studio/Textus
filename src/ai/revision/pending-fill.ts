@@ -23,9 +23,9 @@ export function renderPendingHtml(span: HTMLElement, markdown: string) {
 
 // Widgets showing a formula's source while KaTeX loads, redrawn once it is
 // here, since a widget kept by its key wouldn't be.
-export const waitingForKatex = new Map<HTMLElement, string>();
+const waitingForKatex = new Map<HTMLElement, string>();
 
-export function awaitKatex(span: HTMLElement, markdown: string) {
+function awaitKatex(span: HTMLElement, markdown: string) {
   if (waitingForKatex.size === 0)
     onKatexReady(() => {
       for (const [waiting, text] of waitingForKatex)
@@ -35,7 +35,7 @@ export function awaitKatex(span: HTMLElement, markdown: string) {
   waitingForKatex.set(span, markdown);
 }
 
-export function fillPendingHtml(span: HTMLElement, source: string) {
+function fillPendingHtml(span: HTMLElement, source: string) {
   fillPendingContent(span, source);
   // A picture still being made is its frame until it comes.
   framePendingPictures(span);
@@ -43,11 +43,11 @@ export function fillPendingHtml(span: HTMLElement, source: string) {
 
 /** A waiting picture's placeholder, as an address the document renderer's
  *  HTML policy keeps (it drops blob: and textus-generated:). */
-export const PICTURE_STAND_IN = "https://textus.invalid/generated/";
+const PICTURE_STAND_IN = "https://textus.invalid/generated/";
 
 /** New text between two blocks, rendered as the blocks it will be, as
  *  inline text would show its Markdown. */
-export function fillPendingBlocks(el: HTMLElement, source: string) {
+function fillPendingBlocks(el: HTMLElement, source: string) {
   const parts = splitMermaidFences(source) ?? [
     { kind: "text" as const, text: source },
   ];
@@ -82,7 +82,7 @@ export function hasBlocks(text: string): boolean {
   );
 }
 
-export function fillPendingContent(span: HTMLElement, source: string) {
+function fillPendingContent(span: HTMLElement, source: string) {
   // A widget is made once, often before any of its text has come: text at
   // the caret that turns out to be blocks becomes blocks when it does.
   if (

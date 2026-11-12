@@ -3,13 +3,13 @@ import { ai } from "../../platform/ipc";
 import { resolveSkillMessage } from "../../ai/chat/proposal";
 import type { Strings } from "../../i18n/strings";
 import { useSettings } from "../../prefs/SettingsContext";
-import type { DocumentSnapshot } from "../../ai/doc-markdown";
+import type { DocumentSnapshot } from "../../editor/markdown/doc-markdown";
 import type { AgentSkill } from "../../ai/types";
 import { ChatBody } from "../../ai/chat/ChatBody";
 import type { ChatComposerHandle } from "../../ai/chat/ChatComposer";
 import { chatLabels } from "../../ai/chat/chat-labels";
 import { ModeIcon } from "../../ai/chat/mode-icons";
-import { useAgentConversation } from "../../ai/chat/useAgentConversation";
+import { useOwnConversation } from "../../ai/chat/conversation/useConversation";
 import {
   onCreateRequest,
   takeCreateRequest,
@@ -18,7 +18,7 @@ import { useLatest } from "../../utils/hooks/useLatest";
 import { useBoxSlide } from "./useBoxSlide";
 import {
   CREATE_EXAMPLES,
-  createKinds,
+  CREATE_KINDS,
   createMessage,
   type CreateKind,
 } from "./create-studio";
@@ -26,7 +26,7 @@ import {
 /** Nothing is being written: what is made goes in the reply, and is
  *  installed from the card under it. */
 const NO_DOCUMENT: DocumentSnapshot = { markdown: "", blocks: [] };
-const KINDS = createKinds();
+const KINDS = CREATE_KINDS;
 /** The starting points under the empty box, one of each kind. */
 const EXAMPLES = KINDS.map((k) => [k, CREATE_EXAMPLES[k]] as const);
 
@@ -40,13 +40,12 @@ const EXAMPLES = KINDS.map((k) => [k, CREATE_EXAMPLES[k]] as const);
  */
 export function CreateChat({ t }: { t: Strings }) {
   const { settings } = useSettings();
-  const conversation = useAgentConversation(
-    null,
-    null,
-    settings.aiProvider,
-    false,
-    settings.agentModels[settings.aiProvider] || undefined,
-  );
+  const conversation = useOwnConversation(() => ({
+    docPath: null,
+    workspaceRoot: null,
+    settings,
+    port: null,
+  }));
   // What to make, picked with / or a starting point; null for the model's
   // choice. A message sent with one calls its skill.
   const [kind, setKind] = useState<CreateKind | null>(null);
@@ -124,7 +123,7 @@ export function CreateChat({ t }: { t: Strings }) {
           conversation={conversation}
           defaultMode="create"
           onlyMode="create"
-          defaultWebSearch
+          startWebSearch
           autoTools
           labels={{ ...labels, placeholder: t.createPlaceholder }}
           composerRef={composer}

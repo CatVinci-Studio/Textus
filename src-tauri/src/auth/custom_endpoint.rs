@@ -4,6 +4,9 @@ use std::fs;
 use std::path::PathBuf;
 use tauri::{AppHandle, Manager};
 
+/// This file, in the app's config folder.
+pub(crate) const FILE: &str = "custom_endpoint.json";
+
 #[derive(Serialize, Deserialize, Clone)]
 pub struct CustomEndpointConfig {
     pub base_url: String,
@@ -14,7 +17,7 @@ pub struct CustomEndpointConfig {
 fn config_file_path(app: &AppHandle) -> Result<PathBuf, String> {
     let dir = app.path().app_config_dir().map_err(|e| e.to_string())?;
     fs::create_dir_all(&dir).map_err(|e| e.to_string())?;
-    Ok(dir.join("custom_endpoint.json"))
+    Ok(dir.join(FILE))
 }
 
 /// What the settings page is told about the saved endpoint. The key never
@@ -30,7 +33,7 @@ pub struct CustomEndpointStatus {
 
 /// Saves the endpoint. A missing key keeps the stored one while the URL stays
 /// the same; for another URL the old key is dropped rather than sent to the new host.
-#[tauri::command]
+#[tauri::command(async)]
 #[cfg_attr(test, specta::specta)]
 pub fn set_custom_endpoint(
     app: AppHandle,
@@ -55,13 +58,11 @@ pub fn load_custom_endpoint(app: &AppHandle) -> Result<Option<CustomEndpointConf
     if !path.exists() {
         return Ok(None);
     }
-    let text = fs::read_to_string(&path).map_err(|e| e.to_string())?;
-    serde_json::from_str(&text)
-        .map(Some)
-        .map_err(|e| e.to_string())
+    // A broken one is kept aside: the endpoint is entered again, not stuck.
+    Ok(crate::json_file::read_or_set_aside(&path))
 }
 
-#[tauri::command]
+#[tauri::command(async)]
 #[cfg_attr(test, specta::specta)]
 pub fn custom_endpoint_status(app: AppHandle) -> Result<Option<CustomEndpointStatus>, String> {
     Ok(load_custom_endpoint(&app)?.map(|c| CustomEndpointStatus {
@@ -97,7 +98,7 @@ fn same_endpoint(a: &str, b: &str) -> bool {
     a.trim().trim_end_matches('/') == b.trim().trim_end_matches('/')
 }
 
-#[tauri::command]
+#[tauri::command(async)]
 #[cfg_attr(test, specta::specta)]
 pub fn clear_custom_endpoint(app: AppHandle) -> Result<(), String> {
     let path = config_file_path(&app)?;

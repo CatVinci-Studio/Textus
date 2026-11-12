@@ -1,0 +1,83 @@
+/* Short notes and progress bars at the bottom of the window, clear of the
+   status bar, and above a corner's toasts while one shows, so the two
+   never cover each other. Only opacity and transform move. */
+.notice-stack {
+  position: fixed;
+  left: 50%;
+  bottom: 40px;
+  z-index: var(--z-toast);
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 8px;
+  width: min(420px, calc(100vw - 32px));
+  /* Never past the window's top: the newest, at the foot, stay in view. */
+  max-height: calc(100vh - 40px - var(--space-4));
+  justify-content: flex-end;
+  overflow: hidden;
+  transform: translateX(-50%);
+  pointer-events: none;
+}
+
+body:has(.corner-stack .corner-toast) .notice-stack {
+  bottom: calc(16px + var(--control-height) + var(--space-4) + 8px);
+}
+
+.notice {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 8px 12px;
+  width: 100%;
+  padding: 8px 12px;
+  font-size: var(--text-secondary);
+  color: var(--ui-text);
+  pointer-events: auto;
+  animation: motion-rise-in var(--dur-base) var(--ease-out) both;
+}
+
+.notice[data-tone="warning"] {
+  border-left: 3px solid var(--ui-warning);
+}
+
+.notice[data-tone="error"] {
+  border-left: 3px solid var(--ui-danger);
+}
+
+.notice-text {
+  display: flex;
+  flex: 1;
+  flex-wrap: wrap;
+  gap: 2px 8px;
+  min-width: 0;
+  /* A path or a link is one long word: it breaks rather than run out. */
+  overflow-wrap: anywhere;
+}
+
+.notice-source {
+  color: var(--ui-muted);
+}
+
+.notice-detail {
+  flex-basis: 100%;
+  color: var(--ui-muted);
+  font-size: var(--text-caption);
+}
+
+.notice-bar {
+  flex-basis: 100%;
+}
+
+.notice-cancel {
+  font: inherit;
+  font-size: var(--text-caption);
+  color: var(--ui-muted);
+  background: none;
+  border: none;
+  cursor: pointer;
+  padding: 2px 4px;
+}
+
+.notice-cancel:hover {
+  color: var(--ui-text);
+}

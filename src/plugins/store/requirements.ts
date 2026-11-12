@@ -1,3 +1,7 @@
+import { fill } from "../../i18n/fill";
+import { showConfirm } from "../../engine/controls/app-dialog";
+import { changeSettings, loadSettings } from "../../prefs/settings-store";
+import { pluginName, pluginText, pluginsSnapshot } from "./plugin-records";
 import type { Settings } from "../../prefs/SettingsContext";
 import type { Strings } from "../../i18n/strings";
 import type { RequiredSetting, Requirement } from "./manifest";
@@ -31,4 +35,28 @@ export function requirementMet(r: Requirement, settings: Settings): boolean {
 
 export function turnOnRequirement(r: Requirement): Partial<Settings> {
   return SETTINGS[r.setting].turnOn();
+}
+
+/** What plugin `id` needs that is off, now that it is on: asked to turn
+ *  each on, once, in the plugin's words. Every way of installing or
+ *  turning one on ends here. */
+export async function askForRequirements(id: string, t: Strings) {
+  const record = pluginsSnapshot().records.find((r) => r.id === id);
+  if (!record?.manifest || record.status !== "on") return;
+  for (const need of record.manifest.requires) {
+    if (requirementMet(need, loadSettings())) continue;
+    const ok = await showConfirm(
+      fill(t.pluginRequiresAsk, {
+        name: pluginName(record),
+        setting: requirementLabel(need, t),
+        reason: need.reason ? pluginText(record, need.reason) : "",
+      }),
+      {
+        title: pluginName(record),
+        okLabel: t.pluginTurnOn,
+        cancelLabel: t.pluginRequiresLater,
+      },
+    );
+    if (ok) changeSettings(turnOnRequirement(need));
+  }
 }

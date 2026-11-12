@@ -8,40 +8,19 @@ import { invoke as __TAURI_INVOKE } from "@tauri-apps/api/core";
 
 /** Commands */
 export const commands = {
+	/**  The changes `ids` of `conversation`, as kept. */
+	ai_file_changes: (conversation: string, ids: string[]) => __TAURI_INVOKE<FileChange_Serialize[]>("ai_file_changes", { conversation, ids }),
 	/**
-	 *  The workspace as the frontend needs it: skills, the resolved project
-	 *  folder, style profile and library. Loaded fresh each time so edits show.
+	 *  Puts the changes `ids` on disk (`on`: apply, redo) or takes them off
+	 *  (undo), the later first when undoing. Each that can't be is left, and
+	 *  the answer says why; the changes come back as they now are.
 	 */
-	load_agent_workspace: (docPath: string | null, rootOverride: string | null) => __TAURI_INVOKE<AgentWorkspace_Serialize>("load_agent_workspace", { docPath, rootOverride }),
-	/**
-	 *  Folder picker behind "Choose project folder…". Desktop only: the dialog
-	 *  plugin has no folder picker on iOS.
-	 */
-	pick_workspace_root: () => __TAURI_INVOKE<string | null>("pick_workspace_root"),
-	/**
-	 *  Creates the global config folder (with a starter agent.md and skills/) and
-	 *  reveals it in the file manager. Desktop only: iOS has no file manager.
-	 */
-	open_global_agent_dir: (template: string) => __TAURI_INVOKE<null>("open_global_agent_dir", { template }),
-	/**
-	 *  Creates the global config folder if needed and returns the agent.md path,
-	 *  which the frontend opens in the editor itself.
-	 */
-	ensure_global_agent_md: (template: string) => __TAURI_INVOKE<string>("ensure_global_agent_md", { template }),
-	/**  The project's text files, for the composer's @-mention picker. */
-	list_project_files: (docPath: string | null, workspaceRoot: string | null) => __TAURI_INVOKE<string[]>("list_project_files", { docPath, workspaceRoot }),
-	/**
-	 *  One project file's text, for an @-mention, under the same safety rules as
-	 *  the agent's read_file.
-	 */
-	read_project_file: (docPath: string | null, workspaceRoot: string | null, path: string) => __TAURI_INVOKE<string>("read_project_file", { docPath, workspaceRoot, path }),
+	ai_set_file_changes: (conversation: string, ids: string[], on: boolean) => __TAURI_INVOKE<[FileChange_Serialize[], string[]]>("ai_set_file_changes", { conversation, ids, on }),
 	/**
 	 *  Creates `.textus/<rel>` with `template` unless it already exists, and
 	 *  returns its absolute path.
 	 */
 	ensure_project_file: (docPath: string | null, workspaceRoot: string | null, rel: string, template: string) => __TAURI_INVOKE<string>("ensure_project_file", { docPath, workspaceRoot, rel, template }),
-	/**  Multi-select picker for the writing samples "Learn my style" analyses. */
-	pick_text_files: () => __TAURI_INVOKE<string[]>("pick_text_files"),
 	/**
 	 *  "Import references…" and "Import a reference folder…": the picked files
 	 *  (zips unpacked) or folder copied into the project's references/ folder,
@@ -54,6 +33,30 @@ export const commands = {
 	 *  frontend opens for review.
 	 */
 	learn_style: (provider: string, model: string | null, docPath: string | null, workspaceRoot: string | null, files: string[]) => __TAURI_INVOKE<string>("learn_style", { provider, model, docPath, workspaceRoot, files }),
+	/**  The project's text files, for the composer's @-mention picker. */
+	list_project_files: (docPath: string | null, workspaceRoot: string | null) => __TAURI_INVOKE<string[]>("list_project_files", { docPath, workspaceRoot }),
+	/**  Multi-select picker for the writing samples "Learn my style" analyses. */
+	pick_text_files: () => __TAURI_INVOKE<string[]>("pick_text_files"),
+	/**
+	 *  One project file's text, for an @-mention, under the same safety rules as
+	 *  the agent's read_file.
+	 */
+	read_project_file: (docPath: string | null, workspaceRoot: string | null, path: string) => __TAURI_INVOKE<string>("read_project_file", { docPath, workspaceRoot, path }),
+	/**
+	 *  Creates the global config folder if needed and returns the agent.md path,
+	 *  which the frontend opens in the editor itself.
+	 */
+	ensure_global_agent_md: (template: string) => __TAURI_INVOKE<string>("ensure_global_agent_md", { template }),
+	/**
+	 *  The workspace as the frontend needs it: skills, the resolved project
+	 *  folder, style profile and library. Loaded fresh each time so edits show.
+	 */
+	load_agent_workspace: (docPath: string | null, rootOverride: string | null) => __TAURI_INVOKE<AgentWorkspace_Serialize>("load_agent_workspace", { docPath, rootOverride }),
+	/**
+	 *  Creates the global config folder (with a starter agent.md and skills/) and
+	 *  reveals it in the file manager. Desktop only: iOS has no file manager.
+	 */
+	open_global_agent_dir: (template: string) => __TAURI_INVOKE<null>("open_global_agent_dir", { template }),
 };
 
 /* Types */
@@ -308,6 +311,47 @@ export type AgentWorkspace_Serialize = {
 	memories: Memories_Serialize,
 	/**  Whether Textus AI may remember things by itself. */
 	remember: boolean,
+};
+
+/**  One change to one file. */
+export type FileChange = FileChange_Serialize | FileChange_Deserialize;
+
+/**  One change to one file. */
+export type FileChange_Deserialize = {
+	id: string,
+	/**  The file, from the folder. */
+	path: string,
+	/**  The file's whole path. */
+	file: string,
+	/**  The file as it was; None where the change made it. */
+	before?: string | null,
+	after: string,
+	/**  On disk now: false while waiting to be applied, or once undone. */
+	applied: boolean,
+	/**
+	 *  Made while changes land as revisions: kept for review, a file made
+	 *  waiting to be kept.
+	 */
+	revision?: boolean,
+};
+
+/**  One change to one file. */
+export type FileChange_Serialize = {
+	id: string,
+	/**  The file, from the folder. */
+	path: string,
+	/**  The file's whole path. */
+	file: string,
+	/**  The file as it was; None where the change made it. */
+	before: string | null,
+	after: string,
+	/**  On disk now: false while waiting to be applied, or once undone. */
+	applied: boolean,
+	/**
+	 *  Made while changes land as revisions: kept for review, a file made
+	 *  waiting to be kept.
+	 */
+	revision: boolean,
 };
 
 /**  One forgotten memory or library entry, for the Memory tab. */

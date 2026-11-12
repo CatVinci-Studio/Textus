@@ -1,4 +1,3 @@
-use super::args::Args;
 use std::collections::HashMap;
 use std::sync::Mutex;
 use tauri::{Emitter, Manager, State, WebviewUrl, WebviewWindowBuilder};
@@ -6,16 +5,6 @@ use tauri::{Emitter, Manager, State, WebviewUrl, WebviewWindowBuilder};
 /// Label prefix of every detached chat window. A chat window has no tab bar
 /// or document, so it must never be taken for an editor window.
 pub const CHAT_LABEL_PREFIX: &str = "chat-";
-
-/// Whether `label` names a window that hosts a document (not the drag pill
-/// and not a detached chat).
-pub fn is_editor_window(label: &str) -> bool {
-    label != crate::tab_drag::DRAG_PILL_LABEL
-        && !label.starts_with(CHAT_LABEL_PREFIX)
-        && !label.starts_with(crate::commands::floating_window::FLOATING_LABEL_PREFIX)
-        && !label.starts_with(crate::commands::export::PDF_EXPORT_LABEL_PREFIX)
-        && label != crate::schedule::HOST_LABEL
-}
 
 /// One detached chat window. Unlike Quick Ask it follows whatever document the
 /// user edits, so there is at most one per editor window.
@@ -36,8 +25,8 @@ pub fn editor_for_chat(label: &str, open: &OpenChatWindows) -> Option<String> {
         .map(|entry| entry.scope.clone())
 }
 
-/// Everything a detached chat window needs to carry on where the embedded
-/// panel left off. `state` is opaque JSON whose shape TypeScript defines.
+/// Everything a detached chat window needs to carry on where the window's
+/// own conversation left off. `state` is opaque JSON whose shape TypeScript defines.
 #[derive(Clone, serde::Serialize, serde::Deserialize)]
 #[cfg_attr(test, derive(specta::Type))]
 pub struct ChatHandoff {
@@ -67,6 +56,7 @@ fn chat_serving(editor_label: &str, open: &OpenChatWindows) -> Option<String> {
 
 /// detach_chat_window's inputs. `state` is the handoff's opaque JSON.
 #[derive(serde::Deserialize)]
+#[cfg_attr(test, derive(specta::Type))]
 pub struct DetachRequest {
     state: serde_json::Value,
     position: Option<(f64, f64)>,
@@ -77,19 +67,20 @@ pub struct DetachRequest {
 /// Pops this chat out of the editor into a real OS window. `command(async)` is
 /// required: a plain `#[command]` runs on the main thread, where WebView2 deadlocks.
 #[tauri::command(async)]
+#[cfg_attr(test, specta::specta)]
 pub fn detach_chat_window(
     app: tauri::AppHandle,
     window: tauri::WebviewWindow,
-    request: Args<DetachRequest>,
+    request: DetachRequest,
     pending: State<PendingChatHandoffs>,
     open: State<OpenChatWindows>,
 ) -> Result<String, String> {
-    let Args(DetachRequest {
+    let DetachRequest {
         state,
         position,
         title,
         pinned,
-    }) = request;
+    } = request;
     let editor_label = window.label().to_string();
 
     // Already open for this editor: focus it rather than spawning a duplicate
@@ -193,44 +184,6 @@ pub fn take_chat_handoff(
     pending.0.lock().unwrap().remove(window.label())
 }
 
-/// Brings the detached chat serving this editor to the front without handing
-/// it anything, which would overwrite its newer conversation. Returns whether there was one.
-#[tauri::command]
-#[cfg_attr(test, specta::specta)]
-pub fn focus_chat_window(
-    app: tauri::AppHandle,
-    window: tauri::WebviewWindow,
-    open: State<OpenChatWindows>,
-) -> bool {
-    let Some(label) = chat_serving(window.label(), &open) else {
-        return false;
-    };
-    let Some(win) = app.get_webview_window(&label) else {
-        return false;
-    };
-    let _ = win.unminimize();
-    let _ = win.show();
-    win.set_focus().is_ok()
-}
-
-/// Closes the detached chat serving this editor, if one is open (re-embedding the panel).
-#[tauri::command]
-#[cfg_attr(test, specta::specta)]
-pub fn close_chat_window(
-    app: tauri::AppHandle,
-    window: tauri::WebviewWindow,
-    open: State<OpenChatWindows>,
-) {
-    let Some(label) = chat_serving(window.label(), &open) else {
-        return;
-    };
-    open.0.lock().unwrap().retain(|entry| entry.label != label);
-    if let Some(win) = app.get_webview_window(&label) {
-        let _ = win.close();
-    }
-    notify_chat_windows_changed(&app);
-}
-
 /// Told to every editor window when the set of chat windows changes, so none
 /// keeps pushing at a destroyed label (an `emitTo` a dead window fails silently).
 pub const CHAT_WINDOWS_CHANGED: &str = "chat:windows-changed";
@@ -270,8 +223,8 @@ fn forget_entries(label: &str, open: &OpenChatWindows) -> bool {
 /// Announces the registry change to every editor window (the only ones that
 /// listen).
 pub fn notify_chat_windows_changed(app: &tauri::AppHandle) {
-    for (label, window) in app.webview_windows() {
-        if is_editor_window(&label) {
+    for (label, window) in app.windows() {
+        if crate::windows::is_editor_window(&label) {
             let _ = window.emit(CHAT_WINDOWS_CHANGED, ());
         }
     }

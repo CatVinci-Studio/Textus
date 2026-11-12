@@ -1,4 +1,5 @@
-import { useEffect, useRef, useState } from "react";
+import { useConversationGuard } from "../ai/chat/useConversationGuard";
+import { useEffect, useRef } from "react";
 import { useEditorProposals } from "./useEditorProposals";
 import { useChatContextBridge } from "./useChatContextBridge";
 import { usePanelSelection } from "./usePanelSelection";
@@ -52,9 +53,9 @@ export function useEditorChat({
   const { pendingEdits, conversation, quickConversation } = proposals;
   useHeldWhileBusy({
     tabId: setup.tabId,
-    filePath,
-    chats: [conversation, quickConversation],
+    quickAsk: quickConversation,
     quickAskOpen: inlineChat.visible,
+    writing: conversation.busy,
     statuses: pendingEdits.allStatuses,
   });
   const windowChipRef = useRef<SelectionChipHandlers | null>(null);
@@ -80,13 +81,11 @@ export function useEditorChat({
     handleDetachChat,
   } = bridge;
 
-  // The docked panel, rendered by this editor only while it is the active
-  // tab and the panel is open.
+  // The AI's panel shows, with this document the one in front.
   const agentPanel = useAgentPanel();
-  const panelContainer = isActive ? agentPanel.container : null;
+  const panelShown = isActive && agentPanel.shown;
   // The panel, or the detached window while this is the tab it shows.
-  const chatTracking =
-    panelContainer !== null || (detachedChatLabel !== null && isActive);
+  const chatTracking = panelShown || (detachedChatLabel !== null && isActive);
   const { panelSelection, updatePanelSelection } = usePanelSelection(
     run,
     chatTracking,
@@ -140,24 +139,14 @@ export function useEditorChat({
     quickAskEl: setup.quickAskEl,
     phone,
     isActive,
-    settings,
     agentPanel,
-    handleDetachChat,
   });
 
-  // A new panel conversation waits while proposals are still undecided.
-  const decidableCount = pendingEdits.decidable.length;
-  const [panelGuard, setPanelGuard] = useState(false);
-  useEffect(() => {
-    if (decidableCount === 0) setPanelGuard(false);
-  }, [decidableCount]);
+  // A new or reopened panel conversation waits while proposals are still
+  // undecided.
+  const panelGuard = useConversationGuard(pendingEdits.decidable.length);
   function startPanelConversation() {
-    if (pendingEdits.decidable.length > 0) {
-      setPanelGuard(true);
-      return;
-    }
-    setPanelGuard(false);
-    conversation.reset();
+    panelGuard.guard(() => conversation.reset());
   }
 
   function popOutPanel() {
@@ -173,14 +162,13 @@ export function useEditorChat({
     quickConversation,
     bridge,
     agentPanel,
-    panelContainer,
+    panelShown,
     panelSelection,
     quickChipHandlers,
     panelChipHandlers,
     review,
     controls,
     panelGuard,
-    setPanelGuard,
     startPanelConversation,
     popOutPanel,
   };

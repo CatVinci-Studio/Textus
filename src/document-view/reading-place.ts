@@ -1,58 +1,11 @@
-import { LOCAL_KEYS, readLocalJson, writeLocal } from "../storage/local";
+import type { ScrollPlace } from "../document/last-places";
 
 /**
- * Where each file was being read when last shown, so it opens there again.
- * Kept as a block index and offset: scrollTop moves with window width.
+ * A document's reading place on the page: the block at the scroller's top
+ * and how far into it, kept with its caret (last-places.ts) - scrollTop
+ * moves with the window's width.
  */
-export interface ReadingPlace {
-  block: number;
-  into: number;
-  /** When it was kept, for dropping the oldest past MAX. */
-  at: number;
-}
-
-/** Files remembered; the least recently read go first. */
-const MAX = 200;
-
-function isPlace(value: unknown): value is ReadingPlace {
-  const p = value as ReadingPlace;
-  return (
-    typeof p === "object" &&
-    p !== null &&
-    Number.isInteger(p.block) &&
-    p.block >= 0 &&
-    typeof p.into === "number" &&
-    typeof p.at === "number"
-  );
-}
-
-function places(): Record<string, ReadingPlace> {
-  const raw = readLocalJson(LOCAL_KEYS.readingPlaces);
-  if (typeof raw !== "object" || raw === null) return {};
-  return Object.fromEntries(
-    Object.entries(raw).filter(([, p]) => isPlace(p)),
-  ) as Record<string, ReadingPlace>;
-}
-
-export function readingPlace(path: string): ReadingPlace | null {
-  return places()[path] ?? null;
-}
-
-export function keepReadingPlace(
-  path: string,
-  place: Omit<ReadingPlace, "at">,
-): void {
-  const all = places();
-  if (place.block === 0 && place.into < 1) delete all[path];
-  else all[path] = { ...place, at: Date.now() };
-  const kept = Object.entries(all)
-    .sort(([, a], [, b]) => b.at - a.at)
-    .slice(0, MAX);
-  writeLocal(
-    LOCAL_KEYS.readingPlaces,
-    JSON.stringify(Object.fromEntries(kept)),
-  );
-}
+type ReadingPlace = ScrollPlace;
 
 /** The document's blocks, as the editor draws them - not the widgets
  *  between them. */
@@ -76,7 +29,7 @@ function topIn(scroller: HTMLElement, el: HTMLElement): number {
 export function placeIn(
   scroller: HTMLElement,
   root: Element,
-): Omit<ReadingPlace, "at"> | null {
+): ReadingPlace | null {
   const list = blocks(root);
   if (list.length === 0) return null;
   const top = scroller.scrollTop;
@@ -92,7 +45,7 @@ export function placeIn(
 export function scrollToPlace(
   scroller: HTMLElement,
   root: Element,
-  place: Omit<ReadingPlace, "at">,
+  place: ReadingPlace,
 ): boolean {
   const el = blocks(root)[place.block];
   if (!el) return false;

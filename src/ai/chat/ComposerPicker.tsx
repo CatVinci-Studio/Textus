@@ -1,6 +1,6 @@
 import { useEffect, useRef } from "react";
 import type { Lang, Strings } from "../../i18n/strings";
-import { tapKeepingFocus } from "../../ui/tap";
+import { tapKeepingFocus } from "../../engine/controls/tap";
 import type { PickerGroupId } from "./skill-picker";
 
 /** The pickers' words, in the UI language. */
@@ -107,7 +107,7 @@ export function ComposerPicker({
   return (
     <div className="inline-chat-skill-menu composer-picker" data-picker={kind}>
       {count === 0 ? (
-        <div className="composer-picker-empty" role="status">
+        <div className="tx-list-note composer-picker-empty" role="status">
           {empty.map((line, i) => (
             <p key={i}>{line}</p>
           ))}
@@ -127,7 +127,10 @@ export function ComposerPicker({
               className="composer-picker-group"
             >
               {section.title && (
-                <div className="composer-picker-group-title" aria-hidden="true">
+                <div
+                  className="tx-list-heading composer-picker-group-title"
+                  aria-hidden="true"
+                >
                   {section.title}
                 </div>
               )}
@@ -156,7 +159,7 @@ export function ComposerPicker({
                       )}
                     </span>
                     {row.detail && (
-                      <span className="inline-chat-skill-preview">
+                      <span className="tx-truncate inline-chat-skill-preview">
                         {row.detail}
                       </span>
                     )}

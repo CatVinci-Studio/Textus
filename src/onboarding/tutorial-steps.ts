@@ -1,3 +1,4 @@
+import { TUTORIAL_CLIPS } from "../platform/bindings/app";
 import type { TextKey } from "../i18n/strings";
 import type { AgentMode } from "../prefs/SettingsContext";
 import { hasTextusAi } from "../platform/capabilities";
@@ -16,27 +17,14 @@ export type TutorialStepId =
   | "welcome"
   | "wysiwyg"
   | "palette"
-  | "plugins"
   | "connect"
   | "write"
   | "continuation"
   | "done";
 
-/** The clips on the website's tutorials page. Rust opens the page and
- *  accepts only these; keep in step with its TUTORIAL_CLIPS. */
-export const TUTORIAL_CLIPS = [
-  "wysiwyg",
-  "blocks",
-  "modes-themes",
-  "sidebar-export",
-  "ai-panel",
-  "continuation",
-  "grammar",
-  "revision",
-  "review",
-  "skills",
-  "memory",
-] as const;
+/** The clips on the website's tutorials page; Rust opens the page and
+ *  accepts only these. */
+export { TUTORIAL_CLIPS };
 
 export type TutorialClipId = (typeof TUTORIAL_CLIPS)[number];
 
@@ -107,7 +95,8 @@ const ALL_STEPS: TutorialStep[] = [
     clip: "wysiwyg",
   },
   {
-    // A tip more than a lesson: a phone has no shortcut to try it with.
+    // Finding things: the command palette and the plugin store, a tip more
+    // than a lesson (a phone has no shortcut to try it with).
     id: "palette",
     chapter: "writing",
     layout: "card",
@@ -116,16 +105,6 @@ const ALL_STEPS: TutorialStep[] = [
     tasks: [
       { key: "tutorialPaletteTask", phoneKey: "tutorialPaletteTaskPhone" },
     ],
-    optional: true,
-  },
-  {
-    // A pointer to the store, nothing to do there.
-    id: "plugins",
-    chapter: "writing",
-    layout: "card",
-    titleKey: "tutorialPluginsTitle",
-    bodyKey: "tutorialPluginsBody",
-    tasks: [{ key: "tutorialPluginsTask" }],
     optional: true,
   },
   {

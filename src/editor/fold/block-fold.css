@@ -21,13 +21,6 @@
   background: none;
   color: var(--doc-muted);
   cursor: pointer;
-  opacity: 0;
-  transition: opacity var(--dur-fast) var(--ease-standard);
-}
-
-.block-foldable:hover > .block-fold,
-.block-fold:focus-visible {
-  opacity: 1;
 }
 
 .block-fold:hover {
@@ -53,7 +46,7 @@
 }
 
 .block-folded-line:hover {
-  color: var(--doc-accent);
+  color: var(--doc-accent-text);
 }
 
 .block-foldable[data-folded] > .block-folded-line {

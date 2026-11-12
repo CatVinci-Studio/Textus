@@ -163,6 +163,13 @@ pub struct AgentWorkspace {
     pub root: Option<String>,
     /// `.textus/style.md` - the author's style profile.
     pub style: Option<String>,
+    /// The folder's AGENTS.md: its instructions for AI agents.
+    #[serde(skip)]
+    pub agents_md: Option<String>,
+    /// The text files beside the document and in a templates folder, from
+    /// the folder (ai::project::nearby_files).
+    #[serde(skip)]
+    pub nearby: Vec<String>,
     /// `.textus/library/*.md` - the project's people, places and terms.
     pub library: Vec<crate::ai::project::LibraryEntry>,
     /// Where `root` came from, or why there is none, so the agent can tell the
@@ -238,29 +245,6 @@ pub async fn list_skills(
     .unwrap_or_default()
 }
 
-/// Folder picker behind "Choose project folder…". Desktop only: the dialog
-/// plugin has no folder picker on iOS.
-#[cfg(desktop)]
-#[tauri::command]
-#[cfg_attr(test, specta::specta)]
-pub async fn pick_workspace_root(window: tauri::WebviewWindow) -> Result<Option<String>, String> {
-    let picked = tauri::async_runtime::spawn_blocking(move || {
-        crate::commands::fs::window_file_dialog(&window).blocking_pick_folder()
-    })
-    .await
-    .map_err(|e| e.to_string())?;
-    let picked = picked.map(|p| p.to_string());
-    // The home directory or a drive root would hand the agent everything the user
-    // owns: refuse it here, with a reason the panel can show.
-    if picked
-        .as_deref()
-        .is_some_and(|p| crate::ai::project::is_too_broad(Path::new(p)))
-    {
-        return Err("TOO_BROAD".to_string());
-    }
-    Ok(picked)
-}
-
 /// Creates the global config folder (with a starter agent.md and skills/) and
 /// reveals it in the file manager. Desktop only: iOS has no file manager.
 #[cfg(desktop)]
@@ -277,7 +261,7 @@ pub async fn open_global_agent_dir(app: AppHandle, template: String) -> Result<(
 
 /// Creates the global config folder if needed and returns the agent.md path,
 /// which the frontend opens in the editor itself.
-#[tauri::command]
+#[tauri::command(async)]
 #[cfg_attr(test, specta::specta)]
 pub fn ensure_global_agent_md(app: AppHandle, template: String) -> Result<String, String> {
     Ok(ensure_global_layer(&app, &template)?
@@ -297,7 +281,7 @@ pub async fn import_agent_skill(
 ) -> Result<Option<Vec<AgentSkill>>, String> {
     let picked = {
         tauri::async_runtime::spawn_blocking(move || {
-            crate::commands::fs::window_file_dialog(&window)
+            crate::dialogs::window_file_dialog(&window)
                 .add_filter("Markdown", &["md"])
                 .blocking_pick_file()
         })
@@ -321,11 +305,7 @@ pub async fn import_agent_skill(
 
     let global_dir = global_agent_dir(&app)?;
     let skills_dir = global_dir.join("skills");
-    std::fs::create_dir_all(&skills_dir).map_err(|e| e.to_string())?;
-    let target = skill_file_path(&skills_dir, &skill.name)?;
-    crate::atomic::write(&target, &content)
-        .await
-        .map_err(|e| e.to_string())?;
+    write_skill_file(&skills_dir, &skill.name, OnTaken::Replace, |_| content)?;
 
     let (_, skills) = read_layer(&global_dir, SkillSource::Global);
     Ok(Some(skills))
@@ -345,7 +325,7 @@ pub async fn customize_builtin_skill(app: AppHandle, name: String) -> Result<Str
 }
 
 /// Reset to built-in: deletes the Customize… copies (those with
-/// `textus-based-on`); a same-named skill the user wrote is NOT_A_COPY. Returns
+/// `textus-based-on`); a same-named skill the user wrote is notACopy. Returns
 /// the deleted paths, so the frontend can close tabs that would write them back.
 #[tauri::command]
 #[cfg_attr(test, specta::specta)]
@@ -369,7 +349,7 @@ pub async fn set_skill_modes(
     modes: Vec<AgentMode>,
 ) -> Result<(), String> {
     let dir = match source {
-        SkillSource::Builtin => return Err(UNKNOWN_BUILTIN.to_string()),
+        SkillSource::Builtin => return Err(crate::errors::error(UNKNOWN_BUILTIN)),
         SkillSource::Global => global_agent_dir(&app)?,
         SkillSource::Project => project_dir(
             &project_root(doc_path.as_deref(), workspace_root.as_deref())
@@ -394,7 +374,7 @@ pub async fn set_skill_off(
     off: bool,
 ) -> Result<(), String> {
     let dir = match source {
-        SkillSource::Builtin => return Err(UNKNOWN_BUILTIN.to_string()),
+        SkillSource::Builtin => return Err(crate::errors::error(UNKNOWN_BUILTIN)),
         SkillSource::Global => global_agent_dir(&app)?,
         SkillSource::Project => project_dir(
             &project_root(doc_path.as_deref(), workspace_root.as_deref())
@@ -435,10 +415,7 @@ pub async fn delete_global_skill(app: AppHandle, name: String) -> Result<Vec<Str
     tauri::async_runtime::spawn_blocking(move || {
         let files = skill_files_named(&dir, &name)?;
         for file in &files {
-            #[cfg(desktop)]
-            trash::delete(file).map_err(|e| e.to_string())?;
-            #[cfg(not(desktop))]
-            std::fs::remove_file(file).map_err(|e| e.to_string())?;
+            crate::atomic::to_trash(file)?;
         }
         Ok(files
             .iter()
@@ -450,4 +427,4 @@ pub async fn delete_global_skill(app: AppHandle, name: String) -> Result<Vec<Str
 }
 
 #[cfg(test)]
-mod tests;
+pub(crate) mod tests;

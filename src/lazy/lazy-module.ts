@@ -17,6 +17,8 @@ export interface LazyModule<T> {
 interface Entry {
   module: LazyModule<unknown>;
   warm: boolean;
+  /** Warmed before the other warm parts. */
+  first: boolean;
   loaded: boolean;
 }
 
@@ -27,7 +29,7 @@ const entries = new Map<string, Entry>();
 export function lazyModule<T>(
   name: string,
   loader: () => Promise<T>,
-  options: { warm?: boolean } = {},
+  options: { warm?: boolean | "first" } = {},
 ): LazyModule<T> {
   let pending: Promise<T> | null = null;
   let value: T | undefined;
@@ -56,6 +58,7 @@ export function lazyModule<T>(
   entries.set(name, {
     module: module as LazyModule<unknown>,
     warm: !!options.warm,
+    first: options.warm === "first",
     loaded: false,
   });
   if (options.warm && warming) scheduleWarm();
@@ -89,9 +92,10 @@ function scheduleWarm() {
   scheduled = true;
   whenIdle(async () => {
     scheduled = false;
-    const next = [...entries.values()].find(
+    const left = [...entries.values()].filter(
       (entry) => entry.warm && !entry.loaded,
     );
+    const next = left.find((entry) => entry.first) ?? left[0];
     if (!next) return;
     // A failed warm-up is left for the real first use to report.
     await next.module.load().catch(() => {});

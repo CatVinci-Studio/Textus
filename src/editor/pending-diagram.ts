@@ -3,10 +3,10 @@
 // editor's own drawer draws it, so it matches the document's diagrams.
 
 import { renderMarkdownInlineHtml } from "./markdown/render-html";
-import { animate, duration } from "../ui/motion";
+import { animate, duration } from "../engine/motion/motion";
 
 /** A run of Markdown text, or a ```mermaid fence in it. */
-export type DiagramPart =
+type DiagramPart =
   | { kind: "text"; text: string }
   | {
       kind: "diagram";
@@ -69,7 +69,7 @@ export function splitMermaidFences(markdown: string): DiagramPart[] | null {
 
 /** Draws `code` the way the editor draws its diagrams; throws when it
  *  can't be drawn. `idPrefix`: the render id the SVG's own ids start with. */
-export type PendingDrawer = (
+type PendingDrawer = (
   code: string,
   language: string,
 ) => Promise<{ svg: string; idPrefix: string }>;

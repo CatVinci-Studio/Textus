@@ -1,0 +1,314 @@
+/* GitHub-style alerts: a border and badge in the kind's colour, each kind a
+   colour of the palette (engine/tokens/base.css), so a theme's own colours
+   reach them; on the root, so plugin pages get them too. */
+:root {
+  --doc-alert-note: var(--doc-accent);
+  --doc-alert-tip: var(--tone-green);
+  --doc-alert-important: var(--tone-purple);
+  --doc-alert-warning: var(--doc-mark);
+  --doc-alert-caution: var(--tone-red);
+}
+
+.milkdown blockquote.md-alert-note {
+  --doc-alert-accent: var(--doc-alert-note);
+}
+.milkdown blockquote.md-alert-tip {
+  --doc-alert-accent: var(--doc-alert-tip);
+}
+.milkdown blockquote.md-alert-important {
+  --doc-alert-accent: var(--doc-alert-important);
+}
+.milkdown blockquote.md-alert-warning {
+  --doc-alert-accent: var(--doc-alert-warning);
+}
+.milkdown blockquote.md-alert-caution {
+  --doc-alert-accent: var(--doc-alert-caution);
+}
+.milkdown blockquote.md-alert-quote {
+  --doc-alert-accent: var(--doc-muted);
+}
+
+.milkdown blockquote.md-alert {
+  border-left-color: var(--doc-alert-accent);
+}
+
+.md-alert-title {
+  display: flex;
+  align-items: center;
+  gap: 0.5em;
+  font-weight: 600;
+  /* As words, a step towards the text so a bright colour still reads. */
+  color: color-mix(in srgb, var(--doc-alert-accent) 50%, var(--doc-text));
+}
+
+.md-alert-title svg {
+  fill: currentColor;
+  flex-shrink: 0;
+}
+
+.md-alert-marker-hidden {
+  display: none;
+}
+
+/* Obsidian's inline syntax, drawn while the caret is away. */
+.md-syntax-hidden {
+  display: none;
+}
+.md-comment,
+.md-block-id {
+  color: var(--doc-muted);
+}
+.md-block-id {
+  opacity: 0.6;
+}
+/* All comment: kept in the flow so the caret can still reach it. */
+.milkdown .md-comment-block {
+  height: 0;
+  margin: 0;
+  overflow: hidden;
+}
+.md-inline-footnote {
+  font-size: 0.8em;
+  vertical-align: super;
+  color: var(--doc-muted);
+}
+.milkdown mark.md-mark-red {
+  background: var(--tone-red-tint);
+}
+.milkdown mark.md-mark-orange {
+  background: var(--tone-orange-tint);
+}
+.milkdown mark.md-mark-yellow {
+  background: var(--tone-yellow-tint);
+}
+.milkdown mark.md-mark-green {
+  background: var(--tone-green-tint);
+}
+.milkdown mark.md-mark-blue {
+  background: var(--tone-blue-tint);
+}
+.milkdown mark.md-mark-purple {
+  background: var(--tone-purple-tint);
+}
+
+/* Obsidian's "-" / "+": the chevron folds the body away in the view only. */
+.md-alert-fold {
+  display: inline-flex;
+  cursor: pointer;
+  transition: transform var(--dur-fast) var(--ease-standard);
+}
+.md-alert-fold[data-folded="true"] {
+  transform: rotate(-90deg);
+}
+.milkdown blockquote.md-alert-folded > :not(:first-child) {
+  display: none;
+}
+
+.code-block-wrapper {
+  position: relative;
+}
+
+/* Over the block's top-right corner, shown while it is hovered, edited or
+   its language menu is open. */
+.code-block-header {
+  position: absolute;
+  inset: 0;
+  z-index: 2;
+  pointer-events: none;
+}
+
+/* Clear of the block's corner curve, so the buttons' own corners needn't
+   follow it. */
+.code-block-actions {
+  position: absolute;
+  top: var(--shape-s);
+  right: var(--shape-s);
+  display: flex;
+  gap: 4px;
+  user-select: none;
+  -webkit-user-select: none;
+  opacity: 0;
+  transition: opacity var(--dur-fast) var(--ease-standard);
+}
+
+.code-block-wrapper:hover .code-block-actions,
+.code-block-wrapper:focus-within .code-block-actions,
+.code-block-wrapper.is-picking-language .code-block-actions {
+  opacity: 1;
+  pointer-events: auto;
+}
+
+.code-block-language {
+  display: flex;
+}
+
+.code-block-copy,
+.code-block-select-all,
+.code-block-actions .plugin-code-done,
+.code-block-language-select {
+  font: inherit;
+  font-size: 0.72em;
+  line-height: 1.6;
+  color: var(--doc-muted);
+  /* Opaque: it lies over the code, or the text right below the block. */
+  background: var(--doc-bg, var(--ui-bg));
+  border: 1px solid var(--doc-border);
+  border-radius: var(--shape-pill);
+  corner-shape: round;
+  padding: 0.1em 0.5em;
+  cursor: pointer;
+}
+
+.code-block-language-select {
+  position: relative;
+  padding-right: 1.9em;
+}
+
+/* Its chevron as the app's selects draw theirs, in the document's muted
+   colour. */
+.code-block-language-select::after {
+  content: "";
+  position: absolute;
+  top: 50%;
+  right: 0.5em;
+  width: 0.8em;
+  height: 0.8em;
+  translate: 0 -50%;
+  background: var(--doc-muted);
+  -webkit-mask: var(--select-chevron) center / contain no-repeat;
+  mask: var(--select-chevron) center / contain no-repeat;
+  pointer-events: none;
+}
+
+.code-block-copy:hover,
+.code-block-copy:focus-visible,
+.code-block-select-all:hover,
+.code-block-select-all:focus-visible,
+.code-block-actions .plugin-code-done:hover,
+.code-block-language-select:hover,
+.code-block-language-select:focus-visible,
+.code-block-language-select[aria-expanded="true"] {
+  color: var(--doc-text);
+}
+
+.code-block-copy.is-copied {
+  color: var(--doc-accent-text);
+}
+
+/* Stays at the top as the list scrolls. */
+.code-language-search {
+  position: sticky;
+  /* Above the options, which are positioned too. */
+  z-index: 1;
+  top: -4px;
+  margin: -4px -4px 4px;
+  padding: 4px;
+  background: var(--ui-bg);
+}
+
+.code-language-search input {
+  width: 100%;
+  min-width: 9em;
+  box-sizing: border-box;
+  padding: 4px 8px;
+  border: 1px solid var(--doc-border, var(--ui-border));
+  border-radius: var(--shape-s);
+  background: var(--doc-bg, var(--ui-bg));
+  color: var(--doc-text);
+  font: inherit;
+  font-size: var(--text-secondary);
+}
+
+/* Line numbers: the gutter floats, the code beside it is its own block, so
+   nothing paints over the code. The code shares the <pre>'s size and line
+   height, or the numbers drift. Screen only; id-weighted like Typora themes. */
+@media screen {
+  #write .code-block-numbered pre {
+    padding-left: 0;
+  }
+
+  #write .code-block-numbered pre code {
+    display: block;
+    overflow: hidden;
+    white-space: pre-wrap;
+    overflow-wrap: anywhere;
+    font-size: inherit;
+    line-height: inherit;
+  }
+}
+
+.code-line-gutter {
+  float: left;
+  margin-right: 0.9em;
+  padding: 0 0.6em 0 0.9em;
+  border-right: 1px solid var(--doc-border);
+  color: var(--doc-muted);
+  text-align: right;
+  font-family: var(--font-mono);
+  font-variant-numeric: tabular-nums;
+  user-select: none;
+  pointer-events: none;
+}
+
+.code-line-gutter > span {
+  display: block;
+}
+
+/* Typora themes' `#write code` would put a pill on every code block line;
+   unlayered, same id weight, one element more. */
+#write pre > code {
+  background: none;
+  padding: 0;
+  margin: 0;
+  border: 0;
+  border-radius: 0;
+  box-shadow: none;
+}
+
+/* The wrapper is the block's box: a Typora theme's margin on its CodeMirror
+   box, mapped to this <pre>, would open bands inside it. */
+#write .md-fences > pre {
+  margin: 0;
+}
+
+/* "```" typed on a line of its own: the fence, not inline code
+   (md-span-autopair-plugin.ts). */
+#write code.is-fence {
+  background: none;
+  padding: 0;
+  margin: 0;
+  border: 0;
+  border-radius: 0;
+  box-shadow: none;
+  color: inherit;
+  font: inherit;
+}
+
+/* Syntax highlighting tokens (via refractor/Prism token classes), from the
+   palette's colours a step towards the page's text so they read on the code
+   block; the colour rules are in content-base.css's layer, so a theme's own
+   token rules win. */
+:root {
+  --doc-token-string: color-mix(
+    in srgb,
+    var(--tone-green) 72%,
+    var(--doc-text)
+  );
+  --doc-token-number: color-mix(in srgb, var(--doc-mark) 72%, var(--doc-text));
+  --doc-token-keyword: color-mix(
+    in srgb,
+    var(--tone-purple) 72%,
+    var(--doc-text)
+  );
+  --doc-token-function: var(--doc-accent-text);
+  --doc-token-tag: color-mix(in srgb, var(--tone-red) 72%, var(--doc-text));
+}
+
+/* A one-design theme keeps its light page in dark mode: the palette's light
+   colours there, or the dark ones would be pale on it. */
+:root[data-light-page] .milkdown {
+  --doc-mark: #ff9500;
+  --tone-green: #34c759;
+  --tone-purple: #af52de;
+  --tone-red: #ff3b30;
+}

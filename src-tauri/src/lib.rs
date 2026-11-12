@@ -9,16 +9,26 @@ mod auth;
 mod background;
 #[cfg(desktop)]
 pub mod cli;
+mod dialogs;
+mod errors;
+mod excerpt;
 // Checks src/platform/bindings/; desktop builds hold every command it lists.
+#[cfg(desktop)]
+mod agents;
 #[cfg(all(test, desktop))]
 mod bindings;
 mod commands;
 mod conventions;
 mod distribution;
+mod export_formats;
 mod ext_stats;
 mod extract;
+mod frontmatter;
+mod ids;
+mod json_file;
 #[cfg(desktop)]
 mod mcp;
+mod media;
 #[cfg(desktop)]
 mod menu;
 mod net;
@@ -31,6 +41,9 @@ mod walk;
 #[cfg(windows)]
 mod webview_memory;
 mod window_frame;
+mod window_guard;
+#[cfg(desktop)]
+mod windows;
 
 use std::sync::atomic::{AtomicBool, Ordering};
 use std::sync::Mutex;
@@ -69,6 +82,7 @@ fn desktop_builder(builder: tauri::Builder<tauri::Wry>) -> tauri::Builder<tauri:
         .manage(background::BackgroundStatus::default())
         .manage(background::tray::TrayPlugins::default())
         .manage(mcp::McpHub::default())
+        .manage(agents::Agents::default())
         .manage(cli::app::CliBridge::default())
         .plugin(tauri_plugin_deep_link::init())
         .on_window_event(|window, event| {
@@ -82,10 +96,7 @@ fn desktop_builder(builder: tauri::Builder<tauri::Wry>) -> tauri::Builder<tauri:
                 schedule::app_state::changed(app);
             }
             if matches!(event, tauri::WindowEvent::Destroyed) {
-                let no_other_windows = app
-                    .webview_windows()
-                    .keys()
-                    .all(|label| label == window.label());
+                let no_other_windows = app.windows().keys().all(|label| label == window.label());
                 if let Some(state) = app.try_state::<SessionTabsState>() {
                     // The last editor window keeps its documents in the session file.
                     commands::session::forget_window(app, window.label(), &state);
@@ -93,6 +104,12 @@ fn desktop_builder(builder: tauri::Builder<tauri::Wry>) -> tauri::Builder<tauri:
                 if let Some(state) = app.try_state::<OpenChatWindows>() {
                     commands::chat_window::forget_chat_window(app, window.label(), &state);
                 }
+                #[cfg(desktop)]
+                commands::floating_window::close_owned_by(app, window.label());
+                #[cfg(desktop)]
+                agents::stop_for_window(app, window.label());
+                #[cfg(desktop)]
+                cli::app::window_gone(app, window.label());
                 // File > Quit closes every window so dirty editors can cancel; macOS would
                 // otherwise stay alive windowless, so exit once the final window is gone.
                 if no_other_windows && commands::session::app_quitting() {
@@ -102,7 +119,7 @@ fn desktop_builder(builder: tauri::Builder<tauri::Wry>) -> tauri::Builder<tauri:
             // Remember a window's size and place on Close, since after Destroyed they can
             // no longer be read.
             if matches!(event, tauri::WindowEvent::CloseRequested { .. })
-                && commands::chat_window::is_editor_window(window.label())
+                && crate::windows::is_editor_window(window.label())
             {
                 commands::prefs::remember_editor_window(app, window);
             }
@@ -143,6 +160,8 @@ fn desktop_setup(app: &mut tauri::App) -> Result<(), Box<dyn std::error::Error>>
 
     commands::cli::try_silent_install();
     cli::app::start(app.handle());
+    // Secrets an older build left in the settings go to the key store.
+    mcp::secrets::seal_saved(app.handle());
 
     menu::install(app)?;
 
@@ -170,9 +189,9 @@ pub fn run() {
     let builder = builder.plugin(tauri_plugin_single_instance::init(|app, argv, cwd| {
         let paths = paths_from_argv(argv, std::path::Path::new(&cwd));
         let editor_open = app
-            .webview_windows()
+            .windows()
             .keys()
-            .any(|label| commands::chat_window::is_editor_window(label));
+            .any(|label| crate::windows::is_editor_window(label));
         if paths.is_empty() && !editor_open {
             // Launched again while running in the background with no
             // window: the same documents a fresh launch would restore.
@@ -204,6 +223,13 @@ pub fn run() {
         .setup(|app| {
             // Before any window: every window's boot script is made from it.
             settings::init(app.handle());
+            // Where the AI's file changes and revisions are kept, known at once.
+            crate::ai::kept_proposals::know_app_data(app.handle());
+            if let Some(data) = crate::ai::kept_proposals::app_data_dir() {
+                tauri::async_runtime::spawn_blocking(move || {
+                    crate::ai::file_changes::forget_old_records(&data)
+                });
+            }
             tauri::async_runtime::spawn(plugins::moved_skills::install_moved_skills(
                 app.handle().clone(),
             ));
@@ -219,6 +245,8 @@ pub fn run() {
             // Flush whatever is still waiting on its debounce.
             if let tauri::RunEvent::Exit = event {
                 settings::flush_all(app_handle);
+                #[cfg(desktop)]
+                agents::stop_all(app_handle);
             }
             // Closing the last window leaves the app running on macOS, and elsewhere in
             // background mode. Tauri's codeless request after the last window is turned

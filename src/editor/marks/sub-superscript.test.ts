@@ -1,6 +1,6 @@
 // @vitest-environment jsdom
 import { afterEach, describe, expect, it } from "vitest";
-import { closeViews, openView } from "../../document-view/editor-view-kit";
+import { closeViews, openView } from "../editor-view-kit";
 
 afterEach(closeViews);
 

@@ -1,3 +1,4 @@
+import { eachLine } from "../../utils/markdown-lines";
 /**
  * Pasted text as the writer saw it. Markdown reads a line break inside a
  * paragraph as a space, so such breaks are kept as hard breaks; quote bars
@@ -47,16 +48,11 @@ function terminalOutput(lines: string[]): boolean {
 
 /** Whether each line is a fence's or inside one. */
 function fencedLines(lines: string[]): boolean[] {
-  let fence: string | null = null;
-  return lines.map((line) => {
-    const marker = /^[ \t]*(```|~~~|\$\$)/.exec(line)?.[1];
-    if (fence) {
-      if (marker === fence) fence = null;
-      return true;
-    }
-    if (marker) fence = marker;
-    return !!marker;
+  const code: boolean[] = [];
+  eachLine(lines.join("\n"), (_line, i, isCode) => (code[i] = isCode), {
+    math: true,
   });
+  return code;
 }
 
 /** A PDF's ligatures and radical forms as the letters they stand for. */
@@ -154,17 +150,9 @@ export function keepPastedLines(text: string): string {
     ),
     fenced,
   );
-  let fence: string | null = null;
+  const code = fencedLines(lines);
   const out = lines.map((line, i) => {
-    const marker = /^[ \t]*(```|~~~|\$\$)/.exec(line)?.[1];
-    if (fence) {
-      if (marker === fence) fence = null;
-      return line;
-    }
-    if (marker) {
-      fence = marker;
-      return line;
-    }
+    if (code[i]) return line;
     const next = lines[i + 1];
     const breaks =
       next !== undefined &&

@@ -10,7 +10,7 @@ import type { Node as ProseNode } from "@milkdown/kit/prose/model";
  * The tags themselves are hidden, as there, until the caret is on one.
  */
 
-export type Align = "left" | "center" | "right";
+type Align = "left" | "center" | "right";
 
 const OPEN_RE = /^<(div|p)\s+align\s*=\s*["']?(left|center|right)["']?\s*>$/i;
 const CENTER_RE = /^<center\s*>$/i;

@@ -1,10 +1,11 @@
 import { Suspense, useSyncExternalStore, type ComponentType } from "react";
-import { Tooltip } from "../../ui/Tooltip";
+import { PluginTabIcon } from "./plugin-tab-icon";
+import { Tooltip } from "../../engine/controls/Tooltip";
 import {
   contextItemsVersion,
   contributedContextItems,
   subscribeContextItems,
-} from "../../ui/context-menu-items";
+} from "../../registry/context-menu-items";
 import { pluginRecord } from "../store/plugin-records";
 import { lazyComponent } from "../../lazy/lazy-component";
 import { lazyModule } from "../../lazy/lazy-module";
@@ -36,9 +37,6 @@ export const PluginWebviewPanel = waiting(
 );
 export const PluginSettingsWebview = waiting(
   lazyComponent(webviews, (m) => m.PluginSettingsWebview),
-);
-export const PluginTabIcon = waiting(
-  lazyComponent(webviews, (m) => m.PluginTabIcon),
 );
 export const PluginCodeBlock = waiting(
   lazyComponent(webviews, (m) => m.PluginCodeBlock),
@@ -82,3 +80,5 @@ export function ViewTitleActions({ view }: { view: string }) {
     </div>
   );
 }
+
+export { PluginTabIcon };

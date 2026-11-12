@@ -73,7 +73,10 @@ pub(crate) fn target(raw: &str, reach: Reach) -> Result<reqwest::Url, String> {
 /// internet: checked and pinned when direct. Through the app's proxy, which
 /// resolves names itself, only literal private addresses and local names can
 /// be refused.
-async fn client_for(url: &reqwest::Url, reach: Reach) -> Result<reqwest::Client, String> {
+pub(crate) async fn client_for(
+    url: &reqwest::Url,
+    reach: Reach,
+) -> Result<reqwest::Client, String> {
     let host = url.host_str().ok_or_else(|| REFUSED.to_string())?;
     let port = url.port_or_known_default().unwrap_or(443);
     let literal: Option<IpAddr> = host

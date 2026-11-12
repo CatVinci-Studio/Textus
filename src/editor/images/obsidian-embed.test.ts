@@ -2,14 +2,8 @@
 import { afterEach, describe, expect, it } from "vitest";
 import type { Editor } from "@milkdown/kit/core";
 import { editorViewCtx, serializerCtx } from "@milkdown/kit/core";
-import { createTestEditor } from "../../document-view/editor-test-harness";
-import { readFileSync } from "node:fs";
-import {
-  IMAGE_EXTENSIONS,
-  embedForPicked,
-  parseEmbed,
-  withEmbedPath,
-} from "./obsidian-embed";
+import { createTestEditor } from "../editor-test-kit";
+import { embedForPicked, parseEmbed, withEmbedPath } from "./obsidian-embed";
 import { exportSrc } from "./obsidian-embed-preview";
 
 describe("an embed's src in an HTML export", () => {
@@ -38,6 +32,16 @@ describe("parseEmbed", () => {
       height: null,
       isImage: true,
     });
+  });
+
+  it("reads one in a table cell, its bar written \\|", () => {
+    expect(parseEmbed("![[pic.png\\|300]]")).toMatchObject({
+      path: "pic.png",
+      width: 300,
+    });
+    expect(withEmbedPath("![[pic.png\\|300]]", "img/pic.png")).toBe(
+      "![[img/pic.png\\|300]]",
+    );
   });
 
   it("reads a bare file name with spaces", () => {
@@ -71,15 +75,6 @@ describe("parseEmbed", () => {
       expect(parseEmbed(`![[a.${ext}]]`)?.isImage).toBe(true);
     },
   );
-
-  it("takes the same file types for images as the backend searches for", () => {
-    const rust = readFileSync("src-tauri/src/commands/vault.rs", "utf8");
-    const list = /const IMAGE_EXTENSIONS: &\[&str\] = &\[([^\]]*)\]/.exec(rust);
-    const types = [...(list?.[1] ?? "").matchAll(/"([^"]+)"/g)].map(
-      (m) => m[1],
-    );
-    expect(types).toEqual([...IMAGE_EXTENSIONS]);
-  });
 
   it.each(["![[Note]]", "![[Note#Heading]]", "![[doc.pdf]]", "![[a.png#^b]]"])(
     "takes %s for something other than an image",

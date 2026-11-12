@@ -5,7 +5,7 @@
 mod budget;
 pub(crate) mod commons;
 pub(crate) mod extract;
-mod fetch;
+pub(crate) mod fetch;
 mod scholar;
 pub(crate) mod search;
 mod seen;
@@ -71,9 +71,7 @@ pub(crate) fn resolve_service(
             .filter(|u| u.starts_with("http://") || u.starts_with("https://"))
             .map(|u| Service::new(Backend::Searxng, u.to_string())),
         Some(backend) => key(backend).map(|k| Service::new(backend, k)),
-        None => [Backend::Deepseek, Backend::Zhipu, Backend::Kimi]
-            .into_iter()
-            .find_map(|b| key(b).map(|k| Service::new(b, k))),
+        None => Backend::automatic().find_map(|b| key(b).map(|k| Service::new(b, k))),
     }
 }
 
@@ -332,6 +330,23 @@ pub fn web_search_status(
                 .map(|s| s.backend)
         },
     }
+}
+
+/// What came from outside - a page, results, an abstract - in the block the
+/// prompt calls material, never instructions: nothing in it can close the
+/// block early (any case), nor the source its quotes.
+pub(crate) fn external_content(source: &str, body: &str) -> String {
+    let source = source.replace('"', "'");
+    let body = unclosing(body);
+    format!("<external-content source=\"{source}\">\n{body}\n</external-content>")
+}
+
+/// Text for inside an `<external-content>` block, its closing tag broken.
+pub(crate) fn unclosing(body: &str) -> std::borrow::Cow<'_, str> {
+    static CLOSING: std::sync::LazyLock<regex::Regex> = std::sync::LazyLock::new(|| {
+        regex::Regex::new(r"(?i)</\s*external-content").expect("valid")
+    });
+    CLOSING.replace_all(body, "</external_content")
 }
 
 #[cfg(test)]

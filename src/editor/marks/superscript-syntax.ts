@@ -43,7 +43,7 @@ declare module "mdast-util-to-markdown" {
 }
 
 /** Markdown "^superscript^". */
-export interface Superscript extends Parent {
+interface Superscript extends Parent {
   type: "superscript";
   children: PhrasingContent[];
 }

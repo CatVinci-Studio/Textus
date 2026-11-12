@@ -45,7 +45,11 @@ fn place(
                 return Err(format!("{id} was not granted project.data."));
             }
             match root.filter(|r| !r.is_empty()) {
-                Some(root) => Ok(project_place(Path::new(root), id)),
+                Some(root) => {
+                    let place = project_place(Path::new(root), id);
+                    unlinked(Path::new(root), &place)?;
+                    Ok(place)
+                }
                 None => loose_place(app, id),
             }
         }
@@ -72,16 +76,32 @@ pub(super) fn forget_global(app: &tauri::AppHandle, id: &str) -> Result<(), Stri
         if !place.is_dir() {
             continue;
         }
-        #[cfg(desktop)]
-        trash::delete(&place).map_err(|e| e.to_string())?;
-        #[cfg(not(desktop))]
-        std::fs::remove_dir_all(&place).map_err(|e| e.to_string())?;
+        crate::atomic::to_trash(&place)?;
     }
     Ok(())
 }
 
 fn project_place(root: &Path, id: &str) -> PathBuf {
     root.join(".textus").join("plugins").join(id)
+}
+
+/// Refuses a link anywhere from `base` down to `path`: a shared folder may
+/// hold one that leads a plugin's storage elsewhere on the disk.
+fn unlinked(base: &Path, path: &Path) -> Result<(), String> {
+    let rel = path
+        .strip_prefix(base)
+        .map_err(|_| "Outside the plugin's storage.".to_string())?;
+    let mut at = base.to_path_buf();
+    for part in rel.components() {
+        at.push(part);
+        if std::fs::symlink_metadata(&at).is_ok_and(|m| m.file_type().is_symlink()) {
+            return Err(format!(
+                "{} is a link; plugin storage doesn't follow links.",
+                at.display()
+            ));
+        }
+    }
+    Ok(())
 }
 
 /// A key as a file name: letters, digits, `-` and `_` kept, other bytes as
@@ -146,7 +166,9 @@ fn write_within(place: &Path, path: &Path, bytes: &[u8]) -> Result<(), String> {
 }
 
 fn get(place: &Path, key: &str) -> Result<Option<serde_json::Value>, String> {
-    match std::fs::read(place.join("kv").join(key_file(key)?)) {
+    let path = place.join("kv").join(key_file(key)?);
+    unlinked(place, &path)?;
+    match std::fs::read(path) {
         Ok(bytes) => serde_json::from_slice(&bytes)
             .map(Some)
             .map_err(|e| e.to_string()),
@@ -157,6 +179,7 @@ fn get(place: &Path, key: &str) -> Result<Option<serde_json::Value>, String> {
 
 fn set(place: &Path, key: &str, value: &serde_json::Value) -> Result<(), String> {
     let path = place.join("kv").join(key_file(key)?);
+    unlinked(place, &path)?;
     if value.is_null() {
         return match std::fs::remove_file(&path) {
             Err(e) if e.kind() != std::io::ErrorKind::NotFound => Err(e.to_string()),
@@ -183,8 +206,11 @@ fn keys(place: &Path) -> Vec<String> {
 /// `rel` inside the place's `files/`, made first so a new one resolves.
 fn file_in(place: &Path, rel: &str) -> Result<PathBuf, String> {
     let files = place.join("files");
+    unlinked(place, &files)?;
     std::fs::create_dir_all(&files).map_err(|e| e.to_string())?;
-    inside(&files, Path::new(rel))
+    let path = inside(&files, Path::new(rel))?;
+    unlinked(place, &files.join(rel))?;
+    Ok(path)
 }
 
 fn list_files(dir: &Path, base: &Path, out: &mut Vec<String>) {
@@ -202,7 +228,7 @@ fn list_files(dir: &Path, base: &Path, out: &mut Vec<String>) {
 }
 
 /// What the plugin kept under `key`, or null.
-#[tauri::command]
+#[tauri::command(async)]
 #[cfg_attr(test, specta::specta)]
 pub fn plugin_store_get(
     app: tauri::AppHandle,
@@ -215,7 +241,7 @@ pub fn plugin_store_get(
 }
 
 /// Keeps `value` under `key`; null takes the key away.
-#[tauri::command]
+#[tauri::command(async)]
 #[cfg_attr(test, specta::specta)]
 pub fn plugin_store_set(
     app: tauri::AppHandle,
@@ -229,7 +255,7 @@ pub fn plugin_store_set(
 }
 
 /// Every key the plugin keeps there, in order.
-#[tauri::command]
+#[tauri::command(async)]
 #[cfg_attr(test, specta::specta)]
 pub fn plugin_store_keys(
     app: tauri::AppHandle,
@@ -241,7 +267,7 @@ pub fn plugin_store_keys(
 }
 
 /// One of the plugin's own files there, as text.
-#[tauri::command]
+#[tauri::command(async)]
 #[cfg_attr(test, specta::specta)]
 pub fn plugin_store_read(
     app: tauri::AppHandle,
@@ -255,7 +281,7 @@ pub fn plugin_store_read(
 }
 
 /// Writes one of the plugin's own files there.
-#[tauri::command]
+#[tauri::command(async)]
 #[cfg_attr(test, specta::specta)]
 pub fn plugin_store_write(
     app: tauri::AppHandle,
@@ -271,7 +297,7 @@ pub fn plugin_store_write(
 }
 
 /// The plugin's own files there, as paths under its `files/`.
-#[tauri::command]
+#[tauri::command(async)]
 #[cfg_attr(test, specta::specta)]
 pub fn plugin_store_files(
     app: tauri::AppHandle,
@@ -287,7 +313,7 @@ pub fn plugin_store_files(
 }
 
 /// Deletes one of the plugin's own files there.
-#[tauri::command]
+#[tauri::command(async)]
 #[cfg_attr(test, specta::specta)]
 pub fn plugin_store_delete(
     app: tauri::AppHandle,
@@ -305,7 +331,7 @@ pub fn plugin_store_delete(
 
 /// How much a plugin keeps in each place, for Settings. `root` is the open
 /// folder, for the project's.
-#[tauri::command]
+#[tauri::command(async)]
 #[cfg_attr(test, specta::specta)]
 pub fn plugin_store_usage(
     app: tauri::AppHandle,
@@ -328,7 +354,7 @@ pub fn plugin_store_usage(
 
 /// Empties one of a plugin's places (Clear data). Asked by the user, not the
 /// plugin, which may be off.
-#[tauri::command]
+#[tauri::command(async)]
 #[cfg_attr(test, specta::specta)]
 pub fn plugin_store_clear(
     app: tauri::AppHandle,
@@ -346,10 +372,8 @@ pub fn plugin_store_clear(
             None => loose_place(&app, &id)?,
         },
     };
-    match std::fs::remove_dir_all(&dir) {
-        Err(e) if e.kind() != std::io::ErrorKind::NotFound => Err(e.to_string()),
-        _ => Ok(()),
-    }
+    // It may hold the user's notes.
+    crate::atomic::to_trash(&dir)
 }
 
 #[cfg(test)]
@@ -392,6 +416,18 @@ mod tests {
         let mut out = Vec::new();
         list_files(&place.join("files"), &place.join("files"), &mut out);
         assert_eq!(out, vec!["board/one.md".to_string()]);
+        // A link a shared folder planted is never followed.
+        #[cfg(unix)]
+        {
+            let away = tmp.path().join("away");
+            std::fs::create_dir_all(&away).unwrap();
+            std::os::unix::fs::symlink(&away, place.join("files/out")).unwrap();
+            assert!(file_in(&place, "out/x.md").is_err());
+            std::fs::create_dir_all(place.join("kv")).unwrap();
+            std::os::unix::fs::symlink(away.join("k.json"), place.join("kv/k.json")).unwrap();
+            assert!(set(&place, "k", &json!(1)).is_err());
+            assert!(get(&place, "k").is_err());
+        }
     }
 
     #[test]

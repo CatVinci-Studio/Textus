@@ -1,9 +1,10 @@
+import { getUiState, updateUiState } from "../../storage/ui-state";
 import { emitPluginEvent } from "../app-bridge";
 import { windowIpc } from "../../platform/ipc";
 import { thisWindow } from "../../platform/this-window";
 import { setFloatingCount } from "./floating-presence";
 import { dataUrl, readPluginFile } from "../store/files";
-import { contributedContextItems } from "../../ui/context-menu-items";
+import { contributedContextItems } from "../../registry/context-menu-items";
 import type {
   FloatingPlace,
   FloatingViewContribution,
@@ -37,8 +38,8 @@ export interface FloatingView {
 }
 
 /** How far the user may shrink or grow a view. */
-export const MIN_SCALE = 0.6;
-export const MAX_SCALE = 1.4;
+const MIN_SCALE = 0.6;
+const MAX_SCALE = 1.4;
 
 export function clampScale(scale: number) {
   return Math.min(MAX_SCALE, Math.max(MIN_SCALE, scale));
@@ -68,7 +69,6 @@ export interface FloatingChange {
 /** A click, a few quick ones (petting), or a drag that moved it. */
 export type FloatingTouch = "poke" | "pet" | "moved";
 
-const KEY = "textus.floatingViews";
 const open = new Map<string, FloatingView>();
 const listeners = new Set<() => void>();
 let version = 0;
@@ -79,19 +79,17 @@ type Saved = Pick<FloatingView, "place" | "x" | "y" | "folded"> & {
 };
 
 function saved(): Record<string, Saved> {
-  try {
-    return JSON.parse(localStorage.getItem(KEY) ?? "{}") ?? {};
-  } catch {
-    return {};
-  }
+  const kept = getUiState("floatingViews");
+  return kept && typeof kept === "object"
+    ? (kept as Record<string, Saved>)
+    : {};
 }
 
 function save(view: string, value: Saved) {
-  try {
-    localStorage.setItem(KEY, JSON.stringify({ ...saved(), [view]: value }));
-  } catch {
-    // Private mode or full storage: the view still works, unremembered.
-  }
+  updateUiState("floatingViews", (kept) => ({
+    ...(kept && typeof kept === "object" ? kept : {}),
+    [view]: value,
+  }));
 }
 
 /** The screen's left edge among several (WebKit and Chromium know it). */

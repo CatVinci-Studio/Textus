@@ -115,7 +115,7 @@ describe("the AI mode", () => {
   });
 
   it("keeps the practice tab's AI muted through the writing lessons", () => {
-    const result = resumeAt("plugins", { aiMode: "live" });
+    const result = resumeAt("palette", { aiMode: "live" });
     expect(result.current.practiceAi).toBe("muted");
     expect(result.current.watching).toBe(false);
   });

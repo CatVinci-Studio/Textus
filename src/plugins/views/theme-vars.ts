@@ -1,3 +1,4 @@
+import { onAppearance } from "../../engine/tokens/appearance";
 /**
  * The theme a plugin's webview is drawn in: the plugin API's variables with
  * their current values, a fixed list so a theme reworking the window's own
@@ -7,12 +8,14 @@ export const WEBVIEW_THEME_VARS = [
   // The interface's size step, which the page's lengths grow with.
   "--ui-text-scale",
   "--window-scale",
+  "--icon-scale",
   "--ui-bg",
   "--ui-surface",
   "--ui-subtle",
   "--ui-text",
   "--ui-muted",
   "--ui-accent",
+  "--ui-accent-text",
   "--ui-accent-fill",
   "--ui-primary",
   "--ui-on-primary",
@@ -27,6 +30,9 @@ export const WEBVIEW_THEME_VARS = [
   "--doc-bg",
   "--doc-text",
   "--doc-accent",
+  "--doc-accent-text",
+  // The palette's mark: highlights, "look here".
+  "--doc-mark",
   "--doc-code-bg",
   "--doc-border",
   "--doc-radius",
@@ -156,22 +162,5 @@ export function watchTheme(onChange: () => void): () => void {
       onChange();
     });
   };
-  const html = new MutationObserver(changed);
-  html.observe(document.documentElement, {
-    attributes: true,
-    attributeFilter: ["data-theme", "style", "class", "lang"],
-  });
-  const head = new MutationObserver(changed);
-  head.observe(document.head, {
-    childList: true,
-    subtree: true,
-    characterData: true,
-  });
-  const dark = window.matchMedia?.("(prefers-color-scheme: dark)");
-  dark?.addEventListener("change", changed);
-  return () => {
-    html.disconnect();
-    head.disconnect();
-    dark?.removeEventListener("change", changed);
-  };
+  return onAppearance(changed);
 }

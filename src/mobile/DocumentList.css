@@ -74,13 +74,6 @@
   padding: 8px 0 24px;
 }
 
-.document-list-empty {
-  margin: 48px 24px;
-  text-align: center;
-  color: var(--ui-muted);
-  font-size: var(--text-body);
-}
-
 .document-list-toolbar {
   display: flex;
   align-items: center;
@@ -91,53 +84,6 @@
 .document-list-count {
   font-size: var(--text-footnote);
   color: var(--ui-muted);
-}
-
-/* A small segmented control, as in Files' view switcher. The raised
-   segment is one thumb under both buttons that slides to the chosen one. */
-.document-list-views {
-  position: relative;
-  display: flex;
-  padding: 2px;
-  border-radius: var(--shape-pill);
-  corner-shape: round;
-  background: color-mix(in srgb, var(--ui-text, currentColor) 8%, transparent);
-}
-
-.document-list-views::before {
-  content: "";
-  position: absolute;
-  top: 2px;
-  bottom: 2px;
-  left: 2px;
-  width: calc(50% - 2px);
-  /* Concentric with the track: its radius less the 2px inset. */
-  border-radius: var(--shape-pill);
-  corner-shape: round;
-  background: var(--ui-bg);
-  box-shadow: var(--shadow-raised);
-  transition: transform var(--dur-medium) var(--ease-spring);
-}
-
-.document-list-views[data-view="grid"]::before {
-  transform: translateX(100%);
-}
-
-.document-list-view-button {
-  position: relative;
-  display: grid;
-  place-items: center;
-  width: 44px;
-  height: 30px;
-  padding: 0;
-  border: none;
-  background: none;
-  color: var(--ui-muted);
-  transition: color var(--dur-fast) var(--ease-standard);
-}
-
-.document-list-view-button[aria-checked="true"] {
-  color: var(--ui-text);
 }
 
 /* A page thumbnail: the document's opening lines, tiny, on a sheet. */
@@ -262,7 +208,7 @@
   display: grid;
   grid-template-columns: repeat(auto-fill, minmax(96px, 1fr));
   align-content: start;
-  gap: 20px 16px;
+  gap: 24px 16px;
   padding: 12px 16px 32px;
 }
 

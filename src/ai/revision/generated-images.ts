@@ -1,5 +1,11 @@
+import { PICTURES_IN_TEXT } from "../../editor/markdown/doc-blocks";
+import { fnv1a } from "../../utils/hash";
 import { ai, type GeneratedImageData } from "../../platform/ipc";
-import { EDIT_ACTIONS, type EditAction, type EditProposal } from "../types";
+import type { EditProposal } from "../types";
+import {
+  EDIT_ACTIONS,
+  type EditAction,
+} from "../../editor/markdown/edit-actions";
 import { explainAiError } from "../error-messages";
 import { currentStrings } from "../../i18n/current";
 
@@ -81,13 +87,8 @@ function aspectSize(aspect: string): { width: number; height: number } | null {
 }
 
 /** The stand-in id of a picture its call is still asking for. */
-export function draftPictureId(callId: string): string {
-  let h = 0x811c9dc5;
-  for (let i = 0; i < callId.length; i++) {
-    h ^= callId.charCodeAt(i);
-    h = Math.imul(h, 0x01000193) >>> 0;
-  }
-  return `draft${h.toString(36)}`;
+function draftPictureId(callId: string): string {
+  return `draft${fnv1a(callId).toString(36)}`;
 }
 
 function isDraftPicture(id: string): boolean {
@@ -328,12 +329,12 @@ export function showGeneratedImages(markdown: string): string {
   );
 }
 
+const WHOLE_PICTURE = new RegExp(`^${PICTURES_IN_TEXT.source}$`);
+
 /** The src of `markdown` when it is one picture's whole Markdown,
  *  `![alt](src)` - `<...>` around it taken off - else null. */
 export function pictureSrc(markdown: string): string | null {
-  const m = /^!\[[^\]]*\]\((<[^>]*>|[^)\s]*)(?:\s+"[^"]*")?\)$/.exec(
-    markdown.trim(),
-  );
+  const m = WHOLE_PICTURE.exec(markdown.trim());
   if (!m) return null;
   const src = m[1].startsWith("<") ? m[1].slice(1, -1) : m[1];
   return src || null;

@@ -6,7 +6,7 @@ import { pluginsSnapshot } from "./plugin-records";
  * global store, so it goes with the plugin, not the folder. A rename or move
  * takes it along for every installed plugin.
  */
-export const DOCUMENT_KEY_PREFIX = "doc:";
+const DOCUMENT_KEY_PREFIX = "doc:";
 
 /** The key `from`'s data moves to when `from` becomes `to`, or null when
  *  the key is no document under `from`. */

@@ -28,18 +28,6 @@ import {
 } from "./ghost-state";
 import { markChangeSource } from "../../editor/change-source";
 import { isReadOnly } from "../../editor/read-only-plugin";
-export { typedThrough } from "./ghost-state";
-export {
-  tidySuggestion,
-  isOneLineBlock,
-  stripEcho,
-  completionHints,
-  proseText,
-  hasProse,
-  completionContext,
-  nextWordChunk,
-  splitCandidates,
-} from "./ghost-context";
 
 // A pause, not a breath between words: shorter, a request goes out at nearly
 // every word, for suggestions typed past before they come.

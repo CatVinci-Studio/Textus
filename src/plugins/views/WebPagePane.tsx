@@ -1,32 +1,28 @@
+import { getUiState, setUiState } from "../../storage/ui-state";
+import { IconButton } from "../../engine/controls/IconButton";
 import { useRef, useState } from "react";
-import { Tooltip } from "../../ui/Tooltip";
+import { Tooltip } from "../../engine/controls/Tooltip";
 import { links, webPages } from "../../platform/ipc";
-import { ChevronIcon, DetachIcon, RefreshIcon } from "../../ui/icons";
+import {
+  ChevronIcon,
+  DetachIcon,
+  RefreshIcon,
+} from "../../engine/controls/icons";
 import { hasNativeWebPages } from "../../platform/capabilities";
 import type { Strings } from "../../i18n/strings";
 import { useNativeWebPage } from "./useNativeWebPage";
 import { webPageUrl } from "./web-page-url";
 
-/** Whether the address bar is folded away: one choice for every web page tab. */
-const BAR_HIDDEN_KEY = "textus.webPageBarHidden";
-
 function useBarHidden(): [boolean, (hidden: boolean) => void] {
-  const [hidden, setHidden] = useState(() => {
-    try {
-      return localStorage.getItem(BAR_HIDDEN_KEY) === "1";
-    } catch {
-      return false;
-    }
-  });
+  // One choice for every web page tab.
+  const [hidden, setHidden] = useState(
+    () => getUiState("webPageBarHidden") === true,
+  );
   return [
     hidden,
     (next) => {
       setHidden(next);
-      try {
-        localStorage.setItem(BAR_HIDDEN_KEY, next ? "1" : "0");
-      } catch {
-        // Not kept; this tab still folds it.
-      }
+      setUiState("webPageBarHidden", next);
     },
   ];
 }
@@ -157,16 +153,13 @@ function AddressBar({
         onGo(typed.trim());
       }}
     >
-      <Tooltip text={t.webPageReload}>
-        <button
-          type="button"
-          className="icon-button web-page-button"
-          aria-label={t.webPageReload}
-          onClick={onReload}
-        >
-          <RefreshIcon />
-        </button>
-      </Tooltip>
+      <IconButton
+        className="tx-icon-button web-page-button"
+        label={t.webPageReload}
+        onClick={onReload}
+      >
+        <RefreshIcon />
+      </IconButton>
       <input
         className="web-page-address"
         aria-label={t.webPageAddress}
@@ -175,32 +168,25 @@ function AddressBar({
         onFocus={(e) => e.currentTarget.select()}
         onChange={(e) => onType(e.target.value)}
       />
-      <Tooltip
-        text={
+      <IconButton
+        className="tx-icon-button web-page-button"
+        label={t.webPageOpenInBrowser}
+        hint={
           outsideHint
             ? `${t.webPageOpenInBrowser} - ${outsideHint}`
             : t.webPageOpenInBrowser
         }
+        onClick={onOutside}
       >
-        <button
-          type="button"
-          className="icon-button web-page-button"
-          aria-label={t.webPageOpenInBrowser}
-          onClick={onOutside}
-        >
-          <DetachIcon />
-        </button>
-      </Tooltip>
-      <Tooltip text={t.webPageHideBar}>
-        <button
-          type="button"
-          className="icon-button web-page-button"
-          aria-label={t.webPageHideBar}
-          onClick={() => setHidden(true)}
-        >
-          <ChevronIcon className="web-page-chevron-up" />
-        </button>
-      </Tooltip>
+        <DetachIcon />
+      </IconButton>
+      <IconButton
+        className="tx-icon-button web-page-button"
+        label={t.webPageHideBar}
+        onClick={() => setHidden(true)}
+      >
+        <ChevronIcon className="web-page-chevron-up" />
+      </IconButton>
     </form>
   );
 }

@@ -16,11 +16,12 @@
   color: var(--ui-muted);
   font-size: var(--text-secondary);
 }
+/* The shared field (tx-input), the dialog's width. */
 .report-problem-text,
 .report-problem-contact {
   box-sizing: border-box;
   width: 100%;
-  font: inherit;
+  font-size: var(--text-secondary);
 }
 .report-problem-text {
   min-height: 96px;

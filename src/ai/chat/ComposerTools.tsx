@@ -1,5 +1,10 @@
-import { CloseIcon, LightbulbIcon, SearchIcon } from "../../ui/icons";
-import { Tooltip } from "../../ui/Tooltip";
+import { fill } from "../../i18n/fill";
+import {
+  CloseIcon,
+  LightbulbIcon,
+  SearchIcon,
+} from "../../engine/controls/icons";
+import { Tooltip } from "../../engine/controls/Tooltip";
 import { rememberDeepThinking } from "./deep-thinking";
 import type { ChatComposerLabels, ChatComposerProps } from "./composer-types";
 import type { useRequestOptions } from "./useComposerState";
@@ -29,7 +34,7 @@ export function ComposerToggles({
           webSearch && searchUnavailable
             ? labels.webSearchNeedsService
             : webSearch
-              ? labels.toggleOnHint.replace("{label}", labels.webSearch)
+              ? fill(labels.toggleOnHint, { label: labels.webSearch })
               : labels.webSearch
         }
       >
@@ -41,7 +46,7 @@ export function ComposerToggles({
           aria-label={labels.webSearch}
           aria-pressed={webSearch}
           {...holdFocus}
-          onClick={() => setWebSearch((value) => !value)}
+          onClick={() => setWebSearch(!webSearch)}
         >
           <SearchIcon />
         </button>
@@ -52,7 +57,7 @@ export function ComposerToggles({
           description={labels.deepThinkingHint}
           text={
             deepThinking
-              ? labels.toggleOnHint.replace("{label}", labels.deepThinkingHint)
+              ? fill(labels.toggleOnHint, { label: labels.deepThinkingHint })
               : labels.deepThinkingHint
           }
         >
@@ -86,7 +91,7 @@ export function KindChip({
 }) {
   return (
     <span className="inline-chat-selection-chip">
-      <span className="inline-chat-chip-label">{kind.label}</span>
+      <span className="tx-truncate inline-chat-chip-label">{kind.label}</span>
       <Tooltip text={kind.clearLabel} side="above">
         <button
           type="button"

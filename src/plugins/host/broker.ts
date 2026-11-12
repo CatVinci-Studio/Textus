@@ -1,10 +1,12 @@
-import type { QuickPickItem } from "../../ui/quick-pick";
+import { ownError } from "../../utils/error-text";
+import type { QuickPickItem } from "../../engine/controls/quick-pick-queue";
 import { logPluginError, logPluginMessage } from "../store/plugin-log";
 import type { Strings } from "../../i18n/strings";
 import {
   getWindowAccess,
   onPluginEvent,
   type PluginEventMap,
+  type PluginTabInfo,
 } from "../app-bridge";
 import { connectFrame, hostsContainer, sandboxedFrame } from "./frames";
 import { hostDocument } from "./host-document";
@@ -15,7 +17,7 @@ import {
   type PluginManifest,
 } from "../store/manifest";
 import { fileHandlers } from "./broker-files";
-import { layoutHandlers } from "./broker-layout";
+import { layoutHandlers, seenBy } from "./broker-layout";
 import { editorHandlers, stopPluginEditor } from "./broker-editor";
 import { metadataHandlers } from "./broker-metadata";
 import { stopPluginUi, uiHandlers } from "./broker-ui";
@@ -29,7 +31,8 @@ import { forgetWillSave } from "../contributions/will-save";
 import { unwatchMetadata, watchMetadata } from "../workspace/metadata-cache";
 import { str, type Params, type PluginScope } from "./broker-scope";
 import type { Endpoint, Handlers } from "./rpc";
-import { grants, guarded } from "../api-permissions";
+import { guarded } from "../api-permissions";
+import { grants } from "../grants";
 import { lazyModule, type LazyModule } from "../../lazy/lazy-module";
 import { webview } from "../views/webviews";
 
@@ -58,7 +61,12 @@ export interface BrokerDeps {
   /** Sets one of the plugin's own settings, for every folder. */
   setSetting(id: string, key: string, value: unknown): Promise<void>;
   /** Runs any command - the app's, or a plugin's. */
-  runCommand(command: string, args: unknown[]): Promise<unknown>;
+  /** `caller`: the plugin that asks. */
+  runCommand(
+    command: string,
+    args: unknown[],
+    caller?: string,
+  ): Promise<unknown>;
   /** textus.offerPlugin, from the plugin `caller`: whether it is on. */
   offerPlugin(
     caller: { id: string; name: string },
@@ -176,7 +184,10 @@ export class PluginHost {
   start(): Promise<void> {
     this.code ??= lazyModule(`plugin:${this.id}`, () =>
       this.load().catch((err) => {
-        this.deps.failed(this.id, String((err as Error)?.message ?? err));
+        // Stopped while starting (a reload, an update): its replacement is
+        // the plugin now, and must not be turned off for this one.
+        if (!this.stopped)
+          this.deps.failed(this.id, String((err as Error)?.message ?? err));
         throw err;
       }),
     );
@@ -262,16 +273,19 @@ export class PluginHost {
       );
     });
     hostsContainer().append(frame);
-    this.endpoint = await withTimeout(
+    const endpoint = await withTimeout(
       connected,
       START_MS,
       `Starting ${this.name}`,
     );
+    if (this.stopped) throw new Error("Stopped");
+    this.endpoint = endpoint;
     const exported = await withTimeout(
       this.endpoint.call<unknown>("$activate"),
       START_MS,
       `Activating ${this.name}`,
     );
+    if (this.stopped) throw new Error("Stopped");
     this.exports = Array.isArray(exported) ? exported.map(String) : [];
     let missed = 0;
     this.pinger = setInterval(() => {
@@ -307,7 +321,7 @@ export class PluginHost {
       root: () => {
         this.need("files.read");
         const root = getWindowAccess()?.rootPath();
-        if (!root) throw new Error("No folder is open.");
+        if (!root) throw new Error(ownError("noFolder"));
         return root;
       },
       ownWebview: (id) => {
@@ -358,7 +372,14 @@ export class PluginHost {
               ? onPluginEvent(event, (data) => {
                   if (data.plugin === this.id) this.event(event, data);
                 })
-              : onPluginEvent(event, (data) => this.event(event, data)),
+              : event === "activeTab"
+                ? onPluginEvent(event, (data) =>
+                    this.event(
+                      event,
+                      seenBy(this.id, this.info.granted, data as PluginTabInfo),
+                    ),
+                  )
+                : onPluginEvent(event, (data) => this.event(event, data)),
         );
       },
       "plugin.readFile": ({ path }: Params) =>

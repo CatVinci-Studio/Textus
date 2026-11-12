@@ -6,6 +6,7 @@ import { ProposalCard, notMadeLine } from "./ProposalCard";
 import { ProposalGroup } from "./ProposalGroup";
 import { CommentCard, CommentGroup } from "./CommentCard";
 import { SkillOfferChip } from "./SkillOfferChip";
+import { FileChangesCard } from "./FileChangesCard";
 import { PaperCard } from "../paper/lazy";
 import type { ChatItem as Item, Transcript } from "./chat-transcript";
 import type { ChatMessagesProps } from "./chat-messages-types";
@@ -32,18 +33,21 @@ export interface ChatItemsContext extends Pick<
   | "onDecideSentence"
   | "onRevealProposal"
   | "onLocateText"
+  | "onApplySuggestion"
   | "onContinue"
 > {
   proposalActions: boolean;
   docPath: string | null;
   transcript: Transcript;
+  /** The conversation, whose file changes the cards undo and apply. */
+  conversation: string;
 }
 
 export const ChatItems = createContext<ChatItemsContext | null>(null);
 
 /** How the item comes in: whether it fades in, and its place in the
  *  stagger. */
-export interface Arrival {
+interface Arrival {
   reveal: boolean;
   style: CSSProperties | undefined;
 }
@@ -101,6 +105,7 @@ export function ChatItem({
           reveal={false}
           style={style}
           labels={labels}
+          selectedText={c.selectedText}
           actions={c.proposalActions}
           onAccept={c.onAcceptProposal}
           onReject={c.onRejectProposal}
@@ -135,12 +140,14 @@ export function ChatItem({
     case "notes":
       return item.run.length === 1 ? (
         <CommentCard
+          id={item.run[0].id}
           comment={item.run[0].comment}
           num={item.run[0].num}
           reveal={reveal}
           style={style}
           labels={labels}
           onLocateText={c.onLocateText}
+          onApplySuggestion={c.onApplySuggestion}
         />
       ) : (
         <CommentGroup
@@ -149,6 +156,17 @@ export function ChatItem({
           style={style}
           labels={labels}
           onLocateText={c.onLocateText}
+          onApplySuggestion={c.onApplySuggestion}
+        />
+      );
+    case "files":
+      return (
+        <FileChangesCard
+          run={item.run}
+          conversation={c.conversation}
+          reveal={reveal}
+          style={style}
+          labels={labels}
         />
       );
     case "skillOffer":

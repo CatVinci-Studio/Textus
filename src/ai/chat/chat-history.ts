@@ -1,3 +1,4 @@
+import { MAX_CONVERSATIONS } from "../../platform/bindings/app";
 import { useEffect, useMemo, useState } from "react";
 import type { AgentTurn } from "../types";
 import { userMessageBody } from "./user-message";
@@ -40,8 +41,7 @@ export interface ChatHistoryEntry extends ChatSummary {
 
 /** Where the browser fallback (no Rust) keeps the list. */
 const CHAT_HISTORY_KEY = "textus-chat-history";
-/** Keep in step with Rust's MAX_CONVERSATIONS. */
-const MAX_ENTRIES = 500;
+const MAX_ENTRIES = MAX_CONVERSATIONS;
 const MAX_TITLE_CHARS = 60;
 
 const history = createPersistedList<ChatSummary, ChatHistoryEntry>(
@@ -72,14 +72,14 @@ const history = createPersistedList<ChatSummary, ChatHistoryEntry>(
 );
 
 /** `entry` with its document path in the stored form (see docPath). */
-export function storedEntry<E extends ChatSummary>(entry: E): E {
+function storedEntry<E extends ChatSummary>(entry: E): E {
   if (!entry.docPath) return entry;
   const docPath = storedDocumentPath(entry.docPath, knownDocumentsDir());
   return docPath === entry.docPath ? entry : { ...entry, docPath };
 }
 
 /** `entry` with a stored document path resolved against Documents `docs`. */
-export function resolvedEntry(entry: ChatSummary, docs: string): ChatSummary {
+function resolvedEntry(entry: ChatSummary, docs: string): ChatSummary {
   if (!entry.docPath) return entry;
   const docPath = resolvedDocumentPath(entry.docPath, docs);
   return docPath === entry.docPath ? entry : { ...entry, docPath };

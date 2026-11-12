@@ -1,3 +1,4 @@
+import { tabElement } from "../engine/layout/tab-element";
 import { useCallback, useEffect, useLayoutEffect } from "react";
 import {
   applySourceCaret,
@@ -5,7 +6,7 @@ import {
   readSourceCaret,
   setPendingCaret,
   takePendingCaret,
-} from "../editor/modes/mode-switch";
+} from "../editor/modes/mode-caret";
 import { sourceViewAt } from "../editor/modes/source-view-registry";
 import {
   setCurrentViewMode,
@@ -15,7 +16,7 @@ import {
 import { keepReadOnly, tabReadOnly } from "../document/read-only";
 import { useSettings } from "../prefs/SettingsContext";
 /** View › Mode's four. */
-export type ViewModeChoice = "default" | "source" | "split" | "read-only";
+type ViewModeChoice = "default" | "source" | "split" | "read-only";
 import type { TabState } from "./tabs/useTabState";
 
 /** The rich editor, plain source mode and split view, one for every tab of
@@ -39,7 +40,7 @@ export function useSourceModes(tabState: TabState) {
       if (mode === "rich") {
         // The view being left records its caret; the one entered places it.
         if (front) {
-          const activeTab = document.querySelector('[data-active-tab="true"]');
+          const activeTab = tabElement();
           const source = activeTab ? sourceViewAt(activeTab) : null;
           setPendingCaret(source ? readSourceCaret(source.view) : null);
         }
@@ -109,7 +110,7 @@ export function useSourceModes(tabState: TabState) {
     let frames = 180;
     let frame = 0;
     const place = () => {
-      const activeTab = document.querySelector('[data-active-tab="true"]');
+      const activeTab = tabElement();
       const source = activeTab ? sourceViewAt(activeTab) : null;
       if (source) applySourceCaret(source.view, caret);
       else if (--frames > 0) frame = requestAnimationFrame(place);

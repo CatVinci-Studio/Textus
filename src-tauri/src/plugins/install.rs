@@ -1,16 +1,16 @@
-//! Installing a plugin from a folder or a `.textusplugin` zip, developer-mode
-//! loading, listing and uninstalling. A manifest is checked in full
+//! Installing a plugin from a folder or a `.textusplugin` zip, listing and
+//! uninstalling. A manifest is checked in full
 //! (`manifest::check`) before a plugin is put in place or loaded; listing
 //! reads only its id and version, so Settings can still show what is wrong.
 
-use super::state::{self, PluginEntry};
+use super::state;
 use super::{data_dir, plugins_root, require_id, MANIFEST};
 use serde::{Deserialize, Serialize};
 use std::io::Read;
 use std::path::{Path, PathBuf};
 
 /// A package bigger than this, unpacked, is refused.
-const MAX_PACKAGE_BYTES: u64 = 200 * 1024 * 1024;
+pub(super) const MAX_PACKAGE_BYTES: u64 = 200 * 1024 * 1024;
 
 /// One installed plugin, as Settings › Plugins lists it.
 #[derive(Serialize, Clone, Debug)]
@@ -27,8 +27,8 @@ pub struct InstalledPlugin {
 }
 
 #[derive(Deserialize)]
-struct ManifestId {
-    id: String,
+pub(super) struct ManifestId {
+    pub(super) id: String,
     version: String,
 }
 
@@ -45,13 +45,21 @@ fn read_manifest(dir: &Path) -> Result<(ManifestId, String), String> {
 }
 
 /// A folder's manifest, checked in full: what installing or loading needs.
-fn read_checked_manifest(dir: &Path) -> Result<(ManifestId, String), String> {
+pub(super) fn read_checked_manifest(dir: &Path) -> Result<(ManifestId, String), String> {
     let (head, text) = read_manifest(dir)?;
     super::manifest::check(&text).map_err(|e| format!("{MANIFEST}: {e}"))?;
     Ok((head, text))
 }
 
-fn installed(id: String, dir: &Path, manifest: String, dev: bool) -> InstalledPlugin {
+/// The programs a manifest's agents run: `contributes.agents`, as written.
+fn agent_commands(manifest: &str) -> String {
+    serde_json::from_str::<serde_json::Value>(manifest)
+        .ok()
+        .and_then(|m| m.pointer("/contributes/agents").map(|a| a.to_string()))
+        .unwrap_or_default()
+}
+
+pub(super) fn installed(id: String, dir: &Path, manifest: String, dev: bool) -> InstalledPlugin {
     InstalledPlugin {
         id,
         dir: dir.to_string_lossy().to_string(),
@@ -62,7 +70,7 @@ fn installed(id: String, dir: &Path, manifest: String, dev: bool) -> InstalledPl
 
 /// Every installed plugin: `plugins/` and the developer folders in
 /// `state.json`. Unreadable manifests are left out; a developer folder wins.
-#[tauri::command]
+#[tauri::command(async)]
 #[cfg_attr(test, specta::specta)]
 pub fn plugins_installed(app: tauri::AppHandle) -> Result<Vec<InstalledPlugin>, String> {
     let mut out: Vec<InstalledPlugin> = Vec::new();
@@ -110,14 +118,22 @@ pub async fn plugin_install(
     app: tauri::AppHandle,
     path: String,
 ) -> Result<InstalledPlugin, String> {
-    tauri::async_runtime::spawn_blocking(move || install_sync(&app, Path::new(&path)))
+    tauri::async_runtime::spawn_blocking(move || install_sync(&app, Path::new(&path), Origin::File))
         .await
         .map_err(|e| e.to_string())?
+}
+
+/// Where a package came from: the catalog's is the plugin it says it is.
+#[derive(Clone, Copy, PartialEq)]
+pub(super) enum Origin {
+    File,
+    Catalog,
 }
 
 pub(super) fn install_sync(
     app: &tauri::AppHandle,
     source: &Path,
+    origin: Origin,
 ) -> Result<InstalledPlugin, String> {
     let root = plugins_root(app)?;
     std::fs::create_dir_all(&root).map_err(|e| e.to_string())?;
@@ -140,24 +156,57 @@ pub(super) fn install_sync(
         let dir = plugin_dir_in(&staging)?;
         let (head, text) = read_checked_manifest(&dir)?;
         let target = root.join(&head.id);
-        if target.exists() {
-            std::fs::remove_dir_all(&target).map_err(|e| e.to_string())?;
-        }
-        std::fs::rename(&dir, &target).map_err(|e| e.to_string())?;
+        let agents_before = read_manifest(&target)
+            .ok()
+            .map(|(_, old)| agent_commands(&old));
+        swap_in(&dir, &target, &staging.with_extension("old"))?;
+        // New programs to run are asked for again, an update or not.
+        let agents_changed = agents_before.is_some_and(|before| before != agent_commands(&text));
         // Installed now, so no longer a developer folder, and not Official until the
-        // catalog says so.
-        state::update(app, |state| {
-            if let Some(entry) = state.plugins.get_mut(&head.id) {
+        // catalog says so. A file is code from anywhere under the same id:
+        // off, asked again for what it may do, and given no secret kept for
+        // the code before it.
+        let from_file = origin == Origin::File;
+        let had = state::update(app, |state| {
+            state.plugins.get_mut(&head.id).map(|entry| {
+                if from_file {
+                    entry.enabled = false;
+                    entry.granted.clear();
+                } else if agents_changed {
+                    entry.granted.retain(|g| g != "agents");
+                }
                 entry.dev_path = None;
                 entry.official = false;
-            }
+            })
         })?;
+        if from_file && had.is_some() {
+            super::files::forget_secrets(app, &head.id)?;
+        }
         Ok(installed(head.id, &target, text, false))
     })();
     if staging.exists() {
         let _ = std::fs::remove_dir_all(&staging);
     }
     result
+}
+
+/// Puts `new` at `target`: the version there is moved aside first and put back
+/// if the move in fails, so an update never leaves no version at all.
+fn swap_in(new: &Path, target: &Path, aside: &Path) -> Result<(), String> {
+    let had = target.exists();
+    if had {
+        std::fs::rename(target, aside).map_err(|e| e.to_string())?;
+    }
+    if let Err(e) = std::fs::rename(new, target) {
+        if had {
+            let _ = std::fs::rename(aside, target);
+        }
+        return Err(e.to_string());
+    }
+    if had {
+        let _ = std::fs::remove_dir_all(aside);
+    }
+    Ok(())
 }
 
 /// A plugin's files as text, by path in the plugin, as Textus AI writes them.
@@ -217,10 +266,10 @@ pub(super) fn install_files_sync(
 ) -> Result<InstalledPlugin, String> {
     let total: usize = files.iter().map(|f| f.text.len()).sum();
     if total > MAX_WRITTEN_BYTES {
-        return Err("The plugin is too big to install from the conversation.".into());
+        return Err(crate::errors::error("pluginTooBig"));
     }
     let Some(manifest) = files.iter().find(|f| f.path == MANIFEST) else {
-        return Err(format!("No {MANIFEST} among the plugin's files."));
+        return Err(crate::errors::error("pluginNoManifest"));
     };
     written_id(&manifest.text)?;
     let root = plugins_root(app)?;
@@ -235,7 +284,7 @@ pub(super) fn install_files_sync(
     let result = (|| {
         for file in files {
             if !plain_relative(&file.path) {
-                return Err(format!("A plugin file can't be at {}.", file.path));
+                return Err(crate::errors::error("pluginBadPackage"));
             }
             let target = folder.join(&file.path);
             if let Some(parent) = target.parent() {
@@ -243,7 +292,7 @@ pub(super) fn install_files_sync(
             }
             std::fs::write(&target, &file.text).map_err(|e| e.to_string())?;
         }
-        install_sync(app, &folder)
+        install_sync(app, &folder, Origin::File)
     })();
     if folder.exists() {
         let _ = std::fs::remove_dir_all(&folder);
@@ -264,7 +313,7 @@ fn plugin_dir_in(dir: &Path) -> Result<PathBuf, String> {
         .collect();
     match subdirs.as_slice() {
         [only] if only.join(MANIFEST).is_file() => Ok(only.clone()),
-        _ => Err(format!("No {MANIFEST} in the package.")),
+        _ => Err(crate::errors::error("pluginNoManifest")),
     }
 }
 
@@ -287,7 +336,7 @@ fn copy_dir(from: &Path, to: &Path, total: &mut u64) -> Result<(), String> {
         } else if file_type.is_file() {
             *total += entry.metadata().map(|m| m.len()).unwrap_or(0);
             if *total > MAX_PACKAGE_BYTES {
-                return Err("The plugin is too big.".to_string());
+                return Err(crate::errors::error("pluginTooBig"));
             }
             std::fs::copy(entry.path(), target).map_err(|e| e.to_string())?;
         }
@@ -305,8 +354,12 @@ fn unzip(file: &Path, to: &Path) -> Result<(), String> {
         let mut entry = archive.by_index(i).map_err(|e| e.to_string())?;
         // A name with `..` or an absolute path would land outside `to`.
         let Some(rel) = entry.enclosed_name() else {
-            return Err("The package names a file outside itself.".to_string());
+            return Err(crate::errors::error("pluginBadPackage"));
         };
+        // The folder Finder's Compress adds beside the plugin's own.
+        if rel.components().any(|c| c.as_os_str() == "__MACOSX") {
+            continue;
+        }
         let target = to.join(rel);
         if entry.is_dir() {
             std::fs::create_dir_all(&target).map_err(|e| e.to_string())?;
@@ -322,79 +375,16 @@ fn unzip(file: &Path, to: &Path) -> Result<(), String> {
             .map_err(|e| e.to_string())?;
         total += bytes.len() as u64;
         if total > MAX_PACKAGE_BYTES {
-            return Err("The plugin is too big.".to_string());
+            return Err(crate::errors::error("pluginTooBig"));
         }
         std::fs::write(&target, bytes).map_err(|e| e.to_string())?;
     }
     Ok(())
 }
 
-/// Load a plugin folder…: the plugin runs from where it is, so changes show on
-/// reload. It starts off, like any new plugin.
-#[tauri::command]
-#[cfg_attr(test, specta::specta)]
-pub fn plugin_load_dev(app: tauri::AppHandle, path: String) -> Result<InstalledPlugin, String> {
-    let dir = PathBuf::from(&path);
-    let (head, text) = read_checked_manifest(&dir)?;
-    let id = head.id.clone();
-    state::update(&app, |state| {
-        state
-            .plugins
-            .entry(id)
-            .or_insert_with(PluginEntry::default)
-            .dev_path = Some(path.clone());
-    })?;
-    Ok(installed(head.id, &dir, text, true))
-}
-
-/// When a developer's plugin folder last changed (newest file, in ms, ignoring
-/// node_modules and .git), so the window reloads it. None for other plugins.
-#[tauri::command]
-#[cfg_attr(test, specta::specta)]
-pub fn plugin_dev_stamp(app: tauri::AppHandle, id: String) -> Result<Option<f64>, String> {
-    require_id(&id)?;
-    let state = state::read(&app);
-    if let Some(path) = state.plugins.get(&id).and_then(|p| p.dev_path.clone()) {
-        return Ok(newest_change(&PathBuf::from(path), 0));
-    }
-    // A script runs from the scripts folder: a change to one of them
-    // reloads it.
-    Ok(super::scripts::script_file(&app, &id)
-        .and_then(|_| super::scripts::scripts_dir(&app).ok())
-        .and_then(|dir| newest_change(&dir, 0)))
-}
-
-fn newest_change(dir: &std::path::Path, depth: usize) -> Option<f64> {
-    if depth > 6 {
-        return None;
-    }
-    let mut newest: Option<f64> = None;
-    for entry in std::fs::read_dir(dir).ok()?.flatten() {
-        let name = entry.file_name();
-        let name = name.to_string_lossy();
-        if name.starts_with('.') || name == "node_modules" || name == "dist" {
-            continue;
-        }
-        let Ok(meta) = entry.metadata() else { continue };
-        let here = if meta.is_dir() {
-            newest_change(&entry.path(), depth + 1)
-        } else {
-            meta.modified()
-                .ok()
-                .and_then(|t| t.duration_since(std::time::UNIX_EPOCH).ok())
-                .map(|d| d.as_millis() as f64)
-        };
-        newest = match (newest, here) {
-            (Some(a), Some(b)) => Some(a.max(b)),
-            (a, b) => a.or(b),
-        };
-    }
-    newest
-}
-
 /// Removes a plugin: its entry, its storage and, unless loaded from a
 /// developer's folder, its files.
-#[tauri::command]
+#[tauri::command(async)]
 #[cfg_attr(test, specta::specta)]
 pub fn plugin_uninstall(app: tauri::AppHandle, id: String) -> Result<(), String> {
     require_id(&id)?;
@@ -407,15 +397,12 @@ pub fn plugin_uninstall(app: tauri::AppHandle, id: String) -> Result<(), String>
     if target.is_dir() {
         std::fs::remove_dir_all(&target).map_err(|e| e.to_string())?;
     }
-    let data = data_dir(&app, &id)?;
-    if data.is_dir() {
-        std::fs::remove_dir_all(&data).map_err(|e| e.to_string())?;
-    }
+    // Its data may be the user's: to the Trash.
+    crate::atomic::to_trash(&data_dir(&app, &id)?)?;
     super::store::forget_global(&app, &id)?;
     // A script's file goes to the Trash, or it would be found again.
-    #[cfg(desktop)]
     if let Some(file) = super::scripts::script_file(&app, &id) {
-        trash::delete(&file).map_err(|e| e.to_string())?;
+        crate::atomic::to_trash(&file)?;
     }
     super::files::forget_secrets(&app, &id)
 }
@@ -430,7 +417,7 @@ pub async fn plugin_pick_package(
     folder: bool,
     filter_name: String,
 ) -> Option<Vec<String>> {
-    use crate::commands::fs::window_file_dialog;
+    use crate::dialogs::window_file_dialog;
     tauri::async_runtime::spawn_blocking(move || {
         let dialog = window_file_dialog(&window);
         if folder {

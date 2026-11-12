@@ -1,7 +1,7 @@
 import { useState } from "react";
 import "./ReplyFilesPreview.css";
 
-export interface PreviewFile {
+interface PreviewFile {
   /** Shown above its text when there is more than one file; null for none. */
   path: string | null;
   text: string;

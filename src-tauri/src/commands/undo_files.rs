@@ -5,7 +5,7 @@
 //! and the oldest first once all of them pass 50 MB.
 
 use serde::{Deserialize, Serialize};
-use sha2::{Digest, Sha256};
+
 use std::path::{Path, PathBuf};
 use std::time::{Duration, SystemTime};
 use tauri::{AppHandle, Manager};
@@ -21,7 +21,7 @@ struct UndoFile {
     history: String,
 }
 
-fn undo_dir(app: &AppHandle) -> Result<PathBuf, String> {
+pub(crate) fn undo_dir(app: &AppHandle) -> Result<PathBuf, String> {
     app.path()
         .app_data_dir()
         .map_err(|e| e.to_string())
@@ -29,24 +29,21 @@ fn undo_dir(app: &AppHandle) -> Result<PathBuf, String> {
 }
 
 fn file_for(dir: &Path, path: &str) -> PathBuf {
-    let digest = Sha256::digest(path.as_bytes());
-    let name: String = digest[..16].iter().map(|b| format!("{b:02x}")).collect();
+    let name = crate::ids::path_key(path, 16);
     dir.join(format!("{name}.json"))
 }
 
 fn read(file: &Path) -> Option<UndoFile> {
-    serde_json::from_slice(&std::fs::read(file).ok()?).ok()
+    crate::json_file::read_or_set_aside(file)
 }
 
 pub(crate) fn save_in(dir: &Path, path: &str, hash: &str, history: &str) -> Result<(), String> {
-    std::fs::create_dir_all(dir).map_err(|e| e.to_string())?;
-    let json = serde_json::to_vec(&UndoFile {
+    let kept = UndoFile {
         path: path.into(),
         hash: hash.into(),
         history: history.into(),
-    })
-    .map_err(|e| e.to_string())?;
-    crate::atomic::write_sync(&file_for(dir, path), json).map_err(|e| e.to_string())?;
+    };
+    crate::json_file::save(&file_for(dir, path), &kept).map_err(|e| e.to_string())?;
     sweep(dir, SystemTime::now());
     Ok(())
 }
@@ -63,22 +60,21 @@ pub(crate) fn move_in(dir: &Path, from: &str, to: &str) -> Result<(), String> {
     let Ok(entries) = std::fs::read_dir(dir) else {
         return Ok(());
     };
-    let inside = format!("{}/", from.trim_end_matches('/'));
     for entry in entries.flatten() {
         let Some(mut kept) = read(&entry.path()) else {
             continue;
         };
+        // By path parts, so a Windows path's `\` counts as a separator too.
         let moved = if kept.path == from {
             to.to_string()
-        } else if let Some(rest) = kept.path.strip_prefix(&inside) {
-            format!("{}/{rest}", to.trim_end_matches('/'))
+        } else if let Ok(rest) = Path::new(&kept.path).strip_prefix(from) {
+            Path::new(to).join(rest).to_string_lossy().to_string()
         } else {
             continue;
         };
         let old = file_for(dir, &kept.path);
         kept.path = moved;
-        let json = serde_json::to_vec(&kept).map_err(|e| e.to_string())?;
-        crate::atomic::write_sync(&file_for(dir, &kept.path), json).map_err(|e| e.to_string())?;
+        crate::json_file::save(&file_for(dir, &kept.path), &kept).map_err(|e| e.to_string())?;
         let _ = std::fs::remove_file(old);
     }
     Ok(())
@@ -138,16 +134,6 @@ pub async fn undo_file_load(
     tauri::async_runtime::spawn_blocking(move || load_in(&dir, &path, &hash))
         .await
         .map_err(|e| e.to_string())
-}
-
-/// The history kept for `from` follows the document to `to`.
-#[tauri::command]
-#[cfg_attr(test, specta::specta)]
-pub async fn undo_file_move(app: AppHandle, from: String, to: String) -> Result<(), String> {
-    let dir = undo_dir(&app)?;
-    tauri::async_runtime::spawn_blocking(move || move_in(&dir, &from, &to))
-        .await
-        .map_err(|e| e.to_string())?
 }
 
 #[cfg(test)]

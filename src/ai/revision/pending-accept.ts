@@ -8,8 +8,9 @@ import {
   documentMarkdown,
   matchTarget,
   serializeBlocks,
-} from "../doc-markdown";
-import { applyEditRange, replaceWithMarkdown } from "./apply-edit";
+} from "../../editor/markdown/doc-markdown";
+import { applyEditRange, normalizeAiMarkdown } from "./apply-edit";
+import { replaceWithMarkdown } from "../../editor/markdown/parse-markdown-source";
 import {
   citationsAsFootnotes,
   footnoteLabels,
@@ -21,7 +22,7 @@ import {
   pendingEditKey,
   sentenceTake,
   type PendingPreview,
-} from "./pending-edit-plugin";
+} from "./pending-types";
 import { composeSentences, trimBreaks } from "./sentence-diff";
 import { findInOrder } from "./sentence-locate";
 import type { CitationStyle } from "./usePendingEdits";
@@ -101,7 +102,7 @@ export function writeAccept(
         ctx,
         c.from,
         c.to,
-        withoutCitations(c.after).replace(/\s+$/, ""),
+        normalizeAiMarkdown(withoutCitations(c.after).replace(/\s+$/, "")),
       );
     const landed = findInOrder(
       tr.doc,

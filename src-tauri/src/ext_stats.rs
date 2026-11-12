@@ -199,10 +199,7 @@ fn record_file(app: &AppHandle) -> Option<PathBuf> {
 type Record = BTreeMap<String, BTreeSet<String>>;
 
 fn read_record(file: &Path) -> Record {
-    std::fs::read_to_string(file)
-        .ok()
-        .and_then(|text| serde_json::from_str(&text).ok())
-        .unwrap_or_default()
+    crate::json_file::load_or_default(file)
 }
 
 fn seen_in(file: &Path, kind: Kind, id: &str) -> bool {
@@ -218,12 +215,9 @@ fn remember_in(file: &Path, kind: Kind, id: &str) {
         .or_default()
         .insert(id.to_string())
     {
-        if let Some(dir) = file.parent() {
-            let _ = std::fs::create_dir_all(dir);
-        }
         // Only a hint: a record that can't be written makes a later install
         // count as a first one.
-        let _ = std::fs::write(file, serde_json::to_string(&record).unwrap_or_default());
+        let _ = crate::json_file::save(file, &record);
     }
 }
 

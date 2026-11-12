@@ -1,43 +1,38 @@
-import { prepareList, rankList } from "../../utils/list-filter";
+import { useRef, type ReactNode } from "react";
+import { useFitSteps } from "../../engine/controls/fit-steps";
+import { MentionLayer, useMentionPicker } from "./composer-mentions";
+import { AttachmentChips } from "./AttachmentChips";
 import { resolveSkillMessage } from "./proposal";
 import { ai } from "../../platform/ipc";
 import { ComposerPicker } from "./ComposerPicker";
 import {
-  MENTION_TOKEN,
-  MENTION_TRIGGER,
-  SKILL_COMMAND,
   rememberSkill,
   resolveSkillName,
   type PickerSkill,
 } from "./skill-picker";
-import { basename } from "../../utils/path";
+import { MENTION_TOKEN, SKILL_COMMAND } from "./skill-syntax";
 import type { PanelMode } from "../../prefs/SettingsContext";
 import {
+  ArrowUpIcon,
   CloseIcon,
-  GenericFileIcon,
-  ImageFileIcon,
   PlusIcon,
-} from "../../ui/icons";
+  StopIcon,
+} from "../../engine/controls/icons";
 import { ComposerToggles, KindChip } from "./ComposerTools";
 import { ModeAndModelPicker, ModePicker, type ModeChoice } from "./ModePicker";
-import { Tooltip } from "../../ui/Tooltip";
+import { Tooltip } from "../../engine/controls/Tooltip";
 import { FollowUpChips } from "./FollowUpChips";
-import { usePhoneLayout } from "../../ui/usePhoneLayout";
+import { usePhoneLayout } from "../../engine/controls/usePhoneLayout";
 
 import { useComposerSkills } from "./useComposerSkills";
 import {
   useAttachments,
   useComposerInput,
   useComposerMode,
-  useProjectFiles,
   useRequestOptions,
   useSelectionChip,
 } from "./useComposerState";
-import {
-  defaultPickerLabels,
-  FILE_LIMIT,
-  type ChatComposerProps,
-} from "./composer-types";
+import { defaultPickerLabels, type ChatComposerProps } from "./composer-types";
 import { isImeKeydown } from "../../utils/ime";
 import { pickerContent } from "./composer-picker-content";
 
@@ -47,6 +42,7 @@ function mobileChrome() {
   return document.documentElement.dataset.windowChrome === "mobile";
 }
 
+// eslint-disable-next-line no-restricted-syntax -- a lazy chunk's entry passes these on
 export type {
   ChatComposerHandle,
   ChatComposerLabels,
@@ -55,20 +51,12 @@ export type {
 } from "./composer-types";
 import { currentStrings } from "../../i18n/current";
 import { explainError } from "../../utils/error-explain";
+import { listMove } from "../../engine/controls/list-keys";
 
 /**
  * The input row: textarea, attachments, selection chip, send button and the
  * `/` and `@` pickers. Owns its input state; the caller hears only onSend.
  */
-/** The project's files `query` finds by the shared list filter: by name
- *  first, then anywhere in the path. */
-function matchFiles(paths: string[], query: string): string[] {
-  const list = prepareList(
-    paths.map((path) => ({ label: basename(path), keywords: path, path })),
-  );
-  return rankList(list, query, Infinity).map((entry) => entry.path);
-}
-
 export function ChatComposer({
   docPath,
   workspaceRoot,
@@ -83,9 +71,9 @@ export function ChatComposer({
   selectionChip,
   selectionPerMessage = false,
   compact = false,
+  startWebSearch,
   onlyMode,
   focusOnOpen = true,
-  defaultWebSearch,
   dockActions,
   switchModels = false,
   onSend,
@@ -118,7 +106,7 @@ export function ChatComposer({
     offered: modeValues,
     onModeChange,
   });
-  const options = useRequestOptions(defaultWebSearch, compact);
+  const options = useRequestOptions(compact, startWebSearch);
   // Create always searches and thinks deeper, where the model can.
   const webSearch = autoTools || options.webSearch;
   const thinking =
@@ -142,17 +130,22 @@ export function ChatComposer({
     mode: mode === "research" ? null : mode,
   });
 
-  // @-mention picker ("@", or the "＠" a CJK IME types): picking a project
-  // file attaches it and drops the "@query". Fetched on the first "@".
-  const mentionQuery = skillTrigger ? null : MENTION_TRIGGER.exec(input);
-  const mentionMenuOpen = !!mentionQuery && dismissedInput !== input;
-  const projectFiles = useProjectFiles(mentionMenuOpen, docPath, workspaceRoot);
-  const matchingFiles = mentionQuery
-    ? matchFiles(projectFiles ?? [], mentionQuery[1]).slice(0, FILE_LIMIT)
-    : [];
+  const mentionPicker = useMentionPicker({
+    input,
+    setInput,
+    setAttachments,
+    textarea: inputRef,
+    skillTyped: !!skillTrigger,
+    dismissedInput,
+    docPath,
+    workspaceRoot,
+  });
+  const { mentions, projectFiles, matching: matchingFiles } = mentionPicker;
+  const mentionQuery = mentionPicker.query;
+  const mentionMenuOpen = mentionPicker.open;
 
   async function pickFile(path: string) {
-    setInput((prev) => prev.replace(MENTION_TOKEN, "$1"));
+    mentions.add(path, MENTION_TOKEN);
     setPickerIndex(0);
     setAttachError(null);
     try {
@@ -246,11 +239,12 @@ export function ChatComposer({
     if (selectionPerMessage && selectedText) setDroppedSelection(selectedText);
   }
 
-  function onKeyDown(e: React.KeyboardEvent) {
+  function onKeyDown(e: React.KeyboardEvent<HTMLTextAreaElement>) {
     // Keys during an IME composition belong to the IME. WebKit can fire the
     // confirming keydown after compositionend with isComposing false but
     // keyCode still 229, so check both.
     if (isImeKeydown(e)) return;
+    if (mentions.onKeyDown(e)) return;
     // While a picker is open, the navigation keys, Enter and Escape drive it
     // instead of the chat.
     if (pickerOpen) {
@@ -261,12 +255,15 @@ export function ChatComposer({
         return;
       }
       if (pickerRows.length > 0) {
-        if (e.key === "ArrowDown" || e.key === "ArrowUp") {
+        const moved = listMove(
+          e.key,
+          activePickerIndex,
+          pickerRows.length,
+          false,
+        );
+        if (moved !== null) {
           e.preventDefault();
-          const delta = e.key === "ArrowDown" ? 1 : -1;
-          setPickerIndex(
-            (activePickerIndex + delta + pickerRows.length) % pickerRows.length,
-          );
+          setPickerIndex(moved);
           return;
         }
         if (e.key === "Enter" || e.key === "Tab") {
@@ -369,57 +366,39 @@ export function ChatComposer({
         )}
         {/* The field: what is attached, the text and its controls, one box. */}
         <div className="inline-chat-field">
-          {attachments.length > 0 && (
-            <div className="inline-chat-attachments">
-              {attachments.map((file, i) => (
-                <span key={i} className="inline-chat-attachment">
-                  {/* Extracted text and a native image part reach the model
-                    differently, so the chip says which this is. */}
-                  {file.kind === "image" ? (
-                    <ImageFileIcon className="inline-chat-attachment-kind" />
-                  ) : (
-                    <GenericFileIcon className="inline-chat-attachment-kind" />
-                  )}
-                  {file.name}
-                  {/* A file cut at the extraction cap says so, or a partial
-                    answer looks like the model misread the document. */}
-                  {file.kind === "text" && file.truncated && (
-                    <span className="inline-chat-attachment-note">
-                      {labels.attachmentTruncated}
-                    </span>
-                  )}
-                  <button
-                    className="inline-chat-attachment-remove"
-                    onClick={() =>
-                      setAttachments((prev) => prev.filter((_, j) => j !== i))
-                    }
-                  >
-                    <CloseIcon />
-                  </button>
-                </span>
-              ))}
-            </div>
-          )}
-          <textarea
-            ref={inputRef}
-            className={`inline-chat-input${offered ? " inline-chat-input-suggested" : ""}`}
-            rows={1}
-            placeholder={
-              offered
-                ? `${offered}  (${labels.suggestionTab})`
-                : mode === "research"
-                  ? labels.researchPlaceholder
-                  : labels.placeholder
-            }
-            value={input}
-            onChange={(e) => {
-              setInput(e.target.value);
-              setPickerIndex(0);
-            }}
-            onKeyDown={onKeyDown}
-            autoFocus={focusOnOpen}
+          <AttachmentChips
+            attachments={attachments}
+            mentioned={mentions.paths}
+            setAttachments={setAttachments}
+            truncatedLabel={labels.attachmentTruncated}
           />
-          <div className="inline-chat-toolbar">
+          <div className="inline-chat-input-wrap">
+            <MentionLayer
+              input={input}
+              paths={mentions.paths}
+              textarea={inputRef}
+            />
+            <textarea
+              ref={inputRef}
+              className={`inline-chat-input${offered ? " inline-chat-input-suggested" : ""}`}
+              rows={1}
+              placeholder={
+                offered
+                  ? `${offered}  (${labels.suggestionTab})`
+                  : mode === "research"
+                    ? labels.researchPlaceholder
+                    : labels.placeholder
+              }
+              value={input}
+              onChange={(e) => {
+                setInput(e.target.value);
+                setPickerIndex(0);
+              }}
+              onKeyDown={onKeyDown}
+              autoFocus={focusOnOpen}
+            />
+          </div>
+          <ComposerToolbar>
             {switchModels && !mobileChrome() ? (
               <ModeAndModelPicker {...pickerProps} />
             ) : (
@@ -454,7 +433,7 @@ export function ChatComposer({
               >
                 <button
                   type="button"
-                  className="inline-chat-chip-label"
+                  className="tx-truncate inline-chat-chip-label"
                   title={labels.showSelection}
                   {...holdFocus}
                   onClick={() => selectionChip?.onReveal()}
@@ -468,15 +447,38 @@ export function ChatComposer({
             )}
             <button
               className="inline-chat-send"
+              aria-label={busy ? labels.stop : labels.send}
               {...holdFocus}
               onClick={busy ? onStop : () => submit()}
               disabled={!busy && !input.trim()}
             >
-              {busy ? labels.stop : labels.send}
+              {busy ? (
+                <StopIcon className="inline-chat-send-icon" />
+              ) : (
+                <ArrowUpIcon className="inline-chat-send-icon" />
+              )}
+              <span className="inline-chat-send-label">
+                {busy ? labels.stop : labels.send}
+              </span>
             </button>
-          </div>
+          </ComposerToolbar>
         </div>
       </div>
     </>
+  );
+}
+
+/** The composer's steps short of room, measured: the model's name goes
+ *  whole, then Send's word (its arrow stays), then the mode's name is cut. */
+const TOOLBAR_STEPS = ["no-model", "send-icon", "short-mode"] as const;
+
+/** The mode, the tools and Send, giving way in that order (useFitSteps). */
+function ComposerToolbar({ children }: { children: ReactNode }) {
+  const row = useRef<HTMLDivElement>(null);
+  useFitSteps(row, TOOLBAR_STEPS);
+  return (
+    <div ref={row} className="inline-chat-toolbar">
+      {children}
+    </div>
   );
 }

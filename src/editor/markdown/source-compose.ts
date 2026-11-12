@@ -16,7 +16,7 @@ import {
 /** A run of changed blocks as the serializer writes it, without the final
  *  newline, with `original`'s escapes where they still read the same. A
  *  thematic break first in a run (not the document) is "---". */
-export function writeRun(
+function writeRun(
   ctx: Ctx,
   { runs }: SaveMemo,
   doc: ProseNode,
@@ -48,14 +48,14 @@ export function writeRun(
 }
 
 /** Longer stretches are a rewrite: their escapes aren't worth a diff. */
-export const MAX_ESCAPE_CHECK = 20_000;
+const MAX_ESCAPE_CHECK = 20_000;
 
-export function sameObjects(a: readonly ProseNode[], b: readonly ProseNode[]) {
+function sameObjects(a: readonly ProseNode[], b: readonly ProseNode[]) {
   return a.length === b.length && a.every((node, k) => node === b[k]);
 }
 
 /** Link and footnote definitions, which a join is read back with. */
-export function isDefinition(node: ProseNode): boolean {
+function isDefinition(node: ProseNode): boolean {
   if (node.type.name === "footnote_definition") return true;
   return (
     node.type.name === "paragraph" &&
@@ -64,7 +64,7 @@ export function isDefinition(node: ProseNode): boolean {
   );
 }
 
-export function sameNodes(
+function sameNodes(
   ctx: Ctx,
   a: readonly ProseNode[],
   b: readonly ProseNode[],
@@ -74,7 +74,7 @@ export function sameNodes(
   );
 }
 
-export interface Composed {
+interface Composed {
   text: string;
   /** Each piece's text, and for a changed run its serialization. */
   pieceTexts: string[];
@@ -84,7 +84,7 @@ export interface Composed {
 
 /** The file's text a changed run stands in for: between the kept pieces
  *  around it, when they are in the file's order. */
-export function originalBetween(
+function originalBetween(
   { text, units }: SourceBlocks,
   before: Piece | undefined,
   after: Piece | undefined,
@@ -94,7 +94,7 @@ export function originalBetween(
   return from <= to ? text.slice(from, to).trim() : null;
 }
 
-export function unitText(source: SourceBlocks, u: number): string {
+function unitText(source: SourceBlocks, u: number): string {
   const unit = source.units[u];
   return source.text.slice(unit.start!, unit.end!);
 }

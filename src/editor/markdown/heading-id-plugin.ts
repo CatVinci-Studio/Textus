@@ -1,3 +1,4 @@
+import { numberRepeats } from "./link-target";
 import {
   ParserReady,
   editorStateTimerCtx,
@@ -9,13 +10,14 @@ import { Plugin, PluginKey, type Transaction } from "@milkdown/kit/prose/state";
 import type { EditorView } from "@milkdown/kit/prose/view";
 import { $prose } from "@milkdown/kit/utils";
 import { shownText } from "./link-source";
+import { headingSlug } from "./link-target";
 
 const isHeading = (node: ProseNode) => node.type.name === "heading";
 
-/** Milkdown's heading id, from the heading's text as it reads: a link's
- *  source would put its URL in the id. */
-const headingId = (node: ProseNode) =>
-  shownText(node).toLowerCase().trim().replace(/\s+/g, "-");
+/** A heading's id: its slug as links and GitHub write it, from its text as
+ *  it reads (a link's source would put its URL in the id), so an exported
+ *  page's `#anchor` lands. */
+const headingId = (node: ProseNode) => headingSlug(shownText(node));
 
 /** Whether `tr` wrote into a heading, or removed or added one. */
 export function touchesHeading(tr: Transaction): boolean {
@@ -43,24 +45,22 @@ const key = new PluginKey<number>("heading-id");
 type IdOf = (node: ProseNode) => string;
 
 /** Each heading's id as it should be, in document order: the generator's,
- *  with "-#2", "-#3" for repeats. An empty heading has none. */
+ *  with "-1", "-2" for repeats, as headingIndex reads them. An empty
+ *  heading has none. */
 function eachId(
   doc: ProseNode,
   idOf: IdOf,
   visit: (node: ProseNode, pos: number, id: string) => void,
 ) {
-  const seen: Record<string, number> = {};
+  const found: { node: ProseNode; pos: number; id: string }[] = [];
   doc.descendants((node, pos) => {
     if (!isHeading(node)) return !node.isTextblock;
     if (node.textContent.trim().length === 0) return false;
-    let id = idOf(node);
-    if (seen[id]) {
-      seen[id] += 1;
-      id += `-#${seen[id]}`;
-    } else seen[id] = 1;
-    visit(node, pos, id);
+    found.push({ node, pos, id: idOf(node) });
     return false;
   });
+  const ids = numberRepeats(found.map((f) => f.id));
+  found.forEach(({ node, pos }, i) => visit(node, pos, ids[i]));
 }
 
 /** `doc` with its headings' ids written in, sharing every block that holds

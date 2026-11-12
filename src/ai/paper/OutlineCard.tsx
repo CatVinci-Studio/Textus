@@ -1,3 +1,5 @@
+import { HeadRow } from "../../engine/controls/HeadRow";
+import { fill } from "../../i18n/fill";
 import { useState, type ReactNode } from "react";
 import type { Strings } from "../../i18n/strings";
 import type {
@@ -5,7 +7,7 @@ import type {
   Outline,
   OutlineSection,
 } from "../../platform/bindings/ai-paper";
-import { Select } from "../../ui/Select";
+import { Select } from "../../engine/controls/Select";
 import {
   addSection,
   editFigures,
@@ -71,7 +73,7 @@ export function OutlineCard({
   const editButton = (target: Editing, label: string) => (
     <button
       type="button"
-      className="paper-outline-edit"
+      className="tx-reveal paper-outline-edit"
       aria-label={label}
       disabled={busy}
       onClick={() => setEditing(target)}
@@ -94,9 +96,7 @@ export function OutlineCard({
       <header className="paper-outline-head">
         <span className="paper-outline-title">{t.paperOutlineTitle}</span>
         <span className="paper-outline-total">
-          {t.paperOutlineTotal
-            .replace("{n}", String(totalLength(outline)))
-            .replace("{unit}", unit)}
+          {fill(t.paperOutlineTotal, { n: String(totalLength(outline)), unit })}
         </span>
       </header>
       {editing === "thesis" && !busy ? (
@@ -118,7 +118,7 @@ export function OutlineCard({
           </div>
         </div>
       ) : (
-        <div className="paper-outline-thesis">
+        <div className="paper-outline-thesis tx-reveal-host">
           <p>{outline.thesis}</p>
           {editButton(
             "thesis",
@@ -175,7 +175,7 @@ export function OutlineCard({
               </div>
             </li>
           ) : (
-            <li key={i} className="paper-outline-section">
+            <li key={i} className="paper-outline-section tx-reveal-host">
               <SectionView
                 section={section}
                 index={i}
@@ -238,18 +238,26 @@ function SectionView({
     : section.keyPoints.slice(0, POINTS_SHOWN);
   return (
     <>
-      <div className="paper-outline-row">
-        {!NUMBERED.test(section.title) && (
-          <span className="paper-outline-num" aria-hidden="true">
-            {index + 1}
-          </span>
-        )}
-        <span className="paper-outline-heading">{section.title}</span>
-        <span className="paper-outline-words">
-          {section.targetWords} {unit}
-        </span>
-        {edit}
-      </div>
+      {/* Short of room, its length and Edit go under the title. */}
+      <HeadRow
+        className="paper-outline-row"
+        mark={
+          !NUMBERED.test(section.title) && (
+            <span className="paper-outline-num" aria-hidden="true">
+              {index + 1}
+            </span>
+          )
+        }
+        title={<span className="paper-outline-heading">{section.title}</span>}
+        tools={
+          <>
+            <span className="paper-outline-words">
+              {section.targetWords} {unit}
+            </span>
+            {edit}
+          </>
+        }
+      />
       {points.length > 0 && (
         <ul className="paper-outline-points" data-open={open || undefined}>
           {points.map((point, p) => (
@@ -266,13 +274,17 @@ function SectionView({
         >
           {open
             ? t.paperOutlineLess
-            : t.paperOutlineMore.replace("{n}", String(hidden))}
+            : fill(t.paperOutlineMore, { n: String(hidden) })}
         </button>
       )}
       {section.figures.length > 0 && (
         <div className="paper-outline-figures">
           {section.figures.map((figure, f) => (
-            <span key={f} className="paper-outline-tag" title={figure.spec}>
+            <span
+              key={f}
+              className="tx-truncate paper-outline-tag"
+              title={figure.spec}
+            >
               <b>{kindLabel(t, figure.kind)}</b> {figure.spec}
             </span>
           ))}
@@ -303,7 +315,7 @@ function SectionEditor({
         <input
           className="paper-outline-section-title"
           autoFocus
-          aria-label={t.paperOutlineSectionTitle.replace("{n}", String(i + 1))}
+          aria-label={fill(t.paperOutlineSectionTitle, { n: String(i + 1) })}
           value={section.title}
           onChange={(e) =>
             onChange(editSection(outline, i, { title: e.target.value }))

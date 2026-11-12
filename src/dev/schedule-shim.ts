@@ -16,7 +16,7 @@ interface ShimContext {
   emit(event: string, payload?: unknown): void;
 }
 
-export interface DevSchedule {
+interface DevSchedule {
   jobs: Map<string, Map<string, Record<string, unknown>>>;
   notifications: Notification[];
   /** Fires a job as Rust's timer would. */

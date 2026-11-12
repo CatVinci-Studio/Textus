@@ -1,4 +1,5 @@
-import { useEffect, useState } from "react";
+import { useEffect, useMemo, useState } from "react";
+import { fontChoices } from "./font-choices";
 import type { Strings } from "../../i18n/strings";
 import { systemIpc } from "../../platform/ipc";
 import {
@@ -12,9 +13,9 @@ import {
 } from "../../prefs/SettingsContext";
 import type { SettingsPageProps } from "../pages/types";
 import { letterSpacingBy } from "../../prefs/settings-normalise";
-import { Select } from "../../ui/Select";
+import { Select } from "../../engine/controls/Select";
 import { SettingRow } from "./controls";
-import { ChevronIcon } from "../../ui/icons";
+import { ChevronIcon } from "../../engine/controls/icons";
 
 /** The reader's own size, spacing and font for the document, over the
  *  theme's: folded under one row that says whether any is set. */
@@ -117,11 +118,15 @@ function FontRow({ t, settings, setSettings }: Props) {
       live = false;
     };
   }, []);
+  const { recommended, more } = useMemo(
+    () => fontChoices(fonts, settings.language),
+    [fonts, settings.language],
+  );
   // A font chosen on another machine still shows as the choice.
-  const listed =
-    settings.docFont && !fonts.includes(settings.docFont)
-      ? [settings.docFont, ...fonts]
-      : fonts;
+  const chosenElsewhere =
+    settings.docFont &&
+    !recommended.includes(settings.docFont) &&
+    !more.includes(settings.docFont);
   return (
     <SettingRow label={t.docFontLabel}>
       <Select
@@ -131,11 +136,23 @@ function FontRow({ t, settings, setSettings }: Props) {
         onChange={(e) => setSettings({ docFont: e.target.value })}
       >
         <option value="">{t.docFontAuto}</option>
-        {listed.map((name) => (
+        {chosenElsewhere && (
+          <option value={settings.docFont}>{settings.docFont}</option>
+        )}
+        {recommended.map((name) => (
           <option key={name} value={name}>
             {name}
           </option>
         ))}
+        {more.length > 0 && (
+          <optgroup label={t.docFontMore}>
+            {more.map((name) => (
+              <option key={name} value={name}>
+                {name}
+              </option>
+            ))}
+          </optgroup>
+        )}
       </Select>
     </SettingRow>
   );

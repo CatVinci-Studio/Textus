@@ -15,11 +15,11 @@ const SCALED = /scaledPx\(|chrome|[sS]cale\b|zoom|step\b/;
 
 /** "file:NAME": why that size doesn't take the chrome scale. */
 const ALLOWED = {
-  "src/ui/side-panel-width.ts:DOCUMENT_MIN_WIDTH":
+  "src/engine/controls/side-panel-width.ts:DOCUMENT_MIN_WIDTH":
     "interface px; callers pass the scale",
-  "src/app/sidebar-width.ts:SIDEBAR_DEFAULT_WIDTH":
+  "src/app/frame/sidebar-width.ts:SIDEBAR_DEFAULT_WIDTH":
     "interface px, drawn times the scale",
-  "src/app/sidebar-width.ts:SIDEBAR_MIN_WIDTH":
+  "src/app/frame/sidebar-width.ts:SIDEBAR_MIN_WIDTH":
     "interface px, drawn times the scale",
   "src/ai/chat/panel/agent-panel.tsx:AGENT_PANEL_DEFAULT_WIDTH":
     "interface px, drawn times the scale",
@@ -44,10 +44,8 @@ const ALLOWED = {
     "a pointer's slop, not a size drawn",
   "src/editor/mermaid-plugin.ts:RESIZE_REDRAW_PX":
     "a threshold for redrawing, not a size drawn",
-  "src/ui/pointer-drag.ts:DRAG_START_PX": "a pointer's slop, not a size drawn",
-  "src/app/tabs/TabPill.tsx:LIFT_SLOP_PX": "a pointer's slop, not a size drawn",
-  "src/app/tabs/TabPill.tsx:REORDER_THRESHOLD_PX":
-    "a pointer's slop, not a size drawn",
+  "src/utils/gesture.ts:DRAG_START_PX": "a pointer's slop, not a size drawn",
+  "src/utils/gesture.ts:TOUCH_SLOP_PX": "a finger's slop, not a size drawn",
   "src/ai/paper/figure-check.ts:WIDTH":
     "a figure drawn to be checked, not shown",
   "src/ai/revision/stream-follow-plugin.ts:NEAR":
@@ -56,7 +54,7 @@ const ALLOWED = {
     "the document's scrolling: its zoom",
   "src/editor/keys/keyboard-reveal-plugin.ts:MARGIN":
     "the document's scrolling: its zoom",
-  "src/utils/nav-history.ts:NEAR": "places in the document: its zoom",
+  "src/editor/nav-history.ts:NEAR": "places in the document: its zoom",
   "src/mobile/usePageSwipe.ts:EDGE": "the phone, whose chrome is 1",
 };
 

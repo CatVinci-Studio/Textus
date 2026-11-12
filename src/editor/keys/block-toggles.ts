@@ -1,6 +1,11 @@
 import { lift, setBlockType, wrapIn } from "@milkdown/kit/prose/commands";
 import { liftListItem, wrapInList } from "@milkdown/kit/prose/schema-list";
-import type { NodeType } from "@milkdown/kit/prose/model";
+import type { Node, NodeType, ResolvedPos } from "@milkdown/kit/prose/model";
+import {
+  TextSelection,
+  type Command,
+  type EditorState,
+} from "@milkdown/kit/prose/state";
 import type { EditorView } from "@milkdown/kit/prose/view";
 
 /**
@@ -14,7 +19,7 @@ export function cycleHeading(view: EditorView): boolean {
   const { state } = view;
   const { heading, paragraph } = state.schema.nodes;
   if (!heading || !paragraph) return false;
-  const block = state.selection.$from.parent;
+  const block = textblock(state.selection.$from);
   const command =
     block.type === heading
       ? block.attrs.level >= LAST_LEVEL
@@ -22,6 +27,37 @@ export function cycleHeading(view: EditorView): boolean {
         : setBlockType(heading, { level: block.attrs.level + 1 })
       : setBlockType(heading, { level: 1 });
   return command(state, view.dispatch);
+}
+
+/** How deep the textblock around `$pos` is: the caret can sit in an inline
+ *  node with content (a bold or italic span), not in the block itself. */
+function textblockDepth($pos: ResolvedPos): number {
+  let depth = $pos.depth;
+  while (depth > 0 && !$pos.node(depth).isTextblock) depth--;
+  return depth;
+}
+
+const textblock = ($pos: ResolvedPos): Node => $pos.node(textblockDepth($pos));
+
+/** Runs a wrapping command over the selection's whole blocks: inside a span
+ *  the selection's range would be the paragraph's inside, where nothing
+ *  wraps. The selection is kept as it was. */
+function overBlocks(view: EditorView, command: Command): boolean {
+  const { state } = view;
+  const { selection } = state;
+  const { $from, $to } = selection;
+  const from = textblockDepth($from);
+  const to = textblockDepth($to);
+  if (from === $from.depth && to === $to.depth)
+    return command(state, view.dispatch);
+  const whole: EditorState = state.apply(
+    state.tr.setSelection(
+      TextSelection.create(state.doc, $from.start(from), $to.end(to)),
+    ),
+  );
+  return command(whole, (tr) =>
+    view.dispatch(tr.setSelection(selection.map(tr.doc, tr.mapping))),
+  );
 }
 
 /** The list the caret is directly in, if any (its nearest list item's). */
@@ -53,10 +89,10 @@ export function toggleList(
   if (
     heading &&
     paragraph &&
-    view.state.selection.$from.parent.type === heading
+    textblock(view.state.selection.$from).type === heading
   )
     setBlockType(paragraph)(view.state, view.dispatch);
-  return wrapInList(target)(view.state, view.dispatch);
+  return overBlocks(view, wrapInList(target));
 }
 
 export function toggleBlockquote(view: EditorView): boolean {
@@ -66,7 +102,7 @@ export function toggleBlockquote(view: EditorView): boolean {
   for (let d = $from.depth; d > 0; d--) {
     if ($from.node(d).type === quote) return lift(view.state, view.dispatch);
   }
-  return wrapIn(quote)(view.state, view.dispatch);
+  return overBlocks(view, wrapIn(quote));
 }
 
 /** The Format menu's list items in a list of the other kind: the list

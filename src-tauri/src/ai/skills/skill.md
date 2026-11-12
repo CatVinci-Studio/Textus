@@ -77,7 +77,7 @@ Turn the notes the user points to (the selection, or the document) into ...
 
 ## Don't
 - Don't name the app, a model or a provider in the skill.
-- Don't write a skill for a one-off request about this text - say it needs no skill and just do the task in Write mode.
+- Don't write a skill for a one-off request about this text - say it needs no skill and just do the task in General mode.
 
 ## Deliver
 - A one-line reply first: what the skill does and how to call it (/name).

@@ -70,13 +70,16 @@ pub(crate) fn streaming_client() -> reqwest::Client {
     with_proxy(streaming_builder)
 }
 
-/// The configured proxy, for a client that sets up the rest itself.
+/// The configured proxy, for a client that sets up the rest itself. A model
+/// on this computer (Ollama, LM Studio) is reached directly, as the app's
+/// other requests reach it (net.rs).
 pub(crate) fn proxy() -> Option<reqwest::Proxy> {
     PROXY_URL
         .read()
         .unwrap()
         .clone()
         .and_then(|u| reqwest::Proxy::all(u).ok())
+        .map(|p| p.no_proxy(reqwest::NoProxy::from_string("localhost,127.0.0.1,::1")))
 }
 
 pub(crate) fn with_timeouts(builder: reqwest::ClientBuilder) -> reqwest::ClientBuilder {

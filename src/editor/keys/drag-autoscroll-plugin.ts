@@ -27,7 +27,7 @@ export function edgeStep(y: number, top: number, bottom: number): number {
  * tops the scroll up to edgeStep's pace, so a web view that scrolls on its
  * own isn't scrolled twice.
  */
-export function createDragAutoscrollPlugin() {
+function createDragAutoscrollPlugin() {
   return new Plugin({
     view(view) {
       let frame = 0;

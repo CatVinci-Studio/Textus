@@ -101,7 +101,7 @@ impl PdfExporter {
             return;
         }
         let Some(mtm) = MainThreadMarker::new() else {
-            self.finish(Err("PDF export left the main thread".to_string()));
+            self.finish(Err(crate::errors::error("pdfFailed")));
             return;
         };
         let this = self.retain();
@@ -146,7 +146,7 @@ impl PdfExporter {
             return;
         }
         let Some(mtm) = MainThreadMarker::new() else {
-            self.finish(Err("PDF export left the main thread".to_string()));
+            self.finish(Err(crate::errors::error("pdfFailed")));
             return;
         };
         let sheets = SHEETS_PER_RENDER.min(pages - start);
@@ -172,7 +172,7 @@ impl PdfExporter {
                     "Failed to render PDF: {}",
                     error.localizedDescription()
                 ))),
-                (None, None) => this.finish(Err("Failed to render PDF".to_string())),
+                (None, None) => this.finish(Err(crate::errors::error("pdfFailed"))),
             }
         });
         unsafe {
@@ -236,7 +236,7 @@ pub fn start_pdf_export(
     tx: Sender<Result<(), String>>,
 ) {
     let Some(mtm) = MainThreadMarker::new() else {
-        let _ = tx.send(Err("PDF export must run on the main thread".to_string()));
+        let _ = tx.send(Err(crate::errors::error("pdfFailed")));
         return;
     };
     let id = NEXT_ID.with(|next| {

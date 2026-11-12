@@ -1,3 +1,5 @@
+import { replaceChanged } from "../../editor/replace-changed";
+import { fnv1a } from "../../utils/hash";
 import { revealPosition } from "../../editor/reveal-position";
 import type { Ctx } from "@milkdown/kit/ctx";
 import { editorViewCtx } from "@milkdown/kit/core";
@@ -5,9 +7,9 @@ import { closeHistory } from "@milkdown/kit/prose/history";
 import { Selection, TextSelection } from "@milkdown/kit/prose/state";
 import type { Node as ProseNode } from "@milkdown/kit/prose/model";
 import type { EditProposal } from "../../ai/types";
-import { serializeBlocks } from "../../ai/doc-markdown";
+import { serializeBlocks } from "../../editor/markdown/doc-markdown";
 import { resolveAnchored } from "../../ai/revision/pending-place";
-import { replaceWithMarkdown } from "../../ai/revision/apply-edit";
+import { replaceWithMarkdown } from "../../editor/markdown/parse-markdown-source";
 import { locatePlainText } from "../../ai/revision/text-locate";
 import { parseMarkdownSource } from "../../editor/markdown/parse-markdown-source";
 import type { DocumentPlace } from "../../plugins/app-bridge";
@@ -62,7 +64,7 @@ export function applyPluginEdits(ctx: Ctx, edits: EditProposal[]): boolean {
 
 /** Where `place` is in `doc`: its block, its heading, its words, or the
  *  block its line falls in - the first of them that is found. */
-export function findPlace(
+function findPlace(
   ctx: Ctx,
   doc: ProseNode,
   place: DocumentPlace,
@@ -131,51 +133,22 @@ export function selectionText(ctx: Ctx): string {
 /** A short name for the document's version: changes whenever its text
  *  does. */
 export function documentRevision(markdown: string): string {
-  let h = 0x811c9dc5;
-  for (let i = 0; i < markdown.length; i++) {
-    h ^= markdown.charCodeAt(i);
-    h = Math.imul(h, 0x01000193);
-  }
-  return `${markdown.length}-${(h >>> 0).toString(36)}`;
+  return `${markdown.length}-${fnv1a(markdown).toString(36)}`;
 }
 
 /**
- * The document made to read `markdown`, as one undo step: only the blocks
- * that differ are rewritten, so the caret stays.
+ * The document made to read `markdown`, as one undo step: only what
+ * differs is rewritten, so the caret stays.
  */
 export function replaceDocument(ctx: Ctx, markdown: string): boolean {
   const view = ctx.get(editorViewCtx);
   const parsed = parseMarkdownSource(ctx, markdown);
-  if (!parsed || typeof parsed === "string") return false;
+  if (!parsed) return false;
   const doc = view.state.doc;
-  const before = doc.content;
-  const after = parsed.content;
-  let start = 0;
-  while (
-    start < before.childCount &&
-    start < after.childCount &&
-    before.child(start).eq(after.child(start))
-  )
-    start++;
-  let endBefore = before.childCount;
-  let endAfter = after.childCount;
-  while (
-    endBefore > start &&
-    endAfter > start &&
-    before.child(endBefore - 1).eq(after.child(endAfter - 1))
-  ) {
-    endBefore--;
-    endAfter--;
-  }
-  if (start === endBefore && start === endAfter) return true;
-  let from = 0;
-  for (let i = 0; i < start; i++) from += before.child(i).nodeSize;
-  let to = from;
-  for (let i = start; i < endBefore; i++) to += before.child(i).nodeSize;
-  const nodes = [];
-  for (let i = start; i < endAfter; i++) nodes.push(after.child(i));
-  const tr = view.state.tr.replaceWith(from, to, nodes);
+  const tr = replaceChanged(view.state.tr, doc.content, parsed.content);
+  if (!tr) return true;
   closeHistory(tr);
   view.dispatch(markChangeSource(tr, "plugin"));
-  return true;
+  // Refused (a read-only document): the caller learns the text didn't take.
+  return view.state.doc !== doc;
 }

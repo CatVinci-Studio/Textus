@@ -1,13 +1,13 @@
-import { noteStem } from "../../utils/path";
+import { linkPath, noteStem } from "../../utils/path";
 
 /**
  * A link's Markdown, read: the link node holds its source as text, and what
  * it points at, what to draw and what to hide all come from that text.
  */
 
-export type LinkKind = "inline" | "reference" | "autolink" | "bare";
+type LinkKind = "inline" | "reference" | "autolink" | "bare";
 
-export interface LinkParts {
+interface LinkParts {
   kind: LinkKind;
   /** Where the source ends; the whole text for a lone link. */
   end: number;
@@ -316,7 +316,7 @@ export const linkSource = (label: string, url: string): string =>
   inlineLink(label.replace(/([\\[\]])/g, "\\$1"), url);
 
 /** A link to a note as a folder writes it: `[[wiki]]` or Markdown. */
-export interface NoteLinkParts {
+interface NoteLinkParts {
   wiki: boolean;
   /** The note as named in the link ("Note", "a/Note.md"); "" for the
    *  document the link is in. */
@@ -342,15 +342,16 @@ export function noteLinkSource(link: NoteLinkParts): string {
   const name = noteStem(link.target.slice(link.target.lastIndexOf("/") + 1));
   const label =
     link.alias || (link.target ? name : (link.heading ?? `^${link.block}`));
-  // Obsidian's Markdown links write a space as %20, nothing else encoded.
+  // The path as every link Textus writes; the anchor's spaces as %20.
   return (
-    bang + linkSource(label, `${link.target}${anchor}`.replace(/ /g, "%20"))
+    bang +
+    linkSource(label, linkPath(link.target) + anchor.replace(/ /g, "%20"))
   );
 }
 
 /** A run of percent-escapes in a link's source, read as the characters it
  *  stands for. */
-export interface EncodedRun {
+interface EncodedRun {
   from: number;
   to: number;
   text: string;

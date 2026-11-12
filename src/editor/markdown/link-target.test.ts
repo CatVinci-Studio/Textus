@@ -72,6 +72,11 @@ describe("linkTarget", () => {
     });
   });
 
+  it("follows no link to another machine's share", () => {
+    expect(linkTarget("\\\\attacker\\s\\x.md", "C:\\notes\\a.md")).toBeNull();
+    expect(linkTarget("//attacker/s/x.md", "/home/me/a.md")).toBeNull();
+  });
+
   it("follows nothing relative from an unsaved document", () => {
     expect(linkTarget("./notes/ch1.md", null)).toBeNull();
     expect(linkTarget("picture.png", null)).toBeNull();

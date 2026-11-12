@@ -47,6 +47,13 @@ export const commands = {
 	 */
 	plugin_fs_read_versioned: (id: string, root: string, path: string) => __TAURI_INVOKE<VersionedText>("plugin_fs_read_versioned", { id, root, path }),
 	/**
+	 *  An Obsidian vault's own settings file, `<vault>/.obsidian/<name>`, as
+	 *  text; None when it isn't there. The one hidden folder plugins may read
+	 *  from, and only a file at its top: a plugin's saved data lives deeper
+	 *  (plugins/<id>/data.json) and holds its tokens.
+	 */
+	plugin_app_settings: (id: string, vault: string, name: string) => __TAURI_INVOKE<string | null>("plugin_app_settings", { id, vault, name }),
+	/**
 	 *  Writes `text` only if the file is still the version `token` names:
 	 *  false, and nothing written, when it changed since it was read.
 	 */
@@ -253,6 +260,7 @@ export type SearchHit = {
 	rel: string,
 	/**  1-based. */
 	line: number,
+	/**  The line around the match: a long one cut, with "…". */
 	text: string,
 };
 

@@ -5,13 +5,14 @@
 <h1 align="center">Textus</h1>
 
 <p align="center">
-  <strong>次世代のMarkdownエディタ</strong><br>
-  筆をとるのは、あなた。墨を磨るのは、AI。
+  <strong>次世代の統合執筆環境</strong><br>
+  墨を磨るのはAI。筆をとるのは、あなた。
 </p>
 
 <p align="center">
   <a href="https://textus.md"><strong>公式サイト</strong></a> ·
-  <a href="https://github.com/CatVinci-Studio/Textus/releases/latest"><strong>ダウンロード</strong></a>
+  <a href="https://github.com/CatVinci-Studio/Textus/releases/latest"><strong>ダウンロード</strong></a> ·
+  <a href="https://github.com/CatVinci-Studio/Textus/issues/648"><strong>スポンサー</strong></a>
 </p>
 
 <p align="center">
@@ -39,84 +40,104 @@
   <a href="https://trendshift.io/repositories/307610?utm_source=trendshift-badge&amp;utm_medium=badge&amp;utm_campaign=badge-trendshift-307610" target="_blank" rel="noopener noreferrer"><img src="https://trendshift.io/api/badge/trendshift/repositories/307610/daily?language=TypeScript" alt="CatVinci-Studio%2FTextus | Trendshift" width="250" height="55"/></a>
 </p>
 
-https://github.com/user-attachments/assets/f366f282-e3f9-43d9-9a29-edb6d1ace3f5
+<p align="center"><strong>プレミアスポンサー</strong></p>
 
 <p align="center">
-  <a href="https://www.youtube.com/watch?v=k_ew9TRljz0">YouTube で見る</a> ·
-  <a href="https://www.bilibili.com/video/BV19LJb6WEWb">Bilibili</a>
+  <a href="https://www.anthropic.com/">
+    <picture>
+      <source media="(prefers-color-scheme: dark)" srcset="docs/images/readme/sponsors/anthropic-logo-ivory.png">
+      <img src="docs/images/readme/sponsors/anthropic-logo-slate.png" alt="Anthropic" width="240">
+    </picture>
+  </a>
 </p>
 
+<p align="center"><sub>Anthropic Startup Program を通じて</sub></p>
+
 <p align="center">
-  <img src="docs/images/readme/ja/hero.png" alt="『吾輩は猫である』と読書メモを開いたTextus。Textus AIがメモを一文ずつ簡潔にし、修正は余白に並び、本文の横にはレビューのコメントが付いている。" width="860" /><br>
-  <sub>夏目漱石『吾輩は猫である』</sub>
+  <img src="docs/images/readme/ja/hero.webp" alt="『吾輩は猫である』の冒頭と読書メモを並べて開いたTextus。Textus AIがメモの修正案を余白に示し、小説の横にレビューのコメントを付けている。" width="860" /><br>
+  <sub>夏目漱石『吾輩は猫である』（1905年）</sub>
 </p>
 
 ## Textusを入手
 
 無料のオープンソース。MITライセンスで公開しています。
 
-| プラットフォーム | ダウンロード | その他のインストール方法 |
-| --- | --- | --- |
-| macOS · Appleシリコン | [.dmgをダウンロード](https://github.com/CatVinci-Studio/Textus/releases/latest) | Homebrew：`brew install --cask textus` |
-| macOS · Intel | [.dmgをダウンロード](https://github.com/CatVinci-Studio/Textus/releases/latest) | Homebrew：`brew install --cask textus` |
-| Windows · x64 | [.exeをダウンロード](https://github.com/CatVinci-Studio/Textus/releases/latest) | — |
-| Linux · x64 | [.AppImageをダウンロード](https://github.com/CatVinci-Studio/Textus/releases/latest) · ほかの形式も .deb · .rpm | Arch Linux：[`[catvinci]` リポジトリ](https://github.com/CatVinci-Studio/arch-repo) |
+| プラットフォーム          | ダウンロード                                                                                            | その他のインストール方法                                                             |
+| ----------------- | ------------------------------------------------------------------------------------------------- | ------------------------------------------------------------------------ |
+| macOS · Appleシリコン | [.dmgをダウンロード](https://github.com/CatVinci-Studio/Textus/releases/latest)                         | Homebrew：`brew install --cask textus`                                    |
+| macOS · Intel     | [.dmgをダウンロード](https://github.com/CatVinci-Studio/Textus/releases/latest)                         | Homebrew：`brew install --cask textus`                                    |
+| Windows · x64     | [.exeをダウンロード](https://github.com/CatVinci-Studio/Textus/releases/latest)                         | —                                                                        |
+| Linux · x64       | [.AppImageをダウンロード](https://github.com/CatVinci-Studio/Textus/releases/latest) · .deb · .rpm もあり | Arch Linux：[`[catvinci]` リポジトリ](https://github.com/CatVinci-Studio/arch-repo) |
 
-> iPhone版とiPad版は、まもなくApp Storeで公開します（中国本土を除く）。
+> iPhone版とiPad版は、まもなくApp Storeで公開します。
 
-ベータ版：**設定 › 一般 › Textus について** で **アップデートチャンネル** を **ベータ版** にします。
+ベータ版：**設定 › について** で **アップデートチャンネル** を **ベータ版** にします。
+
+## なぜTextusか
+
+プログラマーにはIDEがあります。コードを書き、確かめ、道具を使うことが一か所にまとまっています。一方で書き手は、コードエディタを借りたり、いくつものアプリを行き来したりしがちです。Textusは、書く作業の全体を一か所にまとめます。
+
+- **共通の言葉としてのMarkdown。** AIの時代、Markdownはただのファイル形式ではありません。人もAIもほかのツールも読めるので、文章がそのあいだを自由に行き来できます。
+- **コードではなく、執筆のために。** 下書き、見直し、推敲が主役です。コードエディタに後から足した機能ではありません。
+- **執筆のためのAI。** 書いているときは提案を、見直すときはコメントを。修正案は一つずつ採用するか選べます。
+- **自分に合った組み合わせで。** 見たまま編集、豊富なプラグイン、同期、毎日の予定まで。必要なものだけ使い、あとは置いておけます。
+- **今のノートをそのまま。** Obsidianの保管庫をそのまま開き、Notionから取り込み、Typoraのテーマも使えます。
 
 ## 執筆
 
-見たまま、書ける。入力するそばからMarkdownで整います。PDF、Word、HTMLなどに書き出せます。
+見たまま、書ける。入力するそばからMarkdownで整い、表、コード、数式、ダイアグラムも扱えます。下書き、ノート、資料を横に並べて開けます。PDF、Word、HTMLなどに書き出せます。
 
 <p align="center">
-  <img src="docs/images/readme/ja/markdown.webp" alt="見出し、太字と斜体、引用、リスト、タスク、リンク、注釈など、Markdownの記法をすべて使った文書が整って表示されている" width="860" />
+  <img src="docs/images/readme/ja/writing.webp" alt="いくつもの文書を並べて開いたTextus。表、コードブロック、数式、ダイアグラムが入力したそばから整っている" width="860" />
 </p>
-
-| コードブロック | 表 |
-| :---: | :---: |
-| <img src="docs/images/readme/ja/code.webp" alt="言語に合わせて色分けされたコードブロック" width="420" /> | <img src="docs/images/readme/ja/table.webp" alt="列がきれいに揃った表" width="420" /> |
-| **数式** | **ダイアグラム** |
-| <img src="docs/images/readme/ja/formula.webp" alt="入力するそばから描かれる数式" width="420" /> | <img src="docs/images/readme/ja/diagram.webp" alt="Mermaidのフローチャート" width="420" /> |
 
 ## Textus AI
 
-オンラインのLLMにもローカルのLLMにも対応。AIが執筆を加速します。
+オンラインのモデルにもローカルのモデルにも対応し、執筆そのものに加わります。
 
-| 続きの提案 | 誤字と文法 | 修正の提案 |
-| :---: | :---: | :---: |
-| <img src="docs/images/readme/ja/ai-continue.webp" alt="手を止めると続きが灰色で現れ、Tabで採用" width="280" /> | <img src="docs/images/readme/ja/ai-grammar.webp" alt="誤りに下線、Alt+Enterで修正" width="280" /> | <img src="docs/images/readme/ja/ai-revise.webp" alt="一文ずつの修正案、それぞれに理由つき" width="280" /> |
-| **レビューコメント** | **スラッシュスキル** | **好きなモデルで** |
-| <img src="docs/images/readme/ja/ai-review.webp" alt="該当する文に付いたコメント" width="280" /> | <img src="docs/images/readme/ja/ai-skills.webp" alt="/ で開くスキルメニュー" width="280" /> | <img src="docs/images/readme/ja/ai-models.webp" alt="設定でプロバイダーを選ぶ" width="280" /> |
+| 続きの提案 | 誤字と文法 |
+| :---: | :---: |
+| <img src="docs/images/readme/ja/ai-continue.webp" alt="手を止めると続きが灰色で現れ、Tabで採用" width="420" /> | <img src="docs/images/readme/ja/ai-grammar.webp" alt="誤りに下線、Alt+Enterで修正" width="420" /> |
+| **修正の提案** | **レビューコメント** |
+| <img src="docs/images/readme/ja/ai-revise.webp" alt="一文ずつの修正案、それぞれに理由つき" width="420" /> | <img src="docs/images/readme/ja/ai-review.webp" alt="該当する文に付いたコメント" width="420" /> |
+| **スラッシュスキル** | **好きなモデルで** |
+| <img src="docs/images/readme/ja/ai-skills.webp" alt="/ で開くスキルメニュー" width="420" /> | <img src="docs/images/readme/ja/ai-models.webp" alt="設定でプロバイダーを選ぶ" width="420" /> |
+
+さらに使い込むなら、MCPサーバーを接続したり、Claude CodeやCodexをエージェントとしてAIパネルに呼び込んだりできます。
 
 ## プラグイン
 
-書くだけでなく、必要なものはプラグインで足せます。
-
-| グラフビュー | Vim |
+| グラフビュー | バージョン履歴 |
 | :---: | :---: |
-| <img src="docs/images/readme/ja/plugin-graph.webp" alt="ノートとそのリンクをグラフで表示" width="420" /> | <img src="docs/images/readme/ja/plugin-vim.webp" alt="Vimのジャンプラベルと、ウィンドウバーのモード表示" width="420" /> |
-| **クイックプレビュー** | **バージョン履歴** |
-| <img src="docs/images/readme/ja/plugin-preview.webp" alt="リンクにポインタを置くと、リンク先のノートがカードで表示される" width="420" /> | <img src="docs/images/readme/ja/plugin-history.webp" alt="ノートの過去のバージョンを横に表示" width="420" /> |
+| <img src="docs/images/readme/ja/plugin-graph.webp" alt="ノートとそのリンクをグラフで表示" width="420" /> | <img src="docs/images/readme/ja/plugin-history.webp" alt="ノートの過去のバージョンを横に表示" width="420" /> |
+| **クイックプレビュー** | **ナレッジベース** |
+| <img src="docs/images/readme/ja/plugin-preview.webp" alt="リンクにポインタを置くと、リンク先のノートがカードで表示される" width="420" /> | <img src="docs/images/readme/ja/plugin-database.webp" alt="Notionのようなページ。項目が表に並び、一つ一つがプロパティを持つノートになっている" width="420" /> |
 
-マインドマップ、Marpのスライド、カンバン、タブで開くPDFとWord、Zoteroからの引用、さまざまなグラフなどは **設定 › 拡張機能** にあります。パソコンでもiPhoneとiPadでも使えます。
+ほかのプラグインとテーマ：[textus.md/extensions](https://textus.md/ja/extensions/)。
 
-多くのプラグインは自分の機能を Textus AI にも渡すので、会話の中で頼むだけで使えます。プラグインは [textus-plugins](https://github.com/CatVinci-Studio/textus-plugins)、テーマは [textus-themes](https://github.com/CatVinci-Studio/textus-themes) にあり、自作のテーマも共有できます。
+## スポンサー
+
+**プレミアスポンサー：** [Anthropic](https://www.anthropic.com/)（Anthropic Startup Program を通じて）。
+
+Textusは無料のオープンソースです。開発を支えていただけるなら、[スポンサーになってください](https://github.com/CatVinci-Studio/Textus/issues/648)。
+
+## コミュニティ
+
+Discord、QQ、WeChatで参加できます：[textus.md/community](https://textus.md/ja/community/)。不具合の報告や要望は [GitHub Issues](https://github.com/CatVinci-Studio/Textus/issues) へどうぞ。コードで貢献するなら、まず [CONTRIBUTING.md](CONTRIBUTING.md) をご覧ください。
 
 ## よくある質問
 
 <details>
 <summary><strong>Textusは無料ですか？</strong></summary>
 
-はい。MITライセンスのオープンソースで、アカウントもサブスクリプションも要りません。Textus AIの利用料は、選んだプロバイダーから直接請求されます。ローカルモデルなら費用はかかりません。
+はい、これからもずっと無料です。MITライセンスのオープンソースで、アカウントもサブスクリプションも要りません。Textus AIの利用料は、選んだプロバイダーから直接請求されます。ローカルモデルなら費用はかかりません。
 
 </details>
 
 <details>
 <summary><strong>どの環境で使えますか？</strong></summary>
 
-macOS（AppleシリコンとIntel）、Windows、Linux、そしてApp StoreからiPhoneとiPadで使えます（中国本土を除く）。
+macOS（AppleシリコンとIntel）、Windows、Linux、そしてApp StoreからiPhoneとiPadで使えます。
 
 </details>
 
@@ -142,22 +163,11 @@ macOS（AppleシリコンとIntel）、Windows、Linux、そしてApp Storeか�
 </details>
 
 <details>
-<summary><strong>普通のMarkdownで、書き出しもできますか？</strong></summary>
+<summary><strong>普通のMarkdownですか？何に書き出せますか？</strong></summary>
 
 はい、普通の.mdファイルです。表、タスクリスト、脚注、数式、Mermaidに対応し、PDF、Word、HTMLなどに書き出せます。
 
 </details>
-
-## コミュニティ
-
-- [Discord](https://textus.md/discord)：お知らせ、サポート、フィードバック（英語）
-- 中国語：[QQ グループ](https://textus.md/qq)（1128285004）· [WeChat グループ](https://textus.md/wechat)
-
-不具合の報告や要望は [GitHub Issues](https://github.com/CatVinci-Studio/Textus/issues) へどうぞ。
-
-## ロードマップと開発への参加
-
-Textus の今後の方向は [ROADMAP.md](ROADMAP.md)（英語）にあります。ビルド、チェックの実行、プルリクエストの作成は [CONTRIBUTING.md](CONTRIBUTING.md)（英語）から始めてください。AI コーディングアシスタントは [AGENTS.md](AGENTS.md) に従います。やり取りは英語か中国語でお願いします。
 
 ## スターの推移
 

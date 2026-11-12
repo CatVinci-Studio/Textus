@@ -17,25 +17,6 @@
   animation: motion-nudge-in-end var(--dur-slow) var(--ease-out);
 }
 
-/* On the desktop the window bar's right end (word count, window buttons)
-   belongs to the page: the panel's fill and edge start under it. */
-:root:not([data-window-chrome="mobile"]) .agent-panel {
-  border-left: none;
-  background: linear-gradient(
-    transparent var(--window-bar-height),
-    var(--ui-surface) var(--window-bar-height)
-  );
-}
-:root:not([data-window-chrome="mobile"]) .agent-panel::before {
-  content: "";
-  position: absolute;
-  top: var(--window-bar-height);
-  bottom: 0;
-  left: 0;
-  border-left: 1px solid var(--ui-border);
-  pointer-events: none;
-}
-
 /* It leaves the way it came; the editor takes the room back once it has
    gone. */
 .agent-panel[data-state="closing"] {
@@ -75,7 +56,6 @@
   gap: 8px;
   min-height: calc(40px * var(--chrome-scale));
   padding: 4px 8px 4px 12px;
-  border-bottom: 1px solid var(--chat-hairline, var(--ui-border));
 }
 
 /* The project's name for what the AI keeps, while its view shows. */
@@ -88,7 +68,7 @@
 
 /* The project button stays lit while its view shows. */
 .agent-panel-actions .inline-chat-header-button[aria-pressed="true"] {
-  background: color-mix(in srgb, var(--ui-text) 8%, transparent);
+  background: var(--ui-selected);
   color: var(--ui-text);
 }
 
@@ -158,7 +138,7 @@
   margin: 0;
   /* No padding top or bottom: padding is the one part of a box that never
      gives way, and with the keyboard up it held 64px the / list needed. */
-  padding: 0 28px;
+  padding: 0 24px;
   /* Short of room (the / list or the keyboard up on a phone) it is cut,
      never squashed - and it drops what no longer fits whole (below), so
      the cut never runs through the hint's line. */
@@ -191,7 +171,7 @@
   border-radius: var(--shape-pill);
   corner-shape: round;
   background: color-mix(in srgb, var(--ui-accent) 12%, transparent);
-  color: var(--ui-accent);
+  color: var(--ui-accent-text);
 }
 
 .agent-panel-empty-mark svg {
@@ -230,7 +210,7 @@
     top: 0;
     right: 0;
     bottom: 0;
-    z-index: 40;
+    z-index: var(--z-dock);
     max-width: 92vw;
     box-shadow: var(--shadow-edge-end);
     animation: motion-edge-in-end var(--dur-slow) var(--ease-spring);
@@ -292,9 +272,6 @@
 }
 
 .project-bar-name {
-  overflow: hidden;
-  text-overflow: ellipsis;
-  white-space: nowrap;
   font-weight: 600;
 }
 
@@ -302,39 +279,6 @@
   flex-shrink: 0;
   transform: rotate(90deg);
   opacity: 0.55;
-}
-
-.project-bar-chip {
-  flex-shrink: 0;
-  padding: 1px 8px;
-  border: 1px solid var(--ui-border);
-  border-radius: var(--shape-pill);
-  corner-shape: round;
-  background: none;
-  color: var(--ui-muted);
-  font: inherit;
-  font-size: var(--text-caption);
-  cursor: pointer;
-}
-
-.project-bar-chip-static {
-  cursor: default;
-}
-
-.project-bar-menu {
-  position: absolute;
-  top: calc(100% + 4px);
-  left: 0;
-  z-index: 30;
-  display: flex;
-  flex-direction: column;
-  min-width: 220px;
-  transform-origin: top left;
-  animation: motion-pop-in var(--dur-base) var(--ease-out);
-}
-
-.project-bar-menu[data-state="closing"] {
-  animation: motion-pop-out var(--dur-fast) var(--ease-in) forwards;
 }
 
 .project-bar-naming {
@@ -348,8 +292,7 @@
   min-width: 0;
   padding: 4px 8px;
   border: 1px solid var(--ui-border);
-  border-radius: var(--shape-pill);
-  corner-shape: round;
+  border-radius: var(--shape-s);
   background: var(--ui-surface);
   color: inherit;
   font: inherit;

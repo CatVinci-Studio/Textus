@@ -3,7 +3,7 @@ import type { Slice } from "@milkdown/kit/prose/model";
 import type { EditorView } from "@milkdown/kit/prose/view";
 import { closeHistory } from "@milkdown/kit/prose/history";
 import { resolveStrings } from "../../i18n/strings";
-import { showMessage } from "../../ui/app-dialog";
+import { showMessage } from "../../engine/controls/app-dialog";
 import { fs } from "../../platform/ipc";
 import type { Settings, ImageNamingMode } from "../../prefs/SettingsContext";
 import { IMAGE_FILE_EXTENSIONS, imageMimeForPath } from "./pasted-files";
@@ -12,20 +12,19 @@ import { linkHref } from "../markdown/link-syntax";
 import { currentStrings } from "../../i18n/current";
 import { explainError } from "../../utils/error-explain";
 import { LINK } from "../markdown/link-source";
+import { FILE_CREATED_EVENT } from "../../utils/events";
+import IMAGE_TYPES from "./image-types.json";
 
 /** Pictures pasted, dropped or picked, saved where the writer keeps them. */
 
-export const EXT_BY_MIME: Record<string, string> = {
-  "image/png": "png",
-  "image/jpeg": "jpg",
-  "image/gif": "gif",
-  "image/webp": "webp",
-  "image/bmp": "bmp",
-  "image/svg+xml": "svg",
-  "image/tiff": "tiff",
-};
+/** The extension a picture is saved under, by its type: the first of
+ *  image-types.json's names for it (jpg, tif). */
+const EXT_BY_MIME: Record<string, string> = Object.entries(IMAGE_TYPES).reduce(
+  (by, [ext, mime]) => ({ [mime]: ext, ...by }),
+  {} as Record<string, string>,
+);
 
-export function blobToBase64(blob: Blob): Promise<string> {
+function blobToBase64(blob: Blob): Promise<string> {
   return new Promise((resolve, reject) => {
     const reader = new FileReader();
     reader.onload = () => {
@@ -49,7 +48,7 @@ export function safeImageStem(name: string): string {
   );
 }
 
-export function automaticImageStem(): string {
+function automaticImageStem(): string {
   const now = new Date();
   const two = (value: number) => String(value).padStart(2, "0");
   const stamp = `${now.getFullYear()}${two(now.getMonth() + 1)}${two(now.getDate())}-${two(now.getHours())}${two(now.getMinutes())}${two(now.getSeconds())}`;
@@ -66,7 +65,7 @@ export function imageStemForMode(
 
 /** An image to store. Its bytes are read only once it is known to be
  *  wanted, since a file-manager copy only names a file on disk. */
-export interface PastedImage {
+interface PastedImage {
   name: string;
   type: string;
   base64: () => Promise<string>;
@@ -81,7 +80,7 @@ export interface ImageStore {
 
 /** A stored image: its src, and in a vault that writes wiki links the
  *  `![[…]]` to insert instead. */
-export interface StoredImage {
+interface StoredImage {
   src: string;
   embed?: string | null;
 }
@@ -130,7 +129,7 @@ export async function storeImageAs(
 
 /** In the folder the document's own conventions name (a vault's attachment
  *  folder, Typora's front matter), else Settings > Images > Folder. */
-export function saveToImageFolder(
+function saveToImageFolder(
   image: PastedImage,
   ext: string,
   store: Pick<ImageStore, "docPath" | "settings">,
@@ -144,7 +143,14 @@ export function saveToImageFolder(
         ext,
         store.settings().imageFolder,
       ),
-    );
+    )
+    .then((saved) => {
+      if (saved.path)
+        window.dispatchEvent(
+          new CustomEvent(FILE_CREATED_EVENT, { detail: saved.path }),
+        );
+      return saved;
+    });
 }
 
 /** Copies an image file into the image folder whatever the storage mode,

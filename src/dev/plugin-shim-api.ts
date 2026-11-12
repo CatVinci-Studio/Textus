@@ -1,4 +1,5 @@
-import { blockIds } from "../ai/doc-blocks";
+import { fnv1a } from "../utils/hash";
+import { blockIds } from "../editor/markdown/doc-blocks";
 
 /** Each folder's documents at the last metadata look, for what changed. */
 const lastLook = new Map<string, Map<string, string>>();
@@ -26,16 +27,11 @@ export function forgetShimSecrets(id: string): void {
 }
 
 function token(text: string): string {
-  let h = 0x811c9dc5;
-  for (let i = 0; i < text.length; i++) {
-    h ^= text.charCodeAt(i);
-    h = Math.imul(h, 0x01000193);
-  }
-  return `${text.length}-${(h >>> 0).toString(16)}`;
+  return `${text.length}-${fnv1a(text).toString(16)}`;
 }
 
 /** What a document holds, as the backend's index reads it. */
-export function shimDocumentMeta(path: string, rel: string, text: string) {
+function shimDocumentMeta(path: string, rel: string, text: string) {
   const lines = text.split(/\r?\n/);
   let start = 0;
   let frontmatter: string | null = null;

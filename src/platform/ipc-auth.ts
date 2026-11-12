@@ -6,7 +6,7 @@ import { aiCommand, command } from "./ipc-call";
 /** Backend commands for signing in: AI providers, custom endpoints, picture hosts. */
 
 /** What every sign-in's status command answers (more, for some). */
-export interface OauthStatus {
+interface OauthStatus {
   configured: boolean;
 }
 
@@ -16,7 +16,7 @@ export type CustomEndpointConfig = CustomEndpointStatus_Serialize;
 
 /** Provider ids with an OAuth flow and their command names, looked up by
  *  provider id as the picker iterates the catalog. */
-export const OAUTH_COMMANDS: Record<
+const OAUTH_COMMANDS: Record<
   string,
   {
     status: "codex_auth_status" | "claude_auth_status";
@@ -66,19 +66,14 @@ export const auth = {
     aiCommand("test_custom_endpoint", baseUrl, apiKey),
 };
 
-/** Image-host credentials in the provider-key store, one per host under a
- *  reserved id never shown as a provider. Keep in step with the Rust side. */
-export const IMAGE_HOST_CREDENTIAL_IDS: Record<ImageHost, string> = {
-  picgo: "__image_host_picgo",
-  smms: "__image_host_smms",
-  imgur: "__image_host_imgur",
-  custom: "__image_host",
-};
+/** Image-host tokens, kept in the provider-key store under the id Rust
+ *  gives each host. */
+const keyOf = (host: ImageHost) => command("image_host_key_id", host);
 export const imageHostAuth = {
-  tokenStatus: (host: ImageHost) =>
-    auth.providerApiKeyStatus(IMAGE_HOST_CREDENTIAL_IDS[host]),
-  setToken: (host: ImageHost, token: string) =>
-    auth.setProviderApiKey(IMAGE_HOST_CREDENTIAL_IDS[host], token),
-  clearToken: (host: ImageHost) =>
-    auth.clearProviderApiKey(IMAGE_HOST_CREDENTIAL_IDS[host]),
+  tokenStatus: async (host: ImageHost) =>
+    auth.providerApiKeyStatus(await keyOf(host)),
+  setToken: async (host: ImageHost, token: string) =>
+    auth.setProviderApiKey(await keyOf(host), token),
+  clearToken: async (host: ImageHost) =>
+    auth.clearProviderApiKey(await keyOf(host)),
 };

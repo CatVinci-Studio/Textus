@@ -3,7 +3,7 @@ import { afterEach, describe, expect, it } from "vitest";
 import type { Editor } from "@milkdown/kit/core";
 import { editorViewCtx } from "@milkdown/kit/core";
 import { Selection } from "@milkdown/kit/prose/state";
-import { createTestEditor } from "../../document-view/editor-test-harness";
+import { createTestEditor } from "../editor-test-kit";
 import { loadKatex } from "../math/katex-loader";
 import { renderWhitelistedHtml } from "./raw-html-sanitize";
 

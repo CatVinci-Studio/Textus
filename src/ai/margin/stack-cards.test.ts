@@ -86,6 +86,19 @@ describe("stackCards", () => {
     expect(placed[3].top).toBe(900);
   });
 
+  it("closes chips up to keep pace with lines closer than a chip and its gap", () => {
+    // A line a little short of a chip and its gap, twenty lines down.
+    const line = CHIP_HEIGHT + STACK_GAP / 2;
+    const placed = Array.from({ length: 21 }, (_, i) =>
+      card(`n${i}`, i * line),
+    );
+    stackCards(placed, tall);
+    // Chips but the last, which has room below it.
+    expect(placed.slice(0, -1).every((p) => p.chip)).toBe(true);
+    expect(placed.every((p) => p.group === null)).toBe(true);
+    expect(Math.max(...placed.map((p) => p.drift))).toBeLessThan(1);
+  });
+
   it("makes more notes than lines one chip, a group", () => {
     // Eight notes on three lines: even as chips the last would stand far
     // below its line.

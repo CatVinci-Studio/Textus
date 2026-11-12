@@ -1,9 +1,10 @@
+import type { QuickPickItem } from "../../engine/controls/quick-pick-queue";
 import { matchesWords } from "../../utils/match-words";
 import type { Strings } from "../../i18n/strings";
 import type { Shortcuts } from "../../prefs/SettingsContext";
 import type { PluginOrigin } from "./files";
 import { localize, type Permission, type PluginManifest } from "./manifest";
-import type { PluginStatus } from "./lifecycle";
+import { canRun, type PluginStatus } from "./lifecycle";
 
 /**
  * The plugins as the window draws them: one record per plugin, published to
@@ -33,13 +34,20 @@ let snapshot: PluginsSnapshot = { loaded: false, allOn: true, records: [] };
 const listeners = new Set<() => void>();
 
 /** What the window tells the manager about itself. */
-export interface WindowInfo {
+interface WindowInfo {
   strings: () => Strings;
   language: () => string;
   dark: () => boolean;
   /** The app's shortcuts and the user's keys for commands, as Settings has
    *  them; the defaults when left out. */
   keys?: () => { shortcuts: Shortcuts; overrides: Record<string, string> };
+  /** The command palette, offering `items` (a plugin's ui.pick): the
+   *  window's own. */
+  pickWithCommands?: (
+    items: QuickPickItem[],
+    query: string,
+    placeholder?: string,
+  ) => Promise<unknown>;
 }
 
 let info: WindowInfo = {
@@ -74,6 +82,17 @@ export function update(id: string, change: Partial<PluginRecord>) {
 export function subscribePlugins(listener: () => void): () => void {
   listeners.add(listener);
   return () => listeners.delete(listener);
+}
+
+/** The plugins running now - each on, every plugin switched on - with
+ *  their manifests: what every contribution is read from. */
+export function runningPlugins(
+  from: PluginsSnapshot,
+): (PluginRecord & { manifest: PluginManifest })[] {
+  return from.records.filter(
+    (r): r is PluginRecord & { manifest: PluginManifest } =>
+      canRun(r.status, from.allOn) && !!r.manifest,
+  );
 }
 
 export function pluginsSnapshot(): PluginsSnapshot {

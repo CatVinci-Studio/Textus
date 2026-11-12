@@ -1,7 +1,11 @@
 import type { Node as ProseNode } from "@milkdown/kit/prose/model";
 import { Decoration } from "@milkdown/kit/prose/view";
-import { prefersReducedMotion } from "../../ui/motion";
-import { enterOnBeat, glideAfter, startBeat } from "../../ui/moves";
+import { prefersReducedMotion } from "../../engine/motion/motion";
+import {
+  enterOnBeat,
+  glideAfter,
+  startBeat,
+} from "../../engine/controls/moves";
 import { inlineSentence } from "./sentence-diff";
 import { type PendingPreview, type PendingSentence } from "./pending-types";
 import {
@@ -16,6 +20,7 @@ import {
   updateAnimation,
 } from "./pending-animation";
 import { renderPendingHtml, hasBlocks } from "./pending-fill";
+import { CHECK_ICON_HTML, CROSS_ICON_HTML } from "../../engine/controls/icons";
 import { type SentenceHooks } from "./pending-decorations";
 
 /** The pieces a proposal is drawn with: the green text widget, a sentence's
@@ -86,11 +91,6 @@ export function textWidget(
   );
 }
 
-export const CHECK_SVG =
-  '<svg viewBox="0 0 16 16" aria-hidden="true"><path d="M3.5 8.5l3 3 6-7"/></svg>';
-export const CROSS_SVG =
-  '<svg viewBox="0 0 16 16" aria-hidden="true"><path d="M4 4l8 8M12 4l-8 8"/></svg>';
-
 export interface SentencePickLabels {
   take: string;
   keep: string;
@@ -121,7 +121,7 @@ export function sentenceDecorations(
 
 /** How one change is drawn: settled (with its ✓ / ✕), or while its
  *  rewrite still streams in (`stream`). */
-export interface ChangeDraw {
+interface ChangeDraw {
   focused: boolean;
   stagger: number;
   labels: SentencePickLabels;
@@ -258,7 +258,7 @@ export function changeDecorations(
           const b = document.createElement("button");
           b.type = "button";
           b.className = take ? "pending-pick-take" : "pending-pick-keep";
-          b.innerHTML = take ? CHECK_SVG : CROSS_SVG;
+          b.innerHTML = take ? CHECK_ICON_HTML : CROSS_ICON_HTML;
           const label = take ? labels.take : labels.keep;
           b.title = label;
           b.setAttribute("aria-label", label);
@@ -289,7 +289,7 @@ export function changeDecorations(
 
 /** The ranges a change strikes: each original sentence, and the space
  *  between two of them. */
-export function strikeParts(
+function strikeParts(
   c: Pick<PendingSentence, "from" | "to" | "parts">,
 ): { from: number; to: number }[] {
   const parts = c.parts;
@@ -349,14 +349,14 @@ function blockStrike(
 }
 
 /** The beat a change enters on, shared by its new text and its card. */
-export function changeBeat(callId: string, index: number): string {
+function changeBeat(callId: string, index: number): string {
   return `rev:${callId}:${index}`;
 }
 
 /** How a completed change's new text comes in while streaming: a paragraph's
  *  changes on one beat with their cards. One already on screen from the
  *  partial span gets no entrance; one realigned comes in again. */
-export function streamEntrance(
+function streamEntrance(
   span: HTMLElement,
   s: StreamState,
   index: number,

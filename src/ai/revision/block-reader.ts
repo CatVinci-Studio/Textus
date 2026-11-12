@@ -1,7 +1,7 @@
 import type { MilkdownPlugin } from "@milkdown/kit/ctx";
 import { ParserReady, parserCtx } from "@milkdown/kit/core";
 import { normalizeMathDelimiters } from "../../utils/markdown-math";
-import { blockKind, type BlockKind } from "../doc-blocks";
+import { blockKind, type BlockKind } from "../../editor/markdown/doc-blocks";
 
 /** What kind of block a piece of Markdown is, read by the editor's own
  *  parser so model text and document are told apart the same way. */

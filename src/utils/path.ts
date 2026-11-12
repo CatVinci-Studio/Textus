@@ -1,3 +1,4 @@
+import { MARKDOWN_EXTENSIONS } from "../platform/bindings/files";
 // OS-path string math. Documents opened on Windows arrive with "\", so both
 // separators are treated as separators here.
 
@@ -33,9 +34,26 @@ export function parentDir(path: string): string | null {
   return parent;
 }
 
+/** Whether `path` lies under `dir`, its "." and ".." walked first: a path
+ *  climbing out with ".." is outside, however it starts. */
 export function isInside(path: string, dir: string): boolean {
-  if (!path.startsWith(dir) || path.length === dir.length) return false;
-  return /[\\/]$/.test(dir) || /[\\/]/.test(path[dir.length]);
+  const inner = walked(path);
+  const outer = walked(dir);
+  if (inner === null || outer === null || inner === outer) return false;
+  return inner.startsWith(outer.endsWith("/") ? outer : `${outer}/`);
+}
+
+/** A path with "/" for each separator and its "." and ".." walked; null
+ *  when ".." climbs above its root. */
+function walked(path: string): string | null {
+  const root = /^(?:[A-Za-z]:)?[\\/]*/.exec(path)![0].replace(/\\/g, "/");
+  const parts: string[] = [];
+  for (const part of path.slice(root.length).split(/[\\/]+/)) {
+    if (part === "" || part === ".") continue;
+    if (part !== "..") parts.push(part);
+    else if (parts.pop() === undefined) return null;
+  }
+  return root + parts.join("/");
 }
 
 // A Markdown image or link destination is a URL, so "%20" names a space in
@@ -46,6 +64,16 @@ export function decodeUrlPath(src: string): string {
   } catch {
     return src;
   }
+}
+
+/** A path as a Markdown link's destination, as the Rust side writes one
+ *  (markdown_path): `%`, space, `(`, `)` and `#` escaped, so it needs no
+ *  angle brackets and decodeUrlPath reads it back as written. */
+export function linkPath(path: string): string {
+  return path.replace(
+    /[% ()#]/g,
+    (c) => `%${c.charCodeAt(0).toString(16).toUpperCase()}`,
+  );
 }
 
 // A Windows drive path, "C:\..." or "C:/...". Test it before hasUrlScheme,
@@ -63,7 +91,7 @@ export function hasUrlScheme(src: string): boolean {
 /** `path` with "/" between its parts, as links and the folder index keep it. */
 export const slashed = (path: string): string => path.replace(/\\/g, "/");
 
-const NOTE_FILE = /\.(md|markdown)$/i;
+const NOTE_FILE = new RegExp(`\\.(${MARKDOWN_EXTENSIONS.join("|")})$`, "i");
 
 /** A note: a Markdown file, which a wikilink names without its extension. */
 export const isNoteFile = (path: string): boolean => NOTE_FILE.test(path);

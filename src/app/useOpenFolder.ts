@@ -1,30 +1,35 @@
+import { isError } from "../utils/error-text";
 import { useCallback, useEffect, useRef, useState } from "react";
 import { useLatest } from "../utils/hooks/useLatest";
-import { thisWindow } from "../platform/this-window";
-import { canOpenFolder } from "../platform/capabilities";
+import { canOpenFolder, canUseWindows } from "../platform/capabilities";
+import { takeWindowSession } from "../document/launch-window";
 import { fs, session, windowIpc } from "../platform/ipc";
 import { getUiState, setUiState } from "../storage/ui-state";
 import { useSettings } from "../prefs/SettingsContext";
-import { showMessage } from "../ui/app-dialog";
+import { showMessage } from "../engine/controls/app-dialog";
 import { dirname, isInside } from "../utils/path";
 import { SHOW_FOLDER_EVENT } from "../utils/events";
 import {
   agentRootOnClose,
   agentRootOnOpen,
   nextTreeRoot,
-} from "../sidebar/tree-root";
+} from "../files/tree-root";
 
-/** The folder the last session had open, for the window that restores the
- *  session; later windows start without one. */
+/** The folder the last session had open, where there are no windows (an
+ *  iPad); a desktop window's comes with its session (launch-window.ts). */
 function restoredFolder(restoreSession: boolean): string | null {
-  if (!canOpenFolder || !restoreSession) return null;
-  try {
-    if (thisWindow().label !== "main") return null;
-  } catch {
-    return null;
-  }
+  if (!canOpenFolder || !restoreSession || canUseWindows) return null;
   const saved = getUiState("openFolder");
   return typeof saved === "string" && saved ? saved : null;
+}
+
+/** The folder an earlier version kept for the whole app: taken by the first
+ *  window to restore, once. */
+function olderFolder(): string | null {
+  const saved = getUiState("openFolder");
+  if (!saved) return null;
+  setUiState("openFolder", null);
+  return typeof saved === "string" ? saved : null;
 }
 
 function agentRootFromFolder(): string {
@@ -91,14 +96,17 @@ export function useOpenFolder({
     (root: string) => setTree((prev) => ({ ...prev, root })),
     [],
   );
-  // A plugin's textus.showFolder: a folder inside the open one, only.
+  // A plugin's textus.showFolder: a folder inside the open one, only. The
+  // opened folder stays the root and opens down to it; without one, the
+  // tree narrows to it.
+  const [revealed, setRevealed] = useState<string | null>(null);
   useEffect(() => {
     const show = (event: Event) => {
       const path = (event as CustomEvent<unknown>).detail;
-      // Inside the project, or inside what the tree shows without one.
       const top = folder ?? treeRoot;
-      if (typeof path === "string" && top && isInside(path, top))
-        setTreeRoot(path);
+      if (typeof path !== "string" || !top || !isInside(path, top)) return;
+      if (folder) setRevealed(path);
+      else setTreeRoot(path);
     };
     window.addEventListener(SHOW_FOLDER_EVENT, show);
     return () => window.removeEventListener(SHOW_FOLDER_EVENT, show);
@@ -125,7 +133,7 @@ export function useOpenFolder({
         key: inputsKey(path, now.activePath, now.fallback),
         root: path,
       });
-      setUiState("openFolder", path);
+      if (!canUseWindows) setUiState("openFolder", path);
       void session.addRecentFolder(path).catch(() => {});
       const agentRoot = agentRootOnOpen(
         now.settings.agentWorkspaceRoot,
@@ -159,7 +167,7 @@ export function useOpenFolder({
       key: inputsKey(null, now.activePath, now.fallback),
       root: now.activePath ? dirname(now.activePath) : now.fallback,
     });
-    setUiState("openFolder", null);
+    if (!canUseWindows) setUiState("openFolder", null);
   }, []);
 
   const openFolderDialog = useCallback(async () => {
@@ -167,24 +175,29 @@ export function useOpenFolder({
       const picked = await fs.pickOpenFolder();
       if (picked) openFolder(picked);
     } catch (err) {
-      if (String(err).includes("TOO_BROAD")) void showMessage(folderTooBroad);
+      if (isError(err, "tooBroad")) void showMessage(folderTooBroad);
     }
   }, [openFolder, folderTooBroad]);
 
-  // A recent folder chosen while no window was open: this window was
-  // opened to show it. Taken once.
+  // A recent folder chosen while no window was open (this window was
+  // opened to show it), else the folder its session had open. Taken once.
   const open = useLatest(openFolder);
   useEffect(() => {
-    void windowIpc
-      .takePendingOpenFolder()
-      .then((path) => path && open.current(path))
-      .catch(() => {});
+    void Promise.all([
+      windowIpc.takePendingOpenFolder().catch(() => null),
+      canUseWindows ? takeWindowSession() : null,
+    ]).then(([pending, window]) => {
+      const path =
+        pending ?? (window ? (window.folder ?? olderFolder()) : null);
+      if (path) open.current(path);
+    });
   }, [open]);
 
   return {
     folder,
     treeRoot,
     setTreeRoot,
+    revealed,
     openFolder,
     openFolderDialog,
     closeFolder,

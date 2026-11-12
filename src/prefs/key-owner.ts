@@ -1,15 +1,16 @@
+import { fill } from "../i18n/fill";
 import type { Strings } from "../i18n/strings";
 import type {
   HeadingAction,
   ShortcutAction,
   Shortcuts,
 } from "./SettingsContext";
-import type { FixedShortcutGroup } from "../app/fixed-shortcuts";
+import type { FixedShortcutGroup } from "../registry/fixed-shortcuts";
 import { isMacSystemCombo } from "../utils/system-keys";
 
 /** The heading shortcuts' names: the Format menu's own, and Paragraph. */
 export function headingLabels(t: Strings): Record<HeadingAction, string> {
-  const level = (n: number) => t.menuHeadingTemplate.replace("{n}", String(n));
+  const level = (n: number) => fill(t.menuHeadingTemplate, { n: String(n) });
   return {
     setHeading1: level(1),
     setHeading2: level(2),
@@ -23,10 +24,10 @@ export function headingLabels(t: Strings): Record<HeadingAction, string> {
 
 /** A menu item's name as an action's: without the "…" of one that asks
  *  for more. The shortcuts use the menu's names, so the two never differ. */
-export const plain = (label: string) => label.replace(/…$/, "");
+const plain = (label: string) => label.replace(/…$/, "");
 
-/** Every action's name, for a conflict's message. */
-function actionLabels(t: Strings): Record<ShortcutAction, string> {
+/** Every action's name: its row in Settings, a conflict's message. */
+export function actionLabels(t: Strings): Record<ShortcutAction, string> {
   return {
     triggerCompletion: t.shortcutTriggerCompletion,
     triggerGrammarCheck: t.shortcutTriggerGrammarCheck,
@@ -37,10 +38,10 @@ function actionLabels(t: Strings): Record<ShortcutAction, string> {
     toggleAgentPanel: t.menuToggleAgentPanel,
     toggleSplitView: t.menuToggleSplitView,
     toggleZenMode: t.menuToggleZenMode,
-    splitEditor: t.shortcutSplitEditor,
+    splitEditor: t.menuSplitRight,
     commandPalette: t.shortcutCommandPalette,
-    toggleSourceMode: t.menuViewSource,
-    toggleTypewriterMode: t.menuViewTypewriter,
+    toggleSourceMode: t.menuToggleSourceMode,
+    toggleTypewriterMode: t.menuToggleTypewriterMode,
     searchFiles: t.shortcutSearchFiles,
     nextTab: t.shortcutNextTab,
     previousTab: t.shortcutPreviousTab,
@@ -48,7 +49,7 @@ function actionLabels(t: Strings): Record<ShortcutAction, string> {
   };
 }
 
-export interface KeyOwners {
+interface KeyOwners {
   t: Strings;
   /** The fixed shortcuts, the editor's own keys among them. */
   fixed: FixedShortcutGroup[];

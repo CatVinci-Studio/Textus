@@ -191,7 +191,7 @@ pub(super) fn excerpt(words: &str, said: &str) -> Option<String> {
             text.push_str(next);
         }
     }
-    Some(clip(&text))
+    Some(crate::ai::clip(&text, EXCERPT_CHARS))
 }
 
 /// What starts a section's problem with a figure its sources don't give -
@@ -282,7 +282,7 @@ pub(super) fn unsupported_figures(
         let cites: String = cited.iter().map(|n| format!("[{n}]")).collect();
         out.push(Problem::soft(format!(
             "{UNSUPPORTED_FIGURE}: \"{}\" has {} but the notes of {cites} don't - give the figure as the notes do, cite the source that gives it, or leave it out.",
-            clip_to(plain.trim(), 120),
+            crate::ai::clip(plain.trim(), 120),
             missing.join(", ")
         )));
         if out.len() == MAX_UNSUPPORTED {
@@ -290,18 +290,6 @@ pub(super) fn unsupported_figures(
         }
     }
     out
-}
-
-fn clip(text: &str) -> String {
-    clip_to(text, EXCERPT_CHARS)
-}
-
-fn clip_to(text: &str, most: usize) -> String {
-    if text.chars().count() <= most {
-        return text.to_string();
-    }
-    let cut: String = text.chars().take(most).collect();
-    format!("{}…", cut.trim_end())
 }
 
 /// The passage of its sources a note rests on, marked as the web's words:
@@ -312,7 +300,7 @@ pub(super) fn source_passage(note: &Note) -> String {
     };
     let cited: String = note.sources.iter().map(|n| format!("[{n}]")).collect();
     // A page can't close the block early.
-    let excerpt = excerpt.replace("</external-content", "</external_content");
+    let excerpt = crate::ai::web::unclosing(excerpt);
     format!("\n  <external-content source=\"{cited}\">\n  {excerpt}\n  </external-content>")
 }
 

@@ -1,3 +1,4 @@
+import { MEMORY_TURN } from "../../platform/bindings/ai-agent";
 import type { SkillOffer } from "../../platform/bindings/ai-memory";
 import { OFFER_SKILL } from "./SkillOfferChip";
 import type { AgentTurn } from "../types";
@@ -46,7 +47,7 @@ export function memoryTurns(
       {
         kind: "ToolCall" as const,
         call_id: callId,
-        name: "remember",
+        name: MEMORY_TURN,
         arguments: JSON.stringify({ text: change.text }),
       },
       {
@@ -96,7 +97,7 @@ export function memoryRunsOf(
   const runs = new Map<string, string[]>();
   let run: string[] | null = null;
   for (const turn of turns) {
-    if (turn.kind === "ToolCall" && turn.name === "remember") continue;
+    if (turn.kind === "ToolCall" && turn.name === MEMORY_TURN) continue;
     if (turn.kind === "ToolResult" && results.has(turn.call_id)) {
       if (run) run.push(turn.call_id);
       else runs.set(turn.call_id, (run = [turn.call_id]));

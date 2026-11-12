@@ -1,3 +1,4 @@
+import { fill } from "../../i18n/fill";
 export interface CloseConfirmLabels {
   /** Close prompt while edits are pending; "{n}" is how many. */
   closeConfirm: string;
@@ -24,7 +25,7 @@ export function CloseConfirmBar({
   return (
     <div className="inline-chat-confirm">
       <span className="inline-chat-confirm-message">
-        {labels.closeConfirm.replace("{n}", String(pendingCount))}
+        {fill(labels.closeConfirm, { n: String(pendingCount) })}
       </span>
       <div className="inline-chat-confirm-actions">
         <button

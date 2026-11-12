@@ -285,9 +285,7 @@ pub async fn ai_paper_run(
         .as_ref()
         .map_or_else(ResearchBudget::for_paper, |f| f.paper.budget.renewed());
     let mut images = research_budget.limits.images;
-    let image_cap = session
-        .pictures(request.image_model.as_ref())
-        .map_or(0, |run| run.limit as u32);
+    let image_cap = session.pictures(&request).map_or(0, |run| run.limit as u32);
     research_budget.limits.images = images.min(image_cap);
     let budget = std::sync::Arc::new(SharedBudget::new(research_budget));
     let native = session.native_search();

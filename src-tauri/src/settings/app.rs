@@ -9,9 +9,37 @@ use super::*;
 pub fn init(app: &AppHandle) {
     let config_dir = app.path().app_config_dir().unwrap_or_default();
     let data_dir = app.path().app_data_dir().unwrap_or_default();
-    app.manage(Stores::load(&config_dir, &data_dir));
+    let stores = Stores::load(&config_dir, &data_dir);
+    proxy_changed(&stores.settings.snapshot().0);
+    app.manage(stores);
     #[cfg(target_os = "macos")]
     apply_app_theme(app);
+}
+
+/// The settings' proxy, for every request the app makes: read here, at
+/// launch and on each change, so a request made before any window (a
+/// scheduled job in background mode) goes through it too. An unreadable one
+/// is left out: requests go direct.
+pub(crate) fn proxy_changed(settings: &Value) {
+    let text = |key: &str| {
+        settings
+            .get(key)
+            .and_then(Value::as_str)
+            .unwrap_or("")
+            .trim()
+            .to_string()
+    };
+    let (kind, host, port) = (text("proxyType"), text("proxyHost"), text("proxyPort"));
+    let proxy = (!host.is_empty() && !kind.is_empty() && kind != "none").then(|| {
+        if port.is_empty() {
+            format!("{kind}://{host}")
+        } else {
+            format!("{kind}://{host}:{port}")
+        }
+    });
+    if aicompat::http::set_proxy(proxy).is_err() {
+        let _ = aicompat::http::set_proxy(None);
+    }
 }
 
 /// The appearance setting changed: brings the native side in line so what a
@@ -57,6 +85,30 @@ pub fn flush_all(app: &AppHandle) {
 
 /// A settings field as Rust sees it, for the few decisions Rust makes itself
 /// (some before any webview exists).
+/// An on/off setting Rust reads, or its default from
+/// src/prefs/backend-defaults.json, which the frontend's defaults take too.
+pub fn read_flag(app: &AppHandle, key: &str) -> bool {
+    flag(read_setting(app, key), key)
+}
+
+/// `stored` as on/off, or `key`'s default when unset (a build from before it).
+pub(crate) fn flag(stored: Option<Value>, key: &str) -> bool {
+    stored
+        .and_then(|v| v.as_bool())
+        .unwrap_or_else(|| flag_default(key))
+}
+
+pub(crate) fn flag_default(key: &str) -> bool {
+    static DEFAULTS: std::sync::LazyLock<Map<String, Value>> = std::sync::LazyLock::new(|| {
+        serde_json::from_str(include_str!("../../../src/prefs/backend-defaults.json"))
+            .expect("backend-defaults.json")
+    });
+    DEFAULTS
+        .get(key)
+        .and_then(Value::as_bool)
+        .expect("a flag Rust reads is in backend-defaults.json")
+}
+
 pub fn read_setting(app: &AppHandle, key: &str) -> Option<Value> {
     let stores = app.try_state::<Stores>()?;
     let (settings, _) = stores.settings.snapshot();
@@ -83,7 +135,7 @@ pub fn patch_from_backend(app: &AppHandle, patch: Map<String, Value>) -> Option<
 /// Delivers an event to every window, one by one: every event is
 /// window-addressed.
 pub(crate) fn emit_to_all<S: Serialize + Clone>(app: &AppHandle, event: &str, payload: S) {
-    for label in app.webview_windows().into_keys() {
+    for label in app.windows().into_keys() {
         let _ = app.emit_to(
             tauri::EventTarget::webview_window(&label),
             event,
@@ -120,6 +172,12 @@ pub fn boot_script(app: &AppHandle, label: &str) -> String {
         "label": label,
         "titlebarHeight": titlebar_height,
         "aiUnavailable": ai_unavailable,
+        // The settings' values the boot script turns into the page's look:
+        // the frontend's own tables, one file.
+        "tables": serde_json::from_str::<Value>(include_str!(
+            "../../../src/prefs/appearance-tables.json"
+        ))
+        .unwrap_or(Value::Null),
     });
     format!(
         "{}\n;window.__textusBoot({boot}, {theme_css});",
@@ -178,14 +236,16 @@ pub(crate) fn user_theme_css(app: &AppHandle, settings: &Value) -> Value {
     json!({ "light": light, "dark": dark })
 }
 
-/// Adds the boot script to a webview that shows the app, and on Linux builds the
-/// window in a pinned appearance's background. Other webviews go without.
+/// Adds the boot script and the navigation guard to a webview that shows the
+/// app, and on Linux builds the window in a pinned appearance's background.
+/// Other webviews go without.
 pub fn with_boot<'a, R: tauri::Runtime, M: Manager<R>>(
     builder: tauri::WebviewWindowBuilder<'a, R, M>,
     app: &AppHandle,
     label: &str,
 ) -> tauri::WebviewWindowBuilder<'a, R, M> {
-    let builder = builder.initialization_script(boot_script(app, label));
+    let builder =
+        crate::window_guard::guard(builder.initialization_script(boot_script(app, label)));
     #[cfg(target_os = "linux")]
     let builder = match app
         .try_state::<Stores>()
@@ -203,7 +263,7 @@ pub fn with_boot<'a, R: tauri::Runtime, M: Manager<R>>(
 #[cfg_attr(not(target_os = "linux"), allow(dead_code))]
 pub(crate) fn pinned_background(settings: &Value) -> Option<tauri::window::Color> {
     match settings.get("theme").and_then(Value::as_str) {
-        Some("dark") => Some(tauri::window::Color(0x1b, 0x1e, 0x24, 0xff)),
+        Some("dark") => Some(tauri::window::Color(0x1c, 0x1c, 0x1e, 0xff)),
         Some("light") => Some(tauri::window::Color(0xff, 0xff, 0xff, 0xff)),
         _ => None,
     }
@@ -217,13 +277,14 @@ pub(crate) fn apply_window_backgrounds(app: &AppHandle) {
         return;
     };
     let color = pinned_background(&stores.settings.snapshot().0);
-    for (label, window) in app.webview_windows() {
+    for (label, window) in app.windows() {
         // Only the windows the user sees: not the transparent tab-drag
         // pill, the hidden PDF-export renderers or background host.
-        if label == crate::tab_drag::DRAG_PILL_LABEL
-            || label == crate::schedule::HOST_LABEL
-            || label.starts_with(crate::commands::export::PDF_EXPORT_LABEL_PREFIX)
-        {
+        use crate::windows::WindowKind;
+        if matches!(
+            WindowKind::of(&label),
+            Some(WindowKind::DragPill | WindowKind::BackgroundHost | WindowKind::PdfExport)
+        ) {
             continue;
         }
         let _ = window.set_background_color(color);

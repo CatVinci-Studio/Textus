@@ -12,7 +12,7 @@ type Ask = (page: ExportPage) => Promise<Answer>;
 const listeners = new Map<string, Ask>();
 
 /** How long an export waits for one plugin. */
-export const WILL_EXPORT_MS = 2000;
+const WILL_EXPORT_MS = 2000;
 
 export function setWillExport(plugin: string, on: boolean, ask: Ask): void {
   if (on) listeners.set(plugin, ask);

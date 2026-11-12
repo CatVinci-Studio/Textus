@@ -1,8 +1,9 @@
+import { tabElement } from "../../engine/layout/tab-element";
 import { InlineMarkdownText } from "../MarkdownText";
 import { memo } from "react";
 import { createPortal } from "react-dom";
 import type { ReviewNote } from "./review-notes-plugin";
-import { useViewportClamp } from "../../utils/hooks/useViewportClamp";
+import { usePlacement } from "../../engine/controls/usePlacement";
 import "./ReviewMargin.css";
 import { useCloseOnOutsideClick } from "../../utils/hooks/useCloseOnOutsideClick";
 import { type ReviewMarginLabels } from "./margin-layout";
@@ -59,7 +60,7 @@ export const NoteCard = memo(function NoteCard({
       {picked !== null && (
         <input
           type="checkbox"
-          className="review-note-pick"
+          className="ui-check review-note-pick"
           checked={picked}
           aria-label={labels.reviewNotesPickOne}
           onChange={() => onPick(note.id)}
@@ -72,7 +73,7 @@ export const NoteCard = memo(function NoteCard({
             <NoteMark note={note} labels={labels} />
             {note.by === "me" ? labels.ownNoteBy : labels.reviewNoteBy}
           </div>
-          <div className="review-note-chip-text">
+          <div className="tx-truncate review-note-chip-text">
             <InlineMarkdownText text={note.comment} />
           </div>
         </>
@@ -178,10 +179,10 @@ export function NotePopover({
     ".review-badge",
   );
   // Kept within the document's column, off the AI panel.
-  const pos = useViewportClamp(ref, x, y, {
+  const pos = usePlacement(ref, x, y, {
     right: () =>
-      document
-        .querySelector('[data-active-tab="true"] > .editor-scroll')
+      tabElement()
+        ?.querySelector(":scope > .editor-scroll")
         ?.getBoundingClientRect().right,
   });
   return createPortal(

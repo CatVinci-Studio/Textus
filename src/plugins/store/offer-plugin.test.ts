@@ -18,13 +18,10 @@ function setup({
     official: vi.fn(async (id: string) => official.includes(id)),
     status: (id: string) => statuses[id],
     card: vi.fn<OfferDeps["card"]>(async () => answer),
-    install: vi.fn(async (id: string) => {
-      statuses[id] = "on";
+    takeUp: vi.fn(async ({ plugin }: { plugin: string }) => {
+      statuses[plugin] = "on";
+      return true;
     }),
-    turnOn: vi.fn(async (id: string) => {
-      statuses[id] = "on";
-    }),
-    failed: vi.fn(),
   } satisfies OfferDeps;
   const ask = pluginOffer(deps);
   const offer = (request: unknown, caller = IMPORTER) =>
@@ -50,9 +47,10 @@ describe("textus.offerPlugin", () => {
   it("suggests turning on an installed plugin that is off, and turns it on", async () => {
     const { deps, offer } = setup({ installed: { kanban: "off" } });
     expect(await offer({ id: "kanban" })).toBe(true);
-    expect(deps.card.mock.calls[0][0]).toMatchObject({ installed: true });
-    expect(deps.turnOn).toHaveBeenCalledWith("kanban");
-    expect(deps.install).not.toHaveBeenCalled();
+    expect(deps.takeUp.mock.calls[0][0]).toMatchObject({
+      plugin: "kanban",
+      installed: true,
+    });
   });
 
   it("doesn't offer an installed plugin that can't be turned on", async () => {
@@ -61,15 +59,16 @@ describe("textus.offerPlugin", () => {
     expect(deps.card).not.toHaveBeenCalled();
   });
 
-  it("shows the card for the caller, then installs", async () => {
+  it("shows the card for the caller, then takes it up as any card, its requirements asked", async () => {
     const { deps, offer } = setup();
     expect(await offer({ id: "kanban", reason: "ignored" })).toBe(true);
-    expect(deps.card).toHaveBeenCalledWith({
+    const card = {
       plugin: "kanban",
       situation: { type: "offer", caller: IMPORTER },
       installed: false,
-    });
-    expect(deps.install).toHaveBeenCalledWith("kanban");
+    };
+    expect(deps.card).toHaveBeenCalledWith(card);
+    expect(deps.takeUp).toHaveBeenCalledWith(card, t);
   });
 
   it.each(["later", "never", "busy", "muted"] as const)(
@@ -77,15 +76,7 @@ describe("textus.offerPlugin", () => {
     async (answer) => {
       const { deps, offer } = setup({ answer });
       expect(await offer({ id: "kanban" })).toBe(false);
-      expect(deps.install).not.toHaveBeenCalled();
+      expect(deps.takeUp).not.toHaveBeenCalled();
     },
   );
-
-  it("tells the user when the install they agreed to fails", async () => {
-    const { deps, offer } = setup();
-    const error = new Error("offline");
-    deps.install.mockRejectedValueOnce(error);
-    expect(await offer({ id: "kanban" })).toBe(false);
-    expect(deps.failed).toHaveBeenCalledWith(error, t);
-  });
 });

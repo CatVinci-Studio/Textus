@@ -20,7 +20,7 @@ export function needsMargin(mode: RevisionDisplay): boolean {
 
 /** Whether a display shows part of each change in the margin, and so falls
  *  back where there is none. On a phone Result only reads as the result. */
-export function usesMargin(mode: RevisionDisplay, phone = false): boolean {
+function usesMargin(mode: RevisionDisplay, phone = false): boolean {
   return needsMargin(mode) || (mode === "final" && !phone);
 }
 

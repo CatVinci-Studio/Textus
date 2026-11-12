@@ -1,4 +1,6 @@
-import { scaledPx } from "../../ui/chrome-scale";
+import { inlineSentence } from "../revision/sentence-diff";
+import { counted } from "../../i18n/current";
+import { scaledPx } from "../../engine/tokens/chrome-scale";
 import { memo } from "react";
 import type { ReviewNote } from "./review-notes-plugin";
 import { CARD_WIDTH } from "./margin-room";
@@ -16,8 +18,8 @@ function groupLabel(items: MarginItem[], labels: ReviewMarginLabels): string {
   const notes = items.filter((i) => i.kind === "note").length;
   const changes = items.length - notes;
   return [
-    notes > 0 && labels.reviewGroupNotes.replace("{n}", String(notes)),
-    changes > 0 && labels.proposalChangeCount.replace("{n}", String(changes)),
+    notes > 0 && counted(labels.reviewGroupNotes, notes),
+    changes > 0 && counted(labels.proposalChangeCount, changes),
   ]
     .filter(Boolean)
     .join(" · ");
@@ -30,9 +32,7 @@ function groupGlimpse(items: MarginItem[]): string {
   if (!first) return "";
   return first.kind === "note"
     ? first.note.comment
-    : (first.shows === "new" ? first.before : first.after)
-        .trim()
-        .replace(/^#{1,6}\s+/, "");
+    : inlineSentence(first.shows === "new" ? first.before : first.after);
 }
 
 /** A run with more notes than its paragraph has lines: one chip, "8 notes",
@@ -97,7 +97,9 @@ export const MarginGroup = memo(function MarginGroup({
           {groupLabel(items, labels)}
         </span>
         {!open && (
-          <span className="review-note-chip-text">{groupGlimpse(items)}</span>
+          <span className="tx-truncate review-note-chip-text">
+            {groupGlimpse(items)}
+          </span>
         )}
       </button>
       {open && (

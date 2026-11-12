@@ -1,8 +1,8 @@
+import { fill } from "../../i18n/fill";
 import { useEffect, useRef, useState } from "react";
 import { appVersion } from "../../platform/app-info";
-import { showConfirm } from "../../ui/app-dialog";
+import { showConfirm } from "../../engine/controls/app-dialog";
 import type { Update } from "../../platform/app-info";
-import { relaunchApp } from "../../platform/app-info";
 import type { Strings } from "../../i18n/strings";
 import {
   cli,
@@ -12,11 +12,11 @@ import {
   type DefaultEditorStatus,
   type UpdateChannel,
 } from "../../platform/ipc";
-import { flushPendingWrites } from "../../storage/pending-writes";
+import { installAndRelaunch } from "../../platform/install-update";
 import { checkChannel, selfUpdateAllowed } from "../../platform/distribution";
 import { canAutoUpdate } from "../../platform/capabilities";
 import { useSettings } from "../../prefs/SettingsContext";
-import { Select } from "../../ui/Select";
+import { Select } from "../../engine/controls/Select";
 import { SettingRow } from "./controls";
 import { explainError } from "../../utils/error-explain";
 
@@ -59,11 +59,14 @@ export function UpdateButton({
       const found = await updater.check(
         checkChannel(settings.updateChannel, allowed),
       );
+      // As this check found it, not as the panel first assumed (a menu's
+      // Check for Updates runs before that is known).
+      setSelfUpdate(allowed);
       if (found) {
         setUpdate(found);
         setPhase("available");
         setMessage(
-          selfUpdate
+          allowed
             ? `${t.updateAvailable} v${found.version}`
             : `${t.updateAvailable} v${found.version} ${t.updateViaPackageManager}`,
         );
@@ -121,18 +124,6 @@ export function UpdateButton({
   );
 }
 
-/** Downloads `update`, installs it and starts the new Textus. On Windows
- *  downloadAndInstall never returns (the updater calls process::exit, skipping
- *  Rust's exit flush), so pending writes go now, while the download runs. */
-async function installAndRelaunch(update: Update) {
-  await flushPendingWrites();
-  await update.downloadAndInstall();
-  // macOS and Linux: anything changed during the download, then the
-  // relaunch (which does flush Rust's files on its way out).
-  await flushPendingWrites();
-  await relaunchApp();
-}
-
 /**
  * On a beta with the channel set back to Stable: installs the newest stable
  * release, older than the beta, after asking. Nothing else installs an older version.
@@ -162,11 +153,9 @@ function BackToStable({ t }: { t: Strings }) {
         return;
       }
       const ok = await showConfirm(
-        t.backToStableConfirm
-          .replace("{version}", found.version)
-          .replace("{beta}", version),
+        fill(t.backToStableConfirm, { version: found.version, beta: version }),
         {
-          okLabel: t.backToStableInstall.replace("{version}", found.version),
+          okLabel: fill(t.backToStableInstall, { version: found.version }),
           cancelLabel: t.cancel,
         },
       );
@@ -182,18 +171,16 @@ function BackToStable({ t }: { t: Strings }) {
     }
   }
 
+  // Beside the channel picked: a button, its state under it if any.
   return (
-    <SettingRow
-      label={t.backToStableLabel}
-      hint={t.backToStableHint.replace("{version}", version)}
-    >
+    <>
       <button
         type="button"
         className="text-button settings-inline-button"
         disabled={phase === "working"}
         onClick={() => void goBack()}
       >
-        {t.backToStableButton}
+        {t.backToStableLabel}
       </button>
       {message && (
         <div
@@ -203,7 +190,7 @@ function BackToStable({ t }: { t: Strings }) {
           {message}
         </div>
       )}
-    </SettingRow>
+    </>
   );
 }
 
@@ -234,8 +221,8 @@ export function UpdateChannelRow({ t }: { t: Strings }) {
           <option value="stable">{t.updateChannelStable}</option>
           <option value="beta">{t.updateChannelBeta}</option>
         </Select>
+        {settings.updateChannel === "stable" && <BackToStable t={t} />}
       </SettingRow>
-      {settings.updateChannel === "stable" && <BackToStable t={t} />}
     </div>
   );
 }

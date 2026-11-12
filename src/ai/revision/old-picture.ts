@@ -1,7 +1,8 @@
+import { fill } from "../../i18n/fill";
 import { canTrashFiles } from "../../platform/capabilities";
 import { fs } from "../../platform/ipc";
 import { imageLocation } from "../../editor/images/missing-image";
-import { showConfirm, showMessage } from "../../ui/app-dialog";
+import { showConfirm, showMessage } from "../../engine/controls/app-dialog";
 import type { Strings } from "../../i18n/strings";
 import { explainError } from "../../utils/error-explain";
 
@@ -19,14 +20,11 @@ export async function offerOldPictureTrash(
   // The same picture shown elsewhere in the document stays.
   if (documentMarkdown().includes(oldSrc)) return;
   const name = location.path.split(/[\\/]/).pop() ?? oldSrc;
-  const move = await showConfirm(
-    t.oldPictureTrashQuestion.replace("{name}", name),
-    {
-      okLabel: t.oldPictureTrashOk,
-      cancelLabel: t.oldPictureKeep,
-      focusCancel: true,
-    },
-  );
+  const move = await showConfirm(fill(t.oldPictureTrashQuestion, { name }), {
+    okLabel: t.treeTrash,
+    cancelLabel: t.oldPictureKeep,
+    focusCancel: true,
+  });
   if (!move) return;
   try {
     await fs.movePictureToTrash(docPath, location.path);

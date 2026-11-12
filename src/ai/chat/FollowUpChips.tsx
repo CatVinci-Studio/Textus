@@ -43,7 +43,7 @@ export function FollowUpChips({
         <button
           key={text}
           type="button"
-          className="inline-chat-action inline-chat-follow-up"
+          className="inline-chat-action tx-truncate inline-chat-follow-up"
           tabIndex={i === 0 ? 0 : -1}
           title={text}
           onMouseDown={

@@ -1,6 +1,6 @@
 import type { EditProposal } from "../types";
 import type { ProposalStreamEffects } from "./proposal-stream";
-import { stopRewrite, streamPendingInsertText } from "./pending-edit-plugin";
+import { stopRewrite, streamPendingInsertText } from "./pending-animation";
 
 /** How a streaming proposal is shown: typed in as it arrives, or, with motion
  *  off, redrawn at most every DRAW_EVERY ms. The completed call makes it decidable. */

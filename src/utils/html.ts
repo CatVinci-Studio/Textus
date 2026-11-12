@@ -7,3 +7,9 @@ export function escapeHtml(text: string): string {
     .replace(/>/g, "&gt;")
     .replace(/"/g, "&quot;");
 }
+
+/** CSS made safe to place in a <style> element: nothing in it can close the
+ *  element (`</` is written `<\/`, the same in CSS). */
+export function styleText(css: string): string {
+  return css.replace(/<\//g, "<\\/");
+}

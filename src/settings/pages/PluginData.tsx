@@ -1,12 +1,14 @@
+import { explainError } from "../../utils/error-explain";
+import { fill } from "../../i18n/fill";
 import { useEffect, useState } from "react";
 import { SettingRow } from "../sections/controls";
-import { showConfirm } from "../../ui/app-dialog";
+import { showConfirm, showMessage } from "../../engine/controls/app-dialog";
 import { plugins as pluginsIpc } from "../../platform/ipc";
 import type { Strings } from "../../i18n/strings";
 import { projectRoot } from "../../plugins/store/plugin-settings";
 
 /** "12.3 KB", the way a file manager says it. */
-export function sizeText(bytes: number): string {
+function sizeText(bytes: number): string {
   if (bytes < 1024) return `${bytes} B`;
   const units = ["KB", "MB", "GB"];
   let n = bytes / 1024;
@@ -45,19 +47,23 @@ export function PluginData({
   if (!usage || usage[0] + usage[1] === 0) return null;
   const [global, project] = usage;
   const parts = [
-    global > 0 && t.pluginDataGlobal.replace("{global}", sizeText(global)),
-    project > 0 && t.pluginDataProject.replace("{project}", sizeText(project)),
+    global > 0 && fill(t.pluginDataGlobal, { global: sizeText(global) }),
+    project > 0 && fill(t.pluginDataProject, { project: sizeText(project) }),
   ].filter(Boolean);
   const clear = async () => {
-    const ok = await showConfirm(t.pluginDataClearAsk.replace("{name}", name), {
+    const ok = await showConfirm(fill(t.pluginDataClearAsk, { name }), {
       okLabel: t.pluginDataClear,
-      cancelLabel: t.pluginCancel,
+      cancelLabel: t.cancel,
       danger: true,
     });
     if (!ok) return;
-    await pluginsIpc.storeClear(id, "global", null).catch(() => {});
-    // With no folder open, the hidden place the plugin kept data in instead.
-    await pluginsIpc.storeClear(id, "project", root).catch(() => {});
+    try {
+      await pluginsIpc.storeClear(id, "global", null);
+      // With no folder open, the hidden place the plugin kept data in instead.
+      await pluginsIpc.storeClear(id, "project", root);
+    } catch (err) {
+      await showMessage(explainError(err, t), { tone: "error" });
+    }
     setRound((n) => n + 1);
   };
   return (

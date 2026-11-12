@@ -1,9 +1,10 @@
+import { fill } from "../i18n/fill";
 import { useCallback, useEffect, useRef } from "react";
 import { AI_CANCELLED, ai } from "../platform/ipc";
 import { errorText } from "../utils/error-text";
 import { imageModelOf } from "../ai/image-models";
 import type { useAgentPanel } from "../ai/chat/panel/agent-panel";
-import type { AgentConversation } from "../ai/chat/useAgentConversation";
+import type { AgentConversation } from "../ai/chat/conversation/conversation-types";
 import type { EditorRunner } from "../editor/useEditorRunner";
 import type { GeneratedImageData } from "../platform/ipc";
 import type { Settings } from "../prefs/SettingsContext";
@@ -27,6 +28,7 @@ import {
 import { withoutPictures } from "../ai/paper/paper-document";
 import { figureErrors } from "../ai/paper/figure-check";
 import { usePaperDocument } from "./usePaperDocument";
+import { chosenModel } from "../ai/chosen-model";
 
 /**
  * Research mode's paper: researches and outlines a paper on a topic, waits
@@ -71,7 +73,7 @@ export function usePaperWriter({
     const { settings: s, filePath: docPath } = latest.current;
     return {
       provider: s.aiProvider,
-      model: s.agentModels[s.aiProvider] || null,
+      model: chosenModel(s),
       docPath,
       workspaceRoot: s.agentWorkspaceRoot || null,
       imageModel: imageModelOf(s),
@@ -326,7 +328,7 @@ export function usePaperWriter({
       }));
       agentPanel.setOpen(true);
       latest.current.conversation.append(
-        paperCardTurns(key, topic, strings.paperAsk.replace("{topic}", topic)),
+        paperCardTurns(key, topic, fill(strings.paperAsk, { topic })),
       );
       research(key, topic, genre, null, conversation);
     },

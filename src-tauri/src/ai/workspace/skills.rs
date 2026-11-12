@@ -234,20 +234,57 @@ pub(crate) fn safe_file_stem(name: &str, fallback: &str, max_bytes: usize) -> St
 pub(crate) fn skill_file_path(skills_dir: &Path, name: &str) -> Result<PathBuf, String> {
     let path = skills_dir.join(format!("{}.md", skill_file_stem(name)));
     if path.parent() != Some(skills_dir) {
-        return Err("That skill's name can't be used as a file name.".to_string());
+        return Err(crate::errors::error("skillName"));
     }
     Ok(path)
 }
 
-/// Errors the built-in skill commands return, for the frontend to map to
-/// its own messages.
-pub(crate) const UNKNOWN_BUILTIN: &str = "UNKNOWN_BUILTIN";
+/// What writing a new skill file does where its name's file is there.
+pub(crate) enum OnTaken {
+    /// Writes over it (an imported file of that name).
+    Replace,
+    /// Writes beside it as `name-2`, `name-3`… (a copy, an offer saved).
+    NextFree,
+    /// Leaves it and fails with the error `code` stands for.
+    Refuse(&'static str),
+}
 
-pub(crate) const NOT_A_COPY: &str = "NOT_A_COPY";
+/// Writes skill `name`'s file in `dir` (made if missing), in one step:
+/// `text` is given the name the file gets.
+pub(crate) fn write_skill_file(
+    dir: &Path,
+    name: &str,
+    on_taken: OnTaken,
+    text: impl FnOnce(&str) -> String,
+) -> Result<PathBuf, String> {
+    std::fs::create_dir_all(dir).map_err(|e| e.to_string())?;
+    let mut chosen = name.to_string();
+    let mut path = skill_file_path(dir, name)?;
+    match on_taken {
+        OnTaken::Replace => {}
+        OnTaken::Refuse(code) if path.exists() => return Err(crate::errors::error(code)),
+        OnTaken::Refuse(_) => {}
+        OnTaken::NextFree => {
+            let mut n = 2;
+            while path.exists() {
+                chosen = format!("{name}-{n}");
+                path = skill_file_path(dir, &chosen)?;
+                n += 1;
+            }
+        }
+    }
+    crate::atomic::write_sync(&path, text(&chosen)).map_err(|e| e.to_string())?;
+    Ok(path)
+}
+
+/// The built-in skill commands' errors, by code (errors.json).
+pub(crate) const UNKNOWN_BUILTIN: &str = "unknownBuiltin";
+
+pub(crate) const NOT_A_COPY: &str = "notACopy";
 
 pub(crate) fn customize_in(skills_dir: &Path, name: &str) -> Result<PathBuf, String> {
     let (Some(builtin), Some(raw)) = (builtin::find(name), builtin::raw(name)) else {
-        return Err(UNKNOWN_BUILTIN.to_string());
+        return Err(crate::errors::error(UNKNOWN_BUILTIN));
     };
     if let Some((path, _)) = read_skill_files(skills_dir)
         .into_iter()
@@ -255,23 +292,16 @@ pub(crate) fn customize_in(skills_dir: &Path, name: &str) -> Result<PathBuf, Str
     {
         return Ok(path);
     }
-    std::fs::create_dir_all(skills_dir).map_err(|e| e.to_string())?;
     // A file of that stem holding some other skill keeps its name.
-    let mut path = skill_file_path(skills_dir, &builtin.name)?;
-    let mut n = 2;
-    while path.exists() {
-        path = skill_file_path(skills_dir, &format!("{}-{n}", builtin.name))?;
-        n += 1;
-    }
     let version = builtin.version.as_deref().unwrap_or("1");
-    let content = builtin::with_based_on(raw, &format!("{}@{version}", builtin.name));
-    crate::atomic::write_sync(&path, content).map_err(|e| e.to_string())?;
-    Ok(path)
+    write_skill_file(skills_dir, &builtin.name, OnTaken::NextFree, |_| {
+        builtin::with_based_on(raw, &format!("{}@{version}", builtin.name))
+    })
 }
 
 pub(crate) fn reset_in(skills_dir: &Path, name: &str) -> Result<Vec<String>, String> {
     if builtin::find(name).is_none() {
-        return Err(UNKNOWN_BUILTIN.to_string());
+        return Err(crate::errors::error(UNKNOWN_BUILTIN));
     }
     let prefix = format!("{name}@");
     let same_name: Vec<(PathBuf, AgentSkill)> = read_skill_files(skills_dir)
@@ -288,52 +318,56 @@ pub(crate) fn reset_in(skills_dir: &Path, name: &str) -> Result<Vec<String>, Str
         .map(|(p, _)| p)
         .collect();
     if copies.is_empty() && !same_name.is_empty() {
-        return Err(NOT_A_COPY.to_string());
+        return Err(crate::errors::error(NOT_A_COPY));
     }
     let mut deleted = Vec::new();
     for path in copies {
-        std::fs::remove_file(path).map_err(|e| e.to_string())?;
+        // The user may have edited their copy: to the Trash.
+        crate::atomic::to_trash(path)?;
         deleted.push(path.to_string_lossy().to_string());
     }
     Ok(deleted)
 }
 
 /// `raw` with its `metadata:` key `textus-<key>` set to `value`: replaced, or
-/// added under `metadata:`, adding that or the front matter when missing.
+/// added under `metadata:` at its keys' indent, adding that or the front
+/// matter when missing. A file with no front matter keeps its file's name
+/// (none is written), a leading BOM goes.
 pub(crate) fn with_metadata(raw: &str, key: &str, value: &str) -> String {
-    let line = format!("  {META_PREFIX}-{key}: \"{value}\"");
-    let prefix = format!("  {META_PREFIX}-{key}:");
+    let raw = raw.strip_prefix('\u{feff}').unwrap_or(raw);
+    let field = format!("{META_PREFIX}-{key}:");
+    let entry = |indent: &str| format!("{indent}{field} \"{value}\"");
     let mut lines: Vec<String> = raw.lines().map(str::to_string).collect();
-    let closing = (lines.first().map(|l| l.trim_end()) == Some("---"))
-        .then(|| {
-            lines
-                .iter()
-                .skip(1)
-                .position(|l| l.trim_end() == "---")
-                .map(|i| i + 1)
-        })
-        .flatten();
+    let closing = crate::frontmatter::split(raw).map(|front| front.lines.len() + 1);
+    let indent_of = |l: &str| l[..l.len() - l.trim_start().len()].to_string();
     match closing {
         Some(end) => {
-            if let Some(i) = lines[..end].iter().position(|l| l.starts_with(&prefix)) {
-                lines[i] = line;
+            if let Some(i) = lines[..end]
+                .iter()
+                .position(|l| l.trim_start().starts_with(&field))
+            {
+                lines[i] = entry(&indent_of(&lines[i]));
             } else if let Some(i) = lines[..end]
                 .iter()
                 .position(|l| l.trim_end() == "metadata:")
             {
-                lines.insert(i + 1, line);
+                // Beside the keys already there, at their indent.
+                let indent = lines[i + 1..end]
+                    .first()
+                    .map(|l| indent_of(l))
+                    .filter(|d| !d.is_empty())
+                    .unwrap_or_else(|| "  ".into());
+                lines.insert(i + 1, entry(&indent));
             } else {
-                lines.insert(end, line);
+                lines.insert(end, entry("  "));
                 lines.insert(end, "metadata:".to_string());
             }
         }
         None => {
-            let stem = "skill";
             let mut head = vec![
                 "---".to_string(),
-                format!("name: {stem}"),
                 "metadata:".to_string(),
-                line,
+                entry("  "),
                 "---".to_string(),
             ];
             head.extend(lines);
@@ -361,14 +395,14 @@ pub(crate) fn save_written_in(
     confirmed: bool,
 ) -> Result<PathBuf, String> {
     if text.len() > MAX_WRITTEN_SKILL {
-        return Err("That skill is too long to save.".to_string());
+        return Err(crate::errors::error("skillTooLong"));
     }
     let skill = parse_skill_file("", text);
     if skill.name.is_empty() || skill.prompt.is_empty() {
-        return Err("That isn't a skill file: it needs a name and instructions.".to_string());
+        return Err(crate::errors::error("notSkill"));
     }
     if modes.is_empty() {
-        return Err("A skill needs at least one mode.".to_string());
+        return Err(crate::errors::error("skillNoMode"));
     }
     // The description is shown to the model too, in the list of skills.
     let read = format!("{}\n{}", skill.description, skill.prompt);
@@ -400,7 +434,7 @@ pub(crate) fn set_modes_in(
     modes.sort();
     modes.dedup();
     if modes.is_empty() {
-        return Err("A skill needs at least one mode.".to_string());
+        return Err(crate::errors::error("skillNoMode"));
     }
     let (path, _) = read_skill_files(skills_dir)
         .into_iter()

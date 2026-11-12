@@ -1,10 +1,9 @@
 import { useCallback } from "react";
 import { editorViewCtx } from "@milkdown/kit/core";
 import { selectAllIn } from "../keys/select-all";
-import { openToText } from "../markdown/parse-markdown-source";
+import { insertMarkdown } from "../markdown/parse-markdown-source";
 import type { EditorRunner } from "../useEditorRunner";
 import { tellCopied } from "../../clipboard/copied";
-import { parseMarkdownSource } from "../markdown/parse-markdown-source";
 import { pastePlainText } from "./paste-plain";
 import { clipboardIpc } from "../../platform/ipc";
 import { plainTextOf } from "./plain-text";
@@ -108,21 +107,11 @@ export function useEditorClipboard(run: EditorRunner): EditorClipboard {
           view.focus();
           return;
         }
-        let inserted = false;
-        const doc = parseMarkdownSource(ctx, text);
-        if (doc && doc.content.size > 0) {
-          view.dispatch(
-            view.state.tr
-              .replaceSelection(openToText(doc.content))
-              .setMeta("uiEvent", "paste")
-              .scrollIntoView(),
-          );
-          inserted = true;
-        }
-        if (!inserted)
-          view.dispatch(
-            view.state.tr.insertText(text).setMeta("uiEvent", "paste"),
-          );
+        view.dispatch(
+          insertMarkdown(view.state.tr, ctx, text)
+            .setMeta("uiEvent", "paste")
+            .scrollIntoView(),
+        );
         view.focus();
       });
     },

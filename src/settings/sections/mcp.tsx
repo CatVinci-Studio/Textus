@@ -1,11 +1,17 @@
-import { useEffect, useState } from "react";
+import { PathText } from "../../engine/controls/PathText";
+import { CatalogRow } from "../pages/CatalogRow";
+import { Tooltip } from "../../engine/controls/Tooltip";
+import { Segmented } from "../../engine/controls/Segmented";
+import { counted } from "../../i18n/current";
+import { fill } from "../../i18n/fill";
+import { useEffect, useState, type ReactNode } from "react";
 import type { Strings } from "../../i18n/strings";
 import {
   mcp,
   type McpServerStatus,
   type McpToolInfo,
 } from "../../platform/ipc";
-import { showConfirm } from "../../ui/app-dialog";
+import { showConfirm } from "../../engine/controls/app-dialog";
 import { useSettings } from "../../prefs/SettingsContext";
 import { ExtensionsTabLayout } from "../pages/ExtensionsTabLayout";
 import { SettingsGroup } from "../pages/SettingsGroup";
@@ -21,7 +27,14 @@ import { explainError } from "../../utils/error-explain";
 /** Settings › Extensions › MCP: the servers Textus AI may use, each a card
  *  with its switch and state, and a form to add, change or try one. The
  *  servers run in Rust; this asks for their state. */
-export function McpSection({ t }: { t: Strings }) {
+export function McpSection({
+  t,
+  after,
+}: {
+  t: Strings;
+  /** Shown under the list, not while a server is being edited. */
+  after?: ReactNode;
+}) {
   const { settings, setSettings } = useSettings();
   const servers = settings.mcpServers;
   const [status, setStatus] = useState<McpServerStatus[]>([]);
@@ -42,22 +55,28 @@ export function McpSection({ t }: { t: Strings }) {
         .status()
         .then((list) => {
           if (stopped) return;
-          setStatus(list);
-          const missing = ids.some((id) => !list.some((s) => s.id === id));
-          if (missing) unlisted++;
+          const missing = ids.filter((id) => !list.some((s) => s.id === id));
+          if (missing.length) unlisted++;
+          const gaveUp = missing.length > 0 && unlisted >= 10;
+          // One that never shows up has failed, not still starting.
+          setStatus(
+            gaveUp ? [...list, ...failed(missing, t.errorTimeout)] : list,
+          );
           if (
             list.some((s) => s.state === "starting") ||
-            (missing && unlisted < 10)
+            (missing.length && !gaveUp)
           )
-            timer = window.setTimeout(poll, missing ? 300 : 1000);
+            timer = window.setTimeout(poll, missing.length ? 300 : 1000);
         })
-        .catch(() => {});
+        .catch((err: unknown) => {
+          if (!stopped) setStatus(failed(ids, explainError(err, t)));
+        });
     void poll();
     return () => {
       stopped = true;
       window.clearTimeout(timer);
     };
-  }, [enabledKey, enabledIds]);
+  }, [enabledKey, enabledIds, t]);
 
   const save = (server: McpServer) => {
     const rest = servers.filter((s) => s.id !== server.id);
@@ -69,7 +88,7 @@ export function McpSection({ t }: { t: Strings }) {
   };
   const remove = async (server: McpServer) => {
     const ok = await showConfirm(
-      t.mcpRemoveConfirm.replace("{name}", server.name),
+      fill(t.mcpRemoveConfirm, { name: server.name }),
       { okLabel: t.mcpRemove, cancelLabel: t.cancel, danger: true },
     );
     if (ok)
@@ -106,16 +125,35 @@ export function McpSection({ t }: { t: Strings }) {
               onEdit={() => setEditing(server)}
               onRemove={() => void remove(server)}
               onRestart={() =>
-                void mcp.restart(server.id).then(setStatus, () => {})
+                void mcp
+                  .restart(server.id)
+                  .then(setStatus, (err: unknown) =>
+                    setStatus((list) => [
+                      ...list.filter((s) => s.id !== server.id),
+                      ...failed([server.id], explainError(err, t)),
+                    ]),
+                  )
               }
             />
           ))
         ) : (
-          <p className="plugin-empty">{t.mcpNone}</p>
+          <p className="tx-list-note">{t.mcpNone}</p>
         )
       }
+      footer={after}
     />
   );
+}
+
+/** Servers whose state couldn't be had, shown as failed for a reason. */
+function failed(ids: string[], error: string): McpServerStatus[] {
+  return ids.map((id) => ({
+    id,
+    state: "failed",
+    server: "",
+    tools: [],
+    error,
+  }));
 }
 
 function blankServer(): McpServer {
@@ -140,8 +178,8 @@ function stateText(
   if (!server.enabled) return t.mcpStateOff;
   if (!status || status.state === "starting") return t.mcpStateStarting;
   if (status.state === "failed")
-    return t.mcpStateFailed.replace("{reason}", status.error ?? "");
-  return t.mcpStateReady.replace("{count}", String(status.tools.length));
+    return fill(t.mcpStateFailed, { reason: status.error ?? "" });
+  return counted(t.mcpStateReady, status.tools.length);
 }
 
 function ServerCard({
@@ -163,58 +201,67 @@ function ServerCard({
 }) {
   const failed = server.enabled && status?.state === "failed";
   return (
-    <div className="settings-row plugin-card mcp-card" data-mcp={server.id}>
-      <div className="plugin-card-open">
-        <span className="settings-row-label plugin-card-name">
-          {server.name || server.id}
-        </span>
-        <span className="settings-row-hint plugin-card-description mcp-endpoint">
-          {server.url || joinCommandLine([server.command, ...server.args])}
-        </span>
-        <span
-          className={`settings-row-hint mcp-state${failed ? " mcp-state-failed" : ""}`}
-          role="status"
-        >
-          {stateText(t, server, status)}
-        </span>
-        {server.enabled && status?.state === "ready" && (
-          <ToolList tools={status.tools} />
-        )}
-        <span className="mcp-actions">
-          <button
-            type="button"
-            className="settings-skill-action"
-            onClick={onEdit}
+    <CatalogRow
+      className="mcp-card"
+      data-mcp={server.id}
+      name={server.name || server.id}
+      description={
+        <PathText
+          path={server.url || joinCommandLine([server.command, ...server.args])}
+        />
+      }
+      descriptionClass="mcp-endpoint"
+      extra={
+        <>
+          <span
+            className={`settings-row-hint mcp-state${failed ? " mcp-state-failed" : ""}`}
+            role="status"
           >
-            {t.mcpEdit}
-          </button>
-          {server.enabled && (
+            {stateText(t, server, status)}
+          </span>
+          {server.enabled && status?.state === "ready" && (
+            <ToolList tools={status.tools} />
+          )}
+          <span className="mcp-actions">
             <button
               type="button"
-              className="settings-skill-action"
-              onClick={onRestart}
+              className="text-button settings-inline-button"
+              onClick={onEdit}
             >
-              {t.mcpRestart}
+              {t.mcpEdit}
             </button>
-          )}
-          <button
-            type="button"
-            className="settings-skill-action"
-            onClick={onRemove}
-          >
-            {t.mcpRemove}
-          </button>
-        </span>
-      </div>
-      <div className="settings-row-control">
-        <input
-          type="checkbox"
-          aria-label={server.name || server.id}
-          checked={server.enabled}
-          onChange={(e) => onEnable(e.target.checked)}
-        />
-      </div>
-    </div>
+            {server.enabled && (
+              <button
+                type="button"
+                className="text-button settings-inline-button"
+                onClick={onRestart}
+              >
+                {t.mcpRestart}
+              </button>
+            )}
+            <button
+              type="button"
+              className="text-button settings-inline-button"
+              onClick={onRemove}
+            >
+              {t.mcpRemove}
+            </button>
+          </span>
+        </>
+      }
+      action={
+        <>
+          <input
+            type="checkbox"
+            className="tx-switch"
+            role="switch"
+            aria-label={server.name || server.id}
+            checked={server.enabled}
+            onChange={(e) => onEnable(e.target.checked)}
+          />
+        </>
+      }
+    />
   );
 }
 
@@ -223,9 +270,9 @@ function ToolList({ tools }: { tools: McpToolInfo[] }) {
   return (
     <span className="mcp-tools" data-search-ignore>
       {tools.map((tool) => (
-        <span key={tool.name} className="mcp-tool" title={tool.description}>
-          {tool.name}
-        </span>
+        <Tooltip key={tool.name} text={tool.description || tool.name}>
+          <span className="tx-badge mcp-tool">{tool.name}</span>
+        </Tooltip>
       ))}
     </span>
   );
@@ -244,10 +291,10 @@ function useMcpTry(t: Strings) {
     try {
       const result = await mcp.try(server);
       setTried(
-        t.mcpTried
-          .replace("{server}", result.server)
-          .replace("{count}", String(result.tools.length))
-          .replace("{names}", result.tools.map((x) => x.name).join(", ")),
+        fill(counted(t.mcpTried, result.tools.length), {
+          server: result.server,
+          names: result.tools.map((x) => x.name).join(", "),
+        }),
       );
     } catch (err) {
       setError(explainError(err, t));
@@ -310,20 +357,16 @@ function McpForm({
             onChange={(e) => setName(e.target.value)}
           />
         </label>
-        <div className="auth-tabs" role="tablist" aria-label={t.mcpFormKind}>
-          {(["command", "url"] as const).map((k) => (
-            <button
-              key={k}
-              type="button"
-              role="tab"
-              aria-selected={kind === k}
-              className={`auth-tab${kind === k ? " auth-tab-active" : ""}`}
-              onClick={() => setKind(k)}
-            >
-              {k === "command" ? t.mcpFormKindCommand : t.mcpFormKindUrl}
-            </button>
-          ))}
-        </div>
+        <Segmented
+          className="settings-segmented"
+          label={t.mcpFormKind}
+          options={[
+            { id: "command", label: t.mcpFormKindCommand },
+            { id: "url", label: t.mcpFormKindUrl },
+          ]}
+          value={kind}
+          onChange={setKind}
+        />
         {kind === "command" ? (
           <>
             <label className="settings-field-label">
@@ -411,7 +454,7 @@ function McpForm({
           </button>
           <button
             type="button"
-            className="plugin-install"
+            className="text-button settings-inline-button"
             disabled={!ready}
             onClick={() => onSave(built())}
           >

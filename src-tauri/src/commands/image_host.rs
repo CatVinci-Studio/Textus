@@ -212,7 +212,8 @@ async fn send(
     if let (Auth::KeyQuery, Some(token)) = (&preset.auth, &token) {
         url.query_pairs_mut().append_pair("key", token);
     }
-    let client = crate::net::client(CONNECT_TIMEOUT, UPLOAD_TIMEOUT)
+    // Through the app's proxy, as other calls go; PicGo here directly.
+    let client = crate::net::public_client(CONNECT_TIMEOUT, UPLOAD_TIMEOUT)?
         .build()
         .map_err(|e| e.to_string())?;
     let mut request = client.post(url);
@@ -246,7 +247,8 @@ async fn send(
         } else if e.is_timeout() {
             format!("{name} didn't answer in time")
         } else {
-            format!("couldn't reach {name}: {e}")
+            // Without its address, which may carry the key.
+            format!("couldn't reach {name}: {}", e.without_url())
         }
     })?;
     let status = response.status();
@@ -295,6 +297,13 @@ async fn send(
     Ok(src)
 }
 
+/// Where `host`'s token is kept, for Settings to save or clear it.
+#[tauri::command]
+#[cfg_attr(test, specta::specta)]
+pub fn image_host_key_id(host: ImageHost) -> &'static str {
+    host.credential_id()
+}
+
 #[tauri::command]
 #[cfg_attr(test, specta::specta)]
 pub async fn upload_image(
@@ -308,14 +317,13 @@ pub async fn upload_image(
 ) -> Result<UploadedImage, String> {
     let preset = host.preset();
     let url = upload_url(&preset, &endpoint)?;
-    if filename.is_empty() || filename.contains(['/', '\\']) || filename == "." || filename == ".."
-    {
+    if crate::ids::one_name(&filename) != Some(filename.as_str()) {
         return Err("invalid image filename".to_string());
     }
 
     let bytes = STANDARD.decode(data_base64).map_err(|e| e.to_string())?;
     if bytes.is_empty() || bytes.len() > MAX_IMAGE_BYTES {
-        return Err("image is empty or exceeds the 25 MB limit".to_string());
+        return Err(crate::errors::error("imageTooBig"));
     }
     let token = load_provider_key(&app, host.credential_id())?;
 

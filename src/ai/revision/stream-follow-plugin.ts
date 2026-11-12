@@ -1,7 +1,7 @@
 import { Plugin, PluginKey } from "@milkdown/kit/prose/state";
 import type { EditorView } from "@milkdown/kit/prose/view";
 import { $prose } from "@milkdown/kit/utils";
-import { duration, length, motionAllowed } from "../../ui/motion";
+import { duration, length, motionAllowed } from "../../engine/motion/motion";
 
 /** How near the bottom of the page the writing may be and still count as
  *  in view - a wheel's last step short of it. */
@@ -16,7 +16,7 @@ const INTENT_MS = 800;
  *  rewrite has reached (its reading cursor). */
 const WRITING = ".pending-insert-typing, .pending-reading";
 
-export const streamFollowKey = new PluginKey("textus-stream-follow");
+const streamFollowKey = new PluginKey("textus-stream-follow");
 
 /** The page follows AI writing while the reader is with it. A scroll they
  *  didn't make of over a screen is undone, as WebKit pulls the caret back. */

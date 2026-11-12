@@ -21,8 +21,8 @@ beforeAll(() => {
 });
 afterEach(cleanup);
 
-const { ContextMenu } = await import("../ui/ContextMenu");
-const { Select } = await import("../ui/Select");
+const { ContextMenu } = await import("../engine/controls/ContextMenu");
+const { Select } = await import("../engine/controls/Select");
 
 describe("on a phone", () => {
   it("a menu is an action sheet with Cancel set apart", () => {

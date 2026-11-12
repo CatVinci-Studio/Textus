@@ -1,6 +1,6 @@
 import { normaliseMcpServers } from "./mcp";
 import { hasTextusAi } from "../platform/capabilities";
-import { detectLang, isLang, localeOf, type Lang } from "../i18n/strings";
+import { detectLang, isLang, type Lang } from "../i18n/strings";
 import {
   UPDATE_CHANNELS,
   type UpdateChannel,
@@ -17,6 +17,8 @@ import {
   IMAGE_HOSTS,
   type ImageHost,
   REVISION_DISPLAYS,
+  AI_CHANGE_MODES,
+  type AiChangeMode,
   type RevisionDisplay,
   type Creation,
   CREATION_KINDS,
@@ -33,7 +35,6 @@ import {
   type DocLetterSpacing,
   LETTER_SPACING_BY,
   PANDOC_ARGS_FORMATS,
-  storedAgentMode,
 } from "./settings-values";
 
 /** Saved settings read back whole: a missing, ill-typed or unknown value
@@ -88,12 +89,6 @@ export function storedCreations(value: unknown): Creation[] {
   );
 }
 
-/** The `lang` attribute for the UI language, which the CSS `:lang()` font
- *  stacks key off. Keep in step with the boot script. */
-export function htmlLang(language: Lang): string {
-  return localeOf(language);
-}
-
 /** A new installation starts in the OS's language, when the app has it. */
 export function guessLanguage(): Lang {
   return detectLang(typeof navigator === "undefined" ? "" : navigator.language);
@@ -102,8 +97,25 @@ export function guessLanguage(): Lang {
 /** Stored settings -> a complete, valid `Settings`. Nothing stored at all is
  *  a new installation, which starts in the OS's language. */
 export function normaliseSettings(parsed: Raw | null): Settings {
-  const settings = readSettings(parsed);
+  const settings = withDefaultShapes(readSettings(parsed));
   return hasTextusAi ? settings : { ...settings, textusAi: false };
+}
+
+/** Each setting of another kind than its default (a number where a list
+ *  goes, text where a switch goes) back to the default: a hand-edited or
+ *  older file can't break what reads it. */
+function withDefaultShapes(settings: Settings): Settings {
+  const shape = (value: unknown) =>
+    value === null ? "null" : Array.isArray(value) ? "array" : typeof value;
+  const out: Record<string, unknown> = { ...settings };
+  for (const [key, fallback] of Object.entries(DEFAULT_SETTINGS))
+    if (
+      fallback !== null &&
+      fallback !== undefined &&
+      shape(out[key]) !== shape(fallback)
+    )
+      out[key] = fallback;
+  return out as unknown as Settings;
 }
 
 function readSettings(parsed: Raw | null): Settings {
@@ -113,6 +125,13 @@ function readSettings(parsed: Raw | null): Settings {
     return {
       ...DEFAULT_SETTINGS,
       ...parsed,
+      // A profile from before 1.3.13 kept it off, the old default: on once,
+      // then as the user leaves it.
+      formatBar:
+        parsed.formatBarOnce === true && typeof parsed.formatBar === "boolean"
+          ? parsed.formatBar
+          : true,
+      formatBarOnce: true,
       onboardingShown:
         typeof parsed.onboardingShown === "boolean"
           ? parsed.onboardingShown
@@ -126,10 +145,12 @@ function readSettings(parsed: Raw | null): Settings {
           ? parsed.aiProvider
           : DEFAULT_SETTINGS.aiProvider,
       agentModels: stringMap(parsed.agentModels),
+      chatAgent: typeof parsed.chatAgent === "string" ? parsed.chatAgent : "",
+      writingProvider:
+        typeof parsed.writingProvider === "string"
+          ? parsed.writingProvider
+          : "",
       writingModels: stringMap(parsed.writingModels),
-      agentDefaultMode:
-        storedAgentMode(parsed.agentDefaultMode) ??
-        DEFAULT_SETTINGS.agentDefaultMode,
       revisionDisplay:
         parsed.revisionDisplay === "new"
           ? "final"
@@ -138,6 +159,11 @@ function readSettings(parsed: Raw | null): Settings {
               )
             ? (parsed.revisionDisplay as RevisionDisplay)
             : DEFAULT_SETTINGS.revisionDisplay,
+      aiChangeMode: AI_CHANGE_MODES.includes(
+        parsed.aiChangeMode as AiChangeMode,
+      )
+        ? (parsed.aiChangeMode as AiChangeMode)
+        : DEFAULT_SETTINGS.aiChangeMode,
       shortcuts: storedShortcuts(parsed.shortcuts),
       commandShortcuts: stringMap(parsed.commandShortcuts),
       mcpServers: normaliseMcpServers(parsed.mcpServers),

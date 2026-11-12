@@ -7,7 +7,7 @@
 const IMAGE_TITLE_METADATA =
   /\s*\{((?:\s*(?:textus|levis)-(?:width=\d{1,3}%|rotate=\d{1,3}))+)\s*\}\s*$/;
 
-export interface ImageTitleParts {
+interface ImageTitleParts {
   /** The title as shown, without the suffix. */
   title: string;
   widthPercent: number | null;

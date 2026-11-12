@@ -21,16 +21,16 @@ import {
   resolveTarget,
   type NoteTarget,
   type PathIndex,
-} from "../../links/link-resolve";
+} from "../../files/link-resolve";
 
-export { pathIndex, resolveTarget, type PathIndex };
+export { pathIndex, resolveTarget };
 
 /**
  * textus.metadata on the window's side: Rust's index of the open folder plus
  * what is worked out across documents (links, backlinks, tags, tasks).
  */
 
-export interface MetaTask {
+interface MetaTask {
   text: string;
   done: boolean;
   due: string | null;
@@ -40,7 +40,7 @@ export interface MetaTask {
   location: PluginLocation;
 }
 
-export interface MetaDocument {
+interface MetaDocument {
   path: string;
   rel: string;
   title: string;

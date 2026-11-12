@@ -1,16 +1,14 @@
+import { tabElement } from "../engine/layout/tab-element";
 import { currentStrings } from "../i18n/current";
 import type { Settings } from "../prefs/SettingsContext";
 import { BUILTIN_CONTENT_THEMES } from "../theme/builtin-themes";
-import {
-  installPlugin,
-  loadPlugins,
-  setPluginEnabled,
-} from "../plugins/manager";
+import { loadPlugins } from "../plugins/manager";
+import { installPlugin, setPluginEnabled } from "../plugins/plugin-switches";
 import { pluginName, pluginsSnapshot } from "../plugins/store/plugin-records";
 import { installFromCatalog, loadCatalog } from "../plugins/store/catalog";
 import { emitToWindow } from "../platform/events";
 import { thisWindow } from "../platform/this-window";
-import { runCommand } from "./commands";
+import { runCommand } from "../registry/commands";
 import { runMenuAction } from "./menu/app-menu-actions";
 import { paletteNow, type PaletteEntry } from "./command-palette";
 
@@ -184,7 +182,7 @@ const exportDocument: Handler = async (request, window) => {
   const deadline = Date.now() + EDITOR_WITHIN_MS;
   while (
     window().activePath !== path ||
-    !document.querySelector('[data-active-tab="true"] .milkdown')
+    !tabElement()?.querySelector(".milkdown")
   ) {
     if (Date.now() > deadline)
       return fail(`${path} didn't open in Textus's editor.`);

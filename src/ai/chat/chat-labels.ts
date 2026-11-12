@@ -1,3 +1,4 @@
+import { fill } from "../../i18n/fill";
 import { plural, type Lang, type Strings } from "../../i18n/strings";
 import { blockNames } from "../revision/markdown-forms";
 import type { InlineChatLabels } from "./quick-ask/InlineChat";
@@ -27,6 +28,7 @@ export function chatLabels(t: Strings, lang: Lang): InlineChatLabels {
     send: t.agentSend,
     stop: t.agentStop,
     retry: t.agentRetry,
+    agentPermission: t.chatAgentPermission,
     thinking: t.agentThinking,
     thinkingFor: (n) => plural(t.agentThinkingFor, n, lang),
     waitedFor: (n) => plural(t.agentWaitedFor, n, lang),
@@ -37,17 +39,19 @@ export function chatLabels(t: Strings, lang: Lang): InlineChatLabels {
     stoppedAtLimit: t.chatStoppedAtLimit,
     continueAfterLimit: t.chatContinueAfterLimit,
     proposalImage: t.proposalImage,
-    imageLimitReached: t.imageLimitReached.replace(
-      "{setting}",
-      t.imagesPerRequestLabel,
-    ),
-    imageNoModel: t.imageNoModel.replace("{setting}", t.imageModelLabel),
+    imageLimitReached: fill(t.imageLimitReached, {
+      setting: t.imagesPerRequestLabel,
+    }),
+    imageNoModel: fill(t.imageNoModel, { setting: t.imageModelLabel }),
     attachFile: t.agentAttachFile,
     attachmentTruncated: t.chatAttachmentTruncated,
     attachmentNoVision: t.chatAttachmentNoVision,
     selectedChars: (n) => plural(t.chatSelectedChars, n, lang),
     selectedPicture: t.chatSelectedPicture,
     selectionChip: (n) => plural(t.chatSelectionChip, n, lang),
+    messageCopy: t.copy,
+    messageCopyMarkdown: t.menuCopyAsMarkdown,
+    messageInsert: t.agentActionInsertAtCursor,
     proposalTitle: t.agentProposalTitle,
     proposalStatus: {
       streaming: t.proposalStatusStreaming,
@@ -75,6 +79,18 @@ export function chatLabels(t: Strings, lang: Lang): InlineChatLabels {
     proposalAcceptSome: t.proposalAcceptSome,
     commentTitle: t.reviewNoteBy,
     commentLocate: t.proposalShowInText,
+    commentApplySuggestion: t.commentApplySuggestion,
+    filesChangedTitle: t.filesChangedTitle,
+    filesKeptTitle: t.filesKeptTitle,
+    filesNew: t.filesNew,
+    filesUndo: t.filesUndo,
+    filesApply: t.filesApply,
+    filesWaiting: (n: number) => plural(t.aiPendingCount, n, lang),
+    filesConflict: t.aiFileConflict,
+    filesCreated: t.aiCreatedPending,
+    filesKeep: t.aiKeepFile,
+    filesDiscard: t.aiDiscardFile,
+    filesDismiss: t.aiDismissConflict,
     commentCount: t.reviewGroupNotes,
     commentGroupMore: t.commentGroupMore,
     memorySaved: t.memoryChipSaved,

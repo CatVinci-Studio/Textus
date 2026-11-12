@@ -43,7 +43,7 @@ pub(super) fn unpack(archive: &Path, to: &Path) -> Result<Vec<String>, String> {
             .map_err(|e| e.to_string())?;
         total += bytes.len() as u64;
         if total > MAX_BYTES {
-            return Err("That archive is too large to unpack.".to_string());
+            return Err(crate::errors::error("archiveTooLarge"));
         }
         std::fs::write(&target, bytes).map_err(|e| e.to_string())?;
         files.push(rel.to_string_lossy().replace('\\', "/"));

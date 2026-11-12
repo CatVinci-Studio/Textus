@@ -298,3 +298,23 @@ fn ids_round_trip_and_keys_are_shared_where_the_provider_is_the_same() {
     assert_eq!(Backend::Tavily.key_id(), Some("search-tavily"));
     assert_eq!(Backend::from_id("auto"), None);
 }
+
+#[test]
+fn every_backend_is_in_the_shared_list() {
+    for backend in [
+        Backend::Deepseek,
+        Backend::Zhipu,
+        Backend::Kimi,
+        Backend::Bocha,
+        Backend::Tavily,
+        Backend::Brave,
+        Backend::Exa,
+        Backend::Searxng,
+    ] {
+        assert!(!backend.label().is_empty());
+    }
+    assert_eq!(Backend::Kimi.key_id(), Some("moonshot"));
+    assert_eq!(Backend::Searxng.key_id(), None);
+    let auto: Vec<_> = Backend::automatic().collect();
+    assert_eq!(auto, [Backend::Deepseek, Backend::Zhipu, Backend::Kimi]);
+}

@@ -1,6 +1,7 @@
 import type { PluginFile } from "../../platform/ipc";
 import type { Permission, PluginManifest } from "./manifest";
-import { grants, PERMISSION_CALLS } from "../api-permissions";
+import { PERMISSION_CALLS } from "../api-permissions";
+import { grants } from "../grants";
 import { WHEN_KEYS, whenKeys } from "../contributions/when";
 
 /**

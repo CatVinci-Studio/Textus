@@ -1,0 +1,136 @@
+/* What makes the editor work (carets, markers, previews, AI decorations,
+   tables). How document elements look lives in content-base.css's layer,
+   which themes override; nothing here should be restyled away. */
+.milkdown {
+  --doc-gap: 0.8em;
+  --doc-gap-box: 1.1em;
+  --doc-radius: var(--shape-s);
+  --doc-radius-sm: var(--shape-xs);
+}
+
+/* The reader's own text size and line spacing (Settings) win over any
+   theme's, an imported one's #write rules included: they are the reader's
+   eyes, not the theme's look. */
+:root[data-doc-size] :is(.milkdown, #write) {
+  font-size: var(--doc-font-size) !important;
+}
+:root[data-doc-leading] :is(.milkdown, #write) {
+  line-height: var(--doc-line-height) !important;
+}
+:root[data-doc-font] :is(.milkdown, #write) {
+  font-family: var(--doc-chosen-font) !important;
+}
+:root[data-doc-tracking] :is(.milkdown, #write) {
+  letter-spacing: var(--doc-letter-spacing) !important;
+}
+/* Code keeps its own grid. */
+:root[data-doc-tracking] :is(.milkdown, #write) :is(code, pre, kbd) {
+  letter-spacing: normal !important;
+}
+
+/* A click below the text still lands in it: the page height less the
+   column's padding, divided by the zoom - a document's page, not a preview
+   drawn in it (an embed, a card). flow-root keeps the last block's margin
+   inside, which WebKit on macOS let collapse out into a scrollbar. */
+.milkdown .ProseMirror {
+  display: flow-root;
+  outline: none;
+}
+.milkdown .ProseMirror:not(.editor-preview .ProseMirror) {
+  min-height: calc((100vh - 9rem) / var(--content-zoom, 1));
+}
+
+/* A long document's block out of sight (editor/lazy-blocks): only its
+   height, margins included, so nothing in it is laid out or painted. */
+.milkdown .ProseMirror > .lazy-block {
+  margin: 0;
+  padding: 0;
+  border: 0;
+  contain: strict;
+}
+
+@media print {
+  /* Otherwise every printout gets a near-full blank page after the content. */
+  .milkdown .ProseMirror {
+    min-height: 0;
+  }
+
+  /* Editor-only chrome, not part of the document. */
+  .code-block-header,
+  .code-line-gutter,
+  .chat-selection-layer {
+    display: none;
+  }
+}
+
+/* Painted as generated content, not DOM text, or WebKit paints the caret
+   after the ghost text. */
+.ghost-text {
+  user-select: none;
+  pointer-events: none;
+}
+
+.ghost-text-count {
+  user-select: none;
+  pointer-events: none;
+}
+
+.ghost-text-count::after {
+  content: attr(data-count);
+  margin-left: 0.5em;
+  padding: 0 0.35em;
+  border: 1px solid var(--doc-border);
+  border-radius: var(--shape-pill);
+  corner-shape: round;
+  color: var(--doc-muted);
+  font-size: 0.72em;
+  font-style: normal;
+  white-space: nowrap;
+  vertical-align: 0.1em;
+}
+
+.ghost-text::after {
+  content: attr(data-suggestion);
+  color: var(--doc-muted);
+  opacity: 0.65;
+  font-style: italic;
+  white-space: pre-wrap;
+}
+
+/* Only a suggestion's first appearance fades in; nothing on the typing path moves. */
+.ghost-text-enter::after {
+  animation: motion-fade-in var(--dur-fast) var(--ease-out);
+}
+
+/* At a suggestion, WKWebView paints the native caret AFTER it. So the native
+   caret goes transparent and an identical one is drawn at the ghost's left
+   edge; the \200b content gives it real text height. */
+.milkdown .ProseMirror.ghost-text-caret {
+  caret-color: transparent;
+}
+
+/* caret-color inherits, so the rule above also blanked the caret of form
+   fields inside the document (the Quick Ask composer). */
+.milkdown .ProseMirror input,
+.milkdown .ProseMirror textarea {
+  caret-color: auto;
+}
+
+.milkdown .ProseMirror.ghost-text-caret:focus .ghost-text::before {
+  content: "\200b";
+  border-left: 1.5px solid var(--doc-text);
+  /* design: allow - half a hairline, to sit on the pixel. */
+  margin-left: -0.5px;
+  animation: ghost-caret-blink var(--dur-blink) step-end infinite;
+}
+
+@keyframes ghost-caret-blink {
+  0%,
+  49% {
+    opacity: 1;
+  }
+  50%,
+  100% {
+    opacity: 0;
+  }
+}

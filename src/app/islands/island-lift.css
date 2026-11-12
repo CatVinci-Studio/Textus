@@ -1,0 +1,11 @@
+/* An island lifted whole (island-lift.ts): above everything, a shadow
+   under it, following the pointer with no easing. */
+.island-lift {
+  position: fixed;
+  z-index: var(--z-lift);
+  pointer-events: none;
+  /* The shadow follows the island's own shape - its tab rising from the
+     sheet - not the box around it. */
+  filter: drop-shadow(var(--shadow-popover));
+  opacity: 0.96;
+}

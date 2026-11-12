@@ -50,10 +50,35 @@ function deleteToLineStart(view: EditorView): boolean {
   return true;
 }
 
+/** Ctrl+Home and Ctrl+End (Cmd on a Mac), done on the document: the
+ *  browser's own moved the caret before the source shown where it was
+ *  (a fold's, a heading's) closed behind it, and the editor drew the caret
+ *  back from where it had been. */
+function toDocumentEdge(view: EditorView, event: KeyboardEvent): boolean {
+  const { selection, doc } = stateWithLiveSelection(view);
+  const backward = event.key === "Home";
+  const $target = doc.resolve(
+    (backward ? Selection.atStart(doc) : Selection.atEnd(doc)).head,
+  );
+  const direction = backward ? -1 : 1;
+  const next = event.shiftKey
+    ? TextSelection.between(selection.$anchor, $target, direction)
+    : Selection.near($target, direction);
+  view.dispatch(view.state.tr.setSelection(next).scrollIntoView());
+  return true;
+}
+
 export function createMacNavigationPlugin(isMac = isMacPlatform) {
   return new Plugin({
     props: {
       handleKeyDown(view, event) {
+        if (
+          (event.key === "Home" || event.key === "End") &&
+          (isMac() ? event.metaKey : event.ctrlKey) &&
+          !event.altKey &&
+          !isImeKeyEvent(view, event)
+        )
+          return toDocumentEdge(view, event);
         if (
           !isMac() ||
           !event.metaKey ||

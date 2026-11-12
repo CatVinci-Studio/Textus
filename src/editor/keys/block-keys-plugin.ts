@@ -223,7 +223,7 @@ export const pipeRowToTable: Command = (state, dispatch) => {
 /** Shift+Enter in a paragraph that already ends in a line break. Milkdown's
  *  rule checks the paragraph's last child instead of the node before the
  *  cursor, which mid-line deletes a character; here it's applied as meant. */
-export const shiftEnterWithTrailingBreak: Command = (state, dispatch) => {
+const shiftEnterWithTrailingBreak: Command = (state, dispatch) => {
   const { selection } = state;
   if (!(selection instanceof TextSelection) || !selection.empty) return false;
   const hardbreak = state.schema.nodes.hardbreak;
@@ -269,7 +269,7 @@ export const splitInlineCode: Command = (state, dispatch) => {
 
 /** Shift+Enter in a table cell: a line break saved as `<br>`, since a GFM
  *  row can't hold a line end and Milkdown's command is filtered out there. */
-export const lineBreakInTableCell: Command = (state, dispatch) => {
+const lineBreakInTableCell: Command = (state, dispatch) => {
   const { selection } = state;
   const hardbreak = state.schema.nodes.hardbreak;
   if (!hardbreak || !(selection instanceof TextSelection) || !isInTable(state))
@@ -319,7 +319,7 @@ export function spacesAfterCaret(state: EditorState): Transaction | null {
  * Enter on an empty task nested in a task list moves it up a level and keeps
  * it a task; splitListItem alone made it a plain bullet.
  */
-export const liftEmptyNestedTask: Command = (state, dispatch) => {
+const liftEmptyNestedTask: Command = (state, dispatch) => {
   const { $from, empty } = state.selection;
   const item = state.schema.nodes.list_item;
   if (!empty || !item || $from.depth < 4 || $from.parent.content.size > 0)
@@ -383,7 +383,7 @@ const onShiftEnter: Command[] = [
 
 /** How soon before Enter a Shift press still counts as the same stroke:
  *  macOS Pinyin toggles 中/英 with a Shift tap that can overlap the Enter. */
-export const SHIFT_OVERLAP_MS = 100;
+const SHIFT_OVERLAP_MS = 100;
 
 export const blockKeysPlugin = $prose(() => {
   let shiftDownAt = -Infinity;

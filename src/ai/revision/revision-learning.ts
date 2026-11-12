@@ -1,3 +1,4 @@
+import { fill } from "../../i18n/fill";
 /** Learning from revision choices: a kind turned down again and again is
  *  offered as a requirement. The log holds kinds, not text, and stays local. */
 
@@ -179,10 +180,10 @@ export function describeKind(
       const show = (s: string) =>
         [...s].length === 2 && !/[\p{L}\p{N}]/u.test(s)
           ? s
-          : t.learnQuoted.replace("{text}", s);
-      const fill = (s: string) =>
-        s.replace("{from}", show(kind.from)).replace("{to}", show(kind.to));
-      return pick(fill(t.learnSwap), fill(t.learnSwapRule));
+          : fill(t.learnQuoted, { text: s });
+      const swap = (s: string) =>
+        fill(s, { from: show(kind.from), to: show(kind.to) });
+      return pick(swap(t.learnSwap), swap(t.learnSwapRule));
     }
     case "width":
       return kind.to === "half"

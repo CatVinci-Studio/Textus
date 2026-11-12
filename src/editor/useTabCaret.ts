@@ -6,7 +6,11 @@ import type { EditorRunner } from "./useEditorRunner";
 import { useLatest } from "../utils/hooks/useLatest";
 import { isLargeDoc } from "./large-doc";
 import { flushDomSelection, readEditorCaret } from "./modes/mode-switch";
-import { registerTabCaret, reportTabCaret, type CaretPlace } from "./tab-caret";
+import {
+  registerTabEditor,
+  reportTabCaret,
+  type CaretPlace,
+} from "./tab-editor";
 
 /**
  * Reports this tab's caret as the tab leaves the screen, and whenever asked.
@@ -42,7 +46,7 @@ export function useTabCaret(
       }) ?? null,
     [run, markdownRef],
   );
-  useEffect(() => registerTabCaret(tabId, read), [tabId, read]);
+  useEffect(() => registerTabEditor(tabId, "caret", read), [tabId, read]);
   const runReady = run(() => true) === true;
   useEffect(() => {
     if (!isActive || !runReady) return;

@@ -1,16 +1,17 @@
+import { writingProviderOf } from "../prefs/settings-types";
 import { useProjectTabs } from "./start-project";
 import { useCallback, useEffect, useMemo, useState } from "react";
 import {
   registerNoteCompletion,
   setNoteCompletionRoot,
-} from "../sidebar/note-completion";
+} from "../files/note-completion";
 import { useTabDragMerge } from "./tabs/useTabDragMerge";
 import { useAutosave } from "../document/autosave";
-import { useLastCarets } from "../document/last-carets";
+import { useLastPlaces } from "../document/last-places";
 import { useActiveDocument } from "./useActiveDocument";
 import { useOpenFolder } from "./useOpenFolder";
-import { useSplitRestore } from "./split/split-restore";
-import { useSessionPaths, useWindowTitle } from "./useWindowSession";
+import { useWindowSession } from "./islands/window-session";
+import { useWindowTitle } from "./useWindowSession";
 import { useFileOpening } from "./useFileOpening";
 import { useHelpTabs } from "./useHelpTabs";
 import { useSaveTabs } from "./useSaveTabs";
@@ -20,7 +21,7 @@ import { useSourceModes } from "./useSourceModes";
 import { useTabRemoval } from "./close-flow";
 import { folderTabsToClose } from "./close-folder";
 import { usePracticeTab } from "./onboarding-wiring";
-import { usePluginWindow } from "../plugins/usePluginWindow";
+import { usePluginWindow } from "./usePluginWindow";
 import type { WindowShell } from "./useWindowShell";
 import type { Settings } from "../prefs/SettingsContext";
 import type { Strings } from "../i18n/strings";
@@ -62,18 +63,18 @@ export function useWindowDocuments({
   );
   const hasTree = openFolder.treeRoot !== null;
   const searchFiles = useCallback(() => {
-    showFiles();
+    setPanelOpen(true);
+    setPanelMode("search");
     // No tree yet: a request left standing would take the keyboard later.
     if (hasTree) setSearchFocusRequest(true);
-  }, [showFiles, hasTree]);
+  }, [setPanelOpen, setPanelMode, hasTree]);
   useWindowTitle(activeTitle);
-  useSessionPaths(tabs);
   useProjectTabs(
     openFolder.folder,
     tabs.map((tab) => tab.path),
     activeTab.path,
   );
-  useSplitRestore(tabs, setActiveTabId);
+  useWindowSession(tabs, openFolder.folder, setActiveTabId);
 
   const dialogFilters = useMemo(
     () => ({
@@ -90,7 +91,7 @@ export function useWindowDocuments({
     t,
     onWordDocumentOpened: shell.wordImported.opened,
   });
-  useLastCarets(tabs, activeTabId, settings.restoreSessionOnStartup);
+  useLastPlaces(tabs, settings.restoreSessionOnStartup);
   const folderRoot = openFolder.folder ?? openFolder.treeRoot;
   // `[[` lists the folder's notes while no plugin completes it.
   useEffect(() => {
@@ -107,6 +108,7 @@ export function useWindowDocuments({
     openFile: opening.openFile,
     // Defined below; read when a plugin asks.
     saveActiveTab: () => saving.saveTab(activeTab.id),
+    saveTab: (id) => saving.saveTab(id),
     closeActiveTab: () => requestCloseTab(activeTab.id),
   });
 
@@ -146,9 +148,9 @@ export function useWindowDocuments({
   const aiTitleFor = useDraftTitles(
     tabs,
     settings.textusAi && settings.autoSuggestFilename
-      ? settings.aiProvider
+      ? writingProviderOf(settings)
       : null,
-    settings.writingModels[settings.aiProvider] || null,
+    settings.writingModels[writingProviderOf(settings)] || null,
   );
   const saving = useSaveTabs({
     tabState,
@@ -179,7 +181,7 @@ export function useWindowDocuments({
     t,
   });
 
-  // Close Project also closes the project's saved documents; with none left,
+  // Close Folder also closes the folder's saved documents; with none left,
   // the start page.
   const { folder, closeFolder: forgetFolder } = openFolder;
   const { addStartTab } = tabState;
@@ -202,9 +204,10 @@ export function useWindowDocuments({
       setActiveTabId,
     });
 
-  // The bar shows only with several tabs, or when an incoming tab's preview
-  // needs somewhere to land.
-  const showTabBar = tabs.length > 1 || dragHoverPreview !== null;
+  // The tabs always show, + beside the one tab; in Zen one document is a
+  // clean sheet under its title, until there are several or a tab comes in.
+  const workspace = !zen.zenMode;
+  const showTabBar = workspace || tabs.length > 1 || dragHoverPreview !== null;
 
   return {
     ...active,

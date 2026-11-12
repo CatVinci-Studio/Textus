@@ -1,11 +1,12 @@
+import { isError } from "../../utils/error-text";
+import { fill } from "../../i18n/fill";
 import { useEffect, useState } from "react";
 import type { Strings, TextKey } from "../../i18n/strings";
 import { links, systemIpc } from "../../platform/ipc";
-import { usePresence } from "../../ui/usePresence";
-import { useModalDialog } from "../../ui/useModalDialog";
-import { Select } from "../../ui/Select";
+import { usePresence } from "../../engine/motion/usePresence";
+import { useModalDialog } from "../../engine/controls/useModalDialog";
+import { Select } from "../../engine/controls/Select";
 import type { Settings } from "../../prefs/settings-types";
-import { errorText } from "../../utils/error-text";
 import { explainError } from "../../utils/error-explain";
 import {
   REPORT_AREAS,
@@ -66,7 +67,7 @@ export function ReportProblemDialog({
       );
   }, [open, settings]);
   const close = onClose;
-  const presence = usePresence(open, { exitMs: 150 });
+  const presence = usePresence(open);
   const dialog = useModalDialog(close, open, ".report-problem-text");
   if (!presence.mounted) return null;
   return (
@@ -74,7 +75,7 @@ export function ReportProblemDialog({
       ref={presence.ref}
       data-state={presence.state}
       inert={presence.state === "closing" || undefined}
-      className="close-prompt-overlay"
+      className="tx-backdrop"
       onMouseDown={(e) => {
         if (e.target === e.currentTarget) close();
       }}
@@ -122,7 +123,7 @@ function ReportForm({
     return (
       <>
         <p className="report-problem-sent">
-          {t.reportSent.replace("{number}", String(phase.number))}
+          {fill(t.reportSent, { number: String(phase.number) })}
         </p>
         <div className="close-prompt-buttons">
           <div className="close-prompt-spacer" />
@@ -147,10 +148,9 @@ function ReportForm({
     } catch (err) {
       setPhase({
         state: "failed",
-        why:
-          errorText(err) === "LIMIT"
-            ? t.reportLimit
-            : `${t.reportFailed} ${explainError(err, t)}`,
+        why: isError(err, "sendLimit")
+          ? explainError(err, t)
+          : `${t.reportFailed} ${explainError(err, t)}`,
       });
     }
   };
@@ -197,14 +197,14 @@ function ReportForm({
           )}
       </div>
       <textarea
-        className="report-problem-text"
+        className="tx-input report-problem-text"
         aria-label={t.reportWhat}
         placeholder={t.reportWhat}
         value={text}
         onChange={(e) => setText(e.target.value)}
       />
       <input
-        className="report-problem-contact"
+        className="tx-input report-problem-contact"
         aria-label={t.reportContact}
         placeholder={t.reportContact}
         value={contact}
@@ -229,7 +229,7 @@ function ReportForm({
             );
           }}
         >
-          {phase.state === "copied" ? t.reportCopied : t.reportCopy}
+          {phase.state === "copied" ? t.codeBlockCopied : t.reportCopy}
         </button>
         <div className="close-prompt-spacer" />
         <button

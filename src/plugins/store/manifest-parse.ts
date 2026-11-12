@@ -1,3 +1,5 @@
+import { whenReadable } from "../contributions/when";
+import { DIAGRAM_LANGUAGES } from "../../editor/diagram-languages";
 import type {
   CompletionContribution,
   Contributes,
@@ -34,7 +36,7 @@ export class ManifestError extends Error {}
 /** A contributed id: the plugin's own namespace, then a name. */
 const LOCAL_ID = /^[a-z0-9][a-z0-9.-]*$/i;
 
-export type Json = Record<string, unknown>;
+type Json = Record<string, unknown>;
 
 export function object(value: unknown, what: string): Json {
   if (!value || typeof value !== "object" || Array.isArray(value))
@@ -99,7 +101,7 @@ const HOVER_KINDS: readonly HoverContribution[] = [
 const known = <T extends string>(values: string[], kinds: readonly T[]) =>
   values.filter((v): v is T => (kinds as readonly string[]).includes(v));
 
-const BUILT_IN_BLOCKS = ["mermaid", "math", "latex", "katex", "tex"];
+const BUILT_IN_BLOCKS = [...DIAGRAM_LANGUAGES, "math", "latex", "katex", "tex"];
 
 /** `main`: one file, or several run in order; the host takes no imports. */
 export function parseMain(value: unknown): string[] | undefined {
@@ -117,9 +119,6 @@ const SETTING_TYPES: readonly SettingType[] = [
   "list",
   "button",
 ];
-
-/** A setting's `when`: a key, maybe negated, or a key compared. */
-const SETTING_WHEN = /^\s*!?[\w.-]+\s*$|^\s*[\w.-]+\s*(==|!=)\s*\S.*$/;
 
 /** What a setting's default must be, by its type. */
 function checkDefault(s: Json, type: SettingType, at: string): void {
@@ -159,9 +158,9 @@ function parseSetting(raw: unknown, at: string): SettingContribution {
     );
   checkDefault(s, type, at);
   const when = text(s.when, `${at}.when`, true) || undefined;
-  if (when && !SETTING_WHEN.test(when))
+  if (when && !whenReadable(when))
     throw new ManifestError(
-      `${at}.when must be "key", "!key", "key == value" or "key != value".`,
+      `${at}.when must be a when clause: "key", "!key", "key == value", joined with && or ||.`,
     );
   const min = number(s.min, `${at}.min`);
   const max = number(s.max, `${at}.max`);
@@ -368,8 +367,9 @@ export function parseContributes(raw: unknown, id: string): Contributes {
       if (where !== "math" && where !== "text" && where !== "any")
         throw new ManifestError(`${at}.where must be "math", "text" or "any".`);
       const pattern = text(o.pattern, `${at}.pattern`);
+      // As it is compiled: unicode, at the caret's end.
       try {
-        new RegExp(pattern);
+        new RegExp(`(?:${pattern})$`, "u");
       } catch {
         throw new ManifestError(`${at}.pattern is not a regular expression.`);
       }
@@ -387,8 +387,9 @@ export function parseContributes(raw: unknown, id: string): Contributes {
     const at = `contributes.links[${i}]`;
     const o = object(x, at);
     const pattern = text(o.pattern, `${at}.pattern`);
+    // As it is compiled, unicode.
     try {
-      new RegExp(pattern);
+      new RegExp(pattern, "u");
     } catch {
       throw new ManifestError(`${at}.pattern is not a regular expression.`);
     }
@@ -446,6 +447,27 @@ export function parseContributes(raw: unknown, id: string): Contributes {
       targets: known(targets, EMBED_KINDS),
     };
   });
+  const agents = list(c.agents, "contributes.agents").map((x, i) => {
+    const at = `contributes.agents[${i}]`;
+    const o = object(x, at);
+    const env = o.env === undefined ? {} : object(o.env, `${at}.env`);
+    return {
+      id: ownId(o.id, id, `${at}.id`),
+      name: text(o.name, `${at}.name`),
+      command: text(o.command, `${at}.command`),
+      args: list(o.args, `${at}.args`).map((a, j) =>
+        text(a, `${at}.args[${j}]`, true),
+      ),
+      env: Object.fromEntries(
+        Object.entries(env).map(([k, v]) => [
+          k,
+          text(v, `${at}.env.${k}`, true),
+        ]),
+      ),
+      setup: text(o.setup, `${at}.setup`, true) || undefined,
+      provider: text(o.provider, `${at}.provider`, true) || undefined,
+    };
+  });
   const hovers = known(
     list(c.hovers, "contributes.hovers").map((x, i) =>
       text(x, `contributes.hovers[${i}]`),
@@ -460,6 +482,7 @@ export function parseContributes(raw: unknown, id: string): Contributes {
     links,
     codeBlocks,
     floatingViews,
+    agents,
     commands,
     keybindings,
     menus,

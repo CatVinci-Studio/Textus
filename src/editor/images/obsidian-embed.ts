@@ -1,3 +1,4 @@
+import IMAGE_TYPES from "./image-types.json";
 import { $inputRule, $nodeSchema, $remark } from "@milkdown/kit/utils";
 import { InputRule } from "@milkdown/kit/prose/inputrules";
 import type { RemarkPluginRaw } from "@milkdown/kit/transformer";
@@ -28,7 +29,7 @@ declare module "micromark-util-types" {
 }
 
 /** An embed as mdast: `value` is its source, `![[` to `]]`. */
-export interface ObsidianEmbed extends Literal {
+interface ObsidianEmbed extends Literal {
   type: "obsidianEmbed";
 }
 
@@ -42,29 +43,31 @@ declare module "mdast" {
 }
 
 /** File types an embed shows as a picture. */
-export const IMAGE_EXTENSIONS = [
-  "png",
-  "jpg",
-  "jpeg",
-  "gif",
-  "webp",
-  "svg",
-  "avif",
-  "bmp",
-] as const;
+const IMAGE_EXTENSIONS: readonly string[] = Object.keys(IMAGE_TYPES);
 
 function isImageFile(file: string): boolean {
   const ext = /\.([^./]+)$/.exec(file)?.[1].toLowerCase();
-  return (IMAGE_EXTENSIONS as readonly string[]).includes(ext ?? "");
+  return IMAGE_EXTENSIONS.includes(ext ?? "");
 }
 
 const EMBED_SOURCE = /^!\[\[([^[\]\n]+)\]\]$/;
 
+/** An embed's parts between its bars, and the bar it is written with: in
+ *  a table `\|`, whose backslash belongs to no part. */
+function embedParts(source: string): { parts: string[]; bar: string } | null {
+  const inner = EMBED_SOURCE.exec(source)?.[1];
+  if (inner === undefined) return null;
+  return {
+    parts: inner.split(/\\?\|/),
+    bar: inner.includes("\\|") ? "\\|" : "|",
+  };
+}
+
 /** An embed's source (`![[old.png|alt|300]]`) naming `path` instead, its
  *  alt text and size kept. */
 export function withEmbedPath(source: string, path: string): string {
-  const options = EMBED_SOURCE.exec(source)?.[1].split("|").slice(1) ?? [];
-  return `![[${[path, ...options].join("|")}]]`;
+  const { parts = [], bar = "|" } = embedParts(source) ?? {};
+  return `![[${[path, ...parts.slice(1)].join(bar)}]]`;
 }
 
 /** What a missing embed (`source`) becomes once a picked file is stored:
@@ -76,7 +79,7 @@ export function embedForPicked(
 ): { embed: string } | { src: string; alt: string } {
   const named = stored.embed && parseEmbed(stored.embed)?.path;
   if (named) return { embed: withEmbedPath(source, named) };
-  const options = EMBED_SOURCE.exec(source)?.[1].split("|").slice(1) ?? [];
+  const options = embedParts(source)?.parts.slice(1) ?? [];
   return { src: stored.src, alt: options.join("|") };
 }
 
@@ -93,9 +96,9 @@ export interface EmbedTarget {
 /** What an embed's source (`![[path|alt|300x200]]`) asks for; null when it
  *  isn't one. */
 export function parseEmbed(source: string): EmbedTarget | null {
-  const match = EMBED_SOURCE.exec(source);
-  if (!match) return null;
-  const [path, ...options] = match[1].split("|");
+  const found = embedParts(source);
+  if (!found) return null;
+  const [path, ...options] = found.parts;
   let width: number | null = null;
   let height: number | null = null;
   const alt: string[] = [];

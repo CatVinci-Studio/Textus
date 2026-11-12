@@ -157,7 +157,7 @@ pub(crate) fn export_to(source: &Path, publisher: &str, folder: &Path) -> Result
 }
 
 /// Export for publishing: plugin `id` laid out in `folder` as `publisher`'s.
-#[tauri::command]
+#[tauri::command(async)]
 #[cfg_attr(test, specta::specta)]
 pub fn plugin_export(
     app: tauri::AppHandle,

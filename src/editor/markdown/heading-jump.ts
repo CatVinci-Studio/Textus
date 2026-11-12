@@ -1,5 +1,6 @@
 import type { Node as ProseNode } from "@milkdown/kit/prose/model";
 import type { EditorView } from "@milkdown/kit/prose/view";
+import { TextSelection } from "@milkdown/kit/prose/state";
 import { revealPosition } from "../reveal-position";
 import { headingIndex, headingSlug } from "./link-target";
 import { shownText } from "./link-source";
@@ -34,7 +35,8 @@ function nestedHeadingPos(doc: ProseNode, levels: string[]): number | null {
     if (node.type.name === "heading")
       headings.push({
         level: node.attrs.level as number,
-        slug: headingSlug(node.textContent),
+        // As the single-level path reads it: the heading as shown.
+        slug: headingSlug(shownText(node)),
         pos: pos + 1,
       });
     return node.type.name !== "heading" && !node.isTextblock;
@@ -60,7 +62,7 @@ function nestedHeadingPos(doc: ProseNode, levels: string[]): number | null {
 
 /** The block with the Obsidian id `id`: a textblock ending " ^id", or for an
  *  `^id` line of its own, the block before it (a list, a table, a quote). */
-export function blockPos(doc: ProseNode, id: string): number | null {
+function blockPos(doc: ProseNode, id: string): number | null {
   if (!/^[\w-]+$/.test(id)) return null;
   const tail = new RegExp(`(?:^|\\s)\\^${id}$`);
   let found: number | null = null;
@@ -132,6 +134,35 @@ export function revealNthHeading(view: EditorView, index: number): boolean {
   });
   if (found === null) return false;
   revealPosition(view, found, "top");
+  return true;
+}
+
+/** The document's `index`-th top-level heading's section selected: the
+ *  heading and everything up to the next heading at its level or above. */
+export function selectNthSection(view: EditorView, index: number): boolean {
+  let count = 0;
+  let start: number | null = null;
+  let level = 0;
+  let end: number | null = null;
+  view.state.doc.forEach((node, offset) => {
+    if (node.type.name !== "heading") return;
+    if (start === null) {
+      if (count++ === index) {
+        start = offset;
+        level = node.attrs.level as number;
+      }
+    } else if (end === null && (node.attrs.level as number) <= level)
+      end = offset;
+  });
+  if (start === null) return false;
+  const { doc } = view.state;
+  const selection = TextSelection.between(
+    doc.resolve(start + 1),
+    doc.resolve((end ?? doc.content.size) - 1),
+  );
+  view.dispatch(view.state.tr.setSelection(selection));
+  revealPosition(view, start + 1, "top");
+  view.focus();
   return true;
 }
 

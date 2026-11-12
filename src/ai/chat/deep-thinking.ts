@@ -1,12 +1,8 @@
 import { useEffect, useState } from "react";
 import { ai } from "../../platform/ipc";
 import { useSettings } from "../../prefs/SettingsContext";
-import {
-  LOCAL_KEYS,
-  readLocal,
-  removeLocal,
-  writeLocal,
-} from "../../storage/local";
+import { getUiState, setUiState } from "../../storage/ui-state";
+import { chosenModel } from "../chosen-model";
 
 /**
  * Deep thinking stays on once pressed, across messages, conversations and the
@@ -14,13 +10,12 @@ import {
  * control.
  */
 export function deepThinkingOn(): boolean {
-  return readLocal(LOCAL_KEYS.deepThinking) === "1";
+  return getUiState("deepThinking") === true;
 }
 
 /** Not kept when storage refuses it: the next composer starts with it off. */
 export function rememberDeepThinking(on: boolean): void {
-  if (on) writeLocal(LOCAL_KEYS.deepThinking, "1");
-  else removeLocal(LOCAL_KEYS.deepThinking);
+  setUiState("deepThinking", on);
 }
 
 /**
@@ -30,7 +25,7 @@ export function rememberDeepThinking(on: boolean): void {
 export function useCanThinkDeeper(enabled: boolean): boolean {
   const { settings } = useSettings();
   const provider = settings.aiProvider;
-  const model = settings.agentModels[provider] || null;
+  const model = chosenModel(settings);
   const key = `${provider}\n${model ?? ""}`;
   const [answer, setAnswer] = useState<{ key: string; can: boolean } | null>(
     null,

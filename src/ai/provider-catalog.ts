@@ -1,85 +1,27 @@
 import { useEffect, useState } from "react";
 import { ai, type WebSearchStatus } from "../platform/ipc";
 import { useSettings } from "../prefs/SettingsContext";
+import { PROVIDER_CATALOG } from "../platform/bindings/ai";
+import { chosenModel } from "./chosen-model";
 
-/**
- * Structural facts about each AI provider, fetched from the backend catalog
- * so Settings doesn't hardcode them a second time. Fields kept in step by hand.
- */
+/** Structural facts about each AI provider, as the backend's catalog
+ *  (ai/catalog.rs) has them, generated with the bindings. */
 export interface ProviderCatalogEntry {
   id: string;
   label: string;
-  dialect:
-    "openai-responses" | "anthropic-messages" | "openai-chat-completions";
-  /** Auth methods this provider supports, in preference order. */
-  auth: ("oauth" | "api_key" | "custom")[];
+  dialect: string;
+  auth: readonly string[];
   baseUrl: string | null;
-  /** Low-cost default shared by completion and grammar checking. */
   defaultModel: string | null;
-  /** Stronger default used only by Agent chat. */
   agentDefaultModel: string | null;
   keyOptional: boolean;
-  /** Its account sign-in isn't one the provider offers other apps. */
   oauthUnofficial: boolean;
-  /** Whether the provider's API accepts image parts at all, which gates the
-   *  chat's image attachments. A provider-level claim, not a model-level one. */
   supportsVision: boolean;
-  /** False when a live model-list fetch is known not to work. */
-  modelsListable: boolean;
-  /** A few current model ids that seed the picker before, or instead of, a live fetch. */
-  knownModels: string[];
+  knownModels: readonly string[];
 }
 
-function fetchProviderCatalog(): Promise<ProviderCatalogEntry[]> {
-  return ai.listProviders();
-}
-
-/// A subset of the backend catalog for the first render and the dev shim,
-/// where `list_providers` resolves to null. Entries must match the backend's.
-export const FALLBACK_CATALOG: ProviderCatalogEntry[] = [
-  {
-    id: "openai",
-    label: "OpenAI",
-    dialect: "openai-responses",
-    auth: ["oauth", "api_key"],
-    baseUrl: null,
-    defaultModel: "gpt-6-luna",
-    agentDefaultModel: "gpt-6.1-sol",
-    keyOptional: false,
-    oauthUnofficial: false,
-    supportsVision: true,
-    modelsListable: true,
-    knownModels: ["gpt-6.1-sol", "gpt-6-luna"],
-  },
-  {
-    id: "anthropic",
-    label: "Anthropic",
-    dialect: "anthropic-messages",
-    auth: ["oauth", "api_key"],
-    baseUrl: null,
-    defaultModel: "claude-haiku-5-5",
-    agentDefaultModel: "claude-sonnet-5-5",
-    keyOptional: false,
-    oauthUnofficial: true,
-    supportsVision: true,
-    modelsListable: true,
-    knownModels: ["claude-sonnet-5-5", "claude-haiku-5-5"],
-  },
-  {
-    id: "custom",
-    label: "Custom Endpoint",
-    dialect: "openai-chat-completions",
-    auth: ["custom"],
-    baseUrl: null,
-    defaultModel: null,
-    agentDefaultModel: null,
-    keyOptional: true,
-    oauthUnofficial: false,
-    supportsVision: true,
-    modelsListable: true,
-    knownModels: [],
-  },
-];
+/** The catalog, checked against that shape here. */
+const CATALOG: readonly ProviderCatalogEntry[] = PROVIDER_CATALOG;
 
 /// The catalog entry for the provider selected in Settings, or undefined while
 /// loading. A component that already holds the catalog should `find` itself
@@ -90,20 +32,9 @@ export function useActiveProvider(): ProviderCatalogEntry | undefined {
   return catalog.find((entry) => entry.id === settings.aiProvider);
 }
 
-/// The shared catalog fetch: the fallback, then the real list once it resolves.
-export function useProviderCatalog(): ProviderCatalogEntry[] {
-  const [catalog, setCatalog] =
-    useState<ProviderCatalogEntry[]>(FALLBACK_CATALOG);
-
-  useEffect(() => {
-    fetchProviderCatalog()
-      .then((list) => {
-        if (list?.length) setCatalog(list);
-      })
-      .catch(() => {});
-  }, []);
-
-  return catalog;
+/// The providers, in the catalog's order.
+export function useProviderCatalog(): readonly ProviderCatalogEntry[] {
+  return CATALOG;
 }
 
 /** Fired when a search service's key is saved or cleared; a key isn't a
@@ -119,7 +50,7 @@ export function notifyWebSearchSetup() {
 export function useWebSearchStatus(): WebSearchStatus | null {
   const { settings } = useSettings();
   const provider = settings.aiProvider;
-  const model = settings.agentModels[provider] || null;
+  const model = chosenModel(settings);
   const { searchService, searxngUrl } = settings;
   const [status, setStatus] = useState<WebSearchStatus | null>(null);
   const [setups, setSetups] = useState(0);

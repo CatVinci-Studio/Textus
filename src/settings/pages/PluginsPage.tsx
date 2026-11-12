@@ -1,3 +1,4 @@
+import { fill } from "../../i18n/fill";
 import { takeStartPlugin } from "./extensions-tab";
 import { useMutedCards } from "../../plugins/store/usePluginCard";
 import {
@@ -8,7 +9,8 @@ import {
 } from "react";
 import { requestCreate } from "../../ai/chat/create-request";
 import type { SettingsPageProps } from "./types";
-import { Byline, PluginPage, statusText } from "./PluginPage";
+import { PluginPage, statusText } from "./PluginPage";
+import { Byline, CatalogRow } from "./CatalogRow";
 import { ExtensionsTabLayout } from "./ExtensionsTabLayout";
 import { usePluginActions } from "./PluginAction";
 import { SettingRow, ToggleRow } from "../sections/controls";
@@ -18,20 +20,23 @@ import { MarketPluginPage } from "./MarketPluginPage";
 import { isDesktopApp } from "../../platform/capabilities";
 import type { Strings } from "../../i18n/strings";
 import {
-  installPlugin,
-  loadDevPlugin,
   pluginName,
   pluginText,
   pluginsSnapshot,
-  setAllPlugins,
   subscribePlugins,
   type PluginRecord,
-} from "../../plugins/manager";
+} from "../../plugins/store/plugin-records";
+import {
+  installPlugin,
+  loadDevPlugin,
+  setAllPlugins,
+} from "../../plugins/plugin-switches";
 import {
   catalogSnapshot,
   loadCatalog,
   subscribeCatalog,
   updateFor,
+  catalogItem,
 } from "../../plugins/store/catalog";
 import { pluginMatches } from "../../plugins/store/plugin-records";
 import { PluginIcon } from "./PluginArt";
@@ -59,20 +64,8 @@ export function PluginsPage({ t }: SettingsPageProps) {
 
   const installFile = (folder: boolean) =>
     attempt(async () => {
-      const paths =
-        (await pluginsIpc.pickPackage(folder, t.pluginPackageFilter)) ?? [];
-      if (!paths.length) return;
-      if (folder) return setOpen(await loadDevPlugin(paths[0]));
-      // Several installed one after another; one alone opens its page,
-      // with its README.
-      if (paths.length === 1) return setOpen(await installPlugin(paths[0]));
-      // One that fails doesn't stop the others: each failure is told after.
-      const failed: string[] = [];
-      for (const path of paths)
-        await installPlugin(path).catch((e: unknown) =>
-          failed.push(`${path.split(/[\\/]/).pop()}: ${String(e)}`),
-        );
-      if (failed.length) throw new Error(failed.join("\n"));
+      const opened = await installPluginFiles(t, folder);
+      if (opened) setOpen(opened);
     });
 
   // A catalog plugin installed from its page goes on as the installed
@@ -99,10 +92,7 @@ export function PluginsPage({ t }: SettingsPageProps) {
       onOpen={() => setOpen(record.id)}
     />
   );
-  const item =
-    openItem && catalog.status === "ready"
-      ? catalog.items.find((i) => i.id === openItem)
-      : undefined;
+  const item = catalogItem(openItem, catalog);
   const installed = new Set(snapshot.records.map((r) => r.id));
   // Two or more with updates: one button takes them all (one shows its own).
   const updates =
@@ -137,10 +127,7 @@ export function PluginsPage({ t }: SettingsPageProps) {
         onEditWithAi={() => requestCreate(editRequest(openRecord, t))}
         onEnable={(on) => void enable(openRecord, on)}
         onUpdate={() => {
-          const item =
-            catalog.status === "ready"
-              ? catalog.items.find((i) => i.id === openRecord.id)
-              : undefined;
+          const item = catalogItem(openRecord.id, catalog);
           if (item) void install(item);
         }}
         attempt={attempt}
@@ -194,11 +181,11 @@ export function PluginsPage({ t }: SettingsPageProps) {
         updates.length > 1 && (
           <button
             type="button"
-            className="text-button extensions-title-action"
+            className="text-button settings-inline-button"
             disabled={installing !== null}
             onClick={() => void updateAll(updates)}
           >
-            {t.pluginsUpdateAll.replace("{count}", String(updates.length))}
+            {fill(t.pluginsUpdateAll, { count: String(updates.length) })}
           </button>
         )
       }
@@ -206,22 +193,22 @@ export function PluginsPage({ t }: SettingsPageProps) {
         snapshot.records.length ? (
           <>
             {!shown.length && (
-              <p className="plugin-empty">
-                {t.pluginsSearchNone.replace("{query}", query.trim())}
+              <p className="tx-list-note">
+                {fill(t.pluginsSearchNone, { query: query.trim() })}
               </p>
             )}
             {others.map(card)}
             {mine.length > 0 && (
               <>
-                <h4 className="plugin-subgroup-title">{t.pluginsMine}</h4>
+                <h4 className="tx-list-heading plugin-subgroup-title">
+                  {t.pluginsMine}
+                </h4>
                 {mine.map(card)}
               </>
             )}
           </>
         ) : (
-          <p className="plugin-empty">
-            {t.pluginsInstalledNone.replace("{section}", t.extensionsAvailable)}
-          </p>
+          <p className="tx-list-note">{t.pluginsInstalledNone}</p>
         )
       }
       available={
@@ -245,7 +232,7 @@ function MutedSuggestions({ t }: { t: Strings }) {
   const { count, restore } = useMutedCards();
   if (!count) return null;
   return (
-    <SettingRow label={t.pluginCardsMuted.replace("{n}", String(count))}>
+    <SettingRow label={fill(t.pluginCardsMuted, { n: String(count) })}>
       <button type="button" onClick={restore}>
         {t.pluginCardsRestore}
       </button>
@@ -291,48 +278,65 @@ function PluginCard({
   // All turned off: every card quieter, the switch above says why.
   const status = statusText(record, true, t);
   return (
-    <div
-      className={`settings-row plugin-card${record.status === "on" || !allOn ? "" : " is-off"}`}
+    <CatalogRow
       data-plugin={record.id}
-    >
-      <button
-        type="button"
-        className="plugin-card-open plugin-card-with-icon"
-        aria-label={t.pluginOpenDetails.replace("{name}", name)}
-        onClick={onOpen}
-      >
+      off={record.status !== "on" && allOn}
+      name={name}
+      description={
+        manifest?.description && pluginText(record, manifest.description)
+      }
+      icon={
         <PluginIcon id={record.id} manifest={manifest} origin={record.origin} />
-        <span className="plugin-card-text">
-          <span className="settings-row-label plugin-card-name">{name}</span>
-          {manifest?.description && (
-            <span className="settings-row-hint plugin-card-description">
-              {pluginText(record, manifest.description)}
-            </span>
-          )}
-          {manifest && (
-            <Byline
-              manifest={manifest}
-              official={record.official}
-              dev={record.origin === "dev"}
-              madeHere={madeHere}
-              t={t}
-            />
-          )}
-          {status && <span className="settings-error">{status}</span>}
-        </span>
-      </button>
-      <div className="settings-row-control">{action}</div>
-    </div>
+      }
+      byline={
+        manifest && (
+          <Byline
+            t={t}
+            official={record.official}
+            madeHere={madeHere}
+            author={manifest.author || manifest.publisher}
+            version={manifest.version}
+            dev={record.origin === "dev"}
+          />
+        )
+      }
+      status={status}
+      openLabel={fill(t.pluginOpenDetails, { name })}
+      onOpen={onOpen}
+      action={action}
+    />
   );
 }
 
 /** What "Edit with AI" puts in the AI panel's box: the plugin, and the
  *  error it last stopped with, for the user to say what to change. */
-function editRequest(record: PluginRecord, t: Strings): string {
-  const ask = t.pluginEditWithAiAsk
-    .replace("{name}", pluginName(record))
-    .replace("{id}", record.id);
+export function editRequest(record: PluginRecord, t: Strings): string {
+  const ask = fill(t.pluginEditWithAiAsk, {
+    name: pluginName(record),
+    id: record.id,
+  });
   return record.problem
-    ? `${ask}${t.pluginEditWithAiError.replace("{error}", record.problem)}`
+    ? `${ask}${fill(t.pluginEditWithAiError, { error: record.problem })}`
     : ask;
+}
+
+/** Installs plugins picked from disk - a folder loaded as it is, or one or
+ *  more packages; the id of the one to open after (one alone), else null.
+ *  One that fails doesn't stop the others: each failure is told after. */
+export async function installPluginFiles(
+  t: Strings,
+  folder: boolean,
+): Promise<string | null> {
+  const paths =
+    (await pluginsIpc.pickPackage(folder, t.pluginPackageFilter)) ?? [];
+  if (!paths.length) return null;
+  if (folder) return loadDevPlugin(paths[0]);
+  if (paths.length === 1) return installPlugin(paths[0]);
+  const failed: string[] = [];
+  for (const path of paths)
+    await installPlugin(path).catch((e: unknown) =>
+      failed.push(`${path.split(/[\\/]/).pop()}: ${String(e)}`),
+    );
+  if (failed.length) throw new Error(failed.join("\n"));
+  return null;
 }

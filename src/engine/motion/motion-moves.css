@@ -1,0 +1,250 @@
+/* The shared entrances and exits. Written with the tokens, so under
+   reduced motion each one turns into a plain fade by itself. */
+/* Something working, waiting: it fades and comes back. */
+@keyframes motion-breathe {
+  50% {
+    opacity: 0.35;
+  }
+}
+
+@keyframes motion-fade-in {
+  from {
+    opacity: 0;
+  }
+}
+
+@keyframes motion-fade-out {
+  to {
+    opacity: 0;
+  }
+}
+
+/* Menus and popovers, from the corner touching their anchor
+   (--transform-origin, set where the popover is placed). */
+@keyframes motion-pop-in {
+  from {
+    opacity: 0;
+    transform: scale(var(--scale-enter));
+  }
+}
+
+@keyframes motion-pop-out {
+  to {
+    opacity: 0;
+    transform: scale(var(--scale-exit));
+  }
+}
+
+@keyframes motion-dialog-in {
+  from {
+    opacity: 0;
+    transform: scale(var(--scale-enter-dialog));
+  }
+}
+
+/* A dialog's card as its dimming fades: back to where it came from. */
+@keyframes motion-shrink-out {
+  to {
+    transform: scale(var(--scale-exit));
+  }
+}
+
+/* The phone's alert grows down into place, as UIAlertController does. */
+@keyframes motion-alert-in {
+  from {
+    opacity: 0;
+    transform: scale(var(--scale-enter-alert));
+  }
+}
+
+/* Content taking the place of other content (a page of Settings): a fade
+   with a slight rise, nothing that reads as travel. */
+@keyframes motion-settle-in {
+  from {
+    opacity: 0;
+    transform: translateY(var(--motion-distance-sm));
+  }
+}
+
+/* A small rise from below: toasts, chat turns, cards arriving. */
+@keyframes motion-rise-in {
+  from {
+    opacity: 0;
+    transform: translateY(var(--motion-distance-md));
+  }
+}
+
+@keyframes motion-sink-out {
+  to {
+    opacity: 0;
+    transform: translateY(var(--motion-distance-sm));
+  }
+}
+
+/* Something disclosed under the row that opened it (a diff, a list of
+   choices, a transcript): it settles down into place, its height arriving
+   at once. */
+@keyframes motion-disclose-in {
+  from {
+    opacity: 0;
+    transform: translateY(calc(var(--motion-distance-sm) * -1));
+  }
+}
+
+/* A small drop from above: the find bar. */
+@keyframes motion-drop-in {
+  from {
+    opacity: 0;
+    transform: translateY(calc(var(--motion-distance-sm) * -1.5));
+  }
+}
+
+@keyframes motion-lift-out {
+  to {
+    opacity: 0;
+    transform: translateY(calc(var(--motion-distance-sm) * -1.5));
+  }
+}
+
+/* A panel arriving beside the editor from just off its place (the docked
+   AI panel), and leaving the same way. */
+@keyframes motion-nudge-in-end {
+  from {
+    opacity: 0;
+    transform: translateX(calc(var(--motion-distance-md) * 2));
+  }
+}
+
+@keyframes motion-nudge-out-end {
+  to {
+    opacity: 0;
+    transform: translateX(calc(var(--motion-distance-md) * 2));
+  }
+}
+
+/* A panel over the page from the window's right edge, and back. */
+@keyframes motion-edge-in-end {
+  from {
+    opacity: var(--motion-travel-fade);
+    transform: translateX(calc(100% * var(--motion-travel)));
+  }
+}
+
+@keyframes motion-edge-out-end {
+  to {
+    opacity: var(--motion-travel-fade);
+    transform: translateX(calc(100% * var(--motion-travel)));
+  }
+}
+
+/* A sheet from the bottom edge, and back down. */
+@keyframes motion-sheet-in {
+  from {
+    opacity: var(--motion-travel-fade);
+    transform: translateY(calc(100% * var(--motion-travel)));
+  }
+}
+
+@keyframes motion-sheet-out {
+  to {
+    opacity: var(--motion-travel-fade);
+    transform: translateY(calc(100% * var(--motion-travel)));
+  }
+}
+
+/* motion.ts's probe: its animation computes to "none" only where a stylesheet
+   switched animation off wholesale, and JS-driven movement then stops too. */
+.motion-probe {
+  position: fixed;
+  width: 0;
+  height: 0;
+  overflow: hidden;
+  pointer-events: none;
+  animation: motion-probe 1s paused;
+}
+
+/* Work of unknown length: a bar's fill sweeping across it. */
+@keyframes motion-sweep {
+  from {
+    transform: translateX(-100%);
+  }
+  to {
+    transform: translateX(250%);
+  }
+}
+
+/* Work of unknown length, in a circle: a ring turning. */
+@keyframes motion-spin {
+  to {
+    transform: rotate(1turn);
+  }
+}
+
+@keyframes motion-probe {
+  to {
+    opacity: 1;
+  }
+}
+
+/* The base moves: a part of the page arriving and leaving, from
+   --enter-x/-y/-scale and to --exit-x/-y/-scale; a fade in place when unset. */
+@keyframes motion-enter {
+  from {
+    opacity: 0;
+    transform: translate(var(--enter-x, 0), var(--enter-y, 0))
+      scale(var(--enter-scale, 1));
+  }
+}
+
+@keyframes motion-exit {
+  to {
+    opacity: 0;
+    transform: translate(var(--exit-x, 0), var(--exit-y, 0))
+      scale(var(--exit-scale, 1));
+  }
+}
+
+/* What is about to change, for a moment before it does: a tint, set and
+   taken off, never faded. Colour only, so reduced motion keeps it. */
+.motion-mark {
+  background-color: var(--motion-mark-bg);
+  border-radius: var(--doc-radius-sm);
+}
+
+/* A copy of what a change took away, fading out where it stood: none of its
+   own entrances replay. */
+.motion-ghost,
+.motion-ghost * {
+  animation: none !important;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  :root {
+    --motion-distance-sm: 0px;
+    --motion-distance-md: 0px;
+    --scale-enter: 1;
+    --scale-enter-dialog: 1;
+    --scale-exit: 1;
+    --scale-enter-alert: 1;
+    --motion-travel: 0;
+    --motion-travel-fade: 0;
+    --ease-spring: var(--ease-standard);
+    --ease-spring-bouncy: var(--ease-standard);
+    --dur-slow: 150ms;
+    --dur-sheet: 150ms;
+  }
+
+  html {
+    scroll-behavior: auto;
+  }
+
+  /* Important: these loops are declared in later stylesheets, and a user's
+     setting outranks them. The dots then hold still at full opacity. */
+  .agent-thinking-dots span,
+  .pending-insert-typing::after,
+  .ghost-text::before,
+  .tx-progress.is-indeterminate::after,
+  .tx-progress.ring.is-indeterminate {
+    animation: none !important;
+  }
+}

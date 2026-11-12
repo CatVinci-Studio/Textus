@@ -1,7 +1,7 @@
 // @vitest-environment jsdom
 import { afterEach, expect, it } from "vitest";
 import type { Node as ProseNode } from "@milkdown/kit/prose/model";
-import { closeViews, openView } from "../../document-view/editor-view-kit";
+import { closeViews, openView } from "../editor-view-kit";
 import { linkHref, parseLink } from "./link-syntax";
 
 // A link or image typed or pasted becomes a working link or image, and is

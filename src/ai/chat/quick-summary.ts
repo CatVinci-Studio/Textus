@@ -4,7 +4,7 @@ import { toolActivityText } from "./tool-activity";
 import { userMessageBody } from "./user-message";
 
 /** What Quick Ask's one line shows of its exchange. */
-export interface QuickSummary {
+interface QuickSummary {
   /** The streamed prose while it arrives, else the last assistant reply (so
    *  a restored conversation shows it). */
   summaryText: string | null;

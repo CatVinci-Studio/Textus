@@ -167,7 +167,7 @@
 
   :root[data-window-chrome="mobile"] .settings-group + .settings-group,
   :root[data-window-chrome="mobile"] .settings-advanced {
-    margin-top: 28px;
+    margin-top: 24px;
   }
 
   :root[data-window-chrome="mobile"] .settings-group-title {
@@ -213,7 +213,7 @@
   /* Controls a finger can hit: 36pt tall, in the body's 15pt type. */
   :root[data-window-chrome="mobile"]
     .settings-panel
-    :is(.settings-select, button.settings-inline-button, .appearance-option) {
+    :is(.settings-select, button.settings-inline-button, .tx-segment) {
     min-height: 36px;
     font-size: var(--text-secondary);
   }
@@ -256,11 +256,12 @@
 /* A hairline is one device pixel where the screen has two or more per
    point, as iOS draws its separators. */
 @media (max-width: 760px) and (min-resolution: 2dppx) {
-  :root[data-window-chrome="mobile"] .settings-group-body > * + *,
+  :root[data-window-chrome="mobile"] {
+    --divider-width: 0.5px;
+  }
   :root[data-window-chrome="mobile"]
     .settings-nav-item
-    + .settings-nav-item::before,
-  :root[data-window-chrome="mobile"] .provider-picker > * + * {
+    + .settings-nav-item::before {
     border-top-width: 0.5px;
   }
 }

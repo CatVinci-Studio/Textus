@@ -2,7 +2,6 @@ import { useCallback, useEffect } from "react";
 import { useLatest } from "../utils/hooks/useLatest";
 import { makeBlankTab, tabIsUntouchedDraft } from "../document/doc-tabs";
 import { WRITE_PART } from "../onboarding/tutorial-evaluation";
-import { practiceNotes, withPracticeNotes } from "../onboarding/practice-notes";
 import { stepIndexOf } from "../onboarding/tutorial-steps";
 import type { Tutorial } from "../onboarding/useTutorial";
 import type { Lang } from "../i18n/strings";
@@ -85,15 +84,28 @@ export function usePracticeNotes(opts: {
   const languageRef = useLatest(language);
   useEffect(() => {
     if (!active || !tabId) return;
-    const tab = liveTabs().find((tb) => tb.id === tabId);
-    if (!tab || tab.path || tab.helpDoc) return;
-    let content = tab.content;
-    if (stepIndex >= FIRST_NOTES_STEP) {
-      content = withPracticeNotes(content, practiceNotes(languageRef.current));
-      if (content !== tab.content)
-        updateTab(tab.id, { content, reloadKey: tab.reloadKey + 1 });
-    }
-    evaluate(tab.id, content);
+    let live = true;
+    const step = async () => {
+      const tab = liveTabs().find((tb) => tb.id === tabId);
+      if (!tab || tab.path || tab.helpDoc) return;
+      let content = tab.content;
+      if (stepIndex >= FIRST_NOTES_STEP) {
+        // The notes come with the tour, not with every window.
+        const notes = await import("../onboarding/practice-notes");
+        if (!live) return;
+        content = notes.withPracticeNotes(
+          content,
+          notes.practiceNotes(languageRef.current),
+        );
+        if (content !== tab.content)
+          updateTab(tab.id, { content, reloadKey: tab.reloadKey + 1 });
+      }
+      evaluate(tab.id, content);
+    };
+    void step();
+    return () => {
+      live = false;
+    };
   }, [active, tabId, stepIndex, liveTabs, updateTab, evaluate, languageRef]);
 }
 

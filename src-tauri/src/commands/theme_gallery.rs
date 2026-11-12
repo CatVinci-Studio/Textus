@@ -86,11 +86,7 @@ pub struct GalleryInstall {
 /// A gallery theme id: what the gallery's own check allows (lowercase
 /// letters, digits, `-`), and a safe path component.
 fn valid_id(id: &str) -> bool {
-    !id.is_empty()
-        && id.len() <= 64
-        && id
-            .chars()
-            .all(|c| c.is_ascii_lowercase() || c.is_ascii_digit() || c == '-')
+    crate::ids::safe_id(id, 64, |c| crate::ids::lower_alnum(c) || c == '-')
 }
 
 fn valid_file_name(name: &str) -> bool {
@@ -233,20 +229,6 @@ fn check_self_contained(css: &str) -> Result<(), String> {
     Ok(())
 }
 
-/// The image type a screenshot's bytes are, from its signature rather than
-/// its name or the server's word for it.
-fn image_mime(bytes: &[u8]) -> Option<&'static str> {
-    if bytes.starts_with(b"\x89PNG\r\n\x1a\n") {
-        Some("image/png")
-    } else if bytes.starts_with(&[0xFF, 0xD8, 0xFF]) {
-        Some("image/jpeg")
-    } else if bytes.len() > 12 && &bytes[..4] == b"RIFF" && &bytes[8..12] == b"WEBP" {
-        Some("image/webp")
-    } else {
-        None
-    }
-}
-
 async fn fetch(url: &str, limit: usize) -> Result<Vec<u8>, String> {
     // The allow-list is the URL asked for; a redirect would leave it.
     fetch_with(url, limit, reqwest::redirect::Policy::none()).await
@@ -334,7 +316,7 @@ pub async fn theme_gallery_css(
 pub async fn theme_gallery_preview(path: String) -> Result<String, String> {
     let url = preview_url(&path).ok_or("not a gallery screenshot")?;
     let bytes = fetch(&url, MAX_PREVIEW_BYTES).await?;
-    let mime = image_mime(&bytes).ok_or("the screenshot is not an image")?;
+    let mime = crate::media::sniff(&bytes).ok_or("the screenshot is not an image")?;
     let data = base64::engine::general_purpose::STANDARD.encode(&bytes);
     Ok(format!("data:{mime};base64,{data}"))
 }
@@ -461,10 +443,19 @@ mod tests {
 
     #[test]
     fn screenshots_are_recognised_by_their_bytes() {
-        assert_eq!(image_mime(b"\x89PNG\r\n\x1a\nrest"), Some("image/png"));
-        assert_eq!(image_mime(&[0xFF, 0xD8, 0xFF, 0xE0]), Some("image/jpeg"));
-        assert_eq!(image_mime(b"RIFF\0\0\0\0WEBPVP8 "), Some("image/webp"));
-        assert_eq!(image_mime(b"<svg xmlns="), None);
-        assert_eq!(image_mime(b"<html>"), None);
+        assert_eq!(
+            crate::media::sniff(b"\x89PNG\r\n\x1a\nrest"),
+            Some("image/png")
+        );
+        assert_eq!(
+            crate::media::sniff(&[0xFF, 0xD8, 0xFF, 0xE0]),
+            Some("image/jpeg")
+        );
+        assert_eq!(
+            crate::media::sniff(b"RIFF\0\0\0\0WEBPVP8 "),
+            Some("image/webp")
+        );
+        assert_eq!(crate::media::sniff(b"<svg xmlns="), None);
+        assert_eq!(crate::media::sniff(b"<html>"), None);
     }
 }

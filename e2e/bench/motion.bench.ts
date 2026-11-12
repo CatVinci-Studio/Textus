@@ -126,7 +126,9 @@ async function dragEdge(page: Page, handle: string, by: number) {
   await page.mouse.up();
 }
 
-test("side panels resized by their edge", async ({ page }) => {
+test("the sidebar and the AI's island resized by their edges", async ({
+  page,
+}) => {
   await open(page);
   await pasteMarkdown(page, LONG_DOC);
   await emit(page, "menu-toggle-sidebar");
@@ -135,8 +137,9 @@ test("side panels resized by their edge", async ({ page }) => {
   await bench(page, "sidebar-drag", () =>
     dragEdge(page, ".sidebar-resizer", 120),
   );
-  await bench(page, "ai-panel-drag", () =>
-    dragEdge(page, ".agent-panel-resizer", -120),
+  // The AI is an island: the line between it and the document.
+  await bench(page, "ai-island-drag", () =>
+    dragEdge(page, ".split-divider", -120),
   );
 });
 
@@ -145,7 +148,7 @@ test("Settings open and close", async ({ page }) => {
   await pasteMarkdown(page, LONG_DOC);
   await bench(page, "settings", async () => {
     for (let i = 0; i < ROUNDS; i++) {
-      await emit(page, "menu-open-settings");
+      await emit(page, "menu-settings");
       await page.waitForTimeout(450);
       await page.keyboard.press("Escape");
       await page.waitForTimeout(350);
@@ -173,8 +176,10 @@ test("menus and popovers", async ({ page }) => {
   await open(page);
   await pasteMarkdown(page, LONG_DOC);
   await bench(page, "menus", async () => {
+    // The editor's right-click menu: every platform has it (a Mac's menu
+    // bar is native, with no button in the window).
     for (let i = 0; i < ROUNDS * 2; i++) {
-      await page.locator(".window-menu-button").click();
+      await page.locator(".ProseMirror p").first().click({ button: "right" });
       await page.waitForTimeout(250);
       await page.keyboard.press("Escape");
       await page.waitForTimeout(200);
@@ -184,8 +189,8 @@ test("menus and popovers", async ({ page }) => {
 
 test("InfoTip", async ({ page }) => {
   await open(page);
-  await emit(page, "menu-open-settings");
-  await page.getByRole("button", { name: "Editor & Appearance" }).click();
+  await emit(page, "menu-settings");
+  await page.getByRole("button", { name: "Text", exact: true }).first().click();
   const tip = page.locator(".info-tip-button").first();
   await tip.scrollIntoViewIfNeeded();
   await page.waitForTimeout(400);
@@ -325,10 +330,11 @@ test("diagram build-up", async ({ page }) => {
     const original = w.__TAURI_INTERNALS__.invoke;
     w.__TAURI_INTERNALS__.invoke = (cmd, args) => {
       if (cmd !== "ai_agent_message") return original(cmd, args);
-      const { message, onEvent } = args as {
-        message: string;
+      const { request, onEvent } = args as {
+        request: { message: string };
         onEvent?: { onmessage?: Send };
       };
+      const { message } = request;
       const send: Send = (event) => onEvent?.onmessage?.(event);
       const text = lines.join("");
       const json = JSON.stringify({

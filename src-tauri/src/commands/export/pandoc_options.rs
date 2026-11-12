@@ -127,11 +127,10 @@ end
 "#;
 
 #[cfg(desktop)]
-/// The filter's file, written where each export can read it.
-pub fn lua_filter_path() -> std::io::Result<std::path::PathBuf> {
-    let path = std::env::temp_dir().join(format!("textus-pandoc-{}.lua", std::process::id()));
-    std::fs::write(&path, LUA_FILTER)?;
-    Ok(path)
+/// The filter's file for one export, gone when dropped: a random, owner-only
+/// name, as Pandoc runs what it holds.
+pub fn lua_filter() -> std::io::Result<crate::atomic::TempFile> {
+    crate::atomic::TempFile::create("textus-pandoc-", ".lua", LUA_FILTER)
 }
 
 #[cfg(desktop)]
@@ -240,9 +239,10 @@ mod tests {
     fn the_filter_makes_pandocs_sub_superscripts_and_citations() {
         use std::io::Write;
         use std::process::{Command, Stdio};
+        let filter = lua_filter().unwrap();
         let Ok(mut child) = Command::new("pandoc")
             .args(["--from", "commonmark_x", "--to", "native", "--lua-filter"])
-            .arg(lua_filter_path().unwrap())
+            .arg(filter.path())
             .stdin(Stdio::piped())
             .stdout(Stdio::piped())
             .spawn()

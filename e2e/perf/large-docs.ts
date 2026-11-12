@@ -3,7 +3,7 @@
  * machine and branch measures the same text without a committed fixture.
  */
 
-export type DocLanguage = "zh" | "en";
+type DocLanguage = "zh" | "en";
 
 export interface LargeDoc {
   name: string;

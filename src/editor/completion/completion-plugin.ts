@@ -123,6 +123,9 @@ export function createCompletionPlugin(
           let chosen = -1;
           /** An arrow was pressed: late groups go under the rows. */
           let arrowed = false;
+          /** An item was just written: its own text doesn't open the list
+           *  again; the next thing typed may. */
+          let took = false;
           let loadingTimer: ReturnType<typeof setTimeout> | null = null;
           let pinyinTimer: ReturnType<typeof setTimeout> | null = null;
 
@@ -153,6 +156,7 @@ export function createCompletionPlugin(
             close();
             const at = item.insert.indexOf("$0");
             const text = item.insert.replace("$0", "");
+            took = true;
             const tr = view.state.tr.insertText(text, group.from, to);
             const inserted = tr.steps.length;
             wikilinksIn(tr, group.from, group.from + text.length);
@@ -365,7 +369,8 @@ export function createCompletionPlugin(
             update(view, previous) {
               if (view.composing) return;
               if (view.state.doc !== previous.doc) {
-                refresh();
+                if (took) took = false;
+                else refresh();
                 return;
               }
               if (!groups.size || view.state.selection.eq(previous.selection))

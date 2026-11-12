@@ -1,0 +1,236 @@
+// @vitest-environment jsdom
+//
+// isReservedCombo and defaultShortcuts read navigator.platform.
+
+import { afterEach, describe, expect, it, vi } from "vitest";
+import { resolveStrings, type Strings } from "../i18n/strings";
+import {
+  defaultShortcuts,
+  type ShortcutAction,
+} from "../prefs/SettingsContext";
+import { isBindableCombo, isReservedCombo } from "../utils/shortcuts";
+import { buildAppMenu, NO_RECENTS, type MenuNode } from "./menu/app-menu-model";
+import { nativeAccelerators } from "../app/native-menu-keys";
+import {
+  fixedShortcutGroups,
+  macTabStep,
+  MAC_NEXT_TAB,
+  MAC_PREVIOUS_TAB,
+  type ShortcutPlatform,
+} from "./fixed-shortcuts";
+
+const t = resolveStrings("en") as Strings;
+const PLATFORMS: ShortcutPlatform[] = ["macos", "windows", "linux"];
+const NAVIGATOR_PLATFORM: Record<ShortcutPlatform, string> = {
+  macos: "MacIntel",
+  ios: "iPad",
+  windows: "Win32",
+  linux: "Linux x86_64",
+};
+
+afterEach(() => vi.restoreAllMocks());
+
+function onPlatform(platform: ShortcutPlatform) {
+  vi.spyOn(navigator, "platform", "get").mockReturnValue(
+    NAVIGATOR_PLATFORM[platform],
+  );
+}
+
+function fixedCombos(platform: ShortcutPlatform): string[] {
+  return fixedShortcutGroups(t, platform).flatMap((group) =>
+    group.items.flatMap((item) => item.combos),
+  );
+}
+
+function menuCombos(nodes: MenuNode[]): string[] {
+  return nodes.flatMap((node) =>
+    node === "separator"
+      ? []
+      : [
+          ...(node.accel ? [node.accel] : []),
+          ...(node.submenu ? menuCombos(node.submenu) : []),
+        ],
+  );
+}
+
+describe("the fixed shortcuts in Settings", () => {
+  it("list every combo the app menu shows that can't be rebound", () => {
+    const unbound = Object.fromEntries(
+      Object.keys(defaultShortcuts()).map((key) => [key, ""]),
+    ) as Record<ShortcutAction, string>;
+    const fromMenu = menuCombos(buildAppMenu(t, unbound, NO_RECENTS));
+    expect(fromMenu.length).toBeGreaterThan(10);
+    expect(fixedCombos("windows")).toEqual(expect.arrayContaining(fromMenu));
+  });
+
+  it("match the macOS menu bar's accelerators in menu.rs", () => {
+    const native = [...nativeAccelerators("macos").keys()];
+    expect(native).toContain("mod+shift+t");
+    const mac = fixedCombos("macos");
+    // Both ways. The rest are muda's predefined Edit items, the editor's own
+    // keys and the tab keys.
+    expect(mac).toEqual(expect.arrayContaining(native));
+    const outsideMenuRs = new Set([
+      "mod+x",
+      "mod+c",
+      "mod+v",
+      "mod+b",
+      "mod+i",
+      "mod+enter",
+      "alt+arrowup",
+      "alt+arrowdown",
+      "ctrl+-",
+      "ctrl+shift+-",
+      MAC_NEXT_TAB,
+      MAC_PREVIOUS_TAB,
+      // The window's own keys.
+      "f6",
+      "shift+f6",
+      "f7",
+      "shift+f7",
+      "mod+backspace",
+      // The editor's own keymaps.
+      ...[0, 1, 2, 3, 4, 5, 6, 7, 8].map((n) => `mod+alt+${n}`),
+      "mod+alt+c",
+      "mod+shift+b",
+      "mod+[",
+      "mod+]",
+    ]);
+    expect(mac.filter((combo) => !outsideMenuRs.has(combo)).sort()).toEqual(
+      [...new Set(native)].sort(),
+    );
+  });
+
+  it("show Quit as Cmd+Q on a Mac and Exit as Alt+F4 on Windows", () => {
+    expect(fixedCombos("macos")).toContain("mod+q");
+    expect(fixedCombos("macos")).not.toContain("alt+f4");
+    expect(fixedCombos("windows")).toContain("alt+f4");
+    expect(fixedCombos("windows")).not.toContain("mod+q");
+    expect(fixedCombos("linux")).toContain("mod+q");
+  });
+
+  it("show F11 only where the app handles it", () => {
+    expect(fixedCombos("windows")).toContain("f11");
+    expect(fixedCombos("linux")).toContain("f11");
+    expect(fixedCombos("macos")).not.toContain("f11");
+  });
+
+  it("include the editor's formatting and leave-block keys", () => {
+    for (const platform of PLATFORMS)
+      expect(fixedCombos(platform)).toEqual(
+        expect.arrayContaining(["mod+b", "mod+i", "mod+enter", "mod+z"]),
+      );
+  });
+
+  it("list the editor's own block keys, which no menu item names", () => {
+    for (const platform of PLATFORMS)
+      expect(fixedCombos(platform)).toEqual(
+        expect.arrayContaining([
+          "mod+alt+1",
+          "mod+alt+c",
+          "mod+shift+b",
+          "mod+[",
+        ]),
+      );
+  });
+
+  it("keep macOS's own keys from being bound on a Mac only", () => {
+    onPlatform("macos");
+    expect(isReservedCombo("mod+alt+d")).toBe(true);
+    expect(isReservedCombo("mod+h")).toBe(true);
+    onPlatform("windows");
+    expect(isReservedCombo("mod+alt+d")).toBe(false);
+  });
+
+  it.each(PLATFORMS)("can't be bound to an action (%s)", (platform) => {
+    onPlatform(platform);
+    for (const combo of fixedCombos(platform))
+      expect(isReservedCombo(combo), combo).toBe(true);
+  });
+});
+
+describe("the default configurable shortcuts", () => {
+  it.each(PLATFORMS)(
+    "are each different, and none is a fixed one (%s)",
+    (platform) => {
+      onPlatform(platform);
+      const bound = Object.values(defaultShortcuts()).filter(Boolean);
+      expect(new Set(bound).size).toBe(bound.length);
+      for (const combo of bound) {
+        expect(isBindableCombo(combo), combo).toBe(true);
+        expect(isReservedCombo(combo), combo).toBe(false);
+        expect(fixedCombos(platform)).not.toContain(combo);
+      }
+    },
+  );
+
+  it("switch tabs with Ctrl+Tab and Ctrl+Shift+Tab on every platform", () => {
+    // Ctrl is "ctrl" on a Mac, where "mod" is Cmd.
+    expect(defaultShortcuts(true)).toMatchObject({
+      nextTab: "ctrl+tab",
+      previousTab: "ctrl+shift+tab",
+    });
+    expect(defaultShortcuts(false)).toMatchObject({
+      nextTab: "mod+tab",
+      previousTab: "mod+shift+tab",
+    });
+  });
+
+  it("set Heading 1-6 with Mod+1..6, as Typora does, and leave Paragraph unbound", () => {
+    for (const mac of [true, false]) {
+      const shortcuts = defaultShortcuts(mac);
+      expect(shortcuts).toMatchObject({
+        setHeading1: "mod+1",
+        setHeading2: "mod+2",
+        setHeading3: "mod+3",
+        setHeading4: "mod+4",
+        setHeading5: "mod+5",
+        setHeading6: "mod+6",
+        // Mod+0 is Actual Size.
+        setParagraph: "",
+      });
+    }
+    expect(isReservedCombo("mod+0")).toBe(true);
+  });
+
+  it("are no fixed key on an iPad keyboard either", () => {
+    onPlatform("ios");
+    const fixed = fixedCombos("ios");
+    for (const combo of Object.values(defaultShortcuts()).filter(Boolean))
+      expect(fixed, combo).not.toContain(combo);
+  });
+
+  it("leave Mod+Shift+O to the file search", () => {
+    for (const mac of [true, false]) {
+      const shortcuts = defaultShortcuts(mac);
+      // The sidebar's file-name search, and nothing else.
+      expect(
+        Object.entries(shortcuts).filter(([, c]) => c === "mod+shift+o"),
+      ).toEqual([["searchFiles", "mod+shift+o"]]);
+    }
+  });
+});
+
+describe("macOS's Cmd+Shift+] and [", () => {
+  const key = (code: string, mods: Partial<KeyboardEvent> = {}) =>
+    new KeyboardEvent("keydown", {
+      code,
+      key: code === "BracketRight" ? "}" : "{",
+      metaKey: true,
+      shiftKey: true,
+      ...mods,
+    });
+
+  it("step to the next and the previous tab by physical key", () => {
+    expect(macTabStep(key("BracketRight"), true)).toBe(1);
+    expect(macTabStep(key("BracketLeft"), true)).toBe(-1);
+  });
+
+  it("do nothing without Shift, with another modifier, or off a Mac", () => {
+    expect(macTabStep(key("BracketRight", { shiftKey: false }), true)).toBe(
+      null,
+    );
+    expect(macTabStep(key("BracketRight", { altKey: true }), true)).toBe(null);
+    expect(macTabStep(key("BracketRight"), false)).toBe(null);
+  });
+});

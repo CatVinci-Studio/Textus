@@ -1,7 +1,6 @@
 import { useCallback, useEffect, useState } from "react";
 import { iosFiles } from "../platform/ios-files";
 import { forgetIOSDocument } from "../document/ios-recents";
-import { moveConversations } from "../ai/chat/chat-history";
 import { makeBlankTab, statMtime, tabIsDirty } from "../document/doc-tabs";
 import type { TabState } from "./tabs/useTabState";
 import { isInside } from "../utils/path";
@@ -29,17 +28,6 @@ export function useDocumentActions(opts: {
     },
     [openFile],
   );
-  // A renamed document stays open under its new name; a deleted one keeps
-  // its text in the tab, unsaved.
-  const documentRenamed = useCallback(
-    (from: string, to: string) => {
-      setTabs((prev) =>
-        prev.map((tab) => (tab.path === from ? { ...tab, path: to } : tab)),
-      );
-      moveConversations(from, to);
-    },
-    [setTabs],
-  );
   // A file or folder moved in the tree: every open tab in it follows.
   const entryMoved = useCallback(
     (from: string, to: string) => {
@@ -49,10 +37,8 @@ export function useDocumentActions(opts: {
           : path && isInside(path, from)
             ? to + path.slice(from.length)
             : null;
-      for (const tab of tabsRef.current) {
-        const next = moved(tab.path);
-        if (tab.path && next) moveConversations(tab.path, next);
-      }
+      // Its conversations and what is kept for it follow too (the backend,
+      // for every document under a moved folder).
       void notePathMoved(from, to);
       setTabs((prev) =>
         prev.map((tab) => {
@@ -61,8 +47,11 @@ export function useDocumentActions(opts: {
         }),
       );
     },
-    [tabsRef, setTabs],
+    [setTabs],
   );
+  // A renamed document stays open under its new name, like any move; a
+  // deleted one keeps its text in the tab, unsaved.
+  const documentRenamed = entryMoved;
   // A plugin moving a page (the page tree making it a folder for its
   // sub-pages): its tab saved first, then following it.
   useEffect(() => {

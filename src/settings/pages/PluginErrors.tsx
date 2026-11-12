@@ -1,3 +1,5 @@
+import { currentLanguage } from "../../i18n/current";
+import { localeOf } from "../../i18n/strings";
 import { useSyncExternalStore } from "react";
 import { SettingsGroup } from "./SettingsGroup";
 import type { Strings } from "../../i18n/strings";
@@ -15,14 +17,20 @@ export function PluginErrors({ id, t }: { id: string; t: Strings }) {
   const entries = pluginLog(id);
   if (entries.length === 0) return null;
   const text = entries
-    .map((e) => `${new Date(e.at).toLocaleTimeString()}  ${e.message}`)
+    .map(
+      (e) =>
+        `${new Date(e.at).toLocaleTimeString(localeOf(currentLanguage()))}  ${e.message}`,
+    )
     .join("\n");
   return (
     <SettingsGroup title={t.pluginErrorsGroup}>
       <pre className="plugin-errors" data-plugin-errors={id}>
         {[...entries]
           .reverse()
-          .map((e) => `${new Date(e.at).toLocaleTimeString()}  ${e.message}`)
+          .map(
+            (e) =>
+              `${new Date(e.at).toLocaleTimeString(localeOf(currentLanguage()))}  ${e.message}`,
+          )
           .join("\n")}
       </pre>
       <div className="plugin-errors-actions">

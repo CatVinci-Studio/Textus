@@ -11,7 +11,7 @@ import {
   provideHover,
   removeHoverProvider,
 } from "./hover-providers";
-import { claim, claimantsOf, ownerOf, ownedClaims, pickOwner } from "./owners";
+import { claim, ownerOf, ownedClaims } from "./owners";
 import type { Contributes } from "../store/manifest";
 import { publish, type PluginRecord } from "../store/plugin-records";
 import {
@@ -41,13 +41,11 @@ it("lets the first plugin draw a language, and hands it over when it goes", () =
   expect(redraws).toBe(3);
 });
 
-it("keeps the user's pick while that plugin is on", () => {
+it("goes to the first claimant, the next taking over as it goes", () => {
   undo.push(claim("editor:*.pdf", "a.pdf"), claim("editor:*.pdf", "b.pdf"));
-  pickOwner("editor:*.pdf", "b.pdf");
-  expect(ownerOf("editor:*.pdf")).toBe("b.pdf");
-  expect(claimantsOf("editor:*.pdf")).toEqual(["a.pdf", "b.pdf"]);
-  undo.splice(1, 1)[0]();
   expect(ownerOf("editor:*.pdf")).toBe("a.pdf");
+  undo.splice(0, 1)[0]();
+  expect(ownerOf("editor:*.pdf")).toBe("b.pdf");
 });
 
 it("asks only the owner of a declared hover kind; others for the rest", async () => {
@@ -105,8 +103,7 @@ it("opens a file with the owner of its pattern", () => {
     }) as unknown as PluginRecord;
   publish({ allOn: true, records: [record("a.pdf"), record("b.pdf")] });
   undo.push(claim("editor:*.pdf", "a.pdf"), claim("editor:*.pdf", "b.pdf"));
-  pickOwner("editor:*.pdf", "b.pdf");
-  expect(customEditorFor("/x/y.pdf")?.plugin).toBe("b.pdf");
+  expect(customEditorFor("/x/y.pdf")?.plugin).toBe("a.pdf");
   publish({ records: [] });
 });
 
@@ -133,8 +130,6 @@ it("opens a Markdown document whose front matter a plugin claims, by its owner",
   undo.push(claim(key, "a.board"), claim(key, "b.board"));
   const board = "---\nkanban-plugin: board\n---\n\n## Todo\n";
   expect(customEditorForContent("/x/Plan.md", board)?.plugin).toBe("a.board");
-  pickOwner(key, "b.board");
-  expect(customEditorForContent("/x/Plan.md", board)?.plugin).toBe("b.board");
   // Not in its front matter, or not Markdown: a document.
   expect(customEditorForContent("/x/Plan.md", "kanban-plugin: board\n")).toBe(
     null,
@@ -157,8 +152,6 @@ it("draws an embed kind by its owner in the one registry", async () => {
     () => forgetEmbeds("b.links"),
   );
   expect(embedProvider("note")?.owner).toBe("a.links");
-  pickOwner("embed:note", "b.links");
-  expect(embedProvider("note")?.owner).toBe("b.links");
   forgetEmbeds("b.links");
   expect(embedProvider("note")?.owner).toBe("a.links");
 });

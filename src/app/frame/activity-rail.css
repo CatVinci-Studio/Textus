@@ -1,0 +1,190 @@
+/* The activity rail (design-language.md 5.7): a column of icons in the
+   frame's colour under the title bar, at the window's left edge. The sidebar
+   slides out from under it; the document clears both. */
+.app-shell {
+  --rail-width: 0px;
+}
+
+:root:not(.zen, [data-window-chrome="mobile"])
+  .app-shell:has(> .activity-rail) {
+  --rail-width: 44px;
+}
+
+/* On a whole pixel, so the document beside it starts on one too: WebKitGTK
+   blurs a focused text field's layer at x.5 (source-editor.css). */
+@supports (width: round(down, 1px, 1px)) {
+  :root:not(.zen, [data-window-chrome="mobile"])
+    .app-shell:has(> .activity-rail) {
+    --rail-width: round(44px, 1px);
+  }
+}
+
+.activity-rail {
+  position: absolute;
+  top: var(--window-bar-height);
+  bottom: 0;
+  left: 0;
+  /* Over the sidebar while it slides in and out beneath. */
+  z-index: 2;
+  width: var(--rail-width);
+  box-sizing: border-box;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 4px;
+  padding-top: 8px;
+  background: var(--ui-frame-fill);
+  /* Where the frame meets the document; the open sidebar carries on the
+     frame instead. */
+  border-right: 1px solid var(--ui-frame-edge);
+  transition: border-color var(--dur-base) var(--ease-standard);
+  user-select: none;
+  -webkit-user-select: none;
+}
+
+.app-shell[data-sidebar="open"] .activity-rail {
+  border-right-color: transparent;
+}
+
+:root:is(.zen, [data-window-chrome="mobile"]) .activity-rail {
+  display: none;
+}
+
+.activity-rail-item {
+  width: 36px;
+  height: 36px;
+  border: 0;
+  border-radius: var(--shape-s);
+  background: transparent;
+  color: var(--ui-muted);
+  display: grid;
+  place-items: center;
+  cursor: default;
+  transition:
+    background-color var(--dur-fast) var(--ease-standard),
+    color var(--dur-fast) var(--ease-standard);
+}
+
+.activity-rail-item:hover {
+  background: var(--ui-hover);
+  color: var(--ui-text);
+  transition-duration: var(--dur-instant);
+}
+
+.activity-rail-item[aria-pressed="true"] {
+  background: var(--ui-selected);
+  color: var(--ui-accent-text);
+}
+
+/* With the rail holding the tabs, the sidebar's header is the panel's
+   name on the bar's line: the frame is one surface - bar, rail, sidebar -
+   with no line inside it, and the panel's first row (its search) starts
+   under it, level with the islands' tops. */
+:root:not([data-window-chrome="mobile"])
+  .app-shell:has(> .activity-rail)
+  .sidebar-header {
+  display: flex;
+  align-items: center;
+  height: var(--window-bar-height);
+  padding: 0 var(--pane-inset);
+  border-bottom: 0;
+}
+
+/* Where the bar leaves the sidebar's column free (barLayout: the app menu
+   in the rail, or a Mac in full screen), the sidebar owns it to the
+   window's top: over the bar there, as the islands' top rows are, its own
+   tools on the bar's line. */
+:root[data-side-to-top]:not([data-window-chrome="mobile"])
+  .app-shell
+  > .sidebar {
+  z-index: var(--z-dock);
+}
+
+:root[data-side-to-top] .sidebar-resizer {
+  top: 0;
+}
+
+/* And the rail's, when nothing of the bar's is over it either. */
+:root[data-rail-to-top]:not([data-window-chrome="mobile"])
+  .app-shell
+  > .activity-rail {
+  grid-row: 1 / 3;
+  z-index: var(--z-dock);
+}
+
+/* Textus's own icons, then the ones plugins add, a short line between:
+   each a column of its own, a drag kept inside it. */
+.activity-rail-group {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 4px;
+}
+
+.activity-rail-divider {
+  width: 20px;
+  margin: 4px 0;
+  border: 0;
+  border-top: 1px solid var(--ui-frame-edge);
+}
+
+/* Settings at the rail's foot, with the window's bottom edge for margin. */
+.activity-rail-settings {
+  margin-top: auto;
+  margin-bottom: 8px;
+}
+
+/* A newer release, over Settings at the foot: the accent's colour while it
+   waits for a click, breathing while it downloads, the danger colour when
+   it failed. */
+.activity-rail-update {
+  margin-top: auto;
+  color: var(--ui-accent);
+}
+.activity-rail-update ~ .activity-rail-settings {
+  margin-top: 0;
+}
+.activity-rail-update[data-state="downloading"] {
+  animation: motion-breathe var(--dur-pulse) var(--ease-in-out) infinite;
+}
+.activity-rail-update[data-state="error"] {
+  color: var(--ui-danger);
+}
+
+/* A faint line where the rail meets the open sidebar - softer than the
+   frame's edge against the document. Down from the window's top where the
+   sidebar reaches it, else from under the bar. */
+.app-shell > .sidebar::before {
+  content: "";
+  position: absolute;
+  top: var(--window-bar-height);
+  bottom: 0;
+  left: 0;
+  width: 1px;
+  background: color-mix(in srgb, var(--ui-frame-edge) 55%, transparent);
+  pointer-events: none;
+}
+
+.app-shell:not(:has(> .activity-rail)) > .sidebar::before {
+  display: none;
+}
+
+:root[data-side-to-top] .app-shell > .sidebar::before {
+  top: 0;
+}
+
+/* Under the line: the plugins' icons, scrolling between the top group and
+   Settings when there are more than fit; never pushing either away. */
+.activity-rail-scroll {
+  flex: 0 1 auto;
+  min-height: 0;
+  overflow-y: auto;
+  scrollbar-width: none;
+}
+.activity-rail-scroll::-webkit-scrollbar {
+  display: none;
+}
+/* Each icon its full size: the group scrolls, its icons don't shrink. */
+.activity-rail-group > * {
+  flex-shrink: 0;
+}

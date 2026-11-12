@@ -1,4 +1,6 @@
-import type { DocumentSnapshot } from "../../doc-markdown";
+import type { OpenRequest } from "../../../utils/open-document";
+import { CHAT_WINDOWS_CHANGED } from "../../../platform/bindings/app";
+import type { DocumentSnapshot } from "../../../editor/markdown/doc-markdown";
 import { emitToWindow } from "../../../platform/events";
 import { listenToThisWindow } from "../../../platform/events";
 import type { AgentTurn, EditProposal } from "../../types";
@@ -31,11 +33,20 @@ export const CHAT_TO_EDITOR = {
   /** Open a history conversation's document in a tab, so the window can
    *  restore that conversation. */
   openDocument: "chat:open-document",
+  /** Files a reply changed, or what waits in them: the editor marks them,
+   *  reads them again and places their revisions, as it would its own. */
+  filesChanged: "chat:files-changed",
 } as const;
 
+/** What `filesChanged` carries. */
+export interface FilesChangedMessage {
+  written: { file: string; applied: boolean; before: string | null }[];
+  revised: string[];
+}
+
 /** Rust -> every editor window: the set of open chat windows changed. Only the
- *  backend sees chats closed from another editor window. Keep in step with Rust. */
-export const CHAT_WINDOWS_CHANGED = "chat:windows-changed";
+ *  backend sees chats closed from another editor window. */
+export { CHAT_WINDOWS_CHANGED };
 
 /** Rust -> one chat window: claim the handoff parked under your label. Sent
  *  when detaching reveals an already-open window, which won't re-read it alone. */
@@ -108,7 +119,8 @@ export interface ReembedMessage {
   docPath: string | null;
 }
 
-export interface OpenDocumentMessage {
+/** A file the detached chat asks its editor's window to open, as asked. */
+export interface OpenDocumentMessage extends OpenRequest {
   path: string;
 }
 

@@ -1,0 +1,38 @@
+{
+  "plain": [
+    "editor.read",
+    "editor.write",
+    "editor.propose",
+    "editor.input",
+    "files.read",
+    "files.write",
+    "clipboard",
+    "project.data",
+    "ai.tools",
+    "notifications",
+    "background",
+    "agents"
+  ],
+  "platforms": ["desktop", "ios"],
+  "hosts": {
+    "valid": [
+      "network:*",
+      "network:api.example.com",
+      "network:*.wikipedia.org",
+      "network:localhost:23119",
+      "network:127.0.0.1",
+      "commands:catvinci.sync"
+    ],
+    "invalid": [
+      "network:",
+      "network:a b",
+      "network:x:123456",
+      "network:*.",
+      "files.delete",
+      "network:host:",
+      "commands:",
+      "commands:Sync.x",
+      "commands:textus"
+    ]
+  }
+}

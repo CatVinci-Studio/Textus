@@ -1,0 +1,210 @@
+/* List markers are an out-of-flow ::before, not ::marker: in WKWebView a
+   native marker makes the caret at an item's start paint inside the first
+   glyph. Numbering is a CSS counter, since data-label can lag. */
+.milkdown ol {
+  /* Declared here, or a nested list would inherit its parent's start. */
+  --textus-ol-start: 0;
+  counter-reset: textus-ol var(--textus-ol-start);
+}
+
+/* No `position: relative` on the item: WebKit removes a positioned element
+   left empty by an IME commit, splitting the item. Markers sit at their
+   static position instead; this overrides prosemirror.css. */
+.milkdown ol > li,
+.milkdown ul > li {
+  list-style: none;
+  position: static;
+}
+
+/* A node-selected item still anchors prosemirror.css's outline ::after. */
+.milkdown li.ProseMirror-selectednode {
+  position: relative;
+}
+
+.milkdown ol > li {
+  counter-increment: textus-ol;
+}
+
+/* No `color`: lists would read dimmer than the prose. */
+.milkdown ol > li::before,
+.milkdown ul > li:not([data-item-type="task"])::before {
+  position: absolute;
+  pointer-events: none;
+}
+
+/* The gap is the trailing NBSP, as in the native marker. */
+.milkdown ol > li::before {
+  content: counter(textus-ol) ".\00a0";
+  transform: translateX(-100%);
+  white-space: nowrap;
+}
+
+/* Bullets are drawn, not glyphs: font bullets are smaller than WebKit's disc
+   and font-dependent. margin-top assumes the .milkdown line-height. */
+.milkdown ul > li:not([data-item-type="task"])::before {
+  content: "";
+  width: 0.34em;
+  height: 0.34em;
+  margin-top: 0.73em;
+  transform: translateX(calc(-100% - 0.4em));
+  border-radius: 50%;
+  corner-shape: round;
+  background: currentColor;
+  box-sizing: border-box;
+}
+
+.milkdown ul ul > li:not([data-item-type="task"])::before {
+  background: transparent;
+  border: 0.075em solid currentColor;
+}
+
+.milkdown ul ul ul > li:not([data-item-type="task"])::before {
+  background: currentColor;
+  border: none;
+  border-radius: 0;
+  width: 0.3em;
+  height: 0.3em;
+  margin-top: 0.75em;
+}
+
+.milkdown li[data-item-type="task"] {
+  list-style: none;
+  padding-left: 1.5em;
+}
+
+.milkdown li[data-item-type="task"]::before {
+  content: "";
+  position: absolute;
+  margin-left: -1.5em;
+  margin-top: 0.4em;
+  width: 0.95em;
+  height: 0.95em;
+  border: 1.5px solid var(--doc-muted);
+  border-radius: var(--doc-radius-sm);
+  cursor: pointer;
+  box-sizing: border-box;
+}
+
+/* The tick is part of the box: an ::after would land below the text. */
+.milkdown li[data-item-type="task"][data-checked="true"]::before {
+  background: var(--doc-accent)
+    url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 16 16'%3E%3Cpath d='M3.4 8.2l3.1 3 6-6.2' fill='none' stroke='white' stroke-width='2.3' stroke-linecap='square'/%3E%3C/svg%3E")
+    center / 100% no-repeat;
+  border-color: var(--doc-accent);
+}
+
+.milkdown li[data-item-type="task"][data-checked="true"] > p {
+  color: var(--doc-muted);
+  text-decoration: line-through;
+}
+
+/* Fixed layout so resized <colgroup> widths take effect; an unresized
+   table keeps auto layout and sizes to content. */
+.milkdown table[data-sized] {
+  table-layout: fixed;
+}
+
+.milkdown th,
+.milkdown td {
+  /* Positioning context for the column-resize handle below. */
+  position: relative;
+}
+
+/* A table sized by its content keeps each column a few words wide: in
+   a narrow column it scrolls sideways rather than setting a name one
+   character a line. A column the user sized keeps that width. */
+.milkdown table:not([data-sized]) :is(th, td) {
+  min-width: 6em;
+}
+
+/* prosemirror-tables' column-resize handle. */
+.milkdown .column-resize-handle {
+  position: absolute;
+  top: 0;
+  bottom: 0;
+  right: -2px;
+  width: 4px;
+  z-index: 20;
+  background: var(--doc-accent);
+  pointer-events: none;
+}
+
+.ProseMirror.resize-cursor {
+  cursor: col-resize;
+}
+
+/* Anchors the add-row/column buttons, shown while the pointer is over it. */
+.table-wrapper {
+  position: relative;
+  margin: var(--doc-gap-box) 0;
+}
+
+.table-wrapper table {
+  margin: 0;
+}
+
+/* A table wider than the column scrolls inside it. Sideways only: an
+   overflow-y scroller grabs the wheel and stops the page scrolling. */
+.table-scroll {
+  max-width: 100%;
+  overflow-x: auto;
+  overflow-y: hidden;
+}
+
+.table-add-row-btn,
+.table-add-col-btn {
+  position: absolute;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  border: 1px solid var(--doc-border);
+  border-radius: var(--shape-pill);
+  corner-shape: round;
+  background: var(--doc-bg, var(--ui-bg));
+  color: var(--doc-muted);
+  line-height: 1;
+  cursor: pointer;
+  opacity: 0;
+  pointer-events: none;
+  transition:
+    opacity var(--dur-fast) var(--ease-standard),
+    color var(--dur-fast) var(--ease-standard),
+    border-color var(--dur-fast) var(--ease-standard);
+}
+
+.table-wrapper:hover .table-add-row-btn,
+.table-wrapper:hover .table-add-col-btn,
+.table-add-row-btn:hover,
+.table-add-col-btn:hover {
+  opacity: 1;
+  pointer-events: auto;
+}
+
+.table-add-row-btn:hover,
+.table-add-col-btn:hover {
+  color: var(--doc-accent-text);
+  border-color: var(--doc-accent);
+}
+
+.table-add-row-btn {
+  left: 0;
+  right: 0;
+  /* Under the table's edge, clear of a wide table's scrollbar. */
+  bottom: -19px;
+  height: 16px;
+  width: 100%;
+}
+
+.table-add-col-btn {
+  top: 0;
+  bottom: 0;
+  right: -11px;
+  width: 16px;
+  height: 100%;
+}
+
+/* Zen focus: everything but the current block recedes, changing only per
+   block. The fade is in content-base.css's layer, so leaving zen fades back. */
+.zen .milkdown .ProseMirror:has(> .zen-current) > :not(.zen-current) {
+  opacity: 0.32;
+}

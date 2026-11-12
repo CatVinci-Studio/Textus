@@ -1,0 +1,50 @@
+/* A phone's split (no islands): a pane's own tab bar, over its document;
+   one below another pane keeps no room for the window bar. */
+.main-pane-split > .tab-bar {
+  min-width: 0;
+}
+.main-pane.main-pane-split > .tab-bar.tab-bar-inner {
+  height: calc(var(--header-height) - var(--window-bar-height));
+  padding-top: 4px;
+}
+
+/* A tab's view on its island's sheet, placed by the clock (absolute): a
+   column of its own, the editor's scroller filling it. */
+.split-pane {
+  display: flex;
+  flex-direction: column;
+  min-width: 0;
+  min-height: 0;
+  overflow: hidden;
+}
+
+/* The line between them, down the middle of the gap it lies in; its hit
+   area a few px wider either side. */
+.split-divider {
+  z-index: 5;
+  min-width: 1px;
+  min-height: 1px;
+  background: linear-gradient(var(--ui-border), var(--ui-border)) center / 1px
+    100% no-repeat;
+  touch-action: none;
+  outline: none;
+}
+
+.split-divider-column {
+  background-size: 100% 1px;
+}
+
+.split-divider::before {
+  content: "";
+  position: absolute;
+  inset: 0 -3px;
+  cursor: col-resize;
+  transition: background-color var(--dur-fast) var(--ease-standard);
+}
+
+.split-divider-column::before {
+  inset: -3px 0;
+  cursor: row-resize;
+}
+
+/* Its grip shows on it (tx-grip, resize-handle.css). */

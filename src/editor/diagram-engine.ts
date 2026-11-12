@@ -14,7 +14,7 @@ const mermaidModule = lazyModule("mermaid", () =>
 );
 
 /** Mermaid, loaded the first time a diagram is drawn. */
-export function loadMermaid(): Promise<MermaidApi> {
+function loadMermaid(): Promise<MermaidApi> {
   return mermaidModule.load();
 }
 
@@ -53,7 +53,7 @@ export function mermaidTheme(dark = appearanceIsDark()): MermaidThemeName {
 // Re-applied before every pass because the width follows the text column:
 // Gantt charts laid out offscreen at 1200px and scaled down are unreadable.
 // "strict" is stated because the SVG lands in the editor as innerHTML.
-export function configureMermaid(
+function configureMermaid(
   mermaid: MermaidApi,
   width: number,
   fontFamily?: string,
@@ -94,7 +94,7 @@ export function appearanceIsDark(): boolean {
  * mermaid.render, minus the temporary `#d<id>` node it leaves in <body> on a
  * failure, which gave the window a second scrollbar.
  */
-export async function renderMermaid(
+async function renderMermaid(
   mermaid: MermaidApi,
   id: string,
   code: string,
@@ -112,7 +112,7 @@ type PeleApi = typeof import("pele/lazy");
 const peleModule = lazyModule("pele", () => import("pele/lazy"));
 
 /** Pele's lazy entry: each diagram type is a chunk fetched on first use. */
-export function loadPele(): Promise<PeleApi> {
+function loadPele(): Promise<PeleApi> {
   return peleModule.load();
 }
 
@@ -147,7 +147,7 @@ const PELE_IMAGE_SCHEMES = ["http", "https"];
 
 /** Pele's SVG for `code`, or null when Pele threw or drew nothing; the source
  *  is then remembered as refused. */
-export async function drawWithPele(
+async function drawWithPele(
   code: string,
   layout: { width: number; fontFamily?: string },
 ): Promise<string | null> {
@@ -170,7 +170,7 @@ export async function drawWithPele(
   return null;
 }
 
-export interface DiagramLayout {
+interface DiagramLayout {
   /** The width to lay a diagram out at, in CSS px. */
   width: number;
   fontFamily?: string;
@@ -189,21 +189,18 @@ type ChartApi = typeof import("./chart/chart-svg");
 const chartModule = lazyModule("chart", () => import("./chart/chart-svg"));
 
 /** The ```chart renderer, loaded the first time a chart is drawn. */
-export function loadChart(): Promise<ChartApi> {
+function loadChart(): Promise<ChartApi> {
   return chartModule.load();
 }
 
 /** A ```chart block's SVG; throws when its spec is wrong. */
-export async function drawChart(
+async function drawChart(
   code: string,
   layout: DiagramLayout,
 ): Promise<DrawnDiagram> {
   const chart = await loadChart();
   return { svg: chart.renderChart(code, layout), engine: "chart" };
 }
-
-/** The fenced-block languages drawn as pictures. */
-export const DIAGRAM_LANGUAGES = ["mermaid", "chart"];
 
 /**
  * A drawing function for one render pass: a chart by its own renderer; a

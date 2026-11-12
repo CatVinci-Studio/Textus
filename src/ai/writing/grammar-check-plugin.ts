@@ -28,16 +28,20 @@ export interface GrammarIssue {
   original?: string;
 }
 
-/** Whether the paragraph still reads as at request time; if not, the
- *  response's offsets would land beside the text they meant. */
-function paragraphUnchanged(
+/** Whether the paragraph still starts and reads as at request time; if
+ *  not, the response's offsets would land beside the text they meant. */
+export function paragraphUnchanged(
   view: EditorView,
   contentStart: number,
   text: string,
 ): boolean {
   try {
     const $pos = view.state.doc.resolve(contentStart);
-    return $pos.parent.isTextblock && $pos.parent.textContent === text;
+    return (
+      $pos.parent.isTextblock &&
+      $pos.start() === contentStart &&
+      $pos.parent.textContent === text
+    );
   } catch {
     return false; // position no longer exists
   }

@@ -25,6 +25,8 @@ mod references;
 pub(crate) use references::*;
 mod references_import;
 pub(crate) use references_import::*;
+mod related;
+pub(crate) use related::*;
 
 /// Most library text one request carries, in characters (not bytes, so CJK
 /// gets as much as English).
@@ -37,7 +39,7 @@ mod tests;
 
 fn project_root(doc_path: Option<&str>, workspace_root: Option<&str>) -> Result<PathBuf, String> {
     crate::ai::workspace::project_root(doc_path, workspace_root)
-        .ok_or_else(|| "NO_PROJECT".to_string())
+        .ok_or_else(|| crate::errors::error("noProject"))
 }
 
 /// The project's text files, for the composer's @-mention picker.
@@ -119,7 +121,7 @@ pub async fn ensure_project_file(
             .split(['/', '\\'])
             .any(|part| part == ".." || part.is_empty())
         {
-            return Err("Invalid file name.".to_string());
+            return Err(crate::errors::error("badName"));
         }
         let path = project_dir(&root).join(rel);
         if !path.exists() {
@@ -139,8 +141,8 @@ pub async fn ensure_project_file(
 #[cfg_attr(test, specta::specta)]
 pub async fn pick_text_files(window: tauri::WebviewWindow) -> Vec<String> {
     tauri::async_runtime::spawn_blocking(move || {
-        crate::commands::fs::window_file_dialog(&window)
-            .add_filter("Text", &["md", "markdown", "txt"])
+        crate::dialogs::window_file_dialog(&window)
+            .add_filter("Text", &crate::extract::TEXT_DOCUMENT_EXTENSIONS)
             .blocking_pick_files()
             .unwrap_or_default()
             .into_iter()
@@ -164,7 +166,7 @@ pub async fn import_references_picked(
 ) -> Result<Option<ImportedReferences>, String> {
     let root = project_root(doc_path.as_deref(), workspace_root.as_deref())?;
     tauri::async_runtime::spawn_blocking(move || {
-        let dialog = crate::commands::fs::window_file_dialog(&window);
+        let dialog = crate::dialogs::window_file_dialog(&window);
         let picked: Vec<PathBuf> = if folder {
             #[cfg(desktop)]
             let one = dialog.blocking_pick_folder();
@@ -176,7 +178,7 @@ pub async fn import_references_picked(
             one.into_iter().collect::<Vec<_>>()
         } else {
             let mut kinds: Vec<&str> = vec!["zip"];
-            kinds.extend(crate::extract::DOCUMENT_EXTENSIONS);
+            kinds.extend(crate::extract::TEXT_DOCUMENT_EXTENSIONS);
             kinds.extend(TEXT_EXTENSIONS);
             dialog
                 .add_filter("References", &kinds)

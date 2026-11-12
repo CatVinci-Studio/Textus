@@ -1,6 +1,7 @@
+import IMAGE_TYPES from "../../editor/images/image-types.json";
 import { plugins as pluginsIpc } from "../../platform/ipc";
 import { pluginFilesBase } from "../../platform/file-src";
-import { scaleStylesheet } from "../../ui/scale-lengths";
+import { scaleStylesheet } from "../../engine/tokens/scale-lengths";
 
 /**
  * A plugin's own files, and how a webview gets them: each
@@ -13,7 +14,7 @@ import { scaleStylesheet } from "../../ui/scale-lengths";
 export type PluginOrigin = "installed" | "dev";
 
 /** A relative path inside the plugin, or an error: no `..`, no root. */
-export function pluginPath(rel: string): string {
+function pluginPath(rel: string): string {
   const parts = rel
     .replace(/\\/g, "/")
     .replace(/^\.?\//, "")
@@ -42,20 +43,15 @@ const MIME: Record<string, string> = {
   css: "text/css",
   html: "text/html",
   json: "application/json",
-  svg: "image/svg+xml",
-  png: "image/png",
-  jpg: "image/jpeg",
-  jpeg: "image/jpeg",
-  gif: "image/gif",
-  webp: "image/webp",
   woff: "font/woff",
   woff2: "font/woff2",
   ttf: "font/ttf",
   wasm: "application/wasm",
   bcmap: "application/octet-stream",
+  ...IMAGE_TYPES,
 };
 
-export function mimeOf(path: string): string {
+function mimeOf(path: string): string {
   const ext = /\.([a-z0-9]+)$/i.exec(path)?.[1]?.toLowerCase() ?? "";
   return MIME[ext] ?? "application/octet-stream";
 }

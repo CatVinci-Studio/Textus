@@ -1,4 +1,7 @@
 // @vitest-environment jsdom
+import { localeOf } from "../i18n/strings";
+import TABLES from "./appearance-tables.json";
+import { BUILTIN_CONTENT_THEMES } from "../theme/builtin-themes";
 import { act, cleanup, render, screen } from "@testing-library/react";
 import { useEffect, useLayoutEffect } from "react";
 import {
@@ -11,7 +14,6 @@ import {
   vi,
 } from "vitest";
 import {
-  htmlLang,
   loadSettings,
   normaliseSettings,
   resetSettingsStoreForTests,
@@ -20,15 +22,15 @@ import {
   UI_TEXT_SCALES,
   useSettings,
 } from "./SettingsContext";
-import { readFileSync } from "node:fs";
 import { AppearanceSync } from "../theme/apply-appearance";
+import { changeSettings } from "./settings-store";
 import { storage } from "../platform/ipc";
 import { resetBootForTests } from "../storage/boot";
 import {
   flushPendingWrites,
   resetPendingWritesForTests,
 } from "../storage/pending-writes";
-import { resetUiStateForTests } from "../storage/ui-state";
+import { keepInList, resetUiStateForTests } from "../storage/ui-state";
 import { installTestLocalStorage } from "../dev/test-local-storage";
 
 // The file-backed path, run when Rust booted the window with a snapshot.
@@ -36,7 +38,6 @@ import { installTestLocalStorage } from "../dev/test-local-storage";
 const handlers: Record<string, (event: { payload: unknown }) => void> = {};
 
 vi.mock("../platform/ipc", () => ({
-  ai: { setAiProxy: vi.fn().mockResolvedValue(null) },
   themes: { loadThemeCss: vi.fn().mockResolvedValue(null) },
   storage: {
     settingsGet: vi.fn(),
@@ -80,7 +81,8 @@ function Probe() {
   });
   return (
     <div data-testid="probe">
-      {settings.theme}|{settings.zoom}|{settings.customCss}|{t.settingsTitle}
+      {settings.theme}|{settings.zoom}|{settings.customCss}|{t.settingsTitle}|
+      {settings.agentWorkspaceRoot}
     </div>
   );
 }
@@ -135,6 +137,23 @@ describe("file-backed settings", () => {
     expect(loadSettings().theme).toBe("dark");
   });
 
+  it("keeps the format bar turned off in a profile from before it had a mark", () => {
+    // 1.3.12's settings: no formatBarOnce, so it read as on.
+    boot({ languageChosen: true, formatBar: false });
+    render(
+      <SettingsProvider>
+        <Probe />
+      </SettingsProvider>,
+    );
+    expect(loadSettings().formatBar).toBe(true);
+    act(() => lastSet({ formatBar: false }));
+    expect(storage.settingsPatch).toHaveBeenLastCalledWith({
+      formatBar: false,
+      formatBarOnce: true,
+    });
+    expect(loadSettings().formatBar).toBe(false);
+  });
+
   it("sends every keystroke at once, so a quick quit can't lose it", () => {
     // Rust coalesces the disk writes and flushes on exit; a debounce here would
     // lose the last keystrokes before Cmd+Q.
@@ -154,21 +173,33 @@ describe("file-backed settings", () => {
     expect(loadSettings().customCss).toBe("/* abc */");
   });
 
-  it("applies other windows' changes, except zoom and its own echo", () => {
-    boot({ theme: "light", zoom: 1.5, languageChosen: true });
+  it("applies other windows' changes, except zoom, the AI's folder and its own echo", () => {
+    boot({
+      theme: "light",
+      zoom: 1.5,
+      agentWorkspaceRoot: "/a",
+      languageChosen: true,
+    });
     render(
       <SettingsProvider>
         <Probe />
       </SettingsProvider>,
     );
     const probe = screen.getByTestId("probe");
-    remote({ theme: "dark", zoom: 2 }, 10);
+    remote({ theme: "dark", zoom: 2, agentWorkspaceRoot: "/b" }, 10);
     expect(probe.textContent).toContain("dark|1.5|");
+    // Each window works in the folder it opened.
+    expect(probe.textContent).toContain("|/a");
     // An event this window's own patch caused is not applied twice (here:
     // it would be a stale value).
     remote({ theme: "light" }, 11, "main");
     expect(probe.textContent).toContain("dark|");
     expect(loadSettings().zoom).toBe(1.5);
+    // What a conversation reads (the store), too: not the other window's.
+    expect(loadSettings().agentWorkspaceRoot).toBe("/a");
+    // Its own, changed from outside React, reaches the window.
+    act(() => changeSettings({ agentWorkspaceRoot: "/c" }));
+    expect(probe.textContent).toContain("|/c");
   });
 
   it("corrects a stale boot snapshot once the live values arrive", async () => {
@@ -329,10 +360,10 @@ describe("language", () => {
   });
 
   it("sets the document language for the CSS :lang() font stacks", () => {
-    expect(htmlLang("zh")).toBe("zh-CN");
-    expect(htmlLang("zh-Hant")).toBe("zh-TW");
-    expect(htmlLang("ja")).toBe("ja");
-    expect(htmlLang("en")).toBe("en");
+    expect(localeOf("zh")).toBe("zh-CN");
+    expect(localeOf("zh-Hant")).toBe("zh-TW");
+    expect(localeOf("ja")).toBe("ja");
+    expect(localeOf("en")).toBe("en");
     boot({ language: "zh", languageChosen: true });
     render(
       <SettingsProvider>
@@ -366,12 +397,12 @@ describe("interface text size", () => {
   });
 
   it("is applied by the boot script for the same sizes", () => {
-    const script = readFileSync("src-tauri/src/boot.js", "utf8");
-    const list = /\[([\d., ]+)\]\.indexOf\(settings\.uiTextScale\)/.exec(
-      script,
-    );
-    expect(list?.[1].split(",").map(Number)).toEqual(
-      UI_TEXT_SCALES.filter((scale) => scale !== 1),
+    // The table the boot script is handed (settings/app.rs) is this one.
+    expect(TABLES.uiTextScales).toEqual([...UI_TEXT_SCALES]);
+    expect(TABLES.contentThemes).toEqual(
+      BUILTIN_CONTENT_THEMES.map((theme) => theme.id).filter(
+        (id) => id !== "default",
+      ),
     );
   });
 });
@@ -457,5 +488,20 @@ describe("heading shortcuts", () => {
     const next = normaliseSettings({ shortcuts });
     expect(next.shortcuts.setHeading2).toBe("");
     expect(next.shortcuts.setHeading1).toBe("mod+1");
+  });
+});
+
+describe("a list every window adds to", () => {
+  it("keeps another window's entry when this one adds its own", async () => {
+    boot({ languageChosen: true }, { uiState: { foldedBlocks: [] } });
+    // Another window folded a block since this one booted.
+    vi.mocked(storage.uiStateGet).mockResolvedValue({
+      foldedBlocks: ["other.md#2"],
+    });
+    keepInList("foldedBlocks", "mine.md#1", true, { max: 300 });
+    await flushPendingWrites();
+    expect(storage.uiStatePatch).toHaveBeenLastCalledWith({
+      foldedBlocks: ["other.md#2", "mine.md#1"],
+    });
   });
 });

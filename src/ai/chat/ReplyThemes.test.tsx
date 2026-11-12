@@ -13,13 +13,12 @@ import { themes } from "../../platform/ipc";
 import { ReplyThemes } from "./ReplyThemes";
 
 vi.mock("../../platform/ipc", () => ({
-  ai: { setAiProxy: vi.fn().mockResolvedValue(null) },
   themes: {
     loadThemeCss: vi.fn().mockResolvedValue(""),
     saveThemeCss: vi.fn().mockResolvedValue(undefined),
   },
 }));
-vi.mock("../../theme/theme-chrome", () => ({
+vi.mock("../../engine/tokens/palette", () => ({
   applyThemeChrome: vi.fn(),
   clearThemeChrome: vi.fn(),
 }));

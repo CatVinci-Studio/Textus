@@ -1,7 +1,7 @@
 import { describe, expect, it } from "vitest";
 import { Schema } from "@milkdown/kit/prose/model";
 import { EditorState, TextSelection } from "@milkdown/kit/prose/state";
-import { computeCharDeleteBesideEnclosure } from "./enclosure";
+import { computeCharDeleteBesideEnclosure } from "./enclosure-moves";
 
 const schema = new Schema({
   nodes: {

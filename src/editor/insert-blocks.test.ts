@@ -3,7 +3,7 @@ import { afterEach, expect, it, vi } from "vitest";
 import { editorViewCtx, serializerCtx, type Editor } from "@milkdown/kit/core";
 import { TextSelection } from "@milkdown/kit/prose/state";
 import type { EditorView } from "@milkdown/kit/prose/view";
-import { createTestEditor } from "../document-view/editor-test-harness";
+import { createTestEditor } from "./editor-test-kit";
 import { insertMathBlock, insertRule, makeTasks } from "./insert-blocks";
 
 vi.mock("mermaid", () => ({

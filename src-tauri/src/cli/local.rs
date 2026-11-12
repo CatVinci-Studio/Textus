@@ -203,7 +203,7 @@ pub fn move_entry(ctx: &Ctx, args: &[String], io: &mut Io) -> Result {
             to.display()
         ));
     }
-    std::fs::rename(&from, &to)
+    crate::atomic::move_entry(&from, &to)
         .map_err(|e| format!("{} can't be moved to {}: {e}", from.display(), to.display()))?;
     io.line(&to.display().to_string());
     Ok(0)

@@ -1,13 +1,13 @@
+import IMAGE_TYPES from "../editor/images/image-types.json";
 import { fs, themes } from "../platform/ipc";
-import { withWebFonts } from "./web-fonts";
+import { IMPORT_RE, withWebFonts } from "./web-fonts";
+import { isInside } from "../utils/path";
 import type { UserThemeMeta } from "../prefs/SettingsContext";
 
 /// Typora themes often `@import` a sibling stylesheet and use relative
 /// `url(...)` assets, neither of which resolves in a runtime `<style>`. So
 /// imports are inlined recursively and local assets embedded as data URIs.
 
-const IMPORT_RE =
-  /@import\s+(?:url\(\s*["']?([^"')]+)["']?\s*\)|["']([^"']+)["'])\s*;/g;
 const URL_RE = /url\(\s*["']?([^"')]+)["']?\s*\)/g;
 
 const MIME_BY_EXT: Record<string, string> = {
@@ -15,12 +15,7 @@ const MIME_BY_EXT: Record<string, string> = {
   woff: "font/woff",
   ttf: "font/ttf",
   otf: "font/otf",
-  png: "image/png",
-  jpg: "image/jpeg",
-  jpeg: "image/jpeg",
-  gif: "image/gif",
-  svg: "image/svg+xml",
-  webp: "image/webp",
+  ...IMAGE_TYPES,
 };
 
 function isRemoteOrData(target: string): boolean {
@@ -44,9 +39,10 @@ function resolvePath(baseDir: string, rel: string): string {
   return stack.join("/");
 }
 
-function guessMime(path: string): string {
+/** A font or picture's type by its extension; null for anything else. */
+function mimeOf(path: string): string | null {
   const ext = path.slice(path.lastIndexOf(".") + 1).toLowerCase();
-  return MIME_BY_EXT[ext] ?? "application/octet-stream";
+  return MIME_BY_EXT[ext] ?? null;
 }
 
 async function inlineLocalUrls(css: string, baseDir: string): Promise<string> {
@@ -63,10 +59,17 @@ async function inlineLocalUrls(css: string, baseDir: string): Promise<string> {
       result += m[0];
       continue;
     }
+    const resolved = resolvePath(baseDir, target);
+    const mime = mimeOf(resolved);
+    // Only the theme's own fonts and pictures, beside it: a url() naming
+    // any other file is left as written, not copied into the theme.
+    if (!mime || !isInside(resolved, baseDir)) {
+      result += m[0];
+      continue;
+    }
     try {
-      const resolved = resolvePath(baseDir, target);
       const base64 = await fs.readBinaryFileBase64(resolved);
-      result += `url("data:${guessMime(resolved)};base64,${base64}")`;
+      result += `url("data:${mime};base64,${base64}")`;
     } catch {
       result += m[0]; // asset missing/unreadable - leave the original reference (best effort)
     }
@@ -84,18 +87,21 @@ async function inlineFile(path: string, seen: Set<string>): Promise<string> {
 
   let withImports = "";
   let lastIndex = 0;
-  IMPORT_RE.lastIndex = 0;
-  let m: RegExpExecArray | null;
-  while ((m = IMPORT_RE.exec(raw))) {
+  // matchAll reads its own copy: an import inlined meanwhile can't move
+  // this loop's place.
+  for (const m of raw.matchAll(IMPORT_RE)) {
     const target = m[1] ?? m[2];
     withImports += raw.slice(lastIndex, m.index);
-    lastIndex = IMPORT_RE.lastIndex;
+    lastIndex = m.index + m[0].length;
 
     if (!target || isRemoteOrData(target)) {
       withImports += m[0];
       continue;
     }
-    withImports += await inlineFile(resolvePath(baseDir, target), seen);
+    const text = await inlineFile(resolvePath(baseDir, target), seen);
+    // `@import "x.css" print;`: the sheet for those media only.
+    const media = m[3].trim();
+    withImports += media ? `@media ${media} {\n${text}\n}` : text;
   }
   withImports += raw.slice(lastIndex);
 

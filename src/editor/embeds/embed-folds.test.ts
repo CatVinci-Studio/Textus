@@ -1,15 +1,15 @@
-import { beforeEach, describe, expect, it, vi } from "vitest";
-
-const kept = new Map<string, unknown>();
-vi.mock("../../storage/ui-state", () => ({
-  getUiState: (key: string) => kept.get(key),
-  setUiState: (key: string, value: unknown) => kept.set(key, value),
-}));
-
-const { embedFolded, setEmbedFolded } = await import("./embed-folds");
+// @vitest-environment jsdom
+import { beforeAll, beforeEach, describe, expect, it } from "vitest";
+import { installTestLocalStorage } from "../../dev/test-local-storage";
+import { resetUiStateForTests, setUiState } from "../../storage/ui-state";
+import { embedFolded, setEmbedFolded } from "./embed-folds";
 
 describe("folded embeds", () => {
-  beforeEach(() => kept.clear());
+  beforeAll(installTestLocalStorage);
+  beforeEach(() => {
+    localStorage.clear();
+    resetUiStateForTests();
+  });
 
   it("are remembered until unfolded", () => {
     setEmbedFolded("a.md\nb.md#", true);
@@ -27,9 +27,9 @@ describe("folded embeds", () => {
   });
 
   it("ignore what isn't a list of keys", () => {
-    kept.set("foldedEmbeds", "nonsense");
+    setUiState("foldedEmbeds", "nonsense" as unknown as string[]);
     expect(embedFolded("nonsense")).toBe(false);
-    kept.set("foldedEmbeds", ["a", 3]);
+    setUiState("foldedEmbeds", ["a", 3] as unknown as string[]);
     expect(embedFolded("a")).toBe(true);
   });
 });

@@ -145,6 +145,8 @@ made when they are first shown.
 | `settingsPage`  | `{ title }`: a page of the plugin's own under its settings, a webview.                                                                                                                                                                                                                                                                                                                                                                                                                                                                           |
 | `floatingViews` | `{ id, title, width, height, place }`: a small transparent page that floats over the desktop or in Textus's window (`place`: `"either"`, `"desktop"`, `"window"`), shown with `layout.openFloating`. It opens in the window unless `place` is `"desktop"`. Its page is looked at, not clicked: the user drags it anywhere, resizes it in proportion from its top corner (0.6× to 1.4×, so lay the page out to its viewport) and folds, closes or moves it from its right-click menu. `side` in its state says which half it sits in. From 1.3.6. |
 
+| `agents` | `{ id, name, command, args, env, setup, provider }`: an AI agent on the user's computer that speaks the [Agent Client Protocol](https://agentclientprotocol.com) on stdio (Claude Agent, Codex, Gemini CLI…), offered in Textus AI's model menu under Agents. Textus starts `command` itself, found on the PATH a terminal would have; `{pluginDir}` in `args` and `env` is the plugin's folder; `setup` says how to install it and sign in, shown when it can't start; `provider` names whose models it runs (`"anthropic"`, `"openai"`), what `ai.onDidChangeState` tells other plugins while it works. Needs `agents`; desktop only. From 1.3.13. |
+
 A menu item's `when` is a small expression over the moment it is shown:
 `editorHasSelection`, `fileExtension == .pdf`, `view == jane.tasks.list`,
 `isMac`, joined with `&&`, `||` and `!`.
@@ -167,6 +169,7 @@ turning it on, or leaves it off, and can take each back later.
 | `ai.tools`       | give Textus AI tools to call                                                           |
 | `notifications`  | show system notifications, at once or on a schedule (API 1.1)                          |
 | `background`     | run its `background` code on a schedule, also with every window closed (API 1.1)       |
+| `agents`         | run the AI agents it names in `contributes.agents` (programs on this computer; 1.3.13) |
 | `network:<host>` | fetch from that host over HTTPS (`*.example.com`, `host:port`, `*` for the open web)   |
 
 Ask for what the plugin's purpose explains, and no more: each permission
@@ -210,9 +213,10 @@ The rest of this section goes by what you want to do. The
 ### Commands and dialogs - `commands`, `ui`
 
 `commands.register(id, run)` for a command of the manifest's;
-`commands.execute(id, ...args)` runs any command - Textus's own
-(`textus.save`, `textus.closeTab` with `{ save: true }`) or another
-plugin's. `textus.offerPlugin` with `{ id }` suggests an official
+`commands.execute(id, ...args)` runs a command - Textus's own
+(`textus.save`, `textus.closeTab` with `{ save: true }`), yours, or one
+another plugin lists in its manifest, with the permission
+`commands:<that plugin's id>`. `textus.offerPlugin` with `{ id }` suggests an official
 plugin that works well with yours - the user decides, and it resolves
 whether that plugin is on (best from something the user does; never
 await it in `activate`, which has 10 seconds). `ui` draws Textus's own
@@ -417,7 +421,8 @@ await textus.notify.show({ title: "Exported", body: "notes.pdf" }); // now
 ## What a plugin can't do
 
 Change how the editor itself works (its schema, its rendering), read
-another plugin's data, run native code, or reach the network or files
+another plugin's data, run native code (an agent in `contributes.agents`
+is a program Textus starts and talks to, not code in the plugin), or reach the network or files
 beyond what it was granted. A plugin that stops answering, or throws more
 than ten errors a minute, is turned off and the user is told.
 

@@ -1,10 +1,11 @@
 import { invoke } from "@tauri-apps/api/core";
 import { isDesktopApp } from "./capabilities";
-import { AI_OFF, aiRequestsAllowed } from "./ai-gate";
+import { aiRequestsAllowed } from "./ai-gate";
+import { TEXTUS_AI_OFF as AI_OFF } from "./bindings/ai";
 import { commands as aiCommands } from "./bindings/ai";
 import { commands as aiAgentCommands } from "./bindings/ai-agent";
-import { commands as aiConventionsCommands } from "./bindings/ai-conventions";
 import { commands as aiMemoryCommands } from "./bindings/ai-memory";
+import { commands as aiPaperCommands } from "./bindings/ai-paper";
 import { commands as aiProjectCommands } from "./bindings/ai-project";
 import { commands as aiSkillsCommands } from "./bindings/ai-skills";
 import { commands as appCommands } from "./bindings/app";
@@ -36,8 +37,8 @@ export class IpcError extends Error {
 const commands = {
   ...aiCommands,
   ...aiAgentCommands,
-  ...aiConventionsCommands,
   ...aiMemoryCommands,
+  ...aiPaperCommands,
   ...aiProjectCommands,
   ...aiSkillsCommands,
   ...appCommands,
@@ -48,7 +49,7 @@ const commands = {
 };
 type Commands = typeof commands;
 /** A backend command with generated types: its name, as Rust registers it. */
-export type Command = keyof Commands;
+type Command = keyof Commands;
 type Args<K extends Command> = Parameters<Commands[K]>;
 // A command answering `Result<(), _>` is generated as answering `null`,
 // one answering `()` as `void`; both are nothing to the caller.
@@ -60,7 +61,7 @@ type Answer<K extends Command> = [Awaited<ReturnType<Commands[K]>>] extends [
 
 /**
  * Calls a generated command, type-checked against the Rust signature.
- * Commands not generated (struct inputs, raw bytes, iOS-only) use `call`.
+ * Commands answering raw bytes, which aren't generated, use `call`.
  */
 export async function command<K extends Command>(
   name: K,
@@ -74,7 +75,8 @@ export async function command<K extends Command>(
   }
 }
 
-/** `aiCall` for a generated command. */
+/** A command that sends something to an AI service, refused here while
+ *  Textus AI is off: the backstop for an entry point that missed the switch. */
 export function aiCommand<K extends Command>(
   name: K,
   ...args: Args<K>
@@ -114,23 +116,4 @@ export async function call<T>(command: string, args?: object): Promise<T> {
   } catch (err) {
     throw new IpcError(command, err);
   }
-}
-
-/**
- * A command that sends something to an AI service, refused here while
- * Textus AI is off: the backstop for an entry point that missed the switch.
- */
-export function aiCall<T>(command: string, args?: object): Promise<T> {
-  return aiRequestsAllowed()
-    ? call<T>(command, args)
-    : Promise.reject(new IpcError(command, AI_OFF));
-}
-
-/** A desktop-only command: rejects on iOS, where Rust doesn't register it. */
-export function desktopAction<T>(command: string, args?: object): Promise<T> {
-  return isDesktopApp
-    ? call<T>(command, args)
-    : Promise.reject(
-        new IpcError(command, new Error("not available on this platform")),
-      );
 }

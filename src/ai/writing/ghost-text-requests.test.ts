@@ -1,6 +1,7 @@
+import { createTestEditor } from "../../document-view/editor-test-harness";
 // @vitest-environment jsdom
 import { afterEach, beforeEach, expect, it, vi } from "vitest";
-import { closeViews, openView } from "../../document-view/editor-view-kit";
+import { closeViews, openView } from "../../editor/editor-view-kit";
 import type { Settings } from "../../prefs/SettingsContext";
 
 // When typing asks for a completion: after a pause at the end of prose,
@@ -25,7 +26,7 @@ const open = async (
   const t = await openView(
     markdown,
     { language, textusAi: true, enableCompletion: true },
-    { ai: true },
+    (md, settings) => createTestEditor(md, settings, { ai: true }),
   );
   vi.useFakeTimers();
   return t;

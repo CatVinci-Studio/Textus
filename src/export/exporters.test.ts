@@ -8,7 +8,12 @@ const mocks = vi.hoisted(() => ({
     revealInDir: vi.fn(),
   },
   showMessage: vi.fn(),
-  fs: { readBinaryFileBase64: vi.fn(), writeTextFile: vi.fn() },
+  fs: {
+    readBinaryFileBase64: vi.fn(),
+    writeTextFile: vi.fn(),
+    documentLinkRoot: vi.fn().mockResolvedValue(null),
+    fileMtimeMs: vi.fn().mockResolvedValue(null),
+  },
 }));
 
 vi.mock("../platform/ipc", () => ({
@@ -20,20 +25,15 @@ vi.mock("../platform/capabilities", () => ({
   canExportPdf: true,
   canExportWithPandoc: true,
 }));
-vi.mock("../ui/app-dialog", () => ({
+vi.mock("../engine/controls/app-dialog", () => ({
   showMessage: mocks.showMessage,
   showConfirm: vi.fn(),
 }));
 
 import type { Strings } from "../i18n/strings";
 import type { DocTab } from "../document/doc-tabs";
-import {
-  buildStandaloneHtml,
-  cloneEditorContent,
-  exportHtml,
-  exportPdf,
-  pdfLayoutCss,
-} from "./exporters";
+import { exportHtml, exportPdf, pdfLayoutCss } from "./exporters";
+import { buildStandaloneHtml, cloneEditorContent } from "./standalone-html";
 import { MAC_PAGE, WINDOWS_PAGE } from "./paginate";
 
 function editor(html: string): HTMLElement {
@@ -284,7 +284,7 @@ describe("exportPdf", () => {
 
   it("takes the progress overlay down before it reports a failure", async () => {
     document.body.innerHTML =
-      '<div data-active-tab="true"><div class="milkdown"><p>x</p></div></div>';
+      '<div class="main-pane"><div data-tab-id="1"><div class="milkdown"><p>x</p></div></div></div>';
     mocks.exportDoc.exportSaveDialog.mockResolvedValue("/tmp/a.pdf");
     mocks.exportDoc.exportPdfNative.mockRejectedValue("Printer not found");
     let overlayUnderMessage: Element | null = null;
@@ -305,7 +305,7 @@ describe("exportPdf", () => {
 
   it("asks Rust for page numbers only when the setting is on", async () => {
     document.body.innerHTML =
-      '<div data-active-tab="true"><div class="milkdown"><p>x</p></div></div>';
+      '<div class="main-pane"><div data-tab-id="1"><div class="milkdown"><p>x</p></div></div></div>';
     mocks.exportDoc.exportSaveDialog.mockResolvedValue("/tmp/a.pdf");
     mocks.exportDoc.exportPdfNative.mockReset().mockResolvedValue(undefined);
     mocks.exportDoc.revealInDir.mockResolvedValue(undefined);
@@ -328,7 +328,7 @@ describe("exportPdf", () => {
     const mac = await import("./exporters");
     document.documentElement.setAttribute("data-theme", "dark");
     document.body.innerHTML =
-      '<div data-active-tab="true"><div class="milkdown"><p>x</p></div></div>';
+      '<div class="main-pane"><div data-tab-id="1"><div class="milkdown"><p>x</p></div></div></div>';
     mocks.exportDoc.exportSaveDialog.mockResolvedValue("/tmp/a.pdf");
     mocks.exportDoc.exportPdfNative.mockReset().mockResolvedValue(undefined);
     try {
@@ -365,13 +365,36 @@ describe("exportPdf", () => {
     expect(html).not.toContain("asset://");
     expect(html).not.toContain("data-doc-src");
   });
+
+  it("finds a /-rooted image under the document's link root, as shown", async () => {
+    document.body.innerHTML = activeEditorWithImage.replace(
+      'data-doc-src="assets/my%20pic.png"',
+      'data-doc-src="/assets/my%20pic.png"',
+    );
+    mocks.exportDoc.exportSaveDialog.mockResolvedValue("/tmp/b.pdf");
+    mocks.exportDoc.exportPdfNative.mockReset().mockResolvedValue(undefined);
+    mocks.fs.readBinaryFileBase64.mockReset().mockResolvedValue("QUJD");
+    mocks.fs.documentLinkRoot.mockResolvedValue("/docs");
+    mocks.fs.fileMtimeMs.mockImplementation(async (p: string) =>
+      p === "/docs/assets/my pic.png" ? 1 : null,
+    );
+    const img = document.querySelector("img")!;
+    Object.defineProperty(img, "complete", { value: true });
+    Object.defineProperty(img, "naturalWidth", { value: 10 });
+
+    await exportPdf({ ...tab, path: "/docs/b.md" }, t);
+
+    expect(mocks.fs.readBinaryFileBase64).toHaveBeenCalledWith(
+      "/docs/assets/my pic.png",
+    );
+  });
 });
 
 // The editor's image as shown: an asset: URL, with the markdown's src beside it.
 const activeEditorWithImage =
-  '<div data-active-tab="true"><div class="milkdown"><p>' +
+  '<div class="main-pane"><div data-tab-id="1"><div class="milkdown"><p>' +
   '<img src="asset://localhost/%2Fdocs%2Fassets%2Fmy%20pic.png" data-doc-src="assets/my%20pic.png">' +
-  "</p></div></div>";
+  "</p></div></div></div>";
 
 describe("exportHtml", () => {
   const t = { exportFailedTitle: "Export failed" } as Strings;
@@ -397,5 +420,15 @@ describe("exportHtml", () => {
     const html = await exported("/elsewhere/a.html");
     expect(html).toContain('src="data:image/png;base64,QUJD"');
     expect(html).not.toContain("assets/my");
+  });
+});
+
+describe("what an export drops", () => {
+  it("is the same for a printed page as for an HTML file", async () => {
+    const { readFileSync } = await import("node:fs");
+    const { EDITOR_CHROME_SELECTOR } = await import("./standalone-html");
+    const print = readFileSync("src/export/print.css", "utf8");
+    for (const selector of EDITOR_CHROME_SELECTOR.split(", "))
+      expect(print, selector).toContain(selector);
   });
 });

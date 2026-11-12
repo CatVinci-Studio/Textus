@@ -45,20 +45,13 @@ fn marker_path(dirs: &MemoryDirs) -> Option<PathBuf> {
 
 /// The last tidy: when (seconds) and how many memories there were after it.
 fn last_tidy(dirs: &MemoryDirs) -> Option<(u64, usize)> {
-    let text = std::fs::read_to_string(marker_path(dirs)?).ok()?;
-    let value: serde_json::Value = serde_json::from_str(&text).ok()?;
+    let value: serde_json::Value = crate::json_file::read_or_set_aside(&marker_path(dirs)?)?;
     Some((value["at"].as_u64()?, value["count"].as_u64()? as usize))
 }
 
 fn mark_tidied(dirs: &MemoryDirs, count: usize, at: u64) {
     if let Some(path) = marker_path(dirs) {
-        if let Some(dir) = path.parent() {
-            let _ = std::fs::create_dir_all(dir);
-        }
-        let _ = std::fs::write(
-            path,
-            serde_json::json!({ "at": at, "count": count }).to_string(),
-        );
+        let _ = crate::json_file::save(&path, &serde_json::json!({ "at": at, "count": count }));
     }
 }
 

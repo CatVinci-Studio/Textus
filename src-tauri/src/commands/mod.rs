@@ -2,7 +2,6 @@
 //! `#[cfg(desktop)]` modules are about OS windows or the desktop shell (and
 //! `tree_ops`, also `#[cfg(desktop)]`); `documents` is `#[cfg(mobile)]`.
 
-pub mod args;
 pub mod attachment;
 #[cfg(desktop)]
 pub mod chat_window;
@@ -12,6 +11,7 @@ pub mod cli;
 pub mod clipboard;
 #[cfg(desktop)]
 pub mod default_editor;
+pub mod doc_data;
 #[cfg(mobile)]
 pub mod documents;
 pub mod drafts;
@@ -24,6 +24,8 @@ pub mod fs;
 pub mod image_host;
 pub mod input_source;
 pub mod link_root;
+#[cfg(desktop)]
+pub mod linked_file;
 pub mod links;
 #[cfg(desktop)]
 pub mod native_edit;

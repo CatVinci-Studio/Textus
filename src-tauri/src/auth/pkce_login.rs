@@ -58,21 +58,42 @@ async fn wait_for_callback(
     timeout_secs: u64,
 ) -> Result<String, String> {
     let (tx, rx) = mpsc::channel::<String>();
+    // A sign-in left unfinished still holds the port until it times out:
+    // a new one takes over (the old one ends as cancelled).
+    let _ = tauri_plugin_oauth::cancel(port);
 
-    tauri_plugin_oauth::start_with_config(
-        tauri_plugin_oauth::OauthConfig {
-            ports: Some(vec![port]),
-            response: Some(response_html.into()),
-            ..Default::default()
-        },
-        move |url| {
-            let _ = tx.send(url);
-        },
-    )
+    // The old listener lets the port go a moment after it is cancelled.
+    let mut tries = 0;
+    loop {
+        let tx = tx.clone();
+        match tauri_plugin_oauth::start_with_config(
+            tauri_plugin_oauth::OauthConfig {
+                ports: Some(vec![port]),
+                response: Some(response_html.clone().into()),
+                ..Default::default()
+            },
+            move |url| {
+                let _ = tx.send(url);
+            },
+        ) {
+            Ok(_) => break,
+            Err(_) if tries < 10 => {
+                tries += 1;
+                tokio::time::sleep(Duration::from_millis(200)).await;
+            }
+            Err(e) => return Err(e.to_string()),
+        }
+    }
+    drop(tx);
+
+    let got = tauri::async_runtime::spawn_blocking(move || {
+        rx.recv_timeout(Duration::from_secs(timeout_secs))
+    })
+    .await
     .map_err(|e| e.to_string())?;
-
-    tauri::async_runtime::spawn_blocking(move || rx.recv_timeout(Duration::from_secs(timeout_secs)))
-        .await
-        .map_err(|e| e.to_string())?
-        .map_err(|_| "login timed out or was cancelled".to_string())
+    // Not answered: the port is let go, or the next sign-in can't take it.
+    if got.is_err() {
+        let _ = tauri_plugin_oauth::cancel(port);
+    }
+    got.map_err(|_| "login timed out or was cancelled".to_string())
 }

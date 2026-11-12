@@ -29,9 +29,9 @@ fn language_dir(language: &str) -> Option<&'static str> {
     })
 }
 
-/// The clips on the website's tutorials page, each an element id there. Keep
-/// in step with TUTORIAL_CLIPS in tutorial-steps.ts.
-const TUTORIAL_CLIPS: &[&str] = &[
+/// The clips on the website's tutorials page, each an element id there; the
+/// tutorial's steps read them from the bindings.
+pub(crate) const TUTORIAL_CLIPS: &[&str] = &[
     "wysiwyg",
     "blocks",
     "modes-themes",

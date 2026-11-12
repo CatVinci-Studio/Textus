@@ -26,7 +26,7 @@ mod zh;
 mod zhdata;
 
 pub use detect::Lang;
-pub use document::{check_document, DocReport};
+pub use document::check_document;
 pub use profile::{Conventions, Profile, ProjectConventions};
 pub(crate) use stats::Stats;
 

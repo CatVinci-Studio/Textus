@@ -51,11 +51,22 @@ pub fn settings_patch(
     app: AppHandle,
     window: tauri::WebviewWindow,
     stores: tauri::State<Stores>,
-    patch: Map<String, Value>,
+    mut patch: Map<String, Value>,
 ) -> u64 {
+    // MCP servers' secrets go to the key store before any window hears them.
+    #[cfg(desktop)]
+    if let Some(servers) = patch.get_mut(crate::mcp::SERVERS_KEY) {
+        crate::mcp::secrets::seal(&app, servers);
+    }
     let rev = stores.patch_settings(&patch);
     if patch.contains_key("theme") {
         theme_changed(&app);
+    }
+    if ["proxyType", "proxyHost", "proxyPort"]
+        .iter()
+        .any(|key| patch.contains_key(*key))
+    {
+        proxy_changed(&stores.settings.snapshot().0);
     }
     // Background mode's tray follows the setting and the UI language.
     #[cfg(desktop)]
@@ -182,7 +193,7 @@ pub fn history_upsert(
 }
 
 /// Every conversation and memory, for a settings file.
-#[tauri::command]
+#[tauri::command(async)]
 #[cfg_attr(test, specta::specta)]
 pub fn ai_records_export(
     app: AppHandle,
@@ -194,7 +205,7 @@ pub fn ai_records_export(
 
 /// Adds a settings file's conversations and memories; every window's history
 /// hears of each conversation saved.
-#[tauri::command]
+#[tauri::command(async)]
 #[cfg_attr(test, specta::specta)]
 pub fn ai_records_import(
     app: AppHandle,
@@ -269,7 +280,7 @@ pub fn history_clear(
 }
 
 /// One saved conversation whole, turns included. `None` when its file is gone.
-#[tauri::command]
+#[tauri::command(async)]
 #[cfg_attr(test, specta::specta)]
 pub fn chat_history_get(stores: tauri::State<Stores>, id: String) -> Option<Value> {
     stores.chat.get(&id)
@@ -277,21 +288,21 @@ pub fn chat_history_get(stores: tauri::State<Stores>, id: String) -> Option<Valu
 
 /// The saved conversations with every word of `query` in a message or a
 /// reply, newest first (the history list's search).
-#[tauri::command]
+#[tauri::command(async)]
 #[cfg_attr(test, specta::specta)]
 pub fn chat_history_search(stores: tauri::State<Stores>, query: String) -> Vec<Value> {
     stores.chat.search(&query, 50)
 }
 
 /// How many older conversations sit in the chat history's trash.
-#[tauri::command]
+#[tauri::command(async)]
 #[cfg_attr(test, specta::specta)]
 pub fn chat_history_archived(stores: tauri::State<Stores>) -> usize {
     stores.chat.archived()
 }
 
 /// A document saved under a new path: its conversations follow it.
-#[tauri::command]
+#[tauri::command(async)]
 #[cfg_attr(test, specta::specta)]
 pub fn chat_history_move_document(
     app: AppHandle,
@@ -299,9 +310,19 @@ pub fn chat_history_move_document(
     from: String,
     to: String,
 ) {
-    if stores.chat.move_document(&from, &to) {
+    move_conversations(&app, &stores, &[(from, to)]);
+}
+
+/// The conversations of each `(from, to)` document follow it; every window's
+/// history list is told once if any moved.
+pub fn move_conversations(app: &AppHandle, stores: &Stores, pairs: &[(String, String)]) {
+    let mut any = false;
+    for (from, to) in pairs {
+        any |= stores.chat.move_document(from, to);
+    }
+    if any {
         emit_to_all(
-            &app,
+            app,
             "history-changed",
             HistoryChanged {
                 kind: HistoryKind::Chat,

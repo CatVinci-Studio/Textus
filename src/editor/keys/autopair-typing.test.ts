@@ -1,6 +1,6 @@
 // @vitest-environment jsdom
 import { afterEach, expect, it } from "vitest";
-import { closeViews, openView } from "../../document-view/editor-view-kit";
+import { closeViews, openView } from "../editor-view-kit";
 import { parseLink } from "../markdown/link-syntax";
 
 // Brackets, quotes and Markdown links typed by hand: what closes itself,

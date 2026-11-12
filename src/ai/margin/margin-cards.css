@@ -1,0 +1,308 @@
+/* Review notes in the margin. The text column's margin-left is set at once
+   while the column glides there on its transform. */
+.editor-scroll.review-notes-on {
+  position: relative;
+}
+
+.review-margin {
+  position: absolute;
+  inset: 0 auto auto 0;
+  width: 0;
+  height: 0;
+  z-index: 5;
+}
+
+.review-links {
+  position: absolute;
+  left: 0;
+  top: 0;
+  width: 1px;
+  height: 1px;
+  overflow: visible;
+  pointer-events: none;
+}
+
+.review-links path {
+  fill: none;
+  stroke: var(--review-note-line);
+  stroke-width: 1.2;
+  opacity: 0.7;
+  stroke-dasharray: 1;
+  animation: review-link-draw calc(var(--dur-base) * 3) var(--ease-out) both;
+  animation-delay: calc(var(--dur-instant) * 2);
+  transition:
+    opacity var(--dur-fast) var(--ease-standard),
+    stroke-width var(--dur-fast) var(--ease-standard);
+}
+
+.review-links path.hot {
+  opacity: 1;
+  stroke-width: 1.7;
+}
+
+/* A card stacked far below its passage: its line is there, fainter. */
+.review-links path.far {
+  opacity: 0.35;
+  stroke-width: 1;
+}
+
+@keyframes review-link-draw {
+  from {
+    stroke-dashoffset: 1;
+  }
+  to {
+    stroke-dashoffset: 0;
+  }
+}
+
+.review-note {
+  position: absolute;
+  box-sizing: border-box;
+  padding: 8px 12px 8px;
+  border-radius: var(--shape-m);
+  border: 1px solid var(--review-note-border);
+  background: var(--review-note-bg);
+  color: var(--ui-text);
+  font-family: var(--font-ui, inherit);
+  font-size: var(--text-secondary);
+  line-height: 1.55;
+  /* A card is its hairline; the shadow comes only under the pointer and
+     when a cut card opens over the ones below. */
+  /* A card glides on `translate`, never `top`, which would lay the margin
+     out on every frame. */
+  transition: transform var(--dur-fast) var(--ease-out);
+  --enter-x: calc(var(--motion-distance-md) * 1.75);
+  animation: motion-enter var(--dur-slow) var(--ease-out) both;
+}
+
+/* The deeper shadow under the pointer fades in on a layer of its own:
+   the shadow's own size never animates. */
+.review-note::after {
+  content: "";
+  position: absolute;
+  inset: -1px;
+  border-radius: inherit;
+  box-shadow: var(--shadow-card-hover);
+  opacity: 0;
+  pointer-events: none;
+  transition: opacity var(--dur-fast) var(--ease-out);
+}
+
+.review-note-hot {
+  /* Still under reduced motion: the darker tint says it alone. */
+  transform: translateX(calc(var(--motion-distance-sm) * -0.75));
+}
+
+.review-note-hot::after {
+  opacity: 1;
+}
+
+.review-note-by {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  margin-bottom: 2px;
+  font-size: var(--text-caption);
+  color: var(--ui-muted);
+}
+
+.review-note-mark {
+  display: inline-grid;
+  place-items: center;
+  width: calc(16px * var(--ui-text-scale, 1));
+  height: calc(16px * var(--ui-text-scale, 1));
+  border-radius: 50%;
+  corner-shape: round;
+  background: color-mix(in srgb, var(--ui-accent) 14%, transparent);
+  color: var(--ui-accent-text);
+  font-size: var(--text-mark);
+  font-weight: 600;
+}
+
+/* The writer's own note: its mark in the text colour, not the AI's
+   accent, so whose note it is reads at a glance. */
+.review-note-mark-me {
+  background: color-mix(in srgb, var(--ui-text) 12%, transparent);
+  color: var(--ui-text);
+}
+
+.review-note-text {
+  white-space: pre-wrap;
+  overflow-wrap: anywhere;
+}
+
+/* The actions' room arrives at once and they settle into it: growing the
+   card's height would restack the margin on every frame. */
+.review-note-actions {
+  display: flex;
+  gap: 8px;
+  max-height: 0;
+  margin-top: 0;
+  overflow: hidden;
+  opacity: 0;
+  transform: translateY(calc(var(--motion-distance-sm) * -1));
+  transition:
+    opacity var(--dur-fast) var(--ease-out),
+    transform var(--dur-fast) var(--ease-out);
+}
+
+.review-note:is(:hover, :focus-within, .review-note-hot, .review-note-popover)
+  .review-note-actions {
+  max-height: 32px;
+  margin-top: 8px;
+  opacity: 1;
+  transform: none;
+}
+
+.review-note-actions button {
+  padding: 2px 8px;
+  border-radius: var(--shape-pill);
+  corner-shape: round;
+  border: 1px solid var(--review-note-border);
+  background: var(--ui-surface);
+  color: var(--ui-text);
+  font: inherit;
+  font-size: var(--text-caption);
+  cursor: pointer;
+}
+
+.review-note-actions button:hover {
+  border-color: var(--review-note-line);
+}
+
+/* A card of a crowded run, cut to its heading and a line; keep its height in
+   step with CHIP_HEIGHT. */
+.review-note-chip {
+  overflow: hidden;
+  padding-block: 2px;
+}
+
+/* Its heading a small line over its text, so a chip stands beside a line
+   of the document as one line did. */
+.review-note-chip .review-note-by {
+  height: 12px;
+  margin: 0;
+  font-size: var(--text-caption);
+  line-height: 12px;
+}
+
+.review-note-chip :is(.revision-note-num, .review-note-num) {
+  min-width: 12px;
+  height: 12px;
+  font-size: var(--text-mark);
+}
+
+.review-note-chip .revision-note-pick {
+  margin-block: -4px;
+  transform: scale(0.85);
+  transform-origin: right center;
+}
+
+.review-note-chip-text {
+  font-size: var(--text-body);
+  line-height: 16px;
+}
+
+.review-note-chip-text {
+  display: block;
+}
+
+.review-note-chip-text del {
+  color: var(--ui-muted);
+}
+
+.review-note-chip-text ins {
+  text-decoration: none;
+  color: var(--ui-accent-text);
+}
+
+/* A revision cut to its chip keeps the card's look: its number, then its
+   new text in the green box - not plain text, as a note's chip is. */
+.revision-note.review-note-chip .review-note-chip-text {
+  padding: 0 4px;
+  border-radius: var(--shape-xs);
+  background: var(--revision-insert-bg);
+}
+
+.revision-note.review-note-chip .review-note-chip-text:has(> s) {
+  background: var(--revision-delete-bg);
+  color: var(--ui-muted);
+}
+
+.revision-note-kept.review-note-chip .review-note-chip-text {
+  background: none;
+  opacity: 0.5;
+  text-decoration: line-through;
+}
+
+/* Picking on the notes bar: each note's box, top right. */
+.review-note-pick {
+  position: absolute;
+  top: 8px;
+  right: 10px;
+  /* Ticked in its note's own colour. */
+  --ui-accent-fill: var(--review-note-line);
+}
+
+.review-note:has(> .review-note-pick) {
+  padding-right: 32px;
+  cursor: pointer;
+}
+
+/* An opened group: its cards in a list over the margin, scrolling past a
+   screen's worth. */
+.review-note-group-open {
+  max-height: min(60vh, 520px);
+  overflow-y: auto;
+}
+
+.review-note-group-list {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+  margin-top: 8px;
+}
+
+.review-note-group-list > .review-note {
+  position: relative;
+  box-shadow: none;
+  animation: none;
+}
+
+/* A click selects a card (and opens a cut one). */
+.review-margin > .review-note {
+  cursor: pointer;
+}
+
+.review-note-group-head {
+  width: 100%;
+  border: none;
+  background: none;
+  padding: 0;
+  font: inherit;
+  color: inherit;
+  text-align: start;
+  cursor: pointer;
+}
+
+/* A card of a crowded run cut to the room beside its passage: it fades
+   out where it is cut. */
+.review-note-cut {
+  overflow: hidden;
+  mask-image: linear-gradient(to bottom, #000 calc(100% - 18px), transparent);
+}
+
+/* Opened, a cut card is whole, over the cards below: none of them moves. */
+.review-note-cut-open {
+  z-index: 3;
+  box-shadow: var(--shadow-card-hover);
+}
+
+.review-note-popover {
+  position: fixed;
+  /* Not the modal tier: portaled after the app, it would draw over
+     Settings' backdrop. */
+  z-index: var(--z-popover);
+  width: 260px;
+  animation: motion-pop-in var(--dur-fast) var(--ease-out);
+}

@@ -1,3 +1,5 @@
+import { fill } from "../../i18n/fill";
+import { askInComposer } from "../chat/composer-asks";
 import { useEffect, useMemo, useRef, useState } from "react";
 import { editorViewCtx } from "@milkdown/kit/core";
 import { TextSelection } from "@milkdown/kit/prose/state";
@@ -5,27 +7,25 @@ import type { EditorView } from "@milkdown/kit/prose/view";
 import type { EditorRunner } from "../../editor/useEditorRunner";
 import { revealPosition } from "../../editor/reveal-position";
 import {
-  commentCalls,
   numberNotes,
   reviewNotesKey,
   type ReviewNote,
 } from "./review-notes-plugin";
-import type { MarginItem } from "./ReviewMargin";
+import { commentCalls } from "../chat/comment-args";
+import { type MarginItem } from "./margin-layout";
 import { setMarginAvailable } from "./margin-room";
-import { blockAt, holdBlock } from "../../ui/hold-line";
-import type { AgentConversation } from "../chat/useAgentConversation";
+import { blockAt, holdBlock } from "../../engine/controls/hold-line";
+import type { AgentConversation } from "../chat/conversation/conversation-types";
 import type { AgentPanelFrame } from "../chat/panel/agent-panel";
-import {
-  locateTarget,
-  type usePendingEdits,
-} from "../revision/usePendingEdits";
+import { type usePendingEdits } from "../revision/usePendingEdits";
+import { locateTarget } from "../revision/pending-place";
 import {
   pendingEditKey,
   reviewChanges,
   type HotSentence,
   type PendingPreview,
   type PendingSentence,
-} from "../revision/pending-edit-plugin";
+} from "../revision/pending-types";
 import type { RevisionDisplay } from "../../prefs/SettingsContext";
 import type { Strings } from "../../i18n/strings";
 import { useLatest } from "../../utils/hooks/useLatest";
@@ -34,9 +34,9 @@ import { useOpenedCard } from "./margin-layout";
 import { useOwnNotes } from "./useOwnNotes";
 import { useOwnRevisions } from "./useOwnRevisions";
 import { OWN_CHANGES, ownRevisionKey } from "./own-revision-plugin";
-import { duration } from "../../ui/motion";
+import { duration } from "../../engine/motion/motion";
 import { addsTextOnly } from "../revision/revision-display";
-import { asDrawn, zoomedRectScale } from "../../ui/zoomed-rects";
+import { asDrawn, zoomedRectScale } from "../../engine/controls/zoomed-rects";
 import { noteOfAnchor } from "./review-notes-plugin";
 
 /** A proposal shown whole as a margin card's change: what it replaces and
@@ -70,6 +70,7 @@ function wholeChange(p: PendingPreview): PendingSentence | null {
 /** Review notes, the AI's and the writer's own, until done or cleared; also
  *  the margin's revision cards, which share their hover. */
 export function useReviewNotes({
+  isActive,
   run,
   reviewNotesRef,
   noMarginRef,
@@ -82,6 +83,8 @@ export function useReviewNotes({
   showAiNotice,
   filePath,
 }: {
+  /** The document on screen: the one Track My Changes' menu acts on. */
+  isActive: boolean;
   run: EditorRunner;
   /** The document's file, whose own notes are kept for it. */
   filePath: string | null;
@@ -235,27 +238,29 @@ export function useReviewNotes({
   // "Ask about it": into the AI panel's composer, the note quoted, for the
   // writer to finish the question.
   function askAboutNote(note: ReviewNote) {
-    askInPanel(t.reviewNoteAskPrefix.replace("{comment}", note.comment));
+    askInPanel(fill(t.reviewNoteAskPrefix, { comment: note.comment }));
   }
 
   // The notes bar's picked notes, asked about together.
   function askAboutNotes(picked: ReviewNote[]) {
     if (picked.length === 1) return askAboutNote(picked[0]);
     askInPanel(
-      t.reviewNotesAskPrefix.replace(
-        "{notes}",
-        picked.map((n) => `“${n.comment}”`).join("\n"),
-      ),
+      fill(t.reviewNotesAskPrefix, {
+        notes: picked.map((n) => `“${n.comment}”`).join("\n"),
+      }),
     );
   }
 
   const own = useOwnNotes({ run, filePath, notes, t });
-  const revisions = useOwnRevisions({ run, filePath, t });
+  const revisions = useOwnRevisions({ isActive, run, filePath, t });
 
   const bar = useNotesBar({
     notes,
     run,
-    revisionFocus: pendingEdits.focusedStop,
+    // By its key: the stop object is made again as the previews change.
+    revisionFocus: pendingEdits.focusedStop
+      ? `${pendingEdits.focusedStop.callId}:${pendingEdits.focusedStop.index}`
+      : null,
     onDone: doneNote,
     onAsk: askAboutNotes,
   });
@@ -264,20 +269,7 @@ export function useReviewNotes({
   function askInPanel(text: string) {
     setOpenNote(null);
     agentPanel.setOpen(true);
-    window.setTimeout(() => {
-      const box = document.querySelector<HTMLTextAreaElement>(
-        ".agent-panel-view textarea",
-      );
-      if (!box) return;
-      const setter = Object.getOwnPropertyDescriptor(
-        HTMLTextAreaElement.prototype,
-        "value",
-      )?.set;
-      setter?.call(box, text);
-      box.dispatchEvent(new Event("input", { bubbles: true }));
-      box.focus();
-      box.setSelectionRange(text.length, text.length);
-    }, 60);
+    askInComposer(text);
   }
 
   // No room for a margin: notes go behind badges and a rewrite's

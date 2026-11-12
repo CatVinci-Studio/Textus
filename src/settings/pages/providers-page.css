@@ -1,0 +1,65 @@
+/* Providers: the list, the picked one beside it; on a page too narrow for
+   both at their least, the picked one goes under the list (by its width,
+   not a breakpoint). */
+.providers-page {
+  display: flex;
+  flex-wrap: wrap;
+  gap: var(--space-4) var(--space-6);
+}
+
+.providers-list {
+  display: flex;
+  flex: 1 0 12em;
+  max-width: 16em;
+  flex-direction: column;
+  gap: 2px;
+}
+
+.providers-item-name {
+  flex: 1;
+}
+
+.providers-detail {
+  flex: 999 1 20em;
+  min-width: 0;
+  padding-top: 12px;
+}
+
+.providers-note {
+  color: var(--ui-muted);
+  font-size: var(--text-caption);
+}
+
+/* The list and the picked provider: one panel, framed as a group is; the
+   group's own card steps aside for it. */
+.settings-group-body:has(> .providers-page) {
+  padding: 0;
+  border: 0;
+  background: none;
+}
+.providers-page {
+  padding: var(--space-3);
+  border: 1px solid color-mix(in srgb, var(--ui-border) 75%, transparent);
+  border-radius: var(--shape-m);
+  background: var(--ui-subtle);
+}
+
+/* Its right side a sign-in panel: headings and rows, no boxes. */
+.providers-detail .settings-group-body {
+  padding: 0;
+  border: 0;
+  background: none;
+}
+.providers-detail .settings-group + .settings-group {
+  margin-top: var(--space-6);
+}
+/* The key: the panel's width, under its name (the rules above, for a
+   row side by side, leave it alone). */
+.providers-detail .settings-row:has(.api-key-input-row) {
+  flex-direction: column;
+  align-items: stretch;
+}
+
+.providers-detail .api-key-input {
+  max-width: none;
+}

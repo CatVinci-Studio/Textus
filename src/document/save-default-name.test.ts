@@ -35,6 +35,12 @@ describe("firstContentLine", () => {
     expect(firstContentLine("## Section name\n\nBody")).toBe("Section name");
   });
 
+  it("reads past a front matter left open instead of skipping the whole document", () => {
+    expect(firstContentLine("---\nNotes about harbours\n")).toBe(
+      "Notes about harbours",
+    );
+  });
+
   it("skips frontmatter, comments, rules, and fenced code", () => {
     expect(
       firstContentLine(
