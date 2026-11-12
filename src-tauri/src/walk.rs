@@ -399,3 +399,11 @@ mod tests {
         assert_eq!(rels(&all(dir.path(), &limits)), ["top.md"]);
     }
 }
+
+/// When a file was last changed, in milliseconds since 1970.
+pub(crate) fn modified_ms(meta: &std::fs::Metadata) -> Option<f64> {
+    meta.modified()
+        .ok()
+        .and_then(|t| t.duration_since(std::time::UNIX_EPOCH).ok())
+        .map(|d| d.as_millis() as f64)
+}

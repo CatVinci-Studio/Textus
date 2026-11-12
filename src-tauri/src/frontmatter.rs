@@ -65,3 +65,19 @@ mod tests {
         }
     }
 }
+
+/// The `.md` files in `dir` (files only, no folder named so), in file-name
+/// order; none when it can't be read.
+pub(crate) fn md_files(dir: &std::path::Path) -> Vec<std::path::PathBuf> {
+    let Ok(entries) = std::fs::read_dir(dir) else {
+        return Vec::new();
+    };
+    let mut paths: Vec<_> = entries
+        .flatten()
+        .filter(|e| e.file_type().is_ok_and(|t| t.is_file()))
+        .map(|e| e.path())
+        .filter(|p| p.extension().and_then(|e| e.to_str()) == Some("md"))
+        .collect();
+    paths.sort();
+    paths
+}

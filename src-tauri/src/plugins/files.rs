@@ -2,24 +2,12 @@
 //! no-overwrite create, a read-then-write that never loses a change), and the
 //! plugin's secrets. Each is checked against `state.json`.
 
-use super::access::granted_path;
+use super::access::{granted_path, FsEntry};
 use super::{require_id, state};
 use serde::Serialize;
 use sha2::{Digest, Sha256};
 use std::collections::BTreeMap;
 use tauri::Manager;
-
-/// A file's details (textus.files.stat).
-#[derive(Serialize)]
-#[cfg_attr(test, derive(specta::Type))]
-#[serde(rename_all = "camelCase")]
-pub struct FsStat {
-    name: String,
-    path: String,
-    is_dir: bool,
-    size: u64,
-    modified_ms: Option<f64>,
-}
 
 /// The file at `path`, or None when nothing is there.
 #[tauri::command]
@@ -29,25 +17,16 @@ pub async fn plugin_fs_stat(
     id: String,
     root: String,
     path: String,
-) -> Result<Option<FsStat>, String> {
+) -> Result<Option<FsEntry>, String> {
     let path = granted_path(&app, &id, "files.read", &root, &path)?;
     let Ok(meta) = tokio::fs::metadata(&path).await else {
         return Ok(None);
     };
-    Ok(Some(FsStat {
-        name: path
-            .file_name()
-            .map(|n| n.to_string_lossy().to_string())
-            .unwrap_or_default(),
-        path: path.to_string_lossy().to_string(),
-        is_dir: meta.is_dir(),
-        size: meta.len(),
-        modified_ms: meta
-            .modified()
-            .ok()
-            .and_then(|t| t.duration_since(std::time::UNIX_EPOCH).ok())
-            .map(|d| d.as_millis() as f64),
-    }))
+    let name = path
+        .file_name()
+        .map(|n| n.to_string_lossy().to_string())
+        .unwrap_or_default();
+    Ok(Some(FsEntry::of(name, &path, &meta)))
 }
 
 /// A new file holding `text`, and the folders it is in; refused when

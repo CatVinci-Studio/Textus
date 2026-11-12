@@ -35,7 +35,7 @@ export const commands = {
 	/**  Makes a folder (and the folders it is in) in the folder. */
 	plugin_fs_mkdir: (id: string, root: string, path: string) => __TAURI_INVOKE<null>("plugin_fs_mkdir", { id, root, path }),
 	/**  The file at `path`, or None when nothing is there. */
-	plugin_fs_stat: (id: string, root: string, path: string) => __TAURI_INVOKE<FsStat_Serialize | null>("plugin_fs_stat", { id, root, path }),
+	plugin_fs_stat: (id: string, root: string, path: string) => __TAURI_INVOKE<FsEntry_Serialize | null>("plugin_fs_stat", { id, root, path }),
 	/**
 	 *  A new file holding `text`, and the folders it is in; refused when
 	 *  something is there already.
@@ -161,27 +161,6 @@ export type FsEntry_Deserialize = {
 
 /**  One entry of a folder listing. */
 export type FsEntry_Serialize = {
-	name: string,
-	path: string,
-	isDir: boolean,
-	size: number,
-	modifiedMs: number | null,
-};
-
-/**  A file's details (textus.files.stat). */
-export type FsStat = FsStat_Serialize | FsStat_Deserialize;
-
-/**  A file's details (textus.files.stat). */
-export type FsStat_Deserialize = {
-	name: string,
-	path: string,
-	isDir: boolean,
-	size: number,
-	modifiedMs?: number | null,
-};
-
-/**  A file's details (textus.files.stat). */
-export type FsStat_Serialize = {
 	name: string,
 	path: string,
 	isDir: boolean,

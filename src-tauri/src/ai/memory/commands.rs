@@ -108,14 +108,16 @@ pub async fn save_offered_skill(
     // The warnings it was saved with were shown and saved through.
     confirmed: bool,
 ) -> Result<String, String> {
-    let dir = match Scope::parse(&scope).ok_or("Unknown scope.")? {
-        Scope::Personal => global_agent_dir(&app)?.join("skills"),
-        Scope::Project => crate::ai::workspace::project_dir(
-            &project_root(doc_path.as_deref(), workspace_root.as_deref())
-                .ok_or("This document has no project folder.")?,
-        )
-        .join("skills"),
+    let source = match Scope::parse(&scope).ok_or("Unknown scope.")? {
+        Scope::Personal => crate::ai::workspace::SkillSource::Global,
+        Scope::Project => crate::ai::workspace::SkillSource::Project,
     };
+    let dir = crate::ai::workspace::skills_dir(
+        &app,
+        source,
+        doc_path.as_deref(),
+        workspace_root.as_deref(),
+    )?;
     tauri::async_runtime::spawn_blocking(move || save_offer_in(&dir, &offer, &modes, confirmed))
         .await
         .map_err(|e| e.to_string())?

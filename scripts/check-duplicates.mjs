@@ -27,16 +27,13 @@ const IGNORE = [
 /** Copies there today, as "a | b" (sorted, from src/ or src-tauri/src/):
  *  how many each pair of files has. */
 const COPIES_NOW = {
-  "ai/agent/past.rs | ai/memory/files.rs": 1,
   "ai/chat/ChatBody.tsx | ai/chat/ChatBody.tsx": 1,
-  "ai/project/library.rs | ai/workspace/skills.rs": 1,
   "ai/revision/pending-accept.ts | ai/revision/pending-accept.ts": 1,
   "ai/rules/en/spelling.rs | ai/rules/shared.rs": 1,
   "ai/rules/ja/notation.rs | ai/rules/zh/spacing.rs": 1,
   "ai/rules/ru.rs | ai/rules/tw.rs": 1,
   "ai/rules/tw.rs | ai/rules/zh/wording.rs": 1,
   "ai/web/search.rs | ai/web/search.rs": 1,
-  "ai/workspace.rs | ai/workspace.rs": 1,
   "editor/images/obsidian-embed.ts | editor/markdown/wikilink.ts": 1,
   "editor/marks/enclosure-moves.ts | editor/marks/enclosure-moves.ts": 1,
   "plugins/metadata.rs | plugins/workspace.rs": 1,

@@ -175,11 +175,7 @@ fn list_dir_now(dir: &Path) -> Result<Vec<DirEntryInfo>, String> {
         let name = entry.file_name().to_string_lossy().to_string();
         let path = entry.path();
         let meta = entry.metadata().ok();
-        let modified_ms = meta
-            .as_ref()
-            .and_then(|m| m.modified().ok())
-            .and_then(|t| t.duration_since(std::time::UNIX_EPOCH).ok())
-            .map(|d| d.as_millis() as f64);
+        let modified_ms = meta.as_ref().and_then(crate::walk::modified_ms);
         items.push(DirEntryInfo {
             hidden: name.starts_with('.') || meta.as_ref().is_some_and(marked_hidden),
             name,

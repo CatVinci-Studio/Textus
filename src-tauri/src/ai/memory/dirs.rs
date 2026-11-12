@@ -119,14 +119,8 @@ impl MemoryDirs {
         let Some(dir) = self.folder(scope, MEMORY_FOLDER) else {
             return Vec::new();
         };
-        let Ok(entries) = std::fs::read_dir(&dir) else {
-            return Vec::new();
-        };
-        let mut items: Vec<Memory> = entries
-            .flatten()
-            .filter(|e| e.file_type().is_ok_and(|t| t.is_file()))
-            .map(|e| e.path())
-            .filter(|p| p.extension().and_then(|e| e.to_str()) == Some("md"))
+        let mut items: Vec<Memory> = crate::frontmatter::md_files(&dir)
+            .into_iter()
             .filter_map(|path| {
                 let stem = path.file_stem()?.to_str()?.to_string();
                 let content = std::fs::read_to_string(&path).ok()?;
