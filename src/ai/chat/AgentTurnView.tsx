@@ -22,6 +22,10 @@ import {
 import { Presence } from "../../engine/motion/usePresence";
 import { INSERT_MARKDOWN_EVENT } from "../../utils/events";
 import { normalizeAiMarkdown } from "../revision/apply-edit";
+import { CommandText } from "../agents/AgentPermission";
+
+/** A tool's note longer than this is cut to two lines until opened. */
+const LONG_ACTIVITY = 160;
 
 /** The main window, whose document a reply can go into. */
 const inEditorWindow = () =>
@@ -147,13 +151,20 @@ export function AgentTurnView({
           {menu.element}
         </div>
       );
-    case "ToolCall":
+    case "ToolCall": {
+      const activity = toolActivityText(turn.name, turn.arguments, labels);
+      // A long one (an agent's chained shell command) shows two lines.
       return (
         <div className="agent-tool-line">
           <SearchIcon className="agent-tool-icon" />
-          {toolActivityText(turn.name, turn.arguments, labels)}
+          {activity.length > LONG_ACTIVITY ? (
+            <CommandText text={activity} lines={2} className="is-quiet" />
+          ) : (
+            activity
+          )}
         </div>
       );
+    }
     case "ToolResult":
       return (
         <details className="disclosure agent-tool-result">

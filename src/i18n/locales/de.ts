@@ -928,6 +928,10 @@ Skills liegen im Ordner skills/ neben dieser Datei, je Skill eine
   agentSignIn: "Melde dich zuerst bei {agent} an.",
   chatAgentsGroup: "Agenten",
   chatAgentPermission: "Der Agent bittet, weiterzumachen",
+  chatAgentRunCommand: "Einen Befehl ausführen",
+  chatAgentRunCommands: "{n} Befehle ausführen",
+  chatAgentShowAll: "Alles zeigen",
+  chatAgentShowLess: "Weniger zeigen",
   pictureRedraw: "Neu zeichnen…",
   pictureRedrawTitle: "Bild neu zeichnen",
   pictureRedrawPrompt:

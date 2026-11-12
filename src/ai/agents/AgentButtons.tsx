@@ -1,8 +1,17 @@
-import { useExternalAgents } from "../../plugins/contributions/agents";
+import {
+  externalAgent,
+  useExternalAgents,
+} from "../../plugins/contributions/agents";
+import { namePageTabs } from "../../document/doc-tabs";
+import { loadSettings } from "../../prefs/settings-store";
 import { pluginRecord } from "../../plugins/store/plugin-records";
 import { PluginTabIcon } from "../../plugins/views/plugin-views";
 import { useSettings } from "../../prefs/SettingsContext";
 import { Tooltip } from "../../engine/controls/Tooltip";
+
+// An AI tab is named for who answers in it: Claude Code, Codex, or (none
+// chosen) Textus AI.
+namePageTabs("ai", () => externalAgent(loadSettings().chatAgent)?.name ?? null);
 
 /**
  * The outside agents plugins bring (Claude Code, Codex…), one button each

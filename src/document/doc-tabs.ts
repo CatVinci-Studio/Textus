@@ -108,7 +108,7 @@ export function tabTitle(tab: DocTab, t: Strings): string {
       : tab.view.view === "create"
         ? t.extensionsTabCreate
         : tab.view.view === "ai"
-          ? t.agentPanelTitle
+          ? (pageTitles.get("ai")?.(tab.view.state, t) ?? t.agentPanelTitle)
           : tab.view.title
             ? // Told apart from a tab the plugin opens itself, of the same name.
               fill(t.pluginPageTab, { name: tab.view.title })

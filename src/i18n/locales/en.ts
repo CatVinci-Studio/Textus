@@ -907,6 +907,10 @@ type /name in a conversation to use one.
   agentSignIn: "{agent} needs you to sign in first.",
   chatAgentsGroup: "Agents",
   chatAgentPermission: "The agent asks to go on",
+  chatAgentRunCommand: "Run a command",
+  chatAgentRunCommands: "Run {n} commands",
+  chatAgentShowAll: "Show all",
+  chatAgentShowLess: "Show less",
   pictureRedraw: "Redraw…",
   pictureRedrawTitle: "Redraw the picture",
   pictureRedrawPrompt:

@@ -957,6 +957,10 @@ utiliser une.
   agentSignIn: "Connectez-vous d’abord à {agent}.",
   chatAgentsGroup: "Agents",
   chatAgentPermission: "L’agent demande à continuer",
+  chatAgentRunCommand: "Exécuter une commande",
+  chatAgentRunCommands: "Exécuter {n} commandes",
+  chatAgentShowAll: "Tout afficher",
+  chatAgentShowLess: "Réduire",
   pictureRedraw: "Redessiner…",
   pictureRedrawTitle: "Redessiner l’image",
   pictureRedrawPrompt:

@@ -34,6 +34,8 @@ import { askingMode, type ConfigOption } from "./agent-mode";
 /** A step the agent asks the user to allow, shown under the reply. */
 export interface PendingPermission {
   title: string;
+  /** The step's kind as the agent names it: "execute" for a command. */
+  kind?: string;
   options: PermissionOption[];
   /** The option chosen, or null to refuse. */
   choose(optionId: string | null): void;
@@ -132,7 +134,8 @@ async function start(
     },
     {
       update: ({ update }) => deliver(session, update),
-      requestPermission: (p) => ask(session, p.toolCall.title ?? "", p.options),
+      requestPermission: (p) =>
+        ask(session, p.toolCall.title ?? "", p.toolCall.kind, p.options),
       // An open document as the editor has it, typed or not.
       readTextFile: async ({ path, line, limit }) => {
         withinFolder(session.cwd, path);
@@ -252,6 +255,7 @@ const current = new WeakMap<Session, AgentView>();
 function ask(
   session: Session,
   title: string,
+  kind: string | undefined,
   options: PermissionOption[],
 ): Promise<PermissionOutcome> {
   const events = session.events;
@@ -267,7 +271,7 @@ function ask(
       });
     };
     session.refuse = () => choose(null);
-    events.permission({ title, options, choose });
+    events.permission({ title, kind, options, choose });
   });
 }
 

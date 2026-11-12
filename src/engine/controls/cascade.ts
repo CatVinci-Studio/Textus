@@ -18,6 +18,10 @@ const WORDS =
  *  picture's frame, code. Their words don't come in one by one. */
 const WHOLE = ".katex, svg, .mermaid-preview, .pending-picture, pre";
 
+/** Blocks that draw something of their own around their words. Code and
+ *  rules arrive whole, as drawn parts do. */
+const DECORATED = "li, blockquote, table, :not(pre) > code";
+
 export class Cascade {
   /** When each word began coming in (performance.now()), by its place. */
   private begun: number[] = [];
@@ -43,6 +47,7 @@ export class Cascade {
       const from = Math.max(now, (this.begun.at(-1) ?? -Infinity) + gap);
       for (let i = 0; i < fresh; i++) this.begun.push(from + i * gap);
     }
+    this.blocks(root, words, now, fade);
     // From the end backwards: wrapping a word splits its text node, which
     // keeps the text before it - and the places of the words there.
     for (let i = words.length - 1; i >= 0; i--) {
@@ -52,6 +57,27 @@ export class Cascade {
       const word = wrap(words[i]);
       if (!word) continue;
       animate(word, [{ opacity: 0 }, { opacity: 1 }], {
+        duration: fade,
+        easing: "--ease-out",
+        delay: begun - now,
+        fill: "backwards",
+      });
+    }
+  }
+
+  /** What a block draws besides its words (a list's bullet, a quote's
+   *  bar, code's ground) comes in with its first word, never ahead of the
+   *  text before it; one with no word yet waits unseen. */
+  private blocks(root: Element, words: WordAt[], now: number, fade: number) {
+    for (const block of root.querySelectorAll<HTMLElement>(DECORATED)) {
+      const first = words.findIndex((word) => block.contains(word.node));
+      const begun = first < 0 ? undefined : this.begun[first];
+      if (begun === undefined) {
+        block.style.opacity = "0";
+        continue;
+      }
+      if (begun + fade <= now) continue;
+      animate(block, [{ opacity: 0 }, { opacity: 1 }], {
         duration: fade,
         easing: "--ease-out",
         delay: begun - now,

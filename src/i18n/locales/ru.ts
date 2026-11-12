@@ -952,6 +952,10 @@ export default {
   agentSignIn: "Сначала войдите в {agent}.",
   chatAgentsGroup: "Агенты",
   chatAgentPermission: "Агент просит разрешения продолжить",
+  chatAgentRunCommand: "Выполнить команду",
+  chatAgentRunCommands: "Выполнить команды: {n}",
+  chatAgentShowAll: "Показать всё",
+  chatAgentShowLess: "Свернуть",
   pictureRedraw: "Перерисовать…",
   pictureRedrawTitle: "Перерисовать картинку",
   pictureRedrawPrompt:

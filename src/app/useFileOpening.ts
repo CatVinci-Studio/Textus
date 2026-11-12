@@ -32,6 +32,7 @@ import {
   customEditorForContent,
 } from "../plugins/store/plugin-lookup";
 import { basename } from "../utils/path";
+import { isDocumentName } from "../files/document-name";
 import {
   besideLayout,
   openBeside,
@@ -169,6 +170,19 @@ export function useFileOpening(opts: {
         return null;
       }
       const { content, diskMtime } = disk;
+      // Text that isn't a document (a web page): the official plugin that
+      // shows it is offered first; declined, it opens as text.
+      if (!asDocument && !isDocumentName(basename(path))) {
+        const { offerPluginToOpen } =
+          await import("../plugins/store/open-offer");
+        const offered = await offerPluginToOpen(path, t);
+        const now = offered === "on" ? customEditorFor(path) : null;
+        if (now) return pluginTab(path, now, place);
+        if (offered === "system") {
+          await exportDoc.openLinkedFile(path);
+          return null;
+        }
+      }
       // A Markdown document a plugin claims by its front matter (a board).
       const claimed = asDocument ? null : customEditorForContent(path, content);
       if (claimed) return pluginTab(path, claimed, place);

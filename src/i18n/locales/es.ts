@@ -953,6 +953,10 @@ para usar una.
   agentSignIn: "Inicia sesión primero en {agent}.",
   chatAgentsGroup: "Agentes",
   chatAgentPermission: "El agente pide permiso para seguir",
+  chatAgentRunCommand: "Ejecutar un comando",
+  chatAgentRunCommands: "Ejecutar {n} comandos",
+  chatAgentShowAll: "Mostrar todo",
+  chatAgentShowLess: "Mostrar menos",
   pictureRedraw: "Redibujar…",
   pictureRedrawTitle: "Redibujar la imagen",
   pictureRedrawPrompt:

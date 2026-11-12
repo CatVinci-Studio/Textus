@@ -939,6 +939,10 @@ Habilidades ficam na pasta skills/ ao lado deste arquivo, um arquivo
   agentSignIn: "Inicie sessão primeiro no {agent}.",
   chatAgentsGroup: "Agentes",
   chatAgentPermission: "O agente pede para continuar",
+  chatAgentRunCommand: "Executar um comando",
+  chatAgentRunCommands: "Executar {n} comandos",
+  chatAgentShowAll: "Mostrar tudo",
+  chatAgentShowLess: "Mostrar menos",
   pictureRedraw: "Redesenhar…",
   pictureRedrawTitle: "Redesenhar a imagem",
   pictureRedrawPrompt:
