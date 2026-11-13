@@ -29,8 +29,6 @@ const ALLOWED = {
     "a tab's measures as its stylesheet draws them (a probe), and the row's width left after its own controls (+, the AI's buttons), which their stylesheet sizes",
   "src/engine/layout/row-insets.ts":
     "the window bar's own controls and the layout's radii, outside the frame",
-  "src/app/frame/SidebarTabBar.tsx":
-    "the sidebar's own width, for how many of its tabs show; a menu's anchor",
   "src/app/frame/WindowControls.tsx": "a menu's anchor: the button pressed",
   "src/app/frame/rail-drag.ts":
     "the rail's groups, a list its stylesheet places, as an icon is carried and at the drag's end",

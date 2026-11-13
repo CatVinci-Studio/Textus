@@ -1,6 +1,5 @@
 import { useRef } from "react";
 import { conversationScope } from "../../ai/chat/conversation-scope";
-import { isIOSApp } from "../../platform/capabilities";
 import type { TabState } from "../tabs/useTabState";
 import { useDocumentInFront } from "../tabs/useDocumentInFront";
 import { useAiTabs } from "./useAiTabs";
@@ -37,7 +36,7 @@ export function useWindowAi({
     tabs,
     scope: scope.current,
     workspaceRoot,
-    shown: !isIOSApp && shown,
+    shown,
     setShown,
   });
 }

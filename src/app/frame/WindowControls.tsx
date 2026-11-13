@@ -6,7 +6,7 @@ import type { MenuChecks } from "../../registry/menu/app-menu-model";
 import { HamburgerIcon } from "../../engine/controls/icons";
 import { appDrawsWindowFrame } from "../../platform/window-chrome";
 import { Presence } from "../../engine/motion/usePresence";
-import { isIOSApp } from "../../platform/capabilities";
+import { isIOSApp, isMobileApp } from "../../platform/capabilities";
 import { Tooltip } from "../../engine/controls/Tooltip";
 import "./window-controls.css";
 
@@ -36,7 +36,7 @@ export function AppMenuButton({ checks }: { checks?: MenuChecks } = {}) {
   );
 
   // Where the menu bar went with the OS frame, and the iPhone.
-  if (!appDrawsWindowFrame && !isIOSApp) return null;
+  if (!appDrawsWindowFrame && !isMobileApp) return null;
 
   return (
     <div ref={ref} className="window-menu-anchor">

@@ -92,7 +92,8 @@
 
 /* The phone's chrome, at its first design. */
 :root[data-window-chrome="mobile"] {
-  --window-bar-height: 28px;
+  /* The status bar's room and a fingertip's row: the tabs ride in it. */
+  --window-bar-height: calc(env(safe-area-inset-top, 0px) + 48px);
   --icon-button-s: 24px;
   --tree-step: 12px;
   --pane-inset: 12px;

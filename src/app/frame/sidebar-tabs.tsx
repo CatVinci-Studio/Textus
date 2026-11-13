@@ -1,4 +1,4 @@
-import { setUiState, uiList } from "../../storage/ui-state";
+import { uiList } from "../../storage/ui-state";
 import { loadSettings } from "../../prefs/settings-store";
 import {
   addedSidebarTabs,
@@ -20,7 +20,7 @@ import { lazyModule } from "../../lazy/lazy-module";
 import { lazyComponent } from "../../lazy/lazy-component";
 import { isDesktopApp } from "../../platform/capabilities";
 import { canOpenFolder, isIOSApp } from "../../platform/capabilities";
-import { PHONE_QUERY } from "../../engine/controls/usePhoneLayout";
+import { PHONE_QUERY } from "../../platform/phone-layout";
 import type { Strings } from "../../i18n/strings";
 import type { OpenFolder } from "../useOpenFolder";
 import type { FileOpenHow } from "../../files/tree-shared";
@@ -246,19 +246,6 @@ export function orderTabs<T extends { id: string }>(
     out.splice(before + 1, 0, tab);
   });
   return out;
-}
-
-/** The tabs' order after `id` is dropped on `target`'s place: within its
- *  own group, a plugin's never above Textus's. */
-export function moveSidebarTab(id: string, target: string): void {
-  const ids = sidebarTabs().map((tab) => tab.id);
-  const from = ids.indexOf(id);
-  const to = ids.indexOf(target);
-  if (from < 0 || to < 0 || from === to) return;
-  if (isOwnTab(id) !== isOwnTab(target)) return;
-  ids.splice(from, 1);
-  ids.splice(to, 0, id);
-  setUiState("sidebarTabOrder", ids);
 }
 
 /** The rail's order with the tabs shown in `shown`'s order (a rail

@@ -1,8 +1,8 @@
 import { useCallback, useEffect, useState, useSyncExternalStore } from "react";
-import { isIOSApp } from "../../platform/capabilities";
+import { usePhoneLayout } from "../../engine/controls/usePhoneLayout";
+import { isPhoneLayout } from "../../platform/phone-layout";
 import { usePresence } from "../../engine/motion/usePresence";
 import { CLOSE_FIND_REPLACE_EVENT } from "../../utils/events";
-import { useAgentPanelOpen } from "../../ai/chat/panel/agent-panel";
 import { useAgentDock } from "./useAgentDock";
 import { storeSidebarTab, storedSidebarTab } from "./sidebar-tab";
 import { getUiState, setUiState } from "../../storage/ui-state";
@@ -12,7 +12,6 @@ import { useSidebarWidth } from "./sidebar-width";
 import { RAIL_WIDTH } from "./ActivityRail";
 import { chromeScale } from "../../engine/tokens/chrome-scale";
 import { useSettings, type Settings } from "../../prefs/SettingsContext";
-import { PANEL_FLOOR } from "../../engine/controls/side-panel-width";
 
 /** A sidebar tab's id. */
 export type SidebarTabId = string;
@@ -23,13 +22,14 @@ function subscribeWindowResize(onChange: () => void) {
 }
 
 /** Whether the window shows the activity rail: on in Settings, or turned
- *  off but with the sidebar open; never on an iPad, whose sidebar is its
- *  own. */
-function railShown(
+ *  off but with the sidebar open. A phone's comes only with the sidebar,
+ *  both pushed in from the left. */
+export function railShown(
   settings: Pick<Settings, "activityRail">,
   open: boolean,
+  phone: boolean,
 ): boolean {
-  return (settings.activityRail || open) && !isIOSApp;
+  return (settings.activityRail && !phone) || open;
 }
 
 /**
@@ -37,21 +37,19 @@ function railShown(
  * AI's switch: off, the AI panel closes and its toggles do nothing.
  */
 export function useSidePanels(aiOn: boolean) {
-  // Remembered on the desktop; on iOS it is a drawer and starts closed.
+  const phone = usePhoneLayout();
+  // Remembered, except on a phone, where it starts put away.
   const [open, setOpen] = useState(
-    () => !isIOSApp && getUiState("sidebarOpen") === true,
+    () => !isPhoneLayout() && getUiState("sidebarOpen") === true,
   );
   const { settings } = useSettings();
   // With the rail turned off, the window bar's button opens the sidebar
   // with the rail and folds both away; the rail stays off.
   const toggleSidebar = useCallback(() => setOpen((v) => !v), []);
   useEffect(() => {
-    if (!isIOSApp) setUiState("sidebarOpen", open);
-  }, [open]);
-  // On iOS the sidebar is a drawer over the page, and the find bar sits at
-  // the top of the page: they would overlap, so opening one closes the bar.
-  useEffect(() => {
-    if (isIOSApp && open)
+    if (!isPhoneLayout()) setUiState("sidebarOpen", open);
+    // A phone's sidebar pushes the page aside: the find bar goes with it.
+    else if (open)
       window.dispatchEvent(new CustomEvent(CLOSE_FIND_REPLACE_EVENT));
   }, [open]);
   // The docked Agent panel: App owns the frame.
@@ -63,25 +61,21 @@ export function useSidePanels(aiOn: boolean) {
   // The activity rail is beside both panels, as each is beside the other:
   // the document keeps its room after all of them.
   const scale = chromeScale();
-  const rail = railShown(settings, open) ? Math.round(RAIL_WIDTH * scale) : 0;
-  // An iPad's docked AI panel open, the sidebar leaves it its narrowest, so
-  // a small window still keeps the document its room. On the desktop the AI
-  // is an island: the solver keeps its room.
-  const agentShown = useAgentPanelOpen();
-  const sidebarWidth = useSidebarWidth(
-    windowWidth,
-    rail + (isIOSApp && agentShown ? PANEL_FLOOR * scale : 0),
-  );
+  const rail = railShown(settings, open, phone)
+    ? Math.round(RAIL_WIDTH * scale)
+    : 0;
+  const sidebarWidth = useSidebarWidth(windowWidth, rail);
   // The panels give way after the sidebar, and come back before it.
   const panelsFolded = useNarrowIslands(
-    isIOSApp ? Infinity : windowWidth - rail - (open ? sidebarWidth.width : 0),
+    phone ? Infinity : windowWidth - rail - (open ? sidebarWidth.width : 0),
     open,
   );
-  // An iPhone's or iPad's sidebar is a drawer over the page: never put away.
+  // A phone's sidebar is pushed in by hand, over too little room: never
+  // put away for it.
   useNarrowSidebar(
     open,
     setOpen,
-    isIOSApp ? Infinity : windowWidth - rail,
+    phone ? Infinity : windowWidth - rail,
     sidebarWidth.width,
     panelsFolded,
   );
@@ -110,14 +104,11 @@ export function useSidePanels(aiOn: boolean) {
   };
 }
 
-/** The sidebar's tab: remembered on the desktop like its open state; on
- *  iOS it starts on Files. */
+/** The sidebar's tab, remembered like its open state. */
 function useSidebarTab() {
-  const [panelMode, setPanelMode] = useState<SidebarTabId>(() =>
-    isIOSApp ? "tree" : storedSidebarTab(),
-  );
+  const [panelMode, setPanelMode] = useState<SidebarTabId>(storedSidebarTab);
   useEffect(() => {
-    if (!isIOSApp) storeSidebarTab(panelMode);
+    storeSidebarTab(panelMode);
   }, [panelMode]);
 
   return [panelMode, setPanelMode] as const;

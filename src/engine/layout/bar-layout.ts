@@ -37,6 +37,7 @@ export function barLayout({
   railOff,
   zen,
   fullscreen,
+  phone = false,
 }: {
   platform: BarPlatform;
   /** The menu bar spelled out (Windows and Linux only). */
@@ -50,11 +51,12 @@ export function barLayout({
   railOff: boolean;
   zen: boolean;
   fullscreen: boolean;
+  /** The phone's layout (platform/phone-layout.ts): its menu, then the
+   *  button that pushes the rail and sidebar in, before the tabs. */
+  phone?: boolean;
 }): BarLayout {
   const none = { menuInRail: false, sideToTop: false, railToTop: false };
-  // An iPhone or iPad: its menu, the sidebar opened from its own bar.
-  if (platform === "ios" || platform === "android")
-    return { rows: 1, lead: ["menu"], ...none };
+  if (phone) return { rows: 1, lead: ["menu", "sidebar-toggle"], ...none };
   const railShown = rail && !zen;
   const toggle: BarItem[] = railOff || zen ? ["sidebar-toggle"] : [];
   // The rail turned off but shown with the sidebar: the bar keeps its

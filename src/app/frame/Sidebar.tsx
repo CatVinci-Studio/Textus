@@ -1,30 +1,20 @@
 import { useCallback, useReducer } from "react";
 import { useSidebarFrame } from "./useSidebarFrame";
 import { useSideToTop } from "../../engine/layout/useBarLayout";
-import { isIOSApp } from "../../platform/capabilities";
-import {
-  Presence,
-  PresenceDiv,
-  type PresenceHandle,
-} from "../../engine/motion/usePresence";
+import type { PresenceHandle } from "../../engine/motion/usePresence";
+import { usePhoneLayout } from "../../engine/controls/usePhoneLayout";
 import { ResizeHandle } from "../../engine/controls/ResizeHandle";
 import type { Strings } from "../../i18n/strings";
-import type { SidebarTabId } from "./useSidePanels";
+import { railShown, type SidebarTabId } from "./useSidePanels";
 import type { useSidebarWidth } from "./sidebar-width";
 import type { OpenFolder } from "../useOpenFolder";
-import { SidebarTabBar } from "./SidebarTabBar";
 import { ActivityRail } from "./ActivityRail";
 import { useSettings } from "../../prefs/SettingsContext";
-import {
-  moveSidebarTab,
-  railTabs,
-  sidebarTab,
-  sidebarTabs,
-} from "./sidebar-tabs";
+import { railTabs, sidebarTab } from "./sidebar-tabs";
 import { ViewTitleActions } from "../../plugins/views/plugin-views";
 import type { FileOpenHow } from "../../files/tree-shared";
 
-/** The left sidebar and its tabs, plus the scrim behind its drawer on iPhone. */
+/** The left sidebar, with the activity rail that switches its tabs. */
 export function Sidebar({
   open,
   presence,
@@ -74,7 +64,8 @@ export function Sidebar({
   // Under the window bar the header's line is covered: a plugin's buttons
   // for its panel go to the top of the panel instead.
   const titleShown = useSideToTop();
-  const frame = useSidebarFrame(open, !isIOSApp, width.width);
+  const phone = usePhoneLayout();
+  const frame = useSidebarFrame(open, true, width.width);
   const presenceRef = presence.ref;
   const asideRef = useCallback(
     (el: HTMLElement | null) => {
@@ -83,14 +74,9 @@ export function Sidebar({
     },
     [presenceRef, frame],
   );
-  // The phone opens the sidebar from its own bar; there is no rail there,
-  // and an iPad's drawer has its tabs in a row at its top. The rail turned
-  // off comes with the sidebar and goes with it.
-  const rail = (settings.activityRail || open) && !isIOSApp;
-  const move = (id: string, target: string) => {
-    moveSidebarTab(id, target);
-    moved();
-  };
+  // The rail turned off (and always on a phone) comes with the sidebar and
+  // goes with it.
+  const rail = railShown(settings, open, phone);
   return (
     <>
       {rail && (
@@ -107,12 +93,6 @@ export function Sidebar({
           t={t}
         />
       )}
-      {/* iPhone: a tap beside the drawer closes it. */}
-      <Presence show={isIOSApp && open}>
-        {isIOSApp && open && (
-          <PresenceDiv className="sidebar-scrim" onClick={onToggle} />
-        )}
-      </Presence>
       <aside
         ref={asideRef}
         aria-label={t.menuToggleSidebar}
@@ -135,31 +115,16 @@ export function Sidebar({
                   islands' tops. Without the rail its tabs are here. */}
               {/* A plugin's buttons for its panel (menus "view/title")
                   end the name's line: no row of their own. */}
-              {!isIOSApp && (
-                <>
-                  <h2
-                    className="tx-pane-title sidebar-title"
-                    data-tauri-drag-region={titleShown || undefined}
-                  >
-                    {shown.label(t)}
-                  </h2>
-                  {titleShown && <ViewTitleActions view={shown.id} />}
-                </>
-              )}
-              {isIOSApp && (
-                <SidebarTabBar
-                  tabs={sidebarTabs()}
-                  shownId={shown.id}
-                  onSelect={onModeChange}
-                  onMove={move}
-                  t={t}
-                />
-              )}
+              <h2
+                className="tx-pane-title sidebar-title"
+                data-tauri-drag-region={titleShown || undefined}
+              >
+                {shown.label(t)}
+              </h2>
+              {titleShown && <ViewTitleActions view={shown.id} />}
             </div>
             <div className="sidebar-body" inert={closing || undefined}>
-              {(isIOSApp || !titleShown) && (
-                <ViewTitleActions view={shown.id} />
-              )}
+              {!titleShown && <ViewTitleActions view={shown.id} />}
               <shown.Panel
                 t={t}
                 openFolder={openFolder}
@@ -173,8 +138,8 @@ export function Sidebar({
                 onSearchFocusHandled={onSearchFocusHandled}
               />
             </div>
-            {/* An iPad's sidebar keeps the width the layout gives it. */}
-            {!isIOSApp && (
+            {/* A phone's sidebar keeps the width the layout gives it. */}
+            {!phone && (
               <ResizeHandle
                 className="sidebar-resizer"
                 edge="right"

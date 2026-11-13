@@ -1,6 +1,6 @@
 import { shownIsland } from "./store";
 import { scaledPx } from "../tokens/chrome-scale";
-import { isPhoneLayout } from "../controls/usePhoneLayout";
+import { isPhoneLayout } from "../../platform/phone-layout";
 import { frameLayout } from "../frame/frame-store";
 import type { Rect } from "../frame/rect";
 import { stripPlaces } from "../controls/tabs/tab-strips";

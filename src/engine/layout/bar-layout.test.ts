@@ -27,6 +27,19 @@ describe("the window bar's start", () => {
       });
   });
 
+  it("lays a tablet out as the desktop, and a phone with its menu and sidebar button", () => {
+    for (const platform of ["ios", "android"] as const) {
+      expect(at(platform)).toEqual(at("windows"));
+      expect(at(platform, { phone: true })).toEqual({
+        rows: 1,
+        lead: ["menu", "sidebar-toggle"],
+        menuInRail: false,
+        sideToTop: false,
+        railToTop: false,
+      });
+    }
+  });
+
   it("keeps the sidebar button while the rail is turned off, open or not, and in Zen", () => {
     // Turned off, the rail shows with the sidebar; the button folds both,
     // and the bar keeps it where it was clicked: nothing rises over it.
