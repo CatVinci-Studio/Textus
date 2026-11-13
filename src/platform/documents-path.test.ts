@@ -20,15 +20,14 @@ describe("storedDocumentPath", () => {
     );
   });
 
-  it("guesses an app container only while this install's isn't known", () => {
-    // Known: another container (another app's folder) is kept whole.
+  it("keeps another container, and every path while ours isn't known", () => {
     expect(storedDocumentPath(`${OLD}/notes/a.md`, DOCS)).toBe(
       `${OLD}/notes/a.md`,
     );
     expect(storedDocumentPath(`/private${OLD}/a.md`, null)).toBe(
-      "documents:a.md",
+      `/private${OLD}/a.md`,
     );
-    expect(storedDocumentPath(`${SIM}/a.md`, null)).toBe("documents:a.md");
+    expect(storedDocumentPath(`${SIM}/a.md`, null)).toBe(`${SIM}/a.md`);
   });
 
   it("leaves everything else alone, and is idempotent", () => {

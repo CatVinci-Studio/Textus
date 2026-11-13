@@ -71,6 +71,33 @@ test("a conversation keeps its turns when the document in front is closed and an
   await expect(turns).not.toContainText("第三章写了什么？");
 });
 
+test("messages sent during a reply wait their turn; a failure holds them until the user goes on", async ({
+  page,
+}) => {
+  await openApp(page, { settings: { menuBarShown: false } });
+  await aiButton(page).click();
+  const box = page.locator(".ai-tab textarea").first();
+  const turns = page.locator(".ai-tab .inline-chat-messages");
+  const queue = page.locator(".ai-tab .chat-queue");
+  await box.fill("a long first question for the reply to take a while");
+  await box.press("Enter");
+  await box.fill("please fail");
+  await box.press("Enter");
+  await box.fill("third");
+  await box.press("Enter");
+  await expect(queue.getByRole("listitem")).toHaveCount(2);
+  // The second fails: the third waits, and says why.
+  await expect(queue.locator(".chat-queue-text")).toHaveText(["third"]);
+  await expect(queue.locator(".inline-chat-action")).toBeVisible();
+  await page.waitForTimeout(500);
+  await expect(turns).not.toContainText("third");
+  // Going on sends it.
+  await queue.locator(".inline-chat-action").click();
+  await expect(queue).toHaveCount(0);
+  await expect(turns).toContainText("third");
+  await expect(page.locator(".ai-tab .agent-streaming")).toHaveCount(0);
+});
+
 test("pressed again in front of its own island, it collapses; again, it comes back", async ({
   page,
 }) => {

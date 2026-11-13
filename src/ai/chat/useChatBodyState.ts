@@ -91,10 +91,14 @@ export function useStreamedProposals(
  *  nothing is in flight. A failed reply pauses them until Continue. */
 export function useMessageQueue(
   busy: boolean,
+  /** The conversation's failure: while there is one, the queue waits. */
+  failure: unknown,
   sendNext: (next: QueuedMessage) => Promise<AgentTurn[] | undefined>,
 ) {
   const [queue, setQueue] = useState<QueuedMessage[]>([]);
-  const [queuePaused, setQueuePaused] = useState(false);
+  // The failure the user chose to go on past.
+  const [passed, setPassed] = useState<unknown>(null);
+  const queuePaused = !!failure && failure !== passed && queue.length > 0;
   // Bumped as each send ends, so the queue looks again.
   const [settled, setSettled] = useState(0);
   const nextQueued = useRef(0);
@@ -102,33 +106,21 @@ export function useMessageQueue(
   const sending = useRef(false);
   // This render's; the queue and busy say when to look again.
   const send = useLatest(sendNext);
-  const waiting = useLatest(queue);
 
-  /** Runs one send - from the box or the queue - as the one in flight; a
-   *  failed one holds back whatever is still waiting. */
-  const run = useCallback(
-    async (go: () => Promise<AgentTurn[] | undefined>) => {
-      sending.current = true;
-      let turns: AgentTurn[] | undefined;
-      try {
-        turns = await go();
-      } finally {
-        sending.current = false;
-        if (!turns && waiting.current.length > 0) setQueuePaused(true);
-        setSettled((n) => n + 1);
-      }
-      return turns;
-    },
-    [waiting],
-  );
+  /** Runs one send - from the box, the queue or Retry - as the one in
+   *  flight. */
+  const run = useCallback(async <T>(go: () => Promise<T>) => {
+    sending.current = true;
+    try {
+      return await go();
+    } finally {
+      sending.current = false;
+      setSettled((n) => n + 1);
+    }
+  }, []);
 
   useEffect(() => {
-    // Nothing left to hold: an emptied queue is never paused.
-    if (queue.length === 0) {
-      if (queuePaused) setQueuePaused(false);
-      return;
-    }
-    if (busy || queuePaused || sending.current) return;
+    if (queue.length === 0 || busy || queuePaused || sending.current) return;
     const [next] = queue;
     setQueue((now) => now.filter((q) => q.id !== next.id));
     void run(() => send.current(next));
@@ -138,7 +130,7 @@ export function useMessageQueue(
     queue,
     setQueue,
     queuePaused,
-    setQueuePaused,
+    goOn: () => setPassed(failure),
     nextQueued,
     sending,
     run,

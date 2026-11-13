@@ -7,12 +7,6 @@ import { documentDir } from "@tauri-apps/api/path";
  */
 export const IN_DOCUMENTS = "documents:";
 
-/** An app container's Documents folder in an absolute path: only a guess
- *  at ours while this install's isn't known yet - another app's matches too.
- *  Files-app picks are `file://` URLs and don't match. */
-const CONTAINER_DOCUMENTS =
-  /^\/.*\/Containers\/Data\/Application\/[0-9A-Fa-f-]+\/Documents\/(.+)$/;
-
 const withSlash = (dir: string) => dir.replace(/\/+$/, "") + "/";
 
 /** /private/var and /var are one place; iOS spells it either way. */
@@ -33,9 +27,8 @@ export function insideDocuments(path: string, docs: string): string | null {
  */
 export function storedDocumentPath(path: string, docs: string | null): string {
   if (path.startsWith(IN_DOCUMENTS)) return path;
-  const inside = docs
-    ? insideDocuments(path, docs)
-    : (CONTAINER_DOCUMENTS.exec(path)?.[1] ?? null);
+  // Not known yet: kept as it is, rather than guess whose container it is.
+  const inside = docs ? insideDocuments(path, docs) : null;
   return inside === null ? path : IN_DOCUMENTS + inside;
 }
 

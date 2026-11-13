@@ -149,8 +149,14 @@ export function PluginReadme({
       className="plugin-readme"
       aria-label={label}
       data-folded={installed && !open ? "" : undefined}
+      data-cut={installed && !open && long ? "" : undefined}
     >
-      <div className="plugin-readme-body" ref={bodyRef}>
+      {/* Tabbing into the hidden part opens it, rather than scroll it. */}
+      <div
+        className="plugin-readme-body"
+        ref={bodyRef}
+        onFocus={() => long && !open && setOpen(true)}
+      >
         <Suspense fallback={null}>
           <EditorPreview
             markdown={text.replace(/^\s*#\s[^\n]*\n/, "")}

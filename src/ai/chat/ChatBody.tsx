@@ -159,7 +159,7 @@ export function ChatBody({
 
   // Messages sent while a reply is coming, sent in turn once the replies
   // before them finish. A failed reply pauses them; Stop gives them back.
-  const queueState = useMessageQueue(busy, async (next) => {
+  const queueState = useMessageQueue(busy, error, async (next) => {
     const latest = refreshContext ? await refreshContext() : null;
     const turns = await send(
       latest?.document ?? document,
@@ -170,7 +170,7 @@ export function ChatBody({
     afterSend(turns);
     return turns;
   });
-  const { queue, setQueue, queuePaused, setQueuePaused } = queueState;
+  const { queue, setQueue, queuePaused, goOn } = queueState;
   const { nextQueued, sending, run } = queueState;
   const ownComposer = useRef<ChatComposerHandle>(null);
   const composer = composerRef ?? ownComposer;
@@ -217,7 +217,6 @@ export function ChatBody({
     if (queue.length > 0)
       composer.current?.restore(queue.map((q) => q.typed).join("\n\n"));
     setQueue([]);
-    setQueuePaused(false);
     stop();
   }
 
@@ -242,7 +241,7 @@ export function ChatBody({
 
   function handleRetry() {
     void (async () => {
-      afterSend(await retry());
+      afterSend(await run(retry));
     })();
   }
 
@@ -416,7 +415,7 @@ export function ChatBody({
           if (item) composer.current?.restore(item.typed);
         }}
         onRemove={(id) => setQueue((now) => now.filter((q) => q.id !== id))}
-        onContinue={() => setQueuePaused(false)}
+        onContinue={goOn}
       />
       <ChatComposer
         handle={composer}

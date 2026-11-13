@@ -54,8 +54,8 @@ export function statusText(
   }
 }
 
-/** One plugin's own page: about it, what it needs, its settings, what it
- *  adds, its permissions, and removing it. */
+/** One plugin's own page: its switch and version, what it needs, its
+ *  settings, its README, its permissions, and removing it. */
 export function PluginPage({
   record,
   t,
@@ -214,6 +214,7 @@ export function PluginPage({
         </div>
       )}
       <PluginReadme
+        key={record.id}
         id={record.id}
         installed
         label={fill(t.pluginReadmeLabel, { name })}

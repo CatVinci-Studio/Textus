@@ -1593,6 +1593,9 @@ export function installDevTauriShim(): void {
           }) ?? {};
         const message = request?.message ?? "";
         const reply = `Canned dev-shim reply to: ${message}`;
+        // A message saying "fail" fails, as a provider's error would.
+        if (/\bfail\b/i.test(message))
+          return Promise.reject(new Error("Dev-shim failure."));
         return new Promise((resolve) => {
           let sent = 0;
           const timer = setInterval(() => {

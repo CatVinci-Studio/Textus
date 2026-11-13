@@ -244,6 +244,8 @@ button.plugin-card-open:hover .plugin-card-name {
 .plugin-readme[data-folded] > .plugin-readme-body {
   max-height: calc(1.6em * 10);
   overflow: hidden;
+}
+.plugin-readme[data-cut] > .plugin-readme-body {
   mask-image: linear-gradient(to bottom, #000 calc(100% - 3em), transparent);
 }
 /* Permissions in small type, one line each, revoked from the line. */
@@ -263,9 +265,6 @@ button.plugin-card-open:hover .plugin-card-name {
 }
 .plugin-permission > button {
   flex: none;
-}
-.plugin-permission + .plugin-permission {
-  border-top: 1px solid var(--ui-border);
 }
 .plugin-readme-more {
   margin-top: var(--space-2);
