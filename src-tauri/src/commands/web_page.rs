@@ -3,6 +3,9 @@
 //! no app capabilities; other links go to the system browser.
 
 use serde::{Deserialize, Serialize};
+use std::collections::BTreeSet;
+use std::sync::Mutex;
+use std::time::Duration;
 use tauri::webview::{NewWindowResponse, PageLoadEvent, WebviewBuilder};
 use tauri::{Emitter, LogicalPosition, LogicalSize, Manager, Url, WebviewUrl, Window};
 
@@ -85,6 +88,7 @@ pub fn web_page_show(
     let position = LogicalPosition::new(bounds.x, bounds.y);
     let size = LogicalSize::new(bounds.width.max(1.0), bounds.height.max(1.0));
     if let Some(page) = window.app_handle().get_webview(&label) {
+        lock_closing().remove(&label);
         page.set_bounds(tauri::Rect {
             position: position.into(),
             size: size.into(),
@@ -147,14 +151,37 @@ pub fn web_page_hide(window: Window, id: String) -> Result<(), String> {
     }
 }
 
+/// Pages hidden and waiting to be let go; opening one again keeps it.
+static CLOSING: Mutex<BTreeSet<String>> = Mutex::new(BTreeSet::new());
+
+/// How long a hidden page waits before it goes: WebKit can still be drawing
+/// or scrolling it, and a page removed mid-frame can crash the window.
+const CLOSE_AFTER: Duration = Duration::from_millis(500);
+
 /// Lets tab `id`'s page go: its tab closed.
 #[tauri::command]
 #[cfg_attr(test, specta::specta)]
 pub fn web_page_close(window: Window, id: String) -> Result<(), String> {
-    match window.app_handle().get_webview(&label(&window, &id)) {
-        Some(page) => page.close().map_err(|e| e.to_string()),
-        None => Ok(()),
-    }
+    let label = label(&window, &id);
+    let Some(page) = window.app_handle().get_webview(&label) else {
+        return Ok(());
+    };
+    page.hide().map_err(|e| e.to_string())?;
+    lock_closing().insert(label.clone());
+    let app = window.app_handle().clone();
+    tauri::async_runtime::spawn(async move {
+        tokio::time::sleep(CLOSE_AFTER).await;
+        if lock_closing().remove(&label) {
+            if let Some(page) = app.get_webview(&label) {
+                let _ = page.close();
+            }
+        }
+    });
+    Ok(())
+}
+
+fn lock_closing() -> std::sync::MutexGuard<'static, BTreeSet<String>> {
+    CLOSING.lock().unwrap_or_else(|e| e.into_inner())
 }
 
 /// Takes tab `id`'s page to `url`, typed in its address bar.

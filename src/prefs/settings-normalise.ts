@@ -26,6 +26,7 @@ import {
   THEME_MODES,
   type ThemeMode,
   UI_TEXT_SCALES,
+  UI_TEXT_SCALES_BEFORE,
   type UiTextScale,
   DOC_TEXT_SIZES,
   type DocTextSize,
@@ -194,7 +195,8 @@ function readSettings(parsed: Raw | null): Settings {
         : DEFAULT_SETTINGS.colorSwatches,
       uiTextScale: UI_TEXT_SCALES.includes(parsed.uiTextScale as UiTextScale)
         ? (parsed.uiTextScale as UiTextScale)
-        : DEFAULT_SETTINGS.uiTextScale,
+        : (UI_TEXT_SCALES_BEFORE[String(parsed.uiTextScale)] ??
+          DEFAULT_SETTINGS.uiTextScale),
       docTextSize: DOC_TEXT_SIZES.includes(parsed.docTextSize as DocTextSize)
         ? (parsed.docTextSize as DocTextSize)
         : DEFAULT_SETTINGS.docTextSize,

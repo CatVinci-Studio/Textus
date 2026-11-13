@@ -42,11 +42,11 @@ window.__textusBoot = function (boot, themeCss) {
       root.setAttribute("data-content-width", settings.contentWidth);
     // But 1, the stylesheet's own default; theme/apply-appearance.ts sets
     // the same property.
-    if (
-      settings.uiTextScale !== 1 &&
-      (tables.uiTextScales || []).indexOf(settings.uiTextScale) >= 0
-    )
-      root.style.setProperty("--ui-text-scale", String(settings.uiTextScale));
+    var scale =
+      (tables.uiTextScalesBefore || {})[String(settings.uiTextScale)] ||
+      settings.uiTextScale;
+    if (scale !== 1 && (tables.uiTextScales || []).indexOf(scale) >= 0)
+      root.style.setProperty("--ui-text-scale", String(scale));
     // The reader's document size and spacing (DOC_TEXT_SIZES and
     // DOC_LINE_HEIGHTS in prefs/settings-types.ts; apply-appearance.ts).
     if (typeof settings.docTextSize === "number") {

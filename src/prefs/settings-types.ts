@@ -171,6 +171,9 @@ export interface Settings {
   /// Windows and Linux: the menus along the app-drawn window bar instead of
   /// behind ☰. On, the bar has no sidebar button.
   menuBarShown: boolean;
+  /// The window bar is a row of its own, naming the document in front; the
+  /// tabs go in the row under it.
+  titleRowShown: boolean;
   /// The column of icons at the window's left edge (Files, Outline, plugins'
   /// pages). Off, the sidebar shows its tabs along its own top again.
   activityRail: boolean;
@@ -332,6 +335,7 @@ export const DEFAULT_SETTINGS: Settings = {
   emptyLineHint: false,
   imageAlign: "center",
   menuBarShown: false,
+  titleRowShown: false,
   activityRail: true,
   layout: "islands",
   activityRailHidden: [],

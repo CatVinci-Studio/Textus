@@ -4,8 +4,9 @@
  * column is the bar's first: with the rail shown, Windows' and Linux's app
  * menu sits in it at the rail's icons' size. With the rail on, its icons
  * open the sidebar and the bar has no sidebar button; turned off, the
- * button opens the rail and the sidebar together and folds both away. The menu bar spelled out has a row of its own, the islands and the
- * rail under it - but in Zen, with no documents' tabs, it keeps to one.
+ * button opens the rail and the sidebar together and folds both away. The menu bar spelled out, or the title row turned on, makes the bar a
+ * row of its own, the islands and the rail under it - but in Zen, with no
+ * documents' tabs, it keeps to one.
  */
 
 export type BarPlatform = "macos" | "windows" | "linux" | "ios";
@@ -31,6 +32,7 @@ export interface BarLayout {
 export function barLayout({
   platform,
   menuBar,
+  titleRow = false,
   rail,
   railOff,
   zen,
@@ -39,6 +41,8 @@ export function barLayout({
   platform: BarPlatform;
   /** The menu bar spelled out (Windows and Linux only). */
   menuBar: boolean;
+  /** The bar is a row of its own, naming the document, over the tabs. */
+  titleRow?: boolean;
   /** The activity rail is shown. */
   rail: boolean;
   /** The rail is turned off: it shows only with the sidebar, the bar's
@@ -57,16 +61,18 @@ export function barLayout({
   const toTop = railShown && !railOff;
   // In full screen the lights are gone: with the rail, the bar leaves the
   // left columns alone.
+  // In Zen no tabs need a row under the bar.
+  const ownRow = titleRow && !zen;
   if (platform === "macos")
     return {
-      rows: 1,
+      rows: ownRow ? 2 : 1,
       lead: [...(fullscreen ? [] : (["lights"] as BarItem[])), ...toggle],
       ...none,
-      sideToTop: fullscreen && toTop,
-      railToTop: fullscreen && toTop,
+      sideToTop: !ownRow && fullscreen && toTop,
+      railToTop: !ownRow && fullscreen && toTop,
     };
-  // In Zen no tabs need a row under the menu bar.
   if (menuBar) return { rows: zen ? 1 : 2, lead: ["menu-bar"], ...none };
+  if (ownRow) return { rows: 2, lead: ["menu", ...toggle], ...none };
   return {
     rows: 1,
     lead: ["menu", ...toggle],

@@ -1,4 +1,3 @@
-import { localeOf } from "../../i18n/strings";
 import type { Strings } from "../../i18n/strings";
 import type { FixedShortcutGroup } from "../../registry/fixed-shortcuts";
 import type { Settings, useSettings } from "../../prefs/SettingsContext";
@@ -23,8 +22,6 @@ export interface SettingsPageProps {
   setSettings: ReturnType<typeof useSettings>["setSettings"];
   /** The iPhone's layout. */
   phone: boolean;
-  /** "125 %" in French, "125%" in English. */
-  percent: Intl.NumberFormat;
   /** Whether the window has room for the AI's margin. */
   marginAvailable: boolean;
   /** The desktop without that room: the margin's rows say so. */
@@ -52,8 +49,8 @@ export interface SettingsPageProps {
   indexing?: boolean;
 }
 
-/** A page's props: what the caller has, the rest derived (the percent
- *  format from the language, `noMargin` from the room) or left doing
+/** A page's props: what the caller has, the rest derived (`noMargin`
+ *  from the room) or left doing
  *  nothing - a page rendered only to be searched needs no actions. */
 export function pageProps(
   given: Pick<SettingsPageProps, "t" | "settings" | "setSettings"> &
@@ -62,9 +59,6 @@ export function pageProps(
   const marginAvailable = given.marginAvailable ?? false;
   return {
     phone: false,
-    percent: new Intl.NumberFormat(localeOf(given.settings.language), {
-      style: "percent",
-    }),
     noMargin: !marginAvailable,
     setSubpage: () => {},
     openPage: () => {},

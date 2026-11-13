@@ -382,8 +382,13 @@ describe("interface text size", () => {
     expect(normaliseSettings(null).uiTextScale).toBe(1);
   });
 
+  it("reads a size it no longer offers as the nearest of small, medium and large", () => {
+    expect(normaliseSettings({ uiTextScale: 0.9 }).uiTextScale).toBe(0.85);
+    expect(normaliseSettings({ uiTextScale: 1.1 }).uiTextScale).toBe(1);
+  });
+
   it("puts the size on the page for the UI's type scale, and takes it off at 100%", () => {
-    boot({ uiTextScale: 1.1, languageChosen: true });
+    boot({ uiTextScale: 0.85, languageChosen: true });
     render(
       <SettingsProvider>
         <AppearanceSync />
@@ -391,7 +396,7 @@ describe("interface text size", () => {
       </SettingsProvider>,
     );
     const root = document.documentElement;
-    expect(root.style.getPropertyValue("--ui-text-scale")).toBe("1.1");
+    expect(root.style.getPropertyValue("--ui-text-scale")).toBe("0.85");
     act(() => lastSet({ uiTextScale: 1 }));
     expect(root.style.getPropertyValue("--ui-text-scale")).toBe("");
   });

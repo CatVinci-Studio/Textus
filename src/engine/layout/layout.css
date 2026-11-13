@@ -18,8 +18,9 @@
   background: var(--ui-frame-fill);
 }
 
-/* The tabs name the documents; the title gives way to them. */
-.app-shell[data-tabs="bar"] .window-bar-title {
+/* The tabs name the documents; the title gives way to them - but for a
+   bar that is a row of its own, over the tabs. */
+:root:not([data-bar-rows="2"]) .app-shell[data-tabs="bar"] .window-bar-title {
   visibility: hidden;
 }
 

@@ -33,11 +33,13 @@ export function useSideToTop(): boolean {
  */
 export function useBarLayout({
   menuBarShown,
+  titleRowShown,
   rail,
   railOff,
   zen,
 }: {
   menuBarShown: boolean;
+  titleRowShown: boolean;
   rail: boolean;
   railOff: boolean;
   zen: boolean;
@@ -46,6 +48,7 @@ export function useBarLayout({
   const layout = barLayout({
     platform: platformName(),
     menuBar: appDrawsWindowFrame && menuBarShown,
+    titleRow: titleRowShown,
     rail,
     railOff,
     zen,

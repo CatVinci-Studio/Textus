@@ -172,6 +172,17 @@ export function configureEditorRoot(
   ctx.set(
     editorViewOptionsCtx,
     withLazyBlockViews(ctx, {
+      // A line the caret is brought to stays below where the page's text
+      // starts, clear of the format bar over it.
+      scrollMargin: {
+        get top() {
+          const page = root.closest(".editor-content");
+          return page ? parseFloat(getComputedStyle(page).paddingTop) || 5 : 5;
+        },
+        right: 5,
+        bottom: 5,
+        left: 5,
+      },
       attributes: () => ({
         id: "write",
         role: "textbox",

@@ -1091,6 +1091,7 @@ type /name in a conversation to use one.
   layoutClassic: "Classic",
   activityRailLabel: "Show the activity bar",
   menuBarLabel: "Show the menu bar",
+  titleRowLabel: "Show the title bar on its own row",
   // The app menu. The menu ids are the contract; these are only labels.
   menuFile: "File",
   menuEdit: "Edit",
@@ -1309,6 +1310,9 @@ type /name in a conversation to use one.
   docLetterSpacingCondensed: "Condensed",
   docLetterSpacingBy: "By",
   uiTextScaleLabel: "Interface text size",
+  uiTextSmall: "Small",
+  uiTextMedium: "Medium",
+  uiTextLarge: "Large",
   startPageTab: "Start",
   startupOpenLabel: "On launch, open",
   startupOpenSession: "Last documents",

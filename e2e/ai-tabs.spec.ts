@@ -1,5 +1,6 @@
 import { expect, test, type Page } from "@playwright/test";
 import { emit, openApp, pasteMarkdown } from "./helpers";
+import { openPath } from "./plugin-helpers";
 
 // Textus AI's conversations are tabs: the AI button opens one in an island
 // of its own on the right; they drag like any tab; the button collapses
@@ -357,4 +358,57 @@ test("an unsaved document in front keeps the folder's conversation; + opens anot
   const menu = await page.locator(".chat-history-menu").boundingBox();
   const tab = await page.locator(".ai-tab:visible").boundingBox();
   expect(menu!.width).toBeGreaterThan(tab!.width - 40);
+});
+
+test("with the title on a row of its own, it names the document over every tab, the AI's too", async ({
+  page,
+}) => {
+  await page.setViewportSize({ width: 1200, height: 760 });
+  await openApp(page, { settings: { titleRowShown: true } });
+  await pasteMarkdown(page, "# 第三章\n\n雨下到第三天。");
+  await aiButton(page).click();
+  await expect(tabs(page)).toHaveText(["未命名", "Textus AI"]);
+  const bar = (await page.locator(".window-bar").boundingBox())!;
+  await expect(page.locator(".window-bar-title")).toBeVisible();
+  for (const tab of await tabs(page).all())
+    expect((await tab.boundingBox())!.y).toBeGreaterThanOrEqual(
+      bar.y + bar.height - 1,
+    );
+  const button = (await aiButton(page).boundingBox())!;
+  expect(button.y + button.height).toBeLessThanOrEqual(bar.y + bar.height);
+});
+
+test("however many tabs, the bar keeps bare room before its controls to move the window by", async ({
+  page,
+}) => {
+  const names = Array.from(
+    { length: 14 },
+    (_, i) => `note ${i} with a long name.md`,
+  );
+  await page.addInitScript((names) => {
+    const fs: Record<string, string> = {};
+    for (const n of names) fs[`/w/${n}`] = `# ${n}\n`;
+    (window as unknown as Record<string, unknown>).__devFs = fs;
+  }, names);
+  await page.setViewportSize({ width: 1200, height: 760 });
+  await openApp(page);
+  for (const n of names) await openPath(page, `/w/${n}`);
+  const grabbed = async () => {
+    const status = (await page.locator(".window-bar-status").boundingBox())!;
+    return page.evaluate(
+      ([x, y]) => {
+        const hit = document.elementFromPoint(x, y);
+        return (
+          !!hit?.closest("[data-tauri-drag-region]") &&
+          !hit.closest(".tab-pill, button, .tab-bar")
+        );
+      },
+      [status.x - 16, status.y + status.height / 2],
+    );
+  };
+  expect(await grabbed()).toBe(true);
+  // The AI's own row now ends at the controls: its room moves there.
+  await aiButton(page).click();
+  await expect(tabs(page).last()).toHaveText("Textus AI");
+  expect(await grabbed()).toBe(true);
 });

@@ -12,6 +12,9 @@ import {
 
 /** Air kept between the tabs and the window bar's own controls. */
 const AIR = 8;
+/** Bare bar kept before the window's own controls, however many tabs:
+ *  somewhere to grab the window by. */
+const GRIP = 56;
 
 /** Where one tab row in the window bar's row starts and ends its tabs. */
 interface RowInsets {
@@ -35,6 +38,7 @@ export function rowInsets(
   statusStart: number,
   air: number,
   corner: number,
+  grip = 0,
 ): RowInsets {
   // Controls wholly before the row (the menu in the rail's column) are no
   // obstacle: the first tab can stand at the sheet's edge.
@@ -42,7 +46,10 @@ export function rowInsets(
   const atCorner = clear <= 0;
   return {
     start: atCorner ? 0 : Math.max(clear, corner),
-    end: Math.max(corner, row.right - statusStart + air),
+    end: Math.max(
+      corner,
+      row.right - statusStart + air + (row.right > statusStart ? grip : 0),
+    ),
     atCorner,
   };
 }
@@ -177,6 +184,7 @@ function insetsFor(
     inBar ? statusStart : Infinity,
     air,
     Math.max(air, bar.corner),
+    scaledPx(GRIP),
   );
   const shown = island ? shownIsland(island.paneId) : null;
   const joined = insets.atCorner && !!shown && shown.front === shown.tabs[0];
