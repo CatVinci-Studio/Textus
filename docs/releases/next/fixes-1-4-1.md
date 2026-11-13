@@ -16,6 +16,8 @@
 
 ### Fixed
 
+- Windows: Textus's icon is sharp again on the desktop, in Explorer and on the taskbar; 1.4.0's was blurred at every size.
+- A formula's preview while you edit it is as wide as the column, so a long or multi-line formula fits inside it instead of spilling past its border, and it no longer pops in; on Windows it could be left behind at the top of the window after switching tabs.
 - Updating and relaunching Textus writes its windows, tabs, settings and AI chats first, so nothing from the last moments before the update is lost.
 - A picture embedded the Obsidian way (`![[image.png]]`) stays on show when clicked, as any picture does: its corner button or a double click enlarges it, and right-click offers View Image and Copy. The source comes up as the caret reaches it. (#659)
 - Reopening Textus brings its documents back as they were, the one in front first, without flicking through each tab.

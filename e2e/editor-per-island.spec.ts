@@ -43,7 +43,8 @@ test("a formula's preview belongs to its document: under the formula, gone with 
   await page.addInitScript(() => {
     const w = window as unknown as Record<string, unknown>;
     w.__devFs = {
-      "/w/m.md": "# M\n\n$$\n\\int_0^1 x\\,dx\n$$\n\nafter\n",
+      "/w/m.md":
+        "# M\n\n$$\n\\begin{aligned}D_{KL}(q_\\phi(z|x)\\|p_\\theta(z|x))&=\\mathbb{E}_q[\\ln q_\\phi(z|x)-\\ln p_\\theta(x|z)-\\ln p(z)+\\ln p_\\theta(x)]\\end{aligned}\n$$\n\nafter\n",
       "/w/b.md": "# B\n\nbeta line\n",
     };
   });
@@ -59,6 +60,15 @@ test("a formula's preview belongs to its document: under the formula, gone with 
   const box = await preview.boundingBox();
   const formula = await front.locator(".math-block-revealed").boundingBox();
   expect(box!.y).toBeGreaterThan(formula!.y + formula!.height - 1);
+  // A wide formula fits inside it, and it doesn't pop in: on Windows an
+  // animated layer was left on screen after the tab changed.
+  const fits = await preview.evaluate((el) => ({
+    spill: el.scrollWidth - el.clientWidth,
+    room: el.parentElement!.clientWidth - el.getBoundingClientRect().width,
+    animation: getComputedStyle(el).animationName,
+  }));
+  expect(fits.animation).toBe("none");
+  expect(fits.spill <= 1 || fits.room < 2).toBe(true);
   await page.locator(".tab-pill").filter({ hasText: "b.md" }).click();
   await expect(front.locator("h1")).toContainText("B");
   await expect(page.locator(".math-float-preview:visible")).toHaveCount(0);
