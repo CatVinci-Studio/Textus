@@ -19,6 +19,15 @@ describe("pluginLead", () => {
     );
   });
 
+  it("reads past a time and a key shown on its own", () => {
+    expect(pluginLead("Write (@2026-11-02 09:00) in a line: reminded.")).toBe(
+      "Write (@2026-11-02 09:00) in a line",
+    );
+    expect(pluginLead("Type / for headings, : for emoji. More.")).toBe(
+      "Type / for headings, : for emoji",
+    );
+  });
+
   it("keeps a short one whole, and a dot inside a name", () => {
     expect(pluginLead("Sheet music from ABC notation.")).toBe(
       "Sheet music from ABC notation.",

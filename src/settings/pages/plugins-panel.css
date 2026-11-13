@@ -123,7 +123,6 @@
   flex: 1;
 }
 
-.plugins-panel-action[data-update],
 .plugins-panel-action[data-update]:hover {
   color: var(--ui-accent);
 }
