@@ -130,11 +130,12 @@ impl Connection {
         Ok(connection)
     }
 
-    /// Every tool the server offers, page by page.
+    /// Every tool the server offers, page by page (at most 20 pages, so a
+    /// server whose pages never end can't hold it).
     pub async fn list_tools(&self) -> Result<Vec<McpTool>, String> {
         let mut tools = Vec::new();
         let mut cursor: Option<String> = None;
-        loop {
+        for _ in 0..20 {
             let params = match &cursor {
                 Some(c) => json!({ "cursor": c }),
                 None => json!({}),
@@ -154,7 +155,9 @@ impl Connection {
                 });
             }
             match page["nextCursor"].as_str() {
-                Some(next) if tools.len() < 500 => cursor = Some(next.to_string()),
+                Some(next) if tools.len() < 500 && cursor.as_deref() != Some(next) => {
+                    cursor = Some(next.to_string())
+                }
                 _ => break,
             }
         }

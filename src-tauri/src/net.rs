@@ -201,7 +201,9 @@ mod tests {
         let with_credentials = proxy.trim_start_matches("http://").to_string();
         let authorized = through(
             client(Duration::from_secs(5), Duration::from_secs(5)),
-            Some(format!("http://alice:{{SECRET_4bymoh54}}@{with_credentials}")),
+            Some(format!(
+                "http://alice:{{SECRET_4bymoh54}}@{with_credentials}"
+            )),
         )
         .unwrap()
         .build()
@@ -263,9 +265,8 @@ mod tests {
                 }
                 request.extend_from_slice(&buf[..n]);
             }
-            let _ = stream.write_all(
-                b"HTTP/1.1 200 OK\r\nContent-Length: 2\r\nConnection: close\r\n\r\nok",
-            );
+            let _ = stream
+                .write_all(b"HTTP/1.1 200 OK\r\nContent-Length: 2\r\nConnection: close\r\n\r\nok");
         });
         let client = through(
             client(Duration::from_secs(5), Duration::from_secs(5)),

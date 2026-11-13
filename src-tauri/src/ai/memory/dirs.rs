@@ -394,7 +394,7 @@ impl MemoryDirs {
                 }
                 // A forget undone: the file is back, its forgotten copy
                 // goes.
-                self.drop_forgotten_copy(&loc.path);
+                self.drop_forgotten_copy(&loc.path, previous);
                 write(&loc.path, previous)
             }
         }

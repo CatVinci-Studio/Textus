@@ -57,16 +57,19 @@ fn streaming_builder() -> reqwest::ClientBuilder {
         .read_timeout(STREAM_READ_TIMEOUT)
 }
 
+/// `builder` through the app's proxy, or else direct: a terminal that
+/// started the app with HTTPS_PROXY set must not hijack a request through
+/// it, and "None (direct)" says direct. A service that needs a proxy has
+/// the app's setting.
+pub(crate) fn route(builder: reqwest::ClientBuilder) -> reqwest::ClientBuilder {
+    match proxy() {
+        Some(proxy) => builder.proxy(proxy),
+        None => builder.no_proxy(),
+    }
+}
+
 fn with_proxy(build: impl Fn() -> reqwest::ClientBuilder) -> reqwest::Client {
-    let builder = match proxy() {
-        Some(proxy) => build().proxy(proxy),
-        // No proxy in the app's settings: direct all the same. A terminal
-        // that started the app with HTTPS_PROXY set must not hijack a
-        // model on this computer through it, and "None (direct)" says
-        // direct. A provider that needs a proxy has the app's setting.
-        None => build().no_proxy(),
-    };
-    builder.build().unwrap_or_default()
+    route(build()).build().unwrap_or_default()
 }
 
 /// The client every whole-body provider request uses. Falls back to a direct

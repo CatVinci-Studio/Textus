@@ -107,6 +107,12 @@ fn a_tool_name_is_what_every_provider_takes() {
     );
     assert_eq!(tool_name("知识库", "search"), "mcp_search");
     assert!(tool_name(&"x".repeat(80), "y").len() <= 64);
+    // Two long tools alike in their first 53 characters stay apart and short.
+    let long = |end: &str| tool_name("github", &format!("{}{end}", "a".repeat(60)));
+    let first = unique_name(long("1"), &[]);
+    let second = unique_name(long("2"), &[first.clone()]);
+    assert_ne!(first, second);
+    assert!(second.len() <= 64, "{second}");
 }
 
 #[test]

@@ -11,6 +11,13 @@ fn library_entries_parse_frontmatter_lists_in_both_scripts() {
     assert_eq!(entry.aliases, ["晚晚", "林老师"]);
     assert_eq!(entry.include, LibraryInclude::Always);
     assert_eq!(entry.body, "女主角。");
+    let block = parse_library_entry(
+        "f",
+        "lin",
+        "---\naliases:\n  - Lin\n  - \"Dr. Lin\"\ninclude: always\n---\n",
+    );
+    assert_eq!(block.aliases, ["Lin", "Dr. Lin"]);
+    assert_eq!(block.include, LibraryInclude::Always);
     let plain = parse_library_entry("f", "Harbour", "A port city.");
     assert_eq!(plain.name, "Harbour");
     assert_eq!(plain.include, LibraryInclude::Detected);

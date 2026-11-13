@@ -6,7 +6,7 @@
 //! sections are handed on in the outline's order.
 
 use super::checks::*;
-use super::checks::{all_soft, cited_link, length, problems, Problem};
+use super::checks::{all_soft, cited_link, problems, Problem};
 use super::figures::Draw;
 use super::grounding::{figures_by_source, unsupported_figures};
 use super::handover::{hand_over_checked, Checked, Task};
@@ -138,7 +138,7 @@ pub(crate) fn long_posts(markdown: &str, paper: &Paper) -> Vec<Problem> {
     let Some(most) = paper.genre.profile().scale.post_chars else {
         return Vec::new();
     };
-    let most = if length("字", &paper.language) == 1 {
+    let most = if counts_characters(&paper.language) {
         most / 2
     } else {
         most
