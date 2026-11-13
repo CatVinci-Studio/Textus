@@ -16,10 +16,21 @@ pub(crate) fn next_window_id() -> u32 {
 /// Editor windows by when the user was last in them, latest first: what comes
 /// from outside any window (the tray, a menu with none focused) goes to the
 /// first, and a dropped tab to the frontmost of the windows under it.
+#[cfg(desktop)]
+fn is_editor(label: &str) -> bool {
+    crate::windows::is_editor_window(label)
+}
+
+/// The phone and iPad have the one window.
+#[cfg(not(desktop))]
+fn is_editor(_label: &str) -> bool {
+    true
+}
+
 static RECENT: std::sync::Mutex<Vec<String>> = std::sync::Mutex::new(Vec::new());
 
 pub(crate) fn note_focused(label: &str) {
-    if crate::windows::is_editor_window(label) {
+    if is_editor(label) {
         let mut recent = RECENT.lock().unwrap_or_else(|e| e.into_inner());
         recent.retain(|l| l != label);
         recent.insert(0, label.to_string());
@@ -40,7 +51,7 @@ pub(crate) fn focus_rank(label: &str) -> usize {
 pub(crate) fn last_editor(app: &tauri::AppHandle) -> Option<tauri::Window> {
     app.windows()
         .into_iter()
-        .filter(|(label, _)| crate::windows::is_editor_window(label))
+        .filter(|(label, _)| is_editor(label))
         .min_by_key(|(label, _)| focus_rank(label))
         .map(|(_, window)| window)
 }
