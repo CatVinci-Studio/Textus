@@ -8,10 +8,10 @@
 - Plugins that read the folder's notes (Two-way Links, Tasks, Tags, Graph, databases) get only what changed since they last asked, instead of every note at each save.
 - Pictures in a document load as they come near the screen, and switching between long documents does less work.
 
-- A plugin's block in a document can draw at the interface's text size, so a wider column shows more of it: Wiki bases and task queries now do, rather than growing with the document's text and zoom.
+- A plugin's block in a document can draw at the interface's size (Settings › Appearance › Interface size), so a wider column shows more of it: Wiki bases and task queries now do, rather than growing with the document's text and zoom.
 - Switching back to a long document you edited is quicker: its undo history comes back without drawing the whole document again.
 - Only the tab in front keeps a source or split view: tabs behind it let theirs go after a while, as plugin pages do.
-- In a narrow Plugins list, a plugin with an update keeps its row on one line, with a plain Update button.
+- In a narrow Plugins list, a plugin with an update keeps its row on one line.
 - `Ctrl/⌘ + N`, File › New and the sidebar open a document beside Textus AI and Settings, never among their tabs.
 
 ### Fixed
