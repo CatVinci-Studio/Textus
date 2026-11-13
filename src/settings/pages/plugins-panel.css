@@ -75,18 +75,14 @@
   color: var(--ui-text);
 }
 
-/* What it does, in two lines (tx-clamp): one cut it to a few words
-   beside its button. */
+/* What it does, on one line under its name. */
 .plugins-panel-line {
   font-size: var(--text-caption);
   color: var(--ui-muted);
 }
 
 /* Under the text, from its start: the open button's padding, the icon and
-   the gap after it. Short of room, the button goes under the maker, from
-   the same start, rather than cutting the name to a letter. */
-/* One line however narrow: the byline gives way (cut short), never the
-   button, which would otherwise drop to a line of its own. */
+   the gap after it. */
 .plugins-panel-foot {
   display: flex;
   flex-wrap: nowrap;
@@ -96,19 +92,6 @@
   margin-top: -6px;
   /* design: allow - starts under the row's name, past its icon */
   padding: 0 8px 8px 56px;
-}
-
-.plugins-panel-foot > .plugin-byline {
-  flex: 1 1 auto;
-  flex-wrap: nowrap;
-  min-width: 0;
-  overflow: hidden;
-}
-.plugins-panel-foot > .plugin-byline > span:not(.tx-badge) {
-  min-width: 0;
-  overflow: hidden;
-  white-space: nowrap;
-  text-overflow: ellipsis;
 }
 
 .plugins-panel-end {

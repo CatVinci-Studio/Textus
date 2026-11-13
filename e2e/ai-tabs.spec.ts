@@ -418,3 +418,29 @@ test("however many tabs, the bar keeps bare room before its controls to move the
   await expect(tabs(page).last()).toHaveText("Textus AI");
   expect(await grabbed()).toBe(true);
 });
+
+test("the sidebar's name row at the window's top moves the window too", async ({
+  page,
+}) => {
+  await page.addInitScript(() =>
+    Object.defineProperty(navigator, "platform", { get: () => "Win32" }),
+  );
+  await page.setViewportSize({ width: 1200, height: 760 });
+  await openApp(page);
+  await page.locator(".activity-rail-item").first().click();
+  const header = page.locator(".sidebar-header");
+  await expect(header).toBeVisible();
+  const title = (await page.locator(".sidebar-title").boundingBox())!;
+  const moves = (x: number, y: number) =>
+    page.evaluate(
+      ([x, y]) =>
+        !!document
+          .elementFromPoint(x, y)
+          ?.closest("[data-tauri-drag-region]") &&
+        !document.elementFromPoint(x, y)?.closest("button"),
+      [x, y],
+    );
+  // Its name, and the bare room before it.
+  expect(await moves(title.x + 4, title.y + title.height / 2)).toBe(true);
+  expect(await moves(title.x - 6, title.y + title.height / 2)).toBe(true);
+});

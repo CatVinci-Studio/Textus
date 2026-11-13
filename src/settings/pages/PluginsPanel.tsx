@@ -1,6 +1,5 @@
 import { useMutedCards } from "../../plugins/store/usePluginCard";
 import { setAllPlugins } from "../../plugins/plugin-switches";
-import { Byline } from "./CatalogRow";
 import { catalogMessage, catalogStatus } from "./CatalogStatus";
 import { fill } from "../../i18n/fill";
 import {
@@ -36,7 +35,6 @@ import {
   catalogItem,
 } from "../../plugins/store/catalog";
 import { pluginMatches } from "../../plugins/store/plugin-records";
-import type { PluginManifest } from "../../plugins/store/manifest";
 import type { Strings } from "../../i18n/strings";
 import { PluginIcon } from "./PluginArt";
 import { usePluginActions } from "./PluginAction";
@@ -155,9 +153,6 @@ export function PluginsPanel({
                   ? pluginText(record, record.manifest.description)
                   : ""
               }
-              manifest={record.manifest}
-              official={record.official}
-              t={t}
               off={record.status !== "on"}
               picked={picked === record.id}
               onOpen={() => onPick(record.id)}
@@ -213,9 +208,6 @@ export function PluginsPanel({
                   { manifest: item.manifest },
                   item.manifest.description,
                 )}
-                manifest={item.manifest}
-                official={item.official}
-                t={t}
                 picked={picked === item.id}
                 onOpen={() => onPick(item.id)}
                 end={actionFor(item.id)}
@@ -234,24 +226,18 @@ export function PluginsPanel({
 }
 
 function PluginRow({
-  t,
   id,
   name,
   line,
-  manifest,
-  official,
   off = false,
   icon,
   end,
   onOpen,
   picked = false,
 }: {
-  t: Strings;
   id: string;
   name: string;
   line: string;
-  manifest: PluginManifest | null;
-  official: boolean;
   off?: boolean;
   icon: ReactNode;
   /** Its button: install, or update. */
@@ -260,7 +246,6 @@ function PluginRow({
   /** Its page shows beside the list. */
   picked?: boolean;
 }) {
-  const by = manifest?.author || manifest?.publisher;
   return (
     <div
       className="plugins-panel-row"
@@ -277,16 +262,17 @@ function PluginRow({
         {icon}
         <span className="plugins-panel-text">
           <span className="tx-truncate plugins-panel-name">{name}</span>
-          {line && <span className="tx-clamp plugins-panel-line">{line}</span>}
+          {line && (
+            <span className="tx-truncate plugins-panel-line">{line}</span>
+          )}
         </span>
       </button>
-      {/* Its author and its button on a line of their own, under the text:
-          the name and what it does keep the row's width, a long label
-          (Installieren) cutting neither. */}
-      {(by || official || end) && (
+      {/* Its button on a line of its own, under the text: the name and
+          what it does keep the row's width, a long label (Installieren)
+          cutting neither. Who made it is on its page. */}
+      {end && (
         <div className="plugins-panel-foot">
-          <Byline t={t} official={official} author={by} />
-          {end && <span className="plugins-panel-end">{end}</span>}
+          <span className="plugins-panel-end">{end}</span>
         </div>
       )}
     </div>

@@ -5,13 +5,17 @@
 ### Improved
 
 - Interface text size comes in three steps, Small, Medium and Large; a size chosen before moves to the nearest of them.
+- A sidebar panel's search box has room round it, its sides level with the panel's name.
+- The sidebar's Plugins list shows each plugin's name and one line on what it does; who made it is on its page.
 - However many tabs are open, the window bar keeps some bare room before its buttons to move the window by.
 
 ### Fixed
 
+- The sidebar's top row, where it reaches the top of the window, moves the window like the rest of the bar.
 - The open tab's outline joins its sheet's edge again: the sheet's top edge no longer goes missing under the window bar, which on some screens left the tab's curves hanging apart.
 - Jumping back to the top of a document, or switching back to it, no longer leaves its first lines under the format bar.
 
 ### Platform notes
 
+- **Windows and Linux:** the window bar is a little taller, at every interface text size.
 - **macOS:** closing a web page tab lets the page finish drawing first, which avoids a rare crash.

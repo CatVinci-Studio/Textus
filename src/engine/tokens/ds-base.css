@@ -197,11 +197,20 @@
   );
 }
 
+/* Where the app draws the frame (Windows, Linux) the bar is a step taller:
+   nothing native to line up with, and more of it to hold the window by. */
+:root[data-window-chrome="app"] {
+  --window-bar-height: calc(32px * var(--chrome-scale));
+}
+
 /* On a whole pixel: the tabs in it end where their sheets begin, and a
    fraction left between them showed the sheet's edge as a line. */
 @supports (width: round(1px, 1px)) {
   :root {
     --window-bar-height: round(calc(28px * var(--chrome-scale)), 1px);
+  }
+  :root[data-window-chrome="app"] {
+    --window-bar-height: round(calc(32px * var(--chrome-scale)), 1px);
   }
 }
 
