@@ -163,7 +163,7 @@ export function ChatBody({
   // before them finish. A failed reply pauses them; Stop gives them back.
   const queueState = useMessageQueue(
     busy,
-    error,
+    retryable,
     conversation.conversationId,
     async (next) => {
       const latest = refreshContext ? await refreshContext() : null;

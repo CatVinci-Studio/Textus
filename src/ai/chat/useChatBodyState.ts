@@ -1,4 +1,5 @@
 import type { QueuedMessage } from "./MessageQueue";
+import type { RetryableSend } from "./conversation/conversation-types";
 import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import { useLatest } from "../../utils/hooks/useLatest";
 import type { AgentTurn } from "../types";
@@ -92,15 +93,16 @@ export function useStreamedProposals(
  *  conversation gives them back to the box through `restore`. */
 export function useMessageQueue(
   busy: boolean,
-  /** The conversation's failure: while there is one, the queue waits. */
-  failure: unknown,
+  /** The failed send, a new object each time: while there is one the queue
+   *  waits, also when two failures in a row read the same. */
+  failure: RetryableSend | null,
   conversationId: string,
   sendNext: (next: QueuedMessage) => Promise<AgentTurn[] | undefined>,
   restore: (typed: string) => void,
 ) {
   const [queue, setQueue] = useState<QueuedMessage[]>([]);
   // The failure the user chose to go on past, until the next send clears it.
-  const [passed, setPassed] = useState<unknown>(null);
+  const [passed, setPassed] = useState<RetryableSend | null>(null);
   if (!failure && passed !== null) setPassed(null);
   const queuePaused = !!failure && failure !== passed && queue.length > 0;
   // Bumped as each send ends, so the queue looks again.
