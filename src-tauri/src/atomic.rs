@@ -341,7 +341,11 @@ pub(crate) fn copy_entry(from: &std::path::Path, to: &std::path::Path) -> std::i
 }
 
 /// `from` copied to `to`, or nothing left at `to` when the copy fails.
+/// Something already at `to` is never copied over, nor taken back.
 pub(crate) fn copy_whole(from: &std::path::Path, to: &std::path::Path) -> std::io::Result<()> {
+    if std::fs::symlink_metadata(to).is_ok() {
+        return Err(std::io::ErrorKind::AlreadyExists.into());
+    }
     copy_entry(from, to).inspect_err(|_| take_back(to))
 }
 

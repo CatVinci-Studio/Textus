@@ -280,7 +280,7 @@ pub async fn project_settings_read(root: String) -> serde_json::Value {
     let file = Path::new(&root).join(".textus").join("settings.json");
     tauri::async_runtime::spawn_blocking(move || {
         text::json(&file).unwrap_or_else(|| {
-            let empty = std::fs::read_to_string(&file).is_ok_and(|t| t.trim().is_empty());
+            let empty = text::read(&file).is_some_and(|t| t.trim().is_empty());
             if file.exists() && !empty {
                 serde_json::Value::Null
             } else {

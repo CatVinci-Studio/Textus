@@ -9,11 +9,7 @@ import {
 import { webviewMessage } from "../manager";
 import { watchTheme, webviewThemeCss, windowIsDark } from "./theme-vars";
 import { windowInfo } from "../store/plugin-records";
-import {
-  useResolvedWebview,
-  useWindowLanguage,
-  webviewPage,
-} from "./PluginWebview";
+import { useResolvedWebview, webviewPage } from "./PluginWebview";
 import {
   setWebviewState,
   subscribeWebviews,
@@ -85,7 +81,6 @@ export function DesktopFloating({ view }: { view: FloatingView }) {
   );
   const id = record?.id ?? null;
   const html = useSyncExternalStore(subscribeWebviews, () => webviewHtml(id));
-  const language = useWindowLanguage();
   const label = useFloatingWindow(view);
   const chrome = useChromeScale();
 
@@ -145,7 +140,7 @@ export function DesktopFloating({ view }: { view: FloatingView }) {
     };
     // The folded state is sent on its own; the page is sent once per HTML.
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [label, id, html, language, view.view]);
+  }, [label, id, html, view.view]);
 
   return null;
 }

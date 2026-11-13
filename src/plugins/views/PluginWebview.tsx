@@ -12,7 +12,6 @@ import {
 import { grantedHosts } from "../store/permissions";
 import type { CodeBlockSeen } from "../manager";
 import { windowInfo } from "../store/plugin-records";
-import { onPluginEvent } from "../app-bridge";
 import { watchTheme, webviewThemeCss, windowIsDark } from "./theme-vars";
 import { pageMenuEntries } from "./webview-menu";
 import { openPageLink } from "./page-links";
@@ -66,13 +65,6 @@ export function webviewPage(
   };
 }
 
-/** The window's language: a page is drawn anew in it when it changes. */
-export const useWindowLanguage = () =>
-  useSyncExternalStore(
-    (changed) => onPluginEvent("language", changed),
-    () => windowInfo().language(),
-  );
-
 /** The tallest a code block's frame grows: at most 70% of the window, so a
  *  long table or board scrolls inside and the note around it stays in
  *  view. */
@@ -118,7 +110,6 @@ export function PluginWebview({
   zoom?: number;
 }) {
   const html = useSyncExternalStore(subscribeWebviews, () => webviewHtml(id));
-  const language = useWindowLanguage();
   const boxRef = useRef<HTMLDivElement>(null);
   const closeMenuRef = useRef<(() => void) | null>(null);
   // A menu the page asked for, drawn by the app over the page.
@@ -276,7 +267,7 @@ export function PluginWebview({
       webviewConnected(id, null);
       frame.remove();
     };
-  }, [id, html, language, fitHeight, ownZoom, tellZoom, interfaceSize]);
+  }, [id, html, fitHeight, ownZoom, tellZoom, interfaceSize]);
 
   return (
     <>
@@ -333,10 +324,11 @@ export function useResolvedWebview(
   const initialBlock = useRef(target.codeBlock);
   // Turned off, the page shows so; turned on again, it is made anew.
   // Before the plugins have loaded, it isn't known: tried as before.
-  const runs = useSyncExternalStore(subscribePlugins, () => {
-    const record = pluginRecord(plugin);
-    return !pluginsSnapshot().loaded || !record || pluginMayRun(record);
-  });
+  // Once they have, an uninstalled plugin's page is off too.
+  const runs = useSyncExternalStore(
+    subscribePlugins,
+    () => !pluginsSnapshot().loaded || pluginMayRun(pluginRecord(plugin)),
+  );
   useEffect(() => {
     if (!runs) {
       setRecord(null);
