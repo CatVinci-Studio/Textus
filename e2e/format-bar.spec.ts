@@ -53,8 +53,10 @@ test("brought back to the top, the document's first block shows below the format
   const body = Array.from({ length: 60 }, (_, i) => `paragraph ${i}`);
   await doc(page).click();
   await page.keyboard.type(["first block", ...body].join("\n"), { delay: 0 });
-  await page.keyboard.press("ControlOrMeta+ArrowDown");
-  await page.keyboard.press("ControlOrMeta+ArrowUp");
+  // The document's end and start: ⌘↓ ⌘↑ on a Mac, Ctrl+End Ctrl+Home elsewhere.
+  const mac = process.platform === "darwin";
+  await page.keyboard.press(mac ? "Meta+ArrowDown" : "Control+End");
+  await page.keyboard.press(mac ? "Meta+ArrowUp" : "Control+Home");
   const barBox = await bar(page).boundingBox();
   // The scroll back settles over a few frames.
   await expect
