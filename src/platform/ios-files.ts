@@ -1,6 +1,6 @@
 import { useEffect, useState } from "react";
 import { invoke } from "@tauri-apps/api/core";
-import { documentDir, join } from "@tauri-apps/api/path";
+import { join } from "@tauri-apps/api/path";
 import { type DirEntryInfo } from "./bindings/files";
 import { isIOSApp } from "./capabilities";
 import { documentsDir, insideDocuments } from "./documents-path";
@@ -123,7 +123,7 @@ export function useIOSDocumentsFolder(): string | null {
   useEffect(() => {
     if (!isIOSApp) return;
     let alive = true;
-    void documentDir().then((path) => alive && setDir(path));
+    void documentsDir().then((path) => alive && setDir(path.slice(0, -1)));
     return () => {
       alive = false;
     };
@@ -139,7 +139,7 @@ export async function newDocumentPath(
   defaultName: string,
   exists: (path: string) => Promise<boolean>,
 ): Promise<string> {
-  const dir = await documentDir();
+  const dir = await documentsDir();
   const dot = defaultName.lastIndexOf(".");
   const stem = dot > 0 ? defaultName.slice(0, dot) : defaultName;
   const ext = dot > 0 ? defaultName.slice(dot) : ".md";
