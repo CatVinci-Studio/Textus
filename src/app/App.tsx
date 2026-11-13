@@ -161,11 +161,13 @@ function App() {
           data-tabs={tabRow}
           // Its column open: the grid and the rail's edge follow the model.
           data-sidebar={sidebarShown ? "open" : undefined}
+          // The sidebar's dragged width; a phone's is its stylesheet's.
           style={
-            {
-              // The sidebar's dragged width.
-              "--sidebar-width": `${sidebarWidth.width}px`,
-            } as React.CSSProperties
+            phone
+              ? undefined
+              : ({
+                  "--sidebar-width": `${sidebarWidth.width}px`,
+                } as React.CSSProperties)
           }
         >
           <WindowBar
@@ -194,14 +196,16 @@ function App() {
             activeTabId={activeTab.id}
             onToggle={toggleSidebar}
             onClose={() => setPanelOpen(false)}
-            onOpenFile={(path, how, line) =>
+            onOpenFile={(path, how, line) => {
+              // A phone's page comes back with the file opened.
+              if (phone) setPanelOpen(false);
               void openFile(path, {
                 ...(how === "beside"
                   ? { where: "beside" }
                   : { preview: how === "preview" }),
                 ...(line !== undefined ? { place: { line } } : {}),
-              })
-            }
+              });
+            }}
             onEntryMoved={entryMoved}
             searchFocusRequest={searchFocusRequest}
             onSearchFocusHandled={clearSearchFocusRequest}

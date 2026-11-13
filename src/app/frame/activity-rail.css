@@ -46,7 +46,7 @@
   border-right-color: transparent;
 }
 
-:root:is(.zen, [data-window-chrome="mobile"]) .activity-rail {
+:root.zen .activity-rail {
   display: none;
 }
 

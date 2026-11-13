@@ -7,8 +7,8 @@ import { BEFORE_ISLANDS } from "../../engine/frame/useIslandFrame";
  * making room beside it (design-language.md 5.7): at its own width
  * throughout, it is revealed by the room the islands leave before them, on
  * their frames - nothing inside it laid out again frame by frame, never
- * showing where an island still is. Off for an iPhone's drawer, which
- * slides on its own (sidebar-frame.css).
+ * showing where an island still is. Off on a phone, where the page is
+ * pushed aside instead (mobile/styles/sidebar.css).
  */
 export function useSidebarFrame(open: boolean, on: boolean, width: number) {
   const aside = useRef<HTMLElement | null>(null);
@@ -18,7 +18,7 @@ export function useSidebarFrame(open: boolean, on: boolean, width: number) {
     frameClock.attach("sidebar", el);
     placeSidebar(el, width);
   }, [open, on, width]);
-  // Off (an iPhone's drawer) or gone: the clock lets it go.
+  // Off (a phone) or gone: the clock lets it go.
   useLayoutEffect(() => {
     if (on) return;
     frameClock.drop("sidebar");

@@ -1,55 +1,60 @@
-/* The sidebar on a phone: a drawer over the page rather than a column
-   beside it, with rows a finger can hit. */
+/* The sidebar on a phone (design: phone, pushed open): the rail and the
+   sidebar lie under the page's left edge, and the page, its bar too, moves
+   right by their width, a strip of it left at the right edge. Nothing
+   dims; a tap on that strip pushes it back (usePushedSidebar). */
+:root[data-window-chrome="mobile"] .app-shell {
+  --rail-width: 56px;
+  --sidebar-width: min(240px, calc(100vw - var(--rail-width) - 64px));
+}
 
-/* Docked on an iPad, the sidebar clears the title row. */
+:root[data-window-chrome="mobile"] :is(.activity-rail, .sidebar) {
+  position: fixed;
+  top: 0;
+  z-index: 0;
+  padding-top: var(--safe-top);
+  padding-bottom: env(safe-area-inset-bottom, 0px);
+  border-right: none;
+}
+
+/* Moved only while open: a moved box holds its contents' layers, and
+   the tabs rise over the bar's row only while the page is still. Later in
+   the page than the sidebar, it is drawn over it as it slides. */
+:root[data-window-chrome="mobile"] :is(.window-bar, .main-pane) {
+  transition: transform calc(var(--dur-settle) * var(--motion-travel))
+    var(--ease-settle);
+}
+
+:root[data-window-chrome="mobile"]
+  .app-shell[data-sidebar="open"]
+  > :is(.window-bar, .main-pane) {
+  transform: translateX(calc(var(--rail-width) + var(--sidebar-width)));
+}
+
+/* Its tabs show through the moved bar. */
+:root[data-window-chrome="mobile"]
+  .app-shell[data-sidebar="open"]
+  > .window-bar {
+  background: transparent;
+}
+
+:root[data-window-chrome="mobile"] .main-pane {
+  width: 100vw;
+  flex: none;
+  background: var(--ui-bg);
+}
+
+/* Pushed aside, the page is only the way back: a tap there closes. */
+:root[data-window-chrome="mobile"]
+  .app-shell[data-sidebar="open"]
+  > .main-pane::after {
+  content: "";
+  position: absolute;
+  inset: 0;
+  z-index: var(--z-dock);
+}
+
 :root[data-window-chrome="mobile"] .sidebar-header {
-  padding-top: calc(var(--mobile-top) + 12px);
-}
-
-@media (max-width: 760px) {
-  /* The sidebar slides over the page; the scrim behind closes it on a tap. Both
-     cover the title row too, so the dimming reaches the status bar strip. */
-  :root[data-window-chrome="mobile"] .sidebar {
-    position: fixed;
-    z-index: calc(var(--z-dock) + 1);
-    padding-bottom: env(safe-area-inset-bottom, 0px);
-    width: min(352px, 85vw);
-    box-shadow: var(--shadow-drawer);
-  }
-
-  /* A drawer: the page keeps its width under it (the prefix outranks the
-     desktop's chain). */
-  :root[data-window-chrome="mobile"]:not(.zen)
-    .sidebar:not(.sidebar-collapsed)
-    ~ .main-pane {
-    margin-left: 0;
-  }
-
-  /* Over the title row, the drawer clears only the status bar. */
-  :root[data-window-chrome="mobile"] .sidebar-header {
-    padding-top: calc(var(--safe-top) + 12px);
-  }
-
-  /* The scrim fades with the drawer's slide. */
-  :root[data-window-chrome="mobile"] .sidebar-scrim {
-    position: fixed;
-    inset: 0;
-    z-index: var(--z-dock);
-    background: var(--ui-overlay);
-    animation: motion-fade-in var(--dur-slow) var(--ease-standard);
-  }
-
-  :root[data-window-chrome="mobile"] .sidebar-scrim[data-state="closing"] {
-    animation: motion-fade-out var(--dur-base) var(--ease-in) forwards;
-  }
-}
-
-/* Wider than a phone the sidebar is docked, so there is nothing to tap
-   beside it. */
-@media (min-width: 761px) {
-  :root[data-window-chrome="mobile"] .sidebar-scrim {
-    display: none;
-  }
+  padding-top: 12px;
 }
 
 /* A tap leaves :hover on the row until something else is touched. */

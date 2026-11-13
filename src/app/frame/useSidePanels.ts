@@ -4,6 +4,7 @@ import { isPhoneLayout } from "../../platform/phone-layout";
 import { usePresence } from "../../engine/motion/usePresence";
 import { CLOSE_FIND_REPLACE_EVENT } from "../../utils/events";
 import { useAgentDock } from "./useAgentDock";
+import { usePushedSidebar } from "../../mobile/usePushedSidebar";
 import { storeSidebarTab, storedSidebarTab } from "./sidebar-tab";
 import { getUiState, setUiState } from "../../storage/ui-state";
 import { useNarrowSidebar } from "./useNarrowSidebar";
@@ -22,14 +23,14 @@ function subscribeWindowResize(onChange: () => void) {
 }
 
 /** Whether the window shows the activity rail: on in Settings, or turned
- *  off but with the sidebar open. A phone's comes only with the sidebar,
- *  both pushed in from the left. */
+ *  off but with the sidebar open. A phone's is always there, under the
+ *  page with the sidebar, both shown as the page is pushed aside. */
 export function railShown(
   settings: Pick<Settings, "activityRail">,
   open: boolean,
   phone: boolean,
 ): boolean {
-  return (settings.activityRail && !phone) || open;
+  return settings.activityRail || phone || open;
 }
 
 /**
@@ -46,6 +47,7 @@ export function useSidePanels(aiOn: boolean) {
   // With the rail turned off, the window bar's button opens the sidebar
   // with the rail and folds both away; the rail stays off.
   const toggleSidebar = useCallback(() => setOpen((v) => !v), []);
+  usePushedSidebar(phone, open, setOpen);
   useEffect(() => {
     if (!isPhoneLayout()) setUiState("sidebarOpen", open);
     // A phone's sidebar pushes the page aside: the find bar goes with it.

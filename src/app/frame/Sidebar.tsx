@@ -65,7 +65,7 @@ export function Sidebar({
   // for its panel go to the top of the panel instead.
   const titleShown = useSideToTop();
   const phone = usePhoneLayout();
-  const frame = useSidebarFrame(open, true, width.width);
+  const frame = useSidebarFrame(open, !phone, width.width);
   const presenceRef = presence.ref;
   const asideRef = useCallback(
     (el: HTMLElement | null) => {
@@ -74,8 +74,7 @@ export function Sidebar({
     },
     [presenceRef, frame],
   );
-  // The rail turned off (and always on a phone) comes with the sidebar and
-  // goes with it.
+  // The rail turned off comes with the sidebar and goes with it.
   const rail = railShown(settings, open, phone);
   return (
     <>
