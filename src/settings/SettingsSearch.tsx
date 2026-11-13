@@ -229,7 +229,7 @@ const FOCUSABLE =
 
 /** Takes the user to a found row: unfolds what hides it, scrolls it to the
  *  middle, focuses it and tints it for a moment. */
-export function revealEntry(el: HTMLElement) {
+function revealEntry(el: HTMLElement) {
   const details = el.closest("details");
   if (details && !details.open) details.open = true;
   el.scrollIntoView({ block: "center", behavior: scrollBehavior() });
