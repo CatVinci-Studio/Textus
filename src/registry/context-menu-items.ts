@@ -9,6 +9,8 @@ export type ContextMenuPlace =
 interface ContextMenuTarget {
   /** The file, or the tab's file (null for a tab without one). */
   path: string | null;
+  /** For "file/context": a folder, not a file. */
+  folder?: boolean;
   /** For "view/title" and "floating/context": the view's id. */
   view?: string;
 }

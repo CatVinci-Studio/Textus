@@ -122,7 +122,10 @@ export function useRowMenu(
             danger: true,
           },
         );
-      const added = contributedContextItems("file/context", { path });
+      const added = contributedContextItems("file/context", {
+        path,
+        folder: isDir,
+      });
       if (added.length) items.push("separator", ...added);
       setMenu({ x: e.clientX, y: e.clientY, items });
     },

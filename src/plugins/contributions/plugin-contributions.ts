@@ -161,6 +161,7 @@ export function applyContributions(
               item.when,
               whenContext({
                 resourcePath: target.path ?? undefined,
+                resourceIsFolder: !!target.folder,
                 view: target.view,
               }),
             ),

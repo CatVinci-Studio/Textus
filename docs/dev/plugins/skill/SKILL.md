@@ -51,7 +51,7 @@ messages. The full API is in [references/textus.d.ts](references/textus.d.ts)
   permission fails; a completion without `editor.read` is silently left
   out.
 - A menu item's `when` reads only `editorHasSelection`, `documentOpen`,
-  `folderOpen`, `fileExtension == .md`, `resourceFilename`,
+  `folderOpen`, `fileExtension == .md`, `resourceFilename`, `resourceIsFolder`,
   `resourcePath`, `isMac`, `view == <id>`.
 - Strings go in `l10n` per language and are named `%key%` in the
   manifest; `textus.l10n.t(key)` in the code.

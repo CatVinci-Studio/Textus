@@ -13,6 +13,7 @@ export const WHEN_KEYS: readonly string[] = [
   "fileExtension",
   "resourceFilename",
   "resourcePath",
+  "resourceIsFolder",
   "isMac",
   "view",
 ];
