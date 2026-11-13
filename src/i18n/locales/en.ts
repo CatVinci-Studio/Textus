@@ -500,6 +500,7 @@ type /name in a conversation to use one.
   toolbarItalic: "Italic",
   toolbarHighlight: "Highlight",
   toolbarMore: "More",
+  toolbarHideKeyboard: "Hide keyboard",
   zenExitButton: "Leave Zen Mode",
   /** File › Open's file-type choices besides Markdown. */
   openDialogText: "Text files",

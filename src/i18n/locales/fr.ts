@@ -531,6 +531,7 @@ utiliser une.
   toolbarItalic: "Italique",
   toolbarHighlight: "Surligner",
   toolbarMore: "Plus",
+  toolbarHideKeyboard: "Masquer le clavier",
   zenExitButton: "Quitter le mode zen",
   openDialogText: "Fichiers texte",
   openDialogAll: "Tous les fichiers",

@@ -1,4 +1,5 @@
 import { useEffect, useRef } from "react";
+import { scaledPx } from "../engine/tokens/chrome-scale";
 
 /** How far a finger moves across before it counts as a swipe, and how near
  *  the left edge one must start to pull the sidebar in. */
@@ -54,7 +55,8 @@ export function usePushedSidebar(
         Math.abs(dx) > SWIPE &&
         Math.abs(dx) > 2 * Math.abs(t.clientY - start.y);
       if (across && shown.current && dx < 0) setOpen(false);
-      else if (across && !shown.current && dx > 0 && start.x < EDGE) setOpen(true);
+      else if (across && !shown.current && dx > 0 && start.x < scaledPx(EDGE))
+        setOpen(true);
       start = null;
     };
     window.addEventListener("pointerdown", tap, true);

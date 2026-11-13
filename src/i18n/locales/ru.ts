@@ -531,6 +531,7 @@ export default {
   toolbarItalic: "Курсив",
   toolbarHighlight: "Выделение цветом",
   toolbarMore: "Ещё",
+  toolbarHideKeyboard: "Скрыть клавиатуру",
   zenExitButton: "Выйти из режима дзен",
   openDialogText: "Текстовые файлы",
   openDialogAll: "Все файлы",

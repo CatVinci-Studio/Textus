@@ -1,38 +1,23 @@
 import { tabElement } from "../engine/layout/tab-element";
 import { tabInUse } from "../engine/layout/store";
-import { useEffect, useRef, useState, type ComponentType } from "react";
+import { useEffect, useRef, useState } from "react";
 import type { Strings } from "../i18n/strings";
 import { caretBlock, NO_BLOCK, type CaretBlock } from "../editor/caret-block";
 import { IconButton } from "../engine/controls/IconButton";
 import { useFitItems } from "../engine/controls/fit-steps";
 import { useMenuButton } from "../engine/controls/useMenuButton";
+import { usePhoneLayout } from "../engine/controls/usePhoneLayout";
 import type {
   ContextMenuEntry,
   ContextMenuItem,
 } from "../engine/controls/ContextMenu";
 import { fill } from "../i18n/fill";
-import {
-  BoldIcon,
-  CodeBlockIcon,
-  MoreIcon,
-  HeadingIcon,
-  HighlightIcon,
-  InlineCodeIcon,
-  ItalicIcon,
-  LinkIcon,
-  BulletListIcon,
-  NumberedListIcon,
-  QuoteIcon,
-  StrikeIcon,
-  TableIcon,
-} from "../engine/controls/icons";
+import { HideKeyboardIcon, MoreIcon } from "../engine/controls/icons";
 import { formatCombo } from "../utils/shortcuts";
-import {
-  INSERT_BLOCK_EVENT,
-  INSERT_LINK_EVENT,
-  TOGGLE_BLOCK_EVENT,
-  TOGGLE_MARK_EVENT,
-} from "../utils/events";
+import { EDITOR_MORE_EVENT, INSERT_BLOCK_EVENT } from "../utils/events";
+import { useKeyboardUp } from "../mobile/keyboard";
+import { GROUPS, type Button } from "./format-buttons";
+import { phoneGroups } from "./format-bar-phone";
 import "./format-bar.css";
 
 /**
@@ -41,112 +26,6 @@ import "./format-bar.css";
  * events, so the document on screen answers as it does to the menu, and
  * lights what is on at the caret.
  */
-interface Button {
-  label: (t: Strings) => string;
-  keys?: string;
-  Icon: ComponentType<{ className?: string }>;
-  event: string;
-  detail?: string;
-  on?: (block: CaretBlock) => boolean;
-  /** Opens a choice of levels rather than acting at once. */
-  picksHeading?: true;
-}
-
-const GROUPS: Button[][] = [
-  [
-    {
-      label: (t) => t.toolbarHeading,
-      Icon: HeadingIcon,
-      event: TOGGLE_BLOCK_EVENT,
-      detail: "heading",
-      on: (b) => b.heading > 0,
-      picksHeading: true,
-    },
-    {
-      label: (t) => t.toolbarBold,
-      keys: "mod+b",
-      Icon: BoldIcon,
-      event: TOGGLE_MARK_EVENT,
-      detail: "bold",
-      on: (b) => b.bold,
-    },
-    {
-      label: (t) => t.toolbarItalic,
-      keys: "mod+i",
-      Icon: ItalicIcon,
-      event: TOGGLE_MARK_EVENT,
-      detail: "italic",
-      on: (b) => b.italic,
-    },
-    {
-      label: (t) => t.menuStrikethrough,
-      keys: "ctrl+shift+`",
-      Icon: StrikeIcon,
-      event: TOGGLE_MARK_EVENT,
-      detail: "strikethrough",
-      on: (b) => b.strike,
-    },
-    {
-      label: (t) => t.toolbarHighlight,
-      keys: "mod+shift+h",
-      Icon: HighlightIcon,
-      event: TOGGLE_MARK_EVENT,
-      detail: "highlight",
-      on: (b) => b.highlight,
-    },
-    {
-      label: (t) => t.menuInlineCode,
-      keys: "ctrl+`",
-      Icon: InlineCodeIcon,
-      event: TOGGLE_MARK_EVENT,
-      detail: "code",
-      on: (b) => b.code,
-    },
-    {
-      label: (t) => t.menuInsertLink,
-      keys: "mod+k",
-      Icon: LinkIcon,
-      event: INSERT_LINK_EVENT,
-    },
-  ],
-  [
-    {
-      label: (t) => t.menuBulletList,
-      Icon: BulletListIcon,
-      event: TOGGLE_BLOCK_EVENT,
-      detail: "bullet-list",
-      on: (b) => b.bulletList,
-    },
-    {
-      label: (t) => t.menuOrderedList,
-      Icon: NumberedListIcon,
-      event: TOGGLE_BLOCK_EVENT,
-      detail: "ordered-list",
-      on: (b) => b.orderedList,
-    },
-    {
-      label: (t) => t.menuBlockquote,
-      Icon: QuoteIcon,
-      event: TOGGLE_BLOCK_EVENT,
-      detail: "blockquote",
-      on: (b) => b.quote,
-    },
-    {
-      label: (t) => t.menuCodeBlock,
-      Icon: CodeBlockIcon,
-      event: INSERT_BLOCK_EVENT,
-      detail: "code-block",
-    },
-    {
-      label: (t) => t.menuTable,
-      Icon: TableIcon,
-      event: INSERT_BLOCK_EVENT,
-      detail: "table",
-      on: (b) => b.table,
-    },
-  ],
-];
-
 /** Every button, in the row's order: the ones folded into "⋯" go by it. */
 const ALL: Button[] = GROUPS.flat();
 
@@ -232,6 +111,10 @@ export function FormatBar({
   tabId: string;
 }) {
   const block = useCaretBlock(tabId);
+  const phone = usePhoneLayout();
+  // A phone's follows the caret into a table or onto an image, and scrolls
+  // rather than folding: its "⋯" is the editor's menu (PhoneEnd).
+  const groups = phone ? phoneGroups(block) : GROUPS;
   // Narrower than its buttons, it keeps as many as fit and folds the rest,
   // from the end, into "⋯".
   const row = useRef<HTMLDivElement>(null);
@@ -256,7 +139,7 @@ export function FormatBar({
       onMouseDown={(e) => e.preventDefault()}
     >
       <div ref={row} className="format-bar-row">
-        {GROUPS.map((group, g) => (
+        {groups.map((group, g) => (
           <div key={g} className="format-bar-group">
             {group.map((b) => {
               const label = b.label(t);
@@ -264,7 +147,7 @@ export function FormatBar({
                 <span
                   key={label}
                   className="format-bar-item"
-                  data-fit-item={ALL.indexOf(b)}
+                  data-fit-item={phone ? undefined : ALL.indexOf(b)}
                 >
                   <IconButton
                     label={label}
@@ -274,23 +157,51 @@ export function FormatBar({
                     onClick={b.picksHeading ? undefined : () => press(tabId, b)}
                     opens={b.picksHeading ? heading.button : undefined}
                   >
-                    <b.Icon />
+                    {b.Icon ? <b.Icon /> : b.text?.(t)}
                   </IconButton>
                 </span>
               );
             })}
           </div>
         ))}
-        <IconButton
-          label={t.toolbarMore}
-          className="tx-icon-button format-bar-more"
-          opens={more.button}
-        >
-          <MoreIcon />
-        </IconButton>
+        {!phone && (
+          <IconButton
+            label={t.toolbarMore}
+            className="tx-icon-button format-bar-more"
+            opens={more.button}
+          >
+            <MoreIcon />
+          </IconButton>
+        )}
       </div>
+      {phone && <PhoneEnd t={t} />}
       {heading.menu}
       {more.menu}
     </div>
+  );
+}
+
+/** The phone's strip ends with the editor's menu for where the caret is
+ *  (it has no right-click), and while typing, a key that puts the
+ *  keyboard away. */
+function PhoneEnd({ t }: { t: Strings }) {
+  const typing = useKeyboardUp();
+  return (
+    <>
+      <IconButton
+        label={t.toolbarMore}
+        onClick={() => window.dispatchEvent(new CustomEvent(EDITOR_MORE_EVENT))}
+      >
+        <MoreIcon />
+      </IconButton>
+      {typing && (
+        <IconButton
+          label={t.toolbarHideKeyboard}
+          onClick={() => (document.activeElement as HTMLElement | null)?.blur()}
+        >
+          <HideKeyboardIcon />
+        </IconButton>
+      )}
+    </>
   );
 }

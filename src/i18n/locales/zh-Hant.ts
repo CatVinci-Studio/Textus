@@ -454,6 +454,7 @@ export default {
   toolbarItalic: "斜體",
   toolbarHighlight: "醒目提示",
   toolbarMore: "更多",
+  toolbarHideKeyboard: "隱藏鍵盤",
   zenExitButton: "離開禪模式",
   openDialogText: "文字檔案",
   openDialogAll: "所有檔案",

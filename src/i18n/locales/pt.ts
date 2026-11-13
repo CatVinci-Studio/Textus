@@ -519,6 +519,7 @@ Habilidades ficam na pasta skills/ ao lado deste arquivo, um arquivo
   toolbarItalic: "Itálico",
   toolbarHighlight: "Destacar",
   toolbarMore: "Mais",
+  toolbarHideKeyboard: "Ocultar teclado",
   zenExitButton: "Sair do Modo Zen",
   openDialogText: "Arquivos de texto",
   openDialogAll: "Todos os arquivos",

@@ -509,6 +509,7 @@ Skills liegen im Ordner skills/ neben dieser Datei, je Skill eine
   toolbarItalic: "Kursiv",
   toolbarHighlight: "Hervorheben",
   toolbarMore: "Mehr",
+  toolbarHideKeyboard: "Tastatur ausblenden",
   zenExitButton: "Zen-Modus beenden",
   openDialogText: "Textdateien",
   openDialogAll: "Alle Dateien",

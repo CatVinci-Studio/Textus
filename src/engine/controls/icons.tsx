@@ -1,6 +1,7 @@
 import type { CSSProperties, ReactNode } from "react";
 import {
   ArrowUp,
+  KeyboardOff,
   ArrowDownUp,
   ArrowUpRight,
   BetweenHorizontalEnd,
@@ -127,6 +128,8 @@ export function lucide(Shape: LucideIcon, size: number) {
 export const ChevronIcon = lucide(ChevronRight, 10);
 /** A menu button's "opens below". */
 export const ChevronDownIcon = lucide(ChevronDown, 12);
+/** The phone's format strip: puts the keyboard away. */
+export const HideKeyboardIcon = lucide(KeyboardOff, 16);
 /** Back and on, a step at a time (a month, a page). */
 export const PreviousIcon = lucide(ChevronLeft, 16);
 export const NextIcon = lucide(ChevronRight, 16);

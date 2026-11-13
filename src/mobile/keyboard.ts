@@ -1,3 +1,5 @@
+import { useSyncExternalStore } from "react";
+
 /**
  * Whether the iOS keyboard is up, read off the window's height: the web view
  * shrinks by the keyboard's height. A rotation (a new width) starts over.
@@ -53,4 +55,14 @@ export function whenKeyboardDown(then: () => void, timeout = 600) {
     window.removeEventListener("resize", onResize);
     clearTimeout(timer);
   };
+}
+
+function onResize(changed: () => void): () => void {
+  window.addEventListener("resize", changed);
+  return () => window.removeEventListener("resize", changed);
+}
+
+/** Whether the keyboard is up, kept current. */
+export function useKeyboardUp(): boolean {
+  return useSyncExternalStore(onResize, keyboardUp, () => false);
 }

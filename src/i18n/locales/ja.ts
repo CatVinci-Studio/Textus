@@ -486,6 +486,7 @@ ${AI_NAME}への執筆の指示です。すべての文書に適用されます�
   toolbarItalic: "斜体",
   toolbarHighlight: "ハイライト",
   toolbarMore: "その他",
+  toolbarHideKeyboard: "キーボードを隠す",
   zenExitButton: "禅モードを終了",
   openDialogText: "テキストファイル",
   openDialogAll: "すべてのファイル",

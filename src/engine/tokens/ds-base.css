@@ -23,9 +23,8 @@
      sidebar page's too. */
   --pane-row-inset: calc(var(--pane-inset) - var(--pane-edge));
   /* Layers, low to high, so an entrance and an exit stack predictably. */
-  /* The phone's own stack under its title row: the keyboard's bar, the AI
-     page, Quick Ask docked over it. */
-  --z-phone-toolbar: 35;
+  /* The phone's own stack under its title row: its pages, Quick Ask docked
+     over them. */
   --z-phone-page: 40;
   --z-phone-dock: 41;
   --z-bar: 45;

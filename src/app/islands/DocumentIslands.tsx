@@ -270,10 +270,10 @@ export function DocumentIslands({
           onChange={onChange}
           typewriter={typewriter}
           tour={tour}
-          // On every island's document in front.
+          // On every island's document in front; a phone's always, at its
+          // foot, over the keyboard while typing (format-bar.css).
           above={(tab) =>
-            formatBar &&
-            !phone &&
+            (formatBar || phone) &&
             formatsShown(tab) && <FormatBar t={t} tabId={tab.id} />
           }
           t={t}

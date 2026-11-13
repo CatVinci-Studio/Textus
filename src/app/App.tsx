@@ -68,7 +68,6 @@ const phoneParts = lazyModule(
   () => import("../mobile/phone-parts"),
 );
 const DocumentList = lazyComponent(phoneParts, (m) => m.DocumentList);
-const KeyboardToolbar = lazyComponent(phoneParts, (m) => m.KeyboardToolbar);
 
 /**
  * One window: its tabs, the panels around them, and the prompts and notices
@@ -262,11 +261,6 @@ function App() {
             t={t}
           />
 
-          {isIOSApp && (
-            <Suspense fallback={null}>
-              <KeyboardToolbar />
-            </Suspense>
-          )}
           <Presence show={isIOSApp && documentsOpen}>
             {isIOSApp && documentsOpen && (
               <Suspense fallback={null}>

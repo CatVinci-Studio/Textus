@@ -132,9 +132,9 @@
   font-size: 24px;
 }
 
-/* The panel takes the keyboard toolbar's place, and the document scrolls clear
+/* The panel takes the format strip's place, and the document scrolls clear
    of it, its end included. */
-:root[data-window-chrome="mobile"].has-quick-ask-dock .keyboard-toolbar {
+:root[data-window-chrome="mobile"].has-quick-ask-dock .format-bar {
   display: none;
 }
 

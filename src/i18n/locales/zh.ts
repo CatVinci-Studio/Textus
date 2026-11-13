@@ -454,6 +454,7 @@ export default {
   toolbarItalic: "斜体",
   toolbarHighlight: "高亮",
   toolbarMore: "更多",
+  toolbarHideKeyboard: "收起键盘",
   zenExitButton: "退出禅模式",
   openDialogText: "文本文件",
   openDialogAll: "所有文件",

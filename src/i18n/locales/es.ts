@@ -529,6 +529,7 @@ para usar una.
   toolbarItalic: "Cursiva",
   toolbarHighlight: "Resaltar",
   toolbarMore: "Más",
+  toolbarHideKeyboard: "Ocultar teclado",
   zenExitButton: "Salir del modo zen",
   openDialogText: "Archivos de texto",
   openDialogAll: "Todos los archivos",
