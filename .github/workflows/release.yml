@@ -108,11 +108,17 @@ jobs:
         include:
           # macos-26 is what macos-latest points at today (same arm64
           # pool); pinned so the next image switch is a deliberate change.
-          # Fork: Apple silicon only (restore the x86_64 row below, the two
-          # ubuntu rows and the aarch64 Windows row when upstream syncs).
           - platform: macos-26
             target: aarch64-apple-darwin
             args: --target aarch64-apple-darwin
+          # Intel Macs: cross-compiled on the same Apple silicon runner (the
+          # Intel runner pool is being retired). Its DMG and updater tarball
+          # are named _x64, beside the _aarch64 ones.
+          - platform: macos-26
+            target: x86_64-apple-darwin
+            args: --target x86_64-apple-darwin
+          - platform: ubuntu-22.04
+            args: ""
           # Windows ships the NSIS .exe and nothing else; the target list
           # itself lives in src-tauri/tauri.windows.conf.json, so a local
           # `tauri build` produces the same one artifact this does.
@@ -124,11 +130,23 @@ jobs:
           # MSI also cannot build a pre-release at all ("optional pre-release
           # identifier in app version must be numeric-only ... for msi
           # target"), so rc tags were NSIS-only regardless, and the updater
-          # has always shipped NSIS. One installer, one upgrade path. The
-          # portable zip step below keeps Textus/ as the zip's root folder,
-          # so extracting lands in its own directory.
+          # has always shipped NSIS. One installer, one upgrade path.
           - platform: windows-2025
             args: ""
+          # ARM64 Windows and Linux (from 1.1.0), each on GitHub's native
+          # arm64 runner, so the frontend tooling, the Rust build and the
+          # bundlers (NSIS, linuxdeploy) all run as they do on x64. The
+          # explicit --target is what tauri-action reads the architecture
+          # from when it looks for the installers; without it, it would trust
+          # the arch of whichever Node the runner picked. Tauri names their
+          # installers apart from the x64 ones: _arm64-setup.exe, _arm64.deb,
+          # .aarch64.rpm and _aarch64.AppImage (docs/dev/releasing.md).
+          - platform: windows-11-arm
+            target: aarch64-pc-windows-msvc
+            args: --target aarch64-pc-windows-msvc
+          - platform: ubuntu-22.04-arm
+            target: aarch64-unknown-linux-gnu
+            args: --target aarch64-unknown-linux-gnu
 
     runs-on: ${{ matrix.platform }}
     steps:
@@ -196,11 +214,9 @@ jobs:
         run: npm ci
 
       # With the signing secrets missing, Tauri builds an unsigned DMG and
-      # says nothing. Upstream requires them; a fork without an Apple
-      # Developer account ships unsigned instead (Gatekeeper asks for a
-      # right-click open on first launch).
+      # says nothing.
       - name: Require the macOS signing secrets
-        if: startsWith(matrix.platform, 'macos-') && secrets.APPLE_CERTIFICATE != ''
+        if: startsWith(matrix.platform, 'macos-')
         env:
           APPLE_CERTIFICATE: ${{ secrets.APPLE_CERTIFICATE }}
           APPLE_SIGNING_IDENTITY: ${{ secrets.APPLE_SIGNING_IDENTITY }}
@@ -266,20 +282,6 @@ jobs:
           # cannot be an .rpm; rc tags ship the .deb and AppImage only, on
           # x64 and ARM64 alike.
           args: ${{ matrix.args }}${{ startsWith(matrix.platform, 'ubuntu-') && contains(env.RELEASE_TAG, '-') && ' --bundles deb,appimage' || '' }}
-
-      # The fork's portable zip: the app alone, in a Textus folder. Upstream
-      # ships the NSIS installer only. 7z keeps Textus/ as the zip's root
-      # entry, so extracting lands in its own folder.
-      - name: Build the Windows portable zip
-        if: matrix.platform == 'windows-2025'
-        shell: bash
-        env:
-          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
-        run: |
-          mkdir Textus
-          cp src-tauri/target/release/textus.exe Textus/
-          7z a "Textus_${RELEASE_TAG#v}_x64_portable.zip" Textus
-          gh release upload "$RELEASE_TAG" "Textus_${RELEASE_TAG#v}_x64_portable.zip" --clobber
 
       # textus-bin (packaging/arch/PKGBUILD) installs this tarball. Its
       # binary is a second build with TEXTUS_DISTRIBUTION=aur: it reports new

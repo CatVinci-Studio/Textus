@@ -1,0 +1,120 @@
+name: Release (fork)
+
+# Fork-only release pipeline, modeled on Tydora's release-plus.yml:
+# a tag push builds macOS Apple-silicon (unsigned DMG) and Windows x64
+# (NSIS + portable zip) and publishes the release directly. Upstream's
+# release.yml stays untouched but is DISABLED on this fork, or two
+# workflows would race one tag's release.
+
+on:
+  workflow_dispatch:
+    inputs:
+      tag:
+        description: Existing tag to release (for example v1.4.1-rc.3)
+        required: true
+        type: string
+  # Pushing the tag triggers this directly; the workflow file runs from
+  # the commit the tag points at, no need to be on the default branch.
+  push:
+    tags:
+      - "v*.*.*"
+
+env:
+  RELEASE_TAG: ${{ inputs.tag || github.ref_name }}
+
+permissions:
+  contents: write
+
+concurrency:
+  group: fork-release-${{ inputs.tag || github.ref_name }}
+  cancel-in-progress: false
+
+jobs:
+  build:
+    strategy:
+      fail-fast: false
+      matrix:
+        include:
+          - platform: macos-26
+            target: aarch64-apple-darwin
+            args: --target aarch64-apple-darwin
+            label: macos-aarch64
+          - platform: windows-2025
+            args: ""
+            label: windows
+    runs-on: ${{ matrix.platform }}
+    steps:
+      - uses: actions/checkout@v7
+      - uses: actions/setup-node@v7
+        with:
+          node-version: 22
+      - run: npm ci
+
+      # Signs the updater artifacts (the .sig files) with the fork's own
+      # key; fork releases never publish latest.json, so the key is not
+      # the upstream one.
+      - name: Build
+        shell: bash
+        env:
+          TAURI_SIGNING_PRIVATE_KEY: ${{ secrets.TAURI_SIGNING_PRIVATE_KEY }}
+          TAURI_SIGNING_PRIVATE_KEY_PASSWORD: ${{ secrets.TAURI_SIGNING_PRIVATE_KEY_PASSWORD }}
+        run: npx tauri build ${{ matrix.args }}
+
+      # The portable zip: the app alone, in a Textus folder, so extracting
+      # lands in its own directory. Upstream ships the NSIS installer only.
+      - name: Package the Windows portable zip
+        if: matrix.platform == 'windows-2025'
+        shell: bash
+        run: |
+          mkdir -p release-assets/Textus
+          cp src-tauri/target/release/textus.exe release-assets/Textus/
+          7z a "release-assets/Textus_${RELEASE_TAG#v}_x64_portable.zip" release-assets/Textus
+          rm -rf release-assets/Textus
+
+      - name: Stage bundle outputs
+        shell: bash
+        run: |
+          mkdir -p release-assets
+          find src-tauri/target -path '*/bundle/*' -type f \
+            \( -name '*.exe' -o -name '*.exe.sig' -o -name '*.dmg' \
+               -o -name '*.app.tar.gz' -o -name '*.app.tar.gz.sig' \) \
+            -exec cp -f {} release-assets/ \;
+          echo "=== Staged assets (${{ matrix.label }}) ==="
+          ls -la release-assets/
+
+      - name: Upload build artifact
+        uses: actions/upload-artifact@v4
+        with:
+          name: bundle-${{ matrix.label }}
+          path: release-assets/*
+
+  # One job publishes once every build succeeded - two matrix jobs
+  # creating the release themselves would race for it.
+  release:
+    needs: build
+    runs-on: ubuntu-22.04
+    steps:
+      - uses: actions/checkout@v7
+      - uses: actions/setup-node@v7
+        with:
+          node-version: 22
+      - name: Tag matches the app version
+        run: node scripts/check-versions.mjs --root . --tag "$RELEASE_TAG"
+
+      - name: Download build artifacts
+        uses: actions/download-artifact@v4
+        with:
+          pattern: bundle-*
+          merge-multiple: true
+          path: assets
+
+      - name: Publish the release
+        uses: softprops/action-gh-release@v3
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        with:
+          tag_name: ${{ env.RELEASE_TAG }}
+          name: "Textus ${{ env.RELEASE_TAG }}"
+          draft: false
+          prerelease: ${{ contains(env.RELEASE_TAG, '-') }}
+          files: assets/**/*
