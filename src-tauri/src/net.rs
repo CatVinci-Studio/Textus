@@ -86,6 +86,12 @@ mod tests {
     fn serve_once(response: &'static str) -> String {
         let listener = std::net::TcpListener::bind("127.0.0.1:0").unwrap();
         let url = format!("http://{}/", listener.local_addr().unwrap());
+        answer_once(listener, response.as_bytes());
+        url
+    }
+
+    /// Reads one request's head on `listener`, then writes `response`.
+    fn answer_once(listener: std::net::TcpListener, response: &'static [u8]) {
         std::thread::spawn(move || {
             let (mut stream, _) = listener.accept().unwrap();
             let mut request = Vec::new();
@@ -97,9 +103,8 @@ mod tests {
                 }
                 request.extend_from_slice(&buf[..n]);
             }
-            let _ = stream.write_all(response.as_bytes());
+            let _ = stream.write_all(response);
         });
-        url
     }
 
     async fn read(response: &'static str, max: usize) -> Option<Vec<u8>> {
@@ -254,20 +259,10 @@ mod tests {
             .or_else(|_| std::net::TcpListener::bind("127.0.0.1:0"))
             .unwrap();
         let local = format!("http://{}", server.local_addr().unwrap());
-        std::thread::spawn(move || {
-            let (mut stream, _) = server.accept().unwrap();
-            let mut request = Vec::new();
-            let mut buf = [0u8; 1024];
-            while !request.ends_with(b"\r\n\r\n") {
-                let n = stream.read(&mut buf).unwrap();
-                if n == 0 {
-                    break;
-                }
-                request.extend_from_slice(&buf[..n]);
-            }
-            let _ = stream
-                .write_all(b"HTTP/1.1 200 OK\r\nContent-Length: 2\r\nConnection: close\r\n\r\nok");
-        });
+        answer_once(
+            server,
+            b"HTTP/1.1 200 OK\r\nContent-Length: 2\r\nConnection: close\r\n\r\nok",
+        );
         let client = through(
             client(Duration::from_secs(5), Duration::from_secs(5)),
             Some(proxy),

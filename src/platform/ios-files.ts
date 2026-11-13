@@ -154,7 +154,6 @@ export async function newDocumentPath(
 
 /** The app's own Documents folder. */
 export const documentsFolder = documentDir;
-export const joinPath = join;
 
 /** Renames a file in the app's own Documents folder; the new path. */
 export function renameSandboxEntry(
