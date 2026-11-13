@@ -353,7 +353,7 @@ fn chinese(stem: &str) -> Option<u32> {
     };
     let chars: Vec<char> = stem.chars().collect();
     match chars[..] {
-        [d] if d == '十' => Some(10),
+        ['十'] => Some(10),
         [d] => digit(d),
         ['十', one] => Some(10 + digit(one)?),
         [tens, '十'] => Some(10 * digit(tens)?),

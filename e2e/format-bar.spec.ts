@@ -55,7 +55,9 @@ test("brought back to the top, the document's first block shows below the format
   await page.keyboard.type(["first block", ...body].join("\n"), { delay: 0 });
   await page.keyboard.press("ControlOrMeta+ArrowDown");
   await page.keyboard.press("ControlOrMeta+ArrowUp");
-  const top = await doc(page).locator("> *").first().boundingBox();
   const barBox = await bar(page).boundingBox();
-  expect(top!.y).toBeGreaterThanOrEqual(barBox!.y + barBox!.height);
+  // The scroll back settles over a few frames.
+  await expect
+    .poll(async () => (await doc(page).locator("> *").first().boundingBox())!.y)
+    .toBeGreaterThanOrEqual(barBox!.y + barBox!.height);
 });
