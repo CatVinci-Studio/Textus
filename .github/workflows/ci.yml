@@ -1,28 +1,16 @@
 name: CI
 
-# Every job runs the same npm command a contributor runs locally
-# (CONTRIBUTING.md), so a green local run means a green CI run:
+# Three layers (docs/dev/testing.md has the table):
 #
-#   check    npm run check         types, lint, unit tests, formatting,
-#                                  README/version/updater checks; and the build
-#   e2e      npm run test:e2e      the Playwright flows in Chromium, split by
-#                                  test across two machines, and e2e-webkit
-#                                  the WebKit ones (not required); stopwatch
-#                                  tests (@perf) run only locally, with npm
-#                                  run test:perf
-#   native   npm run check:native  rustfmt, clippy, Rust tests - on Linux,
-#                                  macOS and Windows; and npm test on macOS
-#                                  and Windows
-#   ios      the iOS simulator build
-#
-# Two depths. A pull request into main, and a push to main, run the quick
-# suite: `check`, and the Rust checks on Linux where the change reaches
-# Rust (scripts/ci-changes.mjs decides; skipped jobs count as passed). A
-# change only to GitHub's settings, the license or root Markdown runs a
-# light `check`: their format and the READMEs' structure. The
-# full suite - every job, every platform, whatever changed - runs before a
-# tag is built (release.yml calls this workflow on the tagged commit), on a
-# pull request into stable, and by hand (Run workflow).
+#   pull request   check (types, lint, unit tests, format, build); plus the
+#                  Rust checks on Linux when src-tauri/ changed
+#                  (scripts/ci-changes.mjs). Required: check, native,
+#                  ci-config. A contributor runs `npm run check` locally.
+#   push to main   the same.
+#   before release the full suite on every platform: native on Linux, macOS
+#                  and Windows, e2e (2 shards) and e2e-webkit, the iOS
+#                  simulator. release.yml calls this on the tagged commit;
+#                  it also runs on a pull request into stable and by hand.
 #
 # `check`'s save round trip (src/document-view/save-roundtrip*.test.ts)
 # runs only when the change can reach saving: the editor, src/document*/,
