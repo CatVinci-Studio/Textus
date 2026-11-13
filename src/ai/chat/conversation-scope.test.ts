@@ -12,3 +12,13 @@ it("never keeps the unsent draft among a folder's open conversations", () => {
   reorderConversation("/notes", DRAFT, 0);
   expect(openConversations("/notes")).toEqual(["c1"]);
 });
+
+it("leaves out a draft an older version kept there", () => {
+  localStorage.setItem(
+    Object.keys(localStorage)
+      .find((k) => k.endsWith("/notes"))!
+      .replace("/notes", "/old"),
+    JSON.stringify(["\0draft", "c2"]),
+  );
+  expect(openConversations("/old")).toEqual(["c2"]);
+});

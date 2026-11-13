@@ -6,6 +6,7 @@ import {
   pluginMayRun,
   pluginName,
   pluginRecord,
+  pluginsSnapshot,
   subscribePlugins,
 } from "../store/plugin-records";
 import { grantedHosts } from "../store/permissions";
@@ -322,9 +323,11 @@ export function useResolvedWebview(
   const initialTarget = useRef(target.target);
   const initialBlock = useRef(target.codeBlock);
   // Turned off, the page shows so; turned on again, it is made anew.
-  const runs = useSyncExternalStore(subscribePlugins, () =>
-    pluginMayRun(pluginRecord(plugin)),
-  );
+  // Before the plugins have loaded, it isn't known: tried as before.
+  const runs = useSyncExternalStore(subscribePlugins, () => {
+    const record = pluginRecord(plugin);
+    return !pluginsSnapshot().loaded || !record || pluginMayRun(record);
+  });
   useEffect(() => {
     if (!runs) {
       setRecord(null);

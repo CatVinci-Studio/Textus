@@ -20,10 +20,10 @@ describe("storedDocumentPath", () => {
     );
   });
 
-  it("migrates a path into an earlier install's container", () => {
-    // The container id changed with the reinstall or update.
+  it("guesses an app container only while this install's isn't known", () => {
+    // Known: another container (another app's folder) is kept whole.
     expect(storedDocumentPath(`${OLD}/notes/a.md`, DOCS)).toBe(
-      "documents:notes/a.md",
+      `${OLD}/notes/a.md`,
     );
     expect(storedDocumentPath(`/private${OLD}/a.md`, null)).toBe(
       "documents:a.md",
@@ -55,9 +55,9 @@ describe("resolvedDocumentPath", () => {
     );
   });
 
-  it("moves an earlier install's absolute path into this one's", () => {
+  it("never moves another container's path into this one's", () => {
     expect(resolvedDocumentPath(`${OLD}/notes/a.md`, DOCS)).toBe(
-      `${DOCS}/notes/a.md`,
+      `${OLD}/notes/a.md`,
     );
   });
 

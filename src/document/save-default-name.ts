@@ -1,5 +1,5 @@
 import { splitFrontmatter } from "../utils/frontmatter";
-import { eachLine, headingsOf } from "../utils/markdown-lines";
+import { THEMATIC_BREAK, eachLine, headingsOf } from "../utils/markdown-lines";
 const WINDOWS_RESERVED_NAME = /^(con|prn|aux|nul|com[1-9]|lpt[1-9])(?:\..*)?$/i;
 
 function plainMarkdownText(text: string): string {
@@ -8,6 +8,7 @@ function plainMarkdownText(text: string): string {
     .replace(/!\[([^\]]*)\]\([^)]*\)/g, "$1")
     .replace(/\[([^\]]+)\]\([^)]*\)/g, "$1")
     .replace(/`([^`]*)`/g, "$1")
+    .replace(/<!--.*$/, "")
     .replace(/<[^>]+>/g, "")
     .replace(/[*_~]/g, "")
     .trim();
@@ -38,7 +39,7 @@ export function firstContentLine(markdown: string): string | null {
   for (const { line, code } of bodyLines(markdown)) {
     const trimmed = line.trim();
     if (code || !trimmed) continue;
-    if (/^ {0,3}(?:={2,}|-{3,}|\*{3,}|_{3,})[ \t]*$/.test(line)) continue;
+    if (/^ {0,3}={2,}[ \t]*$/.test(line) || THEMATIC_BREAK.test(line)) continue;
     if (/^\s*\|?(?:\s*:?-{3,}:?\s*\|)+\s*$/.test(line)) continue;
 
     const withoutBlockMarkers = line

@@ -7,8 +7,9 @@ import { documentDir } from "@tauri-apps/api/path";
  */
 export const IN_DOCUMENTS = "documents:";
 
-/** An app container's Documents folder in an absolute path, this install's
- *  or an earlier one's. Files-app picks are `file://` URLs and don't match. */
+/** An app container's Documents folder in an absolute path: only a guess
+ *  at ours while this install's isn't known yet - another app's matches too.
+ *  Files-app picks are `file://` URLs and don't match. */
 const CONTAINER_DOCUMENTS =
   /^\/.*\/Containers\/Data\/Application\/[0-9A-Fa-f-]+\/Documents\/(.+)$/;
 
@@ -26,23 +27,23 @@ export function insideDocuments(path: string, docs: string): string | null {
 }
 
 /**
- * `path` as stored: relative when inside the current or any container's
- * Documents folder, unchanged otherwise.
+ * `path` as stored: relative inside this install's Documents folder `docs`
+ * (or, not known yet, what looks like an app's), unchanged otherwise - a
+ * file in another app's folder included.
  */
 export function storedDocumentPath(path: string, docs: string | null): string {
   if (path.startsWith(IN_DOCUMENTS)) return path;
-  const inside = docs ? insideDocuments(path, docs) : null;
-  if (inside !== null) return IN_DOCUMENTS + inside;
-  const match = CONTAINER_DOCUMENTS.exec(path);
-  return match ? IN_DOCUMENTS + match[1] : path;
+  const inside = docs
+    ? insideDocuments(path, docs)
+    : (CONTAINER_DOCUMENTS.exec(path)?.[1] ?? null);
+  return inside === null ? path : IN_DOCUMENTS + inside;
 }
 
 /** A stored path resolved into the current Documents folder `docs`. */
 export function resolvedDocumentPath(stored: string, docs: string): string {
-  const inside = stored.startsWith(IN_DOCUMENTS)
-    ? stored.slice(IN_DOCUMENTS.length)
-    : CONTAINER_DOCUMENTS.exec(stored)?.[1];
-  return inside === undefined ? stored : withSlash(docs) + inside;
+  return stored.startsWith(IN_DOCUMENTS)
+    ? withSlash(docs) + stored.slice(IN_DOCUMENTS.length)
+    : stored;
 }
 
 let known: string | null = null;

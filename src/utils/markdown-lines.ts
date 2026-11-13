@@ -79,8 +79,10 @@ interface HeadingLine {
 const ATX = /^ {0,3}(#{1,6})(?:[ \t]+(.*?))?[ \t]*(?:[ \t]#+[ \t]*)?$/;
 const SETEXT = /^ {0,3}(=+|-+)[ \t]*$/;
 // A line that starts a block of its own can't be a setext heading's text.
-const NOT_TEXT =
-  /^ {0,3}(?:[>|]|(?:[-+*]|\d+[.)])(?:[ \t]|$)|#|$|(?:-[ \t]*){3,}$|(?:\*[ \t]*){3,}$|(?:_[ \t]*){3,}$)/;
+/** A thematic break: three or more -, * or _, spaces between allowed. */
+export const THEMATIC_BREAK =
+  /^ {0,3}(?:(?:-[ \t]*){3,}|(?:\*[ \t]*){3,}|(?:_[ \t]*){3,})$/;
+const NOT_TEXT = /^ {0,3}(?:[>|]|(?:[-+*]|\d+[.)])(?:[ \t]|$)|#|$)/;
 
 /** A whole document's headings, in order, as the editor counts them: ATX
  *  (indented up to three spaces, empty ones too) and setext (`Title` over
@@ -108,7 +110,8 @@ export function headingsOf(markdown: string): HeadingLine[] {
         });
         return;
       }
-      if (!NOT_TEXT.test(line)) previous = { text: line, index };
+      if (!NOT_TEXT.test(line) && !THEMATIC_BREAK.test(line))
+        previous = { text: line, index };
     },
     { frontMatter: true, comments: true },
   );

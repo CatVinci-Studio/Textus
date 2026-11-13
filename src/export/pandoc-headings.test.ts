@@ -11,6 +11,10 @@ describe("numbered headings for Pandoc", () => {
   });
 
   it("keeps a # that ends the title's words, dropping only a closing run", () => {
+    // A commented-out heading isn't one: Title still opens the document.
+    expect(numberedHeadings("# Title\n<!--\n# Old\n-->\n## A")).toBe(
+      "# Title {.unnumbered .unlisted}\n<!--\n# Old\n-->\n# A",
+    );
     expect(numberedHeadings("# Learning C#\n\n## A")).toBe(
       "# Learning C# {.unnumbered .unlisted}\n\n# A",
     );

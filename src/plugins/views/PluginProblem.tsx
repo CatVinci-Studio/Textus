@@ -1,7 +1,11 @@
 import { emitToThisWindow } from "../../platform/menu-events";
 import { FolderOpenIcon } from "../../engine/controls/icons";
 import { canOpenFolder } from "../../platform/capabilities";
-import { PLUGIN_OFF, windowInfo } from "../store/plugin-records";
+import {
+  PLUGIN_OFF,
+  pluginsSnapshot,
+  windowInfo,
+} from "../store/plugin-records";
 
 /** The plugin's own words when it needs an open folder (textus.files,
  *  textus.metadata). */
@@ -26,7 +30,9 @@ export function PluginProblem({
   if (off)
     return (
       <div className="plugin-webview-problem">
-        <p>{t.pluginTurnedOff}</p>
+        <p>
+          {pluginsSnapshot().allOn ? t.pluginTurnedOff : t.pluginStatusAllOff}
+        </p>
       </div>
     );
   return (

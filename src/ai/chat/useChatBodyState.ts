@@ -1,5 +1,5 @@
 import type { QueuedMessage } from "./MessageQueue";
-import { useEffect, useMemo, useRef, useState } from "react";
+import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import { useLatest } from "../../utils/hooks/useLatest";
 import type { AgentTurn } from "../types";
 import { useRevealedText } from "./useRevealedText";
@@ -95,6 +95,8 @@ export function useMessageQueue(
 ) {
   const [queue, setQueue] = useState<QueuedMessage[]>([]);
   const [queuePaused, setQueuePaused] = useState(false);
+  // Bumped as each send ends, so the queue looks again.
+  const [settled, setSettled] = useState(0);
   const nextQueued = useRef(0);
   // A send under way, queued or straight from the box: one more waits.
   const sending = useRef(false);
@@ -102,22 +104,35 @@ export function useMessageQueue(
   const send = useLatest(sendNext);
   const waiting = useLatest(queue);
 
-  useEffect(() => {
-    if (busy || queuePaused || sending.current || queue.length === 0) return;
-    const [next] = queue;
-    sending.current = true;
-    void (async () => {
-      setQueue((now) => now.filter((q) => q.id !== next.id));
+  /** Runs one send - from the box or the queue - as the one in flight; a
+   *  failed one holds back whatever is still waiting. */
+  const run = useCallback(
+    async (go: () => Promise<AgentTurn[] | undefined>) => {
+      sending.current = true;
+      let turns: AgentTurn[] | undefined;
       try {
-        const turns = await send.current(next);
-        // A reply that failed holds back the rest; one stopped with the
-        // queue emptied by Stop leaves nothing to hold.
-        if (!turns && waiting.current.length > 0) setQueuePaused(true);
+        turns = await go();
       } finally {
         sending.current = false;
+        if (!turns && waiting.current.length > 0) setQueuePaused(true);
+        setSettled((n) => n + 1);
       }
-    })();
-  }, [busy, queue, queuePaused, send, waiting]);
+      return turns;
+    },
+    [waiting],
+  );
+
+  useEffect(() => {
+    // Nothing left to hold: an emptied queue is never paused.
+    if (queue.length === 0) {
+      if (queuePaused) setQueuePaused(false);
+      return;
+    }
+    if (busy || queuePaused || sending.current) return;
+    const [next] = queue;
+    setQueue((now) => now.filter((q) => q.id !== next.id));
+    void run(() => send.current(next));
+  }, [busy, queue, queuePaused, send, run, settled]);
 
   return {
     queue,
@@ -126,5 +141,6 @@ export function useMessageQueue(
     setQueuePaused,
     nextQueued,
     sending,
+    run,
   };
 }

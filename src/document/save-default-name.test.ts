@@ -41,6 +41,7 @@ describe("firstContentLine", () => {
   it("skips comments the way the editor does, not a `<!--` inside code", () => {
     expect(firstContentLine("```\n<!--\n```\nBody")).toBe("Body");
     expect(firstContentLine("<!--\nhidden\n-->\nShown")).toBe("Shown");
+    expect(firstContentLine("- - -\n    <!-- note\nShown")).toBe("Shown");
   });
 
   it("reads past a front matter left open instead of skipping the whole document", () => {

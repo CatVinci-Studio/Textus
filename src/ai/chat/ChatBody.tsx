@@ -142,23 +142,18 @@ export function ChatBody({
     }) => { message: string; images?: ImageAttachment[] },
     options: AgentRequestOptions,
   ) {
-    // Until the reply starts, a second send joins the queue: the model is
-    // busy only once send() runs, after the context comes back.
-    sending.current = true;
+    // In flight from the start: a second send meanwhile joins the queue.
     void (async () => {
-      let reply: Promise<AgentTurn[] | undefined> | undefined;
-      try {
+      const turns = await run(async () => {
         const latest = refreshContext ? await refreshContext() : null;
         const state = latest ?? { document, selectionMarkdown };
         const { message, images } = buildMessage(state);
-        reply = send(state.document, message, images, {
+        return send(state.document, message, images, {
           ...options,
           focusHeading: latest?.focusHeading ?? null,
         });
-      } finally {
-        sending.current = false;
-      }
-      afterSend(await reply);
+      });
+      afterSend(turns);
     })();
   }
 
@@ -176,7 +171,7 @@ export function ChatBody({
     return turns;
   });
   const { queue, setQueue, queuePaused, setQueuePaused } = queueState;
-  const { nextQueued, sending } = queueState;
+  const { nextQueued, sending, run } = queueState;
   const ownComposer = useRef<ChatComposerHandle>(null);
   const composer = composerRef ?? ownComposer;
 

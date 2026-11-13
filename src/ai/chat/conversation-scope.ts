@@ -81,7 +81,12 @@ export function openConversations(scope: string): string[] {
   let ids: string[] = [];
   try {
     const raw = JSON.parse(localStorage.getItem(OPEN + scope) ?? "[]");
-    if (Array.isArray(raw)) ids = raw.filter((x) => typeof x === "string");
+    // Ids only: 1.4.0 could keep its draft tab ("\0draft") here too.
+    if (Array.isArray(raw))
+      ids = raw.filter(
+        (x): x is string =>
+          typeof x === "string" && x !== DRAFT && !x.startsWith("\0"),
+      );
   } catch {
     // None kept, or unreadable: none open.
   }

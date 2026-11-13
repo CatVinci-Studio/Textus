@@ -29,13 +29,15 @@ export async function setPluginEnabled(id: string, on: boolean): Promise<void> {
   const granted = on ? await askPermissions(record) : null;
   // Refused: off, even one already on (an update asking for more).
   if (!on || (!granted && record.status === "on")) {
-    stopHost(id);
-    withdraw(id);
-    await pluginsIpc.set(id, false, record.granted);
+    // Marked off first: a message from its open page meanwhile starts
+    // nothing that would outlive the switch.
     update(id, {
       status: nextStatus(record.status, { type: "disable" }),
       problem: undefined,
     });
+    stopHost(id);
+    withdraw(id);
+    await pluginsIpc.set(id, false, record.granted);
     return;
   }
   if (!granted) return;
@@ -57,21 +59,23 @@ export async function revokePermission(
   const record = pluginRecord(id);
   if (!record) return;
   const granted = record.granted.filter((p) => p !== permission);
-  stopHost(id);
-  withdraw(id);
-  // Without a permission it asks for, it can't run: off until granted.
-  await pluginsIpc.set(id, false, granted);
+  // Without a permission it asks for, it can't run: off until granted,
+  // marked so before its host stops.
   update(id, {
     granted,
     status: nextStatus(record.status, { type: "revoke" }),
   });
+  stopHost(id);
+  withdraw(id);
+  await pluginsIpc.set(id, false, granted);
 }
 
 /** Settings › Extensions › Plugins › Plugins: every plugin at once. */
 export async function setAllPlugins(on: boolean): Promise<void> {
-  await pluginsIpc.setAll(on);
+  if (!on) publish({ allOn: false });
   if (!on) for (const id of [...hosts.keys()]) stopHost(id);
   if (!on) for (const id of contributingPlugins()) withdraw(id);
+  await pluginsIpc.setAll(on);
   publish({ allOn: on });
   for (const record of pluginsSnapshot().records)
     if (canRun(record.status, on)) apply(record);
