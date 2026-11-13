@@ -14,6 +14,7 @@ import {
   ChevronIcon,
   DownloadIcon,
   MoreIcon,
+  RefreshIcon,
 } from "../../engine/controls/icons";
 import { Tooltip } from "../../engine/controls/Tooltip";
 import { useMenuButton } from "../../engine/controls/useMenuButton";
@@ -168,6 +169,7 @@ export function PluginsPanel({
                   <RowButton
                     label={`${t.pluginUpdateNow} · ${pluginName(record)}`}
                     tip={t.pluginUpdateNow}
+                    update
                     disabled={installing !== null}
                     onClick={() => {
                       const item = catalogItem(record.id, catalog);
@@ -369,15 +371,18 @@ function moreMenu(
   ];
 }
 
-/** A row's one action, as a small round button: the words keep the row. */
+/** A row's one action, as a small round button: the words keep the row.
+ *  An update turns, in the accent: something to do, not something to get. */
 function RowButton({
   label,
   tip,
+  update = false,
   disabled,
   onClick,
 }: {
   label: string;
   tip: string;
+  update?: boolean;
   disabled: boolean;
   onClick: () => void;
 }) {
@@ -386,11 +391,12 @@ function RowButton({
       <button
         type="button"
         className="tree-tool plugins-panel-action"
+        data-update={update || undefined}
         aria-label={label}
         disabled={disabled}
         onClick={onClick}
       >
-        <DownloadIcon />
+        {update ? <RefreshIcon /> : <DownloadIcon />}
       </button>
     </Tooltip>
   );
