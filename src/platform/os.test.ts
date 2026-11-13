@@ -1,5 +1,5 @@
 import { afterEach, describe, expect, it, vi } from "vitest";
-import { isDesktop, isIOSPlatform, modIsMeta } from "./os";
+import { isAndroidPlatform, isDesktop, isIOSPlatform, modIsMeta } from "./os";
 
 // jsdom's navigator has no maxTouchPoints to spy on - swap in a plain one.
 function stub(platform: string, userAgent: string, maxTouchPoints = 0) {
@@ -43,6 +43,7 @@ describe("isIOSPlatform / isDesktop", () => {
 
   it("never counts Android as desktop", () => {
     stub("Linux armv8l", "Mozilla/5.0 (Linux; Android 14; Pixel 8)", 5);
+    expect(isAndroidPlatform()).toBe(true);
     expect(isIOSPlatform()).toBe(false);
     expect(isDesktop()).toBe(false);
   });

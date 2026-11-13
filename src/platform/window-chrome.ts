@@ -1,4 +1,5 @@
 import {
+  isAndroidPlatform,
   isIOSPlatform,
   isLinuxPlatform,
   isMacPlatform,
@@ -35,8 +36,10 @@ export const drawsWindowEdges = isLinuxPlatform();
  * Which platform's webview this is, for `data-platform`. iOS is checked
  * first: an iPad reports "MacIntel" like a Mac.
  */
-export function platformName(): "macos" | "ios" | "windows" | "linux" {
+export function platformName():
+  "macos" | "ios" | "android" | "windows" | "linux" {
   if (isIOSPlatform()) return "ios";
+  if (isAndroidPlatform()) return "android";
   if (isMacPlatform()) return "macos";
   if (isWindowsPlatform()) return "windows";
   return "linux";

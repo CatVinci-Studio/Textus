@@ -1,5 +1,5 @@
 import { useSyncExternalStore } from "react";
-import { isIOSApp } from "../../platform/capabilities";
+import { isMobileApp } from "../../platform/capabilities";
 
 /** The width at which the iPhone layout takes over: the sidebar becomes a
  *  drawer and Textus AI a bottom sheet. */
@@ -13,12 +13,12 @@ function subscribe(onChange: () => void) {
 
 /** Whether surfaces take their phone form now, outside React. */
 export function isPhoneLayout(): boolean {
-  return isIOSApp && (window.matchMedia?.(PHONE_QUERY).matches ?? false);
+  return isMobileApp && (window.matchMedia?.(PHONE_QUERY).matches ?? false);
 }
 
-/** Whether surfaces should take their phone form. iOS at phone width only:
- *  an iPad keeps the desktop's popovers, and a narrow desktop window is still
- *  a desktop. */
+/** Whether surfaces should take their phone form: a phone or tablet app
+ *  (iOS, Android) at phone width; a tablet keeps the desktop's, and a narrow
+ *  desktop window is still a desktop. */
 export function usePhoneLayout(): boolean {
   return useSyncExternalStore(subscribe, isPhoneLayout, () => false);
 }
