@@ -1,6 +1,6 @@
 # Plugin API reference
 
-Made from [textus.d.ts](textus.d.ts) by `scripts/plugin-reference.mjs` -
+Made from [textus.d.ts](../textus.d.ts) by `scripts/plugin-reference.mjs` -
 change that file, then run the script; don't edit this page. How the
 parts fit together is in [the guide](guide.md).
 
