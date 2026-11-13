@@ -88,22 +88,27 @@ export function useStreamedProposals(
 }
 
 /** Messages sent while a reply is coming, sent in turn by `sendNext` once
- *  nothing is in flight. A failed reply pauses them until Continue. */
+ *  nothing is in flight. A failed reply pauses them until Continue; another
+ *  conversation gives them back to the box through `restore`. */
 export function useMessageQueue(
   busy: boolean,
   /** The conversation's failure: while there is one, the queue waits. */
   failure: unknown,
+  conversationId: unknown,
   sendNext: (next: QueuedMessage) => Promise<AgentTurn[] | undefined>,
+  restore: (typed: string) => void,
 ) {
   const [queue, setQueue] = useState<QueuedMessage[]>([]);
-  // The failure the user chose to go on past.
+  // The failure the user chose to go on past, until the next send clears it.
   const [passed, setPassed] = useState<unknown>(null);
+  if (!failure && passed !== null) setPassed(null);
   const queuePaused = !!failure && failure !== passed && queue.length > 0;
   // Bumped as each send ends, so the queue looks again.
   const [settled, setSettled] = useState(0);
   const nextQueued = useRef(0);
   // A send under way, queued or straight from the box: one more waits.
   const sending = useRef(false);
+  const shown = useRef(conversationId);
   // This render's; the queue and busy say when to look again.
   const send = useLatest(sendNext);
 
@@ -119,18 +124,33 @@ export function useMessageQueue(
     }
   }, []);
 
+  /** What was waiting goes back in the box. */
+  function giveBack() {
+    if (queue.length > 0) restore(queue.map((q) => q.typed).join("\n\n"));
+    setQueue([]);
+  }
+
   useEffect(() => {
     if (queue.length === 0 || busy || queuePaused || sending.current) return;
+    if (shown.current !== conversationId) return;
     const [next] = queue;
     setQueue((now) => now.filter((q) => q.id !== next.id));
     void run(() => send.current(next));
-  }, [busy, queue, queuePaused, send, run, settled]);
+  }, [busy, queue, queuePaused, send, run, settled, conversationId]);
+
+  // Declared after the send so a new conversation never gets the old queue.
+  useEffect(() => {
+    if (shown.current === conversationId) return;
+    shown.current = conversationId;
+    giveBack();
+  });
 
   return {
     queue,
     setQueue,
     queuePaused,
     goOn: () => setPassed(failure),
+    giveBack,
     nextQueued,
     sending,
     run,

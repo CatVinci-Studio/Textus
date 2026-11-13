@@ -155,7 +155,9 @@ export function PluginReadme({
       <div
         className="plugin-readme-body"
         ref={bodyRef}
-        onFocus={() => long && !open && setOpen(true)}
+        onFocus={(e) =>
+          long && !open && e.target.matches(":focus-visible") && setOpen(true)
+        }
       >
         <Suspense fallback={null}>
           <EditorPreview

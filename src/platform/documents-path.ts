@@ -21,9 +21,9 @@ export function insideDocuments(path: string, docs: string): string | null {
 }
 
 /**
- * `path` as stored: relative inside this install's Documents folder `docs`
- * (or, not known yet, what looks like an app's), unchanged otherwise - a
- * file in another app's folder included.
+ * `path` as stored: relative inside this install's Documents folder `docs`;
+ * unchanged otherwise (another app's folder included) and while `docs`
+ * isn't known.
  */
 export function storedDocumentPath(path: string, docs: string | null): string {
   if (path.startsWith(IN_DOCUMENTS)) return path;

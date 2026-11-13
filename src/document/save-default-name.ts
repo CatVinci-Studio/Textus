@@ -8,8 +8,8 @@ function plainMarkdownText(text: string): string {
     .replace(/!\[([^\]]*)\]\([^)]*\)/g, "$1")
     .replace(/\[([^\]]+)\]\([^)]*\)/g, "$1")
     .replace(/`([^`]*)`/g, "$1")
+    .replace(/<!--[\s\S]*?(?:-->|$)/g, "")
     .replace(/<[^>]+>/g, "")
-    .replace(/<!--.*$/, "")
     .replace(/[*_~]/g, "")
     .trim();
 }

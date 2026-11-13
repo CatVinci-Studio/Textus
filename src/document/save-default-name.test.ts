@@ -43,6 +43,10 @@ describe("firstContentLine", () => {
     expect(firstContentLine("<!--\nhidden\n-->\nShown")).toBe("Shown");
     expect(firstContentLine("- - -\n    <!-- note\nShown")).toBe("Shown");
     expect(firstContentLine("Intro <!-- draft --> more")).toBe("Intro  more");
+    expect(firstContentLine("Draft <!-- a -> b --> intro")).toBe(
+      "Draft  intro",
+    );
+    expect(firstContentLine("Draft <!-- a -> b")).toBe("Draft");
   });
 
   it("reads past a front matter left open instead of skipping the whole document", () => {

@@ -96,6 +96,17 @@ test("messages sent during a reply wait their turn; a failure holds them until t
   await expect(queue).toHaveCount(0);
   await expect(turns).toContainText("third");
   await expect(page.locator(".ai-tab .agent-streaming")).toHaveCount(0);
+  // A later failure with the same words holds the queue again.
+  await box.fill("another long question for the reply to take a while");
+  await box.press("Enter");
+  await box.fill("fail again");
+  await box.press("Enter");
+  await box.fill("fourth");
+  await box.press("Enter");
+  await expect(queue.locator(".chat-queue-text")).toHaveText(["fourth"]);
+  await expect(queue.locator(".inline-chat-action")).toBeVisible();
+  await page.waitForTimeout(500);
+  await expect(turns).not.toContainText("fourth");
 });
 
 test("pressed again in front of its own island, it collapses; again, it comes back", async ({

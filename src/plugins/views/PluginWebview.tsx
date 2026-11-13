@@ -332,7 +332,8 @@ export function useResolvedWebview(
   useEffect(() => {
     if (!runs) {
       setRecord(null);
-      setError(PLUGIN_OFF);
+      // Not installed here: nothing in Plugins to turn on.
+      setError(pluginRecord(plugin) ? PLUGIN_OFF : "Not installed.");
       return;
     }
     const made = createWebview(plugin, kind, key, resource);
