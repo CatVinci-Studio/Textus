@@ -16,6 +16,12 @@ import {
   setWindowZoom,
 } from "../engine/zoom/tab-zoom";
 import { windowTabs } from "../engine/layout/store";
+import {
+  endPreview,
+  showPreview,
+  startPreview,
+  type ZoomPreview,
+} from "./zoom-preview";
 
 /// Document zoom, each tab its own (or, with zoomTogether, all documents
 /// one), scoped to the editor content; the window chrome stays at 100%. Published as `--content-zoom` on the tab's own
@@ -32,6 +38,8 @@ const MENU_STEP = 1.1;
 const SCROLL_GESTURE_MS = 250;
 /// Trailing delay before persisting, so only the resting value is saved.
 const PERSIST_DELAY_MS = 400;
+/// A wheel pinch (no gesture end of its own) has ended after this still.
+const PINCH_REST_MS = 150;
 
 /// WebKit's proprietary pinch events (gesturestart/change/end) - not in
 /// lib.dom because no other engine implements them.
@@ -300,6 +308,30 @@ export function useZoom(
       return true;
     };
 
+    // A pinch drawn as a preview (zoom-preview.ts) until it ends: then the
+    // real zoom, at once, holding the line the preview held.
+    let preview: ZoomPreview | null = null;
+    let pinchRest: ReturnType<typeof setTimeout> | undefined;
+    const commitPreview = () => {
+      const shown = preview;
+      if (!shown) return;
+      preview = null;
+      clearTimeout(pinchRest);
+      endPreview(shown);
+      const box = shown.column.getBoundingClientRect();
+      const point = { clientX: box.left + box.width / 2, clientY: shown.line };
+      setZoom(() => zoomRef.current, true, point, shown.tab);
+      // In this frame, or the column shows at its old size for one.
+      if (raf) {
+        cancelAnimationFrame(raf);
+        applyFrame();
+      }
+    };
+    const previewTo = (zoom: number) => {
+      zoomRef.current = clamp(zoom);
+      showPreview(preview!, zoomRef.current);
+    };
+
     // The restored zoom is the starting state, not a step to anchor.
     if (zoomRef.current !== 1) setWindowZoom(zoomRef.current);
 
@@ -312,11 +344,14 @@ export function useZoom(
       const { clientX, clientY } = e as WebKitGestureEvent;
       pinchTab = zoomTab(clientX, clientY);
       pinchBase = pinchTab ? contentZoom(pinchTab) : 1;
+      commitPreview();
+      preview = pinchTab && startPreview(pinchTab, pinchBase, clientY);
     };
     const onGestureChange = (e: Event) => {
       e.preventDefault();
       const { scale } = e as WebKitGestureEvent;
-      if (scale > 0 && pinchTab)
+      if (scale > 0 && preview) previewTo(pinchBase * scale);
+      else if (scale > 0 && pinchTab)
         setZoom(
           () => pinchBase * scale,
           false,
@@ -326,7 +361,8 @@ export function useZoom(
     };
     const onGestureEnd = (e: Event) => {
       e.preventDefault();
-      if (pinchTab)
+      if (preview) commitPreview();
+      else if (pinchTab)
         setZoom(() => zoomRef.current, true, e as WebKitGestureEvent, pinchTab);
       pinchTab = null;
     };
@@ -348,9 +384,26 @@ export function useZoom(
       }
       const pinch = e.ctrlKey && !Number.isInteger(e.deltaY);
       if (!pinch && e.timeStamp - lastScroll < SCROLL_GESTURE_MS) return;
+      if (pinch && pinchPreview(e)) return;
       // A pinch moves in small steps: snapped, each would fall back.
       if (setZoom((z) => z * Math.exp(-e.deltaY * 0.0015), !pinch, e))
         e.preventDefault();
+    };
+
+    // Chromium's pinch, as a preview until it rests.
+    const pinchPreview = (e: WheelEvent): boolean => {
+      if (!preview) {
+        const tab = zoomTab(e.clientX, e.clientY);
+        const base = tab ? contentZoom(tab) : 1;
+        preview = tab && startPreview(tab, base, e.clientY);
+        if (!preview) return false;
+        zoomRef.current = base;
+      }
+      e.preventDefault();
+      previewTo(zoomRef.current * Math.exp(-e.deltaY * 0.0015));
+      clearTimeout(pinchRest);
+      pinchRest = setTimeout(commitPreview, PINCH_REST_MS);
+      return true;
     };
 
     window.addEventListener("gesturestart", onGestureStart);
@@ -370,6 +423,8 @@ export function useZoom(
       window.removeEventListener("gestureend", onGestureEnd);
       window.removeEventListener("wheel", onWheel);
       if (raf) cancelAnimationFrame(raf);
+      clearTimeout(pinchRest);
+      if (preview) endPreview(preview);
       clearTimeout(persistTimer);
       unregisterFlush();
       unlistenMenu();
