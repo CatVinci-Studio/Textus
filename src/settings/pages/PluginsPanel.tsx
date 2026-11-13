@@ -1,3 +1,4 @@
+import { pluginLead } from "./plugin-lead";
 import { useMutedCards } from "../../plugins/store/usePluginCard";
 import { setAllPlugins } from "../../plugins/plugin-switches";
 import { catalogMessage, catalogStatus } from "./CatalogStatus";
@@ -9,7 +10,11 @@ import {
   type ReactNode,
 } from "react";
 import { SearchField } from "../../engine/controls/SearchField";
-import { ChevronIcon, MoreIcon } from "../../engine/controls/icons";
+import {
+  ChevronIcon,
+  DownloadIcon,
+  MoreIcon,
+} from "../../engine/controls/icons";
 import { Tooltip } from "../../engine/controls/Tooltip";
 import { useMenuButton } from "../../engine/controls/useMenuButton";
 import type { ContextMenuEntry } from "../../engine/controls/ContextMenu";
@@ -33,6 +38,7 @@ import {
   subscribeCatalog,
   updateFor,
   catalogItem,
+  neededTextus,
 } from "../../plugins/store/catalog";
 import { pluginMatches } from "../../plugins/store/plugin-records";
 import type { Strings } from "../../i18n/strings";
@@ -65,8 +71,7 @@ export function PluginsPanel({
 }) {
   const plugins = useSyncExternalStore(subscribePlugins, pluginsSnapshot);
   const catalog = useSyncExternalStore(subscribeCatalog, catalogSnapshot);
-  const { actionFor, install, installing, attempt, updateAll } =
-    usePluginActions(t);
+  const { install, installing, attempt, updateAll } = usePluginActions(t);
   const muted = useMutedCards();
   const more = useMenuButton(() =>
     moreMenu(t, attempt, { allOn: plugins.allOn, muted }),
@@ -160,17 +165,15 @@ export function PluginsPanel({
               // button; other versions are on the plugin's page.
               end={
                 catalog.status === "ready" && updateFor(record.id, catalog) ? (
-                  <button
-                    type="button"
-                    className="text-button plugins-panel-update"
+                  <RowButton
+                    label={`${t.pluginUpdateNow} · ${pluginName(record)}`}
+                    tip={t.pluginUpdateNow}
                     disabled={installing !== null}
                     onClick={() => {
                       const item = catalogItem(record.id, catalog);
                       if (item) void install(item);
                     }}
-                  >
-                    {t.pluginUpdateNow}
-                  </button>
+                  />
                 ) : null
               }
               icon={
@@ -210,7 +213,20 @@ export function PluginsPanel({
                 )}
                 picked={picked === item.id}
                 onOpen={() => onPick(item.id)}
-                end={actionFor(item.id)}
+                end={
+                  neededTextus(item) ? null : (
+                    <RowButton
+                      label={`${t.pluginInstall} · ${pluginName({ id: item.id, manifest: item.manifest })}`}
+                      tip={
+                        installing === item.id
+                          ? t.pluginInstalling
+                          : t.pluginInstall
+                      }
+                      disabled={installing !== null}
+                      onClick={() => void install(item)}
+                    />
+                  )
+                }
                 icon={
                   <PluginIcon
                     id={item.id}
@@ -263,18 +279,14 @@ function PluginRow({
         <span className="plugins-panel-text">
           <span className="tx-truncate plugins-panel-name">{name}</span>
           {line && (
-            <span className="tx-truncate plugins-panel-line">{line}</span>
+            <span className="tx-truncate plugins-panel-line">
+              {pluginLead(line)}
+            </span>
           )}
         </span>
       </button>
-      {/* Its button on a line of its own, under the text: the name and
-          what it does keep the row's width, a long label (Installieren)
-          cutting neither. Who made it is on its page. */}
-      {end && (
-        <div className="plugins-panel-foot">
-          <span className="plugins-panel-end">{end}</span>
-        </div>
-      )}
+      {/* Who made it is on its page. */}
+      {end && <span className="plugins-panel-end">{end}</span>}
     </div>
   );
 }
@@ -355,4 +367,31 @@ function moreMenu(
       ? [{ label: t.pluginCardsRestoreAll, onSelect: muted.restore }]
       : []),
   ];
+}
+
+/** A row's one action, as a small round button: the words keep the row. */
+function RowButton({
+  label,
+  tip,
+  disabled,
+  onClick,
+}: {
+  label: string;
+  tip: string;
+  disabled: boolean;
+  onClick: () => void;
+}) {
+  return (
+    <Tooltip text={tip}>
+      <button
+        type="button"
+        className="tree-tool plugins-panel-action"
+        aria-label={label}
+        disabled={disabled}
+        onClick={onClick}
+      >
+        <DownloadIcon />
+      </button>
+    </Tooltip>
+  );
 }

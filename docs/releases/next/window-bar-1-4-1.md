@@ -6,7 +6,7 @@
 
 - Interface text size comes in three steps, Small, Medium and Large; a size chosen before moves to the nearest of them.
 - A sidebar panel's search box has room round it, its sides level with the panel's name.
-- The sidebar's Plugins list shows each plugin's name and one line on what it does; who made it is on its page.
+- The sidebar's Plugins list shows each plugin's name and what it is for on one line, with a small Install or Update button at the end; who made it is on its page.
 - However many tabs are open, the window bar keeps some bare room before its buttons to move the window by.
 
 ### Fixed
