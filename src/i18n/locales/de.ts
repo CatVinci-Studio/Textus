@@ -912,6 +912,10 @@ Skills liegen im Ordner skills/ neben dieser Datei, je Skill eine
   proxyTypeNone: "Keiner (direkt)",
   proxyHostPlaceholder: "Host, z. B. 127.0.0.1",
   proxyPortPlaceholder: "Port",
+  proxyUserPlaceholder: "Benutzername (optional)",
+  proxyPasswordPlaceholder: "Passwort (optional)",
+  proxyAuthHelp:
+    "Verlangt der Proxy einen Benutzernamen und ein Passwort, trage sie hier ein; Anfragen melden sich dann per Basic-Authentifizierung.",
   agentInputPlaceholder: "Frage oder Anweisung… (@\u00a0Datei, /\u00a0Skill)",
   agentQueued: "Warteschlange ({n}) – nach dieser Antwort gesendet",
   agentQueuedPaused:

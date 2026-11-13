@@ -151,7 +151,7 @@ export function ChatWritingPage({
 
       <SettingsGroup title={t.netGroup}>
         {settings.enableAskAi && <SearchServiceSection t={t} />}
-        <SettingRow label={t.proxyLabel}>
+        <SettingRow label={t.proxyLabel} help={t.proxyAuthHelp}>
           <Select
             className="settings-select"
             aria-label={t.proxyLabel}
@@ -167,28 +167,52 @@ export function ChatWritingPage({
           </Select>
         </SettingRow>
         {settings.proxyType !== "none" && (
-          <div className="settings-proxy-row">
-            <input
-              type="text"
-              inputMode="url"
-              {...VERBATIM_INPUT}
-              className="settings-text-input settings-proxy-host"
-              placeholder={t.proxyHostPlaceholder}
-              aria-label={t.proxyHostPlaceholder}
-              value={settings.proxyHost}
-              onChange={(e) => setSettings({ proxyHost: e.target.value })}
-            />
-            <input
-              type="text"
-              inputMode="numeric"
-              {...VERBATIM_INPUT}
-              className="settings-text-input settings-proxy-port"
-              placeholder={t.proxyPortPlaceholder}
-              aria-label={t.proxyPortPlaceholder}
-              value={settings.proxyPort}
-              onChange={(e) => setSettings({ proxyPort: e.target.value })}
-            />
-          </div>
+          <>
+            <div className="settings-proxy-row">
+              <input
+                type="text"
+                inputMode="url"
+                {...VERBATIM_INPUT}
+                className="settings-text-input settings-proxy-host"
+                placeholder={t.proxyHostPlaceholder}
+                aria-label={t.proxyHostPlaceholder}
+                value={settings.proxyHost}
+                onChange={(e) => setSettings({ proxyHost: e.target.value })}
+              />
+              <input
+                type="text"
+                inputMode="numeric"
+                {...VERBATIM_INPUT}
+                className="settings-text-input settings-proxy-port"
+                placeholder={t.proxyPortPlaceholder}
+                aria-label={t.proxyPortPlaceholder}
+                value={settings.proxyPort}
+                onChange={(e) => setSettings({ proxyPort: e.target.value })}
+              />
+            </div>
+            <div className="settings-proxy-row">
+              <input
+                type="text"
+                {...VERBATIM_INPUT}
+                autoComplete="off"
+                className="settings-text-input settings-proxy-host"
+                placeholder={t.proxyUserPlaceholder}
+                aria-label={t.proxyUserPlaceholder}
+                value={settings.proxyUsername}
+                onChange={(e) => setSettings({ proxyUsername: e.target.value })}
+              />
+              <input
+                type="password"
+                {...VERBATIM_INPUT}
+                autoComplete="off"
+                className="settings-text-input settings-proxy-host"
+                placeholder={t.proxyPasswordPlaceholder}
+                aria-label={t.proxyPasswordPlaceholder}
+                value={settings.proxyPassword}
+                onChange={(e) => setSettings({ proxyPassword: e.target.value })}
+              />
+            </div>
+          </>
         )}
       </SettingsGroup>
     </>

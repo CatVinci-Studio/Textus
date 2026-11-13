@@ -48,12 +48,20 @@ describe("the settings file", () => {
 
   it("leaves this computer's own settings out of the file", () => {
     const text = settingsFileText(
-      { ...mine, proxyHost: "10.0.0.2", zoom: 1.2 },
+      {
+        ...mine,
+        proxyHost: "10.0.0.2",
+        proxyUsername: "alice",
+        proxyPassword: "open sesame",
+        zoom: 1.2,
+      },
       {},
     );
     const written = JSON.parse(text).settings;
     expect(written).not.toHaveProperty("agentWorkspaceRoot");
     expect(written).not.toHaveProperty("proxyHost");
+    expect(written).not.toHaveProperty("proxyUsername");
+    expect(written).not.toHaveProperty("proxyPassword");
     expect(written).not.toHaveProperty("zoom");
     expect(written.language).toBe("en");
   });

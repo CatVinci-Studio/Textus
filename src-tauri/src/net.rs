@@ -146,6 +146,70 @@ mod tests {
     }
 
     #[tokio::test]
+    async fn a_proxy_asking_for_a_name_and_password_gets_them() {
+        // The "proxy" answers a request without Proxy-Authorization with
+        // the 407 a proxy that wants a name and password gives, and lets
+        // one that carries them through: what the credentials in the
+        // proxy's URL are for.
+        use std::io::{Read, Write};
+        let listener = std::net::TcpListener::bind("127.0.0.1:0").unwrap();
+        let proxy = format!("http://{}", listener.local_addr().unwrap());
+        std::thread::spawn(move || {
+            for _ in 0..2 {
+                let (mut stream, _) = listener.accept().unwrap();
+                let mut request = Vec::new();
+                let mut buf = [0u8; 4096];
+                while !request.ends_with(b"\r\n\r\n") {
+                    let n = stream.read(&mut buf).unwrap();
+                    if n == 0 {
+                        break;
+                    }
+                    request.extend_from_slice(&buf[..n]);
+                }
+                let carries = String::from_utf8_lossy(&request)
+                    .to_lowercase()
+                    .contains("proxy-authorization:");
+                let answer = if carries {
+                    "HTTP/1.1 200 OK\r\nContent-Length: 2\r\nConnection: close\r\n\r\nok"
+                } else {
+                    "HTTP/1.1 407 Proxy Authentication Required\r\nProxy-Authenticate: Basic\r\nContent-Length: 0\r\nConnection: close\r\n\r\n"
+                };
+                let _ = stream.write_all(answer.as_bytes());
+            }
+        });
+        let unauthorized = through(
+            client(Duration::from_secs(5), Duration::from_secs(5)),
+            Some(proxy.clone()),
+        )
+        .unwrap()
+        .build()
+        .unwrap();
+        let response = unauthorized
+            .get("http://catalog.invalid/index.json")
+            .send()
+            .await
+            .unwrap();
+        assert_eq!(
+            response.status(),
+            reqwest::StatusCode::PROXY_AUTHENTICATION_REQUIRED
+        );
+        let with_credentials = proxy.trim_start_matches("http://").to_string();
+        let authorized = through(
+            client(Duration::from_secs(5), Duration::from_secs(5)),
+            Some(format!("http://alice:{{SECRET_4bymoh54}}@{with_credentials}")),
+        )
+        .unwrap()
+        .build()
+        .unwrap();
+        let response = authorized
+            .get("http://catalog.invalid/index.json")
+            .send()
+            .await
+            .unwrap();
+        assert_eq!(response.text().await.unwrap(), "ok");
+    }
+
+    #[tokio::test]
     async fn this_computers_servers_are_reached_directly() {
         // A proxy that answers nothing: only a direct request can succeed.
         let dead = std::net::TcpListener::bind("127.0.0.1:0").unwrap();

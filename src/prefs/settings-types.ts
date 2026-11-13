@@ -144,6 +144,11 @@ export interface Settings {
   proxyType: ProxyType;
   proxyHost: string;
   proxyPort: string;
+  /// The proxy's credentials, when it asks for a name and password (Basic
+  /// auth); handed to Rust inside the proxy URL, and never written to a
+  /// settings file (settings-file.ts).
+  proxyUsername: string;
+  proxyPassword: string;
   typewriterMode: boolean;
   /** The formatting row under the title bar. */
   formatBar: boolean;
@@ -317,6 +322,8 @@ export const DEFAULT_SETTINGS: Settings = {
   proxyType: "none",
   proxyHost: "",
   proxyPort: "",
+  proxyUsername: "",
+  proxyPassword: "",
   typewriterMode: false,
   formatBar: true,
   formatBarOnce: true,
