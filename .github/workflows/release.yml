@@ -117,8 +117,8 @@ jobs:
           - platform: macos-26
             target: x86_64-apple-darwin
             args: --target x86_64-apple-darwin
-          - platform: ubuntu-22.04
-            args: ""
+          # Fork: no Linux builds (not needed here); restore the two ubuntu
+          # rows below when upstream syncs.
           # Windows ships the NSIS .exe and nothing else; the target list
           # itself lives in src-tauri/tauri.windows.conf.json, so a local
           # `tauri build` produces the same one artifact this does.
@@ -133,20 +133,18 @@ jobs:
           # has always shipped NSIS. One installer, one upgrade path.
           - platform: windows-2025
             args: ""
-          # ARM64 Windows and Linux (from 1.1.0), each on GitHub's native
-          # arm64 runner, so the frontend tooling, the Rust build and the
-          # bundlers (NSIS, linuxdeploy) all run as they do on x64. The
+          # ARM64 Windows on GitHub's native arm64 runner, so the frontend
+          # tooling, the Rust build and the NSIS bundler all run as they do
+          # on x64 (upstream also builds Linux here; the fork does not). The
           # explicit --target is what tauri-action reads the architecture
           # from when it looks for the installers; without it, it would trust
           # the arch of whichever Node the runner picked. Tauri names their
-          # installers apart from the x64 ones: _arm64-setup.exe, _arm64.deb,
-          # .aarch64.rpm and _aarch64.AppImage (docs/dev/releasing.md).
+          # installers apart from the x64 ones: _arm64-setup.exe,
+          # _arm64.deb, .aarch64.rpm and _aarch64.AppImage
+          # (docs/dev/releasing.md).
           - platform: windows-11-arm
             target: aarch64-pc-windows-msvc
             args: --target aarch64-pc-windows-msvc
-          - platform: ubuntu-22.04-arm
-            target: aarch64-unknown-linux-gnu
-            args: --target aarch64-unknown-linux-gnu
 
     runs-on: ${{ matrix.platform }}
     steps:
@@ -284,6 +282,20 @@ jobs:
           # cannot be an .rpm; rc tags ship the .deb and AppImage only, on
           # x64 and ARM64 alike.
           args: ${{ matrix.args }}${{ startsWith(matrix.platform, 'ubuntu-') && contains(env.RELEASE_TAG, '-') && ' --bundles deb,appimage' || '' }}
+
+      # The fork's portable zip: the app alone, in a Textus folder. Upstream
+      # ships the NSIS installer only. 7z keeps Textus/ as the zip's root
+      # entry, so extracting lands in its own folder.
+      - name: Build the Windows portable zip
+        if: matrix.platform == 'windows-2025'
+        shell: bash
+        env:
+          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        run: |
+          mkdir Textus
+          cp src-tauri/target/release/textus.exe Textus/
+          7z a "Textus_${RELEASE_TAG#v}_x64_portable.zip" Textus
+          gh release upload "$RELEASE_TAG" "Textus_${RELEASE_TAG#v}_x64_portable.zip" --clobber
 
       # textus-bin (packaging/arch/PKGBUILD) installs this tarball. Its
       # binary is a second build with TEXTUS_DISTRIBUTION=aur: it reports new

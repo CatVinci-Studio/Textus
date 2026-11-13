@@ -102,3 +102,36 @@ Milkdown/ProseMirror, source mode CodeMirror 6) and a Rust backend in
   don't work around it.
 - Don't change signing, notarization, release or store workflows unless the
   task is about them.
+
+## Fork releases (luckylew23/Textus)
+
+This fork releases from this repository's own `release.yml`: push a tag
+`v*.*.*`, or `gh workflow run -R luckylew23/Textus release.yml
+-f tag=<tag> --ref proxy-authentication`. What the first fork release
+(v1.4.1-rc.3, 2026-11-13) established; drop this section when syncing from
+upstream:
+
+- **Version**: follow upstream's version and raise only the rc suffix
+  (`1.4.1-rc.N`). Every file `scripts/check-versions.mjs` lists moves
+  together (package.json, package-lock.json, src-tauri/tauri.conf.json,
+  src-tauri/Cargo.toml, Cargo.lock), and the tag must exist on the remote
+  BEFORE dispatching - the preflight checks it out and fails on a race.
+- **Updater signing**: the fork has its own `TAURI_SIGNING_PRIVATE_KEY`
+  (created 2026-11-13, empty password) in the Actions secrets; without it
+  every build fails, because `createUpdaterArtifacts` is on. Fork builds
+  never publish latest.json, so the key is not the upstream one.
+- **macOS unsigned**: the "Require the macOS signing secrets" step fires
+  only when `secrets.APPLE_CERTIFICATE` is set, so a fork without an Apple
+  Developer account ships the unsigned DMGs tauri-action builds anyway
+  (Gatekeeper: right-click - Open on first launch). Upstream keeps the
+  unconditional gate.
+- **No Linux builds; portable Windows zip**: the fork's matrix drops the
+  two ubuntu rows and the windows-2025 job adds a portable zip
+  (`Textus_<version>_x64_portable.zip`, built with 7z so `Textus/` is the
+  zip's root folder).
+- **Upstream sync**: `.github/workflows/release.yml` and this section carry
+  fork edits - expect conflicts in both and keep the fork side.
+- **Network**: pushes and Actions checks fail when GitHub is unreachable
+  from the intranet. A failed or cancelled run is no loss: re-dispatch the
+  same tag after the network is back (the draft release and its assets are
+  reused across runs).
