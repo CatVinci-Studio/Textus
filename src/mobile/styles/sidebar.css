@@ -89,11 +89,6 @@
   background: none;
 }
 
-/* The tabs clear the status bar, as the bar's buttons do. */
-:root[data-window-chrome="mobile"] .island-row {
-  padding-top: var(--safe-top);
-}
-
 /* The page ends above the home indicator; with the keyboard up the web
    view already ends at the keyboard. */
 :root[data-window-chrome="mobile"] .main-pane {
