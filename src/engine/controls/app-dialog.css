@@ -14,11 +14,11 @@
 
 .close-prompt {
   /* Inside a small window, the same edge every popup keeps. */
-  min-width: min(320px, calc(100vw - 2 * var(--space-4)));
-  max-width: min(420px, calc(100vw - 2 * var(--space-4)));
+  min-width: min(352px, calc(100vw - 2 * var(--space-4)));
+  max-width: min(462px, calc(100vw - 2 * var(--space-4)));
   /* A long message scrolls inside the box instead of running off the top of a
      short window. */
-  max-height: calc(100% - 32px);
+  max-height: calc(100% - 36px);
   overflow-y: auto;
   padding: var(--space-4) var(--space-5);
   border: 1px solid var(--ui-border);

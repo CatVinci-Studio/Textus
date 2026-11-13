@@ -191,6 +191,23 @@ fn take_flag(args: &mut Vec<String>, names: &[&str]) -> bool {
     args.len() != before
 }
 
+/// Whether `--json` asks for JSON output, removed from `args` - but not,
+/// for a plugin's tool (`plugin`), its `--json '{...}'` arguments.
+fn take_output_json(args: &mut Vec<String>, plugin: bool) -> bool {
+    let mut found = false;
+    let mut i = 0;
+    while i < args.len() {
+        let object = plugin && args.get(i + 1).is_some_and(|next| next.starts_with('{'));
+        if args[i] == "--json" && !object {
+            args.remove(i);
+            found = true;
+        } else {
+            i += 1;
+        }
+    }
+    found
+}
+
 /// Runs one command line (without the program name); the exit code.
 pub fn run(args: &[String], cwd: &Path, io: &mut Io, app: &dyn App) -> i32 {
     let Some((first, rest)) = args.split_first() else {
@@ -203,11 +220,12 @@ pub fn run(args: &[String], cwd: &Path, io: &mut Io, app: &dyn App) -> i32 {
         _ => {}
     }
     let help_asked = take_flag(&mut rest, &["-h", "--help"]);
+    let command = table::find(first);
     let ctx = Ctx {
         cwd: cwd.to_path_buf(),
-        json: take_flag(&mut rest, &["--json"]),
+        json: take_output_json(&mut rest, command.is_none()),
     };
-    let Some(command) = table::find(first) else {
+    let Some(command) = command else {
         return plugin_command(first, rest, &ctx, help_asked, io, app);
     };
     if help_asked {

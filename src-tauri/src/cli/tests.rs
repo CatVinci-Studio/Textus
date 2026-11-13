@@ -137,6 +137,14 @@ fn a_plugin_word_goes_to_the_running_app_without_starting_it() {
     assert_eq!(request.command, "plugin:word-count");
     assert_eq!(request.args, args(&["count", "--text", "a b"]));
     assert!(!launch);
+    // The help's own form: an object after --json is the tool's arguments.
+    run_in(
+        Path::new("/w"),
+        &["word-count", "count", "--json", r#"{"text":"a"}"#],
+        &app,
+    );
+    let (request, _) = app.sent.borrow()[1].clone();
+    assert_eq!(request.args, args(&["count", "--json", r#"{"text":"a"}"#]));
 }
 
 #[test]
@@ -223,6 +231,8 @@ fn files_are_created_moved_listed_searched_and_read() {
         "[{\"line\":1,\"path\":\"done/Plan.md\",\"text\":\"# The plan\"}]\n"
     );
     assert_eq!(at(&["search", "nowhere"]).0, 1);
+    // A built-in command's --json is the output form, whatever follows it.
+    assert!(at(&["search", "--json", "{plan}"]).1.starts_with('['));
 
     assert_eq!(at(&["read", "done/Plan.md"]).1, "# The plan\n");
     std::fs::write(dir.path().join("page.html"), "<h1>Hi</h1><p>there</p>").unwrap();

@@ -1,7 +1,7 @@
 /* The dialog box is the app's (.close-prompt); only its width is its own. */
 .image-name-dialog {
   box-sizing: border-box;
-  width: min(390px, calc(100vw - 2 * var(--space-4)));
+  width: min(430px, calc(100vw - 2 * var(--space-4)));
   max-width: none;
 }
 
@@ -34,7 +34,7 @@
   display: flex;
   justify-content: flex-end;
   gap: 8px;
-  margin-top: 24px;
+  margin-top: 28px;
 }
 
 .image-name-buttons button {

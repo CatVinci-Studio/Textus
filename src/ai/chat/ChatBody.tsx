@@ -13,8 +13,6 @@ import type {
 } from "../types";
 import { ChatMessages } from "./ChatMessages";
 import type { ApplySuggestion } from "./CommentCard";
-import { afterFileChanges } from "./file-changes";
-import { loadSettings } from "../../prefs/settings-store";
 import { ErrorRow } from "./ErrorRow";
 import { ThinkingIndicator } from "./ThinkingIndicator";
 import { ChatComposer, type ChatComposerHandle } from "./ChatComposer";
@@ -122,11 +120,6 @@ export function ChatBody({
   function afterSend(newTurns: AgentTurn[] | undefined) {
     const proposals = proposalsFromTurns(newTurns ?? []);
     if (proposals.length > 0) onProposals(proposals);
-    void afterFileChanges(
-      conversation.conversationId,
-      newTurns ?? [],
-      loadSettings().aiChangeMode === "revision",
-    );
     follow.stick();
     requestAnimationFrame(() => {
       listRef.current?.scrollTo({
@@ -149,36 +142,44 @@ export function ChatBody({
     }) => { message: string; images?: ImageAttachment[] },
     options: AgentRequestOptions,
   ) {
+    // In flight from the start: a second send meanwhile joins the queue.
     void (async () => {
-      const latest = refreshContext ? await refreshContext() : null;
-      const state = latest ?? { document, selectionMarkdown };
-      const { message, images } = buildMessage(state);
-      afterSend(
-        await send(state.document, message, images, {
+      const turns = await run(async () => {
+        const latest = refreshContext ? await refreshContext() : null;
+        const state = latest ?? { document, selectionMarkdown };
+        const { message, images } = buildMessage(state);
+        return send(state.document, message, images, {
           ...options,
           focusHeading: latest?.focusHeading ?? null,
-        }),
-      );
+        });
+      });
+      afterSend(turns);
     })();
   }
 
-  // Messages sent while a reply is coming, sent in turn once the replies
-  // before them finish. A failed reply pauses them; Stop gives them back.
-  const queueState = useMessageQueue(busy, async (next) => {
-    const latest = refreshContext ? await refreshContext() : null;
-    const turns = await send(
-      latest?.document ?? document,
-      next.message,
-      next.images,
-      { ...next.options, focusHeading: latest?.focusHeading ?? null },
-    );
-    afterSend(turns);
-    return turns;
-  });
-  const { queue, setQueue, queuePaused, setQueuePaused } = queueState;
-  const { nextQueued, sendingQueued } = queueState;
   const ownComposer = useRef<ChatComposerHandle>(null);
   const composer = composerRef ?? ownComposer;
+  // Messages sent while a reply is coming, sent in turn once the replies
+  // before them finish. A failed reply pauses them; Stop gives them back.
+  const queueState = useMessageQueue(
+    busy,
+    error,
+    conversation.conversationId,
+    async (next) => {
+      const latest = refreshContext ? await refreshContext() : null;
+      const turns = await send(
+        latest?.document ?? document,
+        next.message,
+        next.images,
+        { ...next.options, focusHeading: latest?.focusHeading ?? null },
+      );
+      afterSend(turns);
+      return turns;
+    },
+    (typed) => composer.current?.restore(typed),
+  );
+  const { queue, setQueue, queuePaused, goOn, giveBack } = queueState;
+  const { nextQueued, sending, run } = queueState;
 
   function handleSend(
     typedMessage: string,
@@ -188,11 +189,24 @@ export function ChatBody({
     typed: string = typedMessage,
   ) {
     const message = prepareMessage?.(typedMessage) ?? typedMessage;
-    const compose = (state: {
+    submit(
+      (state) => composeMessage(state, message, attachments, includeSelection),
+      options,
+      typed,
+    );
+  }
+
+  /** Sends now when nothing is under way, else queues: every send from the
+   *  box, a chip, Ask again or Continue comes through here. */
+  function submit(
+    compose: (state: {
       selectionMarkdown: string | null;
       cursor?: { before: string; after: string } | null;
-    }) => composeMessage(state, message, attachments, includeSelection);
-    if (!busy && queue.length === 0 && !sendingQueued.current) {
+    }) => { message: string; images?: ImageAttachment[] },
+    options: AgentRequestOptions,
+    typed: string,
+  ) {
+    if (!busy && queue.length === 0 && !sending.current) {
       dispatchSend(compose, options);
       return;
     }
@@ -206,10 +220,7 @@ export function ChatBody({
 
   /** Stop drops the queue too: what was waiting goes back in the box. */
   function stopAll() {
-    if (queue.length > 0)
-      composer.current?.restore(queue.map((q) => q.typed).join("\n\n"));
-    setQueue([]);
-    setQueuePaused(false);
+    giveBack();
     stop();
   }
 
@@ -217,26 +228,24 @@ export function ChatBody({
    *  against the document as it now reads, rather than writing text whose
    *  target we can't locate. */
   function handleRelocate(proposal: EditProposal) {
-    dispatchSend(
-      () => ({
-        message: fill(labels.relocateRequest, { text: proposal.text ?? "" }),
-      }),
-      { mode: "write", webSearch: false },
-    );
+    const message = fill(labels.relocateRequest, { text: proposal.text ?? "" });
+    submit(() => ({ message }), { mode: "write", webSearch: false }, message);
   }
 
   /** Continue, after an exchange ran out of steps: asks it to go on, the
    *  way the last message was sent. */
   function handleContinue() {
-    dispatchSend(
-      () => ({ message: labels.continueRequest }),
+    const message = labels.continueRequest;
+    submit(
+      () => ({ message }),
       conversation.lastOptions() ?? { mode: "write", webSearch: false },
+      message,
     );
   }
 
   function handleRetry() {
     void (async () => {
-      afterSend(await retry());
+      afterSend(await run(retry));
     })();
   }
 
@@ -410,7 +419,7 @@ export function ChatBody({
           if (item) composer.current?.restore(item.typed);
         }}
         onRemove={(id) => setQueue((now) => now.filter((q) => q.id !== id))}
-        onContinue={() => setQueuePaused(false)}
+        onContinue={goOn}
       />
       <ChatComposer
         handle={composer}

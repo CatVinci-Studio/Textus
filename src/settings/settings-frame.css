@@ -7,13 +7,13 @@
 .settings-panel {
   /* Settings belong to app chrome, independently of document themes. */
   color: var(--ui-text);
-  width: calc(100% - 32px);
-  max-width: 840px;
+  width: calc(100% - 36px);
+  max-width: 924px;
   /* vh and %, not dvh: an older WebView2 drops dvh lines entirely, and the
      panel then grows past both window edges. The % keeps the header clear of
      the window bar. */
-  height: min(82vh, 720px);
-  max-height: calc(100% - 32px);
+  height: min(82vh, 792px);
+  max-height: calc(100% - 36px);
   display: flex;
   flex-direction: column;
   background: var(--ui-bg);
@@ -51,8 +51,8 @@
 /* As wide as the longest category name needs, within bounds; longer names
    wrap inside the cap. */
 .settings-sidebar {
-  min-width: 176px;
-  max-width: 232px;
+  min-width: 194px;
+  max-width: 256px;
   flex-shrink: 0;
   display: flex;
   flex-direction: column;
@@ -165,7 +165,7 @@
      The gutter alone isn't enough in WebKit with a ::-webkit-scrollbar style. */
   scrollbar-gutter: stable;
   overflow-y: scroll;
-  padding: 24px 24px 32px;
+  padding: 28px 28px 36px;
 }
 
 /* Each group is a quiet inset card: the title above it, rows inside, and the
@@ -176,7 +176,7 @@
   flex-wrap: wrap;
   align-items: flex-end;
   gap: 4px 8px;
-  min-height: 28px;
+  min-height: 30px;
 }
 
 /* The title whole; its tools move to a line of their own under it when
@@ -203,11 +203,11 @@
 }
 
 .settings-group + .settings-group {
-  margin-top: 24px;
+  margin-top: 28px;
 }
 
 .settings-advanced {
-  margin-top: 24px;
+  margin-top: 28px;
   border: 1px solid color-mix(in srgb, var(--ui-border) 75%, transparent);
   border-radius: var(--shape-m);
   background: var(--ui-subtle);
@@ -322,7 +322,7 @@ button.settings-danger-button {
   font-size: var(--text-body);
   line-height: 1.45;
   margin-top: 2px;
-  max-width: 420px;
+  max-width: 462px;
   /* Running text, not a name: it breaks as text does. */
   word-break: normal;
   overflow-wrap: break-word;
@@ -333,7 +333,7 @@ button.settings-danger-button {
 .settings-login-url {
   display: block;
   margin-top: 8px;
-  max-width: 420px;
+  max-width: 462px;
   max-height: 4.5em;
   overflow: auto;
   font-family: var(--font-mono);

@@ -149,7 +149,8 @@ made when they are first shown.
 
 A menu item's `when` is a small expression over the moment it is shown:
 `editorHasSelection`, `fileExtension == .pdf`, `view == jane.tasks.list`,
-`isMac`, joined with `&&`, `||` and `!`.
+`isMac`, `resourceIsFolder` (a file menu item opened on a folder, from
+1.4.1), joined with `&&`, `||` and `!`.
 
 ## Permissions
 

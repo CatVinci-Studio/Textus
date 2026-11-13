@@ -50,6 +50,42 @@ fn list_items_are_tight_and_never_skip_a_level() {
 }
 
 #[test]
+fn list_markers_count_as_what_they_stand_for() {
+    let marks = [
+        "3.",
+        "(3)",
+        "3)",
+        "3、",
+        "（3）",
+        "1.3.",
+        "c.",
+        "C)",
+        "iii.",
+        "IV)",
+        "cc.",
+        "三、",
+        "•",
+        "o",
+        "-",
+        "Note",
+        "ab.",
+        "十、",
+        "十一、",
+        "二十、",
+        "九十九、",
+        "十十、",
+    ]
+    .map(list_mark);
+    assert_eq!(
+        marks,
+        [
+            "3.", "3.", "3.", "3.", "3.", "3.", "3.", "3.", "3.", "4.", "29.", "3.", "-", "-", "-",
+            "-", "-", "10.", "11.", "20.", "99.", "-"
+        ]
+    );
+}
+
+#[test]
 fn tables_get_a_header_padded_rows_and_escaped_cells() {
     let rows = vec![
         vec!["Name".to_string(), "Note".to_string()],

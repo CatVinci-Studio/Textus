@@ -142,7 +142,7 @@ fn images_keep_their_alt_text_and_drawings_are_read_once() {
         r#"<Relationships><Relationship Id="rId4" Type="image" Target="media/image1.png"/></Relationships>"#,
     );
     let body = r#"<w:p><w:r><mc:AlternateContent xmlns:mc="mc">
-            <mc:Choice><w:drawing><wp:inline xmlns:wp="wp"><wp:docPr id="1" name="Picture 1" descr="A [red] barn"/>
+            <mc:Choice><w:drawing><wp:inline xmlns:wp="wp"><wp:docPr id="1" name="Picture 1" descr="" title="A [red] barn"/>
                 <a:graphic xmlns:a="a"><a:graphicData><pic:pic xmlns:pic="pic"><pic:blipFill><a:blip r:embed="rId4"/></pic:blipFill></pic:pic></a:graphicData></a:graphic>
             </wp:inline></w:drawing></mc:Choice>
             <mc:Fallback><w:pict><v:imagedata xmlns:v="v" r:id="rId4"/></w:pict></mc:Fallback>

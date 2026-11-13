@@ -1,7 +1,8 @@
 use super::*;
 
-/// A server in a few lines of Node: initialize, one tool that echoes,
-/// a ping of its own before answering tools/call.
+/// A server in a few lines of Node: initialize, one tool that echoes on
+/// pages whose cursors go round (a, b, a…), a ping of its own before
+/// answering tools/call.
 const ECHO_SERVER: &str = r#"
 const rl = require("readline").createInterface({ input: process.stdin });
 const send = (m) => process.stdout.write(JSON.stringify(m) + "\n");
@@ -10,7 +11,7 @@ rl.on("line", (line) => {
   if (m.method === "initialize")
 send({ jsonrpc: "2.0", id: m.id, result: { protocolVersion: "2025-06-18", capabilities: { tools: {} }, serverInfo: { name: "echo", version: "1.0" } } });
   else if (m.method === "tools/list")
-send({ jsonrpc: "2.0", id: m.id, result: { tools: [{ name: "echo", description: "Says it back.", inputSchema: { type: "object", properties: { text: { type: "string" } } } }] } });
+send({ jsonrpc: "2.0", id: m.id, result: { nextCursor: m.params?.cursor === "a" ? "b" : "a", tools: [{ name: "echo", description: "Says it back.", inputSchema: { type: "object", properties: { text: { type: "string" } } } }] } });
   else if (m.method === "tools/call") {
 send({ jsonrpc: "2.0", id: 900, method: "ping" });
 send({ jsonrpc: "2.0", id: m.id, result: { content: [{ type: "text", text: "echo: " + m.params.arguments.text }] } });
@@ -38,6 +39,8 @@ fn a_server_is_started_asked_for_its_tools_and_called() {
         assert_eq!(connection.server, "echo 1.0");
         let tools = connection.list_tools().await.unwrap();
         assert_eq!(tools[0].name, "echo");
+        // Pages none, a, b; then a again would go round for ever.
+        assert_eq!(tools.len(), 3);
         let tool = mcp_tool(
             "Echo",
             tool_name("Echo", "echo"),
@@ -107,6 +110,12 @@ fn a_tool_name_is_what_every_provider_takes() {
     );
     assert_eq!(tool_name("知识库", "search"), "mcp_search");
     assert!(tool_name(&"x".repeat(80), "y").len() <= 64);
+    // Two long tools alike in their first 53 characters stay apart and short.
+    let long = |end: &str| tool_name("github", &format!("{}{end}", "a".repeat(60)));
+    let first = unique_name(long("1"), &[]);
+    let second = unique_name(long("2"), std::slice::from_ref(&first));
+    assert_ne!(first, second);
+    assert!(second.len() <= 64, "{second}");
 }
 
 #[test]

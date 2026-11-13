@@ -1,5 +1,5 @@
 import { useCallback, useEffect, useMemo, useRef, useState } from "react";
-import { thisWindow } from "../../../platform/this-window";
+import { setWindowTitle, thisWindow } from "../../../platform/this-window";
 import type { PendingStatus } from "../../revision/usePendingEdits";
 import type { ChatRestore } from "../chat-restore";
 import type { ReopenTarget } from "../reopen-conversation";
@@ -68,7 +68,7 @@ export function useChatWindowBridge({
 
   const docTitle = context?.docTitle;
   useEffect(() => {
-    void thisWindow().setTitle(
+    void setWindowTitle(
       docTitle ? `${t.chatWindowTitle} - ${docTitle}` : t.chatWindowTitle,
     );
   }, [docTitle, t.chatWindowTitle]);
@@ -114,10 +114,12 @@ export function useChatWindowBridge({
       send(CHAT_TO_EDITOR.openDocument, { path } satisfies OpenDocumentMessage),
   };
 
-  /** Asks the editor for its current context; null on timeout. */
+  const asking = useRef<Promise<ChatContext | null> | null>(null);
+  /** Asks the editor for its current context; null on timeout. Two sends
+   *  at once share the one ask: the editor answers it once. */
   const refreshContext = useCallback(
     () =>
-      new Promise<ChatContext | null>((resolve) => {
+      (asking.current ??= new Promise<ChatContext | null>((resolve) => {
         if (!editorLabel.current) return resolve(null);
         const timer = window.setTimeout(() => {
           contextWaiter.current = null;
@@ -129,7 +131,9 @@ export function useChatWindowBridge({
           resolve(incoming);
         };
         send(CHAT_TO_EDITOR.requestContext);
-      }),
+      }).finally(() => {
+        asking.current = null;
+      })),
     [send, editorLabel, contextWaiter],
   );
 

@@ -2,7 +2,7 @@
   /* Below the unsaved-changes prompt, which a close during the first launch
      still has to show. */
   z-index: var(--z-modal);
-  padding: 24px;
+  padding: 28px;
   animation: motion-fade-in var(--dur-slow) var(--ease-standard);
 }
 
@@ -15,8 +15,8 @@
   /* Inside the backdrop's padding, not dvh. */
   max-height: 100%;
   overflow-y: auto;
-  width: min(520px, 100%);
-  padding: 32px;
+  width: min(572px, 100%);
+  padding: 36px;
   border: 1px solid var(--ui-border);
   border-radius: var(--shape-l);
   background: var(--ui-bg);
@@ -28,9 +28,9 @@
 
 .language-welcome-mark {
   display: block;
-  width: 48px;
-  height: 48px;
-  margin-bottom: 24px;
+  width: 52px;
+  height: 52px;
+  margin-bottom: 28px;
 }
 
 .language-welcome-eyebrow {
@@ -46,7 +46,7 @@
 }
 
 .language-welcome > p {
-  margin: 0 0 24px;
+  margin: 0 0 28px;
   color: var(--ui-muted);
   font-size: var(--text-body);
 }
@@ -60,13 +60,13 @@
 .language-welcome-continue {
   gap: 8px;
   width: 100%;
-  margin-top: 24px;
+  margin-top: 28px;
   font-size: var(--text-control);
   cursor: pointer;
 }
 
 @media (max-width: 520px) {
   .language-welcome {
-    padding: 24px 24px;
+    padding: 28px 28px;
   }
 }

@@ -236,5 +236,9 @@ pub(crate) fn local_picture(
     if src.is_empty() || src.contains("://") || src.starts_with("data:") {
         return None;
     }
-    crate::ai::project::read_image(folder, src).ok()
+    // Textus writes a space in a link as %20.
+    let src = percent_encoding::percent_decode_str(src)
+        .decode_utf8()
+        .ok()?;
+    crate::ai::project::read_image(folder, &src).ok()
 }

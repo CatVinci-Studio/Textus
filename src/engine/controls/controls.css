@@ -76,8 +76,8 @@
   width: 0;
   height: 0;
   border-left: 4px solid currentColor;
-  border-top: 3.5px solid transparent;
-  border-bottom: 3.5px solid transparent;
+  border-top: 4px solid transparent;
+  border-bottom: 4px solid transparent;
   transition: transform var(--dur-fast) var(--ease-standard);
 }
 :is(.tx-disclosure, .disclosure)[open] > summary::before,
@@ -196,6 +196,14 @@ input[type="checkbox"].tx-switch:checked::after {
 input[type="checkbox"].tx-switch:active::after {
   transform: scaleX(1.2);
   transition-duration: calc(var(--dur-fast) * var(--motion-travel));
+}
+input[type="checkbox"].tx-switch:checked:active::after {
+  transform: translateX(calc(var(--switch-travel) - var(--switch-thumb) * 0.2))
+    scaleX(1.2);
+}
+input[type="checkbox"].tx-switch:focus-visible {
+  outline: 2px solid var(--ui-accent);
+  outline-offset: 2px;
 }
 
 /* A value picked from a few: a capsule that opens Textus's menu

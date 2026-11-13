@@ -238,8 +238,8 @@ export function ReviewMargin({
           // Far below its passage, a card's line is fainter, not gone.
           const far = p.drift > scaledPx(LINE_DRIFT);
           const x2 = layout.left;
-          const y2 = p.top + scaledPx(p.chip ? CHIP_HEIGHT / 2 : 16);
-          const dx = Math.max(scaledPx(16), (x2 - p.ax) / 2);
+          const y2 = p.top + scaledPx(p.chip ? CHIP_HEIGHT / 2 : 18);
+          const dx = Math.max(scaledPx(18), (x2 - p.ax) / 2);
           return (
             <path
               key={p.item.key}

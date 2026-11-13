@@ -209,5 +209,8 @@ fn a_copy_across_disks_keeps_links_as_links() {
     assert_eq!(std::fs::read_to_string(to.join("a.md")).unwrap(), "a");
     let link = std::fs::symlink_metadata(to.join("link.md")).unwrap();
     assert!(link.file_type().is_symlink());
+    // A copy over something already there is refused, and that is kept.
+    assert!(copy_whole(&dir.join("gone"), &to).is_err());
+    assert_eq!(std::fs::read_to_string(to.join("a.md")).unwrap(), "a");
     let _ = std::fs::remove_dir_all(&dir);
 }

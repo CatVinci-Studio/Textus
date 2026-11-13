@@ -15,7 +15,6 @@ import {
   movePane,
   moveTab,
   isSplit,
-  reorderTab,
   type SplitLayout,
 } from "../../engine/layout/ops";
 import {
@@ -34,7 +33,7 @@ import { transientStyle } from "../../engine/tokens/appearance";
 
 /** How far the tab travels before its place closes behind it (interface
  *  px): a short pull and back leaves the layout untouched. */
-const LEAVE_DISTANCE = 48;
+const LEAVE_DISTANCE = 52;
 
 /** A place a drop can go: its key, whether it opens a new island, the
  *  layout it makes, and the layout shown while it is only aimed at. */
@@ -107,8 +106,7 @@ export function pullTab(
     }
     const bar = barDropAt(x, y, tabId, geometry);
     if (bar) {
-      const moved = moveTab(base, tabId, bar.pane, bar.index);
-      const next = moved && reorderTab(moved, bar.pane, tabId, bar.index);
+      const next = moveTab(base, tabId, bar.pane, bar.index);
       return {
         key: `bar:${bar.pane}:${bar.index}`,
         opens: false,

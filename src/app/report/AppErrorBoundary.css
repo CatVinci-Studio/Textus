@@ -6,7 +6,7 @@
   align-items: center;
   justify-content: center;
   gap: 12px;
-  padding: 24px;
+  padding: 28px;
   background: var(--ui-bg);
   color: var(--ui-text);
   font-family: var(--font-sans);
@@ -20,7 +20,7 @@
 }
 
 .app-error-detail {
-  max-width: 480px;
+  max-width: 528px;
   margin: 0;
   color: var(--ui-muted);
   font-size: var(--text-secondary);
@@ -28,8 +28,8 @@
 }
 
 .app-error-reload {
-  min-height: 36px;
-  padding: 0 24px;
+  min-height: 40px;
+  padding: 0 28px;
   border: none;
   border-radius: var(--shape-pill);
   background: var(--ui-text);

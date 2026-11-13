@@ -1,9 +1,9 @@
 #!/usr/bin/env node
-// Which CI jobs a change needs (e2e, native, platforms, roundtrip), printed
-// for $GITHUB_OUTPUT. Docs or a version bump alone need neither; a push runs
-// everything except a bump's merge; without a usable base everything runs.
-// `platforms` is macOS, Windows and iOS beside Linux: a pull request runs
-// them only for code that differs between platforms, a push always.
+// What a change needs in CI's quick suite, printed for $GITHUB_OUTPUT:
+// `light` (GitHub's settings, the license or root Markdown alone: only their
+// format and the READMEs' structure), `native` (the Rust checks on Linux) and
+// `roundtrip`. A push runs native for everything but a bump or a light
+// change; without a usable base everything runs.
 import { execFileSync } from "node:child_process";
 import { readdirSync, readFileSync } from "node:fs";
 import { dirname, join, posix, relative } from "node:path";
@@ -28,20 +28,14 @@ const EVERYTHING =
 const NATIVE =
   /(^src-tauri\/|(^|\/)Cargo\.(toml|lock)$|(^|\/)\.cargo\/|(^|\/)rust-toolchain(\.toml)?$|^scripts\/check-native\.mjs$|^scripts\/(ios-|smoke-ios-))/;
 
-/** Code that differs between platforms: per-OS Rust files, the crate's
- *  entry points, dependencies and build setup, the per-OS Tauri configs and
- *  the iOS project, and the frontend's path and platform layers. */
-const PLATFORM =
-  /(^src-tauri\/(Cargo\.(toml|lock)$|build\.rs$|tauri\.[a-z]+\.conf\.json$|Info\.plist$|[^/]*\.entitlements$|plugins\/|gen\/)|^src-tauri\/src\/(lib|main)\.rs$|^src-tauri\/src\/.*(macos|windows|linux|ios|mobile)[^/]*$|(^|\/)rust-toolchain(\.toml)?$|^scripts\/(ios-|smoke-ios-|check-native)|^src\/utils\/path|^src\/platform\/)/;
-
 /** Frontend files a Rust test reads from disk, so not embedded: the
  *  generated bindings it compares against its own. */
 const RUST_TESTED = /^src\/platform\/bindings\//;
 
-/** The native files the browser does see: icons, boot.js and the Tauri
- *  configs. */
-const BROWSER_NATIVE =
-  /^src-tauri\/(icons\/|src\/boot\.js$|tauri(\.[a-z]+)?\.conf\.json$)/;
+/** Files no build, test or check reads beyond prettier and the README
+ *  check: GitHub's settings and templates (not its workflows or actions),
+ *  the license, and the Markdown at the repository's root. */
+const LIGHT = /^(\.github\/(?!workflows\/|actions\/)|LICENSE$|[^/]+\.md$)/;
 
 /** What can change the save round trip's result, including the documents
  *  it reads. */
@@ -102,23 +96,27 @@ function versionOnly(file, before, after) {
 /** `read(file)` gives a file's text `before` and `after` the change (null
  *  where missing); `rustReads` are files outside src-tauri/ Rust embeds. */
 export function classify({ files, push, read, rustReads = [] }) {
-  const all = { e2e: true, native: true, platforms: true };
-  const none = { e2e: false, native: false, platforms: false };
+  if (
+    files.length > 0 &&
+    files.every((file) => LIGHT.test(file) && !rustReads.includes(file))
+  )
+    return { light: true, native: false };
+  const none = { light: false, native: false };
   const code = files.filter(
     (file) =>
       !DOCS.test(file) || CODE_TREES.test(file) || rustReads.includes(file),
   );
-  if (code.length === 0) return push ? all : none;
+  if (code.length === 0) return { ...none, native: push };
   const rest = code.filter((file) => !versionOnly(file, ...read(file)));
   if (rest.length === 0) return none;
-  if (push || rest.some((file) => EVERYTHING.test(file))) return all;
+  if (push || rest.some((file) => EVERYTHING.test(file)))
+    return { ...none, native: true };
   return {
-    e2e: rest.some((file) => !NATIVE.test(file) || BROWSER_NATIVE.test(file)),
+    ...none,
     native: rest.some(
       (file) =>
         NATIVE.test(file) || RUST_TESTED.test(file) || rustReads.includes(file),
     ),
-    platforms: rest.some((file) => PLATFORM.test(file)),
   };
 }
 
@@ -168,28 +166,29 @@ function show(rev, file) {
 function main(argv) {
   const at = argv.indexOf("--base");
   const base = at === -1 ? "" : (argv[at + 1] ?? "");
-  let result = { e2e: true, native: true, platforms: true, roundtrip: true };
+  let result = { light: false, native: true, roundtrip: true };
   if (base && !/^0+$/.test(base)) {
     try {
       const files = git("diff", "--name-only", "--no-renames", base, "HEAD")
         .split("\n")
         .filter(Boolean);
       const push = argv.includes("--push");
+      const jobs = classify({
+        files,
+        push,
+        read: (file) => [show(base, file), show("HEAD", file)],
+        rustReads: rustIncludes(),
+      });
       result = {
-        ...classify({
-          files,
-          push,
-          read: (file) => [show(base, file), show("HEAD", file)],
-          rustReads: rustIncludes(),
-        }),
-        roundtrip: reachesSaving({ files, push }),
+        ...jobs,
+        roundtrip: !jobs.light && reachesSaving({ files, push }),
       };
     } catch {
       // The base isn't in this clone (a force push): run everything.
     }
   }
   console.log(
-    `e2e=${result.e2e}\nnative=${result.native}\nplatforms=${result.platforms}\nroundtrip=${result.roundtrip}`,
+    `light=${result.light}\nnative=${result.native}\nroundtrip=${result.roundtrip}`,
   );
 }
 

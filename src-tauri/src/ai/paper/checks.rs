@@ -114,10 +114,17 @@ pub(super) fn prose(markdown: &str) -> String {
     out
 }
 
+/// Whether `language` is written without spaces, so its length is counted
+/// in characters rather than words.
+pub(crate) fn counts_characters(language: &str) -> bool {
+    let language = language.to_lowercase();
+    ["zh", "ja", "ko"].iter().any(|l| language.starts_with(l))
+}
+
 /// `text`'s length: its characters (not spaces) for a language written
 /// without spaces, else its words.
 pub(crate) fn length(text: &str, language: &str) -> u32 {
-    if ["zh", "ja", "ko"].iter().any(|l| language.starts_with(l)) {
+    if counts_characters(language) {
         text.chars().filter(|c| !c.is_whitespace()).count() as u32
     } else {
         text.split_whitespace().count() as u32

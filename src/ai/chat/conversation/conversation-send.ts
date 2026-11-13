@@ -53,6 +53,8 @@ export async function sendMessage(
   const trimmed = message.trim();
   const { busy, history, conversationId } = model.snapshot();
   if (!trimmed || busy || !settings.textusAi) return undefined;
+  // Files the reply changes are marked when it ends, however it ends.
+  const revisions = settings.aiChangeMode === "revision";
   const provider = settings.aiProvider;
   const chosen = chosenModel(settings);
   model.lastOptions = sent;
@@ -166,6 +168,7 @@ export async function sendMessage(
     }
     // Named by Textus AI's model, whoever answered.
     if (model.persist) void nameAfter(model, env, after);
+    void afterFileChanges(conversationId, newTurns, revisions);
     ended = "done";
     return newTurns;
   } catch (err) {
@@ -181,6 +184,7 @@ export async function sendMessage(
       if (kept.length === 0) return undefined;
       keepThought();
       model.setHistory((prev) => [...prev, ...kept]);
+      void afterFileChanges(conversationId, kept, revisions);
       return kept;
     }
     ended = "failed";
@@ -189,7 +193,7 @@ export async function sendMessage(
     void afterFileChanges(
       conversationId,
       model.streamingNow?.turns ?? [],
-      settings.aiChangeMode === "revision",
+      revisions,
     );
     model.patch({
       error: errorText(err),

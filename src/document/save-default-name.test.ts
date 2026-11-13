@@ -21,6 +21,9 @@ describe("firstLevelOneHeading", () => {
 
   it("ignores headings inside fenced code", () => {
     expect(firstLevelOneHeading("```md\n# Fake\n```\n# Real")).toBe("Real");
+    expect(firstLevelOneHeading("<!--\n# Old title\n-->\n# Real title")).toBe(
+      "Real title",
+    );
   });
 });
 
@@ -33,6 +36,17 @@ describe("firstContentLine", () => {
 
   it("uses a lower-level heading without its heading markers", () => {
     expect(firstContentLine("## Section name\n\nBody")).toBe("Section name");
+  });
+
+  it("skips comments the way the editor does, not a `<!--` inside code", () => {
+    expect(firstContentLine("```\n<!--\n```\nBody")).toBe("Body");
+    expect(firstContentLine("<!--\nhidden\n-->\nShown")).toBe("Shown");
+    expect(firstContentLine("- - -\n    <!-- note\nShown")).toBe("Shown");
+    expect(firstContentLine("Intro <!-- draft --> more")).toBe("Intro  more");
+    expect(firstContentLine("Draft <!-- a -> b --> intro")).toBe(
+      "Draft  intro",
+    );
+    expect(firstContentLine("Draft <!-- a -> b")).toBe("Draft");
   });
 
   it("reads past a front matter left open instead of skipping the whole document", () => {

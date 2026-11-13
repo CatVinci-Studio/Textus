@@ -1,6 +1,6 @@
 [package]
 name = "textus"
-version = "1.4.1-rc.3"
+version = "1.4.1"
 description = "Textus Markdown Editor"
 authors = ["CatVinci Studio"]
 edition = "2021"
@@ -45,6 +45,9 @@ crate-type = ["staticlib", "cdylib", "rlib"]
 tauri-build = { version = "2", features = [] }
 
 [dependencies]
+# Dates: plugins' scheduled jobs across daylight saving (src/schedule/),
+# memory and past conversations' days, on every platform.
+chrono = { version = "0.4", default-features = false, features = ["clock", "std"] }
 # Version comparison: the update check (the updater hands its versions over
 # as semver 1) and catalog skills.
 semver = "1"
@@ -162,9 +165,6 @@ tauri-plugin-deep-link = "2"
 # A picture an accepted AI picture replaced goes to the system's Trash or
 # Recycle Bin when the user says so (commands/images.rs) - never deleted.
 trash = "5"
-# Plugins' scheduled jobs (src/schedule/): local wall-clock times across
-# daylight saving. Already in the tree through trash, with the same features.
-chrono = { version = "0.4", default-features = false, features = ["clock", "std"] }
 # A notification's id, which its click names (src/schedule/notify/): random,
 # so a textus:// link from a web page can't name one. In the tree through tauri.
 uuid = { version = "1", features = ["v4"] }

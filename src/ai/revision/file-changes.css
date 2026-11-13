@@ -2,7 +2,7 @@
    each block it changed or added, a line where it removed some, and on
    hover the button that puts the place back. */
 .ProseMirror > .ai-changed-block {
-  box-shadow: -12px 0 0 -9px var(--ui-accent);
+  box-shadow: -14px 0 0 -10px var(--ui-accent);
 }
 
 .ai-change-mark {

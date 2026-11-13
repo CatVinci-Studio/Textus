@@ -11,7 +11,7 @@
   left: var(--rail-width, 0px);
   /* Over the editor while it slides away across it. */
   z-index: 1;
-  width: var(--sidebar-width, 240px);
+  width: var(--sidebar-width, 264px);
   background: var(--ui-frame-fill);
   border-right: 1px solid var(--ui-frame-edge);
   display: flex;
@@ -47,14 +47,14 @@
    side of it takes. */
 .sidebar-resizer {
   top: var(--window-bar-height);
-  right: -5px;
+  right: -6px;
 }
 
 /* Thin, unobtrusive sidebar scrollbar: invisible until the pointer is over
    the sidebar, so it reads like a macOS overlay scrollbar. A plugin's list
    scrolls inside the body and wears the same one. */
 :is(.sidebar-body, .sidebar-body .plugin-list-rows)::-webkit-scrollbar {
-  width: 5px;
+  width: 6px;
 }
 
 :is(.sidebar-body, .sidebar-body .plugin-list-rows)::-webkit-scrollbar-track {

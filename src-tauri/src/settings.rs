@@ -62,9 +62,15 @@ pub fn settings_patch(
     if patch.contains_key("theme") {
         theme_changed(&app);
     }
-    if ["proxyType", "proxyHost", "proxyPort"]
-        .iter()
-        .any(|key| patch.contains_key(*key))
+    if [
+        "proxyType",
+        "proxyHost",
+        "proxyPort",
+        "proxyUsername",
+        "proxyPassword",
+    ]
+    .iter()
+    .any(|key| patch.contains_key(*key))
     {
         proxy_changed(&stores.settings.snapshot().0);
     }

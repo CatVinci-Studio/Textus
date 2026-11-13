@@ -11,15 +11,15 @@ import {
 
 /** The sidebar's width as it comes, and the narrowest it can be dragged to:
  *  under this the tree's names are cut to a few letters. */
-export const SIDEBAR_DEFAULT_WIDTH = 240;
-export const SIDEBAR_MIN_WIDTH = 180;
+export const SIDEBAR_DEFAULT_WIDTH = 264;
+export const SIDEBAR_MIN_WIDTH = 198;
 /** Its narrowest, and the widest it can be dragged to in a window with
  *  room (side-panel-width keeps the document's room). */
-export const SIDEBAR_LIMITS = { min: SIDEBAR_MIN_WIDTH, max: 480 };
+export const SIDEBAR_LIMITS = { min: SIDEBAR_MIN_WIDTH, max: 528 };
 
 /** The width last chosen, or the default for anything invalid there. */
 export function storedSidebarWidth(): number {
-  const stored = getUiState("sidebarWidth");
+  const stored = getUiState("sidebarPx");
   return typeof stored === "number" && Number.isFinite(stored) && stored > 0
     ? Math.round(stored)
     : SIDEBAR_DEFAULT_WIDTH;
@@ -57,13 +57,13 @@ export function useSidebarWidth(windowWidth: number, beside = 0) {
       holdWidth(persist ? null : base * step);
       if (!persist) return;
       setChosen(base);
-      setUiState("sidebarWidth", base);
+      setUiState("sidebarPx", base);
     },
     [windowWidth, beside, keep],
   );
   const resetWidth = useCallback(() => {
     setChosen(SIDEBAR_DEFAULT_WIDTH);
-    setUiState("sidebarWidth", SIDEBAR_DEFAULT_WIDTH);
+    setUiState("sidebarPx", SIDEBAR_DEFAULT_WIDTH);
   }, []);
   return {
     width,

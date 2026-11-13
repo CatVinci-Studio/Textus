@@ -255,21 +255,23 @@ impl Drop for TempDir {
 #[cfg(test)]
 mod tests;
 
-/// `from` (a file or a folder) moved to `to`, its folder made first; where
-/// it can't be renamed (another volume), copied whole, then the original
-/// removed.
+/// `from` (a file or a folder) moved to `to`, its folder made first; to
+/// another volume, copied as it is and the original removed once the copy is
+/// whole. For the app's own data, or a file Textus AI made.
 pub(crate) fn move_or_copy(from: &std::path::Path, to: &std::path::Path) -> std::io::Result<()> {
     if let Some(parent) = to.parent() {
         std::fs::create_dir_all(parent)?;
     }
-    if std::fs::rename(from, to).is_ok() {
+    let Err(error) = std::fs::rename(from, to) else {
         return Ok(());
+    };
+    if error.kind() != std::io::ErrorKind::CrossesDevices || std::fs::symlink_metadata(to).is_ok() {
+        return Err(error);
     }
-    if from.is_dir() {
-        copy_dir(from, to)?;
+    copy_whole(from, to)?;
+    if std::fs::symlink_metadata(from)?.is_dir() {
         std::fs::remove_dir_all(from)
     } else {
-        std::fs::copy(from, to)?;
         std::fs::remove_file(from)
     }
 }
@@ -305,10 +307,7 @@ pub(crate) fn move_entry(from: &std::path::Path, to: &std::path::Path) -> std::i
     if error.kind() != std::io::ErrorKind::CrossesDevices || std::fs::symlink_metadata(to).is_ok() {
         return Err(error);
     }
-    if let Err(copying) = copy_entry(from, to) {
-        take_back(to);
-        return Err(copying);
-    }
+    copy_whole(from, to)?;
     if try_trash(from) {
         return Ok(());
     }
@@ -317,7 +316,7 @@ pub(crate) fn move_entry(from: &std::path::Path, to: &std::path::Path) -> std::i
 }
 
 /// `from` copied to `to` as it is: a folder with all inside, a link as a link.
-fn copy_entry(from: &std::path::Path, to: &std::path::Path) -> std::io::Result<()> {
+pub(crate) fn copy_entry(from: &std::path::Path, to: &std::path::Path) -> std::io::Result<()> {
     let kind = std::fs::symlink_metadata(from)?.file_type();
     if kind.is_symlink() {
         let target = std::fs::read_link(from)?;
@@ -341,7 +340,16 @@ fn copy_entry(from: &std::path::Path, to: &std::path::Path) -> std::io::Result<(
     std::fs::copy(from, to).map(|_| ())
 }
 
-/// A copy `move_entry` made itself, removed when the move can't finish.
+/// `from` copied to `to`, or nothing left at `to` when the copy fails.
+/// Something already at `to` is never copied over, nor taken back.
+pub(crate) fn copy_whole(from: &std::path::Path, to: &std::path::Path) -> std::io::Result<()> {
+    if std::fs::symlink_metadata(to).is_ok() {
+        return Err(std::io::ErrorKind::AlreadyExists.into());
+    }
+    copy_entry(from, to).inspect_err(|_| take_back(to))
+}
+
+/// A copy made here, removed when the move can't finish.
 fn take_back(copy: &std::path::Path) {
     let Ok(meta) = std::fs::symlink_metadata(copy) else {
         return;
@@ -351,21 +359,6 @@ fn take_back(copy: &std::path::Path) {
     } else {
         std::fs::remove_file(copy)
     };
-}
-
-/// Folder `from` copied into `to`, its files and folders.
-pub(crate) fn copy_dir(from: &std::path::Path, to: &std::path::Path) -> std::io::Result<()> {
-    std::fs::create_dir_all(to)?;
-    for entry in std::fs::read_dir(from)? {
-        let entry = entry?;
-        let kind = entry.file_type()?;
-        if kind.is_dir() {
-            copy_dir(&entry.path(), &to.join(entry.file_name()))?;
-        } else if kind.is_file() {
-            std::fs::copy(entry.path(), to.join(entry.file_name()))?;
-        }
-    }
-    Ok(())
 }
 
 /// Whether `path` went to the Trash; false where there is none (and in

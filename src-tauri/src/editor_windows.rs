@@ -13,6 +13,49 @@ pub(crate) fn next_window_id() -> u32 {
     WINDOW_COUNTER.fetch_add(1, Ordering::Relaxed)
 }
 
+/// Editor windows by when the user was last in them, latest first: what comes
+/// from outside any window (the tray, a menu with none focused) goes to the
+/// first, and a dropped tab to the frontmost of the windows under it.
+#[cfg(desktop)]
+fn is_editor(label: &str) -> bool {
+    crate::windows::is_editor_window(label)
+}
+
+/// The phone and iPad have the one window.
+#[cfg(not(desktop))]
+fn is_editor(_label: &str) -> bool {
+    true
+}
+
+static RECENT: std::sync::Mutex<Vec<String>> = std::sync::Mutex::new(Vec::new());
+
+pub(crate) fn note_focused(label: &str) {
+    if is_editor(label) {
+        let mut recent = RECENT.lock().unwrap_or_else(|e| e.into_inner());
+        recent.retain(|l| l != label);
+        recent.insert(0, label.to_string());
+    }
+}
+
+/// How recently the window was in use: 0 for the latest, MAX for never.
+pub(crate) fn focus_rank(label: &str) -> usize {
+    RECENT
+        .lock()
+        .unwrap_or_else(|e| e.into_inner())
+        .iter()
+        .position(|l| l == label)
+        .unwrap_or(usize::MAX)
+}
+
+/// The editor window last in use while it is still open, else any editor.
+pub(crate) fn last_editor(app: &tauri::AppHandle) -> Option<tauri::Window> {
+    app.windows()
+        .into_iter()
+        .filter(|(label, _)| is_editor(label))
+        .min_by_key(|(label, _)| focus_rank(label))
+        .map(|(_, window)| window)
+}
+
 /// Places a window, gives it this app's chrome, and builds it, for editor and
 /// chat windows alike. macOS uses an overlay title bar; Windows and Linux drop
 /// the native frame and draw the caption (tao still handles edge resizing).
@@ -89,27 +132,6 @@ pub(crate) fn end_web_process_with_window(window: &tauri::WebviewWindow) {
         }
         view.connect_destroy(|view| view.terminate_web_process());
     });
-}
-
-/// The height of a native title bar, in points, which the traffic lights are
-/// centred in (28, or 32 from macOS 26); the frontend lines its row up with it.
-/// Asked of AppKit on the main thread and cached; until then, None.
-#[cfg(target_os = "macos")]
-pub(crate) fn native_titlebar_height() -> Option<f64> {
-    use objc2_app_kit::{NSWindow, NSWindowStyleMask};
-    use objc2_core_foundation::{CGPoint, CGRect, CGSize};
-    static HEIGHT: std::sync::OnceLock<f64> = std::sync::OnceLock::new();
-    if let Some(height) = HEIGHT.get() {
-        return Some(*height);
-    }
-    let mtm = objc2::MainThreadMarker::new()?;
-    let content = CGRect::new(CGPoint::new(0.0, 0.0), CGSize::new(100.0, 100.0));
-    let style = NSWindowStyleMask::Titled
-        | NSWindowStyleMask::Closable
-        | NSWindowStyleMask::Miniaturizable
-        | NSWindowStyleMask::Resizable;
-    let frame = NSWindow::frameRectForContentRect_styleMask(content, style, mtm);
-    Some(*HEIGHT.get_or_init(|| frame.size.height - content.size.height))
 }
 
 /// Tells a window's page when macOS enters full screen and when it starts
@@ -286,12 +308,7 @@ pub(crate) fn open_new_window(app: &tauri::AppHandle) -> tauri::Result<()> {
 /// launch would, so closing the last window and returning matches a relaunch.
 #[cfg(desktop)]
 pub(crate) fn reopen_without_windows(app: &tauri::AppHandle) {
-    let existing = app
-        .windows()
-        .into_iter()
-        .find(|(label, _)| crate::windows::is_editor_window(label))
-        .map(|(_, window)| window);
-    if let Some(window) = existing {
+    if let Some(window) = last_editor(app) {
         let _ = window.unminimize();
         let _ = window.show();
         let _ = window.set_focus();

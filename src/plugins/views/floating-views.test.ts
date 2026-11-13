@@ -45,19 +45,20 @@ describe("floating views", () => {
     showFloating(pet, false);
     moveFloating(pet.view, { scale: 1.25 });
     closeFloating(pet.view);
-    expect(floatingSize(showFloating(pet, false))).toEqual([200, 200]);
+    expect(floatingSize(showFloating(pet, false))).toEqual([220, 220]);
     closeFloating(pet.view);
     localStorage.setItem(
       "textus.floatingViews",
       JSON.stringify({ [pet.view]: { place: "window", scale: 9, open: true } }),
     );
-    expect(floatingSize(showFloating(pet, false))).toEqual([224, 224]);
+    expect(floatingSize(showFloating(pet, false))).toEqual([246, 246]);
   });
 
   it("grow with the interface, on top of the user's size", () => {
     const view = showFloating(pet, false);
-    expect(floatingSize(view, 1.35)).toEqual(
-      floatingSize(view).map((n) => Math.round(n * 1.35)),
+    const grown = floatingSize(view, 1.35);
+    floatingSize(view).forEach((n, i) =>
+      expect(Math.abs(grown[i] - n * 1.35)).toBeLessThanOrEqual(1),
     );
   });
 

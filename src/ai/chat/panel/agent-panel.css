@@ -54,7 +54,7 @@
   display: flex;
   align-items: center;
   gap: 8px;
-  min-height: calc(40px * var(--chrome-scale));
+  min-height: calc(44px * var(--chrome-scale));
   padding: 4px 8px 4px 12px;
 }
 
@@ -138,7 +138,7 @@
   margin: 0;
   /* No padding top or bottom: padding is the one part of a box that never
      gives way, and with the keyboard up it held 64px the / list needed. */
-  padding: 0 24px;
+  padding: 0 28px;
   /* Short of room (the / list or the keyboard up on a phone) it is cut,
      never squashed - and it drops what no longer fits whole (below), so
      the cut never runs through the hint's line. */
@@ -166,8 +166,8 @@
   flex-shrink: 0;
   align-items: center;
   justify-content: center;
-  width: 44px;
-  height: 44px;
+  width: 48px;
+  height: 48px;
   border-radius: var(--shape-pill);
   corner-shape: round;
   background: color-mix(in srgb, var(--ui-accent) 12%, transparent);
@@ -175,8 +175,8 @@
 }
 
 .agent-panel-empty-mark svg {
-  width: 22px;
-  height: 22px;
+  width: 24px;
+  height: 24px;
 }
 
 .agent-panel-empty-text {
@@ -315,7 +315,7 @@
   align-items: center;
   justify-content: center;
   gap: 12px;
-  padding: 24px;
+  padding: 28px;
   text-align: center;
   font-size: var(--text-body);
   color: var(--ui-muted);

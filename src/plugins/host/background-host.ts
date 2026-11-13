@@ -66,6 +66,7 @@ function scopeOf(run: BackgroundRun): PluginScope {
     t: () => noWindow.strings(),
     manifest: () => run.info.manifest,
     need,
+    folder: () => run.root,
     root: () => {
       need("files.read");
       if (!run.root) throw new Error("The job was set with no folder open.");
@@ -108,7 +109,7 @@ function backgroundMethods(run: BackgroundRun, scope: PluginScope) {
       scope.readOwnFile(str(path, "path")),
     "settings.get": ({ key }: Params) => run.setting(str(key, "key")),
     ...files,
-    ...scheduleHandlers(scope, () => run.root),
+    ...scheduleHandlers(scope),
     "app.state": () => run.env.appState,
   };
 }

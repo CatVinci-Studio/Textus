@@ -5,19 +5,19 @@
 :root[data-layout="islands"] {
   /* Between islands, and from an island to the window's edge; the side by
      the docks keeps the gap too, the activity rail being frame. */
-  --island-gap: var(--space-2);
-  --island-inset: var(--space-2);
+  --island-gap: var(--island-space);
+  --island-inset: var(--island-space);
   --island-radius: var(--shape-m);
   /* An island's edge on the frame. */
   --island-edge:
-    0 0 0 1px var(--ui-frame-edge),
-    0 2px 10px color-mix(in srgb, var(--ui-text) 7%, transparent);
+    0 0 0 1px var(--ui-island-line), 0 1px 2px var(--ui-island-contact),
+    0 4px 18px var(--ui-island-shadow);
   --tab-radius: var(--shape-s);
   /* The open tab's edge: its island's, carried up round it. */
-  --tab-edge: var(--ui-frame-edge);
+  --tab-edge: var(--ui-island-line);
   /* How far a tab stands below its row's top: its words keep to the row's
      middle line, the rest of it joins its island. */
-  --tab-lift: 4px;
+  --tab-lift: var(--ui-tab-lift);
   --tab-gap: 2px;
   /* The line under a tab row, and between tabs. */
   --tab-row-line: transparent;
@@ -26,15 +26,6 @@
   --tab-divider: var(--ui-frame-edge);
   /* A dock's edge against the islands. */
   --dock-edge: transparent;
-}
-
-/* Where the engine can, the gaps are whole pixels: the page's text starts
-   on one. */
-@supports (width: round(1px, 1px)) {
-  :root[data-layout="islands"] {
-    --island-gap: round(var(--space-2), 1px);
-    --island-inset: round(var(--space-2), 1px);
-  }
 }
 
 /* Classic, as VS Code: islands flush and square; each island's 1px edge

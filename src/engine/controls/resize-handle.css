@@ -4,7 +4,7 @@
 .resize-handle {
   position: absolute;
   bottom: 0;
-  width: 10px;
+  width: 12px;
   cursor: col-resize;
   z-index: 5;
   touch-action: none;
@@ -25,18 +25,18 @@
   top: 50%;
   left: 50%;
   width: 3px;
-  height: 15px;
+  height: 16px;
   translate: -50% -50%;
   border-radius: var(--shape-pill);
   background: radial-gradient(circle, var(--ui-muted) 1.1px, transparent 1.4px)
-    center top / 3px 5px repeat-y;
+    center top / 3px 6px repeat-y;
   opacity: 0;
   pointer-events: none;
   transition: opacity var(--dur-fast) var(--ease-standard);
 }
 
 .tx-grip[aria-orientation="horizontal"]::after {
-  width: 10px;
+  width: 12px;
   height: 2px;
   background-size: 4px 2px;
   background-repeat: repeat-x;

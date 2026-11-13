@@ -31,7 +31,7 @@
 }
 
 .agent-reply-file pre {
-  max-height: min(320px, 45vh);
+  max-height: min(352px, 45vh);
   margin: 0;
   padding: 4px 8px;
   overflow: auto;

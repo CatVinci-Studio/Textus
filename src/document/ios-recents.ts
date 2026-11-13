@@ -1,13 +1,13 @@
 import { isIOSApp } from "../platform/capabilities";
-import {
-  deleteSandboxEntry,
-  renameSandboxEntry,
-  documentsFolder,
-  joinPath,
-} from "../platform/ios-files";
+import { deleteSandboxEntry, renameSandboxEntry } from "../platform/ios-files";
 // Entries in Documents are stored relative to it: the app's container moves
 // on every reinstall and App Store update.
-import { IN_DOCUMENTS } from "../platform/documents-path";
+import {
+  IN_DOCUMENTS,
+  documentsDir,
+  resolvedDocumentPath,
+  storedDocumentPath,
+} from "../platform/documents-path";
 import { getUiState, setUiState, uiStateReady } from "../storage/ui-state";
 
 // The iPhone's recent-documents list: what reopens at launch, Open Recent
@@ -42,22 +42,14 @@ function updateRecents(
   return run;
 }
 
-/** A stored entry as a path: Documents-relative ones resolved against
- *  `docs`, the app's current Documents folder. */
-function resolveRecent(docs: string, stored: string): Promise<string> {
-  return stored.startsWith(IN_DOCUMENTS)
-    ? joinPath(docs, stored.slice(IN_DOCUMENTS.length))
-    : Promise.resolve(stored);
-}
-
 /** The documents opened most recently, newest first; the first reopens at
  *  launch, since iOS ends a backgrounded app whenever it likes. */
 export async function recentIOSDocuments(): Promise<string[]> {
   // After any change already queued, so it lists what that change made.
   await recentsQueue;
-  const docs = await documentsFolder();
-  return Promise.all(
-    (await readRecents()).map((stored) => resolveRecent(docs, stored)),
+  const docs = await documentsDir();
+  return (await readRecents()).map((stored) =>
+    resolvedDocumentPath(stored, docs),
   );
 }
 
@@ -70,10 +62,7 @@ export async function rememberIOSDocument(path: string | null): Promise<void> {
   // with would otherwise wipe it before startup gets to read it.
   if (!isIOSApp || !path) return;
   return updateRecents(async (list) => {
-    const docs = (await documentsFolder()).replace(/\/+$/, "") + "/";
-    const stored = path.startsWith(docs)
-      ? IN_DOCUMENTS + path.slice(docs.length)
-      : path;
+    const stored = storedDocumentPath(path, await documentsDir());
     return [stored, ...list.filter((p) => p !== stored)];
   });
 }
@@ -81,19 +70,18 @@ export async function rememberIOSDocument(path: string | null): Promise<void> {
 /** Drops an entry that no longer opens (moved or deleted in Files). */
 export function forgetIOSDocument(path: string): Promise<void> {
   return updateRecents(async (list) => {
-    const docs = await documentsFolder();
-    const resolved = await Promise.all(
-      list.map((stored) => resolveRecent(docs, stored)),
-    );
-    return list.filter((_, i) => resolved[i] !== path);
+    const docs = await documentsDir();
+    const gone = storedDocumentPath(path, docs);
+    return list.filter((entry) => storedDocumentPath(entry, docs) !== gone);
   });
 }
 
 /** Whether a document is in the app's own Documents folder. A file picked
  *  from elsewhere grants access to itself only, so it can't be renamed or deleted. */
 export async function inIOSDocuments(path: string): Promise<boolean> {
-  const docs = (await documentsFolder()).replace(/\/+$/, "") + "/";
-  return path.startsWith(docs);
+  return storedDocumentPath(path, await documentsDir()).startsWith(
+    IN_DOCUMENTS,
+  );
 }
 
 /** Renames a document in Documents and keeps the recent list pointing at
@@ -103,9 +91,10 @@ export async function renameIOSDocument(
   name: string,
 ): Promise<string> {
   const renamed = await renameSandboxEntry(path, name);
-  const docs = (await documentsFolder()).replace(/\/+$/, "") + "/";
-  const before = IN_DOCUMENTS + path.slice(docs.length);
-  const after = IN_DOCUMENTS + renamed.slice(docs.length);
+  // Rust answers with the canonical spelling (/private/var/…).
+  const docs = await documentsDir();
+  const before = storedDocumentPath(path, docs);
+  const after = storedDocumentPath(renamed, docs);
   await updateRecents((list) => list.map((p) => (p === before ? after : p)));
   return renamed;
 }

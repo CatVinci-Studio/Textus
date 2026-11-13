@@ -65,13 +65,13 @@ a key the macOS menu takes reaches nothing.
 
 ## Which tests run when
 
-| Kind                                                            | Where                              | When                                                    | Blocks                         |
-| --------------------------------------------------------------- | ---------------------------------- | ------------------------------------------------------- | ------------------------------ |
-| `npm run check`: types, lint, unit tests, formats               | locally, CI                        | every change; every pull request                        | yes                            |
-| e2e flows in Chromium (`npm run test:e2e`)                      | locally (4 workers), CI (4 shards) | before a push; every pull request touching the frontend | yes                            |
-| e2e flows in WebKit (`E2E_WEBKIT=1`)                            | CI                                 | after a merge to `main`                                 | no: looked at before a release |
-| Stopwatch flows (`@perf`, `npm run test:perf`)                  | locally                            | when timing is the point                                | never                          |
-| Benchmarks (`bench:large-doc`, `bench:plugins`, `bench:motion`) | one machine                        | before a release that touches speed                     | never: compared by hand        |
+| Kind                                                            | Where                              | When                                | Blocks                         |
+| --------------------------------------------------------------- | ---------------------------------- | ----------------------------------- | ------------------------------ |
+| `npm run check`: types, lint, unit tests, formats               | locally, CI                        | every change; every pull request    | yes                            |
+| e2e flows in Chromium (`npm run test:e2e`)                      | locally (4 workers), CI (2 shards) | before a push; the full suite in CI | yes                            |
+| e2e flows in WebKit (`E2E_WEBKIT=1`)                            | CI                                 | the full suite                      | no: looked at before a release |
+| Stopwatch flows (`@perf`, `npm run test:perf`)                  | locally                            | when timing is the point            | never                          |
+| Benchmarks (`bench:large-doc`, `bench:plugins`, `bench:motion`) | one machine                        | before a release that touches speed | never: compared by hand        |
 
 The e2e server makes every run read as Linux (`vite.e2e-platform.ts`), so
 Ctrl is the shortcut key on a Mac too; Mac-only keys and window chrome are
@@ -202,8 +202,8 @@ solver, the tab strip, the row insets, the drop zones): an e2e flow checks
 what a user sees happen - where a tab lands, which island it joins - not
 pixels or styles. There are no screenshot baselines. The WebKit project
 covers the few flows where WebKit differs (`WEBKIT_SPECS` in
-`playwright.config.ts`); CI runs it after a merge, in the `e2e-webkit`
-job. `playwright.webview.config.ts` runs the flows in an old Chromium you
+`playwright.config.ts`); CI runs it in the full suite, in the
+`e2e-webkit` job. `playwright.webview.config.ts` runs the flows in an old Chromium you
 point it at, the oldest WebView2 Textus supports
 ([webview-support.md](webview-support.md#testing)); CI doesn't run it.
 
@@ -241,27 +241,29 @@ that reaches the browser. The required checks are `check`, `e2e`, `native`
 and `ci-config`; `e2e` and `native` are one-line jobs that pass when every
 job they stand for passed, or when all of them were skipped.
 
-| Job                                 | Runs                                                                      | When                                                   |
-| ----------------------------------- | ------------------------------------------------------------------------- | ------------------------------------------------------ |
-| `changes`                           | `scripts/ci-changes.mjs`: which of the jobs below to run                  | always                                                 |
-| `ci-config`                         | `scripts/guard-ci-config.mjs`: fails a change to CI or test configuration | a pull request from a fork; skipped (passed) otherwise |
-| `check`                             | `npm run check`, then `vite build` of the app and of the playground       | always                                                 |
-| `e2e (1/4)` to `e2e (4/4)`          | `npm run test:e2e -- --shard=N/4`, with a pinned textus-plugins checkout  | the full suite                                         |
-| `e2e-webkit`                        | the `WEBKIT_SPECS` flows in WebKit (not required)                         | the full suite                                         |
-| `native (ubuntu-22.04)`             | `npm run check:native`                                                    | the change reaches Rust                                |
-| `native (macos-26)`                 | `npm test`, then `npm run check:native` when the change reaches Rust      | the change reaches platform code                       |
-| `native (windows-2025)`             | `npm run check:native`                                                    | the change reaches Rust and platform code              |
-| `native (windows-2025, unit tests)` | `npm test`                                                                | the change reaches platform code                       |
-| `ios`                               | the unsigned iOS simulator build, started in the simulator (not required) | the change reaches Rust and platform code              |
+| Job                                 | Runs                                                                                                                             | When                                                   |
+| ----------------------------------- | -------------------------------------------------------------------------------------------------------------------------------- | ------------------------------------------------------ |
+| `changes`                           | `scripts/ci-changes.mjs`: which of the jobs below to run                                                                         | always                                                 |
+| `ci-config`                         | `scripts/guard-ci-config.mjs`: fails a change to CI or test configuration                                                        | a pull request from a fork; skipped (passed) otherwise |
+| `check`                             | `npm run check`, then `vite build` of the app and of the playground; for a light change only `format:check` and the README check | always                                                 |
+| `e2e (1/2)` and `e2e (2/2)`         | `npm run test:e2e -- --shard=N/2`, with a pinned textus-plugins checkout                                                         | the full suite                                         |
+| `e2e-webkit`                        | the `WEBKIT_SPECS` flows in WebKit (not required)                                                                                | the full suite                                         |
+| `native (ubuntu-22.04)`             | `npm run check:native`                                                                                                           | the change reaches Rust                                |
+| `native (macos-26)`                 | `npm test`, then `npm run check:native`                                                                                          | the full suite                                         |
+| `native (windows-2025)`             | `npm run check:native`                                                                                                           | the full suite                                         |
+| `native (windows-2025, unit tests)` | `npm test`                                                                                                                       | the full suite                                         |
+| `ios`                               | the unsigned iOS simulator build, started in the simulator (not required)                                                        | the full suite                                         |
 
 macOS, Windows and iOS run only in the full suite; in the quick one
 `native` is the Linux job alone. A release builds only once the full suite
 passed on its tag ([releasing.md](releasing.md#what-the-workflow-does)).
 
 `scripts/ci-changes.mjs` has the rules for "reaches"; the header of
-`ci.yml` sums them up. Some choices that keep a pull request's checks short:
+`ci.yml` sums them up. A light change - only GitHub's settings and
+templates (not its workflows), the license or the Markdown at the root -
+runs `check`'s formatting and README checks alone, merged too. Some choices that keep a pull request's checks short:
 
-- The e2e flows are spread over four shards test by test, not file by file
+- The e2e flows are spread over two shards test by test, not file by file
   (`fullyParallel` in `playwright.config.ts`), and each shard runs two
   workers: a runner has four cores. A shard takes two to three and a half
   minutes. Locally the suite runs one worker unless you pass `--workers`.

@@ -81,7 +81,12 @@ export function openConversations(scope: string): string[] {
   let ids: string[] = [];
   try {
     const raw = JSON.parse(localStorage.getItem(OPEN + scope) ?? "[]");
-    if (Array.isArray(raw)) ids = raw.filter((x) => typeof x === "string");
+    // Ids only: 1.4.0 could keep its draft tab ("\0draft") here too.
+    if (Array.isArray(raw))
+      ids = raw.filter(
+        (x): x is string =>
+          typeof x === "string" && x !== DRAFT && !x.startsWith("\0"),
+      );
   } catch {
     // None kept, or unreadable: none open.
   }
@@ -115,8 +120,10 @@ export function closeConversation(scope: string, id: string): string | null {
   return rest[Math.min(at, rest.length - 1)] ?? null;
 }
 
-/** Moves `id` to `index` among the scope's other tabs. */
+/** Moves `id` to `index` among the scope's other tabs; the draft, never
+ *  an open conversation, stays out of the list. */
 export function reorderConversation(scope: string, id: string, index: number) {
+  if (id === DRAFT) return;
   const rest = openConversations(scope).filter((x) => x !== id);
   rest.splice(index, 0, id);
   setOpen(scope, rest);

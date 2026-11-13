@@ -72,8 +72,6 @@ describe("the hold in a window", () => {
         tabs: pane.tabs,
         front: pane.front,
       })),
-      dividers: [],
-      area: { x: 0, y: 40, w: 800, h: 600 },
       origin: { x: 0, y: 0 },
       need: 0,
     });

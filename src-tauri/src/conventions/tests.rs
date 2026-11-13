@@ -140,6 +140,33 @@ fn reads_logseq_foam_and_our_own_settings() {
 }
 
 #[test]
+fn reads_the_project_settings_file_with_comments_and_flags_a_broken_one() {
+    let read = |files: &[(&str, &str)]| {
+        let dir = folder_with(files);
+        let root = dir.path().to_string_lossy().to_string();
+        tauri::async_runtime::block_on(project_settings_read(root))
+    };
+    assert_eq!(read(&[]), serde_json::json!({}));
+    assert_eq!(
+        read(&[(".textus/settings.json", "\n")]),
+        serde_json::json!({})
+    );
+    assert_eq!(
+        read(&[(".textus/settings.json", "\u{feff}")]),
+        serde_json::json!({})
+    );
+    assert_eq!(
+        read(&[(".textus/settings.json", "{ // mine\n \"a\": 1, }")]),
+        serde_json::json!({ "a": 1 })
+    );
+    // Null, not {}: a write would otherwise replace the file's keys.
+    assert_eq!(
+        read(&[(".textus/settings.json", "{ oops")]),
+        serde_json::Value::Null
+    );
+}
+
+#[test]
 fn the_nearest_folder_decides_and_sites_say_where_slash_points() {
     let site = folder_with(&[
         ("mkdocs.yml", "site_name: x\ndocs_dir: pages\n"),

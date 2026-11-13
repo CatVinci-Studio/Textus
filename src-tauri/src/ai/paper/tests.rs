@@ -2273,6 +2273,8 @@ fn a_thread_post_too_long_for_one_post_is_sent_back_softly() {
     assert_eq!(found.len(), 1, "{found:?}");
     assert!(found[0].text.contains("post 2"), "{found:?}");
     assert!(checks::all_soft(&found));
+    // An English post has the whole 280 characters.
+    assert!(draft::long_posts(&"x".repeat(200), &thread).is_empty());
     let chinese = Paper {
         genre: Genre::Thread,
         ..paper()

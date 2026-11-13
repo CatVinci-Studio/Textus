@@ -121,10 +121,11 @@ function App() {
     setShown: agentPanel.setOpen,
   });
 
-  // Whether the tabs are in the window bar's row (with the menu bar spelled
-  // out, in the row under it), or none: a clean sheet; the phone's own bar.
+  // Whether the documents lie on islands: their tabs in the window bar's
+  // row (or the row under a bar of its own), or one sheet alone under the
+  // title's row - else a clean sheet (Zen), or the phone's own bar.
   const tabsInBar = useTabsInBar(zenMode, showTabBar);
-  const tabRow = tabsInBar && !isIOSApp ? "bar" : undefined;
+  const tabRow = (tabsInBar || !zenMode) && !isIOSApp ? "bar" : undefined;
 
   // What Settings needs, as a sheet or as a tab.
   const settingsProps = {

@@ -1,10 +1,9 @@
-/** What 100% Interface Text Size draws at on the desktop: one step up from
- *  the first design, every step growing with it (design-system.css
- *  --chrome-base). */
-export const CHROME_BASE = 1.1;
+/** The phone keeps its first design, a step under the desktop's
+ *  (ds-base.css). */
+const PHONE_SCALE = 10 / 11;
 
 /** The interface's size step now, as `--chrome-scale` has it: Interface
- *  Text Size on the desktop's base - not the window's size (as VS Code,
+ *  Size, Medium 1 - not the window's size (as VS Code,
  *  Obsidian and Typora: a bigger window shows more, not bigger). A panel's
  *  widths are in this step's units, so it grows with what it holds. */
 export function chromeScale(): number {
@@ -13,14 +12,14 @@ export function chromeScale(): number {
     typeof document !== "undefined" &&
     document.documentElement.dataset.windowChrome === "mobile"
   )
-    return 1;
+    return PHONE_SCALE;
   const text =
     typeof document === "undefined"
       ? 1
       : Number.parseFloat(
           document.documentElement.style.getPropertyValue("--ui-text-scale"),
         ) || 1;
-  return CHROME_BASE * text;
+  return text;
 }
 
 /** `n` interface pixels as drawn now: a size set from script grows with

@@ -28,7 +28,7 @@ import {
 } from "./floating-views";
 
 /** The folded dot's size, on the desktop as in the window. */
-export const DOT_SIZE = 36;
+export const DOT_SIZE = 40;
 
 /** What the floating window tells the editor window that runs its plugin. */
 export type FloatingUp =

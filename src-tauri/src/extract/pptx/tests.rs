@@ -46,7 +46,7 @@ fn slides_get_their_title_body_list_and_notes() {
         para("Why"),
         r#"<a:p><a:pPr lvl="1"/><a:r><a:rPr b="1"/><a:t>Because</a:t></a:r></a:p>"#,
         r#"<a:p><a:pPr><a:buNone/></a:pPr><a:r><a:t>Aside</a:t></a:r></a:p>"#
-    );
+    ) + &r#"<a:p><a:pPr><a:buAutoNum type="arabicPeriod" startAt="4"/></a:pPr><a:r><a:t>Fourth</a:t></a:r></a:p>"#.repeat(2);
     // In the file the body comes first, the footer is template
     // furniture, and the text box sits below the body on the slide.
     let slide = [
@@ -69,7 +69,7 @@ fn slides_get_their_title_body_list_and_notes() {
     ];
     assert_eq!(
             convert(&[&slide], &parts).unwrap(),
-            "## Slide 1: The plan\n\n- Why\n    - **Because**\n\nAside\n\nA text box\n\n### Notes\n\nSay it slowly."
+            "## Slide 1: The plan\n\n- Why\n    - **Because**\n\nAside\n\n4. Fourth\n5. Fourth\n\nA text box\n\n### Notes\n\nSay it slowly."
         );
 }
 

@@ -277,6 +277,8 @@ pub(crate) fn handler() -> impl Fn(tauri::ipc::Invoke<tauri::Wry>) -> bool + Sen
         #[cfg(desktop)]
         commands::clipboard::clipboard_text,
         commands::input_source::set_roman_input,
+        commands::traffic_lights::set_window_bar_height,
+        commands::traffic_lights::set_window_title,
         commands::system_info::system_info,
         commands::fonts::system_font_families,
         commands::system_info::send_problem_report,

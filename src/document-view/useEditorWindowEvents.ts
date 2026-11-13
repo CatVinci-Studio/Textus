@@ -1,3 +1,4 @@
+import { flushDomSelection } from "../editor/modes/mode-switch";
 import { editorInUse } from "../editor/editor-in-use";
 import { useCallback, useEffect } from "react";
 import { insertMarkdown } from "../editor/markdown/parse-markdown-source";
@@ -171,6 +172,7 @@ export function useEditorWindowEvents({
   useWindowEvent(INSERT_BLOCK_EVENT, (e) => {
     if (!isOnScreen()) return;
     const kind = (e as CustomEvent<string>).detail;
+    run((ctx) => flushDomSelection(ctx.get(editorViewCtx)));
     const headingMatch = /^h([1-6])$/.exec(kind);
     if (headingMatch) {
       insertHeading(run, Number(headingMatch[1]));
@@ -219,6 +221,7 @@ export function useEditorWindowEvents({
     const kind = (e as CustomEvent<string>).detail;
     run((ctx) => {
       const view = ctx.get(editorViewCtx);
+      flushDomSelection(view);
       if (kind === "heading") cycleHeading(view);
       else if (kind === "bullet-list") toggleList(view, "bullet_list");
       else if (kind === "ordered-list") toggleList(view, "ordered_list");
@@ -235,6 +238,8 @@ export function useEditorWindowEvents({
     if (!toggle) return;
     run((ctx) => {
       const view = ctx.get(editorViewCtx);
+      // A selection made by keys just now reaches the editor late.
+      flushDomSelection(view);
       toggle(view);
       view.focus();
     });

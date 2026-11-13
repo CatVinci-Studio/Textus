@@ -289,9 +289,7 @@ pub(crate) async fn opening(
             .filter(|s| !s.is_empty())
     };
     let title = field("title").unwrap_or(paper.topic.trim());
-    let cjk = ["zh", "ja", "ko"]
-        .iter()
-        .any(|l| paper.language.to_lowercase().starts_with(l));
+    let cjk = super::checks::counts_characters(&paper.language);
     match field("abstract") {
         _ if profile.frame == Frame::Headline => format!("# {title}"),
         Some(text) if profile.frame == Frame::News => format!("# {title}\n\n**{text}**"),

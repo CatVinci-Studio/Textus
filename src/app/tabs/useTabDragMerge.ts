@@ -22,7 +22,7 @@ import {
 import { drafts, windowIpc, type WindowBounds } from "../../platform/ipc";
 import { flushPendingWrites } from "../../storage/pending-writes";
 import { useLatest } from "../../utils/hooks/useLatest";
-import { canUseWindows } from "../../platform/capabilities";
+import { canDragTabsBetweenWindows } from "../../platform/capabilities";
 import { arrivalPreview, splitForDrop } from "../islands/split-drop";
 import { dropGeometry } from "../../engine/layout/drop-zones";
 import { placeOnArrival } from "../../engine/layout/store";
@@ -34,16 +34,22 @@ import { moveTab } from "../../engine/layout/ops";
 // The drop target is a window's top strip (window bar plus tab bar), with
 // headroom, not its whole body: at the interface's scale, and handed to
 // Rust with a drag so both test the same strip.
-const TAB_ROW_HEIGHT_LOGICAL = 72;
+const TAB_ROW_HEIGHT_LOGICAL = 80;
 const rowStrip = () => scaledPx(TAB_ROW_HEIGHT_LOGICAL);
 
 // Hit-testing is in global logical points, so each window's bounds use its
 // own scaleFactor: it may sit on a different-DPI display.
-function pointInTopStrip(lx: number, ly: number, w: WindowBounds): boolean {
+/** How far down window `w` the point is (logical points), or null when
+ *  it is outside the window. */
+function depthIn(lx: number, ly: number, w: WindowBounds): number | null {
   const x = w.x / w.scaleFactor;
   const y = w.y / w.scaleFactor;
-  const width = w.width / w.scaleFactor;
-  return lx >= x && lx <= x + width && ly >= y && ly <= y + rowStrip();
+  const inside =
+    lx >= x &&
+    lx <= x + w.width / w.scaleFactor &&
+    ly >= y &&
+    ly <= y + w.height / w.scaleFactor;
+  return inside ? ly - y : null;
 }
 
 interface DragHoverPreview {
@@ -85,11 +91,14 @@ export function useTabDragMerge(opts: {
     async (screenX: number, screenY: number): Promise<string | null> => {
       const selfLabel = thisWindow().label;
       try {
+        // Front first (Rust lists them so): the window the point is in,
+        // then whether over its tab row - not a row hidden behind it.
         const bounds = await windowIpc.listWindowBounds();
-        const hit = bounds.find(
-          (b) => b.label !== selfLabel && pointInTopStrip(screenX, screenY, b),
+        const front = bounds.find(
+          (b) => b.label !== selfLabel && depthIn(screenX, screenY, b) !== null,
         );
-        return hit?.label ?? null;
+        const depth = front && depthIn(screenX, screenY, front);
+        return front && depth! <= rowStrip() ? front.label : null;
       } catch {
         return null;
       }
@@ -140,8 +149,8 @@ export function useTabDragMerge(opts: {
   const latest = useLatest({ hitTestWindow, liveTabs, t });
 
   useEffect(() => {
-    // One window, never dragged, on iOS.
-    if (!canUseWindows) return;
+    // Only where a window's tab can join another's (not iOS, nor Linux).
+    if (!canDragTabsBetweenWindows) return;
     const win = thisWindow();
 
     async function handleTick(x: number, y: number, down: boolean) {

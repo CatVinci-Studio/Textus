@@ -8,7 +8,7 @@ import { describe, expect, it } from "vitest";
 // are read here. Newer features are fine inside a matching @supports with a
 // fallback; color-mix() needs no guard, as the build lowers it.
 
-const SRC = join(__dirname, "..");
+const SRC = join(__dirname, "../..");
 const SKIPPED = ["mobile", "playground"];
 
 /** Newer than Chromium 105, with the version that brought each in. */

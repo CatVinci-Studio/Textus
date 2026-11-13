@@ -359,6 +359,9 @@ async fn export(app: &AppHandle, request: Request) -> Answer {
             1,
         );
     }
+    // One `textus export` at a time: the target is one slot.
+    static ONE_AT_A_TIME: tokio::sync::Mutex<()> = tokio::sync::Mutex::const_new(());
+    let _turn = ONE_AT_A_TIME.lock().await;
     let target = job.out.to_string_lossy().into_owned();
     crate::commands::export::set_cli_export_target(Some(target.clone()));
     let opened = in_window(

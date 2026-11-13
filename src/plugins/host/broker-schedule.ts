@@ -1,4 +1,5 @@
 import { grants } from "../grants";
+import type { Permission } from "../store/manifest";
 import { aiState } from "../ai-state";
 import {
   schedule as scheduleIpc,
@@ -12,12 +13,13 @@ import { str, type Params, type PluginScope } from "./broker-scope";
 
 /**
  * A plugin's jobs and notifications, and whether Textus is in front: kept
- * and checked again in Rust. `folder` is the folder a job's files and a
- * notification's file are in - the window's, or the job's in a background
- * run - given to Rust only with files.read.
+ * and checked again in Rust. The plugin's folder goes to Rust with
+ * files.read (a job's or a notification's files) or project.data (what a
+ * job's run keeps for the folder).
  */
-export function scheduleHandlers(p: PluginScope, folder: () => string | null) {
-  const root = () => (grants(p.info.granted, "files.read") ? folder() : null);
+export function scheduleHandlers(p: PluginScope) {
+  const granted = (...any: Permission[]) =>
+    any.some((g) => grants(p.info.granted, g)) ? p.folder() : null;
   return {
     "schedule.set": async ({ id, job }: Params) => {
       const spec = (job ?? {}) as JobSpec;
@@ -29,7 +31,12 @@ export function scheduleHandlers(p: PluginScope, folder: () => string | null) {
             `A job's run needs "background" code in the manifest.`,
           );
       }
-      const set = await scheduleIpc.set(p.id, str(id, "id"), spec, root());
+      const set = await scheduleIpc.set(
+        p.id,
+        str(id, "id"),
+        spec,
+        granted("files.read", "project.data"),
+      );
       pluginScheduled(p.id);
       return set;
     },
@@ -39,7 +46,7 @@ export function scheduleHandlers(p: PluginScope, folder: () => string | null) {
       return scheduleIpc.notify(
         p.id,
         notification as unknown as NotificationSpec,
-        root(),
+        granted("files.read"),
       );
     },
     "app.state": () => currentAppState(),

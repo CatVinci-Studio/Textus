@@ -1,5 +1,5 @@
 import { askForRequirements } from "./requirements";
-import { canRun, canSwitch } from "./lifecycle";
+import { canSwitch } from "./lifecycle";
 import { WIKILINK_SOURCE } from "../../utils/note-link";
 import { basename } from "../../utils/path";
 import type { Strings } from "../../i18n/strings";
@@ -10,7 +10,7 @@ import {
   loadCatalog,
   type CatalogItem,
 } from "./catalog";
-import { pluginRecord, pluginsSnapshot } from "./plugin-records";
+import { pluginMayRun, pluginRecord, pluginsSnapshot } from "./plugin-records";
 import { setPluginEnabled } from "../plugin-switches";
 import { matchesFilename, type SuggestKind } from "./manifest";
 import { SUGGEST_KINDS } from "./manifest-parse";
@@ -58,8 +58,7 @@ export async function takeUp(
       tone: "error",
     });
   }
-  const status = pluginRecord(request.plugin)?.status;
-  return !!status && canRun(status, pluginsSnapshot().allOn);
+  return pluginMayRun(pluginRecord(request.plugin));
 }
 
 /** Suggests the plugin that opens `path` on the card: "on" when it is on

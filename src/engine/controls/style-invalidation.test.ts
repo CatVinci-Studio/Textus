@@ -6,7 +6,7 @@ import { describe, expect, it } from "vitest";
 // is added anywhere: a sibling rule onto anything ("a + *") and ":root:has(...)".
 // Kept out of the app's own stylesheets here.
 
-const root = join(__dirname, "..");
+const root = join(__dirname, "../..");
 
 function cssFiles(dir: string): string[] {
   return readdirSync(dir).flatMap((name) => {

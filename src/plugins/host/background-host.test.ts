@@ -93,6 +93,8 @@ describe("a plugin's background code", () => {
     expect(() =>
       handler(run([]), "files.read")({ path: "/notes/a.md" }),
     ).toThrow(/files.read/);
+    // Its folder is the job's, whatever any window has open now.
+    expect(handler(run(["files.read"]), "files.root")({})).toBe("/notes");
   });
 });
 
@@ -145,7 +147,7 @@ describe("scheduling and notifying", () => {
     );
   });
 
-  it("gives Rust the job's folder only with files.read", async () => {
+  it("gives Rust the job's folder only with files.read or project.data", async () => {
     const job = { notify: { title: "t" }, daily: "09:00" };
     await handler(
       run(["notifications", "files.read"]),
@@ -160,6 +162,19 @@ describe("scheduling and notifying", () => {
       job,
       "/notes",
     );
+    // Its run keeps data for the folder: the folder goes with the job.
+    await handler(
+      run(["notifications", "project.data"]),
+      "schedule.set",
+    )({ id: "b", job });
+    expect(ipc.set).toHaveBeenLastCalledWith(
+      "catvinci.remind",
+      "b",
+      job,
+      "/notes",
+    );
+    await handler(run(["notifications"]), "schedule.set")({ id: "c", job });
+    expect(ipc.set).toHaveBeenLastCalledWith("catvinci.remind", "c", job, null);
   });
 });
 

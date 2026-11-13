@@ -305,5 +305,84 @@ fn table_cell(cell: &str) -> String {
         .replace('|', "\\|")
 }
 
+/// A list item's Markdown mark from the marker a word processor wrote:
+/// `3.`, `(3)`, `3、`, `1.3.`, `c)`, `iii.` and `三、` are item 3, anything
+/// else (a bullet character, a word) a bullet.
+pub(super) fn list_mark(marker: &str) -> String {
+    let marker = marker.trim();
+    let stem = marker
+        .trim_start_matches(['(', '（'])
+        .trim_end_matches(['.', ')', '）', '、']);
+    let punctuated = stem.len() < marker.len();
+    match item_number(stem).filter(|_| punctuated) {
+        Some(n) => format!("{n}."),
+        None => "-".to_string(),
+    }
+}
+
+/// What a list marker's stem counts to: digits (the last of `1.3`), a
+/// Roman numeral, a letter or a run of one (Word's `aa` after `z`), or a
+/// Chinese numeral below a hundred.
+fn item_number(stem: &str) -> Option<u32> {
+    let last = stem.rsplit('.').next()?;
+    if stem.split('.').all(|part| part.parse::<u32>().is_ok()) {
+        return last.parse().ok();
+    }
+    if let Some(n) = chinese(stem) {
+        return Some(n);
+    }
+    // i, ii, iv, xi… are Roman far more often than letters past h.
+    if stem.chars().all(|c| "ivxIVX".contains(c)) {
+        return roman(stem);
+    }
+    let first = stem.chars().next()?;
+    if first.is_ascii_alphabetic() && stem.chars().all(|c| c == first) {
+        let place = first.to_ascii_lowercase() as u32 - 'a' as u32 + 1;
+        return Some((stem.len() as u32 - 1) * 26 + place);
+    }
+    roman(stem)
+}
+
+/// 三 is 3, 十一 is 11, 二十 is 20, 九十九 is 99.
+fn chinese(stem: &str) -> Option<u32> {
+    let digit = |c: char| {
+        "一二三四五六七八九"
+            .chars()
+            .position(|d| d == c)
+            .map(|n| n as u32 + 1)
+    };
+    let chars: Vec<char> = stem.chars().collect();
+    match chars[..] {
+        ['十'] => Some(10),
+        [d] => digit(d),
+        ['十', one] => Some(10 + digit(one)?),
+        [tens, '十'] => Some(10 * digit(tens)?),
+        [tens, '十', one] => Some(10 * digit(tens)? + digit(one)?),
+        _ => None,
+    }
+}
+
+fn roman(stem: &str) -> Option<u32> {
+    let value = |c: char| match c.to_ascii_lowercase() {
+        'i' => Some(1),
+        'v' => Some(5),
+        'x' => Some(10),
+        'l' => Some(50),
+        'c' => Some(100),
+        'd' => Some(500),
+        'm' => Some(1000),
+        _ => None,
+    };
+    let digits: Vec<u32> = stem.chars().map(value).collect::<Option<_>>()?;
+    let total = digits.iter().enumerate().fold(0i64, |sum, (k, &d)| {
+        if digits.get(k + 1).is_some_and(|&next| next > d) {
+            sum - d as i64
+        } else {
+            sum + d as i64
+        }
+    });
+    u32::try_from(total).ok().filter(|&n| n > 0)
+}
+
 #[cfg(test)]
 mod tests;

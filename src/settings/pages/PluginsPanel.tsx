@@ -1,6 +1,6 @@
+import { pluginLead } from "./plugin-lead";
 import { useMutedCards } from "../../plugins/store/usePluginCard";
 import { setAllPlugins } from "../../plugins/plugin-switches";
-import { Byline } from "./CatalogRow";
 import { catalogMessage, catalogStatus } from "./CatalogStatus";
 import { fill } from "../../i18n/fill";
 import {
@@ -10,7 +10,12 @@ import {
   type ReactNode,
 } from "react";
 import { SearchField } from "../../engine/controls/SearchField";
-import { ChevronIcon, MoreIcon } from "../../engine/controls/icons";
+import {
+  ChevronIcon,
+  DownloadIcon,
+  MoreIcon,
+  RefreshIcon,
+} from "../../engine/controls/icons";
 import { Tooltip } from "../../engine/controls/Tooltip";
 import { useMenuButton } from "../../engine/controls/useMenuButton";
 import type { ContextMenuEntry } from "../../engine/controls/ContextMenu";
@@ -34,9 +39,9 @@ import {
   subscribeCatalog,
   updateFor,
   catalogItem,
+  neededTextus,
 } from "../../plugins/store/catalog";
 import { pluginMatches } from "../../plugins/store/plugin-records";
-import type { PluginManifest } from "../../plugins/store/manifest";
 import type { Strings } from "../../i18n/strings";
 import { PluginIcon } from "./PluginArt";
 import { usePluginActions } from "./PluginAction";
@@ -67,8 +72,7 @@ export function PluginsPanel({
 }) {
   const plugins = useSyncExternalStore(subscribePlugins, pluginsSnapshot);
   const catalog = useSyncExternalStore(subscribeCatalog, catalogSnapshot);
-  const { actionFor, install, installing, attempt, updateAll } =
-    usePluginActions(t);
+  const { install, installing, attempt, updateAll } = usePluginActions(t);
   const muted = useMutedCards();
   const more = useMenuButton(() =>
     moreMenu(t, attempt, { allOn: plugins.allOn, muted }),
@@ -155,9 +159,6 @@ export function PluginsPanel({
                   ? pluginText(record, record.manifest.description)
                   : ""
               }
-              manifest={record.manifest}
-              official={record.official}
-              t={t}
               off={record.status !== "on"}
               picked={picked === record.id}
               onOpen={() => onPick(record.id)}
@@ -165,17 +166,16 @@ export function PluginsPanel({
               // button; other versions are on the plugin's page.
               end={
                 catalog.status === "ready" && updateFor(record.id, catalog) ? (
-                  <button
-                    type="button"
-                    className="text-button plugins-panel-update"
+                  <RowButton
+                    label={`${t.pluginUpdateNow} · ${pluginName(record)}`}
+                    tip={t.pluginUpdateNow}
+                    update
                     disabled={installing !== null}
                     onClick={() => {
                       const item = catalogItem(record.id, catalog);
                       if (item) void install(item);
                     }}
-                  >
-                    {t.pluginUpdateNow}
-                  </button>
+                  />
                 ) : null
               }
               icon={
@@ -213,12 +213,22 @@ export function PluginsPanel({
                   { manifest: item.manifest },
                   item.manifest.description,
                 )}
-                manifest={item.manifest}
-                official={item.official}
-                t={t}
                 picked={picked === item.id}
                 onOpen={() => onPick(item.id)}
-                end={actionFor(item.id)}
+                end={
+                  neededTextus(item) ? null : (
+                    <RowButton
+                      label={`${t.pluginInstall} · ${pluginName({ id: item.id, manifest: item.manifest })}`}
+                      tip={
+                        installing === item.id
+                          ? t.pluginInstalling
+                          : t.pluginInstall
+                      }
+                      disabled={installing !== null}
+                      onClick={() => void install(item)}
+                    />
+                  )
+                }
                 icon={
                   <PluginIcon
                     id={item.id}
@@ -234,24 +244,18 @@ export function PluginsPanel({
 }
 
 function PluginRow({
-  t,
   id,
   name,
   line,
-  manifest,
-  official,
   off = false,
   icon,
   end,
   onOpen,
   picked = false,
 }: {
-  t: Strings;
   id: string;
   name: string;
   line: string;
-  manifest: PluginManifest | null;
-  official: boolean;
   off?: boolean;
   icon: ReactNode;
   /** Its button: install, or update. */
@@ -260,7 +264,6 @@ function PluginRow({
   /** Its page shows beside the list. */
   picked?: boolean;
 }) {
-  const by = manifest?.author || manifest?.publisher;
   return (
     <div
       className="plugins-panel-row"
@@ -277,18 +280,15 @@ function PluginRow({
         {icon}
         <span className="plugins-panel-text">
           <span className="tx-truncate plugins-panel-name">{name}</span>
-          {line && <span className="tx-clamp plugins-panel-line">{line}</span>}
+          {line && (
+            <span className="tx-truncate plugins-panel-line">
+              {pluginLead(line)}
+            </span>
+          )}
         </span>
       </button>
-      {/* Its author and its button on a line of their own, under the text:
-          the name and what it does keep the row's width, a long label
-          (Installieren) cutting neither. */}
-      {(by || official || end) && (
-        <div className="plugins-panel-foot">
-          <Byline t={t} official={official} author={by} />
-          {end && <span className="plugins-panel-end">{end}</span>}
-        </div>
-      )}
+      {/* Who made it is on its page. */}
+      {end && <span className="plugins-panel-end">{end}</span>}
     </div>
   );
 }
@@ -369,4 +369,35 @@ function moreMenu(
       ? [{ label: t.pluginCardsRestoreAll, onSelect: muted.restore }]
       : []),
   ];
+}
+
+/** A row's one action, as a small round button: the words keep the row.
+ *  An update turns, in the accent: something to do, not something to get. */
+function RowButton({
+  label,
+  tip,
+  update = false,
+  disabled,
+  onClick,
+}: {
+  label: string;
+  tip: string;
+  update?: boolean;
+  disabled: boolean;
+  onClick: () => void;
+}) {
+  return (
+    <Tooltip text={tip}>
+      <button
+        type="button"
+        className="tree-tool plugins-panel-action"
+        data-update={update || undefined}
+        aria-label={label}
+        disabled={disabled}
+        onClick={onClick}
+      >
+        {update ? <RefreshIcon /> : <DownloadIcon />}
+      </button>
+    </Tooltip>
+  );
 }

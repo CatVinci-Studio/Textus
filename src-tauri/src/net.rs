@@ -22,7 +22,10 @@ pub fn public_client(connect: Duration, total: Duration) -> Result<reqwest::Clie
     through(client(connect, total), aicompat::http::proxy_url())
 }
 
-/// `builder` through `proxy`, if there is one.
+/// `builder` through `proxy`, if there is one. Without one the builder is
+/// pinned to direct: a proxy in the terminal's environment must not hijack
+/// a request to this computer either (aicompat::http::LOOPBACK_NO_PROXY
+/// keeps the loopback family out of a proxy that is set).
 fn through(
     builder: reqwest::ClientBuilder,
     proxy: Option<String>,
@@ -31,9 +34,11 @@ fn through(
         Some(proxy) => builder.proxy(
             reqwest::Proxy::all(proxy)
                 .map_err(|e| e.to_string())?
-                .no_proxy(reqwest::NoProxy::from_string("localhost,127.0.0.1,::1")),
+                .no_proxy(reqwest::NoProxy::from_string(
+                    aicompat::http::LOOPBACK_NO_PROXY,
+                )),
         ),
-        None => builder,
+        None => builder.no_proxy(),
     })
 }
 
@@ -81,6 +86,12 @@ mod tests {
     fn serve_once(response: &'static str) -> String {
         let listener = std::net::TcpListener::bind("127.0.0.1:0").unwrap();
         let url = format!("http://{}/", listener.local_addr().unwrap());
+        answer_once(listener, response.as_bytes());
+        url
+    }
+
+    /// Reads one request's head on `listener`, then writes `response`.
+    fn answer_once(listener: std::net::TcpListener, response: &'static [u8]) {
         std::thread::spawn(move || {
             let (mut stream, _) = listener.accept().unwrap();
             let mut request = Vec::new();
@@ -92,9 +103,8 @@ mod tests {
                 }
                 request.extend_from_slice(&buf[..n]);
             }
-            let _ = stream.write_all(response.as_bytes());
+            let _ = stream.write_all(response);
         });
-        url
     }
 
     async fn read(response: &'static str, max: usize) -> Option<Vec<u8>> {
@@ -146,6 +156,70 @@ mod tests {
     }
 
     #[tokio::test]
+    async fn a_proxy_asking_for_a_name_and_password_gets_them() {
+        // The "proxy" answers a request without Proxy-Authorization with
+        // the 407 a proxy that wants a name and password gives, and lets
+        // one that carries them through: what the credentials in the
+        // proxy's URL are for.
+        use std::io::{Read, Write};
+        let listener = std::net::TcpListener::bind("127.0.0.1:0").unwrap();
+        let proxy = format!("http://{}", listener.local_addr().unwrap());
+        std::thread::spawn(move || {
+            for _ in 0..2 {
+                let (mut stream, _) = listener.accept().unwrap();
+                let mut request = Vec::new();
+                let mut buf = [0u8; 4096];
+                while !request.ends_with(b"\r\n\r\n") {
+                    let n = stream.read(&mut buf).unwrap();
+                    if n == 0 {
+                        break;
+                    }
+                    request.extend_from_slice(&buf[..n]);
+                }
+                // The name and password as typed: "p%41 x", not "pA x".
+                let carries = String::from_utf8_lossy(&request).contains("Basic YWxpY2U6cCU0MSB4");
+                let answer = if carries {
+                    "HTTP/1.1 200 OK\r\nContent-Length: 2\r\nConnection: close\r\n\r\nok"
+                } else {
+                    "HTTP/1.1 407 Proxy Authentication Required\r\nProxy-Authenticate: Basic\r\nContent-Length: 0\r\nConnection: close\r\n\r\n"
+                };
+                let _ = stream.write_all(answer.as_bytes());
+            }
+        });
+        let unauthorized = through(
+            client(Duration::from_secs(5), Duration::from_secs(5)),
+            Some(proxy.clone()),
+        )
+        .unwrap()
+        .build()
+        .unwrap();
+        let response = unauthorized
+            .get("http://catalog.invalid/index.json")
+            .send()
+            .await
+            .unwrap();
+        assert_eq!(
+            response.status(),
+            reqwest::StatusCode::PROXY_AUTHENTICATION_REQUIRED
+        );
+        let with_credentials = proxy.trim_start_matches("http://").to_string();
+        let authorized = through(
+            client(Duration::from_secs(5), Duration::from_secs(5)),
+            // As settings write it: % escaped first, then the URL's own.
+            Some(format!("http://alice:p%2541%20x@{with_credentials}")),
+        )
+        .unwrap()
+        .build()
+        .unwrap();
+        let response = authorized
+            .get("http://catalog.invalid/index.json")
+            .send()
+            .await
+            .unwrap();
+        assert_eq!(response.text().await.unwrap(), "ok");
+    }
+
+    #[tokio::test]
     async fn this_computers_servers_are_reached_directly() {
         // A proxy that answers nothing: only a direct request can succeed.
         let dead = std::net::TcpListener::bind("127.0.0.1:0").unwrap();
@@ -168,6 +242,35 @@ mod tests {
     fn an_unreadable_proxy_is_an_error() {
         let builder = client(Duration::from_secs(5), Duration::from_secs(5));
         assert!(through(builder, Some("not a url".into())).is_err());
+    }
+
+    #[tokio::test]
+    async fn every_loopback_address_is_reached_directly() {
+        // A dead proxy is set, and the server listens on a loopback address
+        // beyond 127.0.0.1, which only a request exempted from the whole
+        // loopback family - not just 127.0.0.1 - reaches. macOS won't hand
+        // out such an address to bind, so there the same request runs
+        // against 127.0.0.1 itself.
+        let dead = std::net::TcpListener::bind("127.0.0.1:0").unwrap();
+        let proxy = format!("http://{}", dead.local_addr().unwrap());
+        let server = std::net::TcpListener::bind("127.0.0.5:0")
+            .or_else(|_| std::net::TcpListener::bind("127.0.0.1:0"))
+            .unwrap();
+        let local = format!("http://{}", server.local_addr().unwrap());
+        answer_once(
+            server,
+            b"HTTP/1.1 200 OK\r\nContent-Length: 2\r\nConnection: close\r\n\r\nok",
+        );
+        let client = through(
+            client(Duration::from_secs(5), Duration::from_secs(5)),
+            Some(proxy),
+        )
+        .unwrap()
+        .build()
+        .unwrap();
+        let response = client.get(local).send().await.unwrap();
+        assert_eq!(response.text().await.unwrap(), "ok");
+        drop(dead);
     }
 
     #[tokio::test]

@@ -14,17 +14,20 @@ describe("storedDocumentPath", () => {
     expect(storedDocumentPath(`${DOCS}/a.md`, `${DOCS}/`)).toBe(
       "documents:a.md",
     );
-  });
-
-  it("migrates a path into an earlier install's container", () => {
-    // The container id changed with the reinstall or update.
-    expect(storedDocumentPath(`${OLD}/notes/a.md`, DOCS)).toBe(
-      "documents:notes/a.md",
-    );
-    expect(storedDocumentPath(`/private${OLD}/a.md`, null)).toBe(
+    // Rust answers /private/var/… for the /var/… folder: one place.
+    expect(storedDocumentPath(`/private${DOCS}/a.md`, DOCS)).toBe(
       "documents:a.md",
     );
-    expect(storedDocumentPath(`${SIM}/a.md`, null)).toBe("documents:a.md");
+  });
+
+  it("keeps another container, and every path while ours isn't known", () => {
+    expect(storedDocumentPath(`${OLD}/notes/a.md`, DOCS)).toBe(
+      `${OLD}/notes/a.md`,
+    );
+    expect(storedDocumentPath(`/private${OLD}/a.md`, null)).toBe(
+      `/private${OLD}/a.md`,
+    );
+    expect(storedDocumentPath(`${SIM}/a.md`, null)).toBe(`${SIM}/a.md`);
   });
 
   it("leaves everything else alone, and is idempotent", () => {
@@ -51,9 +54,9 @@ describe("resolvedDocumentPath", () => {
     );
   });
 
-  it("moves an earlier install's absolute path into this one's", () => {
+  it("never moves another container's path into this one's", () => {
     expect(resolvedDocumentPath(`${OLD}/notes/a.md`, DOCS)).toBe(
-      `${DOCS}/notes/a.md`,
+      `${OLD}/notes/a.md`,
     );
   });
 

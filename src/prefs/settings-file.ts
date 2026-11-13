@@ -27,6 +27,9 @@ const DEVICE_SETTINGS = [
   "proxyType",
   "proxyHost",
   "proxyPort",
+  // A password: it leaves this computer as little as an API key does.
+  "proxyUsername",
+  "proxyPassword",
   "zoom",
   "runInBackground",
   "updateChannel",

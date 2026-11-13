@@ -24,8 +24,6 @@ import { isImeKeydown } from "../../../utils/ime";
 export interface InlineChatLabels extends ChatBodyLabels, CloseConfirmLabels {
   /** Accessible name / tooltip of the header's close button. */
   close: string;
-  /** Accessible name / tooltip of the pop-out-to-OS-window button. */
-  detach: string;
   /** Quick Ask's header button: hand the exchange to the full conversation. */
   continueInPanel: string;
   newConversation: string;

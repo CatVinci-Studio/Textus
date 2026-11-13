@@ -27,7 +27,7 @@ export function numberedHeadings(markdown: string): string {
       const h = code ? null : HEADING.exec(line);
       if (h) headings.push({ line: i, level: h[1].length });
     },
-    { frontMatter: true },
+    { frontMatter: true, comments: true },
   );
   if (!headings.length) return markdown;
   const { start, title } = numberingStart(headings);

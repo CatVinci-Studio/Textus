@@ -3,6 +3,7 @@
 //! hands it over with submit_outline, which checks it and sends back what is
 //! wrong until it holds; the user then edits and approves it.
 
+use super::checks::counts_characters;
 use super::genre::Scale;
 use super::handover::{hand_over, Checked, Task};
 use super::prompts;
@@ -76,12 +77,6 @@ use super::tuning::{
     FIGURES_BEYOND_SECTIONS, OUTLINE_LENGTH, OUTLINE_STEPS, SECTIONS_PER_WEB_PICTURE,
     SECTIONS_SLACK,
 };
-
-/// Whether `language` is written without spaces, so its length is counted
-/// in characters rather than words.
-fn counts_characters(language: &str) -> bool {
-    ["zh", "ja", "ko"].iter().any(|l| language.starts_with(l))
-}
 
 /// The paper's length in the unit its sections' `targetWords` use: its
 /// characters for Chinese, Japanese and Korean, else about a sixth of them

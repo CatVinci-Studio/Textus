@@ -1,6 +1,5 @@
 /* The sidebar's Plugins page (PluginsPanel): the shared search box, then
-   a row per plugin - its icon, name, line and maker - its button at the
-   end. Headings and notes are the Search page's (search-panel.css). */
+   a row per plugin - its icon, name and line - its button at the end. Headings and notes are the Search page's (search-panel.css). */
 .plugins-panel {
   display: flex;
   flex-direction: column;
@@ -34,9 +33,11 @@
   font-weight: 400;
 }
 
+/* Its icon, name and line, then its button at the end of the same row:
+   the words give way, cut short, never the button. */
 .plugins-panel-row {
   display: flex;
-  flex-direction: column;
+  align-items: center;
   border-radius: var(--shape-s);
 }
 
@@ -50,8 +51,9 @@
 
 .plugins-panel-open {
   display: flex;
+  flex: 1;
   min-width: 0;
-  align-items: flex-start;
+  align-items: center;
   gap: 8px;
   padding: 8px;
   border: 0;
@@ -75,40 +77,10 @@
   color: var(--ui-text);
 }
 
-/* What it does, in two lines (tx-clamp): one cut it to a few words
-   beside its button. */
+/* What it does, on one line under its name. */
 .plugins-panel-line {
   font-size: var(--text-caption);
   color: var(--ui-muted);
-}
-
-/* Under the text, from its start: the open button's padding, the icon and
-   the gap after it. Short of room, the button goes under the maker, from
-   the same start, rather than cutting the name to a letter. */
-/* One line however narrow: the byline gives way (cut short), never the
-   button, which would otherwise drop to a line of its own. */
-.plugins-panel-foot {
-  display: flex;
-  flex-wrap: nowrap;
-  align-items: center;
-  gap: 4px 8px;
-  min-height: var(--control-height-sm);
-  margin-top: -6px;
-  /* design: allow - starts under the row's name, past its icon */
-  padding: 0 8px 8px 56px;
-}
-
-.plugins-panel-foot > .plugin-byline {
-  flex: 1 1 auto;
-  flex-wrap: nowrap;
-  min-width: 0;
-  overflow: hidden;
-}
-.plugins-panel-foot > .plugin-byline > span:not(.tx-badge) {
-  min-width: 0;
-  overflow: hidden;
-  white-space: nowrap;
-  text-overflow: ellipsis;
 }
 
 .plugins-panel-end {
@@ -116,6 +88,7 @@
   flex: none;
   align-items: center;
   gap: 4px;
+  padding-right: 8px;
 }
 
 /* A group's heading folds it. */
@@ -149,9 +122,7 @@
 .plugins-panel-text {
   flex: 1;
 }
-.plugins-panel-update {
-  height: auto;
-  padding: 2px 8px;
-  font-size: var(--text-caption);
-  white-space: nowrap;
+
+.plugins-panel-action[data-update]:hover {
+  color: var(--ui-accent);
 }

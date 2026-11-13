@@ -8,7 +8,6 @@ import { useRef, useState } from "react";
 import { useSettings } from "../prefs/SettingsContext";
 import { useMarginAvailable } from "../ai/margin/margin-room";
 import { usePhoneLayout } from "../engine/controls/usePhoneLayout";
-import { localeOf } from "../i18n/strings";
 import type { FixedShortcutGroup } from "../registry/fixed-shortcuts";
 import { ChevronIcon, CloseIcon } from "../engine/controls/icons";
 import { ThemesTab } from "./sections/theme";
@@ -99,10 +98,6 @@ export function SettingsPanel({
   const marginAvailable = useMarginAvailable();
   const phone = usePhoneLayout();
   const noMargin = !phone && !marginAvailable;
-  // "125 %" in French, "125%" in English.
-  const percent = new Intl.NumberFormat(localeOf(settings.language), {
-    style: "percent",
-  });
   // Closing Settings on a phone leaves the keyboard down: the user is
   // going back to the page, not necessarily to typing.
   const modal = useModalDialog(onClose, true, undefined, false);
@@ -137,7 +132,6 @@ export function SettingsPanel({
     settings,
     setSettings,
     phone,
-    percent,
     marginAvailable,
     noMargin,
     setSubpage,

@@ -651,3 +651,20 @@ fn the_stream_keeps_server_blocks_and_citations_for_a_paused_turn() {
     assert_eq!(content[2]["text"], "Twice a day");
     assert_eq!(content[2]["citations"][0]["url"], "https://a.example/");
 }
+
+#[test]
+fn a_tool_call_cut_off_by_the_limit_or_the_connection_is_refused() {
+    let start = json!({"type": "content_block_start", "index": 0,
+        "content_block": {"type": "tool_use", "id": "t1", "name": "propose_edit"}});
+    let half = json!({"type": "content_block_delta", "index": 0,
+        "delta": {"type": "input_json_delta", "partial_json": "{\"text\": \"ha"}});
+    let (ended, _) = run_stream(&[start.clone(), half.clone()]);
+    assert!(ended.cut_off(100).unwrap().contains("connection ended"));
+    let limit = json!({"type": "message_delta", "delta": {"stop_reason": "max_tokens"}});
+    let (limited, _) = run_stream(&[start.clone(), half, limit]);
+    assert!(limited.cut_off(100).unwrap().contains("100-token"));
+    let whole = json!({"type": "content_block_delta", "index": 0,
+        "delta": {"type": "input_json_delta", "partial_json": "{}"}});
+    let (fine, _) = run_stream(&[start, whole]);
+    assert_eq!(fine.cut_off(100), None);
+}

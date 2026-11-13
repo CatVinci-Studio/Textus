@@ -122,6 +122,9 @@ export function DocumentIslands({
   );
   const byId = new Map(tabs.map((tab) => [tab.id, tab]));
   const tabsInBar = useTabsInBar(zen, showTabBar);
+  // Out of Zen with no row of tabs (the title on a row of its own, one
+  // document): its sheet is still an island, only with no row.
+  const lone = !zen && !tabsInBar;
   // Each pane's sheet in the area's grid, as the area places them; without
   // its row, the sheet reaches up into the bar's.
   const cells = new Map<string, CSSProperties | undefined>();
@@ -232,9 +235,10 @@ export function DocumentIslands({
                 place.inner,
                 place.row,
               )
-            : // Its sheet while it has a row, and in Zen with the tab bar
-              // on; the tab bar off, the documents lie on the window.
-              (tabsInBar || showTabBar) && (
+            : // Its sheet while it has a row, alone under the title, and in
+              // Zen with the tab bar on; the tab bar off, the documents lie
+              // on the window.
+              (tabsInBar || showTabBar || lone) && (
                 <Island
                   key={key}
                   frame={place.frame}
@@ -292,7 +296,7 @@ export function DocumentIslands({
     <IslandArea
       layout={layout}
       rows={tabsInBar}
-      plain={!tabsInBar}
+      plain={!tabsInBar && !lone}
       // A panel's island holds pages only (the AI, Settings, a plugin's).
       isPanel={isPanel}
       content={documents}

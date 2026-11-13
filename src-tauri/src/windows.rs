@@ -75,4 +75,16 @@ mod tests {
         }
         assert_eq!(WindowKind::of("chat-99"), Some(WindowKind::Chat));
     }
+
+    #[test]
+    fn the_window_last_in_use_ranks_first() {
+        use crate::editor_windows::{focus_rank, note_focused};
+        note_focused("window-71");
+        note_focused("window-72");
+        note_focused("chat-7");
+        assert!(focus_rank("window-72") < focus_rank("window-71"));
+        note_focused("window-71");
+        assert!(focus_rank("window-71") < focus_rank("window-72"));
+        assert_eq!(focus_rank("chat-7"), usize::MAX);
+    }
 }

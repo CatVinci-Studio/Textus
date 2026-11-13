@@ -17,7 +17,7 @@
    sliver inside that covers the bubble's edge under it. The bubble grows
    out of it. */
 [data-bubble-tail] {
-  --tail-size: 10px;
+  --tail-size: 12px;
 }
 /* On a side edge, which in a one-line bubble is short: the bubble's
    corners a step tighter, so the tail's base sits on the straight run

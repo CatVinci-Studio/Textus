@@ -2,7 +2,7 @@
 //! how far their sources were read, its figures, the submit_section tool,
 //! and what to change when a draft is sent back.
 
-use super::checks::{length, most};
+use super::checks::{counts_characters, most};
 use super::draft::SUBMIT_SECTION_TOOL;
 use super::grounding::source_passage;
 use super::prompts;
@@ -124,7 +124,7 @@ pub(super) fn submit_section_spec() -> ToolSpec {
 /// What a section's writer is told.
 pub(crate) fn writer_instructions(paper: &Paper) -> String {
     let profile = paper.genre.profile();
-    let unit = if length("字", &paper.language) == 1 {
+    let unit = if counts_characters(&paper.language) {
         "characters"
     } else {
         "words"

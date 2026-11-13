@@ -37,7 +37,7 @@ All of them are in the **View** menu (**View › Mode** for the first two) and i
 
 The **Outline** panel of the sidebar lists the document's headings; click one to go there. Right-click the outline for **Expand All** and **Collapse All**, or `Option`-click (`Alt`-click) a heading's arrow to fold or unfold them all at once.
 
-**Interface text size** (Settings › Appearance) makes the text of the sidebar, tabs, menus, the AI tabs and Settings larger or smaller; each document keeps its own zoom (`Cmd+=`, `Cmd+-`). `Ctrl+Tab` and `Ctrl+Shift+Tab` move to the next and the previous tab.
+**Interface size** (Settings › Appearance) makes the sidebar, tabs, menus, the AI tabs and Settings larger or smaller, text and controls together; each document keeps its own zoom (`Cmd+=`, `Cmd+-`). `Ctrl+Tab` and `Ctrl+Shift+Tab` move to the next and the previous tab.
 
 ### Footnotes, rules and a table of contents
 

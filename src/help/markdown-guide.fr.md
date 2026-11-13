@@ -37,7 +37,7 @@ Tous se trouvent dans le menu **Présentation** (les deux premiers sous **Prése
 
 Le panneau **Plan** de la barre latérale liste les titres du document ; cliquez sur l'un d'eux pour vous y rendre. Un clic droit sur le plan propose **Tout déplier** et **Tout replier**, ou `Option`-clic (`Alt`-clic) sur la flèche d'un titre les déplie ou les replie tous d'un coup.
 
-**Taille du texte de l'interface** (Réglages › Apparence) agrandit ou réduit le texte de la barre latérale, des onglets, des menus, des onglets de l'IA et des Réglages ; chaque document garde son propre zoom (`Cmd+=`, `Cmd+-`). `Ctrl+Tab` et `Ctrl+Shift+Tab` passent à l'onglet suivant et au précédent.
+**Taille de l'interface** (Réglages › Apparence) agrandit ou réduit la barre latérale, les onglets, les menus, les onglets de l'IA et les Réglages, texte et commandes ensemble ; chaque document garde son propre zoom (`Cmd+=`, `Cmd+-`). `Ctrl+Tab` et `Ctrl+Shift+Tab` passent à l'onglet suivant et au précédent.
 
 ### Notes de bas de page, filets et table des matières
 

@@ -15,8 +15,8 @@ export function docMin(zoom = 1): number {
   const font = tokenPx("--doc-font-size") || DOC_FONT;
   return Math.round((DOC_MIN * font * zoom) / DOC_FONT);
 }
-const PANEL_MIN = 320;
-const STACKED_MIN = 160;
+const PANEL_MIN = 352;
+const STACKED_MIN = 176;
 
 /** An island's rule along `direction` (VS Code's workbench: the editor
  *  high priority, its side panels low and of a fixed width). `panel` is

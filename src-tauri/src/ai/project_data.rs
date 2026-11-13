@@ -35,7 +35,10 @@ pub(crate) fn adopt(global: &Path, root: &Path, sub: &str) -> PathBuf {
     let to = dir(global, root).join(sub);
     let from = project_dir(root).join(sub);
     if from.is_dir() && !to.exists() {
-        if let Err(e) = crate::atomic::move_or_copy(&from, &to) {
+        let moved = std::fs::create_dir_all(dir(global, root))
+            .and_then(|()| std::fs::rename(&from, &to))
+            .or_else(|_| crate::atomic::copy_whole(&from, &to));
+        if let Err(e) = moved {
             eprintln!(
                 "textus: could not move {} to {}: {e}",
                 from.display(),

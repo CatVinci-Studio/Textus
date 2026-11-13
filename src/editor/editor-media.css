@@ -192,17 +192,21 @@
    from an inline one, hanging below its line, over the next. */
 .math-float-preview {
   display: inline-block;
-  max-width: min(420px, 100%);
+  /* As wide as the column: a wide formula scrolls inside, never spills. */
+  max-width: 100%;
+  overflow-x: auto;
+  vertical-align: top;
   padding: 0.5em 0.7em;
   border: 1px solid var(--doc-border);
   border-radius: var(--shape-m);
   background: var(--ui-bg);
-  box-shadow: var(--shadow-popover);
   pointer-events: none;
   text-align: center;
   white-space: normal;
-  transform-origin: top center;
-  animation: motion-pop-in var(--dur-base) var(--ease-out);
+}
+/* Its formula's own display margins would leave the box half empty. */
+.math-float-preview .katex-display {
+  margin: 0;
 }
 .math-float-preview[hidden] {
   display: none;
@@ -211,6 +215,10 @@
 .math-preview-room {
   margin-top: var(--space-2);
   text-align: center;
+}
+/* In the flow, over nothing: a formula wider than the column scrolls. */
+.math-preview-room > .math-float-preview {
+  pointer-events: auto;
 }
 
 .math-preview-anchor {
@@ -223,8 +231,9 @@
   z-index: var(--z-popover);
   width: max-content;
   /* Of the column, not of the anchor (no width of its own). */
-  max-width: min(420px, 80cqi);
-  transform-origin: top left;
+  max-width: 80cqi;
+  /* Over the next line: lifted as a popover is. */
+  box-shadow: var(--shadow-popover);
 }
 
 .math-inline-rendered {

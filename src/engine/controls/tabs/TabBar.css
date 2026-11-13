@@ -6,7 +6,7 @@
   display: flex;
   align-items: center;
   gap: 2px;
-  padding: 32px 8px 4px;
+  padding: 36px 8px 4px;
   overflow-x: auto;
   /* A scrollbar would make the bar taller than its neighbours' rows; it
      scrolls by trackpad or wheel all the same. */
@@ -39,8 +39,8 @@
   gap: 8px;
   /* Its width is set from tab-widths.ts, between min-width and max-width. */
   box-sizing: border-box;
-  min-width: calc(56px * var(--chrome-scale));
-  max-width: 200px;
+  min-width: calc(62px * var(--chrome-scale));
+  max-width: 220px;
   padding: 4px 8px;
   /* The bar's text grows with a wide window, as its icons do. */
   font-size: var(--text-secondary);
@@ -117,8 +117,8 @@
 }
 
 .tab-pill-lock svg {
-  width: 12px;
-  height: 12px;
+  width: 14px;
+  height: 14px;
 }
 
 /* How many of Textus AI's revisions wait in it: a small count after its
@@ -185,7 +185,7 @@
    scroll under them. */
 .tab-bar[data-overflow] .tab-bar-add {
   position: sticky;
-  right: calc(24px * var(--chrome-scale));
+  right: calc(26px * var(--chrome-scale));
   z-index: 2;
   background: var(--ui-frame-fill, var(--ui-bg));
 }

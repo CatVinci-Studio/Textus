@@ -38,11 +38,15 @@ describe("stackCards", () => {
   });
 
   it("lets a card be pushed a little and stay whole", () => {
-    const placed = [card("a", 0), card("b", 120 + STACK_GAP - CROWDED_DRIFT)];
+    // b wants to stand just under a's top: pushed below a, under the
+    // drift that would cut it.
+    const placed = [card("a", 0), card("b", 4)];
     stackCards(placed, tall);
+    const drift = 120 + STACK_GAP - 4;
+    expect(drift).toBeLessThanOrEqual(CROWDED_DRIFT);
     expect(placed.map((p) => [p.drift, p.cut])).toEqual([
       [0, null],
-      [CROWDED_DRIFT, null],
+      [drift, null],
     ]);
   });
 

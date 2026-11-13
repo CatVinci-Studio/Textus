@@ -81,12 +81,7 @@ pub(crate) fn focused_editor_window(app: &tauri::AppHandle) -> Option<String> {
             .and_then(|open| crate::commands::chat_window::editor_for_chat(&label, &open)),
         None => None,
     }
-    .or_else(|| {
-        windows
-            .keys()
-            .find(|label| crate::windows::is_editor_window(label))
-            .cloned()
-    })
+    .or_else(|| crate::editor_windows::last_editor(app).map(|w| w.label().to_string()))
 }
 
 /// Item `id` run in the focused window, or with no window open, in a fresh

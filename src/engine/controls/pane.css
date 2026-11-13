@@ -23,7 +23,7 @@
 
 /* In a section's heading the field stays a field's width. */
 .settings-group-actions > .tx-search-expanded {
-  flex: 0 1 220px;
+  flex: 0 1 242px;
 }
 
 .tx-pane-title {
@@ -85,13 +85,13 @@
 /* A sidebar panel's second row - level with the islands' tops - holds
    its search, and what acts on the panel beside it (⋯, add). Only a panel
    that finds things has one. */
-/* A pane's first row (its search): its box from the body's edge, the
-   magnifier on the title's line as every row's first mark is. */
+/* A pane's first row (its search): a box of its own, with room round it,
+   its sides level with the title's words. */
 .tx-pane-row {
   display: flex;
   align-items: center;
   gap: 4px;
-  padding: 0 0 8px;
+  padding: 4px var(--pane-row-inset) 8px;
 }
 
 .tx-pane-row > .tx-search {

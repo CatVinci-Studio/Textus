@@ -42,17 +42,15 @@ const bumped = {
 const rustReads = rustIncludes();
 
 /** The jobs for a change from `before` to `after` (maps of file to text;
- *  files missing from either side don't exist there): e2e and native, and
- *  with `platforms` also whether macOS, Windows and iOS run. */
-function change(before, after, { push = false, platforms = false } = {}) {
+ *  files missing from either side don't exist there). */
+function change(before, after, { push = false } = {}) {
   const files = [...new Set([...Object.keys(before), ...Object.keys(after)])];
-  const jobs = classify({
+  return classify({
     files,
     push,
     read: (file) => [before[file] ?? null, after[file] ?? null],
     rustReads,
   });
-  return platforms ? jobs : { e2e: jobs.e2e, native: jobs.native };
 }
 
 /** Each of `files` edited from "a" to "b". */
@@ -61,22 +59,46 @@ function edit(files, options) {
   return change(side("a\n"), side("b\n"), options);
 }
 
-const NONE = { e2e: false, native: false };
-const ALL = { e2e: true, native: true };
-const E2E = { e2e: true, native: false };
-const NATIVE = { e2e: false, native: true };
+const NONE = { light: false, native: false };
+const LIGHT = { light: true, native: false };
+const NATIVE = { light: false, native: true };
 
 describe("which CI jobs a pull request needs", () => {
   it("runs check alone for documentation", () => {
     expect(
-      edit([
-        "docs/dev/testing.md",
-        "README.md",
-        "packaging/arch/README.md",
-        ".github/pull_request_template.md",
-        "LICENSE",
-      ]),
+      edit(["docs/dev/testing.md", "README.md", "packaging/arch/README.md"]),
     ).toEqual(NONE);
+  });
+
+  it("runs the light check alone for GitHub's settings, the license and root Markdown, merged too", () => {
+    const files = [
+      ".github/FUNDING.yml",
+      ".github/CODEOWNERS",
+      ".github/dependabot.yml",
+      ".github/ISSUE_TEMPLATE/bug.yml",
+      ".github/pull_request_template.md",
+      "LICENSE",
+      "CONTRIBUTING.md",
+      "README.zh.md",
+    ];
+    expect(edit(files)).toEqual(LIGHT);
+    expect(edit(files, { push: true })).toEqual(LIGHT);
+    for (const file of [
+      ".github/workflows/ci.yml",
+      ".github/actions/e2e-setup/action.yml",
+      "docs/dev/plugins/reference.md",
+      ".prettierrc",
+      "knip.json",
+    ])
+      expect(edit([file]).light, file).toBe(false);
+    expect(edit([".github/FUNDING.yml", "src/main.tsx"]).light).toBe(false);
+    const embedded = classify({
+      files: ["NOTES.md"],
+      push: false,
+      read: () => ["a\n", "b\n"],
+      rustReads: ["NOTES.md"],
+    });
+    expect(embedded).toEqual(NATIVE);
   });
 
   it("runs native for the Markdown skills Rust embeds", () => {
@@ -88,14 +110,14 @@ describe("which CI jobs a pull request needs", () => {
     ).toEqual(NATIVE);
   });
 
-  it("runs e2e for the Markdown the frontend imports", () => {
+  it("runs check alone for the Markdown the frontend imports", () => {
     expect(
       edit([
         "src/help/markdown-guide.en.md",
         "src/playground/samples/zh.md",
         "src/theme/fixtures/theme-skill-reply.md",
       ]),
-    ).toEqual(E2E);
+    ).toEqual(NONE);
   });
 
   it("runs native for Markdown outside src-tauri/ that Rust embeds", () => {
@@ -115,10 +137,10 @@ describe("which CI jobs a pull request needs", () => {
     expect(change(current, bumped)).toEqual(NONE);
   });
 
-  it("runs e2e alone for a frontend change", () => {
+  it("runs check alone for a frontend change", () => {
     expect(
       edit(["src/editor/editor.ts", "e2e/writing.spec.ts", "vite.config.ts"]),
-    ).toEqual(E2E);
+    ).toEqual(NONE);
   });
 
   it("runs native alone for a Rust change", () => {
@@ -133,49 +155,49 @@ describe("which CI jobs a pull request needs", () => {
     ).toEqual(NATIVE);
   });
 
-  it("runs both for the generated bindings, which a Rust test compares", () => {
-    expect(edit(["src/platform/bindings/app.ts"])).toEqual(ALL);
+  it("runs native for the generated bindings, which a Rust test compares", () => {
+    expect(edit(["src/platform/bindings/app.ts"])).toEqual(NATIVE);
   });
 
-  it("runs both for a frontend file the Rust tests embed", () => {
+  it("runs native for a frontend file the Rust tests embed", () => {
     expect(rustReads).toContain("index.html");
     expect(rustReads).toContain("src/registry/menu/menu.json");
-    expect(edit(["src/registry/menu/menu.json"])).toEqual(ALL);
+    expect(edit(["src/registry/menu/menu.json"])).toEqual(NATIVE);
   });
 
-  it("runs both for the src-tauri files the browser sees", () => {
+  it("runs native for the src-tauri files the browser sees", () => {
     for (const file of [
       "src-tauri/icons/128x128.png",
       "src-tauri/src/boot.js",
       "src-tauri/tauri.conf.json",
       "src-tauri/tauri.ios.conf.json",
     ]) {
-      expect(edit([file]), file).toEqual(ALL);
+      expect(edit([file]), file).toEqual(NATIVE);
     }
   });
 
-  it("runs both for a change to both sides", () => {
-    expect(edit(["src/main.tsx", "src-tauri/src/lib.rs"])).toEqual(ALL);
+  it("runs native for a change to both sides", () => {
+    expect(edit(["src/main.tsx", "src-tauri/src/lib.rs"])).toEqual(NATIVE);
   });
 
-  it("runs everything for a workflow or Node version change", () => {
-    expect(edit([".github/workflows/ci.yml"])).toEqual(ALL);
-    expect(edit([".nvmrc"])).toEqual(ALL);
+  it("runs native for a workflow or Node version change", () => {
+    expect(edit([".github/workflows/ci.yml"])).toEqual(NATIVE);
+    expect(edit([".nvmrc"])).toEqual(NATIVE);
   });
 
   it("ignores a bump's version lines in a mixed change", () => {
     const after = { ...bumped, "src/main.tsx": "b\n" };
-    expect(change({ ...current, "src/main.tsx": "a\n" }, after)).toEqual(E2E);
+    expect(change({ ...current, "src/main.tsx": "a\n" }, after)).toEqual(NONE);
   });
 
-  it("runs everything when the npm dependencies change", () => {
+  it("runs native when the npm dependencies change", () => {
     const pkg = JSON.parse(bumped["package.json"]);
     pkg.dependencies["left-pad"] = "^1.3.0";
     const after = { ...bumped, "package.json": JSON.stringify(pkg, null, 2) };
-    expect(change(current, after)).toEqual(ALL);
+    expect(change(current, after)).toEqual(NATIVE);
   });
 
-  it("runs everything when the lockfile adds a package", () => {
+  it("runs native when the lockfile adds a package", () => {
     const lock = JSON.parse(current["package-lock.json"]);
     lock.packages["node_modules/left-pad"] = { version: "1.3.0" };
     const file = "package-lock.json";
@@ -184,7 +206,7 @@ describe("which CI jobs a pull request needs", () => {
         { [file]: current[file] },
         { [file]: JSON.stringify(lock, null, 2) },
       ),
-    ).toEqual(ALL);
+    ).toEqual(NATIVE);
   });
 
   it("runs native when a bump also adds a Rust dependency", () => {
@@ -209,44 +231,9 @@ describe("which CI jobs a pull request needs", () => {
     );
   });
 
-  it("runs everything when a version file is added or removed", () => {
-    expect(change({}, { "package.json": "{}" })).toEqual(ALL);
-    expect(change({ "package.json": "{}" }, {})).toEqual(ALL);
-  });
-});
-
-describe("whether a pull request runs macOS, Windows and iOS", () => {
-  const onAll = (file) => edit([file], { platforms: true }).platforms;
-
-  it("runs them for code that differs between platforms", () => {
-    for (const file of [
-      "src-tauri/src/schedule/notify/windows.rs",
-      "src-tauri/src/commands/export/pdf_macos.rs",
-      "src-tauri/src/lib.rs",
-      "src-tauri/Cargo.toml",
-      "src-tauri/tauri.windows.conf.json",
-      "src-tauri/rust-toolchain.toml",
-      "scripts/ios-prepare.sh",
-      "src/utils/path.ts",
-      "src/platform/os.ts",
-    ])
-      expect(onAll(file), file).toBe(true);
-  });
-
-  it("leaves them for after the merge otherwise", () => {
-    for (const file of [
-      "src-tauri/src/plugins/catalog.rs",
-      "src/editor/editor.ts",
-      "e2e/writing.spec.ts",
-    ])
-      expect(onAll(file), file).toBe(false);
-  });
-
-  it("runs them on a push and for a workflow change", () => {
-    expect(
-      edit(["src/editor/editor.ts"], { push: true, platforms: true }).platforms,
-    ).toBe(true);
-    expect(onAll(".github/workflows/ci.yml")).toBe(true);
+  it("runs native when a version file is added or removed", () => {
+    expect(change({}, { "package.json": "{}" })).toEqual(NATIVE);
+    expect(change({ "package.json": "{}" }, {})).toEqual(NATIVE);
   });
 });
 
@@ -255,9 +242,9 @@ describe("which CI jobs a push needs", () => {
     expect(change(current, bumped, { push: true })).toEqual(NONE);
   });
 
-  it("runs everything otherwise, documentation and Rust alone included", () => {
+  it("runs native otherwise, documentation and Rust alone included", () => {
     for (const file of ["docs/dev/testing.md", "src-tauri/src/lib.rs"]) {
-      expect(edit([file], { push: true }), file).toEqual(ALL);
+      expect(edit([file], { push: true }), file).toEqual(NATIVE);
     }
   });
 });

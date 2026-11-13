@@ -28,9 +28,9 @@ import {
 } from "./floating-views";
 
 /** Kept this far inside the window's edges, so a view can't be lost. */
-const MARGIN = 16;
+const MARGIN = 18;
 /** Let go this near an edge, it settles against it. */
-const SNAP = 48;
+const SNAP = 52;
 
 /**
  * Plugins' floating views shown in this window: each a frame of its own

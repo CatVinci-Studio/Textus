@@ -1,6 +1,6 @@
 /* A plugin's few fields in the app's dialog. */
 .plugin-form {
-  min-width: min(380px, calc(100vw - 32px));
+  min-width: min(418px, calc(100vw - 36px));
 }
 
 .plugin-form-field {

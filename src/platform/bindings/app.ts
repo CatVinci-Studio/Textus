@@ -118,6 +118,16 @@ export const commands = {
 	 *  Nothing where the input method can't be set from here (all but macOS).
 	 */
 	set_roman_input: (on: boolean) => __TAURI_INVOKE<void>("set_roman_input", { on }),
+	/**
+	 *  The window bar's height in points, from the page as Interface Size sets
+	 *  it; the lights follow it now and after each resize. Nothing off macOS.
+	 */
+	set_window_bar_height: (height: number | null) => __TAURI_INVOKE<void>("set_window_bar_height", { height }),
+	/**
+	 *  The window's title, set here so the lights go back on the bar's middle
+	 *  line in the same step: a new title puts them back in AppKit's title bar.
+	 */
+	set_window_title: (title: string) => __TAURI_INVOKE<void>("set_window_title", { title }),
 	system_info: () => __TAURI_INVOKE<SystemInfo>("system_info"),
 	system_font_families: () => __TAURI_INVOKE<string[]>("system_font_families"),
 	/**

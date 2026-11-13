@@ -25,14 +25,6 @@
   padding: 0 4px;
 }
 
-/* Level with the traffic lights, as the editor's .window-bar is. */
-:root[data-window-chrome="native"] .chat-window-header {
-  padding-top: max(
-    0px,
-    var(--native-titlebar-height, 28px) - var(--window-bar-height)
-  );
-}
-
 /* This row's padding is 6px, not the editor bar's 12px, so the caption's
    edge-to-edge offset has to be re-cancelled to match. */
 :root[data-window-chrome="app"] .chat-window-header .window-caption {
@@ -135,7 +127,7 @@
 
 :root[data-window-chrome="native"]:not([data-window-fullscreen])
   .chat-window-lights {
-  width: 70px;
+  width: var(--lights-room);
 }
 
 :root[data-layout] .chat-window > [data-island] {

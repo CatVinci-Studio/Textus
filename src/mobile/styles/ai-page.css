@@ -26,11 +26,11 @@
   }
 
   :root[data-window-chrome="mobile"] .window-bar .page-switch {
-    min-width: 112px;
+    min-width: 124px;
   }
 
   :root[data-window-chrome="mobile"] .window-bar .page-switch button {
-    min-height: 32px;
+    min-height: 36px;
     padding: 0 var(--space-3);
   }
 
@@ -73,8 +73,8 @@
   :root[data-window-chrome="mobile"]
     .agent-panel-actions
     .inline-chat-header-button {
-    width: 44px;
-    height: 44px;
+    width: 48px;
+    height: 48px;
   }
 
   :root[data-window-chrome="mobile"] .agent-panel-placeholder {

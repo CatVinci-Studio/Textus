@@ -2,13 +2,13 @@
    hold for any touch (iPad too); the rest are phone width only. */
 
 :root[data-window-chrome="mobile"] :is(.app-menu-item, .context-menu-item) {
-  min-height: 44px;
+  min-height: 48px;
 }
 
 /* With 44pt rows and the recent documents, the phone menu is taller than
    the desktop's 560px cap; it may use the screen below the title row. */
 :root[data-window-chrome="mobile"] .app-menu-list {
-  max-height: calc(100vh - var(--mobile-top) - 24px);
+  max-height: calc(100vh - var(--mobile-top) - 26px);
 }
 
 :root[data-window-chrome="mobile"] .tab-bar {
@@ -39,9 +39,9 @@
   }
 
   :root[data-window-chrome="mobile"] .app-dialog {
-    width: 270px;
+    width: 298px;
     min-width: 0;
-    max-width: calc(100vw - 32px);
+    max-width: calc(100vw - 36px);
     padding: 0;
     overflow: hidden;
     border: none;
@@ -61,7 +61,7 @@
      tints it, a destructive answer is shown on its button instead. */
   :root[data-window-chrome="mobile"] .app-dialog-title {
     margin: 0;
-    padding: 24px 16px 0;
+    padding: 28px 16px 0;
     color: var(--ui-text);
     font-size: var(--text-body);
     font-weight: 600;
@@ -70,18 +70,18 @@
 
   :root[data-window-chrome="mobile"] .app-dialog p {
     margin: 0;
-    padding: 4px 16px 24px;
+    padding: 4px 16px 28px;
     font-size: var(--text-footnote);
     line-height: 1.4;
   }
 
   :root[data-window-chrome="mobile"] .app-dialog > p:first-child {
-    padding-top: 24px;
+    padding-top: 28px;
   }
 
   :root[data-window-chrome="mobile"] .app-dialog-input {
-    width: calc(100% - 32px);
-    min-height: 36px;
+    width: calc(100% - 36px);
+    min-height: 40px;
     margin: -8px 16px 16px;
     text-align: left;
   }
@@ -111,7 +111,7 @@
     button {
     flex: 1 1 0;
     min-width: 0;
-    min-height: 44px;
+    min-height: 48px;
     margin: 0;
     padding: 0 8px;
     border: none;
@@ -173,12 +173,12 @@
      still ellipsizes at the cap. */
   :root[data-window-chrome="mobile"] .app-menu-list {
     width: max-content;
-    min-width: 240px;
-    max-width: min(320px, calc(100vw - 16px));
+    min-width: 264px;
+    max-width: min(352px, calc(100vw - 18px));
   }
 
   :root[data-window-chrome="mobile"] .app-menu-item {
-    min-height: 44px;
+    min-height: 48px;
     padding: 0 12px;
     font-size: var(--text-body);
   }
@@ -194,7 +194,7 @@
   }
 
   :root[data-window-chrome="mobile"] .app-menu-inline .app-menu-item {
-    padding-left: 24px;
+    padding-left: 28px;
   }
 
   :root[data-window-chrome="mobile"]
@@ -210,14 +210,14 @@
   /* The check of an on/off row sits at the trailing edge, as on the
      desktop menus; a little larger, for the 17pt row. */
   :root[data-window-chrome="mobile"] .app-menu-check {
-    width: 20px;
-    height: 20px;
+    width: 22px;
+    height: 22px;
     margin-left: 0;
   }
 
   :root[data-window-chrome="mobile"] .app-menu-check svg {
-    width: 17px;
-    height: 17px;
+    width: 18px;
+    height: 18px;
   }
 
   /* A tap leaves :hover on the row it lifted from; a row lights only
@@ -253,18 +253,18 @@
   }
 
   :root[data-window-chrome="mobile"] .find-replace-row {
-    min-height: 44px;
+    min-height: 48px;
     gap: 2px;
   }
 
   :root[data-window-chrome="mobile"] .find-replace-chevron,
   :root[data-window-chrome="mobile"] .find-replace-chevron-spacer {
-    width: 40px;
-    height: 44px;
+    width: 44px;
+    height: 48px;
   }
 
   :root[data-window-chrome="mobile"] .find-replace-field {
-    min-height: 36px;
+    min-height: 40px;
     padding: 0 4px 0 8px;
     border: none;
     border-radius: var(--shape-m);
@@ -280,8 +280,8 @@
   }
 
   :root[data-window-chrome="mobile"] .find-replace-toggle {
-    width: 30px;
-    height: 30px;
+    width: 34px;
+    height: 34px;
     font-size: var(--text-caption) !important;
   }
 
@@ -290,8 +290,8 @@
   }
 
   :root[data-window-chrome="mobile"] .find-replace-nav button {
-    min-width: 44px;
-    height: 44px;
+    min-width: 48px;
+    height: 48px;
     border: none;
   }
 
@@ -314,8 +314,8 @@
   /* Clear of the keyboard toolbar and the home indicator alike: one height,
      since a note a little high is still readable. */
   :root[data-window-chrome="mobile"] .notice-stack {
-    bottom: calc(44px + 12px + env(safe-area-inset-bottom, 0px));
-    max-width: calc(100vw - 32px);
+    bottom: calc(48px + 14px + env(safe-area-inset-bottom, 0px));
+    max-width: calc(100vw - 36px);
   }
 
   /* ---- Tabs: a row a thumb scrolls. ---- */
@@ -338,8 +338,8 @@
   :root[data-window-chrome="mobile"] .tab-pill {
     flex-shrink: 0;
     min-width: 0;
-    max-width: 180px;
-    min-height: 36px;
+    max-width: 198px;
+    min-height: 40px;
     padding: 0 0 0 12px;
     gap: 0;
     /* The close button's 44pt reaches past the pill's 36. */
@@ -359,8 +359,8 @@
   :root[data-window-chrome="mobile"] .tab-pill-close {
     flex-shrink: 0;
     justify-content: center;
-    width: 44px;
-    height: 44px;
+    width: 48px;
+    height: 48px;
     margin: -4px 0;
     padding: 0;
     opacity: 0.7;
@@ -371,9 +371,9 @@
   }
 
   :root[data-window-chrome="mobile"] .tab-bar-add {
-    min-width: 44px;
-    min-height: 44px;
-    font-size: 20px;
+    min-width: 48px;
+    min-height: 48px;
+    font-size: 22px;
   }
 
   :root[data-window-chrome="mobile"] .tab-bar-add:hover {
@@ -383,7 +383,7 @@
 
 /* A segmented switch under a finger: taller, the unchosen quieter. */
 :root[data-window-chrome="mobile"] .tx-segment {
-  min-height: 32px;
+  min-height: 36px;
   font-size: var(--text-secondary);
   color: var(--ui-muted);
 }
@@ -393,5 +393,5 @@
   font-weight: 600;
 }
 :root[data-window-chrome="mobile"] .tx-segment.is-icon {
-  min-width: 44px;
+  min-width: 48px;
 }
