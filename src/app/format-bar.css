@@ -101,6 +101,11 @@
   border-radius: 0 0 var(--island-radius) var(--island-radius);
 }
 
+/* Only while typing: at rest the page is the sheet alone. */
+:root[data-window-chrome="mobile"]:not(.keyboard-up) .split-pane > .format-bar {
+  display: none;
+}
+
 /* It scrolls when a table's buttons outrun the phone, rather than folding
    them away. */
 :root[data-window-chrome="mobile"] .format-bar-row {

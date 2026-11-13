@@ -40,7 +40,7 @@
 :root[data-window-chrome="mobile"] .main-pane {
   width: 100vw;
   flex: none;
-  background: var(--ui-bg);
+  background: var(--ui-frame-fill);
 }
 
 /* Pushed aside, the page is only the way back: a tap there closes. */
@@ -89,13 +89,12 @@
   background: none;
 }
 
-/* The page ends above the home indicator; with the keyboard up the web
-   view already ends at the keyboard. */
-:root[data-window-chrome="mobile"] .main-pane {
-  align-self: flex-start;
-  height: calc(100% - var(--safe-bottom));
+/* The page's sheet ends, rounded, at the home indicator; with the keyboard
+   up the web view already ends at the keyboard. */
+:root[data-window-chrome="mobile"][data-layout] {
+  --island-foot: max(var(--island-inset), var(--safe-bottom));
 }
 
-:root[data-window-chrome="mobile"].keyboard-up .main-pane {
-  height: 100%;
+:root[data-window-chrome="mobile"][data-layout].keyboard-up {
+  --island-foot: 0px;
 }

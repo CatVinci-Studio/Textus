@@ -194,7 +194,7 @@ function boxOf(room: IslandRoom, rows: boolean): Rect {
     x: room.inset,
     y: top,
     w: Math.max(0, room.w - 2 * room.inset),
-    h: Math.max(0, room.h - top - room.inset),
+    h: Math.max(0, room.h - top - room.foot),
   };
 }
 

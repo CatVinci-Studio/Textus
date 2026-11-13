@@ -9,6 +9,8 @@ export interface IslandRoom {
   h: number;
   origin: { x: number; y: number };
   inset: number;
+  /** Under the islands: the inset, or none where they run to the foot. */
+  foot: number;
   gap: number;
   /** A row of tabs: the window bar's height. */
   bar: number;
@@ -25,6 +27,7 @@ const same = (a: IslandRoom | null, b: IslandRoom) =>
   a.origin.x === b.origin.x &&
   a.origin.y === b.origin.y &&
   a.inset === b.inset &&
+  a.foot === b.foot &&
   a.gap === b.gap &&
   a.bar === b.bar &&
   a.shellAt.x === b.shellAt.x &&
@@ -71,6 +74,7 @@ function measure(el: HTMLElement | null): IslandRoom | null {
     h: el.clientHeight,
     origin: { x: el.offsetLeft, y: el.offsetTop },
     inset: tokenPx("--island-inset", fresh),
+    foot: tokenPx("--island-foot", fresh),
     gap: tokenPx("--island-gap", fresh),
     bar: tokenPx("--window-bar-height", fresh),
     shell: { w: shell?.clientWidth ?? 0, h: shell?.clientHeight ?? 0 },

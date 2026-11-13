@@ -43,7 +43,7 @@
 /* The page runs under the status bar and the home indicator: what shows
    there is its own background. */
 :root[data-window-chrome="mobile"] body {
-  background: var(--ui-bg);
+  background: var(--ui-frame);
 }
 
 /* The web view shrinks while the keyboard is up; 100% follows it where 100vh
@@ -57,8 +57,8 @@
 :root[data-window-chrome="mobile"] .window-bar {
   height: var(--mobile-top);
   padding: var(--safe-top) 4px 0;
-  /* One surface from the status bar down through the page. */
-  background: var(--ui-bg);
+  /* The frame, as the sidebar's: the page is the one sheet on it. */
+  background: var(--ui-frame-fill);
 }
 
 :root[data-window-chrome="mobile"] .window-menu-button,
