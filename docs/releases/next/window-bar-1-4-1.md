@@ -1,6 +1,6 @@
 ### New
 
-- Appearance › Show the title bar on its own row puts the document's name in a row of its own across the top, with the tabs in the row under it, as VS Code does; with the menu bar shown, the name sits in the middle of the menu's row. A window with one document then shows it as a whole page under its name, the tabs coming back with a second. Off by default.
+- Appearance › Show the title bar on its own row puts the document's name in a row of its own across the top, with the tabs in the row under it, as VS Code does; with the menu bar shown, the name sits in the middle of the menu's row. A window with one document then shows it as one rounded sheet just under its name, the tabs coming back with a second. Off by default.
 
 ### Improved
 

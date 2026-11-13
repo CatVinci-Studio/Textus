@@ -80,14 +80,17 @@ export function IslandSheet({
   sheetRef,
   className,
   children,
+  rowless,
   ...rest
 }: IslandPlace &
   HTMLAttributes<HTMLElement> & {
     sheetRef?: Ref<HTMLElement>;
     children?: ReactNode;
+    /** No row over it: no tab to join, every corner round. */
+    rowless?: boolean;
   }) {
   // Its first tab at its edge and open: the corner joins it, square.
-  const joined = useRowInsets(frame)?.joined;
+  const joined = useRowInsets(frame)?.joined && !rowless;
   return (
     <section
       {...rest}
@@ -138,7 +141,7 @@ export function Island({
           {row}
         </IslandRow>
       )}
-      <IslandSheet {...sheet} style={sheetStyle} />
+      <IslandSheet {...sheet} rowless={row === undefined} style={sheetStyle} />
     </>
   );
 }
