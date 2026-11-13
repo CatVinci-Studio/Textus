@@ -292,11 +292,12 @@ fn code_block(node: &NodeRef) -> String {
 }
 
 fn inline_code(code: &str) -> String {
-    if code.contains('`') {
-        format!("`` {code} ``")
-    } else {
-        format!("`{code}`")
+    let longest = code.split(|c| c != '`').map(str::len).max().unwrap_or(0);
+    if longest == 0 {
+        return format!("`{code}`");
     }
+    let fence = "`".repeat(longest + 1);
+    format!("{fence} {code} {fence}")
 }
 
 fn table(node: &NodeRef) -> String {

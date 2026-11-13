@@ -7,6 +7,14 @@ fn a_recent_folder_ends_in_a_separator_to_set_it_apart_from_files() {
 }
 
 #[test]
+fn only_the_home_folder_itself_is_shortened() {
+    let home = |path| super::recent::home_relative(path, "/Users/bob");
+    assert_eq!(home("/Users/bob/notes.md").as_deref(), Some("~/notes.md"));
+    assert_eq!(home("/Users/bob").as_deref(), Some("~"));
+    assert_eq!(home("/Users/bobby/notes.md"), None);
+}
+
+#[test]
 fn the_menu_table_reads_whole() {
     use super::table::{Node, TABLE};
     fn walk(nodes: &[Node], seen: &mut Vec<String>) {

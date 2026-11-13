@@ -307,3 +307,18 @@ fn table_cell(cell: &str) -> String {
 
 #[cfg(test)]
 mod tests;
+
+/// A list item's Markdown mark from the one Word wrote: `3.` stays 3, a
+/// letter or Roman numeral (`a)`, `iv.`) is a numbered item too, anything
+/// else a bullet.
+pub fn list_mark(marker: &str) -> String {
+    let stem = marker.trim_end_matches(['.', ')']);
+    if let Ok(n) = stem.parse::<u32>() {
+        return format!("{n}.");
+    }
+    let lettered = stem != marker
+        && !stem.is_empty()
+        && (stem.chars().count() == 1 && stem.chars().all(char::is_alphabetic)
+            || stem.chars().all(|c| "ivxlcdmIVXLCDM".contains(c)));
+    if lettered { "1." } else { "-" }.to_string()
+}

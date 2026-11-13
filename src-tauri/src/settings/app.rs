@@ -44,7 +44,7 @@ pub(crate) fn proxy_changed(settings: &Value) {
         if !user.is_empty() {
             if let Ok(mut parsed) = reqwest::Url::parse(&url) {
                 let _ = parsed.set_username(&user);
-                let _ = parsed.set_password((!pass.is_empty()).then(|| pass.as_str()));
+                let _ = parsed.set_password((!pass.is_empty()).then_some(pass.as_str()));
                 url = parsed.to_string();
             }
         }

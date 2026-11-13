@@ -93,7 +93,9 @@ pub struct WindowBounds {
 #[tauri::command]
 #[cfg_attr(test, specta::specta)]
 pub fn list_window_bounds(app: tauri::AppHandle) -> Vec<WindowBounds> {
-    app.windows()
+    // Latest in use first, so the first hit is the front window.
+    let mut bounds: Vec<WindowBounds> = app
+        .windows()
         .iter()
         .filter_map(|(label, window)| {
             // Never a drop target: the pill being dragged, a detached chat (a dropped tab
@@ -113,7 +115,9 @@ pub fn list_window_bounds(app: tauri::AppHandle) -> Vec<WindowBounds> {
                 scale_factor,
             })
         })
-        .collect()
+        .collect();
+    bounds.sort_by_key(|b| crate::editor_windows::focus_rank(&b.label));
+    bounds
 }
 
 mod pill;
@@ -128,6 +132,7 @@ use pill::{create_drag_pill, destroy_drag_pill, move_drag_pill, park_drag_pill};
 /// drop back where it came from.
 #[cfg(any(target_os = "macos", windows))]
 fn window_hit(app: &tauri::AppHandle, x: f64, y: f64, row: f64) -> Option<(String, bool)> {
+    let mut hit: Option<(String, bool)> = None;
     for (label, window) in app.windows() {
         if !crate::windows::is_editor_window(&label) || !window.is_visible().unwrap_or(false) {
             continue;
@@ -143,11 +148,16 @@ fn window_hit(app: &tauri::AppHandle, x: f64, y: f64, row: f64) -> Option<(Strin
         let wy = pos.y as f64 / scale;
         let ww = size.width as f64 / scale;
         let wh = size.height as f64 / scale;
-        if x >= wx && x <= wx + ww && y >= wy && y <= wy + wh {
-            return Some((label, y <= wy + row));
+        let front = |h: &Option<(String, bool)>| {
+            h.as_ref().is_none_or(|(l, _)| {
+                crate::editor_windows::focus_rank(&label) < crate::editor_windows::focus_rank(l)
+            })
+        };
+        if x >= wx && x <= wx + ww && y >= wy && y <= wy + wh && front(&hit) {
+            hit = Some((label, y <= wy + row));
         }
     }
-    None
+    hit
 }
 
 /// One floating tab drag at a time, app-wide - there's only one mouse.

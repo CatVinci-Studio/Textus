@@ -256,22 +256,30 @@ impl Drop for TempDir {
 mod tests;
 
 /// `from` (a file or a folder) moved to `to`, its folder made first; where
-/// it can't be renamed (another volume), copied whole, then the original
-/// removed.
+/// it can't be renamed (another volume), copied as it is, the original then
+/// put in the Trash - or, with no Trash, left as it was.
 pub(crate) fn move_or_copy(from: &std::path::Path, to: &std::path::Path) -> std::io::Result<()> {
     if let Some(parent) = to.parent() {
         std::fs::create_dir_all(parent)?;
     }
-    if std::fs::rename(from, to).is_ok() {
+    let Err(error) = std::fs::rename(from, to) else {
         return Ok(());
+    };
+    if std::fs::symlink_metadata(to).is_ok() {
+        return Err(error);
     }
-    if from.is_dir() {
-        copy_dir(from, to)?;
-        std::fs::remove_dir_all(from)
-    } else {
-        std::fs::copy(from, to)?;
-        std::fs::remove_file(from)
+    copy_aside(from, to)
+}
+
+/// `from` copied to `to` as it is, the original then put in the Trash, or
+/// left where there is none; never removed outright.
+fn copy_aside(from: &std::path::Path, to: &std::path::Path) -> std::io::Result<()> {
+    if let Err(copying) = copy_entry(from, to) {
+        take_back(to);
+        return Err(copying);
     }
+    try_trash(from);
+    Ok(())
 }
 
 /// Whether `a` and `b` are one file (one name differing only in case on a
@@ -317,7 +325,7 @@ pub(crate) fn move_entry(from: &std::path::Path, to: &std::path::Path) -> std::i
 }
 
 /// `from` copied to `to` as it is: a folder with all inside, a link as a link.
-fn copy_entry(from: &std::path::Path, to: &std::path::Path) -> std::io::Result<()> {
+pub(crate) fn copy_entry(from: &std::path::Path, to: &std::path::Path) -> std::io::Result<()> {
     let kind = std::fs::symlink_metadata(from)?.file_type();
     if kind.is_symlink() {
         let target = std::fs::read_link(from)?;
@@ -351,21 +359,6 @@ fn take_back(copy: &std::path::Path) {
     } else {
         std::fs::remove_file(copy)
     };
-}
-
-/// Folder `from` copied into `to`, its files and folders.
-pub(crate) fn copy_dir(from: &std::path::Path, to: &std::path::Path) -> std::io::Result<()> {
-    std::fs::create_dir_all(to)?;
-    for entry in std::fs::read_dir(from)? {
-        let entry = entry?;
-        let kind = entry.file_type()?;
-        if kind.is_dir() {
-            copy_dir(&entry.path(), &to.join(entry.file_name()))?;
-        } else if kind.is_file() {
-            std::fs::copy(entry.path(), to.join(entry.file_name()))?;
-        }
-    }
-    Ok(())
 }
 
 /// Whether `path` went to the Trash; false where there is none (and in

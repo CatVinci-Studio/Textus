@@ -110,7 +110,7 @@ fn a_tool_name_is_what_every_provider_takes() {
     // Two long tools alike in their first 53 characters stay apart and short.
     let long = |end: &str| tool_name("github", &format!("{}{end}", "a".repeat(60)));
     let first = unique_name(long("1"), &[]);
-    let second = unique_name(long("2"), &[first.clone()]);
+    let second = unique_name(long("2"), std::slice::from_ref(&first));
     assert_ne!(first, second);
     assert!(second.len() <= 64, "{second}");
 }

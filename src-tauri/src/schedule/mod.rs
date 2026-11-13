@@ -207,8 +207,10 @@ mod desktop {
         root: Option<String>,
     ) -> Result<ScheduledJob, String> {
         let plugins = state::read(&app);
-        let root = root.filter(|_| plugins.allows(&id, "files.read"));
+        // Checked with the folder as it is, so a missing files.read is
+        // named as such rather than as no folder open.
         require_grants(&plugins, &id, &job, root.as_deref())?;
+        let root = root.filter(|_| plugins.allows(&id, "files.read"));
         change(&app, |store| {
             store.set(&id, &job_id, job, root, now_ms(), &chrono::Local)
         })

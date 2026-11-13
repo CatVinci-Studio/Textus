@@ -432,13 +432,9 @@ impl Rtf {
             self.out
                 .push(&format!("{} {}", "#".repeat(level), line.render_plain()));
         } else if !marker.is_empty() {
-            let ordered = marker
-                .trim_end_matches(['.', ')'])
-                .chars()
-                .all(|c| c.is_ascii_digit());
             self.out.push_item(
                 para.list_level,
-                if ordered { "1." } else { "-" },
+                &markdown::list_mark(marker),
                 &line.render(),
             );
         } else {
@@ -479,8 +475,12 @@ fn heading_of_style(name: &str) -> Option<usize> {
 
 /// The URL of a `HYPERLINK "https://…"` field instruction.
 fn hyperlink(instruction: &str) -> Option<String> {
-    let rest = instruction.trim().strip_prefix("HYPERLINK")?;
-    let url = rest.trim().trim_start_matches('"');
+    let rest = instruction.trim().strip_prefix("HYPERLINK")?.trim();
+    // `HYPERLINK \l "_Toc1"`: a place in the document itself, no URL.
+    if rest.starts_with('\\') {
+        return None;
+    }
+    let url = rest.trim_start_matches('"');
     let url = url.split('"').next()?.trim();
     (!url.is_empty()).then(|| url.to_string())
 }

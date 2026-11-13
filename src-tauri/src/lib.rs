@@ -90,6 +90,9 @@ fn desktop_builder(builder: tauri::Builder<tauri::Wry>) -> tauri::Builder<tauri:
             let app = window.app_handle();
             #[cfg(windows)]
             webview_memory::follow_minimized(window, event);
+            if matches!(event, tauri::WindowEvent::Focused(true)) {
+                editor_windows::note_focused(window.label());
+            }
             if matches!(
                 event,
                 tauri::WindowEvent::Focused(_) | tauri::WindowEvent::Destroyed

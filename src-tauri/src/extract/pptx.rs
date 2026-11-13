@@ -114,7 +114,7 @@ enum Bullet {
     Inherited,
     None,
     Char,
-    Number,
+    Number(u32),
 }
 
 impl SlideReader<'_> {
@@ -402,7 +402,7 @@ fn body_markdown(paragraphs: &[(usize, Bullet, Inline)], bulleted: bool) -> Stri
     for (level, bullet, line) in paragraphs {
         let text = line.render();
         match bullet {
-            Bullet::Number => blocks.push_item(*level, "1.", &text),
+            Bullet::Number(start) => blocks.push_item(*level, &format!("{start}."), &text),
             Bullet::Char => blocks.push_item(*level, "-", &text),
             Bullet::Inherited if bulleted => blocks.push_item(*level, "-", &text),
             _ => blocks.push(&text),
@@ -421,7 +421,10 @@ fn bullet_of(x: &mut Pull) -> Bullet {
                 match tag.name.as_str() {
                     "buNone" => bullet = Bullet::None,
                     "buChar" | "buBlip" => bullet = Bullet::Char,
-                    "buAutoNum" => bullet = Bullet::Number,
+                    "buAutoNum" => {
+                        let start = tag.attr("startAt").and_then(|n| n.parse().ok());
+                        bullet = Bullet::Number(start.unwrap_or(1));
+                    }
                     _ => {}
                 }
                 depth += 1;

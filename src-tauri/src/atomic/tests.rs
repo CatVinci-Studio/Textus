@@ -211,3 +211,22 @@ fn a_copy_across_disks_keeps_links_as_links() {
     assert!(link.file_type().is_symlink());
     let _ = std::fs::remove_dir_all(&dir);
 }
+
+#[cfg(unix)]
+#[test]
+fn a_copy_set_aside_across_disks_leaves_the_original() {
+    let dir = scratch_dir("copy-aside");
+    let from = dir.join("from");
+    std::fs::create_dir(&from).unwrap();
+    std::fs::write(from.join("a.md"), "a").unwrap();
+    std::os::unix::fs::symlink("a.md", from.join("link.md")).unwrap();
+    let to = dir.join("to");
+    copy_aside(&from, &to).unwrap();
+    assert!(std::fs::symlink_metadata(to.join("link.md"))
+        .unwrap()
+        .file_type()
+        .is_symlink());
+    // No Trash in tests: the original stays as it was.
+    assert_eq!(std::fs::read_to_string(from.join("a.md")).unwrap(), "a");
+    let _ = std::fs::remove_dir_all(&dir);
+}

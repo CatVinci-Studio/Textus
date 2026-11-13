@@ -15,11 +15,17 @@ fn pandoc_candidates() -> Vec<PathBuf> {
     let mut candidates = vec![
         // Works when the app inherits a shell PATH (e.g. launched via CLI).
         PathBuf::from("pandoc"),
+    ];
+    // An app opened from the Dock lacks the shell's PATH (Nix, conda…).
+    candidates.extend(
+        std::env::split_paths(&crate::mcp::path::login_path()).map(|dir| dir.join("pandoc")),
+    );
+    candidates.extend([
         PathBuf::from("/opt/homebrew/bin/pandoc"),
         PathBuf::from("/usr/local/bin/pandoc"),
         PathBuf::from("/opt/local/bin/pandoc"),
         PathBuf::from("/usr/bin/pandoc"),
-    ];
+    ]);
     if let Ok(home) = std::env::var("HOME") {
         candidates.push(PathBuf::from(home).join(".local/bin/pandoc"));
     }

@@ -137,6 +137,14 @@ fn a_plugin_word_goes_to_the_running_app_without_starting_it() {
     assert_eq!(request.command, "plugin:word-count");
     assert_eq!(request.args, args(&["count", "--text", "a b"]));
     assert!(!launch);
+    // The help's own form: an object after --json is the tool's arguments.
+    run_in(
+        Path::new("/w"),
+        &["word-count", "count", "--json", r#"{"text":"a"}"#],
+        &app,
+    );
+    let (request, _) = app.sent.borrow()[1].clone();
+    assert_eq!(request.args, args(&["count", "--json", r#"{"text":"a"}"#]));
 }
 
 #[test]

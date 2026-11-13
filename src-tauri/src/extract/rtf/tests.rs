@@ -12,10 +12,13 @@ fn textedit_rtf_reads_as_markdown() {
 \pard{\listtext\uc0\u8226 	}First item\par
 {\listtext	\uc0\u8226 	}Second \uc0\u20320 \u22909 \par
 \pard After {\field{\*\fldinst{HYPERLINK "https://example.com/"}}{\fldrslt the link}}.\par
+\pard See {\field{\*\fldinst{HYPERLINK \\l "_Toc1"}}{\fldrslt Contents}}.\par
+\pard{\listtext 3.\tab}Third\par
+\pard{\listtext a)\tab}Lettered\par
 }"#;
     assert_eq!(
             rtf_to_markdown(rtf),
-            "Plain, **bold** and *italic* \u{201c}quoted\u{201d}.\n\n# Chapter One\n\n- First item\n- Second \u{4f60}\u{597d}\n\nAfter [the link](https://example.com/)."
+            "Plain, **bold** and *italic* \u{201c}quoted\u{201d}.\n\n# Chapter One\n\n- First item\n- Second \u{4f60}\u{597d}\n\nAfter [the link](https://example.com/).\n\nSee Contents.\n\n3. Third\n1. Lettered"
         );
 }
 
