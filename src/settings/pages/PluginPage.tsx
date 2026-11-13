@@ -89,6 +89,28 @@ export function PluginPage({
   const runs = on && allOn;
   const status = statusText(record, allOn, t);
   const switchable = !!manifest && canSwitch(record.status);
+  // Beside the version while it is known; at the foot of a broken one.
+  const uninstall = (
+    <button
+      type="button"
+      className="text-button settings-inline-button danger"
+      onClick={() =>
+        void attempt(async () => {
+          const ok = await showConfirm(fill(t.pluginUninstallAsk, { name }), {
+            title: t.pluginsTitle,
+            okLabel: t.pluginUninstall,
+            cancelLabel: t.cancel,
+            danger: true,
+          });
+          if (!ok) return;
+          await uninstallPlugin(record.id);
+          onBack?.();
+        })
+      }
+    >
+      {record.origin === "dev" ? t.pluginUnload : t.pluginUninstall}
+    </button>
+  );
   return (
     <div className="plugin-page" data-plugin-page={record.id}>
       {onBack && (
@@ -155,6 +177,7 @@ export function PluginPage({
             >
               {t.pluginEditWithAi}
             </button>
+            {uninstall}
           </SettingRow>
         )}
       </SettingsGroup>
@@ -242,28 +265,7 @@ export function PluginPage({
             {t.pluginExport}
           </button>
         )}
-        <button
-          type="button"
-          className="text-button settings-inline-button danger"
-          onClick={() =>
-            void attempt(async () => {
-              const ok = await showConfirm(
-                fill(t.pluginUninstallAsk, { name }),
-                {
-                  title: t.pluginsTitle,
-                  okLabel: t.pluginUninstall,
-                  cancelLabel: t.cancel,
-                  danger: true,
-                },
-              );
-              if (!ok) return;
-              await uninstallPlugin(record.id);
-              onBack?.();
-            })
-          }
-        >
-          {record.origin === "dev" ? t.pluginUnload : t.pluginUninstall}
-        </button>
+        {!manifest && uninstall}
       </div>
     </div>
   );
