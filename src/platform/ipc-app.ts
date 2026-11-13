@@ -370,7 +370,7 @@ export const defaultEditor = {
 // Distribution
 
 /** The channel this build was installed through. */
-type Distribution = "direct" | "homebrew" | "aur";
+export type Distribution = "direct" | "homebrew" | "aur" | "portable";
 
 export const distribution = {
   appDistribution: () => command("app_distribution") as Promise<Distribution>,

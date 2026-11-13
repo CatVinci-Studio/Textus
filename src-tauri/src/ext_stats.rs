@@ -4,6 +4,7 @@
 //! first install, a reinstall or an update - nothing about the device. When
 //! the address fails, the package is downloaded straight from its own.
 
+use crate::app_dirs::AppDirs;
 use reqwest::redirect::Policy;
 use reqwest::Url;
 use std::collections::{BTreeMap, BTreeSet};
@@ -193,7 +194,7 @@ pub fn installed(app: &AppHandle, kind: Kind, id: &str) {
 }
 
 fn record_file(app: &AppHandle) -> Option<PathBuf> {
-    Some(app.path().app_data_dir().ok()?.join(RECORD))
+    Some(app.path().own_data_dir().ok()?.join(RECORD))
 }
 
 type Record = BTreeMap<String, BTreeSet<String>>;

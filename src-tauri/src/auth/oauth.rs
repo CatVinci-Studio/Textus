@@ -4,6 +4,7 @@
 //! only its endpoints and its credential (claude.rs, openai_codex.rs).
 
 use super::pkce_login::{run_pkce_login, PkceLoginRequest};
+use crate::app_dirs::AppDirs;
 use serde::{de::DeserializeOwned, Serialize};
 use std::future::Future;
 use std::path::PathBuf;
@@ -41,7 +42,7 @@ fn expires_soon(expires: i64) -> bool {
 }
 
 fn file<P: OAuthProvider>(app: &AppHandle) -> Result<PathBuf, String> {
-    let dir = app.path().app_config_dir().map_err(|e| e.to_string())?;
+    let dir = app.path().own_config_dir().map_err(|e| e.to_string())?;
     std::fs::create_dir_all(&dir).map_err(|e| e.to_string())?;
     Ok(dir.join(P::FILE))
 }

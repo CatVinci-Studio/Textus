@@ -1291,6 +1291,7 @@ Skills liegen im Ordner skills/ neben dieser Datei, je Skill eine
   updateDownloading: "Update wird geladen…",
   updateFailed: "Update fehlgeschlagen:",
   updateViaPackageManager: `${APP_NAME} wurde über deinen Paketmanager installiert. Aktualisiere es dort.`,
+  updatePortable: `Dies ist das portable ${APP_NAME}: Lade die neue Version von textus.md und entpacke sie über diesen Ordner.`,
   cliCommandLabel: "Textus CLI installieren",
   cliCommandInstalled: "Installiert",
   cliCommandNotInstalled: "Nicht installiert",

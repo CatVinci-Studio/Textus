@@ -1327,6 +1327,7 @@ para usar una.
   updateDownloading: "Descargando la actualización…",
   updateFailed: "No se pudo actualizar:",
   updateViaPackageManager: `${APP_NAME} se instaló con tu gestor de paquetes. Actualízalo desde ahí.`,
+  updatePortable: `Esta es la versión portátil de ${APP_NAME}: descarga la nueva versión de textus.md y descomprímela sobre esta carpeta.`,
   cliCommandLabel: "Instalar Textus CLI",
   cliCommandInstalled: "Instalado",
   cliCommandNotInstalled: "No instalado",

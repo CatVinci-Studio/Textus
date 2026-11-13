@@ -222,6 +222,8 @@ key. A pre-release has no `.rpm`, and so no `…-rpm` keys.
 | macOS, Intel      | `Textus_X.Y.Z_x64.app.tar.gz`           | `macos-26` (cross) | `darwin-x86_64`, `…-app`      | -               |
 | Windows x64       | `Textus_X.Y.Z_x64-setup.exe`            | `windows-latest`   | `windows-x86_64`, `…-nsis`    | `windows`       |
 | Windows ARM64     | `Textus_X.Y.Z_arm64-setup.exe`          | `windows-11-arm`   | `windows-aarch64`, `…-nsis`   | `windows-arm64` |
+| Windows x64       | `Textus_X.Y.Z_x64-portable.zip`         | `windows-2025`     | -                             | -               |
+| Windows ARM64     | `Textus_X.Y.Z_arm64-portable.zip`       | `windows-11-arm`   | -                             | -               |
 | Linux x64         | `Textus_X.Y.Z_amd64.AppImage`           | `ubuntu-22.04`     | `linux-x86_64`, `…-appimage`  | `linux`         |
 | Linux x64         | `Textus_X.Y.Z_amd64.deb`                | `ubuntu-22.04`     | `linux-x86_64-deb`            | `deb`           |
 | Linux x64         | `Textus-X.Y.Z-1.x86_64.rpm`             | `ubuntu-22.04`     | `linux-x86_64-rpm`            | `rpm`           |

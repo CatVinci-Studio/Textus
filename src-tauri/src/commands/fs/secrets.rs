@@ -1,5 +1,6 @@
 //! The app's own key files, kept out of the page's file commands.
 
+use crate::app_dirs::AppDirs;
 use std::path::Path;
 
 /// The files the app keeps keys and sign-ins in: never read or written
@@ -16,7 +17,7 @@ pub(super) fn not_a_secret(app: &tauri::AppHandle, path: &str) -> Result<(), Str
     use tauri::Manager;
     let Ok(config) = app
         .path()
-        .app_config_dir()
+        .own_config_dir()
         .and_then(|c| Ok(std::fs::canonicalize(c)?))
     else {
         return Ok(());

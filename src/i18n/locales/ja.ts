@@ -1235,6 +1235,7 @@ ${AI_NAME}への執筆の指示です。すべての文書に適用されます�
   updateDownloading: "アップデートをダウンロード中…",
   updateFailed: "アップデートに失敗しました：",
   updateViaPackageManager: `${APP_NAME} はパッケージマネージャーでインストールされています。そちらで更新してください。`,
+  updatePortable: `これはポータブル版の ${APP_NAME} です。textus.md から新しいバージョンをダウンロードし、このフォルダーに上書きで展開してください。`,
   cliCommandLabel: "Textus CLI をインストール",
   cliCommandInstalled: "インストール済み",
   cliCommandNotInstalled: "未インストール",

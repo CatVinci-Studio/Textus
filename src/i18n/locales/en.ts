@@ -1263,6 +1263,7 @@ type /name in a conversation to use one.
   updateDownloading: "Downloading update…",
   updateFailed: "Update failed:",
   updateViaPackageManager: `${APP_NAME} was installed by your package manager. Update it there.`,
+  updatePortable: `This is the portable ${APP_NAME}: download the new version from textus.md and unzip it over this folder.`,
   cliCommandLabel: "Install Textus CLI",
   cliCommandInstalled: "Installed",
   cliCommandNotInstalled: "Not installed",

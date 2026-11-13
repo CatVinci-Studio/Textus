@@ -1222,6 +1222,7 @@ ${AI_NAME}에게 주는 글쓰기 지침으로, 모든 문서에 적용됩니다
   updateDownloading: "업데이트 다운로드 중…",
   updateFailed: "업데이트 실패:",
   updateViaPackageManager: `${APP_NAME} 앱은 패키지 관리자로 설치되었습니다. 업데이트도 패키지 관리자에서 하세요.`,
+  updatePortable: `포터블 ${APP_NAME}입니다. textus.md에서 새 버전을 받아 이 폴더에 덮어써서 압축을 푸세요.`,
   cliCommandLabel: "Textus CLI 설치",
   cliCommandInstalled: "설치됨",
   cliCommandNotInstalled: "설치 안 됨",

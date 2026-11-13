@@ -3,12 +3,13 @@
 //! settings the backend reads or sets.
 
 use super::*;
+use crate::app_dirs::AppDirs;
 
 /// Loads every store into app state, before any window is built (their boot
 /// scripts are made from it).
 pub fn init(app: &AppHandle) {
-    let config_dir = app.path().app_config_dir().unwrap_or_default();
-    let data_dir = app.path().app_data_dir().unwrap_or_default();
+    let config_dir = app.path().own_config_dir().unwrap_or_default();
+    let data_dir = app.path().own_data_dir().unwrap_or_default();
     let stores = Stores::load(&config_dir, &data_dir);
     proxy_changed(&stores.settings.snapshot().0);
     app.manage(stores);
@@ -225,7 +226,7 @@ pub(crate) fn user_theme_css(app: &AppHandle, settings: &Value) -> Value {
         && id
             .chars()
             .all(|c| c.is_ascii_alphanumeric() || c == '-' || c == '_');
-    let Ok(config_dir) = app.path().app_config_dir() else {
+    let Ok(config_dir) = app.path().own_config_dir() else {
         return Value::Null;
     };
     if !safe {

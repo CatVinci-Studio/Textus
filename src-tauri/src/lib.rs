@@ -15,6 +15,7 @@ mod excerpt;
 // Checks src/platform/bindings/; desktop builds hold every command it lists.
 #[cfg(desktop)]
 mod agents;
+mod app_dirs;
 #[cfg(all(test, desktop))]
 mod bindings;
 mod commands;
@@ -183,6 +184,16 @@ fn desktop_setup(app: &mut tauri::App) -> Result<(), Box<dyn std::error::Error>>
     }
 
     Ok(())
+}
+
+/// The portable build keeps the webview's data beside it too: WebView2
+/// takes this over the folder Tauri names. Called first thing in main.
+pub fn prepare_portable() {
+    #[cfg(windows)]
+    if let Some(root) = distribution::portable_root() {
+        // SAFETY: the first statement of main on Windows, single-threaded.
+        unsafe { std::env::set_var("WEBVIEW2_USER_DATA_FOLDER", root.join("webview")) };
+    }
 }
 
 #[cfg_attr(mobile, tauri::mobile_entry_point)]

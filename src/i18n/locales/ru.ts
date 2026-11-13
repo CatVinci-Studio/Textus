@@ -1330,6 +1330,7 @@ export default {
   updateDownloading: "Загрузка обновления…",
   updateFailed: "Не удалось обновить:",
   updateViaPackageManager: `${APP_NAME} установлен через менеджер пакетов. Обновите его там.`,
+  updatePortable: `Это портативная версия ${APP_NAME}: скачайте новую версию с textus.md и распакуйте её поверх этой папки.`,
   cliCommandLabel: "Установить Textus CLI",
   cliCommandInstalled: "Установлена",
   cliCommandNotInstalled: "Не установлена",

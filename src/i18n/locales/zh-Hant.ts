@@ -1173,6 +1173,7 @@ export default {
   updateDownloading: "正在下載更新…",
   updateFailed: "更新失敗：",
   updateViaPackageManager: `${APP_NAME} 是透過套件管理工具安裝的，需在該工具中更新。`,
+  updatePortable: `這是免安裝版 ${APP_NAME}：請從 textus.md 下載新版本，解壓縮覆蓋到這個資料夾。`,
   cliCommandLabel: "安裝 Textus CLI",
   cliCommandInstalled: "已安裝",
   cliCommandNotInstalled: "未安裝",

@@ -4,6 +4,7 @@
 //! as data the page can use. Fonts and stylesheets are kept in the cache
 //! folder, so a theme keeps its fonts offline once they have come.
 
+use crate::app_dirs::AppDirs;
 use base64::Engine;
 use serde::Deserialize;
 use sha2::{Digest, Sha256};
@@ -77,7 +78,7 @@ fn cache_path(app: &tauri::AppHandle, url: &str) -> Option<PathBuf> {
     let key = format!("{:x}", Sha256::digest(url.as_bytes()));
     Some(
         app.path()
-            .app_cache_dir()
+            .own_cache_dir()
             .ok()?
             .join("web-assets")
             .join(key),

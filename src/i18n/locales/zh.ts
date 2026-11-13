@@ -1171,6 +1171,7 @@ export default {
   updateDownloading: "正在下载更新…",
   updateFailed: "更新失败:",
   updateViaPackageManager: `${APP_NAME} 由系统包管理器安装，请用包管理器更新。`,
+  updatePortable: `这是绿色版 ${APP_NAME}：请从 textus.md 下载新版本，解压覆盖到这个文件夹。`,
   cliCommandLabel: "安装 Textus CLI",
   cliCommandInstalled: "已安装",
   cliCommandNotInstalled: "未安装",

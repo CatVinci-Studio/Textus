@@ -1,12 +1,13 @@
 //! prefs.json: the last editor window's size and place, written by Rust on
 //! close. Settings Rust needs early come from settings.json instead.
 
+use crate::app_dirs::AppDirs;
 use std::path::PathBuf;
 use tauri::{AppHandle, Manager};
 
 fn prefs_path(app: &AppHandle) -> Result<PathBuf, String> {
     app.path()
-        .app_config_dir()
+        .own_config_dir()
         .map_err(|e| e.to_string())
         .map(|p| p.join(crate::settings::file_name("prefs")))
 }

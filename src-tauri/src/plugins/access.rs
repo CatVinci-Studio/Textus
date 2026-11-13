@@ -4,6 +4,7 @@
 
 use super::state::{self, PluginsState};
 use super::{plugins_root, require_id};
+use crate::app_dirs::AppDirs;
 use serde::{Deserialize, Serialize};
 use std::collections::BTreeMap;
 use std::path::{Path, PathBuf};
@@ -62,7 +63,7 @@ pub(super) fn granted_path(
 }
 
 pub(super) fn require_not_app_data(app: &tauri::AppHandle, path: &Path) -> Result<(), String> {
-    let own = [app.path().app_data_dir(), app.path().app_config_dir()];
+    let own = [app.path().own_data_dir(), app.path().own_config_dir()];
     for dir in own.into_iter().flatten() {
         let dir = std::fs::canonicalize(&dir).unwrap_or(dir);
         if path.starts_with(&dir) {

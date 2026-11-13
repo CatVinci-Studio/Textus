@@ -11,6 +11,7 @@ mod macos;
 #[cfg(windows)]
 mod windows;
 
+use crate::app_dirs::AppDirs;
 #[cfg(target_os = "linux")]
 use linux as backend;
 #[cfg(target_os = "macos")]
@@ -55,7 +56,7 @@ pub struct Notifications {
 fn targets_file(app: &tauri::AppHandle) -> Option<std::path::PathBuf> {
     Some(
         app.path()
-            .app_data_dir()
+            .own_data_dir()
             .ok()?
             .join("plugins")
             .join("notification-clicks.json"),
