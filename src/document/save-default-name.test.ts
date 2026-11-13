@@ -21,6 +21,9 @@ describe("firstLevelOneHeading", () => {
 
   it("ignores headings inside fenced code", () => {
     expect(firstLevelOneHeading("```md\n# Fake\n```\n# Real")).toBe("Real");
+    expect(firstLevelOneHeading("<!--\n# Old title\n-->\n# Real title")).toBe(
+      "Real title",
+    );
   });
 });
 

@@ -65,20 +65,30 @@ interface HeadingLine {
 const ATX = /^ {0,3}(#{1,6})(?:[ \t]+(.*?))?[ \t]*(?:[ \t]#+[ \t]*)?$/;
 const SETEXT = /^ {0,3}(=+|-+)[ \t]*$/;
 // A line that starts a block of its own can't be a setext heading's text.
-const NOT_TEXT = /^ {0,3}(?:[-+*>|]|\d+[.)]|#|$)/;
+const NOT_TEXT = /^ {0,3}(?:[>|]|(?:[-+*]|\d+[.)])(?:[ \t]|$)|#|$)/;
+const COMMENT_OPEN = /^ {0,3}<!--/;
 
 /** A whole document's headings, in order, as the editor counts them: ATX
  *  (indented up to three spaces, empty ones too) and setext (`Title` over
- *  `===` or `---`), outside code and front matter. */
+ *  `===` or `---`), outside code, front matter and `<!-- -->` comments. */
 export function headingsOf(markdown: string): HeadingLine[] {
   const out: HeadingLine[] = [];
   let previous: { text: string; index: number } | null = null;
+  let comment = false;
   eachLine(
     markdown,
     (line, index, code) => {
       const before = previous;
       previous = null;
       if (code) return;
+      if (comment) {
+        comment = !line.includes("-->");
+        return;
+      }
+      if (COMMENT_OPEN.test(line)) {
+        comment = !line.slice(line.indexOf("<!--") + 4).includes("-->");
+        return;
+      }
       const atx = ATX.exec(line);
       if (atx) {
         out.push({ level: atx[1].length, text: atx[2] ?? "", line: index });

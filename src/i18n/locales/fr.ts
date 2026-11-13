@@ -1150,7 +1150,6 @@ utiliser une.
   askAi: "Demander à l'IA…",
   agentProposalTitle: "Modification proposée",
   chatClose: "Fermer la discussion",
-  chatDetach: "Ouvrir dans sa propre fenêtre",
   dialogOk: "OK",
   chatContinueInPanel: "Continuer dans la conversation complète",
   chatExpandInline: "Déplier la réponse",

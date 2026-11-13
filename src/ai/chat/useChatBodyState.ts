@@ -96,22 +96,22 @@ export function useMessageQueue(
   const [queue, setQueue] = useState<QueuedMessage[]>([]);
   const [queuePaused, setQueuePaused] = useState(false);
   const nextQueued = useRef(0);
-  const sendingQueued = useRef(false);
+  // A send under way, queued or straight from the box: one more waits.
+  const sending = useRef(false);
   // This render's; the queue and busy say when to look again.
   const send = useLatest(sendNext);
 
   useEffect(() => {
-    if (busy || queuePaused || sendingQueued.current || queue.length === 0)
-      return;
+    if (busy || queuePaused || sending.current || queue.length === 0) return;
     const [next] = queue;
-    sendingQueued.current = true;
+    sending.current = true;
     void (async () => {
       setQueue((now) => now.filter((q) => q.id !== next.id));
       try {
         const turns = await send.current(next);
         if (!turns) setQueuePaused(true);
       } finally {
-        sendingQueued.current = false;
+        sending.current = false;
       }
     })();
   }, [busy, queue, queuePaused, send]);
@@ -122,6 +122,6 @@ export function useMessageQueue(
     queuePaused,
     setQueuePaused,
     nextQueued,
-    sendingQueued,
+    sending,
   };
 }

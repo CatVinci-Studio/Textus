@@ -94,7 +94,12 @@ async function moveDrafts(
     kept.map((tab, i) => {
       const id = newId(i);
       return id && tab.text && tab.text.content !== tab.text.savedContent
-        ? drafts.saveDraftSnapshot(id, tab.path, tab.text.content, null)
+        ? drafts.saveDraftSnapshot(
+            id,
+            tab.path,
+            tab.text.content,
+            tab.text.diskMtime,
+          )
         : null;
     }),
   ).catch(() => {});

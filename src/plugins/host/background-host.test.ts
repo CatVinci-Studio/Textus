@@ -93,6 +93,8 @@ describe("a plugin's background code", () => {
     expect(() =>
       handler(run([]), "files.read")({ path: "/notes/a.md" }),
     ).toThrow(/files.read/);
+    // Its folder is the job's, whatever any window has open now.
+    expect(handler(run(["files.read"]), "files.root")({})).toBe("/notes");
   });
 });
 

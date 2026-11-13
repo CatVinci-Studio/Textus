@@ -74,7 +74,7 @@ export function useIslandFrame(
     for (const key of attached.current)
       if (!found.has(key)) frameClock.attach(key, null);
     attached.current = found;
-    publish(room, box, solved, islands, need);
+    publish(room, islands, need);
     const resized =
       was && (was.shell.w !== room.shell.w || was.shell.h !== room.shell.h);
     const animate = !!was && !resized && !gripHeld();
@@ -94,8 +94,6 @@ export function useIslandFrame(
 /** The solve, in the viewport's pixels, for what reads the islands' places. */
 function publish(
   room: IslandRoom,
-  box: Rect,
-  solved: IslandsLayout,
   islands: readonly PlacedIsland[],
   need: number,
 ) {
@@ -110,16 +108,6 @@ function publish(
       sheet: at(rects.sheet),
       whole: at(rects.whole),
     })),
-    dividers: solved.dividers.map((d) => {
-      const by = d.line.direction === "row" ? dx : dy;
-      return {
-        ...d,
-        rect: at(d.rect),
-        before: { start: d.before.start + by, end: d.before.end + by },
-        after: { start: d.after.start + by, end: d.after.end + by },
-      };
-    }),
-    area: at(box),
     origin: { x: dx, y: dy },
     need: Math.round(need),
   });

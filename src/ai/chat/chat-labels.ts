@@ -171,7 +171,6 @@ function buildLabels(t: Strings, lang: Lang): InlineChatLabels {
     toggleOnHint: t.toggleOnHint,
     webSearchNeedsService: t.webSearchNeedsService,
     close: t.chatClose,
-    detach: t.chatDetach,
     continueInPanel: t.chatContinueInPanel,
     newConversation: t.chatNewConversation,
     closeConfirm: t.chatCloseConfirm,

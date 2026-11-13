@@ -998,7 +998,6 @@ export default {
   askAi: "詢問 AI…",
   agentProposalTitle: "修改建議",
   chatClose: "關閉對話",
-  chatDetach: "在獨立視窗中開啟",
   dialogOk: "確定",
   chatContinueInPanel: "在完整對話中繼續",
   chatExpandInline: "展開回答",

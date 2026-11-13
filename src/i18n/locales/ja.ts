@@ -1057,7 +1057,6 @@ ${AI_NAME}への執筆の指示です。すべての文書に適用されます�
   askAi: "AIに聞く…",
   agentProposalTitle: "編集の提案",
   chatClose: "チャットを閉じる",
-  chatDetach: "別ウィンドウで開く",
   dialogOk: "OK",
   chatContinueInPanel: "会話パネルで続ける",
   chatExpandInline: "回答を展開",

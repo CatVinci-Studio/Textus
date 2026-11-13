@@ -6,6 +6,7 @@ import {
   type ReactNode,
 } from "react";
 import { TabBar } from "../../engine/controls/tabs/TabBar";
+import { DRAFT } from "../../ai/chat/conversation-scope";
 import {
   closeConversation,
   liveConversation,
@@ -30,7 +31,6 @@ import type { Strings } from "../../i18n/strings";
 
 const NONE: string[] = [];
 /** The conversation not yet sent: a tab of its own until it is. */
-const DRAFT = "\0draft";
 
 function useOpen(scope: string | null): string[] {
   return useSyncExternalStore(onOpenConversations, () =>

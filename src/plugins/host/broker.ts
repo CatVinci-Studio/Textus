@@ -318,6 +318,7 @@ export class PluginHost {
       t: () => this.deps.strings(),
       manifest: () => this.info.manifest,
       need: (permission) => this.need(permission),
+      folder: () => getWindowAccess()?.rootPath() ?? null,
       root: () => {
         this.need("files.read");
         const root = getWindowAccess()?.rootPath();
@@ -408,7 +409,7 @@ export class PluginHost {
       ...editorHandlers(scope),
       ...fileHandlers(scope),
       ...metadataHandlers(scope),
-      ...scheduleHandlers(scope, () => getWindowAccess()?.rootPath() ?? null),
+      ...scheduleHandlers(scope),
     };
   }
 }

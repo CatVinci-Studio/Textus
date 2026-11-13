@@ -1080,7 +1080,6 @@ type /name in a conversation to use one.
   askAi: "Ask AI…",
   agentProposalTitle: "Proposed edit",
   chatClose: "Close chat",
-  chatDetach: "Open in its own window",
   dialogOk: "OK",
   chatContinueInPanel: "Continue in the full conversation",
   chatExpandInline: "Expand answer",

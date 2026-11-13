@@ -15,7 +15,6 @@ import {
   movePane,
   moveTab,
   isSplit,
-  reorderTab,
   type SplitLayout,
 } from "../../engine/layout/ops";
 import {
@@ -107,8 +106,7 @@ export function pullTab(
     }
     const bar = barDropAt(x, y, tabId, geometry);
     if (bar) {
-      const moved = moveTab(base, tabId, bar.pane, bar.index);
-      const next = moved && reorderTab(moved, bar.pane, tabId, bar.index);
+      const next = moveTab(base, tabId, bar.pane, bar.index);
       return {
         key: `bar:${bar.pane}:${bar.index}`,
         opens: false,

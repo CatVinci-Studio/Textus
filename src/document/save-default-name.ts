@@ -1,5 +1,5 @@
 import { splitFrontmatter } from "../utils/frontmatter";
-import { eachLine } from "../utils/markdown-lines";
+import { eachLine, headingsOf } from "../utils/markdown-lines";
 const WINDOWS_RESERVED_NAME = /^(con|prn|aux|nul|com[1-9]|lpt[1-9])(?:\..*)?$/i;
 
 function plainMarkdownText(text: string): string {
@@ -21,26 +21,11 @@ function bodyLines(markdown: string): { line: string; code: boolean }[] {
   return lines;
 }
 
-/** Finds the first real Markdown level-one heading, excluding fenced code. */
+/** The first level-one heading with any text, as the editor reads them. */
 export function firstLevelOneHeading(markdown: string): string | null {
-  const lines = bodyLines(markdown);
-  for (const [index, { line, code }] of lines.entries()) {
-    if (code) continue;
-    const atx = /^ {0,3}#(?:[ \t]+|$)(.*)$/.exec(line);
-    if (atx) {
-      const heading = plainMarkdownText(atx[1]);
-      if (heading) return heading;
-    }
-    const next = lines[index + 1];
-    if (
-      line.trim() &&
-      next &&
-      !next.code &&
-      /^ {0,3}=+[ \t]*$/.test(next.line)
-    ) {
-      const heading = plainMarkdownText(line.trim());
-      if (heading) return heading;
-    }
+  for (const { level, text } of headingsOf(markdown.replace(/\r\n?/g, "\n"))) {
+    const heading = level === 1 ? plainMarkdownText(text) : "";
+    if (heading) return heading;
   }
   return null;
 }

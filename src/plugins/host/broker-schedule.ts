@@ -12,12 +12,11 @@ import { str, type Params, type PluginScope } from "./broker-scope";
 
 /**
  * A plugin's jobs and notifications, and whether Textus is in front: kept
- * and checked again in Rust. `folder` is the folder a job's files and a
- * notification's file are in - the window's, or the job's in a background
- * run - given to Rust only with files.read.
+ * and checked again in Rust. The plugin's folder, where a job's files and a
+ * notification's file are, goes to Rust only with files.read.
  */
-export function scheduleHandlers(p: PluginScope, folder: () => string | null) {
-  const root = () => (grants(p.info.granted, "files.read") ? folder() : null);
+export function scheduleHandlers(p: PluginScope) {
+  const root = () => (grants(p.info.granted, "files.read") ? p.folder() : null);
   return {
     "schedule.set": async ({ id, job }: Params) => {
       const spec = (job ?? {}) as JobSpec;

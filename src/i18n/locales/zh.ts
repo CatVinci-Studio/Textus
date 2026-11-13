@@ -996,7 +996,6 @@ export default {
   askAi: "询问 AI…",
   agentProposalTitle: "修改提议",
   chatClose: "关闭对话",
-  chatDetach: "在独立窗口中打开",
   dialogOk: "好",
   chatContinueInPanel: "转到大对话",
   chatExpandInline: "展开回答",

@@ -1128,7 +1128,6 @@ Habilidades ficam na pasta skills/ ao lado deste arquivo, um arquivo
   askAi: "Perguntar à IA…",
   agentProposalTitle: "Edição proposta",
   chatClose: "Fechar chat",
-  chatDetach: "Abrir em uma janela própria",
   dialogOk: "OK",
   chatContinueInPanel: "Continuar na conversa completa",
   chatExpandInline: "Expandir resposta",

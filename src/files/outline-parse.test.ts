@@ -8,6 +8,11 @@ describe("parseHeadings", () => {
     expect(texts("# A\n```sh\n# comment\n```\n## B")).toEqual(["A", "B"]);
     // Nor a comment in the front matter's YAML.
     expect(texts("---\n# draft\ntitle: T\n---\n# A")).toEqual(["A"]);
+    // Nor one commented out: `<!--` opens an HTML block until `-->`.
+    expect(texts("<!--\n# Old\n-->\n# A <!-- x -->\n**B**\n===")).toEqual([
+      "A <!-- x -->",
+      "**B**",
+    ]);
   });
 
   it("counts every heading the editor does: indented, empty and setext", () => {
@@ -52,6 +57,8 @@ describe("parseHeadings", () => {
     expect(
       sourceAnchors(["Energy $E=mc^2$", "`Code` *now*", "Energy $E=mc^2$"]),
     ).toEqual(["energy-emc2", "code-now", "energy-emc2-1"]);
+    // A heading already named like a repeat's number takes the next one.
+    expect(sourceAnchors(["A", "A", "A-1"])).toEqual(["a", "a-1", "a-1-1"]);
   });
 
   it("keeps underscores inside words, code and maths", () => {

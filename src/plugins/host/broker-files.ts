@@ -44,12 +44,12 @@ export async function written(
   emitPluginEvent(change, { path });
 }
 
-/** The folder of a plugin's project place: the sidebar's. Null for global,
- *  and with no folder open, where the backend keeps a hidden one instead. */
+/** The folder of a plugin's project place: the plugin's. Null for global,
+ *  and with no folder, where the backend keeps a hidden one instead. */
 function placeRoot(p: PluginScope, scope: StoreScope): string | null {
   if (scope !== "project") return null;
   p.need("project.data");
-  return getWindowAccess()?.rootPath() ?? null;
+  return p.folder();
 }
 
 /** A token for the version of a document in a tab. */
@@ -93,9 +93,7 @@ export function fileHandlers(p: PluginScope) {
     throw new Error(`${path} kept changing while it was written.`);
   };
   return {
-    "files.root": () => {
-      return getWindowAccess()?.rootPath() ?? null;
-    },
+    "files.root": () => p.folder(),
     "files.list": async ({ path }: Params) => {
       const root = p.root();
       const dir = optionalStr(path) || root;

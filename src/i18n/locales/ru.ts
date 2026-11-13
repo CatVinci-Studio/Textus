@@ -1148,7 +1148,6 @@ export default {
   askAi: "Спросить ИИ…",
   agentProposalTitle: "Предлагаемая правка",
   chatClose: "Закрыть чат",
-  chatDetach: "Открыть в отдельном окне",
   dialogOk: "ОК",
   chatContinueInPanel: "Продолжить в полном диалоге",
   chatExpandInline: "Развернуть ответ",

@@ -1,15 +1,3 @@
-/* Toggles render as switches (src/engine/controls/controls.css, .tx-switch). */
-
-input[type="checkbox"].tx-switch:checked:active::after {
-  transform: translateX(calc(var(--switch-travel) - var(--switch-thumb) * 0.2))
-    scaleX(1.2);
-}
-
-input[type="checkbox"].tx-switch:focus-visible {
-  outline: 2px solid var(--ui-accent);
-  outline-offset: 2px;
-}
-
 button.settings-inline-button {
   flex-shrink: 0;
   white-space: nowrap;
@@ -191,6 +179,10 @@ button.settings-inline-button {
   color: var(--ui-muted);
   transform: rotate(90deg);
   transition: transform var(--dur-fast) var(--ease-standard);
+}
+
+.combobox-caret-open {
+  transform: rotate(-90deg);
 }
 
 .status-pill {

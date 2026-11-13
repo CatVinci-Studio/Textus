@@ -52,6 +52,13 @@ import { pluginSetting, setPluginSetting } from "./plugin-setting-values";
 // Loading
 // ---------------------------------------------------------------------------
 
+/** Whether this plugin's code may run now: its own switch and "all plugins"
+ *  both on. Every way into a plugin's code asks this. */
+const mayRun = (
+  record: PluginRecord | null | undefined,
+): record is PluginRecord =>
+  !!record && canRun(record.status, pluginsSnapshot().allOn);
+
 function makeRecord(
   id: string,
   origin: PluginOrigin,
@@ -201,7 +208,7 @@ async function host(record: PluginRecord): Promise<PluginHost> {
           Promise.resolve(null),
         runCommand: async (command, args, caller) => {
           const owner = pluginsSnapshot().records.find(
-            (r) => r.status === "on" && command.startsWith(`${r.id}.`),
+            (r) => mayRun(r) && command.startsWith(`${r.id}.`),
           );
           // Another plugin reaches only the commands this one lists.
           if (
@@ -248,16 +255,14 @@ async function host(record: PluginRecord): Promise<PluginHost> {
         },
         exportsOf: async (other) => {
           const target = pluginRecord(other);
-          if (!target || !canRun(target.status, pluginsSnapshot().allOn))
-            return null;
+          if (!mayRun(target)) return null;
           const running = await host(target);
           await running.start();
           return running.exports;
         },
         callExport: async (other, name, args) => {
           const target = pluginRecord(other);
-          if (!target || !canRun(target.status, pluginsSnapshot().allOn))
-            throw new Error(`${other} is turned off.`);
+          if (!mayRun(target)) throw new Error(`${other} is turned off.`);
           return (await host(target)).request("$callExport", { name, args });
         },
         failed: pluginFailed,
@@ -317,8 +322,7 @@ export async function askPlugin(
   needs?: Permission,
 ): Promise<unknown> {
   const record = await loadedRecord(id);
-  if (!record || !canRun(record.status, pluginsSnapshot().allOn))
-    throw new Error(`${id} is turned off.`);
+  if (!mayRun(record)) throw new Error(`${id} is turned off.`);
   if (needs && !grants(record.granted, needs))
     throw new Error(`${id} was not granted ${needs}.`);
   return (await host(record)).request(method, params);
@@ -354,8 +358,7 @@ export async function resolveWebview(
   },
 ): Promise<void> {
   const plugin = await loadedRecord(record.plugin);
-  if (!plugin || plugin.status !== "on")
-    throw new Error(`${record.plugin} is turned off.`);
+  if (!mayRun(plugin)) throw new Error(`${record.plugin} is turned off.`);
   const running = await host(plugin);
   // Gone while the plugin started: drawn now, nothing would let it go.
   if (!webview(record.id)) return;
@@ -415,7 +418,7 @@ export function revealInPluginTab(tabId: string, target: unknown): void {
 export function webviewMessage(id: string, message: unknown): void {
   const record = webview(id);
   const plugin = record && pluginRecord(record.plugin);
-  if (!record || !plugin || plugin.status !== "on") return;
+  if (!record || !mayRun(plugin)) return;
   void host(plugin)
     .then((running) =>
       running.request("$webviewMessage", { webview: id, message }),
@@ -437,7 +440,7 @@ const contributionDeps: ContributionDeps = {
   runPluginCommand,
   start: async (id) => {
     const record = pluginRecord(id);
-    if (record?.status === "on") await (await host(record)).start();
+    if (mayRun(record)) await (await host(record)).start();
   },
 };
 

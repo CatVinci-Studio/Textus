@@ -186,7 +186,7 @@ describe("startup restore into the initial tab", () => {
           {
             id: "old-draft",
             path: null,
-            text: { content: "typed", savedContent: "", diskMtime: null },
+            text: { content: "typed", savedContent: "", diskMtime: 7 },
           },
           { id: "old-pdf", path: null, view },
         ],
@@ -206,7 +206,7 @@ describe("startup restore into the initial tab", () => {
       tabs()[0].id,
       null,
       "typed",
-      null,
+      7,
     );
     expect(ipc.clearDraftSnapshot).toHaveBeenCalledWith("old-pdf");
   });

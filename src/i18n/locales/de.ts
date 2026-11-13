@@ -1109,7 +1109,6 @@ Skills liegen im Ordner skills/ neben dieser Datei, je Skill eine
   askAi: "KI fragen…",
   agentProposalTitle: "Vorgeschlagene Änderung",
   chatClose: "Chat schließen",
-  chatDetach: "In eigenem Fenster öffnen",
   dialogOk: "OK",
   chatContinueInPanel: "In der vollständigen Unterhaltung fortsetzen",
   chatExpandInline: "Antwort ausklappen",

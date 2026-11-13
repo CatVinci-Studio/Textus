@@ -22,7 +22,7 @@ import {
 import { drafts, windowIpc, type WindowBounds } from "../../platform/ipc";
 import { flushPendingWrites } from "../../storage/pending-writes";
 import { useLatest } from "../../utils/hooks/useLatest";
-import { canUseWindows } from "../../platform/capabilities";
+import { canDragTabsBetweenWindows } from "../../platform/capabilities";
 import { arrivalPreview, splitForDrop } from "../islands/split-drop";
 import { dropGeometry } from "../../engine/layout/drop-zones";
 import { placeOnArrival } from "../../engine/layout/store";
@@ -140,8 +140,8 @@ export function useTabDragMerge(opts: {
   const latest = useLatest({ hitTestWindow, liveTabs, t });
 
   useEffect(() => {
-    // One window, never dragged, on iOS.
-    if (!canUseWindows) return;
+    // Only where a window's tab can join another's (not iOS, nor Linux).
+    if (!canDragTabsBetweenWindows) return;
     const win = thisWindow();
 
     async function handleTick(x: number, y: number, down: boolean) {

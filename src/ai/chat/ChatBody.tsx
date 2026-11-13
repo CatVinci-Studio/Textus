@@ -13,8 +13,6 @@ import type {
 } from "../types";
 import { ChatMessages } from "./ChatMessages";
 import type { ApplySuggestion } from "./CommentCard";
-import { afterFileChanges } from "./file-changes";
-import { loadSettings } from "../../prefs/settings-store";
 import { ErrorRow } from "./ErrorRow";
 import { ThinkingIndicator } from "./ThinkingIndicator";
 import { ChatComposer, type ChatComposerHandle } from "./ChatComposer";
@@ -122,11 +120,6 @@ export function ChatBody({
   function afterSend(newTurns: AgentTurn[] | undefined) {
     const proposals = proposalsFromTurns(newTurns ?? []);
     if (proposals.length > 0) onProposals(proposals);
-    void afterFileChanges(
-      conversation.conversationId,
-      newTurns ?? [],
-      loadSettings().aiChangeMode === "revision",
-    );
     follow.stick();
     requestAnimationFrame(() => {
       listRef.current?.scrollTo({
@@ -149,16 +142,23 @@ export function ChatBody({
     }) => { message: string; images?: ImageAttachment[] },
     options: AgentRequestOptions,
   ) {
+    // Until the reply starts, a second send joins the queue: the model is
+    // busy only once send() runs, after the context comes back.
+    sending.current = true;
     void (async () => {
-      const latest = refreshContext ? await refreshContext() : null;
-      const state = latest ?? { document, selectionMarkdown };
-      const { message, images } = buildMessage(state);
-      afterSend(
-        await send(state.document, message, images, {
+      let reply: Promise<AgentTurn[] | undefined> | undefined;
+      try {
+        const latest = refreshContext ? await refreshContext() : null;
+        const state = latest ?? { document, selectionMarkdown };
+        const { message, images } = buildMessage(state);
+        reply = send(state.document, message, images, {
           ...options,
           focusHeading: latest?.focusHeading ?? null,
-        }),
-      );
+        });
+      } finally {
+        sending.current = false;
+      }
+      afterSend(await reply);
     })();
   }
 
@@ -176,7 +176,7 @@ export function ChatBody({
     return turns;
   });
   const { queue, setQueue, queuePaused, setQueuePaused } = queueState;
-  const { nextQueued, sendingQueued } = queueState;
+  const { nextQueued, sending } = queueState;
   const ownComposer = useRef<ChatComposerHandle>(null);
   const composer = composerRef ?? ownComposer;
 
@@ -192,7 +192,7 @@ export function ChatBody({
       selectionMarkdown: string | null;
       cursor?: { before: string; after: string } | null;
     }) => composeMessage(state, message, attachments, includeSelection);
-    if (!busy && queue.length === 0 && !sendingQueued.current) {
+    if (!busy && queue.length === 0 && !sending.current) {
       dispatchSend(compose, options);
       return;
     }

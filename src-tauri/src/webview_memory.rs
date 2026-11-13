@@ -14,8 +14,21 @@ pub(crate) fn follow_minimized(window: &tauri::Window, event: &tauri::WindowEven
         return;
     };
     let low = window.is_minimized().unwrap_or(false);
-    set_low(&webview, low);
+    // Each resize while dragging an edge would ask again: only a change asks.
+    let mut minimized = MINIMIZED.lock().unwrap_or_else(|e| e.into_inner());
+    let changed = if low {
+        minimized.insert(window.label().to_string())
+    } else {
+        minimized.remove(window.label())
+    };
+    if changed {
+        set_low(&webview, low);
+    }
 }
+
+/// The windows last asked to use less memory.
+static MINIMIZED: std::sync::Mutex<std::collections::BTreeSet<String>> =
+    std::sync::Mutex::new(std::collections::BTreeSet::new());
 
 fn set_low(window: &tauri::WebviewWindow, low: bool) {
     use webview2_com::Microsoft::Web::WebView2::Win32::{

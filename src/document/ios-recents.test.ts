@@ -80,6 +80,16 @@ describe("iOS recent documents", () => {
     expect(stored.list).toEqual(["documents:other.md", "documents:final.md"]);
   });
 
+  it("keeps a renamed entry whole when Rust spells the folder another way", async () => {
+    stored.list = ["documents:draft.md"];
+    // canonicalize() answers /private/var/… for the /var/… Documents folder.
+    vi.mocked(invoke).mockResolvedValue(
+      "/private/var/mobile/Containers/Data/Application/AB-12/Documents/final.md",
+    );
+    await renameIOSDocument("/app/Documents/draft.md", "final");
+    expect(stored.list).toEqual(["documents:final.md"]);
+  });
+
   it("doesn't stall the queue on a change that failed inside it", async () => {
     stored.list = ["documents:a.md"];
     stored.docsFail = true;

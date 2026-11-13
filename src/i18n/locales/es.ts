@@ -1144,7 +1144,6 @@ para usar una.
   askAi: "Preguntar a la IA…",
   agentProposalTitle: "Cambio propuesto",
   chatClose: "Cerrar el chat",
-  chatDetach: "Abrir en su propia ventana",
   dialogOk: "Aceptar",
   chatContinueInPanel: "Continuar en la conversación completa",
   chatExpandInline: "Expandir respuesta",

@@ -1043,7 +1043,6 @@ ${AI_NAME}에게 주는 글쓰기 지침으로, 모든 문서에 적용됩니다
   askAi: "AI에게 묻기…",
   agentProposalTitle: "수정 제안",
   chatClose: "채팅 닫기",
-  chatDetach: "별도 창에서 열기",
   dialogOk: "확인",
   chatContinueInPanel: "전체 대화에서 계속하기",
   chatExpandInline: "답변 펼치기",
