@@ -17,7 +17,9 @@ name: CI
 #
 # Two depths. A pull request into main, and a push to main, run the quick
 # suite: `check`, and the Rust checks on Linux where the change reaches
-# Rust (scripts/ci-changes.mjs decides; skipped jobs count as passed). The
+# Rust (scripts/ci-changes.mjs decides; skipped jobs count as passed). A
+# change only to GitHub's settings, the license or root Markdown runs a
+# light `check`: their format and the READMEs' structure. The
 # full suite - every job, every platform, whatever changed - runs before a
 # tag is built (release.yml calls this workflow on the tagged commit), on a
 # pull request into stable, and by hand (Run workflow).
@@ -58,15 +60,14 @@ concurrency:
   cancel-in-progress: ${{ github.event_name == 'pull_request' }}
 
 jobs:
-  # Whether the change can reach the browser (`e2e`) and the Rust build
-  # (`native`, also ios): scripts/ci-changes.mjs.
+  # Whether the change is light, reaches the Rust build (`native`) or
+  # saving (`roundtrip`): scripts/ci-changes.mjs.
   changes:
     runs-on: ubuntu-22.04
     timeout-minutes: 5
     outputs:
-      e2e: ${{ steps.diff.outputs.e2e }}
+      light: ${{ steps.diff.outputs.light }}
       native: ${{ steps.diff.outputs.native }}
-      platforms: ${{ steps.diff.outputs.platforms }}
       roundtrip: ${{ steps.diff.outputs.roundtrip }}
       # The full suite: before a tag (the release workflow calls this one),
       # on a pull request into stable, or by hand. Otherwise the quick one:
@@ -86,7 +87,7 @@ jobs:
           FULL: ${{ inputs.full || github.event_name == 'workflow_dispatch' || github.base_ref == 'stable' }}
         run: |
           if [ "$FULL" = true ]; then
-            printf 'e2e=true\nnative=true\nplatforms=true\nroundtrip=true\nfull=true\n' >> "$GITHUB_OUTPUT"
+            printf 'light=false\nnative=true\nroundtrip=true\nfull=true\n' >> "$GITHUB_OUTPUT"
           elif [ "$GITHUB_EVENT_NAME" = pull_request ]; then
             node scripts/ci-changes.mjs --base "$PR_BASE" >> "$GITHUB_OUTPUT"
           else
@@ -129,8 +130,13 @@ jobs:
           node-version-file: .nvmrc
           cache: npm
       - run: npm ci
+      # GitHub's settings, the license or root Markdown alone: their format
+      # and the READMEs' structure, nothing that builds or tests.
+      - if: needs.changes.outputs.light == 'true'
+        run: npm run format:check && node scripts/check-readmes.mjs
       # The save round trip only where the change can reach saving.
-      - run: npm run check
+      - if: needs.changes.outputs.light != 'true'
+        run: npm run check
         env:
           TEXTUS_SKIP_ROUNDTRIP: ${{ needs.changes.outputs.roundtrip != 'true' && '1' || '' }}
       # The minifier only warns on a broken selector list - and a warning
@@ -141,6 +147,7 @@ jobs:
       # the exit status of `tee`: a build that failed - over the startup
       # budget, say (vite.startup-budget.ts) - passed here.
       - name: Build, failing on CSS syntax warnings
+        if: needs.changes.outputs.light != 'true'
         run: |
           set -o pipefail
           npx vite build 2>&1 | tee build.log
@@ -148,6 +155,7 @@ jobs:
       # The browser playground (src/playground/) shares the editor: a change
       # that breaks its build shows up here, before it is deployed.
       - name: Build the playground
+        if: needs.changes.outputs.light != 'true'
         run: |
           set -o pipefail
           npx vite build --config vite.playground.config.ts 2>&1 | tee build-playground.log
@@ -157,7 +165,7 @@ jobs:
   # (playwright.config.ts): a few minutes each.
   e2e-shard:
     needs: changes
-    if: needs.changes.outputs.e2e == 'true' && needs.changes.outputs.full == 'true'
+    if: needs.changes.outputs.full == 'true'
     name: e2e (${{ matrix.shard }}/2)
     strategy:
       fail-fast: false
@@ -234,7 +242,7 @@ jobs:
   # merge to main or stable, not on every pull request.
   e2e-webkit:
     needs: changes
-    if: needs.changes.outputs.e2e == 'true' && needs.changes.outputs.full == 'true'
+    if: needs.changes.outputs.full == 'true'
     # Not required: its failure shows here without failing the run (or
     # the release that calls it).
     continue-on-error: true
@@ -287,7 +295,7 @@ jobs:
         # release workflows) so an image switch is a deliberate change.
         #
         # Linux alone, or all of them when `platforms` (see above).
-        include: ${{ fromJSON(needs.changes.outputs.platforms == 'true' && needs.changes.outputs.full == 'true' && '[{"name":"ubuntu-22.04","os":"ubuntu-22.04","rust":true},{"name":"macos-26","os":"macos-26","rust":true,"unit":true},{"name":"windows-2025","os":"windows-2025","rust":true},{"name":"windows-2025, unit tests","os":"windows-2025","unit":true}]' || '[{"name":"ubuntu-22.04","os":"ubuntu-22.04","rust":true}]') }}
+        include: ${{ fromJSON(needs.changes.outputs.full == 'true' && '[{"name":"ubuntu-22.04","os":"ubuntu-22.04","rust":true},{"name":"macos-26","os":"macos-26","rust":true,"unit":true},{"name":"windows-2025","os":"windows-2025","rust":true},{"name":"windows-2025, unit tests","os":"windows-2025","unit":true}]' || '[{"name":"ubuntu-22.04","os":"ubuntu-22.04","rust":true}]') }}
     runs-on: ${{ matrix.os }}
     timeout-minutes: 60
     env:
@@ -353,7 +361,7 @@ jobs:
   # iOS port is young.
   ios:
     needs: changes
-    if: needs.changes.outputs.native == 'true' && needs.changes.outputs.platforms == 'true' && needs.changes.outputs.full == 'true'
+    if: needs.changes.outputs.full == 'true'
     # Not required: its failure shows here without failing the run (or
     # the release that calls it).
     continue-on-error: true
