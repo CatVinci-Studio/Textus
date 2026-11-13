@@ -174,7 +174,7 @@ describe("stopping an agent", () => {
 
 describe("choices made in another window", () => {
   it("reach a running session, only the ones that changed", async () => {
-    void runAgentExchange({
+    const running = runAgentExchange({
       agent: { key: "p/a", plugin: "p", id: "a", name: "A" } as never,
       conversation: "other",
       cwd: "/w",
@@ -182,6 +182,8 @@ describe("choices made in another window", () => {
       message: "hi",
       events: { view: () => {}, thinking: () => {}, permission: () => {} },
     });
+    // Ended as a stop: no reply to wait for.
+    running.catch(() => undefined);
     await vi.waitFor(() => expect(agentRunning("p/a")).toBe(true));
     ipc.set.length = 0;
     ipc.chosen = { "p/a": { model: "sonnet" } };
@@ -208,7 +210,7 @@ describe("choices made in another window", () => {
     ];
     ipc.chosen = { "p/r": { mode: "bypass" } };
     ipc.stop.mockClear();
-    void runAgentExchange({
+    const running = runAgentExchange({
       agent: { key: "p/r", plugin: "p", id: "r", name: "R" } as never,
       conversation: "refusing",
       cwd: "/w",
@@ -216,6 +218,8 @@ describe("choices made in another window", () => {
       message: "hi",
       events: { view: () => {}, thinking: () => {}, permission: () => {} },
     });
+    // Ended as a stop: no reply to wait for.
+    running.catch(() => undefined);
     await vi.waitFor(() => expect(agentRunning("p/r")).toBe(true));
     ipc.refuseMode = true;
     ipc.chosen = { "p/r": { mode: "default" } };
