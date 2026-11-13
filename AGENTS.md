@@ -125,10 +125,11 @@ upstream:
   Developer account ships the unsigned DMGs tauri-action builds anyway
   (Gatekeeper: right-click - Open on first launch). Upstream keeps the
   unconditional gate.
-- **No Linux builds; portable Windows zip**: the fork's matrix drops the
-  two ubuntu rows and the windows-2025 job adds a portable zip
-  (`Textus_<version>_x64_portable.zip`, built with 7z so `Textus/` is the
-  zip's root folder).
+- **Platforms**: only macOS Apple-silicon DMG (unsigned) and Windows x64
+  (NSIS + portable zip). The fork's matrix drops upstream's Intel-mac,
+  arm64-Windows and two Linux rows; the windows-2025 job adds a portable
+  zip (`Textus_<version>_x64_portable.zip`, built with 7z so `Textus/` is
+  the zip's root folder).
 - **Upstream sync**: `.github/workflows/release.yml` and this section carry
   fork edits - expect conflicts in both and keep the fork side.
 - **Network**: pushes and Actions checks fail when GitHub is unreachable
