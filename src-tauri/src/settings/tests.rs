@@ -374,11 +374,11 @@ fn the_proxy_follows_the_settings() {
         "proxyHost": "proxy.lan",
         "proxyPort": "8080",
         "proxyUsername": " alice ",
-        "proxyPassword": "p@ss:word",
+        "proxyPassword": "p@ss:w%41rd ",
     }));
     assert_eq!(
         aicompat::http::proxy_url().as_deref(),
-        Some("http://alice:p%40ss%3Aword@proxy.lan:8080/")
+        Some("http://alice:p%40ss%3Aw%2541rd%20@proxy.lan:8080/")
     );
     // None, or no host: direct. Credentials without a proxy are nothing.
     proxy_changed(&json!({ "proxyType": "none", "proxyHost": "proxy.lan" }));

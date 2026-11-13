@@ -28,6 +28,7 @@ import {
 } from "./views/webviews";
 import { canRun, nextStatus } from "./store/lifecycle";
 import {
+  pluginMayRun,
   pluginName,
   pluginRecord,
   pluginsSnapshot,
@@ -52,12 +53,10 @@ import { pluginSetting, setPluginSetting } from "./plugin-setting-values";
 // Loading
 // ---------------------------------------------------------------------------
 
-/** Whether this plugin's code may run now: its own switch and "all plugins"
- *  both on. Every way into a plugin's code asks this. */
+/** Every way into a plugin's code asks this. */
 const mayRun = (
   record: PluginRecord | null | undefined,
-): record is PluginRecord =>
-  !!record && canRun(record.status, pluginsSnapshot().allOn);
+): record is PluginRecord => pluginMayRun(record);
 
 function makeRecord(
   id: string,
@@ -187,6 +186,9 @@ const brokerModule = lazyModule("plugin-broker", () => import("./host/broker"));
 
 async function host(record: PluginRecord): Promise<PluginHost> {
   const { PluginHost } = await brokerModule.load();
+  // Switched off while the host's code was loading: not started after all.
+  if (!mayRun(pluginRecord(record.id)))
+    throw new Error(`${record.id} is turned off.`);
   let running = hosts.get(record.id);
   if (!running && record.manifest) {
     running = new PluginHost(

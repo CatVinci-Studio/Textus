@@ -39,11 +39,17 @@ const rowStrip = () => scaledPx(TAB_ROW_HEIGHT_LOGICAL);
 
 // Hit-testing is in global logical points, so each window's bounds use its
 // own scaleFactor: it may sit on a different-DPI display.
-function pointInTopStrip(lx: number, ly: number, w: WindowBounds): boolean {
+/** How far down window `w` the point is (logical points), or null when
+ *  it is outside the window. */
+function depthIn(lx: number, ly: number, w: WindowBounds): number | null {
   const x = w.x / w.scaleFactor;
   const y = w.y / w.scaleFactor;
-  const width = w.width / w.scaleFactor;
-  return lx >= x && lx <= x + width && ly >= y && ly <= y + rowStrip();
+  const inside =
+    lx >= x &&
+    lx <= x + w.width / w.scaleFactor &&
+    ly >= y &&
+    ly <= y + w.height / w.scaleFactor;
+  return inside ? ly - y : null;
 }
 
 interface DragHoverPreview {
@@ -85,11 +91,14 @@ export function useTabDragMerge(opts: {
     async (screenX: number, screenY: number): Promise<string | null> => {
       const selfLabel = thisWindow().label;
       try {
+        // Front first (Rust lists them so): the window the point is in,
+        // then whether over its tab row - not a row hidden behind it.
         const bounds = await windowIpc.listWindowBounds();
-        const hit = bounds.find(
-          (b) => b.label !== selfLabel && pointInTopStrip(screenX, screenY, b),
+        const front = bounds.find(
+          (b) => b.label !== selfLabel && depthIn(screenX, screenY, b) !== null,
         );
-        return hit?.label ?? null;
+        const depth = front && depthIn(screenX, screenY, front);
+        return front && depth! <= rowStrip() ? front.label : null;
       } catch {
         return null;
       }

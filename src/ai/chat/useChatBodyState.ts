@@ -100,6 +100,7 @@ export function useMessageQueue(
   const sending = useRef(false);
   // This render's; the queue and busy say when to look again.
   const send = useLatest(sendNext);
+  const waiting = useLatest(queue);
 
   useEffect(() => {
     if (busy || queuePaused || sending.current || queue.length === 0) return;
@@ -109,12 +110,14 @@ export function useMessageQueue(
       setQueue((now) => now.filter((q) => q.id !== next.id));
       try {
         const turns = await send.current(next);
-        if (!turns) setQueuePaused(true);
+        // A reply that failed holds back the rest; one stopped with the
+        // queue emptied by Stop leaves nothing to hold.
+        if (!turns && waiting.current.length > 0) setQueuePaused(true);
       } finally {
         sending.current = false;
       }
     })();
-  }, [busy, queue, queuePaused, send]);
+  }, [busy, queue, queuePaused, send, waiting]);
 
   return {
     queue,

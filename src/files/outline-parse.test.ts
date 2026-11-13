@@ -13,6 +13,13 @@ describe("parseHeadings", () => {
       "A <!-- x -->",
       "**B**",
     ]);
+    // `<!-->` closes at once; a fence inside a comment opens no code; a
+    // thematic break over `---` is two rules, not a heading.
+    expect(texts("<!-->\n# A\n<!--\n```\n-->\n# B\n***\n---\n# C")).toEqual([
+      "A",
+      "B",
+      "C",
+    ]);
   });
 
   it("counts every heading the editor does: indented, empty and setext", () => {

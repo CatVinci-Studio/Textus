@@ -1563,6 +1563,7 @@ export default {
   pluginUpdateNow: "更新",
   pluginNeedsFolder: "開啟一個資料夾後即可使用這個外掛。",
   pluginPageFailed: "這個外掛暫時無法顯示頁面。",
+  pluginTurnedOff: "這個外掛已關閉。在「外掛」中開啟後才能顯示。",
   pluginsSearchNone: "沒有和「{query}」相符的外掛。",
   marketSearch: "搜尋",
   marketListYours: "自己做了一個？",

@@ -70,14 +70,7 @@ export function layoutHandlers(p: PluginScope) {
   return {
     "layout.open": ({ location, where, asDocument }: Params) => {
       const place = locationOf(location);
-      if (
-        !mayOpen(
-          p.id,
-          p.info.granted,
-          getWindowAccess()?.rootPath() ?? null,
-          place.path,
-        )
-      )
+      if (!mayOpen(p.id, p.info.granted, p.folder(), place.path))
         throw new Error("Only its own files and the folder's open.");
       const { path, ...rest } = place;
       access().openFile(path, {

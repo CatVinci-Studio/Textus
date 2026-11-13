@@ -1643,6 +1643,8 @@ ${AI_NAME}への執筆の指示です。すべての文書に適用されます�
   pluginUpdateNow: "更新",
   pluginNeedsFolder: "フォルダを開くとこのプラグインを使えます。",
   pluginPageFailed: "このプラグインのページを表示できませんでした。",
+  pluginTurnedOff:
+    "このプラグインはオフです。「プラグイン」でオンにするとページが表示されます。",
   pluginsSearchNone: "「{query}」に一致するプラグインはありません。",
   marketSearch: "検索",
   marketListYours: "自分で作りましたか？",

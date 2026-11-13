@@ -13,6 +13,8 @@ describe("settingsSummary", () => {
       searxngUrl: "https://search.example.com",
       proxyHost: "10.0.0.2",
       proxyPort: "7890",
+      proxyUsername: "me",
+      proxyPassword: "hunter2",
       customCss: "body { color: red }",
       writingConventions: "Use British spelling",
       agentWorkspaceRoot: "/Users/me/work",

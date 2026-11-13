@@ -103,6 +103,15 @@ export function pluginRecord(id: string): PluginRecord | undefined {
   return snapshot.records.find((r) => r.id === id);
 }
 
+/** Whether a plugin's code may run now: its own switch and "all plugins"
+ *  both on. */
+export function pluginMayRun(record: PluginRecord | null | undefined): boolean {
+  return !!record && canRun(record.status, snapshot.allOn);
+}
+
+/** The error a plugin's page shows while the plugin may not run. */
+export const PLUGIN_OFF = "plugin-off";
+
 /** A plugin's name in the UI language. */
 export function pluginName(
   record: Pick<PluginRecord, "id" | "manifest">,

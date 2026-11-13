@@ -1,7 +1,12 @@
 import { fill } from "../../i18n/fill";
 import { showConfirm } from "../../engine/controls/app-dialog";
 import { changeSettings, loadSettings } from "../../prefs/settings-store";
-import { pluginName, pluginText, pluginsSnapshot } from "./plugin-records";
+import {
+  pluginMayRun,
+  pluginName,
+  pluginText,
+  pluginsSnapshot,
+} from "./plugin-records";
 import type { Settings } from "../../prefs/SettingsContext";
 import type { Strings } from "../../i18n/strings";
 import type { RequiredSetting, Requirement } from "./manifest";
@@ -42,7 +47,7 @@ export function turnOnRequirement(r: Requirement): Partial<Settings> {
  *  turning one on ends here. */
 export async function askForRequirements(id: string, t: Strings) {
   const record = pluginsSnapshot().records.find((r) => r.id === id);
-  if (!record?.manifest || record.status !== "on") return;
+  if (!record?.manifest || !pluginMayRun(record)) return;
   for (const need of record.manifest.requires) {
     if (requirementMet(need, loadSettings())) continue;
     const ok = await showConfirm(

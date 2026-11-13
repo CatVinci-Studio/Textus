@@ -3,6 +3,7 @@ import { invoke } from "@tauri-apps/api/core";
 import { documentDir, join } from "@tauri-apps/api/path";
 import { type DirEntryInfo } from "./bindings/files";
 import { isIOSApp } from "./capabilities";
+import { documentsDir, insideDocuments } from "./documents-path";
 
 /**
  * iOS document access. Files-app picks are `file://` URLs read through the
@@ -24,13 +25,12 @@ const call = <T>(command: string, args?: Record<string, unknown>) =>
  *  same file opens twice, once per spelling. */
 async function inDocuments(url: string | null): Promise<string | null> {
   if (!url?.startsWith("file://")) return url;
-  const path = decodeURIComponent(new URL(url).pathname);
-  const docs = (await documentDir()).replace(/\/+$/, "") + "/";
-  // /private/var and /var are the same place; the picker may say either.
-  const bare = (p: string) => p.replace(/^\/private(?=\/var\/)/, "");
-  return bare(path).startsWith(bare(docs))
-    ? docs + bare(path).slice(bare(docs).length)
-    : url;
+  const docs = await documentsDir();
+  const inside = insideDocuments(
+    decodeURIComponent(new URL(url).pathname),
+    docs,
+  );
+  return inside === null ? url : docs + inside;
 }
 
 export const iosFiles = {
@@ -151,9 +151,6 @@ export async function newDocumentPath(
     if (!(await exists(path))) return path;
   }
 }
-
-/** The app's own Documents folder. */
-export const documentsFolder = documentDir;
 
 /** Renames a file in the app's own Documents folder; the new path. */
 export function renameSandboxEntry(

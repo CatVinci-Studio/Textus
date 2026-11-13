@@ -30,7 +30,13 @@ pub(crate) fn proxy_changed(settings: &Value) {
             .to_string()
     };
     let (kind, host, port) = (text("proxyType"), text("proxyHost"), text("proxyPort"));
-    let (user, pass) = (text("proxyUsername"), text("proxyPassword"));
+    // A password is kept as typed: spaces may be part of it.
+    let pass = settings
+        .get("proxyPassword")
+        .and_then(Value::as_str)
+        .unwrap_or("")
+        .to_string();
+    let user = text("proxyUsername");
     let proxy = (!host.is_empty() && !kind.is_empty() && kind != "none").then(|| {
         let mut url = format!("{kind}://{host}");
         if !port.is_empty() {
@@ -38,13 +44,13 @@ pub(crate) fn proxy_changed(settings: &Value) {
         }
         // The proxy's credentials, when it asks for a name and password
         // (the frontend's proxyUsername/proxyPassword): encoded into the
-        // URL's userinfo, which reqwest answers with Basic auth. Parsing
-        // through reqwest::Url encodes the characters a password often
-        // has (@, :, spaces); without a name the URL stays as before.
+        // URL's userinfo, which reqwest decodes for Basic auth. Url encodes
+        // @, : and spaces but leaves %, so that one is encoded first.
         if !user.is_empty() {
             if let Ok(mut parsed) = reqwest::Url::parse(&url) {
-                let _ = parsed.set_username(&user);
-                let _ = parsed.set_password((!pass.is_empty()).then_some(pass.as_str()));
+                let escaped = |s: &str| s.replace('%', "%25");
+                let _ = parsed.set_username(&escaped(&user));
+                let _ = parsed.set_password((!pass.is_empty()).then(|| escaped(&pass)).as_deref());
                 url = parsed.to_string();
             }
         }

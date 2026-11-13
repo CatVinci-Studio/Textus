@@ -26,18 +26,18 @@ All under the [CatVinci-Studio](https://github.com/CatVinci-Studio) organization
 
 In this repository (`.github/workflows/`):
 
-| Workflow                   | Runs                                              | Does                                                                               |
-| -------------------------- | ------------------------------------------------- | ---------------------------------------------------------------------------------- |
-| `ci.yml`                   | every pull request, pushes to `main` and `stable` | `check`, `e2e`, `native` on three platforms, the iOS simulator build               |
-| `release.yml`              | a `vX.Y.Z` tag, or by hand to rebuild one         | builds, signs and publishes the desktop release ([releasing.md](releasing.md))     |
-| `arch-package.yml`         | from `release.yml`                                | builds and tests the `textus-bin` package                                          |
-| `mirror-downloads.yml`     | after a stable release, or by hand                | copies the installers to the website's download bucket                             |
-| `update-beta-manifest.yml` | after every release, rc included, or by hand      | points the beta update channel's `textus-beta.json` at the newest release          |
-| `update-arch-repo.yml`     | after a stable release, or by hand                | asks `arch-repo` to serve the new `textus-bin`                                     |
-| `deploy-playground.yml`    | `release.yml`, after the newest stable release    | deploys textus.md/playground/ at that tag ([below](#playground))                   |
-| `ios-release.yml`          | an `ios-vX.Y.Z` tag                               | builds the iOS app and uploads it to TestFlight ([ios-release.md](ios-release.md)) |
-| `sync-models.yml`          | Mondays 03:00 UTC                                 | refreshes the AI providers' model lists and opens a pull request if they changed   |
-| `audit.yml`                | Mondays 04:00 UTC                                 | checks npm and Rust dependencies for advisories; opens an issue if it finds any    |
+| Workflow                   | Runs                                              | Does                                                                                   |
+| -------------------------- | ------------------------------------------------- | -------------------------------------------------------------------------------------- |
+| `ci.yml`                   | every pull request, pushes to `main` and `stable` | `check` always; `e2e`, `native` on three platforms and the iOS build in the full suite |
+| `release.yml`              | a `vX.Y.Z` tag, or by hand to rebuild one         | builds, signs and publishes the desktop release ([releasing.md](releasing.md))         |
+| `arch-package.yml`         | from `release.yml`                                | builds and tests the `textus-bin` package                                              |
+| `mirror-downloads.yml`     | after a stable release, or by hand                | copies the installers to the website's download bucket                                 |
+| `update-beta-manifest.yml` | after every release, rc included, or by hand      | points the beta update channel's `textus-beta.json` at the newest release              |
+| `update-arch-repo.yml`     | after a stable release, or by hand                | asks `arch-repo` to serve the new `textus-bin`                                         |
+| `deploy-playground.yml`    | `release.yml`, after the newest stable release    | deploys textus.md/playground/ at that tag ([below](#playground))                       |
+| `ios-release.yml`          | an `ios-vX.Y.Z` tag                               | builds the iOS app and uploads it to TestFlight ([ios-release.md](ios-release.md))     |
+| `sync-models.yml`          | Mondays 03:00 UTC                                 | refreshes the AI providers' model lists and opens a pull request if they changed       |
+| `audit.yml`                | Mondays 04:00 UTC                                 | checks npm and Rust dependencies for advisories; opens an issue if it finds any        |
 
 Dependabot (`.github/dependabot.yml`) opens one grouped pull request a week
 for npm and Rust updates and one a month for GitHub Actions.

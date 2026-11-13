@@ -176,9 +176,10 @@ mod tests {
                     }
                     request.extend_from_slice(&buf[..n]);
                 }
-                let carries = String::from_utf8_lossy(&request)
-                    .to_lowercase()
-                    .contains("proxy-authorization:");
+                // The name and password as typed: "p%41 x", not "pA x".
+                let carries = String::from_utf8_lossy(&request).to_lowercase().contains(
+                    &format!("proxy-authorization: basic {}", "YWxpY2U6cCU0MSB4").to_lowercase(),
+                );
                 let answer = if carries {
                     "HTTP/1.1 200 OK\r\nContent-Length: 2\r\nConnection: close\r\n\r\nok"
                 } else {
@@ -206,9 +207,8 @@ mod tests {
         let with_credentials = proxy.trim_start_matches("http://").to_string();
         let authorized = through(
             client(Duration::from_secs(5), Duration::from_secs(5)),
-            Some(format!(
-                "http://alice:{{SECRET_4bymoh54}}@{with_credentials}"
-            )),
+            // As settings write it: % escaped first, then the URL's own.
+            Some(format!("http://alice:p%2541%20x@{with_credentials}")),
         )
         .unwrap()
         .build()

@@ -13,11 +13,14 @@ function plainMarkdownText(text: string): string {
     .trim();
 }
 
-/** The lines after any front matter, each with whether it is code. */
+/** The lines after any front matter, each with whether it is code (or an
+ *  HTML comment). */
 function bodyLines(markdown: string): { line: string; code: boolean }[] {
   const { body } = splitFrontmatter(markdown.replace(/\r\n?/g, "\n"));
   const lines: { line: string; code: boolean }[] = [];
-  eachLine(body, (line, _index, code) => lines.push({ line, code }));
+  eachLine(body, (line, _index, code) => lines.push({ line, code }), {
+    comments: true,
+  });
   return lines;
 }
 
@@ -32,17 +35,8 @@ export function firstLevelOneHeading(markdown: string): string | null {
 
 /** Finds the first visible, non-empty body line when no H1 is available. */
 export function firstContentLine(markdown: string): string | null {
-  let htmlComment = false;
   for (const { line, code } of bodyLines(markdown)) {
     const trimmed = line.trim();
-    if (htmlComment) {
-      if (line.includes("-->")) htmlComment = false;
-      continue;
-    }
-    if (trimmed.startsWith("<!--")) {
-      if (!trimmed.includes("-->")) htmlComment = true;
-      continue;
-    }
     if (code || !trimmed) continue;
     if (/^ {0,3}(?:={2,}|-{3,}|\*{3,}|_{3,})[ \t]*$/.test(line)) continue;
     if (/^\s*\|?(?:\s*:?-{3,}:?\s*\|)+\s*$/.test(line)) continue;

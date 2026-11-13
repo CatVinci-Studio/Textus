@@ -135,6 +135,7 @@ impl Connection {
     pub async fn list_tools(&self) -> Result<Vec<McpTool>, String> {
         let mut tools = Vec::new();
         let mut cursor: Option<String> = None;
+        let mut seen = std::collections::HashSet::new();
         for _ in 0..20 {
             let params = match &cursor {
                 Some(c) => json!({ "cursor": c }),
@@ -155,7 +156,8 @@ impl Connection {
                 });
             }
             match page["nextCursor"].as_str() {
-                Some(next) if tools.len() < 500 && cursor.as_deref() != Some(next) => {
+                // A cursor met before would go round again.
+                Some(next) if tools.len() < 500 && seen.insert(next.to_string()) => {
                     cursor = Some(next.to_string())
                 }
                 _ => break,

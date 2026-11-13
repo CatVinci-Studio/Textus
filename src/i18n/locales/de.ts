@@ -1717,6 +1717,8 @@ Skills liegen im Ordner skills/ neben dieser Datei, je Skill eine
   pluginUpdateNow: "Aktualisieren",
   pluginNeedsFolder: "Öffne einen Ordner, um dieses Plugin zu nutzen.",
   pluginPageFailed: "Dieses Plugin konnte seine Seite nicht zeigen.",
+  pluginTurnedOff:
+    "Dieses Plugin ist ausgeschaltet. Schalte es unter Plugins ein, um seine Seite zu sehen.",
   pluginsSearchNone: "Kein Plugin passt zu „{query}“.",
   marketSearch: "Suchen",
   marketListYours: "Selbst eins gemacht?",

@@ -19,7 +19,7 @@ export interface IslandRects {
   inner: boolean;
 }
 
-export interface DividerRects {
+interface DividerRects {
   line: Divider;
   /** The gap it lies in. */
   rect: Rect;

@@ -188,10 +188,23 @@ export function ChatBody({
     typed: string = typedMessage,
   ) {
     const message = prepareMessage?.(typedMessage) ?? typedMessage;
-    const compose = (state: {
+    submit(
+      (state) => composeMessage(state, message, attachments, includeSelection),
+      options,
+      typed,
+    );
+  }
+
+  /** Sends now when nothing is under way, else queues: every send from the
+   *  box, a chip, Ask again or Continue comes through here. */
+  function submit(
+    compose: (state: {
       selectionMarkdown: string | null;
       cursor?: { before: string; after: string } | null;
-    }) => composeMessage(state, message, attachments, includeSelection);
+    }) => { message: string; images?: ImageAttachment[] },
+    options: AgentRequestOptions,
+    typed: string,
+  ) {
     if (!busy && queue.length === 0 && !sending.current) {
       dispatchSend(compose, options);
       return;
@@ -217,20 +230,18 @@ export function ChatBody({
    *  against the document as it now reads, rather than writing text whose
    *  target we can't locate. */
   function handleRelocate(proposal: EditProposal) {
-    dispatchSend(
-      () => ({
-        message: fill(labels.relocateRequest, { text: proposal.text ?? "" }),
-      }),
-      { mode: "write", webSearch: false },
-    );
+    const message = fill(labels.relocateRequest, { text: proposal.text ?? "" });
+    submit(() => ({ message }), { mode: "write", webSearch: false }, message);
   }
 
   /** Continue, after an exchange ran out of steps: asks it to go on, the
    *  way the last message was sent. */
   function handleContinue() {
-    dispatchSend(
-      () => ({ message: labels.continueRequest }),
+    const message = labels.continueRequest;
+    submit(
+      () => ({ message }),
       conversation.lastOptions() ?? { mode: "write", webSearch: false },
+      message,
     );
   }
 

@@ -4,6 +4,7 @@ import { FRONTMATTER } from "./frontmatter";
 export const CONTAINER_PREFIX =
   /^(?:[ \t]*(?:>|[-+*]|\d{1,9}[.)])(?=[ \t]|$)[ \t]?)*[ \t]*/;
 const FENCE = /^(`{3,}|~{3,})(.*)$/;
+const COMMENT_OPEN = /^ {0,3}<!--/;
 
 /**
  * Each line of `markdown` with whether it is code: inside a fenced block or
@@ -11,19 +12,32 @@ const FENCE = /^(`{3,}|~{3,})(.*)$/;
  * front matter at its top (YAML, whose `#` starts a comment, not a
  * heading); a fragment's leading `---` lines are its own. As in CommonMark, a fence closes only on a run of the
  * same character at least as long as the one that opened it, with nothing
- * after it - so ``` inside ~~~ stays code.
+ * after it - so ``` inside ~~~ stays code. With `comments`, a `<!-- -->`
+ * block counts as code too: an HTML block, never prose or a fence.
  */
 export function eachLine(
   markdown: string,
   visit: (line: string, index: number, code: boolean) => void,
   /** `$$` blocks count as code too: maths, kept whole. */
-  { math = false, frontMatter = false } = {},
+  { math = false, frontMatter = false, comments = false } = {},
 ): void {
   let fence: string | null = null;
+  let comment = false;
   const head = frontMatter ? (FRONTMATTER.exec(markdown)?.[0] ?? "") : "";
   const yamlLines = head ? head.replace(/\n$/, "").split("\n").length : 0;
   markdown.split("\n").forEach((line, index) => {
     if (index < yamlLines) return visit(line, index, true);
+    if (comments && !fence) {
+      if (comment) {
+        comment = !line.includes("-->");
+        return visit(line, index, true);
+      }
+      // `<!-->` and `<!--->` close where they open, as in CommonMark.
+      if (COMMENT_OPEN.test(line)) {
+        comment = !line.slice(line.indexOf("<!--") + 2).includes("-->");
+        return visit(line, index, true);
+      }
+    }
     const bare = line.replace(CONTAINER_PREFIX, "");
     if (math && (fence === "$$" || (!fence && bare.startsWith("$$")))) {
       const rest = bare.trimEnd();
@@ -65,8 +79,8 @@ interface HeadingLine {
 const ATX = /^ {0,3}(#{1,6})(?:[ \t]+(.*?))?[ \t]*(?:[ \t]#+[ \t]*)?$/;
 const SETEXT = /^ {0,3}(=+|-+)[ \t]*$/;
 // A line that starts a block of its own can't be a setext heading's text.
-const NOT_TEXT = /^ {0,3}(?:[>|]|(?:[-+*]|\d+[.)])(?:[ \t]|$)|#|$)/;
-const COMMENT_OPEN = /^ {0,3}<!--/;
+const NOT_TEXT =
+  /^ {0,3}(?:[>|]|(?:[-+*]|\d+[.)])(?:[ \t]|$)|#|$|(?:-[ \t]*){3,}$|(?:\*[ \t]*){3,}$|(?:_[ \t]*){3,}$)/;
 
 /** A whole document's headings, in order, as the editor counts them: ATX
  *  (indented up to three spaces, empty ones too) and setext (`Title` over
@@ -74,21 +88,12 @@ const COMMENT_OPEN = /^ {0,3}<!--/;
 export function headingsOf(markdown: string): HeadingLine[] {
   const out: HeadingLine[] = [];
   let previous: { text: string; index: number } | null = null;
-  let comment = false;
   eachLine(
     markdown,
     (line, index, code) => {
       const before = previous;
       previous = null;
       if (code) return;
-      if (comment) {
-        comment = !line.includes("-->");
-        return;
-      }
-      if (COMMENT_OPEN.test(line)) {
-        comment = !line.slice(line.indexOf("<!--") + 4).includes("-->");
-        return;
-      }
       const atx = ATX.exec(line);
       if (atx) {
         out.push({ level: atx[1].length, text: atx[2] ?? "", line: index });
@@ -105,7 +110,7 @@ export function headingsOf(markdown: string): HeadingLine[] {
       }
       if (!NOT_TEXT.test(line)) previous = { text: line, index };
     },
-    { frontMatter: true },
+    { frontMatter: true, comments: true },
   );
   return out;
 }

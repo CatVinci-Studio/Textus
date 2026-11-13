@@ -210,7 +210,9 @@ mod desktop {
         // Checked with the folder as it is, so a missing files.read is
         // named as such rather than as no folder open.
         require_grants(&plugins, &id, &job, root.as_deref())?;
-        let root = root.filter(|_| plugins.allows(&id, "files.read"));
+        // The folder its run works in: its files, or its project data.
+        let root = root
+            .filter(|_| plugins.allows(&id, "files.read") || plugins.allows(&id, "project.data"));
         change(&app, |store| {
             store.set(&id, &job_id, job, root, now_ms(), &chrono::Local)
         })

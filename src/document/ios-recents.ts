@@ -1,20 +1,29 @@
 import { isIOSApp } from "../platform/capabilities";
-import {
-  deleteSandboxEntry,
-  renameSandboxEntry,
-  documentsFolder,
-} from "../platform/ios-files";
+import { deleteSandboxEntry, renameSandboxEntry } from "../platform/ios-files";
 // Entries in Documents are stored relative to it: the app's container moves
 // on every reinstall and App Store update.
 import {
   IN_DOCUMENTS,
-  resolvedDocumentPath,
-  storedDocumentPath,
+  documentsDir,
+  insideDocuments,
 } from "../platform/documents-path";
 import { getUiState, setUiState, uiStateReady } from "../storage/ui-state";
 
 // The iPhone's recent-documents list: what reopens at launch, Open Recent
 // and the document list.
+
+/** `path` as the list keeps it: relative inside our own Documents folder
+ *  (`docs`), as it is anywhere else - another app's folder included. */
+function keyOf(path: string, docs: string): string {
+  if (path.startsWith(IN_DOCUMENTS)) return path;
+  const inside = insideDocuments(path, docs);
+  return inside === null ? path : IN_DOCUMENTS + inside;
+}
+
+const resolved = (entry: string, docs: string) =>
+  entry.startsWith(IN_DOCUMENTS)
+    ? docs + entry.slice(IN_DOCUMENTS.length)
+    : entry;
 
 /** The document list keeps this many; the phone menu shows the first few. */
 const RECENT_LIMIT = 30;
@@ -50,10 +59,8 @@ function updateRecents(
 export async function recentIOSDocuments(): Promise<string[]> {
   // After any change already queued, so it lists what that change made.
   await recentsQueue;
-  const docs = await documentsFolder();
-  return (await readRecents()).map((stored) =>
-    resolvedDocumentPath(stored, docs),
-  );
+  const docs = await documentsDir();
+  return (await readRecents()).map((stored) => resolved(stored, docs));
 }
 
 export async function lastIOSDocument(): Promise<string | null> {
@@ -65,7 +72,7 @@ export async function rememberIOSDocument(path: string | null): Promise<void> {
   // with would otherwise wipe it before startup gets to read it.
   if (!isIOSApp || !path) return;
   return updateRecents(async (list) => {
-    const stored = storedDocumentPath(path, await documentsFolder());
+    const stored = keyOf(path, await documentsDir());
     return [stored, ...list.filter((p) => p !== stored)];
   });
 }
@@ -73,18 +80,16 @@ export async function rememberIOSDocument(path: string | null): Promise<void> {
 /** Drops an entry that no longer opens (moved or deleted in Files). */
 export function forgetIOSDocument(path: string): Promise<void> {
   return updateRecents(async (list) => {
-    const docs = await documentsFolder();
-    const gone = storedDocumentPath(path, docs);
-    return list.filter((stored) => storedDocumentPath(stored, docs) !== gone);
+    const docs = await documentsDir();
+    const gone = keyOf(path, docs);
+    return list.filter((entry) => keyOf(entry, docs) !== gone);
   });
 }
 
 /** Whether a document is in the app's own Documents folder. A file picked
  *  from elsewhere grants access to itself only, so it can't be renamed or deleted. */
 export async function inIOSDocuments(path: string): Promise<boolean> {
-  return storedDocumentPath(path, await documentsFolder()).startsWith(
-    IN_DOCUMENTS,
-  );
+  return keyOf(path, await documentsDir()).startsWith(IN_DOCUMENTS);
 }
 
 /** Renames a document in Documents and keeps the recent list pointing at
@@ -95,9 +100,9 @@ export async function renameIOSDocument(
 ): Promise<string> {
   const renamed = await renameSandboxEntry(path, name);
   // Rust answers with the canonical spelling (/private/var/…).
-  const docs = await documentsFolder();
-  const before = storedDocumentPath(path, docs);
-  const after = storedDocumentPath(renamed, docs);
+  const docs = await documentsDir();
+  const before = keyOf(path, docs);
+  const after = keyOf(renamed, docs);
   await updateRecents((list) => list.map((p) => (p === before ? after : p)));
   return renamed;
 }

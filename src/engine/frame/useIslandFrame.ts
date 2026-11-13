@@ -1,4 +1,4 @@
-import { setLayoutFits } from "./frame-store";
+import { setFrameLayout, setLayoutFits } from "./frame-store";
 import type { LayoutNode } from "../layout/tree";
 import { useLayoutEffect, useRef, type RefObject } from "react";
 import { gripHeld } from "./grip";
@@ -7,7 +7,6 @@ import { islandParts, type PlacedIsland } from "./island-parts";
 import type { IslandsLayout } from "./solve";
 import type { IslandRoom } from "./useIslandRoom";
 import type { Rect } from "./rect";
-import { setFrameLayout } from "./frame-store";
 
 /** The room left of the islands' area (the rail, the sidebar's column),
  *  moving with them: what the sidebar is revealed by, on their frames. */

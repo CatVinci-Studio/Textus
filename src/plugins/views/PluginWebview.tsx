@@ -1,7 +1,13 @@
 import { useEffect, useRef, useState, useSyncExternalStore } from "react";
 import { connectFrame, sandboxedFrame, webviewDocument } from "../host/frames";
 import { disposeWebview, resolveWebview, webviewMessage } from "../manager";
-import { pluginName, pluginRecord } from "../store/plugin-records";
+import {
+  PLUGIN_OFF,
+  pluginMayRun,
+  pluginName,
+  pluginRecord,
+  subscribePlugins,
+} from "../store/plugin-records";
 import { grantedHosts } from "../store/permissions";
 import type { CodeBlockSeen } from "../manager";
 import { windowInfo } from "../store/plugin-records";
@@ -315,7 +321,16 @@ export function useResolvedWebview(
   const initialState = useRef(target.state);
   const initialTarget = useRef(target.target);
   const initialBlock = useRef(target.codeBlock);
+  // Turned off, the page shows so; turned on again, it is made anew.
+  const runs = useSyncExternalStore(subscribePlugins, () =>
+    pluginMayRun(pluginRecord(plugin)),
+  );
   useEffect(() => {
+    if (!runs) {
+      setRecord(null);
+      setError(PLUGIN_OFF);
+      return;
+    }
     const made = createWebview(plugin, kind, key, resource);
     // An answer for a page already let go (remounted, moved) is not this
     // one's: its "No webview" must not cover the page that replaced it.
@@ -340,7 +355,7 @@ export function useResolvedWebview(
       current = false;
       disposeWebview(made.id);
     };
-  }, [plugin, kind, key, view, viewType, resource, attempt]);
+  }, [plugin, kind, key, view, viewType, resource, attempt, runs]);
   return { record, error, retry: () => setAttempt((n) => n + 1) };
 }
 

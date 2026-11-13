@@ -5,8 +5,8 @@ import { beforeEach, describe, expect, it, vi } from "vitest";
 const stored = vi.hoisted(() => ({
   list: [] as unknown,
   ready: Promise.resolve() as Promise<void>,
-  /** The next documentDir() call fails (Documents unavailable). */
-  docsFail: false,
+  /** The next read of the list fails (storage unavailable). */
+  readFail: false,
 }));
 
 vi.mock("../platform/capabilities", () => ({ isIOSApp: true }));
@@ -14,17 +14,19 @@ vi.mock("@tauri-apps/api/core", () => ({ invoke: vi.fn() }));
 vi.mock("@tauri-apps/api/path", () => ({
   documentDir: async () => {
     await new Promise((resolve) => setTimeout(resolve, 1));
-    if (stored.docsFail) {
-      stored.docsFail = false;
-      throw new Error("no Documents");
-    }
     return "/app/Documents";
   },
   join: async (...parts: string[]) => parts.join("/"),
 }));
 vi.mock("../storage/ui-state", () => ({
   uiStateReady: () => stored.ready,
-  getUiState: () => stored.list,
+  getUiState: () => {
+    if (stored.readFail) {
+      stored.readFail = false;
+      throw new Error("no Documents");
+    }
+    return stored.list;
+  },
   setUiState: (_key: string, value: unknown) => {
     stored.list = value;
   },
@@ -40,7 +42,7 @@ const { invoke } = await import("@tauri-apps/api/core");
 
 beforeEach(() => {
   stored.list = [];
-  stored.docsFail = false;
+  stored.readFail = false;
   // The live re-read lands a little after everything below has started.
   stored.ready = new Promise((resolve) => setTimeout(resolve, 20));
 });
@@ -80,19 +82,17 @@ describe("iOS recent documents", () => {
     expect(stored.list).toEqual(["documents:other.md", "documents:final.md"]);
   });
 
-  it("keeps a renamed entry whole when Rust spells the folder another way", async () => {
-    stored.list = ["documents:draft.md"];
-    // canonicalize() answers /private/var/… for the /var/… Documents folder.
-    vi.mocked(invoke).mockResolvedValue(
-      "/private/var/mobile/Containers/Data/Application/AB-12/Documents/final.md",
-    );
-    await renameIOSDocument("/app/Documents/draft.md", "final");
-    expect(stored.list).toEqual(["documents:final.md"]);
+  it("keeps a file in another app's folder by its full path", async () => {
+    const other =
+      "/private/var/mobile/Containers/Data/Application/AB-12/Documents/vault/a.md";
+    await rememberIOSDocument(other);
+    expect(stored.list).toEqual([other]);
+    expect(await recentIOSDocuments()).toEqual([other]);
   });
 
   it("doesn't stall the queue on a change that failed inside it", async () => {
     stored.list = ["documents:a.md"];
-    stored.docsFail = true;
+    stored.readFail = true;
     const failed = rememberIOSDocument("/app/Documents/b.md");
     const next = rememberIOSDocument("/app/Documents/c.md");
     await expect(failed).rejects.toThrow("no Documents");

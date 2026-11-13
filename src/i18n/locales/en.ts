@@ -1676,6 +1676,8 @@ type /name in a conversation to use one.
   pluginUpdateNow: "Update",
   pluginNeedsFolder: "Open a folder to use this plugin.",
   pluginPageFailed: "This plugin couldn't show its page.",
+  pluginTurnedOff:
+    "This plugin is turned off. Turn it on in Plugins to see its page.",
   pluginsSearchNone: "No plugin matches “{query}”.",
   marketSearch: "Search",
   marketListYours: "Made one of your own?",

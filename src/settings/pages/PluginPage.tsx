@@ -85,6 +85,8 @@ export function PluginPage({
   const manifest = record.manifest;
   const name = pluginName(record);
   const on = record.status === "on";
+  // Its settings need its code running: its switch and "all plugins" on.
+  const runs = on && allOn;
   const status = statusText(record, allOn, t);
   const switchable = !!manifest && canSwitch(record.status);
   return (
@@ -172,11 +174,11 @@ export function PluginPage({
         </SettingsGroup>
       )}
       {manifest &&
-        (!on ||
+        (!runs ||
           manifest.contributes.settings.length > 0 ||
           !manifest.contributes.settingsPage) && (
           <SettingsGroup title={t.pluginSettingsGroup}>
-            {!on ? (
+            {!runs ? (
               <p className="tx-list-note">
                 {fill(t.pluginSettingsOff, { name })}
               </p>
@@ -191,7 +193,7 @@ export function PluginPage({
         )}
       {/* The plugin's own settings page draws its own groups: on the page,
           not inside one. */}
-      {on && manifest?.contributes.settingsPage && (
+      {runs && manifest?.contributes.settingsPage && (
         <div className="plugin-settings-page">
           <PluginSettingsWebview plugin={record.id} />
         </div>

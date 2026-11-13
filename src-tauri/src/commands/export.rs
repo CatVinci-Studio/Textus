@@ -15,17 +15,11 @@ fn pandoc_candidates() -> Vec<PathBuf> {
     let mut candidates = vec![
         // Works when the app inherits a shell PATH (e.g. launched via CLI).
         PathBuf::from("pandoc"),
-    ];
-    // An app opened from the Dock lacks the shell's PATH (Nix, conda…).
-    candidates.extend(
-        std::env::split_paths(&crate::mcp::path::login_path()).map(|dir| dir.join("pandoc")),
-    );
-    candidates.extend([
         PathBuf::from("/opt/homebrew/bin/pandoc"),
         PathBuf::from("/usr/local/bin/pandoc"),
         PathBuf::from("/opt/local/bin/pandoc"),
         PathBuf::from("/usr/bin/pandoc"),
-    ]);
+    ];
     if let Ok(home) = std::env::var("HOME") {
         candidates.push(PathBuf::from(home).join(".local/bin/pandoc"));
     }
@@ -58,7 +52,13 @@ fn pandoc_command(program: impl AsRef<std::ffi::OsStr>) -> Command {
 #[cfg_attr(test, specta::specta)]
 pub async fn detect_pandoc() -> Option<String> {
     tauri::async_runtime::spawn_blocking(|| {
-        for candidate in pandoc_candidates() {
+        // Last, the login shell's PATH (Nix, conda…), which an app opened
+        // from the Dock lacks: asking it can take seconds.
+        let login = std::iter::once_with(|| {
+            crate::mcp::path::find_program("pandoc", &crate::mcp::path::login_path())
+        })
+        .flatten();
+        for candidate in pandoc_candidates().into_iter().chain(login) {
             let works = pandoc_command(&candidate)
                 .arg("--version")
                 .stdin(Stdio::null())

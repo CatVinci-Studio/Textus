@@ -14,14 +14,25 @@ const CONTAINER_DOCUMENTS =
 
 const withSlash = (dir: string) => dir.replace(/\/+$/, "") + "/";
 
+/** /private/var and /var are one place; iOS spells it either way. */
+const unprivate = (p: string) => p.replace(/^\/private(?=\/var\/)/, "");
+
+/** `path` relative to this install's Documents folder `docs`, however
+ *  either is spelled; null outside it. */
+export function insideDocuments(path: string, docs: string): string | null {
+  const dir = unprivate(withSlash(docs));
+  const bare = unprivate(path);
+  return bare.startsWith(dir) ? bare.slice(dir.length) : null;
+}
+
 /**
  * `path` as stored: relative when inside the current or any container's
  * Documents folder, unchanged otherwise.
  */
 export function storedDocumentPath(path: string, docs: string | null): string {
   if (path.startsWith(IN_DOCUMENTS)) return path;
-  if (docs && path.startsWith(withSlash(docs)))
-    return IN_DOCUMENTS + path.slice(withSlash(docs).length);
+  const inside = docs ? insideDocuments(path, docs) : null;
+  if (inside !== null) return IN_DOCUMENTS + inside;
   const match = CONTAINER_DOCUMENTS.exec(path);
   return match ? IN_DOCUMENTS + match[1] : path;
 }

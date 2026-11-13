@@ -6,7 +6,7 @@ name: CI
 #   check    npm run check         types, lint, unit tests, formatting,
 #                                  README/version/updater checks; and the build
 #   e2e      npm run test:e2e      the Playwright flows in Chromium, split by
-#                                  test across four machines, and e2e-webkit
+#                                  test across two machines, and e2e-webkit
 #                                  the WebKit ones (not required); stopwatch
 #                                  tests (@perf) run only locally, with npm
 #                                  run test:perf
@@ -220,7 +220,7 @@ jobs:
           path: test-results/
           retention-days: 7
 
-  # One required check for the four shards, like `native` below: passes only
+  # One required check for the two shards, like `native` below: passes only
   # when all of them passed (or were skipped together, when the change can't
   # reach the browser).
   e2e:
@@ -272,11 +272,9 @@ jobs:
           path: test-results/
           retention-days: 7
 
-  # Unit tests on macOS and Windows run for frontend changes too (path and
-  # line-ending code); the Rust steps only where Rust can change. A pull
-  # request runs Linux alone unless it touches code that differs between
-  # platforms (scripts/ci-changes.mjs, `platforms`); a push runs all three,
-  # and the release waits for that run on the tagged commit.
+  # Linux alone in the quick suite, where the change reaches Rust; macOS
+  # and Windows (with their unit tests: path and line-ending code) in the
+  # full one, which the release waits for on the tagged commit.
   native-platform:
     needs: changes
     if: needs.changes.outputs.native == 'true' || needs.changes.outputs.full == 'true'
@@ -294,7 +292,7 @@ jobs:
         # macos-26: what macos-latest points at today, pinned (as in the
         # release workflows) so an image switch is a deliberate change.
         #
-        # Linux alone, or all of them when `platforms` (see above).
+        # Linux alone, or all of them in the full suite (see above).
         include: ${{ fromJSON(needs.changes.outputs.full == 'true' && '[{"name":"ubuntu-22.04","os":"ubuntu-22.04","rust":true},{"name":"macos-26","os":"macos-26","rust":true,"unit":true},{"name":"windows-2025","os":"windows-2025","rust":true},{"name":"windows-2025, unit tests","os":"windows-2025","unit":true}]' || '[{"name":"ubuntu-22.04","os":"ubuntu-22.04","rust":true}]') }}
     runs-on: ${{ matrix.os }}
     timeout-minutes: 60

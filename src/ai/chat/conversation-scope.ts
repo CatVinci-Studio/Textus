@@ -115,8 +115,10 @@ export function closeConversation(scope: string, id: string): string | null {
   return rest[Math.min(at, rest.length - 1)] ?? null;
 }
 
-/** Moves `id` to `index` among the scope's other tabs. */
+/** Moves `id` to `index` among the scope's other tabs; the draft, never
+ *  an open conversation, stays out of the list. */
 export function reorderConversation(scope: string, id: string, index: number) {
+  if (id === DRAFT) return;
   const rest = openConversations(scope).filter((x) => x !== id);
   rest.splice(index, 0, id);
   setOpen(scope, rest);

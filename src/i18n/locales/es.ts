@@ -1750,6 +1750,8 @@ para usar una.
   pluginUpdateNow: "Actualizar",
   pluginNeedsFolder: "Abre una carpeta para usar este plugin.",
   pluginPageFailed: "Este plugin no pudo mostrar su página.",
+  pluginTurnedOff:
+    "Este plugin está desactivado. Actívalo en Plugins para ver su página.",
   pluginsSearchNone: "Ningún complemento coincide con «{query}».",
   marketSearch: "Buscar",
   marketListYours: "¿Has hecho uno propio?",

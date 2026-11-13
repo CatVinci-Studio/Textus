@@ -14,6 +14,10 @@ describe("storedDocumentPath", () => {
     expect(storedDocumentPath(`${DOCS}/a.md`, `${DOCS}/`)).toBe(
       "documents:a.md",
     );
+    // Rust answers /private/var/… for the /var/… folder: one place.
+    expect(storedDocumentPath(`/private${DOCS}/a.md`, DOCS)).toBe(
+      "documents:a.md",
+    );
   });
 
   it("migrates a path into an earlier install's container", () => {

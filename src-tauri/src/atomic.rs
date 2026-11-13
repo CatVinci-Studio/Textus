@@ -255,9 +255,9 @@ impl Drop for TempDir {
 #[cfg(test)]
 mod tests;
 
-/// `from` (a file or a folder) moved to `to`, its folder made first; where
-/// it can't be renamed (another volume), copied as it is, the original then
-/// put in the Trash - or, with no Trash, left as it was.
+/// `from` (a file or a folder) moved to `to`, its folder made first; to
+/// another volume, copied as it is and the original removed once the copy is
+/// whole. For the app's own data (papers, AI records), never the user's files.
 pub(crate) fn move_or_copy(from: &std::path::Path, to: &std::path::Path) -> std::io::Result<()> {
     if let Some(parent) = to.parent() {
         std::fs::create_dir_all(parent)?;
@@ -265,21 +265,18 @@ pub(crate) fn move_or_copy(from: &std::path::Path, to: &std::path::Path) -> std:
     let Err(error) = std::fs::rename(from, to) else {
         return Ok(());
     };
-    if std::fs::symlink_metadata(to).is_ok() {
+    if error.kind() != std::io::ErrorKind::CrossesDevices || std::fs::symlink_metadata(to).is_ok() {
         return Err(error);
     }
-    copy_aside(from, to)
-}
-
-/// `from` copied to `to` as it is, the original then put in the Trash, or
-/// left where there is none; never removed outright.
-fn copy_aside(from: &std::path::Path, to: &std::path::Path) -> std::io::Result<()> {
     if let Err(copying) = copy_entry(from, to) {
         take_back(to);
         return Err(copying);
     }
-    try_trash(from);
-    Ok(())
+    if std::fs::symlink_metadata(from)?.is_dir() {
+        std::fs::remove_dir_all(from)
+    } else {
+        std::fs::remove_file(from)
+    }
 }
 
 /// Whether `a` and `b` are one file (one name differing only in case on a

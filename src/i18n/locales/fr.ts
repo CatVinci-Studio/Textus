@@ -1764,6 +1764,8 @@ utiliser une.
   pluginUpdateNow: "Mettre à jour",
   pluginNeedsFolder: "Ouvrez un dossier pour utiliser ce plugin.",
   pluginPageFailed: "Ce plugin n'a pas pu afficher sa page.",
+  pluginTurnedOff:
+    "Ce plugin est désactivé. Activez-le dans Plugins pour voir sa page.",
   pluginsSearchNone: "Aucune extension ne correspond à « {query} ».",
   marketSearch: "Rechercher",
   marketListYours: "Vous en avez créé un ?",

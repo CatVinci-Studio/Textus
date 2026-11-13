@@ -5,6 +5,7 @@ import { contributingPlugins } from "./contributions/plugin-contributions";
 import { canRun, canSwitch, nextStatus } from "./store/lifecycle";
 import {
   pluginRecord,
+  pluginMayRun,
   pluginsSnapshot,
   publish,
   update,
@@ -46,7 +47,7 @@ export async function setPluginEnabled(id: string, on: boolean): Promise<void> {
     problem: undefined,
   };
   update(id, next);
-  if (canRun(next.status, pluginsSnapshot().allOn)) apply(next);
+  if (pluginMayRun(next)) apply(next);
 }
 
 export async function revokePermission(
