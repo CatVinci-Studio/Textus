@@ -133,6 +133,18 @@ section when syncing from upstream:
   and carries no fork edits - re-enable it and delete release-fork.yml
   when returning to the upstream flow. Only this AGENTS.md section and
   release-fork.yml are fork files, so upstream sync never conflicts.
+- **Pushing workflow files needs SSH**: the gh OAuth token has no
+  `workflow` scope, so an https push that adds or changes anything under
+  `.github/workflows/` is rejected ("refusing to allow an OAuth App...")
+  - long after the real error surfaced as connect timeouts. The origin
+  points at `git@github.com:...` (SSH, port 22 works here) and pushes
+  workflow commits fine.
+- **A workflow_dispatch needs the workflow on the default branch**;
+  release-fork.yml is only on `proxy-authentication`. Releasing from the
+  branch therefore means: move the tag onto a commit that carries
+  release-fork.yml and push it (`git tag -f v... <commit> && git push -f
+  origin v...`) - the tag push event runs the workflow from the commit
+  the tag points at.
 - **Network**: pushes and Actions checks fail when GitHub is unreachable
   from the intranet. A failed or cancelled run is no loss: dispatch the
   same tag again after the network is back.
