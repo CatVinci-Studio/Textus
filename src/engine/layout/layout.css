@@ -14,8 +14,10 @@
   --ui-frame-fill: var(--ui-frame);
 }
 
+/* The bar shows the frame under it rather than painting it again: an
+   island's edge, just under the bar, stays in sight and joins its tab's. */
 .app-shell[data-tabs="bar"] .window-bar {
-  background: var(--ui-frame-fill);
+  background: transparent;
 }
 
 /* The tabs name the documents; the title gives way to them - but for a

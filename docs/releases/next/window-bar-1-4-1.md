@@ -9,6 +9,7 @@
 
 ### Fixed
 
+- The open tab's outline joins its sheet's edge again: the sheet's top edge no longer goes missing under the window bar, which on some screens left the tab's curves hanging apart.
 - Jumping back to the top of a document, or switching back to it, no longer leaves its first lines under the format bar.
 
 ### Platform notes
