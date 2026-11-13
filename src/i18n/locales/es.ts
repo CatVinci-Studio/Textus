@@ -937,6 +937,10 @@ para usar una.
   proxyTypeNone: "Ninguno (directo)",
   proxyHostPlaceholder: "Host, p. ej., 127.0.0.1",
   proxyPortPlaceholder: "Puerto",
+  proxyUserPlaceholder: "Usuario (opcional)",
+  proxyPasswordPlaceholder: "Contraseña (opcional)",
+  proxyAuthHelp:
+    "Si el proxy pide usuario y contraseña, escríbelos aquí y las peticiones se identifican con autenticación Basic.",
   agentInputPlaceholder:
     "Pregunta o pide algo… (@\u00a0archivo, /\u00a0habilidad)",
   agentQueued: "En cola ({n}): se envía después de esta respuesta",

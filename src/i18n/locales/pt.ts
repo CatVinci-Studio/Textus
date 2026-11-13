@@ -923,6 +923,10 @@ Habilidades ficam na pasta skills/ ao lado deste arquivo, um arquivo
   proxyTypeNone: "Nenhum (direto)",
   proxyHostPlaceholder: "Host, ex.: 127.0.0.1",
   proxyPortPlaceholder: "Porta",
+  proxyUserPlaceholder: "Usuário (opcional)",
+  proxyPasswordPlaceholder: "Senha (opcional)",
+  proxyAuthHelp:
+    "Se o proxy pedir usuário e senha, preencha-os aqui e as requisições se identificam com autenticação Basic.",
   agentInputPlaceholder:
     "Pergunte ou peça… (@\u00a0arquivo, /\u00a0habilidade)",
   agentQueued: "Na fila ({n}) — enviada depois desta resposta",

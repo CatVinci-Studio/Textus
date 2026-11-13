@@ -366,7 +366,21 @@ fn the_proxy_follows_the_settings() {
         aicompat::http::proxy_url().as_deref(),
         Some("http://proxy.lan")
     );
-    // None, or no host: direct.
+    // A proxy that asks for a name and password (the frontend's
+    // proxyUsername/proxyPassword): they go into the URL's userinfo,
+    // encoded, which reqwest answers with Basic auth.
+    proxy_changed(&json!({
+        "proxyType": "http",
+        "proxyHost": "proxy.lan",
+        "proxyPort": "8080",
+        "proxyUsername": " alice ",
+        "proxyPassword": "p@ss:word",
+    }));
+    assert_eq!(
+        aicompat::http::proxy_url().as_deref(),
+        Some("http://alice:p%40ss%3Aword@proxy.lan:8080/")
+    );
+    // None, or no host: direct. Credentials without a proxy are nothing.
     proxy_changed(&json!({ "proxyType": "none", "proxyHost": "proxy.lan" }));
     assert_eq!(aicompat::http::proxy_url(), None);
     proxy_changed(&json!({ "proxyType": "http", "proxyHost": "" }));

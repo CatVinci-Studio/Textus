@@ -937,6 +937,10 @@ export default {
   proxyTypeNone: "Нет (напрямую)",
   proxyHostPlaceholder: "Хост, например 127.0.0.1",
   proxyPortPlaceholder: "Порт",
+  proxyUserPlaceholder: "Имя пользователя (необязательно)",
+  proxyPasswordPlaceholder: "Пароль (необязательно)",
+  proxyAuthHelp:
+    "Если прокси-сервер запрашивает имя пользователя и пароль, укажите их здесь — запросы будут представляться с помощью Basic-аутентификации.",
   agentInputPlaceholder: "Вопрос или задание… (@\u00a0файл, /\u00a0навык)",
   agentQueued: "В очереди ({n}) — отправится после этого ответа",
   agentQueuedPaused: "В очереди ({n}) — на паузе: прошлый ответ не удался",

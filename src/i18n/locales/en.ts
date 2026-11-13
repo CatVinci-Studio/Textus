@@ -892,6 +892,10 @@ type /name in a conversation to use one.
   proxyTypeNone: "None (direct)",
   proxyHostPlaceholder: "Host, e.g. 127.0.0.1",
   proxyPortPlaceholder: "Port",
+  proxyUserPlaceholder: "Username (optional)",
+  proxyPasswordPlaceholder: "Password (optional)",
+  proxyAuthHelp:
+    "If the proxy asks for a username and password, fill them in and requests identify themselves with Basic auth.",
   agentInputPlaceholder: "Ask or instruct… (@\u00a0file, /\u00a0skill)",
   agentQueued: "Queued ({n}) - sent after this reply",
   agentQueuedPaused: "Queued ({n}) - waiting: the last reply failed",

@@ -823,6 +823,10 @@ export default {
   proxyTypeNone: "不使用（直接連線）",
   proxyHostPlaceholder: "主機，例如 127.0.0.1",
   proxyPortPlaceholder: "連接埠",
+  proxyUserPlaceholder: "使用者名稱，可選",
+  proxyPasswordPlaceholder: "密碼，可選",
+  proxyAuthHelp:
+    "如果代理要求使用者名稱和密碼，在這裡填寫，請求會以 Basic 認證表明身分。",
   agentInputPlaceholder: "提問或下指示…（@\u00a0檔案，/\u00a0技能）",
   agentQueued: "排隊中（{n}）· 這則回覆結束後送出",
   agentQueuedPaused: "排隊中（{n}）· 上一則回覆失敗，已暫停",

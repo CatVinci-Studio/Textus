@@ -821,6 +821,10 @@ export default {
   proxyTypeNone: "不使用（直连）",
   proxyHostPlaceholder: "地址，如 127.0.0.1",
   proxyPortPlaceholder: "端口",
+  proxyUserPlaceholder: "用户名，可选",
+  proxyPasswordPlaceholder: "密码，可选",
+  proxyAuthHelp:
+    "如果代理要求用户名和密码，在这里填写，请求会以 Basic 认证表明身份。",
   agentInputPlaceholder: "输入问题或指令…（@\u00a0引用文件，/\u00a0技能）",
   agentQueued: "排队中（{n}）· 这条回复结束后发送",
   agentQueuedPaused: "排队中（{n}）· 上一条回复失败，已暂停",

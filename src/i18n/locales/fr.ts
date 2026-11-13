@@ -940,6 +940,10 @@ utiliser une.
   proxyTypeNone: "Aucun (direct)",
   proxyHostPlaceholder: "Hôte, p. ex. 127.0.0.1",
   proxyPortPlaceholder: "Port",
+  proxyUserPlaceholder: "Nom d'utilisateur (facultatif)",
+  proxyPasswordPlaceholder: "Mot de passe (facultatif)",
+  proxyAuthHelp:
+    "Si le serveur mandataire demande un nom d'utilisateur et un mot de passe, saisis-les ici ; les requêtes s'identifient alors par authentification Basic.",
   agentInputPlaceholder:
     "Question ou consigne… (@\u00a0fichier, /\u00a0compétence)",
   agentQueued: "En attente ({n}) : envoyé après cette réponse",

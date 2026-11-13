@@ -864,6 +864,10 @@ ${AI_NAME}에게 주는 글쓰기 지침으로, 모든 문서에 적용됩니다
   proxyTypeNone: "사용 안 함(직접 연결)",
   proxyHostPlaceholder: "호스트(예: 127.0.0.1)",
   proxyPortPlaceholder: "포트",
+  proxyUserPlaceholder: "사용자 이름(선택)",
+  proxyPasswordPlaceholder: "비밀번호(선택)",
+  proxyAuthHelp:
+    "프록시가 사용자 이름과 비밀번호를 요구하면 여기에 입력하세요. 요청은 Basic 인증으로 신원을 확인합니다.",
   agentInputPlaceholder: "질문하거나 지시하세요… (@\u00a0파일, /\u00a0스킬)",
   agentQueued: "대기 중({n}) · 이 답변이 끝나면 보냄",
   agentQueuedPaused: "대기 중({n}) · 이전 답변이 실패해 멈춤",

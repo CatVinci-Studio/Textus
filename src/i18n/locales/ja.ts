@@ -878,6 +878,10 @@ ${AI_NAME}への執筆の指示です。すべての文書に適用されます�
   proxyTypeNone: "なし（直接接続）",
   proxyHostPlaceholder: "ホスト、例：127.0.0.1",
   proxyPortPlaceholder: "ポート",
+  proxyUserPlaceholder: "ユーザー名（省略可）",
+  proxyPasswordPlaceholder: "パスワード（省略可）",
+  proxyAuthHelp:
+    "プロキシがユーザー名とパスワードを求める場合はここに入力してください。リクエストは Basic 認証で本人確認します。",
   agentInputPlaceholder: "質問や指示を入力…（@\u00a0ファイル、/\u00a0スキル）",
   agentQueued: "待機中（{n}）· この返答のあとに送信",
   agentQueuedPaused: "待機中（{n}）· 直前の返答が失敗したため一時停止",

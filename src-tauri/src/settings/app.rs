@@ -30,12 +30,25 @@ pub(crate) fn proxy_changed(settings: &Value) {
             .to_string()
     };
     let (kind, host, port) = (text("proxyType"), text("proxyHost"), text("proxyPort"));
+    let (user, pass) = (text("proxyUsername"), text("proxyPassword"));
     let proxy = (!host.is_empty() && !kind.is_empty() && kind != "none").then(|| {
-        if port.is_empty() {
-            format!("{kind}://{host}")
-        } else {
-            format!("{kind}://{host}:{port}")
+        let mut url = format!("{kind}://{host}");
+        if !port.is_empty() {
+            url.push_str(&format!(":{port}"));
         }
+        // The proxy's credentials, when it asks for a name and password
+        // (the frontend's proxyUsername/proxyPassword): encoded into the
+        // URL's userinfo, which reqwest answers with Basic auth. Parsing
+        // through reqwest::Url encodes the characters a password often
+        // has (@, :, spaces); without a name the URL stays as before.
+        if !user.is_empty() {
+            if let Ok(mut parsed) = reqwest::Url::parse(&url) {
+                let _ = parsed.set_username(&user);
+                let _ = parsed.set_password((!pass.is_empty()).then(|| pass.as_str()));
+                url = parsed.to_string();
+            }
+        }
+        url
     });
     if aicompat::http::set_proxy(proxy).is_err() {
         let _ = aicompat::http::set_proxy(None);
