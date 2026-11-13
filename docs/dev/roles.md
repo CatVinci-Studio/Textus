@@ -59,7 +59,7 @@ repositories.
 ### Contributor
 
 - Opens issues and discussions, and pull requests from a fork, all against
-  `main` ([CONTRIBUTING.md](../../CONTRIBUTING.md#branches-and-pull-requests)).
+  `main` ([CONTRIBUTING.md](../../CONTRIBUTING.md#pull-requests)).
 - A fork's pull request that changes `.github/` or the test setup fails the
   `ci-config` check on purpose; a maintainer takes it from there.
 - Themes are shared as a comment on the gallery issue

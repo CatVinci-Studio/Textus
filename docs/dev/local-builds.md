@@ -79,3 +79,26 @@ It's for the loop while you work. Run `npm run check` (or
 `npm run check:all`) before you open a pull request: it also catches a test
 that breaks without importing what you changed, and runs the README,
 installer and updater checks.
+
+## Installers
+
+`npm run tauri build` makes the installers for your platform (`.dmg`,
+`-setup.exe`, `.AppImage`/`.deb`/`.rpm`).
+
+## The browser playground
+
+`src/playground/` is a web edition of the editor alone (no AI, sidebar or
+settings), served at <https://textus.md/playground/>. It reuses the editor
+core (`editor/editor-extensions.ts`) without image storage, and keeps its
+one document in the browser's localStorage.
+
+```sh
+npm run dev:playground     # http://localhost:1450/playground/
+npm run build:playground   # dist-playground/playground/, built for /playground/
+```
+
+Its entry is `playground.html` and its Vite config
+`vite.playground.config.ts`, so `npm run build` and `dist/` are unaffected.
+CI builds it in the `check` job. It is deployed after each newest stable
+release, not from `main` (`deploy-playground.yml`, called by `release.yml`;
+[infrastructure.md](infrastructure.md#playground)).

@@ -1,6 +1,6 @@
 #!/usr/bin/env node
-// Everything a pull request is checked for: frontend checks, e2e flows and
-// native checks, stopping at the first that fails.
+// The full suite a release runs (pull requests run only `check`): frontend
+// checks, e2e flows and native checks, stopping at the first that fails.
 import { spawnSync } from "node:child_process";
 
 for (const script of ["check", "test:e2e", "check:native"]) {

@@ -84,7 +84,7 @@ only geometry, and code that needs the tab in use asks it
 (`tabInUse()`, `engine/layout/tab-element.ts`), never the DOM.
 
 The other checks `npm run check` runs (cycles, copies, dead code, code
-shape) are listed in [CONTRIBUTING.md](../../CONTRIBUTING.md#before-you-push).
+shape) are listed in [code-style.md](code-style.md).
 
 ## UI layering
 
