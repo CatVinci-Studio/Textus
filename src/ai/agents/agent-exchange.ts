@@ -200,9 +200,12 @@ export function cancelAgentExchange(conversation: string): void {
   if (!session) return;
   session.refuse?.();
   session.connection.notify("session/cancel", { sessionId: session.sessionId });
+  // The exchange Stop was for: a new one sent meanwhile is left alone.
+  const stopping = session.events;
   setTimeout(() => {
     const now = sessions.get(conversation) ?? retired.get(conversation);
-    if (now !== session || !session.events) return;
+    if (now !== session || !session.events || session.events !== stopping)
+      return;
     session.stopped = true;
     endAgentSession(conversation);
   }, STOP_GRACE_MS);
