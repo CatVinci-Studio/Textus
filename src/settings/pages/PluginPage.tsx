@@ -1,7 +1,7 @@
 import { Byline } from "./CatalogRow";
 import { fill } from "../../i18n/fill";
 import { SettingsGroup } from "./SettingsGroup";
-import { SettingRow, LinkRow } from "../sections/controls";
+import { SettingRow } from "../sections/controls";
 import { PluginSettingRows } from "./PluginSettings";
 import { PluginErrors } from "./PluginErrors";
 import { PluginData } from "./PluginData";
@@ -139,10 +139,23 @@ export function PluginPage({
                   : fill(t.pluginUpdate, { version: update })}
               </button>
             )}
+            {manifest.repository && (
+              <button
+                type="button"
+                className="text-button settings-inline-button"
+                onClick={() => void links.openWebLink(manifest.repository!)}
+              >
+                {t.pluginRepository}
+              </button>
+            )}
+            <button
+              type="button"
+              className="text-button settings-inline-button"
+              onClick={onEditWithAi}
+            >
+              {t.pluginEditWithAi}
+            </button>
           </SettingRow>
-        )}
-        {manifest && (
-          <LinkRow label={t.pluginEditWithAi} onOpen={onEditWithAi} />
         )}
       </SettingsGroup>
       {manifest && manifest.requires.length > 0 && (
@@ -205,18 +218,11 @@ export function PluginPage({
         installed
         label={fill(t.pluginReadmeLabel, { name })}
       />
+      {manifest && (
+        <PluginPermissions record={record} t={t} attempt={attempt} />
+      )}
       <PluginErrors id={record.id} t={t} />
-      {manifest && <PluginAbout record={record} t={t} attempt={attempt} />}
       <div className="plugin-detail-actions">
-        {manifest?.repository && (
-          <button
-            type="button"
-            className="text-button settings-inline-button"
-            onClick={() => void links.openWebLink(manifest.repository!)}
-          >
-            {t.pluginRepository}
-          </button>
-        )}
         {record.origin === "dev" && (
           <button
             type="button"
@@ -262,8 +268,8 @@ export function PluginPage({
   );
 }
 
-/** What the plugin adds, and the permissions it has (each revocable). */
-function PluginAbout({
+/** The permissions it has (each revocable), and the data it keeps. */
+function PluginPermissions({
   record,
   t,
   attempt,
@@ -273,35 +279,20 @@ function PluginAbout({
   attempt: Attempt;
 }) {
   const manifest = record.manifest!;
-  const { aiTools, commands, customEditors, sidebarTabs } =
-    manifest.contributes;
-  const adds = [
-    ...commands.map((c) => pluginText(record, c.title)),
-    ...sidebarTabs.map((s) =>
-      fill(t.pluginAddsSidebarTab, { name: pluginText(record, s.title) }),
-    ),
-    ...customEditors.map((e) =>
-      fill(t.pluginAddsFileType, { types: e.filenamePatterns.join(", ") }),
-    ),
-    ...aiTools.map((tool) => fill(t.pluginAddsAiTool, { name: tool.name })),
-  ];
   return (
-    <SettingsGroup title={t.pluginAboutGroup}>
-      {adds.length > 0 && (
-        <SettingRow label={t.pluginAddsLabel} hint={adds.join(" · ")} />
+    <SettingsGroup title={t.pluginPermissionsLabel}>
+      {manifest.permissions.length === 0 && (
+        <p className="tx-list-note">{t.pluginNoPermissions}</p>
       )}
-      <SettingRow
-        label={t.pluginPermissionsLabel}
-        hint={manifest.permissions.length ? undefined : t.pluginNoPermissions}
-      />
       {manifest.permissions.map((permission) => {
         const granted = record.granted.includes(permission);
         return (
-          <SettingRow
-            key={permission}
-            label={permissionLabel(permission, t)}
-            hint={granted ? t.pluginGranted : t.pluginNotGranted}
-          >
+          <div className="plugin-permission" key={permission}>
+            <span>
+              {permissionLabel(permission, t)}
+              {" · "}
+              {granted ? t.pluginGranted : t.pluginNotGranted}
+            </span>
             {granted && (
               <button
                 type="button"
@@ -313,7 +304,7 @@ function PluginAbout({
                 {t.pluginRevoke}
               </button>
             )}
-          </SettingRow>
+          </div>
         );
       })}
       <PluginData id={record.id} name={pluginName(record)} t={t} />

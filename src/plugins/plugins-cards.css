@@ -240,6 +240,36 @@ button.plugin-card-open:hover .plugin-card-name {
   font-size: var(--text-body);
   line-height: 1.6;
 }
+/* Folded: about ten lines, the rest a click away. */
+.plugin-readme[data-folded] > .plugin-readme-body {
+  max-height: calc(1.6em * 10);
+  overflow: hidden;
+  mask-image: linear-gradient(to bottom, #000 calc(100% - 3em), transparent);
+}
+/* Permissions in small type, one line each, revoked from the line. */
+.plugin-permission {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: var(--space-1) var(--space-3);
+  min-height: 36px;
+  padding: var(--space-1) 0;
+  color: var(--ui-muted);
+  font-size: var(--text-footnote);
+}
+.plugin-permission > span {
+  flex: 1 1 0;
+  min-width: 0;
+}
+.plugin-permission > button {
+  flex: none;
+}
+.plugin-permission + .plugin-permission {
+  border-top: 1px solid var(--ui-border);
+}
+.plugin-readme-more {
+  margin-top: var(--space-2);
+}
 /* As far from the group above it as groups are from each other. */
 * + .plugin-readme {
   margin-top: var(--space-6);

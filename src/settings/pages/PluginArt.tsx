@@ -1,4 +1,5 @@
-import { lazy, Suspense, useEffect, useState } from "react";
+import { lazy, Suspense, useEffect, useRef, useState } from "react";
+import { currentStrings } from "../../i18n/current";
 import { dataUrl, readPluginFile } from "../../plugins/store/files";
 import { plugins as pluginsIpc } from "../../platform/ipc";
 import type { PluginManifest } from "../../plugins/store/manifest";
@@ -104,7 +105,8 @@ const EditorPreview = lazy(() =>
 
 /** Plugin `id`'s README - its own once installed, the catalog's before -
  *  its first heading left out (the page has the plugin's name above it);
- *  nothing until it is there, or without one. */
+ *  nothing until it is there, or without one. Installed, only its start
+ *  shows until asked for the rest, so the groups below stay in reach. */
 export function PluginReadme({
   id,
   installed,
@@ -115,6 +117,9 @@ export function PluginReadme({
   label: string;
 }) {
   const [text, setText] = useState<string | null>(null);
+  const [open, setOpen] = useState(false);
+  const [long, setLong] = useState(false);
+  const bodyRef = useRef<HTMLDivElement>(null);
   useEffect(() => {
     let live = true;
     setText(null);
@@ -125,16 +130,45 @@ export function PluginReadme({
       live = false;
     };
   }, [id, installed]);
+  // Long is what the fold cuts: measured as the preview draws.
+  useEffect(() => {
+    const body = bodyRef.current;
+    if (!installed || !body) return;
+    const measure = () =>
+      setLong(open || body.scrollHeight > body.clientHeight + 1);
+    const watch = new ResizeObserver(measure);
+    watch.observe(body);
+    if (body.firstElementChild) watch.observe(body.firstElementChild);
+    measure();
+    return () => watch.disconnect();
+  }, [installed, open, text]);
   if (!text?.trim()) return null;
+  const t = currentStrings();
   return (
-    <section className="plugin-readme" aria-label={label}>
-      <Suspense fallback={null}>
-        <EditorPreview
-          markdown={text.replace(/^\s*#\s[^\n]*\n/, "")}
-          docPath={null}
-          label={label}
-        />
-      </Suspense>
+    <section
+      className="plugin-readme"
+      aria-label={label}
+      data-folded={installed && !open ? "" : undefined}
+    >
+      <div className="plugin-readme-body" ref={bodyRef}>
+        <Suspense fallback={null}>
+          <EditorPreview
+            markdown={text.replace(/^\s*#\s[^\n]*\n/, "")}
+            docPath={null}
+            label={label}
+          />
+        </Suspense>
+      </div>
+      {long && (
+        <button
+          type="button"
+          className="text-button plugin-readme-more"
+          aria-expanded={open}
+          onClick={() => setOpen(!open)}
+        >
+          {open ? t.chatAgentShowLess : t.chatAgentShowAll}
+        </button>
+      )}
     </section>
   );
 }
