@@ -115,3 +115,8 @@ fn os_version() -> String {
 fn os_version() -> String {
     "iOS".into()
 }
+
+#[cfg(target_os = "android")]
+fn os_version() -> String {
+    "Android".into()
+}

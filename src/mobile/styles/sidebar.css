@@ -53,8 +53,14 @@
   z-index: var(--z-dock);
 }
 
+/* The panel's name on the tab row's line, the frame one surface with the
+   rail: no line inside it, as on the desktop with its rail. */
 :root[data-window-chrome="mobile"] .sidebar-header {
-  padding-top: 12px;
+  display: flex;
+  align-items: center;
+  height: var(--mobile-bar);
+  padding: 0 var(--pane-inset);
+  border-bottom: 0;
 }
 
 /* A tap leaves :hover on the row until something else is touched. */
@@ -81,4 +87,20 @@
 
 :root[data-window-chrome="mobile"] .sidebar-tab:hover:not(.sidebar-tab-active) {
   background: none;
+}
+
+/* The tabs clear the status bar, as the bar's buttons do. */
+:root[data-window-chrome="mobile"] .island-row {
+  padding-top: var(--safe-top);
+}
+
+/* The page ends above the home indicator; with the keyboard up the web
+   view already ends at the keyboard. */
+:root[data-window-chrome="mobile"] .main-pane {
+  align-self: flex-start;
+  height: calc(100% - env(safe-area-inset-bottom, 0px));
+}
+
+:root[data-window-chrome="mobile"].keyboard-up .main-pane {
+  height: 100%;
 }

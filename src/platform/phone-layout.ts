@@ -3,7 +3,7 @@ import { isMobileApp } from "./capabilities";
 /** The width at which a phone or tablet app takes the phone's layout: one
  *  island, the rail and sidebar pushed in from the left. Wider (a tablet,
  *  an unfolded phone), it is the desktop's. */
-export const PHONE_QUERY = "(max-width: 760px)";
+const PHONE_QUERY = "(max-width: 760px)";
 
 /** Whether the phone's layout is in use now. Never on a desktop: a narrow
  *  desktop window is still a desktop. */

@@ -20,7 +20,6 @@ import { lazyModule } from "../../lazy/lazy-module";
 import { lazyComponent } from "../../lazy/lazy-component";
 import { isDesktopApp } from "../../platform/capabilities";
 import { canOpenFolder, isIOSApp } from "../../platform/capabilities";
-import { PHONE_QUERY } from "../../platform/phone-layout";
 import type { Strings } from "../../i18n/strings";
 import type { OpenFolder } from "../useOpenFolder";
 import type { FileOpenHow } from "../../files/tree-shared";
@@ -50,7 +49,7 @@ export interface SidebarTabProps {
   activeTabId: string;
   /** `beside`: in a split beside the document in front. */
   onOpenFile: (path: string, how?: FileOpenHow, line?: number) => void;
-  /** Closes the sidebar (the phone's drawer, once a file is opened). */
+  /** Closes the sidebar. */
   onClose: () => void;
   /** A file or folder was dragged into another folder in the tree. */
   onEntryMoved: (from: string, to: string) => void;
@@ -77,7 +76,6 @@ function FilesPanel({
   openFolder,
   activePath,
   onOpenFile,
-  onClose,
   onEntryMoved,
 }: SidebarTabProps) {
   if (!openFolder.treeRoot)
@@ -95,11 +93,7 @@ function FilesPanel({
       reveal={openFolder.revealed}
       folder={openFolder.folder}
       activePath={activePath}
-      onFileSelect={(path, how) => {
-        // On a phone the drawer covers the page it just opened.
-        if (isIOSApp && window.matchMedia(PHONE_QUERY).matches) onClose();
-        onOpenFile(path, how);
-      }}
+      onFileSelect={onOpenFile}
       onOpenAsFolder={canOpenFolder ? openFolder.openFolder : undefined}
       onCloseFolder={openFolder.closeFolder}
       onEntryMoved={onEntryMoved}

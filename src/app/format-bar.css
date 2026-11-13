@@ -121,3 +121,7 @@
   padding-top: 1.5rem;
   padding-bottom: calc(1.5rem + 48px);
 }
+
+:root[data-window-chrome="mobile"] .format-bar-row::-webkit-scrollbar {
+  display: none;
+}

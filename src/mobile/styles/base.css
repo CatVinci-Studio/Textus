@@ -13,7 +13,7 @@
   --mobile-bar: 48px;
   /* The page runs under the status bar: the title row takes its height, and
      whatever clears the row clears both. */
-  --safe-top: env(safe-area-inset-top, 0px);
+  --safe-top: max(env(safe-area-inset-top, 0px), var(--native-safe-top, 0px));
   --mobile-top: calc(var(--safe-top) + var(--mobile-bar));
   /* No grey flash over whatever a finger lands on. */
   -webkit-tap-highlight-color: transparent;

@@ -16,7 +16,7 @@ import {
 import { fs } from "../platform/ipc";
 import { useSettings } from "../prefs/SettingsContext";
 import { basename, isInside, onTheWay, parentDir } from "../utils/path";
-import { isIOSApp } from "../platform/capabilities";
+import { isMobileApp } from "../platform/capabilities";
 import { iosFiles } from "../platform/ios-files";
 import { ContextMenu } from "../engine/controls/ContextMenu";
 import { Presence } from "../engine/motion/usePresence";
@@ -302,7 +302,7 @@ const FileNode = memo(function FileNode({
             ? (e) => tree.onRowPointerDown!(e, entry.path, entry.name, false)
             : undefined
         }
-        {...(isIOSApp ? press.handlers : {})}
+        {...(isMobileApp ? press.handlers : {})}
       >
         <Icon className="tree-icon" />
         <Tooltip text={entry.name} description={null} whenCut>
