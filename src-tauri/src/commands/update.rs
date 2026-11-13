@@ -177,13 +177,14 @@ static PENDING_INSTALL: std::sync::Mutex<
 #[cfg(desktop)]
 pub fn exit_app(app: &tauri::AppHandle) {
     if RELAUNCH.load(std::sync::atomic::Ordering::SeqCst) {
+        // A restart, or the installer, ends this process without Exit's own
+        // writes: they're made here.
+        crate::settings::flush_all(app);
+        crate::agents::stop_all(app);
         release_instance(app.clone());
         let pending = PENDING_INSTALL.lock().ok().and_then(|mut p| p.take());
         if let Some((update, bytes)) = pending {
-            // The installer ends this process and starts the new version:
-            // nothing after it runs, Exit's own writes included.
-            crate::settings::flush_all(app);
-            crate::agents::stop_all(app);
+            // The installer ends this process and starts the new version.
             if let Err(e) = update.install(bytes) {
                 eprintln!("textus: update install failed: {e}");
             }

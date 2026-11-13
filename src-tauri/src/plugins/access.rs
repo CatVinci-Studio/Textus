@@ -45,13 +45,15 @@ pub(super) fn granted_path(
     }
     let path = if permission == "files.read" && paths::read_only_hidden(root, path) {
         let resolved = inside(Path::new(root), Path::new(path))?;
-        // A link there must not lead to another hidden file (.env).
+        // A link there leads to what plugins may read anyway, never to
+        // another hidden file (.env).
         let base = std::fs::canonicalize(root).map_err(|e| e.to_string())?;
         let rel = resolved.strip_prefix(&base).unwrap_or(&resolved);
-        if !paths::read_only_hidden("", &rel.to_string_lossy()) {
-            return Err("That file isn't open to plugins.".to_string());
+        if paths::read_only_hidden("", &rel.to_string_lossy()) {
+            resolved
+        } else {
+            plugin_path(Path::new(root), &resolved, id)?
         }
-        resolved
     } else {
         plugin_path(Path::new(root), Path::new(path), id)?
     };

@@ -85,11 +85,7 @@ fn a_caller_is_sent_only_what_changed_since_it_asked() {
     std::fs::write(dir.path().join("a.md"), "# A").unwrap();
     std::fs::write(dir.path().join("b.md"), "# B").unwrap();
     let index = MetadataIndex::default();
-    let ask = |after: Option<u64>| {
-        refresh(&index, dir.path());
-        let all = index.0.lock().unwrap();
-        since(&all[&dir.path().to_string_lossy().to_string()], after)
-    };
+    let ask = |after: Option<u64>| refresh(&index, dir.path(), after);
     let first = ask(None);
     assert!(first.whole && first.documents.len() == 2);
     let quiet = ask(Some(first.generation));
@@ -106,7 +102,7 @@ fn a_caller_is_sent_only_what_changed_since_it_asked() {
     // holding its old generation gets the whole index, not "no change".
     let held = first.generation;
     for _ in 0..ROOTS_KEPT {
-        refresh(&index, tempfile::tempdir().unwrap().path());
+        refresh(&index, tempfile::tempdir().unwrap().path(), None);
     }
     std::fs::write(dir.path().join("c.md"), "# C").unwrap();
     let back = ask(Some(held));

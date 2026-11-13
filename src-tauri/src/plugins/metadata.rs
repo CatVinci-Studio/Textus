@@ -310,8 +310,9 @@ fn modified_of(meta: &std::fs::Metadata) -> Option<u128> {
 }
 
 /// Brings `root`'s index up to date: what was added, changed or gone gets
-/// the next generation.
-fn refresh(index: &MetadataIndex, root: &Path) {
+/// the next generation. Answers a caller at `after` under the same lock,
+/// so another folder can't push this one out in between.
+fn refresh(index: &MetadataIndex, root: &Path, after: Option<u64>) -> MetadataAll {
     let walk = crate::walk::walk(root, &crate::walk::LIMITS, crate::extract::is_markdown);
     let key = root.to_string_lossy().to_string();
     let mut all = index.0.lock().unwrap_or_else(|e| e.into_inner());
@@ -379,6 +380,7 @@ fn refresh(index: &MetadataIndex, root: &Path) {
     if any {
         known.generation = next;
     }
+    since(known, after)
 }
 
 /// What a caller at generation `since` hasn't seen: everything when it has
@@ -446,19 +448,9 @@ pub async fn plugin_metadata_all(
     let shared = MetadataIndex(index.0.clone());
     let root_path = std::path::PathBuf::from(&root);
     // The walk and the reads are blocking file work.
-    tauri::async_runtime::spawn_blocking(move || refresh(&shared, &root_path))
+    tauri::async_runtime::spawn_blocking(move || refresh(&shared, &root_path, after))
         .await
-        .map_err(|e| e.to_string())?;
-    let all = index.0.lock().unwrap_or_else(|e| e.into_inner());
-    Ok(all
-        .get(&root)
-        .map(|known| since(known, after))
-        .unwrap_or(MetadataAll {
-            generation: 0,
-            whole: true,
-            documents: Vec::new(),
-            gone: Vec::new(),
-        }))
+        .map_err(|e| e.to_string())
 }
 
 /// What one document holds now, its blocks with it - read afresh.
