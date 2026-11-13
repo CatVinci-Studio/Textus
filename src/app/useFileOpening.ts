@@ -51,6 +51,9 @@ export interface OpenOptions {
   anchor?: string;
   /** Reopening it (last session, Open Recent): at its last caret. */
   restoreCaret?: boolean;
+  /** The window's saved session coming back: opened as it was last time,
+   *  no plugin offered. */
+  reopening?: boolean;
   /** As a document of ours even where a plugin opens that file type. */
   asDocument?: boolean;
   /** A plugin opened it at a place: gone to once the tab shows. */
@@ -272,7 +275,12 @@ export function useFileOpening(opts: {
       if (already) return show(already);
       const doc = await readDocument(path, open.asDocument, open.place);
       if (!doc) return;
-      const meanwhile = justOpened(path);
+      // Opened meanwhile, by another open or the session coming back.
+      const meanwhile =
+        justOpened(path) ??
+        tabsRef.current.find(
+          (tab) => tab.path === path || tab.importedFrom === path,
+        )?.id;
       if (meanwhile) return show(meanwhile);
       // A plugin's tab has no source to show.
       const newTab: DocTab = {
@@ -294,10 +302,10 @@ export function useFileOpening(opts: {
   // A session's documents coming back: read side by side and made into
   // tabs at their last caret, for the caller to add in one update.
   const tabsForPaths = useCallback(
-    async (paths: string[]): Promise<DocTab[]> => {
+    async (paths: string[], reopening = false): Promise<DocTab[]> => {
       const docs = await Promise.all(
         paths.map((path) =>
-          readDocument(path, false, undefined, true).catch(() => null),
+          readDocument(path, false, undefined, reopening).catch(() => null),
         ),
       );
       return docs.flatMap((doc, i) => {
@@ -330,7 +338,7 @@ export function useFileOpening(opts: {
         path,
         open.asDocument,
         undefined,
-        open.restoreCaret,
+        open.reopening,
       );
       if (!doc) return;
       // Taken by the editor the new reloadKey mounts.

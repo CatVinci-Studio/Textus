@@ -123,11 +123,20 @@ export function useTreeKeys<T extends HTMLElement>() {
           next = items[0];
           break;
         case "End": {
-          // Drawn rows may hold folders with markers of their own.
+          // Only a folder whose undrawn rows end the list is drawn out;
+          // its rows may hold another such folder.
           for (let i = 0; i < 16; i++) {
             const markers = root.querySelectorAll(MORE);
-            if (!markers.length) break;
-            markers.forEach((m) => m.dispatchEvent(new Event(DRAW_ALL_ROWS)));
+            const last = markers[markers.length - 1];
+            const end = visibleItems(root).at(-1);
+            if (
+              !last ||
+              (end &&
+                last.compareDocumentPosition(end) &
+                  Node.DOCUMENT_POSITION_FOLLOWING)
+            )
+              break;
+            last.dispatchEvent(new Event(DRAW_ALL_ROWS));
           }
           const all = visibleItems(root);
           next = all[all.length - 1];

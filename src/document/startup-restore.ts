@@ -38,16 +38,16 @@ interface StartupRestoreOptions {
   markOnboardingShown: () => void;
   openPathInTab: (
     path: string,
-    open?: { restoreCaret?: boolean },
+    open?: { restoreCaret?: boolean; reopening?: boolean },
   ) => Promise<void>;
   /** The tabs `paths` open into, read side by side, not yet added. */
-  tabsForPaths: (paths: string[]) => Promise<DocTab[]>;
+  tabsForPaths: (paths: string[], reopening?: boolean) => Promise<DocTab[]>;
   openFile: (path: string, open?: { restoreCaret?: boolean }) => Promise<void>;
   /** Opens `path` in tab `tabId`, in place of what it holds. */
   replaceTabWithFile: (
     tabId: string,
     path: string,
-    open?: { restoreCaret?: boolean },
+    open?: { restoreCaret?: boolean; reopening?: boolean },
   ) => Promise<void>;
   /** Reopened documents come back at the caret they were left at. */
   restoreCarets: boolean;
@@ -283,6 +283,9 @@ export function useStartupRestore(options: StartupRestoreOptions): void {
       // The one that ends up in front opens first, in the tab already
       // shown: nothing swaps in after it.
       const front = savedFront(taken?.layout);
+      // A saved session (it has a layout), not files sent from outside:
+      // opened as last time, with no plugin offered.
+      const reopening = !!taken?.layout;
       const firstUp =
         front && paths.includes(front)
           ? [front, ...paths.filter((p) => p !== front)]
@@ -307,6 +310,7 @@ export function useStartupRestore(options: StartupRestoreOptions): void {
           // document, the recent list, its last caret.
           await opts.replaceTabWithFile(opts.activeTabId, first, {
             restoreCaret: true,
+            reopening,
           });
         }
         // Gone too, the last of them: the blank tab stays. The rest come
@@ -314,6 +318,7 @@ export function useStartupRestore(options: StartupRestoreOptions): void {
         // its recovered tab is already open.
         const behind = await opts.tabsForPaths(
           rest.filter((p) => !recoveredFor(p)),
+          reopening,
         );
         let ordered: DocTab[] = [];
         opts.setTabs((prev) => {
@@ -323,11 +328,10 @@ export function useStartupRestore(options: StartupRestoreOptions): void {
           ordered = inSessionOrder([...prev, ...fresh], paths);
           return ordered;
         });
-        // The island keeps the tab in front where it was, not first.
-        const place = ordered.findIndex((tab) => tab.id === opts.activeTabId);
+        // The island takes that order too: it keeps its own tabs first.
         const pane = paneOf(windowLayout(), opts.activeTabId);
-        if (pane && place >= 0 && !splitLayout())
-          reorderInPane(pane, opts.activeTabId, place);
+        if (pane && !splitLayout())
+          ordered.forEach((tab, i) => reorderInPane(pane, tab.id, i));
         return;
       }
       // iOS: the document that was open last time.

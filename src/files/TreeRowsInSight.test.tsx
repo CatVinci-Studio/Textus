@@ -80,3 +80,40 @@ it("draws more as the keyboard nears the end, and all at End", () => {
   });
   expect(rows().length).toBe(500);
 });
+
+it("End reaches a big folder's last row, through the tree's own keys", async () => {
+  vi.stubGlobal("IntersectionObserver", FakeObserver);
+  // jsdom lays nothing out: every row counts as shown.
+  vi.spyOn(Element.prototype, "getClientRects").mockReturnValue([
+    {},
+  ] as unknown as DOMRectList);
+  const { useTreeKeys } = await import("../engine/controls/useTreeKeys");
+  function Tree() {
+    const { ref, onKeyDown } = useTreeKeys<HTMLDivElement>();
+    return (
+      <div ref={ref} role="tree" onKeyDown={onKeyDown}>
+        <TreeRowsInSight
+          dir="/v"
+          entries={entries}
+          needed={() => false}
+          row={(e) => (
+            <div key={e.path} role="treeitem" tabIndex={-1} data-path={e.path}>
+              {e.name}
+            </div>
+          )}
+        />
+      </div>
+    );
+  }
+  const { container } = render(<Tree />);
+  const first = container.querySelector<HTMLElement>('[role="treeitem"]')!;
+  act(() => first.focus());
+  act(() => {
+    first.dispatchEvent(
+      new KeyboardEvent("keydown", { key: "End", bubbles: true }),
+    );
+  });
+  expect((document.activeElement as HTMLElement).dataset.path).toBe(
+    "/v/f499.md",
+  );
+});

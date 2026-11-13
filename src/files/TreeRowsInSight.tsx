@@ -51,8 +51,8 @@ export function TreeRowsInSight({
     const el = marker.current;
     if (!more || !el) return;
     const row = el.parentElement?.querySelector<HTMLElement>(".tree-row");
-    if (row?.offsetHeight)
-      el.style.setProperty("--row", `${row.offsetHeight}px`);
+    const height = row?.getBoundingClientRect().height;
+    if (height) el.style.setProperty("--row", `${height}px`);
     const drawMore = () => setLimit(count + ROWS_AT_ONCE);
     const drawAll = () => flushSync(() => setLimit(entries.length));
     const onFocus = (e: FocusEvent) => {

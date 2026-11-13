@@ -229,10 +229,17 @@ describe("startup restore into the initial tab", () => {
     const { tabs, openPathInTab, tabsForPaths, replaceTabWithFile } =
       await restore();
     await waitFor(() => expect(tabs()).toHaveLength(3));
-    expect(replaceTabWithFile).toHaveBeenCalledWith("initial", "/docs/a.md", {
-      restoreCaret: true,
-    });
-    expect(tabsForPaths).toHaveBeenCalledWith(["/docs/b.md", "/docs/c.md"]);
+    expect(replaceTabWithFile).toHaveBeenCalledWith(
+      "initial",
+      "/docs/a.md",
+      expect.objectContaining({
+        restoreCaret: true,
+      }),
+    );
+    expect(tabsForPaths).toHaveBeenCalledWith(
+      ["/docs/b.md", "/docs/c.md"],
+      expect.any(Boolean),
+    );
     // None is brought to the front one by one.
     expect(openPathInTab).not.toHaveBeenCalled();
     expect(tabs().map((tab) => tab.path)).toEqual([
@@ -254,8 +261,10 @@ describe("startup restore into the initial tab", () => {
     });
     const { tabs, replaceTabWithFile } = await restore();
     await waitFor(() => expect(tabs()).toHaveLength(3));
+    // A saved session: opened as last time, no plugin offered.
     expect(replaceTabWithFile).toHaveBeenCalledWith("initial", "/docs/b.md", {
       restoreCaret: true,
+      reopening: true,
     });
     expect(tabs().map((tab) => [tab.id, tab.path])).toEqual([
       ["tab:/docs/a.md", "/docs/a.md"],
@@ -304,7 +313,10 @@ describe("startup restore into the initial tab", () => {
     });
     const { tabs, tabsForPaths } = await restore();
     await waitFor(() => expect(tabs()).toHaveLength(2));
-    expect(tabsForPaths).toHaveBeenCalledWith(["/docs/c.md"]);
+    expect(tabsForPaths).toHaveBeenCalledWith(
+      ["/docs/c.md"],
+      expect.any(Boolean),
+    );
     expect(tabs()[0]).toEqual(
       expect.objectContaining({ id: "initial", path: "/docs/b.md" }),
     );
@@ -406,7 +418,10 @@ describe("startup restore into the initial tab", () => {
     ]);
     const { tabs, tabsForPaths } = await restore();
     await waitFor(() => expect(tabs()).toHaveLength(3));
-    expect(tabsForPaths).toHaveBeenCalledWith(["/docs/c.md"]);
+    expect(tabsForPaths).toHaveBeenCalledWith(
+      ["/docs/c.md"],
+      expect.any(Boolean),
+    );
     expect(tabs()).toEqual([
       expect.objectContaining({
         id: "initial",

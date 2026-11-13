@@ -110,9 +110,11 @@ export function useSaveTabs(opts: {
   // autosave right behind this one sees the path and doesn't save it again.
   const adoptFile = useCallback(
     async (tab: DocTab, picked: string, auto: boolean): Promise<boolean> => {
+      // Saved over a file already there: not a new one to plugins.
+      const existed = (await statMtime(picked)) !== null;
       if (!(await writeOrReport(picked, tab.content, tab.path))) return false;
       void session.addRecentFile(picked);
-      announceFileCreated(picked);
+      if (!existed) announceFileCreated(picked);
       // Pasted images in a first-saved draft move into its image folder with
       // relative paths; saved to another folder, relative images are copied.
       let { content } = tab;
