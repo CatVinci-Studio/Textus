@@ -7,6 +7,11 @@ const ipc = vi.hoisted(() => ({
   /** session/new left unanswered: an agent still signing in. */
   slowStart: false,
   answers: [] as { id?: number; result?: unknown; error?: unknown }[],
+  /** Options set, as "id=value". */
+  set: [] as string[],
+  /** What the user chose, as settings hold it. */
+  chosen: {} as Record<string, Record<string, string>>,
+  remote: null as (() => void) | null,
   out: null as ((o: { type: "lines"; lines: string[] }) => void) | null,
 }));
 vi.mock("../../platform/ipc-plugins", () => ({
@@ -19,6 +24,11 @@ vi.mock("../../platform/ipc-plugins", () => ({
       const sent = JSON.parse(line) as { id?: number; method?: string };
       const { id, method } = sent;
       if (!method) return void ipc.answers.push(sent);
+      if (method === "session/set_config_option") {
+        const p = (sent as { params?: { configId: string; value: string } })
+          .params!;
+        ipc.set.push(`${p.configId}=${p.value}`);
+      }
       if (id === undefined || method === "session/prompt") return;
       if (method === "session/new" && ipc.slowStart) return;
       const result = method === "session/new" ? { sessionId: "s" } : {};
@@ -34,8 +44,11 @@ vi.mock("../../platform/ipc-plugins", () => ({
 }));
 vi.mock("../../platform/app-info", () => ({ appVersion: async () => "0" }));
 vi.mock("../../prefs/settings-store", () => ({
-  loadSettings: () => ({ agentOptions: {} }),
-  subscribeRemote: () => () => {},
+  loadSettings: () => ({ agentOptions: ipc.chosen }),
+  subscribeRemote: (fn: () => void) => {
+    ipc.remote = fn;
+    return () => {};
+  },
 }));
 vi.mock("../../platform/ipc-files", () => ({ fs: {} }));
 vi.mock("../chat/file-changes", () => ({ filesChanged: () => {} }));
@@ -45,6 +58,7 @@ vi.mock("../../plugins/app-bridge", () => ({
 }));
 
 import {
+  agentRunning,
   cancelAgentExchange,
   fileUri,
   runAgentExchange,
@@ -131,5 +145,27 @@ describe("stopping an agent", () => {
     cancelAgentExchange("starting");
     expect(await settled).toBe("cancelled");
     ipc.slowStart = false;
+  });
+});
+
+describe("choices made in another window", () => {
+  it("reach a running session, only the ones that changed", async () => {
+    void runAgentExchange({
+      agent: { key: "p/a", plugin: "p", id: "a", name: "A" } as never,
+      conversation: "other",
+      cwd: "/w",
+      docPath: null,
+      message: "hi",
+      events: { view: () => {}, thinking: () => {}, permission: () => {} },
+    });
+    await vi.waitFor(() => expect(agentRunning("p/a")).toBe(true));
+    ipc.set.length = 0;
+    ipc.chosen = { "p/a": { model: "sonnet" } };
+    ipc.remote!();
+    await vi.waitFor(() => expect(ipc.set).toEqual(["model=sonnet"]));
+    // Another setting changed (a theme): nothing is sent again.
+    ipc.remote!();
+    await new Promise((done) => setTimeout(done, 0));
+    expect(ipc.set).toEqual(["model=sonnet"]);
   });
 });

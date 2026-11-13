@@ -220,7 +220,7 @@ export function ChatComposer({
       : resolveSkillMessage(typed, skills, resolveName);
     // While a reply is coming the message joins the queue.
     if (!message) return;
-    if (message !== typed) {
+    if (message !== typed && !passThrough) {
       const token = SKILL_COMMAND.exec(typed)?.[1];
       const name = token
         ? skills.some((s) => s.name === token)

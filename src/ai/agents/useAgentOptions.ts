@@ -8,7 +8,7 @@ import {
   type AgentCommand,
 } from "./agent-offers";
 import { externalAgent } from "../../plugins/contributions/agents";
-import { setAgentOption } from "./agent-exchange";
+import { agentRunning, setAgentOption } from "./agent-exchange";
 
 /** An agent's options as its menu shows them: each with the value in
  *  force, the user's choice or, for the mode, the one that asks. */
@@ -43,10 +43,12 @@ export function useAgentOptions(agent: string | null): AgentOptionsMenu | null {
       });
       setAgentOption(agent, id, value);
     },
-    // Also when the agent moved itself off it: what it reported last.
-    unasking:
-      unaskingName(offer.options, modeValue) ??
-      unaskingName(offer.options, mode?.current),
+    // While a session runs, the mode it reported: the agent may have
+    // moved itself off the one chosen.
+    unasking: unaskingName(
+      offer.options,
+      agentRunning(agent) ? mode?.current : modeValue,
+    ),
   };
 }
 

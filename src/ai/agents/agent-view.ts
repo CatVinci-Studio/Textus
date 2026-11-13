@@ -58,9 +58,9 @@ function output(fields: ToolCallFields): string {
     .map((c) => (c.type === "content" ? textOf(c.content) : ""))
     .filter(Boolean)
     .join("\n");
-  // Cut, and marked as cut.
+  // Cut, and marked as cut within what is kept.
   const text =
-    all.length > KEPT_OUTPUT ? `${all.slice(0, KEPT_OUTPUT)}\n…` : all;
+    all.length > KEPT_OUTPUT ? `${all.slice(0, KEPT_OUTPUT - 2)}\n…` : all;
   return text || (fields.status === "failed" ? "Failed." : "Done.");
 }
 

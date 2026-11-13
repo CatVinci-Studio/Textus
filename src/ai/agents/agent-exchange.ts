@@ -32,7 +32,7 @@ import {
   offerOf,
 } from "./agent-offers";
 import { modeOption } from "./agent-mode";
-import { subscribeRemote } from "../../prefs/settings-store";
+import { loadSettings, subscribeRemote } from "../../prefs/settings-store";
 
 /**
  * One exchange with an external agent, in a session kept for the
@@ -83,39 +83,65 @@ export function endAgentSession(conversation: string): void {
   session?.connection.stop();
 }
 
-/** Sets an option of `agent` the user just chose in every session of it
- *  running in this window, so none goes on in a mode its menu no longer
- *  shows. */
+/** Whether a session of `agent` runs in this window. */
+export const agentRunning = (agent: string) =>
+  [...sessions.values()].some((s) => s.agent === agent && s.sessionId);
+
+/** Sets an option of `agent` in every session of it running in this
+ *  window. A session that refuses the mode is ended: none goes on in a
+ *  mode its menu no longer shows; the next message starts it afresh. */
+async function setInSessions(agent: string, configId: string, value: string) {
+  const isMode = configId === modeOption(offerOf(agent).options)?.id;
+  const live = new Set(sessions.values());
+  await Promise.all(
+    [...live].map(async (session) => {
+      if (session.agent !== agent || !session.sessionId) return;
+      try {
+        const answer = await session.connection.request<{
+          configOptions?: unknown;
+        } | null>("session/set_config_option", {
+          sessionId: session.sessionId,
+          configId,
+          value,
+        });
+        if (answer?.configOptions) heardOptions(agent, answer.configOptions);
+        else heardValue(agent, configId, value);
+      } catch {
+        if (!isMode) return;
+        for (const [conversation, s] of [...sessions])
+          if (s === session) endAgentSession(conversation);
+      }
+    }),
+  );
+}
+
+/** The options in the order given, each after the agent answered the one
+ *  before (an effort its new model offers). */
+async function sendInOrder(agent: string, entries: [string, string][]) {
+  for (const [id, value] of entries) await setInSessions(agent, id, value);
+}
+
+/** An option the user just chose in this window. */
 export function setAgentOption(agent: string, configId: string, value: string) {
-  for (const session of new Set(sessions.values())) {
-    if (session.agent !== agent || !session.sessionId) continue;
-    void session.connection
-      .request<{ configOptions?: unknown } | null>(
-        "session/set_config_option",
-        { sessionId: session.sessionId, configId, value },
-      )
-      .then((answer) =>
-        answer?.configOptions
-          ? void heardOptions(agent, answer.configOptions)
-          : heardValue(agent, configId, value),
-      )
-      .catch(() => undefined);
-  }
+  void setInSessions(agent, configId, value);
 }
 
-function sendChoices(agent: string) {
-  for (const [id, value] of choicesToSend(agent))
-    setAgentOption(agent, id, value);
-}
-
-let following = false;
-/** A choice made in another window reaches this window's sessions too. */
+let seen: Record<string, Record<string, string>> | null = null;
+/** A choice made in another window reaches this window's sessions too:
+ *  only the choices that changed, never a re-send on any other setting. */
 function followChoices() {
-  if (following) return;
-  following = true;
+  if (seen) return;
+  seen = loadSettings().agentOptions;
   subscribeRemote(() => {
-    for (const agent of new Set([...sessions.values()].map((s) => s.agent)))
-      sendChoices(agent);
+    const now = loadSettings().agentOptions;
+    const before = seen ?? {};
+    seen = now;
+    for (const agent of new Set([...sessions.values()].map((s) => s.agent))) {
+      const changed = Object.entries(now[agent] ?? {}).filter(
+        ([id, value]) => before[agent]?.[id] !== value,
+      );
+      if (changed.length) void sendInOrder(agent, changed);
+    }
   });
 }
 
@@ -373,7 +399,7 @@ export async function runAgentExchange(o: {
     sessions.set(o.conversation, session);
     followChoices();
     // Chosen while it started: set now.
-    sendChoices(o.agent.key);
+    void sendInOrder(o.agent.key, choicesToSend(o.agent.key));
   }
   const user: AgentTurn = { kind: "User", text: o.message };
   current.set(session, { turns: [user], text: "" });

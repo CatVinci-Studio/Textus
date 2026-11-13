@@ -31,6 +31,8 @@ export function CommandText({
         className="agent-command-text"
         style={open || !long ? undefined : { WebkitLineClamp: lines }}
         data-clamped={!open && long ? "" : undefined}
+        // Whole, it may scroll: the keyboard reaches it.
+        tabIndex={lines === undefined ? 0 : undefined}
       >
         {text}
       </code>
