@@ -43,6 +43,22 @@ export function isInside(path: string, dir: string): boolean {
   return inner.startsWith(outer.endsWith("/") ? outer : `${outer}/`);
 }
 
+/** A test for whether a path is one of `targets` or a folder holding one,
+ *  their folders worked out once rather than per path asked about. */
+export function onTheWay(
+  ...targets: (string | null | undefined)[]
+): (path: string) => boolean {
+  const way = new Set<string>();
+  for (const target of targets) {
+    let p = target ? walked(target) : null;
+    for (let i: number; p; p = i > 0 ? p.slice(0, i) : null) {
+      way.add(p);
+      i = p.lastIndexOf("/");
+    }
+  }
+  return (path) => way.has(walked(path) ?? "");
+}
+
 /** A path with "/" for each separator and its "." and ".." walked; null
  *  when ".." climbs above its root. */
 function walked(path: string): string | null {
@@ -125,5 +141,5 @@ export function joinPath(dir: string, name: string): string {
 /** `path` inside `dir` when it is relative (a plugin's folder-relative
  *  path, one typed in a terminal); an absolute path as it is. */
 export function absoluteIn(dir: string, path: string): string {
-  return /^([\\/]|[A-Za-z]:)/.test(path) ? path : joinPath(dir, path);
+  return /^([\\/]|[A-Za-z]:[\\/])/.test(path) ? path : joinPath(dir, path);
 }

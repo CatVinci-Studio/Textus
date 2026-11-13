@@ -12,7 +12,7 @@ import { linkHref } from "../markdown/link-syntax";
 import { currentStrings } from "../../i18n/current";
 import { explainError } from "../../utils/error-explain";
 import { LINK } from "../markdown/link-source";
-import { FILE_CREATED_EVENT } from "../../utils/events";
+import { announceFileCreated } from "../../utils/events";
 import IMAGE_TYPES from "./image-types.json";
 
 /** Pictures pasted, dropped or picked, saved where the writer keeps them. */
@@ -145,10 +145,7 @@ function saveToImageFolder(
       ),
     )
     .then((saved) => {
-      if (saved.path)
-        window.dispatchEvent(
-          new CustomEvent(FILE_CREATED_EVENT, { detail: saved.path }),
-        );
+      if (saved.path) announceFileCreated(saved.path);
       return saved;
     });
 }

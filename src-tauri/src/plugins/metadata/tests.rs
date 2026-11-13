@@ -102,6 +102,15 @@ fn a_caller_is_sent_only_what_changed_since_it_asked() {
     assert!(again.gone.len() == 1 && again.gone[0].ends_with("a.md"));
     // A caller that has seen nothing gets the whole index.
     assert!(ask(None).whole);
+    // Other folders push this one out; indexed again, a caller still
+    // holding its old generation gets the whole index, not "no change".
+    let held = first.generation;
+    for _ in 0..ROOTS_KEPT {
+        refresh(&index, tempfile::tempdir().unwrap().path());
+    }
+    std::fs::write(dir.path().join("c.md"), "# C").unwrap();
+    let back = ask(Some(held));
+    assert!(back.whole && back.documents.len() == 2);
 }
 
 #[test]

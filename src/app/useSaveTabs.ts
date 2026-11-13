@@ -1,3 +1,4 @@
+import { announceFileCreated } from "../utils/events";
 import { fill } from "../i18n/fill";
 import { useCallback, useEffect, useRef } from "react";
 import {
@@ -111,6 +112,7 @@ export function useSaveTabs(opts: {
     async (tab: DocTab, picked: string, auto: boolean): Promise<boolean> => {
       if (!(await writeOrReport(picked, tab.content, tab.path))) return false;
       void session.addRecentFile(picked);
+      announceFileCreated(picked);
       // Pasted images in a first-saved draft move into its image folder with
       // relative paths; saved to another folder, relative images are copied.
       let { content } = tab;

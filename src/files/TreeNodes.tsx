@@ -15,7 +15,7 @@ import {
 } from "../engine/controls/icons";
 import { fs } from "../platform/ipc";
 import { useSettings } from "../prefs/SettingsContext";
-import { basename, isInside, parentDir } from "../utils/path";
+import { basename, isInside, onTheWay, parentDir } from "../utils/path";
 import { isIOSApp } from "../platform/capabilities";
 import { iosFiles } from "../platform/ios-files";
 import { ContextMenu } from "../engine/controls/ContextMenu";
@@ -149,6 +149,8 @@ export const DirNode = memo(function DirNode({
           : 0) || compareEntries(collator, a, b),
     );
   }, [loaded, collator, tree.scope, tree.sort, tree.showHidden]);
+  // Rows that must be drawn: the open document's, and the way to it.
+  const onWay = onTheWay(activePath, tree.reveal);
 
   return (
     <div className="dir-node">
@@ -217,13 +219,9 @@ export const DirNode = memo(function DirNode({
               </div>
             )}
           <TreeRowsInSight
+            dir={path}
             entries={sorted}
-            needed={(entry) =>
-              (activePath !== null &&
-                (entry.path === activePath ||
-                  isInside(activePath, entry.path))) ||
-              (!!tree.reveal && isWithin(tree.reveal, entry.path))
-            }
+            needed={(entry) => onWay(entry.path)}
             row={(entry) =>
               entry.is_dir ? (
                 <DirNode

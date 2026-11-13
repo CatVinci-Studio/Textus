@@ -119,10 +119,13 @@ export function useExternalChangeReload(
     const checkAll = (event: Event) => {
       const at = (event as CustomEvent<unknown>).detail;
       if (typeof at !== "string") return check();
+      // Windows tools may write "c:\\" for the "C:\\" a tab holds.
+      const key = (p: string) =>
+        slashed(p).replace(/^[a-z]:/, (d) => d.toUpperCase());
       const there = liveTabs().filter(
         (tab) =>
           tab.path &&
-          (slashed(tab.path) === slashed(at) || isInside(tab.path, at)),
+          (key(tab.path) === key(at) || isInside(key(tab.path), key(at))),
       );
       if (there.length) check(new Set(there.map((tab) => tab.id)));
     };

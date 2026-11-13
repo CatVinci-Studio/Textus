@@ -50,22 +50,6 @@ pub(crate) fn split(text: &str) -> Option<FrontMatter<'_>> {
     None
 }
 
-#[cfg(test)]
-mod tests {
-    use super::*;
-
-    #[test]
-    fn splits_as_the_app_does() {
-        for (name, text, yaml, body) in crate::ai::workspace::tests::frontmatter_cases() {
-            let found = split(&text);
-            assert_eq!(found.as_ref().map(FrontMatter::yaml), yaml, "{name}");
-            if let Some(found) = found {
-                assert_eq!(found.body, body, "{name}");
-            }
-        }
-    }
-}
-
 /// The `.md` files in `dir` (files only, no folder named so), in file-name
 /// order; none when it can't be read. `links`: a link to a file counts too
 /// (a skill kept in a dotfiles repo); memory folders take none.
@@ -87,6 +71,22 @@ pub(crate) fn md_files(dir: &std::path::Path, links: bool) -> Vec<std::path::Pat
         .collect();
     paths.sort();
     paths
+}
+
+#[cfg(test)]
+mod tests {
+    use super::*;
+
+    #[test]
+    fn splits_as_the_app_does() {
+        for (name, text, yaml, body) in crate::ai::workspace::tests::frontmatter_cases() {
+            let found = split(&text);
+            assert_eq!(found.as_ref().map(FrontMatter::yaml), yaml, "{name}");
+            if let Some(found) = found {
+                assert_eq!(found.body, body, "{name}");
+            }
+        }
+    }
 }
 
 #[cfg(all(test, unix))]

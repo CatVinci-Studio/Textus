@@ -6,6 +6,7 @@ import {
   hasUrlScheme,
   isDrivePath,
   isInside,
+  onTheWay,
   joinPath,
   parentDir,
 } from "./path";
@@ -32,6 +33,13 @@ describe("isInside", () => {
     expect(isInside("C:\\a\\c.md", "C:\\")).toBe(true);
     expect(isInside("/ab/c.md", "/a")).toBe(false);
     expect(isInside("/a", "/a")).toBe(false);
+  });
+  it("onTheWay knows a target and the folders holding it", () => {
+    const way = onTheWay("/a/b/c.md", null, "C:\\x\\y");
+    for (const path of ["/a/b/c.md", "/a/b", "/a", "C:\\x", "C:/x/y"])
+      expect(way(path)).toBe(true);
+    for (const path of ["/a/bc", "/a/b/d.md", "/b"])
+      expect(way(path)).toBe(false);
   });
 });
 
@@ -79,6 +87,9 @@ describe("absoluteIn", () => {
     expect(absoluteIn("/notes/", "Inbox.md")).toBe("/notes/Inbox.md");
     expect(absoluteIn("C:\\notes", "a\\b.md")).toBe("C:\\notes\\a\\b.md");
     expect(absoluteIn("/notes", "/elsewhere/c.md")).toBe("/elsewhere/c.md");
+    // A colon after one letter is a name, not a drive, without a separator.
+    expect(absoluteIn("/notes", "a:b.zip")).toBe("/notes/a:b.zip");
+    expect(absoluteIn("/notes", "D:\\x.md")).toBe("D:\\x.md");
   });
 });
 

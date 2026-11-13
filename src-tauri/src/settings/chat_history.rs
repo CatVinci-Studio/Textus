@@ -215,11 +215,14 @@ impl ChatHistory {
     /// session's conversations don't all stay whole in memory.
     fn file_store(&self, files: &mut HashMap<String, Arc<Store>>, id: &str) -> Arc<Store> {
         if !files.contains_key(id) && files.len() >= KEPT_FILES {
-            for (other, store) in files.drain() {
-                if let Err(e) = store.flush() {
-                    eprintln!("textus: cannot write {}: {e}", file_of(&other));
+            // One that can't be written stays, its turns kept for a retry.
+            files.retain(|other, store| match store.flush() {
+                Ok(()) => false,
+                Err(e) => {
+                    eprintln!("textus: cannot write {}: {e}", file_of(other));
+                    true
                 }
-            }
+            });
         }
         let path = self.dir.join(file_of(id));
         let store = files

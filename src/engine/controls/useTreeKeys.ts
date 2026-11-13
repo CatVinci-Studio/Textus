@@ -1,6 +1,9 @@
 import { useCallback, useEffect, useRef, type KeyboardEvent } from "react";
 
 const ITEM = '[role="treeitem"]';
+/** Sent to a list's "more rows" markers: draw every row now (End). */
+export const DRAW_ALL_ROWS = "tree-draw-all";
+const MORE = "[data-more-rows]";
 
 /** The rows on screen, top to bottom: a folded folder's are not mounted, a
  *  hidden tree (the file tree behind search results) has none. */
@@ -119,9 +122,17 @@ export function useTreeKeys<T extends HTMLElement>() {
         case "Home":
           next = items[0];
           break;
-        case "End":
-          next = items[items.length - 1];
+        case "End": {
+          // Drawn rows may hold folders with markers of their own.
+          for (let i = 0; i < 16; i++) {
+            const markers = root.querySelectorAll(MORE);
+            if (!markers.length) break;
+            markers.forEach((m) => m.dispatchEvent(new Event(DRAW_ALL_ROWS)));
+          }
+          const all = visibleItems(root);
+          next = all[all.length - 1];
           break;
+        }
         case "ArrowRight":
           if (expanded === "false") toggle();
           else if (

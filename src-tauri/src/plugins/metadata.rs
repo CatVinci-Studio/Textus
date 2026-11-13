@@ -296,6 +296,8 @@ const REMOVALS_KEPT: usize = 4096;
 /// Folders kept indexed at once: a window's folder, and another window's.
 const ROOTS_KEPT: usize = 2;
 
+static GENERATION: std::sync::atomic::AtomicU64 = std::sync::atomic::AtomicU64::new(0);
+
 /// The index of the folders plugins ask about, by root.
 #[derive(Default)]
 pub struct MetadataIndex(Arc<Mutex<HashMap<String, RootIndex>>>);
@@ -316,8 +318,15 @@ fn refresh(index: &MetadataIndex, root: &Path) {
     if !all.contains_key(&key) && all.len() >= ROOTS_KEPT {
         all.clear();
     }
-    let known = all.entry(key).or_default();
-    let next = known.generation + 1;
+    // Generations count across folders: one dropped and indexed again never
+    // repeats a number a window holds, which then gets the whole index.
+    let now = GENERATION.load(std::sync::atomic::Ordering::SeqCst);
+    let known = all.entry(key).or_insert_with(|| RootIndex {
+        generation: now,
+        floor: now + 1,
+        ..RootIndex::default()
+    });
+    let next = GENERATION.fetch_add(1, std::sync::atomic::Ordering::SeqCst) + 1;
     let mut any = false;
     let mut present = HashSet::new();
     for file in walk.files {

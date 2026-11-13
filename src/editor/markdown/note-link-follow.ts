@@ -1,4 +1,5 @@
 import { openDocument, type OpenRequest } from "../../utils/open-document";
+import { announceFileCreated } from "../../utils/events";
 import type { EditorView } from "@milkdown/kit/prose/view";
 import { fs } from "../../platform/ipc";
 import { noteJump } from "../nav-history";
@@ -35,7 +36,10 @@ async function createNote(path: string): Promise<boolean> {
   for (const folder of missing)
     await fs.createFolder(dirname(folder), basename(folder)).catch(() => {});
   return fs.createDocument(dir, basename(path)).then(
-    () => true,
+    (made) => {
+      announceFileCreated(made);
+      return true;
+    },
     () => false,
   );
 }
