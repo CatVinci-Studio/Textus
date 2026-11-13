@@ -43,7 +43,10 @@ export function useAgentOptions(agent: string | null): AgentOptionsMenu | null {
       });
       setAgentOption(agent, id, value);
     },
-    unasking: unaskingName(offer.options, modeValue),
+    // Also when the agent moved itself off it: what it reported last.
+    unasking:
+      unaskingName(offer.options, modeValue) ??
+      unaskingName(offer.options, mode?.current),
   };
 }
 

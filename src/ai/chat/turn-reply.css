@@ -279,6 +279,12 @@ button.agent-context-chip:hover {
   opacity: 0.8;
 }
 
+/* A step that failed: its kind icon in the danger colour. */
+[data-failed] .agent-tool-icon {
+  color: var(--ui-danger);
+  opacity: 1;
+}
+
 .agent-tool-result {
   align-self: flex-start;
   font-size: var(--text-caption);

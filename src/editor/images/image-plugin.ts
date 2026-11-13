@@ -237,9 +237,10 @@ function createImageView(
     if (shown() !== before) clearMissing();
     const { title } = readImagePresentation(n.attrs.title as string);
     const width = shownImageWidth(n.attrs);
-    // Only another picture loads again: setting src anew blanked it.
+    // Only another picture loads again: setting src anew blanked it. One
+    // that failed is tried again on any edit (it may be there now).
     const want = shown();
-    if (want !== drawn) {
+    if (want !== drawn || card) {
       drawn = want;
       showDocImage(
         img,

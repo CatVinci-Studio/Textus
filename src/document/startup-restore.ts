@@ -16,6 +16,12 @@ import { lastCaret } from "./last-places";
 import { keptTabsRestored, readKeptTabs, type KeptTab } from "./reload-tabs";
 import { takeWindowSession } from "./launch-window";
 import { savedFront } from "../engine/layout/saved";
+import {
+  paneOf,
+  reorderInPane,
+  splitLayout,
+  windowLayout,
+} from "../engine/layout/store";
 
 // Module-scoped, not a ref: StrictMode runs mount effects twice, and this
 // drain is a destructive pull from shared queues. Each window is its own
@@ -309,7 +315,19 @@ export function useStartupRestore(options: StartupRestoreOptions): void {
         const behind = await opts.tabsForPaths(
           rest.filter((p) => !recoveredFor(p)),
         );
-        opts.setTabs((prev) => inSessionOrder([...prev, ...behind], paths));
+        let ordered: DocTab[] = [];
+        opts.setTabs((prev) => {
+          // One the user opened meanwhile isn't opened twice.
+          const open = new Set(prev.map(fileOf));
+          const fresh = behind.filter((tab) => !open.has(fileOf(tab)));
+          ordered = inSessionOrder([...prev, ...fresh], paths);
+          return ordered;
+        });
+        // The island keeps the tab in front where it was, not first.
+        const place = ordered.findIndex((tab) => tab.id === opts.activeTabId);
+        const pane = paneOf(windowLayout(), opts.activeTabId);
+        if (pane && place >= 0 && !splitLayout())
+          reorderInPane(pane, opts.activeTabId, place);
         return;
       }
       // iOS: the document that was open last time.
@@ -368,10 +386,14 @@ async function fileThere(path: string): Promise<boolean> {
 
 /** `tabs` with the session's documents, which arrive in any order, back in
  *  `paths`' order, in the places they took; the others stay put. */
+/** The file a tab shows: its own, a plugin view's, or the one imported. */
+const fileOf = (tab: DocTab) =>
+  tab.path ?? tab.view?.resource ?? tab.importedFrom;
+
 function inSessionOrder(tabs: DocTab[], paths: string[]): DocTab[] {
   const rank = new Map(paths.map((p, i) => [p, i]));
   const rankOf = (tab: DocTab) => {
-    const path = tab.path ?? tab.view?.resource ?? tab.importedFrom;
+    const path = fileOf(tab);
     return path ? (rank.get(path) ?? -1) : -1;
   };
   const sorted = tabs

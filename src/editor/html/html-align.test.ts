@@ -1,3 +1,4 @@
+// @vitest-environment jsdom
 import { describe, expect, it } from "vitest";
 import { Schema } from "@milkdown/kit/prose/model";
 import { alignedBlocks } from "./html-align";
@@ -49,5 +50,30 @@ describe("aligned blocks", () => {
       tag("</div>"),
     ]);
     expect(alignedBlocks(doc)).toEqual([]);
+  });
+});
+
+describe("align tags in the editor", () => {
+  it("hide again once the caret leaves, even with no block to align", async () => {
+    const { createTestEditor } = await import("../editor-test-kit");
+    const { editorViewCtx } = await import("@milkdown/kit/core");
+    const { TextSelection } = await import("@milkdown/kit/prose/state");
+    const editor = await createTestEditor('Text\n\n<p align="center">\n');
+    const view = editor.ctx.get(editorViewCtx);
+    const hiddenTags = () =>
+      view.dom.querySelectorAll(".html-align-tag").length;
+    const tagAt = view.state.doc.content.size - 2;
+    const go = (pos: number) =>
+      view.dispatch(
+        view.state.tr.setSelection(TextSelection.create(view.state.doc, pos)),
+      );
+    const before = hiddenTags();
+    // Typed with the caret on the tag, then the caret leaves.
+    go(tagAt);
+    view.dispatch(view.state.tr.insertText("!", 2));
+    go(1);
+    expect(hiddenTags()).toBe(before);
+    expect(before).toBeGreaterThan(0);
+    await editor.destroy();
   });
 });

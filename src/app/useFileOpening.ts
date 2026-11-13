@@ -128,6 +128,8 @@ export function useFileOpening(opts: {
       path: string,
       asDocument = false,
       place?: DocumentPlace,
+      /** Reopened as last time: no plugin offered, nothing waited on. */
+      reopening = false,
     ): Promise<Partial<DocTab> | null> => {
       // A file type a plugin opens is its tab, not a document. Plugins load
       // first: a file opened at launch may come before them.
@@ -156,7 +158,7 @@ export function useFileOpening(opts: {
         if (asDocument || (await isFolder(path))) throw err;
         const { offerPluginToOpen } =
           await import("../plugins/store/open-offer");
-        const offered = await offerPluginToOpen(path, t);
+        const offered = reopening ? "none" : await offerPluginToOpen(path, t);
         if (offered === "system") {
           await exportDoc.openLinkedFile(path);
           return null;
@@ -172,7 +174,7 @@ export function useFileOpening(opts: {
       const { content, diskMtime } = disk;
       // Text that isn't a document (a web page): the official plugin that
       // shows it is offered first; declined, it opens as text.
-      if (!asDocument && !isDocumentName(basename(path))) {
+      if (!asDocument && !reopening && !isDocumentName(basename(path))) {
         const { offerPluginToOpen } =
           await import("../plugins/store/open-offer");
         const offered = await offerPluginToOpen(path, t);
@@ -294,7 +296,9 @@ export function useFileOpening(opts: {
   const tabsForPaths = useCallback(
     async (paths: string[]): Promise<DocTab[]> => {
       const docs = await Promise.all(
-        paths.map((path) => readDocument(path).catch(() => null)),
+        paths.map((path) =>
+          readDocument(path, false, undefined, true).catch(() => null),
+        ),
       );
       return docs.flatMap((doc, i) => {
         if (!doc) return [];
@@ -322,7 +326,12 @@ export function useFileOpening(opts: {
   // prompt's resolution.
   const replaceTabWithFile = useCallback(
     async (tabId: string, path: string, open: OpenOptions = {}) => {
-      const doc = await readDocument(path, open.asDocument);
+      const doc = await readDocument(
+        path,
+        open.asDocument,
+        undefined,
+        open.restoreCaret,
+      );
       if (!doc) return;
       // Taken by the editor the new reloadKey mounts.
       const jump =

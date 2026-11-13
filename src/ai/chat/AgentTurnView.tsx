@@ -289,12 +289,14 @@ export function ToolOutput({
   output = "",
   summary,
   parts,
+  failed,
 }: {
   output?: string;
   /** The line it opens from: "Result", or the step itself. */
   summary: ReactNode;
   /** Rows it holds instead of text: steps folded into it. */
   parts?: ReactNode;
+  failed?: boolean;
 }) {
   const [open, setOpen] = useState(false);
   const [all, setAll] = useState(false);
@@ -302,6 +304,7 @@ export function ToolOutput({
   return (
     <details
       className="disclosure agent-tool-result"
+      data-failed={failed || undefined}
       onToggle={(e) => setOpen(e.currentTarget.open)}
     >
       <summary>{summary}</summary>

@@ -72,20 +72,40 @@ const INITIAL: DocTab = {
 };
 
 /** Runs the hook against a tab list held here, the way App holds it. */
-async function restore(restoreCarets = true, launchStartPage = false) {
+async function restore(
+  restoreCarets = true,
+  launchStartPage = false,
+  /** Tabs held in the window's own model, which orders them by island. */
+  inModel = false,
+  /** Done while the session's documents are read. */
+  meanwhile?: (tabs: DocTab[]) => DocTab[],
+) {
   // `drained` is module state (one drain per window): a fresh module each.
   vi.resetModules();
   const { useStartupRestore } = await import("./startup-restore");
-  let tabs: DocTab[] = [{ ...INITIAL }];
+  const model = await import("../engine/layout/store");
+  let local: DocTab[] = [{ ...INITIAL }];
+  if (inModel)
+    model.startWindowTabs(local, () => ({ ...INITIAL, id: "blank" }));
+  const held = {
+    get tabs(): DocTab[] {
+      return inModel ? [...model.windowTabs<DocTab>()] : local;
+    },
+    set tabs(next: DocTab[]) {
+      if (inModel) model.setWindowTabs<DocTab>(() => next);
+      else local = next;
+    },
+  };
   const openPathInTab = vi.fn(async () => {});
   // Made into tabs, not added: the restore adds them in one update.
-  const tabsForPaths = vi.fn(async (paths: string[]) =>
-    paths.map((path) => ({ ...INITIAL, id: `tab:${path}`, path })),
-  );
+  const tabsForPaths = vi.fn(async (paths: string[]) => {
+    if (meanwhile) held.tabs = meanwhile(held.tabs);
+    return paths.map((path) => ({ ...INITIAL, id: `tab:${path}`, path }));
+  });
   const openFile = vi.fn(async () => {});
   // As the window's own: the tab takes the file, its editor remounted.
   const replaceTabWithFile = vi.fn(async (id: string, path: string) => {
-    tabs = tabs.map((tab) =>
+    held.tabs = held.tabs.map((tab) =>
       tab.id === id ? { ...tab, path, reloadKey: tab.reloadKey + 1 } : tab,
     );
   });
@@ -96,7 +116,7 @@ async function restore(restoreCarets = true, launchStartPage = false) {
       language: "en",
       onboardingShown: true,
       setTabs: (update) => {
-        tabs = update(tabs);
+        held.tabs = update(held.tabs);
       },
       setDraftsRestoredCount: vi.fn(),
       markOnboardingShown: vi.fn(),
@@ -112,7 +132,7 @@ async function restore(restoreCarets = true, launchStartPage = false) {
   );
   const { takeTabJump } = await import("../editor/tab-jump");
   return {
-    tabs: () => tabs,
+    tabs: () => held.tabs,
     openPathInTab,
     tabsForPaths,
     openFile,
@@ -242,6 +262,39 @@ describe("startup restore into the initial tab", () => {
       ["initial", "/docs/b.md"],
       ["tab:/docs/c.md", "/docs/c.md"],
     ]);
+  });
+
+  it("keeps that order in the window's own model, which orders by island", async () => {
+    ipc.takePendingWindow.mockResolvedValue({
+      paths: ["/docs/a.md", "/docs/b.md", "/docs/c.md"],
+      layout: {
+        tree: {
+          paths: ["/docs/a.md", "/docs/b.md", "/docs/c.md"],
+          front: "/docs/b.md",
+        },
+      },
+    });
+    const { tabs } = await restore(true, false, true);
+    await waitFor(() => expect(tabs()).toHaveLength(3));
+    expect(tabs().map((tab) => tab.path)).toEqual([
+      "/docs/a.md",
+      "/docs/b.md",
+      "/docs/c.md",
+    ]);
+  });
+
+  it("doesn't open twice a session file the user opened meanwhile", async () => {
+    ipc.takePendingWindow.mockResolvedValue({
+      paths: ["/docs/a.md", "/docs/b.md"],
+    });
+    // Clicked in the tree while the batch was read.
+    const { tabs } = await restore(true, false, false, (now) => [
+      ...now,
+      { ...INITIAL, id: "clicked", path: "/docs/b.md" },
+    ]);
+    await waitFor(() =>
+      expect(tabs().map((tab) => tab.id)).toEqual(["initial", "clicked"]),
+    );
   });
 
   it("skips a first document deleted since, and still opens the rest", async () => {

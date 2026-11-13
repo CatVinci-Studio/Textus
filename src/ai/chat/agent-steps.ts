@@ -34,7 +34,7 @@ function stepOf(call: AgentTurn & { kind: "ToolCall" }): AgentStep {
     kind: typeof args.kind === "string" ? args.kind : "other",
     output: null,
     done: false,
-    failed: false,
+    failed: args.status === "failed",
   };
 }
 
@@ -60,7 +60,7 @@ export function agentStepRuns(turns: AgentTurn[]): Map<string, AgentStep[]> {
     const step = turn.kind === "ToolResult" ? byId.get(turn.call_id) : null;
     if (step && turn.kind === "ToolResult") {
       step.done = true;
-      step.failed = turn.output === "Failed.";
+      step.failed ||= turn.output === "Failed.";
       step.output = BARE.has(turn.output) ? null : turn.output;
       continue;
     }
@@ -100,8 +100,9 @@ export function foldSteps(
  *  and without the backticks some agents put round a command. */
 export function stepTitle(title: string, folder: string | null): string {
   let shown = title.trim().replace(/^`([^`]*)`$/, "$1");
-  if (folder) {
-    const root = folder.replace(/[\\/]+$/, "");
+  const root = folder?.replace(/[\\/]+$/, "");
+  // A drive's root ("/") leaves nothing to take off.
+  if (root) {
     shown = shown
       .split(root + "/")
       .join("")

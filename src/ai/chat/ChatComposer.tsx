@@ -10,7 +10,7 @@ import {
   resolveSkillName,
   type PickerSkill,
 } from "./skill-picker";
-import { MENTION_TOKEN, SKILL_COMMAND } from "./skill-syntax";
+import { MENTION_TOKEN, SKILL_COMMAND, agentCommandText } from "./skill-syntax";
 import type { PanelMode } from "../../prefs/SettingsContext";
 import {
   ArrowUpIcon,
@@ -216,7 +216,7 @@ export function ChatComposer({
       return;
     }
     const message = passThrough
-      ? typed
+      ? agentCommandText(typed, skills)
       : resolveSkillMessage(typed, skills, resolveName);
     // While a reply is coming the message joins the queue.
     if (!message) return;

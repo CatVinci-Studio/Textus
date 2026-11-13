@@ -80,7 +80,7 @@ function Step({ step, folder }: { step: AgentStep; folder: string | null }) {
     </>
   );
   return step.output ? (
-    <ToolOutput output={step.output} summary={line} />
+    <ToolOutput output={step.output} summary={line} failed={step.failed} />
   ) : (
     <div className="agent-tool-line" data-failed={step.failed || undefined}>
       {line}

@@ -33,6 +33,10 @@ vi.mock("../../platform/ipc-plugins", () => ({
   },
 }));
 vi.mock("../../platform/app-info", () => ({ appVersion: async () => "0" }));
+vi.mock("../../prefs/settings-store", () => ({
+  loadSettings: () => ({ agentOptions: {} }),
+  subscribeRemote: () => () => {},
+}));
 vi.mock("../../platform/ipc-files", () => ({ fs: {} }));
 vi.mock("../chat/file-changes", () => ({ filesChanged: () => {} }));
 vi.mock("../../plugins/app-bridge", () => ({

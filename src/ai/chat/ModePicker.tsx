@@ -100,10 +100,12 @@ export function ModePicker({
       : undefined,
     choose: (index) => {
       const item = items[index];
+      // An agent's option is sent even when ticked: its session may have
+      // moved off it (a mode it switched to itself).
+      if (item.kind === "option")
+        return models?.agentOptions?.choose(item.id, item.value);
       if (isSelected(item)) return;
       if (item.kind === "mode") onMode(item.choice.value);
-      else if (item.kind === "option")
-        models?.agentOptions?.choose(item.id, item.value);
       else {
         models?.choose(item.provider, item.model);
         // An agent answers as itself: Research's paper isn't one of its modes.
@@ -176,7 +178,9 @@ export function ModePicker({
         aria-haspopup="listbox"
         aria-expanded={open}
         aria-controls={open ? listId : undefined}
-        aria-label={labels.picker}
+        aria-label={[labels.picker, models?.agentOptions?.unasking]
+          .filter(Boolean)
+          .join(", ")}
         onMouseDown={holdFocus ? (e) => e.preventDefault() : undefined}
         onClick={() => (open ? close() : openMenu())}
         onKeyDown={onTriggerKey}

@@ -1,6 +1,11 @@
 import { getUiState, setUiState } from "../../storage/ui-state";
 import { loadSettings } from "../../prefs/settings-store";
-import { askingValue, readOptions, type AgentOption } from "./agent-mode";
+import {
+  askingValue,
+  modeOption,
+  readOptions,
+  type AgentOption,
+} from "./agent-mode";
 
 /**
  * What each external agent offers, as last heard from it: the options it
@@ -130,6 +135,16 @@ export function wanted(
     : null;
 }
 
+/** The options whose value in force isn't the one wanted, with it. */
+export function choicesToSend(agent: string): [string, string][] {
+  const { options } = offerOf(agent);
+  const chosen = chosenFor(agent);
+  return options.flatMap((o): [string, string][] => {
+    const value = wanted(o, options, chosen);
+    return value !== null && value !== o.current ? [[o.id, value]] : [];
+  });
+}
+
 /**
  * Sets each option the user chose, and the mode that asks unless another
  * was chosen, in the order the agent lists them: an option may depend on
@@ -153,9 +168,16 @@ export async function applyChoices(
     if (!next) return;
     done.add(next.id);
     const value = wanted(next, options, chosen)!;
-    const answer = (await set(next.id, value)) as {
-      configOptions?: unknown;
-    } | null;
+    // A model or effort the agent turns down is skipped; the mode isn't:
+    // the session never runs in one that doesn't ask unless chosen.
+    const isMode = next.id === modeOption(options)?.id;
+    let answer: { configOptions?: unknown } | null;
+    try {
+      answer = (await set(next.id, value)) as typeof answer;
+    } catch (err) {
+      if (isMode) throw err;
+      continue;
+    }
     if (answer?.configOptions)
       options = heardOptions(agent, answer.configOptions);
     else {

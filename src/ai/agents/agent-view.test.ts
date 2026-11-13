@@ -97,6 +97,38 @@ describe("an agent's updates as the chat shows them", () => {
     });
     expect(again).toBe(view);
   });
+
+  it("keeps the plan past prose and a step, marks a failure, and a cut", () => {
+    const view = run([
+      {
+        sessionUpdate: "plan",
+        entries: [{ content: "Read", status: "pending" }],
+      },
+      {
+        sessionUpdate: "agent_message_chunk",
+        content: { type: "text", text: "Let me look." },
+      },
+      { sessionUpdate: "tool_call", toolCallId: "t3", title: "Build" },
+      {
+        sessionUpdate: "tool_call_update",
+        toolCallId: "t3",
+        status: "failed",
+        content: [
+          {
+            type: "content",
+            content: { type: "text", text: "x".repeat(5000) },
+          },
+        ],
+      },
+    ]);
+    expect(view.plan).toHaveLength(1);
+    const step = view.turns.find((t) => t.kind === "ToolCall");
+    expect(step?.kind === "ToolCall" && JSON.parse(step.arguments).status).toBe(
+      "failed",
+    );
+    const out = view.turns.find((t) => t.kind === "ToolResult");
+    expect(out?.kind === "ToolResult" && out.output.endsWith("\n…")).toBe(true);
+  });
 });
 
 describe("a conversation handed back to a model", () => {

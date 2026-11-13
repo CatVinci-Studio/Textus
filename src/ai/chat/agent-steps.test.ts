@@ -57,5 +57,23 @@ describe("an agent's steps", () => {
     );
     expect(stepTitle("`npm run lint`", null)).toBe("npm run lint");
     expect(stepTitle("Read C:\\n\\a.md", "C:\\n")).toBe("Read a.md");
+    // A drive's root as the folder takes nothing off.
+    expect(stepTitle("cat src/a.ts", "/")).toBe("cat src/a.ts");
+  });
+  it("show a step failed by its status, whatever it printed", () => {
+    const runs = agentStepRuns([
+      {
+        kind: "ToolCall",
+        call_id: "a",
+        name: "agent_tool",
+        arguments: JSON.stringify({
+          title: "Build",
+          kind: "execute",
+          status: "failed",
+        }),
+      },
+      result("a", "error: missing semicolon"),
+    ]);
+    expect(runs.get("a")?.[0].failed).toBe(true);
   });
 });

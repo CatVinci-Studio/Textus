@@ -25,10 +25,14 @@ import {
 import { applyUpdate, finish, thoughtOf, type AgentView } from "./agent-view";
 import {
   applyChoices,
+  choicesToSend,
   heardCommands,
   heardOptions,
   heardValue,
+  offerOf,
 } from "./agent-offers";
+import { modeOption } from "./agent-mode";
+import { subscribeRemote } from "../../prefs/settings-store";
 
 /**
  * One exchange with an external agent, in a session kept for the
@@ -97,6 +101,22 @@ export function setAgentOption(agent: string, configId: string, value: string) {
       )
       .catch(() => undefined);
   }
+}
+
+function sendChoices(agent: string) {
+  for (const [id, value] of choicesToSend(agent))
+    setAgentOption(agent, id, value);
+}
+
+let following = false;
+/** A choice made in another window reaches this window's sessions too. */
+function followChoices() {
+  if (following) return;
+  following = true;
+  subscribeRemote(() => {
+    for (const agent of new Set([...sessions.values()].map((s) => s.agent)))
+      sendChoices(agent);
+  });
 }
 
 /** How long an agent has to stop once asked before its process is ended. */
@@ -276,7 +296,11 @@ function deliver(session: Session, update: SessionUpdate) {
   if (u.sessionUpdate === "config_option_update")
     return void heardOptions(session.agent, u.configOptions);
   if (u.sessionUpdate === "current_mode_update")
-    return heardValue(session.agent, "mode", String(u.currentModeId ?? ""));
+    return heardValue(
+      session.agent,
+      modeOption(offerOf(session.agent).options)?.id ?? "mode",
+      String(u.currentModeId ?? ""),
+    );
   const events = session.events;
   if (!events) return;
   const thought = thoughtOf(update);
@@ -347,6 +371,9 @@ export async function runAgentExchange(o: {
       starting.delete(o.conversation);
     }
     sessions.set(o.conversation, session);
+    followChoices();
+    // Chosen while it started: set now.
+    sendChoices(o.agent.key);
   }
   const user: AgentTurn = { kind: "User", text: o.message };
   current.set(session, { turns: [user], text: "" });

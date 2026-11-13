@@ -110,7 +110,8 @@ export function useDocumentActions(opts: {
   // back: an unedited one closes, an edited one becomes an unsaved draft.
   const skillFilesDeleted = useCallback(
     (paths: string[]) => {
-      for (const tab of tabsRef.current) {
+      // Live: typing the editor hasn't reported yet counts as an edit.
+      for (const tab of liveTabs()) {
         if (!tab.path || !paths.includes(tab.path)) continue;
         if (tabIsDirty(tab)) {
           documentDeleted(tab.path);
@@ -123,7 +124,7 @@ export function useDocumentActions(opts: {
         }
       }
     },
-    [documentDeleted, removeTab, tabsRef, setTabs, setActiveTabId],
+    [documentDeleted, removeTab, liveTabs, tabsRef, setTabs, setActiveTabId],
   );
 
   // A file or folder trashed in the sidebar: its tabs go as a reset

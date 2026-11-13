@@ -15,7 +15,6 @@ import { asRoot } from "../../engine/layout/ops";
 import { panesOf } from "../../engine/layout/tree";
 import {
   buildSaved,
-  savedFront,
   readSavedSplit,
   saveNode,
   savedPaths,
@@ -44,11 +43,8 @@ export function useWindowSession(
       const taken = await takeWindowSession();
       const raw = taken?.layout ?? olderSplit();
       const saved = readSavedSplit(raw);
-      // One island: the document that was in front comes back in front.
-      const front = saved ? null : savedFront(raw);
-      const frontTab =
-        front && tabsRef.current.find((t) => pathOf(t) === front);
-      if (frontTab) activate(frontTab.id);
+      // One island: the restore already opened its front document in the
+      // tab in use; nothing here pulls focus from what the user picked.
       if (saved) {
         const idOf = new Map<string, string>();
         for (const tab of tabsRef.current) {

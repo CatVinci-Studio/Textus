@@ -210,8 +210,9 @@ export function buildContextMenuItems(
     {
       label: t.copy,
       disabled: nothingSelected && !options.picture,
+      // Opened on a picture: that picture, whatever text is selected.
       onSelect: () =>
-        nothingSelected && options.picture
+        options.picture
           ? copyPicture(options.picture)
           : options.copyOrCut(false),
     },
@@ -493,5 +494,6 @@ function pictureItems(
 
 /** The picture itself to the clipboard, its file's address beside it. */
 function copyPicture(picture: HTMLImageElement): void {
-  void writeClipboard(picture.outerHTML, picture.alt, pictureAsPng(picture));
+  const address = picture.dataset.docSrc ?? picture.alt;
+  void writeClipboard(picture.outerHTML, address, pictureAsPng(picture));
 }

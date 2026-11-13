@@ -9,19 +9,22 @@ export function commandCount(command: string): number {
 }
 
 /** A command an agent shows: a few lines in code type, the rest a press
- *  away, so a long one doesn't fill the conversation. */
+ *  away, so a long one doesn't fill the conversation; whole when `lines`
+ *  is left out (one asked about is read in full before it runs). */
 export function CommandText({
   text,
   lines,
   className = "",
 }: {
   text: string;
-  lines: number;
+  lines?: number;
   className?: string;
 }) {
   const t = currentStrings();
   const [open, setOpen] = useState(false);
-  const long = text.split("\n").length > lines || text.length > lines * 60;
+  const long =
+    lines !== undefined &&
+    (text.split("\n").length > lines || text.length > lines * 60);
   return (
     <div className={`agent-command ${className}`}>
       <code
@@ -67,7 +70,7 @@ export function AgentPermission({
   return (
     <div className="agent-permission" role="group" aria-label={label}>
       <div className="agent-permission-title">{heading}</div>
-      {command && <CommandText text={command} lines={3} />}
+      {command && <CommandText text={command} />}
       <div className="agent-permission-actions">
         {pending.options.map((option) => (
           <button

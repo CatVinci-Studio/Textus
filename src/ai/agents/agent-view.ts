@@ -45,6 +45,7 @@ function args(fields: ToolCallFields, before?: string): string {
     ...(fields.title ? { title: fields.title } : {}),
     ...(fields.kind ? { kind: fields.kind } : {}),
     ...(path ? { path } : {}),
+    ...(fields.status === "failed" ? { status: "failed" } : {}),
   });
 }
 
@@ -53,11 +54,13 @@ const KEPT_OUTPUT = 4000;
 
 /** What a finished step says: its text content, else how it ended. */
 function output(fields: ToolCallFields): string {
-  const text = (fields.content ?? [])
+  const all = (fields.content ?? [])
     .map((c) => (c.type === "content" ? textOf(c.content) : ""))
     .filter(Boolean)
-    .join("\n")
-    .slice(0, KEPT_OUTPUT);
+    .join("\n");
+  // Cut, and marked as cut.
+  const text =
+    all.length > KEPT_OUTPUT ? `${all.slice(0, KEPT_OUTPUT)}\n…` : all;
   return text || (fields.status === "failed" ? "Failed." : "Done.");
 }
 
@@ -65,6 +68,7 @@ function output(fields: ToolCallFields): string {
 function landText(view: AgentView): AgentView {
   if (!view.text.trim()) return { ...view, text: "" };
   return {
+    ...view,
     turns: [...view.turns, { kind: "Assistant", text: view.text }],
     text: "",
   };

@@ -70,4 +70,21 @@ describe("an agent's options as a session opens", () => {
     });
     expect(sent).toEqual([]);
   });
+
+  it("skips a model the agent turns down, but never a refused mode", async () => {
+    chosen["x/claude"] = { model: "sonnet", effort: "high" };
+    const sent: string[] = [];
+    await applyChoices("x/claude", claude(), async (id, value) => {
+      sent.push(`${id}=${value}`);
+      if (id === "model") throw new Error("not on this plan");
+      return null;
+    });
+    expect(sent).toEqual(["mode=default", "model=sonnet", "effort=high"]);
+    await expect(
+      applyChoices("x/claude", claude(), async (id) => {
+        if (id === "mode") throw new Error("no");
+        return null;
+      }),
+    ).rejects.toThrow("no");
+  });
 });
