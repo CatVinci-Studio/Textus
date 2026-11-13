@@ -157,10 +157,10 @@ export function ChatBody({
     })();
   }
 
-  // Messages sent while a reply is coming, sent in turn once the replies
-  // before them finish. A failed reply pauses them; Stop gives them back.
   const ownComposer = useRef<ChatComposerHandle>(null);
   const composer = composerRef ?? ownComposer;
+  // Messages sent while a reply is coming, sent in turn once the replies
+  // before them finish. A failed reply pauses them; Stop gives them back.
   const queueState = useMessageQueue(
     busy,
     error,

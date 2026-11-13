@@ -1731,6 +1731,7 @@ Habilidades ficam na pasta skills/ ao lado deste arquivo, um arquivo
   pluginUpdateNow: "Atualizar",
   pluginNeedsFolder: "Abra uma pasta para usar este plugin.",
   pluginPageFailed: "Este plugin não conseguiu mostrar a página.",
+  pluginNotInstalled: "Este plugin não está instalado aqui.",
   pluginTurnedOff:
     "Este plugin está desativado. Ative-o em Plugins para ver a página.",
   pluginsSearchNone: "Nenhum plugin corresponde a “{query}”.",

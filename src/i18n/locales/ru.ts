@@ -1751,6 +1751,7 @@ export default {
   pluginUpdateNow: "Обновить",
   pluginNeedsFolder: "Откройте папку, чтобы пользоваться этим плагином.",
   pluginPageFailed: "Плагин не смог показать свою страницу.",
+  pluginNotInstalled: "Этот плагин здесь не установлен.",
   pluginTurnedOff:
     "Этот плагин выключен. Включите его в разделе «Плагины», чтобы увидеть страницу.",
   pluginsSearchNone: "Нет плагинов по запросу «{query}».",

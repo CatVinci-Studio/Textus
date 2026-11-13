@@ -2,6 +2,7 @@ import { useEffect, useRef, useState, useSyncExternalStore } from "react";
 import { connectFrame, sandboxedFrame, webviewDocument } from "../host/frames";
 import { disposeWebview, resolveWebview, webviewMessage } from "../manager";
 import {
+  PLUGIN_MISSING,
   PLUGIN_OFF,
   pluginMayRun,
   pluginName,
@@ -332,8 +333,7 @@ export function useResolvedWebview(
   useEffect(() => {
     if (!runs) {
       setRecord(null);
-      // Not installed here: nothing in Plugins to turn on.
-      setError(pluginRecord(plugin) ? PLUGIN_OFF : "Not installed.");
+      setError(pluginRecord(plugin) ? PLUGIN_OFF : PLUGIN_MISSING);
       return;
     }
     const made = createWebview(plugin, kind, key, resource);

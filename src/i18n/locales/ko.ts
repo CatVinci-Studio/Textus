@@ -1626,6 +1626,7 @@ ${AI_NAME}에게 주는 글쓰기 지침으로, 모든 문서에 적용됩니다
   pluginUpdateNow: "업데이트",
   pluginNeedsFolder: "폴더를 열면 이 플러그인을 사용할 수 있습니다.",
   pluginPageFailed: "이 플러그인의 페이지를 표시하지 못했습니다.",
+  pluginNotInstalled: "이 플러그인은 여기에 설치되어 있지 않습니다.",
   pluginTurnedOff:
     "이 플러그인은 꺼져 있습니다. ‘플러그인’에서 켜면 페이지가 표시됩니다.",
   pluginsSearchNone: "“{query}”와(과) 일치하는 플러그인이 없습니다.",

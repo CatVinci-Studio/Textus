@@ -94,7 +94,7 @@ export function useMessageQueue(
   busy: boolean,
   /** The conversation's failure: while there is one, the queue waits. */
   failure: unknown,
-  conversationId: unknown,
+  conversationId: string,
   sendNext: (next: QueuedMessage) => Promise<AgentTurn[] | undefined>,
   restore: (typed: string) => void,
 ) {
@@ -108,7 +108,7 @@ export function useMessageQueue(
   const nextQueued = useRef(0);
   // A send under way, queued or straight from the box: one more waits.
   const sending = useRef(false);
-  const shown = useRef(conversationId);
+  const shown = useRef<string>(conversationId);
   // This render's; the queue and busy say when to look again.
   const send = useLatest(sendNext);
 

@@ -1559,6 +1559,7 @@ export default {
   pluginUpdateNow: "更新",
   pluginNeedsFolder: "打开一个文件夹后即可使用这个插件。",
   pluginPageFailed: "这个插件暂时没能显示。",
+  pluginNotInstalled: "这个插件没有安装在这台设备上。",
   pluginTurnedOff: "这个插件已关闭。在“插件”里打开后才能显示。",
   pluginsSearchNone: "没有和“{query}”相符的插件。",
   marketSearch: "搜索",

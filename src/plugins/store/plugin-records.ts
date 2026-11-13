@@ -113,6 +113,8 @@ export function pluginMayRun(
 
 /** The error a plugin's page shows while the plugin may not run. */
 export const PLUGIN_OFF = "plugin-off";
+/** The error a plugin's page shows when the plugin isn't installed here. */
+export const PLUGIN_MISSING = "plugin-missing";
 
 /** A plugin's name in the UI language. */
 export function pluginName(

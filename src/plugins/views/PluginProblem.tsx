@@ -2,6 +2,7 @@ import { emitToThisWindow } from "../../platform/menu-events";
 import { FolderOpenIcon } from "../../engine/controls/icons";
 import { canOpenFolder } from "../../platform/capabilities";
 import {
+  PLUGIN_MISSING,
   PLUGIN_OFF,
   pluginsSnapshot,
   windowInfo,
@@ -27,11 +28,15 @@ export function PluginProblem({
   const t = windowInfo().strings();
   const off = error === PLUGIN_OFF;
   const folder = NEEDS_FOLDER.test(error);
-  if (off)
+  if (off || error === PLUGIN_MISSING)
     return (
       <div className="plugin-webview-problem">
         <p>
-          {pluginsSnapshot().allOn ? t.pluginTurnedOff : t.pluginStatusAllOff}
+          {!off
+            ? t.pluginNotInstalled
+            : pluginsSnapshot().allOn
+              ? t.pluginTurnedOff
+              : t.pluginStatusAllOff}
         </p>
       </div>
     );
