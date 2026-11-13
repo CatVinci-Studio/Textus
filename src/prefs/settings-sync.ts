@@ -1,3 +1,5 @@
+import { isRecord } from "../utils/is-record";
+
 /**
  * This window's copy of the settings Rust holds, and which value wins per
  * field as local changes, other windows' changes and re-reads arrive. A
@@ -5,9 +7,7 @@
  */
 export type Raw = Record<string, unknown>;
 
-export function isRecord(value: unknown): value is Raw {
-  return typeof value === "object" && value !== null && !Array.isArray(value);
-}
+export { isRecord };
 
 export class SettingsSync {
   raw: Raw;

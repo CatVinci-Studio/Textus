@@ -14,8 +14,6 @@ export interface FileMark {
  *  provides them; with none, no row is marked. */
 interface FileMarks {
   subscribe: (listener: () => void) => () => void;
-  /** A value that changes whenever any mark does. */
-  version: () => unknown;
   markOf: (path: string) => FileMark | null;
 }
 
@@ -26,8 +24,15 @@ export function provideFileMarks(next: FileMarks): void {
   source = next;
 }
 
+/** A mark as one string, so a row compares its own and draws again only
+ *  when that one changed. */
+const keyOf = (mark: FileMark | null) =>
+  mark ? `${+mark.changed}|${mark.pending ?? ""}|${+!!mark.created}` : "";
+
 /** File `path`'s mark, following it as it changes. */
 export function useFileMark(path: string): FileMark | null {
-  useSyncExternalStore(source?.subscribe ?? none, () => source?.version());
+  useSyncExternalStore(source?.subscribe ?? none, () =>
+    keyOf(source?.markOf(path) ?? null),
+  );
   return source?.markOf(path) ?? null;
 }

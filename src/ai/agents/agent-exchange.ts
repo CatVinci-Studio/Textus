@@ -23,7 +23,16 @@ import {
   type SessionUpdate,
 } from "./acp-client";
 import { applyUpdate, finish, thoughtOf, type AgentView } from "./agent-view";
-import { askingMode, type ConfigOption } from "./agent-mode";
+import {
+  applyChoices,
+  choicesToSend,
+  heardCommands,
+  heardOptions,
+  heardValue,
+  offerOf,
+} from "./agent-offers";
+import { modeOption } from "./agent-mode";
+import { loadSettings, subscribeRemote } from "../../prefs/settings-store";
 
 /**
  * One exchange with an external agent, in a session kept for the
@@ -34,6 +43,8 @@ import { askingMode, type ConfigOption } from "./agent-mode";
 /** A step the agent asks the user to allow, shown under the reply. */
 export interface PendingPermission {
   title: string;
+  /** The step's kind as the agent names it: "execute" for a command. */
+  kind?: string;
   options: PermissionOption[];
   /** The option chosen, or null to refuse. */
   choose(optionId: string | null): void;
@@ -57,9 +68,22 @@ interface Session {
   refuse: (() => void) | null;
   /** Ended by Stop: what it was doing ends as a stop does, not an error. */
   stopped?: boolean;
+  /** Out of use (it refused the mode): stopped once its reply ends. */
+  retired?: boolean;
 }
 
 const sessions = new Map<string, Session>();
+/** Sessions out of use whose reply still runs, by conversation: Stop and
+ *  closing the chat still reach them. */
+const retired = new Map<string, Session>();
+const sessionListeners = new Set<() => void>();
+const sessionsChanged = () => sessionListeners.forEach((fn) => fn());
+
+/** Hears sessions start and end in this window. */
+export function subscribeSessions(listener: () => void): () => void {
+  sessionListeners.add(listener);
+  return () => sessionListeners.delete(listener);
+}
 /** Conversations whose agent is still starting (or signing in): how to
  *  give up on it. */
 const starting = new Map<string, () => void>();
@@ -69,7 +93,100 @@ export function endAgentSession(conversation: string): void {
   starting.get(conversation)?.();
   const session = sessions.get(conversation);
   sessions.delete(conversation);
+  sessionsChanged();
   session?.connection.stop();
+  retired.get(conversation)?.connection.stop();
+  retired.delete(conversation);
+}
+
+/** A session no message goes to again; the reply it is giving finishes. */
+function retire(session: Session) {
+  for (const [conversation, s] of [...sessions])
+    if (s === session) {
+      sessions.delete(conversation);
+      if (session.events) retired.set(conversation, session);
+    }
+  sessionsChanged();
+  if (session.events) session.retired = true;
+  else session.connection.stop();
+}
+
+/** Whether a session of `agent` runs in this window. */
+export const agentRunning = (agent: string) =>
+  [...sessions.values()].some((s) => s.agent === agent && s.sessionId);
+
+/** Sets an option of `agent` in every session of it running in this
+ *  window. A session that refuses the mode is ended: none goes on in a
+ *  mode its menu no longer shows; the next message starts it afresh. */
+async function setInSessions(agent: string, configId: string, value: string) {
+  const isMode = configId === modeOption(offerOf(agent).options)?.id;
+  const live = new Set(sessions.values());
+  await Promise.all(
+    [...live].map(async (session) => {
+      if (session.agent !== agent || !session.sessionId) return;
+      try {
+        const answer = await session.connection.request<{
+          configOptions?: unknown;
+        } | null>("session/set_config_option", {
+          sessionId: session.sessionId,
+          configId,
+          value,
+        });
+        if (answer?.configOptions) heardOptions(agent, answer.configOptions);
+        else heardValue(agent, configId, value);
+      } catch {
+        if (isMode) retire(session);
+      }
+    }),
+  );
+}
+
+/** The options in the agent's order, each after it answered the one
+ *  before (an effort its new model offers). */
+async function sendInOrder(agent: string, entries: [string, string][]) {
+  const order = offerOf(agent).options.map((o) => o.id);
+  const rank = (id: string) =>
+    order.includes(id) ? order.indexOf(id) : order.length;
+  const sorted = [...entries].sort(([a], [b]) => rank(a) - rank(b));
+  for (const [id, value] of sorted) await setInSessions(agent, id, value);
+}
+
+/** Each option still not as wanted, read again after each answer: a new
+ *  model may bring the effort the user chose. */
+async function sendWanted(agent: string) {
+  const done = new Set<string>();
+  for (;;) {
+    const next = choicesToSend(agent).find(([id]) => !done.has(id));
+    if (!next) return;
+    done.add(next[0]);
+    await setInSessions(agent, ...next);
+  }
+}
+
+/** An option the user just chose in this window. */
+export function setAgentOption(agent: string, configId: string, value: string) {
+  // Seen here: another window's change later doesn't send it again.
+  if (seen) seen = loadSettings().agentOptions;
+  void setInSessions(agent, configId, value);
+}
+
+let seen: Record<string, Record<string, string>> | null = null;
+/** A choice made in another window reaches this window's sessions too:
+ *  only the choices that changed, never a re-send on any other setting. */
+function followChoices() {
+  if (seen) return;
+  seen = loadSettings().agentOptions;
+  subscribeRemote(() => {
+    const now = loadSettings().agentOptions;
+    const before = seen ?? {};
+    seen = now;
+    for (const agent of new Set([...sessions.values()].map((s) => s.agent))) {
+      const changed = Object.entries(now[agent] ?? {}).filter(
+        ([id, value]) => before[agent]?.[id] !== value,
+      );
+      if (changed.length) void sendInOrder(agent, changed);
+    }
+  });
 }
 
 /** How long an agent has to stop once asked before its process is ended. */
@@ -79,12 +196,16 @@ const STOP_GRACE_MS = 5000;
  *  hasn't stopped by STOP_GRACE_MS is ended, its session with it. */
 export function cancelAgentExchange(conversation: string): void {
   starting.get(conversation)?.();
-  const session = sessions.get(conversation);
+  const session = sessions.get(conversation) ?? retired.get(conversation);
   if (!session) return;
   session.refuse?.();
   session.connection.notify("session/cancel", { sessionId: session.sessionId });
+  // The exchange Stop was for: a new one sent meanwhile is left alone.
+  const stopping = session.events;
   setTimeout(() => {
-    if (sessions.get(conversation) !== session || !session.events) return;
+    const now = sessions.get(conversation) ?? retired.get(conversation);
+    if (now !== session || !session.events || session.events !== stopping)
+      return;
     session.stopped = true;
     endAgentSession(conversation);
   }, STOP_GRACE_MS);
@@ -132,7 +253,8 @@ async function start(
     },
     {
       update: ({ update }) => deliver(session, update),
-      requestPermission: (p) => ask(session, p.toolCall.title ?? "", p.options),
+      requestPermission: (p) =>
+        ask(session, p.toolCall.title ?? "", p.toolCall.kind, p.options),
       // An open document as the editor has it, typed or not.
       readTextFile: async ({ path, line, limit }) => {
         withinFolder(session.cwd, path);
@@ -163,10 +285,14 @@ async function start(
     },
   );
   handle = agentsIpc.start(agent.plugin, agent.id, cwd, (out) => {
-    if (out.type === "line") session.connection.receive(out.text);
+    if (out.type === "lines")
+      for (const line of out.lines) session.connection.receive(line);
     else {
       session.connection.close(new Error(stoppedText(agent, out.stderr)));
-      if (sessions.get(conversation) === session) sessions.delete(conversation);
+      if (sessions.get(conversation) === session) {
+        sessions.delete(conversation);
+        sessionsChanged();
+      }
     }
   });
   try {
@@ -181,9 +307,9 @@ async function start(
     const open = () =>
       session.connection.request<{
         sessionId: string;
-        configOptions?: ConfigOption[];
+        configOptions?: unknown;
       }>("session/new", { cwd, mcpServers: [] });
-    let opened: { sessionId: string; configOptions?: ConfigOption[] };
+    let opened: { sessionId: string; configOptions?: unknown };
     try {
       opened = await open();
     } catch (err) {
@@ -196,13 +322,15 @@ async function start(
       opened = await open();
     }
     session.sessionId = opened.sessionId;
-    // Every change asks first, in Textus, whatever mode it was set to.
-    const asking = askingMode(opened.configOptions);
-    if (asking)
-      await session.connection.request("session/set_config_option", {
+    // What the user chose for this agent; a change asks first unless
+    // they chose a mode that doesn't, whatever the agent's own settings say.
+    await applyChoices(agent.key, opened.configOptions, (configId, value) =>
+      session.connection.request("session/set_config_option", {
         sessionId: opened.sessionId,
-        ...asking,
-      });
+        configId,
+        value,
+      }),
+    );
   } catch (err) {
     session.connection.stop();
     throw explain(agent, err);
@@ -238,6 +366,18 @@ function explain(agent: ExternalAgent, err: unknown): Error {
 }
 
 function deliver(session: Session, update: SessionUpdate) {
+  // What the agent offers comes between exchanges too.
+  const u = update as Record<string, unknown>;
+  if (u.sessionUpdate === "available_commands_update")
+    return heardCommands(session.agent, u.availableCommands);
+  if (u.sessionUpdate === "config_option_update")
+    return void heardOptions(session.agent, u.configOptions);
+  if (u.sessionUpdate === "current_mode_update")
+    return heardValue(
+      session.agent,
+      modeOption(offerOf(session.agent).options)?.id ?? "mode",
+      String(u.currentModeId ?? ""),
+    );
   const events = session.events;
   if (!events) return;
   const thought = thoughtOf(update);
@@ -252,6 +392,7 @@ const current = new WeakMap<Session, AgentView>();
 function ask(
   session: Session,
   title: string,
+  kind: string | undefined,
   options: PermissionOption[],
 ): Promise<PermissionOutcome> {
   const events = session.events;
@@ -267,7 +408,7 @@ function ask(
       });
     };
     session.refuse = () => choose(null);
-    events.permission({ title, options, choose });
+    events.permission({ title, kind, options, choose });
   });
 }
 
@@ -307,6 +448,10 @@ export async function runAgentExchange(o: {
       starting.delete(o.conversation);
     }
     sessions.set(o.conversation, session);
+    sessionsChanged();
+    followChoices();
+    // Chosen while it started: set now.
+    void sendWanted(o.agent.key);
   }
   const user: AgentTurn = { kind: "User", text: o.message };
   current.set(session, { turns: [user], text: "" });
@@ -331,6 +476,11 @@ export async function runAgentExchange(o: {
   } finally {
     session.events = null;
     o.events.permission(null);
+    if (session.retired) {
+      session.connection.stop();
+      for (const [conversation, s] of [...retired])
+        if (s === session) retired.delete(conversation);
+    }
   }
 }
 

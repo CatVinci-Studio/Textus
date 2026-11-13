@@ -20,9 +20,25 @@ import { fnv1a } from "../utils/hash";
 /** Each undo step, newest first, as the steps that undo it. */
 type Kept = unknown[][];
 
-/** What the text is known by: the history is used only at this text. */
+/** What the text is known by: the history is used only at this text.
+ *  Hashed as the tree is walked, never copied whole: it runs as each tab
+ *  comes to the front and leaves. */
 export function docHash(doc: ProseNode): string {
-  return fnv1a(JSON.stringify(doc.toJSON())).toString(36);
+  let h = fnv1a("doc");
+  const feed = (part: string) => (h = fnv1a(part + "\u0000", h));
+  const attrs = (a: object) => {
+    if (Object.keys(a).length > 0) feed(JSON.stringify(a));
+  };
+  doc.descendants((node) => {
+    feed(node.type.name + "/" + node.childCount);
+    attrs(node.attrs);
+    if (node.text) feed(node.text);
+    for (const mark of node.marks) {
+      feed(mark.type.name);
+      attrs(mark.attrs);
+    }
+  });
+  return h.toString(36);
 }
 
 /** prosemirror-history's plugin, known by its config (its key is private). */

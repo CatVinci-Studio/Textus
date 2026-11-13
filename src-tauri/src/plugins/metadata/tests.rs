@@ -80,20 +80,33 @@ fn blocks_carry_their_lines() {
 }
 
 #[test]
-fn the_index_reads_only_what_changed() {
+fn a_caller_is_sent_only_what_changed_since_it_asked() {
     let dir = tempfile::tempdir().unwrap();
     std::fs::write(dir.path().join("a.md"), "# A").unwrap();
     std::fs::write(dir.path().join("b.md"), "# B").unwrap();
     let index = MetadataIndex::default();
-    let first = refresh(&index, dir.path());
-    assert_eq!(first.len(), 2);
-    assert!(refresh(&index, dir.path()).is_empty());
+    let ask = |after: Option<u64>| refresh(&index, dir.path(), after);
+    let first = ask(None);
+    assert!(first.whole && first.documents.len() == 2);
+    let quiet = ask(Some(first.generation));
+    assert!(!quiet.whole && quiet.documents.is_empty() && quiet.gone.is_empty());
     std::fs::write(dir.path().join("b.md"), "# B, longer now").unwrap();
     std::fs::remove_file(dir.path().join("a.md")).unwrap();
-    let mut again = refresh(&index, dir.path());
-    again.sort();
-    assert_eq!(again.len(), 2);
-    assert!(again[0].ends_with("a.md") && again[1].ends_with("b.md"));
+    let again = ask(Some(quiet.generation));
+    assert_eq!(again.documents.len(), 1);
+    assert!(again.documents[0].path.ends_with("b.md"));
+    assert!(again.gone.len() == 1 && again.gone[0].ends_with("a.md"));
+    // A caller that has seen nothing gets the whole index.
+    assert!(ask(None).whole);
+    // Other folders push this one out; indexed again, a caller still
+    // holding its old generation gets the whole index, not "no change".
+    let held = first.generation;
+    for _ in 0..ROOTS_KEPT {
+        refresh(&index, tempfile::tempdir().unwrap().path(), None);
+    }
+    std::fs::write(dir.path().join("c.md"), "# C").unwrap();
+    let back = ask(Some(held));
+    assert!(back.whole && back.documents.len() == 2);
 }
 
 #[test]

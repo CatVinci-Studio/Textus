@@ -8,17 +8,18 @@ use std::path::{Component, Path, PathBuf};
 /// another app's settings, .env - which hold tokens, or which a write could
 /// turn into code that runs. The folder's own .textus is the user's writing
 /// (instructions, library, memory, skills), which a sync carries; nothing
-/// hidden inside it.
+/// hidden inside it. Obsidian's shared settings are open too.
 pub(crate) fn in_folder(root: &Path, path: &Path) -> Result<PathBuf, String> {
     let resolved = inside(root, path)?;
     let base = std::fs::canonicalize(root).map_err(|e| e.to_string())?;
     let hidden = resolved
         .strip_prefix(&base)
         .map(|rel| {
-            rel.components().enumerate().any(|(i, c)| {
-                matches!(c, Component::Normal(n)
-                    if n.to_string_lossy().starts_with('.') && !(i == 0 && n == ".textus"))
-            })
+            !obsidian_setting(rel)
+                && rel.components().enumerate().any(|(i, c)| {
+                    matches!(c, Component::Normal(n)
+                        if n.to_string_lossy().starts_with('.') && !(i == 0 && n == ".textus"))
+                })
         })
         .unwrap_or(true);
     if hidden {
@@ -48,10 +49,34 @@ pub(crate) fn plugin_path(root: &Path, path: &Path, id: &str) -> Result<PathBuf,
     Ok(resolved)
 }
 
+/// Obsidian's settings a vault shares between devices: no secrets, nothing
+/// that runs (community-plugins.json and plugins/ stay shut).
+const OBSIDIAN_SETTINGS: [&str; 7] = [
+    "app.json",
+    "appearance.json",
+    "hotkeys.json",
+    "bookmarks.json",
+    "graph.json",
+    "core-plugins.json",
+    "types.json",
+];
+
+fn obsidian_setting(rel: &Path) -> bool {
+    let parts: Vec<_> = rel.components().collect();
+    matches!(parts.as_slice(), [Component::Normal(dir), Component::Normal(name)]
+        if *dir == ".obsidian" && OBSIDIAN_SETTINGS.iter().any(|s| *name == *s))
+}
+
 /// Hidden files other apps keep at a folder's top that hold no secrets and
 /// that plugins read for them: Obsidian Vim's settings, WakaTime's project
-/// name, the Git branch checked out. Read only; the rest of .git stays shut.
-const READ_ONLY_HIDDEN: [&str; 3] = [".obsidian.vimrc", ".wakatime-project", ".git/HEAD"];
+/// name, the Git branch checked out, what Git leaves out. Read only; the
+/// rest of .git stays shut.
+const READ_ONLY_HIDDEN: [&str; 4] = [
+    ".obsidian.vimrc",
+    ".wakatime-project",
+    ".git/HEAD",
+    ".gitignore",
+];
 
 /// Whether `path` (from `root`, or whole) is one of READ_ONLY_HIDDEN.
 pub(crate) fn read_only_hidden(root: &str, path: &str) -> bool {

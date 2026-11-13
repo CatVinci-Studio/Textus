@@ -19,6 +19,8 @@ interface PickerKind {
 export function pickerContent(o: {
   /** The `/token` typed, while its picker is open. */
   skillTrigger: RegExpExecArray | null;
+  /** The external agent whose commands the skills are, if they are. */
+  commandsOf?: string | null;
   /** The `@query` typed, while its picker is open. */
   mentionQuery: RegExpExecArray | null;
   kinds: readonly PickerKind[];
@@ -64,7 +66,7 @@ export function pickerContent(o: {
       sections: query
         ? [{ rows: matchSkills(o.available, query, o.recent).map(row) }]
         : groupSkills(o.available, o.recent).map((group) => ({
-            title: labels.groups[group.id],
+            title: o.commandsOf ?? labels.groups[group.id],
             rows: group.skills.map(row),
           })),
       empty:

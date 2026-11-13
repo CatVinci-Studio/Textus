@@ -6,8 +6,8 @@ import { useSettings } from "../../prefs/SettingsContext";
 import { useMarginAvailable } from "../../ai/margin/margin-room";
 import { emitMenuEvent } from "../../platform/menu-events";
 import { settingsPage, settingsPages } from "../settings-pages";
-import { revealEntry } from "../SettingsSearch";
-import { findEntryElement, type SearchEntry } from "../settings-search";
+import { useReveal } from "../SettingsSearch";
+import type { SearchEntry } from "../settings-search";
 import {
   OPEN_SETTINGS_PAGE_EVENT,
   onSettingsPageShown,
@@ -99,24 +99,4 @@ export function SettingsTab({
       </div>
     </div>
   );
-}
-
-/** Once the page is up, goes to the search result's row: one that waits on
- *  the backend (a status, a list) can come a few frames late. */
-function useReveal(
-  content: React.RefObject<HTMLDivElement | null>,
-  jump: SearchEntry | null,
-) {
-  useEffect(() => {
-    if (!jump) return;
-    let frame = 0;
-    let tries = 0;
-    const go = () => {
-      const el = content.current && findEntryElement(content.current, jump);
-      if (el) revealEntry(el);
-      else if (++tries < 30) frame = requestAnimationFrame(go);
-    };
-    go();
-    return () => cancelAnimationFrame(frame);
-  }, [jump, content]);
 }

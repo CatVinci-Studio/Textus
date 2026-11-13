@@ -6,6 +6,10 @@ import {
 import { readFetchedModels } from "../model-info";
 import { localizedLabel, useConnectedProviders } from "../provider-connection";
 import { useExternalAgents } from "../../plugins/contributions/agents";
+import {
+  useAgentOptions,
+  type AgentOptionsMenu,
+} from "../agents/useAgentOptions";
 
 /** The models menu's group of external agents (plugins' `contributes.agents`). */
 export const AGENTS_GROUP = "agents";
@@ -65,6 +69,9 @@ export interface ChatModels {
   groups: ModelGroup[];
   /** Sets the chat provider and its model, as Settings does. */
   choose: (provider: string, model: string) => void;
+  /** The external agent's own options (mode, model, effort), while one
+   *  is in use and has said what it offers. */
+  agentOptions?: AgentOptionsMenu | null;
 }
 
 /** The composer's models, switched without going to Settings. */
@@ -83,6 +90,7 @@ export function useChatModels(): ChatModels {
   const chosen = settings.agentModels;
   const agents = useExternalAgents();
   const agent = agents.find((a) => a.key === settings.chatAgent);
+  const agentOptions = useAgentOptions(agent?.key ?? null);
   // A provider with nothing to offer isn't listed, not even its name.
   const groups = ready
     .map((entry) => ({
@@ -106,6 +114,7 @@ export function useChatModels(): ChatModels {
     model: agent ? agent.name : active ? chatModel(active, chosen) : "",
     provider: agent ? AGENTS_GROUP : settings.aiProvider,
     groups: canSwitchModel(groups) ? groups : [],
+    agentOptions,
     choose: (provider, model) =>
       setSettings(
         provider === AGENTS_GROUP

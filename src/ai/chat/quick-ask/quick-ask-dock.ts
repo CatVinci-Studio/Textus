@@ -24,8 +24,11 @@ export function useQuickAskDock(
     const root = document.documentElement;
     root.classList.add(QUICK_ASK_DOCK_CLASS);
     let first = true;
+    // On <body>, not the root: the root's attributes are the window's look,
+    // and every answer growing would have it all read again.
+    const body = document.body;
     const observer = new ResizeObserver(() => {
-      root.style.setProperty("--quick-ask-dock-height", `${el.offsetHeight}px`);
+      body.style.setProperty("--quick-ask-dock-height", `${el.offsetHeight}px`);
       onResizeRef.current?.(first);
       first = false;
     });
@@ -33,7 +36,7 @@ export function useQuickAskDock(
     return () => {
       observer.disconnect();
       root.classList.remove(QUICK_ASK_DOCK_CLASS);
-      root.style.removeProperty("--quick-ask-dock-height");
+      body.style.removeProperty("--quick-ask-dock-height");
     };
   }, [ref, enabled, onResizeRef]);
 }

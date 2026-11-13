@@ -363,16 +363,7 @@ async fn run_call(connection: &Connection, tool: &str, arguments: &str) -> ToolO
         Ok((text, true)) => format!("The tool reported an error: {text}"),
         Err(why) => format!("The MCP server couldn't run it: {why}"),
     };
-    let mut text = if text.trim().is_empty() {
-        "(The tool returned nothing.)".to_string()
-    } else {
-        text
-    };
-    if text.chars().count() > RESULT_CHARS {
-        text = text.chars().take(RESULT_CHARS).collect::<String>()
-            + "\n[cut off: the rest was too long]";
-    }
-    text.into()
+    crate::ai::outside_tool_result(text, RESULT_CHARS).into()
 }
 
 #[cfg(test)]

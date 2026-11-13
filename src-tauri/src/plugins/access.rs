@@ -44,7 +44,16 @@ pub(super) fn granted_path(
         return Err(refused(id, permission));
     }
     let path = if permission == "files.read" && paths::read_only_hidden(root, path) {
-        inside(Path::new(root), Path::new(path))?
+        let resolved = inside(Path::new(root), Path::new(path))?;
+        // A link there leads to what plugins may read anyway, never to
+        // another hidden file (.env).
+        let base = std::fs::canonicalize(root).map_err(|e| e.to_string())?;
+        let rel = resolved.strip_prefix(&base).unwrap_or(&resolved);
+        if paths::read_only_hidden("", &rel.to_string_lossy()) {
+            resolved
+        } else {
+            plugin_path(Path::new(root), &resolved, id)?
+        }
     } else {
         plugin_path(Path::new(root), Path::new(path), id)?
     };
@@ -144,6 +153,18 @@ pub struct FsEntry {
     modified_ms: Option<f64>,
 }
 
+impl FsEntry {
+    pub(crate) fn of(name: String, path: &Path, meta: &std::fs::Metadata) -> Self {
+        FsEntry {
+            name,
+            path: path.to_string_lossy().to_string(),
+            is_dir: meta.is_dir(),
+            size: meta.len(),
+            modified_ms: crate::walk::modified_ms(meta),
+        }
+    }
+}
+
 /// A folder's entries, hidden ones left out.
 #[tauri::command]
 #[cfg_attr(test, specta::specta)]
@@ -168,17 +189,7 @@ pub async fn plugin_fs_list(
         let Ok(meta) = entry.metadata().await else {
             continue;
         };
-        out.push(FsEntry {
-            name,
-            path: entry.path().to_string_lossy().to_string(),
-            is_dir: meta.is_dir(),
-            size: meta.len(),
-            modified_ms: meta
-                .modified()
-                .ok()
-                .and_then(|t| t.duration_since(std::time::UNIX_EPOCH).ok())
-                .map(|d| d.as_millis() as f64),
-        });
+        out.push(FsEntry::of(name, &entry.path(), &meta));
     }
     out.sort_by_key(|e| e.name.to_lowercase());
     Ok(out)

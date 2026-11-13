@@ -26,10 +26,8 @@ export interface WebviewRecord {
 const records = new Map<string, WebviewRecord>();
 const states = new Map<string, unknown>();
 const listeners = new Set<() => void>();
-let version = 0;
 
 function changed() {
-  version++;
   for (const listener of listeners) listener();
 }
 
@@ -38,9 +36,10 @@ export function subscribeWebviews(listener: () => void): () => void {
   return () => listeners.delete(listener);
 }
 
-/** Changes whenever any webview does: for useSyncExternalStore. */
-export function webviewsVersion(): number {
-  return version;
+/** Webview `id`'s page as useSyncExternalStore reads it: a view of one
+ *  draws again when its own page changes, not when any other does. */
+export function webviewHtml(id: string | null): string | null {
+  return (id && records.get(id)?.html) ?? null;
 }
 
 let counter = 0;

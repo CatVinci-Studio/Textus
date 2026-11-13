@@ -7,6 +7,7 @@ import { ProposalGroup } from "./ProposalGroup";
 import { CommentCard, CommentGroup } from "./CommentCard";
 import { SkillOfferChip } from "./SkillOfferChip";
 import { FileChangesCard } from "./FileChangesCard";
+import { AgentSteps } from "./AgentSteps";
 import { PaperCard } from "../paper/lazy";
 import type { ChatItem as Item, Transcript } from "./chat-transcript";
 import type { ChatMessagesProps } from "./chat-messages-types";
@@ -159,6 +160,8 @@ export function ChatItem({
           onApplySuggestion={c.onApplySuggestion}
         />
       );
+    case "steps":
+      return <AgentSteps steps={item.steps} looked={labels.agentLooks} />;
     case "files":
       return (
         <FileChangesCard

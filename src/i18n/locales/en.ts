@@ -907,6 +907,10 @@ type /name in a conversation to use one.
   agentSignIn: "{agent} needs you to sign in first.",
   chatAgentsGroup: "Agents",
   chatAgentPermission: "The agent asks to go on",
+  chatAgentRunCommand: "Run a command",
+  chatAgentRunCommands: "Run {n} commands",
+  chatAgentShowAll: "Show all",
+  chatAgentShowLess: "Show less",
   pictureRedraw: "Redraw…",
   pictureRedrawTitle: "Redraw the picture",
   pictureRedrawPrompt:
@@ -918,6 +922,12 @@ type /name in a conversation to use one.
   agentDeepThinking: "Deep thinking",
   agentDeepThinkingHint: `Deep thinking: when it's on, ${AI_NAME} thinks longer before it answers; when it's off, the model thinks as much as it does by default`,
   toggleOnHint: "{label} (On - click again to turn it off)",
+  chatAgentPlan: "Plan",
+  chatAgentLooks: { one: "Looked at {n} thing", other: "Looked at {n} things" },
+  chatShowEarlier: {
+    one: "Show {n} earlier item",
+    other: "Show {n} earlier items",
+  },
   agentWaitedFor: { one: "{n} second", other: "{n} seconds" },
   agentThinkingFor: {
     one: "Thinking · {n} second",

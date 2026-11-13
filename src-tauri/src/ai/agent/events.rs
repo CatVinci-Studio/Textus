@@ -54,6 +54,98 @@ impl EventSink for Channel<StreamEvent> {
     }
 }
 
+/// How often merged fragments go to the window: tokens come far faster than
+/// a frame, and each send is a script the page runs.
+const PACE: std::time::Duration = std::time::Duration::from_millis(30);
+
+/// A sink that merges a run of text, thinking or one call's argument
+/// fragments and sends them at most every `PACE`; any other event sends what
+/// waits first, so the order holds. What still waits goes on drop.
+pub(crate) struct Paced<'a> {
+    sink: &'a dyn EventSink,
+    state: std::sync::Mutex<(Option<StreamEvent>, Option<std::time::Instant>)>,
+}
+
+impl<'a> Paced<'a> {
+    pub(crate) fn new(sink: &'a dyn EventSink) -> Self {
+        Self {
+            sink,
+            state: std::sync::Mutex::default(),
+        }
+    }
+}
+
+/// `next` added to `waiting` when both are fragments of one stream.
+fn merged(waiting: &mut StreamEvent, next: &StreamEvent) -> bool {
+    match (waiting, next) {
+        (StreamEvent::Delta { text }, StreamEvent::Delta { text: more })
+        | (StreamEvent::Thinking { text }, StreamEvent::Thinking { text: more }) => {
+            text.push_str(more);
+            true
+        }
+        (
+            StreamEvent::ToolArgsDelta { call_id, delta },
+            StreamEvent::ToolArgsDelta {
+                call_id: next_id,
+                delta: more,
+            },
+        ) if call_id == next_id => {
+            delta.push_str(more);
+            true
+        }
+        _ => false,
+    }
+}
+
+impl EventSink for Paced<'_> {
+    fn send(&self, event: StreamEvent) {
+        let fragment = matches!(
+            event,
+            StreamEvent::Delta { .. }
+                | StreamEvent::Thinking { .. }
+                | StreamEvent::ToolArgsDelta { .. }
+        );
+        let mut out = Vec::new();
+        {
+            let mut state = self.state.lock().unwrap_or_else(|e| e.into_inner());
+            let (waiting, last) = &mut *state;
+            let joined = match waiting.as_mut() {
+                Some(w) => merged(w, &event),
+                None => false,
+            };
+            if !joined {
+                out.extend(waiting.take());
+                if fragment {
+                    *waiting = Some(event);
+                } else {
+                    out.push(event);
+                }
+            }
+            if last.is_none_or(|at| at.elapsed() >= PACE) {
+                out.extend(waiting.take());
+                *last = Some(std::time::Instant::now());
+            }
+        }
+        for event in out {
+            self.sink.send(event);
+        }
+    }
+}
+
+impl Drop for Paced<'_> {
+    fn drop(&mut self) {
+        let waiting = self
+            .state
+            .lock()
+            .unwrap_or_else(|e| e.into_inner())
+            .0
+            .take();
+        if let Some(event) = waiting {
+            self.sink.send(event);
+        }
+    }
+}
+
 /// Forwards a provider-level fragment to `channel`. A native search
 /// citation goes to the request's sources instead.
 pub(crate) fn forward(
@@ -99,5 +191,47 @@ pub(crate) fn report(channel: &dyn EventSink) -> impl FnMut(LoopEvent<'_>) + '_ 
             LoopEvent::Retry => StreamEvent::Retry,
         };
         channel.send(event);
+    }
+}
+
+#[cfg(test)]
+mod paced_tests {
+    use super::*;
+
+    struct Kept(std::sync::Mutex<Vec<StreamEvent>>);
+    impl EventSink for Kept {
+        fn send(&self, event: StreamEvent) {
+            self.0.lock().unwrap().push(event);
+        }
+    }
+    fn delta(text: &str) -> StreamEvent {
+        StreamEvent::Delta { text: text.into() }
+    }
+
+    #[test]
+    fn tokens_go_out_merged_and_in_order() {
+        let kept = Kept(std::sync::Mutex::default());
+        {
+            let paced = Paced::new(&kept);
+            for word in ["a", "b", "c"] {
+                paced.send(delta(word));
+            }
+            paced.send(StreamEvent::Retry);
+            paced.send(delta("d"));
+            paced.send(delta("e"));
+        }
+        let sent: Vec<String> = kept
+            .0
+            .into_inner()
+            .unwrap()
+            .into_iter()
+            .map(|e| match e {
+                StreamEvent::Delta { text } => text,
+                StreamEvent::Retry => "|".into(),
+                _ => "?".into(),
+            })
+            .collect();
+        assert_eq!(sent.concat(), "abc|de");
+        assert!(sent.len() <= 5, "{sent:?}");
     }
 }

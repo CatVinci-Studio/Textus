@@ -172,6 +172,12 @@ export function moveConversations(from: string, to: string) {
   );
 }
 
+/** The name History keeps for conversation `id`: a title Textus AI gave
+ *  it, or its first line. */
+export function storedTitle(id: string): string | undefined {
+  return history.get().find((entry) => entry.id === id)?.title;
+}
+
 export function deleteConversation(id: string) {
   history.remove(id);
 }

@@ -37,12 +37,15 @@ import { SOURCE_EDIT_EVENT } from "../../utils/events";
 import { followFormatMenu, formatSource } from "./source-format-events";
 import { tellCopied } from "../../clipboard/copied";
 import { elasticOverscroll } from "../../engine/controls/elastic-overscroll";
+import { registerTabEditor } from "../tab-editor";
 import "./source-editor.css";
 
 /** A change the tab's markdown made, not the user. */
 const outside = Annotation.define<boolean>();
 /** The texts each editor's edits reported, not yet seen coming back. */
 const sentBy = new WeakMap<EditorView, string[]>();
+/** Typing reports its text after this pause, as the rich editor does. */
+const REPORT_MS = 200;
 
 /** What a copy or cut takes: the selected ranges, a line apart. */
 function tellSelection(view: EditorView, cut: boolean) {
@@ -72,6 +75,8 @@ export interface SourceEditorProps {
    *  document's source passes one that writes a pasted picture's Markdown
    *  (see DocSourceEditor); the playground has no file to store one beside. */
   onPaste?: (event: ClipboardEvent, view: EditorView) => boolean;
+  /** The tab it edits: a save first pulls in what was just typed. */
+  tabId?: string;
 }
 
 /**
@@ -87,12 +92,20 @@ export function SourceEditor({
   className = "",
   onScroll,
   onPaste,
+  tabId,
 }: SourceEditorProps) {
   const hostRef = useRef<HTMLDivElement>(null);
   const viewRef = useRef<EditorView | null>(null);
   const readOnlyRef = useRef<Compartment | null>(null);
-  const latest = useRef({ value, onChange, typewriter, readOnly, onScroll });
-  latest.current = { value, onChange, typewriter, readOnly, onScroll };
+  const latest = useRef({
+    value,
+    onChange,
+    typewriter,
+    readOnly,
+    onScroll,
+    tabId,
+  });
+  latest.current = { value, onChange, typewriter, readOnly, onScroll, tabId };
   // The extension is built once; it reads the current handler through here.
   const pasteRef = useRef(onPaste);
   pasteRef.current = onPaste;
@@ -102,6 +115,19 @@ export function SourceEditor({
     if (!host) return;
     const compartment = new Compartment();
     readOnlyRef.current = compartment;
+    // The text goes out a pause after typing: a copy of the whole document
+    // and a window render per key was too much for a long one.
+    let timer: ReturnType<typeof setTimeout> | null = null;
+    const report = () => {
+      if (timer === null) return null;
+      clearTimeout(timer);
+      timer = null;
+      const text = view.state.doc.toString();
+      if (text === latest.current.value) return null;
+      sentBy.set(view, [...(sentBy.get(view) ?? []), text]);
+      latest.current.onChange(text);
+      return text;
+    };
     const view = new EditorView({
       parent: host,
       state: EditorState.create({
@@ -142,14 +168,12 @@ export function SourceEditor({
           }),
           compartment.of(readOnlyOf(latest.current.readOnly)),
           EditorView.updateListener.of((update) => {
-            if (update.docChanged) {
-              const text = update.state.doc.toString();
-              if (!update.transactions.some((tr) => tr.annotation(outside)))
-                sentBy.set(update.view, [
-                  ...(sentBy.get(update.view) ?? []),
-                  text,
-                ]);
-              latest.current.onChange(text);
+            if (
+              update.docChanged &&
+              !update.transactions.some((tr) => tr.annotation(outside))
+            ) {
+              if (timer !== null) clearTimeout(timer);
+              timer = setTimeout(report, REPORT_MS);
             }
             if (
               latest.current.typewriter &&
@@ -166,6 +190,10 @@ export function SourceEditor({
       view.focus();
     };
     registerSourceView(host, view, edit);
+    const { tabId } = latest.current;
+    const stopFlush = tabId
+      ? registerTabEditor(tabId, "flush", report)
+      : undefined;
     const onEdit = (event: Event) => {
       const action = (event as CustomEvent<SourceEdit>).detail;
       if (action === "undo" || action === "redo" || action === "select-all")
@@ -179,6 +207,8 @@ export function SourceEditor({
     // The same give at either end as the rendered view's, on a Mac.
     const stopElastic = elasticOverscroll(scroller, view.dom);
     return () => {
+      report();
+      stopFlush?.();
       stopElastic();
       stopFormat();
       host.removeEventListener(SOURCE_EDIT_EVENT, onEdit);

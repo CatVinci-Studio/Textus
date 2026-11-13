@@ -29,6 +29,7 @@ import { usePhoneLayout } from "../../engine/controls/usePhoneLayout";
 import "./app-menu.css";
 import { usePluginMenuEntries } from "../../plugins/contributions/usePluginMenu";
 import { trackingShown } from "../../ai/margin/track-changes-state";
+import { menuKeyStep } from "../../engine/controls/list-keys";
 
 /**
  * The app-drawn menu, where the native menu bar is hidden (Windows), with
@@ -90,18 +91,14 @@ export function AppMenu({ x, y, onClose, checks, section }: AppMenuProps) {
 /** For the flyouts' timing, read in event handlers only. */
 const clock = () => performance.now();
 
-/** Focuses the nth enabled item of a list, wrapping at both ends. */
-function focusItem(list: HTMLElement | null, index: number) {
-  if (!list) return;
-  // `:scope >` keeps an open flyout's items out of the parent's arrow-key
-  // walk - they are DOM children of the row they hang off.
-  const rows = Array.from(
-    list.querySelectorAll<HTMLButtonElement>(
-      ":scope > .app-menu-row > .app-menu-item:not(:disabled)",
-    ),
-  );
-  if (rows.length === 0) return;
-  rows[(index + rows.length) % rows.length]?.focus();
+/** A list's own rows: `:scope >` keeps an open flyout's items out of the
+ *  parent's arrow-key walk - they are DOM children of the row they hang
+ *  off. */
+const OWN_ROWS = ":scope > .app-menu-row > .app-menu-item:not(:disabled)";
+
+/** Focuses a list's first enabled item. */
+function focusFirst(list: HTMLElement | null) {
+  list?.querySelector<HTMLElement>(OWN_ROWS)?.focus();
 }
 
 /** What the menu reads once as it opens: the recent files and folders, and
@@ -194,24 +191,19 @@ function MenuList({
     // A flyout is hidden for a frame while it measures, and a hidden element
     // can't take focus, so wait two frames.
     let frame = requestAnimationFrame(() => {
-      frame = requestAnimationFrame(() => focusItem(listRef.current, 0));
+      frame = requestAnimationFrame(() => focusFirst(listRef.current));
     });
     return () => cancelAnimationFrame(frame);
   }, [autoFocus]);
 
   function onKeyDown(e: React.KeyboardEvent<HTMLDivElement>) {
-    const rows = listRef.current?.querySelectorAll<HTMLButtonElement>(
-      ":scope > .app-menu-row > .app-menu-item:not(:disabled)",
-    );
-    const current = Array.from(rows ?? []).indexOf(
-      document.activeElement as HTMLButtonElement,
-    );
     // Every branch stops propagation: with a flyout open both lists are on
     // the same bubble path, and the parent would move its own focus too.
-    if (e.key === "ArrowDown" || e.key === "ArrowUp") {
+    const next = menuKeyStep(e.key, listRef.current, OWN_ROWS);
+    if (next) {
       e.preventDefault();
       e.stopPropagation();
-      focusItem(listRef.current, current + (e.key === "ArrowDown" ? 1 : -1));
+      next.focus();
     } else if (e.key === "ArrowLeft" && onLeave) {
       e.preventDefault();
       e.stopPropagation();

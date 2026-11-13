@@ -1,5 +1,5 @@
 import { pictureSrc } from "../revision/generated-images";
-import { lazy, Suspense, useState } from "react";
+import { lazy, Suspense, useState, type ReactNode } from "react";
 import type { AgentTurn, ImageAttachment, WebSource } from "../types";
 import { links } from "../../platform/ipc";
 import { MarkdownText } from "../MarkdownText";
@@ -22,6 +22,11 @@ import {
 import { Presence } from "../../engine/motion/usePresence";
 import { INSERT_MARKDOWN_EVENT } from "../../utils/events";
 import { normalizeAiMarkdown } from "../revision/apply-edit";
+import { CommandText } from "../agents/AgentPermission";
+import { currentStrings } from "../../i18n/current";
+
+/** A tool's note longer than this is cut to two lines until opened. */
+export const LONG_ACTIVITY = 160;
 
 /** The main window, whose document a reply can go into. */
 const inEditorWindow = () =>
@@ -147,20 +152,22 @@ export function AgentTurnView({
           {menu.element}
         </div>
       );
-    case "ToolCall":
+    case "ToolCall": {
+      const activity = toolActivityText(turn.name, turn.arguments, labels);
+      // A long one (an agent's chained shell command) shows two lines.
       return (
         <div className="agent-tool-line">
           <SearchIcon className="agent-tool-icon" />
-          {toolActivityText(turn.name, turn.arguments, labels)}
+          {activity.length > LONG_ACTIVITY ? (
+            <CommandText text={activity} lines={2} className="is-quiet" />
+          ) : (
+            activity
+          )}
         </div>
       );
+    }
     case "ToolResult":
-      return (
-        <details className="disclosure agent-tool-result">
-          <summary>{labels.toolResult}</summary>
-          <pre>{turn.output}</pre>
-        </details>
-      );
+      return <ToolOutput output={turn.output} summary={labels.toolResult} />;
     default:
       return null;
   }
@@ -267,5 +274,53 @@ function SourceList({
         );
       })}
     </div>
+  );
+}
+
+/** A step's output drawn in full past this, only when asked. */
+const LONG_OUTPUT = 4000;
+
+/**
+ * A step's output, folded: its text is drawn only while it is open, and a
+ * long one (a command reading many files) its start until asked, so a
+ * session of them doesn't weigh on the conversation.
+ */
+export function ToolOutput({
+  output = "",
+  summary,
+  parts,
+  failed,
+}: {
+  output?: string;
+  /** The line it opens from: "Result", or the step itself. */
+  summary: ReactNode;
+  /** Rows it holds instead of text: steps folded into it. */
+  parts?: ReactNode;
+  failed?: boolean;
+}) {
+  const [open, setOpen] = useState(false);
+  const [all, setAll] = useState(false);
+  const cut = !all && output.length > LONG_OUTPUT;
+  return (
+    <details
+      className="disclosure agent-tool-result"
+      data-failed={failed || undefined}
+      onToggle={(e) => setOpen(e.currentTarget.open)}
+    >
+      <summary>{summary}</summary>
+      {open && parts && <div className="agent-steps-folded">{parts}</div>}
+      {open && !parts && (
+        <pre>{cut ? `${output.slice(0, LONG_OUTPUT)}…` : output}</pre>
+      )}
+      {open && cut && (
+        <button
+          type="button"
+          className="text-button agent-command-more"
+          onClick={() => setAll(true)}
+        >
+          {currentStrings().chatAgentShowAll}
+        </button>
+      )}
+    </details>
   );
 }

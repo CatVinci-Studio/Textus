@@ -29,6 +29,7 @@ mod json_file;
 #[cfg(desktop)]
 mod mcp;
 mod media;
+mod memory_level;
 #[cfg(desktop)]
 mod menu;
 mod net;
@@ -235,6 +236,7 @@ pub fn run() {
             tauri::async_runtime::spawn(plugins::moved_skills::install_moved_skills(
                 app.handle().clone(),
             ));
+            memory_level::watch(app.handle().clone());
             crate::editor_windows::build_main_window(app)?;
             #[cfg(desktop)]
             desktop_setup(app)?;

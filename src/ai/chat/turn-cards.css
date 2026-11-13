@@ -331,3 +331,94 @@
   flex-wrap: wrap;
   gap: 8px;
 }
+
+/* A command an agent runs or asks to: code type, a few lines, the rest a
+   press away. */
+.agent-command {
+  display: flex;
+  flex-direction: column;
+  align-items: flex-start;
+  gap: 4px;
+  align-self: stretch;
+  min-width: 0;
+}
+
+.agent-command-text {
+  display: block;
+  max-height: 40vh;
+  overflow: auto;
+  padding: 8px;
+  border-radius: var(--shape-s);
+  background: var(--ui-subtle);
+  font-family: var(--font-mono);
+  font-size: var(--text-caption);
+  line-height: 1.5;
+  white-space: pre-wrap;
+  word-break: break-all;
+}
+
+.agent-command-text[data-clamped] {
+  display: -webkit-box;
+  -webkit-box-orient: vertical;
+  overflow: hidden;
+}
+
+.agent-command.is-quiet .agent-command-text {
+  padding: 0;
+  background: none;
+  color: inherit;
+}
+
+.agent-command-more {
+  min-height: 0;
+  padding: 0;
+  font-size: var(--text-caption);
+}
+
+/* An external agent's plan while it runs: quiet steps, the one it is on in
+   the text's colour, those done checked. */
+.agent-plan ol {
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+  margin: 4px 0;
+  padding: 0 2px;
+  list-style: none;
+  font-size: var(--text-caption);
+  color: var(--ui-muted);
+}
+
+.agent-plan li {
+  display: flex;
+  align-items: baseline;
+  gap: 8px;
+}
+
+.agent-plan li[data-status="in_progress"] {
+  color: var(--ui-text);
+}
+
+.agent-plan-mark {
+  flex: none;
+  width: 0.75em;
+  height: 0.75em;
+  transform: translateY(0.1em);
+}
+
+/* Not done yet: a ring, filled once it is the step under way. */
+span.agent-plan-mark {
+  border: 1px solid currentColor;
+  border-radius: 50%;
+}
+
+.agent-plan li[data-status="in_progress"] span.agent-plan-mark {
+  background: currentColor;
+}
+
+/* Steps folded into one line, under it. */
+.agent-steps-folded {
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+  padding: 4px 0 0 16px;
+}

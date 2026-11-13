@@ -1,5 +1,6 @@
 import { useCallback, useState } from "react";
 import { fs } from "../platform/ipc";
+import { announceFileCreated } from "../utils/events";
 
 import { showMessage } from "../engine/controls/app-dialog";
 import type { Strings } from "../i18n/strings";
@@ -23,7 +24,10 @@ export function useNewEntry(
             ? await fs.createDocument(draft.dir, name)
             : await fs.createFolder(draft.dir, name);
         reload(draft.dir);
-        if (draft.kind === "document") onFileSelect(made);
+        if (draft.kind === "document") {
+          announceFileCreated(made);
+          onFileSelect(made);
+        }
       } catch (err) {
         await showMessage(failureText(t, err, name));
       }

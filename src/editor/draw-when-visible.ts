@@ -160,3 +160,15 @@ export function drawWhileNear(
   el.setAttribute(PENDING_ATTR, "");
   observer.observe(el);
 }
+
+/** Lets go of a placeholder taken out of the document: one that never came
+ *  near the screen would otherwise stay observed, its drawing held. */
+export function stopDrawing(node: Node): void {
+  if (!(node instanceof Element)) return;
+  const el = node;
+  waiting.get(el)?.observer.unobserve(el);
+  waiting.delete(el);
+  keepObservers.get(el)?.unobserve(el);
+  keepObservers.delete(el);
+  kept.delete(el);
+}

@@ -36,12 +36,14 @@ import {
 } from "./image-html";
 import { imageRotationView } from "./image-rotation";
 import { DROP_IMAGE_FILES_EVENT } from "../../utils/events";
-import { decorateAll, redecorateChanged } from "../changed-ranges";
-import { isLargeDoc } from "../large-doc";
+import {
+  changedRangesOf,
+  decorateAll,
+  redecorateChanged,
+} from "../changed-ranges";
 import {
   type ImageStore,
   blobImageSrcs,
-  changedRanges,
   pastedImages,
   fileImage,
   onlyLinkHrefs,
@@ -162,9 +164,9 @@ function createImageView(
   const dom = document.createElement("span");
   dom.className = "image-view";
   const img = document.createElement("img");
-  // In a large document, loaded only as it comes near the screen (set
-  // before the src, or it loads at once).
-  if (isLargeDoc(view.state.doc)) img.loading = "lazy";
+  // Loaded only as it comes near the screen (set before the src, or it
+  // loads at once): a short note can hold many large photos.
+  img.loading = "lazy";
   const handle = document.createElement("span");
   handle.className = "image-resize-handle";
   handle.setAttribute("aria-hidden", "true");
@@ -227,6 +229,7 @@ function createImageView(
   });
   img.addEventListener("error", () => void showMissing());
 
+  let drawn: string | null = null;
   const apply = (n: ProseNode) => {
     const before = shown();
     current = n;
@@ -234,12 +237,18 @@ function createImageView(
     if (shown() !== before) clearMissing();
     const { title } = readImagePresentation(n.attrs.title as string);
     const width = shownImageWidth(n.attrs);
-    showDocImage(
-      img,
-      (n.attrs.src as string) ?? "",
-      docPath(),
-      () => current === n,
-    );
+    // Only another picture loads again: setting src anew blanked it. One
+    // that failed is tried again on any edit (it may be there now).
+    const want = shown();
+    if (want !== drawn || card) {
+      drawn = want;
+      showDocImage(
+        img,
+        (n.attrs.src as string) ?? "",
+        docPath(),
+        () => shown() === want,
+      );
+    }
     img.alt = splitAltSize((n.attrs.alt as string) ?? "").alt;
     if (title) img.title = title;
     else img.removeAttribute("title");
@@ -329,7 +338,7 @@ export function createImagePlugin(options: ImageStore) {
       },
       appendTransaction: (trs, _old, state) =>
         trs.some((tr) => tr.docChanged)
-          ? swapStoredBlobs(state.tr, storedBlobs, changedRanges(trs))
+          ? swapStoredBlobs(state.tr, storedBlobs, changedRangesOf(trs))
           : null,
       // Tauri hands drops to the app, so they arrive as a window event, to
       // every island's editor: the one under the point takes them, else

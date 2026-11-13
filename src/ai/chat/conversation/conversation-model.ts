@@ -9,7 +9,11 @@ import {
   endAgentSession,
 } from "../../agents/agent-exchange";
 import { AGENT_REQUEST } from "../../agents/agent-request";
-import { conversationTitle, saveConversation } from "../chat-history";
+import {
+  conversationTitle,
+  saveConversation,
+  storedTitle,
+} from "../chat-history";
 import { conversationScope, setLiveConversation } from "../conversation-scope";
 import { NextMessage } from "../next-message";
 import type { StreamingState } from "../stream-step";
@@ -82,6 +86,8 @@ export class ConversationModel {
   private deltaFrame: number | null = null;
   /** Turns as History holds them: shown, not saved again. */
   private filed: AgentTurn[] | null = null;
+  /** A short title Textus AI gave it after its first exchange. */
+  private named: string | null = null;
   /** Where it was last sent, reset or restored: where it is saved. */
   private place: ConversationPlace | null = null;
 
@@ -246,6 +252,7 @@ export class ConversationModel {
     this.generation += 1;
     this.end();
     this.filed = null;
+    this.named = null;
     this.setStreaming(null);
     this.patch({
       conversationId: id,
@@ -259,13 +266,26 @@ export class ConversationModel {
     this.onIdentity?.(this);
   }
 
+  /** Its name in History and on its tab, kept once given. */
+  setNamed(title: string) {
+    this.named = title;
+    this.filed = null;
+    this.save();
+  }
+
+  get isNamed(): boolean {
+    return this.named !== null;
+  }
+
   private save() {
     const { history, conversationId } = this.state;
     if (!this.persist || history.length === 0 || history === this.filed) return;
     saveConversation({
       id: conversationId,
       docPath: (this.place ?? this.env()).docPath,
-      title: conversationTitle(history),
+      // A title it was given stays; else its first line.
+      title:
+        this.named ?? storedTitle(conversationId) ?? conversationTitle(history),
       updatedAt: Date.now(),
       turns: history.map(withoutImageData),
     });

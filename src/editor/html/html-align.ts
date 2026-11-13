@@ -68,7 +68,14 @@ export function alignedBlocks(
   return out;
 }
 
-function draw(doc: ProseNode, selection: Selection): DecorationSet {
+/** The decorations, and whether the text has tags at all: with every tag
+ *  under the caret there may be none drawn, yet a caret move matters. */
+interface Drawn {
+  set: DecorationSet;
+  tags: boolean;
+}
+
+function draw(doc: ProseNode, selection: Selection): Drawn {
   const tags: { from: number; to: number }[] = [];
   const blocks = alignedBlocks(doc, tags).map(({ from, to, align }) =>
     Decoration.node(from, to, { class: `html-align-${align}` }),
@@ -78,24 +85,26 @@ function draw(doc: ProseNode, selection: Selection): DecorationSet {
     .map(({ from, to }) =>
       Decoration.node(from, to, { class: "html-align-tag" }),
     );
-  return DecorationSet.create(doc, [...blocks, ...hidden]);
+  if (!tags.length) return { set: DecorationSet.empty, tags: false };
+  return { set: DecorationSet.create(doc, [...blocks, ...hidden]), tags: true };
 }
 
-const key = new PluginKey<DecorationSet>("html-align");
+const key = new PluginKey<Drawn>("html-align");
 
 export const htmlAlignPlugin = $prose(
   () =>
-    new Plugin<DecorationSet>({
+    new Plugin<Drawn>({
       key,
       state: {
         init: (_config, state) => draw(state.doc, state.selection),
+        // A caret move matters only where there are tags to show.
         apply: (tr, prev, _old, state) =>
-          tr.docChanged || tr.selectionSet
+          tr.docChanged || (tr.selectionSet && prev.tags)
             ? draw(state.doc, state.selection)
             : prev,
       },
       props: {
-        decorations: (state) => key.getState(state),
+        decorations: (state) => key.getState(state)?.set,
       },
     }),
 );

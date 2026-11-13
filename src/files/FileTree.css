@@ -162,6 +162,13 @@
 }
 
 .file-tree-dragging,
+/* The rows of a big folder not drawn yet: their room, so the scroll bar
+   tells the folder's length. */
+.tree-rows-more {
+  /* --row: a drawn row's measured height, which text size changes. */
+  height: calc(var(--rows) * var(--row, 24px));
+}
+
 .file-tree-dragging .tree-row {
   cursor: grabbing;
 }

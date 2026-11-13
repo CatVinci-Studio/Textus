@@ -1,8 +1,4 @@
-import {
-  pane,
-  type LayoutNode,
-  type SplitDirection,
-} from "../../engine/layout/tree";
+import { pane, type LayoutNode, type SplitDirection } from "./tree";
 
 /** A split as saved: its branches, and each island by its documents'
  *  paths and the one in front (earlier versions: that one alone). */
@@ -68,6 +64,16 @@ export function readSavedSplit(raw: unknown): SavedNode | null {
   if (!node || !("children" in node)) return null;
   const all = savedPaths(node);
   return new Set(all).size === all.length ? node : null;
+}
+
+/** The document a saved window had in front: its one island's, or its
+ *  first island's when split (the island restored in use). */
+export function savedFront(raw: unknown): string | null {
+  const tree =
+    raw && typeof raw === "object" ? (raw as { tree?: unknown }).tree : null;
+  let node = readNode(tree);
+  while (node && "children" in node) node = node.children[0];
+  return node ? ("path" in node ? node.path : node.front) : null;
 }
 
 /** The islands that show files, as saved: their documents, the one in

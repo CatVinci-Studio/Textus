@@ -1,9 +1,8 @@
 import { describe, expect, it } from "vitest";
 import { pluginString } from "../host/plugin-string";
 import CASES from "./manifest-cases.json";
+import { compareVersions, engineSatisfied } from "./versions";
 import {
-  compareVersions,
-  engineSatisfied,
   isPermission,
   localize,
   matchesFilename,

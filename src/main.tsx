@@ -8,7 +8,7 @@ import { loadLocale } from "./i18n/strings";
 import { lazyModule, startWarming } from "./lazy/lazy-module";
 import { installDevTauriShim } from "./dev/tauri-shim";
 import { installPolyfills } from "./utils/polyfills";
-import { watchMemoryIdle } from "./utils/memory-idle";
+import { watchMemory } from "./app/watch-memory";
 import { publishWindowChrome } from "./platform/window-chrome";
 import { WindowEdges } from "./app/frame/WindowEdges";
 import { installWebviewGuards } from "./engine/controls/webview-guards";
@@ -102,7 +102,8 @@ if (view === "background") {
       );
       // The parts likely to be opened next load once the window is idle.
       startWarming();
-      // Caches and idle views are given back once the window is left alone.
-      watchMemoryIdle();
+      // Caches and idle views are given back once the window is left alone,
+      // and as much is kept as the machine's memory allows.
+      watchMemory();
     });
 }

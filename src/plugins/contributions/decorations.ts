@@ -15,7 +15,12 @@ export interface PluginDecoration {
   before?: boolean;
 }
 
-type Ask = (blocks: SentBlock[]) => Promise<PluginDecoration[]>;
+/** `blocks` in sight, and the whole document they're of: the asking
+ *  editor's, which needn't be the one in front. */
+type Ask = (
+  blocks: SentBlock[],
+  all: readonly SentBlock[],
+) => Promise<PluginDecoration[]>;
 
 const providers = new Map<string, Ask>();
 const listeners = new Set<() => void>();
@@ -47,12 +52,13 @@ export function onDecorationProviders(listener: () => void): () => void {
  *  plugin that fails or takes too long adds none. */
 export async function decorate(
   blocks: SentBlock[],
+  doc: readonly SentBlock[],
   timeoutMs = 1500,
 ): Promise<(PluginDecoration & { plugin: string })[]> {
   const all = await Promise.all(
     [...providers].map(async ([plugin, ask]) => {
       const marks = await Promise.race([
-        ask(blocks).catch(() => []),
+        ask(blocks, doc).catch(() => []),
         new Promise<PluginDecoration[]>((resolve) =>
           setTimeout(() => resolve([]), timeoutMs),
         ),

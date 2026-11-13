@@ -116,7 +116,7 @@ export function fileHandlers(p: PluginScope) {
     // other apps' plugins keep (bookmarks.json, a plugin's data.json).
     "files.appSettings": async ({ app, file, path }: Params) => {
       const name = str(file, "file");
-      if (!/^[\w-][\w.-]*$/.test(name))
+      if (!/^([\w-][\w.-]*|plugins\/[\w-][\w.-]*\/data\.json)$/.test(name))
         throw new Error(`${name} isn't a settings file's name.`);
       if (str(app, "app") !== "obsidian") return null;
       const found = await fs.folderConventions(
@@ -363,9 +363,7 @@ function relOf(root: string, path: string): string {
  *  (access.rs in_folder). Else null, and the call goes to the backend,
  *  which says no where it should. */
 export function openDocument(root: string, path: string) {
-  const full = /^([\\/]|[A-Za-z]:)/.test(path)
-    ? path
-    : `${root.replace(/[\\/]+$/, "")}/${path}`;
+  const full = absoluteIn(root, path);
   return inOpenFolder(root, full)
     ? (getWindowAccess()?.documentAt(full) ?? null)
     : null;
@@ -375,9 +373,7 @@ export function openDocument(root: string, path: string) {
  *  in the open folder. */
 function within(root: string, path: string | undefined): string {
   if (!path) return root;
-  const full = /^([\\/]|[A-Za-z]:)/.test(path)
-    ? path
-    : `${root.replace(/[\\/]+$/, "")}/${path}`;
+  const full = absoluteIn(root, path);
   if (full !== root && !isInside(full, root))
     throw new Error(`${path} isn't in the open folder.`);
   return full;

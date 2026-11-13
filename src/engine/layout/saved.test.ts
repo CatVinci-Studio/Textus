@@ -1,6 +1,6 @@
 import { describe, expect, it } from "vitest";
-import { buildSaved, readSavedSplit, saveNode } from "./saved-layout";
-import { panesOf, type LayoutNode } from "../../engine/layout/tree";
+import { buildSaved, readSavedSplit, savedFront, saveNode } from "./saved";
+import { pane, panesOf, type LayoutNode } from "./tree";
 
 describe("readSavedSplit", () => {
   it("reads a saved tree of panes by their documents' paths", () => {
@@ -76,6 +76,12 @@ describe("saveNode and buildSaved", () => {
       ],
     });
     expect(readSavedSplit({ tree: saved })).toEqual(saved);
+    // The island restored in use is the first: its front comes up first.
+    expect(savedFront({ tree: saved })).toBe("/b.md");
+    // One island keeps its front too, and is no split to restore.
+    const one = saveNode(pane(["a", "b"], "b"), (id) => paths[id] ?? null);
+    expect(savedFront({ tree: one })).toBe("/b.md");
+    expect(readSavedSplit({ tree: one })).toBeNull();
     // Opened again under new ids, one of them gone: the rest come back.
     const idOf = new Map([
       ["/a.md", "x"],

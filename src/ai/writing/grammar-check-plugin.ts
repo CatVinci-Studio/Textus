@@ -10,6 +10,7 @@ import type { FoldAttention } from "../../editor/html/details-fold";
 import { ai } from "../../platform/ipc";
 import { AiNoticeError } from "../../utils/error-text";
 import { markChangeSource } from "../../editor/change-source";
+import { changedRanges } from "../../editor/changed-ranges";
 
 export const grammarKey = new PluginKey("grammar-check");
 const DEBOUNCE_MS = 1500;
@@ -305,7 +306,10 @@ export function createGrammarCheckPlugin(options: {
             // A highlight whose text no longer says what the issue was about
             // is done, so applying a fix clears its underline.
             const mapped = prev.map(tr.mapping, tr.doc);
-            const stale = mapped.find().filter((deco) => {
+            const near = changedRanges(tr).flatMap(([from, to]) =>
+              mapped.find(from, to),
+            );
+            const stale = near.filter((deco) => {
               const spec = deco.spec as GrammarDecorationSpec;
               return (
                 spec.original !== undefined &&

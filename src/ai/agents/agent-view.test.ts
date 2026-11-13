@@ -89,6 +89,45 @@ describe("an agent's updates as the chat shows them", () => {
       { kind: "ToolResult", call_id: "t2", output: "Failed." },
     ]);
     expect(finish(view)).toHaveLength(3);
+    // An update that changes nothing is the same view: nothing redraws.
+    const again = applyUpdate(view, {
+      sessionUpdate: "tool_call_update",
+      toolCallId: "t2",
+      status: "failed",
+    });
+    expect(again).toBe(view);
+  });
+
+  it("keeps the plan past prose and a step, marks a failure, and a cut", () => {
+    const view = run([
+      {
+        sessionUpdate: "plan",
+        entries: [{ content: "Read", status: "pending" }],
+      },
+      {
+        sessionUpdate: "agent_message_chunk",
+        content: { type: "text", text: "Let me look." },
+      },
+      { sessionUpdate: "tool_call", toolCallId: "t3", title: "Build" },
+      {
+        sessionUpdate: "tool_call_update",
+        toolCallId: "t3",
+        status: "failed",
+        content: [
+          {
+            type: "content",
+            content: { type: "text", text: "x".repeat(5000) },
+          },
+        ],
+      },
+    ]);
+    expect(view.plan).toHaveLength(1);
+    const step = view.turns.find((t) => t.kind === "ToolCall");
+    expect(step?.kind === "ToolCall" && JSON.parse(step.arguments).status).toBe(
+      "failed",
+    );
+    const out = view.turns.find((t) => t.kind === "ToolResult");
+    expect(out?.kind === "ToolResult" && out.output.endsWith("\n…")).toBe(true);
   });
 });
 

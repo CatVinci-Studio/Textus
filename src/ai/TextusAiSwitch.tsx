@@ -1,3 +1,4 @@
+import { externalAgent } from "../plugins/contributions/agents";
 import { fill } from "../i18n/fill";
 import { useEffect, useState, type MouseEvent } from "react";
 import { createPortal } from "react-dom";
@@ -81,8 +82,11 @@ export function TextusAiButton({
   shortcut: string;
   onTogglePanel: () => void;
 }) {
-  const { t } = useSettings();
+  const { t, settings, setSettings } = useSettings();
   const ai = useTextusAi();
+  // Claude Code or Codex answering: theirs is the button that shows it.
+  const agentInUse = !!externalAgent(settings.chatAgent);
+  const pressed = ai.on && panelOpen && !agentInUse;
   const [menu, setMenu] = useState<{ x: number; y: number } | null>(null);
   // On with chat turned off there is nothing to open; the switch is in Settings.
   if (ai.on && !showPanel) return null;
@@ -127,11 +131,18 @@ export function TextusAiButton({
       <Tooltip text={tip}>
         <button
           type="button"
-          className={`${className}${ai.on && panelOpen ? " window-bar-toggle-on" : ""}${ai.on ? "" : " textus-ai-button-off"}`}
-          aria-pressed={ai.on ? panelOpen : undefined}
+          className={`${className}${pressed ? " window-bar-toggle-on" : ""}${ai.on ? "" : " textus-ai-button-off"}`}
+          aria-pressed={ai.on ? pressed : undefined}
           aria-label={ai.on ? t.agentPanelTitle : t.textusAiOff}
           aria-haspopup="menu"
-          onClick={(e) => (ai.on ? onTogglePanel() : openMenu(e, false))}
+          onClick={(e) => {
+            if (!ai.on) return openMenu(e, false);
+            // From an agent back to Textus AI, the AI staying open.
+            if (agentInUse) {
+              setSettings({ chatAgent: "" });
+              if (!panelOpen) onTogglePanel();
+            } else onTogglePanel();
+          }}
           onContextMenu={(e) => openMenu(e, e.button === 2)}
         >
           <AssistantIcon off={!ai.on} />

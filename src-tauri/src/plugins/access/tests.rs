@@ -76,6 +76,15 @@ fn a_plugin_reaches_no_hidden_file_but_the_folders_own_settings() {
     }
     assert!(in_folder(root.path(), Path::new("notes/a.md")).is_ok());
     assert!(in_folder(root.path(), Path::new(".textus/sync.json")).is_ok());
+    assert!(in_folder(root.path(), Path::new(".obsidian/app.json")).is_ok());
+    for shut in [
+        ".obsidian/workspace.json",
+        ".obsidian/community-plugins.json",
+        ".obsidian/plugins/x/main.js",
+        "sub/.obsidian/app.json",
+    ] {
+        assert!(in_folder(root.path(), Path::new(shut)).is_err(), "{shut}");
+    }
     std::fs::create_dir_all(root.path().join(".textus/plugins/a.b")).unwrap();
     assert!(plugin_path(root.path(), Path::new(".textus/plugins/a.b/x.json"), "a.b").is_ok());
     assert!(plugin_path(root.path(), Path::new(".textus/plugins/a.b/x.json"), "c.d").is_err());
@@ -85,6 +94,7 @@ fn a_plugin_reaches_no_hidden_file_but_the_folders_own_settings() {
 fn three_secret_free_hidden_files_are_readable_and_nothing_else_in_git() {
     assert!(paths::read_only_hidden("/v", ".obsidian.vimrc"));
     assert!(paths::read_only_hidden("/v", "/v/.git/HEAD"));
+    assert!(paths::read_only_hidden("/v", ".gitignore"));
     assert!(paths::read_only_hidden("C:\\v", "C:\\v\\.wakatime-project"));
     assert!(!paths::read_only_hidden("/v", ".git/config"));
     assert!(!paths::read_only_hidden("/v", ".env"));

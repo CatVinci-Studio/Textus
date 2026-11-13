@@ -1,5 +1,6 @@
 import { checkPlugin, type PluginCheck } from "./plugin-check";
-import { engineSatisfied, parseManifest } from "./manifest";
+import { parseManifest } from "./manifest";
+import { engineSatisfied } from "./versions";
 
 /** A plugin Create mode's AI wrote, as its check_plugin tool reads it: the
  *  manifest as install parses it, the `local.` id install needs, and what

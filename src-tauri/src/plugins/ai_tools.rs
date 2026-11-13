@@ -292,14 +292,7 @@ pub async fn call_tool(
 }
 
 fn trimmed(text: String) -> String {
-    if text.trim().is_empty() {
-        return "(The tool returned nothing.)".to_string();
-    }
-    if text.chars().count() > RESULT_CHARS {
-        return text.chars().take(RESULT_CHARS).collect::<String>()
-            + "\n[cut off: the rest was too long]";
-    }
-    text
+    crate::ai::outside_tool_result(text, RESULT_CHARS)
 }
 
 #[cfg(test)]

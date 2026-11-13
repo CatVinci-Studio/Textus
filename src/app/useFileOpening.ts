@@ -32,6 +32,7 @@ import {
   customEditorForContent,
 } from "../plugins/store/plugin-lookup";
 import { basename } from "../utils/path";
+import { isDocumentName } from "../files/document-name";
 import {
   besideLayout,
   openBeside,
@@ -50,6 +51,9 @@ export interface OpenOptions {
   anchor?: string;
   /** Reopening it (last session, Open Recent): at its last caret. */
   restoreCaret?: boolean;
+  /** The window's saved session coming back: opened as it was last time,
+   *  no plugin offered. */
+  reopening?: boolean;
   /** As a document of ours even where a plugin opens that file type. */
   asDocument?: boolean;
   /** A plugin opened it at a place: gone to once the tab shows. */
@@ -127,6 +131,8 @@ export function useFileOpening(opts: {
       path: string,
       asDocument = false,
       place?: DocumentPlace,
+      /** Reopened as last time: no plugin offered, nothing waited on. */
+      reopening = false,
     ): Promise<Partial<DocTab> | null> => {
       // A file type a plugin opens is its tab, not a document. Plugins load
       // first: a file opened at launch may come before them.
@@ -155,7 +161,7 @@ export function useFileOpening(opts: {
         if (asDocument || (await isFolder(path))) throw err;
         const { offerPluginToOpen } =
           await import("../plugins/store/open-offer");
-        const offered = await offerPluginToOpen(path, t);
+        const offered = reopening ? "none" : await offerPluginToOpen(path, t);
         if (offered === "system") {
           await exportDoc.openLinkedFile(path);
           return null;
@@ -169,6 +175,19 @@ export function useFileOpening(opts: {
         return null;
       }
       const { content, diskMtime } = disk;
+      // Text that isn't a document (a web page): the official plugin that
+      // shows it is offered first; declined, it opens as text.
+      if (!asDocument && !reopening && !isDocumentName(basename(path))) {
+        const { offerPluginToOpen } =
+          await import("../plugins/store/open-offer");
+        const offered = await offerPluginToOpen(path, t);
+        const now = offered === "on" ? customEditorFor(path) : null;
+        if (now) return pluginTab(path, now, place);
+        if (offered === "system") {
+          await exportDoc.openLinkedFile(path);
+          return null;
+        }
+      }
       // A Markdown document a plugin claims by its front matter (a board).
       const claimed = asDocument ? null : customEditorForContent(path, content);
       if (claimed) return pluginTab(path, claimed, place);
@@ -256,7 +275,15 @@ export function useFileOpening(opts: {
       if (already) return show(already);
       const doc = await readDocument(path, open.asDocument, open.place);
       if (!doc) return;
-      const meanwhile = justOpened(path);
+      // Opened meanwhile, by another open or the session coming back.
+      const meanwhile =
+        justOpened(path) ??
+        tabsRef.current.find(
+          (tab) =>
+            tab.path === path ||
+            tab.importedFrom === path ||
+            (!open.asDocument && tab.view?.resource === path),
+        )?.id;
       if (meanwhile) return show(meanwhile);
       // A plugin's tab has no source to show.
       const newTab: DocTab = {
@@ -275,11 +302,47 @@ export function useFileOpening(opts: {
     [tabsRef, setTabs, setActiveTabId, restoreCarets, readDocument, justOpened],
   );
 
+  // A session's documents coming back: read side by side and made into
+  // tabs at their last caret, for the caller to add in one update.
+  const tabsForPaths = useCallback(
+    async (paths: string[], reopening = false): Promise<DocTab[]> => {
+      const docs = await Promise.all(
+        paths.map((path) =>
+          readDocument(path, false, undefined, reopening).catch(() => null),
+        ),
+      );
+      return docs.flatMap((doc, i) => {
+        if (!doc) return [];
+        const tab: DocTab = {
+          ...makeBlankTab(),
+          ...(doc.view ? {} : lastViewMode()),
+          ...doc,
+        };
+        const jump =
+          tab.path &&
+          openingJump(
+            { restoreCaret: true },
+            paths[i],
+            tab.diskMtime,
+            restoreCarets,
+          );
+        if (jump) setTabJump(tab.id, jump);
+        return [tab];
+      });
+    },
+    [restoreCarets, readDocument],
+  );
+
   // Window mode's replace step, shared by the clean path and the save
   // prompt's resolution.
   const replaceTabWithFile = useCallback(
     async (tabId: string, path: string, open: OpenOptions = {}) => {
-      const doc = await readDocument(path, open.asDocument);
+      const doc = await readDocument(
+        path,
+        open.asDocument,
+        undefined,
+        open.reopening,
+      );
       if (!doc) return;
       // Taken by the editor the new reloadKey mounts.
       const jump =
@@ -351,6 +414,7 @@ export function useFileOpening(opts: {
 
   return {
     openPathInTab,
+    tabsForPaths,
     replaceTabWithFile,
     openFile,
     openFileDialog,

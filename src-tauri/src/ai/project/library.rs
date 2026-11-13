@@ -78,16 +78,7 @@ pub fn parse_library_entry(file: &str, stem: &str, content: &str) -> LibraryEntr
 
 /// The library: `.textus/library/*.md`, in file-name order.
 pub fn read_library(root: &Path) -> Vec<LibraryEntry> {
-    let Ok(entries) = std::fs::read_dir(project_dir(root).join("library")) else {
-        return Vec::new();
-    };
-    let mut paths: Vec<PathBuf> = entries
-        .flatten()
-        .map(|e| e.path())
-        .filter(|p| p.extension().and_then(|e| e.to_str()) == Some("md"))
-        .collect();
-    paths.sort();
-    paths
+    crate::frontmatter::md_files(&project_dir(root).join("library"), true)
         .into_iter()
         .filter_map(|path| {
             let stem = path.file_stem().and_then(|s| s.to_str())?;

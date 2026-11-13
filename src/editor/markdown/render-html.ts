@@ -139,6 +139,14 @@ const AUTHORED = {
   FORBID_ATTR: ["srcset", "poster", "background"],
 };
 
+/** A reply's top-level blocks (a paragraph, a list, a fence), their
+ *  sources in order: a streaming reply redraws only its last. */
+export function markdownBlocks(markdown: string): string[] {
+  return chatMarked
+    .lexer(normalizeMathDelimiters(markdown))
+    .map((token) => token.raw);
+}
+
 /** Markdown source -> sanitized, block-aware HTML, for the chat reply. */
 export function renderMarkdownHtml(markdown: string): string {
   // `\(`/`\[` are folded to `$`/`$$` first, so markdown's backslash escaping

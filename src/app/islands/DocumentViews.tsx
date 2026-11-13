@@ -157,6 +157,7 @@ export function DocumentViews({
                 <Suspense fallback={null}>
                   {tab.splitView ? (
                     <SplitView
+                      tabId={tab.id}
                       content={tab.content}
                       filePath={tab.path}
                       typewriter={typewriter}
@@ -165,6 +166,7 @@ export function DocumentViews({
                     />
                   ) : (
                     <DocSourceEditor
+                      tabId={tab.id}
                       value={tab.content}
                       docPath={tab.path}
                       typewriter={typewriter}

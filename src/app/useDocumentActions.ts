@@ -30,8 +30,9 @@ export function useDocumentActions(opts: {
     },
     [openFile],
   );
-  // A file or folder moved in the tree: every open tab in it follows.
-  const entryMoved = useCallback(
+  // A file or folder moved, here or in another window: every open tab in
+  // it follows.
+  const followMove = useCallback(
     (from: string, to: string) => {
       const moved = (path: string | null) =>
         path === from
@@ -39,9 +40,6 @@ export function useDocumentActions(opts: {
           : path && isInside(path, from)
             ? to + path.slice(from.length)
             : null;
-      // Its conversations and what is kept for it follow too (the backend,
-      // for every document under a moved folder).
-      void notePathMoved(from, to);
       setTabs((prev) =>
         prev.map((tab) => {
           const next = moved(tab.path);
@@ -64,6 +62,15 @@ export function useDocumentActions(opts: {
       }
     },
     [setTabs, tabsRef],
+  );
+  // Moved here: its conversations and what is kept for it follow too (the
+  // backend, for every document under a moved folder), once.
+  const entryMoved = useCallback(
+    (from: string, to: string) => {
+      void notePathMoved(from, to);
+      followMove(from, to);
+    },
+    [followMove],
   );
   // A renamed document stays open under its new name, like any move; a
   // deleted one keeps its text in the tab, unsaved.
@@ -103,7 +110,8 @@ export function useDocumentActions(opts: {
   // back: an unedited one closes, an edited one becomes an unsaved draft.
   const skillFilesDeleted = useCallback(
     (paths: string[]) => {
-      for (const tab of tabsRef.current) {
+      // Live: typing the editor hasn't reported yet counts as an edit.
+      for (const tab of liveTabs()) {
         if (!tab.path || !paths.includes(tab.path)) continue;
         if (tabIsDirty(tab)) {
           documentDeleted(tab.path);
@@ -116,7 +124,7 @@ export function useDocumentActions(opts: {
         }
       }
     },
-    [documentDeleted, removeTab, tabsRef, setTabs, setActiveTabId],
+    [documentDeleted, removeTab, liveTabs, tabsRef, setTabs, setActiveTabId],
   );
 
   // A file or folder trashed in the sidebar: its tabs go as a reset
@@ -150,6 +158,7 @@ export function useDocumentActions(opts: {
     openFromDocuments,
     documentRenamed,
     entryMoved,
+    followMove,
     documentDeleted,
     skillFilesDeleted,
     shareActiveTab,

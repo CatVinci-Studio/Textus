@@ -13,7 +13,7 @@ import {
   type RevealState,
   type Touches,
 } from "../reveal-state";
-import { drawWhenVisible } from "../draw-when-visible";
+import { drawWhenVisible, stopDrawing } from "../draw-when-visible";
 import { isLargeDoc } from "../large-doc";
 import { katexNow, mathSourceHtml, onKatexReady } from "./katex-loader";
 import { renderFormula } from "./matrix-rows";
@@ -142,6 +142,7 @@ function decorateMath(
       {
         side: -1,
         key: `math:${displayMode ? "B" : "I"}:${node.textContent}`,
+        destroy: stopDrawing,
       },
     ),
   ];

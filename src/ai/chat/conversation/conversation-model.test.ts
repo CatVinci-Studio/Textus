@@ -23,6 +23,7 @@ vi.mock("../../../platform/ipc", async () => {
       memoryPass: () => Promise.resolve([]),
       offerSkill: () => Promise.resolve(null),
       suggestNextMessage: () => Promise.resolve([]),
+      suggestDocTitle: () => Promise.resolve("Kyoto in three days"),
     },
   };
 });
@@ -121,6 +122,23 @@ describe("a conversation's model", () => {
     expect(state.history).toEqual(reply("你好"));
     expect(seen).toContain(true);
     expect(seen.at(-1)).toBe(false);
+  });
+
+  it("is named by Textus AI after its first exchange, and keeps that name", async () => {
+    const model = modelAt({
+      docPath: "/notes/a.md",
+      settings: { ...settings, aiProvider: "anthropic" },
+    });
+    await model.actions.send(NO_DOCUMENT, "Plan three days in Kyoto for me");
+    await vi.waitFor(() =>
+      expect(saveConversation).toHaveBeenLastCalledWith(
+        expect.objectContaining({ title: "Kyoto in three days" }),
+      ),
+    );
+    await model.actions.send(NO_DOCUMENT, "And a fourth day?");
+    expect(saveConversation).toHaveBeenLastCalledWith(
+      expect.objectContaining({ title: "Kyoto in three days" }),
+    );
   });
 
   it("tells plugins an external agent is at work, by its provider and name", async () => {

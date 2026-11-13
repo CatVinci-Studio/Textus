@@ -32,7 +32,7 @@ import {
   webview,
   webviewConnected,
   webviewState,
-  webviewsVersion,
+  webviewHtml,
   type WebviewKind,
   type WebviewRecord,
 } from "./webviews";
@@ -102,9 +102,7 @@ export function PluginWebview({
   /** A page in the document: its own size, times the document's zoom. */
   zoom?: number;
 }) {
-  useSyncExternalStore(subscribeWebviews, webviewsVersion);
-  const record = webview(id);
-  const html = record?.html ?? null;
+  const html = useSyncExternalStore(subscribeWebviews, () => webviewHtml(id));
   const boxRef = useRef<HTMLDivElement>(null);
   const closeMenuRef = useRef<(() => void) | null>(null);
   // A menu the page asked for, drawn by the app over the page.

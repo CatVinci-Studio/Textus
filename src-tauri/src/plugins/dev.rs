@@ -64,10 +64,7 @@ fn newest_change(dir: &std::path::Path, depth: usize) -> Option<f64> {
         let here = if meta.is_dir() {
             newest_change(&entry.path(), depth + 1)
         } else {
-            meta.modified()
-                .ok()
-                .and_then(|t| t.duration_since(std::time::UNIX_EPOCH).ok())
-                .map(|d| d.as_millis() as f64)
+            crate::walk::modified_ms(&meta)
         };
         newest = match (newest, here) {
             (Some(a), Some(b)) => Some(a.max(b)),

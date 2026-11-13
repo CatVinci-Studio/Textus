@@ -1,7 +1,7 @@
 import { describe, expect, it } from "vitest";
 import { Schema, type Node as ProseNode } from "@milkdown/kit/prose/model";
 import { EditorState, TextSelection } from "@milkdown/kit/prose/state";
-import { linesRange } from "./editor-text";
+import { linesRange, selectionText } from "./editor-text";
 
 const schema = new Schema({
   nodes: {
@@ -62,5 +62,32 @@ describe("Vim's lines, as dd and V take them", () => {
         .node("doc", null, [schema.node("bullet_list", null, [item("three")])])
         .toJSON(),
     );
+  });
+});
+
+describe("selectionText", () => {
+  it("gives a line break as one and a picture as U+FFFC", () => {
+    const inline = new Schema({
+      nodes: {
+        doc: { content: "paragraph+" },
+        paragraph: { content: "inline*" },
+        text: { group: "inline" },
+        hard_break: { group: "inline", inline: true, leafText: () => "\n" },
+        image: { group: "inline", inline: true },
+      },
+    });
+    const doc = inline.node("doc", null, [
+      inline.node("paragraph", null, [
+        inline.text("a"),
+        inline.node("hard_break"),
+        inline.text("b"),
+        inline.node("image"),
+      ]),
+    ]);
+    const state = EditorState.create({
+      doc,
+      selection: TextSelection.create(doc, 1, doc.content.size - 1),
+    });
+    expect(selectionText(state)).toBe("a\nb\uFFFC");
   });
 });

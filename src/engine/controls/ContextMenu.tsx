@@ -28,7 +28,9 @@ import { usePhoneLayout } from "./usePhoneLayout";
 import { usePresenceProps, usePresenceState } from "../motion/usePresence";
 import { CheckIcon, ChevronIcon } from "./icons";
 import "./ContextMenu.css";
-import { listMove } from "./list-keys";
+import { menuKeyStep } from "./list-keys";
+
+const MENU_ROWS = '[role^="menuitem"]:not(:disabled)';
 
 /** A submenu's gap from its menu, in interface pixels. */
 const SUBMENU_GAP = 4;
@@ -141,17 +143,15 @@ function PointerMenu({
   useFocusReturn(ref, keyboard, open);
 
   function onKeyDown(e: KeyboardEvent<HTMLDivElement>) {
-    const rows = Array.from(
-      ref.current?.querySelectorAll<HTMLElement>(
-        '[role^="menuitem"]:not(:disabled)',
-      ) ?? [],
-    );
-    const at = rows.indexOf(document.activeElement as HTMLElement);
-    const moved = listMove(e.key, at, rows.length);
-    let next: HTMLElement | undefined;
-    if (moved !== null) next = rows[moved];
-    else if (e.key === "ArrowRight") {
-      const group = rows[at]?.dataset.group;
+    const next = menuKeyStep(e.key, ref.current, MENU_ROWS);
+    if (next) {
+      e.preventDefault();
+      next.focus();
+      return;
+    }
+    if (e.key === "ArrowRight") {
+      const row = document.activeElement as HTMLElement | null;
+      const group = ref.current?.contains(row) ? row?.dataset.group : undefined;
       if (group !== undefined) {
         e.preventDefault();
         aim.hold();
@@ -168,10 +168,7 @@ function PointerMenu({
       e.preventDefault();
       e.stopPropagation();
       onClose();
-      return;
-    } else return;
-    e.preventDefault();
-    next?.focus();
+    }
   }
 
   const { openGroup, setOpenGroup, rowRefs, aim } = useSubmenu(ref);
@@ -365,27 +362,21 @@ function SubMenu({
   }, [focus, pos]);
 
   function onKeyDown(e: KeyboardEvent<HTMLDivElement>) {
-    const rows = Array.from(
-      ref.current?.querySelectorAll<HTMLElement>(
-        '[role^="menuitem"]:not(:disabled)',
-      ) ?? [],
-    );
-    const at = rows.indexOf(document.activeElement as HTMLElement);
-    const moved = listMove(e.key, at, rows.length);
-    let next: HTMLElement | undefined;
-    if (moved !== null) next = rows[moved];
-    else if (e.key === "ArrowLeft" || e.key === "Escape") {
+    const next = menuKeyStep(e.key, ref.current, MENU_ROWS);
+    if (next) {
+      e.preventDefault();
+      e.stopPropagation();
+      next.focus();
+      return;
+    }
+    if (e.key === "ArrowLeft" || e.key === "Escape") {
       e.preventDefault();
       e.stopPropagation();
       onBack();
       return;
     } else if (e.key === "Tab") {
       e.preventDefault();
-      return;
-    } else return;
-    e.preventDefault();
-    e.stopPropagation();
-    next?.focus();
+    }
   }
 
   return createPortal(

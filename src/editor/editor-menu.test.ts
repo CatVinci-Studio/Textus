@@ -219,6 +219,28 @@ describe("the editor menu", () => {
         }),
       ).slice(0, 4),
     ).toEqual([t.imageReveal, t.imageCopyPath, "-", t.cut]);
+    // On show, it is enlarged and copied as itself, with nothing selected.
+    // (No DOM where this runs: a picture in its frame is all it reads.)
+    const picture = { parentElement: {} } as HTMLImageElement;
+    const shown = buildContextMenuItems(editorAt(caretIn("text")).run, {
+      ...options(null),
+      imageLocation: { kind: "local", path: "/vault/cat.png" },
+      picture,
+    });
+    expect(labels(shown).slice(0, 7)).toEqual([
+      t.imageReveal,
+      t.imageCopyPath,
+      "-",
+      t.imageViewLarge,
+      "-",
+      t.cut,
+      t.copy,
+    ]);
+    const copy = shown.find(
+      (item): item is ContextMenuItem =>
+        item !== "separator" && "label" in item && item.label === t.copy,
+    );
+    expect(copy?.disabled).toBe(false);
   });
 
   it("turns a picture a quarter at a time, keeping it selected", () => {

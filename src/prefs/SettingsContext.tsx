@@ -159,6 +159,12 @@ export function SettingsProvider({ children }: { children: ReactNode }) {
   );
 }
 
+/** The settings where a provider gives them; null outside one (a part
+ *  drawn on its own, as in its tests). */
+export function useSettingsIfAny(): SettingsContextValue | null {
+  return useContext(SettingsContext);
+}
+
 export function useSettings(): SettingsContextValue {
   const ctx = useContext(SettingsContext);
   if (!ctx) throw new Error("useSettings must be used within SettingsProvider");

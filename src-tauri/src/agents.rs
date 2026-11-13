@@ -23,8 +23,9 @@ use tokio::io::{AsyncBufReadExt, AsyncWriteExt, BufReader};
     rename_all_fields = "camelCase"
 )]
 pub enum AgentOutput {
-    /// One line of its stdout: a protocol message.
-    Line { text: String },
+    /// Lines of its stdout, a protocol message each, gathered for a moment
+    /// so a stream of tokens reaches the window a few times a frame at most.
+    Lines { lines: Vec<String> },
     /// It ended; the end of its stderr says why.
     Exit { code: Option<i32>, stderr: String },
 }
@@ -130,9 +131,30 @@ pub async fn agent_start(
         );
     tauri::async_runtime::spawn(async move {
         let mut lines = BufReader::new(stdout).lines();
-        while let Ok(Some(line)) = lines.next_line().await {
-            if !line.trim().is_empty() {
-                let _ = on_output.send(AgentOutput::Line { text: line });
+        let mut open = true;
+        while open {
+            let Ok(Some(first)) = lines.next_line().await else {
+                break;
+            };
+            let mut batch = vec![first];
+            let until = tokio::time::Instant::now() + GATHER;
+            loop {
+                match tokio::time::timeout_at(until, lines.next_line()).await {
+                    Ok(Ok(Some(line))) => batch.push(line),
+                    Ok(_) => {
+                        open = false;
+                        break;
+                    }
+                    Err(_) => break,
+                }
+            }
+            let batch: Vec<String> = batch
+                .into_iter()
+                .filter(|l| !l.trim().is_empty())
+                .map(slim)
+                .collect();
+            if !batch.is_empty() {
+                let _ = on_output.send(AgentOutput::Lines { lines: batch });
             }
         }
         let code = child
@@ -151,6 +173,51 @@ pub async fn agent_start(
         let _ = on_output.send(AgentOutput::Exit { code, stderr });
     });
     Ok(handle)
+}
+
+/// How long lines are gathered before they go to the window together.
+const GATHER: std::time::Duration = std::time::Duration::from_millis(24);
+/// A line longer than this may carry a whole file or command output.
+const SLIM_OVER: usize = 4096;
+/// How much of a step's text the window keeps, as its step output shows.
+const STEP_TEXT: usize = 4000;
+/// What a step's update carries that the window never reads: the tool's raw
+/// input and output (a whole written file, an edit's old and new text).
+const UNREAD_STEP_FIELDS: [&str; 2] = ["rawInput", "rawOutput"];
+
+/// `line` without what the window never reads of a step: its raw fields,
+/// diff and terminal blocks, and text past what a step shows.
+fn slim(line: String) -> String {
+    if line.len() <= SLIM_OVER {
+        return line;
+    }
+    let Ok(mut message) = serde_json::from_str::<Value>(&line) else {
+        return line;
+    };
+    let step = matches!(
+        message["params"]["update"]["sessionUpdate"].as_str(),
+        Some("tool_call" | "tool_call_update")
+    );
+    if message["method"] != "session/update" || !step {
+        return line;
+    }
+    let Some(fields) = message["params"]["update"].as_object_mut() else {
+        return line;
+    };
+    for key in UNREAD_STEP_FIELDS {
+        fields.remove(key);
+    }
+    if let Some(Value::Array(blocks)) = fields.get_mut("content") {
+        blocks.retain(|b| b["type"] == "content");
+        for block in blocks {
+            if let Some(Value::String(text)) = block["content"].get_mut("text") {
+                if let Some((cut, _)) = text.char_indices().nth(STEP_TEXT) {
+                    text.truncate(cut);
+                }
+            }
+        }
+    }
+    serde_json::to_string(&message).unwrap_or(line)
 }
 
 /// Writes one protocol message to agent `handle`.
@@ -234,6 +301,37 @@ pub fn agent_stop(app: tauri::AppHandle, handle: u64) {
 mod tests {
     use super::*;
     use serde_json::json;
+
+    #[test]
+    fn a_long_step_reaches_the_window_without_what_it_never_reads() {
+        let long = "x".repeat(9000);
+        let line = json!({"jsonrpc": "2.0", "method": "session/update", "params": {"update": {
+            "sessionUpdate": "tool_call_update", "toolCallId": "t1", "status": "completed",
+            "rawInput": {"content": long}, "rawOutput": long,
+            "content": [
+                {"type": "content", "content": {"type": "text", "text": long}},
+                {"type": "diff", "path": "a.md", "oldText": long, "newText": long}
+            ]
+        }}})
+        .to_string();
+        let slimmed: Value = serde_json::from_str(&slim(line)).unwrap();
+        let update = &slimmed["params"]["update"];
+        assert!(update.get("rawInput").is_none() && update.get("rawOutput").is_none());
+        assert_eq!(update["content"].as_array().unwrap().len(), 1);
+        assert_eq!(
+            update["content"][0]["content"]["text"]
+                .as_str()
+                .unwrap()
+                .len(),
+            STEP_TEXT
+        );
+        assert_eq!(update["toolCallId"], "t1");
+        // A permission request keeps its step whole: the prompt shows it.
+        let ask = json!({"jsonrpc": "2.0", "id": 3, "method": "session/request_permission",
+            "params": {"toolCall": {"rawInput": {"command": long}}}})
+        .to_string();
+        assert_eq!(slim(ask.clone()), ask);
+    }
 
     #[test]
     fn an_agent_starts_only_as_its_manifest_names_it() {

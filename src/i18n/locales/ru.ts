@@ -952,6 +952,10 @@ export default {
   agentSignIn: "Сначала войдите в {agent}.",
   chatAgentsGroup: "Агенты",
   chatAgentPermission: "Агент просит разрешения продолжить",
+  chatAgentRunCommand: "Выполнить команду",
+  chatAgentRunCommands: "Выполнить команды: {n}",
+  chatAgentShowAll: "Показать всё",
+  chatAgentShowLess: "Свернуть",
   pictureRedraw: "Перерисовать…",
   pictureRedrawTitle: "Перерисовать картинку",
   pictureRedrawPrompt:
@@ -963,6 +967,19 @@ export default {
   agentDeepThinking: "Глубокое размышление",
   agentDeepThinkingHint: `Глубокое размышление: когда включено, ${AI_NAME} дольше думает, прежде чем ответить; когда выключено — столько, сколько модель думает по умолчанию`,
   toggleOnHint: "{label} (Включено — нажмите ещё раз, чтобы выключить)",
+  chatAgentPlan: "План",
+  chatAgentLooks: {
+    one: "Просмотрен {n} объект",
+    few: "Просмотрено {n} объекта",
+    many: "Просмотрено {n} объектов",
+    other: "Просмотрено {n} объекта",
+  },
+  chatShowEarlier: {
+    one: "Показать {n} предыдущий пункт",
+    few: "Показать {n} предыдущих пункта",
+    many: "Показать {n} предыдущих пунктов",
+    other: "Показать {n} предыдущего пункта",
+  },
   agentWaitedFor: {
     one: "{n} секунду",
     few: "{n} секунды",

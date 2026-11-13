@@ -116,14 +116,8 @@ impl MemoryDirs {
 /// The `.md` files in a `.forgotten/` folder with their mtimes (seconds),
 /// newest first.
 fn forgotten_files(dir: &Path) -> Vec<(PathBuf, u64)> {
-    let Ok(entries) = std::fs::read_dir(dir) else {
-        return Vec::new();
-    };
-    let mut files: Vec<(PathBuf, u64)> = entries
-        .flatten()
-        .filter(|e| e.file_type().is_ok_and(|t| t.is_file()))
-        .map(|e| e.path())
-        .filter(|p| p.extension().and_then(|e| e.to_str()) == Some("md"))
+    let mut files: Vec<(PathBuf, u64)> = crate::frontmatter::md_files(dir, false)
+        .into_iter()
         .map(|p| {
             let secs = std::fs::metadata(&p)
                 .and_then(|m| m.modified())

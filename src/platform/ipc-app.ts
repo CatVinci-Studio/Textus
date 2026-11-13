@@ -196,6 +196,8 @@ export const systemIpc = {
   fontFamilies: () => command("system_font_families"),
   sendReport: (report: Generated.ProblemReport_Deserialize) =>
     command("send_problem_report", report),
+  /** The machine's memory and how short of it the system is now. */
+  memoryState: () => desktopQueryCommand("memory_state", null),
 };
 
 /** Roman input sources only while a plugin takes every key as a command
@@ -390,6 +392,8 @@ export const updater = {
   releaseInstance: () => desktopQueryCommand("release_instance", null),
   /** Every window closes as at Quit, then the installed version starts. */
   quitAndRelaunch: () => desktopQueryCommand("quit_and_relaunch", null),
-  /** Every window writes its unsaved drafts now. */
-  flushDrafts: () => desktopQueryCommand("flush_drafts", null),
+  /** Windows: downloads the update, then every window closes as at Quit
+   *  before it installs. */
+  installAfterQuit: (rid: number) =>
+    desktopQueryCommand("install_after_quit", null, rid),
 };

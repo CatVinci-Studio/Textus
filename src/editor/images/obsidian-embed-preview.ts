@@ -23,6 +23,7 @@ import {
   type RevealState,
 } from "../reveal-state";
 import { showDocImage } from "./image-plugin";
+import { openDiagramViewer, zoomButton } from "../diagram-zoom";
 import { copyToImageFolder, pickImageFile } from "./image-store";
 import {
   MISSING_IMAGE_CLASS,
@@ -120,7 +121,17 @@ function embedWidget(
     img.alt = embed.alt;
     if (embed.width) img.style.width = `${embed.width}px`;
     if (embed.height) img.style.height = `${embed.height}px`;
+    // As any picture: enlarged from its corner or a double click, and a
+    // click leaves it on show; the source comes up as the caret reaches it.
+    const loaded = () => (img.naturalWidth > 0 ? img : null);
     el.append(img);
+    el.append(zoomButton(el, loaded));
+    img.addEventListener("mousedown", (event) => {
+      if (event.button === 0) event.preventDefault();
+    });
+    img.addEventListener("dblclick", () => {
+      if (loaded()) openDiagramViewer(img, el);
+    });
     // `path`: the file found, or where the link would be beside the document.
     const missing = (reason: MissingReason, path: string | null) => {
       const location: ImageLocation = path
@@ -159,13 +170,14 @@ function embedWidget(
         img.dataset.docSrc = exportSrc(file, docPath);
       })
       .catch(() => missing("failed", null));
-    // A right-click is for the picture's menu: moving the caret onto the source
-    // would take the picture away under it.
+    // A missing picture's card: a click puts the caret on the source to
+    // mend it. A right-click is for the menu, which would lose it.
     caretToSourceOnClick(
       el,
       view,
       getPos,
       (event) =>
+        !el.classList.contains(MISSING_IMAGE_CLASS) ||
         isMissingCardAction(event) ||
         (event as MouseEvent).button !== 0 ||
         (event as MouseEvent).ctrlKey,
@@ -205,7 +217,13 @@ function embedReveal(options: EmbedPreviewOptions): Reveal {
         Decoration.widget(to, embedWidget(embed, docPath, options.settings), {
           side: -1,
           key: `${docPath}\n${node.textContent}`,
-          stopEvent: isMissingCardAction,
+          // The picture's clicks are its own, not a caret placed at it.
+          stopEvent: (event) =>
+            isMissingCardAction(event) ||
+            (event.target instanceof Element &&
+              !!event.target.closest(
+                ".obsidian-embed-rendered img, .mermaid-zoom",
+              )),
         }),
       ];
     },

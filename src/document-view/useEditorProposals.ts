@@ -388,12 +388,12 @@ export function useEditorProposals({
     }),
     [filePath, streamEvent, statuses, proposalStream],
   );
-  // The window's, read here: it outlives this editor. In front, it is
-  // followed as it streams.
+  // The window's, read here: it outlives this editor. Followed by its
+  // turns, never each frame of a reply: the editor reads none of it.
   const conversation = useLiveConversation(
     filePath,
     settings.agentWorkspaceRoot || null,
-    isActive,
+    false,
   );
   // Quick Ask's one-off exchange, kept out of History. "Continue in the
   // panel" hands it to `conversation`.

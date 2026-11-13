@@ -39,6 +39,7 @@ const vault = (strict: boolean) => ({
 function preview(filePath: string) {
   const { container } = render(
     <SplitView
+      tabId="t"
       content={"one\ntwo"}
       filePath={filePath}
       typewriter={false}
@@ -88,6 +89,7 @@ it("follows the source as it is typed", async () => {
   vi.mocked(fs.folderConventions).mockResolvedValue(vault(true));
   const view = (content: string) => (
     <SplitView
+      tabId="t"
       content={content}
       filePath="/v/c.md"
       typewriter={false}

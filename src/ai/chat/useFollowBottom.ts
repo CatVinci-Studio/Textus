@@ -1,5 +1,5 @@
 import { scaledPx } from "../../engine/tokens/chrome-scale";
-import { useEffect, useRef } from "react";
+import { useCallback, useEffect, useRef } from "react";
 
 /** How near the bottom still counts as at it, for a wheel's last step. */
 const NEAR = 40;
@@ -16,6 +16,10 @@ export function useFollowBottom(content: unknown) {
     if (!content || !el || !following.current) return;
     el.scrollTo({ top: el.scrollHeight });
   }, [content]);
+  const grow = useCallback(() => {
+    const el = ref.current;
+    if (el && following.current) el.scrollTo({ top: el.scrollHeight });
+  }, []);
   return {
     ref,
     /** The list's onScroll: where the reader left it. */
@@ -25,6 +29,8 @@ export function useFollowBottom(content: unknown) {
         following.current =
           el.scrollHeight - el.scrollTop - el.clientHeight < scaledPx(NEAR);
     },
+    /** Content grew between updates (a reply revealing): follow it. */
+    grow,
     /** Follow again from here (a new message sent). */
     stick() {
       following.current = true;

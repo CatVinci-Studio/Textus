@@ -10,11 +10,8 @@ import { getActiveDocument } from "./app-bridge";
 import type { PluginHost } from "./host/broker";
 import { lazyModule } from "../lazy/lazy-module";
 import { type PluginOrigin } from "./store/files";
-import {
-  engineSatisfied,
-  parseManifest,
-  type Permission,
-} from "./store/manifest";
+import { parseManifest, type Permission } from "./store/manifest";
+import { engineSatisfied } from "./store/versions";
 import {
   addContribution,
   applyContributions,
@@ -360,6 +357,8 @@ export async function resolveWebview(
   if (!plugin || plugin.status !== "on")
     throw new Error(`${record.plugin} is turned off.`);
   const running = await host(plugin);
+  // Gone while the plugin started: drawn now, nothing would let it go.
+  if (!webview(record.id)) return;
   if (record.kind === "editor")
     await running.request("$resolveFileEditor", {
       viewType: target.viewType,

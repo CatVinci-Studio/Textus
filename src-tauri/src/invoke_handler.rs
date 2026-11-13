@@ -325,10 +325,11 @@ pub(crate) fn handler() -> impl Fn(tauri::ipc::Invoke<tauri::Wry>) -> bool + Sen
         commands::update::check_for_update,
         #[cfg(desktop)]
         commands::update::release_instance,
+        crate::memory_level::memory_state,
         #[cfg(desktop)]
         commands::update::quit_and_relaunch,
         #[cfg(desktop)]
-        commands::update::flush_drafts,
+        commands::update::install_after_quit,
         #[cfg(desktop)]
         detect_pandoc,
         #[cfg(desktop)]

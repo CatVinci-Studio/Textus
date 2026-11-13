@@ -47,9 +47,10 @@ export function agentRequest(o: {
             ...now,
             turns: view.turns,
             text: view.text,
+            plan: view.plan,
             thought: thinkingDone(now.thought, Date.now()),
           },
-          { textOnly: view.turns === now.turns },
+          { textOnly: view.turns === now.turns && view.plan === now.plan },
         );
       },
       thinking: (text) => {

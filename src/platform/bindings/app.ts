@@ -225,6 +225,8 @@ export const commands = {
 	default_editor_status: () => __TAURI_INVOKE<DefaultEditorStatus>("default_editor_status"),
 	set_default_editor: () => __TAURI_INVOKE<null>("set_default_editor"),
 	app_distribution: () => __TAURI_INVOKE<string>("app_distribution"),
+	/**  The memory state now, for a window as it starts. */
+	memory_state: () => __TAURI_INVOKE<MemoryState>("memory_state"),
 	check_for_update: (channel: string, backToStable: boolean) => __TAURI_INVOKE<UpdateMetadata_Serialize | null>("check_for_update", { channel, backToStable }),
 	/**
 	 *  Just before the relaunch that applies an update: gives up the single-instance
@@ -238,10 +240,10 @@ export const commands = {
 	 */
 	quit_and_relaunch: () => __TAURI_INVOKE<void>("quit_and_relaunch"),
 	/**
-	 *  Windows installs by ending the app at once: each window writes its
-	 *  unsaved drafts first.
+	 *  Windows: downloads `rid`'s update, then every window closes as at Quit
+	 *  (an unsaved document asks, or is kept as a draft) before it installs.
 	 */
-	flush_drafts: () => __TAURI_INVOKE<void>("flush_drafts"),
+	install_after_quit: (rid: number) => __TAURI_INVOKE<null>("install_after_quit", { rid }),
 };
 
 /* Constants */
@@ -442,6 +444,12 @@ export type GalleryTheme_Serialize = {
 	 *  English ones.
 	 */
 	l10n: { [key in string]: GalleryText_Serialize },
+};
+
+/**  The machine's memory and the system's pressure: 0 none, 1 short, 2 very. */
+export type MemoryState = {
+	totalMb: number,
+	pressure: number,
 };
 
 export type NativeEdit = "paste" | "undo" | "redo" | "select-all";

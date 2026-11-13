@@ -19,7 +19,11 @@ import { keepCancelledTurns } from "../cancelled-turns";
 import { afterFileChanges } from "../file-changes";
 import { streamStep } from "../stream-step";
 import { thinkingDone } from "../thought";
-import { offerSkillAfter, rememberAfter } from "./conversation-passes";
+import {
+  nameAfter,
+  offerSkillAfter,
+  rememberAfter,
+} from "./conversation-passes";
 import type { ConversationModel } from "./conversation-model";
 import type { AgentRequestOptions } from "./conversation-types";
 import { chosenModel } from "../../chosen-model";
@@ -154,12 +158,14 @@ export async function sendMessage(
     model.setHistory((prev) => [...prev, ...newTurns]);
     // What follows asks Textus AI's model, which an agent's chat doesn't use,
     // and is about a conversation that is kept: never a Quick Ask's.
+    const after = [...history, ...newTurns];
     if (!agent && model.persist) {
-      const after = [...history, ...newTurns];
       void rememberAfter(model, env, after, at + newTurns.length);
       void offerSkillAfter(model, env, after, at + newTurns.length);
       model.next.suggestAfter(after, provider, chosen, settings.textusAi);
     }
+    // Named by Textus AI's model, whoever answered.
+    if (model.persist) void nameAfter(model, env, after);
     ended = "done";
     return newTurns;
   } catch (err) {

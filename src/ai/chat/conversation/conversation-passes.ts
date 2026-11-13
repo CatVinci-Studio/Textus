@@ -68,3 +68,30 @@ export async function offerSkillAfter(
     // No offer; the exchange itself is unaffected.
   }
 }
+
+/** After the first exchange, a short title for the conversation from the
+ *  writing model: its name in History and on its tab's hover, in place of
+ *  the first line. A failure leaves the first line. */
+export async function nameAfter(
+  model: ConversationModel,
+  env: ConversationEnv,
+  conversation: AgentTurn[],
+) {
+  const { settings } = env;
+  if (model.isNamed || !settings.textusAi || !settings.aiProvider) return;
+  if (conversation.filter((turn) => turn.kind === "User").length !== 1) return;
+  const id = model.id;
+  const excerpt = conversation
+    .flatMap((turn) =>
+      turn.kind === "User"
+        ? [conversationTitle([turn])]
+        : turn.kind === "Assistant"
+          ? [turn.text]
+          : [],
+    )
+    .join("\n\n");
+  const title = await ai
+    .suggestDocTitle({ ...modelInUse(env), excerpt })
+    .catch(() => null);
+  if (title && model.id === id && !model.isNamed) model.setNamed(title);
+}

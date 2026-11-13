@@ -31,7 +31,8 @@ export const commands = {
 	save_file_dialog: (defaultName: string, defaultDir: string | null) => __TAURI_INVOKE<string | null>("save_file_dialog", { defaultName, defaultDir }),
 	/**
 	 *  Lists the immediate children of a directory; the frontend asks again per
-	 *  expanded folder. Async so a slow network mount doesn't stall the app.
+	 *  expanded folder. One blocking read off the async runtime, so a slow
+	 *  network mount doesn't stall the app.
 	 */
 	list_dir: (path: string) => __TAURI_INVOKE<DirEntryInfo_Serialize[]>("list_dir", { path }),
 	/**

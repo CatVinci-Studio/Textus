@@ -140,10 +140,10 @@ export const plugins = {
     text: string,
     token: string,
   ) => command("plugin_fs_write_if", id, root, path, text, token),
-  /** Every document of the folder and what it holds, and what changed
-   *  since last asked. */
-  metadataAll: (id: string, root: string) =>
-    command("plugin_metadata_all", id, root),
+  /** The folder's documents and what they hold: those changed since
+   *  generation `after`, with the paths gone, or every one (`whole`). */
+  metadataAll: (id: string, root: string, after: number | null) =>
+    command("plugin_metadata_all", id, root, after),
   metadataGet: (id: string, root: string, path: string) =>
     command("plugin_metadata_get", id, root, path),
   secretGet: (id: string, key: string) => command("plugin_secret_get", id, key),
