@@ -109,7 +109,8 @@
   }
 }
 
-.tree-tool:disabled {
+.tree-tool:disabled,
+.tree-tool[aria-disabled="true"] {
   cursor: default;
   opacity: 0.3;
 }

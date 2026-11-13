@@ -10,13 +10,9 @@ import {
   type ReactNode,
 } from "react";
 import { SearchField } from "../../engine/controls/SearchField";
-import {
-  ChevronIcon,
-  DownloadIcon,
-  MoreIcon,
-  RefreshIcon,
-} from "../../engine/controls/icons";
+import { ChevronIcon, MoreIcon } from "../../engine/controls/icons";
 import { Tooltip } from "../../engine/controls/Tooltip";
+import { AvailableButton, RowButton } from "./plugin-row-buttons";
 import { useMenuButton } from "../../engine/controls/useMenuButton";
 import type { ContextMenuEntry } from "../../engine/controls/ContextMenu";
 import { requestCreate } from "../../ai/chat/create-request";
@@ -39,7 +35,6 @@ import {
   subscribeCatalog,
   updateFor,
   catalogItem,
-  neededTextus,
 } from "../../plugins/store/catalog";
 import { pluginMatches } from "../../plugins/store/plugin-records";
 import type { Strings } from "../../i18n/strings";
@@ -216,18 +211,12 @@ export function PluginsPanel({
                 picked={picked === item.id}
                 onOpen={() => onPick(item.id)}
                 end={
-                  neededTextus(item) ? null : (
-                    <RowButton
-                      label={`${t.pluginInstall} · ${pluginName({ id: item.id, manifest: item.manifest })}`}
-                      tip={
-                        installing === item.id
-                          ? t.pluginInstalling
-                          : t.pluginInstall
-                      }
-                      disabled={installing !== null}
-                      onClick={() => void install(item)}
-                    />
-                  )
+                  <AvailableButton
+                    t={t}
+                    item={item}
+                    installing={installing}
+                    onInstall={() => void install(item)}
+                  />
                 }
                 icon={
                   <PluginIcon
@@ -369,35 +358,4 @@ function moreMenu(
       ? [{ label: t.pluginCardsRestoreAll, onSelect: muted.restore }]
       : []),
   ];
-}
-
-/** A row's one action, as a small round button: the words keep the row.
- *  An update turns, in the accent: something to do, not something to get. */
-function RowButton({
-  label,
-  tip,
-  update = false,
-  disabled,
-  onClick,
-}: {
-  label: string;
-  tip: string;
-  update?: boolean;
-  disabled: boolean;
-  onClick: () => void;
-}) {
-  return (
-    <Tooltip text={tip}>
-      <button
-        type="button"
-        className="tree-tool plugins-panel-action"
-        data-update={update || undefined}
-        aria-label={label}
-        disabled={disabled}
-        onClick={onClick}
-      >
-        {update ? <RefreshIcon /> : <DownloadIcon />}
-      </button>
-    </Tooltip>
-  );
 }
