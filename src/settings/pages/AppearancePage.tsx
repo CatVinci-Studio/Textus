@@ -9,15 +9,21 @@ import { AdvancedFold, SettingRow, ToggleRow } from "../sections/controls";
 import { CustomCssRow, ThemeSection, ThemesTab } from "../sections/theme";
 import { Select } from "../../engine/controls/Select";
 import { appDrawsWindowFrame } from "../../platform/window-chrome";
+import { canUseWindows } from "../../platform/capabilities";
 
 /** Appearance › Basics: the layout, light or dark, the editor's theme and
  *  importing one, the interface's size, the rail and the menu bar; one's
  *  own CSS under Advanced. */
+const SIZE_NAMES = {
+  0.85: "uiTextSmall",
+  1: "uiTextMedium",
+  1.25: "uiTextLarge",
+} as const satisfies Record<UiTextScale, string>;
+
 export function AppearancePage({
   t,
   settings,
   setSettings,
-  percent,
 }: SettingsPageProps) {
   return (
     <>
@@ -36,7 +42,7 @@ export function AppearancePage({
           >
             {UI_TEXT_SCALES.map((scale) => (
               <option key={scale} value={String(scale)}>
-                {percent.format(scale)}
+                {t[SIZE_NAMES[scale]]}
               </option>
             ))}
           </Select>
@@ -59,6 +65,13 @@ export function AppearancePage({
           checked={settings.activityRail}
           onChange={(on) => setSettings({ activityRail: on })}
         />
+        {canUseWindows && (
+          <ToggleRow
+            label={t.titleRowLabel}
+            checked={settings.titleRowShown}
+            onChange={(on) => setSettings({ titleRowShown: on })}
+          />
+        )}
         {appDrawsWindowFrame && (
           <ToggleRow
             label={t.menuBarLabel}

@@ -17,8 +17,8 @@
   flex: none;
   display: inline-grid;
   place-items: center;
-  width: 18px;
-  height: 18px;
+  width: 20px;
+  height: 20px;
   border-radius: var(--shape-xs);
   background: var(--review-anchor-bg);
   color: var(--review-note-line);

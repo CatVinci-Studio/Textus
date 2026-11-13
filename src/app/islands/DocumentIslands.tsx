@@ -36,6 +36,8 @@ import {
 } from "../../engine/layout/store";
 import { useTabsInBar } from "./tabs-in-bar";
 import { pullTab } from "./tab-pull";
+import { addFromTabRow, newConversation } from "./ai-tabs";
+import { useDocumentsApart } from "./useDocumentsApart";
 import type { ContextMenuItem } from "../../engine/controls/ContextMenu";
 import { contributedContextItems } from "../../registry/context-menu-items";
 
@@ -79,7 +81,8 @@ export function DocumentIslands({
   showTabBar: boolean;
   onActivate: (tabId: string) => void;
   onClose: (tabId: string) => void;
-  onAdd: () => void;
+  /** A blank document added; its tab's id. */
+  onAdd: () => string;
   /** A tab pulled out of the window leaves for a window of its own (macOS). */
   onDetach: (tabId: string) => void;
   onMoveToNewWindow: (tabId: string) => void;
@@ -119,6 +122,9 @@ export function DocumentIslands({
   );
   const byId = new Map(tabs.map((tab) => [tab.id, tab]));
   const tabsInBar = useTabsInBar(zen, showTabBar);
+  // Out of Zen with no row of tabs (the title on a row of its own, one
+  // document): its sheet is still an island, only with no row.
+  const lone = !zen && !tabsInBar;
   // Each pane's sheet in the area's grid, as the area places them; without
   // its row, the sheet reaches up into the bar's.
   const cells = new Map<string, CSSProperties | undefined>();
@@ -131,6 +137,15 @@ export function DocumentIslands({
     onToggleReadOnly,
     t,
   });
+  // The window's tabs as they are now: a tab arriving is checked for room
+  // before this renders it.
+  const isPanel = (p: Pane) =>
+    isPanelPane(
+      p,
+      (id) => windowTabs<DocTab>().find((tab) => tab.id === id)?.view,
+    );
+  // A document opened from a panel's island goes apart from its pages.
+  useDocumentsApart(tabs, isPanel);
   const tabBar = (
     list: DocTab[],
     active: string,
@@ -159,9 +174,10 @@ export function DocumentIslands({
       activeTabId={active}
       onActivate={onActivate}
       onClose={onClose}
+      // Over a conversation, + starts another rather than a document.
       onAdd={() => {
         focusPane(pane);
-        onAdd();
+        addFromTabRow(byId.get(active), () => void onAdd(), newConversation);
       }}
       // Pulled over the documents it splits; out of the window it tears
       // off where the platform gives global cursor positions.
@@ -219,9 +235,10 @@ export function DocumentIslands({
                 place.inner,
                 place.row,
               )
-            : // Its sheet while it has a row, and in Zen with the tab bar
-              // on; the tab bar off, the documents lie on the window.
-              (tabsInBar || showTabBar) && (
+            : // Its sheet while it has a row, alone under the title, and in
+              // Zen with the tab bar on; the tab bar off, the documents lie
+              // on the window.
+              (tabsInBar || showTabBar || lone) && (
                 <Island
                   key={key}
                   frame={place.frame}
@@ -279,16 +296,9 @@ export function DocumentIslands({
     <IslandArea
       layout={layout}
       rows={tabsInBar}
-      plain={!tabsInBar}
+      plain={!tabsInBar && !lone}
       // A panel's island holds pages only (the AI, Settings, a plugin's).
-      // The window's tabs as they are now: a tab arriving is checked for
-      // room before this renders it.
-      isPanel={(pane) =>
-        isPanelPane(
-          pane,
-          (id) => windowTabs<DocTab>().find((tab) => tab.id === id)?.view,
-        )
-      }
+      isPanel={isPanel}
       content={documents}
       t={t}
     />

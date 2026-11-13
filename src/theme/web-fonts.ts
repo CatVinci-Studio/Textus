@@ -21,7 +21,11 @@ export function withWebFonts(css: string): Promise<string> {
   if (!/(https?:)?\/\//i.test(css)) return Promise.resolve(css);
   let pending = done.get(css);
   if (!pending) {
-    pending = resolve(css, null, 0);
+    // Nothing fetched (offline, say) is tried again next time.
+    pending = resolve(css, null, 0).then((out) => {
+      if (out === css) done.delete(css);
+      return out;
+    });
     done.set(css, pending);
   }
   return pending;

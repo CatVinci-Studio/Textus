@@ -12,7 +12,7 @@ fn structure_becomes_markdown() {
             <pre><code class="language-rust">fn main() {
     println!("hi");
 }</code></pre>
-            <p>Line<br>break and <code>x &lt; y</code></p>
+            <p>Line<br>break and <code>x &lt; y</code> <code>a``b</code></p>
         </body></html>"#;
     assert_eq!(
         html_to_markdown(html),
@@ -21,7 +21,7 @@ fn structure_becomes_markdown() {
              - one\n- two\n  3. three\n\n\
              > Quoted.\n>\n> Twice.\n\n\
              ```rust\nfn main() {\n    println!(\"hi\");\n}\n```\n\n\
-             Line\nbreak and `x < y`"
+             Line\nbreak and `x < y` ``` a``b ```"
     );
 }
 

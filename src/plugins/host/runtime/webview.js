@@ -136,8 +136,9 @@
     return Promise.resolve().then(function () {
       if (action === "copy" || action === "cut") {
         var text = selectedText(field);
-        return call("clipboardWrite", { text: text }).then(function () {
-          if (action === "cut") document.execCommand("delete");
+        // Cut takes the text away only once it is on the clipboard.
+        return call("clipboardWrite", { text: text }).then(function (ok) {
+          if (action === "cut" && ok) document.execCommand("delete");
         });
       }
       if (action === "paste")
@@ -407,18 +408,26 @@
   }
   // A scroller marked tx-scroll-fade (a board's lists, a wide table) fades
   // at an edge with more past it (controls.css), so it reads as going on.
-  function edges() {
-    var all = document.querySelectorAll(".tx-scroll-fade");
-    for (var i = 0; i < all.length; i++) {
-      var el = all[i];
-      el.toggleAttribute("data-more-left", el.scrollLeft > 1);
-      el.toggleAttribute(
-        "data-more-right",
-        el.scrollWidth - el.clientWidth - el.scrollLeft > 1,
-      );
-    }
+  function edge(el) {
+    el.toggleAttribute("data-more-left", el.scrollLeft > 1);
+    el.toggleAttribute(
+      "data-more-right",
+      el.scrollWidth - el.clientWidth - el.scrollLeft > 1,
+    );
   }
-  document.addEventListener("scroll", edges, { capture: true, passive: true });
+  function edges() {
+    document.querySelectorAll(".tx-scroll-fade").forEach(edge);
+  }
+  // A scroll moves only its own scroller's edges.
+  document.addEventListener(
+    "scroll",
+    function (event) {
+      var el = event.target;
+      if (el instanceof Element && el.classList.contains("tx-scroll-fade"))
+        edge(el);
+    },
+    { capture: true, passive: true },
+  );
   window.addEventListener("resize", edges);
   window.addEventListener("DOMContentLoaded", function () {
     edges();
@@ -446,12 +455,12 @@
     new ResizeObserver(soon).observe(document.documentElement);
     if (!document.body) return;
     new ResizeObserver(soon).observe(document.body);
-    // Content that shrinks leaves the body, held to the frame, as tall.
+    // Content that shrinks leaves the body, held to the frame, as tall:
+    // what comes and goes is enough to look again (a size change is the
+    // observers' above), not every attribute an animation sets.
     new MutationObserver(soon).observe(document.body, {
       childList: true,
       subtree: true,
-      attributes: true,
-      characterData: true,
     });
   }
   if (document.readyState === "loading")

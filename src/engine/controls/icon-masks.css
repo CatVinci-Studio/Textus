@@ -3,8 +3,8 @@
 .tx-icon {
   display: inline-block;
   flex: none;
-  width: calc(16px * var(--icon-scale, 1));
-  height: calc(16px * var(--icon-scale, 1));
+  width: calc(18px * var(--icon-scale, 1));
+  height: calc(18px * var(--icon-scale, 1));
   background: currentColor;
   -webkit-mask: var(--icon) center / contain no-repeat;
   mask: var(--icon) center / contain no-repeat;

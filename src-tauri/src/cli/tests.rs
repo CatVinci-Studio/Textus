@@ -137,6 +137,14 @@ fn a_plugin_word_goes_to_the_running_app_without_starting_it() {
     assert_eq!(request.command, "plugin:word-count");
     assert_eq!(request.args, args(&["count", "--text", "a b"]));
     assert!(!launch);
+    // The help's own form: an object after --json is the tool's arguments.
+    run_in(
+        Path::new("/w"),
+        &["word-count", "count", "--json", r#"{"text":"a"}"#],
+        &app,
+    );
+    let (request, _) = app.sent.borrow()[1].clone();
+    assert_eq!(request.args, args(&["count", "--json", r#"{"text":"a"}"#]));
 }
 
 #[test]
@@ -163,10 +171,24 @@ fn app_commands_start_the_app_and_carry_json_and_the_folder() {
 #[test]
 fn open_hands_absolute_paths_to_the_app() {
     let app = FakeApp::default();
-    let (code, _, _) = run_in(Path::new("/w"), &["open", "a.md", "/b.md"], &app);
+    let (code, _, _) = run_in(
+        Path::new("/w/x"),
+        &["open", "./a.md", "../b.md", "/c.md"],
+        &app,
+    );
     assert_eq!(code, 0);
-    let joined = Path::new("/w").join("a.md").to_string_lossy().into_owned();
-    assert_eq!(app.opened.borrow()[0], args(&[&joined, "/b.md"]));
+    // Written with the platform's separators, as the resolved paths are.
+    let at = |p: &str| {
+        Path::new(p)
+            .components()
+            .collect::<std::path::PathBuf>()
+            .to_string_lossy()
+            .into_owned()
+    };
+    assert_eq!(
+        app.opened.borrow()[0],
+        vec![at("/w/x/a.md"), at("/w/b.md"), at("/c.md")]
+    );
 }
 
 #[test]
@@ -209,6 +231,8 @@ fn files_are_created_moved_listed_searched_and_read() {
         "[{\"line\":1,\"path\":\"done/Plan.md\",\"text\":\"# The plan\"}]\n"
     );
     assert_eq!(at(&["search", "nowhere"]).0, 1);
+    // A built-in command's --json is the output form, whatever follows it.
+    assert!(at(&["search", "--json", "{plan}"]).1.starts_with('['));
 
     assert_eq!(at(&["read", "done/Plan.md"]).1, "# The plan\n");
     std::fs::write(dir.path().join("page.html"), "<h1>Hi</h1><p>there</p>").unwrap();
@@ -225,7 +249,8 @@ fn an_export_is_checked_before_the_app_is_asked() {
         cwd: dir.path().to_string_lossy().into_owned(),
         json: false,
     };
-    let job = app::export_job(&request(&["a.md", "--to", "latex"])).unwrap();
+    let job = app::export_job(&request(&["./a.md", "--to", "latex"])).unwrap();
+    assert_eq!(job.file, dir.path().join("a.md"));
     assert_eq!(job.out, dir.path().join("a.tex"));
     assert!(app::export_job(&request(&["a.md", "--to", "doc"])).is_err());
     assert!(app::export_job(&request(&["a.md"])).is_err());

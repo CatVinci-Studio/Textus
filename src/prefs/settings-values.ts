@@ -26,9 +26,16 @@ export type ProxyType = "none" | "http" | "https" | "socks5";
 export const THEME_MODES: ThemeMode[] = ["system", "light", "dark"];
 
 /// Interface Text Size, as a factor on the UI's type scale.
-export type UiTextScale = 0.9 | 1 | 1.1 | 1.25;
+export type UiTextScale = 0.85 | 1 | 1.25;
 /** One table with the boot script's (appearance-tables.json). */
 export const UI_TEXT_SCALES = TABLES.uiTextScales as readonly UiTextScale[];
+/** Each step's preset in ui-sizes.css, by place in UI_TEXT_SCALES. */
+export const UI_SIZE_NAMES = TABLES.uiSizeNames as readonly string[];
+/** A step no longer offered, and the one it now reads as. */
+export const UI_TEXT_SCALES_BEFORE = TABLES.uiTextScalesBefore as Record<
+  string,
+  UiTextScale
+>;
 /** The document's text size in px, or "auto" for the theme's own. */
 export const DOC_TEXT_SIZES = [
   "auto",

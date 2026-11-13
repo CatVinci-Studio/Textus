@@ -308,8 +308,11 @@ mod imp {
         let (Some(app), Some(path)) = (app(), script_path()) else {
             return CliStatus::Missing;
         };
+        // A dev build (no AppImage) takes any script as current, so it
+        // never swaps an installed app's script for its own.
+        let dev = cfg!(debug_assertions) && std::env::var_os("APPIMAGE").is_none();
         CliStatus::of(std::fs::read_to_string(path).ok(), |s| {
-            s == super::linux_script(&app)
+            dev || s == super::linux_script(&app)
         })
     }
 

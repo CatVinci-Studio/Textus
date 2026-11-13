@@ -1,4 +1,5 @@
 import type { DocTab } from "./doc-tabs";
+import { joinPath } from "../utils/path";
 
 /**
  * How Save Automatically gives an untitled document a file in the open
@@ -36,10 +37,7 @@ export function numberedFilename(filename: string, n: number): string {
 }
 
 /** `name` inside `dir`, with the separator `dir` is written with. */
-export function joinFile(dir: string, name: string): string {
-  const sep = dir.includes("\\") && !dir.includes("/") ? "\\" : "/";
-  return dir.replace(/[\\/]+$/, "") + sep + name;
-}
+export const joinFile = joinPath;
 
 /** Numbered names tried before giving up, so a broken `exists` can't spin. */
 const MAX_NUMBER = 1000;

@@ -44,14 +44,9 @@
 
 <p align="center">
   <a href="https://www.anthropic.com/">
-    <picture>
-      <source media="(prefers-color-scheme: dark)" srcset="docs/images/readme/sponsors/anthropic-logo-ivory.png">
-      <img src="docs/images/readme/sponsors/anthropic-logo-slate.png" alt="Anthropic" width="240">
-    </picture>
+    <img src="docs/images/readme/sponsors/anthropic-badge.png" alt="Anthropic" width="300">
   </a>
 </p>
-
-<p align="center"><sub>dans le cadre de l’Anthropic Startup Program</sub></p>
 
 <p align="center">
   <img src="docs/images/readme/fr/hero.webp" alt="Textus avec le Livre premier des Misérables à côté des notes du lecteur. Textus AI propose des retouches aux notes dans la marge et épingle un commentaire de relecture à côté du roman." width="860" /><br>
@@ -117,9 +112,11 @@ Plus d’extensions et de thèmes : [textus.md/extensions](https://textus.md/fr/
 
 ## Sponsors
 
+Textus est gratuit et open source. [Soutenez-nous](https://github.com/CatVinci-Studio/Textus/issues/648) pour aider son développement.
+
 **Sponsor principal :** [Anthropic](https://www.anthropic.com/), dans le cadre de l’Anthropic Startup Program.
 
-Textus est gratuit et open source. [Soutenez-nous](https://github.com/CatVinci-Studio/Textus/issues/648) pour aider son développement.
+<p align="center"><img src="docs/images/readme/sponsors/sponsors.svg" alt="Sponsors" width="800"></p>
 
 ## Communauté
 

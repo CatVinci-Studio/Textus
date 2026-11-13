@@ -101,14 +101,25 @@ impl MemoryDirs {
         Ok(id_of(loc.scope, loc.folder, &target))
     }
 
-    /// The forgotten copy of the file at `path`, gone: Undo of a forget
-    /// put the file itself back.
-    pub(crate) fn drop_forgotten_copy(&self, path: &Path) {
-        if let Some(dir) = path.parent() {
-            let copy = dir.join(FORGOTTEN).join(format!("{}.md", file_stem(path)));
-            if std::fs::symlink_metadata(&copy).is_ok_and(|m| m.file_type().is_file()) {
-                let _ = std::fs::remove_file(copy);
-            }
+    /// The forgotten copy of the file at `path` that holds `content`, gone:
+    /// Undo of a forget put the file itself back. A second forget of the
+    /// same name was set aside as `name-2`, so the copy is found by content.
+    pub(crate) fn drop_forgotten_copy(&self, path: &Path, content: &str) {
+        let Some(dir) = path.parent() else { return };
+        let stem = file_stem(path);
+        let ours = |copy: &Path| {
+            let name = file_stem(copy);
+            let numbered = name
+                .strip_prefix(&format!("{stem}-"))
+                .is_some_and(|n| !n.is_empty() && n.bytes().all(|b| b.is_ascii_digit()));
+            (name == stem || numbered)
+                && std::fs::read_to_string(copy).is_ok_and(|text| text == content)
+        };
+        if let Some((copy, _)) = forgotten_files(&dir.join(FORGOTTEN))
+            .into_iter()
+            .find(|(copy, _)| ours(copy))
+        {
+            let _ = std::fs::remove_file(copy);
         }
     }
 }
@@ -116,14 +127,8 @@ impl MemoryDirs {
 /// The `.md` files in a `.forgotten/` folder with their mtimes (seconds),
 /// newest first.
 fn forgotten_files(dir: &Path) -> Vec<(PathBuf, u64)> {
-    let Ok(entries) = std::fs::read_dir(dir) else {
-        return Vec::new();
-    };
-    let mut files: Vec<(PathBuf, u64)> = entries
-        .flatten()
-        .filter(|e| e.file_type().is_ok_and(|t| t.is_file()))
-        .map(|e| e.path())
-        .filter(|p| p.extension().and_then(|e| e.to_str()) == Some("md"))
+    let mut files: Vec<(PathBuf, u64)> = crate::frontmatter::md_files(dir, false)
+        .into_iter()
         .map(|p| {
             let secs = std::fs::metadata(&p)
                 .and_then(|m| m.modified())

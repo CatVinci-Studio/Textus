@@ -1,4 +1,5 @@
 // @vitest-environment jsdom
+import { readDocFromDisk } from "./doc-tabs";
 import { cleanup, renderHook, waitFor } from "@testing-library/react";
 import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
 import type { DocTab } from "./doc-tabs";
@@ -71,16 +72,40 @@ const INITIAL: DocTab = {
 };
 
 /** Runs the hook against a tab list held here, the way App holds it. */
-async function restore(restoreCarets = true, launchStartPage = false) {
+async function restore(
+  restoreCarets = true,
+  launchStartPage = false,
+  /** Tabs held in the window's own model, which orders them by island. */
+  inModel = false,
+  /** Done while the session's documents are read. */
+  meanwhile?: (tabs: DocTab[]) => DocTab[],
+) {
   // `drained` is module state (one drain per window): a fresh module each.
   vi.resetModules();
   const { useStartupRestore } = await import("./startup-restore");
-  let tabs: DocTab[] = [{ ...INITIAL }];
+  const model = await import("../engine/layout/store");
+  let local: DocTab[] = [{ ...INITIAL }];
+  if (inModel)
+    model.startWindowTabs(local, () => ({ ...INITIAL, id: "blank" }));
+  const held = {
+    get tabs(): DocTab[] {
+      return inModel ? [...model.windowTabs<DocTab>()] : local;
+    },
+    set tabs(next: DocTab[]) {
+      if (inModel) model.setWindowTabs<DocTab>(() => next);
+      else local = next;
+    },
+  };
   const openPathInTab = vi.fn(async () => {});
+  // Made into tabs, not added: the restore adds them in one update.
+  const tabsForPaths = vi.fn(async (paths: string[]) => {
+    if (meanwhile) held.tabs = meanwhile(held.tabs);
+    return paths.map((path) => ({ ...INITIAL, id: `tab:${path}`, path }));
+  });
   const openFile = vi.fn(async () => {});
   // As the window's own: the tab takes the file, its editor remounted.
   const replaceTabWithFile = vi.fn(async (id: string, path: string) => {
-    tabs = tabs.map((tab) =>
+    held.tabs = held.tabs.map((tab) =>
       tab.id === id ? { ...tab, path, reloadKey: tab.reloadKey + 1 } : tab,
     );
   });
@@ -91,11 +116,12 @@ async function restore(restoreCarets = true, launchStartPage = false) {
       language: "en",
       onboardingShown: true,
       setTabs: (update) => {
-        tabs = update(tabs);
+        held.tabs = update(held.tabs);
       },
       setDraftsRestoredCount: vi.fn(),
       markOnboardingShown: vi.fn(),
       openPathInTab,
+      tabsForPaths,
       openFile,
       replaceTabWithFile,
       restoreCarets,
@@ -106,8 +132,9 @@ async function restore(restoreCarets = true, launchStartPage = false) {
   );
   const { takeTabJump } = await import("../editor/tab-jump");
   return {
-    tabs: () => tabs,
+    tabs: () => held.tabs,
     openPathInTab,
+    tabsForPaths,
     openFile,
     replaceTabWithFile,
     takeTabJump,
@@ -159,7 +186,7 @@ describe("startup restore into the initial tab", () => {
           {
             id: "old-draft",
             path: null,
-            text: { content: "typed", savedContent: "", diskMtime: null },
+            text: { content: "typed", savedContent: "", diskMtime: 7 },
           },
           { id: "old-pdf", path: null, view },
         ],
@@ -179,6 +206,7 @@ describe("startup restore into the initial tab", () => {
       tabs()[0].id,
       null,
       "typed",
+      7,
     );
     expect(ipc.clearDraftSnapshot).toHaveBeenCalledWith("old-pdf");
   });
@@ -194,22 +222,88 @@ describe("startup restore into the initial tab", () => {
 
   // Opened as any file is (a board a plugin claims, a Word document, the
   // recent list, its last caret), into the initial tab.
-  it("opens the first document as any file opens, the rest in tabs", async () => {
+  it("opens the first document as any file opens, the rest behind it at once", async () => {
     ipc.takePendingWindow.mockResolvedValue({
-      paths: ["/docs/a.md", "/docs/b.md"],
+      paths: ["/docs/a.md", "/docs/b.md", "/docs/c.md"],
     });
-    const { tabs, openPathInTab, replaceTabWithFile } = await restore();
-    await waitFor(() =>
-      expect(openPathInTab).toHaveBeenCalledWith("/docs/b.md", {
+    const { tabs, openPathInTab, tabsForPaths, replaceTabWithFile } =
+      await restore();
+    await waitFor(() => expect(tabs()).toHaveLength(3));
+    expect(replaceTabWithFile).toHaveBeenCalledWith(
+      "initial",
+      "/docs/a.md",
+      expect.objectContaining({
         restoreCaret: true,
       }),
     );
-    expect(replaceTabWithFile).toHaveBeenCalledWith("initial", "/docs/a.md", {
-      restoreCaret: true,
-    });
-    expect(tabs()).toEqual([
-      expect.objectContaining({ id: "initial", path: "/docs/a.md" }),
+    expect(tabsForPaths).toHaveBeenCalledWith(
+      ["/docs/b.md", "/docs/c.md"],
+      expect.any(Boolean),
+    );
+    // None is brought to the front one by one.
+    expect(openPathInTab).not.toHaveBeenCalled();
+    expect(tabs().map((tab) => tab.path)).toEqual([
+      "/docs/a.md",
+      "/docs/b.md",
+      "/docs/c.md",
     ]);
+  });
+
+  it("opens the document that was in front first, the tabs in their order", async () => {
+    ipc.takePendingWindow.mockResolvedValue({
+      paths: ["/docs/a.md", "/docs/b.md", "/docs/c.md"],
+      layout: {
+        tree: {
+          paths: ["/docs/a.md", "/docs/b.md", "/docs/c.md"],
+          front: "/docs/b.md",
+        },
+      },
+    });
+    const { tabs, replaceTabWithFile } = await restore();
+    await waitFor(() => expect(tabs()).toHaveLength(3));
+    // A saved session: opened as last time, no plugin offered.
+    expect(replaceTabWithFile).toHaveBeenCalledWith("initial", "/docs/b.md", {
+      restoreCaret: true,
+      reopening: true,
+    });
+    expect(tabs().map((tab) => [tab.id, tab.path])).toEqual([
+      ["tab:/docs/a.md", "/docs/a.md"],
+      ["initial", "/docs/b.md"],
+      ["tab:/docs/c.md", "/docs/c.md"],
+    ]);
+  });
+
+  it("keeps that order in the window's own model, which orders by island", async () => {
+    ipc.takePendingWindow.mockResolvedValue({
+      paths: ["/docs/a.md", "/docs/b.md", "/docs/c.md"],
+      layout: {
+        tree: {
+          paths: ["/docs/a.md", "/docs/b.md", "/docs/c.md"],
+          front: "/docs/b.md",
+        },
+      },
+    });
+    const { tabs } = await restore(true, false, true);
+    await waitFor(() => expect(tabs()).toHaveLength(3));
+    expect(tabs().map((tab) => tab.path)).toEqual([
+      "/docs/a.md",
+      "/docs/b.md",
+      "/docs/c.md",
+    ]);
+  });
+
+  it("doesn't open twice a session file the user opened meanwhile", async () => {
+    ipc.takePendingWindow.mockResolvedValue({
+      paths: ["/docs/a.md", "/docs/b.md"],
+    });
+    // Clicked in the tree while the batch was read.
+    const { tabs } = await restore(true, false, false, (now) => [
+      ...now,
+      { ...INITIAL, id: "clicked", path: "/docs/b.md" },
+    ]);
+    await waitFor(() =>
+      expect(tabs().map((tab) => tab.id)).toEqual(["initial", "clicked"]),
+    );
   });
 
   it("skips a first document deleted since, and still opens the rest", async () => {
@@ -217,15 +311,15 @@ describe("startup restore into the initial tab", () => {
     ipc.takePendingWindow.mockResolvedValue({
       paths: ["/docs/a.md", "/docs/b.md", "/docs/c.md"],
     });
-    const { tabs, openPathInTab } = await restore();
-    await waitFor(() =>
-      expect(openPathInTab).toHaveBeenCalledWith("/docs/c.md", {
-        restoreCaret: true,
-      }),
+    const { tabs, tabsForPaths } = await restore();
+    await waitFor(() => expect(tabs()).toHaveLength(2));
+    expect(tabsForPaths).toHaveBeenCalledWith(
+      ["/docs/c.md"],
+      expect.any(Boolean),
     );
-    expect(tabs()).toEqual([
+    expect(tabs()[0]).toEqual(
       expect.objectContaining({ id: "initial", path: "/docs/b.md" }),
-    ]);
+    );
     ipc.gone.clear();
   });
 
@@ -314,15 +408,20 @@ describe("startup restore into the initial tab", () => {
     });
     ipc.takeDraftSnapshots.mockResolvedValue([
       { tabId: "old-a", path: "/docs/a.md", content: "a, unsaved" },
-      { tabId: "old-b", path: "/docs/b.md", content: "b, unsaved" },
+      // Begun from an older copy of b: saving it asks first.
+      {
+        tabId: "old-b",
+        path: "/docs/b.md",
+        content: "b, unsaved",
+        diskMtime: 5,
+      },
     ]);
-    const { tabs, openPathInTab } = await restore();
-    await waitFor(() =>
-      expect(openPathInTab).toHaveBeenCalledWith("/docs/c.md", {
-        restoreCaret: true,
-      }),
+    const { tabs, tabsForPaths } = await restore();
+    await waitFor(() => expect(tabs()).toHaveLength(3));
+    expect(tabsForPaths).toHaveBeenCalledWith(
+      ["/docs/c.md"],
+      expect.any(Boolean),
     );
-    expect(openPathInTab).toHaveBeenCalledTimes(1);
     expect(tabs()).toEqual([
       expect.objectContaining({
         id: "initial",
@@ -331,22 +430,29 @@ describe("startup restore into the initial tab", () => {
         savedContent: "# /docs/a.md\n",
         reloadKey: 1,
       }),
-      expect.objectContaining({ path: "/docs/b.md", content: "b, unsaved" }),
+      expect.objectContaining({
+        path: "/docs/b.md",
+        content: "b, unsaved",
+        diskMtime: 5,
+      }),
+      expect.objectContaining({ path: "/docs/c.md" }),
     ]);
   });
 
   // A crash with nothing reopened: what was recovered fills the window, not
   // an empty "Untitled" beside it.
   it("puts the first recovered draft in the initial tab", async () => {
+    // b's file is gone (a drive not mounted): its edits come back untitled.
+    vi.mocked(readDocFromDisk).mockRejectedValueOnce(new Error("gone"));
     ipc.takeDraftSnapshots.mockResolvedValue([
       { tabId: "old-a", path: null, content: "draft a" },
-      { tabId: "old-b", path: null, content: "draft b" },
+      { tabId: "old-b", path: "/gone/b.md", content: "draft b" },
     ]);
     const { tabs } = await restore();
     await waitFor(() => expect(tabs()[0].content).toBe("draft a"));
     expect(tabs()).toEqual([
       expect.objectContaining({ id: "initial", content: "draft a" }),
-      expect.objectContaining({ content: "draft b" }),
+      expect.objectContaining({ content: "draft b", path: null }),
     ]);
   });
 });

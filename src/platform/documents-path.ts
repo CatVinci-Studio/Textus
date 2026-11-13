@@ -7,31 +7,36 @@ import { documentDir } from "@tauri-apps/api/path";
  */
 export const IN_DOCUMENTS = "documents:";
 
-/** An app container's Documents folder in an absolute path, this install's
- *  or an earlier one's. Files-app picks are `file://` URLs and don't match. */
-const CONTAINER_DOCUMENTS =
-  /^\/.*\/Containers\/Data\/Application\/[0-9A-Fa-f-]+\/Documents\/(.+)$/;
-
 const withSlash = (dir: string) => dir.replace(/\/+$/, "") + "/";
 
+/** /private/var and /var are one place; iOS spells it either way. */
+const unprivate = (p: string) => p.replace(/^\/private(?=\/var\/)/, "");
+
+/** `path` relative to this install's Documents folder `docs`, however
+ *  either is spelled; null outside it. */
+export function insideDocuments(path: string, docs: string): string | null {
+  const dir = unprivate(withSlash(docs));
+  const bare = unprivate(path);
+  return bare.startsWith(dir) ? bare.slice(dir.length) : null;
+}
+
 /**
- * `path` as stored: relative when inside the current or any container's
- * Documents folder, unchanged otherwise.
+ * `path` as stored: relative inside this install's Documents folder `docs`;
+ * unchanged otherwise (another app's folder included) and while `docs`
+ * isn't known.
  */
 export function storedDocumentPath(path: string, docs: string | null): string {
   if (path.startsWith(IN_DOCUMENTS)) return path;
-  if (docs && path.startsWith(withSlash(docs)))
-    return IN_DOCUMENTS + path.slice(withSlash(docs).length);
-  const match = CONTAINER_DOCUMENTS.exec(path);
-  return match ? IN_DOCUMENTS + match[1] : path;
+  // Not known yet: kept as it is, rather than guess whose container it is.
+  const inside = docs ? insideDocuments(path, docs) : null;
+  return inside === null ? path : IN_DOCUMENTS + inside;
 }
 
 /** A stored path resolved into the current Documents folder `docs`. */
 export function resolvedDocumentPath(stored: string, docs: string): string {
-  const inside = stored.startsWith(IN_DOCUMENTS)
-    ? stored.slice(IN_DOCUMENTS.length)
-    : CONTAINER_DOCUMENTS.exec(stored)?.[1];
-  return inside === undefined ? stored : withSlash(docs) + inside;
+  return stored.startsWith(IN_DOCUMENTS)
+    ? withSlash(docs) + stored.slice(IN_DOCUMENTS.length)
+    : stored;
 }
 
 let known: string | null = null;

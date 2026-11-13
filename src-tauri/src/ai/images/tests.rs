@@ -546,6 +546,11 @@ fn a_redone_picture_is_read_from_the_document_folder() {
         read("<img src=\"assets/rain.png\" width=\"320\">").as_deref(),
         Some("image/png")
     );
+    std::fs::write(dir.path().join("assets/my rain.png"), b"\x89PNG\r\n\x1a\n").unwrap();
+    assert_eq!(
+        read("![Rain](assets/my%20rain.png)").as_deref(),
+        Some("image/png")
+    );
     // On the web, in the text, or not a picture at all: nothing to send.
     assert_eq!(read("![Rain](https://example.com/rain.png)"), None);
     assert_eq!(read("![Rain](../outside.png)"), None);

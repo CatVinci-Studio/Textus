@@ -20,6 +20,12 @@ export interface ChatMessagesLabels
   /** "{n} seconds", after the indicator's label once nothing has moved
    *  for a while. */
   waitedFor: (seconds: number) => string;
+  /** "Show {n} earlier items", above a long conversation's newest part. */
+  showEarlier: (count: number) => string;
+  /** "Looked at {n} things", an agent's reads and searches folded. */
+  agentLooks: (count: number) => string;
+  /** The heading of an agent's plan: "Plan". */
+  agentPlan: string;
   proposalTitle: string;
   proposalStatus: Record<Exclude<PendingStatus, "pending">, string>;
   proposalAccept: string;
@@ -96,6 +102,8 @@ export interface ChatMessagesLabels
 
 export interface ChatMessagesProps {
   history: AgentTurn[];
+  /** The live reply drew more: keep it in view. */
+  onLiveGrow?: () => void;
   /** Live view of the in-flight exchange (turns landed so far + assistant
    *  prose being generated). Null when idle - and on providers without
    *  streaming, where the reply still arrives all at once via `history`. */

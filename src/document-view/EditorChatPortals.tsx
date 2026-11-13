@@ -1,3 +1,4 @@
+import { useCallback } from "react";
 import { createPortal } from "react-dom";
 import { editorViewCtx } from "@milkdown/kit/core";
 import type { EditorSetup } from "./useEditorSetup";
@@ -39,6 +40,14 @@ export function EditorChatPortals({
   const { chatGuard } = controls;
   const { notes } = review;
   const { handleFocusNext } = chat.review;
+  // Kept while the notes are, so the panel's transcript isn't read again
+  // at each of the editor's renders.
+  const { noMargin, notes: noteList } = notes;
+  const noteNumber = useCallback(
+    (id: string) =>
+      noMargin ? (noteList.find((n) => n.id === id)?.num ?? null) : null,
+    [noMargin, noteList],
+  );
   useAttachDocument(isActive, chat.proposals.port, {
     chat: {
       selectedText: chat.panelSelection?.text ?? null,
@@ -54,10 +63,7 @@ export function EditorChatPortals({
       onDecideSentence: pendingEdits.decide,
       onRevealProposal: review.revealProposal,
       onLocateText: notes.locateText,
-      noteNumber: (id) =>
-        notes.noMargin
-          ? (notes.notes.find((n) => n.id === id)?.num ?? null)
-          : null,
+      noteNumber,
       onRejectProposal: pendingEdits.reject,
       onAcceptAll: pendingEdits.acceptAll,
       onRejectAll: pendingEdits.rejectAll,

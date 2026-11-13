@@ -97,6 +97,13 @@ export const WEBVIEW_THEME_VARS = [
   "--space-4",
   "--space-5",
   "--space-6",
+  "--space-8",
+  // Interface Size's presets (ui-sizes.css) a page's panes are built on.
+  "--pane-inset",
+  "--pane-edge",
+  "--tree-step",
+  "--icon-button-s",
+  "--text-list",
   // Motion as the window has it now: under reduced motion the distances are
   // 0, so a plugin's moves turn into fades.
   "--dur-fast",

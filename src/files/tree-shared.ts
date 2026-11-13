@@ -64,6 +64,21 @@ export interface TreeDraft {
 
 export const TreeContext = createContext<TreeShared | null>(null);
 
+/** What a file's row reads: the actions alone, which keep while the
+ *  folders are read again, so a re-read doesn't draw every row. */
+export type TreeRowActions = Pick<
+  TreeShared,
+  "onRowMenu" | "onRowPointerDown" | "openInNewWindow"
+>;
+
+export const TreeRowActionsContext = createContext<TreeRowActions | null>(null);
+
+export function useTreeRowActions(): TreeRowActions {
+  const actions = useContext(TreeRowActionsContext);
+  if (!actions) throw new Error("FileTree rows render inside a FileTree");
+  return actions;
+}
+
 export function useTree(): TreeShared {
   const shared = useContext(TreeContext);
   if (!shared) throw new Error("FileTree rows render inside a FileTree");

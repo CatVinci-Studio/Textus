@@ -1,5 +1,6 @@
 import type { SearchEntry } from "./settings-search";
 import { SHOW_SIDEBAR_TAB_EVENT } from "../utils/events";
+import { tabInUse, windowTabs } from "../engine/layout/store";
 
 /**
  * Settings on the desktop: its pages listed in the sidebar, the one picked
@@ -59,4 +60,13 @@ export function openSettingsPage(page: string, jump?: SearchEntry): void {
       detail: { page, jump },
     }),
   );
+}
+
+/** ⌘F is Settings' search while the Settings tab is the one in use. */
+export function settingsInUse(): boolean {
+  const tab = windowTabs<{
+    id: string;
+    view?: { kind: string; view: string } | null;
+  }>().find((t) => t.id === tabInUse());
+  return tab?.view?.kind === "page" && tab.view.view === "settings";
 }

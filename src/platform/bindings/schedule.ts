@@ -10,7 +10,7 @@ import { invoke as __TAURI_INVOKE } from "@tauri-apps/api/core";
 export const commands = {
 	/**
 	 *  `textus.schedule.set`: adds or replaces one of the plugin's jobs.
-	 *  `root`, the folder open in the window, is kept only with files.read.
+	 *  `root`, the folder open in the window, is kept only with files.read or project.data.
 	 */
 	schedule_set: (id: string, jobId: string, job: JobSpec_Deserialize, root: string | null) => __TAURI_INVOKE<ScheduledJob_Serialize>("schedule_set", { id, jobId, job, root }),
 	schedule_clear: (id: string, jobId: string) => __TAURI_INVOKE<boolean>("schedule_clear", { id, jobId }),
@@ -58,7 +58,7 @@ export type JobRun_Deserialize = {
 	job: string,
 	/**  The function of the background code that runs. */
 	run: string,
-	/**  The folder its files are in, if it was granted files.read. */
+	/**  The folder its files are in, if it was granted files.read or project.data. */
 	root?: string | null,
 	/**  When it was due, Unix milliseconds. */
 	due: number | null,
@@ -74,7 +74,7 @@ export type JobRun_Serialize = {
 	job: string,
 	/**  The function of the background code that runs. */
 	run: string,
-	/**  The folder its files are in, if it was granted files.read. */
+	/**  The folder its files are in, if it was granted files.read or project.data. */
 	root: string | null,
 	/**  When it was due, Unix milliseconds. */
 	due: number | null,

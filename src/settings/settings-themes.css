@@ -22,7 +22,7 @@
 .theme-gallery-preview {
   flex-shrink: 0;
   /* A quarter of its row, between a thumbnail and a small preview. */
-  width: clamp(64px, 25%, 112px);
+  width: clamp(70px, 25%, 124px);
   aspect-ratio: 16 / 10;
   overflow: hidden;
   border: 1px solid color-mix(in srgb, var(--ui-border) 75%, transparent);
@@ -135,7 +135,7 @@
   display: grid;
   /* As many as fit, sharing the row: four in a full page, two in a narrow
      one, one in the narrowest. */
-  grid-template-columns: repeat(auto-fill, minmax(150px, 1fr));
+  grid-template-columns: repeat(auto-fill, minmax(166px, 1fr));
   gap: var(--space-3);
   padding: var(--space-3);
 }

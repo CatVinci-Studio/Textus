@@ -18,7 +18,10 @@ export interface PluginScope {
   manifest(): PluginManifest;
   /** Throws unless the user granted `permission`. */
   need(permission: Permission): void;
-  /** The folder open in the sidebar; throws without files.read. */
+  /** The plugin's folder: the window's, or the job's in a background run;
+   *  null with none. Unchecked: root() is the one for file calls. */
+  folder(): string | null;
+  /** folder(), and throws without files.read or a folder. */
   root(): string;
   /** One of the plugin's own webviews; throws for another's. */
   ownWebview(id: string): WebviewRecord;

@@ -150,8 +150,11 @@ export function editorHandlers(p: PluginScope) {
       );
     },
     "editor.registerDecorations": () => {
-      addDecorationProvider(p.id, (blocks) =>
-        p.request<PluginDecoration[]>("$decorate", { blocks }),
+      addDecorationProvider(p.id, (blocks, all) =>
+        p.request<PluginDecoration[]>("$decorate", {
+          blocks,
+          document: { blocks: all },
+        }),
       );
     },
     "editor.unregisterDecorations": () => removeDecorationProvider(p.id),

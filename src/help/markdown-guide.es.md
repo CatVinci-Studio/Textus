@@ -37,7 +37,7 @@ Todos están en el menú **Visualización** (**Visualización › Modo** para lo
 
 El panel **Esquema** de la barra lateral muestra los encabezados del documento; haz clic en uno para ir a él. Haz clic derecho en el esquema para **Expandir todo** y **Contraer todo**, o haz `Option`-clic (`Alt`-clic) en la flecha de un encabezado para plegarlos o desplegarlos todos a la vez.
 
-**Tamaño del texto de la interfaz** (Ajustes › Apariencia) agranda o reduce el texto de la barra lateral, las pestañas, los menús, las pestañas de IA y los Ajustes; cada documento conserva su propio zoom (`Cmd+=`, `Cmd+-`). `Ctrl+Tab` y `Ctrl+Shift+Tab` pasan a la pestaña siguiente y a la anterior.
+**Tamaño de la interfaz** (Ajustes › Apariencia) agranda o reduce la barra lateral, las pestañas, los menús, las pestañas de IA y los Ajustes, texto y controles a la vez; cada documento conserva su propio zoom (`Cmd+=`, `Cmd+-`). `Ctrl+Tab` y `Ctrl+Shift+Tab` pasan a la pestaña siguiente y a la anterior.
 
 ### Notas al pie, líneas y un índice
 

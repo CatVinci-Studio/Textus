@@ -9,6 +9,7 @@ const MAX_WAIT_MS = 30000;
 interface Snapshot {
   content: string;
   path: string | null;
+  diskMtime: number | null;
 }
 
 /**
@@ -53,9 +54,9 @@ export function useDraftAutosave(tabs: DocTab[], enabled: boolean): () => void {
       }
       timers.schedule(
         tab.id,
-        { content: tab.content, path: tab.path },
-        ({ content, path }) =>
-          void drafts.saveDraftSnapshot(tab.id, path, content),
+        { content: tab.content, path: tab.path, diskMtime: tab.diskMtime },
+        ({ content, path, diskMtime }) =>
+          void drafts.saveDraftSnapshot(tab.id, path, content, diskMtime),
       );
     }
   }, [tabs, enabled, cancel, timers]);

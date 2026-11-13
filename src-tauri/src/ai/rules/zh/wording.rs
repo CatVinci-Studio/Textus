@@ -83,8 +83,7 @@ pub(crate) fn compat_ideograph(t: &Text, ctx: &Ctx, out: &mut Out) {
         0xFA0E, 0xFA0F, 0xFA11, 0xFA13, 0xFA14, 0xFA1F, 0xFA21, 0xFA23, 0xFA24, 0xFA27, 0xFA28,
         0xFA29,
     ];
-    for i in 0..t.len() {
-        let c = t.chars[i];
+    for (i, &c) in t.chars.iter().enumerate() {
         if matches!(c, '\u{F900}'..='\u{FAFF}' | '\u{2F800}'..='\u{2FA1F}')
             && !UNIFIED.contains(&(c as u32))
         {
@@ -220,9 +219,9 @@ pub(crate) fn gongwen(t: &Text, ctx: &Ctx, out: &mut Out) {
                 );
             }
         }
-        for i in 0..t.len() {
+        for (i, &c) in t.chars.iter().enumerate() {
             if matches!(
-                t.chars[i],
+                c,
                 '，' | '。' | '；' | '：' | '！' | '？' | '“' | '”' | '（' | '）'
             ) {
                 out.flag(

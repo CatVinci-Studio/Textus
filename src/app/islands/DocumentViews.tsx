@@ -119,7 +119,12 @@ export function DocumentViews({
                 <PageTabContent tab={tab} />
               </KeptWhileHidden>
             ) : tab.view?.kind === "web" && tab.view.resource ? (
-              <WebPagePane tabId={tab.id} url={tab.view.resource} t={t} />
+              <WebPagePane
+                tabId={tab.id}
+                url={tab.view.resource}
+                shown={tab.id === activeTabId || !!pane}
+                t={t}
+              />
             ) : tab.view?.kind === "list" ? (
               <KeptWhileHidden shown={tab.id === activeTabId || !!pane}>
                 <PluginListPane
@@ -144,30 +149,43 @@ export function DocumentViews({
               <Suspense fallback={null}>
                 <StartPage t={t} />
               </Suspense>
-            ) : tab.sourceMode && tab.splitView ? (
-              <Suspense fallback={null}>
-                <SplitView
-                  content={tab.content}
-                  filePath={tab.path}
-                  typewriter={typewriter}
-                  onChange={(markdown) => onChange(tab.id, markdown)}
-                  readOnly={tabReadOnly(tab)}
-                />
-              </Suspense>
             ) : tab.sourceMode ? (
-              <Suspense fallback={null}>
-                <DocSourceEditor
-                  value={tab.content}
-                  docPath={tab.path}
-                  typewriter={typewriter}
-                  onChange={(markdown) => onChange(tab.id, markdown)}
-                  readOnly={tabReadOnly(tab)}
-                />
-              </Suspense>
+              <KeptWhileHidden
+                shown={tab.id === activeTabId || !!pane}
+                kind="source-view"
+              >
+                <Suspense fallback={null}>
+                  {tab.splitView ? (
+                    <SplitView
+                      tabId={tab.id}
+                      content={tab.content}
+                      filePath={tab.path}
+                      typewriter={typewriter}
+                      onChange={(markdown) => onChange(tab.id, markdown)}
+                      readOnly={tabReadOnly(tab)}
+                    />
+                  ) : (
+                    <DocSourceEditor
+                      tabId={tab.id}
+                      value={tab.content}
+                      docPath={tab.path}
+                      typewriter={typewriter}
+                      onChange={(markdown) => onChange(tab.id, markdown)}
+                      readOnly={tabReadOnly(tab)}
+                    />
+                  )}
+                </Suspense>
+              </KeptWhileHidden>
             ) : (
               <EditorKept
                 tabId={tab.id}
-                shown={tab.id === activeTabId || !!pane || !tab.path}
+                // An edited untitled draft has no file to come back from
+                // with its undo; a blank one or a guide does.
+                shown={
+                  tab.id === activeTabId ||
+                  !!pane ||
+                  (!tab.path && tab.content !== tab.savedContent)
+                }
               >
                 <EditorPane
                   key={`${tab.id}-${tab.reloadKey}`}

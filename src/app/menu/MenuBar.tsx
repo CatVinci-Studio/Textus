@@ -79,6 +79,9 @@ export function MenuBar({ checks }: { checks?: MenuChecks }) {
           className="window-menu-bar-title"
           aria-haspopup="menu"
           aria-expanded={open?.index === index}
+          // Pressed, it keeps the focus where it was: that is where the
+          // list gives it back (the editor, after Format › Heading 2).
+          onMouseDown={(e) => e.preventDefault()}
           onMouseEnter={() => {
             if (open && open.index !== index) openAt(index);
           }}

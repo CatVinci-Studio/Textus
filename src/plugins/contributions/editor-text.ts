@@ -370,7 +370,14 @@ function wholeBlocks(
   return { from, to };
 }
 
+/** The selection's text: a line break as one, a picture or other object as
+ *  U+FFFC, so a count of characters stays true. */
 export function selectionText(state: EditorState): string {
   const { from, to } = state.selection;
-  return state.doc.textBetween(from, to, "\n", "￼");
+  return state.doc.textBetween(
+    from,
+    to,
+    "\n",
+    (leaf) => leaf.type.spec.leafText?.(leaf) ?? "￼",
+  );
 }

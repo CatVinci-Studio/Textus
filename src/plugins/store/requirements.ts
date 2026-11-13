@@ -42,6 +42,7 @@ export function turnOnRequirement(r: Requirement): Partial<Settings> {
  *  turning one on ends here. */
 export async function askForRequirements(id: string, t: Strings) {
   const record = pluginsSnapshot().records.find((r) => r.id === id);
+  // Its own switch, not "all plugins": what it asks for are Textus's settings.
   if (!record?.manifest || record.status !== "on") return;
   for (const need of record.manifest.requires) {
     if (requirementMet(need, loadSettings())) continue;

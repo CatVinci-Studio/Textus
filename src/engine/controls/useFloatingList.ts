@@ -12,7 +12,7 @@ import { EDGE, clampLeft, opensBelow } from "./placement";
 /** The list's gap from its trigger, in interface pixels. */
 const LIST_GAP = 4;
 
-const MENU_MAX_HEIGHT = 280;
+const MENU_MAX_HEIGHT = 308;
 
 /** A list that opens beside its control: below it, or above without room,
  *  kept inside the window; focused while open, dismissed by an outside press

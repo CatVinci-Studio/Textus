@@ -53,6 +53,18 @@ pub(crate) fn clip(text: &str, most: usize) -> String {
     }
 }
 
+/// What an outside tool (MCP, a plugin's) answered, as the model is shown
+/// it: a word for nothing, and at most `most` characters, said where cut.
+pub(crate) fn outside_tool_result(text: String, most: usize) -> String {
+    if text.trim().is_empty() {
+        return "(The tool returned nothing.)".to_string();
+    }
+    match text.char_indices().nth(most) {
+        Some((at, _)) => format!("{}\n[cut off: the rest was too long]", &text[..at]),
+        None => text,
+    }
+}
+
 #[cfg(test)]
 mod tests {
     use super::TEXTUS_AI_SETTING;

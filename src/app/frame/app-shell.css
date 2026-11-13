@@ -43,7 +43,7 @@ body {
 }
 
 :root:not([data-window-chrome="mobile"]) .app-shell[data-sidebar="open"] {
-  --sidebar-column: var(--sidebar-width, 240px);
+  --sidebar-column: var(--sidebar-width, 264px);
 }
 
 /* The rail under the bar; the islands' area the full height, its top

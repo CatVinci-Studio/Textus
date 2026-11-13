@@ -23,6 +23,7 @@ vi.mock("../../../platform/ipc", async () => {
       memoryPass: () => Promise.resolve([]),
       offerSkill: () => Promise.resolve(null),
       suggestNextMessage: () => Promise.resolve([]),
+      suggestDocTitle: () => Promise.resolve("Kyoto in three days"),
     },
   };
 });
@@ -60,12 +61,17 @@ const reply = (text: string): AgentTurn[] => [
   { kind: "Assistant", text: `Re: ${text}` },
 ];
 
-function port(docPath: string | null): DocumentPort & { events: unknown[] } {
+function port(
+  docPath: string | null,
+): DocumentPort & { events: unknown[]; ends: boolean[] } {
   const events: unknown[] = [];
+  const ends: boolean[] = [];
   return {
     docPath,
     events,
+    ends,
     onStreamEvent: (event) => events.push(event),
+    onReplyEnd: (failed) => ends.push(failed),
     proposalStatuses: () => ({}),
   };
 }
@@ -116,6 +122,23 @@ describe("a conversation's model", () => {
     expect(state.history).toEqual(reply("你好"));
     expect(seen).toContain(true);
     expect(seen.at(-1)).toBe(false);
+  });
+
+  it("is named by Textus AI after its first exchange, and keeps that name", async () => {
+    const model = modelAt({
+      docPath: "/notes/a.md",
+      settings: { ...settings, aiProvider: "anthropic" },
+    });
+    await model.actions.send(NO_DOCUMENT, "Plan three days in Kyoto for me");
+    await vi.waitFor(() =>
+      expect(saveConversation).toHaveBeenLastCalledWith(
+        expect.objectContaining({ title: "Kyoto in three days" }),
+      ),
+    );
+    await model.actions.send(NO_DOCUMENT, "And a fourth day?");
+    expect(saveConversation).toHaveBeenLastCalledWith(
+      expect.objectContaining({ title: "Kyoto in three days" }),
+    );
   });
 
   it("tells plugins an external agent is at work, by its provider and name", async () => {
@@ -185,6 +208,9 @@ describe("a conversation's model", () => {
     await model.actions.send(NO_DOCUMENT, "一");
     expect(first.events).toEqual([event]);
     expect(second.events).toEqual([]);
+    // Its end too: the edits it was writing finish there, not in b.
+    expect(first.ends).toEqual([false]);
+    expect(second.ends).toEqual([]);
   });
 
   it("keeps a failed send to retry, and says why", async () => {
@@ -309,11 +335,22 @@ describe("the window's conversations", () => {
     setLiveConversation("/notes", "c1");
     setLiveConversation("/notes", "c2");
     const model = conversationFor("c1", "/notes");
-    agentMessage.mockImplementation(() => new Promise(() => {}));
+    agentMessage.mockImplementation(
+      (args: { onEvent: (e: StreamEvent) => void }) => {
+        args.onEvent({ type: "delta", text: "答了一半" });
+        return new Promise(() => {});
+      },
+    );
     void model.actions.send(NO_DOCUMENT, "一");
     setLiveConversation("/notes", "c2");
     closeConversation("/notes", "c1");
     expect(cancelAgentMessage).toHaveBeenCalled();
     expect(conversationFor("c1", "/notes")).not.toBe(model);
+    // What streamed stays, as at Stop.
+    expect(saveConversation).toHaveBeenCalled();
+    expect(model.snapshot().history.map((turn) => turn.kind)).toEqual([
+      "User",
+      "Assistant",
+    ]);
   });
 });

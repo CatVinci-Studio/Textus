@@ -205,7 +205,8 @@
     .tree-row
   )
   > svg:not([style*="--icon-scale"]) {
-  scale: var(--chrome-scale);
+  /* Their size attribute's 16 drawn at 18. */
+  scale: calc(1.125 * var(--chrome-scale));
 }
 
 /* Icon buttons: no frame, a muted glyph that darkens on hover; the composer

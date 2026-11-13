@@ -44,6 +44,7 @@ export {
   defaultEditor,
   distribution,
   updater,
+  windowBarIpc,
 } from "./ipc-app";
 export {
   type WindowBounds,

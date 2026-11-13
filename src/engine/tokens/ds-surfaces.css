@@ -26,7 +26,7 @@
   appearance: none;
   -webkit-appearance: none;
   min-height: var(--control-height);
-  padding: 0 24px 0 8px;
+  padding: 0 28px 0 8px;
   border: 1px solid var(--ui-border);
   border-radius: var(--shape-pill);
   corner-shape: round;
@@ -49,8 +49,8 @@
   position: absolute;
   top: 50%;
   right: 8px;
-  width: 10px;
-  height: 10px;
+  width: 12px;
+  height: 12px;
   translate: 0 -50%;
   background: var(--ui-muted);
   -webkit-mask: var(--select-chevron) center / contain no-repeat;
@@ -241,8 +241,8 @@ input[type="checkbox"].ui-check {
   appearance: none;
   -webkit-appearance: none;
   flex-shrink: 0;
-  width: 15px;
-  height: 15px;
+  width: 16px;
+  height: 16px;
   margin: 0;
   border: 1px solid color-mix(in srgb, var(--ui-muted) 55%, var(--ui-border));
   border-radius: var(--shape-xs);
@@ -257,14 +257,14 @@ input[type="checkbox"].ui-check:checked {
   border-color: var(--ui-accent-fill);
   background: var(--ui-accent-fill)
     url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 12 12'%3E%3Cpath d='M2.5 6.2l2.3 2.3 4.7-5' fill='none' stroke='white' stroke-width='1.7' stroke-linecap='round' stroke-linejoin='round'/%3E%3C/svg%3E")
-    center / 11px no-repeat;
+    center / 12px no-repeat;
 }
 
 /* Scrollbars: thin, rounded and quiet everywhere (the sidebar goes further
    and shows its own only on hover). */
 ::-webkit-scrollbar {
-  width: 10px;
-  height: 10px;
+  width: 12px;
+  height: 12px;
 }
 
 ::-webkit-scrollbar-track {
@@ -307,17 +307,5 @@ input[type="checkbox"].ui-check:checked {
 @supports (corner-shape: superellipse(1.25)) {
   :where(*) {
     corner-shape: superellipse(1.25);
-  }
-}
-
-/* Text on whole pixels where the engine can round: a size times the
-   interface's step lands between pixels and blurs. */
-@supports (width: round(1px, 1px)) {
-  :root:not([data-window-chrome="mobile"]) {
-    --text-caption: round(calc(12px * var(--chrome-scale, 1)), 1px);
-    --text-body: round(calc(14px * var(--chrome-scale, 1)), 1px);
-    --text-title: round(calc(18px * var(--chrome-scale, 1)), 1px);
-    --text-large-title: round(calc(24px * var(--chrome-scale, 1)), 1px);
-    --text-mark: round(calc(9px * var(--chrome-scale, 1)), 1px);
   }
 }

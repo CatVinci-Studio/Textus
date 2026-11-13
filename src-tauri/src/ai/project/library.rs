@@ -51,7 +51,7 @@ pub fn parse_library_entry(file: &str, stem: &str, content: &str) -> LibraryEntr
         remembered: Remembered::from_file(content),
     };
     if let Some(front) = crate::frontmatter::split(content) {
-        for line in &front.lines {
+        for (i, line) in front.lines.iter().enumerate() {
             let Some((key, value)) = line.split_once(':') else {
                 continue;
             };
@@ -59,6 +59,15 @@ pub fn parse_library_entry(file: &str, stem: &str, content: &str) -> LibraryEntr
             match key.trim() {
                 "name" if !value.is_empty() => {
                     entry.name = value.trim_matches('"').trim_matches('\'').to_string()
+                }
+                // `aliases: [a, b]`, or a block list on the lines below.
+                "aliases" if value.is_empty() => {
+                    entry.aliases = front.lines[i + 1..]
+                        .iter()
+                        .map_while(|l| l.trim_start().strip_prefix("- "))
+                        .map(|a| a.trim().trim_matches('"').trim_matches('\'').to_string())
+                        .filter(|a| !a.is_empty())
+                        .collect()
                 }
                 "aliases" => entry.aliases = parse_list(value),
                 "include" => {
@@ -78,16 +87,7 @@ pub fn parse_library_entry(file: &str, stem: &str, content: &str) -> LibraryEntr
 
 /// The library: `.textus/library/*.md`, in file-name order.
 pub fn read_library(root: &Path) -> Vec<LibraryEntry> {
-    let Ok(entries) = std::fs::read_dir(project_dir(root).join("library")) else {
-        return Vec::new();
-    };
-    let mut paths: Vec<PathBuf> = entries
-        .flatten()
-        .map(|e| e.path())
-        .filter(|p| p.extension().and_then(|e| e.to_str()) == Some("md"))
-        .collect();
-    paths.sort();
-    paths
+    crate::frontmatter::md_files(&project_dir(root).join("library"), true)
         .into_iter()
         .filter_map(|path| {
             let stem = path.file_stem().and_then(|s| s.to_str())?;

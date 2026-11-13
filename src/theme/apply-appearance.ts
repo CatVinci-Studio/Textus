@@ -1,6 +1,6 @@
 import { useEffect } from "react";
 import { useLatest } from "../utils/hooks/useLatest";
-import { themes } from "../platform/ipc";
+import { themes, windowBarIpc } from "../platform/ipc";
 import { readBoot } from "../storage/boot";
 import {
   getUiState,
@@ -14,7 +14,8 @@ import {
   DOC_LINE_HEIGHTS,
   type DocLetterSpacing,
 } from "../prefs/SettingsContext";
-import { BUILTIN_CONTENT_THEMES } from "./builtin-themes";
+import { BUILTIN_CONTENT_THEMES } from "../prefs/builtin-themes";
+import { UI_SIZE_NAMES, UI_TEXT_SCALES } from "../prefs/settings-values";
 import { applyThemeChrome, clearThemeChrome } from "../engine/tokens/palette";
 import { isIOSApp } from "../platform/capabilities";
 import { lazyModule } from "../lazy/lazy-module";
@@ -43,6 +44,8 @@ export function letterSpacing(
 // the content theme and the user's Custom CSS, in that cascade order.
 
 const CUSTOM_CSS_STYLE_ID = "textus-user-css";
+/** Custom CSS has had its web fonts asked for once (the start). */
+let customFontsAsked = false;
 
 /** Keeps an imported theme's chrome colours for the boot script, which
  *  paints the next window's first frame with them. Written only on change. */
@@ -185,10 +188,21 @@ function useApplyAppearance(
   // leaves popovers and pointer coordinates in the unzoomed space.
   useEffect(() => {
     const root = document.documentElement;
-    if (settings.uiTextScale === 1)
+    const size = UI_SIZE_NAMES[UI_TEXT_SCALES.indexOf(settings.uiTextScale)];
+    if (!size || size === "medium") {
       root.style.removeProperty("--ui-text-scale");
-    else
+      delete root.dataset.uiSize;
+    } else {
       root.style.setProperty("--ui-text-scale", String(settings.uiTextScale));
+      root.dataset.uiSize = size;
+    }
+    // The size's bar height, which macOS's traffic lights centre on.
+    if (root.dataset.windowChrome === "native")
+      void windowBarIpc.follow(
+        Number.parseFloat(
+          getComputedStyle(root).getPropertyValue("--window-bar-height"),
+        ),
+      );
   }, [settings.uiTextScale]);
 
   useEffect(() => {
@@ -214,13 +228,19 @@ function useApplyAppearance(
     // In the document first: a <style> has a sheet to promote only there.
     document.head.appendChild(style);
     void show(settings.customCss);
-    // Its web fonts come a moment later, fetched by Rust.
-    void webFonts.load().then(async ({ withWebFonts }) => {
-      const css = await withWebFonts(settings.customCss);
-      if (current && css !== settings.customCss) void show(css);
-    });
+    // Its web fonts come a moment later, fetched by Rust, once typing
+    // pauses: not for every partial address. At start, at once.
+    const delay = customFontsAsked ? 400 : 0;
+    customFontsAsked = true;
+    const fetchFonts = window.setTimeout(() => {
+      void webFonts.load().then(async ({ withWebFonts }) => {
+        const css = await withWebFonts(settings.customCss);
+        if (current && css !== settings.customCss) void show(css);
+      });
+    }, delay);
     return () => {
       current = false;
+      window.clearTimeout(fetchFonts);
     };
   }, [settings.customCss]);
 
@@ -283,52 +303,60 @@ function useApplyAppearance(
             legacy.load(),
             typora.load(),
           ]);
-        // One imported before web fonts were embedded still has them.
-        const loaded = stored && (await withWebFonts(stored));
-        if (cancelled || request !== revision) return;
-        const css = loaded && withCurrentVariables(loaded);
-        let styleEl = document.getElementById(
-          STYLE_ID,
-        ) as HTMLStyleElement | null;
-        if (!styleEl) {
-          styleEl = document.createElement("style");
-          styleEl.id = STYLE_ID;
-        }
-        const adapted = compat.adaptTyporaCss(css ?? "");
-        styleEl.textContent = isIOSApp
-          ? compat.namedSystemFonts(adapted)
-          : adapted;
-        document.head.appendChild(styleEl);
-        const dark = isEffectiveDark(settings.theme);
-        let chrome: string | null;
-        try {
-          // A one-design theme is that design's page in both appearances, its chrome
-          // derived as light: derived as dark, themes that pin dark text became unreadable.
-          chrome = applyThemeChrome(css ?? "", dark && theme.hasDark);
-          // ...and the document's own dark-only colours (syntax tokens,
-          // alert accents, mermaid) stand down on that light page.
-          if (dark && !theme.hasDark) root.setAttribute("data-light-page", "");
-          else root.removeAttribute("data-light-page");
-        } finally {
-          // The user's own CSS stays after the theme and its chrome, whenever they
-          // load - the order the boot script gives the first frame.
-          const custom = document.getElementById(
-            CUSTOM_CSS_STYLE_ID,
+        const current = () => !cancelled && request === revision;
+        const show = (loaded: string | null) => {
+          const css = loaded && withCurrentVariables(loaded);
+          let styleEl = document.getElementById(
+            STYLE_ID,
           ) as HTMLStyleElement | null;
-          if (custom) {
-            // Moved, a <style> is parsed again from its text: the
-            // promotion has to be redone on the new sheet.
-            document.head.appendChild(custom);
-            if (custom.sheet) promoteCustomProperties(custom.sheet.cssRules);
+          if (!styleEl) {
+            styleEl = document.createElement("style");
+            styleEl.id = STYLE_ID;
           }
-        }
-        if (typeof chrome === "string")
-          rememberThemeChrome({
-            id: theme.id,
-            dark,
-            sourceLength: (css ?? "").length,
-            css: chrome,
-          });
+          const adapted = compat.adaptTyporaCss(css ?? "");
+          styleEl.textContent = isIOSApp
+            ? compat.namedSystemFonts(adapted)
+            : adapted;
+          document.head.appendChild(styleEl);
+          const dark = isEffectiveDark(settings.theme);
+          let chrome: string | null;
+          try {
+            // A one-design theme is that design's page in both appearances, its chrome
+            // derived as light: derived as dark, themes that pin dark text became unreadable.
+            chrome = applyThemeChrome(css ?? "", dark && theme.hasDark);
+            // ...and the document's own dark-only colours (syntax tokens,
+            // alert accents, mermaid) stand down on that light page.
+            if (dark && !theme.hasDark)
+              root.setAttribute("data-light-page", "");
+            else root.removeAttribute("data-light-page");
+          } finally {
+            // The user's own CSS stays after the theme and its chrome, whenever they
+            // load - the order the boot script gives the first frame.
+            const custom = document.getElementById(
+              CUSTOM_CSS_STYLE_ID,
+            ) as HTMLStyleElement | null;
+            if (custom) {
+              // Moved, a <style> is parsed again from its text: the
+              // promotion has to be redone on the new sheet.
+              document.head.appendChild(custom);
+              if (custom.sheet) promoteCustomProperties(custom.sheet.cssRules);
+            }
+          }
+          if (typeof chrome === "string")
+            rememberThemeChrome({
+              id: theme.id,
+              dark,
+              // The file as stored: what the boot script measures.
+              sourceLength: (stored ?? "").length,
+              css: chrome,
+            });
+        };
+        if (!current()) return;
+        show(stored);
+        // One imported before web fonts were embedded still has them: the
+        // theme shows at once, its fonts once fetched (or not, offline).
+        const fonted = stored && (await withWebFonts(stored));
+        if (fonted && fonted !== stored && current()) show(fonted);
       } catch {
         // Theme file missing/unreadable - leave whatever was there before.
       }

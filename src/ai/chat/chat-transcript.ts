@@ -10,6 +10,7 @@ import { OFFER_SKILL, parseSkillOffer } from "./SkillOfferChip";
 import { PAPER_TURN, parsePaperCard } from "../paper/paper-store";
 import { OUT_OF_STEPS } from "./out-of-steps";
 import { fileRunsOf, type FileChangeCall } from "./file-changes";
+import { agentStepRuns, type AgentStep } from "./agent-steps";
 
 /**
  * A conversation's turns read for the panel: which tool calls are edit
@@ -42,6 +43,8 @@ export interface Transcript {
   /** A reply's changes to the folder's files, as one card under its first
    *  (an empty list under the others). */
   fileRuns: Map<string, FileChangeCall[]>;
+  /** An external agent's steps in a row, under the first. */
+  agentSteps: Map<string, AgentStep[]>;
 }
 
 export function readTranscript(
@@ -83,6 +86,7 @@ export function readTranscript(
     noteRuns: noteRunsOf(turns, noteNumber),
     imageCalls,
     fileRuns: fileRunsOf(turns),
+    agentSteps: agentStepRuns(turns),
   };
 }
 
@@ -106,6 +110,8 @@ export type ChatItem =
   | { kind: "paper"; info: NonNullable<ReturnType<typeof parsePaperCard>> }
   | { kind: "memories"; callIds: string[] }
   | { kind: "files"; run: FileChangeCall[] }
+  /** An external agent's steps, a row each and looks in a row folded. */
+  | { kind: "steps"; steps: AgentStep[] }
   /** The model stopped at its step limit. */
   | { kind: "stopped" }
   /** A plain turn: the user's, a reply, a step. */
@@ -139,13 +145,20 @@ export function itemOf(turn: AgentTurn, t: Transcript): ChatItem {
       const run = t.fileRuns.get(id)!;
       return run.length ? { kind: "files", run } : NONE;
     }
+    const steps = t.agentSteps.get(id);
+    if (steps) return steps.length ? { kind: "steps", steps } : NONE;
     // Shown by their results.
     if ([OFFER_SKILL, PAPER_TURN, "remember"].includes(turn.name)) return NONE;
   }
   if (turn.kind === "ToolResult") {
     const id = turn.call_id;
     // A proposal's or a note's card is its result.
-    if (t.proposals.has(id) || t.noteRuns.has(id) || t.fileRuns.has(id))
+    if (
+      t.proposals.has(id) ||
+      t.noteRuns.has(id) ||
+      t.fileRuns.has(id) ||
+      t.agentSteps.has(id)
+    )
       return NONE;
     const offer =
       id.startsWith(`${OFFER_SKILL}-`) && parseSkillOffer(turn.output);

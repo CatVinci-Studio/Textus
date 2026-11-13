@@ -273,16 +273,23 @@ pub async fn folder_conventions(path: String) -> Result<Conventions, String> {
 
 /// A project's own settings file (`.textus/settings.json`) as a whole, read
 /// as the conventions read it (comments and trailing commas allowed); {}
-/// when it isn't there or isn't a settings file.
+/// when it isn't there or is empty, null when it doesn't read as settings.
 #[tauri::command]
 #[cfg_attr(test, specta::specta)]
 pub async fn project_settings_read(root: String) -> serde_json::Value {
     let file = Path::new(&root).join(".textus").join("settings.json");
-    tauri::async_runtime::spawn_blocking(move || text::json(&file))
-        .await
-        .ok()
-        .flatten()
-        .unwrap_or_else(|| serde_json::json!({}))
+    tauri::async_runtime::spawn_blocking(move || {
+        text::json(&file).unwrap_or_else(|| {
+            let empty = text::read(&file).is_some_and(|t| t.trim().is_empty());
+            if file.exists() && !empty {
+                serde_json::Value::Null
+            } else {
+                serde_json::json!({})
+            }
+        })
+    })
+    .await
+    .unwrap_or(serde_json::Value::Null)
 }
 
 /// Whether a document in `dir` shows a single newline as a line break.

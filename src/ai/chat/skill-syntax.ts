@@ -12,3 +12,12 @@ export const SKILL_COMMAND = /^[/／、・](\S+)(?:\s+([\s\S]*))?$/;
 export const MENTION_TRIGGER = /(?:^|\s)[@＠]([^\s@＠]*)$/;
 /** The same `@path`, for removing it once a file is picked. */
 export const MENTION_TOKEN = /(^|\s)[@＠][^\s@＠]*$/;
+
+/** A message to an agent: a command typed with an IME's slash (`、`) in
+ *  the "/" the agent reads, when the word names one of its commands. */
+export function agentCommandText(typed: string, commands: { name: string }[]) {
+  const word = SKILL_COMMAND.exec(typed)?.[1];
+  return typed[0] !== "/" && commands.some((c) => c.name === word)
+    ? `/${typed.slice(1)}`
+    : typed;
+}

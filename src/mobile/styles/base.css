@@ -10,7 +10,7 @@
 }
 
 :root[data-window-chrome="mobile"] {
-  --mobile-bar: 44px;
+  --mobile-bar: 48px;
   /* The page runs under the status bar: the title row takes its height, and
      whatever clears the row clears both. */
   --safe-top: env(safe-area-inset-top, 0px);
@@ -28,7 +28,7 @@
    the page in, and the size iOS sets its own fields in. */
 :root[data-window-chrome="mobile"]
   :is(input:not([type="checkbox"], [type="radio"], [type="range"]), textarea) {
-  font-size: max(16px, 1em);
+  font-size: max(18px, 1em);
 }
 
 /* The page runs under the status bar and the home indicator: what shows
@@ -54,8 +54,8 @@
 
 :root[data-window-chrome="mobile"] .window-menu-button,
 :root[data-window-chrome="mobile"] .window-bar-toggle {
-  width: 44px;
-  height: 44px;
+  width: 48px;
+  height: 48px;
   border-radius: var(--shape-pill);
   corner-shape: round;
 }
@@ -94,6 +94,6 @@
     .agent-panel-actions .inline-chat-header-button
   )
   svg {
-  width: 20px;
-  height: 20px;
+  width: 22px;
+  height: 22px;
 }

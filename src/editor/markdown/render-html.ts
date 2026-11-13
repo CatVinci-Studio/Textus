@@ -110,6 +110,8 @@ function purify() {
   made.addHook("afterSanitizeAttributes", (node) => {
     if (/url\(/i.test(node.getAttribute("style") ?? ""))
       node.removeAttribute("style");
+    // A task list's checkbox stays; `<input type=image>` loads its src.
+    if (node.tagName === "INPUT") node.removeAttribute("src");
     if (node.tagName !== "IMG") return;
     const src = node.getAttribute("src") ?? "";
     if (!/^https?:/i.test(src)) return;
@@ -121,8 +123,29 @@ function purify() {
   return made;
 }
 const AUTHORED = {
-  FORBID_TAGS: ["style", "form", "button", "textarea", "select"],
+  FORBID_TAGS: [
+    "style",
+    "form",
+    "button",
+    "textarea",
+    "select",
+    // Each loads from an address as it shows.
+    "picture",
+    "source",
+    "video",
+    "audio",
+    "track",
+  ],
+  FORBID_ATTR: ["srcset", "poster", "background"],
 };
+
+/** A reply's top-level blocks (a paragraph, a list, a fence), their
+ *  sources in order: a streaming reply redraws only its last. */
+export function markdownBlocks(markdown: string): string[] {
+  return chatMarked
+    .lexer(normalizeMathDelimiters(markdown))
+    .map((token) => token.raw);
+}
 
 /** Markdown source -> sanitized, block-aware HTML, for the chat reply. */
 export function renderMarkdownHtml(markdown: string): string {

@@ -45,14 +45,9 @@
 
 <p align="center">
   <a href="https://www.anthropic.com/">
-    <picture>
-      <source media="(prefers-color-scheme: dark)" srcset="docs/images/readme/sponsors/anthropic-logo-ivory.png">
-      <img src="docs/images/readme/sponsors/anthropic-logo-slate.png" alt="Anthropic" width="240">
-    </picture>
+    <img src="docs/images/readme/sponsors/anthropic-badge.png" alt="Anthropic" width="300">
   </a>
 </p>
-
-<p align="center"><sub>通过 Anthropic Startup Program</sub></p>
 
 <p align="center">
   <img src="docs/images/readme/zh/hero.webp" alt="Textus 打开着《红楼梦》和一段读书笔记，Textus AI 逐句精简笔记，每处修改都在页边，并在原文旁钉上审阅批注" width="860" /><br>
@@ -118,9 +113,11 @@
 
 ## 赞助
 
+Textus 免费开源。欢迎[赞助我们](https://github.com/CatVinci-Studio/Textus/issues/648)，支持它的开发。
+
 **首席赞助：** [Anthropic](https://www.anthropic.com/)，通过 Anthropic Startup Program。
 
-Textus 免费开源。欢迎[赞助我们](https://github.com/CatVinci-Studio/Textus/issues/648)，支持它的开发。
+<p align="center"><img src="docs/images/readme/sponsors/sponsors.svg" alt="Sponsors" width="800"></p>
 
 ## 社区
 

@@ -1,5 +1,5 @@
 import { splitFrontmatter } from "../utils/frontmatter";
-import { eachLine } from "../utils/markdown-lines";
+import { THEMATIC_BREAK, eachLine, headingsOf } from "../utils/markdown-lines";
 const WINDOWS_RESERVED_NAME = /^(con|prn|aux|nul|com[1-9]|lpt[1-9])(?:\..*)?$/i;
 
 function plainMarkdownText(text: string): string {
@@ -8,58 +8,38 @@ function plainMarkdownText(text: string): string {
     .replace(/!\[([^\]]*)\]\([^)]*\)/g, "$1")
     .replace(/\[([^\]]+)\]\([^)]*\)/g, "$1")
     .replace(/`([^`]*)`/g, "$1")
+    .replace(/<!--[\s\S]*?(?:-->|$)/g, "")
     .replace(/<[^>]+>/g, "")
     .replace(/[*_~]/g, "")
     .trim();
 }
 
-/** The lines after any front matter, each with whether it is code. */
+/** The lines after any front matter, each with whether it is code (or an
+ *  HTML comment). */
 function bodyLines(markdown: string): { line: string; code: boolean }[] {
   const { body } = splitFrontmatter(markdown.replace(/\r\n?/g, "\n"));
   const lines: { line: string; code: boolean }[] = [];
-  eachLine(body, (line, _index, code) => lines.push({ line, code }));
+  eachLine(body, (line, _index, code) => lines.push({ line, code }), {
+    comments: true,
+  });
   return lines;
 }
 
-/** Finds the first real Markdown level-one heading, excluding fenced code. */
+/** The first level-one heading with any text, as the editor reads them. */
 export function firstLevelOneHeading(markdown: string): string | null {
-  const lines = bodyLines(markdown);
-  for (const [index, { line, code }] of lines.entries()) {
-    if (code) continue;
-    const atx = /^ {0,3}#(?:[ \t]+|$)(.*)$/.exec(line);
-    if (atx) {
-      const heading = plainMarkdownText(atx[1]);
-      if (heading) return heading;
-    }
-    const next = lines[index + 1];
-    if (
-      line.trim() &&
-      next &&
-      !next.code &&
-      /^ {0,3}=+[ \t]*$/.test(next.line)
-    ) {
-      const heading = plainMarkdownText(line.trim());
-      if (heading) return heading;
-    }
+  for (const { level, text } of headingsOf(markdown.replace(/\r\n?/g, "\n"))) {
+    const heading = level === 1 ? plainMarkdownText(text) : "";
+    if (heading) return heading;
   }
   return null;
 }
 
 /** Finds the first visible, non-empty body line when no H1 is available. */
 export function firstContentLine(markdown: string): string | null {
-  let htmlComment = false;
   for (const { line, code } of bodyLines(markdown)) {
     const trimmed = line.trim();
-    if (htmlComment) {
-      if (line.includes("-->")) htmlComment = false;
-      continue;
-    }
-    if (trimmed.startsWith("<!--")) {
-      if (!trimmed.includes("-->")) htmlComment = true;
-      continue;
-    }
     if (code || !trimmed) continue;
-    if (/^ {0,3}(?:={2,}|-{3,}|\*{3,}|_{3,})[ \t]*$/.test(line)) continue;
+    if (/^ {0,3}={2,}[ \t]*$/.test(line) || THEMATIC_BREAK.test(line)) continue;
     if (/^\s*\|?(?:\s*:?-{3,}:?\s*\|)+\s*$/.test(line)) continue;
 
     const withoutBlockMarkers = line

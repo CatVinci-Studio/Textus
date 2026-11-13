@@ -1,3 +1,4 @@
+import { ENTRY_TRASHED_EVENT } from "../utils/events";
 import { fill } from "../i18n/fill";
 import {
   useCallback,
@@ -72,6 +73,10 @@ export function useRowMenu(
       try {
         await fs.trashEntry(path, root);
         reload(parentDir(path) ?? root);
+        // Its open tabs let it go (useDocumentActions).
+        window.dispatchEvent(
+          new CustomEvent(ENTRY_TRASHED_EVENT, { detail: path }),
+        );
       } catch (err) {
         await showMessage(failureText(t, err, name));
       }
@@ -117,7 +122,10 @@ export function useRowMenu(
             danger: true,
           },
         );
-      const added = contributedContextItems("file/context", { path });
+      const added = contributedContextItems("file/context", {
+        path,
+        folder: isDir,
+      });
       if (added.length) items.push("separator", ...added);
       setMenu({ x: e.clientX, y: e.clientY, items });
     },

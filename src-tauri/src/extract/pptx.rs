@@ -114,7 +114,7 @@ enum Bullet {
     Inherited,
     None,
     Char,
-    Number,
+    Number(u32),
 }
 
 impl SlideReader<'_> {
@@ -399,10 +399,18 @@ impl SlideReader<'_> {
 
 fn body_markdown(paragraphs: &[(usize, Bullet, Inline)], bulleted: bool) -> String {
     let mut blocks = Blocks::default();
+    // Each level's next number: every item of a list carries its start.
+    let mut next: Vec<Option<u32>> = Vec::new();
     for (level, bullet, line) in paragraphs {
         let text = line.render();
+        next.resize(*level + 1, None);
+        let counted = match bullet {
+            Bullet::Number(start) => next[*level].unwrap_or(*start),
+            _ => 0,
+        };
+        next[*level] = matches!(bullet, Bullet::Number(_)).then_some(counted.saturating_add(1));
         match bullet {
-            Bullet::Number => blocks.push_item(*level, "1.", &text),
+            Bullet::Number(_) => blocks.push_item(*level, &format!("{counted}."), &text),
             Bullet::Char => blocks.push_item(*level, "-", &text),
             Bullet::Inherited if bulleted => blocks.push_item(*level, "-", &text),
             _ => blocks.push(&text),
@@ -421,7 +429,10 @@ fn bullet_of(x: &mut Pull) -> Bullet {
                 match tag.name.as_str() {
                     "buNone" => bullet = Bullet::None,
                     "buChar" | "buBlip" => bullet = Bullet::Char,
-                    "buAutoNum" => bullet = Bullet::Number,
+                    "buAutoNum" => {
+                        let start = tag.attr("startAt").and_then(|n| n.parse().ok());
+                        bullet = Bullet::Number(start.unwrap_or(1));
+                    }
                     _ => {}
                 }
                 depth += 1;

@@ -2,12 +2,12 @@ import { scaledPx } from "../../engine/tokens/chrome-scale";
 import { useSyncExternalStore } from "react";
 
 /** A card's width and the air between it and the text. */
-export const CARD_WIDTH = 232;
-export const GAP = 28;
+export const CARD_WIDTH = 256;
+export const GAP = 30;
 /** The least the text column keeps on its left when it moves over. */
-const MIN_LEFT = 16;
+const MIN_LEFT = 18;
 /** The air kept between a card and the editor's right edge. */
-const RIGHT_EDGE = 16;
+const RIGHT_EDGE = 18;
 
 interface MarginRoom {
   /** Where the column's left edge sits on its own, centred. */

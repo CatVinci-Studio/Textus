@@ -3,8 +3,8 @@
   z-index: var(--z-popover);
   display: flex;
   flex-direction: column;
-  width: min(360px, calc(100vw - 16px));
-  max-height: min(320px, calc(100vh - 16px));
+  width: min(396px, calc(100vw - 18px));
+  max-height: min(352px, calc(100vh - 18px));
   color: var(--ui-text);
   opacity: 0;
   transform: translateY(4px);

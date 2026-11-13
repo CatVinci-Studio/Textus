@@ -1,7 +1,7 @@
 import { useCallback, useEffect, useState } from "react";
 
-import { isInside, parentDir } from "../utils/path";
-import { FILE_WRITTEN_EVENT } from "../utils/events";
+import { absoluteIn, isInside, parentDir } from "../utils/path";
+import { FILE_CREATED_EVENT, FILE_WRITTEN_EVENT } from "../utils/events";
 import { type SearchScope } from "./file-search";
 import { getUiState } from "../storage/ui-state";
 import { type TreeSort } from "./tree-shared";
@@ -73,7 +73,8 @@ function bump(counts: Record<string, number>, dirs: string[]) {
   return next;
 }
 
-/** What a plugin wrote, moved or trashed shows in the folders it touched,
+/** What a plugin wrote, moved or trashed, and a picture the app saved,
+ *  shows in the folders it touched,
  *  read again together a moment later. `base` is the opened folder, which a
  *  plugin's relative paths are in. */
 function usePluginWrites(base: string, refresh: (dirs: string[]) => void) {
@@ -83,10 +84,7 @@ function usePluginWrites(base: string, refresh: (dirs: string[]) => void) {
     const onWritten = (e: Event) => {
       const path = (e as CustomEvent<unknown>).detail;
       if (typeof path !== "string") return;
-      const sep = base.includes("\\") ? "\\" : "/";
-      const full = /^([\\/]|[A-Za-z]:)/.test(path)
-        ? path
-        : `${base.replace(/[\\/]+$/, "")}${sep}${path}`;
+      const full = absoluteIn(base, path);
       for (
         let dir = parentDir(full);
         dir && (dir === base || isInside(dir, base));
@@ -100,8 +98,10 @@ function usePluginWrites(base: string, refresh: (dirs: string[]) => void) {
       }, 150);
     };
     window.addEventListener(FILE_WRITTEN_EVENT, onWritten);
+    window.addEventListener(FILE_CREATED_EVENT, onWritten);
     return () => {
       window.removeEventListener(FILE_WRITTEN_EVENT, onWritten);
+      window.removeEventListener(FILE_CREATED_EVENT, onWritten);
       clearTimeout(timer);
     };
   }, [base, refresh]);

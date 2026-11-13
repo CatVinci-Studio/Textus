@@ -42,7 +42,7 @@
   align-items: center;
   gap: var(--space-1);
   max-width: 100%;
-  min-height: 20px;
+  min-height: 22px;
   padding: 0 var(--space-2);
   border-radius: var(--shape-pill);
   corner-shape: round;
@@ -157,7 +157,7 @@
   font-size: var(--text-body);
 }
 .tx-table :is(th, td) {
-  height: 36px;
+  height: 40px;
   padding: 0 var(--space-3);
   border-right: 1px solid var(--doc-border, var(--ui-border));
   border-bottom: 1px solid var(--doc-border, var(--ui-border));
@@ -172,7 +172,7 @@
   border-bottom: none;
 }
 .tx-table th {
-  height: 32px;
+  height: 36px;
   background: var(--doc-code-bg, var(--ui-subtle));
   color: var(--ui-muted);
   font-size: var(--text-secondary);
@@ -201,7 +201,7 @@
   top: 0;
   left: 0;
   z-index: var(--z-popover);
-  max-width: 220px;
+  max-width: 242px;
   padding: var(--space-1) var(--space-2);
   border: 1px solid var(--ui-border);
   border-radius: var(--shape-pill);

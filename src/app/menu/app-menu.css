@@ -19,11 +19,11 @@
 }
 
 .app-menu-list {
-  min-width: 200px;
+  min-width: 220px;
   /* Caps how far a long label stretches the panel; past this it ellipsizes. */
-  max-width: 340px;
+  max-width: 374px;
   /* Long lists scroll rather than run off a short window. */
-  max-height: min(78vh, 560px);
+  max-height: min(78vh, 616px);
   overflow-y: auto;
 }
 
@@ -70,8 +70,8 @@
   flex-shrink: 0;
   align-items: center;
   justify-content: center;
-  width: 14px;
-  height: 14px;
+  width: 16px;
+  height: 16px;
   margin-left: -4px;
   color: var(--ui-accent-text);
 }

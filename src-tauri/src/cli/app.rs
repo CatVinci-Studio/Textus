@@ -359,6 +359,9 @@ async fn export(app: &AppHandle, request: Request) -> Answer {
             1,
         );
     }
+    // One `textus export` at a time: the target is one slot.
+    static ONE_AT_A_TIME: tokio::sync::Mutex<()> = tokio::sync::Mutex::const_new(());
+    let _turn = ONE_AT_A_TIME.lock().await;
     let target = job.out.to_string_lossy().into_owned();
     crate::commands::export::set_cli_export_target(Some(target.clone()));
     let opened = in_window(
@@ -386,7 +389,7 @@ async fn export(app: &AppHandle, request: Request) -> Answer {
 
 #[derive(Debug)]
 pub(super) struct ExportJob {
-    file: PathBuf,
+    pub(super) file: PathBuf,
     format: String,
     pub(super) out: PathBuf,
 }
@@ -400,7 +403,7 @@ pub(super) fn export_job(request: &Request) -> Result<ExportJob, String> {
         return Err("Usage: textus export <file> --to <format> [--out <file>]".into());
     };
     let cwd = Path::new(&request.cwd);
-    let file = cwd.join(file);
+    let file = super::resolve(cwd, file);
     if !file.is_file() {
         return Err(format!("{} isn't a file.", file.display()));
     }
@@ -409,7 +412,7 @@ pub(super) fn export_job(request: &Request) -> Result<ExportJob, String> {
         .ok_or_else(|| format!("Textus doesn't export to '{to}'. See 'textus help export'."))?;
     let format = to.clone();
     let out = match out {
-        Some(out) => cwd.join(out),
+        Some(out) => super::resolve(cwd, &out),
         None => file.with_extension(ext),
     };
     if out.exists() {

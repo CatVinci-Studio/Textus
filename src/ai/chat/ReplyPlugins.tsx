@@ -1,5 +1,5 @@
 import { fill } from "../../i18n/fill";
-import { useMemo, useRef, useState, useSyncExternalStore } from "react";
+import { useMemo, useState, useSyncExternalStore } from "react";
 import { pluginsInReply, type ReplyPlugin } from "./reply-plugin";
 import {
   checkPlugin,
@@ -18,14 +18,9 @@ import {
 import { installPlugin, setPluginEnabled } from "../../plugins/plugin-switches";
 import { localize, type Permission } from "../../plugins/store/manifest";
 import { openReadme } from "../../plugins/store/readme";
-import { showMessage } from "../../engine/controls/app-dialog";
 import { exportPluginForPublishing } from "../../plugins/store/plugin-export";
-import { currentStrings } from "../../i18n/current";
-import { explainError } from "../../utils/error-explain";
 import { ReplyFilesPreview } from "./ReplyFilesPreview";
-import { useSettings } from "../../prefs/SettingsContext";
-import { useLatest } from "../../utils/hooks/useLatest";
-import { withCreation } from "./creations";
+import { useCreationAction } from "./useCreationAction";
 
 export interface ReplyPluginLabels {
   installPlugin: string;
@@ -89,14 +84,11 @@ function ReplyPluginChip({
   plugin: ReplyPlugin;
   labels: ReplyPluginLabels;
 }) {
-  const { settings, setSettings } = useSettings();
-  const latest = useLatest(settings);
   const snapshot = useSyncExternalStore(subscribePlugins, pluginsSnapshot);
   useSyncExternalStore(subscribePluginLog, pluginLogVersion);
-  const [busy, setBusy] = useState(false);
+  const { busy, run } = useCreationAction();
   // When this card installed it: errors logged since are this version's.
   const [installedAt, setInstalledAt] = useState<number | null>(null);
-  const working = useRef(false);
   const manifest = plugin.manifest;
   const checks = useMemo(
     () => (manifest ? checkPlugin(manifest, plugin.files) : []),
@@ -125,29 +117,13 @@ function ReplyPluginChip({
       fill(labels.pluginCheck.runError, { error: runError.message }),
     );
 
-  async function install() {
-    if (working.current || !manifest) return;
-    working.current = true;
-    setBusy(true);
-    try {
+  const install = () =>
+    void run(async () => {
       setInstalledAt(Date.now());
       const id = await installPlugin(plugin.files);
       await setPluginEnabled(id, true);
-      setSettings({
-        creations: withCreation(latest.current.creations, {
-          kind: "plugin",
-          id,
-          name,
-          at: Date.now(),
-        }),
-      });
-    } catch (err) {
-      await showMessage(explainError(err, currentStrings()), { tone: "error" });
-    } finally {
-      working.current = false;
-      setBusy(false);
-    }
-  }
+      return { made: { kind: "plugin", id, name } };
+    });
 
   return (
     <div
@@ -155,11 +131,7 @@ function ReplyPluginChip({
       data-plugin={manifest.id}
     >
       <span className="agent-theme-chip-name">{name}</span>
-      <button
-        type="button"
-        disabled={busy || current}
-        onClick={() => void install()}
-      >
+      <button type="button" disabled={busy || current} onClick={install}>
         {current
           ? labels.pluginInstalled
           : installed

@@ -232,8 +232,12 @@ export const storage = {
 // Drafts
 
 export const drafts = {
-  saveDraftSnapshot: (tabId: string, path: string | null, content: string) =>
-    command("save_draft_snapshot", tabId, path, content),
+  saveDraftSnapshot: (
+    tabId: string,
+    path: string | null,
+    content: string,
+    diskMtime: number | null,
+  ) => command("save_draft_snapshot", tabId, path, content, diskMtime),
   takeDraftSnapshots: () => command("take_draft_snapshots"),
   /** The taken drafts are back, kept again under their new tabs. */
   finishDraftRestore: () => command("finish_draft_restore"),

@@ -1,5 +1,6 @@
 import { expect, test, type Page } from "@playwright/test";
 import { emit, openApp, pasteMarkdown } from "./helpers";
+import { openPath } from "./plugin-helpers";
 
 // Textus AI's conversations are tabs: the AI button opens one in an island
 // of its own on the right; they drag like any tab; the button collapses
@@ -68,6 +69,44 @@ test("a conversation keeps its turns when the document in front is closed and an
   });
   await page.getByRole("menuitem", { name: "新对话" }).click();
   await expect(turns).not.toContainText("第三章写了什么？");
+});
+
+test("messages sent during a reply wait their turn; a failure holds them until the user goes on", async ({
+  page,
+}) => {
+  await openApp(page, { settings: { menuBarShown: false } });
+  await aiButton(page).click();
+  const box = page.locator(".ai-tab textarea").first();
+  const turns = page.locator(".ai-tab .inline-chat-messages");
+  const queue = page.locator(".ai-tab .chat-queue");
+  await box.fill("a long first question for the reply to take a while");
+  await box.press("Enter");
+  await box.fill("please fail");
+  await box.press("Enter");
+  await box.fill("third");
+  await box.press("Enter");
+  await expect(queue.getByRole("listitem")).toHaveCount(2);
+  // The second fails: the third waits, and says why.
+  await expect(queue.locator(".chat-queue-text")).toHaveText(["third"]);
+  await expect(queue.locator(".inline-chat-action")).toBeVisible();
+  await page.waitForTimeout(500);
+  await expect(turns).not.toContainText("third");
+  // Going on sends it.
+  await queue.locator(".inline-chat-action").click();
+  await expect(queue).toHaveCount(0);
+  await expect(turns).toContainText("third");
+  await expect(page.locator(".ai-tab .agent-streaming")).toHaveCount(0);
+  // A later failure with the same words holds the queue again.
+  await box.fill("another long question for the reply to take a while");
+  await box.press("Enter");
+  await box.fill("fail again");
+  await box.press("Enter");
+  await box.fill("fourth");
+  await box.press("Enter");
+  await expect(queue.locator(".chat-queue-text")).toHaveText(["fourth"]);
+  await expect(queue.locator(".inline-chat-action")).toBeVisible();
+  await page.waitForTimeout(500);
+  await expect(turns).not.toContainText("fourth");
 });
 
 test("pressed again in front of its own island, it collapses; again, it comes back", async ({
@@ -357,4 +396,89 @@ test("an unsaved document in front keeps the folder's conversation; + opens anot
   const menu = await page.locator(".chat-history-menu").boundingBox();
   const tab = await page.locator(".ai-tab:visible").boundingBox();
   expect(menu!.width).toBeGreaterThan(tab!.width - 40);
+});
+
+test("with the title on a row of its own, one document is a clean sheet under it, and it names the document over every tab, the AI's too", async ({
+  page,
+}) => {
+  await page.setViewportSize({ width: 1200, height: 760 });
+  await openApp(page, { settings: { titleRowShown: true } });
+  await pasteMarkdown(page, "# 第三章\n\n雨下到第三天。");
+  // One document alone is a clean sheet under the title: no row of tabs.
+  await expect(tabs(page)).toHaveCount(0);
+  const titleRow = (await page.locator(".window-bar").boundingBox())!;
+  const formats = (await page.getByRole("toolbar").boundingBox())!;
+  expect(formats.y).toBeGreaterThanOrEqual(titleRow.y + titleRow.height);
+  expect(formats.y).toBeLessThan(titleRow.y + titleRow.height + 16);
+  await aiButton(page).click();
+  await expect(tabs(page)).toHaveText(["未命名", "Textus AI"]);
+  const bar = (await page.locator(".window-bar").boundingBox())!;
+  await expect(page.locator(".window-bar-title")).toBeVisible();
+  for (const tab of await tabs(page).all())
+    expect((await tab.boundingBox())!.y).toBeGreaterThanOrEqual(
+      bar.y + bar.height - 1,
+    );
+  const button = (await aiButton(page).boundingBox())!;
+  expect(button.y + button.height).toBeLessThanOrEqual(bar.y + bar.height);
+});
+
+test("however many tabs, the bar keeps bare room before its controls to move the window by", async ({
+  page,
+}) => {
+  const names = Array.from(
+    { length: 14 },
+    (_, i) => `note ${i} with a long name.md`,
+  );
+  await page.addInitScript((names) => {
+    const fs: Record<string, string> = {};
+    for (const n of names) fs[`/w/${n}`] = `# ${n}\n`;
+    (window as unknown as Record<string, unknown>).__devFs = fs;
+  }, names);
+  await page.setViewportSize({ width: 1200, height: 760 });
+  await openApp(page);
+  for (const n of names) await openPath(page, `/w/${n}`);
+  const grabbed = async () => {
+    const status = (await page.locator(".window-bar-status").boundingBox())!;
+    return page.evaluate(
+      ([x, y]) => {
+        const hit = document.elementFromPoint(x, y);
+        return (
+          !!hit?.closest("[data-tauri-drag-region]") &&
+          !hit.closest(".tab-pill, button, .tab-bar")
+        );
+      },
+      [status.x - 16, status.y + status.height / 2],
+    );
+  };
+  expect(await grabbed()).toBe(true);
+  // The AI's own row now ends at the controls: its room moves there.
+  await aiButton(page).click();
+  await expect(tabs(page).last()).toHaveText("Textus AI");
+  expect(await grabbed()).toBe(true);
+});
+
+test("the sidebar's name row at the window's top moves the window too", async ({
+  page,
+}) => {
+  await page.addInitScript(() =>
+    Object.defineProperty(navigator, "platform", { get: () => "Win32" }),
+  );
+  await page.setViewportSize({ width: 1200, height: 760 });
+  await openApp(page);
+  await page.locator(".activity-rail-item").first().click();
+  const header = page.locator(".sidebar-header");
+  await expect(header).toBeVisible();
+  const title = (await page.locator(".sidebar-title").boundingBox())!;
+  const moves = (x: number, y: number) =>
+    page.evaluate(
+      ([x, y]) =>
+        !!document
+          .elementFromPoint(x, y)
+          ?.closest("[data-tauri-drag-region]") &&
+        !document.elementFromPoint(x, y)?.closest("button"),
+      [x, y],
+    );
+  // Its name, and the bare room before it.
+  expect(await moves(title.x + 4, title.y + title.height / 2)).toBe(true);
+  expect(await moves(title.x - 6, title.y + title.height / 2)).toBe(true);
 });

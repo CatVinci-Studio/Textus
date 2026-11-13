@@ -12,6 +12,7 @@ import {
   type EditorView,
 } from "@milkdown/kit/prose/view";
 import { drawsLazily, keepsDrawingLazily } from "../large-doc";
+import { changedRanges } from "../changed-ranges";
 
 // Which top-level blocks of a long document are drawn. The document itself
 // is always whole - saving, find, the outline and undo read it - but only
@@ -181,18 +182,6 @@ function drawSelection(drawn: DecorationSet, state: EditorState) {
   const { $anchor, $head } = state.selection;
   drawn = drawBlock(drawn, state.doc, blockAt($anchor));
   return drawBlock(drawn, state.doc, blockAt($head));
-}
-
-/** What a transaction changed, as ranges of the document after it. */
-function changedRanges(tr: Transaction): [number, number][] {
-  const ranges: [number, number][] = [];
-  tr.mapping.maps.forEach((map, i) => {
-    const after = tr.mapping.slice(i + 1);
-    map.forEach((_oldStart, _oldEnd, newStart, newEnd) => {
-      ranges.push([after.map(newStart, -1), after.map(newEnd, 1)]);
-    });
-  });
-  return ranges;
 }
 
 function firstDrawn(state: EditorState): DecorationSet {

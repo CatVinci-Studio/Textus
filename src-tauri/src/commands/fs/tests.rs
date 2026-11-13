@@ -198,3 +198,36 @@ async fn a_drafts_pasted_image_moves_into_the_image_folder() {
     let b = new.parent().unwrap();
     assert_eq!(std::fs::read(b.join("image-1.png")).unwrap(), b"pasted");
 }
+
+#[test]
+fn a_listing_puts_folders_first_and_marks_what_git_leaves_out() {
+    let dir = tempfile::tempdir().unwrap();
+    for f in ["b.md", "A.md", "build.log", ".env"] {
+        std::fs::write(dir.path().join(f), "x").unwrap();
+    }
+    for d in ["zeta", "node_modules"] {
+        std::fs::create_dir(dir.path().join(d)).unwrap();
+    }
+    std::fs::write(dir.path().join(".gitignore"), "*.log\n").unwrap();
+    let items = list_dir_now(dir.path()).unwrap();
+    let names: Vec<_> = items.iter().map(|i| i.name.as_str()).collect();
+    assert_eq!(
+        names,
+        [
+            "node_modules",
+            "zeta",
+            ".env",
+            ".gitignore",
+            "A.md",
+            "b.md",
+            "build.log"
+        ]
+    );
+    let ignored: Vec<_> = items
+        .iter()
+        .filter(|i| i.ignored)
+        .map(|i| i.name.as_str())
+        .collect();
+    assert_eq!(ignored, ["node_modules", "build.log"]);
+    assert!(items.iter().find(|i| i.name == ".env").unwrap().hidden);
+}

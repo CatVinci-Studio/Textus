@@ -1,3 +1,5 @@
+import { isRecord } from "../utils/is-record";
+
 /** The snapshot Rust hands every webview before the page loads, so settings
  *  and UI state are there synchronously. A reload replays an old one, so stores
  *  re-read live values; with no snapshot they fall back to localStorage. */
@@ -13,10 +15,6 @@ interface Boot {
   /** Textus AI isn't offered on this install (an iOS App Store download
    *  in mainland China). */
   aiUnavailable: boolean;
-}
-
-function isRecord(value: unknown): value is Record<string, unknown> {
-  return typeof value === "object" && value !== null && !Array.isArray(value);
 }
 
 let cached: Boot | null | undefined;

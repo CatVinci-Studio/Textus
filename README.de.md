@@ -44,14 +44,9 @@
 
 <p align="center">
   <a href="https://www.anthropic.com/">
-    <picture>
-      <source media="(prefers-color-scheme: dark)" srcset="docs/images/readme/sponsors/anthropic-logo-ivory.png">
-      <img src="docs/images/readme/sponsors/anthropic-logo-slate.png" alt="Anthropic" width="240">
-    </picture>
+    <img src="docs/images/readme/sponsors/anthropic-badge.png" alt="Anthropic" width="300">
   </a>
 </p>
-
-<p align="center"><sub>über das Anthropic Startup Program</sub></p>
 
 <p align="center">
   <img src="docs/images/readme/de/hero.webp" alt="Textus mit dem ersten Kapitel der Verwandlung neben den Notizen des Lesers dazu. Textus AI schlägt am Rand Überarbeitungen der Notizen vor und heftet einen Kommentar neben die Erzählung." width="860" /><br>
@@ -117,9 +112,11 @@ Weitere Plugins und Themes: [textus.md/extensions](https://textus.md/de/extensio
 
 ## Sponsoren
 
+Textus ist kostenlos und Open Source. [Unterstütze uns](https://github.com/CatVinci-Studio/Textus/issues/648), um die Entwicklung zu fördern.
+
 **Hauptsponsor:** [Anthropic](https://www.anthropic.com/), über das Anthropic Startup Program.
 
-Textus ist kostenlos und Open Source. [Unterstütze uns](https://github.com/CatVinci-Studio/Textus/issues/648), um die Entwicklung zu fördern.
+<p align="center"><img src="docs/images/readme/sponsors/sponsors.svg" alt="Sponsors" width="800"></p>
 
 ## Community
 

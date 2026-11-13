@@ -285,12 +285,16 @@ pub async fn plugin_catalog_icon(id: String) -> Result<Option<String>, String> {
 }
 
 /// The README for `language` among `readme`'s: the language itself, its
-/// base ("zh" for "zh-Hant"), then English.
+/// base ("pt" for "pt-BR"), then English. Traditional Chinese reads the
+/// English, never the Simplified.
 fn readme_for(
     readme: &std::collections::BTreeMap<String, String>,
     language: &str,
 ) -> Option<String> {
-    let base = language.split('-').next().unwrap_or(language);
+    let base = match language {
+        "zh-Hant" => "en",
+        _ => language.split('-').next().unwrap_or(language),
+    };
     [language, base, "en"]
         .iter()
         .find_map(|lang| readme.get(*lang))

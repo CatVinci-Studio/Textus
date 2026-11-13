@@ -84,6 +84,7 @@ impl Connection {
     pub async fn open(endpoint: &Endpoint) -> Result<Self, String> {
         let transport = match endpoint {
             Endpoint::Command { program, args, env } => {
+                super::path::ready_login_path().await;
                 Transport::Stdio(Box::new(spawn(program, args, env)?))
             }
             Endpoint::Url { url, headers } => Transport::Http(Http {
@@ -129,11 +130,13 @@ impl Connection {
         Ok(connection)
     }
 
-    /// Every tool the server offers, page by page.
+    /// Every tool the server offers, page by page (at most 20 pages, so a
+    /// server whose pages never end can't hold it).
     pub async fn list_tools(&self) -> Result<Vec<McpTool>, String> {
         let mut tools = Vec::new();
         let mut cursor: Option<String> = None;
-        loop {
+        let mut seen = std::collections::HashSet::new();
+        for _ in 0..20 {
             let params = match &cursor {
                 Some(c) => json!({ "cursor": c }),
                 None => json!({}),
@@ -153,7 +156,10 @@ impl Connection {
                 });
             }
             match page["nextCursor"].as_str() {
-                Some(next) if tools.len() < 500 => cursor = Some(next.to_string()),
+                // A cursor met before would go round again.
+                Some(next) if tools.len() < 500 && seen.insert(next.to_string()) => {
+                    cursor = Some(next.to_string())
+                }
                 _ => break,
             }
         }

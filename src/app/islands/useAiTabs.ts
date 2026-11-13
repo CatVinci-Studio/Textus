@@ -2,6 +2,7 @@ import { useEffect, useRef, useSyncExternalStore } from "react";
 import {
   DRAFT,
   closeConversation,
+  conversationScope,
   liveConversation,
   onLiveConversation,
   onOpenConversations,
@@ -44,11 +45,13 @@ const isAiTab = (tab: DocTab) => pageOf(tab) === "ai";
 export function useAiTabs({
   tabs,
   scope,
+  workspaceRoot,
   shown,
   setShown,
 }: {
   tabs: TabState;
   scope: string | null;
+  workspaceRoot: string | null;
   shown: boolean;
   setShown: (shown: boolean) => void;
 }): void {
@@ -179,7 +182,15 @@ export function useAiTabs({
   const liveRef = useRef(live);
   liveRef.current = live;
   useEffect(() => {
-    setConversationOpener((from, id = crypto.randomUUID()) => {
+    setConversationOpener((from, id = crypto.randomUUID(), docPath) => {
+      // Kept per document (no folder): one of another document's joins
+      // that document's tabs, shown once it comes to the front.
+      const home = conversationScope(docPath ?? null, workspaceRoot) ?? scope;
+      if (home && home !== scope) {
+        setLiveConversation(home, id);
+        setShown(true);
+        return true;
+      }
       if (!scope) return false;
       const open = tabsRef.current.find(
         (tab) => isAiTab(tab) && conversationOf(tab) === id,
@@ -194,7 +205,7 @@ export function useAiTabs({
       return true;
     });
     return () => setConversationOpener(null);
-  }, [scope, tabs, tabsRef, setShown]);
+  }, [scope, workspaceRoot, tabs, tabsRef, setShown]);
 
   // The AI button, while shown.
   useEffect(() => {

@@ -1,3 +1,4 @@
+import { errorText } from "../../utils/error-text";
 import { PathText } from "../../engine/controls/PathText";
 import { HeadRow } from "../../engine/controls/HeadRow";
 import { openDocument } from "../../utils/open-document";
@@ -36,6 +37,26 @@ interface FileChangesLabels {
  * its revisions, a change that met other edits (never dropped), a file
  * made to keep or discard - and the revisions are decided in the file.
  */
+/** What a card shows of a change: never its texts, which a long reply's
+ *  edits of a big file would hold many copies of. */
+type Shown = Pick<
+  FileChange,
+  "id" | "file" | "path" | "applied" | "revision"
+> & {
+  /** The reply made the file: it had no text before. */
+  made: boolean;
+};
+
+const shownOf = (changes: FileChange[]): Shown[] =>
+  changes.map(({ id, file, path, applied, revision, before }) => ({
+    id,
+    file,
+    path,
+    applied,
+    revision,
+    made: before === null,
+  }));
+
 export function FileChangesCard({
   run,
   conversation,
@@ -51,12 +72,12 @@ export function FileChangesCard({
 }) {
   const ids = run.map((c) => c.change);
   const key = ids.join(",");
-  const [changes, setChanges] = useState<FileChange[] | null>(null);
+  const [changes, setChanges] = useState<Shown[] | null>(null);
   const [problems, setProblems] = useState<string[]>([]);
   useEffect(() => {
     let live = true;
     ai.fileChanges(conversation, key.split(",")).then(
-      (kept) => live && setChanges(kept),
+      (kept) => live && setChanges(shownOf(kept)),
       () => live && setChanges([]),
     );
     return () => {
@@ -72,18 +93,16 @@ export function FileChangesCard({
   const on = changes.every((c) => c.applied);
   // One row a file, however many changes it had.
   const files = [...new Map(changes.map((c) => [c.file, c])).values()];
-  const made = new Set(
-    changes.filter((c) => c.before === null).map((c) => c.file),
-  );
+  const made = new Set(changes.filter((c) => c.made).map((c) => c.file));
 
   async function toggle() {
     try {
       const [now, refused] = await ai.setFileChanges(conversation, ids, !on);
-      setChanges(now);
+      setChanges(shownOf(now));
       setProblems(refused);
       filesChanged(now);
     } catch (err) {
-      setProblems([String(err)]);
+      setProblems([errorText(err)]);
     }
   }
 
@@ -92,8 +111,9 @@ export function FileChangesCard({
     if (!keep) {
       const made = changes!.filter((c) => c.file === file).map((c) => c.id);
       const [now, refused] = await ai.setFileChanges(conversation, made, false);
+      const fresh = shownOf(now);
       setChanges(
-        (was) => was && was.map((c) => now.find((n) => n.id === c.id) ?? c),
+        (was) => was && was.map((c) => fresh.find((n) => n.id === c.id) ?? c),
       );
       setProblems(refused);
       if (refused.length) return;
@@ -121,7 +141,7 @@ export function FileChangesCard({
             <button
               type="button"
               className="tx-truncate agent-file-changes-path"
-              disabled={!c.applied && c.before === null}
+              disabled={!c.applied && c.made}
               onClick={() => openDocument(c.file)}
             >
               <PathText path={c.path} />
@@ -212,7 +232,7 @@ function FileWaiting({
 }
 
 /** The card's files whose change met other edits, kept in their stores. */
-function useConflicts(changes: FileChange[] | null): ReadonlySet<string> {
+function useConflicts(changes: Shown[] | null): ReadonlySet<string> {
   const [conflicts, setConflicts] = useState<ReadonlySet<string>>(new Set());
   const files = [...new Set((changes ?? []).map((c) => c.file))].join("\n");
   const [stamp, restamp] = useState(0);

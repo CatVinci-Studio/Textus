@@ -560,6 +560,10 @@
               "frame": {
                 "enum": ["none"],
                 "description": "\"none\": drawn on the page without the box round a figure, for a block that reads as part of the document (a table)."
+              },
+              "size": {
+                "enum": ["interface"],
+                "description": "\"interface\": drawn at the interface's text size, not the document's and its zoom, for an overview (a table, a board) that shows more as the column widens."
               }
             }
           }

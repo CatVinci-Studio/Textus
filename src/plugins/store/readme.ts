@@ -6,13 +6,14 @@ import { pluginsSnapshot, windowInfo } from "./plugin-records";
 /**
  * A plugin's README: what Get more shows on its page, and its guide once
  * installed. README.<lang>.md in the UI language where it has one (its base
- * language next, "zh" for "zh-Hant"), else README.md. Plugins made before
+ * language next, but never "zh" for "zh-Hant"), else README.md. Plugins made before
  * READMEs had USAGE.md instead.
  */
 
 /** The file names to try for `language`, in order. */
 function readmeNames(language: string): string[] {
-  const base = language.split("-")[0];
+  // Traditional Chinese reads the English, never the Simplified.
+  const base = language === "zh-Hant" ? language : language.split("-")[0];
   const langs = [...new Set([language, base])];
   return [
     ...langs.map((l) => `README.${l}.md`),

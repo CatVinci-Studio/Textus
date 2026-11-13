@@ -1,6 +1,5 @@
 import { useSyncExternalStore } from "react";
 import type { Rect } from "./rect";
-import type { DividerRects } from "./solve";
 import type { LayoutNode } from "../layout/tree";
 
 /**
@@ -21,9 +20,6 @@ export interface FrameIsland {
 
 interface FrameLayout {
   islands: readonly FrameIsland[];
-  dividers: readonly DividerRects[];
-  /** The islands' box, inset from the area's sides. */
-  area: Rect;
   /** Where the area's own (0, 0) is: what its parts are placed from. */
   origin: { x: number; y: number };
   /** The width the islands need at the least (their minimums, the gaps
@@ -33,8 +29,6 @@ interface FrameLayout {
 
 const EMPTY: FrameLayout = {
   islands: [],
-  dividers: [],
-  area: { x: 0, y: 0, w: 0, h: 0 },
   origin: { x: 0, y: 0 },
   need: 0,
 };

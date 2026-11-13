@@ -8,7 +8,8 @@ import type { Plugin } from "postcss";
  * typography is left alone: it has its zoom.
  */
 
-/** Stylesheets of the document's content, which follow the document's zoom. */
+/** Stylesheets left as written: the document's content, which follows the
+ *  document's zoom, and the interface's size presets. */
 const DOCUMENT = [
   /\/theme\/content-[^/]+\.css$/,
   /\/editor\/(milkdown-theme|editor-[a-z-]+)\.css$/,
@@ -19,6 +20,8 @@ const DOCUMENT = [
   /\/document-view\/plugins\/plugin-code-blocks\.css$/,
   /\/export\/print\.css$/,
   /\/playground\//,
+  // Interface Size's presets, written as each size draws them.
+  /\/engine\/tokens\/ui-sizes\.css$/,
 ];
 
 /** A length worth scaling: 3px and up; hairlines stay crisp. Plugin pages

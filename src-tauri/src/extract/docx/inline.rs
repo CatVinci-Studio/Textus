@@ -125,7 +125,11 @@ impl Docx<'_> {
             match x.next() {
                 Node::Open(tag) => match tag.name.as_str() {
                     "docPr" | "cNvPr" => {
-                        let text = tag.attr("descr").or(tag.attr("title")).unwrap_or_default();
+                        let text = [tag.attr("descr"), tag.attr("title")]
+                            .into_iter()
+                            .flatten()
+                            .find(|t| !t.trim().is_empty())
+                            .unwrap_or_default();
                         if alt.is_empty() {
                             alt = image_alt(text);
                         }

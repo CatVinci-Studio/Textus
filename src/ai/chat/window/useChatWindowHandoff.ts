@@ -106,8 +106,8 @@ export function useChatWindowHandoff(settings: Settings) {
     [],
   );
 
-  // A send parked waiting for a fresh context. At most one: `send` refuses to
-  // start while another is in flight.
+  // The ask for a fresh context waiting on the editor: one at a time, the
+  // sends that want it share it (refreshContext).
   const contextWaiter = useRef<((context: ChatContext) => void) | null>(null);
 
   const applyContext = useCallback((incoming: ChatContext) => {

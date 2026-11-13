@@ -265,8 +265,8 @@
   position: absolute;
   display: grid;
   place-items: center;
-  width: 32px;
-  height: 32px;
+  width: 36px;
+  height: 36px;
   translate: -50% -50%;
   border: 1px solid var(--ui-border);
   border-radius: var(--shape-pill);

@@ -1,4 +1,5 @@
 import type { PendingPermission } from "../agents/agent-exchange";
+import type { PlanEntry } from "../agents/agent-view";
 import type { AgentTurn } from "../types";
 import type { StreamEvent } from "../../platform/ipc";
 import { thinkingDone, thinkingEvent, type Thought } from "./thought";
@@ -22,6 +23,8 @@ export interface StreamingState {
   comments?: AgentTurn[];
   /** A step an external agent asks the user to allow. */
   permission?: PendingPermission | null;
+  /** An external agent's plan for this exchange, while it runs. */
+  plan?: PlanEntry[];
 }
 
 interface StreamStep {

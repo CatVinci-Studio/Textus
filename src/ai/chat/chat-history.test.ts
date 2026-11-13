@@ -65,7 +65,8 @@ beforeAll(() => {
 describe("chat history", () => {
   it("lists the index and keeps each conversation's turns out of it", async () => {
     vi.mocked(storage.historyList).mockResolvedValue([
-      summary("old", `${OLD}/novel/ch1.md`, 3),
+      summary("old", `/private${DOCS}/novel/ch1.md`, 3),
+      summary("vault", `${OLD}/vault/a.md`, 2),
       summary("picked", "file:///private/var/mobile/Library/x/a.md", 2),
       summary("draft", null, 1),
     ]);
@@ -75,14 +76,16 @@ describe("chat history", () => {
     await waitFor(() =>
       expect(result.current.map((e) => e.docPath)).toEqual([
         `${DOCS}/novel/ch1.md`,
+        `${OLD}/vault/a.md`,
         "file:///private/var/mobile/Library/x/a.md",
         null,
       ]),
     );
-    // ...and the old absolute path rewritten, once: the conversations move
+    // ...and an absolute path into it rewritten, once: the conversations move
     // with their document, since the list has no whole entries to save.
+    // Another app's folder (an Obsidian vault) stays as it is.
     expect(vi.mocked(storage.chatHistoryMoveDocument).mock.calls).toEqual([
-      [`${OLD}/novel/ch1.md`, "documents:novel/ch1.md"],
+      [`/private${DOCS}/novel/ch1.md`, "documents:novel/ch1.md"],
     ]);
     expect(storage.historyUpsert).not.toHaveBeenCalled();
 

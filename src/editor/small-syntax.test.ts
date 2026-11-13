@@ -41,6 +41,26 @@ describe("Obsidian image sizes", () => {
     expect(box.style.width).toBe("300px");
     expect(box.querySelector("img")?.alt).toBe("cat");
     expect(saved(view)).toBe("![cat|300](cat.png)\n\nend\n");
+    // A new size keeps the picture as it is shown: no second load.
+    const img = box.querySelector("img")!;
+    let loads = 0;
+    const own = Object.getOwnPropertyDescriptor(
+      HTMLImageElement.prototype,
+      "src",
+    )!;
+    Object.defineProperty(img, "src", {
+      get: () => own.get!.call(img),
+      set: (v) => (loads++, own.set!.call(img, v)),
+    });
+    let at = -1;
+    view.state.doc.descendants((n, pos) => {
+      if (n.type.name === "image") at = pos;
+    });
+    view.dispatch(view.state.tr.setNodeAttribute(at, "alt", "cat|200"));
+    expect(box.style.width).toBe("200px");
+    expect(loads).toBe(0);
+    view.dispatch(view.state.tr.setNodeAttribute(at, "src", "dog.png"));
+    expect(loads).toBe(1);
   });
 });
 

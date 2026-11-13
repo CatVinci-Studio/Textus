@@ -26,13 +26,13 @@
    icon stands under the folders' icons. The step and the chevron are the
    tree's measures, not spacing. */
 .tree-row {
-  --tree-chevron: calc(10px * var(--icon-scale, 1));
+  --tree-chevron: calc(12px * var(--icon-scale, 1));
   display: flex;
   align-items: center;
   gap: 8px;
   width: 100%;
   /* The small control height: a long list stays dense. */
-  min-height: 24px;
+  min-height: 26px;
   padding: 2px 8px 2px var(--tree-indent);
   background: none;
   border: none;
@@ -162,6 +162,13 @@
 }
 
 .file-tree-dragging,
+/* The rows of a big folder not drawn yet: their room, so the scroll bar
+   tells the folder's length. */
+.tree-rows-more {
+  /* --row: a drawn row's measured height, which text size changes. */
+  height: calc(var(--rows) * var(--row, 26px));
+}
+
 .file-tree-dragging .tree-row {
   cursor: grabbing;
 }
@@ -185,8 +192,8 @@
   align-items: center;
   justify-content: center;
   flex-shrink: 0;
-  width: 16px;
-  height: 22px;
+  width: 18px;
+  height: 24px;
   padding: 0;
   background: none;
   border: none;
@@ -196,7 +203,7 @@
 
 .outline-toggle-spacer {
   flex-shrink: 0;
-  width: 16px;
+  width: 18px;
 }
 
 .outline-row .tree-row {

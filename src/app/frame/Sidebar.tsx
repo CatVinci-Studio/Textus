@@ -122,7 +122,13 @@ export function Sidebar({
           away, so Tab can't land on a collapsed sidebar's buttons. */}
         {presence.mounted && (
           <>
-            <div className="sidebar-header" inert={closing || undefined}>
+            {/* At the window's top it is the bar's row there: its bare
+                room and its name move the window. */}
+            <div
+              className="sidebar-header"
+              inert={closing || undefined}
+              data-tauri-drag-region={titleShown || undefined}
+            >
               {/* With the rail holding the tabs, the header is the panel's
                   name, on the window bar's line; the panel's own first row
                   (its search, its tools) starts under it, level with the
@@ -131,7 +137,10 @@ export function Sidebar({
                   end the name's line: no row of their own. */}
               {!isIOSApp && (
                 <>
-                  <h2 className="tx-pane-title sidebar-title">
+                  <h2
+                    className="tx-pane-title sidebar-title"
+                    data-tauri-drag-region={titleShown || undefined}
+                  >
                     {shown.label(t)}
                   </h2>
                   {titleShown && <ViewTitleActions view={shown.id} />}

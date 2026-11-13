@@ -1,12 +1,9 @@
 import { SelectMenu } from "../../engine/controls/SelectMenu";
-import { Fragment, useId, useRef, useState, type KeyboardEvent } from "react";
+import { Fragment, useRef } from "react";
 import type { PanelMode } from "../../prefs/SettingsContext";
-import { useMergedRef, usePresence } from "../../engine/motion/usePresence";
-import { useFloatingList } from "../../engine/controls/useFloatingList";
+import { useDropdown } from "../../engine/controls/useDropdown";
 import { AGENTS_GROUP, useChatModels, type ChatModels } from "./chat-models";
 import "./ModePicker.css";
-import { isImeKeydown } from "../../utils/ime";
-import { listMove } from "../../engine/controls/list-keys";
 
 export interface ModeChoice {
   value: PanelMode;
@@ -17,7 +14,9 @@ export interface ModeChoice {
 
 type Item =
   | { kind: "mode"; choice: ModeChoice }
-  | { kind: "model"; provider: string; model: string };
+  | { kind: "model"; provider: string; model: string }
+  /** One value of an external agent's own option (its mode, model...). */
+  | { kind: "option"; id: string; value: string; name: string };
 
 /**
  * The composer's mode and model in one control: "Write · gpt-6.1-sol". One
@@ -45,6 +44,7 @@ export function ModePicker({
   // An external agent works its own way: Textus AI's modes are for models.
   const shownModes =
     modes.length > 1 && models?.provider !== AGENTS_GROUP ? modes : [];
+  const agentOptions = models?.agentOptions?.options ?? [];
   const items: Item[] = [
     ...shownModes.map((choice) => ({ kind: "mode" as const, choice })),
     ...groups.flatMap((g) =>
@@ -54,83 +54,66 @@ export function ModePicker({
         model,
       })),
     ),
+    ...agentOptions.flatMap((o) =>
+      o.choices.map((c) => ({
+        kind: "option" as const,
+        id: o.id,
+        value: c.value,
+        name: c.name,
+      })),
+    ),
   ];
   const isSelected = (item: Item) =>
     item.kind === "mode"
       ? item.choice.value === mode
-      : item.provider === models?.provider && item.model === models.model;
-
-  const [open, setOpen] = useState(false);
-  const [active, setActive] = useState(0);
-  const { triggerRef, listRef, place } = useFloatingList(
-    open,
-    active,
-    () => setOpen(false),
-    // The modes and a few providers' models, without a scroll.
-    480,
-  );
-  const listId = useId();
-  const presence = usePresence(open);
-  const presenceRef = useMergedRef(listRef, presence.ref);
+      : item.kind === "option"
+        ? agentOptions.some((o) => o.id === item.id && o.value === item.value)
+        : item.provider === models?.provider && item.model === models.model;
 
   // The list takes focus while open; with holdFocus it goes back to where
   // it was (the message), not to the trigger.
   const focusBefore = useRef<HTMLElement | null>(null);
-
-  function openMenu() {
-    focusBefore.current = document.activeElement as HTMLElement | null;
-    setActive(Math.max(0, items.findIndex(isSelected)));
-    setOpen(true);
-  }
-
-  function close(refocus = true) {
-    setOpen(false);
-    if (!refocus) return;
-    if (holdFocus) focusBefore.current?.focus({ preventScroll: true });
-    else triggerRef.current?.focus();
-  }
-
-  function choose(index: number) {
-    const item = items[index];
-    if (!item) return;
-    close();
-    if (isSelected(item)) return;
-    if (item.kind === "mode") onMode(item.choice.value);
-    else {
-      models?.choose(item.provider, item.model);
-      // An agent answers as itself: Research's paper isn't one of its modes.
-      if (item.provider === AGENTS_GROUP && mode === "research" && modes[0])
-        onMode(modes[0].value);
-    }
-  }
-
-  function onTriggerKey(e: KeyboardEvent<HTMLElement>) {
-    // Keys pressed before the open list has taken focus are its keys.
-    if (open) return onListKey(e);
-    if (["ArrowDown", "ArrowUp", "Enter", " "].includes(e.key)) {
-      e.preventDefault();
-      openMenu();
-    }
-  }
-
-  function onListKey(e: KeyboardEvent<HTMLElement>) {
-    if (isImeKeydown(e)) return;
-    const moved = listMove(e.key, active, items.length);
-    if (moved !== null) {
-      e.preventDefault();
-      setActive(moved);
-    } else if (e.key === "Enter" || e.key === " ") {
-      e.preventDefault();
-      choose(active);
-    } else if (e.key === "Escape") {
-      // Closes the list, not the panel or Quick Ask around it.
-      e.preventDefault();
-      e.stopPropagation();
-      close();
-    } else if (e.key === "Tab") {
-      close();
-    }
-  }
+  const {
+    open,
+    active,
+    setActive,
+    triggerRef,
+    listRef,
+    place,
+    presence,
+    listId,
+    openMenu,
+    close,
+    choose,
+    onListKey,
+    onTriggerKey,
+  } = useDropdown({
+    count: items.length,
+    selected: () => items.findIndex(isSelected),
+    // The modes and a few providers' models, without a scroll.
+    maxHeight: 480,
+    onOpen: () => {
+      focusBefore.current = document.activeElement as HTMLElement | null;
+    },
+    refocus: holdFocus
+      ? () => focusBefore.current?.focus({ preventScroll: true })
+      : undefined,
+    choose: (index) => {
+      const item = items[index];
+      // An agent's option is sent even when ticked: its session may have
+      // moved off it (a mode it switched to itself).
+      if (item.kind === "option")
+        return models?.agentOptions?.choose(item.id, item.value);
+      if (isSelected(item)) return;
+      if (item.kind === "mode") onMode(item.choice.value);
+      else {
+        models?.choose(item.provider, item.model);
+        // An agent answers as itself: Research's paper isn't one of its modes.
+        if (item.provider === AGENTS_GROUP && mode === "research" && modes[0])
+          onMode(modes[0].value);
+      }
+    },
+  });
 
   const current = shownModes.find((m) => m.value === mode);
   const model = models?.model;
@@ -140,7 +123,9 @@ export function ModePicker({
       key={
         item.kind === "mode"
           ? item.choice.value
-          : `${item.provider}/${item.model}`
+          : item.kind === "option"
+            ? `${item.id}=${item.value}`
+            : `${item.provider}/${item.model}`
       }
       id={`${listId}-${index}`}
       data-index={index}
@@ -175,6 +160,8 @@ export function ModePicker({
             {item.choice.hint}
           </span>
         </span>
+      ) : item.kind === "option" ? (
+        item.name
       ) : (
         item.model
       )}
@@ -191,7 +178,9 @@ export function ModePicker({
         aria-haspopup="listbox"
         aria-expanded={open}
         aria-controls={open ? listId : undefined}
-        aria-label={labels.picker}
+        aria-label={[labels.picker, models?.agentOptions?.unasking]
+          .filter(Boolean)
+          .join(", ")}
         onMouseDown={holdFocus ? (e) => e.preventDefault() : undefined}
         onClick={() => (open ? close() : openMenu())}
         onKeyDown={onTriggerKey}
@@ -202,10 +191,15 @@ export function ModePicker({
             {model}
           </span>
         )}
+        {models?.agentOptions?.unasking && (
+          <span className="mode-picker-unasking">
+            {models.agentOptions.unasking}
+          </span>
+        )}
       </button>
       {presence.mounted && (
         <SelectMenu
-          listRef={presenceRef}
+          listRef={listRef}
           id={listId}
           state={presence.state}
           className="mode-picker-menu"
@@ -240,6 +234,27 @@ export function ModePicker({
                 {g.models.map((m, i) =>
                   option(
                     { kind: "model", provider: g.provider, model: m },
+                    start + i,
+                  ),
+                )}
+              </Fragment>
+            );
+          })}
+          {agentOptions.map((o) => {
+            const start = items.findIndex(
+              (item) => item.kind === "option" && item.id === o.id,
+            );
+            return (
+              <Fragment key={o.id}>
+                <li
+                  role="presentation"
+                  className="tx-list-heading ui-select-group mode-picker-models"
+                >
+                  {o.name}
+                </li>
+                {o.choices.map((c, i) =>
+                  option(
+                    { kind: "option", id: o.id, value: c.value, name: c.name },
                     start + i,
                   ),
                 )}

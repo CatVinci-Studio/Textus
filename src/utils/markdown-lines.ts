@@ -1,9 +1,10 @@
 import { FRONTMATTER } from "./frontmatter";
 /** Blockquote and list markers a fence may sit behind, as in `2. ```` or
  *  `> ~~~`; they are stripped before looking for the fence itself. */
-const CONTAINER_PREFIX =
+export const CONTAINER_PREFIX =
   /^(?:[ \t]*(?:>|[-+*]|\d{1,9}[.)])(?=[ \t]|$)[ \t]?)*[ \t]*/;
 const FENCE = /^(`{3,}|~{3,})(.*)$/;
+const COMMENT_OPEN = /^ {0,3}<!--/;
 
 /**
  * Each line of `markdown` with whether it is code: inside a fenced block or
@@ -11,19 +12,32 @@ const FENCE = /^(`{3,}|~{3,})(.*)$/;
  * front matter at its top (YAML, whose `#` starts a comment, not a
  * heading); a fragment's leading `---` lines are its own. As in CommonMark, a fence closes only on a run of the
  * same character at least as long as the one that opened it, with nothing
- * after it - so ``` inside ~~~ stays code.
+ * after it - so ``` inside ~~~ stays code. With `comments`, a `<!-- -->`
+ * block counts as code too: an HTML block, never prose or a fence.
  */
 export function eachLine(
   markdown: string,
   visit: (line: string, index: number, code: boolean) => void,
   /** `$$` blocks count as code too: maths, kept whole. */
-  { math = false, frontMatter = false } = {},
+  { math = false, frontMatter = false, comments = false } = {},
 ): void {
   let fence: string | null = null;
+  let comment = false;
   const head = frontMatter ? (FRONTMATTER.exec(markdown)?.[0] ?? "") : "";
   const yamlLines = head ? head.replace(/\n$/, "").split("\n").length : 0;
   markdown.split("\n").forEach((line, index) => {
     if (index < yamlLines) return visit(line, index, true);
+    if (comments && !fence) {
+      if (comment) {
+        comment = !line.includes("-->");
+        return visit(line, index, true);
+      }
+      // `<!-->` and `<!--->` close where they open, as in CommonMark.
+      if (COMMENT_OPEN.test(line)) {
+        comment = !line.slice(line.indexOf("<!--") + 2).includes("-->");
+        return visit(line, index, true);
+      }
+    }
     const bare = line.replace(CONTAINER_PREFIX, "");
     if (math && (fence === "$$" || (!fence && bare.startsWith("$$")))) {
       const rest = bare.trimEnd();
@@ -65,11 +79,14 @@ interface HeadingLine {
 const ATX = /^ {0,3}(#{1,6})(?:[ \t]+(.*?))?[ \t]*(?:[ \t]#+[ \t]*)?$/;
 const SETEXT = /^ {0,3}(=+|-+)[ \t]*$/;
 // A line that starts a block of its own can't be a setext heading's text.
-const NOT_TEXT = /^ {0,3}(?:[-+*>|]|\d+[.)]|#|$)/;
+/** A thematic break: three or more -, * or _, spaces between allowed. */
+export const THEMATIC_BREAK =
+  /^ {0,3}(?:(?:-[ \t]*){3,}|(?:\*[ \t]*){3,}|(?:_[ \t]*){3,})$/;
+const NOT_TEXT = /^ {0,3}(?:[>|]|(?:[-+*]|\d+[.)])(?:[ \t]|$)|#|$)/;
 
 /** A whole document's headings, in order, as the editor counts them: ATX
  *  (indented up to three spaces, empty ones too) and setext (`Title` over
- *  `===` or `---`), outside code and front matter. */
+ *  `===` or `---`), outside code, front matter and `<!-- -->` comments. */
 export function headingsOf(markdown: string): HeadingLine[] {
   const out: HeadingLine[] = [];
   let previous: { text: string; index: number } | null = null;
@@ -93,9 +110,10 @@ export function headingsOf(markdown: string): HeadingLine[] {
         });
         return;
       }
-      if (!NOT_TEXT.test(line)) previous = { text: line, index };
+      if (!NOT_TEXT.test(line) && !THEMATIC_BREAK.test(line))
+        previous = { text: line, index };
     },
-    { frontMatter: true },
+    { frontMatter: true, comments: true },
   );
   return out;
 }

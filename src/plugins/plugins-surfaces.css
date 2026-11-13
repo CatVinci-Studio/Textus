@@ -72,7 +72,7 @@
 /* Folded: the handle where the hide button was, at the bar's right end. */
 .web-page-bar-folded {
   justify-content: flex-end;
-  height: 10px;
+  height: 12px;
   padding: 0 var(--space-2);
   border-bottom: 0;
 }
@@ -80,8 +80,8 @@
   display: flex;
   align-items: center;
   justify-content: center;
-  width: 26px;
-  height: 10px;
+  width: 28px;
+  height: 12px;
   padding: 0;
   border: 0;
   border-radius: 0 0 var(--shape-xs) var(--shape-xs);
@@ -203,7 +203,7 @@
   position: relative;
 }
 .extensions-more-button {
-  min-width: 32px;
+  min-width: 36px;
   letter-spacing: 1px;
 }
 .extensions-advanced {
@@ -323,15 +323,15 @@
   display: inline-flex;
   align-items: center;
   justify-content: center;
-  width: 44px;
-  height: 44px;
+  width: 48px;
+  height: 48px;
   border-radius: var(--shape-pill);
   background: color-mix(in srgb, var(--ui-accent) 12%, transparent);
   color: var(--ui-accent-text);
 }
 .create-studio-mark svg {
-  width: 22px;
-  height: 22px;
+  width: 24px;
+  height: 24px;
 }
 .create-studio-title {
   margin: 0;
@@ -383,7 +383,7 @@
   background: color-mix(in srgb, var(--ui-accent) 12%, transparent);
   color: var(--ui-accent-text);
   font-size: var(--text-footnote);
-  line-height: 18px;
+  line-height: 20px;
 }
 .create-studio-bar {
   display: flex;

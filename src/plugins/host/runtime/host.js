@@ -1308,7 +1308,10 @@
     $decorate: async function (params) {
       var out = [];
       for (var i = 0; i < decorationProviders.length; i++) {
-        var marks = await decorationProviders[i].decorate(params.blocks);
+        var marks = await decorationProviders[i].decorate(
+          params.blocks,
+          params.document,
+        );
         if (Array.isArray(marks)) out = out.concat(plain(marks));
       }
       return out;

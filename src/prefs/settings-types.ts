@@ -92,6 +92,9 @@ export interface Settings {
    *  `contributes.agents`) Textus AI's chat talks to instead of a model;
    *  "" for none. */
   chatAgent: string;
+  /** What the user set for each external agent (its mode, model, effort:
+   *  the agent's own config options), by agent key, then option id. */
+  agentOptions: Record<string, Record<string, string>>;
   /// How a pending rewrite shows, as Word's markup views: "final" (result in
   /// the text, removals in the margin), "original" (struck original, new text
   /// in the margin; "inline" where no room) or "inline". Legacy "new" reads as "final".
@@ -144,6 +147,11 @@ export interface Settings {
   proxyType: ProxyType;
   proxyHost: string;
   proxyPort: string;
+  /// The proxy's credentials, when it asks for a name and password (Basic
+  /// auth); handed to Rust inside the proxy URL, and never written to a
+  /// settings file (settings-file.ts).
+  proxyUsername: string;
+  proxyPassword: string;
   typewriterMode: boolean;
   /** The formatting row under the title bar. */
   formatBar: boolean;
@@ -168,6 +176,9 @@ export interface Settings {
   /// Windows and Linux: the menus along the app-drawn window bar instead of
   /// behind ☰. On, the bar has no sidebar button.
   menuBarShown: boolean;
+  /// The window bar is a row of its own, naming the document in front; the
+  /// tabs go in the row under it.
+  titleRowShown: boolean;
   /// The column of icons at the window's left edge (Files, Outline, plugins'
   /// pages). Off, the sidebar shows its tabs along its own top again.
   activityRail: boolean;
@@ -297,6 +308,7 @@ export const DEFAULT_SETTINGS: Settings = {
   writingModels: {},
   agentModels: {},
   chatAgent: "",
+  agentOptions: {},
   revisionDisplay: "final",
   completionTone: "default",
   writingConventions: "automatic",
@@ -317,6 +329,8 @@ export const DEFAULT_SETTINGS: Settings = {
   proxyType: "none",
   proxyHost: "",
   proxyPort: "",
+  proxyUsername: "",
+  proxyPassword: "",
   typewriterMode: false,
   formatBar: true,
   formatBarOnce: true,
@@ -328,6 +342,7 @@ export const DEFAULT_SETTINGS: Settings = {
   emptyLineHint: false,
   imageAlign: "center",
   menuBarShown: false,
+  titleRowShown: false,
   activityRail: true,
   layout: "islands",
   activityRailHidden: [],

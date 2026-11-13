@@ -286,17 +286,23 @@ fn code_block(node: &NodeRef) -> String {
         })
         .unwrap_or_default();
     // A fence longer than any backtick run inside, so the code can't end it.
-    let longest = code.split(|c| c != '`').map(str::len).max().unwrap_or(0);
+    let longest = longest_backticks(code);
     let fence = "`".repeat(longest.max(2) + 1);
     format!("{fence}{language}\n{code}\n{fence}")
 }
 
+/// The longest run of backticks in `code`: a fence must be longer.
+fn longest_backticks(code: &str) -> usize {
+    code.split(|c| c != '`').map(str::len).max().unwrap_or(0)
+}
+
 fn inline_code(code: &str) -> String {
-    if code.contains('`') {
-        format!("`` {code} ``")
-    } else {
-        format!("`{code}`")
+    let longest = longest_backticks(code);
+    if longest == 0 {
+        return format!("`{code}`");
     }
+    let fence = "`".repeat(longest + 1);
+    format!("{fence} {code} {fence}")
 }
 
 fn table(node: &NodeRef) -> String {

@@ -47,14 +47,9 @@
 
 <p align="center">
   <a href="https://www.anthropic.com/">
-    <picture>
-      <source media="(prefers-color-scheme: dark)" srcset="docs/images/readme/sponsors/anthropic-logo-ivory.png">
-      <img src="docs/images/readme/sponsors/anthropic-logo-slate.png" alt="Anthropic" width="240">
-    </picture>
+    <img src="docs/images/readme/sponsors/anthropic-badge.png" alt="Anthropic" width="300">
   </a>
 </p>
-
-<p align="center"><sub>through the Anthropic Startup Program</sub></p>
 
 <p align="center">
   <img src="docs/images/readme/en/hero.webp" alt="Textus with the first chapter of A Study in Scarlet beside the reader’s notes on it. Textus AI suggests revisions to the notes in the margin and pins a review comment beside the novel." width="860" /><br>
@@ -120,9 +115,11 @@ More plugins and themes: [textus.md/extensions](https://textus.md/extensions/).
 
 ## Sponsors
 
+Textus is free and open source. [Sponsor us](https://github.com/CatVinci-Studio/Textus/issues/648) to support its development.
+
 **Premier Sponsor:** [Anthropic](https://www.anthropic.com/), through the Anthropic Startup Program.
 
-Textus is free and open source. [Sponsor us](https://github.com/CatVinci-Studio/Textus/issues/648) to support its development.
+<p align="center"><img src="docs/images/readme/sponsors/sponsors.svg" alt="Sponsors" width="800"></p>
 
 ## Community
 

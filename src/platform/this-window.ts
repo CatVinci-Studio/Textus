@@ -2,6 +2,7 @@ import { getCurrentWindow, type Window } from "@tauri-apps/api/window";
 import { PhysicalPosition, PhysicalSize } from "@tauri-apps/api/dpi";
 import type { Event, UnlistenFn } from "@tauri-apps/api/event";
 import { inBrowser } from "./runtime";
+import { windowBarIpc } from "./ipc-app";
 
 /** What the app asks of the window it runs in. */
 type ThisWindow = Pick<
@@ -14,7 +15,6 @@ type ThisWindow = Pick<
   | "isMaximized"
   | "isFullscreen"
   | "setFullscreen"
-  | "setTitle"
   | "setAlwaysOnTop"
   | "startResizeDragging"
   | "startDragging"
@@ -50,10 +50,6 @@ const browserWindow: ThisWindow = {
     on
       ? document.documentElement.requestFullscreen().catch(() => {})
       : document.exitFullscreen().catch(() => {}),
-  setTitle: (title) => {
-    document.title = title;
-    return done();
-  },
   setAlwaysOnTop: done,
   startResizeDragging: done,
   startDragging: done,
@@ -89,4 +85,10 @@ const browserWindow: ThisWindow = {
 
 export function thisWindow(): ThisWindow {
   return inBrowser ? browserWindow : getCurrentWindow();
+}
+
+/** The window's title, for the taskbar, Alt+Tab and window lists. */
+export function setWindowTitle(title: string): Promise<void> {
+  if (inBrowser) document.title = title;
+  return inBrowser ? done() : windowBarIpc.setTitle(title);
 }

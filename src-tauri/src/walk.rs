@@ -114,10 +114,10 @@ pub(crate) fn walk(root: &Path, limits: &Limits, keep: impl Fn(&Path) -> bool + 
     }
 }
 
-/// The entries of `dir` the walk would skip as ignored: by a `.gitignore` (or
-/// `.ignore`, or Git's excludes) or as one of SKIPPED_DIRS. Hidden entries are
-/// not counted; the tree has its own switch for them.
-pub(crate) fn ignored_children(dir: &Path) -> std::collections::HashSet<PathBuf> {
+/// Whether an entry of `dir` is one the walk would skip as ignored: by a
+/// `.gitignore` (or `.ignore`, or Git's excludes) or as one of SKIPPED_DIRS.
+/// Hidden entries are not counted; the tree has its own switch for them.
+pub(crate) fn ignored_in(dir: &Path) -> impl Fn(&Path, bool) -> bool {
     let kept: std::collections::HashSet<PathBuf> = WalkBuilder::new(dir)
         .require_git(false)
         .follow_links(false)
@@ -127,17 +127,25 @@ pub(crate) fn ignored_children(dir: &Path) -> std::collections::HashSet<PathBuf>
         .flatten()
         .map(|entry| entry.into_path())
         .collect();
-    let Ok(entries) = std::fs::read_dir(dir) else {
-        return Default::default();
-    };
-    entries
+    move |path, is_dir| {
+        let skipped = is_dir
+            && path
+                .file_name()
+                .is_some_and(|n| SKIPPED_DIRS.contains(&n.to_string_lossy().as_ref()));
+        skipped || !kept.contains(path)
+    }
+}
+
+#[cfg(test)]
+fn ignored_children(dir: &Path) -> std::collections::HashSet<PathBuf> {
+    let ignored = ignored_in(dir);
+    std::fs::read_dir(dir)
+        .into_iter()
         .flatten()
-        .filter(|entry| {
-            let skipped = entry.file_type().is_ok_and(|t| t.is_dir())
-                && SKIPPED_DIRS.contains(&entry.file_name().to_string_lossy().as_ref());
-            skipped || !kept.contains(&entry.path())
-        })
-        .map(|entry| entry.path())
+        .flatten()
+        .map(|entry| (entry.path(), entry.file_type().is_ok_and(|t| t.is_dir())))
+        .filter(|(path, is_dir)| ignored(path, *is_dir))
+        .map(|(path, _)| path)
         .collect()
 }
 
@@ -175,6 +183,14 @@ fn sort_key(rel: &str) -> Vec<u8> {
         key.push(0);
     }
     key
+}
+
+/// When a file was last changed, in milliseconds since 1970.
+pub(crate) fn modified_ms(meta: &std::fs::Metadata) -> Option<f64> {
+    meta.modified()
+        .ok()
+        .and_then(|t| t.duration_since(std::time::UNIX_EPOCH).ok())
+        .map(|d| d.as_millis() as f64)
 }
 
 #[cfg(test)]

@@ -33,7 +33,8 @@ export interface TabState {
    *  model first. */
   liveTabs: () => DocTab[];
   updateTab: (id: string, patch: Partial<DocTab>) => void;
-  addBlankTab: () => void;
+  /** A blank document in use; its tab's id. */
+  addBlankTab: () => string;
   /** Opens the start page in a tab of its own. */
   addStartTab: () => void;
 }
@@ -107,11 +108,12 @@ export function useTabState(): TabState {
         ),
       );
       setActiveTabId(start.id);
-      return;
+      return start.id;
     }
     const blank = { ...makeBlankTab(), ...lastViewMode() };
     setTabs((prev) => [...prev, blank]);
     setActiveTabId(blank.id);
+    return blank.id;
   }, []);
 
   const addStartTab = useCallback(() => {

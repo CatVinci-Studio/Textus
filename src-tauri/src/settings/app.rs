@@ -30,12 +30,31 @@ pub(crate) fn proxy_changed(settings: &Value) {
             .to_string()
     };
     let (kind, host, port) = (text("proxyType"), text("proxyHost"), text("proxyPort"));
+    // A password is kept as typed: spaces may be part of it.
+    let pass = settings
+        .get("proxyPassword")
+        .and_then(Value::as_str)
+        .unwrap_or("")
+        .to_string();
+    let user = text("proxyUsername");
     let proxy = (!host.is_empty() && !kind.is_empty() && kind != "none").then(|| {
-        if port.is_empty() {
-            format!("{kind}://{host}")
-        } else {
-            format!("{kind}://{host}:{port}")
+        let mut url = format!("{kind}://{host}");
+        if !port.is_empty() {
+            url.push_str(&format!(":{port}"));
         }
+        // The proxy's credentials, when it asks for a name and password
+        // (the frontend's proxyUsername/proxyPassword): encoded into the
+        // URL's userinfo, which reqwest decodes for Basic auth. Url encodes
+        // @, : and spaces but leaves %, so that one is encoded first.
+        if !user.is_empty() {
+            if let Ok(mut parsed) = reqwest::Url::parse(&url) {
+                let escaped = |s: &str| s.replace('%', "%25");
+                let _ = parsed.set_username(&escaped(&user));
+                let _ = parsed.set_password((!pass.is_empty()).then(|| escaped(&pass)).as_deref());
+                url = parsed.to_string();
+            }
+        }
+        url
     });
     if aicompat::http::set_proxy(proxy).is_err() {
         let _ = aicompat::http::set_proxy(None);
@@ -154,10 +173,6 @@ pub fn boot_script(app: &AppHandle, label: &str) -> String {
     let (settings, rev) = stores.settings.snapshot();
     let (ui_state, _) = stores.ui_state.snapshot();
     let theme_css = user_theme_css(app, &settings);
-    #[cfg(target_os = "macos")]
-    let titlebar_height = crate::editor_windows::native_titlebar_height();
-    #[cfg(not(target_os = "macos"))]
-    let titlebar_height: Option<f64> = None;
     #[cfg(target_os = "ios")]
     let ai_unavailable = tauri_plugin_textus_files::ai_unavailable();
     #[cfg(not(target_os = "ios"))]
@@ -170,7 +185,6 @@ pub fn boot_script(app: &AppHandle, label: &str) -> String {
         // seed already put there must not pass for the user's choices.
         "newProfile": stores.settings.missing_at_load(),
         "label": label,
-        "titlebarHeight": titlebar_height,
         "aiUnavailable": ai_unavailable,
         // The settings' values the boot script turns into the page's look:
         // the frontend's own tables, one file.

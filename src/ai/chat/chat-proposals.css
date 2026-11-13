@@ -23,15 +23,15 @@
 /* What it is (an icon and "Revision · 2 changes"), then the "+X −Y" size
    (the diff toggle) and "Show in text" as its tools (HeadRow). */
 .agent-proposal-head {
-  --head-mark-size: 18px;
+  --head-mark-size: 20px;
 }
 
 .agent-proposal-icon {
   flex: none;
   display: inline-grid;
   place-items: center;
-  width: 18px;
-  height: 18px;
+  width: 20px;
+  height: 20px;
   border-radius: var(--shape-xs);
   background: color-mix(in srgb, var(--ui-success) 14%, transparent);
   color: var(--ui-success);
@@ -297,4 +297,9 @@
 .quick-ask-split-chevron-icon {
   transform: rotate(90deg);
   opacity: 0.7;
+}
+
+/* Above a long conversation's newest part: the earlier ones, when asked. */
+.agent-proposal-link.chat-earlier {
+  margin: 0 auto;
 }

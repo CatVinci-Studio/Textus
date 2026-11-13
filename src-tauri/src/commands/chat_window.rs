@@ -223,9 +223,14 @@ fn forget_entries(label: &str, open: &OpenChatWindows) -> bool {
 /// Announces the registry change to every editor window (the only ones that
 /// listen).
 pub fn notify_chat_windows_changed(app: &tauri::AppHandle) {
-    for (label, window) in app.windows() {
+    for label in app.windows().into_keys() {
         if crate::windows::is_editor_window(&label) {
-            let _ = window.emit(CHAT_WINDOWS_CHANGED, ());
+            // `emit_to`: `emit` on a window handle reaches every window.
+            let _ = app.emit_to(
+                tauri::EventTarget::webview_window(&label),
+                CHAT_WINDOWS_CHANGED,
+                (),
+            );
         }
     }
 }

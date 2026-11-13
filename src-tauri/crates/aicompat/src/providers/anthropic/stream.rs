@@ -47,6 +47,24 @@ pub(crate) struct StreamAccumulator {
 }
 
 impl StreamAccumulator {
+    /// Why the reply can't be used, if it was cut inside a tool call - by
+    /// the output limit, or by the connection ending first: its half-JSON
+    /// arguments would reach the tool as `{}` and send the model round in
+    /// circles.
+    pub(crate) fn cut_off(&self, max_tokens: u64) -> Option<String> {
+        let Some(StreamBlock::ToolUse { args, .. }) = self.blocks.last() else {
+            return None;
+        };
+        if self.stop_reason.as_deref() == Some("max_tokens") {
+            return Some(format!(
+                "Claude hit the {max_tokens}-token output limit in the middle of an edit. \
+                 Try asking for a smaller change at a time."
+            ));
+        }
+        let whole = args.trim().is_empty() || serde_json::from_str::<Value>(args).is_ok();
+        (self.stop_reason.is_none() && !whole)
+            .then(|| "The connection ended in the middle of the reply. Try again.".into())
+    }
     pub(crate) fn block_at(&mut self, index: usize) -> &mut StreamBlock {
         while self.blocks.len() <= index {
             self.blocks.push(StreamBlock::Ignored);

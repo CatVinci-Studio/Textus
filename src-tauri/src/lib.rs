@@ -29,6 +29,7 @@ mod json_file;
 #[cfg(desktop)]
 mod mcp;
 mod media;
+mod memory_level;
 #[cfg(desktop)]
 mod menu;
 mod net;
@@ -89,6 +90,9 @@ fn desktop_builder(builder: tauri::Builder<tauri::Wry>) -> tauri::Builder<tauri:
             let app = window.app_handle();
             #[cfg(windows)]
             webview_memory::follow_minimized(window, event);
+            if matches!(event, tauri::WindowEvent::Focused(true)) {
+                editor_windows::note_focused(window.label());
+            }
             if matches!(
                 event,
                 tauri::WindowEvent::Focused(_) | tauri::WindowEvent::Destroyed
@@ -113,7 +117,7 @@ fn desktop_builder(builder: tauri::Builder<tauri::Wry>) -> tauri::Builder<tauri:
                 // File > Quit closes every window so dirty editors can cancel; macOS would
                 // otherwise stay alive windowless, so exit once the final window is gone.
                 if no_other_windows && commands::session::app_quitting() {
-                    app.exit(0);
+                    commands::update::exit_app(app);
                 }
             }
             // Remember a window's size and place on Close, since after Destroyed they can
@@ -134,6 +138,8 @@ fn desktop_setup(app: &mut tauri::App) -> Result<(), Box<dyn std::error::Error>>
     crate::editor_windows::detect_wayland();
     #[cfg(target_os = "macos")]
     crate::editor_windows::watch_fullscreen(app.handle());
+    #[cfg(target_os = "macos")]
+    crate::commands::traffic_lights::watch();
     // Plugins' jobs and notifications: before the links, one of which may be
     // a notification's click that started Textus.
     schedule::start(app.handle());
@@ -206,7 +212,9 @@ pub fn run() {
     let builder = builder
         .register_asynchronous_uri_scheme_protocol(
             plugins::scheme::SCHEME,
-            |ctx, request, responder| plugins::scheme::handle(ctx.app_handle(), request, responder),
+            |ctx, request, responder| {
+                plugins::scheme::handle(ctx.app_handle(), ctx.webview_label(), request, responder)
+            },
         )
         .manage(plugins::uri::PendingUris::default())
         .manage(plugins::ai_tools::PluginAiTools::default())
@@ -233,6 +241,7 @@ pub fn run() {
             tauri::async_runtime::spawn(plugins::moved_skills::install_moved_skills(
                 app.handle().clone(),
             ));
+            memory_level::watch(app.handle().clone());
             crate::editor_windows::build_main_window(app)?;
             #[cfg(desktop)]
             desktop_setup(app)?;

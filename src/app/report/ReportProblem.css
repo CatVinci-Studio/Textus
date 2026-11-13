@@ -1,6 +1,6 @@
 /* Help > Report a Problem: the user's words, then what goes with them. */
 .report-problem {
-  width: min(520px, calc(100vw - 32px));
+  width: min(572px, calc(100vw - 36px));
 }
 /* Type, area and how bad: a row of choices above the words. */
 .report-problem-choices {
@@ -24,7 +24,7 @@
   font-size: var(--text-secondary);
 }
 .report-problem-text {
-  min-height: 96px;
+  min-height: 106px;
   resize: vertical;
 }
 .report-problem-contact {
@@ -42,7 +42,7 @@
   font-size: var(--text-footnote);
 }
 .report-problem-details {
-  max-height: 140px;
+  max-height: 154px;
   margin: 0;
   padding: var(--space-2);
   overflow: auto;

@@ -47,6 +47,11 @@ export function AppMenuButton({ checks }: { checks?: MenuChecks } = {}) {
           aria-label={t.appMenu}
           aria-haspopup="menu"
           aria-expanded={anchor !== null}
+          // Pressed, it keeps the focus where it was, for the menu to give
+          // back.
+          onMouseDown={(e) => {
+            if (!isIOSApp) e.preventDefault();
+          }}
           onClick={(e) => {
             if (anchor) {
               close();

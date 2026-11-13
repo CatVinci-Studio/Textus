@@ -44,14 +44,9 @@
 
 <p align="center">
   <a href="https://www.anthropic.com/">
-    <picture>
-      <source media="(prefers-color-scheme: dark)" srcset="docs/images/readme/sponsors/anthropic-logo-ivory.png">
-      <img src="docs/images/readme/sponsors/anthropic-logo-slate.png" alt="Anthropic" width="240">
-    </picture>
+    <img src="docs/images/readme/sponsors/anthropic-badge.png" alt="Anthropic" width="300">
   </a>
 </p>
-
-<p align="center"><sub>по программе Anthropic Startup Program</sub></p>
 
 <p align="center">
   <img src="docs/images/readme/ru/hero.webp" alt="Textus с первой частью «Анны Карениной» рядом с заметками читателя о ней. Textus AI предлагает на полях правки к заметкам и прикрепляет комментарий рядом с романом." width="860" /><br>
@@ -117,9 +112,11 @@
 
 ## Спонсоры
 
+Textus бесплатен и открыт. [Поддержите нас](https://github.com/CatVinci-Studio/Textus/issues/648), чтобы помочь его развитию.
+
 **Главный спонсор:** [Anthropic](https://www.anthropic.com/), по программе Anthropic Startup Program.
 
-Textus бесплатен и открыт. [Поддержите нас](https://github.com/CatVinci-Studio/Textus/issues/648), чтобы помочь его развитию.
+<p align="center"><img src="docs/images/readme/sponsors/sponsors.svg" alt="Sponsors" width="800"></p>
 
 ## Сообщество
 

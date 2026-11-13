@@ -40,13 +40,16 @@ window.__textusBoot = function (boot, themeCss) {
       root.setAttribute("data-theme", settings.theme);
     if ((tables.contentWidths || []).indexOf(settings.contentWidth) >= 0)
       root.setAttribute("data-content-width", settings.contentWidth);
-    // But 1, the stylesheet's own default; theme/apply-appearance.ts sets
-    // the same property.
-    if (
-      settings.uiTextScale !== 1 &&
-      (tables.uiTextScales || []).indexOf(settings.uiTextScale) >= 0
-    )
-      root.style.setProperty("--ui-text-scale", String(settings.uiTextScale));
+    // But 1, the stylesheet's own default, and its preset (ui-sizes.css);
+    // theme/apply-appearance.ts sets the same.
+    var scale =
+      (tables.uiTextScalesBefore || {})[String(settings.uiTextScale)] ||
+      settings.uiTextScale;
+    var step = (tables.uiTextScales || []).indexOf(scale);
+    if (scale !== 1 && step >= 0) {
+      root.style.setProperty("--ui-text-scale", String(scale));
+      root.setAttribute("data-ui-size", tables.uiSizeNames[step]);
+    }
     // The reader's document size and spacing (DOC_TEXT_SIZES and
     // DOC_LINE_HEIGHTS in prefs/settings-types.ts; apply-appearance.ts).
     if (typeof settings.docTextSize === "number") {
@@ -63,13 +66,6 @@ window.__textusBoot = function (boot, themeCss) {
     if (builtin.indexOf(settings.themeId) >= 0)
       root.setAttribute("data-content-theme", settings.themeId);
     else if (themeCss) root.setAttribute("data-user-theme", "");
-    // macOS only (native_titlebar_height in lib.rs): what the window bar
-    // lines its contents up with, so they sit level with the traffic lights.
-    if (typeof boot.titlebarHeight === "number")
-      root.style.setProperty(
-        "--native-titlebar-height",
-        boot.titlebarHeight + "px",
-      );
   }
 
   function promote(rules) {

@@ -186,7 +186,10 @@ export function IslandArea({
 /** The islands' box in the area: inset from its sides and foot; without
  *  rows, under the window bar. */
 function boxOf(room: IslandRoom, rows: boolean): Rect {
-  const top = rows ? 0 : room.bar;
+  // With no row of tabs the sheet clears what of the window bar lies over
+  // the area: all of it, or, the bar a row of its own, half an inset under
+  // it, close to the title it goes by.
+  const top = rows ? 0 : Math.max(room.inset / 2, room.bar - room.origin.y);
   return {
     x: room.inset,
     y: top,

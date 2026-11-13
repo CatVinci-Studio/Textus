@@ -13,6 +13,8 @@ import {
 
 /** "language plugin" -> drawn without the box round it. */
 const frameless = new Set<string>();
+/** "language plugin" -> drawn at the interface's size. */
+const interfaceSized = new Set<string>();
 
 const claimOf = claimKey.codeBlock;
 
@@ -22,13 +24,17 @@ export function addCodeBlockLanguage(
   language: string,
   plugin: string,
   frame?: "none",
+  size?: "interface",
 ): () => void {
   const key = `${language.toLowerCase()} ${plugin}`;
   if (frame === "none") frameless.add(key);
   else frameless.delete(key);
+  if (size === "interface") interfaceSized.add(key);
+  else interfaceSized.delete(key);
   const release = claim(claimOf(language), plugin);
   return () => {
     frameless.delete(key);
+    interfaceSized.delete(key);
     release();
   };
 }
@@ -37,6 +43,13 @@ export function addCodeBlockLanguage(
 export function codeBlockFrameless(language: string): boolean {
   const owner = codeBlockPlugin(language);
   return !!owner && frameless.has(`${language.toLowerCase()} ${owner}`);
+}
+
+/** Whether `language`'s blocks are drawn at the interface's size, not the
+ *  document's text and zoom. */
+export function codeBlockAtInterfaceSize(language: string): boolean {
+  const owner = codeBlockPlugin(language);
+  return !!owner && interfaceSized.has(`${language.toLowerCase()} ${owner}`);
 }
 
 /** The plugin that draws `language`, if one does. */

@@ -1,13 +1,11 @@
 import { trackWrite } from "./pending-writes";
 import { fs } from "../platform/ipc";
+import { isRecord } from "../utils/is-record";
 
 /** A project's own settings, which go with the folder: plugin values under
  *  "plugins", the folder's conventions under "conventions". */
 export const projectSettingsFile = (root: string) =>
   `${root.replace(/[\\/]+$/, "")}/.textus/settings.json`;
-
-const isRecord = (value: unknown): value is Record<string, unknown> =>
-  !!value && typeof value === "object" && !Array.isArray(value);
 
 /** The project's settings file as a whole, read as the folder's
  *  conventions are (comments allowed); {} when it isn't there or can't be
@@ -19,8 +17,9 @@ export async function readProjectSettings(
   return isRecord(parsed) ? parsed : {};
 }
 
-/** The file to change: {} only when there is none yet. One that is there
- *  but doesn't read as settings stops the write - it would lose its keys. */
+/** The file to change: {} only when there is none yet. One with comments
+ *  or trailing commas is read as the conventions read it; one that doesn't
+ *  read as settings at all stops the write - it would lose its keys. */
 async function settingsToChange(
   root: string,
 ): Promise<Record<string, unknown>> {
@@ -32,7 +31,12 @@ async function settingsToChange(
     if ((await fs.fileMtimeMs(path).catch(() => null)) === null) return {};
     throw err;
   }
-  const parsed: unknown = JSON.parse(text);
+  let parsed: unknown;
+  try {
+    parsed = JSON.parse(text);
+  } catch {
+    parsed = await fs.projectSettings(root);
+  }
   if (!isRecord(parsed)) throw new Error(`${path} isn't a settings file.`);
   return parsed;
 }

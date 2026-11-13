@@ -10,7 +10,7 @@ import {
   resolveSkillName,
   type PickerSkill,
 } from "./skill-picker";
-import { MENTION_TOKEN, SKILL_COMMAND } from "./skill-syntax";
+import { MENTION_TOKEN, SKILL_COMMAND, agentCommandText } from "./skill-syntax";
 import type { PanelMode } from "../../prefs/SettingsContext";
 import {
   ArrowUpIcon,
@@ -120,6 +120,8 @@ export function ChatComposer({
     refreshRecent,
     skillTrigger,
     skillMenuOpen,
+    passThrough,
+    agentName,
   } = useComposerSkills({
     docPath,
     workspaceRoot,
@@ -128,6 +130,7 @@ export function ChatComposer({
     lang: picker.lang,
     // Research has no skills: the message is a paper's topic.
     mode: mode === "research" ? null : mode,
+    agentAnswers: !compact && mode !== "create",
   });
 
   const mentionPicker = useMentionPicker({
@@ -175,6 +178,7 @@ export function ChatComposer({
   // dead key.
   const { sections: pickerSections, empty: pickerEmpty } = pickerContent({
     skillTrigger: skillMenuOpen ? skillTrigger : null,
+    commandsOf: agentName,
     mentionQuery: mentionMenuOpen ? mentionQuery : null,
     kinds,
     available,
@@ -211,10 +215,12 @@ export function ChatComposer({
       onResearch(typed, attachments);
       return;
     }
-    const message = resolveSkillMessage(typed, skills, resolveName);
+    const message = passThrough
+      ? agentCommandText(typed, skills)
+      : resolveSkillMessage(typed, skills, resolveName);
     // While a reply is coming the message joins the queue.
     if (!message) return;
-    if (message !== typed) {
+    if (message !== typed && !passThrough) {
       const token = SKILL_COMMAND.exec(typed)?.[1];
       const name = token
         ? skills.some((s) => s.name === token)

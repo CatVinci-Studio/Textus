@@ -20,12 +20,16 @@ pub(crate) fn abbreviate_home(path: &str) -> String {
     let home = std::env::var("HOME")
         .or_else(|_| std::env::var("USERPROFILE"))
         .ok();
-    if let Some(home) = home {
-        if let Some(rest) = path.strip_prefix(&home) {
-            return format!("~{rest}");
-        }
-    }
-    path.to_string()
+    home.and_then(|home| home_relative(path, &home))
+        .unwrap_or_else(|| path.to_string())
+}
+
+/// `path` as `~/…` when it is in `home` - a whole folder name, so
+/// `/Users/bobby` isn't in `/Users/bob`.
+pub(super) fn home_relative(path: &str, home: &str) -> Option<String> {
+    let home = home.trim_end_matches(['/', '\\']);
+    let rest = path.strip_prefix(home)?;
+    (rest.is_empty() || rest.starts_with(['/', '\\'])).then(|| format!("~{rest}"))
 }
 
 /// Refill the Open Recent submenu, folders then files, most recent first. Menus

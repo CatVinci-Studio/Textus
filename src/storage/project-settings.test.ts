@@ -12,6 +12,13 @@ vi.mock("../platform/ipc", () => ({
       disk.set(path, text);
     },
     fileMtimeMs: async (path: string) => (disk.has(path) ? 1 : null),
+    // Rust's lenient read: comments allowed, null for a file that won't read.
+    projectSettings: async (root: string) => {
+      const text = disk.get(`${root}/.textus/settings.json`) ?? "{}";
+      return text.includes("oops")
+        ? null
+        : JSON.parse(text.replace(/\/\/.*$/gm, ""));
+    },
   },
 }));
 
@@ -31,5 +38,11 @@ describe("a project's settings file", () => {
       updateProjectSettings("/w", "plugins", () => ({ a: 3 })),
     ).rejects.toThrow();
     expect(disk.get(file)).toContain("oops");
+    disk.set(file, '{"conventions": {"b": 2} // mine\n}');
+    await updateProjectSettings("/w", "plugins", () => ({ a: 4 }));
+    expect(JSON.parse(disk.get(file)!)).toEqual({
+      plugins: { a: 4 },
+      conventions: { b: 2 },
+    });
   });
 });

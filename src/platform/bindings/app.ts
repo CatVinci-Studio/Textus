@@ -118,6 +118,16 @@ export const commands = {
 	 *  Nothing where the input method can't be set from here (all but macOS).
 	 */
 	set_roman_input: (on: boolean) => __TAURI_INVOKE<void>("set_roman_input", { on }),
+	/**
+	 *  The window bar's height in points, from the page as Interface Size sets
+	 *  it; the lights follow it now and after each resize. Nothing off macOS.
+	 */
+	set_window_bar_height: (height: number | null) => __TAURI_INVOKE<void>("set_window_bar_height", { height }),
+	/**
+	 *  The window's title, set here so the lights go back on the bar's middle
+	 *  line in the same step: a new title puts them back in AppKit's title bar.
+	 */
+	set_window_title: (title: string) => __TAURI_INVOKE<void>("set_window_title", { title }),
 	system_info: () => __TAURI_INVOKE<SystemInfo>("system_info"),
 	system_font_families: () => __TAURI_INVOKE<string[]>("system_font_families"),
 	/**
@@ -225,6 +235,8 @@ export const commands = {
 	default_editor_status: () => __TAURI_INVOKE<DefaultEditorStatus>("default_editor_status"),
 	set_default_editor: () => __TAURI_INVOKE<null>("set_default_editor"),
 	app_distribution: () => __TAURI_INVOKE<string>("app_distribution"),
+	/**  The memory state now, for a window as it starts. */
+	memory_state: () => __TAURI_INVOKE<MemoryState>("memory_state"),
 	check_for_update: (channel: string, backToStable: boolean) => __TAURI_INVOKE<UpdateMetadata_Serialize | null>("check_for_update", { channel, backToStable }),
 	/**
 	 *  Just before the relaunch that applies an update: gives up the single-instance
@@ -232,6 +244,16 @@ export const commands = {
 	 *  hand its launch to this dying one. Windows and Linux only.
 	 */
 	release_instance: () => __TAURI_INVOKE<void>("release_instance"),
+	/**
+	 *  After an update is installed: every window closes as at Quit (an unsaved
+	 *  document asks, or is kept as a draft), then the new version starts.
+	 */
+	quit_and_relaunch: () => __TAURI_INVOKE<void>("quit_and_relaunch"),
+	/**
+	 *  Windows: downloads `rid`'s update, then every window closes as at Quit
+	 *  (an unsaved document asks, or is kept as a draft) before it installs.
+	 */
+	install_after_quit: (rid: number) => __TAURI_INVOKE<null>("install_after_quit", { rid }),
 };
 
 /* Constants */
@@ -432,6 +454,12 @@ export type GalleryTheme_Serialize = {
 	 *  English ones.
 	 */
 	l10n: { [key in string]: GalleryText_Serialize },
+};
+
+/**  The machine's memory and the system's pressure: 0 none, 1 short, 2 very. */
+export type MemoryState = {
+	totalMb: number,
+	pressure: number,
 };
 
 export type NativeEdit = "paste" | "undo" | "redo" | "select-all";

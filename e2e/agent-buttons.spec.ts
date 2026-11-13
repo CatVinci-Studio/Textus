@@ -65,6 +65,9 @@ test("an outside agent's button opens the AI with that agent", async ({
   await agent.click();
   await expect(page.locator(".ai-tab")).toBeVisible();
   await expect(agent).toHaveAttribute("aria-pressed", "true");
+  // Named for who answers; Textus AI's own button isn't lit beside it.
+  await expect(page.locator(".tab-pill", { hasText: "Coder" })).toBeVisible();
+  await expect(ai).toHaveAttribute("aria-pressed", "false");
   // Pressed again, as the AI button: its own island collapses.
   await agent.click();
   await expect(page.locator(".ai-tab")).toHaveCount(0);

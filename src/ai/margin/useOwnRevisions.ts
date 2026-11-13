@@ -85,6 +85,8 @@ export function useOwnRevisions({
       .then((text) => {
         if (!alive) return;
         loadedFor.current = filePath;
+        // Most files keep no original: nothing to serialize the document for.
+        if (!text) return;
         run((ctx) => {
           const serialize = ctx.get(serializerCtx);
           const kept = keptOriginal(text, serialize(view.state.doc), (md) => {

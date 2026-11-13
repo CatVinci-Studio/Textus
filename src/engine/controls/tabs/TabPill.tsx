@@ -34,7 +34,7 @@ export interface TabInfo {
 
 // How far a tab is dragged off the bar to leave it; dy always wins, like
 // Chrome. A reorder starts at DRAG_START_PX.
-const PULL_OUT_PX = 40;
+const PULL_OUT_PX = 44;
 // A finger holds a tab this long, this still, to lift it: before that, a
 // move scrolls the bar.
 const LIFT_MS = 300;

@@ -19,7 +19,12 @@ export function createTabIdleTimers<S>(opts: {
   const { idleMs, maxWaitMs = Infinity, same } = opts;
   const pending = new Map<
     string,
-    { snapshot: S; timer: ReturnType<typeof setTimeout>; firstAt: number }
+    {
+      snapshot: S;
+      timer: ReturnType<typeof setTimeout>;
+      firstAt: number;
+      fire: (snapshot: S) => void;
+    }
   >();
 
   const cancel = (id: string) => {
@@ -43,7 +48,7 @@ export function createTabIdleTimers<S>(opts: {
         if (entry) entry.firstAt = Date.now();
         fire(snapshot);
       }, delay);
-      pending.set(id, { snapshot, timer, firstAt });
+      pending.set(id, { snapshot, timer, firstAt, fire });
     },
     cancel,
     cancelAll() {

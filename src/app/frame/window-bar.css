@@ -13,7 +13,7 @@
   /* Left inset is room for the macOS traffic lights, which float over the
      top-left corner. */
   /* design: allow - clears macOS's window buttons. */
-  padding: 0 12px 0 76px;
+  padding: 0 14px 0 calc(var(--lights-room) + 6px);
   background: var(--ui-frame-fill);
 }
 
@@ -22,15 +22,6 @@
    offsets. */
 :root[data-window-chrome="app"] .window-bar {
   padding: 0 12px 0 12px;
-}
-
-/* macOS 26 centres the traffic lights in a 32pt title bar; the row keeps
-   its height and drops its contents to the lights' centre. */
-:root[data-window-chrome="native"] .window-bar {
-  padding-top: max(
-    0px,
-    var(--native-titlebar-height, 28px) - var(--window-bar-height)
-  );
 }
 
 /* In full screen the lights' corner is free, and the sidebar's toggle takes
@@ -44,26 +35,26 @@
   position: absolute;
   top: 0;
   left: 0;
-  width: 70px;
+  width: var(--lights-room);
   height: 1px;
 }
 
 /* With the rail, the app menu is the rail's first icon (barLayout): in
    its column, at its icons' size, a hairline between it and them. */
 :root[data-menu-in-rail] .window-menu-button {
-  width: 36px;
-  height: 28px;
+  width: 40px;
+  height: 30px;
   /* Its centre on the rail's: past the bar's own start padding. */
   /* design: allow - centres on the rail, from its button size. */
-  margin-left: calc((var(--rail-width) - 36px) / 2 - 12px);
+  margin-left: calc((var(--rail-width) - 40px) / 2 - 14px);
   border-radius: var(--shape-s);
   color: var(--ui-muted);
   opacity: 1;
 }
 
 :root[data-menu-in-rail] .window-menu-button svg {
-  width: 18px;
-  height: 18px;
+  width: 20px;
+  height: 20px;
 }
 
 :root[data-menu-in-rail] .activity-rail::before {
@@ -180,8 +171,8 @@
   display: inline-flex;
   align-items: center;
   justify-content: center;
-  width: calc(22px * var(--chrome-scale));
-  height: calc(20px * var(--chrome-scale));
+  width: calc(24px * var(--chrome-scale));
+  height: calc(22px * var(--chrome-scale));
   padding: 0;
   border: none;
   border-radius: var(--shape-pill);
@@ -219,7 +210,7 @@
 
 .sidebar-header {
   /* Clears the window bar floating over the top of the window. */
-  padding: 32px 8px 0;
+  padding: 36px 8px 0;
   border-bottom: 1px solid var(--ui-border);
 }
 
@@ -227,7 +218,7 @@
    bar and the AI panel's header (which starts below the window bar). The
    header's own floor, for the phone, must not push its line lower. */
 :root {
-  --header-height: calc(var(--window-bar-height) + 36px * var(--chrome-scale));
+  --header-height: calc(var(--window-bar-height) + 40px * var(--chrome-scale));
 }
 
 :root:not([data-window-chrome="mobile"])
@@ -280,6 +271,6 @@
 
 /* The phone's two pages, the document and Textus AI, in the title row. */
 .page-switch {
-  min-width: 132px;
+  min-width: 146px;
   pointer-events: auto;
 }

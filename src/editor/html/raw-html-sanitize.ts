@@ -6,6 +6,7 @@
 import { ALLOWED_TAGS, INLINE_TAGS, sanitizeNodes } from "./html-policy";
 import { drawHtmlMath, mayHaveHtmlMath } from "./html-math";
 import { loadKatex } from "../math/katex-loader";
+import { onMemoryIdle } from "../../utils/memory-idle";
 
 type RenderedHtml = { html: string; inline: boolean } | null;
 
@@ -13,6 +14,7 @@ type RenderedHtml = { html: string; inline: boolean } | null;
 // depends on the text alone. Bounded.
 const renderCache = new Map<string, RenderedHtml>();
 const RENDER_CACHE_MAX = 500;
+onMemoryIdle(() => renderCache.clear());
 
 export function renderWhitelistedHtml(raw: string): RenderedHtml {
   const cached = renderCache.get(raw);

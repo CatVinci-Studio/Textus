@@ -8,8 +8,8 @@
 }
 
 .bottom-card-grab {
-  width: 38px;
-  height: 5px;
+  width: 42px;
+  height: 6px;
   margin: 8px auto 12px;
   border-radius: var(--shape-pill);
   corner-shape: round;

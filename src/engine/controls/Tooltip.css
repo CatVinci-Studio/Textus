@@ -3,7 +3,7 @@
 .tooltip {
   position: fixed;
   z-index: var(--z-select);
-  max-width: min(280px, calc(100vw - 16px));
+  max-width: min(308px, calc(100vw - 18px));
   padding: var(--space-1) var(--space-2);
   border-radius: var(--shape-s);
   color: var(--ui-text);

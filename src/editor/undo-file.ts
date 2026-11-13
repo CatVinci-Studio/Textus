@@ -1,3 +1,4 @@
+import { replaceChanged } from "./replace-changed";
 import { closeHistory, undo, undoDepth } from "@milkdown/kit/prose/history";
 import type { Node as ProseNode, Schema } from "@milkdown/kit/prose/model";
 import {
@@ -19,9 +20,25 @@ import { fnv1a } from "../utils/hash";
 /** Each undo step, newest first, as the steps that undo it. */
 type Kept = unknown[][];
 
-/** What the text is known by: the history is used only at this text. */
+/** What the text is known by: the history is used only at this text.
+ *  Hashed as the tree is walked, never copied whole: it runs as each tab
+ *  comes to the front and leaves. */
 export function docHash(doc: ProseNode): string {
-  return fnv1a(JSON.stringify(doc.toJSON())).toString(36);
+  let h = fnv1a("doc");
+  const feed = (part: string) => (h = fnv1a(part + "\u0000", h));
+  const attrs = (a: object) => {
+    if (Object.keys(a).length > 0) feed(JSON.stringify(a));
+  };
+  doc.descendants((node) => {
+    feed(node.type.name + "/" + node.childCount);
+    attrs(node.attrs);
+    if (node.text) feed(node.text);
+    for (const mark of node.marks) {
+      feed(mark.type.name);
+      attrs(mark.attrs);
+    }
+  });
+  return h.toString(36);
 }
 
 /** prosemirror-history's plugin, known by its config (its key is private). */
@@ -81,11 +98,13 @@ export function restoreHistory(view: EditorView, undos: Kept): boolean {
   const replayed = replay(state.schema, state.doc, undos);
   if (!replayed) return false;
   const { from, to } = state.selection;
+  // Only what differs is replaced, so blocks the history never touched keep
+  // their nodes and aren't drawn again (a long document took seconds).
+  const toBase =
+    replaceChanged(state.tr, state.doc.content, replayed.base.content) ??
+    state.tr;
   let next = state.apply(
-    state.tr
-      .replaceWith(0, state.doc.content.size, replayed.base.content)
-      .setMeta("addToHistory", false)
-      .setMeta(undoFileKey, true),
+    toBase.setMeta("addToHistory", false).setMeta(undoFileKey, true),
   );
   for (const steps of replayed.redos) {
     const tr = next.tr;

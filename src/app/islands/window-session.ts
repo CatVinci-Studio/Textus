@@ -8,8 +8,8 @@ import { getUiState, setUiState } from "../../storage/ui-state";
 import { afterStartupRestore } from "../../document/reload-tabs";
 import {
   setSplitLayout,
-  splitLayout,
   subscribeSplit,
+  windowLayout,
 } from "../../engine/layout/store";
 import { asRoot } from "../../engine/layout/ops";
 import { panesOf } from "../../engine/layout/tree";
@@ -18,7 +18,7 @@ import {
   readSavedSplit,
   saveNode,
   savedPaths,
-} from "./saved-layout";
+} from "../../engine/layout/saved";
 
 /** A file's tab by its path: a document's, or a plugin's tab of a file. */
 const pathOf = (tab: DocTab) => tab.path ?? tab.view?.resource ?? null;
@@ -36,12 +36,15 @@ export function useWindowSession(
   const tabsRef = useRef(tabs);
   tabsRef.current = tabs;
   const [ready, setReady] = useState(false);
-  const layout = useSyncExternalStore(subscribeSplit, splitLayout);
+  const layout = useSyncExternalStore(subscribeSplit, windowLayout);
 
   useEffect(() => {
     const restore = async () => {
       const taken = await takeWindowSession();
-      const saved = readSavedSplit(taken?.layout ?? olderSplit());
+      const raw = taken?.layout ?? olderSplit();
+      const saved = readSavedSplit(raw);
+      // One island: the restore already opened its front document in the
+      // tab in use; nothing here pulls focus from what the user picked.
       if (saved) {
         const idOf = new Map<string, string>();
         for (const tab of tabsRef.current) {
@@ -74,15 +77,15 @@ export function useWindowSession(
   }, [activate]);
 
   const paths = tabs.flatMap((tab) => pathOf(tab) ?? []);
-  const key = JSON.stringify([paths, layout && layout.root, folder]);
+  const key = JSON.stringify([paths, layout.root, folder]);
   useEffect(() => {
     if (!canUseWindows || !ready) return;
     const byId = new Map(tabsRef.current.map((tab) => [tab.id, pathOf(tab)]));
-    const tree = layout && saveNode(layout.root, (id) => byId.get(id) ?? null);
+    const tree = saveNode(layout.root, (id) => byId.get(id) ?? null);
     void trackWrite(
       session.updateWindow({
         paths: [...new Set(paths)],
-        layout: tree && "children" in tree ? { tree } : null,
+        layout: tree ? { tree } : null,
         folder,
       }),
     ).catch(() => undefined);

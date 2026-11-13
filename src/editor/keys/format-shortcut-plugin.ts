@@ -18,11 +18,12 @@ interface FormatSpec {
   rung: number;
 }
 
-// The same md_span shells the autopair plugin opens for typed delimiters.
-const SHORTCUTS: Record<string, FormatSpec> = {
-  b: { delim: "*", rung: 2 },
-  i: { delim: "*", rung: 1 },
-};
+/** Bold and italic: the same md_span shells the autopair plugin opens for
+ *  typed delimiters. Every Bold and Italic (keys, menus, bars) goes
+ *  through toggleFormat, which reads the selection where the browser has it. */
+export const BOLD: FormatSpec = { delim: "*", rung: 2 };
+export const ITALIC: FormatSpec = { delim: "*", rung: 1 };
+const SHORTCUTS: Record<string, FormatSpec> = { b: BOLD, i: ITALIC };
 /** Highlight, `==text==`: Format › Highlight and Cmd/Ctrl+Shift+H, as in
  *  Typora. */
 export const HIGHLIGHT: FormatSpec = { delim: "=", rung: 2 };

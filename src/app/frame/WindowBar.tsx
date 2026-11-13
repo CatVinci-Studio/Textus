@@ -73,6 +73,7 @@ export function WindowBar({
   const { t, settings } = useSettings();
   const bar = useBarLayout({
     menuBarShown: settings.menuBarShown,
+    titleRowShown: canUseWindows && settings.titleRowShown,
     rail: settings.activityRail || sidebarOpen,
     railOff: !settings.activityRail,
     zen: !!menuChecks.zen,
@@ -146,7 +147,9 @@ export function WindowBar({
           }
         })}
         <WindowTitle
-          placed={!bar.lead.includes("menu-bar") && canUseWindows}
+          placed={
+            bar.rows === 1 && !bar.lead.includes("menu-bar") && canUseWindows
+          }
           title={title}
           dirty={dirty}
           readOnly={!!menuChecks.readOnly}

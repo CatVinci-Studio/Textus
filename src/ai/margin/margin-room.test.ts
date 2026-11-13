@@ -17,14 +17,14 @@ describe("marginRoom", () => {
   it("moves the column left just far enough to open the margin", () => {
     const room = marginRoom(1000, COLUMN, PADDING);
     expect(room.available).toBe(true);
-    expect(room.shift).toBe(92);
+    expect(room.shift).toBe(120);
     // What's left right of the moved text is one card and its air.
-    expect(1000 - (room.textRight - room.shift)).toBe(276);
+    expect(1000 - (room.textRight - room.shift)).toBe(304);
   });
 
-  it("has no margin below about 924px of editor, the column moved or not", () => {
-    expect(marginRoom(924, COLUMN, PADDING).available).toBe(true);
-    expect(marginRoom(923, COLUMN, PADDING).available).toBe(false);
+  it("has no margin below about 954px of editor, the column moved or not", () => {
+    expect(marginRoom(954, COLUMN, PADDING).available).toBe(true);
+    expect(marginRoom(953, COLUMN, PADDING).available).toBe(false);
   });
 
   it("has no margin when the column fills the editor", () => {

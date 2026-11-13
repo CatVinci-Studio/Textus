@@ -4,9 +4,13 @@ import { useEffect, useRef, useState, type ComponentType } from "react";
 import type { Strings } from "../i18n/strings";
 import { caretBlock, NO_BLOCK, type CaretBlock } from "../editor/caret-block";
 import { IconButton } from "../engine/controls/IconButton";
-import { Tooltip } from "../engine/controls/Tooltip";
 import { useFitItems } from "../engine/controls/fit-steps";
 import { useMenuButton } from "../engine/controls/useMenuButton";
+import type {
+  ContextMenuEntry,
+  ContextMenuItem,
+} from "../engine/controls/ContextMenu";
+import { fill } from "../i18n/fill";
 import {
   BoldIcon,
   CodeBlockIcon,
@@ -44,6 +48,8 @@ interface Button {
   event: string;
   detail?: string;
   on?: (block: CaretBlock) => boolean;
+  /** Opens a choice of levels rather than acting at once. */
+  picksHeading?: true;
 }
 
 const GROUPS: Button[][] = [
@@ -54,6 +60,7 @@ const GROUPS: Button[][] = [
       event: TOGGLE_BLOCK_EVENT,
       detail: "heading",
       on: (b) => b.heading > 0,
+      picksHeading: true,
     },
     {
       label: (t) => t.toolbarBold,
@@ -157,6 +164,32 @@ function press(tabId: string, b: Button) {
   window.dispatchEvent(new CustomEvent(b.event, { detail: b.detail }));
 }
 
+/** The heading picker: body text or a level, as Format's items set them,
+ *  the caret's own ticked. */
+function headingItems(
+  t: Strings,
+  tabId: string,
+  level: number,
+): ("separator" | ContextMenuItem)[] {
+  const pick = (detail: string) => () => {
+    focusDocument(tabId);
+    window.dispatchEvent(new CustomEvent(INSERT_BLOCK_EVENT, { detail }));
+  };
+  return [
+    {
+      label: t.shortcutParagraph,
+      checked: level === 0,
+      onSelect: pick("paragraph"),
+    },
+    "separator",
+    ...[1, 2, 3, 4, 5, 6].map((n) => ({
+      label: fill(t.menuHeadingTemplate, { n: String(n) }),
+      checked: level === n,
+      onSelect: pick(`h${n}`),
+    })),
+  ];
+}
+
 /** What is on at the caret of one document, kept current: nothing while
  *  the caret is in another. */
 function useCaretBlock(tabId: string): CaretBlock {
@@ -203,12 +236,15 @@ export function FormatBar({
   // from the end, into "⋯".
   const row = useRef<HTMLDivElement>(null);
   useFitItems(row, ".format-bar-more");
+  const headings = () => headingItems(t, tabId, block.heading);
+  const heading = useMenuButton(headings, { title: t.toolbarHeading });
   const more = useMenuButton(
     () =>
-      folded(row.current).map((b) => ({
-        label: b.label(t),
-        onSelect: () => press(tabId, b),
-      })),
+      folded(row.current).map((b): ContextMenuEntry =>
+        b.picksHeading
+          ? { label: b.label(t), items: headings() }
+          : { label: b.label(t), onSelect: () => press(tabId, b) },
+      ),
     { alignEnd: true },
   );
   return (
@@ -233,8 +269,10 @@ export function FormatBar({
                   <IconButton
                     label={label}
                     hint={b.keys ? `${label}  ${formatCombo(b.keys)}` : label}
-                    pressed={b.on ? b.on(block) : undefined}
-                    onClick={() => press(tabId, b)}
+                    // A menu's button says it opens one, not that it is on.
+                    pressed={b.on && !b.picksHeading ? b.on(block) : undefined}
+                    onClick={b.picksHeading ? undefined : () => press(tabId, b)}
+                    opens={b.picksHeading ? heading.button : undefined}
                   >
                     <b.Icon />
                   </IconButton>
@@ -243,17 +281,15 @@ export function FormatBar({
             })}
           </div>
         ))}
-        <Tooltip text={t.toolbarMore}>
-          <button
-            type="button"
-            className="tx-icon-button format-bar-more"
-            aria-label={t.toolbarMore}
-            {...more.button}
-          >
-            <MoreIcon />
-          </button>
-        </Tooltip>
+        <IconButton
+          label={t.toolbarMore}
+          className="tx-icon-button format-bar-more"
+          opens={more.button}
+        >
+          <MoreIcon />
+        </IconButton>
       </div>
+      {heading.menu}
       {more.menu}
     </div>
   );

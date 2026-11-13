@@ -45,14 +45,9 @@
 
 <p align="center">
   <a href="https://www.anthropic.com/">
-    <picture>
-      <source media="(prefers-color-scheme: dark)" srcset="docs/images/readme/sponsors/anthropic-logo-ivory.png">
-      <img src="docs/images/readme/sponsors/anthropic-logo-slate.png" alt="Anthropic" width="240">
-    </picture>
+    <img src="docs/images/readme/sponsors/anthropic-badge.png" alt="Anthropic" width="300">
   </a>
 </p>
-
-<p align="center"><sub>透過 Anthropic Startup Program</sub></p>
 
 <p align="center">
   <img src="docs/images/readme/zh-hant/hero.webp" alt="Textus 開著《西遊記》和一段讀書筆記，Textus AI 逐句精簡筆記，每處修改都在頁邊，並在原文旁釘上審閱註解" width="860" /><br>
@@ -118,9 +113,11 @@
 
 ## 贊助
 
+Textus 免費開源。歡迎[贊助我們](https://github.com/CatVinci-Studio/Textus/issues/648)，支持它的開發。
+
 **首席贊助：** [Anthropic](https://www.anthropic.com/)，透過 Anthropic Startup Program。
 
-Textus 免費開源。歡迎[贊助我們](https://github.com/CatVinci-Studio/Textus/issues/648)，支持它的開發。
+<p align="center"><img src="docs/images/readme/sponsors/sponsors.svg" alt="Sponsors" width="800"></p>
 
 ## 社群
 

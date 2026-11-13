@@ -1,7 +1,7 @@
 import type { Ctx } from "@milkdown/kit/ctx";
 import { editorViewCtx } from "@milkdown/kit/core";
 import { emitPluginEvent, pluginsListen } from "../../plugins/app-bridge";
-import { selectionText } from "./plugin-edits";
+import { selectionText } from "../../plugins/contributions/editor-text";
 import { takeChangeSource } from "../../editor/change-source";
 
 /**
@@ -33,7 +33,9 @@ export function selectionChangedForPlugins(active: boolean, ctx: Ctx): void {
   selectionTimer = setTimeout(() => {
     selectionTimer = null;
     try {
-      emitPluginEvent("selection", { text: selectionText(ctx) });
+      emitPluginEvent("selection", {
+        text: selectionText(ctx.get(editorViewCtx).state),
+      });
     } catch {
       /* the editor went away */
     }

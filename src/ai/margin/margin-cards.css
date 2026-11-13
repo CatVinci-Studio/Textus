@@ -148,7 +148,7 @@
 
 .review-note:is(:hover, :focus-within, .review-note-hot, .review-note-popover)
   .review-note-actions {
-  max-height: 32px;
+  max-height: 36px;
   margin-top: 8px;
   opacity: 1;
   transform: none;
@@ -180,15 +180,15 @@
 /* Its heading a small line over its text, so a chip stands beside a line
    of the document as one line did. */
 .review-note-chip .review-note-by {
-  height: 12px;
+  height: 14px;
   margin: 0;
   font-size: var(--text-caption);
-  line-height: 12px;
+  line-height: 14px;
 }
 
 .review-note-chip :is(.revision-note-num, .review-note-num) {
-  min-width: 12px;
-  height: 12px;
+  min-width: 14px;
+  height: 14px;
   font-size: var(--text-mark);
 }
 
@@ -200,7 +200,7 @@
 
 .review-note-chip-text {
   font-size: var(--text-body);
-  line-height: 16px;
+  line-height: 18px;
 }
 
 .review-note-chip-text {
@@ -239,20 +239,20 @@
 .review-note-pick {
   position: absolute;
   top: 8px;
-  right: 10px;
+  right: 12px;
   /* Ticked in its note's own colour. */
   --ui-accent-fill: var(--review-note-line);
 }
 
 .review-note:has(> .review-note-pick) {
-  padding-right: 32px;
+  padding-right: 36px;
   cursor: pointer;
 }
 
 /* An opened group: its cards in a list over the margin, scrolling past a
    screen's worth. */
 .review-note-group-open {
-  max-height: min(60vh, 520px);
+  max-height: min(60vh, 572px);
   overflow-y: auto;
 }
 
@@ -289,7 +289,7 @@
    out where it is cut. */
 .review-note-cut {
   overflow: hidden;
-  mask-image: linear-gradient(to bottom, #000 calc(100% - 18px), transparent);
+  mask-image: linear-gradient(to bottom, #000 calc(100% - 20px), transparent);
 }
 
 /* Opened, a cut card is whole, over the cards below: none of them moves. */
@@ -303,6 +303,6 @@
   /* Not the modal tier: portaled after the app, it would draw over
      Settings' backdrop. */
   z-index: var(--z-popover);
-  width: 260px;
+  width: 286px;
   animation: motion-pop-in var(--dur-fast) var(--ease-out);
 }

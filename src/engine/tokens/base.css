@@ -134,6 +134,12 @@
   /* The one line the frame draws: where it meets the page, a hairline
      softer than a card's border. Inside the frame, nothing. */
   --ui-frame-edge: color-mix(in srgb, var(--ui-border) 60%, transparent);
+  /* An island lifts off the sunk frame the same way in every scheme: a
+     hairline rim of the text colour, a close shadow and a wide one. Only
+     their strengths differ (dark below). */
+  --ui-island-line: color-mix(in srgb, var(--ui-text) 9%, transparent);
+  --ui-island-contact: rgb(0 0 0 / 5%);
+  --ui-island-shadow: rgb(0 0 0 / 7%);
   --ui-hover: color-mix(in srgb, var(--ui-text) 7%, transparent);
   --ui-selected: color-mix(in srgb, var(--ui-accent) 13%, transparent);
   --ui-selected-text: var(--ui-text);
@@ -234,7 +240,10 @@
     /* Dark frames recede by darkening: a lighter frame would read as
        raised above the page. */
     --ui-frame: color-mix(in srgb, #000 10%, var(--ui-bg));
-    --ui-frame-sunk: color-mix(in srgb, #000 16%, var(--ui-bg));
+    --ui-frame-sunk: color-mix(in srgb, #000 30%, var(--ui-bg));
+    --ui-island-line: color-mix(in srgb, var(--ui-text) 6%, transparent);
+    --ui-island-contact: rgb(0 0 0 / 40%);
+    --ui-island-shadow: rgb(0 0 0 / 35%);
   }
 }
 
@@ -253,7 +262,10 @@
   /* Dark frames recede by darkening: a lighter frame would read as
      raised above the page. */
   --ui-frame: color-mix(in srgb, #000 10%, var(--ui-bg));
-  --ui-frame-sunk: color-mix(in srgb, #000 16%, var(--ui-bg));
+  --ui-frame-sunk: color-mix(in srgb, #000 30%, var(--ui-bg));
+  --ui-island-line: color-mix(in srgb, var(--ui-text) 6%, transparent);
+  --ui-island-contact: rgb(0 0 0 / 40%);
+  --ui-island-shadow: rgb(0 0 0 / 35%);
 }
 
 * {

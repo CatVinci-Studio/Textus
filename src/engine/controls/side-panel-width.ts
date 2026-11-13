@@ -18,10 +18,10 @@ interface PanelLimits {
 
 /** The narrowest a panel gets, however small the window (or its own
  *  minimum, if smaller). */
-export const PANEL_FLOOR = 200;
+export const PANEL_FLOOR = 220;
 const floor = (limits: PanelLimits) => Math.min(limits.min, PANEL_FLOOR);
 /** Room a squeezed panel keeps to be dragged in. */
-const DRAG_ROOM = 100;
+const DRAG_ROOM = 110;
 
 /** The widest a panel may be in a window `windowWidth` wide, beside
  *  `beside` px of the other panel: the islands keep their room first -

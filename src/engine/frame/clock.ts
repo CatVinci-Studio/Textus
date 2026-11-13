@@ -145,20 +145,6 @@ class FrameClock {
     }
   }
 
-  /** Where part `key` is drawn now, if placed. */
-  rectOf(key: string): Rect | undefined {
-    return this.shown.get(key);
-  }
-
-  /** Where part `key` ends up, once any slide is over. */
-  targetOf(key: string): Rect | undefined {
-    for (const group of this.groups.values()) {
-      const part = group.parts.get(key);
-      if (part) return part.rect;
-    }
-    return undefined;
-  }
-
   private tick(now: number) {
     this.frame = 0;
     this.paint(now);

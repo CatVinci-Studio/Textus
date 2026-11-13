@@ -45,6 +45,7 @@ describe("draft recovery scheduling", () => {
       "test",
       null,
       "draft",
+      null,
     );
   });
   it("cancels writes on unmount", () => {
@@ -65,7 +66,12 @@ describe("draft recovery scheduling", () => {
     advance(1999);
     expect(drafts.saveDraftSnapshot).not.toHaveBeenCalled();
     advance(1);
-    expect(drafts.saveDraftSnapshot).toHaveBeenCalledWith("test", null, "14");
+    expect(drafts.saveDraftSnapshot).toHaveBeenCalledWith(
+      "test",
+      null,
+      "14",
+      null,
+    );
   });
   it("updates the path even when text is unchanged", () => {
     const { rerender } = renderHook(
@@ -79,6 +85,7 @@ describe("draft recovery scheduling", () => {
       "test",
       "/new.md",
       "draft",
+      null,
     );
   });
   it("clears a saved or closed tab and cancels its timer", () => {

@@ -1,6 +1,6 @@
 # Bienvenue dans Textus
 
-Textus est un éditeur Markdown qui montre votre texte tel qu'il sera. Cliquez n'importe où et tapez : les marques Markdown n'apparaissent qu'à l'endroit du curseur, si bien que le **gras**, l'_italique_, le ==surlignage==, le ~~barré~~ et le `code en ligne` restent lisibles pendant que vous écrivez.
+Textus est un environnement d’écriture intégré : vos documents et Textus AI côte à côte, votre texte tel qu’il sera. Cliquez n'importe où et tapez : les marques Markdown n'apparaissent qu'à l'endroit du curseur, si bien que le **gras**, l'_italique_, le ==surlignage==, le ~~barré~~ et le `code en ligne` restent lisibles pendant que vous écrivez.
 
 ## Listes et tâches
 

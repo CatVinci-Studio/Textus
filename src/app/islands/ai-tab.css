@@ -22,7 +22,7 @@
 
 /* Memory starts under the history button, not beneath it. */
 .ai-tab .agent-panel-memory {
-  padding-top: 40px;
+  padding-top: 44px;
 }
 
 /* Its cards on the paper take a tint. */

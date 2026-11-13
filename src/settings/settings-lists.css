@@ -14,8 +14,8 @@
 .settings-skill-item {
   display: flex;
   align-items: center;
-  gap: 24px;
-  min-height: 48px;
+  gap: 28px;
+  min-height: 52px;
   padding: 8px 0;
   min-width: 0;
 }
@@ -160,7 +160,7 @@
 }
 
 .settings-category-title {
-  margin: 0 0 24px;
+  margin: 0 0 28px;
   font-size: var(--text-large-title);
   font-weight: 600;
   line-height: 1.3;
@@ -254,13 +254,13 @@
   flex-direction: column;
   align-items: center;
   gap: 8px;
-  padding: 32px 0 24px;
+  padding: 36px 0 28px;
   text-align: center;
 }
 
 .settings-about-icon {
-  width: 88px;
-  height: 88px;
+  width: 96px;
+  height: 96px;
   margin-bottom: 8px;
 }
 
@@ -294,7 +294,7 @@
 /* Update channel: an ordinary settings row, under the update button. */
 .settings-about-channel {
   width: 100%;
-  max-width: 420px;
+  max-width: 462px;
   margin-top: 8px;
   text-align: start;
 }

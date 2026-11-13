@@ -12,9 +12,9 @@ export interface ReportFacts {
   settings?: Settings;
 }
 
-/** Settings that may name the user's places, servers or own words. */
+/** Settings that may name the user's places, servers, sign-ins or own words. */
 const PRIVATE =
-  /endpoint|url|host|port|folder|root|path|css|conventions|field|plugins|models|shortcuts/i;
+  /endpoint|url|host|port|folder|root|path|css|conventions|field|plugins|models|shortcuts|username|password|secret|token|apikey/i;
 
 /** The settings with nothing private in them: switches, numbers and short
  *  choices; a list by its length. */

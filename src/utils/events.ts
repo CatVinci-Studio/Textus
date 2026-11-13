@@ -98,8 +98,15 @@ export const ZEN_MODE_EVENT = "textus:zen-mode";
 export const FILE_WRITTEN_EVENT = "textus:file-written";
 
 /** The app made a file of the user's: a picture pasted or dropped into a
- *  document, saved in its folder (detail: its path). */
+ *  document, a new document, a draft's first file (detail: its path). */
 export const FILE_CREATED_EVENT = "textus:file-created";
+
+export function announceFileCreated(path: string) {
+  window.dispatchEvent(new CustomEvent(FILE_CREATED_EVENT, { detail: path }));
+}
+
+/** A file or folder the sidebar moved to the Trash; detail: its path. */
+export const ENTRY_TRASHED_EVENT = "textus:entry-trashed";
 
 /** A tab took its file's new text from disk (detail: its path). */
 export const FILE_RELOADED_EVENT = "textus:file-reloaded";

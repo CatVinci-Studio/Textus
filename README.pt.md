@@ -44,14 +44,9 @@
 
 <p align="center">
   <a href="https://www.anthropic.com/">
-    <picture>
-      <source media="(prefers-color-scheme: dark)" srcset="docs/images/readme/sponsors/anthropic-logo-ivory.png">
-      <img src="docs/images/readme/sponsors/anthropic-logo-slate.png" alt="Anthropic" width="240">
-    </picture>
+    <img src="docs/images/readme/sponsors/anthropic-badge.png" alt="Anthropic" width="300">
   </a>
 </p>
-
-<p align="center"><sub>pelo Anthropic Startup Program</sub></p>
 
 <p align="center">
   <img src="docs/images/readme/pt/hero.webp" alt="Textus com o primeiro capítulo de Dom Casmurro ao lado das notas do leitor sobre ele. O Textus AI sugere revisões das notas na margem e fixa um comentário de revisão ao lado do romance." width="860" /><br>
@@ -117,9 +112,11 @@ Mais plugins e temas: [textus.md/extensions](https://textus.md/pt/extensions/).
 
 ## Patrocinadores
 
+O Textus é gratuito e de código aberto. [Apoie-nos](https://github.com/CatVinci-Studio/Textus/issues/648) para ajudar no seu desenvolvimento.
+
 **Patrocinador principal:** [Anthropic](https://www.anthropic.com/), pelo Anthropic Startup Program.
 
-O Textus é gratuito e de código aberto. [Apoie-nos](https://github.com/CatVinci-Studio/Textus/issues/648) para ajudar no seu desenvolvimento.
+<p align="center"><img src="docs/images/readme/sponsors/sponsors.svg" alt="Sponsors" width="800"></p>
 
 ## Comunidade
 

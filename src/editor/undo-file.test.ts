@@ -8,7 +8,7 @@ import {
   undo,
   undoDepth,
 } from "@milkdown/kit/prose/history";
-import { EditorState } from "@milkdown/kit/prose/state";
+import { EditorState, Plugin } from "@milkdown/kit/prose/state";
 import { EditorView } from "@milkdown/kit/prose/view";
 
 vi.mock("../platform/ipc-files", () => ({ undoFiles: {} }));
@@ -65,6 +65,40 @@ it("gives a new editor the same undo steps over the same text", () => {
   expect(text(after)).toBe("One");
   redo(after.state, after.dispatch);
   expect(text(after)).toBe("One two");
+});
+
+it("replaces only what its history touched, so other blocks aren't drawn again", () => {
+  // Every range a restore's steps replace, as plugins that draw see it.
+  const replaced: [number, number][] = [];
+  const watch = new Plugin({
+    appendTransaction(trs) {
+      for (const tr of trs)
+        for (const step of tr.steps)
+          step.getMap().forEach((from, to) => replaced.push([from, to]));
+      return null;
+    },
+  });
+  const two = (first: string, last: string, plugins: Plugin[] = []) => {
+    const doc = schema.node("doc", null, [
+      schema.node("paragraph", null, schema.text(first)),
+      schema.node("paragraph", null, schema.text(last)),
+    ]);
+    const view = new EditorView(document.createElement("div"), {
+      state: EditorState.create({ doc, plugins: [history(), ...plugins] }),
+    });
+    views.push(view);
+    return view;
+  };
+  const before = two("Untouched", "End");
+  type(before, " more");
+  const kept = JSON.parse(JSON.stringify(captureHistory(before.state)));
+  const after = two("Untouched", "End more", [watch]);
+  const firstEnd = after.state.doc.child(0).nodeSize;
+  expect(restoreHistory(after, kept)).toBe(true);
+  expect(replaced.length).toBeGreaterThan(0);
+  expect(replaced.every(([from]) => from >= firstEnd)).toBe(true);
+  undo(after.state, after.dispatch);
+  expect(text(after)).toBe("UntouchedEnd");
 });
 
 it("knows other text by its hash, and leaves an editor the history can't fit", () => {

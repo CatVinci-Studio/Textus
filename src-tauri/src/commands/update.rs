@@ -97,10 +97,12 @@ pub async fn check_for_update<R: Runtime>(
     let endpoints = endpoints_for(&channel, &configured_endpoints(&webview));
     let rpm_install = is_rpm_install();
     let mut builder = webview.updater_builder();
-    // Through the app's proxy, as every other request goes.
-    if let Some(proxy) = aicompat::http::proxy_url().and_then(|p| p.parse().ok()) {
-        builder = builder.proxy(proxy);
-    }
+    // Through the app's proxy, as every other request goes; with none set,
+    // direct, not through one in the environment.
+    builder = match aicompat::http::proxy_url().and_then(|p| p.parse().ok()) {
+        Some(proxy) => builder.proxy(proxy),
+        None => builder.no_proxy(),
+    };
     let updater = builder
         .endpoints(endpoints)
         .map_err(|e| e.to_string())?
@@ -141,6 +143,82 @@ pub fn release_instance<R: Runtime>(app: tauri::AppHandle<R>) {
     tauri_plugin_single_instance::destroy(&app);
     #[cfg(not(any(windows, target_os = "linux")))]
     let _ = app;
+}
+
+/// Set once an update is installed: the app starts again after the quit.
+#[cfg(desktop)]
+static RELAUNCH: std::sync::atomic::AtomicBool = std::sync::atomic::AtomicBool::new(false);
+
+/// After an update is installed: every window closes as at Quit (an unsaved
+/// document asks, or is kept as a draft), then the new version starts.
+#[cfg(desktop)]
+#[tauri::command]
+#[cfg_attr(test, specta::specta)]
+pub fn quit_and_relaunch(app: tauri::AppHandle) {
+    RELAUNCH.store(true, std::sync::atomic::Ordering::SeqCst);
+    crate::menu::quit(&app);
+}
+
+/// A window's prompt cancelled the quit: no relaunch either.
+#[cfg(desktop)]
+pub fn cancel_relaunch() {
+    RELAUNCH.store(false, std::sync::atomic::Ordering::SeqCst);
+    if let Ok(mut pending) = PENDING_INSTALL.lock() {
+        *pending = None;
+    }
+}
+
+/// An update downloaded and waiting for the quit to end: Windows installs by
+/// ending the app at once, so it runs once every window has closed.
+#[cfg(desktop)]
+static PENDING_INSTALL: std::sync::Mutex<
+    Option<(std::sync::Arc<tauri_plugin_updater::Update>, Vec<u8>)>,
+> = std::sync::Mutex::new(None);
+
+/// The end of a quit: exit, or install and start the new version.
+#[cfg(desktop)]
+pub fn exit_app(app: &tauri::AppHandle) {
+    if RELAUNCH.load(std::sync::atomic::Ordering::SeqCst) {
+        // A restart, or the installer, ends this process without Exit's own
+        // writes: they're made here.
+        crate::settings::flush_all(app);
+        crate::agents::stop_all(app);
+        release_instance(app.clone());
+        let pending = PENDING_INSTALL.lock().ok().and_then(|mut p| p.take());
+        if let Some((update, bytes)) = pending {
+            // The installer ends this process and starts the new version.
+            if let Err(e) = update.install(bytes) {
+                eprintln!("textus: update install failed: {e}");
+            }
+        }
+        app.restart();
+    }
+    app.exit(0);
+}
+
+/// Windows: downloads `rid`'s update, then every window closes as at Quit
+/// (an unsaved document asks, or is kept as a draft) before it installs.
+#[cfg(desktop)]
+#[tauri::command]
+#[cfg_attr(test, specta::specta)]
+pub async fn install_after_quit<R: Runtime>(
+    app: tauri::AppHandle,
+    webview: Webview<R>,
+    rid: tauri::ResourceId,
+) -> Result<(), String> {
+    let update = webview
+        .resources_table()
+        .get::<tauri_plugin_updater::Update>(rid)
+        .map_err(|e| e.to_string())?;
+    let bytes = update
+        .download(|_, _| {}, || {})
+        .await
+        .map_err(|e| e.to_string())?;
+    if let Ok(mut pending) = PENDING_INSTALL.lock() {
+        *pending = Some((update, bytes));
+    }
+    quit_and_relaunch(app);
+    Ok(())
 }
 
 #[cfg(test)]

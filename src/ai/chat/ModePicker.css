@@ -20,6 +20,18 @@
   padding: 0 0.4em;
 }
 
+/* An agent's mode that doesn't ask before changes, named while it is on:
+   in the warning tone, after the agent's name. */
+.mode-picker-unasking {
+  color: var(--ui-warning);
+}
+
+.mode-picker-unasking::before {
+  content: "·";
+  padding: 0 0.4em;
+  color: var(--ui-muted);
+}
+
 /* Beside the composer's tools, whole until the last step: then it is cut,
    down to its chevron. Its model goes first, whole. */
 .inline-chat-toolbar > .mode-picker {
@@ -30,9 +42,15 @@
   display: none;
 }
 
+/* Cut down, the agent's name goes but its mode that doesn't ask stays,
+   alone. */
+.inline-chat-toolbar:not([data-fit=""]) .mode-picker-unasking::before {
+  content: none;
+}
+
 .inline-chat-toolbar[data-fit="short-mode"] > .mode-picker {
   flex: 0 1 auto;
-  min-width: 28px;
+  min-width: 30px;
 }
 
 .inline-chat-toolbar[data-fit="short-mode"] .mode-picker-value {
@@ -45,7 +63,7 @@
 /* The list: the modes, each with a line on what it does, then the models
    by provider. Wider than the trigger, as the lines need. */
 .mode-picker-menu {
-  min-width: 240px;
+  min-width: 264px;
 }
 
 .ui-select-option.mode-picker-mode {
@@ -70,7 +88,7 @@
 }
 
 .mode-picker-provider {
-  padding: 4px 8px 2px 24px;
+  padding: 4px 8px 2px 28px;
   color: var(--ui-muted);
   font-size: var(--text-caption);
   cursor: default;

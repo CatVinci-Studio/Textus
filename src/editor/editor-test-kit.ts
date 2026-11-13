@@ -8,6 +8,7 @@ import { loadSettings, type Settings } from "../prefs/SettingsContext";
 export async function createTestEditor(
   markdown: string,
   settings: Partial<Settings> = {},
+  docPath: string | null = null,
 ): Promise<Editor> {
   const root = document.createElement("div");
   document.body.appendChild(root);
@@ -18,7 +19,7 @@ export async function createTestEditor(
     }),
     {
       settings: { current: { ...loadSettings(), ...settings } },
-      docPath: { current: null },
+      docPath: { current: docPath },
       onImagePasteError: () => "",
       requestImageName: async () => null,
     },

@@ -10,6 +10,7 @@ import {
   Selection,
   TextSelection,
   type EditorState,
+  type Transaction,
 } from "@milkdown/kit/prose/state";
 import {
   Decoration,
@@ -18,7 +19,8 @@ import {
 } from "@milkdown/kit/prose/view";
 import { $prose } from "@milkdown/kit/utils";
 import { cachedDocument } from "../../editor/markdown/doc-markdown";
-import { drawWhileNear } from "../../editor/draw-when-visible";
+import { touchesNode } from "../../editor/changed-ranges";
+import { drawWhileNear, stopDrawing } from "../../editor/draw-when-visible";
 import { currentStrings } from "../../i18n/current";
 import {
   codeBlockFrameless,
@@ -79,6 +81,9 @@ interface Drawn {
   render: () => void;
 }
 
+const touchesCode = (tr: Transaction) =>
+  touchesNode(tr, (node) => node.type.name === "code_block");
+
 /**
  * Code blocks plugins draw: the plugin's page below the fenced block, made
  * once in sight. The source hides while the caret is elsewhere. A widget is
@@ -98,7 +103,8 @@ export function pluginCodeBlocks(docPath: { readonly current: string | null }) {
       const seen = new Map<string, number>();
       const out: Decoration[] = [];
       state.doc.descendants((node, pos) => {
-        if (node.type.name !== "code_block") return true;
+        // A paragraph's or heading's words hold no code block.
+        if (node.type.name !== "code_block") return !node.isTextblock;
         const language = String(node.attrs.language ?? "").toLowerCase();
         const plugin = language && codeBlockPlugin(language);
         if (!plugin) return false;
@@ -110,7 +116,9 @@ export function pluginCodeBlocks(docPath: { readonly current: string | null }) {
             class: pos === open ? OPEN_SOURCE_CLASS : HIDDEN_SOURCE_CLASS,
           }),
         );
-        const widget = `${plugin}:${language}:${n}`;
+        // The document's own: another note's block of this place keeps
+        // its own state (the view a database block shows) and fold.
+        const widget = `${docPath.current ?? ""}\n${plugin}:${language}:${n}`;
         out.push(
           Decoration.widget(
             end,
@@ -118,7 +126,8 @@ export function pluginCodeBlocks(docPath: { readonly current: string | null }) {
             {
               side: 1,
               key: widget,
-              destroy: () => {
+              destroy: (node) => {
+                stopDrawing(node);
                 const gone = drawn.get(widget);
                 drawn.delete(widget);
                 // Not while ProseMirror is drawing: React unmounts on its
@@ -180,7 +189,7 @@ export function pluginCodeBlocks(docPath: { readonly current: string | null }) {
       addBlockFold(
         el,
         blockName(plugin),
-        `${docPath.current ?? ""}\n${widget}`,
+        widget,
         view.dom.clientWidth > 0 && view.dom.clientWidth < NARROW_COLUMN,
       );
       // A plugin's frame is heavy: drawn near the screen, let go far from
@@ -263,8 +272,10 @@ export function pluginCodeBlocks(docPath: { readonly current: string | null }) {
                 : tr.mapping.map(prev.open);
           // The caret has left the opened block: its source hides again.
           if (open !== null && !holds(state, open)) open = null;
-          if (tr.docChanged || meta || open !== prev.open)
+          if (meta || open !== prev.open || (tr.docChanged && touchesCode(tr)))
             return { deco: decorations(state, open), open };
+          if (tr.docChanged)
+            return { deco: prev.deco.map(tr.mapping, tr.doc), open };
           return prev;
         },
       },

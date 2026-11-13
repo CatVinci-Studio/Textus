@@ -20,6 +20,27 @@ export function changedRanges(tr: Transaction): [number, number][] {
   return ranges;
 }
 
+/** The ranges `trs` (an appendTransaction's, or those of them in `only`)
+ *  wrote, in the last one's document. */
+export function changedRangesOf(
+  trs: readonly Transaction[],
+  only: readonly Transaction[] = trs,
+): [number, number][] {
+  const ranges: [number, number][] = [];
+  const size = trs.length ? trs[trs.length - 1].doc.content.size : 0;
+  trs.forEach((tr, t) => {
+    if (!only.includes(tr)) return;
+    for (let [from, to] of changedRanges(tr)) {
+      for (const later of trs.slice(t + 1)) {
+        from = later.mapping.map(from, -1);
+        to = later.mapping.map(to, 1);
+      }
+      ranges.push([Math.min(from, size), Math.min(to, size)]);
+    }
+  });
+  return ranges;
+}
+
 /** The top-level blocks of `doc` that the ranges touch (or end beside),
  *  as [from, to], in document order and each once. */
 export function touchedBlocks(
@@ -38,6 +59,32 @@ export function touchedBlocks(
       },
     );
   return [...blocks].sort((a, b) => a[0] - b[0]);
+}
+
+/** Whether the blocks `tr` touched hold a node that `match`es, before or
+ *  after it: an edit elsewhere leaves such nodes' decorations as mapped. */
+export function touchesNode(
+  tr: Transaction,
+  match: (node: ProseNode) => boolean,
+): boolean {
+  const after = changedRanges(tr);
+  const back = tr.mapping.invert();
+  const before = after.map(
+    ([from, to]) => [back.map(from, -1), back.map(to, 1)] as const,
+  );
+  const holds = (
+    doc: ProseNode,
+    ranges: readonly (readonly [number, number])[],
+  ) =>
+    touchedBlocks(doc, ranges).some(([from, to]) => {
+      let found = false;
+      doc.nodesBetween(from, to, (node) => {
+        if (found || match(node)) found = true;
+        return !found && !node.isTextblock;
+      });
+      return found;
+    });
+  return holds(tr.doc, after) || holds(tr.before, before);
 }
 
 /** Whether `deco` is one of those drawn for the node at [from, to]: they

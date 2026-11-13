@@ -1,3 +1,4 @@
+import { errorText } from "../../utils/error-text";
 import { fill } from "../../i18n/fill";
 import { takeStartPlugin } from "./extensions-tab";
 import { useMutedCards } from "../../plugins/store/usePluginCard";
@@ -335,7 +336,7 @@ export async function installPluginFiles(
   const failed: string[] = [];
   for (const path of paths)
     await installPlugin(path).catch((e: unknown) =>
-      failed.push(`${path.split(/[\\/]/).pop()}: ${String(e)}`),
+      failed.push(`${path.split(/[\\/]/).pop()}: ${errorText(e)}`),
     );
   if (failed.length) throw new Error(failed.join("\n"));
   return null;

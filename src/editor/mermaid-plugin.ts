@@ -89,6 +89,8 @@ const drawingKey = (language: string, code: string) =>
 function collectMermaidBlocks(doc: ProseNode): MermaidBlock[] {
   const blocks: MermaidBlock[] = [];
   doc.descendants((node, pos) => {
+    // A paragraph's or heading's inline nodes never hold a diagram.
+    if (node.isTextblock && !isCodeBlock(node)) return false;
     if (isMermaid(node)) {
       const language = node.attrs.language as string;
       blocks.push({
@@ -284,6 +286,8 @@ export function createMermaidPreviewPlugin(options: {
 
         async function renderAll(all = false) {
           if (!options.enabled()) {
+            // Nothing drawn before: nothing to take back.
+            if (lastRenders.size === 0) return;
             lastRenders = new Map();
             editorView.dispatch(
               editorView.state.tr.setMeta(mermaidKey, "rerender"),
@@ -301,6 +305,7 @@ export function createMermaidPreviewPlugin(options: {
           const mySeq = ++renderSeq;
           const blocks = collectMermaidBlocks(editorView.state.doc);
           if (blocks.length === 0) {
+            if (lastRenders.size === 0) return;
             lastRenders = new Map();
             editorView.dispatch(
               editorView.state.tr.setMeta(mermaidKey, "rerender"),

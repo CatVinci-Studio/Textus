@@ -72,11 +72,13 @@ fn client() -> reqwest::Client {
             attempt.follow()
         }
     });
-    let builder = reqwest::Client::builder().redirect(redirects);
-    let builder = match crate::http::proxy() {
-        Some(proxy) => builder.proxy(proxy),
-        None if cfg!(test) => builder,
-        None => builder.dns_resolver(Arc::new(PublicOnly)),
+    let direct = crate::http::proxy().is_none();
+    let builder = crate::http::route(reqwest::Client::builder().redirect(redirects));
+    // Direct, the name is resolved here, to public addresses only.
+    let builder = if direct && !cfg!(test) {
+        builder.dns_resolver(Arc::new(PublicOnly))
+    } else {
+        builder
     };
     crate::http::with_timeouts(builder)
         .build()

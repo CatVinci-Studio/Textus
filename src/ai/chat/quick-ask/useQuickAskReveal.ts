@@ -2,7 +2,7 @@ import { scaledPx } from "../../../engine/tokens/chrome-scale";
 import { useEffect, type RefObject } from "react";
 
 /** Breathing room kept between the panel's edge and the viewport edge. */
-const MARGIN = 12;
+const MARGIN = 14;
 
 /**
  * How much the scroll container has to move for `panel` to be fully visible

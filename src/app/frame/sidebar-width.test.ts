@@ -14,25 +14,17 @@ import {
   storedSidebarWidth,
   useSidebarWidth,
 } from "./sidebar-width";
-import { CHROME_BASE } from "../../engine/tokens/chrome-scale";
 
 // No boot snapshot here: ui-state keeps the width in localStorage.
-const KEY = "textus-sidebar-width";
+const KEY = "textus-sidebar-px";
 
 beforeAll(installTestLocalStorage);
-beforeEach(() => {
-  localStorage.clear();
-  // Widths here are at an interface scale of 1: Interface Text Size set to
-  // undo the desktop's base step.
-  document.documentElement.style.setProperty(
-    "--ui-text-scale",
-    String(1 / CHROME_BASE),
-  );
-});
+// Widths here are at Medium, the interface's scale of 1.
+beforeEach(() => localStorage.clear());
 
 describe("the sidebar's width bounds", () => {
-  it("allows up to 480px on a wide window", () => {
-    expect(sidePanelMax(1920, SIDEBAR_LIMITS)).toBe(480);
+  it("allows up to 528px on a wide window", () => {
+    expect(sidePanelMax(1920, SIDEBAR_LIMITS)).toBe(528);
     // Beside a document and the AI, the islands keep what they need.
     expect(sidePanelMax(1200, SIDEBAR_LIMITS, 48, 1, 860)).toBe(292);
   });
@@ -47,7 +39,7 @@ describe("the sidebar's width bounds", () => {
 
   it("clamps into the bounds and rounds", () => {
     expect(clampSidePanel(50, 1400, SIDEBAR_LIMITS)).toBe(SIDEBAR_MIN_WIDTH);
-    expect(clampSidePanel(9999, 1400, SIDEBAR_LIMITS)).toBe(480);
+    expect(clampSidePanel(9999, 1400, SIDEBAR_LIMITS)).toBe(528);
     expect(clampSidePanel(300.4, 1400, SIDEBAR_LIMITS)).toBe(300);
   });
 });
@@ -59,6 +51,13 @@ describe("the remembered sidebar width", () => {
     expect(storedSidebarWidth()).toBe(SIDEBAR_DEFAULT_WIDTH);
     localStorage.setItem(KEY, "-20");
     expect(storedSidebarWidth()).toBe(SIDEBAR_DEFAULT_WIDTH);
+  });
+
+  it("takes a width kept before 1.4.1 to Medium's pixels", () => {
+    localStorage.setItem("textus-sidebar-width", "240");
+    expect(storedSidebarWidth()).toBe(264);
+    localStorage.setItem(KEY, "300");
+    expect(storedSidebarWidth()).toBe(300);
   });
 
   it("starts from the stored width", () => {
@@ -90,7 +89,7 @@ describe("the remembered sidebar width", () => {
     expect(sidebar.style.width).toBe("300px");
     // Not the inherited variable: that would restyle the whole window.
     expect(shell.style.getPropertyValue("--sidebar-width")).toBe("");
-    expect(result.current.width).toBe(240);
+    expect(result.current.width).toBe(SIDEBAR_DEFAULT_WIDTH);
     expect(localStorage.getItem(KEY)).toBeNull();
     act(() => result.current.setWidth(310, true));
     expect(result.current.width).toBe(310);
@@ -101,8 +100,8 @@ describe("the remembered sidebar width", () => {
   it("stores the clamped width", () => {
     const { result } = renderHook(() => useSidebarWidth(1200));
     act(() => result.current.setWidth(5000));
-    expect(result.current.width).toBe(480);
-    expect(localStorage.getItem(KEY)).toBe("480");
+    expect(result.current.width).toBe(528);
+    expect(localStorage.getItem(KEY)).toBe("528");
   });
 
   it("keeps its width in a wide window: the interface doesn't grow with it", () => {

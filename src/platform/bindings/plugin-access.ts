@@ -35,7 +35,7 @@ export const commands = {
 	/**  Makes a folder (and the folders it is in) in the folder. */
 	plugin_fs_mkdir: (id: string, root: string, path: string) => __TAURI_INVOKE<null>("plugin_fs_mkdir", { id, root, path }),
 	/**  The file at `path`, or None when nothing is there. */
-	plugin_fs_stat: (id: string, root: string, path: string) => __TAURI_INVOKE<FsStat_Serialize | null>("plugin_fs_stat", { id, root, path }),
+	plugin_fs_stat: (id: string, root: string, path: string) => __TAURI_INVOKE<FsEntry_Serialize | null>("plugin_fs_stat", { id, root, path }),
 	/**
 	 *  A new file holding `text`, and the folders it is in; refused when
 	 *  something is there already.
@@ -65,7 +65,7 @@ export const commands = {
 	plugin_secret_get: (id: string, key: string) => __TAURI_INVOKE<string | null>("plugin_secret_get", { id, key }),
 	/**  Keeps a secret of the plugin's; `None` forgets it. */
 	plugin_secret_set: (id: string, key: string, value: string | null) => __TAURI_INVOKE<null>("plugin_secret_set", { id, key, value }),
-	plugin_metadata_all: (id: string, root: string) => __TAURI_INVOKE<MetadataAll_Serialize>("plugin_metadata_all", { id, root }),
+	plugin_metadata_all: (id: string, root: string, after: number | null) => __TAURI_INVOKE<MetadataAll_Serialize>("plugin_metadata_all", { id, root, after }),
 	/**  What one document holds now, its blocks with it - read afresh. */
 	plugin_metadata_get: (id: string, root: string, path: string) => __TAURI_INVOKE<DocumentMeta_Serialize | null>("plugin_metadata_get", { id, root, path }),
 	plugin_http: (id: string, request: HttpRequest_Deserialize) => __TAURI_INVOKE<HttpResponse>("plugin_http", { id, request }),
@@ -168,27 +168,6 @@ export type FsEntry_Serialize = {
 	modifiedMs: number | null,
 };
 
-/**  A file's details (textus.files.stat). */
-export type FsStat = FsStat_Serialize | FsStat_Deserialize;
-
-/**  A file's details (textus.files.stat). */
-export type FsStat_Deserialize = {
-	name: string,
-	path: string,
-	isDir: boolean,
-	size: number,
-	modifiedMs?: number | null,
-};
-
-/**  A file's details (textus.files.stat). */
-export type FsStat_Serialize = {
-	name: string,
-	path: string,
-	isDir: boolean,
-	size: number,
-	modifiedMs: number | null,
-};
-
 export type HeadingMeta = {
 	level: number,
 	text: string,
@@ -231,27 +210,34 @@ export type LinkMeta = {
 };
 
 /**
- *  Every document of the folder and what it holds (blocks left out), and
- *  the paths that changed since the index was last brought up to date.
+ *  The folder's documents and what they hold (blocks left out): every one
+ *  when `whole`, else those changed since the caller's generation, with the
+ *  paths gone since.
  */
 export type MetadataAll = MetadataAll_Serialize | MetadataAll_Deserialize;
 
 /**
- *  Every document of the folder and what it holds (blocks left out), and
- *  the paths that changed since the index was last brought up to date.
+ *  The folder's documents and what they hold (blocks left out): every one
+ *  when `whole`, else those changed since the caller's generation, with the
+ *  paths gone since.
  */
 export type MetadataAll_Deserialize = {
+	generation: number,
+	whole: boolean,
 	documents: DocumentMeta_Deserialize[],
-	changed: string[],
+	gone: string[],
 };
 
 /**
- *  Every document of the folder and what it holds (blocks left out), and
- *  the paths that changed since the index was last brought up to date.
+ *  The folder's documents and what they hold (blocks left out): every one
+ *  when `whole`, else those changed since the caller's generation, with the
+ *  paths gone since.
  */
 export type MetadataAll_Serialize = {
+	generation: number,
+	whole: boolean,
 	documents: DocumentMeta_Serialize[],
-	changed: string[],
+	gone: string[],
 };
 
 /**  A line that holds what was searched for. */

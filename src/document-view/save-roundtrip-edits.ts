@@ -5,7 +5,7 @@ import { splitListItem } from "@milkdown/kit/prose/schema-list";
 import { undo } from "@milkdown/kit/prose/history";
 import { TextSelection } from "@milkdown/kit/prose/state";
 import type { EditorView } from "@milkdown/kit/prose/view";
-import { toggleSpan } from "../editor/marks/span-commands";
+import { BOLD, toggleFormat } from "../editor/keys/format-shortcut-plugin";
 
 /**
  * Test-only: the edits the save round trip makes, each the way the app
@@ -145,7 +145,7 @@ export function makeEdit(
       if (!words.length) return null;
       const { from, to } = pick(rand, words);
       view.dispatch(state.tr.setSelection(TextSelection.create(doc, from, to)));
-      if (!toggleSpan(view, 2)) return null;
+      if (!toggleFormat(view, BOLD)) return null;
       return { touched: [topIndex(doc, from)] };
     }
     case "add-list-item": {

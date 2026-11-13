@@ -68,3 +68,33 @@ test("over Settings, a zoom does nothing", async ({ page }) => {
     );
   expect(zooms.every((z) => z === 1)).toBe(true);
 });
+
+test("a trackpad pinch right after a scroll zooms (Windows: ctrl+wheel in fractions)", async ({
+  page,
+}) => {
+  await page.setViewportSize({ width: 1200, height: 760 });
+  await openApp(page, { settings: { menuBarShown: false } });
+  const sheet = (await page.locator("section.island").first().boundingBox())!;
+  await page.mouse.move(sheet.x + sheet.width / 2, sheet.y + sheet.height / 2);
+  // Two fingers land and drift a little, then spread.
+  await page.mouse.wheel(0, 3);
+  await page.evaluate(
+    ({ x, y }) => {
+      const target = document.elementFromPoint(x, y)!;
+      for (let i = 0; i < 12; i++)
+        target.dispatchEvent(
+          new WheelEvent("wheel", {
+            deltaY: -8.5,
+            ctrlKey: true,
+            clientX: x,
+            clientY: y,
+            bubbles: true,
+            cancelable: true,
+          }),
+        );
+    },
+    { x: sheet.x + sheet.width / 2, y: sheet.y + sheet.height / 2 },
+  );
+  await page.waitForTimeout(600);
+  expect(await zoomOf(page, 0)).toBeGreaterThan(1.1);
+});

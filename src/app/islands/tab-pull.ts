@@ -15,7 +15,6 @@ import {
   movePane,
   moveTab,
   isSplit,
-  reorderTab,
   type SplitLayout,
 } from "../../engine/layout/ops";
 import {
@@ -34,7 +33,7 @@ import { transientStyle } from "../../engine/tokens/appearance";
 
 /** How far the tab travels before its place closes behind it (interface
  *  px): a short pull and back leaves the layout untouched. */
-const LEAVE_DISTANCE = 48;
+const LEAVE_DISTANCE = 52;
 
 /** A place a drop can go: its key, whether it opens a new island, the
  *  layout it makes, and the layout shown while it is only aimed at. */
@@ -107,8 +106,7 @@ export function pullTab(
     }
     const bar = barDropAt(x, y, tabId, geometry);
     if (bar) {
-      const moved = moveTab(base, tabId, bar.pane, bar.index);
-      const next = moved && reorderTab(moved, bar.pane, tabId, bar.index);
+      const next = moveTab(base, tabId, bar.pane, bar.index);
       return {
         key: `bar:${bar.pane}:${bar.index}`,
         opens: false,
@@ -120,13 +118,20 @@ export function pullTab(
     if (!target) return null;
     const next = dropLayout(base, tabId, target);
     if (next === undefined) return null;
-    const pane = target.zone === "center" ? paneOf(base, target.tabId) : null;
+    const own = paneOf(base, tabId);
+    const middle = target.zone === "center" ? paneOf(base, target.tabId) : null;
     // Its own island's middle: where it came from.
-    if (pane && pane === paneOf(base, tabId)) return null;
+    if (middle && middle === own) return null;
+    // An edge with no room for a new island joins the one there: known by
+    // where the tab lands, an island that was there before.
+    const landed = next ? paneOf(next, tabId) : null;
+    const pane =
+      middle ??
+      (landed && landed !== own && paneById(base.root, landed) ? landed : null);
     const end = pane ? (paneById(base.root, pane)?.tabs.length ?? 0) : 0;
     return {
       key: `${target.whole ? "whole" : target.tabId}:${target.zone}`,
-      opens: target.zone !== "center",
+      opens: !pane,
       next,
       // Joining: its slot at the row's end, the row's document in front.
       shown: pane ? joined(base, tabId, pane, end) : next,

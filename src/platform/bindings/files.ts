@@ -31,7 +31,8 @@ export const commands = {
 	save_file_dialog: (defaultName: string, defaultDir: string | null) => __TAURI_INVOKE<string | null>("save_file_dialog", { defaultName, defaultDir }),
 	/**
 	 *  Lists the immediate children of a directory; the frontend asks again per
-	 *  expanded folder. Async so a slow network mount doesn't stall the app.
+	 *  expanded folder. One blocking read off the async runtime, so a slow
+	 *  network mount doesn't stall the app.
 	 */
 	list_dir: (path: string) => __TAURI_INVOKE<DirEntryInfo_Serialize[]>("list_dir", { path }),
 	/**
@@ -118,7 +119,7 @@ export const commands = {
 	/**
 	 *  A project's own settings file (`.textus/settings.json`) as a whole, read
 	 *  as the conventions read it (comments and trailing commas allowed); {}
-	 *  when it isn't there or isn't a settings file.
+	 *  when it isn't there or is empty, null when it doesn't read as settings.
 	 */
 	project_settings_read: (root: string) => __TAURI_INVOKE<Value>("project_settings_read", { root }),
 	open_word_document: (path: string) => __TAURI_INVOKE<WordDocument>("open_word_document", { path }),
@@ -142,7 +143,7 @@ export const commands = {
 	add_recent_folder: (path: string) => __TAURI_INVOKE<void>("add_recent_folder", { path }),
 	/**  One entry taken off both lists: the start page's × beside it. */
 	remove_recent: (path: string) => __TAURI_INVOKE<void>("remove_recent", { path }),
-	save_draft_snapshot: (tabId: string, path: string | null, content: string) => __TAURI_INVOKE<null>("save_draft_snapshot", { tabId, path, content }),
+	save_draft_snapshot: (tabId: string, path: string | null, content: string, diskMtime: number | null) => __TAURI_INVOKE<null>("save_draft_snapshot", { tabId, path, content, diskMtime }),
 	/**
 	 *  Takes every pending draft, so at most one window claims each: each is
 	 *  moved aside into `restoring/` (kept until the window says they are
@@ -387,12 +388,22 @@ export type DraftSnapshot_Deserialize = {
 	tabId: string,
 	path?: string | null,
 	content: string,
+	/**
+	 *  The file's time when its edits began: a restored draft whose file has
+	 *  changed since asks before it is saved over it.
+	 */
+	diskMtime?: number | null,
 };
 
 export type DraftSnapshot_Serialize = {
 	tabId: string,
 	path: string | null,
 	content: string,
+	/**
+	 *  The file's time when its edits began: a restored draft whose file has
+	 *  changed since asks before it is saved over it.
+	 */
+	diskMtime: number | null,
 };
 
 export type FolderIndex = {

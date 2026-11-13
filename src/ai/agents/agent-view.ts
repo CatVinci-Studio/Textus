@@ -12,6 +12,14 @@ export interface AgentView {
   turns: AgentTurn[];
   /** Prose still coming in. */
   text: string;
+  /** The agent's plan, as it last sent it whole. */
+  plan?: PlanEntry[];
+}
+
+export interface PlanEntry {
+  content: string;
+  /** "pending", "in_progress" or "completed". */
+  status: string;
 }
 
 /** The name an external agent's steps go under in the history. */
@@ -37,15 +45,22 @@ function args(fields: ToolCallFields, before?: string): string {
     ...(fields.title ? { title: fields.title } : {}),
     ...(fields.kind ? { kind: fields.kind } : {}),
     ...(path ? { path } : {}),
+    ...(fields.status === "failed" ? { status: "failed" } : {}),
   });
 }
 
+/** How much of a step's output is kept: what its row can show. */
+const KEPT_OUTPUT = 4000;
+
 /** What a finished step says: its text content, else how it ended. */
 function output(fields: ToolCallFields): string {
-  const text = (fields.content ?? [])
+  const all = (fields.content ?? [])
     .map((c) => (c.type === "content" ? textOf(c.content) : ""))
     .filter(Boolean)
     .join("\n");
+  // Cut, and marked as cut within what is kept.
+  const text =
+    all.length > KEPT_OUTPUT ? `${all.slice(0, KEPT_OUTPUT - 2)}\n…` : all;
   return text || (fields.status === "failed" ? "Failed." : "Done.");
 }
 
@@ -53,6 +68,7 @@ function output(fields: ToolCallFields): string {
 function landText(view: AgentView): AgentView {
   if (!view.text.trim()) return { ...view, text: "" };
   return {
+    ...view,
     turns: [...view.turns, { kind: "Assistant", text: view.text }],
     text: "",
   };
@@ -87,18 +103,38 @@ export function applyUpdate(view: AgentView, update: SessionUpdate): AgentView {
     }
     case "tool_call_update": {
       const fields = update as ToolCallFields;
-      const turns = view.turns.map((t) =>
-        t.kind === "ToolCall" && t.call_id === fields.toolCallId
-          ? { ...t, arguments: args(fields, t.arguments) }
-          : t,
+      const at = view.turns.findIndex(
+        (t) => t.kind === "ToolCall" && t.call_id === fields.toolCallId,
       );
+      const call = view.turns[at];
+      let turns = view.turns;
+      if (call?.kind === "ToolCall") {
+        const line = args(fields, call.arguments);
+        if (line !== call.arguments) {
+          turns = [...view.turns];
+          turns[at] = { ...call, arguments: line };
+        }
+      }
       const done = fields.status === "completed" || fields.status === "failed";
       const answered = turns.some(
         (t) => t.kind === "ToolResult" && t.call_id === fields.toolCallId,
       );
+      if (done && !answered)
+        return { ...view, turns: [...turns, result(fields)] };
+      // Nothing new to show: the same view, so nothing draws again.
+      return turns === view.turns ? view : { ...view, turns };
+    }
+    case "plan": {
+      // Each one is the whole plan again.
+      const entries = (update as { entries?: unknown }).entries;
+      if (!Array.isArray(entries)) return view;
       return {
         ...view,
-        turns: done && !answered ? [...turns, result(fields)] : turns,
+        plan: entries.flatMap((e) =>
+          typeof e?.content === "string"
+            ? [{ content: e.content, status: String(e.status ?? "pending") }]
+            : [],
+        ),
       };
     }
     default:

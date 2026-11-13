@@ -1,13 +1,9 @@
-import { useMemo, useRef, useState } from "react";
+import { useMemo, useState } from "react";
 import { useSettings } from "../../prefs/SettingsContext";
 import { themesInReply, type ReplyTheme } from "./reply-theme";
 import { saveUserTheme, withUserTheme } from "../../theme/theme-import";
-import { showMessage } from "../../engine/controls/app-dialog";
-import { useLatest } from "../../utils/hooks/useLatest";
-import { currentStrings } from "../../i18n/current";
-import { explainError } from "../../utils/error-explain";
 import { ReplyFilesPreview } from "./ReplyFilesPreview";
-import { withCreation } from "./creations";
+import { useCreationAction } from "./useCreationAction";
 
 export interface ReplyThemeLabels {
   useTheme: string;
@@ -48,49 +44,33 @@ function ReplyThemeChip({
   labels: ReplyThemeLabels;
 }) {
   const { settings, setSettings } = useSettings();
-  const latest = useLatest(settings);
   const [installedId, setInstalledId] = useState<string | null>(null);
-  const [busy, setBusy] = useState(false);
-  const working = useRef(false);
+  const { busy, run } = useCreationAction();
   const name = theme.name ?? labels.themeFallbackName;
   const installed = installedId
     ? settings.userThemes.some((th) => th.id === installedId)
     : false;
   const inUse = installed && settings.themeId === installedId;
 
-  async function use() {
-    if (working.current) return;
-    if (installed && installedId) {
-      setSettings({ themeId: installedId });
-      return;
-    }
-    working.current = true;
-    setBusy(true);
-    try {
+  function use() {
+    if (installed && installedId) return setSettings({ themeId: installedId });
+    void run(async () => {
       const meta = await saveUserTheme(theme.css, { name });
       setInstalledId(meta.id);
-      setSettings({
-        userThemes: withUserTheme(latest.current.userThemes, meta),
-        themeId: meta.id,
-        creations: withCreation(latest.current.creations, {
-          kind: "theme",
-          id: meta.id,
-          name,
-          at: Date.now(),
+      return {
+        made: { kind: "theme", id: meta.id, name },
+        settings: (now) => ({
+          userThemes: withUserTheme(now.userThemes, meta),
+          themeId: meta.id,
         }),
-      });
-    } catch (err) {
-      await showMessage(explainError(err, currentStrings()), { tone: "error" });
-    } finally {
-      working.current = false;
-      setBusy(false);
-    }
+      };
+    });
   }
 
   return (
     <div className="agent-theme-chip">
       <span className="agent-theme-chip-name">{name}</span>
-      <button type="button" disabled={busy || inUse} onClick={() => void use()}>
+      <button type="button" disabled={busy || inUse} onClick={use}>
         {inUse ? labels.themeInUse : labels.useTheme}
       </button>
       <ReplyFilesPreview

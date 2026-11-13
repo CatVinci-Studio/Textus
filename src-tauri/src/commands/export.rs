@@ -23,7 +23,37 @@ fn pandoc_candidates() -> Vec<PathBuf> {
     if let Ok(home) = std::env::var("HOME") {
         candidates.push(PathBuf::from(home).join(".local/bin/pandoc"));
     }
+    // Windows: the installer's folders, for each user or for everyone.
+    for base in ["LOCALAPPDATA", "ProgramFiles"] {
+        if let Ok(dir) = std::env::var(base) {
+            candidates.push(PathBuf::from(dir).join("Pandoc").join("pandoc.exe"));
+        }
+    }
     candidates
+}
+
+/// The fixed places, then the login shell's PATH (Nix, conda…), which an
+/// app opened from the Dock lacks: asking it can take seconds.
+#[cfg(desktop)]
+fn pandoc_places() -> impl Iterator<Item = PathBuf> {
+    let login = std::iter::once_with(|| {
+        crate::mcp::path::find_program("pandoc", &crate::mcp::path::login_path())
+    })
+    .flatten();
+    pandoc_candidates().into_iter().chain(login)
+}
+
+/// Pandoc started without a console window flashing up (Windows).
+#[cfg(desktop)]
+fn pandoc_command(program: impl AsRef<std::ffi::OsStr>) -> Command {
+    #[allow(unused_mut)]
+    let mut command = Command::new(program);
+    #[cfg(windows)]
+    {
+        use std::os::windows::process::CommandExt;
+        command.creation_flags(0x0800_0000);
+    }
+    command
 }
 
 /// Returns the path of a working pandoc binary, or None. GUI apps launched
@@ -33,8 +63,8 @@ fn pandoc_candidates() -> Vec<PathBuf> {
 #[cfg_attr(test, specta::specta)]
 pub async fn detect_pandoc() -> Option<String> {
     tauri::async_runtime::spawn_blocking(|| {
-        for candidate in pandoc_candidates() {
-            let works = Command::new(&candidate)
+        for candidate in pandoc_places() {
+            let works = pandoc_command(&candidate)
                 .arg("--version")
                 .stdin(Stdio::null())
                 .stdout(Stdio::null())
@@ -119,22 +149,19 @@ pub async fn export_via_pandoc(
     reference_doc: Option<String>,
     options: pandoc_options::PandocOptions,
 ) -> Result<(), String> {
-    // Only a Pandoc found where detect_pandoc looks: the page names which,
-    // never a program of its own.
-    if !pandoc_candidates()
-        .iter()
-        .any(|c| c.to_string_lossy() == pandoc_path)
-    {
-        return Err(format!("{pandoc_path} isn't a Pandoc Textus found."));
-    }
     tauri::async_runtime::spawn_blocking(move || {
+        // Only a Pandoc found where detect_pandoc looks: the page names
+        // which, never a program of its own.
+        if !pandoc_places().any(|c| c.to_string_lossy() == pandoc_path) {
+            return Err(format!("{pandoc_path} isn't a Pandoc Textus found."));
+        }
         if let Some(arg) = pandoc_options::owned_arg(&options.extra_args) {
             return Err(format!("The Pandoc argument {arg} is set by Textus."));
         }
         let mut args = pandoc_args(&format, &title);
         args[1].push_str(breaks_extension(resource_dir.as_deref()));
         let filter = pandoc_options::lua_filter().map_err(|e| e.to_string())?;
-        let mut cmd = Command::new(&pandoc_path);
+        let mut cmd = pandoc_command(&pandoc_path);
         cmd.arg("--lua-filter")
             .arg(filter.path())
             .args(&options.extra_args)

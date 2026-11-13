@@ -1,6 +1,11 @@
 import { describe, expect, it } from "vitest";
 import { DOC_MIN } from "../frame/island-rules";
-import { clampSidePanel, sidePanelMax, sidePanelMin } from "./side-panel-width";
+import {
+  PANEL_FLOOR,
+  clampSidePanel,
+  sidePanelMax,
+  sidePanelMin,
+} from "./side-panel-width";
 
 const AI = { min: 300, max: 720 };
 
@@ -19,10 +24,10 @@ describe("a side panel in a window too small for it", () => {
   });
 
   it("gives way to the document in a small window, and can still be dragged", () => {
-    // 820 wide beside a 240 sidebar: 220 left once the document has 360.
-    expect(clampSidePanel(380, 820, AI, 240)).toBe(220);
-    expect(sidePanelMin(820, AI, 240)).toBeLessThan(220);
-    expect(clampSidePanel(100, 820, AI, 240)).toBe(200);
+    // 860 wide beside a 240 sidebar: 260 left once the document has 360.
+    expect(clampSidePanel(380, 860, AI, 240)).toBe(260);
+    expect(sidePanelMin(860, AI, 240)).toBeLessThan(260);
+    expect(clampSidePanel(100, 860, AI, 240)).toBe(PANEL_FLOOR);
     // With room, its own minimum holds.
     expect(sidePanelMin(1600, AI, 240)).toBe(300);
   });

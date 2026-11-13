@@ -127,15 +127,8 @@ pub async fn agent_step(
         if let Some(error) = acc.error {
             return Err(error);
         }
-        // Cut off by the output limit inside a tool call: its half-JSON arguments
-        // would reach the tool as `{}` and send the model round in circles.
-        if acc.stop_reason.as_deref() == Some("max_tokens")
-            && matches!(acc.blocks.last(), Some(StreamBlock::ToolUse { .. }))
-        {
-            return Err(format!(
-                "Claude hit the {max_tokens}-token output limit in the middle of an edit. \
-                 Try asking for a smaller change at a time."
-            ));
+        if let Some(error) = acc.cut_off(max_tokens) {
+            return Err(error);
         }
         usage.add(acc.usage);
         let paused = acc.stop_reason.as_deref() == Some("pause_turn");

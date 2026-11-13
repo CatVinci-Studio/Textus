@@ -4,9 +4,6 @@ import { beforeEach, describe, expect, it, vi } from "vitest";
 
 const calls: string[] = [];
 
-vi.mock("@tauri-apps/plugin-process", () => ({
-  relaunch: vi.fn(async () => void calls.push("relaunch")),
-}));
 vi.mock("../platform/capabilities", () => ({ canAutoUpdate: true }));
 vi.mock("../platform/distribution", () => ({
   selfUpdateAllowed: async () => true,
@@ -21,7 +18,7 @@ vi.mock("../platform/ipc", () => ({
       version: "9.9.9",
       downloadAndInstall: async () => void calls.push("install"),
     }),
-    releaseInstance: async () => void calls.push("release"),
+    quitAndRelaunch: async () => void calls.push("quit"),
   },
 }));
 
@@ -32,7 +29,7 @@ describe("the app update", () => {
     calls.length = 0;
   });
 
-  it("gives up the running instance just before the relaunch (#349)", async () => {
+  it("installs, then quits as File › Quit does, so unsaved documents ask or stay as drafts", async () => {
     const { result } = renderHook(() => {
       useUpdateChecks("stable");
       return useAppUpdate();
@@ -40,6 +37,6 @@ describe("the app update", () => {
     await waitFor(() => expect(result.current.version).toBe("9.9.9"));
     expect(result.current.status).toBe("available");
     await act(() => installUpdate());
-    expect(calls).toEqual(["flush", "install", "flush", "release", "relaunch"]);
+    expect(calls).toEqual(["flush", "install", "flush", "quit"]);
   });
 });

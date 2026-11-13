@@ -6,8 +6,8 @@
 
 .insert-table-dialog {
   box-sizing: border-box;
-  min-width: 260px;
-  max-width: calc(100vw - 32px);
+  min-width: 286px;
+  max-width: calc(100vw - 36px);
 }
 
 .insert-table-title {
@@ -18,7 +18,7 @@
 .insert-table-fields {
   display: flex;
   gap: 16px;
-  margin-bottom: 24px;
+  margin-bottom: 28px;
 }
 
 .insert-table-fields label {
@@ -31,7 +31,7 @@
 
 .insert-table-fields .tx-input {
   flex: none;
-  width: 72px;
+  width: 80px;
 }
 
 .insert-table-buttons {

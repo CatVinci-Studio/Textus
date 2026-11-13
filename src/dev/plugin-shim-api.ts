@@ -2,6 +2,7 @@ import { fnv1a } from "../utils/hash";
 import { blockIds } from "../editor/markdown/doc-blocks";
 
 /** Each folder's documents at the last metadata look, for what changed. */
+let looks = 0;
 const lastLook = new Map<string, Map<string, string>>();
 
 /**
@@ -228,7 +229,17 @@ export function pluginApiShim(
         ...[...before].filter(([p]) => !now.has(p)),
       ].map(([p]) => p);
       lastLook.set(root, now);
-      return Promise.resolve({ documents, changed });
+      // As Rust does: the whole index for a first look, else what changed.
+      const whole = args.after == null;
+      const changedSet = new Set(changed);
+      return Promise.resolve({
+        generation: ++looks,
+        whole,
+        documents: whole
+          ? documents
+          : documents.filter((d) => changedSet.has(d.path)),
+        gone: whole ? [] : changed.filter((p) => !now.has(p)),
+      });
     }
     case "plugin_metadata_get": {
       const refused = needs("files.read");

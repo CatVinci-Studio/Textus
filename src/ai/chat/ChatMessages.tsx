@@ -1,6 +1,16 @@
 import type { PendingStatus } from "../revision/usePendingEdits";
 import { withoutCitationMarkers } from "../citation-markers";
-import { useEffect, useMemo, useRef, type CSSProperties } from "react";
+import {
+  useEffect,
+  useLayoutEffect,
+  useMemo,
+  useRef,
+  useState,
+  type CSSProperties,
+  type RefObject,
+} from "react";
+import { useLatest } from "../../utils/hooks/useLatest";
+import { useRevealedText } from "./useRevealedText";
 import { AgentTurnView } from "./AgentTurnView";
 import type { AgentTurn } from "../types";
 import { isProposalTool } from "./proposal";
@@ -12,6 +22,7 @@ import type { ChatMessagesProps } from "./chat-messages-types";
 import { itemOf, readTranscript } from "./chat-transcript";
 import { ChatItem, ChatItems, type ChatItemsContext } from "./ChatItem";
 import { AgentPermission } from "../agents/AgentPermission";
+import { AgentPlan } from "../agents/AgentPlan";
 
 /** The statuses a card reaches by being decided, which collapse it. */
 const DECIDED: ReadonlySet<PendingStatus> = new Set([
@@ -50,13 +61,11 @@ export function ChatMessages({
   onContinue,
   docPath = null,
   conversation = "",
+  onLiveGrow,
 }: ChatMessagesProps) {
-  const revealFrom = useRef(0);
-  const wasBusy = useRef(busy);
-  useEffect(() => {
-    if (busy && !wasBusy.current) revealFrom.current = history.length;
-    wasBusy.current = busy;
-  }, [busy, history.length]);
+  const revealFrom = useArrival(busy, history.length);
+  // A long conversation draws its newest part; the rest when asked.
+  const [drawn, setDrawn] = useState(DRAWN_TURNS);
 
   // Memoized on the turn lists, NOT on `streaming` itself: text deltas
   // replace the streaming object many times a second while reusing the
@@ -87,25 +96,44 @@ export function ChatMessages({
     () => readTranscript(shown, noteNumber),
     [shown, noteNumber],
   );
-  const items: ChatItemsContext = {
-    labels,
-    busy,
-    selectedText,
-    proposalStatus,
+  // The actions are read at the call, so the items keep while only a
+  // reply's text moves.
+  const latest = useLatest({
     onAcceptProposal,
     onRejectProposal,
     onRelocateProposal,
-    proposalSentences,
     onDecideSentence,
     onRevealProposal,
     onLocateText,
     onApplySuggestion,
     onContinue,
-    proposalActions,
-    docPath,
-    transcript,
-    conversation,
-  };
+  });
+  const items = useMemo<ChatItemsContext>(
+    () => ({
+      labels,
+      busy,
+      selectedText,
+      proposalStatus,
+      proposalSentences,
+      proposalActions,
+      docPath,
+      transcript,
+      conversation,
+      ...actionsOf(latest),
+    }),
+    [
+      labels,
+      busy,
+      selectedText,
+      proposalStatus,
+      proposalSentences,
+      proposalActions,
+      docPath,
+      transcript,
+      conversation,
+      latest,
+    ],
+  );
 
   // A decided card shrinks to its status line and what is under it slides
   // up. Only decisions count: an arriving card must not slide the
@@ -118,18 +146,25 @@ export function ChatMessages({
     })
     .join(" ");
 
-  return (
-    <>
-      <FlipOnChange
-        watch={decisions}
-        targets={() =>
-          document.querySelectorAll(
-            ":is(.inline-chat-messages, .quick-ask-transcript) > *",
-          )
-        }
-      />
+  const liveThought = streaming?.thought ?? null;
+  const start = Math.max(0, shown.length - drawn);
+  const historyLength = history.length;
+  // Drawn again when the turns or what they read change, not with each
+  // frame of a reply coming in.
+  const list = useMemo(
+    () => (
       <ChatItems.Provider value={items}>
-        {shown.map((turn, i) => {
+        {start > 0 && (
+          <button
+            type="button"
+            className="agent-proposal-link chat-earlier"
+            onClick={() => setDrawn((n) => n + DRAWN_TURNS)}
+          >
+            {labels.showEarlier(start)}
+          </button>
+        )}
+        {shown.slice(start).map((turn, at) => {
+          const i = start + at;
           const reveal = i >= revealFrom.current;
           // A CSS custom property, which CSSProperties doesn't type. The
           // stagger stops at the third turn.
@@ -143,8 +178,8 @@ export function ChatMessages({
           const thought =
             turn.kind !== "User"
               ? null
-              : i === history.length
-                ? (streaming?.thought ?? null)
+              : i === historyLength
+                ? liveThought
                 : (thoughts?.[i] ?? null);
           return (
             <ChatItem
@@ -152,22 +187,41 @@ export function ChatMessages({
               item={itemOf(turn, transcript)}
               arrival={{ reveal, style }}
               thought={thought}
-              last={i === history.length - 1}
+              last={i === historyLength - 1}
             />
           );
         })}
       </ChatItems.Provider>
+    ),
+    [
+      items,
+      shown,
+      start,
+      transcript,
+      thoughts,
+      liveThought,
+      historyLength,
+      labels,
+      revealFrom,
+    ],
+  );
+
+  return (
+    <>
+      <FlipOnChange
+        watch={decisions}
+        targets={() =>
+          document.querySelectorAll(
+            ":is(.inline-chat-messages, .quick-ask-transcript) > *",
+          )
+        }
+      />
+      {list}
       {streaming && streaming.text.length > 0 && (
-        <div className="turn-reveal agent-streaming">
-          <AgentTurnView
-            turn={{
-              kind: "Assistant",
-              text: withoutCitationMarkers(streaming.text, true),
-            }}
-            labels={labels}
-            live
-          />
-        </div>
+        <LiveReply text={streaming.text} labels={labels} onGrow={onLiveGrow} />
+      )}
+      {streaming?.plan && streaming.plan.length > 0 && (
+        <AgentPlan entries={streaming.plan} label={labels.agentPlan} />
       )}
       {streaming?.permission && (
         <AgentPermission
@@ -207,4 +261,70 @@ export function ChatMessages({
       )}
     </>
   );
+}
+
+/** How many of a conversation's newest turns are drawn, and how many more
+ *  each "show earlier" adds. */
+const DRAWN_TURNS = 80;
+
+/** Where this request's turns start: those fade in as they come. */
+function useArrival(busy: boolean, length: number) {
+  const revealFrom = useRef(0);
+  const wasBusy = useRef(busy);
+  useEffect(() => {
+    if (busy && !wasBusy.current) revealFrom.current = length;
+    wasBusy.current = busy;
+  }, [busy, length]);
+  return revealFrom;
+}
+
+/** The reply still coming in, revealed at a steady pace: only this redraws
+ *  each frame, not the conversation above it. */
+function LiveReply({
+  text,
+  labels,
+  onGrow,
+}: {
+  text: string;
+  labels: ChatMessagesProps["labels"];
+  onGrow?: () => void;
+}) {
+  const shown = useRevealedText(text, true);
+  useLayoutEffect(() => onGrow?.(), [shown, onGrow]);
+  return (
+    <div className="turn-reveal agent-streaming">
+      <AgentTurnView
+        turn={{ kind: "Assistant", text: withoutCitationMarkers(shown, true) }}
+        labels={labels}
+        live
+      />
+    </div>
+  );
+}
+
+type Actions = Pick<
+  ChatItemsContext,
+  | "onAcceptProposal"
+  | "onRejectProposal"
+  | "onRelocateProposal"
+  | "onDecideSentence"
+  | "onRevealProposal"
+  | "onLocateText"
+  | "onApplySuggestion"
+  | "onContinue"
+>;
+type Call = (...args: unknown[]) => unknown;
+
+/** Each action as a call through `latest`, so the set keeps its identity;
+ *  one not given stays absent. */
+function actionsOf(latest: RefObject<Actions>): Actions {
+  const now = latest.current as unknown as Record<string, Call | undefined>;
+  const out: Record<string, Call> = {};
+  for (const name of Object.keys(now))
+    if (now[name])
+      out[name] = (...args) =>
+        (latest.current as unknown as Record<string, Call | undefined>)[name]?.(
+          ...args,
+        );
+  return out as unknown as Actions;
 }

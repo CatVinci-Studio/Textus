@@ -123,7 +123,7 @@ pub(crate) fn search_in(root: &Path, query: &str, limit: usize, deadline: Instan
             truncated: false,
         };
     }
-    let walk = crate::walk::walk(root, &crate::walk::LIMITS, crate::extract::is_markdown);
+    let walk = crate::walk::walk(root, &crate::walk::LIMITS, crate::extract::is_text_document);
     let mut truncated = walk.truncated;
     'files: for file in walk.files {
         if Instant::now() >= deadline {
@@ -218,7 +218,9 @@ mod tests {
             .iter()
             .map(|h| (h.rel.as_str(), h.line))
             .collect();
-        assert_eq!(lines, [("sub/b.markdown", 1), ("a.md", 4)]);
+        // A plain-text note is searched as it opens: a document.
+        assert!(lines.contains(&("notes.txt", 1)));
+        assert!(lines.contains(&("a.md", 4)) && lines.contains(&("sub/b.markdown", 1)));
         assert_eq!(found.hits[1].text, "- [ ] Call Ann");
         assert!(!found.truncated);
         let one = search_in(dir.path(), "call", 1, far);

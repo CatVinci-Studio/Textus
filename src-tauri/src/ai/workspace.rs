@@ -336,6 +336,25 @@ pub async fn reset_builtin_skill(app: AppHandle, name: String) -> Result<Vec<Str
         .map_err(|e| e.to_string())?
 }
 
+/// The skills folder of a user's skills from `source`: every document's, or
+/// the project's of the document or open folder. A built-in has none.
+pub(crate) fn skills_dir(
+    app: &AppHandle,
+    source: SkillSource,
+    doc_path: Option<&str>,
+    workspace_root: Option<&str>,
+) -> Result<std::path::PathBuf, String> {
+    let dir = match source {
+        SkillSource::Builtin => return Err(crate::errors::error(UNKNOWN_BUILTIN)),
+        SkillSource::Global => global_agent_dir(app)?,
+        SkillSource::Project => project_dir(
+            &project_root(doc_path, workspace_root)
+                .ok_or("This document has no project folder.")?,
+        ),
+    };
+    Ok(dir.join("skills"))
+}
+
 /// Sets the panel modes a user's skill applies in, rewriting `textus-modes` in
 /// its file. A built-in's modes are fixed.
 #[tauri::command]
@@ -348,15 +367,8 @@ pub async fn set_skill_modes(
     workspace_root: Option<String>,
     modes: Vec<AgentMode>,
 ) -> Result<(), String> {
-    let dir = match source {
-        SkillSource::Builtin => return Err(crate::errors::error(UNKNOWN_BUILTIN)),
-        SkillSource::Global => global_agent_dir(&app)?,
-        SkillSource::Project => project_dir(
-            &project_root(doc_path.as_deref(), workspace_root.as_deref())
-                .ok_or("No project folder.")?,
-        ),
-    };
-    tauri::async_runtime::spawn_blocking(move || set_modes_in(&dir.join("skills"), &name, &modes))
+    let dir = skills_dir(&app, source, doc_path.as_deref(), workspace_root.as_deref())?;
+    tauri::async_runtime::spawn_blocking(move || set_modes_in(&dir, &name, &modes))
         .await
         .map_err(|e| e.to_string())?
 }
@@ -373,15 +385,8 @@ pub async fn set_skill_off(
     workspace_root: Option<String>,
     off: bool,
 ) -> Result<(), String> {
-    let dir = match source {
-        SkillSource::Builtin => return Err(crate::errors::error(UNKNOWN_BUILTIN)),
-        SkillSource::Global => global_agent_dir(&app)?,
-        SkillSource::Project => project_dir(
-            &project_root(doc_path.as_deref(), workspace_root.as_deref())
-                .ok_or("No project folder.")?,
-        ),
-    };
-    tauri::async_runtime::spawn_blocking(move || set_off_in(&dir.join("skills"), &name, off))
+    let dir = skills_dir(&app, source, doc_path.as_deref(), workspace_root.as_deref())?;
+    tauri::async_runtime::spawn_blocking(move || set_off_in(&dir, &name, off))
         .await
         .map_err(|e| e.to_string())?
 }

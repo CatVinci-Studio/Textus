@@ -43,6 +43,22 @@ export function isInside(path: string, dir: string): boolean {
   return inner.startsWith(outer.endsWith("/") ? outer : `${outer}/`);
 }
 
+/** A test for whether a path is one of `targets` or a folder holding one,
+ *  their folders worked out once rather than per path asked about. */
+export function onTheWay(
+  ...targets: (string | null | undefined)[]
+): (path: string) => boolean {
+  const way = new Set<string>();
+  for (const target of targets) {
+    let p = target ? walked(target) : null;
+    for (let i: number; p; p = i > 0 ? p.slice(0, i) : null) {
+      way.add(p);
+      i = p.lastIndexOf("/");
+    }
+  }
+  return (path) => way.has(walked(path) ?? "");
+}
+
 /** A path with "/" for each separator and its "." and ".." walked; null
  *  when ".." climbs above its root. */
 function walked(path: string): string | null {
@@ -107,4 +123,23 @@ export function relativePath(fromDir: string, to: string): string {
   while (i < a.length && i < b.length && a[i] === b[i]) i++;
   const up = a.slice(i).map(() => "..");
   return [...up, ...b.slice(i)].join("/") || ".";
+}
+
+/** A folder's name as shown: its last part, or the whole path for a
+ *  disk's root ("/", "C:\\"). */
+export function folderName(path: string): string {
+  return basename(path.replace(/[\\/]+$/, "")) || path;
+}
+
+/** `name` inside `dir`, with the separator `dir` is written with (a
+ *  Windows path only when it has no "/"). */
+export function joinPath(dir: string, name: string): string {
+  const sep = dir.includes("\\") && !dir.includes("/") ? "\\" : "/";
+  return `${dir.replace(/[\\/]+$/, "")}${sep}${name.replace(/^[\\/]+/, "")}`;
+}
+
+/** `path` inside `dir` when it is relative (a plugin's folder-relative
+ *  path, one typed in a terminal); an absolute path as it is. */
+export function absoluteIn(dir: string, path: string): string {
+  return /^([\\/]|[A-Za-z]:[\\/])/.test(path) ? path : joinPath(dir, path);
 }

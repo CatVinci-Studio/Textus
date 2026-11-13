@@ -9,11 +9,24 @@ import { toolActivityLabels } from "./tool-activity";
 import { MODES } from "../modes";
 import type { PanelMode } from "../../prefs/settings-values";
 
+const built = new WeakMap<Strings, Map<Lang, InlineChatLabels>>();
+
 /**
  * The chat's user-facing strings, built once for every chat surface so no
- * copy goes stale. `lang` picks the plural forms of the counts.
+ * copy goes stale. `lang` picks the plural forms of the counts. The same
+ * object while the language is, so what is drawn from it can be kept.
  */
 export function chatLabels(t: Strings, lang: Lang): InlineChatLabels {
+  const forT = built.get(t) ?? new Map<Lang, InlineChatLabels>();
+  built.set(t, forT);
+  const known = forT.get(lang);
+  if (known) return known;
+  const labels = buildLabels(t, lang);
+  forT.set(lang, labels);
+  return labels;
+}
+
+function buildLabels(t: Strings, lang: Lang): InlineChatLabels {
   return {
     placeholder: t.agentInputPlaceholder,
     researchPlaceholder: t.paperTopicPlaceholder,
@@ -32,6 +45,9 @@ export function chatLabels(t: Strings, lang: Lang): InlineChatLabels {
     thinking: t.agentThinking,
     thinkingFor: (n) => plural(t.agentThinkingFor, n, lang),
     waitedFor: (n) => plural(t.agentWaitedFor, n, lang),
+    showEarlier: (n) => plural(t.chatShowEarlier, n, lang),
+    agentLooks: (n) => plural(t.chatAgentLooks, n, lang),
+    agentPlan: t.chatAgentPlan,
     thoughtFor: (n) => plural(t.agentThoughtFor, n, lang),
     generatingImage: t.agentGeneratingImage,
     writingEdit: t.agentWritingEdit,
@@ -155,7 +171,6 @@ export function chatLabels(t: Strings, lang: Lang): InlineChatLabels {
     toggleOnHint: t.toggleOnHint,
     webSearchNeedsService: t.webSearchNeedsService,
     close: t.chatClose,
-    detach: t.chatDetach,
     continueInPanel: t.chatContinueInPanel,
     newConversation: t.chatNewConversation,
     closeConfirm: t.chatCloseConfirm,

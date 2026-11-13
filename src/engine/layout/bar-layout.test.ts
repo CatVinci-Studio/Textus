@@ -91,4 +91,23 @@ describe("the window bar's start", () => {
     expect(at("windows", { menuBar: true, zen: true }).rows).toBe(1);
     expect(at("macos", { menuBar: true }).rows).toBe(1);
   });
+
+  it("gives the title row a row of its own on every desktop, the rail and sidebar under it", () => {
+    expect(at("windows", { titleRow: true })).toEqual({
+      rows: 2,
+      lead: ["menu"],
+      menuInRail: false,
+      sideToTop: false,
+      railToTop: false,
+    });
+    expect(at("macos", { titleRow: true, fullscreen: true })).toMatchObject({
+      rows: 2,
+      sideToTop: false,
+      railToTop: false,
+    });
+    expect(at("windows", { titleRow: true, menuBar: true }).lead).toEqual([
+      "menu-bar",
+    ]);
+    expect(at("macos", { titleRow: true, zen: true }).rows).toBe(1);
+  });
 });

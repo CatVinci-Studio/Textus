@@ -19,7 +19,11 @@ import { keepCancelledTurns } from "../cancelled-turns";
 import { afterFileChanges } from "../file-changes";
 import { streamStep } from "../stream-step";
 import { thinkingDone } from "../thought";
-import { offerSkillAfter, rememberAfter } from "./conversation-passes";
+import {
+  nameAfter,
+  offerSkillAfter,
+  rememberAfter,
+} from "./conversation-passes";
 import type { ConversationModel } from "./conversation-model";
 import type { AgentRequestOptions } from "./conversation-types";
 import { chosenModel } from "../../chosen-model";
@@ -49,6 +53,8 @@ export async function sendMessage(
   const trimmed = message.trim();
   const { busy, history, conversationId } = model.snapshot();
   if (!trimmed || busy || !settings.textusAi) return undefined;
+  // Files the reply changes are marked when it ends, however it ends.
+  const revisions = settings.aiChangeMode === "revision";
   const provider = settings.aiProvider;
   const chosen = chosenModel(settings);
   model.lastOptions = sent;
@@ -154,12 +160,15 @@ export async function sendMessage(
     model.setHistory((prev) => [...prev, ...newTurns]);
     // What follows asks Textus AI's model, which an agent's chat doesn't use,
     // and is about a conversation that is kept: never a Quick Ask's.
+    const after = [...history, ...newTurns];
     if (!agent && model.persist) {
-      const after = [...history, ...newTurns];
       void rememberAfter(model, env, after, at + newTurns.length);
       void offerSkillAfter(model, env, after, at + newTurns.length);
       model.next.suggestAfter(after, provider, chosen, settings.textusAi);
     }
+    // Named by Textus AI's model, whoever answered.
+    if (model.persist) void nameAfter(model, env, after);
+    void afterFileChanges(conversationId, newTurns, revisions);
     ended = "done";
     return newTurns;
   } catch (err) {
@@ -175,6 +184,7 @@ export async function sendMessage(
       if (kept.length === 0) return undefined;
       keepThought();
       model.setHistory((prev) => [...prev, ...kept]);
+      void afterFileChanges(conversationId, kept, revisions);
       return kept;
     }
     ended = "failed";
@@ -183,7 +193,7 @@ export async function sendMessage(
     void afterFileChanges(
       conversationId,
       model.streamingNow?.turns ?? [],
-      settings.aiChangeMode === "revision",
+      revisions,
     );
     model.patch({
       error: errorText(err),
@@ -192,6 +202,7 @@ export async function sendMessage(
     return undefined;
   } finally {
     reportAiState("idle", aiProvider, aiModel, ended);
+    port?.onReplyEnd?.(ended === "failed");
     if (current()) {
       model.requestId = null;
       model.setStreaming(null);

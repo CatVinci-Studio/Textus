@@ -99,12 +99,7 @@ pub fn on_menu(app: &AppHandle, item: &str) {
 /// A plugin command from the tray: run by an editor window, brought forward,
 /// or with none open, by the one opened for it.
 fn run_plugin_command(app: &AppHandle, command: &str) {
-    let window = app
-        .windows()
-        .into_iter()
-        .find(|(label, _)| crate::windows::is_editor_window(label))
-        .map(|(_, window)| window);
-    match window {
+    match crate::editor_windows::last_editor(app) {
         Some(window) => {
             crate::editor_windows::reopen_without_windows(app);
             let _ = window.emit_to(

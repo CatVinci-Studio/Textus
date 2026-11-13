@@ -473,5 +473,19 @@ fn a_forget_undone_leaves_no_forgotten_copy() {
     let loaded = dirs.load();
     assert_eq!(loaded.items.len(), 1);
     assert!(loaded.forgotten.is_empty());
+    // Forgotten again under the same name: Undo takes back that copy, and
+    // the one forgotten before stays to restore.
+    let again = dirs.forget(&kept.remembered).unwrap();
+    let back = dirs
+        .remember(args("preference", None, "Keep it longer."), &source(), NOW)
+        .unwrap();
+    let second = dirs.forget(&back.remembered).unwrap();
+    assert_eq!(dirs.load().forgotten.len(), 2);
+    dirs.undo(&second.remembered, second.previous.as_deref())
+        .unwrap();
+    let left = dirs.load().forgotten;
+    assert_eq!(left.len(), 1, "{left:?}");
+    assert!(left[0].text.contains("Keep it short."), "{left:?}");
+    assert!(again.previous.is_some());
     std::fs::remove_dir_all(&base).ok();
 }

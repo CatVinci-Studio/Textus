@@ -10,7 +10,12 @@ import {
   pickerSkills,
   resolveSkillName,
 } from "./skill-picker";
-import { MENTION_TRIGGER, SKILL_COMMAND, SKILL_TRIGGER } from "./skill-syntax";
+import {
+  MENTION_TRIGGER,
+  SKILL_COMMAND,
+  SKILL_TRIGGER,
+  agentCommandText,
+} from "./skill-syntax";
 
 const builtins: SkillListItem[] = BUILTIN_SKILLS.map((skill) => ({
   name: skill.name,
@@ -64,6 +69,15 @@ describe("the triggers", () => {
     expect(SKILL_TRIGGER.exec("a/b")).toBeNull();
     // A 、 inside a sentence is punctuation, not a command.
     expect(SKILL_COMMAND.exec("我们、他们")).toBeNull();
+  });
+  it("reach an agent as /command whatever slash the IME typed", () => {
+    const commands = [{ name: "review" }];
+    expect(agentCommandText("、review src/a.ts", commands)).toBe(
+      "/review src/a.ts",
+    );
+    expect(agentCommandText("／review", commands)).toBe("/review");
+    expect(agentCommandText("、hello there", commands)).toBe("、hello there");
+    expect(agentCommandText("/other", commands)).toBe("/other");
   });
 
   it("open the file picker on @ and ＠ after a space or at the start", () => {

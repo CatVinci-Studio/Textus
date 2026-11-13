@@ -123,13 +123,6 @@ export function revealPlace(ctx: Ctx, place: DocumentPlace): boolean {
   return true;
 }
 
-/** The selection's plain text, for onDidChangeSelection. */
-export function selectionText(ctx: Ctx): string {
-  const { state } = ctx.get(editorViewCtx);
-  const { from, to } = state.selection;
-  return state.doc.textBetween(from, to, "\n");
-}
-
 /** A short name for the document's version: changes whenever its text
  *  does. */
 export function documentRevision(markdown: string): string {

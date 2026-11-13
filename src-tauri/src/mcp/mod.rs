@@ -281,6 +281,23 @@ fn tool_name(server: &str, tool: &str) -> String {
     name
 }
 
+/// `name`, or with `_2`, `_3`… where another tool already has it, still
+/// at most 64 long.
+fn unique_name(name: String, taken: &[String]) -> String {
+    if !taken.contains(&name) {
+        return name;
+    }
+    (2..)
+        .map(|n| {
+            let suffix = format!("_{n}");
+            let mut base = name.clone();
+            base.truncate(64 - suffix.len());
+            base + &suffix
+        })
+        .find(|candidate| !taken.contains(candidate))
+        .expect("an unused suffix")
+}
+
 /// The tools of every server ready for this request, waiting a little for
 /// one still starting.
 pub async fn tools_for_request<'a>(app: &AppHandle) -> Vec<Tool<'a>> {
@@ -295,8 +312,10 @@ pub async fn tools_for_request<'a>(app: &AppHandle) -> Vec<Tool<'a>> {
         .collect();
     let mut tools = Vec::new();
     let mut taken: Vec<String> = Vec::new();
+    // One wait for all the servers still starting, not one each.
+    let until = tokio::time::Instant::now() + WAIT_FOR_START;
     for (name, mut state) in servers {
-        let _ = tokio::time::timeout(WAIT_FOR_START, state.wait_for(|s| s.is_some())).await;
+        let _ = tokio::time::timeout_at(until, state.wait_for(|s| s.is_some())).await;
         let Some(Started::Ready {
             connection,
             tools: offered,
@@ -305,10 +324,7 @@ pub async fn tools_for_request<'a>(app: &AppHandle) -> Vec<Tool<'a>> {
             continue;
         };
         for tool in offered {
-            let mut model_name = tool_name(&name, &tool.name);
-            while taken.contains(&model_name) {
-                model_name.push('_');
-            }
+            let model_name = unique_name(tool_name(&name, &tool.name), &taken);
             taken.push(model_name.clone());
             tools.push(mcp_tool(&name, model_name, tool, connection.clone()));
         }
@@ -363,16 +379,7 @@ async fn run_call(connection: &Connection, tool: &str, arguments: &str) -> ToolO
         Ok((text, true)) => format!("The tool reported an error: {text}"),
         Err(why) => format!("The MCP server couldn't run it: {why}"),
     };
-    let mut text = if text.trim().is_empty() {
-        "(The tool returned nothing.)".to_string()
-    } else {
-        text
-    };
-    if text.chars().count() > RESULT_CHARS {
-        text = text.chars().take(RESULT_CHARS).collect::<String>()
-            + "\n[cut off: the rest was too long]";
-    }
-    text.into()
+    crate::ai::outside_tool_result(text, RESULT_CHARS).into()
 }
 
 #[cfg(test)]

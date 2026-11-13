@@ -48,18 +48,27 @@ describe("the settings file", () => {
 
   it("leaves this computer's own settings out of the file", () => {
     const text = settingsFileText(
-      { ...mine, proxyHost: "10.0.0.2", zoom: 1.2 },
+      {
+        ...mine,
+        proxyHost: "10.0.0.2",
+        proxyUsername: "alice",
+        proxyPassword: "open sesame",
+        zoom: 1.2,
+      },
       {},
     );
     const written = JSON.parse(text).settings;
     expect(written).not.toHaveProperty("agentWorkspaceRoot");
     expect(written).not.toHaveProperty("proxyHost");
+    expect(written).not.toHaveProperty("proxyUsername");
+    expect(written).not.toHaveProperty("proxyPassword");
     expect(written).not.toHaveProperty("zoom");
     expect(written.language).toBe("en");
   });
 
   it("brings imported themes with their CSS, and keeps this computer's", () => {
-    const paper = { id: "paper", name: "Paper", hasDark: false };
+    // Marked dark, but its dark CSS couldn't be read.
+    const paper = { id: "paper", name: "Paper", hasDark: true };
     const local = { id: "local", name: "Local", hasDark: false };
     const lost = { id: "lost", name: "Lost", hasDark: false };
     const other: Settings = {
@@ -74,9 +83,17 @@ describe("the settings file", () => {
       themeId: "local",
     });
     expect(imported?.themes).toEqual({ paper: { light: "body{}" } });
-    expect(imported?.settings.userThemes).toEqual([local, paper]);
+    expect(imported?.settings.userThemes).toEqual([
+      local,
+      { ...paper, hasDark: false },
+    ]);
     // Its CSS didn't come along, so the theme in use stays.
     expect(imported?.settings.themeId).toBe("local");
+  });
+
+  it("brings a built-in theme in use (Slate) along", () => {
+    const text = settingsFileText({ ...mine, themeId: "slate" }, {});
+    expect(settingsFromFile(text, mine)?.settings.themeId).toBe("slate");
   });
 
   it("carries AI records only when asked, and only well-formed ones", () => {

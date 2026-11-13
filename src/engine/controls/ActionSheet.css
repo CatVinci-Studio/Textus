@@ -16,7 +16,7 @@
 }
 
 .action-sheet-group {
-  max-height: calc(100vh - 140px);
+  max-height: calc(100vh - 154px);
   overflow-y: auto;
 }
 
@@ -35,7 +35,7 @@
 .action-sheet-item {
   display: block;
   width: 100%;
-  min-height: 56px;
+  min-height: 62px;
   padding: 0 16px;
   border: none;
   background: none;

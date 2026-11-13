@@ -27,6 +27,10 @@ pub struct DraftSnapshot {
     tab_id: String,
     path: Option<String>,
     content: String,
+    /// The file's time when its edits began: a restored draft whose file has
+    /// changed since asks before it is saved over it.
+    #[serde(rename = "diskMtime", default)]
+    disk_mtime: Option<f64>,
 }
 
 #[tauri::command]
@@ -36,6 +40,7 @@ pub async fn save_draft_snapshot(
     tab_id: String,
     path: Option<String>,
     content: String,
+    disk_mtime: Option<f64>,
 ) -> Result<(), String> {
     if !valid_component(&tab_id) {
         return Err("invalid tab id".to_string());
@@ -46,6 +51,7 @@ pub async fn save_draft_snapshot(
         tab_id: tab_id.clone(),
         path,
         content,
+        disk_mtime,
     })
     .map_err(|e| e.to_string())?;
     crate::atomic::write(&dir.join(format!("{tab_id}.json")), json)

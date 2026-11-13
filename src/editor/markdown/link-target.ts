@@ -92,11 +92,18 @@ export function headingIndex(texts: readonly string[], anchor: string): number {
 /** Anchors in document order with repeats numbered as GitHub does: the
  *  second "intro" is "intro-1". The one rule for headings' ids. */
 export function numberRepeats(slugs: readonly string[]): string[] {
+  // Each name given, with how many repeats of it have been numbered.
   const seen = new Map<string, number>();
   return slugs.map((slug) => {
-    const repeat = seen.get(slug) ?? 0;
-    seen.set(slug, repeat + 1);
-    return repeat ? `${slug}-${repeat}` : slug;
+    let name = slug;
+    let n = seen.get(slug);
+    if (n !== undefined) {
+      do name = `${slug}-${++n}`;
+      while (seen.has(name));
+      seen.set(slug, n);
+    }
+    seen.set(name, 0);
+    return name;
   });
 }
 

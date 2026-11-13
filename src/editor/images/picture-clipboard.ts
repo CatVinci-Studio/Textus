@@ -19,7 +19,12 @@ export function selectedPictureAsPng(view: EditorView): Promise<Blob> | null {
       : dom instanceof HTMLElement
         ? dom.querySelector("img")
         : null;
-  const src = img?.currentSrc || img?.src;
+  return img ? pictureAsPng(img) : null;
+}
+
+/** A picture on show as PNG; null before it has a source. */
+export function pictureAsPng(img: HTMLImageElement): Promise<Blob> | null {
+  const src = img.currentSrc || img.src;
   if (!src) return null;
   // The window may not fetch from the web itself: a web picture it can't
   // read is brought by Rust.
