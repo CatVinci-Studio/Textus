@@ -68,9 +68,12 @@
   color: var(--ui-text);
 }
 
-/* With no row of tabs the sheet reaches up under the window bar: the bar
-   sits below it. */
-.app-shell:not([data-tabs="bar"]) .split-pane > .format-bar {
+/* With no row of tabs the sheet reaches up under the window bar (but for a
+   bar that is a row of its own): the bar sits below it. */
+:root:not([data-bar-rows="2"])
+  .app-shell:not([data-tabs="bar"])
+  .split-pane
+  > .format-bar {
   top: var(--window-bar-height);
   border-radius: 0;
 }
@@ -82,7 +85,8 @@
   padding-top: calc(1.5rem + var(--format-bar-height));
 }
 
-.app-shell:not([data-tabs="bar"])
+:root:not([data-bar-rows="2"])
+  .app-shell:not([data-tabs="bar"])
   .main-pane
   .split-pane:has(> .format-bar)
   .editor-content:not(.typewriter-active) {

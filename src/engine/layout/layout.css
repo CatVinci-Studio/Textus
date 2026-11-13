@@ -28,7 +28,7 @@
 
 /* A clean sheet: the bar is the page's own top, in its paper, so the
    window reads as one sheet. */
-:root:not([data-window-chrome="mobile"])
+:root:not([data-window-chrome="mobile"], [data-bar-rows="2"])
   .app-shell:not([data-tabs])
   .window-bar {
   background: var(--doc-bg);

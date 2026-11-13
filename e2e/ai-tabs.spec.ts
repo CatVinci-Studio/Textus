@@ -360,12 +360,18 @@ test("an unsaved document in front keeps the folder's conversation; + opens anot
   expect(menu!.width).toBeGreaterThan(tab!.width - 40);
 });
 
-test("with the title on a row of its own, it names the document over every tab, the AI's too", async ({
+test("with the title on a row of its own, one document is a clean sheet under it, and it names the document over every tab, the AI's too", async ({
   page,
 }) => {
   await page.setViewportSize({ width: 1200, height: 760 });
   await openApp(page, { settings: { titleRowShown: true } });
   await pasteMarkdown(page, "# 第三章\n\n雨下到第三天。");
+  // One document alone is a clean sheet under the title: no row of tabs.
+  await expect(tabs(page)).toHaveCount(0);
+  const titleRow = (await page.locator(".window-bar").boundingBox())!;
+  const formats = (await page.getByRole("toolbar").boundingBox())!;
+  expect(formats.y).toBeGreaterThanOrEqual(titleRow.y + titleRow.height);
+  expect(formats.y).toBeLessThan(titleRow.y + titleRow.height + 16);
   await aiButton(page).click();
   await expect(tabs(page)).toHaveText(["未命名", "Textus AI"]);
   const bar = (await page.locator(".window-bar").boundingBox())!;

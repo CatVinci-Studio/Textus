@@ -1,3 +1,4 @@
+import { canUseWindows } from "../platform/capabilities";
 import { writingProviderOf } from "../prefs/settings-types";
 import { useProjectTabs } from "./start-project";
 import { useCallback, useEffect, useMemo, useState } from "react";
@@ -204,10 +205,11 @@ export function useWindowDocuments({
       setActiveTabId,
     });
 
-  // The tabs always show, + beside the one tab; in Zen one document is a
-  // clean sheet under its title, until there are several or a tab comes in.
-  const workspace = !zen.zenMode;
-  const showTabBar = workspace || tabs.length > 1 || dragHoverPreview !== null;
+  // The tabs always show, + beside the one tab; in Zen, or with the title
+  // on a row of its own, one document is a clean sheet under its title,
+  // until there are several or a tab comes in.
+  const oneSheet = zen.zenMode || (canUseWindows && settings.titleRowShown);
+  const showTabBar = !oneSheet || tabs.length > 1 || dragHoverPreview !== null;
 
   return {
     ...active,
