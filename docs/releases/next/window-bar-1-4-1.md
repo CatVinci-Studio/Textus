@@ -8,7 +8,7 @@
 - A sidebar panel's search box has room round it, its sides level with the panel's name.
 - The sidebar's Plugins list shows each plugin's name and what it is for on one line, with a small Install or Update button at the end; who made it is on its page.
 - However many tabs are open, the window bar keeps some bare room before its buttons to move the window by.
-- In the dark theme, documents float above a deeper window with a soft shadow instead of a grey outline.
+- Documents lift off the window the same way in light and dark: a faint rim and a soft two-layer shadow, the dark window a step deeper, instead of a grey outline.
 
 ### Fixed
 

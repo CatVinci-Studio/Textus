@@ -10,8 +10,8 @@
   --island-radius: var(--shape-m);
   /* An island's edge on the frame. */
   --island-edge:
-    0 0 0 1px var(--ui-island-line),
-    0 2px 10px var(--ui-island-shadow);
+    0 0 0 1px var(--ui-island-line), 0 1px 2px var(--ui-island-contact),
+    0 4px 16px var(--ui-island-shadow);
   --tab-radius: var(--shape-s);
   /* The open tab's edge: its island's, carried up round it. */
   --tab-edge: var(--ui-island-line);
