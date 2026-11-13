@@ -224,5 +224,11 @@ describe("choices made in another window", () => {
     // Its reply is still coming: the process isn't stopped under it.
     expect(ipc.stop).not.toHaveBeenCalled();
     ipc.refuseMode = false;
+    // Stop still reaches it: ended once its grace runs out.
+    vi.useFakeTimers();
+    cancelAgentExchange("refusing");
+    await vi.advanceTimersByTimeAsync(5500);
+    expect(ipc.stop).toHaveBeenCalled();
+    vi.useRealTimers();
   });
 });

@@ -73,6 +73,9 @@ interface Session {
 }
 
 const sessions = new Map<string, Session>();
+/** Sessions out of use whose reply still runs, by conversation: Stop and
+ *  closing the chat still reach them. */
+const retired = new Map<string, Session>();
 const sessionListeners = new Set<() => void>();
 const sessionsChanged = () => sessionListeners.forEach((fn) => fn());
 
@@ -92,12 +95,17 @@ export function endAgentSession(conversation: string): void {
   sessions.delete(conversation);
   sessionsChanged();
   session?.connection.stop();
+  retired.get(conversation)?.connection.stop();
+  retired.delete(conversation);
 }
 
 /** A session no message goes to again; the reply it is giving finishes. */
 function retire(session: Session) {
   for (const [conversation, s] of [...sessions])
-    if (s === session) sessions.delete(conversation);
+    if (s === session) {
+      sessions.delete(conversation);
+      if (session.events) retired.set(conversation, session);
+    }
   sessionsChanged();
   if (session.events) session.retired = true;
   else session.connection.stop();
@@ -188,12 +196,13 @@ const STOP_GRACE_MS = 5000;
  *  hasn't stopped by STOP_GRACE_MS is ended, its session with it. */
 export function cancelAgentExchange(conversation: string): void {
   starting.get(conversation)?.();
-  const session = sessions.get(conversation);
+  const session = sessions.get(conversation) ?? retired.get(conversation);
   if (!session) return;
   session.refuse?.();
   session.connection.notify("session/cancel", { sessionId: session.sessionId });
   setTimeout(() => {
-    if (sessions.get(conversation) !== session || !session.events) return;
+    const now = sessions.get(conversation) ?? retired.get(conversation);
+    if (now !== session || !session.events) return;
     session.stopped = true;
     endAgentSession(conversation);
   }, STOP_GRACE_MS);
@@ -464,7 +473,11 @@ export async function runAgentExchange(o: {
   } finally {
     session.events = null;
     o.events.permission(null);
-    if (session.retired) session.connection.stop();
+    if (session.retired) {
+      session.connection.stop();
+      for (const [conversation, s] of [...retired])
+        if (s === session) retired.delete(conversation);
+    }
   }
 }
 
