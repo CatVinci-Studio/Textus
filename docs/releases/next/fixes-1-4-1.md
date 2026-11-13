@@ -16,6 +16,7 @@
 
 ### Fixed
 
+- Updating and relaunching Textus writes its windows, tabs, settings and AI chats first, so nothing from the last moments before the update is lost.
 - A picture embedded the Obsidian way (`![[image.png]]`) stays on show when clicked, as any picture does: its corner button or a double click enlarges it, and right-click offers View Image and Copy. The source comes up as the caret reaches it. (#659)
 - Reopening Textus brings its documents back as they were, the one in front first, without flicking through each tab.
 - Codex starts in Read-only, its mode that asks before changes, rather than Workspace access.
