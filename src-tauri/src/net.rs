@@ -22,7 +22,10 @@ pub fn public_client(connect: Duration, total: Duration) -> Result<reqwest::Clie
     through(client(connect, total), aicompat::http::proxy_url())
 }
 
-/// `builder` through `proxy`, if there is one.
+/// `builder` through `proxy`, if there is one. Without one the builder is
+/// pinned to direct: a proxy in the terminal's environment must not hijack
+/// a request to this computer either (aicompat::http::LOOPBACK_NO_PROXY
+/// keeps the loopback family out of a proxy that is set).
 fn through(
     builder: reqwest::ClientBuilder,
     proxy: Option<String>,
@@ -31,9 +34,11 @@ fn through(
         Some(proxy) => builder.proxy(
             reqwest::Proxy::all(proxy)
                 .map_err(|e| e.to_string())?
-                .no_proxy(reqwest::NoProxy::from_string("localhost,127.0.0.1,::1")),
+                .no_proxy(reqwest::NoProxy::from_string(
+                    aicompat::http::LOOPBACK_NO_PROXY,
+                )),
         ),
-        None => builder,
+        None => builder.no_proxy(),
     })
 }
 
@@ -232,6 +237,46 @@ mod tests {
     fn an_unreadable_proxy_is_an_error() {
         let builder = client(Duration::from_secs(5), Duration::from_secs(5));
         assert!(through(builder, Some("not a url".into())).is_err());
+    }
+
+    #[tokio::test]
+    async fn every_loopback_address_is_reached_directly() {
+        // A dead proxy is set, and the server listens on a loopback address
+        // beyond 127.0.0.1, which only a request exempted from the whole
+        // loopback family - not just 127.0.0.1 - reaches. macOS won't hand
+        // out such an address to bind, so there the same request runs
+        // against 127.0.0.1 itself.
+        let dead = std::net::TcpListener::bind("127.0.0.1:0").unwrap();
+        let proxy = format!("http://{}", dead.local_addr().unwrap());
+        let server = std::net::TcpListener::bind("127.0.0.5:0")
+            .or_else(|_| std::net::TcpListener::bind("127.0.0.1:0"))
+            .unwrap();
+        let local = format!("http://{}", server.local_addr().unwrap());
+        std::thread::spawn(move || {
+            let (mut stream, _) = server.accept().unwrap();
+            let mut request = Vec::new();
+            let mut buf = [0u8; 1024];
+            while !request.ends_with(b"\r\n\r\n") {
+                let n = stream.read(&mut buf).unwrap();
+                if n == 0 {
+                    break;
+                }
+                request.extend_from_slice(&buf[..n]);
+            }
+            let _ = stream.write_all(
+                b"HTTP/1.1 200 OK\r\nContent-Length: 2\r\nConnection: close\r\n\r\nok",
+            );
+        });
+        let client = through(
+            client(Duration::from_secs(5), Duration::from_secs(5)),
+            Some(proxy),
+        )
+        .unwrap()
+        .build()
+        .unwrap();
+        let response = client.get(local).send().await.unwrap();
+        assert_eq!(response.text().await.unwrap(), "ok");
+        drop(dead);
     }
 
     #[tokio::test]

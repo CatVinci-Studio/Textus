@@ -7,6 +7,12 @@ use std::time::Duration;
 
 static PROXY_URL: RwLock<Option<String>> = RwLock::new(None);
 
+/// The loopback family, which never goes through a proxy: a model or
+/// service on this computer is reached directly whatever the settings say
+/// (a proxy in the environment of the terminal that started the app
+/// included - see net.rs, which shares this).
+pub const LOOPBACK_NO_PROXY: &str = "localhost,127.0.0.0/8,::1";
+
 /// Total request timeout for whole-body paths, so a hung proxy or endpoint
 /// can't hold a request forever. Streamed requests use a per-read idle
 /// timeout instead, since a healthy stream can outlive any total cap.
@@ -52,10 +58,15 @@ fn streaming_builder() -> reqwest::ClientBuilder {
 }
 
 fn with_proxy(build: impl Fn() -> reqwest::ClientBuilder) -> reqwest::Client {
-    proxy()
-        .and_then(|p| build().proxy(p).build().ok())
-        .or_else(|| build().build().ok())
-        .unwrap_or_default()
+    let builder = match proxy() {
+        Some(proxy) => build().proxy(proxy),
+        // No proxy in the app's settings: direct all the same. A terminal
+        // that started the app with HTTPS_PROXY set must not hijack a
+        // model on this computer through it, and "None (direct)" says
+        // direct. A provider that needs a proxy has the app's setting.
+        None => build().no_proxy(),
+    };
+    builder.build().unwrap_or_default()
 }
 
 /// The client every whole-body provider request uses. Falls back to a direct
@@ -79,7 +90,7 @@ pub(crate) fn proxy() -> Option<reqwest::Proxy> {
         .unwrap()
         .clone()
         .and_then(|u| reqwest::Proxy::all(u).ok())
-        .map(|p| p.no_proxy(reqwest::NoProxy::from_string("localhost,127.0.0.1,::1")))
+        .map(|p| p.no_proxy(reqwest::NoProxy::from_string(LOOPBACK_NO_PROXY)))
 }
 
 pub(crate) fn with_timeouts(builder: reqwest::ClientBuilder) -> reqwest::ClientBuilder {
