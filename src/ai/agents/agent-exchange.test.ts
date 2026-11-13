@@ -12,6 +12,10 @@ const ipc = vi.hoisted(() => ({
   /** What the user chose, as settings hold it. */
   chosen: {} as Record<string, Record<string, string>>,
   remote: null as (() => void) | null,
+  /** The agent turns down a change of mode. */
+  refuseMode: false,
+  /** What session/new offers. */
+  offered: undefined as unknown,
   out: null as ((o: { type: "lines"; lines: string[] }) => void) | null,
 }));
 vi.mock("../../platform/ipc-plugins", () => ({
@@ -31,7 +35,27 @@ vi.mock("../../platform/ipc-plugins", () => ({
       }
       if (id === undefined || method === "session/prompt") return;
       if (method === "session/new" && ipc.slowStart) return;
-      const result = method === "session/new" ? { sessionId: "s" } : {};
+      if (
+        method === "session/set_config_option" &&
+        ipc.refuseMode &&
+        (sent as { params?: { configId: string } }).params?.configId === "mode"
+      )
+        return queueMicrotask(() =>
+          ipc.out!({
+            type: "lines",
+            lines: [
+              JSON.stringify({
+                jsonrpc: "2.0",
+                id,
+                error: { code: -32602, message: "no" },
+              }),
+            ],
+          }),
+        );
+      const result =
+        method === "session/new"
+          ? { sessionId: "s", configOptions: ipc.offered }
+          : {};
       queueMicrotask(() =>
         ipc.out!({
           type: "lines",
@@ -167,5 +191,38 @@ describe("choices made in another window", () => {
     ipc.remote!();
     await new Promise((done) => setTimeout(done, 0));
     expect(ipc.set).toEqual(["model=sonnet"]);
+  });
+
+  it("a mode the agent refuses retires its session once the reply ends", async () => {
+    ipc.offered = [
+      {
+        id: "mode",
+        category: "mode",
+        type: "select",
+        currentValue: "default",
+        options: [
+          { value: "default", name: "Default" },
+          { value: "bypass", name: "Bypass" },
+        ],
+      },
+    ];
+    ipc.chosen = { "p/r": { mode: "bypass" } };
+    ipc.stop.mockClear();
+    void runAgentExchange({
+      agent: { key: "p/r", plugin: "p", id: "r", name: "R" } as never,
+      conversation: "refusing",
+      cwd: "/w",
+      docPath: null,
+      message: "hi",
+      events: { view: () => {}, thinking: () => {}, permission: () => {} },
+    });
+    await vi.waitFor(() => expect(agentRunning("p/r")).toBe(true));
+    ipc.refuseMode = true;
+    ipc.chosen = { "p/r": { mode: "default" } };
+    ipc.remote!();
+    await vi.waitFor(() => expect(agentRunning("p/r")).toBe(false));
+    // Its reply is still coming: the process isn't stopped under it.
+    expect(ipc.stop).not.toHaveBeenCalled();
+    ipc.refuseMode = false;
   });
 });

@@ -68,9 +68,19 @@ interface Session {
   refuse: (() => void) | null;
   /** Ended by Stop: what it was doing ends as a stop does, not an error. */
   stopped?: boolean;
+  /** Out of use (it refused the mode): stopped once its reply ends. */
+  retired?: boolean;
 }
 
 const sessions = new Map<string, Session>();
+const sessionListeners = new Set<() => void>();
+const sessionsChanged = () => sessionListeners.forEach((fn) => fn());
+
+/** Hears sessions start and end in this window. */
+export function subscribeSessions(listener: () => void): () => void {
+  sessionListeners.add(listener);
+  return () => sessionListeners.delete(listener);
+}
 /** Conversations whose agent is still starting (or signing in): how to
  *  give up on it. */
 const starting = new Map<string, () => void>();
@@ -80,7 +90,17 @@ export function endAgentSession(conversation: string): void {
   starting.get(conversation)?.();
   const session = sessions.get(conversation);
   sessions.delete(conversation);
+  sessionsChanged();
   session?.connection.stop();
+}
+
+/** A session no message goes to again; the reply it is giving finishes. */
+function retire(session: Session) {
+  for (const [conversation, s] of [...sessions])
+    if (s === session) sessions.delete(conversation);
+  sessionsChanged();
+  if (session.events) session.retired = true;
+  else session.connection.stop();
 }
 
 /** Whether a session of `agent` runs in this window. */
@@ -107,22 +127,38 @@ async function setInSessions(agent: string, configId: string, value: string) {
         if (answer?.configOptions) heardOptions(agent, answer.configOptions);
         else heardValue(agent, configId, value);
       } catch {
-        if (!isMode) return;
-        for (const [conversation, s] of [...sessions])
-          if (s === session) endAgentSession(conversation);
+        if (isMode) retire(session);
       }
     }),
   );
 }
 
-/** The options in the order given, each after the agent answered the one
+/** The options in the agent's order, each after it answered the one
  *  before (an effort its new model offers). */
 async function sendInOrder(agent: string, entries: [string, string][]) {
-  for (const [id, value] of entries) await setInSessions(agent, id, value);
+  const order = offerOf(agent).options.map((o) => o.id);
+  const rank = (id: string) =>
+    order.includes(id) ? order.indexOf(id) : order.length;
+  const sorted = [...entries].sort(([a], [b]) => rank(a) - rank(b));
+  for (const [id, value] of sorted) await setInSessions(agent, id, value);
+}
+
+/** Each option still not as wanted, read again after each answer: a new
+ *  model may bring the effort the user chose. */
+async function sendWanted(agent: string) {
+  const done = new Set<string>();
+  for (;;) {
+    const next = choicesToSend(agent).find(([id]) => !done.has(id));
+    if (!next) return;
+    done.add(next[0]);
+    await setInSessions(agent, ...next);
+  }
 }
 
 /** An option the user just chose in this window. */
 export function setAgentOption(agent: string, configId: string, value: string) {
+  // Seen here: another window's change later doesn't send it again.
+  if (seen) seen = loadSettings().agentOptions;
   void setInSessions(agent, configId, value);
 }
 
@@ -241,7 +277,10 @@ async function start(
       for (const line of out.lines) session.connection.receive(line);
     else {
       session.connection.close(new Error(stoppedText(agent, out.stderr)));
-      if (sessions.get(conversation) === session) sessions.delete(conversation);
+      if (sessions.get(conversation) === session) {
+        sessions.delete(conversation);
+        sessionsChanged();
+      }
     }
   });
   try {
@@ -397,9 +436,10 @@ export async function runAgentExchange(o: {
       starting.delete(o.conversation);
     }
     sessions.set(o.conversation, session);
+    sessionsChanged();
     followChoices();
     // Chosen while it started: set now.
-    void sendInOrder(o.agent.key, choicesToSend(o.agent.key));
+    void sendWanted(o.agent.key);
   }
   const user: AgentTurn = { kind: "User", text: o.message };
   current.set(session, { turns: [user], text: "" });
@@ -424,6 +464,7 @@ export async function runAgentExchange(o: {
   } finally {
     session.events = null;
     o.events.permission(null);
+    if (session.retired) session.connection.stop();
   }
 }
 

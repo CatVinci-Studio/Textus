@@ -8,7 +8,11 @@ import {
   type AgentCommand,
 } from "./agent-offers";
 import { externalAgent } from "../../plugins/contributions/agents";
-import { agentRunning, setAgentOption } from "./agent-exchange";
+import {
+  agentRunning,
+  setAgentOption,
+  subscribeSessions,
+} from "./agent-exchange";
 
 /** An agent's options as its menu shows them: each with the value in
  *  force, the user's choice or, for the mode, the one that asks. */
@@ -23,6 +27,9 @@ export function useAgentOptions(agent: string | null): AgentOptionsMenu | null {
   const { settings, setSettings } = useSettings();
   const offer = useSyncExternalStore(subscribeOffers, () =>
     offerOf(agent ?? ""),
+  );
+  const running = useSyncExternalStore(subscribeSessions, () =>
+    agentRunning(agent ?? ""),
   );
   if (!agent || offer.options.length === 0) return null;
   const chosen = settings.agentOptions[agent] ?? {};
@@ -45,10 +52,7 @@ export function useAgentOptions(agent: string | null): AgentOptionsMenu | null {
     },
     // While a session runs, the mode it reported: the agent may have
     // moved itself off the one chosen.
-    unasking: unaskingName(
-      offer.options,
-      agentRunning(agent) ? mode?.current : modeValue,
-    ),
+    unasking: unaskingName(offer.options, running ? mode?.current : modeValue),
   };
 }
 

@@ -316,9 +316,10 @@ export function useStartupRestore(options: StartupRestoreOptions): void {
         // Gone too, the last of them: the blank tab stays. The rest come
         // in at once behind it, so the window doesn't flick through each;
         // its recovered tab is already open.
+        // Behind the front, none offers a plugin: no card holds them back.
         const behind = await opts.tabsForPaths(
           rest.filter((p) => !recoveredFor(p)),
-          reopening,
+          true,
         );
         let ordered: DocTab[] = [];
         opts.setTabs((prev) => {

@@ -279,7 +279,10 @@ export function useFileOpening(opts: {
       const meanwhile =
         justOpened(path) ??
         tabsRef.current.find(
-          (tab) => tab.path === path || tab.importedFrom === path,
+          (tab) =>
+            tab.path === path ||
+            tab.importedFrom === path ||
+            (!open.asDocument && tab.view?.resource === path),
         )?.id;
       if (meanwhile) return show(meanwhile);
       // A plugin's tab has no source to show.
