@@ -9,13 +9,18 @@ const EDGE = 24;
 /**
  * A phone's sidebar is pushed in from the left (mobile/styles/sidebar.css):
  * a swipe in from the left edge opens it; a tap on the page's strip left
- * showing, or a swipe left, pushes it back.
+ * showing, a swipe left, or another tab coming to the front (a file opened
+ * from anywhere) pushes it back.
  */
 export function usePushedSidebar(
   phone: boolean,
   open: boolean,
   setOpen: (open: boolean) => void,
+  activeTabId: string,
 ): void {
+  useEffect(() => {
+    if (phone) setOpen(false);
+  }, [phone, activeTabId, setOpen]);
   // Read as events come: the listeners stay put while it opens and closes,
   // so the closing tap's click still finds them.
   const shown = useRef(open);

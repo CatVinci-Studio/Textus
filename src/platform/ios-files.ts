@@ -2,21 +2,32 @@ import { useEffect, useState } from "react";
 import { invoke } from "@tauri-apps/api/core";
 import { join } from "@tauri-apps/api/path";
 import { type DirEntryInfo } from "./bindings/files";
-import { isIOSApp } from "./capabilities";
+import { isIOSApp, isMobileApp } from "./capabilities";
+import { nameContentUrl } from "../utils/path";
 import { documentsDir, insideDocuments } from "./documents-path";
 
 /**
- * iOS document access. Files-app picks are `file://` URLs read through the
- * native plugin, which holds the security scope; the app's own Documents
- * folder keeps plain paths and the ordinary Rust commands.
+ * iOS and Android document access. Files-app picks are `file://` URLs read
+ * through the native plugin, which holds the security scope; Android's are
+ * `content://` URLs read through its ContentResolver. The app's own
+ * Documents folder keeps plain paths and the ordinary Rust commands.
  */
 
 /** True for a picked file or folder (a URL) rather than a sandbox path. */
 export function isScopedUrl(path: string): boolean {
-  return isIOSApp && path.startsWith("file://");
+  return isIOSApp
+    ? path.startsWith("file://")
+    : isMobileApp && path.startsWith("content://");
 }
 
 type Picked = { url: string | null; name?: string; folder?: boolean };
+
+/** A pick or a listing's item, its name kept for a content:// URL. */
+function named<T extends { url: string | null; name?: string }>(item: T): T {
+  if (item.url?.startsWith("content://") && item.name)
+    nameContentUrl(item.url, item.name);
+  return item;
+}
 
 const call = <T>(command: string, args?: Record<string, unknown>) =>
   invoke<T>(`plugin:textus-files|${command}`, args ? { args } : undefined);
@@ -36,7 +47,11 @@ async function inDocuments(url: string | null): Promise<string | null> {
 export const iosFiles = {
   /** The Files app's document picker; null when cancelled. */
   pickDocument: async (): Promise<string | null> =>
-    inDocuments((await call<Picked>("pick_document")).url),
+    inDocuments(named(await call<Picked>("pick_document")).url),
+  /** Android's Save As for a new document: where and under what name, in
+   *  the system's picker; null when cancelled. */
+  createDocument: async (name: string): Promise<string | null> =>
+    named(await call<Picked>("create_document", { name })).url,
   readText: async (url: string): Promise<string> =>
     (await call<{ text: string }>("read_text", { url })).text,
   /** A tap felt under the finger, as something lifts. Never fails. */
@@ -52,13 +67,15 @@ export const iosFiles = {
       await call<{
         entries: { url: string; name: string; folder: boolean }[];
       }>("list_folder", { url })
-    ).entries.map((e) => ({
-      name: e.name,
-      path: e.url,
-      is_dir: e.folder,
-      hidden: e.name.startsWith("."),
-      ignored: false,
-    })),
+    ).entries
+      .map(named)
+      .map((e) => ({
+        name: e.name,
+        path: e.url,
+        is_dir: e.folder,
+        hidden: e.name.startsWith("."),
+        ignored: false,
+      })),
   /** Picked files and folders that survive a relaunch. */
   remembered: async () =>
     (
@@ -71,7 +88,7 @@ export const iosFiles = {
     (await call<{ path: string }>("begin_access", { url })).path,
   /** Picks a folder for the project and opens it: its plain path, or null. */
   pickProjectFolder: async (): Promise<string | null> => {
-    const url = (await call<Picked>("pick_folder")).url;
+    const url = named(await call<Picked>("pick_folder")).url;
     return url ? iosFiles.beginAccess(url) : null;
   },
 };
@@ -105,10 +122,13 @@ export async function scopedImageSrc(
  * process, so the AI couldn't read the project after a relaunch otherwise.
  */
 export async function restoreFolderAccess(): Promise<void> {
-  if (!isIOSApp) return;
+  if (!isMobileApp) return;
   const { items } = await call<{
-    items: { url: string; folder: boolean }[];
+    items: { url: string; name: string; folder: boolean }[];
   }>("remembered");
+  // Android: the names of documents reopened from the last session.
+  items.forEach(named);
+  if (!isIOSApp) return;
   await Promise.all(
     items
       .filter((item) => item.folder)

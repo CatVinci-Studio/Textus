@@ -35,9 +35,10 @@ export function railShown(
 
 /**
  * Layout state of the sidebar and the docked Agent panel. `aiOn` is Textus
- * AI's switch: off, the AI panel closes and its toggles do nothing.
+ * AI's switch: off, the AI panel closes and its toggles do nothing. A new
+ * tab in front pushes a phone's sidebar back.
  */
-export function useSidePanels(aiOn: boolean) {
+export function useSidePanels(aiOn: boolean, activeTabId: string) {
   const phone = usePhoneLayout();
   // Remembered, except on a phone, where it starts put away.
   const [open, setOpen] = useState(
@@ -47,7 +48,7 @@ export function useSidePanels(aiOn: boolean) {
   // With the rail turned off, the window bar's button opens the sidebar
   // with the rail and folds both away; the rail stays off.
   const toggleSidebar = useCallback(() => setOpen((v) => !v), []);
-  usePushedSidebar(phone, open, setOpen);
+  usePushedSidebar(phone, open, setOpen, activeTabId);
   useEffect(() => {
     if (!isPhoneLayout()) setUiState("sidebarOpen", open);
     // A phone's sidebar pushes the page aside: the find bar goes with it.

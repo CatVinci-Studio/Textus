@@ -2,11 +2,29 @@ import { MARKDOWN_EXTENSIONS } from "../platform/bindings/files";
 // OS-path string math. Documents opened on Windows arrive with "\", so both
 // separators are treated as separators here.
 
+/** Android's content:// URLs carry no readable name: the picker's and the
+ *  folder listing's names, by URL (platform/ios-files.ts). */
+const contentNames = new Map<string, string>();
+
+export function nameContentUrl(url: string, name: string): void {
+  contentNames.set(url, name);
+}
+
 export function basename(path: string): string {
+  if (path.startsWith("content://")) return contentName(path);
   const idx = Math.max(path.lastIndexOf("/"), path.lastIndexOf("\\"));
   const name = idx >= 0 ? path.slice(idx + 1) : path;
   // A document picked on iOS is a file:// URL with an encoded name.
   return path.startsWith("file://") ? decodeUrlPath(name) : name;
+}
+
+/** A content:// URL's name: as picked or listed, else its document id's
+ *  last part (external storage's "primary:Notes/a.md"). */
+function contentName(url: string): string {
+  const named = contentNames.get(url);
+  if (named) return named;
+  const id = decodeUrlPath(url.slice(url.lastIndexOf("/") + 1));
+  return id.slice(Math.max(id.lastIndexOf("/"), id.lastIndexOf(":")) + 1);
 }
 
 // The folder part of a path: "/" for a root-level "/name", and the input

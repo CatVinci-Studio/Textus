@@ -4,6 +4,9 @@ node_modules
 src-tauri/target
 src-tauri/**/target
 src-tauri/gen
+# A plugin's Android build output and the Tauri API copy Gradle makes.
+src-tauri/plugins/*/android/build
+src-tauri/plugins/*/android/.tauri
 package-lock.json
 src-tauri/Cargo.lock
 src/help/*.md

@@ -41,6 +41,13 @@ describe("the file tree's root without an opened folder", () => {
     expect(root("/notes", null, null, "/Documents")).toBe("/Documents");
   });
 
+  it("keeps the tree for a document Android picked alone", () => {
+    const picked =
+      "content://com.android.externalstorage.documents/document/primary%3ADocuments%2Fnotes.md";
+    expect(root("/notes", picked)).toBe("/notes");
+    expect(root(null, picked, null, "/Documents")).toBe("/Documents");
+  });
+
   it("works with Windows paths", () => {
     expect(root("C:\\Notes", "C:\\Notes\\Novel\\ch1.md")).toBe("C:\\Notes");
     expect(root("C:\\Notes", "D:\\Other\\x.md")).toBe("D:\\Other");

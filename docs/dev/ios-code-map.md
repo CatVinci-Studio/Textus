@@ -80,7 +80,7 @@ The design is in the "文件访问方案" (file access plan) section of [2026-10
 - **Configuration:**
   - `src-tauri/PrivacyInfo.ios.xcprivacy`: the privacy manifest. It declares two kinds of "required reason APIs": UserDefaults (the plugin stores bookmarks) and file timestamps (to check whether a document was changed outside the app). Without it, App Store Connect rejects the upload. `tauri.conf.json` does not control this file. `scripts/ios-prepare.sh` copies it into the project after `tauri ios init`. It must run right after init. If xcodegen runs again later, it also adds the built library to the resources, which causes "Multiple commands produce libapp.a";
   - `src-tauri/Info.ios.plist`: makes the Documents folder appear in the Files app, supports opening files in place, and registers "Open with Textus" for Markdown;
-  - `capabilities/ios.json`: the plugin permissions on iOS;
+  - `capabilities/mobile.json`: the plugin permissions on iOS and Android;
   - Documents opened from the Files app (`RunEvent::Opened`) keep their `file://` URL on iOS and are read and written through the plugin.
 
 ## Building for iOS (needs a Mac and Xcode)

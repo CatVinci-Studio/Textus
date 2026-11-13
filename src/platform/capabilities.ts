@@ -67,9 +67,10 @@ export const canPickImageFile = isDesktopApp;
 /** A folder picker: the dialog plugin's on desktop, Files' on iOS. */
 export const canPickFolder = isDesktopApp || isIOSApp;
 
-/** File > Open Folder. Not on iOS: a Files folder is a security-scoped URL
- *  the backend can't walk for the search. */
-export const canOpenFolder = isDesktopApp;
+/** File > Open Folder: on a phone, a folder picked in the system's picker
+ *  (iOS opens its scope for the session; Android's is walked through the
+ *  plugin, platform/scoped-folder.ts). */
+export const canOpenFolder = isDesktopApp || isMobileApp;
 
 /** Settings' "install the `textus` terminal command". */
 export const canInstallCliCommand = isDesktopApp;
