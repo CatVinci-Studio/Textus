@@ -10,7 +10,7 @@
 /* global createEndpoint, localized, __textusText */
 (function () {
   "use strict";
-  var API_VERSION = "1.5";
+  var API_VERSION = "1.6";
   var app = null;
   var waiting = [];
   var module = { exports: {} };
@@ -1063,6 +1063,9 @@
       },
     },
     export: {
+      mathCss: function () {
+        return call("export.mathCss");
+      },
       onWillExport: function (listener) {
         willExport.push(listener);
         if (willExport.length === 1)

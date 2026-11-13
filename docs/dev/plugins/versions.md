@@ -8,6 +8,7 @@ numbers ("1.10" is after "1.9").
 
 | API | Textus       | Added                                                                                                                                                                 |
 | --- | ------------ | --------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| 1.6 | 1.4.2        | `export.mathCss`, KaTeX's stylesheet with its fonts inline                                                                                                            |
 | 1.5 | 1.3.13-rc.1  | `contributes.agents` and the `agents` permission, AI agents on the computer in Textus AI's model menu; `layout.openSettings`                                          |
 | 1.4 | 1.3.10       | `dates`, `templates`, `files.appSettings`, `layout.panels` / `onDidChangePanels`; conventions' `weekly`, `monthly`, `templateFormats`; `files.write` includes reading |
 | 1.3 | 1.3.10-rc.1  | `env.onDidCopy`, `layout.showSidebarTab`, a list's `onMove`                                                                                                           |

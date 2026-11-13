@@ -103,10 +103,20 @@ let obstacles: BarObstacles | null = null;
 const listeners = new Set<() => void>();
 let stopWatching: (() => void) | null = null;
 
+/** The bar's leading controls' end as a length for stylesheets: the
+ *  sidebar's name starts past it (activity-rail.css). */
+export function leadEndLength(leadEnd: number): string {
+  return `${Number.isFinite(leadEnd) ? Math.ceil(leadEnd) : 0}px`;
+}
+
 function remeasure() {
   const next = measure();
   if (JSON.stringify(next) === JSON.stringify(obstacles)) return;
   obstacles = next;
+  document.documentElement.style.setProperty(
+    "--bar-lead-end",
+    leadEndLength(next.leadEnd),
+  );
   for (const listener of listeners) listener();
 }
 

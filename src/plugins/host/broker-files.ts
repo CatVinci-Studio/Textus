@@ -264,6 +264,11 @@ export function fileHandlers(p: PluginScope) {
         p.request<string | null>("$willSave", request),
       );
     },
+    // Loaded only when a plugin asks: the fonts are about 300 KB.
+    "export.mathCss": () =>
+      import("../../editor/math/katex-inline-css").then((m) =>
+        m.katexInlineCss(),
+      ),
     "export.willExport": ({ on }: Params) => {
       setWillExport(p.id, on === true, (page) =>
         p.request("$willExport", page),

@@ -1,5 +1,5 @@
 import { describe, expect, it } from "vitest";
-import { rowInsets } from "./row-insets";
+import { leadEndLength, rowInsets } from "./row-insets";
 
 describe("rowInsets", () => {
   const row = { left: 100, right: 700 };
@@ -34,5 +34,15 @@ describe("rowInsets", () => {
     expect(rowInsets(row, 0, 650, 8, 20, 56).end).toBe(114);
     // A row that ends before the controls has none to keep.
     expect(rowInsets(row, 0, 900, 8, 20, 56).end).toBe(20);
+  });
+});
+
+describe("leadEndLength", () => {
+  it("gives the end of the bar's leading controls, rounded up", () => {
+    expect(leadEndLength(118.2)).toBe("119px");
+  });
+
+  it("is zero with no leading controls", () => {
+    expect(leadEndLength(-Infinity)).toBe("0px");
   });
 });
