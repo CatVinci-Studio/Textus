@@ -24,20 +24,14 @@ pub fn public_client(connect: Duration, total: Duration) -> Result<reqwest::Clie
 
 /// `builder` through `proxy`, if there is one. Without one the builder is
 /// pinned to direct: a proxy in the terminal's environment must not hijack
-/// a request to this computer either (aicompat::http::LOOPBACK_NO_PROXY
+/// a request to this computer either (aicompat::http::proxy_for
 /// keeps the loopback family out of a proxy that is set).
 fn through(
     builder: reqwest::ClientBuilder,
     proxy: Option<String>,
 ) -> Result<reqwest::ClientBuilder, String> {
     Ok(match proxy {
-        Some(proxy) => builder.proxy(
-            reqwest::Proxy::all(proxy)
-                .map_err(|e| e.to_string())?
-                .no_proxy(reqwest::NoProxy::from_string(
-                    aicompat::http::LOOPBACK_NO_PROXY,
-                )),
-        ),
+        Some(proxy) => builder.proxy(aicompat::http::proxy_for(&proxy)?),
         None => builder.no_proxy(),
     })
 }
