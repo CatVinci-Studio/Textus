@@ -119,7 +119,7 @@ export const commands = {
 	/**
 	 *  A project's own settings file (`.textus/settings.json`) as a whole, read
 	 *  as the conventions read it (comments and trailing commas allowed); {}
-	 *  when it isn't there, null when it is but doesn't read as settings.
+	 *  when it isn't there or is empty, null when it doesn't read as settings.
 	 */
 	project_settings_read: (root: string) => __TAURI_INVOKE<Value>("project_settings_read", { root }),
 	open_word_document: (path: string) => __TAURI_INVOKE<WordDocument>("open_word_document", { path }),

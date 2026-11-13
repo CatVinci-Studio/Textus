@@ -21,6 +21,7 @@ import {
   PluginWebviewPanel,
 } from "../views/plugin-views";
 import {
+  pluginMayRun,
   pluginRecord,
   windowInfo,
   type PluginRecord,
@@ -232,7 +233,7 @@ export function applyContributions(
   if (embedKinds.length)
     undo.push(
       startOnEmbed(id, embedKinds, (plugin) => {
-        if (pluginRecord(plugin)?.status === "on")
+        if (pluginMayRun(pluginRecord(plugin)))
           void deps.start(plugin).catch(() => {});
       }),
     );
@@ -264,7 +265,7 @@ function syncHoverStarter(deps: ContributionDeps) {
           syncHoverStarter(deps);
           await Promise.all(
             ids.map((id) =>
-              pluginRecord(id)?.status === "on"
+              pluginMayRun(pluginRecord(id))
                 ? deps.start(id).catch(() => {})
                 : undefined,
             ),

@@ -202,7 +202,7 @@ pub(crate) fn keep_attachments(
             .filter(|f| f.is_dir())
         {
             std::fs::create_dir_all(&files).map_err(|e| e.to_string())?;
-            crate::atomic::copy_entry(&from, &attached).map_err(|e| e.to_string())?;
+            crate::atomic::copy_whole(&from, &attached).map_err(|e| e.to_string())?;
         }
     }
     write_out_materials(&dir, &attached)?;

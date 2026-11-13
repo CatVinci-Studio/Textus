@@ -148,6 +148,10 @@ fn reads_the_project_settings_file_with_comments_and_flags_a_broken_one() {
     };
     assert_eq!(read(&[]), serde_json::json!({}));
     assert_eq!(
+        read(&[(".textus/settings.json", "\n")]),
+        serde_json::json!({})
+    );
+    assert_eq!(
         read(&[(".textus/settings.json", "{ // mine\n \"a\": 1, }")]),
         serde_json::json!({ "a": 1 })
     );

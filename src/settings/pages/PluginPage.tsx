@@ -180,7 +180,9 @@ export function PluginPage({
           <SettingsGroup title={t.pluginSettingsGroup}>
             {!runs ? (
               <p className="tx-list-note">
-                {fill(t.pluginSettingsOff, { name })}
+                {on
+                  ? t.pluginStatusAllOff
+                  : fill(t.pluginSettingsOff, { name })}
               </p>
             ) : manifest.contributes.settings.length === 0 ? (
               <p className="tx-list-note">

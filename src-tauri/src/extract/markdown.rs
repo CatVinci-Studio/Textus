@@ -322,17 +322,14 @@ pub(super) fn list_mark(marker: &str) -> String {
 
 /// What a list marker's stem counts to: digits (the last of `1.3`), a
 /// Roman numeral, a letter or a run of one (Word's `aa` after `z`), or a
-/// Chinese numeral up to ten.
+/// Chinese numeral below a hundred.
 fn item_number(stem: &str) -> Option<u32> {
     let last = stem.rsplit('.').next()?;
     if stem.split('.').all(|part| part.parse::<u32>().is_ok()) {
         return last.parse().ok();
     }
-    if let Some(n) = "一二三四五六七八九十"
-        .chars()
-        .position(|c| stem == c.to_string())
-    {
-        return Some(n as u32 + 1);
+    if let Some(n) = chinese(stem) {
+        return Some(n);
     }
     // i, ii, iv, xi… are Roman far more often than letters past h.
     if stem.chars().all(|c| "ivxIVX".contains(c)) {
@@ -344,6 +341,25 @@ fn item_number(stem: &str) -> Option<u32> {
         return Some((stem.len() as u32 - 1) * 26 + place);
     }
     roman(stem)
+}
+
+/// 三 is 3, 十一 is 11, 二十 is 20, 九十九 is 99.
+fn chinese(stem: &str) -> Option<u32> {
+    let digit = |c: char| {
+        "一二三四五六七八九"
+            .chars()
+            .position(|d| d == c)
+            .map(|n| n as u32 + 1)
+    };
+    let chars: Vec<char> = stem.chars().collect();
+    match chars[..] {
+        [d] if d == '十' => Some(10),
+        [d] => digit(d),
+        ['十', one] => Some(10 + digit(one)?),
+        [tens, '十'] => Some(10 * digit(tens)?),
+        [tens, '十', one] => Some(10 * digit(tens)? + digit(one)?),
+        _ => None,
+    }
 }
 
 fn roman(stem: &str) -> Option<u32> {

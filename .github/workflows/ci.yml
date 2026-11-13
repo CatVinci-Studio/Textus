@@ -221,8 +221,8 @@ jobs:
           retention-days: 7
 
   # One required check for the two shards, like `native` below: passes only
-  # when all of them passed (or were skipped together, when the change can't
-  # reach the browser).
+  # when all of them passed (or were skipped together, when the run isn't the
+  # full suite).
   e2e:
     needs: [changes, e2e-shard]
     if: always()

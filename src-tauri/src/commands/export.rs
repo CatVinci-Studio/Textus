@@ -32,6 +32,17 @@ fn pandoc_candidates() -> Vec<PathBuf> {
     candidates
 }
 
+/// The fixed places, then the login shell's PATH (Nix, conda…), which an
+/// app opened from the Dock lacks: asking it can take seconds.
+#[cfg(desktop)]
+fn pandoc_places() -> impl Iterator<Item = PathBuf> {
+    let login = std::iter::once_with(|| {
+        crate::mcp::path::find_program("pandoc", &crate::mcp::path::login_path())
+    })
+    .flatten();
+    pandoc_candidates().into_iter().chain(login)
+}
+
 /// Pandoc started without a console window flashing up (Windows).
 #[cfg(desktop)]
 fn pandoc_command(program: impl AsRef<std::ffi::OsStr>) -> Command {
@@ -52,13 +63,7 @@ fn pandoc_command(program: impl AsRef<std::ffi::OsStr>) -> Command {
 #[cfg_attr(test, specta::specta)]
 pub async fn detect_pandoc() -> Option<String> {
     tauri::async_runtime::spawn_blocking(|| {
-        // Last, the login shell's PATH (Nix, conda…), which an app opened
-        // from the Dock lacks: asking it can take seconds.
-        let login = std::iter::once_with(|| {
-            crate::mcp::path::find_program("pandoc", &crate::mcp::path::login_path())
-        })
-        .flatten();
-        for candidate in pandoc_candidates().into_iter().chain(login) {
+        for candidate in pandoc_places() {
             let works = pandoc_command(&candidate)
                 .arg("--version")
                 .stdin(Stdio::null())
@@ -144,15 +149,12 @@ pub async fn export_via_pandoc(
     reference_doc: Option<String>,
     options: pandoc_options::PandocOptions,
 ) -> Result<(), String> {
-    // Only a Pandoc found where detect_pandoc looks: the page names which,
-    // never a program of its own.
-    if !pandoc_candidates()
-        .iter()
-        .any(|c| c.to_string_lossy() == pandoc_path)
-    {
-        return Err(format!("{pandoc_path} isn't a Pandoc Textus found."));
-    }
     tauri::async_runtime::spawn_blocking(move || {
+        // Only a Pandoc found where detect_pandoc looks: the page names
+        // which, never a program of its own.
+        if !pandoc_places().any(|c| c.to_string_lossy() == pandoc_path) {
+            return Err(format!("{pandoc_path} isn't a Pandoc Textus found."));
+        }
         if let Some(arg) = pandoc_options::owned_arg(&options.extra_args) {
             return Err(format!("The Pandoc argument {arg} is set by Textus."));
         }

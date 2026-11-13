@@ -53,11 +53,6 @@ import { pluginSetting, setPluginSetting } from "./plugin-setting-values";
 // Loading
 // ---------------------------------------------------------------------------
 
-/** Every way into a plugin's code asks this. */
-const mayRun = (
-  record: PluginRecord | null | undefined,
-): record is PluginRecord => pluginMayRun(record);
-
 function makeRecord(
   id: string,
   origin: PluginOrigin,
@@ -187,7 +182,7 @@ const brokerModule = lazyModule("plugin-broker", () => import("./host/broker"));
 async function host(record: PluginRecord): Promise<PluginHost> {
   const { PluginHost } = await brokerModule.load();
   // Switched off while the host's code was loading: not started after all.
-  if (!mayRun(pluginRecord(record.id)))
+  if (!pluginMayRun(pluginRecord(record.id)))
     throw new Error(`${record.id} is turned off.`);
   let running = hosts.get(record.id);
   if (!running && record.manifest) {
@@ -210,7 +205,7 @@ async function host(record: PluginRecord): Promise<PluginHost> {
           Promise.resolve(null),
         runCommand: async (command, args, caller) => {
           const owner = pluginsSnapshot().records.find(
-            (r) => mayRun(r) && command.startsWith(`${r.id}.`),
+            (r) => pluginMayRun(r) && command.startsWith(`${r.id}.`),
           );
           // Another plugin reaches only the commands this one lists.
           if (
@@ -257,14 +252,14 @@ async function host(record: PluginRecord): Promise<PluginHost> {
         },
         exportsOf: async (other) => {
           const target = pluginRecord(other);
-          if (!mayRun(target)) return null;
+          if (!pluginMayRun(target)) return null;
           const running = await host(target);
           await running.start();
           return running.exports;
         },
         callExport: async (other, name, args) => {
           const target = pluginRecord(other);
-          if (!mayRun(target)) throw new Error(`${other} is turned off.`);
+          if (!pluginMayRun(target)) throw new Error(`${other} is turned off.`);
           return (await host(target)).request("$callExport", { name, args });
         },
         failed: pluginFailed,
@@ -324,7 +319,7 @@ export async function askPlugin(
   needs?: Permission,
 ): Promise<unknown> {
   const record = await loadedRecord(id);
-  if (!mayRun(record)) throw new Error(`${id} is turned off.`);
+  if (!pluginMayRun(record)) throw new Error(`${id} is turned off.`);
   if (needs && !grants(record.granted, needs))
     throw new Error(`${id} was not granted ${needs}.`);
   return (await host(record)).request(method, params);
@@ -360,7 +355,7 @@ export async function resolveWebview(
   },
 ): Promise<void> {
   const plugin = await loadedRecord(record.plugin);
-  if (!mayRun(plugin)) throw new Error(`${record.plugin} is turned off.`);
+  if (!pluginMayRun(plugin)) throw new Error(`${record.plugin} is turned off.`);
   const running = await host(plugin);
   // Gone while the plugin started: drawn now, nothing would let it go.
   if (!webview(record.id)) return;
@@ -420,7 +415,7 @@ export function revealInPluginTab(tabId: string, target: unknown): void {
 export function webviewMessage(id: string, message: unknown): void {
   const record = webview(id);
   const plugin = record && pluginRecord(record.plugin);
-  if (!record || !mayRun(plugin)) return;
+  if (!record || !pluginMayRun(plugin)) return;
   void host(plugin)
     .then((running) =>
       running.request("$webviewMessage", { webview: id, message }),
@@ -442,7 +437,7 @@ const contributionDeps: ContributionDeps = {
   runPluginCommand,
   start: async (id) => {
     const record = pluginRecord(id);
-    if (mayRun(record)) await (await host(record)).start();
+    if (pluginMayRun(record)) await (await host(record)).start();
   },
 };
 

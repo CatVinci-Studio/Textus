@@ -28,7 +28,7 @@ pub struct JobRun {
     pub job: String,
     /// The function of the background code that runs.
     pub run: String,
-    /// The folder its files are in, if it was granted files.read.
+    /// The folder its files are in, if it was granted files.read or project.data.
     pub root: Option<String>,
     /// When it was due, Unix milliseconds.
     pub due: f64,

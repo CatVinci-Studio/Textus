@@ -37,7 +37,7 @@ pub(crate) fn adopt(global: &Path, root: &Path, sub: &str) -> PathBuf {
     if from.is_dir() && !to.exists() {
         let moved = std::fs::create_dir_all(dir(global, root))
             .and_then(|()| std::fs::rename(&from, &to))
-            .or_else(|_| crate::atomic::copy_entry(&from, &to));
+            .or_else(|_| crate::atomic::copy_whole(&from, &to));
         if let Err(e) = moved {
             eprintln!(
                 "textus: could not move {} to {}: {e}",

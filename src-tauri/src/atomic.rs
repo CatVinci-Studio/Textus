@@ -257,7 +257,7 @@ mod tests;
 
 /// `from` (a file or a folder) moved to `to`, its folder made first; to
 /// another volume, copied as it is and the original removed once the copy is
-/// whole. For the app's own data (papers, AI records), never the user's files.
+/// whole. For the app's own data, or a file Textus AI made.
 pub(crate) fn move_or_copy(from: &std::path::Path, to: &std::path::Path) -> std::io::Result<()> {
     if let Some(parent) = to.parent() {
         std::fs::create_dir_all(parent)?;
@@ -268,10 +268,7 @@ pub(crate) fn move_or_copy(from: &std::path::Path, to: &std::path::Path) -> std:
     if error.kind() != std::io::ErrorKind::CrossesDevices || std::fs::symlink_metadata(to).is_ok() {
         return Err(error);
     }
-    if let Err(copying) = copy_entry(from, to) {
-        take_back(to);
-        return Err(copying);
-    }
+    copy_whole(from, to)?;
     if std::fs::symlink_metadata(from)?.is_dir() {
         std::fs::remove_dir_all(from)
     } else {
@@ -310,10 +307,7 @@ pub(crate) fn move_entry(from: &std::path::Path, to: &std::path::Path) -> std::i
     if error.kind() != std::io::ErrorKind::CrossesDevices || std::fs::symlink_metadata(to).is_ok() {
         return Err(error);
     }
-    if let Err(copying) = copy_entry(from, to) {
-        take_back(to);
-        return Err(copying);
-    }
+    copy_whole(from, to)?;
     if try_trash(from) {
         return Ok(());
     }
@@ -346,7 +340,12 @@ pub(crate) fn copy_entry(from: &std::path::Path, to: &std::path::Path) -> std::i
     std::fs::copy(from, to).map(|_| ())
 }
 
-/// A copy `move_entry` made itself, removed when the move can't finish.
+/// `from` copied to `to`, or nothing left at `to` when the copy fails.
+pub(crate) fn copy_whole(from: &std::path::Path, to: &std::path::Path) -> std::io::Result<()> {
+    copy_entry(from, to).inspect_err(|_| take_back(to))
+}
+
+/// A copy made here, removed when the move can't finish.
 fn take_back(copy: &std::path::Path) {
     let Ok(meta) = std::fs::symlink_metadata(copy) else {
         return;

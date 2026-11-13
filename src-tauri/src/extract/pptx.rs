@@ -408,7 +408,7 @@ fn body_markdown(paragraphs: &[(usize, Bullet, Inline)], bulleted: bool) -> Stri
             Bullet::Number(start) => next[*level].unwrap_or(*start),
             _ => 0,
         };
-        next[*level] = matches!(bullet, Bullet::Number(_)).then_some(counted + 1);
+        next[*level] = matches!(bullet, Bullet::Number(_)).then_some(counted.saturating_add(1));
         match bullet {
             Bullet::Number(_) => blocks.push_item(*level, &format!("{counted}."), &text),
             Bullet::Char => blocks.push_item(*level, "-", &text),

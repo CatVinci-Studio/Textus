@@ -196,7 +196,7 @@ mod desktop {
     }
 
     /// `textus.schedule.set`: adds or replaces one of the plugin's jobs.
-    /// `root`, the folder open in the window, is kept only with files.read.
+    /// `root`, the folder open in the window, is kept only with files.read or project.data.
     #[tauri::command(async)]
     #[cfg_attr(test, specta::specta)]
     pub fn schedule_set(

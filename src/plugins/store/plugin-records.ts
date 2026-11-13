@@ -105,7 +105,9 @@ export function pluginRecord(id: string): PluginRecord | undefined {
 
 /** Whether a plugin's code may run now: its own switch and "all plugins"
  *  both on. */
-export function pluginMayRun(record: PluginRecord | null | undefined): boolean {
+export function pluginMayRun(
+  record: PluginRecord | null | undefined,
+): record is PluginRecord {
   return !!record && canRun(record.status, snapshot.allOn);
 }
 

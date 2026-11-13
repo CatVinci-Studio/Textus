@@ -177,9 +177,7 @@ mod tests {
                     request.extend_from_slice(&buf[..n]);
                 }
                 // The name and password as typed: "p%41 x", not "pA x".
-                let carries = String::from_utf8_lossy(&request).to_lowercase().contains(
-                    &format!("proxy-authorization: basic {}", "YWxpY2U6cCU0MSB4").to_lowercase(),
-                );
+                let carries = String::from_utf8_lossy(&request).contains("Basic YWxpY2U6cCU0MSB4");
                 let answer = if carries {
                     "HTTP/1.1 200 OK\r\nContent-Length: 2\r\nConnection: close\r\n\r\nok"
                 } else {
