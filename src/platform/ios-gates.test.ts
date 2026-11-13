@@ -17,8 +17,6 @@ const ALLOWED: Record<string, string> = {
   "app/frame/sidebar-tabs.tsx": "the drawer closes over a document it opened",
   "engine/controls/tabs/TabPill.tsx": "a haptic tap as a tab lifts",
   "ai/chat/panel/agent-panel.tsx": "a docked panel drawn at its width",
-  "document/ios-recents.ts": "the document list's recent documents",
-  "document/startup-restore.ts": "reopens the last document; no shortcut tour",
   "document/word-import.ts":
     "Files' security-scoped URLs the converter can't read",
   "platform/ios-files.ts": "the Files app's documents",

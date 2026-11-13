@@ -10,21 +10,25 @@ import androidx.core.view.WindowInsetsCompat
 
 // Copied over the generated one by scripts/android-prepare.sh.
 class MainActivity : TauriActivity() {
-  /** The status bar's (or cutout's) height, in CSS px. */
+  /** The status bar's (or cutout's) and the navigation bar's heights, in
+   *  CSS px. */
   @Volatile private var top = 0f
+  @Volatile private var bottom = 0f
 
   override fun onCreate(savedInstanceState: Bundle?) {
     enableEdgeToEdge()
     super.onCreate(savedInstanceState)
   }
 
-  // The page runs under the status bar and ends above the navigation bar
-  // and the keyboard. Shortened so, the web view reports no safe area at
-  // its top: the page reads it as TextusInsets.top() (mobile-viewport.ts).
+  // The page runs under the status bar and the navigation bar, its own
+  // colours there, and ends at the keyboard, which the web view doesn't
+  // make room for itself. It reports no safe area, so the page reads the
+  // bars' heights as TextusInsets (mobile-viewport.ts).
   override fun onWebViewCreate(webView: WebView) {
     webView.addJavascriptInterface(
       object {
         @JavascriptInterface fun top(): Float = top
+        @JavascriptInterface fun bottom(): Float = bottom
       },
       "TextusInsets",
     )
@@ -33,10 +37,9 @@ class MainActivity : TauriActivity() {
       top = insets.getInsets(
         WindowInsetsCompat.Type.statusBars() or WindowInsetsCompat.Type.displayCutout(),
       ).top / density
-      val foot = insets.getInsets(
-        WindowInsetsCompat.Type.ime() or WindowInsetsCompat.Type.navigationBars(),
-      ).bottom
-      (view.parent as? View)?.setPadding(0, 0, 0, foot)
+      bottom = insets.getInsets(WindowInsetsCompat.Type.navigationBars()).bottom / density
+      val keyboard = insets.getInsets(WindowInsetsCompat.Type.ime()).bottom
+      (view.parent as? View)?.setPadding(0, 0, 0, keyboard)
       ViewCompat.onApplyWindowInsets(view, insets)
     }
   }

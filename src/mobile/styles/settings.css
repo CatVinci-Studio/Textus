@@ -9,7 +9,7 @@
     top: 0;
     z-index: var(--z-phone-page);
     padding: calc(var(--safe-top) + 8px) 8px
-      calc(env(safe-area-inset-bottom, 0px) + 8px);
+      calc(var(--safe-bottom) + 8px);
   }
 
   :root[data-window-chrome="mobile"] .settings-panel {

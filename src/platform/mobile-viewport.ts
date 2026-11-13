@@ -17,13 +17,14 @@ export function installMobileViewport(): void {
   window.addEventListener("resize", nativeSafeTop);
 }
 
-/** Android's web view, ending above the navigation bar, reports no safe
- *  area at its top: the app says how tall the status bar is. */
+/** Android's web view, ending only at the keyboard, reports no safe area:
+ *  the app says how tall the status bar and the navigation bar are. */
 function nativeSafeTop(): void {
-  const insets = (window as { TextusInsets?: { top(): number } }).TextusInsets;
+  const insets = (
+    window as { TextusInsets?: { top(): number; bottom(): number } }
+  ).TextusInsets;
   if (!insets) return;
-  document.documentElement.style.setProperty(
-    "--native-safe-top",
-    `${insets.top()}px`,
-  );
+  const style = document.documentElement.style;
+  style.setProperty("--native-safe-top", `${insets.top()}px`);
+  style.setProperty("--native-safe-bottom", `${insets.bottom()}px`);
 }

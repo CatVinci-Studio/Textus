@@ -12,7 +12,7 @@
   color: var(--ui-text);
   font-family: var(--font-sans);
   /* Clear of the status bar and the home indicator it runs under. */
-  padding: var(--safe-top, 0px) 0 env(safe-area-inset-bottom, 0px);
+  padding: var(--safe-top, 0px) 0 var(--safe-bottom);
   /* As the app's dialogs open: grown out of the middle as it fades in. */
   animation: motion-dialog-in var(--dur-base) var(--ease-out);
 }

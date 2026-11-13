@@ -7,6 +7,13 @@
 @import "../controls/bubble.css";
 
 :root {
+  /* What a phone's home indicator or navigation bar takes at the bottom:
+     the web view's safe area, or Android's, told by the app
+     (mobile-viewport.ts). */
+  --safe-bottom: max(
+    env(safe-area-inset-bottom, 0px),
+    var(--native-safe-bottom, 0px)
+  );
   /* Shape (docs/design/design-language.md). Containers are rounded rectangles in
      three sizes (4, 8, 12), bigger and further forward rounder; a box
      inside another takes the outer radius less the padding between them,

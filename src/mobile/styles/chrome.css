@@ -310,7 +310,7 @@
   /* Clear of the keyboard toolbar and the home indicator alike: one height,
      since a note a little high is still readable. */
   :root[data-window-chrome="mobile"] .notice-stack {
-    bottom: calc(48px + 14px + env(safe-area-inset-bottom, 0px));
+    bottom: calc(48px + 14px + var(--safe-bottom));
     max-width: calc(100vw - 36px);
   }
 
