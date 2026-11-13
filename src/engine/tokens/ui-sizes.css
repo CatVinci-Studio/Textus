@@ -1,0 +1,99 @@
+/* Interface Size's three presets, as Chrome and macOS keep theirs: each
+   size chosen by hand, on even pixels, not a factor times one design. The
+   build leaves this sheet's lengths as written (vite.chrome-scale.ts); the
+   rest of the interface grows by --chrome-scale between them. Medium is the
+   default; the phone has its own (ds-base.css). */
+:root {
+  --window-bar-height: 40px;
+  /* Room above a tab in the bar: the tab is the bar less it. */
+  --ui-tab-lift: 8px;
+  --island-space: 10px;
+  --control-height-sm: 26px;
+  --control-height: 30px;
+  /* The small round icon button: a panel's tools (.tx-icon-button). */
+  --icon-button-s: 26px;
+  /* A tree's step in, a level at a time: files, the outline, plugin lists. */
+  --tree-step: 14px;
+  /* From a pane's edge to its text: its title's, and its rows'. A scrolling
+     body keeps --pane-edge for itself (rows' fills stop short of the edge);
+     a row's own padding is the rest, so every line starts level - a
+     plugin's sidebar page's too. */
+  --pane-inset: 16px;
+  --pane-edge: 4px;
+  /* The macOS traffic lights' corner: AppKit draws them at one size,
+     whatever the interface's, so their room never grows or shrinks. */
+  --lights-room: 78px;
+  /* Text by role: small for what is said about something (a count, a hint,
+     a group's title), list for a long list read at a glance (the file
+     tree), body for everything read or used, title for a dialog's, large
+     for a welcome; mark is a badge's digit. */
+  --text-caption: 12px;
+  --text-list: 14px;
+  --text-body: 16px;
+  --text-title: 20px;
+  --text-large-title: 26px;
+  --text-mark: 10px;
+  /* Spacing on a 4-point grid, 8 the default step. */
+  --space-1: 4px;
+  --space-2: 8px;
+  --space-3: 12px;
+  --space-4: 16px;
+  --space-6: 24px;
+  --space-8: 32px;
+}
+
+:root[data-ui-size="small"]:not([data-window-chrome="mobile"]) {
+  --window-bar-height: 36px;
+  --ui-tab-lift: 6px;
+  --island-space: 8px;
+  --control-height-sm: 22px;
+  --control-height: 26px;
+  --icon-button-s: 22px;
+  --tree-step: 12px;
+  --pane-inset: 12px;
+  --pane-edge: 4px;
+  --text-caption: 12px;
+  --text-list: 12px;
+  --text-body: 14px;
+  --text-title: 18px;
+  --text-large-title: 22px;
+  --text-mark: 8px;
+  --space-1: 4px;
+  --space-2: 6px;
+  --space-3: 10px;
+  --space-4: 14px;
+  --space-6: 20px;
+  --space-8: 28px;
+}
+
+:root[data-ui-size="large"]:not([data-window-chrome="mobile"]) {
+  --window-bar-height: 48px;
+  --ui-tab-lift: 10px;
+  --island-space: 12px;
+  --control-height-sm: 32px;
+  --control-height: 36px;
+  --icon-button-s: 32px;
+  --tree-step: 16px;
+  --pane-inset: 20px;
+  --pane-edge: 6px;
+  --text-caption: 16px;
+  --text-list: 18px;
+  --text-body: 20px;
+  --text-title: 24px;
+  --text-large-title: 32px;
+  --text-mark: 12px;
+  --space-1: 6px;
+  --space-2: 10px;
+  --space-3: 16px;
+  --space-4: 20px;
+  --space-6: 30px;
+  --space-8: 40px;
+}
+
+/* The phone's chrome, at its first design. */
+:root[data-window-chrome="mobile"] {
+  --window-bar-height: 28px;
+  --icon-button-s: 24px;
+  --tree-step: 12px;
+  --pane-inset: 12px;
+}

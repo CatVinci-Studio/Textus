@@ -14,7 +14,7 @@ import {
 const AIR = 8;
 /** Bare bar kept before the window's own controls, however many tabs:
  *  somewhere to grab the window by. */
-const GRIP = 56;
+const GRIP = 62;
 
 /** Where one tab row in the window bar's row starts and ends its tabs. */
 interface RowInsets {

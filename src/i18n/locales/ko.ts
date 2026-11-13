@@ -1268,7 +1268,7 @@ ${AI_NAME}에게 주는 글쓰기 지침으로, 모든 문서에 적용됩니다
   docLetterSpacingExpanded: "넓게",
   docLetterSpacingCondensed: "좁게",
   docLetterSpacingBy: "간격",
-  uiTextScaleLabel: "인터페이스 글자 크기",
+  uiTextScaleLabel: "인터페이스 크기",
   uiTextSmall: "작게",
   uiTextMedium: "보통",
   uiTextLarge: "크게",

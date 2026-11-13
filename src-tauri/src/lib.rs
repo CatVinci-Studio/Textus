@@ -135,6 +135,8 @@ fn desktop_setup(app: &mut tauri::App) -> Result<(), Box<dyn std::error::Error>>
     crate::editor_windows::detect_wayland();
     #[cfg(target_os = "macos")]
     crate::editor_windows::watch_fullscreen(app.handle());
+    #[cfg(target_os = "macos")]
+    crate::commands::traffic_lights::watch();
     // Plugins' jobs and notifications: before the links, one of which may be
     // a notification's click that started Textus.
     schedule::start(app.handle());

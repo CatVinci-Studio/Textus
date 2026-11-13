@@ -13,7 +13,7 @@
     position: fixed;
     z-index: calc(var(--z-dock) + 1);
     padding-bottom: env(safe-area-inset-bottom, 0px);
-    width: min(320px, 85vw);
+    width: min(352px, 85vw);
     box-shadow: var(--shadow-drawer);
   }
 
@@ -67,11 +67,11 @@
 
 /* Rows and tabs a finger can hit (an iPad's too). */
 :root[data-window-chrome="mobile"] :is(.tree-row, .sidebar-tab) {
-  min-height: 44px;
+  min-height: 48px;
 }
 
 :root[data-window-chrome="mobile"] .sidebar-tab {
-  min-width: 44px;
+  min-width: 48px;
 }
 
 :root[data-window-chrome="mobile"] .sidebar-tab:hover:not(.sidebar-tab-active) {

@@ -6,7 +6,7 @@
   left: 8px;
   right: 8px;
   z-index: var(--z-popover);
-  max-height: min(420px, 60vh);
+  max-height: min(462px, 60vh);
   overflow-y: auto;
   overscroll-behavior: contain;
   transform-origin: top right;
@@ -98,8 +98,8 @@
 @media (pointer: coarse) {
   .chat-history-entry-delete {
     justify-content: center;
-    min-width: 32px;
-    min-height: 32px;
+    min-width: 36px;
+    min-height: 36px;
     margin: -4px -4px -4px 0;
   }
 }

@@ -92,7 +92,7 @@ for (const language of ["zh", "en", "de"])
     for (const width of WIDTHS) {
       await openApp(page, {
         settings: { language, menuBarShown: false },
-        storage: { "textus-panel-width": String(width) },
+        storage: { "textus-panel-px": String(width) },
       });
       await emit(page, "menu-settings");
       await emit(page, "menu-split-right");

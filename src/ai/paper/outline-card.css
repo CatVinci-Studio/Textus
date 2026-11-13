@@ -109,7 +109,7 @@
 }
 
 .paper-outline-length {
-  width: 80px;
+  width: 88px;
 }
 
 .paper-outline-figure input {
@@ -182,7 +182,7 @@
 
 .paper-outline-more {
   align-self: flex-start;
-  padding: 0 0 0 24px;
+  padding: 0 0 0 28px;
 }
 
 .paper-outline-points {
@@ -190,7 +190,7 @@
   flex-direction: column;
   gap: 2px;
   margin: 0;
-  padding-left: 24px;
+  padding-left: 28px;
   color: var(--ui-muted);
   font-size: var(--text-footnote);
   line-height: 1.5;
@@ -211,7 +211,7 @@
   display: flex;
   flex-wrap: wrap;
   gap: 4px;
-  padding-left: 24px;
+  padding-left: 28px;
 }
 
 .paper-outline-tag {
@@ -358,7 +358,7 @@
    while it is being worked on, and new lines that slide in. Transform and
    opacity only. */
 .paper-card-spinner {
-  --progress-ring-size: 10px;
+  --progress-ring-size: 12px;
   --progress-ring-line: 1.5px;
 }
 

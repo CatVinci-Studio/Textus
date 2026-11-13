@@ -4,15 +4,15 @@
 .notice-stack {
   position: fixed;
   left: 50%;
-  bottom: 40px;
+  bottom: 44px;
   z-index: var(--z-toast);
   display: flex;
   flex-direction: column;
   align-items: center;
   gap: 8px;
-  width: min(420px, calc(100vw - 32px));
+  width: min(462px, calc(100vw - 36px));
   /* Never past the window's top: the newest, at the foot, stay in view. */
-  max-height: calc(100vh - 40px - var(--space-4));
+  max-height: calc(100vh - 44px - var(--space-4));
   justify-content: flex-end;
   overflow: hidden;
   transform: translateX(-50%);
@@ -20,7 +20,7 @@
 }
 
 body:has(.corner-stack .corner-toast) .notice-stack {
-  bottom: calc(16px + var(--control-height) + var(--space-4) + 8px);
+  bottom: calc(18px + var(--control-height) + var(--space-4) + 8px);
 }
 
 .notice {

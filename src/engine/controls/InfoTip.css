@@ -11,8 +11,8 @@
   display: inline-flex;
   align-items: center;
   justify-content: center;
-  width: 16px;
-  height: 16px;
+  width: 18px;
+  height: 18px;
   padding: 0;
   border: 1px solid var(--ui-border);
   border-radius: var(--shape-pill);
@@ -45,7 +45,7 @@
 .info-tip-card {
   position: fixed;
   z-index: var(--z-select);
-  max-width: min(300px, calc(100vw - 16px));
+  max-width: min(330px, calc(100vw - 18px));
   padding: var(--space-2) var(--space-3);
   color: var(--ui-text);
   font-size: var(--text-body);

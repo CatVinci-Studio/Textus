@@ -1,22 +1,22 @@
 /* A window corner's toasts: stacked, newest nearest the edge. */
 .corner-stack {
   position: fixed;
-  bottom: 16px;
+  bottom: 18px;
   z-index: var(--z-toast);
   display: flex;
   flex-direction: column;
   gap: 8px;
-  max-width: calc(100vw - 32px);
+  max-width: calc(100vw - 36px);
 }
 
 .corner-stack[data-corner="end"] {
-  right: 16px;
+  right: 18px;
   align-items: flex-end;
 }
 
 /* After the rail, never over its buttons. */
 .corner-stack[data-corner="start"] {
-  left: calc(var(--rail-width, 0px) + 16px);
+  left: calc(var(--rail-width, 0px) + 18px);
   align-items: flex-start;
 }
 
@@ -26,7 +26,7 @@
   flex-wrap: wrap;
   align-items: center;
   gap: 8px;
-  max-width: min(520px, calc(100vw - 32px));
+  max-width: min(572px, calc(100vw - 36px));
   padding: 4px 8px 4px 12px;
   font-size: var(--text-body);
   user-select: none;
@@ -56,8 +56,8 @@
 
 .corner-toast-summary .plugin-icon {
   flex-shrink: 0;
-  width: 24px;
-  height: 24px;
+  width: 26px;
+  height: 26px;
 }
 /* Opened, or with nothing more to open: its words whole, wrapping. */
 .corner-toast[data-open] .corner-toast-line,
@@ -91,7 +91,7 @@
   order: 1;
   flex-basis: 100%;
   /* design: allow - lines up with the text after the toast's icon. */
-  padding: 0 4px 4px 36px;
+  padding: 0 4px 4px 40px;
   color: var(--ui-muted);
   font-size: var(--text-sm);
 }
@@ -100,7 +100,7 @@
    buttons go under the details. */
 @media (max-width: 480px) {
   .corner-stack .corner-toast {
-    width: calc(100vw - 32px);
+    width: calc(100vw - 36px);
     padding: 8px 12px 8px 8px;
   }
 

@@ -2,7 +2,7 @@ import { scaledPx } from "../../engine/tokens/chrome-scale";
 import { useCallback, useEffect, useRef } from "react";
 
 /** How near the bottom still counts as at it, for a wheel's last step. */
-const NEAR = 40;
+const NEAR = 44;
 
 /**
  * Keeps the newest streamed content in view while the reader is at the

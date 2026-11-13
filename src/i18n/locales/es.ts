@@ -1373,7 +1373,7 @@ para usar una.
   docLetterSpacingExpanded: "Expandido",
   docLetterSpacingCondensed: "Comprimido",
   docLetterSpacingBy: "En",
-  uiTextScaleLabel: "Tamaño del texto de la interfaz",
+  uiTextScaleLabel: "Tamaño de la interfaz",
   uiTextSmall: "Pequeño",
   uiTextMedium: "Mediano",
   uiTextLarge: "Grande",

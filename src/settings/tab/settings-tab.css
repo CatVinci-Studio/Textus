@@ -7,9 +7,9 @@
 }
 
 .settings-tab .settings-tab-page {
-  max-width: 720px;
+  max-width: 792px;
   margin: 0 auto;
-  padding: 24px;
+  padding: 28px;
   overflow: visible;
   scrollbar-gutter: auto;
 }
@@ -20,15 +20,15 @@
   display: flex;
   align-items: center;
   gap: 12px;
-  margin-bottom: 24px;
+  margin-bottom: 28px;
   padding: 12px;
   border: 1px solid color-mix(in srgb, var(--ui-border) 75%, transparent);
   border-radius: var(--shape-m);
 }
 
 .settings-about-card-icon {
-  width: 44px;
-  height: 44px;
+  width: 48px;
+  height: 48px;
   border-radius: var(--shape-m);
 }
 

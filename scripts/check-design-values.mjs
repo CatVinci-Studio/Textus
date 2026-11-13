@@ -7,8 +7,8 @@ import { readFileSync, readdirSync, statSync } from "node:fs";
 import { join, relative } from "node:path";
 
 const ROOT = new URL("../src/", import.meta.url).pathname;
-// Spacing steps; 1 and 2 for hairlines and nudges.
-const SPACING = new Set([0, 1, 2, 4, 8, 12, 16, 24, 32, 40, 48]);
+// Spacing on the 4-point grid; 1 and 2 for hairlines and nudges.
+const onGrid = (n) => n <= 2 || n % 4 === 0;
 // Radii a token doesn't name: none, a hairline's.
 const RADII = new Set([0, 1]);
 
@@ -40,7 +40,7 @@ const RULES = [
     test: (prop, value) =>
       /^(padding|margin|gap|row-gap|column-gap)(-[a-z]+)*$/.test(prop) &&
       [...value.matchAll(/(?<![\w-])(\d*\.?\d+)px/g)].some(
-        ([, n]) => !SPACING.has(Number(n)),
+        ([, n]) => !onGrid(Number(n)),
       ),
   },
 ];

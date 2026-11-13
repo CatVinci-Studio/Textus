@@ -50,8 +50,8 @@ const STACK_EDGE = 0.12;
 /** How near the documents' outer edge puts a drop beside all of them: a
  *  share of that side, kept between two lengths (interface px). */
 const OUTER_SHARE = 0.04;
-const OUTER_MIN = 24;
-const OUTER_MAX = 48;
+const OUTER_MIN = 26;
+const OUTER_MAX = 52;
 
 /** The split's outer edge under (x, y), if it is near one. */
 function outerEdge(

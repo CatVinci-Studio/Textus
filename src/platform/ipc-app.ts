@@ -207,6 +207,15 @@ export const inputSourceIpc = {
     desktopQueryCommand("set_roman_input", undefined, on),
 };
 
+/** The window bar: on macOS its traffic lights stay on its middle line,
+ *  through a new title too (commands/traffic_lights.rs). */
+export const windowBarIpc = {
+  follow: (barHeight: number) =>
+    desktopQueryCommand("set_window_bar_height", undefined, barHeight),
+  setTitle: (title: string) =>
+    desktopQueryCommand("set_window_title", undefined, title),
+};
+
 // Links and export
 
 /** Our own pages, opened in the system browser. URLs are fixed in Rust,

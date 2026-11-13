@@ -171,7 +171,7 @@ Two heights: `--control-height` 28 (36) for forms, dialogs and a Settings row's 
 
 ### 5.4 Layout
 
-**Window** (desktop): sidebar (resizable, 180–480, 240 to start) | document column | AI panel (resizable, 300–720, 380 to start). Widths are kept in base units and drawn times `--chrome-scale` (5.6); each panel takes at most 45% of the window and leaves the document at least 360 × scale, the AI panel counting an open sidebar. The document column centres the text at the theme's measure; the margin for review notes takes 280 on the right when shown. A tab's toolbar is 36 high.
+**Window** (desktop): sidebar (resizable, 198–528, 264 to start) | document column | AI panel (resizable, 330–792, 440 to start). Widths are kept in base units and drawn times `--chrome-scale` (5.6); each panel takes at most 45% of the window and leaves the document at least 360 × scale, the AI panel counting an open sidebar. The document column centres the text at the theme's measure; the margin for review notes takes 280 on the right when shown. A tab's toolbar is 36 high.
 
 **Surface templates.** A new surface - in the app or a plugin - MUST use one of these:
 
@@ -211,7 +211,7 @@ Every surface that appears in the window is one of these. Each row says where it
 
 Every size in the interface is written once, in **interface pixels** on the 4 px grid, and drawn at the interface's size. Nothing - the app, a plugin, a script - draws a fixed number of screen pixels.
 
-**The scale.** `--chrome-scale` = the desktop's base (1.1, one step up from the first design) × Interface Text Size, the same on every desktop platform. It never follows the window's size: a bigger window shows more, not bigger (as VS Code, Obsidian and Typora). `--window-scale` stays 1 for plugins that read it. Icons take one step more (`--icon-scale`, 1.15). The phone's chrome is 1. Hairlines (1–2 px) never scale; the document's typography doesn't either - it has the document's zoom.
+**The scale.** Interface Size has three presets, Small, Medium and Large, as Chrome and macOS keep theirs: the sizes that set the frame (the window bar 36/40/48, control heights, text roles, spacing, pane insets) are chosen per preset on even pixels in `ui-sizes.css`, which the build leaves as written. Everything else is written at Medium and grows by `--chrome-scale` (0.85, 1, 1.25), the same on every desktop platform. It never follows the window's size: a bigger window shows more, not bigger (as VS Code, Obsidian and Typora). `--window-scale` stays 1 for plugins that read it. Icons draw a quarter over their design size (`--icon-scale`, 1.25). The phone keeps its first design (`--chrome-scale` 10/11). A plugin's own lengths are in the first design's pixels and are taken to Medium's (×1.1, on an even pixel) as its page loads. Hairlines (1–2 px) never scale; the document's typography doesn't either - it has the document's zoom.
 
 **Where a size is written, and how it scales:**
 

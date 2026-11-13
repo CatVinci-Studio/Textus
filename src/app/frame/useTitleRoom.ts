@@ -5,9 +5,9 @@ import { useFrameLayout } from "../../engine/frame/frame-store";
 import { useBarObstacles } from "../../engine/layout/row-insets";
 
 /** Room kept between the title and what sits beside it. */
-const GAP = 12;
+const GAP = 14;
 /** Less than this either side of the column's centre, and the title moves. */
-const MIN_HALF = 80;
+const MIN_HALF = 88;
 
 /**
  * The window bar's title over the document it names: centred on its

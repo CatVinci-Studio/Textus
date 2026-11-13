@@ -34,7 +34,7 @@ button.settings-inline-button {
 }
 
 .shortcut-capture-button {
-  min-width: 120px;
+  min-width: 132px;
   text-align: center;
   font-size: var(--text-secondary);
   font-variant-numeric: tabular-nums;
@@ -67,7 +67,7 @@ button.settings-inline-button {
 .api-key-input {
   flex: 1;
   min-width: 0;
-  max-width: 220px;
+  max-width: 242px;
 }
 
 .api-key-configured {
@@ -117,8 +117,8 @@ button.settings-inline-button {
 }
 
 .image-settings-input {
-  width: min(270px, 48%);
-  flex: 0 1 270px;
+  width: min(298px, 48%);
+  flex: 0 1 298px;
 }
 
 /* Settings > Images > Folder: the choice, the subfolder's name beside it,
@@ -156,7 +156,7 @@ button.settings-inline-button {
   align-items: center;
   gap: 8px;
   width: 100%;
-  min-height: 48px;
+  min-height: 52px;
   padding: 8px 0;
   border: none;
   border-radius: 0;
@@ -266,10 +266,10 @@ button.settings-inline-button {
 }
 
 .settings-proxy-host {
-  flex: 1 1 160px;
+  flex: 1 1 176px;
   min-width: 0;
 }
 
 .settings-proxy-port {
-  flex: 0 0 72px;
+  flex: 0 0 80px;
 }

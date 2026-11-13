@@ -14,8 +14,8 @@
   display: inline-grid;
   place-items: center;
   box-sizing: border-box;
-  min-width: 18px;
-  height: 18px;
+  min-width: 20px;
+  height: 20px;
   margin: 0 2px;
   padding: 0 4px;
   vertical-align: 0.2em;
@@ -24,15 +24,15 @@
   corner-shape: round;
   background: var(--review-note-line);
   color: var(--ui-on-fill);
-  font: 700 10.5px/1 var(--font-ui, sans-serif);
+  font: 700 12px/1 var(--font-ui, sans-serif);
   cursor: pointer;
   box-shadow: 0 0 0 3px var(--review-anchor-bg);
   animation: pending-pick-in var(--dur-base) var(--ease-spring-bouncy) both;
 }
 
 [data-platform="ios"] .review-badge {
-  width: 24px;
-  height: 24px;
+  width: 26px;
+  height: 26px;
   font-size: var(--text-caption);
 }
 
@@ -203,7 +203,7 @@
   width: auto;
   height: auto;
   max-width: 100%;
-  max-height: 96px;
+  max-height: 106px;
   margin: 4px 0;
   border-radius: var(--shape-xs);
   object-fit: contain;
@@ -215,7 +215,7 @@
      fill the card), and not stretched across a flex card either. */
   display: inline-block;
   align-self: flex-start;
-  height: 72px;
+  height: 80px;
 }
 
 /* Struck, the old picture reads as gone. */

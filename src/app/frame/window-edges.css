@@ -14,7 +14,7 @@
   position: fixed;
   z-index: calc(var(--z-edges) + 1);
   --edge: 6px;
-  --corner: 12px;
+  --corner: 14px;
 }
 
 .window-edge[data-edge="North"] {

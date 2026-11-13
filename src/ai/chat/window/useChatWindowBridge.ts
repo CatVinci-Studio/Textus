@@ -1,5 +1,5 @@
 import { useCallback, useEffect, useMemo, useRef, useState } from "react";
-import { thisWindow } from "../../../platform/this-window";
+import { setWindowTitle, thisWindow } from "../../../platform/this-window";
 import type { PendingStatus } from "../../revision/usePendingEdits";
 import type { ChatRestore } from "../chat-restore";
 import type { ReopenTarget } from "../reopen-conversation";
@@ -68,7 +68,7 @@ export function useChatWindowBridge({
 
   const docTitle = context?.docTitle;
   useEffect(() => {
-    void thisWindow().setTitle(
+    void setWindowTitle(
       docTitle ? `${t.chatWindowTitle} - ${docTitle}` : t.chatWindowTitle,
     );
   }, [docTitle, t.chatWindowTitle]);

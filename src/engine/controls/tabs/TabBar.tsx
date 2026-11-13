@@ -97,7 +97,7 @@ export function TabBar({
 
   // The open tab in view as it changes, and as the row narrows.
   const { x: slotX, w: slotW } = strip.slotOf(activeTabId) ?? {};
-  const shownLength = fit && fit.available - (overflow ? scaledPx(24) : 0);
+  const shownLength = fit && fit.available - (overflow ? scaledPx(26) : 0);
   const smooth = useRef<string | null>(null);
   useEffect(() => {
     const bar = barRef.current;

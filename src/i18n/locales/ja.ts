@@ -1281,7 +1281,7 @@ ${AI_NAME}への執筆の指示です。すべての文書に適用されます�
   docLetterSpacingExpanded: "広く",
   docLetterSpacingCondensed: "狭く",
   docLetterSpacingBy: "間隔",
-  uiTextScaleLabel: "インターフェイスの文字サイズ",
+  uiTextScaleLabel: "インターフェイスのサイズ",
   uiTextSmall: "小",
   uiTextMedium: "中",
   uiTextLarge: "大",

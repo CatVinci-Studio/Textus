@@ -10,7 +10,7 @@
   align-self: stretch;
   flex-shrink: 0;
   /* Cancels .window-bar's right padding so the buttons run to the window's edge. */
-  margin-right: -12px;
+  margin-right: -14px;
   /* The bar is the drag region; the buttons must take their own clicks back
      (.window-bar-status next to them deliberately does not). */
   pointer-events: auto;
@@ -20,7 +20,7 @@
   display: flex;
   align-items: center;
   justify-content: center;
-  width: calc(46px * var(--chrome-scale, 1));
+  width: calc(50px * var(--chrome-scale, 1));
   align-self: stretch;
   padding: 0;
   border: none;

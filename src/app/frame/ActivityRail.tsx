@@ -15,7 +15,7 @@ import type { Strings } from "../../i18n/strings";
 import { isOwnTab, railOrder, type SidebarTabDef } from "./sidebar-tabs";
 
 /** The rail's width in interface px (activity-rail.css draws the same). */
-export const RAIL_WIDTH = 44;
+export const RAIL_WIDTH = 48;
 
 /**
  * The column of icons at the window's left edge (design-language.md 5.7):

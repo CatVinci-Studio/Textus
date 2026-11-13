@@ -89,7 +89,7 @@ button.agent-context-chip:hover {
   line-height: 1.45;
   white-space: pre-wrap;
   word-break: break-word;
-  max-height: 160px;
+  max-height: 176px;
   overflow-y: auto;
   padding: 4px 8px;
   border-radius: var(--shape-s);
@@ -274,8 +274,8 @@ button.agent-context-chip:hover {
 }
 
 .agent-tool-line .agent-tool-icon {
-  width: 11px;
-  height: 11px;
+  width: 12px;
+  height: 12px;
   opacity: 0.8;
 }
 
@@ -323,7 +323,7 @@ button.agent-context-chip:hover {
   margin: 4px 0 0;
   /* A long result scrolls in its own box, so the summary that closes it
      stays close at hand. */
-  max-height: min(320px, 45vh);
+  max-height: min(352px, 45vh);
   overflow-y: auto;
 }
 

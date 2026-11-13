@@ -2,7 +2,7 @@
    than a caption button. Over the bar's shared button rule whichever
    stylesheet loads last (window-bar.css). */
 .window-menu-button.window-menu-button {
-  width: calc(34px * var(--chrome-scale));
+  width: calc(38px * var(--chrome-scale));
   margin-left: -8px;
   color: var(--ui-muted);
   pointer-events: auto;
@@ -20,7 +20,7 @@
   display: flex;
   align-self: stretch;
   flex-shrink: 0;
-  margin-left: -12px;
+  margin-left: -14px;
   pointer-events: auto;
 }
 

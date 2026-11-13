@@ -1,9 +1,12 @@
 /**
- * Lengths written in interface pixels, as the interface draws them: times
- * `--chrome-scale`. The build does it to the app's stylesheets
- * (vite.chrome-scale.ts, kept in step by its test); a plugin's page has
- * it done as it loads.
+ * A plugin page's lengths, as the interface draws them: times
+ * `--chrome-scale`, as the build does the app's (vite.chrome-scale.ts). A
+ * plugin's are written in the first design's pixels, which Medium draws a
+ * step larger: each is taken to Medium's even pixel first, as the app's own
+ * stylesheets were once.
  */
+
+import { atMedium } from "../../utils/at-medium";
 
 /** A length worth scaling: 3px and up; hairlines stay crisp. */
 const LENGTH = /(^|[\s(,/+*])(-?\d*\.?\d+)px\b/g;
@@ -15,7 +18,7 @@ export function scaleLengths(value: string): string {
   return value.replace(LENGTH, (whole, before: string, n: string) =>
     Math.abs(Number(n)) < 3 || Math.abs(Number(n)) >= 999
       ? whole
-      : `${before}calc(${n}px * var(--chrome-scale, 1))`,
+      : `${before}calc(${atMedium(Number(n))}px * var(--chrome-scale, 1))`,
   );
 }
 

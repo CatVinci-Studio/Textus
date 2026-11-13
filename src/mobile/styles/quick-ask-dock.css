@@ -20,7 +20,7 @@
 :root[data-window-chrome="mobile"] .quick-ask-dock .inline-chat-shell {
   /* Never taller than the page below the title row; the reply area gives
      way first (below). */
-  max-height: calc(100dvh - var(--mobile-top, 44px) - 8px);
+  max-height: calc(100dvh - var(--mobile-top, 48px) - 8px);
   padding-bottom: env(safe-area-inset-bottom, 0px);
   border-width: 1px 0 0;
   border-color: var(--ui-border);
@@ -37,7 +37,7 @@
   display: flex;
   align-items: center;
   gap: 2px;
-  min-height: 44px;
+  min-height: 48px;
   padding: 0 4px 0 12px;
 }
 
@@ -79,8 +79,8 @@
 :root[data-window-chrome="mobile"]
   .quick-ask-dock-head
   .inline-chat-chip-remove {
-  width: 44px;
-  height: 44px;
+  width: 48px;
+  height: 48px;
   justify-content: center;
 }
 
@@ -88,8 +88,8 @@
   .quick-ask-dock
   .inline-chat-header-button
   svg {
-  width: 18px;
-  height: 18px;
+  width: 20px;
+  height: 20px;
 }
 
 /* The reply: the one part that scrolls, held to about 40% of the page so
@@ -106,11 +106,11 @@
 /* Opened out in full, the transcript scrolls inside that area rather than
    adding a second limit of its own. */
 :root[data-window-chrome="mobile"] .quick-ask-dock .quick-ask-transcript {
-  max-height: calc(40dvh - 64px);
+  max-height: calc(40dvh - 70px);
 }
 
 :root[data-window-chrome="mobile"] .quick-ask-dock .quick-ask-more {
-  min-height: 44px;
+  min-height: 48px;
 }
 
 /* Review: accept, reject, previous, next - finger-sized. */
@@ -121,15 +121,15 @@
 }
 
 :root[data-window-chrome="mobile"] .quick-ask-dock .inline-chat-action {
-  min-height: 44px;
+  min-height: 48px;
 }
 
 :root[data-window-chrome="mobile"]
   .quick-ask-dock
   .quick-ask-pending-nav-button {
-  width: 44px;
-  height: 44px;
-  font-size: 22px;
+  width: 48px;
+  height: 48px;
+  font-size: 24px;
 }
 
 /* The panel takes the keyboard toolbar's place, and the document scrolls clear

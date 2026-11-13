@@ -27,7 +27,7 @@
   grid-template-columns: 1fr auto 1fr;
   align-items: center;
   gap: 4px;
-  height: 44px;
+  height: 48px;
   padding: 0 4px;
   border-bottom: 1px solid var(--ui-border);
 }
@@ -43,9 +43,9 @@
 .document-list-icon-button {
   display: grid;
   place-items: center;
-  flex: 0 0 44px;
-  width: 44px;
-  height: 44px;
+  flex: 0 0 48px;
+  width: 48px;
+  height: 48px;
   padding: 0;
   border: none;
   border-radius: var(--shape-pill);
@@ -56,8 +56,8 @@
 
 .document-list-header .document-list-icon-button svg {
   /* An xmark the size of the title beside it, not a 9px glyph. */
-  width: 22px;
-  height: 22px;
+  width: 24px;
+  height: 24px;
 }
 
 /* Open from Files: a symbol in the bar's right corner, as the × in its left. */
@@ -71,7 +71,7 @@
   flex: 1;
   overflow-y: auto;
   -webkit-overflow-scrolling: touch;
-  padding: 8px 0 24px;
+  padding: 8px 0 28px;
 }
 
 .document-list-toolbar {
@@ -170,13 +170,13 @@
   flex: 1;
   align-items: center;
   gap: 12px;
-  min-height: 64px;
+  min-height: 70px;
   padding: 8px 8px 8px 12px;
   text-align: left;
 }
 
 .document-list-list .document-page {
-  width: 36px;
+  width: 40px;
 }
 
 .document-list-list .document-page-text {
@@ -193,7 +193,7 @@
   content: "";
   position: absolute;
   top: 0;
-  left: 58px;
+  left: 64px;
   right: 0;
   border-top: 0.5px solid var(--ui-border);
 }
@@ -206,10 +206,10 @@
    centred) and date under each page. */
 .document-list-grid {
   display: grid;
-  grid-template-columns: repeat(auto-fill, minmax(96px, 1fr));
+  grid-template-columns: repeat(auto-fill, minmax(106px, 1fr));
   align-content: start;
-  gap: 24px 16px;
-  padding: 12px 16px 32px;
+  gap: 28px 16px;
+  padding: 12px 16px 36px;
 }
 
 .document-list-grid .document-item-main {
@@ -225,7 +225,7 @@
 }
 
 .document-list-grid .document-page-text {
-  font-size: 5px;
+  font-size: 6px;
   line-height: 1.35;
 }
 

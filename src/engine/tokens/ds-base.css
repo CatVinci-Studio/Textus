@@ -12,20 +12,15 @@
      inside another takes the outer radius less the padding between them,
      never below --shape-xs. Controls are capsules (--shape-pill), or
      circles. --shape-l stays for plugins, as the largest. */
-  --shape-m: 12px;
+  --shape-m: 14px;
   --shape-l: var(--shape-m);
   --shape-s: 8px;
   --shape-xs: 4px;
   --shape-pill: 999px;
-  /* Control heights: in bars, cards and segments; in forms and dialogs. */
-  --control-height-sm: 24px;
-  --control-height: 28px;
   /* From a pane's edge to its text: its title's, and its rows'. A scrolling
      body keeps --pane-edge for itself (rows' fills stop short of the edge);
      a row's own padding is the rest, so every line starts level - a plugin's
      sidebar page's too. */
-  --pane-inset: 12px;
-  --pane-edge: 4px;
   --pane-row-inset: calc(var(--pane-inset) - var(--pane-edge));
   /* Layers, low to high, so an entrance and an exit stack predictably. */
   /* The phone's own stack under its title row: the keyboard's bar, the AI
@@ -51,17 +46,17 @@
   /* Layout sizes the shared controls and plugin pages take (5.6): a tab
      view's bar, the room a document block leaves its source button, a
      board's list, a find field, a slider, a progress ring, a bubble. */
-  --bar-height: 36px;
-  --block-source-room: 40px;
-  --board-lane-width: 260px;
-  --find-field-width: 180px;
-  --slider-width: 104px;
-  --progress-ring-size: 32px;
+  --bar-height: 40px;
+  --block-source-room: 44px;
+  --board-lane-width: 286px;
+  --find-field-width: 198px;
+  --slider-width: 114px;
+  --progress-ring-size: 36px;
   /* A document's readouts (word count) at its page's foot: their line
      and the gap under it, which a bar over the page keeps clear of. */
-  --document-corner-room: 32px;
+  --document-corner-room: 36px;
   --progress-ring-line: 4px;
-  --bubble-width: 240px;
+  --bubble-width: 264px;
   /* Surfaces that are what they show, whatever the theme: a sheet of
      paper (a PDF's page), a stage (slides shown full screen). */
   --paper-bg: #fff;
@@ -70,41 +65,19 @@
      the interface text only: a bigger window shows more, not bigger.
      --window-scale stays 1 for plugins' pages that still read it. */
   --window-scale: 1;
-  /* The desktop's base: what 100% Interface Text Size means, one step up
-     from the first design (chrome-scale.ts keeps the same number). */
-  --chrome-base: 1.1;
-  /* Icons one step larger than their design size (icons.tsx iconSize). */
-  --icon-scale: 1.15;
-  --chrome-scale: calc(var(--chrome-base) * var(--ui-text-scale, 1));
-  --window-bar-height: calc(28px * var(--chrome-scale));
-  /* The small round icon button: a panel's tools (.tx-icon-button). */
-  --icon-button-s: calc(24px * var(--chrome-scale));
-  /* A tree's step in, a level at a time: files, the outline, plugin lists. */
-  --tree-step: calc(12px * var(--chrome-scale));
+  /* Icons a quarter larger than their design size (icons.tsx iconSize):
+     Lucide's 16 draws at 20. */
+  --icon-scale: 1.25;
+  /* Medium is 1: lengths written here are what Medium draws. */
+  --chrome-scale: var(--ui-text-scale, 1);
   /* The app's own text, by role: a component names what its text is,
-     never a size. The desktop's sizes are here, the phone's (iOS's text
-     styles) under :root[data-window-chrome="mobile"] below. The desktop's
-     grow with --chrome-scale, as every other interface length does
-     (vite.chrome-scale.ts); the phone's with --ui-text-scale.
+     never a size. The desktop's sizes are the presets' (ui-sizes below),
+     the phone's (iOS's text styles) under [data-window-chrome="mobile"].
      The document's own text is the theme's, in em. */
-  /* Four sizes, even and on the grid, far enough apart to read as chosen;
-     a role names which: small (12) for what is said about something - a
-     count, a hint, a group's title, a key, an empty state; body (14) for
-     everything read or used - lists, rows, menus, fields, buttons, a pane's
-     name; title (18) for a dialog's or a sheet's; large (24) for a welcome.
-     Whole pixels after the interface's size (below), so text stays sharp. */
-  --text-caption: calc(12px * var(--chrome-scale, 1));
-  /* A long list read at a glance (the file tree): a step under the body. */
-  --text-list: calc(13px * var(--chrome-scale, 1));
   --text-footnote: var(--text-caption);
   --text-secondary: var(--text-body);
   --text-control: var(--text-body);
-  --text-body: calc(14px * var(--chrome-scale, 1));
   --text-body-large: var(--text-body);
-  --text-title: calc(18px * var(--chrome-scale, 1));
-  --text-large-title: calc(24px * var(--chrome-scale, 1));
-  /* Not a text size: the digit in a count badge or a numbered mark. */
-  --text-mark: calc(9px * var(--chrome-scale, 1));
   /* The size names plugins' webviews were given (plugins/views/theme-vars.ts). */
   --text-xs: var(--text-caption);
   --text-sm: var(--text-footnote);
@@ -112,15 +85,8 @@
   --text-lg: var(--text-body-large);
   --text-xl: var(--text-title);
   --text-2xl: var(--text-large-title);
-  /* Spacing on a 4-point grid, 8 the default step. */
-  --space-1: 4px;
-  --space-2: 8px;
-  --space-3: 12px;
-  --space-4: 16px;
   /* 20 is off the scale: kept for plugins, as 24. */
   --space-5: var(--space-6);
-  --space-6: 24px;
-  --space-8: 32px;
   /* The accent as a fill under --ui-on-fill. */
   --ui-accent-fill: var(--ui-accent);
   /* A primary button is ink on the page's own colours (text colour as fill,
@@ -146,8 +112,8 @@
      resting on it (1), floating over it (2), over everything (3). The
      names below say who uses which. */
   --shadow-1: 0 1px 3px rgb(0 0 0 / 12%);
-  --shadow-2: 0 4px 16px rgb(20 27 40 / 10%);
-  --shadow-3: 0 16px 48px rgb(20 27 40 / 16%);
+  --shadow-2: 0 4px 18px rgb(20 27 40 / 10%);
+  --shadow-3: 0 18px 52px rgb(20 27 40 / 16%);
   /* A menu or popover; a card under the pointer; the review bar. */
   --shadow-popover: var(--shadow-2);
   --shadow-card-hover: var(--shadow-2);
@@ -197,31 +163,16 @@
   );
 }
 
-/* Where the app draws the frame (Windows, Linux) the bar is a step taller:
-   nothing native to line up with, and more of it to hold the window by. */
-:root[data-window-chrome="app"] {
-  --window-bar-height: calc(32px * var(--chrome-scale));
-}
-
-/* On a whole pixel: the tabs in it end where their sheets begin, and a
-   fraction left between them showed the sheet's edge as a line. */
-@supports (width: round(1px, 1px)) {
-  :root {
-    --window-bar-height: round(calc(28px * var(--chrome-scale)), 1px);
-  }
-  :root[data-window-chrome="app"] {
-    --window-bar-height: round(calc(32px * var(--chrome-scale)), 1px);
-  }
-}
-
 /* iOS's text styles at their default size, and its control sizes. Hit
    areas reach 44 on their own (mobile/styles). */
 :root[data-window-chrome="mobile"] {
-  --icon-scale: 1;
+  /* The phone's icons at their design size, under its chrome's step. */
+  --icon-scale: 1.1;
   --text-list: var(--text-body);
-  --control-height-sm: 32px;
-  --control-height: 36px;
-  --chrome-scale: 1;
+  --control-height-sm: 36px;
+  --control-height: 40px;
+  /* The phone keeps its first design, a step under the desktop's. */
+  --chrome-scale: calc(10 / 11);
   --text-caption: calc(12px * var(--ui-text-scale, 1));
   --text-footnote: calc(13px * var(--ui-text-scale, 1));
   --text-secondary: calc(15px * var(--ui-text-scale, 1));
@@ -242,8 +193,8 @@
     --ui-overlay: rgb(0 0 0 / 48%);
     --ui-overlay-strong: rgb(0 0 0 / 72%);
     --shadow-1: 0 1px 3px rgb(0 0 0 / 32%);
-    --shadow-2: 0 4px 16px rgb(0 0 0 / 24%);
-    --shadow-3: 0 16px 48px rgb(0 0 0 / 32%);
+    --shadow-2: 0 4px 18px rgb(0 0 0 / 24%);
+    --shadow-3: 0 18px 52px rgb(0 0 0 / 32%);
   }
 }
 
@@ -256,8 +207,8 @@
   --ui-overlay: rgb(0 0 0 / 48%);
   --ui-overlay-strong: rgb(0 0 0 / 72%);
   --shadow-1: 0 1px 3px rgb(0 0 0 / 32%);
-  --shadow-2: 0 4px 16px rgb(0 0 0 / 24%);
-  --shadow-3: 0 16px 48px rgb(0 0 0 / 32%);
+  --shadow-2: 0 4px 18px rgb(0 0 0 / 24%);
+  --shadow-3: 0 18px 52px rgb(0 0 0 / 32%);
 }
 
 /* The window's own surfaces: the interface's type and colour. */

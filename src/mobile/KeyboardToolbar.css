@@ -11,7 +11,7 @@
   align-items: center;
   gap: 2px;
   /* 44pt buttons, and the hairline above them. */
-  height: 45px;
+  height: 50px;
   padding: 0 4px;
   border-top: 1px solid var(--ui-border);
   background: var(--ui-bg);
@@ -26,7 +26,7 @@
   scrollbar-width: none;
   /* Fades the last button out at the edge on narrower iPhones, where the
      row scrolls - a hint there is more. */
-  mask-image: linear-gradient(to left, transparent, #000 28px);
+  mask-image: linear-gradient(to left, transparent, #000 30px);
   padding-right: 12px;
 }
 
@@ -48,8 +48,8 @@
 
 .keyboard-toolbar-button svg {
   display: block;
-  width: 20px;
-  height: 20px;
+  width: 22px;
+  height: 22px;
   margin: 0 auto;
 }
 
@@ -57,8 +57,8 @@
    for a table outrun a narrow iPhone, rather than shrinking them. */
 .keyboard-toolbar-button {
   flex: 0 0 auto;
-  min-width: 44px;
-  height: 44px;
+  min-width: 48px;
+  height: 48px;
   padding: 0 4px;
   border: none;
   border-radius: var(--shape-pill);
@@ -118,5 +118,5 @@
    its scroller, so a line being typed would otherwise stop behind the strip. */
 :root.has-keyboard-toolbar .editor-scroll {
   /* design: allow - the keyboard toolbar's touch height. */
-  margin-bottom: 44px;
+  margin-bottom: 48px;
 }

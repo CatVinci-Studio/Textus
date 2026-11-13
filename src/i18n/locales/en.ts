@@ -1309,7 +1309,7 @@ type /name in a conversation to use one.
   docLetterSpacingExpanded: "Expanded",
   docLetterSpacingCondensed: "Condensed",
   docLetterSpacingBy: "By",
-  uiTextScaleLabel: "Interface text size",
+  uiTextScaleLabel: "Interface size",
   uiTextSmall: "Small",
   uiTextMedium: "Medium",
   uiTextLarge: "Large",

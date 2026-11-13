@@ -1337,7 +1337,7 @@ Skills liegen im Ordner skills/ neben dieser Datei, je Skill eine
   docLetterSpacingExpanded: "Erweitert",
   docLetterSpacingCondensed: "Schmal",
   docLetterSpacingBy: "Um",
-  uiTextScaleLabel: "Schriftgröße der Oberfläche",
+  uiTextScaleLabel: "Größe der Oberfläche",
   uiTextSmall: "Klein",
   uiTextMedium: "Mittel",
   uiTextLarge: "Groß",

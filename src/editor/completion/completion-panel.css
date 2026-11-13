@@ -5,7 +5,7 @@
   position: fixed;
   z-index: var(--z-popover);
   box-sizing: border-box;
-  width: min(320px, calc(100vw - 16px));
+  width: min(352px, calc(100vw - 18px));
   max-height: calc(var(--completion-row) * 10 + 8px);
   overflow-y: auto;
   overscroll-behavior: contain;
@@ -70,9 +70,9 @@
 /* Room kept for the icon on every row, so labels line up with or without. */
 .completion-icon {
   flex: none;
-  width: 14px;
-  height: 14px;
-  line-height: 14px;
+  width: 16px;
+  height: 16px;
+  line-height: 16px;
   text-align: center;
   color: var(--ui-muted);
 }

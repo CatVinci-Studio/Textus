@@ -91,27 +91,6 @@ pub(crate) fn end_web_process_with_window(window: &tauri::WebviewWindow) {
     });
 }
 
-/// The height of a native title bar, in points, which the traffic lights are
-/// centred in (28, or 32 from macOS 26); the frontend lines its row up with it.
-/// Asked of AppKit on the main thread and cached; until then, None.
-#[cfg(target_os = "macos")]
-pub(crate) fn native_titlebar_height() -> Option<f64> {
-    use objc2_app_kit::{NSWindow, NSWindowStyleMask};
-    use objc2_core_foundation::{CGPoint, CGRect, CGSize};
-    static HEIGHT: std::sync::OnceLock<f64> = std::sync::OnceLock::new();
-    if let Some(height) = HEIGHT.get() {
-        return Some(*height);
-    }
-    let mtm = objc2::MainThreadMarker::new()?;
-    let content = CGRect::new(CGPoint::new(0.0, 0.0), CGSize::new(100.0, 100.0));
-    let style = NSWindowStyleMask::Titled
-        | NSWindowStyleMask::Closable
-        | NSWindowStyleMask::Miniaturizable
-        | NSWindowStyleMask::Resizable;
-    let frame = NSWindow::frameRectForContentRect_styleMask(content, style, mtm);
-    Some(*HEIGHT.get_or_init(|| frame.size.height - content.size.height))
-}
-
 /// Tells a window's page when macOS enters full screen and when it starts
 /// leaving (`window-fullscreen`), via AppKit notifications, since size checks
 /// lag. Main thread only, once.

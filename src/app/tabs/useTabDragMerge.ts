@@ -34,7 +34,7 @@ import { moveTab } from "../../engine/layout/ops";
 // The drop target is a window's top strip (window bar plus tab bar), with
 // headroom, not its whole body: at the interface's scale, and handed to
 // Rust with a drag so both test the same strip.
-const TAB_ROW_HEIGHT_LOGICAL = 72;
+const TAB_ROW_HEIGHT_LOGICAL = 80;
 const rowStrip = () => scaledPx(TAB_ROW_HEIGHT_LOGICAL);
 
 // Hit-testing is in global logical points, so each window's bounds use its

@@ -4,16 +4,16 @@
 @media (max-width: 760px) {
   :root[data-window-chrome="mobile"]
     :is(.inline-chat-attach, .inline-chat-toggle) {
-    width: 44px;
-    height: 44px;
+    width: 48px;
+    height: 48px;
   }
 
   :root[data-window-chrome="mobile"] .inline-chat-mode {
-    min-height: 44px;
+    min-height: 48px;
   }
 
   :root[data-window-chrome="mobile"] .inline-chat-send {
-    min-height: 44px;
+    min-height: 48px;
     padding: 0 16px;
     font-size: var(--text-control);
   }
@@ -28,20 +28,20 @@
     .inline-chat-chip-remove,
   :root[data-window-chrome="mobile"] .inline-chat-attachment-remove {
     justify-content: center;
-    width: 44px;
-    height: 44px;
-    margin: -12px -12px -12px -8px;
+    width: 48px;
+    height: 48px;
+    margin: -14px -14px -14px -8px;
   }
 
   /* The / skill and @ file suggestions: rows a finger can pick. */
   :root[data-window-chrome="mobile"] .inline-chat-skill-item {
     align-items: center;
-    min-height: 44px;
+    min-height: 48px;
     font-size: var(--text-body);
   }
 
   :root[data-window-chrome="mobile"] .inline-chat-skill-menu {
-    max-height: 220px;
+    max-height: 242px;
     overscroll-behavior: contain;
   }
 
@@ -107,6 +107,6 @@
 
 /* Attach and web search: symbols at the size of the buttons around them. */
 :root[data-window-chrome="mobile"] .inline-chat-bar button svg {
-  width: 18px;
-  height: 18px;
+  width: 20px;
+  height: 20px;
 }

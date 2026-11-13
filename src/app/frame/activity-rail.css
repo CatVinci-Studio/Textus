@@ -7,7 +7,7 @@
 
 :root:not(.zen, [data-window-chrome="mobile"])
   .app-shell:has(> .activity-rail) {
-  --rail-width: 44px;
+  --rail-width: 48px;
 }
 
 /* On a whole pixel, so the document beside it starts on one too: WebKitGTK
@@ -15,7 +15,7 @@
 @supports (width: round(down, 1px, 1px)) {
   :root:not(.zen, [data-window-chrome="mobile"])
     .app-shell:has(> .activity-rail) {
-    --rail-width: round(44px, 1px);
+    --rail-width: round(48px, 1px);
   }
 }
 
@@ -51,8 +51,8 @@
 }
 
 .activity-rail-item {
-  width: 36px;
-  height: 36px;
+  width: 40px;
+  height: 40px;
   border: 0;
   border-radius: var(--shape-s);
   background: transparent;
@@ -90,6 +90,16 @@
   border-bottom: 0;
 }
 
+/* On a Mac's one-row bar the lights float over the rail and into the
+   sidebar's start: its name begins clear of them, at every size. */
+:root[data-window-chrome="native"]:not([data-window-fullscreen]):not(
+    [data-bar-rows="2"]
+  )
+  .app-shell:has(> .activity-rail)
+  .sidebar-header {
+  padding-left: max(var(--pane-inset), var(--lights-room) - var(--rail-width));
+}
+
 /* Where the bar leaves the sidebar's column free (barLayout: the app menu
    in the rail, or a Mac in full screen), the sidebar owns it to the
    window's top: over the bar there, as the islands' top rows are, its own
@@ -122,7 +132,7 @@
 }
 
 .activity-rail-divider {
-  width: 20px;
+  width: 22px;
   margin: 4px 0;
   border: 0;
   border-top: 1px solid var(--ui-frame-edge);

@@ -25,7 +25,7 @@ const TAIL: Record<BubbleSide, string> = {
 };
 
 /** How far the tail stays from the bubble's corners. */
-const TAIL_INSET = 12;
+const TAIL_INSET = 14;
 
 /**
  * A bubble beside an element, its tail pointing at it: the one way the app

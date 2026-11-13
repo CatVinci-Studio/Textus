@@ -1376,7 +1376,7 @@ export default {
   docLetterSpacingExpanded: "Разреженный",
   docLetterSpacingCondensed: "Уплотнённый",
   docLetterSpacingBy: "На",
-  uiTextScaleLabel: "Размер текста интерфейса",
+  uiTextScaleLabel: "Размер интерфейса",
   uiTextSmall: "Мелкий",
   uiTextMedium: "Средний",
   uiTextLarge: "Крупный",

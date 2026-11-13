@@ -1217,7 +1217,7 @@ export default {
   docLetterSpacingExpanded: "加宽",
   docLetterSpacingCondensed: "紧缩",
   docLetterSpacingBy: "磅值",
-  uiTextScaleLabel: "界面文字大小",
+  uiTextScaleLabel: "界面大小",
   uiTextSmall: "小",
   uiTextMedium: "中",
   uiTextLarge: "大",

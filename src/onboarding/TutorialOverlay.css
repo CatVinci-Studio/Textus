@@ -1,6 +1,6 @@
 .tutorial-backdrop {
   z-index: var(--z-popover);
-  padding: 24px;
+  padding: 28px;
 }
 
 .tutorial-surface.floating-surface {
@@ -23,18 +23,18 @@
 .tutorial-overlay {
   max-height: 100%;
   overflow-y: auto;
-  width: min(540px, calc(100vw - 48px));
-  padding: 24px 24px 24px;
+  width: min(594px, calc(100vw - 52px));
+  padding: 28px 28px 28px;
 }
 
 /* Beside the docked AI panel, never over it: the AI lessons happen there. */
 .tutorial-card {
   position: fixed;
-  top: 48px;
-  right: 18px;
+  top: 52px;
+  right: 20px;
   z-index: var(--z-popover);
-  width: min(380px, calc(100vw - 36px));
-  max-height: calc(100vh - 66px);
+  width: min(418px, calc(100vw - 40px));
+  max-height: calc(100vh - 72px);
   overflow-y: auto;
   padding: 16px;
 }
@@ -44,7 +44,7 @@
 @media (min-width: 721px) {
   .app-shell:is(:has(> .agent-panel), :has(.ai-tab)) .tutorial-card {
     top: auto;
-    bottom: 18px;
+    bottom: 20px;
   }
 }
 
@@ -116,21 +116,21 @@
 .tutorial-glyph {
   display: grid;
   place-items: center;
-  width: 42px;
-  height: 42px;
-  flex: 0 0 42px;
+  width: 46px;
+  height: 46px;
+  flex: 0 0 46px;
   border: 1px solid var(--tutorial-line);
   border-radius: var(--shape-m);
   color: var(--ui-accent-text);
   background: var(--tutorial-soft);
-  font: 600 19px/1 var(--font-mono);
+  font: 600 20px/1 var(--font-mono);
 }
 
 .tutorial-glyph-icon {
   display: block;
-  width: 42px;
-  height: 42px;
-  flex: 0 0 42px;
+  width: 46px;
+  height: 46px;
+  flex: 0 0 46px;
 }
 
 .tutorial-step-label {
@@ -180,7 +180,7 @@
 
 .tutorial-task-line {
   display: grid;
-  grid-template-columns: 20px 1fr;
+  grid-template-columns: 22px 1fr;
   align-items: start;
   gap: 8px;
   overflow-wrap: anywhere;
@@ -198,8 +198,8 @@
 .tutorial-task-icon {
   display: grid;
   place-items: center;
-  width: 20px;
-  height: 20px;
+  width: 22px;
+  height: 22px;
   margin-top: 1px;
   border: 1px solid var(--tutorial-line);
   border-radius: 50%;
@@ -262,8 +262,8 @@
 .tutorial-watch-icon {
   display: grid;
   place-items: center;
-  width: 18px;
-  height: 18px;
+  width: 20px;
+  height: 20px;
   border-radius: 50%;
   corner-shape: round;
   color: var(--ui-accent-text);
@@ -309,7 +309,7 @@
 }
 
 .tutorial-btn-primary {
-  min-width: 80px;
+  min-width: 88px;
   font-weight: 600;
 }
 
@@ -330,22 +330,22 @@
 @media (max-width: 720px) {
   .tutorial-card {
     top: auto;
-    right: 12px;
-    bottom: 12px;
-    left: 12px;
+    right: 14px;
+    bottom: 14px;
+    left: 14px;
     width: auto;
-    max-height: min(54vh, 520px);
+    max-height: min(54vh, 572px);
   }
 
   /* The AI panel is a sheet from the bottom here: the card goes up. */
   .app-shell:has(> .agent-panel) .tutorial-card {
-    top: calc(var(--mobile-top, 0px) + 12px);
+    top: calc(var(--mobile-top, 0px) + 14px);
     bottom: auto;
     max-height: 38vh;
   }
 
   .tutorial-overlay {
-    width: min(100%, 540px);
+    width: min(100%, 594px);
   }
 }
 

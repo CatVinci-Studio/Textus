@@ -34,7 +34,7 @@ import { transientStyle } from "../../engine/tokens/appearance";
 
 /** How far the tab travels before its place closes behind it (interface
  *  px): a short pull and back leaves the layout untouched. */
-const LEAVE_DISTANCE = 48;
+const LEAVE_DISTANCE = 52;
 
 /** A place a drop can go: its key, whether it opens a new island, the
  *  layout it makes, and the layout shown while it is only aimed at. */

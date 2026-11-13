@@ -71,8 +71,8 @@
    built-in tabs' icons. */
 .plugin-tab-icon {
   display: inline-block;
-  width: 16px;
-  height: 16px;
+  width: 18px;
+  height: 18px;
   background-color: currentColor;
   mask-size: contain;
   mask-repeat: no-repeat;
@@ -139,8 +139,8 @@ button.plugin-card-open:hover .plugin-card-name {
   display: grid;
   flex-shrink: 0;
   place-items: center;
-  width: 40px;
-  height: 40px;
+  width: 44px;
+  height: 44px;
   border: 1px solid var(--ui-border);
   border-radius: var(--shape-m);
   background: color-mix(in srgb, var(--ui-muted) 7%, var(--ui-bg));
@@ -158,8 +158,8 @@ button.plugin-card-open:hover .plugin-card-name {
   -webkit-mask: center / contain no-repeat;
 }
 .plugin-icon-large {
-  width: 56px;
-  height: 56px;
+  width: 62px;
+  height: 62px;
   border-radius: var(--shape-l);
 }
 .plugin-icon-letter {
@@ -230,7 +230,7 @@ button.plugin-card-open:hover .plugin-card-name {
 }
 .market-plugin-shots .plugin-card-shot {
   margin-top: 0;
-  max-height: 220px;
+  max-height: 242px;
 }
 .plugin-readme {
   margin: 0 0 var(--space-4);
@@ -294,16 +294,16 @@ button.plugin-card-open:hover .plugin-card-name {
   flex-direction: column;
 }
 .plugin-webview-settings {
-  min-height: 120px;
+  min-height: 132px;
 }
 .plugin-setting-input {
-  width: 220px;
+  width: 242px;
 }
 /* A catalog plugin's picture of itself at work (Get more). */
 .plugin-card-shot {
   display: block;
   max-width: 100%;
-  max-height: 160px;
+  max-height: 176px;
   margin-top: var(--space-2);
   border: 1px solid var(--ui-border);
   border-radius: var(--shape-xs);
@@ -315,8 +315,8 @@ button.plugin-card-open:hover .plugin-card-name {
   margin: var(--space-3) var(--space-3) var(--space-1);
 }
 .plugin-setting-color {
-  width: 40px;
-  height: 24px;
+  width: 44px;
+  height: 26px;
   padding: 0;
   border: 1px solid var(--ui-border);
   border-radius: var(--shape-pill);
@@ -340,7 +340,7 @@ button.plugin-card-open:hover .plugin-card-name {
   margin: 0;
   font-family: var(--font-mono);
   padding: var(--space-3);
-  max-height: 200px;
+  max-height: 220px;
   overflow: auto;
   font-size: var(--text-caption);
   white-space: pre-wrap;

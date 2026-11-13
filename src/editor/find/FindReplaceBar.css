@@ -50,8 +50,8 @@
 
 .find-replace-chevron {
   flex: none;
-  width: 18px;
-  height: 26px;
+  width: 20px;
+  height: 28px;
   border: none !important;
   padding: 0 !important;
   color: var(--ui-muted);
@@ -143,8 +143,8 @@
 
 .find-replace-toggle {
   flex: none;
-  width: 22px;
-  height: 22px;
+  width: 24px;
+  height: 24px;
   padding: 0 !important;
   border: none !important;
   border-radius: var(--shape-pill) !important;

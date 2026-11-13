@@ -12,11 +12,11 @@
 .inline-chat {
   /* A command bar, not a second text column: on a wide column it stays at a
      comfortable width instead of stretching past 1000px. */
-  max-width: min(100%, 720px);
+  max-width: min(100%, 792px);
   margin: var(--doc-gap-box, 1.1em) auto;
   /* Room the first text row leaves for Quick Ask's floating header buttons:
      4px edge + three 22px buttons with 2px gaps, plus 6px of air. */
-  --quick-ask-actions-width: 80px;
+  --quick-ask-actions-width: 88px;
   /* The panel sits inside the editable root, whose pre-wrap would show the
      newlines between the reply's blocks as blank lines. */
   white-space: normal;
@@ -204,7 +204,7 @@
 }
 
 .inline-chat-mode {
-  min-width: 72px;
+  min-width: 80px;
 }
 
 /* How much text rides along as context, and a way to drop it. Tinted like
@@ -230,14 +230,14 @@
   /* Shrinks long before the mode does: shrink is shared out by weight. */
   flex: 0 1000 auto;
   /* Never past its x: padding, border and the 12px button. */
-  min-width: 26px;
+  min-width: 28px;
 }
 
 /* The last resort: the mode's name ellipsizes down to its chevron, so
    Send keeps its words in a narrow window at a large size. */
 .inline-chat-toolbar > .inline-chat-mode {
   flex-shrink: 1;
-  min-width: 28px;
+  min-width: 30px;
 }
 
 .inline-chat-selection-chip:hover {
@@ -325,8 +325,8 @@
 /* Document vs image reach the model differently, so the chip says which. */
 .inline-chat-attachment-kind {
   flex-shrink: 0;
-  width: 12px;
-  height: 12px;
+  width: 14px;
+  height: 14px;
   opacity: 0.8;
 }
 

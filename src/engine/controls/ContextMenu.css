@@ -1,7 +1,7 @@
 .context-menu {
   position: fixed;
-  min-width: 170px;
-  max-height: min(70vh, 480px);
+  min-width: 188px;
+  max-height: min(70vh, 528px);
   overflow-y: auto;
   z-index: var(--z-popover);
   transform-origin: var(--transform-origin, top left);

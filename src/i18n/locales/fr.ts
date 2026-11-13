@@ -1379,7 +1379,7 @@ utiliser une.
   docLetterSpacingExpanded: "Étendu",
   docLetterSpacingCondensed: "Condensé",
   docLetterSpacingBy: "De",
-  uiTextScaleLabel: "Taille du texte de l'interface",
+  uiTextScaleLabel: "Taille de l'interface",
   uiTextSmall: "Petite",
   uiTextMedium: "Moyenne",
   uiTextLarge: "Grande",

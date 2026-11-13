@@ -5,7 +5,7 @@
   /* A little room over its buttons, clear of the island's top edge. */
   --format-bar-bleed: var(--space-1);
   --format-bar-height: calc(
-    32px * var(--chrome-scale) + var(--format-bar-bleed)
+    36px * var(--chrome-scale) + var(--format-bar-bleed)
   );
 }
 

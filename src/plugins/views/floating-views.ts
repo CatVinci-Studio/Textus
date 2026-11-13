@@ -1,4 +1,5 @@
 import { getUiState, updateUiState } from "../../storage/ui-state";
+import { atMedium } from "../../utils/at-medium";
 import { emitPluginEvent } from "../app-bridge";
 import { windowIpc } from "../../platform/ipc";
 import { thisWindow } from "../../platform/this-window";
@@ -46,11 +47,12 @@ export function clampScale(scale: number) {
 }
 
 /** Its size now, in points; `chrome` is the interface's scale, which its
- *  page's own controls follow too. */
+ *  page's own controls follow too. A plugin gives its size in the first
+ *  design's pixels, as its stylesheets (scale-lengths). */
 export function floatingSize(view: FloatingView, chrome = 1): [number, number] {
   return [
-    Math.round(view.width * view.scale * chrome),
-    Math.round(view.height * view.scale * chrome),
+    Math.round(atMedium(view.width) * view.scale * chrome),
+    Math.round(atMedium(view.height) * view.scale * chrome),
   ];
 }
 

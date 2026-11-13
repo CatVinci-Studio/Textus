@@ -76,8 +76,8 @@
   width: 0;
   height: 0;
   border-left: 4px solid currentColor;
-  border-top: 3.5px solid transparent;
-  border-bottom: 3.5px solid transparent;
+  border-top: 4px solid transparent;
+  border-bottom: 4px solid transparent;
   transition: transform var(--dur-fast) var(--ease-standard);
 }
 :is(.tx-disclosure, .disclosure)[open] > summary::before,

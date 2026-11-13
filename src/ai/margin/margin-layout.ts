@@ -72,19 +72,19 @@ export type MarginItem =
 export const STACK_GAP = 8;
 /** How far a card can be pushed down by the ones above it and still draw
  *  its line at full strength. */
-export const LINE_DRIFT = 20;
+export const LINE_DRIFT = 22;
 /** A chip's height: the card's heading and one line of its text. Keep in
  *  step with .review-note-chip. */
-export const CHIP_HEIGHT = 35;
+export const CHIP_HEIGHT = 38;
 /** The least room a cut card is given - its heading and a line; with less,
  *  it is a chip. */
-const MIN_CUT = 88;
+const MIN_CUT = 96;
 /** How far a run of cards may push one of its own below its passage
  *  before the whole run is cut to fit beside its passages. */
-export const CROWDED_DRIFT = 120;
+export const CROWDED_DRIFT = 132;
 /** How far a run cut to fit may still push one below its passage - more
  *  notes than lines - before the run is one chip, "8 notes". */
-export const GROUP_DRIFT = 200;
+export const GROUP_DRIFT = 220;
 
 export interface Placed {
   item: MarginItem;

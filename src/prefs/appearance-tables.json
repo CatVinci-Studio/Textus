@@ -17,6 +17,7 @@
     "zh-Hant": "zh-TW"
   },
   "uiTextScales": [0.85, 1, 1.25],
+  "uiSizeNames": ["small", "medium", "large"],
   "uiTextScalesBefore": { "0.9": 0.85, "1.1": 1 },
   "docLineHeights": {
     "compact": 1.55,

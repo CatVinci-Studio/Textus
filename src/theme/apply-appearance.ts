@@ -1,6 +1,6 @@
 import { useEffect } from "react";
 import { useLatest } from "../utils/hooks/useLatest";
-import { themes } from "../platform/ipc";
+import { themes, windowBarIpc } from "../platform/ipc";
 import { readBoot } from "../storage/boot";
 import {
   getUiState,
@@ -15,6 +15,7 @@ import {
   type DocLetterSpacing,
 } from "../prefs/SettingsContext";
 import { BUILTIN_CONTENT_THEMES } from "../prefs/builtin-themes";
+import { UI_SIZE_NAMES, UI_TEXT_SCALES } from "../prefs/settings-values";
 import { applyThemeChrome, clearThemeChrome } from "../engine/tokens/palette";
 import { isIOSApp } from "../platform/capabilities";
 import { lazyModule } from "../lazy/lazy-module";
@@ -187,10 +188,21 @@ function useApplyAppearance(
   // leaves popovers and pointer coordinates in the unzoomed space.
   useEffect(() => {
     const root = document.documentElement;
-    if (settings.uiTextScale === 1)
+    const size = UI_SIZE_NAMES[UI_TEXT_SCALES.indexOf(settings.uiTextScale)];
+    if (!size || size === "medium") {
       root.style.removeProperty("--ui-text-scale");
-    else
+      delete root.dataset.uiSize;
+    } else {
       root.style.setProperty("--ui-text-scale", String(settings.uiTextScale));
+      root.dataset.uiSize = size;
+    }
+    // The size's bar height, which macOS's traffic lights centre on.
+    if (root.dataset.windowChrome === "native")
+      void windowBarIpc.follow(
+        Number.parseFloat(
+          getComputedStyle(root).getPropertyValue("--window-bar-height"),
+        ),
+      );
   }, [settings.uiTextScale]);
 
   useEffect(() => {

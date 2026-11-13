@@ -2,7 +2,7 @@
    the messages and the composer. */
 .inline-chat-skill-menu {
   padding: 4px;
-  max-height: 200px;
+  max-height: 220px;
   overflow-y: auto;
   display: flex;
   flex-direction: column;
@@ -47,7 +47,7 @@
 /* The `/` and `@` picker: the list scrolls, the key hint under it stays. */
 .composer-picker {
   padding: 0;
-  max-height: min(320px, 45vh);
+  max-height: min(352px, 45vh);
   overflow: hidden;
 }
 
@@ -249,7 +249,7 @@
 .inline-chat-messages {
   overflow-wrap: anywhere;
   padding: 8px 8px;
-  max-height: 280px;
+  max-height: 308px;
   overflow-y: auto;
   display: flex;
   flex-direction: column;
@@ -309,7 +309,7 @@
 }
 
 .quick-ask-transcript {
-  max-height: min(52vh, 520px);
+  max-height: min(52vh, 572px);
   overflow-y: auto;
   display: flex;
   flex-direction: column;

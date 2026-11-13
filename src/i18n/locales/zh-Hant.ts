@@ -1219,7 +1219,7 @@ export default {
   docLetterSpacingExpanded: "加寬",
   docLetterSpacingCondensed: "緊縮",
   docLetterSpacingBy: "點數",
-  uiTextScaleLabel: "介面文字大小",
+  uiTextScaleLabel: "介面大小",
   uiTextSmall: "小",
   uiTextMedium: "中",
   uiTextLarge: "大",

@@ -57,10 +57,10 @@
 .zen-exit {
   position: fixed;
   top: calc(var(--window-bar-height) + 6px);
-  right: 12px;
+  right: 14px;
   z-index: var(--z-lift);
-  width: 28px;
-  height: 28px;
+  width: 30px;
+  height: 30px;
   display: grid;
   place-items: center;
   border: none;
