@@ -214,9 +214,11 @@ jobs:
         run: npm ci
 
       # With the signing secrets missing, Tauri builds an unsigned DMG and
-      # says nothing.
+      # says nothing. Upstream requires them; a fork without an Apple
+      # Developer account ships unsigned instead (Gatekeeper asks for a
+      # right-click open on first launch).
       - name: Require the macOS signing secrets
-        if: startsWith(matrix.platform, 'macos-')
+        if: startsWith(matrix.platform, 'macos-') && secrets.APPLE_CERTIFICATE != ''
         env:
           APPLE_CERTIFICATE: ${{ secrets.APPLE_CERTIFICATE }}
           APPLE_SIGNING_IDENTITY: ${{ secrets.APPLE_SIGNING_IDENTITY }}
