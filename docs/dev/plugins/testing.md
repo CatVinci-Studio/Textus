@@ -25,12 +25,28 @@ calls it.
 
 ## The host, without Textus
 
-textus-plugins' `tests/plugin-host.ts` runs a plugin's host code against a
-stand-in `textus`: `loadPlugin(id, api)` gives it an in-memory folder
-(`folder({ "notes/a.md": "# A" })`), settings, storage, and the same
-`dates`, `templates` and folder conventions Textus has, so a test can call
-its commands and tools and read the files it wrote. Copy it for your own
-plugin, or run your tests in that repository.
+textus-plugins' `packages/textus-plugin/test.mjs` runs a plugin's folder
+against a stand-in `textus`, outside the app; copy the package folder (it needs nothing else) into your project:
+
+```js
+// test.mjs from textus-plugins' packages/textus-plugin, copied or linked
+import { loadPlugin } from "./textus-plugin/test.mjs";
+const plugin = loadPlugin("./my-plugin", {
+  settings: { get: async () => "TOC = table of contents" },
+});
+await plugin.activate();
+await plugin.callTool("look_up_term", { term: "toc" });
+await plugin.run("jane.my-plugin.count");
+```
+
+What you give in the second argument answers; any other call the plugin
+API has does nothing, and a call it doesn't have throws, as it would in
+Textus. `plugin.registered` holds what the plugin registered, by kind and
+id. The official plugins' own tests use a fuller one, `tests/plugin-host.ts`,
+with an in-memory folder and the same `dates` and `templates` as Textus.
+
+Before you publish, `node packages/textus-plugin/cli.mjs check my-plugin`
+runs the install checks over the folder.
 
 ## In the app
 

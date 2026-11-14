@@ -25,10 +25,15 @@ of typing.
 
 ## Getting started
 
-1. Start from the template: copy
-   [`template/`](https://github.com/CatVinci-Studio/textus-plugins/tree/main/template)
-   from textus-plugins. It is a working plugin: a command and a sidebar
-   list, in English and Chinese.
+1. Start from an example in textus-plugins'
+   [`examples/`](https://github.com/CatVinci-Studio/textus-plugins/tree/main/examples):
+   `hello` (a command and a sidebar list), `page` (a sidebar page of its
+   own), `code-block` or `ai-tool`. In a clone of that repository,
+   `node packages/create-textus-plugin/index.mjs my-plugin --from page --id jane.my-plugin`
+   copies one with your id; `node packages/textus-plugin/cli.mjs check my-plugin`
+   says what Textus would refuse or ignore in it. `packages/textus-plugin`
+   also has the API's types and a stand-in Textus for unit tests
+   (`test.mjs`); see [Testing](testing.md).
 2. In Textus, **Settings › Extensions › Plugins**, the **More** (…) menu ›
    **Load a plugin folder…**, and choose the folder. It is listed under Installed,
    marked _development_; turn it on.

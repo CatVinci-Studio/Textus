@@ -1,0 +1,130 @@
+[
+  {
+    "permission": "editor.read",
+    "calls": [
+      "editor.getPath",
+      "editor.getText",
+      "editor.getSelection",
+      "editor.getBlocks",
+      "editor.getOutline",
+      "editor.registerHover",
+      "editor.registerDecorations",
+      "editor.registerOutline",
+      "export.willExport",
+      "editor.registerCompletion",
+      "export.onWillExport"
+    ]
+  },
+  {
+    "permission": "editor.write",
+    "calls": [
+      "editor.edit",
+      "codeBlock.setSource",
+      "editor.registerPasteHandler",
+      "editor.insertText",
+      "editor.replaceSelection",
+      "setSource"
+    ]
+  },
+  {
+    "permission": "editor.propose",
+    "calls": [
+      "editor.propose"
+    ]
+  },
+  {
+    "permission": "editor.input",
+    "calls": [
+      "editor.captureKeys",
+      "editor.exec",
+      "keys.capture",
+      "keys.exec"
+    ]
+  },
+  {
+    "permission": "files.read",
+    "calls": [
+      "files.root",
+      "files.conventions",
+      "files.appSettings",
+      "files.list",
+      "files.find",
+      "files.stat",
+      "files.setBadge",
+      "files.read",
+      "files.frontmatterGet",
+      "metadata.get",
+      "metadata.all",
+      "metadata.backlinks",
+      "metadata.resolveLink",
+      "metadata.resolveNote",
+      "metadata.linkTo",
+      "views.registerEmbed",
+      "metadata.tags",
+      "metadata.tasks",
+      "metadata.search",
+      "files.readText",
+      "metadata.",
+      "files.writeText",
+      "files.create",
+      "files.process",
+      "files.rename",
+      "files.frontmatter."
+    ]
+  },
+  {
+    "permission": "files.write",
+    "calls": [
+      "files.writeText",
+      "files.write",
+      "files.create",
+      "files.processRead",
+      "files.processWrite",
+      "files.rename",
+      "files.trash",
+      "files.createFolder",
+      "files.frontmatterSet",
+      "files.setConvention",
+      "files.blockId",
+      "files.willSave",
+      "webview.writeFile",
+      "files.process",
+      "files.frontmatter.update",
+      "files.onWillSave"
+    ]
+  },
+  {
+    "permission": "project.data",
+    "calls": [
+      "storage.project"
+    ]
+  },
+  {
+    "permission": "clipboard",
+    "calls": [
+      "clipboard.readText",
+      "clipboard.writeText",
+      "env.readClipboard",
+      "env.writeClipboard"
+    ]
+  },
+  {
+    "permission": "notifications",
+    "calls": [
+      "notify.show"
+    ]
+  },
+  {
+    "permission": "appearance",
+    "calls": [
+      "appearance.setColors",
+      "appearance.clear"
+    ]
+  },
+  {
+    "permission": "ai.tools",
+    "calls": [
+      "ai.registerTool"
+    ]
+  }
+]

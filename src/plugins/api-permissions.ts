@@ -146,6 +146,15 @@ export function guarded<H extends Record<string, unknown>>(
   ) as H;
 }
 
+/** The table as a plugin's code names it, for tools outside the app
+ *  (docs/dev/plugin-permissions.json, which a test keeps the same). */
+export const PERMISSION_TABLE = API_PERMISSIONS.map(
+  ({ permission, methods, calls = [] }) => ({
+    permission,
+    calls: [...methods, ...calls],
+  }),
+);
+
 /** Every method the table names, for the test that holds it to the broker. */
 export const PERMISSION_METHODS: readonly string[] = [...BY_METHOD.keys()];
 
