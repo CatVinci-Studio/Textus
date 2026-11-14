@@ -10,10 +10,13 @@ import androidx.core.view.WindowInsetsCompat
 
 // Copied over the generated one by scripts/android-prepare.sh.
 class MainActivity : TauriActivity() {
-  /** The status bar's (or cutout's) and the navigation bar's heights, in
-   *  CSS px. */
+  /** The status bar's (or cutout's) and the navigation bar's heights, and
+   *  what the cutout or a side navigation bar takes at either side (a phone
+   *  on its side), in CSS px. */
   @Volatile private var top = 0f
   @Volatile private var bottom = 0f
+  @Volatile private var left = 0f
+  @Volatile private var right = 0f
 
   override fun onCreate(savedInstanceState: Bundle?) {
     enableEdgeToEdge()
@@ -29,6 +32,8 @@ class MainActivity : TauriActivity() {
       object {
         @JavascriptInterface fun top(): Float = top
         @JavascriptInterface fun bottom(): Float = bottom
+        @JavascriptInterface fun left(): Float = left
+        @JavascriptInterface fun right(): Float = right
       },
       "TextusInsets",
     )
@@ -38,6 +43,11 @@ class MainActivity : TauriActivity() {
         WindowInsetsCompat.Type.statusBars() or WindowInsetsCompat.Type.displayCutout(),
       ).top / density
       bottom = insets.getInsets(WindowInsetsCompat.Type.navigationBars()).bottom / density
+      val sides = insets.getInsets(
+        WindowInsetsCompat.Type.navigationBars() or WindowInsetsCompat.Type.displayCutout(),
+      )
+      left = sides.left / density
+      right = sides.right / density
       val keyboard = insets.getInsets(WindowInsetsCompat.Type.ime()).bottom
       (view.parent as? View)?.setPadding(0, 0, 0, keyboard)
       ViewCompat.onApplyWindowInsets(view, insets)

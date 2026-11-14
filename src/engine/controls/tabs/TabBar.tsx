@@ -7,6 +7,7 @@ import { scrollBehavior } from "../../motion/motion";
 import { TabPill, type TabInfo } from "./TabPill";
 import { TabListButton, useTabFit } from "./TabList";
 import { INCOMING, useTabStrip } from "./useTabStrip";
+import { useTabSwipe } from "./useTabSwipe";
 import type { Slot } from "./tab-strip";
 
 interface TabBarProps {
@@ -93,6 +94,8 @@ export function TabBar({
     gap: fit?.between ?? 0,
     incomingX: previewTab?.x ?? null,
   });
+
+  useTabSwipe(barRef, ids, activeTabId, onActivate);
 
   // The open tab in view as it changes, and as the row narrows.
   const { x: slotX, w: slotW } = strip.slotOf(activeTabId) ?? {};

@@ -10,10 +10,27 @@
 }
 
 /* The page runs under the status bar, a phone's or a tablet's: the title
-   row takes its height, and whatever clears the row clears both. Android
-   tells it (mobile-viewport.ts). */
+   row takes its height, and whatever clears the row clears both. The
+   insets are mobile-viewport.ts's: Android's app tells them, and an iPhone
+   on its side has WebKit's turned. */
 :root:is([data-platform="ios"], [data-platform="android"]) {
-  --safe-top: max(env(safe-area-inset-top, 0px), var(--native-safe-top, 0px));
+  --safe-top: var(--native-safe-top, env(safe-area-inset-top, 0px));
+  --safe-left: var(--native-safe-left, env(safe-area-inset-left, 0px));
+  --safe-right: var(--native-safe-right, env(safe-area-inset-right, 0px));
+}
+
+/* A phone on its side has the camera's cutout at one end and a rounded
+   corner at the other: the whole frame stays between them, the window bar
+   with it. */
+:root:is([data-platform="ios"], [data-platform="android"]) #root {
+  box-sizing: border-box;
+  padding: 0 var(--safe-right) 0 var(--safe-left);
+  background: var(--ui-frame-fill) fixed;
+}
+
+:root:is([data-platform="ios"], [data-platform="android"]) .window-bar {
+  left: var(--safe-left);
+  right: var(--safe-right);
 }
 
 :root:is([data-platform="ios"], [data-platform="android"])
