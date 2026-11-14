@@ -89,6 +89,7 @@ const API_PERMISSIONS: readonly {
       "files.trash",
       "files.createFolder",
       "files.frontmatterSet",
+      "files.setConvention",
       "files.blockId",
       "files.willSave",
       "webview.writeFile",

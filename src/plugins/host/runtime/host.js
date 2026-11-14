@@ -10,7 +10,7 @@
 /* global createEndpoint, localized, __textusText */
 (function () {
   "use strict";
-  var API_VERSION = "1.6";
+  var API_VERSION = "1.7";
   var app = null;
   var waiting = [];
   var module = { exports: {} };
@@ -908,6 +908,12 @@
           path: path === undefined ? null : String(path),
         });
       },
+      setConvention: function (key, value) {
+        return call("files.setConvention", {
+          key: String(key),
+          value: value === undefined ? null : plain(value),
+        });
+      },
       appSettings: function (app, file, path) {
         return call("files.appSettings", {
           app: String(app),
@@ -930,8 +936,12 @@
           text: String(value),
         });
       },
-      create: function (path, value) {
-        return call("files.create", { path: String(path), text: text(value) });
+      create: function (path, value, options) {
+        return call("files.create", {
+          path: String(path),
+          text: text(value),
+          unique: !!(options && options.unique),
+        });
       },
       process: async function (path, change) {
         for (var attempt = 0; attempt < 4; attempt++) {
@@ -1149,6 +1159,25 @@
     notify: {
       show: function (notification) {
         return call("notify.show", plain(notification));
+      },
+    },
+    // Text as the app reads it: the status bar's count, a note's front
+    // matter apart from its body, names in the file tree's order.
+    text: {
+      count: function (markdown) {
+        return call("text.count", { markdown: String(markdown) });
+      },
+      splitFrontmatter: function (value) {
+        return call("text.splitFrontmatter", { text: String(value) });
+      },
+      compareNames: function (a, b) {
+        var collator = new Intl.Collator(env.language || "en", {
+          numeric: true,
+          sensitivity: "base",
+        });
+        a = String(a);
+        b = String(b);
+        return collator.compare(a, b) || (a < b ? -1 : a > b ? 1 : 0);
       },
     },
     appearance: {
