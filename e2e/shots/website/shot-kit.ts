@@ -505,7 +505,7 @@ function withIllustration(doc: string, title = ""): string {
   const quote = /(^>.*\n)+/m.exec(doc);
   if (!quote) return doc;
   const end = quote.index + quote[0].length;
-  return `${doc.slice(0, end)}\n<img src="${ILLUSTRATION}" alt="${title}" width="50%">\n${doc.slice(end)}`;
+  return `${doc.slice(0, end)}\n<img src="${ILLUSTRATION}" alt="${title}" width="80%">\n${doc.slice(end)}`;
 }
 
 /** The illustration's file name in a sample's folder. */

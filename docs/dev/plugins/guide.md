@@ -405,6 +405,44 @@ await textus.notify.show({ title: "Exported", body: "notes.pdf" }); // now
   `engines.textus` to `">=1.3.0-beta.8"`: Textus doesn't offer a plugin to
   a version it doesn't fit.
 
+### Colours - `appearance` (API 1.6)
+
+A plugin with the `appearance` permission lays a palette over whichever
+theme is on: the page (`--doc-bg`, `--doc-text`, `--doc-accent`,
+`--doc-mark`…), the interface (`--ui-bg`, `--ui-text`, `--ui-accent`), the
+tones, and the frame round the pages, which may be a gradient
+(`--ui-frame-paint`). Borders, hovers and the rest follow from these. Text
+is kept readable, the user's Custom CSS still wins, and turning the plugin
+off puts the theme back. A whole palette, light and dark apart:
+
+```js
+exports.activate = async function (ctx) {
+  ctx.subscriptions.push(
+    await textus.appearance.setColors(
+      {
+        "--ui-frame-paint": "linear-gradient(170deg, #6ec5e6, #f6cde1)",
+        "--doc-accent": "#0b7fa3",
+        "--doc-mark": "#ef8fbb",
+      },
+      { scheme: "light" },
+    ),
+    await textus.appearance.setColors(
+      {
+        "--ui-frame-paint": "linear-gradient(170deg, #0f3346, #3b2440)",
+        "--doc-accent": "#5fd0ec",
+        "--doc-mark": "#f3a3c7",
+      },
+      { scheme: "dark" },
+    ),
+  );
+};
+```
+
+`appearance.colors()` reads the colours as the window shows them now, and
+`appearance.onDidChange` tells of another theme, scheme or plugin's
+colours - for a palette that depends on the theme underneath. Set
+`engines.textus` to `">=1.4.2"`.
+
 ### The rest
 
 - `net.fetch(url, { method, headers, body })` (`network:<host>`).
