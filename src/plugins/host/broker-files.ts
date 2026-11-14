@@ -1,4 +1,5 @@
 import { notesRoot } from "../../files/link-style";
+import { setFileBadge } from "../contributions/file-badges";
 import { inOpenFolder } from "../may-open";
 import { fs, plugins as pluginsIpc, type StoreScope } from "../../platform/ipc";
 import { absoluteIn, basename, isInside, slashed } from "../../utils/path";
@@ -138,6 +139,12 @@ export function fileHandlers(p: PluginScope) {
       const root = p.root();
       const stat = await pluginsIpc.fsStat(p.id, root, str(path, "path"));
       return stat && { ...stat, rel: relOf(root, stat.path) };
+    },
+    // Through stat: the path the tree shows, and only inside the folder.
+    "files.setBadge": async ({ path, badge }: Params) => {
+      const stat = await pluginsIpc.fsStat(p.id, p.root(), str(path, "path"));
+      if (!stat) throw new Error(`No file ${String(path)}.`);
+      setFileBadge(p.id, stat.path, badge);
     },
     "files.read": ({ path }: Params) =>
       pluginsIpc.fsRead(p.id, p.root(), str(path, "path")),

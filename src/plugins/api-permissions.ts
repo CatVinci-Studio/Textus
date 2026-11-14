@@ -48,6 +48,7 @@ const API_PERMISSIONS: readonly {
       "files.list",
       "files.find",
       "files.stat",
+      "files.setBadge",
       "files.read",
       "files.frontmatterGet",
       "metadata.get",

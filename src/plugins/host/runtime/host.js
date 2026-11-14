@@ -861,6 +861,12 @@
       stat: function (path) {
         return call("files.stat", { path: String(path) });
       },
+      setBadge: function (path, badge) {
+        return call("files.setBadge", {
+          path: String(path),
+          badge: badge ? plain(badge) : null,
+        });
+      },
       conventions: function (path) {
         return call("files.conventions", {
           path: path === undefined ? null : String(path),

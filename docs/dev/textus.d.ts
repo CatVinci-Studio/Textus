@@ -955,6 +955,18 @@ declare global {
        *  "Daily/*.md"); every document without one. */
       find(glob?: string): Promise<{ path: string; rel: string }[]>;
       stat(path: string): Promise<FileEntry | null>;
+      /** From 1.6: a short badge after the file's name in the sidebar (1
+       *  to 12 characters: "draft", "3", "★"), quiet or in a tone; null
+       *  takes it off. One shows per file, the plugin last by id winning;
+       *  gone when the plugin stops (files.read). */
+      setBadge(
+        path: string,
+        badge: {
+          text: string;
+          tone?: "accent" | "warning" | "danger" | "success";
+          tooltip?: string;
+        } | null,
+      ): Promise<void>;
       read(path: string): Promise<Uint8Array>;
       readText(path: string): Promise<string>;
       write(

@@ -3,6 +3,7 @@ import {
   showMessage,
   showPrompt,
 } from "../../engine/controls/app-dialog";
+import { forgetFileBadges } from "../contributions/file-badges";
 import {
   endProgress,
   reportProgress,
@@ -205,4 +206,5 @@ export function stopPluginUi(plugin: string): void {
   progressBars.delete(plugin);
   removeStatusItem(plugin);
   forgetPluginWhenKeys(plugin);
+  forgetFileBadges(plugin);
 }

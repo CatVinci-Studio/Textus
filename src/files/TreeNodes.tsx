@@ -1,4 +1,5 @@
 import { explainError } from "../utils/error-explain";
+import { useFileBadge } from "../plugins/contributions/file-badges";
 import { Tooltip } from "../engine/controls/Tooltip";
 import { currentStrings } from "../i18n/current";
 // The file tree's rows: a folder, which reads and lists its entries, and
@@ -267,6 +268,7 @@ const FileNode = memo(function FileNode({
   const Icon = fileIconFor(entry.name);
   const press = useLongPress();
   const mark = useFileMark(entry.path);
+  const badge = useFileBadge(entry.path);
   const changed = !!mark?.changed;
   // What Textus AI left here waiting for the writer, said after the name.
   const waiting = mark?.pending
@@ -308,6 +310,15 @@ const FileNode = memo(function FileNode({
         <Tooltip text={entry.name} description={null} whenCut>
           <span className="tx-truncate tree-label">{entry.name}</span>
         </Tooltip>
+        {badge && (
+          <Tooltip text={badge.tooltip ?? badge.text} description={null}>
+            <span
+              className={`tree-badge${badge.tone ? ` plugin-tone-${badge.tone}` : ""}`}
+            >
+              {badge.text}
+            </span>
+          </Tooltip>
+        )}
         {waiting && <span className="tree-ai-waiting">{waiting}</span>}
       </div>
       <Presence show={!!press.at}>
