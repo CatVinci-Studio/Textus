@@ -90,6 +90,30 @@ export function outAtEdges(
   }
 }
 
+/** The `spec` span a selection from `from` to `to` is all of, its ends just
+ *  inside or just outside, and where it starts and ends. `***` loads as
+ *  italic around bold: the span looked for may be inside the one there. */
+export function spanCovering(
+  state: EditorState,
+  from: number,
+  to: number,
+  spec: FormatSpec,
+): { node: ProseNode; from: number; to: number } | null {
+  let start = outAtEdges(state, from, -1);
+  const end = outAtEdges(state, to, 1);
+  let node = state.doc.nodeAt(start);
+  if (!node || start + node.nodeSize !== end) return null;
+  while (!gives(node, spec) && node.childCount === 1) {
+    const inner: ProseNode = node.firstChild!;
+    if (!isSpan(inner)) return null;
+    node = inner;
+    start += 1;
+  }
+  return gives(node, spec)
+    ? { node, from: start, to: start + node.nodeSize }
+    : null;
+}
+
 /** What of each textblock a selection over several holds, trimmed of edge
  *  whitespace: the ranges a shortcut wraps or unwraps. Code, maths and
  *  enclosure blocks are left out. */

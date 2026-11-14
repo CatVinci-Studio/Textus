@@ -149,6 +149,12 @@ describe("Ctrl+B and Ctrl+` on a selection with one end inside the span", () => 
     expect((await pressOver("a **bc** d\n", from, to)).saved).toBe("a bc d\n");
   });
 
+  it("takes the bold half out of bold italic selected exactly", async () => {
+    // "a ***x*** d" loads as italic(2-7) around bold(3-6).
+    expect((await pressOver("a ***x*** d\n", 3, 6)).saved).toBe("a *x* d\n");
+    expect((await pressOver("a ***x*** d\n", 2, 7)).saved).toBe("a *x* d\n");
+  });
+
   it("leaves bold alone when only part of its text is selected", async () => {
     // "a **bcde** f": bold(2-8), "de" 5-7.
     expect((await pressOver("a **bcde** f\n", 5, 8)).saved).toBe(

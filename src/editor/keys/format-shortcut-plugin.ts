@@ -17,7 +17,7 @@ export { toggleCodeSpan };
 import {
   blockRanges,
   gives,
-  outAtEdges,
+  spanCovering,
   mergedContent,
   outOfSpans,
   type FormatSpec,
@@ -70,15 +70,13 @@ function toggleOff(state: EditorState, spec: FormatSpec): Transaction | null {
   }
   // A selection that is all of a span, either end inside it or just
   // outside: from before it to the end of its text, say.
-  if (!empty) {
-    const start = outAtEdges(state, from, -1);
-    const end = outAtEdges(state, to, 1);
-    const node = state.doc.nodeAt(start);
-    if (matches(node) && start + node!.nodeSize === end) {
-      const tr = unwrap(start, node!, 0);
-      if (node!.attrs.rung === 3) return tr;
-      return tr.setSelection(TextSelection.create(tr.doc, start, end - 2));
-    }
+  const whole = !empty && spanCovering(state, from, to, spec);
+  if (whole) {
+    const tr = unwrap(whole.from, whole.node, 0);
+    if (whole.node.attrs.rung === 3) return tr;
+    return tr.setSelection(
+      TextSelection.create(tr.doc, whole.from, whole.to - 2),
+    );
   }
   return null;
 }
@@ -115,20 +113,8 @@ function acrossBlocks(
   const ranges = blockRanges(state);
   if (ranges.length === 0) return null;
   // The span a block's part is all of, either end inside it or not.
-  // `***` loads as italic around bold: the span looked for may be inside.
-  const spanOf = (range: { from: number; to: number }) => {
-    let from = outAtEdges(state, range.from, -1);
-    const to = outAtEdges(state, range.to, 1);
-    let node = state.doc.nodeAt(from);
-    if (!node || from + node.nodeSize !== to) return null;
-    while (!gives(node, spec) && node.childCount === 1) {
-      const inner: ProseNode = node.firstChild!;
-      if (inner.type.name !== "md_span") return null;
-      node = inner;
-      from += 1;
-    }
-    return gives(node, spec) ? { node, from, to: from + node.nodeSize } : null;
-  };
+  const spanOf = (range: { from: number; to: number }) =>
+    spanCovering(state, range.from, range.to, spec);
   const tr = state.tr;
   const allOn = ranges.every((range) => spanOf(range));
   for (const range of [...ranges].reverse()) {

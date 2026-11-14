@@ -250,8 +250,13 @@ for (const [os, platform] of [
               width,
               sidebar,
             });
-            for (const p of await chromeOverlaps(page))
-              found.push(`${said}: ${p}`);
+            // Only what stays: under load the layout may still be settling.
+            let left = await chromeOverlaps(page);
+            for (let i = 0; left.length && i < 10; i++) {
+              await page.waitForTimeout(150);
+              left = await chromeOverlaps(page);
+            }
+            for (const p of left) found.push(`${said}: ${p}`);
           }
         }
     expect([...new Set(found)]).toEqual([]);
