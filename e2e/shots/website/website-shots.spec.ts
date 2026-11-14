@@ -115,6 +115,9 @@ for (const lang of LANGS) {
 
     test("hero", async ({ page, browser }) => {
       const s = textsFor("hero");
+      // A larger window, same shape: the margin's cards keep room for their
+      // text in the longer languages, rather than being cut to fit.
+      await page.setViewportSize({ width: 1600, height: 1000 });
       await launch(page, {
         lang,
         file: heroFile(s),
