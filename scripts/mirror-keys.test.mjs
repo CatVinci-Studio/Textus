@@ -14,6 +14,7 @@ const stable = [
   "Textus_1.1.0_aarch64.AppImage",
   "Textus_1.1.0_arm64.deb",
   "Textus-1.1.0-1.aarch64.rpm",
+  "Textus_1.1.0_android_arm64.apk",
   "Textus_1.1.0_linux_x86_64.tar.gz",
   "textus-bin-1.1.0-1-x86_64.pkg.tar.zst",
   "Textus_1.1.0_x64-setup.exe.sig",
@@ -44,6 +45,13 @@ describe("download mirror keys", () => {
     );
   });
 
+  it("serves the Android APK under its own key", () => {
+    const { files } = mirrorManifest("v1.1.0", stable);
+    expect(files.android).toBe(
+      "releases/v1.1.0/Textus_1.1.0_android_arm64.apk",
+    );
+  });
+
   it("writes the manifest in a fixed key order, without other files", () => {
     // The order gh lists them in must not matter.
     const manifest = mirrorManifest("v1.1.0", [...stable].reverse());
@@ -60,6 +68,7 @@ describe("download mirror keys", () => {
       "linux-arm64",
       "deb-arm64",
       "rpm-arm64",
+      "android",
     ]);
   });
 
