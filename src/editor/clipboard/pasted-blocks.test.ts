@@ -187,3 +187,42 @@ it("a to-do's text copied whole pastes as a to-do on its own line, as text in a 
   t.paste(task.text, task.html);
   expect(t.markdown()).toContain("paraalpha");
 });
+
+it("a table copies as other apps read one, and pastes back as itself", async () => {
+  const source = "| a | **b** |\n| :-: | --- |\n| 1 | `2` |";
+  const t = await openView(`${source}\n\nend`);
+  const { CellSelection } = await import("@milkdown/kit/prose/tables");
+  const cellAt = (text: string) => {
+    let at = -1;
+    t.view.state.doc.descendants((n, pos) => {
+      if (at < 0 && n.isText && n.text === text) at = pos;
+    });
+    const $at = t.view.state.doc.resolve(at);
+    let d = $at.depth;
+    while (!/cell/.test($at.node(d).type.spec.tableRole ?? "")) d--;
+    return $at.before(d);
+  };
+  const copy = (from: string, to: string) => {
+    t.view.dispatch(
+      t.view.state.tr.setSelection(
+        CellSelection.create(t.view.state.doc, cellAt(from), cellAt(to)),
+      ),
+    );
+    return t.view.serializeForClipboard(t.view.state.selection.content());
+  };
+  const whole = copy("a", "2");
+  const table = whole.dom.querySelector("table")!;
+  expect(table.getAttribute("border")).toBe("1");
+  expect(table.querySelector("thead th")?.textContent).toBe("a");
+  expect(table.querySelector("td p")).toBeNull();
+  expect(table.querySelector("td")?.getAttribute("style")).toContain("border");
+  // Body cells alone: a row of tab-separated cells.
+  const body = copy("1", "2");
+  expect(body.text).toBe("1\t2");
+  t.caretAtEnd();
+  t.press("Enter");
+  t.paste(whole.text, whole.dom.innerHTML);
+  const back = t.markdown().split("end")[1];
+  expect(back).toMatch(/\|\s*a\s*\|\s*\*\*b\*\*\s*\|/);
+  expect(back).toMatch(/\|\s*1\s*\|\s*`2`\s*\|/);
+});

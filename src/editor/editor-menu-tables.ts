@@ -18,6 +18,9 @@ import {
   type Transaction,
 } from "@milkdown/kit/prose/state";
 import type { EditorView } from "@milkdown/kit/prose/view";
+import { Fragment, Slice } from "@milkdown/kit/prose/model";
+import { writeClipboard } from "./images/picture-clipboard";
+import { tellCopied } from "../clipboard/copied";
 import type { EditorRunner } from "./useEditorRunner";
 import type { Strings, TextKey } from "../i18n/strings";
 import { parseMarkdownSource } from "./markdown/parse-markdown-source";
@@ -165,23 +168,35 @@ function leaveTableForClick(
   );
 }
 
-/** The table the caret or cell selection is in, as Markdown; null outside
- *  one. */
-export function tableMarkdown(run: EditorRunner): string | null {
+/** The table the caret or cell selection is in, as Markdown and as the
+ *  HTML other apps read (Copy Table); null outside one. */
+function tableCopy(
+  run: EditorRunner,
+): { markdown: string; html: string } | null {
   return (
     run((ctx) => {
-      const { state } = ctx.get(editorViewCtx);
+      const view = ctx.get(editorViewCtx);
+      const { state } = view;
       const { $from } = state.selection;
       for (let d = $from.depth; d > 0; d--) {
         const node = $from.node(d);
         if (node.type.spec.tableRole !== "table") continue;
         const doc = state.schema.topNodeType.create(null, node);
-        return ctx.get(serializerCtx)(doc).trimEnd() + "\n";
+        const { dom } = view.serializeForClipboard(
+          new Slice(Fragment.from(node), 0, 0),
+        );
+        return {
+          markdown: ctx.get(serializerCtx)(doc).trimEnd() + "\n",
+          html: dom.innerHTML,
+        };
       }
       return null;
     }) ?? null
   );
 }
+
+export const tableMarkdown = (run: EditorRunner) =>
+  tableCopy(run)?.markdown ?? null;
 
 export function inTable(run: EditorRunner): boolean {
   return run((ctx) => isInTable(ctx.get(editorViewCtx).state)) ?? false;
@@ -251,9 +266,11 @@ export function tableMenuItems(
     {
       label: t.copyTable,
       onSelect: () => {
-        const markdown = tableMarkdown(run);
-        if (markdown)
-          void navigator.clipboard?.writeText(markdown).catch(() => {});
+        const copy = tableCopy(run);
+        if (!copy) return;
+        void writeClipboard(copy.html, copy.markdown, null)
+          .then(() => tellCopied(copy.markdown))
+          .catch(() => {});
       },
     },
     { label: t.deleteTable, onSelect: table("delete-table"), danger: true },

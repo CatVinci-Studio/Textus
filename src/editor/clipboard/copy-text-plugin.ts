@@ -2,6 +2,7 @@ import { schemaCtx, serializerCtx } from "@milkdown/kit/core";
 import { Plugin } from "@milkdown/kit/prose/state";
 import { Fragment, type Slice } from "@milkdown/kit/prose/model";
 import { $prose } from "@milkdown/kit/utils";
+import { plainTextOf } from "./plain-text";
 
 /** The text a copy from inside one code block, formula or inline code
  *  gives, as written - no fence or `$` around it; null for any other copy. */
@@ -49,7 +50,10 @@ export const copyTextPlugin = $prose(
             ? Fragment.from(schema.nodes.paragraph.create(null, slice.content))
             : slice.content;
           const doc = schema.topNodeType.createAndFill(undefined, content);
-          return doc ? ctx.get(serializerCtx)(doc).trimEnd() : "";
+          if (doc) return ctx.get(serializerCtx)(doc).trimEnd();
+          // Cells without the head row make no Markdown table: tab between
+          // cells, a line a row, as spreadsheets paste.
+          return plainTextOf(slice.content);
         },
       },
     }),
