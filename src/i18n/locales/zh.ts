@@ -1294,6 +1294,8 @@ export default {
   tutorialConnectBody:
     "接下来两步要用到 AI；用账号登录、填 API Key，或者以后再说——随时可以在 设置 › Textus AI 里改。",
   tutorialConnectTask: "登录或填 key；也可以先跳过",
+  chatSignInHint: "登录一个 AI 后就能在这里对话。",
+  chatSignIn: "登录",
   tutorialConnectSkip: "暂时跳过",
   tutorialConnected: "已连接。",
   tutorialWriteTitle: "让 AI 动笔",

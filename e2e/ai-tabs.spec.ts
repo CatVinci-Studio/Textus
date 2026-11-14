@@ -482,3 +482,21 @@ test("the sidebar's name row at the window's top moves the window too", async ({
   expect(await moves(title.x + 4, title.y + title.height / 2)).toBe(true);
   expect(await moves(title.x - 6, title.y + title.height / 2)).toBe(true);
 });
+
+test("with no AI signed in, the conversation asks for a sign-in, not a message", async ({
+  page,
+}) => {
+  await open(page);
+  await page.evaluate(() => {
+    (window as unknown as { __devInvokeResults: unknown }).__devInvokeResults =
+      {
+        codex_auth_status: { configured: false },
+        claude_auth_status: { configured: false },
+        provider_api_key_status: false,
+      };
+  });
+  await aiButton(page).click();
+  const view = page.locator(".agent-panel-view");
+  await expect(view.getByRole("button", { name: "登录" })).toBeVisible();
+  await expect(view.locator("textarea")).toHaveCount(0);
+});

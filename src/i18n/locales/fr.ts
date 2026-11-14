@@ -1463,6 +1463,8 @@ utiliser une.
     "Les deux étapes suivantes utilisent une IA; connectez-vous avec un compte, saisissez une clé d’API, ou plus tard - à tout moment dans Réglages › Textus AI.",
   tutorialConnectTask:
     "Connectez-vous ou collez une clé, ou passez pour l'instant.",
+  chatSignInHint: "Connectez-vous à une IA pour discuter ici.",
+  chatSignIn: "Se connecter",
   tutorialConnectSkip: "Passer pour l'instant",
   tutorialConnected: "Connecté.",
   tutorialWriteTitle: "Laisser l’IA écrire",

@@ -1420,6 +1420,8 @@ Skills liegen im Ordner skills/ neben dieser Datei, je Skill eine
     "Die nächsten zwei Schritte nutzen eine KI; mit einem Konto anmelden, einen API-Schlüssel eingeben oder später - jederzeit unter Einstellungen › Textus AI.",
   tutorialConnectTask:
     "Melde dich an oder füge einen Schlüssel ein - oder überspring es vorerst.",
+  chatSignInHint: "Melde dich bei einer KI an, um hier zu schreiben.",
+  chatSignIn: "Anmelden",
   tutorialConnectSkip: "Später",
   tutorialConnected: "Verbunden.",
   tutorialWriteTitle: "Die KI schreiben lassen",

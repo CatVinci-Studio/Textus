@@ -1360,6 +1360,8 @@ ${AI_NAME}への執筆の指示です。すべての文書に適用されます�
     "次の 2 ステップでは AI を使います；アカウントでサインイン、API キーを入力、あとで設定のどれでも；設定 › Textus AI でいつでも変えられます。",
   tutorialConnectTask:
     "サインインするか API キーを入力。あとにしてもかまいません。",
+  chatSignInHint: "AI にログインすると、ここで会話できます。",
+  chatSignIn: "ログイン",
   tutorialConnectSkip: "今はスキップ",
   tutorialConnected: "接続しました。",
   tutorialWriteTitle: "AI に書いてもらう",

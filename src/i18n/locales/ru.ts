@@ -1456,6 +1456,8 @@ export default {
   tutorialConnectBody:
     "Следующие два шага используют ИИ; войдите с учётной записью, введите ключ API или сделайте это позже — в любой момент в Настройки › Textus AI.",
   tutorialConnectTask: "Войдите или вставьте ключ - или пропустите пока.",
+  chatSignInHint: "Войдите в ИИ, чтобы общаться здесь.",
+  chatSignIn: "Войти",
   tutorialConnectSkip: "Пропустить пока",
   tutorialConnected: "Подключено.",
   tutorialWriteTitle: "Пусть пишет ИИ",

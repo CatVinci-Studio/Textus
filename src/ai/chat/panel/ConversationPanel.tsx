@@ -26,6 +26,8 @@ import {
 import { ModeIcon } from "../mode-icons";
 import { useSettings, type PanelMode } from "../../../prefs/SettingsContext";
 import { START_MODE, initialMode } from "../last-mode";
+import { useAiSignedIn } from "../chat-models";
+import { openSettingsPage } from "../../../settings/settings-nav";
 
 /** The panel always asks for the document as it is now; this stands until
  *  it answers, and where there is none. */
@@ -62,6 +64,7 @@ export function ConversationPanel({
   const { settings, t } = useSettings();
   const agentPanel = useAgentPanel();
   const conversation = useConversation(model);
+  const signedIn = useAiSignedIn();
   // The composer's mode: the empty state says what the AI will do in it.
   const [mode, setMode] = useState<PanelMode>(() => initialMode());
   // Research mode's kind of piece, "auto" for the model's choice; the
@@ -113,73 +116,92 @@ export function ConversationPanel({
         />
       )}
     >
-      {conversation.history.length === 0 && !conversation.busy && (
-        <div className="agent-panel-empty">
-          <span className="agent-panel-empty-mark" aria-hidden="true">
-            <ModeIcon key={mode} mode={mode} />
-          </span>
-          <p className="agent-panel-empty-text" key={mode}>
-            {t[MODES[mode].empty]}
-          </p>
+      {signedIn === false && conversation.history.length === 0 ? (
+        // Nothing to send to yet: where to sign in, not a box that answers
+        // nothing.
+        <div className="agent-panel-empty agent-panel-sign-in">
+          <p className="agent-panel-empty-text">{t.chatSignInHint}</p>
+          <button
+            type="button"
+            className="tx-button"
+            onClick={() => openSettingsPage("providers")}
+          >
+            {t.chatSignIn}
+          </button>
         </div>
+      ) : (
+        <>
+          {conversation.history.length === 0 && !conversation.busy && (
+            <div className="agent-panel-empty">
+              <span className="agent-panel-empty-mark" aria-hidden="true">
+                <ModeIcon key={mode} mode={mode} />
+              </span>
+              <p className="agent-panel-empty-text" key={mode}>
+                {t[MODES[mode].empty]}
+              </p>
+            </div>
+          )}
+          <ChatBody
+            composerRef={composer}
+            {...chat}
+            document={NO_DOCUMENT}
+            selectionMarkdown={null}
+            docPath={docPath}
+            workspaceRoot={settings.agentWorkspaceRoot || null}
+            conversation={conversation}
+            defaultMode={START_MODE}
+            labels={labels}
+            fillHeight
+            pendingBar={false}
+            onModeChange={setMode}
+            // The files attached are already in the conversation's scratch
+            // folder, which the paper copies.
+            onResearch={
+              doc &&
+              ((topic) =>
+                doc.writePaper(
+                  topic,
+                  paperGenre === "auto" ? null : paperGenre,
+                  conversation.conversationId,
+                ))
+            }
+            // `/` picks the kind of piece in Research; skills elsewhere.
+            kinds={
+              mode !== "research"
+                ? []
+                : (["auto", ...PAPER_GENRES] as const).map((genre) => ({
+                    key: genre,
+                    label:
+                      genre === "auto"
+                        ? t.paperGenreAuto
+                        : genreLabel(t, genre),
+                    pick: () => setPaperGenre(genre),
+                  }))
+            }
+            kind={
+              mode !== "research" || paperGenre === "auto"
+                ? null
+                : {
+                    label: genreLabel(t, paperGenre),
+                    clearLabel: t.paperGenreAuto,
+                    clear: () => setPaperGenre("auto"),
+                  }
+            }
+            footer={
+              doc?.guard && (
+                <CloseConfirmBar
+                  labels={labels}
+                  pendingCount={chat.pendingCount}
+                  onAcceptAll={chat.onAcceptAll}
+                  onRejectAll={chat.onRejectAll}
+                  onClose={doc.proceed}
+                  onCancel={doc.cancelGuard}
+                />
+              )
+            }
+          />
+        </>
       )}
-      <ChatBody
-        composerRef={composer}
-        {...chat}
-        document={NO_DOCUMENT}
-        selectionMarkdown={null}
-        docPath={docPath}
-        workspaceRoot={settings.agentWorkspaceRoot || null}
-        conversation={conversation}
-        defaultMode={START_MODE}
-        labels={labels}
-        fillHeight
-        pendingBar={false}
-        onModeChange={setMode}
-        // The files attached are already in the conversation's scratch
-        // folder, which the paper copies.
-        onResearch={
-          doc &&
-          ((topic) =>
-            doc.writePaper(
-              topic,
-              paperGenre === "auto" ? null : paperGenre,
-              conversation.conversationId,
-            ))
-        }
-        // `/` picks the kind of piece in Research; skills elsewhere.
-        kinds={
-          mode !== "research"
-            ? []
-            : (["auto", ...PAPER_GENRES] as const).map((genre) => ({
-                key: genre,
-                label:
-                  genre === "auto" ? t.paperGenreAuto : genreLabel(t, genre),
-                pick: () => setPaperGenre(genre),
-              }))
-        }
-        kind={
-          mode !== "research" || paperGenre === "auto"
-            ? null
-            : {
-                label: genreLabel(t, paperGenre),
-                clearLabel: t.paperGenreAuto,
-                clear: () => setPaperGenre("auto"),
-              }
-        }
-        footer={
-          doc?.guard && (
-            <CloseConfirmBar
-              labels={labels}
-              pendingCount={chat.pendingCount}
-              onAcceptAll={chat.onAcceptAll}
-              onRejectAll={chat.onRejectAll}
-              onClose={doc.proceed}
-              onCancel={doc.cancelGuard}
-            />
-          )
-        }
-      />
     </AgentPanelView>
   );
 }

@@ -1439,6 +1439,8 @@ Habilidades ficam na pasta skills/ ao lado deste arquivo, um arquivo
   tutorialConnectBody:
     "Os próximos dois passos usam uma IA; entre com uma conta, digite uma chave de API ou deixe para depois - em Ajustes › Textus AI, quando quiser.",
   tutorialConnectTask: "Entre ou cole uma chave - ou pule por agora.",
+  chatSignInHint: "Entre em uma IA para conversar aqui.",
+  chatSignIn: "Entrar",
   tutorialConnectSkip: "Pular por agora",
   tutorialConnected: "Conectado.",
   tutorialWriteTitle: "Deixe a IA escrever",

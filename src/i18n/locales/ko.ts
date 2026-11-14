@@ -1347,6 +1347,8 @@ ${AI_NAME}에게 주는 글쓰기 지침으로, 모든 문서에 적용됩니다
     "다음 두 단계에서 AI를 쓰니 계정으로 로그인하거나 API 키를 입력하거나 나중에 하세요(설정 › Textus AI에서 언제든 바꿀 수 있음).",
   tutorialConnectTask:
     "로그인하거나 키를 입력하세요. 지금은 건너뛰어도 됩니다.",
+  chatSignInHint: "AI에 로그인하면 여기서 대화할 수 있습니다.",
+  chatSignIn: "로그인",
   tutorialConnectSkip: "나중에 하기",
   tutorialConnected: "연결되었습니다.",
   tutorialWriteTitle: "AI에게 쓰게 하기",

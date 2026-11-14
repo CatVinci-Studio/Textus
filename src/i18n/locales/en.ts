@@ -1388,6 +1388,8 @@ type /name in a conversation to use one.
   tutorialConnectBody:
     "The next two steps use an AI; sign in with an account, enter an API key, or do it later - Settings › Textus AI, any time.",
   tutorialConnectTask: "Sign in or paste a key - or skip for now.",
+  chatSignInHint: "Sign in to an AI to start talking here.",
+  chatSignIn: "Sign in",
   tutorialConnectSkip: "Skip for now",
   tutorialConnected: "Connected.",
   tutorialWriteTitle: "Let the AI write",

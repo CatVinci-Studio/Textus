@@ -1453,6 +1453,8 @@ para usar una.
   tutorialConnectBody:
     "Los dos pasos siguientes usan una IA; inicia sesión con una cuenta, introduce una clave de API o hazlo más tarde: en Ajustes › Textus AI, cuando quieras.",
   tutorialConnectTask: "Inicia sesión o pega una clave, o sáltalo por ahora.",
+  chatSignInHint: "Inicia sesión en una IA para conversar aquí.",
+  chatSignIn: "Iniciar sesión",
   tutorialConnectSkip: "Omitir por ahora",
   tutorialConnected: "Conectado.",
   tutorialWriteTitle: "Deja que la IA escriba",
