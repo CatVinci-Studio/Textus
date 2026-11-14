@@ -107,11 +107,19 @@
 }
 
 /* It scrolls when a table's buttons outrun the phone, rather than folding
-   them away. */
+   them away; its edges fade, so a button cut off there reads as more to
+   scroll to, not as a stray mark. */
 :root[data-window-chrome="mobile"] .format-bar-row {
   flex: 1;
   overflow-x: auto;
   scrollbar-width: none;
+  mask-image: linear-gradient(
+    to right,
+    transparent,
+    #000 12px,
+    #000 calc(100% - 12px),
+    transparent
+  );
 }
 
 :root[data-window-chrome="mobile"] .format-bar .tx-icon-button {
