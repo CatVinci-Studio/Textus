@@ -777,6 +777,7 @@ export default {
   insertColumnRight: "在右侧插入列",
   deleteRow: "删除行",
   deleteColumn: "删除列",
+  copyTable: "复制表格",
   deleteTable: "删除表格",
   tableToMarkdown: "转换为 Markdown 表格",
   tableToMarkdownMerged: "转换为 Markdown 表格（有合并的单元格）",

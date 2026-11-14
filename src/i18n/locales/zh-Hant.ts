@@ -778,6 +778,7 @@ export default {
   insertColumnRight: "在右側插入欄",
   deleteRow: "刪除列",
   deleteColumn: "刪除欄",
+  copyTable: "複製表格",
   deleteTable: "刪除表格",
   tableToMarkdown: "轉換為 Markdown 表格",
   tableToMarkdownMerged: "轉換為 Markdown 表格（有合併的儲存格）",

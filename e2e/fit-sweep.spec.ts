@@ -209,10 +209,14 @@ for (const [os, platform] of [
 ] as const)
   test(`the window's parts never overlap on ${os}`, async ({ page }) => {
     test.setTimeout(60_000);
-    await page.addInitScript(
-      (p) => Object.defineProperty(navigator, "platform", { get: () => p }),
-      platform,
-    );
+    // The user agent too: Playwright's says Windows, and the platform
+    // check reads it.
+    await page.addInitScript((p) => {
+      Object.defineProperty(navigator, "platform", { get: () => p });
+      Object.defineProperty(navigator, "userAgent", {
+        get: () => `Mozilla/5.0 (${p}) AppleWebKit/537.36 Chrome/157.0`,
+      });
+    }, platform);
     await page.setViewportSize({ width: 1200, height: 760 });
     await openApp(page, { settings: { language: "de" } });
     await emit(page, "menu-settings");

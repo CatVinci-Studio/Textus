@@ -889,6 +889,7 @@ para usar una.
   insertColumnRight: "Insertar columna a la derecha",
   deleteRow: "Eliminar fila",
   deleteColumn: "Eliminar columna",
+  copyTable: "Copiar tabla",
   deleteTable: "Eliminar tabla",
   tableToMarkdown: "Convertir en tabla Markdown",
   tableToMarkdownMerged:

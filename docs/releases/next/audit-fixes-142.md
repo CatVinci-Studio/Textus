@@ -12,3 +12,5 @@
 - The tour dims the window again after a step that left it undimmed.
 - A window too narrow for a split, with the sidebar open, now folds the split into one island and puts it back when there is room.
 - Help › Sponsor Textus, and a small link under the version in Settings › About, open the sponsor page (not on iOS).
+- Tables: Copy Table in the right-click menu copies the whole table as Markdown.
+- Linux: the window's buttons are small and round, close together as in GNOME's own apps; the menu button matches the sidebar's in size and tone.

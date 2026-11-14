@@ -832,6 +832,7 @@ ${AI_NAME}への執筆の指示です。すべての文書に適用されます�
   insertColumnRight: "右に列を挿入",
   deleteRow: "行を削除",
   deleteColumn: "列を削除",
+  copyTable: "表をコピー",
   deleteTable: "表を削除",
   tableToMarkdown: "Markdown の表に変換",
   tableToMarkdownMerged: "Markdown の表に変換（結合されたセルがあります）",

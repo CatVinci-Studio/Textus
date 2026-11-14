@@ -1,4 +1,4 @@
-import { editorViewCtx } from "@milkdown/kit/core";
+import { editorViewCtx, serializerCtx } from "@milkdown/kit/core";
 import {
   isInTable,
   addRowAfter,
@@ -165,6 +165,24 @@ function leaveTableForClick(
   );
 }
 
+/** The table the caret or cell selection is in, as Markdown; null outside
+ *  one. */
+export function tableMarkdown(run: EditorRunner): string | null {
+  return (
+    run((ctx) => {
+      const { state } = ctx.get(editorViewCtx);
+      const { $from } = state.selection;
+      for (let d = $from.depth; d > 0; d--) {
+        const node = $from.node(d);
+        if (node.type.spec.tableRole !== "table") continue;
+        const doc = state.schema.topNodeType.create(null, node);
+        return ctx.get(serializerCtx)(doc).trimEnd() + "\n";
+      }
+      return null;
+    }) ?? null
+  );
+}
+
 export function inTable(run: EditorRunner): boolean {
   return run((ctx) => isInTable(ctx.get(editorViewCtx).state)) ?? false;
 }
@@ -229,6 +247,14 @@ export function tableMenuItems(
           danger: true,
         },
       ],
+    },
+    {
+      label: t.copyTable,
+      onSelect: () => {
+        const markdown = tableMarkdown(run);
+        if (markdown)
+          void navigator.clipboard?.writeText(markdown).catch(() => {});
+      },
     },
     { label: t.deleteTable, onSelect: table("delete-table"), danger: true },
   ];

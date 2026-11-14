@@ -889,6 +889,7 @@ export default {
   insertColumnRight: "Вставить столбец справа",
   deleteRow: "Удалить строку",
   deleteColumn: "Удалить столбец",
+  copyTable: "Копировать таблицу",
   deleteTable: "Удалить таблицу",
   tableToMarkdown: "Преобразовать в таблицу Markdown",
   tableToMarkdownMerged:

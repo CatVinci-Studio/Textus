@@ -862,6 +862,7 @@ Skills liegen im Ordner skills/ neben dieser Datei, je Skill eine
   insertColumnRight: "Spalte rechts einfügen",
   deleteRow: "Zeile löschen",
   deleteColumn: "Spalte löschen",
+  copyTable: "Tabelle kopieren",
   deleteTable: "Tabelle löschen",
   tableToMarkdown: "In Markdown-Tabelle umwandeln",
   tableToMarkdownMerged:

@@ -891,6 +891,7 @@ utiliser une.
   insertColumnRight: "Insérer une colonne à droite",
   deleteRow: "Supprimer la ligne",
   deleteColumn: "Supprimer la colonne",
+  copyTable: "Copier le tableau",
   deleteTable: "Supprimer le tableau",
   tableToMarkdown: "Convertir en tableau Markdown",
   tableToMarkdownMerged:

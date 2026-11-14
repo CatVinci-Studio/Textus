@@ -818,6 +818,7 @@ ${AI_NAME}에게 주는 글쓰기 지침으로, 모든 문서에 적용됩니다
   insertColumnRight: "오른쪽에 열 삽입",
   deleteRow: "행 삭제",
   deleteColumn: "열 삭제",
+  copyTable: "표 복사",
   deleteTable: "표 삭제",
   tableToMarkdown: "Markdown 표로 변환",
   tableToMarkdownMerged: "Markdown 표로 변환 (병합된 셀이 있음)",

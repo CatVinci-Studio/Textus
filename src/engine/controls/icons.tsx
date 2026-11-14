@@ -215,7 +215,7 @@ export function StopIcon({ className }: IconProps) {
 export const SortIcon = lucide(ArrowDownUp, 13);
 export const RefreshIcon = lucide(RefreshCw, 12);
 /** The way into the app menu, once the native menu bar is gone. */
-export const HamburgerIcon = lucide(Menu, 12);
+export const HamburgerIcon = lucide(Menu, 15);
 
 /** Undo (the iPhone keyboard toolbar). */
 export const UndoIcon = lucide(Undo2, 16);

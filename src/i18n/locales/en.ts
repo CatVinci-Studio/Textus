@@ -846,6 +846,7 @@ type /name in a conversation to use one.
   insertColumnRight: "Insert Column Right",
   deleteRow: "Delete Row",
   deleteColumn: "Delete Column",
+  copyTable: "Copy Table",
   deleteTable: "Delete Table",
   tableToMarkdown: "Convert to Markdown Table",
   tableToMarkdownMerged: "Convert to Markdown Table (it has merged cells)",

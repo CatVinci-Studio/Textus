@@ -876,6 +876,7 @@ Habilidades ficam na pasta skills/ ao lado deste arquivo, um arquivo
   insertColumnRight: "Inserir Coluna à Direita",
   deleteRow: "Apagar Linha",
   deleteColumn: "Apagar Coluna",
+  copyTable: "Copiar tabela",
   deleteTable: "Apagar Tabela",
   tableToMarkdown: "Converter em Tabela Markdown",
   tableToMarkdownMerged: "Converter em Tabela Markdown (tem células mescladas)",

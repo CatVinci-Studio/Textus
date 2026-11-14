@@ -125,6 +125,7 @@ describe("the editor menu", () => {
       t.insertColumnRight,
       `${t.tableRowGroup} › ${t.insertRowAbove} | ${t.selectRow} | - | ${t.deleteRow}`,
       `${t.tableColumnGroup} › ${t.insertColumnLeft} | - | ${t.alignLeft} | ${t.alignCenter} | ${t.alignRight} | - | ${t.selectColumn} | - | ${t.deleteColumn}`,
+      t.copyTable,
       t.deleteTable,
       "-",
       t.cut,
