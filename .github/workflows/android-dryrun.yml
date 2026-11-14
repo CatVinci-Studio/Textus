@@ -29,7 +29,6 @@ jobs:
       SIGNER_SHA256: 559b0eb511a274a75704f9ae12390da2a75f774b91714eeb50c4769148ce4f0a
     steps:
       - uses: actions/checkout@v7
-        with:
 
       - uses: actions/setup-java@v5
         with:
