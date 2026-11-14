@@ -69,14 +69,18 @@ static DRAFTS_CLAIMED: AtomicBool = AtomicBool::new(false);
 /// moved aside into `restoring/` (kept until the window says they are
 /// back, finish_draft_restore), and one a crash left there last time comes
 /// back too. One that can't be read goes to `unreadable/`, never deleted.
-/// Only the `main` window's first call gets anything (see DRAFTS_CLAIMED).
+/// Only the `main` window's first call gets anything (see DRAFTS_CLAIMED);
+/// on a phone, every page's.
 #[tauri::command]
 #[cfg_attr(test, specta::specta)]
 pub async fn take_draft_snapshots(
     app: AppHandle,
     window: tauri::Window,
 ) -> Result<Vec<DraftSnapshot>, String> {
-    if window.label() != "main" || DRAFTS_CLAIMED.swap(true, Ordering::SeqCst) {
+    // A phone has one window, and a new page there (Android recreating its
+    // activity) has lost the tabs those drafts belong to: offered again.
+    let claimed = cfg!(desktop) && DRAFTS_CLAIMED.swap(true, Ordering::SeqCst);
+    if window.label() != "main" || claimed {
         return Ok(Vec::new());
     }
     let dir = drafts_dir(&app)?;

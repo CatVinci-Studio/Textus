@@ -1,6 +1,7 @@
 import { useEffect, useRef } from "react";
 import { scaledPx } from "../engine/tokens/chrome-scale";
 import { onBack } from "./back";
+import { androidBridge } from "../platform/android-bridge";
 
 /** How far a finger moves across before it counts as a swipe, and how near
  *  the left edge one must start to pull the sidebar in. */
@@ -76,7 +77,8 @@ export function usePushedSidebar(
       setOpen(false);
       return true;
     });
-    edgeSwipe(true);
+    // Android keeps its back gesture off the edge the sidebar comes from.
+    androidBridge()?.setEdgeSwipe(true);
     window.addEventListener("pointerdown", tap, true);
     window.addEventListener("click", click, true);
     window.addEventListener("touchstart", down, { passive: true });
@@ -87,7 +89,7 @@ export function usePushedSidebar(
       window.removeEventListener("touchstart", down);
       window.removeEventListener("touchend", up);
       offBack();
-      edgeSwipe(false);
+      androidBridge()?.setEdgeSwipe(false);
     };
   }, [phone, setOpen]);
 }
@@ -105,12 +107,4 @@ function scrollsAcross(target: EventTarget | null): boolean {
       return true;
   }
   return false;
-}
-
-/** Android keeps its back gesture off a band of the left edge, so a swipe
- *  in from there opens the sidebar (MainActivity). */
-function edgeSwipe(on: boolean): void {
-  (
-    window as { TextusInsets?: { setEdgeSwipe?(on: boolean): void } }
-  ).TextusInsets?.setEdgeSwipe?.(on);
 }

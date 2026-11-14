@@ -10,6 +10,11 @@
   align-items: center;
   justify-content: center;
   background: var(--ui-overlay);
+  /* A phone on its side: the dialog stays clear of the camera and the
+     corners (mobile/styles/base.css). */
+  box-sizing: border-box;
+  padding: var(--safe-top, 0px) var(--safe-right, 0px) var(--safe-bottom, 0px)
+    var(--safe-left, 0px);
 }
 
 .close-prompt {

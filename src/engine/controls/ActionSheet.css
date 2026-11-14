@@ -16,7 +16,8 @@
 }
 
 .action-sheet-group {
-  max-height: calc(100vh - 154px);
+  /* Under the status bar's room, with Cancel and the gaps below it. */
+  max-height: calc(100vh - var(--safe-top, 0px) - 154px);
   overflow-y: auto;
 }
 
@@ -64,4 +65,16 @@
 .action-sheet-item.action-sheet-cancel {
   background: var(--ui-surface);
   font-weight: 600;
+}
+
+/* The one in force: its check at the row's end, the label still centred. */
+.action-sheet-item[aria-checked="true"] {
+  position: relative;
+}
+
+.action-sheet-check {
+  position: absolute;
+  top: 50%;
+  right: 16px;
+  transform: translateY(-50%);
 }

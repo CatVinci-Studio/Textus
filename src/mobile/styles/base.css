@@ -33,6 +33,27 @@
   right: var(--safe-right);
 }
 
+/* Android's navigation bar or a tablet's taskbar stays drawn over the
+   page's foot (an iPhone's or iPad's home indicator hides itself): the
+   desktop layout ends above it, as the phone's does. */
+:root[data-platform="android"]:not([data-window-chrome="mobile"]) #root {
+  padding-bottom: var(--safe-bottom);
+}
+
+:root:is([data-platform="ios"], [data-platform="android"]) .app-shell {
+  height: 100%;
+}
+
+/* The sidebar's name on the bar's row, not centred across the status bar
+   above it. */
+:root:is([data-platform="ios"], [data-platform="android"]):not(
+    [data-window-chrome="mobile"]
+  )
+  .app-shell:has(> .activity-rail)
+  .sidebar-header {
+  padding-top: var(--safe-top);
+}
+
 :root:is([data-platform="ios"], [data-platform="android"])
   :is(.window-bar, .island-row:not([data-inner])) {
   padding-top: var(--safe-top);

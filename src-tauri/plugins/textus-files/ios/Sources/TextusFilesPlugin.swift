@@ -41,9 +41,11 @@ class TextusFilesPlugin: Plugin, UIDocumentPickerDelegate {
   private var pending: Invoke?
   private var pickingFolder = false
   private var keyboardFit: KeyboardFit?
+  private var systemBars: SystemBars?
 
   @objc public override func load(webview: WKWebView) {
     keyboardFit = KeyboardFit(webview: webview)
+    systemBars = SystemBars(webview: webview)
   }
 
   // MARK: Bookmarks

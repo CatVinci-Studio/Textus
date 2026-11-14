@@ -1,3 +1,4 @@
+import { androidBridge } from "./android-bridge";
 import { isIOSApp, isMobileApp } from "./capabilities";
 
 /**
@@ -42,15 +43,13 @@ function safeArea(): void {
  *  the app says how tall the status bar and the navigation bar are, and
  *  what the cutout or a side navigation bar takes at either side. */
 function androidInsets(): Insets | null {
-  const native = (
-    window as { TextusInsets?: Record<keyof Insets, () => number> }
-  ).TextusInsets;
-  return native
+  const android = androidBridge();
+  return android
     ? {
-        top: native.top(),
-        right: native.right(),
-        bottom: native.bottom(),
-        left: native.left(),
+        top: android.top(),
+        right: android.right(),
+        bottom: android.bottom(),
+        left: android.left(),
       }
     : null;
 }

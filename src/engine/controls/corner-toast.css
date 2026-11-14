@@ -1,7 +1,7 @@
 /* A window corner's toasts: stacked, newest nearest the edge. */
 .corner-stack {
   position: fixed;
-  bottom: 18px;
+  bottom: calc(18px + var(--safe-bottom, 0px));
   z-index: var(--z-toast);
   display: flex;
   flex-direction: column;
@@ -10,13 +10,13 @@
 }
 
 .corner-stack[data-corner="end"] {
-  right: 18px;
+  right: calc(18px + var(--safe-right, 0px));
   align-items: flex-end;
 }
 
 /* After the rail, never over its buttons, nor past the window's end. */
 .corner-stack[data-corner="start"] {
-  --corner-from: calc(var(--rail-width, 0px) + 18px);
+  --corner-from: calc(var(--safe-left, 0px) + var(--rail-width, 0px) + 18px);
   left: var(--corner-from);
   max-width: calc(100vw - var(--corner-from) - 18px);
   align-items: flex-start;
@@ -24,7 +24,7 @@
 
 /* A phone's rail lies under the page while it is shut. */
 :root[data-window-chrome="mobile"] .corner-stack[data-corner="start"] {
-  --corner-from: 18px;
+  --corner-from: calc(var(--safe-left, 0px) + 18px);
 }
 
 /* One line until opened: what it says, then its buttons and ×. */

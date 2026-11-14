@@ -1,4 +1,5 @@
 import { useEffect, useRef } from "react";
+import { androidBridge } from "../platform/android-bridge";
 import { tabIsDirty, type DocTab, type HelpDoc } from "./doc-tabs";
 import type { PluginTabView } from "../plugins/app-bridge";
 
@@ -70,7 +71,16 @@ export function keptTabs(
   };
 }
 
-function store(): Storage | null {
+function store(): Pick<Storage, "getItem" | "setItem" | "removeItem"> | null {
+  // Android may make the page anew without a reload (a font or display size
+  // changed), with an empty sessionStorage: its app keeps them instead.
+  const android = androidBridge();
+  if (android)
+    return {
+      getItem: (key) => (key === KEY ? android.kept() || null : null),
+      setItem: (key, value) => key === KEY && android.keep(value),
+      removeItem: (key) => key === KEY && android.keep(""),
+    };
   try {
     return window.sessionStorage;
   } catch {

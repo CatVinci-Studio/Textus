@@ -67,7 +67,7 @@ class MainActivity : TauriActivity() {
   // The page runs under the status bar and the navigation bar, its own
   // colours there, and ends at the keyboard, which the web view doesn't
   // make room for itself. It reports no safe area, so the page reads the
-  // bars' sizes as TextusInsets (mobile-viewport.ts), told when they change
+  // bars' sizes from TextusAndroid (android-bridge.ts), told when they change
   // (`textus-insets`), and the keyboard's height (`textus-keyboard`).
   override fun onWebViewCreate(webView: WebView) {
     page = webView
@@ -83,6 +83,10 @@ class MainActivity : TauriActivity() {
             keepEdge()
           }
         }
+        @JavascriptInterface fun keep(text: String) {
+          kept = text
+        }
+        @JavascriptInterface fun kept(): String = kept
         /** The page's Appearance: "light", "dark" or "system". */
         @JavascriptInterface fun setAppearance(mode: String) {
           runOnUiThread {
@@ -95,7 +99,7 @@ class MainActivity : TauriActivity() {
           }
         }
       },
-      "TextusInsets",
+      "TextusAndroid",
     )
     webView.addOnLayoutChangeListener { _, _, _, _, _, _, _, _, _ -> keepEdge() }
     ViewCompat.setOnApplyWindowInsetsListener(webView) { view, insets ->
@@ -134,6 +138,13 @@ class MainActivity : TauriActivity() {
       if (edgeSwipe) listOf(Rect(0, mid - band / 2, (32 * density).toInt(), mid + band / 2))
       else emptyList(),
     )
+  }
+
+  companion object {
+    /** The page's tabs (reload-tabs.ts), for the page Android makes anew
+     *  when it recreates the activity (a font or display size change):
+     *  kept by the process, not by the page. */
+    @Volatile private var kept = ""
   }
 
   private fun tell(webView: WebView, event: String) {
