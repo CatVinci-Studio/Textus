@@ -8,9 +8,10 @@ import { $prose } from "@milkdown/kit/utils";
 import { isImeKeyEvent } from "./ime";
 
 /**
- * Backspace at the start of a numbered item takes its number away: the
- * item becomes body text between two lists, and the items after it start
- * again from 1, as in Typora. Null where it isn't such a start.
+ * Backspace at the start of a task takes its box away. At the start of a
+ * numbered item it takes the number: the item becomes body text between
+ * two lists, the items after it numbered from 1 again, as in Typora. Null
+ * where it isn't such a start.
  */
 function unnumberItem(state: EditorState) {
   const { $from, empty } = state.selection;
@@ -18,9 +19,14 @@ function unnumberItem(state: EditorState) {
   if (!empty || $from.parentOffset !== 0 || d < 3) return null;
   const item = $from.node(d - 1);
   const list = $from.node(d - 2);
-  if (item.type.name !== "list_item" || list.type.name !== "ordered_list")
-    return null;
-  if ($from.index(d - 1) !== 0) return null;
+  if (item.type.name !== "list_item" || $from.index(d - 1) !== 0) return null;
+  // A task gives up its box first; the next Backspace its number.
+  if (item.attrs.checked != null)
+    return state.tr.setNodeMarkup($from.before(d - 1), undefined, {
+      ...item.attrs,
+      checked: null,
+    });
+  if (list.type.name !== "ordered_list") return null;
   const at = $from.index(d - 2);
   const items: ProseNode[] = [];
   list.forEach((child) => items.push(child));

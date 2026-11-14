@@ -913,6 +913,8 @@ type /name in a conversation to use one.
   agentNeedsFolder:
     "Open a folder or save the document first: the agent works in a folder.",
   agentStopped: "{agent} stopped.",
+  agentNoImages:
+    "{agent} can't read images. Remove the image, or choose another agent.",
   agentSignIn: "{agent} needs you to sign in first.",
   chatAgentsGroup: "Agents",
   chatAgentPermission: "The agent asks to go on",

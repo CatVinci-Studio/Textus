@@ -884,6 +884,8 @@ ${AI_NAME}에게 주는 글쓰기 지침으로, 모든 문서에 적용됩니다
   agentNeedsFolder:
     "먼저 폴더를 열거나 문서를 저장하세요. 에이전트는 폴더 안에서 작업합니다.",
   agentStopped: "{agent}이(가) 멈췄습니다.",
+  agentNoImages:
+    "{agent}은(는) 이미지를 읽을 수 없습니다. 이미지를 빼거나 다른 에이전트를 고르세요.",
   agentSignIn: "먼저 {agent}에 로그인하세요.",
   chatAgentsGroup: "에이전트",
   chatAgentPermission: "에이전트가 계속하도록 허락을 구합니다",

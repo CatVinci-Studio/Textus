@@ -933,6 +933,8 @@ Skills liegen im Ordner skills/ neben dieser Datei, je Skill eine
   agentNeedsFolder:
     "Öffne zuerst einen Ordner oder speichere das Dokument: Der Agent arbeitet in einem Ordner.",
   agentStopped: "{agent} wurde beendet.",
+  agentNoImages:
+    "{agent} kann keine Bilder lesen. Entferne das Bild oder wähle einen anderen Agenten.",
   agentSignIn: "Melde dich zuerst bei {agent} an.",
   chatAgentsGroup: "Agenten",
   chatAgentPermission: "Der Agent bittet, weiterzumachen",

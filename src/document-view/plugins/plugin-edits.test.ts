@@ -65,4 +65,24 @@ it("keeps the caret where it was when a block is written again", async () => {
   expect(editor.ctx.get(serializerCtx)(view.state.doc)).toContain(
     "- [ ] open\n- [x] done",
   );
+  // Words selected elsewhere stay selected.
+  const intro = blocks.find((b) => b.kind === "paragraph")!;
+  view.dispatch(
+    view.state.tr.setSelection(
+      TextSelection.create(view.state.doc, intro.from + 1, intro.from + 4),
+    ),
+  );
+  const again = serializeBlocks(editor.ctx, view.state.doc).find(
+    (b) => b.kind === "list",
+  )!;
+  applyPluginEdits(editor.ctx, [
+    { action: "replace", block: again.id, text: "- [x] done\n- [ ] open" },
+  ] as EditProposal[]);
+  expect(view.state.selection.empty).toBe(false);
+  expect(
+    view.state.doc.textBetween(
+      view.state.selection.from,
+      view.state.selection.to,
+    ),
+  ).toBe("Int");
 });

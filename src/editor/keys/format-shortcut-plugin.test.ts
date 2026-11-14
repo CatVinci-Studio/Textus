@@ -81,6 +81,13 @@ describe("Ctrl+B and Ctrl+I over a selection", () => {
     expect((await pressOver("a **bb** c\n", 4, 9)).saved).toBe("a **bb c**\n");
   });
 
+  it("takes in a bold-italic the selection reaches into", async () => {
+    // "a ***bc*** d" loads as italic around bold: "a b" selected.
+    expect((await pressOver("a ***bc*** d\n", 0, 4)).saved).toBe(
+      "**a *bc*** d\n",
+    );
+  });
+
   it("keeps the other half of bold-italic inside", async () => {
     expect((await pressOver("a ***b*** c\n", 0, 9)).saved).toBe(
       "**a *b* c**\n",

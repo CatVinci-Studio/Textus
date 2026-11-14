@@ -76,7 +76,16 @@ function useTourView(
     const observer = new ResizeObserver(measure);
     observer.observe(el);
     window.addEventListener("resize", measure);
-    const escape = (e: KeyboardEvent) => e.key === "Escape" && onEscape();
+    // Not an Esc something else took (completion, find, a menu, the IME),
+    // nor one in a text the step has the learner type in.
+    const escape = (e: KeyboardEvent) =>
+      e.key === "Escape" &&
+      !e.defaultPrevented &&
+      !e.isComposing &&
+      !(e.target as HTMLElement | null)?.closest?.(
+        "input, textarea, [contenteditable='true']",
+      ) &&
+      onEscape();
     window.addEventListener("keydown", escape);
     return () => {
       observer.disconnect();

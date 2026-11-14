@@ -50,7 +50,8 @@ export function mergedContent(
 
 /** `pos` moved out of every `spec` span it sits inside, to that span's
  *  start (`side` -1) or end (1), so a selection half in bold takes all of
- *  that bold in. */
+ *  that bold in - with the spans around it (`***` loads as italic around
+ *  bold), which stay nested inside the new one. */
 export function outOfSpans(
   state: EditorState,
   pos: number,
@@ -58,10 +59,13 @@ export function outOfSpans(
   spec: FormatSpec,
 ): number {
   const $pos = state.doc.resolve(pos);
-  let moved = pos;
+  let outer = 0;
+  let found = false;
   for (let d = $pos.depth; d > 0 && !$pos.node(d).isTextblock; d--) {
-    if (gives($pos.node(d), spec))
-      moved = side < 0 ? $pos.before(d) : $pos.after(d);
+    if (!isSpan($pos.node(d))) break;
+    outer = d;
+    found ||= gives($pos.node(d), spec);
   }
-  return moved;
+  if (!found) return pos;
+  return side < 0 ? $pos.before(outer) : $pos.after(outer);
 }

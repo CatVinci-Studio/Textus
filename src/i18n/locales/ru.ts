@@ -957,6 +957,8 @@ export default {
   agentNeedsFolder:
     "Сначала откройте папку или сохраните документ: агент работает в папке.",
   agentStopped: "{agent} остановился.",
+  agentNoImages:
+    "{agent} не умеет читать изображения. Уберите изображение или выберите другого агента.",
   agentSignIn: "Сначала войдите в {agent}.",
   chatAgentsGroup: "Агенты",
   chatAgentPermission: "Агент просит разрешения продолжить",

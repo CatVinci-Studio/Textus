@@ -8,7 +8,7 @@ import { panelsState, type PanelsState } from "../plugins/panels-state";
 import { useAiSignedIn } from "../ai/chat/chat-models";
 import { TourLayer } from "./TourLayer";
 import { withCode } from "./with-code";
-import type { TutorialUntil } from "./tutorial-steps";
+import { TUTORIAL_STEPS, type TutorialUntil } from "./tutorial-steps";
 import type { Tutorial } from "./useTutorial";
 
 /** The panel a step waits on being opened. */
@@ -28,6 +28,21 @@ function usePanelStep(tutorial: Tutorial) {
   }, [opened, next]);
 }
 
+/** Back past the steps that would move on again at once: what they ask
+ *  for is already done. */
+function backTarget(stepIndex: number, signedIn: boolean | null): number {
+  let at = stepIndex - 1;
+  while (at > 0) {
+    const until = TUTORIAL_STEPS[at]!.until;
+    const done =
+      (until && OPENS[until]?.(panelsState())) ||
+      (until === "signed-in" && signedIn === true);
+    if (!done) break;
+    at--;
+  }
+  return at;
+}
+
 /** The AI's steps without an AI to use: on to the end. Signing in moves
  *  the sign-in step on. */
 function useAiSteps(tutorial: Tutorial, aiOn: boolean) {
@@ -38,6 +53,7 @@ function useAiSteps(tutorial: Tutorial, aiOn: boolean) {
     if (!aiOn || (step.live && signedIn === false)) goTo("done");
     else if (step.until === "signed-in" && signedIn) next();
   }, [step, aiOn, signedIn, next, goTo]);
+  return signedIn;
 }
 
 /** The tour's card over the window, for its current step. */
@@ -55,7 +71,7 @@ export function TutorialExperience({
 }) {
   const { settings } = useSettings();
   usePanelStep(tutorial);
-  useAiSteps(tutorial, settings.textusAi);
+  const signedIn = useAiSteps(tutorial, settings.textusAi);
 
   const { step, stop, stepIndex, totalSteps } = tutorial;
   const stopAt = step.stops?.[stop];
@@ -135,7 +151,15 @@ export function TutorialExperience({
             </button>
           )}
           {stepIndex > 0 && !isLast && (
-            <button type="button" className="tx-button" onClick={tutorial.back}>
+            <button
+              type="button"
+              className="tx-button"
+              onClick={() =>
+                tutorial.goTo(
+                  TUTORIAL_STEPS[backTarget(stepIndex, signedIn)]!.id,
+                )
+              }
+            >
               {t.tutorialBack}
             </button>
           )}

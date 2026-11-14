@@ -113,14 +113,8 @@ describe("the document a prompt points at", () => {
 });
 
 describe("pictures attached to a message", () => {
-  it.each([
-    [false, ["text", "resource_link"]],
-    [true, ["text", "resource_link", "image"]],
-  ])("reach an agent only when it reads them (%s)", async (reads, blocks) => {
-    ipc.images = reads;
-    ipc.prompts.length = 0;
-    const conversation = `pictures-${reads}`;
-    const reply = runAgentExchange({
+  const send = (conversation: string) =>
+    runAgentExchange({
       agent: { key: "p/pic", plugin: "p", id: "pic", name: "Pic" } as never,
       conversation,
       cwd: "/w",
@@ -129,10 +123,22 @@ describe("pictures attached to a message", () => {
       images: [{ name: "a.png", mime: "image/png", dataBase64: "AA==" }],
       events: { view: () => {}, thinking: () => {}, permission: () => {} },
     });
-    reply.catch(() => undefined);
-    await vi.waitFor(() => expect(ipc.prompts).toEqual([blocks]));
-    cancelAgentExchange(conversation);
+
+  it("reach an agent that reads them", async () => {
+    ipc.images = true;
+    ipc.prompts.length = 0;
+    send("pictures-read").catch(() => undefined);
+    await vi.waitFor(() =>
+      expect(ipc.prompts).toEqual([["text", "resource_link", "image"]]),
+    );
+    cancelAgentExchange("pictures-read");
     ipc.images = false;
+  });
+
+  it("are refused, not dropped, for an agent that doesn't", async () => {
+    ipc.prompts.length = 0;
+    await expect(send("pictures-unread")).rejects.toThrow(/Pic/);
+    expect(ipc.prompts).toEqual([]);
   });
 });
 

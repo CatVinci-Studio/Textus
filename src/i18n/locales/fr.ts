@@ -962,6 +962,8 @@ utiliser une.
   agentNeedsFolder:
     "Ouvrez d’abord un dossier ou enregistrez le document : l’agent travaille dans un dossier.",
   agentStopped: "{agent} s’est arrêté.",
+  agentNoImages:
+    "{agent} ne sait pas lire les images. Retirez l’image ou choisissez un autre agent.",
   agentSignIn: "Connectez-vous d’abord à {agent}.",
   chatAgentsGroup: "Agents",
   chatAgentPermission: "L’agent demande à continuer",

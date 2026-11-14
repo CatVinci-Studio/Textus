@@ -8,7 +8,23 @@ vi.mock("../app-bridge", async (importOriginal) => ({
   }),
 }));
 
-import { openDocument } from "./broker-files";
+vi.mock("../../platform/ipc", async (importOriginal) => {
+  const real = await importOriginal<typeof import("../../platform/ipc")>();
+  return {
+    ...real,
+    plugins: {
+      ...real.plugins,
+      // As Rust answers on Windows: the path resolved, \\?\ and all.
+      fsStat: async (_id: string, _root: string, path: string) => ({
+        path: `\\\\?\\C:\\notes\\${path}`,
+      }),
+    },
+  };
+});
+
+import { fileHandlers, openDocument } from "./broker-files";
+import { fileBadge } from "../contributions/file-badges";
+import type { PluginScope } from "./broker-scope";
 
 describe("a plugin reaching an open document", () => {
   open.add("/notes/a.md");
@@ -27,4 +43,13 @@ describe("a plugin reaching an open document", () => {
     expect(openDocument("/notes", ".obsidian/x.md")).toBeNull();
     expect(openDocument("/notes", "../private/diary.md")).toBeNull();
   });
+});
+
+it("puts a plugin's badge on the file as the tree spells its path", async () => {
+  const scope = { id: "p", root: () => "C:\\notes" } as PluginScope;
+  await fileHandlers(scope)["files.setBadge"]({
+    path: "a.md",
+    badge: { text: "3" },
+  });
+  expect(fileBadge("C:\\notes\\a.md")).not.toBeNull();
 });

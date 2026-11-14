@@ -843,6 +843,7 @@ export default {
   agentNeedsFolder:
     "請先開啟一個資料夾或儲存文件：Agent 需要在一個資料夾裡工作。",
   agentStopped: "{agent} 已停止。",
+  agentNoImages: "{agent} 讀不了圖片。請移除圖片，或改選其他代理。",
   agentSignIn: "請先登入 {agent}。",
   chatAgentsGroup: "Agent",
   chatAgentPermission: "Agent 請求繼續",

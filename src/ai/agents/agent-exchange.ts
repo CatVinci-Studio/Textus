@@ -461,6 +461,12 @@ export async function runAgentExchange(o: {
     void sendWanted(o.agent.key);
   }
   const images = o.images ?? [];
+  // Refused rather than dropped, as for a model: it would answer about a
+  // picture it never saw.
+  if (images.length && !session.images)
+    throw new Error(
+      fill(currentStrings().agentNoImages, { agent: o.agent.name }),
+    );
   const user: AgentTurn = {
     kind: "User",
     text: o.message,
@@ -471,7 +477,7 @@ export async function runAgentExchange(o: {
   const prompt = promptBlocks({
     message: o.message,
     docPath: o.docPath,
-    images: session.images ? images : [],
+    images,
   });
   try {
     await session.connection.request("session/prompt", {

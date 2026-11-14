@@ -24,6 +24,14 @@ import { TutorialExperience } from "./TutorialExperience";
 import { useTutorial, type Tutorial } from "./useTutorial";
 
 const ai = vi.hoisted(() => ({ on: true, signedIn: false as boolean | null }));
+/** The panels as the window last reported them. */
+const shown = vi.hoisted(() => ({
+  state: { sidebar: { open: false, tab: "tree" }, ai: { open: false } },
+}));
+vi.mock("../plugins/panels-state", async (importOriginal) => ({
+  ...(await importOriginal<typeof import("../plugins/panels-state")>()),
+  panelsState: () => shown.state,
+}));
 
 vi.mock("../prefs/SettingsContext", async (importOriginal) => ({
   ...(await importOriginal<typeof import("../prefs/SettingsContext")>()),
@@ -73,16 +81,18 @@ function resumeAt(stepId: string) {
 
 const card = () => screen.getByRole("dialog");
 const panels = (sidebar: boolean, aiOpen: boolean) =>
-  act(() =>
-    emitPluginEvent("panels", {
+  act(() => {
+    shown.state = {
       sidebar: { open: sidebar, tab: "tree" },
       ai: { open: aiOpen },
-    }),
-  );
+    };
+    emitPluginEvent("panels", shown.state);
+  });
 
 beforeAll(installTestLocalStorage);
 beforeEach(() => {
   localStorage.clear();
+  shown.state = { sidebar: { open: false, tab: "tree" }, ai: { open: false } };
   ai.on = true;
   ai.signedIn = false;
 });
@@ -116,6 +126,13 @@ describe("the tour's card", () => {
     expect(card()).toHaveAccessibleName(t.tutorialSettingsTitle);
   });
 
+  it("goes back past a step already done, instead of bouncing on it", () => {
+    resumeAt("rail");
+    panels(true, false);
+    fireEvent.click(screen.getByRole("button", { name: t.tutorialBack }));
+    expect(card()).toHaveAccessibleName(t.tutorialWelcomeTitle);
+  });
+
   it("asks to sign in once the AI opens, and skipping it ends the tour", () => {
     resumeAt("ai");
     panels(false, true);
@@ -143,6 +160,19 @@ describe("the tour's card", () => {
     expect(tour.active).toBe(false);
     cleanup();
     resumeAt("editor");
+    // An Esc in the text being typed, or one a menu took, stays there.
+    const editor = document.createElement("div");
+    editor.setAttribute("contenteditable", "true");
+    document.body.append(editor);
+    fireEvent.keyDown(editor, { key: "Escape" });
+    const taken = new KeyboardEvent("keydown", {
+      key: "Escape",
+      cancelable: true,
+    });
+    taken.preventDefault();
+    window.dispatchEvent(taken);
+    expect(tour.active).toBe(true);
+    editor.remove();
     fireEvent.keyDown(window, { key: "Escape" });
     expect(tour.active).toBe(false);
   });

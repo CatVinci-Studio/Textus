@@ -944,6 +944,8 @@ Habilidades ficam na pasta skills/ ao lado deste arquivo, um arquivo
   agentNeedsFolder:
     "Abra primeiro uma pasta ou salve o documento: o agente trabalha numa pasta.",
   agentStopped: "{agent} parou.",
+  agentNoImages:
+    "{agent} não consegue ler imagens. Remova a imagem ou escolha outro agente.",
   agentSignIn: "Inicie sessão primeiro no {agent}.",
   chatAgentsGroup: "Agentes",
   chatAgentPermission: "O agente pede para continuar",

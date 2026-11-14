@@ -898,6 +898,8 @@ ${AI_NAME}への執筆の指示です。すべての文書に適用されます�
   agentNeedsFolder:
     "先にフォルダを開くか、書類を保存してください。エージェントはフォルダの中で作業します。",
   agentStopped: "{agent} が停止しました。",
+  agentNoImages:
+    "{agent} は画像を読めません。画像を外すか、別のエージェントを選んでください。",
   agentSignIn: "先に {agent} にサインインしてください。",
   chatAgentsGroup: "エージェント",
   chatAgentPermission: "エージェントが続行の許可を求めています",

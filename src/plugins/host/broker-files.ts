@@ -140,11 +140,14 @@ export function fileHandlers(p: PluginScope) {
       const stat = await pluginsIpc.fsStat(p.id, root, str(path, "path"));
       return stat && { ...stat, rel: relOf(root, stat.path) };
     },
-    // Through stat: the path the tree shows, and only inside the folder.
+    // Stat only checks it is in the folder: its path is resolved (\\?\ on
+    // Windows), the tree's is as the folder was opened.
     "files.setBadge": async ({ path, badge }: Params) => {
-      const stat = await pluginsIpc.fsStat(p.id, p.root(), str(path, "path"));
+      const root = p.root();
+      const target = str(path, "path");
+      const stat = await pluginsIpc.fsStat(p.id, root, target);
       if (!stat) throw new Error(`No file ${String(path)}.`);
-      setFileBadge(p.id, stat.path, badge);
+      setFileBadge(p.id, absoluteIn(root, target), badge);
     },
     "files.read": ({ path }: Params) =>
       pluginsIpc.fsRead(p.id, p.root(), str(path, "path")),

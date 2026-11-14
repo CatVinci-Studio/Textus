@@ -958,6 +958,8 @@ para usar una.
   agentNeedsFolder:
     "Abre primero una carpeta o guarda el documento: el agente trabaja en una carpeta.",
   agentStopped: "{agent} se ha detenido.",
+  agentNoImages:
+    "{agent} no puede leer imágenes. Quita la imagen o elige otro agente.",
   agentSignIn: "Inicia sesión primero en {agent}.",
   chatAgentsGroup: "Agentes",
   chatAgentPermission: "El agente pide permiso para seguir",

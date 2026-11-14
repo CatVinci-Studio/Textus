@@ -2,6 +2,7 @@ package com.catvinci.textus.files
 
 import android.Manifest
 import android.app.Activity
+import android.content.ActivityNotFoundException
 import android.content.Intent
 import android.database.Cursor
 import android.net.Uri
@@ -206,12 +207,17 @@ class TextusFilesPlugin(private val activity: Activity) : Plugin(activity) {
     when {
       plainPath(url) == null || hasAllFiles() -> answerAccess(invoke)
       Build.VERSION.SDK_INT >= Build.VERSION_CODES.R ->
-        startActivityForResult(
-          invoke,
-          Intent(Settings.ACTION_MANAGE_APP_ALL_FILES_ACCESS_PERMISSION)
-            .setData(Uri.parse("package:${activity.packageName}")),
-          "allFilesAnswered",
-        )
+        // Some builds (Go, TV) have no such screen: the URL, then.
+        try {
+          startActivityForResult(
+            invoke,
+            Intent(Settings.ACTION_MANAGE_APP_ALL_FILES_ACCESS_PERMISSION)
+              .setData(Uri.parse("package:${activity.packageName}")),
+            "allFilesAnswered",
+          )
+        } catch (e: ActivityNotFoundException) {
+          answerAccess(invoke)
+        }
       else -> requestPermissionForAlias("storage", invoke, "storageAnswered")
     }
   }
@@ -224,7 +230,11 @@ class TextusFilesPlugin(private val activity: Activity) : Plugin(activity) {
 
   private fun answerAccess(invoke: Invoke) {
     val url = invoke.parseArgs(UrlArgs::class.java).url
-    val path = plainPath(url)?.takeIf { hasAllFiles() && File(it).isDirectory }
+    // Writable too: before Android 11 a memory card's folder reads but won't
+    // take a write, where its URL would.
+    val path = plainPath(url)?.takeIf {
+      hasAllFiles() && File(it).isDirectory && File(it).canWrite()
+    }
     invoke.resolve(JSObject().put("path", path ?: url))
   }
 
@@ -239,10 +249,11 @@ class TextusFilesPlugin(private val activity: Activity) : Plugin(activity) {
     if (uri.authority != "com.android.externalstorage.documents") return null
     val id = runCatching { DocumentsContract.getDocumentId(uri) }.getOrNull() ?: return null
     val volume = id.substringBefore(':')
-    val rel = id.substringAfter(':', "")
+    // A whole volume stays its URL: as a path it would open all of storage.
+    val rel = id.substringAfter(':', "").ifEmpty { return null }
     val base = if (volume == "primary") Environment.getExternalStorageDirectory().path
     else "/storage/$volume"
-    return if (rel.isEmpty()) base else "$base/$rel"
+    return "$base/$rel"
   }
 
   // ---- Share and touch

@@ -841,6 +841,7 @@ export default {
   agentNeedsFolder:
     "请先打开一个文件夹或保存文档：Agent 需要在一个文件夹里工作。",
   agentStopped: "{agent} 已停止。",
+  agentNoImages: "{agent} 读不了图片。请移除图片，或改选其他代理。",
   agentSignIn: "请先登录 {agent}。",
   chatAgentsGroup: "Agent",
   chatAgentPermission: "Agent 请求继续",

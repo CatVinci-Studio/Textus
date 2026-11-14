@@ -23,9 +23,9 @@ import { markChangeSource } from "../../editor/change-source";
 export function applyPluginEdits(ctx: Ctx, edits: EditProposal[]): boolean {
   const view = ctx.get(editorViewCtx);
   let tr = view.state.tr;
-  // Where the caret is, kept by its offset into a block written again
+  // The selection's ends, kept by their offsets into a block written again
   // whole (a list reordered), not thrown to the block's edge.
-  let caret = tr.selection.from;
+  let ends = [tr.selection.anchor, tr.selection.head];
   let atCaret = false;
   for (const edit of edits) {
     const text = edit.text ?? "";
@@ -54,18 +54,25 @@ export function applyPluginEdits(ctx: Ctx, edits: EditProposal[]): boolean {
     );
     if (!placed) return false;
     const { from, to } = placed.range;
-    const inside = caret >= from && caret <= to;
     const size = tr.doc.content.size;
     const steps = tr.steps.length;
     tr = replaceWithMarkdown(tr, ctx, from, to, placed.replacement);
     const end = to + tr.doc.content.size - size;
-    caret = inside ? Math.min(caret, end) : tr.mapping.slice(steps).map(caret);
+    const map = tr.mapping.slice(steps);
+    ends = ends.map((at) =>
+      at >= from && at <= to ? Math.min(at, end) : map.map(at),
+    );
   }
   if (!tr.docChanged) return true;
   closeHistory(tr);
   if (!atCaret) {
     // A block written again leaves the view where it was.
-    tr.setSelection(Selection.near(tr.doc.resolve(caret)));
+    const [anchor, head] = ends.map((at) => tr.doc.resolve(at));
+    tr.setSelection(
+      anchor!.pos === head!.pos
+        ? Selection.near(anchor!)
+        : TextSelection.between(anchor!, head!),
+    );
     view.dispatch(markChangeSource(tr, "plugin"));
     return true;
   }
