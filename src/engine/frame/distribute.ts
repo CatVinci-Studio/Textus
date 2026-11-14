@@ -11,6 +11,9 @@ export type Priority = "low" | "normal" | "high";
 export interface SizeRule {
   /** The least it takes before others below its priority give way. */
   min: number;
+  /** Kept even when every child must go under its minimum: the others
+   *  give the shortfall first (the island under the bar's own buttons). */
+  floor?: number;
   /** Pixels for a fixed one; for a flexible one, its fraction. */
   size: number;
   fixed: boolean;
@@ -69,8 +72,15 @@ function settle(rules: readonly SizeRule[], sizes: number[], room: number) {
     over -= give;
     if (over < 0.5) return;
   }
-  const total = sizes.reduce((a, b) => a + b, 0);
-  for (let i = 0; i < sizes.length; i++) sizes[i] *= room / total;
+  // Still too long: everyone shrinks alike, above their floors while the
+  // floors fit.
+  const sum = (xs: number[]) => xs.reduce((a, b) => a + b, 0);
+  const floors = rules.map((r, i) => Math.min(r.floor ?? 0, sizes[i]));
+  const base = sum(floors) < room ? floors : sizes.map(() => 0);
+  const spare = sum(sizes) - sum(base);
+  const left = room - sum(base);
+  for (let i = 0; i < sizes.length; i++)
+    sizes[i] = base[i] + ((sizes[i] - base[i]) * left) / (spare || 1);
 }
 
 /** Indexes by priority group, last child first within a group. */

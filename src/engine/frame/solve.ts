@@ -43,6 +43,9 @@ export interface IslandsInput {
   gap: number;
   /** A row of tabs' height; 0 with no rows. */
   rowHeight: number;
+  /** What the island at the top right keeps, however short the room:
+   *  the bar's own buttons over its row and a tab beside them. */
+  endRoom?: number;
   /** A pane's rule along `direction`. */
   rule: (
     pane: Pane,
@@ -130,6 +133,12 @@ function place(
   const rules = node.children.map((c, i) =>
     ruleOf(input, c, node.direction, node.sizes[i]),
   );
+  const last = rules.length - 1;
+  const topRight =
+    box.y === input.box.y &&
+    Math.abs(box.x + box.w - (input.box.x + input.box.w)) < 1;
+  if (row && topRight && input.rowHeight && input.endRoom)
+    rules[last] = { ...rules[last], floor: input.endRoom };
   const lengths = distribute(rules, (row ? box.w : box.h) - gaps);
   let at = row ? box.x : box.y;
   const parts = lengths.map((length) => {

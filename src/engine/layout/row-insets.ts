@@ -15,6 +15,9 @@ const AIR = 8;
 /** Bare bar kept before the window's own controls, however many tabs:
  *  somewhere to grab the window by. */
 const GRIP = 62;
+/** Room a row keeps for its tabs before any grip: one tab at its least
+ *  (TabBar.css) and the row's + and list. */
+const ROOM = 132;
 
 /** Where one tab row in the window bar's row starts and ends its tabs. */
 interface RowInsets {
@@ -39,19 +42,19 @@ export function rowInsets(
   air: number,
   corner: number,
   grip = 0,
+  room = 0,
 ): RowInsets {
   // Controls wholly before the row (the menu in the rail's column) are no
   // obstacle: the first tab can stand at the sheet's edge.
   const clear = leadEnd <= row.left ? 0 : leadEnd + air - row.left;
   const atCorner = clear <= 0;
-  return {
-    start: atCorner ? 0 : Math.max(clear, corner),
-    end: Math.max(
-      corner,
-      row.right - statusStart + air + (row.right > statusStart ? grip : 0),
-    ),
-    atCorner,
-  };
+  const start = atCorner ? 0 : Math.max(clear, corner);
+  const over = row.right - statusStart + air;
+  const under = Math.max(corner, over);
+  // The grip gives way first where the tabs would have no room.
+  const free = row.right - row.left - start - under - room;
+  const kept = row.right > statusStart ? Math.min(grip, Math.max(0, free)) : 0;
+  return { start, end: Math.max(corner, over + kept), atCorner };
 }
 
 /** What of the window bar the rows keep clear of, in the viewport. */
@@ -103,10 +106,13 @@ let obstacles: BarObstacles | null = null;
 const listeners = new Set<() => void>();
 let stopWatching: (() => void) | null = null;
 
-/** The bar's leading controls' end as a length for stylesheets: the
- *  sidebar's name starts past it (activity-rail.css). */
-export function leadEndLength(leadEnd: number): string {
-  return `${Number.isFinite(leadEnd) ? Math.ceil(leadEnd) : 0}px`;
+/** Room between the bar's leading controls and the sidebar's name. */
+const TITLE_GAP = 16;
+
+/** Where a name beside the bar's leading controls may start, as a length
+ *  for stylesheets (activity-rail.css): past them by `gap`; 0 with none. */
+export function leadClearLength(leadEnd: number, gap: number): string {
+  return `${Number.isFinite(leadEnd) && leadEnd > 0 ? Math.ceil(leadEnd + gap) : 0}px`;
 }
 
 function remeasure() {
@@ -114,8 +120,8 @@ function remeasure() {
   if (JSON.stringify(next) === JSON.stringify(obstacles)) return;
   obstacles = next;
   document.documentElement.style.setProperty(
-    "--bar-lead-end",
-    leadEndLength(next.leadEnd),
+    "--bar-lead-clear",
+    leadClearLength(next.leadEnd, scaledPx(TITLE_GAP)),
   );
   for (const listener of listeners) listener();
 }
@@ -169,6 +175,15 @@ function subscribe(listener: () => void) {
 
 const snapshot = () => obstacles;
 
+/** What the island at the window's top right keeps for its row: the bar's
+ *  buttons over it (its status, the window's), air, and a tab's room;
+ *  0 until the bar is measured. */
+export function barEndRoom(): number {
+  const ends = obstacles?.ends ?? [];
+  if (!ends.length) return 0;
+  return obstacles!.right - Math.min(...ends) + scaledPx(AIR) + scaledPx(ROOM);
+}
+
 /** The window bar's controls as last measured; null until they are. */
 export function useBarObstacles(): BarObstacles | null {
   return useSyncExternalStore(subscribe, snapshot);
@@ -195,6 +210,7 @@ function insetsFor(
     air,
     Math.max(air, bar.corner),
     scaledPx(GRIP),
+    scaledPx(ROOM),
   );
   const shown = island ? shownIsland(island.paneId) : null;
   const joined = insets.atCorner && !!shown && shown.front === shown.tabs[0];

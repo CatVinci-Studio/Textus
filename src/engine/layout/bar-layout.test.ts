@@ -124,3 +124,51 @@ describe("the window bar's start", () => {
     expect(at("macos", { titleRow: true, zen: true }).rows).toBe(1);
   });
 });
+
+// Every combination the window can be in: the bar's start holds each
+// control once, the lights only on a Mac's window, and with the rail off
+// or in Zen a way to the sidebar.
+describe("the window bar's start, swept", () => {
+  const flags = [false, true];
+  it("holds each control once, and always a way to the sidebar", () => {
+    for (const platform of ["macos", "windows", "linux"] as const)
+      for (const menuBar of flags)
+        for (const titleRow of flags)
+          for (const railOff of flags)
+            for (const zen of flags)
+              for (const fullscreen of flags)
+                for (const phone of flags) {
+                  const rail = !railOff;
+                  const said = JSON.stringify({
+                    platform,
+                    menuBar,
+                    titleRow,
+                    railOff,
+                    zen,
+                    fullscreen,
+                    phone,
+                  });
+                  const { lead } = barLayout({
+                    platform,
+                    menuBar,
+                    titleRow,
+                    rail,
+                    railOff,
+                    zen,
+                    fullscreen,
+                    phone,
+                  });
+                  expect(new Set(lead).size, said).toBe(lead.length);
+                  if (lead.includes("lights"))
+                    expect(platform === "macos" && !fullscreen, said).toBe(
+                      true,
+                    );
+                  if (railOff || zen || phone)
+                    expect(
+                      lead.includes("sidebar-toggle") ||
+                        lead.includes("menu-bar"),
+                      said,
+                    ).toBe(true);
+                }
+  });
+});

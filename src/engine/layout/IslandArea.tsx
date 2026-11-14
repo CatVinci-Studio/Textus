@@ -23,6 +23,7 @@ import {
   solveIslands,
   type IslandsLayout,
 } from "../frame/solve";
+import { barEndRoom } from "./row-insets";
 import { dividerKey, type PlacedIsland } from "../frame/island-parts";
 import { useIslandRoom, type IslandRoom } from "../frame/useIslandRoom";
 import { usePanelWidth } from "../frame/panel-width";
@@ -211,6 +212,7 @@ function solve(
     box,
     gap: room.gap,
     rowHeight: rows ? room.bar : 0,
+    endRoom: barEndRoom(),
     rule: ruleFor(panel, isPanel),
   });
 }

@@ -92,8 +92,8 @@
 
 /* On the bar's one row, its leading controls (a Mac's lights, the app
    menu, the sidebar's toggle) reach over the rail into the sidebar's
-   start: the name begins past them, as the bar measured them
-   (row-insets.ts), at every size. */
+   start: the name begins past them and the room after them, as the bar
+   measured them (row-insets.ts), at every size. */
 :root:not([data-window-chrome="mobile"]):not([data-bar-rows="2"]):not(
     [data-side-to-top]
   )
@@ -101,7 +101,7 @@
   .sidebar-header {
   padding-left: max(
     var(--pane-inset),
-    var(--bar-lead-end, 0px) + var(--space-4) - var(--rail-width)
+    var(--bar-lead-clear, 0px) - var(--rail-width)
   );
 }
 
