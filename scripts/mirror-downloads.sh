@@ -26,7 +26,7 @@ work="$(mktemp -d)"
 trap 'echo "downloaded files left in $work"' EXIT
 gh release download "$tag" --repo "$repo" --dir "$work" \
   --pattern '*_aarch64.dmg' --pattern '*_x64.dmg' --pattern '*-setup.exe' --pattern '*.AppImage' \
-  --pattern '*.deb' --pattern '*.rpm'
+  --pattern '*.deb' --pattern '*.rpm' --pattern '*.apk'
 
 # One object up, retried: a large upload now and then drops its connection.
 put() {
