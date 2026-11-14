@@ -208,6 +208,8 @@ para usar una.
   reviewNotesAskPrefix: "Sobre estas notas tuyas:\n{notes}\n",
   reviewNoteAskPrefix: "Sobre tu nota «{comment}»: ",
   agentTabProject: "Memoria",
+  memoryBack: "Volver a la conversación",
+  memorySetup: "Enseña a Textus AI cómo escribes",
   memoryStyle: "Estilo de escritura",
   memoryLibrary: "Biblioteca",
   memoryInstructions: "Instrucciones de escritura",

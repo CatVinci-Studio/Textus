@@ -97,7 +97,7 @@ afterEach(cleanup);
 
 describe("the Project tab", () => {
   it("lists writing style, writing instructions, the library and memory, in that order, each saying what it is", () => {
-    renderTab(workspace({}));
+    renderTab(workspace({ library: [entry({})] }));
     const titles = [...document.querySelectorAll(".memory-section > h4")].map(
       (h) => h.firstChild?.textContent,
     );
@@ -107,6 +107,18 @@ describe("the Project tab", () => {
       t.memoryLibrary,
       t.memoryRemembered,
     ]);
+  });
+
+  it("with nothing kept yet, offers the three as one row", () => {
+    const on = renderTab(workspace({}));
+    const titles = [...document.querySelectorAll(".memory-section > h4")].map(
+      (h) => h.firstChild?.textContent,
+    );
+    expect(titles).toEqual([t.memorySetup, t.memoryRemembered]);
+    fireEvent.click(
+      screen.getByRole("button", { name: `+ ${t.memoryLibrary}` }),
+    );
+    expect(on.onNewEntry).toHaveBeenCalled();
   });
 
   it("leaves the skills to the slash menu", () => {
@@ -144,6 +156,9 @@ describe("the Project tab's Memory section", () => {
         ],
       }),
     );
+    // Each opens to say what it is and where it came from.
+    for (const words of ["Reply briefly.", "Spell it colour."])
+      fireEvent.click(screen.getByRole("button", { name: words }));
     const text = section().textContent ?? "";
     expect(text.indexOf("Reply briefly.")).toBeLessThan(
       text.indexOf("Spell it colour."),
@@ -241,6 +256,9 @@ describe("the Project tab's Memory section", () => {
       }),
     );
     const tab = within(section());
+    // Its actions show once it is opened.
+    expect(tab.queryByRole("button", { name: t.memoryDelete })).toBeNull();
+    fireEvent.click(tab.getByRole("button", { name: "Reply briefly." }));
     fireEvent.click(tab.getByRole("button", { name: t.memoryEdit }));
     expect(on.onOpenFile).toHaveBeenCalledWith("/config/agent/memory/brief.md");
     fireEvent.click(screen.getByRole("button", { name: t.memoryMakeProject }));

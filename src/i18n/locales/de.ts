@@ -195,6 +195,8 @@ Skills liegen im Ordner skills/ neben dieser Datei, je Skill eine
   reviewNotesAskPrefix: "Zu diesen Notizen:\n{notes}\n",
   reviewNoteAskPrefix: "Zu deiner Anmerkung „{comment}“: ",
   agentTabProject: "Gedächtnis",
+  memoryBack: "Zurück zum Gespräch",
+  memorySetup: "Textus AI deine Art zu schreiben zeigen",
   memoryStyle: "Schreibstil",
   memoryLibrary: "Lexikon",
   memoryInstructions: "Schreibanweisungen",

@@ -184,6 +184,8 @@ ${AI_NAME}への執筆の指示です。すべての文書に適用されます�
   reviewNotesAskPrefix: "これらのコメントについて：\n{notes}\n",
   reviewNoteAskPrefix: "このコメント「{comment}」について：",
   agentTabProject: "記憶",
+  memoryBack: "会話に戻る",
+  memorySetup: "Textus AI にあなたの書き方を教える",
   memoryStyle: "文体",
   memoryLibrary: "ライブラリ",
   memoryInstructions: "執筆の指示",

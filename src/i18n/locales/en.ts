@@ -194,6 +194,8 @@ type /name in a conversation to use one.
   reviewNotesAskPrefix: "About these notes of yours:\n{notes}\n",
   reviewNoteAskPrefix: "About your note “{comment}”: ",
   agentTabProject: "Memory",
+  memoryBack: "Back to the conversation",
+  memorySetup: "Help Textus AI write like you",
   memoryStyle: "Writing style",
   memoryLibrary: "Library",
   memoryInstructions: "Writing instructions",

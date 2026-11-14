@@ -209,6 +209,8 @@ utiliser une.
   reviewNotesAskPrefix: "À propos de ces notes :\n{notes}\n",
   reviewNoteAskPrefix: "À propos de votre note «\u00a0{comment}\u00a0»\u00a0: ",
   agentTabProject: "Mémoire",
+  memoryBack: "Revenir à la conversation",
+  memorySetup: "Apprendre à Textus AI votre façon d’écrire",
   memoryStyle: "Style d'écriture",
   memoryLibrary: "Bibliothèque",
   memoryInstructions: "Instructions d'écriture",

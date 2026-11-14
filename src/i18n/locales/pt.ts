@@ -200,6 +200,8 @@ Habilidades ficam na pasta skills/ ao lado deste arquivo, um arquivo
   reviewNotesAskPrefix: "Sobre estas notas:\n{notes}\n",
   reviewNoteAskPrefix: "Sobre a sua nota “{comment}”: ",
   agentTabProject: "Memória",
+  memoryBack: "Voltar à conversa",
+  memorySetup: "Ensine ao Textus AI como você escreve",
   memoryStyle: "Estilo de escrita",
   memoryLibrary: "Biblioteca",
   memoryInstructions: "Instruções de escrita",

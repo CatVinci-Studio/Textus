@@ -174,6 +174,8 @@ export default {
   reviewNotesAskPrefix: "關於你的這幾則批註：\n{notes}\n",
   reviewNoteAskPrefix: "關於這則批註「{comment}」：",
   agentTabProject: "記憶",
+  memoryBack: "回到對話",
+  memorySetup: "讓 Textus AI 更懂你的寫作",
   memoryStyle: "寫作風格",
   memoryLibrary: "資料庫",
   memoryInstructions: "寫作指示",

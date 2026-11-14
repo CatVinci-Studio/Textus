@@ -211,6 +211,8 @@ export default {
   reviewNotesAskPrefix: "Об этих заметках:\n{notes}\n",
   reviewNoteAskPrefix: "По поводу заметки «{comment}»: ",
   agentTabProject: "Память",
+  memoryBack: "Вернуться к разговору",
+  memorySetup: "Научите Textus AI писать как вы",
   memoryStyle: "Стиль письма",
   memoryLibrary: "Картотека",
   memoryInstructions: "Инструкции",

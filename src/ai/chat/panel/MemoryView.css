@@ -327,6 +327,23 @@
   color: var(--ui-muted);
 }
 
+/* The memory's words, a button that opens its details. */
+.memory-remembered-text {
+  display: block;
+  width: 100%;
+  padding: 0;
+  border: 0;
+  background: none;
+  color: var(--ui-text);
+  font: inherit;
+  text-align: start;
+  cursor: pointer;
+}
+
+.memory-remembered-text.tx-clamp {
+  display: -webkit-box;
+}
+
 .memory-not-sent .memory-remembered-text {
   opacity: 0.6;
 }
@@ -363,4 +380,11 @@
   font-size: var(--text-caption);
   line-height: 1.5;
   color: var(--ui-muted);
+}
+
+/* Nothing kept yet: what can be, as one row of light buttons. */
+.memory-setup-actions {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
 }

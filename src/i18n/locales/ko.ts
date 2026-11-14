@@ -182,6 +182,8 @@ ${AI_NAME}에게 주는 글쓰기 지침으로, 모든 문서에 적용됩니다
   reviewNotesAskPrefix: "이 메모들에 대해:\n{notes}\n",
   reviewNoteAskPrefix: "이 댓글 “{comment}”에 대해: ",
   agentTabProject: "기억",
+  memoryBack: "대화로 돌아가기",
+  memorySetup: "Textus AI가 내 글쓰기를 알도록",
   memoryStyle: "문체",
   memoryLibrary: "라이브러리",
   memoryInstructions: "글쓰기 지침",
