@@ -261,3 +261,33 @@ for (const [os, platform] of [
         }
     expect([...new Set(found)]).toEqual([]);
   });
+
+for (const [os, platform] of [
+  ["windows", "Win32"],
+  ["linux", "Linux x86_64"],
+] as const)
+  test(`the menu bar's titles show on ${os}, the window's buttons inside it`, async ({
+    page,
+  }) => {
+    await page.addInitScript((p) => {
+      Object.defineProperty(navigator, "platform", { get: () => p });
+      Object.defineProperty(navigator, "userAgent", {
+        get: () => `Mozilla/5.0 (${p}) AppleWebKit/537.36 Chrome/157.0`,
+      });
+    }, platform);
+    await page.setViewportSize({ width: 1200, height: 760 });
+    await openApp(page, { settings: { menuBarShown: true } });
+    await expect(page.locator(".window-menu-bar").first()).toBeVisible();
+    const edges = await page.evaluate(() =>
+      [...document.querySelectorAll(".window-menu-bar, .window-caption")].map(
+        (el) => {
+          const r = el.getBoundingClientRect();
+          return [r.left, r.right];
+        },
+      ),
+    );
+    for (const [left, right] of edges) {
+      expect(left).toBeGreaterThanOrEqual(0);
+      expect(right).toBeLessThanOrEqual(1200);
+    }
+  });
