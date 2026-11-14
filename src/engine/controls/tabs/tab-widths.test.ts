@@ -40,6 +40,9 @@ describe("tabWidths", () => {
     expect(fit.overflow).toBe(true);
     expect(fit.widths).toEqual([126, 100]);
     expect(fit.cut).toEqual([true, false]);
+    // One that fits once capped needs no list: it takes the row.
+    const one = tabWidths([tab(180)], limits, 200, 2, 174);
+    expect(one).toMatchObject({ widths: [200], overflow: false });
   });
 
   it("squeezed, the widest tabs give way first and a short one keeps its width", () => {

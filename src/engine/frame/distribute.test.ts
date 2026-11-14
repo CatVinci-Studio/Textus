@@ -51,6 +51,13 @@ describe("distribute", () => {
     expect(sizes).toEqual([230, 230]);
   });
 
+  it("a floor above the minimum holds while the others can still give", () => {
+    // Wide window buttons: the right one needs 380, more than its 360 least.
+    expect(distribute([doc(), { ...doc(), floor: 380 }], 740)).toEqual([
+      360, 380,
+    ]);
+  });
+
   it("panels alone fill the row by their widths, each kept to its minimum", () => {
     expect(distribute([panel(400), panel(400)], 900)).toEqual([450, 450]);
     expect(distribute([panel(400), panel(200)], 900)).toEqual([580, 320]);

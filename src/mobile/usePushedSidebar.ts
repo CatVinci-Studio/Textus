@@ -41,16 +41,21 @@ export function usePushedSidebar(
       setOpen(false);
     };
     const click = (e: MouseEvent) => {
-      if (!swallow) return;
+      // A keyboard's click (no press before it) is never the closing tap's.
+      if (!swallow || e.detail === 0) return void (swallow = false);
       swallow = false;
       e.preventDefault();
       e.stopPropagation();
     };
     let start: { x: number; y: number } | null = null;
+    // A swipe that scrolls something across (a long name, a table, a
+    // text field) is that scroll's, not the sidebar's.
     const down = (e: TouchEvent) => {
       const t = e.touches[0];
       start =
-        e.touches.length === 1 && t ? { x: t.clientX, y: t.clientY } : null;
+        e.touches.length === 1 && t && !scrollsAcross(e.target)
+          ? { x: t.clientX, y: t.clientY }
+          : null;
     };
     const up = (e: TouchEvent) => {
       const t = e.changedTouches[0];
@@ -75,4 +80,19 @@ export function usePushedSidebar(
       window.removeEventListener("touchend", up);
     };
   }, [phone, setOpen]);
+}
+
+/** Whether `target` is in something a sideways swipe scrolls or edits. */
+function scrollsAcross(target: EventTarget | null): boolean {
+  for (
+    let el = target instanceof Element ? target : null;
+    el && el !== document.body;
+    el = el.parentElement
+  ) {
+    if (el.matches("input, textarea")) return true;
+    const { overflowX } = getComputedStyle(el);
+    if (/auto|scroll/.test(overflowX) && el.scrollWidth > el.clientWidth + 1)
+      return true;
+  }
+  return false;
 }

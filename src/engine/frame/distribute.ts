@@ -45,7 +45,7 @@ export function distribute(
   );
   // Each up to its minimum, paid for by those that give way first.
   rules.forEach((r, i) => {
-    if (sizes[i] < r.min) sizes[i] = Math.min(r.min, room);
+    if (sizes[i] < least(r)) sizes[i] = Math.min(least(r), room);
   });
   settle(rules, sizes, room);
   return whole(sizes, room);
@@ -66,7 +66,7 @@ function settle(rules: readonly SizeRule[], sizes: number[], room: number) {
     return;
   }
   for (const i of order(rules, GIVE_ORDER, () => true)) {
-    const give = Math.min(over, sizes[i] - rules[i].min);
+    const give = Math.min(over, sizes[i] - least(rules[i]));
     if (give <= 0) continue;
     sizes[i] -= give;
     over -= give;
@@ -82,6 +82,10 @@ function settle(rules: readonly SizeRule[], sizes: number[], room: number) {
   for (let i = 0; i < sizes.length; i++)
     sizes[i] = base[i] + ((sizes[i] - base[i]) * left) / (spare || 1);
 }
+
+/** What a child keeps before the shrink everyone shares: its minimum, or
+ *  its floor where that is more. */
+const least = (r: SizeRule) => Math.max(r.min, r.floor ?? 0);
 
 /** Indexes by priority group, last child first within a group. */
 function order(

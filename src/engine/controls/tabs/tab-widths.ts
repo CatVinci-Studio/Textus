@@ -56,11 +56,14 @@ export function tabWidths(
   const squeezed = wanted.map((width) =>
     Math.max(Math.min(width, min), Math.min(width, level)),
   );
-  const overflow =
-    squeezed.reduce((sum, width) => sum + width, 0) > room + SLACK;
+  const sum = (ws: readonly number[]) => ws.reduce((a, w) => a + w, 0);
+  const capped = squeezed.map((width) => Math.min(width, shown));
+  // Capped to what shows beside the list they may fit after all: then
+  // there is no list, and a tab may take the whole row.
+  const overflow = sum(capped) > room + SLACK;
   const widths = overflow
-    ? squeezed.map((width) => Math.min(width, shown))
-    : squeezed;
+    ? capped
+    : squeezed.map((width) => Math.min(width, room));
   return {
     widths,
     cut: tabs.map((tab, i) => tab.title > widths[i]! - tab.fixed + SLACK),

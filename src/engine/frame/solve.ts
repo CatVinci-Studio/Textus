@@ -43,6 +43,8 @@ export interface IslandsInput {
   gap: number;
   /** A row of tabs' height; 0 with no rows. */
   rowHeight: number;
+  /** An inner island's row, clear of no status bar; rowHeight if unset. */
+  innerRowHeight?: number;
   /** What the island at the top right keeps, however short the room:
    *  the bar's own buttons over its row and a tab beside them. */
   endRoom?: number;
@@ -74,7 +76,10 @@ export function leastHeight(input: Omit<IslandsInput, "box">): number {
 }
 
 function island(input: IslandsInput, box: Rect, top: boolean): IslandRects {
-  const h = Math.min(input.rowHeight, box.h);
+  const tall = top
+    ? input.rowHeight
+    : (input.innerRowHeight ?? input.rowHeight);
+  const h = Math.min(tall, box.h);
   const row = h ? { x: box.x, y: box.y, w: box.w, h } : null;
   const sheet = { x: box.x, y: box.y + h, w: box.w, h: box.h - h };
   return { row, sheet, whole: box, inner: !top };

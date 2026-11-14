@@ -1,6 +1,7 @@
 import { tokenPx } from "../tokens/token-px";
 import { useLayoutEffect, useState, type RefObject } from "react";
 import { flushSync } from "react-dom";
+import { isMobileApp } from "../../platform/capabilities";
 
 /** The islands' area as laid out: its size, where it sits in the shell,
  *  and the layout's spacings in pixels. */
@@ -14,6 +15,8 @@ export interface IslandRoom {
   gap: number;
   /** A row of tabs: the window bar's height. */
   bar: number;
+  /** An inner island's row: the bar's, without the status bar's room. */
+  row: number;
   /** The shell's own size: when it changed, the window was resized. */
   shell: { w: number; h: number };
   /** Where the shell sits in the viewport. */
@@ -30,6 +33,7 @@ const same = (a: IslandRoom | null, b: IslandRoom) =>
   a.foot === b.foot &&
   a.gap === b.gap &&
   a.bar === b.bar &&
+  a.row === b.row &&
   a.shellAt.x === b.shellAt.x &&
   a.shellAt.y === b.shellAt.y;
 
@@ -59,9 +63,9 @@ export function useIslandRoom(
     };
     const observer = new ResizeObserver(remeasure);
     observer.observe(el);
-    // Also once the window's resize is told: what marks the window then (a
-    // phone's keyboard-up) may change the spacings after the size is seen.
-    window.addEventListener("resize", remeasure);
+    // A phone's also once the window's resize is told: keyboard-up, marked
+    // then, may change the spacings after the size is seen.
+    if (isMobileApp) window.addEventListener("resize", remeasure);
     return () => {
       observer.disconnect();
       window.removeEventListener("resize", remeasure);
@@ -84,6 +88,7 @@ function measure(el: HTMLElement | null): IslandRoom | null {
     foot: tokenPx("--island-foot", fresh),
     gap: tokenPx("--island-gap", fresh),
     bar: tokenPx("--window-bar-height", fresh),
+    row: tokenPx("--window-bar-row", fresh),
     shell: { w: shell?.clientWidth ?? 0, h: shell?.clientHeight ?? 0 },
     shellAt: { x: at?.left ?? 0, y: at?.top ?? 0 },
   };

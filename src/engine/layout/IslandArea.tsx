@@ -23,7 +23,7 @@ import {
   solveIslands,
   type IslandsLayout,
 } from "../frame/solve";
-import { barEndRoom } from "./row-insets";
+import { barEndRoom, useBarObstacles } from "./row-insets";
 import { dividerKey, type PlacedIsland } from "../frame/island-parts";
 import { useIslandRoom, type IslandRoom } from "../frame/useIslandRoom";
 import { usePanelWidth } from "../frame/panel-width";
@@ -87,10 +87,7 @@ export function IslandArea({
   const ref = useRef<HTMLElement>(null);
   const keyed = useRef(new Map<string, string>());
   const panel = usePanelWidth();
-  // Solved again as an island's content measures a new least width.
-  useSyncExternalStore(onContentMin, contentMinVersion);
-  // And as a document's zoom changes its column's least.
-  useSyncExternalStore(onZoom, zoomVersion);
+  useSolveAgain();
   const split = isSplit(layout);
   const room = useIslandRoom(ref, `${split} ${rows} ${plain}`);
   const all = panesOf(layout.root);
@@ -199,6 +196,15 @@ function boxOf(room: IslandRoom, rows: boolean): Rect {
   };
 }
 
+/** Solved again as an island's content measures a new least width, as a
+ *  document's zoom changes its column's least, and as the window bar's
+ *  buttons change what the top-right island keeps. */
+function useSolveAgain() {
+  useSyncExternalStore(onContentMin, contentMinVersion);
+  useSyncExternalStore(onZoom, zoomVersion);
+  useBarObstacles();
+}
+
 function solve(
   room: IslandRoom,
   box: Rect,
@@ -212,6 +218,7 @@ function solve(
     box,
     gap: room.gap,
     rowHeight: rows ? room.bar : 0,
+    innerRowHeight: rows ? room.row : 0,
     endRoom: barEndRoom(),
     rule: ruleFor(panel, isPanel),
   });

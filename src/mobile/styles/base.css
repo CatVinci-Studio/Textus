@@ -17,7 +17,7 @@
 }
 
 :root:is([data-platform="ios"], [data-platform="android"])
-  :is(.window-bar, .island-row) {
+  :is(.window-bar, .island-row:not([data-inner])) {
   padding-top: var(--safe-top);
 }
 
