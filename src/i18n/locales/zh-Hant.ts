@@ -1278,6 +1278,7 @@ export default {
   tutorialRailOutline: "大綱：這一頁的標題，點一下就跳過去。",
   tutorialRailSearch: "搜尋：在整個資料夾裡找檔案或一句話。",
   tutorialRailPlugins: "外掛：需要時再裝的更多功能。",
+  tutorialRailHide: "視窗小的時候，在圖示列按右鍵可以把它隱藏。",
   tutorialSettingsTitle: "設定",
   tutorialSettingsBody: "齒輪裡有主題、字型和 AI 帳號。",
   tutorialEditorTitle: "所見即所得",

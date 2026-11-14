@@ -110,6 +110,9 @@ describe("the tour's card", () => {
     fireEvent.click(screen.getByRole("button", { name: t.tutorialNext }));
     expect(card()).toHaveTextContent(t.tutorialRailPlugins);
     fireEvent.click(screen.getByRole("button", { name: t.tutorialNext }));
+    // Last, that the icon bar hides from its right-click.
+    expect(card()).toHaveTextContent(t.tutorialRailHide);
+    fireEvent.click(screen.getByRole("button", { name: t.tutorialNext }));
     expect(card()).toHaveAccessibleName(t.tutorialSettingsTitle);
   });
 

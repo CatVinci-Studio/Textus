@@ -1276,6 +1276,7 @@ export default {
   tutorialRailOutline: "大纲：这一页的标题，点一下就跳过去。",
   tutorialRailSearch: "搜索：在整个文件夹里找文件或一句话。",
   tutorialRailPlugins: "插件：需要时再装的更多功能。",
+  tutorialRailHide: "窗口小的时候，右键图标栏可以把它隐藏。",
   tutorialSettingsTitle: "设置",
   tutorialSettingsBody: "齿轮里有主题、字体和 AI 账号。",
   tutorialEditorTitle: "所见即所得",

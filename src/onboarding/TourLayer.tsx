@@ -13,17 +13,39 @@ import "./TourLayer.css";
 /** The hole's corner radius: --shape-m, as the ring's. */
 const RADIUS = 14;
 
-/** The dimmed window with a rounded hole cut where `hole` is. */
-function scrimPath(view: { width: number; height: number }, hole: Box | null) {
-  const outer = `M0 0H${view.width}V${view.height}H0Z`;
-  if (!hole || hole.width <= 0 || hole.height <= 0) return outer;
+/** One rounded hole, as a path cut from the scrim; "" with none. */
+function holePath(hole: Box | null): string {
+  if (!hole || hole.width <= 0 || hole.height <= 0) return "";
   const r = Math.min(RADIUS, hole.width / 2, hole.height / 2);
   const { left: x, top: y, width: w, height: h } = hole;
   return (
-    `${outer}M${x + r} ${y}H${x + w - r}A${r} ${r} 0 0 1 ${x + w} ${y + r}` +
+    `M${x + r} ${y}H${x + w - r}A${r} ${r} 0 0 1 ${x + w} ${y + r}` +
     `V${y + h - r}A${r} ${r} 0 0 1 ${x + w - r} ${y + h}H${x + r}` +
     `A${r} ${r} 0 0 1 ${x} ${y + h - r}V${y + r}A${r} ${r} 0 0 1 ${x + r} ${y}Z`
   );
+}
+
+/** The dimmed window with its holes cut (evenodd: they must not overlap). */
+function scrimPath(
+  view: { width: number; height: number },
+  holes: (Box | null)[],
+) {
+  return `M0 0H${view.width}V${view.height}H0Z` + holes.map(holePath).join("");
+}
+
+/** `beside` cut clear of `hole`, so the two holes never overlap. */
+function apart(hole: Box, beside: Box): Box | null {
+  const left = Math.max(beside.left, hole.left + hole.width);
+  const right = beside.left + beside.width;
+  return right - left > 0 ? { ...beside, left, width: right - left } : null;
+}
+
+/** `hole` widened across `beside`: the card goes past both, level with
+ *  the lit part. */
+function across(hole: Box, beside: Box): Box {
+  const left = Math.min(hole.left, beside.left);
+  const right = Math.max(hole.left + hole.width, beside.left + beside.width);
+  return { ...hole, left, width: right - left };
 }
 
 const viewNow = () => ({
@@ -68,6 +90,7 @@ function useTourView(
  */
 export function TourLayer({
   target,
+  beside,
   open,
   phone,
   labelledBy,
@@ -75,6 +98,8 @@ export function TourLayer({
   children,
 }: {
   target: string | null;
+  /** What the card keeps clear of, besides the lit part. */
+  beside?: string;
   open: boolean;
   phone: boolean;
   labelledBy: string;
@@ -82,6 +107,7 @@ export function TourLayer({
   children: ReactNode;
 }) {
   const box = useTargetBox(target);
+  const besideBox = useTargetBox(beside ?? null);
   const card = useRef<HTMLDivElement>(null);
   const path = useRef<SVGPathElement>(null);
   const ring = useRef<HTMLDivElement>(null);
@@ -89,7 +115,10 @@ export function TourLayer({
 
   const hole = box && holeAround(box, view);
   const draw = useCallback((frame: TourFrame) => {
-    path.current?.setAttribute("d", scrimPath(viewNow(), frame.hole));
+    path.current?.setAttribute(
+      "d",
+      scrimPath(viewNow(), [frame.hole, frame.extra]),
+    );
     const ringEl = ring.current;
     if (ringEl) {
       ringEl.hidden = !frame.hole;
@@ -103,7 +132,13 @@ export function TourLayer({
     if (card.current)
       card.current.style.transform = `translate(${frame.card.left}px, ${frame.card.top}px)`;
   }, []);
-  useGlide({ hole, card: placeCard(hole, cardSize, view, phone) }, draw);
+  // The card goes beside the lit part and whatever it keeps clear of.
+  const anchor = hole && besideBox ? across(hole, besideBox) : hole;
+  const extra = hole && besideBox ? apart(hole, besideBox) : null;
+  useGlide(
+    { hole, extra, card: placeCard(anchor, cardSize, view, phone) },
+    draw,
+  );
 
   return (
     <div className="tour-layer">

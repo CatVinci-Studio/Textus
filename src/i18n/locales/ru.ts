@@ -1439,6 +1439,8 @@ export default {
     "Структура: заголовки страницы, чтобы переходить между ними.",
   tutorialRailSearch: "Поиск: файл или строка во всей папке.",
   tutorialRailPlugins: "Плагины: новые функции, когда понадобятся.",
+  tutorialRailHide:
+    "В маленьком окне эту панель значков можно скрыть правым щелчком.",
   tutorialSettingsTitle: "Настройки",
   tutorialSettingsBody: "В шестерёнке тема, шрифты и ваши аккаунты ИИ.",
   tutorialEditorTitle: "Пишите, как видите",

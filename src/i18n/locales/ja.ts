@@ -1341,6 +1341,8 @@ ${AI_NAME}への執筆の指示です。すべての文書に適用されます�
   tutorialRailOutline: "アウトライン：ページの見出しで、クリックで移動。",
   tutorialRailSearch: "検索：フォルダー全体からファイルや一文を探す。",
   tutorialRailPlugins: "プラグイン：必要なときに追加する機能。",
+  tutorialRailHide:
+    "ウィンドウが小さいときは、このアイコンバーを右クリックして隠せます。",
   tutorialSettingsTitle: "設定",
   tutorialSettingsBody: "歯車にはテーマ、フォント、AI アカウントがあります。",
   tutorialEditorTitle: "見たまま書く",

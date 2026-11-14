@@ -1439,6 +1439,8 @@ para usar una.
     "Esquema: los títulos de la página, para saltar entre ellos.",
   tutorialRailSearch: "Buscar: un archivo o una línea en toda la carpeta.",
   tutorialRailPlugins: "Plugins: más funciones, cuando las necesites.",
+  tutorialRailHide:
+    "En una ventana pequeña, haz clic derecho en esta barra de iconos para ocultarla.",
   tutorialSettingsTitle: "Ajustes",
   tutorialSettingsBody:
     "El engranaje guarda el tema, las fuentes y tus cuentas de IA.",

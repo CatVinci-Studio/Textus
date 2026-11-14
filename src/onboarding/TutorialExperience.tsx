@@ -84,6 +84,7 @@ export function TutorialExperience({
   return (
     <TourLayer
       target={target}
+      beside={step.beside}
       open={!!step.open}
       phone={phone}
       labelledBy="tour-title"

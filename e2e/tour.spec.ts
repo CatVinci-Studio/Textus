@@ -22,7 +22,11 @@ test("the tour walks the window, moving on as each thing is done", async ({
     await page.locator('.activity-rail [data-rail-id="tree"]').click();
   await expect(title).toHaveText("侧边栏里有什么");
   await expect(page.locator(".tour-ring")).toBeVisible();
-  for (let i = 0; i < 4; i++) await primary.click();
+  // The card sits past the open sidebar, its files in sight.
+  const card = await page.locator(".tour-card").boundingBox();
+  const side = await page.locator("aside.sidebar").boundingBox();
+  expect(card!.x).toBeGreaterThanOrEqual(side!.x + side!.width);
+  for (let i = 0; i < 5; i++) await primary.click();
   await expect(title).toHaveText("设置");
   await primary.click();
 

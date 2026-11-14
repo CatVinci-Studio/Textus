@@ -1372,6 +1372,7 @@ type /name in a conversation to use one.
   tutorialRailOutline: "Outline: the page's headings, to jump between.",
   tutorialRailSearch: "Search: find a file or a line anywhere in the folder.",
   tutorialRailPlugins: "Plugins: more features, added when you need them.",
+  tutorialRailHide: "In a small window, right-click this icon bar to hide it.",
   tutorialSettingsTitle: "Settings",
   tutorialSettingsBody:
     "The gear holds the theme, the fonts and your AI accounts.",

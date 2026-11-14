@@ -1402,6 +1402,8 @@ Skills liegen im Ordner skills/ neben dieser Datei, je Skill eine
   tutorialRailOutline: "Gliederung: die Überschriften der Seite, zum Springen.",
   tutorialRailSearch: "Suche: eine Datei oder Zeile im ganzen Ordner finden.",
   tutorialRailPlugins: "Plugins: weitere Funktionen, wenn du sie brauchst.",
+  tutorialRailHide:
+    "In einem kleinen Fenster blendest du diese Symbolleiste per Rechtsklick aus.",
   tutorialSettingsTitle: "Einstellungen",
   tutorialSettingsBody:
     "Im Zahnrad sind Design, Schriften und deine KI-Konten.",

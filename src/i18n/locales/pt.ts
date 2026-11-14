@@ -1422,6 +1422,8 @@ Habilidades ficam na pasta skills/ ao lado deste arquivo, um arquivo
   tutorialRailSearch:
     "Busca: encontre um arquivo ou uma linha em toda a pasta.",
   tutorialRailPlugins: "Plugins: mais recursos, quando precisar.",
+  tutorialRailHide:
+    "Numa janela pequena, clique com o botão direito nesta barra de ícones para ocultá-la.",
   tutorialSettingsTitle: "Configurações",
   tutorialSettingsBody:
     "A engrenagem guarda o tema, as fontes e suas contas de IA.",

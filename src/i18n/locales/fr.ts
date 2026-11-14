@@ -1446,6 +1446,8 @@ utiliser une.
   tutorialRailSearch:
     "Recherche : trouver un fichier ou une ligne dans tout le dossier.",
   tutorialRailPlugins: "Plugins : d'autres fonctions, ajoutées au besoin.",
+  tutorialRailHide:
+    "Dans une petite fenêtre, un clic droit sur cette barre d’icônes la masque.",
   tutorialSettingsTitle: "Réglages",
   tutorialSettingsBody:
     "L'engrenage réunit le thème, les polices et vos comptes d'IA.",

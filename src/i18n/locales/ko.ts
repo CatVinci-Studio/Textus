@@ -1327,6 +1327,8 @@ ${AI_NAME}에게 주는 글쓰기 지침으로, 모든 문서에 적용됩니다
   tutorialRailOutline: "개요: 페이지의 제목들, 눌러서 이동.",
   tutorialRailSearch: "검색: 폴더 전체에서 파일이나 문장을 찾기.",
   tutorialRailPlugins: "플러그인: 필요할 때 추가하는 기능.",
+  tutorialRailHide:
+    "창이 작을 때는 이 아이콘 막대를 오른쪽 클릭해 숨길 수 있습니다.",
   tutorialSettingsTitle: "설정",
   tutorialSettingsBody: "톱니바퀴에는 테마, 글꼴, AI 계정이 있습니다.",
   tutorialEditorTitle: "보이는 대로 쓰기",

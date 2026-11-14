@@ -41,6 +41,9 @@ export interface TutorialStep {
   phoneTarget?: string;
   /** Lit one after another, Next going through them. */
   stops?: TutorialStop[];
+  /** What the card keeps clear of beside the lit part (the sidebar just
+   *  opened, so its contents show). */
+  beside?: string;
   until?: TutorialUntil;
   /** The window left undimmed: what the step leads to opens elsewhere
    *  (signing in, in Settings). */
@@ -79,7 +82,9 @@ const ALL_STEPS: TutorialStep[] = [
       { target: RAIL("outline"), key: "tutorialRailOutline" },
       { target: RAIL("search"), key: "tutorialRailSearch" },
       { target: RAIL("plugins"), key: "tutorialRailPlugins" },
+      { target: ".activity-rail", key: "tutorialRailHide" },
     ],
+    beside: "aside.sidebar:not(.sidebar-collapsed)",
   },
   {
     id: "settings",
