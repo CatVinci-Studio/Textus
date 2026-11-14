@@ -4,7 +4,7 @@ import { editorViewCtx, serializerCtx, type Editor } from "@milkdown/kit/core";
 import { TextSelection } from "@milkdown/kit/prose/state";
 import type { EditProposal } from "../../ai/types";
 import { createTestEditor } from "../editor-test-harness";
-import { applyPluginEdits } from "./plugin-edits";
+import { applyPluginEdits, replaceDocument } from "./plugin-edits";
 import { serializeBlocks } from "../../editor/markdown/doc-markdown";
 
 vi.mock("mermaid", () => ({
@@ -85,4 +85,22 @@ it("keeps the caret where it was when a block is written again", async () => {
       view.state.selection.to,
     ),
   ).toBe("Int");
+});
+
+// An agent outside edits a cell and a paragraph after the table: the file
+// comes back as one table, as written.
+it("takes a file changed outside in a table cell and after it as one table", async () => {
+  const table =
+    "| 标签 | 正常 | 异常 |\n| --- | --- | --- |\n| 正常（228） | 201（88.16%） | 27（11.84%） |\n| 异常（228） | 32（14.04%） | 196（85.96%） |";
+  editor = await createTestEditor(`${table}\n\n结论：一致。`);
+  const view = editor.ctx.get(editorViewCtx);
+  const next = `${table.replace("201（88.16%）", "201 （88.2%）")}\n\n结论：不一致。`;
+  expect(replaceDocument(editor.ctx, next)).toBe(true);
+  const tables: string[] = [];
+  view.state.doc.forEach((n) => {
+    if (n.type.name === "table") tables.push(n.textContent);
+  });
+  expect(tables).toHaveLength(1);
+  expect(tables[0]).toContain("201 （88.2%）");
+  expect(tables[0]).toContain("27（11.84%）");
 });
