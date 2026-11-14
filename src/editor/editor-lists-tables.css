@@ -247,3 +247,70 @@
 .table-size-sheet .table-size-card-body {
   padding: var(--space-4);
 }
+
+/* A row's grip on the table's left edge, a column's on its top edge, at
+   the row and column under the pointer (table-grips.ts). */
+.table-grip {
+  position: absolute;
+  top: 0;
+  left: 0;
+  z-index: 3;
+  padding: 0;
+  border: 1px solid var(--doc-border);
+  border-radius: var(--shape-pill);
+  corner-shape: round;
+  background: var(--doc-bg, var(--ui-bg));
+  cursor: grab;
+  touch-action: none;
+  opacity: 0;
+  pointer-events: none;
+  transition: opacity var(--dur-fast) var(--ease-standard);
+}
+.table-grip-row {
+  width: 8px;
+  height: 20px;
+  margin: -10px 0 0 -4px;
+}
+.table-grip-col {
+  width: 20px;
+  height: 8px;
+  margin: -4px 0 0 -10px;
+}
+.table-wrapper[data-grips]:is(:hover, .is-table-caret, [data-dragging])
+  > .table-grip:not([hidden]) {
+  opacity: 1;
+  pointer-events: auto;
+}
+.table-grip:hover,
+.table-wrapper[data-dragging] > .table-grip {
+  border-color: var(--doc-accent);
+  background: var(--doc-accent);
+}
+
+/* While one is pulled: the row or column it moves, and where it lands. */
+.table-drag-band,
+.table-drop-line {
+  position: absolute;
+  top: 0;
+  left: 0;
+  display: none;
+  pointer-events: none;
+}
+.table-wrapper[data-dragging] > :is(.table-drag-band, .table-drop-line) {
+  display: block;
+}
+.table-drag-band {
+  border: 1px dashed var(--doc-accent);
+  background: color-mix(in srgb, var(--doc-accent) 8%, transparent);
+}
+.table-drop-line {
+  background: var(--doc-accent);
+}
+.table-wrapper[data-dragging="row"] > .table-drop-line {
+  height: 2px;
+  margin-top: -1px;
+}
+.table-wrapper[data-dragging="col"] > .table-drop-line {
+  width: 2px;
+  margin-left: -1px;
+}

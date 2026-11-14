@@ -6,11 +6,11 @@ import { openApp, pasteMarkdown } from "./helpers";
 
 const TABLE = "| a | b |\n| --- | --- |\n| 1 | 2 |\n";
 
-async function open(page: Page) {
+async function open(page: Page, markdown = TABLE) {
   await page.setViewportSize({ width: 1200, height: 760 });
   await openApp(page, { settings: { menuBarShown: false, language: "en" } });
   await page.locator(".ProseMirror:visible").first().click();
-  await pasteMarkdown(page, TABLE);
+  await pasteMarkdown(page, markdown);
   return page.locator(".table-wrapper").first();
 }
 
@@ -41,4 +41,43 @@ test("a table's tools align the caret's column, size it, and delete it", async (
 
   await tool(page, "Delete Table").click();
   await expect(page.locator(".table-wrapper")).toHaveCount(0);
+});
+
+test("a row's grip picks the row, and pulled it moves the row; a column's the same", async ({
+  page,
+}) => {
+  const table = await open(
+    page,
+    "| h | k |\n| --- | --- |\n| 1 | x |\n| 2 | y |\n| 3 | z |\n",
+  );
+  const cell = (text: string) => table.locator("td", { hasText: text });
+  await cell("3").hover();
+  const grip = page.locator(".table-grip-row");
+  await expect(grip).toBeVisible();
+  const g = (await grip.boundingBox())!;
+  const top = (await cell("1").boundingBox())!;
+  await page.mouse.move(g.x + g.width / 2, g.y + g.height / 2);
+  await page.mouse.down();
+  await page.mouse.move(g.x + g.width / 2, top.y + 2, { steps: 8 });
+  await expect(page.locator(".table-drop-line")).toBeVisible();
+  await page.screenshot({ path: "test-results/table-grip-drag.png" });
+  await page.mouse.up();
+  const firstColumn = () =>
+    table.locator("tbody tr td:first-child").allInnerTexts();
+  await expect.poll(firstColumn).toEqual(["3", "1", "2"]);
+
+  await cell("y").hover();
+  const colGrip = page.locator(".table-grip-col");
+  const c = (await colGrip.boundingBox())!;
+  const left = (await table.locator("th").first().boundingBox())!;
+  await page.mouse.move(c.x + c.width / 2, c.y + c.height / 2);
+  await page.mouse.down();
+  await page.mouse.move(left.x + 4, c.y + c.height / 2, { steps: 8 });
+  await page.mouse.up();
+  await expect(table.locator("th").first()).toHaveText("k");
+
+  // Pressed without a pull: the whole row is picked.
+  await cell("1").hover();
+  await page.locator(".table-grip-row").click();
+  await expect(table.locator(".selectedCell")).toHaveCount(2);
 });

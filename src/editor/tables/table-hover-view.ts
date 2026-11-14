@@ -10,6 +10,7 @@ import {
   tableSize,
 } from "./table-edits";
 import { mountTableToolbar } from "./TableToolbar";
+import { attachGrips } from "./table-grips";
 import { copyTable } from "../clipboard/table-clipboard";
 import { tableSchema } from "@milkdown/kit/preset/gfm";
 import {
@@ -139,6 +140,12 @@ export function createTableView(strings: () => Strings) {
     scroller.appendChild(table);
     wrapper.appendChild(addRowBtn);
     wrapper.appendChild(addColBtn);
+    const grips = attachGrips({ wrapper, table, tbody, view, getPos });
+    const followCaret = () => {
+      const at = view.domAtPos(view.state.selection.from).node;
+      const el = at instanceof Element ? at : at.parentElement;
+      grips.follow(el?.closest<HTMLElement>("td, th") ?? null);
+    };
 
     const header = wrapper.appendChild(document.createElement("div"));
     header.className = "block-toolbar table-toolbar";
@@ -193,12 +200,16 @@ export function createTableView(strings: () => Strings) {
         currentNode = updatedNode;
         caretCols = caretColsOf(updatedDecorations);
         syncColumns(updatedNode, colgroup, table);
-        if (caretCols.length) showTools();
-        else render();
+        if (caretCols.length) {
+          showTools();
+          followCaret();
+        } else render();
         return true;
       },
       // Keys and presses on its tools aren't the editor's.
-      stopEvent: (event) => header.contains(event.target as Node),
+      stopEvent: (event) =>
+        header.contains(event.target as Node) ||
+        (event.target as Element).classList?.contains("table-grip"),
       // Only the cells are the document's: its tools, buttons and the
       // resize drag's widths on the table and its <col>s change under the
       // view's DOM observer.
@@ -207,6 +218,7 @@ export function createTableView(strings: () => Strings) {
         return !tbody.contains(record.target);
       },
       destroy() {
+        grips.destroy();
         tools?.destroy();
       },
     };
