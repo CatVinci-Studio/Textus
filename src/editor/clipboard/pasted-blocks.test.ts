@@ -186,6 +186,13 @@ it("a to-do's text copied whole pastes as a to-do on its own line, as text in a 
   t.select(para, para);
   t.paste(task.text, task.html);
   expect(t.markdown()).toContain("paraalpha");
+  // Part of its text is text, on a line of its own too.
+  const part = copy("lph");
+  t.caretAtEnd();
+  t.press("Enter");
+  t.press("Enter"); // out of the list
+  t.paste(part.text, part.html);
+  expect(t.markdown()).toMatch(/\n\nlph$/);
 });
 
 it("a table copies as other apps read one, and pastes back as itself", async () => {
@@ -216,9 +223,13 @@ it("a table copies as other apps read one, and pastes back as itself", async () 
   expect(table.querySelector("thead th")?.textContent).toBe("a");
   expect(table.querySelector("td p")).toBeNull();
   expect(table.querySelector("td")?.getAttribute("style")).toContain("border");
-  // Body cells alone: a row of tab-separated cells.
+  // Body cells alone: a row of tab-separated cells, lined all the same.
   const body = copy("1", "2");
   expect(body.text).toBe("1\t2");
+  expect(body.dom.querySelector("td")?.getAttribute("style")).toContain(
+    "border",
+  );
+  expect(body.dom.querySelector("td p")).toBeNull();
   t.caretAtEnd();
   t.press("Enter");
   t.paste(whole.text, whole.dom.innerHTML);

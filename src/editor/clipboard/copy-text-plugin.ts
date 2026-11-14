@@ -1,6 +1,6 @@
 import { schemaCtx, serializerCtx } from "@milkdown/kit/core";
 import { Plugin } from "@milkdown/kit/prose/state";
-import { Fragment, type Slice } from "@milkdown/kit/prose/model";
+import { Fragment, Slice } from "@milkdown/kit/prose/model";
 import { $prose } from "@milkdown/kit/utils";
 import { plainTextOf } from "./plain-text";
 
@@ -39,6 +39,22 @@ export const copyTextPlugin = $prose(
   (ctx) =>
     new Plugin({
       props: {
+        // Part of one line's text copies as text alone: pasted, it never
+        // brings back the list item or quote it came from. A whole line
+        // keeps them (a to-do stays a to-do).
+        transformCopied: (slice, view) => {
+          const { $from, $to } = view.state.selection;
+          const whole =
+            $from.parentOffset === 0 &&
+            $to.parentOffset === $to.parent.content.size;
+          if (!$from.sameParent($to) || !$from.parent.isTextblock || whole)
+            return slice;
+          return new Slice(
+            $from.parent.content.cut($from.parentOffset, $to.parentOffset),
+            0,
+            0,
+          );
+        },
         clipboardTextSerializer: (slice) => {
           const code = codeTextOf(slice);
           if (code !== null) return code;

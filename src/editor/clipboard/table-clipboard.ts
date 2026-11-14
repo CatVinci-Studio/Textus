@@ -19,11 +19,13 @@ export function tidyTablesForClipboard(root: ParentNode): void {
       table.insertBefore(thead, table.firstChild);
       thead.append(head);
     }
-    for (const cell of table.querySelectorAll("th, td")) {
-      const align = (cell as HTMLElement).style.textAlign;
-      cell.setAttribute("style", align ? `${CELL};text-align:${align}` : CELL);
-      unwrapParagraphs(cell);
-    }
+  }
+  // Rows copied without their table get their table round them later
+  // (ProseMirror's own wrapping): their cells are styled here all the same.
+  for (const cell of root.querySelectorAll("th, td")) {
+    const align = (cell as HTMLElement).style.textAlign;
+    cell.setAttribute("style", align ? `${CELL};text-align:${align}` : CELL);
+    unwrapParagraphs(cell);
   }
 }
 

@@ -3,10 +3,10 @@ import { onAppearance } from "../../engine/tokens/appearance";
 
 /** One row's control gone under its name puts every row's there: a group
  *  reads one way (data-stacked on its body). */
-function useEvenRows(body: RefObject<HTMLDivElement | null>) {
+function useEvenRows(body: RefObject<HTMLDivElement | null>, on: boolean) {
   useLayoutEffect(() => {
     const el = body.current;
-    if (!el) return;
+    if (!el || !on) return;
     const fit = () => {
       delete el.dataset.stacked;
       const rows = el.querySelectorAll(":scope > .settings-row");
@@ -42,6 +42,7 @@ export function SettingsGroup({
   count,
   actions,
   className,
+  evenRows = false,
   children,
 }: {
   /** None for a page's first section when it would only repeat the page's
@@ -51,11 +52,14 @@ export function SettingsGroup({
   count?: number;
   actions?: ReactNode;
   className?: string;
+  /** Rows alike (a list of shortcuts): one row's control under its name
+   *  puts every row's there. */
+  evenRows?: boolean;
   /** None while the section is folded: only its head shows. */
   children?: ReactNode;
 }) {
   const body = useRef<HTMLDivElement>(null);
-  useEvenRows(body);
+  useEvenRows(body, evenRows);
   return (
     <section
       className={className ? `settings-group ${className}` : "settings-group"}

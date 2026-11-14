@@ -119,9 +119,11 @@ export function FormatBar({
   const row = useRef<HTMLDivElement>(null);
   useFitItems(row, ".format-bar-more");
   const headings = () => headingItems(t, tabId, block.heading);
-  // Closed without a pick, the document takes the keys back: the keyboard
-  // stays up.
-  const refocus = () => focusDocument(tabId);
+  // On a phone, closed without a pick, the document takes the keys back:
+  // the keyboard stays up. Elsewhere the focus goes back to the button.
+  const refocus = () => {
+    if (phone) focusDocument(tabId);
+  };
   const heading = useMenuButton(headings, {
     title: t.toolbarHeading,
     onClosed: refocus,

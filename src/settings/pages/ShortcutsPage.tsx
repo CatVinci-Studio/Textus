@@ -62,7 +62,7 @@ export function ShortcutsPage({
           ],
         ] satisfies [string, ShortcutAction[]][]
       ).map(([title, rows]) => (
-        <SettingsGroup key={title} title={title}>
+        <SettingsGroup key={title} title={title} evenRows>
           {rows.map((action) => (
             <ShortcutRow
               key={action}
