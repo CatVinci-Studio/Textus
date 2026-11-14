@@ -1,4 +1,5 @@
 import { createRoot, type Root } from "react-dom/client";
+import { heldByFinger } from "../../utils/gesture";
 import { createElement } from "react";
 import { ContextMenu, type ContextMenuEntry } from "./ContextMenu";
 import { currentStrings } from "../../i18n/current";
@@ -119,7 +120,8 @@ function show(x: number, y: number, field: Field): void {
  *  opened (the editor's) is left alone. */
 export function installTextFieldMenu(): void {
   window.addEventListener("contextmenu", (event) => {
-    if (event.defaultPrevented) return;
+    // A finger's hold in the document: the system's selection menu.
+    if (event.defaultPrevented || heldByFinger(event)) return;
     const field = fieldAt(event.target);
     if (!field) return;
     event.preventDefault();

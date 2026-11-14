@@ -16,12 +16,14 @@ if (typeof window !== "undefined")
   );
 
 /**
- * Whether a contextmenu came from a finger held down (Android's WebView
- * sends one; WebKit doesn't): the system's own selection and the app's touch
- * menus answer that, not the mouse's right-click menu.
+ * Whether a contextmenu came from a finger (Android's WebView sends one on
+ * a hold, and as a "mouse" one on a double tap or a selection handle
+ * dragged; WebKit sends none): the system's own selection and the app's
+ * touch menus answer that, not the mouse's right-click menu.
  */
 export function heldByFinger(e: Event): boolean {
   const type = (e as PointerEvent).pointerType;
-  if (type) return type === "touch";
+  if (type === "touch") return true;
+  if (type === "pen") return false;
   return lastTouch > 0 && e.timeStamp - lastTouch < 1500;
 }

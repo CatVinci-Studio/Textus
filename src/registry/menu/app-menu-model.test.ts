@@ -14,6 +14,7 @@ import {
   menuBarSections,
   NO_RECENTS,
   nativeMenuChecks,
+  type MenuChecks,
   type MenuNode,
 } from "./app-menu-model";
 import {
@@ -188,6 +189,20 @@ describe("the View menu's on/off items", () => {
     const [first] = buildMobileMenu(t, { words: 49 });
     expect(first).toEqual({ label: "49 words", disabled: true });
     expect(buildMobileMenu(t)[0]).toMatchObject({ label: t.menuNewFile });
+  });
+
+  it("grey Save, Share and Find on the phone while a page (AI, Settings) is in front", () => {
+    const t = resolveStrings("en");
+    const off = (checks: MenuChecks) =>
+      flatten(buildMobileMenu(t, checks, [{ label: "P", command: "p" }]))
+        .filter((item) => item.disabled)
+        .map((item) => item.label);
+    expect(off({ noDocument: true })).toEqual([
+      t.menuSave,
+      t.menuShare,
+      t.menuFindReplace,
+    ]);
+    expect(off({})).toEqual([]);
   });
 
   it("give the phone its plugins' commands, and Textus AI only where it is offered", () => {

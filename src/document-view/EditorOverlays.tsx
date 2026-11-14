@@ -1,4 +1,6 @@
 import { createPortal } from "react-dom";
+import { editorViewCtx } from "@milkdown/kit/core";
+import { isPhoneLayout } from "../platform/phone-layout";
 import { insertTable } from "../editor/editor-menu";
 import { EditorContextMenu } from "./EditorContextMenu";
 import type { EditorSetup } from "./useEditorSetup";
@@ -63,7 +65,12 @@ export function EditorOverlays({
         openFindReplace={findReplace.show}
         openTableDialog={() => setTableDialogOpen(true)}
         own={review.notes.menu}
-        onClose={() => popups.setMenu(null)}
+        onClose={() => {
+          popups.setMenu(null);
+          // A phone's sheet (⋯) closed: the text takes the keys back, the
+          // keyboard staying up.
+          if (isPhoneLayout()) run((ctx) => ctx.get(editorViewCtx).focus());
+        }}
       />
       <Presence show={tableDialogOpen}>
         {tableDialogOpen && (

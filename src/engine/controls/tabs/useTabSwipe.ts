@@ -33,12 +33,23 @@ export function useTabSwipe(
       const dy = t.clientY - start.y;
       return Math.abs(dx) > 2 * Math.abs(dy) ? dx : null;
     };
+    // Taken on the window: on a phone the window bar's empty middle lies
+    // over the row, and a swipe may start there.
     const down = (e: TouchEvent) => {
       const t = e.touches[0];
+      const row = el.getBoundingClientRect();
       start =
-        e.touches.length === 1 && t ? { x: t.clientX, y: t.clientY } : null;
+        e.touches.length === 1 &&
+        t &&
+        t.clientY >= row.top &&
+        t.clientY <= row.bottom &&
+        t.clientX >= row.left &&
+        t.clientX <= row.right
+          ? { x: t.clientX, y: t.clientY }
+          : null;
     };
     const move = (e: TouchEvent) => {
+      if (!start) return;
       if (el.querySelector(".tab-pill-lifted")) start = null;
       const dx = along(e);
       // The row's own scroll and the sidebar's swipe stay out of it.
@@ -56,13 +67,13 @@ export function useTabSwipe(
       onActivate(next);
       if (canHaptic) iosFiles.haptic();
     };
-    el.addEventListener("touchstart", down, { passive: true });
-    el.addEventListener("touchmove", move, { passive: false });
-    el.addEventListener("touchend", up);
+    window.addEventListener("touchstart", down, { passive: true });
+    window.addEventListener("touchmove", move, { passive: false });
+    window.addEventListener("touchend", up);
     return () => {
-      el.removeEventListener("touchstart", down);
-      el.removeEventListener("touchmove", move);
-      el.removeEventListener("touchend", up);
+      window.removeEventListener("touchstart", down);
+      window.removeEventListener("touchmove", move);
+      window.removeEventListener("touchend", up);
     };
   }, [bar]);
 }

@@ -33,6 +33,7 @@ import type { WindowDocuments } from "./useWindowDocuments";
 import type { Settings, useSettings } from "../prefs/SettingsContext";
 import type { Strings } from "../i18n/strings";
 import { tabInUse } from "../engine/layout/store";
+import { pageOf } from "./tabs/page-tabs";
 
 /** Everything that reaches a window from outside its own controls. */
 export function useWindowWiring({
@@ -163,6 +164,7 @@ export function useWindowWiring({
     zen: docs.zenMode,
     readOnly: tabReadOnly(activeTab),
     folderOpen: openFolder.folder !== null,
+    noDocument: pageOf(activeTab) !== null,
   };
   useNativeMenuChecks(menuChecks);
   useNativeMenuAccelerators(settings.shortcuts);

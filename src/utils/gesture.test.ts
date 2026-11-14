@@ -22,5 +22,8 @@ describe("a contextmenu held by a finger", () => {
     Object.defineProperty(down, "pointerType", { value: "touch" });
     window.dispatchEvent(down);
     expect(heldByFinger(contextmenu())).toBe(true);
+    // Android's double tap and handle drag come as "mouse" ones.
+    expect(heldByFinger(contextmenu("mouse"))).toBe(true);
+    expect(heldByFinger(contextmenu("pen"))).toBe(false);
   });
 });

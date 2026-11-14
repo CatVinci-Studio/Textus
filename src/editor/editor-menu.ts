@@ -52,8 +52,7 @@ import {
 // The editor commands behind the right-click, Format and Edit menus, and
 // the right-click menu itself.
 
-// CmdKey<any>: the preset command keys vary in payload type (some
-// unknown, some undefined) and all are called here without a payload.
+// CmdKey<any>: the preset keys vary in payload type; none gets one here.
 export function runCommand(run: EditorRunner, key: CmdKey<any>) {
   run((ctx) => {
     ctx.get(commandsCtx).call(key);
@@ -319,11 +318,12 @@ export function buildPhoneMoreItems(
 ): ContextMenuEntry[] {
   const { t, imagePos } = options;
   // The phone has no Edit menu to offer the plain text.
+  // Offered, not working, with nothing selected.
+  const disabled = run((c) => c.get(editorViewCtx).state.selection.empty);
+  const plain = options.copyAsPlainText;
   const clipboard: ContextMenuEntry[] = [
-    { label: t.cut, onSelect: () => options.copyOrCut(true) },
-    ...(options.copyAsPlainText
-      ? [{ label: t.copyAsPlainText, onSelect: options.copyAsPlainText }]
-      : []),
+    { label: t.cut, disabled, onSelect: () => options.copyOrCut(true) },
+    ...(plain ? [{ label: t.copyAsPlainText, disabled, onSelect: plain }] : []),
   ];
   if (inTable(run)) {
     return [
@@ -377,8 +377,7 @@ function generalItems(options: ContextMenuOptions): ContextMenuEntry[] {
   ];
 }
 
-/** A list from the Format or Insert menu: the block wrapped in one, or a
- *  list of the other kind changed over. */
+/** A Format/Insert list: the block wrapped, or the other kind changed. */
 export function insertList(
   run: EditorRunner,
   kind: "bullet_list" | "ordered_list",

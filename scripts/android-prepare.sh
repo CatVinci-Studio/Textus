@@ -6,10 +6,11 @@
 # - The launcher icons from icons/android, over Tauri's placeholders.
 # - MainActivity.kt from src-tauri/android: the page ends above the
 #   navigation bar and the keyboard.
-# - The activity left alone on a font, display size or navigation change:
+# - The activity left alone on a font, display size or navigation change
+#   (a switch to gesture navigation swaps the system's overlays: assetsPaths):
 #   the web view adapts, and a new page would drop the window's tabs.
-# - The window's colour before the page draws: the frame's, light and dark,
-#   not Material's default purple-white.
+# - The window's colour before the page draws, the launch splash's too: the
+#   frame's, light and dark, not Material's default purple-white.
 # - Release signing, when TEXTUS_ANDROID_KEYSTORE names a properties file
 #   (keystore, alias, storePassword, keyPassword); the keystore path in it
 #   is relative to that file.
@@ -21,11 +22,15 @@ cp android/MainActivity.kt "$app/src/main/java/com/catvinci/textus/MainActivity.
 manifest="$app/src/main/AndroidManifest.xml"
 grep -q 'fontScale' "$manifest" ||
   perl -pi -e 's/android:configChanges="([^"]*)"/android:configChanges="$1|fontScale|density|navigation"/' "$manifest"
+grep -q 'assetsPaths' "$manifest" ||
+  perl -pi -e 's/android:configChanges="([^"]*)"/android:configChanges="$1|assetsPaths"/' "$manifest"
 for night in "" "-night"; do
   colour=$([ -z "$night" ] && echo '#F7F6F3' || echo '#121213')
   theme="$app/src/main/res/values$night/themes.xml"
   grep -q 'windowBackground' "$theme" ||
     perl -pi -e "s|<!-- Customize your theme here. -->|<item name=\"android:windowBackground\">$colour</item>|" "$theme"
+  grep -q 'windowSplashScreenBackground' "$theme" ||
+    perl -pi -e "s|(<item name=\"android:windowBackground\">[^<]*</item>)|\$1<item name=\"android:windowSplashScreenBackground\" tools:targetApi=\"31\">$colour</item>|" "$theme"
 done
 gradle="$app/build.gradle.kts"
 if [ -n "${TEXTUS_ANDROID_KEYSTORE:-}" ] && ! grep -q 'signingConfigs' "$gradle"; then

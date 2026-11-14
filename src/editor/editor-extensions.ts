@@ -95,6 +95,7 @@ import { syntaxHighlightPlugin } from "./code/syntax-highlight-plugin";
 import { createCodeBlockView } from "./code/code-block-language-view";
 import { createCodeLineNumbersPlugin } from "./code/code-line-numbers-plugin";
 import { tableCaretPlugin } from "./tables/table-caret";
+import { scrollOptions } from "./editor-scroll";
 import { tableKeys, tableRowPaste } from "./tables/table-keys";
 import {
   tableColumnFreeze,
@@ -156,7 +157,6 @@ import {
 import { readOnlyPlugin, readOnlyStatePlugin } from "./read-only-plugin";
 import { resolveStrings } from "../i18n/strings";
 import type { Settings } from "../prefs/SettingsContext";
-import { isPhoneLayout } from "../platform/phone-layout";
 
 // Long documents: ProseMirror lookups that were linear made logarithmic.
 installProseMirrorSpeedups();
@@ -176,26 +176,7 @@ export function configureEditorRoot(
   ctx.set(
     editorViewOptionsCtx,
     withLazyBlockViews(ctx, {
-      // A line the caret is brought to stays below where the page's text
-      // starts, clear of the format bar over it.
-      scrollMargin: {
-        get top() {
-          const page = root.closest(".editor-content");
-          return page ? parseFloat(getComputedStyle(page).paddingTop) || 5 : 5;
-        },
-        right: 5,
-        // A phone's format bar, riding on the keyboard, covers the page's
-        // foot: the caret's line stays above it.
-        get bottom() {
-          if (!document.documentElement.classList.contains("keyboard-up"))
-            return 5;
-          const bar = root
-            .closest(".split-pane")
-            ?.querySelector<HTMLElement>(":scope > .format-bar");
-          return isPhoneLayout() && bar ? bar.offsetHeight + 8 : 5;
-        },
-        left: 5,
-      },
+      ...scrollOptions(root),
       attributes: () => ({
         id: "write",
         role: "textbox",

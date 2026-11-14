@@ -130,6 +130,9 @@ export interface MenuChecks {
   /** Not a check mark: the document's word count, which the phone's menu
    *  shows when its title row has no room for it. */
   words?: number;
+  /** Not a check mark: the tab in front is a page (AI, Settings), with no
+   *  document to save, share or search. */
+  noDocument?: boolean;
 }
 
 export type MenuNode = MenuEntry | "separator";
@@ -320,10 +323,22 @@ export function buildMobileMenu(
       : []),
     { label: t.menuNewFile, action: { native: "new-file" } },
     { label: t.menuOpenFile, action: { native: "open-file" } },
-    { label: t.menuSave, action: { native: "save-file" } },
-    { label: t.menuShare, action: { native: "share" } },
-    "separator",
-    { label: t.menuFindReplace, action: { native: "find-replace" } },
+    ...(
+      [
+        [t.menuSave, "save-file"],
+        [t.menuShare, "share"],
+        "separator",
+        [t.menuFindReplace, "find-replace"],
+      ] as const
+    ).map((item): MenuNode =>
+      item === "separator"
+        ? item
+        : {
+            label: item[0],
+            action: { native: item[1] },
+            disabled: checks.noDocument,
+          },
+    ),
     {
       label: t.menuToggleSidebar,
       action: { native: "toggle-sidebar" },

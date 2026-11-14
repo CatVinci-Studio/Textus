@@ -27,6 +27,14 @@
   --corner-from: calc(var(--safe-left, 0px) + 18px);
 }
 
+/* On a phone or tablet the foot holds the format bar riding on the
+   keyboard and the rail's Settings: toasts come down under the tab row. */
+:root[data-window-chrome="mobile"] .corner-stack {
+  top: calc(var(--safe-top, 0px) + var(--header-height, 44px) + 8px);
+  bottom: auto;
+  flex-direction: column-reverse;
+}
+
 /* One line until opened: what it says, then its buttons and ×. */
 .corner-toast {
   display: flex;

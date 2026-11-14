@@ -245,7 +245,12 @@ export function TabBar({
  * it that shows, `shown` long from where it is scrolled to.
  */
 function reveal(bar: HTMLElement, slot: Slot, shown: number, smooth: boolean) {
-  const left = revealAt(slot, bar.scrollLeft, shown, scaledPx(TAB_FADE));
+  const fade = scaledPx(TAB_FADE);
+  // A row barely wider than the tab (a phone's) fades only what is left
+  // beside it: never the tab's own first letters.
+  const room = Math.min(fade, Math.max(0, shown - slot.w));
+  bar.style.setProperty("--tab-fade", `${room}px`);
+  const left = revealAt(slot, bar.scrollLeft, shown, fade);
   if (left !== null)
     bar.scrollTo({ left, behavior: smooth ? scrollBehavior() : "auto" });
 }

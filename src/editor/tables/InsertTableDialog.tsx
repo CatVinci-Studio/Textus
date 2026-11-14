@@ -26,7 +26,9 @@ export function InsertTableDialog({
   const [rows, setRows] = useState("3");
   const [cols, setCols] = useState("3");
 
-  const modal = useModalDialog(onClose);
+  // Its caret is the new table's first cell (insertTable), not the one it
+  // was opened from: on a phone no caret is put back.
+  const modal = useModalDialog(onClose, true, undefined, false);
   const presence = usePresenceProps<HTMLDivElement>();
   const rowCount = Number(rows);
   const columnCount = Number(cols);

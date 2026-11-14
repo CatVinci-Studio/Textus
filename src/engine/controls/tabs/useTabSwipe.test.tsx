@@ -32,7 +32,15 @@ function touch(el: Element, type: string, x: number, y = 20) {
   return e;
 }
 
+/** The row's box: jsdom lays nothing out. */
+function laidOut(row: Element) {
+  row.getBoundingClientRect = () =>
+    ({ top: 0, bottom: 40, left: 0, right: 400 }) as DOMRect;
+}
+
 function swipe(el: Element, from: number, to: number, toY = 20) {
+  const row = el.closest("[data-testid=row]");
+  if (row) laidOut(row);
   touch(el, "touchstart", from);
   const move = touch(el, "touchmove", (from + to) / 2, (20 + toY) / 2);
   touch(el, "touchend", to, toY);
@@ -69,5 +77,19 @@ describe("swiping the tab row", () => {
     getByTestId("pill").classList.add("tab-pill-lifted");
     swipe(getByTestId("pill"), 200, 100);
     expect(onActivate).not.toHaveBeenCalled();
+  });
+
+  it("takes a swipe begun over the row from what lies on it (the window bar)", () => {
+    const onActivate = vi.fn();
+    const { getByTestId } = render(<Row active="a" onActivate={onActivate} />);
+    laidOut(getByTestId("row"));
+    const over = document.body.appendChild(document.createElement("div"));
+    swipe(over, 300, 200);
+    expect(onActivate).toHaveBeenLastCalledWith("b");
+    // Below the row it is the page's.
+    touch(over, "touchstart", 300, 80);
+    touch(over, "touchend", 200, 80);
+    expect(onActivate).toHaveBeenCalledTimes(1);
+    over.remove();
   });
 });
