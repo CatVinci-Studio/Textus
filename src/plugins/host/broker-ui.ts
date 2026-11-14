@@ -32,6 +32,19 @@ import {
   setPluginWhenKey,
 } from "../contributions/plugin-when-keys";
 
+/** A plugin's rows for a pick, strings as their own label and value; a
+ *  search's answer at most this many. */
+const MAX_PICK_ITEMS = 500;
+function pickItems(items: unknown): QuickPickItem[] {
+  return (Array.isArray(items) ? items : [])
+    .slice(0, MAX_PICK_ITEMS)
+    .map((item) =>
+      typeof item === "string"
+        ? { label: item, value: item }
+        : (item as QuickPickItem),
+    );
+}
+
 function tone(value: unknown): "info" | "warning" | "error" {
   return value === "warning" || value === "error" ? value : "info";
 }
@@ -109,12 +122,9 @@ export function uiHandlers(p: PluginScope) {
       multiple,
       value,
       commands,
+      search,
     }: Params) => {
-      const list = (Array.isArray(items) ? items : []).map((item) =>
-        typeof item === "string"
-          ? { label: item, value: item }
-          : (item as QuickPickItem),
-      );
+      const list = pickItems(items);
       // A command line: the items among the palette's (Vim's ":"). Its
       // Enter is a key the user pressed, which the editor ops that follow
       // (":12", ":u") may act on.
@@ -127,9 +137,16 @@ export function uiHandlers(p: PluginScope) {
         if (held.owner?.plugin === p.id) held.owner.lastKeyAt = Date.now();
         return picked;
       }
+      const searchId = optionalStr(search);
       return showQuickPick(list, optionalStr(placeholder) ?? "", {
-        multiple: multiple === true,
+        multiple: multiple === true && !searchId,
         query: optionalStr(value),
+        search: searchId
+          ? (query) =>
+              p
+                .request<unknown>("$pickSearch", { id: searchId, query })
+                .then(pickItems)
+          : undefined,
       });
     },
     "ui.form": ({ title, okLabel, fields }: Params) =>

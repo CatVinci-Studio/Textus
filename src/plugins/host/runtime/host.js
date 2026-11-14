@@ -21,6 +21,8 @@
   var codeBlockProviders = new Map();
   var hoverProviders = [];
   var pasteHandlers = {};
+  var pickSearches = {};
+  var pickSearchCount = 0;
   var pasteHandlerCount = 0;
   var decorationProviders = [];
   var completionProviders = new Map();
@@ -535,12 +537,19 @@
         return call("ui.input", plain(options || {}));
       },
       pick: function (items, options) {
+        var search = options && options.search;
+        var id =
+          typeof search === "function" ? String(++pickSearchCount) : null;
+        if (id) pickSearches[id] = search;
         return call("ui.pick", {
           items: plain(items),
           placeholder: options && options.placeholder,
           multiple: !!(options && options.multiple),
           value: options && options.value,
           commands: !!(options && options.commands),
+          search: id,
+        }).finally(function () {
+          if (id) delete pickSearches[id];
         });
       },
       form: function (options) {
@@ -1344,6 +1353,11 @@
     $cancelEmbed: function (params) {
       var controller = embedAsks.get(params.request);
       if (controller) controller.abort();
+    },
+    $pickSearch: async function (params) {
+      var search = pickSearches[params.id];
+      if (!search) return [];
+      return plain((await search(params.query)) || []);
     },
     $providePaste: async function (params) {
       var provide = pasteHandlers[params.id];

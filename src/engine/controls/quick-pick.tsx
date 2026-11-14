@@ -1,10 +1,4 @@
-import {
-  useEffect,
-  useMemo,
-  useRef,
-  useState,
-  useSyncExternalStore,
-} from "react";
+import { useEffect, useRef, useState, useSyncExternalStore } from "react";
 import {
   answer,
   quickPickNow,
@@ -17,39 +11,8 @@ import { formatCombo } from "../../utils/shortcuts";
 import { useModalDialog } from "./useModalDialog";
 import "./quick-pick.css";
 import { isImeKeydown } from "../../utils/ime";
-import {
-  preparePinyin,
-  prepareList,
-  rankList,
-  type Filterable,
-  type PreparedList,
-} from "../../utils/list-filter";
 import { listMove } from "./list-keys";
-
-type Entry = Filterable & { item: QuickPickItem };
-const prepared = new WeakMap<readonly QuickPickItem[], PreparedList<Entry>>();
-
-/** The items `query` finds, best first, by the filter the / panel uses:
- *  the label, then every word in the label or description, or a Chinese
- *  label spelled in pinyin. */
-export function quickPickFilter(
-  items: readonly QuickPickItem[],
-  query: string,
-): QuickPickItem[] {
-  let list = prepared.get(items);
-  if (!list) {
-    list = prepareList(
-      items.map((item) => ({
-        label: item.label,
-        keywords: item.description,
-        item,
-      })),
-    );
-    prepared.set(items, list);
-  }
-  preparePinyin(list, Infinity);
-  return rankList(list, query, Infinity).map((entry) => entry.item);
-}
+import { useShownItems } from "./quick-pick-shown";
 
 export function QuickPickHost({
   emptyLabel,
@@ -85,18 +48,7 @@ function QuickPick({
     () => new Set(request.items.filter((i) => i.picked)),
   );
   const listRef = useRef<HTMLUListElement>(null);
-  const shown = useMemo(() => {
-    // ":sa" finds Save as well as ":saveas"; ":12" is a line, not Heading
-    // 1 or 2.
-    const rest = query.startsWith(request.query)
-      ? query.slice(request.query.length)
-      : query;
-    const words = /\p{L}/u.test(rest);
-    const found = quickPickFilter(request.items, query);
-    return words
-      ? [...new Set([...found, ...quickPickFilter(request.items, rest)])]
-      : found;
-  }, [request.items, request.query, query]);
+  const shown = useShownItems(request, query);
   const dialog = useModalDialog(
     () => answer(request, null),
     true,
@@ -108,8 +60,7 @@ function QuickPick({
       if (!next.delete(item)) next.add(item);
       return next;
     });
-  const done = () =>
-    answer(request, request.items.filter((i) => ticked.has(i)).map(valueOf));
+  const done = () => answer(request, [...ticked].map(valueOf));
   const choose = (item: QuickPickItem | undefined) => {
     if (!item) return;
     if (request.multiple) toggle(item);

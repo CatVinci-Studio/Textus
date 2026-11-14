@@ -260,6 +260,12 @@ declare global {
           multiple?: boolean;
           value?: string;
           commands?: boolean;
+          /** From 1.6: the rows for what is typed, asked as typing rests,
+           *  in place of filtering `items` (shown until it answers) - a
+           *  citation or a library searched as you type. One choice only. */
+          search?: (
+            query: string,
+          ) => (string | PickItem)[] | Promise<(string | PickItem)[]>;
         },
       ): Promise<unknown>;
       /** A date picked on Textus's month calendar, as `YYYY-MM-DD`, or
