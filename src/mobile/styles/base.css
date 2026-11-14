@@ -58,7 +58,7 @@
   height: var(--mobile-top);
   padding: var(--safe-top) 4px 0;
   /* The frame, as the sidebar's: the page is the one sheet on it. */
-  background: var(--ui-frame-fill);
+  background: var(--ui-frame-fill) fixed;
 }
 
 :root[data-window-chrome="mobile"] .window-menu-button,

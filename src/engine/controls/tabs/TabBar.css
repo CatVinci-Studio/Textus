@@ -187,7 +187,7 @@
   position: sticky;
   right: calc(26px * var(--chrome-scale));
   z-index: 2;
-  background: var(--ui-frame-fill, var(--ui-bg));
+  background: var(--ui-frame-fill, var(--ui-bg)) fixed;
 }
 
 /* Every tab, listed: held at the row's end as the tabs scroll under it. */
@@ -206,9 +206,9 @@
   border: none;
   border-radius: var(--shape-pill);
   corner-shape: round;
-  background: var(--ui-frame-fill, var(--ui-bg));
+  background: var(--ui-frame-fill, var(--ui-bg)) fixed;
   /* design: allow - a fade over the overflowing tabs, not a shadow. */
-  box-shadow: -8px 0 8px var(--ui-frame-fill, var(--ui-bg));
+  box-shadow: -8px 0 8px var(--ui-frame, var(--ui-bg));
   color: var(--ui-muted);
   cursor: pointer;
   z-index: 2;
@@ -218,7 +218,7 @@
   background: color-mix(
     in srgb,
     var(--ui-text) 8%,
-    var(--ui-frame-fill, var(--ui-bg))
+    var(--ui-frame, var(--ui-bg))
   );
   color: var(--ui-text);
 }

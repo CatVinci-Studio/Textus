@@ -33,7 +33,7 @@
   align-items: center;
   gap: 4px;
   padding-top: 8px;
-  background: var(--ui-frame-fill);
+  background: var(--ui-frame-fill) fixed;
   /* Where the frame meets the document; the open sidebar carries on the
      frame instead. */
   border-right: 1px solid var(--ui-frame-edge);

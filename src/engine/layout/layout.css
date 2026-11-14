@@ -11,7 +11,7 @@
 /* With tabs the frame sinks a step and stays solid (no glass). */
 .app-shell[data-tabs="bar"] {
   --ui-frame: var(--ui-frame-sunk);
-  --ui-frame-fill: var(--ui-frame);
+  --ui-frame-fill: var(--ui-frame-paint, var(--ui-frame));
 }
 
 /* The bar shows the frame under it rather than painting it again: an
@@ -51,7 +51,7 @@
 }
 
 .app-shell[data-tabs="bar"] .main-pane {
-  background: var(--ui-frame-fill);
+  background: var(--ui-frame-fill) fixed;
 }
 
 .app-shell[data-tabs="bar"] .main-pane-split > .split-divider {

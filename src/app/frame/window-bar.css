@@ -14,7 +14,7 @@
      top-left corner. */
   /* design: allow - clears macOS's window buttons. */
   padding: 0 14px 0 calc(var(--lights-room) + 6px);
-  background: var(--ui-frame-fill);
+  background: var(--ui-frame-fill) fixed;
 }
 
 /* Where the app owns the frame, the menu button and caption buttons sit

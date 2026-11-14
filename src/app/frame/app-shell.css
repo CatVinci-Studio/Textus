@@ -24,7 +24,7 @@ body {
   overflow: clip;
   /* The frame's colour under everything: a gap while parts move shows the
      frame, never the window's white. */
-  background: var(--ui-frame);
+  background: var(--ui-frame-fill) fixed;
 }
 
 /* On the desktop the window is one grid (design-language.md 5.7): the

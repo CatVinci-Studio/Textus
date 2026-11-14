@@ -100,8 +100,8 @@
    it (island.css). */
 :root[data-layout] .chat-window {
   --ui-frame: var(--ui-frame-sunk);
-  --ui-frame-fill: var(--ui-frame);
-  background: var(--ui-frame-fill);
+  --ui-frame-fill: var(--ui-frame-paint, var(--ui-frame));
+  background: var(--ui-frame-fill) fixed;
 }
 
 .chat-window-tabs {
