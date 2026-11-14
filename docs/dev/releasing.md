@@ -165,7 +165,8 @@ Release notes aren't required for a pre-release: the fragments stay in
    commit. Run `npm run test:perf` once and compare its numbers with the
    last release's: a reference, not a gate. Then it builds,
    signs and notarizes for macOS (Apple silicon and Intel), Windows and Linux
-   (x64 and ARM64 each; see [Installers](#installers)),
+   (x64 and ARM64 each; see [Installers](#installers)), builds and signs the
+   Android APK (`android-release.yml`),
    writes the updater manifest onto the draft, publishes the GitHub release,
    points the beta channel's manifest at it, mirrors the
    installers to the website's download bucket, and sends the tested
@@ -187,8 +188,8 @@ Release notes aren't required for a pre-release: the fragments stay in
      `windows-x86_64` and `windows-aarch64`, each also with its installer
      suffix;
    - <https://textus.md/download/manifest.json> names the new
-     files under all ten keys, `windows-arm64`, `linux-arm64`, `deb-arm64`
-     and `rpm-arm64` included;
+     files under all eleven keys, `windows-arm64`, `linux-arm64`, `deb-arm64`,
+     `rpm-arm64` and `android` included;
    - <https://textus.md/download/textus-beta.json> has the new
      version;
    - the Arch repository has `textus-bin-X.Y.Z-1`;
@@ -232,6 +233,7 @@ key. A pre-release has no `.rpm`, and so no `…-rpm` keys.
 | Linux ARM64       | `Textus-X.Y.Z-1.aarch64.rpm`            | `ubuntu-22.04-arm` | `linux-aarch64-rpm`           | `rpm-arm64`     |
 | Arch Linux x86_64 | `Textus_X.Y.Z_linux_x86_64.tar.gz`      | `ubuntu-22.04`     | -                             | -               |
 | Arch Linux x86_64 | `textus-bin-X.Y.Z-1-x86_64.pkg.tar.zst` | Arch container     | -                             | -               |
+| Android ARM64     | `Textus_X.Y.Z_android_arm64.apk`        | `ubuntu-24.04`     | -                             | `android`       |
 
 ARM64 Windows and Linux ship from 1.1.0 on, built on GitHub's native arm64
 runners. The Arch package stays x86_64: it is built and tested in the
@@ -314,8 +316,9 @@ download bucket, never on a GitHub release.
 The signing, notarizing, upload and deploy secrets live in the repository's
 **release** environment (Settings › Environments › release), not in the
 repository's own secrets: `APPLE_*`, `TAURI_SIGNING_PRIVATE_KEY`,
-`CLOUDFLARE_API_TOKEN`, `CLOUDFLARE_PLAYGROUND_TOKEN` and
-`ARCH_REPO_DEPLOY_KEY`. The jobs that use them (`release.yml` build,
+`CLOUDFLARE_API_TOKEN`, `CLOUDFLARE_PLAYGROUND_TOKEN`,
+`ARCH_REPO_DEPLOY_KEY` and `ANDROID_*` (the APK's signing key). The jobs
+that use them (`release.yml` build, `android-release.yml`,
 `ios-release.yml`, `mirror-downloads.yml`, `update-beta-manifest.yml`,
 `update-arch-repo.yml`, `deploy-playground.yml`) name the environment, and it
 admits only `v*` and `ios-v*` tags. So a job run by hand - a retried mirror,

@@ -30,6 +30,7 @@ In this repository (`.github/workflows/`):
 | -------------------------- | ------------------------------------------------- | -------------------------------------------------------------------------------------- |
 | `ci.yml`                   | every pull request, pushes to `main` and `stable` | `check` always; `e2e`, `native` on three platforms and the iOS build in the full suite |
 | `release.yml`              | a `vX.Y.Z` tag, or by hand to rebuild one         | builds, signs and publishes the desktop release ([releasing.md](releasing.md))         |
+| `android-release.yml`      | from `release.yml`                                | builds and signs the Android APK                                                       |
 | `arch-package.yml`         | from `release.yml`                                | builds and tests the `textus-bin` package                                              |
 | `mirror-downloads.yml`     | after a stable release, or by hand                | copies the installers to the website's download bucket                                 |
 | `update-beta-manifest.yml` | after every release, rc included, or by hand      | points the beta update channel's `textus-beta.json` at the newest release              |
