@@ -86,6 +86,24 @@ fn list_markers_count_as_what_they_stand_for() {
 }
 
 #[test]
+fn roman_markers_count_in_either_case() {
+    let marks = [
+        "i.", "iv.", "ix.", "xiv.", "xl.", "I)", "IV)", "IX)", "XIV)", "XL)",
+    ]
+    .map(list_mark);
+    assert_eq!(
+        marks,
+        ["1.", "4.", "9.", "14.", "40.", "1.", "4.", "9.", "14.", "40."]
+    );
+}
+
+#[test]
+fn a_malformed_roman_marker_is_a_bullet() {
+    let marks = ["iiii.", "vx.", "ic.", "IIII)", "VX)", "IC)"].map(list_mark);
+    assert_eq!(marks, ["-"; 6]);
+}
+
+#[test]
 fn tables_get_a_header_padded_rows_and_escaped_cells() {
     let rows = vec![
         vec!["Name".to_string(), "Note".to_string()],
