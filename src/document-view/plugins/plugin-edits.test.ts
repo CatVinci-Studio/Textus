@@ -5,6 +5,7 @@ import { TextSelection } from "@milkdown/kit/prose/state";
 import type { EditProposal } from "../../ai/types";
 import { createTestEditor } from "../editor-test-harness";
 import { applyPluginEdits } from "./plugin-edits";
+import { serializeBlocks } from "../../editor/markdown/doc-markdown";
 
 vi.mock("mermaid", () => ({
   default: { initialize() {}, render: () => new Promise(() => {}) },
@@ -39,5 +40,29 @@ it("keeps a wiki link or bold words that start what is inserted", async () => {
   expect(await insertAtEnd("See ", "[[Trip]]")).toBe("See[[Trip]]");
   expect(await insertAtEnd("Note: ", "**bold** words")).toBe(
     "Note:**bold** words",
+  );
+});
+
+// The Tasks plugin moves a ticked task after the open ones by writing its
+// list again: the caret stays in the list, and the view is left alone.
+it("keeps the caret where it was when a block is written again", async () => {
+  editor = await createTestEditor(
+    "# Notes\n\nIntro.\n\n- [x] done\n- [ ] open\n\nAfter.",
+  );
+  const view = editor.ctx.get(editorViewCtx);
+  const blocks = serializeBlocks(editor.ctx, view.state.doc);
+  const list = blocks.find((b) => b.kind === "list")!;
+  const at = list.from + 4;
+  view.dispatch(
+    view.state.tr.setSelection(TextSelection.create(view.state.doc, at)),
+  );
+  applyPluginEdits(editor.ctx, [
+    { action: "replace", block: list.id, text: "- [ ] open\n- [x] done" },
+  ] as EditProposal[]);
+  const { from } = view.state.selection;
+  expect(from).toBeGreaterThan(list.from);
+  expect(from).toBeLessThan(list.to);
+  expect(editor.ctx.get(serializerCtx)(view.state.doc)).toContain(
+    "- [ ] open\n- [x] done",
   );
 });

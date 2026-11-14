@@ -23,6 +23,10 @@ import { markChangeSource } from "../../editor/change-source";
 export function applyPluginEdits(ctx: Ctx, edits: EditProposal[]): boolean {
   const view = ctx.get(editorViewCtx);
   let tr = view.state.tr;
+  // Where the caret is, kept by its offset into a block written again
+  // whole (a list reordered), not thrown to the block's edge.
+  let caret = tr.selection.from;
+  let atCaret = false;
   for (const edit of edits) {
     const text = edit.text ?? "";
     if (
@@ -32,6 +36,7 @@ export function applyPluginEdits(ctx: Ctx, edits: EditProposal[]): boolean {
       const { from, to } = tr.selection;
       const end = edit.action === "insert_at_cursor" ? from : to;
       tr = replaceWithMarkdown(tr, ctx, from, end, text);
+      atCaret = true;
       continue;
     }
     if (edit.action === "append") {
@@ -48,16 +53,22 @@ export function applyPluginEdits(ctx: Ctx, edits: EditProposal[]): boolean {
       edit,
     );
     if (!placed) return false;
-    tr = replaceWithMarkdown(
-      tr,
-      ctx,
-      placed.range.from,
-      placed.range.to,
-      placed.replacement,
-    );
+    const { from, to } = placed.range;
+    const inside = caret >= from && caret <= to;
+    const size = tr.doc.content.size;
+    const steps = tr.steps.length;
+    tr = replaceWithMarkdown(tr, ctx, from, to, placed.replacement);
+    const end = to + tr.doc.content.size - size;
+    caret = inside ? Math.min(caret, end) : tr.mapping.slice(steps).map(caret);
   }
   if (!tr.docChanged) return true;
   closeHistory(tr);
+  if (!atCaret) {
+    // A block written again leaves the view where it was.
+    tr.setSelection(Selection.near(tr.doc.resolve(caret)));
+    view.dispatch(markChangeSource(tr, "plugin"));
+    return true;
+  }
   view.dispatch(markChangeSource(tr, "plugin").scrollIntoView());
   return true;
 }
