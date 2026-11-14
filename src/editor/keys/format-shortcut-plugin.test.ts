@@ -140,6 +140,33 @@ async function pressOverAll(
   });
 }
 
+describe("Ctrl+B and Ctrl+` on a selection with one end inside the span", () => {
+  // "a **bc** d": a(0) space(1) bold(2-6), its text 3-5.
+  it.each([
+    [2, 5],
+    [3, 6],
+  ])("takes bold off %i-%i", async (from, to) => {
+    expect((await pressOver("a **bc** d\n", from, to)).saved).toBe("a bc d\n");
+  });
+
+  // "x `co` y": x(0) space(1) code(2-6), its text 3-5.
+  it.each([
+    [2, 5],
+    [3, 6],
+  ])("takes code off %i-%i", async (from, to) => {
+    expect((await pressOver("x `co` y\n", from, to, "`")).saved).toBe(
+      "x co y\n",
+    );
+  });
+});
+
+it("keeps Ctrl+B from the browser where it can't apply", async () => {
+  // "x *ab* cd": the selection "b c" crosses the italic's end.
+  const { saved, handled } = await pressOver("x *ab* cd\n", 4, 8);
+  expect(handled).toBe(true);
+  expect(saved).toBe("x *ab* cd\n");
+});
+
 describe("Ctrl+B and Ctrl+I over several blocks", () => {
   it("formats each block's text after Select All, and takes it off again", async () => {
     const [on, off] = await pressOverAll(
@@ -149,6 +176,11 @@ describe("Ctrl+B and Ctrl+I over several blocks", () => {
     );
     expect(on).toBe("**One line**\n\n**Two lines**\n\n```\ncode\n```\n");
     expect(off).toBe("One line\n\nTwo lines\n\n```\ncode\n```\n");
+  });
+
+  it("takes bold out of bold-italic in each block", async () => {
+    const [off] = await pressOverAll("***ab***\n\n***cd***\n", "b", 1);
+    expect(off).toBe("*ab*\n\n*cd*\n");
   });
 
   it("merges the bold already in each block", async () => {

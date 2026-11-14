@@ -31,10 +31,20 @@ function outward(doc: ProseNode, pos: number, side: -1 | 1): number {
   }
 }
 
-/** The code node `range` is exactly, if it is one. */
-function codeAt(state: EditorState, { from, to }: Range): ProseNode | null {
+/** The code `range` is all of, either end inside it or just outside, and
+ *  where it starts and ends; null if it is not one code. */
+function codeAt(state: EditorState, range: Range) {
+  const out = (pos: number, side: -1 | 1) => {
+    const $pos = state.doc.resolve(pos);
+    if ($pos.parent.type.name !== CODE) return pos;
+    return side < 0 ? $pos.before() : $pos.after();
+  };
+  const from = out(range.from, -1);
+  const to = out(range.to, 1);
   const node = state.doc.nodeAt(from);
-  return node?.type.name === CODE && from + node.nodeSize === to ? node : null;
+  return node?.type.name === CODE && from + node.nodeSize === to
+    ? { node, from, to }
+    : null;
 }
 
 /** `range` made one code on `tr`: formatting inside given up, codes inside
@@ -75,9 +85,9 @@ function acrossBlocks(state: EditorState): Transaction | null {
   const tr = state.tr;
   const allOn = ranges.every((range) => codeAt(state, range));
   for (const range of [...ranges].reverse()) {
-    if (allOn)
-      tr.replaceWith(range.from, range.to, codeAt(state, range)!.content);
-    else if (!codeAt(state, range) && !wrapCode(state, tr, range)) return null;
+    const on = codeAt(state, range);
+    if (allOn) tr.replaceWith(on!.from, on!.to, on!.node.content);
+    else if (!on && !wrapCode(state, tr, range)) return null;
   }
   const { from, to } = state.selection;
   return tr.setSelection(
@@ -106,8 +116,10 @@ export function toggleCodeSpan(view: EditorView): boolean {
   }
   const whole = !empty && codeAt(state, { from, to });
   if (whole) {
-    const tr = state.tr.replaceWith(from, to, whole.content);
-    view.dispatch(tr.setSelection(TextSelection.create(tr.doc, from, to - 2)));
+    const tr = state.tr.replaceWith(whole.from, whole.to, whole.node.content);
+    view.dispatch(
+      tr.setSelection(TextSelection.create(tr.doc, whole.from, whole.to - 2)),
+    );
     return true;
   }
   const parent = $from.parent;

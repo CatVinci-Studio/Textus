@@ -67,13 +67,16 @@ function toggleOff(state: EditorState, spec: FormatSpec): Transaction | null {
       );
     return unwrap($from.before(d), node, 1);
   }
-  // A selection from just before a span to just after it.
-  if (!empty && $from.sameParent($to)) {
-    const node = state.doc.nodeAt(from);
-    if (matches(node) && from + node!.nodeSize === to) {
-      const tr = unwrap(from, node!, 0);
+  // A selection that is all of a span, either end inside it or just
+  // outside: from before it to the end of its text, say.
+  if (!empty) {
+    const start = outOfSpans(state, from, -1, spec);
+    const end = outOfSpans(state, to, 1, spec);
+    const node = state.doc.nodeAt(start);
+    if (matches(node) && start + node!.nodeSize === end) {
+      const tr = unwrap(start, node!, 0);
       if (node!.attrs.rung === 3) return tr;
-      return tr.setSelection(TextSelection.create(tr.doc, from, to - 2));
+      return tr.setSelection(TextSelection.create(tr.doc, start, end - 2));
     }
   }
   return null;
@@ -110,23 +113,32 @@ function acrossBlocks(
 ): Transaction | null {
   const ranges = blockRanges(state);
   if (ranges.length === 0) return null;
-  const spanOf = ({ from, to }: { from: number; to: number }) => {
-    const node = state.doc.nodeAt(from);
-    return node?.type.name === "md_span" &&
-      node.attrs.delim === spec.delim &&
-      node.attrs.rung === spec.rung &&
-      from + node.nodeSize === to
-      ? node
-      : null;
+  // The span a block's part is all of, either end inside it or not.
+  // `***` loads as italic around bold: the span looked for may be inside.
+  const spanOf = (range: { from: number; to: number }) => {
+    let from = outOfSpans(state, range.from, -1, spec);
+    const to = outOfSpans(state, range.to, 1, spec);
+    let node = state.doc.nodeAt(from);
+    if (!node || from + node.nodeSize !== to) return null;
+    while (!gives(node, spec) && node.childCount === 1) {
+      const inner: ProseNode = node.firstChild!;
+      if (inner.type.name !== "md_span") return null;
+      node = inner;
+      from += 1;
+    }
+    return gives(node, spec) ? { node, from, to: from + node.nodeSize } : null;
   };
   const tr = state.tr;
   const allOn = ranges.every((range) => spanOf(range));
   for (const range of [...ranges].reverse()) {
-    if (allOn) {
-      tr.replaceWith(range.from, range.to, spanOf(range)!.content);
-      continue;
-    }
-    if (!spanOf(range) && !wrapMerged(state, tr, range, spec)) return null;
+    const on = spanOf(range);
+    if (allOn && on!.node.attrs.rung === 3)
+      tr.setNodeMarkup(on!.from, undefined, {
+        ...on!.node.attrs,
+        rung: 3 - spec.rung,
+      });
+    else if (allOn) tr.replaceWith(on!.from, on!.to, on!.node.content);
+    else if (!on && !wrapMerged(state, tr, range, spec)) return null;
   }
   const { from, to } = state.selection;
   return tr.setSelection(
@@ -328,7 +340,9 @@ export const formatShortcutPlugin = $prose(
           ];
           if (!spec) return false;
           if (isImeKeyEvent(view, event)) return false;
-          if (!toggleFormat(view, spec)) return false;
+          // Taken even where nothing applies: the browser's own bold would
+          // write tags the editor has no mark for.
+          toggleFormat(view, spec);
           event.preventDefault();
           return true;
         },
