@@ -74,11 +74,7 @@ export function outOfSpans(
 /** `pos` moved out of the spans whose very start (`side` -1) or end (1) it
  *  sits at: a selection from before a bold to the end of its text is all of
  *  it, one ending inside its text is not. */
-export function outAtEdges(
-  state: EditorState,
-  pos: number,
-  side: -1 | 1,
-): number {
+function outAtEdges(state: EditorState, pos: number, side: -1 | 1): number {
   for (;;) {
     const $pos = state.doc.resolve(pos);
     const at =
