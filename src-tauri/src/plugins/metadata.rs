@@ -413,8 +413,9 @@ fn since(known: &RootIndex, since: Option<u64>) -> MetadataAll {
     }
 }
 
+/// The app's own AI tools (app_tools.rs) ask as `textus`, which no plugin is.
 fn checked_root(app: &tauri::AppHandle, id: &str, root: &str) -> Result<(), String> {
-    if !state::read(app).allows(id, "files.read") {
+    if id != super::app_tools::APP && !state::read(app).allows(id, "files.read") {
         return Err(refused(id, "files.read"));
     }
     if root.is_empty() || !Path::new(root).is_dir() {
