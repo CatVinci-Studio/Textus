@@ -98,8 +98,9 @@ jobs:
       - name: Check the signature and attach the APK
         run: |
           apk=src-tauri/gen/android/app/build/outputs/apk/universal/release/app-universal-release.apk
-          signer=$("$ANDROID_HOME/build-tools/$(ls "$ANDROID_HOME/build-tools" | sort -V | tail -n1)/apksigner" \
-            verify --print-certs "$apk" | sed -n 's/^Signer #1 certificate SHA-256 digest: //p')
+          apksigner=$(find "$ANDROID_HOME/build-tools" -name apksigner | sort -V | tail -n1)
+          signer=$("$apksigner" verify --print-certs "$apk" \
+            | sed -n 's/^Signer #1 certificate SHA-256 digest: //p')
           if [ "$signer" != "$SIGNER_SHA256" ]; then
             echo "::error::The APK is signed by $signer, not Textus's key: phones would refuse it as an update."
             exit 1
