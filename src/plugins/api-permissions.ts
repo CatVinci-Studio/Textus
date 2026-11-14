@@ -28,7 +28,7 @@ const API_PERMISSIONS: readonly {
       "export.willExport",
     ],
     // Completions without it are left out, with no error to say so.
-    calls: ["editor.registerCompletion"],
+    calls: ["editor.registerCompletion", "export.onWillExport"],
   },
   {
     permission: "editor.write",
@@ -37,12 +37,14 @@ const API_PERMISSIONS: readonly {
       "codeBlock.setSource",
       "editor.registerPasteHandler",
     ],
-    calls: ["editor.insertText", "editor.replaceSelection"],
+    // A code block's `block.setSource`.
+    calls: ["editor.insertText", "editor.replaceSelection", "setSource"],
   },
   { permission: "editor.propose", methods: ["editor.propose"] },
   {
     permission: "editor.input",
     methods: ["editor.captureKeys", "editor.exec"],
+    calls: ["keys.capture", "keys.exec"],
   },
   {
     permission: "files.read",
@@ -75,6 +77,7 @@ const API_PERMISSIONS: readonly {
       "files.create",
       "files.process",
       "files.rename",
+      "files.frontmatter.",
     ],
   },
   {
@@ -94,7 +97,7 @@ const API_PERMISSIONS: readonly {
       "files.willSave",
       "webview.writeFile",
     ],
-    calls: ["files.process"],
+    calls: ["files.process", "files.frontmatter.update", "files.onWillSave"],
   },
   { permission: "project.data", methods: [], calls: ["storage.project"] },
   {
@@ -107,7 +110,7 @@ const API_PERMISSIONS: readonly {
     permission: "appearance",
     methods: ["appearance.setColors", "appearance.clear"],
   },
-  // Checked in Rust, when Textus AI calls the tool.
+  // Checked when the window tells Rust the tools (contributions/ai-tools.ts).
   { permission: "ai.tools", methods: [], calls: ["ai.registerTool"] },
 ];
 

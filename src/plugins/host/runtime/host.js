@@ -72,8 +72,15 @@
         app.notify(method, params);
       });
   }
+  // A call whose failure is no one's business - but a refused permission
+  // goes to the plugin's log, where its author finds why nothing happens.
   function quiet(promise) {
-    promise.catch(function () {});
+    promise.catch(refused);
+  }
+  function refused(err) {
+    var message = String((err && err.message) || err);
+    if (/was not granted/.test(message))
+      notify("log", { level: "error", message: message });
   }
   function disposable(fn) {
     var done = false;
@@ -96,9 +103,7 @@
     return function (callback) {
       if (!listeners.has(name)) {
         listeners.set(name, new Set());
-        call("events.subscribe", { name: name }).catch(function (err) {
-          console.error(err);
-        });
+        call("events.subscribe", { name: name }).catch(refused);
       }
       listeners.get(name).add(callback);
       return disposable(function () {

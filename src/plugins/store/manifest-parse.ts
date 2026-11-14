@@ -311,14 +311,6 @@ export function parseContributes(raw: unknown, id: string): Contributes {
     c.settingsPage === undefined
       ? null
       : object(c.settingsPage, "contributes.settingsPage");
-  const themes = list(c.themes, "contributes.themes").map((x, i) => {
-    const o = object(x, `contributes.themes[${i}]`);
-    return {
-      id: ownId(o.id, id, `contributes.themes[${i}].id`),
-      label: text(o.label, `contributes.themes[${i}].label`),
-      path: text(o.path, `contributes.themes[${i}].path`),
-    };
-  });
   const aiTools = list(c.aiTools, "contributes.aiTools").map((x, i) => {
     const o = object(x, `contributes.aiTools[${i}]`);
     const name = text(o.name, `contributes.aiTools[${i}].name`);
@@ -491,7 +483,6 @@ export function parseContributes(raw: unknown, id: string): Contributes {
     settingsPage: page && {
       title: text(page.title, "contributes.settingsPage.title"),
     },
-    themes,
     suggestFor,
   };
 }

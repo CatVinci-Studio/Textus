@@ -168,12 +168,6 @@ export interface SettingContribution {
   command?: string;
 }
 
-export interface ThemeContribution {
-  id: string;
-  label: string;
-  path: string;
-}
-
 /** A tool the plugin gives Textus AI: what the model is told and its
  *  arguments as a JSON schema. */
 export interface AiToolContribution {
@@ -268,7 +262,6 @@ export interface Contributes {
   settings: SettingContribution[];
   /** A page of its own in Settings, a webview. */
   settingsPage: { title: string } | null;
-  themes: ThemeContribution[];
   aiTools: AiToolContribution[];
   completions: CompletionContribution[];
   embeds: EmbedContribution[];
@@ -299,7 +292,8 @@ export interface PluginManifest {
   /** Where it runs. Unset, everywhere, unless it works in the background
    *  (background code, or requiring runInBackground): the desktop's only. */
   platforms: readonly PluginPlatform[];
-  /** Its code, run in the plugin host; none for a themes-only plugin. */
+  /** Its code, run in the plugin host; none for a plugin that only
+   *  declares (a command running another, an agent). */
   main?: string[];
   /** Code its scheduled jobs run, apart from `main` and without the editor
    *  or UI; it runs only with the background permission granted. */
