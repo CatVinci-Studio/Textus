@@ -157,6 +157,8 @@ declare global {
       notify: Notify;
       /** 1.1: whether Textus is in front, behind, or has no window. */
       app: App;
+      /** 1.6: colours over the theme (appearance). */
+      appearance: Appearance;
     }
 
     interface Env {
@@ -1393,6 +1395,62 @@ declare global {
       /** The user typed (heard once typing pauses) or saved by hand -
        *  that it happened, with nothing of the document. From 1.3.6. */
       onDidActivity: Event<{ kind: "typing" | "saved" }>;
+    }
+
+    /** A colour Textus's look is drawn from, which a plugin may set. */
+    type OpenColor =
+      | "--doc-bg"
+      | "--doc-text"
+      | "--doc-muted"
+      | "--doc-accent"
+      | "--doc-mark"
+      | "--doc-code-bg"
+      | "--ui-bg"
+      | "--ui-text"
+      | "--ui-accent"
+      | "--ui-frame-tint"
+      | "--ui-frame-paint"
+      | "--tone-blue"
+      | "--tone-green"
+      | "--tone-orange"
+      | "--tone-purple"
+      | "--tone-red"
+      | "--tone-teal"
+      | "--tone-yellow"
+      | "--tone-pink"
+      | "--tone-gray";
+
+    /**
+     * From 1.6 (permission `appearance`): a palette over whichever theme is
+     * on. Only the colours the others are drawn from are open; borders,
+     * hovers and the like follow. Values are colours; `--ui-frame-paint`
+     * (the frame round the pages: bar, rail, sidebar) may also be a
+     * `linear-`, `radial-` or `conic-gradient(...)` of colours, laid across
+     * the whole window. No images, `url()` or `var()`. Text kept readable:
+     * below 4.5:1 on its background (or any of the paint's colours) it is
+     * moved toward ink or white. The user's Custom CSS still wins.
+     *
+     *     const layer = await textus.appearance.setColors(
+     *       { "--ui-frame-paint": "linear-gradient(120deg, #f3d9c4, #d6dcec)" },
+     *       { scheme: "light" },
+     *     );
+     *     ctx.subscriptions.push(layer);
+     */
+    interface Appearance {
+      /** Lays `colors` over the theme, for light, dark or both (the
+       *  default); disposing it, or the plugin stopping, takes it away.
+       *  Several plugins: per colour the one last by id wins. Rejects
+       *  naming the first colour or value not taken. */
+      setColors(
+        colors: Partial<Record<OpenColor, string>>,
+        options?: { scheme?: "light" | "dark" | "both" },
+      ): Promise<Disposable>;
+      /** The open colours as the window shows them now (theme and every
+       *  plugin's), as `rgb(...)`; the paint as set, or "". No permission. */
+      colors(): Promise<Record<OpenColor, string>>;
+      /** The theme (its id, for keeping a palette per theme), the scheme or
+       *  a plugin's colours changed. */
+      onDidChange: Event<{ theme: string; scheme: "light" | "dark" }>;
     }
 
     /**

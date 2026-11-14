@@ -27,6 +27,9 @@ export const WEBVIEW_THEME_VARS = [
   "--ui-danger",
   "--ui-success",
   "--ui-warning",
+  // The frame round the pages: its tint, and its paint when one is set.
+  "--ui-frame-tint",
+  "--ui-frame-paint",
   "--doc-bg",
   "--doc-text",
   "--doc-accent",

@@ -23,6 +23,8 @@ import { metadataHandlers } from "./broker-metadata";
 import { stopPluginUi, uiHandlers } from "./broker-ui";
 import { viewHandlers } from "./broker-views";
 import { scheduleHandlers } from "./broker-schedule";
+import { appearanceHandlers } from "./broker-appearance";
+import { forgetPluginColors } from "../../theme/plugin-colors";
 import { currentAppState } from "../background/app-state";
 import { forgetListViews } from "../contributions/list-views";
 import { forgetEmbeds } from "../contributions/embeds";
@@ -139,6 +141,7 @@ const PLUGIN_EVENT_NEEDS: Record<keyof PluginEventMap, Permission | null> = {
   fileDelete: "files.read",
   metadata: "files.read",
   theme: null,
+  appearance: null,
   language: null,
   settings: null,
   editorKey: "editor.input",
@@ -232,6 +235,7 @@ export class PluginHost {
     forgetWillSave(this.id);
     forgetWillExport(this.id);
     unwatchMetadata(this.id);
+    forgetPluginColors(this.id);
     setTimeout(() => {
       this.disconnect?.();
       this.frame?.remove();
@@ -410,6 +414,7 @@ export class PluginHost {
       ...fileHandlers(scope),
       ...metadataHandlers(scope),
       ...scheduleHandlers(scope),
+      ...appearanceHandlers(scope),
     };
   }
 }

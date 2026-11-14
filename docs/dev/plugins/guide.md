@@ -171,6 +171,7 @@ turning it on, or leaves it off, and can take each back later.
 | `notifications`  | show system notifications, at once or on a schedule (API 1.1)                          |
 | `background`     | run its `background` code on a schedule, also with every window closed (API 1.1)       |
 | `agents`         | run the AI agents it names in `contributes.agents` (programs on this computer; 1.3.13) |
+| `appearance`     | change Textus's colours: a palette over the theme, the frame a gradient (API 1.6)      |
 | `network:<host>` | fetch from that host over HTTPS (`*.example.com`, `host:port`, `*` for the open web)   |
 
 Ask for what the plugin's purpose explains, and no more: each permission

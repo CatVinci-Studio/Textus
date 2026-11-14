@@ -1795,6 +1795,7 @@ ${AI_NAME}への執筆の指示です。すべての文書に適用されます�
     "開いているフォルダー（.textus/plugins）に自分のデータを保存する",
   pluginPermAiTools: "Textus AI に独自のツールを提供する",
   pluginPermNotifications: "システム通知を表示する",
+  pluginPermAppearance: "Textus と文書の色を変更する",
   pluginPermAgents:
     "このコンピュータにインストールされた AI エージェントを実行する（ファイルの読み取りと変更ができます）",
   pluginPermBackground:

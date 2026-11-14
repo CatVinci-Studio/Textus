@@ -159,6 +159,8 @@ export interface PluginEventMap {
   /** The folder's index (metadata) changed for these documents. */
   metadata: { paths: string[] };
   theme: "light" | "dark";
+  /** The theme, the scheme or a plugin's colours changed. */
+  appearance: { theme: string; scheme: "light" | "dark" };
   language: string;
   /** One of the plugin's own settings changed (told to that plugin only). */
   settings: { key: string; value: unknown };

@@ -1910,6 +1910,7 @@ export default {
     "Хранить свои данные в открытой папке, в .textus/plugins",
   pluginPermAiTools: "Давать Textus AI свои инструменты",
   pluginPermNotifications: "Показывать системные уведомления",
+  pluginPermAppearance: "Менять цвета Textus и ваших документов",
   pluginPermAgents:
     "Запускать ИИ-агента, установленного на этом компьютере (он может читать и менять файлы)",
   pluginPermBackground:

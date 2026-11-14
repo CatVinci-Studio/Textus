@@ -1829,6 +1829,7 @@ type /name in a conversation to use one.
     "Keep its own data in the open folder, in .textus/plugins",
   pluginPermAiTools: "Give Textus AI tools of its own to use",
   pluginPermNotifications: "Show system notifications",
+  pluginPermAppearance: "Change the colors of Textus and your documents",
   pluginPermAgents:
     "Run an AI agent installed on this computer (it can read and change files)",
   pluginPermBackground: "Run code on a schedule, even with every window closed",

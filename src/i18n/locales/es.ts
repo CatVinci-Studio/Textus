@@ -1907,6 +1907,7 @@ para usar una.
     "Guardar sus propios datos en la carpeta abierta, en .textus/plugins",
   pluginPermAiTools: "Dar a Textus AI herramientas propias para usar",
   pluginPermNotifications: "Mostrar notificaciones del sistema",
+  pluginPermAppearance: "Cambiar los colores de Textus y de tus documentos",
   pluginPermAgents:
     "Ejecutar un agente de IA instalado en este ordenador (puede leer y cambiar archivos)",
   pluginPermBackground:

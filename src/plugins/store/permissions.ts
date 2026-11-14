@@ -19,6 +19,7 @@ export const PERMISSION_LABELS: Record<
   notifications: "pluginPermNotifications",
   background: "pluginPermBackground",
   agents: "pluginPermAgents",
+  appearance: "pluginPermAppearance",
 };
 
 /** A permission in plain words, as the install dialog and a plugin's page

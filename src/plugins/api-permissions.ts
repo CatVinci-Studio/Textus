@@ -96,6 +96,10 @@ const API_PERMISSIONS: readonly {
     calls: ["env.readClipboard", "env.writeClipboard"],
   },
   { permission: "notifications", methods: ["notify.show"] },
+  {
+    permission: "appearance",
+    methods: ["appearance.setColors", "appearance.clear"],
+  },
   // Checked in Rust, when Textus AI calls the tool.
   { permission: "ai.tools", methods: [], calls: ["ai.registerTool"] },
 ];

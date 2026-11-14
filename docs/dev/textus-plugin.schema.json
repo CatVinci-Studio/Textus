@@ -100,7 +100,8 @@
               "ai.tools",
               "notifications",
               "background",
-              "agents"
+              "agents",
+              "appearance"
             ]
           },
           {

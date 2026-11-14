@@ -112,28 +112,29 @@ Values kept for one document.
 
 ## Api
 
-| Member                 |                                                                |
-| ---------------------- | -------------------------------------------------------------- |
-| `env: Env`             |                                                                |
-| `l10n: L10n`           |                                                                |
-| `commands: Commands`   |                                                                |
-| `ui: Ui`               |                                                                |
-| `layout: Layout`       |                                                                |
-| `views: Views`         |                                                                |
-| `editor: Editor`       |                                                                |
-| `files: Files`         |                                                                |
-| `metadata: Metadata`   |                                                                |
-| `dates: Dates`         | From 1.3.10: no permission, nothing leaves the plugin's frame. |
-| `templates: Templates` |                                                                |
-| `net: Net`             |                                                                |
-| `settings: Settings`   |                                                                |
-| `ai: Ai`               |                                                                |
-| `plugins: Plugins`     |                                                                |
-| `uri: Uri`             |                                                                |
-| `export: Export`       |                                                                |
-| `schedule: Schedule`   | 1.1: jobs Textus fires on time (notifications, background).    |
-| `notify: Notify`       | 1.1: system notifications (notifications).                     |
-| `app: App`             | 1.1: whether Textus is in front, behind, or has no window.     |
+| Member                   |                                                                |
+| ------------------------ | -------------------------------------------------------------- |
+| `env: Env`               |                                                                |
+| `l10n: L10n`             |                                                                |
+| `commands: Commands`     |                                                                |
+| `ui: Ui`                 |                                                                |
+| `layout: Layout`         |                                                                |
+| `views: Views`           |                                                                |
+| `editor: Editor`         |                                                                |
+| `files: Files`           |                                                                |
+| `metadata: Metadata`     |                                                                |
+| `dates: Dates`           | From 1.3.10: no permission, nothing leaves the plugin's frame. |
+| `templates: Templates`   |                                                                |
+| `net: Net`               |                                                                |
+| `settings: Settings`     |                                                                |
+| `ai: Ai`                 |                                                                |
+| `plugins: Plugins`       |                                                                |
+| `uri: Uri`               |                                                                |
+| `export: Export`         |                                                                |
+| `schedule: Schedule`     | 1.1: jobs Textus fires on time (notifications, background).    |
+| `notify: Notify`         | 1.1: system notifications (notifications).                     |
+| `app: App`               | 1.1: whether Textus is in front, behind, or has no window.     |
+| `appearance: Appearance` | 1.6: colours over the theme (appearance).                      |
 
 ## Env
 
@@ -876,6 +877,46 @@ A system notification. A click brings Textus up with `open.path` (a file of the 
 | `readonly state: "active" \| "inactive" \| "background"`          | "active": a Textus window has the focus; "inactive": windows are open, none focused; "background": no window (background code, or every window closed in background mode). |
 | `onDidChangeState: Event<"active" \| "inactive" \| "background">` |                                                                                                                                                                            |
 | `onDidActivity: Event<{ kind: "typing" \| "saved" }>`             | The user typed (heard once typing pauses) or saved by hand - that it happened, with nothing of the document. From 1.3.6.                                                   |
+
+## OpenColor
+
+A colour Textus's look is drawn from, which a plugin may set.
+
+```ts
+type OpenColor =
+  | "--doc-bg"
+  | "--doc-text"
+  | "--doc-muted"
+  | "--doc-accent"
+  | "--doc-mark"
+  | "--doc-code-bg"
+  | "--ui-bg"
+  | "--ui-text"
+  | "--ui-accent"
+  | "--ui-frame-tint"
+  | "--ui-frame-paint"
+  | "--tone-blue"
+  | "--tone-green"
+  | "--tone-orange"
+  | "--tone-purple"
+  | "--tone-red"
+  | "--tone-teal"
+  | "--tone-yellow"
+  | "--tone-pink"
+  | "--tone-gray";
+```
+
+## Appearance
+
+From 1.6 (permission `appearance`): a palette over whichever theme is on. Only the colours the others are drawn from are open; borders, hovers and the like follow. Values are colours; `--ui-frame-paint` (the frame round the pages: bar, rail, sidebar) may also be a `linear-`, `radial-` or `conic-gradient(...)` of colours, laid across the whole window. No images, `url()` or `var()`. Text kept readable: below 4.5:1 on its background (or any of the paint's colours) it is moved toward ink or white. The user's Custom CSS still wins.
+
+const layer = await textus.appearance.setColors( { "--ui-frame-paint": "linear-gradient(120deg, #f3d9c4, #d6dcec)" }, { scheme: "light" }, ); ctx.subscriptions.push(layer);
+
+| Member                                                                                                                           |                                                                                                                                                                                                                                    |
+| -------------------------------------------------------------------------------------------------------------------------------- | ---------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| `setColors(colors: Partial<Record<OpenColor, string>>, options?: { scheme?: "light" \| "dark" \| "both" }): Promise<Disposable>` | Lays `colors` over the theme, for light, dark or both (the default); disposing it, or the plugin stopping, takes it away. Several plugins: per colour the one last by id wins. Rejects naming the first colour or value not taken. |
+| `colors(): Promise<Record<OpenColor, string>>`                                                                                   | The open colours as the window shows them now (theme and every plugin's), as `rgb(...)`; the paint as set, or "". No permission.                                                                                                   |
+| `onDidChange: Event<{ theme: string; scheme: "light" \| "dark" }>`                                                               | The theme (its id, for keeping a palette per theme), the scheme or a plugin's colours changed.                                                                                                                                     |
 
 ## JobRun
 
