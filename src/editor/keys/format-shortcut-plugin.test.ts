@@ -149,6 +149,16 @@ describe("Ctrl+B and Ctrl+` on a selection with one end inside the span", () => 
     expect((await pressOver("a **bc** d\n", from, to)).saved).toBe("a bc d\n");
   });
 
+  it("leaves bold alone when only part of its text is selected", async () => {
+    // "a **bcde** f": bold(2-8), "de" 5-7.
+    expect((await pressOver("a **bcde** f\n", 5, 8)).saved).toBe(
+      "a **bcde** f\n",
+    );
+    expect((await pressOver("a `bcde` f\n", 5, 8, "`")).saved).toBe(
+      "a `bcde` f\n",
+    );
+  });
+
   // "x `co` y": x(0) space(1) code(2-6), its text 3-5.
   it.each([
     [2, 5],

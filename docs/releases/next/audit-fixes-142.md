@@ -18,5 +18,5 @@
 - A plugin can take its badge off a file that was deleted or renamed; badges on files in subfolders show on Windows.
 - The tour no longer skips a step when the sidebar or the AI opens with two quick updates.
 - Android: the phone menu no longer lists Documents, which only iOS has; picking up a tab gives a light haptic as on iOS; Word files open from plain paths.
-- Bold, italic, strikethrough, highlight and inline code come off a selection that has one end inside the formatting, and off bold-italic across several lines.
+- Bold, italic, strikethrough, highlight and inline code come off a selection of all their text, whether its ends sit just inside or just outside the marks, and off bold-italic across several lines.
 - Typing Chinese with an input method into a new heading no longer leaves the text in front of its "##".

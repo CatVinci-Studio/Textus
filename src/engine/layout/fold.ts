@@ -1,9 +1,9 @@
 import { moveTab, splitOff, type SplitLayout } from "./ops";
 import {
   mapPanes,
-  paneBeside,
   panesOf,
   type Branch,
+  type LayoutNode,
   type Pane,
   type Side,
 } from "./tree";
@@ -49,7 +49,7 @@ export function foldIsland(
   const order = [...panes.filter(isPanel), ...panes.filter((p) => !isPanel(p))];
   for (const panel of order) {
     for (const side of SIDES) {
-      const into = paneBeside(layout.root, panel.id, side);
+      const into = rowNeighbour(layout.root, panel.id, side);
       if (!into) continue;
       let next: SplitLayout | null = layout;
       for (const tab of panel.tabs) next = next && moveTab(next, tab, into.id);
@@ -110,6 +110,27 @@ export function unfoldIsland(
     root: withFront(withFront(root, id, front), into.id, intoFront),
     focus: picked && layout.focus === into.id ? id : layout.focus,
   };
+}
+
+/** The island right beside pane `id` in the row they share, itself a pane:
+ *  folded into one inside a column, it would come back in that column, the
+ *  layout's shape changed. */
+function rowNeighbour(
+  node: LayoutNode,
+  id: string,
+  side: Side,
+): Pane | undefined {
+  if (node.kind === "pane") return undefined;
+  const at = node.children.findIndex((c) => c.kind === "pane" && c.id === id);
+  if (at >= 0) {
+    const next = node.children[at + (side === "left" ? -1 : 1)];
+    return node.direction === "row" && next?.kind === "pane" ? next : undefined;
+  }
+  for (const child of node.children) {
+    const found = rowNeighbour(child, id, side);
+    if (found) return found;
+  }
+  return undefined;
 }
 
 /** Pane `id` showing `front`, when it holds it. */

@@ -17,6 +17,7 @@ export { toggleCodeSpan };
 import {
   blockRanges,
   gives,
+  outAtEdges,
   mergedContent,
   outOfSpans,
   type FormatSpec,
@@ -70,8 +71,8 @@ function toggleOff(state: EditorState, spec: FormatSpec): Transaction | null {
   // A selection that is all of a span, either end inside it or just
   // outside: from before it to the end of its text, say.
   if (!empty) {
-    const start = outOfSpans(state, from, -1, spec);
-    const end = outOfSpans(state, to, 1, spec);
+    const start = outAtEdges(state, from, -1);
+    const end = outAtEdges(state, to, 1);
     const node = state.doc.nodeAt(start);
     if (matches(node) && start + node!.nodeSize === end) {
       const tr = unwrap(start, node!, 0);
@@ -116,8 +117,8 @@ function acrossBlocks(
   // The span a block's part is all of, either end inside it or not.
   // `***` loads as italic around bold: the span looked for may be inside.
   const spanOf = (range: { from: number; to: number }) => {
-    let from = outOfSpans(state, range.from, -1, spec);
-    const to = outOfSpans(state, range.to, 1, spec);
+    let from = outAtEdges(state, range.from, -1);
+    const to = outAtEdges(state, range.to, 1);
     let node = state.doc.nodeAt(from);
     if (!node || from + node.nodeSize !== to) return null;
     while (!gives(node, spec) && node.childCount === 1) {

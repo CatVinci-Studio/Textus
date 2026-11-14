@@ -162,6 +162,7 @@ export function joinPath(dir: string, name: string): string {
 export function absoluteIn(dir: string, path: string): string {
   if (/^([\\/]|[A-Za-z]:[\\/])/.test(path)) return path;
   const sep = dir.includes("\\") && !dir.includes("/") ? "\\" : "/";
-  const rel = path.replace(/^(\.[\\/])+/, "").replace(/[\\/]/g, sep);
-  return joinPath(dir, rel);
+  // On macOS and Linux a backslash is part of a name, not a separator.
+  if (sep === "/") return joinPath(dir, path.replace(/^(\.\/)+/, ""));
+  return joinPath(dir, path.replace(/^(\.[\\/])+/, "").replace(/\//g, sep));
 }

@@ -34,9 +34,15 @@ function outward(doc: ProseNode, pos: number, side: -1 | 1): number {
 /** The code `range` is all of, either end inside it or just outside, and
  *  where it starts and ends; null if it is not one code. */
 function codeAt(state: EditorState, range: Range) {
+  // Out of a code only from its very start or end: one end inside its
+  // text is part of it, not all.
   const out = (pos: number, side: -1 | 1) => {
     const $pos = state.doc.resolve(pos);
-    if ($pos.parent.type.name !== CODE) return pos;
+    const edge =
+      side < 0
+        ? $pos.parentOffset === 0
+        : $pos.parentOffset === $pos.parent.content.size;
+    if ($pos.parent.type.name !== CODE || !edge) return pos;
     return side < 0 ? $pos.before() : $pos.after();
   };
   const from = out(range.from, -1);

@@ -82,6 +82,30 @@ describe("folding a panel's island", () => {
     expect(foldIsland(column, isPanel, 900)).toBeNull();
   });
 
+  it("never folds into an island inside a column, nor a panel in one", () => {
+    const mixed: SplitLayout = {
+      root: {
+        kind: "split",
+        direction: "row",
+        sizes: [0.5, 0.5],
+        children: [
+          { kind: "pane", id: "d", tabs: ["a.md"], front: "a.md" },
+          {
+            kind: "split",
+            direction: "column",
+            sizes: [0.5, 0.5],
+            children: [
+              { kind: "pane", id: "x", tabs: ["b.md"], front: "b.md" },
+              { kind: "pane", id: "p", tabs: ["ai-1"], front: "ai-1" },
+            ],
+          },
+        ],
+      },
+      focus: "d",
+    };
+    expect(foldIsland(mixed, isPanel, 900)).toBeNull();
+  });
+
   it("leaves a lone island be", () => {
     const one: SplitLayout = {
       root: {

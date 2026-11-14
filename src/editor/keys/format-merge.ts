@@ -71,6 +71,25 @@ export function outOfSpans(
   return side < 0 ? $pos.before(outer) : $pos.after(outer);
 }
 
+/** `pos` moved out of the spans whose very start (`side` -1) or end (1) it
+ *  sits at: a selection from before a bold to the end of its text is all of
+ *  it, one ending inside its text is not. */
+export function outAtEdges(
+  state: EditorState,
+  pos: number,
+  side: -1 | 1,
+): number {
+  for (;;) {
+    const $pos = state.doc.resolve(pos);
+    const at =
+      side < 0
+        ? $pos.parentOffset === 0
+        : $pos.parentOffset === $pos.parent.content.size;
+    if (!isSpan($pos.parent) || !at) return pos;
+    pos = side < 0 ? $pos.before() : $pos.after();
+  }
+}
+
 /** What of each textblock a selection over several holds, trimmed of edge
  *  whitespace: the ranges a shortcut wraps or unwraps. Code, maths and
  *  enclosure blocks are left out. */

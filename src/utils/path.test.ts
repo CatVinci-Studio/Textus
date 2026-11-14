@@ -95,6 +95,7 @@ describe("absoluteIn", () => {
       "C:\\notes\\drafts\\a.md",
     );
     expect(absoluteIn("/notes", "./a.md")).toBe("/notes/a.md");
+    expect(absoluteIn("/notes", "a\\b.md")).toBe("/notes/a\\b.md");
   });
 });
 
