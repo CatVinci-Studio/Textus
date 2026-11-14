@@ -20,6 +20,8 @@
   var fileEditorProviders = new Map();
   var codeBlockProviders = new Map();
   var hoverProviders = [];
+  var pasteHandlers = {};
+  var pasteHandlerCount = 0;
   var decorationProviders = [];
   var completionProviders = new Map();
   // Asks the panel may still call off, by request.
@@ -794,6 +796,21 @@
             completionProviders.delete(key);
         });
       },
+      registerPasteHandler: function (pattern, provide) {
+        var id = String(++pasteHandlerCount);
+        pasteHandlers[id] = provide;
+        quiet(
+          call("editor.registerPasteHandler", {
+            id: id,
+            pattern:
+              pattern instanceof RegExp ? pattern.source : String(pattern),
+          }),
+        );
+        return disposable(function () {
+          delete pasteHandlers[id];
+          quiet(call("editor.unregisterPasteHandler", { id: id }));
+        });
+      },
       registerHover: function (provider) {
         hoverProviders.push(provider);
         quiet(call("editor.registerHover", {}));
@@ -1327,6 +1344,12 @@
     $cancelEmbed: function (params) {
       var controller = embedAsks.get(params.request);
       if (controller) controller.abort();
+    },
+    $providePaste: async function (params) {
+      var provide = pasteHandlers[params.id];
+      if (!provide) return null;
+      var markdown = await provide(params.text);
+      return typeof markdown === "string" ? markdown : null;
     },
     $provideHover: async function (params) {
       for (var i = 0; i < hoverProviders.length; i++) {

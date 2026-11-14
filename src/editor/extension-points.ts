@@ -54,6 +54,10 @@ interface EditorExtensions {
   provideHover: (target: HoverTarget) => Promise<HoverCard | null>;
   /** Opens a web link in what handles it; false when nothing does. */
   openLink: (url: string) => boolean;
+  /** Whether someone turns pasted `text` into Markdown of its own, and
+   *  that Markdown (null: paste as usual). */
+  pasteMatches: (text: string) => boolean;
+  providePaste: (text: string) => Promise<string | null>;
 }
 
 let current: EditorExtensions = {
@@ -61,6 +65,8 @@ let current: EditorExtensions = {
   hasHoverProviders: () => false,
   provideHover: async () => null,
   openLink: () => false,
+  pasteMatches: () => false,
+  providePaste: async () => null,
 };
 
 export function setEditorExtensions(next: Partial<EditorExtensions>): void {

@@ -31,7 +31,11 @@ const API_PERMISSIONS: readonly {
   },
   {
     permission: "editor.write",
-    methods: ["editor.edit", "codeBlock.setSource"],
+    methods: [
+      "editor.edit",
+      "codeBlock.setSource",
+      "editor.registerPasteHandler",
+    ],
     calls: ["editor.insertText", "editor.replaceSelection"],
   },
   { permission: "editor.propose", methods: ["editor.propose"] },

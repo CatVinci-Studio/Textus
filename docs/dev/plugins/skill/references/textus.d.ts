@@ -644,6 +644,20 @@ declare global {
        *  Shown in the / panel, grouped by plugin. 1.2: every matching
        *  provider is asked at once, and none holds up typing. */
       registerCompletion(id: string, provider: CompletionProvider): Disposable;
+      /** From 1.6 (editor.write): pasted text matching `pattern` is handed
+       *  to `provide`, and the Markdown it answers goes in instead - a URL
+       *  as a titled link, a spreadsheet's rows as a table. Answering null
+       *  (or not within 1.5 s) lets the paste go on as usual; text no
+       *  handler matches is never held. Several match: asked in plugin id
+       *  order, the first answer wins. Not in code, not with files.
+       *
+       *      textus.editor.registerPasteHandler(/^https?:\/\/\S+$/, async (url) =>
+       *        `[${await titleOf(url)}](${url})`);
+       */
+      registerPasteHandler(
+        pattern: RegExp | string,
+        provide: (text: string) => string | null | Promise<string | null>,
+      ): Disposable;
       /** A card for what the pointer rests on (editor.read). */
       registerHover(provider: {
         provideHover(

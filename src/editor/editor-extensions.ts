@@ -121,6 +121,7 @@ import {
   htmlTagInputRule,
 } from "./markdown/source-input-rules";
 import { pasteUrlPlugin } from "./clipboard/paste-url";
+import { pasteHookPlugin } from "./clipboard/paste-hook";
 import { ownUndoStepPlugin } from "./clipboard/own-undo-step";
 import { changeSourcePlugin } from "./change-source";
 import { createLinkClickPlugin } from "./markdown/link-click-plugin";
@@ -434,6 +435,7 @@ export function withEditorCore(
       .use(editing(linkSettlePlugin))
       .use(editing(htmlTagInputRule))
       .use(editing(footnoteInputRule))
+      .use(editing(pasteHookPlugin))
       .use(editing(pasteUrlPlugin))
       .use(editing(pasteMarkdownSourcePlugin))
       .use(editing(copyTextPlugin))

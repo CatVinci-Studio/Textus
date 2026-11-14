@@ -3,6 +3,7 @@ import {
   showMessage,
   showPrompt,
 } from "../../engine/controls/app-dialog";
+import { forgetPasteHandlers } from "../contributions/paste-handlers";
 import { forgetFileBadges } from "../contributions/file-badges";
 import {
   endProgress,
@@ -207,4 +208,5 @@ export function stopPluginUi(plugin: string): void {
   removeStatusItem(plugin);
   forgetPluginWhenKeys(plugin);
   forgetFileBadges(plugin);
+  forgetPasteHandlers(plugin);
 }
