@@ -62,11 +62,29 @@ describe("Ctrl+B and Ctrl+I over a selection", () => {
     );
   });
 
-  it("leaves a selection with a span in it as it was", async () => {
+  it("keeps another style nested inside the new span", async () => {
     expect(await pressOver("x a *i* y\n", 2, 7)).toEqual({
-      saved: "x a *i* y\n",
-      handled: false,
+      saved: "x **a *i*** y\n",
+      handled: true,
     });
+  });
+
+  // "a **b** c **d** e": a(0) sp(1) span(2-5) sp(5) c(6) sp(7) span(8-11) sp(11) e(12).
+  it("merges bold already in the selection into one span", async () => {
+    expect((await pressOver("a **b** c **d** e\n", 0, 13)).saved).toBe(
+      "**a b c d e**\n",
+    );
+  });
+
+  it("takes in all of a bold the selection cuts", async () => {
+    // From inside the first bold (its "b") to the "c" after it.
+    expect((await pressOver("a **bb** c\n", 4, 9)).saved).toBe("a **bb c**\n");
+  });
+
+  it("keeps the other half of bold-italic inside", async () => {
+    expect((await pressOver("a ***b*** c\n", 0, 9)).saved).toBe(
+      "**a *b* c**\n",
+    );
   });
 });
 
@@ -124,6 +142,11 @@ describe("Ctrl+B and Ctrl+I over several blocks", () => {
     );
     expect(on).toBe("**One line**\n\n**Two lines**\n\n```\ncode\n```\n");
     expect(off).toBe("One line\n\nTwo lines\n\n```\ncode\n```\n");
+  });
+
+  it("merges the bold already in each block", async () => {
+    const [on] = await pressOverAll("a **b** c\n\nd\n", "b", 1);
+    expect(on).toBe("**a b c**\n\n**d**\n");
   });
 
   it("formats a list's items each", async () => {

@@ -101,6 +101,7 @@ import {
 } from "./tables/table-hover-view";
 import { createMermaidPreviewPlugin } from "./mermaid-plugin";
 import { blockKeysPlugin } from "./keys/block-keys-plugin";
+import { listBackspacePlugin } from "./keys/list-backspace-plugin";
 import { blockJoinPlugin } from "./keys/block-join-plugin";
 import { inlineSourcePlugin } from "./keys/inline-source-plugin";
 import { wikilinkRevealPlugin } from "./markdown/wikilink-reveal";
@@ -453,6 +454,7 @@ export function withEditorCore(
       .use(editing(tabStaysPlugin))
       .use(editing(moveBlockPlugin))
       .use(editing(escapeTrailingBlockPlugin))
+      .use(editing(listBackspacePlugin))
       .use(editing(blockJoinPlugin))
       .use(editing(inlineSourcePlugin))
       .use(editing(findReplacePlugin))
