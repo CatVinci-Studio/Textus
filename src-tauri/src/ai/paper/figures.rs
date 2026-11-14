@@ -283,16 +283,28 @@ mod tests {
                 code: "flowchart TB".into(),
             }]
         };
-        let answering = by_window(|event| {
+        // Only this test's calls: another test's may be waiting meanwhile.
+        let ids = Arc::new(std::sync::Mutex::new(Vec::new()));
+        let seen = ids.clone();
+        let answering = by_window(move |event| {
             if let PaperEvent::DrawFigures { call_id, .. } = event {
+                seen.lock().unwrap().push(call_id.clone());
                 ai_paper_figures_drawn(call_id, vec![Some("bad".into())]);
             }
             true
         });
         assert_eq!(answering(block()).await, Some(vec![Some("bad".into())]));
-        let gone = by_window(|_| false);
+        let seen = ids.clone();
+        let gone = by_window(move |event| {
+            if let PaperEvent::DrawFigures { call_id, .. } = event {
+                seen.lock().unwrap().push(call_id);
+            }
+            false
+        });
         assert_eq!(gone(block()).await, None);
-        assert!(waiting().is_empty());
+        let ids = ids.lock().unwrap();
+        assert_eq!(ids.len(), 2);
+        assert!(ids.iter().all(|id| !waiting().contains_key(id)));
     }
 
     #[tokio::test(start_paused = true)]

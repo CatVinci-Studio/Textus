@@ -24,7 +24,13 @@ function usePanelStep(tutorial: Tutorial) {
   useEffect(() => {
     if (!opened) return;
     if (opened(panelsState())) return next();
-    return onPluginEvent("panels", (p) => opened(p) && next());
+    // Once: two events before the step changes would skip the next step.
+    let moved = false;
+    return onPluginEvent("panels", (p) => {
+      if (moved || !opened(p)) return;
+      moved = true;
+      next();
+    });
   }, [opened, next]);
 }
 

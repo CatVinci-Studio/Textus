@@ -81,6 +81,13 @@ export const canTrashFiles = isDesktopApp;
 /** Settings' "Default Markdown editor". iOS has no default app to set. */
 export const canSetDefaultEditor = isDesktopApp;
 
+/** The phone menu's Documents list: iOS's own folder of documents; Android
+ *  opens files and folders through the system's pickers instead. */
+export const hasDocumentsList = isIOSApp;
+
+/** A tap's light haptic (a tab picked up): both phones' plugins give one. */
+export const canHaptic = isMobileApp;
+
 /** The sponsor link: not on iOS, whose store rules keep payment outside
  *  the app from being linked to. */
 export const canLinkSponsor = !isIOSApp;

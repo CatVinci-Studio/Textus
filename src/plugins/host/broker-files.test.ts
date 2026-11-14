@@ -15,9 +15,8 @@ vi.mock("../../platform/ipc", async (importOriginal) => {
     plugins: {
       ...real.plugins,
       // As Rust answers on Windows: the path resolved, \\?\ and all.
-      fsStat: async (_id: string, _root: string, path: string) => ({
-        path: `\\\\?\\C:\\notes\\${path}`,
-      }),
+      fsStat: async (_id: string, _root: string, path: string) =>
+        path.startsWith("gone") ? null : { path: `\\\\?\\C:\\notes\\${path}` },
     },
   };
 });
@@ -52,4 +51,15 @@ it("puts a plugin's badge on the file as the tree spells its path", async () => 
     badge: { text: "3" },
   });
   expect(fileBadge("C:\\notes\\a.md")).not.toBeNull();
+});
+
+it("takes a badge off a file that is gone", async () => {
+  const scope = { id: "p", root: () => "C:\\notes" } as PluginScope;
+  const files = fileHandlers(scope);
+  await files["files.setBadge"]({ path: "drafts/b.md", badge: { text: "1" } });
+  expect(fileBadge("C:\\notes\\drafts\\b.md")).not.toBeNull();
+  await expect(
+    files["files.setBadge"]({ path: "gone.md", badge: { text: "1" } }),
+  ).rejects.toThrow();
+  await files["files.setBadge"]({ path: "gone.md", badge: null });
 });

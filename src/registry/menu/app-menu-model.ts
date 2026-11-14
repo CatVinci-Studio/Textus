@@ -20,6 +20,7 @@ import {
   type TableNode,
   type TableSection,
 } from "./menu-table";
+import { canLinkSponsor, hasDocumentsList } from "../../platform/capabilities";
 /**
  * The app-drawn menu, as data, for windows with no native menu bar. Entries
  * that reach the backend use the same ids as the native menu.
@@ -173,6 +174,10 @@ export interface RecentLists {
 
 export const NO_RECENTS: RecentLists = { files: [], folders: [] };
 
+/** Entries this platform leaves out: the sponsor link on iOS, whose store
+ *  rules keep payment outside the app from being linked to. */
+const LEFT_OUT: Record<string, boolean> = { "help-sponsor": !canLinkSponsor };
+
 /** Entries that stay off unless something is open or on. */
 const DISABLED: Record<string, (checks: MenuChecks) => boolean> = {
   "close-folder": (checks) => !checks.folderOpen,
@@ -236,6 +241,7 @@ export function buildAppMenu(
           moved[item.drawn.in].push(entry(item));
           return [];
         }
+        if (LEFT_OUT[item.id ?? ""]) return [];
         return shown && (!item.on || item.drawn) ? [entry(item)] : [];
       }),
     );
@@ -304,7 +310,14 @@ export function buildMobileMenu(
           "separator" as const,
         ]
       : []),
-    { label: t.menuDocuments, action: { native: "documents" } },
+    ...(hasDocumentsList
+      ? [
+          {
+            label: t.menuDocuments,
+            action: { native: "documents" },
+          } as MenuNode,
+        ]
+      : []),
     { label: t.menuNewFile, action: { native: "new-file" } },
     { label: t.menuOpenFile, action: { native: "open-file" } },
     { label: t.menuSave, action: { native: "save-file" } },

@@ -157,7 +157,11 @@ export function joinPath(dir: string, name: string): string {
 }
 
 /** `path` inside `dir` when it is relative (a plugin's folder-relative
- *  path, one typed in a terminal); an absolute path as it is. */
+ *  path, one typed in a terminal), written with `dir`'s separator and no
+ *  leading "./", as the file tree has it; an absolute path as it is. */
 export function absoluteIn(dir: string, path: string): string {
-  return /^([\\/]|[A-Za-z]:[\\/])/.test(path) ? path : joinPath(dir, path);
+  if (/^([\\/]|[A-Za-z]:[\\/])/.test(path)) return path;
+  const sep = dir.includes("\\") && !dir.includes("/") ? "\\" : "/";
+  const rel = path.replace(/^(\.[\\/])+/, "").replace(/[\\/]/g, sep);
+  return joinPath(dir, rel);
 }

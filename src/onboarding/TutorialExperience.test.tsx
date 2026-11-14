@@ -112,6 +112,19 @@ describe("the tour's card", () => {
     expect(card()).toHaveAccessibleName(t.tutorialRailTitle);
   });
 
+  it("moves on once for two panel events in a row", () => {
+    resumeAt("sidebar");
+    act(() => {
+      shown.state = {
+        sidebar: { open: true, tab: "tree" },
+        ai: { open: false },
+      };
+      emitPluginEvent("panels", shown.state);
+      emitPluginEvent("panels", shown.state);
+    });
+    expect(card()).toHaveAccessibleName(t.tutorialRailTitle);
+  });
+
   it("walks the sidebar's buttons one by one", () => {
     resumeAt("rail");
     expect(card()).toHaveTextContent(t.tutorialRailFiles);

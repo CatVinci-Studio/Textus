@@ -1,7 +1,7 @@
 import { describe, expect, it } from "vitest";
 import { foldIsland, unfoldIsland } from "./fold";
 import type { SplitLayout } from "./ops";
-import { panesOf, type Pane } from "./tree";
+import { mapPanes, panesOf, type Branch, type Pane } from "./tree";
 
 const docAndAi = (): SplitLayout => ({
   root: {
@@ -34,6 +34,52 @@ describe("folding a panel's island", () => {
       "a.md,b.md>b.md",
       "ai-1,ai-2>ai-2",
     ]);
+  });
+
+  it("folds twice and puts both back, the first under its own id", () => {
+    const three: SplitLayout = {
+      root: {
+        kind: "split",
+        direction: "row",
+        sizes: [0.4, 0.3, 0.3],
+        children: [
+          { kind: "pane", id: "d1", tabs: ["a.md"], front: "a.md" },
+          { kind: "pane", id: "d2", tabs: ["b.md"], front: "b.md" },
+          { kind: "pane", id: "p", tabs: ["ai-1"], front: "ai-1" },
+        ],
+      },
+      focus: "d1",
+    };
+    const first = foldIsland(three, isPanel, 900)!;
+    const second = foldIsland(first.layout, isPanel, 800)!;
+    expect(shape(second.layout)).toEqual(["a.md,b.md,ai-1>a.md"]);
+    const one = unfoldIsland(second.layout, second.folded)!;
+    const both = unfoldIsland(one, first.folded)!;
+    expect(shape(both)).toEqual(["a.md>a.md", "b.md>b.md", "ai-1>ai-1"]);
+  });
+
+  it("keeps the folded tab the user went to in front, and in use", () => {
+    const { layout, folded } = foldIsland(docAndAi(), () => false, 900)!;
+    const picked: SplitLayout = {
+      ...layout,
+      root: mapPanes(layout.root, (p) => ({ ...p, front: "ai-1" })) as Branch,
+    };
+    const back = unfoldIsland(picked, folded)!;
+    expect(shape(back)).toEqual(["a.md,b.md>b.md", "ai-1,ai-2>ai-1"]);
+    expect(back.focus).toBe("p");
+  });
+
+  it("never folds an island into the one above it", () => {
+    const column: SplitLayout = {
+      root: {
+        kind: "split",
+        direction: "column",
+        sizes: [0.5, 0.5],
+        children: docAndAi().root.children,
+      },
+      focus: "d",
+    };
+    expect(foldIsland(column, isPanel, 900)).toBeNull();
   });
 
   it("leaves a lone island be", () => {

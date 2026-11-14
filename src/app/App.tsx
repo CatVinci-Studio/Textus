@@ -8,7 +8,7 @@ import { CornerStack } from "../engine/controls/CornerToast";
 import { Suspense } from "react";
 import { AppDialogHost } from "../engine/controls/app-dialog";
 import { WindowBar } from "./frame/WindowBar";
-import { isIOSApp } from "../platform/capabilities";
+import { hasDocumentsList } from "../platform/capabilities";
 import {
   CreateTabPage,
   PluginTabPage,
@@ -261,8 +261,8 @@ function App() {
             t={t}
           />
 
-          <Presence show={isIOSApp && documentsOpen}>
-            {isIOSApp && documentsOpen && (
+          <Presence show={hasDocumentsList && documentsOpen}>
+            {hasDocumentsList && documentsOpen && (
               <Suspense fallback={null}>
                 <DocumentList
                   activePath={activeTab.path}

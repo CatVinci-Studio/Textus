@@ -1,3 +1,4 @@
+import { canLinkSponsor } from "../platform/capabilities";
 import { useEntriesFromOtherWindows } from "./useEntriesFromOtherWindows";
 import { linkToFile } from "./islands/link-to-file";
 import { useHoldScrollOnReturn } from "../document-view/hold-scroll-on-return";
@@ -208,7 +209,8 @@ export function useWindowWiring({
     startWelcomeTutorial: docs.startWelcomeTutorial,
     openCommunity: () => void links.openCommunityPage(settings.language),
     openTutorials: () => void links.openTutorialsPage(settings.language),
-    openSponsor: () => void links.openSponsorPage(settings.language),
+    openSponsor: () =>
+      canLinkSponsor && void links.openSponsorPage(settings.language),
     onOpenDocuments: () => actions.setDocumentsOpen(true),
     shareActiveTab: actions.shareActiveTab,
   });

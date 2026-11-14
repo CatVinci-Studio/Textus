@@ -142,11 +142,12 @@ export function fileHandlers(p: PluginScope) {
     },
     // Stat only checks it is in the folder: its path is resolved (\\?\ on
     // Windows), the tree's is as the folder was opened.
+    // Clearing needs no file: one deleted or renamed still takes its badge off.
     "files.setBadge": async ({ path, badge }: Params) => {
       const root = p.root();
       const target = str(path, "path");
-      const stat = await pluginsIpc.fsStat(p.id, root, target);
-      if (!stat) throw new Error(`No file ${String(path)}.`);
+      if (badge != null && !(await pluginsIpc.fsStat(p.id, root, target)))
+        throw new Error(`No file ${String(path)}.`);
       setFileBadge(p.id, absoluteIn(root, target), badge);
     },
     "files.read": ({ path }: Params) =>

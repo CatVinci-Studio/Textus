@@ -11,18 +11,15 @@ import { describe, expect, it } from "vitest";
  */
 const ALLOWED: Record<string, string> = {
   "ai/chat/chat-history.ts": "paths relative to the app's Documents folder",
-  "app/App.tsx": "the document list",
   "app/SettingsLayer.tsx": "Settings is a sheet over the window, not a tab",
   "app/frame/WindowControls.tsx": "the title row's menu button",
   "app/frame/sidebar-tabs.tsx": "the drawer closes over a document it opened",
-  "engine/controls/tabs/TabPill.tsx": "a haptic tap as a tab lifts",
   "ai/chat/panel/agent-panel.tsx": "a docked panel drawn at its width",
   "document/word-import.ts":
     "Files' security-scoped URLs the converter can't read",
   "platform/ios-files.ts": "the Files app's documents",
   "platform/ipc-files.ts": "the Files app's documents",
   "platform/ipc-ai-workspace.ts": "the project folder is picked in Files",
-  "plugins/plugin-platform.ts": "textus.env.platform tells plugins it is iOS",
   "theme/apply-appearance.ts":
     "its WebKit draws CJK as boxes under generic system fonts",
   "engine/controls/elastic-overscroll.ts": "the system's own overscroll",

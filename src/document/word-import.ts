@@ -5,11 +5,11 @@ import type { DocTab } from "./doc-tabs";
 
 /**
  * A .docx opens as a new, unsaved Markdown document named after it; the
- * Word file is only read. Desktop only: iOS hands over security-scoped URLs
- * the converter can't open.
+ * Word file is only read. Not from iOS's security-scoped URLs or Android's
+ * content:// ones, which the converter can't open; a plain path is fine.
  */
 export function isWordDocument(path: string): boolean {
-  return !isIOSApp && /\.docx$/i.test(path);
+  return !isIOSApp && !path.startsWith("content://") && /\.docx$/i.test(path);
 }
 
 /** The tab a Word document opens as: a draft holding its Markdown. */

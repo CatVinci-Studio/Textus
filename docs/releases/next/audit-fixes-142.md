@@ -14,3 +14,7 @@
 - Help › Sponsor Textus, and a small link under the version in Settings › About, open the sponsor page (not on iOS).
 - Tables: Copy Table in the right-click menu copies the whole table as Markdown.
 - Linux: the window's buttons are small and round, close together as in GNOME's own apps; the menu button matches the sidebar's in size and tone.
+- A narrow window that folded two islands puts both back as they were, keeps the document you were on in use, and never folds an island into the one above it.
+- A plugin can take its badge off a file that was deleted or renamed; badges on files in subfolders show on Windows.
+- The tour no longer skips a step when the sidebar or the AI opens with two quick updates.
+- Android: the phone menu no longer lists Documents, which only iOS has; picking up a tab gives a light haptic as on iOS; Word files open from plain paths.

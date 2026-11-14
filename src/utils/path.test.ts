@@ -90,6 +90,11 @@ describe("absoluteIn", () => {
     // A colon after one letter is a name, not a drive, without a separator.
     expect(absoluteIn("/notes", "a:b.zip")).toBe("/notes/a:b.zip");
     expect(absoluteIn("/notes", "D:\\x.md")).toBe("D:\\x.md");
+    // A plugin writes "/" and "./" on Windows too: the tree's spelling.
+    expect(absoluteIn("C:\\notes", "./drafts/a.md")).toBe(
+      "C:\\notes\\drafts\\a.md",
+    );
+    expect(absoluteIn("/notes", "./a.md")).toBe("/notes/a.md");
   });
 });
 
