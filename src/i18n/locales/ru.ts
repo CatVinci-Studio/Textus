@@ -1609,8 +1609,6 @@ export default {
   themeNameSlate: "Грифель",
   themeNameForest: "Лес",
   themeNameAurora: "Аврора",
-  themeNameDusk: "Сумерки",
-  themeNameMist: "Туман",
   appearanceLabel: "Оформление",
   appearanceModeLabel: "Светлая или тёмная",
   appearanceSystem: "Как в системе",

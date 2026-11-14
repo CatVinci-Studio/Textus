@@ -1607,8 +1607,6 @@ para usar una.
   themeNameSlate: "Pizarra",
   themeNameForest: "Bosque",
   themeNameAurora: "Aurora",
-  themeNameDusk: "Crepúsculo",
-  themeNameMist: "Neblina",
   appearanceLabel: "Aspecto",
   appearanceModeLabel: "Claro u oscuro",
   appearanceSystem: "Según el sistema",

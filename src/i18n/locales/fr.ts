@@ -1621,8 +1621,6 @@ utiliser une.
   themeNameSlate: "Ardoise",
   themeNameForest: "Forêt",
   themeNameAurora: "Aurore",
-  themeNameDusk: "Crépuscule",
-  themeNameMist: "Brume",
   appearanceLabel: "Apparence",
   appearanceModeLabel: "Clair ou sombre",
   appearanceSystem: "Selon le système",

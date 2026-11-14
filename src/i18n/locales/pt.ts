@@ -1590,8 +1590,6 @@ Habilidades ficam na pasta skills/ ao lado deste arquivo, um arquivo
   themeNameSlate: "Ardósia",
   themeNameForest: "Floresta",
   themeNameAurora: "Aurora",
-  themeNameDusk: "Crepúsculo",
-  themeNameMist: "Névoa",
   appearanceLabel: "Aparência",
   appearanceModeLabel: "Claro ou escuro",
   appearanceSystem: "Seguir o sistema",

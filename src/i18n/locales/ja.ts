@@ -1511,8 +1511,6 @@ ${AI_NAME}への執筆の指示です。すべての文書に適用されます�
   themeNameSlate: "スレート",
   themeNameForest: "フォレスト",
   themeNameAurora: "オーロラ",
-  themeNameDusk: "夕暮れ",
-  themeNameMist: "朝霧",
   appearanceLabel: "外観",
   appearanceModeLabel: "ライト／ダーク",
   appearanceSystem: "システムに従う",

@@ -64,8 +64,8 @@ const frameBlocks = [...frameCss.matchAll(/([^{}]+)\{([^{}]+)\}/g)]
       ]),
     ),
   }));
-describe("built-in frame themes", () => {
-  for (const theme of ["aurora", "dusk", "mist"]) {
+describe("the built-in frame theme", () => {
+  for (const theme of ["aurora"]) {
     const variants = frameBlocks.filter((b) =>
       b.selector.includes(`"${theme}"`),
     );

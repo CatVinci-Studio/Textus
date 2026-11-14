@@ -1578,8 +1578,6 @@ Skills liegen im Ordner skills/ neben dieser Datei, je Skill eine
   themeNameSlate: "Schiefer",
   themeNameForest: "Wald",
   themeNameAurora: "Polarlicht",
-  themeNameDusk: "Dämmerung",
-  themeNameMist: "Nebel",
   appearanceLabel: "Erscheinungsbild",
   appearanceModeLabel: "Hell oder dunkel",
   appearanceSystem: "Systemeinstellung",
