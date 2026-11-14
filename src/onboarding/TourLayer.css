@@ -2,6 +2,10 @@
    a ring round it, and a small card beside it. Only the scrim's path and
    the card take clicks; the hole lets them through. */
 .tour-layer {
+  /* A glowing line in the theme's accent, pushed toward a bright cyan so it
+     reads as light on every theme; the rest of the window well dimmed. */
+  --tour-glow: color-mix(in oklch, var(--ui-accent) 60%, #6ff3ff);
+  --tour-scrim: color-mix(in srgb, var(--ui-overlay) 40%, rgb(0 0 0 / 60%));
   position: fixed;
   inset: 0;
   z-index: var(--z-popover);
@@ -14,7 +18,7 @@
 }
 
 .tour-scrim path {
-  fill: var(--ui-overlay);
+  fill: var(--tour-scrim);
   pointer-events: auto;
 }
 
@@ -22,8 +26,24 @@
   position: absolute;
   top: 0;
   left: 0;
-  border: 2px solid var(--ui-accent);
+  border: 1.5px solid var(--tour-glow);
   border-radius: var(--shape-m);
+  box-shadow:
+    0 0 4px 0 var(--tour-glow),
+    inset 0 0 6px 0 color-mix(in srgb, var(--tour-glow) 45%, transparent);
+}
+
+/* The halo, on a layer of its own so it breathes by opacity alone. */
+.tour-ring::after {
+  content: "";
+  position: absolute;
+  inset: -1.5px;
+  border-radius: inherit;
+  box-shadow:
+    0 0 12px 2px color-mix(in srgb, var(--tour-glow) 70%, transparent),
+    0 0 28px 6px color-mix(in srgb, var(--tour-glow) 30%, transparent);
+  animation: motion-breathe calc(var(--dur-pulse) * 2) var(--ease-in-out)
+    infinite;
 }
 
 .tour-card.floating-surface {
