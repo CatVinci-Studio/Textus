@@ -43,6 +43,9 @@ export function tabWidths(
   { min, max, shrink = true }: TabLimits,
   available: number,
   gap = 0,
+  /** What shows of the row once its tabs overflow (its end holds the list
+   *  button): no tab grows wider, or the open one could never show whole. */
+  shown = available,
 ): TabFit {
   const room = available - gap * Math.max(0, tabs.length - 1);
   const wanted = tabs.map((tab) =>
@@ -50,13 +53,18 @@ export function tabWidths(
   );
   const total = wanted.reduce((sum, width) => sum + width, 0);
   const level = shrink && total > room ? shareLevel(wanted, room) : Infinity;
-  const widths = wanted.map((width) =>
+  const squeezed = wanted.map((width) =>
     Math.max(Math.min(width, min), Math.min(width, level)),
   );
+  const overflow =
+    squeezed.reduce((sum, width) => sum + width, 0) > room + SLACK;
+  const widths = overflow
+    ? squeezed.map((width) => Math.min(width, shown))
+    : squeezed;
   return {
     widths,
     cut: tabs.map((tab, i) => tab.title > widths[i]! - tab.fixed + SLACK),
-    overflow: widths.reduce((sum, width) => sum + width, 0) > room + SLACK,
+    overflow,
   };
 }
 

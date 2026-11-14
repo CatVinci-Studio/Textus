@@ -39,6 +39,8 @@ export interface TabRoom {
   available: number;
   /** Between two tabs. */
   between: number;
+  /** The list button's width, held at the row's end once tabs overflow. */
+  list: number;
   pill: PillMeasures;
 }
 
@@ -158,6 +160,7 @@ export function readTabRoom(
   return {
     available: Math.floor(inner - taken),
     between,
+    list: px(style.getPropertyValue("--icon-button-s")),
     pill: pill ?? measurePill(strip, tab),
   };
 }
@@ -186,7 +189,13 @@ export function fitTabs(tabs: readonly TabShape[], room: TabRoom): TabFit {
           pill.gap
         : 0),
   }));
-  const fit = tabWidths(parts, pill, room.available, room.between);
+  const fit = tabWidths(
+    parts,
+    pill,
+    room.available,
+    room.between,
+    room.available - room.list,
+  );
   return pill.outside
     ? { ...fit, widths: fit.widths.map((width) => width - pill.outside) }
     : fit;

@@ -80,23 +80,36 @@ const BAR = ".window-bar, .chat-window-header";
 /** The window bar's controls, measured: they are outside the islands,
  *  placed by their own stylesheet - the rows' inputs, not their layout. */
 function barSides() {
-  const box = document.querySelector(BAR)?.getBoundingClientRect();
+  const bar = document.querySelector(BAR);
+  const box = bar?.getBoundingClientRect();
+  const shift = slid(bar);
   return {
-    left: box?.left ?? 0,
-    right: box?.right ?? window.innerWidth,
+    left: (box?.left ?? 0) - shift,
+    right: box ? box.right - shift : window.innerWidth,
     bottom: box?.bottom ?? 0,
   };
 }
 
+/** How far the bar is slid aside (a phone's sidebar pushing it), which
+ *  the rows inside it share: left out of every measure. */
+function slid(bar: Element | null | undefined): number {
+  const moved = bar && getComputedStyle(bar).transform;
+  return moved && moved !== "none" ? new DOMMatrix(moved).m41 : 0;
+}
+
 function measure(): BarObstacles {
+  const shift = slid(document.querySelector(BAR));
   const boxes = (selector: string) =>
     [...document.querySelectorAll(selector)]
       .filter((el) => el.matches(LEAD) || el.firstElementChild)
       .map((el) => el.getBoundingClientRect())
       .filter((box) => box.width > 0);
   return {
-    leadEnd: Math.max(-Infinity, ...boxes(LEAD).map((box) => box.right)),
-    ends: boxes(ENDS).map((box) => box.left),
+    leadEnd: Math.max(
+      -Infinity,
+      ...boxes(LEAD).map((box) => box.right - shift),
+    ),
+    ends: boxes(ENDS).map((box) => box.left - shift),
     ...barSides(),
     corner: tokenPx("--island-radius") + tokenPx("--tab-radius"),
   };

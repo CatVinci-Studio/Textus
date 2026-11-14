@@ -185,7 +185,7 @@
    scroll under them. */
 .tab-bar[data-overflow] .tab-bar-add {
   position: sticky;
-  right: calc(26px * var(--chrome-scale));
+  right: var(--icon-button-s);
   z-index: 2;
   background: var(--ui-frame-fill, var(--ui-bg)) fixed;
 }

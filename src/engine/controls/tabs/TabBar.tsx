@@ -4,7 +4,6 @@ import { Tooltip } from "../Tooltip";
 import { ContextMenu, type ContextMenuEntry } from "../ContextMenu";
 import { Presence } from "../../motion/usePresence";
 import { scrollBehavior } from "../../motion/motion";
-import { scaledPx } from "../../tokens/chrome-scale";
 import { TabPill, type TabInfo } from "./TabPill";
 import { TabListButton, useTabFit } from "./TabList";
 import { INCOMING, useTabStrip } from "./useTabStrip";
@@ -97,7 +96,7 @@ export function TabBar({
 
   // The open tab in view as it changes, and as the row narrows.
   const { x: slotX, w: slotW } = strip.slotOf(activeTabId) ?? {};
-  const shownLength = fit && fit.available - (overflow ? scaledPx(26) : 0);
+  const shownLength = fit && fit.available - (overflow ? fit.list : 0);
   const smooth = useRef<string | null>(null);
   useEffect(() => {
     const bar = barRef.current;
@@ -228,7 +227,8 @@ export function TabBar({
  * it that shows, `shown` long from where it is scrolled to.
  */
 function reveal(bar: HTMLElement, slot: Slot, shown: number, smooth: boolean) {
-  const margin = 12;
+  // Room either side of it, as much as there is.
+  const margin = Math.max(0, Math.min(12, (shown - slot.w) / 2));
   const from = bar.scrollLeft;
   const behavior = smooth ? scrollBehavior() : "auto";
   if (slot.x < from + margin)

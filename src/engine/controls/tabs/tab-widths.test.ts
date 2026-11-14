@@ -33,6 +33,15 @@ describe("tabWidths", () => {
     expect(fit.overflow).toBe(false);
   });
 
+  it("overflowing, no tab is wider than what shows beside the list button", () => {
+    // A phone's tabs keep their names' widths and scroll.
+    const limits = { ...LIMITS, shrink: false };
+    const fit = tabWidths([tab(160), tab(60)], limits, 150, 2, 126);
+    expect(fit.overflow).toBe(true);
+    expect(fit.widths).toEqual([126, 100]);
+    expect(fit.cut).toEqual([true, false]);
+  });
+
   it("squeezed, the widest tabs give way first and a short one keeps its width", () => {
     // 100 + 180 + 180 wanted, 380 to share: the short one keeps 100.
     const fit = tabWidths([tab(60), tab(140), tab(140)], LIMITS, 380);
