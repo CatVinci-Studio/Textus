@@ -3,6 +3,7 @@ import { Tooltip } from "../../engine/controls/Tooltip";
 import { emitToThisWindow } from "../../platform/menu-events";
 import type { Strings } from "../../i18n/strings";
 import { installUpdate, useAppUpdate } from "../app-update";
+import { updateElsewhere } from "../../platform/distribution";
 
 /**
  * A newer release, at the rail's foot over Settings, only while there is
@@ -15,7 +16,7 @@ export function RailUpdate({ t }: { t: Strings }) {
   if (update.status === "idle") return null;
   const tip = {
     available: `${t.updateAvailable} v${update.version} · ${
-      update.selfUpdate ? t.updateInstall : t.updateViaPackageManager
+      update.selfUpdate ? t.updateInstall : updateElsewhere(t)
     }`,
     downloading: t.updateDownloading,
     error: `${t.updateFailed} ${update.error ?? ""}`,

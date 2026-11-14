@@ -10,7 +10,8 @@ import { buildAppMenu, NO_RECENTS, type MenuNode } from "./menu/app-menu-model";
  * platform differences and fixed keys no menu item carries.
  */
 
-export type ShortcutPlatform = "macos" | "ios" | "windows" | "linux";
+export type ShortcutPlatform =
+  "macos" | "ios" | "android" | "windows" | "linux";
 
 export interface FixedShortcut {
   label: string;

@@ -19,6 +19,7 @@ import { UI_SIZE_NAMES, UI_TEXT_SCALES } from "../prefs/settings-values";
 import { applyThemeChrome, clearThemeChrome } from "../engine/tokens/palette";
 import { isIOSApp } from "../platform/capabilities";
 import { lazyModule } from "../lazy/lazy-module";
+import { CUSTOM_CSS_STYLE_ID, PLUGIN_COLORS_STYLE_ID } from "./style-ids";
 
 // What an imported theme or the user's own CSS is read through: loaded
 // when there is one, not with every window.
@@ -43,7 +44,6 @@ export function letterSpacing(
 // Puts the appearance settings on the page: light or dark, the text width,
 // the content theme and the user's Custom CSS, in that cascade order.
 
-const CUSTOM_CSS_STYLE_ID = "textus-user-css";
 /** Custom CSS has had its web fonts asked for once (the start). */
 let customFontsAsked = false;
 
@@ -258,6 +258,8 @@ function useApplyAppearance(
       clearThemeChrome();
     }
 
+    // Which theme, for plugins that keep colours per theme.
+    root.dataset.themeId = settings.themeId;
     const builtin = BUILTIN_CONTENT_THEMES.find(
       (t) => t.id === settings.themeId,
     );
@@ -330,6 +332,9 @@ function useApplyAppearance(
               root.setAttribute("data-light-page", "");
             else root.removeAttribute("data-light-page");
           } finally {
+            // Plugins' colours after the theme and its chrome...
+            const plugin = document.getElementById(PLUGIN_COLORS_STYLE_ID);
+            if (plugin) document.head.appendChild(plugin);
             // The user's own CSS stays after the theme and its chrome, whenever they
             // load - the order the boot script gives the first frame.
             const custom = document.getElementById(

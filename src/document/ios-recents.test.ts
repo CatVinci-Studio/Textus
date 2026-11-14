@@ -9,7 +9,7 @@ const stored = vi.hoisted(() => ({
   readFail: false,
 }));
 
-vi.mock("../platform/capabilities", () => ({ isIOSApp: true }));
+vi.mock("../platform/capabilities", () => ({ isMobileApp: true }));
 vi.mock("@tauri-apps/api/core", () => ({ invoke: vi.fn() }));
 vi.mock("@tauri-apps/api/path", () => ({
   documentDir: async () => {

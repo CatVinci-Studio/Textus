@@ -26,7 +26,7 @@ import {
 } from "../../engine/controls/ContextMenu";
 import { Presence } from "../../engine/motion/usePresence";
 import { IconButton } from "../../engine/controls/IconButton";
-import { PlusIcon } from "../../engine/controls/icons";
+import { CloseIcon, PlusIcon } from "../../engine/controls/icons";
 import type { Strings } from "../../i18n/strings";
 
 const NONE: string[] = [];
@@ -176,6 +176,15 @@ export function AgentIslandTools({
         buttonClassName="inline-chat-header-button"
         onReopen={(entry) => void reopenConversation(entry, t)}
       />
+      {panel.tab === "memory" && (
+        <IconButton
+          className="inline-chat-header-button"
+          label={t.memoryBack}
+          onClick={() => panel.setTab("chat")}
+        >
+          <CloseIcon />
+        </IconButton>
+      )}
       <Presence show={menu !== null}>
         {menu && (
           <ContextMenu

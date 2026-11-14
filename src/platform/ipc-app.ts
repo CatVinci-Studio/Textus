@@ -224,6 +224,8 @@ export const links = {
   /** The website's community page, in the UI's language. */
   openCommunityPage: (language: Lang) =>
     command("open_community_page", language),
+  /** The website's sponsor page, in the UI's language. */
+  openSponsorPage: (language: Lang) => command("open_sponsor_page", language),
   /** The website's video tutorials in the UI's language, at one lesson's
    *  clip or from the top. */
   openTutorialsPage: (language: Lang, clip?: string) =>
@@ -370,7 +372,7 @@ export const defaultEditor = {
 // Distribution
 
 /** The channel this build was installed through. */
-type Distribution = "direct" | "homebrew" | "aur";
+export type Distribution = "direct" | "homebrew" | "aur" | "portable";
 
 export const distribution = {
   appDistribution: () => command("app_distribution") as Promise<Distribution>,

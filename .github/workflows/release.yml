@@ -301,6 +301,29 @@ jobs:
             src-tauri/target/release/textus dist-aur
           gh release upload "$RELEASE_TAG" dist-aur/* --clobber
 
+      # The portable zip (Windows): a second build with
+      # TEXTUS_DISTRIBUTION=portable, which keeps its settings, data and the
+      # webview's in the TextusData folder beside it and reports new versions
+      # without installing them. --no-bundle recompiles only the textus crate.
+      - name: Build and upload the portable zip
+        if: startsWith(matrix.platform, 'windows-')
+        shell: pwsh
+        env:
+          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+          TEXTUS_DISTRIBUTION: portable
+        run: |
+          npx tauri build --no-bundle ${{ matrix.args }}
+          $version = $env:RELEASE_TAG.TrimStart("v")
+          $arch = if ("${{ matrix.target }}") { "arm64" } else { "x64" }
+          $exe = if ("${{ matrix.target }}") { "src-tauri/target/${{ matrix.target }}/release/textus.exe" } else { "src-tauri/target/release/textus.exe" }
+          $dir = Join-Path $env:RUNNER_TEMP "Textus"
+          New-Item -ItemType Directory -Force (Join-Path $dir "TextusData") | Out-Null
+          Copy-Item $exe (Join-Path $dir "Textus.exe")
+          Set-Content (Join-Path $dir "TextusData/README.txt") "Textus keeps its settings and data in this folder. Keep it beside Textus.exe; to update, unzip the new version over this folder."
+          $zip = Join-Path $env:RUNNER_TEMP "Textus_${version}_${arch}-portable.zip"
+          Compress-Archive -Path (Join-Path $dir "*") -DestinationPath $zip
+          gh release upload $env:RELEASE_TAG $zip --clobber
+
   # Builds and tests textus-bin and attaches it to the draft (see
   # arch-package.yml). Before publish, so a broken package keeps the whole
   # release a draft.

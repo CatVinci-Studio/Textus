@@ -58,15 +58,17 @@ function signature(node, text) {
     .trim();
 }
 
-export async function reference() {
+/** The page, with links to textus.d.ts and the guide as they go from the
+ *  folder it is written to: the skill's copy sits beside its own d.ts. */
+export async function reference(dts = "../textus.d.ts", guide = "guide.md") {
   const text = readFileSync(SOURCE, "utf8");
   const file = ts.createSourceFile(SOURCE, text, ts.ScriptTarget.Latest, true);
   const out = [
     "# Plugin API reference",
     "",
-    "Made from [textus.d.ts](textus.d.ts) by `scripts/plugin-reference.mjs` -",
+    `Made from [textus.d.ts](${dts}) by \`scripts/plugin-reference.mjs\` -`,
     "change that file, then run the script; don't edit this page. How the",
-    "parts fit together is in [the guide](guide.md).",
+    `parts fit together is in [the guide](${guide}).`,
     "",
     "`textus` is a `Textus.Api`; `activate` is given a `PluginContext`;",
     "a webview's page has `acquireTextusApi()`, a `WebviewApi`.",
@@ -106,10 +108,12 @@ export async function reference() {
 }
 
 if (process.argv[1] === fileURLToPath(import.meta.url)) {
-  const page = await reference();
   const outputs = [
-    [PAGE, page],
-    [join(SKILL_REFS, "reference.md"), page],
+    [PAGE, await reference()],
+    [
+      join(SKILL_REFS, "reference.md"),
+      await reference("textus.d.ts", "../../guide.md"),
+    ],
     [join(SKILL_REFS, "textus.d.ts"), readFileSync(SOURCE, "utf8")],
   ];
   if (process.argv.includes("--check")) {

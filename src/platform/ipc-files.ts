@@ -4,8 +4,9 @@ import {
 } from "./bindings/files";
 import type { ImageHost } from "../prefs/SettingsContext";
 import type * as Generated from "./bindings/files";
-import { isIOSApp } from "./capabilities";
+import { isIOSApp, isMobileApp } from "./capabilities";
 import { iosFiles, isScopedUrl, newDocumentPath } from "./ios-files";
+import { scopedFolder } from "./scoped-folder";
 import { command, desktopActionCommand, desktopQueryCommand } from "./ipc-call";
 
 /**
@@ -16,8 +17,9 @@ import { command, desktopActionCommand, desktopQueryCommand } from "./ipc-call";
 export type HistoryKind = Generated.HistoryKind;
 
 export const fs = {
-  // On iOS a picked document is a file:// URL read and written through the
-  // native plugin; every other path goes to Rust.
+  // On iOS a picked document is a file:// URL, on Android a content:// one,
+  // read and written through the native plugin; every other path goes to
+  // Rust.
   /** `filters` names the dialog's file-type choices besides Markdown, in
    *  the UI language. */
   openFileDialog: (filters?: {
@@ -25,7 +27,7 @@ export const fs = {
     wordFilter: string;
     allFilter: string;
   }): Promise<string | null> =>
-    isIOSApp
+    isMobileApp
       ? iosFiles.pickDocument()
       : command(
           "open_file_dialog",
@@ -47,12 +49,14 @@ export const fs = {
     defaultName: string,
     defaultDir: string | null = null,
   ): Promise<string | null> =>
-    isIOSApp
-      ? newDocumentPath(
-          defaultName,
-          async (path) => (await command("file_mtime_ms", path)) !== null,
-        )
-      : command("save_file_dialog", defaultName, defaultDir),
+    !isMobileApp
+      ? command("save_file_dialog", defaultName, defaultDir)
+      : !isIOSApp
+        ? iosFiles.createDocument(defaultName)
+        : newDocumentPath(
+            defaultName,
+            async (path) => (await command("file_mtime_ms", path)) !== null,
+          ),
   listDir: (path: string): Promise<DirEntryInfo[]> =>
     isScopedUrl(path) ? iosFiles.listFolder(path) : command("list_dir", path),
   /** The sidebar tree's New Document, New Folder and drag-to-move. Each
@@ -70,18 +74,29 @@ export const fs = {
   trashEntry: (path: string, root: string) =>
     desktopActionCommand("tree_trash_entry", path, root),
   /** File > Open Folder…'s picker. Rejects with "TOO_BROAD" for the home
-   *  folder or a drive root. Desktop only. */
-  pickOpenFolder: () => desktopActionCommand("pick_open_folder"),
+   *  folder or a drive root. A phone's is the system's folder picker. */
+  pickOpenFolder: (): Promise<string | null> =>
+    isMobileApp
+      ? iosFiles.pickProjectFolder()
+      : desktopActionCommand("pick_open_folder"),
   /** Every document under `root`, for the sidebar's file-name search.
    *  Rejects with "TOO_BROAD" as the picker does. */
-  indexFolder: (root: string) => command("index_folder", root),
+  indexFolder: (root: string) =>
+    isScopedUrl(root)
+      ? scopedFolder.index(root)
+      : command("index_folder", root),
   /** The lines of the documents under `root` holding `query`, ignoring
    *  case, for the Search page. Rejects as `indexFolder` does. */
   searchFolderText: (root: string, query: string) =>
-    command("search_folder_text", root, query),
+    isScopedUrl(root)
+      ? scopedFolder.search(root, query)
+      : command("search_folder_text", root, query),
   /** Every Markdown document under `root` with its text, for the links a
    *  rename updates. Rejects as `indexFolder` does. */
-  folderDocuments: (root: string) => command("folder_documents", root),
+  folderDocuments: (root: string) =>
+    isScopedUrl(root)
+      ? scopedFolder.documents(root)
+      : command("folder_documents", root),
   // No change watching for picked documents: the coordinator serialises
   // our writes with iCloud's, and the app re-reads on open.
   fileMtimeMs: (path: string): Promise<number | null> =>

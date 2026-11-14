@@ -111,8 +111,6 @@ export function DocumentIslands({
   // Zen shows the tab in use alone; the split waits until Zen ends.
   const layout = useIslands(zen);
   const phone = usePhoneLayout();
-  // A phone's column has its bar of its own, not islands.
-  const islands = canUseWindows;
   const panes = panesOf(layout.root);
   // Each pane shows its tab in front; its place in reading order names it.
   const shownIn = new Map(
@@ -215,52 +213,44 @@ export function DocumentIslands({
   );
 
   const documents: IslandContent = (places) => {
-    // The views lie on their island's sheet, placed by the area; a
-    // phone's column lays its view out under its own bar.
+    // The views lie on their island's sheet, placed by the area.
     for (const { pane, place } of places)
-      if (islands) cells.set(pane.id, tabsInBar ? place.sheet : place.whole);
+      cells.set(pane.id, tabsInBar ? place.sheet : place.whole);
     const listOf = (pane: Pane) =>
       pane.tabs.flatMap((id) => byId.get(id) ?? []);
     return (
       <>
         {/* Each pane of documents an island: its row of tabs over its
-            sheet, its documents on the sheet (below). A phone's column has
-            its own bar; a clean sheet is the page itself. */}
-        {places.map(({ pane, place, key }) =>
-          !islands
-            ? tabBar(
-                listOf(pane),
-                pane.front ?? "",
-                pane.id,
-                place.inner,
-                place.row,
-              )
-            : // Its sheet while it has a row, alone under the title, and in
-              // Zen with the tab bar on; the tab bar off, the documents lie
-              // on the window.
-              (tabsInBar || showTabBar || lone) && (
-                <Island
-                  key={key}
-                  frame={place.frame}
-                  paneId={pane.id}
-                  row={
-                    tabsInBar
-                      ? tabBar(
-                          listOf(pane),
-                          pane.front ?? "",
-                          pane.id,
-                          place.inner,
-                        )
-                      : undefined
-                  }
-                  rowStyle={place.row}
-                  inner={place.inner}
-                  sheetStyle={body(pane.id)}
-                />
-              ),
+            sheet, its documents on the sheet (below); a clean sheet is the
+            page itself. */}
+        {places.map(
+          ({ pane, place, key }) =>
+            // Its sheet while it has a row, alone under the title, and in
+            // Zen with the tab bar on; the tab bar off, the documents lie on
+            // the window.
+            (tabsInBar || showTabBar || lone) && (
+              <Island
+                key={key}
+                frame={place.frame}
+                paneId={pane.id}
+                row={
+                  tabsInBar
+                    ? tabBar(
+                        listOf(pane),
+                        pane.front ?? "",
+                        pane.id,
+                        place.inner,
+                      )
+                    : undefined
+                }
+                rowStyle={place.row}
+                inner={place.inner}
+                sheetStyle={body(pane.id)}
+              />
+            ),
         )}
         {/* Each document's length at its page's corner. */}
-        {islands && (
+        {
           <DocumentCorners
             fronts={places.map(({ pane, place }) => ({
               tab: byId.get(pane.front ?? ""),
@@ -270,7 +260,7 @@ export function DocumentIslands({
             lang={lang}
             t={t}
           />
-        )}
+        }
         <DocumentViews
           tabs={tabs}
           activeTabId={activeTabId}
@@ -280,10 +270,10 @@ export function DocumentIslands({
           onChange={onChange}
           typewriter={typewriter}
           tour={tour}
-          // On every island's document in front.
+          // On every island's document in front; a phone's always, at its
+          // foot, over the keyboard while typing (format-bar.css).
           above={(tab) =>
-            formatBar &&
-            !phone &&
+            (formatBar || phone) &&
             formatsShown(tab) && <FormatBar t={t} tabId={tab.id} />
           }
           t={t}

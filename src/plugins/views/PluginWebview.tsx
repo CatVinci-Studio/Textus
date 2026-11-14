@@ -1,3 +1,4 @@
+import { contentZoom, watchContentZoom } from "../../engine/zoom/tab-zoom";
 import { useEffect, useRef, useState, useSyncExternalStore } from "react";
 import { connectFrame, sandboxedFrame, webviewDocument } from "../host/frames";
 import { disposeWebview, resolveWebview, webviewMessage } from "../manager";
@@ -20,12 +21,7 @@ import {
   clipboardText,
   textFieldItems,
 } from "../../engine/controls/text-field-menu";
-import {
-  contentZoom,
-  passZoomGesture,
-  passZoomWheel,
-  watchContentZoom,
-} from "./frame-zoom";
+import { passZoomGesture, passZoomWheel } from "./frame-zoom";
 import { createPortal } from "react-dom";
 import { PluginProblem } from "./PluginProblem";
 import {

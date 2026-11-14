@@ -63,6 +63,26 @@ test("Find and Replace work in source mode, on the source in use", async ({
   await expect(bar).toHaveCount(0);
 });
 
+test("the find bar stays over the document as it scrolls", async ({ page }) => {
+  await page.setViewportSize({ width: 1200, height: 600 });
+  await openApp(page, { settings: { menuBarShown: false } });
+  await docs(page).first().click();
+  for (let i = 0; i < 60; i++) await page.keyboard.type(`line ${i}\n`);
+  await emit(page, "menu-find-replace");
+  const bar = page.locator(".find-replace-bar");
+  await expect(bar).toBeVisible();
+  const before = await bar.boundingBox();
+  await page
+    .locator(".editor-scroll")
+    .first()
+    .evaluate((el) => {
+      el.scrollTop = 0;
+      el.scrollTop = el.scrollHeight;
+    });
+  await expect(bar).toBeInViewport();
+  expect((await bar.boundingBox())?.y).toBe(before?.y);
+});
+
 test("in source mode the format keys and the Format menu write Markdown", async ({
   page,
 }) => {

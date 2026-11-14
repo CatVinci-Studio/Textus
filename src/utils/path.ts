@@ -2,11 +2,29 @@ import { MARKDOWN_EXTENSIONS } from "../platform/bindings/files";
 // OS-path string math. Documents opened on Windows arrive with "\", so both
 // separators are treated as separators here.
 
+/** Android's content:// URLs carry no readable name: the picker's and the
+ *  folder listing's names, by URL (platform/ios-files.ts). */
+const contentNames = new Map<string, string>();
+
+export function nameContentUrl(url: string, name: string): void {
+  contentNames.set(url, name);
+}
+
 export function basename(path: string): string {
+  if (path.startsWith("content://")) return contentName(path);
   const idx = Math.max(path.lastIndexOf("/"), path.lastIndexOf("\\"));
   const name = idx >= 0 ? path.slice(idx + 1) : path;
   // A document picked on iOS is a file:// URL with an encoded name.
   return path.startsWith("file://") ? decodeUrlPath(name) : name;
+}
+
+/** A content:// URL's name: as picked or listed, else its document id's
+ *  last part (external storage's "primary:Notes/a.md"). */
+function contentName(url: string): string {
+  const named = contentNames.get(url);
+  if (named) return named;
+  const id = decodeUrlPath(url.slice(url.lastIndexOf("/") + 1));
+  return id.slice(Math.max(id.lastIndexOf("/"), id.lastIndexOf(":")) + 1);
 }
 
 // The folder part of a path: "/" for a root-level "/name", and the input
@@ -139,7 +157,12 @@ export function joinPath(dir: string, name: string): string {
 }
 
 /** `path` inside `dir` when it is relative (a plugin's folder-relative
- *  path, one typed in a terminal); an absolute path as it is. */
+ *  path, one typed in a terminal), written with `dir`'s separator and no
+ *  leading "./", as the file tree has it; an absolute path as it is. */
 export function absoluteIn(dir: string, path: string): string {
-  return /^([\\/]|[A-Za-z]:[\\/])/.test(path) ? path : joinPath(dir, path);
+  if (/^([\\/]|[A-Za-z]:[\\/])/.test(path)) return path;
+  const sep = dir.includes("\\") && !dir.includes("/") ? "\\" : "/";
+  // On macOS and Linux a backslash is part of a name, not a separator.
+  if (sep === "/") return joinPath(dir, path.replace(/^(\.\/)+/, ""));
+  return joinPath(dir, path.replace(/^(\.[\\/])+/, "").replace(/\//g, sep));
 }

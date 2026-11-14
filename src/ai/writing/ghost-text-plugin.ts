@@ -1,4 +1,5 @@
 import type { EditorView } from "@milkdown/kit/prose/view";
+import { requestRest } from "./request-rest";
 import { Plugin, PluginKey } from "@milkdown/kit/prose/state";
 import { $prose } from "@milkdown/kit/utils";
 import { isImeKeyEvent } from "../../editor/keys/ime";
@@ -133,6 +134,8 @@ export function dismissGhostText(view: EditorView): void {
       .setMeta("addToHistory", false),
   );
 }
+
+const rest = requestRest("ghost-text");
 
 export function createGhostTextPlugin(options: {
   enabled: () => boolean;
@@ -362,6 +365,7 @@ export function createGhostTextPlugin(options: {
                 // Turned off, or made read-only, while the request waited
                 // out the debounce.
                 if (!options.enabled() || isReadOnly(view.state)) return;
+                if (rest.resting()) return;
                 let suggestion: string;
                 try {
                   suggestion = await ai.complete(
@@ -379,7 +383,7 @@ export function createGhostTextPlugin(options: {
                   );
                 } catch (err) {
                   // Quiet in the UI while typing, but logged.
-                  console.error("[ghost-text] completion request failed:", err);
+                  rest.failed(err);
                   return;
                 }
                 if (!isCurrent()) return; // superseded by a newer trigger

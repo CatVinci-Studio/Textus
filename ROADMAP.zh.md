@@ -1,62 +1,39 @@
 # 路线图
 
-[English](ROADMAP.md)
+[English](ROADMAP.md) · 每个小版本更新一次，上次更新：1.4.1。
 
-这里写的是我们正在做的事，和接下来想做的事。没有写日期是故意的：我们是个小团队，宁愿等东西做好了再发，也不想赶着日期交差。
+这里特意不写日期：我们人少，做好了再发。已经发布的内容见[更新说明](docs/releases/)。
 
-每一项都有一个带 [`roadmap`](https://github.com/CatVinci-Studio/Textus/labels/roadmap) 标签的 issue。哪一项对你特别重要，就去那里说一声，真的会影响我们先做哪个。
+## 现在（1.4.x）
 
-## 正在做的
+- **查找替换**在各种情况下都可靠。[#668](https://github.com/CatVinci-Studio/Textus/issues/668)
+- **大表格**可以调整宽度。[#645](https://github.com/CatVinci-Studio/Textus/issues/645)
+- **Linux**：降低内存占用，窗口加阴影、标题栏更宽松。[#644](https://github.com/CatVinci-Studio/Textus/issues/644)、[#664](https://github.com/CatVinci-Studio/Textus/issues/664)
+- **iOS 公测**通过 TestFlight 开放，Android 版随每个版本提供 APK。[#87](https://github.com/CatVinci-Studio/Textus/issues/87)
 
-**上架 App Store。** iPhone 和 iPad 版已经在 TestFlight 里测试了一段时间，马上就要提交审核。
-[#87](https://github.com/CatVinci-Studio/Textus/issues/87)
+## 下一个（1.5）
 
-## 下一个版本（1.2.0）
+- **iPad 使用桌面版界面**，iPhone 在此基础上适配。
+- **更轻的窗口**：窗口的每个区域只用一个编辑器，文档以数据保存，开很多标签页也不怎么占内存。
+- **语音输入。**[#195](https://github.com/CatVinci-Studio/Textus/issues/195)
 
-Textus AI 能做的更多，编辑器更顺手，也修了很多问题。现在正在 beta 通道发候选版（rc）。这是最后一个用 rc 的版本：从 1.3 开始，新版本先以 beta 发布试用。
+## 以后
 
-- **在侧边栏打开整个文件夹**，并用 `Ctrl/⌘ + Shift + O` 搜索里面的文件名。[#152](https://github.com/CatVinci-Studio/Textus/issues/152)、[#79](https://github.com/CatVinci-Studio/Textus/issues/79)
-- **保存时只改你编辑过的地方。** 没动过的段落按原样写回，和 Git 一起用时改动一目了然。双链（`[[笔记]]`、`[[笔记#标题]]`）可以点开，双链和 `#标签` 都原样保存。[#234](https://github.com/CatVinci-Studio/Textus/pull/234)
-- **修订边生成边一处一处出现。** 每一句改动直接出现在原来的位置，边注卡片同时出现，修订条上的处数跟着增加。[#243](https://github.com/CatVinci-Studio/Textus/pull/243)
-- **Textus AI 画的图边写边画出来**，采纳前就能看到。[#254](https://github.com/CatVinci-Studio/Textus/pull/254)
-- **Textus AI 能读更多项目文件夹里的东西**：长文件分段读，Word、PDF、幻灯片和表格，模型能看图时还能看图片；能按文件名找文件，跳过 `.gitignore` 里写的文件。
-- **Textus AI 联网搜索**，所有 AI 服务都能用，来源编号列出、可以查证，也可以变成脚注。
-- **深度思考按钮**，和联网搜索按钮并排。
-- **Textus AI 生成图片**，像其他提议一样由你确认，支持国内外主流的图片服务。[#194](https://github.com/CatVinci-Studio/Textus/issues/194)
-- **Textus AI 从你拒绝的修订里学习**，你一再拒绝的修改，它会提议记下来。
-- **豆包（火山引擎）** 成为内置的 AI 服务。
-- **长文档**打开、滚动、打字都流畅。
-- **动画更流畅**：动画、滚动和面板在各个平台上都不卡顿。
-- **无障碍**：支持读屏软件、完全用键盘操作和高对比度。
-- **在后台保持运行**（需要手动打开），在通知区域、系统托盘或菜单栏显示图标。[#244](https://github.com/CatVinci-Studio/Textus/pull/244)
-- **跳到其他文件里的标题**（[#233](https://github.com/CatVinci-Studio/Textus/pull/233)），重新打开文档时回到上次的位置（[#218](https://github.com/CatVinci-Studio/Textus/issues/218)）。
-- **更多快捷键**、**界面文字大小**、代码块的**复制**按钮和行号、颜色代码前的**色块**，以及可选的**图表引擎**（Mermaid，或更快的 Pele）。[#214](https://github.com/CatVinci-Studio/Textus/issues/214)、[#150](https://github.com/CatVinci-Studio/Textus/issues/150)、[#146](https://github.com/CatVinci-Studio/Textus/issues/146)、[#242](https://github.com/CatVinci-Studio/Textus/pull/242)
-- **侧边栏的文件树变成一个小文件管理器**：新建文档和文件夹、拖动移动、按名称或修改时间排序；窗口栏开头也多了一个侧边栏按钮。
-- **用 ChatGPT 订阅画图**，使用订阅自带的画图额度（实验性），图片服务默认跟随聊天服务；**文字和图片一起生成**，图片生成好之前先显示一个流动的占位框；还能**修改文档里已有的图片**。
-- **导入的主题能覆盖整个窗口**：界面上的每种颜色都来自 Typora 风格主题可以设置的变量。
+其余的按大家的需求排：给 issue 点 👍 让它往前排，或者在[许愿池](https://github.com/CatVinci-Studio/Textus/issues/196)里留言。
 
-新功能只在 1.2 这样的小版本里加入，修复版（1.2.x）只修问题。1.2.0 发布后，它的修复以 1.2.x 发出，1.3.0 同时在另一条线上开发，两条线怎么配合见 [docs/dev/releasing.md](docs/dev/releasing.md#branches)。
+## 不进核心，做成插件
 
-## 最近完成
+App 本身保持精简。外部服务和较少用的语法都做成插件，在 **设置 › 插件** 里安装，在 [textus-plugins](https://github.com/CatVinci-Studio/textus-plugins) 里开发。
 
-- **Textus 1.1.0**：Textus AI 的三种模式：写作、审阅、修订（[#179](https://github.com/CatVinci-Studio/Textus/pull/179)），会记住你要求的 Textus AI（[#180](https://github.com/CatVinci-Studio/Textus/pull/180)），在对话里做主题，全新的新手教程（[#90](https://github.com/CatVinci-Studio/Textus/issues/90)），Windows 和 Linux 的原生 ARM64 安装包，设为默认 Markdown 编辑器（[#183](https://github.com/CatVinci-Studio/Textus/issues/183)），文档里支持更多 HTML，测试版通道，自动保存（[#133](https://github.com/CatVinci-Studio/Textus/issues/133)），在 App 里使用主题分享平台（[#89](https://github.com/CatVinci-Studio/Textus/issues/89)），`![[image.png]]` 形式的图片嵌入（[#135](https://github.com/CatVinci-Studio/Textus/issues/135)），以及自选图片文件夹或图床（[#147](https://github.com/CatVinci-Studio/Textus/issues/147)）。
-- **Textus 1.1.1**：修订的高亮更柔和；加载不了的图片显示一张说明卡片；图片右键可以**在文件夹中显示**；图片宽度改用其他应用也认的写法；修好了输入的链接和图片（[#189](https://github.com/CatVinci-Studio/Textus/issues/189)）、打字机模式下的点击（[#217](https://github.com/CatVinci-Studio/Textus/issues/217)）和最近打开（[#201](https://github.com/CatVinci-Studio/Textus/issues/201)）。
-- **Playground 已上线**：[textus.md/playground](https://textus.md/playground/)，不用安装就能在浏览器里试试编辑器。[#88](https://github.com/CatVinci-Studio/Textus/issues/88)
-- **主题分享已开放**：在置顶的 issue 里发一条评论，我们看过之后，你的主题就会出现在 [textus.md/themes](https://textus.md/themes/) 上，大家都能免费下载。[#89](https://github.com/CatVinci-Studio/Textus/issues/89)
+已经有的插件：
 
-## 接下来：Textus 1.3.0，插件
+- 外部服务：Zotero、Openverse 图片、WakaTime、DeepSeek，以及作为智能体的 Claude Code、Codex 和 OpenCode；
+- 同步：Cloud Sync（WebDAV、S3、坚果云）；
+- 语法和图表：LaTeX 补全、ABC 乐谱、PlantUML、WaveDrom、Markmap、ECharts 和 Chart.js、函数图像；
+- 工作方式：看板、数据库、白板、日记、任务、幻灯片、Vim 和 Emacs 键位等。
 
-- **插件**，Textus AI 也能帮你写插件。插件可以添加命令和快捷键、右键菜单项、侧边栏标签和设置页，也能打开自己的视图：网页、PDF、Word 等文档。接口的第一版草稿在 [docs/dev/plugin-api.md](docs/dev/plugin-api.md)。每个插件都要遵守这些要求：
-  - 在沙盒里运行，只拿到你安装时允许的权限（读写某个文件夹、联网），更新后要更多权限会重新问你。
-  - 不装就不会运行；一个总开关能关掉所有插件，关掉后就和没有插件一样。
-  - 装好的插件在你第一次用到时才加载：装多少个，启动都和一个没装时一样快。
-  - 出错或拖慢 Textus 的插件会自动停用，并告诉你原因。
-  - Textus AI 只有在你允许时才会用插件，而且只能读取或提议：改你的文档仍然是由你确认的提议。
-  - 分享平台上的插件和主题一样，由我们看过之后才会上架，发现有害的可以下架。
-- **主题、插件、Skill 和 MCP 的统一市场**，放在一个单独的仓库里，写清楚收录什么、怎么提交、怎么审核。它会取代现在的主题分享页和用来分享主题的置顶 issue。
-- **第一批官方插件**，每一个都和 Textus 本身一样用心做好看：随时速记（[#193](https://github.com/CatVinci-Studio/Textus/issues/193)）、文档的版本历史、SVG 和 PDF 阅读器、图片查看器、日历和每日笔记、任务、看板，以及用于引用文献的 Zotero。
-- **第二版插件接口**，按第一批插件的实际需要来补。
+还没有、欢迎做成插件的：MkDocs / Zensical 提示块（[#220](https://github.com/CatVinci-Studio/Textus/issues/220)）、Cisco IOS 代码高亮（[#639](https://github.com/CatVinci-Studio/Textus/issues/639)）。
 
 ## 想帮忙？
 
-带 [`good first issue`](https://github.com/CatVinci-Studio/Textus/labels/good%20first%20issue) 标签的 issue 适合上手。如果你有这里没写到的想法，到[许愿池](https://github.com/CatVinci-Studio/Textus/issues/196)许个愿，或者给已有的愿望点个 👍。每一条我们都会看，呼声高的会放进这里。怎么构建 Textus、怎么提 PR，见 [CONTRIBUTING.md](CONTRIBUTING.md)（英文）。
+挑一个还没人认领的 [good first issue](https://github.com/CatVinci-Studio/Textus/issues?q=is%3Aopen+label%3A%22good+first+issue%22+no%3Aassignee)、[help wanted](https://github.com/CatVinci-Studio/Textus/issues?q=is%3Aopen+label%3A%22help+wanted%22+no%3Aassignee) 或[插件点子](https://github.com/CatVinci-Studio/textus-plugins/issues?q=is%3Aopen+label%3A%22plugin+idea%22)，并阅读 [CONTRIBUTING.zh-CN.md](CONTRIBUTING.zh-CN.md)。

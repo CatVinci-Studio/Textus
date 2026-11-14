@@ -2,6 +2,7 @@
 //! notes and tracked changes, the AI's undecided proposals, the undo
 //! history - follows it when it, or its folder, moves in Textus.
 
+use crate::app_dirs::AppDirs;
 use crate::commands::own_notes::{part_file_in, OwnPart};
 use crate::commands::undo_files;
 use std::path::{Path, PathBuf};
@@ -73,7 +74,7 @@ pub(crate) fn move_in(data: &Path, from: &str, to: &str) -> Result<(), String> {
 #[tauri::command]
 #[cfg_attr(test, specta::specta)]
 pub async fn document_data_move(app: AppHandle, from: String, to: String) -> Result<(), String> {
-    let data = app.path().app_data_dir().map_err(|e| e.to_string())?;
+    let data = app.path().own_data_dir().map_err(|e| e.to_string())?;
     tauri::async_runtime::spawn_blocking(move || {
         move_in(&data, &from, &to)?;
         // Its conversations too, every document of a moved folder's.

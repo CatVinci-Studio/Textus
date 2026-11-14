@@ -1,5 +1,9 @@
 import { Plugin, PluginKey, Selection } from "@milkdown/kit/prose/state";
-import { Decoration, DecorationSet } from "@milkdown/kit/prose/view";
+import {
+  Decoration,
+  DecorationSet,
+  type EditorView,
+} from "@milkdown/kit/prose/view";
 import { $prose } from "@milkdown/kit/utils";
 import type { EditorState } from "@milkdown/kit/prose/state";
 import { stateWithLiveSelection } from "../live-selection";
@@ -45,6 +49,21 @@ function buildDecorations(state: EditorState): DecorationSet {
   return DecorationSet.create(state.doc, decorations);
 }
 
+/** The "# " of the heading the caret is in put back in front when text came
+ *  to sit before it, the caret drawn again after it. The marker is the
+ *  widget's own element; the document is unchanged. */
+export function redrawMisplaced(view: EditorView): void {
+  if (view.isDestroyed || view.composing) return;
+  const { $from } = view.state.selection;
+  if ($from.parent.type.name !== "heading") return;
+  const dom = view.nodeDOM($from.before());
+  const marker =
+    dom instanceof HTMLElement && dom.querySelector(".heading-marker");
+  if (!marker || marker === dom.firstChild) return;
+  dom.insertBefore(marker, dom.firstChild);
+  view.dispatch(view.state.tr.setSelection(view.state.selection));
+}
+
 /** Typora-style reveal: a heading's "# " prefix shows only while the cursor
  *  is on that line. */
 export const headingMarkerPlugin = $prose(
@@ -61,6 +80,14 @@ export const headingMarkerPlugin = $prose(
       props: {
         decorations(state) {
           return headingMarkerKey.getState(state);
+        },
+        handleDOMEvents: {
+          // An IME committing into an empty heading (WebKit deletes the
+          // preedit, then inserts) can leave its text in front of "# ".
+          compositionend(view) {
+            setTimeout(() => redrawMisplaced(view));
+            return false;
+          },
         },
         handleKeyDown(view, event) {
           if (isImeKeyEvent(view, event)) return false;

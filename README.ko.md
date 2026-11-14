@@ -63,8 +63,9 @@ MIT 라이선스로 공개된 무료 오픈 소스입니다.
 | macOS · Intel     | [.dmg 다운로드](https://github.com/CatVinci-Studio/Textus/releases/latest)                         | Homebrew: `brew install --cask textus`                                   |
 | Windows · x64     | [.exe 다운로드](https://github.com/CatVinci-Studio/Textus/releases/latest)                         | —                                                                        |
 | Linux · x64       | [.AppImage 다운로드](https://github.com/CatVinci-Studio/Textus/releases/latest) · 또는 .deb · .rpm | Arch Linux: [`[catvinci]` 저장소](https://github.com/CatVinci-Studio/arch-repo) |
+| Android · arm64   | [.apk 다운로드](https://github.com/CatVinci-Studio/Textus/releases/latest) | — |
 
-> iPhone·iPad 버전이 곧 App Store에 나옵니다.
+> iOS(iPhone·iPad) 버전은 곧 TestFlight 공개 베타로 나옵니다.
 
 베타: **설정 › 정보**에서 **업데이트 채널**을 **베타**로 바꾸세요.
 
@@ -134,7 +135,7 @@ Discord, QQ, WeChat에서 함께하세요: [textus.md/community](https://textus.
 <details>
 <summary><strong>어떤 운영체제에서 쓸 수 있나요?</strong></summary>
 
-macOS(Apple 실리콘·Intel), Windows, Linux, 그리고 App Store를 통해 iPhone·iPad에서 쓸 수 있습니다.
+macOS(Apple 실리콘·Intel), Windows, Linux, 그리고 Android와 iOS(공개 베타)에서 쓸 수 있습니다.
 
 </details>
 

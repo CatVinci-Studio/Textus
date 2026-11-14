@@ -48,7 +48,7 @@ vi.mock("../platform/capabilities", async (importOriginal) => ({
   get hasAppMenu() {
     return platform.hasAppMenu;
   },
-  get isIOSApp() {
+  get isMobileApp() {
     return platform.isIOSApp;
   },
 }));

@@ -1,6 +1,5 @@
 import { provideAiFileMarks } from "../ai/revision/file-marks";
 import { useTabsInBar } from "./islands/tabs-in-bar";
-import { tabElement } from "../engine/layout/tab-element";
 import { tabTitle } from "../document/doc-tabs";
 import { useWindowAi } from "./islands/useWindowAi";
 import { conversationIn } from "./islands/ai-tabs";
@@ -9,7 +8,7 @@ import { CornerStack } from "../engine/controls/CornerToast";
 import { Suspense } from "react";
 import { AppDialogHost } from "../engine/controls/app-dialog";
 import { WindowBar } from "./frame/WindowBar";
-import { isIOSApp } from "../platform/capabilities";
+import { hasDocumentsList } from "../platform/capabilities";
 import {
   CreateTabPage,
   PluginTabPage,
@@ -28,7 +27,6 @@ import { fixedShortcutGroups } from "../registry/fixed-shortcuts";
 import { commands } from "../registry/commands";
 import { platformName } from "../platform/window-chrome";
 import { Presence } from "../engine/motion/usePresence";
-import { FlipOnChange } from "../engine/motion/flip";
 import { AgentPanelProvider } from "../ai/chat/panel/agent-panel";
 import { aiFeatures } from "../prefs/ai-features";
 import { useWindowShell } from "./useWindowShell";
@@ -36,7 +34,6 @@ import { useWindowDocuments } from "./useWindowDocuments";
 import { useWindowWiring } from "./useWindowWiring";
 import { Sidebar } from "./frame/Sidebar";
 import { DocumentIslands } from "./islands/DocumentIslands";
-import { AgentPanelDock } from "./islands/AgentPanelDock";
 import { ClosePrompt } from "./ClosePrompt";
 import { DraftRestoredToast, WordImportNotice, ZenExit } from "./AppNotices";
 import { OnboardingLayers } from "./OnboardingLayers";
@@ -71,7 +68,6 @@ const phoneParts = lazyModule(
   () => import("../mobile/phone-parts"),
 );
 const DocumentList = lazyComponent(phoneParts, (m) => m.DocumentList);
-const KeyboardToolbar = lazyComponent(phoneParts, (m) => m.KeyboardToolbar);
 
 /**
  * One window: its tabs, the panels around them, and the prompts and notices
@@ -84,22 +80,20 @@ function App() {
   const wiring = useWindowWiring({ shell, docs, settings, setSettings, t });
   const phone = usePhoneLayout();
 
-  const { textusAi, tutorial, settingsOpening, pendingClose } = shell;
+  const { tutorial, settingsOpening, pendingClose } = shell;
   const { draftsRestoredCount, setDraftsRestoredCount, wordImported } = shell;
   const { tabs, activeTabId, setActiveTabId, addBlankTab } = shell.tabState;
   const { panelOpen, setPanelOpen, toggleSidebar, sidebarWidth } = shell.panels;
   const { agentPanel, toggleAgentPanel } = shell.panels;
-  const { sidebarPresence, sidebarClosing, agentPresence, agentClosing } =
-    shell.panels;
+  const { sidebarPresence, sidebarClosing, agentPresence } = shell.panels;
   const { panelMode, setPanelMode } = shell.panels;
-  const { activeTab, activeTitle, activeDirty, featuresPaused, wordCount } =
-    docs;
+  const { activeTab, activeTitle, activeDirty } = docs;
   const { openFolder, openFile, openFileDialog, handleChange } = docs;
   const { searchFocusRequest, clearSearchFocusRequest } = docs;
   const { showTabBar, requestCloseTab, handleTabDetach, dragHoverPreview } =
     docs;
   const { moveTabToNewWindow, toggleReadOnly } = docs;
-  const { toggleSourceMode, zenMode, setZenMode } = docs;
+  const { zenMode, setZenMode } = docs;
   // Zen puts the sidebar away as a close does, on the window's clock.
   const sidebarShown = panelOpen && !zenMode;
   const { menuChecks, entryMoved, skillFilesDeleted } = wiring;
@@ -125,7 +119,7 @@ function App() {
   // row (or the row under a bar of its own), or one sheet alone under the
   // title's row - else a clean sheet (Zen), or the phone's own bar.
   const tabsInBar = useTabsInBar(zenMode, showTabBar);
-  const tabRow = (tabsInBar || !zenMode) && !isIOSApp ? "bar" : undefined;
+  const tabRow = tabsInBar || !zenMode ? "bar" : undefined;
 
   // What Settings needs, as a sheet or as a tab.
   const settingsProps = {
@@ -158,20 +152,6 @@ function App() {
         tab={agentPanel.tab}
         setTab={agentPanel.setTab}
       >
-        {/* An iPad's AI panel makes room by sliding the page; the
-            desktop's islands move on the frame's clock (IslandArea). */}
-        {isIOSApp && (
-          <FlipOnChange
-            watch={agentPresence.mounted}
-            targets={() => [
-              ...(tabElement()?.querySelectorAll(
-                ":scope > .editor-scroll > .editor-content, :scope > .source-view",
-              ) ?? []),
-            ]}
-            duration="--dur-settle"
-            easing="--ease-settle"
-          />
-        )}
         <div
           className="app-shell"
           // The layout's switches for the styles (layout/layout*.css): floating islands or classic, and the tabs in the
@@ -180,21 +160,19 @@ function App() {
           data-tabs={tabRow}
           // Its column open: the grid and the rail's edge follow the model.
           data-sidebar={sidebarShown ? "open" : undefined}
+          // The sidebar's dragged width; a phone's is its stylesheet's.
           style={
-            {
-              // The sidebar's dragged width; an iPad's sidebar has no handle.
-              ...(!isIOSApp && {
-                "--sidebar-width": `${sidebarWidth.width}px`,
-              }),
-            } as React.CSSProperties
+            phone
+              ? undefined
+              : ({
+                  "--sidebar-width": `${sidebarWidth.width}px`,
+                } as React.CSSProperties)
           }
         >
           <WindowBar
             menuChecks={menuChecks}
             title={activeTitle}
             dirty={activeDirty}
-            largeDoc={featuresPaused}
-            words={wordCount.words}
             sidebarOpen={panelOpen}
             sidebarShortcut={formatCombo(settings.shortcuts.toggleSidebar)}
             onToggleSidebar={toggleSidebar}
@@ -217,14 +195,16 @@ function App() {
             activeTabId={activeTab.id}
             onToggle={toggleSidebar}
             onClose={() => setPanelOpen(false)}
-            onOpenFile={(path, how, line) =>
+            onOpenFile={(path, how, line) => {
+              // A phone's page comes back with the file opened.
+              if (phone) setPanelOpen(false);
               void openFile(path, {
                 ...(how === "beside"
                   ? { where: "beside" }
                   : { preview: how === "preview" }),
                 ...(line !== undefined ? { place: { line } } : {}),
-              })
-            }
+              });
+            }}
             onEntryMoved={entryMoved}
             searchFocusRequest={searchFocusRequest}
             onSearchFocusHandled={clearSearchFocusRequest}
@@ -260,23 +240,6 @@ function App() {
             t={t}
           />
 
-          {/* The desktop's conversations are tabs (useAiTabs); an iPhone or iPad
-            keeps its own panel. */}
-          {isIOSApp && agentPresence.mounted && (
-            <AgentPanelDock
-              presence={agentPresence}
-              closing={agentClosing}
-              width={agentPanel.width}
-              min={agentPanel.min}
-              max={agentPanel.max}
-              onResize={agentPanel.setWidth}
-              sourceMode={!!activeTab.sourceMode}
-              onToggleSourceMode={toggleSourceMode}
-              aiOn={textusAi.on}
-              t={t}
-            />
-          )}
-
           <SettingsLayer opening={settingsOpening} {...settingsProps} />
 
           <ClosePrompt
@@ -298,13 +261,8 @@ function App() {
             t={t}
           />
 
-          {isIOSApp && (
-            <Suspense fallback={null}>
-              <KeyboardToolbar />
-            </Suspense>
-          )}
-          <Presence show={isIOSApp && documentsOpen}>
-            {isIOSApp && documentsOpen && (
+          <Presence show={hasDocumentsList && documentsOpen}>
+            {hasDocumentsList && documentsOpen && (
               <Suspense fallback={null}>
                 <DocumentList
                   activePath={activeTab.path}

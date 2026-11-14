@@ -1,4 +1,5 @@
 import type { PluginFile } from "../../platform/ipc";
+import { ownWhenKey } from "../contributions/plugin-when-keys";
 import type { Permission, PluginManifest } from "./manifest";
 import { PERMISSION_CALLS } from "../api-permissions";
 import { grants } from "../grants";
@@ -79,6 +80,7 @@ function unknownWhenKeys(manifest: PluginManifest): string[] {
   for (const items of Object.values(manifest.contributes.menus ?? {}))
     for (const item of items ?? [])
       for (const key of whenKeys(item.when ?? ""))
-        if (!WHEN_KEYS.includes(key)) keys.add(key);
+        if (!WHEN_KEYS.includes(key) && !ownWhenKey(manifest.id, key))
+          keys.add(key);
   return [...keys];
 }

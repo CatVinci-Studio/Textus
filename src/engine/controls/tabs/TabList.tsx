@@ -30,7 +30,7 @@ const PILLS = new Map<string, PillMeasures>();
 export function useTabFit(
   bar: RefObject<HTMLElement | null>,
   tabs: readonly TabShape[],
-): (TabFit & { available: number; between: number }) | null {
+): (TabFit & { available: number; between: number; list: number }) | null {
   const [room, setRoom] = useState<TabRoom | null>(null);
   const shapes = useRef(tabs);
   shapes.current = tabs;
@@ -93,6 +93,7 @@ export function useTabFit(
       ...fitTabs(tabs, now),
       available: now.available,
       between: now.between,
+      list: now.list,
     }
   );
 }

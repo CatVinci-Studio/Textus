@@ -48,3 +48,32 @@
   color: #fff;
   opacity: 1;
 }
+
+/* Linux: GNOME's own caption, small round buttons close together on a
+   light fill, close no different from the others (#664). */
+:root[data-platform="linux"] .window-caption {
+  align-items: center;
+  gap: 8px;
+  margin: 0 0 0 8px;
+}
+
+:root[data-platform="linux"] .window-caption-button {
+  width: 24px;
+  height: 24px;
+  align-self: center;
+  border-radius: var(--shape-pill);
+  background: color-mix(in srgb, var(--ui-text) 8%, transparent);
+  opacity: 0.85;
+}
+
+:root[data-platform="linux"] .window-caption-button:hover,
+:root[data-platform="linux"] .window-caption-close:hover {
+  background: color-mix(in srgb, var(--ui-text) 14%, transparent);
+  color: var(--ui-text);
+}
+
+:root[data-platform="linux"] .window-caption-button:active,
+:root[data-platform="linux"] .window-caption-close:active {
+  background: color-mix(in srgb, var(--ui-text) 20%, transparent);
+  color: var(--ui-text);
+}

@@ -195,6 +195,8 @@ Skills liegen im Ordner skills/ neben dieser Datei, je Skill eine
   reviewNotesAskPrefix: "Zu diesen Notizen:\n{notes}\n",
   reviewNoteAskPrefix: "Zu deiner Anmerkung „{comment}“: ",
   agentTabProject: "Gedächtnis",
+  memoryBack: "Zurück zum Gespräch",
+  memorySetup: "Textus AI deine Art zu schreiben zeigen",
   memoryStyle: "Schreibstil",
   memoryLibrary: "Lexikon",
   memoryInstructions: "Schreibanweisungen",
@@ -509,6 +511,7 @@ Skills liegen im Ordner skills/ neben dieser Datei, je Skill eine
   toolbarItalic: "Kursiv",
   toolbarHighlight: "Hervorheben",
   toolbarMore: "Mehr",
+  toolbarHideKeyboard: "Tastatur ausblenden",
   zenExitButton: "Zen-Modus beenden",
   openDialogText: "Textdateien",
   openDialogAll: "Alle Dateien",
@@ -720,6 +723,7 @@ Skills liegen im Ordner skills/ neben dieser Datei, je Skill eine
   navAbout: "Über",
   navGuides: "Anleitungen",
   aboutVersion: "Version {version}",
+  aboutVersionBeta: "Version {version} · Beta",
   aboutMadeBy: "Von CatVinci Studio",
   aboutQq: "QQ-Gruppe",
   navShortcuts: "Tastenkürzel",
@@ -858,6 +862,7 @@ Skills liegen im Ordner skills/ neben dieser Datei, je Skill eine
   insertColumnRight: "Spalte rechts einfügen",
   deleteRow: "Zeile löschen",
   deleteColumn: "Spalte löschen",
+  copyTable: "Tabelle kopieren",
   deleteTable: "Tabelle löschen",
   tableToMarkdown: "In Markdown-Tabelle umwandeln",
   tableToMarkdownMerged:
@@ -929,6 +934,8 @@ Skills liegen im Ordner skills/ neben dieser Datei, je Skill eine
   agentNeedsFolder:
     "Öffne zuerst einen Ordner oder speichere das Dokument: Der Agent arbeitet in einem Ordner.",
   agentStopped: "{agent} wurde beendet.",
+  agentNoImages:
+    "{agent} kann keine Bilder lesen. Entferne das Bild oder wähle einen anderen Agenten.",
   agentSignIn: "Melde dich zuerst bei {agent} an.",
   chatAgentsGroup: "Agenten",
   chatAgentPermission: "Der Agent bittet, weiterzumachen",
@@ -1195,6 +1202,7 @@ Skills liegen im Ordner skills/ neben dieser Datei, je Skill eine
   menuHelpMarkdown: "Markdown-Anleitung",
   menuHelpAgent: "Anleitung zu KI-Funktionen",
   menuHelpCommunity: "Zur Community",
+  menuHelpSponsor: "Textus unterstützen",
   menuHelpReport: "Problem melden…",
   reportTitle: "Problem melden",
   reportWhat: "Was ist passiert, und was hast du erwartet?",
@@ -1291,6 +1299,7 @@ Skills liegen im Ordner skills/ neben dieser Datei, je Skill eine
   updateDownloading: "Update wird geladen…",
   updateFailed: "Update fehlgeschlagen:",
   updateViaPackageManager: `${APP_NAME} wurde über deinen Paketmanager installiert. Aktualisiere es dort.`,
+  updatePortable: `Dies ist das portable ${APP_NAME}: Lade die neue Version von textus.md und entpacke sie über diesen Ordner.`,
   cliCommandLabel: "Textus CLI installieren",
   cliCommandInstalled: "Installiert",
   cliCommandNotInstalled: "Nicht installiert",
@@ -1379,67 +1388,50 @@ Skills liegen im Ordner skills/ neben dieser Datei, je Skill eine
   markdownGuideTab: "Markdown-Anleitung",
   agentGuideTab: "Anleitung zu KI-Funktionen",
   tutorialStepOfCount: "Schritt {i} von {n}",
-  tutorialChapters: "Kapitel der Einführung",
-  tutorialChapterStart: "Start",
-  tutorialChapterWriting: "Schreiben",
-  tutorialChapterConnect: "KI verbinden",
-  tutorialChapterAi: AI_NAME,
-  tutorialChapterDone: "Fertig",
   tutorialBack: "Zurück",
   tutorialNext: "Weiter",
   tutorialStart: "Los geht's",
   tutorialFinish: "Losschreiben",
   tutorialSkip: "Einführung beenden",
   tutorialSkipStep: "Überspringen",
-  tutorialCollapse: "Minimieren",
-  tutorialExpand: "Anleitung einblenden",
-  tutorialTryIt: "Probier's aus",
-  tutorialWatch: "Animation ansehen",
-  tutorialWatchNote:
-    "Verbinde später unter {path} eine KI, um es selbst auszuprobieren.",
   tutorialWelcomeTitle: `Willkommen bei ${APP_NAME}`,
   tutorialWelcomeBody:
-    "Ein Ort, um Markdown zu schreiben: Deine Dateien bleiben auf deinem Computer, und eine KI hilft, wenn du fragst; zwei Minuten, beim Schreiben gelernt.",
-  tutorialWysiwygTitle: "Formatieren beim Tippen",
-  tutorialWysiwygBody:
-    "Tippe dort, wo die grauen Hinweise stehen: Markdown wird sofort zur Formatierung; zweimal Return beendet eine Liste.",
-  tutorialWysiwygHeading: "Eine Überschrift: `# {title}`, dann Enter",
-  tutorialWysiwygList: "Eine Liste: `- Gregor Samsa`, Enter, `Grete`",
-  tutorialWysiwygNumbered: "Eine nummerierte Liste: `1. Kapitel I`",
-  tutorialWysiwygTaskItem: "Eine Aufgabe: `- [ ] Kapitel III lesen`",
-  tutorialPaletteTitle: "Dinge finden",
-  tutorialPaletteBody:
-    "Jeder Befehl ist mit {shortcut} eine Suche entfernt; mehr Funktionen gibt es im Plugin-Store unter dem Puzzleteil, installiert, wenn du sie brauchst.",
-  tutorialPaletteTask: "Drücke {shortcut}, tippe „Export“, drücke Return",
-  tutorialPaletteTaskPhone:
-    "Auf dem Telefon ist der Plugin-Store in den Einstellungen unter „Erweiterungen“",
-  tutorialConnectTitle: "Eine KI verbinden",
-  tutorialConnectBody:
-    "Die nächsten zwei Schritte nutzen eine KI; mit einem Konto anmelden, einen API-Schlüssel eingeben oder später - jederzeit unter Einstellungen › Textus AI.",
-  tutorialConnectTask:
-    "Melde dich an oder füge einen Schlüssel ein - oder überspring es vorerst.",
-  tutorialConnectSkip: "Später",
-  tutorialConnected: "Verbunden.",
-  tutorialWriteTitle: "Die KI schreiben lassen",
-  tutorialWriteBody:
-    "Die Änderungen der KI erscheinen zuerst grün; sie zählen erst, wenn du sie annimmst.",
-  tutorialWriteOpen:
-    "Öffne den KI-Bereich: das Federsymbol oben rechts ({shortcut})",
-  tutorialWriteOpenPhone:
-    "Öffne den KI-Bereich: Tippe oben auf das Federsymbol",
-  tutorialWriteSend:
-    "Sende `Schreib meine Notizen um einen Absatz weiter` und klick auf Annehmen",
-  tutorialContinuationTitle: "Vervollständigung",
-  tutorialContinuationBody:
-    "Halte beim Schreiben kurz inne: Eine graue Fortsetzung erscheint; Tab übernimmt sie.",
-  tutorialContinuationTask:
-    "Tippe am Ende `Was Gregor wirklich quält, ist`, halte inne und drück Tab",
-  tutorialContinuationTaskPhone:
-    "Tippe am Ende `Was Gregor wirklich quält, ist`, halte inne und tippe auf den grauen Text",
-  tutorialDoneTitle: "Alles bereit",
+    "Eine Minute Rundgang: die Seitenleiste, die Seite und die KI.",
+  tutorialSidebarTitle: "Die Seitenleiste",
+  tutorialSidebarBody:
+    "Klicke links auf den Ordner, um die Seitenleiste zu öffnen.",
+  tutorialSidebarBodyPhone:
+    "Tippe oben links auf die Seitenleisten-Taste, um sie zu öffnen.",
+  tutorialRailTitle: "Was darin ist",
+  tutorialRailBody: "Jedes Symbol links öffnet einen Teil der Seitenleiste.",
+  tutorialRailFiles: "Dateien: der Ordner, in dem du schreibst.",
+  tutorialRailOutline: "Gliederung: die Überschriften der Seite, zum Springen.",
+  tutorialRailSearch: "Suche: eine Datei oder Zeile im ganzen Ordner finden.",
+  tutorialRailPlugins: "Plugins: weitere Funktionen, wenn du sie brauchst.",
+  tutorialRailHide:
+    "In einem kleinen Fenster blendest du diese Symbolleiste per Rechtsklick aus.",
+  tutorialSettingsTitle: "Einstellungen",
+  tutorialSettingsBody:
+    "Im Zahnrad sind Design, Schriften und deine KI-Konten.",
+  tutorialEditorTitle: "Schreiben, wie es aussieht",
+  tutorialEditorBody:
+    "Markdown wird beim Tippen zur Formatierung: probiere `# Ein Titel` oder `- eine Liste`.",
+  tutorialAiTitle: "Textus AI",
+  tutorialAiBody: "Klicke oben rechts auf das Funkeln, um Textus AI zu öffnen.",
+  tutorialAiBodyPhone:
+    "Tippe oben rechts auf das Funkeln, um Textus AI zu öffnen.",
+  tutorialSignInTitle: "Bei einer KI anmelden",
+  tutorialSignInBody:
+    "Klicke auf Anmelden und nutze ein Konto oder einen API-Schlüssel; danach geht der Rundgang weiter.",
+  tutorialAiUseTitle: "Die KI überarbeiten lassen",
+  tutorialAiUseBody:
+    "Bitte sie, deine Notizen zu straffen, und übernimm oder verwirf ihren Vorschlag.",
   tutorialDoneBody:
-    "Leg ein neues Dokument an; die zwei Anleitungen im Menü Hilfe erklären Markdown und die KI ausführlich; dort ist auch die Tour, um sie noch einmal zu machen.",
-  tutorialDoneMemory: `${AI_NAME} merkt sich mit der Zeit deine Wünsche und deinen Stil; sieh im KI-Bereich unter Gedächtnis nach.`,
+    "Leg los: Im Hilfe-Menü findest du die Anleitungen und diesen Rundgang noch einmal.",
+  chatSignInHint: "Melde dich bei einer KI an, um hier zu schreiben.",
+  chatSignIn: "Anmelden",
+  tutorialConnectSkip: "Später",
+  tutorialDoneTitle: "Alles bereit",
   closePromptNamed: "„{name}“ hat nicht gespeicherte Änderungen.",
   closePromptMessage: "Dieses Dokument hat nicht gespeicherte Änderungen.",
   closePromptSave: "Speichern",
@@ -1575,6 +1567,7 @@ Skills liegen im Ordner skills/ neben dieser Datei, je Skill eine
   themeNamePaper: "Papier",
   themeNameSlate: "Schiefer",
   themeNameForest: "Wald",
+  themeNameAurora: "Polarlicht",
   appearanceLabel: "Erscheinungsbild",
   appearanceModeLabel: "Hell oder dunkel",
   appearanceSystem: "Systemeinstellung",
@@ -1870,6 +1863,7 @@ Skills liegen im Ordner skills/ neben dieser Datei, je Skill eine
     "Eigene Daten im geöffneten Ordner ablegen, unter .textus/plugins",
   pluginPermAiTools: "Textus AI eigene Werkzeuge geben",
   pluginPermNotifications: "Systemmitteilungen anzeigen",
+  pluginPermAppearance: "Die Farben von Textus und Ihren Dokumenten ändern",
   pluginPermAgents:
     "Einen auf diesem Computer installierten KI-Agenten ausführen (er kann Dateien lesen und ändern)",
   pluginPermBackground:

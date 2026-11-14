@@ -6,6 +6,7 @@ import { withEditorCore } from "../editor/editor-extensions";
 import { withAiPlugins, type PendingEditCallbacks } from "../ai/editor-plugins";
 import { pluginCodeBlocks } from "./plugins/plugin-code-blocks";
 import { pluginDecorations } from "./plugins/plugin-decorations";
+import { pluginVisible } from "./plugins/plugin-visible";
 import type { ReviewNote } from "../ai/margin/review-notes-plugin";
 import type { Settings } from "../prefs/SettingsContext";
 import type { TourAi } from "../utils/events";
@@ -48,5 +49,6 @@ export function withEditorExtensions(
     { settings, docPath, pendingEdits, quickAskWidget, tour, reviewNotes },
   )
     .use(pluginCodeBlocks(docPath))
-    .use(pluginDecorations);
+    .use(pluginDecorations)
+    .use(pluginVisible);
 }

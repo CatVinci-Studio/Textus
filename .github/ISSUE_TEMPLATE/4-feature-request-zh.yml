@@ -7,6 +7,8 @@ body:
       value: |
         提交前请先搜索[已有的 issue](https://github.com/CatVinci-Studio/Textus/issues?q=is%3Aissue)，给相同的建议点 👍 能帮我们判断优先级。已经在计划中的功能可以看[路线图](https://github.com/CatVinci-Studio/Textus/blob/main/ROADMAP.zh.md)。
 
+        **能做成插件吗？** 大多数新功能，以及接入外部服务的功能，都更适合放在 [textus-plugins](https://github.com/CatVinci-Studio/textus-plugins) 而不是 App 本身；这种情况请到那里以“插件点子”提出。
+
   - type: textarea
     id: problem
     attributes:

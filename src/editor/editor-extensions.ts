@@ -101,6 +101,7 @@ import {
 } from "./tables/table-hover-view";
 import { createMermaidPreviewPlugin } from "./mermaid-plugin";
 import { blockKeysPlugin } from "./keys/block-keys-plugin";
+import { listBackspacePlugin } from "./keys/list-backspace-plugin";
 import { blockJoinPlugin } from "./keys/block-join-plugin";
 import { inlineSourcePlugin } from "./keys/inline-source-plugin";
 import { wikilinkRevealPlugin } from "./markdown/wikilink-reveal";
@@ -121,6 +122,7 @@ import {
   htmlTagInputRule,
 } from "./markdown/source-input-rules";
 import { pasteUrlPlugin } from "./clipboard/paste-url";
+import { pasteHookPlugin } from "./clipboard/paste-hook";
 import { ownUndoStepPlugin } from "./clipboard/own-undo-step";
 import { changeSourcePlugin } from "./change-source";
 import { createLinkClickPlugin } from "./markdown/link-click-plugin";
@@ -137,8 +139,7 @@ import {
   obsidianEmbedSchema,
   remarkObsidianEmbedPlugin,
 } from "./images/obsidian-embed";
-import { createObsidianEmbedPreviewPlugin } from "./images/obsidian-embed-preview";
-import { createNoteEmbedPlugin } from "./embeds/note-embed-plugin";
+import { createEmbedsPlugin } from "./embeds/embeds-plugin";
 import { createUndoFilePlugin } from "./undo-file";
 import { createMissingLinksPlugin } from "./markdown/missing-links";
 import { createTypewriterPlugin } from "./modes/typewriter-plugin";
@@ -305,12 +306,11 @@ export function withEditorCore(
       .use(wikilinkRevealPlugin)
       .use(createMissingLinksPlugin(() => docPath.current))
       .use(
-        createObsidianEmbedPreviewPlugin({
-          docPath: () => docPath.current,
-          settings: () => settings.current,
-        }),
+        createEmbedsPlugin(
+          () => docPath.current,
+          () => settings.current,
+        ),
       )
-      .use(createNoteEmbedPlugin(() => docPath.current))
 
       .use(
         createGithubAlertPlugin((type) => {
@@ -434,6 +434,7 @@ export function withEditorCore(
       .use(editing(linkSettlePlugin))
       .use(editing(htmlTagInputRule))
       .use(editing(footnoteInputRule))
+      .use(editing(pasteHookPlugin))
       .use(editing(pasteUrlPlugin))
       .use(editing(pasteMarkdownSourcePlugin))
       .use(editing(copyTextPlugin))
@@ -453,6 +454,7 @@ export function withEditorCore(
       .use(editing(tabStaysPlugin))
       .use(editing(moveBlockPlugin))
       .use(editing(escapeTrailingBlockPlugin))
+      .use(editing(listBackspacePlugin))
       .use(editing(blockJoinPlugin))
       .use(editing(inlineSourcePlugin))
       .use(editing(findReplacePlugin))

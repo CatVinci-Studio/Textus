@@ -17,6 +17,11 @@ export function focusMemory(id: string) {
   for (const listener of listeners) listener();
 }
 
+/** The memory pointed at now, if any: it opens whole as it is drawn. */
+export function pointedAt(): string | null {
+  return focused;
+}
+
 function subscribe(listener: () => void) {
   listeners.add(listener);
   return () => listeners.delete(listener);

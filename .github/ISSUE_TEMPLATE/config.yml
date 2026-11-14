@@ -6,3 +6,6 @@ contact_links:
   - name: 中文交流（QQ 群 / 微信群）
     url: https://textus.md/zh/community/
     about: 使用问题和交流，欢迎加入 QQ 群 1128285004 或微信群。
+  - name: Make it a plugin / 做成插件
+    url: https://github.com/CatVinci-Studio/textus-plugins/issues
+    about: Ideas for plugins and bugs in official plugins go to textus-plugins. 插件点子和官方插件的问题请到插件仓库。

@@ -76,6 +76,9 @@ export function useTabStrip({
     if (!widths || !tabWidths) return;
     const slots = stripSlots(tabWidths, gap);
     setStripPlaces(pane, { ids, slots, scrolled });
+    // Grown at once, shrunk on the clock: the row can scroll a new tab
+    // into view while it is still sliding in.
+    if (strip.current) strip.current.style.minWidth = `${stripLength(slots)}px`;
     // Tabs gone from the row let go of their refs.
     for (const id of refs.current.keys())
       if (id !== INCOMING && !ids.includes(id)) refs.current.delete(id);

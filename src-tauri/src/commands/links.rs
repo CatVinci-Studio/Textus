@@ -29,6 +29,19 @@ fn language_dir(language: &str) -> Option<&'static str> {
     })
 }
 
+/// The website's sponsor page in the UI's `language` (English by default).
+pub fn sponsor_url(language: Option<&str>) -> String {
+    let dir = language.and_then(language_dir).unwrap_or("");
+    format!("{SITE}/{dir}sponsor/")
+}
+
+pub fn open_sponsor(app: &tauri::AppHandle, language: Option<&str>) -> Result<(), String> {
+    use tauri_plugin_opener::OpenerExt;
+    app.opener()
+        .open_url(sponsor_url(language), None::<&str>)
+        .map_err(|e| e.to_string())
+}
+
 /// The clips on the website's tutorials page, each an element id there; the
 /// tutorial's steps read them from the bindings.
 pub(crate) const TUTORIAL_CLIPS: &[&str] = &[
@@ -130,6 +143,16 @@ pub async fn open_community_page(
     open_community(&app, language.as_deref())
 }
 
+/// Help > Sponsor Textus, and the link under the version in Settings › About.
+#[tauri::command]
+#[cfg_attr(test, specta::specta)]
+pub async fn open_sponsor_page(
+    app: tauri::AppHandle,
+    language: Option<String>,
+) -> Result<(), String> {
+    open_sponsor(&app, language.as_deref())
+}
+
 /// Help > Online Tutorials, its row in Settings, and the tour's "Watch the
 /// animation" links, which name their `clip`.
 #[tauri::command]
@@ -144,7 +167,7 @@ pub async fn open_tutorials_page(
 
 #[cfg(test)]
 mod tests {
-    use super::{community_url, tutorials_url};
+    use super::{community_url, sponsor_url, tutorials_url};
 
     #[test]
     fn every_tour_clip_opens_in_every_ui_language() {
@@ -198,6 +221,13 @@ mod tests {
             "https://textus.md/zh-hant/community/"
         );
         assert_eq!(community_url(Some("en")), "https://textus.md/community/");
+    }
+
+    #[test]
+    fn the_sponsor_page_is_in_the_ui_language_or_english() {
+        assert_eq!(sponsor_url(Some("zh")), "https://textus.md/zh/sponsor/");
+        assert_eq!(sponsor_url(Some("en")), "https://textus.md/sponsor/");
+        assert_eq!(sponsor_url(Some("../evil")), "https://textus.md/sponsor/");
     }
 
     #[test]

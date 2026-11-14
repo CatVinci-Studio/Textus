@@ -6,6 +6,7 @@ import { editorInputPlugin } from "./editor-input";
 import { hasHoverProviders, provideHover } from "./hover-providers";
 import { pluginCompletionSources } from "./completion-sources";
 import { openLinkInPlugin } from "./link-handlers";
+import { pasteMatches, providePaste } from "./paste-handlers";
 // The / commands register their source as they load.
 import "./slash-commands";
 
@@ -16,5 +17,7 @@ setEditorExtensions({
   hasHoverProviders,
   provideHover,
   openLink: openLinkInPlugin,
+  pasteMatches,
+  providePaste,
 });
 setPluginCompletionSources(pluginCompletionSources);

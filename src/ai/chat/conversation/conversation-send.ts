@@ -112,6 +112,7 @@ export async function sendMessage(
           folder: folder!,
           docPath,
           message: trimmed,
+          images,
           get: () => model.streamingNow,
           set: (value, opts) => {
             if (current()) model.setStreaming(value, opts);

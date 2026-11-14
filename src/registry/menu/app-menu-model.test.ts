@@ -2,7 +2,7 @@
 //
 // formatCombo reads navigator, which Node 20 doesn't define globally.
 
-import { describe, expect, it } from "vitest";
+import { describe, expect, it, vi } from "vitest";
 import { defaultShortcuts, type Shortcuts } from "../../prefs/SettingsContext";
 import type { Strings } from "../../i18n/strings";
 import { APP_NAME, resolveStrings } from "../../i18n/strings";
@@ -187,7 +187,7 @@ describe("the View menu's on/off items", () => {
     const t = resolveStrings("en");
     const [first] = buildMobileMenu(t, { words: 49 });
     expect(first).toEqual({ label: "49 words", disabled: true });
-    expect(buildMobileMenu(t)[0]).toMatchObject({ label: t.menuDocuments });
+    expect(buildMobileMenu(t)[0]).toMatchObject({ label: t.menuNewFile });
   });
 
   it("give the phone its plugins' commands, and Textus AI only where it is offered", () => {
@@ -372,5 +372,33 @@ describe("the menu ids", () => {
       ["Desk Pet", 0],
       ["Workspace", 2],
     ]);
+  });
+});
+
+describe("the sponsor link", () => {
+  it("is in Help, and left out where the store forbids it (iOS)", async () => {
+    expect(entries.map((e) => e.label)).toContain(t.menuHelpSponsor);
+    vi.resetModules();
+    vi.doMock("../../platform/capabilities", async (importOriginal) => ({
+      ...(await importOriginal<object>()),
+      canLinkSponsor: false,
+    }));
+    const model = await import("./app-menu-model");
+    const ios = flatten(model.buildAppMenu(t, shortcuts, NO_RECENTS));
+    expect(ios.map((e) => e.label)).not.toContain(t.menuHelpSponsor);
+    vi.doUnmock("../../platform/capabilities");
+  });
+
+  it("puts Documents in the phone's menu only where there is a list (iOS)", async () => {
+    vi.resetModules();
+    vi.doMock("../../platform/capabilities", async (importOriginal) => ({
+      ...(await importOriginal<object>()),
+      hasDocumentsList: true,
+    }));
+    const model = await import("./app-menu-model");
+    expect(model.buildMobileMenu(t)[0]).toMatchObject({
+      label: t.menuDocuments,
+    });
+    vi.doUnmock("../../platform/capabilities");
   });
 });

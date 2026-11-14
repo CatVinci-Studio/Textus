@@ -62,7 +62,9 @@
     opacity: 0.75;
   }
 
+  /* A <mark>: the text keeps its own colour, not the browser's black. */
   .md-span[data-delim="="] {
+    color: inherit;
     background: var(--doc-highlight-bg);
     border-radius: var(--doc-radius-sm);
     padding: 0 0.15em;

@@ -1,14 +1,18 @@
 import { TextSelection } from "@milkdown/kit/prose/state";
 // @vitest-environment jsdom
-import { afterEach, describe, expect, it } from "vitest";
+import { afterEach, describe, expect, it, vi } from "vitest";
 import { editorViewCtx, type Editor } from "@milkdown/kit/core";
 import type { Ctx } from "@milkdown/kit/ctx";
 import { undo } from "@milkdown/kit/prose/history";
 import { createTestEditor } from "../editor-test-harness";
-import { documentChangedForPlugins } from "./plugin-events";
+import {
+  documentChangedForPlugins,
+  selectionChangedForPlugins,
+} from "./plugin-events";
 import { applyPluginEdits, replaceDocument } from "./plugin-edits";
 import { markChangeSource } from "../../editor/change-source";
-import { onPluginEvent } from "../../plugins/app-bridge";
+import { onPluginEvent, type PluginEventMap } from "../../plugins/app-bridge";
+import { cachedDocument } from "../../editor/markdown/doc-markdown";
 import { setReadOnly } from "../../editor/read-only-plugin";
 
 let editor: Editor | null = null;
@@ -87,6 +91,26 @@ describe("the source plugins are told of a change", () => {
       documentChangedForPlugins(true, "/notes/a.md", ctx);
     });
     expect(told).toEqual(["user"]);
+  });
+});
+
+describe("the selection plugins are told of", () => {
+  it("names the block its moving end is in, and whether it is the caret", async () => {
+    vi.useFakeTimers();
+    editor = await createTestEditor("one\n\ntwo words\n");
+    const told: PluginEventMap["selection"][] = [];
+    stop = onPluginEvent("selection", (e) => told.push(e));
+    const second = editor.action((ctx) => {
+      const v = view(ctx);
+      v.dispatch(
+        v.state.tr.setSelection(TextSelection.create(v.state.doc, 6, 9)),
+      );
+      selectionChangedForPlugins(true, ctx);
+      return cachedDocument(ctx, v.state.doc).blocks[1].id;
+    });
+    vi.runAllTimers();
+    vi.useRealTimers();
+    expect(told).toEqual([{ text: "two", empty: false, block: second }]);
   });
 });
 

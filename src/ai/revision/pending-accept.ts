@@ -17,7 +17,7 @@ import {
   hasCitations,
   withoutCitations,
 } from "../citations";
-import { isIOSApp } from "../../platform/capabilities";
+import { isMobileApp } from "../../platform/capabilities";
 import {
   pendingEditKey,
   sentenceTake,
@@ -134,7 +134,7 @@ export function writeAccept(
         normalizeAiMarkdown(withoutCitations(c.after).replace(/\s+$/, "")),
       );
     land(ctx, view, tr, preview, callId, taken);
-    if (!isIOSApp) view.focus();
+    if (!isMobileApp) view.focus();
     ok = true;
     return done();
   }
@@ -239,7 +239,7 @@ export function writeAccept(
   }
   // On a phone, focusing would raise the keyboard over the AI sheet and send
   // typing to the document instead of the composer.
-  if (!isIOSApp) view.focus();
+  if (!isMobileApp) view.focus();
   ok = true;
   return done();
 }

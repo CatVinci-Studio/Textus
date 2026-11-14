@@ -2,6 +2,7 @@
 //! data folder (named by a hash of the path), never in the Markdown. They
 //! follow a move made in Textus (doc_data); one made outside loses them.
 
+use crate::app_dirs::AppDirs;
 use std::path::PathBuf;
 use tauri::{AppHandle, Manager};
 
@@ -16,7 +17,7 @@ pub enum OwnPart {
 }
 
 fn part_file(app: &AppHandle, path: &str, part: OwnPart) -> Result<PathBuf, String> {
-    let data = app.path().app_data_dir().map_err(|e| e.to_string())?;
+    let data = app.path().own_data_dir().map_err(|e| e.to_string())?;
     Ok(part_file_in(&data, path, part))
 }
 

@@ -1,7 +1,7 @@
 # Documentation
 
-Start with [CONTRIBUTING.md](../CONTRIBUTING.md): setup, the checks to
-run, code style and the writing rules. [AGENTS.md](../AGENTS.md) is the
+Start with [CONTRIBUTING.md](../CONTRIBUTING.md): where to start, setup,
+the one check to run and how pull requests work. [AGENTS.md](../AGENTS.md) is the
 index and hard rules for AI coding assistants; [ROADMAP.md](../ROADMAP.md)
 shows where the project is heading.
 
@@ -13,9 +13,11 @@ Start here:
 | ---------------------------------------- | ------------------------------------------------------------------------------------------------------ |
 | [architecture.md](dev/architecture.md)   | The folders in `src/` and `src-tauri/`, the layers ESLint enforces, UI layering, the backend bridge, CSS, the CSP |
 | [recipes.md](dev/recipes.md)             | Step by step: a setting, a menu item and shortcut, a backend command, a UI string, a plugin API call, an e2e test, platform code |
+| [code-style.md](dev/code-style.md)       | The code-shape, interface and writing rules, and the script that checks each                            |
+| [triage.md](dev/triage.md)               | Sorting issues and pull requests, and how a newcomer issue is written                                  |
 | [reuse.md](dev/reuse.md)                 | The one place in the code for each common need                                                         |
 | [testing.md](dev/testing.md)             | Which test layer, running each suite, the e2e helpers, CI's jobs, flaky tests, what isn't covered      |
-| [local-builds.md](dev/local-builds.md)   | Faster builds across many worktrees (a shared Cargo build directory) and `npm run check:quick`         |
+| [local-builds.md](dev/local-builds.md)   | Faster builds across many worktrees, `npm run check:quick`, installers, the browser playground         |
 
 How the app works:
 

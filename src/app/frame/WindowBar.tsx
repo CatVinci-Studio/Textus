@@ -1,4 +1,3 @@
-import { counted } from "../../i18n/current";
 import { Fragment, Suspense, useRef, useSyncExternalStore } from "react";
 import { useFitSteps } from "../../engine/controls/fit-steps";
 import { useSettings } from "../../prefs/SettingsContext";
@@ -9,13 +8,11 @@ import { MenuBar } from "../menu/MenuBar";
 import { Tooltip } from "../../engine/controls/Tooltip";
 import { TextusAiButton } from "../../ai/TextusAiSwitch";
 import { AgentButtons } from "../../ai/agents/AgentButtons";
-import { canUseWindows, isIOSApp } from "../../platform/capabilities";
+import { canUseWindows } from "../../platform/capabilities";
 import { LockIcon, SidebarToggleIcon } from "../../engine/controls/icons";
 import { useBarLayout } from "../../engine/layout/useBarLayout";
 import { useTitleRoom } from "./useTitleRoom";
 import { usePhoneLayout } from "../../engine/controls/usePhoneLayout";
-import { Segmented } from "../../engine/controls/Segmented";
-import { usePageSwipe } from "../../mobile/usePageSwipe";
 import { lazyModule } from "../../lazy/lazy-module";
 import { lazyComponent } from "../../lazy/lazy-component";
 import {
@@ -41,8 +38,6 @@ export function WindowBar({
   menuChecks,
   title,
   dirty,
-  largeDoc,
-  words,
   sidebarOpen,
   sidebarShortcut,
   onToggleSidebar,
@@ -55,8 +50,6 @@ export function WindowBar({
   menuChecks: MenuChecks;
   title: string;
   dirty: boolean;
-  largeDoc: boolean;
-  words: number;
   sidebarOpen: boolean;
   /** The sidebar's shortcut, as shown in the button's tooltip. */
   sidebarShortcut: string;
@@ -82,17 +75,8 @@ export function WindowBar({
     subscribeStatusItems,
     () => statusItemsSnapshot().length > 0,
   );
-  // A phone switches between the document and Textus AI as two pages: the
-  // capsule takes the AI button's place, and the word count goes into the
-  // menu to leave the row to the title.
+  // A phone's row is its tabs': no title over them.
   const phone = usePhoneLayout();
-  const pages = phone && settings.textusAi && showAgentToggle;
-  // An iPad keeps the docked panel, with the same edge swipes.
-  usePageSwipe(
-    isIOSApp && settings.textusAi && showAgentToggle,
-    agentOpen,
-    onToggleAgent,
-  );
   // Too narrow for the menu bar's titles: the ☰ instead (window-controls.css).
   const header = useRef<HTMLElement>(null);
   useFitSteps(header, MENU_FOLDS);
@@ -121,12 +105,7 @@ export function WindowBar({
                 </Fragment>
               );
             case "menu":
-              return (
-                <AppMenuButton
-                  key={item}
-                  checks={pages ? { ...menuChecks, words } : menuChecks}
-                />
-              );
+              return <AppMenuButton key={item} checks={menuChecks} />;
             case "sidebar-toggle":
               return (
                 <Tooltip
@@ -147,9 +126,7 @@ export function WindowBar({
           }
         })}
         <WindowTitle
-          placed={
-            bar.rows === 1 && !bar.lead.includes("menu-bar") && canUseWindows
-          }
+          placed={bar.rows === 1 && !bar.lead.includes("menu-bar") && !phone}
           title={title}
           dirty={dirty}
           readOnly={!!menuChecks.readOnly}
@@ -161,46 +138,16 @@ export function WindowBar({
               <PluginStatusItems />
             </Suspense>
           )}
-          {/* On the desktop each document says these at its own corner
-              (DocumentCorner); a phone or an iPad has one, up here. */}
-          {!canUseWindows && largeDoc && (
-            <Tooltip text={t.largeDocHint}>
-              <span className="tx-badge large-doc-badge">
-                {t.largeDocBadge}
-              </span>
-            </Tooltip>
-          )}
-          {!canUseWindows && !pages && (
-            <span className="word-count">
-              {words > 0 && counted(t.wordCount, words)}
-            </span>
-          )}
           {/* Struck through while Textus AI is off; right-click pauses or
           turns it off. */}
-          {pages ? (
-            <Segmented
-              equal
-              className="page-switch"
-              label={t.phonePages}
-              value={agentOpen ? "ai" : "write"}
-              onChange={onToggleAgent}
-              options={[
-                { id: "write", label: t.phonePageWrite },
-                { id: "ai", label: t.phonePageAi },
-              ]}
-            />
-          ) : (
-            <>
-              <AgentButtons aiOpen={agentOpen} onToggleAi={onToggleAgent} />
-              <TextusAiButton
-                className="window-bar-toggle"
-                panelOpen={agentOpen}
-                showPanel={showAgentToggle}
-                shortcut={agentShortcut}
-                onTogglePanel={onToggleAgent}
-              />
-            </>
-          )}
+          <AgentButtons aiOpen={agentOpen} onToggleAi={onToggleAgent} />
+          <TextusAiButton
+            className="window-bar-toggle"
+            panelOpen={agentOpen}
+            showPanel={showAgentToggle}
+            shortcut={agentShortcut}
+            onTogglePanel={onToggleAgent}
+          />
         </div>
         <WindowCaptionButtons />
       </header>

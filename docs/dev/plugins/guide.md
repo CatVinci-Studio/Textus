@@ -141,6 +141,7 @@ made when they are first shown.
 | `completions`   | `{ id, where: "math" \| "text" \| "any", pattern }`: completions as you type when what is before the caret matches `pattern` (`editor.registerCompletion`).                                                                                                                                                                                                                                                                                                                                                                                      |
 | `aiTools`       | `{ name, description, parameters }`: tools Textus AI can call (`ai.registerTool`); `parameters` is a JSON schema.                                                                                                                                                                                                                                                                                                                                                                                                                                |
 | `links`         | `{ pattern, command }`: web links Ctrl/Cmd+clicked in a document whose URL matches `pattern` run `command` with the URL.                                                                                                                                                                                                                                                                                                                                                                                                                         |
+| `statusItems`   | `{ id, text, tooltip?, command? }`: statuses in the window bar shown while the plugin is on, before its code starts; its `ui.statusItem(id, …)` takes one over.                                                                                                                                                                                                                                                                                                                                                                                  |
 | `settings`      | Rows on the plugin's page in Settings, drawn as Textus's own: `{ key, type, default, title, description?, group?, when? }`. See [Settings of every kind](#settings-of-every-kind).                                                                                                                                                                                                                                                                                                                                                               |
 | `settingsPage`  | `{ title }`: a page of the plugin's own under its settings, a webview.                                                                                                                                                                                                                                                                                                                                                                                                                                                                           |
 | `floatingViews` | `{ id, title, width, height, place }`: a small transparent page that floats over the desktop or in Textus's window (`place`: `"either"`, `"desktop"`, `"window"`), shown with `layout.openFloating`. It opens in the window unless `place` is `"desktop"`. Its page is looked at, not clicked: the user drags it anywhere, resizes it in proportion from its top corner (0.6× to 1.4×, so lay the page out to its viewport) and folds, closes or moves it from its right-click menu. `side` in its state says which half it sits in. From 1.3.6. |
@@ -148,9 +149,12 @@ made when they are first shown.
 | `agents` | `{ id, name, command, args, env, setup, provider }`: an AI agent on the user's computer that speaks the [Agent Client Protocol](https://agentclientprotocol.com) on stdio (Claude Agent, Codex, Gemini CLI…), offered in Textus AI's model menu under Agents. Textus starts `command` itself, found on the PATH a terminal would have; `{pluginDir}` in `args` and `env` is the plugin's folder; `setup` says how to install it and sign in, shown when it can't start; `provider` names whose models it runs (`"anthropic"`, `"openai"`), what `ai.onDidChangeState` tells other plugins while it works. Needs `agents`; desktop only. From 1.3.13. |
 
 A menu item's `when` is a small expression over the moment it is shown:
-`editorHasSelection`, `fileExtension == .pdf`, `view == jane.tasks.list`,
+`documentOpen`, `folderOpen`, `editorHasSelection`, `fileExtension == .pdf`,
+`resourceFilename == notes.md`, `resourcePath`, `view == jane.tasks.list`,
 `isMac`, `resourceIsFolder` (a file menu item opened on a folder, from
-1.4.1), joined with `&&`, `||` and `!`.
+1.4.1), and from 1.6 the plugin's own keys set with
+`textus.commands.setContext("jane.focus.on", true)`; joined with `&&`, `||`
+and `!`.
 
 ## Permissions
 
@@ -171,6 +175,7 @@ turning it on, or leaves it off, and can take each back later.
 | `notifications`  | show system notifications, at once or on a schedule (API 1.1)                          |
 | `background`     | run its `background` code on a schedule, also with every window closed (API 1.1)       |
 | `agents`         | run the AI agents it names in `contributes.agents` (programs on this computer; 1.3.13) |
+| `appearance`     | change Textus's colours: a palette over the theme, the frame a gradient (API 1.6)      |
 | `network:<host>` | fetch from that host over HTTPS (`*.example.com`, `host:port`, `*` for the open web)   |
 
 Ask for what the plugin's purpose explains, and no more: each permission
@@ -224,7 +229,8 @@ await it in `activate`, which has 10 seconds). `ui` draws Textus's own
 dialogs: `message`, `notice` (a note that goes by itself), `confirm`,
 `input`, `pick` (one or several of a list), `form` (a few fields at once),
 `withProgress` (a bar with Cancel) and `statusItem` (a short status in
-the window bar that runs a command when clicked).
+the window bar that runs a command when clicked; one declared in
+`contributes.statusItems` shows without starting the plugin).
 
 ### The document in front - `editor`
 
@@ -399,6 +405,44 @@ await textus.notify.show({ title: "Exported", body: "notes.pdf" }); // now
   `engines.textus` to `">=1.3.0-beta.8"`: Textus doesn't offer a plugin to
   a version it doesn't fit.
 
+### Colours - `appearance` (API 1.6)
+
+A plugin with the `appearance` permission lays a palette over whichever
+theme is on: the page (`--doc-bg`, `--doc-text`, `--doc-accent`,
+`--doc-mark`…), the interface (`--ui-bg`, `--ui-text`, `--ui-accent`), the
+tones, and the frame round the pages, which may be a gradient
+(`--ui-frame-paint`). Borders, hovers and the rest follow from these. Text
+is kept readable, the user's Custom CSS still wins, and turning the plugin
+off puts the theme back. A whole palette, light and dark apart:
+
+```js
+exports.activate = async function (ctx) {
+  ctx.subscriptions.push(
+    await textus.appearance.setColors(
+      {
+        "--ui-frame-paint": "linear-gradient(170deg, #6ec5e6, #f6cde1)",
+        "--doc-accent": "#0b7fa3",
+        "--doc-mark": "#ef8fbb",
+      },
+      { scheme: "light" },
+    ),
+    await textus.appearance.setColors(
+      {
+        "--ui-frame-paint": "linear-gradient(170deg, #0f3346, #3b2440)",
+        "--doc-accent": "#5fd0ec",
+        "--doc-mark": "#f3a3c7",
+      },
+      { scheme: "dark" },
+    ),
+  );
+};
+```
+
+`appearance.colors()` reads the colours as the window shows them now, and
+`appearance.onDidChange` tells of another theme, scheme or plugin's
+colours - for a palette that depends on the theme underneath. Set
+`engines.textus` to `">=1.4.2"`.
+
 ### The rest
 
 - `net.fetch(url, { method, headers, body })` (`network:<host>`).
@@ -431,8 +475,9 @@ than ten errors a minute, is turned off and the user is told.
 ## On iPhone and iPad
 
 Plugins run on iOS as on the desktop, from the same catalog, with the same
-API; `textus.env.platform` is `"ios"`. What differs is room and what the
-system allows:
+API; `textus.env.platform` is `"ios"`. Android runs the plugins made for
+iOS (`"platforms"` with `"ios"`), with `textus.env.platform` `"android"`.
+What differs is room and what the system allows:
 
 - A phone is a narrow window: a sidebar view is a tab in a drawer about
   320px wide, and there is no hover or right-click. Keep a view usable by

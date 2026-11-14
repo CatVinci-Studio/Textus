@@ -1,3 +1,4 @@
+import { emitPluginEvent } from "../plugins/app-bridge";
 import { ENTRY_TRASHED_EVENT } from "../utils/events";
 import { fill } from "../i18n/fill";
 import {
@@ -77,6 +78,7 @@ export function useRowMenu(
         window.dispatchEvent(
           new CustomEvent(ENTRY_TRASHED_EVENT, { detail: path }),
         );
+        emitPluginEvent("fileDelete", { path });
       } catch (err) {
         await showMessage(failureText(t, err, name));
       }

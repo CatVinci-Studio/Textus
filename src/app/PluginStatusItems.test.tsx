@@ -19,6 +19,8 @@ vi.mock("../plugins/store/plugin-records", () => {
     pluginsSnapshot: () => snapshot,
     subscribePlugins: () => () => {},
     pluginName: () => "Timer",
+    windowInfo: () => ({ language: () => "en" }),
+    runningPlugins: () => [],
   };
 });
 vi.mock("../plugins/store/plugin-lookup", () => ({

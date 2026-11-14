@@ -1,5 +1,5 @@
 /**
- * The Textus plugin API, 1.5: the `textus` object a plugin's code is given
+ * The Textus plugin API, 1.6: the `textus` object a plugin's code is given
  * (src/plugins/host/runtime/host.js), the context its `activate` receives, and
  * `acquireTextusApi()` in its webviews (runtime/webview.js). The one source
  * of truth: docs/dev/plugins/guide.md explains it, the reference pages are
@@ -157,17 +157,19 @@ declare global {
       notify: Notify;
       /** 1.1: whether Textus is in front, behind, or has no window. */
       app: App;
+      /** 1.6: colours over the theme (appearance). */
+      appearance: Appearance;
     }
 
     interface Env {
       /** Textus's UI language ("en", "zh", "zh-Hant", ...). */
       readonly language: string;
       readonly appVersion: string;
-      /** This API's version: "1.5" from Textus 1.3.12-rc.1 ("1.4": 1.3.10, "1.3": 1.3.10-rc.1,
-       *  "1.2": 1.3.9, "1.1": 1.3.0-beta.8). Prefer engines.textus; compare
+      /** This API's version: "1.6" from Textus 1.4.2 ("1.5": 1.3.12-rc.1,
+       *  "1.4": 1.3.10, "1.3": 1.3.10-rc.1, "1.2": 1.3.9, "1.1": 1.3.0-beta.8). Prefer engines.textus; compare
        *  it as numbers, not as text ("1.10" > "1.9"). */
       readonly apiVersion: string;
-      readonly platform: "macos" | "windows" | "linux" | "ios";
+      readonly platform: "macos" | "windows" | "linux" | "ios" | "android";
       readonly theme: "light" | "dark";
       onDidChangeTheme: Event<"light" | "dark">;
       onDidChangeLanguage: Event<string>;
@@ -196,6 +198,11 @@ declare global {
         id: string,
         run: (editor: Editor, ...args: unknown[]) => unknown,
       ): Disposable;
+      /** From 1.6: sets a key the manifest's menu `when` clauses can read,
+       *  named `<plugin id>.<name>` - `when: "jane.focus.on"`. A string or
+       *  true; false, null or undefined unsets it. Gone when the plugin
+       *  stops. */
+      setContext(key: string, value: string | boolean | null): Promise<void>;
       /** A command of Textus's or of a plugin's. Textus's: "textus.save",
        *  "textus.closeTab" ({ save: true } closes once saved) and
        *  "textus.insertBlock" with a Format menu block at the caret - "h1"
@@ -253,6 +260,12 @@ declare global {
           multiple?: boolean;
           value?: string;
           commands?: boolean;
+          /** From 1.6: the rows for what is typed, asked as typing rests,
+           *  in place of filtering `items` (shown until it answers) - a
+           *  citation or a library searched as you type. One choice only. */
+          search?: (
+            query: string,
+          ) => (string | PickItem)[] | Promise<(string | PickItem)[]>;
         },
       ): Promise<unknown>;
       /** A date picked on Textus's month calendar, as `YYYY-MM-DD`, or
@@ -637,6 +650,32 @@ declare global {
        *  Shown in the / panel, grouped by plugin. 1.2: every matching
        *  provider is asked at once, and none holds up typing. */
       registerCompletion(id: string, provider: CompletionProvider): Disposable;
+      /** From 1.6 (editor.write): pasted text matching `pattern` is handed
+       *  to `provide`, and the Markdown it answers goes in instead - a URL
+       *  as a titled link, a spreadsheet's rows as a table. Answering null
+       *  (or not within 1.5 s) lets the paste go on as usual; text no
+       *  handler matches is never held. Several match: asked in plugin id
+       *  order, the first answer wins. Not in code, not with files.
+       *
+       *      textus.editor.registerPasteHandler(/^https?:\/\/\S+$/, async (url) =>
+       *        `[${await titleOf(url)}](${url})`);
+       */
+      registerPasteHandler(
+        pattern: RegExp | string,
+        provide: (text: string) => string | null | Promise<string | null>,
+      ): Disposable;
+      /** From 1.6 (editor.read): rows added to the outline of the document
+       *  in front, under its headings - a screenplay's scenes, a novel's
+       *  characters - each going to its block when clicked. Asked with its
+       *  blocks as it changes (1.5 s to answer); `level` 1 to 6 sets how
+       *  far in a row sits. */
+      registerOutline(provider: {
+        provideOutline(
+          blocks: Block[],
+        ):
+          | { text: string; level?: number; block: string }[]
+          | Promise<{ text: string; level?: number; block: string }[]>;
+      }): Disposable;
       /** A card for what the pointer rests on (editor.read). */
       registerHover(provider: {
         provideHover(
@@ -663,7 +702,17 @@ declare global {
        *  When several did since the last event, "user" wins, then history,
        *  ai, plugin, disk. */
       onDidChange: Event<{ path: string | null; source: ChangeSource }>;
-      onDidChangeSelection: Event<{ text: string }>;
+      /** The selection settled. From 1.6 also whether it is only the caret
+       *  and the id of the block its moving end is in (null past the
+       *  blocks): a typewriter, a reading line, a linked preview. */
+      onDidChangeSelection: Event<{
+        text: string;
+        empty: boolean;
+        block: string | null;
+      }>;
+      /** From 1.6: the first and last block in sight changed, once
+       *  scrolling or an edit rests (editor.read). */
+      onDidChangeVisible: Event<{ first: string | null; last: string | null }>;
       /** The keyboard, for plugins that are a way of typing - Vim, Emacs
        *  (editor.input). */
       keys: EditorKeys;
@@ -795,6 +844,10 @@ declare global {
       tooltip?: string;
       /** For "badge": before the words instead - a heading's number. */
       before?: boolean;
+      /** From 1.6: the words link here (http, https or mailto), followed
+       *  with Cmd/Ctrl+click as a link is - a DOI, an RFC, an issue number
+       *  made a link without changing the text. */
+      url?: string;
     }
 
     /** A document about to be saved. */
@@ -938,6 +991,18 @@ declare global {
        *  "Daily/*.md"); every document without one. */
       find(glob?: string): Promise<{ path: string; rel: string }[]>;
       stat(path: string): Promise<FileEntry | null>;
+      /** From 1.6: a short badge after the file's name in the sidebar (1
+       *  to 12 characters: "draft", "3", "★"), quiet or in a tone; null
+       *  takes it off. One shows per file, the plugin last by id winning;
+       *  gone when the plugin stops (files.read). */
+      setBadge(
+        path: string,
+        badge: {
+          text: string;
+          tone?: "accent" | "warning" | "danger" | "success";
+          tooltip?: string;
+        } | null,
+      ): Promise<void>;
       read(path: string): Promise<Uint8Array>;
       readText(path: string): Promise<string>;
       write(
@@ -972,11 +1037,15 @@ declare global {
       trash(path: string): Promise<void>;
       createFolder(path: string): Promise<void>;
       frontmatter: Frontmatter;
-      /** A file a plugin made, and from 1.3.13 a picture pasted or dropped
-       *  into a document and saved in its folder. */
+      /** A file a plugin made, and one the app made: a new document, a
+       *  picture pasted or dropped, a note made by following a link, a file
+       *  Textus AI wrote (from 1.4.2). A plugin's own path is as it gave it,
+       *  the app's is whole. */
       onDidCreate: Event<{ path: string }>;
       onDidChange: Event<{ path: string }>;
       onDidRename: Event<{ from: string; to: string }>;
+      /** A file or folder a plugin moved to the Trash, and from 1.4.2 one
+       *  the sidebar did (its whole path). */
       onDidDelete: Event<{ path: string }>;
       /** A document is about to be saved (files.write). Plugins are asked
        *  one after another in plugin id order, each given the text as the
@@ -1290,6 +1359,10 @@ declare global {
     }
 
     interface Export {
+      /** KaTeX's stylesheet with its fonts inline, as Textus draws formulas:
+       *  for a plugin page or a saved file that shows KaTeX's markup without
+       *  loading anything from the web. About 400 KB. From 1.4.2 (API 1.6). */
+      mathCss(): Promise<string>;
       /** An HTML or PDF export's page, before it is written (editor.read):
        *  `css` is added to its styles, `html` replaces its content. Scripts
        *  and handlers in the HTML are taken out. Plugins are asked in plugin
@@ -1389,6 +1462,62 @@ declare global {
       /** The user typed (heard once typing pauses) or saved by hand -
        *  that it happened, with nothing of the document. From 1.3.6. */
       onDidActivity: Event<{ kind: "typing" | "saved" }>;
+    }
+
+    /** A colour Textus's look is drawn from, which a plugin may set. */
+    type OpenColor =
+      | "--doc-bg"
+      | "--doc-text"
+      | "--doc-muted"
+      | "--doc-accent"
+      | "--doc-mark"
+      | "--doc-code-bg"
+      | "--ui-bg"
+      | "--ui-text"
+      | "--ui-accent"
+      | "--ui-frame-tint"
+      | "--ui-frame-paint"
+      | "--tone-blue"
+      | "--tone-green"
+      | "--tone-orange"
+      | "--tone-purple"
+      | "--tone-red"
+      | "--tone-teal"
+      | "--tone-yellow"
+      | "--tone-pink"
+      | "--tone-gray";
+
+    /**
+     * From 1.6 (permission `appearance`): a palette over whichever theme is
+     * on. Only the colours the others are drawn from are open; borders,
+     * hovers and the like follow. Values are colours; `--ui-frame-paint`
+     * (the frame round the pages: bar, rail, sidebar) may also be a
+     * `linear-`, `radial-` or `conic-gradient(...)` of colours, laid across
+     * the whole window. No images, `url()` or `var()`. Text kept readable:
+     * below 4.5:1 on its background (or any of the paint's colours) it is
+     * moved toward ink or white. The user's Custom CSS still wins.
+     *
+     *     const layer = await textus.appearance.setColors(
+     *       { "--ui-frame-paint": "linear-gradient(120deg, #f3d9c4, #d6dcec)" },
+     *       { scheme: "light" },
+     *     );
+     *     ctx.subscriptions.push(layer);
+     */
+    interface Appearance {
+      /** Lays `colors` over the theme, for light, dark or both (the
+       *  default); disposing it, or the plugin stopping, takes it away.
+       *  Several plugins: per colour the one last by id wins. Rejects
+       *  naming the first colour or value not taken. */
+      setColors(
+        colors: Partial<Record<OpenColor, string>>,
+        options?: { scheme?: "light" | "dark" | "both" },
+      ): Promise<Disposable>;
+      /** The open colours as the window shows them now (theme and every
+       *  plugin's), as `rgb(...)`; the paint as set, or "". No permission. */
+      colors(): Promise<Record<OpenColor, string>>;
+      /** The theme (its id, for keeping a palette per theme), the scheme or
+       *  a plugin's colours changed. */
+      onDidChange: Event<{ theme: string; scheme: "light" | "dark" }>;
     }
 
     /**

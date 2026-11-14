@@ -211,6 +211,8 @@ export default {
   reviewNotesAskPrefix: "Об этих заметках:\n{notes}\n",
   reviewNoteAskPrefix: "По поводу заметки «{comment}»: ",
   agentTabProject: "Память",
+  memoryBack: "Вернуться к разговору",
+  memorySetup: "Научите Textus AI писать как вы",
   memoryStyle: "Стиль письма",
   memoryLibrary: "Картотека",
   memoryInstructions: "Инструкции",
@@ -531,6 +533,7 @@ export default {
   toolbarItalic: "Курсив",
   toolbarHighlight: "Выделение цветом",
   toolbarMore: "Ещё",
+  toolbarHideKeyboard: "Скрыть клавиатуру",
   zenExitButton: "Выйти из режима дзен",
   openDialogText: "Текстовые файлы",
   openDialogAll: "Все файлы",
@@ -748,6 +751,7 @@ export default {
   navAbout: "О программе",
   navGuides: "Руководства",
   aboutVersion: "Версия {version}",
+  aboutVersionBeta: "Версия {version} · Бета",
   aboutMadeBy: "Сделано в CatVinci Studio",
   aboutQq: "Группа QQ",
   navShortcuts: "Сочетания клавиш",
@@ -885,6 +889,7 @@ export default {
   insertColumnRight: "Вставить столбец справа",
   deleteRow: "Удалить строку",
   deleteColumn: "Удалить столбец",
+  copyTable: "Копировать таблицу",
   deleteTable: "Удалить таблицу",
   tableToMarkdown: "Преобразовать в таблицу Markdown",
   tableToMarkdownMerged:
@@ -953,6 +958,8 @@ export default {
   agentNeedsFolder:
     "Сначала откройте папку или сохраните документ: агент работает в папке.",
   agentStopped: "{agent} остановился.",
+  agentNoImages:
+    "{agent} не умеет читать изображения. Уберите изображение или выберите другого агента.",
   agentSignIn: "Сначала войдите в {agent}.",
   chatAgentsGroup: "Агенты",
   chatAgentPermission: "Агент просит разрешения продолжить",
@@ -1234,6 +1241,7 @@ export default {
   menuHelpMarkdown: "Руководство по Markdown",
   menuHelpAgent: "Руководство по ИИ",
   menuHelpCommunity: "Сообщество",
+  menuHelpSponsor: "Поддержать Textus",
   menuHelpReport: "Сообщить о проблеме…",
   reportTitle: "Сообщить о проблеме",
   reportWhat: "Что случилось и чего вы ожидали?",
@@ -1330,6 +1338,7 @@ export default {
   updateDownloading: "Загрузка обновления…",
   updateFailed: "Не удалось обновить:",
   updateViaPackageManager: `${APP_NAME} установлен через менеджер пакетов. Обновите его там.`,
+  updatePortable: `Это портативная версия ${APP_NAME}: скачайте новую версию с textus.md и распакуйте её поверх этой папки.`,
   cliCommandLabel: "Установить Textus CLI",
   cliCommandInstalled: "Установлена",
   cliCommandNotInstalled: "Не установлена",
@@ -1416,65 +1425,48 @@ export default {
   markdownGuideTab: "Руководство по Markdown",
   agentGuideTab: "Руководство по ИИ",
   tutorialStepOfCount: "Шаг {i} из {n}",
-  tutorialChapters: "Главы обучения",
-  tutorialChapterStart: "Начало",
-  tutorialChapterWriting: "Письмо",
-  tutorialChapterConnect: "Подключение ИИ",
-  tutorialChapterAi: AI_NAME,
-  tutorialChapterDone: "Готово",
   tutorialBack: "Назад",
   tutorialNext: "Продолжить",
   tutorialStart: "Начать",
   tutorialFinish: "Начать писать",
   tutorialSkip: "Выйти из обучения",
   tutorialSkipStep: "Пропустить шаг",
-  tutorialCollapse: "Свернуть",
-  tutorialExpand: "Развернуть",
-  tutorialTryIt: "Попробуйте",
-  tutorialWatch: "Смотреть анимацию",
-  tutorialWatchNote:
-    "Подключите ИИ позже в разделе {path}, чтобы попробовать самим.",
   tutorialWelcomeTitle: `Добро пожаловать в ${APP_NAME}`,
   tutorialWelcomeBody:
-    "Место, где пишут Markdown: файлы остаются на вашем компьютере, а ИИ помогает, когда вы попросите; две минуты — учимся, пока пишем.",
-  tutorialWysiwygTitle: "Форматирование на ходу",
-  tutorialWysiwygBody:
-    "Печатайте там, где серые подсказки: Markdown сразу превращается в оформление; дважды Return завершает список.",
-  tutorialWysiwygHeading: "Заголовок: `# {title}`, затем Enter",
-  tutorialWysiwygList: "Список: `- Облонский`, Enter, `Долли`",
-  tutorialWysiwygNumbered: "Нумерованный список: `1. Часть первая`",
-  tutorialWysiwygTaskItem: "Задача: `- [ ] Дочитать первую часть`",
-  tutorialPaletteTitle: "Где что искать",
-  tutorialPaletteBody:
-    "Любая команда находится поиском по {shortcut}; больше возможностей — в магазине плагинов под значком пазла, ставьте то, что нужно.",
-  tutorialPaletteTask: "Нажмите {shortcut}, введите «экспорт», нажмите Return",
-  tutorialPaletteTaskPhone:
-    "На телефоне магазин плагинов — в настройках, в разделе «Расширения»",
-  tutorialConnectTitle: "Подключить ИИ",
-  tutorialConnectBody:
-    "Следующие два шага используют ИИ; войдите с учётной записью, введите ключ API или сделайте это позже — в любой момент в Настройки › Textus AI.",
-  tutorialConnectTask: "Войдите или вставьте ключ - или пропустите пока.",
-  tutorialConnectSkip: "Пропустить пока",
-  tutorialConnected: "Подключено.",
-  tutorialWriteTitle: "Пусть пишет ИИ",
-  tutorialWriteBody:
-    "Правки ИИ сначала показаны зелёным; они вступают в силу, только когда вы их примете.",
-  tutorialWriteOpen:
-    "Откройте панель ИИ: значок пера справа вверху ({shortcut})",
-  tutorialWriteOpenPhone: "Откройте панель ИИ: нажмите значок пера вверху",
-  tutorialWriteSend:
-    "Отправьте `Продолжи мои заметки ещё одним абзацем` и нажмите «Принять»",
-  tutorialContinuationTitle: "Автодополнение",
-  tutorialContinuationBody:
-    "Остановитесь на секунду: появится серое продолжение; Tab — принять его.",
-  tutorialContinuationTask:
-    "В конце введите `Главное в первой фразе то, что`, сделайте паузу и нажмите Tab",
-  tutorialContinuationTaskPhone:
-    "В конце введите `Главное в первой фразе то, что`, сделайте паузу и коснитесь серого текста",
-  tutorialDoneTitle: "Всё готово",
+    "Минута, чтобы всё показать: боковая панель, страница и ИИ.",
+  tutorialSidebarTitle: "Боковая панель",
+  tutorialSidebarBody: "Нажмите на папку слева, чтобы открыть боковую панель.",
+  tutorialSidebarBodyPhone:
+    "Коснитесь кнопки боковой панели слева вверху, чтобы открыть её.",
+  tutorialRailTitle: "Что в ней",
+  tutorialRailBody: "Каждый значок слева открывает часть боковой панели.",
+  tutorialRailFiles: "Файлы: папка, в которой вы пишете.",
+  tutorialRailOutline:
+    "Структура: заголовки страницы, чтобы переходить между ними.",
+  tutorialRailSearch: "Поиск: файл или строка во всей папке.",
+  tutorialRailPlugins: "Плагины: новые функции, когда понадобятся.",
+  tutorialRailHide:
+    "В маленьком окне эту панель значков можно скрыть правым щелчком.",
+  tutorialSettingsTitle: "Настройки",
+  tutorialSettingsBody: "В шестерёнке тема, шрифты и ваши аккаунты ИИ.",
+  tutorialEditorTitle: "Пишите, как видите",
+  tutorialEditorBody:
+    "Markdown становится форматированием прямо при вводе: попробуйте `# Заголовок` или `- список`.",
+  tutorialAiTitle: "Textus AI",
+  tutorialAiBody: "Нажмите на искры справа вверху, чтобы открыть Textus AI.",
+  tutorialAiBodyPhone: "Коснитесь искр справа вверху, чтобы открыть Textus AI.",
+  tutorialSignInTitle: "Войдите в ИИ",
+  tutorialSignInBody:
+    "Нажмите «Войти» и используйте аккаунт или API-ключ; после входа тур продолжится.",
+  tutorialAiUseTitle: "Пусть ИИ поправит",
+  tutorialAiUseBody:
+    "Попросите сократить заметки, затем примите или отклоните предложение.",
   tutorialDoneBody:
-    "Создайте новый документ; два руководства в меню «Справка» подробно рассказывают о Markdown и ИИ; там же можно пройти обзор ещё раз.",
-  tutorialDoneMemory: `${AI_NAME} со временем запоминает ваши требования и стиль; загляните в «Память» в панели ИИ.`,
+    "Пишите: в меню «Справка» есть руководства и этот тур, чтобы пройти его снова.",
+  chatSignInHint: "Войдите в ИИ, чтобы общаться здесь.",
+  chatSignIn: "Войти",
+  tutorialConnectSkip: "Пропустить пока",
+  tutorialDoneTitle: "Всё готово",
   closePromptNamed: "В «{name}» есть несохранённые изменения.",
   closePromptMessage: "В документе есть несохранённые изменения.",
   closePromptSave: "Сохранить",
@@ -1606,6 +1598,7 @@ export default {
   themeNamePaper: "Бумага",
   themeNameSlate: "Грифель",
   themeNameForest: "Лес",
+  themeNameAurora: "Аврора",
   appearanceLabel: "Оформление",
   appearanceModeLabel: "Светлая или тёмная",
   appearanceSystem: "Как в системе",
@@ -1908,6 +1901,7 @@ export default {
     "Хранить свои данные в открытой папке, в .textus/plugins",
   pluginPermAiTools: "Давать Textus AI свои инструменты",
   pluginPermNotifications: "Показывать системные уведомления",
+  pluginPermAppearance: "Менять цвета Textus и ваших документов",
   pluginPermAgents:
     "Запускать ИИ-агента, установленного на этом компьютере (он может читать и менять файлы)",
   pluginPermBackground:

@@ -17,7 +17,7 @@ import {
 import { setQuickAskWidget } from "../ai/chat/quick-ask/quick-ask-widget-plugin";
 import { keepClearOfDock } from "../ai/chat/quick-ask/quick-ask-dock";
 import { type PendingPreview } from "../ai/revision/pending-types";
-import { isIOSApp } from "../platform/capabilities";
+import { isMobileApp } from "../platform/capabilities";
 
 /** Whether document position `pos` shows inside its editor's scroller. */
 function previewOnScreen(view: EditorView, pos: number): boolean {
@@ -55,7 +55,7 @@ export function useQuickAskReview({
   );
   useEffect(() => {
     // The active tab's editor only: the others take no review steps.
-    if (!isIOSApp || phone || !isActive) return;
+    if (!isMobileApp || phone || !isActive) return;
     const record = () => {
       focusAtPress.current = { focused: editorHasFocus(), at: Date.now() };
     };
@@ -105,7 +105,7 @@ export function useQuickAskReview({
       if (
         refocusAfterReview({
           phone,
-          ios: isIOSApp,
+          ios: isMobileApp,
           editorHadFocus,
           textFieldFocused:
             active instanceof HTMLTextAreaElement ||

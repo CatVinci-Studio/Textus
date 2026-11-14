@@ -18,7 +18,7 @@ import { ownRevisionPlugin } from "./margin/own-revision-plugin";
 import { paperRegionPlugin } from "./paper/paper-region-plugin";
 import { resolveStrings } from "../i18n/strings";
 import { prefersReducedMotion } from "../engine/motion/motion";
-import { sendTourSignal, type TourAi } from "../utils/events";
+import type { TourAi } from "../utils/events";
 import type { RevisionDisplay, Settings } from "../prefs/SettingsContext";
 import { aiFeatures } from "../prefs/ai-features";
 
@@ -82,9 +82,6 @@ export function withAiPlugins(
             docPath: docPath.current,
             workspaceRoot: settings.current.agentWorkspaceRoot || null,
           }),
-          onAccept: () => {
-            if (tour.current) sendTourSignal("completion-accepted");
-          },
         }),
       )
       .use(

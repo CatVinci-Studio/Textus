@@ -1,3 +1,4 @@
+use crate::app_dirs::AppDirs;
 use tauri::{AppHandle, Manager};
 use tokio::fs;
 
@@ -5,7 +6,7 @@ use tokio::fs;
 /// and optionally `dark.css`, already self-contained.
 fn themes_dir(app: &AppHandle) -> Result<std::path::PathBuf, String> {
     app.path()
-        .app_config_dir()
+        .own_config_dir()
         .map_err(|e| e.to_string())
         .map(|p| p.join("themes"))
 }

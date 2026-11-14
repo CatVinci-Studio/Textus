@@ -32,9 +32,9 @@ Milkdown/ProseMirror, source mode CodeMirror 6) and a Rust backend in
   [releasing.md](docs/dev/releasing.md#pull-requests-and-commits): work goes
   to `main` from a branch, never pushed directly; plain English commit
   messages; don't merge a pull request yourself unless asked.
-- **Run the checks** before you say a change is done: `npm run check`
-  while you work (`npm run check:quick` for only your files), and
-  `npm run check:all` before a pull request ([CONTRIBUTING.md](CONTRIBUTING.md#before-you-push)).
+- **Run the checks** before you say a change is done: `npm run check:quick`
+  while you work (only your files), and `npm run check` before a pull
+  request ([CONTRIBUTING.md](CONTRIBUTING.md#before-you-push)).
 - **Don't change CI or the test setup to make a check pass**: `.github/`,
   `playwright*.config.ts`, `vite*.config.ts`, `eslint.config.js`,
   `tsconfig*.json`, `scripts/check-*.mjs`, `e2e/helpers.ts`, or a test's
@@ -57,9 +57,9 @@ Milkdown/ProseMirror, source mode CodeMirror 6) and a Rust backend in
 - **The e2e plugin flows need a textus-plugins checkout** beside the
   repository or at `TEXTUS_PLUGINS_DIR`; without one the catalog is empty
   ([testing.md](docs/dev/testing.md#the-official-plugins)).
-- **Keep the code shape**: at most 600 lines a file and 8 hooks a
-  component, pure logic apart from side effects, provider differences as
-  data. Make the smallest change that fixes the cause, match the
+- **Keep the code shape** in [code-style.md](docs/dev/code-style.md)
+  (file size, hooks a component, pure logic apart from side effects,
+  provider differences as data). Make the smallest change that fixes the cause, match the
   surrounding code, and write comments that say why, not what.
 - **Startup**: anything first used after a click or a keystroke loads
   through `lazyModule` (`src/lazy/lazy-module.ts`); the startup layer

@@ -63,7 +63,7 @@ const onOpenChange = (listener: () => void) => {
 };
 
 /** Whether the docked panel is open. */
-export function useAgentPanelOpen(): boolean {
+function useAgentPanelOpen(): boolean {
   return useSyncExternalStore(onOpenChange, openSnapshot);
 }
 

@@ -33,16 +33,10 @@ it("keeps the master switch off whatever was saved", async () => {
   }
 });
 
-it("offers no Textus AI page, and the tour skips the AI chapters", async () => {
+it("offers no Textus AI page, and the tour skips the AI steps", async () => {
   const { pages, tour } = await withoutAi();
   expect(pages.settingsPages().map((p) => p.id)).not.toContain("ai");
-  expect(tour.TUTORIAL_STEPS.map((s) => s.chapter)).not.toContain("ai");
-  expect(tour.TUTORIAL_STEPS.map((s) => s.id)).not.toContain("connect");
-  expect(tour.TUTORIAL_CHAPTERS.map((c) => c.id)).toEqual([
-    "start",
-    "writing",
-    "done",
-  ]);
+  expect(tour.TUTORIAL_STEPS.filter((s) => s.ai)).toEqual([]);
 });
 
 it("is offered everywhere else", async () => {
@@ -50,5 +44,5 @@ it("is offered everywhere else", async () => {
   const { hasTextusAi } = await import("./capabilities");
   const { TUTORIAL_STEPS } = await import("../onboarding/tutorial-steps");
   expect(hasTextusAi).toBe(true);
-  expect(TUTORIAL_STEPS.map((s) => s.id)).toContain("connect");
+  expect(TUTORIAL_STEPS.map((s) => s.id)).toContain("signin");
 });

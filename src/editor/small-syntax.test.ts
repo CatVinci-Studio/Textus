@@ -7,6 +7,8 @@ import type { EditorView } from "@milkdown/kit/prose/view";
 import { createTestEditor } from "./editor-test-kit";
 import { splitAltSize } from "./images/image-html";
 import { loadKatex } from "./math/katex-loader";
+import { tableMarkdown } from "./editor-menu-tables";
+import type { EditorRunner } from "./useEditorRunner";
 
 const editors: Editor[] = [];
 afterEach(async () => {
@@ -97,6 +99,21 @@ describe("formulas in a Markdown table", () => {
     });
     expect(math).toBe("x | y");
     expect(saved(view)).toContain("| $x \\| y$ |");
+  });
+
+  it("copies the table the caret is in as Markdown, a formula's bar escaped", async () => {
+    const view = await open(table);
+    let at = -1;
+    view.state.doc.descendants((n, pos) => {
+      if (at < 0 && n.isText && n.text === "2") at = pos;
+    });
+    view.dispatch(
+      view.state.tr.setSelection(Selection.near(view.state.doc.resolve(at))),
+    );
+    const editor = editors[editors.length - 1];
+    const run = ((fn) => editor.action(fn)) as EditorRunner;
+    expect(tableMarkdown(run)).toBe(`${saved(view).split("\n\nend")[0]}\n`);
+    expect(tableMarkdown(run)).toContain("| $x \\| y$ |");
   });
 
   it("saves a bar typed into a cell's formula as \\|", async () => {

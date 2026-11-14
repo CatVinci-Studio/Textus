@@ -24,6 +24,9 @@ export interface Request {
   query: string;
   /** Enter on text that matches nothing resolves { typed: text }. */
   typed: boolean;
+  /** The rows for what is typed, asked as it changes, in place of
+   *  filtering `items` here (which show until it answers). */
+  search?: (query: string) => Promise<QuickPickItem[]>;
   resolve: (value: unknown) => void;
 }
 
@@ -51,7 +54,12 @@ export function quickPickNow(): Request | undefined {
 export function showQuickPick(
   items: QuickPickItem[],
   placeholder: string,
-  options: { multiple?: boolean; query?: string; typed?: boolean } = {},
+  options: {
+    multiple?: boolean;
+    query?: string;
+    typed?: boolean;
+    search?: Request["search"];
+  } = {},
 ): Promise<unknown> {
   return new Promise((resolve) => {
     queue = [
@@ -63,6 +71,7 @@ export function showQuickPick(
         multiple: options.multiple === true,
         query: options.query ?? "",
         typed: options.typed === true,
+        search: options.search,
         resolve,
       },
     ];

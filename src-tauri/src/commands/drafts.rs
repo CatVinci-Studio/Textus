@@ -2,6 +2,7 @@
 //! survives a crash. Snapshots are cleared once content is safe, so anything
 //! found at launch is unresolved.
 
+use crate::app_dirs::AppDirs;
 use serde::{Deserialize, Serialize};
 use std::path::PathBuf;
 use std::sync::atomic::{AtomicBool, Ordering};
@@ -15,7 +16,7 @@ fn valid_component(s: &str) -> bool {
 
 fn drafts_dir(app: &AppHandle) -> Result<PathBuf, String> {
     app.path()
-        .app_data_dir()
+        .own_data_dir()
         .map_err(|e| e.to_string())
         .map(|p| p.join(crate::settings::dir_name("drafts")))
 }

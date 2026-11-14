@@ -20,9 +20,16 @@
   display: none;
 }
 
-/* Memory starts under the history button, not beneath it. */
+/* Memory's folder sits on the tools' row, at its start; the tools keep
+   their end (+, history, back). */
 .ai-tab .agent-panel-memory {
-  padding-top: 44px;
+  padding-top: var(--space-2);
+}
+
+.ai-tab .project-bar-memory > .project-bar-row,
+.ai-tab .agent-panel-memory > .project-bar-empty {
+  min-height: var(--control-height-sm);
+  padding-right: calc(3 * var(--control-height-sm) + 3 * var(--space-1));
 }
 
 /* Its cards on the paper take a tint. */

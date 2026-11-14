@@ -24,6 +24,7 @@ const PLATFORMS: ShortcutPlatform[] = ["macos", "windows", "linux"];
 const NAVIGATOR_PLATFORM: Record<ShortcutPlatform, string> = {
   macos: "MacIntel",
   ios: "iPad",
+  android: "Linux armv8l",
   windows: "Win32",
   linux: "Linux x86_64",
 };

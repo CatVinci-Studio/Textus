@@ -209,6 +209,8 @@ utiliser une.
   reviewNotesAskPrefix: "À propos de ces notes :\n{notes}\n",
   reviewNoteAskPrefix: "À propos de votre note «\u00a0{comment}\u00a0»\u00a0: ",
   agentTabProject: "Mémoire",
+  memoryBack: "Revenir à la conversation",
+  memorySetup: "Apprendre à Textus AI votre façon d’écrire",
   memoryStyle: "Style d'écriture",
   memoryLibrary: "Bibliothèque",
   memoryInstructions: "Instructions d'écriture",
@@ -531,6 +533,7 @@ utiliser une.
   toolbarItalic: "Italique",
   toolbarHighlight: "Surligner",
   toolbarMore: "Plus",
+  toolbarHideKeyboard: "Masquer le clavier",
   zenExitButton: "Quitter le mode zen",
   openDialogText: "Fichiers texte",
   openDialogAll: "Tous les fichiers",
@@ -748,6 +751,7 @@ utiliser une.
   navAbout: "À propos",
   navGuides: "Guides",
   aboutVersion: "Version {version}",
+  aboutVersionBeta: "Version {version} · Bêta",
   aboutMadeBy: "Créé par CatVinci Studio",
   aboutQq: "Groupe QQ",
   navShortcuts: "Raccourcis",
@@ -887,6 +891,7 @@ utiliser une.
   insertColumnRight: "Insérer une colonne à droite",
   deleteRow: "Supprimer la ligne",
   deleteColumn: "Supprimer la colonne",
+  copyTable: "Copier le tableau",
   deleteTable: "Supprimer le tableau",
   tableToMarkdown: "Convertir en tableau Markdown",
   tableToMarkdownMerged:
@@ -958,6 +963,8 @@ utiliser une.
   agentNeedsFolder:
     "Ouvrez d’abord un dossier ou enregistrez le document : l’agent travaille dans un dossier.",
   agentStopped: "{agent} s’est arrêté.",
+  agentNoImages:
+    "{agent} ne sait pas lire les images. Retirez l’image ou choisissez un autre agent.",
   agentSignIn: "Connectez-vous d’abord à {agent}.",
   chatAgentsGroup: "Agents",
   chatAgentPermission: "L’agent demande à continuer",
@@ -1236,6 +1243,7 @@ utiliser une.
   menuHelpMarkdown: "Guide Markdown",
   menuHelpAgent: "Guide des fonctions IA",
   menuHelpCommunity: "Rejoindre la communauté",
+  menuHelpSponsor: "Soutenir Textus",
   menuHelpReport: "Signaler un problème…",
   reportTitle: "Signaler un problème",
   reportWhat: "Que s'est-il passé, et qu'attendiez-vous ?",
@@ -1333,6 +1341,7 @@ utiliser une.
   updateDownloading: "Téléchargement de la mise à jour…",
   updateFailed: "Échec de la mise à jour\u00a0:",
   updateViaPackageManager: `${APP_NAME} a été installé par votre gestionnaire de paquets. Mettez-le à jour depuis celui-ci.`,
+  updatePortable: `Ceci est la version portable de ${APP_NAME} : téléchargez la nouvelle version sur textus.md et décompressez-la dans ce dossier.`,
   cliCommandLabel: "Installer Textus CLI",
   cliCommandInstalled: "Installée",
   cliCommandNotInstalled: "Non installée",
@@ -1421,68 +1430,53 @@ utiliser une.
   markdownGuideTab: "Guide Markdown",
   agentGuideTab: "Guide des fonctions IA",
   tutorialStepOfCount: "Étape {i} sur {n}",
-  tutorialChapters: "Chapitres du tutoriel",
-  tutorialChapterStart: "Début",
-  tutorialChapterWriting: "Écriture",
-  tutorialChapterConnect: "Connecter l'IA",
-  tutorialChapterAi: AI_NAME,
-  tutorialChapterDone: "Terminé",
   tutorialBack: "Retour",
   tutorialNext: "Continuer",
   tutorialStart: "Commencer",
   tutorialFinish: "Commencer à écrire",
   tutorialSkip: "Quitter le tutoriel",
   tutorialSkipStep: "Passer cette étape",
-  tutorialCollapse: "Réduire",
-  tutorialExpand: "Afficher les instructions",
-  tutorialTryIt: "À vous",
-  tutorialWatch: "Voir l'animation",
-  tutorialWatchNote:
-    "Connectez une IA plus tard dans {path} pour l'essayer vous-même.",
   tutorialWelcomeTitle: `Bienvenue dans ${APP_NAME}`,
   tutorialWelcomeBody:
-    "Un endroit pour écrire en Markdown : vos fichiers restent sur votre ordinateur, et une IA aide quand vous le demandez; deux minutes, en écrivant.",
-  tutorialWysiwygTitle: "La mise en forme en tapant",
-  tutorialWysiwygBody:
-    "Tapez là où sont les indications grises : le Markdown devient aussitôt mise en forme; deux fois Entrée termine une liste.",
-  tutorialWysiwygHeading: "Un titre : `# {title}`, puis Entrée",
-  tutorialWysiwygList:
-    "Une liste : `- Monseigneur Bienvenu`, Entrée, `Mademoiselle Baptistine`",
-  tutorialWysiwygNumbered: "Une liste numérotée : `1. Livre premier`",
-  tutorialWysiwygTaskItem: "Une tâche : `- [ ] Finir le tome I`",
-  tutorialPaletteTitle: "Trouver une fonction",
-  tutorialPaletteBody:
-    "Chaque commande se trouve en tapant {shortcut} ; d’autres fonctions sont dans le magasin de plugins, sous la pièce de puzzle, à installer selon vos besoins.",
-  tutorialPaletteTask: "Appuyez sur {shortcut}, tapez « export », puis Entrée",
-  tutorialPaletteTaskPhone:
-    "Sur un téléphone, le magasin de plugins est dans les Réglages, sous « Extensions »",
-  tutorialConnectTitle: "Connecter une IA",
-  tutorialConnectBody:
-    "Les deux étapes suivantes utilisent une IA; connectez-vous avec un compte, saisissez une clé d’API, ou plus tard - à tout moment dans Réglages › Textus AI.",
-  tutorialConnectTask:
-    "Connectez-vous ou collez une clé, ou passez pour l'instant.",
-  tutorialConnectSkip: "Passer pour l'instant",
-  tutorialConnected: "Connecté.",
-  tutorialWriteTitle: "Laisser l’IA écrire",
-  tutorialWriteBody:
-    "Les modifications de l’IA s’affichent d’abord en vert ; elles ne comptent qu’une fois acceptées.",
-  tutorialWriteOpen:
-    "Ouvrez le panneau IA : l'icône de la plume, en haut à droite ({shortcut})",
-  tutorialWriteOpenPhone:
-    "Ouvrez le panneau IA : touchez l'icône de la plume, en haut",
-  tutorialWriteSend:
-    "Envoyez `Ajoute un paragraphe à mes notes`, puis cliquez sur Accepter",
-  tutorialContinuationTitle: "Complétion",
-  tutorialContinuationBody:
-    "Marquez une pause en écrivant : une suite grise apparaît ; Tab l’accepte.",
-  tutorialContinuationTask:
-    "À la fin, tapez `Ce que Hugo veut montrer, c'est`, faites une pause, puis appuyez sur Tab",
-  tutorialContinuationTaskPhone:
-    "À la fin, tapez `Ce que Hugo veut montrer, c'est`, faites une pause, puis touchez le texte gris",
-  tutorialDoneTitle: "C’est prêt",
+    "Une minute pour faire le tour : la barre latérale, la page et l'IA.",
+  tutorialSidebarTitle: "La barre latérale",
+  tutorialSidebarBody:
+    "Cliquez sur le dossier à gauche pour ouvrir la barre latérale.",
+  tutorialSidebarBodyPhone:
+    "Touchez le bouton de barre latérale en haut à gauche pour l'ouvrir.",
+  tutorialRailTitle: "Ce qu'elle contient",
+  tutorialRailBody:
+    "Chaque icône à gauche ouvre une partie de la barre latérale.",
+  tutorialRailFiles: "Fichiers : le dossier où vous écrivez.",
+  tutorialRailOutline: "Plan : les titres de la page, pour y sauter.",
+  tutorialRailSearch:
+    "Recherche : trouver un fichier ou une ligne dans tout le dossier.",
+  tutorialRailPlugins: "Plugins : d'autres fonctions, ajoutées au besoin.",
+  tutorialRailHide:
+    "Dans une petite fenêtre, un clic droit sur cette barre d’icônes la masque.",
+  tutorialSettingsTitle: "Réglages",
+  tutorialSettingsBody:
+    "L'engrenage réunit le thème, les polices et vos comptes d'IA.",
+  tutorialEditorTitle: "Écrire tel que ça s'affiche",
+  tutorialEditorBody:
+    "Le Markdown devient mise en forme pendant la frappe : essayez `# Un titre` ou `- une liste`.",
+  tutorialAiTitle: "Textus AI",
+  tutorialAiBody:
+    "Cliquez sur les étincelles en haut à droite pour ouvrir Textus AI.",
+  tutorialAiBodyPhone:
+    "Touchez les étincelles en haut à droite pour ouvrir Textus AI.",
+  tutorialSignInTitle: "Se connecter à une IA",
+  tutorialSignInBody:
+    "Cliquez sur Se connecter, avec un compte ou une clé d'API ; la visite reprend une fois connecté.",
+  tutorialAiUseTitle: "Laisser l'IA réviser",
+  tutorialAiUseBody:
+    "Demandez-lui de resserrer vos notes, puis acceptez ou refusez ce qu'elle propose.",
   tutorialDoneBody:
-    "Créez un nouveau document; les deux guides du menu Aide expliquent Markdown et l’IA en détail ; la visite s’y trouve aussi, pour la refaire.",
-  tutorialDoneMemory: `${AI_NAME} retient peu à peu vos exigences et votre style ; voyez Mémoire, dans le panneau IA.`,
+    "À vous d'écrire : le menu Aide contient les guides, et cette visite à refaire.",
+  chatSignInHint: "Connectez-vous à une IA pour discuter ici.",
+  chatSignIn: "Se connecter",
+  tutorialConnectSkip: "Passer pour l'instant",
+  tutorialDoneTitle: "C’est prêt",
   closePromptNamed: "« {name} » a des modifications non enregistrées.",
   closePromptMessage:
     "Ce document contient des modifications non enregistrées.",
@@ -1618,6 +1612,7 @@ utiliser une.
   themeNamePaper: "Papier",
   themeNameSlate: "Ardoise",
   themeNameForest: "Forêt",
+  themeNameAurora: "Aurore",
   appearanceLabel: "Apparence",
   appearanceModeLabel: "Clair ou sombre",
   appearanceSystem: "Selon le système",
@@ -1922,6 +1917,7 @@ utiliser une.
     "Garder ses propres données dans le dossier ouvert, dans .textus/plugins",
   pluginPermAiTools: "Donner à Textus AI ses propres outils",
   pluginPermNotifications: "Afficher des notifications système",
+  pluginPermAppearance: "Modifier les couleurs de Textus et de vos documents",
   pluginPermAgents:
     "Lancer un agent IA installé sur cet ordinateur (il peut lire et modifier des fichiers)",
   pluginPermBackground:

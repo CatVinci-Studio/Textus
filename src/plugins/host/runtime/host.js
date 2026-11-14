@@ -10,7 +10,7 @@
 /* global createEndpoint, localized, __textusText */
 (function () {
   "use strict";
-  var API_VERSION = "1.5";
+  var API_VERSION = "1.6";
   var app = null;
   var waiting = [];
   var module = { exports: {} };
@@ -20,6 +20,11 @@
   var fileEditorProviders = new Map();
   var codeBlockProviders = new Map();
   var hoverProviders = [];
+  var pasteHandlers = {};
+  var outlineProviders = [];
+  var pickSearches = {};
+  var pickSearchCount = 0;
+  var pasteHandlerCount = 0;
   var decorationProviders = [];
   var completionProviders = new Map();
   // Asks the panel may still call off, by request.
@@ -495,6 +500,12 @@
       registerEditorCommand: function (id, run) {
         return registerCommand(String(id), editorCommand(run), true);
       },
+      setContext: function (key, value) {
+        return call("commands.setContext", {
+          key: String(key),
+          value: value === undefined ? null : value,
+        });
+      },
       execute: function (id) {
         return call("commands.execute", {
           command: String(id),
@@ -527,12 +538,19 @@
         return call("ui.input", plain(options || {}));
       },
       pick: function (items, options) {
+        var search = options && options.search;
+        var id =
+          typeof search === "function" ? String(++pickSearchCount) : null;
+        if (id) pickSearches[id] = search;
         return call("ui.pick", {
           items: plain(items),
           placeholder: options && options.placeholder,
           multiple: !!(options && options.multiple),
           value: options && options.value,
           commands: !!(options && options.commands),
+          search: id,
+        }).finally(function () {
+          if (id) delete pickSearches[id];
         });
       },
       form: function (options) {
@@ -788,6 +806,30 @@
             completionProviders.delete(key);
         });
       },
+      registerPasteHandler: function (pattern, provide) {
+        var id = String(++pasteHandlerCount);
+        pasteHandlers[id] = provide;
+        quiet(
+          call("editor.registerPasteHandler", {
+            id: id,
+            pattern:
+              pattern instanceof RegExp ? pattern.source : String(pattern),
+          }),
+        );
+        return disposable(function () {
+          delete pasteHandlers[id];
+          quiet(call("editor.unregisterPasteHandler", { id: id }));
+        });
+      },
+      registerOutline: function (provider) {
+        outlineProviders.push(provider);
+        quiet(call("editor.registerOutline", {}));
+        return disposable(function () {
+          without(outlineProviders, provider);
+          if (!outlineProviders.length)
+            quiet(call("editor.unregisterOutline", {}));
+        });
+      },
       registerHover: function (provider) {
         hoverProviders.push(provider);
         quiet(call("editor.registerHover", {}));
@@ -807,6 +849,7 @@
       onDidChangeActive: on("activeDocument"),
       onDidChange: on("documentChange"),
       onDidChangeSelection: on("selection"),
+      onDidChangeVisible: on("visible"),
       keys: {
         capture: function (capture) {
           return call("editor.captureKeys", plain(capture) || null);
@@ -853,6 +896,12 @@
       },
       stat: function (path) {
         return call("files.stat", { path: String(path) });
+      },
+      setBadge: function (path, badge) {
+        return call("files.setBadge", {
+          path: String(path),
+          badge: badge ? plain(badge) : null,
+        });
       },
       conventions: function (path) {
         return call("files.conventions", {
@@ -1063,6 +1112,9 @@
       },
     },
     export: {
+      mathCss: function () {
+        return call("export.mathCss");
+      },
       onWillExport: function (listener) {
         willExport.push(listener);
         if (willExport.length === 1)
@@ -1099,6 +1151,23 @@
         return call("notify.show", plain(notification));
       },
     },
+    appearance: {
+      // Layered over the theme until disposed or the plugin stops.
+      setColors: function (colors, options) {
+        return call("appearance.setColors", {
+          colors: plain(colors),
+          scheme: (options && options.scheme) || "both",
+        }).then(function (id) {
+          return disposable(function () {
+            quiet(call("appearance.clear", { id: id }));
+          });
+        });
+      },
+      colors: function () {
+        return call("appearance.colors");
+      },
+      onDidChange: on("appearance"),
+    },
     app: {
       // Kept up to date from the first time it is read.
       get state() {
@@ -1124,6 +1193,7 @@
       "uri",
       "ai",
       "plugins",
+      "appearance",
     ].forEach(function (name) {
       textus[name] = new Proxy(
         {},
@@ -1293,6 +1363,25 @@
     $cancelEmbed: function (params) {
       var controller = embedAsks.get(params.request);
       if (controller) controller.abort();
+    },
+    $provideOutline: async function (params) {
+      var all = [];
+      for (var i = 0; i < outlineProviders.length; i++) {
+        var items = await outlineProviders[i].provideOutline(params.blocks);
+        if (Array.isArray(items)) all = all.concat(items);
+      }
+      return plain(all);
+    },
+    $pickSearch: async function (params) {
+      var search = pickSearches[params.id];
+      if (!search) return [];
+      return plain((await search(params.query)) || []);
+    },
+    $providePaste: async function (params) {
+      var provide = pasteHandlers[params.id];
+      if (!provide) return null;
+      var markdown = await provide(params.text);
+      return typeof markdown === "string" ? markdown : null;
     },
     $provideHover: async function (params) {
       for (var i = 0; i < hoverProviders.length; i++) {

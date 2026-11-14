@@ -11,12 +11,17 @@ import { isEnclosureName } from "../marks/enclosure-runs";
 import { wrapInLinkSource } from "../marks/span-commands";
 import { caretAt, stateWithLiveSelection } from "../live-selection";
 import { isImeKeyEvent } from "./ime";
-import { LINK } from "../markdown/link-source";
+import { toggleCodeSpan } from "./code-toggle";
 
-interface FormatSpec {
-  delim: string;
-  rung: number;
-}
+export { toggleCodeSpan };
+import {
+  blockRanges,
+  gives,
+  spanCovering,
+  mergedContent,
+  outOfSpans,
+  type FormatSpec,
+} from "./format-merge";
 
 /** Bold and italic: the same md_span shells the autopair plugin opens for
  *  typed delimiters. Every Bold and Italic (keys, menus, bars) goes
@@ -31,10 +36,6 @@ const SHIFT_SHORTCUTS: Record<string, FormatSpec> = { h: HIGHLIGHT };
 /** Strikethrough, `~~text~~`: Format › Strikethrough and Ctrl+Shift+`. */
 export const STRIKETHROUGH: FormatSpec = { delim: "~", rung: 2 };
 
-/** Inline nodes besides text a selection may hold to be made bold or
- *  italic: verbatim ones, with no formatting of their own to clash. */
-const WRAPPABLE = new Set(["md_code_span", "math_inline", LINK]);
-
 /**
  * The shortcut pressed again on its own formatting takes it off; a `***`
  * span keeps the other half. Null when the selection isn't in or on such a
@@ -43,9 +44,7 @@ const WRAPPABLE = new Set(["md_code_span", "math_inline", LINK]);
 function toggleOff(state: EditorState, spec: FormatSpec): Transaction | null {
   const { $from, $to, from, to, empty } = state.selection;
   const matches = (node: ProseNode | null | undefined) =>
-    node?.type.name === "md_span" &&
-    node.attrs.delim === spec.delim &&
-    (node.attrs.rung === spec.rung || node.attrs.rung === 3);
+    !!node && gives(node, spec);
   const unwrap = (start: number, node: ProseNode, shift: number) => {
     if (node.attrs.rung === 3)
       return state.tr.setNodeMarkup(start, undefined, {
@@ -69,14 +68,15 @@ function toggleOff(state: EditorState, spec: FormatSpec): Transaction | null {
       );
     return unwrap($from.before(d), node, 1);
   }
-  // A selection from just before a span to just after it.
-  if (!empty && $from.sameParent($to)) {
-    const node = state.doc.nodeAt(from);
-    if (matches(node) && from + node!.nodeSize === to) {
-      const tr = unwrap(from, node!, 0);
-      if (node!.attrs.rung === 3) return tr;
-      return tr.setSelection(TextSelection.create(tr.doc, from, to - 2));
-    }
+  // A selection that is all of a span, either end inside it or just
+  // outside: from before it to the end of its text, say.
+  const whole = !empty && spanCovering(state, from, to, spec);
+  if (whole) {
+    const tr = unwrap(whole.from, whole.node, 0);
+    if (whole.node.attrs.rung === 3) return tr;
+    return tr.setSelection(
+      TextSelection.create(tr.doc, whole.from, whole.to - 2),
+    );
   }
   return null;
 }
@@ -101,30 +101,6 @@ function wholeSpan(
   return null;
 }
 
-/** What of each textblock a selection over several holds, trimmed of edge
- *  whitespace: the ranges a shortcut wraps or unwraps. Code, maths and
- *  enclosure blocks are left out. */
-function blockRanges(state: EditorState): { from: number; to: number }[] {
-  const { from, to } = state.selection;
-  const ranges: { from: number; to: number }[] = [];
-  state.doc.nodesBetween(from, to, (node, pos) => {
-    if (!node.isTextblock) return true;
-    if (node.type.spec.code || isEnclosureName(node.type.name)) return false;
-    const start = Math.max(from, pos + 1);
-    const end = Math.min(to, pos + 1 + node.content.size);
-    // Only a text node's edge whitespace stays outside: spaces in code are code.
-    const part = state.doc.slice(start, end).content;
-    const edge = (child: ProseNode | null, pattern: RegExp) =>
-      child?.isText ? pattern.exec(child.text!)![0].length : 0;
-    const lead = edge(part.firstChild, /^\s*/);
-    const trail = edge(part.lastChild, /\s*$/);
-    if (start + lead < end - trail)
-      ranges.push({ from: start + lead, to: end - trail });
-    return false;
-  });
-  return ranges;
-}
-
 /**
  * A selection over several textblocks: each block's part made bold or
  * italic on its own, as in Typora, or, when every part already is, each
@@ -136,36 +112,20 @@ function acrossBlocks(
 ): Transaction | null {
   const ranges = blockRanges(state);
   if (ranges.length === 0) return null;
-  const spanOf = ({ from, to }: { from: number; to: number }) => {
-    const node = state.doc.nodeAt(from);
-    return node?.type.name === "md_span" &&
-      node.attrs.delim === spec.delim &&
-      node.attrs.rung === spec.rung &&
-      from + node.nodeSize === to
-      ? node
-      : null;
-  };
+  // The span a block's part is all of, either end inside it or not.
+  const spanOf = (range: { from: number; to: number }) =>
+    spanCovering(state, range.from, range.to, spec);
   const tr = state.tr;
   const allOn = ranges.every((range) => spanOf(range));
   for (const range of [...ranges].reverse()) {
-    if (allOn) {
-      tr.replaceWith(range.from, range.to, spanOf(range)!.content);
-      continue;
-    }
-    if (spanOf(range)) continue;
-    const fragment = state.doc.slice(range.from, range.to).content;
-    for (let i = 0; i < fragment.childCount; i++) {
-      const child = fragment.child(i);
-      if (!child.isText && !WRAPPABLE.has(child.type.name)) return null;
-    }
-    tr.replaceWith(
-      range.from,
-      range.to,
-      state.schema.nodes.md_span.create(
-        { delim: spec.delim, rung: spec.rung },
-        fragment,
-      ),
-    );
+    const on = spanOf(range);
+    if (allOn && on!.node.attrs.rung === 3)
+      tr.setNodeMarkup(on!.from, undefined, {
+        ...on!.node.attrs,
+        rung: 3 - spec.rung,
+      });
+    else if (allOn) tr.replaceWith(on!.from, on!.to, on!.node.content);
+    else if (!on && !wrapMerged(state, tr, range, spec)) return null;
   }
   const { from, to } = state.selection;
   return tr.setSelection(
@@ -193,7 +153,7 @@ export function toggleFormat(view: EditorView, spec: FormatSpec): boolean {
   }
 
   const mdSpan = state.schema.nodes.md_span;
-  const { $from, $to, empty } = state.selection;
+  const { $from, empty } = state.selection;
   const parent = $from.parent;
 
   if (empty) {
@@ -211,7 +171,7 @@ export function toggleFormat(view: EditorView, spec: FormatSpec): boolean {
   }
 
   // Over several blocks, or all of the document (Select All).
-  if (!$from.sameParent($to) || !parent.inlineContent) {
+  if (!sameTextblock(state) || !parent.inlineContent) {
     const tr = acrossBlocks(state, spec);
     if (!tr) return false;
     view.dispatch(tr);
@@ -235,37 +195,67 @@ export function toggleFormat(view: EditorView, spec: FormatSpec): boolean {
     );
     return true;
   }
+
+  // Edge whitespace stays outside, so it serializes. Bold already in the
+  // selection, or half in it, merges into the one new span.
+  const [range] = blockRanges(state);
+  const tr = state.tr;
+  const span = range && wrapMerged(state, tr, range, spec);
+  if (!span) return false;
+  // The text stays selected, as in Typora.
+  view.dispatch(
+    tr.setSelection(
+      TextSelection.create(tr.doc, span.from + 1, span.from + 1 + span.size),
+    ),
+  );
+  return true;
+}
+
+/** Both ends of the selection in one textblock, at any depth of spans. */
+function sameTextblock(state: EditorState): boolean {
+  const { $from, $to } = state.selection;
+  const block = (depth: number, $pos: typeof $from) => {
+    for (let d = depth; d >= 0; d--)
+      if ($pos.node(d).isTextblock) return $pos.before(d);
+    return -1;
+  };
+  const at = block($from.depth, $from);
+  return at >= 0 && at === block($to.depth, $to);
+}
+
+/**
+ * `range` (in one textblock) wrapped in one `spec` span on `tr`, taking in
+ * whole any `spec` span it cuts and flattening those inside. Where the new
+ * span starts and its content's size; null when it can't be wrapped.
+ */
+function wrapMerged(
+  state: EditorState,
+  tr: Transaction,
+  range: { from: number; to: number },
+  spec: FormatSpec,
+): { from: number; size: number } | null {
+  const from = outOfSpans(state, range.from, -1, spec);
+  const to = outOfSpans(state, range.to, 1, spec);
+  const $from = state.doc.resolve(from);
+  const parent = $from.parent;
   if (
+    !$from.sameParent(state.doc.resolve(to)) ||
     !parent.isTextblock ||
     parent.type.spec.code ||
     isEnclosureName(parent.type.name)
   )
-    return false;
-
-  // Only a text node's edge whitespace stays outside: spaces in code are code.
-  const selected = parent.content.cut($from.parentOffset, $to.parentOffset);
-  const edgeSpaces = (node: ProseNode | null, pattern: RegExp) =>
-    node?.isText ? pattern.exec(node.text!)![0].length : 0;
-  const from = $from.pos + edgeSpaces(selected.firstChild, /^\s*/);
-  const to = $to.pos - edgeSpaces(selected.lastChild, /\s*$/);
-  if (from >= to) return false;
-
-  // Text, code and maths may move inside; a span already in the selection
-  // leaves it alone.
-  const fragment = parent.content.cut(from - $from.start(), to - $from.start());
-  for (let i = 0; i < fragment.childCount; i++) {
-    const child = fragment.child(i);
-    if (!child.isText && !WRAPPABLE.has(child.type.name)) return false;
-  }
-
-  const node = mdSpan.create({ delim: spec.delim, rung: spec.rung }, fragment);
-  // The text stays selected, as in Typora.
-  const tr = state.tr.replaceWith(from, to, node);
-  tr.setSelection(
-    TextSelection.create(tr.doc, from + 1, from + 1 + fragment.size),
+    return null;
+  const content = mergedContent(state.doc.slice(from, to).content, spec);
+  if (!content) return null;
+  tr.replaceWith(
+    tr.mapping.map(from),
+    tr.mapping.map(to),
+    state.schema.nodes.md_span.create(
+      { delim: spec.delim, rung: spec.rung },
+      content,
+    ),
   );
-  view.dispatch(tr);
-  return true;
+  return { from: tr.mapping.map(from, -1), size: content.size };
 }
 
 /** The selection in one textblock as plain text, or null where it holds
@@ -284,33 +274,6 @@ function plainSelection(state: EditorState) {
   let plain = true;
   part.forEach((child) => (plain &&= child.isText));
   return plain ? state.doc.textBetween($from.pos, $to.pos) : null;
-}
-
-/** Inline code, Ctrl+`: the selection made code, an empty one opened as
- *  typing "`" does, and the caret in code taking it off. */
-export function toggleCodeSpan(view: EditorView): boolean {
-  const state = stateWithLiveSelection(view);
-  const code = state.schema.nodes.md_code_span;
-  const { $from, from, to, empty } = state.selection;
-  if (!code) return false;
-  if ($from.parent.type === code) {
-    const start = $from.before();
-    const tr = state.tr.replaceWith(start, $from.after(), $from.parent.content);
-    view.dispatch(caretAt(tr, from - 1));
-    return true;
-  }
-  const text = plainSelection(state);
-  if (text === null) return false;
-  const node = code.create({}, text ? state.schema.text(text) : undefined);
-  const tr = state.tr.replaceWith(from, to, node);
-  view.dispatch(
-    empty
-      ? caretAt(tr, from + 1)
-      : tr.setSelection(
-          TextSelection.create(tr.doc, from + 1, from + 1 + text.length),
-        ),
-  );
-  return true;
 }
 
 /** Cmd/Ctrl+K: `[selection]()` with the caret where the address goes - or,
@@ -364,7 +327,9 @@ export const formatShortcutPlugin = $prose(
           ];
           if (!spec) return false;
           if (isImeKeyEvent(view, event)) return false;
-          if (!toggleFormat(view, spec)) return false;
+          // Taken even where nothing applies: the browser's own bold would
+          // write tags the editor has no mark for.
+          toggleFormat(view, spec);
           event.preventDefault();
           return true;
         },

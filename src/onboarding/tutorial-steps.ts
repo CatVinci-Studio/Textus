@@ -1,194 +1,149 @@
-import { TUTORIAL_CLIPS } from "../platform/bindings/app";
 import type { TextKey } from "../i18n/strings";
 import type { AgentMode } from "../prefs/SettingsContext";
 import { hasTextusAi } from "../platform/capabilities";
-import { LESSON_DONE, WRITE_PART, WYSIWYG_PART } from "./tutorial-evaluation";
 
 /**
- * The first-run tour, short on purpose: Markdown typed for real, the command
- * palette and the store, connecting an AI, then Textus AI working on the
- * learner's notes about a classic, never on the classic. Each lesson is one
- * card; the rest is on the website's tutorials page.
+ * The first-run tour: the window part by part, each one lit while the rest
+ * dims, a small card beside it. A step that asks for something moves on by
+ * itself once it is done; the AI's steps run only with Textus AI on, and its
+ * last only with an AI signed in.
  */
-
-type TutorialChapterId = "start" | "writing" | "connect" | "ai" | "done";
 
 export type TutorialStepId =
   | "welcome"
-  | "wysiwyg"
-  | "palette"
-  | "connect"
-  | "write"
-  | "continuation"
+  | "sidebar"
+  | "rail"
+  | "settings"
+  | "editor"
+  | "ai"
+  | "signin"
+  | "ai-use"
   | "done";
 
-/** The clips on the website's tutorials page; Rust opens the page and
- *  accepts only these. */
-export { TUTORIAL_CLIPS };
+/** What the learner does that moves a step on by itself. */
+export type TutorialUntil =
+  "sidebar-open" | "formatted" | "ai-open" | "signed-in" | "revision-decided";
 
-export type TutorialClipId = (typeof TUTORIAL_CLIPS)[number];
-
-export interface TutorialChapter {
-  id: TutorialChapterId;
-  titleKey: TextKey;
-}
-
-export interface TutorialTask {
+/** One part of a step lit in turn, a line of its own. */
+export interface TutorialStop {
+  target: string;
   key: TextKey;
-  /** Its wording on a phone (taps, no shortcuts), where it differs. */
-  phoneKey?: TextKey;
-  /** Its wording on a Mac (the native menu bar), where it differs. */
-  macKey?: TextKey;
-  /** The bit of the lesson's phase that ticks this line. Without one it is
-   *  ticked with the lesson. */
-  part?: number;
 }
 
 export interface TutorialStep {
   id: TutorialStepId;
-  chapter: TutorialChapterId;
-  /** Opening, connecting and ending dim the app; lessons leave the editor
-   *  to work in, the card at its side. */
-  layout: "overlay" | "card";
   titleKey: TextKey;
   bodyKey: TextKey;
-  tasks?: TutorialTask[];
-  /** Its clip on the website's tutorials page, when it has one. */
-  clip?: TutorialClipId;
-  /** A Textus AI lesson: with no AI connected it is watched, not done. */
+  /** Its wording on a phone, where it differs. */
+  phoneBodyKey?: TextKey;
+  /** What it lights; none: a card in the middle of the dimmed window. */
+  target?: string;
+  phoneTarget?: string;
+  /** Lit one after another, Next going through them. */
+  stops?: TutorialStop[];
+  /** What the card keeps clear of beside the lit part (the sidebar just
+   *  opened, so its contents show). */
+  beside?: string;
+  until?: TutorialUntil;
+  /** The window left undimmed: what the step leads to opens elsewhere
+   *  (signing in, in Settings). */
+  open?: boolean;
+  /** A Textus AI step. */
   ai?: boolean;
-  /** The AI panel's mode this lesson needs; the tour sets it. */
+  /** Only with an AI signed in. */
+  live?: boolean;
+  /** The AI panel's mode this step sets. */
   agentMode?: AgentMode;
-  /** Never locked: Continue is there whether or not it was tried. */
-  optional?: boolean;
 }
 
-const ALL_CHAPTERS: TutorialChapter[] = [
-  { id: "start", titleKey: "tutorialChapterStart" },
-  { id: "writing", titleKey: "tutorialChapterWriting" },
-  { id: "connect", titleKey: "tutorialChapterConnect" },
-  { id: "ai", titleKey: "tutorialChapterAi" },
-  { id: "done", titleKey: "tutorialChapterDone" },
-];
+const RAIL = (id: string) => `.activity-rail [data-rail-id="${id}"]`;
 
 const ALL_STEPS: TutorialStep[] = [
   {
     id: "welcome",
-    chapter: "start",
-    layout: "overlay",
     titleKey: "tutorialWelcomeTitle",
     bodyKey: "tutorialWelcomeBody",
   },
   {
-    // On an empty document: what the learner types here heads the notes.
-    id: "wysiwyg",
-    chapter: "writing",
-    layout: "card",
-    titleKey: "tutorialWysiwygTitle",
-    bodyKey: "tutorialWysiwygBody",
-    tasks: [
-      { key: "tutorialWysiwygHeading", part: WYSIWYG_PART.heading },
-      { key: "tutorialWysiwygList", part: WYSIWYG_PART.list },
-      { key: "tutorialWysiwygNumbered", part: WYSIWYG_PART.numbered },
-      { key: "tutorialWysiwygTaskItem", part: WYSIWYG_PART.task },
-    ],
-    clip: "wysiwyg",
+    id: "sidebar",
+    titleKey: "tutorialSidebarTitle",
+    bodyKey: "tutorialSidebarBody",
+    phoneBodyKey: "tutorialSidebarBodyPhone",
+    target: RAIL("tree"),
+    phoneTarget: ".window-bar-sidebar-toggle",
+    until: "sidebar-open",
   },
   {
-    // Finding things: the command palette and the plugin store, a tip more
-    // than a lesson (a phone has no shortcut to try it with).
-    id: "palette",
-    chapter: "writing",
-    layout: "card",
-    titleKey: "tutorialPaletteTitle",
-    bodyKey: "tutorialPaletteBody",
-    tasks: [
-      { key: "tutorialPaletteTask", phoneKey: "tutorialPaletteTaskPhone" },
+    id: "rail",
+    titleKey: "tutorialRailTitle",
+    bodyKey: "tutorialRailBody",
+    stops: [
+      { target: RAIL("tree"), key: "tutorialRailFiles" },
+      { target: RAIL("outline"), key: "tutorialRailOutline" },
+      { target: RAIL("search"), key: "tutorialRailSearch" },
+      { target: RAIL("plugins"), key: "tutorialRailPlugins" },
+      { target: ".activity-rail", key: "tutorialRailHide" },
     ],
-    optional: true,
+    beside: "aside.sidebar:not(.sidebar-collapsed)",
   },
   {
-    // Never a gate: leaving it decides whether the AI lessons are done for real
-    // or watched.
-    id: "connect",
-    chapter: "connect",
-    layout: "overlay",
-    titleKey: "tutorialConnectTitle",
-    bodyKey: "tutorialConnectBody",
-    tasks: [{ key: "tutorialConnectTask" }],
+    id: "settings",
+    titleKey: "tutorialSettingsTitle",
+    bodyKey: "tutorialSettingsBody",
+    target: ".activity-rail-settings",
   },
   {
-    // Opens the real panel whether or not an AI is connected: it is where
-    // the next lessons happen.
-    id: "write",
-    chapter: "ai",
-    layout: "card",
-    titleKey: "tutorialWriteTitle",
-    bodyKey: "tutorialWriteBody",
-    tasks: [
-      {
-        key: "tutorialWriteOpen",
-        phoneKey: "tutorialWriteOpenPhone",
-        part: WRITE_PART.panel,
-      },
-      { key: "tutorialWriteSend", part: LESSON_DONE },
-    ],
-    clip: "ai-panel",
+    id: "editor",
+    titleKey: "tutorialEditorTitle",
+    bodyKey: "tutorialEditorBody",
+    target: '[data-active-tab="true"] .editor-scroll',
+    until: "formatted",
+  },
+  {
+    id: "ai",
+    titleKey: "tutorialAiTitle",
+    bodyKey: "tutorialAiBody",
+    phoneBodyKey: "tutorialAiBodyPhone",
+    target: ".window-bar-toggle",
+    until: "ai-open",
     ai: true,
+  },
+  {
+    id: "signin",
+    titleKey: "tutorialSignInTitle",
+    bodyKey: "tutorialSignInBody",
+    target: ".agent-panel-view",
+    until: "signed-in",
+    open: true,
+    ai: true,
+  },
+  {
+    id: "ai-use",
+    titleKey: "tutorialAiUseTitle",
+    bodyKey: "tutorialAiUseBody",
+    target: ".agent-panel-view",
+    until: "revision-decided",
+    ai: true,
+    live: true,
     agentMode: "write",
   },
   {
-    id: "continuation",
-    chapter: "ai",
-    layout: "card",
-    titleKey: "tutorialContinuationTitle",
-    bodyKey: "tutorialContinuationBody",
-    tasks: [
-      {
-        key: "tutorialContinuationTask",
-        phoneKey: "tutorialContinuationTaskPhone",
-      },
-    ],
-    clip: "continuation",
-    ai: true,
-  },
-  {
     id: "done",
-    chapter: "done",
-    layout: "overlay",
     titleKey: "tutorialDoneTitle",
     bodyKey: "tutorialDoneBody",
   },
 ];
 
-/** Without Textus AI (capabilities.ts) the tour ends after the writing
- *  lessons. */
-const offered = (chapter: TutorialChapterId) =>
-  hasTextusAi || (chapter !== "connect" && chapter !== "ai");
-
-export const TUTORIAL_CHAPTERS = ALL_CHAPTERS.filter((c) => offered(c.id));
-export const TUTORIAL_STEPS = ALL_STEPS.filter((s) => offered(s.chapter));
+/** Without Textus AI (capabilities.ts) the tour has no AI steps. */
+export const TUTORIAL_STEPS = ALL_STEPS.filter((s) => hasTextusAi || !s.ai);
 
 export function stepIndexOf(id: TutorialStepId): number {
   return TUTORIAL_STEPS.findIndex((step) => step.id === id);
 }
 
-/** How the AI lessons run: for real with a connected AI, or watched.
- *  Decided on leaving the connect lesson. */
-export type TutorialAiMode = "live" | "watch";
-
-/** Where saved progress resumes, and in which AI mode. An unknown `stepId`
- *  starts over; an AI lesson resumes only with its mode saved beside it. */
-export function resolveSavedProgress(saved: {
-  stepId?: unknown;
-  aiMode?: unknown;
-}): { stepIndex: number; aiMode: TutorialAiMode | null } {
-  const aiMode =
-    saved.aiMode === "live" || saved.aiMode === "watch" ? saved.aiMode : null;
-  const id =
-    TUTORIAL_STEPS.find((step) => step.id === saved.stepId)?.id ?? "welcome";
-  const step = TUTORIAL_STEPS[stepIndexOf(id)];
-  if (step.ai && !aiMode)
-    return { stepIndex: stepIndexOf("connect"), aiMode: null };
-  return { stepIndex: stepIndexOf(id), aiMode };
+/** Where saved progress resumes: its step, or the start for one unknown
+ *  (a step since renamed or dropped). */
+export function resolveSavedStep(saved: { stepId?: unknown }): number {
+  const at = TUTORIAL_STEPS.findIndex((step) => step.id === saved.stepId);
+  return Math.max(0, at);
 }

@@ -1,6 +1,12 @@
 // @vitest-environment jsdom
-import { describe, expect, it } from "vitest";
+import { describe, expect, it, vi } from "vitest";
 import { dropTargetAt, type DropGeometry } from "./drop-zones";
+import { layoutFits } from "../frame/frame-store";
+
+const phone = vi.hoisted(() => ({ on: false }));
+vi.mock("../../platform/phone-layout", () => ({
+  isPhoneLayout: () => phone.on,
+}));
 
 // Two islands side by side, each 400 x 600, the window's outer band left
 // aside (x from 100, the outer edges far from the points tested).
@@ -45,5 +51,26 @@ describe("dropTargetAt", () => {
   it("whole islands go to the half they are over", () => {
     expect(dropTargetAt(400 + 150, 300, geometry, true)?.zone).toBe("left");
     expect(dropTargetAt(400 + 250, 300, geometry, true)?.zone).toBe("right");
+  });
+
+  it("on a phone everything dropped joins the one island, and no split fits", () => {
+    phone.on = true;
+    try {
+      expect(at(400 + 10, 300)).toBe("center");
+      expect(at(400 + 200, 595)).toBe("center");
+      const split = {
+        kind: "split" as const,
+        direction: "row" as const,
+        children: [
+          { kind: "pane" as const, id: "p", tabs: ["a"], front: "a" },
+          { kind: "pane" as const, id: "q", tabs: ["b"], front: "b" },
+        ],
+        sizes: [0.5, 0.5],
+      };
+      expect(layoutFits(split)).toBe(false);
+      expect(layoutFits(split.children[0])).toBe(true);
+    } finally {
+      phone.on = false;
+    }
   });
 });

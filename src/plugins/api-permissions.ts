@@ -24,6 +24,7 @@ const API_PERMISSIONS: readonly {
       "editor.getOutline",
       "editor.registerHover",
       "editor.registerDecorations",
+      "editor.registerOutline",
       "export.willExport",
     ],
     // Completions without it are left out, with no error to say so.
@@ -31,7 +32,11 @@ const API_PERMISSIONS: readonly {
   },
   {
     permission: "editor.write",
-    methods: ["editor.edit", "codeBlock.setSource"],
+    methods: [
+      "editor.edit",
+      "codeBlock.setSource",
+      "editor.registerPasteHandler",
+    ],
     calls: ["editor.insertText", "editor.replaceSelection"],
   },
   { permission: "editor.propose", methods: ["editor.propose"] },
@@ -48,6 +53,7 @@ const API_PERMISSIONS: readonly {
       "files.list",
       "files.find",
       "files.stat",
+      "files.setBadge",
       "files.read",
       "files.frontmatterGet",
       "metadata.get",
@@ -96,6 +102,10 @@ const API_PERMISSIONS: readonly {
     calls: ["env.readClipboard", "env.writeClipboard"],
   },
   { permission: "notifications", methods: ["notify.show"] },
+  {
+    permission: "appearance",
+    methods: ["appearance.setColors", "appearance.clear"],
+  },
   // Checked in Rust, when Textus AI calls the tool.
   { permission: "ai.tools", methods: [], calls: ["ai.registerTool"] },
 ];

@@ -7,6 +7,8 @@
      the docks keeps the gap too, the activity rail being frame. */
   --island-gap: var(--island-space);
   --island-inset: var(--island-space);
+  /* Under the islands: the inset, but none on a phone (mobile/sidebar.css). */
+  --island-foot: var(--island-inset);
   --island-radius: var(--shape-m);
   /* An island's edge on the frame. */
   --island-edge:
@@ -33,6 +35,7 @@
 :root[data-layout="classic"] {
   --island-gap: 1px;
   --island-inset: 0px;
+  --island-foot: 0px;
   --island-radius: 0px;
   --island-edge: 0 0 0 1px var(--ui-frame-edge);
   --tab-radius: 0px;

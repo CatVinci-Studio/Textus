@@ -1,7 +1,7 @@
 import { SelectMenu } from "../../engine/controls/SelectMenu";
 import { useEffect, useId, useRef, useState, type KeyboardEvent } from "react";
 import { createRoot, type Root } from "react-dom/client";
-import { isIOSApp } from "../../platform/capabilities";
+import { isMobileApp } from "../../platform/capabilities";
 import { Select } from "../../engine/controls/Select";
 import { usePresence, useMergedRef } from "../../engine/motion/usePresence";
 import { useFloatingList } from "../../engine/controls/useFloatingList";
@@ -48,7 +48,7 @@ export function mountLanguagePicker(container: HTMLElement) {
         ? props.languages
         : [...props.languages, props.value];
       root?.render(
-        isIOSApp ? (
+        isMobileApp ? (
           <Select
             className="code-block-language-select"
             aria-label={props.label}

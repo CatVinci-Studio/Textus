@@ -1,6 +1,6 @@
 import { useSyncExternalStore } from "react";
 import { ai } from "../../platform/ipc";
-import { FILE_WRITTEN_EVENT } from "../../utils/events";
+import { FILE_WRITTEN_EVENT, announceFileCreated } from "../../utils/events";
 import type { AgentTurn } from "../types";
 import {
   keepAsCreated,
@@ -186,6 +186,7 @@ export async function afterFileChanges(
     const changes = await ai.fileChanges(conversation, ids);
     const revised: string[] = [];
     for (const { id, file, before, after, applied } of changes) {
+      if (applied && before == null) announceFileCreated(file);
       if (!applied && before != null) {
         await keepAsRevisions({ id, file, before, after });
         revised.push(file);

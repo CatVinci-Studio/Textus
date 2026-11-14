@@ -3,7 +3,7 @@ import { getWindowAccess } from "../../plugins/app-bridge";
 import { dirname } from "../../utils/path";
 import type { StreamingState } from "../chat/stream-step";
 import { thinkingDone, thinkingEvent } from "../chat/thought";
-import type { AgentTurn } from "../types";
+import type { AgentTurn, ImageAttachment } from "../types";
 import { runAgentExchange } from "./agent-exchange";
 
 /** A chat request id that stands for an external agent's exchange: stopped
@@ -29,6 +29,7 @@ export function agentRequest(o: {
   folder: string;
   docPath: string | null;
   message: string;
+  images?: ImageAttachment[];
   get: () => StreamingState | null;
   set: (value: StreamingState, opts?: { textOnly?: boolean }) => void;
 }): Promise<AgentTurn[]> {
@@ -39,6 +40,7 @@ export function agentRequest(o: {
     cwd: o.folder,
     docPath: o.docPath,
     message: o.message,
+    images: o.images,
     events: {
       view: (view) => {
         const now = prev();

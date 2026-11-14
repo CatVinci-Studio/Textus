@@ -164,6 +164,8 @@ export const commands = {
 	set_menu_accelerators: (accelerators: { [key in string]: string }) => __TAURI_INVOKE<void>("set_menu_accelerators", { accelerators }),
 	/**  Help > Join the Community, and its row in Settings. */
 	open_community_page: (language: string | null) => __TAURI_INVOKE<null>("open_community_page", { language }),
+	/**  Help > Sponsor Textus, and the link under the version in Settings › About. */
+	open_sponsor_page: (language: string | null) => __TAURI_INVOKE<null>("open_sponsor_page", { language }),
 	open_about_link: (page: string) => __TAURI_INVOKE<null>("open_about_link", { page }),
 	/**  A link Ctrl/Cmd+clicked in a document. */
 	open_web_link: (url: string) => __TAURI_INVOKE<null>("open_web_link", { url }),

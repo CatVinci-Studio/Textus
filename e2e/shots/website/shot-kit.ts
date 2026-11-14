@@ -499,13 +499,13 @@ for (const lang of LANGS) {
 }
 
 /** The built-in texts, with SAMPLES_JSON's over them. */
-/** The hero document with its illustration under the first quoted passage
- *  (the language's own picture, served by `launch`). */
+/** The hero document with its illustration under the reader's note, before
+ *  the table (the language's own picture, served by `launch`). */
 function withIllustration(doc: string, title = ""): string {
-  const quote = /(^>.*\n)+/m.exec(doc);
-  if (!quote) return doc;
-  const end = quote.index + quote[0].length;
-  return `${doc.slice(0, end)}\n<img src="${ILLUSTRATION}" alt="${title}" width="80%">\n${doc.slice(end)}`;
+  const at = /^\|/m.exec(doc) ?? /(^>.*\n)+/m.exec(doc);
+  if (!at) return doc;
+  const end = at[0].startsWith("|") ? at.index : at.index + at[0].length;
+  return `${doc.slice(0, end)}\n<img src="${ILLUSTRATION}" alt="${title}" width="80%">\n\n${doc.slice(end)}`;
 }
 
 /** The illustration's file name in a sample's folder. */

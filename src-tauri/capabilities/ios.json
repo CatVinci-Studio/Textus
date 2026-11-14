@@ -1,8 +1,0 @@
-{
-  "$schema": "../gen/schemas/mobile-schema.json",
-  "identifier": "ios",
-  "description": "iOS only: document access outside the app's own folder (plugins/textus-files).",
-  "platforms": ["iOS"],
-  "windows": ["main"],
-  "permissions": ["textus-files:default"]
-}

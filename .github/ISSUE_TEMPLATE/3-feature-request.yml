@@ -7,6 +7,8 @@ body:
       value: |
         Please search [existing issues](https://github.com/CatVinci-Studio/Textus/issues?q=is%3Aissue) first; a 👍 on a matching one helps us see what matters. The [roadmap](https://github.com/CatVinci-Studio/Textus/blob/main/ROADMAP.md) shows what's already planned.
 
+        **Could it be a plugin?** Most new features, and anything that talks to an outside service, belong in [textus-plugins](https://github.com/CatVinci-Studio/textus-plugins) rather than the app. If so, open it there as a *plugin idea*.
+
   - type: textarea
     id: problem
     attributes:

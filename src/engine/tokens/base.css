@@ -129,8 +129,10 @@
      documents). */
   --ui-frame-sunk: color-mix(in srgb, var(--ui-frame-tint) 8%, var(--ui-bg));
   /* What the frame is filled with: one fill for the bar, the rail and the
-     sidebar, so they never differ. */
-  --ui-frame-fill: var(--ui-frame);
+     sidebar, so they never differ. A theme or a plugin may paint it
+     (--ui-frame-paint: a colour or a gradient, unset by default); each
+     piece lays it against the window, so one gradient runs across them. */
+  --ui-frame-fill: var(--ui-frame-paint, var(--ui-frame));
   /* The one line the frame draws: where it meets the page, a hairline
      softer than a card's border. Inside the frame, nothing. */
   --ui-frame-edge: color-mix(in srgb, var(--ui-border) 60%, transparent);

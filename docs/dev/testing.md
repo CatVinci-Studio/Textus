@@ -65,13 +65,23 @@ a key the macOS menu takes reaches nothing.
 
 ## Which tests run when
 
-| Kind                                                            | Where                              | When                                | Blocks                         |
-| --------------------------------------------------------------- | ---------------------------------- | ----------------------------------- | ------------------------------ |
-| `npm run check`: types, lint, unit tests, formats               | locally, CI                        | every change; every pull request    | yes                            |
-| e2e flows in Chromium (`npm run test:e2e`)                      | locally (4 workers), CI (2 shards) | before a push; the full suite in CI | yes                            |
-| e2e flows in WebKit (`E2E_WEBKIT=1`)                            | CI                                 | the full suite                      | no: looked at before a release |
-| Stopwatch flows (`@perf`, `npm run test:perf`)                  | locally                            | when timing is the point            | never                          |
-| Benchmarks (`bench:large-doc`, `bench:plugins`, `bench:motion`) | one machine                        | before a release that touches speed | never: compared by hand        |
+CI has three layers (`.github/workflows/ci.yml`):
+
+| When                                                    | What runs                                                                                          | Required                 |
+| ------------------------------------------------------- | -------------------------------------------------------------------------------------------------- | ------------------------ |
+| Every pull request (forks too), and a push to `main`    | `check` (types, lint, unit tests, formats, build); Rust on Linux when `src-tauri/` changed         | check, native, ci-config |
+| Before a release (the tag, a PR into `stable`, by hand) | everything: Rust on Linux, macOS and Windows, e2e in Chromium (2 shards) and WebKit, iOS simulator | all of them              |
+
+A contributor runs **`npm run check`** before pushing; that is all a pull
+request needs. Maintainers run the rest before a release.
+
+| Kind                                                            | Where                              | When                                |
+| --------------------------------------------------------------- | ---------------------------------- | ----------------------------------- |
+| `npm run check`: types, lint, unit tests, formats               | locally, CI                        | every pull request                  |
+| e2e flows in Chromium (`npm run test:e2e`)                      | locally (4 workers), CI (2 shards) | before a release                    |
+| e2e flows in WebKit (`E2E_WEBKIT=1`)                            | CI                                 | before a release, looked at by hand |
+| Stopwatch flows (`@perf`, `npm run test:perf`)                  | locally                            | when timing is the point; never CI  |
+| Benchmarks (`bench:large-doc`, `bench:plugins`, `bench:motion`) | one machine                        | before a release that touches speed |
 
 The e2e server makes every run read as Linux (`vite.e2e-platform.ts`), so
 Ctrl is the shortcut key on a Mac too; Mac-only keys and window chrome are
@@ -165,9 +175,9 @@ yet, so wait for the listener before you `emit` (as `openPath` does).
 ## Every suite
 
 `npm run check`, `npm run test:e2e` and `npm run check:native` are the
-three CI runs, the same commands on every platform;
-[CONTRIBUTING.md](../../CONTRIBUTING.md#before-you-push) lists what each
-holds. The rest are run by hand:
+three CI runs, the same commands on every platform; the rules
+`npm run check` holds are in [code-style.md](code-style.md). The rest are
+run by hand:
 
 ```sh
 E2E_WEBKIT=1 npm run test:e2e          # adds the WebKit project (npx playwright install webkit once)

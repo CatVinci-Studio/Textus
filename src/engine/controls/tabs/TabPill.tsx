@@ -6,7 +6,7 @@ import { useEffect, useRef } from "react";
 import { CloseIcon, LockIcon } from "../icons";
 import { Tooltip } from "../Tooltip";
 import { iosFiles } from "../../../platform/ios-files";
-import { isIOSApp } from "../../../platform/capabilities";
+import { canHaptic } from "../../../platform/capabilities";
 
 // One tab in the bar and what a pointer or finger does with it: a click
 // brings it to the front, a drag along the bar reorders, one down out of it
@@ -148,7 +148,7 @@ export function TabPill({
     holding.current = true;
     lifted.current = true;
     elRef.current?.classList.add("tab-pill-lifted");
-    if (isIOSApp) iosFiles.haptic();
+    if (canHaptic) iosFiles.haptic();
   }
 
   function letGo() {

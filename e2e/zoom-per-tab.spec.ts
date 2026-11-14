@@ -95,6 +95,11 @@ test("a trackpad pinch right after a scroll zooms (Windows: ctrl+wheel in fracti
     },
     { x: sheet.x + sheet.width / 2, y: sheet.y + sheet.height / 2 },
   );
+  // Mid-pinch the column is only drawn larger: no relayout of the document.
+  const column = page.locator(".editor-content").first();
+  expect(await zoomOf(page, 0)).toBe(1);
+  await expect(column).toHaveCSS("transform", /matrix/);
   await page.waitForTimeout(600);
   expect(await zoomOf(page, 0)).toBeGreaterThan(1.1);
+  await expect(column).toHaveCSS("transform", "none");
 });

@@ -80,6 +80,7 @@ macro_rules! with_plugin_commands {
     };
 }
 
+use crate::app_dirs::AppDirs;
 use std::path::PathBuf;
 use tauri::Manager;
 
@@ -90,7 +91,7 @@ pub const MANIFEST: &str = "textus-plugin.json";
 fn plugins_root(app: &tauri::AppHandle) -> Result<PathBuf, String> {
     Ok(app
         .path()
-        .app_data_dir()
+        .own_data_dir()
         .map_err(|e| e.to_string())?
         .join("plugins"))
 }
@@ -100,7 +101,7 @@ fn data_dir(app: &tauri::AppHandle, id: &str) -> Result<PathBuf, String> {
     require_id(id)?;
     Ok(app
         .path()
-        .app_data_dir()
+        .own_data_dir()
         .map_err(|e| e.to_string())?
         .join("plugin-data")
         .join(id))

@@ -13,6 +13,16 @@ export interface PluginDecoration {
   tooltip?: string;
   /** For "badge": before the words rather than after (a number). */
   before?: boolean;
+  /** The words link here (http, https, mailto), followed as a link is. */
+  url?: string;
+}
+
+/** A mark's link, when it is one a click may follow. */
+export function markUrl(url: unknown): string | null {
+  return typeof url === "string" &&
+    /^(https?:\/\/|mailto:)[^\s<>"]+$/i.test(url)
+    ? url
+    : null;
 }
 
 /** `blocks` in sight, and the whole document they're of: the asking

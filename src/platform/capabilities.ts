@@ -1,4 +1,5 @@
 import {
+  isAndroidPlatform,
   isDesktop,
   isIOSPlatform,
   isLinuxPlatform,
@@ -15,6 +16,10 @@ import { readBoot } from "../storage/boot";
 /** macOS, Windows or Linux - Rust's `cfg(desktop)`. */
 export const isDesktopApp = isDesktop();
 export const isIOSApp = isIOSPlatform();
+const isAndroidApp = isAndroidPlatform();
+/** iOS or Android: one webview, touch first; its layout is the desktop's
+ *  on a tablet and the phone's on a narrow screen (usePhoneLayout). */
+export const isMobileApp = isIOSApp || isAndroidApp;
 
 /** More than one OS window, and windows as something the app manages
  *  (title, close, size, session restore). iOS has one fixed webview. */
@@ -62,9 +67,10 @@ export const canPickImageFile = isDesktopApp;
 /** A folder picker: the dialog plugin's on desktop, Files' on iOS. */
 export const canPickFolder = isDesktopApp || isIOSApp;
 
-/** File > Open Folder. Not on iOS: a Files folder is a security-scoped URL
- *  the backend can't walk for the search. */
-export const canOpenFolder = isDesktopApp;
+/** File > Open Folder: on a phone, a folder picked in the system's picker
+ *  (iOS opens its scope for the session; Android's is walked through the
+ *  plugin, platform/scoped-folder.ts). */
+export const canOpenFolder = isDesktopApp || isMobileApp;
 
 /** Settings' "install the `textus` terminal command". */
 export const canInstallCliCommand = isDesktopApp;
@@ -74,6 +80,17 @@ export const canTrashFiles = isDesktopApp;
 
 /** Settings' "Default Markdown editor". iOS has no default app to set. */
 export const canSetDefaultEditor = isDesktopApp;
+
+/** The phone menu's Documents list: iOS's own folder of documents; Android
+ *  opens files and folders through the system's pickers instead. */
+export const hasDocumentsList = isIOSApp;
+
+/** A tap's light haptic (a tab picked up): both phones' plugins give one. */
+export const canHaptic = isMobileApp;
+
+/** The sponsor link: not on iOS, whose store rules keep payment outside
+ *  the app from being linked to. */
+export const canLinkSponsor = !isIOSApp;
 
 /** Textus AI at all: not on an iOS App Store download in mainland China,
  *  where it would need its own licence. Off, the master switch stays off

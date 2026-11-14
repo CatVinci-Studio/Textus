@@ -1,6 +1,6 @@
 [package]
 name = "textus"
-version = "1.4.1"
+version = "1.4.2"
 description = "Textus Markdown Editor"
 authors = ["CatVinci Studio"]
 edition = "2021"
@@ -147,13 +147,13 @@ ignore = "0.4"
 # under #[cfg(desktop)]. iOS updates come through the App Store. Shared
 # plugins (opener, dialog) stay in [dependencies] above. See
 # docs/dev/ios-code-map.md.
-# iOS document access (plugins/textus-files): pickers, security-scoped reads
+# iOS and Android document access (plugins/textus-files): pickers, security-scoped reads
 # and writes, remembered folders.
 # The scratch folder checks it is the user's own (ai/scratch.rs).
 [target.'cfg(unix)'.dependencies]
 libc = "0.2"
 
-[target.'cfg(target_os = "ios")'.dependencies]
+[target.'cfg(any(target_os = "ios", target_os = "android"))'.dependencies]
 tauri-plugin-textus-files = { path = "plugins/textus-files" }
 
 [target.'cfg(not(any(target_os = "ios", target_os = "android")))'.dependencies]

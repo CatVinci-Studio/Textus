@@ -1,0 +1,104 @@
+# Claiming a newcomer issue: "/take" assigns it, "/untake" lets it go, and a
+# daily pass nudges after 7 days without a pull request and releases after 14
+# quiet days. Replies come from the org's CatVinci-Bot app.
+name: claim
+
+on:
+  issue_comment:
+    types: [created]
+  schedule:
+    - cron: "17 15 * * *"
+  workflow_dispatch:
+
+permissions: {}
+
+concurrency:
+  group: claim-${{ github.event.issue.number || 'daily' }}
+
+jobs:
+  claim:
+    if: >-
+      github.event_name != 'issue_comment' ||
+      (!github.event.issue.pull_request &&
+       (startsWith(github.event.comment.body, '/take') || startsWith(github.event.comment.body, '/untake')))
+    runs-on: ubuntu-latest
+    timeout-minutes: 5
+    steps:
+      - id: bot
+        uses: actions/create-github-app-token@v1
+        with:
+          app-id: ${{ vars.CATVINCI_BOT_ID }}
+          private-key: ${{ secrets.CATVINCI_BOT_KEY }}
+      - uses: actions/github-script@v7
+        with:
+          github-token: ${{ steps.bot.outputs.token }}
+          script: |
+            const OPEN_TO = ["good first issue", "help wanted"];
+            const CLAIMED = "claimed";
+            const MAINTAINERS = ["OWNER", "MEMBER", "COLLABORATOR"];
+            const DAY = 86400000;
+            const repo = context.repo;
+            const say = (issue_number, body) =>
+              github.rest.issues.createComment({ ...repo, issue_number, body });
+
+            async function claimedAt(issue_number) {
+              const events = await github.paginate(github.rest.issues.listEvents, { ...repo, issue_number });
+              const added = events.filter((e) => e.event === "labeled" && e.label?.name === CLAIMED).pop();
+              return added ? Date.parse(added.created_at) : null;
+            }
+
+            async function hasPullRequest(issue_number, login) {
+              const q = `repo:${repo.owner}/${repo.repo} is:pr author:${login} ${issue_number}`;
+              const found = await github.rest.search.issuesAndPullRequests({ q });
+              return found.data.items.some((pr) => (pr.body || "").includes(`#${issue_number}`));
+            }
+
+            if (context.eventName === "issue_comment") {
+              const { issue, comment } = context.payload;
+              const who = comment.user.login;
+              const n = issue.number;
+              const command = comment.body.trim().split(/\s/)[0];
+              const assignees = issue.assignees.map((a) => a.login);
+              const labels = issue.labels.map((l) => l.name);
+
+              if (command === "/untake") {
+                if (!assignees.includes(who)) return;
+                await github.rest.issues.removeAssignees({ ...repo, issue_number: n, assignees: [who] });
+                await github.rest.issues.removeLabel({ ...repo, issue_number: n, name: CLAIMED }).catch(() => {});
+                return say(n, `Released, thanks @${who}. It's open for someone else now.`);
+              }
+              if (command !== "/take") return;
+              if (!labels.some((l) => OPEN_TO.includes(l)))
+                return say(n, `@${who} \`/take\` works on issues labelled *good first issue* or *help wanted*. For this one, just say here what you'd like to do.`);
+              if (assignees.includes(who)) return;
+              if (assignees.length)
+                return say(n, `@${who} @${assignees[0]} is working on this one. Have a look at the other [unclaimed issues](https://github.com/${repo.owner}/${repo.repo}/issues?q=is%3Aopen+label%3A%22good+first+issue%22+no%3Aassignee).`);
+              if (!MAINTAINERS.includes(comment.author_association)) {
+                const mine = await github.rest.issues.listForRepo({ ...repo, state: "open", assignee: who, labels: CLAIMED });
+                if (mine.data.length)
+                  return say(n, `@${who} you're already on #${mine.data[0].number}. One at a time: finish or \`/untake\` it first.`);
+              }
+              await github.rest.issues.addAssignees({ ...repo, issue_number: n, assignees: [who] });
+              await github.rest.issues.addLabels({ ...repo, issue_number: n, labels: [CLAIMED] });
+              return say(n, `Assigned to you, @${who}. Please open a draft pull request within 7 days (\`Closes #${n}\` in its description); after 14 quiet days the issue is released. Questions are welcome here.`);
+            }
+
+            // The daily pass.
+            const claimed = await github.paginate(github.rest.issues.listForRepo, { ...repo, state: "open", labels: CLAIMED });
+            for (const issue of claimed) {
+              if (issue.pull_request || !issue.assignees.length) continue;
+              const n = issue.number;
+              const who = issue.assignees[0].login;
+              const since = await claimedAt(n);
+              if (!since || (await hasPullRequest(n, who))) continue;
+              const comments = await github.paginate(github.rest.issues.listComments, { ...repo, issue_number: n });
+              const lastWord = Math.max(since, ...comments.filter((c) => c.user.login === who).map((c) => Date.parse(c.created_at)));
+              const nudged = comments.some((c) => c.performed_via_github_app && c.body.includes("<!-- claim:nudge -->"));
+              if (Date.now() - lastWord >= 14 * DAY) {
+                await github.rest.issues.removeAssignees({ ...repo, issue_number: n, assignees: [who] });
+                await github.rest.issues.removeLabel({ ...repo, issue_number: n, name: CLAIMED }).catch(() => {});
+                await say(n, `Released after 14 quiet days, so someone else can pick it up. @${who}, \`/take\` it again any time you're back.`);
+              } else if (!nudged && Date.now() - since >= 7 * DAY) {
+                await say(n, `<!-- claim:nudge -->\n@${who} how is it going? A draft pull request, even unfinished, keeps this claimed; ask here if you're stuck.`);
+              }
+            }

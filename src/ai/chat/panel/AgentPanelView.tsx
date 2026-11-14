@@ -1,6 +1,7 @@
 import { IconButton } from "../../../engine/controls/IconButton";
 import { PanelHeader } from "../../../engine/controls/PanelHeader";
-import type { ReactNode } from "react";
+import { useEffect, type ReactNode } from "react";
+import { useLatest } from "../../../utils/hooks/useLatest";
 import {
   DetachIcon,
   PlusIcon,
@@ -16,6 +17,25 @@ interface AgentPanelLabels {
 }
 
 export type AgentPanelTab = "chat" | "memory";
+
+/** Esc goes back to the conversation while Memory shows, unless something
+ *  took it first (a field, a menu) or focus is elsewhere in the window. */
+function useEscapeBack(on: boolean, back: () => void) {
+  const latest = useLatest(back);
+  useEffect(() => {
+    if (!on) return;
+    const onKey = (e: KeyboardEvent) => {
+      if (e.key !== "Escape" || e.defaultPrevented) return;
+      const at = document.activeElement;
+      if (at && at !== document.body && !at.closest(".agent-panel-view"))
+        return;
+      e.preventDefault();
+      latest.current();
+    };
+    window.addEventListener("keydown", onKey);
+    return () => window.removeEventListener("keydown", onKey);
+  }, [on, latest]);
+}
 
 /**
  * The docked panel's chrome: a header row over the conversation, or over
@@ -49,6 +69,7 @@ export function AgentPanelView({
   children: ReactNode;
 }) {
   const showingMemory = tab === "memory" && !!memory;
+  useEscapeBack(showingMemory, () => setTab("chat"));
   return (
     <section className="agent-panel-view" aria-label={labels.title}>
       <PanelHeader

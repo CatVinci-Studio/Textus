@@ -1,28 +1,16 @@
 name: CI
 
-# Every job runs the same npm command a contributor runs locally
-# (CONTRIBUTING.md), so a green local run means a green CI run:
+# Three layers (docs/dev/testing.md has the table):
 #
-#   check    npm run check         types, lint, unit tests, formatting,
-#                                  README/version/updater checks; and the build
-#   e2e      npm run test:e2e      the Playwright flows in Chromium, split by
-#                                  test across two machines, and e2e-webkit
-#                                  the WebKit ones (not required); stopwatch
-#                                  tests (@perf) run only locally, with npm
-#                                  run test:perf
-#   native   npm run check:native  rustfmt, clippy, Rust tests - on Linux,
-#                                  macOS and Windows; and npm test on macOS
-#                                  and Windows
-#   ios      the iOS simulator build
-#
-# Two depths. A pull request into main, and a push to main, run the quick
-# suite: `check`, and the Rust checks on Linux where the change reaches
-# Rust (scripts/ci-changes.mjs decides; skipped jobs count as passed). A
-# change only to GitHub's settings, the license or root Markdown runs a
-# light `check`: their format and the READMEs' structure. The
-# full suite - every job, every platform, whatever changed - runs before a
-# tag is built (release.yml calls this workflow on the tagged commit), on a
-# pull request into stable, and by hand (Run workflow).
+#   pull request   check (types, lint, unit tests, format, build); plus the
+#                  Rust checks on Linux when src-tauri/ changed
+#                  (scripts/ci-changes.mjs). Required: check, native,
+#                  ci-config. A contributor runs `npm run check` locally.
+#   push to main   the same.
+#   before release the full suite on every platform: native on Linux, macOS
+#                  and Windows, e2e (2 shards) and e2e-webkit, the iOS
+#                  simulator. release.yml calls this on the tagged commit;
+#                  it also runs on a pull request into stable and by hand.
 #
 # `check`'s save round trip (src/document-view/save-roundtrip*.test.ts)
 # runs only when the change can reach saving: the editor, src/document*/,
@@ -414,3 +402,48 @@ jobs:
             ios-sim.png
             ~/Library/Logs/DiagnosticReports/Textus*.ips
           if-no-files-found: ignore
+
+  # Android: the same proof for the APK (scripts/android-prepare.sh): the
+  # project is generated fresh (gen/android is not committed) and built for
+  # arm64, debug and unsigned by our key. Not a required check while the
+  # Android port is young.
+  android:
+    needs: changes
+    if: needs.changes.outputs.full == 'true'
+    continue-on-error: true
+    runs-on: ubuntu-24.04
+    timeout-minutes: 60
+    env:
+      CARGO_PROFILE_DEV_DEBUG: "0"
+    steps:
+      - uses: actions/checkout@v7
+      - uses: actions/setup-java@v5
+        with:
+          distribution: temurin
+          java-version: "17"
+      - uses: actions/setup-node@v7
+        with:
+          node-version-file: .nvmrc
+          cache: npm
+      - uses: dtolnay/rust-toolchain@stable
+        with:
+          targets: aarch64-linux-android
+      - uses: swatinem/rust-cache@v2
+        with:
+          workspaces: "./src-tauri -> target"
+          key: android
+          save-if: ${{ github.ref == 'refs/heads/main' }}
+      - run: npm ci
+      # The runner image's SDK and newest NDK.
+      - name: Generate the Android project (src-tauri/gen/android)
+        run: |
+          echo "NDK_HOME=$ANDROID_NDK_LATEST_HOME" >> "$GITHUB_ENV"
+          NDK_HOME=$ANDROID_NDK_LATEST_HOME npx tauri android init --ci
+          sh scripts/android-prepare.sh
+      - name: Build the APK for arm64, debug
+        run: npx tauri android build --ci --debug --target aarch64 --apk
+      - uses: actions/upload-artifact@v7
+        with:
+          name: textus-android-debug
+          path: src-tauri/gen/android/app/build/outputs/apk/universal/debug/*.apk
+          if-no-files-found: error

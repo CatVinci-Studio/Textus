@@ -14,10 +14,17 @@
   align-items: flex-end;
 }
 
-/* After the rail, never over its buttons. */
+/* After the rail, never over its buttons, nor past the window's end. */
 .corner-stack[data-corner="start"] {
-  left: calc(var(--rail-width, 0px) + 18px);
+  --corner-from: calc(var(--rail-width, 0px) + 18px);
+  left: var(--corner-from);
+  max-width: calc(100vw - var(--corner-from) - 18px);
   align-items: flex-start;
+}
+
+/* A phone's rail lies under the page while it is shut. */
+:root[data-window-chrome="mobile"] .corner-stack[data-corner="start"] {
+  --corner-from: 18px;
 }
 
 /* One line until opened: what it says, then its buttons and ×. */
@@ -26,7 +33,7 @@
   flex-wrap: wrap;
   align-items: center;
   gap: 8px;
-  max-width: min(572px, calc(100vw - 36px));
+  max-width: min(572px, calc(100vw - var(--corner-from, 18px) - 18px));
   padding: 4px 8px 4px 12px;
   font-size: var(--text-body);
   user-select: none;

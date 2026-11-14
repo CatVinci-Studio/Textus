@@ -1,6 +1,6 @@
 /* The sidebar lies over its column at its own width (app-shell.css): the
-   window's clock reveals it on the desktop, a phone's drawer slides on its
-   transform. */
+   window's clock reveals it on the desktop; a phone's lies under the page,
+   pushed aside to show it. */
 /* --sidebar-width stays an ordinary inherited property: registered as
    non-inherited, WebKit never restyled the sidebar and its edge couldn't drag. */
 .sidebar {
@@ -12,7 +12,7 @@
   /* Over the editor while it slides away across it. */
   z-index: 1;
   width: var(--sidebar-width, 264px);
-  background: var(--ui-frame-fill);
+  background: var(--ui-frame-fill) fixed;
   border-right: 1px solid var(--ui-frame-edge);
   display: flex;
   flex-direction: column;
@@ -22,24 +22,16 @@
   -webkit-user-select: none;
 }
 
-/* A phone's or iPad's drawer slides on its own. The desktop's sidebar is
-   revealed on the window's clock instead (useSidebarFrame): clipped to its
-   column, it needs no hiding. */
-:root[data-window-chrome="mobile"] .sidebar {
-  transition:
-    transform var(--dur-settle) var(--ease-settle),
-    opacity var(--dur-settle) var(--ease-out),
-    visibility 0s;
-}
-
-:root[data-window-chrome="mobile"] .sidebar-collapsed {
-  transform: translateX(calc(-100% * var(--motion-travel)));
-  opacity: var(--motion-travel-fade);
+/* A phone's sidebar lies under the page (mobile/styles/sidebar.css):
+   put away, it is hidden once the page has covered it. The desktop's is
+   revealed on the window's clock instead (useSidebarFrame). */
+:root[data-window-chrome="mobile"]
+  :is(
+    .sidebar-collapsed,
+    .app-shell:not([data-sidebar="open"]) > .activity-rail
+  ) {
   visibility: hidden;
-  transition:
-    transform var(--dur-settle) var(--ease-settle),
-    opacity var(--dur-settle) var(--ease-in),
-    visibility 0s linear var(--dur-settle);
+  transition: visibility 0s linear var(--dur-settle);
 }
 
 /* Below the window bar: the bar's own row stays the window's to drag. */

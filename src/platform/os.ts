@@ -45,9 +45,15 @@ export function isIOSPlatform(): boolean {
   return platform === "MacIntel" && (navigator.maxTouchPoints ?? 0) > 1;
 }
 
+/** Android, phone or tablet. */
+export function isAndroidPlatform(): boolean {
+  if (typeof navigator === "undefined") return false;
+  return /android/i.test(navigator.userAgent);
+}
+
 /** A desktop build: anything not iOS or Android (whose "Linux" must never
  *  read as desktop). The Rust side's `cfg(desktop)`. */
 export function isDesktop(): boolean {
   if (typeof navigator === "undefined") return true;
-  return !isIOSPlatform() && !/android/i.test(navigator.userAgent);
+  return !isIOSPlatform() && !isAndroidPlatform();
 }

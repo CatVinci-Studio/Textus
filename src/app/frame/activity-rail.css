@@ -33,7 +33,7 @@
   align-items: center;
   gap: 4px;
   padding-top: 8px;
-  background: var(--ui-frame-fill);
+  background: var(--ui-frame-fill) fixed;
   /* Where the frame meets the document; the open sidebar carries on the
      frame instead. */
   border-right: 1px solid var(--ui-frame-edge);
@@ -46,7 +46,7 @@
   border-right-color: transparent;
 }
 
-:root:is(.zen, [data-window-chrome="mobile"]) .activity-rail {
+:root.zen .activity-rail {
   display: none;
 }
 
@@ -90,14 +90,19 @@
   border-bottom: 0;
 }
 
-/* On a Mac's one-row bar the lights float over the rail and into the
-   sidebar's start: its name begins clear of them, at every size. */
-:root[data-window-chrome="native"]:not([data-window-fullscreen]):not(
-    [data-bar-rows="2"]
+/* On the bar's one row, its leading controls (a Mac's lights, the app
+   menu, the sidebar's toggle) reach over the rail into the sidebar's
+   start: the name begins past them and the room after them, as the bar
+   measured them (row-insets.ts), at every size. */
+:root:not([data-window-chrome="mobile"]):not([data-bar-rows="2"]):not(
+    [data-side-to-top]
   )
   .app-shell:has(> .activity-rail)
   .sidebar-header {
-  padding-left: max(var(--pane-inset), var(--lights-room) - var(--rail-width));
+  padding-left: max(
+    var(--pane-inset),
+    var(--bar-lead-clear, 0px) - var(--rail-width)
+  );
 }
 
 /* Where the bar leaves the sidebar's column free (barLayout: the app menu

@@ -9,6 +9,32 @@
   color-scheme: dark;
 }
 
+/* Scroll bars as Textus draws its own (ds-surfaces.css): thin, and shown
+   only while their scroller moves (webview.js) or under the pointer. */
+::-webkit-scrollbar {
+  width: 12px;
+  height: 12px;
+}
+::-webkit-scrollbar-track,
+::-webkit-scrollbar-corner {
+  background: transparent;
+}
+::-webkit-scrollbar-thumb {
+  border: 3px solid transparent;
+  border-radius: var(--shape-pill);
+  background: color-mix(in srgb, var(--ui-muted) 35%, transparent) padding-box;
+}
+::-webkit-scrollbar-thumb:hover {
+  background-color: color-mix(in srgb, var(--ui-muted) 55%, transparent);
+}
+:not(.is-scrolling)::-webkit-scrollbar-thumb:not(:hover) {
+  background-color: transparent;
+}
+/* WebKit restyles a bar only when its element's own style changes. */
+.is-scrolling {
+  column-rule-color: transparent;
+}
+
 /* The page fills its frame: a panel's background reaches the bottom of
    the sidebar, however little is in it. */
 html {

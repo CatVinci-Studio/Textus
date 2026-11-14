@@ -16,7 +16,7 @@ function that takes back what it added.
 
 ## Commands
 
-[`src/app/commands.ts`](../../src/app/commands.ts)
+[`src/registry/commands.ts`](../../src/registry/commands.ts)
 
 ```ts
 const remove = pluginApi.commands.register({

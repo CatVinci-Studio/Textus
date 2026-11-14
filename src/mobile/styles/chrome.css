@@ -11,15 +11,10 @@
   max-height: calc(100vh - var(--mobile-top) - 26px);
 }
 
-:root[data-window-chrome="mobile"] .tab-bar {
-  padding-top: calc(var(--mobile-top) + 4px);
-}
-
 :root[data-window-chrome="mobile"]
   :is(
     .settings-backdrop,
     .language-welcome-backdrop,
-    .tutorial-backdrop,
     .insert-table-overlay,
     .image-name-overlay,
     .tx-backdrop
@@ -314,7 +309,7 @@
   /* Clear of the keyboard toolbar and the home indicator alike: one height,
      since a note a little high is still readable. */
   :root[data-window-chrome="mobile"] .notice-stack {
-    bottom: calc(48px + 14px + env(safe-area-inset-bottom, 0px));
+    bottom: calc(48px + 14px + var(--safe-bottom));
     max-width: calc(100vw - 36px);
   }
 
@@ -322,8 +317,6 @@
 
   :root[data-window-chrome="mobile"] .tab-bar {
     gap: 4px;
-    padding-left: 8px;
-    padding-right: 4px;
     overscroll-behavior-x: contain;
     -webkit-overflow-scrolling: touch;
     scrollbar-width: none;

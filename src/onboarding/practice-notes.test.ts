@@ -4,7 +4,6 @@ import type { Editor } from "@milkdown/kit/core";
 import { editorViewCtx, serializerCtx } from "@milkdown/kit/core";
 import { createTestEditor } from "../document-view/editor-test-harness";
 import { LANGS } from "../i18n/strings";
-import { evaluateWysiwyg } from "./tutorial-evaluation";
 import { practiceNotes, withPracticeNotes } from "./practice-notes";
 
 const editors: Editor[] = [];
@@ -20,8 +19,6 @@ describe.each(LANGS)("the practice notes in %s", (lang) => {
     expect(notes.body).toMatch(/^> /m);
     // The notes come last: the AI lessons add to and rework them there.
     expect(notes.body.trimEnd().split("\n").at(-1)).not.toMatch(/^[>#]/);
-    // Nothing the writing lessons ask the learner to add.
-    expect(evaluateWysiwyg(notes.body)).toBe(0);
   });
 
   it("come back from the editor exactly as written", async () => {

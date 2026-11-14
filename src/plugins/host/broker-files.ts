@@ -1,4 +1,5 @@
 import { notesRoot } from "../../files/link-style";
+import { setFileBadge } from "../contributions/file-badges";
 import { inOpenFolder } from "../may-open";
 import { fs, plugins as pluginsIpc, type StoreScope } from "../../platform/ipc";
 import { absoluteIn, basename, isInside, slashed } from "../../utils/path";
@@ -139,6 +140,16 @@ export function fileHandlers(p: PluginScope) {
       const stat = await pluginsIpc.fsStat(p.id, root, str(path, "path"));
       return stat && { ...stat, rel: relOf(root, stat.path) };
     },
+    // Stat only checks it is in the folder: its path is resolved (\\?\ on
+    // Windows), the tree's is as the folder was opened.
+    // Clearing needs no file: one deleted or renamed still takes its badge off.
+    "files.setBadge": async ({ path, badge }: Params) => {
+      const root = p.root();
+      const target = str(path, "path");
+      if (badge != null && !(await pluginsIpc.fsStat(p.id, root, target)))
+        throw new Error(`No file ${String(path)}.`);
+      setFileBadge(p.id, absoluteIn(root, target), badge);
+    },
     "files.read": ({ path }: Params) =>
       pluginsIpc.fsRead(p.id, p.root(), str(path, "path")),
     "files.writeText": ({ path, text }: Params) => {
@@ -264,6 +275,11 @@ export function fileHandlers(p: PluginScope) {
         p.request<string | null>("$willSave", request),
       );
     },
+    // Loaded only when a plugin asks: the fonts are about 300 KB.
+    "export.mathCss": () =>
+      import("../../editor/math/katex-inline-css").then((m) =>
+        m.katexInlineCss(),
+      ),
     "export.willExport": ({ on }: Params) => {
       setWillExport(p.id, on === true, (page) =>
         p.request("$willExport", page),

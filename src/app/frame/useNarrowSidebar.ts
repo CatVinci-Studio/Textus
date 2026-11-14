@@ -22,6 +22,9 @@ export function useNarrowSidebar(
   const putAway = useRef(false);
   useEffect(() => {
     const was = before.current;
+    // A phone's sidebar is pushed in by hand: one put away before the
+    // layout turned into the phone's stays shut.
+    if (room === Infinity) putAway.current = false;
     if (was.fits && !fits && open && room < was.room) {
       putAway.current = true;
       setOpen(false);

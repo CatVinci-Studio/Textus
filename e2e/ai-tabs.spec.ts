@@ -482,3 +482,43 @@ test("the sidebar's name row at the window's top moves the window too", async ({
   expect(await moves(title.x + 4, title.y + title.height / 2)).toBe(true);
   expect(await moves(title.x - 6, title.y + title.height / 2)).toBe(true);
 });
+
+test("with no AI signed in, the conversation asks for a sign-in, not a message", async ({
+  page,
+}) => {
+  await open(page);
+  await page.evaluate(() => {
+    (window as unknown as { __devInvokeResults: unknown }).__devInvokeResults =
+      {
+        codex_auth_status: { configured: false },
+        claude_auth_status: { configured: false },
+        provider_api_key_status: false,
+      };
+  });
+  await aiButton(page).click();
+  const view = page.locator(".agent-panel-view");
+  await expect(view.getByRole("button", { name: "登录" })).toBeVisible();
+  await expect(view.locator("textarea")).toHaveCount(0);
+});
+
+test("Memory opens from the tab's right-click and closes with its × or Esc", async ({
+  page,
+}) => {
+  await open(page);
+  await aiButton(page).click();
+  const memory = page.locator(".agent-panel-memory");
+  const fromMenu = async () => {
+    const box = await page.locator(".ai-tab").boundingBox();
+    await page.mouse.click(box!.x + box!.width / 2, box!.y + box!.height / 2, {
+      button: "right",
+    });
+    await page.getByRole("menuitem", { name: "记忆" }).click();
+    await expect(memory).toHaveCount(1);
+  };
+  await fromMenu();
+  await page.getByRole("button", { name: "回到对话" }).click();
+  await expect(memory).toHaveCount(0);
+  await fromMenu();
+  await page.keyboard.press("Escape");
+  await expect(memory).toHaveCount(0);
+});

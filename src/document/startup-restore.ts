@@ -1,7 +1,11 @@
 import { useEffect } from "react";
 import { useLatest } from "../utils/hooks/useLatest";
 import { drafts, fs, windowIpc } from "../platform/ipc";
-import { canUseWindows, hasAppMenu, isIOSApp } from "../platform/capabilities";
+import {
+  canUseWindows,
+  hasAppMenu,
+  isMobileApp,
+} from "../platform/capabilities";
 import { lastIOSDocument } from "./ios-recents";
 import {
   helpDocContent,
@@ -340,8 +344,8 @@ export function useStartupRestore(options: StartupRestoreOptions): void {
           ordered.forEach((tab, i) => reorderInPane(pane, tab.id, i));
         return;
       }
-      // iOS: the document that was open last time.
-      const last = isIOSApp ? await lastIOSDocument() : null;
+      // A phone: the document that was open last time.
+      const last = isMobileApp ? await lastIOSDocument() : null;
       // Its recovered tab takes the initial one's place, so it doesn't open
       // twice.
       const recovered = last ? recoveredFor(last) : undefined;
@@ -372,9 +376,9 @@ export function useStartupRestore(options: StartupRestoreOptions): void {
       }
       // Nothing claimed the blank tab and onboarding was never shown. The
       // flag stays false until here, so a busy first launch defers the guide
-      // instead of losing it. Not on the iPhone: it teaches shortcuts.
+      // instead of losing it. Not on a phone: it teaches shortcuts.
       if (!opts.onboardingShown) {
-        if (!isIOSApp) opts.startTutorial(opts.activeTabId);
+        if (!isMobileApp) opts.startTutorial(opts.activeTabId);
         opts.markOnboardingShown();
       } else if (opts.launchStartPage && canUseWindows) {
         opts.setTabs((prev) =>
