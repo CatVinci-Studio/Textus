@@ -1,6 +1,8 @@
 # Plugin documentation
 
-Everything for writing a Textus plugin, in the order you need it:
+Everything for writing a Textus plugin, in the order you need it. The
+same pages are at [textus.md/developers](https://textus.md/developers/),
+made from these files.
 
 | Page                             | For                                                                   |
 | -------------------------------- | --------------------------------------------------------------------- |
