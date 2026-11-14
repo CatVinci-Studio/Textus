@@ -1,6 +1,7 @@
 /* The main window's stylesheet. Order is cascade order: print rules come
    after what they hide, and the zen and typewriter modes come last. */
 @import "../engine/tokens/base.css";
+@import "../theme/frame-themes.css";
 @import "../engine/controls/pane.css";
 @import "./frame/app-shell.css";
 @import "./frame/sidebar-frame.css";

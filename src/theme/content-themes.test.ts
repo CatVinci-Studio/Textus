@@ -1,6 +1,7 @@
 import { readFileSync } from "node:fs";
 import { describe, expect, it } from "vitest";
 import { contrast } from "../engine/tokens/palette";
+import { DOC_DEFAULTS } from "../engine/tokens/doc-defaults";
 const css = readFileSync(
   new URL("./content-themes.css", import.meta.url),
   "utf8",
@@ -43,6 +44,58 @@ describe("built-in theme display contract", () => {
             ).toBeGreaterThanOrEqual(4.5);
           }
         }
+      });
+    }
+  }
+});
+
+const frameCss = readFileSync(
+  new URL("./frame-themes.css", import.meta.url),
+  "utf8",
+);
+const frameBlocks = [...frameCss.matchAll(/([^{}]+)\{([^{}]+)\}/g)]
+  .filter((match) => match[2].includes("--ui-frame-paint:"))
+  .map((match) => ({
+    selector: match[1].trim().split("\n").slice(-1)[0],
+    values: Object.fromEntries(
+      [...match[2].matchAll(/(--[\w-]+):\s*([^;]+);/g)].map((m) => [
+        m[1],
+        m[2].replace(/\s+/g, " ").trim(),
+      ]),
+    ),
+  }));
+describe("built-in frame themes", () => {
+  for (const theme of ["aurora", "dusk", "mist"]) {
+    const variants = frameBlocks.filter((b) =>
+      b.selector.includes(`"${theme}"`),
+    );
+    it(`${theme}: system dark matches explicit dark, the page left alone`, () => {
+      expect(variants).toHaveLength(3);
+      expect(variants[1].values).toEqual(variants[2].values);
+      const open = [
+        "--ui-frame-paint",
+        "--ui-frame-tint",
+        "--doc-accent",
+        "--doc-mark",
+      ];
+      for (const block of variants)
+        expect(Object.keys(block.values).every((k) => open.includes(k))).toBe(
+          true,
+        );
+    });
+    for (const [index, variant] of variants.entries()) {
+      const ink = DOC_DEFAULTS[index === 0 ? "light" : "dark"];
+      it(`${theme} variant ${index}: links on the page and the frame's text read`, () => {
+        expect(
+          contrast(rgb(variant.values["--doc-accent"]), rgb(ink.bg)),
+        ).toBeGreaterThanOrEqual(4.5);
+        const stops =
+          variant.values["--ui-frame-paint"].match(/#[0-9a-f]{6}/gi)!;
+        expect(stops.length).toBeGreaterThanOrEqual(2);
+        for (const stop of stops)
+          expect(contrast(rgb(ink.text), rgb(stop))).toBeGreaterThanOrEqual(
+            4.5,
+          );
       });
     }
   }

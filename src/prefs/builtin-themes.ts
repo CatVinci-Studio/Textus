@@ -1,9 +1,11 @@
 import type { TextKey } from "../i18n/strings";
 
-/// Built-in content themes only override `--doc-*` variables; "default"
+/// Built-in content themes override `--doc-*` variables (the frame themes
+/// also paint the frame: theme/frame-themes.css); "default"
 /// means none are active. A setting naming a withdrawn one (Parchment)
 /// falls back to the default.
-type BuiltinContentThemeId = "default" | "paper" | "slate" | "forest";
+type BuiltinContentThemeId =
+  "default" | "paper" | "slate" | "forest" | "aurora" | "dusk" | "mist";
 
 /// `nameKey` gives the picker label in the app language; `name` is the
 /// English fallback. Each defines a light and a dark palette, so switching
@@ -17,4 +19,8 @@ export const BUILTIN_CONTENT_THEMES: {
   { id: "paper", name: "Paper", nameKey: "themeNamePaper" },
   { id: "slate", name: "Slate", nameKey: "themeNameSlate" },
   { id: "forest", name: "Forest", nameKey: "themeNameForest" },
+  // A gradient across the frame (theme/frame-themes.css).
+  { id: "aurora", name: "Aurora", nameKey: "themeNameAurora" },
+  { id: "dusk", name: "Dusk", nameKey: "themeNameDusk" },
+  { id: "mist", name: "Mist", nameKey: "themeNameMist" },
 ];

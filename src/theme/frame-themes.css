@@ -1,0 +1,71 @@
+/* Built-in frame themes: a gradient across the frame round the pages
+   (bar, rail, sidebar), with an accent to match; the page itself keeps
+   the default paper, so text reads as it always does. Three blocks each,
+   as content-themes.css: light, dark following the system, dark pinned
+   (the two dark ones identical). */
+
+/* Aurora - peach, pink and lavender */
+:root[data-content-theme="aurora"] {
+  --ui-frame-paint: linear-gradient(135deg, #f6d5c3, #f1c7d6 50%, #d8ccee);
+  --ui-frame-tint: #b9789a;
+  --doc-accent: #ad3a70;
+  --doc-mark: #e0679f;
+}
+
+@media (prefers-color-scheme: dark) {
+  :root:not([data-theme="light"])[data-content-theme="aurora"] {
+    --ui-frame-paint: linear-gradient(135deg, #2e2128, #2c2033 50%, #241f3a);
+    --ui-frame-tint: #b9789a;
+    --doc-accent: #f08dba;
+    --doc-mark: #f08dba;
+  }
+}
+
+:root[data-theme="dark"][data-content-theme="aurora"] {
+  --ui-frame-paint: linear-gradient(135deg, #2e2128, #2c2033 50%, #241f3a);
+  --ui-frame-tint: #b9789a;
+  --doc-accent: #f08dba;
+  --doc-mark: #f08dba;
+}
+
+/* Dusk - peach into rose into evening blue */
+:root[data-content-theme="dusk"] {
+  --ui-frame-paint: linear-gradient(135deg, #f3d9c4, #ebd3da 50%, #d6dcec);
+  --ui-frame-tint: #8a80b0;
+  --doc-accent: #5652a3;
+}
+
+@media (prefers-color-scheme: dark) {
+  :root:not([data-theme="light"])[data-content-theme="dusk"] {
+    --ui-frame-paint: linear-gradient(135deg, #2a2233, #1e2433 50%, #1c2b2e);
+    --ui-frame-tint: #8a80b0;
+    --doc-accent: #a9a6e8;
+  }
+}
+
+:root[data-theme="dark"][data-content-theme="dusk"] {
+  --ui-frame-paint: linear-gradient(135deg, #2a2233, #1e2433 50%, #1c2b2e);
+  --ui-frame-tint: #8a80b0;
+  --doc-accent: #a9a6e8;
+}
+
+/* Mist - linen into sage into morning blue */
+:root[data-content-theme="mist"] {
+  --ui-frame-paint: linear-gradient(135deg, #f2ecdf, #dce5d6 50%, #d3e2e6);
+  --ui-frame-tint: #6f9a88;
+  --doc-accent: #2c6b5c;
+}
+
+@media (prefers-color-scheme: dark) {
+  :root:not([data-theme="light"])[data-content-theme="mist"] {
+    --ui-frame-paint: linear-gradient(135deg, #1d2622, #1b2629 50%, #1a2430);
+    --ui-frame-tint: #6f9a88;
+    --doc-accent: #7cc1ae;
+  }
+}
+
+:root[data-theme="dark"][data-content-theme="mist"] {
+  --ui-frame-paint: linear-gradient(135deg, #1d2622, #1b2629 50%, #1a2430);
+  --ui-frame-tint: #6f9a88;
+  --doc-accent: #7cc1ae;
+}
