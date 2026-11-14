@@ -1,12 +1,13 @@
 import type { ComponentType } from "react";
 import type { Strings } from "../i18n/strings";
-import { hasTextusAi, isIOSApp, isMobileApp } from "../platform/capabilities";
+import { hasTextusAi, isMobileApp } from "../platform/capabilities";
 import { lucide } from "../engine/controls/icons";
 import {
   Info,
   Keyboard,
   Palette,
   PenLine,
+  Puzzle,
   ShieldCheck,
   SlidersHorizontal,
   Sparkles,
@@ -96,12 +97,13 @@ const BUILT_IN: SettingsPageDef[] = [
     available: () => hasTextusAi && !isMobileApp,
     label: (t) => t.navExternalTools,
   },
-  // The iPhone's and iPad's: there plugins, themes and skills are managed
+  // A phone's or tablet's: there plugins, themes and skills are managed
   // in Settings; the desktop has the sidebar's plugins and these pages.
   {
     id: "extensions",
     label: (t) => t.navExtensions,
-    available: () => isIOSApp,
+    Icon: lucide(Puzzle, NAV_ICON),
+    available: () => isMobileApp,
   },
   {
     id: "shortcuts",

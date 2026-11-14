@@ -23,7 +23,6 @@ const ALLOWED: Record<string, string> = {
   "platform/ipc-files.ts": "the Files app's documents",
   "platform/ipc-ai-workspace.ts": "the project folder is picked in Files",
   "plugins/plugin-platform.ts": "textus.env.platform tells plugins it is iOS",
-  "settings/settings-pages.tsx": "no keyboard to bind shortcuts on",
   "theme/apply-appearance.ts":
     "its WebKit draws CJK as boxes under generic system fonts",
   "engine/controls/elastic-overscroll.ts": "the system's own overscroll",

@@ -1,9 +1,13 @@
 package com.catvinci.textus.files
 
+import android.Manifest
 import android.app.Activity
 import android.content.Intent
 import android.database.Cursor
 import android.net.Uri
+import android.os.Build
+import android.os.Environment
+import android.provider.Settings
 import android.provider.DocumentsContract
 import android.provider.OpenableColumns
 import android.util.Base64
@@ -12,7 +16,10 @@ import androidx.activity.result.ActivityResult
 import androidx.core.content.FileProvider
 import app.tauri.annotation.ActivityCallback
 import app.tauri.annotation.Command
+import app.tauri.PermissionState
 import app.tauri.annotation.InvokeArg
+import app.tauri.annotation.Permission
+import app.tauri.annotation.PermissionCallback
 import app.tauri.annotation.TauriPlugin
 import app.tauri.plugin.Invoke
 import app.tauri.plugin.JSArray
@@ -23,7 +30,10 @@ import java.io.File
 // Android's side of Textus's document access, the Swift plugin's twin
 // (ios/Sources/TextusFilesPlugin.swift). A picked file or folder is a
 // content:// URL, read and written through the ContentResolver; its grant
-// is taken as persistable, so it survives a relaunch.
+// is taken as persistable, so it survives a relaunch. A picked folder on
+// the device's storage opens by its plain path once the user allows access
+// to all files, so the backend, plugins and file watching work as on the
+// desktop; without it the folder stays a content:// URL.
 
 @InvokeArg
 class UrlArgs {
@@ -49,7 +59,9 @@ class CreateArgs {
 private const val GRANT =
   Intent.FLAG_GRANT_READ_URI_PERMISSION or Intent.FLAG_GRANT_WRITE_URI_PERMISSION
 
-@TauriPlugin
+@TauriPlugin(
+  permissions = [Permission(strings = [Manifest.permission.WRITE_EXTERNAL_STORAGE], alias = "storage")]
+)
 class TextusFilesPlugin(private val activity: Activity) : Plugin(activity) {
   private val resolver get() = activity.contentResolver
 
@@ -185,11 +197,52 @@ class TextusFilesPlugin(private val activity: Activity) : Plugin(activity) {
     invoke.resolve(JSObject().put("items", items))
   }
 
-  /** A folder's grant already holds for the whole process: its URL is its
-   *  path (there is no plain one). */
+  /** A picked folder's plain path when it is on the device's storage and
+   *  the user allows access to all files (asked here the first time);
+   *  else its URL, whose grant already holds for the whole process. */
   @Command
   fun beginAccess(invoke: Invoke) {
-    invoke.resolve(JSObject().put("path", invoke.parseArgs(UrlArgs::class.java).url))
+    val url = invoke.parseArgs(UrlArgs::class.java).url
+    when {
+      plainPath(url) == null || hasAllFiles() -> answerAccess(invoke)
+      Build.VERSION.SDK_INT >= Build.VERSION_CODES.R ->
+        startActivityForResult(
+          invoke,
+          Intent(Settings.ACTION_MANAGE_APP_ALL_FILES_ACCESS_PERMISSION)
+            .setData(Uri.parse("package:${activity.packageName}")),
+          "allFilesAnswered",
+        )
+      else -> requestPermissionForAlias("storage", invoke, "storageAnswered")
+    }
+  }
+
+  @ActivityCallback
+  fun allFilesAnswered(invoke: Invoke, result: ActivityResult) = answerAccess(invoke)
+
+  @PermissionCallback
+  fun storageAnswered(invoke: Invoke) = answerAccess(invoke)
+
+  private fun answerAccess(invoke: Invoke) {
+    val url = invoke.parseArgs(UrlArgs::class.java).url
+    val path = plainPath(url)?.takeIf { hasAllFiles() && File(it).isDirectory }
+    invoke.resolve(JSObject().put("path", path ?: url))
+  }
+
+  private fun hasAllFiles(): Boolean =
+    if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.R) Environment.isExternalStorageManager()
+    else getPermissionState("storage") == PermissionState.GRANTED
+
+  /** A folder of the device's storage provider as a path: "primary:Notes"
+   *  is the shared storage's Notes, "1A2B-3C4D:Notes" a card's. */
+  private fun plainPath(url: String): String? {
+    val uri = Uri.parse(url)
+    if (uri.authority != "com.android.externalstorage.documents") return null
+    val id = runCatching { DocumentsContract.getDocumentId(uri) }.getOrNull() ?: return null
+    val volume = id.substringBefore(':')
+    val rel = id.substringAfter(':', "")
+    val base = if (volume == "primary") Environment.getExternalStorageDirectory().path
+    else "/storage/$volume"
+    return if (rel.isEmpty()) base else "$base/$rel"
   }
 
   // ---- Share and touch
