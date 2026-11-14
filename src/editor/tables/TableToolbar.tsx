@@ -1,10 +1,7 @@
-import { useState, type ReactNode } from "react";
+import { useCallback, useRef, useState, type ReactNode } from "react";
 import { createRoot, type Root } from "react-dom/client";
 import type { Strings } from "../../i18n/strings";
-import {
-  TABLE_TOOL_ICONS as ICONS,
-  TableEditIcon,
-} from "../../engine/controls/icons";
+import { TABLE_TOOL_ICONS as ICONS } from "../../engine/controls/icons";
 import { IconButton } from "../../engine/controls/IconButton";
 import { Bubble } from "../../engine/controls/Bubble";
 import { Sheet } from "../../engine/controls/Sheet";
@@ -17,6 +14,7 @@ const {
   copy: CopyIcon,
   less: LessIcon,
   more: MoreIcon,
+  delete: DeleteIcon,
 } = ICONS;
 const ALIGNS = ["left", "center", "right"] as const;
 
@@ -40,12 +38,16 @@ interface TableToolbarProps {
  *  alignment, its size, Copy and Delete. */
 function TableToolbar(p: TableToolbarProps) {
   const { t } = p;
-  const [anchor, setAnchor] = useState<HTMLButtonElement | null>(null);
+  const sizeSlot = useRef<HTMLSpanElement>(null);
   const [sizing, setSizing] = useState(false);
-  const show = (open: boolean) => {
+  const openChange = useRef(p.onOpenChange);
+  openChange.current = p.onOpenChange;
+  // One function for the card's life: its outside-click watch stays put.
+  const show = useCallback((open: boolean) => {
     setSizing(open);
-    p.onOpenChange(open);
-  };
+    openChange.current(open);
+  }, []);
+  const close = useCallback(() => show(false), [show]);
   const button = "block-toolbar-button";
   return (
     <>
@@ -72,7 +74,7 @@ function TableToolbar(p: TableToolbarProps) {
           );
         })}
       {p.editable && (
-        <span ref={(el) => setAnchor(el?.querySelector("button") ?? null)}>
+        <span ref={sizeSlot} className="block-toolbar-slot">
           <IconButton
             className={button}
             label={t.tableSize}
@@ -92,11 +94,11 @@ function TableToolbar(p: TableToolbarProps) {
           label={t.deleteTable}
           onClick={p.onDelete}
         >
-          <TableEditIcon kind="delete-table" />
+          <DeleteIcon />
         </IconButton>
       )}
-      {sizing && anchor && (
-        <SizeCard {...p} anchor={anchor} onClose={() => show(false)} />
+      {sizing && sizeSlot.current && (
+        <SizeCard {...p} anchor={sizeSlot.current} onClose={close} />
       )}
     </>
   );
@@ -112,6 +114,8 @@ function SizeCard({
   anchor,
   onClose,
 }: TableToolbarProps & { anchor: HTMLElement; onClose: () => void }) {
+  // One ref for the card's life: a new one each render places it again.
+  const anchorRef = useRef(anchor);
   const ref = useCloseOnOutsideClick<HTMLDivElement>(
     onClose,
     true,
@@ -151,7 +155,7 @@ function SizeCard({
     );
   return (
     <Bubble
-      anchor={{ current: anchor }}
+      anchor={anchorRef}
       role="dialog"
       aria-label={t.tableSize}
       className="table-size-card floating-surface"

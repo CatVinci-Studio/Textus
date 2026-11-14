@@ -147,6 +147,11 @@
   pointer-events: auto;
 }
 
+/* A button held in a box of its own (the size card hangs from it). */
+.block-toolbar-slot {
+  display: inline-flex;
+}
+
 /* An icon's button among them: a circle in the document's colours. */
 .block-toolbar-button {
   display: inline-flex;

@@ -289,6 +289,7 @@ export const TABLE_TOOL_ICONS = {
   copy: lucide(Copy, 14),
   less: lucide(Minus, 14),
   more: lucide(Plus, 14),
+  delete: lucide(Grid2x2X, 14),
 } as const;
 /** Documents list: as a grid of page thumbnails, or as rows. */
 export const GridViewIcon = lucide(LayoutGrid, 16);

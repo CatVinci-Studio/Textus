@@ -146,11 +146,16 @@ export function createTableView(strings: () => Strings) {
     const actions = header.appendChild(document.createElement("div"));
     actions.className = "block-toolbar-actions";
 
-    const edit = (make: (tr: Transaction, pos: number) => Transaction) => {
+    // `refocus`: back to the text, but not from the size card, whose
+    // buttons are pressed again and again.
+    const edit = (
+      make: (tr: Transaction, pos: number) => Transaction,
+      refocus = true,
+    ) => {
       const pos = getPos();
       if (pos == null) return;
       view.dispatch(make(view.state.tr, pos));
-      view.focus();
+      if (refocus) view.focus();
     };
     // Mounted on first hover or caret: a long document has many tables.
     let tools: ReturnType<typeof mountTableToolbar> | null = null;
@@ -166,7 +171,7 @@ export function createTableView(strings: () => Strings) {
         editable: view.editable,
         onAlign: (a) => edit((tr, pos) => alignColumns(tr, pos, caretCols, a)),
         onSize: (rows, cols) =>
-          edit((tr, pos) => resizeTable(tr, pos, rows, cols)),
+          edit((tr, pos) => resizeTable(tr, pos, rows, cols), false),
         onCopy: () => copyTable(view, currentNode, ctx.get(serializerCtx)),
         onDelete: () =>
           edit((tr, pos) => tr.delete(pos, pos + currentNode.nodeSize)),
@@ -194,15 +199,12 @@ export function createTableView(strings: () => Strings) {
       },
       // Keys and presses on its tools aren't the editor's.
       stopEvent: (event) => header.contains(event.target as Node),
+      // Only the cells are the document's: its tools, buttons and the
+      // resize drag's widths on the table and its <col>s change under the
+      // view's DOM observer.
       ignoreMutation(record) {
         if (record.type === "selection") return false;
-        if (header.contains(record.target)) return true;
-        // The resize drag writes width styles onto the table and its <col>s; they
-        // aren't content edits.
-        return (
-          record.type === "attributes" &&
-          (record.target === table || colgroup.contains(record.target))
-        );
+        return !tbody.contains(record.target);
       },
       destroy() {
         tools?.destroy();
