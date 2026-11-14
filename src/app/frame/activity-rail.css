@@ -101,7 +101,7 @@
   .sidebar-header {
   padding-left: max(
     var(--pane-inset),
-    var(--bar-lead-end, 0px) + 8px - var(--rail-width)
+    var(--bar-lead-end, 0px) + var(--space-4) - var(--rail-width)
   );
 }
 

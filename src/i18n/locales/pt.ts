@@ -737,6 +737,7 @@ Habilidades ficam na pasta skills/ ao lado deste arquivo, um arquivo
   navAbout: "Sobre",
   navGuides: "Guias",
   aboutVersion: "Versão {version}",
+  aboutVersionBeta: "Versão {version} · Beta",
   aboutMadeBy: "Feito pela CatVinci Studio",
   aboutQq: "Grupo do QQ",
   navShortcuts: "Atalhos",

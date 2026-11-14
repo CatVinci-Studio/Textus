@@ -749,6 +749,7 @@ utiliser une.
   navAbout: "À propos",
   navGuides: "Guides",
   aboutVersion: "Version {version}",
+  aboutVersionBeta: "Version {version} · Bêta",
   aboutMadeBy: "Créé par CatVinci Studio",
   aboutQq: "Groupe QQ",
   navShortcuts: "Raccourcis",

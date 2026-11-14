@@ -749,6 +749,7 @@ export default {
   navAbout: "О программе",
   navGuides: "Руководства",
   aboutVersion: "Версия {version}",
+  aboutVersionBeta: "Версия {version} · Бета",
   aboutMadeBy: "Сделано в CatVinci Studio",
   aboutQq: "Группа QQ",
   navShortcuts: "Сочетания клавиш",

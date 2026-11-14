@@ -750,6 +750,7 @@ para usar una.
   navAbout: "Acerca de",
   navGuides: "Guías",
   aboutVersion: "Versión {version}",
+  aboutVersionBeta: "Versión {version} · Beta",
   aboutMadeBy: "Hecho por CatVinci Studio",
   aboutQq: "Grupo de QQ",
   navShortcuts: "Atajos de teclado",

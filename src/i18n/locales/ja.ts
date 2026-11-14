@@ -693,6 +693,7 @@ ${AI_NAME}への執筆の指示です。すべての文書に適用されます�
   navAbout: "について",
   navGuides: "使い方ガイド",
   aboutVersion: "バージョン {version}",
+  aboutVersionBeta: "バージョン {version} · ベータ版",
   aboutMadeBy: "CatVinci Studio 制作",
   aboutQq: "QQ グループ",
   navShortcuts: "ショートカット",

@@ -647,6 +647,7 @@ export default {
   navAbout: "關於",
   navGuides: "使用指南",
   aboutVersion: "版本 {version}",
+  aboutVersionBeta: "版本 {version} · 公測版",
   aboutMadeBy: "由 CatVinci Studio 製作",
   aboutQq: "QQ 群",
   navShortcuts: "快速鍵",

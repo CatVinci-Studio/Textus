@@ -681,6 +681,7 @@ ${AI_NAME}에게 주는 글쓰기 지침으로, 모든 문서에 적용됩니다
   navAbout: "정보",
   navGuides: "사용 안내",
   aboutVersion: "버전 {version}",
+  aboutVersionBeta: "버전 {version} · 베타",
   aboutMadeBy: "CatVinci Studio 제작",
   aboutQq: "QQ 그룹",
   navShortcuts: "단축키",

@@ -646,6 +646,7 @@ export default {
   navAbout: "关于",
   navGuides: "使用指南",
   aboutVersion: "版本 {version}",
+  aboutVersionBeta: "版本 {version} · 公测版",
   aboutMadeBy: "由 CatVinci Studio 制作",
   aboutQq: "QQ 群",
   navShortcuts: "快捷键",

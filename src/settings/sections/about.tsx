@@ -3,6 +3,7 @@ import { useEffect, useState } from "react";
 import { appVersion } from "../../platform/app-info";
 import type { Strings } from "../../i18n/strings";
 import { links } from "../../platform/ipc";
+import { isMobileApp } from "../../platform/capabilities";
 import { UpdateButton } from "./general";
 import appIcon from "../../../src-tauri/icons/128x128@2x.png";
 
@@ -29,7 +30,11 @@ export function AboutSection({
       <img className="settings-about-icon" src={appIcon} alt="" />
       <div className="settings-about-name">Textus</div>
       <div className="settings-about-version">
-        {version ? fill(t.aboutVersion, { version }) : " "}
+        {version
+          ? fill(isMobileApp ? t.aboutVersionBeta : t.aboutVersion, {
+              version,
+            })
+          : " "}
       </div>
       <div className="settings-about-links">
         <button

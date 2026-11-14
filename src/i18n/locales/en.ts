@@ -707,6 +707,8 @@ type /name in a conversation to use one.
   navAbout: "About",
   navGuides: "Guides",
   aboutVersion: "Version {version}",
+  /** The phone and tablet apps, still in public testing. */
+  aboutVersionBeta: "Version {version} · Beta",
   aboutMadeBy: "Made by CatVinci Studio",
   aboutQq: "QQ group",
   navShortcuts: "Shortcuts",
