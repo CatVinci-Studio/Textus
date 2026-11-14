@@ -1,4 +1,5 @@
 import { fill } from "../i18n/fill";
+import { wasClosed } from "./close-flow";
 import { useCallback, useEffect, useRef } from "react";
 import {
   listenToThisWebview,
@@ -214,11 +215,14 @@ export function useFileOpening(opts: {
     (path: string): string | null => {
       const made = opened.current.get(path);
       if (!made) return null;
-      if (tabsRef.current.some((tab) => tab.id === made.id)) {
+      if (
+        wasClosed(made.id) ||
+        tabsRef.current.some((tab) => tab.id === made.id)
+      ) {
         opened.current.delete(path);
         return null;
       }
-      // Still arriving (a moment), else closed before it did.
+      // Still arriving (a moment); a time limit too, should it never come.
       if (Date.now() - made.at < 2000) return made.id;
       opened.current.delete(path);
       return null;

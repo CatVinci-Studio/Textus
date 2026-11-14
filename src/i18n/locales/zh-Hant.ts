@@ -1549,6 +1549,10 @@ export default {
   writingProviderLabel: "寫作輔助用的服務商",
   followChatProvider: "與對話相同",
   providerModelsGroup: "模型",
+  allFilesAccessAsk:
+    "Android 接下來會請你允許 Textus 管理所有檔案。允許後，Textus 會直接開啟這個資料夾：更快，其他 App 的變更也會立刻顯示。不允許也能開啟，只是稍慢。",
+  allFilesAccessContinue: "繼續",
+  allFilesAccessNotNow: "暫不",
   providerKeysLocal: "金鑰只存在這台裝置上。",
   pluginsMore: "更多",
   pluginsSearch: "搜尋外掛",

@@ -1664,6 +1664,10 @@ type /name in a conversation to use one.
   writingProviderLabel: "Writing provider",
   followChatProvider: "Same as chat",
   providerModelsGroup: "Models",
+  allFilesAccessAsk:
+    "Android will now ask you to let Textus manage all files. With it, Textus opens this folder directly: faster, and changes from other apps show up at once. Without it, the folder still opens, a little slower.",
+  allFilesAccessContinue: "Continue",
+  allFilesAccessNotNow: "Not now",
   providerKeysLocal: "Keys stay on this device.",
   pluginsMore: "More",
   pluginsSearch: "Search plugins",

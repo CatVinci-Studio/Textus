@@ -7,8 +7,8 @@ import {
   type ReactNode,
 } from "react";
 
-const FIT_EQUAL = ["unequal"] as const;
-const NO_STEPS = [] as const;
+const FIT_EQUAL = ["unequal", "tight"] as const;
+const FIT = ["tight"] as const;
 
 /**
  * One of a few choices side by side (components.css .tx-segmented), one
@@ -36,8 +36,9 @@ export function Segmented<T extends string>({
   className?: string;
 }) {
   const row = useRef<HTMLDivElement>(null);
-  // Too narrow for equal segments: each its own width, then labels cut.
-  useFitSteps(row, equal ? FIT_EQUAL : NO_STEPS);
+  // Too narrow for equal segments: each its own width, then less padding,
+  // then labels cut.
+  useFitSteps(row, equal ? FIT_EQUAL : FIT);
   const at = options.findIndex((o) => o.id === value);
   const onKeyDown = (e: KeyboardEvent<HTMLDivElement>) => {
     const moved = listMove(e.key, at, options.length, true, "row");

@@ -1,4 +1,36 @@
-import type { ReactNode } from "react";
+import { useLayoutEffect, useRef, type ReactNode, type RefObject } from "react";
+import { onAppearance } from "../../engine/tokens/appearance";
+
+/** One row's control gone under its name puts every row's there: a group
+ *  reads one way (data-stacked on its body). */
+function useEvenRows(body: RefObject<HTMLDivElement | null>) {
+  useLayoutEffect(() => {
+    const el = body.current;
+    if (!el) return;
+    const fit = () => {
+      delete el.dataset.stacked;
+      const rows = el.querySelectorAll(":scope > .settings-row");
+      const wrapped = [...rows].some((row) => {
+        const [name, control] = [row.firstElementChild, row.lastElementChild];
+        return (
+          name instanceof HTMLElement &&
+          control instanceof HTMLElement &&
+          name !== control &&
+          control.offsetTop > name.offsetTop + 1
+        );
+      });
+      if (wrapped && rows.length > 1) el.dataset.stacked = "";
+    };
+    fit();
+    const resized = new ResizeObserver(fit);
+    resized.observe(el);
+    const restyled = onAppearance(fit);
+    return () => {
+      resized.disconnect();
+      restyled();
+    };
+  });
+}
 
 /**
  * A section of a Settings page (and of a plugin's page): a small heading,
@@ -22,6 +54,8 @@ export function SettingsGroup({
   /** None while the section is folded: only its head shows. */
   children?: ReactNode;
 }) {
+  const body = useRef<HTMLDivElement>(null);
+  useEvenRows(body);
   return (
     <section
       className={className ? `settings-group ${className}` : "settings-group"}
@@ -42,7 +76,11 @@ export function SettingsGroup({
           {actions && <div className="settings-group-actions">{actions}</div>}
         </div>
       )}
-      {children && <div className="settings-group-body">{children}</div>}
+      {children && (
+        <div ref={body} className="settings-group-body">
+          {children}
+        </div>
+      )}
     </section>
   );
 }

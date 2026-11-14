@@ -1742,6 +1742,10 @@ para usar una.
   writingProviderLabel: "Proveedor de escritura",
   followChatProvider: "Igual que el chat",
   providerModelsGroup: "Modelos",
+  allFilesAccessAsk:
+    "Android te pedirá ahora que permitas a Textus administrar todos los archivos. Con ese permiso, Textus abre esta carpeta directamente: más rápido, y los cambios de otras apps aparecen al instante. Sin él, la carpeta se abre igual, algo más lenta.",
+  allFilesAccessContinue: "Continuar",
+  allFilesAccessNotNow: "Ahora no",
   providerKeysLocal: "Las claves se quedan en este dispositivo.",
   pluginsMore: "Más",
   pluginsSearch: "Buscar plugins",

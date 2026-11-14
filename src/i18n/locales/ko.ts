@@ -1612,6 +1612,10 @@ ${AI_NAME}에게 주는 글쓰기 지침으로, 모든 문서에 적용됩니다
   writingProviderLabel: "글쓰기 서비스",
   followChatProvider: "채팅과 같음",
   providerModelsGroup: "모델",
+  allFilesAccessAsk:
+    "이제 Android가 Textus의 모든 파일 관리 권한을 묻습니다. 허용하면 Textus가 이 폴더를 직접 열어 더 빠르고, 다른 앱에서 바꾼 내용도 바로 보입니다. 허용하지 않아도 폴더는 열리지만 조금 느립니다.",
+  allFilesAccessContinue: "계속",
+  allFilesAccessNotNow: "나중에",
   providerKeysLocal: "키는 이 기기에만 저장됩니다.",
   pluginsMore: "더 보기",
   pluginsSearch: "플러그인 검색",

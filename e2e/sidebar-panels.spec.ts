@@ -127,6 +127,27 @@ test("the folder's tools coming on hover move none of the tree's rows", async ({
   expect((await row.boundingBox())!.y).toBe(before);
 });
 
+test("a file closed at once opens again at once", async ({ page }) => {
+  await page.addInitScript(() => {
+    const w = window as unknown as Record<string, unknown>;
+    w.__devFs = { "/proj/a.md": "# A\n", "/proj/b.md": "# B\n" };
+    w.__devPickFolder = "/proj";
+  });
+  await openApp(page);
+  await emit(page, "menu-open-folder");
+  // Another tab, so closing this one leaves the window open.
+  await page.locator(".tree-row", { hasText: "b.md" }).dblclick();
+  await expect(page.locator(".tab-pill", { hasText: "b.md" })).toBeVisible();
+  const row = page.locator(".tree-row", { hasText: "a.md" });
+  const tab = page.locator(".tab-pill", { hasText: "a.md" });
+  await row.dblclick();
+  await expect(tab).toBeVisible();
+  await emit(page, "menu-close-tab");
+  await expect(tab).toHaveCount(0);
+  await row.dblclick();
+  await expect(tab).toBeVisible();
+});
+
 test("a file dragged onto a folder moves into it; with Esc it stays", async ({
   page,
 }) => {

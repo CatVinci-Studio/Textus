@@ -42,6 +42,13 @@ class UrlArgs {
 }
 
 @InvokeArg
+class AccessArgs {
+  lateinit var url: String
+  /** False: only tells whether it would ask (the page explains first). */
+  var ask: Boolean = true
+}
+
+@InvokeArg
 class WriteArgs {
   lateinit var url: String
   lateinit var text: String
@@ -203,9 +210,12 @@ class TextusFilesPlugin(private val activity: Activity) : Plugin(activity) {
    *  else its URL, whose grant already holds for the whole process. */
   @Command
   fun beginAccess(invoke: Invoke) {
-    val url = invoke.parseArgs(UrlArgs::class.java).url
+    val args = invoke.parseArgs(AccessArgs::class.java)
+    val url = args.url
+    val asks = plainPath(url) != null && !hasAllFiles()
+    if (!args.ask) return answerAccess(invoke, asks)
     when {
-      plainPath(url) == null || hasAllFiles() -> answerAccess(invoke)
+      !asks -> answerAccess(invoke)
       Build.VERSION.SDK_INT >= Build.VERSION_CODES.R ->
         // Some builds (Go, TV) have no such screen: the URL, then.
         try {
@@ -228,14 +238,14 @@ class TextusFilesPlugin(private val activity: Activity) : Plugin(activity) {
   @PermissionCallback
   fun storageAnswered(invoke: Invoke) = answerAccess(invoke)
 
-  private fun answerAccess(invoke: Invoke) {
+  private fun answerAccess(invoke: Invoke, asks: Boolean = false) {
     val url = invoke.parseArgs(UrlArgs::class.java).url
     // Writable too: before Android 11 a memory card's folder reads but won't
     // take a write, where its URL would.
     val path = plainPath(url)?.takeIf {
       hasAllFiles() && File(it).isDirectory && File(it).canWrite()
     }
-    invoke.resolve(JSObject().put("path", path ?: url))
+    invoke.resolve(JSObject().put("path", path ?: url).put("asks", asks))
   }
 
   private fun hasAllFiles(): Boolean =

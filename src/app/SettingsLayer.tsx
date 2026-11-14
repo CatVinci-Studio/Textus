@@ -93,7 +93,7 @@ const SettingsPanel = lazyComponent(
 
 /** The page Settings opens at: General, or Plugins from that menu. */
 /** Where Settings opens: a page, or "updates" - About, checking. */
-type SettingsStart = "general" | "extensions" | "updates";
+type SettingsStart = "general" | "extensions" | "updates" | (string & {});
 
 /** Whether Settings is open, and at which page. Each request counts, so
  *  one made while Settings is open goes to its page from wherever it was.
@@ -120,7 +120,9 @@ export function useSettingsOpening(tabs: TabState) {
     // A page picked in the sidebar's list, or a search result there.
     const page = (e: Event) => {
       const { page, jump } = (e as CustomEvent<SettingsPageRequest>).detail;
-      showSettings(tabs, page, jump);
+      // The iPhone's and iPad's Settings is the sheet, from anywhere.
+      if (!inTabs) setState((s) => ({ open: page, request: s.request + 1 }));
+      else showSettings(tabs, page, jump);
     };
     window.addEventListener(OPEN_SETTINGS_PAGE_EVENT, page);
     return () => {

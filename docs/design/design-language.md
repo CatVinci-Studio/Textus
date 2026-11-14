@@ -227,7 +227,7 @@ Every size in the interface is written once, in **interface pixels** on the 4 px
 **Layout rules that follow from it:**
 
 - **Side panels** (sidebar, AI panel): each keeps its own width in interface px; in a small window it is drawn narrower. A panel takes at most 45% of the window; the document keeps at least 360 × scale beside both panels; a squeezed panel can go down to 200 × scale and keeps 100 × scale of room to be dragged in. The handle's range (keys, readers) is the range in force, not the panel's ideal one.
-- **One header line.** The sidebar's header, every tab bar and the AI panel's header end on `--header-height` (the window bar + 36 × scale). The sidebar's fill and edge run up to the window's top (only the window's controls sit there); the AI panel's start under the window bar, whose right end - the word count, the window's buttons - is the page's. `e2e/panel-alignment.spec.ts` checks this at 820, 1280 and 1920.
+- **One header line.** The sidebar's header, every tab bar and the AI panel's header end on `--header-height` (the window bar + 36 × scale). The sidebar's fill and edge run up to the window's top (only the window's controls sit there); the AI panel's start under the window bar, whose right end - the word count, the window's buttons - is the page's. The sidebar's search row sits a few px under the islands' top edge (3 / 4 / 5 at Small / Medium / Large).
 - **Popups** keep `EDGE` (8) from the window's edge and `GAP` (6) from what opened them, both scaled; a menu is at most 280 × scale tall.
 - **A block in the document** grows with its page up to 70% of the window's height, then scrolls inside.
 - **Floating views** are their manifest's size × the user's resize × scale; folded, a 36 × scale dot.

@@ -10,10 +10,13 @@
   z-index: var(--z-bar);
   display: flex;
   align-items: center;
+  /* Its end's padding, which the caption and the menu bar cancel to run to
+     the window's edges. */
+  --window-bar-pad: 14px;
   /* Left inset is room for the macOS traffic lights, which float over the
      top-left corner. */
   /* design: allow - clears macOS's window buttons. */
-  padding: 0 14px 0 calc(var(--lights-room) + 6px);
+  padding: 0 var(--window-bar-pad) 0 calc(var(--lights-room) + 6px);
   background: var(--ui-frame-fill) fixed;
 }
 
@@ -21,7 +24,8 @@
    flush to the edges. The height stays: other bars clear it with fixed
    offsets. */
 :root[data-window-chrome="app"] .window-bar {
-  padding: 0 12px 0 12px;
+  --window-bar-pad: 12px;
+  padding: 0 var(--window-bar-pad);
 }
 
 /* In full screen the lights' corner is free, and the sidebar's toggle takes

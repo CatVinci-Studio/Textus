@@ -1704,6 +1704,10 @@ Skills liegen im Ordner skills/ neben dieser Datei, je Skill eine
   writingProviderLabel: "Anbieter fürs Schreiben",
   followChatProvider: "Wie im Chat",
   providerModelsGroup: "Modelle",
+  allFilesAccessAsk:
+    "Android fragt jetzt, ob Textus alle Dateien verwalten darf. Mit dieser Erlaubnis öffnet Textus den Ordner direkt: schneller, und Änderungen aus anderen Apps erscheinen sofort. Ohne sie öffnet sich der Ordner trotzdem, nur etwas langsamer.",
+  allFilesAccessContinue: "Weiter",
+  allFilesAccessNotNow: "Nicht jetzt",
   providerKeysLocal: "Schlüssel bleiben auf diesem Gerät.",
   pluginsMore: "Mehr",
   pluginsSearch: "Plugins suchen",

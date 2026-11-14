@@ -147,7 +147,10 @@ export function TourLayer({
   }, []);
   // The card beside it all, level with the part the step is about.
   const anchor = lit && hole ? across(lit, hole) : hole;
-  useGlide({ hole, card: placeCard(anchor, cardSize, view, phone) }, draw);
+  useGlide(
+    { hole, card: placeCard(anchor, cardSize, view, phone, hole) },
+    draw,
+  );
 
   return (
     <div className="tour-layer">

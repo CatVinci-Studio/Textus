@@ -64,8 +64,7 @@ export function runCommand(run: EditorRunner, key: CmdKey<any>) {
 export function insertTable(run: EditorRunner, rows: number, cols: number) {
   run((ctx) => {
     ctx.get(commandsCtx).call(insertTableCommand.key, { row: rows, col: cols });
-    // The caret waits in the first cell, the keyboard up on a phone.
-    ctx.get(editorViewCtx).focus();
+    ctx.get(editorViewCtx).focus(); // the caret in its first cell
   });
 }
 

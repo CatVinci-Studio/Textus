@@ -89,3 +89,22 @@ describe("on a phone", () => {
     expect(onChange).toHaveBeenCalledWith({ target: { value: "a" } });
   });
 });
+
+describe("any menu", () => {
+  it("draws no rule at its ends or twice in a row", async () => {
+    const { tidy } = await import("../engine/controls/ContextMenu");
+    const a = { label: "A", onSelect: () => {} };
+    const b = { label: "B", onSelect: () => {} };
+    expect(
+      tidy([
+        "separator",
+        "separator",
+        a,
+        "separator",
+        "separator",
+        b,
+        "separator",
+      ]),
+    ).toEqual([a, "separator", b]);
+  });
+});

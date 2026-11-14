@@ -1753,6 +1753,10 @@ utiliser une.
   writingProviderLabel: "Fournisseur de l'écriture",
   followChatProvider: "Comme le chat",
   providerModelsGroup: "Modèles",
+  allFilesAccessAsk:
+    "Android va vous demander d’autoriser Textus à gérer tous les fichiers. Avec cette autorisation, Textus ouvre ce dossier directement : plus vite, et les modifications des autres apps apparaissent aussitôt. Sans elle, le dossier s’ouvre quand même, un peu plus lentement.",
+  allFilesAccessContinue: "Continuer",
+  allFilesAccessNotNow: "Plus tard",
   providerKeysLocal: "Les clés restent sur cet appareil.",
   pluginsMore: "Plus",
   pluginsSearch: "Rechercher des plugins",

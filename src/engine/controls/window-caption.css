@@ -9,8 +9,8 @@
      row's full height instead, or the hit areas end up a glyph tall. */
   align-self: stretch;
   flex-shrink: 0;
-  /* Cancels .window-bar's right padding so the buttons run to the window's edge. */
-  margin-right: -14px;
+  /* Cancels its row's end padding: the buttons run to the window's edge. */
+  margin-right: calc(-1 * var(--window-bar-pad, 0px));
   /* The bar is the drag region; the buttons must take their own clicks back
      (.window-bar-status next to them deliberately does not). */
   pointer-events: auto;

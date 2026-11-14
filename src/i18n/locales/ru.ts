@@ -1738,6 +1738,10 @@ export default {
   writingProviderLabel: "Провайдер для письма",
   followChatProvider: "Как в чате",
   providerModelsGroup: "Модели",
+  allFilesAccessAsk:
+    "Сейчас Android попросит разрешить Textus управлять всеми файлами. С этим разрешением Textus открывает папку напрямую: быстрее, и изменения из других приложений видны сразу. Без него папка тоже откроется, но чуть медленнее.",
+  allFilesAccessContinue: "Продолжить",
+  allFilesAccessNotNow: "Не сейчас",
   providerKeysLocal: "Ключи хранятся только на этом устройстве.",
   pluginsMore: "Ещё",
   pluginsSearch: "Поиск плагинов",

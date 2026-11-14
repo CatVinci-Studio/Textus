@@ -66,11 +66,17 @@ function flatMenu(
     if (!isMenuGroup(entry)) flat.push(entry);
     else flat.push("separator", ...entry.items, "separator");
   }
-  return flat.filter(
-    (entry, i) =>
-      entry !== "separator" ||
-      (i > 0 && i < flat.length - 1 && flat[i + 1] !== "separator"),
-  );
+  return tidy(flat);
+}
+
+/** No rule at either end or twice in a row, however the menu was built. */
+export function tidy<T>(entries: readonly (T | "separator")[]) {
+  const out: (T | "separator")[] = [];
+  for (const entry of entries)
+    if (entry !== "separator" || (out.length && out.at(-1) !== "separator"))
+      out.push(entry);
+  if (out.at(-1) === "separator") out.pop();
+  return out;
 }
 
 interface ContextMenuProps {
@@ -107,7 +113,7 @@ export function ContextMenu(props: ContextMenuProps) {
         onClose={props.onClose}
       />
     );
-  return <PointerMenu {...props} />;
+  return <PointerMenu {...props} items={tidy(props.items)} />;
 }
 
 function PointerMenu({

@@ -1544,6 +1544,10 @@ export default {
   writingProviderLabel: "写作辅助用的服务商",
   followChatProvider: "跟随对话",
   providerModelsGroup: "模型",
+  allFilesAccessAsk:
+    "安卓接下来会请你允许 Textus 管理所有文件。允许后，Textus 直接打开这个文件夹：更快，其他应用的改动也会立刻显示。不允许也能打开，只是稍慢。",
+  allFilesAccessContinue: "继续",
+  allFilesAccessNotNow: "暂不",
   providerKeysLocal: "密钥只存在这台设备上。",
   pluginsMore: "更多",
   pluginsSearch: "搜索插件",

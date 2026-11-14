@@ -144,3 +144,26 @@
   width: 22px;
   height: 22px;
 }
+
+/* Small bar buttons keep their look; a finger gets a 44pt target around
+   them. */
+@media (pointer: coarse) {
+  :root[data-window-chrome="mobile"]
+    :is(.window-bar-sidebar-toggle, .inline-chat-header-button) {
+    position: relative;
+  }
+  :root[data-window-chrome="mobile"]
+    :is(
+      .window-bar-sidebar-toggle,
+      .inline-chat-header-button,
+      .tab-bar-list
+    )::after {
+    content: "";
+    position: absolute;
+    top: 50%;
+    left: 50%;
+    width: 44px;
+    height: 44px;
+    transform: translate(-50%, -50%);
+  }
+}

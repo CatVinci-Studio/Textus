@@ -1721,6 +1721,10 @@ Habilidades ficam na pasta skills/ ao lado deste arquivo, um arquivo
   writingProviderLabel: "Provedor da escrita",
   followChatProvider: "Igual ao chat",
   providerModelsGroup: "Modelos",
+  allFilesAccessAsk:
+    "O Android vai pedir agora que você permita ao Textus gerenciar todos os arquivos. Com essa permissão, o Textus abre esta pasta diretamente: mais rápido, e as alterações de outros apps aparecem na hora. Sem ela, a pasta abre do mesmo jeito, um pouco mais devagar.",
+  allFilesAccessContinue: "Continuar",
+  allFilesAccessNotNow: "Agora não",
   providerKeysLocal: "As chaves ficam neste dispositivo.",
   pluginsMore: "Mais",
   pluginsSearch: "Pesquisar plugins",

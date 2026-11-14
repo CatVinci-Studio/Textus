@@ -181,19 +181,24 @@ textarea.tx-input {
 .tx-segmented.is-equal > .tx-segment {
   justify-content: center;
 }
-.tx-segmented.is-equal:not([data-fit="unequal"])
+.tx-segmented.is-equal:not([data-fit="unequal"], [data-fit="tight"])
   > .tx-segment:is([aria-selected="true"], [aria-checked="true"]) {
   background: none;
   box-shadow: none;
 }
 /* Too narrow for equal segments (useFitSteps): each its own width, the
    chosen one lit as an unequal row's is. */
-.tx-segmented.is-equal[data-fit="unequal"] {
+.tx-segmented.is-equal:is([data-fit="unequal"], [data-fit="tight"]) {
   display: flex;
   gap: 2px;
 }
-.tx-segmented.is-equal[data-fit="unequal"]::before {
+.tx-segmented.is-equal:is([data-fit="unequal"], [data-fit="tight"])::before {
   display: none;
+}
+/* Tighter still (a long language, a large interface): less air in each
+   segment before any label is cut. */
+.tx-segmented[data-fit="tight"] > .tx-segment {
+  padding-inline: var(--space-2);
 }
 
 /* A tool shown on hover: its parent's, or its host's (.tx-reveal-host),

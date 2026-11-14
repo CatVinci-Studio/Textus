@@ -9,6 +9,10 @@ import { TabListButton, useTabFit } from "./TabList";
 import { INCOMING, useTabStrip } from "./useTabStrip";
 import { useTabSwipe } from "./useTabSwipe";
 import { revealAt, type Slot } from "./tab-strip";
+import { scaledPx } from "../../tokens/chrome-scale";
+
+/** The fade over a scrolled row's start (island.css). */
+const TAB_FADE = 36;
 
 interface TabBarProps {
   tabs: TabInfo[];
@@ -108,6 +112,17 @@ export function TabBar({
     const slot = { x: slotX, w: slotW };
     reveal(bar, slot, shownLength, smooth.current !== activeTabId);
     smooth.current = activeTabId;
+    // The fit may come before the row has its new width, its scroll then
+    // cut short: again once the row is that wide.
+    let width: number | null = null;
+    const resized = new ResizeObserver(([entry]) => {
+      const now = entry?.contentRect.width ?? null;
+      if (width !== null && now !== width)
+        reveal(bar, slot, shownLength, false);
+      width = now;
+    });
+    resized.observe(bar);
+    return () => resized.disconnect();
   }, [activeTabId, slotX, slotW, shownLength]);
 
   const pillOf = (id: string) =>
@@ -230,9 +245,7 @@ export function TabBar({
  * it that shows, `shown` long from where it is scrolled to.
  */
 function reveal(bar: HTMLElement, slot: Slot, shown: number, smooth: boolean) {
-  // The start's fade is 3em of the row's text (island.css).
-  const fade = 3 * parseFloat(getComputedStyle(bar).fontSize);
-  const left = revealAt(slot, bar.scrollLeft, shown, fade || 0);
+  const left = revealAt(slot, bar.scrollLeft, shown, scaledPx(TAB_FADE));
   if (left !== null)
     bar.scrollTo({ left, behavior: smooth ? scrollBehavior() : "auto" });
 }
