@@ -103,6 +103,9 @@ export function useModalDialog(
       target.removeEventListener("blur", speak);
       speak();
       if (!(previous instanceof HTMLElement) || !previous.isConnected) return;
+      // The dialog's action already put the focus there (a table inserted):
+      // the old caret would undo where it went.
+      if (previous.contains(document.activeElement)) return;
       // On a phone, refocusing the editor brings the keyboard back up, which only
       // the caller knows is wanted.
       if (phone && !refocusEditorOnPhone && previous.isContentEditable) return;

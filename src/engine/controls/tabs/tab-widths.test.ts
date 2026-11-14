@@ -1,5 +1,5 @@
 import { describe, expect, it } from "vitest";
-import { dragSlots, incomingSlots, stripSlots } from "./tab-strip";
+import { dragSlots, incomingSlots, revealAt, stripSlots } from "./tab-strip";
 import { tabWidths, type TabParts } from "./tab-widths";
 
 const LIMITS = { min: 56, max: 200 };
@@ -58,6 +58,14 @@ describe("tabWidths", () => {
     expect(fit.widths).toEqual([80, 80, 80]);
     expect(fit.cut).toEqual([true, true, true]);
     expect(fit.overflow).toBe(false);
+  });
+
+  it("never squeezes a name below a few letters: the row overflows first", () => {
+    // 5 tabs in 310: an even share (62) would leave each 22 of its name.
+    const limits = { ...LIMITS, fewest: 30 };
+    const fit = tabWidths(Array(5).fill(tab(80)), limits, 310);
+    expect(fit.widths).toEqual(Array(5).fill(70));
+    expect(fit.overflow).toBe(true);
   });
 
   it("takes the gaps between tabs out of the row before sharing it", () => {
@@ -124,5 +132,22 @@ describe("the tabs' places along their strip", () => {
     expect(ride.at).toBe(2);
     expect(ride.slots.map((s) => s.x)).toEqual([0, 102, 216]);
     expect(incomingSlots(slots, 50, -40, 2).incoming.x).toBe(0);
+  });
+});
+
+describe("bringing the open tab into view", () => {
+  const fade = 36;
+  it("leaves it clear of the start's fade once scrolled", () => {
+    // Shown at 300 of 400 scrolled: back to 300 would put it under the fade.
+    expect(revealAt({ x: 300, w: 80 }, 350, 200, fade)).toBe(264);
+  });
+  it("scrolls home when the fade's room reaches the start", () => {
+    expect(revealAt({ x: 20, w: 80 }, 50, 200, fade)).toBe(0);
+  });
+  it("keeps the whole tab when the row is barely wider than it", () => {
+    expect(revealAt({ x: 300, w: 180 }, 350, 200, fade)).toBe(280);
+  });
+  it("stays put with the tab already clear", () => {
+    expect(revealAt({ x: 100, w: 60 }, 40, 300, fade)).toBeNull();
   });
 });

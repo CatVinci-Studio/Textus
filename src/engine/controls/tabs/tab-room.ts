@@ -29,6 +29,8 @@ export interface PillMeasures {
   min: number;
   max: number;
   shrink: boolean;
+  /** The least of a name a squeezed tab shows: four letters' width. */
+  fewest: number;
   /** What its `width` leaves out of its box (its padding and borders
    *  where it is sized by its content box). */
   outside: number;
@@ -109,9 +111,10 @@ function measurePill(strip: HTMLElement, pill: HTMLElement): PillMeasures {
   const font = fontOf(title);
   const drawn = title.getBoundingClientRect().width;
   const measured = textWidth(title.textContent ?? "", font) ?? 0;
+  const textFix = drawn > 0 && measured > 0 ? Math.max(1, drawn / measured) : 1;
   const measures: PillMeasures = {
     font,
-    textFix: drawn > 0 && measured > 0 ? Math.max(1, drawn / measured) : 1,
+    textFix,
     pad,
     gap: px(style.columnGap),
     // Not its margin: the free room it is pushed to the end with.
@@ -123,6 +126,7 @@ function measurePill(strip: HTMLElement, pill: HTMLElement): PillMeasures {
     min: px(style.minWidth) + outside,
     max: style.maxWidth === "none" ? Infinity : px(style.maxWidth) + outside,
     shrink: style.flexShrink !== "0",
+    fewest: Math.ceil((textWidth("0000", font) ?? 0) * textFix),
     outside,
   };
   probe.remove();

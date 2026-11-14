@@ -154,6 +154,7 @@ import {
 import { readOnlyPlugin, readOnlyStatePlugin } from "./read-only-plugin";
 import { resolveStrings } from "../i18n/strings";
 import type { Settings } from "../prefs/SettingsContext";
+import { isPhoneLayout } from "../platform/phone-layout";
 
 // Long documents: ProseMirror lookups that were linear made logarithmic.
 installProseMirrorSpeedups();
@@ -181,7 +182,16 @@ export function configureEditorRoot(
           return page ? parseFloat(getComputedStyle(page).paddingTop) || 5 : 5;
         },
         right: 5,
-        bottom: 5,
+        // A phone's format bar, riding on the keyboard, covers the page's
+        // foot: the caret's line stays above it.
+        get bottom() {
+          if (!document.documentElement.classList.contains("keyboard-up"))
+            return 5;
+          const bar = root
+            .closest(".split-pane")
+            ?.querySelector<HTMLElement>(":scope > .format-bar");
+          return isPhoneLayout() && bar ? bar.offsetHeight + 8 : 5;
+        },
         left: 5,
       },
       attributes: () => ({

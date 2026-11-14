@@ -7,12 +7,13 @@ import { fs, session, windowIpc } from "../platform/ipc";
 import { getUiState, setUiState } from "../storage/ui-state";
 import { useSettings } from "../prefs/SettingsContext";
 import { showMessage } from "../engine/controls/app-dialog";
-import { dirname, isInside } from "../utils/path";
+import { isInside } from "../utils/path";
 import { SHOW_FOLDER_EVENT } from "../utils/events";
 import {
   agentRootOnClose,
   agentRootOnOpen,
   nextTreeRoot,
+  rootAfterClose,
 } from "../files/tree-root";
 
 /** The folder the last session had open, where there are no windows (an
@@ -165,7 +166,7 @@ export function useOpenFolder({
     // Back to following the document.
     setTree({
       key: inputsKey(null, now.activePath, now.fallback),
-      root: now.activePath ? dirname(now.activePath) : now.fallback,
+      root: rootAfterClose(now.activePath, now.fallback),
     });
     if (!canUseWindows) setUiState("openFolder", null);
   }, []);

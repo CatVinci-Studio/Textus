@@ -8,7 +8,7 @@ import { TabPill, type TabInfo } from "./TabPill";
 import { TabListButton, useTabFit } from "./TabList";
 import { INCOMING, useTabStrip } from "./useTabStrip";
 import { useTabSwipe } from "./useTabSwipe";
-import type { Slot } from "./tab-strip";
+import { revealAt, type Slot } from "./tab-strip";
 
 interface TabBarProps {
   tabs: TabInfo[];
@@ -230,12 +230,9 @@ export function TabBar({
  * it that shows, `shown` long from where it is scrolled to.
  */
 function reveal(bar: HTMLElement, slot: Slot, shown: number, smooth: boolean) {
-  // Room either side of it, as much as there is.
-  const margin = Math.max(0, Math.min(12, (shown - slot.w) / 2));
-  const from = bar.scrollLeft;
-  const behavior = smooth ? scrollBehavior() : "auto";
-  if (slot.x < from + margin)
-    bar.scrollTo({ left: Math.max(0, slot.x - margin), behavior });
-  else if (slot.x + slot.w > from + shown - margin)
-    bar.scrollTo({ left: slot.x + slot.w - shown + margin, behavior });
+  // The start's fade is 3em of the row's text (island.css).
+  const fade = 3 * parseFloat(getComputedStyle(bar).fontSize);
+  const left = revealAt(slot, bar.scrollLeft, shown, fade || 0);
+  if (left !== null)
+    bar.scrollTo({ left, behavior: smooth ? scrollBehavior() : "auto" });
 }

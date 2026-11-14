@@ -1,6 +1,8 @@
 import { useEffect, useRef } from "react";
 import { scaledPx } from "../engine/tokens/chrome-scale";
 import { onBack } from "./back";
+import { keyboardStaysDown } from "./keyboard-stays-down";
+import { OPEN_SETTINGS_PAGE_EVENT } from "../settings/settings-nav";
 import { androidBridge } from "../platform/android-bridge";
 
 /** How far a finger moves across before it counts as a swipe, and how near
@@ -11,8 +13,8 @@ const EDGE = 24;
 /**
  * A phone's sidebar is pushed in from the left (mobile/styles/sidebar.css):
  * a swipe in from the left edge opens it; a tap on the page's strip left
- * showing, a swipe left, or another tab coming to the front (a file opened
- * from anywhere) pushes it back.
+ * showing, a swipe left, Back, another tab coming to the front (a file
+ * opened from anywhere) or a Settings page picked pushes it back.
  */
 export function usePushedSidebar(
   phone: boolean,
@@ -21,7 +23,10 @@ export function usePushedSidebar(
   activeTabId: string,
 ): void {
   useEffect(() => {
-    if (phone) setOpen(false);
+    if (!phone) return;
+    setOpen(false);
+    // And it is read first: no keyboard until a tap in the page.
+    return keyboardStaysDown();
   }, [phone, activeTabId, setOpen]);
   // Read as events come: the listeners stay put while it opens and closes,
   // so the closing tap's click still finds them.
@@ -79,6 +84,9 @@ export function usePushedSidebar(
     });
     // Android keeps its back gesture off the edge the sidebar comes from.
     androidBridge()?.setEdgeSwipe(true);
+    // A Settings page picked from it (the same tab): shown, not covered.
+    const picked = () => setOpen(false);
+    window.addEventListener(OPEN_SETTINGS_PAGE_EVENT, picked);
     window.addEventListener("pointerdown", tap, true);
     window.addEventListener("click", click, true);
     window.addEventListener("touchstart", down, { passive: true });
@@ -88,6 +96,7 @@ export function usePushedSidebar(
       window.removeEventListener("click", click, true);
       window.removeEventListener("touchstart", down);
       window.removeEventListener("touchend", up);
+      window.removeEventListener(OPEN_SETTINGS_PAGE_EVENT, picked);
       offBack();
       androidBridge()?.setEdgeSwipe(false);
     };

@@ -4,6 +4,7 @@ import {
   agentRootOnOpen,
   isWithin,
   nextTreeRoot,
+  rootAfterClose,
 } from "./tree-root";
 
 const root = (
@@ -110,5 +111,19 @@ describe("the AI's project folder when a folder closes", () => {
     expect(agentRootOnClose("/research", "/notes", "/notes")).toBeNull();
     expect(agentRootOnClose("/novel", "/novel", "/notes")).toBeNull();
     expect(agentRootOnClose("", "", "/notes")).toBeNull();
+  });
+});
+
+describe("Close Folder", () => {
+  it("goes back to the document's folder", () => {
+    expect(rootAfterClose("/notes/a.md", "/home")).toBe("/notes");
+  });
+  it("never roots at an Android document's address", () => {
+    expect(
+      rootAfterClose(
+        "content://com.android.externalstorage.documents/tree/primary%3ANotes/document/primary%3ANotes%2Fa.md",
+        "/data/notes",
+      ),
+    ).toBe("/data/notes");
   });
 });

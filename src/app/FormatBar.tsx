@@ -119,7 +119,13 @@ export function FormatBar({
   const row = useRef<HTMLDivElement>(null);
   useFitItems(row, ".format-bar-more");
   const headings = () => headingItems(t, tabId, block.heading);
-  const heading = useMenuButton(headings, { title: t.toolbarHeading });
+  // Closed without a pick, the document takes the keys back: the keyboard
+  // stays up.
+  const refocus = () => focusDocument(tabId);
+  const heading = useMenuButton(headings, {
+    title: t.toolbarHeading,
+    onClosed: refocus,
+  });
   const more = useMenuButton(
     () =>
       folded(row.current).map((b): ContextMenuEntry =>
@@ -127,7 +133,7 @@ export function FormatBar({
           ? { label: b.label(t), items: headings() }
           : { label: b.label(t), onSelect: () => press(tabId, b) },
       ),
-    { alignEnd: true },
+    { alignEnd: true, onClosed: refocus },
   );
   return (
     <div

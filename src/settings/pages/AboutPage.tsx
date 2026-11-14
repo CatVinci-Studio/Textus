@@ -5,7 +5,11 @@ import { GuidesSection } from "../sections/guides";
 import { LinkRow } from "../sections/controls";
 import { UpdateButton, UpdateChannelRow } from "../sections/general";
 import { appVersion } from "../../platform/app-info";
-import { canLinkSponsor, isDesktopApp } from "../../platform/capabilities";
+import {
+  canAutoUpdate,
+  canLinkSponsor,
+  isDesktopApp,
+} from "../../platform/capabilities";
 import { emitMenuEvent } from "../../platform/menu-events";
 import { links } from "../../platform/ipc";
 import appIcon from "../../../src-tauri/icons/128x128@2x.png";
@@ -48,9 +52,11 @@ export function AboutPage({
           <UpdateButton t={t} checkOnOpen={checkUpdates} />
         </div>
       </div>
-      <SettingsGroup title={t.settingsUpdatesGroup}>
-        <UpdateChannelRow t={t} />
-      </SettingsGroup>
+      {canAutoUpdate && (
+        <SettingsGroup title={t.settingsUpdatesGroup}>
+          <UpdateChannelRow t={t} />
+        </SettingsGroup>
+      )}
       <SettingsGroup title={t.settingsHelpGroup}>
         {isDesktopApp && (
           <LinkRow

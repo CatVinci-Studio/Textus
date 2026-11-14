@@ -30,6 +30,14 @@ export function nextTreeRoot({
   return dirname(docPath);
 }
 
+/** The root after Close Folder: the front document's own folder again. */
+export function rootAfterClose(
+  docPath: string | null,
+  fallback: string | null,
+): string | null {
+  return nextTreeRoot({ current: null, folder: null, docPath, fallback });
+}
+
 /**
  * The AI's project folder once a folder is opened, or null to leave it. It
  * follows the opened folder unless the user chose one for the AI.

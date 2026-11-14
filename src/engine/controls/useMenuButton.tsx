@@ -16,6 +16,9 @@ export function useMenuButton(
     /** The button sits at the end of its bar: the menu lines up with its
      *  right edge. */
     alignEnd?: boolean;
+    /** After it closes, picked or not (the format bar's document takes the
+     *  keys back, keeping a phone's keyboard up). */
+    onClosed?: () => void;
   } = {},
 ): {
   button: {
@@ -33,7 +36,12 @@ export function useMenuButton(
     keyboard: boolean;
   } | null>(null);
   const anchor = useRef<HTMLElement | null>(null);
-  const close = useCallback(() => setAt(null), []);
+  const closed = useRef(options.onClosed);
+  closed.current = options.onClosed;
+  const close = useCallback(() => {
+    setAt(null);
+    closed.current?.();
+  }, []);
   return {
     button: {
       ref: (el) => {

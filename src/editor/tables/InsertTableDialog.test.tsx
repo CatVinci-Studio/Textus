@@ -63,4 +63,31 @@ describe("table dialog keyboard and validation", () => {
     expect(document.activeElement).toBe(previous);
     previous.remove();
   });
+  it("leaves the caret where the insert put it, not where it was", () => {
+    const editor = document.createElement("div");
+    editor.tabIndex = 0;
+    // jsdom has no isContentEditable of its own.
+    Object.defineProperty(editor, "isContentEditable", { value: true });
+    editor.innerHTML = "<p>before</p><table><tr><td>cell</td></tr></table>";
+    document.body.append(editor);
+    editor.focus();
+    const [before, cell] = [
+      editor.querySelector("p")!.firstChild!,
+      editor.querySelector("td")!.firstChild!,
+    ];
+    const at = (node: Node) => {
+      const range = document.createRange();
+      range.setStart(node, 0);
+      const selection = window.getSelection()!;
+      selection.removeAllRanges();
+      selection.addRange(range);
+    };
+    at(before);
+    const { unmount } = setup();
+    editor.focus();
+    at(cell);
+    unmount();
+    expect(window.getSelection()!.anchorNode).toBe(cell);
+    editor.remove();
+  });
 });

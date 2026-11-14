@@ -83,3 +83,24 @@ export function incomingSlots(
     incoming: { x: Math.max(0, Math.min(end, x - w / 2)), w },
   };
 }
+
+/**
+ * Where a row scrolled to `from`, `shown` long, scrolls to bring `slot`
+ * into view, or null where it is. Scrolled, the row's start fades over
+ * `fade` (island.css): the tab stands clear of it, as far as there's room.
+ */
+export function revealAt(
+  slot: Slot,
+  from: number,
+  shown: number,
+  fade: number,
+): number | null {
+  // Room either side of it, as much as there is.
+  const margin = Math.max(0, Math.min(12, (shown - slot.w) / 2));
+  const lead = Math.max(margin, Math.min(fade, shown - slot.w));
+  const start = Math.max(0, slot.x - lead);
+  if (slot.x - from < (from > 0 ? lead : margin)) return start;
+  if (slot.x + slot.w > from + shown - margin)
+    return Math.min(start, slot.x + slot.w - shown + margin);
+  return null;
+}

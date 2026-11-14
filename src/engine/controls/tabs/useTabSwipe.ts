@@ -22,7 +22,8 @@ export function useTabSwipe(
   const now = useRef({ ids, activeTabId, onActivate });
   now.current = { ids, activeTabId, onActivate };
   useEffect(() => {
-    const el = bar.current;
+    // The whole row: a swipe may start between its buttons.
+    const el = bar.current?.closest<HTMLElement>(".island-row") ?? bar.current;
     if (!el || !isMobileApp) return;
     let start: { x: number; y: number } | null = null;
     const along = (e: TouchEvent) => {
