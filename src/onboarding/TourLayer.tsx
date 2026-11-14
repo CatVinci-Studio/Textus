@@ -151,11 +151,17 @@ export function TourLayer({
 
   return (
     <div className="tour-layer">
-      {!open && (
-        <svg className="tour-scrim" width="100%" height="100%" aria-hidden>
-          <path ref={path} fillRule="evenodd" />
-        </svg>
-      )}
+      {/* Kept while open, hidden: mounted again it would wait for the next
+          draw to dim anything. */}
+      <svg
+        className="tour-scrim"
+        width="100%"
+        height="100%"
+        aria-hidden
+        data-open={open || undefined}
+      >
+        <path ref={path} fillRule="evenodd" />
+      </svg>
       <div ref={ring} className="tour-ring" hidden />
       <div
         ref={card}

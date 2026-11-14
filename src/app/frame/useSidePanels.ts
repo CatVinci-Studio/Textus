@@ -68,9 +68,10 @@ export function useSidePanels(aiOn: boolean, activeTabId: string) {
     ? Math.round(RAIL_WIDTH * scale)
     : 0;
   const sidebarWidth = useSidebarWidth(windowWidth, rail);
-  // The panels give way after the sidebar, and come back before it.
+  // The islands give way after the sidebar, and come back before it.
   const panelsFolded = useNarrowIslands(
-    phone ? Infinity : windowWidth - rail - (open ? sidebarWidth.width : 0),
+    phone ? Infinity : windowWidth - rail,
+    sidebarWidth.width,
     open,
   );
   // A phone's sidebar is pushed in by hand, over too little room: never

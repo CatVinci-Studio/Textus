@@ -20,6 +20,7 @@ import {
 import { resolveStrings } from "../i18n/strings";
 import { installTestLocalStorage } from "../dev/test-local-storage";
 import { emitPluginEvent } from "../plugins/app-bridge";
+import { TourLayer } from "./TourLayer";
 import { TutorialExperience } from "./TutorialExperience";
 import { useTutorial, type Tutorial } from "./useTutorial";
 
@@ -175,5 +176,26 @@ describe("the tour's card", () => {
     editor.remove();
     fireEvent.keyDown(window, { key: "Escape" });
     expect(tour.active).toBe(false);
+  });
+});
+
+describe("the tour's dimming", () => {
+  it("draws again when a step that left the window undimmed ends", () => {
+    const layer = (open: boolean) => (
+      <TourLayer
+        target={null}
+        open={open}
+        phone={false}
+        labelledBy="x"
+        onEscape={() => {}}
+      >
+        card
+      </TourLayer>
+    );
+    const { container, rerender } = render(layer(true));
+    rerender(layer(false));
+    expect(
+      container.querySelector(".tour-scrim path")?.getAttribute("d"),
+    ).toMatch(/^M0 0H/);
   });
 });

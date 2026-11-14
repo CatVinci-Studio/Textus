@@ -8,12 +8,13 @@ import {
   type Side,
 } from "./tree";
 
-/** A panel's island folded into its neighbour's: enough to put it back. */
+/** An island folded into its neighbour's: enough to put it back. */
 export interface Folded {
   tabs: string[];
   front: string | null;
-  /** The island it joined, and the side of it it stood on. */
+  /** The island it joined, what that showed, and the side it stood on. */
   into: string;
+  intoFront: string | null;
   side: Side;
   /** The width the islands needed before it folded. */
   need: number;
@@ -31,27 +32,29 @@ const OPPOSITE: Record<Side, Side> = {
 /**
  * The window short of room: the last panel's island (the AI, Settings, a
  * plugin's page) folded into the island beside it, its tabs joining that
- * row; documents' islands never fold. Null when there is none to fold.
+ * row; with no panel left, the last document's island, so a split that
+ * can't fit comes undone. The island in use keeps showing what it showed.
+ * Null when there is one island.
  */
-export function foldPanel(
+export function foldIsland(
   layout: SplitLayout,
   isPanel: (pane: Pane) => boolean,
   need: number,
 ): { layout: SplitLayout; folded: Folded } | null {
-  const panes = panesOf(layout.root);
-  for (const panel of [...panes].reverse()) {
-    if (!isPanel(panel)) continue;
+  const panes = [...panesOf(layout.root)].reverse();
+  const order = [...panes.filter(isPanel), ...panes.filter((p) => !isPanel(p))];
+  for (const panel of order) {
     for (const side of SIDES) {
       const into = paneBeside(layout.root, panel.id, side);
       if (!into) continue;
       let next: SplitLayout | null = layout;
       for (const tab of panel.tabs) next = next && moveTab(next, tab, into.id);
       if (!next) return null;
-      // The island it joined keeps showing what it showed.
+      const inUse = layout.focus === panel.id;
       next = {
         ...next,
-        root: withFront(next.root, into.id, into.front),
-        focus: layout.focus === panel.id ? into.id : layout.focus,
+        root: withFront(next.root, into.id, inUse ? panel.front : into.front),
+        focus: inUse ? into.id : layout.focus,
       };
       return {
         layout: next,
@@ -59,6 +62,7 @@ export function foldPanel(
           tabs: [...panel.tabs],
           front: panel.front,
           into: into.id,
+          intoFront: into.front,
           side: OPPOSITE[side],
           need,
         },
@@ -68,9 +72,9 @@ export function foldPanel(
   return null;
 }
 
-/** A folded panel back on its side of the island it joined, with the tabs
+/** A folded island back on its side of the island it joined, with the tabs
  *  it had that are still open; null when none are or that island is gone. */
-export function unfoldPanel(
+export function unfoldIsland(
   layout: SplitLayout,
   folded: Folded,
 ): SplitLayout | null {
@@ -86,7 +90,11 @@ export function unfoldPanel(
     folded.front && tabs.includes(folded.front) ? folded.front : tabs[0];
   return {
     ...next,
-    root: withFront(withFront(next.root, back.id, front), into.id, into.front),
+    root: withFront(
+      withFront(next.root, back.id, front),
+      into.id,
+      folded.intoFront,
+    ),
     focus: layout.focus,
   };
 }

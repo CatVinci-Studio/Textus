@@ -195,16 +195,6 @@ async function chromeOverlaps(page: Page): Promise<string[]> {
   });
 }
 
-/** Known, awaiting the user's choice: the rail off, the sidebar opened by
- *  hand and a split in a 760-wide window at the larger text leave the
- *  islands too little room for both rows at their least; the one under
- *  the bar's buttons keeps its tab, the other can't. */
-const KNOWN = (state: string, problem: string) =>
-  state.includes('"activityRail":false') &&
-  state.includes('"uiTextScale":1.25') &&
-  state.includes('"width":760') &&
-  problem.startsWith("open tab not whole");
-
 const STATES = [
   { activityRail: true, menuBarShown: false },
   { activityRail: false, menuBarShown: false },
@@ -257,7 +247,7 @@ for (const [os, platform] of [
               sidebar,
             });
             for (const p of await chromeOverlaps(page))
-              if (!KNOWN(said, p)) found.push(`${said}: ${p}`);
+              found.push(`${said}: ${p}`);
           }
         }
     expect([...new Set(found)]).toEqual([]);

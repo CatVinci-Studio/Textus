@@ -9,3 +9,5 @@
 - The window's top-right island keeps room for the bar's buttons when a status appears there, and when those buttons need more than an island's least width.
 - Phone: a sideways swipe that scrolls a long name, a table or a text field no longer opens or closes the sidebar.
 - Inline code (Ctrl+`) works like bold: a selection holding bold or other code becomes one code, and a code it reaches into is taken in whole.
+- The tour dims the window again after a step that left it undimmed.
+- A window too narrow for a split, with the sidebar open, now folds the split into one island and puts it back when there is room.

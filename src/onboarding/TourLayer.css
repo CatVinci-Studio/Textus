@@ -16,6 +16,10 @@
   inset: 0;
 }
 
+.tour-scrim[data-open] {
+  display: none;
+}
+
 .tour-scrim path {
   fill: var(--ui-overlay);
   pointer-events: auto;
