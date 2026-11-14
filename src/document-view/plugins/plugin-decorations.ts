@@ -77,8 +77,15 @@ export const pluginDecorations = $prose((ctx) => {
           view.state.tr.setMeta(key, DecorationSet.create(doc, out)),
         );
       };
-      const scroller = view.dom.closest(".editor-scroll");
-      scroller?.addEventListener("scroll", ask, { passive: true });
+      // The view is made before it is in the page: its scroller is found
+      // as scrolls come.
+      const scrolled = (e: Event) => {
+        if (e.target instanceof Node && e.target.contains(view.dom)) ask();
+      };
+      document.addEventListener("scroll", scrolled, {
+        capture: true,
+        passive: true,
+      });
       const stop = onDecorationProviders(ask);
       ask();
       return {
@@ -89,7 +96,7 @@ export const pluginDecorations = $prose((ctx) => {
         destroy() {
           clearTimeout(timer);
           stop();
-          scroller?.removeEventListener("scroll", ask);
+          document.removeEventListener("scroll", scrolled, { capture: true });
         },
       };
     },
@@ -97,7 +104,7 @@ export const pluginDecorations = $prose((ctx) => {
 });
 
 /** The first and last top-level block in sight. */
-function inSight(view: EditorView): [number, number] {
+export function inSight(view: EditorView): [number, number] {
   const count = view.state.doc.childCount;
   const scroller = view.dom.closest(".editor-scroll");
   if (!scroller) return [0, count - 1];

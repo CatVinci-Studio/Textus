@@ -670,7 +670,17 @@ declare global {
        *  When several did since the last event, "user" wins, then history,
        *  ai, plugin, disk. */
       onDidChange: Event<{ path: string | null; source: ChangeSource }>;
-      onDidChangeSelection: Event<{ text: string }>;
+      /** The selection settled. From 1.6 also whether it is only the caret
+       *  and the id of the block its moving end is in (null past the
+       *  blocks): a typewriter, a reading line, a linked preview. */
+      onDidChangeSelection: Event<{
+        text: string;
+        empty: boolean;
+        block: string | null;
+      }>;
+      /** From 1.6: the first and last block in sight changed, once
+       *  scrolling or an edit rests (editor.read). */
+      onDidChangeVisible: Event<{ first: string | null; last: string | null }>;
       /** The keyboard, for plugins that are a way of typing - Vim, Emacs
        *  (editor.input). */
       keys: EditorKeys;

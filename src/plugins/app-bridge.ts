@@ -144,7 +144,11 @@ export interface PluginEventMap {
   /** The document in front changed, once typing paused; `source` says who
    *  changed it (the user's wins when several did meanwhile). */
   documentChange: { path: string | null; source: ChangeSource };
-  selection: { text: string };
+  /** The selection settled: its text, whether it is only the caret, and
+   *  the block its moving end is in. */
+  selection: { text: string; empty: boolean; block: string | null };
+  /** The first and last block of the document in front in sight. */
+  visible: { first: string | null; last: string | null };
   /** The user copied or cut text from a document: the Markdown that went
    *  on the clipboard. */
   copy: { text: string; cut: boolean };

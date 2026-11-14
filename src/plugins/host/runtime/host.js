@@ -813,6 +813,7 @@
       onDidChangeActive: on("activeDocument"),
       onDidChange: on("documentChange"),
       onDidChangeSelection: on("selection"),
+      onDidChangeVisible: on("visible"),
       keys: {
         capture: function (capture) {
           return call("editor.captureKeys", plain(capture) || null);

@@ -130,6 +130,7 @@ const PLUGIN_EVENT_NEEDS: Record<keyof PluginEventMap, Permission | null> = {
   activeDocument: "editor.read",
   documentChange: "editor.read",
   selection: "editor.read",
+  visible: "editor.read",
   copy: "clipboard",
   activeTab: null,
   layout: null,
