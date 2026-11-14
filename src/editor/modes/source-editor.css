@@ -38,13 +38,17 @@
 }
 
 /* The column: the text where the rendered view's is (editor-column.css's
-   .editor-content: the column times the zoom, centred, 1.5rem inside). */
+   .editor-content: the column times the zoom, centred, its gutter inside). */
 .source-view .cm-scroller {
-  --source-gutter: max(
+  --zoomed-gutter: max(
     1.5rem,
+    calc(var(--doc-gutter) * var(--content-zoom, 1))
+  );
+  --source-gutter: max(
+    var(--zoomed-gutter),
     calc(
       (100% - min(100%, var(--content-width) * var(--content-zoom, 1))) / 2 +
-        1.5rem
+        var(--zoomed-gutter)
     )
   );
   /* Room below, as the rendered view has, so the last line can come up to the middle. */

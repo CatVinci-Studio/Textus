@@ -223,6 +223,8 @@ pub(crate) fn handler() -> impl Fn(tauri::ipc::Invoke<tauri::Wry>) -> bool + Sen
         #[cfg(desktop)]
         open_path_in_new_window,
         #[cfg(desktop)]
+        open_folder_in_new_window,
+        #[cfg(desktop)]
         menu::trigger_menu_item,
         #[cfg(desktop)]
         menu::list_recent_files,

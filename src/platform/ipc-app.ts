@@ -66,6 +66,9 @@ export const windowIpc = {
   /** One file in a window of its own, tab mode or not. */
   openPathInNewWindow: (path: string) =>
     desktopActionCommand("open_path_in_new_window", path),
+  /** A folder in a window of its own (⌘/Ctrl-click on a recent folder). */
+  openFolderInNewWindow: (path: string) =>
+    desktopActionCommand("open_folder_in_new_window", path),
   /** What this window was opened with: a session's window (its documents,
    *  islands, folder) or files handed over; asks once (window-session.ts). */
   takePendingWindow: () => command("take_pending_window"),

@@ -9,7 +9,7 @@
 .block-fold {
   position: absolute;
   top: 0;
-  left: -1.75em;
+  left: calc(-1 * var(--doc-gutter));
   display: inline-flex;
   align-items: center;
   justify-content: center;

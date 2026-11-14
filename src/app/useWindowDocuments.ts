@@ -1,7 +1,7 @@
 import { canUseWindows } from "../platform/capabilities";
 import { writingProviderOf } from "../prefs/settings-types";
-import { useProjectTabs } from "./start-project";
-import { useCallback, useEffect, useMemo, useState } from "react";
+import { openingDocuments, useProjectTabs } from "./start-project";
+import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import {
   registerNoteCompletion,
   setNoteCompletionRoot,
@@ -21,6 +21,7 @@ import { useZenMode } from "./useZenMode";
 import { useSourceModes } from "./useSourceModes";
 import { useTabRemoval } from "./close-flow";
 import { folderTabsToClose } from "./close-folder";
+import { readRecents } from "./menu/recents";
 import { usePracticeTab } from "./onboarding-wiring";
 import { usePluginWindow } from "./usePluginWindow";
 import type { WindowShell } from "./useWindowShell";
@@ -50,10 +51,16 @@ export function useWindowDocuments({
     setPanelOpen(true);
     setPanelMode("tree");
   }, [setPanelOpen, setPanelMode]);
+  // Set below, once the tabs can be closed.
+  const replaceRef = useRef<(old: string, next: string) => void>(() => {});
   const openFolder = useOpenFolder({
     activePath: activeTab.path,
     fallback: documentsFolder,
     onOpened: showFiles,
+    onReplace: useCallback(
+      (old: string, next: string) => replaceRef.current(old, next),
+      [],
+    ),
     folderTooBroad: t.folderTooBroad,
   });
   // The search shortcut's request, cleared by the box once it shows.
@@ -186,13 +193,30 @@ export function useWindowDocuments({
   // the start page.
   const { folder, closeFolder: forgetFolder } = openFolder;
   const { addStartTab } = tabState;
+  const closeTabsOf = useCallback(
+    (old: string) => {
+      const { close, blank } = folderTabsToClose(liveTabs(), old);
+      if (blank) addStartTab();
+      for (const id of close) removeTab(id);
+    },
+    [liveTabs, addStartTab, removeTab],
+  );
   const closeFolder = useCallback(() => {
     forgetFolder();
-    if (!folder) return;
-    const { close, blank } = folderTabsToClose(liveTabs(), folder);
-    if (blank) addStartTab();
-    for (const id of close) removeTab(id);
-  }, [folder, forgetFolder, liveTabs, addStartTab, removeTab]);
+    if (folder) closeTabsOf(folder);
+  }, [folder, forgetFolder, closeTabsOf]);
+  // Another folder opened here takes the old one's place, as an editor's
+  // workspace does: its saved documents close, and the new one's come back
+  // as it was left (start-project.ts).
+  const { openRecentFile } = opening;
+  replaceRef.current = (old, next) => {
+    closeTabsOf(old);
+    void readRecents()
+      .then((recents) => openingDocuments(next, recents.files))
+      .then(async (docs) => {
+        for (const doc of docs) await openRecentFile(doc);
+      });
+  };
 
   // Tabs moving between windows, in both directions.
   const { dragHoverPreview, handleTabDetach, moveTabToNewWindow } =

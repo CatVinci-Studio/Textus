@@ -17,6 +17,7 @@ import {
   type MenuNode,
 } from "../../registry/menu/app-menu-model";
 import { thisWindow } from "../../platform/this-window";
+import { windowIpc } from "../../platform/ipc";
 import {
   canToggleFullscreen,
   hasAppMenu,
@@ -86,6 +87,12 @@ export function AppMenu({ x, y, onClose, checks, section }: AppMenuProps) {
     </div>,
     document.body,
   );
+}
+
+/** The folder a recent-folder entry opens, if it is one. */
+function recentFolderOf(action: MenuEntry["action"]): string | null {
+  const id = action && "native" in action ? action.native : "";
+  return id.startsWith("recent-folder:") ? id.slice(14) : null;
 }
 
 /** For the flyouts' timing, read in event handlers only. */
@@ -288,7 +295,7 @@ function MenuRow({
   // hover doesn't yank focus off whatever the user was typing into.
   const [focusSubmenu, setFocusSubmenu] = useState(false);
 
-  function activate() {
+  function activate(e: { metaKey: boolean; ctrlKey: boolean }) {
     if (item.disabled) return;
     if (hasSubmenu) {
       if (inline && open) return onCloseSubmenu();
@@ -300,7 +307,11 @@ function MenuRow({
     // Closed first: the focus goes back to where it was (source mode, the
     // AI's box), which Undo, Redo and Select All act on.
     onDismiss();
-    runMenuAction(item.action);
+    const folder = recentFolderOf(item.action);
+    // ⌘/Ctrl-click: the folder in a window of its own.
+    if (folder && (e.metaKey || e.ctrlKey))
+      void windowIpc.openFolderInNewWindow(folder);
+    else runMenuAction(item.action);
   }
 
   return (

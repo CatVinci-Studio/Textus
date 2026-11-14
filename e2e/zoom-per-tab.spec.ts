@@ -103,3 +103,29 @@ test("a trackpad pinch right after a scroll zooms (Windows: ctrl+wheel in fracti
   expect(await zoomOf(page, 0)).toBeGreaterThan(1.1);
   await expect(column).toHaveCSS("transform", "none");
 });
+
+test("zoomed in a narrow window, the text's margin still holds a block's fold caret", async ({
+  page,
+}) => {
+  await page.setViewportSize({ width: 700, height: 760 });
+  await openApp(page, { settings: { menuBarShown: false } });
+  const sheet = (await page.locator("section.island").first().boundingBox())!;
+  await zoomIn(page, sheet.x + sheet.width / 2, sheet.y + sheet.height / 2);
+  const zoom = await zoomOf(page, 0);
+  expect(zoom).toBeGreaterThan(1.1);
+  // A drawn block's fold caret (block-fold.css), at the text's left edge.
+  const { pane, caret } = await page
+    .locator(".editor-content:visible")
+    .first()
+    .evaluate((el) => {
+      const block = document.createElement("div");
+      block.className = "block-foldable";
+      const fold = block.appendChild(document.createElement("button"));
+      fold.className = "block-fold";
+      el.querySelector(".milkdown")!.append(block);
+      const caret = fold.getBoundingClientRect().left;
+      block.remove();
+      return { pane: el.getBoundingClientRect().left, caret };
+    });
+  expect(caret).toBeGreaterThanOrEqual(pane);
+});

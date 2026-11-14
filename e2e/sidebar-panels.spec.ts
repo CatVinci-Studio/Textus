@@ -225,3 +225,28 @@ test("a split the window has no room for is not made, and says why", async ({
   await expect(page.locator(".app-dialog")).toBeVisible();
   await expect(page.locator("section.island")).toHaveCount(2);
 });
+
+test("another folder takes the open one's place: its documents close, and come back with it", async ({
+  page,
+}) => {
+  await page.addInitScript(() => {
+    const w = window as unknown as Record<string, unknown>;
+    w.__devFs = { "/one/a.md": "# A\n", "/two/b.md": "# B\n" };
+    w.__devPickFolder = "/one";
+  });
+  await openApp(page);
+  await emit(page, "menu-open-folder");
+  await page.locator(".tree-row", { hasText: "a.md" }).dblclick();
+  const a = page.locator(".tab-pill", { hasText: "a.md" });
+  await expect(a).toBeVisible();
+
+  await emit(page, "menu-open-recent-folder", "/two");
+  await expect(page.locator(".tree-row", { hasText: "b.md" })).toBeVisible();
+  await expect(a).toHaveCount(0);
+  await page.locator(".tree-row", { hasText: "b.md" }).dblclick();
+  await expect(page.locator(".tab-pill", { hasText: "b.md" })).toBeVisible();
+
+  await emit(page, "menu-open-recent-folder", "/one");
+  await expect(a).toBeVisible();
+  await expect(page.locator(".tab-pill", { hasText: "b.md" })).toHaveCount(0);
+});

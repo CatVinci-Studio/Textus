@@ -149,7 +149,8 @@ export const commands = {
 	 *  moved aside into `restoring/` (kept until the window says they are
 	 *  back, finish_draft_restore), and one a crash left there last time comes
 	 *  back too. One that can't be read goes to `unreadable/`, never deleted.
-	 *  Only the `main` window's first call gets anything (see DRAFTS_CLAIMED).
+	 *  Only the `main` window's first call gets anything (see DRAFTS_CLAIMED);
+	 *  on a phone, every page's.
 	 */
 	take_draft_snapshots: () => __TAURI_INVOKE<DraftSnapshot_Serialize[]>("take_draft_snapshots"),
 	/**

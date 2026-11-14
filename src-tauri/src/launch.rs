@@ -176,6 +176,16 @@ pub(crate) async fn open_path_in_new_window(app: tauri::AppHandle, path: String)
     let _ = crate::editor_windows::open_new_window(&app);
 }
 
+/// ⌘/Ctrl-click on a recent folder: the folder in a window of its own, this
+/// window's workspace left as it is.
+#[cfg(desktop)]
+#[tauri::command]
+#[cfg_attr(test, specta::specta)]
+pub(crate) async fn open_folder_in_new_window(app: tauri::AppHandle, path: String) {
+    *PENDING_OPEN_FOLDER.lock().unwrap() = Some(path);
+    let _ = crate::editor_windows::open_new_window(&app);
+}
+
 /// What the window mounting now opens: a session's window (its documents,
 /// islands and folder), or files the system handed over.
 #[tauri::command]

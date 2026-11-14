@@ -21,13 +21,20 @@
   --content-width: 100%;
 }
 
+:root {
+  /* The margin left of the text: a drawn block's fold caret sits in it, so
+     it grows with the document's zoom (block-fold.css). */
+  --doc-gutter: 1.75rem;
+}
+
 .editor-content {
+  --gutter: max(1.5rem, calc(var(--doc-gutter) * var(--content-zoom, 1)));
   max-width: calc(var(--content-width) * var(--content-zoom, 1));
   margin: 0 auto;
   /* The text size follows this column's width (milkdown-theme.css). */
   container-type: inline-size;
   /* Clears the floating window bar with air to spare. */
-  padding: 3rem 1.5rem 6rem;
+  padding: 3rem var(--gutter) 6rem;
 }
 
 /* An engine whose containers trap position: fixed gets no container here,
@@ -37,7 +44,7 @@
 }
 
 :root[data-content-width="full"] .editor-content {
-  padding-inline: max(1.5rem, 4%);
+  padding-inline: max(var(--gutter), 4%);
 }
 
 .editor-content .milkdown {

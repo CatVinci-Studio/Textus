@@ -57,6 +57,7 @@ export function useOpenFolder({
   activePath,
   fallback,
   onOpened,
+  onReplace,
   folderTooBroad,
 }: {
   activePath: string | null;
@@ -64,6 +65,8 @@ export function useOpenFolder({
   fallback: string | null;
   /** Brings the Files tab into view once a folder opens. */
   onOpened: () => void;
+  /** Another folder takes the open one's place in this window. */
+  onReplace: (old: string, next: string) => void;
   /** The refusal shown for the home folder or a drive root. */
   folderTooBroad: string;
 }) {
@@ -129,6 +132,9 @@ export function useOpenFolder({
   const openFolder = useCallback(
     (path: string) => {
       const now = latest.current;
+      const trim = (p: string) => p.replace(/[\\/]+$/, "");
+      if (now.folder && trim(now.folder) !== trim(path))
+        onReplace(now.folder, path);
       setFolder(path);
       setTree({
         key: inputsKey(path, now.activePath, now.fallback),
@@ -147,7 +153,7 @@ export function useOpenFolder({
       }
       onOpened();
     },
-    [onOpened],
+    [onOpened, onReplace],
   );
 
   const closeFolder = useCallback(() => {
