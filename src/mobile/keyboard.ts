@@ -1,4 +1,3 @@
-import { useSyncExternalStore } from "react";
 import { isMobileApp } from "../platform/capabilities";
 
 /**
@@ -61,14 +60,4 @@ export function whenKeyboardDown(then: () => void, timeout = 600) {
     window.removeEventListener("resize", onResize);
     clearTimeout(timer);
   };
-}
-
-function onResize(changed: () => void): () => void {
-  window.addEventListener("resize", changed);
-  return () => window.removeEventListener("resize", changed);
-}
-
-/** Whether the keyboard is up, kept current. */
-export function useKeyboardUp(): boolean {
-  return useSyncExternalStore(onResize, keyboardUp, () => false);
 }

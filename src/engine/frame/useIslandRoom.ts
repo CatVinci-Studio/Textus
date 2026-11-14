@@ -52,13 +52,20 @@ export function useIslandRoom(
   useLayoutEffect(() => {
     const el = area.current;
     if (!el) return;
-    const observer = new ResizeObserver(() => {
+    const remeasure = () => {
       const next = measure(area.current);
       if (next)
         flushSync(() => setRoom((was) => (same(was, next) ? was : next)));
-    });
+    };
+    const observer = new ResizeObserver(remeasure);
     observer.observe(el);
-    return () => observer.disconnect();
+    // Also once the window's resize is told: what marks the window then (a
+    // phone's keyboard-up) may change the spacings after the size is seen.
+    window.addEventListener("resize", remeasure);
+    return () => {
+      observer.disconnect();
+      window.removeEventListener("resize", remeasure);
+    };
   }, [area]);
   return room;
 }

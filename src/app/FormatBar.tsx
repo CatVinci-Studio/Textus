@@ -15,7 +15,6 @@ import { fill } from "../i18n/fill";
 import { HideKeyboardIcon, MoreIcon } from "../engine/controls/icons";
 import { formatCombo } from "../utils/shortcuts";
 import { EDITOR_MORE_EVENT, INSERT_BLOCK_EVENT } from "../utils/events";
-import { useKeyboardUp } from "../mobile/keyboard";
 import { GROUPS, type Button } from "./format-buttons";
 import { phoneGroups } from "./format-bar-phone";
 import "./format-bar.css";
@@ -181,11 +180,10 @@ export function FormatBar({
   );
 }
 
-/** The phone's strip ends with the editor's menu for where the caret is
- *  (it has no right-click), and while typing, a key that puts the
- *  keyboard away. */
+/** The phone's strip, shown only while typing, ends with the editor's
+ *  menu for where the caret is (it has no right-click) and a key that puts
+ *  the keyboard away. */
 function PhoneEnd({ t }: { t: Strings }) {
-  const typing = useKeyboardUp();
   return (
     <>
       <IconButton
@@ -194,14 +192,12 @@ function PhoneEnd({ t }: { t: Strings }) {
       >
         <MoreIcon />
       </IconButton>
-      {typing && (
-        <IconButton
-          label={t.toolbarHideKeyboard}
-          onClick={() => (document.activeElement as HTMLElement | null)?.blur()}
-        >
-          <HideKeyboardIcon />
-        </IconButton>
-      )}
+      <IconButton
+        label={t.toolbarHideKeyboard}
+        onClick={() => (document.activeElement as HTMLElement | null)?.blur()}
+      >
+        <HideKeyboardIcon />
+      </IconButton>
     </>
   );
 }

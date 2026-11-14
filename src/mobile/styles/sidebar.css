@@ -30,6 +30,34 @@
   transform: translateX(calc(var(--rail-width) + var(--sidebar-width)));
 }
 
+/* The frame's paint, laid against the window as on the desktop: iOS has
+   no fixed backgrounds and a moved box loses them, so each piece places
+   the window-sized paint at its own offset, the page's by how far it is
+   pushed. */
+:root[data-window-chrome="mobile"] .app-shell {
+  --frame-shift: 0px;
+}
+
+:root[data-window-chrome="mobile"] .app-shell[data-sidebar="open"] {
+  --frame-shift: calc(var(--rail-width) + var(--sidebar-width));
+}
+
+:root[data-window-chrome="mobile"]
+  .app-shell
+  > :is(.activity-rail, .sidebar, .window-bar, .main-pane) {
+  background-attachment: scroll;
+  background-size: 100vw 100vh;
+  background-position: calc(-1 * var(--frame-shift)) 0;
+}
+
+:root[data-window-chrome="mobile"] .app-shell > .sidebar {
+  background-position: calc(-1 * var(--rail-width)) 0;
+}
+
+:root[data-window-chrome="mobile"] .app-shell > .activity-rail {
+  background-position: 0 0;
+}
+
 /* Its tabs show through the moved bar. */
 :root[data-window-chrome="mobile"]
   .app-shell[data-sidebar="open"]
