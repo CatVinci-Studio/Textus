@@ -110,7 +110,9 @@
 
 /* Over the block's top-right corner, shown while it is hovered, edited or
    its language menu is open. */
-.code-block-header {
+/* A block's tools at its top right (a code block's, a table's): shown on
+   hover, and while the block is in use. */
+.block-toolbar {
   position: absolute;
   inset: 0;
   z-index: 2;
@@ -119,11 +121,12 @@
 
 /* Clear of the block's corner curve, so the buttons' own corners needn't
    follow it. */
-.code-block-actions {
+.block-toolbar-actions {
   position: absolute;
   top: var(--shape-s);
   right: var(--shape-s);
   display: flex;
+  align-items: center;
   gap: 4px;
   user-select: none;
   -webkit-user-select: none;
@@ -131,11 +134,48 @@
   transition: opacity var(--dur-fast) var(--ease-standard);
 }
 
-.code-block-wrapper:hover .code-block-actions,
-.code-block-wrapper:focus-within .code-block-actions,
-.code-block-wrapper.is-picking-language .code-block-actions {
+:is(.code-block-wrapper, .table-wrapper):is(
+    :hover,
+    :focus-within,
+    .is-picking-language,
+    .is-table-caret,
+    .is-sizing
+  )
+  > .block-toolbar
+  > .block-toolbar-actions {
   opacity: 1;
   pointer-events: auto;
+}
+
+/* An icon's button among them: a circle in the document's colours. */
+.block-toolbar-button {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 24px;
+  height: 24px;
+  padding: 0;
+  color: var(--doc-muted);
+  background: var(--doc-bg, var(--ui-bg));
+  border: 1px solid var(--doc-border);
+  border-radius: var(--shape-pill);
+  corner-shape: round;
+  cursor: pointer;
+}
+.block-toolbar-button:hover,
+.block-toolbar-button:focus-visible {
+  color: var(--doc-text);
+}
+.block-toolbar-button[aria-pressed="true"] {
+  color: var(--doc-accent-text);
+  border-color: var(--doc-accent);
+}
+.block-toolbar-button:disabled {
+  opacity: 0.4;
+  cursor: default;
+}
+.block-toolbar-button.is-danger:hover {
+  color: var(--ui-danger);
 }
 
 .code-block-language {

@@ -94,10 +94,11 @@ import {
 import { syntaxHighlightPlugin } from "./code/syntax-highlight-plugin";
 import { createCodeBlockView } from "./code/code-block-language-view";
 import { createCodeLineNumbersPlugin } from "./code/code-line-numbers-plugin";
+import { tableCaretPlugin } from "./tables/table-caret";
 import {
   tableColumnFreeze,
   tableColumnResizing,
-  tableHoverView,
+  createTableView,
 } from "./tables/table-hover-view";
 import { createMermaidPreviewPlugin } from "./mermaid-plugin";
 import { blockKeysPlugin } from "./keys/block-keys-plugin";
@@ -410,7 +411,8 @@ export function withEditorCore(
           enabled: () => settings.current.codeLineNumbers,
         }),
       )
-      .use(tableHoverView)
+      .use(createTableView(() => resolveStrings(settings.current.language)))
+      .use(tableCaretPlugin)
       // Before the resize plugin: its press holds every column first.
       .use(editing(tableColumnFreeze))
       .use(editing(tableColumnResizing))

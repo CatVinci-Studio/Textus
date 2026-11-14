@@ -43,7 +43,9 @@ export const copyTextPlugin = $prose(
         // brings back the list item or quote it came from. A whole line
         // keeps them (a to-do stays a to-do).
         transformCopied: (slice, view) => {
-          const { $from, $to } = view.state.selection;
+          const { selection } = view.state;
+          if (!slice.eq(selection.content())) return slice;
+          const { $from, $to } = selection;
           const whole =
             $from.parentOffset === 0 &&
             $to.parentOffset === $to.parent.content.size;

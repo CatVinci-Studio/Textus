@@ -890,6 +890,11 @@ export default {
   deleteRow: "Удалить строку",
   deleteColumn: "Удалить столбец",
   copyTable: "Копировать таблицу",
+  tableSize: "Строки и столбцы",
+  tableFewerRows: "Меньше строк",
+  tableMoreRows: "Больше строк",
+  tableFewerColumns: "Меньше столбцов",
+  tableMoreColumns: "Больше столбцов",
   deleteTable: "Удалить таблицу",
   tableToMarkdown: "Преобразовать в таблицу Markdown",
   tableToMarkdownMerged:

@@ -63,6 +63,7 @@ export const EDITOR_CHROME_SELECTOR = [
   `.${EMOJI_SOURCE_CLASS}`,
   ".enclosure-delimiter",
   ".code-block-header",
+  ".block-toolbar",
   ".mermaid-zoom",
   ".code-line-gutter",
   `.${COLOR_SWATCH_CLASS}`,

@@ -18,9 +18,7 @@ import {
   type Transaction,
 } from "@milkdown/kit/prose/state";
 import type { EditorView } from "@milkdown/kit/prose/view";
-import { Fragment, Slice } from "@milkdown/kit/prose/model";
-import { writeClipboard } from "./images/picture-clipboard";
-import { tellCopied } from "../clipboard/copied";
+import { copyTable, tableCopy } from "./clipboard/table-clipboard";
 import type { EditorRunner } from "./useEditorRunner";
 import type { Strings, TextKey } from "../i18n/strings";
 import { parseMarkdownSource } from "./markdown/parse-markdown-source";
@@ -168,35 +166,29 @@ function leaveTableForClick(
   );
 }
 
-/** The table the caret or cell selection is in, as Markdown and as the
- *  HTML other apps read (Copy Table); null outside one. */
-function tableCopy(
-  run: EditorRunner,
-): { markdown: string; html: string } | null {
+/** The table the caret or cell selection is in, and its view; null
+ *  outside one. */
+function tableHere(run: EditorRunner) {
   return (
     run((ctx) => {
       const view = ctx.get(editorViewCtx);
-      const { state } = view;
-      const { $from } = state.selection;
+      const { $from } = view.state.selection;
       for (let d = $from.depth; d > 0; d--) {
         const node = $from.node(d);
-        if (node.type.spec.tableRole !== "table") continue;
-        const doc = state.schema.topNodeType.create(null, node);
-        const { dom } = view.serializeForClipboard(
-          new Slice(Fragment.from(node), 0, 0),
-        );
-        return {
-          markdown: ctx.get(serializerCtx)(doc).trimEnd() + "\n",
-          html: dom.innerHTML,
-        };
+        if (node.type.spec.tableRole === "table")
+          return { view, node, serialize: ctx.get(serializerCtx) };
       }
       return null;
     }) ?? null
   );
 }
 
-export const tableMarkdown = (run: EditorRunner) =>
-  tableCopy(run)?.markdown ?? null;
+/** The table the caret or cell selection is in, as Markdown; null outside
+ *  one. */
+export function tableMarkdown(run: EditorRunner): string | null {
+  const here = tableHere(run);
+  return here ? tableCopy(here.view, here.node, here.serialize).markdown : null;
+}
 
 export function inTable(run: EditorRunner): boolean {
   return run((ctx) => isInTable(ctx.get(editorViewCtx).state)) ?? false;
@@ -266,11 +258,8 @@ export function tableMenuItems(
     {
       label: t.copyTable,
       onSelect: () => {
-        const copy = tableCopy(run);
-        if (!copy) return;
-        void writeClipboard(copy.html, copy.markdown, null)
-          .then(() => tellCopied(copy.markdown))
-          .catch(() => {});
+        const here = tableHere(run);
+        if (here) copyTable(here.view, here.node, here.serialize);
       },
     },
     { label: t.deleteTable, onSelect: table("delete-table"), danger: true },

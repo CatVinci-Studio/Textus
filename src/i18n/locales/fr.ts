@@ -892,6 +892,11 @@ utiliser une.
   deleteRow: "Supprimer la ligne",
   deleteColumn: "Supprimer la colonne",
   copyTable: "Copier le tableau",
+  tableSize: "Lignes et colonnes",
+  tableFewerRows: "Moins de lignes",
+  tableMoreRows: "Plus de lignes",
+  tableFewerColumns: "Moins de colonnes",
+  tableMoreColumns: "Plus de colonnes",
   deleteTable: "Supprimer le tableau",
   tableToMarkdown: "Convertir en tableau Markdown",
   tableToMarkdownMerged:

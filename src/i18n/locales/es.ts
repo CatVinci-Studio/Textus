@@ -890,6 +890,11 @@ para usar una.
   deleteRow: "Eliminar fila",
   deleteColumn: "Eliminar columna",
   copyTable: "Copiar tabla",
+  tableSize: "Filas y columnas",
+  tableFewerRows: "Menos filas",
+  tableMoreRows: "Más filas",
+  tableFewerColumns: "Menos columnas",
+  tableMoreColumns: "Más columnas",
   deleteTable: "Eliminar tabla",
   tableToMarkdown: "Convertir en tabla Markdown",
   tableToMarkdownMerged:

@@ -1,4 +1,16 @@
 import { $prose, $view } from "@milkdown/kit/utils";
+import { serializerCtx } from "@milkdown/kit/core";
+import type { Decoration } from "@milkdown/kit/prose/view";
+import type { Strings } from "../../i18n/strings";
+import { TABLE_CARET_SPEC } from "./table-caret";
+import {
+  alignColumns,
+  resizeTable,
+  sharedAlignment,
+  tableSize,
+} from "./table-edits";
+import { mountTableToolbar } from "./TableToolbar";
+import { copyTable } from "../clipboard/table-clipboard";
 import { tableSchema } from "@milkdown/kit/preset/gfm";
 import {
   addRowAfter,
@@ -94,15 +106,16 @@ function makeInsertButton(className: string): HTMLButtonElement {
 
 /**
  * Wraps the table's own <table><tbody> (still the contentDOM) with "+"
- * buttons on the bottom and right edges, shown on hover, and a horizontal
- * scroller for wide tables. It also renders the <colgroup> column resizing
- * writes into, as the table's first child. Widths are session-only: GFM
- * can't store them.
+ * buttons on the bottom and right edges, shown on hover, a horizontal
+ * scroller for wide tables, and its tools at the top right (alignment,
+ * size, Copy, Delete), shown on hover and while the caret is in it. It
+ * also renders the <colgroup> column resizing writes into, as the table's
+ * first child. Widths are session-only: GFM can't store them.
  */
-export const tableHoverView = $view(
-  tableSchema.node,
-  () => (node, view, getPos) => {
+export function createTableView(strings: () => Strings) {
+  return $view(tableSchema.node, (ctx) => (node, view, getPos, decorations) => {
     let currentNode = node;
+    let caretCols = caretColsOf(decorations);
     const wrapper = document.createElement("div");
     wrapper.className = "table-wrapper";
 
@@ -127,16 +140,63 @@ export const tableHoverView = $view(
     wrapper.appendChild(addRowBtn);
     wrapper.appendChild(addColBtn);
 
+    const header = wrapper.appendChild(document.createElement("div"));
+    header.className = "block-toolbar table-toolbar";
+    header.contentEditable = "false";
+    const actions = header.appendChild(document.createElement("div"));
+    actions.className = "block-toolbar-actions";
+
+    const edit = (make: (tr: Transaction, pos: number) => Transaction) => {
+      const pos = getPos();
+      if (pos == null) return;
+      view.dispatch(make(view.state.tr, pos));
+      view.focus();
+    };
+    // Mounted on first hover or caret: a long document has many tables.
+    let tools: ReturnType<typeof mountTableToolbar> | null = null;
+    const render = () => {
+      if (!tools) return;
+      const size = tableSize(currentNode);
+      tools.render({
+        t: strings(),
+        ...size,
+        align: caretCols.length
+          ? sharedAlignment(currentNode, caretCols)
+          : undefined,
+        editable: view.editable,
+        onAlign: (a) => edit((tr, pos) => alignColumns(tr, pos, caretCols, a)),
+        onSize: (rows, cols) =>
+          edit((tr, pos) => resizeTable(tr, pos, rows, cols)),
+        onCopy: () => copyTable(view, currentNode, ctx.get(serializerCtx)),
+        onDelete: () =>
+          edit((tr, pos) => tr.delete(pos, pos + currentNode.nodeSize)),
+        onOpenChange: (open) => wrapper.classList.toggle("is-sizing", open),
+      });
+    };
+    const showTools = () => {
+      tools ??= mountTableToolbar(actions);
+      render();
+    };
+    wrapper.addEventListener("pointerenter", showTools);
+    if (caretCols.length) showTools();
+
     return {
       dom: wrapper,
       contentDOM: tbody,
-      update(updatedNode) {
+      update(updatedNode, updatedDecorations) {
         if (updatedNode.type !== currentNode.type) return false;
         currentNode = updatedNode;
+        caretCols = caretColsOf(updatedDecorations);
         syncColumns(updatedNode, colgroup, table);
+        if (caretCols.length) showTools();
+        else render();
         return true;
       },
+      // Keys and presses on its tools aren't the editor's.
+      stopEvent: (event) => header.contains(event.target as Node),
       ignoreMutation(record) {
+        if (record.type === "selection") return false;
+        if (header.contains(record.target)) return true;
         // The resize drag writes width styles onto the table and its <col>s; they
         // aren't content edits.
         return (
@@ -144,9 +204,21 @@ export const tableHoverView = $view(
           (record.target === table || colgroup.contains(record.target))
         );
       },
+      destroy() {
+        tools?.destroy();
+      },
     };
-  },
-);
+  });
+}
+
+/** The columns the caret is in, from tableCaretPlugin's decoration. */
+function caretColsOf(decorations: readonly Decoration[]): number[] {
+  for (const d of decorations) {
+    const cols = (d.spec as Record<string, unknown>)[TABLE_CARET_SPEC];
+    if (Array.isArray(cols)) return cols as number[];
+  }
+  return [];
+}
 
 /**
  * Drag-to-resize columns: prosemirror-tables' columnResizing, with

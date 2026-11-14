@@ -56,7 +56,7 @@
   }
 
   /* Editor-only chrome, not part of the document. */
-  .code-block-header,
+  .block-toolbar,
   .code-line-gutter,
   .chat-selection-layer {
     display: none;

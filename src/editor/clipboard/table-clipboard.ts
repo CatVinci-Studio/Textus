@@ -1,3 +1,12 @@
+import {
+  Fragment,
+  Slice,
+  type Node as ProseNode,
+} from "@milkdown/kit/prose/model";
+import type { EditorView } from "@milkdown/kit/prose/view";
+import { writeClipboard } from "../images/picture-clipboard";
+import { tellCopied } from "../../clipboard/copied";
+
 /**
  * A copied table as Word, Pages, WeChat and the spreadsheets read one: a
  * head row in <thead>, lines round every cell, and a cell's text without
@@ -38,4 +47,28 @@ function unwrapParagraphs(cell: Element) {
     if (i > 0) cell.insertBefore(doc.createElement("br"), p);
     p.replaceWith(...p.childNodes);
   });
+}
+
+/** A table as Markdown and as the HTML other apps read: Copy Table. */
+export function tableCopy(
+  view: EditorView,
+  table: ProseNode,
+  serialize: (doc: ProseNode) => string,
+): { markdown: string; html: string } {
+  const doc = view.state.schema.topNodeType.create(null, table);
+  const { dom } = view.serializeForClipboard(
+    new Slice(Fragment.from(table), 0, 0),
+  );
+  return { markdown: serialize(doc).trimEnd() + "\n", html: dom.innerHTML };
+}
+
+export function copyTable(
+  view: EditorView,
+  table: ProseNode,
+  serialize: (doc: ProseNode) => string,
+): void {
+  const { markdown, html } = tableCopy(view, table, serialize);
+  void writeClipboard(html, markdown, null)
+    .then(() => tellCopied(markdown))
+    .catch(() => {});
 }

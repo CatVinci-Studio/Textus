@@ -82,6 +82,12 @@ import {
   WandSparkles,
   X,
   type LucideIcon,
+  AlignLeft,
+  AlignCenter,
+  AlignRight,
+  Copy,
+  Grid3x3,
+  Minus,
 } from "lucide-react";
 
 /** An icon's drawn size: its design size (the svg's own width and height)
@@ -274,6 +280,16 @@ export function TableEditIcon({
 }
 
 export const TrashIcon = lucide(Trash2, 16);
+/** A table's tools (its top-right toolbar). */
+export const TABLE_TOOL_ICONS = {
+  left: lucide(AlignLeft, 14),
+  center: lucide(AlignCenter, 14),
+  right: lucide(AlignRight, 14),
+  size: lucide(Grid3x3, 14),
+  copy: lucide(Copy, 14),
+  less: lucide(Minus, 14),
+  more: lucide(Plus, 14),
+} as const;
 /** Documents list: as a grid of page thumbnails, or as rows. */
 export const GridViewIcon = lucide(LayoutGrid, 16);
 export const ListViewIcon = lucide(LayoutList, 16);
