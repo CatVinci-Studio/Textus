@@ -71,3 +71,87 @@ describe("the table's own tools", () => {
     expect(tableSize(tableAt(t).node)).toEqual({ rows: 2, cols: 1 });
   });
 });
+
+describe("the table's keys and pastes", () => {
+  const ROWS = "| h | k |\n| - | - |\n| 1 | x |\n| 2 | y |\n\nend";
+  const body = (t: TestView) => lines(t).slice(2);
+
+  it("Alt+arrows move the caret's row and column, never above the head row", async () => {
+    const t = await openView(ROWS);
+    t.caretAt("2");
+    t.press("Alt+ArrowUp");
+    expect(body(t)).toEqual(["| 2 | y |", "| 1 | x |"]);
+    t.press("Alt+ArrowUp");
+    expect(lines(t)[0]).toBe("| h | k |");
+    t.press("Alt+ArrowRight");
+    expect(lines(t)[0]).toBe("| k | h |");
+  });
+
+  it("Backspace on a picked row takes it out", async () => {
+    const t = await openView(ROWS);
+    const { CellSelection } = await import("@milkdown/kit/prose/tables");
+    const cell = (text: string) => {
+      const $at = t.view.state.doc.resolve(t.caretAt(text));
+      return $at.before($at.depth - 1);
+    };
+    t.view.dispatch(
+      t.view.state.tr.setSelection(
+        CellSelection.create(t.view.state.doc, cell("1"), cell("x")),
+      ),
+    );
+    t.press("Backspace");
+    expect(body(t)).toEqual(["| 2 | y |"]);
+  });
+
+  it("a copied row pastes in as a new row under the caret's", async () => {
+    const t = await openView(ROWS);
+    const { CellSelection } = await import("@milkdown/kit/prose/tables");
+    const cell = (text: string) => {
+      const $at = t.view.state.doc.resolve(t.caretAt(text));
+      return $at.before($at.depth - 1);
+    };
+    t.view.dispatch(
+      t.view.state.tr.setSelection(
+        CellSelection.create(t.view.state.doc, cell("2"), cell("y")),
+      ),
+    );
+    const { dom, text } = t.view.serializeForClipboard(
+      t.view.state.selection.content(),
+    );
+    t.caretAt("1");
+    t.paste(text, dom.innerHTML);
+    expect(body(t)).toEqual(["| 1 | x |", "| 2 | y |", "| 2 | y |"]);
+  });
+
+  it("a copied column pastes in as a new column after the caret's", async () => {
+    const t = await openView(ROWS);
+    const { CellSelection } = await import("@milkdown/kit/prose/tables");
+    const cell = (text: string) => {
+      const $at = t.view.state.doc.resolve(t.caretAt(text));
+      return $at.before($at.depth - 1);
+    };
+    t.view.dispatch(
+      t.view.state.tr.setSelection(
+        CellSelection.create(t.view.state.doc, cell("k"), cell("y")),
+      ),
+    );
+    const { dom, text } = t.view.serializeForClipboard(
+      t.view.state.selection.content(),
+    );
+    t.caretAt("1");
+    t.paste(text, dom.innerHTML);
+    expect(lines(t)[0]).toBe("| h | k | k |");
+    expect(body(t)).toEqual(["| 1 | x | x |", "| 2 | y | y |"]);
+  });
+});
+
+describe("where a pulled row or column lands", () => {
+  it("takes the place it is let go at, by the others' middles", async () => {
+    const { dropIndex } = await import("./table-grips");
+    const middles = [10, 30, 50, 70];
+    expect(dropIndex(middles, 5, 2)).toBe(0);
+    expect(dropIndex(middles, 45, 0)).toBe(1);
+    expect(dropIndex(middles, 90, 1)).toBe(3);
+    expect(dropIndex(middles, 40, 2)).toBe(2);
+  });
+});

@@ -95,6 +95,7 @@ import { syntaxHighlightPlugin } from "./code/syntax-highlight-plugin";
 import { createCodeBlockView } from "./code/code-block-language-view";
 import { createCodeLineNumbersPlugin } from "./code/code-line-numbers-plugin";
 import { tableCaretPlugin } from "./tables/table-caret";
+import { tableKeys, tableRowPaste } from "./tables/table-keys";
 import {
   tableColumnFreeze,
   tableColumnResizing,
@@ -288,6 +289,7 @@ export function withEditorCore(
       )
       // Ahead of gfm's table keys.
       .use(editing(tableEdgeArrowPlugin))
+      .use(editing([tableKeys, tableRowPaste]))
       .use(gfmWithoutStrikethrough)
 
       // Before anything else can misread its "---" lines as setext headings.

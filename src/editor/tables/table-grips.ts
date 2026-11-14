@@ -1,4 +1,5 @@
 import type { EditorView } from "@milkdown/kit/prose/view";
+import { scaledPx } from "../../engine/tokens/chrome-scale";
 import {
   CellSelection,
   moveTableColumn,
@@ -136,7 +137,7 @@ export function attachGrips(options: {
     const move = (ev: PointerEvent) => {
       const along =
         axis === "row" ? ev.clientY - start.y : ev.clientX - start.x;
-      if (!dragging && Math.abs(along) < DRAG_PX) return;
+      if (!dragging && Math.abs(along) < scaledPx(DRAG_PX)) return;
       dragging = axis;
       wrapper.setAttribute("data-dragging", axis);
       const w = wrapper.getBoundingClientRect();
