@@ -4,10 +4,10 @@ import { duration, motionAllowed } from "../engine/motion/motion";
 import type { Box } from "./tour-place";
 
 /** What the tour draws: the lit hole (none: the window dimmed whole) and
- *  the card's corner. */
+ *  the card's corner, with a width when it is narrowed. */
 export interface TourFrame {
   hole: Box | null;
-  card: { left: number; top: number };
+  card: { left: number; top: number; width?: number };
 }
 
 const mix = (a: number, b: number, k: number) => a + (b - a) * k;
@@ -29,6 +29,7 @@ function mixFrame(a: TourFrame, b: TourFrame, k: number): TourFrame {
     card: {
       left: mix(a.card.left, b.card.left, k),
       top: mix(a.card.top, b.card.top, k),
+      width: b.card.width,
     },
   };
 }

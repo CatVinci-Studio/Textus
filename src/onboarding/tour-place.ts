@@ -18,6 +18,8 @@ interface Size {
 const GAP = 16;
 /** Around the lit part, so its edge isn't cut by the hole. */
 const PAD = 6;
+/** The narrowest the card gets to stay beside the hole, not over it. */
+const NARROWEST = 240;
 
 /** The hole round `target`, padded and kept inside the window. */
 export function holeAround(target: Box, view: Size): Box {
@@ -52,7 +54,8 @@ function covers(at: { left: number; top: number }, card: Size, box: Box) {
  * or above it when the hole is low; elsewhere to its right, left, below or
  * above, the first with room, centred on it along that side, and never
  * over `lit` (the whole hole, where `hole` is the part it is level with).
- * With none, the window's corner clear of it, else its lower right.
+ * With none, narrower beside it when there is room for that (`width`),
+ * else the window's corner clear of it, else its lower right.
  */
 export function placeCard(
   hole: Box | null,
@@ -60,7 +63,7 @@ export function placeCard(
   view: Size,
   phone: boolean,
   lit: Box | null = hole,
-): { left: number; top: number } {
+): { left: number; top: number; width?: number } {
   const gap = scaledPx(GAP);
   const maxLeft = view.width - card.width - gap;
   const maxTop = view.height - card.height - gap;
@@ -97,6 +100,17 @@ export function placeCard(
     !lit || !covers(place, card, lit);
   const side = sides.find((s) => s.fits && clear(s));
   if (side) return { left: side.left, top: side.top };
+  if (lit) {
+    const roomRight = view.width - (lit.left + lit.width) - 2 * gap;
+    const roomLeft = lit.left - 2 * gap;
+    const room = Math.max(roomRight, roomLeft);
+    if (room >= scaledPx(NARROWEST) && room < card.width)
+      return {
+        left: roomRight >= roomLeft ? lit.left + lit.width + gap : gap,
+        top: clamp(middleY, gap, maxTop),
+        width: room,
+      };
+  }
   const corners = [
     at(maxLeft, maxTop),
     at(gap, maxTop),

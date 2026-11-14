@@ -71,7 +71,12 @@ function useTourView(
     if (!el) return;
     const measure = () => {
       setView(viewNow());
-      setCardSize({ width: el.offsetWidth, height: el.offsetHeight });
+      // Its own width, not one a step narrowed it to (or it would widen
+      // and narrow again, back and forth).
+      setCardSize((was) => ({
+        width: el.style.width ? was.width : el.offsetWidth,
+        height: el.offsetHeight,
+      }));
     };
     const observer = new ResizeObserver(measure);
     observer.observe(el);
@@ -142,8 +147,13 @@ export function TourLayer({
         ringEl.style.height = `${height}px`;
       }
     }
-    if (card.current)
+    if (card.current) {
       card.current.style.transform = `translate(${frame.card.left}px, ${frame.card.top}px)`;
+      // Narrowed to stay beside the hole when it can't go round it.
+      card.current.style.width = frame.card.width
+        ? `${frame.card.width}px`
+        : "";
+    }
   }, []);
   // The card beside it all, level with the part the step is about.
   const anchor = lit && hole ? across(lit, hole) : hole;

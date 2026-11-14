@@ -35,8 +35,9 @@ describe("the tour's hole and card", () => {
     const lit = { left: 0, top: 0, width: 376, height: 520 };
     const band = { left: 0, top: 120, width: 376, height: 40 };
     const at = placeCard(band, wide, small, false, lit);
-    // No side has room: the corner that covers least of it, not below the
-    // band over the sidebar's list.
-    expect(at.left).toBe(760 - 16 - 425);
+    // No side has room for it as it is: narrowed beside the sidebar, not
+    // in a corner over its list.
+    expect(at.left).toBe(376 + 16);
+    expect(at.width).toBe(760 - 376 - 32);
   });
 });
