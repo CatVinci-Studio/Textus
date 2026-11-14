@@ -372,6 +372,21 @@ export function parseContributes(raw: unknown, id: string): Contributes {
     }
     return { pattern, command: declaredCommand(o.command, `${at}.command`) };
   });
+  const statusItems = list(c.statusItems, "contributes.statusItems").map(
+    (x, i) => {
+      const at = `contributes.statusItems[${i}]`;
+      const o = object(x, at);
+      const tooltip = text(o.tooltip, `${at}.tooltip`, true);
+      return {
+        id: text(o.id, `${at}.id`),
+        text: text(o.text, `${at}.text`),
+        ...(tooltip ? { tooltip } : {}),
+        ...(o.command === undefined
+          ? {}
+          : { command: declaredCommand(o.command, `${at}.command`) }),
+      };
+    },
+  );
   const codeBlocks = list(c.codeBlocks, "contributes.codeBlocks").map(
     (x, i) => {
       const at = `contributes.codeBlocks[${i}]`;
@@ -462,6 +477,7 @@ export function parseContributes(raw: unknown, id: string): Contributes {
     embeds,
     hovers,
     links,
+    statusItems,
     codeBlocks,
     floatingViews,
     agents,

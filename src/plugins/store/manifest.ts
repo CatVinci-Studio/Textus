@@ -193,6 +193,16 @@ export interface CompletionContribution {
   title?: string;
 }
 
+/** A status in the window bar shown from the manifest, before the plugin's
+ *  code starts; its code's ui.statusItem with the same id takes it over. */
+export interface StatusItemContribution {
+  id: string;
+  text: string;
+  tooltip?: string;
+  /** One of its contributes.commands, run (starting the plugin) on click. */
+  command?: string;
+}
+
 /** Links a plugin opens on Ctrl/Cmd+click instead of the browser: a URL
  *  matching `pattern` runs its `command` with the URL. */
 export interface LinkContribution {
@@ -264,6 +274,7 @@ export interface Contributes {
   embeds: EmbedContribution[];
   hovers: HoverContribution[];
   links: LinkContribution[];
+  statusItems: StatusItemContribution[];
   codeBlocks: CodeBlockContribution[];
   floatingViews: FloatingViewContribution[];
   agents: AgentContribution[];

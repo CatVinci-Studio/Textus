@@ -205,6 +205,28 @@ describe("a plugin's manifest", () => {
     );
   });
 
+  it("reads the statuses a plugin shows before it starts", () => {
+    const command = { command: "catvinci.example.open", title: "Open" };
+    const m = parseManifest({
+      ...base,
+      contributes: {
+        commands: [command],
+        statusItems: [
+          { id: "count", text: "%words%", command: command.command },
+        ],
+      },
+    });
+    expect(m.contributes.statusItems).toEqual([
+      { id: "count", text: "%words%", command: "catvinci.example.open" },
+    ]);
+    expect(() =>
+      parseManifest({
+        ...base,
+        contributes: { statusItems: [{ id: "a", text: "b", command: "x.y" }] },
+      }),
+    ).toThrow(/not in contributes.commands/);
+  });
+
   it("reads what a document must hold for the plugin to be suggested, leaving out kinds it doesn't know", () => {
     const m = parseManifest({
       ...base,

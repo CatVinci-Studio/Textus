@@ -544,6 +544,29 @@
             }
           }
         },
+        "statusItems": {
+          "type": "array",
+          "description": "Statuses in the window bar shown while the plugin is on, before its code starts (Textus 1.4.2); textus.ui.statusItem with the same id takes one over.",
+          "items": {
+            "type": "object",
+            "required": ["id", "text"],
+            "properties": {
+              "id": {
+                "type": "string",
+                "description": "The id its code's statusItem uses."
+              },
+              "text": {
+                "type": "string",
+                "description": "A short status, up to 40 characters; may be %localized%."
+              },
+              "tooltip": { "type": "string" },
+              "command": {
+                "type": "string",
+                "description": "One of the plugin's contributes.commands, run on click (starting the plugin)."
+              }
+            }
+          }
+        },
         "codeBlocks": {
           "type": "array",
           "description": "Code blocks of a language the plugin draws in the document, answered by textus.views.registerCodeBlock(language).",
