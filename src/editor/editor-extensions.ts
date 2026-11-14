@@ -138,8 +138,7 @@ import {
   obsidianEmbedSchema,
   remarkObsidianEmbedPlugin,
 } from "./images/obsidian-embed";
-import { createObsidianEmbedPreviewPlugin } from "./images/obsidian-embed-preview";
-import { createNoteEmbedPlugin } from "./embeds/note-embed-plugin";
+import { createEmbedsPlugin } from "./embeds/embeds-plugin";
 import { createUndoFilePlugin } from "./undo-file";
 import { createMissingLinksPlugin } from "./markdown/missing-links";
 import { createTypewriterPlugin } from "./modes/typewriter-plugin";
@@ -306,12 +305,11 @@ export function withEditorCore(
       .use(wikilinkRevealPlugin)
       .use(createMissingLinksPlugin(() => docPath.current))
       .use(
-        createObsidianEmbedPreviewPlugin({
-          docPath: () => docPath.current,
-          settings: () => settings.current,
-        }),
+        createEmbedsPlugin(
+          () => docPath.current,
+          () => settings.current,
+        ),
       )
-      .use(createNoteEmbedPlugin(() => docPath.current))
 
       .use(
         createGithubAlertPlugin((type) => {

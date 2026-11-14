@@ -1,6 +1,4 @@
-import { Plugin, PluginKey } from "@milkdown/kit/prose/state";
 import { Decoration } from "@milkdown/kit/prose/view";
-import { $prose } from "@milkdown/kit/utils";
 import type { Node as ProseNode } from "@milkdown/kit/prose/model";
 import type { EditorView } from "@milkdown/kit/prose/view";
 import { closeHistory } from "@milkdown/kit/prose/history";
@@ -10,18 +8,11 @@ import {
   canRevealInFileManager,
 } from "../../platform/capabilities";
 import { fs } from "../../platform/ipc";
-import { isScopedUrl } from "../../platform/ios-files";
 import type { Settings } from "../../prefs/SettingsContext";
 import { showMessage } from "../../engine/controls/app-dialog";
 import { basename, dirname, isInside } from "../../utils/path";
 import { localPath } from "../markdown/link-target";
-import {
-  applyReveal,
-  caretToSourceOnClick,
-  revealAll,
-  type Reveal,
-  type RevealState,
-} from "../reveal-state";
+import { caretToSourceOnClick } from "../reveal-state";
 import { showDocImage } from "./image-plugin";
 import { openDiagramViewer, zoomButton } from "../diagram-zoom";
 import { copyToImageFolder, pickImageFile } from "./image-store";
@@ -36,8 +27,6 @@ import {
 import { embedForPicked, parseEmbed, type EmbedTarget } from "./obsidian-embed";
 import { explainError } from "../../utils/error-explain";
 import { windowFolder } from "../../platform/window-folder";
-
-const embedPreviewKey = new PluginKey<RevealState>("obsidian-embed-preview");
 
 /**
  * The src an HTML export writes for an embed's picture: relative when the
@@ -193,59 +182,31 @@ export function embedFileAt(target: Element): string | null {
   return (el && embedFiles.get(el)) ?? null;
 }
 
-interface EmbedPreviewOptions {
-  docPath: () => string | null;
-  settings: () => Settings;
-}
-
-const isEmbed = (node: ProseNode) => node.type.name === "obsidian_embed";
-
-function embedReveal(options: EmbedPreviewOptions): Reveal {
-  return {
-    match: isEmbed,
-    decorate(node, pos, touches) {
-      const docPath = options.docPath();
-      // An unsaved document has no vault; an iOS Files one can't be searched.
-      if (!docPath || isScopedUrl(docPath)) return [];
-      const embed = parseEmbed(node.textContent);
-      const to = pos + node.nodeSize;
-      if (!embed?.isImage || touches(pos, to)) return [];
-      return [
-        Decoration.inline(pos + 1, to - 1, {
-          class: "obsidian-embed-source-hidden",
-        }),
-        Decoration.widget(to, embedWidget(embed, docPath, options.settings), {
-          side: -1,
-          key: `${docPath}\n${node.textContent}`,
-          // The picture's clicks are its own, not a caret placed at it.
-          stopEvent: (event) =>
-            isMissingCardAction(event) ||
-            (event.target instanceof Element &&
-              !!event.target.closest(
-                ".obsidian-embed-rendered img, .mermaid-zoom",
-              )),
-        }),
-      ];
-    },
-    config: options.docPath,
-  };
-}
-
-/** Obsidian image embeds as pictures while the caret is away. */
-export function createObsidianEmbedPreviewPlugin(options: EmbedPreviewOptions) {
-  const reveal = embedReveal(options);
-  return $prose(
-    () =>
-      new Plugin<RevealState>({
-        key: embedPreviewKey,
-        state: {
-          init: (_config, state) => revealAll(state, reveal),
-          apply: (tr, prev, oldState, newState) =>
-            applyReveal(tr, prev, oldState, newState, reveal),
-        },
-        props: {
-          decorations: (state) => embedPreviewKey.getState(state)?.set,
-        },
-      }),
-  );
+/** An image embed's decorations: its source hidden, the picture after it;
+ *  none for an embed that isn't a picture. */
+export function imageEmbedDecorations(
+  node: ProseNode,
+  pos: number,
+  docPath: string,
+  settings: () => Settings,
+): Decoration[] {
+  const embed = parseEmbed(node.textContent);
+  if (!embed?.isImage) return [];
+  const to = pos + node.nodeSize;
+  return [
+    Decoration.inline(pos + 1, to - 1, {
+      class: "obsidian-embed-source-hidden",
+    }),
+    Decoration.widget(to, embedWidget(embed, docPath, settings), {
+      side: -1,
+      key: `${docPath}\n${node.textContent}`,
+      // The picture's clicks are its own, not a caret placed at it.
+      stopEvent: (event) =>
+        isMissingCardAction(event) ||
+        (event.target instanceof Element &&
+          !!event.target.closest(
+            ".obsidian-embed-rendered img, .mermaid-zoom",
+          )),
+    }),
+  ];
 }

@@ -7,6 +7,8 @@ import { Plugin, PluginKey } from "@milkdown/kit/prose/state";
 import { Decoration, type EditorView } from "@milkdown/kit/prose/view";
 import { $prose } from "@milkdown/kit/utils";
 import { isScopedUrl } from "../../platform/ios-files";
+import type { Settings } from "../../prefs/SettingsContext";
+import { imageEmbedDecorations } from "../images/obsidian-embed-preview";
 import { windowFolder } from "../../platform/window-folder";
 import {
   embedDepthOf,
@@ -117,35 +119,50 @@ function embedWidget(state: EmbedView, source: string, docPath: string) {
   };
 }
 
-function embedReveal(state: EmbedView): Reveal {
+function embedReveal(state: EmbedView, settings: () => Settings): Reveal {
   return {
     match: (node: ProseNode) => node.type.name === "obsidian_embed",
     decorate(node, pos, touches) {
       const docPath = state.docPath();
+      // An unsaved document has no vault; an iOS Files one can't be searched.
       if (!docPath || isScopedUrl(docPath)) return [];
-      const source = node.textContent;
-      const link = noteEmbedOf(source);
-      const to = pos + node.nodeSize;
-      if (!link || !embedProvider(embedKind(link)) || touches(pos, to))
-        return [];
-      return [
-        Decoration.inline(pos + 1, to - 1, {
-          class: "obsidian-embed-source-hidden",
-        }),
-        Decoration.widget(to, embedWidget(state, source, docPath), {
-          side: -1,
-          key: `${docPath}\n${source}\n${state.generation}`,
-          destroy: (el) => releaseEmbed(el as HTMLElement),
-        }),
-      ];
+      if (touches(pos, pos + node.nodeSize)) return [];
+      const image = imageEmbedDecorations(node, pos, docPath, settings);
+      return image.length ? image : noteDecorations(state, node, pos, docPath);
     },
     config: () => `${state.docPath()}\n${state.generation}`,
   };
 }
 
-/** `![[note]]`, `![[note#heading]]` and `![[note#^block]]` drawn read-only
- *  while the caret is away, when a plugin gives their content. */
-export function createNoteEmbedPlugin(docPath: () => string | null) {
+function noteDecorations(
+  state: EmbedView,
+  node: ProseNode,
+  pos: number,
+  docPath: string,
+): Decoration[] {
+  const source = node.textContent;
+  const link = noteEmbedOf(source);
+  if (!link || !embedProvider(embedKind(link))) return [];
+  const to = pos + node.nodeSize;
+  return [
+    Decoration.inline(pos + 1, to - 1, {
+      class: "obsidian-embed-source-hidden",
+    }),
+    Decoration.widget(to, embedWidget(state, source, docPath), {
+      side: -1,
+      key: `${docPath}\n${source}\n${state.generation}`,
+      destroy: (el) => releaseEmbed(el as HTMLElement),
+    }),
+  ];
+}
+
+/** `![[...]]` while the caret is away: a picture as the picture; a note,
+ *  `![[note#heading]]` or `![[note#^block]]` drawn read-only when a plugin
+ *  gives their content. One plugin for both, so the document is walked once. */
+export function createEmbedsPlugin(
+  docPath: () => string | null,
+  settings: () => Settings,
+) {
   return $prose(() => {
     const state: EmbedView = {
       docPath,
@@ -153,7 +170,7 @@ export function createNoteEmbedPlugin(docPath: () => string | null) {
       read: new Set(),
       asks: new AbortController(),
     };
-    const reveal = embedReveal(state);
+    const reveal = embedReveal(state, settings);
     return new Plugin<RevealState>({
       key,
       state: {
