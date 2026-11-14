@@ -100,3 +100,14 @@ describe("the built-in frame theme", () => {
     }
   }
 });
+
+describe("a highlight", () => {
+  it("keeps the text's colour, not the browser's black for <mark>", () => {
+    const base = readFileSync(
+      new URL("./content-base.css", import.meta.url),
+      "utf8",
+    );
+    const rule = /\.md-span\[data-delim="="\]\s*\{([^}]*)\}/.exec(base);
+    expect(rule?.[1]).toMatch(/color:\s*inherit/);
+  });
+});

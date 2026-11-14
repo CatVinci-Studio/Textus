@@ -4,26 +4,26 @@
    as content-themes.css: light, dark following the system, dark pinned
    (the two dark ones identical). */
 
-/* Aurora - peach, pink and lavender */
+/* Aurora - sky blue into pink by day, deep sea into plum by night */
 :root[data-content-theme="aurora"] {
-  --ui-frame-paint: linear-gradient(135deg, #f6d5c3, #f1c7d6 50%, #d8ccee);
-  --ui-frame-tint: #b9789a;
-  --doc-accent: #ad3a70;
-  --doc-mark: #e0679f;
+  --ui-frame-paint: linear-gradient(170deg, #6ec5e6, #a9c4e4 50%, #f6cde1);
+  --ui-frame-tint: #3f9cc0;
+  --doc-accent: #0b7fa3;
+  --doc-mark: #ef8fbb;
 }
 
 @media (prefers-color-scheme: dark) {
   :root:not([data-theme="light"])[data-content-theme="aurora"] {
-    --ui-frame-paint: linear-gradient(135deg, #2e2128, #2c2033 50%, #241f3a);
-    --ui-frame-tint: #b9789a;
-    --doc-accent: #f08dba;
-    --doc-mark: #f08dba;
+    --ui-frame-paint: linear-gradient(170deg, #0f3346, #1f2a48 50%, #3b2440);
+    --ui-frame-tint: #4fa9c9;
+    --doc-accent: #5fd0ec;
+    --doc-mark: #f3a3c7;
   }
 }
 
 :root[data-theme="dark"][data-content-theme="aurora"] {
-  --ui-frame-paint: linear-gradient(135deg, #2e2128, #2c2033 50%, #241f3a);
-  --ui-frame-tint: #b9789a;
-  --doc-accent: #f08dba;
-  --doc-mark: #f08dba;
+  --ui-frame-paint: linear-gradient(170deg, #0f3346, #1f2a48 50%, #3b2440);
+  --ui-frame-tint: #4fa9c9;
+  --doc-accent: #5fd0ec;
+  --doc-mark: #f3a3c7;
 }
