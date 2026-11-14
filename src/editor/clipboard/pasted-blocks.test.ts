@@ -166,3 +166,24 @@ it("pasted code keeps its lines, Chinese comments and long lines too", async () 
   t.paste("Before\n\n```js\n" + lines.join("\n") + "\n```\n\nAfter");
   expect(texts(t.view.dom, "pre code")).toEqual([lines.join("\n")]);
 });
+
+it("a to-do's text copied whole pastes as a to-do on its own line, as text in a line", async () => {
+  const t = await openView("- [ ] alpha\n- plain\n\npara");
+  const copy = (word: string) => {
+    const at = t.caretAt(word);
+    t.select(at, at + word.length);
+    const { dom, text } = t.view.serializeForClipboard(
+      t.view.state.selection.content(),
+    );
+    return { text, html: dom.innerHTML };
+  };
+  const task = copy("alpha");
+  t.caretAtEnd();
+  t.press("Enter");
+  t.paste(task.text, task.html);
+  expect(t.markdown()).toBe("- [ ] alpha\n- plain\n\npara\n\n- [ ] alpha");
+  const para = t.caretAt("para", 4);
+  t.select(para, para);
+  t.paste(task.text, task.html);
+  expect(t.markdown()).toContain("paraalpha");
+});

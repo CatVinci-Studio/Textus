@@ -53,7 +53,12 @@ function htmlIsStyledPlainText(html: string): boolean {
   template.innerHTML = html;
   // Textus's own node types mark their wrappers with data-type: that's node
   // data, and re-parsing their plain text would drop math formulas.
-  if (template.content.querySelector("[data-type]")) return false;
+  // An item's text copied in Textus keeps its list (a to-do's box) in the
+  // slice's context alone.
+  if (
+    template.content.querySelector('[data-type], [data-pm-slice*="list_item"]')
+  )
+    return false;
   return !template.content.querySelector(RICH_HTML_SELECTOR);
 }
 
