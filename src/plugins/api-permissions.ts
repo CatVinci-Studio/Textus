@@ -24,6 +24,7 @@ const API_PERMISSIONS: readonly {
       "editor.getOutline",
       "editor.registerHover",
       "editor.registerDecorations",
+      "editor.registerOutline",
       "export.willExport",
     ],
     // Completions without it are left out, with no error to say so.

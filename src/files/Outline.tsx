@@ -11,6 +11,7 @@ import { Presence } from "../engine/motion/usePresence";
 import { noteJump } from "../editor/nav-history";
 import { setTabJump } from "../editor/tab-jump";
 import { escapeLabel } from "../editor/markdown/link-label";
+import { PluginOutlineRows, usePluginOutline } from "./OutlineExtras";
 import "./FileTree.css";
 
 interface OutlineProps {
@@ -102,6 +103,7 @@ export function Outline({ content, tabId }: OutlineProps) {
   const [collapsed, setCollapsed] = useState<ReadonlySet<string>>(new Set());
   const { ref: treeRef, onKeyDown: treeKeys } = useTreeKeys<HTMLDivElement>();
   const current = useCurrentHeading(content, tabId);
+  const extras = usePluginOutline(content);
   /** Where the menu is open, and the heading row it is on, if any. */
   const [menu, setMenu] = useState<{
     x: number;
@@ -124,7 +126,7 @@ export function Outline({ content, tabId }: OutlineProps) {
     return rows;
   }, [headings, collapsed]);
 
-  if (headings.length === 0) {
+  if (headings.length === 0 && extras.length === 0) {
     return <p className="tx-list-note">{t.outlineEmpty}</p>;
   }
 
@@ -204,6 +206,7 @@ export function Outline({ content, tabId }: OutlineProps) {
           </div>
         );
       })}
+      <PluginOutlineRows items={extras} tabId={tabId} />
       <Presence show={menu !== null}>
         {menu && (
           <ContextMenu

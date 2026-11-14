@@ -3,6 +3,7 @@ import {
   showMessage,
   showPrompt,
 } from "../../engine/controls/app-dialog";
+import { removeOutlineProvider } from "../contributions/outline-providers";
 import { forgetPasteHandlers } from "../contributions/paste-handlers";
 import { forgetFileBadges } from "../contributions/file-badges";
 import {
@@ -226,4 +227,5 @@ export function stopPluginUi(plugin: string): void {
   forgetPluginWhenKeys(plugin);
   forgetFileBadges(plugin);
   forgetPasteHandlers(plugin);
+  removeOutlineProvider(plugin);
 }

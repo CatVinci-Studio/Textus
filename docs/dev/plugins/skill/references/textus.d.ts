@@ -664,6 +664,18 @@ declare global {
         pattern: RegExp | string,
         provide: (text: string) => string | null | Promise<string | null>,
       ): Disposable;
+      /** From 1.6 (editor.read): rows added to the outline of the document
+       *  in front, under its headings - a screenplay's scenes, a novel's
+       *  characters - each going to its block when clicked. Asked with its
+       *  blocks as it changes (1.5 s to answer); `level` 1 to 6 sets how
+       *  far in a row sits. */
+      registerOutline(provider: {
+        provideOutline(
+          blocks: Block[],
+        ):
+          | { text: string; level?: number; block: string }[]
+          | Promise<{ text: string; level?: number; block: string }[]>;
+      }): Disposable;
       /** A card for what the pointer rests on (editor.read). */
       registerHover(provider: {
         provideHover(

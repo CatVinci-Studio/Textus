@@ -1,5 +1,9 @@
 import { fill } from "../../i18n/fill";
 import {
+  addOutlineProvider,
+  removeOutlineProvider,
+} from "../contributions/outline-providers";
+import {
   addPasteHandler,
   pastePattern,
   removePasteHandler,
@@ -161,6 +165,11 @@ export function editorHandlers(p: PluginScope) {
       ),
     "editor.unregisterPasteHandler": ({ id }: Params) =>
       removePasteHandler(p.id, str(id, "id")),
+    "editor.registerOutline": () =>
+      addOutlineProvider(p.id, (blocks) =>
+        p.request<unknown>("$provideOutline", { blocks }),
+      ),
+    "editor.unregisterOutline": () => removeOutlineProvider(p.id),
     "editor.registerHover": () => {
       addHoverProvider(
         p.id,

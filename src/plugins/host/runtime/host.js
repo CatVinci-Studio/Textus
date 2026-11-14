@@ -21,6 +21,7 @@
   var codeBlockProviders = new Map();
   var hoverProviders = [];
   var pasteHandlers = {};
+  var outlineProviders = [];
   var pickSearches = {};
   var pickSearchCount = 0;
   var pasteHandlerCount = 0;
@@ -820,6 +821,15 @@
           quiet(call("editor.unregisterPasteHandler", { id: id }));
         });
       },
+      registerOutline: function (provider) {
+        outlineProviders.push(provider);
+        quiet(call("editor.registerOutline", {}));
+        return disposable(function () {
+          without(outlineProviders, provider);
+          if (!outlineProviders.length)
+            quiet(call("editor.unregisterOutline", {}));
+        });
+      },
       registerHover: function (provider) {
         hoverProviders.push(provider);
         quiet(call("editor.registerHover", {}));
@@ -1353,6 +1363,14 @@
     $cancelEmbed: function (params) {
       var controller = embedAsks.get(params.request);
       if (controller) controller.abort();
+    },
+    $provideOutline: async function (params) {
+      var all = [];
+      for (var i = 0; i < outlineProviders.length; i++) {
+        var items = await outlineProviders[i].provideOutline(params.blocks);
+        if (Array.isArray(items)) all = all.concat(items);
+      }
+      return plain(all);
     },
     $pickSearch: async function (params) {
       var search = pickSearches[params.id];
