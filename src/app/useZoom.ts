@@ -8,7 +8,7 @@ import { blockAt, holdBlock } from "../engine/controls/hold-line";
 import { listenToThisWindow, unlistenAll } from "../platform/events";
 import type { EditorView } from "@codemirror/view";
 import { sourceViewAt } from "../editor/modes/source-view-registry";
-import { contentZoom } from "../plugins/views/frame-zoom";
+import { contentZoom } from "../engine/zoom/tab-zoom";
 import {
   clearTabZooms,
   keepWindowZoomIn,

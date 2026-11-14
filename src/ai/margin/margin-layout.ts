@@ -1,6 +1,6 @@
 import type { Plural } from "../../i18n/plural";
 import { scaledPx } from "../../engine/tokens/chrome-scale";
-import { watchContentZoom } from "../../plugins/views/frame-zoom";
+import { watchContentZoom } from "../../engine/zoom/tab-zoom";
 import { useCallback, useLayoutEffect, useMemo, useState } from "react";
 import { useCloseOnOutsideClick } from "../../utils/hooks/useCloseOnOutsideClick";
 import type { EditorView } from "@milkdown/kit/prose/view";
