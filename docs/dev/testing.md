@@ -270,7 +270,8 @@ passed on its tag ([releasing.md](releasing.md#what-the-workflow-does)).
 
 `scripts/ci-changes.mjs` has the rules for "reaches"; the header of
 `ci.yml` sums them up. A light change - only GitHub's settings and
-templates (not its workflows), the license or the Markdown at the root -
+templates (not its workflows), the license, the Markdown at the root or
+the pictures in `docs/images/` -
 runs `check`'s formatting and README checks alone, merged too. Some choices that keep a pull request's checks short:
 
 - The e2e flows are spread over two shards test by test, not file by file

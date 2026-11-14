@@ -118,7 +118,7 @@ jobs:
           node-version-file: .nvmrc
           cache: npm
       - run: npm ci
-      # GitHub's settings, the license or root Markdown alone: their format
+      # GitHub's settings, the license, root Markdown or docs/images alone: their format
       # and the READMEs' structure, nothing that builds or tests.
       - if: needs.changes.outputs.light == 'true'
         run: npm run format:check && node scripts/check-readmes.mjs

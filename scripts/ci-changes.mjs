@@ -34,8 +34,10 @@ const RUST_TESTED = /^src\/platform\/bindings\//;
 
 /** Files no build, test or check reads beyond prettier and the README
  *  check: GitHub's settings and templates (not its workflows or actions),
- *  the license, and the Markdown at the repository's root. */
-const LIGHT = /^(\.github\/(?!workflows\/|actions\/)|LICENSE$|[^/]+\.md$)/;
+ *  the license, the Markdown at the repository's root, and the READMEs' and
+ *  store listings' pictures. */
+const LIGHT =
+  /^(\.github\/(?!workflows\/|actions\/)|LICENSE$|[^/]+\.md$|docs\/images\/)/;
 
 /** What can change the save round trip's result, including the documents
  *  it reads. */
