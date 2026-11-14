@@ -64,8 +64,9 @@
 | macOS · Intel    | [下载 .dmg](https://github.com/CatVinci-Studio/Textus/releases/latest)                       | Homebrew：`brew install --cask textus`                                  |
 | Windows · x64    | [下载 .exe](https://github.com/CatVinci-Studio/Textus/releases/latest)                       | —                                                                      |
 | Linux · x64      | [下载 .AppImage](https://github.com/CatVinci-Studio/Textus/releases/latest) · 另有 .deb · .rpm | Arch Linux：[`[catvinci]` 软件源](https://github.com/CatVinci-Studio/arch-repo) |
+| Android · arm64  | [下载 .apk](https://github.com/CatVinci-Studio/Textus/releases/latest) | — |
 
-> iPhone 与 iPad 版即将在 App Store 上架。
+> iOS（iPhone 与 iPad）公测即将在 TestFlight 开放。
 
 测试版：在 **设置 › 关于** 中把 **更新通道** 改为 **测试版**。
 
@@ -135,7 +136,7 @@ Textus 免费开源。欢迎[赞助我们](https://github.com/CatVinci-Studio/Te
 <details>
 <summary><strong>支持哪些平台？</strong></summary>
 
-支持 macOS（Apple 芯片和 Intel）、Windows 和 Linux，iPhone 与 iPad 版在 App Store 提供。
+macOS、Windows、Linux，以及 Android 与 iOS（公测）。
 
 </details>
 

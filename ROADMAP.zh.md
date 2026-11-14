@@ -8,7 +8,7 @@
 
 ## 正在做的
 
-**上架 App Store。** iPhone 和 iPad 版已经在 TestFlight 里测试了一段时间，马上就要提交审核。
+**iOS 公测。** iPhone 和 iPad 版通过 TestFlight 向所有人开放公测；Android 版随每个版本提供 APK。
 [#87](https://github.com/CatVinci-Studio/Textus/issues/87)
 
 ## 下一个版本（1.2.0）

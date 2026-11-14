@@ -13,8 +13,8 @@ first.
 
 ## What we're working on now
 
-**Getting onto the App Store.** Textus for iPhone and iPad has been in
-TestFlight for a while and is about to go to review.
+**iOS public beta.** Textus for iPhone and iPad opens to everyone as a public
+beta on TestFlight; Android ships as an APK with each release.
 [#87](https://github.com/CatVinci-Studio/Textus/issues/87)
 
 ## In the next release (1.2.0)

@@ -63,8 +63,9 @@ Gratuit et open source, sous licence MIT.
 | macOS · Intel         | [Télécharger le .dmg](https://github.com/CatVinci-Studio/Textus/releases/latest)                                | Homebrew : `brew install --cask textus`                                              |
 | Windows · x64         | [Télécharger le .exe](https://github.com/CatVinci-Studio/Textus/releases/latest)                                | —                                                                                    |
 | Linux · x64           | [Télécharger l’AppImage](https://github.com/CatVinci-Studio/Textus/releases/latest) · Également en .deb · .rpm | Arch Linux : le [dépôt `[catvinci]`](https://github.com/CatVinci-Studio/arch-repo) |
+| Android · arm64       | [Télécharger l’APK](https://github.com/CatVinci-Studio/Textus/releases/latest) | — |
 
-> iPhone et iPad : bientôt sur l’App Store.
+> iOS (iPhone et iPad) : bientôt en bêta publique sur TestFlight.
 
 Bêta : dans **Réglages › À propos**, réglez le **Canal de mise à jour** sur **Bêta**.
 
@@ -134,7 +135,7 @@ Oui, et il le restera toujours. Il est open source, sous licence MIT, sans compt
 <details>
 <summary><strong>Sur quels systèmes fonctionne-t-il ?</strong></summary>
 
-macOS (Apple Silicon et Intel), Windows et Linux, ainsi qu’iPhone et iPad via l’App Store.
+macOS (Apple Silicon et Intel), Windows et Linux, ainsi qu’Android et iOS (bêta publique).
 
 </details>
 
