@@ -7,6 +7,7 @@ use crate::app_dirs::AppDirs;
 use crate::ext_stats;
 
 mod download;
+mod fitting;
 use download::{checked, download, download_counted, fetch, hex};
 use serde::{Deserialize, Serialize};
 use serde_json::Value;
@@ -71,6 +72,10 @@ pub struct CatalogEntry {
     /// offered to install: a plugin merged into another.
     #[serde(default)]
     pub unlisted: bool,
+    /// Its earlier versions, newest first, for a Textus the newest needs a
+    /// newer one than (fitting.rs).
+    #[serde(default)]
+    pub versions: Vec<fitting::EarlierVersion>,
 }
 
 /// One skill in the catalog, listed beside the plugins in the market.
@@ -152,7 +157,14 @@ fn parse_all(text: &str) -> Result<(Vec<CatalogEntry>, Vec<SkillEntry>), String>
                 .filter_map(|(lang, url)| Some((lang, mirrored(&url)?)))
                 .collect();
             p.icon = p.icon.as_deref().and_then(mirrored);
-            Some(p)
+            p.versions.retain_mut(|v| match mirrored(&v.url) {
+                Some(url) => {
+                    v.url = url;
+                    true
+                }
+                None => false,
+            });
+            Some(fitting::fitted(p, env!("CARGO_PKG_VERSION")))
         })
         .collect();
     let skills = catalog
