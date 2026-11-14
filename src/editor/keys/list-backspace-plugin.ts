@@ -8,10 +8,9 @@ import { $prose } from "@milkdown/kit/utils";
 import { isImeKeyEvent } from "./ime";
 
 /**
- * Backspace at the start of a task takes its box away. At the start of a
- * numbered item it takes the number: the item becomes body text between
- * two lists, the items after it numbered from 1 again, as in Typora. Null
- * where it isn't such a start.
+ * Backspace at the start of a task or a numbered item: it becomes body text
+ * between two lists, numbered items after it from 1 again, as in Typora and
+ * Notion. Null where it isn't such a start.
  */
 function unnumberItem(state: EditorState) {
   const { $from, empty } = state.selection;
@@ -20,13 +19,8 @@ function unnumberItem(state: EditorState) {
   const item = $from.node(d - 1);
   const list = $from.node(d - 2);
   if (item.type.name !== "list_item" || $from.index(d - 1) !== 0) return null;
-  // A task gives up its box first; the next Backspace its number.
-  if (item.attrs.checked != null)
-    return state.tr.setNodeMarkup($from.before(d - 1), undefined, {
-      ...item.attrs,
-      checked: null,
-    });
-  if (list.type.name !== "ordered_list") return null;
+  const ordered = list.type.name === "ordered_list";
+  if (!ordered && item.attrs.checked == null) return null;
   const at = $from.index(d - 2);
   const items: ProseNode[] = [];
   list.forEach((child) => items.push(child));
@@ -37,7 +31,7 @@ function unnumberItem(state: EditorState) {
   if (at + 1 < items.length)
     parts.push(
       list.type.create(
-        { ...list.attrs, order: 1 },
+        ordered ? { ...list.attrs, order: 1 } : list.attrs,
         Fragment.from(items.slice(at + 1)),
       ),
     );

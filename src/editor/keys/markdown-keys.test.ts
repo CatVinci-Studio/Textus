@@ -254,11 +254,14 @@ it("Backspace at a numbered item's start makes it text between two lists, the se
   expect(t.caretLine()).toBe("|c");
 });
 
-it("Backspace at a task's start takes its box first, then its number", async () => {
+it("Backspace at a task's start makes it text, never a bare item", async () => {
   const t = await open("1. [ ] a\n2. [x] b\n3. [ ] c\n");
   t.caretAt("b", 0, 0);
   t.press("Backspace");
-  expect(t.markdown()).toBe("1. [ ] a\n2. b\n3. [ ] c");
-  t.press("Backspace");
   expect(t.markdown()).toBe("1. [ ] a\n\nb\n\n1. [ ] c");
+  const bullets = await open("- [ ] a\n- [ ] b\n- [ ] c\n");
+  bullets.caretAt("b", 0, 0);
+  bullets.press("Backspace");
+  expect(bullets.markdown()).toBe("- [ ] a\n\nb\n\n- [ ] c");
+  expect(bullets.caretLine()).toBe("|b");
 });
