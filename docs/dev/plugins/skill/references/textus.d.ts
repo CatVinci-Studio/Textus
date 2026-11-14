@@ -198,6 +198,11 @@ declare global {
         id: string,
         run: (editor: Editor, ...args: unknown[]) => unknown,
       ): Disposable;
+      /** From 1.6: sets a key the manifest's menu `when` clauses can read,
+       *  named `<plugin id>.<name>` - `when: "jane.focus.on"`. A string or
+       *  true; false, null or undefined unsets it. Gone when the plugin
+       *  stops. */
+      setContext(key: string, value: string | boolean | null): Promise<void>;
       /** A command of Textus's or of a plugin's. Textus's: "textus.save",
        *  "textus.closeTab" ({ save: true } closes once saved) and
        *  "textus.insertBlock" with a Format menu block at the caret - "h1"

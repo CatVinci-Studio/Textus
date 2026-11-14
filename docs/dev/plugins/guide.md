@@ -148,9 +148,12 @@ made when they are first shown.
 | `agents` | `{ id, name, command, args, env, setup, provider }`: an AI agent on the user's computer that speaks the [Agent Client Protocol](https://agentclientprotocol.com) on stdio (Claude Agent, Codex, Gemini CLI…), offered in Textus AI's model menu under Agents. Textus starts `command` itself, found on the PATH a terminal would have; `{pluginDir}` in `args` and `env` is the plugin's folder; `setup` says how to install it and sign in, shown when it can't start; `provider` names whose models it runs (`"anthropic"`, `"openai"`), what `ai.onDidChangeState` tells other plugins while it works. Needs `agents`; desktop only. From 1.3.13. |
 
 A menu item's `when` is a small expression over the moment it is shown:
-`editorHasSelection`, `fileExtension == .pdf`, `view == jane.tasks.list`,
+`documentOpen`, `folderOpen`, `editorHasSelection`, `fileExtension == .pdf`,
+`resourceFilename == notes.md`, `resourcePath`, `view == jane.tasks.list`,
 `isMac`, `resourceIsFolder` (a file menu item opened on a folder, from
-1.4.1), joined with `&&`, `||` and `!`.
+1.4.1), and from 1.6 the plugin's own keys set with
+`textus.commands.setContext("jane.focus.on", true)`; joined with `&&`, `||`
+and `!`.
 
 ## Permissions
 

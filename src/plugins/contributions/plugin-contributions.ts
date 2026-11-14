@@ -1,4 +1,5 @@
 import { pluginPlatform } from "../plugin-platform";
+import { pluginWhenKeys } from "./plugin-when-keys";
 import { createElement } from "react";
 import { registerCommand, runCommand } from "../../registry/commands";
 import { registerSidebarTab } from "../../registry/sidebar-tabs";
@@ -67,6 +68,7 @@ function whenContext(extra: WhenContext = {}): WhenContext {
     resourceFilename: path ? path.split(/[\\/]/).pop() : undefined,
     // As plugins are told the system (an iPad reports itself as a Mac).
     isMac: pluginPlatform() === "macos",
+    ...pluginWhenKeys(),
     ...extra,
   };
 }

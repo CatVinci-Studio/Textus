@@ -82,6 +82,8 @@ describe("checkPlugin", () => {
                   command: "local.demo.add",
                   when: "fileExtension == .md && !isMac",
                 },
+                // Its own key, set with commands.setContext.
+                { command: "local.demo.add", when: "local.demo.focus" },
               ],
             },
           },

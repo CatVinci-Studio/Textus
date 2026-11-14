@@ -495,6 +495,12 @@
       registerEditorCommand: function (id, run) {
         return registerCommand(String(id), editorCommand(run), true);
       },
+      setContext: function (key, value) {
+        return call("commands.setContext", {
+          key: String(key),
+          value: value === undefined ? null : value,
+        });
+      },
       execute: function (id) {
         return call("commands.execute", {
           command: String(id),

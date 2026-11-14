@@ -25,6 +25,10 @@ import {
   type PluginScope,
 } from "./broker-scope";
 import { held } from "../contributions/key-holder";
+import {
+  forgetPluginWhenKeys,
+  setPluginWhenKey,
+} from "../contributions/plugin-when-keys";
 
 function tone(value: unknown): "info" | "warning" | "error" {
   return value === "warning" || value === "error" ? value : "info";
@@ -51,6 +55,8 @@ export function uiHandlers(p: PluginScope) {
         throw new Error(`A command must start with "${p.id}.".`);
       p.deps.commandRegistered(p.id, id, editor === true);
     },
+    "commands.setContext": ({ key, value }: Params) =>
+      setPluginWhenKey(p.id, str(key, "key"), value),
     "commands.unregister": ({ command }: Params) => {
       p.deps.commandUnregistered(p.id, str(command, "command"));
     },
@@ -198,4 +204,5 @@ export function stopPluginUi(plugin: string): void {
   for (const id of progressBars.get(plugin) ?? []) endProgress(id);
   progressBars.delete(plugin);
   removeStatusItem(plugin);
+  forgetPluginWhenKeys(plugin);
 }

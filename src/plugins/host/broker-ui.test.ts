@@ -1,5 +1,7 @@
 import { describe, expect, it, vi } from "vitest";
-import { uiHandlers } from "./broker-ui";
+import { stopPluginUi, uiHandlers } from "./broker-ui";
+import { pluginWhenKeys } from "../contributions/plugin-when-keys";
+import { evaluateWhen } from "../contributions/when";
 import type { PluginScope } from "./broker-scope";
 
 function scopeOf(id: string, granted: string[]) {
@@ -13,8 +15,39 @@ function scopeOf(id: string, granted: string[]) {
     },
     deps: { runCommand },
   } as unknown as PluginScope;
-  return { execute: uiHandlers(scope)["commands.execute"], runCommand };
+  const handlers = uiHandlers(scope);
+  return {
+    execute: handlers["commands.execute"],
+    setContext: handlers["commands.setContext"],
+    runCommand,
+  };
 }
+
+describe("commands.setContext", () => {
+  it("sets the plugin's own when keys, and they go when it stops", () => {
+    const { setContext } = scopeOf("a.notes", []);
+    setContext({ key: "a.notes.focus", value: true });
+    setContext({ key: "a.notes.mode", value: "review" });
+    expect(pluginWhenKeys()).toEqual({
+      "a.notes.focus": true,
+      "a.notes.mode": "review",
+    });
+    expect(
+      evaluateWhen("a.notes.focus && a.notes.mode == review", pluginWhenKeys()),
+    ).toBe(true);
+    setContext({ key: "a.notes.focus", value: false });
+    expect(pluginWhenKeys()).toEqual({ "a.notes.mode": "review" });
+    stopPluginUi("a.notes");
+    expect(pluginWhenKeys()).toEqual({});
+  });
+
+  it("refuses another's keys and Textus's", () => {
+    const { setContext } = scopeOf("a.notes", []);
+    expect(() => setContext({ key: "b.sync.on", value: true })).toThrow();
+    expect(() => setContext({ key: "isMac", value: true })).toThrow();
+    expect(() => setContext({ key: "a.notes.x", value: 3 })).toThrow();
+  });
+});
 
 describe("commands.execute", () => {
   it("runs Textus's commands and the plugin's own", async () => {
