@@ -73,13 +73,11 @@
   font-variant-numeric: tabular-nums;
 }
 
+/* Each thing kept a row, as the remembered ones are: no box around them. */
 .memory-card {
   margin: 0;
-  padding: 2px 12px;
+  padding: 0;
   list-style: none;
-  border: 1px solid var(--chat-hairline, var(--ui-border));
-  border-radius: var(--shape-m);
-  background: var(--chat-card-bg, var(--ui-surface));
 }
 
 .memory-lines li {
@@ -107,69 +105,30 @@
   color: var(--ui-muted);
 }
 
-.memory-library {
-  display: grid;
-  grid-template-columns: repeat(auto-fill, minmax(154px, 1fr));
-  gap: 8px;
-}
-
-.memory-entry {
-  display: flex;
-  flex-direction: column;
-  align-items: flex-start;
-  gap: 4px;
-  padding: 8px 12px;
-  border: 1px solid var(--chat-hairline, var(--ui-border));
-  border-radius: var(--shape-m);
-  background: var(--chat-card-bg, var(--ui-surface));
-  color: var(--ui-muted);
-  font: inherit;
-  font-size: var(--text-caption);
-  line-height: 1.45;
-  text-align: start;
-  cursor: pointer;
-  transition:
-    border-color var(--dur-fast) var(--ease-standard),
-    transform var(--dur-fast) var(--ease-out);
-}
-
-.memory-entry:hover {
-  border-color: var(--ui-muted);
-  transform: translateY(-1px);
-}
-
-.memory-entry b {
-  font-size: var(--text-body);
-  color: var(--ui-text);
-}
-
-.memory-entry-used {
-  border-color: color-mix(in srgb, var(--ui-accent) 40%, transparent);
-  box-shadow: 0 0 0 3px color-mix(in srgb, var(--ui-accent) 10%, transparent);
-}
-
-.memory-aliases {
-  display: flex;
-  flex-wrap: wrap;
-  gap: 4px;
-}
-
-.memory-aliases span {
-  padding: 0 4px;
-  border-radius: var(--shape-pill);
-  corner-shape: round;
-  background: color-mix(in srgb, var(--ui-text) 7%, transparent);
-}
 .memory-used {
-  margin-top: 2px;
   font-weight: 600;
   color: var(--ui-accent-text);
 }
 
+.memory-entry {
+  position: relative;
+}
+
+.memory-entry + .memory-entry {
+  border-top: 1px solid var(--chat-hairline, var(--ui-border));
+}
+
+.memory-entry-name {
+  font-size: var(--text-secondary);
+  color: var(--ui-text);
+}
+
+.memory-desc {
+  font-size: var(--text-caption);
+  color: var(--ui-muted);
+}
+
 .memory-empty {
-  padding: 12px 12px;
-  border: 1px dashed var(--chat-hairline, var(--ui-border));
-  border-radius: var(--shape-m);
   color: var(--ui-muted);
   font-size: var(--text-footnote);
   line-height: 1.55;
@@ -205,20 +164,15 @@
   color: var(--ui-on-primary);
 }
 
-/* A library card is the open button plus a delete button in its corner,
-   shown on hover or focus. */
-.memory-entry {
-  position: relative;
-  padding: 0;
-}
-
+/* An entry: its name, its first line, then whether it was sent; delete at
+   its end on hover or focus. */
 .memory-entry-open {
   display: flex;
   flex-direction: column;
   align-items: flex-start;
-  gap: 4px;
+  gap: 2px;
   width: 100%;
-  padding: 8px 12px;
+  padding: 8px 28px 8px 0;
   border: 0;
   background: none;
   color: inherit;
@@ -229,8 +183,8 @@
 
 .memory-entry-delete {
   position: absolute;
-  top: 4px;
-  right: 4px;
+  top: 8px;
+  right: 0;
   width: 22px;
   height: 22px;
   padding: 0;
@@ -299,12 +253,6 @@
 .memory-search {
   flex: none;
   margin: 0 0 12px;
-}
-
-/* A library entry the AI wrote: who noted it, and when. */
-.memory-by-ai {
-  font-size: var(--text-caption);
-  color: var(--ui-muted);
 }
 
 .memory-remembered-list li {

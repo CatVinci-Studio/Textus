@@ -1201,6 +1201,7 @@ Skills liegen im Ordner skills/ neben dieser Datei, je Skill eine
   menuHelpMarkdown: "Markdown-Anleitung",
   menuHelpAgent: "Anleitung zu KI-Funktionen",
   menuHelpCommunity: "Zur Community",
+  menuHelpSponsor: "Textus unterstützen",
   menuHelpReport: "Problem melden…",
   reportTitle: "Problem melden",
   reportWhat: "Was ist passiert, und was hast du erwartet?",

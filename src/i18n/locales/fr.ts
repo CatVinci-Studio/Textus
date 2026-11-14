@@ -1242,6 +1242,7 @@ utiliser une.
   menuHelpMarkdown: "Guide Markdown",
   menuHelpAgent: "Guide des fonctions IA",
   menuHelpCommunity: "Rejoindre la communauté",
+  menuHelpSponsor: "Soutenir Textus",
   menuHelpReport: "Signaler un problème…",
   reportTitle: "Signaler un problème",
   reportWhat: "Que s'est-il passé, et qu'attendiez-vous ?",

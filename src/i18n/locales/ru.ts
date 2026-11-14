@@ -1240,6 +1240,7 @@ export default {
   menuHelpMarkdown: "Руководство по Markdown",
   menuHelpAgent: "Руководство по ИИ",
   menuHelpCommunity: "Сообщество",
+  menuHelpSponsor: "Поддержать Textus",
   menuHelpReport: "Сообщить о проблеме…",
   reportTitle: "Сообщить о проблеме",
   reportWhat: "Что случилось и чего вы ожидали?",

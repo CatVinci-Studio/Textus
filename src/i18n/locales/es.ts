@@ -1236,6 +1236,7 @@ para usar una.
   menuHelpMarkdown: "Guía de Markdown",
   menuHelpAgent: "Guía de funciones de IA",
   menuHelpCommunity: "Únete a la comunidad",
+  menuHelpSponsor: "Patrocinar Textus",
   menuHelpReport: "Informar de un problema…",
   reportTitle: "Informar de un problema",
   reportWhat: "¿Qué pasó y qué esperabas?",

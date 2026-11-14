@@ -1149,6 +1149,7 @@ ${AI_NAME}への執筆の指示です。すべての文書に適用されます�
   menuHelpMarkdown: "Markdown ガイド",
   menuHelpAgent: "AI 機能ガイド",
   menuHelpCommunity: "コミュニティに参加",
+  menuHelpSponsor: "Textus を支援",
   menuHelpReport: "問題を報告…",
   reportTitle: "問題を報告",
   reportWhat: "何が起きましたか？本来はどうなるはずでしたか？",

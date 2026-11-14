@@ -1087,6 +1087,7 @@ export default {
   menuHelpMarkdown: "Markdown 指南",
   menuHelpAgent: "AI 功能指南",
   menuHelpCommunity: "加入社区",
+  menuHelpSponsor: "赞助 Textus",
   menuHelpReport: "报告问题…",
   reportTitle: "报告问题",
   reportWhat: "发生了什么？你本来期望怎样？",

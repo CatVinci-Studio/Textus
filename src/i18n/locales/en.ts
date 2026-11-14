@@ -1174,6 +1174,7 @@ type /name in a conversation to use one.
   menuHelpMarkdown: "Markdown Guide",
   menuHelpAgent: "AI Features Guide",
   menuHelpCommunity: "Join the Community",
+  menuHelpSponsor: "Sponsor Textus",
   menuHelpReport: "Report a Problem…",
   reportTitle: "Report a Problem",
   reportWhat: "What happened, and what did you expect?",

@@ -1135,6 +1135,7 @@ ${AI_NAME}에게 주는 글쓰기 지침으로, 모든 문서에 적용됩니다
   menuHelpMarkdown: "Markdown 가이드",
   menuHelpAgent: "AI 기능 가이드",
   menuHelpCommunity: "커뮤니티 참여",
+  menuHelpSponsor: "Textus 후원하기",
   menuHelpReport: "문제 신고…",
   reportTitle: "문제 신고",
   reportWhat: "무슨 일이 있었나요? 원래 어떻게 되어야 했나요?",

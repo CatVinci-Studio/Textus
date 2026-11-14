@@ -462,6 +462,11 @@
           "en": "Join the Community"
         },
         {
+          "id": "help-sponsor",
+          "label": "menuHelpSponsor",
+          "en": "Sponsor Textus"
+        },
+        {
           "id": "help-report",
           "label": "menuHelpReport",
           "en": "Report a Problem…"

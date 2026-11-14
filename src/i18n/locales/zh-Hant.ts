@@ -1089,6 +1089,7 @@ export default {
   menuHelpMarkdown: "Markdown 指南",
   menuHelpAgent: "AI 功能指南",
   menuHelpCommunity: "加入社群",
+  menuHelpSponsor: "贊助 Textus",
   menuHelpReport: "回報問題…",
   reportTitle: "回報問題",
   reportWhat: "發生了什麼？你原本期望怎樣？",

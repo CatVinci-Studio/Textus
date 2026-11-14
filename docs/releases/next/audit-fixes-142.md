@@ -11,3 +11,4 @@
 - Inline code (Ctrl+`) works like bold: a selection holding bold or other code becomes one code, and a code it reaches into is taken in whole.
 - The tour dims the window again after a step that left it undimmed.
 - A window too narrow for a split, with the sidebar open, now folds the split into one island and puts it back when there is room.
+- Help › Sponsor Textus, and a small link under the version in Settings › About, open the sponsor page (not on iOS).

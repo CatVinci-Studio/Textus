@@ -84,6 +84,8 @@ interface MenuBridgeHandlers extends AppActionHandlers {
   openCommunity: () => void;
   /** Help > Online Tutorials: the website's page in the UI's language. */
   openTutorials: () => void;
+  /** Help > Sponsor Textus: the website's page in the UI's language. */
+  openSponsor: () => void;
   /** The phone menu's Documents. */
   onOpenDocuments: () => void;
   /** The phone menu's Share (iOS share sheet). */
@@ -250,6 +252,7 @@ export function useMenuBridge(handlers: MenuBridgeHandlers): void {
       }),
       listenToThisWindow("menu-help-community", () => h().openCommunity()),
       listenToThisWindow("menu-help-tutorials", () => h().openTutorials()),
+      listenToThisWindow("menu-help-sponsor", () => h().openSponsor()),
       listenToThisWindow<string>("menu-open-help", (event) => {
         if (event.payload === "welcome") h().startWelcomeTutorial();
         else if (event.payload === "markdown" || event.payload === "agent")

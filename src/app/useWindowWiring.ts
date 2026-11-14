@@ -208,6 +208,7 @@ export function useWindowWiring({
     startWelcomeTutorial: docs.startWelcomeTutorial,
     openCommunity: () => void links.openCommunityPage(settings.language),
     openTutorials: () => void links.openTutorialsPage(settings.language),
+    openSponsor: () => void links.openSponsorPage(settings.language),
     onOpenDocuments: () => actions.setDocumentsOpen(true),
     shareActiveTab: actions.shareActiveTab,
   });

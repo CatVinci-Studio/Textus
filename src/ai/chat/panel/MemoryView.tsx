@@ -221,46 +221,47 @@ export function MemorySections({
                 <p>{t.memoryNoMatch}</p>
               </div>
             ) : info.library.length > 0 ? (
-              <div className="memory-library">
+              <div className="memory-library memory-card">
                 {library.map((entry) => {
                   const sent = used.has(entry.file);
                   return (
                     <div
                       key={entry.file}
-                      className={`memory-entry tx-reveal-host${sent ? " memory-entry-used" : ""}`}
+                      className="memory-entry tx-reveal-host"
                       data-memory-id={libraryEntryId(entry)}
                     >
                       <button
                         type="button"
                         className="memory-entry-open"
+                        title={entry.aliases.join(" · ") || undefined}
                         onClick={() => onOpenEntry(entry)}
                       >
-                        <b>{entry.name}</b>
-                        {entry.aliases.length > 0 && (
-                          <span className="memory-aliases">
-                            {entry.aliases.slice(0, 3).map((a) => (
-                              <span key={a}>{a}</span>
-                            ))}
-                          </span>
-                        )}
+                        <span className="memory-entry-name">{entry.name}</span>
                         <span className="tx-clamp memory-desc">
                           {firstLine(entry.body)}
                         </span>
-                        {entry.remembered && (
-                          <span className="tx-clamp memory-desc memory-by-ai">
-                            {[
-                              t.memoryWrittenByAi,
-                              rememberedDate(entry.remembered.updated, lang),
-                            ]
-                              .filter(Boolean)
-                              .join(" · ")}
-                          </span>
-                        )}
-                        {sent && (
-                          <span className="memory-used">
-                            {libraryUse?.lastRequest
-                              ? t.memoryUsedInConversation
-                              : t.memoryInThisDocument}
+                        {(sent || entry.remembered) && (
+                          <span className="memory-remembered-meta">
+                            {sent && (
+                              <span className="memory-used">
+                                {libraryUse?.lastRequest
+                                  ? t.memoryUsedInConversation
+                                  : t.memoryInThisDocument}
+                              </span>
+                            )}
+                            {entry.remembered && (
+                              <span>
+                                {[
+                                  t.memoryWrittenByAi,
+                                  rememberedDate(
+                                    entry.remembered.updated,
+                                    lang,
+                                  ),
+                                ]
+                                  .filter(Boolean)
+                                  .join(" · ")}
+                              </span>
+                            )}
                           </span>
                         )}
                       </button>

@@ -81,6 +81,10 @@ export const canTrashFiles = isDesktopApp;
 /** Settings' "Default Markdown editor". iOS has no default app to set. */
 export const canSetDefaultEditor = isDesktopApp;
 
+/** The sponsor link: not on iOS, whose store rules keep payment outside
+ *  the app from being linked to. */
+export const canLinkSponsor = !isIOSApp;
+
 /** Textus AI at all: not on an iOS App Store download in mainland China,
  *  where it would need its own licence. Off, the master switch stays off
  *  (settings-normalise.ts) and the AI lessons, Settings page and chat

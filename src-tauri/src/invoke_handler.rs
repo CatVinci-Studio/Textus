@@ -340,6 +340,7 @@ pub(crate) fn handler() -> impl Fn(tauri::ipc::Invoke<tauri::Wry>) -> bool + Sen
         #[cfg(desktop)]
         export_pdf_native,
         commands::links::open_community_page,
+        commands::links::open_sponsor_page,
         commands::links::open_about_link,
         commands::links::open_web_link,
         commands::links::open_tutorials_page,

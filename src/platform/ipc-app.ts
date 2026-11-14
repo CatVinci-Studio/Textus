@@ -224,6 +224,8 @@ export const links = {
   /** The website's community page, in the UI's language. */
   openCommunityPage: (language: Lang) =>
     command("open_community_page", language),
+  /** The website's sponsor page, in the UI's language. */
+  openSponsorPage: (language: Lang) => command("open_sponsor_page", language),
   /** The website's video tutorials in the UI's language, at one lesson's
    *  clip or from the top. */
   openTutorialsPage: (language: Lang, clip?: string) =>

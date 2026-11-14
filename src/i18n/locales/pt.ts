@@ -1220,6 +1220,7 @@ Habilidades ficam na pasta skills/ ao lado deste arquivo, um arquivo
   menuHelpMarkdown: "Guia de Markdown",
   menuHelpAgent: "Guia dos Recursos de IA",
   menuHelpCommunity: "Participe da comunidade",
+  menuHelpSponsor: "Patrocinar o Textus",
   menuHelpReport: "Relatar um problema…",
   reportTitle: "Relatar um problema",
   reportWhat: "O que aconteceu e o que você esperava?",

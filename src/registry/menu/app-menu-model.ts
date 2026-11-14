@@ -73,6 +73,7 @@ export type NativeMenuId =
   | `toggle-mark:${string}`
   | `help-doc:${string}`
   | "help-community"
+  | "help-sponsor"
   | "help-report"
   | "help-tutorials"
   | "manage-plugins"
