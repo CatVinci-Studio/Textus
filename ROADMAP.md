@@ -1,159 +1,59 @@
 # Roadmap
 
-[简体中文](ROADMAP.zh.md)
+[简体中文](ROADMAP.zh.md) · Updated with every minor release. Last: 1.4.1.
 
-This is what we're working on and what we'd like to do next. There are no
-dates here on purpose: we're a small team, and we'd rather ship something when
-it's good than when a calendar says so.
+No dates on purpose: we're a small team and ship when it's good. What's
+already out is in the [release notes](docs/releases/).
 
-Each item has an issue tagged
-[`roadmap`](https://github.com/CatVinci-Studio/Textus/labels/roadmap). If one
-of them matters to you, say so there - it really does change what we pick up
-first.
+## Now (1.4.x)
 
-## What we're working on now
+- **Find and replace** that holds up in every case.
+  [#668](https://github.com/CatVinci-Studio/Textus/issues/668)
+- **Wide tables** you can resize.
+  [#645](https://github.com/CatVinci-Studio/Textus/issues/645)
+- **Linux**: lower memory use, and a window with a shadow and a roomier
+  bar. [#644](https://github.com/CatVinci-Studio/Textus/issues/644),
+  [#664](https://github.com/CatVinci-Studio/Textus/issues/664)
+- **iOS public beta** on TestFlight, and Android as an APK with each release.
+  [#87](https://github.com/CatVinci-Studio/Textus/issues/87)
 
-**iOS public beta.** Textus for iPhone and iPad opens to everyone as a public
-beta on TestFlight; Android ships as an APK with each release.
-[#87](https://github.com/CatVinci-Studio/Textus/issues/87)
+## Next (1.5)
 
-## In the next release (1.2.0)
+- **iPad with the desktop interface**, and the iPhone adapted from it.
+- **Lighter windows**: one editor for each part of the window, documents
+  kept as data, so many open tabs cost little memory.
+- **Voice input.** [#195](https://github.com/CatVinci-Studio/Textus/issues/195)
 
-Textus AI that can do more, an editor that feels better, and a lot of fixes.
-It is in release candidates now, on the beta channel - the last version to use them: from 1.3, new versions are tried out as betas.
+## Later
 
-- **Open a whole folder** in the sidebar and search its file names with
-  `Ctrl/⌘ + Shift + O`.
-  [#152](https://github.com/CatVinci-Studio/Textus/issues/152),
-  [#79](https://github.com/CatVinci-Studio/Textus/issues/79)
-- **Saving changes only what you edited.** Every paragraph you didn't touch
-  is written back exactly as it was, so a file you also keep in Git shows a
-  small diff. Wikilinks (`[[Note]]`, `[[Note#Heading]]`) open the note, and
-  they and `#tags` are kept as written.
-  [#234](https://github.com/CatVinci-Studio/Textus/pull/234)
-- **Revise, change by change, as it streams in.** Each changed sentence
-  appears in its place, with its card in the margin and the count in the
-  review bar growing as Textus AI writes.
-  [#243](https://github.com/CatVinci-Studio/Textus/pull/243)
-- **Diagrams Textus AI draws build up as it writes them**, and show before
-  you accept them. [#254](https://github.com/CatVinci-Studio/Textus/pull/254)
-- **Textus AI reads more of your project folder**: long files a part at a
-  time, Word, PDF, slide and spreadsheet files, and images with a model that
-  can see; it finds files by name and skips what `.gitignore` leaves out.
-- **Web search for Textus AI** with every AI provider, with numbered sources
-  you can check, as footnotes if you like.
-- **A deep-thinking button** beside the web-search one.
-- **Images made by Textus AI**, as suggestions you accept, with the major
-  Chinese and international image providers.
-  [#194](https://github.com/CatVinci-Studio/Textus/issues/194)
-- **Textus AI learns from the revisions you reject**, and offers to remember
-  what you keep turning down.
-- **Doubao (Volcengine)** as an AI provider.
-- **Long documents** that open, scroll and take typing smoothly.
-- **Smoother motion** throughout: animations, scrolling and panels that keep
-  up on every platform.
-- **Accessibility**: screen readers, full keyboard use and high contrast.
-- **Textus in the background**, if you turn it on, with an icon in the
-  notification area, the system tray or the menu bar.
-  [#244](https://github.com/CatVinci-Studio/Textus/pull/244)
-- **Links to headings in other files** open at that heading
-  ([#233](https://github.com/CatVinci-Studio/Textus/pull/233)), and
-  documents reopen where you left off
-  ([#218](https://github.com/CatVinci-Studio/Textus/issues/218)).
-- **More shortcuts**, an **interface text size**, a **Copy** button and line
-  numbers for code blocks, **colour swatches** beside colour codes, and a
-  choice of **diagram engine** (Mermaid, or the faster Pele).
-  [#214](https://github.com/CatVinci-Studio/Textus/issues/214),
-  [#150](https://github.com/CatVinci-Studio/Textus/issues/150),
-  [#146](https://github.com/CatVinci-Studio/Textus/issues/146),
-  [#242](https://github.com/CatVinci-Studio/Textus/pull/242)
-- **The sidebar's file tree as a small file manager**: new documents and
-  folders, moving by dragging, sorting by name or date - and a button for
-  the sidebar at the start of the window bar.
-- **Pictures with a ChatGPT plan**, from the plan's own image allowance
-  (experimental), the image service following your chat provider by
-  default; **writing and pictures together**, each picture in a moving frame
-  until it is made; and **changing a picture already in the document**.
-- **Imported themes reach the whole window**: every colour comes from a
-  variable a Typora-style theme can set.
+Everything else is decided by what people ask for: give an issue a 👍 to
+move it up, or add a wish to the
+[Wishlist](https://github.com/CatVinci-Studio/Textus/issues/196).
 
-New features come in minor releases like this one; patch releases (1.2.x)
-only fix things. Once 1.2.0 is out, its fixes ship as 1.2.x while 1.3.0 is
-made beside it - [docs/dev/releasing.md](docs/dev/releasing.md#branches)
-says how the two lines work.
+## Not in the core: plugins
 
-## Recently done
+The app stays lean. Outside services and less common syntax are plugins,
+installed from **Settings › Plugins** and made in
+[textus-plugins](https://github.com/CatVinci-Studio/textus-plugins).
 
-- **Textus 1.1.0**: three ways to work with Textus AI - Write, Review and
-  Revise ([#179](https://github.com/CatVinci-Studio/Textus/pull/179)) - and
-  a Textus AI that remembers what you ask for
-  ([#180](https://github.com/CatVinci-Studio/Textus/pull/180)), themes made
-  in the chat, a new first-run tour
-  ([#90](https://github.com/CatVinci-Studio/Textus/issues/90)), native ARM64
-  builds for Windows and Linux, Textus as your default Markdown editor
-  ([#183](https://github.com/CatVinci-Studio/Textus/issues/183)), more HTML
-  in your documents, a beta channel, autosave
-  ([#133](https://github.com/CatVinci-Studio/Textus/issues/133)), the theme
-  gallery inside the app
-  ([#89](https://github.com/CatVinci-Studio/Textus/issues/89)), image
-  embeds written as `![[image.png]]` ([#135](https://github.com/CatVinci-Studio/Textus/issues/135))
-  and your choice of image folder or image host
-  ([#147](https://github.com/CatVinci-Studio/Textus/issues/147)).
-- **Textus 1.1.1**: calmer revision highlights, a card in place of an image
-  that can't be loaded, **Show in folder** for images, image widths other
-  apps understand, and fixes for typed links and images
-  ([#189](https://github.com/CatVinci-Studio/Textus/issues/189)), clicks in
-  Typewriter Mode
-  ([#217](https://github.com/CatVinci-Studio/Textus/issues/217)) and Open
-  Recent ([#201](https://github.com/CatVinci-Studio/Textus/issues/201)).
-- **The Playground** is live at
-  [textus.md/playground](https://textus.md/playground/):
-  try the editor in your browser before installing anything.
-  [#88](https://github.com/CatVinci-Studio/Textus/issues/88)
-- **Theme sharing** is open: post your theme as a comment on one pinned issue;
-  once one of us has looked it over, it shows up on
-  [textus.md/themes](https://textus.md/themes/) for
-  everyone, free. [#89](https://github.com/CatVinci-Studio/Textus/issues/89)
+Already plugins:
 
-## Next: Textus 1.3.0, plugins
+- outside services: Zotero, Openverse images, WakaTime, DeepSeek, Claude
+  Code, Codex and OpenCode as agents;
+- sync: Cloud Sync (WebDAV, S3, Nutstore);
+- syntax and diagrams: LaTeX completion, ABC music, PlantUML, WaveDrom,
+  Markmap, ECharts and Chart.js, function plots;
+- ways of working: kanban, database, canvas, daily notes, tasks, slides,
+  Vim and Emacs keys, and more.
 
-- **Plugins**, and Textus AI can write a plugin for you. A plugin can add
-  commands and shortcuts, items in the right-click menu, sidebar tabs and
-  Settings pages, and open views of its own - a web page, a PDF, a Word or
-  other document. The API's first draft is
-  [docs/dev/plugin-api.md](docs/dev/plugin-api.md). What every plugin has to
-  keep to:
-  - It runs in a sandbox and gets only the permissions you grant when you
-    install it - reading or writing a folder, the network - and asks again
-    if an update wants more.
-  - Nothing runs unless you install it, and one switch turns every plugin
-    off, leaving Textus as if none were there.
-  - An installed plugin loads only when you first use it, so however many
-    you have, Textus starts as fast as it does with none.
-  - A plugin that fails or slows Textus down is turned off by itself and
-    tells you why.
-  - Textus AI uses a plugin only if you allow it, and only to read or to
-    propose: a change to your document is a suggestion you accept, as now.
-  - Plugins in the gallery are looked over by one of us before they appear,
-    like themes, and one that turns out to be harmful can be taken down.
-- **One market for themes, plugins, skills and MCP servers**, in a
-  repository of its own, with written rules for what is accepted, how to
-  send something in and how it is reviewed. It takes over the theme
-  gallery and the pinned issue themes are shared in now.
-- **A first batch of official plugins**, each made with as much care for how
-  it looks as Textus itself: quick notes from anywhere
-  ([#193](https://github.com/CatVinci-Studio/Textus/issues/193)), version
-  history for your documents, SVG and PDF viewers, an image viewer, a
-  calendar and daily notes, tasks, a kanban board, and Zotero for citations.
-- **A second version of the plugin API**, shaped by what the first plugins
-  need.
+Not yet, and welcome as plugins: MkDocs / Zensical admonitions
+([#220](https://github.com/CatVinci-Studio/Textus/issues/220)), Cisco IOS
+highlighting ([#639](https://github.com/CatVinci-Studio/Textus/issues/639)).
 
 ## Want to help?
 
-Issues tagged
-[`good first issue`](https://github.com/CatVinci-Studio/Textus/labels/good%20first%20issue)
-are a good way in. If you have an idea that isn't here, add it to the
-[wishlist](https://github.com/CatVinci-Studio/Textus/issues/196), or give a 👍
-to one that's already there - we read all of them, and the most wanted ones
-come here. [CONTRIBUTING.md](CONTRIBUTING.md) explains how to build
-Textus and send a pull request.
+Pick an unclaimed
+[good first issue](https://github.com/CatVinci-Studio/Textus/issues?q=is%3Aopen+label%3A%22good+first+issue%22+no%3Aassignee),
+[help wanted](https://github.com/CatVinci-Studio/Textus/issues?q=is%3Aopen+label%3A%22help+wanted%22+no%3Aassignee)
+or [plugin idea](https://github.com/CatVinci-Studio/textus-plugins/issues?q=is%3Aopen+label%3A%22plugin+idea%22),
+and read [CONTRIBUTING.md](CONTRIBUTING.md).

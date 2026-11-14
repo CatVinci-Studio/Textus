@@ -57,7 +57,7 @@ for (const path of sources) {
   const cap = LINES_NOW[path] ?? MAX_LINES;
   if (lines > cap)
     problems.push(
-      `${path}: ${lines} lines, over ${cap} - split it by concern (CONTRIBUTING.md, "Code shape")`,
+      `${path}: ${lines} lines, over ${cap} - split it by concern (docs/dev/code-style.md, "Code shape")`,
     );
 }
 

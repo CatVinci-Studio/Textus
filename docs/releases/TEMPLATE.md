@@ -24,7 +24,7 @@ Textus X.Y.Z <one sentence: what this release is about, e.g. "improves PDF expor
 Installers for macOS (Apple silicon and Intel), Windows and Linux (x64 and ARM64) are below; the app updates itself.
 
 <!--
-How to write release notes (docs/releases/X.Y.Z.md) - see CONTRIBUTING.md › Writing:
+How to write release notes (docs/releases/X.Y.Z.md) - see docs/dev/code-style.md › Writing:
 
 - English, from 1.0.4 on. A pull request adds its bullets as a fragment in
   docs/releases/next/ (see its README); `node scripts/release-notes.mjs build`

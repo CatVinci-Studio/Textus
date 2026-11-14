@@ -8,7 +8,7 @@ rebase. Name the file after your branch or change, such as
 
 A fragment has one or more of the template's section headings - `### New`,
 `### Improved`, `### Fixed`, `### Platform notes` - each with its bullets,
-written as [TEMPLATE.md](../TEMPLATE.md) and CONTRIBUTING.md › Writing say:
+written as [TEMPLATE.md](../TEMPLATE.md) and [code-style.md](../../dev/code-style.md#writing) say:
 
 ```md
 ### Fixed
