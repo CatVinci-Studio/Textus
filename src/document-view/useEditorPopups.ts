@@ -1,4 +1,5 @@
 import { type KeyboardEvent, type MouseEvent, useRef, useState } from "react";
+import { heldByFinger } from "../utils/gesture";
 import { editorViewCtx } from "@milkdown/kit/core";
 import { contextMenuTarget } from "../editor/editor-menu";
 import { usePopupDismiss } from "./usePopupDismiss";
@@ -146,7 +147,8 @@ export function useEditorPopups({
   }
 
   function onContextMenu(e: MouseEvent) {
-    if (!ownsMenu(e.target)) return;
+    // A finger held on a word selects it, with the system's handles.
+    if (!ownsMenu(e.target) || heldByFinger(e.nativeEvent)) return;
     e.preventDefault();
     // A key that still arrives as a contextmenu event (no mouse button).
     if (e.button !== 2) {

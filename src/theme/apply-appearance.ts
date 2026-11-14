@@ -88,6 +88,12 @@ function systemPrefersDark(): boolean {
   return window.matchMedia?.("(prefers-color-scheme: dark)").matches ?? false;
 }
 
+function androidBars() {
+  return (
+    window as { TextusInsets?: { setAppearance?(mode: ThemeMode): void } }
+  ).TextusInsets;
+}
+
 export function isEffectiveDark(themeMode: ThemeMode): boolean {
   if (themeMode === "dark") return true;
   if (themeMode === "light") return false;
@@ -110,6 +116,8 @@ function useApplyAppearance(
     } else {
       root.setAttribute("data-theme", settings.theme);
     }
+    // Android's bar icons go light on a dark page (MainActivity).
+    androidBars()?.setAppearance?.(settings.theme);
   }, [settings.theme]);
 
   // The layout on <html> too: its lengths (layout-tokens.css) reach what

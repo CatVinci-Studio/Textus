@@ -16,6 +16,9 @@ export function installMobileViewport(): void {
   if (isIOSApp) watchWebKitInsets();
   safeArea();
   window.addEventListener("resize", safeArea);
+  // Android's app says when its bars change: a half turn or a fold may not
+  // resize the page, or resize it before the bars are known.
+  window.addEventListener("textus-insets", safeArea);
 }
 
 interface Insets {

@@ -1,12 +1,17 @@
 import { isMobileApp } from "../platform/capabilities";
 
 /**
- * Whether the keyboard is up, read off the window's height: the web view
- * shrinks by the keyboard's height. A rotation (a new width) starts over.
- * Marked on the root (`keyboard-up`) for the page's foot to sit on it.
+ * Whether the keyboard is up. The app says so where it can (`textus-keyboard`,
+ * how many px the keyboard covers): a turn with the keyboard up leaves no
+ * full height to compare with. Else it is read off the window's height: the
+ * web view shrinks by the keyboard's height, and a rotation (a new width)
+ * starts over. Marked on the root (`keyboard-up`) for the page's foot to sit
+ * on it.
  */
 let tallest = 0;
 let width = 0;
+/** What the app last said the keyboard covers; null until it says. */
+let covered: number | null = null;
 
 function track() {
   if (window.innerWidth !== width) {
@@ -21,11 +26,18 @@ function track() {
  *  keyboard's shortcut strip on an iPad). */
 const KEYBOARD_MIN = 120;
 
-const up = () => window.innerHeight < tallest - KEYBOARD_MIN;
+const up = () =>
+  covered === null
+    ? window.innerHeight < tallest - KEYBOARD_MIN
+    : covered >= KEYBOARD_MIN;
 
 if (typeof window !== "undefined") {
   track();
   window.addEventListener("resize", track);
+  window.addEventListener("textus-keyboard", (e) => {
+    covered = Number((e as CustomEvent<number>).detail) || 0;
+    track();
+  });
 }
 
 export function keyboardUp(): boolean {

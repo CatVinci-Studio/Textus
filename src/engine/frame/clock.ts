@@ -61,6 +61,13 @@ class FrameClock {
 
   attach(key: string, el: HTMLElement | null): void {
     if (!el) {
+      // Let go (a sidebar turned a phone's): no carry or clip left on it
+      // that nothing will write again.
+      const had = this.elements.get(key);
+      if (had) {
+        had.style.transform = "";
+        had.style.clipPath = "";
+      }
       this.elements.delete(key);
       return;
     }
