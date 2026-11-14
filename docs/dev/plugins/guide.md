@@ -475,8 +475,9 @@ than ten errors a minute, is turned off and the user is told.
 ## On iPhone and iPad
 
 Plugins run on iOS as on the desktop, from the same catalog, with the same
-API; `textus.env.platform` is `"ios"`. What differs is room and what the
-system allows:
+API; `textus.env.platform` is `"ios"`. Android runs the plugins made for
+iOS (`"platforms"` with `"ios"`), with `textus.env.platform` `"android"`.
+What differs is room and what the system allows:
 
 - A phone is a narrow window: a sidebar view is a tab in a drawer about
   320px wide, and there is no hover or right-click. Keep a view usable by

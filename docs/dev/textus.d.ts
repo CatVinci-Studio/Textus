@@ -169,7 +169,7 @@ declare global {
        *  "1.4": 1.3.10, "1.3": 1.3.10-rc.1, "1.2": 1.3.9, "1.1": 1.3.0-beta.8). Prefer engines.textus; compare
        *  it as numbers, not as text ("1.10" > "1.9"). */
       readonly apiVersion: string;
-      readonly platform: "macos" | "windows" | "linux" | "ios";
+      readonly platform: "macos" | "windows" | "linux" | "ios" | "android";
       readonly theme: "light" | "dark";
       onDidChangeTheme: Event<"light" | "dark">;
       onDidChangeLanguage: Event<string>;

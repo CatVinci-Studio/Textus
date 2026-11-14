@@ -1,6 +1,6 @@
 import type { ComponentType } from "react";
 import type { Strings } from "../i18n/strings";
-import { hasTextusAi, isIOSApp } from "../platform/capabilities";
+import { hasTextusAi, isIOSApp, isMobileApp } from "../platform/capabilities";
 import { lucide } from "../engine/controls/icons";
 import {
   Info,
@@ -93,7 +93,7 @@ const BUILT_IN: SettingsPageDef[] = [
   {
     id: "mcp",
     group: "ai",
-    available: () => hasTextusAi && !isIOSApp,
+    available: () => hasTextusAi && !isMobileApp,
     label: (t) => t.navExternalTools,
   },
   // The iPhone's and iPad's: there plugins, themes and skills are managed
@@ -108,7 +108,7 @@ const BUILT_IN: SettingsPageDef[] = [
     label: (t) => t.navShortcuts,
     Icon: lucide(Keyboard, NAV_ICON),
     // A phone has no keyboard to bind shortcuts on.
-    available: () => !isIOSApp,
+    available: () => !isMobileApp,
   },
   {
     id: "privacy",
