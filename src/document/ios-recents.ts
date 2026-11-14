@@ -1,4 +1,4 @@
-import { isIOSApp } from "../platform/capabilities";
+import { isMobileApp } from "../platform/capabilities";
 import { deleteSandboxEntry, renameSandboxEntry } from "../platform/ios-files";
 // Entries in Documents are stored relative to it: the app's container moves
 // on every reinstall and App Store update.
@@ -43,7 +43,8 @@ function updateRecents(
 }
 
 /** The documents opened most recently, newest first; the first reopens at
- *  launch, since iOS ends a backgrounded app whenever it likes. */
+ *  launch, since a phone ends a backgrounded app whenever it likes
+ *  (Android's are content:// URLs, kept as they are). */
 export async function recentIOSDocuments(): Promise<string[]> {
   // After any change already queued, so it lists what that change made.
   await recentsQueue;
@@ -60,7 +61,7 @@ export async function lastIOSDocument(): Promise<string | null> {
 export async function rememberIOSDocument(path: string | null): Promise<void> {
   // Only ever added to, never cleared: the blank tab every launch starts
   // with would otherwise wipe it before startup gets to read it.
-  if (!isIOSApp || !path) return;
+  if (!isMobileApp || !path) return;
   return updateRecents(async (list) => {
     const stored = storedDocumentPath(path, await documentsDir());
     return [stored, ...list.filter((p) => p !== stored)];

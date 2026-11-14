@@ -1,6 +1,6 @@
 /* A phone's bottom card (in a Sheet): content and two big buttons. */
 .bottom-card {
-  padding: 0 16px calc(16px + env(safe-area-inset-bottom, 0px));
+  padding: 0 16px calc(16px + var(--safe-bottom));
   border-radius: var(--shape-l) var(--shape-l) 0 0;
   background: var(--ui-surface);
   color: var(--ui-text);

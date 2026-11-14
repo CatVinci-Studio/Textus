@@ -9,7 +9,7 @@
 - **查找替换**在各种情况下都可靠。[#668](https://github.com/CatVinci-Studio/Textus/issues/668)
 - **大表格**可以调整宽度。[#645](https://github.com/CatVinci-Studio/Textus/issues/645)
 - **Linux**：降低内存占用，窗口加阴影、标题栏更宽松。[#644](https://github.com/CatVinci-Studio/Textus/issues/644)、[#664](https://github.com/CatVinci-Studio/Textus/issues/664)
-- **iPhone 和 iPad 上架 App Store。**[#87](https://github.com/CatVinci-Studio/Textus/issues/87)
+- **iOS 公测**通过 TestFlight 开放，Android 版随每个版本提供 APK。[#87](https://github.com/CatVinci-Studio/Textus/issues/87)
 
 ## 下一个（1.5）
 

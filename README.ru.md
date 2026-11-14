@@ -63,8 +63,9 @@
 | macOS · Intel         | [Скачать .dmg](https://github.com/CatVinci-Studio/Textus/releases/latest)                                 | Homebrew: `brew install --cask textus`                                                |
 | Windows · x64         | [Скачать .exe](https://github.com/CatVinci-Studio/Textus/releases/latest)                                 | —                                                                                     |
 | Linux · x64           | [Скачать .AppImage](https://github.com/CatVinci-Studio/Textus/releases/latest) · Также .deb · .rpm        | Arch Linux: [репозиторий `[catvinci]`](https://github.com/CatVinci-Studio/arch-repo) |
+| Android · arm64       | [Скачать .apk](https://github.com/CatVinci-Studio/Textus/releases/latest) | — |
 
-> iPhone и iPad: скоро в App Store.
+> iOS (iPhone и iPad): скоро открытая бета в TestFlight.
 
 Бета-версии: в **Настройки › О программе** переключите **Канал обновлений** на **Бета**.
 
@@ -134,7 +135,7 @@ Textus бесплатен и открыт. [Поддержите нас](https:/
 <details>
 <summary><strong>На каких платформах он работает?</strong></summary>
 
-macOS (Apple Silicon и Intel), Windows и Linux, а также iPhone и iPad через App Store.
+macOS (Apple Silicon и Intel), Windows и Linux, а также Android и iOS (открытая бета).
 
 </details>
 

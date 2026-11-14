@@ -1,0 +1,18 @@
+<?xml version="1.0" encoding="utf-8"?>
+<manifest xmlns:android="http://schemas.android.com/apk/res/android"
+  xmlns:tools="http://schemas.android.com/tools">
+  <!-- A picked folder opens by its plain path: plugins and the backend
+       read it as on the desktop. Android 11+ asks for all files, older
+       versions for storage. -->
+  <uses-permission
+    android:name="android.permission.MANAGE_EXTERNAL_STORAGE"
+    tools:ignore="ScopedStorage" />
+  <uses-permission
+    android:name="android.permission.WRITE_EXTERNAL_STORAGE"
+    android:maxSdkVersion="29" />
+  <uses-permission
+    android:name="android.permission.READ_EXTERNAL_STORAGE"
+    android:maxSdkVersion="29" />
+  <!-- Android 10 grants plain paths only under the legacy storage model. -->
+  <application android:requestLegacyExternalStorage="true" />
+</manifest>

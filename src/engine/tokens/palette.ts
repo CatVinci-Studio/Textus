@@ -1,6 +1,6 @@
 import { DOC_DEFAULTS } from "./doc-defaults";
 /** Derive application colors from an imported document theme. */
-type RGB = readonly [number, number, number];
+export type RGB = readonly [number, number, number];
 const WHITE: RGB = [255, 255, 255];
 const INK: RGB = [24, 28, 36];
 const rgb = (c: RGB) => `rgb(${c.map(Math.round).join(", ")})`;
@@ -20,7 +20,7 @@ const luminance = (c: RGB) =>
 export const contrast = (a: RGB, b: RGB) =>
   (Math.max(luminance(a), luminance(b)) + 0.05) /
   (Math.min(luminance(a), luminance(b)) + 0.05);
-function readable(color: RGB, background: RGB, ratio = 4.5): RGB {
+export function readable(color: RGB, background: RGB, ratio = 4.5): RGB {
   const target =
     contrast(WHITE, background) > contrast(INK, background) ? WHITE : INK;
   for (let i = 0; i <= 100; i++) {

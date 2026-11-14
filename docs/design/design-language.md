@@ -8,7 +8,7 @@ The rules every surface of Textus is built to: the app, its official plugins, th
 - **SHOULD**, **SHOULD NOT**: the default. Departing from it needs a reason written in the pull request.
 - **MAY**: allowed.
 - Each section is marked **In force** (the code does this today; tests check what can be checked) or **Planned** (agreed, not built yet; don't depend on it until it is marked In force). A planned item names the work that makes it real.
-- Values are given in CSS pixels at 100% Interface text size on the desktop. The phone's values follow in brackets where they differ.
+- Values are given in CSS pixels at the Medium Interface size on the desktop. The phone's values follow in brackets where they differ.
 - Code references are paths in this repository.
 
 ## 1. Principles
@@ -121,21 +121,21 @@ Rules:
 
 ### 4.2 Interface type roles
 
-Text names a role, never a size. Sizes are set in `src/engine/tokens/design-system.css` and follow **Interface text size** (`--ui-text-scale`, 90–125%).
+Text names a role, never a size. Sizes are set per **Interface size** preset (Small, Medium, Large) in `src/engine/tokens/ui-sizes.css`; the table gives Medium. Footnote, secondary, control and body-large follow caption and body on the desktop (`ds-base.css`).
 
 | Role (`--text-…`) | Desktop | Phone | Line height | Weight  | Used for                                                                          |
 | ----------------- | ------- | ----- | ----------- | ------- | --------------------------------------------------------------------------------- |
 | `caption`         | 12      | 12    | 1.2         | 400/500 | Badges, counts, keycaps                                                           |
 | `footnote`        | 12      | 13    | 1.4         | 400     | Hints, group titles, empty states                                                 |
-| `list`            | 13      | 17    | 1.35        | 400     | A long list read at a glance (the file tree)                                      |
-| `secondary`       | 14      | 15    | 1.4         | 400     | Text beside the main text in a dense surface (a card, a list entry's second line) |
-| `control`         | 14      | 15    | 1.2         | 400/500 | A control's label                                                                 |
-| `body`            | 14      | 17    | 1.5         | 400     | The main text of a panel, menu, list or field                                     |
-| `body-large`      | 14      | 17    | 1.5         | 400     | Main text where there is room: Settings' rows, dialogs                            |
-| `title`           | 18      | 17    | 1.3         | 600     | A sheet's, panel's or navigation bar's title                                      |
-| `large-title`     | 24      | 34    | 1.2         | 600     | A page's own title                                                                |
+| `list`            | 14      | 17    | 1.35        | 400     | A long list read at a glance (the file tree)                                      |
+| `secondary`       | 16      | 15    | 1.4         | 400     | Text beside the main text in a dense surface (a card, a list entry's second line) |
+| `control`         | 16      | 15    | 1.2         | 400/500 | A control's label                                                                 |
+| `body`            | 16      | 17    | 1.5         | 400     | The main text of a panel, menu, list or field                                     |
+| `body-large`      | 16      | 17    | 1.5         | 400     | Main text where there is room: Settings' rows, dialogs                            |
+| `title`           | 20      | 17    | 1.3         | 600     | A sheet's, panel's or navigation bar's title                                      |
+| `large-title`     | 26      | 34    | 1.2         | 600     | A page's own title                                                                |
 
-- `--text-mark` (9) is not a text size: the digit in a count badge or a numbered mark.
+- `--text-mark` (10) is not a text size: the digit in a count badge or a numbered mark.
 - Weights are 400, 500 and 600 only.
 - The line heights and weights in the table are the rule for new work; they become tokens later (Planned). Today the base sets 1.5 for text and 1.2 for controls.
 - A size written in px instead of a role MUST be `calc(Npx * var(--ui-text-scale, 1))`, and a fixed box around text scales with it.
@@ -167,11 +167,11 @@ Every radius, padding, margin, gap and component size MUST be a multiple of 4 px
 
 ### 5.3 Control heights
 
-Two heights: `--control-height` 28 (36) for forms, dialogs and a Settings row's select; `--control-height-sm` 24 (32) for bars, cards, segmented controls and tags. Each reaches a 44 pt touch target on the phone. There is no density setting.
+Two heights: `--control-height` 30 (36) for forms, dialogs and a Settings row's select; `--control-height-sm` 26 (32) for bars, cards, segmented controls and tags. Each reaches a 44 pt touch target on the phone. There is no density setting.
 
 ### 5.4 Layout
 
-**Window** (desktop): sidebar (resizable, 198–528, 264 to start) | document column | AI panel (resizable, 330–792, 440 to start). Widths are kept in base units and drawn times `--chrome-scale` (5.6); each panel takes at most 45% of the window and leaves the document at least 360 × scale, the AI panel counting an open sidebar. The document column centres the text at the theme's measure; the margin for review notes takes 280 on the right when shown. A tab's toolbar is 36 high.
+**Window** (desktop): sidebar (resizable, 198–528, 264 to start) | document column | AI panel (resizable, 330–792, 440 to start). Widths are kept in base units and drawn times `--chrome-scale` (5.6); each panel takes at most 45% of the window and leaves the document at least 360 × scale, the AI panel counting an open sidebar. The document column centres the text at the theme's measure; the margin for review notes takes 280 on the right when shown. The window bar is 40 high (`--window-bar-height`; 36 Small, 48 Large).
 
 **Surface templates.** A new surface - in the app or a plugin - MUST use one of these:
 

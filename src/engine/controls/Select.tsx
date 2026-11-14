@@ -7,7 +7,7 @@ import {
   type ReactElement,
   type ReactNode,
 } from "react";
-import { isIOSApp } from "../../platform/capabilities";
+import { isMobileApp } from "../../platform/capabilities";
 import { useDropdown } from "./useDropdown";
 import "./Select.css";
 
@@ -97,7 +97,7 @@ function textOf(node: ReactNode): string {
 }
 
 export function Select(props: SelectProps) {
-  return isIOSApp ? <NativeSelect {...props} /> : <DrawnSelect {...props} />;
+  return isMobileApp ? <NativeSelect {...props} /> : <DrawnSelect {...props} />;
 }
 
 function NativeSelect({

@@ -418,13 +418,26 @@
   function edges() {
     document.querySelectorAll(".tx-scroll-fade").forEach(edge);
   }
-  // A scroll moves only its own scroller's edges.
+  // A scroll moves only its own scroller's edges, and shows its bars until
+  // it rests (plugin-ui.css), as a page of Textus's does
+  // (engine/controls/scroll-reveal.ts): WebKit's own overlay bars in a frame
+  // can stay up after a scroll.
+  var resting = new WeakMap();
   document.addEventListener(
     "scroll",
     function (event) {
-      var el = event.target;
-      if (el instanceof Element && el.classList.contains("tx-scroll-fade"))
-        edge(el);
+      var el =
+        event.target === document ? document.documentElement : event.target;
+      if (!(el instanceof Element)) return;
+      if (el.classList.contains("tx-scroll-fade")) edge(el);
+      el.classList.add("is-scrolling");
+      clearTimeout(resting.get(el));
+      resting.set(
+        el,
+        setTimeout(function () {
+          el.classList.remove("is-scrolling");
+        }, 900),
+      );
     },
     { capture: true, passive: true },
   );

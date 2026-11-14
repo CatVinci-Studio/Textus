@@ -4,6 +4,7 @@
 //! when the document opens at that text again. Old ones go after 30 days,
 //! and the oldest first once all of them pass 50 MB.
 
+use crate::app_dirs::AppDirs;
 use serde::{Deserialize, Serialize};
 
 use std::path::{Path, PathBuf};
@@ -23,7 +24,7 @@ struct UndoFile {
 
 pub(crate) fn undo_dir(app: &AppHandle) -> Result<PathBuf, String> {
     app.path()
-        .app_data_dir()
+        .own_data_dir()
         .map_err(|e| e.to_string())
         .map(|p| p.join("undo"))
 }

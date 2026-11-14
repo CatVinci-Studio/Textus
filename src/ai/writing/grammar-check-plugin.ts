@@ -1,4 +1,5 @@
 import type { EditorView } from "@milkdown/kit/prose/view";
+import { requestRest } from "./request-rest";
 import type { Node as ProseNode } from "@milkdown/kit/prose/model";
 import { Plugin, PluginKey, type EditorState } from "@milkdown/kit/prose/state";
 import { Decoration, DecorationSet } from "@milkdown/kit/prose/view";
@@ -252,6 +253,8 @@ export function issuesToDecorations(
   return decorations;
 }
 
+const rest = requestRest("grammar-check");
+
 export function createGrammarCheckPlugin(options: {
   enabled: () => boolean;
   provider: () => string;
@@ -371,7 +374,7 @@ export function createGrammarCheckPlugin(options: {
 
               debounced.schedule(async (isCurrent) => {
                 // Turned off while the request waited out the debounce.
-                if (!options.enabled()) return;
+                if (!options.enabled() || rest.resting()) return;
                 let issues: GrammarIssue[];
                 try {
                   issues = await ai.grammarCheck(
@@ -384,7 +387,7 @@ export function createGrammarCheckPlugin(options: {
                   );
                 } catch (err) {
                   // Quiet in the UI while typing, but logged.
-                  console.error("[grammar-check] request failed:", err);
+                  rest.failed(err);
                   return;
                 }
                 if (!isCurrent() || !options.enabled()) return;

@@ -11,7 +11,8 @@
     "ai.tools",
     "notifications",
     "background",
-    "agents"
+    "agents",
+    "appearance"
   ],
   "platforms": ["desktop", "ios"],
   "hosts": {

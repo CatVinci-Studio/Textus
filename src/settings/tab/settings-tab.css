@@ -55,6 +55,21 @@
   font-size: var(--text-caption);
 }
 
+/* Under the version, as quiet as it. */
+.settings-about-sponsor {
+  display: block;
+  margin-top: 2px;
+  border: 0;
+  padding: 0;
+  background: none;
+  color: var(--ui-muted);
+  font: inherit;
+  font-size: var(--text-caption);
+  cursor: pointer;
+  text-decoration: underline;
+  text-underline-offset: 2px;
+}
+
 /* Where Textus lives and who made it: one quiet line, last; wrapping,
    each part whole, spaced rather than dotted. */
 .settings-about-links {
@@ -76,7 +91,8 @@
   cursor: pointer;
 }
 
-.settings-about-links > button:hover {
+.settings-about-links > button:hover,
+.settings-about-sponsor:hover {
   color: var(--ui-text);
 }
 

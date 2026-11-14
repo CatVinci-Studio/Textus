@@ -4,7 +4,10 @@
    rest of the interface grows by --chrome-scale between them. Medium is the
    default; the phone has its own (ds-base.css). */
 :root {
-  --window-bar-height: 40px;
+  /* The bar's own row; on a phone or tablet the status bar sits above it,
+     inside the bar (--safe-top, mobile/styles/base.css). */
+  --window-bar-row: 40px;
+  --window-bar-height: calc(var(--safe-top, 0px) + var(--window-bar-row));
   /* Room above a tab in the bar: the tab is the bar less it. */
   --ui-tab-lift: 8px;
   --island-space: 10px;
@@ -43,7 +46,7 @@
 }
 
 :root[data-ui-size="small"]:not([data-window-chrome="mobile"]) {
-  --window-bar-height: 36px;
+  --window-bar-row: 36px;
   --ui-tab-lift: 6px;
   --island-space: 8px;
   --control-height-sm: 22px;
@@ -67,7 +70,7 @@
 }
 
 :root[data-ui-size="large"]:not([data-window-chrome="mobile"]) {
-  --window-bar-height: 48px;
+  --window-bar-row: 48px;
   --ui-tab-lift: 10px;
   --island-space: 12px;
   --control-height-sm: 32px;
@@ -92,7 +95,8 @@
 
 /* The phone's chrome, at its first design. */
 :root[data-window-chrome="mobile"] {
-  --window-bar-height: 28px;
+  /* The status bar's room and a fingertip's row: the tabs ride in it. */
+  --window-bar-row: 48px;
   --icon-button-s: 24px;
   --tree-step: 12px;
   --pane-inset: 12px;

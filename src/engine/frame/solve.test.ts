@@ -44,6 +44,22 @@ describe("solveIslands", () => {
     });
   });
 
+  it("an island under another keeps no room for a tablet's status bar", () => {
+    const stacked: LayoutNode = {
+      kind: "split",
+      direction: "column",
+      children: [pane("a"), pane("b")],
+      sizes: [1, 1],
+    };
+    const { islands } = solveIslands({
+      ...input(stacked),
+      rowHeight: 64,
+      innerRowHeight: 40,
+    });
+    expect(islands.get("a")!.row!.h).toBe(64);
+    expect(islands.get("b")!.row!.h).toBe(40);
+  });
+
   it("the AI beside a document keeps its width; the gap holds the divider", () => {
     const root: LayoutNode = {
       kind: "split",

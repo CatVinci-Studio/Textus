@@ -3,6 +3,7 @@
 //! opaque JSON; made pictures go beside it in `<file>.pictures/`.
 
 use crate::ai::workspace::project_dir;
+use crate::app_dirs::AppDirs;
 use std::path::{Component, Path, PathBuf};
 use tauri::Manager;
 
@@ -118,7 +119,7 @@ fn restore_pictures(dir: &Path) {
 }
 
 fn app_data(app: &tauri::AppHandle) -> Result<PathBuf, String> {
-    let dir = app.path().app_data_dir().map_err(|e| e.to_string())?;
+    let dir = app.path().own_data_dir().map_err(|e| e.to_string())?;
     let _ = KNOWN_APP_DATA.set(dir.clone());
     Ok(dir)
 }

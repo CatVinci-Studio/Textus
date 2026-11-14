@@ -6,7 +6,7 @@ import {
   NewDocumentIcon,
 } from "../engine/controls/icons";
 import { Tooltip } from "../engine/controls/Tooltip";
-import { canOpenFolder } from "../platform/capabilities";
+import { canOpenFolder, isMobileApp } from "../platform/capabilities";
 import type { Strings } from "../i18n/strings";
 
 /**
@@ -86,7 +86,8 @@ export function StartActions({
               {a.icon}
             </span>
             <span className="start-page-action-label">{a.label}</span>
-            {a.combo && (
+            {/* A touch screen's keys are its own. */}
+            {a.combo && !isMobileApp && (
               <kbd className="start-page-action-keys">
                 {formatCombo(a.combo)}
               </kbd>

@@ -6,6 +6,7 @@ import { runCommand } from "../registry/commands";
 import {
   statusItemsSnapshot,
   subscribeStatusItems,
+  withDeclared,
   type StatusItem,
 } from "../plugins/contributions/status-items";
 import {
@@ -16,6 +17,7 @@ import {
   pluginName,
   pluginsSnapshot,
   subscribePlugins,
+  windowInfo,
 } from "../plugins/store/plugin-records";
 import { pluginMenuEntries } from "../plugins/store/plugin-lookup";
 
@@ -29,7 +31,11 @@ export function PluginStatusItems() {
   const items = useSyncExternalStore(subscribeStatusItems, statusItemsSnapshot);
   const plugins = useSyncExternalStore(subscribePlugins, pluginsSnapshot);
   const groups = useMemo(
-    () => groupStatusItems(items, pluginMenuEntries(plugins)),
+    () =>
+      groupStatusItems(
+        withDeclared(items, plugins, windowInfo().language()),
+        pluginMenuEntries(plugins),
+      ),
     [items, plugins],
   );
   return (

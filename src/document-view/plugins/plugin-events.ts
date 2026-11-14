@@ -3,6 +3,7 @@ import { editorViewCtx } from "@milkdown/kit/core";
 import { emitPluginEvent, pluginsListen } from "../../plugins/app-bridge";
 import { selectionText } from "../../plugins/contributions/editor-text";
 import { takeChangeSource } from "../../editor/change-source";
+import { cachedDocument } from "../../editor/markdown/doc-markdown";
 
 /**
  * What the document in front tells plugins as the user works: only for the
@@ -33,8 +34,12 @@ export function selectionChangedForPlugins(active: boolean, ctx: Ctx): void {
   selectionTimer = setTimeout(() => {
     selectionTimer = null;
     try {
+      const state = ctx.get(editorViewCtx).state;
+      const index = state.selection.$head.index(0);
       emitPluginEvent("selection", {
-        text: selectionText(ctx.get(editorViewCtx).state),
+        text: selectionText(state),
+        empty: state.selection.empty,
+        block: cachedDocument(ctx, state.doc).blocks[index]?.id ?? null,
       });
     } catch {
       /* the editor went away */

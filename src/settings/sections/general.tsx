@@ -13,7 +13,11 @@ import {
   type UpdateChannel,
 } from "../../platform/ipc";
 import { installAndRelaunch } from "../../platform/install-update";
-import { checkChannel, selfUpdateAllowed } from "../../platform/distribution";
+import {
+  checkChannel,
+  selfUpdateAllowed,
+  updateElsewhere,
+} from "../../platform/distribution";
 import { canAutoUpdate } from "../../platform/capabilities";
 import { useSettings } from "../../prefs/SettingsContext";
 import { Select } from "../../engine/controls/Select";
@@ -68,7 +72,7 @@ export function UpdateButton({
         setMessage(
           allowed
             ? `${t.updateAvailable} v${found.version}`
-            : `${t.updateAvailable} v${found.version} ${t.updateViaPackageManager}`,
+            : `${t.updateAvailable} v${found.version} ${updateElsewhere(t)}`,
         );
       } else {
         setPhase("latest");

@@ -71,3 +71,22 @@ export function tabZoomStyle(id: string): Record<string, string> | undefined {
   const zoom = zooms.get(id);
   return zoom === undefined ? undefined : { "--content-zoom": String(zoom) };
 }
+
+/** The zoom `at` is drawn at: its tab's, else the window's. */
+export function contentZoom(at?: Element): number {
+  return zoomOf(at?.closest<HTMLElement>("[data-tab-id]")?.dataset.tabId);
+}
+
+/** Calls `changed` with `at`'s zoom whenever it changes; returns the stop. */
+export function watchContentZoom(
+  changed: (zoom: number) => void,
+  at?: Element,
+): () => void {
+  let last = contentZoom(at);
+  return onZoom(() => {
+    const now = contentZoom(at);
+    if (now === last) return;
+    last = now;
+    changed(now);
+  });
+}

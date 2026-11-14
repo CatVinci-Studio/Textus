@@ -10,33 +10,18 @@ import { sendTourSignal } from "../utils/events";
 const KEY = "textus-tutorial-progress";
 const saved = () => JSON.parse(localStorage.getItem(KEY) ?? "null");
 
-function resumeAt(stepId: TutorialStepId, extra: object = {}) {
+function resumeAt(stepId: TutorialStepId) {
   localStorage.setItem(
     KEY,
-    JSON.stringify({ active: true, stepId, tabId: "practice", ...extra }),
+    JSON.stringify({ active: true, stepId, tabId: "practice" }),
   );
   return renderHook(() => useTutorial()).result;
-}
-
-function goTo(result: { current: ReturnType<typeof useTutorial> }, id: string) {
-  while (result.current.step.id !== id) act(() => result.current.next());
 }
 
 beforeAll(installTestLocalStorage);
 beforeEach(() => localStorage.clear());
 
-describe("useTutorial navigation", () => {
-  it("keeps a lesson complete when the learner moves back and forth", () => {
-    const { result } = renderHook(() => useTutorial());
-    act(() => result.current.start("practice-tab"));
-    goTo(result, "wysiwyg");
-    act(() => result.current.setPhase(15));
-    act(() => result.current.next());
-    act(() => result.current.back());
-    expect(result.current.step.id).toBe("wysiwyg");
-    expect(result.current.phase).toBe(15);
-  });
-
+describe("useTutorial", () => {
   it("saves the step's id beside its index", () => {
     const { result } = renderHook(() => useTutorial());
     act(() => result.current.start("practice"));
@@ -44,24 +29,27 @@ describe("useTutorial navigation", () => {
     expect(saved()).toMatchObject({
       active: true,
       stepIndex: 1,
-      stepId: "wysiwyg",
+      stepId: "sidebar",
       tabId: "practice",
-      aiMode: null,
     });
   });
 
-  it.each([2.5, -1, 999, "invalid", null])(
-    "normalizes persisted step %s",
-    (stepIndex) => {
-      localStorage.setItem(
-        KEY,
-        JSON.stringify({ active: true, stepIndex, tabId: "practice" }),
-      );
-      const { result } = renderHook(() => useTutorial());
-      expect(result.current.step).toBeDefined();
-      expect(Number.isInteger(result.current.stepIndex)).toBe(true);
-    },
-  );
+  it("goes back to a step's first stop on every move", () => {
+    const result = resumeAt("rail");
+    act(() => result.current.setStop(2));
+    act(() => result.current.next());
+    act(() => result.current.back());
+    expect(result.current.step.id).toBe("rail");
+    expect(result.current.stop).toBe(0);
+  });
+
+  it("jumps to a step by id, and ends past the last", () => {
+    const result = resumeAt("signin");
+    act(() => result.current.goTo("done"));
+    expect(result.current.step.id).toBe("done");
+    act(() => result.current.next());
+    expect(result.current.active).toBe(false);
+  });
 
   it("ignores delayed navigation after exit", () => {
     const { result } = renderHook(() => useTutorial());
@@ -76,97 +64,31 @@ describe("useTutorial navigation", () => {
   });
 });
 
-describe("the AI mode", () => {
-  it("is live when the connect lesson is left connected", () => {
-    const result = resumeAt("connect");
-    act(() => result.current.setPhase(1));
-    act(() => result.current.next());
-    expect(result.current.step.id).toBe("write");
-    expect(result.current.aiMode).toBe("live");
-    expect(result.current.watching).toBe(false);
-    expect(result.current.practiceAi).toBe("live");
-    expect(saved()).toMatchObject({ stepId: "write", aiMode: "live" });
-  });
-
-  it("is watch when the connect lesson is skipped", () => {
-    const result = resumeAt("connect");
-    act(() => result.current.next());
-    expect(result.current.aiMode).toBe("watch");
-    expect(result.current.watching).toBe(true);
+describe("the practice tab's AI", () => {
+  it("is live, in write mode, only on the step that uses it", () => {
+    const result = resumeAt("editor");
     expect(result.current.practiceAi).toBe("muted");
-    expect(saved()).toMatchObject({ aiMode: "watch" });
-  });
-
-  it("is decided again when the learner goes back to connect", () => {
-    const result = resumeAt("write", { aiMode: "watch" });
-    act(() => result.current.back());
-    expect(result.current.step.id).toBe("connect");
-    act(() => result.current.setPhase(1));
-    act(() => result.current.next());
-    expect(result.current.aiMode).toBe("live");
-  });
-
-  it("survives a relaunch with the step", () => {
-    const live = resumeAt("continuation", { aiMode: "live" });
-    expect(live.current.step.id).toBe("continuation");
-    expect(live.current.practiceAi).toBe("live");
-    const watched = resumeAt("continuation", { aiMode: "watch" });
-    expect(watched.current.watching).toBe(true);
-  });
-
-  it("keeps the practice tab's AI muted through the writing lessons", () => {
-    const result = resumeAt("palette", { aiMode: "live" });
-    expect(result.current.practiceAi).toBe("muted");
-    expect(result.current.watching).toBe(false);
-  });
-
-  it("starts over with no mode", () => {
-    const result = resumeAt("continuation", { aiMode: "live" });
-    act(() => result.current.start("practice"));
-    expect(result.current.aiMode).toBeNull();
-    expect(result.current.stepIndex).toBe(0);
-  });
-});
-
-describe("the AI panel's mode", () => {
-  it("is the one each AI lesson needs, and none elsewhere", () => {
-    expect(resumeAt("write", { aiMode: "live" }).current.agentMode).toBe(
-      "write",
-    );
-    expect(resumeAt("continuation", { aiMode: "live" }).current.agentMode).toBe(
-      null,
-    );
-    const result = resumeAt("write", { aiMode: "watch" });
-    expect(result.current.agentMode).toBe("write");
-    act(() => result.current.exit());
     expect(result.current.agentMode).toBe(null);
-  });
-});
-
-describe("the AI lessons' signals", () => {
-  it.each([
-    ["write", "revision-decided"],
-    ["continuation", "completion-accepted"],
-    ["palette", "palette-command"],
-  ] as const)("complete %s on %s", (stepId, signal) => {
-    const result = resumeAt(stepId, { aiMode: "live" });
-    expect(result.current.phase).toBe(0);
-    act(() => sendTourSignal(signal));
-    expect(result.current.phase).toBe(1);
+    act(() => result.current.goTo("ai-use"));
+    expect(result.current.practiceAi).toBe("live");
+    expect(result.current.agentMode).toBe("write");
   });
 
-  it("keep the parts already done", () => {
-    const result = resumeAt("write", { aiMode: "live" });
-    act(() => result.current.setPhase(2));
+  it("stays muted with Textus AI off", () => {
+    localStorage.setItem(
+      KEY,
+      JSON.stringify({ active: true, stepId: "ai-use", tabId: "practice" }),
+    );
+    const { result } = renderHook(() => useTutorial(false));
+    expect(result.current.practiceAi).toBe("muted");
+  });
+
+  it("moves on once the AI's revision is decided, and not before", () => {
+    const result = resumeAt("editor");
     act(() => sendTourSignal("revision-decided"));
-    expect(result.current.phase).toBe(3);
-  });
-
-  it("only complete the lesson they belong to", () => {
-    const result = resumeAt("write", { aiMode: "live" });
-    act(() => sendTourSignal("completion-accepted"));
-    act(() => sendTourSignal("palette-command"));
-    expect(result.current.phase).toBe(0);
-    expect(stepIndexOf("write")).toBe(result.current.stepIndex);
+    expect(result.current.step.id).toBe("editor");
+    act(() => result.current.goTo("ai-use"));
+    act(() => sendTourSignal("revision-decided"));
+    expect(result.current.stepIndex).toBe(stepIndexOf("done"));
   });
 });

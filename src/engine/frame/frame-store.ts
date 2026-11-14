@@ -1,6 +1,7 @@
 import { useSyncExternalStore } from "react";
 import type { Rect } from "./rect";
 import type { LayoutNode } from "../layout/tree";
+import { isPhoneLayout } from "../../platform/phone-layout";
 
 /**
  * The islands as the solver last placed them, in the viewport's pixels:
@@ -92,6 +93,8 @@ export function setLayoutFits(check: (root: LayoutNode) => boolean): void {
   fits = check;
 }
 
+/** A phone shows one island: a split never fits there. */
 export function layoutFits(root: LayoutNode): boolean {
+  if (root.kind === "split" && isPhoneLayout()) return false;
   return fits ? fits(root) : true;
 }

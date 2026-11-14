@@ -130,6 +130,7 @@ fn groups() -> Vec<(&'static str, Builder<tauri::Wry>)> {
                     crate::menu::set_menu_checks,
                     crate::menu::set_menu_accelerators,
                     crate::commands::links::open_community_page,
+                    crate::commands::links::open_sponsor_page,
                     crate::commands::links::open_about_link,
                     crate::commands::links::open_web_link,
                     crate::commands::links::open_tutorials_page,

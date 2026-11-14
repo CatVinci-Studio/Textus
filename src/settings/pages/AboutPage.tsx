@@ -5,7 +5,7 @@ import { GuidesSection } from "../sections/guides";
 import { LinkRow } from "../sections/controls";
 import { UpdateButton, UpdateChannelRow } from "../sections/general";
 import { appVersion } from "../../platform/app-info";
-import { isDesktopApp } from "../../platform/capabilities";
+import { canLinkSponsor, isDesktopApp } from "../../platform/capabilities";
 import { emitMenuEvent } from "../../platform/menu-events";
 import { links } from "../../platform/ipc";
 import appIcon from "../../../src-tauri/icons/128x128@2x.png";
@@ -35,6 +35,15 @@ export function AboutPage({
           <div className="settings-about-card-text">
             <div className="settings-about-card-name">Textus</div>
             <div className="settings-about-card-version">{version}</div>
+            {canLinkSponsor && (
+              <button
+                type="button"
+                className="settings-about-sponsor"
+                onClick={() => void links.openSponsorPage(settings.language)}
+              >
+                {t.menuHelpSponsor}
+              </button>
+            )}
           </div>
           <UpdateButton t={t} checkOnOpen={checkUpdates} />
         </div>

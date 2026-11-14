@@ -6,7 +6,6 @@ import {
   showQuickPick,
   type QuickPickItem,
 } from "../engine/controls/quick-pick-queue";
-import { sendTourSignal } from "../utils/events";
 import { commands, commandShortcut, runCommand } from "../registry/commands";
 import { runMenuAction } from "./menu/app-menu-actions";
 import {
@@ -132,6 +131,5 @@ export async function pickWithCommands(
   const { run } = entries[picked.entry];
   if ("command" in run) runCommand(run.command);
   else runMenuAction(run.menu);
-  sendTourSignal("palette-command");
   return null;
 }

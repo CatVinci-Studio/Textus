@@ -3,7 +3,7 @@ name = "tauri-plugin-textus-files"
 version = "0.1.0"
 edition = "2021"
 publish = false
-description = "iOS document access for Textus: pickers, security-scoped reads and writes, remembered folders"
+description = "iOS and Android document access for Textus: pickers, scoped reads and writes, remembered folders"
 links = "tauri-plugin-textus-files"
 
 [dependencies]

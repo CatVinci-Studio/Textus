@@ -4,6 +4,7 @@
 
 use super::access::{granted_path, FsEntry};
 use super::{require_id, state};
+use crate::app_dirs::AppDirs;
 use serde::Serialize;
 use sha2::{Digest, Sha256};
 use std::collections::BTreeMap;
@@ -148,7 +149,7 @@ type Secrets = BTreeMap<String, BTreeMap<String, String>>;
 
 /// Every plugin's secrets, in one owner-only file apart from settings and storage.
 fn secrets_path(app: &tauri::AppHandle) -> Result<std::path::PathBuf, String> {
-    let dir = app.path().app_config_dir().map_err(|e| e.to_string())?;
+    let dir = app.path().own_config_dir().map_err(|e| e.to_string())?;
     std::fs::create_dir_all(&dir).map_err(|e| e.to_string())?;
     Ok(dir.join(SECRETS_FILE))
 }

@@ -3,10 +3,11 @@
 //! in skills.
 
 use super::*;
+use crate::app_dirs::AppDirs;
 
 pub(crate) fn global_agent_dir(app: &AppHandle) -> Result<PathBuf, String> {
     app.path()
-        .app_config_dir()
+        .own_config_dir()
         .map_err(|e| e.to_string())
         .map(|config| config.join(GLOBAL_DIR))
 }

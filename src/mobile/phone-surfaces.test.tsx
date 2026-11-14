@@ -8,6 +8,7 @@ import { afterEach, beforeAll, describe, expect, it, vi } from "vitest";
 vi.mock("../platform/capabilities", async (importOriginal) => ({
   ...(await importOriginal<object>()),
   isIOSApp: true,
+  isMobileApp: true,
 }));
 vi.mock("../prefs/SettingsContext", () => ({
   useSettings: () => ({ t: { cancel: "Cancel" } }),

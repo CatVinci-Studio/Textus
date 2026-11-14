@@ -1,3 +1,4 @@
+import { createPortal } from "react-dom";
 import { insertTable } from "../editor/editor-menu";
 import { EditorContextMenu } from "./EditorContextMenu";
 import type { EditorSetup } from "./useEditorSetup";
@@ -36,13 +37,18 @@ export function EditorOverlays({
   const { run, clipboard, notice } = setup;
   const { imageNameRequest, closeImageNameDialog } = setup.imageName;
   const { findReplace, tableDialogOpen, setTableDialogOpen } = popups;
+  const findBar = (
+    <Presence show={findReplace.open}>
+      {findReplace.open && (
+        <FindReplaceBar findReplace={findReplace} labels={t} />
+      )}
+    </Presence>
+  );
+  // Beside the scroller, as Source mode's: it stays put as the text scrolls.
+  const findHost = review.scrollEl?.parentElement;
   return (
     <>
-      <Presence show={findReplace.open}>
-        {findReplace.open && (
-          <FindReplaceBar findReplace={findReplace} labels={t} />
-        )}
-      </Presence>
+      {findHost ? createPortal(findBar, findHost) : findBar}
       <EditorContextMenu
         menu={popups.menu}
         run={run}

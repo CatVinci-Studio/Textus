@@ -11,7 +11,7 @@ static PROXY_URL: RwLock<Option<String>> = RwLock::new(None);
 /// service on this computer is reached directly whatever the settings say
 /// (a proxy in the environment of the terminal that started the app
 /// included - see net.rs, which shares this).
-pub const LOOPBACK_NO_PROXY: &str = "localhost,127.0.0.0/8,::1";
+const LOOPBACK_NO_PROXY: &str = "localhost,127.0.0.0/8,::1";
 
 /// Total request timeout for whole-body paths, so a hung proxy or endpoint
 /// can't hold a request forever. Streamed requests use a per-read idle
@@ -88,12 +88,15 @@ pub(crate) fn streaming_client() -> reqwest::Client {
 /// on this computer (Ollama, LM Studio) is reached directly, as the app's
 /// other requests reach it (net.rs).
 pub(crate) fn proxy() -> Option<reqwest::Proxy> {
-    PROXY_URL
-        .read()
-        .unwrap()
-        .clone()
-        .and_then(|u| reqwest::Proxy::all(u).ok())
-        .map(|p| p.no_proxy(reqwest::NoProxy::from_string(LOOPBACK_NO_PROXY)))
+    let url = PROXY_URL.read().unwrap().clone()?;
+    proxy_for(&url).ok()
+}
+
+/// A proxy for every request to `url`, the loopback family left direct.
+pub fn proxy_for(url: &str) -> Result<reqwest::Proxy, String> {
+    Ok(reqwest::Proxy::all(url)
+        .map_err(|e| e.to_string())?
+        .no_proxy(reqwest::NoProxy::from_string(LOOPBACK_NO_PROXY)))
 }
 
 pub(crate) fn with_timeouts(builder: reqwest::ClientBuilder) -> reqwest::ClientBuilder {

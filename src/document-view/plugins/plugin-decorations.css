@@ -52,3 +52,10 @@
   line-height: inherit;
   vertical-align: baseline;
 }
+
+/* Words a plugin links: followed with Cmd/Ctrl+click, as a link is. */
+.plugin-mark-link {
+  text-decoration-line: underline;
+  text-decoration-style: dotted;
+  text-decoration-color: var(--plugin-tone, var(--doc-accent));
+}

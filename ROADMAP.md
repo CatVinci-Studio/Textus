@@ -14,7 +14,7 @@ already out is in the [release notes](docs/releases/).
 - **Linux**: lower memory use, and a window with a shadow and a roomier
   bar. [#644](https://github.com/CatVinci-Studio/Textus/issues/644),
   [#664](https://github.com/CatVinci-Studio/Textus/issues/664)
-- **iPhone and iPad on the App Store.**
+- **iOS public beta** on TestFlight, and Android as an APK with each release.
   [#87](https://github.com/CatVinci-Studio/Textus/issues/87)
 
 ## Next (1.5)

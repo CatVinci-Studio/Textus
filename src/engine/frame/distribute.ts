@@ -11,6 +11,9 @@ export type Priority = "low" | "normal" | "high";
 export interface SizeRule {
   /** The least it takes before others below its priority give way. */
   min: number;
+  /** Kept even when every child must go under its minimum: the others
+   *  give the shortfall first (the island under the bar's own buttons). */
+  floor?: number;
   /** Pixels for a fixed one; for a flexible one, its fraction. */
   size: number;
   fixed: boolean;
@@ -42,7 +45,7 @@ export function distribute(
   );
   // Each up to its minimum, paid for by those that give way first.
   rules.forEach((r, i) => {
-    if (sizes[i] < r.min) sizes[i] = Math.min(r.min, room);
+    if (sizes[i] < least(r)) sizes[i] = Math.min(least(r), room);
   });
   settle(rules, sizes, room);
   return whole(sizes, room);
@@ -63,15 +66,26 @@ function settle(rules: readonly SizeRule[], sizes: number[], room: number) {
     return;
   }
   for (const i of order(rules, GIVE_ORDER, () => true)) {
-    const give = Math.min(over, sizes[i] - rules[i].min);
+    const give = Math.min(over, sizes[i] - least(rules[i]));
     if (give <= 0) continue;
     sizes[i] -= give;
     over -= give;
     if (over < 0.5) return;
   }
-  const total = sizes.reduce((a, b) => a + b, 0);
-  for (let i = 0; i < sizes.length; i++) sizes[i] *= room / total;
+  // Still too long: everyone shrinks alike, above their floors while the
+  // floors fit.
+  const sum = (xs: number[]) => xs.reduce((a, b) => a + b, 0);
+  const floors = rules.map((r, i) => Math.min(r.floor ?? 0, sizes[i]));
+  const base = sum(floors) < room ? floors : sizes.map(() => 0);
+  const spare = sum(sizes) - sum(base);
+  const left = room - sum(base);
+  for (let i = 0; i < sizes.length; i++)
+    sizes[i] = base[i] + ((sizes[i] - base[i]) * left) / (spare || 1);
 }
+
+/** What a child keeps before the shrink everyone shares: its minimum, or
+ *  its floor where that is more. */
+const least = (r: SizeRule) => Math.max(r.min, r.floor ?? 0);
 
 /** Indexes by priority group, last child first within a group. */
 function order(

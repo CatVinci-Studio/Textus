@@ -8,7 +8,7 @@ import { getUiState, setUiState } from "../../storage/ui-state";
  * keeps its panel's. Its one owner; kept in the window's UI state.
  */
 /** Before any panel was dragged: where a double-click on its edge puts it. */
-export const PANEL_DEFAULT = 440;
+const PANEL_DEFAULT = 440;
 
 let width = read();
 const listeners = new Set<() => void>();

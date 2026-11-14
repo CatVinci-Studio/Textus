@@ -3,6 +3,7 @@
 //! package's SHA-256, so "Official" is decided here, not by the window.
 
 use super::{install, state};
+use crate::app_dirs::AppDirs;
 use crate::ext_stats;
 
 mod download;
@@ -188,7 +189,7 @@ fn cache_file(app: &tauri::AppHandle) -> Result<std::path::PathBuf, String> {
     use tauri::Manager;
     Ok(app
         .path()
-        .app_cache_dir()
+        .own_cache_dir()
         .map_err(|e| e.to_string())?
         .join("plugin-catalog.json"))
 }

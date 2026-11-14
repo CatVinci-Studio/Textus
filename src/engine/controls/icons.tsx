@@ -1,6 +1,7 @@
 import type { CSSProperties, ReactNode } from "react";
 import {
   ArrowUp,
+  KeyboardOff,
   ArrowDownUp,
   ArrowUpRight,
   BetweenHorizontalEnd,
@@ -127,6 +128,8 @@ export function lucide(Shape: LucideIcon, size: number) {
 export const ChevronIcon = lucide(ChevronRight, 10);
 /** A menu button's "opens below". */
 export const ChevronDownIcon = lucide(ChevronDown, 12);
+/** The phone's format strip: puts the keyboard away. */
+export const HideKeyboardIcon = lucide(KeyboardOff, 16);
 /** Back and on, a step at a time (a month, a page). */
 export const PreviousIcon = lucide(ChevronLeft, 16);
 export const NextIcon = lucide(ChevronRight, 16);
@@ -212,7 +215,7 @@ export function StopIcon({ className }: IconProps) {
 export const SortIcon = lucide(ArrowDownUp, 13);
 export const RefreshIcon = lucide(RefreshCw, 12);
 /** The way into the app menu, once the native menu bar is gone. */
-export const HamburgerIcon = lucide(Menu, 12);
+export const HamburgerIcon = lucide(Menu, 15);
 
 /** Undo (the iPhone keyboard toolbar). */
 export const UndoIcon = lucide(Undo2, 16);

@@ -1,4 +1,13 @@
 import { fill } from "../../i18n/fill";
+import {
+  addOutlineProvider,
+  removeOutlineProvider,
+} from "../contributions/outline-providers";
+import {
+  addPasteHandler,
+  pastePattern,
+  removePasteHandler,
+} from "../contributions/paste-handlers";
 import { resolveBlockEdit } from "../../editor/markdown/doc-blocks";
 import type { EditProposal } from "../../ai/types";
 import {
@@ -23,7 +32,12 @@ import {
   removeDecorationProvider,
   type PluginDecoration,
 } from "../contributions/decorations";
-import { optionalStr, type Params, type PluginScope } from "./broker-scope";
+import {
+  optionalStr,
+  str,
+  type Params,
+  type PluginScope,
+} from "./broker-scope";
 import { FILE_RELOADED_EVENT } from "../../utils/events";
 import { showNotice } from "../../engine/controls/notices";
 import { logPluginMessage } from "../store/plugin-log";
@@ -142,6 +156,20 @@ export function editorHandlers(p: PluginScope) {
         text: optionalStr(l.text),
       });
     },
+    "editor.registerPasteHandler": ({ id, pattern }: Params) =>
+      addPasteHandler(
+        p.id,
+        str(id, "id"),
+        pastePattern(str(pattern, "pattern")),
+        (text) => p.request<string | null>("$providePaste", { id, text }),
+      ),
+    "editor.unregisterPasteHandler": ({ id }: Params) =>
+      removePasteHandler(p.id, str(id, "id")),
+    "editor.registerOutline": () =>
+      addOutlineProvider(p.id, (blocks) =>
+        p.request<unknown>("$provideOutline", { blocks }),
+      ),
+    "editor.unregisterOutline": () => removeOutlineProvider(p.id),
     "editor.registerHover": () => {
       addHoverProvider(
         p.id,

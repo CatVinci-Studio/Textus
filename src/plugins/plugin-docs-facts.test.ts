@@ -1,5 +1,5 @@
 import { readCss } from "../dev/read-css";
-import { readFileSync } from "node:fs";
+import { existsSync, readFileSync, readdirSync } from "node:fs";
 import { expect, it } from "vitest";
 import { WHEN_KEYS } from "./contributions/when";
 import { WEBVIEW_THEME_VARS } from "./views/theme-vars";
@@ -96,4 +96,26 @@ it("names only classes a plugin page's stylesheets draw", () => {
     read("docs/dev/plugins/ui.md").match(/tx-[a-z][a-z-]*/g),
   ).entries())
     expect(given, name).toMatch(new RegExp(`\\.${name}(?![\\w-])`));
+});
+
+it("links only files that exist", () => {
+  const root = new URL("../../", import.meta.url);
+  const plugins = new URL("docs/dev/plugins/", root);
+  const docs = [
+    new URL("docs/dev/plugin-api.md", root),
+    ...readdirSync(plugins, { recursive: true, encoding: "utf8" })
+      .filter((name) => name.endsWith(".md"))
+      .map((name) => new URL(name, plugins)),
+  ];
+  const broken = docs.flatMap((doc) =>
+    [
+      ...readFileSync(doc, "utf8")
+        .replace(/```[\s\S]*?```|`[^`\n]*`/g, "")
+        .matchAll(/\]\(([^)\s#]+)/g),
+    ]
+      .map((m) => m[1])
+      .filter((to) => !/^[a-z]+:/.test(to) && !existsSync(new URL(to, doc)))
+      .map((to) => `${doc.href.slice(root.href.length)}: ${to}`),
+  );
+  expect(broken).toEqual([]);
 });

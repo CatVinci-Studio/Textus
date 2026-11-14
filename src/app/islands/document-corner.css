@@ -26,3 +26,8 @@
   background: color-mix(in srgb, var(--doc-bg) 88%, transparent);
   cursor: default;
 }
+
+/* A phone's format strip is the sheet's foot: the readouts sit over it. */
+:root[data-window-chrome="mobile"] .document-corner {
+  padding-bottom: calc(48px + var(--space-2));
+}

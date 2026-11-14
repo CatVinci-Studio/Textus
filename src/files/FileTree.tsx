@@ -12,7 +12,7 @@ import {
 
 import { useSettings } from "../prefs/SettingsContext";
 import { folderName, parentDir } from "../utils/path";
-import { canOpenFolder, isIOSApp } from "../platform/capabilities";
+import { canOpenFolder, isMobileApp } from "../platform/capabilities";
 import { ContextMenu } from "../engine/controls/ContextMenu";
 import { Presence } from "../engine/motion/usePresence";
 import { useTreeKeys } from "../engine/controls/useTreeKeys";
@@ -73,14 +73,14 @@ export function FileTree({
   const { generation, setGeneration } = view;
   const { sort, setSort, scope, setScope, versions, reload } = view;
   const { showHidden, setShowHidden } = view;
-  // Not on iOS: above Documents is the app's private container, and above
-  // a folder picked in Files is outside what the user granted. Not above an
+  // Not on a phone: above Documents is the app's private container, and above
+  // a picked folder is outside what the user granted. Not above an
   // opened folder either: that is the edge of what the user opened.
-  const parent = isIOSApp || root === folder ? null : parentDir(root);
+  const parent = isMobileApp || root === folder ? null : parentDir(root);
   const { ref: treeRef, onKeyDown: treeKeys } = useTreeKeys<HTMLDivElement>();
   // One handler for the tree's life: a row redraws only when it changes.
   const select = useLatestCallback(onFileSelect);
-  const desktop = !isIOSApp && canOpenFolder;
+  const desktop = !isMobileApp && canOpenFolder;
   const { draft, setDraft, finishDraft } = useNewEntry(t, reload, select);
 
   const { menu, setMenu, onRowMenu } = useRowMenu(

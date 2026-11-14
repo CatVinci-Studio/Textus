@@ -5,6 +5,7 @@ import {
 } from "../../platform/window-chrome";
 import { barLayout, type BarLayout } from "./bar-layout";
 import { useFullscreenMark } from "./useFullscreenMark";
+import { usePhoneLayout } from "../controls/usePhoneLayout";
 
 // Whether the sidebar's column reaches the window's top, for the sidebar:
 // where it doesn't, the bar covers its header's line.
@@ -45,6 +46,7 @@ export function useBarLayout({
   zen: boolean;
 }): BarLayout {
   const fullscreen = useFullscreenMark();
+  const phone = usePhoneLayout();
   const layout = barLayout({
     platform: platformName(),
     menuBar: appDrawsWindowFrame && menuBarShown,
@@ -53,6 +55,7 @@ export function useBarLayout({
     railOff,
     zen,
     fullscreen,
+    phone,
   });
   const { rows, menuInRail, sideToTop, railToTop } = layout;
   useLayoutEffect(() => {

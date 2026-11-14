@@ -74,12 +74,8 @@ export type TourAi = "muted" | "live";
 
 /// What the learner did in the tour's practice tab that a lesson waits for.
 export type TourSignal =
-  /** A completion suggestion was taken (Tab, or a tap on a phone). */
-  | "completion-accepted"
   /** An AI revision was accepted or rejected, all of it decided. */
-  | "revision-decided"
-  /** A command ran from the command palette. */
-  | "palette-command";
+  "revision-decided";
 
 /// detail: a TourSignal.
 export const TOUR_SIGNAL_EVENT = "textus:tour-signal";

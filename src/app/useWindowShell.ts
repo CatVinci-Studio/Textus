@@ -29,7 +29,7 @@ export function useWindowShell({
   const [pendingClose, setPendingClose] = useState<PendingClose | null>(null);
   const textusAi = useTextusAi();
   useTextusAiResume();
-  const panels = useSidePanels(textusAi.on);
+  const panels = useSidePanels(textusAi.on, tabState.activeTabId);
   const settingsOpening = useSettingsOpening(tabState);
   useUpdateChecks(settings.updateChannel);
   useZoom(

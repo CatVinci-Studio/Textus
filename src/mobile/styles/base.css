@@ -9,11 +9,20 @@
   --font-system-ui: "SF Pro Text";
 }
 
+/* The page runs under the status bar, a phone's or a tablet's: the title
+   row takes its height, and whatever clears the row clears both. Android
+   tells it (mobile-viewport.ts). */
+:root:is([data-platform="ios"], [data-platform="android"]) {
+  --safe-top: max(env(safe-area-inset-top, 0px), var(--native-safe-top, 0px));
+}
+
+:root:is([data-platform="ios"], [data-platform="android"])
+  :is(.window-bar, .island-row:not([data-inner])) {
+  padding-top: var(--safe-top);
+}
+
 :root[data-window-chrome="mobile"] {
   --mobile-bar: 48px;
-  /* The page runs under the status bar: the title row takes its height, and
-     whatever clears the row clears both. */
-  --safe-top: env(safe-area-inset-top, 0px);
   --mobile-top: calc(var(--safe-top) + var(--mobile-bar));
   /* No grey flash over whatever a finger lands on. */
   -webkit-tap-highlight-color: transparent;
@@ -34,7 +43,7 @@
 /* The page runs under the status bar and the home indicator: what shows
    there is its own background. */
 :root[data-window-chrome="mobile"] body {
-  background: var(--ui-bg);
+  background: var(--ui-frame);
 }
 
 /* The web view shrinks while the keyboard is up; 100% follows it where 100vh
@@ -48,8 +57,8 @@
 :root[data-window-chrome="mobile"] .window-bar {
   height: var(--mobile-top);
   padding: var(--safe-top) 4px 0;
-  /* One surface from the status bar down through the page. */
-  background: var(--ui-bg);
+  /* The frame, as the sidebar's: the page is the one sheet on it. */
+  background: var(--ui-frame-fill) fixed;
 }
 
 :root[data-window-chrome="mobile"] .window-menu-button,

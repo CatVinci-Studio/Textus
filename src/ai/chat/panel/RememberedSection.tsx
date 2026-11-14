@@ -1,3 +1,5 @@
+import { useState } from "react";
+import { pointedAt } from "./memory-focus";
 import { fill } from "../../../i18n/fill";
 import type {
   AgentWorkspaceInfo,
@@ -218,26 +220,46 @@ function RememberedItem({
     rememberedDate(remembered.updated, lang),
     from ? fill(t.memoryFrom, { title: from }) : "",
   ].filter(Boolean);
+  // One or two lines until opened: its kind, date, source and actions
+  // show only for the one looked at.
+  const [open, setOpen] = useState(() => pointedAt() === id);
   return (
-    <li className={notSent ? "memory-not-sent" : undefined} data-memory-id={id}>
-      <div className="memory-remembered-text">{text}</div>
-      <div className="memory-remembered-meta">
-        {meta.join(" · ")}
-        {notSent && <span className="memory-badge">{t.memoryNotSent}</span>}
-      </div>
-      <div className="memory-remembered-actions">
-        <button type="button" onClick={onEdit}>
-          {t.memoryEdit}
-        </button>
-        {moveLabel && (
-          <button type="button" onClick={onMove}>
-            {moveLabel}
-          </button>
-        )}
-        <button type="button" onClick={onDelete}>
-          {t.memoryDelete}
-        </button>
-      </div>
+    <li
+      className={`memory-remembered-item${notSent ? " memory-not-sent" : ""}`}
+      data-memory-id={id}
+    >
+      <button
+        type="button"
+        className={`memory-remembered-text${open ? "" : " tx-clamp"}`}
+        aria-expanded={open}
+        onClick={() => setOpen(!open)}
+      >
+        {text}
+      </button>
+      {notSent && !open && (
+        <span className="memory-badge">{t.memoryNotSent}</span>
+      )}
+      {open && (
+        <>
+          <div className="memory-remembered-meta">
+            {meta.join(" · ")}
+            {notSent && <span className="memory-badge">{t.memoryNotSent}</span>}
+          </div>
+          <div className="memory-remembered-actions">
+            <button type="button" onClick={onEdit}>
+              {t.memoryEdit}
+            </button>
+            {moveLabel && (
+              <button type="button" onClick={onMove}>
+                {moveLabel}
+              </button>
+            )}
+            <button type="button" onClick={onDelete}>
+              {t.memoryDelete}
+            </button>
+          </div>
+        </>
+      )}
     </li>
   );
 }

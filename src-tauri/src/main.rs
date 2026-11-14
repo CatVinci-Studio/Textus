@@ -2,6 +2,7 @@
 #![cfg_attr(not(debug_assertions), windows_subsystem = "windows")]
 
 fn main() {
+    textus_lib::prepare_portable();
     // WebKitGTK's DMA-BUF renderer draws a blank window on NVIDIA's driver and
     // makes menus and dialogs flash on others, so use the older renderer unless
     // the user set it. Set before any thread exists, which makes set_var sound.

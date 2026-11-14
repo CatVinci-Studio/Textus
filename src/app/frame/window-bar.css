@@ -14,7 +14,7 @@
      top-left corner. */
   /* design: allow - clears macOS's window buttons. */
   padding: 0 14px 0 calc(var(--lights-room) + 6px);
-  background: var(--ui-frame-fill);
+  background: var(--ui-frame-fill) fixed;
 }
 
 /* Where the app owns the frame, the menu button and caption buttons sit
@@ -83,7 +83,6 @@
   :is(
     .settings-backdrop,
     .language-welcome-backdrop,
-    .tutorial-backdrop,
     .insert-table-overlay,
     .image-name-overlay,
     .tx-backdrop
@@ -95,7 +94,6 @@
   :is(
     .settings-backdrop,
     .language-welcome-backdrop,
-    .tutorial-backdrop,
     .insert-table-overlay,
     .image-name-overlay,
     .tx-backdrop
@@ -267,10 +265,4 @@
 .window-bar-agent-letter {
   font-size: var(--text-caption);
   font-weight: 600;
-}
-
-/* The phone's two pages, the document and Textus AI, in the title row. */
-.page-switch {
-  min-width: 146px;
-  pointer-events: auto;
 }

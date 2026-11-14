@@ -96,3 +96,8 @@
   width: 100%;
   height: 100%;
 }
+/* A phone typing has no room to spare: the views step aside until the
+   keyboard goes, rather than sit on the format strip and the text. */
+:root[data-window-chrome="mobile"].keyboard-up .floating-views {
+  visibility: hidden;
+}

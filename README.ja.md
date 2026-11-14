@@ -63,8 +63,9 @@
 | macOS · Intel     | [.dmgをダウンロード](https://github.com/CatVinci-Studio/Textus/releases/latest)                         | Homebrew：`brew install --cask textus`                                    |
 | Windows · x64     | [.exeをダウンロード](https://github.com/CatVinci-Studio/Textus/releases/latest)                         | —                                                                        |
 | Linux · x64       | [.AppImageをダウンロード](https://github.com/CatVinci-Studio/Textus/releases/latest) · .deb · .rpm もあり | Arch Linux：[`[catvinci]` リポジトリ](https://github.com/CatVinci-Studio/arch-repo) |
+| Android · arm64   | [.apkをダウンロード](https://github.com/CatVinci-Studio/Textus/releases/latest) | — |
 
-> iPhone版とiPad版は、まもなくApp Storeで公開します。
+> iOS版（iPhone・iPad）は、まもなくTestFlightで公開ベータを始めます。
 
 ベータ版：**設定 › について** で **アップデートチャンネル** を **ベータ版** にします。
 
@@ -134,7 +135,7 @@ Discord、QQ、WeChatで参加できます：[textus.md/community](https://textu
 <details>
 <summary><strong>どの環境で使えますか？</strong></summary>
 
-macOS（AppleシリコンとIntel）、Windows、Linux、そしてApp StoreからiPhoneとiPadで使えます。
+macOS（AppleシリコンとIntel）、Windows、Linux、そしてAndroidとiOS（公開ベータ）で使えます。
 
 </details>
 

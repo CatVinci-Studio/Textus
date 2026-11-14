@@ -109,7 +109,8 @@
   }
 }
 
-.tree-tool:disabled {
+.tree-tool:disabled,
+.tree-tool[aria-disabled="true"] {
   cursor: default;
   opacity: 0.3;
 }
@@ -260,6 +261,21 @@
 }
 
 /* What waits there for the writer: after the name, quiet, never cut. */
+/* A plugin's badge after the name (files.setBadge): quiet text, in its
+   tone when it has one. */
+.tree-badge {
+  flex: none;
+  margin-left: auto;
+  padding-left: var(--space-2);
+  font-size: var(--text-footnote);
+  color: var(--plugin-tone, var(--ui-muted));
+  white-space: nowrap;
+}
+
+.tree-badge + .tree-ai-waiting {
+  margin-left: 0;
+}
+
 .tree-ai-waiting {
   flex: none;
   margin-left: auto;

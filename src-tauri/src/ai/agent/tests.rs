@@ -716,7 +716,7 @@ fn the_prompt_names_things_exactly_as_the_ui_does() {
         (&ja_ts, "navSkills: \"スキル\""),
         (&zh_ts, "settingsTitle: \"设置\""),
         (&ja_ts, "settingsTitle: \"設定\""),
-        (&zh_ts, "tutorialContinuationTitle: \"续写\""),
+        (&zh_ts, "aiCompletionLabel: \"续写\""),
         (&ja_ts, "completionToneLabel: \"補完のトーン\""),
         (&zh_ts, "proposalAccept: \"采纳\""),
         (&ja_ts, "proposalAccept: \"適用\""),

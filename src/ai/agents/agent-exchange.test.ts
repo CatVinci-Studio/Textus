@@ -17,6 +17,10 @@ const ipc = vi.hoisted(() => ({
   /** What session/new offers. */
   offered: undefined as unknown,
   out: null as ((o: { type: "lines"; lines: string[] }) => void) | null,
+  /** It says it reads images. */
+  images: false,
+  /** The prompts sent, their blocks' types. */
+  prompts: [] as string[][],
 }));
 vi.mock("../../platform/ipc-plugins", () => ({
   agentsIpc: {
@@ -33,6 +37,12 @@ vi.mock("../../platform/ipc-plugins", () => ({
           .params!;
         ipc.set.push(`${p.configId}=${p.value}`);
       }
+      if (method === "session/prompt")
+        ipc.prompts.push(
+          (
+            sent as { params: { prompt: { type: string }[] } }
+          ).params.prompt.map((block) => block.type),
+        );
       if (id === undefined || method === "session/prompt") return;
       if (method === "session/new" && ipc.slowStart) return;
       if (
@@ -55,7 +65,9 @@ vi.mock("../../platform/ipc-plugins", () => ({
       const result =
         method === "session/new"
           ? { sessionId: "s", configOptions: ipc.offered }
-          : {};
+          : method === "initialize" && ipc.images
+            ? { agentCapabilities: { promptCapabilities: { image: true } } }
+            : {};
       queueMicrotask(() =>
         ipc.out!({
           type: "lines",
@@ -84,9 +96,9 @@ vi.mock("../../plugins/app-bridge", () => ({
 import {
   agentRunning,
   cancelAgentExchange,
-  fileUri,
   runAgentExchange,
 } from "./agent-exchange";
+import { fileUri } from "./agent-prompt";
 
 describe("the document a prompt points at", () => {
   it("is a file: URI with its spaces and marks encoded", () => {
@@ -97,6 +109,36 @@ describe("the document a prompt points at", () => {
     expect(fileUri("C:\\Notes\\周报.md")).toBe(
       "file:///C:/Notes/%E5%91%A8%E6%8A%A5.md",
     );
+  });
+});
+
+describe("pictures attached to a message", () => {
+  const send = (conversation: string) =>
+    runAgentExchange({
+      agent: { key: "p/pic", plugin: "p", id: "pic", name: "Pic" } as never,
+      conversation,
+      cwd: "/w",
+      docPath: "/w/a.md",
+      message: "what is this?",
+      images: [{ name: "a.png", mime: "image/png", dataBase64: "AA==" }],
+      events: { view: () => {}, thinking: () => {}, permission: () => {} },
+    });
+
+  it("reach an agent that reads them", async () => {
+    ipc.images = true;
+    ipc.prompts.length = 0;
+    send("pictures-read").catch(() => undefined);
+    await vi.waitFor(() =>
+      expect(ipc.prompts).toEqual([["text", "resource_link", "image"]]),
+    );
+    cancelAgentExchange("pictures-read");
+    ipc.images = false;
+  });
+
+  it("are refused, not dropped, for an agent that doesn't", async () => {
+    ipc.prompts.length = 0;
+    await expect(send("pictures-unread")).rejects.toThrow(/Pic/);
+    expect(ipc.prompts).toEqual([]);
   });
 });
 

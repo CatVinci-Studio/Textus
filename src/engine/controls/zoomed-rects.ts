@@ -1,4 +1,4 @@
-import { zoomOf } from "../zoom/tab-zoom";
+import { contentZoom } from "../zoom/tab-zoom";
 /**
  * Boxes read inside the document's zoom (`--content-zoom`, CSS `zoom` on the
  * text) as drawn on screen. Chromium and current WebKit report them as
@@ -8,9 +8,7 @@ import { zoomOf } from "../zoom/tab-zoom";
  */
 export function zoomedRectScale(inside: HTMLElement): number {
   // Its tab's zoom; the window's for an element in none.
-  const zoom = zoomOf(
-    inside.closest<HTMLElement>("[data-tab-id]")?.dataset.tabId,
-  );
+  const zoom = contentZoom(inside);
   if (Math.abs(zoom - 1) < 0.01) return 1;
   const drawn = inside.getBoundingClientRect().width;
   const laid = inside.offsetWidth;

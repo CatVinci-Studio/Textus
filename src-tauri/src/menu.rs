@@ -292,13 +292,15 @@ fn dispatch(app_handle: &tauri::AppHandle, id: &str) {
         }
     } else if id == "new-window" {
         let _ = crate::editor_windows::open_new_window(app_handle);
-    } else if id == "help-community" || id == "help-tutorials" {
+    } else if matches!(id, "help-community" | "help-tutorials" | "help-sponsor") {
         // A window knows the UI's language; with none open (macOS keeps
         // running after the last one closes), the site picks it.
         if focused_editor_window(app_handle).is_some() {
             emit_to_focused(app_handle, &format!("menu-{id}"));
         } else if id == "help-community" {
             let _ = commands::links::open_community(app_handle, None);
+        } else if id == "help-sponsor" {
+            let _ = commands::links::open_sponsor(app_handle, None);
         } else {
             let _ = commands::links::open_tutorials(app_handle, None, None);
         }

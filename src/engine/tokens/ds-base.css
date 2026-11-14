@@ -7,6 +7,13 @@
 @import "../controls/bubble.css";
 
 :root {
+  /* What a phone's home indicator or navigation bar takes at the bottom:
+     the web view's safe area, or Android's, told by the app
+     (mobile-viewport.ts). */
+  --safe-bottom: max(
+    env(safe-area-inset-bottom, 0px),
+    var(--native-safe-bottom, 0px)
+  );
   /* Shape (docs/design/design-language.md). Containers are rounded rectangles in
      three sizes (4, 8, 12), bigger and further forward rounder; a box
      inside another takes the outer radius less the padding between them,
@@ -23,9 +30,8 @@
      sidebar page's too. */
   --pane-row-inset: calc(var(--pane-inset) - var(--pane-edge));
   /* Layers, low to high, so an entrance and an exit stack predictably. */
-  /* The phone's own stack under its title row: the keyboard's bar, the AI
-     page, Quick Ask docked over it. */
-  --z-phone-toolbar: 35;
+  /* The phone's own stack under its title row: its pages, Quick Ask docked
+     over them. */
   --z-phone-page: 40;
   --z-phone-dock: 41;
   --z-bar: 45;
@@ -219,7 +225,6 @@
   .floating-surface,
   .settings-panel,
   .language-welcome,
-  .tutorial-surface,
   .image-name-dialog,
   .insert-table-dialog,
   .close-prompt,
@@ -343,7 +348,6 @@
 :where(
     .settings-panel,
     .language-welcome,
-    .tutorial-surface,
     .image-name-dialog,
     .insert-table-dialog,
     .close-prompt

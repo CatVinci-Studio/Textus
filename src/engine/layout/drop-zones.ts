@@ -1,6 +1,6 @@
 import { shownIsland } from "./store";
 import { scaledPx } from "../tokens/chrome-scale";
-import { isPhoneLayout } from "../controls/usePhoneLayout";
+import { isPhoneLayout } from "../../platform/phone-layout";
 import { frameLayout } from "../frame/frame-store";
 import type { Rect } from "../frame/rect";
 import { stripPlaces } from "../controls/tabs/tab-strips";
@@ -69,12 +69,8 @@ function outerEdge(
   const sides = [
     ["top", (y - area.top) / down],
     ["bottom", (area.bottom - y) / down],
-    ...(isPhoneLayout()
-      ? []
-      : ([
-          ["left", (x - area.left) / across],
-          ["right", (area.right - x) / across],
-        ] as const)),
+    ["left", (x - area.left) / across],
+    ["right", (area.right - x) / across],
   ] as const;
   const [side, near] = sides.reduce((a, b) => (b[1] < a[1] ? b : a));
   return near < 1 ? side : null;
@@ -161,6 +157,9 @@ export function dropTargetAt(
   const { panes } = geometry;
   const pane = panes.find((p) => inside(p.rect, x, y));
   if (!pane?.tabId) return null;
+  // A phone shows one island: whatever is dropped joins it.
+  if (isPhoneLayout())
+    return { zone: "center", tabId: pane.tabId, rect: pane.rect };
   // Split, an outer edge puts it beside all of them.
   if (panes.length > 1) {
     const area = union(panes.map((p) => p.rect));
@@ -175,13 +174,8 @@ export function dropTargetAt(
   const sides: [DropZone, number][] = [
     ["top", fy],
     ["bottom", 1 - fy],
-    // A phone's column is too narrow to share: documents only stack there.
-    ...(isPhoneLayout()
-      ? []
-      : ([
-          ["left", fx],
-          ["right", 1 - fx],
-        ] as [DropZone, number][])),
+    ["left", fx],
+    ["right", 1 - fx],
   ];
   const kept = held && !held.whole && held.tabId === tabId ? held.zone : null;
   const band = (side: DropZone) =>
@@ -194,7 +188,6 @@ export function dropTargetAt(
 }
 
 function halfAt(fx: number, fy: number): DropZone {
-  if (isPhoneLayout()) return fy < 0.5 ? "top" : "bottom";
   if (fy < STACK_EDGE) return "top";
   if (fy > 1 - STACK_EDGE) return "bottom";
   return fx < 0.5 ? "left" : "right";

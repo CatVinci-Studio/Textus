@@ -82,6 +82,12 @@ export function MemorySections({
 
   const [root, setRoot] = useState<HTMLDivElement | null>(null);
   useMemoryFocus(root);
+  // Nothing kept yet: one row of what can be, not three empty boxes.
+  const unset =
+    styleLines.length === 0 &&
+    projectRules.length === 0 &&
+    globalRules.length === 0 &&
+    info.library.length === 0;
 
   return (
     <div className="memory-sections" ref={setRoot}>
@@ -94,166 +100,201 @@ export function MemorySections({
           onChange={(e) => setQuery(e.target.value)}
         />
       )}
-      <section className="memory-section">
-        <h4>
-          {t.memoryStyle}
-          {info.style && (
+      {unset ? (
+        <section className="memory-section memory-setup">
+          <h4>{t.memorySetup}</h4>
+          <div className="memory-setup-actions">
             <button
               type="button"
-              title=".textus/style.md"
-              onClick={onOpenStyle}
+              className="tx-button small"
+              onClick={onLearnStyle}
             >
-              {t.memoryEdit}
+              + {t.memoryStyle}
             </button>
-          )}
-        </h4>
-        {styleLines.length > 0 ? (
-          <ul className="memory-card memory-lines">
-            {styleLines.map((line, i) => (
-              <li key={i} style={{ "--i": i } as React.CSSProperties}>
-                {line}
-              </li>
-            ))}
-          </ul>
-        ) : (
-          <div className="memory-empty">
-            <p>{t.memoryStyleEmpty}</p>
-            <div className="memory-empty-actions">
-              <button type="button" className="primary" onClick={onLearnStyle}>
-                {t.projectLearnStyle}
-              </button>
-              <button type="button" onClick={onOpenStyle}>
-                {t.projectCreateStyle}
-              </button>
-            </div>
+            <button
+              type="button"
+              className="tx-button small"
+              onClick={onOpenInstructions}
+            >
+              + {t.memoryInstructions}
+            </button>
+            <button
+              type="button"
+              className="tx-button small"
+              onClick={onNewEntry}
+            >
+              + {t.memoryLibrary}
+            </button>
           </div>
-        )}
-      </section>
-
-      <section className="memory-section">
-        <h4>
-          {t.memoryInstructions}
-          <button
-            type="button"
-            title=".textus/agent.md"
-            onClick={onOpenInstructions}
-          >
-            {t.memoryEdit}
-          </button>
-        </h4>
-        {projectRules.length > 0 || globalRules.length > 0 ? (
-          <ul className="memory-card memory-lines">
-            {projectRules.map((line, i) => (
-              <li key={`p${i}`}>{line}</li>
-            ))}
-            {globalRules.map((line, i) => (
-              <li key={`g${i}`} className="memory-global">
-                {line}
-                <span className="memory-scope">{t.memoryAllProjects}</span>
-              </li>
-            ))}
-          </ul>
-        ) : (
-          <div className="memory-empty">
-            <p>{t.memoryInstructionsEmpty}</p>
-          </div>
-        )}
-        <button
-          type="button"
-          className="memory-link"
-          onClick={onOpenGlobalInstructions}
-        >
-          {t.memoryEditGlobal}
-        </button>
-      </section>
-
-      <section className="memory-section">
-        <h4>
-          {t.memoryLibrary}
-          {info.library.length > 0 && (
-            <span className="memory-count">{info.library.length}</span>
-          )}
-          <button type="button" onClick={onNewEntry}>
-            {t.memoryNew}
-          </button>
-        </h4>
-        {info.library.length > 0 && library.length === 0 ? (
-          <div className="memory-empty">
-            <p>{t.memoryNoMatch}</p>
-          </div>
-        ) : info.library.length > 0 ? (
-          <div className="memory-library">
-            {library.map((entry) => {
-              const sent = used.has(entry.file);
-              return (
-                <div
-                  key={entry.file}
-                  className={`memory-entry tx-reveal-host${sent ? " memory-entry-used" : ""}`}
-                  data-memory-id={libraryEntryId(entry)}
+        </section>
+      ) : (
+        <>
+          <section className="memory-section">
+            <h4>
+              {t.memoryStyle}
+              {info.style && (
+                <button
+                  type="button"
+                  title=".textus/style.md"
+                  onClick={onOpenStyle}
                 >
+                  {t.memoryEdit}
+                </button>
+              )}
+            </h4>
+            {styleLines.length > 0 ? (
+              <ul className="memory-card memory-lines">
+                {styleLines.map((line, i) => (
+                  <li key={i} style={{ "--i": i } as React.CSSProperties}>
+                    {line}
+                  </li>
+                ))}
+              </ul>
+            ) : (
+              <div className="memory-empty">
+                <p>{t.memoryStyleEmpty}</p>
+                <div className="memory-empty-actions">
                   <button
                     type="button"
-                    className="memory-entry-open"
-                    onClick={() => onOpenEntry(entry)}
+                    className="primary"
+                    onClick={onLearnStyle}
                   >
-                    <b>{entry.name}</b>
-                    {entry.aliases.length > 0 && (
-                      <span className="memory-aliases">
-                        {entry.aliases.slice(0, 3).map((a) => (
-                          <span key={a}>{a}</span>
-                        ))}
-                      </span>
-                    )}
-                    <span className="tx-clamp memory-desc">
-                      {firstLine(entry.body)}
-                    </span>
-                    {entry.remembered && (
-                      <span className="tx-clamp memory-desc memory-by-ai">
-                        {[
-                          t.memoryWrittenByAi,
-                          rememberedDate(entry.remembered.updated, lang),
-                        ]
-                          .filter(Boolean)
-                          .join(" · ")}
-                      </span>
-                    )}
-                    {sent && (
-                      <span className="memory-used">
-                        {libraryUse?.lastRequest
-                          ? t.memoryUsedInConversation
-                          : t.memoryInThisDocument}
-                      </span>
-                    )}
+                    {t.projectLearnStyle}
                   </button>
-                  <Tooltip text={t.memoryDelete}>
-                    <button
-                      type="button"
-                      className="tx-reveal memory-entry-delete"
-                      aria-label={`${t.memoryDelete} ${entry.name}`}
-                      onClick={() => onDeleteEntry(entry)}
-                    >
-                      ×
-                    </button>
-                  </Tooltip>
+                  <button type="button" onClick={onOpenStyle}>
+                    {t.projectCreateStyle}
+                  </button>
                 </div>
-              );
-            })}
-          </div>
-        ) : (
-          <div className="memory-empty">
-            <p>{t.memoryLibraryEmpty}</p>
-          </div>
-        )}
-        {leftOut.length > 0 && (
-          <p className="memory-note" role="note">
-            {fill(t.memoryLibraryLeftOut, {
-              names: leftOut.map((e) => e.name).join(", "),
-              cap: (libraryUse?.cap ?? 0).toLocaleString(localeOf(lang)),
-            })}
-          </p>
-        )}
-      </section>
+              </div>
+            )}
+          </section>
 
+          <section className="memory-section">
+            <h4>
+              {t.memoryInstructions}
+              <button
+                type="button"
+                title=".textus/agent.md"
+                onClick={onOpenInstructions}
+              >
+                {t.memoryEdit}
+              </button>
+            </h4>
+            {projectRules.length > 0 || globalRules.length > 0 ? (
+              <ul className="memory-card memory-lines">
+                {projectRules.map((line, i) => (
+                  <li key={`p${i}`}>{line}</li>
+                ))}
+                {globalRules.map((line, i) => (
+                  <li key={`g${i}`} className="memory-global">
+                    {line}
+                    <span className="memory-scope">{t.memoryAllProjects}</span>
+                  </li>
+                ))}
+              </ul>
+            ) : (
+              <div className="memory-empty">
+                <p>{t.memoryInstructionsEmpty}</p>
+              </div>
+            )}
+            <button
+              type="button"
+              className="memory-link"
+              onClick={onOpenGlobalInstructions}
+            >
+              {t.memoryEditGlobal}
+            </button>
+          </section>
+
+          <section className="memory-section">
+            <h4>
+              {t.memoryLibrary}
+              {info.library.length > 0 && (
+                <span className="memory-count">{info.library.length}</span>
+              )}
+              <button type="button" onClick={onNewEntry}>
+                {t.memoryNew}
+              </button>
+            </h4>
+            {info.library.length > 0 && library.length === 0 ? (
+              <div className="memory-empty">
+                <p>{t.memoryNoMatch}</p>
+              </div>
+            ) : info.library.length > 0 ? (
+              <div className="memory-library memory-card">
+                {library.map((entry) => {
+                  const sent = used.has(entry.file);
+                  return (
+                    <div
+                      key={entry.file}
+                      className="memory-entry tx-reveal-host"
+                      data-memory-id={libraryEntryId(entry)}
+                    >
+                      <button
+                        type="button"
+                        className="memory-entry-open"
+                        title={entry.aliases.join(" · ") || undefined}
+                        onClick={() => onOpenEntry(entry)}
+                      >
+                        <span className="memory-entry-name">{entry.name}</span>
+                        <span className="tx-clamp memory-desc">
+                          {firstLine(entry.body)}
+                        </span>
+                        {(sent || entry.remembered) && (
+                          <span className="memory-remembered-meta">
+                            {sent && (
+                              <span className="memory-used">
+                                {libraryUse?.lastRequest
+                                  ? t.memoryUsedInConversation
+                                  : t.memoryInThisDocument}
+                              </span>
+                            )}
+                            {entry.remembered && (
+                              <span>
+                                {[
+                                  t.memoryWrittenByAi,
+                                  rememberedDate(
+                                    entry.remembered.updated,
+                                    lang,
+                                  ),
+                                ]
+                                  .filter(Boolean)
+                                  .join(" · ")}
+                              </span>
+                            )}
+                          </span>
+                        )}
+                      </button>
+                      <Tooltip text={t.memoryDelete}>
+                        <button
+                          type="button"
+                          className="tx-reveal memory-entry-delete"
+                          aria-label={`${t.memoryDelete} ${entry.name}`}
+                          onClick={() => onDeleteEntry(entry)}
+                        >
+                          ×
+                        </button>
+                      </Tooltip>
+                    </div>
+                  );
+                })}
+              </div>
+            ) : (
+              <div className="memory-empty">
+                <p>{t.memoryLibraryEmpty}</p>
+              </div>
+            )}
+            {leftOut.length > 0 && (
+              <p className="memory-note" role="note">
+                {fill(t.memoryLibraryLeftOut, {
+                  names: leftOut.map((e) => e.name).join(", "),
+                  cap: (libraryUse?.cap ?? 0).toLocaleString(localeOf(lang)),
+                })}
+              </p>
+            )}
+          </section>
+        </>
+      )}
       <RememberedSection
         info={info}
         t={t}

@@ -1,11 +1,12 @@
 ## Default Permission
 
-Everything Textus's iOS document access needs.
+Everything Textus's iOS and Android document access needs.
 
 #### This default permission set includes the following:
 
 - `allow-pick-document`
 - `allow-pick-folder`
+- `allow-create-document`
 - `allow-read-text`
 - `allow-read-data`
 - `allow-write-text`
@@ -46,6 +47,32 @@ Enables the begin_access command without any pre-configured scope.
 <td>
 
 Denies the begin_access command without any pre-configured scope.
+
+</td>
+</tr>
+
+<tr>
+<td>
+
+`textus-files:allow-create-document`
+
+</td>
+<td>
+
+Enables the create_document command without any pre-configured scope.
+
+</td>
+</tr>
+
+<tr>
+<td>
+
+`textus-files:deny-create-document`
+
+</td>
+<td>
+
+Denies the create_document command without any pre-configured scope.
 
 </td>
 </tr>

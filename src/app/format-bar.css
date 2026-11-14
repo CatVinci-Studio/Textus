@@ -88,3 +88,53 @@
   .editor-content:not(.typewriter-active) {
   padding-top: calc(3rem + var(--format-bar-height));
 }
+
+/* A phone's strip is the sheet's foot (design: phone): a finger's reach,
+   and with the keyboard up the page ends at it, so the strip rides on it. */
+:root[data-window-chrome="mobile"] .split-pane > .format-bar {
+  top: auto;
+  bottom: 0;
+  height: 48px;
+  padding: 0 var(--space-2);
+  border-top: 1px solid var(--ui-border);
+  border-bottom: none;
+  border-radius: 0 0 var(--island-radius) var(--island-radius);
+}
+
+/* Only while typing: at rest the page is the sheet alone. */
+:root[data-window-chrome="mobile"]:not(.keyboard-up) .split-pane > .format-bar {
+  display: none;
+}
+
+/* It scrolls when a table's buttons outrun the phone, rather than folding
+   them away; its edges fade, so a button cut off there reads as more to
+   scroll to, not as a stray mark. */
+:root[data-window-chrome="mobile"] .format-bar-row {
+  flex: 1;
+  overflow-x: auto;
+  scrollbar-width: none;
+  mask-image: linear-gradient(
+    to right,
+    transparent,
+    #000 12px,
+    #000 calc(100% - 12px),
+    transparent
+  );
+}
+
+:root[data-window-chrome="mobile"] .format-bar .tx-icon-button {
+  min-width: 44px;
+  height: 44px;
+}
+
+:root[data-window-chrome="mobile"]
+  .main-pane
+  .split-pane:has(> .format-bar)
+  .editor-content:not(.typewriter-active) {
+  padding-top: 1.5rem;
+  padding-bottom: calc(1.5rem + 48px);
+}
+
+:root[data-window-chrome="mobile"] .format-bar-row::-webkit-scrollbar {
+  display: none;
+}

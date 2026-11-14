@@ -10,6 +10,8 @@ import type { ChatAttachment, ThinkingLevel } from "../types";
 import { ai } from "../../platform/ipc";
 import { useActiveProvider, useWebSearchStatus } from "../provider-catalog";
 import type { AgentMode, PanelMode } from "../../prefs/SettingsContext";
+import { loadSettings } from "../../prefs/settings-store";
+import { externalAgent } from "../../plugins/contributions/agents";
 import { initialMode, rememberMode } from "./last-mode";
 import { rememberWebSearch, webSearchOn } from "./web-search-on";
 import { deepThinkingOn, useCanThinkDeeper } from "./deep-thinking";
@@ -82,7 +84,7 @@ export function useComposerInput(handle?: Ref<ChatComposerHandle | null>) {
  *  rather than swallowed. Vision support is derived here, the only place an
  *  image is staged, so no caller can forget it. */
 export function useAttachments(noVisionMessage: string, conversation: string) {
-  const supportsVision = useActiveProvider()?.supportsVision ?? true;
+  const providerVision = useActiveProvider()?.supportsVision ?? true;
   const [attachments, setAttachments] = useState<ChatAttachment[]>([]);
   const [attachError, setAttachError] = useState<string | null>(null);
 
@@ -91,9 +93,13 @@ export function useAttachments(noVisionMessage: string, conversation: string) {
     try {
       // None means the picker was cancelled - not something to report.
       const files = await ai.pickAttachmentFiles(conversation);
-      const kept = supportsVision
-        ? files
-        : files.filter((file) => file.kind !== "image");
+      // An outside agent answering takes pictures if it reads them; the
+      // exchange leaves them out for one that doesn't.
+      const agent = externalAgent(loadSettings().chatAgent);
+      const kept =
+        agent || providerVision
+          ? files
+          : files.filter((file) => file.kind !== "image");
       if (kept.length < files.length) setAttachError(noVisionMessage);
       setAttachments((prev) => [...prev, ...kept]);
     } catch (err) {

@@ -1,10 +1,11 @@
 "$schema" = "schemas/schema.json"
 
 [default]
-description = "Everything Textus's iOS document access needs."
+description = "Everything Textus's iOS and Android document access needs."
 permissions = [
   "allow-pick-document",
   "allow-pick-folder",
+  "allow-create-document",
   "allow-read-text",
   "allow-read-data",
   "allow-write-text",

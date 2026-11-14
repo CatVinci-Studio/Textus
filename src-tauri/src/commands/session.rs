@@ -1,3 +1,4 @@
+use crate::app_dirs::AppDirs;
 use serde::{Deserialize, Serialize};
 use std::collections::{HashMap, HashSet};
 use std::fs;
@@ -39,7 +40,7 @@ static APP_QUITTING: AtomicBool = AtomicBool::new(false);
 
 fn session_file(app: &AppHandle) -> Option<PathBuf> {
     app.path()
-        .app_config_dir()
+        .own_config_dir()
         .ok()
         .map(|dir| dir.join(crate::settings::file_name("session")))
 }

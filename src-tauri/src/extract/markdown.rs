@@ -362,6 +362,9 @@ fn chinese(stem: &str) -> Option<u32> {
     }
 }
 
+/// A Roman numeral as a word processor writes it, in either case. `iiii`,
+/// `vx` and `ic` add up to 4, 5 and 99 but aren't numerals, so they count
+/// as nothing, as `十十` does.
 fn roman(stem: &str) -> Option<u32> {
     let value = |c: char| match c.to_ascii_lowercase() {
         'i' => Some(1),
@@ -381,7 +384,35 @@ fn roman(stem: &str) -> Option<u32> {
             sum + d as i64
         }
     });
-    u32::try_from(total).ok().filter(|&n| n > 0)
+    let n = u32::try_from(total).ok().filter(|&n| n > 0)?;
+    to_roman(n).eq_ignore_ascii_case(stem).then_some(n)
+}
+
+/// 4 is `iv`, 14 `xiv`, 40 `xl`.
+fn to_roman(mut n: u32) -> String {
+    const NUMERALS: [(u32, &str); 13] = [
+        (1000, "m"),
+        (900, "cm"),
+        (500, "d"),
+        (400, "cd"),
+        (100, "c"),
+        (90, "xc"),
+        (50, "l"),
+        (40, "xl"),
+        (10, "x"),
+        (9, "ix"),
+        (5, "v"),
+        (4, "iv"),
+        (1, "i"),
+    ];
+    let mut out = String::new();
+    for (value, numeral) in NUMERALS {
+        while n >= value {
+            out.push_str(numeral);
+            n -= value;
+        }
+    }
+    out
 }
 
 #[cfg(test)]

@@ -1,4 +1,5 @@
 import { explainError } from "../utils/error-explain";
+import { useFileBadge } from "../plugins/contributions/file-badges";
 import { Tooltip } from "../engine/controls/Tooltip";
 import { currentStrings } from "../i18n/current";
 // The file tree's rows: a folder, which reads and lists its entries, and
@@ -16,7 +17,7 @@ import {
 import { fs } from "../platform/ipc";
 import { useSettings } from "../prefs/SettingsContext";
 import { basename, isInside, onTheWay, parentDir } from "../utils/path";
-import { isIOSApp } from "../platform/capabilities";
+import { isMobileApp } from "../platform/capabilities";
 import { iosFiles } from "../platform/ios-files";
 import { ContextMenu } from "../engine/controls/ContextMenu";
 import { Presence } from "../engine/motion/usePresence";
@@ -267,6 +268,7 @@ const FileNode = memo(function FileNode({
   const Icon = fileIconFor(entry.name);
   const press = useLongPress();
   const mark = useFileMark(entry.path);
+  const badge = useFileBadge(entry.path);
   const changed = !!mark?.changed;
   // What Textus AI left here waiting for the writer, said after the name.
   const waiting = mark?.pending
@@ -302,12 +304,21 @@ const FileNode = memo(function FileNode({
             ? (e) => tree.onRowPointerDown!(e, entry.path, entry.name, false)
             : undefined
         }
-        {...(isIOSApp ? press.handlers : {})}
+        {...(isMobileApp ? press.handlers : {})}
       >
         <Icon className="tree-icon" />
         <Tooltip text={entry.name} description={null} whenCut>
           <span className="tx-truncate tree-label">{entry.name}</span>
         </Tooltip>
+        {badge && (
+          <Tooltip text={badge.tooltip ?? badge.text} description={null}>
+            <span
+              className={`tree-badge${badge.tone ? ` plugin-tone-${badge.tone}` : ""}`}
+            >
+              {badge.text}
+            </span>
+          </Tooltip>
+        )}
         {waiting && <span className="tree-ai-waiting">{waiting}</span>}
       </div>
       <Presence show={!!press.at}>

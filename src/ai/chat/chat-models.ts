@@ -127,3 +127,19 @@ export function useChatModels(): ChatModels {
       ),
   };
 }
+
+/** Whether a message can go anywhere: an agent chosen, or the selected
+ *  provider signed in (or needing no key). Null until that is known, so
+ *  the panel doesn't flash a sign-in it then takes back. */
+export function useAiSignedIn(): boolean | null {
+  const { settings } = useSettings();
+  const catalog = useProviderCatalog();
+  const { connected } = useConnectedProviders(catalog, settings.aiProvider);
+  const agents = useExternalAgents();
+  if (agents.some((a) => a.key === settings.chatAgent)) return true;
+  const active = catalog.find((e) => e.id === settings.aiProvider);
+  if (!active) return null;
+  if (active.keyOptional && active.id !== "custom") return true;
+  const state = connected[active.id];
+  return state ? state.oauth || state.apiKey : null;
+}

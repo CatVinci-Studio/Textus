@@ -2,6 +2,7 @@
 //! file's place, moving a draft's pictures, and which may go to the Trash.
 
 use super::*;
+use crate::app_dirs::AppDirs;
 
 /// Where a saved document's images go (Settings > Images > Folder), worked out
 /// for one document. Keep in step with image-folder.ts, which previews the rules.
@@ -96,7 +97,7 @@ pub struct SavedImage {
 pub(crate) fn draft_assets_dir(app: &tauri::AppHandle) -> Result<PathBuf, String> {
     use tauri::Manager;
     app.path()
-        .app_data_dir()
+        .own_data_dir()
         .map(|dir| dir.join("assets"))
         .map_err(|e| e.to_string())
 }

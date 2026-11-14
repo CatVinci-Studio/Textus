@@ -1,3 +1,4 @@
+use crate::app_dirs::AppDirs;
 use std::path::PathBuf;
 use tauri::Manager;
 
@@ -13,7 +14,7 @@ const FOLDERS_LIST: &str = "recent_folders";
 
 fn list_file(app: &tauri::AppHandle, name: &str) -> Option<PathBuf> {
     app.path()
-        .app_config_dir()
+        .own_config_dir()
         .ok()
         .map(|dir| dir.join(crate::settings::file_name(name)))
 }

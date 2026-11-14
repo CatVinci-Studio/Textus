@@ -51,7 +51,7 @@ pub fn settings_patch(
     app: AppHandle,
     window: tauri::WebviewWindow,
     stores: tauri::State<Stores>,
-    mut patch: Map<String, Value>,
+    #[cfg_attr(mobile, allow(unused_mut))] mut patch: Map<String, Value>,
 ) -> u64 {
     // MCP servers' secrets go to the key store before any window hears them.
     #[cfg(desktop)]

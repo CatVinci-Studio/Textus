@@ -1,4 +1,5 @@
 import { lazyModule } from "../lazy/lazy-module";
+import { appearanceNow } from "../theme/plugin-colors";
 import { pickWithCommands } from "./command-palette-entry";
 import { watchConventions } from "../plugins/contributions/conventions-watch";
 import { useEffect, useSyncExternalStore } from "react";
@@ -320,7 +321,13 @@ export function usePluginWindow({
   useEffect(() => onCopied((copied) => emitPluginEvent("copy", copied)), []);
   useEffect(() => {
     let dark = windowIsDark();
+    let look = appearanceNow().key;
     return watchTheme(() => {
+      const now = appearanceNow();
+      if (now.key !== look) {
+        look = now.key;
+        emitPluginEvent("appearance", { theme: now.theme, scheme: now.scheme });
+      }
       if (windowIsDark() === dark) return;
       dark = !dark;
       emitPluginEvent("theme", dark ? "dark" : "light");

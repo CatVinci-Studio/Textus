@@ -1,6 +1,7 @@
 //! Per-provider API keys, stored together in one 0600 JSON file
 //! (`provider_keys.json`, provider id -> key).
 
+use crate::app_dirs::AppDirs;
 use std::collections::HashMap;
 use std::fs;
 use std::path::PathBuf;
@@ -10,7 +11,7 @@ use tauri::{AppHandle, Manager};
 pub(crate) const FILE: &str = "provider_keys.json";
 
 fn keys_file_path(app: &AppHandle) -> Result<PathBuf, String> {
-    let dir = app.path().app_config_dir().map_err(|e| e.to_string())?;
+    let dir = app.path().own_config_dir().map_err(|e| e.to_string())?;
     fs::create_dir_all(&dir).map_err(|e| e.to_string())?;
     Ok(dir.join(FILE))
 }

@@ -24,6 +24,8 @@ export function nextTreeRoot({
   // An opened folder is the tree's root, whole, as a project is.
   if (folder) return folder;
   if (!docPath) return fallback ?? current;
+  // A document Android granted alone (content://) has no folder to list.
+  if (docPath.startsWith("content://")) return current ?? fallback;
   if (current && isInside(docPath, current)) return current;
   return dirname(docPath);
 }

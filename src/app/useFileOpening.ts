@@ -19,7 +19,7 @@ import { useDocumentOpener } from "./useDocumentOpener";
 import { setTabJump, type TabJump } from "../editor/tab-jump";
 import { lastCaret } from "../document/last-places";
 import { lastViewMode } from "../editor/modes/view-mode";
-import { isIOSApp } from "../platform/capabilities";
+import { isMobileApp } from "../platform/capabilities";
 import { isWindowsPlatform } from "../platform/os";
 import { dropPointInPage, sortDroppedPaths } from "./dropped-files";
 import { isWordDocument, wordDocumentTab } from "../document/word-import";
@@ -455,7 +455,7 @@ export function useFileDrop(
   openFolder: (path: string) => void,
 ): void {
   useEffect(() => {
-    if (isIOSApp) return;
+    if (isMobileApp) return;
     const unlisten = listenToThisWebview<{
       paths: string[];
       position: { x: number; y: number };

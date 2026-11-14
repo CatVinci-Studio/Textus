@@ -2,7 +2,7 @@ import { useCallback, useEffect, useRef } from "react";
 import { useAgentPanelState } from "../../ai/chat/panel/agent-panel";
 import { usePresence } from "../../engine/motion/usePresence";
 import { keyboardUp, whenKeyboardDown } from "../../mobile/keyboard";
-import { isIOSApp } from "../../platform/capabilities";
+import { isMobileApp } from "../../platform/capabilities";
 import { AI_PRESS_EVENT } from "../islands/ai-tabs";
 
 /**
@@ -32,7 +32,7 @@ export function useAgentDock(
       pendingAgentOpen.current = null;
       return;
     }
-    if (isIOSApp && !agentPanel.open) {
+    if (isMobileApp && !agentPanel.open) {
       const active = document.activeElement;
       if (active instanceof HTMLElement) active.blur();
       if (keyboardUp()) {
@@ -45,7 +45,7 @@ export function useAgentDock(
     }
     // Shown on the desktop: what a press does is the AI tabs' to decide -
     // bring theirs to the front, or hide the AI (useAiTabs).
-    if (!isIOSApp && agentPanel.open) {
+    if (!isMobileApp && agentPanel.open) {
       window.dispatchEvent(new Event(AI_PRESS_EVENT));
       return;
     }

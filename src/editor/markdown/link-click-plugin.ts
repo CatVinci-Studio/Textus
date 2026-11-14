@@ -31,7 +31,7 @@ function wikilinkAt(view: EditorView, event: MouseEvent): HTMLElement | null {
 
 /** Ctrl+click, or Cmd+click where Mod is Cmd: on a Mac, Ctrl+click is the
  *  right click. */
-function isFollowClick(event: MouseEvent): boolean {
+export function isFollowClick(event: MouseEvent): boolean {
   return event.button === 0 && (modIsMeta() ? event.metaKey : event.ctrlKey);
 }
 

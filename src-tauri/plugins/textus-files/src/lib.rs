@@ -1,4 +1,4 @@
-//! iOS document access for Textus.
+//! iOS and Android document access for Textus.
 //!
 //! An iOS app can't open arbitrary paths: a file or folder the user picks in
 //! the Files app arrives as a security-scoped URL that has to be opened for
@@ -12,16 +12,20 @@
 //! iPhone > Textus") don't need any of this and keep using the app's
 //! ordinary Rust file commands.
 //!
-//! Registered on iOS only (see the app's lib.rs); desktop never loads it.
+//! Android's picks are content:// URLs read through the ContentResolver in
+//! `android/src/main/java/TextusFilesPlugin.kt`, the Swift plugin's twin.
+//!
+//! Registered on mobile only (see the app's lib.rs); desktop never loads it.
 
-#[cfg(target_os = "ios")]
-mod ios {
+#[cfg(any(target_os = "ios", target_os = "android"))]
+mod native {
     use serde_json::Value;
     use tauri::{
         plugin::{Builder, PluginHandle, TauriPlugin},
         AppHandle, Manager, Runtime,
     };
 
+    #[cfg(target_os = "ios")]
     tauri::ios_plugin_binding!(init_plugin_textus_files);
 
     struct Native<R: Runtime>(PluginHandle<R>);
@@ -49,6 +53,7 @@ mod ios {
     forwarded! {
         pick_document => "pickDocument",
         pick_folder => "pickFolder",
+        create_document => "createDocument",
         read_text => "readText",
         read_data => "readData",
         write_text => "writeText",
@@ -64,6 +69,7 @@ mod ios {
             .invoke_handler(tauri::generate_handler![
                 pick_document,
                 pick_folder,
+                create_document,
                 read_text,
                 read_data,
                 write_text,
@@ -74,7 +80,11 @@ mod ios {
                 haptic
             ])
             .setup(|app, api| {
+                #[cfg(target_os = "ios")]
                 let handle = api.register_ios_plugin(init_plugin_textus_files)?;
+                #[cfg(target_os = "android")]
+                let handle =
+                    api.register_android_plugin("com.catvinci.textus.files", "TextusFilesPlugin")?;
                 app.manage(Native(handle));
                 Ok(())
             })
@@ -82,8 +92,8 @@ mod ios {
     }
 }
 
-#[cfg(target_os = "ios")]
-pub use ios::init;
+#[cfg(any(target_os = "ios", target_os = "android"))]
+pub use native::init;
 
 #[cfg(target_os = "ios")]
 extern "C" {
