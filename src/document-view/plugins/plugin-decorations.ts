@@ -10,11 +10,15 @@ import { cachedDocument } from "../../editor/markdown/doc-markdown";
 import {
   decorate,
   hasDecorationProviders,
+  markUrl,
   onDecorationProviders,
   type PluginDecoration,
 } from "../../plugins/contributions/decorations";
 import "./plugin-decorations.css";
 import { metaDecorations } from "../../editor/meta-decorations";
+import { isFollowClick } from "../../editor/markdown/link-click-plugin";
+import { editorExtensions } from "../../editor/extension-points";
+import { links } from "../../platform/ipc";
 
 const key = new PluginKey<DecorationSet>("plugin-decorations");
 /** How long the document (or its scrolling) rests before plugins are
@@ -35,6 +39,18 @@ export const pluginDecorations = $prose((ctx) => {
     state: metaDecorations(key),
     props: {
       decorations: (state) => key.getState(state),
+      // A mark that links is followed as a link is: Cmd/Ctrl+click, the
+      // caret left where it was.
+      handleDOMEvents: {
+        mousedown: (view, event) => !!linkedMark(view, event),
+        click(view, event) {
+          const url = linkedMark(view, event);
+          if (!url) return false;
+          event.preventDefault();
+          if (!editorExtensions().openLink(url)) void links.openWebLink(url);
+          return true;
+        },
+      },
     },
     view(view) {
       let timer: ReturnType<typeof setTimeout> | undefined;
@@ -103,6 +119,15 @@ export const pluginDecorations = $prose((ctx) => {
   });
 });
 
+/** The link of the plugin mark a Cmd/Ctrl+click is on, or null. */
+function linkedMark(view: EditorView, event: MouseEvent): string | null {
+  if (!isFollowClick(event)) return null;
+  const at = (event.target as Element | null)?.closest?.("[data-plugin-url]");
+  if (!at || !view.dom.contains(at)) return null;
+  event.preventDefault();
+  return at.getAttribute("data-plugin-url");
+}
+
 /** The first and last top-level block in sight. */
 export function inSight(view: EditorView): [number, number] {
   const count = view.state.doc.childCount;
@@ -139,6 +164,11 @@ function drawMark(
     "data-plugin": mark.plugin,
   };
   if (mark.tooltip) attrs.title = mark.tooltip;
+  const url = markUrl(mark.url);
+  if (url) {
+    attrs["data-plugin-url"] = url;
+    attrs.class += " plugin-mark-link";
+  }
   // An export keeps neither.
   if (mark.style !== "badge")
     return [Decoration.inline(from, to, { ...attrs, "data-editor-mark": "" })];

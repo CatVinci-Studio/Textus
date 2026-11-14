@@ -506,15 +506,16 @@ type HoverTarget =
 
 A mark over some of a block's text: the words `anchor` (all of the block without it).
 
-| Member                                                    |                                                             |
-| --------------------------------------------------------- | ----------------------------------------------------------- |
-| `block: string`                                           |                                                             |
-| `anchor?: string`                                         |                                                             |
-| `style: "highlight" \| "underline" \| "muted" \| "badge"` |                                                             |
-| `tone?: "accent" \| "warning" \| "danger" \| "success"`   |                                                             |
-| `text?: string`                                           | For "badge": its text, after the words.                     |
-| `tooltip?: string`                                        |                                                             |
-| `before?: boolean`                                        | For "badge": before the words instead - a heading's number. |
+| Member                                                    |                                                                                                                                                                          |
+| --------------------------------------------------------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------ |
+| `block: string`                                           |                                                                                                                                                                          |
+| `anchor?: string`                                         |                                                                                                                                                                          |
+| `style: "highlight" \| "underline" \| "muted" \| "badge"` |                                                                                                                                                                          |
+| `tone?: "accent" \| "warning" \| "danger" \| "success"`   |                                                                                                                                                                          |
+| `text?: string`                                           | For "badge": its text, after the words.                                                                                                                                  |
+| `tooltip?: string`                                        |                                                                                                                                                                          |
+| `before?: boolean`                                        | For "badge": before the words instead - a heading's number.                                                                                                              |
+| `url?: string`                                            | From 1.6: the words link here (http, https or mailto), followed with Cmd/Ctrl+click as a link is - a DOI, an RFC, an issue number made a link without changing the text. |
 
 ## WillSave
 

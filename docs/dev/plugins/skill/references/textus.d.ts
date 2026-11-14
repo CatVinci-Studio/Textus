@@ -826,6 +826,10 @@ declare global {
       tooltip?: string;
       /** For "badge": before the words instead - a heading's number. */
       before?: boolean;
+      /** From 1.6: the words link here (http, https or mailto), followed
+       *  with Cmd/Ctrl+click as a link is - a DOI, an RFC, an issue number
+       *  made a link without changing the text. */
+      url?: string;
     }
 
     /** A document about to be saved. */
