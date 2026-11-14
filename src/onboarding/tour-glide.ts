@@ -23,7 +23,7 @@ function mixBox(a: Box, b: Box, k: number): Box {
 
 /** The frame `k` of the way from `a` to `b`. A hole that wasn't there
  *  appears where it goes rather than gliding in from nowhere. */
-export function mixFrame(a: TourFrame, b: TourFrame, k: number): TourFrame {
+function mixFrame(a: TourFrame, b: TourFrame, k: number): TourFrame {
   return {
     hole: b.hole && (a.hole ? mixBox(a.hole, b.hole, k) : b.hole),
     card: {

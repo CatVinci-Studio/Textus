@@ -4,19 +4,17 @@ import {
   useRef,
   useState,
   type ReactNode,
+  type RefObject,
 } from "react";
 import { holeAround, placeCard, type Box } from "./tour-place";
 import { useGlide, useTargetBox, type TourFrame } from "./tour-glide";
 import "./TourLayer.css";
 
-/** The hole's corner radius, the lit part's own calm radius. */
-const RADIUS = 12;
+/** The hole's corner radius: --shape-m, as the ring's. */
+const RADIUS = 14;
 
 /** The dimmed window with a rounded hole cut where `hole` is. */
-export function scrimPath(
-  view: { width: number; height: number },
-  hole: Box | null,
-) {
+function scrimPath(view: { width: number; height: number }, hole: Box | null) {
   const outer = `M0 0H${view.width}V${view.height}H0Z`;
   if (!hole || hole.width <= 0 || hole.height <= 0) return outer;
   const r = Math.min(RADIUS, hole.width / 2, hole.height / 2);
@@ -32,6 +30,35 @@ const viewNow = () => ({
   width: window.innerWidth,
   height: window.innerHeight,
 });
+
+/** The window's size and the card's, followed as either changes; Esc
+ *  calls `onEscape`. */
+function useTourView(
+  card: RefObject<HTMLDivElement | null>,
+  onEscape: () => void,
+) {
+  const [view, setView] = useState(viewNow);
+  const [cardSize, setCardSize] = useState({ width: 320, height: 160 });
+  useEffect(() => {
+    const el = card.current;
+    if (!el) return;
+    const measure = () => {
+      setView(viewNow());
+      setCardSize({ width: el.offsetWidth, height: el.offsetHeight });
+    };
+    const observer = new ResizeObserver(measure);
+    observer.observe(el);
+    window.addEventListener("resize", measure);
+    const escape = (e: KeyboardEvent) => e.key === "Escape" && onEscape();
+    window.addEventListener("keydown", escape);
+    return () => {
+      observer.disconnect();
+      window.removeEventListener("resize", measure);
+      window.removeEventListener("keydown", escape);
+    };
+  }, [card, onEscape]);
+  return { view, cardSize };
+}
 
 /**
  * The tour over the window: everything dimmed but the part a step is about,
@@ -55,30 +82,10 @@ export function TourLayer({
   children: ReactNode;
 }) {
   const box = useTargetBox(target);
-  const [view, setView] = useState(viewNow);
-  const [cardSize, setCardSize] = useState({ width: 320, height: 160 });
   const card = useRef<HTMLDivElement>(null);
   const path = useRef<SVGPathElement>(null);
   const ring = useRef<HTMLDivElement>(null);
-
-  useEffect(() => {
-    const el = card.current;
-    if (!el) return;
-    const measure = () => {
-      setView(viewNow());
-      setCardSize({ width: el.offsetWidth, height: el.offsetHeight });
-    };
-    const observer = new ResizeObserver(measure);
-    observer.observe(el);
-    window.addEventListener("resize", measure);
-    const escape = (e: KeyboardEvent) => e.key === "Escape" && onEscape();
-    window.addEventListener("keydown", escape);
-    return () => {
-      observer.disconnect();
-      window.removeEventListener("resize", measure);
-      window.removeEventListener("keydown", escape);
-    };
-  }, [onEscape]);
+  const { view, cardSize } = useTourView(card, onEscape);
 
   const hole = box && holeAround(box, view);
   const draw = useCallback((frame: TourFrame) => {

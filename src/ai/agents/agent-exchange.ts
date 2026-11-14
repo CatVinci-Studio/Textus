@@ -10,14 +10,13 @@ import { currentStrings } from "../../i18n/current";
 import { getWindowAccess } from "../../plugins/app-bridge";
 import { openDocumentAt } from "../../registry/open-documents";
 import type { ExternalAgent } from "../../plugins/contributions/agents";
-import type { AgentTurn } from "../types";
+import type { AgentTurn, ImageAttachment } from "../types";
 import {
   AcpConnection,
   AcpError,
   AUTH_REQUIRED,
   CLIENT_CAPABILITIES,
   PROTOCOL_VERSION,
-  type ContentBlock,
   type PermissionOption,
   type PermissionOutcome,
   type SessionUpdate,
@@ -32,6 +31,7 @@ import {
   offerOf,
 } from "./agent-offers";
 import { modeOption } from "./agent-mode";
+import { promptBlocks } from "./agent-prompt";
 import { loadSettings, subscribeRemote } from "../../prefs/settings-store";
 
 /**
@@ -70,6 +70,8 @@ interface Session {
   stopped?: boolean;
   /** Out of use (it refused the mode): stopped once its reply ends. */
   retired?: boolean;
+  /** It reads images in a prompt (ACP's promptCapabilities.image). */
+  images?: boolean;
 }
 
 const sessions = new Map<string, Session>();
@@ -299,11 +301,13 @@ async function start(
     await handle;
     const init = await session.connection.request<{
       authMethods?: { id: string; type?: string }[];
+      agentCapabilities?: { promptCapabilities?: { image?: boolean } };
     }>("initialize", {
       protocolVersion: PROTOCOL_VERSION,
       clientCapabilities: CLIENT_CAPABILITIES,
       clientInfo: { name: "Textus", version: await appVersion() },
     });
+    session.images = !!init?.agentCapabilities?.promptCapabilities?.image;
     const open = () =>
       session.connection.request<{
         sessionId: string;
@@ -420,6 +424,9 @@ export async function runAgentExchange(o: {
   cwd: string;
   docPath: string | null;
   message: string;
+  /** Pictures attached to the message; sent only to an agent that reads
+   *  them. */
+  images?: ImageAttachment[];
   events: ExchangeEvents;
 }): Promise<AgentTurn[]> {
   let session = sessions.get(o.conversation);
@@ -453,17 +460,19 @@ export async function runAgentExchange(o: {
     // Chosen while it started: set now.
     void sendWanted(o.agent.key);
   }
-  const user: AgentTurn = { kind: "User", text: o.message };
+  const images = o.images ?? [];
+  const user: AgentTurn = {
+    kind: "User",
+    text: o.message,
+    ...(images.length ? { images } : {}),
+  };
   current.set(session, { turns: [user], text: "" });
   session.events = o.events;
-  const prompt: ContentBlock[] = [{ type: "text", text: o.message }];
-  if (o.docPath)
-    prompt.push({
-      type: "resource_link",
-      uri: fileUri(o.docPath),
-      name: o.docPath.split(/[\\/]/).pop() ?? o.docPath,
-      mimeType: "text/markdown",
-    });
+  const prompt = promptBlocks({
+    message: o.message,
+    docPath: o.docPath,
+    images: session.images ? images : [],
+  });
   try {
     await session.connection.request("session/prompt", {
       sessionId: session.sessionId,
@@ -482,16 +491,4 @@ export async function runAgentExchange(o: {
         if (s === session) retired.delete(conversation);
     }
   }
-}
-
-/** `path` as a file: URI, its spaces and the rest encoded; a Windows
- *  drive's path as file:///C:/… */
-export function fileUri(path: string): string {
-  const slashed = path.replace(/\\/g, "/");
-  const encoded = (slashed.startsWith("/") ? slashed : "/" + slashed)
-    .split("/")
-    .map(encodeURIComponent)
-    .join("/")
-    .replace(/^\/([A-Za-z])%3A/, "/$1:");
-  return "file://" + encoded;
 }

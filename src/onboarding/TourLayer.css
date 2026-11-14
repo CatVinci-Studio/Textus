@@ -23,7 +23,7 @@
   top: 0;
   left: 0;
   border: 2px solid var(--ui-accent);
-  border-radius: 12px;
+  border-radius: var(--shape-m);
 }
 
 .tour-card.floating-surface {
@@ -33,7 +33,7 @@
   left: 0;
   display: flex;
   flex-direction: column;
-  gap: 10px;
+  gap: 12px;
   width: min(340px, calc(100vw - 32px));
   max-height: calc(100vh - 32px);
   overflow-y: auto;
@@ -104,7 +104,7 @@
 }
 
 .tour-card code {
-  padding: 1px 5px;
+  padding: 0 4px;
   border-radius: var(--shape-xs, 4px);
   background: var(--doc-code-bg);
   font-size: 0.92em;
