@@ -168,6 +168,15 @@ export function useStartupRestore(options: StartupRestoreOptions): void {
             return made[i] ? [made[i]] : [];
           });
         });
+        // The window's first tab was the one kept in front; the others
+        // joined its island after it. Back to the place it was kept at.
+        const pane = paneOf(windowLayout(), opts.activeTabId);
+        if (pane)
+          reorderInPane(
+            pane,
+            opts.activeTabId,
+            docs.slice(0, kept.active).filter(Boolean).length,
+          );
         void moveDrafts(kept.tabs, (i) =>
           i === kept.active ? opts.activeTabId : made[i]?.id,
         );

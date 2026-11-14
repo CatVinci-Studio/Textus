@@ -1570,7 +1570,7 @@ Skills liegen im Ordner skills/ neben dieser Datei, je Skill eine
   themeNameAurora: "Polarlicht",
   appearanceLabel: "Erscheinungsbild",
   appearanceModeLabel: "Hell oder dunkel",
-  appearanceSystem: "Systemeinstellung",
+  appearanceSystem: "System",
   appearanceLight: "Hell",
   appearanceDark: "Dunkel",
   pdfPreparing: "PDF wird vorbereitet…",

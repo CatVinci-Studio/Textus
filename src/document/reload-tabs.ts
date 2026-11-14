@@ -165,6 +165,17 @@ export function useKeepTabs(
     return () => clearTimeout(timer);
   }, [tabs, activeTabId, withText]);
 
+  // Written once the restore is done, too: a page reloaded before any tab
+  // changed would otherwise find nothing kept.
+  useEffect(
+    () =>
+      afterStartupRestore(() => {
+        const now = latest.current;
+        writeKeptTabs(keptTabs(now.liveTabs(), now.activeTabId, now.withText));
+      }),
+    [],
+  );
+
   useEffect(() => {
     const write = () => {
       if (!restored) return;

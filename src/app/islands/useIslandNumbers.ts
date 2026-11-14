@@ -3,6 +3,7 @@ import { subscribeSplit, tabInUse } from "../../engine/layout/store";
 import { useEffect } from "react";
 import { watchIslandNumbers } from "../../engine/layout/island-numbers";
 import { modIsMeta } from "../../platform/os";
+import { isMobileApp } from "../../platform/capabilities";
 
 /** What takes the keys in a tab: its editor, its source, the AI's box. */
 const TYPED_IN = ".ProseMirror, .cm-content, textarea";
@@ -21,7 +22,12 @@ function focusTab(tabId: string, tries = 10): void {
         .querySelector<HTMLElement>(
           `.tab-pill[data-tab="${CSS.escape(tabId)}"]`,
         )
-        ?.focus({ preventScroll: true });
+        // On a touch screen it came by a tap: no keyboard ring (WebKit
+        // drew one for this programmatic focus).
+        ?.focus({
+          preventScroll: true,
+          focusVisible: !isMobileApp,
+        } as FocusOptions);
   });
 }
 

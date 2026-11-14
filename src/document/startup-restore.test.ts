@@ -292,6 +292,26 @@ describe("startup restore into the initial tab", () => {
     ]);
   });
 
+  it("a reloaded page keeps the tab in front at its place in the row", async () => {
+    sessionStorage.setItem(
+      "textus-reload-tabs",
+      JSON.stringify({
+        active: 2,
+        tabs: ["/docs/a.md", "/docs/b.md", "/docs/c.md", "/docs/d.md"].map(
+          (path, i) => ({ id: `old-${i}`, path }),
+        ),
+      }),
+    );
+    const { tabs } = await restore(true, false, true);
+    await waitFor(() => expect(tabs()).toHaveLength(4));
+    expect(tabs().map((tab) => tab.path)).toEqual([
+      "/docs/a.md",
+      "/docs/b.md",
+      "/docs/c.md",
+      "/docs/d.md",
+    ]);
+  });
+
   it("doesn't open twice a session file the user opened meanwhile", async () => {
     ipc.takePendingWindow.mockResolvedValue({
       paths: ["/docs/a.md", "/docs/b.md"],

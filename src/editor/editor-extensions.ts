@@ -97,6 +97,7 @@ import { createCodeLineNumbersPlugin } from "./code/code-line-numbers-plugin";
 import { tableCaretPlugin } from "./tables/table-caret";
 import { scrollOptions } from "./editor-scroll";
 import { tableKeys, tableRowPaste } from "./tables/table-keys";
+import { clickBelowEnd } from "./click-below-end";
 import {
   tableColumnFreeze,
   tableColumnResizing,
@@ -270,7 +271,7 @@ export function withEditorCore(
       )
       // Ahead of gfm's table keys.
       .use(editing(tableEdgeArrowPlugin))
-      .use(editing([tableKeys, tableRowPaste]))
+      .use(editing([tableKeys, tableRowPaste, clickBelowEnd]))
       .use(gfmWithoutStrikethrough)
 
       // Before anything else can misread its "---" lines as setext headings.

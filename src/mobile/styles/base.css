@@ -146,8 +146,11 @@
 }
 
 /* Small bar buttons keep their look; a finger gets a 44pt target around
-   them. */
+   them, the AI's header buttons spaced so no target covers the next. */
 @media (pointer: coarse) {
+  :root[data-window-chrome="mobile"] .inline-chat-header-actions {
+    gap: 16px;
+  }
   :root[data-window-chrome="mobile"]
     :is(.window-bar-sidebar-toggle, .inline-chat-header-button) {
     position: relative;

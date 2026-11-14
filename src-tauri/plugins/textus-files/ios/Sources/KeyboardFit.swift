@@ -22,6 +22,8 @@ final class KeyboardFit {
   /// (nil: down).
   private var keyboardEnd: CGRect?
   private var toldCovered: CGFloat = -1
+  /// The host's shape last laid out: a turn flips it.
+  private var wasLandscape: Bool?
 
   init(webview: WKWebView) {
     self.webview = webview
@@ -59,7 +61,7 @@ final class KeyboardFit {
     // portrait keyboard's gap stays under a landscape page.
     boundsObservation = webview.superview?.layer.observe(\.bounds) {
       [weak self] _, _ in
-      DispatchQueue.main.async { self?.fit(animated: false) }
+      DispatchQueue.main.async { self?.turned() }
     }
     // Coming back from another app the keyboard is re-announced and the
     // page may have drifted; settle it again.
@@ -122,6 +124,21 @@ final class KeyboardFit {
     guard let scroll = webview?.scrollView else { return }
     scroll.setContentOffset(
       CGPoint(x: 0, y: -scroll.adjustedContentInset.top), animated: false)
+  }
+
+  /// A turn with the keyboard up: the system keyboard window may stay drawn
+  /// in the old orientation and report no new frame, leaving the page cut
+  /// to a strip. The keyboard is put down instead, as a tap brings it back
+  /// in the new orientation.
+  private func turned() {
+    guard let host = webview?.superview else { return }
+    let landscape = host.bounds.width > host.bounds.height
+    if let was = wasLandscape, was != landscape, toldCovered > 0 {
+      host.window?.endEditing(true)
+      keyboardEnd = nil
+    }
+    wasLandscape = landscape
+    fit(animated: false)
   }
 
   private func keyboardMoved(_ note: Notification) {

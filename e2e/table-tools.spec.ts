@@ -96,3 +96,16 @@ test("a row's grip picks the row, and pulled it moves the row; a column's the sa
   await page.locator(".table-grip-row").click();
   await expect(table.locator(".selectedCell")).toHaveCount(2);
 });
+
+test("a click below a table that ends the document starts a paragraph there", async ({
+  page,
+}) => {
+  const table = await open(page);
+  const box = (await table.boundingBox())!;
+  await page.mouse.click(box.x + 40, box.y + box.height + 40);
+  await page.keyboard.type("after");
+  await expect(page.locator(".ProseMirror:visible > p").last()).toHaveText(
+    "after",
+  );
+  await expect(table.locator("td", { hasText: "after" })).toHaveCount(0);
+});
