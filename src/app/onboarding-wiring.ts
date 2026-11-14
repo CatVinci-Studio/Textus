@@ -1,7 +1,6 @@
 import { useCallback, useEffect } from "react";
 import { useLatest } from "../utils/hooks/useLatest";
 import { makeBlankTab, tabIsUntouchedDraft } from "../document/doc-tabs";
-import { WRITE_PART } from "../onboarding/tutorial-evaluation";
 import { stepIndexOf } from "../onboarding/tutorial-steps";
 import type { Tutorial } from "../onboarding/useTutorial";
 import type { Lang } from "../i18n/strings";
@@ -62,13 +61,14 @@ export function useTutorialTabRecovery(
   }, [latest, tabsRef]);
 }
 
-// The notes come once the first lesson, typed on an empty page, is done.
-const FIRST_NOTES_STEP = stepIndexOf("wysiwyg") + 1;
+// The notes come for the step where the AI works on them; a tour without
+// it never has them.
+const NOTES_STEP = stepIndexOf("ai-use");
 
 /**
- * The practice notes in the tour's tab from the second writing lesson on.
- * Checked every step, so a resumed tour gets them back; each step also
- * grades the text as it stands.
+ * The practice notes in the tour's tab for the AI's step. Checked every
+ * step, so a resumed tour gets them back; each step also reads the text as
+ * it stands.
  */
 export function usePracticeNotes(opts: {
   tutorial: Tutorial;
@@ -89,7 +89,7 @@ export function usePracticeNotes(opts: {
       const tab = liveTabs().find((tb) => tb.id === tabId);
       if (!tab || tab.path || tab.helpDoc) return;
       let content = tab.content;
-      if (stepIndex >= FIRST_NOTES_STEP) {
+      if (NOTES_STEP >= 0 && stepIndex >= NOTES_STEP) {
         // The notes come with the tour, not with every window.
         const notes = await import("../onboarding/practice-notes");
         if (!live) return;
@@ -107,19 +107,4 @@ export function usePracticeNotes(opts: {
       live = false;
     };
   }, [active, tabId, stepIndex, liveTabs, updateTab, evaluate, languageRef]);
-}
-
-/** The AI writing lesson's first line: the panel open. */
-export function useWriteLesson(opts: {
-  tutorial: Tutorial;
-  languageChosen: boolean;
-  agentPanelOpen: boolean;
-}): void {
-  const { tutorial, languageChosen, agentPanelOpen } = opts;
-  const lesson = tutorial.active && languageChosen ? tutorial.step.id : null;
-  const setPhase = tutorial.setPhase;
-  useEffect(() => {
-    if (lesson === "write" && agentPanelOpen)
-      setPhase((phase) => phase | WRITE_PART.panel);
-  }, [lesson, agentPanelOpen, setPhase]);
 }

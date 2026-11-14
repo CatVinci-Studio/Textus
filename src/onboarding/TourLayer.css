@@ -1,0 +1,111 @@
+/* The tour: a dimmed window with the part in question cut out and usable,
+   a ring round it, and a small card beside it. Only the scrim's path and
+   the card take clicks; the hole lets them through. */
+.tour-layer {
+  position: fixed;
+  inset: 0;
+  z-index: var(--z-popover);
+  pointer-events: none;
+}
+
+.tour-scrim {
+  position: absolute;
+  inset: 0;
+}
+
+.tour-scrim path {
+  fill: var(--ui-overlay);
+  pointer-events: auto;
+}
+
+.tour-ring {
+  position: absolute;
+  top: 0;
+  left: 0;
+  border: 2px solid var(--ui-accent);
+  border-radius: 12px;
+}
+
+.tour-card.floating-surface {
+  --doc-code-bg: var(--ui-subtle);
+  position: absolute;
+  top: 0;
+  left: 0;
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+  width: min(340px, calc(100vw - 32px));
+  max-height: calc(100vh - 32px);
+  overflow-y: auto;
+  padding: 16px;
+  border-radius: var(--shape-l);
+  box-shadow: var(--shadow-dialog);
+  color: var(--ui-text);
+  pointer-events: auto;
+}
+
+.tour-count {
+  color: var(--ui-muted);
+  font-size: var(--text-caption);
+  font-variant-numeric: tabular-nums;
+}
+
+.tour-title {
+  margin: 0;
+  font-size: var(--text-title);
+  font-weight: 600;
+}
+
+.tour-body,
+.tour-stop {
+  margin: 0;
+  line-height: 1.5;
+}
+
+.tour-stop {
+  color: var(--ui-accent-text);
+}
+
+.tour-links {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+}
+
+/* Wraps, so in a long language the buttons move under the links. */
+.tour-actions {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  justify-content: space-between;
+  gap: 8px 12px;
+  padding-top: 4px;
+}
+
+.tour-actions-main {
+  display: flex;
+  flex-wrap: wrap;
+  justify-content: flex-end;
+  gap: 8px;
+  margin-left: auto;
+}
+
+.tour-link {
+  padding: 4px 2px;
+  border: 0;
+  color: var(--ui-muted);
+  background: transparent;
+  cursor: pointer;
+  font-size: var(--text-caption);
+}
+
+.tour-link:hover {
+  color: var(--ui-text);
+}
+
+.tour-card code {
+  padding: 1px 5px;
+  border-radius: var(--shape-xs, 4px);
+  background: var(--doc-code-bg);
+  font-size: 0.92em;
+}

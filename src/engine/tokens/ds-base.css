@@ -225,7 +225,6 @@
   .floating-surface,
   .settings-panel,
   .language-welcome,
-  .tutorial-surface,
   .image-name-dialog,
   .insert-table-dialog,
   .close-prompt,
@@ -349,7 +348,6 @@
 :where(
     .settings-panel,
     .language-welcome,
-    .tutorial-surface,
     .image-name-dialog,
     .insert-table-dialog,
     .close-prompt

@@ -24,11 +24,7 @@ import {
   useClosePrompt,
   useWindowCloseGuard,
 } from "./close-flow";
-import {
-  usePracticeNotes,
-  useTutorialTabRecovery,
-  useWriteLesson,
-} from "./onboarding-wiring";
+import { usePracticeNotes, useTutorialTabRecovery } from "./onboarding-wiring";
 import { setDocumentDrop } from "../engine/controls/document-drop";
 import { fileDropOnDocuments } from "./islands/split-drop";
 import type { WindowShell } from "./useWindowShell";
@@ -214,12 +210,6 @@ export function useWindowWiring({
     openTutorials: () => void links.openTutorialsPage(settings.language),
     onOpenDocuments: () => actions.setDocumentsOpen(true),
     shareActiveTab: actions.shareActiveTab,
-  });
-
-  useWriteLesson({
-    tutorial,
-    languageChosen: settings.languageChosen,
-    agentPanelOpen: panels.agentPanel.open,
   });
 
   const close = useClosePrompt({

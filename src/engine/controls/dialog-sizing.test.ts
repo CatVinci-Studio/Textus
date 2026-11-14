@@ -11,7 +11,6 @@ const DIALOG_STYLESHEETS = [
   "engine/controls/app-dialog.css",
   "editor/images/ImageNameDialog.css",
   "editor/tables/InsertTableDialog.css",
-  "onboarding/TutorialOverlay.css",
   "onboarding/LanguageWelcome.css",
 ];
 

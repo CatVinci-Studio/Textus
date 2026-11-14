@@ -3,7 +3,6 @@ import { lazyModule } from "../lazy/lazy-module";
 import { lazyComponent } from "../lazy/lazy-component";
 import type { Tutorial } from "../onboarding/useTutorial";
 import type { Settings } from "../prefs/SettingsContext";
-import { formatCombo } from "../utils/shortcuts";
 import { Presence } from "../engine/motion/usePresence";
 import { usePhoneLayout } from "../engine/controls/usePhoneLayout";
 import type { Strings } from "../i18n/strings";
@@ -45,10 +44,6 @@ export function OnboardingLayers({
             t={t}
             language={settings.language}
             phone={phone}
-            shortcuts={{
-              agentPanel: formatCombo(settings.shortcuts.toggleAgentPanel),
-              palette: formatCombo(settings.shortcuts.commandPalette),
-            }}
           />
         </Suspense>
       )}

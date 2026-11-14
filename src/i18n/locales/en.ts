@@ -1351,66 +1351,46 @@ type /name in a conversation to use one.
   markdownGuideTab: "Markdown Guide",
   agentGuideTab: "AI Features Guide",
   tutorialStepOfCount: "Step {i} of {n}",
-  tutorialChapters: "Tutorial chapters",
-  tutorialChapterStart: "Start",
-  tutorialChapterWriting: "Writing",
-  tutorialChapterConnect: "Connect AI",
-  tutorialChapterAi: AI_NAME,
-  tutorialChapterDone: "Done",
   tutorialBack: "Back",
   tutorialNext: "Continue",
   tutorialStart: "Start",
   tutorialFinish: "Start writing",
   tutorialSkip: "Exit guide",
   tutorialSkipStep: "Skip this step",
-  tutorialCollapse: "Minimize",
-  tutorialExpand: "Show instructions",
-  tutorialTryIt: "Try it",
-  tutorialWatch: "Watch the animation",
-  tutorialWatchNote: "Connect an AI later in {path} to try it yourself.",
   tutorialWelcomeTitle: `Welcome to ${APP_NAME}`,
   tutorialWelcomeBody:
-    "A place to write Markdown: your files stay on your computer, and an AI helps when you ask; two minutes, learning as you write.",
-  tutorialWysiwygTitle: "Formatting as you type",
-  tutorialWysiwygBody:
-    "Type where the gray hints are: Markdown turns into formatting at once; press Return twice to end a list.",
-  tutorialWysiwygHeading: "A heading: `# {title}`, then Enter",
-  tutorialWysiwygList: "A list: `- Hamlet`, Enter, `Horatio`",
-  tutorialWysiwygNumbered: "A numbered list: `1. Act I`",
-  tutorialWysiwygTaskItem: "A task: `- [ ] Finish Act V`",
-  tutorialPaletteTitle: "Finding things",
-  tutorialPaletteBody:
-    "Every command is a search away with {shortcut}; more features are in the plugin store under the puzzle piece, installed as you need them.",
-  tutorialPaletteTask: 'Press {shortcut}, type "export", press Return',
-  tutorialPaletteTaskPhone:
-    "On a phone, the plugin store is under Extensions in Settings",
-  tutorialConnectTitle: "Connect an AI",
-  tutorialConnectBody:
-    "The next two steps use an AI; sign in with an account, enter an API key, or do it later - Settings › Textus AI, any time.",
-  tutorialConnectTask: "Sign in or paste a key - or skip for now.",
+    "A minute to show you around: the sidebar, the page and the AI.",
+  tutorialSidebarTitle: "The sidebar",
+  tutorialSidebarBody: "Click the folder on the left to open the sidebar.",
+  tutorialSidebarBodyPhone:
+    "Tap the sidebar button at the top left to open it.",
+  tutorialRailTitle: "What's in it",
+  tutorialRailBody: "Each icon on the left opens one part of the sidebar.",
+  tutorialRailFiles: "Files: the folder you write in.",
+  tutorialRailOutline: "Outline: the page's headings, to jump between.",
+  tutorialRailSearch: "Search: find a file or a line anywhere in the folder.",
+  tutorialRailPlugins: "Plugins: more features, added when you need them.",
+  tutorialSettingsTitle: "Settings",
+  tutorialSettingsBody:
+    "The gear holds the theme, the fonts and your AI accounts.",
+  tutorialEditorTitle: "Write as it shows",
+  tutorialEditorBody:
+    "Markdown turns into formatting as you type: try `# A title` or `- a list`.",
+  tutorialAiTitle: "Textus AI",
+  tutorialAiBody: "Click the sparkles at the top right to open Textus AI.",
+  tutorialAiBodyPhone: "Tap the sparkles at the top right to open Textus AI.",
+  tutorialSignInTitle: "Sign in to an AI",
+  tutorialSignInBody:
+    "Click Sign in and use an account or an API key; the tour goes on once you're in.",
+  tutorialAiUseTitle: "Let the AI edit",
+  tutorialAiUseBody:
+    "Ask it to tighten your notes, then accept or reject what it proposes.",
+  tutorialDoneBody:
+    "Start writing: the Help menu has the guides, and this tour to take again.",
   chatSignInHint: "Sign in to an AI to start talking here.",
   chatSignIn: "Sign in",
   tutorialConnectSkip: "Skip for now",
-  tutorialConnected: "Connected.",
-  tutorialWriteTitle: "Let the AI write",
-  tutorialWriteBody:
-    "The AI's changes show in green first; they count only once you accept them.",
-  tutorialWriteOpen:
-    "Open Textus AI: the sparkles at the top right ({shortcut})",
-  tutorialWriteOpenPhone: "Open Textus AI: switch to it at the top",
-  tutorialWriteSend:
-    "Send `Continue my notes with one more paragraph`, then click Accept",
-  tutorialContinuationTitle: "Continuation",
-  tutorialContinuationBody:
-    "Pause as you write: a gray continuation appears; press Tab to take it.",
-  tutorialContinuationTask:
-    "At the end, type `What really stops Hamlet is`, pause, then press Tab",
-  tutorialContinuationTaskPhone:
-    "At the end, type `What really stops Hamlet is`, pause, then tap the gray text",
   tutorialDoneTitle: "You're set",
-  tutorialDoneBody:
-    "Start a new document: the Help menu's two guides cover Markdown and the AI in full, and the tour is there too, to take again.",
-  tutorialDoneMemory: `${AI_NAME} remembers your requirements and style over time; see Memory (right-click an AI tab).`,
   closePromptNamed: "“{name}” has unsaved changes.",
   closePromptMessage: "This document has unsaved changes.",
   closePromptSave: "Save",

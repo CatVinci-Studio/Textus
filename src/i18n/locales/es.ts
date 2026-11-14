@@ -1416,67 +1416,51 @@ para usar una.
   markdownGuideTab: "Guía de Markdown",
   agentGuideTab: "Guía de funciones de IA",
   tutorialStepOfCount: "Paso {i} de {n}",
-  tutorialChapters: "Capítulos del tutorial",
-  tutorialChapterStart: "Inicio",
-  tutorialChapterWriting: "Escritura",
-  tutorialChapterConnect: "Conectar IA",
-  tutorialChapterAi: AI_NAME,
-  tutorialChapterDone: "Listo",
   tutorialBack: "Atrás",
   tutorialNext: "Continuar",
   tutorialStart: "Empezar",
   tutorialFinish: "Empezar a escribir",
   tutorialSkip: "Salir del tutorial",
   tutorialSkipStep: "Omitir paso",
-  tutorialCollapse: "Minimizar",
-  tutorialExpand: "Mostrar instrucciones",
-  tutorialTryIt: "Pruébalo",
-  tutorialWatch: "Ver la animación",
-  tutorialWatchNote: "Conecta una IA más tarde en {path} para probarlo tú.",
   tutorialWelcomeTitle: `Te damos la bienvenida a ${APP_NAME}`,
   tutorialWelcomeBody:
-    "Un lugar para escribir Markdown: tus archivos se quedan en tu ordenador y una IA ayuda cuando se lo pides; dos minutos, aprendiendo mientras escribes.",
-  tutorialWysiwygTitle: "Formato mientras escribes",
-  tutorialWysiwygBody:
-    "Escribe donde están las pistas grises: el Markdown se convierte en formato al momento; pulsa Intro dos veces para terminar una lista.",
-  tutorialWysiwygHeading: "Un título: `# {title}` e Intro",
-  tutorialWysiwygList: "Una lista: `- don Quijote`, Intro, `Sancho Panza`",
-  tutorialWysiwygNumbered: "Una lista numerada: `1. Capítulo primero`",
-  tutorialWysiwygTaskItem: "Una tarea: `- [ ] Terminar la primera parte`",
-  tutorialPaletteTitle: "Encontrar funciones",
-  tutorialPaletteBody:
-    "Cualquier comando está a una búsqueda con {shortcut}; hay más funciones en la tienda de plugins, bajo la pieza de puzle, para instalar cuando las necesites.",
-  tutorialPaletteTask: "Pulsa {shortcut}, escribe «exportar» y pulsa Intro",
-  tutorialPaletteTaskPhone:
-    "En el móvil, la tienda de plugins está en los Ajustes, en «Extensiones»",
-  tutorialConnectTitle: "Conectar una IA",
-  tutorialConnectBody:
-    "Los dos pasos siguientes usan una IA; inicia sesión con una cuenta, introduce una clave de API o hazlo más tarde: en Ajustes › Textus AI, cuando quieras.",
-  tutorialConnectTask: "Inicia sesión o pega una clave, o sáltalo por ahora.",
+    "Un minuto para enseñarte todo: la barra lateral, la página y la IA.",
+  tutorialSidebarTitle: "La barra lateral",
+  tutorialSidebarBody:
+    "Haz clic en la carpeta de la izquierda para abrir la barra lateral.",
+  tutorialSidebarBodyPhone:
+    "Toca el botón de barra lateral arriba a la izquierda para abrirla.",
+  tutorialRailTitle: "Qué hay dentro",
+  tutorialRailBody:
+    "Cada icono de la izquierda abre una parte de la barra lateral.",
+  tutorialRailFiles: "Archivos: la carpeta donde escribes.",
+  tutorialRailOutline:
+    "Esquema: los títulos de la página, para saltar entre ellos.",
+  tutorialRailSearch: "Buscar: un archivo o una línea en toda la carpeta.",
+  tutorialRailPlugins: "Plugins: más funciones, cuando las necesites.",
+  tutorialSettingsTitle: "Ajustes",
+  tutorialSettingsBody:
+    "El engranaje guarda el tema, las fuentes y tus cuentas de IA.",
+  tutorialEditorTitle: "Escribe tal como se ve",
+  tutorialEditorBody:
+    "El Markdown se convierte en formato al escribir: prueba `# Un título` o `- una lista`.",
+  tutorialAiTitle: "Textus AI",
+  tutorialAiBody:
+    "Haz clic en los destellos de arriba a la derecha para abrir Textus AI.",
+  tutorialAiBodyPhone:
+    "Toca los destellos de arriba a la derecha para abrir Textus AI.",
+  tutorialSignInTitle: "Inicia sesión en una IA",
+  tutorialSignInBody:
+    "Haz clic en Iniciar sesión con una cuenta o una clave de API; el recorrido sigue al entrar.",
+  tutorialAiUseTitle: "Deja que la IA corrija",
+  tutorialAiUseBody:
+    "Pídele que afine tus notas y luego acepta o rechaza lo que proponga.",
+  tutorialDoneBody:
+    "A escribir: el menú Ayuda tiene las guías y este recorrido para repetirlo.",
   chatSignInHint: "Inicia sesión en una IA para conversar aquí.",
   chatSignIn: "Iniciar sesión",
   tutorialConnectSkip: "Omitir por ahora",
-  tutorialConnected: "Conectado.",
-  tutorialWriteTitle: "Deja que la IA escriba",
-  tutorialWriteBody:
-    "Los cambios de la IA aparecen primero en verde; solo cuentan cuando los aceptas.",
-  tutorialWriteOpen:
-    "Abre el panel de IA: el icono de la pluma, arriba a la derecha ({shortcut})",
-  tutorialWriteOpenPhone:
-    "Abre el panel de IA: toca el icono de la pluma, arriba",
-  tutorialWriteSend:
-    "Envía `Continúa mis notas con un párrafo más` y haz clic en Aceptar",
-  tutorialContinuationTitle: "Autocompletado",
-  tutorialContinuationBody:
-    "Haz una pausa al escribir: aparece una continuación en gris; pulsa Tab para quedártela.",
-  tutorialContinuationTask:
-    "Al final, escribe `Lo que de verdad enloquece al hidalgo es`, haz una pausa y pulsa Tab",
-  tutorialContinuationTaskPhone:
-    "Al final, escribe `Lo que de verdad enloquece al hidalgo es`, haz una pausa y toca el texto gris",
   tutorialDoneTitle: "Todo listo",
-  tutorialDoneBody:
-    "Crea un documento nuevo; las dos guías del menú Ayuda explican Markdown y la IA a fondo; el recorrido también está ahí, para repetirlo.",
-  tutorialDoneMemory: `${AI_NAME} recuerda con el tiempo lo que le pides y tu estilo; míralo en Memoria, en el panel de IA.`,
   closePromptNamed: "«{name}» tiene cambios sin guardar.",
   closePromptMessage: "Este documento tiene cambios sin guardar.",
   closePromptSave: "Guardar",

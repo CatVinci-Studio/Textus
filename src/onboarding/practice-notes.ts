@@ -6,10 +6,9 @@ import type { Lang } from "../i18n/strings";
  * the notes, never the classic.
  */
 interface PracticeNotes {
-  /** The level-one heading the WYSIWYG lesson has the learner type. */
+  /** The notes' own name, set apart from every other language's. */
   title: string;
-  /** Everything under it. No level-one heading, list, table, inline mark or
-   *  link of its own: those are what the writing lessons ask the learner to add. */
+  /** Everything under it, for the AI's step to rework. */
   body: string;
 }
 

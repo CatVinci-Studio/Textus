@@ -2,11 +2,11 @@
 
 import "@testing-library/jest-dom/vitest";
 import {
+  act,
   cleanup,
   fireEvent,
   render,
   screen,
-  waitFor,
 } from "@testing-library/react";
 import {
   afterEach,
@@ -17,229 +17,130 @@ import {
   it,
   vi,
 } from "vitest";
-import { resolveStrings, type Lang } from "../i18n/strings";
+import { resolveStrings } from "../i18n/strings";
 import { installTestLocalStorage } from "../dev/test-local-storage";
-import { auth, links } from "../platform/ipc";
+import { emitPluginEvent } from "../plugins/app-bridge";
 import { TutorialExperience } from "./TutorialExperience";
-import { practiceNotes } from "./practice-notes";
 import { useTutorial, type Tutorial } from "./useTutorial";
 
-const providerMocks = vi.hoisted(() => ({
-  catalog: [
-    {
-      id: "openai",
-      label: "OpenAI",
-      dialect: "openai-responses",
-      auth: ["oauth", "api_key"],
-      baseUrl: null,
-      defaultModel: "gpt-6-luna",
-      agentDefaultModel: "gpt-6.1-sol",
-      keyOptional: false,
-      oauthUnofficial: false,
-      supportsVision: true,
-      knownModels: [],
-    },
-  ],
-}));
+const ai = vi.hoisted(() => ({ on: true, signedIn: false as boolean | null }));
 
 vi.mock("../prefs/SettingsContext", async (importOriginal) => ({
   ...(await importOriginal<typeof import("../prefs/SettingsContext")>()),
-  useSettings: () => ({
-    settings: {
-      textusAi: true,
-      aiProvider: "openai",
-      themeId: "default",
-      userThemes: [],
-    },
-    setSettings: vi.fn(),
-  }),
+  useSettings: () => ({ settings: { textusAi: ai.on }, setSettings: vi.fn() }),
 }));
-
-vi.mock("../ai/provider-catalog", async (importOriginal) => ({
-  ...(await importOriginal<typeof import("../ai/provider-catalog")>()),
-  useProviderCatalog: () => providerMocks.catalog,
+vi.mock("../ai/chat/chat-models", () => ({
+  useAiSignedIn: () => ai.signedIn,
 }));
-
 vi.mock("../platform/ipc", () => ({
-  auth: {
-    providerApiKeyStatus: vi.fn().mockResolvedValue(false),
-    setProviderApiKey: vi.fn().mockResolvedValue(undefined),
-    clearProviderApiKey: vi.fn().mockResolvedValue(undefined),
-    oauthStatus: vi.fn().mockResolvedValue({ configured: false }),
-    oauthLogin: vi.fn(),
-    oauthLogout: vi.fn(),
-    customEndpointStatus: vi.fn().mockResolvedValue(null),
-  },
   links: {
     openTutorialsPage: vi.fn().mockResolvedValue(undefined),
     openCommunityPage: vi.fn().mockResolvedValue(undefined),
   },
 }));
 
+globalThis.ResizeObserver = class {
+  observe() {}
+  disconnect() {}
+  unobserve() {}
+} as unknown as typeof ResizeObserver;
+
 const t = resolveStrings("en");
+let tour: Tutorial;
+const keep = (current: Tutorial) => (tour = current);
 
 function Harness({
-  language = "en",
   phone = false,
-  onTutorial,
+  onTutorial = keep,
 }: {
-  language?: Lang;
   phone?: boolean;
   onTutorial?: (tutorial: Tutorial) => void;
 }) {
-  const tutorial = useTutorial();
-  onTutorial?.(tutorial);
-  return (
-    <TutorialExperience
-      tutorial={tutorial}
-      t={resolveStrings(language)}
-      language={language}
-      phone={phone}
-      shortcuts={{
-        agentPanel: "Ctrl+Shift+L",
-        palette: "Ctrl+Shift+P",
-      }}
-    />
-  );
+  const tour = useTutorial(ai.on);
+  onTutorial(tour);
+  return tour.active ? (
+    <TutorialExperience tutorial={tour} t={t} language="en" phone={phone} />
+  ) : null;
 }
 
-function resumeAt(stepId: string, extra: object = {}) {
+function resumeAt(stepId: string) {
   localStorage.setItem(
     "textus-tutorial-progress",
-    JSON.stringify({ active: true, stepId, tabId: "practice", ...extra }),
+    JSON.stringify({ active: true, stepId, tabId: "practice" }),
   );
+  render(<Harness />);
 }
 
+const card = () => screen.getByRole("dialog");
+const panels = (sidebar: boolean, aiOpen: boolean) =>
+  act(() =>
+    emitPluginEvent("panels", {
+      sidebar: { open: sidebar, tab: "tree" },
+      ai: { open: aiOpen },
+    }),
+  );
+
 beforeAll(installTestLocalStorage);
-beforeEach(() => localStorage.clear());
-afterEach(() => {
-  cleanup();
-  vi.useRealTimers();
-  vi.clearAllMocks();
-  vi.mocked(auth.oauthStatus).mockResolvedValue({ configured: false });
-  vi.mocked(auth.providerApiKeyStatus).mockResolvedValue(false);
+beforeEach(() => {
+  localStorage.clear();
+  ai.on = true;
+  ai.signedIn = false;
 });
+afterEach(cleanup);
 
-describe("the connect lesson", () => {
-  it("offers Skip for now while nothing is connected, then the AI is watched", () => {
-    resumeAt("connect");
-    render(<Harness />);
+describe("the tour's card", () => {
+  it("starts, then waits for the sidebar to open", () => {
+    resumeAt("welcome");
+    expect(card()).toHaveAccessibleName(t.tutorialWelcomeTitle);
+    fireEvent.click(screen.getByRole("button", { name: t.tutorialStart }));
+    expect(card()).toHaveAccessibleName(t.tutorialSidebarTitle);
     expect(
-      screen.getByRole("dialog", { name: t.tutorialConnectTitle }),
-    ).toBeInTheDocument();
-    // The Settings controls, credentials already open.
-    expect(
-      screen.getByRole("button", { name: /Provider OpenAI/ }),
-    ).toBeInTheDocument();
-    expect(
-      screen.getByRole("button", { name: "Sign in with OpenAI" }),
-    ).toBeInTheDocument();
-
-    fireEvent.click(screen.getByRole("button", { name: "Skip for now" }));
-    const write = screen.getByRole("dialog", { name: t.tutorialWriteTitle });
-    expect(write).toHaveTextContent(
-      "Connect an AI later in Settings › Textus AI › Models to try it yourself.",
-    );
+      screen.queryByRole("button", { name: t.tutorialNext }),
+    ).not.toBeInTheDocument();
+    panels(true, false);
+    expect(card()).toHaveAccessibleName(t.tutorialRailTitle);
   });
 
-  it("shows Connected and Continue once the provider is signed in", async () => {
-    vi.mocked(auth.oauthStatus).mockResolvedValue({ configured: true });
-    resumeAt("connect");
-    render(<Harness />);
-    expect(await screen.findByText(t.tutorialConnected)).toBeVisible();
-    expect(
-      screen.queryByRole("button", { name: "Skip for now" }),
-    ).not.toBeInTheDocument();
+  it("walks the sidebar's buttons one by one", () => {
+    resumeAt("rail");
+    expect(card()).toHaveTextContent(t.tutorialRailFiles);
     fireEvent.click(screen.getByRole("button", { name: t.tutorialNext }));
-    // Connected, the AI lessons are done for real: no watch note.
-    const write = screen.getByRole("dialog", { name: t.tutorialWriteTitle });
-    expect(write).not.toHaveTextContent("Connect an AI later");
-    expect(screen.getByRole("button", { name: t.tutorialNext })).toBeDisabled();
+    expect(card()).toHaveTextContent(t.tutorialRailOutline);
+    fireEvent.click(screen.getByRole("button", { name: t.tutorialNext }));
+    fireEvent.click(screen.getByRole("button", { name: t.tutorialNext }));
+    expect(card()).toHaveTextContent(t.tutorialRailPlugins);
+    fireEvent.click(screen.getByRole("button", { name: t.tutorialNext }));
+    expect(card()).toHaveAccessibleName(t.tutorialSettingsTitle);
   });
 
-  it("turns Connected on when a key is saved from the lesson", async () => {
-    resumeAt("connect");
-    render(<Harness />);
-    fireEvent.click(screen.getByRole("tab", { name: t.authTabApiKey }));
-    fireEvent.change(screen.getByPlaceholderText(t.apiKeyPlaceholder), {
-      target: { value: "sk-test" },
-    });
-    vi.mocked(auth.providerApiKeyStatus).mockResolvedValue(true);
-    fireEvent.click(screen.getByRole("button", { name: t.apiKeySave }));
-    await waitFor(() =>
-      expect(screen.getByText(t.tutorialConnected)).toBeVisible(),
+  it("asks to sign in once the AI opens, and skipping it ends the tour", () => {
+    resumeAt("ai");
+    panels(false, true);
+    expect(card()).toHaveAccessibleName(t.tutorialSignInTitle);
+    fireEvent.click(
+      screen.getByRole("button", { name: t.tutorialConnectSkip }),
     );
-    expect(auth.setProviderApiKey).toHaveBeenCalledWith("openai", "sk-test");
-  });
-});
-
-describe("watching an AI lesson", () => {
-  it("keeps the lines to follow, Continue as the way on, the animation as an extra", () => {
-    resumeAt("write", { aiMode: "watch" });
-    render(<Harness language="zh" />);
-    const zh = resolveStrings("zh");
-    expect(screen.getByText("接着我的笔记再写一段")).toBeVisible();
-    fireEvent.click(screen.getByRole("button", { name: /观看动画/ }));
-    expect(links.openTutorialsPage).toHaveBeenCalledWith("zh", "ai-panel");
-    const next = screen.getByRole("button", { name: zh.tutorialNext });
-    expect(next).toBeEnabled();
-    fireEvent.click(next);
-    expect(
-      screen.getByRole("dialog", { name: zh.tutorialContinuationTitle }),
-    ).toBeInTheDocument();
-  });
-});
-
-describe("the lessons' copy", () => {
-  it("fills in the notes' title and the shortcuts", () => {
-    resumeAt("wysiwyg");
-    const first = render(<Harness language="zh" />);
-    expect(screen.getByText(`# ${practiceNotes("zh").title}`)).toBeVisible();
-    first.unmount();
-    resumeAt("write", { aiMode: "live" });
-    render(<Harness />);
-    expect(
-      screen.getByText(
-        "Open Textus AI: the sparkles at the top right (Ctrl+Shift+L)",
-      ),
-    ).toBeVisible();
+    expect(card()).toHaveAccessibleName(t.tutorialDoneTitle);
   });
 
-  it("names the command palette's shortcut", () => {
-    resumeAt("palette");
-    render(<Harness />);
-    expect(
-      screen.getByText('Press Ctrl+Shift+P, type "export", press Return'),
-    ).toBeVisible();
+  it("goes on to use the AI once signed in", () => {
+    resumeAt("signin");
+    ai.signedIn = true;
+    fireEvent.click(screen.getByRole("button", { name: t.tutorialBack }));
+    panels(false, true);
+    expect(card()).toHaveAccessibleName(t.tutorialAiUseTitle);
   });
 
-  it("speaks of taps on a phone", () => {
-    resumeAt("continuation", { aiMode: "live" });
-    const { unmount } = render(<Harness phone />);
-    expect(screen.getByText(/pause, then tap the gray text/)).toBeVisible();
-    unmount();
-    resumeAt("write", { aiMode: "live" });
-    render(<Harness phone />);
-    expect(screen.getByText(t.tutorialWriteOpenPhone)).toBeVisible();
-  });
-
-  it("ends with the video tutorials, the community and the Memory tab", () => {
+  it("ends with the tutorials and the community, and Esc leaves", () => {
     resumeAt("done");
-    render(<Harness language="ko" />);
-    const ko = resolveStrings("ko");
-    expect(screen.getByText(ko.tutorialDoneMemory)).toBeVisible();
-    fireEvent.click(screen.getByRole("button", { name: ko.menuHelpTutorials }));
-    fireEvent.click(screen.getByRole("button", { name: ko.menuHelpCommunity }));
-    expect(links.openTutorialsPage).toHaveBeenCalledWith("ko");
-    expect(links.openCommunityPage).toHaveBeenCalledWith("ko");
-  });
-
-  it("never locks the optional tips", () => {
-    resumeAt("palette");
-    render(<Harness />);
-    expect(screen.getByRole("button", { name: t.tutorialNext })).toBeEnabled();
     expect(
-      screen.queryByRole("button", { name: t.tutorialSkipStep }),
-    ).not.toBeInTheDocument();
+      screen.getByRole("button", { name: t.menuHelpTutorials }),
+    ).toBeInTheDocument();
+    fireEvent.click(screen.getByRole("button", { name: t.tutorialFinish }));
+    expect(tour.active).toBe(false);
+    cleanup();
+    resumeAt("editor");
+    fireEvent.keyDown(window, { key: "Escape" });
+    expect(tour.active).toBe(false);
   });
 });
