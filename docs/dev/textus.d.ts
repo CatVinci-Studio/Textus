@@ -1037,11 +1037,15 @@ declare global {
       trash(path: string): Promise<void>;
       createFolder(path: string): Promise<void>;
       frontmatter: Frontmatter;
-      /** A file a plugin made, and from 1.3.13 a picture pasted or dropped
-       *  into a document and saved in its folder. */
+      /** A file a plugin made, and one the app made: a new document, a
+       *  picture pasted or dropped, a note made by following a link, a file
+       *  Textus AI wrote (from 1.4.2). A plugin's own path is as it gave it,
+       *  the app's is whole. */
       onDidCreate: Event<{ path: string }>;
       onDidChange: Event<{ path: string }>;
       onDidRename: Event<{ from: string; to: string }>;
+      /** A file or folder a plugin moved to the Trash, and from 1.4.2 one
+       *  the sidebar did (its whole path). */
       onDidDelete: Event<{ path: string }>;
       /** A document is about to be saved (files.write). Plugins are asked
        *  one after another in plugin id order, each given the text as the
