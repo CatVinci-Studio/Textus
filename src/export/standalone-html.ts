@@ -70,8 +70,6 @@ export const EDITOR_CHROME_SELECTOR = [
   ".table-add-row-btn",
   ".table-add-col-btn",
   ".table-grip",
-  ".table-drag-band",
-  ".table-drop-line",
   ".ghost-text",
   ".quick-ask-anchor",
   ".pending-insert",

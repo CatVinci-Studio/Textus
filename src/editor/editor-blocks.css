@@ -152,41 +152,12 @@
   display: inline-flex;
 }
 
-/* An icon's button among them: a circle in the document's colours. */
-.block-toolbar-button {
-  display: inline-flex;
-  align-items: center;
-  justify-content: center;
-  width: 24px;
-  height: 24px;
-  padding: 0;
-  color: var(--doc-muted);
-  background: var(--doc-bg, var(--ui-bg));
-  border: 1px solid var(--doc-border);
-  border-radius: var(--shape-pill);
-  corner-shape: round;
-  cursor: pointer;
-}
-.block-toolbar-button:hover,
-.block-toolbar-button:focus-visible {
-  color: var(--doc-text);
-}
-.block-toolbar-button[aria-pressed="true"] {
-  color: var(--doc-accent-text);
-  border-color: var(--doc-accent);
-}
-.block-toolbar-button:disabled {
-  opacity: 0.4;
-  cursor: default;
-}
-.block-toolbar-button.is-danger:hover {
-  color: var(--ui-danger);
-}
-
 .code-block-language {
   display: flex;
 }
 
+/* A block's tool: a small pill in the document's colours. */
+.block-pill,
 .code-block-copy,
 .code-block-select-all,
 .code-block-actions .plugin-code-done,
@@ -225,6 +196,8 @@
   pointer-events: none;
 }
 
+.block-pill:is(button):hover,
+.block-pill:focus-visible,
 .code-block-copy:hover,
 .code-block-copy:focus-visible,
 .code-block-select-all:hover,
@@ -236,6 +209,7 @@
   color: var(--doc-text);
 }
 
+.block-pill.is-copied,
 .code-block-copy.is-copied {
   color: var(--doc-accent-text);
 }

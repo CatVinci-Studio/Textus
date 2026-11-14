@@ -14,8 +14,8 @@ async function open(page: Page, markdown = TABLE) {
   return page.locator(".table-wrapper").first();
 }
 
-const tool = (page: Page, name: string) =>
-  page.locator(".table-toolbar").getByRole("button", { name, exact: true });
+const tool = (page: Page, name: string, exact = true) =>
+  page.locator(".table-toolbar").getByRole("button", { name, exact });
 
 test("a table's tools align the caret's column, size it, and delete it", async ({
   page,
@@ -28,14 +28,23 @@ test("a table's tools align the caret's column, size it, and delete it", async (
   await expect(table.locator("th").nth(1)).toHaveCSS("text-align", "center");
   await expect(table.locator("td").nth(1)).toHaveCSS("text-align", "center");
 
-  await tool(page, "Rows and Columns").click();
+  await tool(page, "Rows and Columns 2 × 2", false).click();
   const card = page.getByRole("dialog", { name: "Rows and Columns" });
   await expect(card).toBeVisible();
+  await card.locator('[data-cell="2,2"]').hover();
+  await expect(card.getByText("3 × 3")).toBeVisible();
   await page.screenshot({ path: "test-results/table-size.png" });
-  await card.getByRole("button", { name: "More Rows" }).click();
-  await card.getByRole("button", { name: "More Columns" }).click();
+  await card.locator('[data-cell="2,2"]').click();
+  await expect(card).toHaveCount(0);
   await expect(table.locator("tr")).toHaveCount(3);
   await expect(table.locator("tr").first().locator("th")).toHaveCount(3);
+
+  // Smaller again: the cells with text it would cut are marked first.
+  await tool(page, "Rows and Columns 3 × 3", false).click();
+  await card.locator('[data-cell="1,0"]').hover();
+  await expect(card.locator(".is-lost")).toHaveCount(2);
+  await expect(card.getByText("Cells with text will be removed")).toBeVisible();
+  await page.screenshot({ path: "test-results/table-size-lost.png" });
   await page.keyboard.press("Escape");
   await expect(card).toHaveCount(0);
 
@@ -50,6 +59,10 @@ test("a row's grip picks the row, and pulled it moves the row; a column's the sa
     page,
     "| h | k |\n| --- | --- |\n| 1 | x |\n| 2 | y |\n| 3 | z |\n",
   );
+  page.on(
+    "console",
+    (m) => m.text().includes("GRIPDBG") && console.log(m.text()),
+  );
   const cell = (text: string) => table.locator("td", { hasText: text });
   await cell("3").hover();
   const grip = page.locator(".table-grip-row");
@@ -59,7 +72,9 @@ test("a row's grip picks the row, and pulled it moves the row; a column's the sa
   await page.mouse.move(g.x + g.width / 2, g.y + g.height / 2);
   await page.mouse.down();
   await page.mouse.move(g.x + g.width / 2, top.y + 2, { steps: 8 });
-  await expect(page.locator(".table-drop-line")).toBeVisible();
+  await expect(page.locator(".table-wrapper[data-dragging=row]")).toHaveCount(
+    1,
+  );
   await page.screenshot({ path: "test-results/table-grip-drag.png" });
   await page.mouse.up();
   const firstColumn = () =>

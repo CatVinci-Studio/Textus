@@ -75,11 +75,7 @@ export function EditorOverlays({
       <Presence show={tableDialogOpen}>
         {tableDialogOpen && (
           <InsertTableDialog
-            title={t.insertTable}
-            rowsLabel={t.insertTableRowsLabel}
-            columnsLabel={t.insertTableColumnsLabel}
-            confirmLabel={t.insertTableConfirm}
-            cancelLabel={t.cancel}
+            t={t}
             onInsert={(rows, cols) => insertTable(run, rows, cols)}
             onClose={() => setTableDialogOpen(false)}
           />

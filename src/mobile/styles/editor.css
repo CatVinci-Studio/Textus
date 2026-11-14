@@ -23,9 +23,8 @@
     font-size: 18px;
   }
 
-  :root[data-window-chrome="mobile"] .block-toolbar-button {
-    width: 44px;
-    height: 44px;
+  :root[data-window-chrome="mobile"] .table-toolbar .block-pill {
+    min-height: 32px;
   }
 }
 

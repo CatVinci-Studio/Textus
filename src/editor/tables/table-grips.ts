@@ -1,5 +1,6 @@
 import type { EditorView } from "@milkdown/kit/prose/view";
-import { scaledPx } from "../../engine/tokens/chrome-scale";
+import { trackDrag } from "../../engine/drag/pointer-drag";
+import { passedCount, shiftAt } from "../../engine/drag/row";
 import {
   CellSelection,
   moveTableColumn,
@@ -7,27 +8,12 @@ import {
   TableMap,
 } from "@milkdown/kit/prose/tables";
 
-/** How far a grip is pulled before it drags rather than selects. */
-const DRAG_PX = 4;
-
 type Axis = "row" | "col";
-
-/** Where a row or column lands when let go at `at` along `axis`: the
- *  index it takes, by the middles of the others. */
-export function dropIndex(
-  middles: readonly number[],
-  at: number,
-  from: number,
-): number {
-  let slot = middles.findIndex((m) => at < m);
-  if (slot === -1) slot = middles.length;
-  return slot > from ? slot - 1 : slot;
-}
 
 /**
  * A grip at the left of the row and the top of the column under the
  * pointer (or the caret, on a phone): pressed, it picks the whole row or
- * column; pulled, it moves it, a line showing where it lands. The head row
+ * column; pulled, it moves it, the others making room. The head row
  * stays first: it has no grip, and nothing lands above it.
  */
 export function attachGrips(options: {
@@ -51,10 +37,6 @@ export function attachGrips(options: {
     return el;
   };
   const grips = { row: grip("row"), col: grip("col") };
-  const band = wrapper.appendChild(document.createElement("div"));
-  band.className = "table-drag-band";
-  const line = wrapper.appendChild(document.createElement("div"));
-  line.className = "table-drop-line";
   let at = { row: -1, col: -1 };
 
   const rows = () => [...tbody.children] as HTMLTableRowElement[];
@@ -116,89 +98,101 @@ export function attachGrips(options: {
   }
 
   let dragging: Axis | null = null;
+  // The lift and the slides are rules here, not styles on the rows and
+  // cells: ProseMirror redraws a row whose attributes change.
+  const sheet = wrapper.appendChild(document.createElement("style"));
+  const id = `t${Math.random().toString(36).slice(2, 8)}`;
+  wrapper.dataset.dragId = id;
+  /**
+   * The row (below the head) or column under the grip, pulled: it follows
+   * the pointer lifted, the others make room as it passes them (the
+   * sidebar tabs' way, engine/drag); let go, it moves there.
+   */
   function drag(axis: Axis, e: PointerEvent) {
-    const from = axis === "row" ? at.row : at.col;
-    if (from < 0 || e.button !== 0) return;
+    const index = axis === "row" ? at.row : at.col;
+    if (index < 0 || (axis === "row" && index < 1)) return;
     e.preventDefault();
-    const el = grips[axis];
-    el.setPointerCapture(e.pointerId);
-    const start = { x: e.clientX, y: e.clientY };
-    // The rows (below the head) or the columns, as laid out now.
-    const parts =
+    // Rows: the body's, the head row staying first. Columns: the head
+    // row's cells stand for theirs.
+    const items =
       axis === "row"
-        ? rows()
+        ? rows().slice(1)
         : ([...(rows()[0]?.children ?? [])] as HTMLElement[]);
-    const boxes = parts.map(box);
-    const middles = boxes.map((b) =>
-      axis === "row" ? b.y + b.h / 2 : b.x + b.w / 2,
-    );
-    const t = box(table);
+    const from = axis === "row" ? index - 1 : index;
+    const along = (el: Element) => {
+      const r = el.getBoundingClientRect();
+      return axis === "row"
+        ? { mid: r.top + r.height / 2, size: r.height }
+        : { mid: r.left + r.width / 2, size: r.width };
+    };
+    const centers = items
+      .filter((_, i) => i !== from)
+      .map((el) => along(el).mid);
+    const mine = along(items[from]!);
+    // It stays within the others: never over the head row, or past the end.
+    const first = items[0]!.getBoundingClientRect();
+    const last = items[items.length - 1]!.getBoundingClientRect();
+    const reach =
+      axis === "row" ? [first.top, last.bottom] : [first.left, last.right];
+    const least = reach[0]! - (mine.mid - mine.size / 2);
+    const most = reach[1]! - (mine.mid + mine.size / 2);
+    const start = axis === "row" ? e.clientY : e.clientX;
+    const scope = `.table-wrapper[data-drag-id="${id}"] tbody`;
+    const place = (i: number) =>
+      axis === "row"
+        ? `${scope} > tr:nth-child(${i + 2})`
+        : `${scope} > tr > :nth-child(${i + 1})`;
+    const translate = axis === "row" ? "translateY" : "translateX";
     let to = from;
-    const move = (ev: PointerEvent) => {
-      const along =
-        axis === "row" ? ev.clientY - start.y : ev.clientX - start.x;
-      if (!dragging && Math.abs(along) < scaledPx(DRAG_PX)) return;
-      dragging = axis;
-      wrapper.setAttribute("data-dragging", axis);
-      const w = wrapper.getBoundingClientRect();
-      const point = axis === "row" ? ev.clientY - w.top : ev.clientX - w.left;
-      to = dropIndex(middles, point, from);
-      // Nothing lands above the head row.
-      if (axis === "row") to = Math.max(1, to);
-      const b = boxes[from]!;
-      band.style.transform = `translate(${b.x}px, ${b.y}px)`;
-      band.style.width = `${b.w}px`;
-      band.style.height = `${b.h}px`;
-      const edge = boxes[to]!;
-      const lineAt =
-        axis === "row"
-          ? to > from
-            ? edge.y + edge.h
-            : edge.y
-          : to > from
-            ? edge.x + edge.w
-            : edge.x;
-      line.style.transform =
-        axis === "row"
-          ? `translate(${t.x}px, ${lineAt}px)`
-          : `translate(${lineAt}px, ${t.y}px)`;
-      line.style.width = axis === "row" ? `${t.w}px` : "";
-      line.style.height = axis === "row" ? "" : `${t.h}px`;
-    };
-    const end = (ev: PointerEvent | null) => {
-      el.removeEventListener("pointermove", move);
-      el.removeEventListener("pointerup", up);
-      el.removeEventListener("pointercancel", cancel);
-      window.removeEventListener("keydown", key, true);
-      wrapper.removeAttribute("data-dragging");
-      const moved = dragging;
-      dragging = null;
-      if (!ev) return;
-      if (!moved) return pick(axis, from);
-      const table = tableNow();
-      if (!table || to === from) return;
-      const command = axis === "row" ? moveTableRow : moveTableColumn;
-      command({ from, to, pos: table.pos + 1, select: true })(
-        view.state,
-        view.dispatch,
-      );
-      view.focus();
-    };
-    const up = (ev: PointerEvent) => end(ev);
-    const cancel = () => end(null);
-    const key = (ev: KeyboardEvent) => {
-      if (ev.key !== "Escape") return;
-      ev.preventDefault();
-      ev.stopPropagation();
-      end(null);
-    };
-    el.addEventListener("pointermove", move);
-    el.addEventListener("pointerup", up);
-    el.addEventListener("pointercancel", cancel);
-    window.addEventListener("keydown", key, true);
+    trackDrag(e, {
+      start: () => {
+        dragging = axis;
+        wrapper.setAttribute("data-dragging", axis);
+      },
+      move: (x, y) => {
+        // Where it lands goes by the pointer; where it is drawn stays inside.
+        const pulled = (axis === "row" ? y : x) - start;
+        to = passedCount(centers, mine.mid + pulled);
+        const shift = Math.min(most, Math.max(least, pulled));
+        const lifted = axis === "row" ? `${place(from)} > *` : place(from);
+        const rules = [
+          `${place(from)} { transform: ${translate}(${shift}px); position: relative; z-index: 2; transition: none; }`,
+          `${lifted} { background: var(--doc-bg, var(--ui-bg)); box-shadow: var(--shadow-popover); }`,
+        ];
+        let other = 0;
+        items.forEach((_, i) => {
+          if (i === from) return;
+          const by = shiftAt(other++, from, to, mine.size);
+          if (by)
+            rules.push(`${place(i)} { transform: ${translate}(${by}px); }`);
+        });
+        sheet.textContent = rules.join("\n");
+      },
+      end: (_x, _y, dropped) => {
+        sheet.textContent = "";
+        wrapper.removeAttribute("data-dragging");
+        dragging = null;
+        const table = tableNow();
+        if (!dropped || !table || to === from) return;
+        const offset = axis === "row" ? 1 : 0;
+        const command = axis === "row" ? moveTableRow : moveTableColumn;
+        command({
+          from: from + offset,
+          to: to + offset,
+          pos: table.pos + 1,
+          select: true,
+        })(view.state, view.dispatch);
+        view.focus();
+      },
+    });
   }
-  grips.row.addEventListener("pointerdown", (e) => drag("row", e));
-  grips.col.addEventListener("pointerdown", (e) => drag("col", e));
+  for (const axis of ["row", "col"] as const) {
+    grips[axis].addEventListener("pointerdown", (e) => drag(axis, e));
+    // Pressed without a pull: the whole row or column is picked.
+    grips[axis].addEventListener("click", () =>
+      pick(axis, axis === "row" ? at.row : at.col),
+    );
+  }
 
   return {
     /** The grips follow the caret where there is no pointer (a phone). */

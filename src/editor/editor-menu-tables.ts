@@ -259,7 +259,8 @@ export function tableMenuItems(
       label: t.copyTable,
       onSelect: () => {
         const here = tableHere(run);
-        if (here) copyTable(here.view, here.node, here.serialize);
+        if (here)
+          void copyTable(here.view, here.node, here.serialize).catch(() => {});
       },
     },
     { label: t.deleteTable, onSelect: table("delete-table"), danger: true },

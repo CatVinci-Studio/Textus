@@ -218,33 +218,78 @@
   padding-bottom: 4px;
 }
 
-/* Rows and columns, each with its − and +. */
+/* The table's pills: its size with a chevron, the three alignments in one
+   pill, Copy, and Delete as a bin. Icons sit on the text's centre line. */
+.table-toolbar .block-pill {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.3em;
+  box-sizing: border-box;
+  height: 1.9em;
+}
+.table-toolbar .block-pill svg {
+  width: 1.15em;
+  height: 1.15em;
+}
+.table-size-pill {
+  font-variant-numeric: tabular-nums;
+}
+.table-size-pill[aria-expanded="true"] {
+  color: var(--doc-accent-text);
+  border-color: var(--doc-accent);
+}
+.table-align-pill {
+  gap: 0;
+  padding: 0.1em;
+}
+.table-align-pill > button {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 1.9em;
+  height: 100%;
+  padding: 0;
+  border: none;
+  border-radius: var(--shape-pill);
+  corner-shape: round;
+  background: none;
+  color: inherit;
+  cursor: pointer;
+}
+.table-align-pill > button:hover:not(:disabled) {
+  color: var(--doc-text);
+}
+.table-align-pill > button[aria-pressed="true"] {
+  color: var(--doc-accent-text);
+  background: color-mix(in srgb, var(--doc-accent) 12%, transparent);
+}
+.table-align-pill > button:disabled {
+  opacity: 0.4;
+  cursor: default;
+}
+.block-pill-icon {
+  justify-content: center;
+  aspect-ratio: 1;
+  padding: 0.1em;
+}
+.block-pill.is-danger:hover {
+  color: var(--ui-danger);
+  border-color: color-mix(in srgb, var(--ui-danger) 40%, var(--doc-border));
+}
+
+/* The size grid, under its pill. */
 .table-size-card {
   position: fixed;
   z-index: var(--z-select);
-  padding: var(--space-2) var(--space-3);
+  padding: var(--space-3);
   animation: motion-pop-in var(--dur-base) var(--ease-out);
 }
 .table-size-card[data-state="closing"] {
   animation: motion-pop-out var(--dur-fast) var(--ease-in) forwards;
 }
-.table-size-card-body {
-  display: grid;
-  gap: var(--space-1);
-}
-.table-size-row {
-  display: grid;
-  grid-template-columns: 1fr auto 2.5em auto;
-  align-items: center;
-  gap: var(--space-2);
-  color: var(--ui-text);
-  font-size: var(--text-body);
-}
-.table-size-value {
-  text-align: center;
-  font-variant-numeric: tabular-nums;
-}
-.table-size-sheet .table-size-card-body {
+.table-size-sheet .table-size-body {
+  display: flex;
+  justify-content: center;
   padding: var(--space-4);
 }
 
@@ -276,41 +321,24 @@
   height: 8px;
   margin: -4px 0 0 -10px;
 }
-.table-wrapper[data-grips]:is(:hover, .is-table-caret, [data-dragging])
+.table-wrapper[data-grips]:is(:hover, .is-table-caret):not([data-dragging])
   > .table-grip:not([hidden]) {
   opacity: 1;
   pointer-events: auto;
 }
-.table-grip:hover,
-.table-wrapper[data-dragging] > .table-grip {
+.table-grip:hover {
   border-color: var(--doc-accent);
   background: var(--doc-accent);
 }
 
-/* While one is pulled: the row or column it moves, and where it lands. */
-.table-drag-band,
-.table-drop-line {
-  position: absolute;
-  top: 0;
-  left: 0;
-  display: none;
-  pointer-events: none;
+/* While one is pulled: the others slide aside on the settle spring, as
+   the sidebar's tabs do; the pulled one's lift is table-grips.ts's. */
+.table-wrapper[data-dragging] tbody :is(tr, td, th) {
+  transition: transform calc(var(--dur-settle) * var(--motion-travel))
+    var(--ease-settle);
 }
-.table-wrapper[data-dragging] > :is(.table-drag-band, .table-drop-line) {
-  display: block;
-}
-.table-drag-band {
-  border: 1px dashed var(--doc-accent);
-  background: color-mix(in srgb, var(--doc-accent) 8%, transparent);
-}
-.table-drop-line {
-  background: var(--doc-accent);
-}
-.table-wrapper[data-dragging="row"] > .table-drop-line {
-  height: 2px;
-  margin-top: -1px;
-}
-.table-wrapper[data-dragging="col"] > .table-drop-line {
-  width: 2px;
-  margin-left: -1px;
+.table-wrapper[data-dragging] {
+  cursor: grabbing;
+  user-select: none;
+  -webkit-user-select: none;
 }

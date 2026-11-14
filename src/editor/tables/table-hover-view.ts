@@ -172,6 +172,8 @@ export function createTableView(strings: () => Strings) {
       tools.render({
         t: strings(),
         ...size,
+        filled: (r, c) =>
+          !!currentNode.maybeChild(r)?.maybeChild(c)?.textContent.trim(),
         align: caretCols.length
           ? sharedAlignment(currentNode, caretCols)
           : undefined,

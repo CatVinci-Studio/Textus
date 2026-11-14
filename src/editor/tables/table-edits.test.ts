@@ -144,14 +144,3 @@ describe("the table's keys and pastes", () => {
     expect(body(t)).toEqual(["| 1 | x | x |", "| 2 | y | y |"]);
   });
 });
-
-describe("where a pulled row or column lands", () => {
-  it("takes the place it is let go at, by the others' middles", async () => {
-    const { dropIndex } = await import("./table-grips");
-    const middles = [10, 30, 50, 70];
-    expect(dropIndex(middles, 5, 2)).toBe(0);
-    expect(dropIndex(middles, 45, 0)).toBe(1);
-    expect(dropIndex(middles, 90, 1)).toBe(3);
-    expect(dropIndex(middles, 40, 2)).toBe(2);
-  });
-});

@@ -85,9 +85,6 @@ import {
   AlignLeft,
   AlignCenter,
   AlignRight,
-  Copy,
-  Grid3x3,
-  Minus,
 } from "lucide-react";
 
 /** An icon's drawn size: its design size (the svg's own width and height)
@@ -285,11 +282,8 @@ export const TABLE_TOOL_ICONS = {
   left: lucide(AlignLeft, 14),
   center: lucide(AlignCenter, 14),
   right: lucide(AlignRight, 14),
-  size: lucide(Grid3x3, 14),
-  copy: lucide(Copy, 14),
-  less: lucide(Minus, 14),
-  more: lucide(Plus, 14),
-  delete: lucide(Grid2x2X, 14),
+  chevron: lucide(ChevronDown, 12),
+  delete: lucide(Trash2, 13),
 } as const;
 /** Documents list: as a grid of page thumbnails, or as rows. */
 export const GridViewIcon = lucide(LayoutGrid, 16);

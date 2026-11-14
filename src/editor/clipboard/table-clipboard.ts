@@ -66,9 +66,8 @@ export function copyTable(
   view: EditorView,
   table: ProseNode,
   serialize: (doc: ProseNode) => string,
-): void {
+): Promise<void> {
   const { markdown, html } = tableCopy(view, table, serialize);
-  void writeClipboard(html, markdown, null)
-    .then(() => tellCopied(markdown))
-    .catch(() => {});
+  // Rejects when nothing was copied, so no "Copied" shows.
+  return writeClipboard(html, markdown, null).then(() => tellCopied(markdown));
 }
