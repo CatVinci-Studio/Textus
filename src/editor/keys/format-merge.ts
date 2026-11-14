@@ -1,6 +1,7 @@
 import { Fragment, type Node as ProseNode } from "@milkdown/kit/prose/model";
 import type { EditorState } from "@milkdown/kit/prose/state";
 import { LINK } from "../markdown/link-source";
+import { isEnclosureName } from "../marks/enclosure-runs";
 
 export interface FormatSpec {
   delim: string;
@@ -68,4 +69,30 @@ export function outOfSpans(
   }
   if (!found) return pos;
   return side < 0 ? $pos.before(outer) : $pos.after(outer);
+}
+
+/** What of each textblock a selection over several holds, trimmed of edge
+ *  whitespace: the ranges a shortcut wraps or unwraps. Code, maths and
+ *  enclosure blocks are left out. */
+export function blockRanges(
+  state: EditorState,
+): { from: number; to: number }[] {
+  const { from, to } = state.selection;
+  const ranges: { from: number; to: number }[] = [];
+  state.doc.nodesBetween(from, to, (node, pos) => {
+    if (!node.isTextblock) return true;
+    if (node.type.spec.code || isEnclosureName(node.type.name)) return false;
+    const start = Math.max(from, pos + 1);
+    const end = Math.min(to, pos + 1 + node.content.size);
+    // Only a text node's edge whitespace stays outside: spaces in code are code.
+    const part = state.doc.slice(start, end).content;
+    const edge = (child: ProseNode | null, pattern: RegExp) =>
+      child?.isText ? pattern.exec(child.text!)![0].length : 0;
+    const lead = edge(part.firstChild, /^\s*/);
+    const trail = edge(part.lastChild, /\s*$/);
+    if (start + lead < end - trail)
+      ranges.push({ from: start + lead, to: end - trail });
+    return false;
+  });
+  return ranges;
 }

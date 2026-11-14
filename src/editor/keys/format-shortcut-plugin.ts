@@ -11,7 +11,11 @@ import { isEnclosureName } from "../marks/enclosure-runs";
 import { wrapInLinkSource } from "../marks/span-commands";
 import { caretAt, stateWithLiveSelection } from "../live-selection";
 import { isImeKeyEvent } from "./ime";
+import { toggleCodeSpan } from "./code-toggle";
+
+export { toggleCodeSpan };
 import {
+  blockRanges,
   gives,
   mergedContent,
   outOfSpans,
@@ -93,30 +97,6 @@ function wholeSpan(
   if (node?.type.name === "md_span" && from + node.nodeSize === to)
     return { node, pos: from };
   return null;
-}
-
-/** What of each textblock a selection over several holds, trimmed of edge
- *  whitespace: the ranges a shortcut wraps or unwraps. Code, maths and
- *  enclosure blocks are left out. */
-function blockRanges(state: EditorState): { from: number; to: number }[] {
-  const { from, to } = state.selection;
-  const ranges: { from: number; to: number }[] = [];
-  state.doc.nodesBetween(from, to, (node, pos) => {
-    if (!node.isTextblock) return true;
-    if (node.type.spec.code || isEnclosureName(node.type.name)) return false;
-    const start = Math.max(from, pos + 1);
-    const end = Math.min(to, pos + 1 + node.content.size);
-    // Only a text node's edge whitespace stays outside: spaces in code are code.
-    const part = state.doc.slice(start, end).content;
-    const edge = (child: ProseNode | null, pattern: RegExp) =>
-      child?.isText ? pattern.exec(child.text!)![0].length : 0;
-    const lead = edge(part.firstChild, /^\s*/);
-    const trail = edge(part.lastChild, /\s*$/);
-    if (start + lead < end - trail)
-      ranges.push({ from: start + lead, to: end - trail });
-    return false;
-  });
-  return ranges;
 }
 
 /**
@@ -295,33 +275,6 @@ function plainSelection(state: EditorState) {
   let plain = true;
   part.forEach((child) => (plain &&= child.isText));
   return plain ? state.doc.textBetween($from.pos, $to.pos) : null;
-}
-
-/** Inline code, Ctrl+`: the selection made code, an empty one opened as
- *  typing "`" does, and the caret in code taking it off. */
-export function toggleCodeSpan(view: EditorView): boolean {
-  const state = stateWithLiveSelection(view);
-  const code = state.schema.nodes.md_code_span;
-  const { $from, from, to, empty } = state.selection;
-  if (!code) return false;
-  if ($from.parent.type === code) {
-    const start = $from.before();
-    const tr = state.tr.replaceWith(start, $from.after(), $from.parent.content);
-    view.dispatch(caretAt(tr, from - 1));
-    return true;
-  }
-  const text = plainSelection(state);
-  if (text === null) return false;
-  const node = code.create({}, text ? state.schema.text(text) : undefined);
-  const tr = state.tr.replaceWith(from, to, node);
-  view.dispatch(
-    empty
-      ? caretAt(tr, from + 1)
-      : tr.setSelection(
-          TextSelection.create(tr.doc, from + 1, from + 1 + text.length),
-        ),
-  );
-  return true;
 }
 
 /** Cmd/Ctrl+K: `[selection]()` with the caret where the address goes - or,
