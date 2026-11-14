@@ -876,6 +876,8 @@ declare global {
         capture: { mode: "all" | "some"; keys: string[] } | null,
       ): Promise<boolean>;
       onKey: Event<string>;
+      /** From 1.7: onKey by the events' rule; onKey stays. */
+      onDidPressKey: Event<string>;
       exec(op: EditorOp): Promise<EditorOpResult>;
     }
 
@@ -1236,8 +1238,14 @@ declare global {
         query: string,
         options?: { limit?: number },
       ): Promise<{
-        /** `line` counts from 1 here, unlike a Location's (from 0). */
-        hits: (Location & { rel: string; line: number; text: string })[];
+        /** `line` counts from 1 here, unlike a Location's (from 0); from
+         *  1.7 `location` is where the hit opens, its line from 0. */
+        hits: (Location & {
+          rel: string;
+          line: number;
+          text: string;
+          location: Location;
+        })[];
         truncated: boolean;
       }>;
       /** Documents were added, changed or removed. */
@@ -1582,6 +1590,9 @@ declare global {
       t(key: string, ...args: unknown[]): string;
       postMessage(message: unknown): void;
       onMessage(fn: (message: unknown) => void): Disposable;
+      /** From 1.7: onMessage by the name host.js's webview has; onMessage
+       *  stays. */
+      onDidReceiveMessage(fn: (message: unknown) => void): Disposable;
       getState(): unknown;
       setState<T>(state: T): T;
       /** Textus's own menu over the page, for a right-click or a dropdown,

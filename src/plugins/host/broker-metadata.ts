@@ -94,6 +94,8 @@ export function metadataHandlers(p: PluginScope) {
           rel: h.rel,
           line: h.line,
           text: h.text,
+          // From 1.7: where it opens, its line from 0 as every Location's.
+          location: { path: h.path, line: h.line - 1 },
         })),
       };
     },

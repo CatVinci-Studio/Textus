@@ -855,6 +855,7 @@
           return call("editor.captureKeys", plain(capture) || null);
         },
         onKey: on("editorKey"),
+        onDidPressKey: on("editorKey"),
         exec: function (op) {
           return call("editor.exec", plain(op));
         },

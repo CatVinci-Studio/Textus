@@ -37,6 +37,36 @@
     });
   }
 
+  // The page's errors and console warnings go to the plugin's log, where
+  // its author looks (Settings › the plugin), not only to a devtools.
+  function logged(level, parts) {
+    var text = Array.prototype.map
+      .call(parts, function (part) {
+        if (part instanceof Error) return part.stack || part.message;
+        if (typeof part === "string") return part;
+        try {
+          return JSON.stringify(part);
+        } catch {
+          return String(part);
+        }
+      })
+      .join(" ");
+    send("log", { level: level, message: text.slice(0, 2000) });
+  }
+  ["error", "warn"].forEach(function (level) {
+    var own = console[level];
+    console[level] = function () {
+      logged(level, arguments);
+      return own.apply(console, arguments);
+    };
+  });
+  window.addEventListener("error", function (event) {
+    logged("error", [event.error || event.message]);
+  });
+  window.addEventListener("unhandledrejection", function (event) {
+    logged("error", [event.reason]);
+  });
+
   // A press or Escape in the page closes the app's menu over it: the
   // window can't see them, the page's events stay in its frame.
   var menuOpen = false;
@@ -263,7 +293,12 @@
     postMessage: function (message) {
       send("message", { message: message });
     },
+    // onDidReceiveMessage (1.7) as host.js's webview names it; onMessage
+    // stays for older pages.
     onMessage: function (callback) {
+      return api.onDidReceiveMessage(callback);
+    },
+    onDidReceiveMessage: function (callback) {
       receivers.add(callback);
       held.splice(0).forEach(function (message) {
         callback(message);

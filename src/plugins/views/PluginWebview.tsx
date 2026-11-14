@@ -24,6 +24,7 @@ import {
 import { passZoomGesture, passZoomWheel } from "./frame-zoom";
 import { createPortal } from "react-dom";
 import { PluginProblem } from "./PluginProblem";
+import { logPluginMessage } from "../store/plugin-log";
 import {
   ContextMenu,
   type ContextMenuEntry,
@@ -201,6 +202,13 @@ export function PluginWebview({
             : false,
         clipboardRead: () => (pickedNow("paste") ? clipboardText() : ""),
         menuClose: () => closeMenuRef.current?.(),
+        // The page's errors and console, in the plugin's log in Settings.
+        log: ({ level, message }: { level: unknown; message: unknown }) =>
+          logPluginMessage(
+            current.plugin,
+            level === "error" || level === "warn" ? level : "info",
+            `(page) ${String(message ?? "")}`,
+          ),
         openLink: openPageLink,
         // Told on as a right-click on the frame, for the menu around it.
         contextMenu: ({ x, y }: { x: unknown; y: unknown }) => {
