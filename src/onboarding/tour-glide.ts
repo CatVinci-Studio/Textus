@@ -7,8 +7,6 @@ import type { Box } from "./tour-place";
  *  the card's corner. */
 export interface TourFrame {
   hole: Box | null;
-  /** Lit too, without the ring: what the lit part opened (the sidebar). */
-  extra: Box | null;
   card: { left: number; top: number };
 }
 
@@ -28,7 +26,6 @@ function mixBox(a: Box, b: Box, k: number): Box {
 function mixFrame(a: TourFrame, b: TourFrame, k: number): TourFrame {
   return {
     hole: b.hole && (a.hole ? mixBox(a.hole, b.hole, k) : b.hole),
-    extra: b.extra && (a.extra ? mixBox(a.extra, b.extra, k) : b.extra),
     card: {
       left: mix(a.card.left, b.card.left, k),
       top: mix(a.card.top, b.card.top, k),

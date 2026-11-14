@@ -33,11 +33,16 @@ function scrimPath(
   return `M0 0H${view.width}V${view.height}H0Z` + holes.map(holePath).join("");
 }
 
-/** `beside` cut clear of `hole`, so the two holes never overlap. */
-function apart(hole: Box, beside: Box): Box | null {
-  const left = Math.max(beside.left, hole.left + hole.width);
-  const right = beside.left + beside.width;
-  return right - left > 0 ? { ...beside, left, width: right - left } : null;
+/** The smallest box holding both. */
+function union(a: Box, b: Box): Box {
+  const left = Math.min(a.left, b.left);
+  const top = Math.min(a.top, b.top);
+  return {
+    left,
+    top,
+    width: Math.max(a.left + a.width, b.left + b.width) - left,
+    height: Math.max(a.top + a.height, b.top + b.height) - top,
+  };
 }
 
 /** `hole` widened across `beside`: the card goes past both, level with
@@ -113,12 +118,11 @@ export function TourLayer({
   const ring = useRef<HTMLDivElement>(null);
   const { view, cardSize } = useTourView(card, onEscape);
 
-  const hole = box && holeAround(box, view);
+  // The lit part and what it opened (the sidebar) light as one, one ring.
+  const lit = box && holeAround(box, view);
+  const hole = lit && besideBox ? union(lit, besideBox) : lit;
   const draw = useCallback((frame: TourFrame) => {
-    path.current?.setAttribute(
-      "d",
-      scrimPath(viewNow(), [frame.hole, frame.extra]),
-    );
+    path.current?.setAttribute("d", scrimPath(viewNow(), [frame.hole]));
     const ringEl = ring.current;
     if (ringEl) {
       ringEl.hidden = !frame.hole;
@@ -132,13 +136,9 @@ export function TourLayer({
     if (card.current)
       card.current.style.transform = `translate(${frame.card.left}px, ${frame.card.top}px)`;
   }, []);
-  // The card goes beside the lit part and whatever it keeps clear of.
-  const anchor = hole && besideBox ? across(hole, besideBox) : hole;
-  const extra = hole && besideBox ? apart(hole, besideBox) : null;
-  useGlide(
-    { hole, extra, card: placeCard(anchor, cardSize, view, phone) },
-    draw,
-  );
+  // The card beside it all, level with the part the step is about.
+  const anchor = lit && hole ? across(lit, hole) : hole;
+  useGlide({ hole, card: placeCard(anchor, cardSize, view, phone) }, draw);
 
   return (
     <div className="tour-layer">
