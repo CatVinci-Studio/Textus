@@ -40,6 +40,13 @@ describe("a link typed out", () => {
     expect(links(t.view)).toEqual(["https://x.org中文"]);
   });
 
+  it("is undone apart from the URL typed before it", async () => {
+    const t = await typed("see https://x.org ");
+    undo(t.view.state, t.view.dispatch);
+    expect(links(t.view)).toEqual([]);
+    expect(t.view.state.doc.textContent).toBe("see https://x.org ");
+  });
+
   it("is still text while the caret is in it", async () => {
     const t = await typed("see https://x.org");
     expect(links(t.view)).toEqual([]);
