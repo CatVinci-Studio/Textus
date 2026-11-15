@@ -107,7 +107,10 @@ function measurePill(strip: HTMLElement, pill: HTMLElement): PillMeasures {
     px(style.borderLeftWidth) +
     px(style.borderRightWidth);
   const outside = style.boxSizing === "border-box" ? 0 : pad;
-  const close = probe.querySelector(".tab-pill-close");
+  // Shown: without a pointer an unopened tab hides it, and the open tab's
+  // name would lose its room.
+  const close = probe.querySelector<HTMLElement>(".tab-pill-close");
+  close?.style.setProperty("display", "flex", "important");
   const font = fontOf(title);
   const drawn = title.getBoundingClientRect().width;
   const measured = textWidth(title.textContent ?? "", font) ?? 0;

@@ -27,11 +27,18 @@
   --corner-from: calc(var(--safe-left, 0px) + 18px);
 }
 
-/* A phone at rest keeps them at its foot, off the page's first lines; while
-   typing the foot holds the format bar on the keyboard (or Quick Ask's
-   composer), so they come down under the tab row. */
-:root[data-window-chrome="mobile"]:is(.keyboard-up, .has-quick-ask-dock)
-  .corner-stack {
+/* While a touch keyboard is up they step aside: anywhere they stood they
+   would cover the line being written or the format bar. They come back
+   when it goes. */
+.keyboard-up .corner-stack {
+  opacity: 0;
+  pointer-events: none;
+  transition: opacity var(--dur-fast) var(--ease-standard);
+}
+
+/* A phone keeps them at its foot, off the page's first lines; with Quick
+   Ask's composer there, they come down under the tab row. */
+:root[data-window-chrome="mobile"].has-quick-ask-dock .corner-stack {
   top: calc(var(--safe-top, 0px) + var(--header-height, 44px) + 8px);
   bottom: auto;
   flex-direction: column-reverse;

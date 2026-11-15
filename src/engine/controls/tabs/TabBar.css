@@ -196,6 +196,12 @@
   right: var(--icon-button-s);
   z-index: 2;
   background: var(--ui-frame-fill, var(--ui-bg)) fixed;
+  /* design: allow - a cover and a fade, so no stub of the next tab shows
+     beside it. */
+  box-shadow:
+    0 0 0 4px var(--ui-frame, var(--ui-bg)),
+    -8px 0 0 var(--ui-frame, var(--ui-bg)),
+    -12px 0 8px var(--ui-frame, var(--ui-bg));
 }
 
 /* Every tab, listed: held at the row's end as the tabs scroll under it. */
@@ -215,8 +221,11 @@
   border-radius: var(--shape-pill);
   corner-shape: round;
   background: var(--ui-frame-fill, var(--ui-bg)) fixed;
-  /* design: allow - a fade over the overflowing tabs, not a shadow. */
-  box-shadow: -8px 0 8px var(--ui-frame, var(--ui-bg));
+  /* design: allow - a fade over the overflowing tabs, not a shadow; the
+     spread fills its round corners, or a tab shows through them. */
+  box-shadow:
+    0 0 0 4px var(--ui-frame, var(--ui-bg)),
+    -8px 0 8px var(--ui-frame, var(--ui-bg));
   color: var(--ui-muted);
   cursor: pointer;
   z-index: 2;
