@@ -333,7 +333,28 @@ const closingHashGuard: Unsafe = {
 };
 
 /** Set up per serialization, before any node is written. */
+/** Nodes that hold phrasing, which mdast says always have `children`. */
+const PHRASING_PARENTS = new Set([
+  "paragraph",
+  "heading",
+  "tableCell",
+  "emphasis",
+  "strong",
+  "delete",
+  "link",
+  "linkReference",
+]);
+
+/** An empty paragraph or cell, built without `children`, gets an empty
+ *  list: the to-markdown extensions read its length. */
+function withChildren(node: { type: string; children?: unknown[] }): void {
+  if (PHRASING_PARENTS.has(node.type)) node.children ??= [];
+  for (const child of node.children ?? [])
+    withChildren(child as { type: string; children?: unknown[] });
+}
+
 const root: Handle = (node, parent, state, info) => {
+  withChildren(node);
   joinAdjacent(node as Phrasing);
   underscoresAtWordEdges(node as Phrasing);
   alternateNestedMarkers(node as Phrasing);
