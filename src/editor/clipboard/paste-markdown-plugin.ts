@@ -3,7 +3,7 @@ import { Slice } from "@milkdown/kit/prose/model";
 import type { Node as ProseNode, ResolvedPos } from "@milkdown/kit/prose/model";
 import { $prose } from "@milkdown/kit/utils";
 import { parseMarkdownSource } from "../markdown/parse-markdown-source";
-import { fillTable, inTableCell, joinLinesForTableCell } from "./paste-slice";
+import { fillTableAt, inTableCell, joinLinesForTableCell } from "./paste-slice";
 import { wordListsToHtml } from "./word-lists";
 import { keepPastedLines } from "./paste-lines";
 import { cleanPastedHtml } from "./paste-html";
@@ -199,17 +199,14 @@ export const pasteMarkdownSourcePlugin = $prose(
             const $from = view.state.selection.$from;
             let depth = $from.depth;
             while ($from.node(depth).type.spec.tableRole !== "table") depth--;
-            const table = $from.node(depth);
-            const filled = fillTable(
-              table,
-              $from.index(depth),
-              $from.index(depth + 1),
-              doc.firstChild!,
-            );
-            const at = $from.before(depth);
             view.dispatch(
-              view.state.tr
-                .replaceWith(at, at + table.nodeSize, filled)
+              fillTableAt(
+                view.state.tr,
+                $from.before(depth),
+                $from.index(depth),
+                $from.index(depth + 1),
+                doc.firstChild!,
+              )
                 .setMeta("uiEvent", "paste")
                 .scrollIntoView(),
             );

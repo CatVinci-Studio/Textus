@@ -1,3 +1,5 @@
+import { TableMap } from "@milkdown/kit/prose/tables";
+import { Selection, type Transaction } from "@milkdown/kit/prose/state";
 import {
   Fragment,
   Slice,
@@ -99,4 +101,20 @@ export function fillTable(
     return rowTypes[r].create(null, full);
   });
   return table.type.create(table.attrs, rows);
+}
+
+/** The table at `pos` filled with `pasted` from row `top`, column `left`
+ *  on (fillTable), the caret kept in that cell. */
+export function fillTableAt(
+  tr: Transaction,
+  pos: number,
+  top: number,
+  left: number,
+  pasted: Node,
+): Transaction {
+  const table = tr.doc.nodeAt(pos)!;
+  const filled = fillTable(table, top, left, pasted);
+  tr.replaceWith(pos, pos + table.nodeSize, filled);
+  const cell = pos + 1 + TableMap.get(filled).positionAt(top, left, filled);
+  return tr.setSelection(Selection.near(tr.doc.resolve(cell + 1)));
 }
