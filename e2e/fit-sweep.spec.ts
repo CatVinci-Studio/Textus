@@ -256,32 +256,6 @@ for (const [os, platform] of [
               await page.waitForTimeout(150);
               left = await chromeOverlaps(page);
             }
-            if (left.length)
-              console.log(
-                "DUMP",
-                said,
-                await page.evaluate(() =>
-                  JSON.stringify(
-                    [...document.querySelectorAll(".tab-bar")].map((b) => {
-                      const bar = b as HTMLElement;
-                      const r = (e: Element) => {
-                        const x = e.getBoundingClientRect();
-                        return [Math.round(x.left), Math.round(x.right)];
-                      };
-                      return {
-                        box: r(bar),
-                        sl: bar.scrollLeft,
-                        sw: bar.scrollWidth,
-                        cw: bar.clientWidth,
-                        gap: getComputedStyle(bar).columnGap,
-                        pad: getComputedStyle(bar).paddingLeft + "/" + getComputedStyle(bar).paddingRight,
-                        kids: [...bar.children].map((c) => [c.className, ...r(c), getComputedStyle(c).position]),
-                        pills: [...bar.querySelectorAll(".tab-pill")].map((p) => [p.textContent, ...r(p), (p as HTMLElement).style.width]),
-                      };
-                    }),
-                  ),
-                ),
-              );
             for (const p of left) found.push(`${said}: ${p}`);
           }
         }
