@@ -118,3 +118,35 @@ test("a ⌘ or Ctrl click in the text places the caret, never selects the block"
     ),
   ).toBe(true);
 });
+
+test("a heading key reaching the page mid-pinyin (Windows) waits for the text and doubles nothing", async ({
+  page,
+}) => {
+  await openApp(page, { settings: { menuBarShown: false } });
+  const doc = docs(page).first();
+  await doc.click();
+  const cdp = await page.context().newCDPSession(page);
+  await cdp.send("Input.insertText", { text: "你" });
+  await cdp.send("Input.imeSetComposition", {
+    text: "hi",
+    selectionStart: 2,
+    selectionEnd: 2,
+  });
+  // As the input method hands it on: a plain key, no isComposing.
+  await page.evaluate((mac) => {
+    document.activeElement!.dispatchEvent(
+      new KeyboardEvent("keydown", {
+        key: "3",
+        code: "Digit3",
+        ctrlKey: !mac,
+        metaKey: mac,
+        bubbles: true,
+        cancelable: true,
+      }),
+    );
+  }, MAC);
+  await cdp.send("Input.insertText", { text: "hi" });
+  await cdp.send("Input.insertText", { text: "哎" });
+  await expect(doc.locator("h3")).toHaveText(/你hi哎$/);
+  await expect(doc).not.toContainText("hihi");
+});

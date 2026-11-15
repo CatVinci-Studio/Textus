@@ -36,6 +36,7 @@ import type { PandocSettings } from "../../export/pandoc-options";
 import type { DiagramEngine, Shortcuts } from "../../prefs/SettingsContext";
 import { closeSplit } from "../../engine/layout/store";
 import { pickIsland } from "../../engine/layout/island-numbers";
+import { afterComposition } from "../../utils/ime";
 import { islandKeyOf } from "./island-key";
 import { APP_ACTIONS, type AppActionHandlers } from "./app-actions";
 import { copyPath } from "../../clipboard/copy-path";
@@ -241,8 +242,10 @@ export function useMenuBridge(handlers: MenuBridgeHandlers): void {
         // numbers up, the heading it sends is that island's key.
         const island = islandKeyOf(event.payload, h().shortcuts);
         if (island && pickIsland(island)) return;
-        window.dispatchEvent(
-          new CustomEvent(INSERT_BLOCK_EVENT, { detail: event.payload }),
+        afterComposition(() =>
+          window.dispatchEvent(
+            new CustomEvent(INSERT_BLOCK_EVENT, { detail: event.payload }),
+          ),
         );
       }),
       listenToThisWindow<string>("menu-toggle-mark", (event) => {

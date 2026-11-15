@@ -27,7 +27,7 @@ import {
 } from "../utils/events";
 import { actionForCombo, type AppActionHandlers } from "./menu/app-actions";
 import { pickIsland } from "../engine/layout/island-numbers";
-import { isImeKeydown } from "../utils/ime";
+import { afterComposition, isImeKeydown } from "../utils/ime";
 
 /** The heading shortcuts, by the block kind they apply. */
 const HEADING_KINDS: [HeadingAction, string][] = [
@@ -201,8 +201,10 @@ export function useGlobalShortcuts(opts: {
       }
       if (heading) {
         e.preventDefault();
-        window.dispatchEvent(
-          new CustomEvent(INSERT_BLOCK_EVENT, { detail: heading[1] }),
+        afterComposition(() =>
+          window.dispatchEvent(
+            new CustomEvent(INSERT_BLOCK_EVENT, { detail: heading[1] }),
+          ),
         );
         return;
       }
