@@ -27,7 +27,7 @@ export function attachGrips(options: {
   const grip = (axis: Axis) => {
     const el = document.createElement("button");
     el.type = "button";
-    el.className = `table-grip table-grip-${axis} tx-grip tx-grip-${axis}`;
+    el.className = `table-grip table-grip-${axis} tx-table-grip tx-table-grip-${axis}`;
     el.contentEditable = "false";
     // A pointer's way only: the menus and keys do the same for the keyboard
     // and screen readers.

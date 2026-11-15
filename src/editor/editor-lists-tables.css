@@ -320,7 +320,7 @@
 
 /* A row's grip on the table's left edge, a column's on its top edge, at
    the row and column under the pointer (table-grips.ts); its look is the
-   shared .tx-grip. */
+   shared .tx-table-grip. */
 .table-grip {
   position: absolute;
   top: 0;

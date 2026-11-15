@@ -248,7 +248,7 @@
 
 /* A table row's or column's grip, a pill on the table's edge, in the
    editor and on plugin pages: pressed, it picks; pulled, it moves. */
-.tx-grip {
+.tx-table-grip {
   padding: 0;
   border: 1px solid var(--doc-border, var(--ui-border));
   border-radius: var(--shape-pill);
@@ -257,21 +257,21 @@
   cursor: grab;
   touch-action: none;
 }
-.tx-grip:hover {
+.tx-table-grip:hover {
   border-color: var(--ui-accent);
   background: var(--ui-accent);
 }
-.tx-grip-row {
+.tx-table-grip-row {
   width: 8px;
   height: 20px;
 }
-.tx-grip-col {
+.tx-table-grip-col {
   width: 20px;
   height: 8px;
 }
 /* A finger's grip: the same pill, a fingertip's room to press. */
 @media (pointer: coarse) {
-  .tx-grip::before {
+  .tx-table-grip::before {
     content: "";
     position: absolute;
     inset: -12px;
