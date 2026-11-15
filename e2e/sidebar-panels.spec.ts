@@ -54,20 +54,20 @@ test("too narrow for the islands at their least, the sidebar steps aside, then t
   await expect(sidebar).not.toHaveClass(/sidebar-collapsed/);
   await page.getByRole("button", { name: "Textus AI" }).first().click();
   await expect(page.locator("section.island")).toHaveCount(2);
-  await page.setViewportSize({ width: 900, height: 760 });
+  await page.setViewportSize({ width: 780, height: 760 });
   await expect(sidebar).toHaveClass(/sidebar-collapsed/);
   // Narrower still, the AI's island folds into the document's, and comes
   // back first; the sidebar after it.
-  await page.setViewportSize({ width: 780, height: 760 });
+  await page.setViewportSize({ width: 660, height: 760 });
   await expect(page.locator("section.island")).toHaveCount(1);
   await expect(page.locator(".tab-pill")).toHaveCount(2);
-  await page.setViewportSize({ width: 900, height: 760 });
+  await page.setViewportSize({ width: 780, height: 760 });
   await expect(page.locator("section.island")).toHaveCount(2);
   await expect(sidebar).toHaveClass(/sidebar-collapsed/);
   await page.setViewportSize({ width: 1200, height: 760 });
   await expect(sidebar).not.toHaveClass(/sidebar-collapsed/);
   // Opened by hand in a narrow window, it stays.
-  await page.setViewportSize({ width: 900, height: 760 });
+  await page.setViewportSize({ width: 780, height: 760 });
   await expect(sidebar).toHaveClass(/sidebar-collapsed/);
   await emit(page, "menu-toggle-sidebar");
   await page.waitForTimeout(300);
@@ -77,7 +77,7 @@ test("too narrow for the islands at their least, the sidebar steps aside, then t
   await page.setViewportSize({ width: 1200, height: 760 });
   await page.getByRole("button", { name: "Textus AI" }).first().click();
   await expect(page.locator("section.island")).toHaveCount(1);
-  await page.setViewportSize({ width: 1000, height: 760 });
+  await page.setViewportSize({ width: 800, height: 760 });
   await page.getByRole("button", { name: "Textus AI" }).first().click();
   await expect(page.locator(".tab-pill")).toHaveCount(2);
   await expect(page.locator("section.island")).toHaveCount(1);
@@ -214,16 +214,22 @@ test("the AI's edge stepped past what the window can show stops there, and steps
   await expect.poll(ai).toBeLessThan(widest - 10);
 });
 
-test("a split the window has no room for is not made, and says why", async ({
+test("a split the window has no room for is not made, and says by how much", async ({
   page,
 }) => {
   await page.setViewportSize({ width: 900, height: 600 });
   await openApp(page, { settings: { menuBarShown: false } });
-  await emit(page, "menu-split-right");
-  await expect(page.locator("section.island")).toHaveCount(2);
-  await emit(page, "menu-split-right");
-  await expect(page.locator(".app-dialog")).toBeVisible();
-  await expect(page.locator("section.island")).toHaveCount(2);
+  const islands = page.locator("section.island");
+  // Splits while a document keeps its least, 240 wide, whatever its zoom.
+  let count = 1;
+  for (; count < 6; count++) {
+    await emit(page, "menu-split-right");
+    if ((await islands.count()) === count) break;
+    await expect(islands).toHaveCount(count + 1);
+  }
+  expect(count).toBe(3);
+  await expect(page.locator(".notice-text")).toContainText(/\d+/);
+  await expect(islands).toHaveCount(3);
 });
 
 test("another folder takes the open one's place: its documents close, and come back with it", async ({

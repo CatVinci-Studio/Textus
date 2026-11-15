@@ -1,5 +1,5 @@
 import { useEffect, useRef, useState } from "react";
-import { useIslandsNeed } from "../../engine/frame/frame-store";
+import { giveWay, useIslandsNeed } from "../../engine/frame/frame-store";
 import {
   foldIsland,
   unfoldIsland,
@@ -12,13 +12,15 @@ import {
 } from "../../engine/layout/store";
 import type { DocTab } from "../../document/doc-tabs";
 import { isPanelPane } from "../islands/panel-pane";
+import { panesOf, type Pane } from "../../engine/layout/tree";
 
 /**
  * After the sidebar, the islands give way: a window too narrow for every
  * island at its least folds the last panel's island (the AI, Settings, a
  * plugin's page) into the island beside it, then a split of documents, and
  * puts each back once there is room again. The sidebar opened by hand into
- * too little room makes room the same way; an island opened by hand stays.
+ * too little room makes room the same way; an island opened by hand stays,
+ * but for a split made into too little room: its panels fold first.
  * Returns whether the sidebar must wait: put away by the window, it comes
  * back only after every folded island has.
  */
@@ -52,15 +54,21 @@ export function useNarrowIslands(
       windowRoom < was.windowRoom &&
       was.windowRoom - sidebar >= was.need &&
       room < need;
+    if (giveWay() === "panels" && need <= room) giveWay(null);
     if (!need || !room || sidebarGoes || backAt.current !== null) return;
-    if (need > room && !grew) {
+    const giving = giveWay() === "panels";
+    if (need > room && (!grew || giving)) {
       const views = new Map(windowTabs<DocTab>().map((t) => [t.id, t.view]));
-      const out = foldIsland(
-        windowLayout(),
-        (p) => isPanelPane(p, (id) => views.get(id)),
-        need,
-      );
-      if (!out) return;
+      const isPanel = (p: Pane) => isPanelPane(p, (id) => views.get(id));
+      const out = foldIsland(windowLayout(), isPanel, need);
+      // Making room for a split: its panels only, then the sidebar's turn.
+      const panel =
+        out &&
+        panesOf(windowLayout().root).some(
+          (p) => p.id === out.folded.id && isPanel(p),
+        );
+      if (giving && !panel) giveWay("sidebar");
+      if (!out || (giving && !panel)) return;
       folded.current.push(out.folded);
       setHold(true);
       setSplitLayout(out.layout);

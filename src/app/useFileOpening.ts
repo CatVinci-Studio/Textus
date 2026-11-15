@@ -34,11 +34,8 @@ import {
 } from "../plugins/store/plugin-lookup";
 import { basename } from "../utils/path";
 import { isDocumentName } from "../files/document-name";
-import {
-  besideLayout,
-  openBeside,
-  placeOnArrival,
-} from "../engine/layout/store";
+import { openBeside, placeOnArrival } from "../engine/layout/store";
+import { besideOrSay, sayNoRoom } from "./menu/split-here";
 import type { Strings } from "../i18n/strings";
 import type { TabState } from "./tabs/useTabState";
 import { splitForDrop } from "./islands/split-drop";
@@ -214,9 +211,11 @@ export function useFileOpening(opts: {
         // update: never drawn first in front where it doesn't stay.
         const arriving = !tabsRef.current.some((tab) => tab.id === id);
         if (open.where === "beside") {
-          if (arriving)
-            placeOnArrival(id, (now) => besideLayout(now, id, from) ?? now);
-          else openBeside(id, from);
+          if (arriving) placeOnArrival(id, (now) => besideOrSay(now, id, from));
+          else {
+            const short = openBeside(id, from);
+            if (short) sayNoRoom(short);
+          }
         } else if (drop) splitForDrop(id, drop, arriving);
       };
       const existing = tabsRef.current.find(

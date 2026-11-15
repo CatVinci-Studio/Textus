@@ -16,6 +16,7 @@ import {
   type DropGeometry,
   type DropTarget,
 } from "../../engine/layout/drop-zones";
+import { shortGivingWay } from "../../engine/frame/frame-store";
 import "./split-drop.css";
 import { transientStyle } from "../../engine/tokens/appearance";
 
@@ -44,6 +45,21 @@ export function dropLayout(
     ifRoom(splitOff(now, tabId, pane, target.zone)) ??
     (pane === paneOf(now, tabId) ? undefined : moveTab(now, tabId, pane))
   );
+}
+
+/** The pixels a drop on an island's edge lacks for a new island, even
+ *  with the panels and the sidebar giving way: 0 when it has room, or
+ *  isn't on an edge. Said when it is let go (noRoomForSplit). */
+export function dropShort(
+  now: SplitLayout,
+  tabId: string,
+  target: DropTarget,
+): number {
+  if (target.zone === "center") return 0;
+  const pane = target.whole ? null : paneOf(now, target.tabId);
+  if (!target.whole && pane === null) return 0;
+  const next = splitOff(now, tabId, pane, target.zone);
+  return next ? shortGivingWay(next.root) : 0;
 }
 
 /** Commits a layout dropLayout gave. */

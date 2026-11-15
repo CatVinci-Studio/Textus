@@ -1,5 +1,5 @@
 import { useCallback } from "react";
-import { docMin } from "../frame/island-rules";
+import { DOC_MIN } from "../frame/island-rules";
 import { useIslandsNeed } from "../frame/frame-store";
 import { chromeScale } from "../tokens/chrome-scale";
 /**
@@ -42,7 +42,7 @@ export function sidePanelMax(
     Math.min(
       limits.max * scale,
       Math.floor(windowWidth * PANEL_SHARE),
-      windowWidth - beside - Math.max(keep, docMin()),
+      windowWidth - beside - Math.max(keep, DOC_MIN),
     ),
   );
 }

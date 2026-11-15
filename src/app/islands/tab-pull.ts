@@ -26,7 +26,8 @@ import {
 import { paneById } from "../../engine/layout/tree";
 import { frameLayout } from "../../engine/frame/frame-store";
 import { setDragging } from "../../engine/controls/document-drop";
-import { commitDrop, dropLayout, roomMarks } from "./split-drop";
+import { commitDrop, dropLayout, dropShort, roomMarks } from "./split-drop";
+import { sayNoRoom } from "../menu/split-here";
 import { liftIsland, type IslandLift } from "./island-lift";
 import "./split-drop.css";
 import { transientStyle } from "../../engine/tokens/appearance";
@@ -241,6 +242,10 @@ export function pullTab(
           // The layout it showed, made: the same panes, so nothing jumps;
           // the pill lands where its room was.
           commitDrop(place.next);
+          // Aimed at an edge with no room for an island: it joined the one
+          // there, and the window says why.
+          const short = place.target ? dropShort(base, tabId, place.target) : 0;
+          if (short) sayNoRoom(short);
           const room = marks.room();
           if (room && !lift) {
             ghost.land(room);

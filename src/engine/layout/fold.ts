@@ -77,6 +77,26 @@ export function foldIsland(
   return null;
 }
 
+/** `layout` with every panel's island folded into the island beside it:
+ *  what a split may count on them giving. */
+export function foldPanels(
+  layout: SplitLayout,
+  isPanel: (pane: Pane) => boolean,
+): SplitLayout {
+  let next = layout;
+  for (;;) {
+    const panels = new Set(
+      panesOf(next.root)
+        .filter(isPanel)
+        .map((p) => p.id),
+    );
+    const out = panels.size ? foldIsland(next, isPanel, 0) : null;
+    // With no panel beside another island left, a document's would go.
+    if (!out || !panels.has(out.folded.id)) return next;
+    next = out.layout;
+  }
+}
+
 /** A folded island back on its side of the island it joined, under its own
  *  id, with the tabs it had that are still open; null when none are or that
  *  island is gone. What the user picked meanwhile stays: a moved tab in

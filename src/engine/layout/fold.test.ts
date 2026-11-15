@@ -1,5 +1,5 @@
 import { describe, expect, it } from "vitest";
-import { foldIsland, unfoldIsland } from "./fold";
+import { foldIsland, foldPanels, unfoldIsland } from "./fold";
 import type { SplitLayout } from "./ops";
 import { mapPanes, panesOf, type Branch, type Pane } from "./tree";
 
@@ -104,6 +104,27 @@ describe("folding a panel's island", () => {
       focus: "d",
     };
     expect(foldIsland(mixed, isPanel, 900)).toBeNull();
+  });
+
+  it("folds every panel for a split's room, never a document's island", () => {
+    const three: SplitLayout = {
+      root: {
+        kind: "split",
+        direction: "row",
+        sizes: [0.4, 0.3, 0.3],
+        children: [
+          { kind: "pane", id: "d", tabs: ["a.md"], front: "a.md" },
+          { kind: "pane", id: "e", tabs: ["b.md"], front: "b.md" },
+          { kind: "pane", id: "p", tabs: ["ai-1"], front: "ai-1" },
+        ],
+      },
+      focus: "d",
+    };
+    expect(shape(foldPanels(three, isPanel))).toEqual([
+      "a.md>a.md",
+      "b.md,ai-1>b.md",
+    ]);
+    expect(shape(foldPanels(three, () => false))).toEqual(shape(three));
   });
 
   it("leaves a lone island be", () => {

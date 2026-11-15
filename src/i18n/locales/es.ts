@@ -173,7 +173,7 @@ para usar una.
   revisionDisplayOriginal: "Original en el texto, cambios en el margen",
   revisionDisplayFinal: "Solo el resultado, original en el margen",
   splitNoRoom:
-    "No hay espacio para dividir: ensancha la ventana o cierra la barra lateral o una división",
+    "No cabe otra división: a la ventana le faltan {px} px. Ensánchala o cierra una división.",
   revisionDisplayNoRoom:
     "No hay espacio: cierra la barra lateral o el panel de IA",
   proposalDeletedSentence: "Original",

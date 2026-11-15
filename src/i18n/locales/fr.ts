@@ -174,7 +174,7 @@ utiliser une.
     "Original dans le texte, modifications dans la marge",
   revisionDisplayFinal: "Résultat seul, original dans la marge",
   splitNoRoom:
-    "Pas assez de place pour partager : élargissez la fenêtre, ou fermez la barre latérale ou un partage",
+    "Pas de place pour une autre division : il manque {px} px à la fenêtre. Élargissez-la ou fermez une division.",
   revisionDisplayNoRoom:
     "Pas assez de place : fermez la barre latérale ou le panneau IA",
   proposalDeletedSentence: "Original",
@@ -1933,7 +1933,8 @@ utiliser une.
   pluginPermAiTools: "Donner à Textus AI ses propres outils",
   pluginPermNotifications: "Afficher des notifications système",
   pluginPermAppearance: "Modifier les couleurs de Textus et de vos documents",
-  pluginPermGitCommit: "Faire des commits Git dans le dossier ouvert avec votre Git",
+  pluginPermGitCommit:
+    "Faire des commits Git dans le dossier ouvert avec votre Git",
   pluginPermAgents:
     "Lancer un agent IA installé sur cet ordinateur (il peut lire et modifier des fichiers)",
   pluginPermBackground:

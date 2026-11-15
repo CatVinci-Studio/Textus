@@ -28,13 +28,14 @@ import { dividerKey, type PlacedIsland } from "../frame/island-parts";
 import { useIslandRoom, type IslandRoom } from "../frame/useIslandRoom";
 import { usePanelWidth } from "../frame/panel-width";
 import { islandRule } from "../frame/island-rules";
-import { onZoom, zoomOf, zoomVersion } from "../zoom/tab-zoom";
 import {
   contentMinOf,
   contentMinVersion,
   onContentMin,
 } from "../frame/content-min";
 import { useIslandFrame } from "../frame/useIslandFrame";
+import type { RoomCheck } from "../frame/frame-store";
+import { foldPanels } from "./fold";
 import "./split-panes.css";
 
 /** Where one island goes in the area, in pixels. */
@@ -138,20 +139,30 @@ export function IslandArea({
       rule: ruleFor(panel, isPanel),
     }) +
       2 * room.inset;
-  // A layout fits when its islands at their least do: a split that
-  // doesn't is not made (store.ts).
-  const fits = (root: LayoutNode) => {
-    if (!room || !area) return true;
-    const input = {
-      root,
-      gap: room.gap,
-      rowHeight: 0,
-      rule: ruleFor(panel, isPanel),
+  // What a layout lacks with its islands at their least, and what its
+  // panels' islands would give folding (frame-store's RoomCheck).
+  const fits = (root: LayoutNode): RoomCheck => {
+    if (!room || !area) return { short: 0, panels: 0 };
+    const least = (node: LayoutNode) => {
+      const input = {
+        root: node,
+        gap: room.gap,
+        rowHeight: 0,
+        rule: ruleFor(panel, isPanel),
+      };
+      return {
+        w: leastWidth(input),
+        h: leastHeight(input) + (rows ? room.bar : 0),
+      };
     };
-    return (
-      leastWidth(input) <= area.w + 0.5 &&
-      leastHeight(input) + (rows ? room.bar : 0) <= area.h + 0.5
-    );
+    const now = least(root);
+    // Too low is no room either: nothing gives height.
+    if (now.h > area.h + 0.5) return { short: Infinity, panels: 0 };
+    const folded =
+      root.kind === "pane"
+        ? now
+        : least(foldPanels({ ...layout, root }, isPanel).root);
+    return { short: now.w - area.w, panels: now.w - folded.w };
   };
   useIslandFrame(ref, room, area, solved, placed, need || 0, fits);
   return (
@@ -196,12 +207,10 @@ function boxOf(room: IslandRoom, rows: boolean): Rect {
   };
 }
 
-/** Solved again as an island's content measures a new least width, as a
- *  document's zoom changes its column's least, and as the window bar's
- *  buttons change what the top-right island keeps. */
+/** Solved again as an island's content measures a new least width, and
+ *  as the window bar's buttons change what the top-right island keeps. */
 function useSolveAgain() {
   useSyncExternalStore(onContentMin, contentMinVersion);
-  useSyncExternalStore(onZoom, zoomVersion);
   useBarObstacles();
 }
 
@@ -225,7 +234,7 @@ function solve(
 }
 
 /** Each island's rule: a panel's or a document's, raised to its front
- *  tab's measured least and its document's zoom. */
+ *  tab's measured least. */
 function ruleFor(panel: number, isPanel: (pane: Pane) => boolean) {
   return (pane: Pane, direction: SplitDirection) =>
     islandRule(
@@ -233,6 +242,5 @@ function ruleFor(panel: number, isPanel: (pane: Pane) => boolean) {
       direction,
       panel,
       contentMinOf(pane.front),
-      zoomOf(pane.front),
     );
 }
