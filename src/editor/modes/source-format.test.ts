@@ -100,6 +100,19 @@ describe("setSourceBlock", () => {
     expect(view.state.doc.toString()).toBe("- a\n\n- b\nc");
   });
 
+  it("leaves a caret at the line's start after the new prefix, so typing goes into the heading", () => {
+    for (const doc of ["|", "|text", "  |text"]) {
+      const view = viewOf(doc);
+      setSourceBlock(view, "h3");
+      view.dispatch(view.state.replaceSelection("你"));
+      expect(view.state.doc.toString()).toBe(
+        doc.includes("text")
+          ? `${doc.startsWith(" ") ? "  " : ""}### 你text`
+          : "### 你",
+      );
+    }
+  });
+
   it("keeps a line's indent", () => {
     const view = viewOf("  * a|");
     setSourceBlock(view, "task-list");

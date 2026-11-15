@@ -130,8 +130,8 @@ export function setSourceBlock(view: EditorView, kind: string): boolean {
     (prefix === "1. " && /^\s*\d+[.)]\s/.test(text));
   const off = prefix !== "" && all.every((line) => has(line.text));
   let number = 0;
-  view.dispatch({
-    changes: all.map((line) => {
+  const changes = state.changes(
+    all.map((line) => {
       const m = PREFIX.exec(line.text)!;
       const indent = m[1];
       const next =
@@ -142,7 +142,10 @@ export function setSourceBlock(view: EditorView, kind: string): boolean {
         insert: next,
       };
     }),
-  });
+  );
+  // A caret where the prefix goes lands after it, not before: typing went
+  // in front of a new "### " on an empty line.
+  view.dispatch({ changes, selection: state.selection.map(changes, 1) });
   return true;
 }
 
