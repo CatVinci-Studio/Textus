@@ -36,6 +36,9 @@ jobs:
       RELEASE_TAG: ${{ inputs.tag }}
       GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
       NDK_VERSION: 27.2.12479018
+      # The apksigner the check uses: a known one, not whatever is newest
+      # on the runner (whose output or Java may differ).
+      BUILD_TOOLS: 36.0.0
       SIGNER_SHA256: 559b0eb511a274a75704f9ae12390da2a75f774b91714eeb50c4769148ce4f0a
     steps:
       - uses: actions/checkout@v7
@@ -47,9 +50,9 @@ jobs:
           distribution: temurin
           java-version: 17
 
-      - name: Install the NDK
+      - name: Install the NDK and build tools
         run: |
-          "$ANDROID_HOME/cmdline-tools/latest/bin/sdkmanager" --install "ndk;$NDK_VERSION" > /dev/null
+          "$ANDROID_HOME/cmdline-tools/latest/bin/sdkmanager" --install "ndk;$NDK_VERSION" "build-tools;$BUILD_TOOLS" > /dev/null
           echo "NDK_HOME=$ANDROID_HOME/ndk/$NDK_VERSION" >> "$GITHUB_ENV"
 
       - uses: dtolnay/rust-toolchain@stable
@@ -98,11 +101,11 @@ jobs:
       - name: Check the signature and attach the APK
         run: |
           apk=src-tauri/gen/android/app/build/outputs/apk/universal/release/app-universal-release.apk
-          apksigner=$(find "$ANDROID_HOME/build-tools" -name apksigner | sort -V | tail -n1)
-          signer=$("$apksigner" verify --print-certs "$apk" \
-            | sed -n 's/^Signer #1 certificate SHA-256 digest: //p')
+          certs=$("$ANDROID_HOME/build-tools/$BUILD_TOOLS/apksigner" verify --print-certs "$apk" 2>&1) || true
+          signer=$(printf '%s\n' "$certs" | sed -n 's/^Signer #1 certificate SHA-256 digest: //p')
           if [ "$signer" != "$SIGNER_SHA256" ]; then
-            echo "::error::The APK is signed by $signer, not Textus's key: phones would refuse it as an update."
+            printf '%s\n' "$certs"
+            echo "::error::The APK is signed by '$signer', not Textus's key: phones would refuse it as an update."
             exit 1
           fi
           out="$RUNNER_TEMP/Textus_${RELEASE_TAG#v}_android_arm64.apk"
