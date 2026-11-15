@@ -121,3 +121,18 @@ fn an_update_that_cannot_move_in_keeps_the_version_there() {
     assert!(target.join("added").is_file());
     assert!(!aside.exists() && !new.exists());
 }
+
+#[test]
+fn a_checkouts_secrets_and_packages_are_not_installed() {
+    let from = tempfile::tempdir().unwrap();
+    let to = tempfile::tempdir().unwrap();
+    std::fs::write(from.path().join("main.js"), "x").unwrap();
+    std::fs::write(from.path().join(".env"), "TOKEN=1").unwrap();
+    std::fs::create_dir(from.path().join("node_modules")).unwrap();
+    std::fs::write(from.path().join("node_modules/a.js"), "x").unwrap();
+    let mut total = 0;
+    copy_dir(from.path(), &to.path().join("p"), &mut total).unwrap();
+    assert!(to.path().join("p/main.js").exists());
+    assert!(!to.path().join("p/.env").exists());
+    assert!(!to.path().join("p/node_modules").exists());
+}

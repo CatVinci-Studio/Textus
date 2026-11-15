@@ -88,13 +88,17 @@ pub(crate) fn read_only_hidden(root: &str, path: &str) -> bool {
     READ_ONLY_HIDDEN.contains(&rel)
 }
 
-/// Whether `rel` passes through anything hidden (`.env`, `.git/config`) or
-/// node_modules: what a plugin's own folder serves and lists leaves out.
+/// A name that is no part of a plugin: hidden (`.env`, `.git`) or
+/// node_modules. What its folder serves, lists, installs and exports
+/// leaves these out.
+pub(crate) fn not_plugin_file(name: &std::ffi::OsStr) -> bool {
+    name.to_string_lossy().starts_with('.') || name == "node_modules"
+}
+
+/// Whether `rel` passes through such a name (`.env`, `.git/config`).
 pub(crate) fn hidden_part(rel: &Path) -> bool {
-    rel.components().any(|c| {
-        matches!(c, Component::Normal(n)
-            if n.to_string_lossy().starts_with('.') || n == "node_modules")
-    })
+    rel.components()
+        .any(|c| matches!(c, Component::Normal(n) if not_plugin_file(n)))
 }
 
 /// `path` resolved inside `root`: no `..`, and still under `root` after

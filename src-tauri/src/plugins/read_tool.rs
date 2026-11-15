@@ -121,9 +121,7 @@ fn walk(root: &Path, dir: &Path, out: &mut Vec<String>) {
     };
     for entry in entries.flatten() {
         let path = entry.path();
-        let name = entry.file_name();
-        let name = name.to_string_lossy();
-        if name.starts_with('.') || name == "node_modules" {
+        if super::access::not_plugin_file(&entry.file_name()) {
             continue;
         }
         if path.is_dir() {

@@ -32,13 +32,13 @@ fn this_year() -> u64 {
     1970 + secs / 31_556_952
 }
 
-/// Every file under `from` but hidden ones, copied to `to`.
+/// Every file of the plugin under `from`, copied to `to`.
 fn copy_files(from: &Path, to: &Path) -> Result<(), String> {
     std::fs::create_dir_all(to).map_err(|e| e.to_string())?;
     for entry in std::fs::read_dir(from).map_err(|e| e.to_string())? {
         let entry = entry.map_err(|e| e.to_string())?;
         let name = entry.file_name();
-        if name.to_string_lossy().starts_with('.') {
+        if super::access::not_plugin_file(&name) {
             continue;
         }
         let path = entry.path();

@@ -454,7 +454,7 @@ pub async fn plugin_http(
 }
 
 mod paths;
-pub(crate) use paths::{hidden_part, in_folder, inside, plugin_path};
+pub(crate) use paths::{hidden_part, in_folder, inside, not_plugin_file, plugin_path};
 
 #[cfg(test)]
 mod tests;
