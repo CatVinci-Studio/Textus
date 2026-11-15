@@ -6,6 +6,7 @@ import {
 import type { EditProposal } from "../types";
 import {
   EDIT_ACTIONS,
+  needsAnchor,
   type EditAction,
 } from "../../editor/markdown/edit-actions";
 
@@ -125,8 +126,7 @@ export function draftProposal(
   const action = fields.action;
   if (!action?.complete) return null;
   if (!EDIT_ACTIONS.includes(action.value as EditAction)) return null;
-  const needsAnchor =
-    action.value !== "append" && action.value !== "replace_selection";
+  const anchored = needsAnchor(action.value as EditAction);
   const anchor = fields.anchor;
   // Named by its block: placed once the run's end is known too - its own
   // `last_block`, or a field written after it (schema order: block,
@@ -153,17 +153,17 @@ export function draftProposal(
       textComplete: fields.text?.complete ?? false,
     };
   }
-  if (needsAnchor && !anchor?.complete) return null;
+  if (anchored && !anchor?.complete) return null;
   // Quoted without a block - text proposed and not decided yet - only
   // once the text begins: a `block` the model writes after its quote
   // comes before that, and the draft would otherwise be placed by the
   // quote alone, nowhere.
-  if (needsAnchor && action.value !== "delete" && !fields.text) return null;
+  if (anchored && action.value !== "delete" && !fields.text) return null;
 
   return {
     proposal: {
       action: action.value as EditAction,
-      anchor: needsAnchor ? anchor?.value : undefined,
+      anchor: anchored ? anchor?.value : undefined,
       // Without the citation markers an OpenAI model may put in: the anchor
       // quotes the document.
       text: withoutCitationMarkers(
