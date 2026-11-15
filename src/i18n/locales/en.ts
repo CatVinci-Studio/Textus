@@ -160,7 +160,7 @@ type /name in a conversation to use one.
   revisionDisplayOriginal: "Original in the text, changes in the margin",
   revisionDisplayFinal: "Result only, originals in the margin",
   splitNoRoom:
-    "No room for another split: the window is {px} px too narrow. Widen it, or close a split.",
+    "No room for another split: the window is too narrow. Widen it, or close a split.",
   revisionDisplayNoRoom: "Not enough room - close the sidebar or the AI panel",
   proposalDeletedSentence: "Original",
   proposalAddedSentence: "Added",

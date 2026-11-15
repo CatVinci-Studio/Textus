@@ -6,22 +6,19 @@ import {
 } from "../../engine/layout/store";
 import type { SplitLayout } from "../../engine/layout/ops";
 import type { SplitDirection } from "../../engine/layout/tree";
-import { fill } from "../../i18n/fill";
 import { currentStrings } from "../../i18n/current";
 
-/** Says a split wasn't made, and by how much the window was too narrow:
- *  the menu, a tab dropped on an edge, a document opened beside. */
-export function sayNoRoom(px: number): void {
-  showNotice(fill(currentStrings().splitNoRoom, { px: String(px) }), {
-    tone: "warning",
-  });
+/** Says a split wasn't made for want of room: the menu, a tab dropped
+ *  on an edge, a document opened beside. */
+export function sayNoRoom(): void {
+  showNotice(currentStrings().splitNoRoom, { tone: "warning" });
 }
 
 /** Splits the island in use, or says why the window has no room for it:
  *  the documents never go under their least width for a split. */
 export function splitHere(direction: SplitDirection): void {
   const short = splitEditor(direction);
-  if (short) sayNoRoom(short);
+  if (short) sayNoRoom();
 }
 
 /** `now` with `tabId` beside `from` as it arrives; else `now`, and the
@@ -34,6 +31,6 @@ export function besideOrSay(
   const next = besideLayout(now, tabId, from);
   if (next) return next;
   const short = besideShort(now, tabId, from);
-  if (short) sayNoRoom(short);
+  if (short) sayNoRoom();
   return now;
 }

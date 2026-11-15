@@ -160,7 +160,7 @@ Skills liegen im Ordner skills/ neben dieser Datei, je Skill eine
   revisionDisplayOriginal: "Original im Text, Änderungen am Rand",
   revisionDisplayFinal: "Nur das Ergebnis, Original am Rand",
   splitNoRoom:
-    "Kein Platz für eine weitere Teilung: Dem Fenster fehlen {px} px. Verbreitern Sie es oder schließen Sie eine Teilung.",
+    "Kein Platz für eine weitere Teilung: Das Fenster ist zu schmal. Verbreitern Sie es oder schließen Sie eine Teilung.",
   revisionDisplayNoRoom:
     "Nicht genug Platz - schließ die Seitenleiste oder den KI-Bereich",
   proposalDeletedSentence: "Original",

@@ -214,7 +214,7 @@ test("the AI's edge stepped past what the window can show stops there, and steps
   await expect.poll(ai).toBeLessThan(widest - 10);
 });
 
-test("a split the window has no room for is not made, and says by how much", async ({
+test("a split the window has no room for is not made, and says why", async ({
   page,
 }) => {
   await page.setViewportSize({ width: 900, height: 600 });
@@ -228,7 +228,7 @@ test("a split the window has no room for is not made, and says by how much", asy
     await expect(islands).toHaveCount(count + 1);
   }
   expect(count).toBe(3);
-  await expect(page.locator(".notice-text")).toContainText(/\d+/);
+  await expect(page.locator(".notice-text")).toBeVisible();
   await expect(islands).toHaveCount(3);
 });
 

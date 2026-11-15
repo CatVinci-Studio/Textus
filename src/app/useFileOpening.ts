@@ -214,7 +214,7 @@ export function useFileOpening(opts: {
           if (arriving) placeOnArrival(id, (now) => besideOrSay(now, id, from));
           else {
             const short = openBeside(id, from);
-            if (short) sayNoRoom(short);
+            if (short) sayNoRoom();
           }
         } else if (drop) splitForDrop(id, drop, arriving);
       };

@@ -149,7 +149,7 @@ ${AI_NAME}への執筆の指示です。すべての文書に適用されます�
   revisionDisplayOriginal: "本文に元の文、修正は余白に",
   revisionDisplayFinal: "結果だけ、元の文は余白に",
   splitNoRoom:
-    "これ以上分割できません：ウインドウの幅があと {px} px 足りません。ウインドウを広げるか、分割を 1 つ閉じてください。",
+    "これ以上分割できません：ウインドウの幅が足りません。ウインドウを広げるか、分割を 1 つ閉じてください。",
   revisionDisplayNoRoom:
     "余白が足りません：サイドバーか AIパネルを閉じてください",
   proposalDeletedSentence: "元の文",

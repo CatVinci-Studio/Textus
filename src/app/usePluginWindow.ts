@@ -179,7 +179,7 @@ export function usePluginWindow({
           const from = tabInUse();
           setActiveTabId(open.id);
           const short = where === "beside" ? openBeside(open.id, from) : 0;
-          if (short) sayNoRoom(short);
+          if (short) sayNoRoom();
         } else addTab({ view }, where);
       },
       tabs: () => tabsRef.current.map(info),

@@ -174,7 +174,7 @@ utiliser une.
     "Original dans le texte, modifications dans la marge",
   revisionDisplayFinal: "Résultat seul, original dans la marge",
   splitNoRoom:
-    "Pas de place pour une autre division : il manque {px} px à la fenêtre. Élargissez-la ou fermez une division.",
+    "Pas de place pour une autre division : la fenêtre est trop étroite. Élargissez-la ou fermez une division.",
   revisionDisplayNoRoom:
     "Pas assez de place : fermez la barre latérale ou le panneau IA",
   proposalDeletedSentence: "Original",

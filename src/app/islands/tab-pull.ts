@@ -245,7 +245,7 @@ export function pullTab(
           // Aimed at an edge with no room for an island: it joined the one
           // there, and the window says why.
           const short = place.target ? dropShort(base, tabId, place.target) : 0;
-          if (short) sayNoRoom(short);
+          if (short) sayNoRoom();
           const room = marks.room();
           if (room && !lift) {
             ghost.land(room);
