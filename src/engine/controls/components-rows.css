@@ -300,3 +300,9 @@ textarea.tx-input {
   gap: var(--space-1);
   white-space: nowrap;
 }
+
+/* A name that would stand in a column of words beside its control
+   (useStackWhenTall): the control goes under it. */
+.settings-row[data-stacked] > :first-child {
+  flex-basis: 100%;
+}

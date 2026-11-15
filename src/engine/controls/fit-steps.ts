@@ -81,3 +81,40 @@ export function useFitItems(
     };
   }, [el, more, column]);
 }
+
+/**
+ * A row of a name and a control: `data-stacked` on it while the name (its
+ * `name` element), squeezed beside the control, would run past `lines`
+ * lines, so the stylesheet can put the control under it instead. Read
+ * again as its container resizes or the interface restyles.
+ */
+export function useStackWhenTall(
+  el: RefObject<HTMLElement | null>,
+  name: string,
+  lines = 2,
+): void {
+  useLayoutEffect(() => {
+    const row = el.current;
+    if (!row) return;
+    const fit = () => {
+      row.removeAttribute("data-stacked");
+      const label = row.querySelector<HTMLElement>(name);
+      const control = row.lastElementChild as HTMLElement | null;
+      if (!label || !control || control.contains(label)) return;
+      const style = getComputedStyle(label);
+      const line =
+        parseFloat(style.lineHeight) || parseFloat(style.fontSize) * 1.3;
+      const beside = control.offsetTop < label.offsetTop + label.offsetHeight;
+      if (beside && label.offsetHeight > line * (lines + 0.5))
+        row.setAttribute("data-stacked", "");
+    };
+    fit();
+    const resized = new ResizeObserver(fit);
+    resized.observe(row.offsetParent ?? row);
+    const restyled = onAppearance(fit);
+    return () => {
+      resized.disconnect();
+      restyled();
+    };
+  }, [el, name, lines]);
+}

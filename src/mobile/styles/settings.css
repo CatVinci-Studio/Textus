@@ -180,7 +180,9 @@
 
   /* A short name gives its room to the control beside it, so a picker
      with a long value stays on the row instead of dropping under it. */
-  :root[data-window-chrome="mobile"] .settings-row > *:first-child {
+  :root[data-window-chrome="mobile"]
+    .settings-row:not([data-stacked])
+    > *:first-child {
     flex-basis: 96px;
     /* As narrow as its longest word, so the control goes under it rather
        than squeezing it letter by letter; a word wider than the row still
