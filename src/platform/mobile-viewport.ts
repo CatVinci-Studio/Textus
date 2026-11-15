@@ -32,11 +32,23 @@ interface Insets {
 /** What the page keeps clear of at each edge (--native-safe-*, which the
  *  stylesheets read as --safe-top and the rest). */
 function safeArea(): void {
-  const insets = isIOSApp ? turned(webKitInsets()) : androidInsets();
+  applyInsets(isIOSApp ? turned(webKitInsets()) : androidInsets());
+}
+
+const SIDES = ["top", "right", "bottom", "left"] as const;
+
+/** Sets the insets; none known yet (all 0 on iOS before WebKit has them)
+ *  leaves the stylesheets on env(), which WebKit fills in itself. */
+export function applyInsets(
+  insets: Insets | null,
+  style = document.documentElement.style,
+  ios = isIOSApp,
+): void {
   if (!insets) return;
-  const style = document.documentElement.style;
-  for (const side of ["top", "right", "bottom", "left"] as const)
-    style.setProperty(`--native-safe-${side}`, `${insets[side]}px`);
+  const known = ios ? SIDES.some((side) => insets[side] > 0) : true;
+  for (const side of SIDES)
+    if (known) style.setProperty(`--native-safe-${side}`, `${insets[side]}px`);
+    else style.removeProperty(`--native-safe-${side}`);
 }
 
 /** Android's web view, ending only at the keyboard, reports no safe area:
@@ -65,7 +77,8 @@ function watchWebKitInsets(): void {
   probe.style.cssText =
     "position:fixed;top:0;left:0;visibility:hidden;pointer-events:none;padding:env(safe-area-inset-top) env(safe-area-inset-right) env(safe-area-inset-bottom) env(safe-area-inset-left)";
   document.body.appendChild(probe);
-  new ResizeObserver(safeArea).observe(probe);
+  // Its border box: the padding is all it has, its content box stays 0.
+  new ResizeObserver(safeArea).observe(probe, { box: "border-box" });
 }
 
 function webKitInsets(): Insets {
