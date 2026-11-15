@@ -255,16 +255,8 @@
   min-width: 0;
 }
 
-.quick-ask-pending-nav-button {
-  flex-shrink: 0;
-  font-size: var(--text-control);
-  line-height: 1;
-}
-
-.quick-ask-pending-position {
-  font-variant-numeric: tabular-nums;
+.quick-ask-pending-nav .tx-step-nav-pos {
   color: var(--ui-muted);
-  white-space: nowrap;
 }
 
 .quick-ask-pending-actions {

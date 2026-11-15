@@ -79,17 +79,8 @@
   color: inherit;
 }
 
-.review-bar-nav {
-  display: inline-flex;
-  align-items: center;
-  gap: 2px;
-}
-
-.review-bar-pos {
-  min-width: 3ch;
-  text-align: center;
+.review-bar-nav .tx-step-nav-pos {
   opacity: 0.85;
-  font-variant-numeric: tabular-nums;
 }
 
 .review-bar button {
@@ -97,12 +88,12 @@
   cursor: pointer;
 }
 
-.review-bar-nav button,
+.review-bar-nav .tx-icon-button,
 .review-bar-chat {
   display: inline-grid;
   place-items: center;
-  width: 26px;
-  height: 26px;
+  width: var(--icon-button-s);
+  height: var(--icon-button-s);
   padding: 0;
   border: 0;
   border-radius: 50%;
@@ -112,14 +103,10 @@
   opacity: 0.85;
 }
 
-.review-bar-nav button:hover,
+.review-bar-nav .tx-icon-button:hover,
 .review-bar-chat:hover {
   background: color-mix(in srgb, var(--ui-on-primary) 14%, transparent);
   opacity: 1;
-}
-
-.review-bar-prev {
-  transform: rotate(180deg);
 }
 
 /* How revisions show: an eye opening a short menu above the bar. */
@@ -201,13 +188,13 @@
 
 /* While a rewrite streams in (Accept, Reject), and with nothing to step
    to (‹ ›): there, faint and inert. */
-.review-bar :is(.review-bar-button, .review-bar-nav button):disabled {
+.review-bar :is(.review-bar-button, .review-bar-nav .tx-icon-button):disabled {
   opacity: 0.4;
   cursor: default;
   pointer-events: none;
 }
 
-.review-bar :is(.review-bar-button, .review-bar-nav button) {
+.review-bar :is(.review-bar-button, .review-bar-nav .tx-icon-button) {
   transition:
     background var(--dur-fast) var(--ease-standard),
     opacity var(--dur-base) var(--ease-standard);
@@ -248,7 +235,7 @@
   margin-left: auto;
 }
 
-.review-bar-phone .review-bar-nav button,
+.review-bar-phone .review-bar-nav .tx-icon-button,
 .review-bar-phone .review-bar-chat {
   width: 38px;
   height: 38px;

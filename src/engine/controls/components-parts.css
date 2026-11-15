@@ -334,3 +334,22 @@ th > .tx-table-grip-col {
   font-size: 16px;
   pointer-events: none;
 }
+
+/* "‹ 2/5 ›" (StepNav): the position between its two arrows. */
+.tx-step-nav {
+  display: inline-flex;
+  flex: none;
+  align-items: center;
+  gap: 2px;
+}
+
+.tx-step-nav-pos {
+  min-width: 3ch;
+  text-align: center;
+  font-variant-numeric: tabular-nums;
+  white-space: nowrap;
+}
+
+.tx-step-nav-back {
+  transform: rotate(180deg);
+}

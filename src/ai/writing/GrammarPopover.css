@@ -71,7 +71,7 @@
   font-variant-numeric: tabular-nums;
 }
 
-.grammar-popover-nav button {
+.grammar-popover-nav .tx-icon-button {
   display: inline-grid;
   place-items: center;
   width: 22px;
@@ -85,13 +85,9 @@
   cursor: pointer;
 }
 
-.grammar-popover-nav button:hover {
+.grammar-popover-nav .tx-icon-button:hover {
   background: var(--ui-hover);
   color: var(--ui-text);
-}
-
-.grammar-popover-prev {
-  transform: rotate(180deg);
 }
 
 .grammar-popover-issue {

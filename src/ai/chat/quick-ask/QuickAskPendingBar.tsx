@@ -1,7 +1,7 @@
 import { fill } from "../../../i18n/fill";
 import { useMenuButton } from "../../../engine/controls/useMenuButton";
 import { ChevronIcon } from "../../../engine/controls/icons";
-import { Tooltip } from "../../../engine/controls/Tooltip";
+import { StepNav } from "../../../engine/controls/StepNav";
 
 export interface QuickAskPendingBarLabels {
   proposalAccept: string;
@@ -52,34 +52,16 @@ export function QuickAskPendingBar({
   return (
     <div className="quick-ask-pending-bar">
       {total > 1 && (
-        <div className="quick-ask-pending-nav">
-          <Tooltip text={labels.quickAskPrevEdit}>
-            <button
-              type="button"
-              className="quick-ask-pending-nav-button"
-              aria-label={labels.quickAskPrevEdit}
-              onClick={onFocusPrevious}
-            >
-              ‹
-            </button>
-          </Tooltip>
-          <span className="quick-ask-pending-position">
-            {fill(labels.quickAskPosition, {
-              i: String(focusIndex + 1),
-              n: String(total),
-            })}
-          </span>
-          <Tooltip text={labels.quickAskNextEdit}>
-            <button
-              type="button"
-              className="quick-ask-pending-nav-button"
-              aria-label={labels.quickAskNextEdit}
-              onClick={onFocusNext}
-            >
-              ›
-            </button>
-          </Tooltip>
-        </div>
+        <StepNav
+          className="quick-ask-pending-nav"
+          previous={labels.quickAskPrevEdit}
+          next={labels.quickAskNextEdit}
+          onStep={(step) => (step < 0 ? onFocusPrevious() : onFocusNext())}
+          position={fill(labels.quickAskPosition, {
+            i: String(focusIndex + 1),
+            n: String(total),
+          })}
+        />
       )}
       <div className="quick-ask-pending-actions">
         {total === 1 ? (

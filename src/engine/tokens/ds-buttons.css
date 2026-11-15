@@ -204,7 +204,6 @@
    toolbar's are framed to match its 26px controls. */
 :is(
   .inline-chat-header-button,
-  .quick-ask-pending-nav-button,
   .tree-tool,
   .tx-icon-button,
   .inline-chat-attach,
@@ -226,12 +225,7 @@
     color var(--dur-fast) var(--ease-standard);
 }
 
-:is(
-  .inline-chat-header-button,
-  .quick-ask-pending-nav-button,
-  .tree-tool,
-  .tx-icon-button
-) {
+:is(.inline-chat-header-button, .tree-tool, .tx-icon-button) {
   width: var(--icon-button-s);
   height: var(--icon-button-s);
 }
@@ -245,7 +239,6 @@
 
 :is(
     .inline-chat-header-button,
-    .quick-ask-pending-nav-button,
     .tree-tool,
     .tx-icon-button,
     .inline-chat-attach,
@@ -258,7 +251,6 @@
 
 :is(
     .inline-chat-header-button,
-    .quick-ask-pending-nav-button,
     .tree-tool,
     .tx-icon-button,
     .inline-chat-attach,
@@ -281,7 +273,6 @@
       .corner-toast button,
       .project-bar-naming button,
       .inline-chat-header-button,
-      .quick-ask-pending-nav-button,
       .tree-tool,
       .tx-icon-button,
       .inline-chat-attach,

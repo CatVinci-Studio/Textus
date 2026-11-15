@@ -2,9 +2,8 @@ import { fill } from "../../i18n/fill";
 import { useRef, type CSSProperties } from "react";
 import { usePlacement } from "../../engine/controls/usePlacement";
 import { usePresenceProps } from "../../engine/motion/usePresence";
-import { ChevronIcon } from "../../engine/controls/icons";
 import type { GrammarKind } from "./grammar-kind";
-import { Tooltip } from "../../engine/controls/Tooltip";
+import { StepNav } from "../../engine/controls/StepNav";
 import "./GrammarPopover.css";
 
 export interface GrammarPopoverInfo {
@@ -99,29 +98,13 @@ export function GrammarPopover({
           <b>{info.shownSuggestion ?? (info.suggestion || "\u2205")}</b>
         </span>
         {info.count > 1 && (
-          <span className="grammar-popover-nav">
-            <Tooltip text={labels.grammarPrevious}>
-              <button
-                type="button"
-                aria-label={labels.grammarPrevious}
-                onClick={() => onStep(-1)}
-              >
-                <ChevronIcon className="grammar-popover-prev" />
-              </button>
-            </Tooltip>
-            <span>
-              {info.index + 1}/{info.count}
-            </span>
-            <Tooltip text={labels.grammarNext}>
-              <button
-                type="button"
-                aria-label={labels.grammarNext}
-                onClick={() => onStep(1)}
-              >
-                <ChevronIcon />
-              </button>
-            </Tooltip>
-          </span>
+          <StepNav
+            className="grammar-popover-nav"
+            previous={labels.grammarPrevious}
+            next={labels.grammarNext}
+            onStep={onStep}
+            position={`${info.index + 1}/${info.count}`}
+          />
         )}
       </div>
       {info.issue && <div className="grammar-popover-issue">{info.issue}</div>}
