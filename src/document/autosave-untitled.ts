@@ -1,4 +1,4 @@
-import type { DocTab } from "./doc-tabs";
+import { isPlainDraft, type DocTab } from "./doc-tabs";
 import { joinPath } from "../utils/path";
 
 /**
@@ -10,14 +10,8 @@ import { joinPath } from "../utils/path";
  *  draft with something besides whitespace in it. Guides, plugin views and
  *  Word imports (whose Save As suggests a place of its own) are left out. */
 export function untitledAutosavable(tab: DocTab): boolean {
-  return (
-    !tab.path &&
-    !tab.view &&
-    !tab.helpDoc &&
-    !tab.importedFrom &&
-    // Stops at the first visible character, not a copy of the document.
-    /\S/.test(tab.content)
-  );
+  // Stops at the first visible character, not a copy of the document.
+  return isPlainDraft(tab) && /\S/.test(tab.content);
 }
 
 /** Whether a draft's title is written: something follows its first line.

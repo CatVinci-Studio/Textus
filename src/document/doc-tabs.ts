@@ -163,6 +163,12 @@ export function tabIsDirty(tab: DocTab): boolean {
   return tab.content !== tab.savedContent;
 }
 
+/** The user's own unsaved draft: no file, plugin view, guide or Word
+ *  import behind it. */
+export function isPlainDraft(tab: DocTab): boolean {
+  return !tab.path && !tab.view && !tab.helpDoc && !tab.importedFrom;
+}
+
 /** A new Untitled tab nobody has written in, so opening something here
  *  loses nothing. */
 export function tabIsUntouchedDraft(tab: DocTab): boolean {
