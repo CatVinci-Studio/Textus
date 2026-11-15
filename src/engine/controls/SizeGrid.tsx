@@ -27,6 +27,20 @@ const clamp = (n: number, low: number, high: number) =>
 /** How far a press moves before it is a drag, in px. */
 const SLOP = 6;
 
+/** The mouse events a browser makes after a finger lifts land on what is
+ *  under it then: the grid closed, that is the page. They are dropped. */
+function swallowTapThrough() {
+  const drop = (e: Event) => {
+    e.preventDefault();
+    e.stopPropagation();
+  };
+  const kinds = ["mousedown", "mouseup", "click"] as const;
+  for (const kind of kinds) window.addEventListener(kind, drop, true);
+  setTimeout(() => {
+    for (const kind of kinds) window.removeEventListener(kind, drop, true);
+  }, 400);
+}
+
 /** Cells of a table that a picked size would cut away and that have
  *  something in them. */
 export function lostCells(
@@ -147,6 +161,7 @@ export function SizeGrid(p: SizeGridProps) {
           if (!press) return;
           follow(e);
           pressed.current = null;
+          if (e.pointerType !== "mouse") swallowTapThrough();
           p.onPick(press.size);
         }}
         onPointerCancel={() => (pressed.current = null)}

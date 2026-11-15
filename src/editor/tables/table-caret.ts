@@ -35,27 +35,51 @@ export function caretColumns(
   return null;
 }
 
+/** The decoration marking the caret's table in `state`, if it is in one. */
+function caretDecorations(state: EditorState): DecorationSet {
+  const at = caretColumns(state);
+  const table = at && state.doc.nodeAt(at.pos);
+  if (!at || !table) return DecorationSet.empty;
+  return DecorationSet.create(state.doc, [
+    Decoration.node(
+      at.pos,
+      at.pos + table.nodeSize,
+      { class: "is-table-caret" },
+      { [TABLE_CARET_SPEC]: at.cols },
+    ),
+  ]);
+}
+
+const sameCols = (a: DecorationSet, b: DecorationSet) => {
+  const [x] = a.find();
+  const [y] = b.find();
+  if (!x || !y) return !x && !y;
+  const cols = (d: typeof x) =>
+    String((d.spec as Record<string, unknown>)[TABLE_CARET_SPEC]);
+  return x.from === y.from && x.to === y.to && cols(x) === cols(y);
+};
+
 /**
  * Marks the table the selection is in (`is-table-caret`), with the columns
  * it covers: its tools show while the caret is in it, a phone's without a
- * hover, and its alignment buttons act on those columns.
+ * hover, and its alignment buttons act on those columns. The set is kept
+ * while it is the same: a new one redraws the table and puts the state's
+ * selection back in the page, under a finger's tap that was moving it.
  */
 export const tableCaretPlugin = $prose(
   () =>
-    new Plugin({
+    new Plugin<DecorationSet>({
+      state: {
+        init: (_, state) => caretDecorations(state),
+        apply(tr, old, _prev, state) {
+          if (!tr.docChanged && !tr.selectionSet) return old;
+          const next = caretDecorations(state);
+          return !tr.docChanged && sameCols(old, next) ? old : next;
+        },
+      },
       props: {
         decorations(state) {
-          const at = caretColumns(state);
-          const table = at && state.doc.nodeAt(at.pos);
-          if (!at || !table) return null;
-          return DecorationSet.create(state.doc, [
-            Decoration.node(
-              at.pos,
-              at.pos + table.nodeSize,
-              { class: "is-table-caret" },
-              { [TABLE_CARET_SPEC]: at.cols },
-            ),
-          ]);
+          return this.getState(state);
         },
       },
     }),

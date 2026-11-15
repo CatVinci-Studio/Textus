@@ -1,7 +1,8 @@
 // @vitest-environment jsdom
 import { afterEach, describe, expect, it } from "vitest";
 import { closeViews, openView, type TestView } from "../editor-view-kit";
-import { caretColumns } from "./table-caret";
+import { caretColumns, TABLE_CARET_SPEC } from "./table-caret";
+import type { DecorationSet } from "@milkdown/kit/prose/view";
 import {
   alignColumns,
   resizeTable,
@@ -40,6 +41,23 @@ describe("the table's own tools", () => {
     expect(caretColumns(t.view.state)!.cols).toEqual([1]);
     t.caretAt("end");
     expect(caretColumns(t.view.state)).toBeNull();
+  });
+
+  it("keeps the caret's mark on the table while it stays: a fresh one would put the caret back under a finger's tap", async () => {
+    const t = await openView(SOURCE);
+    const mark = () =>
+      t.view.state.plugins
+        .map((p) => p.props.decorations?.call(p, t.view.state))
+        .find((set) =>
+          (set as DecorationSet | undefined)
+            ?.find()
+            .some((d) => TABLE_CARET_SPEC in (d.spec as object)),
+        );
+    t.caretAt("2");
+    const before = mark();
+    expect(before).toBeDefined();
+    t.view.dispatch(t.view.state.tr.setMeta("held", true));
+    expect(mark()).toBe(before);
   });
 
   it("aligns a whole column, head row and body, as GFM writes it", async () => {

@@ -47,6 +47,7 @@ describe("the new table's size grid", () => {
     expect(lostCells(now, { rows: 4, cols: 4 }, filled)).toBe(0);
   });
   it("a finger's tap picks the cell it went down on, though the grid grew under it", () => {
+    vi.useFakeTimers();
     const { onInsert } = setup();
     Element.prototype.setPointerCapture = () => {};
     const cell = (r: number, c: number) =>
@@ -63,6 +64,14 @@ describe("the new table's size grid", () => {
     fireEvent.pointerDown(grid(), touch);
     fireEvent.pointerUp(grid(), { ...touch, clientX: 52 });
     expect(onInsert).toHaveBeenCalledExactlyOnceWith(5, 5);
+    // The click the lift makes doesn't reach the page under the grid.
+    const page = vi.fn();
+    document.body.addEventListener("mousedown", page);
+    fireEvent.mouseDown(document.body);
+    expect(page).not.toHaveBeenCalled();
+    document.body.removeEventListener("mousedown", page);
+    vi.runAllTimers();
+    vi.useRealTimers();
   });
   it("Cancel closes it with nothing inserted", () => {
     const { onInsert, onClose } = setup();
