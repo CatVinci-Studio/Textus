@@ -6,6 +6,7 @@
 
 ### Improved
 
+- The Paper theme uses each system's own serif with even-height figures, so numbers no longer rise and fall in a line.
 - Source mode takes the same keys as the rendered editor: highlight, strikethrough, inline code, link, headings and lists, code fences, indent, moving lines and a new line below. A heading key at a line's start leaves the cursor after the new `#`.
 - A to-do copied whole pastes back as a to-do, and Backspace at a to-do's start turns it into plain text.
 - Closing the tab in use goes back to the tab you used before it.
