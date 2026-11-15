@@ -309,6 +309,7 @@ export function FileTree({
                 x={menu.x}
                 y={menu.y}
                 items={menu.items}
+                title={menu.title}
                 onClose={() => setMenu(null)}
               />
             )}

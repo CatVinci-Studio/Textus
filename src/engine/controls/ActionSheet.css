@@ -6,6 +6,10 @@
   flex-direction: column;
   gap: 8px;
   padding: 0 8px calc(8px + var(--safe-bottom));
+  /* Rows to press, not text: a held finger never selects a label. */
+  -webkit-user-select: none;
+  user-select: none;
+  -webkit-touch-callout: none;
 }
 
 .action-sheet-group,

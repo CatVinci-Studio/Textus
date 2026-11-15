@@ -29,6 +29,8 @@ type TreeMenu = {
   x: number;
   y: number;
   items: (ContextMenuItem | "separator")[];
+  /** The row's name, heading a phone's sheet. */
+  title?: string;
 } | null;
 
 /** The tree's menus: the one open, and a row's context menu - open, new
@@ -137,7 +139,7 @@ export function useRowMenu(
         folder: isDir,
       });
       if (added.length) items.push("separator", ...added);
-      setMenu({ ...at, items });
+      setMenu({ ...at, items, title: basename(path) });
     },
     [root, t, setDraft, rename, trash, onFileSelect, onEnter],
   );
