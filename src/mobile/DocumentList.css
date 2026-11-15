@@ -4,8 +4,9 @@
 .document-list {
   position: fixed;
   inset: 0;
-  /* Over the find bar, under the alerts it opens. */
-  z-index: var(--z-phone-page, 350);
+  /* Over the find bar, under the alerts it opens; on an iPad's desktop
+     frame over its bar and sidebar too, under its menus. */
+  z-index: max(var(--z-phone-page), var(--z-floating));
   display: flex;
   flex-direction: column;
   background: var(--ui-bg);
