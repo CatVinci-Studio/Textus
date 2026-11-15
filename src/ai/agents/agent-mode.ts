@@ -21,6 +21,8 @@ export interface AgentOption {
   category?: string;
   current: string;
   choices: AgentChoice[];
+  /** The mode's value that asks first, as the agent's plugin names it. */
+  asking?: string;
 }
 
 const text = (v: unknown) => (typeof v === "string" ? v : undefined);
@@ -46,8 +48,9 @@ export function readOptions(raw: unknown): AgentOption[] {
   return raw.flatMap((o): AgentOption[] => {
     if (!isRecord(o) || typeof o.id !== "string") return [];
     if (o.type !== undefined && o.type !== "select") return [];
+    // A list of one still says what is in use (DeepSeek's model, signed out).
     const choices = choicesOf(o.options);
-    if (choices.length < 2) return [];
+    if (!choices.length) return [];
     return [
       {
         id: o.id,
@@ -76,6 +79,8 @@ export const modeOption = (options: readonly AgentOption[]) =>
 export function askingValue(options: readonly AgentOption[]): string | null {
   const mode = modeOption(options);
   if (!mode) return null;
+  if (mode.asking && mode.choices.some((c) => c.value === mode.asking))
+    return mode.asking;
   for (const word of ASKING) {
     const pick = mode.choices.find((c) =>
       [c.description ?? "", c.name, c.value].some((part) => word.test(part)),

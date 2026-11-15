@@ -16,6 +16,10 @@ export interface ExternalAgent {
   setup?: string;
   /** The provider whose models it runs, if it says. */
   provider?: string;
+  /** Its mode that asks first, as its plugin names it. */
+  askMode?: string;
+  /** The sign-in Textus may run for it; "" for none (manifest). */
+  signIn?: string;
 }
 
 let agents: ExternalAgent[] = [];

@@ -1,15 +1,10 @@
 import { optionsOf, setOption, type Opened } from "./agent-legacy";
 import { fill } from "../../i18n/fill";
-import { filesChanged } from "../chat/file-changes";
-import { isInside } from "../../utils/path";
 import { IpcError } from "../../platform/ipc-call";
 import { AI_CANCELLED } from "../../platform/ipc-ai-types";
 import { agentsIpc } from "../../platform/ipc-plugins";
-import { fs } from "../../platform/ipc-files";
 import { appVersion } from "../../platform/app-info";
 import { currentStrings } from "../../i18n/current";
-import { getWindowAccess } from "../../plugins/app-bridge";
-import { openDocumentAt } from "../../registry/open-documents";
 import type { ExternalAgent } from "../../plugins/contributions/agents";
 import type { AgentTurn, ImageAttachment } from "../types";
 import {
@@ -21,7 +16,10 @@ import {
   type PermissionOption,
   type PermissionOutcome,
   type SessionUpdate,
+  type ToolCallFields,
 } from "./acp-client";
+import { stepFacts, type StepFacts } from "./agent-steps";
+import { readForAgent, writeForAgent } from "./agent-files";
 import { applyUpdate, finish, thoughtOf, type AgentView } from "./agent-view";
 import {
   applyChoices,
@@ -47,6 +45,8 @@ export interface PendingPermission {
   title: string;
   /** The step's kind as the agent names it: "execute" for a command. */
   kind?: string;
+  /** The command it runs, or the file, address or search it reaches. */
+  detail?: string;
   options: PermissionOption[];
   /** The option chosen, or null to refuse. */
   choose(optionId: string | null): void;
@@ -76,6 +76,8 @@ interface Session {
   images?: boolean;
   /** Its mode and model are set the older way (agent-legacy.ts). */
   older?: boolean;
+  /** Its steps as heard, by id, for the permissions that name only that. */
+  steps: Map<string, StepFacts>;
 }
 
 const sessions = new Map<string, Session>();
@@ -211,23 +213,6 @@ export function cancelAgentExchange(conversation: string): void {
   }, STOP_GRACE_MS);
 }
 
-/** What an agent reads or writes through Textus stays in its session's
- *  folder and out of hidden folders, as Textus AI's own tools do. */
-function withinFolder(folder: string, path: string): void {
-  const rest = isInside(path, folder) ? path.slice(folder.length) : null;
-  const parts = rest?.split(/[\\/]/).filter(Boolean) ?? [];
-  if (!rest || parts.some((part) => part.startsWith(".")))
-    throw new Error(`${path} is outside the folder this session works in.`);
-}
-
-/** `content` from line `line` (1-based), at most `limit` lines. */
-function lines(content: string, line?: number | null, limit?: number | null) {
-  if (!line && !limit) return content;
-  const all = content.split("\n");
-  const from = Math.max(0, (line ?? 1) - 1);
-  return all.slice(from, limit ? from + limit : undefined).join("\n");
-}
-
 async function start(
   agent: ExternalAgent,
   conversation: string,
@@ -240,6 +225,7 @@ async function start(
     events: null,
     refuse: null,
     sessionId: "",
+    steps: new Map(),
   } as unknown as Session;
   session.connection = new AcpConnection(
     {
@@ -255,34 +241,13 @@ async function start(
       update: ({ update }) => deliver(session, update),
       requestPermission: (p) =>
         allowedUnasked(session.agent, p.options) ??
-        ask(session, p.toolCall.title ?? "", p.toolCall.kind, p.options),
-      // An open document as the editor has it, typed or not.
-      readTextFile: async ({ path, line, limit }) => {
-        withinFolder(session.cwd, path);
-        const doc = openDocumentAt(path);
-        const content = doc ? doc.text() : await fs.readTextFile(path);
-        return { content: lines(content, line, limit) };
-      },
-      // An open document is changed in its editor, one undo step, and
-      // saved: read again from disk, it would start over and lose the
-      // conversation beside it. Either way the file is marked as Textus
-      // AI's own changes are, each place in it put back from the editor.
-      writeTextFile: async ({ path, content }) => {
-        withinFolder(session.cwd, path);
-        const doc = openDocumentAt(path);
-        if (doc) {
-          const before = doc.text();
-          if (!doc.replaceText(content, doc.revision()))
-            throw new Error(`${path} changed while it was being written.`);
-          await getWindowAccess()?.saveAt(path);
-          filesChanged([{ file: path, applied: true, before }]);
-          return null;
-        }
-        const before = await fs.readTextFile(path).catch(() => null);
-        await fs.writeTextFile(path, content);
-        filesChanged([{ file: path, applied: true, before }]);
-        return null;
-      },
+        ask(
+          session,
+          stepFacts(session.steps.get(p.toolCall.toolCallId), p.toolCall),
+          p.options,
+        ),
+      readTextFile: (p) => readForAgent(session.cwd, p),
+      writeTextFile: (p) => writeForAgent(session.cwd, p),
     },
   );
   handle = agentsIpc.start(agent.plugin, agent.id, cwd, (out) => {
@@ -316,9 +281,14 @@ async function start(
     try {
       opened = await open();
     } catch (err) {
-      // A sign-in the agent runs itself (a browser opens); one it wants
-      // run in a terminal is the user's, as its setup says.
-      const own = init?.authMethods?.find((m) => !m.type || m.type === "agent");
+      // A sign-in the agent runs itself (a browser opens), the one its
+      // plugin names if it does; one it wants run in a terminal is the
+      // user's, as its setup says.
+      const own = init?.authMethods?.find((m) =>
+        agent.signIn === undefined
+          ? !m.type || m.type === "agent"
+          : m.id === agent.signIn,
+      );
       if (!(err instanceof AcpError && err.code === AUTH_REQUIRED && own))
         throw err;
       await session.connection.request("authenticate", { methodId: own.id });
@@ -379,6 +349,14 @@ function deliver(session: Session, update: SessionUpdate) {
       modeOption(offerOf(session.agent).options)?.id ?? "mode",
       String(u.currentModeId ?? ""),
     );
+  if (
+    u.sessionUpdate === "tool_call" ||
+    u.sessionUpdate === "tool_call_update"
+  ) {
+    const fields = update as ToolCallFields;
+    const id = fields.toolCallId;
+    session.steps.set(id, stepFacts(session.steps.get(id), fields));
+  }
   const events = session.events;
   if (!events) return;
   const thought = thoughtOf(update);
@@ -392,8 +370,7 @@ const current = new WeakMap<Session, AgentView>();
 
 function ask(
   session: Session,
-  title: string,
-  kind: string | undefined,
+  step: StepFacts,
   options: PermissionOption[],
 ): Promise<PermissionOutcome> {
   const events = session.events;
@@ -409,7 +386,13 @@ function ask(
       });
     };
     session.refuse = () => choose(null);
-    events.permission({ title, kind, options, choose });
+    events.permission({
+      title: step.title ?? "",
+      kind: step.kind,
+      detail: step.detail,
+      options,
+      choose,
+    });
   });
 }
 

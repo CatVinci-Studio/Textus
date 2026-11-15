@@ -188,6 +188,8 @@ export function applyContributions(
           name: text(a.name),
           setup: a.setup && text(a.setup),
           provider: a.provider,
+          askMode: a.askMode,
+          signIn: a.signIn,
         })),
       ),
     );

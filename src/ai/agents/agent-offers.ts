@@ -1,5 +1,6 @@
 import { getUiState, setUiState } from "../../storage/ui-state";
 import { loadSettings } from "../../prefs/settings-store";
+import { externalAgent } from "../../plugins/contributions/agents";
 import {
   askingValue,
   modeOption,
@@ -98,8 +99,16 @@ export function subscribeOffers(listener: () => void): () => void {
 }
 
 /** Options as the agent sent them (`configOptions`), now in force. */
+/** The mode marked with the value its plugin says asks first. */
+function withAsking(options: AgentOption[], asking?: string): AgentOption[] {
+  const mode = modeOption(options);
+  return asking && mode
+    ? options.map((o) => (o === mode ? { ...o, asking } : o))
+    : options;
+}
+
 export function heardOptions(agent: string, raw: unknown): AgentOption[] {
-  const options = readOptions(raw);
+  const options = withAsking(readOptions(raw), externalAgent(agent)?.askMode);
   hear(agent, { options });
   return options;
 }
@@ -171,20 +180,26 @@ export async function applyChoices(
     if (!next) return;
     done.add(next.id);
     const value = wanted(next, options, chosen)!;
-    // A model or effort the agent turns down is skipped; the mode isn't:
-    // the session never runs in one that doesn't ask unless chosen.
+    // A model or effort the agent turns down is skipped; a mode falls back
+    // to the one that asks (Gemini refuses Auto Edit in a folder it doesn't
+    // trust), and the session never runs in one that doesn't ask unless
+    // chosen.
     const isMode = next.id === modeOption(options)?.id;
     let answer: { configOptions?: unknown } | null;
+    let sent = value;
     try {
       answer = (await set(next.id, value)) as typeof answer;
     } catch (err) {
-      if (isMode) throw err;
-      continue;
+      if (!isMode) continue;
+      const asking = askingValue(options);
+      if (asking === null || asking === value) throw err;
+      sent = asking;
+      answer = (await set(next.id, asking)) as typeof answer;
     }
     if (answer?.configOptions)
       options = heardOptions(agent, answer.configOptions);
     else {
-      heardValue(agent, next.id, value);
+      heardValue(agent, next.id, sent);
       options = offerOf(agent).options;
     }
   }

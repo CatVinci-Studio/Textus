@@ -181,9 +181,31 @@ const GATHER: std::time::Duration = std::time::Duration::from_millis(24);
 const SLIM_OVER: usize = 4096;
 /// How much of a step's text the window keeps, as its step output shows.
 const STEP_TEXT: usize = 4000;
-/// What a step's update carries that the window never reads: the tool's raw
-/// input and output (a whole written file, an edit's old and new text).
-const UNREAD_STEP_FIELDS: [&str; 2] = ["rawInput", "rawOutput"];
+/// The tool's raw output, which the window never reads (a whole file read).
+const UNREAD_STEP_FIELD: &str = "rawOutput";
+/// Of the tool's raw input (a whole written file, an edit's old and new
+/// text) only what says what the step does, as its permission prompt shows.
+const STEP_DETAIL_KEYS: [&str; 6] = ["command", "cmd", "file_path", "path", "url", "query"];
+/// How much of each kept input field the window gets.
+const STEP_DETAIL: usize = 1000;
+
+/// `input` cut down to the fields that say what a step does, each short.
+fn step_detail(input: &Value) -> Option<Value> {
+    let fields = input.as_object()?;
+    let kept: serde_json::Map<String, Value> = STEP_DETAIL_KEYS
+        .iter()
+        .filter_map(|key| {
+            let mut value = fields.get(*key)?.clone();
+            if let Value::String(text) = &mut value {
+                if let Some((cut, _)) = text.char_indices().nth(STEP_DETAIL) {
+                    text.truncate(cut);
+                }
+            }
+            Some((key.to_string(), value))
+        })
+        .collect();
+    (!kept.is_empty()).then_some(Value::Object(kept))
+}
 
 /// `line` without what the window never reads of a step: its raw fields,
 /// diff and terminal blocks, and text past what a step shows.
@@ -204,8 +226,9 @@ fn slim(line: String) -> String {
     let Some(fields) = message["params"]["update"].as_object_mut() else {
         return line;
     };
-    for key in UNREAD_STEP_FIELDS {
-        fields.remove(key);
+    fields.remove(UNREAD_STEP_FIELD);
+    if let Some(detail) = fields.remove("rawInput").as_ref().and_then(step_detail) {
+        fields.insert("rawInput".into(), detail);
     }
     if let Some(Value::Array(blocks)) = fields.get_mut("content") {
         blocks.retain(|b| b["type"] == "content");
@@ -307,7 +330,7 @@ mod tests {
         let long = "x".repeat(9000);
         let line = json!({"jsonrpc": "2.0", "method": "session/update", "params": {"update": {
             "sessionUpdate": "tool_call_update", "toolCallId": "t1", "status": "completed",
-            "rawInput": {"content": long}, "rawOutput": long,
+            "rawInput": {"content": long, "file_path": "a.md", "command": long}, "rawOutput": long,
             "content": [
                 {"type": "content", "content": {"type": "text", "text": long}},
                 {"type": "diff", "path": "a.md", "oldText": long, "newText": long}
@@ -316,7 +339,14 @@ mod tests {
         .to_string();
         let slimmed: Value = serde_json::from_str(&slim(line)).unwrap();
         let update = &slimmed["params"]["update"];
-        assert!(update.get("rawInput").is_none() && update.get("rawOutput").is_none());
+        assert!(update.get("rawOutput").is_none());
+        // Of its input, what says what it does, cut short.
+        assert_eq!(update["rawInput"]["file_path"], "a.md");
+        assert!(update["rawInput"].get("content").is_none());
+        assert_eq!(
+            update["rawInput"]["command"].as_str().unwrap().len(),
+            STEP_DETAIL
+        );
         assert_eq!(update["content"].as_array().unwrap().len(), 1);
         assert_eq!(
             update["content"][0]["content"]["text"]

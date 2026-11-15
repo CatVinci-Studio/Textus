@@ -455,6 +455,11 @@ export function parseContributes(raw: unknown, id: string): Contributes {
       ),
       setup: text(o.setup, `${at}.setup`, true) || undefined,
       provider: text(o.provider, `${at}.provider`, true) || undefined,
+      askMode: text(o.askMode, `${at}.askMode`, true) || undefined,
+      signIn:
+        o.signIn === undefined
+          ? undefined
+          : text(o.signIn, `${at}.signIn`, true),
     };
   });
   const hovers = known(

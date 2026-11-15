@@ -40,6 +40,8 @@ export interface ToolCallFields {
   status?: "pending" | "in_progress" | "completed" | "failed";
   content?: { type: string; content?: ContentBlock; path?: string }[] | null;
   locations?: { path: string; line?: number | null }[] | null;
+  /** The tool's own input: a command, a path, a query. */
+  rawInput?: unknown;
 }
 
 export type SessionUpdate =

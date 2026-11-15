@@ -250,6 +250,11 @@ export interface AgentContribution {
   /** The provider whose models it runs ("anthropic", "openai"), told to
    *  plugins as the AI at work. */
   provider?: string;
+  /** Its mode that asks before each change, where its names don't say. */
+  askMode?: string;
+  /** The sign-in method Textus may run for it when it asks for one; ""
+   *  for none (its setup says how). Unset: one it runs itself. */
+  signIn?: string;
 }
 
 export interface Contributes {

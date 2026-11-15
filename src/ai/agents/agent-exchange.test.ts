@@ -23,6 +23,10 @@ const ipc = vi.hoisted(() => ({
   images: false,
   /** The prompts sent, their blocks' types. */
   prompts: [] as string[][],
+  /** Sign-in methods it lists; until one is run, session/new asks for it. */
+  authMethods: null as null | { id: string }[],
+  /** The sign-ins Textus ran. */
+  authenticated: [] as string[],
 }));
 vi.mock("../../platform/ipc-plugins", () => ({
   agentsIpc: {
@@ -51,6 +55,27 @@ vi.mock("../../platform/ipc-plugins", () => ({
         );
       if (id === undefined || method === "session/prompt") return;
       if (method === "session/new" && ipc.slowStart) return;
+      if (method === "authenticate")
+        ipc.authenticated.push(
+          (sent as { params: { methodId: string } }).params.methodId,
+        );
+      if (
+        method === "session/new" &&
+        ipc.authMethods &&
+        !ipc.authenticated.length
+      )
+        return queueMicrotask(() =>
+          ipc.out!({
+            type: "lines",
+            lines: [
+              JSON.stringify({
+                jsonrpc: "2.0",
+                id,
+                error: { code: -32000, message: "sign in" },
+              }),
+            ],
+          }),
+        );
       if (
         method === "session/set_config_option" &&
         ipc.refuseMode &&
@@ -73,8 +98,13 @@ vi.mock("../../platform/ipc-plugins", () => ({
           ? ipc.older
             ? { sessionId: "s", ...ipc.older }
             : { sessionId: "s", configOptions: ipc.offered }
-          : method === "initialize" && ipc.images
-            ? { agentCapabilities: { promptCapabilities: { image: true } } }
+          : method === "initialize"
+            ? {
+                ...(ipc.images && {
+                  agentCapabilities: { promptCapabilities: { image: true } },
+                }),
+                ...(ipc.authMethods && { authMethods: ipc.authMethods }),
+              }
             : {};
       queueMicrotask(() =>
         ipc.out!({
@@ -387,5 +417,88 @@ describe("an agent with no mode that asks first (OpenCode)", () => {
       ),
     );
     cancelAgentExchange("opencode");
+  });
+
+  it("names the step a request gives only by id, from what the agent said of it (DeepSeek)", async () => {
+    ipc.offered = undefined;
+    ipc.chosen = {};
+    const permission = vi.fn();
+    const running = runAgentExchange({
+      agent: { key: "p/d", plugin: "p", id: "d", name: "D" } as never,
+      conversation: "deepseek",
+      cwd: "/w",
+      docPath: null,
+      message: "hi",
+      events: { view: () => {}, thinking: () => {}, permission },
+    });
+    running.catch(() => undefined);
+    await vi.waitFor(() => expect(agentRunning("p/d")).toBe(true));
+    ipc.out!({
+      type: "lines",
+      lines: [
+        JSON.stringify({
+          jsonrpc: "2.0",
+          method: "session/update",
+          params: {
+            sessionId: "s",
+            update: {
+              sessionUpdate: "tool_call",
+              toolCallId: "b1",
+              title: "bash",
+              kind: "execute",
+              rawInput: { command: "rm -rf build && npm test" },
+            },
+          },
+        }),
+        JSON.stringify({
+          jsonrpc: "2.0",
+          id: 903,
+          method: "session/request_permission",
+          params: {
+            sessionId: "s",
+            toolCall: { toolCallId: "b1" },
+            options: [{ optionId: "yes", name: "Allow", kind: "allow_once" }],
+          },
+        }),
+      ],
+    });
+    await vi.waitFor(() =>
+      expect(permission).toHaveBeenCalledWith(
+        expect.objectContaining({
+          kind: "execute",
+          detail: "rm -rf build && npm test",
+        }),
+      ),
+    );
+    cancelAgentExchange("deepseek");
+  });
+});
+
+describe("an agent that asks to be signed in", () => {
+  const start = (agent: Record<string, unknown>) =>
+    runAgentExchange({
+      agent: { key: "p/a", plugin: "p", id: "a", name: "A", ...agent } as never,
+      conversation: `sign-${Math.random()}`,
+      cwd: "/w",
+      docPath: "/w/a.md",
+      message: "hi",
+      images: [],
+      events: { view: () => {}, thinking: () => {}, permission: () => {} },
+    });
+  afterEach(() => {
+    ipc.authMethods = null;
+    ipc.authenticated = [];
+  });
+
+  it("is signed in the way its plugin names, not the first it lists (Codex)", async () => {
+    ipc.authMethods = [{ id: "api-key" }, { id: "chat-gpt" }];
+    void start({ signIn: "chat-gpt" }).catch(() => {});
+    await vi.waitFor(() => expect(ipc.authenticated).toEqual(["chat-gpt"]));
+  });
+
+  it("is left to its setup when its plugin names none (Qwen)", async () => {
+    ipc.authMethods = [{ id: "openai" }];
+    await expect(start({ signIn: "" })).rejects.toBeTruthy();
+    expect(ipc.authenticated).toEqual([]);
   });
 });

@@ -11,6 +11,7 @@ vi.mock("../../storage/ui-state", () => ({
 
 const { applyChoices, offerOf, resetOffersForTests } =
   await import("./agent-offers");
+const { addAgents } = await import("../../plugins/contributions/agents");
 
 const select = (
   id: string,
@@ -104,5 +105,34 @@ describe("an agent's options as a session opens", () => {
         return null;
       }),
     ).rejects.toThrow("no");
+  });
+
+  it("falls back to the mode that asks when a chosen one is refused (Gemini's untrusted folder)", async () => {
+    const gemini = () => [
+      select("mode", "mode", "default", ["default", "autoEdit", "yolo"]),
+    ];
+    chosen["x/gemini"] = { mode: "autoEdit" };
+    const sent: string[] = [];
+    await applyChoices("x/gemini", gemini(), async (id, value) => {
+      sent.push(`${id}=${value}`);
+      if (value === "autoEdit") throw new Error("untrusted folder");
+      return null;
+    });
+    expect(sent).toEqual(["mode=autoEdit", "mode=default"]);
+    expect(offerOf("x/gemini").options[0].current).toBe("default");
+  });
+
+  it("takes the mode that asks from the agent's plugin when its names don't say", async () => {
+    const remove = addAgents("x", [
+      { id: "odd", name: "Odd", askMode: "careful" },
+    ]);
+    const odd = () => [select("mode", "mode", "free", ["free", "careful"])];
+    const sent: string[] = [];
+    await applyChoices("x/odd", odd(), async (id, value) => {
+      sent.push(`${id}=${value}`);
+      return null;
+    });
+    remove();
+    expect(sent).toEqual(["mode=careful"]);
   });
 });
