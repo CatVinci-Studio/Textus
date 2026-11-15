@@ -40,10 +40,22 @@ export function attachGrips(options: {
   let at = { row: -1, col: -1 };
 
   const rows = () => [...tbody.children] as HTMLTableRowElement[];
-  const box = (el: Element) => {
-    const r = el.getBoundingClientRect();
-    const w = wrapper.getBoundingClientRect();
-    return { x: r.left - w.left, y: r.top - w.top, w: r.width, h: r.height };
+  /** `el`'s box in the wrapper as laid out, where the grips are placed:
+   *  screen boxes inside the document's zoom differ by engine. The
+   *  table's sideways scroll is taken off. */
+  const box = (el: HTMLElement) => {
+    let x = 0;
+    let y = 0;
+    for (let n: HTMLElement | null = el; n && n !== wrapper;) {
+      x += n.offsetLeft;
+      y += n.offsetTop;
+      n = n.offsetParent as HTMLElement | null;
+    }
+    for (let n = el.parentElement; n && n !== wrapper; n = n.parentElement) {
+      x -= n.scrollLeft;
+      y -= n.scrollTop;
+    }
+    return { x, y, w: el.offsetWidth, h: el.offsetHeight };
   };
 
   /** The grips at `cell`'s row and column; hidden with none. */
@@ -55,10 +67,11 @@ export function attachGrips(options: {
     wrapper.toggleAttribute("data-grips", row >= 0);
     if (!cell || !tr || row < 0) return;
     const t = box(table);
-    const r = box(tr);
+    const r = box(tr as HTMLElement);
     const c = box(cell);
     grips.row.hidden = row === 0;
-    grips.row.style.transform = `translate(${t.x}px, ${r.y + r.h / 2}px)`;
+    // Scrolled sideways, the row's grip stays at the edge still shown.
+    grips.row.style.transform = `translate(${Math.max(t.x, 0)}px, ${r.y + r.h / 2}px)`;
     grips.col.style.transform = `translate(${c.x + c.w / 2}px, ${t.y}px)`;
   }
 

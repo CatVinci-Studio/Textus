@@ -59,10 +59,6 @@ test("a row's grip picks the row, and pulled it moves the row; a column's the sa
     page,
     "| h | k |\n| --- | --- |\n| 1 | x |\n| 2 | y |\n| 3 | z |\n",
   );
-  page.on(
-    "console",
-    (m) => m.text().includes("GRIPDBG") && console.log(m.text()),
-  );
   const cell = (text: string) => table.locator("td", { hasText: text });
   await cell("3").hover();
   const grip = page.locator(".table-grip-row");
@@ -105,6 +101,32 @@ test("a row's grip picks the row, and pulled it moves the row; a column's the sa
   await page.locator(".table-grip-col").dispatchEvent("click");
   await expect(table.locator(".selectedCell")).toHaveCount(4);
   expect(await rowY()).toBe(before);
+});
+
+test("the grips sit at the middle of their row and column, the document zoomed too", async ({
+  page,
+}) => {
+  const table = await open(
+    page,
+    "| h | k |\n| --- | --- |\n| 1 | x |\n| 2 | y |\n| 3 | z |\n",
+  );
+  const middle = async (selector: string) => {
+    const b = (await page.locator(selector).boundingBox())!;
+    return { x: b.x + b.width / 2, y: b.y + b.height / 2 };
+  };
+  for (const zoom of ["1", "1.5"]) {
+    await page.evaluate(
+      (z) => document.documentElement.style.setProperty("--content-zoom", z),
+      zoom,
+    );
+    const cell = table.locator("td", { hasText: "y" });
+    await cell.hover();
+    const c = (await cell.boundingBox())!;
+    const row = await middle(".table-grip-row");
+    const col = await middle(".table-grip-col");
+    expect(Math.abs(row.y - (c.y + c.height / 2))).toBeLessThan(2);
+    expect(Math.abs(col.x - (c.x + c.width / 2))).toBeLessThan(2);
+  }
 });
 
 test("a click below a table that ends the document starts a paragraph there", async ({

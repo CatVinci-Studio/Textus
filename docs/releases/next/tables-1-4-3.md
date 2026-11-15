@@ -14,3 +14,4 @@
 - A table pasted into a table undoes in one step, and rows copied as plain text (tab-separated) paste in as rows.
 - A table pasted into a narrower table fills it from the cursor's cell and adds the columns it needs, instead of jumbling its cells.
 - On iPhone and iPad, a pasted table undoes in one step, and a copied or cut row with empty cells at its end pastes in as a row.
+- A table's row and column grips sit at the middle of their row and column when the document is zoomed or the table scrolled sideways.
