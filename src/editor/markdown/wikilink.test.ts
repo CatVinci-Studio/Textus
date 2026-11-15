@@ -54,6 +54,19 @@ describe("a wikilink in a file", () => {
     expect(linkHref(link.textContent)).toBe("https://x.org");
   });
 
+  it("put in as text in one go, makes wikilinks as the file reads them", async () => {
+    const editor = await createTestEditor("x\n");
+    editors.push(editor);
+    const { wikilinksIn } = await import("./wikilink");
+    const doc = editor.action((ctx) => {
+      const view = ctx.get(editorViewCtx);
+      const tr = view.state.tr.insertText("[[a]] and [[1]](https://x.org)", 1);
+      wikilinksIn(tr, 1, tr.doc.content.size - 1);
+      return tr.doc;
+    });
+    expect(wikilinks(doc)).toEqual(["[[a]]"]);
+  });
+
   it("leaves an embed an embed", async () => {
     const { doc } = await open("![[pic.png]]\n");
     expect(wikilinks(doc)).toEqual([]);
