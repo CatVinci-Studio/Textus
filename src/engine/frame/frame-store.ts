@@ -95,7 +95,7 @@ export interface RoomCheck {
 
 let check: ((root: LayoutNode) => RoomCheck) | null = null;
 /** The width the sidebar would give, stepping aside (0 when shut). */
-let sidebarRoom = () => 0;
+let sidebarRoom = 0;
 /** A split made into too little room: first the panels' islands fold,
  *  then the sidebar steps aside; null when nothing gives way. */
 let givingWay: "panels" | "sidebar" | null = null;
@@ -106,7 +106,7 @@ export function setLayoutFits(next: (root: LayoutNode) => RoomCheck): void {
 }
 
 /** Told by the window's frame: what the sidebar gives by stepping aside. */
-export function setSidebarRoom(room: () => number): void {
+export function setSidebarRoom(room: number): void {
   sidebarRoom = room;
 }
 
@@ -127,7 +127,7 @@ export function layoutFits(root: LayoutNode): boolean {
  *  they give way (useNarrowIslands, useNarrowSidebar). */
 export function shortGivingWay(root: LayoutNode): number {
   const { short, panels } = roomFor(root);
-  return Math.max(0, Math.ceil(short - panels - sidebarRoom() - 0.5));
+  return Math.max(0, Math.ceil(short - panels - sidebarRoom - 0.5));
 }
 
 /** A layout set into too little room: the panels, then the sidebar, give
@@ -136,8 +136,18 @@ export function askGiveWay(): void {
   givingWay = "panels";
 }
 
-/** Who gives way now; `next` moves it on (the sidebar's turn, or done). */
-export function giveWay(next?: "sidebar" | null): "panels" | "sidebar" | null {
-  if (next !== undefined) givingWay = next;
+/** Who gives way now. */
+export function givingWayNow(): "panels" | "sidebar" | null {
   return givingWay;
+}
+
+/** The panels have folded what they can: done when the layout now fits,
+ *  else the sidebar's turn. */
+export function panelsGaveWay(fits: boolean): void {
+  if (givingWay === "panels") givingWay = fits ? null : "sidebar";
+}
+
+/** The sidebar has heard its turn. */
+export function sidebarGaveWay(): void {
+  if (givingWay === "sidebar") givingWay = null;
 }

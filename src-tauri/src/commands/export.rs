@@ -6,7 +6,7 @@ use std::io::Write;
 #[cfg(desktop)]
 use std::path::{Path, PathBuf};
 #[cfg(desktop)]
-use std::process::{Command, Stdio};
+use std::process::Stdio;
 
 /// Pandoc is detected, not bundled (it is ~180MB and GPL); the frontend points
 /// the user to pandoc.org when it's missing.
@@ -43,19 +43,6 @@ fn pandoc_places() -> impl Iterator<Item = PathBuf> {
     pandoc_candidates().into_iter().chain(login)
 }
 
-/// Pandoc started without a console window flashing up (Windows).
-#[cfg(desktop)]
-fn pandoc_command(program: impl AsRef<std::ffi::OsStr>) -> Command {
-    #[allow(unused_mut)]
-    let mut command = Command::new(program);
-    #[cfg(windows)]
-    {
-        use std::os::windows::process::CommandExt;
-        command.creation_flags(0x0800_0000);
-    }
-    command
-}
-
 /// Returns the path of a working pandoc binary, or None. GUI apps launched
 /// from Finder lack the shell's PATH, so the usual install locations are probed.
 #[cfg(desktop)]
@@ -64,7 +51,7 @@ fn pandoc_command(program: impl AsRef<std::ffi::OsStr>) -> Command {
 pub async fn detect_pandoc() -> Option<String> {
     tauri::async_runtime::spawn_blocking(|| {
         for candidate in pandoc_places() {
-            let works = pandoc_command(&candidate)
+            let works = crate::mcp::path::quiet_command(&candidate)
                 .arg("--version")
                 .stdin(Stdio::null())
                 .stdout(Stdio::null())
@@ -161,7 +148,7 @@ pub async fn export_via_pandoc(
         let mut args = pandoc_args(&format, &title);
         args[1].push_str(breaks_extension(resource_dir.as_deref()));
         let filter = pandoc_options::lua_filter().map_err(|e| e.to_string())?;
-        let mut cmd = pandoc_command(&pandoc_path);
+        let mut cmd = crate::mcp::path::quiet_command(&pandoc_path);
         cmd.arg("--lua-filter")
             .arg(filter.path())
             .args(&options.extra_args)

@@ -1,18 +1,16 @@
 import { useEffect, useRef, useState } from "react";
-import { giveWay, useIslandsNeed } from "../../engine/frame/frame-store";
+import {
+  givingWayNow,
+  panelsGaveWay,
+  useIslandsNeed,
+} from "../../engine/frame/frame-store";
 import {
   foldIsland,
   unfoldIsland,
   type Folded,
 } from "../../engine/layout/fold";
-import {
-  setSplitLayout,
-  windowLayout,
-  windowTabs,
-} from "../../engine/layout/store";
-import type { DocTab } from "../../document/doc-tabs";
-import { isPanelPane } from "../islands/panel-pane";
-import { panesOf, type Pane } from "../../engine/layout/tree";
+import { setSplitLayout, windowLayout } from "../../engine/layout/store";
+import { isWindowPanel } from "../islands/panel-pane";
 
 /**
  * After the sidebar, the islands give way: a window too narrow for every
@@ -54,21 +52,14 @@ export function useNarrowIslands(
       windowRoom < was.windowRoom &&
       was.windowRoom - sidebar >= was.need &&
       room < need;
-    if (giveWay() === "panels" && need <= room) giveWay(null);
+    if (need <= room) panelsGaveWay(true);
     if (!need || !room || sidebarGoes || backAt.current !== null) return;
-    const giving = giveWay() === "panels";
+    const giving = givingWayNow() === "panels";
     if (need > room && (!grew || giving)) {
-      const views = new Map(windowTabs<DocTab>().map((t) => [t.id, t.view]));
-      const isPanel = (p: Pane) => isPanelPane(p, (id) => views.get(id));
-      const out = foldIsland(windowLayout(), isPanel, need);
+      const out = foldIsland(windowLayout(), isWindowPanel, need);
       // Making room for a split: its panels only, then the sidebar's turn.
-      const panel =
-        out &&
-        panesOf(windowLayout().root).some(
-          (p) => p.id === out.folded.id && isPanel(p),
-        );
-      if (giving && !panel) giveWay("sidebar");
-      if (!out || (giving && !panel)) return;
+      if (giving && !out?.panel) panelsGaveWay(false);
+      if (!out || (giving && !out.panel)) return;
       folded.current.push(out.folded);
       setHold(true);
       setSplitLayout(out.layout);

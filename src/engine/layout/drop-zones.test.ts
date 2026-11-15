@@ -3,7 +3,9 @@ import { describe, expect, it, vi } from "vitest";
 import { dropTargetAt, type DropGeometry } from "./drop-zones";
 import {
   askGiveWay,
-  giveWay,
+  givingWayNow,
+  panelsGaveWay,
+  sidebarGaveWay,
   layoutFits,
   setLayoutFits,
   setSidebarRoom,
@@ -97,20 +99,22 @@ describe("a split into too little room", () => {
     try {
       // 300 short: the AI's island gives 200, the sidebar 100.
       setLayoutFits(() => ({ short: 300, panels: 200 }));
-      setSidebarRoom(() => 100);
+      setSidebarRoom(100);
       expect(layoutFits(split)).toBe(false);
       expect(shortGivingWay(split)).toBe(0);
       // Without the sidebar, 100 short: said, not made.
-      setSidebarRoom(() => 0);
+      setSidebarRoom(0);
       expect(shortGivingWay(split)).toBe(100);
       // The panels go first, then the sidebar.
       askGiveWay();
-      expect(giveWay()).toBe("panels");
-      expect(giveWay("sidebar")).toBe("sidebar");
-      expect(giveWay(null)).toBe(null);
+      expect(givingWayNow()).toBe("panels");
+      panelsGaveWay(false);
+      expect(givingWayNow()).toBe("sidebar");
+      sidebarGaveWay();
+      expect(givingWayNow()).toBe(null);
     } finally {
       setLayoutFits(() => ({ short: 0, panels: 0 }));
-      setSidebarRoom(() => 0);
+      setSidebarRoom(0);
     }
   });
 });

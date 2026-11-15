@@ -1,7 +1,7 @@
 import { showNotice } from "../../engine/controls/notices";
 import {
   besideLayout,
-  besideShort,
+  openBeside,
   splitEditor,
 } from "../../engine/layout/store";
 import type { SplitLayout } from "../../engine/layout/ops";
@@ -17,8 +17,12 @@ export function sayNoRoom(): void {
 /** Splits the island in use, or says why the window has no room for it:
  *  the documents never go under their least width for a split. */
 export function splitHere(direction: SplitDirection): void {
-  const short = splitEditor(direction);
-  if (short) sayNoRoom();
+  if (!splitEditor(direction)) sayNoRoom();
+}
+
+/** Shows `tabId` beside `from` (openBeside), or says why it can't. */
+export function openBesideOrSay(tabId: string, from: string | null): void {
+  if (!openBeside(tabId, from)) sayNoRoom();
 }
 
 /** `now` with `tabId` beside `from` as it arrives; else `now`, and the
@@ -28,9 +32,7 @@ export function besideOrSay(
   tabId: string,
   from: string | null,
 ): SplitLayout {
-  const next = besideLayout(now, tabId, from);
-  if (next) return next;
-  const short = besideShort(now, tabId, from);
-  if (short) sayNoRoom();
-  return now;
+  const { next, noRoom } = besideLayout(now, tabId, from);
+  if (noRoom) sayNoRoom();
+  return next ?? now;
 }

@@ -1,7 +1,8 @@
 import { useEffect, useRef, type Dispatch, type SetStateAction } from "react";
 import {
-  giveWay,
+  givingWayNow,
   setSidebarRoom,
+  sidebarGaveWay,
   useIslandsNeed,
 } from "../../engine/frame/frame-store";
 
@@ -27,14 +28,13 @@ export function useNarrowSidebar(
   const putAway = useRef(false);
   useEffect(() => {
     // What putting it aside would give a split (frame-store).
-    const gives = open && room !== Infinity ? sidebar : 0;
-    setSidebarRoom(() => gives);
+    setSidebarRoom(open && room !== Infinity ? sidebar : 0);
     const was = before.current;
     // A phone's sidebar is pushed in by hand: one put away before the
     // layout turned into the phone's stays shut.
     if (room === Infinity) putAway.current = false;
-    const forSplit = giveWay() === "sidebar";
-    if (forSplit) giveWay(null);
+    const forSplit = givingWayNow() === "sidebar";
+    if (forSplit) sidebarGaveWay();
     if (!fits && open && ((was.fits && room < was.room) || forSplit)) {
       putAway.current = true;
       setOpen(false);

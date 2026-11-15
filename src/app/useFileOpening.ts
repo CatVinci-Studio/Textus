@@ -34,8 +34,8 @@ import {
 } from "../plugins/store/plugin-lookup";
 import { basename } from "../utils/path";
 import { isDocumentName } from "../files/document-name";
-import { openBeside, placeOnArrival } from "../engine/layout/store";
-import { besideOrSay, sayNoRoom } from "./menu/split-here";
+import { placeOnArrival } from "../engine/layout/store";
+import { besideOrSay, openBesideOrSay } from "./menu/split-here";
 import type { Strings } from "../i18n/strings";
 import type { TabState } from "./tabs/useTabState";
 import { splitForDrop } from "./islands/split-drop";
@@ -212,10 +212,7 @@ export function useFileOpening(opts: {
         const arriving = !tabsRef.current.some((tab) => tab.id === id);
         if (open.where === "beside") {
           if (arriving) placeOnArrival(id, (now) => besideOrSay(now, id, from));
-          else {
-            const short = openBeside(id, from);
-            if (short) sayNoRoom();
-          }
+          else openBesideOrSay(id, from);
         } else if (drop) splitForDrop(id, drop, arriving);
       };
       const existing = tabsRef.current.find(

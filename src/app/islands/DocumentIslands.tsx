@@ -1,5 +1,5 @@
 import type { FormatBarSide } from "../../prefs/settings-values";
-import { isPanelPane } from "./panel-pane";
+import { isWindowPanel } from "./panel-pane";
 import { Island } from "../../engine/layout/Island";
 import { IslandArea, type IslandContent } from "../../engine/layout/IslandArea";
 import { useChangedFiles } from "../../ai/chat/file-changes";
@@ -30,11 +30,7 @@ import { tabMenuItems } from "../tabs/tab-menu-items";
 import { FormatBar } from "../FormatBar";
 import { useIslands } from "../../engine/layout/useIslands";
 import { panesOf, type Pane } from "../../engine/layout/tree";
-import {
-  focusPane,
-  reorderInPane,
-  windowTabs,
-} from "../../engine/layout/store";
+import { focusPane, reorderInPane } from "../../engine/layout/store";
 import { useTabsInBar } from "./tabs-in-bar";
 import { pullTab } from "./tab-pull";
 import { addFromTabRow, newConversation } from "./ai-tabs";
@@ -136,15 +132,8 @@ export function DocumentIslands({
     onToggleReadOnly,
     t,
   });
-  // The window's tabs as they are now: a tab arriving is checked for room
-  // before this renders it.
-  const isPanel = (p: Pane) =>
-    isPanelPane(
-      p,
-      (id) => windowTabs<DocTab>().find((tab) => tab.id === id)?.view,
-    );
   // A document opened from a panel's island goes apart from its pages.
-  useDocumentsApart(tabs, isPanel);
+  useDocumentsApart(tabs, isWindowPanel);
   const tabBar = (
     list: DocTab[],
     active: string,
@@ -291,7 +280,7 @@ export function DocumentIslands({
       rows={tabsInBar}
       plain={!tabsInBar && !lone}
       // A panel's island holds pages only (the AI, Settings, a plugin's).
-      isPanel={isPanel}
+      isPanel={isWindowPanel}
       content={documents}
       t={t}
     />

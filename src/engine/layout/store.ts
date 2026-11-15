@@ -153,14 +153,24 @@ export function paneOf(current: SplitLayout, tabId: string): string | null {
  *  be; null when even so they don't. Every split a person or a plugin
  *  asks for goes through it; a panel folded for room coming back doesn't. */
 export function ifRoom(next: SplitLayout | null): SplitLayout | null {
-  return next && shortGivingWay(next.root) === 0 ? next : null;
+  return withRoom(next).next;
+}
+
+/** ifRoom, and whether `next` was refused for want of room - said to the
+ *  person (sayNoRoom) - rather than there being nothing to do. */
+export function withRoom(next: SplitLayout | null): {
+  next: SplitLayout | null;
+  noRoom: boolean;
+} {
+  const fits = !!next && shortGivingWay(next.root) === 0;
+  return { next: fits ? next : null, noRoom: !!next && !fits };
 }
 
 /** Splits the pane in use (or the window) this way, a document of its
  *  tabs, or a blank one, going into the new pane - when the islands, the
  *  new one too, fit the window at their least once the panels and the
  *  sidebar give way: 0. Else the pixels missing even so, nothing changed. */
-export function splitEditor(direction: SplitDirection): number {
+export function splitEditor(direction: SplitDirection): boolean {
   const next = resolveSplit(
     layout,
     { direction },
@@ -169,11 +179,10 @@ export function splitEditor(direction: SplitDirection): number {
     () => undefined,
   );
   const root = "blank" in next ? next.blank.root : next.root;
-  const short = shortGivingWay(root);
-  if (short) return short;
+  if (shortGivingWay(root)) return false;
   request = { direction };
   change();
-  return 0;
+  return true;
 }
 
 /** A layout an operation (ops.ts) gave back: null, one pane left,
@@ -225,43 +234,33 @@ function besidePlan(
 }
 
 /** `layout` with `tabId` beside `from` (besidePlan), a new island only
- *  when there is room for it; null when there is nothing to do. */
+ *  when there is room for it (withRoom); `next` null when there is
+ *  nothing to do. */
 export function besideLayout(
   layout: SplitLayout,
   tabId: string,
   from: string | null,
   side: "right" | "bottom" = "right",
   share = 0.5,
-): SplitLayout | null {
+): { next: SplitLayout | null; noRoom: boolean } {
   const plan = besidePlan(layout, tabId, from, side, share);
-  return plan && ("into" in plan ? plan.into : ifRoom(plan.split));
+  if (!plan) return { next: null, noRoom: false };
+  return "into" in plan
+    ? { next: plan.into, noRoom: false }
+    : withRoom(plan.split);
 }
 
-/** The pixels a new island for `tabId` beside `from` lacks, the panels
- *  and the sidebar giving way: 0 when it has room or needs none. */
-export function besideShort(
-  layout: SplitLayout,
-  tabId: string,
-  from: string | null,
-  side: "right" | "bottom" = "right",
-): number {
-  const plan = besidePlan(layout, tabId, from, side, 0.5);
-  return plan && "split" in plan && plan.split
-    ? shortGivingWay(plan.split.root)
-    : 0;
-}
-
-/** Shows `tabId` beside `from` (besideLayout), both tabs of the window:
- *  0, or the pixels the window lacks for it. */
+/** Shows `tabId` beside `from` (besideLayout), both tabs of the window;
+ *  false when the window has no room for it. */
 export function openBeside(
   tabId: string,
   from: string | null,
   side: "right" | "bottom" = "right",
   share = 0.5,
-): number {
-  const next = besideLayout(layout, tabId, from, side, share);
+): boolean {
+  const { next, noRoom } = besideLayout(layout, tabId, from, side, share);
   if (next) setSplitLayout(next);
-  return next ? 0 : besideShort(layout, tabId, from, side);
+  return !noRoom;
 }
 
 /** Where a tab goes as it arrives (Arrival): asked for before it is

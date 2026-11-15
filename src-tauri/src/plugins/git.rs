@@ -4,7 +4,7 @@
 //! made as the user would make it (hooks, signing). Every path is checked as
 //! a read of the folder is; .git itself is never handed over.
 
-use super::access::{checked_root, folder_path, require_not_app_data};
+use super::access::{checked_root, folder_path};
 use super::state::{self, PluginsState};
 use serde::Serialize;
 use std::path::{Path, PathBuf};
@@ -75,9 +75,9 @@ fn git_program() -> Option<PathBuf> {
 /// went wrong.
 fn run(dir: &Path, args: &[&str], input: Option<&str>) -> Result<Vec<u8>, String> {
     use std::io::Write;
-    use std::process::{Command, Stdio};
+    use std::process::Stdio;
     let program = git_program().ok_or("Git isn't installed on this computer.")?;
-    let mut command = Command::new(program);
+    let mut command = crate::mcp::path::quiet_command(program);
     command
         .current_dir(dir)
         .args(["-c", "core.quotepath=off", "-c", "color.ui=false"])
@@ -92,11 +92,6 @@ fn run(dir: &Path, args: &[&str], input: Option<&str>) -> Result<Vec<u8>, String
         })
         .stdout(Stdio::piped())
         .stderr(Stdio::piped());
-    #[cfg(windows)]
-    {
-        use std::os::windows::process::CommandExt;
-        command.creation_flags(0x0800_0000);
-    }
     let mut child = command.spawn().map_err(|e| e.to_string())?;
     if let (Some(text), Some(mut stdin)) = (input, child.stdin.take()) {
         stdin
@@ -139,13 +134,28 @@ fn from_top(
     Ok(rel.to_string_lossy().replace('\\', "/"))
 }
 
+/// How a call names the files git gives: under the folder as the window
+/// names it, which git names by its real path (/private/var for /var, a
+/// link's target).
+struct Names<'a> {
+    root: &'a str,
+    real_root: Option<PathBuf>,
+}
+
+impl<'a> Names<'a> {
+    fn new(root: &'a str) -> Self {
+        Names {
+            root,
+            real_root: std::fs::canonicalize(root).ok(),
+        }
+    }
+}
+
 /// A path git gave (from the top) as the plugin sees it, if it may read it.
-/// Written under `root` as the window names it (git names the real path:
-/// /private/var for /var, a link's target), so it matches the window's.
-fn shown(state: &PluginsState, id: &str, root: &str, top: &Path, rel: &str) -> Option<String> {
-    let real = top.join(rel);
-    let base = std::fs::canonicalize(root).ok()?;
-    let path = match real.strip_prefix(&base) {
+fn shown(state: &PluginsState, id: &str, names: &Names, top: &Path, rel: &str) -> Option<String> {
+    let (root, real) = (names.root, top.join(rel));
+    let base = names.real_root.as_deref()?;
+    let path = match real.strip_prefix(base) {
         Ok(rest) => Path::new(root).join(rest),
         Err(_) => real,
     };
@@ -172,6 +182,7 @@ pub(super) fn status(
     let Some(top) = top(Path::new(root)) else {
         return Ok(None);
     };
+    let names = Names::new(root);
     let args = [
         "status",
         "--porcelain=v2",
@@ -209,7 +220,7 @@ pub(super) fn status(
             entries.next();
         }
         if status.changes.len() < MAX_CHANGES {
-            if let Some(path) = shown(state, id, root, &top, rel) {
+            if let Some(path) = shown(state, id, &names, &top, rel) {
                 status.changes.push(GitChange {
                     path,
                     state: change_state(kind, xy).to_string(),
@@ -232,6 +243,7 @@ pub(super) fn log(
         return Ok(Vec::new());
     };
     let rel = from_top(state, id, root, &top, path)?;
+    let names = Names::new(root);
     let count = format!("-n{}", limit.unwrap_or(100).clamp(1, MAX_LOG));
     let format = "--format=%x1e%H%x1f%ct%x1f%an%x1f%s";
     let args = [
@@ -262,7 +274,7 @@ pub(super) fn log(
                 subject: subject.to_string(),
                 // A path the plugin may not read (renamed in from a hidden
                 // folder) shows as the file it is now.
-                path: shown(state, id, root, &top, file).unwrap_or_else(|| path.to_string()),
+                path: shown(state, id, &names, &top, file).unwrap_or_else(|| path.to_string()),
             })
         })
         .collect())
@@ -341,7 +353,6 @@ async fn checked<T: Send + 'static>(
     work: impl FnOnce(PluginsState) -> Result<T, String> + Send + 'static,
 ) -> Result<T, String> {
     checked_root(app, id, root)?;
-    require_not_app_data(app, Path::new(root))?;
     let state = state::read(app);
     tauri::async_runtime::spawn_blocking(move || work(state))
         .await

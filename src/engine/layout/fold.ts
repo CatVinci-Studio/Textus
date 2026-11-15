@@ -44,7 +44,7 @@ export function foldIsland(
   layout: SplitLayout,
   isPanel: (pane: Pane) => boolean,
   need: number,
-): { layout: SplitLayout; folded: Folded } | null {
+): { layout: SplitLayout; folded: Folded; panel: boolean } | null {
   const panes = [...panesOf(layout.root)].reverse();
   const order = [...panes.filter(isPanel), ...panes.filter((p) => !isPanel(p))];
   for (const panel of order) {
@@ -62,6 +62,7 @@ export function foldIsland(
       };
       return {
         layout: next,
+        panel: isPanel(panel),
         folded: {
           id: panel.id,
           tabs: [...panel.tabs],
@@ -85,14 +86,9 @@ export function foldPanels(
 ): SplitLayout {
   let next = layout;
   for (;;) {
-    const panels = new Set(
-      panesOf(next.root)
-        .filter(isPanel)
-        .map((p) => p.id),
-    );
-    const out = panels.size ? foldIsland(next, isPanel, 0) : null;
+    const out = foldIsland(next, isPanel, 0);
     // With no panel beside another island left, a document's would go.
-    if (!out || !panels.has(out.folded.id)) return next;
+    if (!out || !out.panel) return next;
     next = out.layout;
   }
 }

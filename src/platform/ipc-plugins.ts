@@ -15,8 +15,6 @@ export type PluginsState = Generated.PluginsState_Serialize;
 export type PluginCatalogEntry = Generated.CatalogEntry_Serialize;
 export type StoreScope = Access.StoreScope;
 export type PluginDocumentMeta = Access.DocumentMeta_Serialize;
-export type PluginGitStatus = Access.GitStatus_Serialize;
-export type PluginGitCommit = Access.GitCommit;
 
 /** A raw IPC response's bytes, which specta can't type, so those commands
  *  go through `call`. */

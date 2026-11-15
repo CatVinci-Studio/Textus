@@ -20,6 +20,14 @@ pub(crate) struct Reading {
 }
 
 impl Reading {
+    /// The room every model has, a local server's too.
+    pub(crate) fn least(tools: bool) -> Self {
+        Reading {
+            tools,
+            whole: FULL_DOCUMENT_LIMIT,
+        }
+    }
+
     /// For `entry`'s model: a cloud model's room, or a local server's.
     pub(crate) fn for_provider(
         tools: bool,
@@ -34,20 +42,10 @@ impl Reading {
     }
 }
 
-impl From<bool> for Reading {
-    fn from(tools: bool) -> Self {
-        Reading {
-            tools,
-            whole: FULL_DOCUMENT_LIMIT,
-        }
-    }
-}
-
 /// Whether a request shows the whole document - else an outline and
 /// excerpts, which the document tools read on from (search_document,
 /// read_document: offered only then).
-pub(super) fn shown_whole(document: &str, reading: impl Into<Reading>) -> bool {
-    let reading = reading.into();
+pub(super) fn shown_whole(document: &str, reading: Reading) -> bool {
     let size = if reading.tools {
         document.chars().map(crate::ai::project::char_units).sum()
     } else {
@@ -122,10 +120,9 @@ pub(super) fn focus_section(document: &Document, heading: &str) -> Option<(usize
 /// The `---document---` section, each block marked with its id.
 pub(crate) fn document_section(
     document: &Document,
-    reading: impl Into<Reading>,
+    reading: Reading,
     focus_heading: Option<&str>,
 ) -> String {
-    let reading = reading.into();
     let with_tools = reading.tools;
     let len = document.chars().count();
     if shown_whole(document, reading) {
@@ -173,18 +170,24 @@ pub(crate) fn request_context(
     // editor - included in full when the document is too long to embed.
     focus_heading: Option<&str>,
 ) -> String {
-    request_context_and_library(workspace, document, with_tools, focus, focus_heading).0
+    request_context_and_library(
+        workspace,
+        document,
+        Reading::least(with_tools),
+        focus,
+        focus_heading,
+    )
+    .0
 }
 
 /// [`request_context`], and the library entries it carries and leaves out.
 pub(super) fn request_context_and_library<'a>(
     workspace: &'a AgentWorkspace,
     document: &Document,
-    reading: impl Into<Reading>,
+    reading: Reading,
     focus: &str,
     focus_heading: Option<&str>,
 ) -> (String, crate::ai::project::LibraryPick<'a>) {
-    let reading = reading.into();
     let with_tools = reading.tools;
     let document_text = document_section(document, reading, focus_heading);
     let pick =

@@ -35,8 +35,8 @@ import {
 import { setPluginProject } from "../plugins/plugin-setting-values";
 import { watchTheme, windowIsDark } from "../plugins/views/theme-vars";
 import { usePluginMenuSync } from "../plugins/contributions/usePluginMenu";
-import { openBeside, placeOnArrival, tabInUse } from "../engine/layout/store";
-import { besideOrSay, sayNoRoom } from "./menu/split-here";
+import { placeOnArrival, tabInUse } from "../engine/layout/store";
+import { besideOrSay, openBesideOrSay } from "./menu/split-here";
 import {
   INSERT_BLOCK_EVENT,
   SHOW_FOLDER_EVENT,
@@ -178,8 +178,7 @@ export function usePluginWindow({
         if (open) {
           const from = tabInUse();
           setActiveTabId(open.id);
-          const short = where === "beside" ? openBeside(open.id, from) : 0;
-          if (short) sayNoRoom();
+          if (where === "beside") openBesideOrSay(open.id, from);
         } else addTab({ view }, where);
       },
       tabs: () => tabsRef.current.map(info),
