@@ -86,19 +86,19 @@ export function CornerToast({
                 {action.label}
               </button>
             ))}
-            {close && (
-              <Tooltip text={close.label}>
-                <button
-                  type="button"
-                  className="tx-icon-button corner-toast-close"
-                  aria-label={close.label}
-                  onClick={close.onSelect}
-                >
-                  <CloseIcon />
-                </button>
-              </Tooltip>
-            )}
           </div>
+          {close && (
+            <Tooltip text={close.label}>
+              <button
+                type="button"
+                className="tx-icon-button corner-toast-close"
+                aria-label={close.label}
+                onClick={close.onSelect}
+              >
+                <CloseIcon />
+              </button>
+            </Tooltip>
+          )}
           {open && details && (
             <div className="corner-toast-more" id={moreId}>
               {details}

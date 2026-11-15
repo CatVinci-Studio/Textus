@@ -27,9 +27,11 @@
   --corner-from: calc(var(--safe-left, 0px) + 18px);
 }
 
-/* On a phone or tablet the foot holds the format bar riding on the
-   keyboard and the rail's Settings: toasts come down under the tab row. */
-:root[data-window-chrome="mobile"] .corner-stack {
+/* A phone at rest keeps them at its foot, off the page's first lines; while
+   typing the foot holds the format bar on the keyboard (or Quick Ask's
+   composer), so they come down under the tab row. */
+:root[data-window-chrome="mobile"]:is(.keyboard-up, .has-quick-ask-dock)
+  .corner-stack {
   top: calc(var(--safe-top, 0px) + var(--header-height, 44px) + 8px);
   bottom: auto;
   flex-direction: column-reverse;
@@ -128,6 +130,12 @@
 
   .corner-toast-actions {
     gap: 8px;
+  }
+
+  /* × stays on the first line, by the words; the buttons take the next. */
+  .corner-toast:has(> .corner-toast-close) .corner-toast-actions {
+    order: 1;
+    flex-basis: 100%;
   }
 
   .corner-toast[data-open] .corner-toast-actions {

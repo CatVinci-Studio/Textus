@@ -95,6 +95,16 @@ test("a row's grip picks the row, and pulled it moves the row; a column's the sa
   await cell("1").hover();
   await page.locator(".table-grip-row").click();
   await expect(table.locator(".selectedCell")).toHaveCount(2);
+
+  // With no mouse over it (a finger), the grips follow the caret; a column
+  // picked leaves the row grip on the caret's row.
+  await cell("1").click();
+  await page.mouse.move(2, 2);
+  const rowY = async () => (await grip.boundingBox())!.y;
+  const before = await rowY();
+  await page.locator(".table-grip-col").dispatchEvent("click");
+  await expect(table.locator(".selectedCell")).toHaveCount(4);
+  expect(await rowY()).toBe(before);
 });
 
 test("a click below a table that ends the document starts a paragraph there", async ({
@@ -132,4 +142,36 @@ test("the + strips under and beside a table add a row and a column, reached from
   await page.mouse.down();
   await page.mouse.up();
   await expect(table.locator("tr").first().locator("th")).toHaveCount(3);
+});
+
+test.describe("on a touch screen", () => {
+  test.use({ hasTouch: true, isMobile: true });
+
+  test("a table shows its tools only while the caret is in it", async ({
+    page,
+  }) => {
+    await open(
+      page,
+      `${TABLE}\nbetween\n\n| c | d |\n| --- | --- |\n| 3 | 4 |\n`,
+    );
+    const tables = page.locator(".table-wrapper");
+    const actions = (i: number) =>
+      tables.nth(i).locator(".block-toolbar-actions");
+    await tables.nth(0).locator("td", { hasText: "1" }).tap();
+    await expect(actions(0)).toHaveCSS("opacity", "1");
+    await tables.nth(1).locator("td", { hasText: "3" }).tap();
+    await expect(actions(1)).toHaveCSS("opacity", "1");
+    // iOS leaves :hover on what a finger touched last.
+    await tables.nth(0).hover();
+    await expect(actions(0)).toHaveCSS("opacity", "0");
+    // Its size grid has cells a finger can hit.
+    await tables
+      .nth(1)
+      .getByRole("button", { name: "Rows and Columns 2 × 2" })
+      .tap();
+    await expect(page.locator(".tx-size-grid-cells > span").first()).toHaveCSS(
+      "width",
+      "28px",
+    );
+  });
 });

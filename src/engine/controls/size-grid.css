@@ -67,8 +67,10 @@
   color: var(--ui-danger);
 }
 
-/* A finger's cells. */
-:root[data-window-chrome="mobile"] .tx-size-grid-cells > span {
-  width: 28px;
-  height: 28px;
+/* A finger's cells: a phone's, and a tablet's in the desktop's layout. */
+@media (pointer: coarse) {
+  .tx-size-grid-cells > span {
+    width: 28px;
+    height: 28px;
+  }
 }

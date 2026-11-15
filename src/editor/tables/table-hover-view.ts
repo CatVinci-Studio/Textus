@@ -16,6 +16,7 @@ import { tableSchema } from "@milkdown/kit/preset/gfm";
 import {
   addRowAfter,
   addColumnAfter,
+  CellSelection,
   columnResizing,
   columnResizingPluginKey,
   TableMap,
@@ -142,6 +143,8 @@ export function createTableView(strings: () => Strings) {
     wrapper.appendChild(addColBtn);
     const grips = attachGrips({ wrapper, table, tbody, view, getPos });
     const followCaret = () => {
+      // Picked cells (a grip's row or column) leave the grips where they were.
+      if (view.state.selection instanceof CellSelection) return;
       const at = view.domAtPos(view.state.selection.from).node;
       const el = at instanceof Element ? at : at.parentElement;
       grips.follow(el?.closest<HTMLElement>("td, th") ?? null);

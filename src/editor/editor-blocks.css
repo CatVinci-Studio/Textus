@@ -147,6 +147,17 @@
   pointer-events: auto;
 }
 
+/* A finger leaves :hover and a tapped pill's focus stuck on the table it
+   touched: there its tools show only while the caret is in it. */
+@media (hover: none) {
+  .table-wrapper:is(:hover, :focus-within):not(.is-table-caret, .is-sizing)
+    > .block-toolbar
+    > .block-toolbar-actions {
+    opacity: 0;
+    pointer-events: none;
+  }
+}
+
 /* A button held in a box of its own (the size card hangs from it). */
 .block-toolbar-slot {
   display: inline-flex;
