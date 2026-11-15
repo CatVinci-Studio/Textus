@@ -152,6 +152,11 @@
 @media (hover: none) {
   .table-wrapper:is(:hover, :focus-within):not(.is-table-caret, .is-sizing)
     > .block-toolbar
+    > .block-toolbar-actions,
+  /* The keyboard put away, the document lets go of the caret: so do they. */
+  .ProseMirror:not(.ProseMirror-focused)
+    .table-wrapper.is-table-caret:not(.is-sizing, :focus-within)
+    > .block-toolbar
     > .block-toolbar-actions {
     opacity: 0;
     pointer-events: none;
