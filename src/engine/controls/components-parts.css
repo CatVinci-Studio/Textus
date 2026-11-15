@@ -279,12 +279,18 @@ th > .tx-table-grip-col {
   left: 50%;
   translate: -50% var(--space-1);
 }
-/* A finger's grip: the same pill, a fingertip's room to press. */
+/* A finger's grip: the same pill, a fingertip's room to press, all of it
+   outside the table, so a press in the cell beside it stays the cell's. */
 @media (pointer: coarse) {
   .tx-table-grip::before {
     content: "";
     position: absolute;
-    inset: -12px;
+  }
+  .tx-table-grip-row::before {
+    inset: -12px 50% -12px -16px;
+  }
+  .tx-table-grip-col::before {
+    inset: -16px -12px 50% -12px;
   }
 }
 /* A pulled row's or column's cells over the others, which slide aside on

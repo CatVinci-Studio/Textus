@@ -195,5 +195,16 @@ test.describe("on a touch screen", () => {
       "width",
       "28px",
     );
+    // A press just inside a first-column cell is the cell's, not the grip's
+    // beside it (a long press there gave no Paste on iOS).
+    const cell = tables.nth(1).locator("td", { hasText: "3" });
+    await cell.tap();
+    const box = (await cell.boundingBox())!;
+    const hit = await page.evaluate(
+      ([x, y]) =>
+        document.elementFromPoint(x, y)?.closest("td, button")?.tagName,
+      [box.x + 6, box.y + box.height / 2],
+    );
+    expect(hit).toBe("TD");
   });
 });
