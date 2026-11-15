@@ -1,6 +1,8 @@
 import { isMobileApp } from "../platform/capabilities";
 import { platformName } from "../platform/window-chrome";
 import type { PluginManifest } from "./store/manifest";
+import { engineSatisfied } from "./store/versions";
+import { version as APP_VERSION } from "../../package.json";
 
 /** The system as a plugin is told it (textus.env.platform). */
 export function pluginPlatform(): string {
@@ -11,4 +13,10 @@ export function pluginPlatform(): string {
 export function runsHere(manifest: PluginManifest): boolean {
   // A plugin made for iOS's web view runs in Android's as well.
   return manifest.platforms.includes(isMobileApp ? "ios" : "desktop");
+}
+
+/** Whether a plugin may run in this Textus: its version range and its
+ *  platforms both fit. */
+export function fitsHere(manifest: PluginManifest): boolean {
+  return engineSatisfied(manifest.engine, APP_VERSION) && runsHere(manifest);
 }
