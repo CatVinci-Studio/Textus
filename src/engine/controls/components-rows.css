@@ -138,6 +138,11 @@ textarea.tx-input {
   overflow: hidden;
   text-overflow: ellipsis;
 }
+/* Whole until the tightest step: shrinking, they would cut their labels
+   before the row ever overflowed to take a tighter step. */
+.tx-segmented:not([data-fit="tight"]) > .tx-segment {
+  flex-shrink: 0;
+}
 
 .tx-segment.is-selected,
 .tx-segment[aria-selected="true"],
