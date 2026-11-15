@@ -208,9 +208,13 @@ export function createTableView(strings: () => Strings) {
         } else render();
         return true;
       },
-      // Keys and presses on its tools aren't the editor's.
+      // Keys and presses on its tools, grips and "+" strips aren't the
+      // editor's: a press on the strip under the table was also a click
+      // below the document's end.
       stopEvent: (event) =>
         header.contains(event.target as Node) ||
+        addRowBtn.contains(event.target as Node) ||
+        addColBtn.contains(event.target as Node) ||
         (event.target as Element).classList?.contains("table-grip"),
       // Only the cells are the document's: its tools, buttons and the
       // resize drag's widths on the table and its <col>s change under the

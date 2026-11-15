@@ -180,6 +180,23 @@
   pointer-events: auto;
 }
 
+/* Reaching for a strip from the table, the pointer crosses no gap: the
+   strip's own hit area runs back to the table's edge, so the wrapper's
+   hover never lapses and the strip never fades under the pointer. */
+.table-add-row-btn::before,
+.table-add-col-btn::before {
+  content: "";
+  position: absolute;
+}
+
+.table-add-row-btn::before {
+  inset: -8px 0 -4px;
+}
+
+.table-add-col-btn::before {
+  inset: 0 -4px 0 -8px;
+}
+
 .table-add-row-btn:hover,
 .table-add-col-btn:hover {
   color: var(--doc-accent-text);

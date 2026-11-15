@@ -109,3 +109,24 @@ test("a click below a table that ends the document starts a paragraph there", as
   );
   await expect(table.locator("td", { hasText: "after" })).toHaveCount(0);
 });
+
+test("the + strips under and beside a table add a row and a column, reached from the table", async ({
+  page,
+}) => {
+  const table = await open(page);
+  const box = (await table.locator("table").boundingBox())!;
+  // From inside the table straight down onto the strip, as a hand moves.
+  await page.mouse.move(box.x + 40, box.y + box.height - 6);
+  await page.mouse.move(box.x + 40, box.y + box.height + 10, { steps: 6 });
+  await page.mouse.down();
+  await page.mouse.up();
+  await expect(table.locator("tr")).toHaveCount(3);
+  await expect(page.locator(".ProseMirror:visible > p")).toHaveCount(0);
+
+  const wide = (await table.locator("table").boundingBox())!;
+  await page.mouse.move(wide.x + wide.width - 6, wide.y + 20);
+  await page.mouse.move(wide.x + wide.width + 3, wide.y + 20, { steps: 4 });
+  await page.mouse.down();
+  await page.mouse.up();
+  await expect(table.locator("tr").first().locator("th")).toHaveCount(3);
+});
