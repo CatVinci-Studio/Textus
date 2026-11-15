@@ -475,4 +475,42 @@ describe("startup restore into the initial tab", () => {
       expect.objectContaining({ content: "draft b", path: null }),
     ]);
   });
+
+  // Android ended the app in the background: no window session, only the
+  // drafts and the order its tabs were in.
+  it("brings the drafts back in their tabs' order, the front one in front, kept once", async () => {
+    localStorage.setItem(
+      "textus-tab-order",
+      JSON.stringify({ ids: ["old-b", "old-c", "old-a"], active: "old-c" }),
+    );
+    ipc.takeDraftSnapshots.mockResolvedValue(
+      ["a", "b", "c"].map((x) => ({
+        tabId: `old-${x}`,
+        path: null,
+        content: `draft ${x}`,
+      })),
+    );
+    const { tabs } = await restore(true, false, true);
+    await waitFor(() =>
+      expect(tabs().map((tab) => tab.content)).toEqual([
+        "draft b",
+        "draft c",
+        "draft a",
+      ]),
+    );
+    expect(tabs()[1].id).toBe("initial");
+    // c's draft, kept again under the tab it came in as, goes once it is
+    // kept under the initial one: the next launch finds it once.
+    await waitFor(() => expect(ipc.clearDraftSnapshot).toHaveBeenCalled());
+    const resavedAs = (
+      ipc.saveDraftSnapshot.mock.calls as unknown as [string, unknown, string][]
+    )
+      .filter((call) => call[2] === "draft c")
+      .map((call) => call[0]);
+    expect(resavedAs).toContain("initial");
+    expect(ipc.clearDraftSnapshot).toHaveBeenCalledWith(
+      resavedAs.find((id) => id !== "initial"),
+    );
+    localStorage.clear();
+  });
 });

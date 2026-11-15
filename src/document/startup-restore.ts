@@ -17,7 +17,12 @@ import {
 } from "./doc-tabs";
 import { setTabJump } from "../editor/tab-jump";
 import { lastCaret } from "./last-places";
-import { keptTabsRestored, readKeptTabs, type KeptTab } from "./reload-tabs";
+import {
+  keptTabsRestored,
+  readKeptTabs,
+  readTabOrder,
+  type KeptTab,
+} from "./reload-tabs";
 import { takeWindowSession } from "./launch-window";
 import { savedFront } from "../engine/layout/saved";
 import {
@@ -193,63 +198,45 @@ export function useStartupRestore(options: StartupRestoreOptions): void {
       }
       // Recovered drafts from a crash or forced quit, added as extra tabs
       // without stealing focus. Skipped while the privacy toggle is off.
-      const draftSnapshots = opts.enableDraftRecovery
-        ? ((await drafts.takeDraftSnapshots()) ?? [])
-        : [];
+      const order = readTabOrder();
+      const place = (id: string) => {
+        const at = order.ids.indexOf(id);
+        return at < 0 ? order.ids.length : at;
+      };
+      const draftSnapshots = (
+        opts.enableDraftRecovery
+          ? ((await drafts.takeDraftSnapshots()) ?? [])
+          : []
+      ).sort((a, b) => place(a.tabId) - place(b.tabId));
       const restored: DocTab[] = [];
-      if (draftSnapshots.length > 0) {
-        for (const draft of draftSnapshots) {
-          if (!draft.path) {
-            restored.push({
-              ...makeBlankTab(),
-              content: draft.content,
-              savedContent: "",
-            });
-            continue;
-          }
-          try {
-            const { content: diskContent, diskMtime } = await readDocFromDisk(
-              draft.path,
-            );
-            if (diskContent === draft.content) continue; // disk already matches - nothing to recover
-            restored.push({
-              ...makeBlankTab(),
-              path: draft.path,
-              content: draft.content,
-              savedContent: diskContent,
-              // The time its edits began from: a file changed since then
-              // asks before this is saved over it.
-              diskMtime: draft.diskMtime ?? diskMtime,
-            });
-          } catch {
-            // Its file is gone (renamed, or on a drive not mounted): the
-            // edits come back untitled rather than not at all.
-            restored.push({
-              ...makeBlankTab(),
-              content: draft.content,
-              savedContent: "",
-            });
-          }
-        }
-        if (restored.length > 0) {
-          opts.setTabs((prev) => [...prev, ...restored]);
-          opts.setDraftsRestoredCount(restored.length);
-        }
-        // Kept again under their new tabs before the taken copies go: a
-        // crash in between brings them back next time.
-        void Promise.all(
-          restored.map((tab) =>
-            drafts.saveDraftSnapshot(
-              tab.id,
-              tab.path,
-              tab.content,
-              tab.diskMtime,
-            ),
-          ),
-        )
-          .then(() => drafts.finishDraftRestore())
-          .catch(() => undefined);
+      // The restored tab that was in front, by the id it had then.
+      let frontDraft: DocTab | undefined;
+      for (const draft of draftSnapshots) {
+        const tab = await recoveredTab(draft);
+        if (!tab) continue;
+        restored.push(tab);
+        if (draft.tabId === order.active) frontDraft = tab;
       }
+      if (restored.length > 0) {
+        opts.setTabs((prev) => [...prev, ...restored]);
+        opts.setDraftsRestoredCount(restored.length);
+      }
+      // Kept again under their new tabs before the taken copies go: a
+      // crash in between brings them back next time.
+      const resaved = draftSnapshots.length
+        ? Promise.all(
+            restored.map((tab) =>
+              drafts.saveDraftSnapshot(
+                tab.id,
+                tab.path,
+                tab.content,
+                tab.diskMtime,
+              ),
+            ),
+          )
+            .then(() => drafts.finishDraftRestore())
+            .catch(() => undefined)
+        : Promise.resolve();
       // A Help doc clicked with no window open: this window was spawned to
       // show it in the blank tab. "welcome" starts the tutorial there.
       const helpDoc: string | null = hasAppMenu
@@ -277,14 +264,17 @@ export function useStartupRestore(options: StartupRestoreOptions): void {
         restored.find((tab) => tab.path === path);
       const loadRecoveredIntoInitialTab = (recovered: DocTab) => {
         // Kept under the tab it moves into before its own goes: a crash in
-        // between still brings it back.
-        void drafts
-          .saveDraftSnapshot(
-            opts.activeTabId,
-            recovered.path,
-            recovered.content,
-            recovered.diskMtime,
+        // between still brings it back, and the next launch only once.
+        void resaved
+          .then(() =>
+            drafts.saveDraftSnapshot(
+              opts.activeTabId,
+              recovered.path,
+              recovered.content,
+              recovered.diskMtime,
+            ),
           )
+          .then(() => drafts.clearDraftSnapshot(recovered.id))
           .catch(() => undefined);
         loadIntoInitialTab({
           path: recovered.path,
@@ -380,7 +370,12 @@ export function useStartupRestore(options: StartupRestoreOptions): void {
       // Only recovered drafts: the first takes the blank tab instead of an
       // empty "Untitled" beside them.
       if (restored.length > 0) {
-        loadRecoveredIntoInitialTab(restored[0]);
+        const first = frontDraft ?? restored[0];
+        loadRecoveredIntoInitialTab(first);
+        // At the place it had among them.
+        const pane = paneOf(windowLayout(), opts.activeTabId);
+        if (pane)
+          reorderInPane(pane, opts.activeTabId, restored.indexOf(first));
         return;
       }
       // Nothing claimed the blank tab and onboarding was never shown. The
@@ -400,6 +395,40 @@ export function useStartupRestore(options: StartupRestoreOptions): void {
       }
     })().finally(keptTabsRestored);
   }, [latest]);
+}
+
+/** A draft found at launch as a tab; null when its file already says
+ *  the same. */
+async function recoveredTab(draft: {
+  path: string | null;
+  content: string;
+  diskMtime?: number | null;
+}): Promise<DocTab | null> {
+  const untitled = {
+    ...makeBlankTab(),
+    content: draft.content,
+    savedContent: "",
+  };
+  if (!draft.path) return untitled;
+  try {
+    const { content: diskContent, diskMtime } = await readDocFromDisk(
+      draft.path,
+    );
+    if (diskContent === draft.content) return null;
+    return {
+      ...makeBlankTab(),
+      path: draft.path,
+      content: draft.content,
+      savedContent: diskContent,
+      // The time its edits began from: a file changed since then asks
+      // before this is saved over it.
+      diskMtime: draft.diskMtime ?? diskMtime,
+    };
+  } catch {
+    // Its file is gone (renamed, or on a drive not mounted): the edits
+    // come back untitled rather than not at all.
+    return untitled;
+  }
 }
 
 /** Whether a file is still where the last session left it. */

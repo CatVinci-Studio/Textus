@@ -25,5 +25,8 @@ export function heldByFinger(e: Event): boolean {
   const type = (e as PointerEvent).pointerType;
   if (type === "touch") return true;
   if (type === "pen") return false;
+  // No button at all: a selection handle let go, however long after the
+  // last touch went down. A right-click is button 2.
+  if ((e as MouseEvent).button === -1) return true;
   return lastTouch > 0 && e.timeStamp - lastTouch < 1500;
 }

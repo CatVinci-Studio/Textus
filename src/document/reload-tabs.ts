@@ -91,6 +91,11 @@ function store(): Pick<Storage, "getItem" | "setItem" | "removeItem"> | null {
 /** Writes the tabs down; past the storage's quota, without their text,
  *  so at least the documents come back. */
 export function writeKeptTabs(kept: KeptTabs): void {
+  writeKept(kept);
+  writeTabOrder(kept);
+}
+
+function writeKept(kept: KeptTabs): void {
   const storage = store();
   if (!storage) return;
   try {
@@ -107,6 +112,38 @@ export function writeKeptTabs(kept: KeptTabs): void {
     } catch {
       storage.removeItem(KEY);
     }
+  }
+}
+
+const ORDER_KEY = "textus-tab-order";
+
+/** The tabs' ids in order and the one in front, kept past the app's end
+ *  (Android ending it in the background): the drafts found at the next
+ *  launch come back in that order, the front one in front. */
+function writeTabOrder(kept: KeptTabs): void {
+  try {
+    localStorage.setItem(
+      ORDER_KEY,
+      JSON.stringify({
+        ids: kept.tabs.map((tab) => tab.id ?? ""),
+        active: kept.tabs[kept.active]?.id ?? "",
+      }),
+    );
+  } catch {
+    // Without storage the drafts come back in the order found.
+  }
+}
+
+export function readTabOrder(): { ids: string[]; active: string } {
+  try {
+    const raw = JSON.parse(localStorage.getItem(ORDER_KEY) ?? "null") as {
+      ids?: unknown;
+      active?: unknown;
+    } | null;
+    const ids = Array.isArray(raw?.ids) ? raw.ids.map(String) : [];
+    return { ids, active: typeof raw?.active === "string" ? raw.active : "" };
+  } catch {
+    return { ids: [], active: "" };
   }
 }
 
