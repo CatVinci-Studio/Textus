@@ -29,6 +29,10 @@ describe("on a phone", () => {
   it("a menu is an action sheet with Cancel set apart", () => {
     const share = vi.fn();
     const onClose = vi.fn();
+    // Typing in a document: the sheet takes the focus from it.
+    const doc = document.createElement("textarea");
+    document.body.append(doc);
+    doc.focus();
     render(
       <ContextMenu
         x={0}
@@ -42,7 +46,8 @@ describe("on a phone", () => {
         onClose={onClose}
       />,
     );
-    expect(screen.getByRole("menu", { name: "notes.md" })).toBeInTheDocument();
+    expect(screen.getByRole("menu", { name: "notes.md" })).toHaveFocus();
+    doc.remove();
     fireEvent.click(screen.getByRole("menuitem", { name: "Share" }));
     expect(share).toHaveBeenCalled();
     expect(onClose).toHaveBeenCalled();
@@ -70,6 +75,25 @@ describe("on a phone", () => {
       screen.getByRole("menuitemradio", { name: "todo.md" }),
     ).toHaveAttribute("aria-checked", "false");
     expect(screen.getByRole("menuitem", { name: "Copy" })).toBeDisabled();
+  });
+
+  it("a menu's sheet brings the checked row into view", () => {
+    const seen = vi.fn();
+    Element.prototype.scrollIntoView = function (this: Element) {
+      seen(this.textContent);
+    };
+    render(
+      <ContextMenu
+        x={0}
+        y={0}
+        items={[
+          { label: "a.md", onSelect: () => {}, checked: false },
+          { label: "z.md", onSelect: () => {}, checked: true },
+        ]}
+        onClose={() => {}}
+      />,
+    );
+    expect(seen).toHaveBeenCalledWith("z.md");
   });
 
   it("a select is the system's own picker", () => {

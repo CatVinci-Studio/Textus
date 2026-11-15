@@ -51,6 +51,12 @@ export function ActionSheet({
                     item.checked === undefined ? "menuitem" : "menuitemradio"
                   }
                   aria-checked={item.checked}
+                  // The one in force in view, however long the list.
+                  ref={
+                    item.checked
+                      ? (el) => el?.scrollIntoView?.({ block: "nearest" })
+                      : undefined
+                  }
                   disabled={item.disabled}
                   className={`action-sheet-item${item.danger ? " action-sheet-item-danger" : ""}`}
                   onClick={() => {

@@ -1,4 +1,4 @@
-import { useEffect, type ReactNode } from "react";
+import { useEffect, useRef, type ReactNode } from "react";
 import { createPortal } from "react-dom";
 import { isImeKeydown } from "../../utils/ime";
 import { usePresenceProps } from "../motion/usePresence";
@@ -34,6 +34,12 @@ export function Sheet({
     window.addEventListener("keydown", onKey);
     return () => window.removeEventListener("keydown", onKey);
   }, [onClose, open]);
+  // A menu takes the focus: the keyboard goes down, and nothing typed lands
+  // in the document behind it.
+  const sheet = useRef<HTMLDivElement>(null);
+  useEffect(() => {
+    if (role === "menu") sheet.current?.focus({ preventScroll: true });
+  }, [role]);
   return createPortal(
     <div
       {...presence}
@@ -42,7 +48,13 @@ export function Sheet({
         if (e.target === e.currentTarget) onClose();
       }}
     >
-      <div className={`sheet ${className}`} role={role} aria-label={label}>
+      <div
+        ref={sheet}
+        tabIndex={-1}
+        className={`sheet ${className}`}
+        role={role}
+        aria-label={label}
+      >
         {children}
       </div>
     </div>,

@@ -1,5 +1,11 @@
 import { describe, expect, it } from "vitest";
-import { adjacentTabId, makeBlankTab, windowIsUntouched } from "./doc-tabs";
+import {
+  adjacentTabId,
+  makeBlankTab,
+  tabTip,
+  windowIsUntouched,
+} from "./doc-tabs";
+import { resolveStrings } from "../i18n/strings";
 
 describe("adjacentTabId", () => {
   const tabs = [{ id: "a" }, { id: "b" }, { id: "c" }];
@@ -49,5 +55,16 @@ describe("windowIsUntouched", () => {
         { ...makeBlankTab(), content: "draft", savedContent: "" },
       ]),
     ).toBe(false);
+  });
+});
+
+describe("tabTip", () => {
+  const t = resolveStrings("en");
+  it("names an untitled document by its first line, its marks left out", () => {
+    const tab = { ...makeBlankTab(), content: "\n## Shopping list\nmilk" };
+    expect(tabTip(tab, t)).toBe("Shopping list");
+    expect(tabTip({ ...tab, content: "x".repeat(60) }, t)).toHaveLength(40);
+    expect(tabTip(makeBlankTab(), t)).toBeUndefined();
+    expect(tabTip({ ...tab, path: "/n/a.md" }, t)).toBeUndefined();
   });
 });

@@ -113,8 +113,8 @@ export function TabListButton({
   const list = useMenuButton(
     () =>
       tabs.map((tab) => ({
-        // Its unsaved dot too, as on the tab: Untitled ones told apart.
-        label: tab.dirty ? `${tab.title} •` : tab.title,
+        // Its unsaved dot too, as on the tab; an Untitled one by its tip.
+        label: `${tab.tip && !tab.path ? `${tab.title} · ${tab.tip}` : tab.title}${tab.dirty ? " •" : ""}`,
         checked: tab.id === activeTabId,
         onSelect: () => onActivate(tab.id),
       })),

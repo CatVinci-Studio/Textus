@@ -216,7 +216,11 @@ export function TabBar({
           className="tab-bar-add"
           tabIndex={-1}
           aria-hidden="true"
-          onClick={onAdd}
+          onClick={(e) => {
+            // Not left holding the focus a tap gave it: Enter would add more.
+            e.currentTarget.blur();
+            onAdd();
+          }}
         >
           +
         </button>
