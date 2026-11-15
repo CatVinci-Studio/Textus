@@ -11,7 +11,7 @@ vi.mock("../platform/capabilities", async (importOriginal) => ({
   isMobileApp: true,
 }));
 vi.mock("../prefs/SettingsContext", () => ({
-  useSettings: () => ({ t: { cancel: "Cancel" } }),
+  useSettings: () => ({ t: { cancel: "Cancel", dialogOk: "OK" } }),
 }));
 beforeAll(() => {
   window.matchMedia = ((query: string) => ({
@@ -24,6 +24,7 @@ afterEach(cleanup);
 
 const { ContextMenu } = await import("../engine/controls/ContextMenu");
 const { Select } = await import("../engine/controls/Select");
+const { ColorField } = await import("../engine/controls/ColorField");
 
 describe("on a phone", () => {
   it("a menu is an action sheet with Cancel set apart", () => {
@@ -116,6 +117,19 @@ describe("on a phone", () => {
     );
     fireEvent.click(screen.getByRole("menuitemradio", { name: "Ask" }));
     expect(onChange).toHaveBeenCalledWith({ target: { value: "a" } });
+  });
+});
+
+describe("a colour on a phone", () => {
+  it("opens the app's own card of tones and a hex field, not the system's picker", () => {
+    document.documentElement.style.setProperty("--tone-blue", "#007aff");
+    const onChange = vi.fn();
+    render(<ColorField value="#000000" onChange={onChange} label="Accent" />);
+    expect(document.querySelector('input[type="color"]')).toBeNull();
+    fireEvent.click(screen.getByRole("button", { name: "Accent" }));
+    fireEvent.click(screen.getByRole("radio", { name: "#007aff" }));
+    fireEvent.click(screen.getByRole("button", { name: "OK" }));
+    expect(onChange).toHaveBeenCalledWith("#007aff");
   });
 });
 
