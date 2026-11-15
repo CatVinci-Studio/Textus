@@ -1,3 +1,4 @@
+import { optionsOf, setOption, type Opened } from "./agent-legacy";
 import { fill } from "../../i18n/fill";
 import { filesChanged } from "../chat/file-changes";
 import { isInside } from "../../utils/path";
@@ -72,6 +73,8 @@ interface Session {
   retired?: boolean;
   /** It reads images in a prompt (ACP's promptCapabilities.image). */
   images?: boolean;
+  /** Its mode and model are set the older way (agent-legacy.ts). */
+  older?: boolean;
 }
 
 const sessions = new Map<string, Session>();
@@ -127,13 +130,7 @@ async function setInSessions(agent: string, configId: string, value: string) {
     [...live].map(async (session) => {
       if (session.agent !== agent || !session.sessionId) return;
       try {
-        const answer = await session.connection.request<{
-          configOptions?: unknown;
-        } | null>("session/set_config_option", {
-          sessionId: session.sessionId,
-          configId,
-          value,
-        });
+        const answer = await setOption(session, configId, value);
         if (answer?.configOptions) heardOptions(agent, answer.configOptions);
         else heardValue(agent, configId, value);
       } catch {
@@ -309,11 +306,11 @@ async function start(
     });
     session.images = !!init?.agentCapabilities?.promptCapabilities?.image;
     const open = () =>
-      session.connection.request<{
-        sessionId: string;
-        configOptions?: unknown;
-      }>("session/new", { cwd, mcpServers: [] });
-    let opened: { sessionId: string; configOptions?: unknown };
+      session.connection.request<Opened>("session/new", {
+        cwd,
+        mcpServers: [],
+      });
+    let opened: Opened;
     try {
       opened = await open();
     } catch (err) {
@@ -326,14 +323,11 @@ async function start(
       opened = await open();
     }
     session.sessionId = opened.sessionId;
-    // What the user chose for this agent; a change asks first unless
     // they chose a mode that doesn't, whatever the agent's own settings say.
-    await applyChoices(agent.key, opened.configOptions, (configId, value) =>
-      session.connection.request("session/set_config_option", {
-        sessionId: opened.sessionId,
-        configId,
-        value,
-      }),
+    const { raw, older } = optionsOf(opened);
+    session.older = older;
+    await applyChoices(agent.key, raw, (configId, value) =>
+      setOption(session, configId, value),
     );
   } catch (err) {
     session.connection.stop();

@@ -16,6 +16,8 @@ const ipc = vi.hoisted(() => ({
   refuseMode: false,
   /** What session/new offers. */
   offered: undefined as unknown,
+  /** session/new offers modes and models the older way (Gemini CLI). */
+  older: null as null | { modes: unknown; models: unknown },
   out: null as ((o: { type: "lines"; lines: string[] }) => void) | null,
   /** It says it reads images. */
   images: false,
@@ -36,6 +38,10 @@ vi.mock("../../platform/ipc-plugins", () => ({
         const p = (sent as { params?: { configId: string; value: string } })
           .params!;
         ipc.set.push(`${p.configId}=${p.value}`);
+      }
+      if (method === "session/set_mode" || method === "session/set_model") {
+        const p = (sent as { params: Record<string, string> }).params;
+        ipc.set.push(`${method}=${p.modeId ?? p.modelId}`);
       }
       if (method === "session/prompt")
         ipc.prompts.push(
@@ -64,7 +70,9 @@ vi.mock("../../platform/ipc-plugins", () => ({
         );
       const result =
         method === "session/new"
-          ? { sessionId: "s", configOptions: ipc.offered }
+          ? ipc.older
+            ? { sessionId: "s", ...ipc.older }
+            : { sessionId: "s", configOptions: ipc.offered }
           : method === "initialize" && ipc.images
             ? { agentCapabilities: { promptCapabilities: { image: true } } }
             : {};
@@ -211,6 +219,45 @@ describe("stopping an agent", () => {
     cancelAgentExchange("starting");
     expect(await settled).toBe("cancelled");
     ipc.slowStart = false;
+  });
+});
+
+describe("an agent offering its mode and model the older way", () => {
+  it("gets the user's choices with set_mode and set_model", async () => {
+    ipc.older = {
+      modes: {
+        currentModeId: "default",
+        availableModes: [
+          { id: "default", name: "Default" },
+          { id: "autoEdit", name: "Auto Edit" },
+        ],
+      },
+      models: {
+        currentModelId: "auto",
+        availableModels: [
+          { modelId: "auto", name: "Auto" },
+          { modelId: "pro", name: "Pro" },
+        ],
+      },
+    };
+    ipc.chosen = { "p/g": { mode: "autoEdit", model: "pro" } };
+    ipc.set.length = 0;
+    const running = runAgentExchange({
+      agent: { key: "p/g", plugin: "p", id: "g", name: "G" } as never,
+      conversation: "older",
+      cwd: "/w",
+      docPath: null,
+      message: "hi",
+      events: { view: () => {}, thinking: () => {}, permission: () => {} },
+    });
+    running.catch(() => undefined);
+    await vi.waitFor(() => expect(agentRunning("p/g")).toBe(true));
+    expect(ipc.set.sort()).toEqual([
+      "session/set_mode=autoEdit",
+      "session/set_model=pro",
+    ]);
+    cancelAgentExchange("older");
+    ipc.older = null;
   });
 });
 
