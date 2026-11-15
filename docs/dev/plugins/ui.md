@@ -91,12 +91,13 @@ and its colours from the theme, so it follows light, dark and every theme.
 
 ### Dragging
 
-Use `lib/drag.js` (pages.md › Dragging). Two kinds, as in the rest of
-Textus: `drag.reorder` for a row of tabs or columns - the item itself
-follows the pointer along its row and the others slide aside, nothing
-floats - and `drag.sortable` for things moved between lists (cards between
-a board's lists): a lifted copy follows the pointer. Either way it stays
-under the point it was taken by, in a zoomed document too.
+Two kinds, as in the rest of Textus. A row of tabs or columns put in a new
+order is the page's own `textus.drag.reorder` (API 1.7): the item itself
+follows the pointer along its row, the others slide aside, nothing floats,
+and let go it is in its new place at once. Things moved between lists
+(cards between a board's lists) use `drag.sortable` from `lib/drag.js`
+(pages.md › Dragging): a lifted copy follows the pointer. Either way it
+stays under the point it was taken by, in a zoomed document too.
 
 ## Sizes and colours
 

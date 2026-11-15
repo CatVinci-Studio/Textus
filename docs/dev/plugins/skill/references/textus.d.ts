@@ -1651,10 +1651,12 @@ declare global {
        *  or null when closed without one. */
       pickDate(value: string | null, anchor: Element): Promise<string | null>;
       /** From 1.7: a month's 42 days from the week's first day in the UI
-       *  language, for a calendar a page draws itself (`tx-calendar`). */
+       *  language (or `weekStart`, 0 Sunday to 6 Saturday: a vault's own),
+       *  for a calendar a page draws itself (`tx-calendar`). */
       monthDays(
         year: number,
         month: number,
+        options?: { weekStart?: number },
       ): { date: string; day: number; inMonth: boolean; today: boolean }[];
       /** From 1.7: an edge dragged (or moved with the arrow keys) to resize
        *  something: `get` the size now, `set` it as it moves, `done` at the

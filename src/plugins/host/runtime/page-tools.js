@@ -30,7 +30,11 @@
         return axis === "x" ? r.left + r.width / 2 : r.top + r.height / 2;
       };
       var box = item.getBoundingClientRect();
-      var size = axis === "x" ? box.width : box.height;
+      // In a zoomed page the screen's pixels aren't the item's: moves are
+      // measured on screen and drawn in the item's own.
+      var own = axis === "x" ? item.offsetWidth : item.offsetHeight;
+      var scale = own > 0 ? (axis === "x" ? box.width : box.height) / own : 1;
+      var size = (axis === "x" ? box.width : box.height) / scale;
       var others = items.filter(function (el) {
         return el !== item;
       });
@@ -51,7 +55,7 @@
         to = centers.filter(function (c) {
           return c < mine + along;
         }).length;
-        item.style.transform = translate + "(" + along + "px)";
+        item.style.transform = translate + "(" + along / scale + "px)";
         others.forEach(function (el, i) {
           var by =
             to > from && i >= from && i < to
@@ -84,7 +88,16 @@
         setTimeout(function () {
           window.removeEventListener("click", swallow, true);
         }, 0);
-        if (dropped && to !== from) options.onDrop(from, to);
+        if (!dropped || to === from) return;
+        // In its new place at once: it stays there while the plugin saves
+        // the order and draws again, instead of springing back first.
+        var parent = item.parentNode;
+        if (parent)
+          parent.insertBefore(
+            item,
+            to > from ? items[to].nextSibling : items[to],
+          );
+        options.onDrop(from, to);
       }
       var up = function () {
         end(true);
@@ -171,13 +184,19 @@
   }
 
   // ---- A month's days, from the week's first day where the language
-  // starts its weeks: { date: "YYYY-MM-DD", day, inMonth, today }.
+  // starts its weeks (or `options.weekStart`, 0 Sunday … 6 Saturday):
+  // { date: "YYYY-MM-DD", day, inMonth, today }.
   function iso(d) {
     return dates.format(d, "YYYY-MM-DD", api.language);
   }
-  function monthDays(year, month) {
+  function monthDays(year, month, options) {
     var first = new Date(year, month, 1);
-    var start = dates.weekStart(api.language);
+    // The language's first day, unless the page names one (a vault's).
+    var given = options && options.weekStart;
+    var start =
+      given === undefined || given === null
+        ? dates.weekStart(api.language)
+        : given;
     var back = (first.getDay() - start + 7) % 7;
     var today = iso(new Date());
     var out = [];
