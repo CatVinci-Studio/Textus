@@ -87,20 +87,35 @@ export function incomingSlots(
 /**
  * Where a row scrolled to `from`, `shown` long, scrolls to bring `slot`
  * into view, or null where it is. Scrolled, the row's start fades over
- * `fade` (island.css): the tab stands clear of it, as far as there's room.
+ * `fade` (island.css): the tab stands clear of it, as far as there's room,
+ * with `air` either side. A touch row, with neither, shows no part of the
+ * tab before it.
  */
 export function revealAt(
   slot: Slot,
   from: number,
   shown: number,
   fade: number,
+  air = 12,
 ): number | null {
   // Room either side of it, as much as there is.
-  const margin = Math.max(0, Math.min(12, (shown - slot.w) / 2));
+  const margin = Math.max(0, Math.min(air, (shown - slot.w) / 2));
   const lead = Math.max(margin, Math.min(fade, shown - slot.w));
   const start = Math.max(0, slot.x - lead);
   if (slot.x - from < (from > 0 ? lead : margin)) return start;
   if (slot.x + slot.w > from + shown - margin)
     return Math.min(start, slot.x + slot.w - shown + margin);
   return null;
+}
+
+/** `left` moved on to the start of the first tab at or after it, never past
+ *  `limit` (the open tab's start): a touch row then shows no part of a tab
+ *  at its start. `edges` are the tabs' starts. */
+export function snapToTab(
+  left: number,
+  edges: readonly number[],
+  limit: number,
+): number {
+  const next = edges.find((x) => x >= left - 0.5 && x <= limit);
+  return next ?? left;
 }

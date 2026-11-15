@@ -8,9 +8,10 @@ import { TabPill, type TabInfo } from "./TabPill";
 import { TabListButton, useTabFit } from "./TabList";
 import { INCOMING, useTabStrip } from "./useTabStrip";
 import { useTabSwipe } from "./useTabSwipe";
-import { revealAt, type Slot } from "./tab-strip";
+import { revealAt, snapToTab, stripSlots, type Slot } from "./tab-strip";
 import { revealOnResize } from "./reveal-on-resize";
 import { scaledPx } from "../../tokens/chrome-scale";
+import { isMobileApp } from "../../../platform/capabilities";
 
 /** The fade over a scrolled row's start (island.css). */
 const TAB_FADE = 36;
@@ -108,14 +109,18 @@ export function TabBar({
   const smooth = useRef<string | null>(null);
   // What the reveal reads when the row resizes: the tab's place and the
   // row's room as last laid out, not as they were when it began watching.
-  const placed = useRef({ slotX, slotW, shownLength });
-  placed.current = { slotX, slotW, shownLength };
+  const edges =
+    isMobileApp && fit
+      ? stripSlots(fit.widths, fit.between).map((slot) => slot.x)
+      : null;
+  const placed = useRef({ slotX, slotW, shownLength, edges });
+  placed.current = { slotX, slotW, shownLength, edges };
   useEffect(() => {
     const bar = barRef.current;
     const revealNow = (smoothly: boolean) => {
       const { slotX: x, slotW: w, shownLength: shown } = placed.current;
       if (!bar || x === undefined || w === undefined || shown == null) return;
-      reveal(bar, { x, w }, shown, smoothly);
+      reveal(bar, { x, w }, shown, smoothly, placed.current.edges);
     };
     if (!bar || slotX === undefined || slotW === undefined) return;
     if (shownLength === null) return;
@@ -259,13 +264,21 @@ function reveal(
   slot: Slot,
   shown: number,
   smooth: boolean,
+  /** A touch row's tab starts, which it scrolls to. */
+  edges: readonly number[] | null,
 ): void {
-  const fade = scaledPx(TAB_FADE);
+  // A touch row lists its tabs (⌄) and swipes: no faded part of the tab
+  // before the open one, which reads as a stray sliver there.
+  const fade = edges ? 0 : scaledPx(TAB_FADE);
   // A row barely wider than the tab (a phone's) fades only what is left
   // beside it: never the tab's own first letters.
   const room = Math.min(fade, Math.max(0, shown - slot.w));
   bar.style.setProperty("--tab-fade", `${room}px`);
-  const left = revealAt(slot, bar.scrollLeft, shown, fade);
+  let left = revealAt(slot, bar.scrollLeft, shown, fade, edges ? 0 : 12);
+  if (edges) {
+    const snapped = snapToTab(left ?? bar.scrollLeft, edges, slot.x);
+    left = Math.abs(snapped - bar.scrollLeft) < 1 ? null : snapped;
+  }
   if (left !== null)
     bar.scrollTo({ left, behavior: smooth ? scrollBehavior() : "auto" });
 }

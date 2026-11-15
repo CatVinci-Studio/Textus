@@ -1,5 +1,11 @@
 import { describe, expect, it } from "vitest";
-import { dragSlots, incomingSlots, revealAt, stripSlots } from "./tab-strip";
+import {
+  dragSlots,
+  incomingSlots,
+  revealAt,
+  snapToTab,
+  stripSlots,
+} from "./tab-strip";
 import { tabWidths, type TabParts } from "./tab-widths";
 
 const LIMITS = { min: 56, max: 200 };
@@ -146,6 +152,11 @@ describe("bringing the open tab into view", () => {
   });
   it("keeps the whole tab when the row is barely wider than it", () => {
     expect(revealAt({ x: 300, w: 180 }, 350, 200, fade)).toBe(280);
+  });
+  it("on a touch row, scrolled to a tab's start: no part of the tab before it shows", () => {
+    // Tabs start at 0, 90, 180, 270; the open one at 270, 80 wide, in 200.
+    const left = revealAt({ x: 270, w: 80 }, 0, 200, 0, 0)!;
+    expect(snapToTab(left, [0, 90, 180, 270], 270)).toBe(180);
   });
   it("stays put with the tab already clear", () => {
     expect(revealAt({ x: 100, w: 60 }, 40, 300, fade)).toBeNull();
