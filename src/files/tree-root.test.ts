@@ -1,7 +1,9 @@
 import { describe, expect, it } from "vitest";
+import { ownFolderMoved } from "../platform/documents-path";
 import {
   agentRootOnClose,
   agentRootOnOpen,
+  agentRootsMoved,
   isWithin,
   nextTreeRoot,
   rootAfterClose,
@@ -80,6 +82,24 @@ describe("isWithin", () => {
     expect(isWithin("/notes", "/notes")).toBe(true);
     expect(isWithin("/notes/a/b.md", "/notes")).toBe(true);
     expect(isWithin("/notesx", "/notes")).toBe(false);
+  });
+});
+
+describe("the AI's project folder after a reinstall", () => {
+  const old = "/var/mobile/Containers/Data/Application/AAA/Documents";
+  const docs = "/var/mobile/Containers/Data/Application/BBB/Documents/";
+  const move = (path: string) => ownFolderMoved(path, docs);
+
+  it("moves into this install's Documents, with the folder that set it", () => {
+    expect(agentRootsMoved(`${old}/Notes`, `${old}/Notes`, move)).toEqual({
+      current: `${docs}Notes`,
+      fromFolder: `${docs}Notes`,
+    });
+  });
+
+  it("leaves an unset or unmoved folder alone", () => {
+    expect(agentRootsMoved("", "", move)).toBeNull();
+    expect(agentRootsMoved(`${docs}Notes`, "", move)).toBeNull();
   });
 });
 

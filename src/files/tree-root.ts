@@ -51,6 +51,25 @@ export function agentRootOnOpen(
   return current === "" || current === fromFolder ? opened : null;
 }
 
+/**
+ * The AI's folder and the folder that set it, after a reinstall moved the
+ * app's Documents (iOS): each in this install's Documents, or null when
+ * neither moved.
+ */
+export function agentRootsMoved(
+  current: string,
+  fromFolder: string,
+  move: (path: string) => string,
+): { current: string; fromFolder: string } | null {
+  const next = {
+    current: current && move(current),
+    fromFolder: fromFolder && move(fromFolder),
+  };
+  return next.current === current && next.fromFolder === fromFolder
+    ? null
+    : next;
+}
+
 /** The same on Close Folder: back to "" if this folder set the AI's
  *  folder, else null to leave it. */
 export function agentRootOnClose(

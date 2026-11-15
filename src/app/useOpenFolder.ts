@@ -19,6 +19,7 @@ import { SHOW_FOLDER_EVENT } from "../utils/events";
 import {
   agentRootOnClose,
   agentRootOnOpen,
+  agentRootsMoved,
   nextTreeRoot,
   rootAfterClose,
 } from "../files/tree-root";
@@ -98,12 +99,28 @@ export function useOpenFolder({
   useEffect(() => {
     if (!restoring.current) return;
     restoring.current = false;
+    // A reinstall moved Documents (iOS): the AI's folder follows it.
+    void documentsDir().then((docs) => {
+      const moved = agentRootsMoved(
+        settings.agentWorkspaceRoot,
+        agentRootFromFolder(),
+        (path) => ownFolderMoved(path, docs),
+      );
+      if (!moved) return;
+      setSettings({ agentWorkspaceRoot: moved.current });
+      setUiState("agentRootFromFolder", moved.fromFolder);
+    });
     const saved = savedFolder(settings.restoreSessionOnStartup);
     if (folder !== null || !saved) return;
     void documentsDir().then((docs) =>
       setFolder((now) => now ?? ownFolderMoved(saved, docs)),
     );
-  }, [folder, settings.restoreSessionOnStartup]);
+  }, [
+    folder,
+    settings.restoreSessionOnStartup,
+    settings.agentWorkspaceRoot,
+    setSettings,
+  ]);
   const [tree, setTree] = useState(() => ({
     key: inputsKey(folder, activePath, fallback),
     root: nextTreeRoot({
