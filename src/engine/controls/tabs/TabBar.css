@@ -181,6 +181,14 @@
   visibility: hidden;
 }
 
+/* With no pointer to bring it, an unopened tab's × only takes its name's
+   room: the name has it, the pill's width the same. */
+@media (hover: none) {
+  .tab-pill:not(.tab-pill-active, :focus-visible) .tab-pill-close {
+    display: none;
+  }
+}
+
 /* Overflowing, the + stays beside the list at the row's end as the tabs
    scroll under them. */
 .tab-bar[data-overflow] .tab-bar-add {
