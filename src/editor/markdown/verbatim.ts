@@ -2,33 +2,10 @@ import { $remark } from "@milkdown/kit/utils";
 import { scanSource, type Range } from "./verbatim-scan";
 import { extname } from "../../utils/path";
 import { editorExtensions } from "../extension-points";
+import { BUILT_IN_KEEP, type VerbatimRules } from "./verbatim-rules";
 
-/**
- * Syntax a document type keeps exactly as written: read as raw source
- * (the `html` node, saved verbatim), shown as source and never drawn.
- * Rules are plain data, so other document types can declare their own.
- */
-export interface VerbatimRules {
-  /** A top-level paragraph starting with one of these is kept whole, with
-   *  the blocks after it while a bracket it opened is still open. */
-  blockStarts: string[];
-  /** `{…}` with balanced braces, in any line of text. */
-  braces: boolean;
-  /** JSX: `<Tag …>`, `</Tag>`, `<>`; a paragraph opening with one that
-   *  isn't plain HTML is kept whole. */
-  jsx: boolean;
-}
-
-const MDX: VerbatimRules = {
-  blockStarts: ["import ", "export ", "{", ":::"],
-  braces: true,
-  jsx: true,
-};
-
-/** Textus's own document types that keep syntax, by extension. */
-export const BUILT_IN_KEEP: Readonly<Record<string, VerbatimRules>> = {
-  mdx: MDX,
-};
+// Syntax a document type keeps (verbatim-rules) read as raw source (the
+// `html` node, saved verbatim), shown as source and never drawn.
 
 /** The rules the document at `path` is read by: its type's, Textus's or
  *  a plugin's that is on. */

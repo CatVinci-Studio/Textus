@@ -13,9 +13,7 @@ import {
   type ReactNode,
 } from "react";
 import { getUiState, setUiState } from "../../../storage/ui-state";
-import {
-  useSidePanelWidth,
-} from "../../../engine/controls/side-panel-width";
+import { useSidePanelWidth } from "../../../engine/controls/side-panel-width";
 import type { AgentPanelTab } from "./AgentPanelView";
 import "./agent-panel.css";
 import "../inline-chat.css";

@@ -1,7 +1,4 @@
-import {
-  Plugin,
-  type Command,
-} from "@milkdown/kit/prose/state";
+import { Plugin, type Command } from "@milkdown/kit/prose/state";
 import {
   CellSelection,
   deleteColumn,

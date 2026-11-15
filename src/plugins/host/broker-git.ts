@@ -21,6 +21,11 @@ export function gitHandlers(p: PluginScope) {
     "git.show": ({ hash, path }: Params) =>
       pluginsIpc.gitShow(p.id, p.root(), str(hash, "hash"), str(path, "path")),
     "git.commit": ({ message, paths: files }: Params) =>
-      pluginsIpc.gitCommit(p.id, p.root(), str(message, "message"), paths(files)),
+      pluginsIpc.gitCommit(
+        p.id,
+        p.root(),
+        str(message, "message"),
+        paths(files),
+      ),
   };
 }

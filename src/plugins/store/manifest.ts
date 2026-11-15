@@ -1,5 +1,5 @@
 import { isHiddenFilePath } from "./hidden-files";
-import type { VerbatimRules } from "../../editor/markdown/verbatim";
+import type { VerbatimRules } from "../../editor/markdown/verbatim-rules";
 import { pluginString } from "../host/plugin-string";
 import PERMISSIONS from "./permissions.json";
 /**

@@ -8,7 +8,7 @@ import {
   TABLE_ACTION_EVENT,
 } from "../utils/events";
 import { GROUPS, type Button } from "./format-buttons";
-import { IMAGE_WIDTHS } from "../editor/images/image-html";
+import { IMAGE_WIDTHS } from "../editor/images/image-widths";
 
 /*
  * The format bar on a phone (design: phone, typing): undo first, as a phone

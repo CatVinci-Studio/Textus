@@ -121,8 +121,7 @@ export function pasteRows(
   if (!at) return null;
   const table = state.doc.nodeAt(at.tablePos)!;
   const head = table.firstChild!;
-  const align = (col: number) =>
-    head.maybeChild(col)?.attrs.alignment ?? null;
+  const align = (col: number) => head.maybeChild(col)?.attrs.alignment ?? null;
   // From the schema: a table of its head row alone has no body
   // row to copy them from.
   const { nodes } = state.schema;
@@ -151,11 +150,7 @@ export function pasteRows(
       for (let c = 0; c <= at.col; c++) pos += row.child(c).nodeSize;
       tr.insert(
         pos,
-        asCells(
-          cells.rows[r]!,
-          r === 0 ? types.head : types.cell,
-          () => null,
-        ),
+        asCells(cells.rows[r]!, r === 0 ? types.head : types.cell, () => null),
       );
     }
   } else {

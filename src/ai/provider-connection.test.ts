@@ -12,9 +12,7 @@ vi.mock("../platform/ipc", () => ({
   },
 }));
 
-const { useConnectedProviders } = await import(
-  "./provider-connection"
-);
+const { useConnectedProviders } = await import("./provider-connection");
 
 const openai = {
   id: "openai",

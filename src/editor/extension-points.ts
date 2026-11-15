@@ -45,7 +45,7 @@ export {
   type EmbedKind,
 } from "./embeds/embed-sources";
 
-import type { VerbatimRules } from "./markdown/verbatim";
+import type { VerbatimRules } from "./markdown/verbatim-rules";
 
 interface EditorExtensions {
   /** Editor plugins that see keys before the editor's own (a plugin

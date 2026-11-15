@@ -5,10 +5,7 @@ import {
   showMessage,
   showPrompt,
 } from "../engine/controls/app-dialog";
-import {
-  deleteIOSDocument,
-  renameIOSDocument,
-} from "../document/ios-recents";
+import { deleteIOSDocument, renameIOSDocument } from "../document/ios-recents";
 import { updateLinksAfterMove } from "../files/move-links";
 import { emitPluginEvent } from "../plugins/app-bridge";
 import { basename, dirname } from "../utils/path";

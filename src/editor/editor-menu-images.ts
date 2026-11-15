@@ -1,10 +1,7 @@
 import { editorViewCtx } from "@milkdown/kit/core";
 import { NodeSelection } from "@milkdown/kit/prose/state";
-import {
-  IMAGE_WIDTHS,
-  imageWidthOf,
-  withImageWidth,
-} from "./images/image-html";
+import { imageWidthOf, withImageWidth } from "./images/image-html";
+import { IMAGE_WIDTHS } from "./images/image-widths";
 import { turnedTitle } from "./images/image-rotation";
 import { openDiagramViewer } from "./diagram-zoom";
 import { revealNearest, type ImageLocation } from "./images/missing-image";

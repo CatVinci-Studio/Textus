@@ -237,10 +237,5 @@ function solve(
  *  tab's measured least. */
 function ruleFor(panel: number, isPanel: (pane: Pane) => boolean) {
   return (pane: Pane, direction: SplitDirection) =>
-    islandRule(
-      isPanel(pane),
-      direction,
-      panel,
-      contentMinOf(pane.front),
-    );
+    islandRule(isPanel(pane), direction, panel, contentMinOf(pane.front));
 }

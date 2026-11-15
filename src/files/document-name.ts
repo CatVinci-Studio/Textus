@@ -1,5 +1,8 @@
 import { basename } from "../utils/path";
-import { BUILT_IN_KEEP, type VerbatimRules } from "../editor/markdown/verbatim";
+import {
+  BUILT_IN_KEEP,
+  type VerbatimRules,
+} from "../editor/markdown/verbatim-rules";
 import {
   pluginsSnapshot,
   runningPlugins,

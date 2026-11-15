@@ -1,11 +1,7 @@
 import { useEffect, useRef, type RefObject } from "react";
 import { canHaptic, isMobileApp } from "../../../platform/capabilities";
 import { iosFiles } from "../../../platform/ios-files";
-import {
-  across,
-  claimSwipe,
-  TOUCH_SLOP_PX,
-} from "../../../utils/gesture";
+import { across, claimSwipe, TOUCH_SLOP_PX } from "../../../utils/gesture";
 import { scaledPx } from "../../tokens/chrome-scale";
 
 /** How far a finger moves along the row to count as a swipe. */

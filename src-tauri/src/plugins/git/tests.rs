@@ -133,7 +133,14 @@ fn a_commit_takes_the_named_files_only_and_needs_its_grant() {
     let (_tmp, root) = repo();
     let b = format!("{root}/b.md");
     let c = format!("{root}/c.md");
-    assert!(commit(&state(&["files.read"]), "a.b", &root, "Add c", std::slice::from_ref(&c)).is_err());
+    assert!(commit(
+        &state(&["files.read"]),
+        "a.b",
+        &root,
+        "Add c",
+        std::slice::from_ref(&c)
+    )
+    .is_err());
     let s = state(&["files.read", "git.commit"]);
     assert!(commit(&s, "a.b", &root, "Hidden", &[format!("{root}/.env")]).is_err());
     let hash = commit(
