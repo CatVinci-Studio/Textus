@@ -172,6 +172,11 @@ export function useFileOpening(opts: {
         diskMtime,
         importedFrom: undefined,
         view: undefined,
+        // Text that isn't Markdown (YAML, a web page) is shown, not edited:
+        // the Markdown editor would write it back as Markdown.
+        ...(!asDocument && !isDocumentName(basename(path))
+          ? { readOnly: true }
+          : {}),
       };
     },
     [t, onWordDocumentOpened],
