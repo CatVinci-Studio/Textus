@@ -117,7 +117,7 @@ button.icon {
   border-radius: 50%;
 }
 
-input,
+input:not([type="checkbox"], [type="radio"]),
 select,
 textarea {
   min-height: var(--control-height-sm);

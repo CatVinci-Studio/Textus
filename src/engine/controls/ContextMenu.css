@@ -3,7 +3,8 @@
   min-width: 188px;
   max-height: min(70vh, 528px);
   overflow-y: auto;
-  z-index: var(--z-popover);
+  /* Over a toast, as the app's menus are: it was just opened. */
+  z-index: var(--z-menu);
   transform-origin: var(--transform-origin, top left);
   animation: motion-pop-in var(--dur-base) var(--ease-out);
 }

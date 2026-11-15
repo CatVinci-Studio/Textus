@@ -199,7 +199,7 @@
   /* design: allow - a cover and a fade, so no stub of the next tab shows
      beside it. */
   box-shadow:
-    0 0 0 4px var(--ui-frame, var(--ui-bg)),
+    0 -4px 0 4px var(--ui-frame, var(--ui-bg)),
     -8px 0 0 var(--ui-frame, var(--ui-bg)),
     -12px 0 8px var(--ui-frame, var(--ui-bg));
 }
@@ -224,7 +224,7 @@
   /* design: allow - a fade over the overflowing tabs, not a shadow; the
      spread fills its round corners, or a tab shows through them. */
   box-shadow:
-    0 0 0 4px var(--ui-frame, var(--ui-bg)),
+    0 -4px 0 4px var(--ui-frame, var(--ui-bg)),
     -8px 0 8px var(--ui-frame, var(--ui-bg));
   color: var(--ui-muted);
   cursor: pointer;
