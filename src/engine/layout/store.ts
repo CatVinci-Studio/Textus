@@ -1,5 +1,6 @@
 import {
   paneBeside,
+  paneById,
   paneWithTab,
   panesOf,
   type Path,
@@ -40,6 +41,8 @@ interface TabRecord {
 
 let records: readonly TabRecord[] = [];
 let active = "";
+/** Tabs in use before, the latest last: a closed one's place goes back. */
+let shown: string[] = [];
 /** The document in front: the tab in use when it is a document, else the
  *  one last in use - with a conversation or a page in front, the document
  *  the AI reads and writes. */
@@ -99,6 +102,7 @@ export function setWindowTabs<T extends TabRecord>(
 /** Tab `id` in use: in front of its island, that island in use. */
 export function activateTab(id: string): void {
   if (id === active) return;
+  if (active) shown = [...shown.filter((t) => t !== active), active].slice(-32);
   active = id;
   change();
 }
@@ -285,8 +289,14 @@ function change() {
  *  islands'. */
 function settle() {
   const ids = records.map((tab) => tab.id);
-  const resolved = resolveSplit(layout, request, ids, active, (id) =>
-    arriving.get(id),
+  shown = shown.filter((id) => ids.includes(id));
+  const resolved = resolveSplit(
+    layout,
+    request,
+    ids,
+    active,
+    (id) => arriving.get(id),
+    shown,
   );
   if (resolved && "blank" in resolved) {
     layout = resolved.blank;
@@ -318,7 +328,12 @@ export function documentInFront(): string {
  *  away together): the first island's front tab, else the last - never
  *  none, or keys and zoom have nowhere to go. */
 function fallback(ids: readonly string[]): string {
-  const fronts = panesOf(layout.root).map((p) => p.front);
+  // The island it was in first, which shows the tab shown before it.
+  const panes = panesOf(layout.root);
+  const fronts = [
+    paneById(layout.root, layout.focus)?.front,
+    ...panes.map((p) => p.front),
+  ];
   return fronts.find((f) => f && ids.includes(f)) ?? ids[ids.length - 1] ?? "";
 }
 
@@ -339,6 +354,7 @@ function inIslandOrder(
 export function resetWindowModelForTests(): void {
   records = [];
   active = "";
+  shown = [];
   documentId = "";
   blankTab = null;
   layout = oneIsland([], null);

@@ -70,8 +70,8 @@ export function useTabRemoval(opts: {
   const { tabsRef, setTabs, setActiveTabId, liveTabs } = tabState;
 
   // No prompt here. Closing the last tab closes the window, or shows the
-  // start page (closing that closes the window); the active tab hands focus
-  // to its right-hand neighbor.
+  // start page (closing that closes the window); the active tab's island
+  // goes back to the tab in use before it (the window model).
   const removeTab = useCallback(
     (id: string) => {
       const closedIndex = tabsRef.current.findIndex((tb) => tb.id === id);
