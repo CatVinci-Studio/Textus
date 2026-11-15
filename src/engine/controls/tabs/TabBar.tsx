@@ -106,19 +106,27 @@ export function TabBar({
   const { x: slotX, w: slotW } = strip.slotOf(activeTabId) ?? {};
   const shownLength = fit && fit.available - (overflow ? fit.list : 0);
   const smooth = useRef<string | null>(null);
+  // What the reveal reads when the row resizes: the tab's place and the
+  // row's room as last laid out, not as they were when it began watching.
+  const placed = useRef({ slotX, slotW, shownLength });
+  placed.current = { slotX, slotW, shownLength };
   useEffect(() => {
     const bar = barRef.current;
+    const revealNow = (smoothly: boolean) => {
+      const { slotX: x, slotW: w, shownLength: shown } = placed.current;
+      if (!bar || x === undefined || w === undefined || shown == null) return;
+      reveal(bar, { x, w }, shown, smoothly);
+    };
     if (!bar || slotX === undefined || slotW === undefined) return;
     if (shownLength === null) return;
-    const slot = { x: slotX, w: slotW };
     const smoothly = smooth.current !== activeTabId;
     smooth.current = activeTabId;
-    reveal(bar, slot, shownLength, smoothly);
+    revealNow(smoothly);
     // Again once the row is measured, as smoothly the first time: the
     // reveal may have run while it still had its old width.
     let first = smoothly;
     return revealOnResize([bar, stripEl.current], () => {
-      reveal(bar, slot, shownLength, first);
+      revealNow(first);
       first = false;
     });
   }, [activeTabId, slotX, slotW, shownLength]);
