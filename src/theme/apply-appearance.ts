@@ -1,4 +1,5 @@
 import { androidBridge } from "../platform/android-bridge";
+import { iosFiles } from "../platform/ios-files";
 import { useEffect } from "react";
 import { useLatest } from "../utils/hooks/useLatest";
 import { themes, windowBarIpc } from "../platform/ipc";
@@ -113,6 +114,8 @@ function useApplyAppearance(
     }
     // Android's bar icons go light on a dark page (MainActivity).
     androidBridge()?.setAppearance(settings.theme);
+    // iOS's keyboard takes the window's dark or light.
+    if (isIOSApp) iosFiles.appearance(settings.theme);
   }, [settings.theme]);
 
   // The layout on <html> too: its lengths (layout-tokens.css) reach what

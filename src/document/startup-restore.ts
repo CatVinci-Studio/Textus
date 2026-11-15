@@ -25,6 +25,7 @@ import {
 } from "./reload-tabs";
 import { takeWindowSession } from "./launch-window";
 import { savedFront } from "../engine/layout/saved";
+import { paneWithTab } from "../engine/layout/tree";
 import {
   paneOf,
   reorderInPane,
@@ -348,11 +349,19 @@ export function useStartupRestore(options: StartupRestoreOptions): void {
       // Its recovered tab takes the initial one's place, so it doesn't open
       // twice.
       const recovered = last ? recoveredFor(last) : undefined;
-      if (recovered) {
+      // The tab in front was a draft: it takes the initial tab, the last
+      // document joins the rest behind it.
+      if (last && frontDraft && !recovered) {
+        const behind = await opts.tabsForPaths([last], true);
+        opts.setTabs((prev) => [
+          ...prev,
+          ...behind.filter((tab) => !prev.some((p) => p.path === tab.path)),
+        ]);
+      } else if (recovered) {
         loadRecoveredIntoInitialTab(recovered);
         return;
       }
-      if (last) {
+      if (last && !frontDraft) {
         try {
           const { content: text, diskMtime } = await readDocFromDisk(last);
           restoreCaret(last, diskMtime);
@@ -372,10 +381,22 @@ export function useStartupRestore(options: StartupRestoreOptions): void {
       if (restored.length > 0) {
         const first = frontDraft ?? restored[0];
         loadRecoveredIntoInitialTab(first);
-        // At the place it had among them.
-        const pane = paneOf(windowLayout(), opts.activeTabId);
-        if (pane)
-          reorderInPane(pane, opts.activeTabId, restored.indexOf(first));
+        // At the place it had among them: before the one that came after
+        // it, whatever else (the AI's tab) the row holds.
+        const pane = paneWithTab(windowLayout().root, opts.activeTabId);
+        const k = restored.indexOf(first);
+        if (pane) {
+          const others = pane.tabs.filter((id) => id !== opts.activeTabId);
+          const after = restored[k + 1] && others.indexOf(restored[k + 1].id);
+          const before = restored[k - 1] && others.indexOf(restored[k - 1].id);
+          const at =
+            typeof after === "number" && after >= 0
+              ? after
+              : typeof before === "number" && before >= 0
+                ? before + 1
+                : pane.tabs.indexOf(opts.activeTabId);
+          reorderInPane(pane.id, opts.activeTabId, at);
+        }
         return;
       }
       // Nothing claimed the blank tab and onboarding was never shown. The

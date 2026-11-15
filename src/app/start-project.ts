@@ -68,10 +68,13 @@ function projectReadme(
   return readme?.path ?? null;
 }
 
+// Gone is a file not found; one it may not look at that way (Android's
+// shared storage, read through the system) may well be there: opened, it
+// says for itself.
 const exists = (path: string) =>
   fs.fileMtimeMs(path).then(
     (t) => t !== null,
-    () => false,
+    () => true,
   );
 
 /** The documents `folder` opens with, the one in front last; none when it

@@ -56,6 +56,10 @@ export const iosFiles = {
     (await call<{ text: string }>("read_text", { url })).text,
   /** A tap felt under the finger, as something lifts. Never fails. */
   haptic: (): void => void call<void>("haptic").catch(() => {}),
+  /** The window dark, light or the system's ("system"): the keyboard
+   *  follows it. Never fails. */
+  appearance: (mode: string): void =>
+    void call<void>("appearance", { mode }).catch(() => {}),
   /** The share sheet for a saved document, by path or picked URL. */
   share: (path: string): Promise<void> => call<void>("share", { path }),
   readBase64: async (url: string): Promise<string> =>

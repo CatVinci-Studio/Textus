@@ -331,10 +331,12 @@
   background: var(--doc-accent);
 }
 /* A finger's grip: the same pill, a fingertip's room to press. */
-:root[data-window-chrome="mobile"] .table-grip::before {
-  content: "";
-  position: absolute;
-  inset: -12px;
+@media (pointer: coarse) {
+  .table-grip::before {
+    content: "";
+    position: absolute;
+    inset: -12px;
+  }
 }
 
 /* While one is pulled: the others slide aside on the settle spring, as

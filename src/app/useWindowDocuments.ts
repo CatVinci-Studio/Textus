@@ -208,13 +208,16 @@ export function useWindowDocuments({
   // Another folder opened here takes the old one's place, as an editor's
   // workspace does: its saved documents close, and the new one's come back
   // as it was left (start-project.ts).
-  const { openRecentFile } = opening;
+  // In this window, whatever else it holds: not as Open Recent, which hands
+  // a busy window's files to the windows (none on a phone).
+  const { openPathInTab } = opening;
   replaceRef.current = (old, next) => {
     closeTabsOf(old);
     void readRecents()
       .then((recents) => openingDocuments(next, recents.files))
       .then(async (docs) => {
-        for (const doc of docs) await openRecentFile(doc);
+        for (const doc of docs)
+          await openPathInTab(doc, { restoreCaret: true });
       });
   };
 

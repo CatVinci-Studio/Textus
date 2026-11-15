@@ -7,7 +7,6 @@ import {
   createCodeBlockCommand,
   wrapInHeadingCommand,
 } from "@milkdown/kit/preset/commonmark";
-import { insertTableCommand } from "@milkdown/kit/preset/gfm";
 import { NodeSelection } from "@milkdown/kit/prose/state";
 import type {
   ContextMenuEntry,
@@ -57,13 +56,6 @@ export function runCommand(run: EditorRunner, key: CmdKey<any>) {
   run((ctx) => {
     ctx.get(commandsCtx).call(key);
     ctx.get(editorViewCtx).focus();
-  });
-}
-
-export function insertTable(run: EditorRunner, rows: number, cols: number) {
-  run((ctx) => {
-    ctx.get(commandsCtx).call(insertTableCommand.key, { row: rows, col: cols });
-    ctx.get(editorViewCtx).focus(); // the caret in its first cell
   });
 }
 

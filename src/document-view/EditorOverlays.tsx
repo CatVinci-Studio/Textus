@@ -1,7 +1,7 @@
 import { createPortal } from "react-dom";
 import { editorViewCtx } from "@milkdown/kit/core";
 import { isPhoneLayout } from "../platform/phone-layout";
-import { insertTable } from "../editor/editor-menu";
+import { insertTable } from "../editor/tables/insert-table";
 import { EditorContextMenu } from "./EditorContextMenu";
 import type { EditorSetup } from "./useEditorSetup";
 import type { EditorChat } from "./useEditorChat";

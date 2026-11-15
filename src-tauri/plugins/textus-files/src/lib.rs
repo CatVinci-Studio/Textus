@@ -62,6 +62,7 @@ mod native {
         begin_access => "beginAccess",
         share => "share",
         haptic => "haptic",
+        appearance => "appearance",
     }
 
     pub fn init<R: Runtime>() -> TauriPlugin<R> {
@@ -77,7 +78,8 @@ mod native {
                 remembered,
                 begin_access,
                 share,
-                haptic
+                haptic,
+                appearance
             ])
             .setup(|app, api| {
                 #[cfg(target_os = "ios")]

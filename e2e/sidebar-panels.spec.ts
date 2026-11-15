@@ -245,6 +245,11 @@ test("another folder takes the open one's place: its documents close, and come b
   await expect(a).toHaveCount(0);
   await page.locator(".tree-row", { hasText: "b.md" }).dblclick();
   await expect(page.locator(".tab-pill", { hasText: "b.md" })).toBeVisible();
+  // An unsaved draft stays across the switch: the documents still come
+  // back in this window, beside it.
+  await emit(page, "menu-new-file");
+  await page.locator(".ProseMirror:visible").first().click();
+  await page.keyboard.type("draft");
 
   await emit(page, "menu-open-recent-folder", "/one");
   await expect(a).toBeVisible();

@@ -15,6 +15,7 @@ Everything Textus's iOS and Android document access needs.
 - `allow-begin-access`
 - `allow-share`
 - `allow-haptic`
+- `allow-appearance`
 
 ## Permission Table
 
@@ -24,6 +25,32 @@ Everything Textus's iOS and Android document access needs.
 <th>Description</th>
 </tr>
 
+
+<tr>
+<td>
+
+`textus-files:allow-appearance`
+
+</td>
+<td>
+
+Enables the appearance command without any pre-configured scope.
+
+</td>
+</tr>
+
+<tr>
+<td>
+
+`textus-files:deny-appearance`
+
+</td>
+<td>
+
+Denies the appearance command without any pre-configured scope.
+
+</td>
+</tr>
 
 <tr>
 <td>

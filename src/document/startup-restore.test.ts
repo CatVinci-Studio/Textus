@@ -79,12 +79,14 @@ async function restore(
   inModel = false,
   /** Done while the session's documents are read. */
   meanwhile?: (tabs: DocTab[]) => DocTab[],
+  /** Tabs the window already has before the initial one (the AI's). */
+  before: DocTab[] = [],
 ) {
   // `drained` is module state (one drain per window): a fresh module each.
   vi.resetModules();
   const { useStartupRestore } = await import("./startup-restore");
   const model = await import("../engine/layout/store");
-  let local: DocTab[] = [{ ...INITIAL }];
+  let local: DocTab[] = [...before, { ...INITIAL }];
   if (inModel)
     model.startWindowTabs(local, () => ({ ...INITIAL, id: "blank" }));
   const held = {
@@ -490,15 +492,18 @@ describe("startup restore into the initial tab", () => {
         content: `draft ${x}`,
       })),
     );
-    const { tabs } = await restore(true, false, true);
+    // The AI's tab first in the row: the drafts keep their order after it.
+    const ai = { ...INITIAL, id: "ai", content: "ai" };
+    const { tabs } = await restore(true, false, true, undefined, [ai]);
     await waitFor(() =>
       expect(tabs().map((tab) => tab.content)).toEqual([
+        "ai",
         "draft b",
         "draft c",
         "draft a",
       ]),
     );
-    expect(tabs()[1].id).toBe("initial");
+    expect(tabs()[2].id).toBe("initial");
     // c's draft, kept again under the tab it came in as, goes once it is
     // kept under the initial one: the next launch finds it once.
     await waitFor(() => expect(ipc.clearDraftSnapshot).toHaveBeenCalled());

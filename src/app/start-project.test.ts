@@ -2,11 +2,16 @@
 import { beforeEach, describe, expect, it, vi } from "vitest";
 
 const files = new Set<string>();
+/** Paths the file system won't time (Android's shared storage). */
+const unreadable = new Set<string>();
 const dirs: Record<string, { name: string; path: string; is_dir: boolean }[]> =
   {};
 vi.mock("../platform/ipc", () => ({
   fs: {
-    fileMtimeMs: async (p: string) => (files.has(p) ? 1 : null),
+    fileMtimeMs: async (p: string) => {
+      if (unreadable.has(p)) throw new Error("Permission denied");
+      return files.has(p) ? 1 : null;
+    },
     listDir: async (p: string) => dirs[p] ?? [],
   },
 }));
@@ -22,6 +27,7 @@ const entry = (name: string, is_dir = false) => ({
 
 beforeEach(() => {
   files.clear();
+  unreadable.clear();
   for (const k of Object.keys(dirs)) delete dirs[k];
   setUiState("projectTabs", {});
 });
@@ -41,6 +47,17 @@ describe("what a project opens with from the start page", () => {
     expect(await openingDocuments("/p", ["/p/c.md"])).toEqual([
       "/p/b.md",
       "/p/a.md",
+    ]);
+  });
+
+  it("keeps a tab the file system won't time: it may well be there", async () => {
+    setUiState(
+      "projectTabs",
+      withProjectTabs({}, "/storage/A", ["/storage/A/n.md"], null),
+    );
+    unreadable.add("/storage/A/n.md");
+    expect(await openingDocuments("/storage/A", [])).toEqual([
+      "/storage/A/n.md",
     ]);
   });
 
