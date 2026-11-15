@@ -1,6 +1,7 @@
 import { counted } from "../../i18n/current";
 import type { Strings } from "../../i18n/strings";
 import type { Shortcuts } from "../../prefs/SettingsContext";
+import type { FormatBarSide } from "../../prefs/settings-values";
 import { type PluginMenuEntry } from "./plugin-menu";
 
 import {
@@ -56,7 +57,10 @@ export type NativeMenuId =
   | "track-changes"
   | "toggle-sidebar"
   | "toggle-agent-panel"
-  | "toggle-format-bar"
+  | "format-bar-top"
+  | "format-bar-left"
+  | "format-bar-right"
+  | "format-bar-hidden"
   | "toggle-textus-ai"
   | "toggle-split-view"
   | "toggle-read-only"
@@ -113,6 +117,8 @@ export interface MenuChecks {
   sidebar?: boolean;
   agentPanel?: boolean;
   formatBar?: boolean;
+  /** Which edge the format bar is on, when shown. */
+  formatBarSide?: FormatBarSide;
   /** Textus AI's master switch; unset counts as on. */
   textusAi?: boolean;
   sourceMode?: boolean;
@@ -130,6 +136,9 @@ export interface MenuChecks {
   /** Not a check mark: the document's word count, which the phone's menu
    *  shows when its title row has no room for it. */
   words?: number;
+  /** Not a check mark: the tab in front is a page (AI, Settings), with no
+   *  document to save, share or search. */
+  noDocument?: boolean;
 }
 
 export type MenuNode = MenuEntry | "separator";
@@ -143,7 +152,7 @@ export function nativeMenuChecks(checks: MenuChecks): Record<string, boolean> {
   return {
     "toggle-sidebar": !!checks.sidebar,
     "toggle-agent-panel": !!checks.agentPanel,
-    "toggle-format-bar": !!checks.formatBar,
+    ...formatBarChecks(checks),
     "view-mode-default": mode.default,
     "toggle-source-mode": mode.source,
     "toggle-split-view": mode.split,
@@ -151,6 +160,16 @@ export function nativeMenuChecks(checks: MenuChecks): Record<string, boolean> {
     "toggle-zen-mode": !!checks.zen,
     "toggle-read-only": mode.readOnly,
     "track-changes": !!checks.trackChanges,
+  };
+}
+
+/** View › Format Bar's one check: hidden, or the edge it is on. */
+function formatBarChecks({ formatBar, formatBarSide = "top" }: MenuChecks) {
+  return {
+    "format-bar-top": !!formatBar && formatBarSide === "top",
+    "format-bar-left": !!formatBar && formatBarSide === "left",
+    "format-bar-right": !!formatBar && formatBarSide === "right",
+    "format-bar-hidden": !formatBar,
   };
 }
 
@@ -320,10 +339,24 @@ export function buildMobileMenu(
       : []),
     { label: t.menuNewFile, action: { native: "new-file" } },
     { label: t.menuOpenFile, action: { native: "open-file" } },
-    { label: t.menuSave, action: { native: "save-file" } },
-    { label: t.menuShare, action: { native: "share" } },
-    "separator",
-    { label: t.menuFindReplace, action: { native: "find-replace" } },
+    // Another folder over the one open: the Files panel shows that folder.
+    { label: t.menuOpenFolder, action: { native: "open-folder" } },
+    ...(
+      [
+        [t.menuSave, "save-file"],
+        [t.menuShare, "share"],
+        "separator",
+        [t.menuFindReplace, "find-replace"],
+      ] as const
+    ).map((item): MenuNode =>
+      item === "separator"
+        ? item
+        : {
+            label: item[0],
+            action: { native: item[1] },
+            disabled: checks.noDocument,
+          },
+    ),
     {
       label: t.menuToggleSidebar,
       action: { native: "toggle-sidebar" },

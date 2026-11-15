@@ -10,10 +10,48 @@
 }
 
 /* The page runs under the status bar, a phone's or a tablet's: the title
-   row takes its height, and whatever clears the row clears both. Android
-   tells it (mobile-viewport.ts). */
+   row takes its height, and whatever clears the row clears both. The
+   insets are mobile-viewport.ts's: Android's app tells them, and an iPhone
+   on its side has WebKit's turned. */
 :root:is([data-platform="ios"], [data-platform="android"]) {
-  --safe-top: max(env(safe-area-inset-top, 0px), var(--native-safe-top, 0px));
+  --safe-top: var(--native-safe-top, env(safe-area-inset-top, 0px));
+  --safe-left: var(--native-safe-left, env(safe-area-inset-left, 0px));
+  --safe-right: var(--native-safe-right, env(safe-area-inset-right, 0px));
+}
+
+/* A phone on its side has the camera's cutout at one end and a rounded
+   corner at the other: the whole frame stays between them, the window bar
+   with it. */
+:root:is([data-platform="ios"], [data-platform="android"]) #root {
+  box-sizing: border-box;
+  padding: 0 var(--safe-right) 0 var(--safe-left);
+  background: var(--ui-frame-fill) fixed;
+}
+
+:root:is([data-platform="ios"], [data-platform="android"]) .window-bar {
+  left: var(--safe-left);
+  right: var(--safe-right);
+}
+
+/* Android's navigation bar or a tablet's taskbar stays drawn over the
+   page's foot (an iPhone's or iPad's home indicator hides itself): the
+   desktop layout ends above it, as the phone's does. */
+:root[data-platform="android"]:not([data-window-chrome="mobile"]) #root {
+  padding-bottom: var(--safe-bottom);
+}
+
+:root:is([data-platform="ios"], [data-platform="android"]) .app-shell {
+  height: 100%;
+}
+
+/* The sidebar's name on the bar's row, not centred across the status bar
+   above it. */
+:root:is([data-platform="ios"], [data-platform="android"]):not(
+    [data-window-chrome="mobile"]
+  )
+  .app-shell:has(> .activity-rail)
+  .sidebar-header {
+  padding-top: var(--safe-top);
 }
 
 :root:is([data-platform="ios"], [data-platform="android"])
@@ -105,4 +143,46 @@
   svg {
   width: 22px;
   height: 22px;
+}
+
+/* Small bar buttons keep their look; a finger gets a 44pt target around
+   them, the AI's header buttons spaced so no target covers the next. */
+@media (pointer: coarse) {
+  :root[data-window-chrome="mobile"]
+    :is(.inline-chat-header-actions, .agent-island-tools) {
+    gap: 16px;
+  }
+  :root[data-window-chrome="mobile"]
+    :is(.window-bar-sidebar-toggle, .inline-chat-header-button) {
+    position: relative;
+  }
+  :root[data-window-chrome="mobile"]
+    :is(
+      .window-bar-sidebar-toggle,
+      .inline-chat-header-button,
+      .tab-bar-list
+    )::after {
+    content: "";
+    position: absolute;
+    top: 50%;
+    left: 50%;
+    width: 44px;
+    height: 44px;
+    transform: translate(-50%, -50%);
+  }
+}
+
+/* The keyboard takes the page's colour scheme: dark or light as chosen in
+   Settings, not the system's. "System" leaves it to the system. */
+:root[data-window-chrome="mobile"][data-theme="dark"] {
+  color-scheme: dark;
+}
+:root[data-window-chrome="mobile"][data-theme="light"] {
+  color-scheme: light;
+}
+
+/* The keyboard covers the home indicator and the navigation bar: with it
+   up nothing keeps clear of them, at any layout (a tablet's too). */
+:root.keyboard-up {
+  --safe-bottom: 0px;
 }

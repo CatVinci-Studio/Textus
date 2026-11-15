@@ -27,4 +27,17 @@ describe("the tour's hole and card", () => {
     const high = { left: 0, top: 40, width: 40, height: 40 };
     expect(placeCard(high, card, phone, true).top).toBe(96);
   });
+
+  it("keeps off the lit part, though level with a piece of it", () => {
+    // A small window, the rail and the open sidebar lit down its height.
+    const small = { width: 760, height: 520 };
+    const wide = { width: 425, height: 314 };
+    const lit = { left: 0, top: 0, width: 376, height: 520 };
+    const band = { left: 0, top: 120, width: 376, height: 40 };
+    const at = placeCard(band, wide, small, false, lit);
+    // No side has room for it as it is: narrowed beside the sidebar, not
+    // in a corner over its list.
+    expect(at.left).toBe(376 + 16);
+    expect(at.width).toBe(760 - 376 - 32);
+  });
 });

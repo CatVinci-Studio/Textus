@@ -2,6 +2,19 @@ import { useEffect } from "react";
 import { fs } from "../platform/ipc";
 import { isNoteFile } from "../utils/path";
 import { getUiState, setUiState } from "../storage/ui-state";
+import {
+  knownDocumentsDir,
+  resolvedDocumentPath,
+  storedDocumentPath,
+  storedOwnFolder,
+} from "../platform/documents-path";
+
+/** iOS moves the app's Documents on a reinstall: its folders and tabs are
+ *  kept relative to it ("documents:…"), as the open folder is; read back
+ *  the same way wherever the Documents folder is known. */
+const docsNow = () => knownDocumentsDir();
+const keptFolder = (folder: string) =>
+  storedOwnFolder(trimmed(folder), docsNow());
 
 /**
  * What a project opened from the start page shows, as editors do: the tabs
@@ -18,6 +31,8 @@ const TABS_KEPT = 20;
 const trimmed = (folder: string) => folder.replace(/[\\/]+$/, "");
 const inside = (folder: string, path: string) => {
   const root = trimmed(folder);
+  // "documents:", Documents itself as kept on iOS: all of it is inside.
+  if (root.endsWith(":")) return path.startsWith(root) && path !== root;
   return path.startsWith(root + "/") || path.startsWith(root + "\\");
 };
 
@@ -50,7 +65,14 @@ export function useProjectTabs(
   useEffect(() => {
     if (!folder) return;
     const all = (getUiState("projectTabs") ?? {}) as ProjectTabs;
-    const next = withProjectTabs(all, folder, key.split("\n"), active);
+    const docs = docsNow();
+    const kept = (p: string) => storedDocumentPath(p, docs);
+    const next = withProjectTabs(
+      all,
+      keptFolder(folder),
+      key.split("\n").filter(Boolean).map(kept),
+      active && kept(active),
+    );
     if (next !== all) setUiState("projectTabs", next);
   }, [folder, key, active]);
 }
@@ -68,10 +90,13 @@ function projectReadme(
   return readme?.path ?? null;
 }
 
+// Gone is a file not found; one it may not look at that way (Android's
+// shared storage, read through the system) may well be there: opened, it
+// says for itself.
 const exists = (path: string) =>
   fs.fileMtimeMs(path).then(
     (t) => t !== null,
-    () => false,
+    () => true,
   );
 
 /** The documents `folder` opens with, the one in front last; none when it
@@ -80,9 +105,11 @@ export async function openingDocuments(
   folder: string,
   recentFiles: readonly string[],
 ): Promise<string[]> {
-  const kept = ((getUiState("projectTabs") ?? {}) as ProjectTabs)[
-    trimmed(folder)
-  ];
+  const all = (getUiState("projectTabs") ?? {}) as ProjectTabs;
+  const docs = docsNow();
+  const kept = (all[keptFolder(folder)] ?? all[trimmed(folder)])?.map((p) =>
+    docs ? resolvedDocumentPath(p, docs) : p,
+  );
   if (kept?.length) {
     const found = await Promise.all(kept.map(exists));
     const left = kept.filter((_, i) => found[i]);

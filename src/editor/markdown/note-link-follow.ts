@@ -44,6 +44,12 @@ async function createNote(path: string): Promise<boolean> {
   );
 }
 
+/** Where an unsaved draft's links start: the folder's top, as a note
+ *  there; null without a folder. */
+export function draftBase(folder: string | null): string | null {
+  return folder ? `${folder.replace(/\/$/, "")}/_` : null;
+}
+
 /**
  * Follows a wikilink's source, or a Markdown link's target the plain path
  * didn't find, from the document at `docPath`: a note opens at its heading
@@ -66,13 +72,9 @@ export async function followNoteLink(
     }
     return;
   }
-  if (!docPath) return;
-  const target = await fs.resolveNoteLink(
-    docPath,
-    link.note,
-    folder,
-    link.wiki,
-  );
+  const from = docPath ?? draftBase(folder);
+  if (!from) return;
+  const target = await fs.resolveNoteLink(from, link.note, folder, link.wiki);
   if (!target) return;
   if (!isNoteFile(target.path)) {
     if (target.exists) open({ path: target.path, linked: true });

@@ -9,9 +9,11 @@ const fs = vi.hoisted(() => ({
   createFolder: vi.fn(),
   fileMtimeMs: vi.fn(),
 }));
-vi.mock("../../platform/ipc", () => ({ fs }));
+vi.mock("../../platform/ipc", () => ({ fs, links: {} }));
+vi.mock("../../platform/window-folder", () => ({ windowFolder: () => "/v" }));
 
 const { followNoteLink } = await import("./note-link-follow");
+const { openLinkHref } = await import("./link-click-plugin");
 
 const view = {} as EditorView;
 let opened: ({ path: string } & OpenRequest)[] = [];
@@ -45,6 +47,22 @@ describe("following a link to a note", () => {
       "Note",
       "/v",
       true,
+    );
+  });
+
+  it("finds a note from an unsaved draft by the folder's top", async () => {
+    fs.resolveNoteLink.mockResolvedValue({ path: "/v/Note.md", exists: true });
+    await followNoteLink(view, "[[Note]]", null, "/v");
+    expect(opened).toEqual([{ path: "/v/Note.md" }]);
+    expect(fs.resolveNoteLink).toHaveBeenCalledWith("/v/_", "Note", "/v", true);
+  });
+
+  it("opens a Markdown link's relative path from an unsaved draft by the folder's top", async () => {
+    openLinkHref(view, "Blocks.md", null);
+    await vi.waitFor(() =>
+      expect(opened).toEqual([
+        expect.objectContaining({ path: "/v/Blocks.md" }),
+      ]),
     );
   });
 

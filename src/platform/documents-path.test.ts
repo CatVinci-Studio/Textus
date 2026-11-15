@@ -1,5 +1,10 @@
 import { describe, expect, it } from "vitest";
-import { resolvedDocumentPath, storedDocumentPath } from "./documents-path";
+import {
+  ownFolderMoved,
+  storedOwnFolder,
+  resolvedDocumentPath,
+  storedDocumentPath,
+} from "./documents-path";
 
 const DOCS = "/var/mobile/Containers/Data/Application/AAAA-1111/Documents";
 const OLD = "/var/mobile/Containers/Data/Application/BBBB-2222/Documents";
@@ -67,5 +72,33 @@ describe("resolvedDocumentPath", () => {
     );
     expect(resolvedDocumentPath("/Users/me/a.md", DOCS)).toBe("/Users/me/a.md");
     expect(resolvedDocumentPath("file:///x/a.md", DOCS)).toBe("file:///x/a.md");
+  });
+
+  it("moves the open folder an earlier version kept whole into this install's Documents", () => {
+    const docs = "/var/mobile/Containers/Data/Application/NEW/Documents/";
+    expect(
+      ownFolderMoved(
+        "/private/var/mobile/Containers/Data/Application/OLD/Documents/Notes",
+        docs,
+      ),
+    ).toBe(docs + "Notes");
+    // Already this install's, or another app's, it stays.
+    expect(ownFolderMoved(docs + "Notes", docs)).toBe(docs + "Notes");
+    // Documents itself, kept whole by an earlier version.
+    expect(
+      ownFolderMoved(
+        "/var/mobile/Containers/Data/Application/OLD/Documents",
+        docs,
+      ),
+    ).toBe(docs.slice(0, -1));
+    expect(ownFolderMoved("documents:Notes", docs)).toBe(docs + "Notes");
+    expect(ownFolderMoved("file:///x/y", docs)).toBe("file:///x/y");
+  });
+
+  it("keeps the open folder Documents as documents:, given back without a slash", () => {
+    expect(storedOwnFolder(DOCS, DOCS)).toBe("documents:");
+    expect(storedOwnFolder(`/private${DOCS}/`, DOCS)).toBe("documents:");
+    expect(storedOwnFolder(`${DOCS}/n`, DOCS)).toBe("documents:n");
+    expect(resolvedDocumentPath("documents:", `${DOCS}/`)).toBe(DOCS);
   });
 });

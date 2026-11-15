@@ -94,10 +94,15 @@ import {
 import { syntaxHighlightPlugin } from "./code/syntax-highlight-plugin";
 import { createCodeBlockView } from "./code/code-block-language-view";
 import { createCodeLineNumbersPlugin } from "./code/code-line-numbers-plugin";
+import { tableCaretPlugin } from "./tables/table-caret";
+import { keyboardCaretPlugin } from "./keyboard-caret-plugin";
+import { scrollOptions } from "./editor-scroll";
+import { tableKeys, tableRowPaste } from "./tables/table-keys";
+import { clickBelowEnd } from "./click-below-end";
 import {
   tableColumnFreeze,
   tableColumnResizing,
-  tableHoverView,
+  createTableView,
 } from "./tables/table-hover-view";
 import { createMermaidPreviewPlugin } from "./mermaid-plugin";
 import { blockKeysPlugin } from "./keys/block-keys-plugin";
@@ -173,17 +178,7 @@ export function configureEditorRoot(
   ctx.set(
     editorViewOptionsCtx,
     withLazyBlockViews(ctx, {
-      // A line the caret is brought to stays below where the page's text
-      // starts, clear of the format bar over it.
-      scrollMargin: {
-        get top() {
-          const page = root.closest(".editor-content");
-          return page ? parseFloat(getComputedStyle(page).paddingTop) || 5 : 5;
-        },
-        right: 5,
-        bottom: 5,
-        left: 5,
-      },
+      ...scrollOptions(root),
       attributes: () => ({
         id: "write",
         role: "textbox",
@@ -277,6 +272,7 @@ export function withEditorCore(
       )
       // Ahead of gfm's table keys.
       .use(editing(tableEdgeArrowPlugin))
+      .use(editing([tableKeys, tableRowPaste, clickBelowEnd]))
       .use(gfmWithoutStrikethrough)
 
       // Before anything else can misread its "---" lines as setext headings.
@@ -400,7 +396,9 @@ export function withEditorCore(
           enabled: () => settings.current.codeLineNumbers,
         }),
       )
-      .use(tableHoverView)
+      .use(createTableView(() => resolveStrings(settings.current.language)))
+      .use(tableCaretPlugin)
+      .use(keyboardCaretPlugin)
       // Before the resize plugin: its press holds every column first.
       .use(editing(tableColumnFreeze))
       .use(editing(tableColumnResizing))

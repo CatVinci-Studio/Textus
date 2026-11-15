@@ -199,6 +199,10 @@
 .theme-card-head > .theme-card-name {
   flex: 1 1 auto;
 }
+/* Inline, a name inside the button would run on uncut. */
+.theme-card-open > .theme-card-name {
+  display: block;
+}
 .theme-card-actions {
   display: flex;
   flex: none;

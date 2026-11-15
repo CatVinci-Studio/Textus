@@ -12,20 +12,23 @@ export function useTreeContexts(
     desktop: boolean;
     dropInto: string | null | undefined;
     onRowMenu: NonNullable<TreeRowActions["onRowMenu"]>;
+    /** Null where rows aren't touched (the desktop). */
+    onRowHold: TreeRowActions["onRowHold"];
     onRowPointerDown: NonNullable<TreeRowActions["onRowPointerDown"]>;
     newDocumentLabel: string;
     setDraft: (draft: TreeDraft) => void;
     root: string;
   },
 ): { rowActions: TreeRowActions; shared: TreeShared } {
-  const { desktop, onRowMenu, onRowPointerDown } = input;
+  const { desktop, onRowMenu, onRowHold, onRowPointerDown } = input;
   const rowActions = useMemo<TreeRowActions>(
     () => ({
       onRowMenu: desktop ? onRowMenu : null,
+      onRowHold,
       onRowPointerDown: desktop ? onRowPointerDown : null,
       openInNewWindow: desktop ? openInNewWindow : null,
     }),
-    [desktop, onRowMenu, onRowPointerDown],
+    [desktop, onRowMenu, onRowHold, onRowPointerDown],
   );
   const {
     sort,

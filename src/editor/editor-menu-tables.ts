@@ -18,6 +18,7 @@ import {
   type Transaction,
 } from "@milkdown/kit/prose/state";
 import type { EditorView } from "@milkdown/kit/prose/view";
+import { copyTable, tableCopy } from "./clipboard/table-clipboard";
 import type { EditorRunner } from "./useEditorRunner";
 import type { Strings, TextKey } from "../i18n/strings";
 import { parseMarkdownSource } from "./markdown/parse-markdown-source";
@@ -165,22 +166,28 @@ function leaveTableForClick(
   );
 }
 
-/** The table the caret or cell selection is in, as Markdown; null outside
- *  one. */
-export function tableMarkdown(run: EditorRunner): string | null {
+/** The table the caret or cell selection is in, and its view; null
+ *  outside one. */
+function tableHere(run: EditorRunner) {
   return (
     run((ctx) => {
-      const { state } = ctx.get(editorViewCtx);
-      const { $from } = state.selection;
+      const view = ctx.get(editorViewCtx);
+      const { $from } = view.state.selection;
       for (let d = $from.depth; d > 0; d--) {
         const node = $from.node(d);
-        if (node.type.spec.tableRole !== "table") continue;
-        const doc = state.schema.topNodeType.create(null, node);
-        return ctx.get(serializerCtx)(doc).trimEnd() + "\n";
+        if (node.type.spec.tableRole === "table")
+          return { view, node, serialize: ctx.get(serializerCtx) };
       }
       return null;
     }) ?? null
   );
+}
+
+/** The table the caret or cell selection is in, as Markdown; null outside
+ *  one. */
+export function tableMarkdown(run: EditorRunner): string | null {
+  const here = tableHere(run);
+  return here ? tableCopy(here.view, here.node, here.serialize).markdown : null;
 }
 
 export function inTable(run: EditorRunner): boolean {
@@ -251,9 +258,9 @@ export function tableMenuItems(
     {
       label: t.copyTable,
       onSelect: () => {
-        const markdown = tableMarkdown(run);
-        if (markdown)
-          void navigator.clipboard?.writeText(markdown).catch(() => {});
+        const here = tableHere(run);
+        if (here)
+          void copyTable(here.view, here.node, here.serialize).catch(() => {});
       },
     },
     { label: t.deleteTable, onSelect: table("delete-table"), danger: true },

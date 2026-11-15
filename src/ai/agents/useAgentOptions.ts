@@ -8,6 +8,8 @@ import {
   type AgentCommand,
 } from "./agent-offers";
 import { externalAgent } from "../../plugins/contributions/agents";
+import { currentStrings } from "../../i18n/current";
+import { APPROVAL, approvalOption } from "./agent-approval";
 import {
   agentRunning,
   setAgentOption,
@@ -33,7 +35,11 @@ export function useAgentOptions(agent: string | null): AgentOptionsMenu | null {
   );
   if (!agent || offer.options.length === 0) return null;
   const chosen = settings.agentOptions[agent] ?? {};
-  const options = offer.options.map((o) => ({
+  const approval = approvalOption(offer.options, currentStrings());
+  const options = byKind([
+    ...offer.options,
+    ...(approval ? [approval] : []),
+  ]).map((o) => ({
     ...o,
     value: wanted(o, offer.options, chosen) ?? o.current,
   }));
@@ -48,13 +54,32 @@ export function useAgentOptions(agent: string | null): AgentOptionsMenu | null {
           [agent]: { ...chosen, [id]: value },
         },
       });
-      setAgentOption(agent, id, value);
+      // Textus's own switch never goes to the agent.
+      if (id !== APPROVAL) setAgentOption(agent, id, value);
     },
     // While a session runs, the mode it reported: the agent may have
     // moved itself off the one chosen.
-    unasking: unaskingName(offer.options, running ? mode?.current : modeValue),
+    unasking:
+      unaskingName(offer.options, running ? mode?.current : modeValue) ??
+      (approval && chosen[APPROVAL] === "allow"
+        ? currentStrings().agentAllowAll
+        : null),
   };
 }
+
+/** The menu's order: how it works (mode, approval), then what thinks
+ *  (model, effort), then the rest, each kind in the agent's order. */
+const KINDS = ["mode", "approval", "model", "thought_level"];
+const byKind = (options: AgentOption[]) => {
+  const rank = (o: AgentOption) => {
+    const at = KINDS.indexOf(o.category ?? "");
+    return at < 0 ? KINDS.length : at;
+  };
+  return options
+    .map((o, i) => ({ o, i }))
+    .sort((a, b) => rank(a.o) - rank(b.o) || a.i - b.i)
+    .map(({ o }) => o);
+};
 
 /** The agent the chat talks to and its slash commands, while `answers`
  *  (it answers this composer); null when Textus AI does. */

@@ -9,6 +9,7 @@ import {
   setSplitLayout,
   setWindowTabs,
   splitLayout,
+  tabInUse,
 } from "./store";
 import { pairLayout } from "./ops";
 import { pane, panesOf, type Branch } from "./tree";
@@ -108,5 +109,13 @@ describe("the document in front", () => {
     expect(documentInFront()).toBe("b");
     setWindowTabs((now) => now.filter((tab) => tab.id !== "b"));
     expect(documentInFront()).toBe("a");
+  });
+
+  it("closing the tab in use goes back to the one in use before it, not the first", () => {
+    setWindowTabs(() => [{ id: "ai", view: {} }, { id: "a" }, { id: "b" }]);
+    activateTab("a");
+    activateTab("b");
+    setWindowTabs((now) => now.filter((tab) => tab.id !== "b"));
+    expect(tabInUse()).toBe("a");
   });
 });

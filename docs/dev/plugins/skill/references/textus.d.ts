@@ -1,5 +1,5 @@
 /**
- * The Textus plugin API, 1.6: the `textus` object a plugin's code is given
+ * The Textus plugin API, 1.7: the `textus` object a plugin's code is given
  * (src/plugins/host/runtime/host.js), the context its `activate` receives, and
  * `acquireTextusApi()` in its webviews (runtime/webview.js). The one source
  * of truth: docs/dev/plugins/guide.md explains it, the reference pages are
@@ -159,13 +159,15 @@ declare global {
       app: App;
       /** 1.6: colours over the theme (appearance). */
       appearance: Appearance;
+      /** 1.7: text as the app reads it. */
+      text: Text;
     }
 
     interface Env {
       /** Textus's UI language ("en", "zh", "zh-Hant", ...). */
       readonly language: string;
       readonly appVersion: string;
-      /** This API's version: "1.6" from Textus 1.4.2 ("1.5": 1.3.12-rc.1,
+      /** This API's version: "1.7" from Textus 1.4.3 ("1.6": 1.4.2, "1.5": 1.3.13-rc.1,
        *  "1.4": 1.3.10, "1.3": 1.3.10-rc.1, "1.2": 1.3.9, "1.1": 1.3.0-beta.8). Prefer engines.textus; compare
        *  it as numbers, not as text ("1.10" > "1.9"). */
       readonly apiVersion: string;
@@ -874,6 +876,8 @@ declare global {
         capture: { mode: "all" | "some"; keys: string[] } | null,
       ): Promise<boolean>;
       onKey: Event<string>;
+      /** From 1.7: onKey by the events' rule; onKey stays. */
+      onDidPressKey: Event<string>;
       exec(op: EditorOp): Promise<EditorOpResult>;
     }
 
@@ -1010,8 +1014,14 @@ declare global {
         data: Uint8Array | ArrayBuffer | string,
       ): Promise<void>;
       writeText(path: string, text: string): Promise<void>;
-      /** A new file; fails if one is there. */
-      create(path: string, text?: string): Promise<void>;
+      /** A new file; fails if one is there. From 1.7, `unique` gives it a
+       *  free name instead ("Note 2.md", "Note 3.md", as the app names its
+       *  own), and the path written comes back, written as `path` was. */
+      create(
+        path: string,
+        text?: string,
+        options?: { unique?: boolean },
+      ): Promise<string>;
       /**
        * Reads, changes and writes a file without losing anything: open in
        * a tab, the change goes into its editor as one undo step; on disk,
@@ -1077,6 +1087,10 @@ declare global {
        *  instead of other apps' settings files; a field no app sets is
        *  null, for Textus's own settings. From 1.3.9 (files.read). */
       conventions(path?: string): Promise<FolderConventions>;
+      /** From 1.7 (files.write): sets how the open folder writes something,
+       *  in its `.textus/settings.json` "conventions", keeping the rest;
+       *  null clears it. Only `linkStyle` for now. */
+      setConvention(key: "linkStyle", value: LinkStyle | null): Promise<void>;
       /** From 1.3.10: a settings file of the nearest Obsidian vault -
        *  `appSettings("obsidian", "bookmarks.json")` reads
        *  `.obsidian/bookmarks.json` - parsed as JSON, found above the open
@@ -1224,8 +1238,14 @@ declare global {
         query: string,
         options?: { limit?: number },
       ): Promise<{
-        /** `line` counts from 1 here, unlike a Location's (from 0). */
-        hits: (Location & { rel: string; line: number; text: string })[];
+        /** `line` counts from 1 here, unlike a Location's (from 0); from
+         *  1.7 `location` is where the hit opens, its line from 0. */
+        hits: (Location & {
+          rel: string;
+          line: number;
+          text: string;
+          location: Location;
+        })[];
         truncated: boolean;
       }>;
       /** Documents were added, changed or removed. */
@@ -1537,6 +1557,19 @@ declare global {
       due: Date;
     }
 
+    /** From 1.7: text read as the app reads it. */
+    interface Text {
+      /** Words and characters as the status bar counts them. */
+      count(markdown: string): Promise<{ words: number; characters: number }>;
+      /** A note's front matter (its YAML, null with none) and the rest. */
+      splitFrontmatter(
+        text: string,
+      ): Promise<{ yaml: string | null; body: string }>;
+      /** Names in the file tree's order: "Week2" before "Week10", case
+       *  and accents aside, in the UI language. For `Array.sort`. */
+      compareNames(a: string, b: string): number;
+    }
+
     // ---------------------------------------------------------------
     // A webview's page
     // ---------------------------------------------------------------
@@ -1557,6 +1590,9 @@ declare global {
       t(key: string, ...args: unknown[]): string;
       postMessage(message: unknown): void;
       onMessage(fn: (message: unknown) => void): Disposable;
+      /** From 1.7: onMessage by the name host.js's webview has; onMessage
+       *  stays. */
+      onDidReceiveMessage(fn: (message: unknown) => void): Disposable;
       getState(): unknown;
       setState<T>(state: T): T;
       /** Textus's own menu over the page, for a right-click or a dropdown,
@@ -1581,6 +1617,58 @@ declare global {
         provider: (options: {
           theme: "light" | "dark";
         }) => string | null | Promise<string | null>,
+      ): Disposable;
+      /** From 1.7: dates as `textus.dates` has them. */
+      readonly dates: Dates;
+      /** From 1.7: a list dragged into a new order, the app's way: the
+       *  item lifts, the others make room; `onDrop(from, to)` once let go
+       *  somewhere new. `handle`: only from inside it. Esc puts it back. */
+      drag: {
+        reorder(
+          container: Element,
+          options: {
+            items: string;
+            axis?: "x" | "y";
+            handle?: string;
+            onDrop(from: number, to: number): void;
+          },
+        ): Disposable;
+      };
+      /** From 1.7: `content` in the window's floating card under `anchor`
+       *  (above with no room), kept on screen; a press outside or Esc
+       *  closes it, the focus back on `anchor`. `closed` resolves with
+       *  what `close(value)` was given, null otherwise. */
+      popover(
+        content: Element,
+        anchor: Element,
+        options?: { label?: string; role?: string; align?: "start" | "end" },
+      ): {
+        element: Element;
+        close(value?: unknown): void;
+        closed: Promise<unknown>;
+      };
+      /** From 1.7: a month under `anchor` to pick a day on: "YYYY-MM-DD",
+       *  or null when closed without one. */
+      pickDate(value: string | null, anchor: Element): Promise<string | null>;
+      /** From 1.7: a month's 42 days from the week's first day in the UI
+       *  language, for a calendar a page draws itself (`tx-calendar`). */
+      monthDays(
+        year: number,
+        month: number,
+      ): { date: string; day: number; inMonth: boolean; today: boolean }[];
+      /** From 1.7: an edge dragged (or moved with the arrow keys) to resize
+       *  something: `get` the size now, `set` it as it moves, `done` at the
+       *  end. */
+      resizeHandle(
+        handle: Element,
+        options: {
+          axis?: "x" | "y";
+          min?: number;
+          max?: number;
+          get(): number;
+          set(px: number): void;
+          done?(px: number): void;
+        },
       ): Disposable;
     }
   }

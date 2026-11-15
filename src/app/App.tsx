@@ -89,6 +89,7 @@ function App() {
   const { panelMode, setPanelMode } = shell.panels;
   const { activeTab, activeTitle, activeDirty } = docs;
   const { openFolder, openFile, openFileDialog, handleChange } = docs;
+  const { searchFiles } = docs;
   const { searchFocusRequest, clearSearchFocusRequest } = docs;
   const { showTabBar, requestCloseTab, handleTabDetach, dragHoverPreview } =
     docs;
@@ -160,6 +161,12 @@ function App() {
           data-tabs={tabRow}
           // Its column open: the grid and the rail's edge follow the model.
           data-sidebar={sidebarShown ? "open" : undefined}
+          // A format bar down the right edge: the page's readouts clear it.
+          data-format-bar={
+            settings.formatBar && settings.formatBarSide === "right" && !phone
+              ? "right"
+              : undefined
+          }
           // The sidebar's dragged width; a phone's is its stylesheet's.
           style={
             phone
@@ -187,7 +194,10 @@ function App() {
             presence={sidebarPresence}
             closing={sidebarClosing}
             mode={panelMode}
-            onModeChange={setPanelMode}
+            // Search shown by its icon takes the keyboard, as by its key.
+            onModeChange={(id) =>
+              id === "search" ? searchFiles() : setPanelMode(id)
+            }
             width={sidebarWidth}
             openFolder={openFolder}
             activePath={activeTab.path}
@@ -225,7 +235,7 @@ function App() {
             previewTab={dragHoverPreview}
             onChange={handleChange}
             typewriter={settings.typewriterMode}
-            formatBar={settings.formatBar}
+            formatBar={settings.formatBar ? settings.formatBarSide : null}
             tour={
               tutorial.active && tutorial.tabId
                 ? {

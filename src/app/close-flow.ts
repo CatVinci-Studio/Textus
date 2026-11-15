@@ -38,6 +38,11 @@ export type PendingClose = { kind: "tab"; tabId: string } | { kind: "window" };
 /** The documents closed in this window, the latest last. */
 const closedPaths: string[] = [];
 
+/** Tabs closed lately: one closed before it reached the window's tabs is
+ *  not still on its way (useFileOpening). */
+const closedIds: string[] = [];
+export const wasClosed = (id: string) => closedIds.includes(id);
+
 /** File > Reopen Closed Tab's document: the latest closed that isn't open
  *  again already. */
 export function takeClosedPath(isOpen: (path: string) => boolean) {
@@ -65,8 +70,8 @@ export function useTabRemoval(opts: {
   const { tabsRef, setTabs, setActiveTabId, liveTabs } = tabState;
 
   // No prompt here. Closing the last tab closes the window, or shows the
-  // start page (closing that closes the window); the active tab hands focus
-  // to its right-hand neighbor.
+  // start page (closing that closes the window); the active tab's island
+  // goes back to the tab in use before it (the window model).
   const removeTab = useCallback(
     (id: string) => {
       const closedIndex = tabsRef.current.findIndex((tb) => tb.id === id);
@@ -93,6 +98,8 @@ export function useTabRemoval(opts: {
         ]).then(() => void thisWindow().destroy());
         return;
       }
+      closedIds.push(id);
+      if (closedIds.length > 32) closedIds.shift();
       forgetTabZoom(id);
       forgetTabWebviewState(id);
       setTabs((prev) => {

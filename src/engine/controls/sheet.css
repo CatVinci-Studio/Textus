@@ -30,3 +30,8 @@
 .sheet-scrim[data-state="closing"] > .sheet {
   animation: motion-sheet-out var(--dur-base) var(--ease-in) forwards;
 }
+
+/* Holds the focus only to keep keys from the document behind. */
+.sheet:focus {
+  outline: none;
+}

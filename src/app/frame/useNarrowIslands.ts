@@ -38,7 +38,9 @@ export function useNarrowIslands(
   useEffect(() => {
     const was = last.current;
     last.current = { need, windowRoom };
-    const grew = need > was.need;
+    // Opened by hand; not the first count, where a window starts too
+    // narrow for the islands it brings back (a phone launched on its side).
+    const grew = was.need > 0 && need > was.need;
     if (backAt.current !== null && need !== was.need) {
       backAt.current = null;
       setHold(folded.current.length > 0);

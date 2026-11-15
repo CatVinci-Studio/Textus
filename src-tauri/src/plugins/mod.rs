@@ -4,6 +4,7 @@
 
 pub mod access;
 pub mod ai_tools;
+pub mod app_tools;
 pub mod catalog;
 pub mod dev;
 pub mod export;

@@ -14,6 +14,7 @@ import {
   menuBarSections,
   NO_RECENTS,
   nativeMenuChecks,
+  type MenuChecks,
   type MenuNode,
 } from "./app-menu-model";
 import {
@@ -112,9 +113,9 @@ describe("the View menu's on/off items", () => {
         view === undefined || view === "separator" ? [] : (view.submenu ?? []),
       );
       const onOff = items.filter((item) => item.checked !== undefined);
-      // Sidebar, AI panel, format bar, the four modes and their three
-      // additions.
-      expect(onOff).toHaveLength(11);
+      // Sidebar, AI panel, the format bar's four places, the four modes
+      // and their three additions.
+      expect(onOff).toHaveLength(14);
       for (const item of items) expect(item.label).not.toMatch(TOGGLE_WORDS);
       const phone = flatten(buildMobileMenu(strings));
       for (const item of phone) expect(item.label).not.toMatch(TOGGLE_WORDS);
@@ -137,6 +138,7 @@ describe("the View menu's on/off items", () => {
     // One of View › Mode's four is always on: here, the default.
     expect(checked).toEqual([
       t.menuToggleSidebar,
+      t.menuFormatBarHidden,
       t.menuViewModeDefault,
       t.menuToggleZenMode,
       t.menuFullscreen,
@@ -165,6 +167,20 @@ describe("the View menu's on/off items", () => {
     ]);
   });
 
+  it("check one place for the format bar: an edge, or hidden", () => {
+    const on = (checks: Parameters<typeof nativeMenuChecks>[0]) =>
+      Object.entries(nativeMenuChecks(checks))
+        .filter(([id, v]) => v && id.startsWith("format-bar-"))
+        .map(([id]) => id);
+    expect(on({ formatBar: true })).toEqual(["format-bar-top"]);
+    expect(on({ formatBar: true, formatBarSide: "right" })).toEqual([
+      "format-bar-right",
+    ]);
+    expect(on({ formatBar: false, formatBarSide: "left" })).toEqual([
+      "format-bar-hidden",
+    ]);
+  });
+
   it("keep Textus AI out of View, the AI panel out of reach while it is off, and the switch in the phone's menu", () => {
     const items = (checks: { textusAi?: boolean }) =>
       flatten(buildAppMenu(t, shortcuts, NO_RECENTS, checks));
@@ -183,11 +199,32 @@ describe("the View menu's on/off items", () => {
     );
   });
 
+  it("on a phone opens another folder, as the desktop's File menu does", () => {
+    const phone = flatten(buildMobileMenu(t));
+    expect(
+      phone.find((item) => item.label === t.menuOpenFolder)?.action,
+    ).toEqual({ native: "open-folder" });
+  });
+
   it("head the phone's menu with the word count when the title row has no room for it", () => {
     const t = resolveStrings("en");
     const [first] = buildMobileMenu(t, { words: 49 });
     expect(first).toEqual({ label: "49 words", disabled: true });
     expect(buildMobileMenu(t)[0]).toMatchObject({ label: t.menuNewFile });
+  });
+
+  it("grey Save, Share and Find on the phone while a page (AI, Settings) is in front", () => {
+    const t = resolveStrings("en");
+    const off = (checks: MenuChecks) =>
+      flatten(buildMobileMenu(t, checks, [{ label: "P", command: "p" }]))
+        .filter((item) => item.disabled)
+        .map((item) => item.label);
+    expect(off({ noDocument: true })).toEqual([
+      t.menuSave,
+      t.menuShare,
+      t.menuFindReplace,
+    ]);
+    expect(off({})).toEqual([]);
   });
 
   it("give the phone its plugins' commands, and Textus AI only where it is offered", () => {

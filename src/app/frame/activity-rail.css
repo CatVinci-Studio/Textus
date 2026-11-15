@@ -5,6 +5,9 @@
   --rail-width: 0px;
 }
 
+/* On the root too, for what is drawn outside the shell (a corner's
+   toasts). */
+:root:not(.zen, [data-window-chrome="mobile"]):has(.app-shell > .activity-rail),
 :root:not(.zen, [data-window-chrome="mobile"])
   .app-shell:has(> .activity-rail) {
   --rail-width: 48px;
@@ -13,6 +16,9 @@
 /* On a whole pixel, so the document beside it starts on one too: WebKitGTK
    blurs a focused text field's layer at x.5 (source-editor.css). */
 @supports (width: round(down, 1px, 1px)) {
+  :root:not(.zen, [data-window-chrome="mobile"]):has(
+      .app-shell > .activity-rail
+    ),
   :root:not(.zen, [data-window-chrome="mobile"])
     .app-shell:has(> .activity-rail) {
     --rail-width: round(48px, 1px);

@@ -96,7 +96,9 @@ export function SettingsNavPanel() {
       }
     >
       <PluginsTabIcon className="settings-nav-icon" />
-      <span className="settings-nav-group-name">{t.extensionsTabPlugins}</span>
+      <span className="settings-nav-group-name tx-truncate">
+        {t.extensionsTabPlugins}
+      </span>
       <GoToIcon className="settings-nav-chevron" />
     </button>
   );
@@ -157,7 +159,7 @@ export function SettingsNavPanel() {
                 onClick={() => openSettingsPage(p.id)}
               >
                 {p.Icon && <p.Icon className="settings-nav-icon" />}
-                {p.label(t)}
+                <span className="tx-truncate">{p.label(t)}</span>
               </button>
             );
             if (!p.group)
@@ -175,7 +177,7 @@ export function SettingsNavPanel() {
                     onClick={() => toggle(p.group!)}
                   >
                     <group.Icon className="settings-nav-icon" />
-                    <span className="settings-nav-group-name">
+                    <span className="settings-nav-group-name tx-truncate">
                       {group.label(t)}
                     </span>
                     <ChevronIcon className="settings-nav-chevron" />

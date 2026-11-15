@@ -4,16 +4,15 @@ import { explainError } from "../utils/error-explain";
 import { logPluginError } from "./store/plugin-log";
 import { version as APP_VERSION } from "../../package.json";
 import { plugins as pluginsIpc, type PluginsState } from "../platform/ipc";
-import { registerCommand, runCommand } from "../registry/commands";
+import { runCommand } from "../registry/commands";
 import { showMessage } from "../engine/controls/app-dialog";
-import { getActiveDocument } from "./app-bridge";
+import { commandRegistered, commandUnregistered } from "./dynamic-commands";
 import type { PluginHost } from "./host/broker";
 import { lazyModule } from "../lazy/lazy-module";
 import { type PluginOrigin } from "./store/files";
 import { parseManifest, type Permission } from "./store/manifest";
 import { engineSatisfied } from "./store/versions";
 import {
-  addContribution,
   applyContributions,
   contributingPlugins,
   withdrawContributions,
@@ -225,31 +224,14 @@ async function host(record: PluginRecord): Promise<PluginHost> {
           import("./store/open-offer").then((offer) =>
             offer.offerPlugin(caller, request, windowInfo().strings()),
           ),
-        commandRegistered: (id, command, editor) => {
-          const manifest = pluginRecord(id)?.manifest;
-          const declared = manifest?.contributes.commands.some(
-            (c) => c.command === command,
-          );
-          if (editor) editorCommands.add(command);
-          if (declared || dynamicCommands.has(command)) return;
-          dynamicCommands.set(
+        commandRegistered: (id, command, editor) =>
+          commandRegistered(
+            id,
             command,
-            registerCommand({
-              id: command,
-              title: () => command,
-              run: (...args) => void runPluginCommand(id, command, args),
-              enabled: () =>
-                !editorCommands.has(command) || !!getActiveDocument(),
-            }),
-          );
-          addContribution(id, () => removeDynamicCommand(command));
-        },
-        commandUnregistered: (id, command) => {
-          // Only its own, as registering is.
-          if (!command.startsWith(`${id}.`)) return;
-          editorCommands.delete(command);
-          removeDynamicCommand(command);
-        },
+            editor,
+            (args) => void runPluginCommand(id, command, args),
+          ),
+        commandUnregistered,
         exportsOf: async (other) => {
           const target = pluginRecord(other);
           if (!pluginMayRun(target)) return null;
@@ -269,17 +251,6 @@ async function host(record: PluginRecord): Promise<PluginHost> {
   }
   if (!running) throw new Error(`${record.id} can't run.`);
   return running;
-}
-
-/** Commands a plugin's code registered beyond its manifest's. */
-const dynamicCommands = new Map<string, () => void>();
-/** Commands that work on the document in front: offered only with one
- *  (registerEditorCommand). */
-const editorCommands = new Set<string>();
-
-function removeDynamicCommand(command: string) {
-  dynamicCommands.get(command)?.();
-  dynamicCommands.delete(command);
 }
 
 async function pluginFailed(id: string, reason: string) {

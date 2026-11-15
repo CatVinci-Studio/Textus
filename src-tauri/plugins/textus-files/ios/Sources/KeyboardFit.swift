@@ -17,6 +17,13 @@ final class KeyboardFit {
   private weak var webview: WKWebView?
   private var observers: [NSObjectProtocol] = []
   private var offsetObservation: NSKeyValueObservation?
+  private var boundsObservation: NSKeyValueObservation?
+  /// Where the keyboard last said it would end up, in screen coordinates
+  /// (nil: down).
+  private var keyboardEnd: CGRect?
+  private var toldCovered: CGFloat = -1
+  /// The host's shape last laid out: a turn flips it.
+  private var wasLandscape: Bool?
 
   init(webview: WKWebView) {
     self.webview = webview
@@ -47,8 +54,15 @@ final class KeyboardFit {
         object: nil,
         queue: .main
       ) { [weak self] note in
-        self?.fit(note)
+        self?.keyboardMoved(note)
       })
+    // A turn re-lays out the host after the keyboard has said where it goes:
+    // the gap it leaves is measured again against the new bounds, or the
+    // portrait keyboard's gap stays under a landscape page.
+    boundsObservation = webview.superview?.layer.observe(\.bounds) {
+      [weak self] _, _ in
+      DispatchQueue.main.async { self?.turned() }
+    }
     // Coming back from another app the keyboard is re-announced and the
     // page may have drifted; settle it again.
     observers.append(
@@ -63,6 +77,7 @@ final class KeyboardFit {
 
   deinit {
     offsetObservation?.invalidate()
+    boundsObservation?.invalidate()
     observers.forEach(NotificationCenter.default.removeObserver)
   }
 
@@ -111,19 +126,53 @@ final class KeyboardFit {
       CGPoint(x: 0, y: -scroll.adjustedContentInset.top), animated: false)
   }
 
-  private func fit(_ note: Notification) {
-    guard let webview = webview, let host = webview.superview,
-      let end = note.userInfo?[UIResponder.keyboardFrameEndUserInfoKey] as? CGRect
+  /// A turn with the keyboard up: the system keyboard window may stay drawn
+  /// in the old orientation and report no new frame, leaving the page cut
+  /// to a strip. The keyboard is put down instead, as a tap brings it back
+  /// in the new orientation.
+  private func turned() {
+    guard let host = webview?.superview else { return }
+    let landscape = host.bounds.width > host.bounds.height
+    if let was = wasLandscape, was != landscape, toldCovered > 0 {
+      host.window?.endEditing(true)
+      keyboardEnd = nil
+    }
+    wasLandscape = landscape
+    fit(animated: false)
+  }
+
+  private func keyboardMoved(_ note: Notification) {
+    guard let end = note.userInfo?[UIResponder.keyboardFrameEndUserInfoKey] as? CGRect
     else { return }
-    // How much of the host the keyboard covers once it has moved (zero
-    // when it is leaving, or is a floating/hardware-keyboard bar).
-    let keyboard = host.convert(end, from: nil)
-    let covered = max(0, host.bounds.maxY - keyboard.minY)
+    keyboardEnd = end
+    let duration =
+      note.userInfo?[UIResponder.keyboardAnimationDurationUserInfoKey] as? Double ?? 0.25
+    fit(animated: true, duration: duration)
+  }
+
+  /// The web view as tall as the host less what the keyboard covers of it
+  /// (nothing when it is leaving, or is a floating/hardware-keyboard bar).
+  private func fit(animated: Bool, duration: Double = 0) {
+    guard let webview = webview, let host = webview.superview else { return }
+    let covered =
+      keyboardEnd.map { max(0, host.bounds.maxY - host.convert($0, from: nil).minY) } ?? 0
     // Shows for a moment below the shortened view as the keyboard moves.
     host.backgroundColor = .systemBackground
     var frame = host.bounds
     frame.size.height -= covered
-    let duration = note.userInfo?[UIResponder.keyboardAnimationDurationUserInfoKey] as? Double ?? 0.25
+    // The page reads the keyboard's state from this, not from its own
+    // height, which a turn with the keyboard up leaves nothing to compare to.
+    if covered != toldCovered {
+      toldCovered = covered
+      webview.evaluateJavaScript(
+        "window.dispatchEvent(new CustomEvent('textus-keyboard', {detail: \(Double(covered))}))")
+    }
+    guard webview.frame != frame else { return }
+    if !animated {
+      webview.frame = frame
+      pinToTop()
+      return
+    }
     UIView.animate(
       withDuration: duration,
       animations: {

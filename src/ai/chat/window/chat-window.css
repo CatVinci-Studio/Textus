@@ -22,13 +22,8 @@
   justify-content: flex-end;
   gap: 4px;
   height: var(--window-bar-height);
-  padding: 0 4px;
-}
-
-/* This row's padding is 6px, not the editor bar's 12px, so the caption's
-   edge-to-edge offset has to be re-cancelled to match. */
-:root[data-window-chrome="app"] .chat-window-header .window-caption {
-  margin-right: -4px;
+  --window-bar-pad: 4px;
+  padding: 0 var(--window-bar-pad);
 }
 
 /* The buttons sit in the row itself, 4px apart, as they always have. */

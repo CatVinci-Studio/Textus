@@ -19,6 +19,33 @@ const base = {
 };
 
 describe("a plugin's manifest", () => {
+  it("takes an agent whose sign-in is its own (signIn empty)", () => {
+    const m = parseManifest({
+      ...base,
+      permissions: ["agents"],
+      contributes: {
+        agents: [
+          {
+            id: "catvinci.example.qwen",
+            name: "Qwen",
+            command: "npx",
+            signIn: "",
+          },
+          {
+            id: "catvinci.example.codex",
+            name: "Codex",
+            command: "npx",
+            signIn: "chat-gpt",
+          },
+        ],
+      },
+    });
+    expect(m.contributes?.agents?.map((a) => a.signIn)).toEqual([
+      "",
+      "chat-gpt",
+    ]);
+  });
+
   it("reads what a plugin adds", () => {
     const m = parseManifest({
       ...base,

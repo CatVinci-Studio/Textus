@@ -34,9 +34,31 @@ export function storedDocumentPath(path: string, docs: string | null): string {
 
 /** A stored path resolved into the current Documents folder `docs`. */
 export function resolvedDocumentPath(stored: string, docs: string): string {
-  return stored.startsWith(IN_DOCUMENTS)
-    ? withSlash(docs) + stored.slice(IN_DOCUMENTS.length)
-    : stored;
+  if (!stored.startsWith(IN_DOCUMENTS)) return stored;
+  const rest = stored.slice(IN_DOCUMENTS.length);
+  // Documents itself, as a folder is written: no slash at its end.
+  return rest ? withSlash(docs) + rest : docs.replace(/\/+$/, "");
+}
+
+/** An iOS app container's Documents folder at a path's start. */
+const CONTAINER_DOCUMENTS =
+  /^(?:\/private)?\/var\/mobile\/Containers\/Data\/Application\/[^/]+\/Documents(?=\/|$)/;
+
+/** The folder an earlier version kept whole, in the Documents of the
+ *  container a reinstall left behind: this install's own folder of that
+ *  name. Only for the app's open folder, which was always its own. */
+/** The app's open folder as stored: as storedDocumentPath, and Documents
+ *  itself as "documents:". */
+export function storedOwnFolder(path: string, docs: string | null): string {
+  if (docs && unprivate(withSlash(path)) === unprivate(withSlash(docs)))
+    return IN_DOCUMENTS;
+  return storedDocumentPath(path, docs);
+}
+
+export function ownFolderMoved(stored: string, docs: string): string {
+  if (stored.startsWith(IN_DOCUMENTS) || insideDocuments(stored, docs) !== null)
+    return resolvedDocumentPath(stored, docs);
+  return stored.replace(CONTAINER_DOCUMENTS, docs.replace(/\/+$/, ""));
 }
 
 let known: string | null = null;

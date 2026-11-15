@@ -58,7 +58,7 @@ pub(crate) fn last_editor(app: &tauri::AppHandle) -> Option<tauri::Window> {
 
 /// Places a window, gives it this app's chrome, and builds it, for editor and
 /// chat windows alike. macOS uses an overlay title bar; Windows and Linux drop
-/// the native frame and draw the caption (tao still handles edge resizing).
+/// the native title bar and draw the caption, Linux keeping GTK's shadow.
 #[cfg(desktop)]
 pub(crate) fn build_with_app_chrome(
     builder: WebviewWindowBuilder<'_, tauri::Wry, tauri::AppHandle>,
@@ -74,10 +74,15 @@ pub(crate) fn build_with_app_chrome(
         .hidden_title(true);
     #[cfg(any(windows, target_os = "linux"))]
     let builder = builder.decorations(false);
+    #[cfg(target_os = "linux")]
+    let builder = builder.visible(false);
     let window = builder.build()?;
     hide_native_menu_bar(&window);
     #[cfg(target_os = "linux")]
-    end_web_process_with_window(&window);
+    {
+        end_web_process_with_window(&window);
+        show_with_gtk_frame(&window)?;
+    }
     #[cfg(target_os = "macos")]
     draw_at_full_frame_rate(&window);
     Ok(window)
@@ -113,6 +118,31 @@ fn draw_at_full_frame_rate(window: &tauri::WebviewWindow) {
             }
         }
     });
+}
+
+/// Linux: the undecorated window gets GTK's own frame, its shadow and outer
+/// resize margin, under an empty title bar, then shows. On the main thread
+/// (windows are built from async commands too), while still hidden: X11
+/// rebuilds a shown window whose frame changes. Showing shows the menu bar
+/// again, so it is hidden after.
+#[cfg(target_os = "linux")]
+fn show_with_gtk_frame(window: &tauri::WebviewWindow) -> tauri::Result<()> {
+    let shown = window.clone();
+    window.run_on_main_thread(move || {
+        use gtk::prelude::*;
+        let Ok(gtk_window) = shown.gtk_window() else {
+            return;
+        };
+        // tao adds the empty title bar only on Wayland; without it X11 shows mutter's.
+        if gtk_window.titlebar().is_none() {
+            let bar = gtk::EventBox::new();
+            bar.show();
+            gtk_window.set_titlebar(Some(&bar));
+        }
+        gtk_window.set_decorated(true);
+        gtk_window.show_all();
+        hide_native_menu_bar(&shown);
+    })
 }
 
 /// Linux: a window's web process ends with the window. WebKitGTK otherwise
@@ -361,12 +391,17 @@ pub(crate) fn build_main_window(app: &tauri::App) -> tauri::Result<()> {
             _ => builder,
         }
     };
+    #[cfg(target_os = "linux")]
+    let builder = builder.visible(false);
     let window = settings::with_boot(builder, app.handle(), "main").build()?;
     // As every other window built with the app's chrome.
     #[cfg(target_os = "macos")]
     draw_at_full_frame_rate(&window);
     #[cfg(target_os = "linux")]
-    end_web_process_with_window(&window);
+    {
+        end_web_process_with_window(&window);
+        show_with_gtk_frame(&window)?;
+    }
     #[cfg(not(any(target_os = "linux", target_os = "macos")))]
     let _ = window;
     Ok(())

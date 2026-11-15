@@ -7,14 +7,13 @@ import {
   createCodeBlockCommand,
   wrapInHeadingCommand,
 } from "@milkdown/kit/preset/commonmark";
-import { insertTableCommand } from "@milkdown/kit/preset/gfm";
 import { NodeSelection } from "@milkdown/kit/prose/state";
 import type {
   ContextMenuEntry,
   ContextMenuItem,
 } from "../engine/controls/ContextMenu";
 import { contributedMenuItems } from "./editor-menu-items";
-import { linkMenuItems, menuLinkAt, type MenuLink } from "./editor-menu-links";
+import { linkForMenu, linkMenuItems, type MenuLink } from "./editor-menu-links";
 import { imageLocation, type ImageLocation } from "./images/missing-image";
 import { embedFileAt } from "./images/obsidian-embed-preview";
 import { openDiagramViewer } from "./diagram-zoom";
@@ -52,18 +51,11 @@ import {
 // The editor commands behind the right-click, Format and Edit menus, and
 // the right-click menu itself.
 
-// CmdKey<any>: the preset command keys vary in payload type (some
-// unknown, some undefined) and all are called here without a payload.
+// CmdKey<any>: the preset keys vary in payload type; none gets one here.
 export function runCommand(run: EditorRunner, key: CmdKey<any>) {
   run((ctx) => {
     ctx.get(commandsCtx).call(key);
     ctx.get(editorViewCtx).focus();
-  });
-}
-
-export function insertTable(run: EditorRunner, rows: number, cols: number) {
-  run((ctx) => {
-    ctx.get(commandsCtx).call(insertTableCommand.key, { row: rows, col: cols });
   });
 }
 
@@ -121,7 +113,7 @@ export function contextMenuTarget(
         // Not representable in the DOM right now.
       }
 
-      const link = menuLinkAt(view, e.target, docPath);
+      const link = linkForMenu(view, e.target, docPath, !coords);
       if (link) return { ...none, link };
       const target =
         e.target instanceof Element ? e.target.closest(".image-view") : null;
@@ -318,11 +310,12 @@ export function buildPhoneMoreItems(
 ): ContextMenuEntry[] {
   const { t, imagePos } = options;
   // The phone has no Edit menu to offer the plain text.
+  // Offered, not working, with nothing selected.
+  const disabled = run((c) => c.get(editorViewCtx).state.selection.empty);
+  const plain = options.copyAsPlainText;
   const clipboard: ContextMenuEntry[] = [
-    { label: t.cut, onSelect: () => options.copyOrCut(true) },
-    ...(options.copyAsPlainText
-      ? [{ label: t.copyAsPlainText, onSelect: options.copyAsPlainText }]
-      : []),
+    { label: t.cut, disabled, onSelect: () => options.copyOrCut(true) },
+    ...(plain ? [{ label: t.copyAsPlainText, disabled, onSelect: plain }] : []),
   ];
   if (inTable(run)) {
     return [
@@ -333,7 +326,11 @@ export function buildPhoneMoreItems(
     ];
   }
   if (imagePos !== null) return [...clipboard, ...generalItems(options)];
+  // A tap only edits a link: here it opens.
+  const link = options.link ? linkMenuItems(run, t, options.link) : [];
   return [
+    ...link,
+    ...(link.length ? ["separator" as const] : []),
     { label: t.insertTable, onSelect: options.openTableDialog },
     "separator",
     ...clipboard,
@@ -376,8 +373,7 @@ function generalItems(options: ContextMenuOptions): ContextMenuEntry[] {
   ];
 }
 
-/** A list from the Format or Insert menu: the block wrapped in one, or a
- *  list of the other kind changed over. */
+/** A Format/Insert list: the block wrapped, or the other kind changed. */
 export function insertList(
   run: EditorRunner,
   kind: "bullet_list" | "ordered_list",

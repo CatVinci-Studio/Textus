@@ -67,6 +67,8 @@ export const IMAGE_ACTION_EVENT = "textus:image-action";
 /// Opens the editor's menu for the caret as an action sheet, standing in for
 /// the right-click a phone doesn't have.
 export const EDITOR_MORE_EVENT = "textus:editor-more";
+/** The phone's keyboard has come up (mobile/keyboard.ts). */
+export const KEYBOARD_UP_EVENT = "textus:keyboard-up";
 
 /// The AI of the tour's practice tab: "muted" keeps completion and the
 /// grammar check quiet; "live" is the real thing, as outside the tour.

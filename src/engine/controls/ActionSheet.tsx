@@ -1,4 +1,5 @@
 import { useSettings } from "../../prefs/SettingsContext";
+import { CheckIcon } from "./icons";
 import { Sheet } from "./Sheet";
 import "./ActionSheet.css";
 
@@ -6,6 +7,10 @@ interface ActionSheetItem {
   label: string;
   onSelect: () => void;
   danger?: boolean;
+  /** One choice of several: a check beside the one in force. */
+  checked?: boolean;
+  /** Shown but not offered now. */
+  disabled?: boolean;
 }
 
 /**
@@ -42,7 +47,17 @@ export function ActionSheet({
                 <button
                   key={i}
                   type="button"
-                  role="menuitem"
+                  role={
+                    item.checked === undefined ? "menuitem" : "menuitemradio"
+                  }
+                  aria-checked={item.checked}
+                  // The one in force in view, however long the list.
+                  ref={
+                    item.checked
+                      ? (el) => el?.scrollIntoView?.({ block: "nearest" })
+                      : undefined
+                  }
+                  disabled={item.disabled}
                   className={`action-sheet-item${item.danger ? " action-sheet-item-danger" : ""}`}
                   onClick={() => {
                     onClose();
@@ -50,6 +65,9 @@ export function ActionSheet({
                   }}
                 >
                   {item.label}
+                  {item.checked && (
+                    <CheckIcon className="action-sheet-check" aria-hidden />
+                  )}
                 </button>
               ))}
             </div>

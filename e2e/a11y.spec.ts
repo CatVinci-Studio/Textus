@@ -41,6 +41,13 @@ for (const colorScheme of ["light", "dark"] as const) {
     await pasteMarkdown(page, SAMPLE_DOC);
     await scan(page, "document");
 
+    // A table's own tools and its size grid.
+    await page.locator(".table-wrapper td").first().click();
+    await page.locator(".table-size-pill").click();
+    await expect(page.locator(".table-size-card")).toBeVisible();
+    await scan(page, "table tools");
+    await page.keyboard.press("Escape");
+
     await emit(page, "menu-settings");
     await expect(page.locator(".settings-tab-page")).toBeVisible();
     await scan(page, "settings");

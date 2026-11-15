@@ -20,7 +20,11 @@ import { lastCaret } from "./last-places";
 import { keptTabsRestored, readKeptTabs, type KeptTab } from "./reload-tabs";
 import { takeWindowSession } from "./launch-window";
 import { savedFront } from "../engine/layout/saved";
+import { readTabOrder } from "./tab-order";
+import { documentsDir } from "../platform/documents-path";
+import { fileOf, restoreTabsInOrder } from "./phone-restore";
 import {
+  activateTab,
   paneOf,
   reorderInPane,
   splitLayout,
@@ -168,6 +172,15 @@ export function useStartupRestore(options: StartupRestoreOptions): void {
             return made[i] ? [made[i]] : [];
           });
         });
+        // The window's first tab was the one kept in front; the others
+        // joined its island after it. Back to the place it was kept at.
+        const pane = paneOf(windowLayout(), opts.activeTabId);
+        if (pane)
+          reorderInPane(
+            pane,
+            opts.activeTabId,
+            docs.slice(0, kept.active).filter(Boolean).length,
+          );
         void moveDrafts(kept.tabs, (i) =>
           i === kept.active ? opts.activeTabId : made[i]?.id,
         );
@@ -184,63 +197,50 @@ export function useStartupRestore(options: StartupRestoreOptions): void {
       }
       // Recovered drafts from a crash or forced quit, added as extra tabs
       // without stealing focus. Skipped while the privacy toggle is off.
-      const draftSnapshots = opts.enableDraftRecovery
-        ? ((await drafts.takeDraftSnapshots()) ?? [])
-        : [];
+      const order = readTabOrder(
+        isMobileApp ? await documentsDir().catch(() => null) : null,
+      );
+      const place = (id: string) => {
+        const at = order.keys.indexOf(`id:${id}`);
+        return at < 0 ? order.keys.length : at;
+      };
+      const draftSnapshots = (
+        opts.enableDraftRecovery
+          ? ((await drafts.takeDraftSnapshots()) ?? [])
+          : []
+      ).sort((a, b) => place(a.tabId) - place(b.tabId));
       const restored: DocTab[] = [];
-      if (draftSnapshots.length > 0) {
-        for (const draft of draftSnapshots) {
-          if (!draft.path) {
-            restored.push({
-              ...makeBlankTab(),
-              content: draft.content,
-              savedContent: "",
-            });
-            continue;
-          }
-          try {
-            const { content: diskContent, diskMtime } = await readDocFromDisk(
-              draft.path,
-            );
-            if (diskContent === draft.content) continue; // disk already matches - nothing to recover
-            restored.push({
-              ...makeBlankTab(),
-              path: draft.path,
-              content: draft.content,
-              savedContent: diskContent,
-              // The time its edits began from: a file changed since then
-              // asks before this is saved over it.
-              diskMtime: draft.diskMtime ?? diskMtime,
-            });
-          } catch {
-            // Its file is gone (renamed, or on a drive not mounted): the
-            // edits come back untitled rather than not at all.
-            restored.push({
-              ...makeBlankTab(),
-              content: draft.content,
-              savedContent: "",
-            });
-          }
-        }
-        if (restored.length > 0) {
-          opts.setTabs((prev) => [...prev, ...restored]);
-          opts.setDraftsRestoredCount(restored.length);
-        }
-        // Kept again under their new tabs before the taken copies go: a
-        // crash in between brings them back next time.
-        void Promise.all(
-          restored.map((tab) =>
-            drafts.saveDraftSnapshot(
-              tab.id,
-              tab.path,
-              tab.content,
-              tab.diskMtime,
-            ),
-          ),
-        )
-          .then(() => drafts.finishDraftRestore())
-          .catch(() => undefined);
+      // The restored tab that was in front, by the id it had then.
+      let frontDraft: DocTab | undefined;
+      // Each restored tab's id before, its key in the order.
+      const oldIds = new Map<string, string>();
+      for (const draft of draftSnapshots) {
+        const tab = await recoveredTab(draft);
+        if (!tab) continue;
+        restored.push(tab);
+        oldIds.set(tab.id, draft.tabId);
+        if (`id:${draft.tabId}` === order.active) frontDraft = tab;
       }
+      if (restored.length > 0) {
+        opts.setTabs((prev) => [...prev, ...restored]);
+        opts.setDraftsRestoredCount(restored.length);
+      }
+      // Kept again under their new tabs before the taken copies go: a
+      // crash in between brings them back next time.
+      const resaved = draftSnapshots.length
+        ? Promise.all(
+            restored.map((tab) =>
+              drafts.saveDraftSnapshot(
+                tab.id,
+                tab.path,
+                tab.content,
+                tab.diskMtime,
+              ),
+            ),
+          )
+            .then(() => drafts.finishDraftRestore())
+            .catch(() => undefined)
+        : Promise.resolve();
       // A Help doc clicked with no window open: this window was spawned to
       // show it in the blank tab. "welcome" starts the tutorial there.
       const helpDoc: string | null = hasAppMenu
@@ -268,14 +268,17 @@ export function useStartupRestore(options: StartupRestoreOptions): void {
         restored.find((tab) => tab.path === path);
       const loadRecoveredIntoInitialTab = (recovered: DocTab) => {
         // Kept under the tab it moves into before its own goes: a crash in
-        // between still brings it back.
-        void drafts
-          .saveDraftSnapshot(
-            opts.activeTabId,
-            recovered.path,
-            recovered.content,
-            recovered.diskMtime,
+        // between still brings it back, and the next launch only once.
+        void resaved
+          .then(() =>
+            drafts.saveDraftSnapshot(
+              opts.activeTabId,
+              recovered.path,
+              recovered.content,
+              recovered.diskMtime,
+            ),
           )
+          .then(() => drafts.clearDraftSnapshot(recovered.id))
           .catch(() => undefined);
         loadIntoInitialTab({
           path: recovered.path,
@@ -342,38 +345,44 @@ export function useStartupRestore(options: StartupRestoreOptions): void {
         const pane = paneOf(windowLayout(), opts.activeTabId);
         if (pane && !splitLayout())
           ordered.forEach((tab, i) => reorderInPane(pane, tab.id, i));
+        // A draft was in front: it comes back in front, not the first file.
+        if (frontDraft) activateTab(frontDraft.id);
         return;
       }
-      // A phone: the document that was open last time.
+      // A phone: the tabs it had, saved ones and drafts, in their order;
+      // a desktop's recovered drafts alone (its documents come with its
+      // window's session).
       const last = isMobileApp ? await lastIOSDocument() : null;
-      // Its recovered tab takes the initial one's place, so it doesn't open
-      // twice.
-      const recovered = last ? recoveredFor(last) : undefined;
-      if (recovered) {
-        loadRecoveredIntoInitialTab(recovered);
+      if (
+        await restoreTabsInOrder({
+          order,
+          restored,
+          oldIds,
+          frontDraft,
+          last,
+          phone: isMobileApp,
+          initial: opts.activeTabId,
+          loadRecovered: loadRecoveredIntoInitialTab,
+          loadFile: async (path) => {
+            try {
+              const { content: text, diskMtime } = await readDocFromDisk(path);
+              restoreCaret(path, diskMtime);
+              loadIntoInitialTab({
+                path,
+                content: text,
+                savedContent: text,
+                diskMtime,
+              });
+              return true;
+            } catch {
+              return false; // moved or deleted since
+            }
+          },
+          tabsForPaths: opts.tabsForPaths,
+          setTabs: opts.setTabs,
+        })
+      )
         return;
-      }
-      if (last) {
-        try {
-          const { content: text, diskMtime } = await readDocFromDisk(last);
-          restoreCaret(last, diskMtime);
-          loadIntoInitialTab({
-            path: last,
-            content: text,
-            savedContent: text,
-            diskMtime,
-          });
-          return;
-        } catch {
-          // Moved or deleted since: start blank.
-        }
-      }
-      // Only recovered drafts: the first takes the blank tab instead of an
-      // empty "Untitled" beside them.
-      if (restored.length > 0) {
-        loadRecoveredIntoInitialTab(restored[0]);
-        return;
-      }
       // Nothing claimed the blank tab and onboarding was never shown. The
       // flag stays false until here, so a busy first launch defers the guide
       // instead of losing it. Not on a phone: it teaches shortcuts.
@@ -393,6 +402,40 @@ export function useStartupRestore(options: StartupRestoreOptions): void {
   }, [latest]);
 }
 
+/** A draft found at launch as a tab; null when its file already says
+ *  the same. */
+async function recoveredTab(draft: {
+  path: string | null;
+  content: string;
+  diskMtime?: number | null;
+}): Promise<DocTab | null> {
+  const untitled = {
+    ...makeBlankTab(),
+    content: draft.content,
+    savedContent: "",
+  };
+  if (!draft.path) return untitled;
+  try {
+    const { content: diskContent, diskMtime } = await readDocFromDisk(
+      draft.path,
+    );
+    if (diskContent === draft.content) return null;
+    return {
+      ...makeBlankTab(),
+      path: draft.path,
+      content: draft.content,
+      savedContent: diskContent,
+      // The time its edits began from: a file changed since then asks
+      // before this is saved over it.
+      diskMtime: draft.diskMtime ?? diskMtime,
+    };
+  } catch {
+    // Its file is gone (renamed, or on a drive not mounted): the edits
+    // come back untitled rather than not at all.
+    return untitled;
+  }
+}
+
 /** Whether a file is still where the last session left it. */
 async function fileThere(path: string): Promise<boolean> {
   return (await fs.fileMtimeMs(path).catch(() => null)) !== null;
@@ -400,10 +443,6 @@ async function fileThere(path: string): Promise<boolean> {
 
 /** `tabs` with the session's documents, which arrive in any order, back in
  *  `paths`' order, in the places they took; the others stay put. */
-/** The file a tab shows: its own, a plugin view's, or the one imported. */
-const fileOf = (tab: DocTab) =>
-  tab.path ?? tab.view?.resource ?? tab.importedFrom;
-
 function inSessionOrder(tabs: DocTab[], paths: string[]): DocTab[] {
   const rank = new Map(paths.map((p, i) => [p, i]));
   const rankOf = (tab: DocTab) => {

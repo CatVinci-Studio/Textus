@@ -19,7 +19,7 @@
   display: flex;
   align-self: stretch;
   flex-shrink: 0;
-  margin-left: -14px;
+  margin-left: calc(-1 * var(--window-bar-pad, 0px));
   pointer-events: auto;
 }
 
@@ -52,6 +52,8 @@
   flex: 1 1 0;
   min-width: 0;
   max-width: none;
+  /* Clear of the titles and of the status group after it. */
+  margin-inline: var(--space-3);
   justify-content: center;
 }
 

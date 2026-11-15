@@ -117,7 +117,7 @@ button.icon {
   border-radius: 50%;
 }
 
-input,
+input:not([type="checkbox"], [type="radio"]),
 select,
 textarea {
   min-height: var(--control-height-sm);
@@ -283,4 +283,85 @@ pre {
 .motion-mark {
   background-color: var(--motion-mark-bg);
   border-radius: var(--shape-xs);
+}
+
+/* The window's floating card, for what page-kit.js puts over a page: a
+   tooltip, a popover, a date picker. */
+.floating-surface {
+  font-family: var(--font-sans);
+  background: var(--ui-bg);
+  border: 1px solid var(--ui-border);
+  border-radius: var(--shape-m);
+  box-shadow: var(--shadow-popover);
+}
+.tooltip {
+  border-radius: var(--shape-s);
+}
+.tx-popover {
+  position: fixed;
+  z-index: 50;
+  padding: var(--space-3);
+  animation: motion-pop-in var(--dur-base) var(--ease-out);
+}
+
+/* A month under a button: its name between ‹ and ›, then its days. */
+.tx-date-picker {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-2);
+  width: 224px;
+}
+.tx-date-picker-head {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  color: var(--ui-text);
+  font-size: var(--text-secondary);
+  font-weight: 600;
+}
+
+/* Something's edge pulled to resize it: a line on hover or focus. */
+.tx-resize-handle {
+  cursor: col-resize;
+  touch-action: none;
+}
+.tx-resize-handle[aria-orientation="horizontal"] {
+  cursor: row-resize;
+}
+.tx-resize-handle:is(:hover, :focus-visible) {
+  background: var(--ui-accent);
+  outline: none;
+}
+
+/* The page itself marked tx-scroll-fade: its edges fade over the frame,
+   not masked along the whole page. */
+:root.tx-scroll-fade:is([data-more-left], [data-more-right]) {
+  -webkit-mask-image: none;
+  mask-image: none;
+}
+:root.tx-scroll-fade[data-more-right]::after,
+:root.tx-scroll-fade[data-more-left]::before {
+  content: "";
+  position: fixed;
+  top: 0;
+  bottom: 0;
+  z-index: 40;
+  width: var(--space-6);
+  pointer-events: none;
+}
+:root.tx-scroll-fade[data-more-right]::after {
+  right: 0;
+  background: linear-gradient(
+    to right,
+    transparent,
+    var(--doc-bg, var(--ui-bg))
+  );
+}
+:root.tx-scroll-fade[data-more-left]::before {
+  left: 0;
+  background: linear-gradient(
+    to left,
+    transparent,
+    var(--doc-bg, var(--ui-bg))
+  );
 }

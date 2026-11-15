@@ -35,6 +35,8 @@ export function ShortcutsPage({
               "commandPalette",
               "findReplace",
               "searchFiles",
+              "showFiles",
+              "showOutline",
               "nextTab",
               "previousTab",
             ],
@@ -62,7 +64,7 @@ export function ShortcutsPage({
           ],
         ] satisfies [string, ShortcutAction[]][]
       ).map(([title, rows]) => (
-        <SettingsGroup key={title} title={title}>
+        <SettingsGroup key={title} title={title} evenRows>
           {rows.map((action) => (
             <ShortcutRow
               key={action}

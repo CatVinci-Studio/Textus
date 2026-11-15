@@ -84,8 +84,9 @@ export function Sidebar({
           shownId={shown.id}
           sidebarOpen={open}
           onSelect={(id) => {
-            onModeChange(id);
+            // Opened first: Search's own way in opens it outright too.
             if (!open) onToggle();
+            onModeChange(id);
           }}
           onCloseSidebar={onToggle}
           onReorder={moved}

@@ -158,6 +158,9 @@
   align-items: center;
   justify-content: center;
   border: 1px solid var(--doc-border);
+  /* No padding: the column's strip is narrower than a button's own, which
+     squeezed its "+" to nothing. */
+  padding: 0;
   border-radius: var(--shape-pill);
   corner-shape: round;
   background: var(--doc-bg, var(--ui-bg));
@@ -178,6 +181,28 @@
 .table-add-col-btn:hover {
   opacity: 1;
   pointer-events: auto;
+}
+
+/* Reaching for a strip from the table, the pointer crosses no gap: the
+   strip's own hit area runs back to the table's edge, so the wrapper's
+   hover never lapses and the strip never fades under the pointer. */
+.table-add-row-btn > svg,
+.table-add-col-btn > svg {
+  flex-shrink: 0;
+}
+
+.table-add-row-btn::before,
+.table-add-col-btn::before {
+  content: "";
+  position: absolute;
+}
+
+.table-add-row-btn::before {
+  inset: -8px 0 -4px;
+}
+
+.table-add-col-btn::before {
+  inset: 0 -4px 0 -8px;
 }
 
 .table-add-row-btn:hover,
@@ -207,4 +232,127 @@
    block. The fade is in content-base.css's layer, so leaving zen fades back. */
 .zen .milkdown .ProseMirror:has(> .zen-current) > :not(.zen-current) {
   opacity: 0.32;
+}
+
+/* A table's tools sit over its top edge, not on its head row's words; the
+   gap under them is theirs, so the pointer reaching them stays on it. */
+.table-toolbar > .block-toolbar-actions {
+  top: auto;
+  bottom: 100%;
+  right: 0;
+  padding-bottom: 4px;
+}
+
+/* The table's pills: its size with a chevron, the three alignments in one
+   pill, Copy, and Delete as a bin. Icons sit on the text's centre line. */
+.table-toolbar .block-pill {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.3em;
+  box-sizing: border-box;
+  height: 1.9em;
+}
+.table-toolbar .block-pill svg {
+  width: 1.15em;
+  height: 1.15em;
+}
+.table-size-pill {
+  font-variant-numeric: tabular-nums;
+}
+.table-size-pill[aria-expanded="true"] {
+  color: var(--doc-accent-text);
+  border-color: var(--doc-accent);
+}
+.table-align-pill {
+  gap: 0;
+  padding: 0.1em;
+}
+.table-align-pill > button {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 1.9em;
+  height: 100%;
+  padding: 0;
+  border: none;
+  border-radius: var(--shape-pill);
+  corner-shape: round;
+  background: none;
+  color: inherit;
+  cursor: pointer;
+}
+.table-align-pill > button:hover:not(:disabled) {
+  color: var(--doc-text);
+}
+.table-align-pill > button[aria-pressed="true"] {
+  color: var(--doc-accent-text);
+  background: color-mix(in srgb, var(--doc-accent) 12%, transparent);
+}
+.table-align-pill > button:disabled {
+  opacity: 0.4;
+  cursor: default;
+}
+.block-pill-icon {
+  justify-content: center;
+  aspect-ratio: 1;
+  padding: 0.1em;
+}
+.block-pill.is-danger:hover {
+  color: var(--ui-danger);
+  border-color: color-mix(in srgb, var(--ui-danger) 40%, var(--doc-border));
+}
+
+/* The size grid, under its pill. */
+.table-size-card {
+  position: fixed;
+  z-index: var(--z-select);
+  padding: var(--space-3);
+  animation: motion-pop-in var(--dur-base) var(--ease-out);
+}
+.table-size-card[data-state="closing"] {
+  animation: motion-pop-out var(--dur-fast) var(--ease-in) forwards;
+}
+.table-size-sheet .table-size-body {
+  display: flex;
+  justify-content: center;
+  padding: var(--space-4);
+}
+
+/* A row's grip on the table's left edge, a column's on its top edge, at
+   the row and column under the pointer (table-grips.ts); its look is the
+   shared .tx-table-grip. */
+.table-grip {
+  position: absolute;
+  top: 0;
+  left: 0;
+  z-index: 3;
+  opacity: 0;
+  pointer-events: none;
+  transition: opacity var(--dur-fast) var(--ease-standard);
+}
+.table-grip-row {
+  margin: -10px 0 0 -4px;
+}
+.table-grip-col {
+  margin: -4px 0 0 -10px;
+}
+.table-wrapper[data-grips]:is(:hover, .is-table-caret):not([data-dragging])
+  > .table-grip:not([hidden]) {
+  opacity: 1;
+  pointer-events: auto;
+}
+
+.table-wrapper[data-dragging] {
+  cursor: grabbing;
+  user-select: none;
+  -webkit-user-select: none;
+}
+
+/* Without hover (a touch screen at any width) the "+" strips would stay
+   after a tap; the size pill adds rows and columns there. */
+@media (hover: none) {
+  .table-add-row-btn,
+  .table-add-col-btn {
+    display: none;
+  }
 }

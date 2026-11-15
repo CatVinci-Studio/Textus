@@ -1,4 +1,5 @@
 import { schemaCtx } from "@milkdown/kit/core";
+import { tidyTablesForClipboard } from "../clipboard/table-clipboard";
 import { Plugin } from "@milkdown/kit/prose/state";
 import { DOMSerializer, Fragment } from "@milkdown/kit/prose/model";
 import type {
@@ -167,11 +168,22 @@ function mdSpanDOM(node: ProseNode, forClipboard: boolean): DOMOutputSpec {
   return ["em", attrs, 0];
 }
 
-/** Copies bold+italic as strong>em and a link as an <a> with its label;
- *  everything else as the schema renders it. */
+/** What a copy hands other apps: its tables tidied for them. */
+class ClipboardSerializer extends DOMSerializer {
+  serializeFragment(
+    ...args: Parameters<DOMSerializer["serializeFragment"]>
+  ): ReturnType<DOMSerializer["serializeFragment"]> {
+    const out = super.serializeFragment(...args);
+    tidyTablesForClipboard(out);
+    return out;
+  }
+}
+
+/** Copies bold+italic as strong>em, a link as an <a> with its label and a
+ *  table as other apps read one; everything else as the schema renders it. */
 export const mdSpanClipboardPlugin = $prose((ctx) => {
   const base = DOMSerializer.fromSchema(ctx.get(schemaCtx));
-  const serializer = new DOMSerializer(
+  const serializer = new ClipboardSerializer(
     {
       ...base.nodes,
       md_span: (node) => mdSpanDOM(node, true),

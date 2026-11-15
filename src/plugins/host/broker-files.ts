@@ -2,7 +2,18 @@ import { notesRoot } from "../../files/link-style";
 import { setFileBadge } from "../contributions/file-badges";
 import { inOpenFolder } from "../may-open";
 import { fs, plugins as pluginsIpc, type StoreScope } from "../../platform/ipc";
-import { absoluteIn, basename, isInside, slashed } from "../../utils/path";
+import {
+  absoluteIn,
+  basename,
+  dirname,
+  isInside,
+  slashed,
+} from "../../utils/path";
+import { freeFilePath } from "../../document/autosave-untitled";
+import { updateProjectSettings } from "../../storage/project-settings";
+
+/** The folder conventions a plugin may set. */
+const SETTABLE_CONVENTIONS = ["linkStyle"];
 import { ENTRY_TRASHED_EVENT, FILE_WRITTEN_EVENT } from "../../utils/events";
 import { fromBase64, toBase64 } from "../store/files";
 import {
@@ -111,6 +122,17 @@ export function fileHandlers(p: PluginScope) {
     },
     "files.conventions": ({ path }: Params) =>
       fs.folderConventions(within(p.root(), optionalStr(path))),
+    // How the open folder writes something, kept in its own settings
+    // (.textus/settings.json) as Settings' own card keeps it.
+    "files.setConvention": async ({ key, value }: Params) => {
+      const name = str(key, "key");
+      if (!SETTABLE_CONVENTIONS.includes(name))
+        throw new Error(`${name} isn't a convention a plugin can set.`);
+      await updateProjectSettings(p.root(), "conventions", (now) => ({
+        ...now,
+        [name]: value ?? undefined,
+      }));
+    },
     // The nearest vault's own file, even above the open folder: settings
     // other apps' plugins keep (bookmarks.json, a plugin's data.json).
     "files.appSettings": async ({ app, file, path }: Params) => {
@@ -171,14 +193,27 @@ export function fileHandlers(p: PluginScope) {
         write(),
       );
     },
-    "files.create": ({ path, text }: Params) => {
-      const target = str(path, "path");
-      return written(
+    // `unique`: never over a file - "Note 2.md", "Note 3.md" beside it, as
+    // the app names its own new files. Gives the path written.
+    "files.create": async ({ path, text, unique }: Params) => {
+      let target = str(path, "path");
+      if (unique === true) {
+        const root = write();
+        const full = absoluteIn(root, target);
+        const free = await freeFilePath(dirname(full), basename(full), (at) =>
+          pluginsIpc.fsStat(p.id, root, at).then(Boolean, () => false),
+        );
+        if (!free) throw new Error(`No free name for ${target}.`);
+        // As it was given: relative to the folder, or whole.
+        target = full === target ? free : relOf(root, free);
+      }
+      await written(
         target,
         pluginsIpc.fsCreate(p.id, write(), target, optionalStr(text) ?? ""),
         "fileCreate",
         write(),
       );
+      return target;
     },
     "files.processRead": ({ path }: Params) => {
       return readVersion(str(path, "path"));

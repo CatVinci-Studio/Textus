@@ -342,6 +342,12 @@ async fn ai_agent_message_inner(
             for tool in installed_tools(&app, &window).await {
                 tools.add(tool);
             }
+            // What the folder's index knows: tasks, backlinks, tags.
+            if workspace.root.is_some() {
+                for tool in crate::plugins::app_tools::folder_tools(&app, &window) {
+                    tools.add(tool);
+                }
+            }
             // Create mode reads the plugins installed, to change one.
             if let Some(tool) = crate::plugins::read_tool::read_plugin_tool(&app) {
                 tools.add(tool);

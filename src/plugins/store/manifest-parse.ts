@@ -311,14 +311,6 @@ export function parseContributes(raw: unknown, id: string): Contributes {
     c.settingsPage === undefined
       ? null
       : object(c.settingsPage, "contributes.settingsPage");
-  const themes = list(c.themes, "contributes.themes").map((x, i) => {
-    const o = object(x, `contributes.themes[${i}]`);
-    return {
-      id: ownId(o.id, id, `contributes.themes[${i}].id`),
-      label: text(o.label, `contributes.themes[${i}].label`),
-      path: text(o.path, `contributes.themes[${i}].path`),
-    };
-  });
   const aiTools = list(c.aiTools, "contributes.aiTools").map((x, i) => {
     const o = object(x, `contributes.aiTools[${i}]`);
     const name = text(o.name, `contributes.aiTools[${i}].name`);
@@ -463,6 +455,12 @@ export function parseContributes(raw: unknown, id: string): Contributes {
       ),
       setup: text(o.setup, `${at}.setup`, true) || undefined,
       provider: text(o.provider, `${at}.provider`, true) || undefined,
+      askMode: text(o.askMode, `${at}.askMode`, true) || undefined,
+      // "" says the agent signs in by itself: no sign-in step offered.
+      signIn:
+        o.signIn === undefined || o.signIn === ""
+          ? (o.signIn as "" | undefined)
+          : text(o.signIn, `${at}.signIn`),
     };
   });
   const hovers = known(
@@ -491,7 +489,6 @@ export function parseContributes(raw: unknown, id: string): Contributes {
     settingsPage: page && {
       title: text(page.title, "contributes.settingsPage.title"),
     },
-    themes,
     suggestFor,
   };
 }

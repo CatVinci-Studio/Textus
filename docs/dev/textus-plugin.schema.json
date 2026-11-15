@@ -396,24 +396,6 @@
             }
           }
         },
-        "themes": {
-          "type": "array",
-          "items": {
-            "type": "object",
-            "required": ["id", "label", "path"],
-            "properties": {
-              "id": {
-                "type": "string"
-              },
-              "label": {
-                "type": "string"
-              },
-              "path": {
-                "type": "string"
-              }
-            }
-          }
-        },
         "aiTools": {
           "type": "array",
           "description": "Tools Textus AI may call (ai.tools), run by textus.ai.registerTool.",
@@ -437,7 +419,7 @@
         },
         "completions": {
           "type": "array",
-          "description": "Completions suggested as you type (document.read), answered by textus.editor.registerCompletion(id).",
+          "description": "Completions suggested as you type (editor.read), answered by textus.editor.registerCompletion(id).",
           "items": {
             "type": "object",
             "required": ["id", "pattern"],

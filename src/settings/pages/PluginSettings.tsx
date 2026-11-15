@@ -1,6 +1,7 @@
 import { fill } from "../../i18n/fill";
 import { useEffect, useReducer, useState } from "react";
 import { SettingRow, ToggleRow, VERBATIM_INPUT } from "../sections/controls";
+import { ColorField } from "../../engine/controls/ColorField";
 import { Select } from "../../engine/controls/Select";
 import type { Strings } from "../../i18n/strings";
 import { runPluginCommand } from "../../plugins/manager";
@@ -202,12 +203,11 @@ function PluginSettingRow({
           ))}
         </Select>
       ) : setting.type === "color" ? (
-        <input
+        <ColorField
           className="plugin-setting-color"
-          aria-label={label}
-          type="color"
+          label={label}
           value={String(value ?? "#000000")}
-          onChange={(e) => save(e.target.value)}
+          onChange={save}
         />
       ) : (
         <input

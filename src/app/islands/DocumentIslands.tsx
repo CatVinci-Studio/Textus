@@ -1,3 +1,4 @@
+import type { FormatBarSide } from "../../prefs/settings-values";
 import { isPanelPane } from "./panel-pane";
 import { Island } from "../../engine/layout/Island";
 import { IslandArea, type IslandContent } from "../../engine/layout/IslandArea";
@@ -94,8 +95,8 @@ export function DocumentIslands({
    *  then (App's data-tabs). */
   onChange: (tabId: string, markdown: string) => void;
   typewriter: boolean;
-  /** View › Format Bar is on. */
-  formatBar: boolean;
+  /** View › Format Bar: the edge it is on, or null when hidden. */
+  formatBar: FormatBarSide | null;
   /** The tour's practice tab, its AI and the AI panel mode its lesson
    *  needs, while the tour runs; else null. */
   tour: { tabId: string; ai: TourAi; mode: AgentMode | null } | null;
@@ -274,7 +275,9 @@ export function DocumentIslands({
           // foot, over the keyboard while typing (format-bar.css).
           above={(tab) =>
             (formatBar || phone) &&
-            formatsShown(tab) && <FormatBar t={t} tabId={tab.id} />
+            formatsShown(tab) && (
+              <FormatBar t={t} tabId={tab.id} side={formatBar ?? "top"} />
+            )
           }
           t={t}
         />

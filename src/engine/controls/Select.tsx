@@ -3,17 +3,21 @@ import {
   Children,
   Fragment,
   isValidElement,
+  useState,
   type KeyboardEvent,
   type ReactElement,
   type ReactNode,
 } from "react";
 import { isMobileApp } from "../../platform/capabilities";
 import { useDropdown } from "./useDropdown";
+import { ContextMenu, type ContextMenuEntry } from "./ContextMenu";
+import { Presence } from "../motion/usePresence";
 import "./Select.css";
 
 /** A drop-in for `<select>` whose list the app draws, in a portal marked
  *  `data-floating-select` so outside-click code treats it as inside its opener.
- *  On iOS it is a native select laid invisibly over the control. */
+ *  On a touch screen it opens the app's own menu (an action sheet on a
+ *  phone). */
 interface OptionItem {
   value: string;
   label: ReactNode;
@@ -84,8 +88,7 @@ function runs(options: OptionItem[]) {
   return out;
 }
 
-/** An option label as plain text, for the native list (which shows text
- *  only) and type-ahead. */
+/** An option label as plain text, for the sheet's rows and type-ahead. */
 function textOf(node: ReactNode): string {
   if (node === null || node === undefined || typeof node === "boolean")
     return "";
@@ -97,10 +100,12 @@ function textOf(node: ReactNode): string {
 }
 
 export function Select(props: SelectProps) {
-  return isMobileApp ? <NativeSelect {...props} /> : <DrawnSelect {...props} />;
+  return isMobileApp ? <SheetSelect {...props} /> : <DrawnSelect {...props} />;
 }
 
-function NativeSelect({
+/** A touch screen's: the app's own menu, an action sheet on a phone, not
+ *  the system's picker. */
+function SheetSelect({
   value,
   onChange,
   children,
@@ -111,42 +116,50 @@ function NativeSelect({
 }: SelectProps) {
   const options = collectOptions(children);
   const current = options.find((o) => o.value === value);
+  const [at, setAt] = useState<{ x: number; y: number } | null>(null);
+  const items = runs(options).flatMap((run, r): ContextMenuEntry[] => [
+    ...(r > 0 ? ["separator" as const] : []),
+    ...run.items.map(({ option }) => ({
+      label: textOf(closedLabel(option)),
+      checked: option.value === value,
+      disabled: option.disabled,
+      onSelect: () => {
+        if (option.value !== value)
+          onChange({ target: { value: option.value } });
+      },
+    })),
+  ]);
   return (
-    <span
-      className={`ui-select ui-select-native-frame ${className ?? ""}`}
-      aria-disabled={disabled || undefined}
-    >
-      <span className="tx-truncate ui-select-value" aria-hidden="true">
-        {closedLabel(current)}
-      </span>
-      <select
-        className="ui-select-native"
-        value={value}
-        disabled={disabled}
+    <>
+      <button
+        type="button"
+        className={`ui-select ${className ?? ""}`}
+        aria-haspopup="menu"
+        aria-expanded={!!at}
         aria-label={ariaLabel}
         title={title}
-        onChange={(e) => onChange({ target: { value: e.target.value } })}
+        disabled={disabled}
+        onClick={(e) => {
+          const r = e.currentTarget.getBoundingClientRect();
+          setAt({ x: r.left, y: r.bottom });
+        }}
       >
-        {runs(options).map((run, r) => {
-          const items = run.items.map(({ option, index }) => (
-            <option
-              key={`${option.value}-${index}`}
-              value={option.value}
-              disabled={option.disabled}
-            >
-              {textOf(option.label)}
-            </option>
-          ));
-          return run.group === undefined ? (
-            <Fragment key={`run-${r}`}>{items}</Fragment>
-          ) : (
-            <optgroup key={`run-${r}`} label={run.group}>
-              {items}
-            </optgroup>
-          );
-        })}
-      </select>
-    </span>
+        <span className="tx-truncate ui-select-value">
+          {closedLabel(current)}
+        </span>
+      </button>
+      <Presence show={!!at}>
+        {at && (
+          <ContextMenu
+            x={at.x}
+            y={at.y}
+            title={ariaLabel}
+            items={items}
+            onClose={() => setAt(null)}
+          />
+        )}
+      </Presence>
+    </>
   );
 }
 

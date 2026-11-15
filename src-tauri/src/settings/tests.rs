@@ -256,7 +256,7 @@ fn only_a_pinned_appearance_overrides_the_system() {
 }
 
 #[test]
-fn a_pinned_appearance_gives_windows_the_page_background() {
+fn the_appearance_gives_windows_the_page_background() {
     // Checked against the page itself: a window must open in exactly the colour
     // index.html paints first and ui/base.css's --doc-bg (--ui-bg follows it) keeps.
     let index = include_str!("../../../index.html");
@@ -265,7 +265,8 @@ fn a_pinned_appearance_gives_windows_the_page_background() {
         ("dark", ":root[data-theme=\"dark\"] {"),
         ("light", ":root {"),
     ] {
-        let Some(tauri::window::Color(r, g, b, a)) = pinned_background(&json!({ "theme": theme }))
+        let Some(tauri::window::Color(r, g, b, a)) =
+            window_background(&json!({ "theme": theme }), None)
         else {
             panic!("no window background for a pinned {theme}");
         };
@@ -283,10 +284,16 @@ fn a_pinned_appearance_gives_windows_the_page_background() {
             "ui/base.css, {theme}"
         );
     }
-    // "system", missing or unreadable: the toolkit's own default.
-    assert_eq!(pinned_background(&json!({ "theme": "system" })), None);
-    assert_eq!(pinned_background(&json!({})), None);
-    assert_eq!(pinned_background(&json!({ "theme": 1 })), None);
+    // "system" or missing with the system's mode unknown, or unreadable:
+    // the toolkit's own default.
+    assert_eq!(window_background(&json!({ "theme": "system" }), None), None);
+    assert_eq!(window_background(&json!({}), None), None);
+    assert_eq!(window_background(&json!({ "theme": 1 }), Some(true)), None);
+    // "system" with the system's mode known (Windows): the page's colour for it.
+    let dark = window_background(&json!({ "theme": "system" }), Some(true));
+    assert_eq!(dark, window_background(&json!({ "theme": "dark" }), None));
+    let light = window_background(&json!({}), Some(false));
+    assert_eq!(light, window_background(&json!({ "theme": "light" }), None));
 }
 
 /// The value `property` has in the first rule that starts with `rule`.

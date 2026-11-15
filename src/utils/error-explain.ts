@@ -47,6 +47,10 @@ const KINDS: { text: TextKey; pattern: RegExp }[] = [
   },
 ];
 
+/** Whether the failure was a file or folder not there. */
+export const isNotFoundError = (err: unknown) =>
+  KINDS.find((k) => k.text === "errorNotFound")!.pattern.test(errorText(err));
+
 /** An error's text for a person: what happened in their language, and the
  *  system's own words below it when they add something. */
 export function explainError(err: unknown, t: Strings): string {

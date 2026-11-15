@@ -41,6 +41,8 @@ function blocks(content: Fragment, defs: Definitions): string[] {
 }
 
 function block(node: ProseNode, defs: Definitions): string | null {
+  // Rows copied without their table (cells picked below the head).
+  if (node.type.spec.tableRole === "row") return tableRow(node, defs);
   switch (node.type.name) {
     case "code_block":
     case "math_block":
@@ -88,12 +90,14 @@ function list(node: ProseNode, defs: Definitions): string {
 
 function table(node: ProseNode, defs: Definitions): string {
   const rows: string[] = [];
-  node.forEach((row) => {
-    const cells: string[] = [];
-    row.forEach((cell) => cells.push(blocks(cell.content, defs).join(" ")));
-    rows.push(cells.join("\t"));
-  });
+  node.forEach((row) => rows.push(tableRow(row, defs)));
   return rows.join("\n");
+}
+
+function tableRow(row: ProseNode, defs: Definitions): string {
+  const cells: string[] = [];
+  row.forEach((cell) => cells.push(blocks(cell.content, defs).join(" ")));
+  return cells.join("\t");
 }
 
 function childrenOf(node: ProseNode): ProseNode[] {

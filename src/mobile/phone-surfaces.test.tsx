@@ -11,7 +11,7 @@ vi.mock("../platform/capabilities", async (importOriginal) => ({
   isMobileApp: true,
 }));
 vi.mock("../prefs/SettingsContext", () => ({
-  useSettings: () => ({ t: { cancel: "Cancel" } }),
+  useSettings: () => ({ t: { cancel: "Cancel", dialogOk: "OK" } }),
 }));
 beforeAll(() => {
   window.matchMedia = ((query: string) => ({
@@ -24,11 +24,16 @@ afterEach(cleanup);
 
 const { ContextMenu } = await import("../engine/controls/ContextMenu");
 const { Select } = await import("../engine/controls/Select");
+const { ColorField } = await import("../engine/controls/ColorField");
 
 describe("on a phone", () => {
   it("a menu is an action sheet with Cancel set apart", () => {
     const share = vi.fn();
     const onClose = vi.fn();
+    // Typing in a document: the sheet takes the focus from it.
+    const doc = document.createElement("textarea");
+    document.body.append(doc);
+    doc.focus();
     render(
       <ContextMenu
         x={0}
@@ -42,14 +47,57 @@ describe("on a phone", () => {
         onClose={onClose}
       />,
     );
-    expect(screen.getByRole("menu", { name: "notes.md" })).toBeInTheDocument();
+    expect(screen.getByRole("menu", { name: "notes.md" })).toHaveFocus();
+    doc.remove();
     fireEvent.click(screen.getByRole("menuitem", { name: "Share" }));
     expect(share).toHaveBeenCalled();
     expect(onClose).toHaveBeenCalled();
     expect(screen.getByRole("button", { name: "Cancel" })).toBeInTheDocument();
   });
 
-  it("a select is the system's own picker", () => {
+  it("a menu's sheet keeps its check and its rows not offered now", () => {
+    const copy = vi.fn();
+    render(
+      <ContextMenu
+        x={0}
+        y={0}
+        items={[
+          { label: "notes.md", onSelect: () => {}, checked: true },
+          { label: "todo.md", onSelect: () => {}, checked: false },
+          { label: "Copy", onSelect: copy, disabled: true },
+        ]}
+        onClose={() => {}}
+      />,
+    );
+    expect(
+      screen.getByRole("menuitemradio", { name: "notes.md" }),
+    ).toHaveAttribute("aria-checked", "true");
+    expect(
+      screen.getByRole("menuitemradio", { name: "todo.md" }),
+    ).toHaveAttribute("aria-checked", "false");
+    expect(screen.getByRole("menuitem", { name: "Copy" })).toBeDisabled();
+  });
+
+  it("a menu's sheet brings the checked row into view", () => {
+    const seen = vi.fn();
+    Element.prototype.scrollIntoView = function (this: Element) {
+      seen(this.textContent);
+    };
+    render(
+      <ContextMenu
+        x={0}
+        y={0}
+        items={[
+          { label: "a.md", onSelect: () => {}, checked: false },
+          { label: "z.md", onSelect: () => {}, checked: true },
+        ]}
+        onClose={() => {}}
+      />,
+    );
+    expect(seen).toHaveBeenCalledWith("z.md");
+  });
+
+  it("a select opens the app's own sheet, not the system's picker", () => {
     const onChange = vi.fn();
     render(
       <Select value="b" onChange={onChange} aria-label="Mode">
@@ -59,10 +107,47 @@ describe("on a phone", () => {
         </option>
       </Select>,
     );
-    const native = screen.getByRole("combobox", { name: "Mode" });
-    expect(native.tagName).toBe("SELECT");
-    expect(screen.getByRole("option", { name: "Edit" })).toBeInTheDocument();
-    fireEvent.change(native, { target: { value: "a" } });
+    const button = screen.getByRole("button", { name: "Mode" });
+    expect(document.querySelector("select")).toBeNull();
+    fireEvent.click(button);
+    expect(screen.getByRole("menu", { name: "Mode" })).toBeInTheDocument();
+    expect(screen.getByRole("menuitemradio", { name: "Edit" })).toHaveAttribute(
+      "aria-checked",
+      "true",
+    );
+    fireEvent.click(screen.getByRole("menuitemradio", { name: "Ask" }));
     expect(onChange).toHaveBeenCalledWith({ target: { value: "a" } });
+  });
+});
+
+describe("a colour on a phone", () => {
+  it("opens the app's own card of tones and a hex field, not the system's picker", () => {
+    document.documentElement.style.setProperty("--tone-blue", "#007aff");
+    const onChange = vi.fn();
+    render(<ColorField value="#000000" onChange={onChange} label="Accent" />);
+    expect(document.querySelector('input[type="color"]')).toBeNull();
+    fireEvent.click(screen.getByRole("button", { name: "Accent" }));
+    fireEvent.click(screen.getByRole("radio", { name: "#007aff" }));
+    fireEvent.click(screen.getByRole("button", { name: "OK" }));
+    expect(onChange).toHaveBeenCalledWith("#007aff");
+  });
+});
+
+describe("any menu", () => {
+  it("draws no rule at its ends or twice in a row", async () => {
+    const { tidy } = await import("../engine/controls/ContextMenu");
+    const a = { label: "A", onSelect: () => {} };
+    const b = { label: "B", onSelect: () => {} };
+    expect(
+      tidy([
+        "separator",
+        "separator",
+        a,
+        "separator",
+        "separator",
+        b,
+        "separator",
+      ]),
+    ).toEqual([a, "separator", b]);
   });
 });

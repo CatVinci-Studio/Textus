@@ -1,5 +1,5 @@
 import { expect, test, type Page } from "@playwright/test";
-import { emit, openApp } from "./helpers";
+import { emit, openApp, settled } from "./helpers";
 
 // Every Settings page at every island width it can be given, in the
 // longest languages: nothing past the island's edge, no two controls on
@@ -261,3 +261,50 @@ for (const [os, platform] of [
         }
     expect([...new Set(found)]).toEqual([]);
   });
+
+for (const [os, platform] of [
+  ["windows", "Win32"],
+  ["linux", "Linux x86_64"],
+] as const)
+  test(`the menu bar's titles show on ${os}, the window's buttons inside it`, async ({
+    page,
+  }) => {
+    await page.addInitScript((p) => {
+      Object.defineProperty(navigator, "platform", { get: () => p });
+      Object.defineProperty(navigator, "userAgent", {
+        get: () => `Mozilla/5.0 (${p}) AppleWebKit/537.36 Chrome/157.0`,
+      });
+    }, platform);
+    await page.setViewportSize({ width: 1200, height: 760 });
+    await openApp(page, { settings: { menuBarShown: true } });
+    await expect(page.locator(".window-menu-bar").first()).toBeVisible();
+    const edges = await page.evaluate(() =>
+      [...document.querySelectorAll(".window-menu-bar, .window-caption")].map(
+        (el) => {
+          const r = el.getBoundingClientRect();
+          return [r.left, r.right];
+        },
+      ),
+    );
+    for (const [left, right] of edges) {
+      expect(left).toBeGreaterThanOrEqual(0);
+      expect(right).toBeLessThanOrEqual(1200);
+    }
+  });
+
+test.describe("on a touch screen", () => {
+  test.use({ hasTouch: true, isMobile: true });
+
+  test("the open tab's name keeps the room its × takes", async ({ page }) => {
+    await page.setViewportSize({ width: 1024, height: 700 });
+    await openApp(page);
+    for (let i = 0; i < 3; i++) await emit(page, "menu-new-file");
+    const open = page.locator(".tab-pill-active");
+    await expect(open.locator(".tab-pill-close")).toBeVisible();
+    await settled(page);
+    const cut = await open
+      .locator(".tab-pill-title")
+      .evaluate((el) => el.scrollWidth - el.clientWidth);
+    expect(cut).toBeLessThanOrEqual(0);
+  });
+});

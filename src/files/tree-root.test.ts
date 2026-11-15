@@ -1,9 +1,12 @@
 import { describe, expect, it } from "vitest";
+import { ownFolderMoved } from "../platform/documents-path";
 import {
   agentRootOnClose,
   agentRootOnOpen,
+  agentRootsMoved,
   isWithin,
   nextTreeRoot,
+  rootAfterClose,
 } from "./tree-root";
 
 const root = (
@@ -82,6 +85,24 @@ describe("isWithin", () => {
   });
 });
 
+describe("the AI's project folder after a reinstall", () => {
+  const old = "/var/mobile/Containers/Data/Application/AAA/Documents";
+  const docs = "/var/mobile/Containers/Data/Application/BBB/Documents/";
+  const move = (path: string) => ownFolderMoved(path, docs);
+
+  it("moves into this install's Documents, with the folder that set it", () => {
+    expect(agentRootsMoved(`${old}/Notes`, `${old}/Notes`, move)).toEqual({
+      current: `${docs}Notes`,
+      fromFolder: `${docs}Notes`,
+    });
+  });
+
+  it("leaves an unset or unmoved folder alone", () => {
+    expect(agentRootsMoved("", "", move)).toBeNull();
+    expect(agentRootsMoved(`${docs}Notes`, "", move)).toBeNull();
+  });
+});
+
 describe("the AI's project folder when a folder opens", () => {
   it("follows the folder while the AI has none of its own", () => {
     expect(agentRootOnOpen("", "", "/notes")).toBe("/notes");
@@ -110,5 +131,19 @@ describe("the AI's project folder when a folder closes", () => {
     expect(agentRootOnClose("/research", "/notes", "/notes")).toBeNull();
     expect(agentRootOnClose("/novel", "/novel", "/notes")).toBeNull();
     expect(agentRootOnClose("", "", "/notes")).toBeNull();
+  });
+});
+
+describe("Close Folder", () => {
+  it("goes back to the document's folder", () => {
+    expect(rootAfterClose("/notes/a.md", "/home")).toBe("/notes");
+  });
+  it("never roots at an Android document's address", () => {
+    expect(
+      rootAfterClose(
+        "content://com.android.externalstorage.documents/tree/primary%3ANotes/document/primary%3ANotes%2Fa.md",
+        "/data/notes",
+      ),
+    ).toBe("/data/notes");
   });
 });

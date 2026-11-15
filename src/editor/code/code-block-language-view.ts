@@ -74,10 +74,10 @@ export function createCodeBlockView(
       wrapper.className = "code-block-wrapper md-fences";
 
       const header = document.createElement("div");
-      header.className = "code-block-header";
+      header.className = "block-toolbar code-block-header";
       header.contentEditable = "false";
       const actions = document.createElement("div");
-      actions.className = "code-block-actions";
+      actions.className = "block-toolbar-actions code-block-actions";
       const picker = document.createElement("div");
       picker.className = "code-block-language";
       header.append(actions);

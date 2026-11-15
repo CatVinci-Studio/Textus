@@ -359,6 +359,12 @@
     opacity: 0.7;
   }
 
+  /* Over the desktop's hover-only rule: on a tab not in front too, or its
+     room stood empty after a cut name. */
+  :root[data-window-chrome="mobile"] .tab-pill .tab-pill-close {
+    visibility: visible;
+  }
+
   :root[data-window-chrome="mobile"] .tab-pill-close:hover {
     background: none;
   }
@@ -369,8 +375,25 @@
     font-size: 22px;
   }
 
-  :root[data-window-chrome="mobile"] .tab-bar-add:hover {
+  :root[data-window-chrome="mobile"]
+    .tab-bar:not([data-overflow])
+    .tab-bar-add:hover {
     background: none;
+  }
+
+  /* The list a fingertip wide; both it and the + square, so no tab
+     scrolling under them shows at their corners. */
+  :root[data-window-chrome="mobile"] .tab-bar-list {
+    width: 44px;
+    height: 44px;
+  }
+  :root[data-window-chrome="mobile"]
+    .tab-bar[data-overflow]
+    :is(.tab-bar-add, .tab-bar-list) {
+    border-radius: 0;
+  }
+  :root[data-window-chrome="mobile"] .tab-bar[data-overflow] .tab-bar-add {
+    right: 44px;
   }
 }
 

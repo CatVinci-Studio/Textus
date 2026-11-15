@@ -108,17 +108,17 @@
 }
 
 /* Tabs hidden before its start: the first ones in view fade in from it,
-   none cut off mid-name. */
+   none cut off mid-name. Its width is TabBar's TAB_FADE. */
 :root .island-row > .tab-bar[data-scrolled] {
   -webkit-mask-image: linear-gradient(
     to right,
     transparent calc(var(--tabs-inset-start, 8px) + 1px),
-    #000 calc(var(--tabs-inset-start, 8px) + 1px + 3em)
+    #000 calc(var(--tabs-inset-start, 8px) + 1px + var(--tab-fade, 36px))
   );
   mask-image: linear-gradient(
     to right,
     transparent calc(var(--tabs-inset-start, 8px) + 1px),
-    #000 calc(var(--tabs-inset-start, 8px) + 1px + 3em)
+    #000 calc(var(--tabs-inset-start, 8px) + 1px + var(--tab-fade, 36px))
   );
 }
 

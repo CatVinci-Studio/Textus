@@ -1,12 +1,16 @@
 /* The format bar (design-language.md 5.7): the top of the sheet of the
    document in use, on the page's own surface, riding with its view as the
    islands move; the page scrolls beneath it. */
-.split-pane {
+:root {
   /* A little room over its buttons, clear of the island's top edge. */
   --format-bar-bleed: var(--space-1);
   --format-bar-height: calc(
     36px * var(--chrome-scale) + var(--format-bar-bleed)
   );
+}
+.split-pane {
+  /* What the bar takes off the page's top: none when it is on a side. */
+  --format-bar-top: var(--format-bar-height);
 }
 
 .format-bar {
@@ -79,14 +83,71 @@
 .main-pane
   .split-pane:has(> .format-bar)
   .editor-content:not(.typewriter-active) {
-  padding-top: calc(1.5rem + var(--format-bar-height));
+  padding-top: calc(1.5rem + var(--format-bar-top));
 }
 
 .app-shell:not([data-tabs="bar"])
   .main-pane
   .split-pane:has(> .format-bar)
   .editor-content:not(.typewriter-active) {
-  padding-top: calc(3rem + var(--format-bar-height));
+  padding-top: calc(3rem + var(--format-bar-top));
+}
+
+/* On a side (View › Format Bar › Left or Right): a column down the
+   sheet's edge, the page beside it. */
+.split-pane:has(> .format-bar[data-side="left"]) {
+  --format-bar-top: 0px;
+  box-sizing: border-box;
+  padding-left: var(--format-bar-height);
+}
+.split-pane:has(> .format-bar[data-side="right"]) {
+  --format-bar-top: 0px;
+  box-sizing: border-box;
+  padding-right: var(--format-bar-height);
+}
+
+.format-bar[data-side] {
+  bottom: 0;
+  flex-direction: column;
+  width: var(--format-bar-height);
+  height: auto;
+  padding: var(--space-2) 0;
+  border-bottom: none;
+}
+.format-bar[data-side="left"] {
+  right: auto;
+  border-right: 1px solid var(--ui-border);
+  border-radius: var(--island-radius) 0 0 var(--island-radius);
+}
+.format-bar[data-side="right"] {
+  left: auto;
+  border-left: 1px solid var(--ui-border);
+  border-radius: 0 var(--island-radius) var(--island-radius) 0;
+}
+.app-shell:not([data-tabs="bar"]) .split-pane > .format-bar[data-side="left"] {
+  border-radius: 0 0 0 var(--island-radius);
+}
+.app-shell:not([data-tabs="bar"]) .split-pane > .format-bar[data-side="right"] {
+  border-radius: 0 0 var(--island-radius) 0;
+}
+
+/* The page's readouts (DocumentCorner) keep clear of a bar on the right. */
+.app-shell[data-format-bar="right"] .document-corner {
+  padding-right: calc(var(--format-bar-height) + var(--space-3));
+}
+
+.format-bar[data-side] :is(.format-bar-row, .format-bar-group) {
+  flex-direction: column;
+}
+.format-bar[data-side] .format-bar-row {
+  width: 100%;
+  height: auto;
+  min-height: 0;
+}
+.format-bar[data-side] .format-bar-group + .format-bar-group {
+  padding: var(--space-2) 0 0;
+  border-top: 1px solid var(--ui-frame-edge);
+  border-left: none;
 }
 
 /* A phone's strip is the sheet's foot (design: phone): a finger's reach,
@@ -137,4 +198,15 @@
 
 :root[data-window-chrome="mobile"] .format-bar-row::-webkit-scrollbar {
   display: none;
+}
+
+/* A phone turned sideways with its keyboard up leaves a strip of a page:
+   the text takes it, the bar comes back as the keyboard goes. */
+@media (max-height: 320px) {
+  :root.keyboard-up .split-pane {
+    --format-bar-height: 0px;
+  }
+  :root.keyboard-up .format-bar {
+    display: none;
+  }
 }

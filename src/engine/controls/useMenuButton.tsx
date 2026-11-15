@@ -16,6 +16,11 @@ export function useMenuButton(
     /** The button sits at the end of its bar: the menu lines up with its
      *  right edge. */
     alignEnd?: boolean;
+    /** Opens beside the button, not below: a button in a column. */
+    beside?: "left" | "right";
+    /** After it closes, picked or not (the format bar's document takes the
+     *  keys back, keeping a phone's keyboard up). */
+    onClosed?: () => void;
   } = {},
 ): {
   button: {
@@ -33,7 +38,12 @@ export function useMenuButton(
     keyboard: boolean;
   } | null>(null);
   const anchor = useRef<HTMLElement | null>(null);
-  const close = useCallback(() => setAt(null), []);
+  const closed = useRef(options.onClosed);
+  closed.current = options.onClosed;
+  const close = useCallback(() => {
+    setAt(null);
+    closed.current?.();
+  }, []);
   return {
     button: {
       ref: (el) => {
@@ -44,9 +54,17 @@ export function useMenuButton(
       onClick: (e) => {
         if (at) return setAt(null);
         const box = (e.currentTarget as HTMLElement).getBoundingClientRect();
+        const { beside, alignEnd } = options;
         setAt({
-          x: options.alignEnd ? box.right : box.left,
-          y: box.bottom + 4,
+          x:
+            beside === "right"
+              ? box.right + 4
+              : beside === "left"
+                ? box.left - 4
+                : alignEnd
+                  ? box.right
+                  : box.left,
+          y: beside ? box.top : box.bottom + 4,
           // detail 0: Enter or Space, not a pointer.
           keyboard: e.detail === 0,
         });
@@ -60,7 +78,9 @@ export function useMenuButton(
             y={at.y}
             keyboard={at.keyboard}
             anchor={anchor.current}
-            alignEnd={options.alignEnd}
+            alignEnd={
+              options.beside ? options.beside === "left" : options.alignEnd
+            }
             heading={options.title}
             title={options.title}
             items={items()}

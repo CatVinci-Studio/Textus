@@ -1,3 +1,4 @@
+import { windowIpc } from "../platform/ipc";
 import { fill } from "../i18n/fill";
 import { PathText } from "../engine/controls/PathText";
 import { useEffect, useState, type ReactNode } from "react";
@@ -138,7 +139,12 @@ function FolderChips({
             <button
               type="button"
               className="tx-button small start-page-chip"
-              onClick={() => onOpen(path)}
+              onClick={(e) =>
+                // ⌘/Ctrl-click: the folder in a window of its own.
+                e.metaKey || e.ctrlKey
+                  ? void windowIpc.openFolderInNewWindow(path)
+                  : onOpen(path)
+              }
             >
               <FolderIcon />
               {folderName(path)}

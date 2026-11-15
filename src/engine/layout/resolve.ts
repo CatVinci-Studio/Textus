@@ -10,6 +10,7 @@ import {
   paneById,
   panesOf,
   paneWithTab,
+  type Pane,
   splitPane,
   tidy,
   keepsItself,
@@ -38,6 +39,9 @@ export function resolveSplit(
   tabIds: readonly string[],
   active: string,
   arrival: (tabId: string) => Arrival | undefined,
+  /** Tabs shown before, the latest last: a closed front's place goes to
+   *  the latest of its pane's. */
+  recent: readonly string[] = [],
 ): SplitLayout | Blank {
   // A tab arriving with its place asked for takes it, not the pane in use.
   if (!request)
@@ -63,21 +67,23 @@ export function resolveSplit(
       root: asRoot(splitPane(without, home.id, side, added)),
       focus: added.id,
     };
-    return other ? settle(next, tabIds, active) : { blank: next };
+    return other ? settle(next, tabIds, active, recent) : { blank: next };
   }
-  return settle(layout, tabIds, active);
+  return settle(layout, tabIds, active, recent);
 }
 
 function settle(
   layout: SplitLayout,
   tabIds: readonly string[],
   active: string,
+  recent: readonly string[],
 ): SplitLayout {
   const open = new Set(tabIds);
-  let root = mapPanes(layout.root, (p) => ({
-    ...p,
-    tabs: p.tabs.filter((id) => open.has(id)),
-  }));
+  let root = mapPanes(layout.root, (p) => {
+    const tabs = p.tabs.filter((id) => open.has(id));
+    if (tabs.length === p.tabs.length) return { ...p, tabs };
+    return { ...p, tabs, front: frontAfterClose(p, tabs, recent) };
+  });
   const known = new Set(panesOf(root).flatMap((p) => p.tabs));
   const fresh = tabIds.filter((id) => !known.has(id));
   // Opened tabs join the pane in use, or the first.
@@ -117,4 +123,19 @@ function same(a: SplitLayout, b: SplitLayout): boolean {
   return (
     a.focus === b.focus && JSON.stringify(a.root) === JSON.stringify(b.root)
   );
+}
+
+/** Its front closed, the pane shows the tab shown before it there, else
+ *  the one that took its place. */
+function frontAfterClose(
+  was: Pane,
+  tabs: readonly string[],
+  recent: readonly string[],
+): string | null {
+  // An emptied pane keeps it, and goes.
+  if (!was.front || !tabs.length || tabs.includes(was.front)) return was.front;
+  const before = [...recent].reverse().find((id) => tabs.includes(id));
+  if (before) return before;
+  const at = was.tabs.indexOf(was.front);
+  return tabs[Math.min(Math.max(at, 0), tabs.length - 1)]!;
 }

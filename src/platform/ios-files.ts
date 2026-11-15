@@ -56,6 +56,10 @@ export const iosFiles = {
     (await call<{ text: string }>("read_text", { url })).text,
   /** A tap felt under the finger, as something lifts. Never fails. */
   haptic: (): void => void call<void>("haptic").catch(() => {}),
+  /** The window dark, light or the system's ("system"): the keyboard
+   *  follows it. Never fails. */
+  appearance: (mode: string): void =>
+    void call<void>("appearance", { mode }).catch(() => {}),
   /** The share sheet for a saved document, by path or picked URL. */
   share: (path: string): Promise<void> => call<void>("share", { path }),
   readBase64: async (url: string): Promise<string> =>
@@ -89,7 +93,24 @@ export const iosFiles = {
   /** Picks a folder for the project and opens it: its plain path, or null. */
   pickProjectFolder: async (): Promise<string | null> => {
     const url = named(await call<Picked>("pick_folder")).url;
-    return url ? iosFiles.beginAccess(url) : null;
+    if (!url) return null;
+    // Android: whether it would open Settings for access to all files,
+    // which then shows unexplained; the URL serves if the user declines.
+    const first = await call<{ path: string; asks?: boolean }>("begin_access", {
+      url,
+      ask: false,
+    });
+    if (!first.asks) return first.path;
+    const [{ showConfirm }, { currentStrings }] = await Promise.all([
+      import("../engine/controls/app-dialog"),
+      import("../i18n/current"),
+    ]);
+    const t = currentStrings();
+    const go = await showConfirm(t.allFilesAccessAsk, {
+      okLabel: t.allFilesAccessContinue,
+      cancelLabel: t.allFilesAccessNotNow,
+    });
+    return go ? iosFiles.beginAccess(url) : first.path;
   },
 };
 

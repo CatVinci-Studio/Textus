@@ -24,6 +24,7 @@ import { stopPluginUi, uiHandlers } from "./broker-ui";
 import { viewHandlers } from "./broker-views";
 import { scheduleHandlers } from "./broker-schedule";
 import { appearanceHandlers } from "./broker-appearance";
+import { textHandlers } from "./broker-text";
 import { forgetPluginColors } from "../../theme/plugin-colors";
 import { currentAppState } from "../background/app-state";
 import { forgetListViews } from "../contributions/list-views";
@@ -416,6 +417,7 @@ export class PluginHost {
       ...metadataHandlers(scope),
       ...scheduleHandlers(scope),
       ...appearanceHandlers(scope),
+      ...textHandlers(),
     };
   }
 }

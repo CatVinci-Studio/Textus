@@ -106,6 +106,10 @@ Textus's own official plugins share one small helper for this
 its own row (tabs, columns) while the others make way, and `drag.sortable`
 moves it between lists with a lifted copy under the pointer
 (`tx-drag-ghost`; `tx-drag-source` marks where it will land).
+A table's row or column takes the editor tables' look: `tx-table-grip` with
+`tx-table-grip-row` or `tx-table-grip-col` is the pill to pull it by, `tx-cell-lifted`
+marks the pulled cells, and `tx-making-room` on the table lets the others
+slide aside (Textus 1.4.3).
 
 ## Floating views
 

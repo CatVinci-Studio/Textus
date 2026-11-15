@@ -2,7 +2,11 @@
   /* Below the unsaved-changes prompt, which a close during the first launch
      still has to show. */
   z-index: var(--z-modal);
-  padding: 28px;
+  --edge: 28px;
+  padding: calc(var(--safe-top, 0px) + var(--edge))
+    calc(var(--safe-right, 0px) + var(--edge))
+    calc(var(--safe-bottom, 0px) + var(--edge))
+    calc(var(--safe-left, 0px) + var(--edge));
   animation: motion-fade-in var(--dur-slow) var(--ease-standard);
 }
 
@@ -68,5 +72,23 @@
 @media (max-width: 520px) {
   .language-welcome {
     padding: 28px 28px;
+  }
+}
+
+/* A phone on its side: less air, so Continue shows without a scroll. */
+@media (max-height: 520px) {
+  .language-welcome-backdrop {
+    --edge: 8px;
+  }
+  .language-welcome {
+    padding: 20px 24px;
+  }
+  .language-welcome-mark {
+    width: 36px;
+    height: 36px;
+    margin-bottom: 12px;
+  }
+  .language-welcome > p {
+    margin-bottom: 16px;
   }
 }

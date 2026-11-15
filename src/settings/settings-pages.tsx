@@ -1,6 +1,11 @@
 import type { ComponentType } from "react";
 import type { Strings } from "../i18n/strings";
-import { hasTextusAi, isMobileApp } from "../platform/capabilities";
+import {
+  canExportPdf,
+  canExportWithPandoc,
+  hasTextusAi,
+  isMobileApp,
+} from "../platform/capabilities";
 import { lucide } from "../engine/controls/icons";
 import {
   Info,
@@ -70,6 +75,8 @@ const BUILT_IN: SettingsPageDef[] = [
   {
     id: "edit-export",
     group: "edit",
+    // Its PDF and Pandoc exports are the desktop's.
+    available: () => canExportPdf || canExportWithPandoc,
     label: (t) => t.menuExport,
   },
   {

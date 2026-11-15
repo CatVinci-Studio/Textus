@@ -8,6 +8,7 @@ import { onFontsChange } from "../text-measure";
 import type { TabInfo } from "./TabPill";
 import {
   fitTabs,
+  measuresKey,
   readTabRoom,
   sameRoom,
   type PillMeasures,
@@ -46,7 +47,7 @@ export function useTabFit(
     // serve all with the same parts, until the look or a font changes.
     const read = (fresh = false) => {
       if (fresh) PILLS.clear();
-      const key = `${el.className}|${parts}`;
+      const key = `${measuresKey(el)}|${parts}`;
       const next = readTabRoom(el, PILLS.get(key));
       if (next) PILLS.set(key, next.pill);
       latest.current = next;
@@ -113,7 +114,8 @@ export function TabListButton({
   const list = useMenuButton(
     () =>
       tabs.map((tab) => ({
-        label: tab.title,
+        // Its unsaved dot too, as on the tab; an Untitled one by its tip.
+        label: `${tab.tip && !tab.path ? `${tab.title} · ${tab.tip}` : tab.title}${tab.dirty ? " •" : ""}`,
         checked: tab.id === activeTabId,
         onSelect: () => onActivate(tab.id),
       })),

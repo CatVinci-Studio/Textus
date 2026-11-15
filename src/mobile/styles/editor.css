@@ -24,6 +24,21 @@
   }
 }
 
+/* A touch screen (phone, tablet, unfolded fold) shows a table's tools
+   while the caret is in it, with no hover to wait for: room is kept above
+   every table for them, so they never cover the line before it, and
+   nothing moves as they come. */
+@media (pointer: coarse) {
+  .table-toolbar .block-pill {
+    min-height: 40px;
+  }
+
+  /* Over the editor's own margin, which comes later. */
+  .milkdown .ProseMirror .table-wrapper {
+    margin-top: calc(var(--doc-gap-box) + 44px);
+  }
+}
+
 /* Completion is accepted with a tap on the suggestion, so it takes the touch. */
 :root[data-window-chrome="mobile"] .ghost-text {
   pointer-events: auto;

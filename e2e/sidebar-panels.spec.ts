@@ -127,6 +127,27 @@ test("the folder's tools coming on hover move none of the tree's rows", async ({
   expect((await row.boundingBox())!.y).toBe(before);
 });
 
+test("a file closed at once opens again at once", async ({ page }) => {
+  await page.addInitScript(() => {
+    const w = window as unknown as Record<string, unknown>;
+    w.__devFs = { "/proj/a.md": "# A\n", "/proj/b.md": "# B\n" };
+    w.__devPickFolder = "/proj";
+  });
+  await openApp(page);
+  await emit(page, "menu-open-folder");
+  // Another tab, so closing this one leaves the window open.
+  await page.locator(".tree-row", { hasText: "b.md" }).dblclick();
+  await expect(page.locator(".tab-pill", { hasText: "b.md" })).toBeVisible();
+  const row = page.locator(".tree-row", { hasText: "a.md" });
+  const tab = page.locator(".tab-pill", { hasText: "a.md" });
+  await row.dblclick();
+  await expect(tab).toBeVisible();
+  await emit(page, "menu-close-tab");
+  await expect(tab).toHaveCount(0);
+  await row.dblclick();
+  await expect(tab).toBeVisible();
+});
+
 test("a file dragged onto a folder moves into it; with Esc it stays", async ({
   page,
 }) => {
@@ -203,4 +224,64 @@ test("a split the window has no room for is not made, and says why", async ({
   await emit(page, "menu-split-right");
   await expect(page.locator(".app-dialog")).toBeVisible();
   await expect(page.locator("section.island")).toHaveCount(2);
+});
+
+test("another folder takes the open one's place: its documents close, and come back with it", async ({
+  page,
+}) => {
+  await page.addInitScript(() => {
+    const w = window as unknown as Record<string, unknown>;
+    w.__devFs = { "/one/a.md": "# A\n", "/two/b.md": "# B\n" };
+    w.__devPickFolder = "/one";
+  });
+  await openApp(page);
+  await emit(page, "menu-open-folder");
+  await page.locator(".tree-row", { hasText: "a.md" }).dblclick();
+  const a = page.locator(".tab-pill", { hasText: "a.md" });
+  await expect(a).toBeVisible();
+
+  await emit(page, "menu-open-recent-folder", "/two");
+  await expect(page.locator(".tree-row", { hasText: "b.md" })).toBeVisible();
+  await expect(a).toHaveCount(0);
+  await page.locator(".tree-row", { hasText: "b.md" }).dblclick();
+  await expect(page.locator(".tab-pill", { hasText: "b.md" })).toBeVisible();
+  // An unsaved draft stays across the switch: the documents still come
+  // back in this window, beside it.
+  await emit(page, "menu-new-file");
+  await page.locator(".ProseMirror:visible").first().click();
+  await page.keyboard.type("draft");
+
+  await emit(page, "menu-open-recent-folder", "/one");
+  await expect(a).toBeVisible();
+  await expect(page.locator(".tab-pill", { hasText: "b.md" })).toHaveCount(0);
+});
+
+test("a sidebar tab's own key shows it, and again puts the sidebar away; Search by its icon takes the keyboard", async ({
+  page,
+}) => {
+  await page.addInitScript(() => {
+    const w = window as unknown as Record<string, unknown>;
+    w.__devFs = { "/one/a.md": "# A\n" };
+    w.__devPickFolder = "/one";
+  });
+  await openApp(page, {
+    settings: {
+      menuBarShown: false,
+      shortcuts: { showOutline: "mod+shift+u", showFiles: "mod+shift+y" },
+    },
+  });
+  await emit(page, "menu-open-folder");
+  await expect(page.locator(".tree-row", { hasText: "a.md" })).toBeVisible();
+  const mod = MAC ? "Meta" : "Control";
+  await page.keyboard.press(`${mod}+Shift+u`);
+  await expect(page.locator('[data-rail-id="outline"]')).toHaveAttribute(
+    "aria-pressed",
+    "true",
+  );
+  await page.keyboard.press(`${mod}+Shift+u`);
+  await expect(page.locator(".tree-row")).toHaveCount(0);
+  await page.keyboard.press(`${mod}+Shift+y`);
+  await expect(page.locator(".tree-row", { hasText: "a.md" })).toBeVisible();
+  await page.locator('[data-rail-id="search"]').click();
+  await expect(page.locator(".search-panel input").first()).toBeFocused();
 });

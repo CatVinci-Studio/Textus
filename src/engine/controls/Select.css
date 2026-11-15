@@ -78,24 +78,3 @@
   color: var(--ui-muted);
   cursor: default;
 }
-
-/* iOS: the closed control is drawn as on the desktop, with a transparent
-   native select over it taking the tap. 16px keeps WebKit from zooming in. */
-.ui-select-native-frame {
-  position: relative;
-}
-
-.ui-select-native {
-  position: absolute;
-  inset: 0;
-  width: 100%;
-  height: 100%;
-  opacity: 0;
-  font-size: 18px;
-  appearance: none;
-  cursor: pointer;
-}
-
-.ui-select-native-frame[aria-disabled="true"] {
-  opacity: 0.5;
-}

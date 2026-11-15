@@ -62,7 +62,8 @@ export function AgentPermission({
   label: string;
 }) {
   const t = currentStrings();
-  const command = pending.kind === "execute" ? pending.title : "";
+  const command =
+    pending.kind === "execute" ? pending.detail || pending.title : "";
   const n = command ? commandCount(command) : 0;
   const heading = command
     ? n > 1
@@ -72,7 +73,12 @@ export function AgentPermission({
   return (
     <div className="agent-permission" role="group" aria-label={label}>
       <div className="agent-permission-title">{heading}</div>
-      {command && <CommandText text={command} />}
+      {command ? (
+        <CommandText text={command} />
+      ) : (
+        pending.detail &&
+        pending.detail !== heading && <CommandText text={pending.detail} />
+      )}
       <div className="agent-permission-actions">
         {pending.options.map((option) => (
           <button

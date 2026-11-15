@@ -1,4 +1,5 @@
 import { fill } from "../i18n/fill";
+import { wasClosed } from "./close-flow";
 import { useCallback, useEffect, useRef } from "react";
 import {
   listenToThisWebview,
@@ -43,6 +44,7 @@ import type { TabState } from "./tabs/useTabState";
 import { splitForDrop } from "./islands/split-drop";
 import type { DropTarget } from "../engine/layout/drop-zones";
 import { explainError } from "../utils/error-explain";
+import { isBinaryContent, openUnreadable, pluginTab } from "./open-unreadable";
 import { tabInUse } from "../engine/layout/store";
 
 /** How a document opens, beyond which file. */
@@ -79,30 +81,6 @@ function openingJump(
   const at =
     open.restoreCaret && restoreCarets ? lastCaret(path, diskMtime) : null;
   return at && { kind: "caret", at };
-}
-
-/** The tab a plugin's custom editor opens `path` in (a PDF, a board). */
-function pluginTab(
-  path: string,
-  editor: NonNullable<ReturnType<typeof customEditorFor>>,
-  target?: DocumentPlace,
-): Partial<DocTab> {
-  void session.addRecentFile(path);
-  return {
-    path: null,
-    content: "",
-    savedContent: "",
-    diskMtime: null,
-    importedFrom: undefined,
-    view: {
-      plugin: editor.plugin,
-      view: editor.viewType,
-      kind: "editor",
-      resource: path,
-      title: editor.title,
-      ...(target ? { target: { path, ...target } } : {}),
-    },
-  };
 }
 
 /**
@@ -156,25 +134,17 @@ export function useFileOpening(opts: {
       try {
         disk = await readDocFromDisk(path);
       } catch (err) {
-        // Not text: offer a market plugin that may open it. A folder is
-        // the caller's to open.
+        // Not text. A folder is the caller's to open.
         if (asDocument || (await isFolder(path))) throw err;
-        const { offerPluginToOpen } =
-          await import("../plugins/store/open-offer");
-        const offered = reopening ? "none" : await offerPluginToOpen(path, t);
-        if (offered === "system") {
-          await exportDoc.openLinkedFile(path);
-          return null;
-        }
-        const now = offered === "on" ? customEditorFor(path) : null;
-        if (now) return pluginTab(path, now, place);
-        if (offered === "none")
-          void showMessage(fill(t.openFileFailed, { name: basename(path) }), {
-            tone: "error",
-          });
-        return null;
+        return openUnreadable(path, err, { reopening, place, t });
       }
       const { content, diskMtime } = disk;
+      if (!asDocument && isBinaryContent(content))
+        return openUnreadable(path, new Error("not text"), {
+          reopening,
+          place,
+          t,
+        });
       // Text that isn't a document (a web page): the official plugin that
       // shows it is offered first; declined, it opens as text.
       if (!asDocument && !reopening && !isDocumentName(basename(path))) {
@@ -214,11 +184,14 @@ export function useFileOpening(opts: {
     (path: string): string | null => {
       const made = opened.current.get(path);
       if (!made) return null;
-      if (tabsRef.current.some((tab) => tab.id === made.id)) {
+      if (
+        wasClosed(made.id) ||
+        tabsRef.current.some((tab) => tab.id === made.id)
+      ) {
         opened.current.delete(path);
         return null;
       }
-      // Still arriving (a moment), else closed before it did.
+      // Still arriving (a moment); a time limit too, should it never come.
       if (Date.now() - made.at < 2000) return made.id;
       opened.current.delete(path);
       return null;

@@ -95,7 +95,18 @@ export function namePageTabs(view: string, title: PageTitle): void {
 export function tabTip(tab: DocTab, t: Strings): string | undefined {
   if (tab.view?.kind === "page" && tab.view.view === "ai")
     return tab.view.title ?? t.chatNewConversation;
+  // An untitled document by its first line: drafts told apart.
+  if (!tab.path && !tab.view) return firstLine(tab.content);
   return undefined;
+}
+
+function firstLine(text: string): string | undefined {
+  const line = text
+    .split("\n")
+    .map((l) => l.replace(/^\s*(?:#+|>|[-*+]|\d+[.)])\s+/, "").trim())
+    .find(Boolean);
+  if (!line) return undefined;
+  return line.length > 40 ? `${line.slice(0, 39)}…` : line;
 }
 
 export function tabTitle(tab: DocTab, t: Strings): string {

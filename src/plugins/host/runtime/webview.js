@@ -10,6 +10,7 @@
   var app = null;
   var queue = [];
   var receivers = new Set();
+  var held = [];
   var state = null;
   var exporter = null;
 
@@ -35,6 +36,36 @@
       return app.call(method, params);
     });
   }
+
+  // The page's errors and console warnings go to the plugin's log, where
+  // its author looks (Settings › the plugin), not only to a devtools.
+  function logged(level, parts) {
+    var text = Array.prototype.map
+      .call(parts, function (part) {
+        if (part instanceof Error) return part.stack || part.message;
+        if (typeof part === "string") return part;
+        try {
+          return JSON.stringify(part);
+        } catch {
+          return String(part);
+        }
+      })
+      .join(" ");
+    send("log", { level: level, message: text.slice(0, 2000) });
+  }
+  ["error", "warn"].forEach(function (level) {
+    var own = console[level];
+    console[level] = function () {
+      logged(level, arguments);
+      return own.apply(console, arguments);
+    };
+  });
+  window.addEventListener("error", function (event) {
+    logged("error", [event.error || event.message]);
+  });
+  window.addEventListener("unhandledrejection", function (event) {
+    logged("error", [event.reason]);
+  });
 
   // A press or Escape in the page closes the app's menu over it: the
   // window can't see them, the page's events stay in its frame.
@@ -262,8 +293,16 @@
     postMessage: function (message) {
       send("message", { message: message });
     },
+    // onDidReceiveMessage (1.7) as host.js's webview names it; onMessage
+    // stays for older pages.
     onMessage: function (callback) {
+      return api.onDidReceiveMessage(callback);
+    },
+    onDidReceiveMessage: function (callback) {
       receivers.add(callback);
+      held.splice(0).forEach(function (message) {
+        callback(message);
+      });
       return {
         dispose: function () {
           receivers.delete(callback);
@@ -326,6 +365,8 @@
       event.ports[0],
       {
         message: function (params) {
+          // Before the page listens, kept for its first listener.
+          if (!receivers.size) held.push(params.message);
           receivers.forEach(function (receive) {
             receive(params.message);
           });
@@ -406,50 +447,6 @@
     requestAnimationFrame(run);
     setTimeout(run, 100);
   }
-  // A scroller marked tx-scroll-fade (a board's lists, a wide table) fades
-  // at an edge with more past it (controls.css), so it reads as going on.
-  function edge(el) {
-    el.toggleAttribute("data-more-left", el.scrollLeft > 1);
-    el.toggleAttribute(
-      "data-more-right",
-      el.scrollWidth - el.clientWidth - el.scrollLeft > 1,
-    );
-  }
-  function edges() {
-    document.querySelectorAll(".tx-scroll-fade").forEach(edge);
-  }
-  // A scroll moves only its own scroller's edges, and shows its bars until
-  // it rests (plugin-ui.css), as a page of Textus's does
-  // (engine/controls/scroll-reveal.ts): WebKit's own overlay bars in a frame
-  // can stay up after a scroll.
-  var resting = new WeakMap();
-  document.addEventListener(
-    "scroll",
-    function (event) {
-      var el =
-        event.target === document ? document.documentElement : event.target;
-      if (!(el instanceof Element)) return;
-      if (el.classList.contains("tx-scroll-fade")) edge(el);
-      el.classList.add("is-scrolling");
-      clearTimeout(resting.get(el));
-      resting.set(
-        el,
-        setTimeout(function () {
-          el.classList.remove("is-scrolling");
-        }, 900),
-      );
-    },
-    { capture: true, passive: true },
-  );
-  window.addEventListener("resize", edges);
-  window.addEventListener("DOMContentLoaded", function () {
-    edges();
-    new MutationObserver(edges).observe(document.body, {
-      childList: true,
-      subtree: true,
-    });
-  });
-
   // A page taller than its frame scrolls in it, and its scrolling stops at
   // its ends instead of carrying on into the document around it. One that
   // fits passes the wheel on, as the rest of the document does.

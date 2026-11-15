@@ -21,6 +21,10 @@ const isAndroidApp = isAndroidPlatform();
  *  on a tablet and the phone's on a narrow screen (usePhoneLayout). */
 export const isMobileApp = isIOSApp || isAndroidApp;
 
+/** A system Back (Android's button or gesture), which the page answers
+ *  first (mobile/back.ts). */
+export const hasSystemBack = isAndroidApp;
+
 /** More than one OS window, and windows as something the app manages
  *  (title, close, size, session restore). iOS has one fixed webview. */
 export const canUseWindows = isDesktopApp;

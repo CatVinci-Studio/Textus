@@ -166,3 +166,74 @@ it("pasted code keeps its lines, Chinese comments and long lines too", async () 
   t.paste("Before\n\n```js\n" + lines.join("\n") + "\n```\n\nAfter");
   expect(texts(t.view.dom, "pre code")).toEqual([lines.join("\n")]);
 });
+
+it("a to-do's text copied whole pastes as a to-do on its own line, as text in a line", async () => {
+  const t = await openView("- [ ] alpha\n- plain\n\npara");
+  const copy = (word: string) => {
+    const at = t.caretAt(word);
+    t.select(at, at + word.length);
+    const { dom, text } = t.view.serializeForClipboard(
+      t.view.state.selection.content(),
+    );
+    return { text, html: dom.innerHTML };
+  };
+  const task = copy("alpha");
+  t.caretAtEnd();
+  t.press("Enter");
+  t.paste(task.text, task.html);
+  expect(t.markdown()).toBe("- [ ] alpha\n- plain\n\npara\n\n- [ ] alpha");
+  const para = t.caretAt("para", 4);
+  t.select(para, para);
+  t.paste(task.text, task.html);
+  expect(t.markdown()).toContain("paraalpha");
+  // Part of its text is text, on a line of its own too.
+  const part = copy("lph");
+  t.caretAtEnd();
+  t.press("Enter");
+  t.press("Enter"); // out of the list
+  t.paste(part.text, part.html);
+  expect(t.markdown()).toMatch(/\n\nlph$/);
+});
+
+it("a table copies as other apps read one, and pastes back as itself", async () => {
+  const source = "| a | **b** |\n| :-: | --- |\n| 1 | `2` |";
+  const t = await openView(`${source}\n\nend`);
+  const { CellSelection } = await import("@milkdown/kit/prose/tables");
+  const cellAt = (text: string) => {
+    let at = -1;
+    t.view.state.doc.descendants((n, pos) => {
+      if (at < 0 && n.isText && n.text === text) at = pos;
+    });
+    const $at = t.view.state.doc.resolve(at);
+    let d = $at.depth;
+    while (!/cell/.test($at.node(d).type.spec.tableRole ?? "")) d--;
+    return $at.before(d);
+  };
+  const copy = (from: string, to: string) => {
+    t.view.dispatch(
+      t.view.state.tr.setSelection(
+        CellSelection.create(t.view.state.doc, cellAt(from), cellAt(to)),
+      ),
+    );
+    return t.view.serializeForClipboard(t.view.state.selection.content());
+  };
+  const whole = copy("a", "2");
+  const table = whole.dom.querySelector("table")!;
+  expect(table.getAttribute("border")).toBe("1");
+  expect(table.querySelector("thead th")?.textContent).toBe("a");
+  expect(table.querySelector("td p")).toBeNull();
+  expect(table.querySelector("td")?.getAttribute("style")).toContain("border");
+  // Body cells alone: a row of tab-separated cells, lined all the same.
+  const body = copy("1", "2");
+  expect(body.text).toBe("1\t2");
+  expect(body.dom.querySelector("td")?.getAttribute("style")).toContain(
+    "border",
+  );
+  expect(body.dom.querySelector("td p")).toBeNull();
+  t.caretAtEnd();
+  t.press("Enter");
+  t.paste(whole.text, whole.dom.innerHTML);
+  const back = t.markdown().split("end")[1];
+  expect(back).toMatch(/\|\s*a\s*\|\s*\*\*b\*\*\s*\|/);
+  expect(back).toMatch(/\|\s*1\s*\|\s*`2`\s*\|/);
+});

@@ -1,5 +1,9 @@
 import { pluginString } from "./plugin-string";
 import webviewRuntime from "./runtime/webview.js?raw";
+import pageKitRuntime from "./runtime/page-kit.js?raw";
+import pageToolsRuntime from "./runtime/page-tools.js?raw";
+import textRuntime from "./runtime/text.js?raw";
+import tooltipCss from "../../engine/controls/Tooltip.css?inline";
 import componentsCss from "../../engine/controls/components.css?inline";
 import iconMasksCss from "../../engine/controls/icon-masks.css?inline";
 import controlsCss from "../../engine/controls/controls.css?inline";
@@ -22,6 +26,7 @@ const SHARED_CSS = [
   paneCss,
   progressCss,
   bubbleCss,
+  tooltipCss,
 ].join("\n");
 import { createEndpoint, type Endpoint, type Handlers } from "./rpc";
 
@@ -101,7 +106,7 @@ export function webviewDocument(
     `<style id="textus-ui">${inElement(pluginUiCss, "style")}</style>`,
     `<style id="textus-shared">${inElement(SHARED_CSS, "style")}</style>`,
     `<script type="application/json" id="textus-locale">${inElement(locale, "script")}</script>`,
-    `<script>${inElement(`${RPC_SOURCE}\n${webviewRuntime}`, "script")}</script>`,
+    `<script>${inElement(`${RPC_SOURCE}\n${textRuntime}\n${webviewRuntime}\n${pageKitRuntime}\n${pageToolsRuntime}`, "script")}</script>`,
   ].join("\n");
   const theme = options.dark ? "dark" : "light";
   // Into the plugin's own <head> if it has one, so its <meta> and styles

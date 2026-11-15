@@ -33,9 +33,13 @@ export interface TreeShared {
    *  read again, as another app may have changed it. */
   refreshed: number;
   dropInto: string | null;
-  /** Desktop only (null on iOS, where the long press has its own menu). */
+  /** Desktop only: touch has onRowHold. */
   onRowMenu:
     ((e: ReactMouseEvent, path: string, isDir: boolean) => void) | null;
+  /** Touch only: a row held down opens the same menu, as a sheet. */
+  onRowHold:
+    | ((at: { x: number; y: number }, path: string, isDir: boolean) => void)
+    | null;
   onRowPointerDown:
     | ((
         e: ReactPointerEvent,
@@ -68,7 +72,7 @@ export const TreeContext = createContext<TreeShared | null>(null);
  *  folders are read again, so a re-read doesn't draw every row. */
 export type TreeRowActions = Pick<
   TreeShared,
-  "onRowMenu" | "onRowPointerDown" | "openInNewWindow"
+  "onRowMenu" | "onRowHold" | "onRowPointerDown" | "openInNewWindow"
 >;
 
 export const TreeRowActionsContext = createContext<TreeRowActions | null>(null);

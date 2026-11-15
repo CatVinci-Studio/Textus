@@ -17,10 +17,6 @@ import {
 import { fs } from "../platform/ipc";
 import { useSettings } from "../prefs/SettingsContext";
 import { basename, isInside, onTheWay, parentDir } from "../utils/path";
-import { isMobileApp } from "../platform/capabilities";
-import { iosFiles } from "../platform/ios-files";
-import { ContextMenu } from "../engine/controls/ContextMenu";
-import { Presence } from "../engine/motion/usePresence";
 import { useLongPress } from "../utils/hooks/useLongPress";
 import { isDocumentName } from "./document-name";
 import { localeOf } from "../i18n/langs";
@@ -156,38 +152,14 @@ export const DirNode = memo(function DirNode({
   return (
     <div className="dir-node">
       {depth > 0 && (
-        <div
-          className={`tree-row${tree.dropInto === path ? " tree-row-drop" : ""}${ignored ? " tree-row-ignored" : ""}`}
-          role="treeitem"
-          aria-level={depth}
-          aria-expanded={open}
-          data-drop-dir={path}
-          style={{ "--depth": depth } as CSSProperties}
-          // A double click folds or unfolds it once, as a click does; going
-          // into it is the row's menu's Show Only This Folder.
-          onClick={(e) => {
-            if (e.detail > 1) return;
-            setOpen(!open);
-          }}
-          onContextMenu={
-            tree.onRowMenu ? (e) => tree.onRowMenu!(e, path, true) : undefined
-          }
-          onPointerDown={
-            tree.onRowPointerDown
-              ? (e) => tree.onRowPointerDown!(e, path, basename(path), true)
-              : undefined
-          }
-        >
-          <ChevronIcon className={`chevron ${open ? "chevron-open" : ""}`} />
-          {open ? (
-            <FolderOpenIcon className="tree-icon" />
-          ) : (
-            <FolderIcon className="tree-icon" />
-          )}
-          <Tooltip text={basename(path)} description={null} whenCut>
-            <span className="tx-truncate tree-label">{basename(path)}</span>
-          </Tooltip>
-        </div>
+        <FolderRow
+          path={path}
+          depth={depth}
+          open={open}
+          ignored={ignored}
+          dropping={tree.dropInto === path}
+          onToggle={() => setOpen(!open)}
+        />
       )}
       {open && sorted && (
         <div className="dir-children" role={depth > 0 ? "group" : "none"}>
@@ -266,7 +238,9 @@ const FileNode = memo(function FileNode({
   const lang = settings.language;
   const tree = useTreeRowActions();
   const Icon = fileIconFor(entry.name);
-  const press = useLongPress();
+  const press = useLongPress(
+    tree.onRowHold ? (at) => tree.onRowHold!(at, entry.path, false) : undefined,
+  );
   const mark = useFileMark(entry.path);
   const badge = useFileBadge(entry.path);
   const changed = !!mark?.changed;
@@ -304,7 +278,7 @@ const FileNode = memo(function FileNode({
             ? (e) => tree.onRowPointerDown!(e, entry.path, entry.name, false)
             : undefined
         }
-        {...(isMobileApp ? press.handlers : {})}
+        {...(tree.onRowHold ? press.handlers : {})}
       >
         <Icon className="tree-icon" />
         <Tooltip text={entry.name} description={null} whenCut>
@@ -321,23 +295,64 @@ const FileNode = memo(function FileNode({
         )}
         {waiting && <span className="tree-ai-waiting">{waiting}</span>}
       </div>
-      <Presence show={!!press.at}>
-        {press.at && (
-          <ContextMenu
-            x={press.at.x}
-            y={press.at.y}
-            title={entry.name}
-            onClose={press.close}
-            items={[
-              { label: t.treeOpen, onSelect: () => onSelect(entry.path) },
-              {
-                label: t.menuShare,
-                onSelect: () => void iosFiles.share(entry.path).catch(() => {}),
-              },
-            ]}
-          />
-        )}
-      </Presence>
     </>
   );
 });
+
+/** A folder's own row: a click folds it, a right click or a held touch
+ *  opens its menu, a press may start a drag. */
+function FolderRow({
+  path,
+  depth,
+  open,
+  ignored,
+  dropping,
+  onToggle,
+}: {
+  path: string;
+  depth: number;
+  open: boolean;
+  ignored: boolean;
+  dropping: boolean;
+  onToggle: () => void;
+}) {
+  const tree = useTreeRowActions();
+  const press = useLongPress(
+    tree.onRowHold ? (at) => tree.onRowHold!(at, path, true) : undefined,
+  );
+  return (
+    <div
+      className={`tree-row${dropping ? " tree-row-drop" : ""}${ignored ? " tree-row-ignored" : ""}`}
+      role="treeitem"
+      aria-level={depth}
+      aria-expanded={open}
+      data-drop-dir={path}
+      style={{ "--depth": depth } as CSSProperties}
+      // A double click folds or unfolds it once, as a click does; going
+      // into it is the row's menu's Show Only This Folder.
+      onClick={(e) => {
+        if (e.detail > 1 || press.consumeClick()) return;
+        onToggle();
+      }}
+      onContextMenu={
+        tree.onRowMenu ? (e) => tree.onRowMenu!(e, path, true) : undefined
+      }
+      onPointerDown={
+        tree.onRowPointerDown
+          ? (e) => tree.onRowPointerDown!(e, path, basename(path), true)
+          : undefined
+      }
+      {...(tree.onRowHold ? press.handlers : {})}
+    >
+      <ChevronIcon className={`chevron ${open ? "chevron-open" : ""}`} />
+      {open ? (
+        <FolderOpenIcon className="tree-icon" />
+      ) : (
+        <FolderIcon className="tree-icon" />
+      )}
+      <Tooltip text={basename(path)} description={null} whenCut>
+        <span className="tx-truncate tree-label">{basename(path)}</span>
+      </Tooltip>
+    </div>
+  );
+}

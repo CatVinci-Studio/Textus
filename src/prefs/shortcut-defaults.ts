@@ -21,6 +21,8 @@ export type ShortcutAction =
   | "toggleTypewriterMode"
   | "findReplace"
   | "searchFiles"
+  | "showFiles"
+  | "showOutline"
   | "nextTab"
   | "previousTab"
   | HeadingAction;
@@ -58,6 +60,9 @@ export function defaultShortcuts(mac = modIsMeta()): Shortcuts {
     toggleTypewriterMode: "",
     findReplace: "mod+f",
     searchFiles: "mod+shift+o",
+    // Unbound: the user picks keys for the sidebar's tabs (#687).
+    showFiles: "",
+    showOutline: "",
     nextTab: `${ctrl}+tab`,
     previousTab: `${ctrl}+shift+tab`,
     setHeading1: "mod+1",

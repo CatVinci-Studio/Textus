@@ -6,8 +6,9 @@ const LONG_PRESS_MS = 450;
 /**
  * A touch held still on a row, and where. iOS fires no contextmenu for a long
  * press in a web view, so this times it; the click after lifting is swallowed.
+ * With `onHold`, the point goes there instead of into `at`.
  */
-export function useLongPress() {
+export function useLongPress(onHold?: (at: { x: number; y: number }) => void) {
   const [at, setAt] = useState<{ x: number; y: number } | null>(null);
   const timer = useRef<ReturnType<typeof setTimeout> | null>(null);
   const start = useRef<{ x: number; y: number } | null>(null);
@@ -34,7 +35,9 @@ export function useLongPress() {
         cancel();
         timer.current = setTimeout(() => {
           fired.current = true;
-          setAt(start.current);
+          if (!start.current) return;
+          if (onHold) onHold(start.current);
+          else setAt(start.current);
         }, LONG_PRESS_MS);
       },
       onTouchMove: (e: React.TouchEvent) => {

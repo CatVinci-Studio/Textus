@@ -265,3 +265,10 @@ button.settings-inline-button {
 .settings-proxy-port {
   flex: 0 0 80px;
 }
+
+/* One row's control under its name: every row's (SettingsGroup). */
+.settings-group-body[data-stacked]
+  > .settings-row:not(.settings-toggle-row)
+  > :last-child:not(:first-child) {
+  flex-basis: 100%;
+}

@@ -4,7 +4,7 @@
 .notice-stack {
   position: fixed;
   left: 50%;
-  bottom: 44px;
+  bottom: calc(44px + var(--safe-bottom, 0px));
   z-index: var(--z-toast);
   display: flex;
   flex-direction: column;
@@ -20,7 +20,10 @@
 }
 
 body:has(.corner-stack .corner-toast) .notice-stack {
-  bottom: calc(18px + var(--control-height) + var(--space-4) + 8px);
+  bottom: calc(
+    18px + var(--safe-bottom, 0px) + var(--control-height) + var(--space-4) +
+      8px
+  );
 }
 
 .notice {

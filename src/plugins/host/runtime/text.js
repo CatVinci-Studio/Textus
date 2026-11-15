@@ -364,6 +364,10 @@ var __textusText = {};
     fillNote: fillNote,
     notePath: notePath,
     weekDays: weekDays,
+    /** The day `language`'s weeks start on (0 Sunday … 6 Saturday). */
+    weekStart: function (language) {
+      return (WEEKS[base(language)] || ISO)[0];
+    },
   };
 })(__textusText);
 

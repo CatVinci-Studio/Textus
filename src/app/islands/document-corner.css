@@ -31,3 +31,9 @@
 :root[data-window-chrome="mobile"] .document-corner {
   padding-bottom: calc(48px + var(--space-2));
 }
+
+/* Typing on a touch screen (phone or tablet, any turn) the page is short
+   and the count would sit on the text; the ☰ menu still says it. */
+:root.keyboard-up .document-corner .word-count {
+  display: none;
+}

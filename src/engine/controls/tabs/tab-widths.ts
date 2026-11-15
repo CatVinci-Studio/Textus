@@ -20,6 +20,9 @@ interface TabLimits {
   max: number;
   /** False where tabs keep their width and the row scrolls (a phone's). */
   shrink?: boolean;
+  /** The least of its name a squeezed tab still shows: below that the row
+   *  scrolls rather than show tabs that say nothing. */
+  fewest?: number;
 }
 
 export interface TabFit {
@@ -40,7 +43,7 @@ const SLACK = 0.5;
  */
 export function tabWidths(
   tabs: readonly TabParts[],
-  { min, max, shrink = true }: TabLimits,
+  { min, max, shrink = true, fewest = 0 }: TabLimits,
   available: number,
   gap = 0,
   /** What shows of the row once its tabs overflow (its end holds the list
@@ -53,8 +56,14 @@ export function tabWidths(
   );
   const total = wanted.reduce((sum, width) => sum + width, 0);
   const level = shrink && total > room ? shareLevel(wanted, room) : Infinity;
-  const squeezed = wanted.map((width) =>
-    Math.max(Math.min(width, min), Math.min(width, level)),
+  const floor = tabs.map((tab, i) =>
+    Math.min(
+      wanted[i]!,
+      Math.max(min, tab.fixed + Math.min(tab.title, fewest)),
+    ),
+  );
+  const squeezed = wanted.map((width, i) =>
+    Math.max(floor[i]!, Math.min(width, level)),
   );
   const sum = (ws: readonly number[]) => ws.reduce((a, w) => a + w, 0);
   const capped = squeezed.map((width) => Math.min(width, shown));

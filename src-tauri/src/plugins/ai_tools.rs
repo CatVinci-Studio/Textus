@@ -2,7 +2,6 @@
 //! request offers the asking window's, and a call goes back there. Like MCP
 //! tools, calls run one at a time, in order.
 
-use crate::ai::agent::AgentMode;
 use crate::ai::tools::{Access, Run, Tool, EVERY_MODE};
 use aicompat::agent::{ToolCall, ToolOutput, ToolSpec};
 use serde::{Deserialize, Serialize};
@@ -109,71 +108,65 @@ fn model_name(plugin: &str, name: &str) -> String {
     out
 }
 
-/// The tools the asking window's plugins offer, for this request. A detached
-/// chat asks for the editor window it serves.
-pub fn tools_for_request<'a>(app: &AppHandle, asking: &str) -> Vec<Tool<'a>> {
+/// The editor window a request's tools run in: a detached chat's is the
+/// window it serves.
+pub(super) fn editor_window(app: &AppHandle, asking: &str) -> String {
     #[cfg(desktop)]
-    let window = app
+    return app
         .try_state::<crate::commands::chat_window::OpenChatWindows>()
         .and_then(|open| crate::commands::chat_window::editor_for_chat(asking, &open))
         .unwrap_or_else(|| asking.to_string());
     // The phone has one window and no detached chats.
     #[cfg(mobile)]
-    let window = asking.to_string();
+    {
+        let _ = app;
+        asking.to_string()
+    }
+}
+
+/// The tools the asking window's plugins offer, for this request. A detached
+/// chat asks for the editor window it serves.
+pub fn tools_for_request<'a>(app: &AppHandle, asking: &str) -> Vec<Tool<'a>> {
+    let window = editor_window(app, asking);
     let hub = app.state::<PluginAiTools>();
     let offered = hub.offered.lock().unwrap_or_else(|e| e.into_inner());
-    let mut tools: Vec<Tool<'a>> = window_tools(&offered, &window)
-        .into_iter()
-        .map(|(name, tool)| plugin_tool(app.clone(), window.clone(), name, tool.clone()))
+    let named = window_tools(&offered, &window);
+    let names: Vec<(&str, &str)> = named
+        .iter()
+        .map(|(n, t)| (t.name.as_str(), n.as_str()))
+        .collect();
+    let mut tools: Vec<Tool<'a>> = named
+        .iter()
+        .map(|(name, tool)| {
+            let mut tool = (*tool).clone();
+            tool.description = model_names_in(&tool.description, &names);
+            plugin_tool(app.clone(), window.clone(), name.clone(), tool)
+        })
         .collect();
     // Create mode's alone: its modes keep it out of every other request.
-    tools.push(check_plugin_tool(app, &window));
+    tools.push(super::app_tools::check_plugin_tool(app, &window));
     tools
 }
 
-/// Create mode's check of a plugin it wrote, run in the editor window by
-/// the same rules install reads it with (check-written-plugin.ts).
-fn check_plugin_tool<'a>(app: &AppHandle, window: &str) -> Tool<'a> {
-    let (app, window) = (app.clone(), window.to_string());
-    Tool {
-        spec: ToolSpec {
-            name: "check_plugin".into(),
-            description: "Checks a plugin you wrote before you give it to the user, as Textus will read it at install: the manifest, the `local.` id, the files `main` names, the permissions the code needs, commands and views declared but never registered, menu conditions Textus never sets. Pass every file of the plugin. Fix what it reports and check again until it reports nothing.".into(),
-            parameters: json!({
-                "type": "object",
-                "properties": {
-                    "files": {
-                        "type": "array",
-                        "description": "Every file of the plugin: textus-plugin.json, host.js and the rest.",
-                        "items": {
-                            "type": "object",
-                            "properties": { "path": { "type": "string" }, "text": { "type": "string" } },
-                            "required": ["path", "text"]
-                        }
-                    }
-                },
-                "required": ["files"]
-            }),
-        },
-        access: Access::ReadOnly,
-        modes: &[AgentMode::Create],
-        run: Run::Async(Box::new(move |call: ToolCall| {
-            let (app, window) = (app.clone(), window.clone());
-            Box::pin(async move {
-                let tool = PluginAiTool {
-                    plugin: "textus".into(),
-                    name: "check_plugin".into(),
-                    description: String::new(),
-                    parameters: json!({}),
-                };
-                let arguments = serde_json::from_str(&call.arguments).unwrap_or_else(|_| json!({}));
-                let text = match call_tool(&app, &window, &tool, call.call_id, arguments).await {
-                    Ok(text) | Err(text) => text,
-                };
-                trimmed(text).into()
-            })
-        })),
+/// `text` with the plugins' own names for their tools - "list_reminders" in
+/// a description - as the model is given them. Only names with a `_`: a
+/// plain word ("search") is more often just the word.
+fn model_names_in(text: &str, names: &[(&str, &str)]) -> String {
+    let word = |c: Option<char>| c.is_some_and(|c| c.is_alphanumeric() || c == '_');
+    let mut out = text.to_string();
+    for (own, model) in names.iter().filter(|(own, _)| own.contains('_')) {
+        let mut at = 0;
+        while let Some(found) = out[at..].find(own) {
+            let (start, end) = (at + found, at + found + own.len());
+            if word(out[..start].chars().next_back()) || word(out[end..].chars().next()) {
+                at = end;
+                continue;
+            }
+            out.replace_range(start..end, model);
+            at = start + model.len();
+        }
     }
+    out
 }
 
 /// `window`'s tools, each with the model's name for it, kept distinct.
@@ -291,7 +284,7 @@ pub async fn call_tool(
     }
 }
 
-fn trimmed(text: String) -> String {
+pub(super) fn trimmed(text: String) -> String {
     crate::ai::outside_tool_result(text, RESULT_CHARS)
 }
 
@@ -327,6 +320,21 @@ mod tests {
             .map(|(name, _)| name)
             .collect();
         assert_eq!(names, vec!["plugin_count_words".to_string()]);
+    }
+
+    #[test]
+    fn a_description_names_other_tools_as_the_model_sees_them() {
+        let names = [
+            ("list_reminders", "plugin_reminders_list_reminders"),
+            ("read", "plugin_x_read"),
+        ];
+        assert_eq!(
+            model_names_in(
+                "Timed ones are list_reminders; read it, not list_reminders_2.",
+                &names
+            ),
+            "Timed ones are plugin_reminders_list_reminders; read it, not list_reminders_2."
+        );
     }
 
     #[test]

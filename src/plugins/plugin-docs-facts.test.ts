@@ -13,6 +13,9 @@ const DOCS = [
   "docs/dev/plugins/pages.md",
   "docs/dev/plugins/ui.md",
   "docs/dev/plugins/permissions.md",
+  "docs/dev/plugins/testing.md",
+  "docs/dev/plugins/publishing.md",
+  "docs/dev/plugins/versions.md",
   "docs/dev/plugins/skill/SKILL.md",
   "docs/dev/textus.d.ts",
   "src-tauri/src/ai/skills/plugin.md",
@@ -118,4 +121,26 @@ it("links only files that exist", () => {
       .map((to) => `${doc.href.slice(root.href.length)}: ${to}`),
   );
   expect(broken).toEqual([]);
+});
+
+it("names only calls the API has", () => {
+  // Every name textus.d.ts declares; each part of a `textus.<area>.<call>`
+  // in the docs must be one. (`textus.save`, one part, is a command's id.)
+  const declared = new Set(
+    [
+      ...read("docs/dev/textus.d.ts").matchAll(
+        /^\s+(?:readonly )?(\w+)\??[(:<]/gm,
+      ),
+    ].map((m) => m[1]),
+  );
+  const unknown = DOCS.filter((d) => d.endsWith(".md")).flatMap((doc) =>
+    [...read(doc).matchAll(/\btextus\.(?!d\.ts|md\b)((?:\w+\.)*\w+)/g)]
+      .filter(
+        (m) =>
+          m[1].includes(".") &&
+          m[1].split(".").some((part) => !declared.has(part)),
+      )
+      .map((m) => `${doc}: textus.${m[1]}`),
+  );
+  expect(unknown).toEqual([]);
 });

@@ -14,6 +14,10 @@ struct UrlArgs: Decodable {
   let url: String
 }
 
+struct AppearanceArgs: Decodable {
+  let mode: String
+}
+
 struct WriteArgs: Decodable {
   let url: String
   let text: String
@@ -41,9 +45,11 @@ class TextusFilesPlugin: Plugin, UIDocumentPickerDelegate {
   private var pending: Invoke?
   private var pickingFolder = false
   private var keyboardFit: KeyboardFit?
+  private var systemBars: SystemBars?
 
   @objc public override func load(webview: WKWebView) {
     keyboardFit = KeyboardFit(webview: webview)
+    systemBars = SystemBars(webview: webview)
   }
 
   // MARK: Bookmarks
@@ -269,6 +275,22 @@ class TextusFilesPlugin: Plugin, UIDocumentPickerDelegate {
   @objc public func haptic(_ invoke: Invoke) throws {
     DispatchQueue.main.async {
       UIImpactFeedbackGenerator(style: .medium).impactOccurred()
+      invoke.resolve()
+    }
+  }
+
+  /// Dark or light as chosen in Settings, "system" the system's: the
+  /// keyboard and the page's prefers-color-scheme follow the window's.
+  @objc public func appearance(_ invoke: Invoke) throws {
+    let args = try invoke.parseArgs(AppearanceArgs.self)
+    let style: UIUserInterfaceStyle =
+      args.mode == "dark" ? .dark : args.mode == "light" ? .light : .unspecified
+    DispatchQueue.main.async {
+      for scene in UIApplication.shared.connectedScenes {
+        for window in (scene as? UIWindowScene)?.windows ?? [] {
+          window.overrideUserInterfaceStyle = style
+        }
+      }
       invoke.resolve()
     }
   }

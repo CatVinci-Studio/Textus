@@ -201,7 +201,7 @@ pub fn check(manifest: &str) -> Result<(), String> {
             .is_some_and(|e| !e.is_empty());
         let reads = list(m.get("permissions"), "permissions")?
             .iter()
-            .any(|p| p.as_str() == Some("files.read"));
+            .any(|p| matches!(p.as_str(), Some("files.read" | "files.write")));
         if embeds && !reads {
             return Err("contributes.embeds needs files.read.".into());
         }
@@ -324,6 +324,8 @@ mod tests {
             "contributes.embeds needs files.read."
         );
         assert!(embeds(r#"["files.read"]"#).is_ok());
+        // Writing includes reading, as everywhere else.
+        assert!(embeds(r#"["files.write"]"#).is_ok());
     }
 
     #[test]

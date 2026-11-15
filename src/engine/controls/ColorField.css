@@ -1,0 +1,48 @@
+/* A touch screen's colour setting: a round swatch of the value; its card
+   the palette's tones as swatches a finger can take, and a hex field. */
+.color-swatch-button {
+  display: inline-grid;
+  place-items: center;
+  width: var(--control-height);
+  height: var(--control-height);
+  padding: 0;
+  border: 1px solid var(--ui-border);
+  border-radius: var(--shape-pill);
+  background: none;
+}
+
+.color-swatch {
+  width: 60%;
+  height: 60%;
+  border-radius: var(--shape-pill);
+  box-shadow: inset 0 0 0 1px var(--ui-border);
+}
+
+.color-tones {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(var(--control-height), 1fr));
+  gap: var(--space-3);
+  margin-bottom: var(--space-4);
+}
+
+.color-tone {
+  aspect-ratio: 1;
+  min-height: var(--control-height);
+  padding: 0;
+  border: 1px solid var(--ui-border);
+  border-radius: var(--shape-pill);
+}
+
+.color-tone[aria-checked="true"] {
+  outline: 2px solid var(--ui-text);
+  outline-offset: 2px;
+}
+
+.color-hex {
+  width: 100%;
+  font-family: var(--font-mono);
+}
+
+.color-hex[aria-invalid="true"] {
+  border-color: var(--ui-danger);
+}

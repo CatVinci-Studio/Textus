@@ -91,8 +91,19 @@ export function useSidePanels(aiOn: boolean, activeTabId: string) {
   const sidebarPresence = usePresence(open);
   const sidebarClosing = sidebarPresence.state === "closing";
   const [panelMode, setPanelMode] = useSidebarTab();
+  // A sidebar tab's key: that tab in front, or the sidebar put away when
+  // it already is.
+  const showSidebarTab = useCallback(
+    (id: SidebarTabId) => {
+      const shown = open && panelMode === id;
+      setOpen(!shown);
+      if (!shown) setPanelMode(id);
+    },
+    [open, panelMode, setPanelMode],
+  );
 
   return {
+    showSidebarTab,
     panelOpen: open,
     setPanelOpen: setOpen,
     toggleSidebar,

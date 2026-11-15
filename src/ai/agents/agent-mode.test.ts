@@ -104,11 +104,18 @@ const deepseek = {
 };
 
 describe("what an agent offers", () => {
-  it("reads lists of two or more, a grouped one's choices in a row", () => {
+  it("reads lists, a grouped one's choices in a row", () => {
     const [model] = readOptions([deepseek]);
     expect(model.choices.map((c) => c.name)).toEqual(["flash", "pro"]);
     expect(model.current).toBe(deepseek.currentValue);
-    // One choice only, or not a list: nothing to pick.
+    // A list of one says what is in use (DeepSeek's model, signed out).
+    const group = deepseek.options[0];
+    const one = {
+      ...deepseek,
+      options: [{ ...group, options: [group.options[0]] }],
+    };
+    expect(readOptions([one])[0].choices).toHaveLength(1);
+    // An empty list, or not a list: nothing to show.
     expect(readOptions([claude[1], { id: "x", type: "boolean" }])).toEqual([]);
     expect(readOptions(undefined)).toEqual([]);
   });

@@ -1,5 +1,7 @@
 import { createPortal } from "react-dom";
-import { insertTable } from "../editor/editor-menu";
+import { editorViewCtx } from "@milkdown/kit/core";
+import { isPhoneLayout } from "../platform/phone-layout";
+import { insertTable } from "../editor/tables/insert-table";
 import { EditorContextMenu } from "./EditorContextMenu";
 import type { EditorSetup } from "./useEditorSetup";
 import type { EditorChat } from "./useEditorChat";
@@ -63,16 +65,17 @@ export function EditorOverlays({
         openFindReplace={findReplace.show}
         openTableDialog={() => setTableDialogOpen(true)}
         own={review.notes.menu}
-        onClose={() => popups.setMenu(null)}
+        onClose={() => {
+          popups.setMenu(null);
+          // A phone's sheet (⋯) closed: the text takes the keys back, the
+          // keyboard staying up.
+          if (isPhoneLayout()) run((ctx) => ctx.get(editorViewCtx).focus());
+        }}
       />
       <Presence show={tableDialogOpen}>
         {tableDialogOpen && (
           <InsertTableDialog
-            title={t.insertTable}
-            rowsLabel={t.insertTableRowsLabel}
-            columnsLabel={t.insertTableColumnsLabel}
-            confirmLabel={t.insertTableConfirm}
-            cancelLabel={t.cancel}
+            t={t}
             onInsert={(rows, cols) => insertTable(run, rows, cols)}
             onClose={() => setTableDialogOpen(false)}
           />

@@ -1,4 +1,5 @@
 import { splitHere } from "./split-here";
+import type { FormatBarSide } from "../../prefs/settings-values";
 import { PLUGIN_SETTINGS } from "../../registry/menu/plugin-menu";
 import { useEffect, useLayoutEffect, useRef } from "react";
 import { useSyncExternalStore } from "react";
@@ -36,6 +37,7 @@ import type { PandocSettings } from "../../export/pandoc-options";
 import type { DiagramEngine, Shortcuts } from "../../prefs/SettingsContext";
 import { closeSplit } from "../../engine/layout/store";
 import { pickIsland } from "../../engine/layout/island-numbers";
+import { afterComposition } from "../../utils/ime";
 import { islandKeyOf } from "./island-key";
 import { APP_ACTIONS, type AppActionHandlers } from "./app-actions";
 import { copyPath } from "../../clipboard/copy-path";
@@ -59,7 +61,8 @@ interface MenuBridgeHandlers extends AppActionHandlers {
   onCheckUpdates: () => void;
   /** Settings › Extensions › Plugins, at plugin `id`'s page if given. */
   onOpenPluginSettings: (id?: string) => void;
-  onToggleFormatBar: () => void;
+  /** View › Format Bar: put on an edge, or hidden (null). */
+  onFormatBar: (side: FormatBarSide | null) => void;
   /** Opens the sidebar on the tab with this id. */
   showSidebarTab: (id: string) => void;
   /** Opens Textus AI's panel; left open if it is. */
@@ -97,6 +100,14 @@ const exporters = lazyModule(
   "exporters",
   () => import("../../export/exporters"),
 );
+
+/** View › Format Bar's items: an edge, or hidden. */
+const FORMAT_BAR_PICKS: (FormatBarSide | null)[] = [
+  "top",
+  "left",
+  "right",
+  null,
+];
 
 /** Subscribes the frontend's handlers to the menu events from Rust. */
 export function useMenuBridge(handlers: MenuBridgeHandlers): void {
@@ -193,8 +204,10 @@ export function useMenuBridge(handlers: MenuBridgeHandlers): void {
               ),
             );
       }),
-      listenToThisWindow("menu-toggle-format-bar", () =>
-        h().onToggleFormatBar(),
+      ...FORMAT_BAR_PICKS.map((side) =>
+        listenToThisWindow(`menu-format-bar-${side ?? "hidden"}`, () =>
+          h().onFormatBar(side),
+        ),
       ),
       listenToThisWindow("menu-track-changes", () =>
         window.dispatchEvent(
@@ -241,8 +254,10 @@ export function useMenuBridge(handlers: MenuBridgeHandlers): void {
         // numbers up, the heading it sends is that island's key.
         const island = islandKeyOf(event.payload, h().shortcuts);
         if (island && pickIsland(island)) return;
-        window.dispatchEvent(
-          new CustomEvent(INSERT_BLOCK_EVENT, { detail: event.payload }),
+        afterComposition(() =>
+          window.dispatchEvent(
+            new CustomEvent(INSERT_BLOCK_EVENT, { detail: event.payload }),
+          ),
         );
       }),
       listenToThisWindow<string>("menu-toggle-mark", (event) => {

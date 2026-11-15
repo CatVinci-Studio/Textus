@@ -14,12 +14,18 @@ const ALLOWED: Record<string, string> = {
   "app/SettingsLayer.tsx": "Settings is a sheet over the window, not a tab",
   "app/frame/WindowControls.tsx": "the title row's menu button",
   "app/frame/sidebar-tabs.tsx": "the drawer closes over a document it opened",
+  "app/useOpenFolder.ts":
+    "a reinstall moves Documents, and the AI's folder with it",
   "ai/chat/panel/agent-panel.tsx": "a docked panel drawn at its width",
+  "editor/click-below-end.ts":
+    "a tap beside a table: its caret went astray, onto a word it selected",
   "document/word-import.ts":
     "Files' security-scoped URLs the converter can't read",
   "platform/ios-files.ts": "the Files app's documents",
   "platform/ipc-files.ts": "the Files app's documents",
   "platform/ipc-ai-workspace.ts": "the project folder is picked in Files",
+  "platform/mobile-viewport.ts":
+    "the safe area from WebKit's env(), Android's from its bridge",
   "theme/apply-appearance.ts":
     "its WebKit draws CJK as boxes under generic system fonts",
   "engine/controls/elastic-overscroll.ts": "the system's own overscroll",

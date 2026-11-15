@@ -1,31 +1,49 @@
 import { isMobileApp } from "../platform/capabilities";
+import { KEYBOARD_UP_EVENT } from "../utils/events";
 
 /**
- * Whether the keyboard is up, read off the window's height: the web view
- * shrinks by the keyboard's height. A rotation (a new width) starts over.
- * Marked on the root (`keyboard-up`) for the page's foot to sit on it.
+ * Whether the keyboard is up. The app says so where it can (`textus-keyboard`,
+ * how many px the keyboard covers): a turn with the keyboard up leaves no
+ * full height to compare with. Else it is read off the window's height: the
+ * web view shrinks by the keyboard's height, and a rotation (a new width)
+ * starts over. Marked on the root (`keyboard-up`) for the page's foot to sit
+ * on it.
  */
 let tallest = 0;
 let width = 0;
+/** What the app last said the keyboard covers; null until it says. */
+let covered: number | null = null;
+
+let wasUp = false;
 
 function track() {
   if (window.innerWidth !== width) {
     width = window.innerWidth;
     tallest = window.innerHeight;
   } else tallest = Math.max(tallest, window.innerHeight);
-  if (isMobileApp)
-    document.documentElement.classList.toggle("keyboard-up", up());
+  if (!isMobileApp) return;
+  const now = up();
+  document.documentElement.classList.toggle("keyboard-up", now);
+  if (now && !wasUp) window.dispatchEvent(new Event(KEYBOARD_UP_EVENT));
+  wasUp = now;
 }
 
 /** Less than this much shorter is a bar, not a keyboard (a hardware
  *  keyboard's shortcut strip on an iPad). */
 const KEYBOARD_MIN = 120;
 
-const up = () => window.innerHeight < tallest - KEYBOARD_MIN;
+const up = () =>
+  covered === null
+    ? window.innerHeight < tallest - KEYBOARD_MIN
+    : covered >= KEYBOARD_MIN;
 
 if (typeof window !== "undefined") {
   track();
   window.addEventListener("resize", track);
+  window.addEventListener("textus-keyboard", (e) => {
+    covered = Number((e as CustomEvent<number>).detail) || 0;
+    track();
+  });
 }
 
 export function keyboardUp(): boolean {

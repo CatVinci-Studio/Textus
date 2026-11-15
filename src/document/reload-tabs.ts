@@ -1,6 +1,8 @@
 import { useEffect, useRef } from "react";
+import { androidBridge } from "../platform/android-bridge";
 import { tabIsDirty, type DocTab, type HelpDoc } from "./doc-tabs";
 import type { PluginTabView } from "../plugins/app-bridge";
+import { writeTabOrder } from "./tab-order";
 
 /**
  * What a window has open, kept in its sessionStorage: a reload of the page
@@ -70,7 +72,16 @@ export function keptTabs(
   };
 }
 
-function store(): Storage | null {
+function store(): Pick<Storage, "getItem" | "setItem" | "removeItem"> | null {
+  // Android may make the page anew without a reload (a font or display size
+  // changed), with an empty sessionStorage: its app keeps them instead.
+  const android = androidBridge();
+  if (android)
+    return {
+      getItem: (key) => (key === KEY ? android.kept() || null : null),
+      setItem: (key, value) => key === KEY && android.keep(value),
+      removeItem: (key) => key === KEY && android.keep(""),
+    };
   try {
     return window.sessionStorage;
   } catch {
@@ -81,6 +92,11 @@ function store(): Storage | null {
 /** Writes the tabs down; past the storage's quota, without their text,
  *  so at least the documents come back. */
 export function writeKeptTabs(kept: KeptTabs): void {
+  writeKept(kept);
+  writeTabOrder(kept.tabs, kept.active);
+}
+
+function writeKept(kept: KeptTabs): void {
   const storage = store();
   if (!storage) return;
   try {
@@ -154,6 +170,17 @@ export function useKeepTabs(
     }, WRITE_MS);
     return () => clearTimeout(timer);
   }, [tabs, activeTabId, withText]);
+
+  // Written once the restore is done, too: a page reloaded before any tab
+  // changed would otherwise find nothing kept.
+  useEffect(
+    () =>
+      afterStartupRestore(() => {
+        const now = latest.current;
+        writeKeptTabs(keptTabs(now.liveTabs(), now.activeTabId, now.withText));
+      }),
+    [],
+  );
 
   useEffect(() => {
     const write = () => {

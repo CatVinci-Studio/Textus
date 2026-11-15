@@ -1,4 +1,8 @@
-import { DRAG_START_PX, TOUCH_SLOP_PX } from "../../../utils/gesture";
+import {
+  DRAG_START_PX,
+  TOUCH_SLOP_PX,
+  heldByFinger,
+} from "../../../utils/gesture";
 import { scaledPx } from "../../tokens/chrome-scale";
 import { rowIslandAt } from "../../frame/frame-store";
 import { trackDrag } from "../../drag/pointer-drag";
@@ -274,7 +278,8 @@ export function TabPill({
         onMenu &&
         ((e) => {
           e.preventDefault();
-          onMenu(e.clientX, e.clientY);
+          // A finger's menu is the lift let go in place (handlePointerUp).
+          if (!heldByFinger(e.nativeEvent)) onMenu(e.clientX, e.clientY);
         })
       }
       // Otherwise WebKit starts a text selection and paints a sweep through

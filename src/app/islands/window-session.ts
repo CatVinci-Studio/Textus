@@ -9,10 +9,11 @@ import { afterStartupRestore } from "../../document/reload-tabs";
 import {
   setSplitLayout,
   subscribeSplit,
+  tabInUse,
   windowLayout,
 } from "../../engine/layout/store";
 import { asRoot } from "../../engine/layout/ops";
-import { panesOf } from "../../engine/layout/tree";
+import { mapPanes, panesOf, type LayoutNode } from "../../engine/layout/tree";
 import {
   buildSaved,
   readSavedSplit,
@@ -22,6 +23,23 @@ import {
 
 /** A file's tab by its path: a document's, or a plugin's tab of a file. */
 const pathOf = (tab: DocTab) => tab.path ?? tab.view?.resource ?? null;
+
+/** The saved islands with the draft the launch put in front (a split
+ *  keeps only files) in front of the first island, or as they were. */
+export function withDraftInFront(
+  root: LayoutNode,
+  tabs: readonly DocTab[],
+  inUse: string,
+): LayoutNode {
+  const draft = tabs.find((tab) => tab.id === inUse && !pathOf(tab));
+  const [first] = panesOf(root);
+  if (!draft || !first) return root;
+  return mapPanes(root, (p) =>
+    p.id === first.id
+      ? { ...p, tabs: [...p.tabs, draft.id], front: draft.id }
+      : p,
+  );
+}
 
 /**
  * Brings this window's islands back once the launch has opened its
@@ -51,7 +69,9 @@ export function useWindowSession(
           const path = pathOf(tab);
           if (path && savedPaths(saved).includes(path)) idOf.set(path, tab.id);
         }
-        const root = buildSaved(saved, idOf);
+        const built = buildSaved(saved, idOf);
+        const root =
+          built && withDraftInFront(built, tabsRef.current, tabInUse());
         if (root && root.kind === "split") {
           const [first] = panesOf(root);
           // Its first island's document in front, so the split keeps them all.

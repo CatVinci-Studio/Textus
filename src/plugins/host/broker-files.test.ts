@@ -1,3 +1,4 @@
+// @vitest-environment jsdom
 import { describe, expect, it, vi } from "vitest";
 
 const open = vi.hoisted(() => new Set<string>());
@@ -16,7 +17,10 @@ vi.mock("../../platform/ipc", async (importOriginal) => {
       ...real.plugins,
       // As Rust answers on Windows: the path resolved, \\?\ and all.
       fsStat: async (_id: string, _root: string, path: string) =>
-        path.startsWith("gone") ? null : { path: `\\\\?\\C:\\notes\\${path}` },
+        path.startsWith("gone") || path.endsWith("Dup 3.md")
+          ? null
+          : { path: `\\\\?\\C:\\notes\\${path}` },
+      fsCreate: async () => {},
     },
   };
 });
@@ -62,4 +66,15 @@ it("takes a badge off a file that is gone", async () => {
     files["files.setBadge"]({ path: "gone.md", badge: { text: "1" } }),
   ).rejects.toThrow();
   await files["files.setBadge"]({ path: "gone.md", badge: null });
+});
+
+it("creates a file under a free name when asked, as given", async () => {
+  const scope = { id: "p", root: () => "/notes" } as PluginScope;
+  const files = fileHandlers(scope);
+  await expect(
+    files["files.create"]({ path: "inbox/Dup.md", text: "x", unique: true }),
+  ).resolves.toBe("inbox/Dup 3.md");
+  await expect(
+    files["files.create"]({ path: "/notes/Dup.md", text: "x", unique: true }),
+  ).resolves.toBe("/notes/Dup 3.md");
 });

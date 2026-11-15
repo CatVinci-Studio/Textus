@@ -30,6 +30,14 @@ export function nextTreeRoot({
   return dirname(docPath);
 }
 
+/** The root after Close Folder: the front document's own folder again. */
+export function rootAfterClose(
+  docPath: string | null,
+  fallback: string | null,
+): string | null {
+  return nextTreeRoot({ current: null, folder: null, docPath, fallback });
+}
+
 /**
  * The AI's project folder once a folder is opened, or null to leave it. It
  * follows the opened folder unless the user chose one for the AI.
@@ -41,6 +49,25 @@ export function agentRootOnOpen(
 ): string | null {
   if (current === opened) return null;
   return current === "" || current === fromFolder ? opened : null;
+}
+
+/**
+ * The AI's folder and the folder that set it, after a reinstall moved the
+ * app's Documents (iOS): each in this install's Documents, or null when
+ * neither moved.
+ */
+export function agentRootsMoved(
+  current: string,
+  fromFolder: string,
+  move: (path: string) => string,
+): { current: string; fromFolder: string } | null {
+  const next = {
+    current: current && move(current),
+    fromFolder: fromFolder && move(fromFolder),
+  };
+  return next.current === current && next.fromFolder === fromFolder
+    ? null
+    : next;
 }
 
 /** The same on Close Folder: back to "" if this folder set the AI's

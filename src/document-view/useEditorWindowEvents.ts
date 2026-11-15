@@ -17,6 +17,7 @@ import {
   setImageWidth,
 } from "../editor/editor-menu-images";
 import { runTableAction } from "../editor/editor-menu-tables";
+import { caretLink } from "../editor/editor-menu-links";
 import {
   BOLD,
   HIGHLIGHT,
@@ -292,7 +293,13 @@ export function useEditorWindowEvents({
   // caret is, as an action sheet.
   useWindowEvent(EDITOR_MORE_EVENT, () => {
     if (!isOnScreen()) return;
-    setMenu({ x: 0, y: 0, imagePos: selectedImagePos(run), phone: true });
+    setMenu({
+      x: 0,
+      y: 0,
+      imagePos: selectedImagePos(run),
+      link: caretLink(run, docPath),
+      phone: true,
+    });
   });
 
   // The app-drawn menu's Edit submenu: these native items are predefined and

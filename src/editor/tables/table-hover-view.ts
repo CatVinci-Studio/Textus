@@ -1,8 +1,22 @@
 import { $prose, $view } from "@milkdown/kit/utils";
+import { serializerCtx } from "@milkdown/kit/core";
+import type { Decoration } from "@milkdown/kit/prose/view";
+import type { Strings } from "../../i18n/strings";
+import { TABLE_CARET_SPEC } from "./table-caret";
+import {
+  alignColumns,
+  resizeTable,
+  sharedAlignment,
+  tableSize,
+} from "./table-edits";
+import { mountTableToolbar } from "./TableToolbar";
+import { attachGrips } from "./table-grips";
+import { copyTable } from "../clipboard/table-clipboard";
 import { tableSchema } from "@milkdown/kit/preset/gfm";
 import {
   addRowAfter,
   addColumnAfter,
+  CellSelection,
   columnResizing,
   columnResizingPluginKey,
   TableMap,
@@ -94,15 +108,16 @@ function makeInsertButton(className: string): HTMLButtonElement {
 
 /**
  * Wraps the table's own <table><tbody> (still the contentDOM) with "+"
- * buttons on the bottom and right edges, shown on hover, and a horizontal
- * scroller for wide tables. It also renders the <colgroup> column resizing
- * writes into, as the table's first child. Widths are session-only: GFM
- * can't store them.
+ * buttons on the bottom and right edges, shown on hover, a horizontal
+ * scroller for wide tables, and its tools at the top right (alignment,
+ * size, Copy, Delete), shown on hover and while the caret is in it. It
+ * also renders the <colgroup> column resizing writes into, as the table's
+ * first child. Widths are session-only: GFM can't store them.
  */
-export const tableHoverView = $view(
-  tableSchema.node,
-  () => (node, view, getPos) => {
+export function createTableView(strings: () => Strings) {
+  return $view(tableSchema.node, (ctx) => (node, view, getPos, decorations) => {
     let currentNode = node;
+    let caretCols = caretColsOf(decorations);
     const wrapper = document.createElement("div");
     wrapper.className = "table-wrapper";
 
@@ -126,27 +141,107 @@ export const tableHoverView = $view(
     scroller.appendChild(table);
     wrapper.appendChild(addRowBtn);
     wrapper.appendChild(addColBtn);
+    const grips = attachGrips({ wrapper, table, tbody, view, getPos });
+    const followCaret = () => {
+      // Picked cells (a grip's row or column) leave the grips where they were.
+      if (view.state.selection instanceof CellSelection) return;
+      const at = view.domAtPos(view.state.selection.from).node;
+      const el = at instanceof Element ? at : at.parentElement;
+      grips.follow(el?.closest<HTMLElement>("td, th") ?? null);
+    };
+
+    const header = wrapper.appendChild(document.createElement("div"));
+    header.className = "block-toolbar table-toolbar";
+    header.contentEditable = "false";
+    const actions = header.appendChild(document.createElement("div"));
+    actions.className = "block-toolbar-actions";
+
+    // `refocus`: back to the text, but not from the size card, whose
+    // buttons are pressed again and again.
+    const edit = (
+      make: (tr: Transaction, pos: number) => Transaction,
+      refocus = true,
+    ) => {
+      const pos = getPos();
+      if (pos == null) return;
+      view.dispatch(make(view.state.tr, pos));
+      if (refocus) view.focus();
+    };
+    // Mounted on first hover or caret: a long document has many tables.
+    let tools: ReturnType<typeof mountTableToolbar> | null = null;
+    const render = () => {
+      if (!tools) return;
+      const size = tableSize(currentNode);
+      tools.render({
+        t: strings(),
+        ...size,
+        filled: (r, c) =>
+          !!currentNode.maybeChild(r)?.maybeChild(c)?.textContent.trim(),
+        align: caretCols.length
+          ? sharedAlignment(currentNode, caretCols)
+          : undefined,
+        editable: view.editable,
+        onAlign: (a) => edit((tr, pos) => alignColumns(tr, pos, caretCols, a)),
+        onSize: (rows, cols) =>
+          edit((tr, pos) => resizeTable(tr, pos, rows, cols), false),
+        onCopy: () => copyTable(view, currentNode, ctx.get(serializerCtx)),
+        onDelete: () =>
+          edit((tr, pos) => tr.delete(pos, pos + currentNode.nodeSize)),
+        onOpenChange: (open) => wrapper.classList.toggle("is-sizing", open),
+      });
+    };
+    const showTools = () => {
+      tools ??= mountTableToolbar(actions);
+      render();
+    };
+    wrapper.addEventListener("pointerenter", showTools);
+    if (caretCols.length) showTools();
 
     return {
       dom: wrapper,
       contentDOM: tbody,
-      update(updatedNode) {
+      update(updatedNode, updatedDecorations) {
         if (updatedNode.type !== currentNode.type) return false;
         currentNode = updatedNode;
+        caretCols = caretColsOf(updatedDecorations);
         syncColumns(updatedNode, colgroup, table);
+        if (caretCols.length) {
+          showTools();
+          followCaret();
+        } else render();
         return true;
       },
+      // Keys and presses on its tools, grips and "+" strips aren't the
+      // editor's: a press on the strip under the table was also a click
+      // below the document's end.
+      stopEvent: (event) =>
+        header.contains(event.target as Node) ||
+        addRowBtn.contains(event.target as Node) ||
+        addColBtn.contains(event.target as Node) ||
+        (event.target as Element).classList?.contains("table-grip"),
+      // Only the cells are the document's: its tools, buttons and the
+      // resize drag's widths on the table and its <col>s change under the
+      // view's DOM observer.
       ignoreMutation(record) {
-        // The resize drag writes width styles onto the table and its <col>s; they
-        // aren't content edits.
-        return (
-          record.type === "attributes" &&
-          (record.target === table || colgroup.contains(record.target))
-        );
+        if (record.type === "selection") return false;
+        return !tbody.contains(record.target);
+      },
+      destroy() {
+        grips.destroy();
+        tools?.destroy();
       },
     };
-  },
-);
+  });
+}
+
+/** The columns the caret is in, from tableCaretPlugin's decoration. */
+function caretColsOf(decorations: readonly Decoration[]): number[] {
+  for (const d of decorations) {
+    const cols = (d.spec as Record<string, unknown>)[TABLE_CARET_SPEC];
+    if (Array.isArray(cols)) return cols as number[];
+  }
+  return [];
+}
 
 /**
  * Drag-to-resize columns: prosemirror-tables' columnResizing, with

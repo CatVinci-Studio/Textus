@@ -7,7 +7,13 @@ import { scrollBehavior } from "../../motion/motion";
 import { TabPill, type TabInfo } from "./TabPill";
 import { TabListButton, useTabFit } from "./TabList";
 import { INCOMING, useTabStrip } from "./useTabStrip";
-import type { Slot } from "./tab-strip";
+import { useTabSwipe } from "./useTabSwipe";
+import { revealAt, type Slot } from "./tab-strip";
+import { revealOnResize } from "./reveal-on-resize";
+import { scaledPx } from "../../tokens/chrome-scale";
+
+/** The fade over a scrolled row's start (island.css). */
+const TAB_FADE = 36;
 
 interface TabBarProps {
   tabs: TabInfo[];
@@ -94,6 +100,8 @@ export function TabBar({
     incomingX: previewTab?.x ?? null,
   });
 
+  useTabSwipe(barRef, ids, activeTabId, onActivate);
+
   // The open tab in view as it changes, and as the row narrows.
   const { x: slotX, w: slotW } = strip.slotOf(activeTabId) ?? {};
   const shownLength = fit && fit.available - (overflow ? fit.list : 0);
@@ -103,8 +111,16 @@ export function TabBar({
     if (!bar || slotX === undefined || slotW === undefined) return;
     if (shownLength === null) return;
     const slot = { x: slotX, w: slotW };
-    reveal(bar, slot, shownLength, smooth.current !== activeTabId);
+    const smoothly = smooth.current !== activeTabId;
     smooth.current = activeTabId;
+    reveal(bar, slot, shownLength, smoothly);
+    // Again once the row is measured, as smoothly the first time: the
+    // reveal may have run while it still had its old width.
+    let first = smoothly;
+    return revealOnResize([bar, stripEl.current], () => {
+      reveal(bar, slot, shownLength, first);
+      first = false;
+    });
   }, [activeTabId, slotX, slotW, shownLength]);
 
   const pillOf = (id: string) =>
@@ -205,7 +221,11 @@ export function TabBar({
           className="tab-bar-add"
           tabIndex={-1}
           aria-hidden="true"
-          onClick={onAdd}
+          onClick={(e) => {
+            // Not left holding the focus a tap gave it: Enter would add more.
+            e.currentTarget.blur();
+            onAdd();
+          }}
         >
           +
         </button>
@@ -226,13 +246,18 @@ export function TabBar({
  * Scrolls the row alone (never the page) to bring `slot` into the part of
  * it that shows, `shown` long from where it is scrolled to.
  */
-function reveal(bar: HTMLElement, slot: Slot, shown: number, smooth: boolean) {
-  // Room either side of it, as much as there is.
-  const margin = Math.max(0, Math.min(12, (shown - slot.w) / 2));
-  const from = bar.scrollLeft;
-  const behavior = smooth ? scrollBehavior() : "auto";
-  if (slot.x < from + margin)
-    bar.scrollTo({ left: Math.max(0, slot.x - margin), behavior });
-  else if (slot.x + slot.w > from + shown - margin)
-    bar.scrollTo({ left: slot.x + slot.w - shown + margin, behavior });
+function reveal(
+  bar: HTMLElement,
+  slot: Slot,
+  shown: number,
+  smooth: boolean,
+): void {
+  const fade = scaledPx(TAB_FADE);
+  // A row barely wider than the tab (a phone's) fades only what is left
+  // beside it: never the tab's own first letters.
+  const room = Math.min(fade, Math.max(0, shown - slot.w));
+  bar.style.setProperty("--tab-fade", `${room}px`);
+  const left = revealAt(slot, bar.scrollLeft, shown, fade);
+  if (left !== null)
+    bar.scrollTo({ left, behavior: smooth ? scrollBehavior() : "auto" });
 }

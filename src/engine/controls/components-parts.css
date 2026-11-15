@@ -246,6 +246,54 @@
   visibility: hidden;
 }
 
+/* A table row's or column's grip, a pill on the table's edge, in the
+   editor and on plugin pages: pressed, it picks; pulled, it moves. */
+.tx-table-grip {
+  padding: 0;
+  border: 1px solid var(--doc-border, var(--ui-border));
+  border-radius: var(--shape-pill);
+  corner-shape: round;
+  background: var(--doc-bg, var(--ui-bg));
+  cursor: grab;
+  touch-action: none;
+}
+.tx-table-grip:hover {
+  border-color: var(--ui-accent);
+  background: var(--ui-accent);
+}
+.tx-table-grip-row {
+  width: 8px;
+  height: 20px;
+}
+.tx-table-grip-col {
+  width: 20px;
+  height: 8px;
+}
+/* A finger's grip: the same pill, a fingertip's room to press. */
+@media (pointer: coarse) {
+  .tx-table-grip::before {
+    content: "";
+    position: absolute;
+    inset: -12px;
+  }
+}
+/* A pulled row's or column's cells over the others, which slide aside on
+   the settle spring. */
+.tx-cell-lifted {
+  position: relative;
+  z-index: 2;
+  background: var(--doc-bg, var(--ui-bg));
+  box-shadow: var(--shadow-popover);
+  transition: none;
+}
+.tx-making-room :is(tr, td, th) {
+  transition: transform calc(var(--dur-settle) * var(--motion-travel))
+    var(--ease-settle);
+}
+.tx-making-room .tx-cell-lifted {
+  transition: none;
+}
+
 /* What will appear here and how to get it: one sentence, at most one
    button. */
 .tx-empty {

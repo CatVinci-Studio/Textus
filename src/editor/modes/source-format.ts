@@ -130,8 +130,8 @@ export function setSourceBlock(view: EditorView, kind: string): boolean {
     (prefix === "1. " && /^\s*\d+[.)]\s/.test(text));
   const off = prefix !== "" && all.every((line) => has(line.text));
   let number = 0;
-  view.dispatch({
-    changes: all.map((line) => {
+  const changes = state.changes(
+    all.map((line) => {
       const m = PREFIX.exec(line.text)!;
       const indent = m[1];
       const next =
@@ -142,7 +142,10 @@ export function setSourceBlock(view: EditorView, kind: string): boolean {
         insert: next,
       };
     }),
-  });
+  );
+  // A caret where the prefix goes lands after it, not before: typing went
+  // in front of a new "### " on an empty line.
+  view.dispatch({ changes, selection: state.selection.map(changes, 1) });
   return true;
 }
 
@@ -157,4 +160,31 @@ export function insertSourceLink(view: EditorView): void {
     changes: { from: range.from, to: range.to, insert },
     selection: { anchor: at },
   });
+}
+
+/** The selected lines in a code fence, or out of the one around them. */
+export function toggleSourceFence(view: EditorView): boolean {
+  const { state } = view;
+  const range = state.selection.main;
+  const first = state.doc.lineAt(range.from);
+  const last = state.doc.lineAt(range.to);
+  const before = first.number > 1 ? state.doc.line(first.number - 1) : null;
+  const after =
+    last.number < state.doc.lines ? state.doc.line(last.number + 1) : null;
+  const fence = (text?: string) => !!text && /^\s*(`{3,}|~{3,})/.test(text);
+  if (before && after && fence(before.text) && fence(after.text)) {
+    view.dispatch({
+      changes: [
+        { from: before.from, to: first.from },
+        { from: last.to, to: after.to },
+      ],
+    });
+    return true;
+  }
+  const changes = state.changes([
+    { from: first.from, insert: "```\n" },
+    { from: last.to, insert: "\n```" },
+  ]);
+  view.dispatch({ changes, selection: state.selection.map(changes, 1) });
+  return true;
 }

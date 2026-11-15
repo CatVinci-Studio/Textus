@@ -91,6 +91,11 @@ fn desktop_builder(builder: tauri::Builder<tauri::Wry>) -> tauri::Builder<tauri:
             let app = window.app_handle();
             #[cfg(windows)]
             webview_memory::follow_minimized(window, event);
+            // Windows switched dark or light: "system" windows take its colour.
+            #[cfg(windows)]
+            if matches!(event, tauri::WindowEvent::ThemeChanged(_)) {
+                settings::apply_window_backgrounds(app);
+            }
             if matches!(event, tauri::WindowEvent::Focused(true)) {
                 editor_windows::note_focused(window.label());
             }

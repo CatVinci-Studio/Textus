@@ -232,6 +232,11 @@ export type CatalogEntry_Deserialize = {
 	 *  offered to install: a plugin merged into another.
 	 */
 	unlisted?: boolean,
+	/**
+	 *  Its earlier versions, newest first, for a Textus the newest needs a
+	 *  newer one than (fitting.rs).
+	 */
+	versions?: EarlierVersion_Deserialize[],
 };
 
 /**  One plugin in the catalog. */
@@ -270,6 +275,36 @@ export type CatalogEntry_Serialize = {
 	 *  offered to install: a plugin merged into another.
 	 */
 	unlisted: boolean,
+	/**
+	 *  Its earlier versions, newest first, for a Textus the newest needs a
+	 *  newer one than (fitting.rs).
+	 */
+	versions: EarlierVersion_Serialize[],
+};
+
+/**  An earlier version the catalog keeps (textus-plugins scripts/history.mjs). */
+export type EarlierVersion = EarlierVersion_Serialize | EarlierVersion_Deserialize;
+
+/**  An earlier version the catalog keeps (textus-plugins scripts/history.mjs). */
+export type EarlierVersion_Deserialize = {
+	version: string,
+	/**  Its `engines.textus`. */
+	textus: string,
+	permissions?: string[],
+	url: string,
+	sha256: string,
+	size?: number,
+};
+
+/**  An earlier version the catalog keeps (textus-plugins scripts/history.mjs). */
+export type EarlierVersion_Serialize = {
+	version: string,
+	/**  Its `engines.textus`. */
+	textus: string,
+	permissions: string[],
+	url: string,
+	sha256: string,
+	size: number,
 };
 
 /**  One installed plugin, as Settings › Plugins lists it. */

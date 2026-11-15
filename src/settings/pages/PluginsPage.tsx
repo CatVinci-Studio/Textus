@@ -234,7 +234,11 @@ function MutedSuggestions({ t }: { t: Strings }) {
   if (!count) return null;
   return (
     <SettingRow label={fill(t.pluginCardsMuted, { n: String(count) })}>
-      <button type="button" onClick={restore}>
+      <button
+        type="button"
+        className="text-button settings-inline-button"
+        onClick={restore}
+      >
         {t.pluginCardsRestore}
       </button>
     </SettingRow>

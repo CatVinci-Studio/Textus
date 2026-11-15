@@ -1,0 +1,76 @@
+/* A size picked on a grid (SizeGrid.tsx): the size now in the quiet fill,
+   the size pointed at in the accent, cells with text that would go
+   dashed in the danger colour. */
+.tx-size-grid {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-2);
+  user-select: none;
+  -webkit-user-select: none;
+}
+
+.tx-size-grid-cells {
+  display: grid;
+  gap: 4px;
+  width: fit-content;
+  padding: 2px;
+  border-radius: var(--shape-xs);
+  touch-action: none;
+  cursor: pointer;
+}
+
+.tx-size-grid-cells:focus-visible {
+  outline: 2px solid var(--ui-accent);
+  outline-offset: 2px;
+}
+
+.tx-size-grid-cells > span {
+  width: 16px;
+  height: 16px;
+  box-sizing: border-box;
+  border: 1px solid var(--ui-border);
+  border-radius: var(--shape-xs);
+  background: var(--ui-surface);
+}
+
+.tx-size-grid-cells > .is-current {
+  background: var(--ui-hover);
+}
+
+.tx-size-grid-cells > .is-picked {
+  border-color: var(--ui-accent);
+  background: color-mix(in srgb, var(--ui-accent) 22%, var(--ui-surface));
+}
+
+.tx-size-grid-cells > .is-lost {
+  border-style: dashed;
+  border-color: var(--ui-danger);
+  background: color-mix(in srgb, var(--ui-danger) 10%, var(--ui-surface));
+}
+
+.tx-size-grid-foot {
+  display: flex;
+  align-items: baseline;
+  justify-content: space-between;
+  gap: var(--space-3);
+  font-size: var(--text-footnote);
+  color: var(--ui-muted);
+}
+
+.tx-size-grid-size {
+  color: var(--ui-text);
+  font-weight: 600;
+  font-variant-numeric: tabular-nums;
+}
+
+.tx-size-grid-loses {
+  color: var(--ui-danger);
+}
+
+/* A finger's cells: a phone's, and a tablet's in the desktop's layout. */
+@media (pointer: coarse) {
+  .tx-size-grid-cells > span {
+    width: 28px;
+    height: 28px;
+  }
+}

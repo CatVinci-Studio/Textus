@@ -28,8 +28,8 @@ export const appDrawsWindowFrame =
 export const ownsMenuAccelerators = isLinuxPlatform();
 
 /**
- * Whether the app draws the window outline and resize edges. Linux only: an
- * undecorated GTK window loses both, Windows keeps them.
+ * Whether the app draws inner resize edges. Linux only: GTK's frame resizes
+ * only from outside the window, Windows from its own edge.
  */
 export const drawsWindowEdges = isLinuxPlatform();
 

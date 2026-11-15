@@ -9,8 +9,9 @@ vi.mock("../../storage/ui-state", () => ({
   setUiState: () => {},
 }));
 
-const { applyChoices, offerOf, resetOffersForTests } =
+const { applyChoices, choicesToSend, offerOf, resetOffersForTests } =
   await import("./agent-offers");
+const { addAgents } = await import("../../plugins/contributions/agents");
 
 const select = (
   id: string,
@@ -71,6 +72,24 @@ describe("an agent's options as a session opens", () => {
     expect(sent).toEqual([]);
   });
 
+  it("turns an allow-all switch of the agent's own off unless chosen (Copilot's)", async () => {
+    const copilot = () => [
+      select("mode", "mode", "#agent", ["#agent", "#plan", "#autopilot"]),
+      select("allow_all", "permissions", "on", ["on", "off"]),
+    ];
+    const sent: string[] = [];
+    const set = async (id: string, value: string) => {
+      sent.push(`${id}=${value}`);
+      return null;
+    };
+    await applyChoices("x/copilot", copilot(), set);
+    expect(sent).toEqual(["allow_all=off"]);
+    chosen["x/copilot"] = { allow_all: "on" };
+    sent.length = 0;
+    await applyChoices("x/copilot", copilot(), set);
+    expect(sent).toEqual([]);
+  });
+
   it("skips a model the agent turns down, but never a refused mode", async () => {
     chosen["x/claude"] = { model: "sonnet", effort: "high" };
     const sent: string[] = [];
@@ -86,5 +105,36 @@ describe("an agent's options as a session opens", () => {
         return null;
       }),
     ).rejects.toThrow("no");
+  });
+
+  it("falls back to the mode that asks when a chosen one is refused (Gemini's untrusted folder)", async () => {
+    const gemini = () => [
+      select("mode", "mode", "default", ["default", "autoEdit", "yolo"]),
+    ];
+    chosen["x/gemini"] = { mode: "autoEdit" };
+    const sent: string[] = [];
+    await applyChoices("x/gemini", gemini(), async (id, value) => {
+      sent.push(`${id}=${value}`);
+      if (value === "autoEdit") throw new Error("untrusted folder");
+      return null;
+    });
+    expect(sent).toEqual(["mode=autoEdit", "mode=default"]);
+    expect(offerOf("x/gemini").options[0].current).toBe("default");
+    // Not sent again after the start, or each message would be refused.
+    expect(choicesToSend("x/gemini")).toEqual([]);
+  });
+
+  it("takes the mode that asks from the agent's plugin when its names don't say", async () => {
+    const remove = addAgents("x", [
+      { id: "odd", name: "Odd", askMode: "careful" },
+    ]);
+    const odd = () => [select("mode", "mode", "free", ["free", "careful"])];
+    const sent: string[] = [];
+    await applyChoices("x/odd", odd(), async (id, value) => {
+      sent.push(`${id}=${value}`);
+      return null;
+    });
+    remove();
+    expect(sent).toEqual(["mode=careful"]);
   });
 });
