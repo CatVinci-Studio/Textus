@@ -111,10 +111,19 @@ export function TabBar({
     if (!bar || slotX === undefined || slotW === undefined) return;
     if (shownLength === null) return;
     const slot = { x: slotX, w: slotW };
-    reveal(bar, slot, shownLength, smooth.current !== activeTabId);
+    const smoothly = smooth.current !== activeTabId;
     smooth.current = activeTabId;
-    return revealOnResize([bar, stripEl.current], () =>
-      reveal(bar, slot, shownLength, false),
+    // Asked for while the row may still be at its old width: done again,
+    // as smoothly, once its new width is measured.
+    let first = smoothly;
+    const asked = reveal(bar, slot, shownLength, smoothly);
+    return revealOnResize(
+      [bar, stripEl.current],
+      () => {
+        reveal(bar, slot, shownLength, first);
+        first = false;
+      },
+      asked,
     );
   }, [activeTabId, slotX, slotW, shownLength]);
 
@@ -239,15 +248,22 @@ export function TabBar({
 
 /**
  * Scrolls the row alone (never the page) to bring `slot` into the part of
- * it that shows, `shown` long from where it is scrolled to.
+ * it that shows, `shown` long from where it is scrolled to. True when it
+ * scrolled.
  */
-function reveal(bar: HTMLElement, slot: Slot, shown: number, smooth: boolean) {
+function reveal(
+  bar: HTMLElement,
+  slot: Slot,
+  shown: number,
+  smooth: boolean,
+): boolean {
   const fade = scaledPx(TAB_FADE);
   // A row barely wider than the tab (a phone's) fades only what is left
   // beside it: never the tab's own first letters.
   const room = Math.min(fade, Math.max(0, shown - slot.w));
   bar.style.setProperty("--tab-fade", `${room}px`);
   const left = revealAt(slot, bar.scrollLeft, shown, fade);
-  if (left !== null)
-    bar.scrollTo({ left, behavior: smooth ? scrollBehavior() : "auto" });
+  if (left === null) return false;
+  bar.scrollTo({ left, behavior: smooth ? scrollBehavior() : "auto" });
+  return true;
 }

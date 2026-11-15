@@ -38,4 +38,15 @@ describe("revealOnResize", () => {
     fire([{ target: bar, contentRect: { width: 300 } }]);
     expect(again).toHaveBeenCalledTimes(1);
   });
+
+  it("reveals on the first measure when the reveal scrolled", () => {
+    fakeObserver();
+    const bar = document.createElement("div");
+    const again = vi.fn();
+    revealOnResize([bar], again, true);
+    fire([{ target: bar, contentRect: { width: 166 } }]);
+    expect(again).toHaveBeenCalledTimes(1);
+    fire([{ target: bar, contentRect: { width: 166 } }]);
+    expect(again).toHaveBeenCalledTimes(1);
+  });
 });
