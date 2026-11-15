@@ -39,6 +39,19 @@ export function resolvedDocumentPath(stored: string, docs: string): string {
     : stored;
 }
 
+/** An iOS app container's Documents folder at a path's start. */
+const CONTAINER_DOCUMENTS =
+  /^(?:\/private)?\/var\/mobile\/Containers\/Data\/Application\/[^/]+\/Documents\//;
+
+/** The folder an earlier version kept whole, in the Documents of the
+ *  container a reinstall left behind: this install's own folder of that
+ *  name. Only for the app's open folder, which was always its own. */
+export function ownFolderMoved(stored: string, docs: string): string {
+  if (stored.startsWith(IN_DOCUMENTS) || insideDocuments(stored, docs) !== null)
+    return resolvedDocumentPath(stored, docs);
+  return stored.replace(CONTAINER_DOCUMENTS, withSlash(docs));
+}
+
 let known: string | null = null;
 let loading: Promise<string> | null = null;
 

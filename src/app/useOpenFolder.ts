@@ -8,6 +8,13 @@ import { getUiState, setUiState } from "../storage/ui-state";
 import { useSettings } from "../prefs/SettingsContext";
 import { showMessage } from "../engine/controls/app-dialog";
 import { isInside } from "../utils/path";
+import {
+  documentsDir,
+  IN_DOCUMENTS,
+  knownDocumentsDir,
+  ownFolderMoved,
+  storedDocumentPath,
+} from "../platform/documents-path";
 import { SHOW_FOLDER_EVENT } from "../utils/events";
 import {
   agentRootOnClose,
@@ -18,10 +25,20 @@ import {
 
 /** The folder the last session had open, where there are no windows (an
  *  iPad); a desktop window's comes with its session (launch-window.ts). */
-function restoredFolder(restoreSession: boolean): string | null {
+function savedFolder(restoreSession: boolean): string | null {
   if (!canOpenFolder || !restoreSession || canUseWindows) return null;
   const saved = getUiState("openFolder");
   return typeof saved === "string" && saved ? saved : null;
+}
+
+/** That folder in this install's Documents, which a reinstall or update
+ *  moves: null until the Documents folder is known (then useOpenFolder
+ *  puts it back). */
+function restoredFolder(restoreSession: boolean): string | null {
+  const saved = savedFolder(restoreSession);
+  const docs = knownDocumentsDir();
+  if (!saved || (!docs && saved.startsWith(IN_DOCUMENTS))) return null;
+  return docs ? ownFolderMoved(saved, docs) : saved;
 }
 
 /** The folder an earlier version kept for the whole app: taken by the first
@@ -74,6 +91,18 @@ export function useOpenFolder({
   const [folder, setFolder] = useState<string | null>(() =>
     restoredFolder(settings.restoreSessionOnStartup),
   );
+  // Kept inside Documents and read before Documents was known: back once
+  // it is.
+  const restoring = useRef(true);
+  useEffect(() => {
+    if (!restoring.current) return;
+    restoring.current = false;
+    const saved = savedFolder(settings.restoreSessionOnStartup);
+    if (folder !== null || !saved) return;
+    void documentsDir().then((docs) =>
+      setFolder((now) => now ?? ownFolderMoved(saved, docs)),
+    );
+  }, [folder, settings.restoreSessionOnStartup]);
   const [tree, setTree] = useState(() => ({
     key: inputsKey(folder, activePath, fallback),
     root: nextTreeRoot({
@@ -140,7 +169,8 @@ export function useOpenFolder({
         key: inputsKey(path, now.activePath, now.fallback),
         root: path,
       });
-      if (!canUseWindows) setUiState("openFolder", path);
+      if (!canUseWindows)
+        setUiState("openFolder", storedDocumentPath(path, knownDocumentsDir()));
       void session.addRecentFolder(path).catch(() => {});
       const agentRoot = agentRootOnOpen(
         now.settings.agentWorkspaceRoot,
