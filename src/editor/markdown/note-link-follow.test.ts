@@ -48,6 +48,13 @@ describe("following a link to a note", () => {
     );
   });
 
+  it("finds a note from an unsaved draft by the folder's top", async () => {
+    fs.resolveNoteLink.mockResolvedValue({ path: "/v/Note.md", exists: true });
+    await followNoteLink(view, "[[Note]]", null, "/v");
+    expect(opened).toEqual([{ path: "/v/Note.md" }]);
+    expect(fs.resolveNoteLink).toHaveBeenCalledWith("/v/_", "Note", "/v", true);
+  });
+
   it("asks for a table's [[Note\\|alias]] by the note's name alone", async () => {
     fs.resolveNoteLink.mockResolvedValue({ path: "/v/Note.md", exists: true });
     await followNoteLink(view, "[[Note\\|alias]]", "/v/a.md", null);

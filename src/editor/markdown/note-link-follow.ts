@@ -66,13 +66,10 @@ export async function followNoteLink(
     }
     return;
   }
-  if (!docPath) return;
-  const target = await fs.resolveNoteLink(
-    docPath,
-    link.note,
-    folder,
-    link.wiki,
-  );
+  // An unsaved draft finds it from the folder's top, as a note there would.
+  const from = docPath ?? (folder ? `${folder.replace(/\/$/, "")}/_` : null);
+  if (!from) return;
+  const target = await fs.resolveNoteLink(from, link.note, folder, link.wiki);
   if (!target) return;
   if (!isNoteFile(target.path)) {
     if (target.exists) open({ path: target.path, linked: true });
