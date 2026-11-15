@@ -1,26 +1,7 @@
 import type { Node as ProseNode } from "@milkdown/kit/prose/model";
+import { textWithPositions } from "../../editor/text-positions";
 import { wholeBlockKind } from "./markdown-forms";
 import { trimBreaks, type SentenceHunk } from "./sentence-diff";
-
-/** The range's text and each character's position. Unlike textBetween,
- *  nothing between text nodes adds characters. */
-function textPositions(
-  doc: ProseNode,
-  from: number,
-  to: number,
-): { text: string; positions: number[] } {
-  const positions: number[] = [];
-  let text = "";
-  doc.nodesBetween(from, to, (node, pos) => {
-    if (!node.isText || !node.text) return true;
-    const a = Math.max(pos, from);
-    const b = Math.min(pos + node.nodeSize, to);
-    for (let p = a; p < b; p++) positions.push(p);
-    text += node.text.slice(a - pos, b - pos);
-    return true;
-  });
-  return { text, positions };
-}
 
 /** Where each of `needles` stands in [from, to), in order; one not found is
  *  skipped. */
@@ -30,7 +11,7 @@ export function findInOrder(
   to: number,
   needles: string[],
 ): { from: number; to: number }[] {
-  const { text, positions } = textPositions(doc, from, to);
+  const { text, positions } = textWithPositions(doc, from, to);
   const out: { from: number; to: number }[] = [];
   let cursor = 0;
   for (const needle of needles) {
@@ -56,7 +37,7 @@ export function locateHunks(
   plainOf: (markdown: string) => string | null,
   lead = "",
 ): LocatedHunk[] | null {
-  const { text, positions } = textPositions(doc, from, to);
+  const { text, positions } = textWithPositions(doc, from, to);
   if (positions.length === 0) return null;
   const at = (i: number) =>
     i < positions.length ? positions[i] : positions[positions.length - 1] + 1;
