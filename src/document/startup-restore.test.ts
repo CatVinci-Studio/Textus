@@ -275,6 +275,29 @@ describe("startup restore into the initial tab", () => {
     ]);
   });
 
+  it("brings a draft that was in front back in front, the files behind it", async () => {
+    localStorage.setItem(
+      "textus-tab-order",
+      JSON.stringify({ keys: ["path:/docs/a.md", "id:d1"], active: "id:d1" }),
+    );
+    ipc.takeDraftSnapshots.mockResolvedValue([
+      { tabId: "d1", path: null, content: "draft text", diskMtime: null },
+    ]);
+    ipc.takePendingWindow.mockResolvedValue({
+      paths: ["/docs/a.md"],
+      layout: { tree: { paths: ["/docs/a.md"], front: "/docs/a.md" } },
+    });
+    await restore(true, false, true);
+    const model = await import("../engine/layout/store");
+    await waitFor(() =>
+      expect(
+        model.windowTabs<DocTab>().find((tab) => tab.id === model.tabInUse())
+          ?.content,
+      ).toBe("draft text"),
+    );
+    localStorage.removeItem("textus-tab-order");
+  });
+
   it("keeps that order in the window's own model, which orders by island", async () => {
     ipc.takePendingWindow.mockResolvedValue({
       paths: ["/docs/a.md", "/docs/b.md", "/docs/c.md"],

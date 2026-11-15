@@ -24,6 +24,7 @@ import { readTabOrder } from "./tab-order";
 import { documentsDir } from "../platform/documents-path";
 import { fileOf, restoreTabsInOrder } from "./phone-restore";
 import {
+  activateTab,
   paneOf,
   reorderInPane,
   splitLayout,
@@ -344,6 +345,8 @@ export function useStartupRestore(options: StartupRestoreOptions): void {
         const pane = paneOf(windowLayout(), opts.activeTabId);
         if (pane && !splitLayout())
           ordered.forEach((tab, i) => reorderInPane(pane, tab.id, i));
+        // A draft was in front: it comes back in front, not the first file.
+        if (frontDraft) activateTab(frontDraft.id);
         return;
       }
       // A phone: the tabs it had, saved ones and drafts, in their order;
