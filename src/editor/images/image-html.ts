@@ -95,6 +95,9 @@ export function readImagePresentation(title: string | null | undefined): {
   return { title: caption, widthPercent };
 }
 
+/** The widths an image's menus offer, as percentages of the page. */
+export const IMAGE_WIDTHS = [30, 50, 70, 100] as const;
+
 /** The width an image shows at, as HTML writes it, or null for its own
  *  size: its `width`, else one kept in its title. */
 export function imageWidthOf(attrs: Attrs): string | null {
