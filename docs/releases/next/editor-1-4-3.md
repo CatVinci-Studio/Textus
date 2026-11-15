@@ -13,3 +13,5 @@
 ### Fixed
 
 - A heading key pressed while an input method is still composing no longer doubles the text.
+- A PDF or zip file that happens to read as text no longer opens in the text editor, where saving would damage it.
+- In an unsaved draft, a link to a note by its relative path opens the note.
