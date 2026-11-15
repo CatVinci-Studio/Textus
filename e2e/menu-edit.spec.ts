@@ -150,3 +150,93 @@ test("a heading key reaching the page mid-pinyin (Windows) waits for the text an
   await expect(doc.locator("h3")).toHaveText(/你hi哎$/);
   await expect(doc).not.toContainText("hihi");
 });
+
+test.describe("the app-drawn menu (Windows, Linux)", () => {
+  test.beforeEach(async ({ page }) => {
+    await page.addInitScript(() => {
+      Object.defineProperty(navigator, "platform", { get: () => "Win32" });
+      Object.defineProperty(navigator, "userAgent", {
+        get: () => "Mozilla/5.0 (Win32) AppleWebKit/537.36 Chrome/157.0",
+      });
+    });
+    await page.setViewportSize({ width: 1200, height: 760 });
+  });
+
+  const menus = (page: Page) => page.getByRole("menu");
+  // A row by its label (its shortcut follows it): an action or an on/off.
+  const row = (page: Page, name: string) =>
+    page
+      .locator('[role="menuitem"], [role="menuitemcheckbox"]')
+      .filter({ hasText: new RegExp(`^${name}`) });
+
+  test("the bar's lists are walked with ← and →, and Edit › Undo acts on the source in use", async ({
+    page,
+  }) => {
+    await openApp(page, { settings: { menuBarShown: true, language: "en" } });
+    await docs(page).first().click();
+    await page.keyboard.type("alpha");
+    await emit(page, "menu-toggle-source-mode");
+    const source = page.locator(".source-view .cm-content");
+    await expect(source).toContainText("alpha");
+    await source.click();
+    await page.keyboard.press("End");
+    await page.keyboard.type(" beta");
+    await expect(source).toContainText("alpha beta");
+    const bar = page.getByRole("menubar");
+    await bar.getByRole("menuitem", { name: "Edit" }).click();
+    await expect(row(page, "Undo")).toBeVisible();
+    await page.keyboard.press("ArrowRight");
+    await expect(bar.getByRole("menuitem", { name: "Format" })).toHaveAttribute(
+      "aria-expanded",
+      "true",
+    );
+    await page.keyboard.press("ArrowLeft");
+    await expect(row(page, "Undo")).toBeVisible();
+    await row(page, "Undo").click();
+    await expect(menus(page)).toHaveCount(0);
+    await expect(source).not.toContainText("beta");
+    await expect(source).toContainText("alpha");
+  });
+
+  test("the window's menu opens a section beside it, and that section's submenu beside that", async ({
+    page,
+  }) => {
+    await openApp(page, { settings: { menuBarShown: false, language: "en" } });
+    await page.getByRole("button", { name: "Menu" }).click();
+    await row(page, "View").hover();
+    await expect(row(page, "Zen Mode")).toBeVisible();
+    await row(page, "Mode").hover();
+    await expect(menus(page)).toHaveCount(3);
+    const [first, second, third] = await Promise.all(
+      [0, 1, 2].map((i) => menus(page).nth(i).boundingBox()),
+    );
+    expect(second!.x).toBeGreaterThanOrEqual(first!.x + first!.width);
+    expect(third!.x).toBeGreaterThanOrEqual(second!.x + second!.width);
+    await page.keyboard.press("Escape");
+    await expect(menus(page)).toHaveCount(0);
+  });
+});
+
+test.describe("the phone's menu", () => {
+  test.use({
+    userAgent:
+      "Mozilla/5.0 (iPhone; CPU iPhone OS 18_0 like Mac OS X) AppleWebKit/605.1.15 (KHTML, like Gecko) Mobile/15E148",
+    viewport: { width: 402, height: 874 },
+    hasTouch: true,
+    isMobile: true,
+  });
+
+  test("opens a submenu in place under its row", async ({ page }) => {
+    await openApp(page, { settings: { language: "en" } });
+    await page.getByRole("button", { name: "Menu" }).first().tap();
+    const group = page
+      .locator('[role="menuitem"][aria-haspopup="menu"]')
+      .first();
+    await group.tap();
+    await expect(group).toHaveAttribute("aria-expanded", "true");
+    // In place: its rows inside the one panel, none beside it.
+    await expect(page.locator('[role="menu"] [role="menu"]')).toHaveCount(1);
+    await expect(page.locator('[role="menu"]')).toHaveCount(2);
+    await page.screenshot({ path: "test-results/phone-menu.png" });
+  });
+});
