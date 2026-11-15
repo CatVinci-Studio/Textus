@@ -21,6 +21,7 @@ import { keptTabsRestored, readKeptTabs, type KeptTab } from "./reload-tabs";
 import { takeWindowSession } from "./launch-window";
 import { savedFront } from "../engine/layout/saved";
 import { readTabOrder } from "./tab-order";
+import { documentsDir } from "../platform/documents-path";
 import { fileOf, restoreTabsInOrder } from "./phone-restore";
 import {
   paneOf,
@@ -195,7 +196,9 @@ export function useStartupRestore(options: StartupRestoreOptions): void {
       }
       // Recovered drafts from a crash or forced quit, added as extra tabs
       // without stealing focus. Skipped while the privacy toggle is off.
-      const order = readTabOrder();
+      const order = readTabOrder(
+        isMobileApp ? await documentsDir().catch(() => null) : null,
+      );
       const place = (id: string) => {
         const at = order.keys.indexOf(`id:${id}`);
         return at < 0 ? order.keys.length : at;

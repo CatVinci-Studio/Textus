@@ -1472,6 +1472,8 @@ Habilidades ficam na pasta skills/ ao lado deste arquivo, um arquivo
   wordImportDismiss: "Entendi",
   openFileFailed:
     "Não é possível abrir {name}: não é um documento de texto e nenhum plugin abre arquivos deste tipo.",
+  openFileGone:
+    "Não é possível abrir {name}: o arquivo não está mais lá. Talvez tenha sido movido, renomeado ou excluído.",
   wordImportFailed: "Não foi possível abrir {name}.",
   wordSaveRefused:
     "Um documento Markdown não pode ser salvo por cima de um documento do Word. Escolha um nome terminado em .md.",

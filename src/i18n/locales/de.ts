@@ -1452,6 +1452,8 @@ Skills liegen im Ordner skills/ neben dieser Datei, je Skill eine
   wordImportDismiss: "Verstanden",
   openFileFailed:
     "{name} lässt sich nicht öffnen: Es ist kein Textdokument, und kein Plugin öffnet solche Dateien.",
+  openFileGone:
+    "{name} lässt sich nicht öffnen: Die Datei ist nicht mehr da. Sie wurde vielleicht verschoben, umbenannt oder gelöscht.",
   wordImportFailed: "{name} konnte nicht geöffnet werden.",
   wordSaveRefused:
     "Ein Markdown-Dokument kann nicht über ein Word-Dokument gespeichert werden. Wähle einen Namen, der auf .md endet.",

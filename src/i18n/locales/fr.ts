@@ -1498,6 +1498,8 @@ utiliser une.
   wordImportDismiss: "OK",
   openFileFailed:
     "Impossible d’ouvrir {name} : ce n’est pas un document texte, et aucun plugin n’ouvre ce type de fichier.",
+  openFileGone:
+    "Impossible d’ouvrir {name} : le fichier n’est plus là. Il a peut-être été déplacé, renommé ou supprimé.",
   wordImportFailed: "Impossible d'ouvrir {name}.",
   wordSaveRefused:
     "Un document Markdown ne peut pas être enregistré à la place d'un document Word. Choisissez un nom qui se termine par .md.",

@@ -1320,6 +1320,8 @@ export default {
     "已將 {name} 轉換為新的 Markdown 文件。部分格式可能與 Word 中不同，原 Word 檔案不會被更動。",
   wordImportDismiss: "知道了",
   openFileFailed: "無法開啟 {name}：它不是文字文件，也沒有外掛能開啟這類檔案。",
+  openFileGone:
+    "無法開啟 {name}：檔案已不在原處，可能已被移動、重新命名或刪除。",
   wordImportFailed: "無法開啟 {name}。",
   wordSaveRefused:
     "Markdown 文件不能儲存到 Word 文件上。請選擇以 .md 結尾的檔名。",

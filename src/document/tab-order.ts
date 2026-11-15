@@ -5,6 +5,12 @@
  * tab with unsaved text by its id, its draft's.
  */
 
+import {
+  knownDocumentsDir,
+  ownFolderMoved,
+  storedDocumentPath,
+} from "../platform/documents-path";
+
 const KEY = "textus-tab-order";
 
 export interface TabOrder {
@@ -22,9 +28,17 @@ interface Keyed {
 
 function orderKey(tab: Keyed): string {
   if (tab.view) return `view:${tab.view.view ?? tab.view.kind}`;
-  if (tab.path && !tab.text) return `path:${tab.path}`;
+  // Kept by its place in Documents: a reinstall moves an iOS app's folder.
+  if (tab.path && !tab.text)
+    return `path:${storedDocumentPath(tab.path, knownDocumentsDir())}`;
   return `id:${tab.id ?? ""}`;
 }
+
+/** A key's document resolved into this install's Documents `docs`. */
+const resolved = (key: string, docs: string | null) =>
+  docs && key.startsWith("path:")
+    ? `path:${ownFolderMoved(key.slice(5), docs)}`
+    : key;
 
 export function writeTabOrder(tabs: readonly Keyed[], active: number): void {
   try {
@@ -40,7 +54,7 @@ export function writeTabOrder(tabs: readonly Keyed[], active: number): void {
   }
 }
 
-export function readTabOrder(): TabOrder {
+export function readTabOrder(docs: string | null = null): TabOrder {
   try {
     const raw = JSON.parse(localStorage.getItem(KEY) ?? "null") as {
       keys?: unknown;
@@ -48,7 +62,11 @@ export function readTabOrder(): TabOrder {
       active?: unknown;
     } | null;
     const active = typeof raw?.active === "string" ? raw.active : "";
-    if (Array.isArray(raw?.keys)) return { keys: raw.keys.map(String), active };
+    if (Array.isArray(raw?.keys))
+      return {
+        keys: raw.keys.map((k) => resolved(String(k), docs)),
+        active: resolved(active, docs),
+      };
     // 1.4.3's first builds kept the ids alone.
     const ids = Array.isArray(raw?.ids) ? raw.ids.map(String) : [];
     return {

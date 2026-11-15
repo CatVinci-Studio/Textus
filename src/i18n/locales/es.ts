@@ -1490,6 +1490,8 @@ para usar una.
   wordImportDismiss: "Entendido",
   openFileFailed:
     "No se puede abrir {name}: no es un documento de texto y ningún complemento abre archivos de este tipo.",
+  openFileGone:
+    "No se puede abrir {name}: ya no está ahí. Puede que se haya movido, renombrado o eliminado.",
   wordImportFailed: "No se pudo abrir {name}.",
   wordSaveRefused:
     "Un documento Markdown no se puede guardar sobre un documento de Word. Elige un nombre que termine en .md.",

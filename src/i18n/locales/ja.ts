@@ -1388,6 +1388,8 @@ ${AI_NAME}への執筆の指示です。すべての文書に適用されます�
   wordImportDismiss: "OK",
   openFileFailed:
     "{name} を開けません。テキスト文書ではなく、この種類のファイルを開けるプラグインもありません。",
+  openFileGone:
+    "{name} を開けません。ファイルが見つかりません。移動、名前の変更、または削除された可能性があります。",
   wordImportFailed: "{name} を開けませんでした。",
   wordSaveRefused:
     "Markdown 文書を Word 文書に上書き保存することはできません。.md で終わる名前を選んでください。",
