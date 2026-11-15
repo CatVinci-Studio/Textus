@@ -64,13 +64,13 @@ const LIGHT = { light: true, native: false };
 const NATIVE = { light: false, native: true };
 
 describe("which CI jobs a pull request needs", () => {
-  it("runs check alone for documentation", () => {
+  it("runs check alone for documentation outside the pictures", () => {
     expect(
       edit(["docs/dev/testing.md", "README.md", "packaging/arch/README.md"]),
     ).toEqual(NONE);
   });
 
-  it("runs the light check alone for GitHub's settings, the license and root Markdown, merged too", () => {
+  it("runs the light check alone for GitHub's settings, the license, root Markdown and the READMEs' pictures, merged too", () => {
     const files = [
       ".github/FUNDING.yml",
       ".github/CODEOWNERS",
@@ -80,6 +80,8 @@ describe("which CI jobs a pull request needs", () => {
       "LICENSE",
       "CONTRIBUTING.md",
       "README.zh.md",
+      "docs/images/readme/en/hero.png",
+      "docs/images/appstore/zh/01.png",
     ];
     expect(edit(files)).toEqual(LIGHT);
     expect(edit(files, { push: true })).toEqual(LIGHT);

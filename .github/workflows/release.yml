@@ -334,8 +334,17 @@ jobs:
       tag: ${{ inputs.tag || github.ref_name }}
     secrets: inherit
 
+  # The signed Android APK (see android-release.yml), also on the draft
+  # before publish.
+  android:
+    needs: build
+    uses: ./.github/workflows/android-release.yml
+    with:
+      tag: ${{ inputs.tag || github.ref_name }}
+    secrets: inherit
+
   publish:
-    needs: [build, arch-package]
+    needs: [build, arch-package, android]
     runs-on: ubuntu-22.04
     timeout-minutes: 15
     outputs:
