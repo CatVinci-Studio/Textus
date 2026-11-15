@@ -249,6 +249,9 @@
 /* A table row's or column's grip, a pill on the table's edge, in the
    editor and on plugin pages: pressed, it picks; pulled, it moves. */
 .tx-table-grip {
+  /* Placed by its centre, at the middle of its row's or column's edge. */
+  position: absolute;
+  translate: -50% -50%;
   padding: 0;
   border: 1px solid var(--doc-border, var(--ui-border));
   border-radius: var(--shape-pill);
@@ -268,6 +271,13 @@
 .tx-table-grip-col {
   width: 20px;
   height: 8px;
+}
+/* In a table's head cell (plugin pages): the middle of its top edge, just
+   inside, where a clipping frame leaves it whole. */
+th > .tx-table-grip-col {
+  top: 0;
+  left: 50%;
+  translate: -50% var(--space-1);
 }
 /* A finger's grip: the same pill, a fingertip's room to press. */
 @media (pointer: coarse) {

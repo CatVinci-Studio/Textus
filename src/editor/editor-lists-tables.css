@@ -322,19 +322,12 @@
    the row and column under the pointer (table-grips.ts); its look is the
    shared .tx-table-grip. */
 .table-grip {
-  position: absolute;
   top: 0;
   left: 0;
   z-index: 3;
   opacity: 0;
   pointer-events: none;
   transition: opacity var(--dur-fast) var(--ease-standard);
-}
-.table-grip-row {
-  margin: -10px 0 0 -4px;
-}
-.table-grip-col {
-  margin: -4px 0 0 -10px;
 }
 .table-wrapper[data-grips]:is(:hover, .is-table-caret):not([data-dragging])
   > .table-grip:not([hidden]) {
