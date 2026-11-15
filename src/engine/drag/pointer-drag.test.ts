@@ -89,3 +89,19 @@ it("drops when the buttons are found up, and from the first move once handed ove
   again.cancel();
   expect(end2).toHaveBeenCalledWith(4, 0, false, undefined);
 });
+
+it("keeps a long press's menu from taking the touch over while it follows a press", () => {
+  const menu = () => {
+    const e = new MouseEvent("contextmenu", {
+      bubbles: true,
+      cancelable: true,
+    });
+    document.body.dispatchEvent(e);
+    return e.defaultPrevented;
+  };
+  trackDrag({ button: 0, clientX: 0, clientY: 0 }, { move() {}, end() {} });
+  pointer("pointermove", 30);
+  expect(menu()).toBe(true);
+  pointer("pointerup", 30);
+  expect(menu()).toBe(false);
+});

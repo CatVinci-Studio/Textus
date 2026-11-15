@@ -13,3 +13,4 @@
 - Touch screens: the open tab's name is no longer cut short by its ×.
 - Android: the back key, rotation, folding, system font size and dark mode keep your tabs and drafts.
 - On iPad, the document that was in front when you left is in front again when you come back, not another one in the split.
+- On Android tablets, a tab dragged with a finger drops where you lift it.

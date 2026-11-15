@@ -47,6 +47,7 @@ export function trackDrag(
     window.removeEventListener("pointerup", up);
     window.removeEventListener("pointercancel", cancel);
     window.removeEventListener("keydown", key, true);
+    window.removeEventListener("contextmenu", noMenu, true);
     if (!dragging) return;
     handlers.end(x, y, dropped, e);
     swallowClick();
@@ -58,6 +59,10 @@ export function trackDrag(
     e.preventDefault();
     finish(from.x, from.y, false);
   };
+  // A finger held still a moment is a long press to Android's web view: its
+  // menu would take the touch over, and the lift would never come.
+  const noMenu = (e: Event) => e.preventDefault();
+  window.addEventListener("contextmenu", noMenu, true);
   window.addEventListener("pointermove", move);
   window.addEventListener("pointerup", up);
   window.addEventListener("pointercancel", cancel);
