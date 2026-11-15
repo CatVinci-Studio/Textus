@@ -1,4 +1,5 @@
 import { isMobileApp } from "../platform/capabilities";
+import { KEYBOARD_UP_EVENT } from "../utils/events";
 
 /**
  * Whether the keyboard is up. The app says so where it can (`textus-keyboard`,
@@ -13,13 +14,18 @@ let width = 0;
 /** What the app last said the keyboard covers; null until it says. */
 let covered: number | null = null;
 
+let wasUp = false;
+
 function track() {
   if (window.innerWidth !== width) {
     width = window.innerWidth;
     tallest = window.innerHeight;
   } else tallest = Math.max(tallest, window.innerHeight);
-  if (isMobileApp)
-    document.documentElement.classList.toggle("keyboard-up", up());
+  if (!isMobileApp) return;
+  const now = up();
+  document.documentElement.classList.toggle("keyboard-up", now);
+  if (now && !wasUp) window.dispatchEvent(new Event(KEYBOARD_UP_EVENT));
+  wasUp = now;
 }
 
 /** Less than this much shorter is a bar, not a keyboard (a hardware

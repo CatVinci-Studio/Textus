@@ -95,6 +95,7 @@ import { syntaxHighlightPlugin } from "./code/syntax-highlight-plugin";
 import { createCodeBlockView } from "./code/code-block-language-view";
 import { createCodeLineNumbersPlugin } from "./code/code-line-numbers-plugin";
 import { tableCaretPlugin } from "./tables/table-caret";
+import { keyboardCaretPlugin } from "./keyboard-caret-plugin";
 import { scrollOptions } from "./editor-scroll";
 import { tableKeys, tableRowPaste } from "./tables/table-keys";
 import { clickBelowEnd } from "./click-below-end";
@@ -397,6 +398,7 @@ export function withEditorCore(
       )
       .use(createTableView(() => resolveStrings(settings.current.language)))
       .use(tableCaretPlugin)
+      .use(keyboardCaretPlugin)
       // Before the resize plugin: its press holds every column first.
       .use(editing(tableColumnFreeze))
       .use(editing(tableColumnResizing))

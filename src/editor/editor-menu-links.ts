@@ -49,6 +49,17 @@ export function linkForMenu(
   );
 }
 
+/** The link the caret is in, for the phone's ⋯ sheet. */
+export function caretLink(
+  run: EditorRunner,
+  docPath: string | null,
+): MenuLink | null {
+  return (
+    run((ctx) => linkForMenu(ctx.get(editorViewCtx), null, docPath, true)) ??
+    null
+  );
+}
+
 /** The element the caret is in, to look for a link around. */
 function caretElement(view: EditorView): Element | null {
   try {

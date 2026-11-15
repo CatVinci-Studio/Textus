@@ -1,5 +1,6 @@
 import type { DocTab } from "./doc-tabs";
 import {
+  activateTab,
   paneOf,
   reorderInPane,
   splitLayout,
@@ -36,10 +37,12 @@ export async function restoreTabsInOrder(o: {
   const recoveredFor = (path: string) => restored.find((t) => t.path === path);
   const paths = o.phone ? savedPaths(order) : [];
   // Kept by a build that knew only drafts: the last document, in front.
-  if (o.last && !paths.includes(o.last)) paths.push(o.last);
+  // An order of tabs that leaves it out had it closed.
+  const keyed = order.keys.some((k) => !k.startsWith("id:"));
+  if (o.last && !keyed && !paths.includes(o.last)) paths.push(o.last);
   const activePath = order.active.startsWith("path:")
     ? order.active.slice(5)
-    : !order.active && o.last
+    : !order.active && o.last && !keyed
       ? o.last
       : null;
   const front =
@@ -80,5 +83,10 @@ export async function restoreTabsInOrder(o: {
   const pane = paneOf(windowLayout(), o.initial);
   if (pane && !splitLayout())
     ordered.forEach((tab, i) => reorderInPane(pane, tab.id, i));
+  // A page in front (the AI's) back in front.
+  const page = order.active.startsWith("view:")
+    ? ordered.find((tab) => keyOf(tab) === order.active)
+    : undefined;
+  if (page) activateTab(page.id);
   return true;
 }
