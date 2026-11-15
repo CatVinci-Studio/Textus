@@ -1,7 +1,11 @@
 import { useEffect, useRef, type RefObject } from "react";
 import { canHaptic, isMobileApp } from "../../../platform/capabilities";
 import { iosFiles } from "../../../platform/ios-files";
-import { TOUCH_SLOP_PX } from "../../../utils/gesture";
+import {
+  across,
+  claimSwipe,
+  TOUCH_SLOP_PX,
+} from "../../../utils/gesture";
 import { scaledPx } from "../../tokens/chrome-scale";
 
 /** How far a finger moves along the row to count as a swipe. */
@@ -28,10 +32,7 @@ export function useTabSwipe(
     let start: { x: number; y: number } | null = null;
     const along = (e: TouchEvent) => {
       const t = e.changedTouches[0];
-      if (!start || !t) return null;
-      const dx = t.clientX - start.x;
-      const dy = t.clientY - start.y;
-      return Math.abs(dx) > 2 * Math.abs(dy) ? dx : null;
+      return start && t ? across(start, t) : null;
     };
     // Taken on the window: on a phone the window bar's empty middle lies
     // over the row, and a swipe may start there.
@@ -53,8 +54,10 @@ export function useTabSwipe(
       if (el.querySelector(".tab-pill-lifted")) start = null;
       const dx = along(e);
       // The row's own scroll and the sidebar's swipe stay out of it.
-      if (dx !== null && Math.abs(dx) > scaledPx(TOUCH_SLOP_PX))
+      if (dx !== null && Math.abs(dx) > scaledPx(TOUCH_SLOP_PX)) {
         e.preventDefault();
+        claimSwipe();
+      }
     };
     const up = (e: TouchEvent) => {
       const dx = along(e);
