@@ -180,3 +180,9 @@
 :root[data-window-chrome="mobile"][data-theme="light"] {
   color-scheme: light;
 }
+
+/* The keyboard covers the home indicator and the navigation bar: with it
+   up nothing keeps clear of them, at any layout (a tablet's too). */
+:root.keyboard-up {
+  --safe-bottom: 0px;
+}

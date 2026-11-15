@@ -64,11 +64,19 @@ export function useIslandRoom(
     const observer = new ResizeObserver(remeasure);
     observer.observe(el);
     // A phone's also once the window's resize is told: keyboard-up, marked
-    // then, may change the spacings after the size is seen.
-    if (isMobileApp) window.addEventListener("resize", remeasure);
+    // then, may change the spacings after the size is seen. The app's own
+    // word on its bars and keyboard comes with no resize at all: read once
+    // those have been applied.
+    const later = () => requestAnimationFrame(remeasure);
+    const told = ["textus-insets", "textus-keyboard"];
+    if (isMobileApp) {
+      window.addEventListener("resize", remeasure);
+      for (const type of told) window.addEventListener(type, later);
+    }
     return () => {
       observer.disconnect();
       window.removeEventListener("resize", remeasure);
+      for (const type of told) window.removeEventListener(type, later);
     };
   }, [area]);
   return room;
