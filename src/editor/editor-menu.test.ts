@@ -276,6 +276,16 @@ describe("the editor menu", () => {
     );
     expect(inText).toContain(t.insertTable);
     expect(inText).not.toContain(t.menuBulletList);
+    // A tap only edits a link: its Open is here.
+    const link = { pos: 0, source: "[a](b.md)", href: "b.md", docPath: null };
+    expect(
+      labels(
+        buildPhoneMoreItems(editorAt(caretIn("text")).run, {
+          ...options(null),
+          link,
+        }),
+      ),
+    ).toContain(t.menuOpenLink);
 
     const onImage = labels(
       buildPhoneMoreItems(editorAt(imageSelected).run, options(imagePos)),

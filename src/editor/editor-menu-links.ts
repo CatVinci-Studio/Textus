@@ -20,7 +20,7 @@ export interface MenuLink {
 }
 
 /** The Markdown link under `target`, if any. */
-export function menuLinkAt(
+function menuLinkAt(
   view: EditorView,
   target: EventTarget | null,
   docPath: string | null,
@@ -33,6 +33,30 @@ export function menuLinkAt(
   return node?.type.name === LINK
     ? { pos, source: node.textContent, href, docPath }
     : null;
+}
+
+/** The link a menu is for: under the pointer, or, opened from a button
+ *  (the phone's ⋯), the one the caret is in. */
+export function linkForMenu(
+  view: EditorView,
+  target: EventTarget | null,
+  docPath: string | null,
+  fromButton: boolean,
+): MenuLink | null {
+  return (
+    menuLinkAt(view, target, docPath) ??
+    (fromButton ? menuLinkAt(view, caretElement(view), docPath) : null)
+  );
+}
+
+/** The element the caret is in, to look for a link around. */
+function caretElement(view: EditorView): Element | null {
+  try {
+    const { node } = view.domAtPos(view.state.selection.from);
+    return node instanceof Element ? node : node.parentElement;
+  } catch {
+    return null;
+  }
 }
 
 /** Open, Copy, Edit and Remove for the link right-clicked. */

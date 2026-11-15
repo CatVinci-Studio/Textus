@@ -13,7 +13,7 @@ import type {
   ContextMenuItem,
 } from "../engine/controls/ContextMenu";
 import { contributedMenuItems } from "./editor-menu-items";
-import { linkMenuItems, menuLinkAt, type MenuLink } from "./editor-menu-links";
+import { linkForMenu, linkMenuItems, type MenuLink } from "./editor-menu-links";
 import { imageLocation, type ImageLocation } from "./images/missing-image";
 import { embedFileAt } from "./images/obsidian-embed-preview";
 import { openDiagramViewer } from "./diagram-zoom";
@@ -113,7 +113,7 @@ export function contextMenuTarget(
         // Not representable in the DOM right now.
       }
 
-      const link = menuLinkAt(view, e.target, docPath);
+      const link = linkForMenu(view, e.target, docPath, !coords);
       if (link) return { ...none, link };
       const target =
         e.target instanceof Element ? e.target.closest(".image-view") : null;
@@ -326,7 +326,11 @@ export function buildPhoneMoreItems(
     ];
   }
   if (imagePos !== null) return [...clipboard, ...generalItems(options)];
+  // A tap only edits a link: here it opens.
+  const link = options.link ? linkMenuItems(run, t, options.link) : [];
   return [
+    ...link,
+    ...(link.length ? ["separator" as const] : []),
     { label: t.insertTable, onSelect: options.openTableDialog },
     "separator",
     ...clipboard,
