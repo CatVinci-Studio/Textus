@@ -6,6 +6,8 @@ import {
   openBeside,
   reorderInPane,
   resetWindowModelForTests,
+  setTabOrder,
+  subscribeSplit,
   setSplitLayout,
   setWindowTabs,
   splitLayout,
@@ -33,6 +35,16 @@ describe("a pane's own tabs", () => {
     start([["a"], ["b", "c", "d"]]);
     reorderInPane(ids()[1], "d", 0);
     expect(tabs()[1]).toEqual(["d", "b", "c"]);
+  });
+
+  it("takes a restored window's order at once, the tabs it doesn't name after them", () => {
+    start([["x"], ["a", "b", "c", "d"]]);
+    let told = 0;
+    const stop = subscribeSplit(() => told++);
+    setTabOrder(ids()[1], ["c", "a", "d"]);
+    expect(tabs()[1]).toEqual(["c", "a", "d", "b"]);
+    expect(told).toBe(1);
+    stop();
   });
 });
 

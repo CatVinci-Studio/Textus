@@ -27,6 +27,7 @@ import {
   activateTab,
   paneOf,
   reorderInPane,
+  setTabOrder,
   splitLayout,
   windowLayout,
 } from "../engine/layout/store";
@@ -344,7 +345,10 @@ export function useStartupRestore(options: StartupRestoreOptions): void {
         // The island takes that order too: it keeps its own tabs first.
         const pane = paneOf(windowLayout(), opts.activeTabId);
         if (pane && !splitLayout())
-          ordered.forEach((tab, i) => reorderInPane(pane, tab.id, i));
+          setTabOrder(
+            pane,
+            ordered.map((tab) => tab.id),
+          );
         // A draft was in front: it comes back in front, not the first file.
         if (frontDraft) activateTab(frontDraft.id);
         return;

@@ -2,7 +2,7 @@ import type { DocTab } from "./doc-tabs";
 import {
   activateTab,
   paneOf,
-  reorderInPane,
+  setTabOrder,
   splitLayout,
   windowLayout,
 } from "../engine/layout/store";
@@ -82,7 +82,10 @@ export async function restoreTabsInOrder(o: {
   // The island takes that order too.
   const pane = paneOf(windowLayout(), o.initial);
   if (pane && !splitLayout())
-    ordered.forEach((tab, i) => reorderInPane(pane, tab.id, i));
+    setTabOrder(
+      pane,
+      ordered.map((tab) => tab.id),
+    );
   // A page in front (the AI's) back in front.
   const page = order.active.startsWith("view:")
     ? ordered.find((tab) => keyOf(tab) === order.active)

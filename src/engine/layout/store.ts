@@ -186,6 +186,16 @@ export function reorderInPane(id: string, tabId: string, index: number): void {
   commit(reorderTab(layout, id, tabId, index));
 }
 
+/** A pane's tabs put in the order `ids` gives them, at once (those it
+ *  doesn't name after them): a restored window's order. */
+export function setTabOrder(id: string, ids: readonly string[]): void {
+  let next: SplitLayout | null = layout;
+  ids.forEach((tabId, i) => {
+    next = next && reorderTab(next, id, tabId, i);
+  });
+  if (next && next !== layout) commit(next);
+}
+
 /** The pane a tab opened next joins. */
 export function focusPane(id: string): void {
   setSplitLayout(focusOn(layout, id));
