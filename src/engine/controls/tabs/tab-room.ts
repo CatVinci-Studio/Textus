@@ -172,6 +172,13 @@ export function readTabRoom(
   };
 }
 
+/** What a row's tab measures hold for: its kind and the interface's scale,
+ *  which a narrow window's step changes with no other sign. */
+export function measuresKey(bar: HTMLElement): string {
+  const scale = getComputedStyle(bar).getPropertyValue("--chrome-scale");
+  return `${bar.className}|${scale.trim()}`;
+}
+
 export function sameRoom(a: TabRoom | null, b: TabRoom | null): boolean {
   return JSON.stringify(a) === JSON.stringify(b);
 }
