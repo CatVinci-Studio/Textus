@@ -183,6 +183,30 @@ describe("the table's keys and pastes", () => {
     expect(body(t)).toEqual(["| 1 | x |", "| 2 | y |"]);
   });
 
+  it("a whole wider table pasted with its HTML fills from the caret's cell, as its Markdown does, in one Undo", async () => {
+    const wide = "| a | | d |\n| - | - | - |\n| e | b | |\n\n";
+    const t = await openView(wide + ROWS);
+    const { tableCopy } = await import("../clipboard/table-clipboard");
+    const { serializerCtx } = await import("@milkdown/kit/core");
+    const { markdown, html } = tableCopy(
+      t.view,
+      t.view.state.doc.firstChild!,
+      t.editor.ctx.get(serializerCtx),
+    );
+    t.caretAt("2");
+    t.paste(markdown, html);
+    const second = () => t.markdown().split("\n\n")[1]!.split("\n");
+    expect(second().map((l) => l.replace(/ +/g, " "))).toEqual([
+      "| h | k | |",
+      "| - | - | - |",
+      "| 1 | x | |",
+      "| a | | d |",
+      "| e | b | |",
+    ]);
+    t.press("Mod+z");
+    expect(t.markdown()).toBe(wide + ROWS);
+  });
+
   it("a copied row pasted as the phone gives it, its text alone, goes in as a row", async () => {
     const t = await openView(ROWS);
     const { CellSelection } = await import("@milkdown/kit/prose/tables");

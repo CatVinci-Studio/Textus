@@ -19,6 +19,7 @@ import {
 } from "@milkdown/kit/prose/tables";
 import { keymap } from "@milkdown/kit/prose/keymap";
 import { $prose } from "@milkdown/kit/utils";
+import { fillTable } from "../clipboard/paste-slice";
 
 /** The caret's row and column in its table, the table's start and size. */
 function here(state: EditorState) {
@@ -150,7 +151,7 @@ function asCells(
 /**
  * Whole rows pasted with the caret in a table go in as rows under the
  * caret's; whole columns (as tall as the table), as columns after its
- * column. Picked cells, or fewer, are written over as before.
+ * column. Anything else is written over from the caret's cell.
  */
 export const tableRowPaste = $prose(
   () =>
@@ -207,7 +208,19 @@ export const tableRowPaste = $prose(
                 ),
               );
             }
-          } else return false;
+          } else {
+            // Any other shape is written over from the caret's cell, the
+            // table growing where it runs past, as its Markdown pastes.
+            const pasted = table.type.create(
+              null,
+              cells.rows.map((row) => types.row.create(null, row)),
+            );
+            tr.replaceWith(
+              at.tablePos,
+              at.tablePos + table.nodeSize,
+              fillTable(table, at.row, at.col, pasted),
+            );
+          }
           view.dispatch(tr.scrollIntoView().setMeta("uiEvent", "paste"));
           return true;
         },
