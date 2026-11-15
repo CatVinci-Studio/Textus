@@ -28,25 +28,15 @@ describe("revealOnResize", () => {
     const strip = document.createElement("div");
     const again = vi.fn();
     revealOnResize([bar, strip], again);
+    // The first measure: the row may have narrowed since the reveal.
     fire([
       { target: bar, contentRect: { width: 300 } },
       { target: strip, contentRect: { width: 400 } },
     ]);
-    expect(again).not.toHaveBeenCalled();
+    expect(again).toHaveBeenCalledTimes(1);
     fire([{ target: strip, contentRect: { width: 260 } }]);
-    expect(again).toHaveBeenCalledTimes(1);
+    expect(again).toHaveBeenCalledTimes(2);
     fire([{ target: bar, contentRect: { width: 300 } }]);
-    expect(again).toHaveBeenCalledTimes(1);
-  });
-
-  it("reveals on the first measure when the reveal scrolled", () => {
-    fakeObserver();
-    const bar = document.createElement("div");
-    const again = vi.fn();
-    revealOnResize([bar], again, true);
-    fire([{ target: bar, contentRect: { width: 166 } }]);
-    expect(again).toHaveBeenCalledTimes(1);
-    fire([{ target: bar, contentRect: { width: 166 } }]);
-    expect(again).toHaveBeenCalledTimes(1);
+    expect(again).toHaveBeenCalledTimes(2);
   });
 });
