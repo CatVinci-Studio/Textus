@@ -4,6 +4,7 @@ import { serializerCtx } from "@milkdown/kit/core";
 import type { Ctx } from "@milkdown/kit/ctx";
 import { Selection, type EditorState } from "@milkdown/kit/prose/state";
 import { blockMarkdown } from "./block-markdown";
+import { shownText } from "./link-source";
 import type { EditAction } from "./edit-actions";
 import {
   blockIds,
@@ -115,7 +116,7 @@ export function headingTrail(
   doc.forEach((node, offset) => {
     if (offset >= pos || node.type.name !== "heading") return;
     const level = Number(node.attrs.level) || 1;
-    const text = node.textContent.trim();
+    const text = shownText(node).trim();
     if (!text) return;
     title ??= text;
     while (path.length && path[path.length - 1].level >= level) path.pop();

@@ -17,6 +17,17 @@ describe("[TOC]", () => {
     expect(t.markdown()).toBe(source);
   });
 
+  it("reads a heading's link by its label, as the AI's section path does", async () => {
+    const t = await openView(
+      "[TOC]\n\n# See [the guide](https://x.org/g)\n\nText.",
+    );
+    expect(tocLinks(t.view.dom)).toEqual(["See the guide"]);
+    const { headingAt } = await import("./doc-markdown");
+    expect(headingAt(t.view.state.doc, t.view.state.doc.content.size)).toBe(
+      "See the guide",
+    );
+  });
+
   it("indents each heading by its level below the shallowest", async () => {
     const t = await openView("[TOC]\n\n## A\n\n### B");
     const depths = [
