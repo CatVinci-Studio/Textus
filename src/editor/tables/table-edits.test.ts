@@ -106,6 +106,26 @@ describe("the table's keys and pastes", () => {
     expect(lines(t)[0]).toBe("| k | h |");
   });
 
+  it("iOS's own new line at a line's end before a table is refused, leaving prosemirror's Enter", async () => {
+    const t = await openView(`line\n\n${ROWS}`);
+    const input = (t.view as unknown as { input: { lastIOSEnter: number } })
+      .input;
+    const enter = () => {
+      input.lastIOSEnter = Date.now();
+      const event = new InputEvent("beforeinput", {
+        inputType: "insertParagraph",
+        bubbles: true,
+        cancelable: true,
+      });
+      t.view.dom.dispatchEvent(event);
+      return event.defaultPrevented;
+    };
+    t.caretAt("line", 4);
+    expect(enter()).toBe(true);
+    t.caretAt("line", 2);
+    expect(enter()).toBe(false);
+  });
+
   it("Backspace on a picked row takes it out", async () => {
     const t = await openView(ROWS);
     const { CellSelection } = await import("@milkdown/kit/prose/tables");
@@ -203,6 +223,8 @@ describe("the table's keys and pastes", () => {
       "| a | | d |",
       "| e | b | |",
     ]);
+    // The caret stays in the cell the paste began at.
+    expect(t.caretLine()).toBe("|a");
     t.press("Mod+z");
     expect(t.markdown()).toBe(wide + ROWS);
   });

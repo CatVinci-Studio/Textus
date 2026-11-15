@@ -60,6 +60,7 @@ import { formatShortcutPlugin } from "./keys/format-shortcut-plugin";
 import { selectAllKeyPlugin } from "./keys/select-all";
 import { enclosurePlugin } from "./marks/enclosure";
 import { linuxImeEnterPlugin } from "./keys/linux-ime-enter-plugin";
+import { iosEnterBeforeBlockPlugin } from "./keys/ios-enter-before-block-plugin";
 import { compositionPruneGuardPlugin } from "./keys/composition-prune-guard-plugin";
 import { configureMarkdownOutput } from "./markdown/markdown-output";
 import { openedParseRecorder } from "./markdown/source-preserving";
@@ -253,6 +254,7 @@ export function withEditorCore(
       .use(editing(dragAutoscrollPlugin))
       .use(editing(marginClickPlugin))
       .use(editing(linuxImeEnterPlugin))
+      .use(editing(iosEnterBeforeBlockPlugin))
       .use(editing(compositionPruneGuardPlugin))
       // Commonmark/GFM with bold/italic/strike marks stripped: those are nodes.
       .use(commonmarkWithoutMarks)
