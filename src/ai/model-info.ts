@@ -1,3 +1,4 @@
+import { useSyncExternalStore } from "react";
 import { LOCAL_KEYS, readLocalJson, writeLocal } from "../storage/local";
 import snapshot from "./models-snapshot.json";
 
@@ -53,6 +54,23 @@ export function writeFetchedModels(provider: string, models: string[]): void {
     LOCAL_KEYS.fetchedModels(provider),
     JSON.stringify({ models, at: Date.now() }),
   );
+  fetchedCount++;
+  window.dispatchEvent(new Event(MODELS_FETCHED_EVENT));
+}
+
+// Every picker (Settings' writing and chat rows, the composer) reads the
+// new list at once.
+const MODELS_FETCHED_EVENT = "textus-models-fetched";
+let fetchedCount = 0;
+const onFetched = (listener: () => void) => {
+  window.addEventListener(MODELS_FETCHED_EVENT, listener);
+  return () => window.removeEventListener(MODELS_FETCHED_EVENT, listener);
+};
+
+/** Draws again whenever a model list is fetched; read the lists with
+ *  {@link readFetchedModels}. */
+export function useModelsFetched(): number {
+  return useSyncExternalStore(onFetched, () => fetchedCount);
 }
 
 /** Fetched ids ordered for the picker: current models before deprecated
