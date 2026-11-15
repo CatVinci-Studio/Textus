@@ -62,3 +62,24 @@ export function sideThatFits(
   };
   return fits[side] || !fits[ACROSS[side]] ? side : ACROSS[side];
 }
+
+/** A submenu's gap from its menu, in interface pixels. */
+const SUBMENU_GAP = 4;
+
+type Box = { top: number; bottom: number; left: number; right: number };
+
+/** Where a submenu `size` goes beside its `menu`, level with its `row`: to
+ *  the right, or the left where the window ends; never over the menu. */
+export function submenuPlace(
+  row: Box,
+  menu: Box,
+  size: { width: number; height: number },
+): { left: number; top: number } {
+  const gap = scaledPx(SUBMENU_GAP);
+  const side = sideThatFits("right", menu, size, gap);
+  const left = clampLeft(
+    side === "right" ? menu.right + gap : menu.left - gap - size.width,
+    size.width,
+  );
+  return { left, top: clampTop(row.top - gap, size.height) };
+}

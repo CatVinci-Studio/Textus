@@ -20,8 +20,7 @@ function menuHost(): Element {
 }
 import { useCloseOnOutsideClick } from "../../utils/hooks/useCloseOnOutsideClick";
 import { usePlacement } from "./usePlacement";
-import { clampLeft, clampTop, sideThatFits } from "./placement";
-import { scaledPx } from "../tokens/chrome-scale";
+import { submenuPlace } from "./placement";
 import { ActionSheet } from "./ActionSheet";
 import { useMenuAim } from "./menu-aim";
 import { usePhoneLayout } from "./usePhoneLayout";
@@ -31,9 +30,6 @@ import "./ContextMenu.css";
 import { menuKeyStep } from "./list-keys";
 
 const MENU_ROWS = '[role^="menuitem"]:not(:disabled)';
-
-/** A submenu's gap from its menu, in interface pixels. */
-const SUBMENU_GAP = 4;
 
 export interface ContextMenuItem {
   label: string;
@@ -351,14 +347,7 @@ function SubMenu({
     const menu = (
       anchor.closest(".context-menu") ?? anchor
     ).getBoundingClientRect();
-    const size = el.getBoundingClientRect();
-    const gap = scaledPx(SUBMENU_GAP);
-    const side = sideThatFits("right", menu, size, gap);
-    const left = clampLeft(
-      side === "right" ? menu.right + gap : menu.left - gap - size.width,
-      size.width,
-    );
-    setPos({ left, top: clampTop(row.top - gap, size.height) });
+    setPos(submenuPlace(row, menu, el.getBoundingClientRect()));
   }, [anchor, items]);
   useEffect(() => {
     if (focus && pos)

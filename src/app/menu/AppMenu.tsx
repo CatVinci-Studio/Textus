@@ -5,6 +5,7 @@ import { useSettings } from "../../prefs/SettingsContext";
 import { readRecents } from "./recents";
 import { formatCombo } from "../../utils/shortcuts";
 import { usePlacement } from "../../engine/controls/usePlacement";
+import { submenuPlace } from "../../engine/controls/placement";
 import { opensField, runMenuAction } from "./app-menu-actions";
 import { holdKeyboard } from "../../engine/controls/hold-keyboard";
 import { isMobileApp } from "../../platform/capabilities";
@@ -420,22 +421,15 @@ function Flyout({
     const panel = ref.current;
     const row = anchor.current;
     if (!panel || !row) return;
-    const rowBox = row.getBoundingClientRect();
-    const panelBox = panel.getBoundingClientRect();
-    const margin = 6;
-
-    // Beside the list, a small gap from its edge, never over it.
-    const list = (row.closest(".app-menu-list") ?? row).getBoundingClientRect();
-    const gap = 4;
-    let left = list.right + gap;
-    if (left + panelBox.width > window.innerWidth - margin) {
-      left = Math.max(margin, list.left - gap - panelBox.width);
-    }
-    let top = rowBox.top - 5;
-    if (top + panelBox.height > window.innerHeight - margin) {
-      top = Math.max(margin, window.innerHeight - margin - panelBox.height);
-    }
-    setPos({ left, top });
+    // Beside the list, as a context menu's submenu is.
+    const list = row.closest(".app-menu-list") ?? row;
+    setPos(
+      submenuPlace(
+        row.getBoundingClientRect(),
+        list.getBoundingClientRect(),
+        panel.getBoundingClientRect(),
+      ),
+    );
   }, [anchor, children]);
 
   // On <body>, as the menu is: inside a submenu's panel, which moves as it
