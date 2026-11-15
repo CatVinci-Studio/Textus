@@ -11,6 +11,18 @@ pub(crate) fn read_or_set_aside<T: DeserializeOwned>(path: &Path) -> Option<T> {
     parse_or_set_aside(path, &std::fs::read(path).ok()?)
 }
 
+/// A store read before it is changed and written back whole (keys,
+/// secrets): empty when it isn't there or doesn't parse (then moved aside),
+/// but an error when it can't be read, so a save never writes over what it
+/// holds.
+pub(crate) fn read_store<T: DeserializeOwned + Default>(path: &Path) -> Result<T, String> {
+    match std::fs::read(path) {
+        Ok(bytes) => Ok(parse_or_set_aside(path, &bytes).unwrap_or_default()),
+        Err(e) if e.kind() == std::io::ErrorKind::NotFound => Ok(T::default()),
+        Err(e) => Err(e.to_string()),
+    }
+}
+
 /// `path` read as `T`, or `T`'s default when it isn't there or doesn't
 /// parse (then moved aside first).
 pub(crate) fn load_or_default<T: DeserializeOwned + Default>(path: &Path) -> T {
@@ -80,6 +92,7 @@ fn set_aside(path: &Path) -> std::io::Result<PathBuf> {
 #[cfg(test)]
 mod tests {
     use super::*;
+    use std::collections::HashMap;
 
     #[test]
     fn a_broken_file_is_kept_aside_beside_earlier_ones_and_reads_as_none() {
@@ -96,5 +109,16 @@ mod tests {
         );
         std::fs::write(&path, "{\"a\":1}").unwrap();
         assert!(read_or_set_aside::<serde_json::Value>(&path).is_some());
+    }
+
+    #[test]
+    fn a_store_that_cannot_be_read_is_an_error_not_an_empty_one() {
+        let dir = tempfile::tempdir().unwrap();
+        let path = dir.path().join("provider_keys.json");
+        let empty: HashMap<String, String> = read_store(&path).unwrap();
+        assert!(empty.is_empty());
+        // A folder where the file should be: reading it fails.
+        std::fs::create_dir(&path).unwrap();
+        assert!(read_store::<HashMap<String, String>>(&path).is_err());
     }
 }
