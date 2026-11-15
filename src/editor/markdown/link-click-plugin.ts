@@ -10,7 +10,7 @@ import { revealHeading } from "./heading-jump";
 import { noteJump } from "../nav-history";
 import { linkHrefAt } from "./link-reveal";
 import { linkTarget, type LinkTarget } from "./link-target";
-import { followNoteLink } from "./note-link-follow";
+import { draftBase, followNoteLink } from "./note-link-follow";
 import { windowFolder } from "../../platform/window-folder";
 
 /** The link under a mouse event in this editor, if any. */
@@ -72,8 +72,10 @@ export function openLinkHref(
   href: string,
   docPath: string | null,
 ): void {
+  // An iOS Files document has no folder this app may read beside it.
   const local = docPath && !isScopedUrl(docPath) ? docPath : null;
-  const target = linkTarget(href, local);
+  const base = docPath ? local : draftBase(windowFolder());
+  const target = linkTarget(href, base);
   if (target) void follow(view, href, target, local).catch(() => {});
 }
 
@@ -123,12 +125,10 @@ export function createLinkClickPlugin(docPath: () => string | null) {
             },
             click(view, event) {
               const doc = docPath();
-              // An iOS Files document has no folder this app may read beside it.
-              const local = doc && !isScopedUrl(doc) ? doc : null;
               const wikilink = wikilinkAt(view, event);
               if (wikilink && isFollowClick(event)) {
                 event.preventDefault();
-                openWikilink(view, wikilink.textContent ?? "", local);
+                openWikilink(view, wikilink.textContent ?? "", doc);
                 return true;
               }
               const link = linkAt(view, event);
@@ -137,9 +137,7 @@ export function createLinkClickPlugin(docPath: () => string | null) {
               const href = hrefAt(view, event);
               if (href === null) return false;
               event.preventDefault();
-              const target = linkTarget(href, local);
-              if (target)
-                void follow(view, href, target, local).catch(() => {});
+              openLinkHref(view, href, doc);
               return true;
             },
             auxclick(view, event) {
