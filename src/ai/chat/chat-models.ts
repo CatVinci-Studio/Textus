@@ -151,5 +151,7 @@ export function useAiSignedIn(): boolean | null {
   const active = catalog.find((e) => e.id === settings.aiProvider);
   if (!active) return null;
   const state = connected[active.id];
-  return isReady(active, state) || (state ? false : null);
+  if (isReady(active, state)) return true;
+  // A check that couldn't answer (null) isn't a no.
+  return state && state.apiKey !== null ? false : null;
 }
