@@ -24,6 +24,9 @@ interface SizeGridProps {
 const clamp = (n: number, low: number, high: number) =>
   Math.min(high, Math.max(low, n));
 
+/** How far a press moves before it is a drag, in px. */
+const SLOP = 6;
+
 /** Cells of a table that a picked size would cut away and that have
  *  something in them. */
 export function lostCells(
@@ -58,7 +61,10 @@ export function shownSize(
  */
 export function SizeGrid(p: SizeGridProps) {
   const [at, setAt] = useState<GridSize>(p.value);
-  const pressed = useRef(false);
+  // The press: where it went down and the size it points at. The grid
+  // grows under it (a sheet upward), so the lift picks this, not the cell
+  // under the finger then.
+  const pressed = useRef<{ x: number; y: number; size: GridSize } | null>(null);
   const fit = (size: GridSize): GridSize => ({
     rows: clamp(size.rows, p.least.rows, p.most.rows),
     cols: clamp(size.cols, p.least.cols, p.most.cols),
@@ -75,9 +81,15 @@ export function SizeGrid(p: SizeGridProps) {
     return fit({ rows: r! + 1, cols: c! + 1 });
   };
   const follow = (e: PointerEvent) => {
-    if (e.pointerType !== "mouse" && !pressed.current) return;
+    const press = pressed.current;
+    if (e.pointerType !== "mouse" && !press) return;
+    // A finger's tremor isn't a move.
+    if (press && Math.hypot(e.clientX - press.x, e.clientY - press.y) < SLOP)
+      return;
     const size = cellAt(e);
-    if (size) setAt(size);
+    if (!size) return;
+    setAt(size);
+    if (press) press.size = size;
   };
   const keys = (e: KeyboardEvent) => {
     const step: Record<string, [number, number]> = {
@@ -124,18 +136,20 @@ export function SizeGrid(p: SizeGridProps) {
         style={{ gridTemplateColumns: `repeat(${shown.cols}, auto)` }}
         onKeyDown={keys}
         onPointerDown={(e) => {
-          pressed.current = true;
           e.currentTarget.setPointerCapture(e.pointerId);
-          follow(e);
+          const size = cellAt(e);
+          if (size) setAt(size);
+          pressed.current = { x: e.clientX, y: e.clientY, size: size ?? at };
         }}
         onPointerMove={follow}
         onPointerUp={(e) => {
-          if (!pressed.current) return;
-          pressed.current = false;
-          const size = cellAt(e);
-          if (size) p.onPick(size);
+          const press = pressed.current;
+          if (!press) return;
+          follow(e);
+          pressed.current = null;
+          p.onPick(press.size);
         }}
-        onPointerCancel={() => (pressed.current = false)}
+        onPointerCancel={() => (pressed.current = null)}
         onPointerLeave={(e) => {
           if (e.pointerType === "mouse" && !pressed.current) setAt(p.value);
         }}

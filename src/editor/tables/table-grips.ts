@@ -66,12 +66,18 @@ export function attachGrips(options: {
     const cell = (target as Element | null)?.closest?.("td, th");
     return cell && tbody.contains(cell) ? (cell as HTMLElement) : null;
   };
+  // A mouse over the table: the grips follow it, not the caret. A finger
+  // leaves iOS's :hover stuck on, so only a mouse counts.
+  let mouseOver = false;
   const onMove = (e: PointerEvent) => {
-    if (dragging) return;
+    if (dragging || e.pointerType !== "mouse") return;
+    mouseOver = true;
     const cell = cellAt(e.target);
     if (cell) place(cell);
   };
+  const onLeave = () => (mouseOver = false);
   wrapper.addEventListener("pointermove", onMove);
+  wrapper.addEventListener("pointerleave", onLeave);
 
   /** The table's start and its map, while it is in the document. */
   const tableNow = () => {
@@ -197,10 +203,11 @@ export function attachGrips(options: {
   return {
     /** The grips follow the caret where there is no pointer (a phone). */
     follow(caretCell: HTMLElement | null) {
-      if (!dragging && !wrapper.matches(":hover")) place(caretCell);
+      if (!dragging && !mouseOver) place(caretCell);
     },
     destroy() {
       wrapper.removeEventListener("pointermove", onMove);
+      wrapper.removeEventListener("pointerleave", onLeave);
     },
   };
 }

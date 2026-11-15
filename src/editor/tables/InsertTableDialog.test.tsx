@@ -46,6 +46,24 @@ describe("the new table's size grid", () => {
     expect(lostCells(now, { rows: 3, cols: 2 }, filled)).toBe(2);
     expect(lostCells(now, { rows: 4, cols: 4 }, filled)).toBe(0);
   });
+  it("a finger's tap picks the cell it went down on, though the grid grew under it", () => {
+    const { onInsert } = setup();
+    Element.prototype.setPointerCapture = () => {};
+    const cell = (r: number, c: number) =>
+      grid().querySelector(`[data-cell="${r},${c}"]`);
+    // Down on 5 × 5; grown, the lift is over a gap, then over 6 × 5.
+    const under = vi.fn().mockReturnValueOnce(cell(4, 4)).mockReturnValue(null);
+    document.elementFromPoint = under;
+    const touch = {
+      pointerType: "touch",
+      pointerId: 1,
+      clientX: 50,
+      clientY: 50,
+    };
+    fireEvent.pointerDown(grid(), touch);
+    fireEvent.pointerUp(grid(), { ...touch, clientX: 52 });
+    expect(onInsert).toHaveBeenCalledExactlyOnceWith(5, 5);
+  });
   it("Cancel closes it with nothing inserted", () => {
     const { onInsert, onClose } = setup();
     fireEvent.click(screen.getByRole("button", { name: "Cancel" }));
