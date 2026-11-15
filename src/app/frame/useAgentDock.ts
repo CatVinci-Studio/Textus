@@ -43,9 +43,9 @@ export function useAgentDock(
         return;
       }
     }
-    // Shown on the desktop: what a press does is the AI tabs' to decide -
-    // bring theirs to the front, or hide the AI (useAiTabs).
-    if (!isMobileApp && agentPanel.open) {
+    // Shown: what a press does is the AI tabs' to decide - bring theirs to
+    // the front, or hide the AI (useAiTabs).
+    if (agentPanel.open) {
       window.dispatchEvent(new Event(AI_PRESS_EVENT));
       return;
     }
