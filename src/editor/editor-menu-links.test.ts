@@ -29,4 +29,14 @@ describe("a link in the editor's menu", () => {
     t.caretAt("here", 1);
     expect(caretLink(run, "/n/B.md")).toBeNull();
   });
+
+  it("is a note link's too, opened and copied by its source", async () => {
+    const t = await openView("See [[Note A]] here\n");
+    t.caretAt("Note A", 2);
+    const run: EditorRunner = (fn) => t.editor.action(fn);
+    expect(caretLink(run, "/n/B.md")).toMatchObject({
+      source: "[[Note A]]",
+      wiki: true,
+    });
+  });
 });

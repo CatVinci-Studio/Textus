@@ -77,6 +77,16 @@ export function openLinkHref(
   if (target) void follow(view, href, target, local).catch(() => {});
 }
 
+/** Follows a `[[note]]` link from its source, as a Ctrl+click does. */
+export function openWikilink(
+  view: EditorView,
+  source: string,
+  docPath: string | null,
+): void {
+  const local = docPath && !isScopedUrl(docPath) ? docPath : null;
+  void followNoteLink(view, source, local, windowFolder()).catch(() => {});
+}
+
 /** The URL of the link under a mouse event: a link's own, read from its
  *  source, or a raw HTML anchor's. */
 function hrefAt(view: EditorView, event: MouseEvent): string | null {
@@ -118,10 +128,7 @@ export function createLinkClickPlugin(docPath: () => string | null) {
               const wikilink = wikilinkAt(view, event);
               if (wikilink && isFollowClick(event)) {
                 event.preventDefault();
-                const source = wikilink.textContent ?? "";
-                void followNoteLink(view, source, local, windowFolder()).catch(
-                  () => {},
-                );
+                openWikilink(view, wikilink.textContent ?? "", local);
                 return true;
               }
               const link = linkAt(view, event);
