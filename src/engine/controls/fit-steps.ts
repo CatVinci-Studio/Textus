@@ -49,19 +49,25 @@ export function useFitSteps(
 export function useFitItems(
   el: RefObject<HTMLElement | null>,
   more: string,
+  /** A column: fitted to its height. */
+  column = false,
 ): void {
   useLayoutEffect(() => {
     const row = el.current;
     if (!row) return;
+    const fits = () =>
+      column
+        ? row.scrollHeight <= row.clientHeight
+        : row.scrollWidth <= row.clientWidth;
     const fit = () => {
       const items = [...row.querySelectorAll<HTMLElement>("[data-fit-item]")];
       const button = row.querySelector<HTMLElement>(more);
       for (const item of items) item.removeAttribute("data-fit-hidden");
       button?.setAttribute("data-fit-hidden", "");
-      if (row.scrollWidth <= row.clientWidth) return;
+      if (fits()) return;
       button?.removeAttribute("data-fit-hidden");
       for (let i = items.length - 1; i >= 0; i--) {
-        if (row.scrollWidth <= row.clientWidth) return;
+        if (fits()) return;
         items[i].setAttribute("data-fit-hidden", "");
       }
     };
@@ -73,5 +79,5 @@ export function useFitItems(
       resized.disconnect();
       restyled();
     };
-  }, [el, more]);
+  }, [el, more, column]);
 }

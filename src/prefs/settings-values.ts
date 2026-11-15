@@ -22,6 +22,8 @@ export type EmbedDisplay = "expand" | "card";
  *  source beside a preview. One for all windows. */
 export type ViewMode = "rich" | "source" | "split";
 export type ProxyType = "none" | "http" | "https" | "socks5";
+/** Which edge of a document the format bar sits on (not on a phone). */
+export type FormatBarSide = "top" | "left" | "right";
 
 export const THEME_MODES: ThemeMode[] = ["system", "light", "dark"];
 

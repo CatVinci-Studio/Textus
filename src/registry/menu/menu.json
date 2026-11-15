@@ -290,10 +290,36 @@
           "check": true
         },
         {
-          "id": "toggle-format-bar",
+          "menu": "format-bar",
           "label": "menuFormatBar",
           "en": "Format Bar",
-          "check": true
+          "items": [
+            {
+              "id": "format-bar-top",
+              "label": "menuFormatBarTop",
+              "en": "Top",
+              "check": true
+            },
+            {
+              "id": "format-bar-left",
+              "label": "menuFormatBarLeft",
+              "en": "Left",
+              "check": true
+            },
+            {
+              "id": "format-bar-right",
+              "label": "menuFormatBarRight",
+              "en": "Right",
+              "check": true
+            },
+            "-",
+            {
+              "id": "format-bar-hidden",
+              "label": "menuFormatBarHidden",
+              "en": "Hidden",
+              "check": true
+            }
+          ]
         },
         "-",
         {

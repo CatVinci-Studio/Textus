@@ -1,5 +1,6 @@
 import type { ReactNode } from "react";
 import { Tooltip } from "./Tooltip";
+import type { BubbleSide } from "./Bubble";
 import type { useMenuButton } from "./useMenuButton";
 
 /**
@@ -11,6 +12,7 @@ import type { useMenuButton } from "./useMenuButton";
 export function IconButton({
   label,
   hint = label,
+  hintSide,
   onClick,
   opens,
   pressed,
@@ -21,6 +23,8 @@ export function IconButton({
   label: string;
   /** What the tooltip says, when more than the name (a toggle's state). */
   hint?: string;
+  /** Where the tooltip prefers to sit (below by default). */
+  hintSide?: BubbleSide;
   onClick?: () => void;
   opens?: ReturnType<typeof useMenuButton>["button"];
   /** For a toggle: whether it is on. */
@@ -30,7 +34,7 @@ export function IconButton({
   children: ReactNode;
 }) {
   return (
-    <Tooltip text={hint}>
+    <Tooltip text={hint} side={hintSide}>
       <button
         type="button"
         className={className}

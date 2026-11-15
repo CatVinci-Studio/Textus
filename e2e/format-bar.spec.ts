@@ -1,5 +1,5 @@
 import { expect, test, type Page } from "@playwright/test";
-import { openApp } from "./helpers";
+import { emit, openApp } from "./helpers";
 
 const doc = (page: Page) => page.locator(".ProseMirror:visible").first();
 const bar = (page: Page) => page.getByRole("toolbar");
@@ -62,4 +62,35 @@ test("brought back to the top, the document's first block shows below the format
   await expect
     .poll(async () => (await doc(page).locator("> *").first().boundingBox())!.y)
     .toBeGreaterThanOrEqual(barBox!.y + barBox!.height);
+});
+
+test("View › Format Bar puts the bar on a side of the sheet, the text beside it, or hides it", async ({
+  page,
+}) => {
+  await openApp(page);
+  await doc(page).click();
+  await page.keyboard.type("words");
+  const box = async (sel: string) =>
+    (await page.locator(sel).first().boundingBox())!;
+  for (const side of ["left", "right"] as const) {
+    await emit(page, `menu-format-bar-${side}`);
+    await expect(bar(page)).toHaveAttribute("aria-orientation", "vertical");
+    const b = await box(".format-bar");
+    const pane = await box(".split-pane:has(> .format-bar)");
+    const text = await box(".ProseMirror:visible");
+    expect(b.height).toBeGreaterThan(b.width * 4);
+    if (side === "left") {
+      expect(Math.abs(b.x - pane.x)).toBeLessThan(2);
+      expect(text.x).toBeGreaterThanOrEqual(b.x + b.width);
+    } else {
+      expect(Math.abs(b.x + b.width - (pane.x + pane.width))).toBeLessThan(2);
+      expect(text.x + text.width).toBeLessThanOrEqual(b.x);
+    }
+    // Every button still reachable: shown, or folded behind "⋯".
+    await expect(bar(page).getByRole("button", { name: "加粗" })).toBeVisible();
+  }
+  await emit(page, "menu-format-bar-hidden");
+  await expect(bar(page)).toHaveCount(0);
+  await emit(page, "menu-format-bar-top");
+  await expect(bar(page)).not.toHaveAttribute("aria-orientation", "vertical");
 });

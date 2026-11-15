@@ -1,6 +1,7 @@
 import { counted } from "../../i18n/current";
 import type { Strings } from "../../i18n/strings";
 import type { Shortcuts } from "../../prefs/SettingsContext";
+import type { FormatBarSide } from "../../prefs/settings-values";
 import { type PluginMenuEntry } from "./plugin-menu";
 
 import {
@@ -56,7 +57,10 @@ export type NativeMenuId =
   | "track-changes"
   | "toggle-sidebar"
   | "toggle-agent-panel"
-  | "toggle-format-bar"
+  | "format-bar-top"
+  | "format-bar-left"
+  | "format-bar-right"
+  | "format-bar-hidden"
   | "toggle-textus-ai"
   | "toggle-split-view"
   | "toggle-read-only"
@@ -113,6 +117,8 @@ export interface MenuChecks {
   sidebar?: boolean;
   agentPanel?: boolean;
   formatBar?: boolean;
+  /** Which edge the format bar is on, when shown. */
+  formatBarSide?: FormatBarSide;
   /** Textus AI's master switch; unset counts as on. */
   textusAi?: boolean;
   sourceMode?: boolean;
@@ -146,7 +152,7 @@ export function nativeMenuChecks(checks: MenuChecks): Record<string, boolean> {
   return {
     "toggle-sidebar": !!checks.sidebar,
     "toggle-agent-panel": !!checks.agentPanel,
-    "toggle-format-bar": !!checks.formatBar,
+    ...formatBarChecks(checks),
     "view-mode-default": mode.default,
     "toggle-source-mode": mode.source,
     "toggle-split-view": mode.split,
@@ -154,6 +160,16 @@ export function nativeMenuChecks(checks: MenuChecks): Record<string, boolean> {
     "toggle-zen-mode": !!checks.zen,
     "toggle-read-only": mode.readOnly,
     "track-changes": !!checks.trackChanges,
+  };
+}
+
+/** View › Format Bar's one check: hidden, or the edge it is on. */
+function formatBarChecks({ formatBar, formatBarSide = "top" }: MenuChecks) {
+  return {
+    "format-bar-top": !!formatBar && formatBarSide === "top",
+    "format-bar-left": !!formatBar && formatBarSide === "left",
+    "format-bar-right": !!formatBar && formatBarSide === "right",
+    "format-bar-hidden": !formatBar,
   };
 }
 

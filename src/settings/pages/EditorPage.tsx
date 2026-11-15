@@ -7,7 +7,7 @@ import {
   type ColorSwatchMode,
   type DiagramEngine,
 } from "../../prefs/SettingsContext";
-import type { ViewMode } from "../../prefs/settings-values";
+import type { FormatBarSide, ViewMode } from "../../prefs/settings-values";
 import { AdvancedFold, SettingRow, ToggleRow } from "../sections/controls";
 import { DocTextFold } from "../sections/text-font";
 import { ImageStorageSection } from "../sections/images";
@@ -67,11 +67,26 @@ export function EditTextPage({ t, settings, setSettings }: SettingsPageProps) {
             <option value="split">{t.menuToggleSplitView}</option>
           </Select>
         </SettingRow>
-        <ToggleRow
-          label={t.menuFormatBar}
-          checked={settings.formatBar}
-          onChange={(on) => setSettings({ formatBar: on })}
-        />
+        <SettingRow label={t.menuFormatBar}>
+          <Select
+            className="settings-select"
+            aria-label={t.menuFormatBar}
+            value={settings.formatBar ? settings.formatBarSide : "hidden"}
+            onChange={(e) => {
+              const side = e.target.value;
+              setSettings(
+                side === "hidden"
+                  ? { formatBar: false }
+                  : { formatBar: true, formatBarSide: side as FormatBarSide },
+              );
+            }}
+          >
+            <option value="top">{t.menuFormatBarTop}</option>
+            <option value="left">{t.menuFormatBarLeft}</option>
+            <option value="right">{t.menuFormatBarRight}</option>
+            <option value="hidden">{t.menuFormatBarHidden}</option>
+          </Select>
+        </SettingRow>
         <ToggleRow
           label={t.zoomTogetherLabel}
           help={t.zoomTogetherHint}

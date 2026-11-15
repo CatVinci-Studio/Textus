@@ -12,6 +12,7 @@ import {
   type EmbedDisplay,
   type ViewMode,
   type ProxyType,
+  type FormatBarSide,
   type UiTextScale,
   type DocTextSize,
   type DocLineSpacing,
@@ -158,6 +159,7 @@ export interface Settings {
   /** formatBar has been turned on once for a profile from before it was
    *  on by default (settings-normalise.ts). */
   formatBarOnce: boolean;
+  formatBarSide: FormatBarSide;
   /** Every document zoomed together, not each tab its own (documents
    *  only: Settings, plugin pages and the AI aren't zoomed). */
   zoomTogether: boolean;
@@ -334,6 +336,7 @@ export const DEFAULT_SETTINGS: Settings = {
   typewriterMode: false,
   formatBar: true,
   formatBarOnce: true,
+  formatBarSide: "top",
   zoomTogether: false,
   viewMode: "rich",
   zenMode: false,

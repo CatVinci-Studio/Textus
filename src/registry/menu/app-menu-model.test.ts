@@ -113,9 +113,9 @@ describe("the View menu's on/off items", () => {
         view === undefined || view === "separator" ? [] : (view.submenu ?? []),
       );
       const onOff = items.filter((item) => item.checked !== undefined);
-      // Sidebar, AI panel, format bar, the four modes and their three
-      // additions.
-      expect(onOff).toHaveLength(11);
+      // Sidebar, AI panel, the format bar's four places, the four modes
+      // and their three additions.
+      expect(onOff).toHaveLength(14);
       for (const item of items) expect(item.label).not.toMatch(TOGGLE_WORDS);
       const phone = flatten(buildMobileMenu(strings));
       for (const item of phone) expect(item.label).not.toMatch(TOGGLE_WORDS);
@@ -138,6 +138,7 @@ describe("the View menu's on/off items", () => {
     // One of View › Mode's four is always on: here, the default.
     expect(checked).toEqual([
       t.menuToggleSidebar,
+      t.menuFormatBarHidden,
       t.menuViewModeDefault,
       t.menuToggleZenMode,
       t.menuFullscreen,
@@ -163,6 +164,20 @@ describe("the View menu's on/off items", () => {
     expect(on({ splitView: true })).toEqual(["toggle-split-view"]);
     expect(on({ splitView: true, readOnly: true })).toEqual([
       "toggle-read-only",
+    ]);
+  });
+
+  it("check one place for the format bar: an edge, or hidden", () => {
+    const on = (checks: Parameters<typeof nativeMenuChecks>[0]) =>
+      Object.entries(nativeMenuChecks(checks))
+        .filter(([id, v]) => v && id.startsWith("format-bar-"))
+        .map(([id]) => id);
+    expect(on({ formatBar: true })).toEqual(["format-bar-top"]);
+    expect(on({ formatBar: true, formatBarSide: "right" })).toEqual([
+      "format-bar-right",
+    ]);
+    expect(on({ formatBar: false, formatBarSide: "left" })).toEqual([
+      "format-bar-hidden",
     ]);
   });
 
