@@ -8,7 +8,6 @@ import {
   deleteRow,
   deleteColumn,
   deleteTable,
-  setCellAttr,
   CellSelection,
   selectionCell,
 } from "@milkdown/kit/prose/tables";
@@ -19,6 +18,8 @@ import {
 } from "@milkdown/kit/prose/state";
 import type { EditorView } from "@milkdown/kit/prose/view";
 import { copyTable, tableCopy } from "./clipboard/table-clipboard";
+import { caretColumns } from "./tables/table-caret";
+import { alignColumns } from "./tables/table-edits";
 import type { EditorRunner } from "./useEditorRunner";
 import type { Strings, TextKey } from "../i18n/strings";
 import { parseMarkdownSource } from "./markdown/parse-markdown-source";
@@ -57,25 +58,17 @@ function selectTableLine(run: EditorRunner, kind: "row" | "column") {
   });
 }
 
-// Markdown alignment is per column (the `:---:` row), so a cell alone would
-// serialize to something other than what the editor showed.
+// Markdown alignment is per column (the `:---:` row), so every column the
+// caret or the picked cells are in, as the table's own tools do.
 function alignTableColumn(
   run: EditorRunner,
   alignment: "left" | "center" | "right",
 ) {
   run((ctx) => {
     const view = ctx.get(editorViewCtx);
-    const $cell = selectionCell(view.state);
-    if (!$cell) return;
-    view.dispatch(
-      view.state.tr.setSelection(CellSelection.colSelection($cell)),
-    );
-    setCellAttr("alignment", alignment)(view.state, view.dispatch);
-    view.dispatch(
-      view.state.tr.setSelection(
-        Selection.near(view.state.doc.resolve($cell.pos + 1)),
-      ),
-    );
+    const at = caretColumns(view.state);
+    if (!at?.cols.length) return;
+    view.dispatch(alignColumns(view.state.tr, at.pos, at.cols, alignment));
     view.focus();
   });
 }

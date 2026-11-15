@@ -9,7 +9,8 @@ import {
   sharedAlignment,
   tableSize,
 } from "./table-edits";
-import { runTableAction } from "../editor-menu-tables";
+import { runTableAction, tableLayoutItems } from "../editor-menu-tables";
+import type { Strings } from "../../i18n/strings";
 
 afterEach(closeViews);
 
@@ -67,6 +68,20 @@ describe("the table's own tools", () => {
     t.view.dispatch(alignColumns(t.view.state.tr, pos, [1], "right"));
     expect(lines(t)[1]).toMatch(/^\| :-+: \| -+: \|$/);
     expect(sharedAlignment(tableAt(t).node, [1])).toBe("right");
+    // The right-click menu aligns every picked column, as the tools do.
+    const { CellSelection } = await import("@milkdown/kit/prose/tables");
+    const cell = (text: string) => {
+      const $at = t.view.state.doc.resolve(t.caretAt(text));
+      return $at.before($at.depth - 1);
+    };
+    t.view.dispatch(
+      t.view.state.tr.setSelection(
+        CellSelection.create(t.view.state.doc, cell("a"), cell("b")),
+      ),
+    );
+    const items = tableLayoutItems((fn) => t.editor.action(fn), {} as Strings);
+    (items[0] as { onSelect: () => void }).onSelect();
+    expect(sharedAlignment(tableAt(t).node, [0, 1])).toBe("left");
   });
 
   it("grows at its end, new rows aligned as their columns, new columns plain", async () => {
