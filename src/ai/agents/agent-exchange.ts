@@ -19,7 +19,12 @@ import {
   type ToolCallFields,
 } from "./acp-client";
 import { stepFacts, type StepFacts } from "./agent-steps";
-import { readForAgent, writeForAgent } from "./agent-files";
+import {
+  followEdit,
+  readForAgent,
+  writeForAgent,
+  type EditSnapshots,
+} from "./agent-files";
 import { applyUpdate, finish, thoughtOf, type AgentView } from "./agent-view";
 import {
   applyChoices,
@@ -78,6 +83,8 @@ interface Session {
   older?: boolean;
   /** Its steps as heard, by id, for the permissions that name only that. */
   steps: Map<string, StepFacts>;
+  /** Its edit steps' files as they were, to mark what they changed. */
+  edits: EditSnapshots;
 }
 
 const sessions = new Map<string, Session>();
@@ -226,6 +233,7 @@ async function start(
     refuse: null,
     sessionId: "",
     steps: new Map(),
+    edits: new Map(),
   } as unknown as Session;
   session.connection = new AcpConnection(
     {
@@ -355,7 +363,9 @@ function deliver(session: Session, update: SessionUpdate) {
   ) {
     const fields = update as ToolCallFields;
     const id = fields.toolCallId;
-    session.steps.set(id, stepFacts(session.steps.get(id), fields));
+    const step = stepFacts(session.steps.get(id), fields);
+    session.steps.set(id, step);
+    followEdit(session.edits, session.cwd, { ...fields, kind: step.kind });
   }
   const events = session.events;
   if (!events) return;

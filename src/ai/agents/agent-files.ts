@@ -3,6 +3,8 @@ import { isInside } from "../../utils/path";
 import { fs } from "../../platform/ipc-files";
 import { getWindowAccess } from "../../plugins/app-bridge";
 import { openDocumentAt } from "../../registry/open-documents";
+import { isRecord } from "../../utils/is-record";
+import type { ToolCallFields } from "./acp-client";
 
 /**
  * The files an external agent reads and writes through Textus (ACP's fs
@@ -11,10 +13,15 @@ import { openDocumentAt } from "../../registry/open-documents";
 
 /** What an agent reads or writes through Textus stays in its session's
  *  folder and out of hidden folders, as Textus AI's own tools do. */
-function withinFolder(folder: string, path: string): void {
+/** Whether `path` is in `folder` and out of its hidden folders. */
+function insideFolder(folder: string, path: string): boolean {
   const rest = isInside(path, folder) ? path.slice(folder.length) : null;
   const parts = rest?.split(/[\\/]/).filter(Boolean) ?? [];
-  if (!rest || parts.some((part) => part.startsWith(".")))
+  return !!rest && !parts.some((part) => part.startsWith("."));
+}
+
+function withinFolder(folder: string, path: string): void {
+  if (!insideFolder(folder, path))
     throw new Error(`${path} is outside the folder this session works in.`);
 }
 
@@ -63,4 +70,60 @@ export async function writeForAgent(
   await fs.writeTextFile(path, content);
   filesChanged([{ file: path, applied: true, before }]);
   return null;
+}
+
+/** Steps that change files: the ones whose changes are marked. */
+const EDIT_KINDS = new Set(["edit", "delete", "move"]);
+
+/** Each edit step's files as they were before it, by step id. */
+export type EditSnapshots = Map<string, Map<string, Promise<string | null>>>;
+
+/** The files a step touches: its places, else the path in its input. */
+function pathsOf(fields: ToolCallFields): string[] {
+  const input = isRecord(fields.rawInput) ? fields.rawInput : {};
+  const named = [input.file_path, input.path].filter(
+    (p): p is string => typeof p === "string",
+  );
+  return [...(fields.locations ?? []).map((l) => l.path), ...named];
+}
+
+/** The text of `path` now: an open document as its editor has it. */
+function textNow(path: string): Promise<string | null> {
+  const doc = openDocumentAt(path);
+  return doc
+    ? Promise.resolve(doc.text())
+    : fs.readTextFile(path).catch(() => null);
+}
+
+/**
+ * Most agents write files themselves, not through Textus: an edit step's
+ * files are kept as they were when it is first heard of, and once it ends,
+ * those it changed are marked as Textus AI's changes are (the open ones
+ * take the new text as one undo step: useExternalChangeReload).
+ */
+export function followEdit(
+  snapshots: EditSnapshots,
+  cwd: string,
+  fields: ToolCallFields,
+): void {
+  const id = fields.toolCallId;
+  const done = fields.status === "completed" || fields.status === "failed";
+  let files = snapshots.get(id);
+  if (!files && fields.kind && !EDIT_KINDS.has(fields.kind)) return;
+  if (!done) {
+    for (const path of pathsOf(fields)) {
+      if (!insideFolder(cwd, path) || files?.has(path)) continue;
+      if (!files) snapshots.set(id, (files = new Map()));
+      files.set(path, textNow(path));
+    }
+    return;
+  }
+  snapshots.delete(id);
+  for (const [path, was] of files ?? [])
+    void Promise.all([was, fs.readTextFile(path).catch(() => null)]).then(
+      ([before, after]) => {
+        if (after !== null && after !== before)
+          filesChanged([{ file: path, applied: true, before }]);
+      },
+    );
 }
