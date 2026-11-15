@@ -2,6 +2,7 @@ import { viewKey } from "../../engine/frame/island-parts";
 import { tabZoomStyle } from "../../engine/zoom/tab-zoom";
 import { Suspense, type CSSProperties, type ReactNode } from "react";
 import { EditorKept, KeptWhileHidden } from "./kept";
+import { userHasActed } from "./user-input";
 import { PageTabContent } from "../tabs/page-tabs";
 import { useDocumentInFront } from "../tabs/useDocumentInFront";
 import { EditorPane } from "../../document-view/EditorPane";
@@ -109,7 +110,7 @@ export function DocumentViews({
             }
             onFocusCapture={
               pane && tab.id !== activeTabId
-                ? () => onActivate(tab.id)
+                ? () => userHasActed() && onActivate(tab.id)
                 : undefined
             }
           >
