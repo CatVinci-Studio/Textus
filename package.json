@@ -79,7 +79,7 @@
   "devDependencies": {
     "@axe-core/playwright": "^4.14.0",
     "@eslint/js": "^10.0.1",
-    "@playwright/test": "^1.64.1",
+    "@playwright/test": "^1.65.1",
     "@tauri-apps/cli": "^2.12.4",
     "@testing-library/jest-dom": "^6.9.1",
     "@testing-library/react": "^16.3.3",
@@ -91,7 +91,7 @@
     "eslint": "^10.14.0",
     "eslint-plugin-react-hooks": "^7.1.1",
     "gemoji": "8.1.0",
-    "globals": "^17.13.0",
+    "globals": "^17.14.0",
     "jscpd": "5.4.2",
     "jsdom": "^29.1.1",
     "jszip": "3.10.2",
