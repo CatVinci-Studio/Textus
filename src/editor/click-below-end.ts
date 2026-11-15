@@ -1,6 +1,8 @@
 import { Plugin, TextSelection } from "@milkdown/kit/prose/state";
 import type { EditorView } from "@milkdown/kit/prose/view";
 import { $prose } from "@milkdown/kit/utils";
+import type { Node } from "@milkdown/kit/prose/model";
+import { isIOSApp } from "../platform/capabilities";
 
 /** Where and when a single finger went down: a tap, not a scroll. */
 let down: { x: number; y: number; at: number } | null = null;
@@ -35,25 +37,38 @@ function paragraphBelowEnd(view: EditorView, y: number): boolean {
   return true;
 }
 
-/** The caret at the start of the block after a table (or a picture, a
- *  code block's frame) when `y` is in the gap between them. A finger's tap
- *  there otherwise lets iOS place it, and a misspelled first word is then
- *  taken as tapped: selected, so the next key replaced it. */
-function caretBelowBlock(view: EditorView, y: number): boolean {
-  if (!view.editable) return false;
+/** A block's own box: a table's, not its wrapper's with the tools' room. */
+function boxOf(dom: HTMLElement): DOMRect {
+  return (dom.querySelector("table") ?? dom).getBoundingClientRect();
+}
+
+/** A table or a picture: a block a tap beside lands nowhere in. */
+const holdsNoCaret = (node: Node) =>
+  node.type.name === "table" || (node.isBlock && node.isAtom);
+
+/** The caret beside a table or a picture when `y` is in the gap above or
+ *  below it: at the end of the text block above, or the start of the one
+ *  below. iOS only: its own caret went to the document's last paragraph,
+ *  or onto a misspelled word it then selected, so the next key replaced
+ *  it. Android places it well, and opens its keyboard only for its own. */
+function caretBesideBlock(view: EditorView, y: number): boolean {
+  if (!isIOSApp || !view.editable) return false;
   const { doc } = view.state;
   let found = -1;
   doc.forEach((node, offset, index) => {
-    if (found >= 0 || node.isTextblock || index === doc.childCount - 1) return;
-    const next = doc.child(index + 1);
-    const above = view.nodeDOM(offset);
-    const below = view.nodeDOM(offset + node.nodeSize);
-    if (!next.isTextblock) return;
+    if (found >= 0 || index === 0) return;
+    const prev = doc.child(index - 1);
+    const text = prev.isTextblock ? prev : node;
+    const other = prev.isTextblock ? node : prev;
+    if (!text.isTextblock || !holdsNoCaret(other)) return;
+    const prevAt = offset - prev.nodeSize;
+    const above = view.nodeDOM(prevAt);
+    const below = view.nodeDOM(offset);
     if (!(above instanceof HTMLElement) || !(below instanceof HTMLElement))
       return;
-    const bottom = above.getBoundingClientRect().bottom;
-    const top = below.getBoundingClientRect().top;
-    if (y > bottom && y < top) found = offset + node.nodeSize + 1;
+    if (y <= boxOf(above).bottom || y >= boxOf(below).top) return;
+    // Into the text block of the two: the end of one above, the start of one below.
+    found = prev.isTextblock ? offset - 1 : offset + 1;
   });
   if (found < 0) return false;
   view.dispatch(
@@ -89,7 +104,7 @@ export const clickBelowEnd = $prose(
             if (event.touches.length || !touch || !wasTap(touch)) return false;
             if (
               !paragraphBelowEnd(view, touch.clientY) &&
-              !caretBelowBlock(view, touch.clientY)
+              !caretBesideBlock(view, touch.clientY)
             )
               return false;
             event.preventDefault();

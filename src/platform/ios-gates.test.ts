@@ -15,6 +15,8 @@ const ALLOWED: Record<string, string> = {
   "app/frame/WindowControls.tsx": "the title row's menu button",
   "app/frame/sidebar-tabs.tsx": "the drawer closes over a document it opened",
   "ai/chat/panel/agent-panel.tsx": "a docked panel drawn at its width",
+  "editor/click-below-end.ts":
+    "a tap beside a table: its caret went astray, onto a word it selected",
   "document/word-import.ts":
     "Files' security-scoped URLs the converter can't read",
   "platform/ios-files.ts": "the Files app's documents",

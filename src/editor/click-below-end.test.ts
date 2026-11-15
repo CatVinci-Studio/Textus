@@ -1,6 +1,11 @@
 // @vitest-environment jsdom
-import { afterEach, describe, expect, it } from "vitest";
+import { afterEach, describe, expect, it, vi } from "vitest";
 import { closeViews, openView } from "./editor-view-kit";
+
+vi.mock("../platform/capabilities", async (importOriginal) => ({
+  ...(await importOriginal<object>()),
+  isIOSApp: true,
+}));
 
 afterEach(closeViews);
 
@@ -41,11 +46,31 @@ describe("a finger's tap in the gap under a table", () => {
     const next = t.view.nodeDOM(
       t.view.state.doc.child(0).nodeSize,
     ) as HTMLElement;
-    table.getBoundingClientRect = () => ({ top: 0, bottom: 100 }) as DOMRect;
+    table.querySelector("table")!.getBoundingClientRect = () =>
+      ({ top: 0, bottom: 100 }) as DOMRect;
     next.getBoundingClientRect = () => ({ top: 120, bottom: 140 }) as DOMRect;
     touch(t.view.dom, "touchstart", 110);
     const end = touch(t.view.dom, "touchend", 110);
     expect(end.defaultPrevented).toBe(true);
     expect(t.caretLine()).toBe("|wrod here");
+  });
+});
+
+describe("a finger's tap in the gap above a table", () => {
+  it("puts the caret at the end of the paragraph above", async () => {
+    const t = await openView(
+      "line b\n\n| a | b |\n| - | - |\n| c | d |\n\nlast one\n",
+    );
+    const above = t.view.nodeDOM(0) as HTMLElement;
+    const table = t.view.nodeDOM(
+      t.view.state.doc.child(0).nodeSize,
+    ) as HTMLElement;
+    above.getBoundingClientRect = () => ({ top: 0, bottom: 20 }) as DOMRect;
+    table.querySelector("table")!.getBoundingClientRect = () =>
+      ({ top: 30, bottom: 100 }) as DOMRect;
+    touch(t.view.dom, "touchstart", 25);
+    const end = touch(t.view.dom, "touchend", 25);
+    expect(end.defaultPrevented).toBe(true);
+    expect(t.caretLine()).toBe("line b|");
   });
 });
