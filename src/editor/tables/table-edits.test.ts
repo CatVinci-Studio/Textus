@@ -166,6 +166,43 @@ describe("the table's keys and pastes", () => {
     expect(tables).toEqual([3, 2]);
   });
 
+  it("a whole copied table pasted into its own cell adds rows, and Undo takes them out", async () => {
+    const t = await openView(ROWS);
+    const { tableCopy } = await import("../clipboard/table-clipboard");
+    const { serializerCtx } = await import("@milkdown/kit/core");
+    const { markdown } = tableCopy(
+      t.view,
+      t.view.state.doc.firstChild!,
+      t.editor.ctx.get(serializerCtx),
+    );
+    t.caretAt("1");
+    // As the phone's paste gives it: the Markdown alone.
+    t.paste(markdown);
+    expect(t.view.state.doc.firstChild!.childCount).toBeGreaterThan(3);
+    t.press("Mod+z");
+    expect(body(t)).toEqual(["| 1 | x |", "| 2 | y |"]);
+  });
+
+  it("a copied row pasted as the phone gives it, its text alone, goes in as a row", async () => {
+    const t = await openView(ROWS);
+    const { CellSelection } = await import("@milkdown/kit/prose/tables");
+    const cell = (text: string) => {
+      const $at = t.view.state.doc.resolve(t.caretAt(text));
+      return $at.before($at.depth - 1);
+    };
+    t.view.dispatch(
+      t.view.state.tr.setSelection(
+        CellSelection.create(t.view.state.doc, cell("2"), cell("y")),
+      ),
+    );
+    const { text } = t.view.serializeForClipboard(
+      t.view.state.selection.content(),
+    );
+    t.caretAt("1");
+    t.paste(text);
+    expect(body(t)).toEqual(["| 1 | x |", "| 2 | y |", "| 2 | y |"]);
+  });
+
   it("a copied column pastes in as a new column after the caret's", async () => {
     const t = await openView(ROWS);
     const { CellSelection } = await import("@milkdown/kit/prose/tables");

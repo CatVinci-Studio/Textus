@@ -1,4 +1,8 @@
-import type { Fragment, Node as ProseNode } from "@milkdown/kit/prose/model";
+import {
+  Fragment,
+  type Node as ProseNode,
+  type Schema,
+} from "@milkdown/kit/prose/model";
 import {
   Plugin,
   type Command,
@@ -106,6 +110,27 @@ function pastedRows(
   };
 }
 
+/** Lines of tab-separated cells, as a table's cells copy as plain text
+ *  (a phone's paste gives only that): each line a row. */
+function tabbedRows(
+  text: string,
+  schema: Schema,
+): { rows: Fragment[]; width: number; height: number } | null {
+  const lines = text.replace(/\r?\n$/, "").split(/\r?\n/);
+  if (!lines.every((line) => line.includes("\t"))) return null;
+  const cell = (value: string) =>
+    schema.nodes.table_cell!.create(
+      null,
+      schema.nodes.paragraph!.create(null, value ? schema.text(value) : null),
+    );
+  const rows = lines.map((line) => Fragment.from(line.split("\t").map(cell)));
+  return {
+    rows,
+    width: Math.max(...rows.map((r) => r.childCount)),
+    height: rows.length,
+  };
+}
+
 /** `cells` as cells of `type`, each aligned as its column `aligns`. */
 function asCells(
   cells: Fragment,
@@ -131,11 +156,17 @@ export const tableRowPaste = $prose(
   () =>
     new Plugin({
       props: {
-        handlePaste(view, _event, slice) {
+        handlePaste(view, event, slice) {
           const { state } = view;
           if (state.selection instanceof CellSelection) return false;
           const at = here(state);
-          const cells = at && pastedRows(slice.content);
+          const text = event.clipboardData?.getData("text/plain") ?? "";
+          const cells =
+            at &&
+            (pastedRows(slice.content) ??
+              (event.clipboardData?.getData("text/html")
+                ? null
+                : tabbedRows(text, state.schema)));
           if (!at || !cells) return false;
           const table = state.doc.nodeAt(at.tablePos)!;
           const head = table.firstChild!;

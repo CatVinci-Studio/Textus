@@ -70,6 +70,11 @@ export function fillTable(
     grid.push(cells);
   });
   let width = grid[0].length;
+  // A new cell takes its column's alignment, as the table keeps it: else
+  // it is set after, as an undo step of its own.
+  const aligned = (col: number) => ({
+    alignment: grid[0][col]?.attrs.alignment ?? null,
+  });
   pasted.forEach((row, _, r) => {
     const at = top + r;
     if (at >= grid.length) {
@@ -78,7 +83,10 @@ export function fillTable(
     }
     row.forEach((cell, __, c) => {
       const type = at === 0 ? header : body;
-      grid[at][left + c] = type.create(grid[at][left + c]?.attrs, cell.content);
+      grid[at][left + c] = type.create(
+        grid[at][left + c]?.attrs ?? aligned(left + c),
+        cell.content,
+      );
       width = Math.max(width, left + c + 1);
     });
   });
@@ -86,7 +94,7 @@ export function fillTable(
     const type = r === 0 ? header : body;
     const full = Array.from(
       { length: width },
-      (_, c) => cells[c] ?? type.createAndFill()!,
+      (_, c) => cells[c] ?? type.createAndFill(aligned(c))!,
     );
     return rowTypes[r].create(null, full);
   });
