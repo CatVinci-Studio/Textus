@@ -2,8 +2,7 @@
 //! call: all with their text, or the lines matching a search. Walked as the
 //! sidebar walks, so hidden and ignored files are left out.
 
-use super::access::refused;
-use super::state;
+use super::access::checked_root;
 use serde::Serialize;
 use std::path::Path;
 use std::time::{Duration, Instant};
@@ -16,16 +15,6 @@ const MAX_TOTAL_BYTES: u64 = 64 * 1024 * 1024;
 pub(crate) const MAX_SEARCH_HITS: usize = 1000;
 /// How long a search reads before it stops.
 pub(crate) const SEARCH_TIME: Duration = Duration::from_secs(5);
-
-fn checked_root(app: &tauri::AppHandle, id: &str, root: &str) -> Result<(), String> {
-    if !state::read(app).allows(id, "files.read") {
-        return Err(refused(id, "files.read"));
-    }
-    if root.is_empty() || !Path::new(root).is_dir() {
-        return Err(crate::errors::error("noFolder"));
-    }
-    Ok(())
-}
 
 /// One document and its text.
 #[derive(Serialize)]

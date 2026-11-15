@@ -62,6 +62,19 @@ pub(super) fn granted_path(
     Ok(path)
 }
 
+/// A folder a plugin reads: it holds `files.read` (the app's own AI tools
+/// ask as `textus`, which no plugin is), the folder is there, and it is
+/// not one of the app's own.
+pub(super) fn checked_root(app: &tauri::AppHandle, id: &str, root: &str) -> Result<(), String> {
+    if id != super::app_tools::APP && !state::read(app).allows(id, "files.read") {
+        return Err(refused(id, "files.read"));
+    }
+    if root.is_empty() || !Path::new(root).is_dir() {
+        return Err(crate::errors::error("noFolder"));
+    }
+    require_not_app_data(app, Path::new(root))
+}
+
 pub(super) fn require_not_app_data(app: &tauri::AppHandle, path: &Path) -> Result<(), String> {
     let own = [app.path().own_data_dir(), app.path().own_config_dir()];
     for dir in own.into_iter().flatten() {
