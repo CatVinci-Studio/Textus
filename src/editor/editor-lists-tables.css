@@ -319,31 +319,21 @@
 }
 
 /* A row's grip on the table's left edge, a column's on its top edge, at
-   the row and column under the pointer (table-grips.ts). */
+   the row and column under the pointer (table-grips.ts); its look is the
+   shared .tx-grip. */
 .table-grip {
   position: absolute;
   top: 0;
   left: 0;
   z-index: 3;
-  padding: 0;
-  border: 1px solid var(--doc-border);
-  border-radius: var(--shape-pill);
-  corner-shape: round;
-  background: var(--doc-bg, var(--ui-bg));
-  cursor: grab;
-  touch-action: none;
   opacity: 0;
   pointer-events: none;
   transition: opacity var(--dur-fast) var(--ease-standard);
 }
 .table-grip-row {
-  width: 8px;
-  height: 20px;
   margin: -10px 0 0 -4px;
 }
 .table-grip-col {
-  width: 20px;
-  height: 8px;
   margin: -4px 0 0 -10px;
 }
 .table-wrapper[data-grips]:is(:hover, .is-table-caret):not([data-dragging])
@@ -351,25 +341,7 @@
   opacity: 1;
   pointer-events: auto;
 }
-.table-grip:hover {
-  border-color: var(--doc-accent);
-  background: var(--doc-accent);
-}
-/* A finger's grip: the same pill, a fingertip's room to press. */
-@media (pointer: coarse) {
-  .table-grip::before {
-    content: "";
-    position: absolute;
-    inset: -12px;
-  }
-}
 
-/* While one is pulled: the others slide aside on the settle spring, as
-   the sidebar's tabs do; the pulled one's lift is table-grips.ts's. */
-.table-wrapper[data-dragging] tbody :is(tr, td, th) {
-  transition: transform calc(var(--dur-settle) * var(--motion-travel))
-    var(--ease-settle);
-}
 .table-wrapper[data-dragging] {
   cursor: grabbing;
   user-select: none;

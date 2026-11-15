@@ -27,7 +27,7 @@ export function attachGrips(options: {
   const grip = (axis: Axis) => {
     const el = document.createElement("button");
     el.type = "button";
-    el.className = `table-grip table-grip-${axis}`;
+    el.className = `table-grip table-grip-${axis} tx-grip tx-grip-${axis}`;
     el.contentEditable = "false";
     // A pointer's way only: the menus and keys do the same for the keyboard
     // and screen readers.
@@ -154,6 +154,7 @@ export function attachGrips(options: {
       start: () => {
         dragging = axis;
         wrapper.setAttribute("data-dragging", axis);
+        wrapper.classList.add("tx-making-room");
       },
       move: (x, y) => {
         // Where it lands goes by the pointer; where it is drawn stays inside.
@@ -177,6 +178,7 @@ export function attachGrips(options: {
       end: (_x, _y, dropped) => {
         sheet.textContent = "";
         wrapper.removeAttribute("data-dragging");
+        wrapper.classList.remove("tx-making-room");
         dragging = null;
         const table = tableNow();
         if (!dropped || !table || to === from) return;
