@@ -1,3 +1,4 @@
+import { plainInline } from "../../utils/markdown-plain";
 import { citationPattern } from "../citations";
 import { counted } from "../../i18n/current";
 import { explainAiError } from "../error-messages";
@@ -167,13 +168,14 @@ export function previewText(
   markdown: string,
   order: ReadonlyMap<number, number> = new Map(),
 ): string {
-  return markdown
-    .replace(
-      citationPattern(true),
-      (_, n: string) => `[${order.get(Number(n)) ?? n}]`,
-    )
-    .replace(/^#{1,6}\s+/gm, "")
-    .replace(/[*_`]{1,3}/g, "")
+  return plainInline(
+    markdown
+      .replace(
+        citationPattern(true),
+        (_, n: string) => `[${order.get(Number(n)) ?? n}]`,
+      )
+      .replace(/^#{1,6}\s+/gm, ""),
+  )
     .replace(/\n{3,}/g, "\n\n")
     .trim();
 }

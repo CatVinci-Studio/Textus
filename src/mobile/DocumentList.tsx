@@ -1,3 +1,4 @@
+import { plainInline } from "../utils/markdown-plain";
 import { Segmented } from "../engine/controls/Segmented";
 import { splitFrontmatter } from "../utils/frontmatter";
 import { fill } from "../i18n/fill";
@@ -67,10 +68,10 @@ export function previewText(markdown: string): string {
       line
         .replace(/^\s{0,3}((#{1,6}|>|[-*+]|\d+[.)])(\s+|$))+/, "")
         // A task's box: "[ ] Milk" read as raw syntax in the thumbnail.
-        .replace(/^\[[ xX]\]\s+/, "")
-        .replace(/(^|[^\\])[*_`~]+/g, "$1")
-        .replace(/!?\[([^\]]*)\]\([^)]*\)/g, "$1")
-        .replace(/\\([\\`*_{}[\]()#+\-.!>~|])/g, "$1"),
+        .replace(/^\[[ xX]\]\s+/, ""),
+    )
+    .map((line) =>
+      plainInline(line).replace(/\\([\\`*_{}[\]()#+\-.!>~|])/g, "$1"),
     )
     .join("\n")
     .trim()

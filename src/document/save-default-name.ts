@@ -1,17 +1,15 @@
 import { splitFrontmatter } from "../utils/frontmatter";
 import { THEMATIC_BREAK, eachLine, headingsOf } from "../utils/markdown-lines";
+import { plainInline } from "../utils/markdown-plain";
 const WINDOWS_RESERVED_NAME = /^(con|prn|aux|nul|com[1-9]|lpt[1-9])(?:\..*)?$/i;
 
 function plainMarkdownText(text: string): string {
-  return text
-    .replace(/\s+#+\s*$/, "")
-    .replace(/!\[([^\]]*)\]\([^)]*\)/g, "$1")
-    .replace(/\[([^\]]+)\]\([^)]*\)/g, "$1")
-    .replace(/`([^`]*)`/g, "$1")
-    .replace(/<!--[\s\S]*?(?:-->|$)/g, "")
-    .replace(/<[^>]+>/g, "")
-    .replace(/[*_~]/g, "")
-    .trim();
+  return plainInline(
+    text
+      .replace(/\s+#+\s*$/, "")
+      .replace(/<!--[\s\S]*?(?:-->|$)/g, "")
+      .replace(/<[^>]+>/g, ""),
+  ).trim();
 }
 
 /** The lines after any front matter, each with whether it is code (or an

@@ -1,10 +1,11 @@
 import { tabElement } from "../engine/layout/tab-element";
 import { useEffect, useMemo, useState, type CSSProperties } from "react";
-import { headingLabel, parseHeadings, sourceAnchors } from "./outline-parse";
+import { parseHeadings, sourceAnchors } from "./outline-parse";
 import { ChevronIcon } from "../engine/controls/icons";
 import { useSettings } from "../prefs/SettingsContext";
 import { HEADING_PLACEHOLDER } from "../editor/lazy-blocks/lazy-block-views";
 import { useTreeKeys } from "../engine/controls/useTreeKeys";
+import { plainInline } from "../utils/markdown-plain";
 import { Tooltip } from "../engine/controls/Tooltip";
 import { ContextMenu } from "../engine/controls/ContextMenu";
 import { Presence } from "../engine/motion/usePresence";
@@ -75,7 +76,7 @@ export function Outline({ content, tabId }: OutlineProps) {
   }, [content]);
   // A heading row's own: a link to it, and its section selected.
   const headingItems = (text: string, index: number) => {
-    const label = headingLabel(text);
+    const label = plainInline(text);
     return [
       {
         label: t.outlineCopyLink,
@@ -197,9 +198,9 @@ export function Outline({ content, tabId }: OutlineProps) {
               <span className="outline-level" aria-hidden="true">
                 H{h.level}
               </span>
-              <Tooltip text={headingLabel(h.text)} description={null} whenCut>
+              <Tooltip text={plainInline(h.text)} description={null} whenCut>
                 <span className="tx-truncate tree-label">
-                  {headingLabel(h.text)}
+                  {plainInline(h.text)}
                 </span>
               </Tooltip>
             </span>

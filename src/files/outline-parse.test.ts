@@ -1,5 +1,6 @@
 import { describe, expect, it } from "vitest";
-import { parseHeadings, sourceAnchors, headingLabel } from "./outline-parse";
+import { parseHeadings, sourceAnchors } from "./outline-parse";
+import { plainInline as headingLabel } from "../utils/markdown-plain";
 
 const texts = (md: string) => parseHeadings(md).map((h) => h.text);
 
