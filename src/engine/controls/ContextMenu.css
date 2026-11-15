@@ -1,9 +1,12 @@
 .context-menu {
   position: fixed;
   min-width: 188px;
-  max-height: min(70vh, 528px);
+  /* Caps how far a long label stretches the panel; past this it ellipsizes. */
+  max-width: 374px;
+  max-height: min(78vh, 616px);
   overflow-y: auto;
-  /* Over a toast, as the app's menus are: it was just opened. */
+  /* Over a toast and the find bar, as the app's menus are: it was just
+     opened. */
   z-index: var(--z-menu);
   transform-origin: var(--transform-origin, top left);
   animation: motion-pop-in var(--dur-base) var(--ease-out);
@@ -13,9 +16,19 @@
   animation: motion-pop-out var(--dur-fast) var(--ease-in) forwards;
 }
 
+/* A row: its label, then its keys, its check or its chevron at the end. */
 .context-menu-item {
-  display: block;
-  width: 100%;
+  display: flex;
+  align-items: center;
+  gap: 16px;
+}
+
+.context-menu-label {
+  flex: 1;
+}
+
+.context-menu-item:disabled {
+  color: var(--ui-muted);
 }
 
 /* Doubled class: the shared menu-item colour loads later. */
@@ -23,37 +36,44 @@
   color: var(--ui-danger);
 }
 
-/* A choice of several (the file tree's sort): the check at the far end of
-   the one in force, so every label starts at the same place. */
-.context-menu-item[role="menuitemradio"] {
-  display: flex;
-  align-items: center;
-  gap: var(--space-3);
-}
-
-.context-menu-check {
+/* The shortcut: quiet, and never the reason the panel is wide. */
+.context-menu-accel {
   flex-shrink: 0;
-  margin-left: auto;
+  color: var(--ui-muted);
+  font-size: var(--text-footnote);
+  font-variant-numeric: tabular-nums;
 }
 
-/* A row that opens a submenu: its chevron at the far end. */
-.context-menu-item.context-menu-group {
-  display: flex;
+/* The check column, kept on every row of a level that has one. */
+.context-menu-check {
+  display: inline-flex;
+  flex-shrink: 0;
   align-items: center;
-  justify-content: space-between;
-  gap: var(--space-3);
+  justify-content: center;
+  width: 16px;
+  height: 16px;
+  margin-left: -4px;
+  color: var(--ui-accent-text);
 }
 
 .context-menu-chevron {
   flex-shrink: 0;
-  opacity: 0.6;
+  margin-right: -2px;
+  color: var(--ui-muted);
 }
 
 .context-menu-item.context-menu-group[aria-expanded="true"] {
   background: var(--ui-hover);
 }
 
+/* A submenu slides in from its row; one replacing another a moment ago
+   comes at once. */
 .context-submenu {
+  --enter-x: calc(var(--motion-distance-sm) * -1);
+  animation: motion-enter var(--dur-fast) var(--ease-out);
+}
+
+.context-submenu-instant {
   animation: none;
 }
 

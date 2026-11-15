@@ -125,7 +125,6 @@
 /* Rows in menus and lists: the highlight arrives in 80ms and leaves at
    once, so a pointer running down a list leaves no trail behind it. */
 :is(
-  .app-menu-item,
   .context-menu-item,
   .ui-select-option,
   .inline-chat-skill-item,
@@ -138,7 +137,6 @@
 }
 
 :is(
-  .app-menu-item,
   .context-menu-item,
   .ui-select-option,
   .inline-chat-skill-item,
@@ -150,12 +148,12 @@
 }
 
 /* Menus: one panel padding, one item size, one hover. */
-:is(.app-menu-list, .context-menu) {
+.context-menu {
   padding: 4px;
   font-size: var(--text-body);
 }
 
-:is(.app-menu-item, .context-menu-item) {
+.context-menu-item {
   width: 100%;
   padding: 4px 8px;
   border: none;
@@ -167,23 +165,18 @@
   cursor: pointer;
 }
 
-:is(.app-menu-item, .context-menu-item):not(:disabled):is(
-    :hover,
-    :focus-visible
-  ) {
+.context-menu-item:not(:disabled):is(:hover, :focus-visible) {
   background: var(--ui-hover);
   outline: none;
 }
 
 /* On its way to an open submenu, the pointer lights no row it crosses. */
-:is(
-    .app-menu-list[data-aiming] > .app-menu-row > .app-menu-item,
-    .context-menu[data-aiming] > .context-menu-item
-  ):hover:not([aria-expanded="true"], :focus-visible) {
+.context-menu[data-aiming]
+  > .context-menu-item:hover:not([aria-expanded="true"], :focus-visible) {
   background: transparent;
 }
 
-:is(.app-menu-separator, .context-menu-separator) {
+.context-menu-separator {
   height: 1px;
   margin: 4px 8px;
   background: var(--ui-border);

@@ -80,6 +80,7 @@ export function AppMenuButton({ checks }: { checks?: MenuChecks } = {}) {
               x={anchor.x}
               y={anchor.y}
               onClose={close}
+              anchor={ref.current}
               checks={checks}
             />
           </Suspense>

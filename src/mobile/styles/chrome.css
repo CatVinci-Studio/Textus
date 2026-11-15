@@ -1,13 +1,13 @@
 /* The iPhone's forms of the app's dialogs, menus and bars. The first rules
    hold for any touch (iPad too); the rest are phone width only. */
 
-:root[data-window-chrome="mobile"] :is(.app-menu-item, .context-menu-item) {
+:root[data-window-chrome="mobile"] .context-menu-item {
   min-height: 48px;
 }
 
 /* With 44pt rows and the recent documents, the phone menu is taller than
    the desktop's 560px cap; it may use the screen below the title row. */
-:root[data-window-chrome="mobile"] .app-menu-list {
+:root[data-window-chrome="mobile"] .context-menu {
   max-height: calc(100vh - var(--mobile-top) - 26px);
 }
 
@@ -166,13 +166,13 @@
 
   /* The desktop's menu, wide and tall enough for a finger; a long name
      still ellipsizes at the cap. */
-  :root[data-window-chrome="mobile"] .app-menu-list {
+  :root[data-window-chrome="mobile"] .context-menu {
     width: max-content;
     min-width: 264px;
     max-width: min(352px, calc(100vw - 18px));
   }
 
-  :root[data-window-chrome="mobile"] .app-menu-item {
+  :root[data-window-chrome="mobile"] .context-menu-item {
     min-height: 48px;
     padding: 0 12px;
     font-size: var(--text-body);
@@ -180,7 +180,7 @@
 
   /* A submenu opens in place under its row, its rows set in; its chevron
      turns down. */
-  :root[data-window-chrome="mobile"] .app-menu-inline > .app-menu-list {
+  :root[data-window-chrome="mobile"] .context-menu-inline {
     width: 100%;
     min-width: 0;
     max-width: none;
@@ -188,29 +188,29 @@
     padding: 0;
   }
 
-  :root[data-window-chrome="mobile"] .app-menu-inline .app-menu-item {
+  :root[data-window-chrome="mobile"] .context-menu-inline .context-menu-item {
     padding-left: 28px;
   }
 
   :root[data-window-chrome="mobile"]
-    .app-menu-item[aria-expanded="true"]
-    > .app-menu-chevron {
+    .context-menu-item[aria-expanded="true"]
+    > .context-menu-chevron {
     transform: rotate(90deg);
   }
 
-  :root[data-window-chrome="mobile"] .app-menu-chevron {
+  :root[data-window-chrome="mobile"] .context-menu-chevron {
     transition: transform var(--dur-fast) var(--ease-out);
   }
 
   /* The check of an on/off row sits at the trailing edge, as on the
      desktop menus; a little larger, for the 17pt row. */
-  :root[data-window-chrome="mobile"] .app-menu-check {
+  :root[data-window-chrome="mobile"] .context-menu-check {
     width: 22px;
     height: 22px;
     margin-left: 0;
   }
 
-  :root[data-window-chrome="mobile"] .app-menu-check svg {
+  :root[data-window-chrome="mobile"] .context-menu-check svg {
     width: 18px;
     height: 18px;
   }
@@ -218,16 +218,16 @@
   /* A tap leaves :hover on the row it lifted from; a row lights only
      while pressed. */
   :root[data-window-chrome="mobile"]
-    .app-menu-item:not(:disabled):is(:hover, :focus-visible) {
+    .context-menu-item:not(:disabled):is(:hover, :focus-visible) {
     background: none;
   }
 
   /* A row lights at the touch and fades out after it. */
-  :root[data-window-chrome="mobile"] .app-menu-item {
+  :root[data-window-chrome="mobile"] .context-menu-item {
     transition: background-color var(--dur-base) var(--ease-standard);
   }
 
-  :root[data-window-chrome="mobile"] .app-menu-item:not(:disabled):active {
+  :root[data-window-chrome="mobile"] .context-menu-item:not(:disabled):active {
     background: color-mix(in srgb, var(--ui-text) 8%, transparent);
     transition-duration: 0s;
   }
