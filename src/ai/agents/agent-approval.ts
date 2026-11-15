@@ -13,13 +13,19 @@ import { offerOf } from "./agent-offers";
 
 export const APPROVAL = "textus-approval";
 
+/** Whether `options` already hold a way to ask first: a mode that does, or
+ *  an allow-all switch of the agent's own. */
+const asksItself = (options: readonly AgentOption[]) =>
+  askingValue(options) !== null ||
+  options.some((o) => o.category === "permissions");
+
 /** The switch for an agent offering `options`; null when its own mode
  *  does the job, or before it has been heard. */
 export function approvalOption(
   options: readonly AgentOption[],
   t: Strings,
 ): AgentOption | null {
-  if (options.length === 0 || askingValue(options) !== null) return null;
+  if (options.length === 0 || asksItself(options)) return null;
   return {
     id: APPROVAL,
     name: t.agentApproval,
@@ -43,7 +49,7 @@ export function allowedUnasked(
   options: readonly PermissionOption[],
 ): Promise<PermissionOutcome> | null {
   const offered = offerOf(agent).options;
-  if (offered.length === 0 || askingValue(offered) !== null) return null;
+  if (offered.length === 0 || asksItself(offered)) return null;
   if (loadSettings().agentOptions[agent]?.[APPROVAL] !== "allow") return null;
   const allow = options.find((o) => o.kind === "allow_once");
   return allow

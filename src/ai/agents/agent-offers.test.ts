@@ -71,6 +71,24 @@ describe("an agent's options as a session opens", () => {
     expect(sent).toEqual([]);
   });
 
+  it("turns an allow-all switch of the agent's own off unless chosen (Copilot's)", async () => {
+    const copilot = () => [
+      select("mode", "mode", "#agent", ["#agent", "#plan", "#autopilot"]),
+      select("allow_all", "permissions", "on", ["on", "off"]),
+    ];
+    const sent: string[] = [];
+    const set = async (id: string, value: string) => {
+      sent.push(`${id}=${value}`);
+      return null;
+    };
+    await applyChoices("x/copilot", copilot(), set);
+    expect(sent).toEqual(["allow_all=off"]);
+    chosen["x/copilot"] = { allow_all: "on" };
+    sent.length = 0;
+    await applyChoices("x/copilot", copilot(), set);
+    expect(sent).toEqual([]);
+  });
+
   it("skips a model the agent turns down, but never a refused mode", async () => {
     chosen["x/claude"] = { model: "sonnet", effort: "high" };
     const sent: string[] = [];

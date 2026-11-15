@@ -121,7 +121,8 @@ const chosenFor = (agent: string): Record<string, string> =>
   loadSettings().agentOptions[agent] ?? {};
 
 /** The value `option` should have: the user's choice while the agent still
- *  offers it, else, for the mode, the one that asks first. */
+ *  offers it, else, for the mode, the one that asks first, and for an
+ *  allow-all switch of its own (Copilot's), off. */
 export function wanted(
   option: AgentOption,
   options: readonly AgentOption[],
@@ -130,6 +131,8 @@ export function wanted(
   const choice = chosen[option.id];
   if (choice !== undefined && option.choices.some((c) => c.value === choice))
     return choice;
+  if (option.category === "permissions")
+    return option.choices.some((c) => c.value === "off") ? "off" : null;
   return option.category === "mode" || option.id === "mode"
     ? askingValue(options)
     : null;
