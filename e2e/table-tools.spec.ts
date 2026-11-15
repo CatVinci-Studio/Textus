@@ -207,4 +207,36 @@ test.describe("on a touch screen", () => {
     );
     expect(hit).toBe("TD");
   });
+
+  test("the row grip follows the caret after a pasted row is undone", async ({
+    page,
+  }) => {
+    const table = await open(
+      page,
+      "| h | k |\n| --- | --- |\n| a1 | a2 |\n| b1 | b2 |\n| c1 | c2 |\n",
+    );
+    const gripAtCaret = () =>
+      page.evaluate(() => {
+        const grip = document.querySelector(".table-grip-row")!;
+        const sel = getSelection()!.anchorNode;
+        const cell = (
+          sel instanceof Element ? sel : sel?.parentElement
+        )?.closest("td, th");
+        if (!cell) return "no caret cell";
+        const g = grip.getBoundingClientRect();
+        const c = cell.getBoundingClientRect();
+        return Math.abs(g.top + g.height / 2 - (c.top + c.height / 2)) < 2
+          ? "at caret"
+          : `grip ${g.top} vs ${cell.textContent}`;
+      });
+    await table.locator("td", { hasText: "c1" }).tap();
+    await table.locator("td", { hasText: "a1" }).tap();
+    await pasteMarkdown(page, "w1\tw2");
+    await expect(table.locator("td", { hasText: "w1" })).toHaveCount(1);
+    await page.keyboard.press(
+      process.platform === "darwin" ? "Meta+z" : "Control+z",
+    );
+    await expect(table.locator("td", { hasText: "w1" })).toHaveCount(0);
+    await expect.poll(gripAtCaret).toBe("at caret");
+  });
 });
