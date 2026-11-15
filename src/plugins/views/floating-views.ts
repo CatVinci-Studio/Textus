@@ -57,6 +57,16 @@ export function floatingSize(view: FloatingView, chrome = 1): [number, number] {
   ];
 }
 
+/** Its size at scale 1, which its own window scales when resized: the
+ *  same as {@link floatingSize} at its scale. */
+export function floatingBase(view: FloatingView, chrome = 1) {
+  return {
+    width: atMedium(view.width) * chrome,
+    height: atMedium(view.height) * chrome,
+    scale: view.scale,
+  };
+}
+
 /** What a plugin hears when its view opens, closes, folds or moves. */
 export interface FloatingChange {
   view: string;
