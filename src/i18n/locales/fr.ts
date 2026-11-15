@@ -854,7 +854,7 @@ utiliser une.
   conventionsEu: "Institutions de l'UE",
   agentAttachFile:
     "Joindre des fichiers : documents, PDF, images, code, un zip… n’importe quel fichier",
-  chatAttachmentTruncated: "(tronqué)",
+  chatAttachmentTruncated: "(long : lu par parties)",
   chatAttachmentNoVision: `Ce fournisseur ne peut pas lire les images. Changez de fournisseur dans Réglages › ${AI_NAME}, ou joignez plutôt un document.`,
   aiGrammarLabel: "Vérification grammaticale",
   aiAskLabel: `Discussion avec ${AI_NAME}`,

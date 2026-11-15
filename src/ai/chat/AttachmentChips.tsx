@@ -41,8 +41,8 @@ export function AttachmentChips({
           <span className="tx-truncate inline-chat-attachment-name">
             {file.name}
           </span>
-          {/* A file cut at the extraction cap says so, or a partial answer
-            looks like the model misread the document. */}
+          {/* A file past the extraction cap says the AI reads it in parts
+            (read_file has the whole), or a partial answer looks misread. */}
           {file.kind === "text" && file.truncated && (
             <span className="inline-chat-attachment-note">
               {truncatedLabel}

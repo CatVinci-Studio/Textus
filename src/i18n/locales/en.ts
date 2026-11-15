@@ -809,7 +809,7 @@ type /name in a conversation to use one.
   conventionsEu: "EU institutions",
   agentAttachFile:
     "Attach files: documents, PDFs, pictures, code, a zip - any file",
-  chatAttachmentTruncated: "(shortened)",
+  chatAttachmentTruncated: "(long: read in parts)",
   chatAttachmentNoVision: `This provider can't read images. Switch provider in Settings › ${AI_NAME}, or attach a document instead.`,
   aiGrammarLabel: "Grammar check",
   aiAskLabel: `${AI_NAME} Chat`,

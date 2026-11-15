@@ -852,7 +852,7 @@ para usar una.
   conventionsEu: "Instituciones de la UE",
   agentAttachFile:
     "Adjuntar archivos: documentos, PDF, imágenes, código, un zip… cualquier archivo",
-  chatAttachmentTruncated: "(recortado)",
+  chatAttachmentTruncated: "(largo: se lee por partes)",
   chatAttachmentNoVision: `Este proveedor no puede leer imágenes. Cambia de proveedor en Ajustes › ${AI_NAME} o adjunta un documento.`,
   aiGrammarLabel: "Revisión gramatical",
   aiAskLabel: `Chat de ${AI_NAME}`,

@@ -742,7 +742,7 @@ export default {
   conventionsNewMedia: "社群媒體",
   conventionsEu: "歐盟機構",
   agentAttachFile: "附加檔案：文件、PDF、圖片、程式碼、壓縮檔，任何檔案都可以",
-  chatAttachmentTruncated: "（已截斷）",
+  chatAttachmentTruncated: "（長文，分段讀）",
   chatAttachmentNoVision: `這個服務供應商無法讀取圖片。在「設定 › ${AI_NAME}」中更換服務供應商，或改為附加文件。`,
   aiGrammarLabel: "文法檢查",
   aiAskLabel: `${AI_NAME} 對話`,

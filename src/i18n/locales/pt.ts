@@ -839,7 +839,7 @@ Habilidades ficam na pasta skills/ ao lado deste arquivo, um arquivo
   conventionsEu: "Instituições da UE",
   agentAttachFile:
     "Anexar arquivos: documentos, PDFs, imagens, código, um zip – qualquer arquivo",
-  chatAttachmentTruncated: "(parcial)",
+  chatAttachmentTruncated: "(longo: lido por partes)",
   chatAttachmentNoVision: `Este provedor não lê imagens. Troque de provedor em Ajustes › ${AI_NAME} ou anexe um documento.`,
   aiGrammarLabel: "Verificação gramatical",
   aiAskLabel: `Chat da ${AI_NAME}`,

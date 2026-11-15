@@ -851,7 +851,7 @@ export default {
   conventionsEu: "Институты ЕС",
   agentAttachFile:
     "Прикрепить файлы: документы, PDF, изображения, код, zip — любой файл",
-  chatAttachmentTruncated: "(сокращено)",
+  chatAttachmentTruncated: "(длинный: читается по частям)",
   chatAttachmentNoVision: `Этот провайдер не умеет читать изображения. Смените провайдера в разделе «Настройки › ${AI_NAME}» или прикрепите документ.`,
   aiGrammarLabel: "Проверка грамматики",
   aiAskLabel: `Чат ${AI_NAME}`,

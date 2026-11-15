@@ -825,7 +825,7 @@ Skills liegen im Ordner skills/ neben dieser Datei, je Skill eine
   conventionsEu: "EU-Institutionen",
   agentAttachFile:
     "Dateien anhängen: Dokumente, PDFs, Bilder, Code, ein Zip – jede Datei",
-  chatAttachmentTruncated: "(gekürzt)",
+  chatAttachmentTruncated: "(lang: in Teilen gelesen)",
   chatAttachmentNoVision: `Dieser Anbieter kann keine Bilder lesen. Wechsle den Anbieter unter Einstellungen › ${AI_NAME} oder hänge stattdessen ein Dokument an.`,
   aiGrammarLabel: "Grammatikprüfung",
   aiAskLabel: `Chat mit ${AI_NAME}`,

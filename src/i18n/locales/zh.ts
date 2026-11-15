@@ -741,7 +741,7 @@ export default {
   conventionsNewMedia: "新媒体",
   conventionsEu: "欧盟机构",
   agentAttachFile: "附加文件：文档、PDF、图片、代码、压缩包，任何文件都可以",
-  chatAttachmentTruncated: "（已截断）",
+  chatAttachmentTruncated: "（长文，分段读）",
   chatAttachmentNoVision: `当前服务商无法读取图片。请在「设置 › ${AI_NAME}」中更换服务商，或改为附加文档。`,
   aiGrammarLabel: "语法检查",
   aiAskLabel: `${AI_NAME} 对话`,

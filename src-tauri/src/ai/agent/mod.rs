@@ -223,10 +223,11 @@ async fn ai_agent_message_inner(
     // isn't told to.
     let reads_document =
         ToolRegistry::builtin(false, false, mode, false).offers(tools::READ_DOCUMENT_TOOL_NAME);
+    let reading = context::Reading::for_provider(reads_document, entry);
     let (context, sent_library) = request_context_and_library(
         &workspace,
         &document,
-        reads_document,
+        reading,
         &focus,
         focus_heading.as_deref(),
     );
@@ -320,7 +321,13 @@ async fn ai_agent_message_inner(
             }
             // A document shown whole needs no tools to read it: offered, they were
             // read again and again instead of edited.
-            if context::shown_whole(&document, true) {
+            if context::shown_whole(
+                &document,
+                context::Reading {
+                    tools: true,
+                    ..reading
+                },
+            ) {
                 tools.remove(tools::SEARCH_TOOL_NAME);
                 tools.remove(tools::READ_DOCUMENT_TOOL_NAME);
             }

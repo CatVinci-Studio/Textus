@@ -795,7 +795,7 @@ ${AI_NAME}への執筆の指示です。すべての文書に適用されます�
   conventionsEu: "EU 機関",
   agentAttachFile:
     "ファイルを添付：文書、PDF、画像、コード、zip など、どんなファイルでも",
-  chatAttachmentTruncated: "（一部のみ）",
+  chatAttachmentTruncated: "（長文：分けて読みます）",
   chatAttachmentNoVision: `このプロバイダーは画像を読めません。「設定 › ${AI_NAME}」でプロバイダーを変更するか、文書を添付してください。`,
   aiGrammarLabel: "文法チェック",
   aiAskLabel: `${AI_NAME} チャット`,

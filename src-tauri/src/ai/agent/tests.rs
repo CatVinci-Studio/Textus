@@ -344,6 +344,30 @@ fn the_document_tools_are_for_a_document_shown_in_part() {
 }
 
 #[test]
+fn a_cloud_model_takes_a_long_document_whole_a_local_one_in_part() {
+    let provider = |id: &str| {
+        crate::ai::catalog::PROVIDER_CATALOG
+            .iter()
+            .find(|p| p.id == id)
+            .unwrap()
+    };
+    let doc = "x".repeat(FULL_DOCUMENT_LIMIT * 2);
+    assert!(context::shown_whole(
+        &doc,
+        context::Reading::for_provider(true, provider("anthropic"))
+    ));
+    assert!(!context::shown_whole(
+        &doc,
+        context::Reading::for_provider(true, provider("ollama"))
+    ));
+    let past = "x".repeat(context::ROOMY_DOCUMENT_LIMIT + 1);
+    assert!(!context::shown_whole(
+        &past,
+        context::Reading::for_provider(true, provider("anthropic"))
+    ));
+}
+
+#[test]
 fn truncation_note_omits_tool_mention_without_tools() {
     let doc = "x".repeat(FULL_DOCUMENT_LIMIT + 1);
     let section = document_section(&md(&doc), false, None);
