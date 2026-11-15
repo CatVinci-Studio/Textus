@@ -33,3 +33,19 @@ describe("a finger's tap below a table that ends the document", () => {
     expect(t.caretLine()).toBe("after|");
   });
 });
+
+describe("a finger's tap in the gap under a table", () => {
+  it("puts the caret at the start of the next paragraph itself", async () => {
+    const t = await openView("| a | b |\n| - | - |\n| c | d |\n\nwrod here\n");
+    const table = t.view.nodeDOM(0) as HTMLElement;
+    const next = t.view.nodeDOM(
+      t.view.state.doc.child(0).nodeSize,
+    ) as HTMLElement;
+    table.getBoundingClientRect = () => ({ top: 0, bottom: 100 }) as DOMRect;
+    next.getBoundingClientRect = () => ({ top: 120, bottom: 140 }) as DOMRect;
+    touch(t.view.dom, "touchstart", 110);
+    const end = touch(t.view.dom, "touchend", 110);
+    expect(end.defaultPrevented).toBe(true);
+    expect(t.caretLine()).toBe("|wrod here");
+  });
+});
