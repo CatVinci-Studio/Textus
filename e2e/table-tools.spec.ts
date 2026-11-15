@@ -124,6 +124,9 @@ test("the + strips under and beside a table add a row and a column, reached from
   await expect(page.locator(".ProseMirror:visible > p")).toHaveCount(0);
 
   const wide = (await table.locator("table").boundingBox())!;
+  // Its "+" drawn whole in the narrow strip, not squeezed away.
+  const plus = await table.locator(".table-add-col-btn svg").boundingBox();
+  expect(plus?.width).toBeGreaterThan(10);
   await page.mouse.move(wide.x + wide.width - 6, wide.y + 20);
   await page.mouse.move(wide.x + wide.width + 3, wide.y + 20, { steps: 4 });
   await page.mouse.down();

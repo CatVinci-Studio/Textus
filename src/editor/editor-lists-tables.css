@@ -158,6 +158,9 @@
   align-items: center;
   justify-content: center;
   border: 1px solid var(--doc-border);
+  /* No padding: the column's strip is narrower than a button's own, which
+     squeezed its "+" to nothing. */
+  padding: 0;
   border-radius: var(--shape-pill);
   corner-shape: round;
   background: var(--doc-bg, var(--ui-bg));
@@ -183,6 +186,11 @@
 /* Reaching for a strip from the table, the pointer crosses no gap: the
    strip's own hit area runs back to the table's edge, so the wrapper's
    hover never lapses and the strip never fades under the pointer. */
+.table-add-row-btn > svg,
+.table-add-col-btn > svg {
+  flex-shrink: 0;
+}
+
 .table-add-row-btn::before,
 .table-add-col-btn::before {
   content: "";
