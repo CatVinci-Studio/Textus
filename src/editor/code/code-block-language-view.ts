@@ -3,7 +3,7 @@ import { codeBlockSchema } from "@milkdown/kit/preset/commonmark";
 import type { Node as ProseNode } from "@milkdown/kit/prose/model";
 import { TextSelection } from "@milkdown/kit/prose/state";
 import type { Decoration } from "@milkdown/kit/prose/view";
-import { tellCopied } from "../../clipboard/copied";
+import { copyButton, widgetButton } from "../widget-button";
 import { LINE_NUMBERS_SPEC } from "./code-line-numbers-plugin";
 import { mountLanguagePicker } from "./code-language-picker";
 import { fitGutter } from "./gutter-fit";
@@ -37,9 +37,6 @@ const LANGUAGES = [
   "markdown",
   "diff",
 ];
-
-/** How long the copy button says it copied. */
-const COPIED_MS = 1500;
 
 /** The line count as the gutter numbers it: a trailing newline starts a
  *  line of its own. */
@@ -82,45 +79,8 @@ export function createCodeBlockView(
       picker.className = "code-block-language";
       header.append(actions);
 
-      const copy = document.createElement("button");
-      copy.type = "button";
-      copy.className = "code-block-copy";
-      copy.textContent = labels().copy;
-      let copiedTimer: ReturnType<typeof setTimeout> | undefined;
-      // Pressed, it would take the focus and the caret out of the text.
-      copy.addEventListener("mousedown", (e) => {
-        e.preventDefault();
-        e.stopPropagation();
-      });
-      copy.addEventListener("click", () => {
-        const text = node.textContent;
-        void navigator.clipboard.writeText(text).then(
-          () => {
-            // navigator.clipboard bypasses the copy event.
-            tellCopied(text);
-            copy.textContent = labels().copied;
-            copy.classList.add("is-copied");
-            clearTimeout(copiedTimer);
-            copiedTimer = setTimeout(() => {
-              copy.textContent = labels().copy;
-              copy.classList.remove("is-copied");
-            }, COPIED_MS);
-          },
-          () => {
-            // No clipboard access: nothing was copied, nothing to say.
-          },
-        );
-      });
-
-      const selectAll = document.createElement("button");
-      selectAll.type = "button";
-      selectAll.className = "code-block-select-all";
-      selectAll.textContent = labels().selectAll;
-      selectAll.addEventListener("mousedown", (e) => {
-        e.preventDefault();
-        e.stopPropagation();
-      });
-      selectAll.addEventListener("click", () => {
+      const copy = copyButton(labels, () => node.textContent);
+      const selectAll = widgetButton("block-pill", labels().selectAll, () => {
         const pos = getPos();
         if (pos == null) return;
         const { tr } = view.state;
@@ -237,7 +197,6 @@ export function createCodeBlockView(
           return !code.contains(mutation.target);
         },
         destroy() {
-          clearTimeout(copiedTimer);
           cancelAnimationFrame(fitting);
           resized?.disconnect();
           languagePicker?.destroy();

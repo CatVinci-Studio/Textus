@@ -17,7 +17,7 @@
   /* A code block's copy and select buttons and language picker: 44pt
      targets, and 16px text, below which iOS zooms into a focused control. */
   :root[data-window-chrome="mobile"]
-    :is(.code-block-language-select, .code-block-copy, .code-block-select-all) {
+    :is(.code-block-language-select, .code-block-actions .block-pill) {
     min-height: 48px;
     padding: 0 12px;
     font-size: 18px;
