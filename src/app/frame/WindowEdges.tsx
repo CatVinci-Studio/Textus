@@ -25,7 +25,7 @@ const EDGES: ResizeDirection[] = [
 ];
 
 /**
- * The outline and resize edges an undecorated Linux window lacks. Pressing
+ * Resize edges inside a Linux window, beside GTK's outer margin. Pressing
  * hands the drag to the compositor, which also works under Wayland. Dropped
  * while the window fills the screen.
  */
@@ -37,7 +37,6 @@ export function WindowEdges() {
 
   return (
     <>
-      <div className="window-edge-outline" aria-hidden="true" />
       {EDGES.map((edge) => (
         <div
           key={edge}
