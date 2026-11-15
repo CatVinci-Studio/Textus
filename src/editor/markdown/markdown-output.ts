@@ -1,3 +1,4 @@
+import { allowHeaderOnlyTables } from "../tables/header-only-tables";
 import type { Ctx } from "@milkdown/kit/ctx";
 import { defaultValueCtx, remarkStringifyOptionsCtx } from "@milkdown/kit/core";
 import { codeBlockSchema, imageSchema } from "@milkdown/kit/preset/commonmark";
@@ -369,6 +370,7 @@ function documentBullet(markdown: string): "-" | "*" | "+" | null {
 export function configureMarkdownOutput(ctx: Ctx): void {
   configureImageNode(ctx);
   keepCodeFenceMeta(ctx);
+  allowHeaderOnlyTables(ctx);
   ctx.update(remarkGFMPlugin.options.key, (options) => ({
     ...options,
     stringLength: displayWidth,

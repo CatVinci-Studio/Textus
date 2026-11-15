@@ -9,6 +9,7 @@ import {
   sharedAlignment,
   tableSize,
 } from "./table-edits";
+import { runTableAction } from "../editor-menu-tables";
 
 afterEach(closeViews);
 
@@ -160,5 +161,12 @@ describe("the table's keys and pastes", () => {
     t.paste(text, dom.innerHTML);
     expect(lines(t)[0]).toBe("| h | k | k |");
     expect(body(t)).toEqual(["| 1 | x | x |", "| 2 | y | y |"]);
+  });
+
+  it("deletes the one row under its head, leaving the head alone, as Markdown allows", async () => {
+    const t = await openView("| a | b |\n| --- | --- |\n| 1 | 2 |\n\nend");
+    t.caretAt("1");
+    runTableAction((fn) => t.editor.action(fn), "delete-row");
+    expect(t.markdown()).toBe("| a | b |\n| - | - |\n\nend");
   });
 });
