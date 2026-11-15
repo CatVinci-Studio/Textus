@@ -1784,6 +1784,7 @@ ${AI_NAME}에게 주는 글쓰기 지침으로, 모든 문서에 적용됩니다
   pluginPermAiTools: "Textus AI에 자체 도구를 제공하기",
   pluginPermNotifications: "시스템 알림 표시하기",
   pluginPermAppearance: "Textus와 문서의 색상 변경하기",
+  pluginPermGitCommit: "내 Git으로 열린 폴더에 Git 커밋 만들기",
   pluginPermAgents:
     "이 컴퓨터에 설치된 AI 에이전트 실행하기(파일을 읽고 바꿀 수 있음)",
   pluginPermBackground: "일정에 따라 코드 실행하기(모든 창을 닫아도)",

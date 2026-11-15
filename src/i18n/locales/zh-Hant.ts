@@ -1714,6 +1714,7 @@ export default {
   pluginPermAiTools: "為 Textus AI 提供它自己的工具",
   pluginPermNotifications: "顯示系統通知",
   pluginPermAppearance: "變更 Textus 和文件的顏色",
+  pluginPermGitCommit: "用你的 Git 在開啟的資料夾中提交",
   pluginPermAgents: "執行這台電腦上安裝的 AI Agent（它能讀取和修改檔案）",
   pluginPermBackground: "按排程執行程式碼，關閉所有視窗後也會執行",
   pluginScheduleNotice:

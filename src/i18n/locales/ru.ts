@@ -1917,6 +1917,7 @@ export default {
   pluginPermAiTools: "Давать Textus AI свои инструменты",
   pluginPermNotifications: "Показывать системные уведомления",
   pluginPermAppearance: "Менять цвета Textus и ваших документов",
+  pluginPermGitCommit: "Делать коммиты Git в открытой папке вашим Git",
   pluginPermAgents:
     "Запускать ИИ-агента, установленного на этом компьютере (он может читать и менять файлы)",
   pluginPermBackground:

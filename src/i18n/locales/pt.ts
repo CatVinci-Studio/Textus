@@ -1898,6 +1898,7 @@ Habilidades ficam na pasta skills/ ao lado deste arquivo, um arquivo
   pluginPermAiTools: "Dar ao Textus AI ferramentas próprias para usar",
   pluginPermNotifications: "Mostrar notificações do sistema",
   pluginPermAppearance: "Alterar as cores do Textus e dos seus documentos",
+  pluginPermGitCommit: "Fazer commits do Git na pasta aberta com o seu Git",
   pluginPermAgents:
     "Executar um agente de IA instalado neste computador (ele pode ler e alterar arquivos)",
   pluginPermBackground:

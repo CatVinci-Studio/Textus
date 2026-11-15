@@ -112,30 +112,31 @@ Values kept for one document.
 
 ## Api
 
-| Member                   |                                                                |
-| ------------------------ | -------------------------------------------------------------- |
-| `env: Env`               |                                                                |
-| `l10n: L10n`             |                                                                |
-| `commands: Commands`     |                                                                |
-| `ui: Ui`                 |                                                                |
-| `layout: Layout`         |                                                                |
-| `views: Views`           |                                                                |
-| `editor: Editor`         |                                                                |
-| `files: Files`           |                                                                |
-| `metadata: Metadata`     |                                                                |
-| `dates: Dates`           | From 1.3.10: no permission, nothing leaves the plugin's frame. |
-| `templates: Templates`   |                                                                |
-| `net: Net`               |                                                                |
-| `settings: Settings`     |                                                                |
-| `ai: Ai`                 |                                                                |
-| `plugins: Plugins`       |                                                                |
-| `uri: Uri`               |                                                                |
-| `export: Export`         |                                                                |
-| `schedule: Schedule`     | 1.1: jobs Textus fires on time (notifications, background).    |
-| `notify: Notify`         | 1.1: system notifications (notifications).                     |
-| `app: App`               | 1.1: whether Textus is in front, behind, or has no window.     |
-| `appearance: Appearance` | 1.6: colours over the theme (appearance).                      |
-| `text: Text`             | 1.7: text as the app reads it.                                 |
+| Member                   |                                                                                          |
+| ------------------------ | ---------------------------------------------------------------------------------------- |
+| `env: Env`               |                                                                                          |
+| `l10n: L10n`             |                                                                                          |
+| `commands: Commands`     |                                                                                          |
+| `ui: Ui`                 |                                                                                          |
+| `layout: Layout`         |                                                                                          |
+| `views: Views`           |                                                                                          |
+| `editor: Editor`         |                                                                                          |
+| `files: Files`           |                                                                                          |
+| `metadata: Metadata`     |                                                                                          |
+| `git: Git`               | From 1.4.3: the folder's Git history (files.read; committing, git.commit). Desktop only. |
+| `dates: Dates`           | From 1.3.10: no permission, nothing leaves the plugin's frame.                           |
+| `templates: Templates`   |                                                                                          |
+| `net: Net`               |                                                                                          |
+| `settings: Settings`     |                                                                                          |
+| `ai: Ai`                 |                                                                                          |
+| `plugins: Plugins`       |                                                                                          |
+| `uri: Uri`               |                                                                                          |
+| `export: Export`         |                                                                                          |
+| `schedule: Schedule`     | 1.1: jobs Textus fires on time (notifications, background).                              |
+| `notify: Notify`         | 1.1: system notifications (notifications).                                               |
+| `app: App`               | 1.1: whether Textus is in front, behind, or has no window.                               |
+| `appearance: Appearance` | 1.6: colours over the theme (appearance).                                                |
+| `text: Text`             | 1.7: text as the app reads it.                                                           |
 
 ## Env
 
@@ -697,6 +698,33 @@ A kind of periodic note: its folder (full path), file name format (moment.js tok
 | ------------------------------------------------------------------------------------------------------------------------ | ----------------------------------------------------------------- |
 | `get(path: string): Promise<Record<string, unknown>>`                                                                    | The YAML at the top of a document, as an object; {} for none.     |
 | `update(path: string, change: (frontmatter: Record<string, unknown>) => Record<string, unknown> \| void): Promise<void>` | Changes it through files.process; the rest of the file untouched. |
+
+## GitChange
+
+| Member                                                                                     |                                     |
+| ------------------------------------------------------------------------------------------ | ----------------------------------- |
+| `path: string`                                                                             |                                     |
+| `state: \| "modified" \| "added" \| "deleted" \| "renamed" \| "untracked" \| "conflicted"` |                                     |
+| `staged: boolean`                                                                          | In the index already (`git add`ed). |
+
+## GitCommit
+
+| Member            |                                                                 |
+| ----------------- | --------------------------------------------------------------- |
+| `hash: string`    |                                                                 |
+| `at: number`      | When it was committed, in ms since 1970.                        |
+| `author: string`  |                                                                 |
+| `subject: string` |                                                                 |
+| `path: string`    | The file's path in this commit; it may have been renamed since. |
+
+## Git
+
+| Member                                                                        |                                                                                                                                                           |
+| ----------------------------------------------------------------------------- | --------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| `status(): Promise<{ branch: string \| null; changes: GitChange[] } \| null>` | The branch (null when detached) and the changed files of the open folder; null when it is in no repository or git isn't there. Hidden files are left out. |
+| `log(path: string, options?: { limit?: number }): Promise<GitCommit[]>`       | `path`'s commits, newest first, through renames (100, at most 500).                                                                                       |
+| `show(hash: string, path: string): Promise<string \| null>`                   | The file as commit `hash` had it at `path` (a GitCommit's path); null when it had none there, or it isn't text.                                           |
+| `commit(message: string, paths: string[]): Promise<string>`                   | Commits the changes of `paths` only, with `message`, as the user's git does (hooks, signing): the new commit's hash. git.commit.                          |
 
 ## Metadata
 

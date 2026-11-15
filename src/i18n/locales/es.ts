@@ -1919,6 +1919,7 @@ para usar una.
   pluginPermAiTools: "Dar a Textus AI herramientas propias para usar",
   pluginPermNotifications: "Mostrar notificaciones del sistema",
   pluginPermAppearance: "Cambiar los colores de Textus y de tus documentos",
+  pluginPermGitCommit: "Hacer commits de Git en la carpeta abierta con tu Git",
   pluginPermAgents:
     "Ejecutar un agente de IA instalado en este ordenador (puede leer y cambiar archivos)",
   pluginPermBackground:

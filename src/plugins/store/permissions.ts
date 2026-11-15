@@ -23,6 +23,7 @@ export const PERMISSION_LABELS: Record<
   background: "pluginPermBackground",
   agents: "pluginPermAgents",
   appearance: "pluginPermAppearance",
+  "git.commit": "pluginPermGitCommit",
 };
 
 /** A permission in plain words, as the install dialog and a plugin's page

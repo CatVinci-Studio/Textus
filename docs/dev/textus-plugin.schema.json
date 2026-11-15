@@ -101,7 +101,8 @@
               "notifications",
               "background",
               "agents",
-              "appearance"
+              "appearance",
+              "git.commit"
             ]
           },
           {

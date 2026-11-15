@@ -28,7 +28,8 @@ type PlainPermission =
   | "notifications"
   | "background"
   | "agents"
-  | "appearance";
+  | "appearance"
+  | "git.commit";
 export type PluginPlatform = "desktop" | "ios";
 
 /** A permission, as the manifest names it. `network:<host>` names one

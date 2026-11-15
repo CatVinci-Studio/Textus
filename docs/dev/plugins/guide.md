@@ -187,6 +187,7 @@ turning it on, or leaves it off, and can take each back later.
 | `background`     | run its `background` code on a schedule, also with every window closed (API 1.1)                    |
 | `agents`         | run the AI agents it names in `contributes.agents` (programs on this computer; 1.3.13)              |
 | `appearance`     | change Textus's colours: a palette over the theme, the frame a gradient (API 1.6)                   |
+| `git.commit`     | commit files of the open folder with the user's git (1.4.3; reading Git history is `files.read`)    |
 | `network:<host>` | fetch from that host over HTTPS (`*.example.com`, `host:port`, `*` for the open web)                |
 | `hidden:<path>`  | read that hidden file of the open folder, named from its top: `hidden:.vitepress/config.ts` (1.4.3) |
 
@@ -458,6 +459,17 @@ exports.activate = async function (ctx) {
 `appearance.onDidChange` tells of another theme, scheme or plugin's
 colours - for a palette that depends on the theme underneath. Set
 `engines.textus` to `">=1.4.2"`.
+
+### Git history - `textus.git` (API 1.7)
+
+On the desktop, with git installed and the folder in a repository,
+`git.status()` gives the branch and the changed files, `git.log(path)` a
+file's commits through renames, and `git.show(hash, path)` the file as a
+commit had it; these need `files.read`. `git.commit(message, paths)`
+commits those files' changes only, through the user's own git (hooks,
+signing), and needs `git.commit`. Hidden files stay out, and nothing
+pushes, pulls or switches branches. Elsewhere `status()` is `null`. Set
+`engines.textus` to `">=1.4.3"`.
 
 ### The rest
 

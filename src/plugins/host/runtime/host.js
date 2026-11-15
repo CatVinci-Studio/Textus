@@ -1070,6 +1070,26 @@
       },
       onDidChange: on("metadata"),
     },
+    git: {
+      status: function () {
+        return call("git.status");
+      },
+      log: function (path, options) {
+        return call("git.log", {
+          path: String(path),
+          limit: options && options.limit,
+        });
+      },
+      show: function (hash, path) {
+        return call("git.show", { hash: String(hash), path: String(path) });
+      },
+      commit: function (message, paths) {
+        return call("git.commit", {
+          message: String(message),
+          paths: (paths || []).map(String),
+        });
+      },
+    },
     net: {
       fetch: function (url, init) {
         init = init || {};

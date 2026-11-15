@@ -12,7 +12,8 @@
     "notifications",
     "background",
     "agents",
-    "appearance"
+    "appearance",
+    "git.commit"
   ],
   "platforms": ["desktop", "ios"],
   "hosts": {

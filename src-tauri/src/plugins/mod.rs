@@ -9,6 +9,7 @@ pub mod catalog;
 pub mod dev;
 pub mod export;
 pub mod files;
+pub mod git;
 pub mod install;
 pub mod manifest;
 pub mod metadata;
@@ -51,6 +52,10 @@ macro_rules! with_plugin_commands {
             $crate::plugins::files::plugin_secret_set,
             $crate::plugins::metadata::plugin_metadata_all,
             $crate::plugins::metadata::plugin_metadata_get,
+            $crate::plugins::git::plugin_git_status,
+            $crate::plugins::git::plugin_git_log,
+            $crate::plugins::git::plugin_git_show,
+            $crate::plugins::git::plugin_git_commit,
             $crate::plugins::catalog::plugin_install_catalog,
             $crate::plugins::dev::plugin_load_dev,
             $crate::plugins::install::plugin_uninstall,

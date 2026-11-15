@@ -20,6 +20,7 @@ import { fileHandlers } from "./broker-files";
 import { layoutHandlers, seenBy } from "./broker-layout";
 import { editorHandlers, stopPluginEditor } from "./broker-editor";
 import { metadataHandlers } from "./broker-metadata";
+import { gitHandlers } from "./broker-git";
 import { stopPluginUi, uiHandlers } from "./broker-ui";
 import { viewHandlers } from "./broker-views";
 import { scheduleHandlers } from "./broker-schedule";
@@ -416,6 +417,7 @@ export class PluginHost {
       ...editorHandlers(scope),
       ...fileHandlers(scope),
       ...metadataHandlers(scope),
+      ...gitHandlers(scope),
       ...scheduleHandlers(scope),
       ...appearanceHandlers(scope),
       ...textHandlers(),

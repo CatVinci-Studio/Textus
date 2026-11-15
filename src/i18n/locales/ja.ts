@@ -1802,6 +1802,7 @@ ${AI_NAME}への執筆の指示です。すべての文書に適用されます�
   pluginPermAiTools: "Textus AI に独自のツールを提供する",
   pluginPermNotifications: "システム通知を表示する",
   pluginPermAppearance: "Textus と文書の色を変更する",
+  pluginPermGitCommit: "自分の Git で、開いているフォルダにコミットする",
   pluginPermAgents:
     "このコンピュータにインストールされた AI エージェントを実行する（ファイルの読み取りと変更ができます）",
   pluginPermBackground:

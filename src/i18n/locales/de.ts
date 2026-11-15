@@ -1879,6 +1879,7 @@ Skills liegen im Ordner skills/ neben dieser Datei, je Skill eine
   pluginPermAiTools: "Textus AI eigene Werkzeuge geben",
   pluginPermNotifications: "Systemmitteilungen anzeigen",
   pluginPermAppearance: "Die Farben von Textus und Ihren Dokumenten ändern",
+  pluginPermGitCommit: "Mit Ihrem Git Commits im geöffneten Ordner erstellen",
   pluginPermAgents:
     "Einen auf diesem Computer installierten KI-Agenten ausführen (er kann Dateien lesen und ändern)",
   pluginPermBackground:

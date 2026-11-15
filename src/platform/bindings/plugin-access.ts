@@ -68,6 +68,10 @@ export const commands = {
 	plugin_metadata_all: (id: string, root: string, after: number | null) => __TAURI_INVOKE<MetadataAll_Serialize>("plugin_metadata_all", { id, root, after }),
 	/**  What one document holds now, its blocks with it - read afresh. */
 	plugin_metadata_get: (id: string, root: string, path: string) => __TAURI_INVOKE<DocumentMeta_Serialize | null>("plugin_metadata_get", { id, root, path }),
+	plugin_git_status: (id: string, root: string) => __TAURI_INVOKE<GitStatus_Serialize | null>("plugin_git_status", { id, root }),
+	plugin_git_log: (id: string, root: string, path: string, limit: number | null) => __TAURI_INVOKE<GitCommit[]>("plugin_git_log", { id, root, path, limit }),
+	plugin_git_show: (id: string, root: string, hash: string, path: string) => __TAURI_INVOKE<string | null>("plugin_git_show", { id, root, hash, path }),
+	plugin_git_commit: (id: string, root: string, message: string, paths: string[]) => __TAURI_INVOKE<string>("plugin_git_commit", { id, root, message, paths }),
 	plugin_http: (id: string, request: HttpRequest_Deserialize) => __TAURI_INVOKE<HttpResponse>("plugin_http", { id, request }),
 	/**  What the plugin kept under `key`, or null. */
 	plugin_store_get: (id: string, scope: StoreScope, root: string | null, key: string) => __TAURI_INVOKE<Value | null>("plugin_store_get", { id, scope, root, key }),
@@ -166,6 +170,38 @@ export type FsEntry_Serialize = {
 	isDir: boolean,
 	size: number,
 	modifiedMs: number | null,
+};
+
+export type GitChange = {
+	path: string,
+	/**  modified, added, deleted, renamed, untracked or conflicted. */
+	state: string,
+	/**  In the index already (`git add`ed). */
+	staged: boolean,
+};
+
+export type GitCommit = {
+	hash: string,
+	/**  Milliseconds since 1970, when it was committed. */
+	at: number | null,
+	author: string,
+	subject: string,
+	/**  The file's path in this commit (it may have been renamed since). */
+	path: string,
+};
+
+export type GitStatus = GitStatus_Serialize | GitStatus_Deserialize;
+
+export type GitStatus_Deserialize = {
+	/**  None when HEAD is detached. */
+	branch?: string | null,
+	changes: GitChange[],
+};
+
+export type GitStatus_Serialize = {
+	/**  None when HEAD is detached. */
+	branch: string | null,
+	changes: GitChange[],
 };
 
 export type HeadingMeta = {

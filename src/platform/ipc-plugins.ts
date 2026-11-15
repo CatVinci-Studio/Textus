@@ -15,6 +15,8 @@ export type PluginsState = Generated.PluginsState_Serialize;
 export type PluginCatalogEntry = Generated.CatalogEntry_Serialize;
 export type StoreScope = Access.StoreScope;
 export type PluginDocumentMeta = Access.DocumentMeta_Serialize;
+export type PluginGitStatus = Access.GitStatus_Serialize;
+export type PluginGitCommit = Access.GitCommit;
 
 /** A raw IPC response's bytes, which specta can't type, so those commands
  *  go through `call`. */
@@ -146,6 +148,16 @@ export const plugins = {
     command("plugin_metadata_all", id, root, after),
   metadataGet: (id: string, root: string, path: string) =>
     command("plugin_metadata_get", id, root, path),
+  /** The folder's Git branch and changes; null outside a repository. */
+  gitStatus: (id: string, root: string) =>
+    command("plugin_git_status", id, root),
+  /** A file's commits, newest first, through renames. */
+  gitLog: (id: string, root: string, path: string, limit: number | null) =>
+    command("plugin_git_log", id, root, path, limit),
+  gitShow: (id: string, root: string, hash: string, path: string) =>
+    command("plugin_git_show", id, root, hash, path),
+  gitCommit: (id: string, root: string, message: string, paths: string[]) =>
+    command("plugin_git_commit", id, root, message, paths),
   secretGet: (id: string, key: string) => command("plugin_secret_get", id, key),
   secretSet: (id: string, key: string, value: string | null) =>
     command("plugin_secret_set", id, key, value),

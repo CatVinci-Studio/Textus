@@ -142,6 +142,9 @@ declare global {
       editor: Editor;
       files: Files;
       metadata: Metadata;
+      /** From 1.4.3: the folder's Git history (files.read; committing,
+       *  git.commit). Desktop only. */
+      git: Git;
       /** From 1.3.10: no permission, nothing leaves the plugin's frame. */
       dates: Dates;
       templates: Templates;
@@ -1189,6 +1192,50 @@ declare global {
           frontmatter: Record<string, unknown>,
         ) => Record<string, unknown> | void,
       ): Promise<void>;
+    }
+
+    // ---------------------------------------------------------------
+    // git: the open folder's Git history, read with the user's own git
+    // (desktop; elsewhere status() is null and the rest refuse). Files.read;
+    // commit needs git.commit. No push, pull or switching branches.
+    // ---------------------------------------------------------------
+
+    interface GitChange {
+      path: string;
+      state:
+        | "modified"
+        | "added"
+        | "deleted"
+        | "renamed"
+        | "untracked"
+        | "conflicted";
+      /** In the index already (`git add`ed). */
+      staged: boolean;
+    }
+
+    interface GitCommit {
+      hash: string;
+      /** When it was committed, in ms since 1970. */
+      at: number;
+      author: string;
+      subject: string;
+      /** The file's path in this commit; it may have been renamed since. */
+      path: string;
+    }
+
+    interface Git {
+      /** The branch (null when detached) and the changed files of the
+       *  open folder; null when it is in no repository or git isn't there.
+       *  Hidden files are left out. */
+      status(): Promise<{ branch: string | null; changes: GitChange[] } | null>;
+      /** `path`'s commits, newest first, through renames (100, at most 500). */
+      log(path: string, options?: { limit?: number }): Promise<GitCommit[]>;
+      /** The file as commit `hash` had it at `path` (a GitCommit's path);
+       *  null when it had none there, or it isn't text. */
+      show(hash: string, path: string): Promise<string | null>;
+      /** Commits the changes of `paths` only, with `message`, as the user's
+       *  git does (hooks, signing): the new commit's hash. git.commit. */
+      commit(message: string, paths: string[]): Promise<string>;
     }
 
     // ---------------------------------------------------------------
