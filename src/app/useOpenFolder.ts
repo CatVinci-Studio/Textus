@@ -1,7 +1,11 @@
 import { isError } from "../utils/error-text";
 import { useCallback, useEffect, useRef, useState } from "react";
 import { useLatest } from "../utils/hooks/useLatest";
-import { canOpenFolder, canUseWindows } from "../platform/capabilities";
+import {
+  canOpenFolder,
+  canUseWindows,
+  isIOSApp,
+} from "../platform/capabilities";
 import { takeWindowSession } from "../document/launch-window";
 import { fs, session, windowIpc } from "../platform/ipc";
 import { getUiState, setUiState } from "../storage/ui-state";
@@ -100,16 +104,17 @@ export function useOpenFolder({
     if (!restoring.current) return;
     restoring.current = false;
     // A reinstall moved Documents (iOS): the AI's folder follows it.
-    void documentsDir().then((docs) => {
-      const moved = agentRootsMoved(
-        settings.agentWorkspaceRoot,
-        agentRootFromFolder(),
-        (path) => ownFolderMoved(path, docs),
-      );
-      if (!moved) return;
-      setSettings({ agentWorkspaceRoot: moved.current });
-      setUiState("agentRootFromFolder", moved.fromFolder);
-    });
+    if (isIOSApp)
+      void documentsDir().then((docs) => {
+        const moved = agentRootsMoved(
+          settings.agentWorkspaceRoot,
+          agentRootFromFolder(),
+          (path) => ownFolderMoved(path, docs),
+        );
+        if (!moved) return;
+        setSettings({ agentWorkspaceRoot: moved.current });
+        setUiState("agentRootFromFolder", moved.fromFolder);
+      });
     const saved = savedFolder(settings.restoreSessionOnStartup);
     if (folder !== null || !saved) return;
     void documentsDir().then((docs) =>

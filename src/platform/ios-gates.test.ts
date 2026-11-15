@@ -14,6 +14,8 @@ const ALLOWED: Record<string, string> = {
   "app/SettingsLayer.tsx": "Settings is a sheet over the window, not a tab",
   "app/frame/WindowControls.tsx": "the title row's menu button",
   "app/frame/sidebar-tabs.tsx": "the drawer closes over a document it opened",
+  "app/useOpenFolder.ts":
+    "a reinstall moves Documents, and the AI's folder with it",
   "ai/chat/panel/agent-panel.tsx": "a docked panel drawn at its width",
   "editor/click-below-end.ts":
     "a tap beside a table: its caret went astray, onto a word it selected",
