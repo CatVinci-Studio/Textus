@@ -44,7 +44,7 @@ import type { TabState } from "./tabs/useTabState";
 import { splitForDrop } from "./islands/split-drop";
 import type { DropTarget } from "../engine/layout/drop-zones";
 import { explainError } from "../utils/error-explain";
-import { openUnreadable, pluginTab } from "./open-unreadable";
+import { isBinaryContent, openUnreadable, pluginTab } from "./open-unreadable";
 import { tabInUse } from "../engine/layout/store";
 
 /** How a document opens, beyond which file. */
@@ -139,6 +139,12 @@ export function useFileOpening(opts: {
         return openUnreadable(path, err, { reopening, place, t });
       }
       const { content, diskMtime } = disk;
+      if (!asDocument && isBinaryContent(content))
+        return openUnreadable(path, new Error("not text"), {
+          reopening,
+          place,
+          t,
+        });
       // Text that isn't a document (a web page): the official plugin that
       // shows it is offered first; declined, it opens as text.
       if (!asDocument && !reopening && !isDocumentName(basename(path))) {

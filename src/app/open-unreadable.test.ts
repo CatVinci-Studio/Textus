@@ -8,7 +8,7 @@ vi.mock("../engine/controls/app-dialog", () => ({
 }));
 vi.mock("../plugins/store/open-offer", () => ({ offerPluginToOpen: offer }));
 
-const { openUnreadable } = await import("./open-unreadable");
+const { isBinaryContent, openUnreadable } = await import("./open-unreadable");
 const t = resolveStrings("en");
 
 describe("a file that won't open as text", () => {
@@ -33,5 +33,11 @@ describe("a file that won't open as text", () => {
     expect(shown).toHaveBeenLastCalledWith(
       expect.stringContaining("isn't a text document"),
     );
+  });
+
+  it("knows a PDF or a zip that happens to read as text", () => {
+    expect(isBinaryContent("%PDF-1.1 1 0 obj<</Type/Page>>")).toBe(true);
+    expect(isBinaryContent("PK\u0003\u0004word/document.xml")).toBe(true);
+    expect(isBinaryContent("<html><body>%PDF-</body></html>")).toBe(false);
   });
 });

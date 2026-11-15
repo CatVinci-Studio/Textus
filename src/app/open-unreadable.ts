@@ -32,6 +32,14 @@ function pluginTab(
   };
 }
 
+/** Formats that are never text, though a small one may read as such
+ *  (a PDF of plain ASCII, a zip): opened as text, a save would wreck it. */
+const BINARY_STARTS = ["%PDF-", "PK\u0003\u0004"];
+
+export function isBinaryContent(content: string): boolean {
+  return BINARY_STARTS.some((start) => content.startsWith(start));
+}
+
 /** A file that wouldn't read as text: a market plugin offered to open it,
  *  or the system's app; else said why not. Its tab, or null. */
 export async function openUnreadable(
