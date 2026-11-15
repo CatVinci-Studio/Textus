@@ -104,3 +104,24 @@ it("takes a file changed outside in a table cell and after it as one table", asy
   expect(tables[0]).toContain("201 （88.2%）");
   expect(tables[0]).toContain("27（11.84%）");
 });
+
+// Blocks added or taken out right between two others: the neighbours stay,
+// once each.
+it("takes a block added or removed between two others without losing or doubling one", async () => {
+  const table = "| a | b |\n| --- | --- |\n| 1 | 2 |";
+  editor = await createTestEditor(`one\n\n${table}`);
+  const blocks = () => {
+    const names: string[] = [];
+    editor!.ctx.get(editorViewCtx).state.doc.forEach((n) => {
+      names.push(`${n.type.name}:${n.textContent}`);
+    });
+    return names;
+  };
+  expect(replaceDocument(editor.ctx, `one\n\n## Head\n\n${table}`)).toBe(true);
+  expect(blocks()).toEqual(["paragraph:one", "heading:Head", "table:ab12"]);
+  expect(replaceDocument(editor.ctx, `one\n\n${table}`)).toBe(true);
+  expect(blocks()).toEqual(["paragraph:one", "table:ab12"]);
+  expect(replaceDocument(editor.ctx, `one\n\n## H\n\ntwo`)).toBe(true);
+  expect(replaceDocument(editor.ctx, `one\n\ntwo`)).toBe(true);
+  expect(blocks()).toEqual(["paragraph:one", "paragraph:two"]);
+});

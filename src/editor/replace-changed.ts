@@ -31,17 +31,26 @@ export function replaceChanged(
     $from.sameParent(tr.doc.resolve(a)) &&
     whole.resolve(start - at).sameParent(whole.resolve(b - at));
   if (!inLine) {
-    const first = indexAt(old, start - at);
-    const lastOld = indexAt(old, Math.max(a - at - 1, start - at));
-    const lastNew = indexAt(next, Math.max(b - at - 1, start - at));
+    const from = start;
+    const first = indexAt(old, from - at);
+    let before = 0;
+    for (let k = 0; k < first; k++) before += old.child(k).nodeSize;
+    // Blocks only added, or only taken out, between two blocks: the side
+    // with nothing replaces nothing, not the block after the boundary.
+    const boundary = before === from - at;
+    const last = (f: Fragment, end: number) =>
+      boundary && end === from
+        ? first - 1
+        : indexAt(f, Math.max(end - at - 1, from - at));
+    const lastOld = last(old, a);
+    const lastNew = last(next, b);
     const span = (f: Fragment, to: number) => {
       let size = 0;
       for (let k = first; k <= to && k < f.childCount; k++)
         size += f.child(k).nodeSize;
       return size;
     };
-    start = at;
-    for (let k = 0; k < first; k++) start += old.child(k).nodeSize;
+    start = at + before;
     a = start + span(old, lastOld);
     b = start + span(next, lastNew);
   }
