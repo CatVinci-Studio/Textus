@@ -7,6 +7,8 @@ import {
   type MouseEvent as ReactMouseEvent,
 } from "react";
 import { fs } from "../platform/ipc";
+import { isMobileApp } from "../platform/capabilities";
+import { iosFiles } from "../platform/ios-files";
 
 import { basename, parentDir } from "../utils/path";
 import { type ContextMenuItem } from "../engine/controls/ContextMenu";
@@ -86,10 +88,8 @@ export function useRowMenu(
     [root, t, reload],
   );
 
-  const onRowMenu = useCallback(
-    (e: ReactMouseEvent, path: string, isDir: boolean) => {
-      e.preventDefault();
-      e.stopPropagation();
+  const openRowMenu = useCallback(
+    (at: { x: number; y: number }, path: string, isDir: boolean) => {
       // New things go into the folder clicked, or the one the file is in.
       const dir = isDir ? path : (parentDir(path) ?? root);
       const items: (ContextMenuItem | "separator")[] = [];
@@ -97,6 +97,14 @@ export function useRowMenu(
         items.push(
           // Beside another document: drag it there.
           { label: t.treeOpen, onSelect: () => onFileSelect(path) },
+          ...(isMobileApp
+            ? [
+                {
+                  label: t.menuShare,
+                  onSelect: () => void iosFiles.share(path).catch(() => {}),
+                },
+              ]
+            : []),
           "separator",
         );
       if (path !== root && isDir && onEnter)
@@ -129,9 +137,17 @@ export function useRowMenu(
         folder: isDir,
       });
       if (added.length) items.push("separator", ...added);
-      setMenu({ x: e.clientX, y: e.clientY, items });
+      setMenu({ ...at, items });
     },
     [root, t, setDraft, rename, trash, onFileSelect, onEnter],
   );
-  return { menu, setMenu, onRowMenu };
+  const onRowMenu = useCallback(
+    (e: ReactMouseEvent, path: string, isDir: boolean) => {
+      e.preventDefault();
+      e.stopPropagation();
+      openRowMenu({ x: e.clientX, y: e.clientY }, path, isDir);
+    },
+    [openRowMenu],
+  );
+  return { menu, setMenu, onRowMenu, openRowMenu };
 }

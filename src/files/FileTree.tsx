@@ -83,7 +83,7 @@ export function FileTree({
   const desktop = !isMobileApp && canOpenFolder;
   const { draft, setDraft, finishDraft } = useNewEntry(t, reload, select);
 
-  const { menu, setMenu, onRowMenu } = useRowMenu(
+  const { menu, setMenu, onRowMenu, openRowMenu } = useRowMenu(
     root,
     folder ?? root,
     t,
@@ -110,6 +110,7 @@ export function FileTree({
     dropInto: drag?.into,
     desktop,
     onRowMenu,
+    onRowHold: isMobileApp ? openRowMenu : null,
     onRowPointerDown,
     draft,
     finishDraft,
