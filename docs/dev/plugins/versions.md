@@ -28,8 +28,8 @@ exact version; [the reference](reference.md) shows them too.
   name, arguments and answers. A plugin written for 1.0 still runs.
 - A better name or shape comes in beside the old one, which keeps
   working. The old one is marked "Deprecated" in textus.d.ts with what to
-  use instead, and stays for at least two of Textus's minor releases
-  (1.4 → 1.6) before it can go; it goes only with a row here saying so.
+  use instead, and stays until Textus's next minor release: deprecated
+  in 1.4, it can go in 1.5. It goes only with a row here saying so.
 - Lines count from 0 in every `Location` and in the index
   (`metadata.*`); the only line from 1 is a search hit's `line`, kept for
   the plugins that read it - use its `location`.
