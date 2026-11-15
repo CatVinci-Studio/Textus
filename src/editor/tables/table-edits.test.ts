@@ -142,6 +142,30 @@ describe("the table's keys and pastes", () => {
     expect(body(t)).toEqual(["| 1 | x |", "| 2 | y |", "| 2 | y |"]);
   });
 
+  it("a copied row pastes into a table of its head row alone, as its row", async () => {
+    const t = await openView(`${ROWS}\n\n| a | b |\n| - | - |\n\nend`);
+    const { CellSelection } = await import("@milkdown/kit/prose/tables");
+    const cell = (text: string) => {
+      const $at = t.view.state.doc.resolve(t.caretAt(text));
+      return $at.before($at.depth - 1);
+    };
+    t.view.dispatch(
+      t.view.state.tr.setSelection(
+        CellSelection.create(t.view.state.doc, cell("2"), cell("y")),
+      ),
+    );
+    const { dom, text } = t.view.serializeForClipboard(
+      t.view.state.selection.content(),
+    );
+    t.caretAt("a");
+    t.paste(text, dom.innerHTML);
+    const tables: number[] = [];
+    t.view.state.doc.forEach((n) => {
+      if (n.type.name === "table") tables.push(n.childCount);
+    });
+    expect(tables).toEqual([3, 2]);
+  });
+
   it("a copied column pastes in as a new column after the caret's", async () => {
     const t = await openView(ROWS);
     const { CellSelection } = await import("@milkdown/kit/prose/tables");

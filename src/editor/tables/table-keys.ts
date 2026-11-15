@@ -141,9 +141,12 @@ export const tableRowPaste = $prose(
           const head = table.firstChild!;
           const align = (col: number) =>
             head.maybeChild(col)?.attrs.alignment ?? null;
+          // From the schema: a table of its head row alone has no body
+          // row to copy them from.
+          const { nodes } = state.schema;
           const types = {
-            row: table.lastChild!.type,
-            cell: table.lastChild!.firstChild!.type,
+            row: nodes.table_row!,
+            cell: nodes.table_cell!,
             head: head.firstChild!.type,
           };
           const tr = state.tr;
