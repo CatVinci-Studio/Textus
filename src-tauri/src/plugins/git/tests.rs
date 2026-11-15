@@ -69,6 +69,27 @@ fn relative_name(path: &str) -> String {
         .to_string()
 }
 
+#[cfg(unix)]
+#[test]
+fn paths_are_named_under_the_folder_as_given_not_its_real_path() {
+    let (tmp, real_root) = repo();
+    let link = tempfile::tempdir().unwrap();
+    let root = link.path().join("linked");
+    std::os::unix::fs::symlink(&real_root, &root).unwrap();
+    let root = root.to_string_lossy().to_string();
+    let s = state(&["files.read"]);
+    let changes = status(&s, "a.b", &root).unwrap().unwrap().changes;
+    assert!(
+        changes.iter().all(|c| c.path.starts_with(&root)),
+        "{changes:?}"
+    );
+    let b = format!("{root}/b.md");
+    assert!(log(&s, "a.b", &root, &b, None).unwrap()[0]
+        .path
+        .starts_with(&root));
+    drop(tmp);
+}
+
 #[test]
 fn a_folder_in_no_repository_has_no_status() {
     let tmp = tempfile::tempdir().unwrap();

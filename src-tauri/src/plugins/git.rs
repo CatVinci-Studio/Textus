@@ -140,8 +140,15 @@ fn from_top(
 }
 
 /// A path git gave (from the top) as the plugin sees it, if it may read it.
+/// Written under `root` as the window names it (git names the real path:
+/// /private/var for /var, a link's target), so it matches the window's.
 fn shown(state: &PluginsState, id: &str, root: &str, top: &Path, rel: &str) -> Option<String> {
-    let path = top.join(rel);
+    let real = top.join(rel);
+    let base = std::fs::canonicalize(root).ok()?;
+    let path = match real.strip_prefix(&base) {
+        Ok(rest) => Path::new(root).join(rest),
+        Err(_) => real,
+    };
     folder_path(state, id, "files.read", root, &path.to_string_lossy()).ok()?;
     Some(path.to_string_lossy().to_string())
 }
