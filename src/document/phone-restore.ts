@@ -6,7 +6,8 @@ import {
   splitLayout,
   windowLayout,
 } from "../engine/layout/store";
-import { inOrder, savedPaths, type TabOrder } from "./tab-order";
+import { savedPaths, type TabOrder } from "./tab-order";
+import { inOrder } from "../utils/in-order";
 
 /** The file a tab shows: its own, a plugin view's, or the one imported. */
 export const fileOf = (tab: DocTab) =>

@@ -1,5 +1,6 @@
 import { useEffect } from "react";
 import { useLatest } from "../utils/hooks/useLatest";
+import { inOrder } from "../utils/in-order";
 import { drafts, windowIpc } from "../platform/ipc";
 import {
   canUseWindows,
@@ -340,7 +341,7 @@ export function useStartupRestore(options: StartupRestoreOptions): void {
           // One the user opened meanwhile isn't opened twice.
           const open = new Set(prev.map(fileOf));
           const fresh = behind.filter((tab) => !open.has(fileOf(tab)));
-          ordered = inSessionOrder([...prev, ...fresh], paths);
+          ordered = inOrder([...prev, ...fresh], (t) => fileOf(t) ?? "", paths);
           return ordered;
         });
         // The island takes that order too: it keeps its own tabs first.
@@ -439,20 +440,4 @@ async function recoveredTab(draft: {
     // come back untitled rather than not at all.
     return untitled;
   }
-}
-
-/** `tabs` with the session's documents, which arrive in any order, back in
- *  `paths`' order, in the places they took; the others stay put. */
-function inSessionOrder(tabs: DocTab[], paths: string[]): DocTab[] {
-  const rank = new Map(paths.map((p, i) => [p, i]));
-  const rankOf = (tab: DocTab) => {
-    const path = fileOf(tab);
-    return path ? (rank.get(path) ?? -1) : -1;
-  };
-  const sorted = tabs
-    .filter((tab) => rankOf(tab) >= 0)
-    .sort((a, b) => rankOf(a) - rankOf(b));
-  let next = 0;
-  const out = tabs.map((tab) => (rankOf(tab) >= 0 ? sorted[next++] : tab));
-  return out.every((tab, i) => tab === tabs[i]) ? tabs : out;
 }
