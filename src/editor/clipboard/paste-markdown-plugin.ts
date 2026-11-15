@@ -3,7 +3,8 @@ import { Slice } from "@milkdown/kit/prose/model";
 import type { Node as ProseNode, ResolvedPos } from "@milkdown/kit/prose/model";
 import { $prose } from "@milkdown/kit/utils";
 import { parseMarkdownSource } from "../markdown/parse-markdown-source";
-import { fillTableAt, inTableCell, joinLinesForTableCell } from "./paste-slice";
+import { inTableCell, joinLinesForTableCell } from "./paste-slice";
+import { pastedRows, pasteRows } from "../tables/row-paste";
 import { wordListsToHtml } from "./word-lists";
 import { keepPastedLines } from "./paste-lines";
 import { cleanPastedHtml } from "./paste-html";
@@ -189,27 +190,12 @@ export const pasteMarkdownSourcePlugin = $prose(
             );
             return true;
           }
-          // A table pasted into a table: its cells fill the table from the
-          // caret's cell on, as a copy of cells from a table does.
-          if (
-            inTableCell(view.state.selection.$from) &&
-            doc.childCount === 1 &&
-            doc.firstChild!.type.spec.tableRole === "table"
-          ) {
-            const $from = view.state.selection.$from;
-            let depth = $from.depth;
-            while ($from.node(depth).type.spec.tableRole !== "table") depth--;
-            view.dispatch(
-              fillTableAt(
-                view.state.tr,
-                $from.before(depth),
-                $from.index(depth),
-                $from.index(depth + 1),
-                doc.firstChild!,
-              )
-                .setMeta("uiEvent", "paste")
-                .scrollIntoView(),
-            );
+          // A table pasted into a table goes in as its copied rows do.
+          const rows =
+            doc.childCount === 1 && pastedRows(doc.firstChild!.content);
+          const tr = rows && pasteRows(view.state, rows);
+          if (tr) {
+            view.dispatch(tr.setMeta("uiEvent", "paste").scrollIntoView());
             return true;
           }
           const parsed = Slice.maxOpen(doc.content);

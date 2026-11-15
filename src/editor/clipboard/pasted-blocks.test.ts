@@ -82,7 +82,7 @@ it("a code block pasted in the middle of a line stays a code block between its h
   expect(texts(t.view.dom, ":scope > p")).toEqual(["before", "after"]);
 });
 
-it("a table pasted on a new line takes that line, and one pasted in a cell fills the cells from it", async () => {
+it("a table pasted on a new line takes that line, and one as wide pasted in a cell goes in as rows under the caret's, as its HTML does", async () => {
   const t = await open();
   t.type("Before");
   t.press("Enter");
@@ -91,7 +91,7 @@ it("a table pasted on a new line takes that line, and one pasted in a cell fills
   t.caretAt("d", 1);
   t.paste("| p | q |\n| - | - |\n| r | s |");
   expect(all(t.view.dom, "table")).toHaveLength(1);
-  expect(texts(t.view.dom, "tr")).toEqual(["ab", "cpq", "rs"]);
+  expect(texts(t.view.dom, "tr")).toEqual(["ab", "cd", "pq", "rs"]);
 });
 
 it("plain pasted lines keep their breaks", async () => {

@@ -5,7 +5,7 @@
 
 ### Improved
 
-- Copying from a table gives other apps what they expect: a head row, lines and no stray paragraphs; Copy Table writes HTML too, and copied rows paste back in as new rows.
+- Copying from a table gives other apps what they expect: a head row, lines and no stray paragraphs; Copy Table writes HTML too, and copied rows paste back in as new rows, whether they come as HTML, tab-separated text or Markdown.
 - A table's one row under its head row can be deleted, leaving the head alone as Markdown allows.
 
 ### Fixed
