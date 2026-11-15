@@ -1,6 +1,9 @@
-import { useCallback, useEffect, useState } from "react";
+import { useEffect, useSyncExternalStore } from "react";
 import type { Strings, TextKey } from "../i18n/strings";
-import type { ProviderCatalogEntry } from "./provider-catalog";
+import {
+  useProviderCatalog,
+  type ProviderCatalogEntry,
+} from "./provider-catalog";
 import { auth } from "../platform/ipc";
 import type { AiProvider } from "../prefs/SettingsContext";
 
@@ -54,6 +57,40 @@ export interface ConnectedState {
   apiKey: boolean;
 }
 
+type Connections = Partial<Record<AiProvider, ConnectedState>>;
+
+// One copy for the whole window: a sign-in made in Settings shows at once
+// in the AI panel and the composer.
+let connections: Connections = {};
+const listeners = new Set<() => void>();
+const subscribe = (listener: () => void) => {
+  listeners.add(listener);
+  return () => void listeners.delete(listener);
+};
+const snapshot = () => connections;
+
+/** Checks `entry`'s connection again, for everyone showing it. */
+export function refreshConnected(entry: ProviderCatalogEntry): void {
+  fetchConnected(entry)
+    .then((state) => {
+      connections = { ...connections, [entry.id]: state };
+      listeners.forEach((listener) => listener());
+    })
+    .catch(() => {});
+}
+
+/** Whether `entry` can take a message: signed in, a key saved, or one
+ *  that needs none. */
+export function isReady(
+  entry: ProviderCatalogEntry,
+  state: ConnectedState | undefined,
+): boolean {
+  return (
+    !!(state?.oauth || state?.apiKey) ||
+    (!!entry.keyOptional && entry.id !== "custom")
+  );
+}
+
 /** Each catalog provider's connection, checked as the catalog loads and
  *  after a sign-in changes (not while `check` is off: Settings drawn only
  *  for its search); the selected one's is also reported. */
@@ -63,19 +100,10 @@ export function useConnectedProviders(
   onActiveConnectedChange?: (connected: boolean) => void,
   check = true,
 ) {
-  const [connected, setConnected] = useState<
-    Partial<Record<AiProvider, ConnectedState>>
-  >({});
-
-  const refreshConnected = useCallback((entry: ProviderCatalogEntry) => {
-    fetchConnected(entry)
-      .then((state) => setConnected((prev) => ({ ...prev, [entry.id]: state })))
-      .catch(() => {});
-  }, []);
-
+  const connected = useSyncExternalStore(subscribe, snapshot);
   useEffect(() => {
     if (check) for (const entry of catalog) refreshConnected(entry);
-  }, [catalog, refreshConnected, check]);
+  }, [catalog, check]);
 
   const activeConnected = connected[activeId];
   const isConnected = !!(activeConnected?.oauth || activeConnected?.apiKey);
@@ -84,4 +112,15 @@ export function useConnectedProviders(
   }, [isConnected, onActiveConnectedChange]);
 
   return { connected, refreshConnected, isConnected };
+}
+
+/** Whether `provider`'s account sign-in is kept. */
+export function useSignedIn(provider: string): boolean {
+  const catalog = useProviderCatalog();
+  const entry = catalog.find((e) => e.id === provider);
+  const connected = useSyncExternalStore(subscribe, snapshot);
+  useEffect(() => {
+    if (entry) refreshConnected(entry);
+  }, [entry]);
+  return !!connected[provider as AiProvider]?.oauth;
 }
