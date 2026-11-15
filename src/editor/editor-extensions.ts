@@ -150,7 +150,6 @@ import { createUndoFilePlugin } from "./undo-file";
 import { createMissingLinksPlugin } from "./markdown/missing-links";
 import { createTypewriterPlugin } from "./modes/typewriter-plugin";
 import { zenFocusPlugin } from "./modes/zen-focus-plugin";
-import { keyboardRevealPlugin } from "./keys/keyboard-reveal-plugin";
 import { createPlaceholderPlugin } from "./placeholder-plugin";
 import { findReplacePlugin } from "./find/find-replace-plugin";
 import {
@@ -462,7 +461,6 @@ export function withEditorCore(
       .use(lazyBlocksPlugin)
       .use(readOnlyPlugin)
       .use(editing(zenFocusPlugin))
-      .use(editing(keyboardRevealPlugin))
       .use(
         editing(
           createTypewriterPlugin({
