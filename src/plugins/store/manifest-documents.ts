@@ -1,0 +1,48 @@
+import type { DocumentTypeContribution } from "./manifest";
+import { ManifestError, list, object, text, type Json } from "./manifest-json";
+
+const EXTENSION = /^[a-z0-9][a-z0-9_-]{0,15}$/;
+/** Textus's own; a plugin can't take them over. */
+const OWN = ["md", "markdown", "mdx", "txt", "text"];
+
+const flag = (value: unknown, what: string): boolean => {
+  if (value === undefined) return false;
+  if (typeof value !== "boolean")
+    throw new ManifestError(`${what} must be true or false.`);
+  return value;
+};
+
+/** `contributes.documentTypes`: extensions opened as documents, with what
+ *  of their syntax is kept as written. Data only, no patterns: it runs on
+ *  every read of the document. */
+export function parseDocumentTypes(c: Json): DocumentTypeContribution[] {
+  return list(c.documentTypes, "contributes.documentTypes").map((x, i) => {
+    const at = `contributes.documentTypes[${i}]`;
+    const o = object(x, at);
+    const extensions = list(o.extensions, `${at}.extensions`).map((e, j) => {
+      const ext = text(e, `${at}.extensions[${j}]`)
+        .replace(/^\./, "")
+        .toLowerCase();
+      if (!EXTENSION.test(ext))
+        throw new ManifestError(`${at}.extensions[${j}] isn't an extension.`);
+      if (OWN.includes(ext))
+        throw new ManifestError(`${at}.extensions[${j}] is Textus's own.`);
+      return ext;
+    });
+    if (!extensions.length)
+      throw new ManifestError(`${at}.extensions is empty.`);
+    const keep = o.keep === undefined ? {} : object(o.keep, `${at}.keep`);
+    const blockStarts = list(keep.blockStarts, `${at}.keep.blockStarts`).map(
+      (s, j) => text(s, `${at}.keep.blockStarts[${j}]`),
+    );
+    const braces = flag(keep.braces, `${at}.keep.braces`);
+    const jsx = flag(keep.jsx, `${at}.keep.jsx`);
+    return {
+      extensions,
+      keep:
+        blockStarts.length || braces || jsx
+          ? { blockStarts, braces, jsx }
+          : null,
+    };
+  });
+}

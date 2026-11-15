@@ -1,6 +1,7 @@
 import { $remark } from "@milkdown/kit/utils";
-import { extname } from "../../utils/path";
 import { scanSource, type Range } from "./verbatim-scan";
+import { extname } from "../../utils/path";
+import { editorExtensions } from "../extension-points";
 
 /**
  * Syntax a document type keeps exactly as written: read as raw source
@@ -24,12 +25,17 @@ const MDX: VerbatimRules = {
   jsx: true,
 };
 
-const BY_EXTENSION: Record<string, VerbatimRules> = { mdx: MDX };
+/** Textus's own document types that keep syntax, by extension. */
+export const BUILT_IN_KEEP: Readonly<Record<string, VerbatimRules>> = {
+  mdx: MDX,
+};
 
-export function verbatimRulesFor(path: string | null): VerbatimRules | null {
-  return path
-    ? (BY_EXTENSION[extname(path).slice(1).toLowerCase()] ?? null)
-    : null;
+/** The rules the document at `path` is read by: its type's, Textus's or
+ *  a plugin's that is on. */
+export function keepFor(path: string | null): VerbatimRules | null {
+  if (!path) return null;
+  const ext = extname(path).slice(1).toLowerCase();
+  return BUILT_IN_KEEP[ext] ?? editorExtensions().pluginKeep(path);
 }
 
 /** HTML that is JSX rather than a tag: a component, a fragment, braces. */
@@ -199,12 +205,10 @@ export function keepVerbatim(tree: MdNode, text: string, rules: VerbatimRules) {
   walk(tree);
 }
 
-/** The remark side. The rules are those of the document the editor opened
- *  with, kept for its life: a rename doesn't reread what's open. */
-export const createRemarkVerbatim = (docPath: () => string | null) => {
-  let rules: VerbatimRules | null | undefined;
-  return $remark("remark-verbatim", () => () => (tree, file) => {
-    rules ??= verbatimRulesFor(docPath());
+/** The remark side, with the rules of the document the editor opened:
+ *  fixed for its life, so a rename or a plugin turned off midway never
+ *  reads it by other rules. */
+export const createRemarkVerbatim = (rules: VerbatimRules | null) =>
+  $remark("remark-verbatim", () => () => (tree, file) => {
     if (rules) keepVerbatim(tree as MdNode, String(file.value), rules);
   });
-};

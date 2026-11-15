@@ -1,6 +1,7 @@
 import { describe, expect, it } from "vitest";
 import { matchFiles, searchEntries } from "./file-search";
 import { isDocumentName } from "./document-name";
+import { publish, type PluginsSnapshot } from "../plugins/store/plugin-records";
 import { nameCollator } from "../utils/name-order";
 import { pinyinEngine } from "../utils/pinyin";
 
@@ -109,5 +110,29 @@ describe("isDocumentName", () => {
     expect(isDocumentName("photo.png")).toBe(false);
     expect(isDocumentName(".md")).toBe(false);
     expect(isDocumentName("Makefile")).toBe(false);
+    expect(isDocumentName("guide.mdx")).toBe(true);
+  });
+
+  it("takes a running plugin's document types, not a stopped one's", () => {
+    const quarto = (status: string) =>
+      publish({
+        allOn: true,
+        records: [
+          {
+            id: "a.quarto",
+            status,
+            manifest: {
+              contributes: {
+                documentTypes: [{ extensions: ["qmd"], keep: null }],
+              },
+            },
+          },
+        ] as unknown as PluginsSnapshot["records"],
+      });
+    quarto("on");
+    expect(isDocumentName("report.QMD")).toBe(true);
+    quarto("off");
+    expect(isDocumentName("report.qmd")).toBe(false);
+    publish({ records: [] });
   });
 });

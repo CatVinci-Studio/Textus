@@ -10,7 +10,7 @@ import { history } from "@milkdown/kit/plugin/history";
 import { clipboard } from "@milkdown/kit/plugin/clipboard";
 import { listener } from "@milkdown/kit/plugin/listener";
 import { $remark } from "@milkdown/kit/utils";
-import { createRemarkVerbatim } from "./markdown/verbatim";
+import { createRemarkVerbatim, keepFor } from "./markdown/verbatim";
 import remarkCjkFriendly from "remark-cjk-friendly";
 import remarkCjkFriendlyGfmStrikethrough from "remark-cjk-friendly-gfm-strikethrough";
 import {
@@ -286,7 +286,7 @@ export function withEditorCore(
       .use(rawHtmlSchema)
       // A document type's own syntax (MDX's imports, {expressions}, JSX),
       // read as raw source before anything else takes its text apart.
-      .use(createRemarkVerbatim(() => docPath.current))
+      .use(createRemarkVerbatim(keepFor(docPath.current)))
       .use(remarkHtmlImages)
       .use(createRawHtmlPreviewPlugin({ docPath: () => docPath.current }))
       .use(htmlAlignPlugin)

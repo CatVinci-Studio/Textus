@@ -1,3 +1,4 @@
+import type { VerbatimRules } from "../../editor/markdown/verbatim";
 import { pluginString } from "../host/plugin-string";
 import PERMISSIONS from "./permissions.json";
 /**
@@ -141,6 +142,13 @@ export interface CustomEditorContribution {
   priority: "default" | "option";
 }
 
+/** Files opened as documents in the editor (from 1.4.3): Quarto's .qmd,
+ *  R Markdown's .Rmd. `keep`: what of their syntax stays as written. */
+export interface DocumentTypeContribution {
+  extensions: string[];
+  keep: VerbatimRules | null;
+}
+
 export type SettingType =
   "boolean" | "string" | "number" | "enum" | "color" | "list" | "button";
 
@@ -264,6 +272,7 @@ export interface Contributes {
   sidebarTabs: SidebarTabContribution[];
   views: ViewContribution[];
   customEditors: CustomEditorContribution[];
+  documentTypes: DocumentTypeContribution[];
   settings: SettingContribution[];
   /** A page of its own in Settings, a webview. */
   settingsPage: { title: string } | null;

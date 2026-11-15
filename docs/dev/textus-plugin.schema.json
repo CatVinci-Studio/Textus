@@ -321,6 +321,40 @@
             }
           }
         },
+        "documentTypes": {
+          "type": "array",
+          "items": {
+            "type": "object",
+            "required": ["extensions"],
+            "properties": {
+              "extensions": {
+                "type": "array",
+                "items": { "type": "string" },
+                "minItems": 1,
+                "description": "Opened as documents in the editor: \"qmd\", \"Rmd\". Not md, markdown, mdx, txt or text."
+              },
+              "keep": {
+                "type": "object",
+                "description": "What of the syntax stays exactly as written, shown as source.",
+                "properties": {
+                  "blockStarts": {
+                    "type": "array",
+                    "items": { "type": "string" },
+                    "description": "A paragraph starting with one is kept whole, with the blocks after it while a bracket it opened is open."
+                  },
+                  "braces": {
+                    "type": "boolean",
+                    "description": "{…} in a line of text."
+                  },
+                  "jsx": {
+                    "type": "boolean",
+                    "description": "JSX tags: <Tag …>, </Tag>, <>."
+                  }
+                }
+              }
+            }
+          }
+        },
         "settings": {
           "type": "array",
           "items": {

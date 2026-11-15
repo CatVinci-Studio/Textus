@@ -1,11 +1,17 @@
 // @vitest-environment jsdom
+// A plugin's document types reach the editor as the plugin system loads.
+import "../../plugins/contributions/editor-extensions";
 import { afterEach, describe, expect, it } from "vitest";
 import type { Editor } from "@milkdown/kit/core";
 import { editorViewCtx, serializerCtx } from "@milkdown/kit/core";
 import type { Node as ProseNode } from "@milkdown/kit/prose/model";
 import { createTestEditor } from "../editor-test-kit";
 import { readSourceBlocks, writePreservingSource } from "./source-preserving";
-import { verbatimRulesFor } from "./verbatim";
+import { documentTypeOf } from "../../files/document-name";
+import {
+  publish,
+  type PluginsSnapshot,
+} from "../../plugins/store/plugin-records";
 import { scanSource } from "./verbatim-scan";
 
 const editors: Editor[] = [];
@@ -134,11 +140,42 @@ describe("MDX kept as written", () => {
   });
 });
 
+describe("a plugin's document type", () => {
+  it("keeps what its manifest names", async () => {
+    publish({
+      allOn: true,
+      records: [
+        {
+          id: "a.quarto",
+          status: "on",
+          manifest: {
+            contributes: {
+              documentTypes: [
+                {
+                  extensions: ["qmd"],
+                  keep: { blockStarts: [":::"], braces: true, jsx: false },
+                },
+              ],
+            },
+          },
+        },
+      ] as unknown as PluginsSnapshot["records"],
+    });
+    const qmd =
+      "::: {.callout-note}\nA *note* [here]\n:::\n\nSee {{< var v >}} and @fig-a.\n";
+    try {
+      expect(await serialized(await open(qmd, "/r/a.qmd"))).toBe(qmd);
+    } finally {
+      publish({ records: [] });
+    }
+  });
+});
+
 describe("rules", () => {
   it("are MDX's for .mdx only", () => {
-    expect(verbatimRulesFor("/a/b.MDX")).not.toBeNull();
-    expect(verbatimRulesFor("/a/b.md")).toBeNull();
-    expect(verbatimRulesFor(null)).toBeNull();
+    expect(documentTypeOf("/a/b.MDX")?.keep).toBeTruthy();
+    expect(documentTypeOf("/a/b.md")?.keep).toBeNull();
+    expect(documentTypeOf("/a/b.pdf")).toBeNull();
   });
 
   it("find balanced braces, past escapes and skipped code", () => {

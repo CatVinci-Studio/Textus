@@ -82,6 +82,16 @@ written back as CRLF.
 - **Tags.** A `#` at the start of a line is escaped only where it would
   open a heading (up to six `#` and a space), so `#tag` stays `#tag`.
 
+## Syntax kept as written
+
+A document type can name syntax that is never parsed as Markdown
+(`markdown/verbatim.ts`): it is read as raw source, shown as source, and
+saved byte for byte even in an edited block. MDX (`.mdx`) keeps its
+`import`/`export` lines, `{expressions}`, JSX tags and `:::` blocks; a
+plugin's `documentTypes` declare their own, as data (line starts, braces,
+JSX). The rules are taken from the document type when the editor opens
+(`files/document-name.ts`) and kept for its life.
+
 ## What is still rewritten
 
 - A block you edit is serialized whole, in the serializer's style: edit

@@ -13,6 +13,7 @@ import type {
   ViewType,
 } from "./manifest";
 import { ManifestError, list, object, text, type Json } from "./manifest-json";
+import { parseDocumentTypes } from "./manifest-documents";
 
 /** Where a plugin's menu items may go. */
 export const MENU_IDS: readonly MenuId[] = [
@@ -485,6 +486,7 @@ export function parseContributes(raw: unknown, id: string): Contributes {
     sidebarTabs,
     views,
     customEditors,
+    documentTypes: parseDocumentTypes(c),
     settings,
     settingsPage: page && {
       title: text(page.title, "contributes.settingsPage.title"),
