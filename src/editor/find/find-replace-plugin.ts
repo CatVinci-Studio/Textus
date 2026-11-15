@@ -32,11 +32,12 @@ export function computeMatches(
   const matches: FindReplaceMatch[] = [];
   doc.descendants((node, pos) => {
     if (!node.isTextblock) return true;
-    const start = pos + 1;
-    const end = start + node.content.size;
-    const { text, positions: posMap } = textWithPositions(doc, start, end);
+    // Measured on the block itself: from the document's top, each block
+    // would walk every block before it.
+    const size = node.content.size;
+    const { text, positions } = textWithPositions(node, 0, size);
     // One more entry: the block's end, for a match that reaches it.
-    posMap.push(end);
+    const posMap = [...positions, size].map((p) => pos + 1 + p);
     matches.push(
       ...matchesIn(text, regex, (start, end) => ({
         from: posMap[start],
