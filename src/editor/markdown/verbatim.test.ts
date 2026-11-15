@@ -5,7 +5,8 @@ import { editorViewCtx, serializerCtx } from "@milkdown/kit/core";
 import type { Node as ProseNode } from "@milkdown/kit/prose/model";
 import { createTestEditor } from "../editor-test-kit";
 import { readSourceBlocks, writePreservingSource } from "./source-preserving";
-import { braceRanges, verbatimRulesFor } from "./verbatim";
+import { verbatimRulesFor } from "./verbatim";
+import { scanSource } from "./verbatim-scan";
 
 const editors: Editor[] = [];
 afterEach(async () => {
@@ -66,6 +67,31 @@ describe("MDX kept as written", () => {
     expect(await serialized(await open(MDX, "/docs/a.mdx"))).toBe(MDX);
   });
 
+  it.each([
+    [
+      "attributes HTML can't read",
+      "<Tabs items={['pnpm', 'npm']}>\n  <Tabs.Tab>pnpm i</Tabs.Tab>\n</Tabs>\n",
+    ],
+    [
+      "JSX in an attribute",
+      "Click <Foo render={() => <b />}>here</Foo> now.\n",
+    ],
+    [
+      "a handler in a line",
+      "Use <Button onClick={() => alert('hi')}>Go</Button> now.\n",
+    ],
+    ["an image component", '<Image src="/a.png" alt="A" width={400} />\n'],
+    [
+      "an export over a blank line",
+      "export const x = {\n  a: 1,\n\n    b: 2,\n};\n\nText.\n",
+    ],
+    ["a fragment", "<>\n  <A />\n</>\n"],
+    ["an admonition", ":::note[Title with *md*]\n\nSome {content}.\n\n:::\n"],
+    ["math braces", "Inline $\\frac{a}{b}$ math.\n\n$$\n\\frac{1}{2}\n$$\n"],
+  ])("writes %s back as read", async (_name, mdx) => {
+    expect(await serialized(await open(mdx, "/docs/a.mdx"))).toBe(mdx);
+  });
+
   it("keeps imports, expressions and components as source", async () => {
     const editor = await open(MDX, "/docs/a.mdx");
     const texts = await editor.action((ctx) =>
@@ -118,6 +144,10 @@ describe("rules", () => {
   it("find balanced braces, past escapes and skipped code", () => {
     const text = "a {b {c}} \\{d} `{e}` {f";
     const code = text.indexOf("`");
-    expect(braceRanges(text, 0, [[code, code + 5]])).toEqual([[2, 9]]);
+    const scan = scanSource(text, 0, [[code, code + 5]], {
+      braces: true,
+      jsx: false,
+    });
+    expect(scan).toEqual({ ranges: [[2, 9]], open: true });
   });
 });

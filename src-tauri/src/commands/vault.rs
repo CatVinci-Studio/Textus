@@ -49,9 +49,7 @@ fn is_image(path: &Path) -> bool {
 }
 
 fn is_note(path: &Path) -> bool {
-    path.extension()
-        .and_then(|e| e.to_str())
-        .is_some_and(|e| e.eq_ignore_ascii_case("md") || e.eq_ignore_ascii_case("markdown"))
+    crate::extract::is_markdown(path)
 }
 
 /// What a link may name: a picture for an embed, a note for a wikilink.
