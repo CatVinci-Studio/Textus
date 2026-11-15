@@ -1,3 +1,4 @@
+import { isHiddenFilePath } from "./hidden-files";
 import type { VerbatimRules } from "../../editor/markdown/verbatim";
 import { pluginString } from "../host/plugin-string";
 import PERMISSIONS from "./permissions.json";
@@ -32,15 +33,21 @@ export type PluginPlatform = "desktop" | "ios";
 
 /** A permission, as the manifest names it. `network:<host>` names one
  *  host (`*.domain` for its subdomains, `host:port`, or `*` for any);
- *  `commands:<plugin id>` lets it run that plugin's listed commands. */
+ *  `commands:<plugin id>` lets it run that plugin's listed commands;
+ *  `hidden:<path>` lets it read that hidden file of the open folder. */
 export type Permission =
-  PlainPermission | `network:${string}` | `commands:${string}`;
+  | PlainPermission
+  | `network:${string}`
+  | `commands:${string}`
+  | `hidden:${string}`;
 
 export function isPermission(value: unknown): value is Permission {
   if (typeof value !== "string") return false;
   if ((PLAIN_PERMISSIONS as readonly string[]).includes(value)) return true;
   if (value.startsWith("commands:"))
     return ID.test(value.slice("commands:".length));
+  if (value.startsWith("hidden:"))
+    return isHiddenFilePath(value.slice("hidden:".length));
   const host = value.startsWith("network:") && value.slice("network:".length);
   return !!host && /^(\*|(\*\.)?[a-z0-9.-]+(:\d{1,5})?)$/i.test(host);
 }

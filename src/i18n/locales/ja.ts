@@ -1809,6 +1809,7 @@ ${AI_NAME}への執筆の指示です。すべての文書に適用されます�
   pluginScheduleNotice:
     "{name} が予定を設定しました。Textus の実行中にだけ動きます。「{setting}」をオンにすると、すべてのウインドウを閉じていても動きます。",
   pluginPermNetwork: "{host} に接続する",
+  pluginPermHidden: "開いているフォルダの {path} を読む",
   pluginPermCommands: "{plugin} のコマンドを実行",
   pluginPermNetworkAny: "任意のウェブサイトに接続する",
   menuPlugins: "プラグイン",

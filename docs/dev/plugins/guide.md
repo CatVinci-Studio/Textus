@@ -172,27 +172,32 @@ and `!`.
 A plugin asks for these in `permissions`; the user grants them when
 turning it on, or leaves it off, and can take each back later.
 
-| Permission       | Lets the plugin                                                                        |
-| ---------------- | -------------------------------------------------------------------------------------- |
-| `editor.read`    | read the document in front: its text, selection, blocks and outline; also completions  |
-| `editor.write`   | change it at once, each change one undo step                                           |
-| `editor.propose` | suggest changes to it, shown as Textus AI's are, accepted or rejected by the user      |
-| `editor.input`   | take the editor's keys and move, select and edit with them (Vim, Emacs)                |
-| `files.read`     | list, find and read files in the open folder, and what Textus knows of them (metadata) |
-| `files.write`    | create, change, rename and trash files in the open folder (reading them comes with it) |
-| `clipboard`      | read and write the clipboard                                                           |
-| `project.data`   | keep its own data in the open folder, in `.textus/plugins/<id>/`                       |
-| `ai.tools`       | give Textus AI tools to call                                                           |
-| `notifications`  | show system notifications, at once or on a schedule (API 1.1)                          |
-| `background`     | run its `background` code on a schedule, also with every window closed (API 1.1)       |
-| `agents`         | run the AI agents it names in `contributes.agents` (programs on this computer; 1.3.13) |
-| `appearance`     | change Textus's colours: a palette over the theme, the frame a gradient (API 1.6)      |
-| `network:<host>` | fetch from that host over HTTPS (`*.example.com`, `host:port`, `*` for the open web)   |
+| Permission       | Lets the plugin                                                                                     |
+| ---------------- | --------------------------------------------------------------------------------------------------- |
+| `editor.read`    | read the document in front: its text, selection, blocks and outline; also completions               |
+| `editor.write`   | change it at once, each change one undo step                                                        |
+| `editor.propose` | suggest changes to it, shown as Textus AI's are, accepted or rejected by the user                   |
+| `editor.input`   | take the editor's keys and move, select and edit with them (Vim, Emacs)                             |
+| `files.read`     | list, find and read files in the open folder, and what Textus knows of them (metadata)              |
+| `files.write`    | create, change, rename and trash files in the open folder (reading them comes with it)              |
+| `clipboard`      | read and write the clipboard                                                                        |
+| `project.data`   | keep its own data in the open folder, in `.textus/plugins/<id>/`                                    |
+| `ai.tools`       | give Textus AI tools to call                                                                        |
+| `notifications`  | show system notifications, at once or on a schedule (API 1.1)                                       |
+| `background`     | run its `background` code on a schedule, also with every window closed (API 1.1)                    |
+| `agents`         | run the AI agents it names in `contributes.agents` (programs on this computer; 1.3.13)              |
+| `appearance`     | change Textus's colours: a palette over the theme, the frame a gradient (API 1.6)                   |
+| `network:<host>` | fetch from that host over HTTPS (`*.example.com`, `host:port`, `*` for the open web)                |
+| `hidden:<path>`  | read that hidden file of the open folder, named from its top: `hidden:.vitepress/config.ts` (1.4.3) |
 
 Ask for what the plugin's purpose explains, and no more: each permission
 is shown to the user, and a listing in Textus asks why for the broad ones.
 Files are reached only inside the open folder, never the app's own; plain
-HTTP goes only to this computer (`network:localhost:23119`).
+HTTP goes only to this computer (`network:localhost:23119`). Files and
+folders whose names start with "." are shut to plugins but for `.textus`,
+Obsidian's shared settings, `.gitignore`, `.git/HEAD` and those a plugin
+names with `hidden:`, read only; `.git`, `.env`, `.ssh`, keys and other
+plugins' storage can't be named.
 
 ## The code
 

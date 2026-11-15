@@ -1940,6 +1940,7 @@ utiliser une.
   pluginScheduleNotice:
     "{name} a programmé une tâche. Elle ne s’exécute que lorsque Textus est ouvert : activez « {setting} » pour qu’elle s’exécute aussi toutes fenêtres fermées.",
   pluginPermNetwork: "Se connecter à {host}",
+  pluginPermHidden: "Lire {path} dans le dossier ouvert",
   pluginPermCommands: "Exécuter les commandes de {plugin}",
   pluginPermNetworkAny: "Se connecter à n’importe quel site web",
   menuPlugins: "Extensions",

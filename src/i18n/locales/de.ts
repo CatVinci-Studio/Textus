@@ -1886,6 +1886,7 @@ Skills liegen im Ordner skills/ neben dieser Datei, je Skill eine
   pluginScheduleNotice:
     "{name} hat etwas geplant. Es läuft nur, solange Textus läuft: schalte „{setting}“ ein, damit es auch bei geschlossenen Fenstern läuft.",
   pluginPermNetwork: "Mit {host} verbinden",
+  pluginPermHidden: "{path} im geöffneten Ordner lesen",
   pluginPermCommands: "Befehle von {plugin} ausführen",
   pluginPermNetworkAny: "Mit beliebigen Websites verbinden",
   menuPlugins: "Plugins",
