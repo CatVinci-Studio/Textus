@@ -76,7 +76,12 @@ export async function writeForAgent(
 const EDIT_KINDS = new Set(["edit", "delete", "move"]);
 
 /** Each edit step's files as they were before it, by step id. */
-export type EditSnapshots = Map<string, Map<string, Promise<string | null>>>;
+/** A file before a step: on disk, and as its open editor shows it. */
+interface Before {
+  disk: string | null;
+  shown: string | null;
+}
+export type EditSnapshots = Map<string, Map<string, Promise<Before>>>;
 
 /** The files a step touches: its places, else the path in its input. */
 function pathsOf(fields: ToolCallFields): string[] {
@@ -87,12 +92,10 @@ function pathsOf(fields: ToolCallFields): string[] {
   return [...(fields.locations ?? []).map((l) => l.path), ...named];
 }
 
-/** The text of `path` now: an open document as its editor has it. */
-function textNow(path: string): Promise<string | null> {
-  const doc = openDocumentAt(path);
-  return doc
-    ? Promise.resolve(doc.text())
-    : fs.readTextFile(path).catch(() => null);
+/** `path` now: on disk, and as an open editor has it (unsaved typing). */
+async function textNow(path: string): Promise<Before> {
+  const disk = await fs.readTextFile(path).catch(() => null);
+  return { disk, shown: openDocumentAt(path)?.text() ?? disk };
 }
 
 /**
@@ -120,10 +123,11 @@ export function followEdit(
   }
   snapshots.delete(id);
   for (const [path, was] of files ?? [])
+    // Changed on disk, not merely unlike unsaved typing in its editor.
     void Promise.all([was, fs.readTextFile(path).catch(() => null)]).then(
       ([before, after]) => {
-        if (after !== null && after !== before)
-          filesChanged([{ file: path, applied: true, before }]);
+        if (after !== null && after !== before.disk)
+          filesChanged([{ file: path, applied: true, before: before.shown }]);
       },
     );
 }

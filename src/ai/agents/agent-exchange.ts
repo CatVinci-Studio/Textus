@@ -32,6 +32,7 @@ import {
   heardCommands,
   heardOptions,
   heardValue,
+  noteRefused,
   offerOf,
 } from "./agent-offers";
 import { modeOption } from "./agent-mode";
@@ -132,7 +133,8 @@ export const agentRunning = (agent: string) =>
 
 /** Sets an option of `agent` in every session of it running in this
  *  window. A session that refuses the mode is ended: none goes on in a
- *  mode its menu no longer shows; the next message starts it afresh. */
+ *  mode its menu no longer shows. The refusal is kept, so the next one
+ *  starts in the mode that asks and isn't sent it again. */
 async function setInSessions(agent: string, configId: string, value: string) {
   const isMode = configId === modeOption(offerOf(agent).options)?.id;
   const live = new Set(sessions.values());
@@ -144,6 +146,7 @@ async function setInSessions(agent: string, configId: string, value: string) {
         if (answer?.configOptions) heardOptions(agent, answer.configOptions);
         else heardValue(agent, configId, value);
       } catch {
+        noteRefused(agent, configId, value);
         if (isMode) retire(session);
       }
     }),
@@ -480,6 +483,9 @@ export async function runAgentExchange(o: {
     throw explain(o.agent, err);
   } finally {
     session.events = null;
+    // Steps a stopped turn never finished keep no copies of their files.
+    session.edits.clear();
+    session.steps.clear();
     o.events.permission(null);
     if (session.retired) {
       session.connection.stop();

@@ -13,8 +13,10 @@ vi.mock("../../platform/ipc-files", () => ({
 }));
 vi.mock("../chat/file-changes", () => ({ filesChanged: changed }));
 vi.mock("../../plugins/app-bridge", () => ({ getWindowAccess: () => null }));
+const open = vi.hoisted(() => new Map<string, string>());
 vi.mock("../../registry/open-documents", () => ({
-  openDocumentAt: () => null,
+  openDocumentAt: (path: string) =>
+    open.has(path) ? { text: () => open.get(path)! } : null,
 }));
 
 const { followEdit } = await import("./agent-files");
@@ -24,6 +26,7 @@ const settle = () => new Promise((done) => setTimeout(done, 0));
 describe("an agent's edits written to disk itself", () => {
   beforeEach(() => {
     disk.clear();
+    open.clear();
     changed.mockReset();
   });
 
@@ -68,6 +71,21 @@ describe("an agent's edits written to disk itself", () => {
     disk.set("/elsewhere/b.md", "changed");
     for (const id of ["r1", "e2", "e3"])
       followEdit(edits, "/w", { toolCallId: id, status: "completed" });
+    await settle();
+    expect(changed).not.toHaveBeenCalled();
+  });
+
+  it("leave an open file alone when only its unsaved typing differs", async () => {
+    const edits = new Map();
+    disk.set("/w/a.md", "saved");
+    open.set("/w/a.md", "saved and typed");
+    followEdit(edits, "/w", {
+      toolCallId: "e4",
+      kind: "edit",
+      locations: [{ path: "/w/a.md" }],
+    });
+    await settle();
+    followEdit(edits, "/w", { toolCallId: "e4", status: "failed" });
     await settle();
     expect(changed).not.toHaveBeenCalled();
   });

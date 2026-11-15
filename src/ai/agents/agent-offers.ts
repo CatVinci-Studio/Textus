@@ -148,12 +148,30 @@ export function wanted(
 }
 
 /** The options whose value in force isn't the one wanted, with it. */
+/** Values an agent turned down, `option=value` by agent: never sent to it
+ *  again this run, or each new message would be refused anew. */
+const refusals = new Map<string, Set<string>>();
+
+/** That `agent` turned `value` of option `id` down. */
+export function noteRefused(agent: string, id: string, value: string): void {
+  const set = refusals.get(agent) ?? new Set<string>();
+  set.add(`${id}=${value}`);
+  refusals.set(agent, set);
+}
+
+const wasRefused = (agent: string, id: string, value: string) =>
+  refusals.get(agent)?.has(`${id}=${value}`) ?? false;
+
 export function choicesToSend(agent: string): [string, string][] {
   const { options } = offerOf(agent);
   const chosen = chosenFor(agent);
   return options.flatMap((o): [string, string][] => {
     const value = wanted(o, options, chosen);
-    return value !== null && value !== o.current ? [[o.id, value]] : [];
+    return value !== null &&
+      value !== o.current &&
+      !wasRefused(agent, o.id, value)
+      ? [[o.id, value]]
+      : [];
   });
 }
 
@@ -190,6 +208,7 @@ export async function applyChoices(
     try {
       answer = (await set(next.id, value)) as typeof answer;
     } catch (err) {
+      noteRefused(agent, next.id, value);
       if (!isMode) continue;
       const asking = askingValue(options);
       if (asking === null || asking === value) throw err;
@@ -209,4 +228,5 @@ export async function applyChoices(
 export function resetOffersForTests(): void {
   offers = null;
   listeners.clear();
+  refusals.clear();
 }

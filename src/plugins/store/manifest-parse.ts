@@ -456,10 +456,11 @@ export function parseContributes(raw: unknown, id: string): Contributes {
       setup: text(o.setup, `${at}.setup`, true) || undefined,
       provider: text(o.provider, `${at}.provider`, true) || undefined,
       askMode: text(o.askMode, `${at}.askMode`, true) || undefined,
+      // "" says the agent signs in by itself: no sign-in step offered.
       signIn:
-        o.signIn === undefined
-          ? undefined
-          : text(o.signIn, `${at}.signIn`, true),
+        o.signIn === undefined || o.signIn === ""
+          ? (o.signIn as "" | undefined)
+          : text(o.signIn, `${at}.signIn`),
     };
   });
   const hovers = known(

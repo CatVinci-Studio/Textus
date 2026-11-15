@@ -9,7 +9,7 @@ vi.mock("../../storage/ui-state", () => ({
   setUiState: () => {},
 }));
 
-const { applyChoices, offerOf, resetOffersForTests } =
+const { applyChoices, choicesToSend, offerOf, resetOffersForTests } =
   await import("./agent-offers");
 const { addAgents } = await import("../../plugins/contributions/agents");
 
@@ -120,6 +120,8 @@ describe("an agent's options as a session opens", () => {
     });
     expect(sent).toEqual(["mode=autoEdit", "mode=default"]);
     expect(offerOf("x/gemini").options[0].current).toBe("default");
+    // Not sent again after the start, or each message would be refused.
+    expect(choicesToSend("x/gemini")).toEqual([]);
   });
 
   it("takes the mode that asks from the agent's plugin when its names don't say", async () => {
