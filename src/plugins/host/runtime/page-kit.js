@@ -86,6 +86,9 @@
   var COLUMNS = "[role='listbox'], [role='menu']";
   var ITEMS =
     ":scope > :is(button, [role='tab'], [role='option'], [role='menuitem'], [role='radio']):not(:disabled)";
+  // A row of tabs is its tabs: a button beside them ("+", a menu) is
+  // reached with Tab, never chosen by the arrows.
+  var TAB_ITEMS = ":scope > [role='tab']:not([aria-disabled='true'])";
   function chosen(item) {
     return (
       item.getAttribute("aria-selected") === "true" ||
@@ -94,7 +97,10 @@
     );
   }
   function roving(group) {
-    var items = Array.prototype.slice.call(group.querySelectorAll(ITEMS));
+    var tabs = group.querySelector(":scope > [role='tab']");
+    var items = Array.prototype.slice.call(
+      group.querySelectorAll(tabs ? TAB_ITEMS : ITEMS),
+    );
     var at = items.findIndex(chosen);
     items.forEach(function (item, i) {
       item.tabIndex = i === (at < 0 ? 0 : at) ? 0 : -1;
@@ -241,5 +247,36 @@
     });
   });
 
-  api.dates = dates;
+  // As textus.dates in the plugin's host code: a Date, ms or "YYYY-MM-DD";
+  // the language as { language } or, as the engine takes it, a string.
+  function asDate(value) {
+    var at =
+      value instanceof Date
+        ? value
+        : typeof value === "string" && /^\d{4}-\d{2}-\d{2}$/.test(value)
+          ? new Date(value + "T00:00:00")
+          : new Date(value === undefined ? Date.now() : value);
+    if (isNaN(at.getTime())) throw new Error("Not a date: " + value);
+    return at;
+  }
+  function languageOf(options) {
+    if (typeof options === "string") return options;
+    return (options && options.language) || api.language || "en";
+  }
+  api.dates = {
+    format: function (date, form, options) {
+      return dates.format(
+        asDate(date),
+        form || "YYYY-MM-DD",
+        languageOf(options),
+      );
+    },
+    parse: function (text, form, options) {
+      return dates.parse(
+        String(text),
+        form || "YYYY-MM-DD",
+        languageOf(options),
+      );
+    },
+  };
 })();

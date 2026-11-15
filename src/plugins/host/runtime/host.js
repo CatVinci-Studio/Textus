@@ -404,6 +404,17 @@
     return at;
   }
 
+  // One per language: made anew for each comparison, a sort is slow.
+  var collators = {};
+  function collatorFor(language) {
+    if (!collators[language])
+      collators[language] = new Intl.Collator(language, {
+        numeric: true,
+        sensitivity: "base",
+      });
+    return collators[language];
+  }
+
   function languageOf(options) {
     return (options && options.language) || env.language || "en";
   }
@@ -1177,10 +1188,7 @@
         return call("text.splitFrontmatter", { text: String(value) });
       },
       compareNames: function (a, b) {
-        var collator = new Intl.Collator(env.language || "en", {
-          numeric: true,
-          sensitivity: "base",
-        });
+        var collator = collatorFor(env.language || "en");
         a = String(a);
         b = String(b);
         return collator.compare(a, b) || (a < b ? -1 : a > b ? 1 : 0);

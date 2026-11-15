@@ -7,7 +7,13 @@ import pageTools from "./page-tools.js?raw";
 type PageApi = {
   language: string;
   t: (key: string) => string;
-  dates: { format: (d: Date, form: string, language: string) => string };
+  dates: {
+    format: (
+      d: Date | number | string,
+      form?: string,
+      options?: { language?: string } | string,
+    ) => string;
+  };
   drag: {
     reorder: (
       container: Element,
@@ -65,6 +71,32 @@ describe("what every plugin page gets", () => {
     );
     expect(document.activeElement).toBe(c);
     expect(clicked).toHaveBeenCalledOnce();
+  });
+
+  it("chooses only a tab row's tabs with the arrows, never the + beside them", () => {
+    document.body.innerHTML = `<div class="tx-segmented" role="tablist">
+      <button role="tab" aria-selected="false">A</button>
+      <button role="tab" aria-selected="true">B</button>
+      <button class="add">+</button></div>`;
+    const [, b] = document.querySelectorAll<HTMLButtonElement>("[role=tab]");
+    const add = document.querySelector<HTMLButtonElement>(".add")!;
+    const added = vi.fn();
+    add.addEventListener("click", added);
+    b!.focus();
+    b!.dispatchEvent(
+      new KeyboardEvent("keydown", { key: "ArrowRight", bubbles: true }),
+    );
+    expect(added).not.toHaveBeenCalled();
+    expect(document.activeElement?.textContent).toBe("A");
+  });
+
+  it("formats dates as the host's textus.dates does", () => {
+    const { format } = page().dates;
+    expect(format("2026-11-14")).toBe("2026-11-14");
+    expect(format(new Date(2026, 10, 14), "MMMM", { language: "de" })).toBe(
+      "November",
+    );
+    expect(format(new Date(2026, 2, 1), "MMMM", "de")).toBe("März");
   });
 
   it("lays out a month from the language's first weekday", () => {
