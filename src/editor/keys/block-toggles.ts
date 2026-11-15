@@ -79,11 +79,10 @@ export function toggleList(
   const item = schema.nodes.list_item;
   if (!target || !item) return false;
   const current = enclosingList(view);
-  if (current) {
-    liftListItem(item)(view.state, view.dispatch);
-    // Out of the list of this kind: done. Out of the other kind: re-wrap.
-    if (current === target) return true;
-  }
+  // In a list of the other kind it changes kind, nesting kept; in one of
+  // this kind the item comes out.
+  if (current && current !== target) return convertList(view, kind);
+  if (current) return liftListItem(item)(view.state, view.dispatch);
   // A list item has to start with a paragraph: a heading becomes one.
   const { heading, paragraph } = schema.nodes;
   if (
