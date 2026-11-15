@@ -232,6 +232,11 @@ export async function statMtime(path: string): Promise<number | null> {
   }
 }
 
+/** Whether a file is on disk; one that can't be read counts as gone. */
+export async function fileExists(path: string): Promise<boolean> {
+  return (await statMtime(path)) !== null;
+}
+
 /** A document's text as the editor holds it: "\n" line breaks, no BOM. */
 export async function readDocText(path: string): Promise<string> {
   return toEditorText(await fs.readTextFile(path));

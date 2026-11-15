@@ -1,6 +1,6 @@
 import { useEffect } from "react";
 import { useLatest } from "../utils/hooks/useLatest";
-import { drafts, fs, windowIpc } from "../platform/ipc";
+import { drafts, windowIpc } from "../platform/ipc";
 import {
   canUseWindows,
   hasAppMenu,
@@ -11,6 +11,7 @@ import {
   helpDocContent,
   makeBlankTab,
   readDocFromDisk,
+  fileExists,
   tabIsUntouchedDraft,
   type DocTab,
   type HelpDoc,
@@ -311,14 +312,14 @@ export function useStartupRestore(options: StartupRestoreOptions): void {
         while (
           at < firstUp.length - 1 &&
           !recoveredFor(firstUp[at]) &&
-          !(await fileThere(firstUp[at]))
+          !(await fileExists(firstUp[at]))
         )
           at++;
         const [first, ...rest] = firstUp.slice(at);
         const recovered = recoveredFor(first);
         if (recovered) {
           loadRecoveredIntoInitialTab(recovered);
-        } else if (await fileThere(first)) {
+        } else if (await fileExists(first)) {
           // Opened as any file is: a plugin's file or board, a Word
           // document, the recent list, its last caret.
           await opts.replaceTabWithFile(opts.activeTabId, first, {
@@ -438,11 +439,6 @@ async function recoveredTab(draft: {
     // come back untitled rather than not at all.
     return untitled;
   }
-}
-
-/** Whether a file is still where the last session left it. */
-async function fileThere(path: string): Promise<boolean> {
-  return (await fs.fileMtimeMs(path).catch(() => null)) !== null;
 }
 
 /** `tabs` with the session's documents, which arrive in any order, back in

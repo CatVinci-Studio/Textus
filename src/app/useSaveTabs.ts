@@ -11,6 +11,7 @@ import { migrateDraftImages } from "../editor/images/image-migration";
 import { basename, parentDir } from "../utils/path";
 import {
   readDocText,
+  fileExists,
   statMtime,
   tabIsDirty,
   tabTitle,
@@ -111,7 +112,7 @@ export function useSaveTabs(opts: {
   const adoptFile = useCallback(
     async (tab: DocTab, picked: string, auto: boolean): Promise<boolean> => {
       // Saved over a file already there: not a new one to plugins.
-      const existed = (await statMtime(picked)) !== null;
+      const existed = await fileExists(picked);
       if (!(await writeOrReport(picked, tab.content, tab.path))) return false;
       void session.addRecentFile(picked);
       if (!existed) announceFileCreated(picked);
@@ -335,11 +336,7 @@ export function useSaveTabs(opts: {
     (tab: DocTab): Promise<SaveOutcome> =>
       serialized(UNTITLED_QUEUE, async () => {
         if (!folder) return "skipped";
-        const path = await freeFilePath(
-          folder,
-          suggestedName(tab),
-          async (p) => (await statMtime(p)) !== null,
-        );
+        const path = await freeFilePath(folder, suggestedName(tab), fileExists);
         if (!path) return "skipped";
         if (!(await adoptFile(tab, path, true))) return "failed";
         autoNamed.current.set(tab.id, path);
@@ -366,8 +363,7 @@ export function useSaveTabs(opts: {
         dir,
         wanted,
         async (p) =>
-          p.toLowerCase() !== from.toLowerCase() &&
-          (await statMtime(p)) !== null,
+          p.toLowerCase() !== from.toLowerCase() && (await fileExists(p)),
       );
       if (!to || to === from) return;
       let moved: string;
