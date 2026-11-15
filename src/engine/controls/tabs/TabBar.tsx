@@ -9,6 +9,7 @@ import { TabListButton, useTabFit } from "./TabList";
 import { INCOMING, useTabStrip } from "./useTabStrip";
 import { useTabSwipe } from "./useTabSwipe";
 import { revealAt, type Slot } from "./tab-strip";
+import { revealOnResize } from "./reveal-on-resize";
 import { scaledPx } from "../../tokens/chrome-scale";
 
 /** The fade over a scrolled row's start (island.css). */
@@ -112,17 +113,9 @@ export function TabBar({
     const slot = { x: slotX, w: slotW };
     reveal(bar, slot, shownLength, smooth.current !== activeTabId);
     smooth.current = activeTabId;
-    // The fit may come before the row has its new width, its scroll then
-    // cut short: again once the row is that wide.
-    let width: number | null = null;
-    const resized = new ResizeObserver(([entry]) => {
-      const now = entry?.contentRect.width ?? null;
-      if (width !== null && now !== width)
-        reveal(bar, slot, shownLength, false);
-      width = now;
-    });
-    resized.observe(bar);
-    return () => resized.disconnect();
+    return revealOnResize([bar, stripEl.current], () =>
+      reveal(bar, slot, shownLength, false),
+    );
   }, [activeTabId, slotX, slotW, shownLength]);
 
   const pillOf = (id: string) =>
