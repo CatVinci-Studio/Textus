@@ -1053,6 +1053,12 @@ declare global {
        *  the app's is whole. */
       onDidCreate: Event<{ path: string }>;
       onDidChange: Event<{ path: string }>;
+      /** An open document's file was changed by something else - another
+       *  app, a sync, git, an AI agent - and its tab took the new text:
+       *  `before` is what it had saved, `after` what is on disk now, so a
+       *  plugin keeping versions can record both. Its whole path. Files no
+       *  tab holds aren't watched. From 1.4.3. */
+      onDidChangeOnDisk: Event<{ path: string; before: string; after: string }>;
       onDidRename: Event<{ from: string; to: string }>;
       /** A file or folder a plugin moved to the Trash, and from 1.4.2 one
        *  the sidebar did (its whole path). */

@@ -1012,6 +1012,7 @@
       },
       onDidCreate: on("fileCreate"),
       onDidChange: on("fileChange"),
+      onDidChangeOnDisk: on("fileChangeOnDisk"),
       onDidRename: on("fileRename"),
       onDidDelete: on("fileDelete"),
       onWillSave: function (listener) {

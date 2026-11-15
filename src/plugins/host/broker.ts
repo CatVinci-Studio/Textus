@@ -139,6 +139,7 @@ const PLUGIN_EVENT_NEEDS: Record<keyof PluginEventMap, Permission | null> = {
   conventions: "files.read",
   fileCreate: "files.read",
   fileChange: "files.read",
+  fileChangeOnDisk: "files.read",
   fileRename: "files.read",
   fileDelete: "files.read",
   metadata: "files.read",
