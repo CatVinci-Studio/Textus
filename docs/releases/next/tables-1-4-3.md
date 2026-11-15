@@ -13,3 +13,4 @@
 - A file changed by another app updates whole blocks when the change spans several lines, so a table is never split in two.
 - A table pasted into a table undoes in one step, and rows copied as plain text (tab-separated) paste in as rows.
 - A table pasted into a narrower table fills it from the cursor's cell and adds the columns it needs, instead of jumbling its cells.
+- On iPhone and iPad, a pasted table undoes in one step, and a copied or cut row with empty cells at its end pastes in as a row.

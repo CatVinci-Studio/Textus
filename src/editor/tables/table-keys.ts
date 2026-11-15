@@ -83,14 +83,14 @@ export const tableKeys = $prose(() =>
   }),
 );
 
+type PastedRows = { rows: Fragment[]; width: number; height: number };
+
 /**
  * The rows of cells pasted, top to bottom, however the clipboard's table
  * was parsed back (a head row of its own, a table inside it); null when
  * no cells came. A head row made empty to fill a table is left out.
  */
-function pastedRows(
-  content: Fragment,
-): { rows: Fragment[]; width: number; height: number } | null {
+function pastedRows(content: Fragment): PastedRows | null {
   const rows: Fragment[] = [];
   content.descendants((node) => {
     const role = node.type.spec.tableRole as string | undefined;
@@ -113,10 +113,7 @@ function pastedRows(
 
 /** Lines of tab-separated cells, as a table's cells copy as plain text
  *  (a phone's paste gives only that): each line a row. */
-function tabbedRows(
-  text: string,
-  schema: Schema,
-): { rows: Fragment[]; width: number; height: number } | null {
+function tabbedRows(text: string, schema: Schema): PastedRows | null {
   const lines = text.replace(/\r?\n$/, "").split(/\r?\n/);
   if (!lines.every((line) => line.includes("\t"))) return null;
   const cell = (value: string) =>
@@ -129,6 +126,29 @@ function tabbedRows(
     rows,
     width: Math.max(...rows.map((r) => r.childCount)),
     height: rows.length,
+  };
+}
+
+/** `rows` each as wide as the widest, or as the same rows' tab-separated
+ *  text says: iOS drops a row's empty cells at its end from the HTML. */
+function fullWidth(
+  rows: PastedRows,
+  tabbed: PastedRows | null,
+  schema: Schema,
+): PastedRows {
+  const width =
+    tabbed?.height === rows.height
+      ? Math.max(rows.width, tabbed.width)
+      : rows.width;
+  const empty = () => schema.nodes.table_cell!.createAndFill()!;
+  return {
+    ...rows,
+    width,
+    rows: rows.rows.map((row) =>
+      row.append(
+        Fragment.from(Array.from({ length: width - row.childCount }, empty)),
+      ),
+    ),
   };
 }
 
@@ -162,12 +182,15 @@ export const tableRowPaste = $prose(
           if (state.selection instanceof CellSelection) return false;
           const at = here(state);
           const text = event.clipboardData?.getData("text/plain") ?? "";
+          const tabbed = tabbedRows(text, state.schema);
+          const html = pastedRows(slice.content);
           const cells =
             at &&
-            (pastedRows(slice.content) ??
-              (event.clipboardData?.getData("text/html")
+            (html
+              ? fullWidth(html, tabbed, state.schema)
+              : event.clipboardData?.getData("text/html")
                 ? null
-                : tabbedRows(text, state.schema)));
+                : tabbed);
           if (!at || !cells) return false;
           const table = state.doc.nodeAt(at.tablePos)!;
           const head = table.firstChild!;

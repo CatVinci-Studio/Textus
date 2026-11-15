@@ -207,6 +207,16 @@ describe("the table's keys and pastes", () => {
     expect(t.markdown()).toBe(wide + ROWS);
   });
 
+  it("a copied row pasted as iOS gives it, its empty last cell gone from the HTML, goes in as a row", async () => {
+    const t = await openView(ROWS);
+    t.caretAt("1");
+    t.paste(
+      "c1\t",
+      '<table data-pm-slice="1 1 -2 []"><tbody><tr><td>c1</td></tr></tbody></table>',
+    );
+    expect(body(t)).toEqual(["| 1 | x |", "| c1 | |", "| 2 | y |"]);
+  });
+
   it("a copied row pasted as the phone gives it, its text alone, goes in as a row", async () => {
     const t = await openView(ROWS);
     const { CellSelection } = await import("@milkdown/kit/prose/tables");
