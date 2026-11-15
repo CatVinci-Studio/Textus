@@ -2,7 +2,7 @@ import { Plugin, TextSelection } from "@milkdown/kit/prose/state";
 import type { EditorView } from "@milkdown/kit/prose/view";
 import { $prose } from "@milkdown/kit/utils";
 import type { Node } from "@milkdown/kit/prose/model";
-import { isIOSApp } from "../platform/capabilities";
+import { isIOSApp, isMobileApp } from "../platform/capabilities";
 
 /** Where and when a single finger went down: a tap, not a scroll. */
 let down: { x: number; y: number; at: number } | null = null;
@@ -48,11 +48,13 @@ const holdsNoCaret = (node: Node) =>
 
 /** The caret beside a table or a picture when `y` is in the gap above or
  *  below it: at the end of the text block above, or the start of the one
- *  below. iOS only: its own caret went to the document's last paragraph,
- *  or onto a misspelled word it then selected, so the next key replaced
- *  it. Android places it well, and opens its keyboard only for its own. */
+ *  below. On iOS its own caret went to the document's last paragraph, or
+ *  onto a misspelled word it then selected, so the next key replaced it;
+ *  Android's went under the table or into a cell. Android only with its
+ *  keyboard up: it opens it only for its own caret. */
 function caretBesideBlock(view: EditorView, y: number): boolean {
-  if (!isIOSApp || !view.editable) return false;
+  if (!view.editable) return false;
+  if (!isIOSApp && !(isMobileApp && view.hasFocus())) return false;
   const { doc } = view.state;
   let found = -1;
   doc.forEach((node, offset, index) => {
@@ -74,7 +76,28 @@ function caretBesideBlock(view: EditorView, y: number): boolean {
   view.dispatch(
     view.state.tr.setSelection(TextSelection.create(view.state.doc, found)),
   );
+  holdCaret(view, found);
   return true;
+}
+
+const HOLD_MS = 400;
+
+/** With the keyboard up, iOS still puts its own caret after the tap: the
+ *  last paragraph. Moved there within a moment, the caret comes back. */
+function holdCaret(view: EditorView, at: number) {
+  const until = Date.now() + HOLD_MS;
+  // After the editor has read the change.
+  const back = () =>
+    setTimeout(() => {
+      if (Date.now() > until) return stop();
+      const { selection, doc } = view.state;
+      if (selection.empty && selection.from === at) return;
+      stop();
+      view.dispatch(view.state.tr.setSelection(TextSelection.create(doc, at)));
+    });
+  const stop = () => document.removeEventListener("selectionchange", back);
+  document.addEventListener("selectionchange", back);
+  setTimeout(stop, HOLD_MS);
 }
 
 /**

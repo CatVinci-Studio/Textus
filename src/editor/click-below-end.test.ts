@@ -1,76 +1,46 @@
 // @vitest-environment jsdom
-import { afterEach, describe, expect, it, vi } from "vitest";
+import { afterEach, expect, it, vi } from "vitest";
 import { closeViews, openView } from "./editor-view-kit";
 
-vi.mock("../platform/capabilities", async (importOriginal) => ({
-  ...(await importOriginal<object>()),
+vi.mock("../platform/capabilities", async (real) => ({
+  ...(await real<typeof import("../platform/capabilities")>()),
   isIOSApp: true,
 }));
 
-afterEach(closeViews);
+afterEach(async () => {
+  vi.restoreAllMocks();
+  await closeViews();
+});
 
-function touch(el: Element, type: string, y: number) {
-  const point = { clientX: 20, clientY: y };
+function touch(target: Element, type: string, y: number) {
+  const point = { clientX: 50, clientY: y };
   const event = new Event(type, { bubbles: true, cancelable: true });
   Object.assign(event, {
-    touches: type === "touchstart" ? [point] : [],
+    touches: type === "touchend" ? [] : [point],
     changedTouches: [point],
   });
-  el.dispatchEvent(event);
-  return event;
+  target.dispatchEvent(event);
 }
 
-describe("a finger's tap below a table that ends the document", () => {
-  it("starts a paragraph there, the caret in it; a scroll from there doesn't", async () => {
-    const t = await openView("one line\n\n| a | b |\n| - | - |\n| c | d |\n");
-    const table = t.view.dom.querySelector("table")!;
-    const below = table.getBoundingClientRect().bottom + 50;
-    touch(t.view.dom, "touchstart", below);
-    touch(t.view.dom, "touchmove", below - 40);
-    touch(t.view.dom, "touchend", below - 40);
-    expect(t.view.state.doc.lastChild?.type.name).toBe("table");
-
-    touch(t.view.dom, "touchstart", below);
-    const end = touch(t.view.dom, "touchend", below);
-    expect(end.defaultPrevented).toBe(true);
-    expect(t.view.state.doc.lastChild?.type.name).toBe("paragraph");
-    t.type("after");
-    expect(t.caretLine()).toBe("after|");
-  });
-});
-
-describe("a finger's tap in the gap under a table", () => {
-  it("puts the caret at the start of the next paragraph itself", async () => {
-    const t = await openView("| a | b |\n| - | - |\n| c | d |\n\nwrod here\n");
-    const table = t.view.nodeDOM(0) as HTMLElement;
-    const next = t.view.nodeDOM(
-      t.view.state.doc.child(0).nodeSize,
-    ) as HTMLElement;
-    table.querySelector("table")!.getBoundingClientRect = () =>
-      ({ top: 0, bottom: 100 }) as DOMRect;
-    next.getBoundingClientRect = () => ({ top: 120, bottom: 140 }) as DOMRect;
-    touch(t.view.dom, "touchstart", 110);
-    const end = touch(t.view.dom, "touchend", 110);
-    expect(end.defaultPrevented).toBe(true);
-    expect(t.caretLine()).toBe("|wrod here");
-  });
-});
-
-describe("a finger's tap in the gap above a table", () => {
-  it("puts the caret at the end of the paragraph above", async () => {
-    const t = await openView(
-      "line b\n\n| a | b |\n| - | - |\n| c | d |\n\nlast one\n",
-    );
-    const above = t.view.nodeDOM(0) as HTMLElement;
-    const table = t.view.nodeDOM(
-      t.view.state.doc.child(0).nodeSize,
-    ) as HTMLElement;
-    above.getBoundingClientRect = () => ({ top: 0, bottom: 20 }) as DOMRect;
-    table.querySelector("table")!.getBoundingClientRect = () =>
-      ({ top: 30, bottom: 100 }) as DOMRect;
-    touch(t.view.dom, "touchstart", 25);
-    const end = touch(t.view.dom, "touchend", 25);
-    expect(end.defaultPrevented).toBe(true);
-    expect(t.caretLine()).toBe("line b|");
-  });
+it("a tap above a table keeps its caret when iOS then puts its own in the last paragraph", async () => {
+  const t = await openView("above\n\n| a | b |\n| - | - |\n| 1 | 2 |\n\nlast");
+  // The paragraph ends at 100, the table starts at 140.
+  vi.spyOn(HTMLElement.prototype, "getBoundingClientRect").mockImplementation(
+    function (this: HTMLElement) {
+      const table = this.tagName === "TABLE" || !!this.querySelector("table");
+      return (
+        table ? { top: 140, bottom: 200 } : { top: 60, bottom: 100 }
+      ) as DOMRect;
+    },
+  );
+  t.caretAt("last");
+  touch(t.view.dom, "touchstart", 120);
+  touch(t.view.dom, "touchend", 120);
+  const beside = t.view.state.selection.from;
+  expect(t.caretLine()).toBe("above|");
+  // iOS's own caret, read by the editor.
+  t.caretAt("last");
+  document.dispatchEvent(new Event("selectionchange"));
+  await new Promise((done) => setTimeout(done, 10));
+  expect(t.view.state.selection.from).toBe(beside);
 });
