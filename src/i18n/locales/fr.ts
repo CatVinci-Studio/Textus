@@ -1310,7 +1310,7 @@ utiliser une.
   proposalRelocate: "Demander à l'IA de refaire cette modification",
   diffShow: "Afficher les différences",
   diffCollapse: "Afficher moins",
-  chatPendingSummary: "Modifications en attente\u00a0: {n}",
+  chatPendingSummary: "Modifications en attente\u00a0:\u00a0{n}",
   chatPendingReveal: "Afficher dans le document",
   quickAskPosition: "{i} / {n}",
   quickAskPrevEdit: "Modification précédente",
@@ -1863,7 +1863,7 @@ utiliser une.
   conventionsDecline: "Garder l’actuel",
   pluginCardSystemApp: "Ouvrir avec l’app du système",
   pluginCardNever: "Ne plus suggérer",
-  pluginCardsMuted: "Suggestions de plugins désactivées : {n}",
+  pluginCardsMuted: "Suggestions de plugins désactivées\u00a0:\u00a0{n}",
   pluginCardsRestore: "Afficher à nouveau",
   pluginCardsRestoreAll:
     "Afficher à nouveau les suggestions de plugins masquées",
