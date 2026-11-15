@@ -3,6 +3,7 @@
 
 import type { DiagramEngine } from "../prefs/SettingsContext";
 import { lazyModule } from "../lazy/lazy-module";
+import { appearanceIsDark } from "../engine/tokens/appearance";
 
 export type MermaidApi = (typeof import("mermaid"))["default"];
 /** The theme names Mermaid itself knows. */
@@ -77,17 +78,6 @@ function configureMermaid(
       axisFormat: "%m-%d",
     },
   });
-}
-
-/** Whether the app shows its dark appearance: the explicit choice, else the
- *  system's. */
-export function appearanceIsDark(): boolean {
-  // A one-design imported theme shows its light page in either appearance.
-  if (document.documentElement.hasAttribute("data-light-page")) return false;
-  const chosen = document.documentElement.getAttribute("data-theme");
-  if (chosen === "dark") return true;
-  if (chosen === "light") return false;
-  return window.matchMedia?.("(prefers-color-scheme: dark)").matches ?? false;
 }
 
 /**
