@@ -96,7 +96,7 @@ describe("on a phone", () => {
     expect(seen).toHaveBeenCalledWith("z.md");
   });
 
-  it("a select is the system's own picker", () => {
+  it("a select opens the app's own sheet, not the system's picker", () => {
     const onChange = vi.fn();
     render(
       <Select value="b" onChange={onChange} aria-label="Mode">
@@ -106,10 +106,15 @@ describe("on a phone", () => {
         </option>
       </Select>,
     );
-    const native = screen.getByRole("combobox", { name: "Mode" });
-    expect(native.tagName).toBe("SELECT");
-    expect(screen.getByRole("option", { name: "Edit" })).toBeInTheDocument();
-    fireEvent.change(native, { target: { value: "a" } });
+    const button = screen.getByRole("button", { name: "Mode" });
+    expect(document.querySelector("select")).toBeNull();
+    fireEvent.click(button);
+    expect(screen.getByRole("menu", { name: "Mode" })).toBeInTheDocument();
+    expect(screen.getByRole("menuitemradio", { name: "Edit" })).toHaveAttribute(
+      "aria-checked",
+      "true",
+    );
+    fireEvent.click(screen.getByRole("menuitemradio", { name: "Ask" }));
     expect(onChange).toHaveBeenCalledWith({ target: { value: "a" } });
   });
 });
