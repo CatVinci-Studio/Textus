@@ -7,6 +7,7 @@ import { math } from "micromark-extension-math";
 import { frontmatter } from "micromark-extension-frontmatter";
 import type { RootContent } from "mdast";
 import { blockIds, type BlockKind } from "../../editor/markdown/doc-blocks";
+import { sharedEnds } from "../../utils/lcs";
 
 /**
  * A document's blocks as they sit in its text, for plugins that change it
@@ -140,15 +141,7 @@ export function mergeWholeText(
       })),
       dropped,
     );
-  let start = 0;
-  while (start < text.length && text[start] === next[start]) start++;
-  let end = 0;
-  while (
-    end < text.length - start &&
-    end < next.length - start &&
-    text[text.length - 1 - end] === next[next.length - 1 - end]
-  )
-    end++;
+  const { start, end } = sharedEnds(text, next);
   const reaches = before.some(
     (block) =>
       KEPT.has(block.kind) &&

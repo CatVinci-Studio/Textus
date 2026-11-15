@@ -1,4 +1,5 @@
 import { decodeNamedCharacterReference } from "decode-named-character-reference";
+import { sharedEnds } from "../../utils/lcs";
 
 /**
  * An edited block written with the file's own escapes and entities wherever
@@ -123,16 +124,11 @@ export function withEscapesAsWritten(
   const a = tokenize(original);
   const b = tokenize(written);
   // The common ends need no diff, so only the edited middle is compared.
-  let head = 0;
-  while (head < a.length && head < b.length && a[head].char === b[head].char)
-    head++;
-  let tail = 0;
-  while (
-    tail < a.length - head &&
-    tail < b.length - head &&
-    a[a.length - 1 - tail].char === b[b.length - 1 - tail].char
-  )
-    tail++;
+  const { start: head, end: tail } = sharedEnds(
+    a,
+    b,
+    (x, y) => x.char === y.char,
+  );
   const middle = matchTokens(
     a.slice(head, a.length - tail),
     b.slice(head, b.length - tail),

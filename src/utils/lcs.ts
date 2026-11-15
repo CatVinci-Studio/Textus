@@ -63,3 +63,22 @@ export function wholeChange(n: number, m: number): LcsStep[] {
     ...new Array<LcsStep>(m).fill("insert"),
   ];
 }
+
+/** How many items `a` and `b` share at their start, and then at their end
+ *  (never overlapping the start): the changed middle lies between. */
+export function sharedEnds<T>(
+  a: ArrayLike<T>,
+  b: ArrayLike<T>,
+  same: (x: T, y: T) => boolean = (x, y) => x === y,
+): { start: number; end: number } {
+  const most = Math.min(a.length, b.length);
+  let start = 0;
+  while (start < most && same(a[start], b[start])) start++;
+  let end = 0;
+  while (
+    end < most - start &&
+    same(a[a.length - 1 - end], b[b.length - 1 - end])
+  )
+    end++;
+  return { start, end };
+}

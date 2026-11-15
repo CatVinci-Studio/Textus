@@ -1,3 +1,5 @@
+import { sharedEnds } from "../../utils/lcs";
+
 /** A change as a chip shows it: what goes and what comes, with a few
  *  characters either side. */
 interface Glimpse {
@@ -23,15 +25,7 @@ const CONTEXT = 6;
 export function changeGlimpse(before: string, after: string): Glimpse {
   const a = Array.from(before.trim());
   const b = Array.from(after.trim());
-  let start = 0;
-  while (start < a.length && start < b.length && a[start] === b[start]) start++;
-  let end = 0;
-  while (
-    end < a.length - start &&
-    end < b.length - start &&
-    a[a.length - 1 - end] === b[b.length - 1 - end]
-  )
-    end++;
+  const { start, end } = sharedEnds(a, b);
   const lead = a.slice(Math.max(0, start - CONTEXT), start).join("");
   const tail = a.slice(a.length - end, a.length - end + CONTEXT).join("");
   return {
