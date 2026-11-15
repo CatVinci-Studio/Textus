@@ -35,6 +35,7 @@ import {
 } from "./source-view-registry";
 import { SOURCE_EDIT_EVENT } from "../../utils/events";
 import { followFormatMenu, formatSource } from "./source-format-events";
+import { sourceKeys } from "./source-keys";
 import { tellCopied } from "../../clipboard/copied";
 import { elasticOverscroll } from "../../engine/controls/elastic-overscroll";
 import { registerTabEditor } from "../tab-editor";
@@ -149,6 +150,7 @@ export function SourceEditor({
           // Textus's own find bar). Tab indents as in a text editor; Escape
           // then Tab still moves the focus on. Bold and italic write their
           // Markdown, as in the rendered view.
+          sourceKeys,
           keymap.of([
             { key: "Mod-b", run: (v) => formatSource(v, "bold") },
             { key: "Mod-i", run: (v) => formatSource(v, "italic") },

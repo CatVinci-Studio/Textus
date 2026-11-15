@@ -161,3 +161,30 @@ export function insertSourceLink(view: EditorView): void {
     selection: { anchor: at },
   });
 }
+
+/** The selected lines in a code fence, or out of the one around them. */
+export function toggleSourceFence(view: EditorView): boolean {
+  const { state } = view;
+  const range = state.selection.main;
+  const first = state.doc.lineAt(range.from);
+  const last = state.doc.lineAt(range.to);
+  const before = first.number > 1 ? state.doc.line(first.number - 1) : null;
+  const after =
+    last.number < state.doc.lines ? state.doc.line(last.number + 1) : null;
+  const fence = (text?: string) => !!text && /^\s*(`{3,}|~{3,})/.test(text);
+  if (before && after && fence(before.text) && fence(after.text)) {
+    view.dispatch({
+      changes: [
+        { from: before.from, to: first.from },
+        { from: last.to, to: after.to },
+      ],
+    });
+    return true;
+  }
+  const changes = state.changes([
+    { from: first.from, insert: "```\n" },
+    { from: last.to, insert: "\n```" },
+  ]);
+  view.dispatch({ changes, selection: state.selection.map(changes, 1) });
+  return true;
+}

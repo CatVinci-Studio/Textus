@@ -1,12 +1,14 @@
 // @vitest-environment jsdom
-import { describe, expect, it } from "vitest";
-import { EditorSelection, EditorState } from "@codemirror/state";
+import { beforeAll, describe, expect, it } from "vitest";
+import { EditorSelection, EditorState, StateEffect } from "@codemirror/state";
 import { EditorView } from "@codemirror/view";
 import {
   insertSourceLink,
   setSourceBlock,
   toggleSourceMark,
 } from "./source-format";
+import { sourceKeys } from "./source-keys";
+import { modIsMeta } from "../../platform/os";
 
 /** A view of `doc`, "|" marking the caret or "[…]" the selection. */
 function viewOf(doc: string) {
@@ -131,5 +133,96 @@ describe("insertSourceLink", () => {
     const view = viewOf("[site]");
     insertSourceLink(view);
     expect(shown(view)).toBe("[site](|)");
+  });
+});
+
+describe("the rendered editor's keys in source mode", () => {
+  // jsdom has no layout: moving a line scrolls the caret into view, which
+  // measures a range's rects.
+  beforeAll(() => {
+    Range.prototype.getClientRects = () =>
+      ({
+        length: 0,
+        item: () => null,
+        [Symbol.iterator]: function* () {},
+      }) as unknown as DOMRectList;
+    Range.prototype.getBoundingClientRect = () => new DOMRect();
+  });
+  const mac = modIsMeta();
+  /** `combo` pressed in `doc`: what the source then reads. */
+  function press(doc: string, init: KeyboardEventInit) {
+    const view = viewOf(doc);
+    view.dispatch({ effects: StateEffect.appendConfig.of(sourceKeys) });
+    view.contentDOM.dispatchEvent(
+      new KeyboardEvent("keydown", {
+        bubbles: true,
+        cancelable: true,
+        ...init,
+      }),
+    );
+    return view.state.doc.toString();
+  }
+  const mod = mac ? { metaKey: true } : { ctrlKey: true };
+
+  it("writes the Format menu's marks and a link around the selection", () => {
+    expect(
+      press("[word]", { ...mod, shiftKey: true, key: "H", code: "KeyH" }),
+    ).toBe("==word==");
+    expect(
+      press("[word]", {
+        ctrlKey: true,
+        shiftKey: true,
+        key: "~",
+        code: "Backquote",
+      }),
+    ).toBe("~~word~~");
+    expect(
+      press("[word]", { ctrlKey: true, key: "`", code: "Backquote" }),
+    ).toBe("`word`");
+    expect(press("[word]", { ...mod, key: "k", code: "KeyK" })).toBe(
+      "[word]()",
+    );
+  });
+
+  it("sets blocks by the block keys, a Mac's Alt-changed character read by its key", () => {
+    expect(
+      press("wo|rd", {
+        ...mod,
+        altKey: true,
+        key: mac ? "™" : "2",
+        code: "Digit2",
+      }),
+    ).toBe("## word");
+    expect(
+      press("wo|rd", {
+        ...mod,
+        altKey: true,
+        key: mac ? "ª" : "8",
+        code: "Digit8",
+      }),
+    ).toBe("- word");
+    expect(
+      press("wo|rd", {
+        ...mod,
+        altKey: true,
+        key: mac ? "ç" : "c",
+        code: "KeyC",
+      }),
+    ).toBe("```\nword\n```");
+    expect(
+      press("wo|rd", { ...mod, shiftKey: true, key: "B", code: "KeyB" }),
+    ).toBe("> word");
+  });
+
+  it("moves, indents and leaves lines", () => {
+    expect(
+      press("a\nb|", { altKey: true, key: "ArrowUp", code: "ArrowUp" }),
+    ).toBe("b\na");
+    expect(press("- a|", { ...mod, key: "]", code: "BracketRight" })).toMatch(
+      /^\s+- a$/,
+    );
+    expect(press("wo|rd", { ...mod, key: "Enter", code: "Enter" })).toBe(
+      "word\n",
+    );
   });
 });
