@@ -96,3 +96,31 @@ test("a text file no plugin opens shows read-only, not as Markdown to rewrite", 
   await expect(editor).toContainText("views");
   await expect(editor).toHaveAttribute("contenteditable", "false");
 });
+
+test("a plugin's page is in the UI's language, and changes with it", async ({
+  page,
+}) => {
+  test.skip(!hasPlugin("catvinci.kanban"), "no plugins checkout");
+  await openWithPlugins(page, {
+    plugins: { "catvinci.kanban": permissions("catvinci.kanban") },
+    folder: {
+      "/work/notes/board.md":
+        "---\nkanban-plugin: board\n---\n\n## Todo\n\n- [ ] Outline\n",
+    },
+  });
+  await openPath(page, "/work/notes/board.md");
+  const frame = page.frameLocator(
+    '[data-active-tab="true"] .plugin-webview-frame',
+  );
+  await expect(frame.locator("html")).toHaveAttribute("lang", "en");
+  await page.evaluate(() => {
+    const key = "catvinci-settings";
+    const next = JSON.stringify({
+      ...JSON.parse(localStorage.getItem(key) ?? "{}"),
+      language: "de",
+    });
+    localStorage.setItem(key, next);
+    window.dispatchEvent(new StorageEvent("storage", { key, newValue: next }));
+  });
+  await expect(frame.locator("html")).toHaveAttribute("lang", "de");
+});
