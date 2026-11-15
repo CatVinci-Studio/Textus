@@ -962,6 +962,11 @@ para usar una.
   agentNoImages:
     "{agent} no puede leer imágenes. Quita la imagen o elige otro agente.",
   agentSignIn: "Inicia sesión primero en {agent}.",
+  agentApproval: "Aprobación",
+  agentAskFirst: "Preguntar antes",
+  agentAskFirstHint: "Pregunta antes de cada cambio o comando.",
+  agentAllowAll: "Permitir todo",
+  agentAllowAllHint: "Ejecuta cada cambio y comando sin preguntar.",
   chatAgentsGroup: "Agentes",
   chatAgentPermission: "El agente pide permiso para seguir",
   chatAgentRunCommand: "Ejecutar un comando",

@@ -948,6 +948,11 @@ Habilidades ficam na pasta skills/ ao lado deste arquivo, um arquivo
   agentNoImages:
     "{agent} não consegue ler imagens. Remova a imagem ou escolha outro agente.",
   agentSignIn: "Inicie sessão primeiro no {agent}.",
+  agentApproval: "Aprovação",
+  agentAskFirst: "Perguntar antes",
+  agentAskFirstHint: "Pergunta antes de cada alteração ou comando.",
+  agentAllowAll: "Permitir tudo",
+  agentAllowAllHint: "Executa todas as alterações e comandos sem perguntar.",
   chatAgentsGroup: "Agentes",
   chatAgentPermission: "O agente pede para continuar",
   chatAgentRunCommand: "Executar um comando",

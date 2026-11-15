@@ -16,7 +16,13 @@ type Item =
   | { kind: "mode"; choice: ModeChoice }
   | { kind: "model"; provider: string; model: string }
   /** One value of an external agent's own option (its mode, model...). */
-  | { kind: "option"; id: string; value: string; name: string };
+  | {
+      kind: "option";
+      id: string;
+      value: string;
+      name: string;
+      description?: string;
+    };
 
 /**
  * The composer's mode and model in one control: "Write · gpt-6.1-sol". One
@@ -60,6 +66,9 @@ export function ModePicker({
         id: o.id,
         value: c.value,
         name: c.name,
+        // What a mode lets the agent do is worth a line; a model's blurb
+        // isn't, the list would double.
+        description: HINTED.has(o.category ?? o.id) ? c.description : undefined,
       })),
     ),
   ];
@@ -132,38 +141,32 @@ export function ModePicker({
       role="option"
       aria-selected={isSelected(item)}
       // A mode is named by its name; its line is the description.
-      aria-labelledby={
-        item.kind === "mode" ? `${listId}-${index}-name` : undefined
-      }
-      aria-describedby={
-        item.kind === "mode" ? `${listId}-${index}-hint` : undefined
-      }
+      aria-labelledby={hint(item) ? `${listId}-${index}-name` : undefined}
+      aria-describedby={hint(item) ? `${listId}-${index}-hint` : undefined}
       className={`ui-select-option${index === active ? " is-active" : ""}${
-        item.kind === "mode" ? " mode-picker-mode" : ""
+        hint(item) ? " mode-picker-mode" : ""
       }`}
       onMouseEnter={() => setActive(index)}
       onMouseDown={(e) => e.preventDefault()}
       onClick={() => choose(index)}
     >
-      {item.kind === "mode" ? (
+      {hint(item) ? (
         <span className="mode-picker-mode-text">
           <span
             id={`${listId}-${index}-name`}
             className="mode-picker-mode-name"
           >
-            {item.choice.label}
+            {item.kind === "mode" ? item.choice.label : nameOf(item)}
           </span>
           <span
             id={`${listId}-${index}-hint`}
             className="mode-picker-mode-hint"
           >
-            {item.choice.hint}
+            {hint(item)}
           </span>
         </span>
-      ) : item.kind === "option" ? (
-        item.name
       ) : (
-        item.model
+        nameOf(item)
       )}
     </li>
   );
@@ -252,12 +255,7 @@ export function ModePicker({
                 >
                   {o.name}
                 </li>
-                {o.choices.map((c, i) =>
-                  option(
-                    { kind: "option", id: o.id, value: c.value, name: c.name },
-                    start + i,
-                  ),
-                )}
+                {o.choices.map((_, i) => option(items[start + i]!, start + i))}
               </Fragment>
             );
           })}
@@ -266,6 +264,24 @@ export function ModePicker({
     </>
   );
 }
+
+const HINTED = new Set(["mode", "approval"]);
+
+/** The line under a choice's name: a mode's, or what an agent says of
+ *  its choice. */
+const hint = (item: Item) =>
+  item.kind === "mode"
+    ? item.choice.hint
+    : item.kind === "option"
+      ? item.description
+      : undefined;
+
+const nameOf = (item: Item) =>
+  item.kind === "mode"
+    ? item.choice.label
+    : item.kind === "option"
+      ? item.name
+      : item.model;
 
 /** The picker with the models under the modes, where the model can be
  *  switched. */

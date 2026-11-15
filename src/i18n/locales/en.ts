@@ -917,6 +917,11 @@ type /name in a conversation to use one.
   agentNoImages:
     "{agent} can't read images. Remove the image, or choose another agent.",
   agentSignIn: "{agent} needs you to sign in first.",
+  agentApproval: "Approval",
+  agentAskFirst: "Ask first",
+  agentAskFirstHint: "Asks before each change or command.",
+  agentAllowAll: "Allow all",
+  agentAllowAllHint: "Runs every change and command without asking.",
   chatAgentsGroup: "Agents",
   chatAgentPermission: "The agent asks to go on",
   chatAgentRunCommand: "Run a command",

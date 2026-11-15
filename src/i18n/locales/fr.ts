@@ -966,6 +966,11 @@ utiliser une.
   agentNoImages:
     "{agent} ne sait pas lire les images. Retirez l’image ou choisissez un autre agent.",
   agentSignIn: "Connectez-vous d’abord à {agent}.",
+  agentApproval: "Approbation",
+  agentAskFirst: "Demander d’abord",
+  agentAskFirstHint: "Demande avant chaque modification ou commande.",
+  agentAllowAll: "Tout autoriser",
+  agentAllowAllHint: "Exécute chaque modification et commande sans demander.",
   chatAgentsGroup: "Agents",
   chatAgentPermission: "L’agent demande à continuer",
   chatAgentRunCommand: "Exécuter une commande",

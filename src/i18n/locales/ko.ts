@@ -888,6 +888,11 @@ ${AI_NAME}에게 주는 글쓰기 지침으로, 모든 문서에 적용됩니다
   agentNoImages:
     "{agent}은(는) 이미지를 읽을 수 없습니다. 이미지를 빼거나 다른 에이전트를 고르세요.",
   agentSignIn: "먼저 {agent}에 로그인하세요.",
+  agentApproval: "승인",
+  agentAskFirst: "먼저 묻기",
+  agentAskFirstHint: "변경하거나 명령을 실행하기 전에 매번 묻습니다.",
+  agentAllowAll: "모두 허용",
+  agentAllowAllHint: "모든 변경과 명령을 묻지 않고 실행합니다.",
   chatAgentsGroup: "에이전트",
   chatAgentPermission: "에이전트가 계속하도록 허락을 구합니다",
   chatAgentRunCommand: "명령 1개 실행",

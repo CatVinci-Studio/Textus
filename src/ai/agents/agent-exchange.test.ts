@@ -325,3 +325,67 @@ describe("choices made in another window", () => {
     vi.useRealTimers();
   });
 });
+
+describe("an agent with no mode that asks first (OpenCode)", () => {
+  const request = (id: number) =>
+    ipc.out!({
+      type: "lines",
+      lines: [
+        JSON.stringify({
+          jsonrpc: "2.0",
+          id,
+          method: "session/request_permission",
+          params: {
+            sessionId: "s",
+            toolCall: { toolCallId: "t", title: "write a.txt" },
+            options: [
+              { optionId: "yes", name: "Allow", kind: "allow_once" },
+              { optionId: "no", name: "Reject", kind: "reject_once" },
+            ],
+          },
+        }),
+      ],
+    });
+
+  it("asks the user, and with Allow all chosen Textus answers for them", async () => {
+    ipc.offered = [
+      {
+        id: "mode",
+        category: "mode",
+        type: "select",
+        currentValue: "build",
+        options: [
+          { value: "build", name: "build" },
+          { value: "plan", name: "plan" },
+        ],
+      },
+    ];
+    ipc.chosen = {};
+    const permission = vi.fn();
+    const running = runAgentExchange({
+      agent: { key: "p/o", plugin: "p", id: "o", name: "O" } as never,
+      conversation: "opencode",
+      cwd: "/w",
+      docPath: null,
+      message: "hi",
+      events: { view: () => {}, thinking: () => {}, permission },
+    });
+    running.catch(() => undefined);
+    await vi.waitFor(() => expect(agentRunning("p/o")).toBe(true));
+    request(901);
+    await vi.waitFor(() => expect(permission).toHaveBeenCalled());
+
+    ipc.chosen = { "p/o": { "textus-approval": "allow" } };
+    ipc.answers.length = 0;
+    request(902);
+    await vi.waitFor(() =>
+      expect(ipc.answers).toContainEqual(
+        expect.objectContaining({
+          id: 902,
+          result: { outcome: { outcome: "selected", optionId: "yes" } },
+        }),
+      ),
+    );
+    cancelAgentExchange("opencode");
+  });
+});

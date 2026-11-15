@@ -902,6 +902,11 @@ ${AI_NAME}への執筆の指示です。すべての文書に適用されます�
   agentNoImages:
     "{agent} は画像を読めません。画像を外すか、別のエージェントを選んでください。",
   agentSignIn: "先に {agent} にサインインしてください。",
+  agentApproval: "承認",
+  agentAskFirst: "先に確認",
+  agentAskFirstHint: "変更やコマンドの前に毎回確認します。",
+  agentAllowAll: "すべて許可",
+  agentAllowAllHint: "変更とコマンドをすべて確認なしで実行します。",
   chatAgentsGroup: "エージェント",
   chatAgentPermission: "エージェントが続行の許可を求めています",
   chatAgentRunCommand: "コマンドを 1 つ実行",

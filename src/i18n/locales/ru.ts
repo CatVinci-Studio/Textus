@@ -961,6 +961,11 @@ export default {
   agentNoImages:
     "{agent} не умеет читать изображения. Уберите изображение или выберите другого агента.",
   agentSignIn: "Сначала войдите в {agent}.",
+  agentApproval: "Подтверждение",
+  agentAskFirst: "Сначала спрашивать",
+  agentAskFirstHint: "Спрашивает перед каждым изменением или командой.",
+  agentAllowAll: "Разрешить всё",
+  agentAllowAllHint: "Выполняет все изменения и команды без вопросов.",
   chatAgentsGroup: "Агенты",
   chatAgentPermission: "Агент просит разрешения продолжить",
   chatAgentRunCommand: "Выполнить команду",

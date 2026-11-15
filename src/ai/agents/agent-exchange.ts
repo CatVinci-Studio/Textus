@@ -32,6 +32,7 @@ import {
   offerOf,
 } from "./agent-offers";
 import { modeOption } from "./agent-mode";
+import { allowedUnasked } from "./agent-approval";
 import { promptBlocks } from "./agent-prompt";
 import { loadSettings, subscribeRemote } from "../../prefs/settings-store";
 
@@ -253,6 +254,7 @@ async function start(
     {
       update: ({ update }) => deliver(session, update),
       requestPermission: (p) =>
+        allowedUnasked(session.agent, p.options) ??
         ask(session, p.toolCall.title ?? "", p.toolCall.kind, p.options),
       // An open document as the editor has it, typed or not.
       readTextFile: async ({ path, line, limit }) => {
@@ -323,7 +325,8 @@ async function start(
       opened = await open();
     }
     session.sessionId = opened.sessionId;
-    // they chose a mode that doesn't, whatever the agent's own settings say.
+    // The mode that asks first, unless the user chose one that doesn't,
+    // whatever the agent's own settings say.
     const { raw, older } = optionsOf(opened);
     session.older = older;
     await applyChoices(agent.key, raw, (configId, value) =>

@@ -937,6 +937,11 @@ Skills liegen im Ordner skills/ neben dieser Datei, je Skill eine
   agentNoImages:
     "{agent} kann keine Bilder lesen. Entferne das Bild oder wähle einen anderen Agenten.",
   agentSignIn: "Melde dich zuerst bei {agent} an.",
+  agentApproval: "Freigabe",
+  agentAskFirst: "Erst fragen",
+  agentAskFirstHint: "Fragt vor jeder Änderung und jedem Befehl.",
+  agentAllowAll: "Alles erlauben",
+  agentAllowAllHint: "Führt alle Änderungen und Befehle ohne Nachfrage aus.",
   chatAgentsGroup: "Agenten",
   chatAgentPermission: "Der Agent bittet, weiterzumachen",
   chatAgentRunCommand: "Einen Befehl ausführen",
