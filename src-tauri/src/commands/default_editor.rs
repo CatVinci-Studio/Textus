@@ -233,7 +233,7 @@ mod platform {
 
     fn markdown_types() -> Vec<String> {
         let class = CFString::from_str(FILENAME_EXTENSION);
-        let resolved = crate::extract::MARKDOWN_EXTENSIONS
+        let resolved = crate::extract::CLAIMED_EXTENSIONS
             .into_iter()
             .filter_map(|ext| {
                 let tag = CFString::from_str(ext);

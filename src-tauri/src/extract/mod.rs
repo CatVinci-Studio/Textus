@@ -49,12 +49,16 @@ pub(crate) fn image_mime(ext: &str) -> Option<&'static str> {
 }
 
 /// A Markdown document's extensions: what Textus opens and plugins read as
-/// one. The front end's list (utils/path.ts) is the same.
-pub(crate) const MARKDOWN_EXTENSIONS: [&str; 2] = ["md", "markdown"];
+/// one. The front end's list (utils/path.ts) is the same. MDX's own syntax
+/// is kept as written (editor/markdown/verbatim.ts).
+pub(crate) const MARKDOWN_EXTENSIONS: [&str; 3] = ["md", "markdown", "mdx"];
+
+/// The ones Textus offers to be the default app for.
+pub(crate) const CLAIMED_EXTENSIONS: [&str; 2] = ["md", "markdown"];
 
 /// What Textus treats as a document: Markdown and plain text, listed before
 /// other files in the sidebar and its searches (front end: file-search.ts).
-pub(crate) const TEXT_DOCUMENT_EXTENSIONS: [&str; 4] = ["md", "markdown", "txt", "text"];
+pub(crate) const TEXT_DOCUMENT_EXTENSIONS: [&str; 5] = ["md", "markdown", "mdx", "txt", "text"];
 
 /// Whether `path` is a document Textus opens as text (Markdown or plain).
 pub(crate) fn is_text_document(path: &Path) -> bool {

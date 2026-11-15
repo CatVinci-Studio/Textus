@@ -227,9 +227,9 @@ export const commands = {
 };
 
 /* Constants */
-export const MARKDOWN_EXTENSIONS = ["md","markdown"] as const;
+export const MARKDOWN_EXTENSIONS = ["md","markdown","mdx"] as const;
 
-export const TEXT_DOCUMENT_EXTENSIONS = ["md","markdown","txt","text"] as const;
+export const TEXT_DOCUMENT_EXTENSIONS = ["md","markdown","mdx","txt","text"] as const;
 
 /* Types */
 export type AiRecords = {
