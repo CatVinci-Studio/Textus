@@ -1,6 +1,7 @@
 package com.catvinci.textus
 
 import android.content.res.Configuration
+import android.graphics.drawable.ColorDrawable
 import android.graphics.Rect
 import android.os.Bundle
 import android.view.View
@@ -62,6 +63,9 @@ class MainActivity : TauriActivity() {
       isAppearanceLightStatusBars = !dark
       isAppearanceLightNavigationBars = !dark
     }
+    // What shows beside the keyboard where the page doesn't reach (a
+    // cutout's side): the app's own dark or light, as themes.xml has them.
+    window.setBackgroundDrawable(ColorDrawable(if (dark) 0xFF121213.toInt() else 0xFFF7F6F3.toInt()))
   }
 
   // The page runs under the status bar and the navigation bar, its own

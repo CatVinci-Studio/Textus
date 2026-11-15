@@ -138,3 +138,14 @@
 :root[data-window-chrome="mobile"] .format-bar-row::-webkit-scrollbar {
   display: none;
 }
+
+/* A phone turned sideways with its keyboard up leaves a strip of a page:
+   the text takes it, the bar comes back as the keyboard goes. */
+@media (max-height: 320px) {
+  :root.keyboard-up .split-pane {
+    --format-bar-height: 0px;
+  }
+  :root.keyboard-up .format-bar {
+    display: none;
+  }
+}
