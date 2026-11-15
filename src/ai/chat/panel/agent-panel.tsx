@@ -3,7 +3,6 @@ import {
   setPanelWidth,
   usePanelWidth,
 } from "../../../engine/frame/panel-width";
-import { chromeScale } from "../../../engine/tokens/chrome-scale";
 import {
   createContext,
   useCallback,
@@ -15,9 +14,7 @@ import {
 } from "react";
 import { getUiState, setUiState } from "../../../storage/ui-state";
 import {
-  clampSidePanel,
-  sidePanelMax,
-  sidePanelMin,
+  useSidePanelWidth,
 } from "../../../engine/controls/side-panel-width";
 import type { AgentPanelTab } from "./AgentPanelView";
 import "./agent-panel.css";
@@ -75,14 +72,13 @@ export function useAgentPanelState(windowWidth: number, beside: number) {
   // Only an iPad's or iPhone's docked panel is drawn at it; on the desktop
   // the AI is an island, which the islands' area sizes itself.
   const chosen = usePanelWidth(isIOSApp);
-  // Kept in the interface's size units, shown at its size now.
-  const scale = chromeScale();
-  const width = clampSidePanel(
-    chosen * scale,
+  // Kept in the interface's size units, shown at its size now; the islands
+  // beside it keep their room, as beside the sidebar.
+  const { width, min, max, toBase } = useSidePanelWidth(
+    chosen,
     windowWidth,
     LIMITS,
     beside,
-    scale,
   );
   const [tab, setTab] = useState<AgentPanelTab>("chat");
   const setOpen = useCallback(
@@ -100,19 +96,10 @@ export function useAgentPanelState(windowWidth: number, beside: number) {
   );
   // Remembered once a drag lets go, not on every frame of it.
   const setWidth = useCallback(
-    (next: number, persist = true) => {
-      const step = chromeScale();
-      const base = Math.round(
-        clampSidePanel(next, windowWidth, LIMITS, beside, step) / step,
-      );
-      setPanelWidth(base, persist);
-    },
-    [windowWidth, beside],
+    (next: number, persist = true) => setPanelWidth(toBase(next), persist),
+    [toBase],
   );
   const toggle = useCallback(() => setOpen(!open), [open, setOpen]);
-  // How far it may be dragged here, for its handle's keys and readers.
-  const min = Math.round(sidePanelMin(windowWidth, LIMITS, beside, scale));
-  const max = Math.round(sidePanelMax(windowWidth, LIMITS, beside, scale));
   return { open, setOpen, toggle, width, min, max, setWidth, tab, setTab };
 }
 
