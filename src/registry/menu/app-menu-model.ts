@@ -323,6 +323,8 @@ export function buildMobileMenu(
       : []),
     { label: t.menuNewFile, action: { native: "new-file" } },
     { label: t.menuOpenFile, action: { native: "open-file" } },
+    // Another folder over the one open: the Files panel shows that folder.
+    { label: t.menuOpenFolder, action: { native: "open-folder" } },
     ...(
       [
         [t.menuSave, "save-file"],

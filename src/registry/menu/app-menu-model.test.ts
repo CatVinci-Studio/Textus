@@ -184,6 +184,13 @@ describe("the View menu's on/off items", () => {
     );
   });
 
+  it("on a phone opens another folder, as the desktop's File menu does", () => {
+    const phone = flatten(buildMobileMenu(t));
+    expect(
+      phone.find((item) => item.label === t.menuOpenFolder)?.action,
+    ).toEqual({ native: "open-folder" });
+  });
+
   it("head the phone's menu with the word count when the title row has no room for it", () => {
     const t = resolveStrings("en");
     const [first] = buildMobileMenu(t, { words: 49 });

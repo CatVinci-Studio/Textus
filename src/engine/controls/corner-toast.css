@@ -55,7 +55,9 @@
 .corner-toast .corner-toast-summary {
   display: flex;
   flex: 1 1 0;
-  min-width: 0;
+  /* Room for its words first: short of it, the buttons take the next line
+     (a long language's, on a phone). */
+  min-width: min(12em, 100%);
   min-height: 0;
   align-items: center;
   justify-content: flex-start;
@@ -80,11 +82,16 @@
   white-space: normal;
 }
 
+/* Too many for the card's width (a phone, long words), its buttons wrap
+   inside it rather than run past its edge. */
 .corner-toast-actions {
   display: flex;
   flex-shrink: 0;
+  flex-wrap: wrap;
   align-items: center;
+  justify-content: flex-end;
   gap: 4px;
+  max-width: 100%;
 }
 
 .corner-toast-secondary {
