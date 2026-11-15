@@ -52,13 +52,15 @@ export function useWindowDocuments({
     setPanelMode("tree");
   }, [setPanelOpen, setPanelMode]);
   // Set below, once the tabs can be closed.
-  const replaceRef = useRef<(old: string, next: string) => void>(() => {});
+  const replaceRef = useRef<(old: string | null, next: string) => void>(
+    () => {},
+  );
   const openFolder = useOpenFolder({
     activePath: activeTab.path,
     fallback: documentsFolder,
     onOpened: showFiles,
     onReplace: useCallback(
-      (old: string, next: string) => replaceRef.current(old, next),
+      (old: string | null, next: string) => replaceRef.current(old, next),
       [],
     ),
     folderTooBroad: t.folderTooBroad,
@@ -212,7 +214,7 @@ export function useWindowDocuments({
   // a busy window's files to the windows (none on a phone).
   const { openPathInTab } = opening;
   replaceRef.current = (old, next) => {
-    closeTabsOf(old);
+    if (old) closeTabsOf(old);
     void readRecents()
       .then((recents) => openingDocuments(next, recents.files))
       .then(async (docs) => {

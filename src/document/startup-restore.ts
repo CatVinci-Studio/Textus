@@ -17,15 +17,11 @@ import {
 } from "./doc-tabs";
 import { setTabJump } from "../editor/tab-jump";
 import { lastCaret } from "./last-places";
-import {
-  keptTabsRestored,
-  readKeptTabs,
-  readTabOrder,
-  type KeptTab,
-} from "./reload-tabs";
+import { keptTabsRestored, readKeptTabs, type KeptTab } from "./reload-tabs";
 import { takeWindowSession } from "./launch-window";
 import { savedFront } from "../engine/layout/saved";
-import { paneWithTab } from "../engine/layout/tree";
+import { readTabOrder } from "./tab-order";
+import { fileOf, restoreTabsInOrder } from "./phone-restore";
 import {
   paneOf,
   reorderInPane,
@@ -201,8 +197,8 @@ export function useStartupRestore(options: StartupRestoreOptions): void {
       // without stealing focus. Skipped while the privacy toggle is off.
       const order = readTabOrder();
       const place = (id: string) => {
-        const at = order.ids.indexOf(id);
-        return at < 0 ? order.ids.length : at;
+        const at = order.keys.indexOf(`id:${id}`);
+        return at < 0 ? order.keys.length : at;
       };
       const draftSnapshots = (
         opts.enableDraftRecovery
@@ -212,11 +208,14 @@ export function useStartupRestore(options: StartupRestoreOptions): void {
       const restored: DocTab[] = [];
       // The restored tab that was in front, by the id it had then.
       let frontDraft: DocTab | undefined;
+      // Each restored tab's id before, its key in the order.
+      const oldIds = new Map<string, string>();
       for (const draft of draftSnapshots) {
         const tab = await recoveredTab(draft);
         if (!tab) continue;
         restored.push(tab);
-        if (draft.tabId === order.active) frontDraft = tab;
+        oldIds.set(tab.id, draft.tabId);
+        if (`id:${draft.tabId}` === order.active) frontDraft = tab;
       }
       if (restored.length > 0) {
         opts.setTabs((prev) => [...prev, ...restored]);
@@ -344,61 +343,40 @@ export function useStartupRestore(options: StartupRestoreOptions): void {
           ordered.forEach((tab, i) => reorderInPane(pane, tab.id, i));
         return;
       }
-      // A phone: the document that was open last time.
+      // A phone: the tabs it had, saved ones and drafts, in their order;
+      // a desktop's recovered drafts alone (its documents come with its
+      // window's session).
       const last = isMobileApp ? await lastIOSDocument() : null;
-      // Its recovered tab takes the initial one's place, so it doesn't open
-      // twice.
-      const recovered = last ? recoveredFor(last) : undefined;
-      // The tab in front was a draft: it takes the initial tab, the last
-      // document joins the rest behind it.
-      if (last && frontDraft && !recovered) {
-        const behind = await opts.tabsForPaths([last], true);
-        opts.setTabs((prev) => [
-          ...prev,
-          ...behind.filter((tab) => !prev.some((p) => p.path === tab.path)),
-        ]);
-      } else if (recovered) {
-        loadRecoveredIntoInitialTab(recovered);
+      if (
+        await restoreTabsInOrder({
+          order,
+          restored,
+          oldIds,
+          frontDraft,
+          last,
+          phone: isMobileApp,
+          initial: opts.activeTabId,
+          loadRecovered: loadRecoveredIntoInitialTab,
+          loadFile: async (path) => {
+            try {
+              const { content: text, diskMtime } = await readDocFromDisk(path);
+              restoreCaret(path, diskMtime);
+              loadIntoInitialTab({
+                path,
+                content: text,
+                savedContent: text,
+                diskMtime,
+              });
+              return true;
+            } catch {
+              return false; // moved or deleted since
+            }
+          },
+          tabsForPaths: opts.tabsForPaths,
+          setTabs: opts.setTabs,
+        })
+      )
         return;
-      }
-      if (last && !frontDraft) {
-        try {
-          const { content: text, diskMtime } = await readDocFromDisk(last);
-          restoreCaret(last, diskMtime);
-          loadIntoInitialTab({
-            path: last,
-            content: text,
-            savedContent: text,
-            diskMtime,
-          });
-          return;
-        } catch {
-          // Moved or deleted since: start blank.
-        }
-      }
-      // Only recovered drafts: the first takes the blank tab instead of an
-      // empty "Untitled" beside them.
-      if (restored.length > 0) {
-        const first = frontDraft ?? restored[0];
-        loadRecoveredIntoInitialTab(first);
-        // At the place it had among them: before the one that came after
-        // it, whatever else (the AI's tab) the row holds.
-        const pane = paneWithTab(windowLayout().root, opts.activeTabId);
-        const k = restored.indexOf(first);
-        if (pane) {
-          const others = pane.tabs.filter((id) => id !== opts.activeTabId);
-          const after = restored[k + 1] && others.indexOf(restored[k + 1].id);
-          const before = restored[k - 1] && others.indexOf(restored[k - 1].id);
-          const at =
-            typeof after === "number" && after >= 0
-              ? after
-              : typeof before === "number" && before >= 0
-                ? before + 1
-                : pane.tabs.indexOf(opts.activeTabId);
-          reorderInPane(pane.id, opts.activeTabId, at);
-        }
-        return;
-      }
       // Nothing claimed the blank tab and onboarding was never shown. The
       // flag stays false until here, so a busy first launch defers the guide
       // instead of losing it. Not on a phone: it teaches shortcuts.
@@ -459,10 +437,6 @@ async function fileThere(path: string): Promise<boolean> {
 
 /** `tabs` with the session's documents, which arrive in any order, back in
  *  `paths`' order, in the places they took; the others stay put. */
-/** The file a tab shows: its own, a plugin view's, or the one imported. */
-const fileOf = (tab: DocTab) =>
-  tab.path ?? tab.view?.resource ?? tab.importedFrom;
-
 function inSessionOrder(tabs: DocTab[], paths: string[]): DocTab[] {
   const rank = new Map(paths.map((p, i) => [p, i]));
   const rankOf = (tab: DocTab) => {

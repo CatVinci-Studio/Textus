@@ -399,6 +399,38 @@ describe("startup restore into the initial tab", () => {
     ]);
   });
 
+  it("on a phone ended in the background: its saved documents, drafts and the AI's tab in their order, the one in front in front", async () => {
+    Object.assign(platform, {
+      canUseWindows: false,
+      hasAppMenu: false,
+      isIOSApp: true,
+    });
+    lastIOSDocument.mockResolvedValue("/docs/b.md");
+    localStorage.setItem(
+      "textus-tab-order",
+      JSON.stringify({
+        keys: ["path:/docs/a.md", "view:ai", "id:old-d", "path:/docs/b.md"],
+        active: "path:/docs/a.md",
+      }),
+    );
+    ipc.takeDraftSnapshots.mockResolvedValue([
+      { tabId: "old-d", path: null, content: "draft d" },
+    ]);
+    const ai = {
+      ...INITIAL,
+      id: "ai",
+      view: { plugin: "textus", view: "ai", kind: "page" as const },
+    };
+    const { tabs } = await restore(true, false, true, undefined, [ai]);
+    await waitFor(() =>
+      expect(
+        tabs().map((tab) => tab.path ?? tab.view?.view ?? tab.content),
+      ).toEqual(["/docs/a.md", "ai", "draft d", "/docs/b.md"]),
+    );
+    expect(tabs()[0].id).toBe("initial");
+    localStorage.clear();
+  });
+
   it("and for that document's recovered edits, which take the initial tab's place", async () => {
     Object.assign(platform, {
       canUseWindows: false,

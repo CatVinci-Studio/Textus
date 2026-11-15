@@ -16,7 +16,16 @@ vi.mock("../platform/ipc", () => ({
   },
 }));
 
-const { openingDocuments, withProjectTabs } = await import("./start-project");
+const ios = vi.hoisted(() => ({ on: false }));
+vi.mock("../platform/documents-path", async (importOriginal) => ({
+  ...(await importOriginal<typeof import("../platform/documents-path")>()),
+  knownDocumentsDir: () => (ios.on ? docsNow.dir : null),
+}));
+const docsNow = vi.hoisted(() => ({ dir: "/c/OLD/Documents/" }));
+
+const { openingDocuments, withProjectTabs, useProjectTabs } =
+  await import("./start-project");
+const { renderHook } = await import("@testing-library/react");
 const { setUiState } = await import("../storage/ui-state");
 
 const entry = (name: string, is_dir = false) => ({
@@ -77,5 +86,19 @@ describe("what a project opens with from the start page", () => {
   it("keeps a project's tabs only while some are in it", () => {
     const kept = withProjectTabs({}, "/p", ["/p/a.md"], "/p/a.md");
     expect(withProjectTabs(kept, "/p", ["/q/x.md"], "/q/x.md")).toBe(kept);
+  });
+
+  it("on iOS keeps a folder's tabs relative to Documents, back after a reinstall moves it", async () => {
+    ios.on = true;
+    docsNow.dir = "/c/OLD/Documents/";
+    renderHook(() =>
+      useProjectTabs("/c/OLD/Documents", ["/c/OLD/Documents/n.md"], null),
+    );
+    docsNow.dir = "/c/NEW/Documents/";
+    files.add("/c/NEW/Documents/n.md");
+    expect(await openingDocuments("/c/NEW/Documents", [])).toEqual([
+      "/c/NEW/Documents/n.md",
+    ]);
+    ios.on = false;
   });
 });

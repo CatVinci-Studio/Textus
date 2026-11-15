@@ -13,7 +13,7 @@ import {
   IN_DOCUMENTS,
   knownDocumentsDir,
   ownFolderMoved,
-  storedDocumentPath,
+  storedOwnFolder,
 } from "../platform/documents-path";
 import { SHOW_FOLDER_EVENT } from "../utils/events";
 import {
@@ -82,8 +82,9 @@ export function useOpenFolder({
   fallback: string | null;
   /** Brings the Files tab into view once a folder opens. */
   onOpened: () => void;
-  /** Another folder takes the open one's place in this window. */
-  onReplace: (old: string, next: string) => void;
+  /** Another folder takes the open one's place in this window (`old`
+   *  null: none was open). */
+  onReplace: (old: string | null, next: string) => void;
   /** The refusal shown for the home folder or a drive root. */
   folderTooBroad: string;
 }) {
@@ -164,13 +165,16 @@ export function useOpenFolder({
       const trim = (p: string) => p.replace(/[\\/]+$/, "");
       if (now.folder && trim(now.folder) !== trim(path))
         onReplace(now.folder, path);
+      // A phone with none open: its documents come back all the same (a
+      // desktop window's come with its session).
+      else if (!now.folder && !canUseWindows) onReplace(null, path);
       setFolder(path);
       setTree({
         key: inputsKey(path, now.activePath, now.fallback),
         root: path,
       });
       if (!canUseWindows)
-        setUiState("openFolder", storedDocumentPath(path, knownDocumentsDir()));
+        setUiState("openFolder", storedOwnFolder(path, knownDocumentsDir()));
       void session.addRecentFolder(path).catch(() => {});
       const agentRoot = agentRootOnOpen(
         now.settings.agentWorkspaceRoot,

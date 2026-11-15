@@ -1,6 +1,7 @@
 import { describe, expect, it } from "vitest";
 import {
   ownFolderMoved,
+  storedOwnFolder,
   resolvedDocumentPath,
   storedDocumentPath,
 } from "./documents-path";
@@ -83,7 +84,21 @@ describe("resolvedDocumentPath", () => {
     ).toBe(docs + "Notes");
     // Already this install's, or another app's, it stays.
     expect(ownFolderMoved(docs + "Notes", docs)).toBe(docs + "Notes");
+    // Documents itself, kept whole by an earlier version.
+    expect(
+      ownFolderMoved(
+        "/var/mobile/Containers/Data/Application/OLD/Documents",
+        docs,
+      ),
+    ).toBe(docs.slice(0, -1));
     expect(ownFolderMoved("documents:Notes", docs)).toBe(docs + "Notes");
     expect(ownFolderMoved("file:///x/y", docs)).toBe("file:///x/y");
+  });
+
+  it("keeps the open folder Documents as documents:, given back without a slash", () => {
+    expect(storedOwnFolder(DOCS, DOCS)).toBe("documents:");
+    expect(storedOwnFolder(`/private${DOCS}/`, DOCS)).toBe("documents:");
+    expect(storedOwnFolder(`${DOCS}/n`, DOCS)).toBe("documents:n");
+    expect(resolvedDocumentPath("documents:", `${DOCS}/`)).toBe(DOCS);
   });
 });
