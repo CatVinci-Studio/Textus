@@ -1,3 +1,4 @@
+import { isRecord } from "../../utils/is-record";
 import type {
   ContextMenuEntry,
   ContextMenuItem,
@@ -32,8 +33,7 @@ export function pageMenuEntries(
       out.push("separator");
       continue;
     }
-    if (!raw || typeof raw !== "object" || typeof raw.label !== "string")
-      continue;
+    if (!isRecord(raw) || typeof raw.label !== "string") continue;
     const label = raw.label;
     if (Array.isArray(raw.items) && depth === 0) {
       const inner = pageMenuEntries(raw.items, choose, 1).filter(

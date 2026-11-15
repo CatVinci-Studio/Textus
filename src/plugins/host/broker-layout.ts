@@ -1,3 +1,4 @@
+import { isRecord } from "../../utils/is-record";
 import { grants } from "../grants";
 import type { PluginTabInfo } from "../app-bridge";
 import { mayOpen } from "../may-open";
@@ -27,8 +28,7 @@ import {
 
 /** A location as the runtime sends it, checked. */
 function locationOf(value: unknown): PluginLocation {
-  if (!value || typeof value !== "object")
-    throw new Error("A location is { path, ... }.");
+  if (!isRecord(value)) throw new Error("A location is { path, ... }.");
   const v = value as Record<string, unknown>;
   const num = (x: unknown) =>
     typeof x === "number" && Number.isFinite(x) ? x : undefined;

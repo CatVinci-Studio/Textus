@@ -78,3 +78,17 @@ it("creates a file under a free name when asked, as given", async () => {
     files["files.create"]({ path: "/notes/Dup.md", text: "x", unique: true }),
   ).resolves.toBe("/notes/Dup 3.md");
 });
+
+it("refuses a list as front matter, which would write 0: and 1: keys", () => {
+  const scope = {
+    id: "p",
+    root: () => "/notes",
+    allows: () => true,
+  } as unknown as PluginScope;
+  expect(() =>
+    fileHandlers(scope)["files.frontmatterSet"]({
+      path: "a.md",
+      frontmatter: ["x"],
+    }),
+  ).toThrow("frontmatter is an object.");
+});

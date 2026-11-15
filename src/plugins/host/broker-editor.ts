@@ -1,3 +1,4 @@
+import { isRecord } from "../../utils/is-record";
 import { fill } from "../../i18n/fill";
 import {
   addOutlineProvider,
@@ -76,8 +77,7 @@ function editOf(
   change: unknown,
   reason?: string,
 ): EditProposal {
-  if (!change || typeof change !== "object")
-    throw new Error("A change is { action, ... }.");
+  if (!isRecord(change)) throw new Error("A change is { action, ... }.");
   const c = change as Record<string, unknown>;
   const action = (c.action ?? "insert_at_cursor") as EditAction;
   if (!EDIT_ACTIONS.includes(action))
@@ -147,7 +147,7 @@ export function editorHandlers(p: PluginScope) {
     },
     "editor.reveal": ({ location }: Params) => {
       const d = getActiveDocument();
-      if (!d || !location || typeof location !== "object") return false;
+      if (!d || !isRecord(location)) return false;
       const l = location as Record<string, unknown>;
       return d.reveal({
         line: typeof l.line === "number" ? l.line : undefined,
