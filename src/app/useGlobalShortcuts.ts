@@ -29,6 +29,12 @@ import { actionForCombo, type AppActionHandlers } from "./menu/app-actions";
 import { pickIsland } from "../engine/layout/island-numbers";
 import { afterComposition, isImeKeydown } from "../utils/ime";
 
+/** The sidebar tabs a key of their own shows, by the shortcut's name. */
+const SIDEBAR_KEYS = [
+  ["showFiles", "tree"],
+  ["showOutline", "outline"],
+] as const;
+
 /** The heading shortcuts, by the block kind they apply. */
 const HEADING_KINDS: [HeadingAction, string][] = [
   ["setHeading1", "h1"],
@@ -86,6 +92,8 @@ export function useGlobalShortcuts(opts: {
   actions: AppActionHandlers;
   /** Opens the sidebar on its Files tab with the search box focused. */
   searchFiles: () => void;
+  /** A sidebar tab's own key: that tab, or the sidebar away (#687). */
+  showSidebarTab: (id: string) => void;
 }): void {
   const {
     tabsRef,
@@ -95,6 +103,7 @@ export function useGlobalShortcuts(opts: {
     requestCloseTab,
     actions,
     searchFiles,
+    showSidebarTab,
   } = opts;
   const { settings } = useSettings();
   // Read when a key runs one: a new object each render would resubscribe.
@@ -227,6 +236,10 @@ export function useGlobalShortcuts(opts: {
       } else if (canOpenFolder && combo === shortcuts.searchFiles) {
         e.preventDefault();
         searchFiles();
+      } else if (SIDEBAR_KEYS.some(([key]) => combo === shortcuts[key])) {
+        e.preventDefault();
+        const [, tab] = SIDEBAR_KEYS.find(([key]) => combo === shortcuts[key])!;
+        showSidebarTab(tab);
       } else {
         // A command added from outside, on a combo the app hasn't taken.
         const command = commandForCombo(combo, settings.commandShortcuts);
@@ -252,5 +265,6 @@ export function useGlobalShortcuts(opts: {
     settings,
     actionsNow,
     searchFiles,
+    showSidebarTab,
   ]);
 }

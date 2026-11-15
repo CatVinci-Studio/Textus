@@ -89,6 +89,7 @@ function App() {
   const { panelMode, setPanelMode } = shell.panels;
   const { activeTab, activeTitle, activeDirty } = docs;
   const { openFolder, openFile, openFileDialog, handleChange } = docs;
+  const { searchFiles } = docs;
   const { searchFocusRequest, clearSearchFocusRequest } = docs;
   const { showTabBar, requestCloseTab, handleTabDetach, dragHoverPreview } =
     docs;
@@ -187,7 +188,10 @@ function App() {
             presence={sidebarPresence}
             closing={sidebarClosing}
             mode={panelMode}
-            onModeChange={setPanelMode}
+            // Search shown by its icon takes the keyboard, as by its key.
+            onModeChange={(id) =>
+              id === "search" ? searchFiles() : setPanelMode(id)
+            }
             width={sidebarWidth}
             openFolder={openFolder}
             activePath={activeTab.path}

@@ -73,6 +73,7 @@ export function useWindowWiring({
     requestCloseTab: docs.requestCloseTab,
     actions: appActions,
     searchFiles: docs.searchFiles,
+    showSidebarTab: panels.showSidebarTab,
   });
 
   useIslandNumbers(setActiveTabId);

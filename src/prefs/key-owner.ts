@@ -43,6 +43,8 @@ export function actionLabels(t: Strings): Record<ShortcutAction, string> {
     toggleSourceMode: t.menuToggleSourceMode,
     toggleTypewriterMode: t.menuToggleTypewriterMode,
     searchFiles: t.shortcutSearchFiles,
+    showFiles: t.treeTab,
+    showOutline: t.outlineTab,
     nextTab: t.shortcutNextTab,
     previousTab: t.shortcutPreviousTab,
     ...headingLabels(t),

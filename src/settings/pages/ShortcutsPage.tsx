@@ -35,6 +35,8 @@ export function ShortcutsPage({
               "commandPalette",
               "findReplace",
               "searchFiles",
+              "showFiles",
+              "showOutline",
               "nextTab",
               "previousTab",
             ],

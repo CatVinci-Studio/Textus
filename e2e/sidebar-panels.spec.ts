@@ -255,3 +255,33 @@ test("another folder takes the open one's place: its documents close, and come b
   await expect(a).toBeVisible();
   await expect(page.locator(".tab-pill", { hasText: "b.md" })).toHaveCount(0);
 });
+
+test("a sidebar tab's own key shows it, and again puts the sidebar away; Search by its icon takes the keyboard", async ({
+  page,
+}) => {
+  await page.addInitScript(() => {
+    const w = window as unknown as Record<string, unknown>;
+    w.__devFs = { "/one/a.md": "# A\n" };
+    w.__devPickFolder = "/one";
+  });
+  await openApp(page, {
+    settings: {
+      menuBarShown: false,
+      shortcuts: { showOutline: "mod+shift+u", showFiles: "mod+shift+y" },
+    },
+  });
+  await emit(page, "menu-open-folder");
+  await expect(page.locator(".tree-row", { hasText: "a.md" })).toBeVisible();
+  const mod = MAC ? "Meta" : "Control";
+  await page.keyboard.press(`${mod}+Shift+u`);
+  await expect(page.locator('[data-rail-id="outline"]')).toHaveAttribute(
+    "aria-pressed",
+    "true",
+  );
+  await page.keyboard.press(`${mod}+Shift+u`);
+  await expect(page.locator(".tree-row")).toHaveCount(0);
+  await page.keyboard.press(`${mod}+Shift+y`);
+  await expect(page.locator(".tree-row", { hasText: "a.md" })).toBeVisible();
+  await page.locator('[data-rail-id="search"]').click();
+  await expect(page.locator(".search-panel input").first()).toBeFocused();
+});
