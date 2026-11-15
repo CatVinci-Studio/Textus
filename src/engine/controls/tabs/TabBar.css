@@ -47,6 +47,12 @@
   white-space: nowrap;
   overflow: hidden;
 }
+/* Placed in a row, a tab is the width the fit gave it: below its least
+   where only that much of the row shows beside its list. The measuring
+   copy (no data-tab) keeps the least, which the fit reads. */
+.tab-pill[data-tab] {
+  min-width: 0;
+}
 
 /* Held by a finger until it lifts: it rises under it, ready to drag, and
    no callout or selection comes up meanwhile. */
