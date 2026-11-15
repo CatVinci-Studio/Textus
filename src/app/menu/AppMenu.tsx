@@ -5,7 +5,9 @@ import { useSettings } from "../../prefs/SettingsContext";
 import { readRecents } from "./recents";
 import { formatCombo } from "../../utils/shortcuts";
 import { usePlacement } from "../../engine/controls/usePlacement";
-import { runMenuAction } from "./app-menu-actions";
+import { opensField, runMenuAction } from "./app-menu-actions";
+import { holdKeyboard } from "../../engine/controls/hold-keyboard";
+import { isMobileApp } from "../../platform/capabilities";
 import {
   buildAppMenu,
   buildMobileMenu,
@@ -311,7 +313,11 @@ function MenuRow({
     // ⌘/Ctrl-click: the folder in a window of its own.
     if (folder && (e.metaKey || e.ctrlKey))
       void windowIpc.openFolderInNewWindow(folder);
-    else runMenuAction(item.action);
+    else {
+      // Find opens its field after this tap: the keyboard is asked for now.
+      if (isMobileApp && opensField(item.action)) holdKeyboard();
+      runMenuAction(item.action);
+    }
   }
 
   return (
