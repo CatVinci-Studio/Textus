@@ -202,15 +202,10 @@ pub(crate) fn handler() -> impl Fn(tauri::ipc::Invoke<tauri::Wry>) -> bool + Sen
         crate::agents::agent_stop,
         #[cfg(desktop)]
         menu::set_plugin_menu,
-        #[cfg(desktop)]
         commands::tree_ops::tree_create_document,
-        #[cfg(desktop)]
         commands::tree_ops::tree_create_folder,
-        #[cfg(desktop)]
         commands::tree_ops::tree_move_entry,
-        #[cfg(desktop)]
         commands::tree_ops::tree_rename_entry,
-        #[cfg(desktop)]
         commands::tree_ops::tree_trash_entry,
         #[cfg(desktop)]
         commands::recents::add_recent_folder,
