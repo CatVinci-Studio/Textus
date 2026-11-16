@@ -18,8 +18,7 @@ const WRITING = ".pending-insert-typing, .pending-reading";
 
 const streamFollowKey = new PluginKey("textus-stream-follow");
 
-/** The page follows AI writing while the reader is with it. A scroll they
- *  didn't make of over a screen is undone, as WebKit pulls the caret back. */
+/** The page follows AI writing while the reader is with it. */
 export const streamFollowPlugin = $prose(
   () =>
     new Plugin({
@@ -149,10 +148,6 @@ class StreamFollow {
       return;
     }
     const theirs = performance.now() - this.intent < INTENT_MS;
-    if (!theirs && Math.abs(top - this.kept) > scroller.clientHeight) {
-      this.set(this.kept);
-      return;
-    }
     // Up is away from the writing, however near it still is; down to it
     // takes it up again.
     if (theirs) this.following = top >= this.kept && this.inView();

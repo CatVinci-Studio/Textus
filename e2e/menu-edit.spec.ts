@@ -1,6 +1,7 @@
 import { expect, test, type Page } from "@playwright/test";
 import { MAC, emit, openApp, pasteMarkdown } from "./helpers";
 import { openPath } from "./plugin-helpers";
+import { STORY, streamRevise } from "./revise-mock";
 
 // On a Mac, ⌘Z, ⇧⌘Z and ⌘A reach the app as the native Edit menu's events
 // (menu.rs MAC_EDIT_ITEMS): these send those same events, so the islands
@@ -271,4 +272,47 @@ test("a look at the source and back keeps the document's undo and its caret", as
   await expect(line).toHaveText("The first line. ONE");
   await page.keyboard.type("!");
   await expect(line).toHaveText("The first line. ONE!");
+});
+
+test("Find Next from the menu reaches its match while the AI writes, and the page stays there", async ({
+  page,
+}) => {
+  await page.setViewportSize({ width: 1200, height: 760 });
+  await openApp(page, {
+    settings: { language: "en", revisionDisplay: "original" },
+  });
+  const filler = Array.from({ length: 80 }, (_, i) => `Filler line ${i}.`);
+  await pasteMarkdown(
+    page,
+    [STORY, ...filler, "The needle is here."].join("\n\n"),
+  );
+  await emit(page, "menu-toggle-agent-panel");
+  await streamRevise(
+    page,
+    [
+      {
+        id: "s1",
+        args: {
+          action: "replace",
+          anchor: "搬到窗边",
+          text: "移至窗边，又寻来一盏台灯照着，慢慢地拆",
+        },
+      },
+    ],
+    { chunk: 2, every: 40, hold: "慢慢" },
+  );
+  const composer = page.locator(".agent-panel-view textarea");
+  await composer.fill("Classical Chinese, please");
+  await composer.press("Enter");
+  await expect(page.locator(".pending-reading").first()).toBeAttached();
+  await docs(page).first().locator("p", { hasText: "Filler line 0." }).click();
+  await emit(page, "menu-find-replace");
+  await page.keyboard.type("needle");
+  // Past the reader's last key: the jump is the menu's alone.
+  await page.waitForTimeout(1000);
+  await emit(page, "menu-find-next");
+  const needle = docs(page).first().locator("p", { hasText: "needle" });
+  await expect(needle).toBeInViewport();
+  await page.waitForTimeout(500);
+  await expect(needle).toBeInViewport();
 });
