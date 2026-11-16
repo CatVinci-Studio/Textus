@@ -15,7 +15,7 @@ import { noteLinkSources, resolveNoteLinks } from "./note-links";
 import { drawPending, preparePage } from "./export-page";
 import { diagramsToImages, drawnBlocksToImages } from "./diagram-images";
 import { drawnPicturesByLanguage } from "./drawn-blocks";
-import { appearanceIsDark } from "../editor/diagram-engine";
+import { appearanceIsDark } from "../engine/tokens/appearance";
 import type { DiagramEngine } from "../prefs/SettingsContext";
 import {
   MAC_PAGE,

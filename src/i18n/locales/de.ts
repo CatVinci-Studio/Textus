@@ -160,7 +160,7 @@ Skills liegen im Ordner skills/ neben dieser Datei, je Skill eine
   revisionDisplayOriginal: "Original im Text, Änderungen am Rand",
   revisionDisplayFinal: "Nur das Ergebnis, Original am Rand",
   splitNoRoom:
-    "Zu wenig Platz zum Teilen – Fenster verbreitern oder Seitenleiste bzw. eine Teilung schließen",
+    "Kein Platz für eine weitere Teilung: Das Fenster ist zu schmal. Verbreitern Sie es oder schließen Sie eine Teilung.",
   revisionDisplayNoRoom:
     "Nicht genug Platz - schließ die Seitenleiste oder den KI-Bereich",
   proposalDeletedSentence: "Original",
@@ -825,7 +825,7 @@ Skills liegen im Ordner skills/ neben dieser Datei, je Skill eine
   conventionsEu: "EU-Institutionen",
   agentAttachFile:
     "Dateien anhängen: Dokumente, PDFs, Bilder, Code, ein Zip – jede Datei",
-  chatAttachmentTruncated: "(gekürzt)",
+  chatAttachmentTruncated: "(lang: in Teilen gelesen)",
   chatAttachmentNoVision: `Dieser Anbieter kann keine Bilder lesen. Wechsle den Anbieter unter Einstellungen › ${AI_NAME} oder hänge stattdessen ein Dokument an.`,
   aiGrammarLabel: "Grammatikprüfung",
   aiAskLabel: `Chat mit ${AI_NAME}`,
@@ -1269,7 +1269,7 @@ Skills liegen im Ordner skills/ neben dieser Datei, je Skill eine
   proposalRelocate: "Änderung neu anfordern",
   diffShow: "Unterschiede anzeigen",
   diffCollapse: "Weniger anzeigen",
-  chatPendingSummary: "Offene Änderungen: {n}",
+  chatPendingSummary: "Offene Änderungen:\u00a0{n}",
   chatPendingReveal: "Im Dokument anzeigen",
   quickAskPosition: "{i} / {n}",
   quickAskPrevEdit: "Vorherige Änderung",
@@ -1811,7 +1811,7 @@ Skills liegen im Ordner skills/ neben dieser Datei, je Skill eine
   conventionsDecline: "Aktuelle behalten",
   pluginCardSystemApp: "Mit System-App öffnen",
   pluginCardNever: "Nicht mehr vorschlagen",
-  pluginCardsMuted: "Ausgeblendete Plugin-Vorschläge: {n}",
+  pluginCardsMuted: "Ausgeblendete Plugin-Vorschläge:\u00a0{n}",
   pluginCardsRestore: "Wieder zeigen",
   pluginCardsRestoreAll: "Ausgeblendete Plugin-Vorschläge wieder zeigen",
   pluginScreenshot: "{name} bei der Arbeit",
@@ -1879,6 +1879,7 @@ Skills liegen im Ordner skills/ neben dieser Datei, je Skill eine
   pluginPermAiTools: "Textus AI eigene Werkzeuge geben",
   pluginPermNotifications: "Systemmitteilungen anzeigen",
   pluginPermAppearance: "Die Farben von Textus und Ihren Dokumenten ändern",
+  pluginPermGitCommit: "Mit Ihrem Git Commits im geöffneten Ordner erstellen",
   pluginPermAgents:
     "Einen auf diesem Computer installierten KI-Agenten ausführen (er kann Dateien lesen und ändern)",
   pluginPermBackground:
@@ -1886,6 +1887,7 @@ Skills liegen im Ordner skills/ neben dieser Datei, je Skill eine
   pluginScheduleNotice:
     "{name} hat etwas geplant. Es läuft nur, solange Textus läuft: schalte „{setting}“ ein, damit es auch bei geschlossenen Fenstern läuft.",
   pluginPermNetwork: "Mit {host} verbinden",
+  pluginPermHidden: "{path} im geöffneten Ordner lesen",
   pluginPermCommands: "Befehle von {plugin} ausführen",
   pluginPermNetworkAny: "Mit beliebigen Websites verbinden",
   menuPlugins: "Plugins",

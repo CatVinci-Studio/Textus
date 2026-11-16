@@ -53,6 +53,13 @@ body {
   line-height: 1.5;
 }
 
+/* A sidebar tab's page reads as the file tree beside it: list-size text,
+   its controls with it; headings keep theirs. */
+:root[data-sidebar] {
+  --text-body: var(--text-list);
+  --text-secondary: var(--text-list);
+}
+
 /* A floating view has no page behind it: only what the plugin draws. A
    sidebar tab's page lies on the sidebar, in its colour. */
 :root:is([data-floating], [data-sidebar]),

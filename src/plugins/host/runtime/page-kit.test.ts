@@ -27,6 +27,7 @@ type PageApi = {
   monthDays: (
     year: number,
     month: number,
+    options?: { weekStart?: number },
   ) => { date: string; day: number; inMonth: boolean }[];
   pickDate: (value: string | null, anchor: Element) => Promise<string | null>;
 };
@@ -105,6 +106,37 @@ describe("what every plugin page gets", () => {
     // November 2026 starts on a Sunday; English weeks start on Sunday.
     expect(days[0]).toMatchObject({ date: "2026-11-01", inMonth: true });
     expect(days.filter((d) => d.inMonth)).toHaveLength(30);
+    // A vault whose weeks start on Monday: the Monday before.
+    expect(page().monthDays(2026, 10, { weekStart: 1 })[0]).toMatchObject({
+      date: "2026-10-26",
+      inMonth: false,
+    });
+  });
+
+  it("keeps a dragged item under the pointer in a zoomed page", async () => {
+    document.body.innerHTML = `<ul><li>a</li><li>b</li></ul>`;
+    const items = [...document.querySelectorAll("li")];
+    items.forEach((li, i) => {
+      // Drawn at twice its own size.
+      li.getBoundingClientRect = () =>
+        ({ top: i * 40, height: 40, left: 0, width: 200 }) as DOMRect;
+      Object.defineProperty(li, "offsetHeight", { value: 20 });
+    });
+    const handle = page().drag.reorder(document.querySelector("ul")!, {
+      items: "li",
+      onDrop: () => {},
+    });
+    const pointer = (type: string, y: number, target: EventTarget = window) =>
+      target.dispatchEvent(
+        new MouseEvent(type, { bubbles: true, clientY: y, button: 0 }),
+      );
+    pointer("pointerdown", 10, items[0]);
+    pointer("pointermove", 30);
+    expect(items[0].style.transform).toBe("translateY(10px)");
+    window.dispatchEvent(new KeyboardEvent("keydown", { key: "Escape" }));
+    handle.dispose();
+    // The release's click it swallows goes with the next tick.
+    await settle();
   });
 
   it("picks a date on a month under a button", async () => {
@@ -148,6 +180,10 @@ describe("what every plugin page gets", () => {
     expect(items[0].classList.contains("is-drag-lifted")).toBe(true);
     pointer("pointerup", 55);
     expect(onDrop).toHaveBeenCalledWith(0, 2);
+    // Put in its place at once, not left to spring back.
+    expect(
+      [...document.querySelectorAll("li")].map((li) => li.textContent),
+    ).toEqual(["b", "c", "a"]);
 
     pointer("pointerdown", 50, items[2]);
     pointer("pointermove", 10);

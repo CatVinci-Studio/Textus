@@ -65,10 +65,12 @@ describe("draftProposal", () => {
     expect(draft?.textComplete).toBe(false);
   });
 
-  it("places append and replace_selection without an anchor", () => {
-    const draft = draftProposal('{"action":"append","text":"tail');
-    expect(draft?.proposal.action).toBe("append");
-    expect(draft?.proposal.anchor).toBeUndefined();
+  it("places append, replace_selection and insert_at_cursor without an anchor", () => {
+    for (const action of ["append", "replace_selection", "insert_at_cursor"]) {
+      const draft = draftProposal(`{"action":"${action}","text":"tail`);
+      expect(draft?.proposal.action).toBe(action);
+      expect(draft?.proposal.anchor).toBeUndefined();
+    }
   });
 
   it("places a delete as soon as its anchor is known", () => {

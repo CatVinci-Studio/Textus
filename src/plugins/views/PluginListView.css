@@ -4,11 +4,14 @@
   flex-direction: column;
   min-height: 0;
   height: 100%;
-  font-size: var(--text-secondary);
+  /* The sidebar's list size, as the file tree beside it; a tab's list is
+     read as a page. */
+  font-size: var(--text-list);
   color: var(--ui-text);
 }
 
 .plugin-list-tab {
+  font-size: var(--text-secondary);
   max-width: 836px;
   width: 100%;
   margin: 0 auto;
@@ -40,6 +43,28 @@
   cursor: pointer;
   user-select: none;
   -webkit-user-select: none;
+}
+
+/* Items of several lines (a clip, a note: a label and a detail under it)
+   kept apart by a hairline, short of the row's rounded ends. */
+.plugin-list-entry:has(> .plugin-list-row.has-detail)
+  + .plugin-list-entry
+  > .plugin-list-row.has-detail {
+  position: relative;
+  margin-top: 1px;
+}
+.plugin-list-entry:has(> .plugin-list-row.has-detail)
+  + .plugin-list-entry
+  > .plugin-list-row.has-detail::before {
+  content: "";
+  position: absolute;
+  top: -1px;
+  inset-inline: var(--space-2);
+  border-top: 1px solid var(--ui-border);
+  pointer-events: none;
+}
+.plugin-list-row.has-detail {
+  padding-block: var(--space-2);
 }
 
 /* Under the pointer; the keyboard's row only while the keys move it (the

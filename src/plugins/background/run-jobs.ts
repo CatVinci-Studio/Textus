@@ -13,6 +13,7 @@ import { lazyModule } from "../../lazy/lazy-module";
 import { parseManifest, type Permission } from "../store/manifest";
 import { globalPluginValue } from "../store/plugin-settings";
 import { logPluginError } from "../store/plugin-log";
+import { fitsHere } from "../plugin-platform";
 
 /**
  * The background runs Rust has waiting, each taken and run in a frame of its
@@ -59,6 +60,8 @@ async function runOne(
   if (!state.allOn || !entry?.enabled || !plugin) return;
   if (!granted.includes("background")) return;
   const manifest = parseManifest(plugin.manifest);
+  // Registered before an update of Textus, or on a system it doesn't fit.
+  if (!fitsHere(manifest)) return;
   const { runBackground } = await host.load();
   await runBackground({
     info: { manifest, origin: plugin.dev ? "dev" : "installed", granted },

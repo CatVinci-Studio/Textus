@@ -11,7 +11,6 @@ import type { PluginHost } from "./host/broker";
 import { lazyModule } from "../lazy/lazy-module";
 import { type PluginOrigin } from "./store/files";
 import { parseManifest, type Permission } from "./store/manifest";
-import { engineSatisfied } from "./store/versions";
 import {
   applyContributions,
   contributingPlugins,
@@ -44,7 +43,7 @@ import {
  */
 
 import { compareNames } from "../utils/name-order";
-import { pluginPlatform, runsHere } from "./plugin-platform";
+import { fitsHere, pluginPlatform } from "./plugin-platform";
 import { hosts, stopHost } from "./running-hosts";
 import { pluginSetting, setPluginSetting } from "./plugin-setting-values";
 
@@ -65,8 +64,7 @@ function makeRecord(
     const manifest = parseManifest(text);
     if (manifest.id !== id)
       throw new Error(`id "${manifest.id}" is not its folder's, "${id}".`);
-    const compatible =
-      engineSatisfied(manifest.engine, APP_VERSION) && runsHere(manifest);
+    const compatible = fitsHere(manifest);
     return {
       id,
       origin,

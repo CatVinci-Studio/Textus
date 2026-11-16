@@ -14,6 +14,7 @@ import {
 import { grantedHosts } from "../store/permissions";
 import type { CodeBlockSeen } from "../manager";
 import { windowInfo } from "../store/plugin-records";
+import { useSettingsIfAny } from "../../prefs/SettingsContext";
 import { watchTheme, webviewThemeCss, windowIsDark } from "./theme-vars";
 import { pageMenuEntries } from "./webview-menu";
 import { openPageLink } from "./page-links";
@@ -108,6 +109,8 @@ export function PluginWebview({
   zoom?: number;
 }) {
   const html = useSyncExternalStore(subscribeWebviews, () => webviewHtml(id));
+  // The page is made again in a new language, its strings and `lang` too.
+  const language = useSettingsIfAny()?.settings.language;
   const boxRef = useRef<HTMLDivElement>(null);
   const closeMenuRef = useRef<(() => void) | null>(null);
   // A menu the page asked for, drawn by the app over the page.
@@ -272,7 +275,7 @@ export function PluginWebview({
       webviewConnected(id, null);
       frame.remove();
     };
-  }, [id, html, fitHeight, ownZoom, tellZoom, interfaceSize]);
+  }, [id, html, fitHeight, ownZoom, tellZoom, interfaceSize, language]);
 
   return (
     <>

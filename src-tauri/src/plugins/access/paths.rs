@@ -78,23 +78,58 @@ const READ_ONLY_HIDDEN: [&str; 4] = [
     ".gitignore",
 ];
 
-/// Whether `path` (from `root`, or whole) is one of READ_ONLY_HIDDEN.
-pub(crate) fn read_only_hidden(root: &str, path: &str) -> bool {
+/// `path` from `root`, with forward slashes; whole if it isn't under it.
+pub(crate) fn relative(root: &str, path: &str) -> String {
     let slashed = path.replace('\\', "/");
     let root = root.replace('\\', "/");
-    let rel = slashed
+    slashed
         .strip_prefix(root.trim_end_matches('/'))
-        .map_or(slashed.as_str(), |rest| rest.trim_start_matches('/'));
-    READ_ONLY_HIDDEN.contains(&rel)
+        .map_or(slashed.as_str(), |rest| rest.trim_start_matches('/'))
+        .to_string()
 }
 
-/// Whether `rel` passes through anything hidden (`.env`, `.git/config`) or
-/// node_modules: what a plugin's own folder serves and lists leaves out.
+/// Whether `path` (from `root`, or whole) is one of READ_ONLY_HIDDEN.
+pub(crate) fn read_only_hidden(root: &str, path: &str) -> bool {
+    READ_ONLY_HIDDEN.contains(&relative(root, path).as_str())
+}
+
+/// Hidden names never open to a plugin, wherever they are: keys, tokens,
+/// what runs, other plugins' storage. One rule with the frontend's
+/// (store/hidden-files.ts).
+static NEVER_HIDDEN: std::sync::LazyLock<regex::Regex> = std::sync::LazyLock::new(|| {
+    regex::Regex::new(
+        r"(?i)^(?:\.git|\.ssh|\.aws|\.gnupg|\.docker|\.kube|\.textus|\.env.*|\.netrc|\.npmrc|\.pypirc|\.pgpass|\.htpasswd|credentials.*|.*\.(?:pem|key|p12|pfx))$",
+    )
+    .expect("a valid pattern")
+});
+
+/// Whether a plugin may ask for `hidden:<path>`: a file under a hidden
+/// folder or a hidden file of the open folder, named from its top, none
+/// of whose parts is a secret's.
+pub(crate) fn hidden_file_path(path: &str) -> bool {
+    let parts: Vec<&str> = path.split('/').collect();
+    path.len() <= 200
+        && path
+            .chars()
+            .all(|c| c.is_ascii_alphanumeric() || "_.- /".contains(c))
+        && parts[0].starts_with('.')
+        && parts
+            .iter()
+            .all(|p| !p.is_empty() && *p != "." && *p != "..")
+        && !parts.iter().any(|p| NEVER_HIDDEN.is_match(p))
+}
+
+/// A name that is no part of a plugin: hidden (`.env`, `.git`) or
+/// node_modules. What its folder serves, lists, installs and exports
+/// leaves these out.
+pub(crate) fn not_plugin_file(name: &std::ffi::OsStr) -> bool {
+    name.to_string_lossy().starts_with('.') || name == "node_modules"
+}
+
+/// Whether `rel` passes through such a name (`.env`, `.git/config`).
 pub(crate) fn hidden_part(rel: &Path) -> bool {
-    rel.components().any(|c| {
-        matches!(c, Component::Normal(n)
-            if n.to_string_lossy().starts_with('.') || n == "node_modules")
-    })
+    rel.components()
+        .any(|c| matches!(c, Component::Normal(n) if not_plugin_file(n)))
 }
 
 /// `path` resolved inside `root`: no `..`, and still under `root` after

@@ -48,15 +48,19 @@ function swipe(el: Element, from: number, to: number, toY = 20) {
 }
 
 describe("swiping the tab row", () => {
-  it("brings the next tab forward on a swipe left, the one before on a swipe right", () => {
+  it("brings the next tab forward on a swipe left, the one before on a swipe right", async () => {
     const onActivate = vi.fn();
     const { getByTestId, rerender } = render(
       <Row active="b" onActivate={onActivate} />,
     );
     const move = swipe(getByTestId("pill"), 200, 100);
     expect(onActivate).toHaveBeenLastCalledWith("c");
-    // The row's own scroll doesn't run under it.
+    // The row's own scroll doesn't run under it, nor the sidebar's swipe.
     expect(move.defaultPrevented).toBe(true);
+    const { swipeClaimed } = await import("../../../utils/gesture");
+    expect(swipeClaimed()).toBe(true);
+    touch(getByTestId("pill"), "touchstart", 10);
+    expect(swipeClaimed()).toBe(false);
     rerender(<Row active="b" onActivate={onActivate} />);
     swipe(getByTestId("pill"), 100, 200);
     expect(onActivate).toHaveBeenLastCalledWith("a");

@@ -20,6 +20,7 @@ import { fileHandlers } from "./broker-files";
 import { layoutHandlers, seenBy } from "./broker-layout";
 import { editorHandlers, stopPluginEditor } from "./broker-editor";
 import { metadataHandlers } from "./broker-metadata";
+import { gitHandlers } from "./broker-git";
 import { stopPluginUi, uiHandlers } from "./broker-ui";
 import { viewHandlers } from "./broker-views";
 import { scheduleHandlers } from "./broker-schedule";
@@ -139,6 +140,7 @@ const PLUGIN_EVENT_NEEDS: Record<keyof PluginEventMap, Permission | null> = {
   conventions: "files.read",
   fileCreate: "files.read",
   fileChange: "files.read",
+  fileChangeOnDisk: "files.read",
   fileRename: "files.read",
   fileDelete: "files.read",
   metadata: "files.read",
@@ -415,6 +417,7 @@ export class PluginHost {
       ...editorHandlers(scope),
       ...fileHandlers(scope),
       ...metadataHandlers(scope),
+      ...gitHandlers(scope),
       ...scheduleHandlers(scope),
       ...appearanceHandlers(scope),
       ...textHandlers(),

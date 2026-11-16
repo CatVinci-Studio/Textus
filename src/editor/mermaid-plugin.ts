@@ -16,8 +16,8 @@ import { fnv1a } from "../utils/hash";
 import { zoomButton } from "./diagram-zoom";
 import { isLargeDoc, pausesFeatures } from "./large-doc";
 import { registerDrawAll } from "./draw-when-visible";
+import { appearanceIsDark } from "../engine/tokens/appearance";
 import {
-  appearanceIsDark,
   diagramRenderer,
   mermaidTheme,
   type DrawnDiagram,

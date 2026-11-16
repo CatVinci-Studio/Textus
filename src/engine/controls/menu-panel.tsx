@@ -1,0 +1,328 @@
+import {
+  Fragment,
+  useEffect,
+  useLayoutEffect,
+  useRef,
+  useState,
+  type CSSProperties,
+  type KeyboardEvent,
+  type ReactNode,
+  type RefObject,
+} from "react";
+import { createPortal } from "react-dom";
+import { Tooltip } from "./Tooltip";
+import { useMenuAim } from "./menu-aim";
+import { submenuPlace } from "./placement";
+import { CheckIcon, ChevronIcon } from "./icons";
+import { menuKeyStep } from "./list-keys";
+import type {
+  ContextMenuEntry,
+  ContextMenuGroup,
+  ContextMenuItem,
+} from "./ContextMenu";
+
+const MENU_ROWS = '[role^="menuitem"]:not(:disabled)';
+
+/** Opened this soon after another closed, a submenu swaps in at once. */
+const SWAP_MS = 400;
+
+type Open = { index: number; focus: boolean } | null;
+
+export function isMenuGroup(
+  entry: ContextMenuEntry,
+): entry is ContextMenuGroup {
+  return typeof entry === "object" && "items" in entry;
+}
+
+/** Where a menu is drawn: in the dialog open over the window, whose menu
+ *  it is, else on the page itself - never inside its opener, whose clip
+ *  (a tab row's) would cut it. */
+export function menuHost(): Element {
+  return (
+    [...document.querySelectorAll('[role="dialog"]')].at(-1) ?? document.body
+  );
+}
+
+/**
+ * One level of a menu: its rows, arrow keys and menu aim, and the submenu
+ * of the group open - beside its row, or with `inline` (a phone) under it.
+ */
+export function MenuPanel({
+  items,
+  onClose,
+  inline = false,
+  nested = false,
+  panelRef,
+  className,
+  style,
+  label,
+  heading,
+  surface,
+  onKeyDown,
+  onMouseEnter,
+}: {
+  items: ContextMenuEntry[];
+  onClose: () => void;
+  inline?: boolean;
+  /** Opened in place inside another level: its keys are that level's. */
+  nested?: boolean;
+  panelRef?: RefObject<HTMLDivElement | null>;
+  className: string;
+  style?: CSSProperties;
+  label?: string;
+  heading?: ReactNode;
+  /** The surface's own props (a Presence's state and ref). */
+  surface?: object;
+  onKeyDown?: (e: KeyboardEvent<HTMLDivElement>) => void;
+  onMouseEnter?: () => void;
+}) {
+  const own = useRef<HTMLDivElement>(null);
+  const ref = panelRef ?? own;
+  const [open, setOpenNow] = useState<Open>(null);
+  const [instant, setInstant] = useState(false);
+  const closedAt = useRef(-Infinity);
+  const sub = useRef<HTMLDivElement | null>(null);
+  const rows = useRef(new Map<number, HTMLButtonElement>());
+  const setOpen = (next: Open) => {
+    const now = performance.now();
+    if (open) closedAt.current = now;
+    setInstant(next !== null && now - closedAt.current < SWAP_MS);
+    setOpenNow(next);
+  };
+  // A pointer on its way to the open submenu leaves it open (menu-aim.ts).
+  const aim = useMenuAim<number>(
+    (index) => {
+      if (index !== (open?.index ?? null))
+        setOpen(index === null ? null : { index, focus: false });
+    },
+    () => ref.current,
+    () => sub.current,
+  );
+
+  function keyDown(e: KeyboardEvent<HTMLDivElement>) {
+    const next = menuKeyStep(e.key, ref.current, MENU_ROWS);
+    if (next) {
+      e.preventDefault();
+      e.stopPropagation();
+      next.focus();
+    } else if (e.key === "Tab") {
+      // A menu is left with Escape or a choice, not walked out of.
+      e.preventDefault();
+    } else onKeyDown?.(e);
+  }
+
+  // A level with an on/off or a choice keeps the check column on every
+  // row, so the labels and shortcuts stay in line.
+  const checks = items.some(
+    (item) =>
+      item !== "separator" && !isMenuGroup(item) && item.checked !== undefined,
+  );
+  const group = open && !inline ? items[open.index] : undefined;
+  return (
+    <div
+      {...surface}
+      ref={ref}
+      role="menu"
+      aria-label={label}
+      data-floating-menu=""
+      className={className}
+      style={style}
+      onKeyDown={nested ? undefined : keyDown}
+      onMouseMove={aim.move}
+      onMouseEnter={onMouseEnter}
+      // A press on an item doesn't take the focus: on Linux the button kept
+      // it, and once the menu closed it fell to the page.
+      onMouseDown={(e) => e.preventDefault()}
+    >
+      {heading}
+      {items.map((item, i) =>
+        item === "separator" ? (
+          <div key={i} className="context-menu-separator" role="separator" />
+        ) : isMenuGroup(item) ? (
+          <Fragment key={i}>
+            <button
+              ref={(el) => {
+                if (el) rows.current.set(i, el);
+                else rows.current.delete(i);
+              }}
+              role="menuitem"
+              aria-haspopup="menu"
+              aria-expanded={open?.index === i}
+              disabled={item.disabled}
+              tabIndex={-1}
+              className="context-menu-item context-menu-group"
+              onMouseEnter={() => {
+                if (!inline) aim.hover(i);
+              }}
+              onClick={() => {
+                aim.hold();
+                setOpen(
+                  inline && open?.index === i
+                    ? null
+                    : { index: i, focus: !inline },
+                );
+              }}
+              onKeyDown={(e) => {
+                if (e.key !== "ArrowRight" || inline) return;
+                e.preventDefault();
+                e.stopPropagation();
+                aim.hold();
+                setOpen({ index: i, focus: true });
+              }}
+            >
+              <span className="context-menu-label tx-truncate">
+                {item.label}
+              </span>
+              <ChevronIcon className="context-menu-chevron" />
+            </button>
+            {inline && open?.index === i && (
+              <MenuPanel
+                items={item.items}
+                onClose={onClose}
+                inline
+                nested
+                className="context-menu-inline"
+              />
+            )}
+          </Fragment>
+        ) : (
+          <MenuRow
+            key={i}
+            item={item}
+            checks={checks}
+            onClose={onClose}
+            onMouseEnter={() => aim.hover(null)}
+          />
+        ),
+      )}
+      {group && isMenuGroup(group) && open && (
+        <SubMenu
+          anchor={rows.current.get(open.index) ?? null}
+          items={group.items}
+          focus={open.focus}
+          instant={instant}
+          subRef={sub}
+          onClose={onClose}
+          onBack={() => {
+            rows.current.get(open.index)?.focus();
+            aim.hold();
+            setOpen(null);
+          }}
+          onEnter={aim.hold}
+        />
+      )}
+    </div>
+  );
+}
+
+function MenuRow({
+  item,
+  checks,
+  onClose,
+  onMouseEnter,
+}: {
+  item: ContextMenuItem;
+  checks: boolean;
+  onClose: () => void;
+  onMouseEnter: () => void;
+}) {
+  const label = (
+    <span className="context-menu-label tx-truncate">{item.label}</span>
+  );
+  return (
+    <button
+      role={
+        item.checked === undefined
+          ? "menuitem"
+          : item.toggle
+            ? "menuitemcheckbox"
+            : "menuitemradio"
+      }
+      aria-checked={item.checked}
+      tabIndex={-1}
+      disabled={item.disabled}
+      className={`context-menu-item${item.danger ? " context-menu-item-danger" : ""}`}
+      onMouseEnter={onMouseEnter}
+      onClick={(e) => {
+        item.onSelect(e);
+        onClose();
+      }}
+    >
+      {item.hint ? (
+        // Its whole text on hover, where WebKitGTK shows no title.
+        <Tooltip text={item.hint} description={null}>
+          {label}
+        </Tooltip>
+      ) : (
+        label
+      )}
+      {item.accel && <span className="context-menu-accel">{item.accel}</span>}
+      {checks && (
+        <span className="context-menu-check" aria-hidden="true">
+          {item.checked && <CheckIcon />}
+        </span>
+      )}
+    </button>
+  );
+}
+
+/** A group's items beside its row: to the right, or to the left where the
+ *  window ends. Portalled, so the menu's own transform doesn't move it. */
+function SubMenu({
+  anchor,
+  items,
+  focus,
+  instant,
+  subRef,
+  onClose,
+  onBack,
+  onEnter,
+}: {
+  anchor: HTMLElement | null;
+  items: ContextMenuEntry[];
+  focus: boolean;
+  instant: boolean;
+  subRef: RefObject<HTMLDivElement | null>;
+  onClose: () => void;
+  onBack: () => void;
+  onEnter: () => void;
+}) {
+  const ref = useRef<HTMLDivElement>(null);
+  const [pos, setPos] = useState<{ left: number; top: number } | null>(null);
+  useLayoutEffect(() => {
+    const el = ref.current;
+    subRef.current = el;
+    if (!el || !anchor) return;
+    const menu = anchor.closest('[role="menu"]') ?? anchor;
+    setPos(
+      submenuPlace(
+        anchor.getBoundingClientRect(),
+        menu.getBoundingClientRect(),
+        el.getBoundingClientRect(),
+      ),
+    );
+  }, [anchor, items, subRef]);
+  useEffect(() => {
+    if (focus && pos)
+      ref.current?.querySelector<HTMLElement>(MENU_ROWS)?.focus();
+  }, [focus, pos]);
+
+  return createPortal(
+    <MenuPanel
+      panelRef={ref}
+      items={items}
+      onClose={onClose}
+      className={`context-menu context-submenu floating-surface${instant ? " context-submenu-instant" : ""}`}
+      // Painted only once placed.
+      style={pos ?? { left: -9999, top: -9999 }}
+      onMouseEnter={onEnter}
+      onKeyDown={(e) => {
+        if (e.key !== "ArrowLeft" && e.key !== "Escape") return;
+        e.preventDefault();
+        e.stopPropagation();
+        onBack();
+      }}
+    />,
+    menuHost(),
+  );
+}

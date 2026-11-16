@@ -258,7 +258,7 @@ export const PluginListPane = memo(function PluginListPane({
                 aria-selected={index === active}
                 className={`plugin-list-row${index === active ? " is-active" : ""}${
                   item.checkbox ? " is-done" : ""
-                }`}
+                }${item.detail ? " has-detail" : ""}`}
                 style={{ "--depth": depth } as CSSProperties}
                 onMouseEnter={() => setActive(index)}
                 onClick={() => select(item)}

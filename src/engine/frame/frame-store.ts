@@ -85,16 +85,69 @@ export function islandAt(x: number, y: number): FrameIsland | null {
   );
 }
 
-let fits: ((root: LayoutNode) => boolean) | null = null;
+/** How a layout fits the islands' area: `short`, the pixels it lacks with
+ *  each island at its least (0 or less: it fits); `panels`, what folding
+ *  its panels' islands into their neighbours would give. */
+export interface RoomCheck {
+  short: number;
+  panels: number;
+}
 
-/** Whether a layout's islands, each at its least, fit the area as it
- *  stands: told by the islands' area after each solve. */
-export function setLayoutFits(check: (root: LayoutNode) => boolean): void {
-  fits = check;
+let check: ((root: LayoutNode) => RoomCheck) | null = null;
+/** The width the sidebar would give, stepping aside (0 when shut). */
+let sidebarRoom = 0;
+/** A split made into too little room: first the panels' islands fold,
+ *  then the sidebar steps aside; null when nothing gives way. */
+let givingWay: "panels" | "sidebar" | null = null;
+
+/** Told by the islands' area after each solve. */
+export function setLayoutFits(next: (root: LayoutNode) => RoomCheck): void {
+  check = next;
+}
+
+/** Told by the window's frame: what the sidebar gives by stepping aside. */
+export function setSidebarRoom(room: number): void {
+  sidebarRoom = room;
 }
 
 /** A phone shows one island: a split never fits there. */
+function roomFor(root: LayoutNode): RoomCheck {
+  if (root.kind === "split" && isPhoneLayout())
+    return { short: Infinity, panels: 0 };
+  return check ? check(root) : { short: 0, panels: 0 };
+}
+
+/** Whether a layout's islands, each at its least, fit the area as it is. */
 export function layoutFits(root: LayoutNode): boolean {
-  if (root.kind === "split" && isPhoneLayout()) return false;
-  return fits ? fits(root) : true;
+  return roomFor(root).short <= 0.5;
+}
+
+/** The pixels `root` lacks once the panels' islands fold and the sidebar
+ *  steps aside: 0 when it fits so. A split asked for is made then, and
+ *  they give way (useNarrowIslands, useNarrowSidebar). */
+export function shortGivingWay(root: LayoutNode): number {
+  const { short, panels } = roomFor(root);
+  return Math.max(0, Math.ceil(short - panels - sidebarRoom - 0.5));
+}
+
+/** A layout set into too little room: the panels, then the sidebar, give
+ *  way until it fits, rather than the islands waiting for the window. */
+export function askGiveWay(): void {
+  givingWay = "panels";
+}
+
+/** Who gives way now. */
+export function givingWayNow(): "panels" | "sidebar" | null {
+  return givingWay;
+}
+
+/** The panels have folded what they can: done when the layout now fits,
+ *  else the sidebar's turn. */
+export function panelsGaveWay(fits: boolean): void {
+  if (givingWay === "panels") givingWay = fits ? null : "sidebar";
+}
+
+/** The sidebar has heard its turn. */
+export function sidebarGaveWay(): void {
+  if (givingWay === "sidebar") givingWay = null;
 }

@@ -34,6 +34,11 @@ textus.views.registerWebview("jane.board.view", {
 
 - `textus-resource:<path>` names one of the plugin's files
   (`webview.asWebviewUri(path)` writes the same).
+- The page is in the UI's language: Textus sets `<html lang>` (a
+  `lang="{{lang}}"` left in the page takes it too) and makes the page again
+  with the new strings when the language changes (Textus 1.4.3). Before
+  1.4.3 a plugin replaced `{{lang}}` and set `webview.html` again on
+  `env.onDidChangeLanguage` itself.
 - A webview shows pictures (`<img>`, CSS) and frames from the HTTPS hosts
   its plugin's `network:` permissions name, and nothing else from the
   network. For data, and for storage, it asks its plugin with

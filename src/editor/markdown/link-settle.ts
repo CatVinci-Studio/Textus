@@ -146,8 +146,11 @@ export const linkSettlePlugin = $prose(
         const ranges = [...mapped, ...(linkSettleKey.getState(state) ?? [])];
         if (ranges.length === 0) return null;
         const tr = settle(state, ranges);
-        // Its own undo step: one undo takes back the link, not the pasted URL too.
-        return tr ? closeHistory(tr.setMeta(linkSettleKey, true)) : null;
+        if (!tr) return null;
+        tr.setMeta(linkSettleKey, true);
+        // Typed, its own undo step: one undo takes back the link, not the URL
+        // too. Put in whole (a completion), one step with what was put in.
+        return transactions.every(typed) ? closeHistory(tr) : tr;
       },
     }),
 );

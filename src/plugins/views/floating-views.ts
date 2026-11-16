@@ -1,3 +1,4 @@
+import { isRecord } from "../../utils/is-record";
 import { getUiState, updateUiState } from "../../storage/ui-state";
 import { atMedium } from "../../utils/at-medium";
 import { emitPluginEvent } from "../app-bridge";
@@ -56,6 +57,16 @@ export function floatingSize(view: FloatingView, chrome = 1): [number, number] {
   ];
 }
 
+/** Its size at scale 1, which its own window scales when resized: the
+ *  same as {@link floatingSize} at its scale. */
+export function floatingBase(view: FloatingView, chrome = 1) {
+  return {
+    width: atMedium(view.width) * chrome,
+    height: atMedium(view.height) * chrome,
+    scale: view.scale,
+  };
+}
+
 /** What a plugin hears when its view opens, closes, folds or moves. */
 export interface FloatingChange {
   view: string;
@@ -82,14 +93,12 @@ type Saved = Pick<FloatingView, "place" | "x" | "y" | "folded"> & {
 
 function saved(): Record<string, Saved> {
   const kept = getUiState("floatingViews");
-  return kept && typeof kept === "object"
-    ? (kept as Record<string, Saved>)
-    : {};
+  return isRecord(kept) ? (kept as Record<string, Saved>) : {};
 }
 
 function save(view: string, value: Saved) {
   updateUiState("floatingViews", (kept) => ({
-    ...(kept && typeof kept === "object" ? kept : {}),
+    ...(isRecord(kept) ? kept : {}),
     [view]: value,
   }));
 }

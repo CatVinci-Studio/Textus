@@ -12,3 +12,5 @@
 - Touch screens: a tap below or between tables puts the cursor where you tapped, instead of in the table's last cell or on a word iOS then replaced.
 - Touch screens: the open tab's name is no longer cut short by its ×.
 - Android: the back key, rotation, folding, system font size and dark mode keep your tabs and drafts.
+- On iPad, the document that was in front when you left is in front again when you come back, not another one in the split.
+- On Android tablets, a tab dragged with a finger drops where you lift it.

@@ -1,6 +1,6 @@
+import { plainInline } from "../utils/markdown-plain";
 import { Segmented } from "../engine/controls/Segmented";
 import { splitFrontmatter } from "../utils/frontmatter";
-import { fill } from "../i18n/fill";
 import { useCallback, useEffect, useRef, useState } from "react";
 import { useSettings } from "../prefs/SettingsContext";
 import { localeOf, plural } from "../i18n/strings";
@@ -9,11 +9,6 @@ import {
   type ContextMenuItem,
 } from "../engine/controls/ContextMenu";
 import { useMenuButton } from "../engine/controls/useMenuButton";
-import {
-  showConfirm,
-  showMessage,
-  showPrompt,
-} from "../engine/controls/app-dialog";
 import {
   CloseIcon,
   FolderOpenIcon,
@@ -30,12 +25,15 @@ import { basename, dirname } from "../utils/path";
 import { useLongPress } from "../utils/hooks/useLongPress";
 import { iosFiles } from "../platform/ios-files";
 import {
-  deleteIOSDocument,
   forgetIOSDocument,
   inIOSDocuments,
   recentIOSDocuments,
-  renameIOSDocument,
 } from "../document/ios-recents";
+import {
+  deleteDocument,
+  documentActionFailed,
+  renameDocument,
+} from "./document-actions";
 import "./DocumentList.css";
 
 /**
@@ -67,10 +65,10 @@ export function previewText(markdown: string): string {
       line
         .replace(/^\s{0,3}((#{1,6}|>|[-*+]|\d+[.)])(\s+|$))+/, "")
         // A task's box: "[ ] Milk" read as raw syntax in the thumbnail.
-        .replace(/^\[[ xX]\]\s+/, "")
-        .replace(/(^|[^\\])[*_`~]+/g, "$1")
-        .replace(/!?\[([^\]]*)\]\([^)]*\)/g, "$1")
-        .replace(/\\([\\`*_{}[\]()#+\-.!>~|])/g, "$1"),
+        .replace(/^\[[ xX]\]\s+/, ""),
+    )
+    .map((line) =>
+      plainInline(line).replace(/\\([\\`*_{}[\]()#+\-.!>~|])/g, "$1"),
     )
     .join("\n")
     .trim()
@@ -174,44 +172,14 @@ export function DocumentList({
       : dateFormat.format(d);
   };
 
-  const fail = (error: unknown) =>
-    showMessage(String(error), { title: t.docActionFailed, tone: "error" });
+  const fail = (error: unknown) => documentActionFailed(t, error);
 
   async function rename(entry: Entry) {
-    const name = await showPrompt(t.docRenamePrompt, basename(entry.path), {
-      title: t.docRename,
-      okLabel: t.docRenameOk,
-      cancelLabel: t.cancel,
-    });
-    if (!name || name === basename(entry.path)) return;
-    try {
-      const to = await renameIOSDocument(entry.path, name);
-      onRenamed(entry.path, to);
-      await reload();
-    } catch (error) {
-      await fail(error);
-    }
+    if (await renameDocument(entry.path, t, onRenamed)) await reload();
   }
 
   async function remove(entry: Entry) {
-    const ok = await showConfirm(
-      fill(t.docDeleteConfirm, { name: basename(entry.path) }),
-      {
-        title: t.docDelete,
-        tone: "warning",
-        okLabel: t.docDeleteOk,
-        cancelLabel: t.cancel,
-        danger: true,
-      },
-    );
-    if (!ok) return;
-    try {
-      await deleteIOSDocument(entry.path);
-      onDeleted(entry.path);
-      await reload();
-    } catch (error) {
-      await fail(error);
-    }
+    if (await deleteDocument(entry.path, t, onDeleted)) await reload();
   }
 
   function actions(entry: Entry): ContextMenuItem[] {

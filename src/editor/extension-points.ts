@@ -45,6 +45,8 @@ export {
   type EmbedKind,
 } from "./embeds/embed-sources";
 
+import type { VerbatimRules } from "./markdown/verbatim-rules";
+
 interface EditorExtensions {
   /** Editor plugins that see keys before the editor's own (a plugin
    *  holding the keyboard, as Vim's normal mode does). */
@@ -58,6 +60,8 @@ interface EditorExtensions {
    *  that Markdown (null: paste as usual). */
   pasteMatches: (text: string) => boolean;
   providePaste: (text: string) => Promise<string | null>;
+  /** What of a plugin's document type is kept as written (documentTypes). */
+  pluginKeep: (path: string) => VerbatimRules | null;
 }
 
 let current: EditorExtensions = {
@@ -67,6 +71,7 @@ let current: EditorExtensions = {
   openLink: () => false,
   pasteMatches: () => false,
   providePaste: async () => null,
+  pluginKeep: () => null,
 };
 
 export function setEditorExtensions(next: Partial<EditorExtensions>): void {

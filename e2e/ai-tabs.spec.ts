@@ -522,3 +522,31 @@ test("Memory opens from the tab's right-click and closes with its × or Esc", as
   await page.keyboard.press("Escape");
   await expect(memory).toHaveCount(0);
 });
+
+test.describe("on a phone", () => {
+  test.use({
+    userAgent:
+      "Mozilla/5.0 (iPhone; CPU iPhone OS 18_0 like Mac OS X) AppleWebKit/605.1.15 (KHTML, like Gecko) Mobile/15E148",
+    viewport: { width: 402, height: 874 },
+    hasTouch: true,
+    isMobile: true,
+  });
+
+  test("the AI button brings the AI's tab forward from behind a document, and only then closes it, the documents kept", async ({
+    page,
+  }) => {
+    await openApp(page);
+    await aiButton(page).click();
+    await page.locator(".tab-bar-add").first().click();
+    await expect(tabs(page)).toHaveCount(3);
+    // A document in front, the AI's tab behind it.
+    await tabs(page).first().click();
+    await aiButton(page).click();
+    await expect(
+      page.locator(".tab-pill.active, .tab-pill[aria-selected=true]"),
+    ).toHaveText(/Textus AI/);
+    await expect(tabs(page)).toHaveCount(3);
+    await aiButton(page).click();
+    await expect(tabs(page)).toHaveCount(2);
+  });
+});

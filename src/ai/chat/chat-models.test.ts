@@ -41,6 +41,21 @@ describe("the composer's model", () => {
     ]);
   });
 
+  it("offers a sign-in's own models alone, as Settings does: its token takes no others", async () => {
+    const { signInChatModels } = await import("../sign-in-models");
+    const withKey = { ...entry, knownModels: ["gpt-6.1-sol", "gpt-6-nano"] };
+    const signIn = signInChatModels("openai");
+    expect(modelChoices(withKey, {}, [], true, signIn)).toEqual([
+      "gpt-6.1-sol",
+      "gpt-6-astra",
+      "gpt-6-luna",
+    ]);
+    // A model chosen with a key, not taken by the sign-in, isn't offered.
+    expect(
+      modelChoices(withKey, { openai: "gpt-6-nano" }, [], true, signIn),
+    ).not.toContain("gpt-6-nano");
+  });
+
   it("is a button only when there is another model to switch to", () => {
     expect(canSwitchModel([{ models: ["llama"] }])).toBe(false);
     expect(canSwitchModel([])).toBe(false);

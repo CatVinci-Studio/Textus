@@ -11,33 +11,13 @@ import {
   type FindReplaceMatch,
   type FindState,
 } from "./find-query";
+import { textWithPositions } from "../text-positions";
 
 interface FindReplaceState extends FindState {
   decorations: DecorationSet;
 }
 
 export const findReplaceKey = new PluginKey<FindReplaceState>("find-replace");
-
-/**
- * Flattens a textblock's inline content, nested enclosures included, into a
- * string plus a map from each character index to its doc position (one extra
- * entry for the end).
- */
-function textblockCharMap(
-  node: ProseNode,
-  contentStart: number,
-): { text: string; posMap: number[] } {
-  let text = "";
-  const posMap: number[] = [];
-  node.descendants((child, offset) => {
-    if (!child.isText || !child.text) return;
-    const base = contentStart + offset;
-    for (let i = 0; i < child.text.length; i++) posMap.push(base + i);
-    text += child.text;
-  });
-  posMap.push(contentStart + node.content.size);
-  return { text, posMap };
-}
 
 /** The query's matches in the document's text, block by block. */
 export function computeMatches(
@@ -52,7 +32,12 @@ export function computeMatches(
   const matches: FindReplaceMatch[] = [];
   doc.descendants((node, pos) => {
     if (!node.isTextblock) return true;
-    const { text, posMap } = textblockCharMap(node, pos + 1);
+    // Measured on the block itself: from the document's top, each block
+    // would walk every block before it.
+    const size = node.content.size;
+    const { text, positions } = textWithPositions(node, 0, size);
+    // One more entry: the block's end, for a match that reaches it.
+    const posMap = [...positions, size].map((p) => pos + 1 + p);
     matches.push(
       ...matchesIn(text, regex, (start, end) => ({
         from: posMap[start],

@@ -1,7 +1,16 @@
 // @vitest-environment jsdom
 import { describe, expect, it, vi } from "vitest";
 import { dropTargetAt, type DropGeometry } from "./drop-zones";
-import { layoutFits } from "../frame/frame-store";
+import {
+  askGiveWay,
+  givingWayNow,
+  panelsGaveWay,
+  sidebarGaveWay,
+  layoutFits,
+  setLayoutFits,
+  setSidebarRoom,
+  shortGivingWay,
+} from "../frame/frame-store";
 
 const phone = vi.hoisted(() => ({ on: false }));
 vi.mock("../../platform/phone-layout", () => ({
@@ -71,6 +80,41 @@ describe("dropTargetAt", () => {
       expect(layoutFits(split.children[0])).toBe(true);
     } finally {
       phone.on = false;
+    }
+  });
+});
+
+describe("a split into too little room", () => {
+  const split = {
+    kind: "split" as const,
+    direction: "row" as const,
+    children: [
+      { kind: "pane" as const, id: "p", tabs: ["a"], front: "a" },
+      { kind: "pane" as const, id: "q", tabs: ["b"], front: "b" },
+    ],
+    sizes: [0.5, 0.5],
+  };
+
+  it("is made when folding the panels and putting the sidebar aside makes room", () => {
+    try {
+      // 300 short: the AI's island gives 200, the sidebar 100.
+      setLayoutFits(() => ({ short: 300, panels: 200 }));
+      setSidebarRoom(100);
+      expect(layoutFits(split)).toBe(false);
+      expect(shortGivingWay(split)).toBe(0);
+      // Without the sidebar, 100 short: said, not made.
+      setSidebarRoom(0);
+      expect(shortGivingWay(split)).toBe(100);
+      // The panels go first, then the sidebar.
+      askGiveWay();
+      expect(givingWayNow()).toBe("panels");
+      panelsGaveWay(false);
+      expect(givingWayNow()).toBe("sidebar");
+      sidebarGaveWay();
+      expect(givingWayNow()).toBe(null);
+    } finally {
+      setLayoutFits(() => ({ short: 0, panels: 0 }));
+      setSidebarRoom(0);
     }
   });
 });

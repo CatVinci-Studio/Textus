@@ -339,6 +339,33 @@ function enterInLink(view: EditorView): void {
   view.dispatch(tr);
 }
 
+/** A link at or beside the caret whose destination has `%20` drawn as a
+ *  space: iOS's own typing there is read back from the page in pieces. */
+function besideDecodedLink(state: EditorState): boolean {
+  const { $from, empty } = state.selection;
+  if (!empty) return false;
+  return [$from.parent, $from.nodeBefore, $from.nodeAfter].some((node) => {
+    if (!node || !isLink(node)) return false;
+    const dest = destRange(node.textContent);
+    return !!dest && encodedRuns(node.textContent, ...dest).length > 0;
+  });
+}
+
+/** A character typed beside such a link, put in as typing in the editor
+ *  is (its input rules first), not left to the page. */
+function typeBesideDecodedLink(view: EditorView, event: InputEvent): boolean {
+  if (event.inputType !== "insertText" || !event.data || view.composing)
+    return false;
+  if (!besideDecodedLink(view.state)) return false;
+  event.preventDefault();
+  const { from, to } = view.state.selection;
+  const text = event.data;
+  const typed = () => view.state.tr.insertText(text, from, to);
+  if (!view.someProp("handleTextInput", (f) => f(view, from, to, text, typed)))
+    view.dispatch(typed().scrollIntoView());
+  return true;
+}
+
 export function createLinkRevealPlugin(docPath: () => string | null) {
   return $prose((ctx) => {
     let defined = new Set<string>();
@@ -367,6 +394,10 @@ export function createLinkRevealPlugin(docPath: () => string | null) {
         // Pasted where its definition isn't, a reference would link nowhere.
         transformCopied: (slice, view) =>
           inlineReferences(slice, view.state.doc),
+        handleDOMEvents: {
+          beforeinput: (view, event) =>
+            typeBesideDecodedLink(view, event as InputEvent),
+        },
         handleKeyDown(view, event) {
           if (isImeKeyEvent(view, event)) return false;
           if (event.key === "Enter") {

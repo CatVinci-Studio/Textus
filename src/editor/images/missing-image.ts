@@ -1,4 +1,5 @@
 import { fill } from "../../i18n/fill";
+import { widgetButton } from "../widget-button";
 import { IMAGE_ICON_HTML } from "../../engine/controls/icons";
 import { exportDoc, fs } from "../../platform/ipc";
 import type { Strings } from "../../i18n/strings";
@@ -206,20 +207,8 @@ export function missingImageCard(
     const row = document.createElement("span");
     row.className = "missing-image-actions";
     for (const [name, label, run] of actions) {
-      const button = document.createElement("button");
-      button.type = "button";
+      const button = widgetButton("", label, () => run());
       button.dataset.action = name;
-      button.textContent = label;
-      // The editor would take the press as a click into the document.
-      button.addEventListener("mousedown", (event) => {
-        event.preventDefault();
-        event.stopPropagation();
-      });
-      button.addEventListener("click", (event) => {
-        event.preventDefault();
-        event.stopPropagation();
-        run();
-      });
       row.append(button);
     }
     card.append(row);

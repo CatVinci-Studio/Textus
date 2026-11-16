@@ -29,6 +29,7 @@ const SHARED_CSS = [
   tooltipCss,
 ].join("\n");
 import { createEndpoint, type Endpoint, type Handlers } from "./rpc";
+import { escapeHtml } from "../../utils/html";
 
 /**
  * The sandboxed frames a plugin runs in: its hidden host and its webviews.
@@ -132,12 +133,16 @@ export function webviewDocument(
     options.floating ? " data-floating" : "",
     options.sidebar ? " data-sidebar" : "",
   ].join("");
-  return page.replace(/<html(\s[^>]*)?>/i, (tag) =>
-    tag.replace(
+  // The UI's language as the page's, for its hyphens, quotes and voice: a
+  // `lang` the page left as "{{lang}}" (or none) takes it.
+  const lang = ` lang="${escapeHtml(options.language)}"`;
+  return page.replace(/<html(\s[^>]*)?>/i, (tag) => {
+    const named = tag.replace(/\slang="\{\{lang\}\}"/i, "");
+    return named.replace(
       />$/,
-      `${/data-theme=/i.test(tag) ? "" : ` data-theme="${theme}"`}${platformAttrs}>`,
-    ),
-  );
+      `${/\slang=/i.test(named) ? "" : lang}${/data-theme=/i.test(named) ? "" : ` data-theme="${theme}"`}${platformAttrs}>`,
+    );
+  });
 }
 
 /** Stands in the runtimes' `ready` for the key of the frame they run in. */

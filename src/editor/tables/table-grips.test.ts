@@ -27,7 +27,41 @@ function setUp() {
   return { wrapper, grips, cells, rowGrip, move };
 }
 
+/** A layout box for `el` in jsdom, and a screen box twice that (a zoom). */
+function lay(el: HTMLElement, x: number, y: number, w: number, h: number) {
+  const set = (name: string, value: unknown) =>
+    Object.defineProperty(el, name, { value, configurable: true });
+  set("offsetLeft", x);
+  set("offsetTop", y);
+  set("offsetWidth", w);
+  set("offsetHeight", h);
+  set("getBoundingClientRect", () => new DOMRect(x * 2, y * 2, w * 2, h * 2));
+}
+
 describe("table grips", () => {
+  it("sit at the middle of their row's left edge and their column's top edge, whatever the zoom and the table's scroll", () => {
+    const { wrapper, grips, cells, rowGrip } = setUp();
+    const table = wrapper.querySelector("table")!;
+    const scroller = document.createElement("div");
+    wrapper.prepend(scroller);
+    scroller.append(table);
+    Object.defineProperty(scroller, "scrollLeft", { value: 30 });
+    lay(table, 10, 20, 400, 80);
+    const row = cells[2]!.parentElement!;
+    lay(row, 0, 40, 400, 40);
+    lay(cells[3]!, 200, 0, 200, 40);
+    for (const el of [table, row, cells[3]!])
+      Object.defineProperty(el, "offsetParent", {
+        value: el === table ? wrapper : el === row ? table : row,
+      });
+    grips.follow(cells[3]!);
+    const colGrip = wrapper.querySelector<HTMLElement>(".table-grip-col")!;
+    expect(rowGrip.style.transform).toBe("translate(0px, 80px)");
+    expect(colGrip.style.transform).toBe("translate(280px, 20px)");
+    grips.destroy();
+    wrapper.remove();
+  });
+
   it("follow the caret through a finger's touches, and a mouse over the table instead", () => {
     const { wrapper, grips, cells, rowGrip, move } = setUp();
     grips.follow(cells[2]);

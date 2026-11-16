@@ -8,11 +8,7 @@ import {
   REVISION_DISPLAYS,
   type RevisionDisplay,
 } from "../../prefs/SettingsContext";
-import {
-  AssistantIcon,
-  ChevronIcon,
-  EyeIcon,
-} from "../../engine/controls/icons";
+import { AssistantIcon, EyeIcon } from "../../engine/controls/icons";
 import { usePresenceProps } from "../../engine/motion/usePresence";
 import { useMarginAvailable } from "../margin/margin-room";
 import {
@@ -23,6 +19,7 @@ import {
 import { Tooltip } from "../../engine/controls/Tooltip";
 import { ThinkingIndicator } from "../chat/ThinkingIndicator";
 import type { NotesBarState } from "../margin/useNotesBar";
+import { StepNav } from "../../engine/controls/StepNav";
 import "./ReviewBar.css";
 
 interface ReviewBarLabels {
@@ -183,36 +180,22 @@ export function ReviewBar({
     .filter(Boolean)
     .join(" · ");
   const nav = (counted || stops > 1 || streaming) && !picking && (
-    <span className="review-bar-nav">
-      <Tooltip text={labels.quickAskPrevEdit} side="above">
-        <button
-          type="button"
-          aria-label={labels.quickAskPrevEdit}
-          disabled={stops < 2}
-          onClick={onPrevious}
-        >
-          <ChevronIcon className="review-bar-prev" />
-        </button>
-      </Tooltip>
-      <span className="review-bar-pos">
-        {position < 0
+    <StepNav
+      className="review-bar-nav"
+      previous={labels.quickAskPrevEdit}
+      next={labels.quickAskNextEdit}
+      hintSide="above"
+      disabled={stops < 2}
+      onStep={(step) => (step < 0 ? onPrevious() : onNext())}
+      position={
+        position < 0
           ? counts
           : fill(labels.quickAskPosition, {
               i: String(position + 1),
               n: String(stops),
-            })}
-      </span>
-      <Tooltip text={labels.quickAskNextEdit} side="above">
-        <button
-          type="button"
-          aria-label={labels.quickAskNextEdit}
-          disabled={stops < 2}
-          onClick={onNext}
-        >
-          <ChevronIcon className="review-bar-next" />
-        </button>
-      </Tooltip>
-    </span>
+            })
+      }
+    />
   );
   const name = picking
     ? fill(labels.reviewNotesPicked, {

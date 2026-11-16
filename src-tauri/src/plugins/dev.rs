@@ -56,8 +56,8 @@ fn newest_change(dir: &std::path::Path, depth: usize) -> Option<f64> {
     let mut newest: Option<f64> = None;
     for entry in std::fs::read_dir(dir).ok()?.flatten() {
         let name = entry.file_name();
-        let name = name.to_string_lossy();
-        if name.starts_with('.') || name == "node_modules" || name == "dist" {
+        // Its build's output too: a rebuild is no change of the source.
+        if super::access::not_plugin_file(&name) || name == "dist" {
             continue;
         }
         let Ok(meta) = entry.metadata() else { continue };

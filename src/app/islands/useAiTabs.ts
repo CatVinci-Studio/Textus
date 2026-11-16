@@ -20,6 +20,7 @@ import { moveTab, splitOff } from "../../engine/layout/ops";
 import { paneWithTab } from "../../engine/layout/tree";
 import type { TabState } from "../tabs/useTabState";
 import { pageOf } from "../tabs/page-tabs";
+import { isPhoneLayout } from "../../platform/phone-layout";
 import {
   AI_PRESS_EVENT,
   conversationIn,
@@ -214,6 +215,11 @@ export function useAiTabs({
       const target =
         ai.find((tab) => conversationOf(tab) === (live ?? DRAFT)) ?? ai[0];
       if (!target) return setShown(false);
+      // A phone shows one island, whose front is the tab in use.
+      if (isPhoneLayout())
+        return activeTabId === target.id
+          ? setShown(false)
+          : tabs.setActiveTabId(target.id);
       const pane = paneWithTab(windowLayout().root, target.id);
       if (pane?.front !== target.id) return tabs.setActiveTabId(target.id);
       const onlyAi = pane.tabs.every((id) =>

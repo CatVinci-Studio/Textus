@@ -41,16 +41,35 @@ pub(super) fn granted_path(
     root: &str,
     path: &str,
 ) -> Result<PathBuf, String> {
-    if !state::read(app).allows(id, permission) {
+    let path = folder_path(&state::read(app), id, permission, root, path)?;
+    require_not_app_data(app, &path)?;
+    Ok(path)
+}
+
+/// [`granted_path`] but for the app's own data: granted, in the folder,
+/// nothing hidden but what every plugin reads and the hidden files this
+/// one was granted by name (`hidden:<path>`), those only to read.
+pub(super) fn folder_path(
+    state: &PluginsState,
+    id: &str,
+    permission: &str,
+    root: &str,
+    path: &str,
+) -> Result<PathBuf, String> {
+    if !state.allows(id, permission) {
         return Err(refused(id, permission));
     }
-    let path = if permission == "files.read" && paths::read_only_hidden(root, path) {
+    let open_hidden = |rel: &str| {
+        paths::read_only_hidden("", rel)
+            || (paths::hidden_file_path(rel) && state.allows(id, &format!("hidden:{rel}")))
+    };
+    let path = if permission == "files.read" && open_hidden(&paths::relative(root, path)) {
         let resolved = inside(Path::new(root), Path::new(path))?;
         // A link there leads to what plugins may read anyway, never to
         // another hidden file (.env).
         let base = std::fs::canonicalize(root).map_err(|e| e.to_string())?;
         let rel = resolved.strip_prefix(&base).unwrap_or(&resolved);
-        if paths::read_only_hidden("", &rel.to_string_lossy()) {
+        if open_hidden(&rel.to_string_lossy().replace('\\', "/")) {
             resolved
         } else {
             plugin_path(Path::new(root), &resolved, id)?
@@ -58,8 +77,20 @@ pub(super) fn granted_path(
     } else {
         plugin_path(Path::new(root), Path::new(path), id)?
     };
-    require_not_app_data(app, &path)?;
     Ok(path)
+}
+
+/// A folder a plugin reads: it holds `files.read` (the app's own AI tools
+/// ask as `textus`, which no plugin is), the folder is there, and it is
+/// not one of the app's own.
+pub(super) fn checked_root(app: &tauri::AppHandle, id: &str, root: &str) -> Result<(), String> {
+    if id != super::app_tools::APP && !state::read(app).allows(id, "files.read") {
+        return Err(refused(id, "files.read"));
+    }
+    if root.is_empty() || !Path::new(root).is_dir() {
+        return Err(crate::errors::error("noFolder"));
+    }
+    require_not_app_data(app, Path::new(root))
 }
 
 pub(super) fn require_not_app_data(app: &tauri::AppHandle, path: &Path) -> Result<(), String> {
@@ -440,8 +471,8 @@ pub async fn plugin_http(
     })
 }
 
-mod paths;
-pub(crate) use paths::{hidden_part, in_folder, inside, plugin_path};
+pub(crate) mod paths;
+pub(crate) use paths::{hidden_part, in_folder, inside, not_plugin_file, plugin_path};
 
 #[cfg(test)]
 mod tests;

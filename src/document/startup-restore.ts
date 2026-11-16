@@ -1,6 +1,7 @@
 import { useEffect } from "react";
 import { useLatest } from "../utils/hooks/useLatest";
-import { drafts, fs, windowIpc } from "../platform/ipc";
+import { inOrder } from "../utils/in-order";
+import { drafts, windowIpc } from "../platform/ipc";
 import {
   canUseWindows,
   hasAppMenu,
@@ -11,6 +12,7 @@ import {
   helpDocContent,
   makeBlankTab,
   readDocFromDisk,
+  fileExists,
   tabIsUntouchedDraft,
   type DocTab,
   type HelpDoc,
@@ -27,6 +29,7 @@ import {
   activateTab,
   paneOf,
   reorderInPane,
+  setTabOrder,
   splitLayout,
   windowLayout,
 } from "../engine/layout/store";
@@ -310,14 +313,14 @@ export function useStartupRestore(options: StartupRestoreOptions): void {
         while (
           at < firstUp.length - 1 &&
           !recoveredFor(firstUp[at]) &&
-          !(await fileThere(firstUp[at]))
+          !(await fileExists(firstUp[at]))
         )
           at++;
         const [first, ...rest] = firstUp.slice(at);
         const recovered = recoveredFor(first);
         if (recovered) {
           loadRecoveredIntoInitialTab(recovered);
-        } else if (await fileThere(first)) {
+        } else if (await fileExists(first)) {
           // Opened as any file is: a plugin's file or board, a Word
           // document, the recent list, its last caret.
           await opts.replaceTabWithFile(opts.activeTabId, first, {
@@ -338,13 +341,16 @@ export function useStartupRestore(options: StartupRestoreOptions): void {
           // One the user opened meanwhile isn't opened twice.
           const open = new Set(prev.map(fileOf));
           const fresh = behind.filter((tab) => !open.has(fileOf(tab)));
-          ordered = inSessionOrder([...prev, ...fresh], paths);
+          ordered = inOrder([...prev, ...fresh], (t) => fileOf(t) ?? "", paths);
           return ordered;
         });
         // The island takes that order too: it keeps its own tabs first.
         const pane = paneOf(windowLayout(), opts.activeTabId);
         if (pane && !splitLayout())
-          ordered.forEach((tab, i) => reorderInPane(pane, tab.id, i));
+          setTabOrder(
+            pane,
+            ordered.map((tab) => tab.id),
+          );
         // A draft was in front: it comes back in front, not the first file.
         if (frontDraft) activateTab(frontDraft.id);
         return;
@@ -434,25 +440,4 @@ async function recoveredTab(draft: {
     // come back untitled rather than not at all.
     return untitled;
   }
-}
-
-/** Whether a file is still where the last session left it. */
-async function fileThere(path: string): Promise<boolean> {
-  return (await fs.fileMtimeMs(path).catch(() => null)) !== null;
-}
-
-/** `tabs` with the session's documents, which arrive in any order, back in
- *  `paths`' order, in the places they took; the others stay put. */
-function inSessionOrder(tabs: DocTab[], paths: string[]): DocTab[] {
-  const rank = new Map(paths.map((p, i) => [p, i]));
-  const rankOf = (tab: DocTab) => {
-    const path = fileOf(tab);
-    return path ? (rank.get(path) ?? -1) : -1;
-  };
-  const sorted = tabs
-    .filter((tab) => rankOf(tab) >= 0)
-    .sort((a, b) => rankOf(a) - rankOf(b));
-  let next = 0;
-  const out = tabs.map((tab) => (rankOf(tab) >= 0 ? sorted[next++] : tab));
-  return out.every((tab, i) => tab === tabs[i]) ? tabs : out;
 }

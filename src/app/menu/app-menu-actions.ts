@@ -19,6 +19,14 @@ export function runMenuAction(action: MenuAction): void {
     });
 }
 
+/** Whether `action` opens a field to type in (Find, Replace). */
+export function opensField(action: MenuAction): boolean {
+  return (
+    "native" in action &&
+    (action.native === "find-replace" || action.native === "replace")
+  );
+}
+
 /** Items with no native id to fire (predefined items in the native menu),
  *  run on this side instead. */
 export function runLocalMenuAction(action: LocalMenuAction): void {

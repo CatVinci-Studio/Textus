@@ -107,6 +107,7 @@ export function MenuBar({ checks }: { checks?: MenuChecks }) {
               y={open.y}
               section={open.index}
               onClose={close}
+              anchor={ref.current}
               checks={checks}
             />
           </Suspense>

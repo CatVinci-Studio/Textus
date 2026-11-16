@@ -10,6 +10,7 @@ import { history } from "@milkdown/kit/plugin/history";
 import { clipboard } from "@milkdown/kit/plugin/clipboard";
 import { listener } from "@milkdown/kit/plugin/listener";
 import { $remark } from "@milkdown/kit/utils";
+import { createRemarkVerbatim, keepFor } from "./markdown/verbatim";
 import remarkCjkFriendly from "remark-cjk-friendly";
 import remarkCjkFriendlyGfmStrikethrough from "remark-cjk-friendly-gfm-strikethrough";
 import {
@@ -60,6 +61,7 @@ import { formatShortcutPlugin } from "./keys/format-shortcut-plugin";
 import { selectAllKeyPlugin } from "./keys/select-all";
 import { enclosurePlugin } from "./marks/enclosure";
 import { linuxImeEnterPlugin } from "./keys/linux-ime-enter-plugin";
+import { iosEnterBeforeBlockPlugin } from "./keys/ios-enter-before-block-plugin";
 import { compositionPruneGuardPlugin } from "./keys/composition-prune-guard-plugin";
 import { configureMarkdownOutput } from "./markdown/markdown-output";
 import { openedParseRecorder } from "./markdown/source-preserving";
@@ -149,7 +151,6 @@ import { createUndoFilePlugin } from "./undo-file";
 import { createMissingLinksPlugin } from "./markdown/missing-links";
 import { createTypewriterPlugin } from "./modes/typewriter-plugin";
 import { zenFocusPlugin } from "./modes/zen-focus-plugin";
-import { keyboardRevealPlugin } from "./keys/keyboard-reveal-plugin";
 import { createPlaceholderPlugin } from "./placeholder-plugin";
 import { findReplacePlugin } from "./find/find-replace-plugin";
 import {
@@ -253,6 +254,7 @@ export function withEditorCore(
       .use(editing(dragAutoscrollPlugin))
       .use(editing(marginClickPlugin))
       .use(editing(linuxImeEnterPlugin))
+      .use(editing(iosEnterBeforeBlockPlugin))
       .use(editing(compositionPruneGuardPlugin))
       // Commonmark/GFM with bold/italic/strike marks stripped: those are nodes.
       .use(commonmarkWithoutMarks)
@@ -282,6 +284,9 @@ export function withEditorCore(
       // Raw HTML parses to real text so it stays editable; common tags render
       // while the cursor is elsewhere.
       .use(rawHtmlSchema)
+      // A document type's own syntax (MDX's imports, {expressions}, JSX),
+      // read as raw source before anything else takes its text apart.
+      .use(createRemarkVerbatim(keepFor(docPath.current)))
       .use(remarkHtmlImages)
       .use(createRawHtmlPreviewPlugin({ docPath: () => docPath.current }))
       .use(htmlAlignPlugin)
@@ -460,7 +465,6 @@ export function withEditorCore(
       .use(lazyBlocksPlugin)
       .use(readOnlyPlugin)
       .use(editing(zenFocusPlugin))
-      .use(editing(keyboardRevealPlugin))
       .use(
         editing(
           createTypewriterPlugin({

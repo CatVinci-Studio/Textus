@@ -324,9 +324,9 @@ fn copy_dir(from: &Path, to: &Path, total: &mut u64) -> Result<(), String> {
         .flatten()
     {
         let name = entry.file_name();
-        // A developer's checkout: its git folder and installed packages
-        // aren't the plugin.
-        if name == ".git" || name == "node_modules" {
+        // A developer's checkout: its git folder, secrets and installed
+        // packages aren't the plugin.
+        if super::access::not_plugin_file(&name) {
             continue;
         }
         let file_type = entry.file_type().map_err(|e| e.to_string())?;

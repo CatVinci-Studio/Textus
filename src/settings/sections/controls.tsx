@@ -5,6 +5,7 @@ import { useSettings } from "../../prefs/SettingsContext";
 import { resolveStrings, type Strings } from "../../i18n/strings";
 import { ChevronIcon } from "../../engine/controls/icons";
 import { InfoTip } from "../../engine/controls/InfoTip";
+import { useStackWhenTall } from "../../engine/controls/fit-steps";
 
 /** For a field that takes a machine-read value rather than prose: iOS would
  *  capitalise and autocorrect it into an id the provider rejects. */
@@ -32,8 +33,11 @@ export function SettingRow({
   error?: string | null;
   children?: ReactNode;
 }) {
+  // A long name beside the control would stand in a column of words.
+  const row = useRef<HTMLDivElement>(null);
+  useStackWhenTall(row, ".settings-row-label");
   return (
-    <div className="settings-row">
+    <div className="settings-row" ref={row}>
       <div className="settings-row-text">
         <div className="settings-row-label">
           {label}

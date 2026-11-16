@@ -1,5 +1,5 @@
 import { useCallback, useEffect, useRef, useState } from "react";
-import type { DocTab } from "../document/doc-tabs";
+import { isPlainDraft, type DocTab } from "../document/doc-tabs";
 import { ai } from "../platform/ipc";
 import { createTabIdleTimers } from "../document/tab-idle-timers";
 import {
@@ -38,13 +38,7 @@ export function wantsAiTitle(markdown: string): boolean {
 
 /** A plain untitled draft the AI may name. */
 function namable(tab: DocTab): boolean {
-  return (
-    !tab.path &&
-    !tab.view &&
-    !tab.helpDoc &&
-    !tab.importedFrom &&
-    wantsAiTitle(tab.content)
-  );
+  return isPlainDraft(tab) && wantsAiTitle(tab.content);
 }
 
 /** What a title was asked for: a draft is named again only once its first

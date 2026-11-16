@@ -152,6 +152,11 @@
 @media (hover: none) {
   .table-wrapper:is(:hover, :focus-within):not(.is-table-caret, .is-sizing)
     > .block-toolbar
+    > .block-toolbar-actions,
+  /* The keyboard put away, the document lets go of the caret: so do they. */
+  .ProseMirror:not(.ProseMirror-focused)
+    .table-wrapper.is-table-caret:not(.is-sizing, :focus-within)
+    > .block-toolbar
     > .block-toolbar-actions {
     opacity: 0;
     pointer-events: none;
@@ -169,9 +174,6 @@
 
 /* A block's tool: a small pill in the document's colours. */
 .block-pill,
-.code-block-copy,
-.code-block-select-all,
-.code-block-actions .plugin-code-done,
 .code-block-language-select {
   font: inherit;
   font-size: 0.72em;
@@ -209,19 +211,13 @@
 
 .block-pill:is(button):hover,
 .block-pill:focus-visible,
-.code-block-copy:hover,
-.code-block-copy:focus-visible,
-.code-block-select-all:hover,
-.code-block-select-all:focus-visible,
-.code-block-actions .plugin-code-done:hover,
 .code-block-language-select:hover,
 .code-block-language-select:focus-visible,
 .code-block-language-select[aria-expanded="true"] {
   color: var(--doc-text);
 }
 
-.block-pill.is-copied,
-.code-block-copy.is-copied {
+.block-pill.is-copied {
   color: var(--doc-accent-text);
 }
 

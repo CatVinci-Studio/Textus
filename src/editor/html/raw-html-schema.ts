@@ -12,13 +12,30 @@ export const rawHtmlSchema = $nodeSchema("html", () => ({
   marks: "",
   // Opaque: typing "*" inside raw HTML shouldn't make a bold md_span.
   code: true,
-  attrs: {},
-  parseDOM: [{ tag: 'span[data-type="html"]', preserveWhitespace: "full" }],
-  toDOM: () => ["span", { "data-type": "html", class: "raw-html-source" }, 0],
+  // Verbatim (remark-verbatim): a document type's own syntax, never drawn.
+  attrs: { verbatim: { default: false } },
+  parseDOM: [
+    {
+      tag: 'span[data-type="html"]',
+      preserveWhitespace: "full",
+      getAttrs: (dom) => ({ verbatim: dom.hasAttribute("data-verbatim") }),
+    },
+  ],
+  toDOM: (node) => [
+    "span",
+    {
+      "data-type": "html",
+      class: "raw-html-source",
+      ...(node.attrs.verbatim ? { "data-verbatim": "" } : {}),
+    },
+    0,
+  ],
   parseMarkdown: {
     match: (node) => node.type === "html",
     runner: (state, node, type) => {
-      state.openNode(type);
+      state.openNode(type, {
+        verbatim: !!(node.data as { verbatim?: boolean } | undefined)?.verbatim,
+      });
       if (node.value) state.addText(node.value as string);
       state.closeNode();
     },

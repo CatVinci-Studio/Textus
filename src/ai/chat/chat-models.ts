@@ -3,8 +3,13 @@ import {
   useProviderCatalog,
   type ProviderCatalogEntry,
 } from "../provider-catalog";
-import { readFetchedModels } from "../model-info";
-import { localizedLabel, useConnectedProviders } from "../provider-connection";
+import { readFetchedModels, useModelsFetched } from "../model-info";
+import { signInChatModels } from "../sign-in-models";
+import {
+  isReady,
+  localizedLabel,
+  useConnectedProviders,
+} from "../provider-connection";
 import { useExternalAgents } from "../../plugins/contributions/agents";
 import {
   useAgentOptions,
@@ -35,7 +40,15 @@ export function modelChoices(
   chosen: Record<string, string>,
   fetched: string[] = [],
   inUse = true,
+  signIn: string[] | null = null,
 ): string[] {
+  // A sign-in takes only its own models, as Settings offers them.
+  if (signIn) {
+    const current = chatModel(entry, chosen);
+    return [
+      ...new Set([...(signIn.includes(current) ? [current] : []), ...signIn]),
+    ];
+  }
   const own = entry.knownModels.length > 0 || !!entry.agentDefaultModel;
   const current = own || inUse ? chatModel(entry, chosen) : "";
   return [
@@ -81,13 +94,10 @@ export function useChatModels(): ChatModels {
   const { connected } = useConnectedProviders(catalog, settings.aiProvider);
   const active = catalog.find((e) => e.id === settings.aiProvider);
   const ready = catalog.filter(
-    (e) =>
-      e.id === settings.aiProvider ||
-      connected[e.id]?.oauth ||
-      connected[e.id]?.apiKey ||
-      (e.keyOptional && e.id !== "custom"),
+    (e) => e.id === settings.aiProvider || isReady(e, connected[e.id]),
   );
   const chosen = settings.agentModels;
+  useModelsFetched();
   const agents = useExternalAgents();
   const agent = agents.find((a) => a.key === settings.chatAgent);
   const agentOptions = useAgentOptions(agent?.key ?? null);
@@ -101,6 +111,7 @@ export function useChatModels(): ChatModels {
         chosen,
         readFetchedModels(entry.id)?.models,
         entry.id === settings.aiProvider,
+        connected[entry.id]?.oauth ? signInChatModels(entry.id) : null,
       ),
     }))
     .filter((group) => group.models.length > 0);
@@ -139,7 +150,8 @@ export function useAiSignedIn(): boolean | null {
   if (agents.some((a) => a.key === settings.chatAgent)) return true;
   const active = catalog.find((e) => e.id === settings.aiProvider);
   if (!active) return null;
-  if (active.keyOptional && active.id !== "custom") return true;
   const state = connected[active.id];
-  return state ? state.oauth || state.apiKey : null;
+  if (isReady(active, state)) return true;
+  // A check that couldn't answer (null) isn't a no.
+  return state && state.apiKey !== null ? false : null;
 }

@@ -3,6 +3,7 @@ import { shownIsland } from "./store";
 import { onAppearance } from "../tokens/appearance";
 import { useSyncExternalStore } from "react";
 import { scaledPx } from "../tokens/chrome-scale";
+import { isMobileApp } from "../../platform/capabilities";
 import { setStripOrigins } from "../controls/tabs/tab-strips";
 import {
   frameLayout,
@@ -15,6 +16,11 @@ const AIR = 8;
 /** Bare bar kept before the window's own controls, however many tabs:
  *  somewhere to grab the window by. */
 const GRIP = 62;
+
+/** The grip kept now: none on a phone or tablet, with no window to grab. */
+export function barGrip(): number {
+  return isMobileApp ? 0 : scaledPx(GRIP);
+}
 /** Room a row keeps for its tabs before any grip: one tab at its least
  *  (TabBar.css) and the row's + and list. */
 const ROOM = 132;
@@ -222,7 +228,7 @@ function insetsFor(
     inBar ? statusStart : Infinity,
     air,
     Math.max(air, bar.corner),
-    scaledPx(GRIP),
+    barGrip(),
     scaledPx(ROOM),
   );
   const shown = island ? shownIsland(island.paneId) : null;

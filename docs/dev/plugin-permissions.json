@@ -63,6 +63,9 @@
       "metadata.tags",
       "metadata.tasks",
       "metadata.search",
+      "git.status",
+      "git.log",
+      "git.show",
       "files.readText",
       "metadata.",
       "files.writeText",
@@ -119,6 +122,12 @@
     "calls": [
       "appearance.setColors",
       "appearance.clear"
+    ]
+  },
+  {
+    "permission": "git.commit",
+    "calls": [
+      "git.commit"
     ]
   },
   {

@@ -63,7 +63,7 @@
       .inline-chat-attach,
       .inline-chat-toggle:not(.is-active),
       .inline-chat-header-button,
-      .quick-ask-pending-nav-button
+      .quick-ask-pending-nav .tx-icon-button
     ):not(:disabled, :active):hover {
     background: transparent;
     color: var(--ui-muted);
@@ -92,7 +92,7 @@
       .inline-chat-attach,
       .inline-chat-toggle,
       .inline-chat-header-button,
-      .quick-ask-pending-nav-button,
+      .quick-ask-pending-nav .tx-icon-button,
       .inline-chat-action:not(.inline-chat-action-primary),
       .inline-chat-skill-item
     ):active {

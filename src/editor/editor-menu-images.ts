@@ -1,6 +1,7 @@
 import { editorViewCtx } from "@milkdown/kit/core";
 import { NodeSelection } from "@milkdown/kit/prose/state";
 import { imageWidthOf, withImageWidth } from "./images/image-html";
+import { IMAGE_WIDTHS } from "./images/image-widths";
 import { turnedTitle } from "./images/image-rotation";
 import { openDiagramViewer } from "./diagram-zoom";
 import { revealNearest, type ImageLocation } from "./images/missing-image";
@@ -90,10 +91,9 @@ export function imageWidthItems(
   });
   return [
     widthItem(null, t.imageWidthAuto),
-    widthItem(30, t.imageWidth30),
-    widthItem(50, t.imageWidth50),
-    widthItem(70, t.imageWidth70),
-    widthItem(100, t.imageWidth100),
+    ...IMAGE_WIDTHS.map((percent) =>
+      widthItem(percent, t[`imageWidth${percent}`]),
+    ),
   ];
 }
 

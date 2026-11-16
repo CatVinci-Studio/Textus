@@ -15,6 +15,7 @@ import type {
 } from "mdast-util-from-markdown";
 import type { Options as ToMarkdownExtension } from "mdast-util-to-markdown";
 import type { Literal } from "mdast";
+import { WIKILINK_SOURCE } from "../../utils/note-link";
 
 /**
  * Obsidian's wikilinks (`[[Note]]`, `[[Note|text]]`, `[[Note#Heading]]`),
@@ -163,7 +164,7 @@ export const wikilinkInputRule = $inputRule(
     }),
 );
 
-const WHOLE_WIKILINK = /(^|[^!])(\[\[[^[\]\n]+\]\])/g;
+const WHOLE_WIKILINK = new RegExp(`(^|[^!])(${WIKILINK_SOURCE})`, "g");
 
 /** `[[...]]` put in as text in one go - a completion taken - made the
  *  wikilinks typing their last "]" makes, so a save keeps their brackets. */

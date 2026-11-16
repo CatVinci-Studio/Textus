@@ -173,7 +173,7 @@ para usar una.
   revisionDisplayOriginal: "Original en el texto, cambios en el margen",
   revisionDisplayFinal: "Solo el resultado, original en el margen",
   splitNoRoom:
-    "No hay espacio para dividir: ensancha la ventana o cierra la barra lateral o una división",
+    "No cabe otra división: la ventana es demasiado estrecha. Ensánchala o cierra una división.",
   revisionDisplayNoRoom:
     "No hay espacio: cierra la barra lateral o el panel de IA",
   proposalDeletedSentence: "Original",
@@ -852,7 +852,7 @@ para usar una.
   conventionsEu: "Instituciones de la UE",
   agentAttachFile:
     "Adjuntar archivos: documentos, PDF, imágenes, código, un zip… cualquier archivo",
-  chatAttachmentTruncated: "(recortado)",
+  chatAttachmentTruncated: "(largo: se lee por partes)",
   chatAttachmentNoVision: `Este proveedor no puede leer imágenes. Cambia de proveedor en Ajustes › ${AI_NAME} o adjunta un documento.`,
   aiGrammarLabel: "Revisión gramatical",
   aiAskLabel: `Chat de ${AI_NAME}`,
@@ -1304,7 +1304,7 @@ para usar una.
   proposalRelocate: "Pedir a la IA que rehaga este cambio",
   diffShow: "Mostrar diferencias",
   diffCollapse: "Mostrar menos",
-  chatPendingSummary: "Cambios por revisar: {n}",
+  chatPendingSummary: "Cambios por revisar:\u00a0{n}",
   chatPendingReveal: "Mostrar en el documento",
   quickAskPosition: "{i} / {n}",
   quickAskPrevEdit: "Cambio anterior",
@@ -1851,7 +1851,7 @@ para usar una.
   conventionsDecline: "Mantener el actual",
   pluginCardSystemApp: "Abrir con la app del sistema",
   pluginCardNever: "No volver a sugerir",
-  pluginCardsMuted: "Sugerencias de plugins desactivadas: {n}",
+  pluginCardsMuted: "Sugerencias de plugins desactivadas:\u00a0{n}",
   pluginCardsRestore: "Mostrar de nuevo",
   pluginCardsRestoreAll: "Mostrar de nuevo las sugerencias de plugins ocultas",
   pluginScreenshot: "{name} en uso",
@@ -1919,6 +1919,7 @@ para usar una.
   pluginPermAiTools: "Dar a Textus AI herramientas propias para usar",
   pluginPermNotifications: "Mostrar notificaciones del sistema",
   pluginPermAppearance: "Cambiar los colores de Textus y de tus documentos",
+  pluginPermGitCommit: "Hacer commits de Git en la carpeta abierta con tu Git",
   pluginPermAgents:
     "Ejecutar un agente de IA instalado en este ordenador (puede leer y cambiar archivos)",
   pluginPermBackground:
@@ -1926,6 +1927,7 @@ para usar una.
   pluginScheduleNotice:
     "{name} programó una tarea. Solo se ejecuta mientras Textus está abierto: activa «{setting}» para que también se ejecute con todas las ventanas cerradas.",
   pluginPermNetwork: "Conectarse a {host}",
+  pluginPermHidden: "Leer {path} en la carpeta abierta",
   pluginPermCommands: "Ejecutar los comandos de {plugin}",
   pluginPermNetworkAny: "Conectarse a cualquier sitio web",
   menuPlugins: "Complementos",

@@ -1,4 +1,4 @@
-import { setFrameLayout, setLayoutFits } from "./frame-store";
+import { setFrameLayout, setLayoutFits, type RoomCheck } from "./frame-store";
 import type { LayoutNode } from "../layout/tree";
 import { useLayoutEffect, useRef, type RefObject } from "react";
 import { gripHeld } from "./grip";
@@ -26,8 +26,8 @@ export function useIslandFrame(
   islands: readonly PlacedIsland[],
   /** The width they need at the least (frame-store's need). */
   need: number,
-  /** Whether another layout would fit this area (frame-store). */
-  fits: (root: LayoutNode) => boolean,
+  /** How another layout would fit this area (frame-store). */
+  fits: (root: LayoutNode) => RoomCheck,
 ): void {
   const last = useRef<{
     shell: IslandRoom["shell"];

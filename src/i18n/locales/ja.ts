@@ -149,7 +149,7 @@ ${AI_NAME}への執筆の指示です。すべての文書に適用されます�
   revisionDisplayOriginal: "本文に元の文、修正は余白に",
   revisionDisplayFinal: "結果だけ、元の文は余白に",
   splitNoRoom:
-    "分割する余裕がありません。ウィンドウを広げるか、サイドバーや分割を閉じてください",
+    "これ以上分割できません：ウインドウの幅が足りません。ウインドウを広げるか、分割を 1 つ閉じてください。",
   revisionDisplayNoRoom:
     "余白が足りません：サイドバーか AIパネルを閉じてください",
   proposalDeletedSentence: "元の文",
@@ -795,7 +795,7 @@ ${AI_NAME}への執筆の指示です。すべての文書に適用されます�
   conventionsEu: "EU 機関",
   agentAttachFile:
     "ファイルを添付：文書、PDF、画像、コード、zip など、どんなファイルでも",
-  chatAttachmentTruncated: "（一部のみ）",
+  chatAttachmentTruncated: "（長文：分けて読みます）",
   chatAttachmentNoVision: `このプロバイダーは画像を読めません。「設定 › ${AI_NAME}」でプロバイダーを変更するか、文書を添付してください。`,
   aiGrammarLabel: "文法チェック",
   aiAskLabel: `${AI_NAME} チャット`,
@@ -1802,6 +1802,7 @@ ${AI_NAME}への執筆の指示です。すべての文書に適用されます�
   pluginPermAiTools: "Textus AI に独自のツールを提供する",
   pluginPermNotifications: "システム通知を表示する",
   pluginPermAppearance: "Textus と文書の色を変更する",
+  pluginPermGitCommit: "自分の Git で、開いているフォルダにコミットする",
   pluginPermAgents:
     "このコンピュータにインストールされた AI エージェントを実行する（ファイルの読み取りと変更ができます）",
   pluginPermBackground:
@@ -1809,6 +1810,7 @@ ${AI_NAME}への執筆の指示です。すべての文書に適用されます�
   pluginScheduleNotice:
     "{name} が予定を設定しました。Textus の実行中にだけ動きます。「{setting}」をオンにすると、すべてのウインドウを閉じていても動きます。",
   pluginPermNetwork: "{host} に接続する",
+  pluginPermHidden: "開いているフォルダの {path} を読む",
   pluginPermCommands: "{plugin} のコマンドを実行",
   pluginPermNetworkAny: "任意のウェブサイトに接続する",
   menuPlugins: "プラグイン",

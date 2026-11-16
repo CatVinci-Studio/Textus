@@ -2,6 +2,7 @@ import { readFileSync } from "node:fs";
 import { join } from "node:path";
 import { expect, test } from "@playwright/test";
 import { pluginsCheckout } from "../vite.dev-plugins";
+import { mockInvoke, openApp } from "./helpers";
 import {
   hasPlugin,
   minimalDocx,
@@ -76,4 +77,50 @@ test("each official plugin's file opens in a tab of its own, drawn", async ({
     ).toBeVisible();
   }
   await expect(page.locator(".plugin-webview-problem")).toHaveCount(0);
+});
+
+test("a text file no plugin opens shows read-only, not as Markdown to rewrite", async ({
+  page,
+}) => {
+  await page.addInitScript(() => {
+    const w = window as unknown as Record<string, unknown>;
+    w.__devFs = {
+      "/work/all.base": "views:\n  - type: table\n    name: All\n",
+    };
+  });
+  await openApp(page);
+  // No catalog: no plugin to offer for it.
+  await mockInvoke(page, { plugin_catalog: [], plugin_catalog_cached: [] });
+  await openPath(page, "/work/all.base");
+  const editor = page.locator('[data-active-tab="true"] .ProseMirror');
+  await expect(editor).toContainText("views");
+  await expect(editor).toHaveAttribute("contenteditable", "false");
+});
+
+test("a plugin's page is in the UI's language, and changes with it", async ({
+  page,
+}) => {
+  test.skip(!hasPlugin("catvinci.kanban"), "no plugins checkout");
+  await openWithPlugins(page, {
+    plugins: { "catvinci.kanban": permissions("catvinci.kanban") },
+    folder: {
+      "/work/notes/board.md":
+        "---\nkanban-plugin: board\n---\n\n## Todo\n\n- [ ] Outline\n",
+    },
+  });
+  await openPath(page, "/work/notes/board.md");
+  const frame = page.frameLocator(
+    '[data-active-tab="true"] .plugin-webview-frame',
+  );
+  await expect(frame.locator("html")).toHaveAttribute("lang", "en");
+  await page.evaluate(() => {
+    const key = "catvinci-settings";
+    const next = JSON.stringify({
+      ...JSON.parse(localStorage.getItem(key) ?? "{}"),
+      language: "de",
+    });
+    localStorage.setItem(key, next);
+    window.dispatchEvent(new StorageEvent("storage", { key, newValue: next }));
+  });
+  await expect(frame.locator("html")).toHaveAttribute("lang", "de");
 });

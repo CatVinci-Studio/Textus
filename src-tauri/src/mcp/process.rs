@@ -27,7 +27,7 @@ pub(crate) fn start(
     let resolved = super::path::find_program(program, &path).ok_or_else(|| {
         format!("`{program}` isn't installed, or isn't on the PATH Textus sees ({path})")
     })?;
-    let mut command = tokio::process::Command::new(resolved);
+    let mut command = tokio::process::Command::from(super::path::quiet_command(resolved));
     command
         .args(args)
         .env("PATH", &path)
@@ -39,9 +39,6 @@ pub(crate) fn start(
     if let Some(cwd) = cwd.filter(|c| std::path::Path::new(c).is_dir()) {
         command.current_dir(cwd);
     }
-    // No console window flashing up for it.
-    #[cfg(windows)]
-    command.creation_flags(0x0800_0000);
     let mut child = command
         .spawn()
         .map_err(|e| format!("couldn't start `{program}`: {e}"))?;

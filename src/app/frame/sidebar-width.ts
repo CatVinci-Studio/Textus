@@ -1,13 +1,8 @@
-import { useIslandsNeed } from "../../engine/frame/frame-store";
 import { chromeScale } from "../../engine/tokens/chrome-scale";
 import { placeSidebar } from "./useSidebarFrame";
 import { useCallback, useState } from "react";
 import { getUiState, setUiState } from "../../storage/ui-state";
-import {
-  clampSidePanel,
-  sidePanelMax,
-  sidePanelMin,
-} from "../../engine/controls/side-panel-width";
+import { useSidePanelWidth } from "../../engine/controls/side-panel-width";
 
 /** The sidebar's width as it comes, and the narrowest it can be dragged to:
  *  under this the tree's names are cut to a few letters. */
@@ -32,48 +27,31 @@ export function storedSidebarWidth(): number {
 export function useSidebarWidth(windowWidth: number, beside = 0) {
   // Kept in the interface's size units, shown at its size now.
   const [chosen, setChosen] = useState(storedSidebarWidth);
-  const scale = chromeScale();
-  // The islands beside it keep what they need at the least.
-  const keep = useIslandsNeed();
-  const width = clampSidePanel(
-    chosen * scale,
+  const { width, min, max, toBase } = useSidePanelWidth(
+    chosen,
     windowWidth,
     SIDEBAR_LIMITS,
     beside,
-    scale,
-    keep,
   );
   const setWidth = useCallback(
     (next: number, persist = true) => {
-      const step = chromeScale();
-      const base = Math.round(
-        clampSidePanel(next, windowWidth, SIDEBAR_LIMITS, beside, step, keep) /
-          step,
-      );
+      const base = toBase(next);
       // While the edge is held, only the shell's column and the sidebar
       // follow, written as their own (not inherited) widths: a variable
       // changed on the shell restyles everything in the window, the
       // document too, every frame. The variable takes over at the end.
-      holdWidth(persist ? null : base * step);
+      holdWidth(persist ? null : base * chromeScale());
       if (!persist) return;
       setChosen(base);
       setUiState("sidebarPx", base);
     },
-    [windowWidth, beside, keep],
+    [toBase],
   );
   const resetWidth = useCallback(() => {
     setChosen(SIDEBAR_DEFAULT_WIDTH);
     setUiState("sidebarPx", SIDEBAR_DEFAULT_WIDTH);
   }, []);
-  return {
-    width,
-    min: Math.round(
-      sidePanelMin(windowWidth, SIDEBAR_LIMITS, beside, scale, keep),
-    ),
-    max: sidePanelMax(windowWidth, SIDEBAR_LIMITS, beside, scale, keep),
-    setWidth,
-    resetWidth,
-  };
+  return { width, min, max, setWidth, resetWidth };
 }
 
 /** The column and the sidebar drawn at `width` px while a drag lasts;

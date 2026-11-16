@@ -3,6 +3,7 @@ import { beforeEach, describe, expect, it, vi } from "vitest";
 import { onPluginEvent } from "../app-bridge";
 import {
   closeFloating,
+  floatingBase,
   floatingSize,
   moveFloating,
   openFloatingViews,
@@ -59,6 +60,14 @@ describe("floating views", () => {
     const grown = floatingSize(view, 1.35);
     floatingSize(view).forEach((n, i) =>
       expect(Math.abs(grown[i] - n * 1.35)).toBeLessThanOrEqual(1),
+    );
+    // Its own window resizes from the size it is sent, at its scale: the
+    // first pull keeps the size it opened at.
+    moveFloating(view.view, { scale: 1.2 });
+    const scaled = showFloating(pet, false);
+    const base = floatingBase(scaled, 1.35);
+    expect(Math.round(base.width * base.scale)).toBe(
+      floatingSize(scaled, 1.35)[0],
     );
   });
 

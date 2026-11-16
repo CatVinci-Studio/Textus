@@ -101,6 +101,28 @@ describe("a plugin's manifest", () => {
       frontMatter: ["kanban-plugin"],
     });
     expect(() => board({})).toThrow(/filenamePatterns/);
+    // A document type: extensions bare and lowercase, Textus's own refused,
+    // nothing kept unless asked.
+    const types = (documentTypes: unknown) =>
+      parseManifest({ ...base, contributes: { documentTypes } }).contributes
+        .documentTypes;
+    expect(
+      types([
+        { extensions: [".QMD"] },
+        { extensions: ["rmd"], keep: { blockStarts: [":::"], braces: true } },
+      ]),
+    ).toEqual([
+      { extensions: ["qmd"], keep: null },
+      {
+        extensions: ["rmd"],
+        keep: { blockStarts: [":::"], braces: true, jsx: false },
+      },
+    ]);
+    expect(() => types([{ extensions: ["md"] }])).toThrow(/Textus's own/);
+    expect(() => types([{ extensions: [] }])).toThrow(/empty/);
+    expect(() =>
+      types([{ extensions: ["q"], keep: { braces: "yes" } }]),
+    ).toThrow(/true or false/);
     // Traditional Chinese reads the English, not the Simplified.
     expect(localize(m, m.contributes.commands[0].title, "zh-Hant")).toBe(
       "Say hello",

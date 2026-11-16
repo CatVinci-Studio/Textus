@@ -77,3 +77,20 @@ it("takes back a cut on its own", async () => {
   undoOnce(view);
   expect(view.state.doc.textContent).toBe("Start typed");
 });
+
+it("takes back a paste with what the editor added to it, in one step", async () => {
+  // A row a cell short: the table plugin adds the cell after the paste.
+  const view = await viewOf("| a | b |\n| - | - |\n| 1 | 2 |\n\nend");
+  const { schema, doc } = view.state;
+  const before = doc.toJSON();
+  const table = doc.firstChild!;
+  const row = schema.nodes.table_row!.create(null, [
+    schema.nodes.table_cell!.create(null, schema.nodes.paragraph!.create()),
+  ]);
+  view.dispatch(
+    view.state.tr.insert(table.nodeSize - 1, row).setMeta("uiEvent", "paste"),
+  );
+  expect(view.state.doc.firstChild!.lastChild!.childCount).toBe(2);
+  undoOnce(view);
+  expect(view.state.doc.toJSON()).toEqual(before);
+});

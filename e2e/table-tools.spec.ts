@@ -59,10 +59,6 @@ test("a row's grip picks the row, and pulled it moves the row; a column's the sa
     page,
     "| h | k |\n| --- | --- |\n| 1 | x |\n| 2 | y |\n| 3 | z |\n",
   );
-  page.on(
-    "console",
-    (m) => m.text().includes("GRIPDBG") && console.log(m.text()),
-  );
   const cell = (text: string) => table.locator("td", { hasText: text });
   await cell("3").hover();
   const grip = page.locator(".table-grip-row");
@@ -105,6 +101,32 @@ test("a row's grip picks the row, and pulled it moves the row; a column's the sa
   await page.locator(".table-grip-col").dispatchEvent("click");
   await expect(table.locator(".selectedCell")).toHaveCount(4);
   expect(await rowY()).toBe(before);
+});
+
+test("the grips sit at the middle of their row and column, the document zoomed too", async ({
+  page,
+}) => {
+  const table = await open(
+    page,
+    "| h | k |\n| --- | --- |\n| 1 | x |\n| 2 | y |\n| 3 | z |\n",
+  );
+  const middle = async (selector: string) => {
+    const b = (await page.locator(selector).boundingBox())!;
+    return { x: b.x + b.width / 2, y: b.y + b.height / 2 };
+  };
+  for (const zoom of ["1", "1.5"]) {
+    await page.evaluate(
+      (z) => document.documentElement.style.setProperty("--content-zoom", z),
+      zoom,
+    );
+    const cell = table.locator("td", { hasText: "y" });
+    await cell.hover();
+    const c = (await cell.boundingBox())!;
+    const row = await middle(".table-grip-row");
+    const col = await middle(".table-grip-col");
+    expect(Math.abs(row.y - (c.y + c.height / 2))).toBeLessThan(2);
+    expect(Math.abs(col.x - (c.x + c.width / 2))).toBeLessThan(2);
+  }
 });
 
 test("a click below a table that ends the document starts a paragraph there", async ({
@@ -173,5 +195,48 @@ test.describe("on a touch screen", () => {
       "width",
       "28px",
     );
+    // A press just inside a first-column cell is the cell's, not the grip's
+    // beside it (a long press there gave no Paste on iOS).
+    const cell = tables.nth(1).locator("td", { hasText: "3" });
+    await cell.tap();
+    const box = (await cell.boundingBox())!;
+    const hit = await page.evaluate(
+      ([x, y]) =>
+        document.elementFromPoint(x, y)?.closest("td, button")?.tagName,
+      [box.x + 6, box.y + box.height / 2],
+    );
+    expect(hit).toBe("TD");
+  });
+
+  test("the row grip follows the caret after a pasted row is undone", async ({
+    page,
+  }) => {
+    const table = await open(
+      page,
+      "| h | k |\n| --- | --- |\n| a1 | a2 |\n| b1 | b2 |\n| c1 | c2 |\n",
+    );
+    const gripAtCaret = () =>
+      page.evaluate(() => {
+        const grip = document.querySelector(".table-grip-row")!;
+        const sel = getSelection()!.anchorNode;
+        const cell = (
+          sel instanceof Element ? sel : sel?.parentElement
+        )?.closest("td, th");
+        if (!cell) return "no caret cell";
+        const g = grip.getBoundingClientRect();
+        const c = cell.getBoundingClientRect();
+        return Math.abs(g.top + g.height / 2 - (c.top + c.height / 2)) < 2
+          ? "at caret"
+          : `grip ${g.top} vs ${cell.textContent}`;
+      });
+    await table.locator("td", { hasText: "c1" }).tap();
+    await table.locator("td", { hasText: "a1" }).tap();
+    await pasteMarkdown(page, "w1\tw2");
+    await expect(table.locator("td", { hasText: "w1" })).toHaveCount(1);
+    await page.keyboard.press(
+      process.platform === "darwin" ? "Meta+z" : "Control+z",
+    );
+    await expect(table.locator("td", { hasText: "w1" })).toHaveCount(0);
+    await expect.poll(gripAtCaret).toBe("at caret");
   });
 });

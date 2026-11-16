@@ -15,7 +15,7 @@ fn the_generated_table_knows_the_pinned_models() {
         }
     );
     assert_eq!(
-        model_reasoning("mistral", "mistral-large-latest"),
+        model_reasoning("mistral", "codestral-latest"),
         ModelReasoning::No
     );
     assert_eq!(

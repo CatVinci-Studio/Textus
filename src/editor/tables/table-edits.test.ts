@@ -9,7 +9,8 @@ import {
   sharedAlignment,
   tableSize,
 } from "./table-edits";
-import { runTableAction } from "../editor-menu-tables";
+import { runTableAction, tableLayoutItems } from "../editor-menu-tables";
+import type { Strings } from "../../i18n/strings";
 
 afterEach(closeViews);
 
@@ -67,6 +68,20 @@ describe("the table's own tools", () => {
     t.view.dispatch(alignColumns(t.view.state.tr, pos, [1], "right"));
     expect(lines(t)[1]).toMatch(/^\| :-+: \| -+: \|$/);
     expect(sharedAlignment(tableAt(t).node, [1])).toBe("right");
+    // The right-click menu aligns every picked column, as the tools do.
+    const { CellSelection } = await import("@milkdown/kit/prose/tables");
+    const cell = (text: string) => {
+      const $at = t.view.state.doc.resolve(t.caretAt(text));
+      return $at.before($at.depth - 1);
+    };
+    t.view.dispatch(
+      t.view.state.tr.setSelection(
+        CellSelection.create(t.view.state.doc, cell("a"), cell("b")),
+      ),
+    );
+    const items = tableLayoutItems((fn) => t.editor.action(fn), {} as Strings);
+    (items[0] as { onSelect: () => void }).onSelect();
+    expect(sharedAlignment(tableAt(t).node, [0, 1])).toBe("left");
   });
 
   it("grows at its end, new rows aligned as their columns, new columns plain", async () => {
@@ -104,6 +119,26 @@ describe("the table's keys and pastes", () => {
     expect(lines(t)[0]).toBe("| h | k |");
     t.press("Alt+ArrowRight");
     expect(lines(t)[0]).toBe("| k | h |");
+  });
+
+  it("iOS's own new line at a line's end before a table is refused, leaving prosemirror's Enter", async () => {
+    const t = await openView(`line\n\n${ROWS}`);
+    const input = (t.view as unknown as { input: { lastIOSEnter: number } })
+      .input;
+    const enter = () => {
+      input.lastIOSEnter = Date.now();
+      const event = new InputEvent("beforeinput", {
+        inputType: "insertParagraph",
+        bubbles: true,
+        cancelable: true,
+      });
+      t.view.dom.dispatchEvent(event);
+      return event.defaultPrevented;
+    };
+    t.caretAt("line", 4);
+    expect(enter()).toBe(true);
+    t.caretAt("line", 2);
+    expect(enter()).toBe(false);
   });
 
   it("Backspace on a picked row takes it out", async () => {
@@ -181,6 +216,42 @@ describe("the table's keys and pastes", () => {
     expect(t.view.state.doc.firstChild!.childCount).toBeGreaterThan(3);
     t.press("Mod+z");
     expect(body(t)).toEqual(["| 1 | x |", "| 2 | y |"]);
+  });
+
+  it("a whole wider table pasted with its HTML fills from the caret's cell, as its Markdown does, in one Undo", async () => {
+    const wide = "| a | | d |\n| - | - | - |\n| e | b | |\n\n";
+    const t = await openView(wide + ROWS);
+    const { tableCopy } = await import("../clipboard/table-clipboard");
+    const { serializerCtx } = await import("@milkdown/kit/core");
+    const { markdown, html } = tableCopy(
+      t.view,
+      t.view.state.doc.firstChild!,
+      t.editor.ctx.get(serializerCtx),
+    );
+    t.caretAt("2");
+    t.paste(markdown, html);
+    const second = () => t.markdown().split("\n\n")[1]!.split("\n");
+    expect(second().map((l) => l.replace(/ +/g, " "))).toEqual([
+      "| h | k | |",
+      "| - | - | - |",
+      "| 1 | x | |",
+      "| a | | d |",
+      "| e | b | |",
+    ]);
+    // The caret stays in the cell the paste began at.
+    expect(t.caretLine()).toBe("|a");
+    t.press("Mod+z");
+    expect(t.markdown()).toBe(wide + ROWS);
+  });
+
+  it("a copied row pasted as iOS gives it, its empty last cell gone from the HTML, goes in as a row", async () => {
+    const t = await openView(ROWS);
+    t.caretAt("1");
+    t.paste(
+      "c1\t",
+      '<table data-pm-slice="1 1 -2 []"><tbody><tr><td>c1</td></tr></tbody></table>',
+    );
+    expect(body(t)).toEqual(["| 1 | x |", "| c1 | |", "| 2 | y |"]);
   });
 
   it("a copied row pasted as the phone gives it, its text alone, goes in as a row", async () => {

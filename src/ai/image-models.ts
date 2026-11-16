@@ -1,5 +1,6 @@
 import { useEffect, useState } from "react";
-import { ai, auth } from "../platform/ipc";
+import { ai } from "../platform/ipc";
+import { useSignedIn } from "./provider-connection";
 import type { Settings } from "../prefs/SettingsContext";
 import type { ImageProviderEntry_Serialize } from "../platform/bindings/ai-agent";
 
@@ -36,20 +37,7 @@ function followingChat(
 }
 
 /** Whether a ChatGPT sign-in is kept, for following an OpenAI chat. */
-export function useChatGptSignedIn(): boolean {
-  const [signedIn, setSignedIn] = useState(false);
-  useEffect(() => {
-    let live = true;
-    void auth
-      .oauthStatus("openai")
-      .then((status) => live && setSignedIn(!!status?.configured))
-      .catch(() => {});
-    return () => {
-      live = false;
-    };
-  }, []);
-  return signedIn;
-}
+export const useChatGptSignedIn = (): boolean => useSignedIn("openai");
 
 /** The image service these settings make pictures with (the chosen one, or
  *  the chat provider's while following it), or null. */

@@ -81,19 +81,3 @@ export function readTabOrder(docs: string | null = null): TabOrder {
 /** The documents the order had saved and open. */
 export const savedPaths = (order: TabOrder): string[] =>
   order.keys.filter((k) => k.startsWith("path:")).map((k) => k.slice(5));
-
-/** `tabs` with those the order knows put back in its order, in the places
- *  they took; the others stay where they are. */
-export function inOrder<T>(
-  tabs: readonly T[],
-  keyOf: (tab: T) => string,
-  keys: readonly string[],
-): T[] {
-  const rank = new Map(keys.map((k, i) => [k, i]));
-  const rankOf = (tab: T) => rank.get(keyOf(tab)) ?? -1;
-  const sorted = tabs
-    .filter((tab) => rankOf(tab) >= 0)
-    .sort((a, b) => rankOf(a) - rankOf(b));
-  let next = 0;
-  return tabs.map((tab) => (rankOf(tab) >= 0 ? sorted[next++]! : tab));
-}

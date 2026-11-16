@@ -132,6 +132,26 @@ describe("typing in a link", () => {
     expect(t.markdown()).toBe("A y[b](u)x c");
   });
 
+  it("typed after a destination with spaces goes in by the editor, the link kept", async () => {
+    const t = await open("A [b](my%20file.md) c");
+    const { pos, node } = firstLink(t.view.state.doc);
+    caret(t.view, pos + node.nodeSize - 1);
+    // What iOS's keyboard sends; left to the page, it was read back in pieces.
+    const space = new InputEvent("beforeinput", {
+      inputType: "insertText",
+      data: " ",
+      bubbles: true,
+      cancelable: true,
+    });
+    t.view.dom.dispatchEvent(space);
+    expect(space.defaultPrevented).toBe(true);
+    t.type("z");
+    expect(firstLink(t.view.state.doc).node.textContent).toBe(
+      "[b](my%20file.md)",
+    );
+    expect(t.markdown()).toBe("A [b](my%20file.md) z c");
+  });
+
   it('"!" typed before it makes an image of it once the caret leaves', async () => {
     const t = await open("A [b](u.png) c");
     caret(t.view, firstLink(t.view.state.doc).pos + 1);

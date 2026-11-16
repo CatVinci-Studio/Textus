@@ -100,3 +100,38 @@ fn three_secret_free_hidden_files_are_readable_and_nothing_else_in_git() {
     assert!(!paths::read_only_hidden("/v", ".env"));
     assert!(!paths::read_only_hidden("/v", "sub/.git/HEAD"));
 }
+
+#[cfg(unix)]
+#[test]
+fn a_hidden_file_granted_by_name_is_readable_and_only_that() {
+    let tmp = tempfile::tempdir().unwrap();
+    let root = tmp.path();
+    std::fs::create_dir_all(root.join(".vitepress")).unwrap();
+    std::fs::write(root.join(".vitepress/config.ts"), "export default {}").unwrap();
+    std::fs::write(root.join(".env"), "TOKEN=x").unwrap();
+    std::os::unix::fs::symlink(root.join(".env"), root.join(".vitepress/env.ts")).unwrap();
+    let state: PluginsState = serde_json::from_value(serde_json::json!({
+        "plugins": { "a.b": { "enabled": true, "granted": [
+            "files.write",
+            "hidden:.vitepress/config.ts",
+            "hidden:.vitepress/env.ts",
+        ] } }
+    }))
+    .unwrap();
+    let at = |permission: &str, path: &str| {
+        folder_path(&state, "a.b", permission, &root.to_string_lossy(), path)
+    };
+    assert!(at("files.read", ".vitepress/config.ts").is_ok());
+    // Read only; not another plugin's grant; not through a link to .env.
+    assert!(at("files.write", ".vitepress/config.ts").is_err());
+    assert!(folder_path(
+        &state,
+        "c.d",
+        "files.read",
+        &root.to_string_lossy(),
+        ".vitepress/config.ts"
+    )
+    .is_err());
+    assert!(at("files.read", ".vitepress/env.ts").is_err());
+    assert!(at("files.read", ".env").is_err());
+}

@@ -8,6 +8,7 @@ import {
   TABLE_ACTION_EVENT,
 } from "../utils/events";
 import { GROUPS, type Button } from "./format-buttons";
+import { IMAGE_WIDTHS } from "../editor/images/image-widths";
 
 /*
  * The format bar on a phone (design: phone, typing): undo first, as a phone
@@ -21,8 +22,6 @@ const UNDO: Button = {
   event: EDIT_ACTION_EVENT,
   detail: "undo",
 };
-
-const IMAGE_WIDTHS = [30, 50, 70, 100] as const;
 
 function tableButton(
   action: TableAction,

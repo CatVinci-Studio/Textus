@@ -145,6 +145,7 @@ made when they are first shown.
 | `sidebarTabs`   | `{ id, title, type: "list" \| "webview", icon }`: a sidebar tab. A list is drawn by Textus from `views.registerList`; a webview is the plugin's page. The icon is an SVG drawn in the text colour.                                                                                                                                                                                                                                                                                                                                                                                                                                                   |
 | `views`         | `{ id, title, type }`: the same, opened in a tab of its own (`textus.layout.openView`).                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                              |
 | `customEditors` | `{ viewType, displayName, filenamePatterns: ["*.pdf"], frontMatter: ["kanban-plugin"], priority }`: a file type opened in the plugin's tab instead of as a document. `frontMatter` (from 1.3.10) claims Markdown documents whose front matter has one of the keys; `filenamePatterns` may then be left out.                                                                                                                                                                                                                                                                                                                                          |
+| `documentTypes` | `{ extensions: ["qmd"], keep: { blockStarts: [":::"], braces: true, jsx: false } }`: a file type opened as a document in Textus's own editor. `keep` names what of its syntax is shown as source and saved exactly as written: paragraphs starting with one of `blockStarts` (with the blocks after while a bracket is open), `{…}` with `braces`, JSX tags with `jsx`. Turned off, the plugin's files open read-only as text. Textus's own types (md, markdown, mdx, txt, text) can't be taken. From 1.4.3.                                                                                                                                         |
 | `codeBlocks`    | `{ language, title, frame, size }`: fenced blocks in that language drawn by the plugin (`views.registerCodeBlock`), in a box like a figure, or on the page with `frame: "none"`. With `size: "interface"` the block draws at the interface's text size instead of the document's and its zoom, for an overview (a table, a board) that shows more as the column widens. Textus's own languages (mermaid, math…) can't be taken.                                                                                                                                                                                                                      |
 | `suggestFor`    | `["wikilinks"]`: what a document can hold that the plugin works with. An official one is suggested, once, for a document that holds it while no installed plugin does.                                                                                                                                                                                                                                                                                                                                                                                                                                                                               |
 | `completions`   | `{ id, where: "math" \| "text" \| "any", pattern, title }`: completions as you type when what is before the caret matches `pattern` (`editor.registerCompletion`), grouped under `title` in the `/` panel. Needs `editor.read`.                                                                                                                                                                                                                                                                                                                                                                                                                      |
@@ -171,27 +172,33 @@ and `!`.
 A plugin asks for these in `permissions`; the user grants them when
 turning it on, or leaves it off, and can take each back later.
 
-| Permission       | Lets the plugin                                                                        |
-| ---------------- | -------------------------------------------------------------------------------------- |
-| `editor.read`    | read the document in front: its text, selection, blocks and outline; also completions  |
-| `editor.write`   | change it at once, each change one undo step                                           |
-| `editor.propose` | suggest changes to it, shown as Textus AI's are, accepted or rejected by the user      |
-| `editor.input`   | take the editor's keys and move, select and edit with them (Vim, Emacs)                |
-| `files.read`     | list, find and read files in the open folder, and what Textus knows of them (metadata) |
-| `files.write`    | create, change, rename and trash files in the open folder (reading them comes with it) |
-| `clipboard`      | read and write the clipboard                                                           |
-| `project.data`   | keep its own data in the open folder, in `.textus/plugins/<id>/`                       |
-| `ai.tools`       | give Textus AI tools to call                                                           |
-| `notifications`  | show system notifications, at once or on a schedule (API 1.1)                          |
-| `background`     | run its `background` code on a schedule, also with every window closed (API 1.1)       |
-| `agents`         | run the AI agents it names in `contributes.agents` (programs on this computer; 1.3.13) |
-| `appearance`     | change Textus's colours: a palette over the theme, the frame a gradient (API 1.6)      |
-| `network:<host>` | fetch from that host over HTTPS (`*.example.com`, `host:port`, `*` for the open web)   |
+| Permission       | Lets the plugin                                                                                     |
+| ---------------- | --------------------------------------------------------------------------------------------------- |
+| `editor.read`    | read the document in front: its text, selection, blocks and outline; also completions               |
+| `editor.write`   | change it at once, each change one undo step                                                        |
+| `editor.propose` | suggest changes to it, shown as Textus AI's are, accepted or rejected by the user                   |
+| `editor.input`   | take the editor's keys and move, select and edit with them (Vim, Emacs)                             |
+| `files.read`     | list, find and read files in the open folder, and what Textus knows of them (metadata)              |
+| `files.write`    | create, change, rename and trash files in the open folder (reading them comes with it)              |
+| `clipboard`      | read and write the clipboard                                                                        |
+| `project.data`   | keep its own data in the open folder, in `.textus/plugins/<id>/`                                    |
+| `ai.tools`       | give Textus AI tools to call                                                                        |
+| `notifications`  | show system notifications, at once or on a schedule (API 1.1)                                       |
+| `background`     | run its `background` code on a schedule, also with every window closed (API 1.1)                    |
+| `agents`         | run the AI agents it names in `contributes.agents` (programs on this computer; 1.3.13)              |
+| `appearance`     | change Textus's colours: a palette over the theme, the frame a gradient (API 1.6)                   |
+| `git.commit`     | commit files of the open folder with the user's git (1.4.3; reading Git history is `files.read`)    |
+| `network:<host>` | fetch from that host over HTTPS (`*.example.com`, `host:port`, `*` for the open web)                |
+| `hidden:<path>`  | read that hidden file of the open folder, named from its top: `hidden:.vitepress/config.ts` (1.4.3) |
 
 Ask for what the plugin's purpose explains, and no more: each permission
 is shown to the user, and a listing in Textus asks why for the broad ones.
 Files are reached only inside the open folder, never the app's own; plain
-HTTP goes only to this computer (`network:localhost:23119`).
+HTTP goes only to this computer (`network:localhost:23119`). Files and
+folders whose names start with "." are shut to plugins but for `.textus`,
+Obsidian's shared settings, `.gitignore`, `.git/HEAD` and those a plugin
+names with `hidden:`, read only; `.git`, `.env`, `.ssh`, keys and other
+plugins' storage can't be named.
 
 ## The code
 
@@ -452,6 +459,17 @@ exports.activate = async function (ctx) {
 `appearance.onDidChange` tells of another theme, scheme or plugin's
 colours - for a palette that depends on the theme underneath. Set
 `engines.textus` to `">=1.4.2"`.
+
+### Git history - `textus.git` (API 1.7)
+
+On the desktop, with git installed and the folder in a repository,
+`git.status()` gives the branch and the changed files, `git.log(path)` a
+file's commits through renames, and `git.show(hash, path)` the file as a
+commit had it; these need `files.read`. `git.commit(message, paths)`
+commits those files' changes only, through the user's own git (hooks,
+signing), and needs `git.commit`. Hidden files stay out, and nothing
+pushes, pulls or switches branches. Elsewhere `status()` is `null`. Set
+`engines.textus` to `">=1.4.3"`.
 
 ### The rest
 

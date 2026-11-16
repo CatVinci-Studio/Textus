@@ -1,4 +1,7 @@
-import { docMin } from "../frame/island-rules";
+import { useCallback } from "react";
+import { DOC_MIN } from "../frame/island-rules";
+import { useIslandsNeed } from "../frame/frame-store";
+import { chromeScale } from "../tokens/chrome-scale";
 /**
  * The one rule both side panels follow - the sidebar on the left and the AI
  * panel on the right: each keeps the width it was dragged to, but a window
@@ -39,7 +42,7 @@ export function sidePanelMax(
     Math.min(
       limits.max * scale,
       Math.floor(windowWidth * PANEL_SHARE),
-      windowWidth - beside - Math.max(keep, docMin()),
+      windowWidth - beside - Math.max(keep, DOC_MIN),
     ),
   );
 }
@@ -75,4 +78,40 @@ export function clampSidePanel(
       Math.max(sidePanelMin(windowWidth, limits, beside, scale, keep), width),
     ),
   );
+}
+
+/** A side panel's width now: `chosen` (in the interface's size units) as
+ *  shown at its size, the bounds its handle drags within, and a dragged
+ *  width in px turned back into the units to keep. The islands beside it
+ *  keep what they need at the least. */
+export function useSidePanelWidth(
+  chosen: number,
+  windowWidth: number,
+  limits: PanelLimits,
+  beside: number,
+) {
+  const keep = useIslandsNeed();
+  const scale = chromeScale();
+  const toBase = useCallback(
+    (next: number) => {
+      const step = chromeScale();
+      return Math.round(
+        clampSidePanel(next, windowWidth, limits, beside, step, keep) / step,
+      );
+    },
+    [windowWidth, limits, beside, keep],
+  );
+  return {
+    width: clampSidePanel(
+      chosen * scale,
+      windowWidth,
+      limits,
+      beside,
+      scale,
+      keep,
+    ),
+    min: Math.round(sidePanelMin(windowWidth, limits, beside, scale, keep)),
+    max: Math.round(sidePanelMax(windowWidth, limits, beside, scale, keep)),
+    toBase,
+  };
 }

@@ -26,7 +26,8 @@ import {
 import { paneById } from "../../engine/layout/tree";
 import { frameLayout } from "../../engine/frame/frame-store";
 import { setDragging } from "../../engine/controls/document-drop";
-import { commitDrop, dropLayout, roomMarks } from "./split-drop";
+import { commitDrop, dropPlan, roomMarks } from "./split-drop";
+import { sayNoRoom } from "../menu/split-here";
 import { liftIsland, type IslandLift } from "./island-lift";
 import "./split-drop.css";
 import { transientStyle } from "../../engine/tokens/appearance";
@@ -43,6 +44,8 @@ interface Place {
   next: SplitLayout | null | undefined;
   shown: SplitLayout | null;
   target?: DropTarget;
+  /** Aimed at an edge with no room for an island: it joins the one there. */
+  noRoom?: boolean;
 }
 
 /**
@@ -116,7 +119,7 @@ export function pullTab(
       };
     }
     if (!target) return null;
-    const next = dropLayout(base, tabId, target);
+    const { next, noRoom } = dropPlan(base, tabId, target);
     if (next === undefined) return null;
     const own = paneOf(base, tabId);
     const middle = target.zone === "center" ? paneOf(base, target.tabId) : null;
@@ -136,6 +139,7 @@ export function pullTab(
       // Joining: its slot at the row's end, the row's document in front.
       shown: pane ? joined(base, tabId, pane, end) : next,
       target,
+      noRoom,
     };
   };
 
@@ -241,6 +245,7 @@ export function pullTab(
           // The layout it showed, made: the same panes, so nothing jumps;
           // the pill lands where its room was.
           commitDrop(place.next);
+          if (place.noRoom) sayNoRoom();
           const room = marks.room();
           if (room && !lift) {
             ghost.land(room);

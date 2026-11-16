@@ -112,30 +112,31 @@ Values kept for one document.
 
 ## Api
 
-| Member                   |                                                                |
-| ------------------------ | -------------------------------------------------------------- |
-| `env: Env`               |                                                                |
-| `l10n: L10n`             |                                                                |
-| `commands: Commands`     |                                                                |
-| `ui: Ui`                 |                                                                |
-| `layout: Layout`         |                                                                |
-| `views: Views`           |                                                                |
-| `editor: Editor`         |                                                                |
-| `files: Files`           |                                                                |
-| `metadata: Metadata`     |                                                                |
-| `dates: Dates`           | From 1.3.10: no permission, nothing leaves the plugin's frame. |
-| `templates: Templates`   |                                                                |
-| `net: Net`               |                                                                |
-| `settings: Settings`     |                                                                |
-| `ai: Ai`                 |                                                                |
-| `plugins: Plugins`       |                                                                |
-| `uri: Uri`               |                                                                |
-| `export: Export`         |                                                                |
-| `schedule: Schedule`     | 1.1: jobs Textus fires on time (notifications, background).    |
-| `notify: Notify`         | 1.1: system notifications (notifications).                     |
-| `app: App`               | 1.1: whether Textus is in front, behind, or has no window.     |
-| `appearance: Appearance` | 1.6: colours over the theme (appearance).                      |
-| `text: Text`             | 1.7: text as the app reads it.                                 |
+| Member                   |                                                                                          |
+| ------------------------ | ---------------------------------------------------------------------------------------- |
+| `env: Env`               |                                                                                          |
+| `l10n: L10n`             |                                                                                          |
+| `commands: Commands`     |                                                                                          |
+| `ui: Ui`                 |                                                                                          |
+| `layout: Layout`         |                                                                                          |
+| `views: Views`           |                                                                                          |
+| `editor: Editor`         |                                                                                          |
+| `files: Files`           |                                                                                          |
+| `metadata: Metadata`     |                                                                                          |
+| `git: Git`               | From 1.4.3: the folder's Git history (files.read; committing, git.commit). Desktop only. |
+| `dates: Dates`           | From 1.3.10: no permission, nothing leaves the plugin's frame.                           |
+| `templates: Templates`   |                                                                                          |
+| `net: Net`               |                                                                                          |
+| `settings: Settings`     |                                                                                          |
+| `ai: Ai`                 |                                                                                          |
+| `plugins: Plugins`       |                                                                                          |
+| `uri: Uri`               |                                                                                          |
+| `export: Export`         |                                                                                          |
+| `schedule: Schedule`     | 1.1: jobs Textus fires on time (notifications, background).                              |
+| `notify: Notify`         | 1.1: system notifications (notifications).                                               |
+| `app: App`               | 1.1: whether Textus is in front, behind, or has no window.                               |
+| `appearance: Appearance` | 1.6: colours over the theme (appearance).                                                |
+| `text: Text`             | 1.7: text as the app reads it.                                                           |
 
 ## Env
 
@@ -630,6 +631,7 @@ Templates filled in as Obsidian's Templates core plugin and then the Templater p
 | `frontmatter: Frontmatter`                                                                                                                         |                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                     |
 | `onDidCreate: Event<{ path: string }>`                                                                                                             | A file a plugin made, and one the app made: a new document, a picture pasted or dropped, a note made by following a link, a file Textus AI wrote (from 1.4.2). A plugin's own path is as it gave it, the app's is whole.                                                                                                                                                                                                                                                                                                                                                                                            |
 | `onDidChange: Event<{ path: string }>`                                                                                                             |                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                     |
+| `onDidChangeOnDisk: Event<{ path: string; before: string; after: string }>`                                                                        | An open document's file was changed by something else - another app, a sync, git, an AI agent - and its tab took the new text: `before` is what it had saved, `after` what is on disk now, so a plugin keeping versions can record both. Its whole path. Files no tab holds aren't watched. From 1.4.3.                                                                                                                                                                                                                                                                                                             |
 | `onDidRename: Event<{ from: string; to: string }>`                                                                                                 |                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                     |
 | `onDidDelete: Event<{ path: string }>`                                                                                                             | A file or folder a plugin moved to the Trash, and from 1.4.2 one the sidebar did (its whole path).                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                  |
 | `onWillSave(listener: (e: WillSave) => string \| BlockEdit[] \| void \| Promise<string \| BlockEdit[] \| void>): Disposable`                       | A document is about to be saved (files.write). Plugins are asked one after another in plugin id order, each given the text as the one before left it, at most a second each. Return the blocks you changed (`{ block, markdown }`, by the ids in `blocks`) - only those are written back - or the whole text, which is written back block by block. Code, math, HTML and link definition blocks stay as the user wrote them, and each block keeps its line endings. A change that would change again when run a second time is skipped for this save. `trigger`, `blocks` and `BlockEdit[]` answers are from 1.3.9. |
@@ -696,6 +698,33 @@ A kind of periodic note: its folder (full path), file name format (moment.js tok
 | ------------------------------------------------------------------------------------------------------------------------ | ----------------------------------------------------------------- |
 | `get(path: string): Promise<Record<string, unknown>>`                                                                    | The YAML at the top of a document, as an object; {} for none.     |
 | `update(path: string, change: (frontmatter: Record<string, unknown>) => Record<string, unknown> \| void): Promise<void>` | Changes it through files.process; the rest of the file untouched. |
+
+## GitChange
+
+| Member                                                                                     |                                     |
+| ------------------------------------------------------------------------------------------ | ----------------------------------- |
+| `path: string`                                                                             |                                     |
+| `state: \| "modified" \| "added" \| "deleted" \| "renamed" \| "untracked" \| "conflicted"` |                                     |
+| `staged: boolean`                                                                          | In the index already (`git add`ed). |
+
+## GitCommit
+
+| Member            |                                                                 |
+| ----------------- | --------------------------------------------------------------- |
+| `hash: string`    |                                                                 |
+| `at: number`      | When it was committed, in ms since 1970.                        |
+| `author: string`  |                                                                 |
+| `subject: string` |                                                                 |
+| `path: string`    | The file's path in this commit; it may have been renamed since. |
+
+## Git
+
+| Member                                                                        |                                                                                                                                                           |
+| ----------------------------------------------------------------------------- | --------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| `status(): Promise<{ branch: string \| null; changes: GitChange[] } \| null>` | The branch (null when detached) and the changed files of the open folder; null when it is in no repository or git isn't there. Hidden files are left out. |
+| `log(path: string, options?: { limit?: number }): Promise<GitCommit[]>`       | `path`'s commits, newest first, through renames (100, at most 500).                                                                                       |
+| `show(hash: string, path: string): Promise<string \| null>`                   | The file as commit `hash` had it at `path` (a GitCommit's path); null when it had none there, or it isn't text.                                           |
+| `commit(message: string, paths: string[]): Promise<string>`                   | Commits the changes of `paths` only, with `message`, as the user's git does (hooks, signing): the new commit's hash. git.commit.                          |
 
 ## Metadata
 
@@ -980,5 +1009,5 @@ An item of a page's menu (`WebviewApi.menu`); `items` makes it a submenu (one le
 | `drag: { reorder(container: Element, options: { items: string; axis?: "x" \| "y"; handle?: string; onDrop(from: number, to: number): void; }): Disposable; }`                                      | From 1.7: a list dragged into a new order, the app's way: the item lifts, the others make room; `onDrop(from, to)` once let go somewhere new. `handle`: only from inside it. Esc puts it back.                                                                       |
 | `popover(content: Element, anchor: Element, options?: { label?: string; role?: string; align?: "start" \| "end" }): { element: Element; close(value?: unknown): void; closed: Promise<unknown>; }` | From 1.7: `content` in the window's floating card under `anchor` (above with no room), kept on screen; a press outside or Esc closes it, the focus back on `anchor`. `closed` resolves with what `close(value)` was given, null otherwise.                           |
 | `pickDate(value: string \| null, anchor: Element): Promise<string \| null>`                                                                                                                        | From 1.7: a month under `anchor` to pick a day on: "YYYY-MM-DD", or null when closed without one.                                                                                                                                                                    |
-| `monthDays(year: number, month: number): { date: string; day: number; inMonth: boolean; today: boolean }[]`                                                                                        | From 1.7: a month's 42 days from the week's first day in the UI language, for a calendar a page draws itself (`tx-calendar`).                                                                                                                                        |
+| `monthDays(year: number, month: number, options?: { weekStart?: number }): { date: string; day: number; inMonth: boolean; today: boolean }[]`                                                      | From 1.7: a month's 42 days from the week's first day in the UI language (or `weekStart`, 0 Sunday to 6 Saturday: a vault's own), for a calendar a page draws itself (`tx-calendar`).                                                                                |
 | `resizeHandle(handle: Element, options: { axis?: "x" \| "y"; min?: number; max?: number; get(): number; set(px: number): void; done?(px: number): void; }): Disposable`                            | From 1.7: an edge dragged (or moved with the arrow keys) to resize something: `get` the size now, `set` it as it moves, `done` at the end.                                                                                                                           |

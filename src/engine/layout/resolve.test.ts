@@ -96,7 +96,7 @@ describe("resolveSplit", () => {
     // in the update it arrives in; unsplit, it splits the window.
     const beside = (id: string) =>
       id === "n"
-        ? (now: SplitLayout) => besideLayout(now, "n", "a")
+        ? (now: SplitLayout) => besideLayout(now, "n", "a").next
         : undefined;
     const first = split([["a"], ["b"]], ["a", "b"], 0);
     expect(look(resolveSplit(first, null, ["a", "b", "n"], "n"))).toMatchObject(

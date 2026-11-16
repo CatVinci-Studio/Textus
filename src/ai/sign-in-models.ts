@@ -29,3 +29,12 @@ export const SIGN_IN_MODELS: Partial<Record<string, SignInModels>> = {
     writingDefault: "gpt-6-luna",
   },
 };
+
+/** The chat models a sign-in takes while it is the active login, its
+ *  default first; null for a provider without such a sign-in. */
+export function signInChatModels(provider: string): string[] | null {
+  const models = SIGN_IN_MODELS[provider];
+  return models
+    ? models.agent.map((option) => option.value || models.agentDefault)
+    : null;
+}

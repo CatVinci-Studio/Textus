@@ -4,6 +4,7 @@ import { onBack } from "./back";
 import { keyboardStaysDown } from "./keyboard-stays-down";
 import { OPEN_SETTINGS_PAGE_EVENT } from "../settings/settings-nav";
 import { androidBridge } from "../platform/android-bridge";
+import { across, swipeClaimed } from "../utils/gesture";
 
 /** How far a finger moves across before it counts as a swipe, and how near
  *  the left edge one must start to pull the sidebar in. */
@@ -66,13 +67,11 @@ export function usePushedSidebar(
     };
     const up = (e: TouchEvent) => {
       const t = e.changedTouches[0];
-      if (!start || !t) return;
-      const dx = t.clientX - start.x;
-      const across =
-        Math.abs(dx) > SWIPE &&
-        Math.abs(dx) > 2 * Math.abs(t.clientY - start.y);
-      if (across && shown.current && dx < 0) setOpen(false);
-      else if (across && !shown.current && dx > 0 && start.x < scaledPx(EDGE))
+      // The tab row's own swipe is the row's.
+      const dx = start && t && !swipeClaimed() ? across(start, t) : null;
+      const far = dx !== null && Math.abs(dx) > scaledPx(SWIPE);
+      if (far && shown.current && dx < 0) setOpen(false);
+      else if (far && !shown.current && dx > 0 && start!.x < scaledPx(EDGE))
         setOpen(true);
       start = null;
     };

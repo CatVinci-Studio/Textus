@@ -2,8 +2,7 @@
 //! matter, headings, links, tags and tasks, re-read only when a file's size or
 //! time changes. Built on the first request. Lines count from 0.
 
-use super::access::{in_folder, refused, require_not_app_data};
-use super::state;
+use super::access::{checked_root, in_folder};
 use crate::ai::doc_blocks::Document as DocBlocks;
 use regex::Regex;
 use serde::Serialize;
@@ -411,17 +410,6 @@ fn since(known: &RootIndex, since: Option<u64>) -> MetadataAll {
         documents,
         gone,
     }
-}
-
-/// The app's own AI tools (app_tools.rs) ask as `textus`, which no plugin is.
-fn checked_root(app: &tauri::AppHandle, id: &str, root: &str) -> Result<(), String> {
-    if id != super::app_tools::APP && !state::read(app).allows(id, "files.read") {
-        return Err(refused(id, "files.read"));
-    }
-    if root.is_empty() || !Path::new(root).is_dir() {
-        return Err(crate::errors::error("noFolder"));
-    }
-    require_not_app_data(app, Path::new(root))
 }
 
 /// The folder's documents and what they hold (blocks left out): every one

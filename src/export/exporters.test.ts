@@ -250,7 +250,14 @@ describe("buildStandaloneHtml", () => {
       expect(buildStandaloneHtml("a", "<p>x</p>", "")).toContain(
         '<html data-theme="dark" data-content-theme="paper">',
       );
+      // A one-design imported theme shows its light page, and its diagrams
+      // are drawn light: the export says light too.
+      root.setAttribute("data-light-page", "");
+      expect(buildStandaloneHtml("a", "<p>x</p>", "")).toContain(
+        '<html data-theme="light"',
+      );
     } finally {
+      root.removeAttribute("data-light-page");
       root.removeAttribute("data-theme");
       root.removeAttribute("data-content-theme");
     }

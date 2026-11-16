@@ -35,12 +35,8 @@ import {
 import { setPluginProject } from "../plugins/plugin-setting-values";
 import { watchTheme, windowIsDark } from "../plugins/views/theme-vars";
 import { usePluginMenuSync } from "../plugins/contributions/usePluginMenu";
-import {
-  besideLayout,
-  openBeside,
-  placeOnArrival,
-  tabInUse,
-} from "../engine/layout/store";
+import { placeOnArrival, tabInUse } from "../engine/layout/store";
+import { besideOrSay, openBesideOrSay } from "./menu/split-here";
 import {
   INSERT_BLOCK_EVENT,
   SHOW_FOLDER_EVENT,
@@ -127,10 +123,7 @@ export function usePluginWindow({
       const from = tabInUse();
       // Beside: its place taken as it arrives, never first drawn in front.
       if (where === "beside")
-        placeOnArrival(
-          made.id,
-          (now) => besideLayout(now, made.id, from) ?? now,
-        );
+        placeOnArrival(made.id, (now) => besideOrSay(now, made.id, from));
       // In its place only while nothing unsaved would go with it.
       const front = liveTabs().find((tab) => tab.id === from);
       const replace = where === "current" && !!front && !tabIsDirty(front);
@@ -185,7 +178,7 @@ export function usePluginWindow({
         if (open) {
           const from = tabInUse();
           setActiveTabId(open.id);
-          if (where === "beside") openBeside(open.id, from);
+          if (where === "beside") openBesideOrSay(open.id, from);
         } else addTab({ view }, where);
       },
       tabs: () => tabsRef.current.map(info),

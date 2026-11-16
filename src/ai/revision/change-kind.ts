@@ -1,4 +1,5 @@
 import { CJK_SCRIPT } from "../../utils/cjk";
+import { sharedEnds } from "../../utils/lcs";
 
 /** What kind of change a revision makes, read off its text alone. Only kinds
  *  narrow enough to become one requirement are named; most rewrites have none. */
@@ -228,16 +229,7 @@ function contractionKind(a: string, b: string): ChangeKind | null {
 function wordSwap(a: string, b: string): ChangeKind | null {
   const ca = [...a];
   const cb = [...b];
-  let start = 0;
-  while (start < ca.length && start < cb.length && ca[start] === cb[start])
-    start++;
-  let end = 0;
-  while (
-    end < ca.length - start &&
-    end < cb.length - start &&
-    ca[ca.length - 1 - end] === cb[cb.length - 1 - end]
-  )
-    end++;
+  let { start, end } = sharedEnds(ca, cb);
   // Out to whole words: "use" against "utilize" shares a "u".
   const wordAt = (chars: string[], i: number) =>
     i >= 0 &&

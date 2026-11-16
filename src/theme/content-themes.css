@@ -13,9 +13,12 @@
   --doc-quote-border: #b5652f;
   --doc-accent: #9a5628;
   --doc-code-bg: #f1e9d8;
-  /* The CJK faces follow <html lang>. */
+  /* Each system's own serif with even-height figures (Georgia's rise and
+     fall); the CJK faces follow <html lang>. */
   --doc-font:
-    var(--font-cjk-punct-serif), Georgia, var(--font-cjk-serif), serif;
+    var(--font-cjk-punct-serif), Charter, "Bitstream Charter", Cambria,
+    "Noto Serif", "DejaVu Serif", "Times New Roman", var(--font-cjk-serif),
+    serif;
 }
 
 @media (prefers-color-scheme: dark) {

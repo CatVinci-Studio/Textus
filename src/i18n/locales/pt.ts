@@ -166,7 +166,7 @@ Habilidades ficam na pasta skills/ ao lado deste arquivo, um arquivo
   revisionDisplayOriginal: "Original no texto, alterações na margem",
   revisionDisplayFinal: "Só o resultado, original na margem",
   splitNoRoom:
-    "Sem espaço para dividir: alargue a janela ou feche a barra lateral ou uma divisão",
+    "Não cabe outra divisão: a janela é estreita demais. Alargue-a ou feche uma divisão.",
   revisionDisplayNoRoom: "Sem espaço: feche a barra lateral ou o painel de IA",
   proposalDeletedSentence: "Original",
   proposalAddedSentence: "Adicionado",
@@ -839,7 +839,7 @@ Habilidades ficam na pasta skills/ ao lado deste arquivo, um arquivo
   conventionsEu: "Instituições da UE",
   agentAttachFile:
     "Anexar arquivos: documentos, PDFs, imagens, código, um zip – qualquer arquivo",
-  chatAttachmentTruncated: "(parcial)",
+  chatAttachmentTruncated: "(longo: lido por partes)",
   chatAttachmentNoVision: `Este provedor não lê imagens. Troque de provedor em Ajustes › ${AI_NAME} ou anexe um documento.`,
   aiGrammarLabel: "Verificação gramatical",
   aiAskLabel: `Chat da ${AI_NAME}`,
@@ -1288,7 +1288,7 @@ Habilidades ficam na pasta skills/ ao lado deste arquivo, um arquivo
   proposalRelocate: "Pedir à IA que refaça esta edição",
   diffShow: "Mostrar diferenças",
   diffCollapse: "Mostrar menos",
-  chatPendingSummary: "Edições aguardando sua decisão: {n}",
+  chatPendingSummary: "Edições aguardando sua decisão:\u00a0{n}",
   chatPendingReveal: "Mostrar no documento",
   quickAskPosition: "{i} / {n}",
   quickAskPrevEdit: "Edição anterior",
@@ -1830,7 +1830,7 @@ Habilidades ficam na pasta skills/ ao lado deste arquivo, um arquivo
   conventionsDecline: "Manter a atual",
   pluginCardSystemApp: "Abrir com o app do sistema",
   pluginCardNever: "Não sugerir de novo",
-  pluginCardsMuted: "Sugestões de plugins desativadas: {n}",
+  pluginCardsMuted: "Sugestões de plugins desativadas:\u00a0{n}",
   pluginCardsRestore: "Mostrar de novo",
   pluginCardsRestoreAll: "Mostrar de novo as sugestões de plugins ocultas",
   pluginScreenshot: "{name} em uso",
@@ -1898,6 +1898,7 @@ Habilidades ficam na pasta skills/ ao lado deste arquivo, um arquivo
   pluginPermAiTools: "Dar ao Textus AI ferramentas próprias para usar",
   pluginPermNotifications: "Mostrar notificações do sistema",
   pluginPermAppearance: "Alterar as cores do Textus e dos seus documentos",
+  pluginPermGitCommit: "Fazer commits do Git na pasta aberta com o seu Git",
   pluginPermAgents:
     "Executar um agente de IA instalado neste computador (ele pode ler e alterar arquivos)",
   pluginPermBackground:
@@ -1905,6 +1906,7 @@ Habilidades ficam na pasta skills/ ao lado deste arquivo, um arquivo
   pluginScheduleNotice:
     "{name} agendou uma tarefa. Ela só é executada enquanto o Textus está aberto: ative “{setting}” para que também seja executada com todas as janelas fechadas.",
   pluginPermNetwork: "Conectar-se a {host}",
+  pluginPermHidden: "Ler {path} na pasta aberta",
   pluginPermCommands: "Executar os comandos de {plugin}",
   pluginPermNetworkAny: "Conectar-se a qualquer site",
   menuPlugins: "Plugins",

@@ -12,24 +12,28 @@ const key = new PluginKey<boolean>("own-undo-step");
 /** A paste, cut or drop is an undo step of its own, as in Word or Pages:
  *  the history would fold two quick pastes, or a paste and the typing
  *  right after it, into one. */
-export const ownUndoStepPlugin = $prose(
-  () =>
-    new Plugin<boolean>({
-      key,
-      state: {
-        init: () => false,
-        apply: (tr, afterOwnStep) =>
-          tr.docChanged && !tr.getMeta("appendedTransaction")
-            ? isOwnStep(tr)
-            : afterOwnStep,
+export const ownUndoStepPlugin = $prose(() => {
+  // A transaction filtered between another's apply and the view's update is
+  // a plugin's appended one (marked only after the filter): part of that step.
+  let appending = false;
+  return new Plugin<boolean>({
+    key,
+    state: {
+      init: () => false,
+      apply: (tr, afterOwnStep) => {
+        if (tr.getMeta("appendedTransaction")) return afterOwnStep;
+        appending = true;
+        return tr.docChanged ? isOwnStep(tr) : afterOwnStep;
       },
-      filterTransaction(tr, state) {
-        if (
-          !tr.getMeta("appendedTransaction") &&
-          (isOwnStep(tr) || (tr.docChanged && key.getState(state)))
-        )
-          closeHistory(tr);
-        return true;
-      },
-    }),
-);
+    },
+    view: () => ({ update: () => void (appending = false) }),
+    filterTransaction(tr, state) {
+      if (
+        !appending &&
+        (isOwnStep(tr) || (tr.docChanged && key.getState(state)))
+      )
+        closeHistory(tr);
+      return true;
+    },
+  });
+});

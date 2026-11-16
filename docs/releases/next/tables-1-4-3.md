@@ -5,10 +5,14 @@
 
 ### Improved
 
-- Copying from a table gives other apps what they expect: a head row, lines and no stray paragraphs; Copy Table writes HTML too, and copied rows paste back in as new rows.
+- Copying from a table gives other apps what they expect: a head row, lines and no stray paragraphs; Copy Table writes HTML too, and copied rows paste back in as new rows, whether they come as HTML, tab-separated text or Markdown.
 - A table's one row under its head row can be deleted, leaving the head alone as Markdown allows.
 
 ### Fixed
 
 - A file changed by another app updates whole blocks when the change spans several lines, so a table is never split in two.
 - A table pasted into a table undoes in one step, and rows copied as plain text (tab-separated) paste in as rows.
+- A table pasted into a narrower table fills it from the cursor's cell and adds the columns it needs, instead of jumbling its cells.
+- On iPhone and iPad, a pasted table undoes in one step, and a copied or cut row with empty cells at its end pastes in as a row.
+- A table's row and column grips sit at the middle of their row and column when the document is zoomed or the table scrolled sideways.
+- On iPhone and iPad, a long press at the left of a table's first column shows Paste instead of moving the cursor out of the table.

@@ -19,6 +19,12 @@ describe("firstLevelOneHeading", () => {
     ).toBe("A useful title");
   });
 
+  it("keeps a snake_case word's underscores and code's text as written", () => {
+    expect(firstLevelOneHeading("# read_me notes with `a_b`")).toBe(
+      "read_me notes with a_b",
+    );
+  });
+
   it("ignores headings inside fenced code", () => {
     expect(firstLevelOneHeading("```md\n# Fake\n```\n# Real")).toBe("Real");
     expect(firstLevelOneHeading("<!--\n# Old title\n-->\n# Real title")).toBe(

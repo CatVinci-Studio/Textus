@@ -70,6 +70,20 @@ describe("the languages", () => {
   });
 });
 
+describe.each(LANGS)("%s counts", (lang) => {
+  // "Hidden suggestions: 1" with the 1 alone on the next line.
+  it("keeps a count after a colon on the colon's line", () => {
+    for (const [key, value] of Object.entries(LOCALES[lang].default)) {
+      const forms =
+        typeof value === "string" ? [value] : Object.values(value ?? {});
+      for (const form of forms)
+        expect(String(form), key).not.toMatch(
+          /[:：]\s*[ \t]\{(n|count|total)\}\S{0,3}$/,
+        );
+    }
+  });
+});
+
 describe.each(LANGS.filter((lang) => lang !== "en"))("%s", (lang) => {
   const { default: translation, complete } = LOCALES[lang];
   const entries = Object.entries(translation) as [

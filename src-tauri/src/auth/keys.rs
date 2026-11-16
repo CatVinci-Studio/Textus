@@ -17,7 +17,7 @@ fn keys_file_path(app: &AppHandle) -> Result<PathBuf, String> {
 }
 
 fn read_keys(app: &AppHandle) -> Result<HashMap<String, String>, String> {
-    Ok(crate::json_file::read_or_set_aside(&keys_file_path(app)?).unwrap_or_default())
+    crate::json_file::read_store(&keys_file_path(app)?)
 }
 
 /// One change at a time: two saves at once would each drop the other's key.

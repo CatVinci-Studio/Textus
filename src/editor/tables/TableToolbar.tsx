@@ -9,9 +9,9 @@ import { SizeGrid, type GridSize } from "../../engine/controls/SizeGrid";
 import { isPhoneLayout } from "../../platform/phone-layout";
 import { useCloseOnOutsideClick } from "../../utils/hooks/useCloseOnOutsideClick";
 import type { Alignment } from "./table-edits";
+import { COPIED_MS } from "../widget-button";
 
 const ALIGNS = ["left", "center", "right"] as const;
-const COPIED_MS = 1500;
 
 interface TableToolbarProps {
   t: Strings;

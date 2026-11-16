@@ -8,6 +8,7 @@ import { FILE_RELOADED_EVENT, FILE_WRITTEN_EVENT } from "../utils/events";
 import { fileTextFor } from "./tracked-file";
 import { openDocumentAt } from "../registry/open-documents";
 import { isInside, slashed } from "../utils/path";
+import { emitPluginEvent } from "../plugins/app-bridge";
 
 // On focus, or when something in the window wrote a file, clean tabs whose
 // file changed on disk take the new text (in place when open in an editor);
@@ -42,6 +43,12 @@ export function takeDiskText(
   updateTab: (id: string, patch: Partial<DocTab>) => void,
 ): void {
   if (!tab.path) return;
+  // Before the tab takes it: a plugin keeping versions records both.
+  emitPluginEvent("fileChangeOnDisk", {
+    path: tab.path,
+    before: tab.savedContent,
+    after: content,
+  });
   const open = openDocumentAt(tab.path);
   if (open?.replaceText(content, open.revision())) {
     // As the editor writes it out: what it reports from now on.

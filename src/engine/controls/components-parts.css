@@ -249,6 +249,9 @@
 /* A table row's or column's grip, a pill on the table's edge, in the
    editor and on plugin pages: pressed, it picks; pulled, it moves. */
 .tx-table-grip {
+  /* Placed by its centre, at the middle of its row's or column's edge. */
+  position: absolute;
+  translate: -50% -50%;
   padding: 0;
   border: 1px solid var(--doc-border, var(--ui-border));
   border-radius: var(--shape-pill);
@@ -269,12 +272,25 @@
   width: 20px;
   height: 8px;
 }
-/* A finger's grip: the same pill, a fingertip's room to press. */
+/* In a table's head cell (plugin pages): the middle of its top edge, just
+   inside, where a clipping frame leaves it whole. */
+th > .tx-table-grip-col {
+  top: 0;
+  left: 50%;
+  translate: -50% var(--space-1);
+}
+/* A finger's grip: the same pill, a fingertip's room to press, all of it
+   outside the table, so a press in the cell beside it stays the cell's. */
 @media (pointer: coarse) {
   .tx-table-grip::before {
     content: "";
     position: absolute;
-    inset: -12px;
+  }
+  .tx-table-grip-row::before {
+    inset: -12px 50% -12px -16px;
+  }
+  .tx-table-grip-col::before {
+    inset: -16px -12px 50% -12px;
   }
 }
 /* A pulled row's or column's cells over the others, which slide aside on
@@ -305,4 +321,23 @@
   color: var(--ui-muted);
   font-size: var(--text-footnote);
   text-align: center;
+}
+
+/* "‹ 2/5 ›" (StepNav): the position between its two arrows. */
+.tx-step-nav {
+  display: inline-flex;
+  flex: none;
+  align-items: center;
+  gap: 2px;
+}
+
+.tx-step-nav-pos {
+  min-width: 3ch;
+  text-align: center;
+  font-variant-numeric: tabular-nums;
+  white-space: nowrap;
+}
+
+.tx-step-nav-back {
+  transform: rotate(180deg);
 }

@@ -1,4 +1,5 @@
 import { uiList } from "../../storage/ui-state";
+import { inOrder } from "../../utils/in-order";
 import { loadSettings } from "../../prefs/settings-store";
 import {
   addedSidebarTabs,
@@ -245,9 +246,7 @@ export function orderTabs<T extends { id: string }>(
 /** The rail's order with the tabs shown in `shown`'s order (a rail
  *  dragged), those not shown (hidden from the rail) kept where they were. */
 export function railOrder(shown: readonly string[]): string[] {
-  const keep = new Set(shown);
-  let next = 0;
-  return railTabs().map((tab) => (keep.has(tab.id) ? shown[next++] : tab.id));
+  return inOrder(railTabs(), (tab) => tab.id, shown).map((tab) => tab.id);
 }
 
 /** The tab with this id, or Files for one no longer there. */

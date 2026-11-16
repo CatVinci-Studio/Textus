@@ -275,7 +275,13 @@ impl ChapterRun<'_, '_> {
             &message,
             self.ui_language,
         );
-        let (context, _) = request_context_and_library(self.workspace, &part, true, &message, None);
+        let (context, _) = request_context_and_library(
+            self.workspace,
+            &part,
+            super::context::Reading::least(true),
+            &message,
+            None,
+        );
         let user_turn = AgentTurn::user(request_message(
             self.workspace,
             self.mode,

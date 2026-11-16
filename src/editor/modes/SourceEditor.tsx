@@ -40,6 +40,7 @@ import { tellCopied } from "../../clipboard/copied";
 import { elasticOverscroll } from "../../engine/controls/elastic-overscroll";
 import { registerTabEditor } from "../tab-editor";
 import "./source-editor.css";
+import { sharedEnds } from "../../utils/lcs";
 
 /** A change the tab's markdown made, not the user. */
 const outside = Annotation.define<boolean>();
@@ -256,15 +257,7 @@ function useFollowProps(
     if (current === value) return;
     // Only the span that changed, so the caret and scroll keep their place;
     // not an undo step of the user's.
-    let start = 0;
-    const most = Math.min(current.length, value.length);
-    while (start < most && current[start] === value[start]) start++;
-    let end = 0;
-    while (
-      end < most - start &&
-      current[current.length - 1 - end] === value[value.length - 1 - end]
-    )
-      end++;
+    const { start, end } = sharedEnds(current, value);
     view.dispatch({
       changes: {
         from: start,

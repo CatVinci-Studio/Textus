@@ -6,8 +6,8 @@ use super::*;
 
 /// Extensions read as text by listing, search and @-mentions.
 pub(crate) const TEXT_EXTENSIONS: &[&str] = &[
-    "md", "markdown", "txt", "text", "rst", "org", "tex", "csv", "tsv", "json", "yaml", "yml",
-    "toml", "html", "htm", "xml",
+    "md", "markdown", "mdx", "txt", "text", "rst", "org", "tex", "csv", "tsv", "json", "yaml",
+    "yml", "toml", "html", "htm", "xml",
 ];
 
 /// Most an @-mention inlines: the whole file goes into the message.

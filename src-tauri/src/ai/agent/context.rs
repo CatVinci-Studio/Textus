@@ -5,19 +5,53 @@ use super::*;
 
 /// Up to this much the document is embedded in full; past it, an outline and
 /// excerpts, and the model reads on through the document tools. Counted in char
-/// units (CJK as 3) when tools can read on, else in characters.
+/// units (CJK as 3) when tools can read on, else in characters. A local
+/// server's model (Ollama, a custom one) keeps this; a cloud model, with a
+/// window of 128k tokens or more, takes ROOMY_DOCUMENT_LIMIT: a third of it.
 pub(super) const FULL_DOCUMENT_LIMIT: usize = 40_000;
+pub(super) const ROOMY_DOCUMENT_LIMIT: usize = 120_000;
+
+/// How a request reads the document: with the document tools to read on
+/// (else whole, whatever its length), and how much it takes whole.
+#[derive(Clone, Copy)]
+pub(crate) struct Reading {
+    pub tools: bool,
+    pub whole: usize,
+}
+
+impl Reading {
+    /// The room every model has, a local server's too.
+    pub(crate) fn least(tools: bool) -> Self {
+        Reading {
+            tools,
+            whole: FULL_DOCUMENT_LIMIT,
+        }
+    }
+
+    /// For `entry`'s model: a cloud model's room, or a local server's.
+    pub(crate) fn for_provider(
+        tools: bool,
+        entry: &crate::ai::catalog::ProviderCatalogEntry,
+    ) -> Self {
+        let whole = if entry.key_optional {
+            FULL_DOCUMENT_LIMIT
+        } else {
+            ROOMY_DOCUMENT_LIMIT
+        };
+        Reading { tools, whole }
+    }
+}
 
 /// Whether a request shows the whole document - else an outline and
 /// excerpts, which the document tools read on from (search_document,
 /// read_document: offered only then).
-pub(super) fn shown_whole(document: &str, with_tools: bool) -> bool {
-    let size = if with_tools {
+pub(super) fn shown_whole(document: &str, reading: Reading) -> bool {
+    let size = if reading.tools {
         document.chars().map(crate::ai::project::char_units).sum()
     } else {
         document.chars().count()
     };
-    size <= FULL_DOCUMENT_LIMIT
+    size <= reading.whole
 }
 pub(super) const EXCERPT_CHARS: usize = 2_000;
 pub(super) const MAX_OUTLINE_HEADINGS: usize = 120;
@@ -86,11 +120,12 @@ pub(super) fn focus_section(document: &Document, heading: &str) -> Option<(usize
 /// The `---document---` section, each block marked with its id.
 pub(crate) fn document_section(
     document: &Document,
-    with_tools: bool,
+    reading: Reading,
     focus_heading: Option<&str>,
 ) -> String {
+    let with_tools = reading.tools;
     let len = document.chars().count();
-    if shown_whole(document, with_tools) {
+    if shown_whole(document, reading) {
         return format!(
             "---document---\n{}",
             doc_blocks::annotate(document, 0, document.len())
@@ -135,18 +170,26 @@ pub(crate) fn request_context(
     // editor - included in full when the document is too long to embed.
     focus_heading: Option<&str>,
 ) -> String {
-    request_context_and_library(workspace, document, with_tools, focus, focus_heading).0
+    request_context_and_library(
+        workspace,
+        document,
+        Reading::least(with_tools),
+        focus,
+        focus_heading,
+    )
+    .0
 }
 
 /// [`request_context`], and the library entries it carries and leaves out.
 pub(super) fn request_context_and_library<'a>(
     workspace: &'a AgentWorkspace,
     document: &Document,
-    with_tools: bool,
+    reading: Reading,
     focus: &str,
     focus_heading: Option<&str>,
 ) -> (String, crate::ai::project::LibraryPick<'a>) {
-    let document_text = document_section(document, with_tools, focus_heading);
+    let with_tools = reading.tools;
+    let document_text = document_section(document, reading, focus_heading);
     let pick =
         crate::ai::project::pick_library(&workspace.library, &format!("{focus}\n{document_text}"));
     let mut parts: Vec<String> =

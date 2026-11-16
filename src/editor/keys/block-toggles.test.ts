@@ -65,6 +65,14 @@ describe("the phone toolbar's block buttons", () => {
     expect(t.markdown()).toBe("1. plain words");
     toggleList(t.view, "ordered_list");
     expect(t.markdown()).toBe("plain words");
+    // In a longer list the whole list switches, as Format does, nesting
+    // kept: the item isn't split off on its own.
+    const list = await openView("1. a\n2. b\n   1. c\n3. d\n", {
+      enableCompletion: false,
+    });
+    list.caretAt("b");
+    toggleList(list.view, "bullet_list");
+    expect(list.markdown()).toMatch(/^[-*] a\n[-*] b\n {2}1\. c\n[-*] d$/);
   });
 
   it("a quote comes on and off", async () => {

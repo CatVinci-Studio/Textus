@@ -2,9 +2,12 @@ import { fill } from "../../i18n/fill";
 import type { Strings } from "../../i18n/strings";
 import type { Permission } from "./manifest";
 
-/** Each permission's words, but those naming a host or a plugin. */
+/** Each permission's words, but those naming a host, a plugin or a file. */
 export const PERMISSION_LABELS: Record<
-  Exclude<Permission, `network:${string}` | `commands:${string}`>,
+  Exclude<
+    Permission,
+    `network:${string}` | `commands:${string}` | `hidden:${string}`
+  >,
   keyof Strings
 > = {
   "editor.read": "pluginPermEditorRead",
@@ -20,6 +23,7 @@ export const PERMISSION_LABELS: Record<
   background: "pluginPermBackground",
   agents: "pluginPermAgents",
   appearance: "pluginPermAppearance",
+  "git.commit": "pluginPermGitCommit",
 };
 
 /** A permission in plain words, as the install dialog and a plugin's page
@@ -27,6 +31,10 @@ export const PERMISSION_LABELS: Record<
 export function permissionLabel(permission: Permission, t: Strings): string {
   const label = PERMISSION_LABELS[permission as keyof typeof PERMISSION_LABELS];
   if (label) return t[label] as string;
+  if (permission.startsWith("hidden:"))
+    return fill(t.pluginPermHidden, {
+      path: permission.slice("hidden:".length),
+    });
   if (permission.startsWith("commands:"))
     return fill(t.pluginPermCommands, {
       plugin: permission.slice("commands:".length),

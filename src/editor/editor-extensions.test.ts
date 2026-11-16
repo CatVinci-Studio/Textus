@@ -11,6 +11,7 @@ const ORDER = [
   "editorExtensions().keyInput",
   "macNavigationPlugin",
   "linuxImeEnterPlugin",
+  "iosEnterBeforeBlockPlugin",
   "compositionPruneGuardPlugin",
   "tableEdgeArrowPlugin",
   "gfmWithoutStrikethrough",

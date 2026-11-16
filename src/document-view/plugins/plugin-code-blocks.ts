@@ -434,19 +434,11 @@ function placeDone(view: EditorView) {
 }
 
 function doneButton(view: EditorView): HTMLElement {
-  const button = document.createElement("button");
-  button.type = "button";
-  button.className = "plugin-code-done";
-  button.textContent = currentStrings().codeBlockDone;
-  button.addEventListener("mousedown", (event) => {
-    event.preventDefault();
-    event.stopPropagation();
-  });
-  button.addEventListener("click", (event) => {
-    event.preventDefault();
-    closeSource(view);
-  });
-  return button;
+  return widgetButton(
+    "block-pill plugin-code-done",
+    currentStrings().codeBlockDone,
+    () => closeSource(view),
+  );
 }
 
 /** An export's way to the drawings' pictures: each asks its plugin's page. */

@@ -34,11 +34,8 @@ import {
 } from "../plugins/store/plugin-lookup";
 import { basename } from "../utils/path";
 import { isDocumentName } from "../files/document-name";
-import {
-  besideLayout,
-  openBeside,
-  placeOnArrival,
-} from "../engine/layout/store";
+import { placeOnArrival } from "../engine/layout/store";
+import { besideOrSay, openBesideOrSay } from "./menu/split-here";
 import type { Strings } from "../i18n/strings";
 import type { TabState } from "./tabs/useTabState";
 import { splitForDrop } from "./islands/split-drop";
@@ -172,6 +169,11 @@ export function useFileOpening(opts: {
         diskMtime,
         importedFrom: undefined,
         view: undefined,
+        // Text that isn't Markdown (YAML, a web page) is shown, not edited:
+        // the Markdown editor would write it back as Markdown.
+        ...(!asDocument && !isDocumentName(basename(path))
+          ? { readOnly: true }
+          : {}),
       };
     },
     [t, onWordDocumentOpened],
@@ -209,9 +211,8 @@ export function useFileOpening(opts: {
         // update: never drawn first in front where it doesn't stay.
         const arriving = !tabsRef.current.some((tab) => tab.id === id);
         if (open.where === "beside") {
-          if (arriving)
-            placeOnArrival(id, (now) => besideLayout(now, id, from) ?? now);
-          else openBeside(id, from);
+          if (arriving) placeOnArrival(id, (now) => besideOrSay(now, id, from));
+          else openBesideOrSay(id, from);
         } else if (drop) splitForDrop(id, drop, arriving);
       };
       const existing = tabsRef.current.find(

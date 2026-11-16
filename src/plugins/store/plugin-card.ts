@@ -1,3 +1,4 @@
+import { isRecord } from "../../utils/is-record";
 import { getUiState, setUiState } from "../../storage/ui-state";
 import { extname } from "../../utils/path";
 
@@ -49,10 +50,9 @@ let answers: Record<string, number | "never"> | null = null;
 function saved(): Record<string, number | "never"> {
   if (answers) return answers;
   const read = getUiState("pluginCardAnswers");
-  answers =
-    read && typeof read === "object"
-      ? { ...(read as Record<string, number | "never">) }
-      : {};
+  answers = isRecord(read)
+    ? { ...(read as Record<string, number | "never">) }
+    : {};
   return answers;
 }
 

@@ -126,7 +126,8 @@
 
 :root[data-window-chrome="mobile"]
   .quick-ask-dock
-  .quick-ask-pending-nav-button {
+  .quick-ask-pending-nav
+  .tx-icon-button {
   width: 48px;
   height: 48px;
   font-size: 24px;

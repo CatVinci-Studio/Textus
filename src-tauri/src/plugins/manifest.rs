@@ -27,13 +27,17 @@ static LISTS: std::sync::LazyLock<Lists> = std::sync::LazyLock::new(|| {
 const REQUIRED_SETTINGS: &[&str] = &["runInBackground"];
 
 /// Whether `value` is a permission a plugin may name: one of the plain ones,
-/// or `network:` and `*`, a host, `*.` a domain, each maybe with `:port`.
+/// `commands:` a plugin, `hidden:` a hidden file to read, or `network:` and
+/// `*`, a host, `*.` a domain, each maybe with `:port`.
 pub fn is_permission(value: &str) -> bool {
     if LISTS.plain.iter().any(|p| p == value) {
         return true;
     }
     if let Some(plugin) = value.strip_prefix("commands:") {
         return super::require_id(plugin).is_ok();
+    }
+    if let Some(path) = value.strip_prefix("hidden:") {
+        return super::access::paths::hidden_file_path(path);
     }
     let Some(host) = value.strip_prefix("network:") else {
         return false;

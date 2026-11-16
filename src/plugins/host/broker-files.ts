@@ -1,3 +1,4 @@
+import { isRecord } from "../../utils/is-record";
 import { notesRoot } from "../../files/link-style";
 import { setFileBadge } from "../contributions/file-badges";
 import { inOpenFolder } from "../may-open";
@@ -299,8 +300,7 @@ export function fileHandlers(p: PluginScope) {
     },
     "files.frontmatterSet": ({ path, frontmatter }: Params) => {
       write();
-      if (!frontmatter || typeof frontmatter !== "object")
-        throw new Error("frontmatter is an object.");
+      if (!isRecord(frontmatter)) throw new Error("frontmatter is an object.");
       return change(str(path, "path"), (text) =>
         withFrontmatter(text, frontmatter as Frontmatter),
       );

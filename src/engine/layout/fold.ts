@@ -44,7 +44,7 @@ export function foldIsland(
   layout: SplitLayout,
   isPanel: (pane: Pane) => boolean,
   need: number,
-): { layout: SplitLayout; folded: Folded } | null {
+): { layout: SplitLayout; folded: Folded; panel: boolean } | null {
   const panes = [...panesOf(layout.root)].reverse();
   const order = [...panes.filter(isPanel), ...panes.filter((p) => !isPanel(p))];
   for (const panel of order) {
@@ -62,6 +62,7 @@ export function foldIsland(
       };
       return {
         layout: next,
+        panel: isPanel(panel),
         folded: {
           id: panel.id,
           tabs: [...panel.tabs],
@@ -75,6 +76,21 @@ export function foldIsland(
     }
   }
   return null;
+}
+
+/** `layout` with every panel's island folded into the island beside it:
+ *  what a split may count on them giving. */
+export function foldPanels(
+  layout: SplitLayout,
+  isPanel: (pane: Pane) => boolean,
+): SplitLayout {
+  let next = layout;
+  for (;;) {
+    const out = foldIsland(next, isPanel, 0);
+    // With no panel beside another island left, a document's would go.
+    if (!out || !out.panel) return next;
+    next = out.layout;
+  }
 }
 
 /** A folded island back on its side of the island it joined, under its own

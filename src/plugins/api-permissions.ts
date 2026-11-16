@@ -68,6 +68,9 @@ const API_PERMISSIONS: readonly {
       "metadata.tags",
       "metadata.tasks",
       "metadata.search",
+      "git.status",
+      "git.log",
+      "git.show",
     ],
     // Writing goes through the folder's root, which reading grants.
     calls: [
@@ -110,6 +113,7 @@ const API_PERMISSIONS: readonly {
     permission: "appearance",
     methods: ["appearance.setColors", "appearance.clear"],
   },
+  { permission: "git.commit", methods: ["git.commit"] },
   // Checked when the window tells Rust the tools (contributions/ai-tools.ts).
   { permission: "ai.tools", methods: [], calls: ["ai.registerTool"] },
 ];

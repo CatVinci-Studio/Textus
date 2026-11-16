@@ -1,4 +1,9 @@
-import { Plugin, TextSelection } from "@milkdown/kit/prose/state";
+import { closeHistory } from "@milkdown/kit/prose/history";
+import {
+  Plugin,
+  TextSelection,
+  type EditorState,
+} from "@milkdown/kit/prose/state";
 import type { EditorView } from "@milkdown/kit/prose/view";
 import { $prose } from "@milkdown/kit/utils";
 import { isImeKeydown } from "../../utils/ime";
@@ -109,6 +114,25 @@ interface LiveGroup extends Group {
  * the sources still answering are asked at once and come in as they do,
  * never holding up typing or moving the row the user chose.
  */
+/** `insert` put in over `from`-`to`, the caret at its `$0` (else its
+ *  end): its own undo step, apart from the typing that called it up. */
+export function pickedText(
+  state: EditorState,
+  insert: string,
+  from: number,
+  to: number,
+) {
+  const at = insert.indexOf("$0");
+  const text = insert.replace("$0", "");
+  const tr = closeHistory(state.tr).insertText(text, from, to);
+  const inserted = tr.steps.length;
+  wikilinksIn(tr, from, from + text.length);
+  const end = tr.mapping
+    .slice(inserted)
+    .map(from + (at < 0 ? text.length : at));
+  return tr.setSelection(TextSelection.create(tr.doc, end)).scrollIntoView();
+}
+
 export function createCompletionPlugin(
   docPath: () => string | null = () => null,
 ) {
@@ -154,20 +178,8 @@ export function createCompletionPlugin(
             const to =
               caret + Math.min(Math.max(0, item.replaceAfter ?? 0), room);
             close();
-            const at = item.insert.indexOf("$0");
-            const text = item.insert.replace("$0", "");
             took = true;
-            const tr = view.state.tr.insertText(text, group.from, to);
-            const inserted = tr.steps.length;
-            wikilinksIn(tr, group.from, group.from + text.length);
-            const end = tr.mapping
-              .slice(inserted)
-              .map(group.from + (at < 0 ? text.length : at));
-            view.dispatch(
-              tr
-                .setSelection(TextSelection.create(tr.doc, end))
-                .scrollIntoView(),
-            );
+            view.dispatch(pickedText(view.state, item.insert, group.from, to));
             view.focus();
             item.run?.();
           };

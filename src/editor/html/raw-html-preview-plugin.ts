@@ -182,6 +182,7 @@ function decorateTextblock(
   // Tags inside a span too: **<u>words</u>**.
   block.descendants((child, offset) => {
     if (child.type.name !== "html") return true;
+    if (child.attrs.verbatim) return false;
     const from = blockPos + 1 + offset;
     // A <details> split around markdown is drawn by decorateDetails.
     if (!handled.has(from))
