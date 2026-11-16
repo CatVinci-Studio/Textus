@@ -43,6 +43,7 @@ test("the drawn caret is one height through a paragraph, beside bold, code or Ch
 }) => {
   await openApp(page, { settings: { language: "en" } });
   await pasteMarkdown(page, "plain **bold** `code` 中文字 $x^2$ end");
+  await expect(page.locator(`${editor} p`)).toContainText("end");
   const heights = new Set<number>();
   for (const word of ["plain", "bold", "code", "中文", "end"]) {
     const at = await page.evaluate(

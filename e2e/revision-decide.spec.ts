@@ -149,8 +149,10 @@ test("an edit while a rewrite streams in is kept, and the rewrite still lands ar
   await composer.fill("Polish this");
   await composer.press("Enter");
   // Held before its end, the paragraph is marked as being rewritten; it
-  // lands once it is whole.
-  await expect(page.locator(".milkdown .pending-reading")).toBeVisible();
+  // lands once it is whole. Another mark inside it draws it in pieces.
+  await expect(
+    page.locator(".milkdown .pending-reading").first(),
+  ).toBeVisible();
   // While it is held, the writer adds to a sentence it keeps.
   await typeAfter(page, "二人从此相识", "，再未分开");
   await releaseRevise(page);

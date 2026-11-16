@@ -67,7 +67,7 @@ export function solveIslands(input: IslandsInput): IslandsLayout {
 /** The least width the islands keep side by side: every island at its
  *  minimum, the gaps between them. */
 export function leastWidth(input: Omit<IslandsInput, "box">): number {
-  return ruleOf(input as IslandsInput, input.root, "row", 1).min;
+  return ruleOf(input as IslandsInput, input.root, "row", 1, true).min;
 }
 
 /** The least height, the same way down the column. */
@@ -88,19 +88,27 @@ function island(input: IslandsInput, box: Rect, top: boolean): IslandRects {
 const PRIORITY_RANK: Record<Priority, number> = { low: 0, normal: 1, high: 2 };
 
 /** A whole subtree's rule along `direction`: across it, the strictest of
- *  its children's. */
+ *  its children's. `topRight`: the subtree holds the island under the
+ *  bar's own buttons, whose width counts what it keeps (`endRoom`). */
 function ruleOf(
   input: IslandsInput,
   node: LayoutNode,
   direction: SplitDirection,
   fraction: number,
+  topRight = false,
 ): SizeRule {
   if (node.kind === "pane") {
     const r = input.rule(node, direction);
-    return { ...r, size: r.fixed ? r.pixels : fraction };
+    const keeps = topRight && direction === "row" ? (input.endRoom ?? 0) : 0;
+    return {
+      ...r,
+      min: Math.max(r.min, keeps),
+      size: r.fixed ? r.pixels : fraction,
+    };
   }
+  const corner = node.direction === "row" ? node.children.length - 1 : 0;
   const kids = node.children.map((c, i) =>
-    ruleOf(input, c, direction, node.sizes[i]),
+    ruleOf(input, c, direction, node.sizes[i], topRight && i === corner),
   );
   const along = node.direction === direction;
   const fixed = kids.every((k) => k.fixed);

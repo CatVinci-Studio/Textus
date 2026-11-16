@@ -136,6 +136,7 @@ export function IslandArea({
       root: layout.root,
       gap: room.gap,
       rowHeight: 0,
+      endRoom: rows ? barEndRoom() : 0,
       rule: ruleFor(panel, isPanel),
     }) +
       2 * room.inset;
@@ -148,6 +149,7 @@ export function IslandArea({
         root: node,
         gap: room.gap,
         rowHeight: 0,
+        endRoom: rows ? barEndRoom() : 0,
         rule: ruleFor(panel, isPanel),
       };
       return {
