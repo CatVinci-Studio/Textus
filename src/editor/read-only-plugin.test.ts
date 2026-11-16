@@ -1,4 +1,6 @@
+// @vitest-environment jsdom
 import { describe, expect, it } from "vitest";
+import { EditorView } from "@milkdown/kit/prose/view";
 import { Schema } from "@milkdown/kit/prose/model";
 import { EditorState, TextSelection } from "@milkdown/kit/prose/state";
 import {
@@ -10,7 +12,7 @@ import {
 const schema = new Schema({
   nodes: {
     doc: { content: "paragraph+" },
-    paragraph: { content: "text*" },
+    paragraph: { content: "text*", toDOM: () => ["p", 0] },
     text: {},
   },
 });
@@ -32,6 +34,25 @@ describe("a read-only document", () => {
     const open = readOnly.apply(readOnlyTr(readOnly, false));
     const again = open.applyTransaction(open.tr.insertText("x", 1));
     expect(again.state.doc.textContent).toBe("xkept");
+  });
+
+  it("keeps Backspace from leaving the page, as WebKit's own would", () => {
+    const view = new EditorView(document.createElement("div"), {
+      state: start(),
+    });
+    view.dispatch(readOnlyTr(view.state, true));
+    for (const key of ["Backspace", "Delete", "Enter"]) {
+      const event = new KeyboardEvent("keydown", { key, cancelable: true });
+      view.dom.dispatchEvent(event);
+      expect(event.defaultPrevented).toBe(true);
+    }
+    const arrow = new KeyboardEvent("keydown", {
+      key: "ArrowLeft",
+      cancelable: true,
+    });
+    view.dom.dispatchEvent(arrow);
+    expect(arrow.defaultPrevented).toBe(false);
+    view.destroy();
   });
 
   it("still moves the selection", () => {
