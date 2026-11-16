@@ -230,6 +230,28 @@ test("a split the window has no room for is not made, and says why", async ({
   expect(count).toBe(3);
   await expect(page.locator(".notice-text")).toBeVisible();
   await expect(islands).toHaveCount(3);
+
+  // A tab dropped on the window's outer edge then joins the island there,
+  // and the window says why.
+  await page.locator(".notice-text").waitFor({ state: "hidden" });
+  const box = (await islands.first().boundingBox())!;
+  await page.mouse.click(box.x + box.width / 2, box.y + box.height / 2);
+  await emit(page, "menu-new-file");
+  const rows = page.getByRole("tablist");
+  await expect(rows.first().getByRole("tab")).toHaveCount(2);
+  const tab = (await rows.first().getByRole("tab").last().boundingBox())!;
+  const last = (await islands.last().boundingBox())!;
+  await page.mouse.move(tab.x + tab.width / 2, tab.y + tab.height / 2);
+  await page.mouse.down();
+  await page.mouse.move(tab.x + 40, tab.y + 150, { steps: 10 });
+  await page.mouse.move(last.x + last.width - 6, last.y + last.height / 2, {
+    steps: 25,
+  });
+  await page.waitForTimeout(700);
+  await page.mouse.up();
+  await expect(page.locator(".notice-text")).toBeVisible();
+  await expect(islands).toHaveCount(3);
+  await expect(rows.last().getByRole("tab")).toHaveCount(2);
 });
 
 test("another folder takes the open one's place: its documents close, and come back with it", async ({

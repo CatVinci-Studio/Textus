@@ -43,6 +43,8 @@ export function dropPlan(
   const none = { next: undefined, noRoom: false };
   if (target.whole && target.zone !== "center") {
     const { next, noRoom } = withRoom(splitOff(now, tabId, null, target.zone));
+    // No room beside them all: as on the edge of the island under it.
+    if (noRoom) return dropPlan(now, tabId, { ...target, whole: false });
     return { next: next ?? undefined, noRoom };
   }
   const pane = paneOf(now, target.tabId);
