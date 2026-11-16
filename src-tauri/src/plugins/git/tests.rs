@@ -131,7 +131,6 @@ fn reading_history_needs_files_read() {
 #[test]
 fn a_commit_takes_the_named_files_only_and_needs_its_grant() {
     let (_tmp, root) = repo();
-    let b = format!("{root}/b.md");
     let c = format!("{root}/c.md");
     assert!(commit(
         &state(&["files.read"]),
@@ -160,5 +159,7 @@ fn a_commit_takes_the_named_files_only_and_needs_its_grant() {
         .into_iter()
         .map(|c| c.path)
         .collect();
+    // Named in the system's own separator under the folder.
+    let b = Path::new(&root).join("b.md").to_string_lossy().to_string();
     assert_eq!(left, vec![b]);
 }

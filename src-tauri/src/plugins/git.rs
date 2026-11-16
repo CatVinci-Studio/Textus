@@ -77,7 +77,7 @@ fn run(dir: &Path, args: &[&str], input: Option<&str>) -> Result<Vec<u8>, String
     use std::io::Write;
     use std::process::Stdio;
     let program = git_program().ok_or("Git isn't installed on this computer.")?;
-    let mut command = crate::mcp::path::quiet_command(program);
+    let mut command = crate::spawn::quiet_command(program);
     command
         .current_dir(dir)
         .args(["-c", "core.quotepath=off", "-c", "color.ui=false"])

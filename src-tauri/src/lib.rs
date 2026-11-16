@@ -37,6 +37,7 @@ mod net;
 mod plugins;
 mod schedule;
 mod settings;
+mod spawn;
 #[cfg(desktop)]
 mod tab_drag;
 mod walk;
