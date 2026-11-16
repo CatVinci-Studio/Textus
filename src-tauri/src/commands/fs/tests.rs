@@ -38,7 +38,7 @@ fn open_dialog_defaults_to_markdown_and_offers_any_file() {
     let filters = open_document_filters("Text", "Word", "All files");
     let names: Vec<&str> = filters.iter().map(|(name, _)| name.as_str()).collect();
     assert_eq!(names, ["Markdown", "Text", "Word", "All files"]);
-    assert_eq!(filters[0].1, ["md", "markdown"]);
+    assert_eq!(filters[0].1, ["md", "markdown", "mdx"]);
     assert_eq!(filters[2].1, ["docx"]);
     assert_eq!(filters[3].1, ["*"]);
 }
