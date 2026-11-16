@@ -255,6 +255,13 @@ test("a split the window has no room for is not made, and says why", async ({
   await expect(page.locator(".notice-text")).toBeVisible();
   await expect(islands).toHaveCount(3);
   await expect(rows.last().getByRole("tab")).toHaveCount(2);
+
+  // Wide but short (a phone on its side, the keyboard up), the window says
+  // it is too short, not too narrow.
+  await page.locator(".notice-text").waitFor({ state: "hidden" });
+  await page.setViewportSize({ width: 2400, height: 170 });
+  await emit(page, "menu-split-right");
+  await expect(page.locator(".notice-text")).toContainText("太矮");
 });
 
 test("another folder takes the open one's place: its documents close, and come back with it", async ({

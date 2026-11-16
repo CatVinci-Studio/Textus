@@ -173,6 +173,8 @@ utiliser une.
   revisionDisplayOriginal:
     "Original dans le texte, modifications dans la marge",
   revisionDisplayFinal: "Résultat seul, original dans la marge",
+  splitNoRoomLow:
+    "Pas de place pour une autre division : la fenêtre est trop basse. Masquez le clavier ou agrandissez la fenêtre en hauteur.",
   splitNoRoom:
     "Pas de place pour une autre division : la fenêtre est trop étroite. Élargissez-la ou fermez une division.",
   revisionDisplayNoRoom:

@@ -91,6 +91,8 @@ export function islandAt(x: number, y: number): FrameIsland | null {
 export interface RoomCheck {
   short: number;
   panels: number;
+  /** Short of height, which nothing gives: no width would do. */
+  low?: boolean;
 }
 
 let check: ((root: LayoutNode) => RoomCheck) | null = null;
@@ -126,8 +128,16 @@ export function layoutFits(root: LayoutNode): boolean {
  *  steps aside: 0 when it fits so. A split asked for is made then, and
  *  they give way (useNarrowIslands, useNarrowSidebar). */
 export function shortGivingWay(root: LayoutNode): number {
-  const { short, panels } = roomFor(root);
+  const { short, panels, low } = roomFor(root);
+  lastLow = !!low;
   return Math.max(0, Math.ceil(short - panels - sidebarRoom - 0.5));
+}
+
+let lastLow = false;
+/** Whether the last layout refused lacked height, not width: what the
+ *  window says about it (sayNoRoom). */
+export function refusedForHeight(): boolean {
+  return lastLow;
 }
 
 /** A layout set into too little room: the panels, then the sidebar, give

@@ -148,6 +148,8 @@ ${AI_NAME}への執筆の指示です。すべての文書に適用されます�
   revisionDisplayInline: "すべて本文に",
   revisionDisplayOriginal: "本文に元の文、修正は余白に",
   revisionDisplayFinal: "結果だけ、元の文は余白に",
+  splitNoRoomLow:
+    "これ以上分割できません：ウインドウの高さが足りません。キーボードを閉じるか、ウインドウを高くしてください。",
   splitNoRoom:
     "これ以上分割できません：ウインドウの幅が足りません。ウインドウを広げるか、分割を 1 つ閉じてください。",
   revisionDisplayNoRoom:

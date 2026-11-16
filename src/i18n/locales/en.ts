@@ -159,6 +159,8 @@ type /name in a conversation to use one.
   revisionDisplayInline: "All in the text",
   revisionDisplayOriginal: "Original in the text, changes in the margin",
   revisionDisplayFinal: "Result only, originals in the margin",
+  splitNoRoomLow:
+    "No room for another split: the window is too short. Put the keyboard away or make the window taller.",
   splitNoRoom:
     "No room for another split: the window is too narrow. Widen it, or close a split.",
   revisionDisplayNoRoom: "Not enough room - close the sidebar or the AI panel",

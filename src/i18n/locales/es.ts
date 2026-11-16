@@ -172,6 +172,8 @@ para usar una.
   revisionDisplayInline: "Todo en el texto",
   revisionDisplayOriginal: "Original en el texto, cambios en el margen",
   revisionDisplayFinal: "Solo el resultado, original en el margen",
+  splitNoRoomLow:
+    "No hay espacio para otra división: la ventana es demasiado baja. Oculta el teclado o haz la ventana más alta.",
   splitNoRoom:
     "No cabe otra división: la ventana es demasiado estrecha. Ensánchala o cierra una división.",
   revisionDisplayNoRoom:

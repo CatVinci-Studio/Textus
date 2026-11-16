@@ -157,7 +157,7 @@ export function IslandArea({
     };
     const now = least(root);
     // Too low is no room either: nothing gives height.
-    if (now.h > area.h + 0.5) return { short: Infinity, panels: 0 };
+    if (now.h > area.h + 0.5) return { short: Infinity, panels: 0, low: true };
     const folded =
       root.kind === "pane"
         ? now

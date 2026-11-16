@@ -170,6 +170,8 @@ export default {
   revisionDisplayInline: "Всё в тексте",
   revisionDisplayOriginal: "Оригинал в тексте, правки на полях",
   revisionDisplayFinal: "Только результат, оригинал на полях",
+  splitNoRoomLow:
+    "Нет места для ещё одного разделения: окно слишком низкое. Скройте клавиатуру или сделайте окно выше.",
   splitNoRoom:
     "Нет места для ещё одного разделения: окно слишком узкое. Расширьте его или закройте одно разделение.",
   revisionDisplayNoRoom:
