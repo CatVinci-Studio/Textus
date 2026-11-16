@@ -124,6 +124,23 @@ test("a row's grip picks the row, and pulled it moves the row; a column's the sa
   await page.mouse.move(g2.x + g2.width / 2, up.y + 2, { steps: 8 });
   await page.mouse.up();
   await expect.poll(firstColumn).toEqual([order[2], order[0], order[1]]);
+
+  // A column's edge, zoomed too: no column jumps when it is pressed, and
+  // the edge stays under the pointer.
+  const heads = table.locator("th");
+  const h0 = (await heads.nth(0).boundingBox())!;
+  const h1 = (await heads.nth(1).boundingBox())!;
+  const edge = { x: h0.x + h0.width - 1, y: h0.y + h0.height / 2 };
+  await page.mouse.move(edge.x - 6, edge.y);
+  await page.mouse.move(edge.x, edge.y, { steps: 3 });
+  await page.mouse.down();
+  await page.mouse.move(edge.x + 1, edge.y);
+  const pressed = (await heads.nth(1).boundingBox())!.width;
+  expect(Math.abs(pressed - h1.width)).toBeLessThan(2);
+  await page.mouse.move(edge.x + 40, edge.y, { steps: 6 });
+  await page.mouse.up();
+  const after = (await heads.nth(0).boundingBox())!;
+  expect(Math.abs(after.width - (h0.width + 40))).toBeLessThan(3);
 });
 
 test("the grips sit at the middle of their row and column, the document zoomed too", async ({

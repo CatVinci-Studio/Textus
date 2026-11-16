@@ -10,6 +10,7 @@ import {
   tableSize,
 } from "./table-edits";
 import { mountTableToolbar } from "./TableToolbar";
+import { dragColumnEdge } from "./column-edge-drag";
 import { attachGrips } from "./table-grips";
 import { copyTable } from "../clipboard/table-clipboard";
 import { tableSchema } from "@milkdown/kit/preset/gfm";
@@ -250,7 +251,8 @@ function caretColsOf(decorations: readonly Decoration[]): number[] {
 export const tableColumnResizing = $prose(() => columnResizing({ View: null }));
 
 /**
- * Before a column's edge is dragged in a table laid out by its content,
+ * A column's edge dragged (column-edge-drag.ts). Before that, in a table
+ * laid out by its content,
  * every column is held at the width it shows: the drag then changes that
  * column alone, the ones before it standing still and the table growing or
  * shrinking, rather than its unsized neighbours sharing the change.
@@ -268,7 +270,9 @@ export const tableColumnFreeze = $prose(
             if (handle === undefined || handle < 0) return false;
             const tr = frozenColumns(view, handle);
             if (tr) view.dispatch(tr);
-            return false;
+            dragColumnEdge(view, handle, event, DEFAULT_CELL_MIN_WIDTH);
+            event.preventDefault();
+            return true;
           },
         },
       },
@@ -289,9 +293,7 @@ function frozenColumns(view: EditorView, pos: number): Transaction | null {
     const cell = table.nodeAt(at);
     const dom = view.nodeDOM(start + at) as HTMLElement | null;
     const span = (cell?.attrs.colspan as number) || 1;
-    widths[col] = dom
-      ? Math.round(dom.getBoundingClientRect().width / span)
-      : 0;
+    widths[col] = dom ? Math.round(dom.offsetWidth / span) : 0;
   }
   if (widths.some((w) => !w)) return null;
   let tr: Transaction | null = null;
