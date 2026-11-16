@@ -57,6 +57,7 @@ export function useEditorChat({
     quickAskOpen: inlineChat.visible,
     writing: conversation.busy,
     statuses: pendingEdits.allStatuses,
+    filePath,
   });
   const windowChipRef = useRef<SelectionChipHandlers | null>(null);
 

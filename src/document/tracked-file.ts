@@ -29,6 +29,29 @@ export function trackFile(path: string, base: () => string | null) {
   };
 }
 
+/** The original of a tracked document whose editor has gone (its tab out
+ *  of sight): still what its file holds, and what its next editor tracks
+ *  from. */
+const left = new Map<string, () => string>();
+
+/** `path`'s editor goes, tracking from `base` (null: not tracking). */
+export function leaveTracked(path: string, base: string | null): void {
+  if (base === null) return void left.delete(path);
+  const kept = () => base;
+  left.set(path, kept);
+  bases.set(path, kept);
+}
+
+/** The original `path`'s last editor left, or null. */
+export const leftTracked = (path: string): string | null =>
+  left.get(path)?.() ?? null;
+
+/** `path`'s tab closed: nothing is tracked for it any more. */
+export function forgetTracked(path: string): void {
+  if (bases.get(path) === left.get(path)) bases.delete(path);
+  left.delete(path);
+}
+
 /** What a document's file holds for the editor's `content`: its original
  *  while tracked, else the text itself. */
 export function fileTextFor(path: string | null, content: string): string {

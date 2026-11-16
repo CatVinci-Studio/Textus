@@ -11,7 +11,12 @@ import {
   reviewNotesKey,
   type ReviewNote,
 } from "./review-notes-plugin";
-import { locateOwnNote, parseOwnNotes, storedOwnNote } from "./own-notes";
+import {
+  locateOwnNote,
+  parseOwnNotes,
+  storedOwnNote,
+  type StoredOwnNote,
+} from "./own-notes";
 
 /** A moment after the last change, the notes are written. */
 const WRITE_AFTER = 400;
@@ -43,6 +48,11 @@ export function useOwnNotes({
   // is written (an empty list would delete the kept file).
   const loadedFor = useRef<string | null>(null);
   const written = useRef<string | null>(null);
+  // Kept notes whose passage isn't in the text as it reads now: they stay
+  // in the file, for when it is.
+  const unplaced = useRef<StoredOwnNote[]>([]);
+  // The last list not yet written: sent at once if the editor goes first.
+  const unsent = useRef<(() => void) | null>(null);
   const notesRef = useLatest(notes);
 
   useEffect(() => {
@@ -71,8 +81,10 @@ export function useOwnNotes({
         run((ctx) => {
           const view = ctx.get(editorViewCtx);
           const current = reviewNotesKey.getState(view.state)?.notes ?? [];
+          unplaced.current = [];
           const placed = kept.flatMap((note) => {
             const range = locateOwnNote(view.state.doc, note);
+            if (!range) unplaced.current.push(note);
             return range
               ? [
                   {
@@ -105,16 +117,23 @@ export function useOwnNotes({
         .map((n) => storedOwnNote(doc, n));
     });
     if (!list) return;
-    const text = JSON.stringify(list);
-    if (text === (written.current ?? "[]")) return;
-    const timer = window.setTimeout(() => {
+    const text = JSON.stringify([...list, ...unplaced.current]);
+    if (text === (written.current ?? "[]")) {
+      unsent.current = null;
+      return;
+    }
+    const send = () => {
+      unsent.current = null;
       written.current = text;
       void ownNotesIpc.write(filePath, "notes", text).catch(() => {
         written.current = null;
       });
-    }, WRITE_AFTER);
+    };
+    unsent.current = send;
+    const timer = window.setTimeout(send, WRITE_AFTER);
     return () => window.clearTimeout(timer);
   }, [filePath, notes, run]);
+  useEffect(() => () => unsent.current?.(), []);
 
   /** Asks for a note on the selection - inside its paragraph - and puts it
    *  in the margin. */

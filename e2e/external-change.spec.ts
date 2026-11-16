@@ -314,3 +314,43 @@ test("a document shown again in the island not in use is where it was read", asy
     Math.abs((await a.evaluate((el) => el.scrollTop)) - 1500),
   ).toBeLessThan(40);
 });
+
+test("a tracked document keeps its original while another tab is in front, through an autosave", async ({
+  page,
+}) => {
+  await page.addInitScript(() => {
+    (window as unknown as Record<string, unknown>).__devFs = {
+      "/work/a.md": "# A\n\nThe first line.\n",
+      "/work/b.md": "# B\n\nAnother file.\n",
+    };
+  });
+  await openApp(page, { settings: { autosave: true } });
+  await openPath(page, "/work/b.md");
+  await openPath(page, "/work/a.md");
+  const editor = page.locator('[data-active-tab="true"] .ProseMirror');
+  await expect(editor).toContainText("The first line.");
+  await emit(page, "menu-track-changes");
+  await editor.locator("p").click();
+  await page.keyboard.press("End");
+  await page.keyboard.type(" Added words.");
+  await expect(editor.locator(".own-insert")).toContainText("Added words.");
+  const file = () =>
+    page.evaluate(
+      () =>
+        (window as unknown as { __devFs: Record<string, string> }).__devFs[
+          "/work/a.md"
+        ],
+    );
+
+  // Its tab out of sight, the autosave writes the original, not the change
+  // nobody decided on.
+  await page.locator(".tab-pill", { hasText: "b.md" }).click();
+  await expect(editor).toContainText("Another file.");
+  await expect(page.locator(".tab-pill-dirty-dot")).toHaveCount(0);
+  expect(await file()).not.toContain("Added words.");
+
+  // Back in front, it is still tracked: the change shows, undecided.
+  await page.locator(".tab-pill", { hasText: "a.md" }).click();
+  await expect(editor.locator(".own-insert")).toContainText("Added words.");
+  expect(await file()).not.toContain("Added words.");
+});

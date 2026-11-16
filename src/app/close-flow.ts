@@ -12,6 +12,7 @@ import {
 import { drafts, session } from "../platform/ipc";
 import { forgetTabZoom } from "../engine/zoom/tab-zoom";
 import { forgetLeft } from "../editor/tab-left";
+import { forgetTracked } from "../document/tracked-file";
 import { forgetTabWebviewState } from "../plugins/views/webviews";
 import { paneOf, shownIsland, windowLayout } from "../engine/layout/store";
 import { flushPendingWrites } from "../storage/pending-writes";
@@ -103,6 +104,7 @@ export function useTabRemoval(opts: {
       if (closedIds.length > 32) closedIds.shift();
       forgetTabZoom(id);
       forgetLeft(id);
+      if (closing?.path) forgetTracked(closing.path);
       forgetTabWebviewState(id);
       setTabs((prev) => {
         const next = prev.filter((tb) => tb.id !== id);
