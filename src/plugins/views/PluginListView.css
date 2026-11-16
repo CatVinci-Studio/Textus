@@ -103,8 +103,14 @@
   transform: rotate(90deg);
 }
 
+/* On the label's first line, however tall its text. */
 .plugin-list-check {
   margin-top: 2px;
+}
+@supports (height: 1lh) {
+  .plugin-list-check {
+    margin-top: calc((1lh - var(--check-size)) / 2);
+  }
 }
 
 .plugin-list-icon {

@@ -216,12 +216,16 @@
 
 /* Checkboxes: drawn, so they match the buttons rather than the platform. */
 input[type="checkbox"].ui-check {
+  /* Its size, for a row that centres it on its first line:
+     margin-top: calc((1lh - var(--check-size)) / 2). */
+  --check-size: 16px;
+  /* The row's font, so its 1lh is the row's line, not a control's. */
+  font: inherit;
   appearance: none;
   -webkit-appearance: none;
   flex-shrink: 0;
-  width: 16px;
-  height: 16px;
-  margin: 0;
+  width: var(--check-size);
+  height: var(--check-size);
   border: 1px solid color-mix(in srgb, var(--ui-muted) 55%, var(--ui-border));
   border-radius: var(--shape-xs);
   background: var(--ui-surface);
@@ -229,6 +233,11 @@ input[type="checkbox"].ui-check {
   transition:
     background-color var(--dur-fast) var(--ease-standard),
     border-color var(--dur-fast) var(--ease-standard);
+}
+
+/* No specificity: a row's own margin for it wins. */
+:where(input[type="checkbox"].ui-check) {
+  margin: 0;
 }
 
 input[type="checkbox"].ui-check:checked {

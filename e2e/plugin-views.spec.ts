@@ -10,6 +10,7 @@ import {
   openPath,
   openWithPlugins,
   PNG,
+  tabFrame,
 } from "./plugin-helpers";
 
 // The official plugins' files open as tabs, one after another, each page
@@ -86,6 +87,19 @@ test("each official plugin's file opens in a tab of its own, drawn", async ({
     expect(gap).toBeLessThanOrEqual(1);
   }
   await expect(page.locator(".plugin-webview-problem")).toHaveCount(0);
+  // A card's checkbox sits on its title's first line, centred on it.
+  await page.locator(".tab-pill", { hasText: "board.md" }).click();
+  const off = await tabFrame(page)
+    .locator(".card")
+    .first()
+    .evaluate((card) => {
+      const box = card.querySelector(".ui-check")!.getBoundingClientRect();
+      const text = card.querySelector(".card-text")!;
+      const line = parseFloat(getComputedStyle(text).lineHeight);
+      const top = text.getBoundingClientRect().top;
+      return box.top + box.height / 2 - (top + line / 2);
+    });
+  expect(Math.abs(off)).toBeLessThanOrEqual(1);
 });
 
 test("a text file no plugin opens shows read-only, not as Markdown to rewrite", async ({
@@ -198,6 +212,8 @@ test("a plugin's page asked for beside, with no room for it, opens as a tab and 
   // Read once: a notice goes by itself after a while.
   await page.waitForTimeout(300);
   expect(await page.locator(".notice").count()).toBe(0);
+  // Alone in front, it still draws the document it was asked for from.
+  await expect(tabFrame(page).locator("body")).toContainText("Some words");
 });
 
 test.describe("on a touch screen", () => {
