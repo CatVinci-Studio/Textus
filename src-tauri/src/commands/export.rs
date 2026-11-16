@@ -51,7 +51,7 @@ fn pandoc_places() -> impl Iterator<Item = PathBuf> {
 pub async fn detect_pandoc() -> Option<String> {
     tauri::async_runtime::spawn_blocking(|| {
         for candidate in pandoc_places() {
-            let works = crate::mcp::path::quiet_command(&candidate)
+            let works = crate::spawn::quiet_command(&candidate)
                 .arg("--version")
                 .stdin(Stdio::null())
                 .stdout(Stdio::null())
@@ -148,7 +148,7 @@ pub async fn export_via_pandoc(
         let mut args = pandoc_args(&format, &title);
         args[1].push_str(breaks_extension(resource_dir.as_deref()));
         let filter = pandoc_options::lua_filter().map_err(|e| e.to_string())?;
-        let mut cmd = crate::mcp::path::quiet_command(&pandoc_path);
+        let mut cmd = crate::spawn::quiet_command(&pandoc_path);
         cmd.arg("--lua-filter")
             .arg(filter.path())
             .args(&options.extra_args)

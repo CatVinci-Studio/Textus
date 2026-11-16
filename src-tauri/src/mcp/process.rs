@@ -27,7 +27,7 @@ pub(crate) fn start(
     let resolved = super::path::find_program(program, &path).ok_or_else(|| {
         format!("`{program}` isn't installed, or isn't on the PATH Textus sees ({path})")
     })?;
-    let mut command = tokio::process::Command::from(super::path::quiet_command(resolved));
+    let mut command = tokio::process::Command::from(crate::spawn::quiet_command(resolved));
     command
         .args(args)
         .env("PATH", &path)
