@@ -146,16 +146,42 @@ pub(crate) fn take_pending_menu_event() -> Option<&'static str> {
     PENDING_MENU_EVENT.lock().unwrap().take()
 }
 
-/// A folder from File > Open Recent chosen while no window was open: the fresh
-/// window takes it into its sidebar once mounted.
+/// The folder each new window was opened for (a recent folder with no
+/// window open, or ⌘/Ctrl-clicked), by the window's label: that window takes
+/// it into its sidebar once mounted, and no other - two opened one after the
+/// other each get their own.
 #[cfg(desktop)]
-pub(crate) static PENDING_OPEN_FOLDER: Mutex<Option<String>> = Mutex::new(None);
+static PENDING_OPEN_FOLDERS: Mutex<Vec<(String, String)>> = Mutex::new(Vec::new());
+
+/// The folder kept for the window `label`, once.
+#[cfg(desktop)]
+fn take_folder_for(label: &str) -> Option<String> {
+    let mut pending = PENDING_OPEN_FOLDERS
+        .lock()
+        .unwrap_or_else(|e| e.into_inner());
+    let at = pending.iter().position(|(window, _)| window == label)?;
+    Some(pending.remove(at).1)
+}
 
 #[cfg(desktop)]
 #[tauri::command]
 #[cfg_attr(test, specta::specta)]
-pub(crate) fn take_pending_open_folder() -> Option<String> {
-    PENDING_OPEN_FOLDER.lock().unwrap().take()
+pub(crate) fn take_pending_open_folder(window: tauri::Window) -> Option<String> {
+    take_folder_for(window.label())
+}
+
+/// A new window with `path` as its folder.
+#[cfg(desktop)]
+pub(crate) fn open_folder_window(app: &tauri::AppHandle, path: &str) {
+    let label = format!("window-{}", crate::editor_windows::next_window_id());
+    PENDING_OPEN_FOLDERS
+        .lock()
+        .unwrap_or_else(|e| e.into_inner())
+        .push((label.clone(), path.to_string()));
+    // No window came of it: its folder isn't left for one that didn't ask.
+    if crate::editor_windows::build_window(app, &label, None).is_err() {
+        take_folder_for(&label);
+    }
 }
 
 /// File > Open Recent from a window that keeps what it holds: the file opens as
@@ -182,8 +208,7 @@ pub(crate) async fn open_path_in_new_window(app: tauri::AppHandle, path: String)
 #[tauri::command]
 #[cfg_attr(test, specta::specta)]
 pub(crate) async fn open_folder_in_new_window(app: tauri::AppHandle, path: String) {
-    *PENDING_OPEN_FOLDER.lock().unwrap() = Some(path);
-    let _ = crate::editor_windows::open_new_window(&app);
+    open_folder_window(&app, &path);
 }
 
 /// What the window mounting now opens: a session's window (its documents,
@@ -224,4 +249,26 @@ pub(crate) fn open_urls(app: &tauri::AppHandle, urls: Vec<tauri::Url>) {
         None => paths,
     };
     queue_paths_to_open(app, paths);
+}
+
+#[cfg(all(test, desktop))]
+mod folder_tests {
+    use super::*;
+
+    #[test]
+    fn each_new_window_takes_the_folder_opened_for_it_once() {
+        let keep = |label: &str, path: &str| {
+            PENDING_OPEN_FOLDERS
+                .lock()
+                .unwrap()
+                .push((label.to_string(), path.to_string()))
+        };
+        // Two folders opened one after the other, the second window up first.
+        keep("window-t1", "/a");
+        keep("window-t2", "/b");
+        assert_eq!(take_folder_for("window-t2").as_deref(), Some("/b"));
+        assert_eq!(take_folder_for("window-other"), None);
+        assert_eq!(take_folder_for("window-t1").as_deref(), Some("/a"));
+        assert_eq!(take_folder_for("window-t1"), None);
+    }
 }
