@@ -63,6 +63,9 @@
 .tx-row > *:first-child {
   flex: 1 1 auto;
   word-break: keep-all;
+  /* A name longer than the whole row (Japanese has no spaces to break
+     at) breaks where it must, without making the name any narrower. */
+  overflow-wrap: break-word;
 }
 :is(.settings-row, .tx-row)
   > :first-child

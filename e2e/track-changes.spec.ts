@@ -23,6 +23,9 @@ async function openDraft(page: Page, kept?: string) {
   await openApp(page, { settings: { language: "en" } });
   await openPath(page, PATH);
   await expect(page.locator(editor)).toContainText("at dawn");
+  // In the document, as a writer is before using its menu.
+  await page.locator(`${editor} p`).first().click();
+  await expect(page.locator(editor)).toBeFocused();
 }
 
 const toggleTracking = (page: Page) => emit(page, "menu-track-changes");
