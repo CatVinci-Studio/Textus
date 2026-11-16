@@ -309,13 +309,19 @@ test("a sidebar tab's own key shows it, and again puts the sidebar away; Search 
     },
   });
   await emit(page, "menu-open-folder");
-  await expect(page.locator(".tree-row", { hasText: "a.md" })).toBeVisible();
+  await page.locator(".tree-row", { hasText: "a.md" }).click();
+  await expect(page.locator(".ProseMirror:visible h1")).toContainText("A");
   const mod = MAC ? "Meta" : "Control";
   await page.keyboard.press(`${mod}+Shift+u`);
   await expect(page.locator('[data-rail-id="outline"]')).toHaveAttribute(
     "aria-pressed",
     "true",
   );
+  // A heading clicked there: the caret at its end, typing goes on in it.
+  await page.locator(".outline-row", { hasText: "A" }).click();
+  await expect(page.locator(".ProseMirror:visible")).toBeFocused();
+  await page.keyboard.type(" more");
+  await expect(page.locator(".ProseMirror:visible h1")).toContainText("A more");
   await page.keyboard.press(`${mod}+Shift+u`);
   await expect(page.locator(".tree-row")).toHaveCount(0);
   await page.keyboard.press(`${mod}+Shift+y`);

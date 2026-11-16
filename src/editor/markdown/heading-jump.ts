@@ -124,16 +124,25 @@ export function referencePos(doc: ProseNode, anchor: string): number | null {
 }
 
 /** Scrolls to the document's `index`-th top-level heading, as the outline
- *  lists them. */
-export function revealNthHeading(view: EditorView, index: number): boolean {
+ *  lists them, the caret at its end: typing goes on there. A phone keeps
+ *  its keyboard down: it comes up for a tap in the text. */
+export function revealNthHeading(
+  view: EditorView,
+  index: number,
+  takeKeys: boolean,
+): boolean {
   let count = 0;
-  let found: number | null = null;
+  let found: { pos: number; end: number } | null = null;
   view.state.doc.forEach((node, offset) => {
     if (found === null && node.type.name === "heading" && count++ === index)
-      found = offset + 1;
+      found = { pos: offset + 1, end: offset + node.nodeSize - 1 };
   });
   if (found === null) return false;
-  revealPosition(view, found, "top");
+  const { pos, end } = found;
+  const { doc } = view.state;
+  view.dispatch(view.state.tr.setSelection(TextSelection.create(doc, end)));
+  revealPosition(view, pos, "top");
+  if (takeKeys) view.focus();
   return true;
 }
 
