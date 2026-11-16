@@ -178,3 +178,24 @@ test("a plugin's sidebar list keeps a short count beside its label", async ({
   });
   await expect(field).toHaveAttribute("placeholder", said("de"));
 });
+
+test("a plugin's page asked for beside, with no room for it, opens as a tab and nothing is said", async ({
+  page,
+}) => {
+  test.skip(!hasPlugin("catvinci.mdx"), "no plugins checkout");
+  await page.setViewportSize({ width: 360, height: 700 });
+  await openWithPlugins(page, {
+    plugins: { "catvinci.mdx": permissions("catvinci.mdx") },
+    folder: { "/work/notes/page.mdx": "# Hello\n\nSome words.\n" },
+  });
+  await openPath(page, "/work/notes/page.mdx");
+  const editor = page.locator('[data-active-tab="true"] .ProseMirror');
+  await expect(editor).toContainText("Some words");
+  await editor.locator("p").click({ button: "right" });
+  await page.getByRole("menuitem", { name: "Preview MDX" }).click();
+  await expect(page.locator(".tab-pill")).toHaveCount(2);
+  await expect(page.locator(".tab-pill-active")).not.toContainText("page.mdx");
+  // Read once: a notice goes by itself after a while.
+  await page.waitForTimeout(300);
+  expect(await page.locator(".notice").count()).toBe(0);
+});

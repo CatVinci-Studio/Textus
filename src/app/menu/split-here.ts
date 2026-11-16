@@ -24,19 +24,25 @@ export function splitHere(direction: SplitDirection): void {
   if (!splitEditor(direction)) sayNoRoom();
 }
 
-/** Shows `tabId` beside `from` (openBeside), or says why it can't. */
-export function openBesideOrSay(tabId: string, from: string | null): void {
-  if (!openBeside(tabId, from)) sayNoRoom();
+/** Shows `tabId` beside `from` (openBeside), or says why it can't. `say`
+ *  false: a plugin asked, not the user; with no room it is just a tab. */
+export function openBesideOrSay(
+  tabId: string,
+  from: string | null,
+  say = true,
+): void {
+  if (!openBeside(tabId, from) && say) sayNoRoom();
 }
 
 /** `now` with `tabId` beside `from` as it arrives; else `now`, and the
- *  window says why when it was too narrow. */
+ *  window says why when it was too narrow (unless `say` is false). */
 export function besideOrSay(
   now: SplitLayout,
   tabId: string,
   from: string | null,
+  say = true,
 ): SplitLayout {
   const { next, noRoom } = besideLayout(now, tabId, from);
-  if (noRoom) sayNoRoom();
+  if (noRoom && say) sayNoRoom();
   return next ?? now;
 }

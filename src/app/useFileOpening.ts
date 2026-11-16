@@ -60,6 +60,9 @@ export interface OpenOptions {
   /** In a tab of its own (the default), beside the tab in front, or in
    *  its place. */
   where?: Where;
+  /** A plugin asked for `where`: a window with no room for it just opens
+   *  a tab, saying nothing. */
+  byPlugin?: boolean;
   /** Dropped over the documents: opens on that side. */
   drop?: DropTarget;
   /** A single click to look: in the preview tab (DocTab.preview). */
@@ -211,8 +214,10 @@ export function useFileOpening(opts: {
         // update: never drawn first in front where it doesn't stay.
         const arriving = !tabsRef.current.some((tab) => tab.id === id);
         if (open.where === "beside") {
-          if (arriving) placeOnArrival(id, (now) => besideOrSay(now, id, from));
-          else openBesideOrSay(id, from);
+          const say = !open.byPlugin;
+          if (arriving)
+            placeOnArrival(id, (now) => besideOrSay(now, id, from, say));
+          else openBesideOrSay(id, from, say);
         } else if (drop) splitForDrop(id, drop, arriving);
       };
       const existing = tabsRef.current.find(

@@ -121,7 +121,9 @@ export function usePluginWindow({
       const from = tabInUse();
       // Beside: its place taken as it arrives, never first drawn in front.
       if (where === "beside")
-        placeOnArrival(made.id, (now) => besideOrSay(now, made.id, from));
+        placeOnArrival(made.id, (now) =>
+          besideOrSay(now, made.id, from, false),
+        );
       // In its place only while nothing unsaved would go with it.
       const front = liveTabs().find((tab) => tab.id === from);
       const replace = where === "current" && !!front && !tabIsDirty(front);
@@ -153,7 +155,7 @@ export function usePluginWindow({
         void (preview ? lookRef : openRef).current(path, {
           ...(place ? { place } : {}),
           ...(asDocument ? { asDocument } : {}),
-          ...(where ? { where } : {}),
+          ...(where ? { where, byPlugin: true } : {}),
           ...(preview ? { preview } : {}),
         }),
       openUntitled: (content, title, where) =>
@@ -176,7 +178,7 @@ export function usePluginWindow({
         if (open) {
           const from = tabInUse();
           setActiveTabId(open.id);
-          if (where === "beside") openBesideOrSay(open.id, from);
+          if (where === "beside") openBesideOrSay(open.id, from, false);
         } else addTab({ view }, where);
       },
       tabs: () => tabsRef.current.map(info),
