@@ -36,6 +36,26 @@ const left = new Map<string, TabLeft>();
 const readings = new Map<string, Reading>();
 const finds = new Map<string, FindLeft>();
 
+/** What a tab's source view leaves: its state as CodeMirror writes it out
+ *  (the text, selection and undo history) and where it was scrolled to,
+ *  as CodeMirror's own effect that takes a view back there. */
+interface SourceLeft {
+  state: unknown;
+  text: string;
+  scroll: unknown;
+}
+const sources = new Map<string, SourceLeft>();
+
+export function leaveSource(tabId: string, left: SourceLeft): void {
+  sources.set(tabId, left);
+}
+
+/** What `tabId`'s last source view left, if the tab still reads `text`. */
+export function sourceLeftBy(tabId: string, text: string): SourceLeft | null {
+  const left = sources.get(tabId);
+  return left?.text === text ? left : null;
+}
+
 export function leaveFind(tabId: string, find: FindLeft): void {
   finds.set(tabId, find);
 }
@@ -66,4 +86,5 @@ export function forgetLeft(tabId: string): void {
   left.delete(tabId);
   readings.delete(tabId);
   finds.delete(tabId);
+  sources.delete(tabId);
 }

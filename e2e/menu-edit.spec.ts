@@ -65,6 +65,47 @@ test("Find and Replace work in source mode, on the source in use", async ({
   await expect(bar).toHaveCount(0);
 });
 
+test("a source view let go for memory comes back with its undo, caret and place", async ({
+  page,
+}) => {
+  const lines = Array.from({ length: 120 }, (_, i) => `line ${i}`);
+  await page.addInitScript((text) => {
+    (window as unknown as Record<string, unknown>).__devFs = {
+      "/work/a.md": text,
+      "/work/b.md": "# B\n",
+    };
+  }, lines.join("\n\n"));
+  await page.setViewportSize({ width: 1200, height: 600 });
+  await openApp(page, { settings: { menuBarShown: false } });
+  await openPath(page, "/work/b.md");
+  await openPath(page, "/work/a.md");
+  await emit(page, "menu-toggle-source-mode");
+  const source = page.locator(".cm-content:visible");
+  await source.getByText("line 2", { exact: true }).click();
+  await page.keyboard.press("End");
+  await page.keyboard.type(" typed");
+  const scroller = page.locator(".cm-scroller:visible");
+  // The last key's own scroll to the caret first, then the reader's.
+  await page.waitForTimeout(300);
+  await scroller.evaluate((el) => (el.scrollTop = 900));
+  await page.waitForTimeout(300);
+  // Short of memory with b's source on screen: a's, out of sight, goes.
+  await page.locator(".tab-pill", { hasText: "b.md" }).click();
+  await expect(source).toContainText("# B");
+  await emit(page, "memory-level", { totalMb: 16384, pressure: 2 });
+  await expect(page.locator(".cm-editor")).toHaveCount(1);
+  await page.locator(".tab-pill", { hasText: "a.md" }).click();
+  await expect(source).toContainText("line 2 typed");
+  await expect
+    .poll(() => scroller.evaluate((el) => Math.round(el.scrollTop)))
+    .toBeGreaterThan(850);
+  await page.keyboard.type("!");
+  await expect(source).toContainText("line 2 typed!");
+  await page.keyboard.press("ControlOrMeta+z");
+  await page.keyboard.press("ControlOrMeta+z");
+  await expect(source).not.toContainText("typed");
+});
+
 test("a find bar left open comes back with its tab, the page where it was read", async ({
   page,
 }) => {
