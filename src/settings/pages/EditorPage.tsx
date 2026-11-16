@@ -1,3 +1,4 @@
+import { isMobileApp } from "../../platform/capabilities";
 import type { SettingsPageProps } from "./types";
 import { SettingsGroup } from "./SettingsGroup";
 import {
@@ -55,6 +56,13 @@ export function EditTextPage({ t, settings, setSettings }: SettingsPageProps) {
           checked={settings.blockHandles}
           onChange={(v) => setSettings({ blockHandles: v })}
         />
+        {!isMobileApp && (
+          <ToggleRow
+            label={t.smoothCaretLabel}
+            checked={settings.smoothCaret}
+            onChange={(v) => setSettings({ smoothCaret: v })}
+          />
+        )}
         <DocTextFold t={t} settings={settings} setSettings={setSettings} />
       </SettingsGroup>
       {/* One view for every document in every window. */}

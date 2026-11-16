@@ -125,6 +125,7 @@ type /name in a conversation to use one.
   blockHandlesLabel: "Block handles",
   blockHandlesHelp:
     "＋ and ⋮⋮ beside the block under the pointer: add a block, move it, or turn it into another kind.",
+  smoothCaretLabel: "Smooth caret",
   menuBlockWide: "Wide",
   menuBlockZoom: "Size",
   diagramViewerLabel: "Diagram",

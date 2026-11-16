@@ -1,0 +1,52 @@
+/* The caret drawn in place of the system's (drawn-caret-plugin.ts). */
+
+.milkdown.drawn-caret-on {
+  position: relative;
+}
+
+.milkdown.drawn-caret-on .ProseMirror {
+  caret-color: transparent;
+}
+
+.drawn-caret {
+  position: absolute;
+  top: 0;
+  left: 0;
+  z-index: 1;
+  width: 2px;
+  border-radius: 1px;
+  background: var(--doc-text);
+  pointer-events: none;
+}
+
+/* Smooth caret on: it glides to where it goes. Shown again, it starts there. */
+.drawn-caret-glide:not(.drawn-caret-still) {
+  transition: transform var(--dur-instant) var(--ease-out);
+}
+
+.drawn-caret[hidden] {
+  display: none;
+}
+
+/* Solid for a moment after each move, then the blink. */
+.drawn-caret[data-blink="a"] {
+  animation: drawn-caret-blink-a var(--dur-blink) steps(1) var(--delay-soon)
+    infinite;
+}
+
+.drawn-caret[data-blink="b"] {
+  animation: drawn-caret-blink-b var(--dur-blink) steps(1) var(--delay-soon)
+    infinite;
+}
+
+@keyframes drawn-caret-blink-a {
+  50% {
+    opacity: 0;
+  }
+}
+
+@keyframes drawn-caret-blink-b {
+  50% {
+    opacity: 0;
+  }
+}

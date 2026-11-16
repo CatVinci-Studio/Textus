@@ -130,6 +130,7 @@ Habilidades ficam na pasta skills/ ao lado deste arquivo, um arquivo
   blockHandlesLabel: "Alças de bloco",
   blockHandlesHelp:
     "＋ e ⋮⋮ ao lado do bloco sob o ponteiro: adicionar um bloco, movê-lo ou transformá-lo em outro tipo.",
+  smoothCaretLabel: "Cursor suave",
   menuBlockWide: "Exibição larga",
   menuBlockZoom: "Tamanho",
   diagramViewerLabel: "Diagrama",

@@ -1,5 +1,5 @@
 // @vitest-environment jsdom
-import { afterEach, beforeAll, describe, expect, it } from "vitest";
+import { afterEach, describe, expect, it } from "vitest";
 import type { EditorView } from "@milkdown/kit/prose/view";
 import { undo } from "@milkdown/kit/prose/history";
 import { closeViews, openView } from "../editor-view-kit";
@@ -8,10 +8,6 @@ import { pickedText } from "../completion/completion-plugin";
 // Typed text that reads as a link becomes one once the caret is past it,
 // as GFM would read the file on reopening; the Markdown stays as typed.
 
-beforeAll(() => {
-  Range.prototype.getClientRects ??= () => [] as unknown as DOMRectList;
-  Range.prototype.getBoundingClientRect ??= () => new DOMRect();
-});
 afterEach(closeViews);
 
 const links = (view: EditorView) => {

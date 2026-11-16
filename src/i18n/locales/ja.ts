@@ -125,6 +125,7 @@ ${AI_NAME}への執筆の指示です。すべての文書に適用されます�
   blockHandlesLabel: "ブロックハンドル",
   blockHandlesHelp:
     "ポインタのあるブロックの左に ＋ と ⋮⋮ を表示：ブロックの追加、移動、別の種類への変換。",
+  smoothCaretLabel: "なめらかなカーソル",
   menuBlockWide: "ワイド表示",
   menuBlockZoom: "表示サイズ",
   diagramViewerLabel: "図",

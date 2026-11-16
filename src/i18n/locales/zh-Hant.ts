@@ -119,6 +119,7 @@ export default {
   blockHandlesLabel: "區塊控點",
   blockHandlesHelp:
     "指標所在的區塊左邊顯示 ＋ 和 ⋮⋮：新增區塊、拖曳移動、轉換成別的類型。",
+  smoothCaretLabel: "平滑游標",
   menuBlockWide: "寬螢幕顯示",
   menuBlockZoom: "縮放",
   diagramViewerLabel: "圖表",

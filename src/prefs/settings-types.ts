@@ -174,6 +174,8 @@ export interface Settings {
   emptyLineHint: boolean;
   /** ＋ and ⋮⋮ beside the block under the pointer. */
   blockHandles: boolean;
+  /** The caret glides to where it goes (computers only). */
+  smoothCaret: boolean;
   /** How an image on a line of its own sits. Display only: the file is
    *  not changed. */
   imageAlign: ImageAlign;
@@ -346,6 +348,7 @@ export const DEFAULT_SETTINGS: Settings = {
   firstLineIndent: false,
   emptyLineHint: false,
   blockHandles: true,
+  smoothCaret: false,
   imageAlign: "center",
   menuBarShown: false,
   titleRowShown: false,

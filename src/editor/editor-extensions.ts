@@ -1,4 +1,3 @@
-import { createBlockHandlesPlugin } from "./blocks/block-handles-plugin";
 import { type Editor, editorViewOptionsCtx, rootCtx } from "@milkdown/kit/core";
 import type { Ctx, MilkdownPlugin } from "@milkdown/kit/ctx";
 import { orderedListAttr } from "@milkdown/kit/preset/commonmark";
@@ -81,10 +80,9 @@ import { mathAutopairPlugin } from "./math/math-autopair-plugin";
 import { createMathPreviewPlugin } from "./math/math-preview-plugin";
 import { headingMarkerPlugin } from "./marks/heading-marker-plugin";
 import { macNavigationPlugin } from "./keys/mac-navigation-plugin";
-import { dragAutoscrollPlugin } from "./keys/drag-autoscroll-plugin";
 import { editorExtensions } from "./extension-points";
-import { marginClickPlugin } from "./keys/margin-click-plugin";
-import { noRevealPlugin, pointerHoldPlugin } from "./pointer-hold";
+import { noRevealPlugin } from "./pointer-hold";
+import { pointerPlugins } from "./pointer-plugins";
 import {
   cjkTaskInputPlugin,
   remarkEmptyTaskItems,
@@ -248,10 +246,7 @@ export function withEditorCore(
       .use(editing(createCompletionPlugin(() => docPath.current)))
       .use(editing(editorExtensions().keyInput))
       .use(editing(macNavigationPlugin))
-      // Before the margin's clicks: held before they move the selection.
-      .use(editing(pointerHoldPlugin))
-      .use(editing(dragAutoscrollPlugin))
-      .use(editing(marginClickPlugin))
+      .use(editing(pointerPlugins(settings)))
       .use(editing(linuxImeEnterPlugin))
       .use(editing(iosEnterBeforeBlockPlugin))
       .use(editing(compositionPruneGuardPlugin))
@@ -365,13 +360,6 @@ export function withEditorCore(
         createColorSwatchPlugin({
           mode: () => settings.current.colorSwatches,
         }),
-      )
-      .use(
-        editing(
-          createBlockHandlesPlugin({
-            enabled: () => settings.current.blockHandles,
-          }),
-        ),
       )
 
       .use(emojiShortcodePlugin)

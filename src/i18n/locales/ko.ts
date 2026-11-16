@@ -124,6 +124,7 @@ ${AI_NAME}에게 주는 글쓰기 지침으로, 모든 문서에 적용됩니다
   blockHandlesLabel: "블록 핸들",
   blockHandlesHelp:
     "포인터가 있는 블록 왼쪽에 ＋와 ⋮⋮ 표시: 블록 추가, 이동, 다른 종류로 변환.",
+  smoothCaretLabel: "부드러운 커서",
   menuBlockWide: "넓게 보기",
   menuBlockZoom: "크기",
   diagramViewerLabel: "다이어그램",

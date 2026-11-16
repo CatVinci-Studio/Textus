@@ -137,6 +137,7 @@ utiliser une.
   blockHandlesLabel: "Poignées de bloc",
   blockHandlesHelp:
     "＋ et ⋮⋮ à côté du bloc sous le pointeur : ajouter un bloc, le déplacer ou le transformer en un autre type.",
+  smoothCaretLabel: "Curseur fluide",
   menuBlockWide: "Affichage large",
   menuBlockZoom: "Taille",
   diagramViewerLabel: "Diagramme",

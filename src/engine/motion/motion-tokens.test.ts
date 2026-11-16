@@ -14,6 +14,9 @@ const OWN_KEYFRAMES: Record<string, string> = {
   "ai/chat/chat-progress.css agent-thinking-pulse": "thinking dots",
   "ai/chat/chat-progress.css agent-caret-pulse": "caret while writing",
   "editor/editor-base.css ghost-caret-blink": "caret before a suggestion",
+  // Two names, so each move starts the blink over.
+  "editor/drawn-caret.css drawn-caret-blink-a": "the caret",
+  "editor/drawn-caret.css drawn-caret-blink-b": "the caret",
   "ai/revision/pending-picture.css pending-picture-drift": "picture being made",
   "ai/revision/pending-picture.css pending-picture-sheen": "picture being made",
   // A state shown by colour or a stroke, not a part arriving.

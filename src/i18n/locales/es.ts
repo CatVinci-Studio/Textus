@@ -137,6 +137,7 @@ para usar una.
   blockHandlesLabel: "Asas de bloque",
   blockHandlesHelp:
     "＋ y ⋮⋮ junto al bloque bajo el puntero: añadir un bloque, moverlo o convertirlo en otro tipo.",
+  smoothCaretLabel: "Cursor suave",
   menuBlockWide: "Vista ancha",
   menuBlockZoom: "Tamaño",
   diagramViewerLabel: "Diagrama",

@@ -119,6 +119,7 @@ export default {
   blockHandlesLabel: "块把手",
   blockHandlesHelp:
     "指针所在的块左边显示 ＋ 和 ⋮⋮：添加一块、拖动移动、转换成别的类型。",
+  smoothCaretLabel: "平滑光标",
   menuBlockWide: "宽屏显示",
   menuBlockZoom: "缩放",
   diagramViewerLabel: "图表",

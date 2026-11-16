@@ -132,6 +132,7 @@ export default {
   blockHandlesLabel: "Маркеры блоков",
   blockHandlesHelp:
     "＋ и ⋮⋮ рядом с блоком под указателем: добавить блок, переместить его или превратить в блок другого вида.",
+  smoothCaretLabel: "Плавный курсор",
   menuBlockWide: "Во всю ширину",
   menuBlockZoom: "Масштаб",
   diagramViewerLabel: "Диаграмма",

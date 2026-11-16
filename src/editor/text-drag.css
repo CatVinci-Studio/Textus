@@ -1,0 +1,19 @@
+/* Where pulled text will land (text-drag-plugin.ts). */
+.text-drop-caret {
+  position: absolute;
+  top: 0;
+  left: 0;
+  z-index: 3;
+  width: 2px;
+  border-radius: 1px;
+  background: var(--ui-accent);
+  pointer-events: none;
+}
+
+.text-drop-caret[hidden] {
+  display: none;
+}
+
+.milkdown:has(> .text-drop-caret) {
+  position: relative;
+}

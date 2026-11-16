@@ -91,3 +91,42 @@ test("the handles stay away while typing, and off in Settings", async ({
   await page.waitForTimeout(200);
   await expect(page.locator(handle)).toBeHidden();
 });
+
+test("selected text pulled moves where it is let go; with Option or Ctrl a copy goes", async ({
+  page,
+}) => {
+  await openApp(page, { settings: { language: "en" } });
+  await pasteMarkdown(page, "move me here\n\nto the end");
+  const word = page.locator(`${editor} > p`).first();
+  await word.dblclick({ position: { x: 8, y: 8 } });
+  const box = (await word.boundingBox())!;
+  const end = (await block(page, "to the end").boundingBox())!;
+  await page.mouse.move(box.x + 8, box.y + 8);
+  await page.mouse.down();
+  await page.mouse.move(end.x + end.width - 2, end.y + end.height / 2, {
+    steps: 8,
+  });
+  await expect(page.locator(".text-drop-caret")).toBeVisible();
+  await page.mouse.up();
+  await expect(page.locator(`${editor} > p`)).toHaveText([
+    " me here",
+    "to the endmove",
+  ]);
+  await expect(page.locator(".text-drop-caret")).toHaveCount(0);
+
+  // The moved word is still selected: pulled again with the key held, a copy.
+  const moved = page.locator(`${editor} > p`).nth(1);
+  const at = (await moved.boundingBox())!;
+  const start = (await block(page, "me here").boundingBox())!;
+  await page.mouse.move(at.x + at.width - 12, at.y + at.height / 2);
+  await page.mouse.down();
+  await page.mouse.move(start.x + 1, start.y + start.height / 2, { steps: 8 });
+  const copyKey = process.platform === "darwin" ? "Alt" : "Control";
+  await page.keyboard.down(copyKey);
+  await page.mouse.up();
+  await page.keyboard.up(copyKey);
+  await expect(page.locator(`${editor} > p`)).toHaveText([
+    "move me here",
+    "to the endmove",
+  ]);
+});
