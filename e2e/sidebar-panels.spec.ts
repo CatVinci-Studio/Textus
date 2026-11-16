@@ -83,6 +83,9 @@ test("too narrow for the islands at their least, the sidebar steps aside, then t
   await expect(page.locator("section.island")).toHaveCount(1);
   await page.waitForTimeout(300);
   await expect(sidebar).not.toHaveClass(/sidebar-collapsed/);
+  // And the island it joined stays in the window.
+  const island = (await page.locator("section.island").boundingBox())!;
+  expect(island.x + island.width).toBeLessThanOrEqual(800);
 });
 
 test("its edge dragged out, the sidebar widens and the islands make room", async ({
