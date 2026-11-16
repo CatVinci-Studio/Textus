@@ -16,6 +16,8 @@ import type { Strings } from "../i18n/strings";
 import type { TourAi } from "../utils/events";
 import { configureEditorRoot } from "../editor/editor-extensions";
 import { leftBy } from "../editor/tab-left";
+import { registerTabEditor } from "../editor/tab-editor";
+import { takeKeys } from "../editor/take-keys";
 import {
   documentChangedForPlugins,
   selectionChangedForPlugins,
@@ -87,6 +89,7 @@ export function useTextusEditor({
     (root) =>
       withEditorExtensions(
         Editor.make().config((ctx) => {
+          let giveBack = () => {};
           configureEditorRoot(
             ctx,
             root,
@@ -97,8 +100,15 @@ export function useTextusEditor({
           ctx
             .get(listenerCtx)
             .mounted((ctx) => {
-              onMounted(ctx, ctx.get(editorViewCtx).state.doc);
+              const view = ctx.get(editorViewCtx);
+              onMounted(ctx, view.state.doc);
+              // The keys can go to it the moment it is built: a render
+              // later, what was typed meanwhile went nowhere.
+              giveBack = registerTabEditor(tabId, "focus", () =>
+                takeKeys(view),
+              );
             })
+            .destroy(() => giveBack())
             // Not markdownUpdated: that serializes the whole document, and a
             // save writes only the changed blocks.
             .updated((ctx, doc) => {

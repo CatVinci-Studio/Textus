@@ -11,25 +11,39 @@ import { mayTakeKeys } from "../../editor/take-keys";
  *  the AI's box. */
 const TYPED_IN = ".cm-content, textarea";
 
-/** Puts the focus in `tabId`'s content once it is drawn in front - a tab
- *  just brought there mounts a frame or two later - or, where it has
- *  nothing to type in, on its tab. A document's editor takes it its own
- *  way (tab-editor.ts), as soon as it is built. */
-function focusTab(tabId: string, tries = 10): void {
+/** Puts the focus in `tabId`'s content: a document's editor the moment it
+ *  is built (tab-editor.ts) - a frame later, on a slow computer, keys typed
+ *  meanwhile went nowhere; anything else once drawn in front, a frame or two
+ *  later; with nothing to type in, its tab. `onlyIfLost`: only where the
+ *  focus would be lost with the view that went out of sight. */
+function focusTab(tabId: string, onlyIfLost = false): void {
+  const mayTake = () => (!onlyIfLost || focusLost()) && mayTakeKeys();
+  if (mayTake() && focusTabEditor(tabId)) return;
+  const cancel = whenEditorBuilt(tabId, () => {
+    if (tabInUse() === tabId && focusLost()) focusTabEditor(tabId);
+  });
+  focusDrawn(tabId, mayTake, cancel);
+}
+
+function focusDrawn(
+  tabId: string,
+  mayTake: () => boolean,
+  cancel: () => void,
+  tries = 10,
+): void {
   requestAnimationFrame(() => {
     // Another tab is in use by now (a click elsewhere): the keys are its.
-    if (tabInUse() !== tabId) return;
+    if (tabInUse() !== tabId) return cancel();
     const view = tabElement(tabId);
-    if (view && focusTabEditor(tabId)) return;
-    if (view?.querySelector(".editor-scroll")) {
-      whenEditorBuilt(tabId, () => {
-        if (tabInUse() === tabId && focusLost()) focusTabEditor(tabId);
-      });
-      return;
-    }
+    // A document's: its editor takes them when built, or did.
+    if (view?.querySelector(".editor-scroll")) return;
+    if (!view && tries > 0)
+      return focusDrawn(tabId, mayTake, cancel, tries - 1);
+    cancel();
+    if (!mayTake()) return;
     const target = view?.querySelector<HTMLElement>(TYPED_IN);
     if (target) target.focus({ preventScroll: true });
-    else if (tries > 0) focusTab(tabId, tries - 1);
+    else if (tries > 0) focusDrawn(tabId, mayTake, () => {}, tries - 1);
     else
       document
         .querySelector<HTMLElement>(
@@ -67,9 +81,7 @@ export function useIslandNumbers(setActiveTabId: (id: string) => void): void {
       const now = tabInUse();
       if (now === was) return;
       was = now;
-      requestAnimationFrame(() => {
-        if (focusLost() && mayTakeKeys()) focusTab(now);
-      });
+      focusTab(now, true);
     });
   }, []);
 }
