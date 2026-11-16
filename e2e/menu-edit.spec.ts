@@ -100,6 +100,7 @@ test("a source view let go for memory comes back with its undo, caret and place"
   await expect
     .poll(() => scroller.evaluate((el) => Math.round(el.scrollTop)))
     .toBeGreaterThan(850);
+  await expect(source).toBeFocused();
   await page.keyboard.type("!");
   await expect(source).toContainText("line 2 typed!");
   await page.keyboard.press("ControlOrMeta+z");

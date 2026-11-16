@@ -54,6 +54,35 @@ test("the unsaved-changes prompt stays in front of Settings", async ({
   expect(await onTop(page, ".close-prompt-primary")).toBe(true);
 });
 
+test("File › Close Window in the app-drawn menu closes this window (#345)", async ({
+  page,
+}) => {
+  // Windows: the app draws its own menu bar there.
+  await page.addInitScript(() => {
+    Object.defineProperty(navigator, "platform", { get: () => "Win32" });
+    Object.defineProperty(navigator, "userAgent", {
+      get: () => "Mozilla/5.0 (Win32) AppleWebKit/537.36 Chrome/157.0",
+    });
+  });
+  await openApp(page, { settings: { language: "en", menuBarShown: true } });
+  await mockInvoke(page, {
+    "plugin:window|close": null,
+    trigger_menu_item: null,
+  });
+  await page.getByRole("menuitem", { name: "File" }).click();
+  await page.getByRole("menuitem", { name: "Close Window" }).click();
+  const asked = await page.evaluate(() =>
+    (
+      (window as unknown as { __devInvokeCalls?: { cmd: string }[] })
+        .__devInvokeCalls ?? []
+    ).map((c) => c.cmd),
+  );
+  // This window closes itself, as its close button does - not through the
+  // backend, which may find no window focused (Windows, Linux).
+  expect(asked).toContain("plugin:window|close");
+  expect(asked).not.toContain("trigger_menu_item");
+});
+
 test("with Keep unsaved changes on, closing keeps them as a draft and asks nothing", async ({
   page,
 }) => {
