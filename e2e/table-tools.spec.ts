@@ -17,18 +17,28 @@ async function open(page: Page, markdown = TABLE) {
 const tool = (page: Page, name: string, exact = true) =>
   page.locator(".table-toolbar").getByRole("button", { name, exact });
 
+/** A tool pressed as a hand does: by way of the head row, which shows them. */
+async function press(page: Page, name: string, exact = true) {
+  await page.locator(".table-wrapper th").last().hover();
+  await tool(page, name, exact).click();
+}
+
 test("a table's tools align the caret's column, size it, and delete it", async ({
   page,
 }) => {
   const table = await open(page);
   await table.locator("td", { hasText: "2" }).click();
-  await expect(tool(page, "Align Center")).toBeVisible();
+  // Its tools come with the pointer by its head row, not with the caret.
+  const tools = table.locator(".block-toolbar-actions");
+  await expect(tools).toHaveCSS("opacity", "0");
+  await table.locator("th").last().hover();
+  await expect(tools).toHaveCSS("opacity", "1");
   await page.screenshot({ path: "test-results/table-tools.png" });
-  await tool(page, "Align Center").click();
+  await press(page, "Align Center");
   await expect(table.locator("th").nth(1)).toHaveCSS("text-align", "center");
   await expect(table.locator("td").nth(1)).toHaveCSS("text-align", "center");
 
-  await tool(page, "Rows and Columns 2 × 2", false).click();
+  await press(page, "Rows and Columns 2 × 2", false);
   const card = page.getByRole("dialog", { name: "Rows and Columns" });
   await expect(card).toBeVisible();
   await card.locator('[data-cell="2,2"]').hover();
@@ -40,7 +50,7 @@ test("a table's tools align the caret's column, size it, and delete it", async (
   await expect(table.locator("tr").first().locator("th")).toHaveCount(3);
 
   // Smaller again: the cells with text it would cut are marked first.
-  await tool(page, "Rows and Columns 3 × 3", false).click();
+  await press(page, "Rows and Columns 3 × 3", false);
   await card.locator('[data-cell="1,0"]').hover();
   await expect(card.locator(".is-lost")).toHaveCount(2);
   await expect(card.getByText("Cells with text will be removed")).toBeVisible();
@@ -48,7 +58,7 @@ test("a table's tools align the caret's column, size it, and delete it", async (
   await page.keyboard.press("Escape");
   await expect(card).toHaveCount(0);
 
-  await tool(page, "Delete Table").click();
+  await press(page, "Delete Table");
   await expect(page.locator(".table-wrapper")).toHaveCount(0);
 });
 
@@ -186,6 +196,18 @@ test("the + strips under and beside a table add a row and a column, reached from
   page,
 }) => {
   const table = await open(page);
+  // Each strip shows by its own edge only: not with the pointer on the head
+  // row's first cell, the row's with it in the last row, the column's by
+  // the last column.
+  const strip = (which: string) => table.locator(`.table-add-${which}-btn`);
+  await table.locator("th").first().hover();
+  await expect(strip("row")).toHaveCSS("opacity", "0");
+  await expect(strip("col")).toHaveCSS("opacity", "0");
+  await table.locator("td").first().hover();
+  await expect(strip("row")).toHaveCSS("opacity", "1");
+  await expect(strip("col")).toHaveCSS("opacity", "0");
+  await table.locator("th").last().hover();
+  await expect(strip("col")).toHaveCSS("opacity", "1");
   const box = (await table.locator("table").boundingBox())!;
   // From inside the table straight down onto the strip, as a hand moves.
   await page.mouse.move(box.x + 40, box.y + box.height - 6);

@@ -60,11 +60,20 @@ export function attachGrips(options: {
 
   /** The grips at `cell`'s row and column; hidden with none. */
   function place(cell: HTMLElement | null) {
+    last = cell;
     const tr = cell?.parentElement;
     const row = tr ? rows().indexOf(tr as HTMLTableRowElement) : -1;
     const col = tr && cell ? [...tr.children].indexOf(cell) : -1;
     at = { row, col };
     wrapper.toggleAttribute("data-grips", row >= 0);
+    // Which edges the pointer is by: each shows its own tools (the strips,
+    // the toolbar over the head row), not all of them as it enters.
+    const near = [
+      row === 0 && "top",
+      tr && row === rows().length - 1 && "bottom",
+      tr && col === tr.children.length - 1 && "right",
+    ].filter(Boolean);
+    wrapper.dataset.near = near.join(" ");
     if (!cell || !tr || row < 0) return;
     const t = box(table);
     const r = box(tr as HTMLElement);
@@ -72,8 +81,19 @@ export function attachGrips(options: {
     grips.row.hidden = row === 0;
     // Scrolled sideways, the row's grip stays at the edge still shown.
     grips.row.style.transform = `translate(${Math.max(t.x, 0)}px, ${r.y + r.h / 2}px)`;
-    grips.col.style.transform = `translate(${c.x + c.w / 2}px, ${t.y}px)`;
+    // A column half scrolled out: its grip at the middle of what shows.
+    const left = Math.max(c.x, 0);
+    const right = Math.min(c.x + c.w, wrapper.clientWidth);
+    grips.col.hidden = right <= left;
+    grips.col.style.transform = `translate(${(left + right) / 2}px, ${t.y}px)`;
   }
+  // Placed again as the table changes size (zoom, the window, a row
+  // growing as it is typed in), not only as the pointer moves.
+  let last: HTMLElement | null = null;
+  const resized = new ResizeObserver(() => {
+    if (last?.isConnected && !dragging) place(last);
+  });
+  resized.observe(table);
 
   const cellAt = (target: EventTarget | null) => {
     const cell = (target as Element | null)?.closest?.("td, th");
@@ -88,7 +108,10 @@ export function attachGrips(options: {
     const cell = cellAt(e.target);
     if (cell) place(cell);
   };
-  const onLeave = () => (mouseOver = false);
+  const onLeave = () => {
+    mouseOver = false;
+    delete wrapper.dataset.near;
+  };
   wrapper.addEventListener("pointermove", onMove);
   wrapper.addEventListener("pointerleave", onLeave);
 
@@ -231,6 +254,7 @@ export function attachGrips(options: {
     destroy() {
       wrapper.removeEventListener("pointermove", onMove);
       wrapper.removeEventListener("pointerleave", onLeave);
+      resized.disconnect();
     },
   };
 }

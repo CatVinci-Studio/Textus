@@ -134,15 +134,18 @@
   transition: opacity var(--dur-fast) var(--ease-standard);
 }
 
-:is(.code-block-wrapper, .table-wrapper):is(
-    :hover,
-    :focus-within,
-    .is-picking-language,
-    .is-table-caret,
-    .is-sizing
-  )
+.code-block-wrapper:is(:hover, :focus-within, .is-picking-language)
   > .block-toolbar
-  > .block-toolbar-actions {
+  > .block-toolbar-actions,
+/* A table's: with the pointer by its head row or on them (a mouse), the
+   caret in it (touch, below), or its size card open - not on every visit. */
+.table-wrapper:is([data-near~="top"]:hover, .is-sizing)
+  > .block-toolbar
+  > .block-toolbar-actions,
+.table-wrapper > .block-toolbar > .block-toolbar-actions:is(
+    :hover,
+    :focus-within
+  ) {
   opacity: 1;
   pointer-events: auto;
 }
@@ -150,6 +153,10 @@
 /* A finger leaves :hover and a tapped pill's focus stuck on the table it
    touched: there its tools show only while the caret is in it. */
 @media (hover: none) {
+  .table-wrapper.is-table-caret > .block-toolbar > .block-toolbar-actions {
+    opacity: 1;
+    pointer-events: auto;
+  }
   .table-wrapper:is(:hover, :focus-within):not(.is-table-caret, .is-sizing)
     > .block-toolbar
     > .block-toolbar-actions,

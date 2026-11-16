@@ -139,9 +139,11 @@ export function createTableView(strings: () => Strings) {
 
     const scroller = wrapper.appendChild(document.createElement("div"));
     scroller.className = "table-scroll";
-    scroller.appendChild(table);
+    // The column strip goes with the table's real end, scrolled with it.
+    const track = scroller.appendChild(document.createElement("div"));
+    track.className = "table-track";
+    track.append(table, addColBtn);
     wrapper.appendChild(addRowBtn);
-    wrapper.appendChild(addColBtn);
     const grips = attachGrips({ wrapper, table, tbody, view, getPos });
     const followCaret = () => {
       // Picked cells (a grip's row or column) leave the grips where they were.

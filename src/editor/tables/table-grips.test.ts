@@ -54,10 +54,18 @@ describe("table grips", () => {
       Object.defineProperty(el, "offsetParent", {
         value: el === table ? wrapper : el === row ? table : row,
       });
+    Object.defineProperty(wrapper, "clientWidth", {
+      value: 1000,
+      configurable: true,
+    });
     grips.follow(cells[3]!);
     const colGrip = wrapper.querySelector<HTMLElement>(".table-grip-col")!;
     expect(rowGrip.style.transform).toBe("translate(0px, 80px)");
     expect(colGrip.style.transform).toBe("translate(280px, 20px)");
+    // Its column half cut by the scroller's edge: the middle of what shows.
+    Object.defineProperty(wrapper, "clientWidth", { value: 300 });
+    grips.follow(cells[3]!);
+    expect(colGrip.style.transform).toBe("translate(240px, 20px)");
     grips.destroy();
     wrapper.remove();
   });

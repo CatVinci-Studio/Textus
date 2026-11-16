@@ -175,8 +175,10 @@
     border-color var(--dur-fast) var(--ease-standard);
 }
 
-.table-wrapper:hover .table-add-row-btn,
-.table-wrapper:hover .table-add-col-btn,
+/* Each strip by its own edge only: the pointer in the last row or column,
+   or on the strip. */
+.table-wrapper[data-near~="bottom"]:hover .table-add-row-btn,
+.table-wrapper[data-near~="right"]:hover .table-add-col-btn,
 .table-add-row-btn:hover,
 .table-add-col-btn:hover {
   opacity: 1;
@@ -220,10 +222,19 @@
   width: 100%;
 }
 
+/* The table and its column strip, as wide as the table and the strip's
+   room: the strip sits by the real last column, scrolled with it, never
+   over a column the scroller cuts. */
+.table-track {
+  position: relative;
+  width: fit-content;
+  padding-inline-end: 20px;
+}
+
 .table-add-col-btn {
   top: 0;
   bottom: 0;
-  right: -11px;
+  right: 0;
   width: 16px;
   height: 100%;
 }
