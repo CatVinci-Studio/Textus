@@ -274,9 +274,17 @@ describe("autosaveTab", () => {
 
 describe("saveTabAs", () => {
   it("brings a document's images to the file it is saved as", async () => {
-    vi.mocked(fs.fileMtimeMs).mockResolvedValue(3);
+    // The new file is there, with a time and its text, once it is written.
+    const written = () => vi.mocked(fs.writeTextFile).mock.calls.at(-1)?.[1];
+    vi.mocked(fs.fileMtimeMs).mockImplementation(async () =>
+      written() === undefined ? null : 3,
+    );
     vi.mocked(fs.saveFileDialog).mockResolvedValue("/elsewhere/b.md");
-    vi.mocked(fs.readTextFile).mockRejectedValue("not found");
+    vi.mocked(fs.readTextFile).mockImplementation(async () => {
+      const text = written();
+      if (text === undefined) throw new Error("not found");
+      return text;
+    });
     vi.mocked(fs.migrateDraftImages).mockResolvedValue([
       { old: "pics/p.png", new: "assets/p.png" },
     ]);

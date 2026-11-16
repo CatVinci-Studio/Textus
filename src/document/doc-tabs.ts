@@ -255,7 +255,13 @@ export async function writeDocFile(
   path: string,
   content: string,
 ): Promise<void> {
-  const existing = await fs.readTextFile(path).catch(() => null);
+  // Only a file that isn't there has no format to keep: one that can't be
+  // read just now (locked, not downloaded) is not written over as if new,
+  // in other line endings.
+  const existing = await fs.readTextFile(path).catch(async (error) => {
+    if (await fileExists(path)) throw error;
+    return null;
+  });
   const format =
     existing === null ? { crlf: false, bom: false } : detectFormat(existing);
   await fs.writeTextFile(path, toFileText(content, format));
