@@ -7,7 +7,7 @@ const KEEP_HIDDEN_MS = memoryLimits().hiddenMs;
 
 afterEach(() => vi.useRealTimers());
 
-it("lets a view out of sight go after a while, and keeps three at most", () => {
+it("lets a view out of sight go after a while, and keeps two of them at most", () => {
   vi.useFakeTimers();
   const gone: number[] = [];
   const views = [0, 1, 2, 3].map((i) => keepLoaded("test", () => gone.push(i)));
@@ -23,11 +23,23 @@ it("lets a view out of sight go after a while, and keeps three at most", () => {
   views[1].shown();
   views[1].hidden();
   views[2].shown();
-  // A fourth shown: the longest unseen hidden one goes first.
-  views[3].shown();
+  views[2].hidden();
+  // A third out of sight: the longest unseen goes first.
   expect(gone).toEqual([0]);
   vi.advanceTimersByTime(KEEP_HIDDEN_MS);
-  expect(gone).toEqual([0, 1]);
+  expect(gone).toEqual([0, 1, 2]);
+});
+
+it("keeps what is out of sight however many are on screen", () => {
+  const gone: number[] = [];
+  const views = [0, 1, 2, 3].map((i) =>
+    keepLoaded("split", () => gone.push(i)),
+  );
+  views[0].shown();
+  views[0].hidden();
+  // Three side by side in a split: the one out of sight stays.
+  for (const v of views.slice(1)) v.shown();
+  expect(gone).toEqual([]);
 });
 
 it("lets go of what no longer fits when memory gets short", async () => {
@@ -38,8 +50,8 @@ it("lets go of what no longer fits when memory gets short", async () => {
     v.shown();
     v.hidden();
   }
+  expect(gone).toEqual([0]);
   views[2].shown();
-  expect(gone).toEqual([]);
   setMemoryState({ totalMb: 16_000, pressure: 2 });
   expect(gone).toEqual([0, 1]);
   setMemoryState({ totalMb: 16_000, pressure: 0 });

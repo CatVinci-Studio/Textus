@@ -7,7 +7,8 @@
 type MemoryLevel = "roomy" | "normal" | "tight" | "critical";
 
 interface MemoryLimits {
-  /** Views of one kind kept loaded, the one on screen among them. */
+  /** Views of one kind kept loaded out of sight; those on screen are
+   *  always loaded. */
   keep: number;
   /** How long one out of sight stays loaded. */
   hiddenMs: number;
@@ -15,10 +16,10 @@ interface MemoryLimits {
 
 const MINUTE = 60_000;
 const LIMITS: Record<MemoryLevel, MemoryLimits> = {
-  roomy: { keep: 5, hiddenMs: 10 * MINUTE },
-  normal: { keep: 3, hiddenMs: 5 * MINUTE },
-  tight: { keep: 2, hiddenMs: 2 * MINUTE },
-  critical: { keep: 1, hiddenMs: MINUTE / 2 },
+  roomy: { keep: 4, hiddenMs: 10 * MINUTE },
+  normal: { keep: 2, hiddenMs: 5 * MINUTE },
+  tight: { keep: 1, hiddenMs: 2 * MINUTE },
+  critical: { keep: 0, hiddenMs: MINUTE / 2 },
 };
 const ORDER: MemoryLevel[] = ["roomy", "normal", "tight", "critical"];
 
