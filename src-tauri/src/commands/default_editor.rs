@@ -66,6 +66,12 @@ mod registry {
         }
     }
 
+    /// The documents' icon, beside `exe` (the installer puts it there).
+    fn doc_icon(exe: &str) -> String {
+        let dir = exe.rsplit_once('\\').map_or("", |(dir, _)| dir);
+        format!("\"{dir}\\doc.ico\"")
+    }
+
     /// Every value, for Textus installed at `exe`; keep in step with the installer
     /// hooks. The extensions' own default values are left to the installer.
     pub fn values(exe: &str) -> Vec<Value> {
@@ -75,7 +81,8 @@ mod registry {
         let app = format!(r"Software\Classes\Applications\{exe_name}");
         let mut values = vec![
             text(&prog_id, "", "Markdown document"),
-            text(&format!(r"{prog_id}\DefaultIcon"), "", &format!("{exe},0")),
+            // A document's own icon, installed beside the app.
+            text(&format!(r"{prog_id}\DefaultIcon"), "", &doc_icon(exe)),
             text(&format!(r"{prog_id}\shell\open\command"), "", &open),
             text(&app, "FriendlyAppName", "Textus"),
             text(&format!(r"{app}\shell\open\command"), "", &open),

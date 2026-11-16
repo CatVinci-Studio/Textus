@@ -143,7 +143,10 @@
     ],
     "createUpdaterArtifacts": true,
     "macOS": {
-      "minimumSystemVersion": "11.0"
+      "minimumSystemVersion": "11.0",
+      "files": {
+        "Resources/doc.icns": "icons/doc.icns"
+      }
     },
     "iOS": {
       "minimumSystemVersion": "16.0"
