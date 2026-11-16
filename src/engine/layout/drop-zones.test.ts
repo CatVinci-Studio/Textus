@@ -101,12 +101,12 @@ describe("a split into too little room", () => {
       setLayoutFits(() => ({ short: 300, panels: 200 }));
       setSidebarRoom(100);
       expect(layoutFits(split)).toBe(false);
-      expect(shortGivingWay(split)).toBe(0);
+      expect(shortGivingWay(split, new Set())).toBe(0);
       // Without the sidebar, 100 short: said, not made.
       setSidebarRoom(0);
-      expect(shortGivingWay(split)).toBe(100);
+      expect(shortGivingWay(split, new Set())).toBe(100);
       // The panels go first, then the sidebar.
-      askGiveWay();
+      askGiveWay(new Set());
       expect(givingWayNow()).toBe("panels");
       panelsGaveWay(false);
       expect(givingWayNow()).toBe("sidebar");

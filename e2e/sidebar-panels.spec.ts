@@ -86,6 +86,13 @@ test("too narrow for the islands at their least, the sidebar steps aside, then t
   // And the island it joined stays in the window.
   const island = (await page.locator("section.island").boundingBox())!;
   expect(island.x + island.width).toBeLessThanOrEqual(800);
+  // Split with the AI in front: it and the document go apart, the sidebar
+  // stepping aside for them - not made, then folded straight back.
+  await emit(page, "menu-split-right");
+  await expect(page.locator("section.island")).toHaveCount(2);
+  await expect(sidebar).toHaveClass(/sidebar-collapsed/);
+  await page.waitForTimeout(300);
+  await expect(page.locator("section.island")).toHaveCount(2);
 });
 
 test("its edge dragged out, the sidebar widens and the islands make room", async ({

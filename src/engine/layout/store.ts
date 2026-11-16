@@ -3,6 +3,7 @@ import {
   paneById,
   paneWithTab,
   panesOf,
+  type LayoutNode,
   type Path,
   type SplitDirection,
 } from "./tree";
@@ -162,9 +163,20 @@ export function withRoom(next: SplitLayout | null): {
   next: SplitLayout | null;
   noRoom: boolean;
 } {
-  const fits = !!next && shortGivingWay(next.root) === 0;
+  const fits = !!next && shortGivingWay(next.root, made(next.root)) === 0;
   return { next: fits ? next : null, noRoom: !!next && !fits };
 }
+
+/** `next`, a panel's island (the AI's, a plugin's page) opening beside,
+ *  when it fits the window as it is; null and it joins an island instead,
+ *  nothing put away for it. */
+export function ifFits(next: SplitLayout | null): SplitLayout | null {
+  return next && layoutFits(next.root) ? next : null;
+}
+
+/** The islands `root` has that the window's layout doesn't, as they are:
+ *  new ones, and those whose tabs changed. */
+const made = (root: LayoutNode) => madeSince(layout.root, root);
 
 /** Splits the pane in use (or the window) this way, a document of its
  *  tabs, or a blank one, going into the new pane - when the islands, the
@@ -179,7 +191,7 @@ export function splitEditor(direction: SplitDirection): boolean {
     () => undefined,
   );
   const root = "blank" in next ? next.blank.root : next.root;
-  if (shortGivingWay(root)) return false;
+  if (shortGivingWay(root, made(root))) return false;
   request = { direction };
   change();
   return true;
@@ -321,9 +333,24 @@ let islandCount = 1;
 function change() {
   settle();
   const count = panesOf(layout.root).length;
-  if (count > islandCount && !layoutFits(layout.root)) askGiveWay();
+  if (count > islandCount && !layoutFits(layout.root))
+    askGiveWay(madeSince(published, layout.root));
   islandCount = count;
+  published = layout.root;
   publish();
+}
+
+/** The layout as the window was last told it. */
+let published: LayoutNode = layout.root;
+
+/** The islands `root` has that `was` doesn't, as they are. */
+function madeSince(was: LayoutNode, root: LayoutNode): ReadonlySet<string> {
+  const tabs = new Map(panesOf(was).map((p) => [p.id, p.tabs.join()]));
+  return new Set(
+    panesOf(root)
+      .filter((p) => tabs.get(p.id) !== p.tabs.join())
+      .map((p) => p.id),
+  );
 }
 
 /** The layout as the tabs now stand (resolve.ts): a tab opened joins the

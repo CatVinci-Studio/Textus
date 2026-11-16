@@ -125,6 +125,14 @@ describe("folding a panel's island", () => {
       "b.md,ai-1>b.md",
     ]);
     expect(shape(foldPanels(three, () => false))).toEqual(shape(three));
+    // The island a split just made is never counted as room: kept, the
+    // split would come undone as soon as it was made.
+    expect(shape(foldPanels(three, isPanel, new Set(["p"])))).toEqual(
+      shape(three),
+    );
+    expect(foldIsland(docAndAi(), isPanel, 900, new Set(["p"]))?.panel).toBe(
+      false,
+    );
   });
 
   it("leaves a lone island be", () => {

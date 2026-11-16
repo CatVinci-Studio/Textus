@@ -12,7 +12,7 @@ import {
 import { useChatHistory } from "../../ai/chat/chat-history";
 import { makeBlankTab, type DocTab } from "../../document/doc-tabs";
 import {
-  ifRoom,
+  ifFits,
   placeOnArrival,
   windowLayout,
 } from "../../engine/layout/store";
@@ -138,7 +138,7 @@ export function useAiTabs({
         placeOnArrival(tab.id, (now) =>
           home
             ? (moveTab(now, tab.id, home.id) ?? now)
-            : (ifRoom(splitOff(now, tab.id, null, "right")) ?? now),
+            : (ifFits(splitOff(now, tab.id, null, "right")) ?? now),
         );
     }
     if (gone.length || made.length)

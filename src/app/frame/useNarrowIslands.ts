@@ -1,6 +1,7 @@
 import { useEffect, useRef, useState } from "react";
 import {
   givingWayNow,
+  keptFromFolding,
   panelsGaveWay,
   useIslandsNeed,
 } from "../../engine/frame/frame-store";
@@ -56,7 +57,12 @@ export function useNarrowIslands(
     if (!need || !room || sidebarGoes || backAt.current !== null) return;
     const giving = givingWayNow() === "panels";
     if (need > room && (!grew || giving)) {
-      const out = foldIsland(windowLayout(), isWindowPanel, need);
+      const out = foldIsland(
+        windowLayout(),
+        isWindowPanel,
+        need,
+        keptFromFolding(),
+      );
       // Making room for a split: its panels only, then the sidebar's turn.
       if (giving && !out?.panel) panelsGaveWay(false);
       if (!out || (giving && !out.panel)) return;
