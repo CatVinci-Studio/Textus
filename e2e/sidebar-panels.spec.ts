@@ -329,3 +329,41 @@ test("a sidebar tab's own key shows it, and again puts the sidebar away; Search 
   await page.locator('[data-rail-id="search"]').click();
   await expect(page.locator(".search-panel input").first()).toBeFocused();
 });
+
+test.describe("on a phone", () => {
+  test.use({
+    userAgent:
+      "Mozilla/5.0 (iPhone; CPU iPhone OS 18_0 like Mac OS X) AppleWebKit/605.1.15 (KHTML, like Gecko) Mobile/15E148",
+    viewport: { width: 402, height: 874 },
+    hasTouch: true,
+    isMobile: true,
+  });
+
+  test("a document brought to the front is read first: the keyboard comes up for a tap in its text", async ({
+    page,
+  }) => {
+    await openApp(page);
+    const editor = page.locator(".ProseMirror:visible");
+    await editor.tap();
+    await page.keyboard.type("some text");
+    await page.locator(".tab-bar-add").first().tap();
+    await expect(page.locator(".tab-pill")).toHaveCount(2);
+    // A slow phone: the document is built well after the tap.
+    const cdp = await page
+      .context()
+      .newCDPSession(page)
+      .catch(() => null);
+    await cdp?.send("Emulation.setCPUThrottlingRate", { rate: 30 });
+    // What was tapped goes (as a sidebar's row does): the document left
+    // in front is not given the keys for it.
+    await page.locator(".tab-pill").last().locator(".tab-pill-close").tap();
+    const text = page.locator(".ProseMirror:visible p", { hasText: "some" });
+    await expect(text).toBeVisible();
+    // Long enough for any late focus of its own to have come.
+    await page.waitForTimeout(2000);
+    await cdp?.send("Emulation.setCPUThrottlingRate", { rate: 1 });
+    await expect(editor).not.toBeFocused();
+    await text.tap();
+    await expect(editor).toBeFocused();
+  });
+});

@@ -329,8 +329,9 @@ test("a tracked document keeps its original while another tab is in front, throu
   await openPath(page, "/work/a.md");
   const editor = page.locator('[data-active-tab="true"] .ProseMirror');
   await expect(editor).toContainText("The first line.");
-  await emit(page, "menu-track-changes");
   await editor.locator("p").click();
+  await expect(editor).toBeFocused();
+  await emit(page, "menu-track-changes");
   await page.keyboard.press("End");
   await page.keyboard.type(" Added words.");
   await expect(editor.locator(".own-insert")).toContainText("Added words.");

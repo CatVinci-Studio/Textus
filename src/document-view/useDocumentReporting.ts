@@ -1,3 +1,4 @@
+import { takeKeys } from "../editor/take-keys";
 import { useCallback, useEffect, useLayoutEffect, useRef } from "react";
 import { editorViewCtx, serializerCtx } from "@milkdown/kit/core";
 import type { Ctx } from "@milkdown/kit/ctx";
@@ -124,7 +125,7 @@ export function useEditorFlush(
   useEffect(() => {
     if (!built) return;
     return registerTabEditor(tabId, "focus", () =>
-      run((ctx) => ctx.get(editorViewCtx).focus()),
+      run((ctx) => takeKeys(ctx.get(editorViewCtx))),
     );
   }, [built, tabId, run]);
 }

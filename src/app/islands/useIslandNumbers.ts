@@ -5,6 +5,7 @@ import { useEffect } from "react";
 import { watchIslandNumbers } from "../../engine/layout/island-numbers";
 import { modIsMeta } from "../../platform/os";
 import { isMobileApp } from "../../platform/capabilities";
+import { mayTakeKeys } from "../../editor/take-keys";
 
 /** What takes the keys in a tab besides a document's editor: its source,
  *  the AI's box. */
@@ -67,7 +68,7 @@ export function useIslandNumbers(setActiveTabId: (id: string) => void): void {
       if (now === was) return;
       was = now;
       requestAnimationFrame(() => {
-        if (focusLost()) focusTab(now);
+        if (focusLost() && mayTakeKeys()) focusTab(now);
       });
     });
   }, []);

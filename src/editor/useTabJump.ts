@@ -10,7 +10,6 @@ import {
 import { applyEditorCaret, placeEditorCaret } from "./modes/mode-switch";
 import { onTabJump, takeTabJump, type TabJump } from "./tab-jump";
 import type { Ctx } from "@milkdown/kit/ctx";
-import { isPhoneLayout } from "../platform/phone-layout";
 import type { DocumentPlace } from "../plugins/app-bridge";
 
 /** This tab's editor carries out the jump its opener left once mounted and
@@ -36,11 +35,7 @@ export function useTabJump(
         else if (jump.kind === "outline" && jump.select)
           selectNthSection(ctx.get(editorViewCtx), jump.index);
         else if (jump.kind === "outline")
-          revealNthHeading(
-            ctx.get(editorViewCtx),
-            jump.index,
-            !isPhoneLayout(),
-          );
+          revealNthHeading(ctx.get(editorViewCtx), jump.index);
         // A line alone is counted in the text as it was opened, not in
         // the editor's own writing of it (blank lines, lists, front matter).
         else if (jump.kind === "place" && onlyLine(jump.place) !== null)
