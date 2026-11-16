@@ -49,6 +49,7 @@ export function useEditorChat({
     isActive,
     onDecided: learning.record,
     requestImageName: setup.imageName.requestImageName,
+    textOf: setup.reporting.textOf,
   });
   const { pendingEdits, conversation, quickConversation } = proposals;
   useHeldWhileBusy({

@@ -23,6 +23,8 @@ export interface DocumentReporting {
   /** The editor has mounted with `doc`, read from the opened file. */
   onMounted: (ctx: Ctx, doc: ProseNode) => void;
   reportDoc: (ctx: Ctx, doc: ProseNode) => void;
+  /** What a save writes for `doc`: the file's own text where unchanged. */
+  textOf: (ctx: Ctx, doc: ProseNode) => string;
 }
 
 export function useDocumentReporting(
@@ -48,26 +50,25 @@ export function useDocumentReporting(
     mountDocRef.current = doc;
     sourceRef.current = readSourceBlocks(ctx, openedValueRef.current, doc);
   }, []);
+  const textOf = useCallback((ctx: Ctx, doc: ProseNode) => {
+    const source = sourceRef.current;
+    if (source) return writePreservingSource(ctx, source, doc);
+    const serializer = ctx.get(serializerCtx);
+    const mountDoc = mountDocRef.current;
+    if (mountDoc && mountMarkdownRef.current === null)
+      mountMarkdownRef.current = serializer(mountDoc);
+    const markdown = serializer(doc);
+    return markdown === mountMarkdownRef.current
+      ? openedValueRef.current
+      : markdown;
+  }, []);
   const reportDoc = useCallback(
     (ctx: Ctx, doc: ProseNode) => {
-      const source = sourceRef.current;
-      let value: string;
-      if (source) value = writePreservingSource(ctx, source, doc);
-      else {
-        const serializer = ctx.get(serializerCtx);
-        const mountDoc = mountDocRef.current;
-        if (mountDoc && mountMarkdownRef.current === null)
-          mountMarkdownRef.current = serializer(mountDoc);
-        const markdown = serializer(doc);
-        value =
-          markdown === mountMarkdownRef.current
-            ? openedValueRef.current
-            : markdown;
-      }
+      const value = textOf(ctx, doc);
       reportedMarkdownRef.current = value;
       onChangeRef.current(value);
     },
-    [onChangeRef],
+    [onChangeRef, textOf],
   );
   return {
     reportedDocRef,
@@ -75,6 +76,7 @@ export function useDocumentReporting(
     openedValueRef,
     onMounted,
     reportDoc,
+    textOf,
   };
 }
 

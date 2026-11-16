@@ -224,3 +224,24 @@ test.describe("on a touch screen", () => {
     await expect(button).toHaveCSS("opacity", "1");
   });
 });
+
+test("a plugin reads the document in front as a save would write it", async ({
+  page,
+}) => {
+  const file = "---\ntitle: Notes\n---\n# Notes\n\nFirst  line.\n";
+  await page.addInitScript((f) => {
+    (window as unknown as Record<string, unknown>).__devFs = {
+      "/work/fm.md": f,
+    };
+  }, file);
+  await openApp(page, { settings: { language: "en" } });
+  await openPath(page, "/work/fm.md");
+  await expect(
+    page.locator('[data-active-tab="true"] .ProseMirror'),
+  ).toContainText("First");
+  const read = await page.evaluate(async (url) => {
+    const bridge = await import(/* @vite-ignore */ url);
+    return bridge.getActiveDocument()?.text();
+  }, "/src/plugins/app-bridge.ts");
+  expect(read).toBe(file);
+});
