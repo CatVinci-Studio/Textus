@@ -1954,4 +1954,10 @@ para usar una.
   shortcutOutdentListItem: "Reducir sangría del elemento",
   pluginKeyTaken:
     "{name}: {key} ya es de «{owner}», así que no se asignó a «{command}». Elige otro en Ajustes › Atajos de teclado.",
+  gitTrustTitle:
+    "¿Permitir que Git ejecute los programas propios de este repositorio?",
+  gitTrustText:
+    "El repositorio Git de esta carpeta está configurado para ejecutar programas en tu ordenador ({what}). Es habitual en un repositorio que has preparado tú. Si la carpeta viene de otra persona, permítelo solo si confías en ella.",
+  gitTrustAllow: "Confiar en este repositorio",
+  gitTrustRefused: "Aquí no se usa Git: el repositorio no es de confianza.",
 } satisfies Translation;

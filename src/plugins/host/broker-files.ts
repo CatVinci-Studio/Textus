@@ -13,8 +13,10 @@ import {
 import { freeFilePath } from "../../document/autosave-untitled";
 import { updateProjectSettings } from "../../storage/project-settings";
 
-/** The folder conventions a plugin may set. */
-const SETTABLE_CONVENTIONS = ["linkStyle"];
+/** The folder conventions a plugin may set, each with what it may say. */
+const SETTABLE_CONVENTIONS: Record<string, readonly string[]> = {
+  linkStyle: ["markdown", "wiki"],
+};
 import { ENTRY_TRASHED_EVENT, FILE_WRITTEN_EVENT } from "../../utils/events";
 import { fromBase64, toBase64 } from "../store/files";
 import {
@@ -127,8 +129,17 @@ export function fileHandlers(p: PluginScope) {
     // (.textus/settings.json) as Settings' own card keeps it.
     "files.setConvention": async ({ key, value }: Params) => {
       const name = str(key, "key");
-      if (!SETTABLE_CONVENTIONS.includes(name))
+      const says = Object.prototype.hasOwnProperty.call(
+        SETTABLE_CONVENTIONS,
+        name,
+      )
+        ? SETTABLE_CONVENTIONS[name]
+        : null;
+      if (!says)
         throw new Error(`${name} isn't a convention a plugin can set.`);
+      // Kept in the folder's own settings file: only what Textus reads.
+      if (value != null && !says.includes(value as string))
+        throw new Error(`${name} is one of: ${says.join(", ")}.`);
       await updateProjectSettings(p.root(), "conventions", (now) => ({
         ...now,
         [name]: value ?? undefined,

@@ -1739,4 +1739,9 @@ export default {
   shortcutOutdentListItem: "列表项取消缩进",
   pluginKeyTaken:
     "「{name}」：{key} 已被「{owner}」使用，所以没有绑定到“{command}”。可在 设置 › 快捷键 中另设。",
+  gitTrustTitle: "允许 Git 运行这个仓库自带的程序吗？",
+  gitTrustText:
+    "这个文件夹的 Git 仓库设置了会在你电脑上运行程序的选项（{what}）。自己建的仓库有这些很正常。如果文件夹来自别人，只有在信任对方时才允许。",
+  gitTrustAllow: "信任这个仓库",
+  gitTrustRefused: "这里不使用 Git：这个仓库未被信任。",
 } satisfies Translation;

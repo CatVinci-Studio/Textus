@@ -1837,4 +1837,10 @@ ${AI_NAME}への執筆の指示です。すべての文書に適用されます�
   shortcutOutdentListItem: "リスト項目のインデントを戻す",
   pluginKeyTaken:
     "「{name}」：{key} は「{owner}」が使っているため、「{command}」には割り当てませんでした。設定 › ショートカット で別のキーを設定できます。",
+  gitTrustTitle: "このリポジトリ独自のプログラムを Git に実行させますか？",
+  gitTrustText:
+    "このフォルダの Git リポジトリは、お使いのコンピュータでプログラムを実行するように設定されています（{what}）。自分で作ったリポジトリではよくあることです。ほかの人から受け取ったフォルダの場合は、相手を信頼できるときだけ許可してください。",
+  gitTrustAllow: "このリポジトリを信頼",
+  gitTrustRefused:
+    "ここでは Git を使いません：このリポジトリは信頼されていません。",
 } satisfies Translation;

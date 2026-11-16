@@ -1933,4 +1933,10 @@ Habilidades ficam na pasta skills/ ao lado deste arquivo, um arquivo
   shortcutOutdentListItem: "Diminuir recuo do item",
   pluginKeyTaken:
     "{name}: {key} já é de “{owner}”, então não foi atribuído a “{command}”. Escolha outro em Ajustes › Atalhos.",
+  gitTrustTitle:
+    "Permitir que o Git execute os programas próprios deste repositório?",
+  gitTrustText:
+    "O repositório Git desta pasta está configurado para executar programas no seu computador ({what}). É comum num repositório que você mesmo preparou. Se a pasta veio de outra pessoa, permita apenas se confiar nela.",
+  gitTrustAllow: "Confiar neste repositório",
+  gitTrustRefused: "O Git não é usado aqui: o repositório não é confiável.",
 } satisfies Translation;

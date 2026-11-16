@@ -1969,4 +1969,9 @@ utiliser une.
   shortcutOutdentListItem: "Désindenter l’élément de liste",
   pluginKeyTaken:
     "{name} : {key} appartient à « {owner} » et n’a donc pas été attribué à « {command} ». Choisissez un raccourci dans Réglages › Raccourcis.",
+  gitTrustTitle: "Laisser Git exécuter les programmes propres à ce dépôt ?",
+  gitTrustText:
+    "Le dépôt Git de ce dossier est configuré pour exécuter des programmes sur votre ordinateur ({what}). C'est courant dans un dépôt que vous avez préparé vous-même. Si le dossier vient de quelqu'un d'autre, ne l'autorisez que si vous lui faites confiance.",
+  gitTrustAllow: "Faire confiance à ce dépôt",
+  gitTrustRefused: "Git n'est pas utilisé ici : le dépôt n'est pas approuvé.",
 } satisfies Translation;

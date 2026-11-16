@@ -2,7 +2,7 @@
  *  what runs, other plugins' storage. One rule with the Rust side's
  *  (plugins/access/paths.rs). */
 const NEVER =
-  /^(?:\.git|\.ssh|\.aws|\.gnupg|\.docker|\.kube|\.textus|\.env.*|\.netrc|\.npmrc|\.pypirc|\.pgpass|\.htpasswd|credentials.*|.*\.(?:pem|key|p12|pfx))$/i;
+  /^(?:\.git|\.git-credentials|\.ssh|\.aws|\.gnupg|\.docker|\.kube|\.config|\.textus|\.env.*|\.netrc|\.npmrc|\.pypirc|\.pgpass|\.htpasswd|\.vault-token|\.terraformrc|.*_history|\.?mcp\.json|credentials.*|.*\.(?:pem|key|p12|pfx))$/i;
 
 /** Whether a plugin may ask for `hidden:<path>`: a file under a hidden
  *  folder or a hidden file of the open folder, named from its top, none

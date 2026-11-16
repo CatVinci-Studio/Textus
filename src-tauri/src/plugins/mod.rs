@@ -56,6 +56,7 @@ macro_rules! with_plugin_commands {
             $crate::plugins::git::plugin_git_log,
             $crate::plugins::git::plugin_git_show,
             $crate::plugins::git::plugin_git_commit,
+            $crate::plugins::git::git_trust_repository,
             $crate::plugins::catalog::plugin_install_catalog,
             $crate::plugins::dev::plugin_load_dev,
             $crate::plugins::install::plugin_uninstall,

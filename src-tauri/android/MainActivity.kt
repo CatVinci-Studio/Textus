@@ -87,10 +87,6 @@ class MainActivity : TauriActivity() {
             keepEdge()
           }
         }
-        @JavascriptInterface fun keep(text: String) {
-          kept = text
-        }
-        @JavascriptInterface fun kept(): String = kept
         /** The page's Appearance: "light", "dark" or "system". */
         @JavascriptInterface fun setAppearance(mode: String) {
           runOnUiThread {
@@ -142,13 +138,6 @@ class MainActivity : TauriActivity() {
       if (edgeSwipe) listOf(Rect(0, mid - band / 2, (32 * density).toInt(), mid + band / 2))
       else emptyList(),
     )
-  }
-
-  companion object {
-    /** The page's tabs (reload-tabs.ts), for the page Android makes anew
-     *  when it recreates the activity (a font or display size change):
-     *  kept by the process, not by the page. */
-    @Volatile private var kept = ""
   }
 
   private fun tell(webView: WebView, event: String) {

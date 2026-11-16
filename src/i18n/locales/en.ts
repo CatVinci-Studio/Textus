@@ -1871,6 +1871,11 @@ type /name in a conversation to use one.
   shortcutOutdentListItem: "Outdent List Item",
   pluginKeyTaken:
     "{name}: {key} is {owner}'s, so it wasn't given to “{command}”. Set a key in Settings › Shortcuts.",
+  gitTrustTitle: "Let Git run this repository's own programs?",
+  gitTrustText:
+    "This folder's Git repository is set up to run programs on your computer ({what}). That is usual in a repository you set up yourself. For a folder that came from someone else, allow it only if you trust them.",
+  gitTrustAllow: "Trust This Repository",
+  gitTrustRefused: "Git isn't used here: the repository isn't trusted.",
 } satisfies Record<string, string | Plural>;
 
 export default en;

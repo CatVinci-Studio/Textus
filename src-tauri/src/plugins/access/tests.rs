@@ -135,3 +135,33 @@ fn a_hidden_file_granted_by_name_is_readable_and_only_that() {
     assert!(at("files.read", ".vitepress/env.ts").is_err());
     assert!(at("files.read", ".env").is_err());
 }
+
+#[test]
+fn no_plugin_may_ask_for_a_file_that_holds_keys_or_tokens() {
+    use super::paths::hidden_file_path;
+    for ok in [
+        ".vitepress/config.ts",
+        ".obsidian/app.json",
+        ".github/workflows/ci.yml",
+    ] {
+        assert!(hidden_file_path(ok), "{ok}");
+    }
+    for secret in [
+        ".git/config",
+        ".git-credentials",
+        ".env.local",
+        ".ssh/id_ed25519",
+        ".config/gh/hosts.yml",
+        ".cursor/mcp.json",
+        ".mcp.json",
+        ".zsh_history",
+        ".vault-token",
+        ".terraformrc",
+        ".aws/credentials",
+        ".certs/site.pem",
+        "notes/visible.md",
+        ".a/../b",
+    ] {
+        assert!(!hidden_file_path(secret), "{secret}");
+    }
+}

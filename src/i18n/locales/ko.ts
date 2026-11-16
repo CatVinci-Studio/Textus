@@ -1818,4 +1818,10 @@ ${AI_NAME}에게 주는 글쓰기 지침으로, 모든 문서에 적용됩니다
   shortcutOutdentListItem: "목록 항목 내어쓰기",
   pluginKeyTaken:
     "{name}: {key}는 {owner}에서 쓰고 있어 “{command}”에 지정하지 않았습니다. 설정 › 단축키에서 다른 키를 지정하세요.",
+  gitTrustTitle: "이 저장소에 설정된 프로그램을 Git이 실행하도록 허용할까요?",
+  gitTrustText:
+    "이 폴더의 Git 저장소는 컴퓨터에서 프로그램을 실행하도록 설정되어 있습니다({what}). 직접 만든 저장소라면 흔한 일입니다. 다른 사람에게서 받은 폴더라면 상대를 신뢰할 때만 허용하세요.",
+  gitTrustAllow: "이 저장소 신뢰",
+  gitTrustRefused:
+    "여기서는 Git을 사용하지 않습니다: 신뢰하지 않는 저장소입니다.",
 } satisfies Translation;

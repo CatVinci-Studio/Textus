@@ -1745,4 +1745,9 @@ export default {
   shortcutOutdentListItem: "清單項目取消縮排",
   pluginKeyTaken:
     "「{name}」：{key} 已被「{owner}」使用，所以沒有綁定到「{command}」。可在 設定 › 快速鍵 中另設。",
+  gitTrustTitle: "允許 Git 執行這個儲存庫自帶的程式嗎？",
+  gitTrustText:
+    "這個資料夾的 Git 儲存庫設定了會在你的電腦上執行程式的選項（{what}）。自己建立的儲存庫有這些很正常。如果資料夾來自別人，只有在信任對方時才允許。",
+  gitTrustAllow: "信任這個儲存庫",
+  gitTrustRefused: "這裡不使用 Git：這個儲存庫未受信任。",
 } satisfies Translation;

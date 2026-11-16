@@ -1914,4 +1914,10 @@ Skills liegen im Ordner skills/ neben dieser Datei, je Skill eine
   shortcutOutdentListItem: "Listenelement ausrücken",
   pluginKeyTaken:
     "{name}: {key} gehört zu „{owner}“ und wurde „{command}“ daher nicht zugewiesen. Lege unter Einstellungen › Tastenkürzel eine andere Taste fest.",
+  gitTrustTitle: "Darf Git die eigenen Programme dieses Repositorys ausführen?",
+  gitTrustText:
+    "Das Git-Repository dieses Ordners ist so eingerichtet, dass es Programme auf deinem Computer ausführt ({what}). Bei einem selbst eingerichteten Repository ist das üblich. Stammt der Ordner von jemand anderem, erlaube es nur, wenn du dieser Person vertraust.",
+  gitTrustAllow: "Diesem Repository vertrauen",
+  gitTrustRefused:
+    "Git wird hier nicht verwendet: Dem Repository wird nicht vertraut.",
 } satisfies Translation;

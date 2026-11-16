@@ -259,6 +259,9 @@ export const drafts = {
   finishDraftRestore: () => command("finish_draft_restore"),
   clearDraftSnapshot: (tabId: string) => command("clear_draft_snapshot", tabId),
   clearAllDrafts: () => command("clear_all_drafts"),
+  /** The page's tabs, kept by the app's process (reload-tabs.ts). */
+  keepPageTabs: (text: string) => command("keep_page_tabs", text),
+  keptPageTabs: () => command("kept_page_tabs"),
 };
 
 /** A document's undo history kept beside the app's data while its editor

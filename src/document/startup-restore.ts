@@ -151,7 +151,7 @@ export function useStartupRestore(options: StartupRestoreOptions): void {
     void (async () => {
       // The page reloaded: the window gets back what it had. Everything
       // below was handed out at its first start.
-      const kept = readKeptTabs();
+      const kept = await readKeptTabs();
       if (kept) {
         opts.stopTutorial();
         const docs = await Promise.all(
