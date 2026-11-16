@@ -23,7 +23,7 @@ export function AppMenuButton({ checks }: { checks?: MenuChecks } = {}) {
 
   const close = useCallback(() => {
     setAnchor(null);
-    focusOnClose.current?.focus();
+    focusOnClose.current?.focus({ preventScroll: true });
     focusOnClose.current = null;
   }, []);
 

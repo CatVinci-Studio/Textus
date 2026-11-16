@@ -240,3 +240,42 @@ test("a document comes back with its caret, its undo and its redo", async ({
     "A line 60. ONE TWO",
   );
 });
+
+test("the editor taking the focus scrolls nothing; typing brings the caret into sight", async ({
+  page,
+}) => {
+  const text = Array.from({ length: 200 }, (_, i) => `Line ${i}.`).join("\n\n");
+  await page.addInitScript((body) => {
+    (window as unknown as Record<string, unknown>).__devFs = {
+      "/work/long.md": `# Long\n\n${body}\n`,
+    };
+  }, text);
+  await openApp(page);
+  await openPath(page, "/work/long.md");
+  const editor = page.locator('[data-active-tab="true"] .ProseMirror');
+  const scroller = page.locator('[data-active-tab="true"] .editor-scroll');
+  await expect(editor).toContainText("Line 199");
+  // The caret far down, the page read back at its top.
+  await editor.locator("p", { hasText: /^Line 150\.$/ }).click();
+  await scroller.hover();
+  await page.mouse.wheel(0, -20000);
+  await expect.poll(() => scroller.evaluate((el) => el.scrollTop)).toBe(0);
+  await page.waitForTimeout(500);
+  // Focus given to the element itself, the page's selection gone meanwhile
+  // (a menu or a dialog took it): the browser starts the caret at the top,
+  // and the editor, putting its own back, must not scroll to it.
+  await editor.evaluate((el: HTMLElement) => {
+    el.blur();
+    getSelection()?.removeAllRanges();
+    el.focus({ preventScroll: true });
+  });
+  await page.waitForTimeout(500);
+  expect(await scroller.evaluate((el) => el.scrollTop)).toBe(0);
+  await page.keyboard.type("!");
+  await expect
+    .poll(() => scroller.evaluate((el) => el.scrollTop))
+    .toBeGreaterThan(1000);
+  await expect(editor.locator("p", { hasText: "Line 150." })).toHaveText(
+    "Line 150.!",
+  );
+});

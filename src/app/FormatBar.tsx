@@ -1,3 +1,4 @@
+import { focusTabEditor } from "../editor/tab-editor";
 import { tabElement } from "../engine/layout/tab-element";
 import { tabInUse } from "../engine/layout/store";
 import { useEffect, useRef, useState } from "react";
@@ -98,7 +99,7 @@ function useCaretBlock(tabId: string): CaretBlock {
  *  selection it kept, so the format lands there. */
 function focusDocument(tabId: string) {
   const editor = tabElement(tabId)?.querySelector<HTMLElement>(".ProseMirror");
-  if (editor && !editor.contains(document.activeElement)) editor.focus();
+  if (editor && !editor.contains(document.activeElement)) focusTabEditor(tabId);
 }
 
 export function FormatBar({

@@ -521,6 +521,12 @@ test("Memory opens from the tab's right-click and closes with its × or Esc", as
   await fromMenu();
   await page.keyboard.press("Escape");
   await expect(memory).toHaveCount(0);
+  // Words selected in the document beside it don't keep the menu away.
+  const editor = page.locator(".ProseMirror").first();
+  await editor.click();
+  await page.keyboard.type("Some words");
+  await page.keyboard.press("ControlOrMeta+a");
+  await fromMenu();
 });
 
 test.describe("on a phone", () => {
