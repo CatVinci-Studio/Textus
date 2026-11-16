@@ -960,6 +960,8 @@ para usar una.
   agentSend: "Enviar",
   agentStop: "Detener",
   agentRetry: "Reintentar",
+  agentForgotStart:
+    "Esta conversación es larga: sus primeros mensajes ya no se envían al modelo. Empieza una conversación nueva para comenzar de cero.",
   agentNeedsFolder:
     "Abre primero una carpeta o guarda el documento: el agente trabaja en una carpeta.",
   agentStopped: "{agent} se ha detenido.",

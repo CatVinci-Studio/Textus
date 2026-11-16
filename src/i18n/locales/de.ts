@@ -935,6 +935,8 @@ Skills liegen im Ordner skills/ neben dieser Datei, je Skill eine
   agentSend: "Senden",
   agentStop: "Stoppen",
   agentRetry: "Erneut versuchen",
+  agentForgotStart:
+    "Dieses Gespräch ist lang: Seine ersten Nachrichten gehen nicht mehr an das Modell. Für einen Neuanfang ein neues Gespräch beginnen.",
   agentNeedsFolder:
     "Öffne zuerst einen Ordner oder speichere das Dokument: Der Agent arbeitet in einem Ordner.",
   agentStopped: "{agent} wurde beendet.",

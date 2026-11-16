@@ -460,6 +460,11 @@ export type StreamEvent_Deserialize =
  */
 { type: "thinking"; text: string } | 
 /**
+ *  The conversation's oldest exchanges no longer fit a request and were
+ *  left out of this one: the model no longer sees its start.
+ */
+{ type: "forgot" } | 
+/**
  *  A picture written into a propose_edit's text (images::inline) is
  *  being made: its `line` there stands for picture `id` from now on.
  *  Sent before the fragment that completes the line.
@@ -490,6 +495,11 @@ export type StreamEvent_Serialize =
  *  provider only says that it is. Shown above the reply, never kept.
  */
 { type: "thinking"; text: string } | 
+/**
+ *  The conversation's oldest exchanges no longer fit a request and were
+ *  left out of this one: the model no longer sees its start.
+ */
+{ type: "forgot" } | 
 /**
  *  A picture written into a propose_edit's text (images::inline) is
  *  being made: its `line` there stands for picture `id` from now on.

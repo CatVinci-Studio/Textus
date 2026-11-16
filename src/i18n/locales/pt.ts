@@ -946,6 +946,8 @@ Habilidades ficam na pasta skills/ ao lado deste arquivo, um arquivo
   agentSend: "Enviar",
   agentStop: "Parar",
   agentRetry: "Tentar de novo",
+  agentForgotStart:
+    "Esta conversa está longa: as primeiras mensagens já não são enviadas ao modelo. Comece uma nova conversa para recomeçar.",
   agentNeedsFolder:
     "Abra primeiro uma pasta ou salve o documento: o agente trabalha numa pasta.",
   agentStopped: "{agent} parou.",

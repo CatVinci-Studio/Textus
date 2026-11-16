@@ -964,6 +964,8 @@ utiliser une.
   agentSend: "Envoyer",
   agentStop: "Arrêter",
   agentRetry: "Réessayer",
+  agentForgotStart:
+    "Cette conversation est longue : ses premiers messages ne sont plus envoyés au modèle. Commencez une nouvelle conversation pour repartir de zéro.",
   agentNeedsFolder:
     "Ouvrez d’abord un dossier ou enregistrez le document : l’agent travaille dans un dossier.",
   agentStopped: "{agent} s’est arrêté.",

@@ -915,6 +915,8 @@ type /name in a conversation to use one.
   agentSend: "Send",
   agentStop: "Stop",
   agentRetry: "Retry",
+  agentForgotStart:
+    "This conversation is long: its earliest messages are no longer sent to the model. Start a new conversation to begin afresh.",
   agentNeedsFolder:
     "Open a folder or save the document first: the agent works in a folder.",
   agentStopped: "{agent} stopped.",

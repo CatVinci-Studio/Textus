@@ -165,6 +165,31 @@ fn compact_history_drops_whole_oldest_exchanges_over_budget() {
     assert!(matches!(&out[0], AgentTurn::User { text, .. } if text == "recent"));
 }
 
+#[test]
+fn a_conversation_that_loses_its_start_says_so() {
+    struct Told(std::sync::Mutex<Vec<String>>);
+    impl EventSink for Told {
+        fn send(&self, event: StreamEvent) {
+            let json = serde_json::to_value(&event).unwrap();
+            self.0
+                .lock()
+                .unwrap()
+                .push(json["type"].as_str().unwrap().into());
+        }
+    }
+    let told = Told(Default::default());
+    let short = vec![AgentTurn::user("hi"), AgentTurn::assistant("hello")];
+    compact_telling(short, &told);
+    assert!(told.0.lock().unwrap().is_empty());
+    let long = vec![
+        AgentTurn::user("y".repeat(HISTORY_BUDGET)),
+        AgentTurn::assistant("a1"),
+        AgentTurn::user("recent"),
+    ];
+    compact_telling(long, &told);
+    assert_eq!(*told.0.lock().unwrap(), ["forgot"]);
+}
+
 /// One exchange of `chars` characters: a question, a file read, a reply.
 fn exchange(n: usize, chars: usize) -> Vec<AgentTurn> {
     vec![

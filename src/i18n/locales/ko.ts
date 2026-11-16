@@ -886,6 +886,8 @@ ${AI_NAME}에게 주는 글쓰기 지침으로, 모든 문서에 적용됩니다
   agentSend: "보내기",
   agentStop: "중지",
   agentRetry: "다시 시도",
+  agentForgotStart:
+    "대화가 길어져 가장 오래된 메시지는 더 이상 모델에 보내지지 않습니다. 처음부터 하려면 새 대화를 시작하세요.",
   agentNeedsFolder:
     "먼저 폴더를 열거나 문서를 저장하세요. 에이전트는 폴더 안에서 작업합니다.",
   agentStopped: "{agent}이(가) 멈췄습니다.",

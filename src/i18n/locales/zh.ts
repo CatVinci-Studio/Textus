@@ -842,6 +842,8 @@ export default {
   agentSend: "发送",
   agentStop: "停止",
   agentRetry: "重试",
+  agentForgotStart:
+    "这段对话已经很长，最早的几条消息不再发给模型。想从头开始，可以新建一段对话。",
   agentNeedsFolder:
     "请先打开一个文件夹或保存文档：Agent 需要在一个文件夹里工作。",
   agentStopped: "{agent} 已停止。",

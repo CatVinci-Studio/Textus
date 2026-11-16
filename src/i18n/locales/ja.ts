@@ -900,6 +900,8 @@ ${AI_NAME}への執筆の指示です。すべての文書に適用されます�
   agentSend: "送信",
   agentStop: "停止",
   agentRetry: "再試行",
+  agentForgotStart:
+    "会話が長くなったため、最初の方のメッセージはモデルに送られなくなりました。最初からやり直すには新しい会話を始めてください。",
   agentNeedsFolder:
     "先にフォルダを開くか、書類を保存してください。エージェントはフォルダの中で作業します。",
   agentStopped: "{agent} が停止しました。",
