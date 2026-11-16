@@ -21,7 +21,7 @@ export function here(state: EditorState) {
   };
 }
 
-export type PastedRows = { rows: Fragment[]; width: number; height: number };
+type PastedRows = { rows: Fragment[]; width: number; height: number };
 
 /**
  * The rows of cells pasted, top to bottom, however the clipboard's table

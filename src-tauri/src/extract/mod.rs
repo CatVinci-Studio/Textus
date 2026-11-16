@@ -53,9 +53,6 @@ pub(crate) fn image_mime(ext: &str) -> Option<&'static str> {
 /// is kept as written (editor/markdown/verbatim.ts).
 pub(crate) const MARKDOWN_EXTENSIONS: [&str; 3] = ["md", "markdown", "mdx"];
 
-/// The ones Textus offers to be the default app for.
-pub(crate) const CLAIMED_EXTENSIONS: [&str; 2] = ["md", "markdown"];
-
 /// What Textus treats as a document: Markdown and plain text, listed before
 /// other files in the sidebar and its searches (front end: file-search.ts).
 pub(crate) const TEXT_DOCUMENT_EXTENSIONS: [&str; 5] = ["md", "markdown", "mdx", "txt", "text"];

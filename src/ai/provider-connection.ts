@@ -70,7 +70,7 @@ const subscribe = (listener: () => void) => {
 const snapshot = () => connections;
 
 /** Checks `entry`'s connection again, for everyone showing it. */
-export function refreshConnected(entry: ProviderCatalogEntry): void {
+function refreshConnected(entry: ProviderCatalogEntry): void {
   fetchConnected(entry)
     .then((state) => {
       connections = { ...connections, [entry.id]: state };

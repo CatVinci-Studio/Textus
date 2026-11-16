@@ -1,3 +1,5 @@
+import "./hold-keyboard.css";
+
 /** How long the stand-in waits for the field it holds the keyboard for. */
 const WAIT_MS = 1500;
 

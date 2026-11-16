@@ -1,20 +1,15 @@
 import { listMove } from "../list-keys";
-import { useEffect, useRef, useState, type CSSProperties } from "react";
+import { useRef, useState, type CSSProperties } from "react";
 import { Tooltip } from "../Tooltip";
 import { ContextMenu, type ContextMenuEntry } from "../ContextMenu";
 import { Presence } from "../../motion/usePresence";
-import { scrollBehavior } from "../../motion/motion";
 import { TabPill, type TabInfo } from "./TabPill";
 import { TabListButton, useTabFit } from "./TabList";
 import { INCOMING, useTabStrip } from "./useTabStrip";
 import { useTabSwipe } from "./useTabSwipe";
-import { revealAt, snapToTab, stripSlots, type Slot } from "./tab-strip";
-import { revealOnResize } from "./reveal-on-resize";
-import { scaledPx } from "../../tokens/chrome-scale";
+import { stripSlots } from "./tab-strip";
+import { useRevealTab } from "./useRevealTab";
 import { isMobileApp } from "../../../platform/capabilities";
-
-/** The fade over a scrolled row's start (island.css). */
-const TAB_FADE = 36;
 
 interface TabBarProps {
   tabs: TabInfo[];
@@ -106,35 +101,18 @@ export function TabBar({
   // The open tab in view as it changes, and as the row narrows.
   const { x: slotX, w: slotW } = strip.slotOf(activeTabId) ?? {};
   const shownLength = fit && fit.available - (overflow ? fit.list : 0);
-  const smooth = useRef<string | null>(null);
   // What the reveal reads when the row resizes: the tab's place and the
   // row's room as last laid out, not as they were when it began watching.
   const edges =
     isMobileApp && fit
       ? stripSlots(fit.widths, fit.between).map((slot) => slot.x)
       : null;
-  const placed = useRef({ slotX, slotW, shownLength, edges });
-  placed.current = { slotX, slotW, shownLength, edges };
-  useEffect(() => {
-    const bar = barRef.current;
-    const revealNow = (smoothly: boolean) => {
-      const { slotX: x, slotW: w, shownLength: shown } = placed.current;
-      if (!bar || x === undefined || w === undefined || shown == null) return;
-      reveal(bar, { x, w }, shown, smoothly, placed.current.edges);
-    };
-    if (!bar || slotX === undefined || slotW === undefined) return;
-    if (shownLength === null) return;
-    const smoothly = smooth.current !== activeTabId;
-    smooth.current = activeTabId;
-    revealNow(smoothly);
-    // Again once the row is measured, as smoothly the first time: the
-    // reveal may have run while it still had its old width.
-    let first = smoothly;
-    return revealOnResize([bar, stripEl.current], () => {
-      revealNow(first);
-      first = false;
-    });
-  }, [activeTabId, slotX, slotW, shownLength]);
+  useRevealTab(barRef, stripEl, activeTabId, {
+    slotX,
+    slotW,
+    shownLength,
+    edges,
+  });
 
   const pillOf = (id: string) =>
     stripEl.current?.querySelector<HTMLElement>(
@@ -253,32 +231,4 @@ export function TabBar({
       )}
     </div>
   );
-}
-
-/**
- * Scrolls the row alone (never the page) to bring `slot` into the part of
- * it that shows, `shown` long from where it is scrolled to.
- */
-function reveal(
-  bar: HTMLElement,
-  slot: Slot,
-  shown: number,
-  smooth: boolean,
-  /** A touch row's tab starts, which it scrolls to. */
-  edges: readonly number[] | null,
-): void {
-  // A touch row lists its tabs (⌄) and swipes: no faded part of the tab
-  // before the open one, which reads as a stray sliver there.
-  const fade = edges ? 0 : scaledPx(TAB_FADE);
-  // A row barely wider than the tab (a phone's) fades only what is left
-  // beside it: never the tab's own first letters.
-  const room = Math.min(fade, Math.max(0, shown - slot.w));
-  bar.style.setProperty("--tab-fade", `${room}px`);
-  let left = revealAt(slot, bar.scrollLeft, shown, fade, edges ? 0 : 12);
-  if (edges) {
-    const snapped = snapToTab(left ?? bar.scrollLeft, edges, slot.x);
-    left = Math.abs(snapped - bar.scrollLeft) < 1 ? null : snapped;
-  }
-  if (left !== null)
-    bar.scrollTo({ left, behavior: smooth ? scrollBehavior() : "auto" });
 }

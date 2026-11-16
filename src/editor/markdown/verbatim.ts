@@ -167,7 +167,7 @@ function keepBlocks(children: MdNode[], src: Source, rules: VerbatimRules) {
 }
 
 /** Applies `rules` to the tree read from `text`. */
-export function keepVerbatim(tree: MdNode, text: string, rules: VerbatimRules) {
+function keepVerbatim(tree: MdNode, text: string, rules: VerbatimRules) {
   const src = sourceOf(text);
   const walk = (node: MdNode) => {
     for (const child of node.children ?? []) {

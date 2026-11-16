@@ -1,0 +1,11 @@
+/* holdKeyboard's stand-in field: unseen, 16px so iOS doesn't zoom to it. */
+.tx-keyboard-stand-in {
+  position: fixed;
+  top: 0;
+  left: 0;
+  width: 1px;
+  height: 1px;
+  opacity: 0;
+  font-size: 16px;
+  pointer-events: none;
+}

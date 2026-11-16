@@ -16,6 +16,8 @@ const ALLOWED_FILES = {
   "src/theme/content-base.css": "the document's text",
   "src/engine/controls/Select.css":
     "an invisible native select: 16px keeps iOS from zooming",
+  "src/engine/controls/hold-keyboard.css":
+    "an unseen stand-in field: 16px keeps iOS from zooming",
   "src/mobile/": "the phone's own type (its --text-* follow Dynamic Type)",
 };
 /** A glyph drawn to fit a fixed-size badge or button: the sizes allowed

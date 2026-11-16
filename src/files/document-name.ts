@@ -10,12 +10,12 @@ import {
 
 /** A file Textus opens as a document, and what of its syntax the editor
  *  keeps exactly as written (none for plain Markdown and text). */
-export interface DocumentType {
+interface DocumentType {
   keep: VerbatimRules | null;
 }
 
 /** Textus's own, by extension; a plugin's `documentTypes` add others. */
-export const CORE_DOCUMENT_TYPES: Readonly<Record<string, DocumentType>> = {
+const CORE_DOCUMENT_TYPES: Readonly<Record<string, DocumentType>> = {
   md: { keep: null },
   markdown: { keep: null },
   mdx: { keep: BUILT_IN_KEEP.mdx },

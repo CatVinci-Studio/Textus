@@ -25,7 +25,7 @@ import { transientStyle } from "../../engine/tokens/appearance";
  * them); in its middle, in that island. Undefined: the drop changes
  * nothing.
  */
-export function dropLayout(
+function dropLayout(
   now: SplitLayout,
   tabId: string,
   target: DropTarget,

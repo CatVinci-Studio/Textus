@@ -233,14 +233,10 @@ mod platform {
 
     fn markdown_types() -> Vec<String> {
         let class = CFString::from_str(FILENAME_EXTENSION);
-        let resolved = crate::extract::CLAIMED_EXTENSIONS
-            .into_iter()
-            .filter_map(|ext| {
-                let tag = CFString::from_str(ext);
-                owned(unsafe {
-                    UTTypeCreatePreferredIdentifierForTag(&class, &tag, std::ptr::null())
-                })
-            });
+        let resolved = ["md", "markdown"].into_iter().filter_map(|ext| {
+            let tag = CFString::from_str(ext);
+            owned(unsafe { UTTypeCreatePreferredIdentifierForTag(&class, &tag, std::ptr::null()) })
+        });
         content_types(resolved)
     }
 
