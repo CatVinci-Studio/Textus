@@ -78,11 +78,15 @@ export function TabBar({
   } | null>(null);
 
   const ids = tabs.map((tab) => tab.id);
+  const shapes = tabs.map((tab) => ({
+    ...tab,
+    open: tab.id === activeTabId,
+  }));
   const fit = useTabFit(
     barRef,
     previewTab
-      ? [...tabs, { title: previewTab.title, dirty: previewTab.dirty }]
-      : tabs,
+      ? [...shapes, { title: previewTab.title, dirty: previewTab.dirty }]
+      : shapes,
   );
   // One tab too long for its row is cut short, not listed: a list of one
   // tells nothing.

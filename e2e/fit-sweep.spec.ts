@@ -307,5 +307,21 @@ test.describe("on a touch screen", () => {
       .locator(".tab-pill-title")
       .evaluate((el) => el.scrollWidth - el.clientWidth);
     expect(cut).toBeLessThanOrEqual(0);
+    // Squeezed by many tabs, the open one still shows its whole name, and
+    // a name drawn whole, its × hidden, is not faded as cut.
+    for (let i = 0; i < 9; i++) await emit(page, "menu-new-file");
+    await settled(page);
+    const pills = await page.locator(".tab-pill").evaluateAll((all) =>
+      all.map((el) => {
+        const title = el.querySelector(".tab-pill-title")!;
+        return {
+          open: el.classList.contains("tab-pill-active"),
+          whole: title.scrollWidth <= title.clientWidth,
+          marked: title.hasAttribute("data-cut"),
+        };
+      }),
+    );
+    expect(pills.find((p) => p.open)).toMatchObject({ whole: true });
+    for (const p of pills) expect(p.marked).toBe(!p.whole);
   });
 });

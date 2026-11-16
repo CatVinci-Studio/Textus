@@ -106,6 +106,27 @@ describe("tabWidths", () => {
     expect(fit.overflow).toBe(true);
   });
 
+  it("squeezed, the open tab keeps its whole name and the others share what is left", () => {
+    const tabs = [tab(140), { ...tab(140), open: true }, tab(140)];
+    const fit = tabWidths(tabs, LIMITS, 360);
+    expect(fit.widths).toEqual([90, 180, 90]);
+    expect(fit.cut).toEqual([true, false, true]);
+    // Short of room even so, the others keep a few letters and it gives.
+    const tight = tabWidths(tabs, { ...LIMITS, fewest: 30 }, 240);
+    expect(tight.widths).toEqual([70, 100, 70]);
+    expect(tight.overflow).toBe(false);
+    // The others overflowing at their least, the row scrolls: it is whole.
+    const over = tabWidths(tabs, LIMITS, 150, 0, 126);
+    expect(over).toMatchObject({ widths: [56, 126, 56], overflow: true });
+  });
+
+  it("a tab whose × is hidden till it opens gives its name the ×'s room", () => {
+    // 1 px over its room with the × counted: whole without it.
+    const hidden = { ...tab(61), spare: 22 };
+    const fit = tabWidths([hidden, tab(61)], { ...LIMITS, max: 100 }, 600);
+    expect(fit.cut).toEqual([false, true]);
+  });
+
   it("fits no tabs in any row", () => {
     expect(tabWidths([], LIMITS, 0)).toEqual({
       widths: [],
