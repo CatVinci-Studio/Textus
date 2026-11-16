@@ -1,7 +1,8 @@
 // @vitest-environment jsdom
+import { ESLint } from "eslint";
 import { beforeAll, beforeEach, expect, it } from "vitest";
-import text from "./text.js?raw";
-import host from "./host.js?raw";
+import { TEXT_RUNTIME as text } from "../text-runtime";
+import { HOST_RUNTIME as host } from "../host-runtime";
 
 type Textus = {
   files: { onDidSave: (fn: () => void) => { dispose(): void } };
@@ -76,4 +77,12 @@ it("stops a fetch whose signal aborts, in the app too", async () => {
   await expect(
     textus.net.fetch("https://example.com/", { signal: stop.signal }),
   ).rejects.toMatchObject({ name: "AbortError" });
+});
+
+it("is one clean script once its parts are joined", async () => {
+  // The parts use what the others define, so they are linted as one.
+  const [result] = await new ESLint().lintText(host, {
+    filePath: "src/plugins/host/runtime/host.js",
+  });
+  expect(result.messages.map((m) => `${m.line}: ${m.message}`)).toEqual([]);
 });

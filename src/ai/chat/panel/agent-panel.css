@@ -34,12 +34,6 @@
   flex-direction: column;
 }
 
-/* Its resize handle, astride the left edge below the window bar. */
-.agent-panel-resizer {
-  top: var(--window-bar-height);
-  left: -3px;
-}
-
 .agent-panel-view {
   flex: 1;
   min-height: 0;

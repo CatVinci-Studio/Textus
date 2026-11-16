@@ -3,6 +3,8 @@
  * a plugin needs no webview to ask for them. Requests queue here; the
  * dialog (plugin-form.tsx) loads with the first.
  */
+import { createRequestQueue } from "../../utils/store";
+
 export type PluginFormField =
   | {
       key: string;
@@ -36,23 +38,12 @@ export interface Request extends PluginFormRequest {
   resolve: (values: Record<string, unknown> | null) => void;
 }
 
-let nextId = 1;
-let queue: Request[] = [];
-const listeners = new Set<() => void>();
+const queue = createRequestQueue<Request>();
 
-function publish() {
-  for (const listener of listeners) listener();
-}
-
-export function subscribePluginForm(listener: () => void): () => void {
-  listeners.add(listener);
-  return () => listeners.delete(listener);
-}
+export const subscribePluginForm = queue.subscribe;
 
 /** The request showing now, if any. */
-export function pluginFormNow(): Request | undefined {
-  return queue[0];
-}
+export const pluginFormNow = queue.now;
 
 /** The fields' values by key, or null when cancelled. A field the plugin
  *  got wrong (no key, an unknown type) is left out. */
@@ -79,17 +70,15 @@ export function showPluginForm(
           f.options.length > 0 &&
           f.options.every((o) => o && typeof o.value === "string"))),
   );
-  return new Promise((resolve) => {
-    queue = [...queue, { ...request, fields, id: nextId++, resolve }];
-    publish();
-  });
+  return new Promise((resolve) =>
+    queue.add((id) => ({ ...request, fields, id, resolve })),
+  );
 }
 
 export function answer(
   request: Request,
   values: Record<string, unknown> | null,
 ) {
-  queue = queue.filter((r) => r.id !== request.id);
-  publish();
+  queue.remove(request.id);
   request.resolve(values);
 }

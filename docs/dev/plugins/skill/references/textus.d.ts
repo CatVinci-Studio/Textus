@@ -1,7 +1,7 @@
 /**
  * The Textus plugin API, 1.7: the `textus` object a plugin's code is given
- * (src/plugins/host/runtime/host.js), the context its `activate` receives, and
- * `acquireTextusApi()` in its webviews (runtime/webview.js). The one source
+ * (src/plugins/host/host-runtime.ts), the context its `activate` receives, and
+ * `acquireTextusApi()` in its webviews (webview-runtime.ts). The one source
  * of truth: docs/dev/plugins/guide.md explains it, the reference pages are
  * made from it, Textus AI writes plugins from it, and
  * src/plugins/host/textus-types.test.ts keeps it in step with the runtime.

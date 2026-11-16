@@ -78,7 +78,6 @@
 ):is(
   .close-prompt-primary,
   .image-name-primary,
-  .insert-table-primary,
   .language-welcome-continue,
   .inline-chat-action-primary,
   .corner-toast-primary,
@@ -103,7 +102,6 @@
   ):is(
     .close-prompt-primary,
     .image-name-primary,
-    .insert-table-primary,
     .language-welcome-continue,
     .inline-chat-action-primary,
     .corner-toast-primary,
@@ -144,7 +142,6 @@
   ):is(
     .close-prompt-primary,
     .image-name-primary,
-    .insert-table-primary,
     .language-welcome-continue,
     .inline-chat-action-primary,
     .corner-toast-primary,

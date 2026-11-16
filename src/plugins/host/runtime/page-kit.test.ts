@@ -1,6 +1,6 @@
 // @vitest-environment jsdom
 import { beforeAll, describe, expect, it, vi } from "vitest";
-import textRuntime from "./text.js?raw";
+import { TEXT_RUNTIME as textRuntime } from "../text-runtime";
 import pageKit from "./page-kit.js?raw";
 import pageTools from "./page-tools.js?raw";
 

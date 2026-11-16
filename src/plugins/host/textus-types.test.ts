@@ -2,6 +2,7 @@
 import { readFileSync } from "node:fs";
 import { join } from "node:path";
 import { describe, expect, it } from "vitest";
+import { HOST_RUNTIME } from "./host-runtime";
 
 /**
  * textus.d.ts names every part of the API the host runtime gives a plugin,
@@ -9,7 +10,7 @@ import { describe, expect, it } from "vitest";
  */
 
 const ROOT = join(__dirname, "..", "..", "..");
-const HOST = readFileSync(join(__dirname, "runtime", "host.js"), "utf8");
+const HOST = HOST_RUNTIME;
 const TYPES = readFileSync(join(ROOT, "docs", "dev", "textus.d.ts"), "utf8");
 
 /** Every `namespace.member` of the runtime's textus object. */

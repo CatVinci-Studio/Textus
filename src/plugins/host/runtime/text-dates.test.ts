@@ -1,10 +1,8 @@
+import { TEXT_RUNTIME } from "../text-runtime";
 import { describe, expect, it } from "vitest";
-import { readFileSync } from "node:fs";
 
-/** The runtime's text.js, as the host frame runs it. */
-const text: any = new Function(
-  `${readFileSync(new URL("./text.js", import.meta.url), "utf8")}; return __textusText;`,
-)();
+/** The text runtime, as the host frame runs it. */
+const text: any = new Function(`${TEXT_RUNTIME}; return __textusText;`)();
 
 /** Moment-style dates and template filling (runtime/text.js: textus.dates). */
 const dates: {

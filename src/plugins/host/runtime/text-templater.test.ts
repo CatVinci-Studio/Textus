@@ -1,12 +1,10 @@
+import { TEXT_RUNTIME } from "../text-runtime";
 import { describe, expect, it } from "vitest";
-import { readFileSync } from "node:fs";
 
-/** The runtime's text.js, as the host frame runs it. */
-const text: any = new Function(
-  `${readFileSync(new URL("./text.js", import.meta.url), "utf8")}; return __textusText;`,
-)();
+/** The text runtime, as the host frame runs it. */
+const text: any = new Function(`${TEXT_RUNTIME}; return __textusText;`)();
 
-/** Templater's tags, as textus.templates fills them (runtime/text.js). */
+/** Templater's tags, as textus.templates fills them (runtime/text-templater.js). */
 type Filled = { text: string; cursor: number | null; skipped: string[] };
 const tp: {
   fill: (

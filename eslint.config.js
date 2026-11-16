@@ -266,6 +266,20 @@ export default tseslint.config(
     },
   },
   {
+    // The plugin runtimes in parts, one scope once joined (host-runtime.ts,
+    // webview-runtime.ts): each part uses what the others define, so these
+    // are checked on the joined text instead (their tests).
+    files: [
+      "src/plugins/host/runtime/host-*.js",
+      "src/plugins/host/runtime/webview-*.js",
+    ],
+    rules: {
+      "no-undef": "off",
+      "no-redeclare": "off",
+      "@typescript-eslint/no-unused-vars": "off",
+    },
+  },
+  {
     files: [
       "vite.config.ts",
       "vite.playground.config.ts",

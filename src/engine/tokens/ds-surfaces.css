@@ -208,25 +208,10 @@
 :is(
   .settings-text-input,
   .settings-code-input,
-  .image-name-input-row input,
-  .insert-table-fields input
+  .image-name-input-row input
 ):focus-visible {
   outline: none;
   border-color: var(--ui-accent);
-}
-
-/* Number fields type their number; the native spin arrows were the one
-   square, grey control left in the dialogs. */
-.insert-table-fields input {
-  appearance: textfield;
-  -moz-appearance: textfield;
-}
-
-.insert-table-fields input::-webkit-inner-spin-button,
-.insert-table-fields input::-webkit-outer-spin-button {
-  appearance: none;
-  -webkit-appearance: none;
-  margin: 0;
 }
 
 /* Checkboxes: drawn, so they match the buttons rather than the platform. */

@@ -1,6 +1,7 @@
 // @vitest-environment jsdom
+import { ESLint } from "eslint";
 import { expect, it } from "vitest";
-import webview from "./webview.js?raw";
+import { WEBVIEW_RUNTIME as webview } from "../webview-runtime";
 
 type Handlers = Record<string, (params: unknown) => void>;
 type Page = {
@@ -56,4 +57,11 @@ it("keeps what the plugin sent before the page listens, and logs its errors", ()
     "log",
     { level: "error", message: 'bad {"n":1}' },
   ]);
+});
+
+it("is one clean script once its parts are joined", async () => {
+  const [result] = await new ESLint().lintText(webview, {
+    filePath: "src/plugins/host/runtime/webview.js",
+  });
+  expect(result.messages.map((m) => `${m.line}: ${m.message}`)).toEqual([]);
 });

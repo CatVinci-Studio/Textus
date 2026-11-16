@@ -23,7 +23,7 @@ const DOCS = [
 
 it("states the API version the runtime answers", () => {
   const version = /API_VERSION = "([\d.]+)"/.exec(
-    read("src/plugins/host/runtime/host.js"),
+    read("src/plugins/host/runtime/host-core.js"),
   )![1];
   expect(read("docs/dev/textus.d.ts")).toContain(
     `The Textus plugin API, ${version}:`,
