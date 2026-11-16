@@ -31,4 +31,23 @@ describe("afterComposition", () => {
     afterComposition(() => ran++);
     expect(ran).toBe(1);
   });
+
+  it("runs what waited once its composition ends, and never at a later one's", async () => {
+    const ran: string[] = [];
+    const settle = () => new Promise((done) => setTimeout(done, 5));
+    window.dispatchEvent(new CompositionEvent("compositionstart"));
+    afterComposition(() => ran.push("first"));
+    window.dispatchEvent(new CompositionEvent("compositionend"));
+    await settle();
+    expect(ran).toEqual(["first"]);
+    // One whose composition was lost with the focus is dropped: the next
+    // composition, in another place, must not carry it out.
+    window.dispatchEvent(new CompositionEvent("compositionstart"));
+    afterComposition(() => ran.push("lost"));
+    window.dispatchEvent(new FocusEvent("blur"));
+    window.dispatchEvent(new CompositionEvent("compositionstart"));
+    window.dispatchEvent(new CompositionEvent("compositionend"));
+    await settle();
+    expect(ran).toEqual(["first"]);
+  });
 });

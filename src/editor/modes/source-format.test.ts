@@ -5,6 +5,7 @@ import { EditorView } from "@codemirror/view";
 import {
   insertSourceLink,
   setSourceBlock,
+  toggleSourceFence,
   toggleSourceMark,
 } from "./source-format";
 import { sourceKeys } from "./source-keys";
@@ -224,5 +225,33 @@ describe("the rendered editor's keys in source mode", () => {
     expect(press("wo|rd", { ...mod, key: "Enter", code: "Enter" })).toBe(
       "word\n",
     );
+  });
+});
+
+describe("toggleSourceFence", () => {
+  const toggled = (doc: string) => {
+    const view = viewOf(doc);
+    toggleSourceFence(view);
+    return view.state.doc.toString();
+  };
+
+  it("puts the selected lines in a fence, and takes it off from anywhere inside", () => {
+    expect(toggled("a\n[one\ntwo]\nb")).toBe("a\n```\none\ntwo\n```\nb");
+    expect(toggled("a\n```js\none\n|two\nthree\n```\nb")).toBe(
+      "a\none\ntwo\nthree\nb",
+    );
+    expect(toggled("```\n|one\n```")).toBe("one");
+  });
+
+  it("fences a line between two blocks, leaving both as they are", () => {
+    expect(toggled("```js\na\n```\n|between\n```py\nb\n```")).toBe(
+      "```js\na\n```\n```\nbetween\n```\n```py\nb\n```",
+    );
+  });
+
+  it("reads a longer fence, and one of tildes, as Markdown does", () => {
+    // The inner ``` is text of the ```` block.
+    expect(toggled("````\n```\n|x\n```\n````")).toBe("```\nx\n```");
+    expect(toggled("~~~\n|x\n~~~")).toBe("x");
   });
 });

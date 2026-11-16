@@ -1,6 +1,7 @@
 // @vitest-environment jsdom
 import { afterEach, expect, it, vi } from "vitest";
-import { closeViews, openView } from "./editor-view-kit";
+import { closeViews, openView, type TestView } from "./editor-view-kit";
+import { setWindowZoom } from "../engine/zoom/tab-zoom";
 
 vi.mock("../platform/capabilities", async (real) => ({
   ...(await real<typeof import("../platform/capabilities")>()),
@@ -43,4 +44,46 @@ it("a tap above a table keeps its caret when iOS then puts its own in the last p
   document.dispatchEvent(new Event("selectionchange"));
   await new Promise((done) => setTimeout(done, 10));
   expect(t.view.state.selection.from).toBe(beside);
+});
+
+const click = (t: TestView, y: number) =>
+  t.view.someProp("handleClick", (handle) =>
+    handle(t.view, 0, { clientY: y } as MouseEvent),
+  ) ?? false;
+const blocks = (t: TestView) => t.view.state.doc.childCount;
+
+it("a click below a table that ends the document starts a paragraph; below a list it doesn't", async () => {
+  vi.spyOn(HTMLElement.prototype, "getBoundingClientRect").mockReturnValue({
+    top: 100,
+    bottom: 200,
+    width: 300,
+  } as DOMRect);
+  const table = await openView("| a | b |\n| - | - |\n| 1 | 2 |");
+  expect(click(table, 150)).toBe(false);
+  expect(click(table, 250)).toBe(true);
+  expect(blocks(table)).toBe(2);
+  // A list takes text at its end: the caret goes to its last line.
+  const list = await openView("- one\n- two");
+  expect(click(list, 250)).toBe(false);
+  expect(blocks(list)).toBe(1);
+});
+
+it("counts the click against the table as drawn, the document zoomed", async () => {
+  // As macOS's web view reports inside the zoom: laid out, not drawn.
+  vi.spyOn(HTMLElement.prototype, "getBoundingClientRect").mockReturnValue({
+    top: 100,
+    bottom: 200,
+    width: 300,
+  } as DOMRect);
+  vi.spyOn(HTMLElement.prototype, "offsetWidth", "get").mockReturnValue(300);
+  setWindowZoom(1.5);
+  try {
+    const t = await openView("| a | b |\n| - | - |\n| 1 | 2 |");
+    // Drawn, the table ends at 300: 250 is still in its last row.
+    expect(click(t, 250)).toBe(false);
+    expect(blocks(t)).toBe(1);
+    expect(click(t, 320)).toBe(true);
+  } finally {
+    setWindowZoom(1);
+  }
 });

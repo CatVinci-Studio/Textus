@@ -8,17 +8,34 @@ export function isImeKeydown(
   return native.isComposing || native.keyCode === 229;
 }
 
-/** Whether an input method is composing somewhere in the page. */
+/** Whether an input method is composing somewhere in the page, and what
+ *  waits for it to end. */
 let composing = false;
+let waiting: (() => void)[] = [];
 if (typeof window !== "undefined") {
   window.addEventListener("compositionstart", () => (composing = true), true);
-  window.addEventListener("compositionend", () => (composing = false), true);
+  window.addEventListener(
+    "compositionend",
+    () => {
+      composing = false;
+      const run = waiting;
+      waiting = [];
+      // After the editor has taken the text it commits.
+      if (run.length) setTimeout(() => run.forEach((then) => then()));
+    },
+    true,
+  );
   // A composition whose end never came (its editor gone, the window left)
-  // ends with the focus: else a heading key would wait for it forever.
-  const ended = () => (composing = false);
-  window.addEventListener("blur", ended);
-  window.addEventListener("focusout", ended, true);
-  document.addEventListener("visibilitychange", ended);
+  // ends with the focus: else a heading key would wait for it forever. What
+  // waited on it goes too: it was for where the writer was, not for the
+  // next composition, somewhere else.
+  const lost = () => {
+    composing = false;
+    waiting = [];
+  };
+  window.addEventListener("blur", lost);
+  window.addEventListener("focusout", lost, true);
+  document.addEventListener("visibilitychange", lost);
 }
 
 /**
@@ -28,12 +45,6 @@ if (typeof window !== "undefined") {
  * text, or left it beside the heading's "# ".
  */
 export function afterComposition(then: () => void): void {
-  if (!composing) {
-    then();
-    return;
-  }
-  window.addEventListener("compositionend", () => setTimeout(then), {
-    once: true,
-    capture: true,
-  });
+  if (composing) waiting.push(then);
+  else then();
 }

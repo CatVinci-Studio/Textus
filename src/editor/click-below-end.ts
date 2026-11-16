@@ -3,6 +3,7 @@ import type { EditorView } from "@milkdown/kit/prose/view";
 import { $prose } from "@milkdown/kit/utils";
 import type { Node } from "@milkdown/kit/prose/model";
 import { isIOSApp, isMobileApp } from "../platform/capabilities";
+import { asDrawn, zoomedRectScale } from "../engine/controls/zoomed-rects";
 
 /** Where and when a single finger went down: a tap, not a scroll. */
 let down: { x: number; y: number; at: number } | null = null;
@@ -19,16 +20,21 @@ function wasTap(touch: Touch): boolean {
   );
 }
 
+/** A table or a picture: a block a tap beside lands nowhere in. */
+const holdsNoCaret = (node: Node) =>
+  node.type.name === "table" || (node.isBlock && node.isAtom);
+
 /** A paragraph after the last block, the caret in it, when `y` is below
- *  that block and it takes no text of its own at its end. */
+ *  that block and it takes no text of its own at its end: a list or a
+ *  quote does, in its last line. */
 function paragraphBelowEnd(view: EditorView, y: number): boolean {
   if (!view.editable) return false;
   const { doc, schema } = view.state;
   const last = doc.lastChild;
-  if (!last || last.isTextblock) return false;
+  if (!last || !holdsNoCaret(last)) return false;
   const dom = view.nodeDOM(doc.content.size - last.nodeSize);
   if (!(dom instanceof HTMLElement)) return false;
-  if (y <= dom.getBoundingClientRect().bottom) return false;
+  if (y <= boxOf(dom).bottom) return false;
   const paragraph = schema.nodes.paragraph?.create();
   if (!paragraph) return false;
   const tr = view.state.tr.insert(doc.content.size, paragraph);
@@ -37,14 +43,12 @@ function paragraphBelowEnd(view: EditorView, y: number): boolean {
   return true;
 }
 
-/** A block's own box: a table's, not its wrapper's with the tools' room. */
-function boxOf(dom: HTMLElement): DOMRect {
-  return (dom.querySelector("table") ?? dom).getBoundingClientRect();
+/** A block's own box as drawn, where a click's `y` is counted: a table's,
+ *  not its wrapper's with the tools' room. */
+function boxOf(dom: HTMLElement) {
+  const own = dom.querySelector<HTMLElement>("table") ?? dom;
+  return asDrawn(own.getBoundingClientRect(), zoomedRectScale(own));
 }
-
-/** A table or a picture: a block a tap beside lands nowhere in. */
-const holdsNoCaret = (node: Node) =>
-  node.type.name === "table" || (node.isBlock && node.isAtom);
 
 /** The caret beside a table or a picture when `y` is in the gap above or
  *  below it: at the end of the text block above, or the start of the one

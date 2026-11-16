@@ -220,6 +220,13 @@ test("the + strips under and beside a table add a row and a column, reached from
   await table.locator("th").last().hover();
   await expect(strip("col")).toHaveCSS("opacity", "1");
   const box = (await table.locator("table").boundingBox())!;
+  // A press just inside the table's last row or last column is the
+  // table's own: neither strip reaches over it.
+  await table.locator("td").last().hover();
+  await page.mouse.click(box.x + 40, box.y + box.height - 2);
+  await page.mouse.click(box.x + box.width - 2, box.y + box.height - 12);
+  await expect(table.locator("tr")).toHaveCount(2);
+  await expect(table.locator("tr").first().locator("th")).toHaveCount(2);
   // From inside the table straight down onto the strip, as a hand moves.
   await page.mouse.move(box.x + 40, box.y + box.height - 6);
   await page.mouse.move(box.x + 40, box.y + box.height + 10, { steps: 6 });
