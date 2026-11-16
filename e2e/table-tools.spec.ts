@@ -1,5 +1,5 @@
 import { expect, test, type Page } from "@playwright/test";
-import { openApp, pasteMarkdown } from "./helpers";
+import { MAC, openApp, pasteMarkdown } from "./helpers";
 
 // A table's own tools at its top right: they show on hover and while the
 // caret is in it, and change what the file says.
@@ -158,9 +158,23 @@ test("a row's grip picks the row, and pulled it moves the row; a column's the sa
   const pressed = (await heads.nth(1).boundingBox())!.width;
   expect(Math.abs(pressed - h1.width)).toBeLessThan(2);
   await page.mouse.move(edge.x + 40, edge.y, { steps: 6 });
+  // Held past the history's grouping: still one undo step.
+  await page.waitForTimeout(700);
   await page.mouse.up();
   const after = (await heads.nth(0).boundingBox())!;
   expect(Math.abs(after.width - (h0.width + 40))).toBeLessThan(3);
+  await page.keyboard.press(MAC ? "Meta+z" : "Control+z");
+  await expect
+    .poll(async () => (await heads.nth(0).boundingBox())!.width)
+    .toBeCloseTo(h0.width, 0);
+  await expect(table.locator("table")).not.toHaveAttribute("data-sized", /.*/);
+
+  // A press on the edge that moves nothing sizes nothing.
+  await page.mouse.move(edge.x - 6, edge.y);
+  await page.mouse.move(edge.x, edge.y, { steps: 3 });
+  await page.mouse.down();
+  await page.mouse.up();
+  await expect(table.locator("table")).not.toHaveAttribute("data-sized", /.*/);
 });
 
 test("the grips sit at the middle of their row and column, the document zoomed too", async ({
@@ -318,5 +332,17 @@ test.describe("on a touch screen", () => {
     );
     await expect(table.locator("td", { hasText: "w1" })).toHaveCount(0);
     await expect.poll(gripAtCaret).toBe("at caret");
+    // A row put in above the caret's, by the phone's table buttons: the
+    // grip goes down with the caret's row.
+    await table.locator("td", { hasText: "c1" }).tap();
+    await page.evaluate(() =>
+      window.dispatchEvent(
+        new CustomEvent("textus:table-action", { detail: "row-above" }),
+      ),
+    );
+    await expect(table.locator("tr")).toHaveCount(5);
+    // Nothing else moves it on a phone: no pointer passes over the table.
+    await page.waitForTimeout(300);
+    expect(await gripAtCaret()).toBe("at caret");
   });
 });

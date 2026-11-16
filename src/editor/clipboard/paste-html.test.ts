@@ -49,6 +49,24 @@ describe("cleanPastedHtml", () => {
     );
   });
 
+  it("splits a table's merged cells back into their places", () => {
+    const html =
+      "<table><tr><th colspan=2>Head</th><th>C</th></tr>" +
+      "<tr><td rowspan=2>Left</td><td>b1</td><td>c1</td></tr>" +
+      "<tr><td>b2</td><td>c2</td></tr></table>";
+    const out = document.createElement("div");
+    out.innerHTML = cleanPastedHtml(html);
+    const rows = [...out.querySelectorAll("tr")].map((tr) =>
+      [...tr.children].map((c) => `${c.localName}:${c.textContent}`),
+    );
+    expect(rows).toEqual([
+      ["th:Head", "th:", "th:C"],
+      ["td:Left", "td:b1", "td:c1"],
+      ["td:", "td:b2", "td:c2"],
+    ]);
+    expect(out.querySelector("[colspan],[rowspan]")).toBeNull();
+  });
+
   it("leaves Textus's own copies as they are", () => {
     const own =
       '<p data-pm-slice="1 1 []"><span style="font-weight:700">x</span></p><p></p>';
