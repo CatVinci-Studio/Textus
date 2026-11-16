@@ -13,6 +13,12 @@ let composing = false;
 if (typeof window !== "undefined") {
   window.addEventListener("compositionstart", () => (composing = true), true);
   window.addEventListener("compositionend", () => (composing = false), true);
+  // A composition whose end never came (its editor gone, the window left)
+  // ends with the focus: else a heading key would wait for it forever.
+  const ended = () => (composing = false);
+  window.addEventListener("blur", ended);
+  window.addEventListener("focusout", ended, true);
+  document.addEventListener("visibilitychange", ended);
 }
 
 /**

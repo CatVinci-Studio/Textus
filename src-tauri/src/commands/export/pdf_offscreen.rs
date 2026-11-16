@@ -68,6 +68,9 @@ pub async fn export(
             WebviewWindowBuilder::new(&app, &label, url)
                 .title("PDF")
                 .visible(false)
+                // Never focused: a hidden window taking focus can leave the
+                // editor's input method broken on Windows (wry#1908).
+                .focused(false)
                 .skip_taskbar(true)
                 .inner_size(794.0, 1123.0)
                 .on_page_load(move |window, payload| {
