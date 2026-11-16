@@ -73,9 +73,11 @@ function add(notice: Omit<Notice, "id">): number {
   if (same) return same.id;
   const id = nextId++;
   notices = [...notices, { ...notice, id }];
-  // The oldest note that isn't a progress bar makes room.
+  // The oldest plain note makes room, this one too: an error or an offer
+  // (Undo) gives way only to one of its kind. A progress bar stays.
+  const plain = (n: Notice) => !n.progress && !n.action && n.tone === "info";
   while (notices.length > MAX_SHOWN) {
-    const old = notices.find((n) => !n.progress);
+    const old = notices.find(plain) ?? notices.find((n) => !n.progress);
     if (!old) break;
     remove(old.id);
   }
