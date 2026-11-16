@@ -58,6 +58,16 @@ test("a table's tools align the caret's column, size it, and delete it", async (
   await page.keyboard.press("Escape");
   await expect(card).toHaveCount(0);
 
+  // Over a narrow column the tools give way rather than run past the table.
+  await page.setViewportSize({ width: 330, height: 760 });
+  await page.waitForTimeout(400);
+  await table.locator("th").last().hover();
+  const box = (await table.boundingBox())!;
+  for (const pill of await table.locator(".block-pill:visible").all())
+    expect((await pill.boundingBox())!.x).toBeGreaterThanOrEqual(box.x - 0.5);
+  await expect(tool(page, "Delete Table")).toBeVisible();
+  await page.setViewportSize({ width: 1200, height: 760 });
+
   await press(page, "Delete Table");
   await expect(page.locator(".table-wrapper")).toHaveCount(0);
 });
@@ -183,6 +193,7 @@ test("a click below a table that ends the document starts a paragraph there", as
   page,
 }) => {
   const table = await open(page);
+  await page.waitForTimeout(400);
   const box = (await table.boundingBox())!;
   await page.mouse.click(box.x + 40, box.y + box.height + 40);
   await page.keyboard.type("after");
