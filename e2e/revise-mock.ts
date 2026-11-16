@@ -3,7 +3,8 @@ import type { Page } from "@playwright/test";
 /**
  * The backend streaming propose_edit `calls` in `chunk`-sized fragments
  * every `every` ms. `hold`: stop after this many fragments, or once the
- * arguments streamed so far have this text, and wait for ai_cancel.
+ * arguments streamed so far have this text, and wait for ai_cancel - or
+ * for `releaseRevise(page)`, which streams the rest.
  */
 export async function streamRevise(
   page: Page,
@@ -86,11 +87,14 @@ export async function streamRevise(
           };
           const next = () => {
             if (
-              typeof holdAt === "string"
+              !(window as { __reviseGo?: boolean }).__reviseGo &&
+              (typeof holdAt === "string"
                 ? streamed.includes(holdAt)
-                : holdAt !== null && fragments >= holdAt
-            )
+                : holdAt !== null && fragments >= holdAt)
+            ) {
+              timer = window.setTimeout(next, every);
               return;
+            }
             const step = steps.shift();
             if (!step) {
               resolve([{ kind: "User", text: message }, ...turns]);
@@ -110,6 +114,13 @@ export async function streamRevise(
       hold: options.hold ?? null,
     },
   );
+}
+
+/** Lets a rewrite `streamRevise` holds stream on to its end. */
+export function releaseRevise(page: Page) {
+  return page.evaluate(() => {
+    (window as { __reviseGo?: boolean }).__reviseGo = true;
+  });
 }
 
 /**
