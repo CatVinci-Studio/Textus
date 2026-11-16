@@ -185,9 +185,14 @@ describe("saving after an edit elsewhere keeps as written", () => {
     expect(await saveAfter(markdown, typeInto(0))).toBe(saved);
   });
 
-  it("still escapes what the user typed that would read as syntax", async () => {
+  it("still escapes what the user typed that would read as syntax, and nothing else", async () => {
+    // The stars would be an emphasis; the bracket and parenthesis open
+    // nothing. The file's own escape stays as it wrote it.
     const out = await saveAfter("a \\[b\n", typeInto(0, " *c* [d](e"));
-    expect(out).toBe("a \\[b \\*c\\* \\[d]\\(e\n");
+    expect(out).toBe("a \\[b \\*c\\* [d](e\n");
+    expect(await saveAfter("a\n", typeInto(0, " my_file_name 2 * 3"))).toBe(
+      "a my_file_name 2 * 3\n",
+    );
   });
 
   it("reads a table formula's \\| as one bar and writes a typed | as \\|", async () => {
@@ -226,10 +231,17 @@ describe("saving after an edit elsewhere keeps as written", () => {
     expect(out).toBe("\\# not a heading\n");
   });
 
-  it("serializes the changed block in the editor's own style", async () => {
+  it("writes the changed block in the file's own hand", async () => {
     const markdown = "__em__ here\n\nTitle\n=====\n";
     expect(await saveAfter(markdown, typeInto(0))).toBe(
-      "**em** here edited\n\nTitle\n=====\n",
+      "__em__ here edited\n\nTitle\n=====\n",
+    );
+    // An underlined heading and a starred list, edited, stay as they were.
+    expect(await saveAfter("Title\n=====\n\nText\n", typeInto(0))).toBe(
+      "Title edited\n=====\n\nText\n",
+    );
+    expect(await saveAfter("* one\n* two\n", typeInto(0))).toBe(
+      "* one edited\n* two\n",
     );
   });
 

@@ -2,6 +2,7 @@ import { serializerCtx } from "@milkdown/kit/core";
 import { type Ctx } from "@milkdown/kit/ctx";
 import type { Node as ProseNode } from "@milkdown/kit/prose/model";
 import { withEscapesAsWritten } from "./escapes-as-written";
+import { inTheFilesHand, withoutNeedlessEscapes } from "./file-style";
 import {
   readBlocks,
   sameBlock,
@@ -14,7 +15,8 @@ import {
  *  together, and each join checked to read back as the document has it. */
 
 /** A run of changed blocks as the serializer writes it, without the final
- *  newline, with `original`'s escapes where they still read the same. A
+ *  newline: with no escape it reads the same without, and `original`'s
+ *  own hand and escapes where they still read the same. A
  *  thematic break first in a run (not the document) is "---". */
 function writeRun(
   ctx: Ctx,
@@ -35,10 +37,14 @@ function writeRun(
     text = ctx
       .get(serializerCtx)(doc.cut(offsets[from], end))
       .replace(/\n+$/, "");
-    if (original !== null && original.length < MAX_ESCAPE_CHECK) {
-      const kept = withEscapesAsWritten(original, text);
-      if (kept !== text && sameNodes(ctx, nodes, readBlocks(ctx, kept)))
-        text = kept;
+    if (text.length < MAX_ESCAPE_CHECK) {
+      const reads = (as: string) => sameNodes(ctx, nodes, readBlocks(ctx, as));
+      text = withoutNeedlessEscapes(text, reads);
+      if (original !== null && original.length < MAX_ESCAPE_CHECK) {
+        text = inTheFilesHand(original, text, reads);
+        const kept = withEscapesAsWritten(original, text);
+        if (kept !== text && reads(kept)) text = kept;
+      }
     }
     runs.set(nodes[0], { nodes, text });
   }
