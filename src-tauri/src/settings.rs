@@ -62,16 +62,7 @@ pub fn settings_patch(
     if patch.contains_key("theme") {
         theme_changed(&app);
     }
-    if [
-        "proxyType",
-        "proxyHost",
-        "proxyPort",
-        "proxyUsername",
-        "proxyPassword",
-    ]
-    .iter()
-    .any(|key| patch.contains_key(*key))
-    {
+    if proxy_keys_changed(&patch) {
         proxy_changed(&stores.settings.snapshot().0);
     }
     // Background mode's tray follows the setting and the UI language.

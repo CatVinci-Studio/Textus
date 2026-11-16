@@ -79,7 +79,12 @@ base64 = "0.22"
 # SFTP over the user's own ssh (plugins/ssh): the protocol only, no SSH stack.
 russh-sftp = "3.0.1"
 sha2 = "0.10"
-reqwest = { version = "0.12", default-features = false, features = ["json", "multipart", "rustls-tls", "http2"] }
+reqwest = { version = "0.12", default-features = false, features = ["json", "multipart", "rustls-tls", "http2", "socks", "system-proxy"] }
+# Feature unification only - nothing here calls it: tauri-plugin-updater
+# builds its own reqwest 0.13 client for check_for_update/install, and the
+# updater must reach a SOCKS5 proxy (a socks5h:// address) as the rest of
+# the app does. Two reqwest versions in the tree, so this one has its own name.
+reqwest13 = { package = "reqwest", version = "0.13", default-features = false, features = ["socks"] }
 aicompat = { path = "crates/aicompat" }
 
 # Markdown extraction (src/extract/), for chat attachments (commands/

@@ -361,12 +361,15 @@ fn invalid_history_entries_are_rejected() {
 
 #[test]
 fn the_proxy_follows_the_settings() {
+    // SOCKS5 resolves names at the proxy (socks5h): on an intranet this
+    // computer's own DNS can't look up an address elsewhere, and socks5://
+    // would ask it to.
     proxy_changed(
         &json!({ "proxyType": "socks5", "proxyHost": " 127.0.0.1 ", "proxyPort": "7890" }),
     );
     assert_eq!(
         aicompat::http::proxy_url().as_deref(),
-        Some("socks5://127.0.0.1:7890")
+        Some("socks5h://127.0.0.1:7890")
     );
     proxy_changed(&json!({ "proxyType": "http", "proxyHost": "proxy.lan" }));
     assert_eq!(
@@ -447,4 +450,19 @@ fn the_ui_state_s_own_lists_win_over_old_files() {
         json!(["/new.md"])
     );
     assert!(!dir.join(file_name("recent_files")).exists());
+}
+
+#[test]
+fn a_name_or_password_change_reapplies_the_proxy() {
+    // Each field is patched on its own as the user types; a proxy that asks
+    // for a name and password must be rebuilt when only those change, or
+    // requests keep going out without them.
+    assert!(proxy_keys_changed(&obj(
+        json!({ "proxyUsername": "alice" })
+    )));
+    assert!(proxy_keys_changed(&obj(
+        json!({ "proxyPassword": "secret" })
+    )));
+    assert!(proxy_keys_changed(&obj(json!({ "proxyType": "http" }))));
+    assert!(!proxy_keys_changed(&obj(json!({ "theme": "dark" }))));
 }

@@ -232,6 +232,44 @@ mod tests {
         drop(dead);
     }
 
+    #[tokio::test]
+    async fn a_socks_proxy_is_reached_and_speaks_socks() {
+        // The `socks` feature must be compiled in: without it a socks5h
+        // proxy address is accepted by the setting but every request fails
+        // before it leaves the computer. A SOCKS5 greeting starts with its
+        // version, 5 - the byte the proxy below waits for.
+        use std::io::Read;
+        let listener = std::net::TcpListener::bind("127.0.0.1:0").unwrap();
+        let proxy = format!("socks5h://{}", listener.local_addr().unwrap());
+        let seen = std::sync::Arc::new(std::sync::Mutex::new(None));
+        let record = seen.clone();
+        std::thread::spawn(move || {
+            if let Ok((mut stream, _)) = listener.accept() {
+                let mut version = [0u8; 1];
+                if stream.read(&mut version).is_ok() {
+                    *record.lock().unwrap() = Some(version[0]);
+                }
+            }
+        });
+        let client = through(
+            client(Duration::from_secs(5), Duration::from_secs(5)),
+            Some(proxy),
+        )
+        .unwrap()
+        .build()
+        .unwrap();
+        // The greeting arrives first; the request itself fails against this
+        // proxy that never answers, which is fine here.
+        let _ = client.get("http://example.invalid/").send().await;
+        for _ in 0..100 {
+            if seen.lock().unwrap().is_some() {
+                break;
+            }
+            tokio::time::sleep(Duration::from_millis(20)).await;
+        }
+        assert_eq!(*seen.lock().unwrap(), Some(5));
+    }
+
     #[test]
     fn an_unreadable_proxy_is_an_error() {
         let builder = client(Duration::from_secs(5), Duration::from_secs(5));

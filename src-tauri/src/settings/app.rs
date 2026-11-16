@@ -18,6 +18,22 @@ pub fn init(app: &AppHandle) {
     apply_app_theme(app);
 }
 
+/// The settings fields the proxy is made from: each is patched on its own as
+/// the user types, and a name or password must reach a proxy that asks for
+/// them as surely as the address does.
+const PROXY_KEYS: [&str; 5] = [
+    "proxyType",
+    "proxyHost",
+    "proxyPort",
+    "proxyUsername",
+    "proxyPassword",
+];
+
+/// Whether `patch` changes any field the proxy is made from.
+pub(crate) fn proxy_keys_changed(patch: &Map<String, Value>) -> bool {
+    PROXY_KEYS.iter().any(|key| patch.contains_key(*key))
+}
+
 /// The settings' proxy, for every request the app makes: read here, at
 /// launch and on each change, so a request made before any window (a
 /// scheduled job in background mode) goes through it too. Unless set, or
@@ -32,7 +48,13 @@ pub(crate) fn proxy_changed(settings: &Value) {
             .trim()
             .to_string()
     };
-    let (kind, host, port) = (text("proxyType"), text("proxyHost"), text("proxyPort"));
+    let (mut kind, host, port) = (text("proxyType"), text("proxyHost"), text("proxyPort"));
+    // The names a SOCKS5 proxy is asked for are looked up at the proxy
+    // (socks5h): on an intranet this computer's own DNS can't resolve an
+    // address elsewhere, which fails before the proxy is ever reached.
+    if kind == "socks5" {
+        kind = "socks5h".to_string();
+    }
     // A password is kept as typed: spaces may be part of it.
     let pass = settings
         .get("proxyPassword")
@@ -40,7 +62,9 @@ pub(crate) fn proxy_changed(settings: &Value) {
         .unwrap_or("")
         .to_string();
     let user = text("proxyUsername");
-    let manual = matches!(kind.as_str(), "http" | "https" | "socks5");
+    // "socks5h", the mapped kind, is a manual proxy like the rest: its
+    // names are looked up at the proxy.
+    let manual = matches!(kind.as_str(), "http" | "https" | "socks5h");
     let route = if kind == "direct" {
         Route::Direct
     } else if !manual || host.is_empty() {
