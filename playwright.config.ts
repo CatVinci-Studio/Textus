@@ -33,8 +33,9 @@ export default defineConfig({
   fullyParallel: true,
   // Four locally: the whole run in minutes; CI's runners take two.
   workers: process.env.CI ? 2 : 4,
-  // On CI a flake is reported without blocking a merge; locally a failure
-  // is a failure.
+  // On CI a test that passes only on its retry is listed apart (flaky, a
+  // warning on the pull request by the github reporter) without blocking
+  // a merge; locally a failure is a failure.
   retries: process.env.CI ? 1 : 0,
   reporter: process.env.CI ? [["list"], ["github"]] : [["list"]],
   use: {
@@ -57,8 +58,8 @@ export default defineConfig({
         viewport: { width: 1180, height: 780 },
       },
     },
-    // WebKit-only flows in Playwright's WebKit, opt in with E2E_WEBKIT=1;
-    // CI doesn't run them.
+    // WebKit flows in Playwright's WebKit, with E2E_WEBKIT=1 (CI's
+    // e2e-webkit job sets it on every pull request).
     ...(process.env.E2E_WEBKIT
       ? [
           {

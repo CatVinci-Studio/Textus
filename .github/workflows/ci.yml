@@ -2,15 +2,18 @@ name: CI
 
 # Three layers (docs/dev/testing.md has the table):
 #
-#   pull request   check (types, lint, unit tests, format, build); plus the
-#                  Rust checks on Linux when src-tauri/ changed
-#                  (scripts/ci-changes.mjs). Required: check, native,
-#                  ci-config. A contributor runs `npm run check` locally.
+#   pull request   check (types, lint, unit tests, format, build), the
+#                  whole e2e suite in Chromium (2 shards) and in WebKit,
+#                  plus the Rust checks on Linux when src-tauri/ changed
+#                  (scripts/ci-changes.mjs). A change to GitHub's settings
+#                  or root Markdown alone skips e2e. Required: check, e2e,
+#                  native, ci-config. A contributor runs `npm run check`
+#                  locally.
 #   push to main   the same.
 #   before release the full suite on every platform: native on Linux, macOS
-#                  and Windows, e2e (2 shards) and e2e-webkit, the iOS
-#                  simulator. release.yml calls this on the tagged commit;
-#                  it also runs on a pull request into stable and by hand.
+#                  and Windows, e2e, the iOS simulator. release.yml calls
+#                  this on the tagged commit; it also runs on a pull
+#                  request into stable and by hand.
 #
 # `check`'s save round trip (src/document-view/save-roundtrip*.test.ts)
 # runs only when the change can reach saving: the editor, src/document*/,
@@ -153,7 +156,7 @@ jobs:
   # (playwright.config.ts): a few minutes each.
   e2e-shard:
     needs: changes
-    if: needs.changes.outputs.full == 'true'
+    if: needs.changes.outputs.light != 'true'
     name: e2e (${{ matrix.shard }}/2)
     strategy:
       fail-fast: false
@@ -208,11 +211,11 @@ jobs:
           path: test-results/
           retention-days: 7
 
-  # One required check for the two shards, like `native` below: passes only
-  # when all of them passed (or were skipped together, when the run isn't the
-  # full suite).
+  # One required check for the shards and WebKit, like `native` below:
+  # passes only when all of them passed (or were skipped together, for a
+  # light change).
   e2e:
-    needs: [changes, e2e-shard]
+    needs: [changes, e2e-shard, e2e-webkit]
     if: always()
     runs-on: ubuntu-22.04
     timeout-minutes: 5
@@ -221,19 +224,18 @@ jobs:
         env:
           CHANGES: ${{ needs.changes.result }}
           RESULT: ${{ needs.e2e-shard.result }}
+          WEBKIT: ${{ needs.e2e-webkit.result }}
         run: |
           test "$CHANGES" = success
           test "$RESULT" = success || test "$RESULT" = skipped
+          test "$WEBKIT" = success || test "$WEBKIT" = skipped
 
   # The flows macOS, iOS and Linux users meet in WebKit
-  # (playwright.config.ts's WEBKIT_SPECS). Not required: it runs after a
-  # merge to main or stable, not on every pull request.
+  # (playwright.config.ts's WEBKIT_SPECS), on every pull request: a failure
+  # here fails `e2e`.
   e2e-webkit:
     needs: changes
-    if: needs.changes.outputs.full == 'true'
-    # Not required: its failure shows here without failing the run (or
-    # the release that calls it).
-    continue-on-error: true
+    if: needs.changes.outputs.light != 'true'
     runs-on: ubuntu-22.04
     timeout-minutes: 30
     steps:
@@ -250,7 +252,7 @@ jobs:
           path: textus-plugins
       - run: npm ci --prefix textus-plugins
       - run: npx playwright install --with-deps webkit
-      - run: npx playwright test --project=webkit --ignore-snapshots --pass-with-no-tests
+      - run: npx playwright test --project=webkit --ignore-snapshots
         env:
           E2E_WEBKIT: "1"
       - if: failure()

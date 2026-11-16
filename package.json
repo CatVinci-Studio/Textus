@@ -20,7 +20,7 @@
     "test": "vitest run",
     "test:watch": "vitest",
     "test:roundtrip": "node scripts/roundtrip-corpus/run.mjs",
-    "test:e2e": "playwright test --pass-with-no-tests",
+    "test:e2e": "playwright test",
     "test:perf": "TEXTUS_PERF=1 playwright test --project=chromium --workers=1",
     "bench:large-doc": "playwright test -c playwright.perf.config.ts large-doc.perf.ts",
     "bench:plugins": "playwright test -c playwright.perf.config.ts plugins.perf.ts",
