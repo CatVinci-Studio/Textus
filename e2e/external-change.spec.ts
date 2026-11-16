@@ -217,8 +217,26 @@ test("a document comes back with its caret, its undo and its redo", async ({
     "A line 60. ONE TWO",
   );
   await page.keyboard.press("ControlOrMeta+z");
+  await expect(editor.locator("p", { hasText: "A line 60." })).toHaveText(
+    "A line 60. ONE",
+  );
+
+  // Saved, closed and opened again: its history comes from its file.
+  await page.keyboard.press("ControlOrMeta+s");
+  await expect(page.locator(".tab-pill-dirty-dot")).toHaveCount(0);
+  await page.keyboard.press("ControlOrMeta+w");
+  await expect(tab("a.md")).toHaveCount(0);
+  await openPath(page, "/work/a.md");
+  await expect(editor).toContainText("A line 60. ONE");
+  await page.waitForTimeout(600);
+  await editor.locator("p", { hasText: "A line 0." }).click();
   await page.keyboard.press("ControlOrMeta+z");
   await expect(editor.locator("p", { hasText: "A line 60." })).toHaveText(
     "A line 60.",
+  );
+  await page.keyboard.press("ControlOrMeta+Shift+z");
+  await page.keyboard.press("ControlOrMeta+Shift+z");
+  await expect(editor.locator("p", { hasText: "A line 60." })).toHaveText(
+    "A line 60. ONE TWO",
   );
 });
