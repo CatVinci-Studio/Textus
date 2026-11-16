@@ -347,7 +347,7 @@ fn the_document_tools_are_for_a_document_shown_in_part() {
 }
 
 #[test]
-fn a_cloud_model_takes_a_long_document_whole_a_local_one_in_part() {
+fn a_roomy_provider_takes_a_long_document_whole_a_gateway_or_local_one_in_part() {
     let provider = |id: &str| {
         crate::ai::catalog::PROVIDER_CATALOG
             .iter()
@@ -359,10 +359,13 @@ fn a_cloud_model_takes_a_long_document_whole_a_local_one_in_part() {
         &doc,
         context::Reading::for_provider(true, provider("anthropic"))
     ));
-    assert!(!context::shown_whole(
-        &doc,
-        context::Reading::for_provider(true, provider("ollama"))
-    ));
+    // A gateway may serve a model of 8k: in part, as a local server's.
+    for id in ["ollama", "openrouter", "groq", "qwen"] {
+        assert!(!context::shown_whole(
+            &doc,
+            context::Reading::for_provider(true, provider(id))
+        ));
+    }
     let past = "x".repeat(context::ROOMY_DOCUMENT_LIMIT + 1);
     assert!(!context::shown_whole(
         &past,
