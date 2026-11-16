@@ -68,6 +68,19 @@
   zoom: calc(1 / var(--content-zoom, 1));
 }
 
+/* A finger has no hover: over a drawing the button would cover it for
+   good, so it shows once the block is tapped (its frame has the focus). */
+@media (hover: none) {
+  .plugin-code-block .plugin-code-edit {
+    opacity: 0;
+    pointer-events: none;
+  }
+  .plugin-code-block:focus-within .plugin-code-edit {
+    opacity: 1;
+    pointer-events: auto;
+  }
+}
+
 .plugin-code-block .plugin-webview-problem {
   padding: 0.8em 1em;
   color: var(--text-muted);

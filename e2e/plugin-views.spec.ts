@@ -199,3 +199,28 @@ test("a plugin's page asked for beside, with no room for it, opens as a tab and 
   await page.waitForTimeout(300);
   expect(await page.locator(".notice").count()).toBe(0);
 });
+
+test.describe("on a touch screen", () => {
+  test.use({ hasTouch: true, isMobile: true });
+
+  test("a drawing's source button shows once the block is tapped, not over it all the time", async ({
+    page,
+  }) => {
+    test.skip(!hasPlugin("catvinci.function-plot"), "no plugins checkout");
+    await openWithPlugins(page, {
+      plugins: {
+        "catvinci.function-plot": permissions("catvinci.function-plot"),
+      },
+      folder: {
+        "/work/notes/plot.md": "# Plot\n\n```function-plot\ny = x^2\n```\n",
+      },
+    });
+    await openPath(page, "/work/notes/plot.md");
+    const block = page.locator('[data-active-tab="true"] .plugin-code-block');
+    const button = block.locator(".plugin-code-edit");
+    await expect(block.locator(".plugin-webview-frame")).toBeVisible();
+    await expect(button).toHaveCSS("opacity", "0");
+    await block.locator(".plugin-webview-frame").tap();
+    await expect(button).toHaveCSS("opacity", "1");
+  });
+});
