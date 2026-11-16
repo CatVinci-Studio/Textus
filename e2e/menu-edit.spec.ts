@@ -65,6 +65,45 @@ test("Find and Replace work in source mode, on the source in use", async ({
   await expect(bar).toHaveCount(0);
 });
 
+test("a find bar left open comes back with its tab, the page where it was read", async ({
+  page,
+}) => {
+  const lines = Array.from({ length: 80 }, (_, i) => `line ${i}`);
+  await page.addInitScript(
+    (text) => {
+      (window as unknown as Record<string, unknown>).__devFs = {
+        "/work/a.md": text,
+        "/work/b.md": "# B\n",
+      };
+    },
+    [...lines, "the needle"].join("\n\n"),
+  );
+  await page.setViewportSize({ width: 1200, height: 600 });
+  await openApp(page, { settings: { menuBarShown: false } });
+  await openPath(page, "/work/b.md");
+  await openPath(page, "/work/a.md");
+  await docs(page).first().locator("p").first().click();
+  await emit(page, "menu-find-replace");
+  const bar = page.locator(".find-replace-bar");
+  await bar.getByRole("textbox").first().fill("needle");
+  await expect(page.locator(".find-match")).toHaveCount(1);
+  // Read on elsewhere, the bar still open.
+  const scroller = page.locator(".editor-scroll").first();
+  await scroller.evaluate((el) => (el.scrollTop = 600));
+  await page.waitForTimeout(200);
+  const read = await scroller.evaluate((el) => el.scrollTop);
+
+  await page.locator(".tab-pill", { hasText: "b.md" }).click();
+  await expect(bar).toHaveCount(0);
+  await page.locator(".tab-pill", { hasText: "a.md" }).click();
+  await expect(bar.getByRole("textbox").first()).toHaveValue("needle");
+  await expect(page.locator(".find-match")).toHaveCount(1);
+  await page.waitForTimeout(300);
+  expect(
+    Math.abs((await scroller.evaluate((el) => el.scrollTop)) - read),
+  ).toBeLessThan(2);
+});
+
 test("the find bar stays over the document as it scrolls", async ({ page }) => {
   await page.setViewportSize({ width: 1200, height: 600 });
   await openApp(page, { settings: { menuBarShown: false } });

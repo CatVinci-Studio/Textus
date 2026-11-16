@@ -22,8 +22,26 @@ export interface Reading {
   place: ScrollPlace | null;
 }
 
+/** The find bar as its tab's editor left it. */
+interface FindLeft {
+  open: boolean;
+  query: string;
+  replacement: string;
+  caseSensitive: boolean;
+  useRegex: boolean;
+  replaceOpen: boolean;
+}
+
 const left = new Map<string, TabLeft>();
 const readings = new Map<string, Reading>();
+const finds = new Map<string, FindLeft>();
+
+export function leaveFind(tabId: string, find: FindLeft): void {
+  finds.set(tabId, find);
+}
+
+export const findLeft = (tabId: string): FindLeft | null =>
+  finds.get(tabId) ?? null;
 
 /** The pane's part of what is left: it is the one that sees the scroll. */
 export function leaveReading(tabId: string, reading: Reading): void {
@@ -47,4 +65,5 @@ export function leftBy(tabId: string, markdown: string): TabLeft | null {
 export function forgetLeft(tabId: string): void {
   left.delete(tabId);
   readings.delete(tabId);
+  finds.delete(tabId);
 }

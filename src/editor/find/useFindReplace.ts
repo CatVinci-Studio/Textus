@@ -7,6 +7,8 @@ import {
 import type { FindBackend } from "./find-backend";
 import { scrollBehavior } from "../../engine/motion/motion";
 import { isImeKeydown } from "../../utils/ime";
+import { useLatest } from "../../utils/hooks/useLatest";
+import { findLeft, leaveFind } from "../tab-left";
 
 interface FindReplaceStatus {
   matchCount: number;
@@ -28,24 +30,54 @@ const statusOf = (s: FindState): FindReplaceStatus => ({
 
 const activeOf = (s: FindState) => s.matches[s.activeIndex];
 
+/** Where a bar's state outlives its editor: the tab it is in, and whether
+ *  that tab's editor is built yet to search. */
+interface KeptBy {
+  tabId: string;
+  ready: boolean;
+}
+
 /** Owns the find & replace bar's open state and drives its editor's search,
- *  the rich document's or its source's (`editor`). */
-export function useFindReplace(editor: FindBackend) {
-  const [open, setOpenState] = useState(false);
+ *  the rich document's or its source's (`editor`). With `keptBy`, the bar
+ *  comes back as its tab's last editor left it. */
+export function useFindReplace(editor: FindBackend, keptBy?: KeptBy) {
+  const [kept] = useState(() => (keptBy ? findLeft(keptBy.tabId) : null));
+  const [open, setOpenState] = useState(kept?.open ?? false);
   // The window-event listeners are re-attached after each render, so a quick
   // second Find event can reach stale callbacks; reading `open` there closed
   // the reopening bar.
-  const openRef = useRef(false);
+  const openRef = useRef(kept?.open ?? false);
   const setOpen = useCallback((value: boolean) => {
     openRef.current = value;
     setOpenState(value);
   }, []);
-  const [query, setQuery] = useState("");
-  const [replacement, setReplacement] = useState("");
-  const [caseSensitive, setCaseSensitive] = useState(false);
-  const [useRegex, setUseRegex] = useState(false);
+  const [query, setQuery] = useState(kept?.query ?? "");
+  const [replacement, setReplacement] = useState(kept?.replacement ?? "");
+  const [caseSensitive, setCaseSensitive] = useState(
+    kept?.caseSensitive ?? false,
+  );
+  const [useRegex, setUseRegex] = useState(kept?.useRegex ?? false);
   const [status, setStatus] = useState<FindReplaceStatus>(IDLE_STATUS);
-  const [replaceOpen, setReplaceOpen] = useState(false);
+  const [replaceOpen, setReplaceOpen] = useState(kept?.replaceOpen ?? false);
+  // A bar come back shows its matches where the page was being read; the
+  // page goes to one when the search changes.
+  const stayPut = useRef(kept?.open ?? false);
+  const ready = keptBy?.ready ?? true;
+  const tabId = keptBy?.tabId;
+  const leaving = useLatest({
+    open,
+    query,
+    replacement,
+    caseSensitive,
+    useRegex,
+    replaceOpen,
+  });
+  useEffect(
+    () => () => {
+      if (tabId) leaveFind(tabId, leaving.current);
+    },
+    [tabId, leaving],
+  );
   // Bumped when Find is asked for again with the bar open: the bar takes the
   // focus back and selects its query.
   const [focusRequest, setFocusRequest] = useState(0);
@@ -55,8 +87,9 @@ export function useFindReplace(editor: FindBackend) {
 
   // Any change to the search inputs while open re-runs the search, including
   // a kept query when the bar reopens.
+  const searched = useRef<string | null>(null);
   useEffect(() => {
-    if (!open) return;
+    if (!open || !ready) return;
     const found = editor.apply({
       type: "search",
       query,
@@ -64,10 +97,14 @@ export function useFindReplace(editor: FindBackend) {
       useRegex,
     });
     setStatus(statusOf(found));
+    const search = JSON.stringify([query, caseSensitive, useRegex]);
+    if (searched.current !== null && searched.current !== search)
+      stayPut.current = false;
+    searched.current = search;
     // Instant: a smooth scroll per keystroke would chase its own tail.
     const active = activeOf(found);
-    if (query && active) editor.reveal(active, false);
-  }, [open, query, caseSensitive, useRegex, editor]);
+    if (query && active && !stayPut.current) editor.reveal(active, false);
+  }, [open, ready, query, caseSensitive, useRegex, editor]);
 
   const toggleCaseSensitive = useCallback(
     () => setCaseSensitive((v) => !v),
