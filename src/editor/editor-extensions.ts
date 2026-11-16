@@ -1,12 +1,8 @@
-import {
-  type Editor,
-  defaultValueCtx,
-  editorViewOptionsCtx,
-  rootCtx,
-} from "@milkdown/kit/core";
+import { type Editor, editorViewOptionsCtx, rootCtx } from "@milkdown/kit/core";
 import type { Ctx, MilkdownPlugin } from "@milkdown/kit/ctx";
 import { orderedListAttr } from "@milkdown/kit/preset/commonmark";
-import { history } from "@milkdown/kit/plugin/history";
+import { historyOpened, openedFromCtx, openWith } from "./opened-from";
+import type { TabLeft } from "./tab-left";
 import { clipboard } from "@milkdown/kit/plugin/clipboard";
 import { listener } from "@milkdown/kit/plugin/listener";
 import { $remark } from "@milkdown/kit/utils";
@@ -172,9 +168,11 @@ export function configureEditorRoot(
   root: HTMLElement,
   initialValue: string,
   label: () => string,
+  /** What the tab's last editor left: this one opens as that was. */
+  from: TabLeft | null = null,
 ): void {
   ctx.set(rootCtx, root);
-  ctx.set(defaultValueCtx, initialValue);
+  openWith(ctx, initialValue, from);
   // Typora-compatible themes style their content under `#write`.
   ctx.set(
     editorViewOptionsCtx,
@@ -416,7 +414,8 @@ export function withEditorCore(
 
       // handlePaste props run in registration order: images first, then a lone
       // URL, then markdown source, then milkdown's own clipboard plugin.
-      .use(editing(history))
+      .use(openedFromCtx)
+      .use(editing(historyOpened))
       .use(editing(disk ? createUndoFilePlugin(() => docPath.current) : []))
       .use(editing(ownUndoStepPlugin))
       .use(editing(changeSourcePlugin))

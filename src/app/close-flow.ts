@@ -11,6 +11,7 @@ import {
 } from "../document/doc-tabs";
 import { drafts, session } from "../platform/ipc";
 import { forgetTabZoom } from "../engine/zoom/tab-zoom";
+import { forgetLeft } from "../editor/tab-left";
 import { forgetTabWebviewState } from "../plugins/views/webviews";
 import { paneOf, shownIsland, windowLayout } from "../engine/layout/store";
 import { flushPendingWrites } from "../storage/pending-writes";
@@ -101,6 +102,7 @@ export function useTabRemoval(opts: {
       closedIds.push(id);
       if (closedIds.length > 32) closedIds.shift();
       forgetTabZoom(id);
+      forgetLeft(id);
       forgetTabWebviewState(id);
       setTabs((prev) => {
         const next = prev.filter((tb) => tb.id !== id);

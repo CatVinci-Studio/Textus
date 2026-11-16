@@ -1,19 +1,29 @@
 import { tabElement } from "../../engine/layout/tab-element";
+import { focusTabEditor, whenEditorBuilt } from "../../editor/tab-editor";
 import { subscribeSplit, tabInUse } from "../../engine/layout/store";
 import { useEffect } from "react";
 import { watchIslandNumbers } from "../../engine/layout/island-numbers";
 import { modIsMeta } from "../../platform/os";
 import { isMobileApp } from "../../platform/capabilities";
 
-/** What takes the keys in a tab: its editor, its source, the AI's box. */
-const TYPED_IN = ".ProseMirror, .cm-content, textarea";
+/** What takes the keys in a tab besides a document's editor: its source,
+ *  the AI's box. */
+const TYPED_IN = ".cm-content, textarea";
 
 /** Puts the focus in `tabId`'s content once it is drawn in front - a tab
  *  just brought there mounts a frame or two later - or, where it has
- *  nothing to type in, on its tab. */
+ *  nothing to type in, on its tab. A document's editor takes it its own
+ *  way (tab-editor.ts), as soon as it is built. */
 function focusTab(tabId: string, tries = 10): void {
   requestAnimationFrame(() => {
     const view = tabInUse() === tabId ? tabElement(tabId) : null;
+    if (view && focusTabEditor(tabId)) return;
+    if (view?.querySelector(".editor-scroll")) {
+      whenEditorBuilt(tabId, () => {
+        if (tabInUse() === tabId && focusLost()) focusTabEditor(tabId);
+      });
+      return;
+    }
     const target = view?.querySelector<HTMLElement>(TYPED_IN);
     if (target) target.focus({ preventScroll: true });
     else if (tries > 0) focusTab(tabId, tries - 1);

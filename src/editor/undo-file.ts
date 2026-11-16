@@ -12,6 +12,8 @@ import type { EditorView } from "@milkdown/kit/prose/view";
 import { $prose } from "@milkdown/kit/utils";
 import { undoFiles } from "../platform/ipc-files";
 import { fnv1a } from "../utils/hash";
+import { isHistory } from "./left-history";
+import { openedFromCtx } from "./opened-from";
 
 // A document's undo history outlives its editor, like Vim's undofile: kept
 // when the editor goes (its tab let go after a while out of sight, or
@@ -39,12 +41,6 @@ export function docHash(doc: ProseNode): string {
     }
   });
   return h.toString(36);
-}
-
-/** prosemirror-history's plugin, known by its config (its key is private). */
-function isHistory(plugin: Plugin): boolean {
-  const { config } = plugin.spec as { config?: { newGroupDelay?: unknown } };
-  return config?.newGroupDelay !== undefined;
 }
 
 /** The history as the steps that undo it, newest first: found by undoing
@@ -135,13 +131,14 @@ const undoFileKey = new PluginKey("undo-file");
  *  back when it opens at the same text. Nothing for a draft with no file. */
 export function createUndoFilePlugin(docPath: () => string | null) {
   return $prose(
-    () =>
+    (ctx) =>
       new Plugin({
         key: undoFileKey,
         view(view) {
           const path = docPath();
           const opened = view.state.doc;
-          if (path)
+          // The tab's last editor left its history here already.
+          if (path && !ctx.get(openedFromCtx.key))
             void undoFiles
               .load(path, docHash(opened))
               .then((kept) => {

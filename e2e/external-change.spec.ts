@@ -113,3 +113,112 @@ test("coming back from another app leaves the document where it was read", async
   });
   await expect.poll(() => scroller.evaluate((el) => el.scrollTop)).toBe(600);
 });
+
+test("switching between documents leaves each where it was read", async ({
+  page,
+}) => {
+  const long = (name: string) =>
+    `# ${name}\n\n${Array.from({ length: 200 }, (_, i) => `${name} line ${i}.`).join("\n\n")}\n`;
+  await page.addInitScript(
+    (docs) => ((window as unknown as Record<string, unknown>).__devFs = docs),
+    { "/work/a.md": long("A"), "/work/b.md": long("B") },
+  );
+  await openApp(page);
+  const active = page.locator('[data-active-tab="true"]');
+  const scroller = active.locator(".editor-scroll");
+  const top = () => scroller.evaluate((el) => Math.round(el.scrollTop));
+  const read = async (path: string, last: string, by: number) => {
+    await openPath(page, path);
+    await expect(active.locator(".ProseMirror")).toContainText(last);
+    await page.waitForTimeout(500);
+    await scroller.hover();
+    await page.mouse.wheel(0, by);
+    await expect.poll(top).toBeGreaterThan(by / 2);
+    // Kept once the scrolling settles.
+    await page.waitForTimeout(600);
+    return top();
+  };
+  const a = await read("/work/a.md", "A line 199", 1500);
+  const b = await read("/work/b.md", "B line 199", 800);
+  // Each comes back drawn anew; the editor taking its focus back must not
+  // scroll it to the caret at the top.
+  for (const [name, at] of [
+    ["a.md", a],
+    ["b.md", b],
+    ["a.md", a],
+  ] as const) {
+    await page.locator(".tab-pill", { hasText: name }).click();
+    await expect
+      .poll(async () => Math.abs((await top()) - at))
+      .toBeLessThan(40);
+    await page.waitForTimeout(500);
+    expect(Math.abs((await top()) - at)).toBeLessThan(40);
+  }
+});
+
+test("a document comes back with its caret, its undo and its redo", async ({
+  page,
+}) => {
+  const long = (name: string) =>
+    `# ${name}\n\n${Array.from({ length: 120 }, (_, i) => `${name} line ${i}.`).join("\n\n")}\n`;
+  await page.addInitScript(
+    (docs) => ((window as unknown as Record<string, unknown>).__devFs = docs),
+    { "/work/a.md": long("A"), "/work/b.md": long("B") },
+  );
+  await openApp(page);
+  const editor = page.locator('[data-active-tab="true"] .ProseMirror');
+  const scroller = page.locator('[data-active-tab="true"] .editor-scroll');
+  const tab = (name: string) => page.locator(".tab-pill", { hasText: name });
+  const away = async () => {
+    await tab("b.md").click();
+    await expect(editor).toContainText("B line 119");
+    await page.waitForTimeout(400);
+    await tab("a.md").click();
+    await expect(editor).toContainText("A line 119");
+    await page.waitForTimeout(400);
+  };
+  await openPath(page, "/work/b.md");
+  await openPath(page, "/work/a.md");
+  await expect(editor).toContainText("A line 119");
+  const line = editor.locator("p", { hasText: "A line 60." });
+  await line.click();
+  await page.keyboard.press("End");
+  await page.keyboard.type(" ONE");
+  await page.waitForTimeout(700);
+  await page.keyboard.type(" TWO");
+  await expect(line).toHaveText("A line 60. ONE TWO");
+  await page.waitForTimeout(400);
+  const read = await scroller.evaluate((el) => Math.round(el.scrollTop));
+
+  // The caret is where it was: typing goes on after the last word, with
+  // no click, and the page has not moved.
+  await away();
+  await page.keyboard.type("!");
+  await expect(editor.locator("p", { hasText: "A line 60." })).toHaveText(
+    "A line 60. ONE TWO!",
+  );
+  expect(
+    Math.abs((await scroller.evaluate((el) => el.scrollTop)) - read),
+  ).toBeLessThan(40);
+
+  // Undo goes back step by step, staying at the edit; redo comes back
+  // after another switch.
+  await page.keyboard.press("ControlOrMeta+z");
+  await page.keyboard.press("ControlOrMeta+z");
+  await expect(editor.locator("p", { hasText: "A line 60." })).toHaveText(
+    "A line 60. ONE",
+  );
+  expect(
+    Math.abs((await scroller.evaluate((el) => el.scrollTop)) - read),
+  ).toBeLessThan(40);
+  await away();
+  await page.keyboard.press("ControlOrMeta+Shift+z");
+  await expect(editor.locator("p", { hasText: "A line 60." })).toHaveText(
+    "A line 60. ONE TWO",
+  );
+  await page.keyboard.press("ControlOrMeta+z");
+  await page.keyboard.press("ControlOrMeta+z");
+  await expect(editor.locator("p", { hasText: "A line 60." })).toHaveText(
+    "A line 60.",
+  );
+});

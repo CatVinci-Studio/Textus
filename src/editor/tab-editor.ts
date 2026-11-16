@@ -18,6 +18,9 @@ interface TabEditor {
    *  the tab's `content` is current. */
   flush?: () => string | null;
   caret?: () => CaretPlace | null;
+  /** Gives it the keys, its selection as it stands: the editor's own
+   *  focus, which scrolls nothing. Given once the editor is built. */
+  focus?: () => void;
   /** It must stay loaded though out of sight: Textus AI has Quick Ask
    *  open in it or is still writing into it. */
   held?: true;
@@ -36,6 +39,11 @@ export function registerTabEditor<K extends keyof TabEditor>(
   handle[part] = give;
   editors.set(tabId, handle);
   if (part === "held") for (const tell of heldListeners) tell();
+  if (part === "focus") {
+    const waiting = awaited.get(tabId);
+    awaited.delete(tabId);
+    waiting?.forEach((ready) => ready());
+  }
   return () => {
     const now = editors.get(tabId);
     if (now?.[part] !== give) return;
@@ -43,6 +51,22 @@ export function registerTabEditor<K extends keyof TabEditor>(
     if (Object.keys(now).length === 0) editors.delete(tabId);
     if (part === "held") for (const tell of heldListeners) tell();
   };
+}
+
+const awaited = new Map<string, Set<() => void>>();
+
+/** Gives `tabId`'s editor the keys; false while it isn't built. */
+export function focusTabEditor(tabId: string): boolean {
+  const focus = editors.get(tabId)?.focus;
+  focus?.();
+  return !!focus;
+}
+
+/** Calls `ready` once `tabId`'s editor is built; returns the cancel. */
+export function whenEditorBuilt(tabId: string, ready: () => void): () => void {
+  const waiting = awaited.get(tabId) ?? new Set();
+  awaited.set(tabId, waiting.add(ready));
+  return () => waiting.delete(ready);
 }
 
 /** Whether `tabId`'s editor is held loaded, kept current in a component. */

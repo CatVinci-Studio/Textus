@@ -11,6 +11,13 @@ import { useSettings, type AgentMode } from "../prefs/SettingsContext";
 import { KatexFirst } from "../editor/math/KatexFirst";
 import { elasticOverscroll } from "../engine/controls/elastic-overscroll";
 import { placeIn, scrollToPlace } from "./reading-place";
+import {
+  leaveReading,
+  leftBy,
+  readingLeft,
+  type Reading,
+} from "../editor/tab-left";
+import { whenEditorBuilt } from "../editor/tab-editor";
 import { lastScroll, rememberScroll } from "../document/last-places";
 import { windowTabs } from "../engine/layout/store";
 import type { DocTab } from "../document/doc-tabs";
@@ -62,25 +69,32 @@ const mtimeOf = (tabId: string) =>
   windowTabs<DocTab>().find((tab) => tab.id === tabId)?.diskMtime ?? null;
 
 /**
- * Restores the tab's scroll when it comes back to the front: WebKit resets
- * a display: none scroller to the top. Also returns a reopened file to where
- * it was last read, unless the reader or a link moved it first.
+ * Where the tab is read. Shown again while its editor was kept, the scroll
+ * is put back (WebKit resets a display: none scroller to the top). With a
+ * new editor it goes back where the tab's last one was read, or a reopened
+ * file where it was read last time - unless the reader or a link moved it
+ * first.
  */
 function useKeptScroll(
   isActive: boolean | undefined,
   tabId: string,
   filePath: string | null,
+  content: string,
 ) {
   const el = useRef<HTMLDivElement | null>(null);
-  const kept = useRef(0);
   // The path now, for the scroll handler: a saved draft gets one.
   const path = useRef(filePath);
   path.current = filePath;
   // Read once, as the pane mounts with its document.
-  const [lastRead] = useState(() =>
-    filePath ? lastScroll(filePath, mtimeOf(tabId)) : null,
-  );
-  const pending = useRef(lastRead);
+  const [opened] = useState<Reading | null>(() => {
+    if (leftBy(tabId, content)) return readingLeft(tabId);
+    const place = filePath ? lastScroll(filePath, mtimeOf(tabId)) : null;
+    return place && { top: 0, width: 0, place };
+  });
+  // As it is read now, taken while it is shown and laid out: by the time
+  // the editor goes, its tab is already drawn as one out of sight.
+  const reading = useRef<Reading>(opened ?? { top: 0, width: 0, place: null });
+  const pending = useRef(opened);
   useEffect(() => {
     const scroller = el.current;
     if (!scroller) return;
@@ -88,15 +102,21 @@ function useKeptScroll(
     const save = () => {
       timer = undefined;
       const root = scroller.querySelector(".ProseMirror");
-      if (!root || !path.current || scroller.clientHeight === 0) return;
+      if (!root || scroller.clientHeight === 0) return;
       const place = placeIn(scroller, root);
+      reading.current = { ...reading.current, place };
       const mtime = mtimeOf(tabId);
-      if (place && mtime !== null) rememberScroll(path.current, place, mtime);
+      if (place && path.current && mtime !== null)
+        rememberScroll(path.current, place, mtime);
     };
     // Only while it is shown: a hidden one has nothing to say.
     const keep = () => {
       if (scroller.clientHeight === 0) return;
-      kept.current = scroller.scrollTop;
+      reading.current = {
+        ...reading.current,
+        top: scroller.scrollTop,
+        width: scroller.clientWidth,
+      };
       pending.current = null;
       window.clearTimeout(timer);
       timer = window.setTimeout(save, 300);
@@ -104,33 +124,36 @@ function useKeptScroll(
     scroller.addEventListener("scroll", keep, { passive: true });
     return () => {
       scroller.removeEventListener("scroll", keep);
-      // Closed within a moment of scrolling: kept all the same.
-      if (timer !== undefined) {
-        window.clearTimeout(timer);
-        save();
-      }
+      window.clearTimeout(timer);
     };
   }, [tabId]);
+  // Left for the tab's next editor as this pane goes.
+  useLayoutEffect(() => () => leaveReading(tabId, reading.current), [tabId]);
   useLayoutEffect(() => {
     const scroller = el.current;
     if (!isActive || !scroller) return;
-    if (scroller.scrollTop !== kept.current) scroller.scrollTop = kept.current;
-    // Its blocks may still be loading: tried each frame for two seconds.
-    let frame = 0;
-    let tries = 120;
     const goBack = () => {
-      const place = pending.current;
-      if (!place) return;
+      const to = pending.current;
       const root = scroller.querySelector(".ProseMirror");
-      if (scroller.scrollTop > 0 || tries-- <= 0) pending.current = null;
-      else if (root && scrollToPlace(scroller, root, place)) {
-        pending.current = null;
-        kept.current = scroller.scrollTop;
-      } else frame = requestAnimationFrame(goBack);
+      if (!to || !root) return;
+      pending.current = null;
+      // The same document at the same width reads at the same offset;
+      // otherwise by the block that was at the top.
+      if (to.width === scroller.clientWidth) scroller.scrollTop = to.top;
+      else if (to.place) scrollToPlace(scroller, root, to.place);
+      reading.current = {
+        ...to,
+        top: scroller.scrollTop,
+        width: scroller.clientWidth,
+      };
     };
-    goBack();
-    return () => cancelAnimationFrame(frame);
-  }, [isActive]);
+    if (pending.current) {
+      goBack();
+      return pending.current ? whenEditorBuilt(tabId, goBack) : undefined;
+    }
+    const { top } = reading.current;
+    if (scroller.scrollTop !== top) scroller.scrollTop = top;
+  }, [isActive, tabId]);
   // A Mac's page gives at either end, short documents too. The iPhone's web
   // view stretches by itself.
   useEffect(() => {
@@ -161,7 +184,7 @@ export const EditorPane = memo(function EditorPane({
     (markdown: string) => onChange(tabId, markdown),
     [onChange, tabId],
   );
-  const scrollRef = useKeptScroll(isActive, tabId, filePath);
+  const scrollRef = useKeptScroll(isActive, tabId, filePath, initialValue);
   const endRef = useDocEndRef(tabId);
 
   return (

@@ -11,6 +11,7 @@ const WEBKIT_SPECS = [
   // The frame engine and the one editor per island: Mac draws in WebKit,
   // whose layout and clip-path the islands' motion leans on.
   "ai-tabs.spec.ts",
+  "external-change.spec.ts",
   "editor-per-island.spec.ts",
   "sidebar-panels.spec.ts",
   "tab-from-window.spec.ts",

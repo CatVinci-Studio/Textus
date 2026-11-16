@@ -2,7 +2,9 @@ import { useCallback, useEffect, useLayoutEffect, useRef } from "react";
 import { editorViewCtx, serializerCtx } from "@milkdown/kit/core";
 import type { Ctx } from "@milkdown/kit/ctx";
 import type { Node as ProseNode } from "@milkdown/kit/prose/model";
+import { leaveHistory } from "../editor/left-history";
 import { registerTabEditor } from "../editor/tab-editor";
+import { leaveTab } from "../editor/tab-left";
 import {
   readSourceBlocks,
   writePreservingSource,
@@ -16,6 +18,8 @@ import { useLatest } from "../utils/hooks/useLatest";
 export interface DocumentReporting {
   reportedDocRef: { current: ProseNode | null };
   reportedMarkdownRef: { current: string | null };
+  /** The text this editor opened with. */
+  openedValueRef: { readonly current: string };
   /** The editor has mounted with `doc`, read from the opened file. */
   onMounted: (ctx: Ctx, doc: ProseNode) => void;
   reportDoc: (ctx: Ctx, doc: ProseNode) => void;
@@ -65,14 +69,25 @@ export function useDocumentReporting(
     },
     [onChangeRef],
   );
-  return { reportedDocRef, reportedMarkdownRef, onMounted, reportDoc };
+  return {
+    reportedDocRef,
+    reportedMarkdownRef,
+    openedValueRef,
+    onMounted,
+    reportDoc,
+  };
 }
 
 /** Registers this editor's flush under its tab. */
 export function useEditorFlush(
   tabId: string,
   run: EditorRunner,
-  { reportedDocRef, reportedMarkdownRef, reportDoc }: DocumentReporting,
+  {
+    reportedDocRef,
+    reportedMarkdownRef,
+    openedValueRef,
+    reportDoc,
+  }: DocumentReporting,
 ) {
   const flush = useCallback(
     () =>
@@ -90,7 +105,26 @@ export function useEditorFlush(
   // The debounce reports the same doc again later: a harmless repeat.
   useEffect(() => registerTabEditor(tabId, "flush", flush), [tabId, flush]);
   // Let go when its tab leaves the front: what was typed a moment before
-  // goes out first, while the editor is still there to read it from.
-  const last = useLatest(flush);
-  useLayoutEffect(() => () => void last.current(), [last]);
+  // goes out first, then the editor's own state for the tab's next one,
+  // while it is still there to read them from.
+  const leave = useLatest(() => {
+    const markdown = flush() ?? openedValueRef.current;
+    run((ctx) => {
+      const { state } = ctx.get(editorViewCtx);
+      leaveTab(tabId, {
+        markdown,
+        doc: state.doc.toJSON(),
+        selection: state.selection.toJSON(),
+        history: leaveHistory(state),
+      });
+    });
+  });
+  useLayoutEffect(() => () => leave.current(), [leave]);
+  const built = run(() => true) === true;
+  useEffect(() => {
+    if (!built) return;
+    return registerTabEditor(tabId, "focus", () =>
+      run((ctx) => ctx.get(editorViewCtx).focus()),
+    );
+  }, [built, tabId, run]);
 }

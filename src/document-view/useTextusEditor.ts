@@ -15,6 +15,7 @@ import type { Settings } from "../prefs/SettingsContext";
 import type { Strings } from "../i18n/strings";
 import type { TourAi } from "../utils/events";
 import { configureEditorRoot } from "../editor/editor-extensions";
+import { leftBy } from "../editor/tab-left";
 import {
   documentChangedForPlugins,
   selectionChangedForPlugins,
@@ -37,6 +38,7 @@ interface EditorBridges {
 /** Builds this tab's Milkdown instance, with the listener that reports the
  *  document. */
 export function useTextusEditor({
+  tabId,
   initialValue,
   reporting,
   settingsRef,
@@ -47,6 +49,7 @@ export function useTextusEditor({
   setQuickAskEl,
   requestImageName,
 }: {
+  tabId: string;
   initialValue: string;
   reporting: DocumentReporting;
   // The chain is built once, so plugins read live values through these refs.
@@ -89,6 +92,7 @@ export function useTextusEditor({
             root,
             initialValue,
             () => tRef.current.editorLabel,
+            leftBy(tabId, initialValue),
           );
           ctx
             .get(listenerCtx)
