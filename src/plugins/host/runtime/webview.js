@@ -12,6 +12,7 @@
   var receivers = new Set();
   var held = [];
   var state = null;
+  var visibility = new Set();
   var exporter = null;
 
   // The page with everything it loads (its chart library) in, so a
@@ -309,8 +310,21 @@
         },
       };
     },
+    // Whether the page is in sight. Out of sight it may be let go to save
+    // memory, and is rebuilt when shown: what it should keep, it sets with
+    // setState as it goes out of sight (onDidChangeVisibility).
+    visible: true,
+    onDidChangeVisibility: function (callback) {
+      visibility.add(callback);
+      return {
+        dispose: function () {
+          visibility.delete(callback);
+        },
+      };
+    },
     // Kept by the window while the view is open, so a page rebuilt (its
-    // tab moved, the theme changed) can pick up where it was.
+    // tab moved, the theme changed, let go out of sight) can pick up where
+    // it was.
     getState: function () {
       return state;
     },
@@ -377,6 +391,13 @@
         },
         theme: function (params) {
           setTheme(params.css, params.dark);
+        },
+        visible: function (params) {
+          if (api.visible === !!params.visible) return;
+          api.visible = !!params.visible;
+          visibility.forEach(function (callback) {
+            callback(api.visible);
+          });
         },
         // A page drawn in the document takes the document's zoom itself:
         // its frame is kept out of the window's, so it draws sharp.

@@ -267,8 +267,15 @@ export function PluginWebview({
         dark: windowIsDark(),
       }),
     );
+    // Out of sight (its tab behind another, its panel closed) the page is
+    // told, to keep what it would lose if let go.
+    const sight = new IntersectionObserver(([entry]) =>
+      endpoint?.notify("visible", { visible: entry.isIntersecting }),
+    );
+    sight.observe(box);
     box.replaceChildren(frame);
     return () => {
+      sight.disconnect();
       stopTheme();
       stopZoom();
       disconnect();

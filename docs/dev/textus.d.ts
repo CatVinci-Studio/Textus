@@ -1646,6 +1646,12 @@ declare global {
       /** From 1.7: onMessage by the name host.js's webview has; onMessage
        *  stays. */
       onDidReceiveMessage(fn: (message: unknown) => void): Disposable;
+      /** From 1.7: whether the page is in sight. */
+      readonly visible: boolean;
+      /** From 1.7: told as the page goes out of sight and comes back. Out
+       *  of sight it may be let go to save memory and is rebuilt when
+       *  shown, from `getState()`: set what it should keep here. */
+      onDidChangeVisibility(fn: (visible: boolean) => void): Disposable;
       getState(): unknown;
       setState<T>(state: T): T;
       /** Textus's own menu over the page, for a right-click or a dropdown,

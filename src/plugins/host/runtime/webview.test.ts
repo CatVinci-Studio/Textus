@@ -4,6 +4,8 @@ import webview from "./webview.js?raw";
 
 type Handlers = Record<string, (params: unknown) => void>;
 type Page = {
+  visible: boolean;
+  onDidChangeVisibility: (fn: (v: boolean) => void) => { dispose(): void };
   onDidReceiveMessage: (fn: (m: unknown) => void) => { dispose(): void };
   onMessage: (fn: (m: unknown) => void) => { dispose(): void };
 };
@@ -38,6 +40,15 @@ it("keeps what the plugin sent before the page listens, and logs its errors", ()
   handlers.message({ message: "both" });
   expect(got).toEqual(["early", "later", "both"]);
   expect(old).toEqual(["both"]);
+
+  // Told as it goes out of sight, the moment to keep its state.
+  const seen: boolean[] = [];
+  page.onDidChangeVisibility((v) => seen.push(v));
+  handlers.visible({ visible: false });
+  handlers.visible({ visible: false });
+  handlers.visible({ visible: true });
+  expect(seen).toEqual([false, true]);
+  expect(page.visible).toBe(true);
 
   // Its console errors reach the plugin's log.
   console.error("bad", { n: 1 });
