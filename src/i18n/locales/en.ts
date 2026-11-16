@@ -927,6 +927,10 @@ type /name in a conversation to use one.
   agentRetry: "Retry",
   agentForgotStart:
     "This conversation is long: its earliest messages are no longer sent to the model. Start a new conversation to begin afresh.",
+  revisionsNotKept:
+    "Changes waiting for your decision couldn't be kept on disk. Accept or reject them before closing the document, or they will be gone.",
+  settingsNotSaved:
+    "Settings and window state can't be saved right now: what you change lasts until Textus closes.",
   agentNeedsFolder:
     "Open a folder or save the document first: the agent works in a folder.",
   agentStopped: "{agent} stopped.",

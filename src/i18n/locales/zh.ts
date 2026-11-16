@@ -854,6 +854,10 @@ export default {
   agentRetry: "重试",
   agentForgotStart:
     "这段对话已经很长，最早的几条消息不再发给模型。想从头开始，可以新建一段对话。",
+  revisionsNotKept:
+    "等你决定的修改没能保存到磁盘。请在关闭文档前接受或拒绝它们，否则会丢失。",
+  settingsNotSaved:
+    "现在无法保存设置和窗口状态：你做的更改只在关闭 Textus 之前有效。",
   agentNeedsFolder:
     "请先打开一个文件夹或保存文档：Agent 需要在一个文件夹里工作。",
   agentStopped: "{agent} 已停止。",

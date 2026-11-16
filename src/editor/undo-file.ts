@@ -60,7 +60,7 @@ export function createUndoFilePlugin(docPath: () => string | null) {
                 const tr = takeHistory(view.state, left);
                 if (tr) view.dispatch(tr);
               })
-              .catch(() => {});
+              .catch((err: unknown) => console.error("[undo-file] read:", err));
           return {
             destroy() {
               const at = docPath();
@@ -68,7 +68,9 @@ export function createUndoFilePlugin(docPath: () => string | null) {
               if (!at || !left) return;
               void undoFiles
                 .save(at, docHash(view.state.doc), writeHistory(left))
-                .catch(() => {});
+                .catch((err: unknown) =>
+                  console.error("[undo-file] save:", err),
+                );
             },
           };
         },

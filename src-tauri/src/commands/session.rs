@@ -97,7 +97,9 @@ fn write_session(app: &AppHandle, windows: &[WindowSession]) {
     let Some(path) = session_file(app) else {
         return;
     };
-    let _ = crate::json_file::save(&path, windows);
+    if let Err(e) = crate::json_file::save(&path, windows) {
+        eprintln!("textus: cannot keep the window session: {e}");
+    }
 }
 
 /// Every window's session, the main window first, each path in one window

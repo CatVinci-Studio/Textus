@@ -1,6 +1,8 @@
 import { textParagraphs } from "../../editor/markdown/doc-blocks";
 import { useSyncExternalStore } from "react";
 import { ai } from "../../platform/ipc";
+import { showNotice } from "../../engine/controls/notices";
+import { currentStrings } from "../../i18n/current";
 import {
   getUiState,
   updateUiState,
@@ -68,7 +70,17 @@ async function writeFileRevisions(
     (!value.incoming.length && !value.created && value.base === undefined);
   await ai
     .keptProposalsWrite(storeOf(path), null, empty ? null : value, [])
-    .catch(() => undefined);
+    .catch(notKept);
+}
+
+let toldNotKept = false;
+/** The waiting changes live only in the editor now: said once a session,
+ *  so the writer decides them before they go with it. */
+function notKept(error: unknown) {
+  console.error("[file-revisions] not kept:", error);
+  if (toldNotKept) return;
+  toldNotKept = true;
+  showNotice(currentStrings().revisionsNotKept, { tone: "warning" });
 }
 
 /** Each file's changes to its store, one after another: two at once read

@@ -976,6 +976,10 @@ utiliser une.
   agentRetry: "Réessayer",
   agentForgotStart:
     "Cette conversation est longue : ses premiers messages ne sont plus envoyés au modèle. Commencez une nouvelle conversation pour repartir de zéro.",
+  revisionsNotKept:
+    "Les modifications en attente de votre décision n'ont pas pu être enregistrées sur le disque. Acceptez-les ou refusez-les avant de fermer le document, sinon elles seront perdues.",
+  settingsNotSaved:
+    "Les réglages et l'état de la fenêtre ne peuvent pas être enregistrés pour l'instant : vos changements durent jusqu'à la fermeture de Textus.",
   agentNeedsFolder:
     "Ouvrez d’abord un dossier ou enregistrez le document : l’agent travaille dans un dossier.",
   agentStopped: "{agent} s’est arrêté.",

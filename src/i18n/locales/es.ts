@@ -972,6 +972,10 @@ para usar una.
   agentRetry: "Reintentar",
   agentForgotStart:
     "Esta conversación es larga: sus primeros mensajes ya no se envían al modelo. Empieza una conversación nueva para comenzar de cero.",
+  revisionsNotKept:
+    "Los cambios pendientes de tu decisión no se pudieron guardar en el disco. Acéptalos o recházalos antes de cerrar el documento, o se perderán.",
+  settingsNotSaved:
+    "Ahora no se pueden guardar los ajustes ni el estado de la ventana: lo que cambies dura hasta que cierres Textus.",
   agentNeedsFolder:
     "Abre primero una carpeta o guarda el documento: el agente trabaja en una carpeta.",
   agentStopped: "{agent} se ha detenido.",

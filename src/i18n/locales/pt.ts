@@ -958,6 +958,10 @@ Habilidades ficam na pasta skills/ ao lado deste arquivo, um arquivo
   agentRetry: "Tentar de novo",
   agentForgotStart:
     "Esta conversa está longa: as primeiras mensagens já não são enviadas ao modelo. Comece uma nova conversa para recomeçar.",
+  revisionsNotKept:
+    "As alterações à espera da sua decisão não puderam ser guardadas no disco. Aceite-as ou recuse-as antes de fechar o documento, ou serão perdidas.",
+  settingsNotSaved:
+    "Neste momento não é possível guardar as definições nem o estado da janela: o que mudar dura até fechar o Textus.",
   agentNeedsFolder:
     "Abra primeiro uma pasta ou salve o documento: o agente trabalha numa pasta.",
   agentStopped: "{agent} parou.",

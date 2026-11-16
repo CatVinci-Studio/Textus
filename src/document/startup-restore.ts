@@ -244,7 +244,8 @@ export function useStartupRestore(options: StartupRestoreOptions): void {
             ),
           )
             .then(() => drafts.finishDraftRestore())
-            .catch(() => undefined)
+            // Offered again next launch, the same drafts: say why.
+            .catch((err: unknown) => console.error("[drafts] restore:", err))
         : Promise.resolve();
       // A Help doc clicked with no window open: this window was spawned to
       // show it in the blank tab. "welcome" starts the tutorial there.
@@ -284,7 +285,7 @@ export function useStartupRestore(options: StartupRestoreOptions): void {
             ),
           )
           .then(() => drafts.clearDraftSnapshot(recovered.id))
-          .catch(() => undefined);
+          .catch((err: unknown) => console.error("[drafts] recover:", err));
         loadIntoInitialTab({
           path: recovered.path,
           content: recovered.content,

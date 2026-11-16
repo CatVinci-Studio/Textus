@@ -947,6 +947,10 @@ Skills liegen im Ordner skills/ neben dieser Datei, je Skill eine
   agentRetry: "Erneut versuchen",
   agentForgotStart:
     "Dieses Gespräch ist lang: Seine ersten Nachrichten gehen nicht mehr an das Modell. Für einen Neuanfang ein neues Gespräch beginnen.",
+  revisionsNotKept:
+    "Änderungen, die auf Ihre Entscheidung warten, konnten nicht gespeichert werden. Nehmen Sie sie an oder lehnen Sie sie ab, bevor Sie das Dokument schließen, sonst gehen sie verloren.",
+  settingsNotSaved:
+    "Einstellungen und Fensterzustand können gerade nicht gespeichert werden: Änderungen gelten nur, bis Textus beendet wird.",
   agentNeedsFolder:
     "Öffne zuerst einen Ordner oder speichere das Dokument: Der Agent arbeitet in einem Ordner.",
   agentStopped: "{agent} wurde beendet.",
