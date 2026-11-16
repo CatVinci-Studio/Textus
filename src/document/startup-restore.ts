@@ -96,27 +96,29 @@ async function keptTab(
 }
 
 /** The drafts of tabs a reload gave new ids, kept under the new ones before
- *  the old go, so a draft dropped since doesn't come back next launch. */
-async function moveDrafts(
+ *  the old go, so a draft dropped since doesn't come back next launch. An
+ *  old one whose new copy couldn't be written stays: it is the only one. */
+export async function moveDrafts(
   kept: KeptTab[],
   newId: (i: number) => string | undefined,
 ): Promise<void> {
   await Promise.all(
-    kept.map((tab, i) => {
+    kept.map(async (tab, i) => {
       const id = newId(i);
-      return id && tab.text && tab.text.content !== tab.text.savedContent
-        ? drafts.saveDraftSnapshot(
+      try {
+        if (id && tab.text && tab.text.content !== tab.text.savedContent)
+          await drafts.saveDraftSnapshot(
             id,
             tab.path,
             tab.text.content,
             tab.text.diskMtime,
-          )
-        : null;
+          );
+        if (tab.id) await drafts.clearDraftSnapshot(tab.id);
+      } catch {
+        /* Kept as it was; the next launch tries again. */
+      }
     }),
-  ).catch(() => {});
-  await Promise.all(
-    kept.map((tab) => tab.id && drafts.clearDraftSnapshot(tab.id)),
-  ).catch(() => {});
+  );
 }
 
 /**

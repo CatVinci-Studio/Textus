@@ -8,10 +8,9 @@ use std::collections::HashMap;
 use std::path::{Path, PathBuf};
 use std::sync::{Arc, Mutex};
 
-/// Conversations listed before the oldest is moved to `.trash/`.
+/// Conversations listed before the oldest is moved to `.trash/`, the
+/// archive: kept there until the writer clears the history.
 pub const MAX_CONVERSATIONS: usize = 500;
-/// Conversations kept in `.trash/`; beyond it the oldest are deleted.
-const MAX_TRASHED: usize = 200;
 const INDEX: &str = "index.json";
 const TRASH: &str = ".trash";
 
@@ -231,8 +230,8 @@ impl ChatHistory {
         Arc::clone(store)
     }
 
-    /// Moves the conversations trimmed off the index into `.trash/`, then
-    /// keeps the trash to `MAX_TRASHED`, deleting the oldest.
+    /// Moves the conversations trimmed off the index into `.trash/`. None is
+    /// deleted from there: the list says they were archived.
     fn trash(&self, files: &mut HashMap<String, Arc<Store>>, dropped: &[Value]) {
         if dropped.is_empty() {
             return;
@@ -255,14 +254,6 @@ impl ChatHistory {
                 Ok(()) => {}
                 Err(e) if e.kind() == std::io::ErrorKind::NotFound => {}
                 Err(e) => eprintln!("textus: cannot move {name} to the trash: {e}"),
-            }
-        }
-        let mut trashed = conversation_files(&trash);
-        if trashed.len() > MAX_TRASHED {
-            // Oldest first: a move keeps the file's time, its last save.
-            trashed.sort_by_key(|(_, modified)| *modified);
-            for (name, _) in &trashed[..trashed.len() - MAX_TRASHED] {
-                remove_file(&trash.join(name));
             }
         }
     }

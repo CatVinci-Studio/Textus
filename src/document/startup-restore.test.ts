@@ -211,6 +211,27 @@ describe("startup restore into the initial tab", () => {
       7,
     );
     expect(ipc.clearDraftSnapshot).toHaveBeenCalledWith("old-pdf");
+
+    // A draft whose new copy can't be written keeps its old one.
+    ipc.clearDraftSnapshot.mockClear();
+    ipc.saveDraftSnapshot.mockRejectedValueOnce(new Error("disk full"));
+    const { moveDrafts } = await import("./startup-restore");
+    await moveDrafts(
+      [
+        {
+          id: "old-a",
+          path: null,
+          text: { content: "a", savedContent: "", diskMtime: null },
+        },
+        {
+          id: "old-b",
+          path: null,
+          text: { content: "b", savedContent: "", diskMtime: null },
+        },
+      ],
+      (i) => `new-${i}`,
+    );
+    expect(ipc.clearDraftSnapshot.mock.calls).toEqual([["old-b"]]);
   });
 
   it("but not over a document opened at launch", async () => {
