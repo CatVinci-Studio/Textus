@@ -5,10 +5,6 @@
   flex: 1;
   min-height: 0;
   min-width: 0;
-  padding-top: var(--window-bar-height);
-}
-.tab-bar ~ * .web-page-pane {
-  padding-top: 0;
 }
 /* The address bar: slim, quiet until used, folded to a handle. */
 .web-page-bar {

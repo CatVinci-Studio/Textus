@@ -537,9 +537,11 @@ declare global {
        *  From 1.3.10. */
       onMove?(item: ListItem, target: ListItem): void | Promise<void>;
       /** What the field over the list says; without it, there is no
-       *  field. The list filters itself by label, description and detail. */
+       *  field. The list filters itself by label, description and detail.
+       *  A `%key%` of the manifest's `l10n` follows the UI language (from
+       *  1.4.3); plain text stays as given. */
       filterPlaceholder?: string;
-      /** Shown when there are no items. */
+      /** Shown when there are no items; a `%key%` as above. */
       emptyText?: string;
     }
 
@@ -575,7 +577,7 @@ declare global {
     interface ListView extends Disposable {
       /** Asks the provider again. */
       refresh(): void;
-      /** A line over the list ("12 tasks"); "" for none. */
+      /** A line over the list ("12 tasks"), or a `%key%`; "" for none. */
       setMessage(text: string): void;
     }
 

@@ -6,6 +6,7 @@ import { watchConventions } from "../plugins/contributions/conventions-watch";
 import { useEffect, useSyncExternalStore } from "react";
 import { onCopied } from "../clipboard/copied";
 import { setCompletionAsker } from "../plugins/contributions/completion-sources";
+import { refreshAllListViews } from "../plugins/contributions/list-views";
 import {
   makeBlankTab,
   tabIsDirty,
@@ -307,7 +308,10 @@ export function usePluginWindow({
     () => emitPluginEvent("activeTab", getWindowAccess()?.activeTab() ?? null),
     [tabState.activeTabId],
   );
-  useEffect(() => emitPluginEvent("language", language), [language]);
+  useEffect(() => {
+    emitPluginEvent("language", language);
+    refreshAllListViews();
+  }, [language]);
   useEffect(() => onCopied((copied) => emitPluginEvent("copy", copied)), []);
   useEffect(() => {
     let dark = windowIsDark();

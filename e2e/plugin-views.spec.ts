@@ -75,6 +75,15 @@ test("each official plugin's file opens in a tab of its own, drawn", async ({
     await expect(
       page.locator('[data-active-tab="true"] .plugin-webview-frame'),
     ).toBeVisible();
+    // Its page starts where its island's sheet does: no band over it.
+    const gap = await page
+      .locator('[data-active-tab="true"] .plugin-webview-frame')
+      .evaluate(
+        (el) =>
+          el.getBoundingClientRect().top -
+          el.closest("[data-active-tab]")!.getBoundingClientRect().top,
+      );
+    expect(gap).toBeLessThanOrEqual(1);
   }
   await expect(page.locator(".plugin-webview-problem")).toHaveCount(0);
 });
@@ -123,4 +132,49 @@ test("a plugin's page is in the UI's language, and changes with it", async ({
     window.dispatchEvent(new StorageEvent("storage", { key, newValue: next }));
   });
   await expect(frame.locator("html")).toHaveAttribute("lang", "de");
+});
+
+test("a plugin's sidebar list keeps a short count beside its label", async ({
+  page,
+}) => {
+  test.skip(!hasPlugin("catvinci.tags"), "no plugins checkout");
+  await openWithPlugins(page, {
+    plugins: { "catvinci.tags": permissions("catvinci.tags") },
+    folder: {
+      "/work/notes/a.md": "# A\n\n#planning-notes and #project\n",
+      "/work/notes/b.md": "# B\n\n#project\n",
+    },
+  });
+  await openPath(page, "/work/notes/a.md");
+  await page.getByRole("button", { name: "Tags", exact: true }).click();
+  const rows = page.locator(".plugin-list-text");
+  await expect(rows.first()).toBeVisible();
+  const tops = await rows.evaluateAll((all) =>
+    all.map((row) => {
+      const top = (sel: string) =>
+        Math.round(row.querySelector(sel)!.getBoundingClientRect().top);
+      return [top(".plugin-list-label"), top(".plugin-list-description")];
+    }),
+  );
+  for (const [label, count] of tops) expect(count).toBe(label);
+  // Its words given as the manifest's keys follow the UI language.
+  const said = (lang: string) =>
+    JSON.parse(
+      readFileSync(
+        join(pluginsCheckout()!, "plugins/catvinci.tags/textus-plugin.json"),
+        "utf8",
+      ),
+    ).l10n[lang].filter;
+  const field = page.locator(".plugin-list input");
+  await expect(field).toHaveAttribute("placeholder", said("en"));
+  await page.evaluate(() => {
+    const key = "catvinci-settings";
+    const next = JSON.stringify({
+      ...JSON.parse(localStorage.getItem(key) ?? "{}"),
+      language: "de",
+    });
+    localStorage.setItem(key, next);
+    window.dispatchEvent(new StorageEvent("storage", { key, newValue: next }));
+  });
+  await expect(field).toHaveAttribute("placeholder", said("de"));
 });

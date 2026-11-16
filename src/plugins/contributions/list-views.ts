@@ -94,3 +94,10 @@ export function forgetListViews(plugin: string): void {
     }
   if (any) changed();
 }
+
+/** Every list asks its plugin again: their rows are in the old language. */
+export function refreshAllListViews(): void {
+  for (const [id, info] of views)
+    views.set(id, { ...info, version: info.version + 1 });
+  changed();
+}

@@ -27,6 +27,7 @@ import {
   subscribeListViews,
 } from "../contributions/list-views";
 import { pluginName, windowInfo } from "../store/plugin-records";
+import { localize } from "../store/manifest";
 import "./PluginListView.css";
 import { isImeKeydown } from "../../utils/ime";
 import { trackDrag } from "../../engine/drag/pointer-drag";
@@ -205,6 +206,11 @@ export const PluginListPane = memo(function PluginListPane({
 
   const record = pluginRecord(plugin);
   const name = record ? pluginName(record) : plugin;
+  // A `%key%` the plugin gave is in the window's language now.
+  const said = (value: string) =>
+    record?.manifest
+      ? localize(record.manifest, value, windowInfo().language())
+      : value;
   let lastGroup: string | undefined;
   return (
     <div className={`plugin-list ${className ?? ""}`}>
@@ -212,8 +218,8 @@ export const PluginListPane = memo(function PluginListPane({
         // The sidebar's second row, as every panel's search is.
         <div className="tx-pane-row">
           <SearchField
-            placeholder={info.filterPlaceholder}
-            aria-label={info.filterPlaceholder}
+            placeholder={said(info.filterPlaceholder)}
+            aria-label={said(info.filterPlaceholder)}
             value={query}
             onChange={(e) => {
               setQuery(e.target.value);
@@ -224,7 +230,7 @@ export const PluginListPane = memo(function PluginListPane({
         </div>
       )}
       {info?.message && (
-        <div className="plugin-list-message">{info.message}</div>
+        <div className="plugin-list-message">{said(info.message)}</div>
       )}
       {error && <PluginProblem error={error} />}
       <div
@@ -238,7 +244,7 @@ export const PluginListPane = memo(function PluginListPane({
             empty text. */}
         {!error && items && rows.length === 0 && (query || !info?.message) && (
           <div className="tx-list-note">
-            {query ? t.pluginQuickPickEmpty : (info?.emptyText ?? "")}
+            {query ? t.pluginQuickPickEmpty : said(info?.emptyText ?? "")}
           </div>
         )}
         {rows.slice(0, paged.limit).map(({ item, key, depth }, index) => {
