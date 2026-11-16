@@ -269,7 +269,7 @@ export function useReviewNotes({
   function askInPanel(text: string) {
     setOpenNote(null);
     agentPanel.setOpen(true);
-    askInComposer(text);
+    void askInComposer(text);
   }
 
   // No room for a margin: notes go behind badges and a rewrite's

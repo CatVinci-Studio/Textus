@@ -1,5 +1,6 @@
 import { expect, test, type Page } from "@playwright/test";
 import { MAC, emit, openApp, pasteMarkdown } from "./helpers";
+import { openPath } from "./plugin-helpers";
 
 // On a Mac, ⌘Z, ⇧⌘Z and ⌘A reach the app as the native Edit menu's events
 // (menu.rs MAC_EDIT_ITEMS): these send those same events, so the islands
@@ -239,4 +240,35 @@ test.describe("the phone's menu", () => {
     await expect(page.locator('[role="menu"]')).toHaveCount(2);
     await page.screenshot({ path: "test-results/phone-menu.png" });
   });
+});
+
+test("a look at the source and back keeps the document's undo and its caret", async ({
+  page,
+}) => {
+  await page.addInitScript(() => {
+    (window as unknown as Record<string, unknown>).__devFs = {
+      "/work/a.md": "# A\n\nThe first line.\n",
+    };
+  });
+  await openApp(page);
+  await openPath(page, "/work/a.md");
+  const editor = page.locator('[data-active-tab="true"] .ProseMirror');
+  const line = editor.locator("p");
+  await line.click();
+  await page.keyboard.press("End");
+  await page.keyboard.type(" ONE");
+  await page.waitForTimeout(700);
+  await page.keyboard.type(" TWO");
+  await expect(line).toHaveText("The first line. ONE TWO");
+  await emit(page, "menu-toggle-source-mode");
+  await expect(
+    page.locator('[data-active-tab="true"] .cm-content'),
+  ).toContainText("ONE TWO");
+  await emit(page, "menu-toggle-source-mode");
+  await expect(line).toHaveText("The first line. ONE TWO");
+  await page.waitForTimeout(500);
+  await page.keyboard.press("ControlOrMeta+z");
+  await expect(line).toHaveText("The first line. ONE");
+  await page.keyboard.type("!");
+  await expect(line).toHaveText("The first line. ONE!");
 });

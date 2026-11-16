@@ -46,6 +46,27 @@ it("a tap above a table keeps its caret when iOS then puts its own in the last p
   expect(t.view.state.selection.from).toBe(beside);
 });
 
+it("a tap above a table lets what is typed at once stay in order", async () => {
+  const t = await openView("above\n\n| a | b |\n| - | - |\n| 1 | 2 |\n\nlast");
+  vi.spyOn(HTMLElement.prototype, "getBoundingClientRect").mockImplementation(
+    function (this: HTMLElement) {
+      const table = this.tagName === "TABLE" || !!this.querySelector("table");
+      return (
+        table ? { top: 140, bottom: 200 } : { top: 60, bottom: 100 }
+      ) as DOMRect;
+    },
+  );
+  touch(t.view.dom, "touchstart", 120);
+  touch(t.view.dom, "touchend", 120);
+  // Each letter moves the caret, which is no caret of iOS's to take back.
+  for (const letter of "ab") {
+    t.type(letter);
+    document.dispatchEvent(new Event("selectionchange"));
+    await new Promise((done) => setTimeout(done, 10));
+  }
+  expect(t.caretLine()).toBe("aboveab|");
+});
+
 const click = (t: TestView, y: number) =>
   t.view.someProp("handleClick", (handle) =>
     handle(t.view, 0, { clientY: y } as MouseEvent),

@@ -87,13 +87,16 @@ function caretBesideBlock(view: EditorView, y: number): boolean {
 const HOLD_MS = 400;
 
 /** With the keyboard up, iOS still puts its own caret after the tap: the
- *  last paragraph. Moved there within a moment, the caret comes back. */
+ *  last paragraph. Moved there within a moment, the caret comes back -
+ *  until something is typed. */
 function holdCaret(view: EditorView, at: number) {
   const until = Date.now() + HOLD_MS;
+  const held = view.state.doc;
   // After the editor has read the change.
   const back = () =>
     setTimeout(() => {
-      if (Date.now() > until) return stop();
+      // Typed in since: the caret is after what was typed, and stays.
+      if (Date.now() > until || view.state.doc !== held) return stop();
       const { selection, doc } = view.state;
       if (selection.empty && selection.from === at) return;
       stop();

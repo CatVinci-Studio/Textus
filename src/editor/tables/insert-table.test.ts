@@ -23,6 +23,18 @@ describe("a new table", () => {
     expect(t.view.state.selection.from).toBe(cell);
   });
 
+  it("leaves the caret where the writer took it at once, the next cell or the line above", async () => {
+    vi.useFakeTimers();
+    const t = await openView("above\n");
+    t.caretAtEnd();
+    insertTable((fn) => t.editor.action(fn), 2, 2);
+    // A press at once (as a key is): the caret it moves is the writer's.
+    t.view.dom.dispatchEvent(new Event("pointerdown", { bubbles: true }));
+    const moved = t.caretAt("above", 2);
+    vi.advanceTimersByTime(500);
+    expect(t.view.state.selection.from).toBe(moved);
+  });
+
   it("leaves the caret alone once something was typed", async () => {
     vi.useFakeTimers();
     const t = await openView("above\n");

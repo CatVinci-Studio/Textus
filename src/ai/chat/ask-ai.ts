@@ -36,10 +36,12 @@ export function useAskAi(
     const onAsk = (e: Event) => {
       const { text, mode: asked } = (e as CustomEvent<Asked>).detail;
       setMode(asked);
-      // Set once: asked again, it is set again.
-      window.setTimeout(() => setMode(null), 400);
       setPanelOpen(true);
-      askInComposer(text);
+      // Set once, for the composer that takes the ask - however long its
+      // panel takes to open: asked again, it is set again.
+      void askInComposer(text).then(() =>
+        window.setTimeout(() => setMode(null)),
+      );
     };
     window.addEventListener(ASK_AI_EVENT, onAsk);
     return () => window.removeEventListener(ASK_AI_EVENT, onAsk);
