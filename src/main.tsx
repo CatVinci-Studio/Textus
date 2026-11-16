@@ -23,6 +23,7 @@ import { flushWhenHidden } from "./storage/pending-writes";
 import { exposePluginApiForDevelopment } from "./plugin-api";
 import "./mobile/styles/index.css";
 import { watchErrors } from "./app/report/recent-errors";
+import { watchInput } from "./app/report/input-trail";
 import { AppErrorBoundary } from "./app/report/AppErrorBoundary";
 
 installPolyfills();
@@ -66,6 +67,7 @@ const FloatingWindowApp = lazyComponent(
 
 // For Help > Report a Problem, from the first moment.
 watchErrors();
+watchInput();
 
 if (view === "background") {
   // The hidden window Rust opens to run plugins' background code draws
