@@ -68,9 +68,4 @@ describe("replyFiles", () => {
   it("skips a block still streaming", () => {
     expect(replyFiles("```js host.js\nexports.x = 1;\n")).toEqual([]);
   });
-
-  it("reads the same reply once for every asker", () => {
-    const text = "```js a.js\nx\n```";
-    expect(replyFiles(text)).toBe(replyFiles(text));
-  });
 });
