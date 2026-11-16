@@ -1,4 +1,5 @@
 import { widgetButton } from "../../editor/widget-button";
+import { drawnBlocks } from "./plugin-block-pictures";
 import { watchPressedBlocks } from "../../plugins/views/pressed-blocks";
 import type { Editor } from "@milkdown/kit/core";
 import { createElement } from "react";
@@ -32,7 +33,6 @@ import {
 } from "../../plugins/contributions/code-blocks";
 import type { CodeBlockSeen } from "../../plugins/manager";
 import { PluginCodeBlock } from "../../plugins/views/plugin-views";
-import { webviewPicture } from "../../plugins/views/webviews";
 import { setDrawnBlocks } from "../../export/drawn-blocks";
 import "./plugin-code-blocks.css";
 import { markChangeSource } from "../../editor/change-source";
@@ -69,8 +69,6 @@ const HIDDEN_SOURCE_CLASS = "plugin-code-source-hidden";
 /** The block whose source shows: its drawing waits, hidden, as a diagram's
  *  does - one of the two at a time. */
 const OPEN_SOURCE_CLASS = "plugin-code-source-open";
-/** How long an export waits for a drawing just made to have its page. */
-const PAGE_WAIT_MS = 5000;
 /** Narrower than this, a plugin's block (a database's table) is crowded. */
 const NARROW_COLUMN = 480;
 /** How long typing pauses before a drawn block is told its new source. */
@@ -92,7 +90,7 @@ const touchesCode = (tr: Transaction) =>
  * new source instead of remaking the page.
  */
 export function pluginCodeBlocks(docPath: { readonly current: string | null }) {
-  setDrawnBlocks(DRAWN_BLOCKS);
+  setDrawnBlocks(drawnBlocks(`.${BLOCK_CLASS}`, HIDDEN_SOURCE_CLASS));
   return $prose((ctx) => {
     const drawn = new Map<string, Drawn>();
 
@@ -441,39 +439,6 @@ function doneButton(view: EditorView): HTMLElement {
     currentStrings().codeBlockDone,
     () => closeSource(view),
   );
-}
-
-/** An export's way to the drawings' pictures: each asks its plugin's page. */
-const DRAWN_BLOCKS = {
-  selector: `.${BLOCK_CLASS}`,
-  hiddenSource: HIDDEN_SOURCE_CLASS,
-  language: (el: HTMLElement) => el.dataset.language ?? "",
-  async picture(el: HTMLElement, theme: "light" | "dark") {
-    const page = await pageIn(el);
-    return page ? webviewPicture(page, theme) : null;
-  },
-};
-
-/** The webview drawn in `el`: there once its plugin has made it. */
-function pageIn(el: HTMLElement): Promise<string | null> {
-  const find = () =>
-    el.querySelector<HTMLElement>("[data-webview-id]")?.dataset.webviewId ??
-    null;
-  const now = find();
-  if (now) return Promise.resolve(now);
-  return new Promise((resolve) => {
-    const done = (id: string | null) => {
-      observer.disconnect();
-      clearTimeout(timer);
-      resolve(id);
-    };
-    const observer = new MutationObserver(() => {
-      const id = find();
-      if (id) done(id);
-    });
-    observer.observe(el, { childList: true, subtree: true });
-    const timer = setTimeout(() => done(null), PAGE_WAIT_MS);
-  });
 }
 
 /** Plugins' blocks drawn in another editor (the split view's preview). */

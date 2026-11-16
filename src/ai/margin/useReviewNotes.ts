@@ -12,20 +12,13 @@ import {
   type ReviewNote,
 } from "./review-notes-plugin";
 import { commentCalls } from "../chat/comment-args";
-import { type MarginItem } from "./margin-layout";
 import { setMarginAvailable } from "./margin-room";
 import { blockAt, holdBlock } from "../../engine/controls/hold-line";
 import type { AgentConversation } from "../chat/conversation/conversation-types";
 import type { AgentPanelFrame } from "../chat/panel/agent-panel";
 import { type usePendingEdits } from "../revision/usePendingEdits";
 import { locateTarget } from "../revision/pending-place";
-import {
-  pendingEditKey,
-  reviewChanges,
-  type HotSentence,
-  type PendingPreview,
-  type PendingSentence,
-} from "../revision/pending-types";
+import { pendingEditKey, type HotSentence } from "../revision/pending-types";
 import type { RevisionDisplay } from "../../prefs/SettingsContext";
 import type { Strings } from "../../i18n/strings";
 import { useLatest } from "../../utils/hooks/useLatest";
@@ -35,37 +28,9 @@ import { useOwnNotes } from "./useOwnNotes";
 import { useOwnRevisions } from "./useOwnRevisions";
 import { OWN_CHANGES, ownRevisionKey } from "./own-revision-plugin";
 import { duration } from "../../engine/motion/motion";
-import { addsTextOnly } from "../revision/revision-display";
 import { asDrawn, zoomedRectScale } from "../../engine/controls/zoomed-rects";
+import { marginItemsOf } from "./margin-items";
 import { noteOfAnchor } from "./review-notes-plugin";
-
-/** A proposal shown whole as a margin card's change: what it replaces and
- *  with what. Null for new text alone, which has no original. */
-function wholeChange(p: PendingPreview): PendingSentence | null {
-  const { action, anchor, text } = p.proposal;
-  // New text alone: nothing replaced, so no original.
-  if (addsTextOnly(p.proposal))
-    return {
-      from: p.from,
-      to: p.from,
-      before: "",
-      after: text ?? "",
-      take: null,
-    };
-  if (
-    action !== "replace" &&
-    action !== "replace_selection" &&
-    action !== "delete"
-  )
-    return null;
-  return {
-    from: p.strikeFrom ?? p.from,
-    to: p.strikeTo ?? p.to,
-    before: anchor ?? p.expectedText,
-    after: action === "delete" ? "" : (text ?? ""),
-    take: null,
-  };
-}
 
 /** Review notes, the AI's and the writer's own, until done or cleared; also
  *  the margin's revision cards, which share their hover. */
@@ -337,66 +302,23 @@ export function useReviewNotes({
   }
 
   // The notes, then each pending sentence in the review bar's order.
-  const marginItems = useMemo<MarginItem[]>(() => {
-    const items: MarginItem[] = notes.map((note) => ({
-      kind: "note",
-      key: `note:${note.id}`,
-      note,
-    }));
-    const display = revisionDisplay;
-    pendingEdits.reviewStops.forEach((stop, i) => {
-      if (display === "inline") return;
-      const preview = pendingEdits.reviewed.find(
-        (p) => p.callId === stop.callId,
-      );
-      if (!preview) return;
-      const c =
-        stop.index < 0
-          ? wholeChange(preview)
-          : reviewChanges(preview)?.[stop.index];
-      if (!c) return;
-      items.push({
-        kind: "revision",
-        key: `rev:${stop.callId}:${stop.index}`,
-        callId: stop.callId,
-        index: stop.index,
-        num: i + 1,
-        from: c.from,
-        to: c.to,
-        after: c.after,
-        before: c.before,
-        shows: display === "final" ? "new" : "original",
-        take: c.take,
-        streaming: !!preview.streaming,
-      });
-    });
-    // The writer's own tracked changes, as the AI's: in the margin views a
-    // card shows what the text doesn't; inline, all is in the text.
-    if (display !== "inline")
-      (revisions.changes ?? []).forEach((c, i) =>
-        items.push({
-          kind: "revision",
-          key: `rev:${OWN_CHANGES}:${c.index}`,
-          callId: OWN_CHANGES,
-          index: c.index,
-          num: i + 1,
-          from: c.from,
-          to: c.to,
-          after: c.after,
-          before: c.before,
-          shows: display === "original" ? "original" : "new",
-          take: null,
-          streaming: false,
-        }),
-      );
-    return items;
-  }, [
-    notes,
-    pendingEdits.reviewStops,
-    pendingEdits.reviewed,
-    revisionDisplay,
-    revisions.changes,
-  ]);
+  const marginItems = useMemo(
+    () =>
+      marginItemsOf(
+        notes,
+        pendingEdits.reviewStops,
+        pendingEdits.reviewed,
+        revisionDisplay,
+        revisions.changes,
+      ),
+    [
+      notes,
+      pendingEdits.reviewStops,
+      pendingEdits.reviewed,
+      revisionDisplay,
+      revisions.changes,
+    ],
+  );
 
   // A card's ✓ / ✕: the writer's own change, or the AI's sentence.
   function decide(callId: string, index: number, take: boolean | null) {
