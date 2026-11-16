@@ -1,5 +1,6 @@
 import { logPluginMessage } from "../store/plugin-log";
 import type { PluginManifest } from "../store/manifest";
+import { createSubscribers } from "../../utils/store";
 
 /**
  * What only one plugin may do at a time - draw a code block language
@@ -10,10 +11,10 @@ import type { PluginManifest } from "../store/manifest";
  */
 
 const claimants = new Map<string, string[]>();
-const listeners = new Set<() => void>();
+const subscribers = createSubscribers();
 
 function changed() {
-  for (const listener of listeners) listener();
+  subscribers.publish();
 }
 
 /** Each kind of claim's key: one language, file pattern, hover or embed
@@ -57,10 +58,7 @@ export function claim(claim: string, plugin: string): () => void {
   };
 }
 
-export function onOwnersChanged(listener: () => void): () => void {
-  listeners.add(listener);
-  return () => listeners.delete(listener);
-}
+export const onOwnersChanged = subscribers.subscribe;
 
 /** The claims a manifest makes besides its code blocks and embeds: the
  *  file patterns it opens by default, and the hover cards it declares. */

@@ -1,4 +1,5 @@
 import type { SentBlock } from "../../editor/markdown/doc-blocks";
+import { createSubscribers } from "../../utils/store";
 
 /**
  * Plugins that add to the outline (`editor.registerOutline`): a
@@ -18,8 +19,8 @@ type Provide = (blocks: SentBlock[]) => Promise<unknown>;
 const ANSWER_MS = 1500;
 const MAX_ITEMS = 500;
 const providers = new Map<string, Provide>();
-const listeners = new Set<() => void>();
-const changed = () => listeners.forEach((listener) => listener());
+const subscribers = createSubscribers();
+const changed = subscribers.publish;
 
 export function addOutlineProvider(plugin: string, provide: Provide): void {
   providers.set(plugin, provide);
@@ -30,10 +31,7 @@ export function removeOutlineProvider(plugin: string): void {
   if (providers.delete(plugin)) changed();
 }
 
-export function onOutlineProviders(listener: () => void): () => void {
-  listeners.add(listener);
-  return () => listeners.delete(listener);
-}
+export const onOutlineProviders = subscribers.subscribe;
 
 function itemsOf(plugin: string, answer: unknown): PluginOutlineItem[] {
   return (Array.isArray(answer) ? answer : []).flatMap((raw) => {

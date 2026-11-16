@@ -1,4 +1,5 @@
 import { useSyncExternalStore } from "react";
+import { createSubscribers } from "../../utils/store";
 
 /**
  * The AI agents on this computer that on plugins name (`contributes.agents`)
@@ -23,11 +24,11 @@ export interface ExternalAgent {
 }
 
 let agents: ExternalAgent[] = [];
-const listeners = new Set<() => void>();
+const subscribers = createSubscribers();
 
 function publish(next: ExternalAgent[]) {
   agents = next;
-  for (const listener of listeners) listener();
+  subscribers.publish();
 }
 
 /** Adds a plugin's agents; the returned function takes them away. */
@@ -50,10 +51,7 @@ export function externalAgent(key: string | null | undefined) {
   return key ? agents.find((a) => a.key === key) : undefined;
 }
 
-function subscribe(listener: () => void): () => void {
-  listeners.add(listener);
-  return () => listeners.delete(listener);
-}
+const subscribe = subscribers.subscribe;
 
 export function useExternalAgents(): ExternalAgent[] {
   return useSyncExternalStore(subscribe, externalAgents);

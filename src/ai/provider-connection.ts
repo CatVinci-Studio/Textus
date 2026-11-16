@@ -6,6 +6,7 @@ import {
 } from "./provider-catalog";
 import { auth } from "../platform/ipc";
 import type { AiProvider } from "../prefs/SettingsContext";
+import { createSubscribers } from "../utils/store";
 
 /** Whether each AI provider is connected (by account, key or custom
  *  endpoint), and its name as Settings shows it. */
@@ -62,11 +63,8 @@ type Connections = Partial<Record<AiProvider, ConnectedState>>;
 // One copy for the whole window: a sign-in made in Settings shows at once
 // in the AI panel and the composer.
 let connections: Connections = {};
-const listeners = new Set<() => void>();
-const subscribe = (listener: () => void) => {
-  listeners.add(listener);
-  return () => void listeners.delete(listener);
-};
+const subscribers = createSubscribers();
+const subscribe = subscribers.subscribe;
 const snapshot = () => connections;
 
 /** Checks `entry`'s connection again, for everyone showing it. */
@@ -74,7 +72,7 @@ function refreshConnected(entry: ProviderCatalogEntry): void {
   fetchConnected(entry)
     .then((state) => {
       connections = { ...connections, [entry.id]: state };
-      listeners.forEach((listener) => listener());
+      subscribers.publish();
     })
     .catch(() => {});
 }

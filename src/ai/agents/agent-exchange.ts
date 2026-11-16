@@ -39,6 +39,7 @@ import { modeOption } from "./agent-mode";
 import { allowedUnasked } from "./agent-approval";
 import { promptBlocks } from "./agent-prompt";
 import { loadSettings, subscribeRemote } from "../../prefs/settings-store";
+import { createSubscribers } from "../../utils/store";
 
 /**
  * One exchange with an external agent, in a session kept for the
@@ -92,14 +93,11 @@ const sessions = new Map<string, Session>();
 /** Sessions out of use whose reply still runs, by conversation: Stop and
  *  closing the chat still reach them. */
 const retired = new Map<string, Session>();
-const sessionListeners = new Set<() => void>();
-const sessionsChanged = () => sessionListeners.forEach((fn) => fn());
+const subscribers = createSubscribers();
+const sessionsChanged = subscribers.publish;
 
 /** Hears sessions start and end in this window. */
-export function subscribeSessions(listener: () => void): () => void {
-  sessionListeners.add(listener);
-  return () => sessionListeners.delete(listener);
-}
+export const subscribeSessions = subscribers.subscribe;
 /** Conversations whose agent is still starting (or signing in): how to
  *  give up on it. */
 const starting = new Map<string, () => void>();

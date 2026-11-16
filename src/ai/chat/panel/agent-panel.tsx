@@ -17,6 +17,7 @@ import { useSidePanelWidth } from "../../../engine/controls/side-panel-width";
 import type { AgentPanelTab } from "./AgentPanelView";
 import "./agent-panel.css";
 import "../inline-chat.css";
+import { createSubscribers } from "../../../utils/store";
 
 /**
  * The docked Agent panel's frame: open, width and tab. The window's
@@ -50,12 +51,9 @@ const LIMITS = { min: AGENT_PANEL_MIN_WIDTH, max: AGENT_PANEL_MAX_WIDTH };
 
 // Whether the panel is open: one value, read by the frame and the panel.
 let openNow: boolean | null = null;
-const openListeners = new Set<() => void>();
+const subscribers = createSubscribers();
 const openSnapshot = () => (openNow ??= getUiState("agentPanelOpen") === true);
-const onOpenChange = (listener: () => void) => {
-  openListeners.add(listener);
-  return () => openListeners.delete(listener);
-};
+const onOpenChange = subscribers.subscribe;
 
 /** Whether the docked panel is open. */
 function useAgentPanelOpen(): boolean {
@@ -84,7 +82,7 @@ export function useAgentPanelState(windowWidth: number, beside: number) {
       setUiState("agentPanelOpen", next);
       if (openNow !== next) {
         openNow = next;
-        for (const listener of openListeners) listener();
+        subscribers.publish();
       }
       // Whatever opens the panel - the shortcut, Ask AI, a restored chat,
       // "ask about this note" - wants the conversation.

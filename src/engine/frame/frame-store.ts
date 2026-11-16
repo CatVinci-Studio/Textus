@@ -2,6 +2,7 @@ import { useSyncExternalStore } from "react";
 import type { Rect } from "./rect";
 import type { LayoutNode } from "../layout/tree";
 import { isPhoneLayout } from "../../platform/phone-layout";
+import { createSubscribers } from "../../utils/store";
 
 /**
  * The islands as the solver last placed them, in the viewport's pixels:
@@ -35,23 +36,20 @@ const EMPTY: FrameLayout = {
 };
 
 let current: FrameLayout = EMPTY;
-const listeners = new Set<() => void>();
+const subscribers = createSubscribers();
 
 /** The islands placed as they now are; told only when that changed. */
 export function setFrameLayout(next: FrameLayout): void {
   if (JSON.stringify(next) === JSON.stringify(current)) return;
   current = next;
-  for (const listener of listeners) listener();
+  subscribers.publish();
 }
 
 export function frameLayout(): FrameLayout {
   return current;
 }
 
-function onFrameLayout(listener: () => void): () => void {
-  listeners.add(listener);
-  return () => listeners.delete(listener);
-}
+const onFrameLayout = subscribers.subscribe;
 
 /** The islands as placed, kept current in a component. */
 export function useFrameLayout(): FrameLayout {

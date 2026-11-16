@@ -1,6 +1,7 @@
 import { useEffect, useSyncExternalStore } from "react";
 import { MARK_CLASS } from "../../../engine/controls/moves";
 import { duration, scrollBehavior } from "../../../engine/motion/motion";
+import { createSubscribers } from "../../../utils/store";
 
 /**
  * The memory a "Remembered" chip points the Memory tab at: a click opens the
@@ -8,13 +9,13 @@ import { duration, scrollBehavior } from "../../../engine/motion/motion";
  */
 
 let focused: string | null = null;
-const listeners = new Set<() => void>();
+const subscribers = createSubscribers();
 
 /** Points the Memory tab at memory `id` (`scope/memory/name`, or
  *  `project/library/name` for a fact). */
 export function focusMemory(id: string) {
   focused = id;
-  for (const listener of listeners) listener();
+  subscribers.publish();
 }
 
 /** The memory pointed at now, if any: it opens whole as it is drawn. */
@@ -22,10 +23,7 @@ export function pointedAt(): string | null {
   return focused;
 }
 
-function subscribe(listener: () => void) {
-  listeners.add(listener);
-  return () => listeners.delete(listener);
-}
+const subscribe = subscribers.subscribe;
 
 /**
  * Within `root` (the Memory tab), scrolls to the memory pointed at and

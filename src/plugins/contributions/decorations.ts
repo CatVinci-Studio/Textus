@@ -1,4 +1,5 @@
 import type { SentBlock } from "../../editor/markdown/doc-blocks";
+import { createSubscribers } from "../../utils/store";
 
 /**
  * The plugins that mark the document's text: asked for the blocks in sight,
@@ -33,10 +34,10 @@ type Ask = (
 ) => Promise<PluginDecoration[]>;
 
 const providers = new Map<string, Ask>();
-const listeners = new Set<() => void>();
+const subscribers = createSubscribers();
 
 function changed() {
-  for (const listener of listeners) listener();
+  subscribers.publish();
 }
 
 export function addDecorationProvider(plugin: string, ask: Ask): void {
@@ -53,10 +54,7 @@ export function hasDecorationProviders(): boolean {
 }
 
 /** The editor redraws when a plugin starts or stops marking. */
-export function onDecorationProviders(listener: () => void): () => void {
-  listeners.add(listener);
-  return () => listeners.delete(listener);
-}
+export const onDecorationProviders = subscribers.subscribe;
 
 /** Every plugin's marks for `blocks`, each tagged with whose it is; a
  *  plugin that fails or takes too long adds none. */

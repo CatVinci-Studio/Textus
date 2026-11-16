@@ -1,5 +1,6 @@
 import { useSyncExternalStore } from "react";
 import { getUiState, setUiState } from "../../storage/ui-state";
+import { createSubscribers } from "../../utils/store";
 
 /**
  * The width a panel keeps (the AI's island, Settings', a plugin page's; an
@@ -11,7 +12,7 @@ import { getUiState, setUiState } from "../../storage/ui-state";
 const PANEL_DEFAULT = 440;
 
 let width = read();
-const listeners = new Set<() => void>();
+const subscribers = createSubscribers();
 
 function read(): number {
   const n = Number(getUiState("panelPx"));
@@ -26,13 +27,10 @@ export function panelWidth(): number {
 export function setPanelWidth(next: number, persist = true): void {
   width = Math.round(next);
   if (persist) setUiState("panelPx", width);
-  for (const listener of listeners) listener();
+  subscribers.publish();
 }
 
-function subscribe(listener: () => void) {
-  listeners.add(listener);
-  return () => listeners.delete(listener);
-}
+const subscribe = subscribers.subscribe;
 const unwatched = () => () => {};
 
 /** The width, kept current; `live` false reads it without drawing again

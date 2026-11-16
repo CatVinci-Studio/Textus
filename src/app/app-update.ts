@@ -6,6 +6,7 @@ import { canAutoUpdate } from "../platform/capabilities";
 import { updater, type UpdateChannel } from "../platform/ipc";
 import { currentStrings } from "../i18n/current";
 import { explainError } from "../utils/error-explain";
+import { createSubscribers } from "../utils/store";
 
 type UpdateStatus = "idle" | "available" | "downloading" | "error";
 
@@ -28,17 +29,14 @@ let state: AppUpdate = {
   selfUpdate: true,
 };
 let found: Update | null = null;
-const listeners = new Set<() => void>();
+const subscribers = createSubscribers();
 
 function set(next: Partial<AppUpdate>) {
   state = { ...state, ...next };
-  for (const listener of listeners) listener();
+  subscribers.publish();
 }
 
-const subscribe = (listener: () => void) => {
-  listeners.add(listener);
-  return () => listeners.delete(listener);
-};
+const subscribe = subscribers.subscribe;
 
 /** The update now, for what shows it. */
 export function useAppUpdate(): AppUpdate {

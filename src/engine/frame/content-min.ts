@@ -1,5 +1,6 @@
 import { useEffect, type RefObject } from "react";
 import { onAppearance } from "../tokens/appearance";
+import { createSubscribers } from "../../utils/store";
 
 /**
  * The least width each tab's content can be laid out in - its longest
@@ -9,12 +10,12 @@ import { onAppearance } from "../tokens/appearance";
  * tab: a tab moved to another island takes its width along.
  */
 const mins = new Map<string, number>();
-const listeners = new Set<() => void>();
+const subscribers = createSubscribers();
 let version = 0;
 
 function told() {
   version++;
-  for (const tell of listeners) tell();
+  subscribers.publish();
 }
 
 /** The measured least width of tab `id`'s content, 0 if none was. */
@@ -22,10 +23,7 @@ export function contentMinOf(id: string | null | undefined): number {
   return (id && mins.get(id)) || 0;
 }
 
-export function onContentMin(changed: () => void): () => void {
-  listeners.add(changed);
-  return () => listeners.delete(changed);
-}
+export const onContentMin = subscribers.subscribe;
 
 export function contentMinVersion(): number {
   return version;

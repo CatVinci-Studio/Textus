@@ -1,7 +1,8 @@
+import { createSubscribers } from "../../utils/store";
 /** How many plugins' floating views are open: all the startup code knows of
  *  them, so the rest loads only once one opens. */
 let count = 0;
-const listeners = new Set<() => void>();
+const subscribers = createSubscribers();
 
 export function floatingCount(): number {
   return count;
@@ -10,10 +11,7 @@ export function floatingCount(): number {
 export function setFloatingCount(next: number) {
   if (next === count) return;
   count = next;
-  for (const listener of listeners) listener();
+  subscribers.publish();
 }
 
-export function subscribeFloatingCount(listener: () => void): () => void {
-  listeners.add(listener);
-  return () => listeners.delete(listener);
-}
+export const subscribeFloatingCount = subscribers.subscribe;

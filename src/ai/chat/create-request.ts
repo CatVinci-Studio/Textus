@@ -1,3 +1,4 @@
+import { createSubscribers } from "../../utils/store";
 /**
  * A request for Settings › Extensions › Create from anywhere in the window -
  * a plugin's "Edit with AI", a reply card's "Fix with AI". Create works in
@@ -18,11 +19,11 @@ interface CreateRequest {
 export const OPEN_CREATE_EVENT = "textus-open-create";
 
 let pending: CreateRequest | null = null;
-const takers = new Set<() => void>();
+const subscribers = createSubscribers();
 
 export function requestCreate(text: string, kind: CreateKind = "plugin"): void {
   pending = { text, kind };
-  for (const take of takers) take();
+  subscribers.publish();
   // No tab open took it.
   if (pending) window.dispatchEvent(new CustomEvent(OPEN_CREATE_EVENT));
 }
@@ -35,7 +36,4 @@ export function takeCreateRequest(): CreateRequest | null {
 }
 
 /** For the open Create tab: `take` runs on each request. */
-export function onCreateRequest(take: () => void): () => void {
-  takers.add(take);
-  return () => takers.delete(take);
-}
+export const onCreateRequest = subscribers.subscribe;

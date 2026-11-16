@@ -1,6 +1,7 @@
 import { isRecord } from "../../utils/is-record";
 import { getUiState, setUiState } from "../../storage/ui-state";
 import { extname } from "../../utils/path";
+import { createSubscribers } from "../../utils/store";
 
 /**
  * The one card at the bottom right that suggests an official plugin: for
@@ -91,16 +92,13 @@ interface Shown {
 
 let shown: Shown | null = null;
 const waiting: Shown[] = [];
-const listeners = new Set<() => void>();
+const subscribers = createSubscribers();
 
 function changed() {
-  for (const listener of listeners) listener();
+  subscribers.publish();
 }
 
-export function subscribePluginCard(listener: () => void): () => void {
-  listeners.add(listener);
-  return () => listeners.delete(listener);
-}
+export const subscribePluginCard = subscribers.subscribe;
 
 /** The card on screen, if any. */
 export function currentPluginCard(): CardRequest | null {
