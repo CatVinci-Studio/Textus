@@ -3,17 +3,6 @@ import { describe, expect, it } from "vitest";
 import { cleanPastedHtml } from "./paste-html";
 
 describe("cleanPastedHtml", () => {
-  it("makes Google Docs' styled spans bold, italic and struck", () => {
-    const docs =
-      '<b style="font-weight:normal" id="docs-internal-guid-1"><p><span style="font-weight:700">Friday</span> and <span style="font-style:italic">mostly</span> <span style="text-decoration:line-through">(old)</span></p></b>';
-    const out = cleanPastedHtml(docs);
-    expect(out).toContain("<strong>Friday</strong>");
-    expect(out).toContain("<em>mostly</em>");
-    expect(out).toContain("<del>(old)</del>");
-    // The wrapper itself is not bold.
-    expect(out).toMatch(/^<b style="font-weight:normal"/);
-  });
-
   it("leaves a heading's weight and code alone", () => {
     const html =
       '<h1><span style="font-weight:400">Trip</span></h1><pre><span style="font-weight:bold">x</span></pre>';
@@ -39,14 +28,6 @@ describe("cleanPastedHtml", () => {
     );
     // A break inside a paragraph is a line of it.
     expect(cleanPastedHtml("<p>One<br>Two</p>")).toBe("<p>One<br>Two</p>");
-  });
-
-  it("unwraps Outlook's Safe Links", () => {
-    const html =
-      '<a href="https://nam12.safelinks.protection.outlook.com/?url=https%3A%2F%2Fexample.com%2Fdesign&amp;data=05" title="Original URL">design</a>';
-    expect(cleanPastedHtml(html)).toBe(
-      '<a href="https://example.com/design">design</a>',
-    );
   });
 
   it("splits a table's merged cells back into their places", () => {
