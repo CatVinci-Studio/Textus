@@ -18,6 +18,7 @@ import {
   type SessionUpdate,
   type ToolCallFields,
 } from "./acp-client";
+import { explain, stoppedText } from "./agent-errors";
 import { stepFacts, type StepFacts } from "./agent-steps";
 import {
   followEdit,
@@ -316,33 +317,6 @@ async function start(
     throw explain(agent, err);
   }
   return session;
-}
-
-function stoppedText(agent: ExternalAgent, stderr: string): string {
-  const tail = stderr.trim().split("\n").slice(-4).join("\n");
-  return [
-    fill(currentStrings().agentStopped, { agent: agent.name }),
-    tail,
-    agent.setup,
-  ]
-    .filter(Boolean)
-    .join("\n\n");
-}
-
-/** An error as the user can act on it: sign in, or install. */
-function explain(agent: ExternalAgent, err: unknown): Error {
-  const message = err instanceof Error ? err.message : String(err);
-  if (err instanceof AcpError && err.code === AUTH_REQUIRED)
-    return new Error(
-      [fill(currentStrings().agentSignIn, { agent: agent.name }), agent.setup]
-        .filter(Boolean)
-        .join("\n\n"),
-    );
-  return new Error(
-    agent.setup && !message.includes(agent.setup)
-      ? `${message}\n\n${agent.setup}`
-      : message,
-  );
 }
 
 function deliver(session: Session, update: SessionUpdate) {

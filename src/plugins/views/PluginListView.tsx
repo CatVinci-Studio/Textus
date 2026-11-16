@@ -2,18 +2,15 @@ import { SearchField } from "../../engine/controls/SearchField";
 import { PluginProblem } from "./PluginProblem";
 import {
   memo,
-  useCallback,
   useEffect,
   useMemo,
   useRef,
   useState,
-  useSyncExternalStore,
   type PointerEvent as ReactPointerEvent,
   type KeyboardEvent,
   type CSSProperties,
 } from "react";
 import { ContextMenu } from "../../engine/controls/ContextMenu";
-import { useLatest } from "../../utils/hooks/useLatest";
 import { runCommand } from "../../registry/commands";
 import { ChevronIcon } from "../../engine/controls/icons";
 import { ListRowIcon } from "./list-row-icon";
@@ -21,17 +18,13 @@ import { getWindowAccess } from "../app-bridge";
 import { mayOpen } from "../may-open";
 import { askPlugin } from "../manager";
 import { pluginRecord } from "../store/plugin-records";
-import {
-  listView,
-  listViewsVersion,
-  subscribeListViews,
-} from "../contributions/list-views";
 import { pluginName, windowInfo } from "../store/plugin-records";
 import { localize } from "../store/manifest";
 import "./PluginListView.css";
 import { isImeKeydown } from "../../utils/ime";
 import { trackDrag } from "../../engine/drag/pointer-drag";
 import { listMove } from "../../engine/controls/list-keys";
+import { keyOf, usePluginListItems } from "./usePluginListItems";
 
 /** A list item as a plugin gives it. */
 export interface PluginListItem {
@@ -66,10 +59,6 @@ export function listItemMatches(item: PluginListItem, query: string): boolean {
     .split(/\s+/)
     .filter(Boolean)
     .every((word) => haystack.includes(word));
-}
-
-function keyOf(item: PluginListItem, index: number): string {
-  return item.id ?? `${index}:${item.label}`;
 }
 
 /** What a click on an item does when the plugin doesn't take it: its
@@ -378,115 +367,4 @@ function usePagedRows(count: number, active: number) {
     return () => seen.disconnect();
   }, [limit, count]);
   return { limit, end };
-}
-
-/**
- * A plugin list's items, asked when the list shows and on each refresh, with
- * the open items' children; the plugin is started first if needed.
- */
-function usePluginListItems(plugin: string, view: string) {
-  useSyncExternalStore(subscribeListViews, listViewsVersion);
-  const info = listView(plugin, view);
-  const [items, setItems] = useState<PluginListItem[] | null>(null);
-  const [children, setChildren] = useState<Map<string, PluginListItem[]>>(
-    () => new Map(),
-  );
-  const [open, setOpen] = useState<Set<string>>(() => new Set());
-  const [error, setError] = useState<string | null>(null);
-  const fail = useCallback(
-    (err: unknown) => setError(String((err as Error)?.message ?? err)),
-    [],
-  );
-
-  const ask = useCallback(
-    (parent?: PluginListItem) =>
-      askPlugin(plugin, "$listItems", { view, parent: parent ?? null }).then(
-        (answer) => (Array.isArray(answer) ? (answer as PluginListItem[]) : []),
-      ),
-    [plugin, view],
-  );
-
-  // Started on first show: the plugin registers its list as it activates.
-  useEffect(() => {
-    if (info) return;
-    askPlugin(plugin, "$ping", {}).catch(fail);
-  }, [plugin, info, fail]);
-
-  // Read as they are when the list refreshes, not a reason to refresh.
-  const state = useLatest({ open, items, children });
-  const version = info?.version ?? 0;
-  useEffect(() => {
-    if (!version) return;
-    let live = true;
-    ask()
-      .then((got) => {
-        if (!live) return;
-        setItems(got);
-        setError(null);
-        // An open item's children are asked again too, the item looked up
-        // in the list just come. One not found (gone) is left: asked
-        // without a parent, the plugin gives the top level, which would be
-        // drawn again under it.
-        const now = state.current;
-        for (const id of now.open) {
-          const parent = findItem(got, now.children, id);
-          if (!parent) continue;
-          void ask(parent)
-            .then(
-              (kids) => live && setChildren((m) => new Map(m).set(id, kids)),
-            )
-            .catch((err: unknown) => live && fail(err));
-        }
-      })
-      .catch((err: unknown) => live && fail(err));
-    return () => {
-      live = false;
-    };
-  }, [ask, version, state, fail]);
-
-  const toggleOpen = (item: PluginListItem, key: string) => {
-    const next = new Set(open);
-    if (next.delete(key)) {
-      setOpen(next);
-      return;
-    }
-    next.add(key);
-    setOpen(next);
-    void ask(item)
-      .then((got) => setChildren((m) => new Map(m).set(key, got)))
-      .catch(fail);
-  };
-
-  /** One item put in another's place, at the top or among children. */
-  const swapItem = (from: PluginListItem, to: PluginListItem) => {
-    const swap = (list: PluginListItem[]) =>
-      list.includes(from) ? list.map((i) => (i === from ? to : i)) : list;
-    setItems((all) => (all ? swap(all) : all));
-    setChildren((m) => {
-      const next = new Map(m);
-      for (const [key, list] of m) next.set(key, swap(list));
-      return next;
-    });
-  };
-
-  return { info, items, swapItem, children, open, toggleOpen, error, fail };
-}
-
-function findItem(
-  top: PluginListItem[],
-  children: Map<string, PluginListItem[]>,
-  key: string,
-): PluginListItem | null {
-  const parts = key.split("/");
-  let list = top;
-  let prefix = "";
-  let found: PluginListItem | null = null;
-  for (const part of parts) {
-    const index = list.findIndex((item, i) => keyOf(item, i) === part);
-    if (index < 0) return null;
-    found = list[index];
-    prefix = prefix ? `${prefix}/${part}` : part;
-    list = children.get(prefix) ?? [];
-  }
-  return found;
 }
