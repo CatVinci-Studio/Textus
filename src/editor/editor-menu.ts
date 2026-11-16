@@ -1,12 +1,4 @@
-import { fill } from "../i18n/fill";
-import { commandsCtx, editorViewCtx, type CmdKey } from "@milkdown/kit/core";
-import {
-  wrapInBulletListCommand,
-  wrapInOrderedListCommand,
-  wrapInBlockquoteCommand,
-  createCodeBlockCommand,
-  wrapInHeadingCommand,
-} from "@milkdown/kit/preset/commonmark";
+import { editorViewCtx } from "@milkdown/kit/core";
 import { NodeSelection } from "@milkdown/kit/prose/state";
 import type {
   ContextMenuEntry,
@@ -23,7 +15,8 @@ import {
   type DrawnBlockActions,
 } from "./drawn-block-actions";
 import type { EditorRunner } from "./useEditorRunner";
-import { convertList } from "./keys/block-toggles";
+import { applyBlockKind } from "./blocks/block-kinds";
+import { BLOCK_KINDS, menuKinds } from "./blocks/block-kind-list";
 import { clearSpans } from "./marks/span-commands";
 import {
   BOLD,
@@ -33,7 +26,6 @@ import {
   toggleCodeSpan,
   toggleFormat,
 } from "./keys/format-shortcut-plugin";
-import { INSERT_BLOCK_EVENT } from "../utils/events";
 import type { EditorView } from "@milkdown/kit/prose/view";
 import type { Strings } from "../i18n/strings";
 import {
@@ -50,21 +42,6 @@ import {
 } from "./editor-menu-images";
 // The editor commands behind the right-click, Format and Edit menus, and
 // the right-click menu itself.
-
-// CmdKey<any>: the preset keys vary in payload type; none gets one here.
-export function runCommand(run: EditorRunner, key: CmdKey<any>) {
-  run((ctx) => {
-    ctx.get(commandsCtx).call(key);
-    ctx.get(editorViewCtx).focus();
-  });
-}
-
-export function insertHeading(run: EditorRunner, level: number) {
-  run((ctx) => {
-    ctx.get(commandsCtx).call(wrapInHeadingCommand.key, level);
-    ctx.get(editorViewCtx).focus();
-  });
-}
 
 /** What a right-click landed on, for the menu's image items. */
 interface ContextMenuTarget {
@@ -373,20 +350,6 @@ function generalItems(options: ContextMenuOptions): ContextMenuEntry[] {
   ];
 }
 
-/** A Format/Insert list: the block wrapped, or the other kind changed. */
-export function insertList(
-  run: EditorRunner,
-  kind: "bullet_list" | "ordered_list",
-): void {
-  if (run((ctx) => convertList(ctx.get(editorViewCtx), kind))) return;
-  runCommand(
-    run,
-    kind === "bullet_list"
-      ? wrapInBulletListCommand.key
-      : wrapInOrderedListCommand.key,
-  );
-}
-
 /** The inline styles, then (outside a table) the block the caret is in
  *  made a heading, list or quote, and blocks put in: Obsidian's Format,
  *  Paragraph and Insert. */
@@ -403,9 +366,6 @@ function formatGroups(
       act(view);
       view.focus();
     });
-  // As the Format menu inserts them.
-  const insertBlock = (kind: string) => () =>
-    window.dispatchEvent(new CustomEvent(INSERT_BLOCK_EVENT, { detail: kind }));
   const format: ContextMenuEntry = {
     label: t.menuFormat,
     items: [
@@ -432,42 +392,25 @@ function formatGroups(
     ],
   };
   if (!blocks) return [format];
+  const item = (kind: (typeof BLOCK_KINDS)[number]) => ({
+    label: kind.label(t),
+    onSelect: () => applyBlockKind(run, kind.id, options.openTableDialog),
+  });
+  const kinds = menuKinds();
   return [
     format,
     {
       label: t.menuParagraph,
-      items: [
-        ...[1, 2, 3].map((level) => ({
-          label: fill(t.menuHeadingTemplate, { n: String(level) }),
-          onSelect: () => insertHeading(run, level),
-        })),
-        "separator",
-        {
-          label: t.menuBulletList,
-          onSelect: () => insertList(run, "bullet_list"),
-        },
-        {
-          label: t.menuOrderedList,
-          onSelect: () => insertList(run, "ordered_list"),
-        },
-        { label: t.menuTaskList, onSelect: insertBlock("task-list") },
-        {
-          label: t.menuBlockquote,
-          onSelect: () => runCommand(run, wrapInBlockquoteCommand.key),
-        },
-      ],
+      // The text and headings, then the blocks that hold it.
+      items: kinds
+        .filter((k) => k.turns)
+        .flatMap((k) =>
+          k.id === "h3" ? [item(k), "separator" as const] : [item(k)],
+        ),
     },
     {
       label: t.menuInsertGroup,
-      items: [
-        { label: t.menuTable, onSelect: options.openTableDialog },
-        {
-          label: t.menuCodeBlock,
-          onSelect: () => runCommand(run, createCodeBlockCommand.key),
-        },
-        { label: t.menuMathBlock, onSelect: insertBlock("math-block") },
-        { label: t.menuDivider, onSelect: insertBlock("rule") },
-      ],
+      items: kinds.filter((k) => !k.turns).map(item),
     },
   ];
 }

@@ -172,6 +172,8 @@ export interface Settings {
   firstLineIndent: boolean;
   /** A gray "type / to insert" on the empty line the caret is on. */
   emptyLineHint: boolean;
+  /** ＋ and ⋮⋮ beside the block under the pointer. */
+  blockHandles: boolean;
   /** How an image on a line of its own sits. Display only: the file is
    *  not changed. */
   imageAlign: ImageAlign;
@@ -343,6 +345,7 @@ export const DEFAULT_SETTINGS: Settings = {
   contentWidth: "auto",
   firstLineIndent: false,
   emptyLineHint: false,
+  blockHandles: true,
   imageAlign: "center",
   menuBarShown: false,
   titleRowShown: false,

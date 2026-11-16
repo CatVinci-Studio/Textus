@@ -38,18 +38,11 @@ export const SOURCE_EDIT_EVENT = "textus:source-edit";
 export const TRACK_CHANGES_EVENT = "textus:track-changes";
 export type TrackChangesAction = "toggle" | "accept-all" | "reject-all";
 
-/// detail: the block kind to insert at the cursor: "h1".."h6", "paragraph",
-/// "bullet-list", "ordered-list", "task-list", "blockquote", "code-block",
-/// "math-block", "rule" or "table".
+/// detail: the block kind to insert at the cursor (editor/blocks/block-kinds).
 export const INSERT_BLOCK_EVENT = "textus:insert-block";
 /** A folder inside the open one to show in the sidebar (detail: its path),
  *  as its Show Only This Folder does: a plugin's import going into what it made. */
 export const SHOW_FOLDER_EVENT = "textus:show-folder";
-export const INSERT_BLOCK_KINDS: readonly string[] = [
-  ...["h1", "h2", "h3", "h4", "h5", "h6", "paragraph"],
-  ...["bullet-list", "ordered-list", "task-list", "blockquote"],
-  ...["code-block", "math-block", "rule", "table"],
-];
 
 /// detail: "heading" | "bullet-list" | "ordered-list" | "blockquote"; these
 /// toggle rather than only insert.
@@ -112,3 +105,15 @@ export const FILE_RELOADED_EVENT = "textus:file-reloaded";
 /** Asks an editor window to open Textus AI's panel (a floating view's
  *  menu, from its own window). */
 export const OPEN_AGENT_PANEL_EVENT = "open-agent-panel";
+
+/** A block handle's ＋ or ⋮⋮ pressed: its editor's menu for that block. */
+export const BLOCK_MENU_EVENT = "textus:block-menu";
+export interface BlockMenuRequest {
+  /** The editor the block is in. */
+  dom: HTMLElement;
+  x: number;
+  y: number;
+  pos: number;
+  /** ＋: the blocks to add below it; else its own menu. */
+  add: boolean;
+}

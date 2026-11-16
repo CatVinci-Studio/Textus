@@ -1,3 +1,4 @@
+import { isBlockKind } from "../editor/blocks/block-kind-list";
 import { lazyModule } from "../lazy/lazy-module";
 import { appearanceNow } from "../theme/plugin-colors";
 import { pickWithCommands } from "./command-palette-entry";
@@ -37,11 +38,7 @@ import { watchTheme, windowIsDark } from "../plugins/views/theme-vars";
 import { usePluginMenuSync } from "../plugins/contributions/usePluginMenu";
 import { placeOnArrival, tabInUse } from "../engine/layout/store";
 import { besideOrSay, openBesideOrSay } from "./menu/split-here";
-import {
-  INSERT_BLOCK_EVENT,
-  SHOW_FOLDER_EVENT,
-  INSERT_BLOCK_KINDS,
-} from "../utils/events";
+import { INSERT_BLOCK_EVENT, SHOW_FOLDER_EVENT } from "../utils/events";
 import { useSettings } from "../prefs/SettingsContext";
 import { setWindowFolderSource } from "../platform/window-folder";
 
@@ -241,7 +238,7 @@ export function usePluginWindow({
       title: (t) => t.menuFormat,
       palette: false,
       run: (kind) => {
-        if (typeof kind === "string" && INSERT_BLOCK_KINDS.includes(kind))
+        if (isBlockKind(kind))
           window.dispatchEvent(
             new CustomEvent(INSERT_BLOCK_EVENT, { detail: kind }),
           );

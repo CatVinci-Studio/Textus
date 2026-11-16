@@ -49,6 +49,12 @@ export function EditTextPage({ t, settings, setSettings }: SettingsPageProps) {
           checked={settings.emptyLineHint}
           onChange={(v) => setSettings({ emptyLineHint: v })}
         />
+        <ToggleRow
+          label={t.blockHandlesLabel}
+          help={t.blockHandlesHelp}
+          checked={settings.blockHandles}
+          onChange={(v) => setSettings({ blockHandles: v })}
+        />
         <DocTextFold t={t} settings={settings} setSettings={setSettings} />
       </SettingsGroup>
       {/* One view for every document in every window. */}

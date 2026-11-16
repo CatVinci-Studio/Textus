@@ -1,3 +1,4 @@
+import { createBlockHandlesPlugin } from "./blocks/block-handles-plugin";
 import { type Editor, editorViewOptionsCtx, rootCtx } from "@milkdown/kit/core";
 import type { Ctx, MilkdownPlugin } from "@milkdown/kit/ctx";
 import { orderedListAttr } from "@milkdown/kit/preset/commonmark";
@@ -364,6 +365,13 @@ export function withEditorCore(
         createColorSwatchPlugin({
           mode: () => settings.current.colorSwatches,
         }),
+      )
+      .use(
+        editing(
+          createBlockHandlesPlugin({
+            enabled: () => settings.current.blockHandles,
+          }),
+        ),
       )
 
       .use(emojiShortcodePlugin)
