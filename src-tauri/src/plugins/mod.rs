@@ -10,6 +10,7 @@ pub mod dev;
 pub mod export;
 pub mod files;
 pub mod git;
+pub mod http;
 pub mod install;
 pub mod manifest;
 pub mod metadata;
@@ -69,7 +70,8 @@ macro_rules! with_plugin_commands {
             $crate::plugins::workspace::plugin_fs_documents,
             $crate::plugins::workspace::plugin_fs_search,
             $crate::plugins::access::plugin_fs_write,
-            $crate::plugins::access::plugin_http,
+            $crate::plugins::http::plugin_http,
+            $crate::plugins::http::plugin_http_cancel,
             $crate::plugins::dev::plugin_dev_stamp,
             $crate::plugins::ai_tools::plugin_ai_tools_set,
             $crate::plugins::ai_tools::plugin_ai_tool_result,

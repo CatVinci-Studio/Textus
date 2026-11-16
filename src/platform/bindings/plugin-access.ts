@@ -78,6 +78,11 @@ export const commands = {
 	 */
 	git_trust_repository: (root: string) => __TAURI_INVOKE<null>("git_trust_repository", { root }),
 	plugin_http: (id: string, request: HttpRequest_Deserialize) => __TAURI_INVOKE<HttpResponse>("plugin_http", { id, request }),
+	/**
+	 *  Stops the plugin's request named `cancel_id`, if it is still going: its
+	 *  connection is dropped and `plugin_http` answers "cancelled".
+	 */
+	plugin_http_cancel: (id: string, cancelId: string) => __TAURI_INVOKE<void>("plugin_http_cancel", { id, cancelId }),
 	/**  What the plugin kept under `key`, or null. */
 	plugin_store_get: (id: string, scope: StoreScope, root: string | null, key: string) => __TAURI_INVOKE<Value | null>("plugin_store_get", { id, scope, root, key }),
 	/**  Keeps `value` under `key`; null takes the key away. */
@@ -224,6 +229,8 @@ export type HttpRequest_Deserialize = {
 	/**  Text, or base64 with `body_base64`. */
 	body?: string | null,
 	bodyBase64?: boolean,
+	/**  The plugin's name for this request, to cancel it by. */
+	cancelId?: string | null,
 };
 
 export type HttpRequest_Serialize = {
@@ -233,6 +240,8 @@ export type HttpRequest_Serialize = {
 	/**  Text, or base64 with `body_base64`. */
 	body: string | null,
 	bodyBase64: boolean,
+	/**  The plugin's name for this request, to cancel it by. */
+	cancelId: string | null,
 };
 
 export type HttpResponse = {

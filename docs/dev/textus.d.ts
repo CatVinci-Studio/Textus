@@ -1365,13 +1365,17 @@ declare global {
     // ---------------------------------------------------------------
 
     interface Net {
-      /** HTTPS to the hosts granted (`network:<host>`); no cookies. */
+      /** HTTPS to the hosts granted (`network:<host>`); no cookies. Each
+       *  plugin's requests share kept connections (HTTP/2 where the server
+       *  has it). `signal` aborted stops the request at once; it then
+       *  rejects with an `AbortError` (from 1.7). */
       fetch(
         url: string,
         init?: {
           method?: string;
           headers?: Record<string, string>;
           body?: Uint8Array | ArrayBuffer | string;
+          signal?: AbortSignal;
         },
       ): Promise<{
         status: number;

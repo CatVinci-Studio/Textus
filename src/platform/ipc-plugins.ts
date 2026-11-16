@@ -176,8 +176,11 @@ export const plugins = {
       headers?: Record<string, string>;
       body?: string;
       bodyBase64?: boolean;
+      cancelId?: string;
     },
   ) => command("plugin_http", id, request),
+  httpCancel: (id: string, cancelId: string) =>
+    command("plugin_http_cancel", id, cancelId),
   // A plugin's two stores: `root` is the open folder, for the project's.
   storeGet: (id: string, scope: StoreScope, root: string | null, key: string) =>
     command("plugin_store_get", id, scope, root, key) as Promise<unknown>,

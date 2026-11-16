@@ -72,6 +72,13 @@
         app.notify(method, params);
       });
   }
+  // net.fetch's requests given a signal, each named to cancel it by.
+  var fetches = 0;
+  function aborted() {
+    var err = new Error("The request was cancelled.");
+    err.name = "AbortError";
+    return err;
+  }
   // A call whose failure is no one's business - but a refused permission
   // goes to the plugin's log, where its author finds why nothing happens.
   function quiet(promise) {
@@ -1093,12 +1100,33 @@
     net: {
       fetch: function (url, init) {
         init = init || {};
-        return call("net.fetch", {
+        var signal = init.signal;
+        if (signal && signal.aborted) return Promise.reject(aborted());
+        var cancelId = signal ? String(++fetches) : undefined;
+        var sent = call("net.fetch", {
           url: String(url),
           method: init.method,
           headers: init.headers,
           body: init.body === undefined ? undefined : bytesOf(init.body),
-        }).then(function (r) {
+          cancelId: cancelId,
+        });
+        if (signal) {
+          var stop = function () {
+            notify("net.cancel", { cancelId: cancelId });
+          };
+          signal.addEventListener("abort", stop, { once: true });
+          sent = sent.then(
+            function (r) {
+              signal.removeEventListener("abort", stop);
+              return r;
+            },
+            function (err) {
+              signal.removeEventListener("abort", stop);
+              throw signal.aborted ? aborted() : err;
+            },
+          );
+        }
+        return sent.then(function (r) {
           return {
             status: r.status,
             ok: r.status >= 200 && r.status < 300,

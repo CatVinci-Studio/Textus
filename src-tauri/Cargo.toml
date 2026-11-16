@@ -77,7 +77,7 @@ tokio = { version = "1", features = ["fs", "sync", "macros", "rt", "rt-multi-thr
 futures-util = { version = "0.3", default-features = false, features = ["alloc"] }
 base64 = "0.22"
 sha2 = "0.10"
-reqwest = { version = "0.12", default-features = false, features = ["json", "multipart", "rustls-tls"] }
+reqwest = { version = "0.12", default-features = false, features = ["json", "multipart", "rustls-tls", "http2"] }
 aicompat = { path = "crates/aicompat" }
 
 # Markdown extraction (src/extract/), for chat attachments (commands/

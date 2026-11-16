@@ -339,9 +339,13 @@ export function fileHandlers(p: PluginScope) {
         headers: (r.headers ?? undefined) as Record<string, string> | undefined,
         body: body ? toBase64(body) : undefined,
         bodyBase64: !!body,
+        cancelId: optionalStr(r.cancelId),
       });
       return { ...response, body: fromBase64(response.body) };
     },
+    // A fetch whose signal aborted: it stops where it is.
+    "net.cancel": ({ cancelId }: Params) =>
+      pluginsIpc.httpCancel(p.id, str(cancelId, "cancelId")),
     // Its own places: the project's is the open folder's, which Rust checks
     // project.data for.
     "store.get": ({ scope, key }: Params) =>
