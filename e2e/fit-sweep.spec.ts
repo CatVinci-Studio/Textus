@@ -293,6 +293,27 @@ for (const [os, platform] of [
     }
   });
 
+test("a button label wider than its row is cut at its end, never its start", async ({
+  page,
+}) => {
+  await openApp(page);
+  const start = await page.evaluate(() => {
+    const row = document.createElement("div");
+    row.style.cssText = "width: 120px; position: fixed; top: 0; left: 0";
+    const button = document.createElement("button");
+    button.className = "tx-button";
+    button.textContent = "Diese Version wiederherstellen";
+    row.append(button);
+    document.body.append(row);
+    const range = document.createRange();
+    range.selectNodeContents(button);
+    const text = range.getBoundingClientRect().left;
+    row.remove();
+    return text - button.getBoundingClientRect().left;
+  });
+  expect(start).toBeGreaterThanOrEqual(0);
+});
+
 test.describe("on a touch screen", () => {
   test.use({ hasTouch: true, isMobile: true });
 

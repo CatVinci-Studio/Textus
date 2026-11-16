@@ -17,6 +17,8 @@
   display: inline-flex;
   align-items: center;
   justify-content: center;
+  /* A label wider than its row is cut at its end, not at both. */
+  justify-content: safe center;
   gap: 8px;
   min-height: var(--control-height);
   padding: 0 12px;
