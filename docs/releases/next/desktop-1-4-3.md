@@ -7,3 +7,4 @@
 ### Improved
 
 - A split made into a narrow window first folds the side panels, then puts the sidebar away, so the documents keep their room; when even that isn't enough, the window says so instead of doing nothing.
+- The built-in theme Aurora is now called Prism; if you used it, pick Prism again in Settings › Appearance.

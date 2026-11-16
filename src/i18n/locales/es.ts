@@ -1614,7 +1614,7 @@ para usar una.
   themeNamePaper: "Papel",
   themeNameSlate: "Pizarra",
   themeNameForest: "Bosque",
-  themeNameAurora: "Aurora",
+  themeNamePrism: "Prisma",
   appearanceLabel: "Aspecto",
   appearanceModeLabel: "Claro u oscuro",
   appearanceSystem: "Según el sistema",

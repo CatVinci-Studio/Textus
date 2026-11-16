@@ -1611,7 +1611,7 @@ export default {
   themeNamePaper: "Бумага",
   themeNameSlate: "Грифель",
   themeNameForest: "Лес",
-  themeNameAurora: "Аврора",
+  themeNamePrism: "Призма",
   appearanceLabel: "Оформление",
   appearanceModeLabel: "Светлая или тёмная",
   appearanceSystem: "Как в системе",

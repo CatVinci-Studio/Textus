@@ -1497,7 +1497,7 @@ ${AI_NAME}에게 주는 글쓰기 지침으로, 모든 문서에 적용됩니다
   themeNamePaper: "종이",
   themeNameSlate: "슬레이트",
   themeNameForest: "숲",
-  themeNameAurora: "오로라",
+  themeNamePrism: "프리즘",
   appearanceLabel: "모양",
   appearanceModeLabel: "밝게/어둡게",
   appearanceSystem: "시스템 설정 따르기",

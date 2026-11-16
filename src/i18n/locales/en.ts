@@ -1544,7 +1544,7 @@ type /name in a conversation to use one.
   themeNamePaper: "Paper",
   themeNameSlate: "Slate",
   themeNameForest: "Forest",
-  themeNameAurora: "Aurora",
+  themeNamePrism: "Prism",
   appearanceLabel: "Appearance",
   appearanceModeLabel: "Light or dark",
   appearanceSystem: "Follow system",

@@ -1625,7 +1625,7 @@ utiliser une.
   themeNamePaper: "Papier",
   themeNameSlate: "Ardoise",
   themeNameForest: "Forêt",
-  themeNameAurora: "Aurore",
+  themeNamePrism: "Prisme",
   appearanceLabel: "Apparence",
   appearanceModeLabel: "Clair ou sombre",
   appearanceSystem: "Selon le système",

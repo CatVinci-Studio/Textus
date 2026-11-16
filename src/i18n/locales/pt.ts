@@ -1595,7 +1595,7 @@ Habilidades ficam na pasta skills/ ao lado deste arquivo, um arquivo
   themeNamePaper: "Papel",
   themeNameSlate: "Ardósia",
   themeNameForest: "Floresta",
-  themeNameAurora: "Aurora",
+  themeNamePrism: "Prisma",
   appearanceLabel: "Aparência",
   appearanceModeLabel: "Claro ou escuro",
   appearanceSystem: "Seguir o sistema",

@@ -1437,7 +1437,7 @@ export default {
   themeNamePaper: "紙張",
   themeNameSlate: "石板",
   themeNameForest: "森林",
-  themeNameAurora: "極光",
+  themeNamePrism: "稜鏡",
   appearanceLabel: "外觀",
   appearanceModeLabel: "淺色／深色",
   appearanceSystem: "依照系統",

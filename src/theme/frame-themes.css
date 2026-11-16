@@ -4,8 +4,8 @@
    as content-themes.css: light, dark following the system, dark pinned
    (the two dark ones identical). */
 
-/* Aurora - sky blue into pink by day, deep sea into plum by night */
-:root[data-content-theme="aurora"] {
+/* Prism - sky blue into pink by day, deep sea into plum by night */
+:root[data-content-theme="prism"] {
   --ui-frame-paint: linear-gradient(170deg, #6ec5e6, #a9c4e4 50%, #f6cde1);
   --ui-frame-tint: #3f9cc0;
   --doc-accent: #0b7fa3;
@@ -13,7 +13,7 @@
 }
 
 @media (prefers-color-scheme: dark) {
-  :root:not([data-theme="light"])[data-content-theme="aurora"] {
+  :root:not([data-theme="light"])[data-content-theme="prism"] {
     --ui-frame-paint: linear-gradient(170deg, #0f3346, #1f2a48 50%, #3b2440);
     --ui-frame-tint: #4fa9c9;
     --doc-accent: #5fd0ec;
@@ -21,7 +21,7 @@
   }
 }
 
-:root[data-theme="dark"][data-content-theme="aurora"] {
+:root[data-theme="dark"][data-content-theme="prism"] {
   --ui-frame-paint: linear-gradient(170deg, #0f3346, #1f2a48 50%, #3b2440);
   --ui-frame-tint: #4fa9c9;
   --doc-accent: #5fd0ec;

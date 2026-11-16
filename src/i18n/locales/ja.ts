@@ -1513,7 +1513,7 @@ ${AI_NAME}への執筆の指示です。すべての文書に適用されます�
   themeNamePaper: "ペーパー",
   themeNameSlate: "スレート",
   themeNameForest: "フォレスト",
-  themeNameAurora: "オーロラ",
+  themeNamePrism: "プリズム",
   appearanceLabel: "外観",
   appearanceModeLabel: "ライト／ダーク",
   appearanceSystem: "システムに従う",
