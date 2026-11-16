@@ -33,20 +33,28 @@ export function useNativeWebPage(
     const el = holder.current;
     if (!el) return;
     let shown = false;
+    // In its place on screen, a menu over it or not: covered, the native
+    // page hides but isn't on its way to being let go.
+    let inView = false;
     let frame = 0;
     let loadTimer = 0;
     const page = keepLoaded("web-page", () => {
       shown = false;
+      inView = false;
       void webPages.close(id).catch(() => {});
     });
     const place = () => {
       frame = 0;
       const r = el.getBoundingClientRect();
-      const visible =
-        r.width > 0 && r.height > 0 && !webPagesCovered() && !failedRef.current;
+      const placed = r.width > 0 && r.height > 0;
+      if (placed !== inView) {
+        inView = placed;
+        if (placed) page.shown();
+        else page.hidden();
+      }
+      const visible = placed && !webPagesCovered() && !failedRef.current;
       if (visible) {
         shown = true;
-        page.shown();
         void webPages
           .show(id, last.current, {
             x: r.left,
@@ -57,7 +65,6 @@ export function useNativeWebPage(
           .catch(() => {});
       } else if (shown) {
         shown = false;
-        page.hidden();
         void webPages.hide(id).catch(() => {});
       }
     };
