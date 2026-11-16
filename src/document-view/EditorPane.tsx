@@ -17,6 +17,7 @@ import type { DocTab } from "../document/doc-tabs";
 import type { TourAi } from "../utils/events";
 import { lazyModule } from "../lazy/lazy-module";
 import { lazyComponent } from "../lazy/lazy-component";
+import { useDocEndRef } from "./doc-end";
 
 // The editor loads with the first document shown, or first once the window
 // is idle, so opening a document doesn't wait on it.
@@ -161,6 +162,7 @@ export const EditorPane = memo(function EditorPane({
     [onChange, tabId],
   );
   const scrollRef = useKeptScroll(isActive, tabId, filePath);
+  const endRef = useDocEndRef(tabId);
 
   return (
     <div className="editor-scroll tx-scroll-reveal" ref={scrollRef}>
@@ -182,6 +184,7 @@ export const EditorPane = memo(function EditorPane({
             />
           </KatexFirst>
         </Suspense>
+        <div className="doc-end" ref={endRef} />
       </div>
     </div>
   );

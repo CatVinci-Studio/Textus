@@ -32,8 +32,12 @@
   padding-bottom: calc(48px + var(--space-2));
 }
 
-/* Typing on a touch screen (phone or tablet, any turn) the page is short
-   and the count would sit on the text; the ☰ menu still says it. */
-:root.keyboard-up .document-corner .word-count {
-  display: none;
+/* A touch screen's count: under the document's last block, in its flow. */
+.doc-end .word-count {
+  margin: var(--space-4) 0 0;
+  text-align: end;
+  font-family: var(--font-ui);
+  font-size: var(--text-footnote);
+  color: var(--doc-muted);
+  user-select: none;
 }
