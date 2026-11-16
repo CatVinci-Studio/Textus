@@ -35,7 +35,8 @@ function countText(text: string): number {
   }
   let words = 0;
   for (const { segment, isWordLike } of segmenter.segment(text)) {
-    if (!isWordLike) continue;
+    // WebKit calls "r12" or "2019" no word: any letter or digit makes one.
+    if (!isWordLike && !/[\p{L}\p{N}]/u.test(segment)) continue;
     words += segment.match(CJK_CHAR)?.length || 1;
   }
   return words;
