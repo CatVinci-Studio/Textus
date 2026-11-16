@@ -26,6 +26,17 @@ console.log("a fairly long first line of code to see whether the language label 
 - 再制定方案
 `;
 
+const touch = (device: string, width: number, height: number) => ({
+  userAgent: `Mozilla/5.0 (${device}; CPU OS 18_0 like Mac OS X) AppleWebKit/605.1.15 (KHTML, like Gecko) Mobile/15E148`,
+  viewport: { width, height },
+  hasTouch: true,
+  isMobile: true,
+});
+/** `test.use(PHONE)`: an iPhone, which takes the phone's layout. */
+export const PHONE = touch("iPhone", 390, 844);
+/** `test.use(TABLET)`: an iPad upright, the desktop's layout by touch. */
+export const TABLET = touch("iPad", 768, 1024);
+
 /** Whether the page runs on a Mac: Mod is ⌘ there, and keys read so. */
 export const MAC = process.platform === "darwin";
 

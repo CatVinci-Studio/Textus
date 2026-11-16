@@ -6,18 +6,11 @@ import { defineConfig, devices } from "@playwright/test";
  * second worktree run too.
  */
 const port = Number(process.env.PLAYWRIGHT_PORT) || 1430;
-/** The specs the opt-in WebKit project runs (projects below). */
-const WEBKIT_SPECS = [
-  // The frame engine and the one editor per island: Mac draws in WebKit,
-  // whose layout and clip-path the islands' motion leans on.
-  "ai-tabs.spec.ts",
-  "external-change.spec.ts",
-  "editor-per-island.spec.ts",
-  "sidebar-panels.spec.ts",
-  "tab-from-window.spec.ts",
-  "island-numbers.spec.ts",
-  "frames.spec.ts",
-];
+
+// The frame claims' own checks go with the frame flows (@perf).
+const ignored = process.env.TEXTUS_PERF
+  ? ["shots/**"]
+  : ["shots/**", "frames/claims.spec.ts"];
 
 export default defineConfig({
   testDir: "./e2e",
@@ -49,22 +42,19 @@ export default defineConfig({
   projects: [
     {
       name: "chromium",
-      // The frame claims' own checks go with the frame flows (@perf).
-      testIgnore: process.env.TEXTUS_PERF
-        ? ["shots/**"]
-        : ["shots/**", "frames/claims.spec.ts"],
+      testIgnore: ignored,
       use: {
         ...devices["Desktop Chrome"],
         viewport: { width: 1180, height: 780 },
       },
     },
-    // WebKit flows in Playwright's WebKit, with E2E_WEBKIT=1 (CI's
+    // The same flows in Playwright's WebKit, with E2E_WEBKIT=1 (CI's
     // e2e-webkit job sets it on every pull request).
     ...(process.env.E2E_WEBKIT
       ? [
           {
             name: "webkit",
-            testMatch: WEBKIT_SPECS,
+            testIgnore: ignored,
             use: {
               ...devices["Desktop Safari"],
               viewport: { width: 1180, height: 780 },

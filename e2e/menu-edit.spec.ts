@@ -33,7 +33,8 @@ test("the Edit menu's Undo, Redo and Select All act on the document in use", asy
   await page.keyboard.type("beta");
   await emit(page, "menu-select-all");
   await expect
-    .poll(() => page.evaluate(() => String(getSelection())))
+    // WebKit's selection text ends with the block's line break.
+    .poll(() => page.evaluate(() => String(getSelection()).trim()))
     .toBe("beta");
   await emit(page, "menu-undo");
   await expect.poll(() => text(page, 1)).toBe("");
@@ -203,7 +204,9 @@ test("a ⌘ or Ctrl click in the text places the caret, never selects the block"
 
 test("a heading key reaching the page mid-pinyin (Windows) waits for the text and doubles nothing", async ({
   page,
+  browserName,
 }) => {
+  test.skip(browserName !== "chromium", "Windows draws in Chromium (WebView2)");
   await openApp(page, { settings: { menuBarShown: false } });
   const doc = docs(page).first();
   await doc.click();

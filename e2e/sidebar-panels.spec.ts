@@ -1,5 +1,5 @@
 import { expect, test, type Page } from "@playwright/test";
-import { MAC, emit, openApp, pasteMarkdown } from "./helpers";
+import { MAC, PHONE, emit, openApp, pasteMarkdown } from "./helpers";
 
 // Sidebar panels: the plugin list opens a plugin's page in a tab of its
 // own; the sidebar steps aside for the islands and widens by its edge.
@@ -331,13 +331,7 @@ test("a sidebar tab's own key shows it, and again puts the sidebar away; Search 
 });
 
 test.describe("on a phone", () => {
-  test.use({
-    userAgent:
-      "Mozilla/5.0 (iPhone; CPU iPhone OS 18_0 like Mac OS X) AppleWebKit/605.1.15 (KHTML, like Gecko) Mobile/15E148",
-    viewport: { width: 402, height: 874 },
-    hasTouch: true,
-    isMobile: true,
-  });
+  test.use(PHONE);
 
   test("a document brought to the front is read first: the keyboard comes up for a tap in its text", async ({
     page,

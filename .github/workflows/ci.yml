@@ -230,9 +230,8 @@ jobs:
           test "$RESULT" = success || test "$RESULT" = skipped
           test "$WEBKIT" = success || test "$WEBKIT" = skipped
 
-  # The flows macOS, iOS and Linux users meet in WebKit
-  # (playwright.config.ts's WEBKIT_SPECS), on every pull request: a failure
-  # here fails `e2e`.
+  # The whole suite again in WebKit, the engine macOS, iOS and Linux users
+  # meet, on every pull request: a failure here fails `e2e`.
   e2e-webkit:
     needs: changes
     if: needs.changes.outputs.light != 'true'
