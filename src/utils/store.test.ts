@@ -12,6 +12,24 @@ describe("a module's store", () => {
     expect(told).toBe(1);
   });
 
+  it("starts what feeds it with the first listener and stops it after the last", () => {
+    let running = 0;
+    const store = createSubscribers(() => {
+      running++;
+      return () => running--;
+    });
+    const a = store.subscribe(() => {});
+    const b = store.subscribe(() => {});
+    expect(running).toBe(1);
+    a();
+    expect(running).toBe(1);
+    b();
+    b();
+    expect(running).toBe(0);
+    store.subscribe(() => {})();
+    expect(running).toBe(0);
+  });
+
   it("shows requests one at a time, oldest first, the list kept until it changes", () => {
     const queue = createRequestQueue<{ id: number; name: string }>();
     let told = 0;

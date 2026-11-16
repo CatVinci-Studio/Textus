@@ -1,4 +1,5 @@
 import { tokenPx } from "../tokens/token-px";
+import { createSubscribers } from "../../utils/store";
 import { shownIsland } from "./store";
 import { onAppearance } from "../tokens/appearance";
 import { useSyncExternalStore } from "react";
@@ -122,8 +123,11 @@ function measure(): BarObstacles {
 }
 
 let obstacles: BarObstacles | null = null;
-const listeners = new Set<() => void>();
-let stopWatching: (() => void) | null = null;
+const subscribers = createSubscribers(() => {
+  const stop = watch();
+  remeasure();
+  return stop;
+});
 
 /** Room between the bar's leading controls and the sidebar's name. */
 const TITLE_GAP = 16;
@@ -142,7 +146,7 @@ function remeasure() {
     "--bar-lead-clear",
     leadClearLength(next.leadEnd, scaledPx(TITLE_GAP)),
   );
-  for (const listener of listeners) listener();
+  subscribers.publish();
 }
 
 /** Measured again as the window, its bar's controls or the interface's
@@ -177,20 +181,7 @@ function watch(): () => void {
   };
 }
 
-function subscribe(listener: () => void) {
-  listeners.add(listener);
-  if (!stopWatching) {
-    stopWatching = watch();
-    remeasure();
-  }
-  return () => {
-    listeners.delete(listener);
-    if (!listeners.size) {
-      stopWatching?.();
-      stopWatching = null;
-    }
-  };
-}
+const subscribe = subscribers.subscribe;
 
 const snapshot = () => obstacles;
 
