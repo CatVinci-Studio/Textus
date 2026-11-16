@@ -63,6 +63,12 @@ test("brought back to the top, the document's first block shows below the format
     .poll(async () => (await doc(page).locator("> *").first().boundingBox())!.y)
     .toBeGreaterThanOrEqual(barBox!.y + barBox!.height);
 
+  // Its scrollbar too: the scroller starts where the bar ends.
+  const scroller = await page
+    .locator(".split-pane:has(> .format-bar) .editor-scroll")
+    .boundingBox();
+  expect(scroller!.y).toBeGreaterThanOrEqual(barBox!.y + barBox!.height);
+
   // A short new document, the wheel turned: nothing to scroll it under.
   await emit(page, "menu-new-file");
   await doc(page).click();

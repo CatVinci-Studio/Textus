@@ -1,6 +1,6 @@
 /* The format bar (design-language.md 5.7): the top of the sheet of the
    document in use, on the page's own surface, riding with its view as the
-   islands move; the page scrolls beneath it. */
+   islands move; the page and its scrollbar start below it. */
 :root {
   /* A little room over its buttons, clear of the island's top edge. */
   --format-bar-bleed: var(--space-1);
@@ -15,6 +15,8 @@
 }
 .split-pane:has(> .format-bar) {
   --format-bar-top: var(--format-bar-height);
+  box-sizing: border-box;
+  padding-top: var(--format-bar-top);
 }
 
 .format-bar {
@@ -82,31 +84,25 @@
   top: var(--window-bar-height);
   border-radius: 0;
 }
+.app-shell:not([data-tabs="bar"]) .split-pane:has(> .format-bar) {
+  --format-bar-top: calc(var(--window-bar-height) + var(--format-bar-height));
+}
 
-/* The page's text starts below the bar, not under it. */
+/* Below the bar the page needn't clear the window bar a second time. */
 .main-pane
   .split-pane:has(> .format-bar)
   .editor-content:not(.typewriter-active) {
-  padding-top: calc(1.5rem + var(--format-bar-top));
-}
-
-.app-shell:not([data-tabs="bar"])
-  .main-pane
-  .split-pane:has(> .format-bar)
-  .editor-content:not(.typewriter-active) {
-  padding-top: calc(3rem + var(--format-bar-top));
+  padding-top: 1.5rem;
 }
 
 /* On a side (View › Format Bar › Left or Right): a column down the
    sheet's edge, the page beside it. */
 .split-pane:has(> .format-bar[data-side="left"]) {
   --format-bar-top: 0px;
-  box-sizing: border-box;
   padding-left: var(--format-bar-height);
 }
 .split-pane:has(> .format-bar[data-side="right"]) {
   --format-bar-top: 0px;
-  box-sizing: border-box;
   padding-right: var(--format-bar-height);
 }
 
@@ -164,6 +160,10 @@
   border-top: 1px solid var(--ui-border);
   border-bottom: none;
   border-radius: 0 0 var(--island-radius) var(--island-radius);
+}
+
+:root[data-window-chrome="mobile"] .split-pane:has(> .format-bar) {
+  --format-bar-top: 0px;
 }
 
 /* Only while typing: at rest the page is the sheet alone. */
