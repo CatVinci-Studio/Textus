@@ -138,23 +138,28 @@ export function attachGrips(options: {
         ? rows().slice(1)
         : ([...(rows()[0]?.children ?? [])] as HTMLElement[]);
     const from = axis === "row" ? index - 1 : index;
-    const along = (el: Element) => {
-      const r = el.getBoundingClientRect();
+    // Laid-out boxes, not screen ones: the lift and the slides are drawn
+    // inside the document's zoom, which scales them; the pointer's moves
+    // are taken back into it.
+    const zoom =
+      parseFloat(
+        getComputedStyle(wrapper).getPropertyValue("--content-zoom"),
+      ) || 1;
+    const along = (el: HTMLElement) => {
+      const b = box(el);
       return axis === "row"
-        ? { mid: r.top + r.height / 2, size: r.height }
-        : { mid: r.left + r.width / 2, size: r.width };
+        ? { start: b.y, size: b.h, mid: b.y + b.h / 2 }
+        : { start: b.x, size: b.w, mid: b.x + b.w / 2 };
     };
     const centers = items
       .filter((_, i) => i !== from)
       .map((el) => along(el).mid);
     const mine = along(items[from]!);
     // It stays within the others: never over the head row, or past the end.
-    const first = items[0]!.getBoundingClientRect();
-    const last = items[items.length - 1]!.getBoundingClientRect();
-    const reach =
-      axis === "row" ? [first.top, last.bottom] : [first.left, last.right];
-    const least = reach[0]! - (mine.mid - mine.size / 2);
-    const most = reach[1]! - (mine.mid + mine.size / 2);
+    const first = along(items[0]!);
+    const last = along(items[items.length - 1]!);
+    const least = first.start - (mine.mid - mine.size / 2);
+    const most = last.start + last.size - (mine.mid + mine.size / 2);
     const start = axis === "row" ? e.clientY : e.clientX;
     const scope = `.table-wrapper[data-drag-id="${id}"] tbody`;
     const place = (i: number) =>
@@ -171,7 +176,7 @@ export function attachGrips(options: {
       },
       move: (x, y) => {
         // Where it lands goes by the pointer; where it is drawn stays inside.
-        const pulled = (axis === "row" ? y : x) - start;
+        const pulled = ((axis === "row" ? y : x) - start) / zoom;
         to = passedCount(centers, mine.mid + pulled);
         const shift = Math.min(most, Math.max(least, pulled));
         const lifted = axis === "row" ? `${place(from)} > *` : place(from);
@@ -196,6 +201,9 @@ export function attachGrips(options: {
         const table = tableNow();
         if (!dropped || !table || to === from) return;
         const offset = axis === "row" ? 1 : 0;
+        // The move reads its row or column off the selection: picked first,
+        // wherever the caret was.
+        pick(axis, from + offset);
         const command = axis === "row" ? moveTableRow : moveTableColumn;
         command({
           from: from + offset,

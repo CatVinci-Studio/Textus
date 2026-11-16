@@ -57,7 +57,7 @@ test("a row's grip picks the row, and pulled it moves the row; a column's the sa
 }) => {
   const table = await open(
     page,
-    "| h | k |\n| --- | --- |\n| 1 | x |\n| 2 | y |\n| 3 | z |\n",
+    "intro\n\n| h | k |\n| --- | --- |\n| 1 | x |\n| 2 | y |\n| 3 | z |\n",
   );
   const cell = (text: string) => table.locator("td", { hasText: text });
   await cell("3").hover();
@@ -101,6 +101,29 @@ test("a row's grip picks the row, and pulled it moves the row; a column's the sa
   await page.locator(".table-grip-col").dispatchEvent("click");
   await expect(table.locator(".selectedCell")).toHaveCount(4);
   expect(await rowY()).toBe(before);
+
+  // Zoomed, with the caret out of the table: the lifted row stays under the
+  // pointer, and let go, it lands where the others made room.
+  await page.evaluate(() =>
+    document.documentElement.style.setProperty("--content-zoom", "1.25"),
+  );
+  await page.locator(".ProseMirror p").first().click();
+  const order = await firstColumn();
+  await cell(order[2]!).hover();
+  const g2 = (await grip.boundingBox())!;
+  const lifted = table.locator("tbody tr").nth(3);
+  const was = (await lifted.boundingBox())!;
+  await page.mouse.move(g2.x + g2.width / 2, g2.y + g2.height / 2);
+  await page.mouse.down();
+  await page.mouse.move(g2.x + g2.width / 2, g2.y + g2.height / 2 - 30, {
+    steps: 6,
+  });
+  const now = (await lifted.boundingBox())!;
+  expect(Math.abs(now.y - was.y + 30)).toBeLessThan(2);
+  const up = (await cell(order[0]!).boundingBox())!;
+  await page.mouse.move(g2.x + g2.width / 2, up.y + 2, { steps: 8 });
+  await page.mouse.up();
+  await expect.poll(firstColumn).toEqual([order[2], order[0], order[1]]);
 });
 
 test("the grips sit at the middle of their row and column, the document zoomed too", async ({
