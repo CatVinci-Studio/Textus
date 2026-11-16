@@ -84,7 +84,8 @@ async function problems(page: Page): Promise<string[]> {
   });
 }
 
-for (const language of ["zh", "en", "de"])
+// German and Russian run longest, Japanese stands tallest.
+for (const language of ["zh", "en", "de", "ru", "ja"])
   test(`Settings fits every width in ${language}`, async ({ page }) => {
     test.setTimeout(120_000);
     await page.setViewportSize({ width: 1400, height: 900 });
@@ -208,7 +209,7 @@ for (const [os, platform] of [
   ["linux", "Linux x86_64"],
 ] as const)
   test(`the window's parts never overlap on ${os}`, async ({ page }) => {
-    test.setTimeout(60_000);
+    test.setTimeout(90_000);
     // The user agent too: Playwright's says Windows, and the platform
     // check reads it.
     await page.addInitScript((p) => {
@@ -223,7 +224,7 @@ for (const [os, platform] of [
     await emit(page, "menu-split-right");
     const found: string[] = [];
     for (const state of STATES)
-      for (const uiTextScale of [1, 1.25])
+      for (const uiTextScale of [0.85, 1, 1.25])
         for (const width of [760, 1200]) {
           await page.setViewportSize({ width, height: 760 });
           await page.evaluate(
