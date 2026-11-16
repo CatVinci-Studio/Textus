@@ -72,4 +72,13 @@ function closeMenu(event) {
   send("menuClose", {});
 }
 window.addEventListener("pointerdown", closeMenu, true);
+// A finger's press, which the window can't see either: a block shows its
+// tools then (pressed-blocks.ts).
+window.addEventListener(
+  "pointerdown",
+  function (event) {
+    if (event.pointerType !== "mouse") send("pressed", {});
+  },
+  true,
+);
 window.addEventListener("keydown", closeMenu, true);

@@ -1,4 +1,5 @@
 import { widgetButton } from "../../editor/widget-button";
+import { watchPressedBlocks } from "../../plugins/views/pressed-blocks";
 import type { Editor } from "@milkdown/kit/core";
 import { createElement } from "react";
 import { createRoot, type Root } from "react-dom/client";
@@ -156,6 +157,7 @@ export function pluginCodeBlocks(docPath: { readonly current: string | null }) {
       el.dataset.language = language;
       el.contentEditable = "false";
       el.append(editButton(view, getPos));
+      watchPressedBlocks(`.${BLOCK_CLASS}`);
       // Its width and size, as its fence says; kept up as the fence changes.
       let layout = layoutOf({});
       let stopWide = () => {};

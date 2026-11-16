@@ -293,8 +293,15 @@ describe("saving after an edit elsewhere keeps as written", () => {
     expect(out).toBe("_two_\n\n_three_\n\n_one_\n");
   });
 
-  it("serializes two lists that would merge once next to each other", async () => {
+  it("makes two lists one once what stood between them is deleted", async () => {
     const out = await saveAfter("- a\n\nbetween\n\n- b\n", deleteBlock(1));
+    const doc = await readAs(out);
+    expect(doc.childCount).toBe(1);
+    expect(doc.child(0).childCount).toBe(2);
+  });
+
+  it("keeps two lists the file has apart through an edit elsewhere", async () => {
+    const out = await saveAfter("- a\n\n* b\n\nlast\n", deleteBlock(2));
     const doc = await readAs(out);
     expect(doc.childCount).toBe(2);
     expect(doc.child(0).type.name).toBe("bullet_list");

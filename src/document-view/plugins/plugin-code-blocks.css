@@ -69,13 +69,13 @@
 }
 
 /* A finger has no hover: over a drawing the button would cover it for
-   good, so it shows once the block is tapped (its frame has the focus). */
+   good, so it shows once the block is tapped (plugins/views/pressed-blocks.ts). */
 @media (hover: none) {
   .plugin-code-block .plugin-code-edit {
     opacity: 0;
     pointer-events: none;
   }
-  .plugin-code-block:focus-within .plugin-code-edit {
+  .plugin-code-block:is([data-pressed], :focus-within) .plugin-code-edit {
     opacity: 1;
     pointer-events: auto;
   }

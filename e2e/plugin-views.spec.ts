@@ -255,9 +255,13 @@ test("a plugin reads the document in front as a save would write it", async ({
   await expect(
     page.locator('[data-active-tab="true"] .ProseMirror'),
   ).toContainText("First");
-  const read = await page.evaluate(async (url) => {
-    const bridge = await import(/* @vite-ignore */ url);
-    return bridge.getActiveDocument()?.text();
-  }, "/src/plugins/app-bridge.ts");
-  expect(read).toBe(file);
+  // Read once the editor is built: before, it has no text to give.
+  await expect
+    .poll(() =>
+      page.evaluate(async (url) => {
+        const bridge = await import(/* @vite-ignore */ url);
+        return bridge.getActiveDocument()?.text();
+      }, "/src/plugins/app-bridge.ts"),
+    )
+    .toBe(file);
 });
