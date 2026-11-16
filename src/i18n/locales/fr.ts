@@ -664,6 +664,8 @@ utiliser une.
     "La boutique de plugins nécessite une version plus récente de Textus. Mettez Textus à jour pour la voir.",
   errorImageTooBig: "L'image est vide ou dépasse 25 Mo.",
   errorNoFolder: "Ouvrez d'abord un dossier.",
+  errorPluginsNeedAllFiles:
+    "Les plugins ne peuvent pas lire ce dossier : Textus n'a pas accès à tous les fichiers. Rouvrez le dossier et choisissez « Continuer ».",
   errorPdfUnsupported: "L'export PDF n'est pas disponible sur ce système.",
   errorNoText: "Il ne contient aucun texte lisible.",
   errorUnreadable: "Ce fichier ne peut pas être lu.",

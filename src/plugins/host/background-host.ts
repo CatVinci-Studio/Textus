@@ -1,4 +1,5 @@
 import { grants } from "../grants";
+import { readableRoot } from "./scoped-root";
 import { guarded } from "../api-permissions";
 import { connectFrame, hostsContainer, sandboxedFrame } from "./frames";
 import { hostDocument } from "./host-document";
@@ -70,7 +71,7 @@ function scopeOf(run: BackgroundRun): PluginScope {
     root: () => {
       need("files.read");
       if (!run.root) throw new Error("The job was set with no folder open.");
-      return run.root;
+      return readableRoot(run.root);
     },
     ownWebview: () => {
       throw new Error("Background code has no webviews.");

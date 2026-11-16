@@ -630,6 +630,8 @@ type /name in a conversation to use one.
     "The plugin store needs a newer Textus. Update Textus to see it.",
   errorImageTooBig: "The picture is empty or larger than 25 MB.",
   errorNoFolder: "Open a folder first.",
+  errorPluginsNeedAllFiles:
+    "Plugins can't read this folder: Textus wasn't given access to all files. Open the folder again and choose Continue.",
   errorPdfUnsupported: "PDF export isn't available on this system.",
   errorNoText: "There is no readable text in it.",
   errorUnreadable: "This file can't be read.",

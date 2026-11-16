@@ -648,6 +648,8 @@ Habilidades ficam na pasta skills/ ao lado deste arquivo, um arquivo
     "A loja de plugins precisa de uma versão mais nova do Textus. Atualize o Textus para vê-la.",
   errorImageTooBig: "A imagem está vazia ou tem mais de 25 MB.",
   errorNoFolder: "Abra uma pasta primeiro.",
+  errorPluginsNeedAllFiles:
+    "Os plugins não conseguem ler esta pasta: o Textus não tem acesso a todos os arquivos. Abra a pasta de novo e escolha “Continuar”.",
   errorPdfUnsupported:
     "A exportação para PDF não está disponível neste sistema.",
   errorNoText: "Não há texto legível nele.",

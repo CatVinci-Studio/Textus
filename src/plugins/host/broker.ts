@@ -1,4 +1,5 @@
 import { ownError } from "../../utils/error-text";
+import { readableRoot } from "./scoped-root";
 import type { QuickPickItem } from "../../engine/controls/quick-pick-queue";
 import { logPluginError, logPluginMessage } from "../store/plugin-log";
 import type { Strings } from "../../i18n/strings";
@@ -331,7 +332,7 @@ export class PluginHost {
         this.need("files.read");
         const root = getWindowAccess()?.rootPath();
         if (!root) throw new Error(ownError("noFolder"));
-        return root;
+        return readableRoot(root);
       },
       ownWebview: (id) => {
         const record = webview(id);

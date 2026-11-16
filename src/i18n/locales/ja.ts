@@ -616,6 +616,8 @@ ${AI_NAME}への執筆の指示です。すべての文書に適用されます�
     "プラグインストアには新しい Textus が必要です。Textus をアップデートしてください。",
   errorImageTooBig: "画像が空か、25 MB を超えています。",
   errorNoFolder: "先にフォルダを開いてください。",
+  errorPluginsNeedAllFiles:
+    "プラグインはこのフォルダを読めません：Textus にすべてのファイルへのアクセスが許可されていません。フォルダを開き直して「続ける」を選んでください。",
   errorPdfUnsupported: "このシステムでは PDF を書き出せません。",
   errorNoText: "読み取れるテキストがありません。",
   errorUnreadable: "このファイルは読み込めません。",
