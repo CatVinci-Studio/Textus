@@ -81,7 +81,11 @@
 
 /* Under a row of tabs the page needn't clear a bar over it; a click below
    the text still lands in it, on the island's height. */
-.app-shell[data-tabs="bar"] .main-pane .editor-content {
+/* :where, so the format bar's clearance still wins, and typewriter mode
+   keeps its own room above the first line. */
+.app-shell[data-tabs="bar"]
+  .main-pane
+  .editor-content:where(:not(.typewriter-active)) {
   padding-top: 1.5rem;
 }
 
@@ -90,7 +94,10 @@
   .milkdown
   .ProseMirror:not(.editor-preview .ProseMirror) {
   min-height: calc(
-    (100vh - var(--window-bar-height) - var(--island-inset) - 7.5rem) /
+    (
+        100vh - var(--window-bar-height) - var(--island-inset) - 7.5rem -
+          var(--format-bar-top, 0px)
+      ) /
       var(--content-zoom, 1)
   );
 }

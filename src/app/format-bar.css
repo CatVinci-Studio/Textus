@@ -8,8 +8,12 @@
     36px * var(--chrome-scale) + var(--format-bar-bleed)
   );
 }
+/* What the bar takes off the page's top: none when it is hidden or on a
+   side. */
 .split-pane {
-  /* What the bar takes off the page's top: none when it is on a side. */
+  --format-bar-top: 0px;
+}
+.split-pane:has(> .format-bar) {
   --format-bar-top: var(--format-bar-height);
 }
 
