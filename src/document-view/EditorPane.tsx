@@ -131,7 +131,9 @@ function useKeptScroll(
   useLayoutEffect(() => () => leaveReading(tabId, reading.current), [tabId]);
   useLayoutEffect(() => {
     const scroller = el.current;
-    if (!isActive || !scroller) return;
+    // Shown is enough, in whichever island: only one kept out of sight
+    // waits to come back.
+    if (!scroller || (!isActive && scroller.clientHeight === 0)) return;
     const goBack = () => {
       const to = pending.current;
       const root = scroller.querySelector(".ProseMirror");

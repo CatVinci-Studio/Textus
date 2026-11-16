@@ -6,6 +6,7 @@ import {
   showConfirm,
   showMessage,
 } from "../engine/controls/app-dialog";
+import { placesSaved } from "../document/last-places";
 import { takeDiskText } from "../document/useExternalChangeReload";
 import { migrateDraftImages } from "../editor/images/image-migration";
 import { basename, parentDir } from "../utils/path";
@@ -224,6 +225,8 @@ export function useSaveTabs(opts: {
   const commitSaved = useCallback(
     async (tabId: string, path: string, content: string, auto: boolean) => {
       const patch = { savedContent: content, diskMtime: await statMtime(path) };
+      const was = liveTabs().find((tab) => tab.id === tabId)?.diskMtime;
+      placesSaved(path, was ?? null, patch.diskMtime);
       updateTab(tabId, patch);
       // Plugins listening for saves (version history) are told.
       emitPluginEvent("didSave", {
@@ -233,7 +236,7 @@ export function useSaveTabs(opts: {
       });
       if (!auto) emitPluginEvent("activity", { kind: "saved" });
     },
-    [updateTab],
+    [updateTab, liveTabs],
   );
 
   // "conflict": the file changed on disk and the user didn't overwrite it

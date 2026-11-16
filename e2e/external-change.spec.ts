@@ -1,5 +1,5 @@
 import { expect, test } from "@playwright/test";
-import { openApp } from "./helpers";
+import { emit, openApp } from "./helpers";
 import { openPath } from "./plugin-helpers";
 
 // A file changed on disk while its tab is open and has nothing unsaved -
@@ -278,4 +278,39 @@ test("the editor taking the focus scrolls nothing; typing brings the caret into 
   await expect(editor.locator("p", { hasText: "Line 150." })).toHaveText(
     "Line 150.!",
   );
+});
+
+test("a document shown again in the island not in use is where it was read", async ({
+  page,
+}) => {
+  const long = (name: string) =>
+    `# ${name}\n\n${Array.from({ length: 200 }, (_, i) => `${name} line ${i}.`).join("\n\n")}\n`;
+  await page.addInitScript(
+    (docs) => ((window as unknown as Record<string, unknown>).__devFs = docs),
+    { "/work/a.md": long("A"), "/work/b.md": long("B") },
+  );
+  await page.setViewportSize({ width: 1400, height: 780 });
+  await openApp(page);
+  await openPath(page, "/work/a.md");
+  const front = page.locator('[data-active-tab="true"]');
+  await expect(front.locator(".ProseMirror")).toContainText("A line 199");
+  await page.waitForTimeout(500);
+  await front.locator(".editor-scroll").hover();
+  await page.mouse.wheel(0, 1500);
+  await expect
+    .poll(() => front.locator(".editor-scroll").evaluate((el) => el.scrollTop))
+    .toBeGreaterThan(1000);
+  await page.waitForTimeout(500);
+  await openPath(page, "/work/b.md");
+  await expect(front.locator(".ProseMirror")).toContainText("B line 199");
+  // b.md takes an island of its own: a.md comes back in the one left
+  // behind, which is not the one in use.
+  await emit(page, "menu-split-right");
+  const a = page.locator(".editor-scroll:visible", { hasText: "A line 199" });
+  await expect(a).toHaveCount(1);
+  await expect(front.locator(".ProseMirror")).toContainText("B line 199");
+  await page.waitForTimeout(600);
+  expect(
+    Math.abs((await a.evaluate((el) => el.scrollTop)) - 1500),
+  ).toBeLessThan(40);
 });

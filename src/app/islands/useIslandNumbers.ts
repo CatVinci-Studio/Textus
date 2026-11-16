@@ -16,7 +16,9 @@ const TYPED_IN = ".cm-content, textarea";
  *  way (tab-editor.ts), as soon as it is built. */
 function focusTab(tabId: string, tries = 10): void {
   requestAnimationFrame(() => {
-    const view = tabInUse() === tabId ? tabElement(tabId) : null;
+    // Another tab is in use by now (a click elsewhere): the keys are its.
+    if (tabInUse() !== tabId) return;
+    const view = tabElement(tabId);
     if (view && focusTabEditor(tabId)) return;
     if (view?.querySelector(".editor-scroll")) {
       whenEditorBuilt(tabId, () => {

@@ -159,6 +159,10 @@ test("Zen shows the tab in use alone, and the split comes back after", async ({
   await aiButton(page).click();
   await expect(islands(page)).toHaveCount(2);
   await page.locator(".ProseMirror").first().click();
+  // The document's island is the one in use before Zen picks it.
+  await expect(
+    page.locator('[data-active-tab="true"] .ProseMirror'),
+  ).toHaveCount(1);
   await emit(page, "menu-toggle-zen-mode");
   await expect(islands(page)).toHaveCount(1);
   await expect(page.locator(".ai-tab:visible")).toHaveCount(0);
