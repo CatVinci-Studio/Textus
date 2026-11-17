@@ -17,9 +17,11 @@ it("closes the folder's saved documents and keeps unsaved ones and the rest", ()
     tab("c", "/w/other.md"),
     tab("d", "/w/notes-2/d.md"),
     tab("e", null),
+    // A plugin's page of a file in the folder (a .base) goes with it.
+    { ...tab("f", null), view: { resource: "/w/notes/all.base" } } as DocTab,
   ];
   expect(folderTabsToClose(tabs, "/w/notes")).toEqual({
-    close: ["a"],
+    close: ["a", "f"],
     blank: false,
   });
 });
