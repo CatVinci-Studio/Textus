@@ -38,7 +38,6 @@ const HOOKS_NOW = {
   "src/document-view/usePaperWriter.ts usePaperWriter": 12,
   "src/editor/find/useFindReplace.ts useFindReplace": 32,
   "src/engine/controls/tabs/useTabStrip.ts useTabStrip": 16,
-  "src/onboarding/useTutorial.ts useTutorial": 11,
   "src/playground/useWebDocuments.ts useWebDocuments": 12,
 };
 

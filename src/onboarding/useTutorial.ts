@@ -42,20 +42,38 @@ function loadProgress(): TutorialProgress {
 
 /** The tour's state: its step and practice tab, kept across relaunches by
  *  the step's id, so a step added later can't shift a saved run. */
-export function useTutorial(
-  /** Textus AI's switch. */
-  aiOn = true,
-) {
+/** The tour's progress, kept across launches. */
+function useKeptProgress() {
   const [progress, setProgress] = useState<TutorialProgress>(loadProgress);
-  // The stop lit within the step (its `stops`), from the first each time.
-  const [stop, setStop] = useState(0);
-
   useEffect(() => {
     setUiState("tutorialProgress", {
       ...progress,
       stepId: TUTORIAL_STEPS[progress.stepIndex].id,
     });
   }, [progress]);
+  return [progress, setProgress] as const;
+}
+
+/** Next, back and to a step by id, through `go`. */
+function useStepMoves(
+  go: (to: (p: TutorialProgress) => number | null) => void,
+) {
+  const next = useCallback(() => go((p) => p.stepIndex + 1), [go]);
+  const back = useCallback(() => go((p) => Math.max(0, p.stepIndex - 1)), [go]);
+  const goTo = useCallback(
+    (id: TutorialStepId) => go(() => stepIndexOf(id)),
+    [go],
+  );
+  return { next, back, goTo };
+}
+
+export function useTutorial(
+  /** Textus AI's switch. */
+  aiOn = true,
+) {
+  const [progress, setProgress] = useKeptProgress();
+  // The stop lit within the step (its `stops`), from the first each time.
+  const [stop, setStop] = useState(0);
 
   const go = useCallback((to: (p: TutorialProgress) => number | null) => {
     setStop(0);
@@ -66,22 +84,17 @@ export function useTutorial(
         ? IDLE
         : { ...p, stepIndex: at };
     });
-  }, []);
+  }, [setProgress]);
 
   const start = useCallback((tabId: string) => {
     setStop(0);
     setProgress({ active: true, stepIndex: 0, tabId });
-  }, []);
-  const next = useCallback(() => go((p) => p.stepIndex + 1), [go]);
-  const back = useCallback(() => go((p) => Math.max(0, p.stepIndex - 1)), [go]);
-  const goTo = useCallback(
-    (id: TutorialStepId) => go(() => stepIndexOf(id)),
-    [go],
-  );
+  }, [setProgress]);
+  const { next, back, goTo } = useStepMoves(go);
   const exit = useCallback(() => {
     setStop(0);
     setProgress(IDLE);
-  }, []);
+  }, [setProgress]);
 
   const step = TUTORIAL_STEPS[progress.stepIndex];
   const { active } = progress;
@@ -100,7 +113,7 @@ export function useTutorial(
   // pathless draft, so it never survives a relaunch.
   const rebindTab = useCallback((tabId: string) => {
     setProgress((p) => (p.active ? { ...p, tabId } : p));
-  }, []);
+  }, [setProgress]);
 
   /** The practice tab's AI: the real thing on the step that uses it, muted
    *  everywhere else in the tour. */
