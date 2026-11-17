@@ -58,35 +58,15 @@ interface DragHoverPreview {
   x: number;
 }
 
-/** What Rust sends while a floating tab is over this window: over its tab
- *  row (`row`), or over its documents, where it would open split. */
-interface DragHover extends DragHoverPreview {
-  y: number;
-  row: boolean;
-}
-
-export function useTabDragMerge(opts: {
-  tabsRef: MutableRefObject<DocTab[]>;
-  /** A handed-off document must carry the edit the editor's debounce still
-   *  holds. */
-  liveTabs: () => DocTab[];
-  t: Strings;
-  removeTab: (id: string) => void;
-  setTabs: Dispatch<SetStateAction<DocTab[]>>;
-  setActiveTabId: (id: string) => void;
-}) {
-  const { tabsRef, liveTabs, t, removeTab, setTabs, setActiveTabId } = opts;
-
-  // A floating tab hovering this window's tab row; x is window-local.
-  const [dragHoverPreview, setDragHoverPreview] =
-    useState<DragHoverPreview | null>(null);
-  // This window's top-left corner in global logical points, cached for one
-  // hover: the window can't move while something is dragged over it.
-  const previewWinRef = useRef<{ left: number; top: number } | null>(null);
-  // A tab from another window over the documents: room made where it
-  // will open.
-  const arrival = useMemo(() => arrivalPreview(), []);
-
+/** A single-tab window merges by dragging the whole window onto another's
+ *  tab row. Tauri has no "drag ended" event, so Rust streams cursor and
+ *  button ticks; on entering a row the window hands off its document and is
+ *  destroyed, the one operation macOS honors mid-drag. */
+function useWindowDragMerge(
+  tabsRef: MutableRefObject<DocTab[]>,
+  liveTabs: () => DocTab[],
+  t: Strings,
+) {
   const hitTestWindow = useCallback(
     async (screenX: number, screenY: number): Promise<string | null> => {
       const selfLabel = thisWindow().label;
@@ -106,45 +86,6 @@ export function useTabDragMerge(opts: {
     [],
   );
 
-  // A pulled-out tab leaves this window for good: Rust carries its live
-  // content to wherever the mouse releases, so the drag outlives this DOM.
-  const handleTabDetach = useCallback(
-    async (id: string) => {
-      const tab = liveTabs().find((tb) => tb.id === id);
-      if (!tab) return;
-      try {
-        await windowIpc.startFloatingTabDrag(
-          floatingDragArgs(tab, t, false),
-          rowStrip(),
-          dragPillLook(),
-        );
-      } catch {
-        return; // drag couldn't start (unsupported platform / one already active) - keep the tab
-      }
-      removeTab(id);
-    },
-    [liveTabs, removeTab, t],
-  );
-
-  // The tab's right-click Move to New Window, on every desktop.
-  const moveTabToNewWindow = useCallback(
-    async (id: string) => {
-      const tab = liveTabs().find((tb) => tb.id === id);
-      if (!tab) return;
-      try {
-        await windowIpc.moveTabToNewWindow(floatingDragArgs(tab, t, false));
-      } catch {
-        return;
-      }
-      removeTab(id);
-    },
-    [liveTabs, removeTab, t],
-  );
-
-  // A single-tab window merges by dragging the whole window onto another's
-  // tab row. Tauri has no "drag ended" event, so Rust streams cursor and
-  // button ticks; on entering a row the window hands off its document and is
-  // destroyed, the one operation macOS honors mid-drag.
   const windowDragRef = useRef<"idle" | "watching" | "handed-off">("idle");
   const latest = useLatest({ hitTestWindow, liveTabs, t });
 
@@ -204,6 +145,73 @@ export function useTabDragMerge(opts: {
 
     return unlistenAll(unlistenTick, unlistenMoved);
   }, [latest, tabsRef]);
+}
+
+/** What Rust sends while a floating tab is over this window: over its tab
+ *  row (`row`), or over its documents, where it would open split. */
+interface DragHover extends DragHoverPreview {
+  y: number;
+  row: boolean;
+}
+
+export function useTabDragMerge(opts: {
+  tabsRef: MutableRefObject<DocTab[]>;
+  /** A handed-off document must carry the edit the editor's debounce still
+   *  holds. */
+  liveTabs: () => DocTab[];
+  t: Strings;
+  removeTab: (id: string) => void;
+  setTabs: Dispatch<SetStateAction<DocTab[]>>;
+  setActiveTabId: (id: string) => void;
+}) {
+  const { tabsRef, liveTabs, t, removeTab, setTabs, setActiveTabId } = opts;
+
+  // A floating tab hovering this window's tab row; x is window-local.
+  const [dragHoverPreview, setDragHoverPreview] =
+    useState<DragHoverPreview | null>(null);
+  // This window's top-left corner in global logical points, cached for one
+  // hover: the window can't move while something is dragged over it.
+  const previewWinRef = useRef<{ left: number; top: number } | null>(null);
+  // A tab from another window over the documents: room made where it
+  // will open.
+  const arrival = useMemo(() => arrivalPreview(), []);
+
+  // A pulled-out tab leaves this window for good: Rust carries its live
+  // content to wherever the mouse releases, so the drag outlives this DOM.
+  const handleTabDetach = useCallback(
+    async (id: string) => {
+      const tab = liveTabs().find((tb) => tb.id === id);
+      if (!tab) return;
+      try {
+        await windowIpc.startFloatingTabDrag(
+          floatingDragArgs(tab, t, false),
+          rowStrip(),
+          dragPillLook(),
+        );
+      } catch {
+        return; // drag couldn't start (unsupported platform / one already active) - keep the tab
+      }
+      removeTab(id);
+    },
+    [liveTabs, removeTab, t],
+  );
+
+  // The tab's right-click Move to New Window, on every desktop.
+  const moveTabToNewWindow = useCallback(
+    async (id: string) => {
+      const tab = liveTabs().find((tb) => tb.id === id);
+      if (!tab) return;
+      try {
+        await windowIpc.moveTabToNewWindow(floatingDragArgs(tab, t, false));
+      } catch {
+        return;
+      }
+      removeTab(id);
+    },
+    [liveTabs, removeTab, t],
+  );
+
+  useWindowDragMerge(tabsRef, liveTabs, t);
 
   // Where in this window a global point is, from the corner one hover
   // cached.
