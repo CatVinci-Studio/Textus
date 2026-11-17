@@ -7,6 +7,22 @@ vi.mock("../motion/motion", () => ({
 }));
 vi.mock("../../platform/os", () => ({ isMacPlatform: () => true }));
 vi.mock("../../platform/capabilities", () => ({ isIOSApp: false }));
+// The native side's word of the finger (trackpad.rs), told by each test.
+const touch = vi.hoisted(() => ({
+  down: null as boolean | null,
+  heard: new Set<(down: boolean) => void>(),
+}));
+vi.mock("../../platform/trackpad", () => ({
+  fingerDown: () => touch.down,
+  onTrackpadTouch: (listener: (down: boolean) => void) => {
+    touch.heard.add(listener);
+    return () => touch.heard.delete(listener);
+  },
+}));
+const finger = (down: boolean) => {
+  touch.down = down;
+  for (const listener of touch.heard) listener(down);
+};
 
 import { elasticOverscroll } from "./elastic-overscroll";
 
@@ -39,7 +55,10 @@ function swipe(el: HTMLElement, deltas: number[]) {
 
 describe("the Mac's give at a document's end", () => {
   beforeEach(() => vi.useFakeTimers());
-  afterEach(() => vi.useRealTimers());
+  afterEach(() => {
+    vi.useRealTimers();
+    touch.down = null;
+  });
 
   it("pulls the text after the finger past the top", () => {
     const { scroller, content, stop } = page();
@@ -78,6 +97,22 @@ describe("the Mac's give at a document's end", () => {
     );
     // Lifted without moving: it springs back.
     vi.advanceTimersByTime(500);
+    expect(content.style.translate).toBe("");
+    expect(springs).toHaveLength(1);
+    stop();
+  });
+
+  it("told of the finger, holds a still pull until it lifts, then springs back at once", () => {
+    const { scroller, content, springs, stop } = page();
+    finger(true);
+    swipe(scroller, [-8, -9, -8, -10, -8]);
+    const held = content.style.translate;
+    // Held still well past any pause a guess would take for a lift.
+    vi.advanceTimersByTime(2000);
+    expect(content.style.translate).toBe(held);
+    expect(springs).toHaveLength(0);
+    // Lifted: back now, not after a wait.
+    finger(false);
     expect(content.style.translate).toBe("");
     expect(springs).toHaveLength(1);
     stop();

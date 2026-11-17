@@ -215,6 +215,9 @@ objc2-app-kit = { version = "0.3", default-features = false, features = [
     # Roman input only while Vim's normal mode holds the keys (commands/input_source.rs).
     "NSTextInputContext",
     "NSTextView",
+    # A finger lifted from the trackpad (trackpad.rs).
+    "NSEvent",
+    "block2",
 ] }
 # Plugins' notifications and their clicks (src/schedule/notify/macos.rs).
 # Already in the lock file; links the system's UserNotifications framework.
