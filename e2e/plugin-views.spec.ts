@@ -102,6 +102,78 @@ test("each official plugin's file opens in a tab of its own, drawn", async ({
   expect(Math.abs(off)).toBeLessThanOrEqual(1);
 });
 
+test("an Obsidian Excalidraw note is drawn and edited, saved as it was kept", async ({
+  page,
+}) => {
+  test.skip(!hasPlugin("catvinci.excalidraw"), "no plugins checkout");
+  const scene = {
+    type: "excalidraw",
+    version: 2,
+    elements: [
+      {
+        id: "t1",
+        type: "text",
+        x: 40,
+        y: 40,
+        width: 80,
+        height: 25,
+        text: "Hello",
+        originalText: "Hello",
+        fontSize: 20,
+        fontFamily: 5,
+        version: 1,
+        versionNonce: 1,
+      },
+    ],
+    appState: {},
+    files: {},
+  };
+  const path = "/work/notes/sketch.excalidraw.md";
+  await openWithPlugins(page, {
+    plugins: { "catvinci.excalidraw": permissions("catvinci.excalidraw") },
+    folder: {
+      [path]: [
+        "---",
+        "excalidraw-plugin: parsed",
+        "---",
+        "# Excalidraw Data",
+        "## Text Elements",
+        "Hello ^t1",
+        "",
+        "%%",
+        "## Drawing",
+        "```json",
+        JSON.stringify(scene),
+        "```",
+        "%%",
+      ].join("\n"),
+    },
+  });
+  await openPath(page, path);
+  const frame = tabFrame(page);
+  const canvas = frame.locator("canvas.interactive");
+  // Shown once its fonts are in, or given up on where none are served.
+  await expect(canvas).toBeVisible({ timeout: 20_000 });
+  // A rectangle drawn with Excalidraw's own tool.
+  await frame.locator('label:has([data-testid="toolbar-rectangle"])').click();
+  const box = (await canvas.boundingBox())!;
+  await page.mouse.move(box.x + 300, box.y + 200);
+  await page.mouse.down();
+  await page.mouse.move(box.x + 420, box.y + 300, { steps: 5 });
+  await page.mouse.up();
+  const saved = () =>
+    page.evaluate(
+      (p) =>
+        (window as unknown as { __devFs: Record<string, string> }).__devFs[p],
+      path,
+    );
+  await expect.poll(saved).toContain('"type": "rectangle"');
+  const text = await saved();
+  expect(text).toMatch(/^---\nexcalidraw-plugin: parsed\n---\n/);
+  expect(text).toContain("## Text Elements\nHello ^t1\n");
+  expect(text).toContain("## Drawing\n```json\n");
+});
+
 test("a text file no plugin opens shows read-only, not as Markdown to rewrite", async ({
   page,
 }) => {
