@@ -32,12 +32,6 @@
   padding-bottom: calc(48px + var(--space-2));
 }
 
-/* The sheet runs under the home indicator on a phone: the page's end
-   stays above it. */
-:root[data-window-chrome="mobile"] .doc-end {
-  padding-bottom: var(--safe-bottom);
-}
-
 /* A touch screen's count: under the document's last block, in its flow. */
 .doc-end .word-count {
   margin: var(--space-4) 0 0;
