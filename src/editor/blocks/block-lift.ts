@@ -11,15 +11,13 @@ import "./block-lift.css";
  *  in whichever editor that is (`landing`). */
 export interface Pulled {
   pos: number | null;
-  /** The block would land where it is: its place stays, outlined. */
-  staying: boolean;
   landing: number | null;
   room: HTMLElement | null;
 }
 
-/** The pulled block's place, and the room it will take: its own place a
- *  dashed outline while it would stay; else gone, and the room open where
- *  it lands, the blocks around moved aside. */
+/** The pulled block's place, and the room it will take: the block out of
+ *  the page, and the room open where it lands - its own place while it
+ *  would stay - the blocks around moved aside. */
 export function pulledDecorations(
   doc: ProseNode,
   pulled: Pulled | null,
@@ -30,7 +28,7 @@ export function pulledDecorations(
   if (node && pulled.pos !== null)
     decorations.push(
       Decoration.node(pulled.pos, pulled.pos + node.nodeSize, {
-        class: pulled.staying ? "block-drag-slot" : "block-drag-gone",
+        class: "block-drag-gone",
       }),
     );
   if (pulled.landing !== null && pulled.room)
@@ -43,10 +41,11 @@ export function pulledDecorations(
 }
 
 /** The room a pulled block takes where it will land: its height, and its
- *  margins, so the blocks around stand as they will. */
-export function roomFor(source: HTMLElement): HTMLElement {
+ *  margins, so the blocks around stand as they will; its outline the
+ *  lifted copy's own (`lifted`), where the copy would come to rest. */
+export function roomFor(source: HTMLElement, lifted: HTMLElement): HTMLElement {
   const room = document.createElement("div");
-  room.className = "block-drag-slot block-drag-room";
+  room.className = "block-drag-room";
   room.setAttribute("aria-hidden", "true");
   room.contentEditable = "false";
   const style = getComputedStyle(source);
@@ -55,7 +54,26 @@ export function roomFor(source: HTMLElement): HTMLElement {
     marginTop: style.marginTop,
     marginBottom: style.marginBottom,
   });
+  const frame = getComputedStyle(lifted);
+  room.style.setProperty("--room-top", frame.marginTop);
+  room.style.setProperty("--room-width", `${lifted.offsetWidth}px`);
+  // A list item put outside a list lands in a list of its own: its
+  // outline stands in that list's indent.
+  const left = parseFloat(frame.marginLeft) || 0;
+  const indent =
+    source.tagName === "LI" && source.parentElement
+      ? parseFloat(getComputedStyle(source.parentElement).paddingLeft) || 0
+      : 0;
+  room.dataset.left = String(left);
+  room.dataset.indent = String(indent);
   return room;
+}
+
+/** The room's outline where it opens: in a list (`inList`), or outside. */
+export function placeRoom(room: HTMLElement, inList: boolean) {
+  const left =
+    Number(room.dataset.left) + (inList ? 0 : Number(room.dataset.indent));
+  room.style.setProperty("--room-left", `${left}px`);
 }
 
 /** The blocks that move aside as the room opens and closes: an editor's
@@ -69,15 +87,27 @@ export const movingBlocks = (view: EditorView): Element[] => [
  *  marker, numbered as it was) and the editor's rules and type. */
 export function blockLook(source: HTMLElement, view: EditorView) {
   return (copy: HTMLElement): HTMLElement => {
-    copy.classList.remove("ProseMirror-selectednode", "block-drag-slot");
+    copy.classList.remove("ProseMirror-selectednode", "block-drag-gone");
+    // What draws it (a task's box, its state) is in its data- attributes,
+    // which a lifted copy is cleared of.
+    for (const attr of source.attributes)
+      if (attr.name.startsWith("data-"))
+        copy.setAttribute(attr.name, attr.value);
     let inner = copy;
     const list = source.parentElement;
     if (source.tagName === "LI" && list) {
       const wrap = list.cloneNode(false) as HTMLElement;
+      // Numbered by a counter from the list's start: this item's number.
       if (list.tagName === "OL") {
-        const first = Number(list.getAttribute("start") ?? 1);
+        const before = Number.parseInt(
+          getComputedStyle(list).getPropertyValue("--textus-ol-start"),
+          10,
+        );
         const index = [...list.children].indexOf(source);
-        wrap.setAttribute("start", String(first + index));
+        wrap.style.setProperty(
+          "--textus-ol-start",
+          String((Number.isNaN(before) ? 0 : before) + index),
+        );
       }
       wrap.append(copy);
       inner = wrap;

@@ -4,4 +4,4 @@
 
 ### Improved
 
-- A block dragged by its handle lifts off the page as itself, room opens where it will land and the blocks around move aside, as a dragged tab does; it can also be dragged into a document open beside it, and with Option (Ctrl on Windows and Linux) a copy goes instead.
+- A block dragged by its handle lifts off the page as itself, in a close frame; room opens where it will land and the blocks around move aside, as a dragged tab does; it can also be dragged into a document open beside it, and with Option (Ctrl on Windows and Linux) a copy goes instead.

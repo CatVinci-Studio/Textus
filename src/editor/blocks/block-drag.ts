@@ -17,6 +17,7 @@ import {
   blockLook,
   movingBlocks,
   openEditors,
+  placeRoom,
   roomFor,
   type Pulled,
 } from "./block-lift";
@@ -58,7 +59,7 @@ export function dragBlock(
   const source = view.nodeDOM(block.pos) as HTMLElement | null;
   if (!source) return;
   const startState = view.state;
-  const room = roomFor(source);
+  let room: HTMLElement | null = null;
   let copy: ReturnType<typeof liftedCopy> | null = null;
   let aim: Aim = { view, landing: null };
   let scrolling = 0;
@@ -97,6 +98,39 @@ export function dragBlock(
     });
   };
 
+  // Each editor's places as it stood before the drag touched it, the
+  // pulled block taken out: read live, the room opening and the block's
+  // place closing moved them under the pointer, and the aim flipped back
+  // and forth.
+  const end = block.pos + block.node.nodeSize;
+  const style = getComputedStyle(source);
+  const tall =
+    source.offsetHeight +
+    Math.max(
+      parseFloat(style.marginTop) || 0,
+      parseFloat(style.marginBottom) || 0,
+    );
+  const layouts = new Map<EditorView, ReturnType<typeof measured>>();
+  const layoutOf = (target: EditorView, root: HTMLElement) => {
+    let gaps = layouts.get(target);
+    if (!gaps) {
+      gaps = measured(target, root);
+      if (target === view)
+        gaps = gaps.map((g) => (g.pos >= end ? { ...g, y: g.y - tall } : g));
+      layouts.set(target, gaps);
+    }
+    return gaps;
+  };
+  /** The places as they stand with the room open at `at` (null: none):
+   *  what is after it moved down by the block's height. */
+  const withRoom = (gaps: ReturnType<typeof measured>, at: number | null) =>
+    at === null
+      ? gaps
+      : gaps.map((g) => ({
+          ...g,
+          y: g.y + (g.pos > at ? tall : g.pos === at ? tall / 2 : 0),
+        }));
+
   /** The pointer in `root`'s units: the document's zoom taken off. */
   const inRoot = (root: HTMLElement, x: number, y: number) => {
     const r = root.getBoundingClientRect();
@@ -122,7 +156,16 @@ export function dragBlock(
     const root = openEditors.get(target);
     if (!root) return { view: target, landing: null };
     const at = inRoot(root, x, y);
-    const gap = nearestGap(measured(target, root), at.x, at.y);
+    // Where the room is open in it now: its own place while it stays.
+    const open =
+      target === view
+        ? aim.view === view
+          ? (aim.landing ?? block.pos)
+          : null
+        : aim.view === target
+          ? aim.landing
+          : null;
+    const gap = nearestGap(withRoom(layoutOf(target, root), open), at.x, at.y);
     if (!gap) return { view: target, landing: null };
     const fits =
       target === view
@@ -134,6 +177,13 @@ export function dragBlock(
   /** What each editor shows of `next`, the blocks around sliding aside. */
   const showAim = (next: Aim) => {
     if (next.view === aim.view && next.landing === aim.landing) return;
+    if (room) {
+      const at =
+        next.view === view ? (next.landing ?? block.pos) : next.landing;
+      const parent =
+        at === null ? "" : next.view.state.doc.resolve(at).parent.type.name;
+      placeRoom(room, /^(bullet|ordered)_list$/.test(parent));
+    }
     const views = new Set([view, aim.view, next.view]);
     const blocks = [...views].flatMap(movingBlocks);
     flip(blocks, () => {
@@ -141,16 +191,15 @@ export function dragBlock(
       if (next.view !== view)
         show(next.view, {
           pos: null,
-          staying: false,
           landing: next.landing,
           room: next.landing === null ? null : room,
         });
+      // At home, the room stands in its own place while it would stay.
       const home = next.view === view;
       show(view, {
         pos: block.pos,
-        staying: home && next.landing === null,
-        landing: home ? next.landing : null,
-        room: home && next.landing !== null ? room : null,
+        landing: home ? (next.landing ?? block.pos) : null,
+        room: home ? room : null,
       });
     });
     aim = next;
@@ -178,11 +227,16 @@ export function dragBlock(
   };
 
   const lift = (x: number, y: number) => {
+    const root = openEditors.get(view);
+    if (root) layoutOf(view, root);
     copy = liftedCopy(source, {
       keep: true,
+      fit: true,
       wrap: blockLook(source, view),
     });
-    show(view, { pos: block.pos, staying: true, landing: null, room: null });
+    room = roomFor(source, copy.element);
+    placeRoom(room, block.node.type.name === "list_item");
+    show(view, { pos: block.pos, landing: block.pos, room });
     last = { x, y };
     place(x, y);
   };

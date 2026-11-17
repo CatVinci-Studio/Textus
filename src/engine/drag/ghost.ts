@@ -76,20 +76,26 @@ export function dragGhost(text: string, className: string): DragGhost {
  *  from there, so it stays under the point it was taken by: for an item
  *  its own clipping box would hide (a rail icon, a document's block that
  *  may land in another document). `wrap` puts the copy inside what gives
- *  it its look (a block's list and editor); it is drawn at `node`'s zoom.
+ *  it its look (a block's list and editor); it is drawn at `node`'s zoom,
+ *  and with `fit` only as wide as what it holds.
  *  The item itself is left hidden until the copy goes, unless `keep`. */
 export function liftedCopy(
   node: HTMLElement,
   {
     wrap,
     keep = false,
+    fit = false,
     className = "",
   }: {
     wrap?: (copy: HTMLElement) => HTMLElement;
     keep?: boolean;
+    /** As wide as its content, at most `node`'s width. */
+    fit?: boolean;
     className?: string;
   } = {},
 ): {
+  /** What follows the pointer. */
+  readonly element: HTMLElement;
   moveBy(dx: number, dy: number): void;
   /** Flies to `to`'s start and fades there (the land spring), then goes. */
   land(to: DOMRect): void;
@@ -105,11 +111,13 @@ export function liftedCopy(
   lifted.setAttribute("aria-hidden", "true");
   lifted.classList.add("tx-drag-ghost", "is-lifted");
   if (className) lifted.classList.add(...className.split(" "));
+  const width = `${(box.right - box.left) / zoom}px`;
   Object.assign(lifted.style, {
     left: "0",
     top: "0",
-    width: `${(box.right - box.left) / zoom}px`,
-    height: `${(box.bottom - box.top) / zoom}px`,
+    ...(fit
+      ? { maxWidth: width }
+      : { width, height: `${(box.bottom - box.top) / zoom}px` }),
     transformOrigin: "0 0",
     transform: zoom === 1 ? "" : `scale(${zoom})`,
   });
@@ -126,6 +134,7 @@ export function liftedCopy(
     if (!keep) node.style.visibility = "";
   };
   return {
+    element: lifted,
     moveBy,
     land(to) {
       const flight = animate(

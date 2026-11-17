@@ -88,6 +88,51 @@ test("a block let go: its copy flies to where it landed, then goes", async ({
   ]);
 });
 
+test("a block pulled slowly past its neighbours never flips back and forth", async ({
+  page,
+}) => {
+  await openApp(page, { settings: { language: "en" } });
+  await pasteMarkdown(page, "# Title line\n\n- one\n- two\n- three\n\nEnd");
+  const title = (await page.locator(`${editor} h1`).boundingBox())!;
+  await page.mouse.move(title.x + 30, title.y + title.height / 2);
+  const grip = (await page
+    .locator(`${handle} .block-handle-grip`)
+    .boundingBox())!;
+  const x = grip.x + grip.width / 2;
+  const y0 = grip.y + grip.height / 2;
+  await page.mouse.move(x, y0);
+  await page.mouse.down();
+  // Where the room is: which of the editor's children (its own place
+  // while it would stay); none before the drag begins.
+  const aim = () =>
+    page.evaluate((sel) => {
+      const kids = [...document.querySelector(sel)!.children];
+      const room = kids.findIndex((k) =>
+        k.classList.contains("block-drag-room"),
+      );
+      return room >= 0 ? `room@${room}` : null;
+    }, editor);
+  const seen: string[] = [];
+  for (let dy = 0; dy <= 160; dy += 2) {
+    await page.mouse.move(x, y0 + dy);
+    const now = await aim();
+    if (now && seen.at(-1) !== now) seen.push(now);
+  }
+  for (let dy = 160; dy >= -10; dy -= 2) {
+    await page.mouse.move(x, y0 + dy);
+    const now = await aim();
+    if (now && seen.at(-1) !== now) seen.push(now);
+  }
+  await page.keyboard.press("Escape");
+  await page.mouse.up();
+  // Down, then back up: the room only ever moves one way at a time.
+  const at = seen.map((v) => Number(v.slice(5)));
+  const turn = at.indexOf(Math.max(...at));
+  expect(at.length).toBeGreaterThan(2);
+  for (let i = 1; i < at.length; i++)
+    expect(i <= turn ? at[i] > at[i - 1] : at[i] < at[i - 1]).toBe(true);
+});
+
 test("a list item's handle stays with it across the markers; pulled, the item moves", async ({
   page,
 }) => {

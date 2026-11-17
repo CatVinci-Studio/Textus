@@ -2,28 +2,31 @@
    block itself lifted off the page under the pointer, the room it will
    take open where it lands, the blocks around moved aside. */
 
-/* Its text where it was, on the shared lifted look (the popover's
-   surface and shadow), the sheet reaching a little past it. */
+/* Inside the document: its own content at its own size, a hairline frame
+   close around it and a light shadow - not grown, not a sheet. */
 .block-drag-lift.tx-drag-ghost {
+  scale: none;
+  /* Its text wraps as on the page: the frame sits outside it. */
   box-sizing: content-box;
-  margin: -9px -13px;
-  padding: 8px 12px;
-  /* Its edge, as the drag pill's: on a dark page the shadow alone is lost. */
+  width: fit-content;
+  margin: -5px -9px;
+  padding: 4px 8px;
   border: 1px solid var(--ui-border);
-  border-radius: var(--shape-m);
+  border-radius: var(--shape-s);
+  box-shadow: var(--shadow-1);
   color: var(--doc-text, var(--ui-text));
 }
 
 /* A list item in its list as it stood, the list's indent taken off; the
-   sheet reaches past its marker. */
+   frame takes in its marker. */
 .block-drag-lift > .milkdown > :is(ul, ol) {
   margin: 0;
   padding: 0;
 }
 
 .block-drag-lift.tx-drag-ghost:has(> .milkdown > :is(ul, ol)) {
-  margin-left: -37px;
-  padding-left: 36px;
+  margin-left: -29px;
+  padding-left: 28px;
 }
 
 .block-drag-lift > .milkdown > *,
@@ -32,25 +35,28 @@
   margin-bottom: 0;
 }
 
-/* Where it will land, and where it was while it would stay there: the
-   islands' quiet dashed outline. */
-.milkdown .block-drag-slot {
-  border-radius: var(--shape-s);
-  background: var(--drop-room-slot) center / 100% 100% no-repeat;
-}
-
-.milkdown .block-drag-slot > *,
-.milkdown li.block-drag-slot::before {
-  visibility: hidden;
-}
-
+/* Where it will land - in its own place while it would stay - the room
+   it takes: as tall as the block, its outline the lifted copy's own, the
+   islands' quiet dashed one. */
 .milkdown .block-drag-room {
+  position: relative;
   display: block;
   list-style: none;
   pointer-events: none;
 }
 
-/* Off to land somewhere else: its room is open there. */
+.milkdown .block-drag-room::before {
+  position: absolute;
+  top: var(--room-top, 0);
+  bottom: var(--room-top, 0);
+  left: var(--room-left, 0);
+  width: var(--room-width, 100%);
+  border-radius: var(--shape-s);
+  background: var(--drop-room-slot) center / 100% 100% no-repeat;
+  content: "";
+}
+
+/* Out of the page while it is carried: its room stands for it. */
 .milkdown .block-drag-gone {
   display: none;
 }
