@@ -1,5 +1,6 @@
 import type { EditorView } from "@milkdown/kit/prose/view";
 import { trackDrag } from "../../engine/drag/pointer-drag";
+import { animate } from "../../engine/motion/motion";
 import { passedCount, shiftAt } from "../../engine/drag/row";
 import {
   CellSelection,
@@ -217,12 +218,37 @@ export function attachGrips(options: {
         sheet.textContent = rules.join("\n");
       },
       end: (_x, _y, dropped) => {
+        // Where the lifted cells are drawn as the hand lets go.
+        const cells = (i: number) => [
+          ...document.querySelectorAll<HTMLElement>(
+            axis === "row" ? `${place(i)} > *` : place(i),
+          ),
+        ];
+        const held = cells(from).map((el) => el.getBoundingClientRect());
         sheet.textContent = "";
         wrapper.removeAttribute("data-dragging");
         wrapper.classList.remove("tx-making-room");
         dragging = null;
         const table = tableNow();
-        if (!dropped || !table || to === from) return;
+        const moved = !!dropped && !!table && to !== from;
+        // They glide from there into their place: the new one, or home.
+        const land = () =>
+          cells(moved ? to : from).forEach((el, i) => {
+            const was = held[i];
+            if (!was) return;
+            const now = el.getBoundingClientRect();
+            animate(
+              el,
+              [
+                {
+                  transform: `translate(${was.left - now.left}px, ${was.top - now.top}px)`,
+                },
+                { transform: "none" },
+              ],
+              { duration: "--dur-land", easing: "--ease-land" },
+            );
+          });
+        if (!moved) return land();
         const offset = axis === "row" ? 1 : 0;
         // The move reads its row or column off the selection: picked first,
         // wherever the caret was.
@@ -234,6 +260,7 @@ export function attachGrips(options: {
           pos: table.pos + 1,
           select: true,
         })(view.state, view.dispatch);
+        land();
         view.focus();
       },
     });

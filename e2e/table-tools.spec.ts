@@ -263,7 +263,7 @@ test("the + strips under and beside a table add a row and a column, reached from
   await expect(table.locator("tr").first().locator("th")).toHaveCount(3);
 });
 
-test("a row or column added opens up: the new cells fade in, the rest make room", async ({
+test("a row or column added opens up, and one dragged glides into its place", async ({
   page,
 }) => {
   const table = await open(page, TABLE, true);
@@ -284,6 +284,19 @@ test("a row or column added opens up: the new cells fade in, the rest make room"
   await expect(table.locator("tr").first().locator("th")).toHaveCount(3);
   expect(await moving("tr:first-child th >> nth=1")).toBe(true);
   expect(await moving("tr:first-child th >> nth=2")).toBe(true);
+  // The last row pulled to the top lands there, not snapped.
+  await table.locator("tr:last-child td").first().hover();
+  const grip = page.locator(".table-grip-row");
+  const g = (await grip.boundingBox())!;
+  const top = (await table.locator("td").first().boundingBox())!;
+  await page.mouse.move(g.x + g.width / 2, g.y + g.height / 2);
+  await page.mouse.down();
+  await page.mouse.move(g.x + g.width / 2, top.y + 2, { steps: 8 });
+  await page.mouse.up();
+  await expect(table.locator("tbody tr:nth-child(2) td").first()).toHaveText(
+    "",
+  );
+  expect(await moving("tbody tr:nth-child(2) td >> nth=0")).toBe(true);
 });
 
 test.describe("on a touch screen", () => {
