@@ -128,13 +128,18 @@ export function dragBlock(
       end: (_x, _y, dropped) => {
         cancelAnimationFrame(scrolling);
         line.remove();
-        ghost?.remove();
         // The document changed under the drag (an AI edit landing): its
         // places are gone, so nothing moves.
-        if (dropped && landing !== null && view.state.doc === doc) {
-          const tr = moveTo(view.state, block, landing);
-          if (tr) view.dispatch(tr);
-        }
+        const tr =
+          dropped && landing !== null && view.state.doc === doc
+            ? moveTo(view.state, block, landing)
+            : null;
+        if (tr) view.dispatch(tr);
+        // The copy flies to where the block is now, moved or not.
+        const now = view.nodeDOM(tr ? view.state.selection.from : block.pos);
+        if (ghost && now instanceof HTMLElement)
+          ghost.land(now.getBoundingClientRect());
+        else ghost?.remove();
         view.focus();
         ended();
       },

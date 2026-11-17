@@ -58,6 +58,32 @@ test("a block pulled by its handle moves where it is let go, in one undo step", 
   ]);
 });
 
+test("a block let go: its copy flies to where it landed, then goes", async ({
+  page,
+}) => {
+  await openApp(page, { settings: { language: "en" }, animations: true });
+  await pasteMarkdown(page, "First\n\nSecond\n\nThird");
+  await hover(page, "First");
+  const grip = (await page
+    .locator(`${handle} .block-handle-grip`)
+    .boundingBox())!;
+  const third = (await block(page, "Third").boundingBox())!;
+  await page.mouse.move(grip.x + grip.width / 2, grip.y + grip.height / 2);
+  await page.mouse.down();
+  await page.mouse.move(third.x + 40, third.y + third.height - 2, { steps: 8 });
+  await page.mouse.up();
+  const ghost = page.locator(".block-drag-ghost");
+  expect(
+    await ghost.evaluate((el) => el.getAnimations().length),
+  ).toBeGreaterThan(0);
+  await expect(ghost).toHaveCount(0);
+  await expect(page.locator(`${editor} > p`)).toHaveText([
+    "Second",
+    "Third",
+    "First",
+  ]);
+});
+
 test("＋ adds the block picked below; ⋮⋮ turns it into another kind or deletes it", async ({
   page,
 }) => {
@@ -204,17 +230,20 @@ test.describe("under a finger", () => {
     await heading.tap();
     const caret = heading.locator(".heading-fold");
     await expect(caret).toBeVisible();
-    // What a finger on the caret's middle lands on is the caret.
-    expect(
-      await caret.evaluate((el) => {
-        const r = el.getBoundingClientRect();
-        const hit = document.elementFromPoint(
-          r.left + r.width / 2,
-          r.top + r.height / 2,
-        );
-        return !!hit && el.contains(hit);
-      }),
-    ).toBe(true);
+    // What a finger on the caret's middle lands on is the caret, once it
+    // is shown.
+    await expect
+      .poll(() =>
+        caret.evaluate((el) => {
+          const r = el.getBoundingClientRect();
+          const hit = document.elementFromPoint(
+            r.left + r.width / 2,
+            r.top + r.height / 2,
+          );
+          return !!hit && el.contains(hit);
+        }),
+      )
+      .toBe(true);
     await caret.tap();
     await expect(page.getByText("Under it")).toBeHidden();
   });
