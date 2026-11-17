@@ -1,7 +1,7 @@
 import type { EditorView } from "@milkdown/kit/prose/view";
 import { requestRest } from "./request-rest";
 import type { Node as ProseNode } from "@milkdown/kit/prose/model";
-import { Plugin, PluginKey, type EditorState } from "@milkdown/kit/prose/state";
+import { Plugin, PluginKey } from "@milkdown/kit/prose/state";
 import { Decoration, DecorationSet } from "@milkdown/kit/prose/view";
 import { $prose } from "@milkdown/kit/utils";
 import { createDebouncedTask } from "../../utils/debounced-task";
@@ -10,10 +10,14 @@ import { pausesFeatures } from "../../editor/large-doc";
 import type { FoldAttention } from "../../editor/html/details-fold";
 import { ai } from "../../platform/ipc";
 import { AiNoticeError } from "../../utils/error-text";
-import { markChangeSource } from "../../editor/change-source";
 import { changedRanges } from "../../editor/changed-ranges";
+import {
+  addIssueSource,
+  applyIssueKey,
+  type IssueSpec,
+} from "../../editor/issues/issue-sources";
 
-export const grammarKey = new PluginKey("grammar-check");
+const grammarKey = new PluginKey("grammar-check");
 const DEBOUNCE_MS = 1500;
 const MIN_PARAGRAPH_CHARS = 12;
 
@@ -123,7 +127,7 @@ const ignoreKey = (original: string | undefined, suggestion: string) =>
   `${original ?? ""}\u0000${suggestion}`;
 
 /// Dismisses one suggestion: its underline goes, and it won't come back.
-export function ignoreGrammarIssue(
+function ignoreGrammarIssue(
   view: EditorView,
   original: string | undefined,
   suggestion: string,
@@ -150,29 +154,19 @@ export function clearGrammarIssues(view: EditorView): void {
   );
 }
 
-/// The issue under the caret, if the caret sits inside an underline.
-export function grammarIssueAt(
-  state: EditorState,
-  pos: number,
-): Decoration | null {
-  return (
-    grammarKey
-      .getState(state)
-      ?.find(pos, pos)
-      .find((deco: Decoration) => deco.from <= pos && pos <= deco.to) ?? null
-  );
-}
-
 /// The popover reads the issue off the decoration's spec, not a `title`
 /// attribute, so it can offer a real Apply button.
-export interface GrammarDecorationSpec {
-  issue: string;
+type GrammarDecorationSpec = IssueSpec & {
+  source: "grammar";
   suggestion: string;
-  /** Set when the writing-rules engine found it (labelled as such). */
-  rule?: string;
-  /** What the highlighted range must still say for Apply to act. */
-  original?: string;
-}
+};
+
+addIssueSource("grammar", {
+  key: grammarKey,
+  changeSource: "ai",
+  ignore: (view, spec) =>
+    ignoreGrammarIssue(view, spec.original, spec.suggestion ?? ""),
+});
 
 /** Masks inline code, one unit per unit so offsets still match: in mixed
  *  Chinese and English, code drew false fixes. */
@@ -243,6 +237,7 @@ export function issuesToDecorations(
     lastEnd = issue.end;
     decorations.push(
       Decoration.inline(from, to, { class: "grammar-issue" }, {
+        source: "grammar",
         issue: issue.issue,
         suggestion: issue.suggestion,
         original: issue.original,
@@ -326,28 +321,8 @@ export function createGrammarCheckPlugin(options: {
           decorations(state) {
             return grammarKey.getState(state);
           },
-          // Alt+Enter applies the suggestion under the caret.
-          handleKeyDown(view, event) {
-            if (!event.altKey || event.key !== "Enter") return false;
-            const { selection } = view.state;
-            if (!selection.empty) return false;
-            const deco = grammarIssueAt(view.state, selection.from);
-            if (!deco) return false;
-            const spec = deco.spec as GrammarDecorationSpec;
-            if (
-              spec.original !== undefined &&
-              view.state.doc.textBetween(deco.from, deco.to) !== spec.original
-            )
-              return false;
-            event.preventDefault();
-            view.dispatch(
-              markChangeSource(
-                view.state.tr.insertText(spec.suggestion, deco.from, deco.to),
-                "ai",
-              ),
-            );
-            return true;
-          },
+          // Alt+Enter applies the fix under the caret.
+          handleKeyDown: applyIssueKey,
         },
         view() {
           return {

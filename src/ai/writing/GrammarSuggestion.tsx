@@ -1,5 +1,5 @@
 import { useMemo } from "react";
-import { GrammarPopover, applyLabel } from "./GrammarPopover";
+import { GrammarPopover, applyLabel, issueLabel } from "./GrammarPopover";
 import type { useGrammarPopover } from "./useGrammarPopover";
 import { BottomCard } from "../../engine/controls/BottomCard";
 import { Presence } from "../../engine/motion/usePresence";
@@ -36,6 +36,9 @@ export function GrammarSuggestion({
     [t],
   );
 
+  const fix = grammar.popover
+    ? (grammar.popover.shownSuggestion ?? grammar.popover.suggestion)
+    : undefined;
   return (
     <>
       <Presence show={!!grammar.popover && phone}>
@@ -43,39 +46,39 @@ export function GrammarSuggestion({
           // A fix that no longer fits the text says so in the notice, the
           // card having closed on the tap.
           <BottomCard
-            label={grammarLabels.grammarKinds[grammar.popover.kind]}
+            label={issueLabel(grammar.popover, grammarLabels)}
             actions={[
               { label: t.grammarIgnore, onSelect: grammar.ignore },
-              {
-                label: applyLabel(
-                  grammarLabels,
-                  grammar.popover.shownSuggestion ?? grammar.popover.suggestion,
-                ),
-                primary: true,
-                onSelect: () => {
-                  if (!grammar.applyFix()) onStale();
-                },
-              },
+              ...(fix === undefined
+                ? []
+                : [
+                    {
+                      label: applyLabel(grammarLabels, fix),
+                      primary: true,
+                      onSelect: () => {
+                        if (!grammar.applyFix()) onStale();
+                      },
+                    },
+                  ]),
             ]}
             onClose={grammar.hide}
           >
             <span
-              className={`grammar-kind grammar-kind-${grammar.popover.kind}`}
+              className={`grammar-kind grammar-kind-${grammar.popover.label ? "plugin" : grammar.popover.kind}`}
             >
-              {grammarLabels.grammarKinds[grammar.popover.kind]}
+              {issueLabel(grammar.popover, grammarLabels)}
             </span>
-            <div className="grammar-card-fix">
-              {grammar.popover.original && (
-                <s>
-                  {grammar.popover.shownOriginal ?? grammar.popover.original}
-                </s>
-              )}
-              {grammar.popover.original && " → "}
-              <b>
-                {grammar.popover.shownSuggestion ??
-                  (grammar.popover.suggestion || "∅")}
-              </b>
-            </div>
+            {fix !== undefined && (
+              <div className="grammar-card-fix">
+                {grammar.popover.original && (
+                  <s>
+                    {grammar.popover.shownOriginal ?? grammar.popover.original}
+                  </s>
+                )}
+                {grammar.popover.original && " → "}
+                <b>{fix || "∅"}</b>
+              </div>
+            )}
             {grammar.popover.issue && (
               <div className="grammar-card-issue">{grammar.popover.issue}</div>
             )}

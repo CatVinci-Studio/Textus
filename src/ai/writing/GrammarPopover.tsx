@@ -12,11 +12,16 @@ export interface GrammarPopoverInfo {
   from: number;
   to: number;
   issue: string;
-  suggestion: string;
+  /** None for a slip with no fix: the card only explains it. */
+  suggestion?: string;
   /** Exact text the range must still contain for Apply to act. */
   original?: string;
   /** What kind of slip it is, for the label. */
   kind: GrammarKind;
+  /** Who found it (a plugin), named in place of the kind. */
+  label?: string;
+  /** Its source, as the underlines' registry names it. */
+  source: string;
   /** How the card shows the fix when it differs from what is replaced (a
    *  one-character CJK fix, shown with its neighbour). */
   shownOriginal?: string;
@@ -60,6 +65,12 @@ export function applyLabel(
     : labels.grammarApply;
 }
 
+/** Who found the slip, or what kind it is. */
+export const issueLabel = (
+  info: Pick<GrammarPopoverInfo, "label" | "kind">,
+  labels: Pick<GrammarPopoverLabels, "grammarKinds">,
+) => info.label ?? labels.grammarKinds[info.kind];
+
 /** The card under a grammar underline. With several underlines in the
  *  paragraph, ‹ 1/3 › steps between them. */
 export function GrammarPopover({
@@ -89,14 +100,18 @@ export function GrammarPopover({
       onMouseLeave={onMouseLeave}
     >
       <div className="grammar-popover-head">
-        <span className={`grammar-kind grammar-kind-${info.kind}`}>
-          {labels.grammarKinds[info.kind]}
+        <span
+          className={`grammar-kind grammar-kind-${info.label ? "plugin" : info.kind}`}
+        >
+          {issueLabel(info, labels)}
         </span>
-        <span className="grammar-popover-fix">
-          {info.original && <s>{info.shownOriginal ?? info.original}</s>}
-          {info.original && <span aria-hidden="true"> → </span>}
-          <b>{info.shownSuggestion ?? (info.suggestion || "\u2205")}</b>
-        </span>
+        {info.suggestion !== undefined && (
+          <span className="grammar-popover-fix">
+            {info.original && <s>{info.shownOriginal ?? info.original}</s>}
+            {info.original && <span aria-hidden="true"> → </span>}
+            <b>{info.shownSuggestion ?? (info.suggestion || "\u2205")}</b>
+          </span>
+        )}
         {info.count > 1 && (
           <StepNav
             className="grammar-popover-nav"
@@ -112,10 +127,12 @@ export function GrammarPopover({
         <div className="grammar-popover-error">{error}</div>
       ) : (
         <div className="grammar-popover-actions">
-          <button className="grammar-popover-apply" onClick={onApply}>
-            {applyLabel(labels, info.shownSuggestion ?? info.suggestion)}
-            <kbd>Alt+Enter</kbd>
-          </button>
+          {info.suggestion !== undefined && (
+            <button className="grammar-popover-apply" onClick={onApply}>
+              {applyLabel(labels, info.shownSuggestion ?? info.suggestion)}
+              <kbd>Alt+Enter</kbd>
+            </button>
+          )}
           <button className="grammar-popover-ignore" onClick={onIgnore}>
             {labels.grammarIgnore}
           </button>
