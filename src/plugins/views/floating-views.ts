@@ -11,6 +11,7 @@ import type {
   FloatingPlace,
   FloatingViewContribution,
 } from "../store/manifest";
+import { createSubscribers } from "../../utils/store";
 
 /**
  * Plugins' floating views that are open (contributes.floatingViews): where
@@ -83,7 +84,7 @@ export interface FloatingChange {
 export type FloatingTouch = "poke" | "pet" | "moved";
 
 const open = new Map<string, FloatingView>();
-const listeners = new Set<() => void>();
+const subscribers = createSubscribers();
 let version = 0;
 
 type Saved = Pick<FloatingView, "place" | "x" | "y" | "folded"> & {
@@ -122,7 +123,7 @@ function changed(view: FloatingView, isOpen: boolean) {
   setFloatingCount(open.size);
   const { place, x, y, folded, scale } = view;
   save(view.view, { place, x, y, folded, scale, open: isOpen });
-  for (const listener of listeners) listener();
+  subscribers.publish();
   emitPluginEvent("floating", {
     plugin: view.plugin,
     view: view.view,
@@ -178,10 +179,7 @@ export function floatingMenuItems(view: Pick<FloatingView, "plugin" | "view">) {
   }).filter((item) => item.plugin === view.plugin);
 }
 
-export function subscribeFloating(listener: () => void): () => void {
-  listeners.add(listener);
-  return () => listeners.delete(listener);
-}
+export const subscribeFloating = subscribers.subscribe;
 
 export function floatingVersion(): number {
   return version;
@@ -260,7 +258,7 @@ export function closeFloatingOf(plugin: string) {
       open.delete(view.view);
       version++;
       setFloatingCount(open.size);
-      for (const listener of listeners) listener();
+      subscribers.publish();
     }
 }
 

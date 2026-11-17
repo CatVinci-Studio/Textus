@@ -115,6 +115,16 @@ ${AI_NAME}에게 주는 글쓰기 지침으로, 모든 문서에 적용됩니다
   codeBlockEditSource: "소스 편집",
   codeBlockDone: "편집 완료",
   codeBlockDelete: "블록 삭제",
+  blockText: "본문",
+  blockCallout: "콜아웃",
+  blockHandleAdd: "아래에 블록 추가",
+  blockHandleOptions: "드래그하여 이동, 클릭하여 옵션 보기",
+  blockTurnInto: "변환",
+  blockDuplicate: "복제",
+  blockHandlesLabel: "블록 핸들",
+  blockHandlesHelp:
+    "포인터가 있는 블록 왼쪽에 ＋와 ⋮⋮ 표시: 블록 추가, 이동, 다른 종류로 변환.",
+  smoothCaretLabel: "부드러운 커서",
   menuBlockWide: "넓게 보기",
   menuBlockZoom: "크기",
   diagramViewerLabel: "다이어그램",
@@ -147,6 +157,8 @@ ${AI_NAME}에게 주는 글쓰기 지침으로, 모든 문서에 적용됩니다
   revisionDisplayInline: "모두 본문에",
   revisionDisplayOriginal: "본문에 원문, 여백에 수정",
   revisionDisplayFinal: "결과만, 원문은 여백에",
+  splitNoRoomLow:
+    "더 분할할 공간이 없습니다: 창 높이가 부족합니다. 키보드를 내리거나 창을 높이세요.",
   splitNoRoom:
     "더 분할할 공간이 없습니다: 창이 너무 좁습니다. 창을 넓히거나 분할 하나를 닫으세요.",
   revisionDisplayNoRoom: "공간이 부족합니다: 사이드바나 AI 패널을 닫아 주세요",
@@ -605,6 +617,8 @@ ${AI_NAME}에게 주는 글쓰기 지침으로, 모든 문서에 적용됩니다
     "플러그인 스토어를 보려면 최신 Textus가 필요합니다. Textus를 업데이트하세요.",
   errorImageTooBig: "그림이 비어 있거나 25MB보다 큽니다.",
   errorNoFolder: "먼저 폴더를 여세요.",
+  errorPluginsNeedAllFiles:
+    "플러그인이 이 폴더를 읽을 수 없습니다: Textus에 모든 파일 접근 권한이 없습니다. 폴더를 다시 열고 '계속'을 고르세요.",
   errorPdfUnsupported: "이 시스템에서는 PDF로 내보낼 수 없습니다.",
   errorNoText: "읽을 수 있는 텍스트가 없습니다.",
   errorUnreadable: "이 파일을 읽을 수 없습니다.",
@@ -882,6 +896,12 @@ ${AI_NAME}에게 주는 글쓰기 지침으로, 모든 문서에 적용됩니다
   agentSend: "보내기",
   agentStop: "중지",
   agentRetry: "다시 시도",
+  agentForgotStart:
+    "대화가 길어져 가장 오래된 메시지는 더 이상 모델에 보내지지 않습니다. 처음부터 하려면 새 대화를 시작하세요.",
+  revisionsNotKept:
+    "결정을 기다리는 변경 사항을 디스크에 저장하지 못했습니다. 문서를 닫기 전에 수락하거나 거절하세요. 그렇지 않으면 사라집니다.",
+  settingsNotSaved:
+    "지금은 설정과 창 상태를 저장할 수 없습니다. 바꾼 내용은 Textus를 닫을 때까지만 유지됩니다.",
   agentNeedsFolder:
     "먼저 폴더를 열거나 문서를 저장하세요. 에이전트는 폴더 안에서 작업합니다.",
   agentStopped: "{agent}이(가) 멈췄습니다.",
@@ -1378,6 +1398,8 @@ ${AI_NAME}에게 주는 글쓰기 지침으로, 모든 문서에 적용됩니다
   wordImportDismiss: "확인",
   openFileFailed:
     "{name}을(를) 열 수 없습니다. 텍스트 문서가 아니며 이런 파일을 여는 플러그인도 없습니다.",
+  openFileMuted:
+    "Textus만으로는 {name}을(를) 열 수 없습니다. 이 파일을 여는 플러그인 제안을 껐습니다. 설정 › {page}에서 다시 표시할 수 있습니다.",
   openFileGone:
     "{name}을(를) 열 수 없습니다. 파일이 더 이상 없습니다. 이동되었거나 이름이 바뀌었거나 삭제되었을 수 있습니다.",
   wordImportFailed: "{name}을(를) 열 수 없습니다.",
@@ -1495,7 +1517,7 @@ ${AI_NAME}에게 주는 글쓰기 지침으로, 모든 문서에 적용됩니다
   themeNamePaper: "종이",
   themeNameSlate: "슬레이트",
   themeNameForest: "숲",
-  themeNameAurora: "오로라",
+  themeNamePrism: "프리즘",
   appearanceLabel: "모양",
   appearanceModeLabel: "밝게/어둡게",
   appearanceSystem: "시스템 설정 따르기",
@@ -1814,4 +1836,10 @@ ${AI_NAME}에게 주는 글쓰기 지침으로, 모든 문서에 적용됩니다
   shortcutOutdentListItem: "목록 항목 내어쓰기",
   pluginKeyTaken:
     "{name}: {key}는 {owner}에서 쓰고 있어 “{command}”에 지정하지 않았습니다. 설정 › 단축키에서 다른 키를 지정하세요.",
+  gitTrustTitle: "이 저장소에 설정된 프로그램을 Git이 실행하도록 허용할까요?",
+  gitTrustText:
+    "이 폴더의 Git 저장소는 컴퓨터에서 프로그램을 실행하도록 설정되어 있습니다({what}). 직접 만든 저장소라면 흔한 일입니다. 다른 사람에게서 받은 폴더라면 상대를 신뢰할 때만 허용하세요.",
+  gitTrustAllow: "이 저장소 신뢰",
+  gitTrustRefused:
+    "여기서는 Git을 사용하지 않습니다: 신뢰하지 않는 저장소입니다.",
 } satisfies Translation;

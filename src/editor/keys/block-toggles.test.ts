@@ -1,5 +1,5 @@
 // @vitest-environment jsdom
-import { afterEach, beforeAll, describe, expect, it } from "vitest";
+import { afterEach, describe, expect, it } from "vitest";
 import { closeViews, openView } from "../editor-view-kit";
 import {
   convertList,
@@ -8,10 +8,6 @@ import {
   toggleList,
 } from "./block-toggles";
 
-beforeAll(() => {
-  Range.prototype.getClientRects ??= () => [] as unknown as DOMRectList;
-  Range.prototype.getBoundingClientRect ??= () => new DOMRect();
-});
 afterEach(closeViews);
 
 describe("Format › a list kind", () => {

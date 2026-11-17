@@ -1,4 +1,4 @@
-import { useEffect, useRef, useState } from "react";
+import { useEffect, useLayoutEffect, useRef, useState } from "react";
 import { editorViewCtx, serializerCtx } from "@milkdown/kit/core";
 import type { Node as ProseNode } from "@milkdown/kit/prose/model";
 import { Transform } from "@milkdown/kit/prose/transform";
@@ -21,7 +21,12 @@ import {
   type OwnChange,
 } from "./own-revision-plugin";
 import { setTrackingShown } from "./track-changes-state";
-import { originalChanged, trackFile } from "../../document/tracked-file";
+import {
+  leaveTracked,
+  leftTracked,
+  originalChanged,
+  trackFile,
+} from "../../document/tracked-file";
 import { reportUndecided } from "../../document/undecided";
 
 /** Track My Changes for one document. The file holds the original with the
@@ -78,6 +83,24 @@ export function useOwnRevisions({
       loadedFor.current = filePath;
       return;
     }
+    const track = (kept: string) =>
+      run((ctx) => {
+        const base = parseMarkdownSource(ctx, kept);
+        if (!base) return;
+        // Until a change is accepted the file keeps the original as written.
+        keptText.current = { base, text: kept };
+        view.dispatch(
+          view.state.tr.setMeta(ownRevisionKey, { type: "base", base }),
+        );
+        baseSeen.current = base;
+      });
+    // The tab's last editor was tracking: this one carries on from there.
+    const from = leftTracked(filePath);
+    if (from !== null) {
+      loadedFor.current = filePath;
+      track(from);
+      return;
+    }
     let alive = true;
     void ownNotesIpc
       .read(filePath, "revisions")
@@ -93,15 +116,7 @@ export function useOwnRevisions({
             const doc = parseMarkdownSource(ctx, md);
             return doc ? serialize(doc) : md;
           });
-          if (kept === null) return;
-          const base = parseMarkdownSource(ctx, kept);
-          if (!base) return;
-          // Until a change is accepted the file keeps the original as written.
-          keptText.current = { base, text: kept };
-          view.dispatch(
-            view.state.tr.setMeta(ownRevisionKey, { type: "base", base }),
-          );
-          baseSeen.current = base;
+          if (kept !== null) track(kept);
         });
       });
     return () => {
@@ -114,15 +129,26 @@ export function useOwnRevisions({
   }, [filePath, changes]);
 
   // What the file holds while tracked: the original.
+  const original = useLatest(() => {
+    const base = view && ownRevisionKey.getState(view.state)?.base;
+    if (!base) return null;
+    if (keptText.current?.base === base) return keptText.current.text;
+    return run((ctx) => ctx.get(serializerCtx)(base)) ?? null;
+  });
   useEffect(() => {
     if (!filePath || !view) return;
-    return trackFile(filePath, () => {
-      const base = ownRevisionKey.getState(view.state)?.base;
-      if (!base) return null;
-      if (keptText.current?.base === base) return keptText.current.text;
-      return run((ctx) => ctx.get(serializerCtx)(base)) ?? null;
-    });
-  }, [filePath, view, run]);
+    return trackFile(filePath, () => original.current());
+  }, [filePath, view, original]);
+  // The editor goes (its tab out of sight) with the document still open:
+  // the original stays what its file holds, written out while the editor
+  // is there to write it.
+  const pathNow = useLatest(filePath);
+  useLayoutEffect(
+    () => () => {
+      if (pathNow.current) leaveTracked(pathNow.current, original.current());
+    },
+    [pathNow, original],
+  );
 
   // A change accepted, or tracking started or stopped: the file follows.
   useEffect(() => {

@@ -39,6 +39,23 @@ pub(crate) fn pending() -> std::sync::MutexGuard<'static, Vec<(String, Slot)>> {
     PENDING.lock().unwrap_or_else(|e| e.into_inner())
 }
 
+/// Lets the oldest pictures go until the list is within `count` and the
+/// bytes kept. One still being made stays: it holds no bytes yet, it is
+/// being paid for, and what waits on it would get nothing.
+fn trim(pending: &mut Vec<(String, Slot)>, count: usize) {
+    while pending.len() > count
+        || pending.iter().map(|(_, s)| s.bytes()).sum::<usize>() > PENDING_BYTES
+    {
+        let Some(oldest) = pending
+            .iter()
+            .position(|(_, slot)| !matches!(slot, Slot::Making))
+        else {
+            break;
+        };
+        pending.remove(oldest);
+    }
+}
+
 /// A new picture's id, its slot marked as being made.
 pub(crate) fn begin() -> String {
     static NEXT: AtomicUsize = AtomicUsize::new(0);
@@ -58,11 +75,7 @@ pub(crate) fn begin() -> String {
         .collect();
     let mut pending = pending();
     pending.push((id.clone(), Slot::Making));
-    while pending.len() > PENDING_COUNT
-        || pending.iter().map(|(_, s)| s.bytes()).sum::<usize>() > PENDING_BYTES
-    {
-        pending.remove(0);
-    }
+    trim(&mut pending, PENDING_COUNT);
     id
 }
 
@@ -273,11 +286,7 @@ pub(crate) fn restore(id: &str, image: GeneratedImage) {
         return;
     }
     pending.push((id.to_string(), Slot::Ready(image)));
-    while pending.len() > PENDING_COUNT
-        || pending.iter().map(|(_, s)| s.bytes()).sum::<usize>() > PENDING_BYTES
-    {
-        pending.remove(0);
-    }
+    trim(&mut pending, PENDING_COUNT);
 }
 
 /// What came of a picture being made. Nothing, if it was let go meanwhile
@@ -287,9 +296,7 @@ pub(crate) fn finish(id: &str, slot: Slot) {
     if let Some((_, waiting)) = pending.iter_mut().find(|(i, _)| i == id) {
         *waiting = slot;
     }
-    while pending.iter().map(|(_, s)| s.bytes()).sum::<usize>() > PENDING_BYTES {
-        pending.remove(0);
-    }
+    trim(&mut pending, usize::MAX);
 }
 
 /// The size a picture is asked for at `aspect`, as GPT image makes it: the
@@ -347,5 +354,30 @@ pub(crate) fn look(id: &str) -> Option<Result<GeneratedImageData, String>> {
             width: image.width,
             height: image.height,
         })),
+    }
+}
+
+#[cfg(test)]
+mod tests {
+    use super::*;
+
+    #[test]
+    fn a_picture_still_being_made_is_not_let_go_for_room() {
+        let failed = |id: &str| (id.to_string(), Slot::Failed(String::new()));
+        let mut list = vec![
+            ("making".to_string(), Slot::Making),
+            failed("old"),
+            failed("new"),
+        ];
+        trim(&mut list, 2);
+        let ids: Vec<&str> = list.iter().map(|(id, _)| id.as_str()).collect();
+        assert_eq!(ids, ["making", "new"]);
+        // All being made: none goes.
+        let mut making = vec![
+            ("a".to_string(), Slot::Making),
+            ("b".to_string(), Slot::Making),
+        ];
+        trim(&mut making, 1);
+        assert_eq!(making.len(), 2);
     }
 }

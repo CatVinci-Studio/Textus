@@ -12,12 +12,14 @@ pub(crate) const DEFAULT_CAPS: ProviderCaps = ProviderCaps {
     replay_reasoning: false,
     image: None,
     stream_usage: false,
+    roomy: false,
 };
 
 pub(crate) const PROVIDERS: &[(&str, ProviderCaps)] = &[
     (
         "openai",
         ProviderCaps {
+            roomy: true,
             auto_effort: None,
             thinking: ThinkingFormat::OpenAi,
             native_search: NativeSearch::ResponsesTool,
@@ -29,6 +31,7 @@ pub(crate) const PROVIDERS: &[(&str, ProviderCaps)] = &[
     (
         "anthropic",
         ProviderCaps {
+            roomy: true,
             auto_effort: None,
             thinking: ThinkingFormat::Anthropic,
             native_search: NativeSearch::AnthropicTool,
@@ -40,6 +43,7 @@ pub(crate) const PROVIDERS: &[(&str, ProviderCaps)] = &[
     (
         "google",
         ProviderCaps {
+            roomy: true,
             auto_effort: None,
             thinking: ThinkingFormat::Gemini,
             image: Some(ImageApi::Gemini),
@@ -50,6 +54,7 @@ pub(crate) const PROVIDERS: &[(&str, ProviderCaps)] = &[
     (
         "deepseek",
         ProviderCaps {
+            roomy: true,
             auto_effort: None,
             thinking: ThinkingFormat::ThinkingType,
             native_search: NativeSearch::None,
@@ -61,6 +66,7 @@ pub(crate) const PROVIDERS: &[(&str, ProviderCaps)] = &[
     (
         "xai",
         ProviderCaps {
+            roomy: true,
             auto_effort: None,
             thinking: ThinkingFormat::OpenAi,
             native_search: NativeSearch::CompatibleResponses,
@@ -73,6 +79,7 @@ pub(crate) const PROVIDERS: &[(&str, ProviderCaps)] = &[
     (
         "mistral",
         ProviderCaps {
+            roomy: false,
             auto_effort: None,
             thinking: ThinkingFormat::None,
             native_search: NativeSearch::None,
@@ -84,6 +91,7 @@ pub(crate) const PROVIDERS: &[(&str, ProviderCaps)] = &[
     (
         "groq",
         ProviderCaps {
+            roomy: false,
             auto_effort: None,
             thinking: ThinkingFormat::OpenAi,
             native_search: NativeSearch::ChatCompletions(NativeWebSearch::Groq),
@@ -95,6 +103,7 @@ pub(crate) const PROVIDERS: &[(&str, ProviderCaps)] = &[
     (
         "openrouter",
         ProviderCaps {
+            roomy: false,
             auto_effort: None,
             thinking: ThinkingFormat::OpenRouter,
             native_search: NativeSearch::ChatCompletions(NativeWebSearch::OpenRouter),
@@ -109,6 +118,7 @@ pub(crate) const PROVIDERS: &[(&str, ProviderCaps)] = &[
     (
         "opencode-go",
         ProviderCaps {
+            roomy: false,
             auto_effort: None,
             thinking: ThinkingFormat::ThinkingType,
             native_search: NativeSearch::None,
@@ -120,6 +130,7 @@ pub(crate) const PROVIDERS: &[(&str, ProviderCaps)] = &[
     (
         "moonshot",
         ProviderCaps {
+            roomy: false,
             auto_effort: None,
             thinking: ThinkingFormat::ThinkingType,
             native_search: NativeSearch::None,
@@ -131,6 +142,7 @@ pub(crate) const PROVIDERS: &[(&str, ProviderCaps)] = &[
     (
         "zhipu",
         ProviderCaps {
+            roomy: false,
             auto_effort: None,
             thinking: ThinkingFormat::ThinkingType,
             native_search: NativeSearch::ChatCompletions(NativeWebSearch::Zhipu),
@@ -142,6 +154,7 @@ pub(crate) const PROVIDERS: &[(&str, ProviderCaps)] = &[
     (
         "qwen",
         ProviderCaps {
+            roomy: false,
             auto_effort: None,
             thinking: ThinkingFormat::Qwen,
             native_search: NativeSearch::Qwen,
@@ -154,6 +167,7 @@ pub(crate) const PROVIDERS: &[(&str, ProviderCaps)] = &[
     (
         "minimax",
         ProviderCaps {
+            roomy: true,
             auto_effort: None,
             thinking: ThinkingFormat::ThinkingType,
             native_search: NativeSearch::None,
@@ -165,6 +179,7 @@ pub(crate) const PROVIDERS: &[(&str, ProviderCaps)] = &[
     (
         "minimax-intl",
         ProviderCaps {
+            roomy: true,
             auto_effort: None,
             thinking: ThinkingFormat::ThinkingType,
             native_search: NativeSearch::None,
@@ -178,6 +193,7 @@ pub(crate) const PROVIDERS: &[(&str, ProviderCaps)] = &[
     (
         "doubao",
         ProviderCaps {
+            roomy: false,
             auto_effort: Some("minimal"),
             thinking: ThinkingFormat::OpenAi,
             native_search: NativeSearch::None,
@@ -191,6 +207,7 @@ pub(crate) const PROVIDERS: &[(&str, ProviderCaps)] = &[
     (
         "ollama",
         ProviderCaps {
+            roomy: false,
             auto_effort: None,
             stream_usage: true,
             ..DEFAULT_CAPS

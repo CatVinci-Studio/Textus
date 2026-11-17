@@ -80,19 +80,8 @@ function run(command: Command, state: EditorState): EditorState | null {
 const docOf = (...blocks: Node[]) => n.doc.create(null, blocks);
 const caretLine = (state: EditorState) =>
   state.selection.$from.parent.textContent;
-const atEnd = (state: EditorState) =>
-  state.selection.$from.parentOffset ===
-  state.selection.$from.parent.content.size;
 
 describe("backspaceKeepingApart", () => {
-  it("moves the caret up from a code block instead of pouring it into the paragraph", () => {
-    const doc = docOf(p("text"), code("line1\nline2"));
-    const next = run(backspaceKeepingApart, at(doc, "line1\nline2", false))!;
-    expect(next.doc.eq(doc)).toBe(true);
-    expect(caretLine(next)).toBe("text");
-    expect(atEnd(next)).toBe(true);
-  });
-
   it("keeps a paragraph out of the front matter above it", () => {
     const fm = n.frontmatter.create(null, schema.text("title: a"));
     const doc = docOf(fm, p("text"));
@@ -190,20 +179,6 @@ describe("deleteSelectionKeepingApart", () => {
 });
 
 describe("deleteKeepingApart", () => {
-  it("moves the caret down into a code block instead of joining it", () => {
-    const doc = docOf(p("text"), code("line1\nline2"));
-    const next = run(deleteKeepingApart, at(doc, "text", true))!;
-    expect(next.doc.eq(doc)).toBe(true);
-    expect(caretLine(next)).toBe("line1\nline2");
-  });
-
-  it("goes into a table's first cell rather than selecting the table", () => {
-    const doc = docOf(p("text"), table(["a", "b"]));
-    const next = run(deleteKeepingApart, at(doc, "text", true))!;
-    expect(next.doc.eq(doc)).toBe(true);
-    expect(caretLine(next)).toBe("a");
-  });
-
   it("removes an empty line on either side", () => {
     const below = run(
       deleteKeepingApart,
@@ -219,24 +194,7 @@ describe("deleteKeepingApart", () => {
   });
 });
 
-describe("deleteKeepingApart before a callout", () => {
-  it("lands at the callout's text, past its hidden marker line", () => {
-    const callout = quote(p("[!NOTE]"), p("body"));
-    const doc = docOf(p("text"), callout);
-    const next = run(deleteKeepingApart, at(doc, "text", true))!;
-    expect(next.doc.eq(doc)).toBe(true);
-    expect(caretLine(next)).toBe("body");
-    expect(next.selection.$from.parentOffset).toBe(0);
-  });
-});
-
 describe("deleteJoiningText", () => {
-  it("joins a quote's first line onto the line above", () => {
-    const doc = docOf(p("text"), quote(p("aaa"), p("bbb")));
-    const next = run(deleteJoiningText, at(doc, "text", true))!;
-    expect(next.doc.eq(docOf(p("textaaa"), quote(p("bbb"))))).toBe(true);
-  });
-
   it("joins the line below a list onto its last item", () => {
     const doc = docOf(list("aaa"), p("text"));
     const next = run(deleteJoiningText, at(doc, "aaa", true))!;

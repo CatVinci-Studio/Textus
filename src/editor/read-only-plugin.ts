@@ -60,10 +60,14 @@ export function createReadOnlyPlugin(): Plugin<boolean> {
       // Not editable, the editor ignores these, so the writer hears why here.
       handleDOMEvents: {
         keydown: (view, event) => {
+          if (!readOnlyKey.getState(view.state)) return false;
+          const erases = ["Backspace", "Delete", "Enter"].includes(event.key);
           const writes =
-            (event.key.length === 1 && !event.metaKey && !event.ctrlKey) ||
-            ["Backspace", "Delete", "Enter"].includes(event.key);
-          if (writes && readOnlyKey.getState(view.state)) refuse();
+            erases ||
+            (event.key.length === 1 && !event.metaKey && !event.ctrlKey);
+          if (writes) refuse();
+          // Nothing for them to do here; WebKit's own would leave the page.
+          if (erases) event.preventDefault();
           return false;
         },
         paste: (view) => refuseIfReadOnly(view.state),

@@ -35,6 +35,13 @@ fn windows_lists_textus_under_open_with_without_taking_the_default() {
     }
     // The path is quoted: an install folder may have a space in it.
     let open = registry::Data::Text(format!("\"{exe}\" \"%1\""));
+    // Its documents show their own icon, installed beside it.
+    assert_eq!(
+        find(r"Software\Classes\Textus.Markdown\DefaultIcon", ""),
+        Some(&registry::Data::Text(
+            r#""C:\Users\me\AppData\Local\Textus\doc.ico""#.into()
+        ))
+    );
     assert_eq!(
         find(r"Software\Classes\Textus.Markdown\shell\open\command", ""),
         Some(&open)

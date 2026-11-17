@@ -2,6 +2,7 @@ import type { Node as ProseNode } from "@milkdown/kit/prose/model";
 import type { EditorView } from "@milkdown/kit/prose/view";
 import { TextSelection } from "@milkdown/kit/prose/state";
 import { revealPosition } from "../reveal-position";
+import { takeKeys } from "../take-keys";
 import { headingIndex, headingSlug } from "./link-target";
 import { shownText } from "./link-source";
 
@@ -124,16 +125,20 @@ export function referencePos(doc: ProseNode, anchor: string): number | null {
 }
 
 /** Scrolls to the document's `index`-th top-level heading, as the outline
- *  lists them. */
+ *  lists them, the caret at its end: typing goes on there. */
 export function revealNthHeading(view: EditorView, index: number): boolean {
   let count = 0;
-  let found: number | null = null;
+  let found: { pos: number; end: number } | null = null;
   view.state.doc.forEach((node, offset) => {
     if (found === null && node.type.name === "heading" && count++ === index)
-      found = offset + 1;
+      found = { pos: offset + 1, end: offset + node.nodeSize - 1 };
   });
   if (found === null) return false;
-  revealPosition(view, found, "top");
+  const { pos, end } = found;
+  const { doc } = view.state;
+  view.dispatch(view.state.tr.setSelection(TextSelection.create(doc, end)));
+  revealPosition(view, pos, "top");
+  takeKeys(view);
   return true;
 }
 
@@ -162,7 +167,7 @@ export function selectNthSection(view: EditorView, index: number): boolean {
   );
   view.dispatch(view.state.tr.setSelection(selection));
   revealPosition(view, start + 1, "top");
-  view.focus();
+  takeKeys(view);
   return true;
 }
 

@@ -152,9 +152,8 @@ describe("ChatComposer web search", () => {
     renderComposer();
     const button = screen.getByLabelText("Web search");
     // Off, there is nothing to warn about.
-    expect(button).not.toHaveClass("needs-setup");
+    expect(button).not.toHaveAccessibleDescription("Choose a search service");
     fireEvent.click(button);
-    expect(button).toHaveClass("needs-setup");
     expect(button).toHaveAccessibleDescription("Choose a search service");
   });
 
@@ -166,9 +165,9 @@ describe("ChatComposer web search", () => {
       webSearchStatus = status;
       renderComposer();
       fireEvent.click(screen.getByLabelText("Web search"));
-      expect(screen.getByLabelText("Web search")).not.toHaveClass(
-        "needs-setup",
-      );
+      expect(
+        screen.getByLabelText("Web search"),
+      ).not.toHaveAccessibleDescription("Choose a search service");
       cleanup();
     }
   });

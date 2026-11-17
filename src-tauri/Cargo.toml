@@ -1,12 +1,13 @@
 [package]
 name = "textus"
-version = "1.4.3-rc.4"
+version = "1.4.3"
 description = "Textus Markdown Editor"
 authors = ["CatVinci Studio"]
 edition = "2021"
 
 [workspace]
 members = ["crates/aicompat", "plugins/textus-files"]
+exclude = ["patches/wry"]
 resolver = "2"
 
 # Shipped builds (tauri build, tauri ios build) are sized for download:
@@ -76,7 +77,7 @@ tokio = { version = "1", features = ["fs", "sync", "macros", "rt", "rt-multi-thr
 futures-util = { version = "0.3", default-features = false, features = ["alloc"] }
 base64 = "0.22"
 sha2 = "0.10"
-reqwest = { version = "0.12", default-features = false, features = ["json", "multipart", "rustls-tls"] }
+reqwest = { version = "0.12", default-features = false, features = ["json", "multipart", "rustls-tls", "http2"] }
 aicompat = { path = "crates/aicompat" }
 
 # Markdown extraction (src/extract/), for chat attachments (commands/
@@ -303,3 +304,9 @@ specta-typescript = "=0.0.13"
 tauri-specta = { version = "=2.0.0-rc.26", features = ["typescript"] }
 # AgentTurn and the types it holds, for the AI commands' bindings.
 aicompat = { path = "crates/aicompat", features = ["specta"] }
+
+# wry 0.57.0 with its open PR #1924: on Windows, Chinese/Japanese input could
+# break for good after switching between two Textus windows. Drop this once a
+# wry release has the fix (patches/wry/PATCHED.md).
+[patch.crates-io]
+wry = { path = "patches/wry" }

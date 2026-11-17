@@ -98,7 +98,9 @@ describe("Select", () => {
     expect(trigger).toHaveTextContent("English · Fiction");
     fireEvent.click(trigger);
     expect(screen.getAllByRole("option")).toHaveLength(3);
-    expect(screen.getByText("English")).toHaveClass("ui-select-group");
+    // The group's name heads its options, and is not one to pick.
+    expect(screen.getByText("English")).toBeInTheDocument();
+    expect(screen.queryByRole("option", { name: "English" })).toBeNull();
     fireEvent.keyDown(screen.getByRole("listbox"), { key: "ArrowUp" });
     fireEvent.keyDown(screen.getByRole("listbox"), { key: "Enter" });
     expect(onChange).toHaveBeenCalledWith({ target: { value: "news" } });

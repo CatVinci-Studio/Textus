@@ -108,6 +108,14 @@ export function revealAt(
   return null;
 }
 
+/** The room a touch row needs after its tabs, which end at `end`, to
+ *  scroll to `left` with `shown` of it in view: none while it can. Without
+ *  it the row stops short of the end-most tabs' starts, a slice of the tab
+ *  before them showing. */
+export function tailFor(left: number, end: number, shown: number): number {
+  return Math.max(0, Math.ceil(left + shown - end));
+}
+
 /** `left` moved on to the start of the first tab at or after it, never past
  *  `limit` (the open tab's start): a touch row then shows no part of a tab
  *  at its start. `edges` are the tabs' starts. */

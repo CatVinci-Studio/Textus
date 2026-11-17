@@ -1,5 +1,5 @@
 import { expect, test, type Page } from "@playwright/test";
-import { MAC, emit, openApp, pasteMarkdown } from "./helpers";
+import { MAC, PHONE, emit, openApp, pasteMarkdown } from "./helpers";
 
 // Sidebar panels: the plugin list opens a plugin's page in a tab of its
 // own; the sidebar steps aside for the islands and widens by its edge.
@@ -83,6 +83,16 @@ test("too narrow for the islands at their least, the sidebar steps aside, then t
   await expect(page.locator("section.island")).toHaveCount(1);
   await page.waitForTimeout(300);
   await expect(sidebar).not.toHaveClass(/sidebar-collapsed/);
+  // And the island it joined stays in the window.
+  const island = (await page.locator("section.island").boundingBox())!;
+  expect(island.x + island.width).toBeLessThanOrEqual(800);
+  // Split with the AI in front: it and the document go apart, the sidebar
+  // stepping aside for them - not made, then folded straight back.
+  await emit(page, "menu-split-right");
+  await expect(page.locator("section.island")).toHaveCount(2);
+  await expect(sidebar).toHaveClass(/sidebar-collapsed/);
+  await page.waitForTimeout(300);
+  await expect(page.locator("section.island")).toHaveCount(2);
 });
 
 test("its edge dragged out, the sidebar widens and the islands make room", async ({
@@ -230,6 +240,50 @@ test("a split the window has no room for is not made, and says why", async ({
   expect(count).toBe(3);
   await expect(page.locator(".notice-text")).toBeVisible();
   await expect(islands).toHaveCount(3);
+
+  // A tab dropped on the window's outer edge then joins the island there,
+  // and the window says why.
+  await page.locator(".notice-text").waitFor({ state: "hidden" });
+  const box = (await islands.first().boundingBox())!;
+  await page.mouse.click(box.x + box.width / 2, box.y + box.height / 2);
+  await emit(page, "menu-new-file");
+  const rows = page.getByRole("tablist");
+  await expect(rows.first().getByRole("tab")).toHaveCount(2);
+  const tab = (await rows.first().getByRole("tab").last().boundingBox())!;
+  const last = (await islands.last().boundingBox())!;
+  await page.mouse.move(tab.x + tab.width / 2, tab.y + tab.height / 2);
+  await page.mouse.down();
+  await page.mouse.move(tab.x + 40, tab.y + 150, { steps: 10 });
+  await page.mouse.move(last.x + last.width - 6, last.y + last.height / 2, {
+    steps: 25,
+  });
+  await page.waitForTimeout(700);
+  await page.mouse.up();
+  await expect(page.locator(".notice-text")).toBeVisible();
+  await expect(islands).toHaveCount(3);
+  await expect(rows.last().getByRole("tab")).toHaveCount(2);
+
+  // Its own island's edge, no room for another: it stays, and is told why.
+  await page.locator(".notice-text").waitFor({ state: "hidden" });
+  const own = (await rows.last().getByRole("tab").last().boundingBox())!;
+  await page.mouse.move(own.x + own.width / 2, own.y + own.height / 2);
+  await page.mouse.down();
+  await page.mouse.move(own.x, own.y + 150, { steps: 10 });
+  await page.mouse.move(last.x + last.width - 6, last.y + last.height / 2, {
+    steps: 25,
+  });
+  await page.waitForTimeout(700);
+  await page.mouse.up();
+  await expect(page.locator(".notice-text")).toBeVisible();
+  await expect(islands).toHaveCount(3);
+  await expect(rows.last().getByRole("tab")).toHaveCount(2);
+
+  // Wide but short (a phone on its side, the keyboard up), the window says
+  // it is too short, not too narrow.
+  await page.locator(".notice-text").waitFor({ state: "hidden" });
+  await page.setViewportSize({ width: 2400, height: 170 });
+  await emit(page, "menu-split-right");
+  await expect(page.locator(".notice-text")).toContainText("太矮");
 });
 
 test("another folder takes the open one's place: its documents close, and come back with it", async ({
@@ -277,17 +331,55 @@ test("a sidebar tab's own key shows it, and again puts the sidebar away; Search 
     },
   });
   await emit(page, "menu-open-folder");
-  await expect(page.locator(".tree-row", { hasText: "a.md" })).toBeVisible();
+  await page.locator(".tree-row", { hasText: "a.md" }).click();
+  await expect(page.locator(".ProseMirror:visible h1")).toContainText("A");
   const mod = MAC ? "Meta" : "Control";
   await page.keyboard.press(`${mod}+Shift+u`);
   await expect(page.locator('[data-rail-id="outline"]')).toHaveAttribute(
     "aria-pressed",
     "true",
   );
+  // A heading clicked there: the caret at its end, typing goes on in it.
+  await page.locator(".outline-row", { hasText: "A" }).click();
+  await expect(page.locator(".ProseMirror:visible")).toBeFocused();
+  await page.keyboard.type(" more");
+  await expect(page.locator(".ProseMirror:visible h1")).toContainText("A more");
   await page.keyboard.press(`${mod}+Shift+u`);
   await expect(page.locator(".tree-row")).toHaveCount(0);
   await page.keyboard.press(`${mod}+Shift+y`);
   await expect(page.locator(".tree-row", { hasText: "a.md" })).toBeVisible();
   await page.locator('[data-rail-id="search"]').click();
   await expect(page.locator(".search-panel input").first()).toBeFocused();
+});
+
+test.describe("on a phone", () => {
+  test.use(PHONE);
+
+  test("a document brought to the front is read first: the keyboard comes up for a tap in its text", async ({
+    page,
+  }) => {
+    await openApp(page);
+    const editor = page.locator(".ProseMirror:visible");
+    await editor.tap();
+    await page.keyboard.type("some text");
+    await page.locator(".tab-bar-add").first().tap();
+    await expect(page.locator(".tab-pill")).toHaveCount(2);
+    // A slow phone: the document is built well after the tap.
+    const cdp = await page
+      .context()
+      .newCDPSession(page)
+      .catch(() => null);
+    await cdp?.send("Emulation.setCPUThrottlingRate", { rate: 30 });
+    // What was tapped goes (as a sidebar's row does): the document left
+    // in front is not given the keys for it.
+    await page.locator(".tab-pill").last().locator(".tab-pill-close").tap();
+    const text = page.locator(".ProseMirror:visible p", { hasText: "some" });
+    await expect(text).toBeVisible();
+    // Long enough for any late focus of its own to have come.
+    await page.waitForTimeout(2000);
+    await cdp?.send("Emulation.setCPUThrottlingRate", { rate: 1 });
+    await expect(editor).not.toBeFocused();
+    await text.tap();
+    await expect(editor).toBeFocused();
+  });
 });

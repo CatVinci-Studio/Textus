@@ -81,7 +81,10 @@ export type Piece =
 
 export interface SaveMemo {
   /** A changed run's text, by its first block. */
-  runs: WeakMap<ProseNode, { nodes: ProseNode[]; text: string }>;
+  runs: WeakMap<
+    ProseNode,
+    { nodes: ProseNode[]; text: string; definitions: string }
+  >;
   /** Whether a join read back, by the blocks on either side of it. */
   joins: WeakMap<ProseNode, WeakMap<ProseNode, JoinCheck>>;
 }

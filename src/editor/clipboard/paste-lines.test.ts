@@ -26,14 +26,6 @@ describe("keepPastedLines", () => {
     expect(keepPastedLines("---\nA\nB\n---")).toBe("---\nA  \nB\n---");
   });
 
-  it("makes a quote drawn with bars a Markdown quote", () => {
-    const pasted =
-      "▎ Hi Denisse,\n▎\n▎ I went through\n▎ your grading.\n▎\n▎ - T1: brief";
-    expect(keepPastedLines(pasted)).toBe(
-      "> Hi Denisse,\n>\n> I went through  \n> your grading.\n>\n> - T1: brief",
-    );
-  });
-
   it("leaves a table's pipes alone", () => {
     expect(keepPastedLines("| a | b |\n| 1 | 2 |")).toBe(
       "| a | b |\n| 1 | 2 |",

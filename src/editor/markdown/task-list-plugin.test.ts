@@ -58,18 +58,18 @@ async function typeIn(
 describe("typing a task spelling", () => {
   it("turns a paragraph into a task", async () => {
     const out = await typeAt("", ["", "-[]x"]);
-    expect(out).toBe("* [ ] x\n");
+    expect(out).toBe("- [ ] x\n");
   });
 
   it("turns a line with words already in it into a task, the words its text", async () => {
     expect(await typeBefore("买牛奶\n", "买牛奶", "-[]")).toBe(
-      "* [ ] 买牛奶\n",
+      "- [ ] 买牛奶\n",
     );
     expect(await typeBefore("Buy **milk**\n", "Buy milk", "-[x]")).toBe(
-      "* [x] Buy **milk**\n",
+      "- [x] Buy **milk**\n",
     );
     expect(await typeBefore("买牛奶\n", "买牛奶", "- 【】")).toBe(
-      "* [ ] 买牛奶\n",
+      "- [ ] 买牛奶\n",
     );
   });
 

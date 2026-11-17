@@ -1,6 +1,7 @@
 import { frameLayout } from "../frame/frame-store";
 import { panesOf } from "./tree";
 import { splitLayout } from "./store";
+import { createSubscribers } from "../../utils/store";
 
 /**
  * The islands' numbers: with ⌘ (Ctrl) held alone for a moment and two or
@@ -58,26 +59,20 @@ export function islandAnchors(): IslandAnchor[] {
 }
 
 let hold: Hold = "idle";
-const listeners = new Set<() => void>();
+const shown = createSubscribers();
 
 function set(next: Hold) {
   if (next === hold) return;
   const was = hold;
   hold = next;
-  if ((was === "shown") !== (next === "shown"))
-    for (const listener of listeners) listener();
+  if ((was === "shown") !== (next === "shown")) shown.publish();
 }
 
 export function islandNumbersShown(): boolean {
   return hold === "shown";
 }
 
-export function subscribeIslandNumbers(listener: () => void): () => void {
-  listeners.add(listener);
-  return () => {
-    listeners.delete(listener);
-  };
-}
+export const subscribeIslandNumbers = shown.subscribe;
 
 let go: ((tabId: string) => void) | null = null;
 

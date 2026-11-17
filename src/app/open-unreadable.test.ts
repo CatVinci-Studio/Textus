@@ -2,9 +2,16 @@ import { describe, expect, it, vi } from "vitest";
 import { resolveStrings } from "../i18n/strings";
 
 const shown = vi.fn();
-const offer = vi.fn(async () => "none");
+const asked = vi.fn(async (text: string) => text.length > 0);
+const opened = vi.fn();
+const offer = vi.fn(async (): Promise<string> => "none");
 vi.mock("../engine/controls/app-dialog", () => ({
   showMessage: (text: string) => shown(text),
+  showConfirm: (text: string) => asked(text),
+}));
+vi.mock("../platform/ipc", () => ({
+  exportDoc: { openLinkedFile: (path: string) => opened(path) },
+  session: {},
 }));
 vi.mock("../plugins/store/open-offer", () => ({ offerPluginToOpen: offer }));
 
@@ -33,6 +40,15 @@ describe("a file that won't open as text", () => {
     expect(shown).toHaveBeenLastCalledWith(
       expect.stringContaining("isn't a text document"),
     );
+  });
+
+  it("says why when its plugin's offer was turned off, the system's app a press away", async () => {
+    offer.mockResolvedValueOnce("muted");
+    const err = new Error("stream did not contain valid UTF-8");
+    const opts = { reopening: false, t };
+    expect(await openUnreadable("/n/doc.pdf", err, opts)).toBeNull();
+    expect(asked).toHaveBeenCalledWith(expect.stringContaining("doc.pdf"));
+    expect(opened).toHaveBeenCalledWith("/n/doc.pdf");
   });
 
   it("knows a PDF or a zip that happens to read as text", () => {

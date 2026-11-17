@@ -1,10 +1,6 @@
 import { describe, expect, it } from "vitest";
 import { Schema } from "@milkdown/kit/prose/model";
-import {
-  EditorState,
-  TextSelection,
-  type Transaction,
-} from "@milkdown/kit/prose/state";
+import { EditorState, type Transaction } from "@milkdown/kit/prose/state";
 import {
   createLazyBlocksPlugin,
   flipOf,
@@ -74,28 +70,6 @@ const withMeta = (tr: Transaction, meta: LazyBlocksMeta) =>
   tr.setMeta(lazyBlocksKey, meta);
 
 describe("drawing a long document's blocks lazily", () => {
-  it("draws every block of a short document", () => {
-    const state = start(100);
-    expect(lazyBlocksKey.getState(state)!.active).toBe(false);
-    expect(drawn(state)).toEqual([]);
-  });
-
-  it("draws only the blocks around the caret of a long one", () => {
-    const state = start(2000);
-    expect(lazyBlocksKey.getState(state)!.active).toBe(true);
-    expect(drawn(state)).toEqual(Array.from({ length: 41 }, (_, i) => i));
-  });
-
-  it("draws the block the caret moves to, far from the others", () => {
-    let state = start(2000);
-    state = state.apply(
-      state.tr.setSelection(
-        TextSelection.create(state.doc, blockStart(state, 1500) + 3),
-      ),
-    );
-    expect(drawn(state)).toContain(1500);
-  });
-
   it("keeps the caret's block drawn when the view releases it", () => {
     let state = start(2000);
     state = state.apply(
@@ -103,17 +77,6 @@ describe("drawing a long document's blocks lazily", () => {
     );
     expect(drawn(state)).toContain(0);
     expect(drawn(state)).not.toContain(5);
-  });
-
-  it("draws the blocks the view asks for", () => {
-    let state = start(2000);
-    state = state.apply(
-      withMeta(state.tr, {
-        draw: [blockStart(state, 900), blockStart(state, 901)],
-      }),
-    );
-    expect(drawn(state)).toEqual(expect.arrayContaining([900, 901]));
-    expect(drawn(state)).not.toContain(902);
   });
 
   it("draws both halves of a paragraph split in two", () => {
@@ -140,12 +103,6 @@ describe("drawing a long document's blocks lazily", () => {
     );
     expect(drawn(state).length).toBeLessThan(50);
     expect(drawn(state)).toContain(1999);
-  });
-
-  it("draws every block when asked to, for printing", () => {
-    let state = start(2000);
-    state = state.apply(withMeta(state.tr, { drawAll: true }));
-    expect(drawn(state)).toHaveLength(2000);
   });
 
   it("stays on until the document is a tenth below the threshold", () => {

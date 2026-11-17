@@ -1,3 +1,4 @@
+import { takeKeys } from "../take-keys";
 import type { Ctx } from "@milkdown/kit/ctx";
 import { editorViewCtx, serializerCtx } from "@milkdown/kit/core";
 import { TextSelection } from "@milkdown/kit/prose/state";
@@ -96,7 +97,7 @@ export function placeEditorCaret(
   view.dispatch(
     view.state.tr.setSelection(TextSelection.near(doc.resolve(at))),
   );
-  view.focus();
+  takeKeys(view);
   const scroller = scrollerOf(view.dom);
   if (!scroller) return;
   const head = view.state.selection.head;

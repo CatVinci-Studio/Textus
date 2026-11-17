@@ -33,7 +33,7 @@ export function MenuBar({ checks }: { checks?: MenuChecks }) {
 
   const close = useCallback(() => {
     setOpen(null);
-    focusOnClose.current?.focus();
+    focusOnClose.current?.focus({ preventScroll: true });
     focusOnClose.current = null;
   }, []);
   // Round the titles and the open list both, so a click on a title isn't

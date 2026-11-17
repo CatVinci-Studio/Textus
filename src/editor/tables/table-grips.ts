@@ -60,11 +60,20 @@ export function attachGrips(options: {
 
   /** The grips at `cell`'s row and column; hidden with none. */
   function place(cell: HTMLElement | null) {
+    last = cell;
     const tr = cell?.parentElement;
     const row = tr ? rows().indexOf(tr as HTMLTableRowElement) : -1;
     const col = tr && cell ? [...tr.children].indexOf(cell) : -1;
     at = { row, col };
     wrapper.toggleAttribute("data-grips", row >= 0);
+    // Which edges the pointer is by: each shows its own tools (the strips,
+    // the toolbar over the head row), not all of them as it enters.
+    const near = [
+      row === 0 && "top",
+      tr && row === rows().length - 1 && "bottom",
+      tr && col === tr.children.length - 1 && "right",
+    ].filter(Boolean);
+    wrapper.dataset.near = near.join(" ");
     if (!cell || !tr || row < 0) return;
     const t = box(table);
     const r = box(tr as HTMLElement);
@@ -72,8 +81,19 @@ export function attachGrips(options: {
     grips.row.hidden = row === 0;
     // Scrolled sideways, the row's grip stays at the edge still shown.
     grips.row.style.transform = `translate(${Math.max(t.x, 0)}px, ${r.y + r.h / 2}px)`;
-    grips.col.style.transform = `translate(${c.x + c.w / 2}px, ${t.y}px)`;
+    // A column half scrolled out: its grip at the middle of what shows.
+    const left = Math.max(c.x, 0);
+    const right = Math.min(c.x + c.w, wrapper.clientWidth);
+    grips.col.hidden = right <= left;
+    grips.col.style.transform = `translate(${(left + right) / 2}px, ${t.y}px)`;
   }
+  // Placed again as the table changes size (zoom, the window, a row
+  // growing as it is typed in), not only as the pointer moves.
+  let last: HTMLElement | null = null;
+  const resized = new ResizeObserver(() => {
+    if (last?.isConnected && !dragging) place(last);
+  });
+  resized.observe(table);
 
   const cellAt = (target: EventTarget | null) => {
     const cell = (target as Element | null)?.closest?.("td, th");
@@ -88,7 +108,10 @@ export function attachGrips(options: {
     const cell = cellAt(e.target);
     if (cell) place(cell);
   };
-  const onLeave = () => (mouseOver = false);
+  const onLeave = () => {
+    mouseOver = false;
+    delete wrapper.dataset.near;
+  };
   wrapper.addEventListener("pointermove", onMove);
   wrapper.addEventListener("pointerleave", onLeave);
 
@@ -138,23 +161,28 @@ export function attachGrips(options: {
         ? rows().slice(1)
         : ([...(rows()[0]?.children ?? [])] as HTMLElement[]);
     const from = axis === "row" ? index - 1 : index;
-    const along = (el: Element) => {
-      const r = el.getBoundingClientRect();
+    // Laid-out boxes, not screen ones: the lift and the slides are drawn
+    // inside the document's zoom, which scales them; the pointer's moves
+    // are taken back into it.
+    const zoom =
+      parseFloat(
+        getComputedStyle(wrapper).getPropertyValue("--content-zoom"),
+      ) || 1;
+    const along = (el: HTMLElement) => {
+      const b = box(el);
       return axis === "row"
-        ? { mid: r.top + r.height / 2, size: r.height }
-        : { mid: r.left + r.width / 2, size: r.width };
+        ? { start: b.y, size: b.h, mid: b.y + b.h / 2 }
+        : { start: b.x, size: b.w, mid: b.x + b.w / 2 };
     };
     const centers = items
       .filter((_, i) => i !== from)
       .map((el) => along(el).mid);
     const mine = along(items[from]!);
     // It stays within the others: never over the head row, or past the end.
-    const first = items[0]!.getBoundingClientRect();
-    const last = items[items.length - 1]!.getBoundingClientRect();
-    const reach =
-      axis === "row" ? [first.top, last.bottom] : [first.left, last.right];
-    const least = reach[0]! - (mine.mid - mine.size / 2);
-    const most = reach[1]! - (mine.mid + mine.size / 2);
+    const first = along(items[0]!);
+    const last = along(items[items.length - 1]!);
+    const least = first.start - (mine.mid - mine.size / 2);
+    const most = last.start + last.size - (mine.mid + mine.size / 2);
     const start = axis === "row" ? e.clientY : e.clientX;
     const scope = `.table-wrapper[data-drag-id="${id}"] tbody`;
     const place = (i: number) =>
@@ -171,7 +199,7 @@ export function attachGrips(options: {
       },
       move: (x, y) => {
         // Where it lands goes by the pointer; where it is drawn stays inside.
-        const pulled = (axis === "row" ? y : x) - start;
+        const pulled = ((axis === "row" ? y : x) - start) / zoom;
         to = passedCount(centers, mine.mid + pulled);
         const shift = Math.min(most, Math.max(least, pulled));
         const lifted = axis === "row" ? `${place(from)} > *` : place(from);
@@ -196,6 +224,9 @@ export function attachGrips(options: {
         const table = tableNow();
         if (!dropped || !table || to === from) return;
         const offset = axis === "row" ? 1 : 0;
+        // The move reads its row or column off the selection: picked first,
+        // wherever the caret was.
+        pick(axis, from + offset);
         const command = axis === "row" ? moveTableRow : moveTableColumn;
         command({
           from: from + offset,
@@ -223,6 +254,7 @@ export function attachGrips(options: {
     destroy() {
       wrapper.removeEventListener("pointermove", onMove);
       wrapper.removeEventListener("pointerleave", onLeave);
+      resized.disconnect();
     },
   };
 }

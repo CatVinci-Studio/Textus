@@ -95,6 +95,10 @@ pub struct ProviderCaps {
     /// The effort Auto asks for where the provider's own default thinks far
     /// longer than writing needs. None: Auto sends nothing.
     pub auto_effort: Option<&'static str>,
+    /// Every model the provider serves reads 128k tokens or more. Not a
+    /// gateway's (any model behind it), nor one that also sells 8k or 32k
+    /// models.
+    pub roomy: bool,
 }
 
 #[cfg(test)]

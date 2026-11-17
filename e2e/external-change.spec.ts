@@ -1,5 +1,5 @@
 import { expect, test } from "@playwright/test";
-import { openApp } from "./helpers";
+import { emit, openApp } from "./helpers";
 import { openPath } from "./plugin-helpers";
 
 // A file changed on disk while its tab is open and has nothing unsaved -
@@ -112,4 +112,246 @@ test("coming back from another app leaves the document where it was read", async
     el.scrollTop = el.scrollHeight;
   });
   await expect.poll(() => scroller.evaluate((el) => el.scrollTop)).toBe(600);
+});
+
+test("switching between documents leaves each where it was read", async ({
+  page,
+}) => {
+  const long = (name: string) =>
+    `# ${name}\n\n${Array.from({ length: 200 }, (_, i) => `${name} line ${i}.`).join("\n\n")}\n`;
+  await page.addInitScript(
+    (docs) => ((window as unknown as Record<string, unknown>).__devFs = docs),
+    { "/work/a.md": long("A"), "/work/b.md": long("B") },
+  );
+  await openApp(page);
+  const active = page.locator('[data-active-tab="true"]');
+  const scroller = active.locator(".editor-scroll");
+  const top = () => scroller.evaluate((el) => Math.round(el.scrollTop));
+  const read = async (path: string, last: string, by: number) => {
+    await openPath(page, path);
+    await expect(active.locator(".ProseMirror")).toContainText(last);
+    await page.waitForTimeout(500);
+    await scroller.hover();
+    await page.mouse.wheel(0, by);
+    await expect.poll(top).toBeGreaterThan(by / 2);
+    // Kept once the scrolling settles.
+    await page.waitForTimeout(600);
+    return top();
+  };
+  const a = await read("/work/a.md", "A line 199", 1500);
+  const b = await read("/work/b.md", "B line 199", 800);
+  // Each comes back drawn anew; the editor taking its focus back must not
+  // scroll it to the caret at the top.
+  for (const [name, at] of [
+    ["a.md", a],
+    ["b.md", b],
+    ["a.md", a],
+  ] as const) {
+    await page.locator(".tab-pill", { hasText: name }).click();
+    await expect
+      .poll(async () => Math.abs((await top()) - at))
+      .toBeLessThan(40);
+    await page.waitForTimeout(500);
+    expect(Math.abs((await top()) - at)).toBeLessThan(40);
+  }
+});
+
+test("a document comes back with its caret, its undo and its redo", async ({
+  page,
+}) => {
+  const long = (name: string) =>
+    `# ${name}\n\n${Array.from({ length: 120 }, (_, i) => `${name} line ${i}.`).join("\n\n")}\n`;
+  await page.addInitScript(
+    (docs) => ((window as unknown as Record<string, unknown>).__devFs = docs),
+    { "/work/a.md": long("A"), "/work/b.md": long("B") },
+  );
+  await openApp(page);
+  const editor = page.locator('[data-active-tab="true"] .ProseMirror');
+  const scroller = page.locator('[data-active-tab="true"] .editor-scroll');
+  const tab = (name: string) => page.locator(".tab-pill", { hasText: name });
+  const away = async () => {
+    await tab("b.md").click();
+    await expect(editor).toContainText("B line 119");
+    await page.waitForTimeout(400);
+    await tab("a.md").click();
+    await expect(editor).toContainText("A line 119");
+    await page.waitForTimeout(400);
+  };
+  await openPath(page, "/work/b.md");
+  await openPath(page, "/work/a.md");
+  await expect(editor).toContainText("A line 119");
+  const line = editor.locator("p", { hasText: "A line 60." });
+  await line.click();
+  await page.keyboard.press("End");
+  await page.keyboard.type(" ONE");
+  await page.waitForTimeout(700);
+  await page.keyboard.type(" TWO");
+  await expect(line).toHaveText("A line 60. ONE TWO");
+  await page.waitForTimeout(400);
+  const read = await scroller.evaluate((el) => Math.round(el.scrollTop));
+
+  // The caret is where it was: typing goes on after the last word, with
+  // no click, and the page has not moved.
+  await away();
+  await page.keyboard.type("!");
+  await expect(editor.locator("p", { hasText: "A line 60." })).toHaveText(
+    "A line 60. ONE TWO!",
+  );
+  expect(
+    Math.abs((await scroller.evaluate((el) => el.scrollTop)) - read),
+  ).toBeLessThan(40);
+
+  // Undo goes back step by step, staying at the edit; redo comes back
+  // after another switch.
+  await page.keyboard.press("ControlOrMeta+z");
+  await page.keyboard.press("ControlOrMeta+z");
+  await expect(editor.locator("p", { hasText: "A line 60." })).toHaveText(
+    "A line 60. ONE",
+  );
+  expect(
+    Math.abs((await scroller.evaluate((el) => el.scrollTop)) - read),
+  ).toBeLessThan(40);
+  await away();
+  await page.keyboard.press("ControlOrMeta+Shift+z");
+  await expect(editor.locator("p", { hasText: "A line 60." })).toHaveText(
+    "A line 60. ONE TWO",
+  );
+  await page.keyboard.press("ControlOrMeta+z");
+  await expect(editor.locator("p", { hasText: "A line 60." })).toHaveText(
+    "A line 60. ONE",
+  );
+
+  // Saved, closed and opened again: its history comes from its file.
+  await page.keyboard.press("ControlOrMeta+s");
+  await expect(page.locator(".tab-pill-dirty-dot")).toHaveCount(0);
+  await page.keyboard.press("ControlOrMeta+w");
+  await expect(tab("a.md")).toHaveCount(0);
+  await openPath(page, "/work/a.md");
+  await expect(editor).toContainText("A line 60. ONE");
+  await page.waitForTimeout(600);
+  await editor.locator("p", { hasText: "A line 0." }).click();
+  await page.keyboard.press("ControlOrMeta+z");
+  await expect(editor.locator("p", { hasText: "A line 60." })).toHaveText(
+    "A line 60.",
+  );
+  await page.keyboard.press("ControlOrMeta+Shift+z");
+  await page.keyboard.press("ControlOrMeta+Shift+z");
+  await expect(editor.locator("p", { hasText: "A line 60." })).toHaveText(
+    "A line 60. ONE TWO",
+  );
+});
+
+test("the editor taking the focus scrolls nothing; typing brings the caret into sight", async ({
+  page,
+}) => {
+  const text = Array.from({ length: 200 }, (_, i) => `Line ${i}.`).join("\n\n");
+  await page.addInitScript((body) => {
+    (window as unknown as Record<string, unknown>).__devFs = {
+      "/work/long.md": `# Long\n\n${body}\n`,
+    };
+  }, text);
+  await openApp(page);
+  await openPath(page, "/work/long.md");
+  const editor = page.locator('[data-active-tab="true"] .ProseMirror');
+  const scroller = page.locator('[data-active-tab="true"] .editor-scroll');
+  await expect(editor).toContainText("Line 199");
+  // The caret far down, the page read back at its top.
+  await editor.locator("p", { hasText: /^Line 150\.$/ }).click();
+  await scroller.hover();
+  await page.mouse.wheel(0, -20000);
+  await expect.poll(() => scroller.evaluate((el) => el.scrollTop)).toBe(0);
+  await page.waitForTimeout(500);
+  // Focus given to the element itself, the page's selection gone meanwhile
+  // (a menu or a dialog took it): the browser starts the caret at the top,
+  // and the editor, putting its own back, must not scroll to it.
+  await editor.evaluate((el: HTMLElement) => {
+    el.blur();
+    getSelection()?.removeAllRanges();
+    el.focus({ preventScroll: true });
+  });
+  await page.waitForTimeout(500);
+  expect(await scroller.evaluate((el) => el.scrollTop)).toBe(0);
+  await page.keyboard.type("!");
+  await expect
+    .poll(() => scroller.evaluate((el) => el.scrollTop))
+    .toBeGreaterThan(1000);
+  await expect(editor.locator("p", { hasText: "Line 150." })).toHaveText(
+    "Line 150.!",
+  );
+});
+
+test("a document shown again in the island not in use is where it was read", async ({
+  page,
+}) => {
+  const long = (name: string) =>
+    `# ${name}\n\n${Array.from({ length: 200 }, (_, i) => `${name} line ${i}.`).join("\n\n")}\n`;
+  await page.addInitScript(
+    (docs) => ((window as unknown as Record<string, unknown>).__devFs = docs),
+    { "/work/a.md": long("A"), "/work/b.md": long("B") },
+  );
+  await page.setViewportSize({ width: 1400, height: 780 });
+  await openApp(page);
+  await openPath(page, "/work/a.md");
+  const front = page.locator('[data-active-tab="true"]');
+  await expect(front.locator(".ProseMirror")).toContainText("A line 199");
+  await page.waitForTimeout(500);
+  await front.locator(".editor-scroll").hover();
+  await page.mouse.wheel(0, 1500);
+  await expect
+    .poll(() => front.locator(".editor-scroll").evaluate((el) => el.scrollTop))
+    .toBeGreaterThan(1000);
+  await page.waitForTimeout(500);
+  await openPath(page, "/work/b.md");
+  await expect(front.locator(".ProseMirror")).toContainText("B line 199");
+  // b.md takes an island of its own: a.md comes back in the one left
+  // behind, which is not the one in use.
+  await emit(page, "menu-split-right");
+  const a = page.locator(".editor-scroll:visible", { hasText: "A line 199" });
+  await expect(a).toHaveCount(1);
+  await expect(front.locator(".ProseMirror")).toContainText("B line 199");
+  await page.waitForTimeout(600);
+  expect(
+    Math.abs((await a.evaluate((el) => el.scrollTop)) - 1500),
+  ).toBeLessThan(40);
+});
+
+test("a tracked document keeps its original while another tab is in front, through an autosave", async ({
+  page,
+}) => {
+  await page.addInitScript(() => {
+    (window as unknown as Record<string, unknown>).__devFs = {
+      "/work/a.md": "# A\n\nThe first line.\n",
+      "/work/b.md": "# B\n\nAnother file.\n",
+    };
+  });
+  await openApp(page, { settings: { autosave: true } });
+  await openPath(page, "/work/b.md");
+  await openPath(page, "/work/a.md");
+  const editor = page.locator('[data-active-tab="true"] .ProseMirror');
+  await expect(editor).toContainText("The first line.");
+  await editor.locator("p").click();
+  await expect(editor).toBeFocused();
+  await emit(page, "menu-track-changes");
+  await page.keyboard.press("End");
+  await page.keyboard.type(" Added words.");
+  await expect(editor.locator(".own-insert")).toContainText("Added words.");
+  const file = () =>
+    page.evaluate(
+      () =>
+        (window as unknown as { __devFs: Record<string, string> }).__devFs[
+          "/work/a.md"
+        ],
+    );
+
+  // Its tab out of sight, the autosave writes the original, not the change
+  // nobody decided on.
+  await page.locator(".tab-pill", { hasText: "b.md" }).click();
+  await expect(editor).toContainText("Another file.");
+  await expect(page.locator(".tab-pill-dirty-dot")).toHaveCount(0);
+  expect(await file()).not.toContain("Added words.");
+
+  // Back in front, it is still tracked: the change shows, undecided.
+  await page.locator(".tab-pill", { hasText: "a.md" }).click();
+  await expect(editor.locator(".own-insert")).toContainText("Added words.");
+  expect(await file()).not.toContain("Added words.");
 });

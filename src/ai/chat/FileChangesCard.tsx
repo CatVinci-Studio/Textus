@@ -7,14 +7,14 @@ import { ai } from "../../platform/ipc";
 import type { FileChange_Serialize as FileChange } from "../../platform/bindings/ai-project";
 import { filesChanged, type FileChangeCall } from "./file-changes";
 import {
-  FILE_REVISIONS_EVENT,
   dismissConflicts,
   forgetCreated,
+  onFileRevisions,
   readFileRevisions,
   useAiFileMarks,
 } from "../revision/file-revisions";
 import type { AiFileMark } from "../../storage/ui-state";
-import { useWindowEvent } from "../../utils/hooks/useWindowEvent";
+import { useHeard } from "../../utils/hooks/useHeard";
 
 interface FileChangesLabels {
   filesChangedTitle: string;
@@ -236,9 +236,8 @@ function useConflicts(changes: Shown[] | null): ReadonlySet<string> {
   const [conflicts, setConflicts] = useState<ReadonlySet<string>>(new Set());
   const files = [...new Set((changes ?? []).map((c) => c.file))].join("\n");
   const [stamp, restamp] = useState(0);
-  useWindowEvent(FILE_REVISIONS_EVENT, (e) => {
-    if (files.split("\n").includes((e as CustomEvent<string>).detail))
-      restamp((n) => n + 1);
+  useHeard(onFileRevisions, (path) => {
+    if (files.split("\n").includes(path)) restamp((n) => n + 1);
   });
   useEffect(() => {
     let live = true;

@@ -68,7 +68,11 @@ export function readSourceBlocks(
   const { children } =
     recorded?.text === text ? recorded : parseBlocks(ctx, text);
   const count = children.reduce((sum, child) => sum + child.blocks.length, 0);
-  if (count !== doc.childCount) return null;
+  // An empty file opens as one empty paragraph: what is typed into it is
+  // written as a person would, too.
+  const empty =
+    count === 0 && doc.childCount === 1 && !doc.firstChild!.content.size;
+  if (count !== doc.childCount && !empty) return null;
   const units: SourceUnit[] = [];
   const byNode = new Map<ProseNode, number>();
   // A construct that became no block of its own goes with the unit before it,

@@ -1,5 +1,6 @@
 import { useEffect, useState, type CSSProperties } from "react";
 import "./notices.css";
+import { createSubscribers } from "../../utils/store";
 
 /** Short notes at the bottom of the window that go by themselves, and
  *  progress bars for slow work: what a plugin says without stopping the user.
@@ -29,12 +30,10 @@ const MAX_SHOWN = 3;
 
 let nextId = 1;
 let notices: Notice[] = [];
-const listeners = new Set<(notices: Notice[]) => void>();
+const shownNow = createSubscribers<[notices: Notice[]]>();
 const timers = new Map<number, ReturnType<typeof setTimeout>>();
 
-function publish() {
-  for (const listener of listeners) listener(notices);
-}
+const publish = () => shownNow.publish(notices);
 
 function remove(id: number) {
   clearTimeout(timers.get(id));
@@ -73,9 +72,11 @@ function add(notice: Omit<Notice, "id">): number {
   if (same) return same.id;
   const id = nextId++;
   notices = [...notices, { ...notice, id }];
-  // The oldest note that isn't a progress bar makes room.
+  // The oldest plain note makes room, this one too: an error or an offer
+  // (Undo) gives way only to one of its kind. A progress bar stays.
+  const plain = (n: Notice) => !n.progress && !n.action && n.tone === "info";
   while (notices.length > MAX_SHOWN) {
-    const old = notices.find((n) => !n.progress);
+    const old = notices.find(plain) ?? notices.find((n) => !n.progress);
     if (!old) break;
     remove(old.id);
   }
@@ -158,12 +159,7 @@ export function endProgress(id: number): void {
 /** Mounted once per window, by App. */
 export function NoticeHost() {
   const [shown, setShown] = useState<Notice[]>(notices);
-  useEffect(() => {
-    listeners.add(setShown);
-    return () => {
-      listeners.delete(setShown);
-    };
-  }, []);
+  useEffect(() => shownNow.subscribe(setShown), []);
   if (!shown.length) return null;
   return (
     <div className="notice-stack" role="status" aria-live="polite">

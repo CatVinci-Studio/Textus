@@ -44,6 +44,12 @@ textus.views.registerWebview("jane.board.view", {
   network. For data, and for storage, it asks its plugin with
   `postMessage`. `api.getState()` / `api.setState(value)` keep a little
   state while Textus runs.
+- A page out of sight (its tab behind another, its panel closed) may be
+  let go to save memory, and is built again from its HTML when shown. It
+  is told first: `api.onDidChangeVisibility(visible => …)` (1.7) runs as it
+  goes out of sight, the moment to `setState` what it should come back to
+  (a scroll, a zoom, a filter not yet applied). Writing to the plugin's
+  storage belongs there too, not on a timer the page may not live to run.
 - From 1.3.13 a page may go full screen (`element.requestFullscreen()`);
   Esc leaves it.
 - The theme's colours and sizes are CSS variables that follow the theme

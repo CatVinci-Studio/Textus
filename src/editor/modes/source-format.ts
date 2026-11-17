@@ -1,5 +1,5 @@
 import type { EditorView } from "@codemirror/view";
-import { EditorSelection } from "@codemirror/state";
+import { EditorSelection, type EditorState } from "@codemirror/state";
 
 /**
  * The Format menu's marks and blocks in source mode, as Markdown written
@@ -162,23 +162,53 @@ export function insertSourceLink(view: EditorView): void {
   });
 }
 
-/** The selected lines in a code fence, or out of the one around them. */
+const FENCE = /^\s*(`{3,}|~{3,})(.*)$/;
+
+/** The code fence holding line `at` (1-based), as its opening and closing
+ *  line numbers; null outside one, or in one never closed. Read from the
+ *  document's start, as Markdown reads it: a closing fence is of the opening
+ *  one's character, as long at least, with nothing after it. */
+function fenceAround(
+  doc: EditorState["doc"],
+  at: number,
+): { open: number; close: number } | null {
+  let open: { line: number; marks: string } | null = null;
+  for (let n = 1; n <= doc.lines; n++) {
+    const found = FENCE.exec(doc.line(n).text);
+    if (!found) continue;
+    const [, marks, rest] = found;
+    if (!open) {
+      if (n > at) return null;
+      open = { line: n, marks };
+    } else if (
+      marks[0] === open.marks[0] &&
+      marks.length >= open.marks.length &&
+      !rest.trim()
+    ) {
+      if (n >= at) return { open: open.line, close: n };
+      open = null;
+    }
+  }
+  return null;
+}
+
+/** The selected lines in a code fence, or the fence around them taken off. */
 export function toggleSourceFence(view: EditorView): boolean {
   const { state } = view;
   const range = state.selection.main;
   const first = state.doc.lineAt(range.from);
   const last = state.doc.lineAt(range.to);
-  const before = first.number > 1 ? state.doc.line(first.number - 1) : null;
-  const after =
-    last.number < state.doc.lines ? state.doc.line(last.number + 1) : null;
-  const fence = (text?: string) => !!text && /^\s*(`{3,}|~{3,})/.test(text);
-  if (before && after && fence(before.text) && fence(after.text)) {
-    view.dispatch({
-      changes: [
-        { from: before.from, to: first.from },
-        { from: last.to, to: after.to },
-      ],
-    });
+  const around = fenceAround(state.doc, first.number);
+  if (around && around.close >= last.number) {
+    // Each fence line with its line break; the last line has none after.
+    const whole = (n: number) => {
+      const line = state.doc.line(n);
+      return n < state.doc.lines
+        ? { from: line.from, to: line.to + 1 }
+        : { from: Math.max(0, line.from - 1), to: line.to };
+    };
+    const changes = state.changes([whole(around.open), whole(around.close)]);
+    view.dispatch({ changes, selection: state.selection.map(changes, 1) });
     return true;
   }
   const changes = state.changes([

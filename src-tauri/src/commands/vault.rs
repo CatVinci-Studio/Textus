@@ -18,8 +18,8 @@ static IMAGE_TYPES: std::sync::LazyLock<serde_json::Map<String, serde_json::Valu
 
 /// The walk that indexes a vault stops here: a vault this size is rare, and a
 /// "vault" that is really a home folder must not stall the editor.
-const MAX_INDEXED_FILES: usize = 20_000;
-const MAX_VISITED_ENTRIES: usize = 200_000;
+const MAX_INDEXED_FILES: usize = 100_000;
+const MAX_VISITED_ENTRIES: usize = 500_000;
 const MAX_DEPTH: usize = 24;
 
 /// How long an index is trusted. A miss rebuilds it sooner (MISS_REBUILD_AFTER),
@@ -81,7 +81,13 @@ fn join_within(root: &Path, base: &Path, link: &str) -> Option<PathBuf> {
 
 /// The vault's files, relative to its root with `/`. Hidden folders and
 /// `node_modules` are skipped; symlinks are not followed.
+#[cfg(test)]
 fn index_vault(root: &Path) -> Vec<String> {
+    index_vault_within(root, MAX_INDEXED_FILES, MAX_VISITED_ENTRIES).0
+}
+
+/// The files, and whether the walk stopped at a limit before the vault's end.
+fn index_vault_within(root: &Path, max_files: usize, max_entries: usize) -> (Vec<String>, bool) {
     let mut found = Vec::new();
     let mut visited = 0usize;
     let mut stack: Vec<(PathBuf, usize)> = vec![(root.to_path_buf(), 0)];
@@ -91,8 +97,8 @@ fn index_vault(root: &Path) -> Vec<String> {
         };
         for entry in entries.flatten() {
             visited += 1;
-            if visited > MAX_VISITED_ENTRIES || found.len() >= MAX_INDEXED_FILES {
-                return found;
+            if visited > max_entries || found.len() >= max_files {
+                return (found, true);
             }
             let name = entry.file_name();
             let name = name.to_string_lossy();
@@ -114,7 +120,7 @@ fn index_vault(root: &Path) -> Vec<String> {
             }
         }
     }
-    found
+    (found, false)
 }
 
 /// Folder steps between two vault-relative folders: up from `from` to their
@@ -290,6 +296,8 @@ struct CachedIndex {
     root: PathBuf,
     built: Instant,
     files: Arc<Vec<String>>,
+    /// The walk stopped at a limit: a file not in `files` may still exist.
+    cut: bool,
 }
 
 /// The vaults indexed lately, most recently used first.
@@ -329,16 +337,25 @@ pub(crate) fn cached_index(root: &Path, fresh: bool) -> Arc<Vec<String>> {
             return files;
         }
     }
-    let files = Arc::new(index_vault(root));
+    let (found, cut) = index_vault_within(root, MAX_INDEXED_FILES, MAX_VISITED_ENTRIES);
+    let files = Arc::new(found);
     if let Ok(mut cache) = INDEXES.lock() {
         let entry = CachedIndex {
             root: root.to_path_buf(),
             built: Instant::now(),
             files: files.clone(),
+            cut,
         };
         touch_cached(&mut cache, root, Some(entry));
     }
     files
+}
+
+/// Whether `root`'s index, as last built, stopped before the vault's end.
+fn index_cut(root: &Path) -> bool {
+    INDEXES
+        .lock()
+        .is_ok_and(|cache| cache.iter().any(|c| c.root == root && c.cut))
 }
 
 /// Where an Obsidian image embed's file is, as an absolute path for the asset
@@ -435,6 +452,11 @@ pub async fn resolve_note_link(
                 path: found.to_string_lossy().to_string(),
                 exists: true,
             });
+        }
+        // The vault is larger than what was looked through: the note may
+        // well be there, and making it here would make a second one.
+        if vault_root(doc, folder).is_some_and(|root| index_cut(&root)) {
+            return None;
         }
         new_note_path(doc, folder, &link, wiki).map(|p| NoteLinkTarget {
             path: p.to_string_lossy().to_string(),

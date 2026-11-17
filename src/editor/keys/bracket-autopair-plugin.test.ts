@@ -279,7 +279,7 @@ describe("typing a bracket or quote", () => {
     const { save, view } = await openView("");
     caretAfter(view, "");
     type(view, "- [ ] milk");
-    expect(save()).toBe("* [ ] milk\n");
+    expect(save()).toBe("- [ ] milk\n");
   });
 
   it("off, types brackets and quotes as they are", async () => {
@@ -440,6 +440,6 @@ describe("brackets and quotes committed by an input method", () => {
     // The 】 and the space typed after the box go with it.
     compose(view, "】");
     type(view, " milk");
-    expect(save()).toBe("* [ ] milk\n");
+    expect(save()).toBe("- [ ] milk\n");
   });
 });

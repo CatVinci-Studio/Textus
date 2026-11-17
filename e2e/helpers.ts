@@ -1,4 +1,4 @@
-import { type Page } from "@playwright/test";
+import { expect, type Page } from "@playwright/test";
 
 /** A document exercising most of the content styling. */
 export const SAMPLE_DOC = `# 老城区更新的几点思考
@@ -25,6 +25,17 @@ console.log("a fairly long first line of code to see whether the language label 
 - 先听取居民意见
 - 再制定方案
 `;
+
+const touch = (device: string, width: number, height: number) => ({
+  userAgent: `Mozilla/5.0 (${device}; CPU OS 18_0 like Mac OS X) AppleWebKit/605.1.15 (KHTML, like Gecko) Mobile/15E148`,
+  viewport: { width, height },
+  hasTouch: true,
+  isMobile: true,
+});
+/** `test.use(PHONE)`: an iPhone, which takes the phone's layout. */
+export const PHONE = touch("iPhone", 390, 844);
+/** `test.use(TABLET)`: an iPad upright, the desktop's layout by touch. */
+export const TABLET = touch("iPad", 768, 1024);
 
 /** Whether the page runs on a Mac: Mod is ⌘ there, and keys read so. */
 export const MAC = process.platform === "darwin";
@@ -167,6 +178,68 @@ export function settled(page: Page) {
           else requestAnimationFrame(tick);
         };
         requestAnimationFrame(tick);
+      }),
+  );
+}
+
+export const HOME = process.platform === "darwin" ? "Meta+ArrowLeft" : "Home";
+export const END = process.platform === "darwin" ? "Meta+ArrowRight" : "End";
+
+/** The raw Markdown source mode is showing, one `.cm-line` per line. Short
+ *  documents are fully rendered; CodeMirror only draws lines near the viewport
+ *  in a long one. */
+async function sourceValue(
+  page: Page,
+  root = '[data-active-tab="true"]',
+): Promise<string> {
+  return (
+    await page.locator(`${root} .source-view .cm-line`).allTextContents()
+  ).join("\n");
+}
+
+/** The active document's Markdown, read from source mode (and back). */
+export async function sourceOf(page: Page): Promise<string> {
+  const source = page.locator(
+    '[data-active-tab="true"] .source-view .cm-content',
+  );
+  await emit(page, "menu-toggle-source-mode");
+  await expect(source).toBeAttached();
+  const value = await sourceValue(page);
+  await emit(page, "menu-toggle-source-mode");
+  await expect(source).toHaveCount(0);
+  return value.trim();
+}
+
+/** Has ProseMirror read the selection a click or a key made. It reads it
+ *  on the selectionchange that follows, which in WebKit the next key sent
+ *  at once can overtake; and 20ms after it hears the editor focused it puts
+ *  its own caret back, undoing a key pressed before - on a busy machine the
+ *  focus comes late. So: focused, past that, the read done now (dev-only
+ *  view, see enclosure.ts), and a frame for what it draws. */
+export async function selectionRead(page: Page) {
+  await page.evaluate(
+    () =>
+      new Promise((resolve) => {
+        const view = (
+          window as unknown as {
+            __pmView?: {
+              focused: boolean;
+              dom: HTMLElement;
+              domObserver: { flush(): void };
+            };
+          }
+        ).__pmView;
+        const settle = () =>
+          setTimeout(() => {
+            view?.domObserver.flush();
+            requestAnimationFrame(resolve);
+          }, 30);
+        if (!view || view.focused) settle();
+        else {
+          view.dom.addEventListener("focus", settle, { once: true });
+          // Never focused (a key aimed elsewhere): on anyway.
+          setTimeout(settle, 1000);
+        }
       }),
   );
 }

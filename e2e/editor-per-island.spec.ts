@@ -25,8 +25,10 @@ test("only the tab in front has an editor; back again, its edit and its undo are
     page.locator(".tab-pill").filter({ hasText: name });
   await tab("a.md").click();
   await front.locator("p").first().click();
+  await expect(front).toBeFocused();
   await page.keyboard.press("End");
   await page.keyboard.type(" EDITED");
+  await expect(front.locator("p").first()).toContainText("EDITED");
   await tab("b.md").click();
   await expect(front.locator("h1")).toContainText("B");
   await expect(page.locator(".ProseMirror")).toHaveCount(1);

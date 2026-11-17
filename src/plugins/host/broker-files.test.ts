@@ -25,6 +25,15 @@ vi.mock("../../platform/ipc", async (importOriginal) => {
   };
 });
 
+const kept = vi.hoisted(() => [] as unknown[]);
+vi.mock("../../storage/project-settings", () => ({
+  updateProjectSettings: async (
+    _root: string,
+    _key: string,
+    change: (now: object) => object,
+  ) => void kept.push(change({})),
+}));
+
 import { fileHandlers, openDocument } from "./broker-files";
 import { fileBadge } from "../contributions/file-badges";
 import type { PluginScope } from "./broker-scope";
@@ -91,4 +100,18 @@ it("refuses a list as front matter, which would write 0: and 1: keys", () => {
       frontmatter: ["x"],
     }),
   ).toThrow("frontmatter is an object.");
+});
+
+it("keeps a folder convention only as one of what Textus reads", async () => {
+  const scope = { id: "p", root: () => "/notes" } as PluginScope;
+  const set = fileHandlers(scope)["files.setConvention"];
+  await set({ key: "linkStyle", value: "wiki" });
+  await set({ key: "linkStyle", value: null });
+  expect(kept).toEqual([{ linkStyle: "wiki" }, { linkStyle: undefined }]);
+  await expect(
+    set({ key: "linkStyle", value: { anything: ["else"] } }),
+  ).rejects.toThrow();
+  await expect(set({ key: "attachments", value: "x" })).rejects.toThrow();
+  await expect(set({ key: "toString", value: "x" })).rejects.toThrow();
+  expect(kept).toHaveLength(2);
 });

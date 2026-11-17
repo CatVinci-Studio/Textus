@@ -38,6 +38,7 @@ import {
   FileVideo,
   Folder,
   FolderOpen,
+  GripVertical,
   FolderOpenDot,
   FolderPlus,
   Grid2x2X,
@@ -319,6 +320,8 @@ export function iconMarkup(Shape: LucideIcon, size: number): string {
 
 export const IMAGE_ICON_HTML = iconMarkup(FileImage, 15);
 export const PLUS_ICON_HTML = iconMarkup(Plus, 15);
+/** A block's handle, pulled to move it. */
+export const GRIP_ICON_HTML = iconMarkup(GripVertical, 15);
 /** Take and keep, on a change the AI proposes. */
 export const CHECK_ICON_HTML = iconMarkup(Check, 11);
 export const CROSS_ICON_HTML = iconMarkup(X, 11);

@@ -252,8 +252,7 @@
     gap: 2px;
   }
 
-  :root[data-window-chrome="mobile"] .find-replace-chevron,
-  :root[data-window-chrome="mobile"] .find-replace-chevron-spacer {
+  :root[data-window-chrome="mobile"] .find-replace-chevron {
     width: 44px;
     height: 48px;
   }

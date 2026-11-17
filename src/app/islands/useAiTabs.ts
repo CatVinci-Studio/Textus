@@ -12,7 +12,7 @@ import {
 import { useChatHistory } from "../../ai/chat/chat-history";
 import { makeBlankTab, type DocTab } from "../../document/doc-tabs";
 import {
-  ifRoom,
+  ifFits,
   placeOnArrival,
   windowLayout,
 } from "../../engine/layout/store";
@@ -21,11 +21,7 @@ import { paneWithTab } from "../../engine/layout/tree";
 import type { TabState } from "../tabs/useTabState";
 import { pageOf } from "../tabs/page-tabs";
 import { isPhoneLayout } from "../../platform/phone-layout";
-import {
-  AI_PRESS_EVENT,
-  conversationIn,
-  setConversationOpener,
-} from "./ai-tabs";
+import { conversationIn, onAiPress, setConversationOpener } from "./ai-tabs";
 
 const NONE: string[] = [];
 
@@ -138,7 +134,7 @@ export function useAiTabs({
         placeOnArrival(tab.id, (now) =>
           home
             ? (moveTab(now, tab.id, home.id) ?? now)
-            : (ifRoom(splitOff(now, tab.id, null, "right")) ?? now),
+            : (ifFits(splitOff(now, tab.id, null, "right")) ?? now),
         );
     }
     if (gone.length || made.length)
@@ -227,7 +223,6 @@ export function useAiTabs({
       );
       if (onlyAi) setShown(false);
     };
-    window.addEventListener(AI_PRESS_EVENT, press);
-    return () => window.removeEventListener(AI_PRESS_EVENT, press);
+    return onAiPress(press);
   }, [tabs, tabsRef, live, activeTabId, setShown]);
 }

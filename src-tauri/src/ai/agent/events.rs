@@ -29,6 +29,9 @@ pub enum StreamEvent {
     /// The model is thinking: a fragment of its reasoning, or "" when the
     /// provider only says that it is. Shown above the reply, never kept.
     Thinking { text: String },
+    /// The conversation's oldest exchanges no longer fit a request and were
+    /// left out of this one: the model no longer sees its start.
+    Forgot,
     /// A picture written into a propose_edit's text (images::inline) is
     /// being made: its `line` there stands for picture `id` from now on.
     /// Sent before the fragment that completes the line.

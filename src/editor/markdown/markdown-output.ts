@@ -403,7 +403,8 @@ export function configureMarkdownOutput(ctx: Ctx): void {
     typeof initial === "string" ? documentBreaks(initial) : "backslash";
   ctx.update(remarkStringifyOptionsCtx, (options) => ({
     ...options,
-    ...(bullet ? { bullet } : {}),
+    // A file with no list yet gets "-", as most write it.
+    bullet: bullet ?? "-",
     handlers: {
       ...options.handlers,
       root,

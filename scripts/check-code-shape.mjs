@@ -44,6 +44,8 @@ const isTest = (path) =>
 
 const sources = [
   ...walk("src").filter((p) => /\.tsx?$/.test(p)),
+  // Plain scripts put into a plugin's frames as text.
+  ...walk("src/plugins/host/runtime").filter((p) => p.endsWith(".js")),
   ...walk("src-tauri/src").filter((p) => p.endsWith(".rs")),
   ...walk("src-tauri/crates").filter((p) => p.endsWith(".rs")),
 ].filter((p) => !isTest(p));

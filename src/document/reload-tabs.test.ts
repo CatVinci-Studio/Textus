@@ -1,5 +1,17 @@
 // @vitest-environment jsdom
-import { afterEach, describe, expect, it } from "vitest";
+import { afterEach, describe, expect, it, vi } from "vitest";
+
+const process = vi.hoisted(() => {
+  let text = "";
+  return {
+    keep: vi.fn(async (value: string) => void (text = value)),
+    kept: vi.fn(async () => text),
+  };
+});
+vi.mock("../platform/ipc", () => ({
+  drafts: { keepPageTabs: process.keep, keptPageTabs: process.kept },
+}));
+
 import { keptTabs, readKeptTabs, writeKeptTabs } from "./reload-tabs";
 import type { DocTab } from "./doc-tabs";
 
@@ -52,13 +64,13 @@ describe("keptTabs", () => {
 });
 
 describe("the kept tabs in sessionStorage", () => {
-  it("come back as they were written", () => {
+  it("come back as they were written", async () => {
     const kept = keptTabs([tab({ content: "edited" })], "a", true);
     writeKeptTabs(kept);
-    expect(readKeptTabs()).toEqual(kept);
+    expect(await readKeptTabs()).toEqual(kept);
   });
 
-  it("past the quota, go without text or id, so no draft is moved away", () => {
+  it("past the quota, go without text or id, so no draft is moved away", async () => {
     const kept = keptTabs([tab({ content: "edited" })], "a", true);
     const set = Storage.prototype.setItem;
     let calls = 0;
@@ -71,11 +83,27 @@ describe("the kept tabs in sessionStorage", () => {
     } finally {
       Storage.prototype.setItem = set;
     }
-    const back = readKeptTabs()!.tabs[0];
+    const back = (await readKeptTabs())!.tabs[0];
     expect([back.id, back.text]).toEqual([undefined, undefined]);
   });
 
-  it("are none in a new window", () => {
-    expect(readKeptTabs()).toBeNull();
+  it("are none in a new window", async () => {
+    expect(await readKeptTabs()).toBeNull();
+  });
+
+  it("on Android are kept by the app's process, through its own commands and nothing a web page can reach", async () => {
+    // The bridge every frame sees has no way to read or write them.
+    const bridge = { top: () => 0 };
+    (window as unknown as Record<string, unknown>).TextusAndroid = bridge;
+    try {
+      const kept = keptTabs([tab({ content: "edited" })], "a", true);
+      writeKeptTabs(kept);
+      expect(process.keep).toHaveBeenCalledWith(JSON.stringify(kept));
+      expect(sessionStorage.getItem("textus-reload-tabs")).toBeNull();
+      expect(await readKeptTabs()).toEqual(kept);
+      expect(Object.keys(bridge)).toEqual(["top"]);
+    } finally {
+      delete (window as unknown as Record<string, unknown>).TextusAndroid;
+    }
   });
 });

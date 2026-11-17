@@ -1,4 +1,5 @@
 import { ownError } from "../../utils/error-text";
+import { readableRoot } from "./scoped-root";
 import type { QuickPickItem } from "../../engine/controls/quick-pick-queue";
 import { logPluginError, logPluginMessage } from "../store/plugin-log";
 import type { Strings } from "../../i18n/strings";
@@ -125,6 +126,9 @@ export function withTimeout<T>(
   });
 }
 
+/** The events that keep a plugin's `textus.env` current. */
+const ENV_EVENTS = ["language", "theme", "appState"] as const;
+
 /** The events a plugin can listen to, and the permission each needs.
  *  `settings` and `editorKey` are told to one plugin only. */
 const PLUGIN_EVENT_NEEDS: Record<keyof PluginEventMap, Permission | null> = {
@@ -172,7 +176,15 @@ export class PluginHost {
   constructor(
     readonly info: PluginRuntimeInfo,
     private readonly deps: BrokerDeps,
-  ) {}
+  ) {
+    // What `textus.env` holds follows the window whether or not the plugin
+    // listens: it is told these as they change, from the start.
+    for (const name of ENV_EVENTS)
+      this.subscriptions.set(
+        name,
+        onPluginEvent(name, (data) => this.event(name, data)),
+      );
+  }
 
   get id(): string {
     return this.info.manifest.id;
@@ -331,7 +343,7 @@ export class PluginHost {
         this.need("files.read");
         const root = getWindowAccess()?.rootPath();
         if (!root) throw new Error(ownError("noFolder"));
-        return root;
+        return readableRoot(root);
       },
       ownWebview: (id) => {
         const record = webview(id);

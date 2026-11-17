@@ -1,3 +1,4 @@
+import { takeKeys } from "../../editor/take-keys";
 import { replaceChanged } from "../../editor/replace-changed";
 import { fnv1a } from "../../utils/hash";
 import { revealPosition } from "../../editor/reveal-position";
@@ -137,7 +138,7 @@ export function revealPlace(ctx: Ctx, place: DocumentPlace): boolean {
     : Selection.near($pos);
   view.dispatch(view.state.tr.setSelection(selection));
   revealPosition(view, selection.from);
-  view.focus();
+  takeKeys(view);
   return true;
 }
 

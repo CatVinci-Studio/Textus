@@ -27,7 +27,7 @@ export function useIslandFrame(
   /** The width they need at the least (frame-store's need). */
   need: number,
   /** How another layout would fit this area (frame-store). */
-  fits: (root: LayoutNode) => RoomCheck,
+  fits: (root: LayoutNode, keep: ReadonlySet<string>) => RoomCheck,
 ): void {
   const last = useRef<{
     shell: IslandRoom["shell"];

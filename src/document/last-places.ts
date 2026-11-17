@@ -120,6 +120,18 @@ export function rememberScroll(
   remember(path, mtime, { scroll: top ? undefined : place });
 }
 
+/** This window wrote `path`, which was at `was`: its places hold for the
+ *  file as written, now at `now`. */
+export function placesSaved(
+  path: string,
+  was: number | null,
+  now: number | null,
+): void {
+  const entry = entryOf(path);
+  if (!entry || now === null || entry.mtime !== was) return;
+  remember(path, now, { ...entry, mtime: now });
+}
+
 /** Where `path` was left, if the file is still as it was then. */
 export function lastCaret(
   path: string,

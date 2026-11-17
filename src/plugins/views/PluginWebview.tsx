@@ -1,4 +1,5 @@
 import { contentZoom, watchContentZoom } from "../../engine/zoom/tab-zoom";
+import { FRAME_PRESS } from "./pressed-blocks";
 import { useEffect, useRef, useState, useSyncExternalStore } from "react";
 import { connectFrame, sandboxedFrame, webviewDocument } from "../host/frames";
 import { disposeWebview, resolveWebview, webviewMessage } from "../manager";
@@ -205,6 +206,8 @@ export function PluginWebview({
             : false,
         clipboardRead: () => (pickedNow("paste") ? clipboardText() : ""),
         menuClose: () => closeMenuRef.current?.(),
+        pressed: () =>
+          frame.dispatchEvent(new CustomEvent(FRAME_PRESS, { bubbles: true })),
         // The page's errors and console, in the plugin's log in Settings.
         log: ({ level, message }: { level: unknown; message: unknown }) =>
           logPluginMessage(
@@ -267,8 +270,15 @@ export function PluginWebview({
         dark: windowIsDark(),
       }),
     );
+    // Out of sight (its tab behind another, its panel closed) the page is
+    // told, to keep what it would lose if let go.
+    const sight = new IntersectionObserver(([entry]) =>
+      endpoint?.notify("visible", { visible: entry.isIntersecting }),
+    );
+    sight.observe(box);
     box.replaceChildren(frame);
     return () => {
+      sight.disconnect();
       stopTheme();
       stopZoom();
       disconnect();

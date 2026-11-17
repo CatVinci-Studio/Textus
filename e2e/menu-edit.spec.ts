@@ -1,5 +1,7 @@
 import { expect, test, type Page } from "@playwright/test";
 import { MAC, emit, openApp, pasteMarkdown } from "./helpers";
+import { openPath } from "./plugin-helpers";
+import { STORY, streamRevise } from "./revise-mock";
 
 // On a Mac, ⌘Z, ⇧⌘Z and ⌘A reach the app as the native Edit menu's events
 // (menu.rs MAC_EDIT_ITEMS): these send those same events, so the islands
@@ -31,7 +33,8 @@ test("the Edit menu's Undo, Redo and Select All act on the document in use", asy
   await page.keyboard.type("beta");
   await emit(page, "menu-select-all");
   await expect
-    .poll(() => page.evaluate(() => String(getSelection())))
+    // WebKit's selection text ends with the block's line break.
+    .poll(() => page.evaluate(() => String(getSelection()).trim()))
     .toBe("beta");
   await emit(page, "menu-undo");
   await expect.poll(() => text(page, 1)).toBe("");
@@ -61,6 +64,87 @@ test("Find and Replace work in source mode, on the source in use", async ({
   await expect(source).toContainText("cow dog cow");
   await page.keyboard.press("Escape");
   await expect(bar).toHaveCount(0);
+});
+
+test("a source view let go for memory comes back with its undo, caret and place", async ({
+  page,
+}) => {
+  const lines = Array.from({ length: 120 }, (_, i) => `line ${i}`);
+  await page.addInitScript((text) => {
+    (window as unknown as Record<string, unknown>).__devFs = {
+      "/work/a.md": text,
+      "/work/b.md": "# B\n",
+    };
+  }, lines.join("\n\n"));
+  await page.setViewportSize({ width: 1200, height: 600 });
+  await openApp(page, { settings: { menuBarShown: false } });
+  await openPath(page, "/work/b.md");
+  await openPath(page, "/work/a.md");
+  await emit(page, "menu-toggle-source-mode");
+  const source = page.locator(".cm-content:visible");
+  await source.getByText("line 2", { exact: true }).click();
+  await page.keyboard.press("End");
+  await page.keyboard.type(" typed");
+  const scroller = page.locator(".cm-scroller:visible");
+  // The last key's own scroll to the caret first, then the reader's.
+  await page.waitForTimeout(300);
+  await scroller.evaluate((el) => (el.scrollTop = 900));
+  await page.waitForTimeout(300);
+  // Short of memory with b's source on screen: a's, out of sight, goes.
+  await page.locator(".tab-pill", { hasText: "b.md" }).click();
+  await expect(source).toContainText("# B");
+  await emit(page, "memory-level", { totalMb: 16384, pressure: 2 });
+  await expect(page.locator(".cm-editor")).toHaveCount(1);
+  await page.locator(".tab-pill", { hasText: "a.md" }).click();
+  await expect(source).toContainText("line 2 typed");
+  await expect
+    .poll(() => scroller.evaluate((el) => Math.round(el.scrollTop)))
+    .toBeGreaterThan(850);
+  await expect(source).toBeFocused();
+  await page.keyboard.type("!");
+  await expect(source).toContainText("line 2 typed!");
+  await page.keyboard.press("ControlOrMeta+z");
+  await page.keyboard.press("ControlOrMeta+z");
+  await expect(source).not.toContainText("typed");
+});
+
+test("a find bar left open comes back with its tab, the page where it was read", async ({
+  page,
+}) => {
+  const lines = Array.from({ length: 80 }, (_, i) => `line ${i}`);
+  await page.addInitScript(
+    (text) => {
+      (window as unknown as Record<string, unknown>).__devFs = {
+        "/work/a.md": text,
+        "/work/b.md": "# B\n",
+      };
+    },
+    [...lines, "the needle"].join("\n\n"),
+  );
+  await page.setViewportSize({ width: 1200, height: 600 });
+  await openApp(page, { settings: { menuBarShown: false } });
+  await openPath(page, "/work/b.md");
+  await openPath(page, "/work/a.md");
+  await docs(page).first().locator("p").first().click();
+  await emit(page, "menu-find-replace");
+  const bar = page.locator(".find-replace-bar");
+  await bar.getByRole("textbox").first().fill("needle");
+  await expect(page.locator(".find-match")).toHaveCount(1);
+  // Read on elsewhere, the bar still open.
+  const scroller = page.locator(".editor-scroll").first();
+  await scroller.evaluate((el) => (el.scrollTop = 600));
+  await page.waitForTimeout(200);
+  const read = await scroller.evaluate((el) => el.scrollTop);
+
+  await page.locator(".tab-pill", { hasText: "b.md" }).click();
+  await expect(bar).toHaveCount(0);
+  await page.locator(".tab-pill", { hasText: "a.md" }).click();
+  await expect(bar.getByRole("textbox").first()).toHaveValue("needle");
+  await expect(page.locator(".find-match")).toHaveCount(1);
+  await page.waitForTimeout(300);
+  expect(
+    Math.abs((await scroller.evaluate((el) => el.scrollTop)) - read),
+  ).toBeLessThan(2);
 });
 
 test("the find bar stays over the document as it scrolls", async ({ page }) => {
@@ -121,7 +205,9 @@ test("a ⌘ or Ctrl click in the text places the caret, never selects the block"
 
 test("a heading key reaching the page mid-pinyin (Windows) waits for the text and doubles nothing", async ({
   page,
+  browserName,
 }) => {
+  test.skip(browserName !== "chromium", "Windows draws in Chromium (WebView2)");
   await openApp(page, { settings: { menuBarShown: false } });
   const doc = docs(page).first();
   await doc.click();
@@ -239,4 +325,78 @@ test.describe("the phone's menu", () => {
     await expect(page.locator('[role="menu"]')).toHaveCount(2);
     await page.screenshot({ path: "test-results/phone-menu.png" });
   });
+});
+
+test("a look at the source and back keeps the document's undo and its caret", async ({
+  page,
+}) => {
+  await page.addInitScript(() => {
+    (window as unknown as Record<string, unknown>).__devFs = {
+      "/work/a.md": "# A\n\nThe first line.\n",
+    };
+  });
+  await openApp(page);
+  await openPath(page, "/work/a.md");
+  const editor = page.locator('[data-active-tab="true"] .ProseMirror');
+  const line = editor.locator("p");
+  await line.click();
+  await page.keyboard.press("End");
+  await page.keyboard.type(" ONE");
+  await page.waitForTimeout(700);
+  await page.keyboard.type(" TWO");
+  await expect(line).toHaveText("The first line. ONE TWO");
+  await emit(page, "menu-toggle-source-mode");
+  await expect(
+    page.locator('[data-active-tab="true"] .cm-content'),
+  ).toContainText("ONE TWO");
+  await emit(page, "menu-toggle-source-mode");
+  await expect(line).toHaveText("The first line. ONE TWO");
+  await page.waitForTimeout(500);
+  await page.keyboard.press("ControlOrMeta+z");
+  await expect(line).toHaveText("The first line. ONE");
+  await page.keyboard.type("!");
+  await expect(line).toHaveText("The first line. ONE!");
+});
+
+test("Find Next from the menu reaches its match while the AI writes, and the page stays there", async ({
+  page,
+}) => {
+  await page.setViewportSize({ width: 1200, height: 760 });
+  await openApp(page, {
+    settings: { language: "en", revisionDisplay: "original" },
+  });
+  const filler = Array.from({ length: 80 }, (_, i) => `Filler line ${i}.`);
+  await pasteMarkdown(
+    page,
+    [STORY, ...filler, "The needle is here."].join("\n\n"),
+  );
+  await emit(page, "menu-toggle-agent-panel");
+  await streamRevise(
+    page,
+    [
+      {
+        id: "s1",
+        args: {
+          action: "replace",
+          anchor: "搬到窗边",
+          text: "移至窗边，又寻来一盏台灯照着，慢慢地拆",
+        },
+      },
+    ],
+    { chunk: 2, every: 40, hold: "慢慢" },
+  );
+  const composer = page.locator(".agent-panel-view textarea");
+  await composer.fill("Classical Chinese, please");
+  await composer.press("Enter");
+  await expect(page.locator(".pending-reading").first()).toBeAttached();
+  await docs(page).first().locator("p", { hasText: "Filler line 0." }).click();
+  await emit(page, "menu-find-replace");
+  await page.keyboard.type("needle");
+  // Past the reader's last key: the jump is the menu's alone.
+  await page.waitForTimeout(1000);
+  await emit(page, "menu-find-next");
+  const needle = docs(page).first().locator("p", { hasText: "needle" });
+  await expect(needle).toBeInViewport();
+  await page.waitForTimeout(500);
+  await expect(needle).toBeInViewport();
 });

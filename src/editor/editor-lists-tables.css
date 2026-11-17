@@ -175,8 +175,10 @@
     border-color var(--dur-fast) var(--ease-standard);
 }
 
-.table-wrapper:hover .table-add-row-btn,
-.table-wrapper:hover .table-add-col-btn,
+/* Each strip by its own edge only: the pointer in the last row or column,
+   or on the strip. */
+.table-wrapper[data-near~="bottom"]:hover .table-add-row-btn,
+.table-wrapper[data-near~="right"]:hover .table-add-col-btn,
 .table-add-row-btn:hover,
 .table-add-col-btn:hover {
   opacity: 1;
@@ -185,7 +187,9 @@
 
 /* Reaching for a strip from the table, the pointer crosses no gap: the
    strip's own hit area runs back to the table's edge, so the wrapper's
-   hover never lapses and the strip never fades under the pointer. */
+   hover never lapses and the strip never fades under the pointer. To the
+   edge and no further: inside it, a press is the last row's or the last
+   column's own (its text, its width). */
 .table-add-row-btn > svg,
 .table-add-col-btn > svg {
   flex-shrink: 0;
@@ -198,17 +202,19 @@
 }
 
 .table-add-row-btn::before {
-  inset: -8px 0 -4px;
+  inset: -3px 0 -4px;
 }
 
 .table-add-col-btn::before {
-  inset: 0 -4px 0 -8px;
+  inset: 0 -4px;
 }
 
-.table-add-row-btn:hover,
-.table-add-col-btn:hover {
-  color: var(--doc-accent-text);
-  border-color: var(--doc-accent);
+@media (hover: hover) {
+  .table-add-row-btn:hover,
+  .table-add-col-btn:hover {
+    color: var(--doc-accent-text);
+    border-color: var(--doc-accent);
+  }
 }
 
 .table-add-row-btn {
@@ -220,10 +226,19 @@
   width: 100%;
 }
 
+/* The table and its column strip, as wide as the table and the strip's
+   room: the strip sits by the real last column, scrolled with it, never
+   over a column the scroller cuts. */
+.table-track {
+  position: relative;
+  width: fit-content;
+  padding-inline-end: 20px;
+}
+
 .table-add-col-btn {
   top: 0;
   bottom: 0;
-  right: -11px;
+  right: 0;
   width: 16px;
   height: 100%;
 }
@@ -241,6 +256,33 @@
   bottom: 100%;
   right: 0;
   padding-bottom: 4px;
+  /* As wide as the table shows, the pills at its right: what doesn't fit
+     gives way (TableToolbar's fit steps) instead of running past it. */
+  left: 0;
+  overflow: hidden;
+}
+/* Pushed right by an auto margin, not justify-content, so what doesn't fit
+   overflows where the fit steps can see it. */
+.table-toolbar > .block-toolbar-actions > :first-child {
+  margin-inline-start: auto;
+}
+/* Only the pills take the pointer: the row's empty left stays the text's. */
+.table-wrapper:is(:hover, :focus-within, .is-table-caret, .is-sizing)
+  > .block-toolbar.table-toolbar
+  > .block-toolbar-actions {
+  pointer-events: none;
+}
+.table-toolbar > .block-toolbar-actions > * {
+  flex-shrink: 0;
+  pointer-events: auto;
+}
+.table-toolbar > [data-fit="tight"],
+.table-toolbar > [data-fit^="no-"] {
+  gap: 2px;
+}
+.table-toolbar > [data-fit^="no-"] .table-copy-pill,
+.table-toolbar > [data-fit="no-align"] .table-align-pill {
+  display: none;
 }
 
 /* The table's pills: its size with a chevron, the three alignments in one
@@ -281,8 +323,10 @@
   color: inherit;
   cursor: pointer;
 }
-.table-align-pill > button:hover:not(:disabled) {
-  color: var(--doc-text);
+@media (hover: hover) {
+  .table-align-pill > button:hover:not(:disabled) {
+    color: var(--doc-text);
+  }
 }
 .table-align-pill > button[aria-pressed="true"] {
   color: var(--doc-accent-text);
@@ -297,9 +341,11 @@
   aspect-ratio: 1;
   padding: 0.1em;
 }
-.block-pill.is-danger:hover {
-  color: var(--ui-danger);
-  border-color: color-mix(in srgb, var(--ui-danger) 40%, var(--doc-border));
+@media (hover: hover) {
+  .block-pill.is-danger:hover {
+    color: var(--ui-danger);
+    border-color: color-mix(in srgb, var(--ui-danger) 40%, var(--doc-border));
+  }
 }
 
 /* The size grid, under its pill. */

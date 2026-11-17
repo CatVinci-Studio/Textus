@@ -132,8 +132,10 @@
   color: var(--ui-text);
 }
 
-.find-replace-bar button:hover:not(:disabled) {
-  background: var(--doc-code-bg);
+@media (hover: hover) {
+  .find-replace-bar button:hover:not(:disabled) {
+    background: var(--doc-code-bg);
+  }
 }
 
 .find-replace-bar button:disabled {

@@ -12,10 +12,6 @@ interface AndroidBridge {
   /** Keeps the back gesture off the left edge while a swipe from there opens
    *  the sidebar. */
   setEdgeSwipe(on: boolean): void;
-  /** Text kept for as long as the app's process lives: through Android
-   *  recreating the page, not a cold start. */
-  keep(text: string): void;
-  kept(): string;
 }
 
 export function androidBridge(): AndroidBridge | null {

@@ -7,6 +7,19 @@ import {
 import { thisWindow } from "./this-window";
 import { inBrowser } from "./runtime";
 
+/** `listen` for this window, its target read per call: the dev shim
+ *  installs the label at startup. */
+function listenHere<T>(
+  event: string,
+  handler: EventCallback<T>,
+  target: (
+    label: string,
+  ) => NonNullable<Parameters<typeof listen>[2]>["target"],
+): Promise<UnlistenFn> {
+  if (inBrowser) return Promise.resolve(() => {});
+  return listen<T>(event, handler, { target: target(thisWindow().label) });
+}
+
 /**
  * Listen to an event addressed to this window only. Never the bare
  * `listen()`: its Any target also receives what Rust's `emit_to` meant
@@ -16,11 +29,7 @@ export function listenToThisWindow<T>(
   event: string,
   handler: EventCallback<T>,
 ): Promise<UnlistenFn> {
-  if (inBrowser) return Promise.resolve(() => {});
-  // Read per call: the dev shim installs the label at startup.
-  return listen<T>(event, handler, {
-    target: thisWindow().label,
-  });
+  return listenHere(event, handler, (label) => label);
 }
 
 /** Listen to an event Tauri addresses to this window's webview, such as a
@@ -29,10 +38,7 @@ export function listenToThisWebview<T>(
   event: string,
   handler: EventCallback<T>,
 ): Promise<UnlistenFn> {
-  if (inBrowser) return Promise.resolve(() => {});
-  return listen<T>(event, handler, {
-    target: { kind: "Webview", label: thisWindow().label },
-  });
+  return listenHere(event, handler, (label) => ({ kind: "Webview", label }));
 }
 
 /** Sends `event` to one window: a label, or a target such as

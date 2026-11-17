@@ -213,12 +213,16 @@ export function documentBreaks(markdown: string): "backslash" | "spaces" {
  */
 export function displayWidth(text: string): number {
   let width = 0;
-  for (const char of text) {
-    const code = char.codePointAt(0)!;
-    width += isWide(code) ? 2 : 1;
+  // By what the eye sees as one character: a joined emoji family, or a
+  // heart with its emoji selector, is one wide character.
+  for (const { segment } of graphemes.segment(text)) {
+    const code = segment.codePointAt(0)!;
+    width += isWide(code) || /\u200d|\ufe0f/.test(segment) ? 2 : 1;
   }
   return width;
 }
+
+const graphemes = new Intl.Segmenter(undefined, { granularity: "grapheme" });
 
 function isWide(code: number): boolean {
   return (

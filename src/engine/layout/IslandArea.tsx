@@ -136,18 +136,20 @@ export function IslandArea({
       root: layout.root,
       gap: room.gap,
       rowHeight: 0,
+      endRoom: rows ? barEndRoom() : 0,
       rule: ruleFor(panel, isPanel),
     }) +
       2 * room.inset;
   // What a layout lacks with its islands at their least, and what its
   // panels' islands would give folding (frame-store's RoomCheck).
-  const fits = (root: LayoutNode): RoomCheck => {
+  const fits = (root: LayoutNode, keep: ReadonlySet<string>): RoomCheck => {
     if (!room || !area) return { short: 0, panels: 0 };
     const least = (node: LayoutNode) => {
       const input = {
         root: node,
         gap: room.gap,
         rowHeight: 0,
+        endRoom: rows ? barEndRoom() : 0,
         rule: ruleFor(panel, isPanel),
       };
       return {
@@ -157,11 +159,11 @@ export function IslandArea({
     };
     const now = least(root);
     // Too low is no room either: nothing gives height.
-    if (now.h > area.h + 0.5) return { short: Infinity, panels: 0 };
+    if (now.h > area.h + 0.5) return { short: Infinity, panels: 0, low: true };
     const folded =
       root.kind === "pane"
         ? now
-        : least(foldPanels({ ...layout, root }, isPanel).root);
+        : least(foldPanels({ ...layout, root }, isPanel, keep).root);
     return { short: now.w - area.w, panels: now.w - folded.w };
   };
   useIslandFrame(ref, room, area, solved, placed, need || 0, fits);

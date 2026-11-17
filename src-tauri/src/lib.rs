@@ -41,7 +41,7 @@ mod spawn;
 #[cfg(desktop)]
 mod tab_drag;
 mod walk;
-#[cfg(windows)]
+#[cfg(any(windows, test))]
 mod webview_memory;
 mod window_frame;
 mod window_guard;

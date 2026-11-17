@@ -40,8 +40,14 @@ export function insertTable(run: EditorRunner, rows: number, cols: number) {
     // nothing was typed: then a moved caret is WebKit's.
     const at = view.state.selection;
     const doc = view.state.doc;
+    // A key or a press since is the writer's own move (Tab to the next
+    // cell, an arrow): the caret is theirs from then on.
+    let moved = false;
+    const own = () => (moved = true);
+    for (const type of ["keydown", "pointerdown"])
+      view.dom.addEventListener(type, own, { capture: true, once: true });
     const back = () => {
-      if (view.isDestroyed || view.state.doc !== doc) return;
+      if (moved || view.isDestroyed || view.state.doc !== doc) return;
       // focus() writes the state's caret into the page, where WebKit may
       // have moved it without telling.
       if (!view.state.selection.eq(at))

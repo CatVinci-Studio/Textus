@@ -1,5 +1,5 @@
 import { isMobileApp } from "../platform/capabilities";
-import { KEYBOARD_UP_EVENT } from "../utils/events";
+import { KEYBOARD_UP_EVENT, sendAppEvent } from "../utils/events";
 
 /**
  * Whether the keyboard is up. The app says so where it can (`textus-keyboard`,
@@ -24,7 +24,7 @@ function track() {
   if (!isMobileApp) return;
   const now = up();
   document.documentElement.classList.toggle("keyboard-up", now);
-  if (now && !wasUp) window.dispatchEvent(new Event(KEYBOARD_UP_EVENT));
+  if (now && !wasUp) sendAppEvent(KEYBOARD_UP_EVENT);
   wasUp = now;
 }
 

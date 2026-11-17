@@ -3,7 +3,7 @@ import { useAgentPanelState } from "../../ai/chat/panel/agent-panel";
 import { usePresence } from "../../engine/motion/usePresence";
 import { keyboardUp, whenKeyboardDown } from "../../mobile/keyboard";
 import { isMobileApp } from "../../platform/capabilities";
-import { AI_PRESS_EVENT } from "../islands/ai-tabs";
+import { pressAi } from "../islands/ai-tabs";
 
 /**
  * The docked AI panel: its state, its button and its way out. `aiOn` is
@@ -46,7 +46,7 @@ export function useAgentDock(
     // Shown: what a press does is the AI tabs' to decide - bring theirs to
     // the front, or hide the AI (useAiTabs).
     if (agentPanel.open) {
-      window.dispatchEvent(new Event(AI_PRESS_EVENT));
+      pressAi();
       return;
     }
     agentPanel.toggle();

@@ -1,9 +1,8 @@
 // @vitest-environment jsdom
-import { readFileSync } from "node:fs";
-import { join } from "node:path";
 import { beforeEach, describe, expect, it, vi } from "vitest";
 import { parseManifest, type Permission } from "../store/manifest";
 import type { BackgroundRun } from "./background-host";
+import { HOST_RUNTIME } from "./host-runtime";
 
 const ipc = vi.hoisted(() => ({
   set: vi.fn(),
@@ -180,7 +179,7 @@ describe("scheduling and notifying", () => {
 
 describe("the runtime in background code", () => {
   it("throws, saying why, where the editor or UI is reached", () => {
-    const host = readFileSync(join(__dirname, "runtime", "host.js"), "utf8");
+    const host = HOST_RUNTIME;
     const w = window as unknown as Record<string, unknown>;
     w.__textusBackground = true;
     w.createEndpoint = () => ({ call: () => Promise.resolve(), notify() {} });
@@ -196,7 +195,7 @@ describe("the runtime in background code", () => {
   });
 
   it("deletes a secret set to nothing, never keeping the word null", async () => {
-    const host = readFileSync(join(__dirname, "runtime", "host.js"), "utf8");
+    const host = HOST_RUNTIME;
     const w = window as unknown as Record<string, unknown>;
     w.__textusBackground = true;
     const calls: [string, unknown][] = [];

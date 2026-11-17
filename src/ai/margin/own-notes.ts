@@ -3,7 +3,7 @@ import type { ReviewNote } from "./review-notes-plugin";
 
 /** A writer's note as kept: its words plus a little text before them, to tell
  *  repeats apart. No positions, as the file can change outside Textus. */
-interface StoredOwnNote {
+export interface StoredOwnNote {
   id: string;
   comment: string;
   anchor: string;

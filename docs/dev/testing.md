@@ -19,7 +19,7 @@ you extended. Fewer, broader tests keep CI fast. Checks are about behaviour
 | 1. Unit               | `src/**/*.test.ts`, next to the code          | Pure logic: a function's answer for its inputs                                             |
 | 1. Editor integration | `src/**/*.test.ts`, with `editor-view-kit.ts` | What keys, typing and pastes do to a real editor's document, and what is saved             |
 | 2. E2E, Chromium      | `e2e/*.spec.ts`                               | What needs a real browser: focus, menus, dialogs, scrolling, layout, clicks, the clipboard |
-| 3. E2E, WebKit        | `WEBKIT_SPECS` in `playwright.config.ts`      | Where WebKit behaves differently: input methods, selection, paste events                   |
+| 3. E2E, WebKit        | the same `e2e/*.spec.ts`, `E2E_WEBKIT=1`      | Where WebKit behaves differently: input methods, selection, paste events                   |
 | 4. The built app      | smoke scripts; by hand, on the platform       | What no browser has: the app starting, native menus and their keys, windows, file dialogs  |
 
 Start at the top and go down only when the layer above can't see the
@@ -43,10 +43,10 @@ mistake:
   and End, and clicks move the caret natively, which jsdom doesn't; focus
   moving between regions, a menu or dialog opening, something scrolling into
   view, a layout measured in pixels, the system clipboard.
-- **WebKit does it its own way**: add the spec to `WEBKIT_SPECS`, but only
-  for what differs there - an input method's events, how a selection is
-  read, a paste event. Not animation timing: a busy machine, not the
-  engine, decides that.
+- **WebKit does it its own way**: every flow runs in WebKit too. A flow
+  that only one engine can run (a Chromium DevTools call, Windows' input
+  method) skips the other with `test.skip(browserName !== ...)` and says
+  why.
 - **Native**: a menu's key equivalent on macOS (the menu takes the key
   before the page does), the system's undo or copy, an input method,
   windows. Check it in the built app, and say what you ran in the pull
@@ -67,19 +67,24 @@ a key the macOS menu takes reaches nothing.
 
 CI has three layers (`.github/workflows/ci.yml`):
 
-| When                                                    | What runs                                                                                          | Required                 |
-| ------------------------------------------------------- | -------------------------------------------------------------------------------------------------- | ------------------------ |
-| Every pull request (forks too), and a push to `main`    | `check` (types, lint, unit tests, formats, build); Rust on Linux when `src-tauri/` changed         | check, native, ci-config |
-| Before a release (the tag, a PR into `stable`, by hand) | everything: Rust on Linux, macOS and Windows, e2e in Chromium (2 shards) and WebKit, iOS simulator | all of them              |
+| When                                                    | What runs                                                                                                                                            | Required                      |
+| ------------------------------------------------------- | ---------------------------------------------------------------------------------------------------------------------------------------------------- | ----------------------------- |
+| Every pull request (forks too), and a push to `main`    | `check` (types, lint, unit tests, formats, build); the whole e2e suite in Chromium (2 shards) and in WebKit; Rust on Linux when `src-tauri/` changed | check, e2e, native, ci-config |
+| Before a release (the tag, a PR into `stable`, by hand) | everything: the above, plus Rust on macOS and Windows and the iOS simulator                                                                          | all of them                   |
 
-A contributor runs **`npm run check`** before pushing; that is all a pull
-request needs. Maintainers run the rest before a release.
+A change to GitHub's settings, the license or the root Markdown alone
+skips e2e (`light` in `scripts/ci-changes.mjs`). A run with no test in it
+fails; a test that passes only on its retry is listed as flaky, a warning
+on the pull request, and goes on the watch list.
+
+A contributor runs **`npm run check`** before pushing, and the e2e flows
+near what they changed.
 
 | Kind                                                            | Where                              | When                                |
 | --------------------------------------------------------------- | ---------------------------------- | ----------------------------------- |
 | `npm run check`: types, lint, unit tests, formats               | locally, CI                        | every pull request                  |
-| e2e flows in Chromium (`npm run test:e2e`)                      | locally (4 workers), CI (2 shards) | before a release                    |
-| e2e flows in WebKit (`E2E_WEBKIT=1`)                            | CI                                 | before a release, looked at by hand |
+| e2e flows in Chromium (`npm run test:e2e`)                      | locally (4 workers), CI (2 shards) | every pull request                  |
+| e2e flows in WebKit (`E2E_WEBKIT=1`)                            | locally, CI                        | every pull request                  |
 | Stopwatch flows (`@perf`, `npm run test:perf`)                  | locally                            | when timing is the point; never CI  |
 | Benchmarks (`bench:large-doc`, `bench:plugins`, `bench:motion`) | one machine                        | before a release that touches speed |
 
@@ -121,23 +126,18 @@ A flow imports its helpers from `e2e/helpers.ts`, never from `src/` (the
 e2e project can't import it; `blockIds` loads a module from the dev server
 instead).
 
-| Helper                              | What it does                                                                                                                                                                                                                                                                  |
-| ----------------------------------- | ----------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
-| `openApp(page, options)`            | Opens the window with onboarding done, animations and the caret blink off. `settings` seeds the settings (Chinese UI unless set), `storage` localStorage, `colorScheme` the appearance, `animations: true` keeps the motion, `ready` what to wait for (an editor by default). |
-| `openPhone(page)`, `PHONE`          | `openApp` as an iPhone, in English: `test.use(PHONE)` gives the viewport and touch, `openPhone` the phone layout.                                                                                                                                                             |
-| `editor`                            | The selector of the active tab's editor.                                                                                                                                                                                                                                      |
-| `emit(page, name, payload)`         | Sends a backend event as Rust would: a menu item (`"menu-toggle-sidebar"`), a file drop, a window event.                                                                                                                                                                      |
-| `mockInvoke(page, { cmd: value })`  | Answers a command with a canned value. `{ __reject: message }` fails it; `{ __hold: true, value }` answers only when the test calls `release(page, cmd)`.                                                                                                                     |
-| `invokeCalls(page, cmd)`            | The calls a mocked command got, with their arguments.                                                                                                                                                                                                                         |
-| `release(page, cmd)`                | Lets a held command answer, once it has been called. Use it to see a state in between (a reply streaming, a save waiting) instead of a timer.                                                                                                                                 |
-| `settled(page)`                     | Waits until no animation runs and nothing scrolls for a few frames (at most 3 s), in place of a fixed pause before checking where things came to rest.                                                                                                                        |
-| `selectionRead(page)`               | Waits until ProseMirror has read the selection a click or a key made; call it between a caret move and the next key.                                                                                                                                                          |
-| `changeSettings(page, patch)`       | Changes settings while the app runs, as another window's change arrives.                                                                                                                                                                                                      |
-| `dropPaths(page, paths)`            | Opens files as dropping them on the window does.                                                                                                                                                                                                                              |
-| `pasteMarkdown(page, md)`           | Pastes text into the active editor and waits for it to land.                                                                                                                                                                                                                  |
-| `sourceOf(page)`                    | The active document's Markdown, read by switching to source mode and back.                                                                                                                                                                                                    |
-| `swallowHtmlDrop(page)`             | Before `openApp`: swallows HTML drag and drop as the app's window does (its file drop takes `dragover` and `drop`), so a drag that works here works there.                                                                                                                    |
-| `dragWithMouse(page, from, to, dx)` | Presses on `from`, moves in steps onto `to`, lets go: a drag made of pointer events, as `src/engine/drag/pointer-drag.ts` reads them.                                                                                                                                         |
+| Helper                             | What it does                                                                                                                                                                                                                                                                  |
+| ---------------------------------- | ----------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| `openApp(page, options)`           | Opens the window with onboarding done, animations and the caret blink off. `settings` seeds the settings (Chinese UI unless set), `storage` localStorage, `colorScheme` the appearance, `animations: true` keeps the motion, `ready` what to wait for (an editor by default). |
+| `PHONE`, `TABLET`                  | `test.use(PHONE)`: an iPhone 390 wide, by touch, in the phone's layout; `TABLET` an iPad 768 wide, the desktop's layout by touch.                                                                                                                                             |
+| `emit(page, name, payload)`        | Sends a backend event as Rust would: a menu item (`"menu-toggle-sidebar"`), a file drop, a window event.                                                                                                                                                                      |
+| `mockInvoke(page, { cmd: value })` | Answers a command with a canned value.                                                                                                                                                                                                                                        |
+| `settled(page)`                    | Waits until no animation runs and nothing scrolls for a few frames (at most 3 s), in place of a fixed pause before checking where things came to rest.                                                                                                                        |
+| `pasteMarkdown(page, md)`          | Pastes text into the active editor and waits for it to land.                                                                                                                                                                                                                  |
+| `selectionRead(page)`              | Waits until ProseMirror has read the selection a click or a key made; call it between a caret move and the next key.                                                                                                                                                          |
+| `sourceOf(page)`                   | The active document's Markdown, read by switching to source mode and back.                                                                                                                                                                                                    |
+| `HOME`, `END`                      | The keys that go to a line's start and end on this platform.                                                                                                                                                                                                                  |
+| `SAMPLE_DOC`, `MAC`                | A document with most kinds of content; whether the run is on a Mac.                                                                                                                                                                                                           |
 
 Files on disk are in memory: `window.__devFs` (a folder, path to text) and
 `window.__devFiles` (single documents), set from an init script before

@@ -149,8 +149,8 @@ Example: `layout.panels()` and `onDidChangePanels` (commit 36709ec9), or
 `textus.dates` (pure, in the runtime). The plugin author's view is
 [plugins/](plugins/README.md).
 
-1. **The runtime**: add the call to the `textus` object in
-   `src/plugins/host/runtime/host.js`, as `call("namespace.method", …)`
+1. **The runtime**: add the call to the `textus` object in its part of
+   `src/plugins/host/runtime/host-api-*.js`, as `call("namespace.method", …)`
    for anything the app answers, or as code in the frame for a pure helper
    (`runtime/text.js`). An event is `on("eventName")`.
 2. **The broker**: a handler named `"namespace.method"` in the

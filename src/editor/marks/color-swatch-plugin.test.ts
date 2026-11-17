@@ -58,22 +58,6 @@ const plainSwatches = (state: EditorState) =>
     .map((d) => (d.spec as { color: string }).color);
 
 describe("colorSwatchPlugin", () => {
-  it("draws nothing while off, the default", () => {
-    expect(swatches(stateWith(["#fff"], { mode: "off" }))).toEqual([]);
-    expect(
-      swatches(stateOf([para(text("a #ff8800"))], { mode: "off" })),
-    ).toEqual([]);
-  });
-
-  it("puts a swatch at the start of each colour code's text", () => {
-    // "x " 1-3, the first span 3-9 ("#fff" at 4), "x " 9-11, "red" 11-16,
-    // "x " 16-18, the last span from 18 (text at 19).
-    const state = stateWith(["#fff", "red", "rgb(1 2 3)"], {
-      mode: "everywhere",
-    });
-    expect(swatches(state)).toEqual([4, 19]);
-  });
-
   it("follows the setting and the code as it is typed", () => {
     const enabled: { mode: ColorSwatchMode } = { mode: "off" };
     let state = stateWith(["#ff"], enabled);

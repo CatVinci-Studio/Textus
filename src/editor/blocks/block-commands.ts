@@ -1,0 +1,141 @@
+import { Fragment, type Node as ProseNode } from "@milkdown/kit/prose/model";
+import {
+  type EditorState,
+  NodeSelection,
+  Selection,
+  TextSelection,
+  type Transaction,
+} from "@milkdown/kit/prose/state";
+import { closeHistory } from "@milkdown/kit/prose/history";
+
+/** A block a handle stands for: a list item (its own list inside it), or
+ *  a block of the document - a quote or a callout whole. */
+export interface HandledBlock {
+  pos: number;
+  node: ProseNode;
+}
+
+const LISTS = /^(bullet_list|ordered_list)$/;
+const isItem = (node: ProseNode) => node.type.name === "list_item";
+
+/** The handled block around `pos`, or the block (a rule, a formula) that
+ *  starts there. */
+export function blockAround(doc: ProseNode, pos: number): HandledBlock | null {
+  const at = Math.max(0, Math.min(pos, doc.content.size));
+  const $pos = doc.resolve(at);
+  for (let depth = $pos.depth; depth > 0; depth--)
+    if (isItem($pos.node(depth)))
+      return { pos: $pos.before(depth), node: $pos.node(depth) };
+  if ($pos.depth > 0) return { pos: $pos.before(1), node: $pos.node(1) };
+  const leaf = doc.nodeAt(at);
+  return leaf?.isBlock ? { pos: at, node: leaf } : null;
+}
+
+/** The range a block goes from when it leaves: a list's only item takes
+ *  its list along. */
+function ownRange(state: EditorState, block: HandledBlock) {
+  const $pos = state.doc.resolve(block.pos);
+  if (isItem(block.node) && $pos.parent.childCount === 1)
+    return { from: $pos.before(), to: $pos.after() };
+  return { from: block.pos, to: block.pos + block.node.nodeSize };
+}
+
+/** The caret at the start of the block's first line, for a command that
+ *  works where the caret is (Turn Into). */
+export function caretInto(state: EditorState, pos: number): Transaction {
+  const $at = state.doc.resolve(Math.min(pos + 1, state.doc.content.size));
+  return state.tr.setSelection(Selection.near($at));
+}
+
+export function deleteBlock(
+  state: EditorState,
+  block: HandledBlock,
+): Transaction {
+  const { from, to } = ownRange(state, block);
+  const tr = state.tr.delete(from, to);
+  // The document keeps a line to write on.
+  if (tr.doc.childCount === 0)
+    tr.insert(0, state.schema.nodes.paragraph!.create());
+  return closeHistory(tr).setSelection(
+    Selection.near(tr.doc.resolve(Math.min(from, tr.doc.content.size))),
+  );
+}
+
+// Each a step of its own on the undo list, however soon after the last.
+
+/** A copy right after it, the selection kept where it was. */
+export function duplicateBlock(
+  state: EditorState,
+  block: HandledBlock,
+): Transaction {
+  return closeHistory(
+    state.tr.insert(block.pos + block.node.nodeSize, block.node),
+  );
+}
+
+/** An empty line after the block, the caret in it: a list item's next
+ *  item, else a paragraph. */
+export function addBelow(state: EditorState, block: HandledBlock): Transaction {
+  const { schema } = state;
+  const paragraph = schema.nodes.paragraph!.create();
+  const line = isItem(block.node)
+    ? block.node.type.create(null, paragraph)
+    : paragraph;
+  const at = block.pos + block.node.nodeSize;
+  const tr = closeHistory(state.tr.insert(at, line));
+  return tr.setSelection(
+    TextSelection.create(tr.doc, at + (isItem(block.node) ? 2 : 1)),
+  );
+}
+
+/** Where a block can be put: before or after each child of the document,
+ *  and (a list item) of a list. */
+interface Gap {
+  pos: number;
+  /** The container the gap is in, for its left edge. */
+  container: number;
+}
+
+export function gapsFor(doc: ProseNode, block: HandledBlock): Gap[] {
+  const item = isItem(block.node);
+  const gaps: Gap[] = [];
+  const collect = (node: ProseNode, start: number, container: number) => {
+    let offset = start;
+    for (let i = 0; i <= node.childCount; i++) {
+      gaps.push({ pos: offset, container });
+      if (i < node.childCount) offset += node.child(i).nodeSize;
+    }
+  };
+  collect(doc, 0, -1);
+  doc.descendants((node, pos) => {
+    if (item && LISTS.test(node.type.name)) collect(node, pos + 1, pos);
+    return !node.isTextblock;
+  });
+  const end = block.pos + block.node.nodeSize;
+  // Inside itself, or where it already is, is no move.
+  return gaps.filter((gap) => gap.pos <= block.pos || gap.pos >= end);
+}
+
+/** The block moved to `gap`, one undo step: a list item put outside a
+ *  list goes in a list of its own kind. Null where it can't go. */
+export function moveTo(
+  state: EditorState,
+  block: HandledBlock,
+  gap: number,
+): Transaction | null {
+  const { from, to } = ownRange(state, block);
+  if (gap >= from && gap <= to) return null;
+  const $gap = state.doc.resolve(gap);
+  let moving: ProseNode = block.node;
+  if (isItem(moving) && !LISTS.test($gap.parent.type.name)) {
+    const list = state.doc.resolve(block.pos).parent;
+    moving = list.type.create(list.attrs, moving);
+  }
+  const index = $gap.index();
+  if (!$gap.parent.canReplace(index, index, Fragment.from(moving))) return null;
+  const tr = closeHistory(state.tr);
+  if (gap > from) tr.insert(gap, moving).delete(from, to);
+  else tr.delete(from, to).insert(gap, moving);
+  const at = gap > from ? gap - (to - from) : gap;
+  return tr.setSelection(NodeSelection.create(tr.doc, at)).scrollIntoView();
+}

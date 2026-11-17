@@ -110,6 +110,16 @@ export default {
   codeBlockEditSource: "编辑源码",
   codeBlockDone: "完成编辑",
   codeBlockDelete: "删除此块",
+  blockText: "正文",
+  blockCallout: "提示框",
+  blockHandleAdd: "在下面添加一块",
+  blockHandleOptions: "拖动移动，点击查看选项",
+  blockTurnInto: "转换为",
+  blockDuplicate: "复制一份",
+  blockHandlesLabel: "块把手",
+  blockHandlesHelp:
+    "指针所在的块左边显示 ＋ 和 ⋮⋮：添加一块、拖动移动、转换成别的类型。",
+  smoothCaretLabel: "平滑光标",
   menuBlockWide: "宽屏显示",
   menuBlockZoom: "缩放",
   diagramViewerLabel: "图表",
@@ -141,6 +151,7 @@ export default {
   revisionDisplayInline: "全部在正文中",
   revisionDisplayOriginal: "原文在正文，修改在页边",
   revisionDisplayFinal: "只看结果，原文在页边",
+  splitNoRoomLow: "放不下新的一栏：窗口太矮了。收起键盘，或把窗口拉高。",
   splitNoRoom: "放不下新的一栏：窗口太窄了。把窗口拉宽，或关掉一个分屏。",
   revisionDisplayNoRoom: "空间不够：关掉侧边栏或 AI 面板即可",
   proposalDeletedSentence: "原文",
@@ -571,6 +582,8 @@ export default {
   errorCatalogNewer: "插件商店需要更新版本的 Textus，请先更新 Textus。",
   errorImageTooBig: "图片是空的，或超过了 25 MB。",
   errorNoFolder: "请先打开一个文件夹。",
+  errorPluginsNeedAllFiles:
+    "插件读不了这个文件夹：Textus 没有获得“所有文件”的访问权限。请重新打开这个文件夹，并选择“继续”。",
   errorPdfUnsupported: "此系统不支持导出 PDF。",
   errorNoText: "里面没有可读的文字。",
   errorUnreadable: "无法读取此文件。",
@@ -839,6 +852,12 @@ export default {
   agentSend: "发送",
   agentStop: "停止",
   agentRetry: "重试",
+  agentForgotStart:
+    "这段对话已经很长，最早的几条消息不再发给模型。想从头开始，可以新建一段对话。",
+  revisionsNotKept:
+    "等你决定的修改没能保存到磁盘。请在关闭文档前接受或拒绝它们，否则会丢失。",
+  settingsNotSaved:
+    "现在无法保存设置和窗口状态：你做的更改只在关闭 Textus 之前有效。",
   agentNeedsFolder:
     "请先打开一个文件夹或保存文档：Agent 需要在一个文件夹里工作。",
   agentStopped: "{agent} 已停止。",
@@ -1321,6 +1340,8 @@ export default {
     "已将 {name} 转换为新的 Markdown 文档。部分格式可能与 Word 中不同，原 Word 文件不会被改动。",
   wordImportDismiss: "知道了",
   openFileFailed: "无法打开 {name}：它不是文本文档，也没有插件能打开这类文件。",
+  openFileMuted:
+    "Textus 本身打不开 {name}。能打开它的插件建议已被你关闭，可在 设置 › {page} 里重新显示。",
   openFileGone: "无法打开 {name}：文件已不在原处，可能已被移动、重命名或删除。",
   wordImportFailed: "无法打开 {name}。",
   wordSaveRefused:
@@ -1429,7 +1450,7 @@ export default {
   themeNamePaper: "纸张",
   themeNameSlate: "石板",
   themeNameForest: "森林",
-  themeNameAurora: "极光",
+  themeNamePrism: "棱镜",
   appearanceLabel: "外观",
   appearanceModeLabel: "浅色/深色",
   appearanceSystem: "跟随系统",
@@ -1736,4 +1757,9 @@ export default {
   shortcutOutdentListItem: "列表项取消缩进",
   pluginKeyTaken:
     "「{name}」：{key} 已被「{owner}」使用，所以没有绑定到“{command}”。可在 设置 › 快捷键 中另设。",
+  gitTrustTitle: "允许 Git 运行这个仓库自带的程序吗？",
+  gitTrustText:
+    "这个文件夹的 Git 仓库设置了会在你电脑上运行程序的选项（{what}）。自己建的仓库有这些很正常。如果文件夹来自别人，只有在信任对方时才允许。",
+  gitTrustAllow: "信任这个仓库",
+  gitTrustRefused: "这里不使用 Git：这个仓库未被信任。",
 } satisfies Translation;

@@ -71,9 +71,17 @@ export function useKeptProposals({
           fnv1a(cachedDocumentMarkdown(ctx, ctx.get(editorViewCtx).state.doc)),
         );
         if (document === undefined) return;
+        const reads = (from: number, to: number) =>
+          run((ctx) => {
+            const { doc } = ctx.get(editorViewCtx).state;
+            return to <= doc.content.size
+              ? serializeRange(ctx, doc, from, to)
+              : null;
+          }) ?? null;
         for (const { callId, proposal, target, takes } of restorable(
           kept,
           document,
+          reads,
         )) {
           showPreviews([{ callId, proposal }], target ?? null);
           takes?.forEach((take, index) => {

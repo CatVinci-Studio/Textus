@@ -1,7 +1,7 @@
 import { useEffect, useRef, type RefObject } from "react";
 import { scrollBehavior } from "../../motion/motion";
 import { scaledPx } from "../../tokens/chrome-scale";
-import { revealAt, snapToTab, type Slot } from "./tab-strip";
+import { revealAt, snapToTab, tailFor, type Slot } from "./tab-strip";
 import { revealOnResize } from "./reveal-on-resize";
 
 /** The fade over a scrolled row's start (island.css). */
@@ -14,6 +14,8 @@ interface TabPlace {
   shownLength: number | null | undefined;
   /** A touch row's tab starts, which it scrolls to. */
   edges: readonly number[] | null;
+  /** Where its tabs end. */
+  end: number;
 }
 
 /** The open tab kept in view as it changes, and as the row resizes:
@@ -33,7 +35,8 @@ export function useRevealTab(
     const revealNow = (smoothly: boolean) => {
       const { slotX: x, slotW: w, shownLength: shown } = placed.current;
       if (!bar || x === undefined || w === undefined || shown == null) return;
-      reveal(bar, { x, w }, shown, smoothly, placed.current.edges);
+      const { edges, end } = placed.current;
+      reveal(bar, { x, w }, shown, smoothly, edges && { edges, end });
     };
     if (!bar || slotX === undefined || slotW === undefined) return;
     if (shownLength === null) return;
@@ -59,9 +62,10 @@ function reveal(
   slot: Slot,
   shown: number,
   smooth: boolean,
-  /** A touch row's tab starts, which it scrolls to. */
-  edges: readonly number[] | null,
+  /** A touch row's tab starts, which it scrolls to, and where they end. */
+  touch: { edges: readonly number[]; end: number } | null,
 ): void {
+  const edges = touch?.edges;
   // A touch row lists its tabs (⌄) and swipes: no faded part of the tab
   // before the open one, which reads as a stray sliver there.
   const fade = edges ? 0 : scaledPx(TAB_FADE);
@@ -72,6 +76,8 @@ function reveal(
   let left = revealAt(slot, bar.scrollLeft, shown, fade, edges ? 0 : 12);
   if (edges) {
     const snapped = snapToTab(left ?? bar.scrollLeft, edges, slot.x);
+    const room = tailFor(snapped, touch.end, shown);
+    bar.style.setProperty("--tab-tail", `${room}px`);
     left = Math.abs(snapped - bar.scrollLeft) < 1 ? null : snapped;
   }
   if (left !== null)

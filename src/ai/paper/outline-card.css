@@ -169,9 +169,11 @@
   cursor: pointer;
 }
 
-.paper-outline-edit:hover:not(:disabled),
-.paper-outline-more:hover {
-  color: var(--ui-accent, var(--ui-text));
+@media (hover: hover) {
+  .paper-outline-edit:hover:not(:disabled),
+  .paper-outline-more:hover {
+    color: var(--ui-accent, var(--ui-text));
+  }
 }
 
 /* Dimmed by the shared disabled rule; a hidden one (tx-reveal) stays so. */

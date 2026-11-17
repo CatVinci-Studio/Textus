@@ -1,3 +1,4 @@
+import { createSubscribers } from "./store";
 /**
  * How much the window keeps loaded out of sight, from how much memory the
  * machine has and how short of it the system is now (memory_level.rs).
@@ -7,7 +8,8 @@
 type MemoryLevel = "roomy" | "normal" | "tight" | "critical";
 
 interface MemoryLimits {
-  /** Views of one kind kept loaded, the one on screen among them. */
+  /** Views of one kind kept loaded out of sight; those on screen are
+   *  always loaded. */
   keep: number;
   /** How long one out of sight stays loaded. */
   hiddenMs: number;
@@ -15,10 +17,10 @@ interface MemoryLimits {
 
 const MINUTE = 60_000;
 const LIMITS: Record<MemoryLevel, MemoryLimits> = {
-  roomy: { keep: 5, hiddenMs: 10 * MINUTE },
-  normal: { keep: 3, hiddenMs: 5 * MINUTE },
-  tight: { keep: 2, hiddenMs: 2 * MINUTE },
-  critical: { keep: 1, hiddenMs: MINUTE / 2 },
+  roomy: { keep: 4, hiddenMs: 10 * MINUTE },
+  normal: { keep: 2, hiddenMs: 5 * MINUTE },
+  tight: { keep: 1, hiddenMs: 2 * MINUTE },
+  critical: { keep: 0, hiddenMs: MINUTE / 2 },
 };
 const ORDER: MemoryLevel[] = ["roomy", "normal", "tight", "critical"];
 
@@ -32,19 +34,14 @@ function levelOf(totalMb: number, pressure: number): MemoryLevel {
 }
 
 let level: MemoryLevel = "normal";
-const listeners = new Set<(level: MemoryLevel, tighter: boolean) => void>();
+const levels = createSubscribers<[level: MemoryLevel, tighter: boolean]>();
 
 export function memoryLimits(): MemoryLimits {
   return LIMITS[level];
 }
 
 /** Told when the level moves, and whether it is tighter than it was. */
-export function onMemoryLevel(
-  listener: (level: MemoryLevel, tighter: boolean) => void,
-): () => void {
-  listeners.add(listener);
-  return () => listeners.delete(listener);
-}
+export const onMemoryLevel = levels.subscribe;
 
 export function setMemoryState(state: {
   totalMb: number;
@@ -54,5 +51,5 @@ export function setMemoryState(state: {
   if (next === level) return;
   const tighter = ORDER.indexOf(next) > ORDER.indexOf(level);
   level = next;
-  for (const listener of listeners) listener(next, tighter);
+  levels.publish(next, tighter);
 }

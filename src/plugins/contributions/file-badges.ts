@@ -1,4 +1,5 @@
 import { useSyncExternalStore } from "react";
+import { createSubscribers } from "../../utils/store";
 
 /**
  * A short badge plugins put after a file's name in the sidebar
@@ -15,8 +16,8 @@ interface FileBadge {
 const MAX_TEXT = 12;
 const TONES: readonly string[] = ["accent", "warning", "danger", "success"];
 const byPath = new Map<string, Map<string, FileBadge>>();
-const listeners = new Set<() => void>();
-const told = () => listeners.forEach((listener) => listener());
+const subscribers = createSubscribers();
+const told = subscribers.publish;
 
 function badgeOf(value: unknown): FileBadge {
   const v = (value ?? {}) as Record<string, unknown>;
@@ -64,10 +65,7 @@ export function fileBadge(path: string): FileBadge | null {
   return last ? own.get(last)! : null;
 }
 
-function subscribe(listener: () => void): () => void {
-  listeners.add(listener);
-  return () => listeners.delete(listener);
-}
+const subscribe = subscribers.subscribe;
 
 /** `path`'s badge, following it as plugins change it. */
 export function useFileBadge(path: string): FileBadge | null {

@@ -187,4 +187,23 @@ describe("rules", () => {
     });
     expect(scan).toEqual({ ranges: [[2, 9]], open: true });
   });
+
+  it("read a comment in an expression past its apostrophe and brace", () => {
+    const rules = { braces: true, jsx: false };
+    const block = "{/* don't ship } yet */} after {x}";
+    expect(scanSource(block, 0, [], rules)).toEqual({
+      ranges: [
+        [0, 24],
+        [31, 34],
+      ],
+      open: false,
+    });
+    const line = "{value // it's here }\n} after";
+    expect(scanSource(line, 0, [], rules)).toEqual({
+      ranges: [[0, 23]],
+      open: false,
+    });
+    // Never closed: still open at the end.
+    expect(scanSource("{/* don't", 0, [], rules).open).toBe(true);
+  });
 });

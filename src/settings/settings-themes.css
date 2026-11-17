@@ -153,8 +153,10 @@
   border-radius: var(--shape-s);
   transition: background-color var(--dur-fast) var(--ease-standard);
 }
-.settings-group-body > .theme-gallery-item:hover {
-  background: var(--ui-hover);
+@media (hover: hover) {
+  .settings-group-body > .theme-gallery-item:hover {
+    background: var(--ui-hover);
+  }
 }
 .settings-group-body > .theme-gallery-item > .theme-gallery-preview {
   width: 100%;

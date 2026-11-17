@@ -19,10 +19,12 @@ import { restoreFolderAccess } from "./platform/ios-files";
 import { installMobileViewport } from "./platform/mobile-viewport";
 import { installBack } from "./mobile/back";
 import { markEngineQuirks } from "./engine/controls/engine-quirks";
-import { flushWhenHidden } from "./storage/pending-writes";
+import { flushWhenHidden, onWriteFailed } from "./storage/pending-writes";
+import { currentStrings } from "./i18n/current";
 import { exposePluginApiForDevelopment } from "./plugin-api";
 import "./mobile/styles/index.css";
 import { watchErrors } from "./app/report/recent-errors";
+import { watchInput } from "./app/report/input-trail";
 import { AppErrorBoundary } from "./app/report/AppErrorBoundary";
 
 installPolyfills();
@@ -33,6 +35,13 @@ installTextFieldMenu();
 installScrollReveal();
 // Held-back storage writes go out when iOS sends the app to the background.
 flushWhenHidden();
+// A write that fails is said once: what changes then lasts only this session.
+const stopTelling = onWriteFailed(() => {
+  stopTelling();
+  void import("./engine/controls/notices").then(({ showNotice }) =>
+    showNotice(currentStrings().settingsNotSaved, { tone: "warning" }),
+  );
+});
 // iOS: reopen the folders picked in earlier sessions (a no-op elsewhere).
 void restoreFolderAccess().catch(() => {});
 
@@ -66,6 +75,7 @@ const FloatingWindowApp = lazyComponent(
 
 // For Help > Report a Problem, from the first moment.
 watchErrors();
+watchInput();
 
 if (view === "background") {
   // The hidden window Rust opens to run plugins' background code draws

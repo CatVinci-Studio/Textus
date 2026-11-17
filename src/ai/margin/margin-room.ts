@@ -1,5 +1,6 @@
 import { scaledPx } from "../../engine/tokens/chrome-scale";
 import { useSyncExternalStore } from "react";
+import { createSubscribers } from "../../utils/store";
 
 /** A card's width and the air between it and the text. */
 export const CARD_WIDTH = 256;
@@ -62,18 +63,15 @@ export function columnForMargin(
 // Whether the active document has room for a margin, for Settings. One value
 // per window; assumed to fit until a document has measured.
 let available = true;
-const listeners = new Set<() => void>();
+const subscribers = createSubscribers();
 
 export function setMarginAvailable(value: boolean) {
   if (value === available) return;
   available = value;
-  for (const listener of listeners) listener();
+  subscribers.publish();
 }
 
-function subscribe(listener: () => void) {
-  listeners.add(listener);
-  return () => listeners.delete(listener);
-}
+const subscribe = subscribers.subscribe;
 
 export function useMarginAvailable(): boolean {
   return useSyncExternalStore(

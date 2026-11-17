@@ -94,31 +94,26 @@ fn beyond_the_cap_the_oldest_move_to_the_trash() {
 }
 
 #[test]
-fn the_trash_keeps_its_newest_files() {
+fn the_archive_keeps_every_conversation_moved_to_it() {
     let data = temp_dir();
     let history = ChatHistory::load(&data);
     let trash = data.join(dir_name()).join(TRASH);
     std::fs::create_dir_all(&trash).unwrap();
-    // Something else in the trash is never touched.
+    // Something else in there is never touched.
     std::fs::write(trash.join("notes.txt"), "mine").unwrap();
-    for i in 0..MAX_TRASHED {
-        let path = trash.join(format!("t{i}.json"));
-        std::fs::write(&path, "{}").unwrap();
-        let at = std::time::UNIX_EPOCH + std::time::Duration::from_secs(1_000 + i as u64);
-        std::fs::File::options()
-            .write(true)
-            .open(&path)
-            .unwrap()
-            .set_modified(at)
-            .unwrap();
+    // More than the 200 it used to be cut to, all older than what comes.
+    for i in 0..250 {
+        std::fs::write(trash.join(format!("t{i}.json")), "{}").unwrap();
     }
     for i in 0..=MAX_CONVERSATIONS {
         history.save(conversation(&format!("c{i}"), "/a.md", i as u64));
     }
-    assert_eq!(history.archived(), MAX_TRASHED);
-    assert!(!trash.join("t0.json").exists(), "the oldest went");
-    assert!(trash.join("t1.json").exists());
-    assert!(trash.join("c0.json").exists(), "the one just trimmed stays");
+    assert_eq!(history.archived(), 251);
+    assert!(trash.join("t0.json").exists(), "the oldest stays");
+    assert!(
+        trash.join("c0.json").exists(),
+        "the one just trimmed is there"
+    );
     assert!(trash.join("notes.txt").exists());
 }
 

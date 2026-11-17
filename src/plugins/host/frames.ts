@@ -1,8 +1,8 @@
 import { pluginString } from "./plugin-string";
-import webviewRuntime from "./runtime/webview.js?raw";
+import { WEBVIEW_RUNTIME as webviewRuntime } from "./webview-runtime";
 import pageKitRuntime from "./runtime/page-kit.js?raw";
 import pageToolsRuntime from "./runtime/page-tools.js?raw";
-import textRuntime from "./runtime/text.js?raw";
+import { TEXT_RUNTIME as textRuntime } from "./text-runtime";
 import tooltipCss from "../../engine/controls/Tooltip.css?inline";
 import componentsCss from "../../engine/controls/components.css?inline";
 import iconMasksCss from "../../engine/controls/icon-masks.css?inline";

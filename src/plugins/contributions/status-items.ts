@@ -1,6 +1,7 @@
 import { headingsOf } from "../../utils/markdown-lines";
 import { localize } from "../store/manifest";
 import { runningPlugins, type PluginsSnapshot } from "../store/plugin-records";
+import { createSubscribers } from "../../utils/store";
 
 /**
  * What plugins show in the window bar's status area: a short text, its
@@ -18,17 +19,14 @@ export interface StatusItem {
 }
 
 let items: StatusItem[] = [];
-const listeners = new Set<() => void>();
+const subscribers = createSubscribers();
 
 function publish(next: StatusItem[]) {
   items = next;
-  for (const listener of listeners) listener();
+  subscribers.publish();
 }
 
-export function subscribeStatusItems(listener: () => void): () => void {
-  listeners.add(listener);
-  return () => listeners.delete(listener);
-}
+export const subscribeStatusItems = subscribers.subscribe;
 
 export function statusItemsSnapshot(): StatusItem[] {
   return items;

@@ -63,8 +63,7 @@ pub(super) fn create_drag_pill(
     });
 }
 
-/// Reposition the pill under the cursor mid-drag; also re-shows it after a
-/// park_drag_pill.
+/// Reposition the pill under the cursor mid-drag, back from a park too.
 #[cfg(any(target_os = "macos", windows))]
 pub(super) fn move_drag_pill(app: &tauri::AppHandle, x: f64, y: f64) {
     if let Some(window) = app.get_webview_window(DRAG_PILL_LABEL) {
@@ -72,16 +71,17 @@ pub(super) fn move_drag_pill(app: &tauri::AppHandle, x: f64, y: f64) {
             x - DRAG_PILL_WIDTH / 2.0,
             y - DRAG_PILL_HEIGHT / 2.0,
         ));
-        let _ = window.show();
     }
 }
 
-/// Hide (don't destroy) the pill while over a target tab row, where the target
-/// shows the preview pill in its bar instead.
+/// Out of sight while over a target tab row, where the target shows the
+/// preview pill in its bar instead. Moved away, not hidden: showing it again
+/// would activate it on Windows, and a window taking focus from an editor
+/// can leave its input method broken (wry#1908).
 #[cfg(any(target_os = "macos", windows))]
 pub(super) fn park_drag_pill(app: &tauri::AppHandle) {
     if let Some(window) = app.get_webview_window(DRAG_PILL_LABEL) {
-        let _ = window.hide();
+        let _ = window.set_position(tauri::LogicalPosition::new(-32000.0, -32000.0));
     }
 }
 

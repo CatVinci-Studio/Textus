@@ -1,5 +1,6 @@
 import { useEffect, useRef } from "react";
 import { androidBridge } from "../platform/android-bridge";
+import { drafts } from "../platform/ipc";
 import { tabIsDirty, type DocTab, type HelpDoc } from "./doc-tabs";
 import type { PluginTabView } from "../plugins/app-bridge";
 import { writeTabOrder } from "./tab-order";
@@ -72,16 +73,13 @@ export function keptTabs(
   };
 }
 
-function store(): Pick<Storage, "getItem" | "setItem" | "removeItem"> | null {
-  // Android may make the page anew without a reload (a font or display size
-  // changed), with an empty sessionStorage: its app keeps them instead.
-  const android = androidBridge();
-  if (android)
-    return {
-      getItem: (key) => (key === KEY ? android.kept() || null : null),
-      setItem: (key, value) => key === KEY && android.keep(value),
-      removeItem: (key) => key === KEY && android.keep(""),
-    };
+/** Android may make the page anew without a reload (a font or display
+ *  size changed), with an empty sessionStorage: the app's process keeps the
+ *  tabs instead, asked through its own commands (not the Android bridge,
+ *  which a web page opened in the app sees too). */
+const processKeeps = () => androidBridge() !== null;
+
+function session(): Storage | null {
   try {
     return window.sessionStorage;
   } catch {
@@ -97,7 +95,11 @@ export function writeKeptTabs(kept: KeptTabs): void {
 }
 
 function writeKept(kept: KeptTabs): void {
-  const storage = store();
+  if (processKeeps()) {
+    void drafts.keepPageTabs(JSON.stringify(kept)).catch(() => {});
+    return;
+  }
+  const storage = session();
   if (!storage) return;
   try {
     storage.setItem(KEY, JSON.stringify(kept));
@@ -117,9 +119,11 @@ function writeKept(kept: KeptTabs): void {
 }
 
 /** The tabs this page had before it was reloaded, or null for a new one. */
-export function readKeptTabs(): KeptTabs | null {
+export async function readKeptTabs(): Promise<KeptTabs | null> {
   try {
-    const raw = store()?.getItem(KEY);
+    const raw = processKeeps()
+      ? await drafts.keptPageTabs()
+      : session()?.getItem(KEY);
     if (!raw) return null;
     const kept = JSON.parse(raw) as KeptTabs;
     return Array.isArray(kept.tabs) && kept.tabs.length > 0 ? kept : null;

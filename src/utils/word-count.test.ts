@@ -48,6 +48,24 @@ describe("countWords", () => {
     expect(countWords(doc.replace("Two", "Now two")).words).toBe(3 + 3 + 3);
   });
 
+  it("counts words with digits where WebKit's segmenter calls them no word", () => {
+    const segment = Intl.Segmenter.prototype.segment;
+    // Safari marks "r12", "h1" and "2019" as not word-like.
+    const spy = vi
+      .spyOn(Intl.Segmenter.prototype, "segment")
+      .mockImplementation(function (this: Intl.Segmenter, text: string) {
+        return [...segment.call(this, text)].map((s) => ({
+          ...s,
+          isWordLike: s.isWordLike && !/\d/.test(s.segment),
+        })) as unknown as Intl.Segments;
+      });
+    try {
+      expect(countWords("r12 ipad h1 a1 in 2019").words).toBe(6);
+    } finally {
+      spy.mockRestore();
+    }
+  });
+
   describe("its paragraph cache", () => {
     const segments = () => vi.spyOn(Intl.Segmenter.prototype, "segment");
     afterEach(() => vi.restoreAllMocks());

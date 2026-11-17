@@ -3,7 +3,7 @@ import { grants } from "../grants";
 import type { PluginTabInfo } from "../app-bridge";
 import { mayOpen } from "../may-open";
 import { emitToThisWindow } from "../../platform/menu-events";
-import { SHOW_SIDEBAR_TAB_EVENT } from "../../utils/events";
+import { SHOW_SIDEBAR_TAB_EVENT, sendAppEvent } from "../../utils/events";
 import { links } from "../../platform/ipc";
 import { splitLayout } from "../../engine/layout/store";
 import { panesOf } from "../../engine/layout/tree";
@@ -103,9 +103,7 @@ export function layoutHandlers(p: PluginScope) {
     },
     // A sidebar tab - any plugin's, or Files and Outline - shown.
     "layout.showSidebarTab": ({ id }: Params) => {
-      window.dispatchEvent(
-        new CustomEvent(SHOW_SIDEBAR_TAB_EVENT, { detail: str(id, "id") }),
-      );
+      sendAppEvent(SHOW_SIDEBAR_TAB_EVENT, str(id, "id"));
     },
     "layout.openWebPage": ({ url, where, title }: Params) => {
       const address = webPageUrl(str(url, "url"));

@@ -1,3 +1,4 @@
+import { createSubscribers } from "../utils/store";
 /**
  * Items added from outside (plugins) to the file tree's, a tab's, a
  * view's and a floating view's menus. Each menu asks when it opens.
@@ -26,12 +27,12 @@ interface ContributedItem {
 type Provider = (target: ContextMenuTarget) => ContributedItem[];
 
 const providers = new Map<ContextMenuPlace, Provider[]>();
-const listeners = new Set<() => void>();
+const subscribers = createSubscribers();
 let version = 0;
 
 function changed() {
   version++;
-  for (const listener of listeners) listener();
+  subscribers.publish();
 }
 
 export function registerContextItems(
@@ -65,10 +66,7 @@ export function contributedContextItems(
 }
 
 /** For buttons that show without a menu being opened (view/title). */
-export function subscribeContextItems(listener: () => void): () => void {
-  listeners.add(listener);
-  return () => listeners.delete(listener);
-}
+export const subscribeContextItems = subscribers.subscribe;
 
 export function contextItemsVersion(): number {
   return version;

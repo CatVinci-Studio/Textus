@@ -166,8 +166,10 @@
   cursor: pointer;
 }
 
-.review-note-actions button:hover {
-  border-color: var(--review-note-line);
+@media (hover: hover) {
+  .review-note-actions button:hover {
+    border-color: var(--review-note-line);
+  }
 }
 
 /* A card of a crowded run, cut to its heading and a line; keep its height in

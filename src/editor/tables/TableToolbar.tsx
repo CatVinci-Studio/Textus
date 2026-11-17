@@ -1,4 +1,5 @@
-import { useCallback, useRef, useState } from "react";
+import { useCallback, useRef, useState, type RefObject } from "react";
+import { useFitSteps } from "../../engine/controls/fit-steps";
 import { createRoot, type Root } from "react-dom/client";
 import type { Strings } from "../../i18n/strings";
 import { fill } from "../../i18n/fill";
@@ -31,10 +32,15 @@ interface TableToolbarProps {
   onOpenChange: (open: boolean) => void;
 }
 
+/** Short of room over a narrow table, the tools give way in turn: tighter
+ *  pills, then Copy, then the alignments (both in its right-click menu). */
+const FIT_STEPS = ["tight", "no-copy", "no-align"] as const;
+
 /** A table's tools over its top right, as a code block's pills: its size,
  *  its columns' alignment, Copy and Delete. */
-function TableToolbar(p: TableToolbarProps) {
+function TableToolbar(p: TableToolbarProps & { bar: RefObject<HTMLElement> }) {
   const { t } = p;
+  useFitSteps(p.bar, FIT_STEPS);
   const sizeSlot = useRef<HTMLSpanElement>(null);
   const [sizing, setSizing] = useState(false);
   const [copied, setCopied] = useState(false);
@@ -96,7 +102,7 @@ function TableToolbar(p: TableToolbarProps) {
       )}
       <button
         type="button"
-        className={`block-pill${copied ? " is-copied" : ""}`}
+        className={`block-pill table-copy-pill${copied ? " is-copied" : ""}`}
         onClick={copy}
       >
         {copied ? t.codeBlockCopied : t.copy}
@@ -182,9 +188,10 @@ function SizePicker({
 /** The table view's tools, drawn into `container` outside React's tree. */
 export function mountTableToolbar(container: HTMLElement) {
   let root: Root | null = createRoot(container);
+  const bar = { current: container };
   return {
     render(props: TableToolbarProps) {
-      root?.render(<TableToolbar {...props} />);
+      root?.render(<TableToolbar {...props} bar={bar} />);
     },
     destroy() {
       const done = root;

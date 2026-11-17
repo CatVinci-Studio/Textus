@@ -4,7 +4,7 @@ import { Plugin, PluginKey } from "@milkdown/kit/prose/state";
 import { $prose } from "@milkdown/kit/utils";
 import { isImeKeyEvent } from "../../editor/keys/ime";
 import { pausesFeatures } from "../../editor/large-doc";
-import { createDebouncedTask } from "./debounced-task";
+import { createDebouncedTask } from "../../utils/debounced-task";
 import { hasPendingEdits } from "../revision/pending-edit-plugin";
 import { ai, type CompletionHints } from "../../platform/ipc";
 import { AiNoticeError } from "../../utils/error-text";

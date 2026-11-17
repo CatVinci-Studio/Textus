@@ -4,6 +4,7 @@ import {
   flushPendingWrites,
   flushWhenHidden,
   onFlush,
+  onWriteFailed,
   resetPendingWritesForTests,
   trackWrite,
 } from "./pending-writes";
@@ -52,6 +53,21 @@ describe("flushPendingWrites", () => {
     b.reject(new Error("ipc"));
     await tick();
     expect(done).toBe(true);
+  });
+
+  it("tells a failed write to who asked, as well as to its caller", async () => {
+    const error = vi.spyOn(console, "error").mockImplementation(() => {});
+    const failed = vi.fn();
+    const stop = onWriteFailed(failed);
+    const write = trackWrite(Promise.reject(new Error("disk full")));
+    await expect(write).rejects.toThrow("disk full");
+    await tick();
+    expect(failed).toHaveBeenCalledTimes(1);
+    stop();
+    await trackWrite(Promise.reject(new Error("again"))).catch(() => {});
+    await tick();
+    expect(failed).toHaveBeenCalledTimes(1);
+    error.mockRestore();
   });
 
   it("waits for a write a held-back one starts, too", async () => {

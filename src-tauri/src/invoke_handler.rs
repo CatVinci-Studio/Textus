@@ -16,8 +16,8 @@ use commands::attachment::pick_attachment_files;
 #[cfg(desktop)]
 use commands::cli::{cli_command_status, install_cli_command};
 use commands::drafts::{
-    clear_all_drafts, clear_draft_snapshot, finish_draft_restore, save_draft_snapshot,
-    take_draft_snapshots,
+    clear_all_drafts, clear_draft_snapshot, finish_draft_restore, keep_page_tabs, kept_page_tabs,
+    save_draft_snapshot, take_draft_snapshots,
 };
 use commands::export::export_save_dialog;
 #[cfg(desktop)]
@@ -159,6 +159,8 @@ pub(crate) fn handler() -> impl Fn(tauri::ipc::Invoke<tauri::Wry>) -> bool + Sen
         finish_draft_restore,
         clear_draft_snapshot,
         clear_all_drafts,
+        keep_page_tabs,
+        kept_page_tabs,
         commands::undo_files::undo_file_save,
         commands::undo_files::undo_file_load,
         commands::doc_data::document_data_move,
@@ -202,15 +204,10 @@ pub(crate) fn handler() -> impl Fn(tauri::ipc::Invoke<tauri::Wry>) -> bool + Sen
         crate::agents::agent_stop,
         #[cfg(desktop)]
         menu::set_plugin_menu,
-        #[cfg(desktop)]
         commands::tree_ops::tree_create_document,
-        #[cfg(desktop)]
         commands::tree_ops::tree_create_folder,
-        #[cfg(desktop)]
         commands::tree_ops::tree_move_entry,
-        #[cfg(desktop)]
         commands::tree_ops::tree_rename_entry,
-        #[cfg(desktop)]
         commands::tree_ops::tree_trash_entry,
         #[cfg(desktop)]
         commands::recents::add_recent_folder,

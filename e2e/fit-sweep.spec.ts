@@ -84,7 +84,8 @@ async function problems(page: Page): Promise<string[]> {
   });
 }
 
-for (const language of ["zh", "en", "de"])
+// German and Russian run longest, Japanese stands tallest.
+for (const language of ["zh", "en", "de", "ru", "ja"])
   test(`Settings fits every width in ${language}`, async ({ page }) => {
     test.setTimeout(120_000);
     await page.setViewportSize({ width: 1400, height: 900 });
@@ -208,7 +209,7 @@ for (const [os, platform] of [
   ["linux", "Linux x86_64"],
 ] as const)
   test(`the window's parts never overlap on ${os}`, async ({ page }) => {
-    test.setTimeout(60_000);
+    test.setTimeout(90_000);
     // The user agent too: Playwright's says Windows, and the platform
     // check reads it.
     await page.addInitScript((p) => {
@@ -223,7 +224,7 @@ for (const [os, platform] of [
     await emit(page, "menu-split-right");
     const found: string[] = [];
     for (const state of STATES)
-      for (const uiTextScale of [1, 1.25])
+      for (const uiTextScale of [0.85, 1, 1.25])
         for (const width of [760, 1200]) {
           await page.setViewportSize({ width, height: 760 });
           await page.evaluate(
@@ -292,6 +293,27 @@ for (const [os, platform] of [
     }
   });
 
+test("a button label wider than its row is cut at its end, never its start", async ({
+  page,
+}) => {
+  await openApp(page);
+  const start = await page.evaluate(() => {
+    const row = document.createElement("div");
+    row.style.cssText = "width: 120px; position: fixed; top: 0; left: 0";
+    const button = document.createElement("button");
+    button.className = "tx-button";
+    button.textContent = "Diese Version wiederherstellen";
+    row.append(button);
+    document.body.append(row);
+    const range = document.createRange();
+    range.selectNodeContents(button);
+    const text = range.getBoundingClientRect().left;
+    row.remove();
+    return text - button.getBoundingClientRect().left;
+  });
+  expect(start).toBeGreaterThanOrEqual(0);
+});
+
 test.describe("on a touch screen", () => {
   test.use({ hasTouch: true, isMobile: true });
 
@@ -306,5 +328,21 @@ test.describe("on a touch screen", () => {
       .locator(".tab-pill-title")
       .evaluate((el) => el.scrollWidth - el.clientWidth);
     expect(cut).toBeLessThanOrEqual(0);
+    // Squeezed by many tabs, the open one still shows its whole name, and
+    // a name drawn whole, its × hidden, is not faded as cut.
+    for (let i = 0; i < 9; i++) await emit(page, "menu-new-file");
+    await settled(page);
+    const pills = await page.locator(".tab-pill").evaluateAll((all) =>
+      all.map((el) => {
+        const title = el.querySelector(".tab-pill-title")!;
+        return {
+          open: el.classList.contains("tab-pill-active"),
+          whole: title.scrollWidth <= title.clientWidth,
+          marked: title.hasAttribute("data-cut"),
+        };
+      }),
+    );
+    expect(pills.find((p) => p.open)).toMatchObject({ whole: true });
+    for (const p of pills) expect(p.marked).toBe(!p.whole);
   });
 });

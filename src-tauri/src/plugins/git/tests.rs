@@ -7,6 +7,11 @@ fn state(granted: &[&str]) -> PluginsState {
     .unwrap()
 }
 
+/// No repository is trusted: none of these runs anything.
+fn list() -> PathBuf {
+    PathBuf::from("/nowhere/git-trusted.json")
+}
+
 fn git(dir: &Path, args: &[&str]) {
     let ok = std::process::Command::new("git")
         .current_dir(dir)
@@ -45,7 +50,7 @@ fn repo() -> (tempfile::TempDir, String) {
 #[test]
 fn status_names_the_branch_and_the_changes_but_no_hidden_file() {
     let (_tmp, root) = repo();
-    let s = status(&state(&["files.read"]), "a.b", &root)
+    let s = status(&state(&["files.read"]), &list(), "a.b", &root)
         .unwrap()
         .unwrap();
     assert_eq!(s.branch.as_deref(), Some("main"));
@@ -78,13 +83,13 @@ fn paths_are_named_under_the_folder_as_given_not_its_real_path() {
     std::os::unix::fs::symlink(&real_root, &root).unwrap();
     let root = root.to_string_lossy().to_string();
     let s = state(&["files.read"]);
-    let changes = status(&s, "a.b", &root).unwrap().unwrap().changes;
+    let changes = status(&s, &list(), "a.b", &root).unwrap().unwrap().changes;
     assert!(
         changes.iter().all(|c| c.path.starts_with(&root)),
         "{changes:?}"
     );
     let b = format!("{root}/b.md");
-    assert!(log(&s, "a.b", &root, &b, None).unwrap()[0]
+    assert!(log(&s, &list(), "a.b", &root, &b, None).unwrap()[0]
         .path
         .starts_with(&root));
     drop(tmp);
@@ -94,7 +99,7 @@ fn paths_are_named_under_the_folder_as_given_not_its_real_path() {
 fn a_folder_in_no_repository_has_no_status() {
     let tmp = tempfile::tempdir().unwrap();
     let root = tmp.path().to_string_lossy().to_string();
-    assert!(status(&state(&["files.read"]), "a.b", &root)
+    assert!(status(&state(&["files.read"]), &list(), "a.b", &root)
         .unwrap()
         .is_none());
 }
@@ -104,28 +109,47 @@ fn a_files_history_follows_renames_and_shows_each_version() {
     let (_tmp, root) = repo();
     let s = state(&["files.read"]);
     let b = format!("{root}/b.md");
-    let commits = log(&s, "a.b", &root, &b, None).unwrap();
+    let commits = log(&s, &list(), "a.b", &root, &b, None).unwrap();
     let subjects: Vec<&str> = commits.iter().map(|c| c.subject.as_str()).collect();
     assert_eq!(subjects, ["Renamed", "First"]);
     assert!(commits[1].path.ends_with("a.md"));
     let first = &commits[1];
     assert_eq!(
-        show(&s, "a.b", &root, &first.hash, &first.path)
+        show(&s, &list(), "a.b", &root, &first.hash, &first.path)
             .unwrap()
             .as_deref(),
         Some("one\n")
     );
     // Not a file of that commit; not a hash; not a hidden file.
-    assert_eq!(show(&s, "a.b", &root, &first.hash, &b).unwrap(), None);
-    assert!(show(&s, "a.b", &root, "--output=x", &b).is_err());
-    assert!(show(&s, "a.b", &root, &first.hash, &format!("{root}/.env")).is_err());
-    assert!(log(&s, "a.b", &root, &format!("{root}/.env"), None).is_err());
+    assert_eq!(
+        show(&s, &list(), "a.b", &root, &first.hash, &b).unwrap(),
+        None
+    );
+    assert!(show(&s, &list(), "a.b", &root, "--output=x", &b).is_err());
+    assert!(show(
+        &s,
+        &list(),
+        "a.b",
+        &root,
+        &first.hash,
+        &format!("{root}/.env")
+    )
+    .is_err());
+    assert!(log(&s, &list(), "a.b", &root, &format!("{root}/.env"), None).is_err());
 }
 
 #[test]
 fn reading_history_needs_files_read() {
     let (_tmp, root) = repo();
-    assert!(log(&state(&[]), "a.b", &root, &format!("{root}/b.md"), None).is_err());
+    assert!(log(
+        &state(&[]),
+        &list(),
+        "a.b",
+        &root,
+        &format!("{root}/b.md"),
+        None
+    )
+    .is_err());
 }
 
 #[test]
@@ -134,6 +158,7 @@ fn a_commit_takes_the_named_files_only_and_needs_its_grant() {
     let c = format!("{root}/c.md");
     assert!(commit(
         &state(&["files.read"]),
+        &list(),
         "a.b",
         &root,
         "Add c",
@@ -141,9 +166,18 @@ fn a_commit_takes_the_named_files_only_and_needs_its_grant() {
     )
     .is_err());
     let s = state(&["files.read", "git.commit"]);
-    assert!(commit(&s, "a.b", &root, "Hidden", &[format!("{root}/.env")]).is_err());
+    assert!(commit(
+        &s,
+        &list(),
+        "a.b",
+        &root,
+        "Hidden",
+        &[format!("{root}/.env")]
+    )
+    .is_err());
     let hash = commit(
         &s,
+        &list(),
         "a.b",
         &root,
         "Add c\n\nWith a body.",
@@ -151,8 +185,11 @@ fn a_commit_takes_the_named_files_only_and_needs_its_grant() {
     )
     .unwrap();
     assert!(is_hash(&hash));
-    assert_eq!(log(&s, "a.b", &root, &c, None).unwrap()[0].subject, "Add c");
-    let left: Vec<String> = status(&s, "a.b", &root)
+    assert_eq!(
+        log(&s, &list(), "a.b", &root, &c, None).unwrap()[0].subject,
+        "Add c"
+    );
+    let left: Vec<String> = status(&s, &list(), "a.b", &root)
         .unwrap()
         .unwrap()
         .changes
@@ -162,4 +199,93 @@ fn a_commit_takes_the_named_files_only_and_needs_its_grant() {
     // Named in the system's own separator under the folder.
     let b = Path::new(&root).join("b.md").to_string_lossy().to_string();
     assert_eq!(left, vec![b]);
+}
+
+#[cfg(unix)]
+#[test]
+fn a_repository_whose_settings_run_a_program_runs_nothing_until_trusted() {
+    let (tmp, root) = repo();
+    let top = std::fs::canonicalize(tmp.path()).unwrap();
+    let marker = top.join("ran");
+    let script = top.join("monitor.sh");
+    std::fs::write(
+        &script,
+        format!("#!/bin/sh\ntouch '{}'\n", marker.display()),
+    )
+    .unwrap();
+    {
+        use std::os::unix::fs::PermissionsExt;
+        std::fs::set_permissions(&script, std::fs::Permissions::from_mode(0o755)).unwrap();
+    }
+    git(
+        &top,
+        &["config", "core.fsmonitor", &script.to_string_lossy()],
+    );
+    let s = state(&["files.read", "git.commit"]);
+    let trusted = top.join("trusted.json");
+    let refused = status(&s, &trusted, "a.b", &root).unwrap_err();
+    assert_eq!(refused, format!("{}core.fsmonitor", safety::UNTRUSTED));
+    let b = format!("{root}/b.md");
+    assert!(log(&s, &trusted, "a.b", &root, &b, None).is_err());
+    assert!(!marker.exists(), "nothing ran while it was asked about");
+    // Trusted, Git works - and still without the monitor.
+    safety::trust(&trusted, &top, &["core.fsmonitor".to_string()]).unwrap();
+    assert!(status(&s, &trusted, "a.b", &root).unwrap().is_some());
+    assert!(!marker.exists(), "the monitor is off on every call");
+}
+
+#[cfg(unix)]
+#[test]
+fn a_commit_asks_about_the_hooks_it_would_run() {
+    let (tmp, root) = repo();
+    let top = std::fs::canonicalize(tmp.path()).unwrap();
+    let hook = top.join(".git/hooks/pre-commit");
+    std::fs::write(&hook, "#!/bin/sh\nexit 0\n").unwrap();
+    {
+        use std::os::unix::fs::PermissionsExt;
+        std::fs::set_permissions(&hook, std::fs::Permissions::from_mode(0o755)).unwrap();
+    }
+    let s = state(&["files.read", "git.commit"]);
+    let trusted = top.join("trusted.json");
+    let c = format!("{root}/c.md");
+    // Reading runs no hook: nothing to ask.
+    assert!(status(&s, &trusted, "a.b", &root).is_ok());
+    let files = std::slice::from_ref(&c);
+    let refused = commit(&s, &trusted, "a.b", &root, "Add c", files).unwrap_err();
+    assert_eq!(refused, format!("{}hook: pre-commit", safety::UNTRUSTED));
+    safety::trust(&trusted, &top, &["hook: pre-commit".to_string()]).unwrap();
+    assert!(commit(&s, &trusted, "a.b", &root, "Add c", files).is_ok());
+}
+
+#[test]
+fn a_commit_of_a_folder_is_refused_so_hidden_files_stay_out() {
+    let (_tmp, root) = repo();
+    let s = state(&["files.read", "git.commit"]);
+    assert!(commit(
+        &s,
+        &list(),
+        "a.b",
+        &root,
+        "All",
+        std::slice::from_ref(&root)
+    )
+    .is_err());
+    let changes = status(&s, &list(), "a.b", &root).unwrap().unwrap().changes;
+    assert!(changes.iter().any(|c| c.path.ends_with("c.md")));
+}
+
+#[cfg(unix)]
+#[test]
+fn a_call_that_takes_too_long_is_stopped() {
+    let (tmp, _root) = repo();
+    let slow = ["-c", "alias.wait=!sleep 5", "wait"];
+    let started = std::time::Instant::now();
+    let said = process::run_within(
+        tmp.path(),
+        &slow,
+        None,
+        std::time::Duration::from_millis(200),
+    );
+    assert!(said.unwrap_err().contains("too long"));
+    assert!(started.elapsed() < std::time::Duration::from_secs(3));
 }

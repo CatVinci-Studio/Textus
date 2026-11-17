@@ -1,5 +1,9 @@
 import { editIpc } from "../../platform/ipc-app";
-import { EDIT_ACTION_EVENT, SOURCE_EDIT_EVENT } from "../../utils/events";
+import {
+  EDIT_ACTION_EVENT,
+  SOURCE_EDIT_EVENT,
+  sendAppEvent,
+} from "../../utils/events";
 
 /** The Edit menu items that act where the keyboard is. */
 type FocusedEdit = "undo" | "redo" | "select-all";
@@ -37,7 +41,7 @@ export function editInFocus(action: FocusedEdit): void {
   }
   if (focused instanceof HTMLElement && focused.closest('[aria-modal="true"]'))
     return;
-  window.dispatchEvent(new CustomEvent(EDIT_ACTION_EVENT, { detail: action }));
+  sendAppEvent(EDIT_ACTION_EVENT, action);
 }
 
 /** As the system's own menu item would. Where there is none, Undo and Redo

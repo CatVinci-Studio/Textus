@@ -1,5 +1,5 @@
-import hostRuntime from "./runtime/host.js?raw";
-import textRuntime from "./runtime/text.js?raw";
+import { HOST_RUNTIME } from "./host-runtime";
+import { TEXT_RUNTIME as textRuntime } from "./text-runtime";
 import { inElement, RPC_SOURCE } from "./frames";
 
 /** The host's page: the runtime, then the plugin's code wrapped as a
@@ -13,7 +13,7 @@ export function hostDocument(pluginCode: string, background = false): string {
     ...(background
       ? ["<script>window.__textusBackground = true;</script>"]
       : []),
-    `<script>${inElement(`${RPC_SOURCE}\n${textRuntime}\n${hostRuntime}`, "script")}</script>`,
+    `<script>${inElement(`${RPC_SOURCE}\n${textRuntime}\n${HOST_RUNTIME}`, "script")}</script>`,
     `<script>__textusDefine(function (module, exports, textus) {\n${inElement(pluginCode, "script")}\n});</script>`,
     "</head><body></body></html>",
   ].join("\n");

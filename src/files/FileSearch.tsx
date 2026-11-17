@@ -118,7 +118,7 @@ function focusEditor() {
       ...(tab?.querySelectorAll<HTMLElement>(selector) ?? []),
     ])
     .find((el) => el.getClientRects().length > 0 && el.isContentEditable);
-  editor?.focus();
+  editor?.focus({ preventScroll: true });
 }
 
 /** The files matching the query, a beat behind the keystroke

@@ -3,6 +3,7 @@ import {
   paneById,
   paneWithTab,
   panesOf,
+  type LayoutNode,
   type Path,
   type SplitDirection,
 } from "./tree";
@@ -19,7 +20,12 @@ import {
   type SplitLayout,
   type SplitRequest,
 } from "./ops";
-import { askGiveWay, layoutFits, shortGivingWay } from "../frame/frame-store";
+import {
+  askGiveWay,
+  layoutFits,
+  refusal,
+  type NoRoom,
+} from "../frame/frame-store";
 import { resolveSplit } from "./resolve";
 
 /**
@@ -160,17 +166,29 @@ export function ifRoom(next: SplitLayout | null): SplitLayout | null {
  *  person (sayNoRoom) - rather than there being nothing to do. */
 export function withRoom(next: SplitLayout | null): {
   next: SplitLayout | null;
-  noRoom: boolean;
+  noRoom: NoRoom;
 } {
-  const fits = !!next && shortGivingWay(next.root) === 0;
-  return { next: fits ? next : null, noRoom: !!next && !fits };
+  if (!next) return { next: null, noRoom: false };
+  const { noRoom } = refusal(next.root, made(next.root));
+  return { next: noRoom ? null : next, noRoom };
 }
+
+/** `next`, a panel's island (the AI's, a plugin's page) opening beside,
+ *  when it fits the window as it is; null and it joins an island instead,
+ *  nothing put away for it. */
+export function ifFits(next: SplitLayout | null): SplitLayout | null {
+  return next && layoutFits(next.root) ? next : null;
+}
+
+/** The islands `root` has that the window's layout doesn't, as they are:
+ *  new ones, and those whose tabs changed. */
+const made = (root: LayoutNode) => madeSince(layout.root, root);
 
 /** Splits the pane in use (or the window) this way, a document of its
  *  tabs, or a blank one, going into the new pane - when the islands, the
  *  new one too, fit the window at their least once the panels and the
- *  sidebar give way: 0. Else the pixels missing even so, nothing changed. */
-export function splitEditor(direction: SplitDirection): boolean {
+ *  sidebar give way: false. Else why not, nothing changed. */
+export function splitEditor(direction: SplitDirection): NoRoom {
   const next = resolveSplit(
     layout,
     { direction },
@@ -179,10 +197,11 @@ export function splitEditor(direction: SplitDirection): boolean {
     () => undefined,
   );
   const root = "blank" in next ? next.blank.root : next.root;
-  if (shortGivingWay(root)) return false;
+  const { noRoom } = refusal(root, made(root));
+  if (noRoom) return noRoom;
   request = { direction };
   change();
-  return true;
+  return false;
 }
 
 /** A layout an operation (ops.ts) gave back: null, one pane left,
@@ -242,7 +261,7 @@ export function besideLayout(
   from: string | null,
   side: "right" | "bottom" = "right",
   share = 0.5,
-): { next: SplitLayout | null; noRoom: boolean } {
+): { next: SplitLayout | null; noRoom: NoRoom } {
   const plan = besidePlan(layout, tabId, from, side, share);
   if (!plan) return { next: null, noRoom: false };
   return "into" in plan
@@ -251,16 +270,16 @@ export function besideLayout(
 }
 
 /** Shows `tabId` beside `from` (besideLayout), both tabs of the window;
- *  false when the window has no room for it. */
+ *  why not when the window has no room for it, else false. */
 export function openBeside(
   tabId: string,
   from: string | null,
   side: "right" | "bottom" = "right",
   share = 0.5,
-): boolean {
+): NoRoom {
   const { next, noRoom } = besideLayout(layout, tabId, from, side, share);
   if (next) setSplitLayout(next);
-  return !noRoom;
+  return noRoom;
 }
 
 /** Where a tab goes as it arrives (Arrival): asked for before it is
@@ -321,9 +340,24 @@ let islandCount = 1;
 function change() {
   settle();
   const count = panesOf(layout.root).length;
-  if (count > islandCount && !layoutFits(layout.root)) askGiveWay();
+  if (count > islandCount && !layoutFits(layout.root))
+    askGiveWay(madeSince(published, layout.root));
   islandCount = count;
+  published = layout.root;
   publish();
+}
+
+/** The layout as the window was last told it. */
+let published: LayoutNode = layout.root;
+
+/** The islands `root` has that `was` doesn't, as they are. */
+function madeSince(was: LayoutNode, root: LayoutNode): ReadonlySet<string> {
+  const tabs = new Map(panesOf(was).map((p) => [p.id, p.tabs.join()]));
+  return new Set(
+    panesOf(root)
+      .filter((p) => tabs.get(p.id) !== p.tabs.join())
+      .map((p) => p.id),
+  );
 }
 
 /** The layout as the tabs now stand (resolve.ts): a tab opened joins the

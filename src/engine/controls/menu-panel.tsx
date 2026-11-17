@@ -34,12 +34,17 @@ export function isMenuGroup(
   return typeof entry === "object" && "items" in entry;
 }
 
-/** Where a menu is drawn: in the dialog open over the window, whose menu
- *  it is, else on the page itself - never inside its opener, whose clip
- *  (a tab row's) would cut it. */
-export function menuHost(): Element {
+/** Where a menu is drawn: in the dialog its opener (its anchor, else what
+ *  has the focus) is in, else in a modal one over the window, else on the
+ *  page itself - never inside its opener, whose clip (a tab row's) would
+ *  cut it. A floating plugin view is a dialog too, but not every menu's. */
+export function menuHost(opener?: Element | null): Element {
   return (
-    [...document.querySelectorAll('[role="dialog"]')].at(-1) ?? document.body
+    (opener ?? document.activeElement)?.closest('[role="dialog"]') ??
+    [...document.querySelectorAll('[role="dialog"][aria-modal="true"]')].at(
+      -1,
+    ) ??
+    document.body
   );
 }
 

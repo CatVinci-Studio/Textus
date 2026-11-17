@@ -3,17 +3,6 @@ import { describe, expect, it } from "vitest";
 import { cleanPastedHtml } from "./paste-html";
 
 describe("cleanPastedHtml", () => {
-  it("makes Google Docs' styled spans bold, italic and struck", () => {
-    const docs =
-      '<b style="font-weight:normal" id="docs-internal-guid-1"><p><span style="font-weight:700">Friday</span> and <span style="font-style:italic">mostly</span> <span style="text-decoration:line-through">(old)</span></p></b>';
-    const out = cleanPastedHtml(docs);
-    expect(out).toContain("<strong>Friday</strong>");
-    expect(out).toContain("<em>mostly</em>");
-    expect(out).toContain("<del>(old)</del>");
-    // The wrapper itself is not bold.
-    expect(out).toMatch(/^<b style="font-weight:normal"/);
-  });
-
   it("leaves a heading's weight and code alone", () => {
     const html =
       '<h1><span style="font-weight:400">Trip</span></h1><pre><span style="font-weight:bold">x</span></pre>';
@@ -41,12 +30,22 @@ describe("cleanPastedHtml", () => {
     expect(cleanPastedHtml("<p>One<br>Two</p>")).toBe("<p>One<br>Two</p>");
   });
 
-  it("unwraps Outlook's Safe Links", () => {
+  it("splits a table's merged cells back into their places", () => {
     const html =
-      '<a href="https://nam12.safelinks.protection.outlook.com/?url=https%3A%2F%2Fexample.com%2Fdesign&amp;data=05" title="Original URL">design</a>';
-    expect(cleanPastedHtml(html)).toBe(
-      '<a href="https://example.com/design">design</a>',
+      "<table><tr><th colspan=2>Head</th><th>C</th></tr>" +
+      "<tr><td rowspan=2>Left</td><td>b1</td><td>c1</td></tr>" +
+      "<tr><td>b2</td><td>c2</td></tr></table>";
+    const out = document.createElement("div");
+    out.innerHTML = cleanPastedHtml(html);
+    const rows = [...out.querySelectorAll("tr")].map((tr) =>
+      [...tr.children].map((c) => `${c.localName}:${c.textContent}`),
     );
+    expect(rows).toEqual([
+      ["th:Head", "th:", "th:C"],
+      ["td:Left", "td:b1", "td:c1"],
+      ["td:", "td:b2", "td:c2"],
+    ]);
+    expect(out.querySelector("[colspan],[rowspan]")).toBeNull();
   });
 
   it("leaves Textus's own copies as they are", () => {

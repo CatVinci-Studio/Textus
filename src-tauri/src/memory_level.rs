@@ -36,24 +36,72 @@ pub fn memory_state() -> MemoryState {
 
 /// Looks at the pressure every `EVERY` and tells the windows when it moves.
 pub fn watch(app: tauri::AppHandle) {
-    std::thread::spawn(move || loop {
-        std::thread::sleep(EVERY);
-        let state = now();
-        if LAST.swap(state.pressure, Ordering::Relaxed) != state.pressure {
-            crate::settings::emit_to_all(&app, EVENT, state);
+    std::thread::spawn(move || {
+        let mut calm = 0;
+        loop {
+            std::thread::sleep(EVERY);
+            let mut state = now();
+            let was = LAST.load(Ordering::Relaxed);
+            (state.pressure, calm) = settle(was, state.pressure, calm);
+            if was != state.pressure {
+                LAST.store(state.pressure, Ordering::Relaxed);
+                crate::settings::emit_to_all(&app, EVENT, state);
+            }
         }
     });
 }
 
-/// Pressure from the share of memory still free: below 10% short, below 5%
-/// very short.
+/// How many looks in a row the pressure must be lower before it eases: a
+/// machine at the line would otherwise let views go and load them again
+/// every look.
+const CALM_LOOKS: u8 = 3;
+
+/// The pressure to tell, from the one told (`was`) and the one read now: up
+/// at once, down only after `CALM_LOOKS` lower looks. Gives the count too.
+fn settle(was: u8, now: u8, calm: u8) -> (u8, u8) {
+    if now >= was {
+        return (now, 0);
+    }
+    if calm + 1 >= CALM_LOOKS {
+        (now, 0)
+    } else {
+        (was, calm + 1)
+    }
+}
+
+/// Pressure from the memory still free, as an amount: what a few views out
+/// of sight take, not a share of the machine (a share left a big machine
+/// short with gigabytes free, and a small one short all day).
 #[cfg(any(test, target_os = "linux", windows))]
-fn from_free_share(free: u64, total: u64) -> u8 {
-    match (free * 100).checked_div(total) {
-        Some(p) if p < 5 => 2,
-        Some(p) if p < 10 => 1,
+fn from_free(free: u64) -> u8 {
+    const MB: u64 = 1024 * 1024;
+    match free {
+        f if f < 512 * MB => 2,
+        f if f < 1024 * MB => 1,
         _ => 0,
     }
+}
+
+/// Linux's own pressure (PSI, /proc/pressure/memory): the share of the last
+/// 10 s that tasks waited on memory. Some waiting is short, all of them
+/// waiting is very short. None on a kernel without it.
+#[cfg(any(test, target_os = "linux"))]
+fn from_psi(text: &str) -> Option<u8> {
+    let avg10 = |kind: &str| -> Option<f64> {
+        let line = text.lines().find(|l| l.starts_with(kind))?;
+        line.split_whitespace()
+            .find_map(|part| part.strip_prefix("avg10="))?
+            .parse()
+            .ok()
+    };
+    let (some, full) = (avg10("some")?, avg10("full").unwrap_or(0.0));
+    Some(if full >= 5.0 {
+        2
+    } else if some >= 10.0 {
+        1
+    } else {
+        0
+    })
 }
 
 #[cfg(target_os = "macos")]
@@ -109,10 +157,11 @@ fn total_bytes() -> u64 {
 
 #[cfg(target_os = "linux")]
 fn pressure() -> u8 {
-    match (meminfo("MemAvailable:"), meminfo("MemTotal:")) {
-        (Some(free), Some(total)) => from_free_share(free, total),
-        _ => 0,
-    }
+    let psi = std::fs::read_to_string("/proc/pressure/memory")
+        .ok()
+        .and_then(|text| from_psi(&text))
+        .unwrap_or(0);
+    psi.max(meminfo("MemAvailable:").map_or(0, from_free))
 }
 
 #[cfg(windows)]
@@ -134,7 +183,7 @@ fn total_bytes() -> u64 {
 
 #[cfg(windows)]
 fn pressure() -> u8 {
-    status().map_or(0, |s| from_free_share(s.ullAvailPhys, s.ullTotalPhys))
+    status().map_or(0, |s| from_free(s.ullAvailPhys))
 }
 
 #[cfg(not(any(target_os = "macos", target_os = "linux", windows)))]
@@ -149,12 +198,36 @@ fn pressure() -> u8 {
 
 #[cfg(test)]
 mod tests {
+    const GB: u64 = 1024 * 1024 * 1024;
+
     #[test]
-    fn short_of_memory_is_read_from_what_is_free() {
-        assert_eq!(super::from_free_share(50, 100), 0);
-        assert_eq!(super::from_free_share(8, 100), 1);
-        assert_eq!(super::from_free_share(3, 100), 2);
-        assert_eq!(super::from_free_share(3, 0), 0);
+    fn short_of_memory_is_an_amount_free_not_a_share() {
+        // 4 GB free of 64 is plenty; 0.8 GB is short on any machine.
+        assert_eq!(super::from_free(4 * GB), 0);
+        assert_eq!(super::from_free(GB * 8 / 10), 1);
+        assert_eq!(super::from_free(GB / 4), 2);
+    }
+
+    #[test]
+    fn linux_pressure_is_read_from_psi() {
+        let calm = "some avg10=0.00 avg60=0.00 avg300=0.00 total=1\nfull avg10=0.00 avg60=0.00 avg300=0.00 total=1\n";
+        let waiting = "some avg10=22.10 avg60=3.00 avg300=1.00 total=9\nfull avg10=1.00 avg60=0.10 avg300=0.00 total=2\n";
+        let stalled = "some avg10=60.00 avg60=3.00 avg300=1.00 total=9\nfull avg10=30.00 avg60=0.10 avg300=0.00 total=2\n";
+        assert_eq!(super::from_psi(calm), Some(0));
+        assert_eq!(super::from_psi(waiting), Some(1));
+        assert_eq!(super::from_psi(stalled), Some(2));
+        assert_eq!(super::from_psi(""), None);
+    }
+
+    #[test]
+    fn pressure_rises_at_once_and_eases_after_a_calm_minute() {
+        assert_eq!(super::settle(0, 2, 0), (2, 0));
+        // Lower looks: held until the third in a row.
+        assert_eq!(super::settle(2, 0, 0), (2, 1));
+        assert_eq!(super::settle(2, 0, 1), (2, 2));
+        assert_eq!(super::settle(2, 0, 2), (0, 0));
+        // A high look in between starts the count again.
+        assert_eq!(super::settle(2, 2, 2), (2, 0));
     }
 
     #[test]

@@ -73,7 +73,7 @@ it("Word's list paragraphs paste as a list, nested by level", async () => {
       item(1, "l1", "1.", "first") +
       "</body></html>",
   );
-  expect(t.markdown()).toBe("* one\n  * nested\n* two\n\n1. first");
+  expect(t.markdown()).toBe("- one\n  - nested\n- two\n\n1. first");
 });
 
 it("a heading pasted into the middle of a line keeps its #", async () => {

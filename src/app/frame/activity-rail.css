@@ -71,10 +71,12 @@
     color var(--dur-fast) var(--ease-standard);
 }
 
-.activity-rail-item:hover {
-  background: var(--ui-hover);
-  color: var(--ui-text);
-  transition-duration: var(--dur-instant);
+@media (hover: hover) {
+  .activity-rail-item:hover {
+    background: var(--ui-hover);
+    color: var(--ui-text);
+    transition-duration: var(--dur-instant);
+  }
 }
 
 .activity-rail-item[aria-pressed="true"] {

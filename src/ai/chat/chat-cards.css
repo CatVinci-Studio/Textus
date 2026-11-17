@@ -112,8 +112,10 @@
   cursor: pointer;
 }
 
-.agent-comment-row-quote:hover:not(:disabled) {
-  color: var(--ui-text);
+@media (hover: hover) {
+  .agent-comment-row-quote:hover:not(:disabled) {
+    color: var(--ui-text);
+  }
 }
 
 .agent-comment-row-quote:disabled {
@@ -164,8 +166,10 @@ button.chat-queue-action {
   font: inherit;
   cursor: pointer;
 }
-button.chat-queue-action:hover {
-  color: var(--ui-text);
+@media (hover: hover) {
+  button.chat-queue-action:hover {
+    color: var(--ui-text);
+  }
 }
 
 /* A run of proposals as one card: a row each, and a decided one says how. */
@@ -230,8 +234,10 @@ button.chat-queue-action:hover {
   cursor: pointer;
 }
 
-.agent-proposal-group-fold:hover {
-  color: var(--ui-text);
+@media (hover: hover) {
+  .agent-proposal-group-fold:hover {
+    color: var(--ui-text);
+  }
 }
 
 /* A reply's changes to the folder's files: one row a file, which opens it. */
@@ -262,8 +268,10 @@ button.chat-queue-action:hover {
   cursor: pointer;
 }
 
-.agent-file-changes-path:hover:not(:disabled) {
-  color: var(--ui-accent-text);
+@media (hover: hover) {
+  .agent-file-changes-path:hover:not(:disabled) {
+    color: var(--ui-accent-text);
+  }
 }
 
 .agent-file-changes-path:disabled {

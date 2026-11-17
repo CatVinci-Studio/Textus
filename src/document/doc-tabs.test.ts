@@ -1,9 +1,28 @@
-import { describe, expect, it } from "vitest";
+import { describe, expect, it, vi } from "vitest";
+
+const disk = vi.hoisted(() => ({
+  read: vi.fn<(path: string) => Promise<string>>(),
+  bytes: vi.fn<(path: string) => Promise<string>>(),
+  mtime: vi.fn<(path: string) => Promise<number | null>>(),
+  written: [] as [string, string][],
+}));
+vi.mock("../platform/ipc", () => ({
+  fs: {
+    readTextFile: disk.read,
+    readBinaryFileBase64: disk.bytes,
+    fileMtimeMs: disk.mtime,
+    writeTextFile: async (path: string, text: string) => {
+      disk.written.push([path, text]);
+    },
+  },
+}));
+
 import {
   adjacentTabId,
   makeBlankTab,
   tabTip,
   windowIsUntouched,
+  writeDocFile,
 } from "./doc-tabs";
 import { resolveStrings } from "../i18n/strings";
 
@@ -66,5 +85,38 @@ describe("tabTip", () => {
     expect(tabTip({ ...tab, content: "x".repeat(60) }, t)).toHaveLength(40);
     expect(tabTip(makeBlankTab(), t)).toBeUndefined();
     expect(tabTip({ ...tab, path: "/n/a.md" }, t)).toBeUndefined();
+  });
+});
+
+describe("writeDocFile", () => {
+  it("keeps the file's line endings, and writes a new file plain", async () => {
+    disk.written.length = 0;
+    disk.read.mockResolvedValueOnce("one\r\ntwo\r\n");
+    await writeDocFile("/a.md", "one\ntwo\nthree\n");
+    disk.read.mockRejectedValueOnce(new Error("not found"));
+    disk.mtime.mockResolvedValueOnce(null);
+    await writeDocFile("/new.md", "one\n");
+    expect(disk.written).toEqual([
+      ["/a.md", "one\r\ntwo\r\nthree\r\n"],
+      ["/new.md", "one\n"],
+    ]);
+  });
+
+  it("does not write over a file that is there but can't be read", async () => {
+    disk.written.length = 0;
+    disk.read.mockRejectedValueOnce(new Error("locked"));
+    disk.bytes.mockRejectedValueOnce(new Error("locked"));
+    disk.mtime.mockResolvedValueOnce(42);
+    await expect(writeDocFile("/a.md", "one\n")).rejects.toThrow("locked");
+    expect(disk.written).toEqual([]);
+  });
+
+  it("writes over a file that is there but not UTF-8, in its line endings", async () => {
+    disk.written.length = 0;
+    disk.read.mockRejectedValueOnce(new Error("invalid UTF-8"));
+    disk.bytes.mockResolvedValueOnce(btoa("caf\xe9\r\nold\r\n"));
+    disk.mtime.mockResolvedValueOnce(42);
+    await writeDocFile("/a.txt", "new\n");
+    expect(disk.written).toEqual([["/a.txt", "new\r\n"]]);
   });
 });

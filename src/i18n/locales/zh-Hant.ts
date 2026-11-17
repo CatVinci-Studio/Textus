@@ -110,6 +110,16 @@ export default {
   codeBlockEditSource: "編輯原始碼",
   codeBlockDone: "完成編輯",
   codeBlockDelete: "刪除此區塊",
+  blockText: "內文",
+  blockCallout: "提示框",
+  blockHandleAdd: "在下方新增區塊",
+  blockHandleOptions: "拖曳以移動，按一下查看選項",
+  blockTurnInto: "轉換為",
+  blockDuplicate: "製作副本",
+  blockHandlesLabel: "區塊控點",
+  blockHandlesHelp:
+    "指標所在的區塊左邊顯示 ＋ 和 ⋮⋮：新增區塊、拖曳移動、轉換成別的類型。",
+  smoothCaretLabel: "平滑游標",
   menuBlockWide: "寬螢幕顯示",
   menuBlockZoom: "縮放",
   diagramViewerLabel: "圖表",
@@ -141,6 +151,7 @@ export default {
   revisionDisplayInline: "全部在正文中",
   revisionDisplayOriginal: "原文在正文，修改在頁邊",
   revisionDisplayFinal: "只看結果，原文在頁邊",
+  splitNoRoomLow: "放不下新的一欄：視窗太矮了。收起鍵盤，或把視窗拉高。",
   splitNoRoom: "放不下新的一欄：視窗太窄了。把視窗拉寬，或關掉一個分割。",
   revisionDisplayNoRoom: "空間不夠：關掉側邊欄或 AI 面板即可",
   proposalDeletedSentence: "原文",
@@ -572,6 +583,8 @@ export default {
   errorCatalogNewer: "外掛商店需要較新版本的 Textus，請先更新 Textus。",
   errorImageTooBig: "圖片是空的，或超過了 25 MB。",
   errorNoFolder: "請先開啟一個資料夾。",
+  errorPluginsNeedAllFiles:
+    "外掛讀不了這個資料夾：Textus 沒有取得「所有檔案」的存取權。請重新打開這個資料夾，並選擇「繼續」。",
   errorPdfUnsupported: "此系統不支援匯出 PDF。",
   errorNoText: "裡面沒有可讀的文字。",
   errorUnreadable: "無法讀取這個檔案。",
@@ -841,6 +854,12 @@ export default {
   agentSend: "傳送",
   agentStop: "停止",
   agentRetry: "重試",
+  agentForgotStart:
+    "這段對話已經很長，最早的幾則訊息不再傳給模型。想從頭開始，可以新增一段對話。",
+  revisionsNotKept:
+    "等你決定的修改沒能儲存到磁碟。請在關閉文件前接受或拒絕它們，否則會遺失。",
+  settingsNotSaved:
+    "現在無法儲存設定和視窗狀態：你做的變更只在關閉 Textus 之前有效。",
   agentNeedsFolder:
     "請先開啟一個資料夾或儲存文件：Agent 需要在一個資料夾裡工作。",
   agentStopped: "{agent} 已停止。",
@@ -1324,6 +1343,8 @@ export default {
     "已將 {name} 轉換為新的 Markdown 文件。部分格式可能與 Word 中不同，原 Word 檔案不會被更動。",
   wordImportDismiss: "知道了",
   openFileFailed: "無法開啟 {name}：它不是文字文件，也沒有外掛能開啟這類檔案。",
+  openFileMuted:
+    "Textus 本身無法開啟 {name}。能開啟它的外掛建議已被你關閉，可在 設定 › {page} 裡重新顯示。",
   openFileGone:
     "無法開啟 {name}：檔案已不在原處，可能已被移動、重新命名或刪除。",
   wordImportFailed: "無法開啟 {name}。",
@@ -1435,7 +1456,7 @@ export default {
   themeNamePaper: "紙張",
   themeNameSlate: "石板",
   themeNameForest: "森林",
-  themeNameAurora: "極光",
+  themeNamePrism: "稜鏡",
   appearanceLabel: "外觀",
   appearanceModeLabel: "淺色／深色",
   appearanceSystem: "依照系統",
@@ -1742,4 +1763,9 @@ export default {
   shortcutOutdentListItem: "清單項目取消縮排",
   pluginKeyTaken:
     "「{name}」：{key} 已被「{owner}」使用，所以沒有綁定到「{command}」。可在 設定 › 快速鍵 中另設。",
+  gitTrustTitle: "允許 Git 執行這個儲存庫自帶的程式嗎？",
+  gitTrustText:
+    "這個資料夾的 Git 儲存庫設定了會在你的電腦上執行程式的選項（{what}）。自己建立的儲存庫有這些很正常。如果資料夾來自別人，只有在信任對方時才允許。",
+  gitTrustAllow: "信任這個儲存庫",
+  gitTrustRefused: "這裡不使用 Git：這個儲存庫未受信任。",
 } satisfies Translation;

@@ -5,6 +5,7 @@ import {
   PERMISSION_METHODS,
   PERMISSION_TABLE,
 } from "./api-permissions";
+import { HOST_RUNTIME } from "./host/host-runtime";
 
 const HOST = new URL("./host/", import.meta.url);
 const read = (name: string) => readFileSync(new URL(name, HOST), "utf8");
@@ -17,7 +18,7 @@ describe("the plugin API's permissions", () => {
       .join("\n");
     for (const method of PERMISSION_METHODS)
       expect(broker, method).toContain(`"${method}":`);
-    const host = read("runtime/host.js");
+    const host = HOST_RUNTIME;
     for (const method of PERMISSION_METHODS)
       expect(host, method).toContain(`"${method}"`);
   });

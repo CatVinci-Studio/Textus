@@ -116,6 +116,16 @@ type /name in a conversation to use one.
   codeBlockEditSource: "Edit Source",
   codeBlockDone: "Done Editing",
   codeBlockDelete: "Delete Block",
+  blockText: "Text",
+  blockCallout: "Callout",
+  blockHandleAdd: "Add a block below",
+  blockHandleOptions: "Drag to move, click for options",
+  blockTurnInto: "Turn Into",
+  blockDuplicate: "Duplicate",
+  blockHandlesLabel: "Block handles",
+  blockHandlesHelp:
+    "＋ and ⋮⋮ beside the block under the pointer: add a block, move it, or turn it into another kind.",
+  smoothCaretLabel: "Smooth caret",
   menuBlockWide: "Wide",
   menuBlockZoom: "Size",
   diagramViewerLabel: "Diagram",
@@ -159,6 +169,8 @@ type /name in a conversation to use one.
   revisionDisplayInline: "All in the text",
   revisionDisplayOriginal: "Original in the text, changes in the margin",
   revisionDisplayFinal: "Result only, originals in the margin",
+  splitNoRoomLow:
+    "No room for another split: the window is too short. Put the keyboard away or make the window taller.",
   splitNoRoom:
     "No room for another split: the window is too narrow. Widen it, or close a split.",
   revisionDisplayNoRoom: "Not enough room - close the sidebar or the AI panel",
@@ -630,6 +642,8 @@ type /name in a conversation to use one.
     "The plugin store needs a newer Textus. Update Textus to see it.",
   errorImageTooBig: "The picture is empty or larger than 25 MB.",
   errorNoFolder: "Open a folder first.",
+  errorPluginsNeedAllFiles:
+    "Plugins can't read this folder: Textus wasn't given access to all files. Open the folder again and choose Continue.",
   errorPdfUnsupported: "PDF export isn't available on this system.",
   errorNoText: "There is no readable text in it.",
   errorUnreadable: "This file can't be read.",
@@ -911,6 +925,12 @@ type /name in a conversation to use one.
   agentSend: "Send",
   agentStop: "Stop",
   agentRetry: "Retry",
+  agentForgotStart:
+    "This conversation is long: its earliest messages are no longer sent to the model. Start a new conversation to begin afresh.",
+  revisionsNotKept:
+    "Changes waiting for your decision couldn't be kept on disk. Accept or reject them before closing the document, or they will be gone.",
+  settingsNotSaved:
+    "Settings and window state can't be saved right now: what you change lasts until Textus closes.",
   agentNeedsFolder:
     "Open a folder or save the document first: the agent works in a folder.",
   agentStopped: "{agent} stopped.",
@@ -1424,6 +1444,8 @@ type /name in a conversation to use one.
   wordImportDismiss: "Got it",
   openFileFailed:
     "Textus can't open {name}: it isn't a text document, and no plugin opens files like it.",
+  openFileMuted:
+    "Textus can't open {name} by itself. You turned off the suggestion of the plugin that opens it; Settings › {page} shows it again.",
   openFileGone:
     "Textus can't open {name}: it isn't there any more. It may have been moved, renamed or deleted.",
   wordImportFailed: "{name} couldn't be opened.",
@@ -1542,7 +1564,7 @@ type /name in a conversation to use one.
   themeNamePaper: "Paper",
   themeNameSlate: "Slate",
   themeNameForest: "Forest",
-  themeNameAurora: "Aurora",
+  themeNamePrism: "Prism",
   appearanceLabel: "Appearance",
   appearanceModeLabel: "Light or dark",
   appearanceSystem: "Follow system",
@@ -1867,6 +1889,11 @@ type /name in a conversation to use one.
   shortcutOutdentListItem: "Outdent List Item",
   pluginKeyTaken:
     "{name}: {key} is {owner}'s, so it wasn't given to “{command}”. Set a key in Settings › Shortcuts.",
+  gitTrustTitle: "Let Git run this repository's own programs?",
+  gitTrustText:
+    "This folder's Git repository is set up to run programs on your computer ({what}). That is usual in a repository you set up yourself. For a folder that came from someone else, allow it only if you trust them.",
+  gitTrustAllow: "Trust This Repository",
+  gitTrustRefused: "Git isn't used here: the repository isn't trusted.",
 } satisfies Record<string, string | Plural>;
 
 export default en;

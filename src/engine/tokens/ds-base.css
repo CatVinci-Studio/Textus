@@ -355,11 +355,6 @@
     border-color var(--dur-fast) var(--ease-standard);
 }
 
-:is(
-  .settings-select,
-  .settings-text-input,
-  .image-name-input-row input,
-  .insert-table-fields input
-) {
+:is(.settings-select, .settings-text-input, .image-name-input-row input) {
   min-height: var(--control-height);
 }

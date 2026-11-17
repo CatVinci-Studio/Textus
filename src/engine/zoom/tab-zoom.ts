@@ -1,4 +1,5 @@
 import { tabElement } from "../layout/tab-element";
+import { createSubscribers } from "../../utils/store";
 
 /**
  * The documents' zoom, its one owner: the window's, which a tab takes
@@ -9,17 +10,14 @@ import { tabElement } from "../layout/tab-element";
  */
 let windowZoom = 1;
 const zooms = new Map<string, number>();
-const listeners = new Set<() => void>();
+const subscribers = createSubscribers();
 
 const told = () => {
-  for (const tell of listeners) tell();
+  subscribers.publish();
 };
 
 /** Calls `changed` after any zoom changes; returns the stop. */
-export function onZoom(changed: () => void): () => void {
-  listeners.add(changed);
-  return () => listeners.delete(changed);
-}
+export const onZoom = subscribers.subscribe;
 
 /** The zoom new tabs start at, and every tab without its own. */
 export function setWindowZoom(zoom: number): void {

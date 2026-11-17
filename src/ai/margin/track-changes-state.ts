@@ -1,19 +1,17 @@
+import { createSubscribers } from "../../utils/store";
 /** Whether the document on screen tracks the writer's changes, for the Track
  *  My Changes check mark. Set by the active tab's editor. */
 let tracking = false;
-const listeners = new Set<() => void>();
+const subscribers = createSubscribers();
 
 export function setTrackingShown(on: boolean): void {
   if (on === tracking) return;
   tracking = on;
-  for (const listener of listeners) listener();
+  subscribers.publish();
 }
 
 export function trackingShown(): boolean {
   return tracking;
 }
 
-export function subscribeTracking(listener: () => void): () => void {
-  listeners.add(listener);
-  return () => listeners.delete(listener);
-}
+export const subscribeTracking = subscribers.subscribe;

@@ -177,5 +177,25 @@ describe("solveIslands", () => {
     };
     expect(leastWidth(input(root))).toBe(360 + 8 + 320);
     expect(leastWidth(input(pane("one")))).toBe(360);
+    // The island under the bar's own buttons counts what it keeps there,
+    // as the solver gives it: else a split that can't fit is never folded.
+    const under = { ...input(root), endRoom: 500 };
+    expect(leastWidth(under)).toBe(360 + 8 + 500);
+    const stacked: LayoutNode = {
+      kind: "split",
+      direction: "row",
+      children: [
+        pane("doc"),
+        {
+          kind: "split",
+          direction: "column",
+          children: [pane("top"), pane("low")],
+          sizes: [0.5, 0.5],
+        },
+      ],
+      sizes: [0.5, 0.5],
+    };
+    expect(leastWidth({ ...input(stacked), endRoom: 500 })).toBe(360 + 8 + 500);
+    expect(leastWidth({ ...under, endRoom: 100 })).toBe(360 + 8 + 320);
   });
 });

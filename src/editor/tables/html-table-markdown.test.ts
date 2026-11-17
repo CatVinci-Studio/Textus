@@ -1,5 +1,5 @@
 // @vitest-environment jsdom
-import { afterEach, beforeAll, describe, expect, it } from "vitest";
+import { afterEach, describe, expect, it } from "vitest";
 import { closeViews, openView } from "../editor-view-kit";
 import { htmlTableToMarkdown } from "./html-table-markdown";
 import { htmlTableItems } from "../editor-menu-tables";
@@ -8,12 +8,6 @@ import type { EditorRunner } from "../useEditorRunner";
 import type { ContextMenuItem } from "../../engine/controls/ContextMenu";
 
 afterEach(closeViews);
-
-// An undo scrolls the caret into view, measuring a Range jsdom can't.
-beforeAll(() => {
-  Range.prototype.getClientRects ??= () => [] as unknown as DOMRectList;
-  Range.prototype.getBoundingClientRect ??= () => new DOMRect();
-});
 
 const t = resolveStrings("en");
 

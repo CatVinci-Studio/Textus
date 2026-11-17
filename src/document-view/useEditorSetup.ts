@@ -68,6 +68,7 @@ export function useEditorSetup({
     noMarginRef,
     reviewNotesRef,
   } = useTextusEditor({
+    tabId,
     initialValue,
     reporting,
     settingsRef,

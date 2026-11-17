@@ -81,6 +81,8 @@ body:has(.corner-stack .corner-toast) .notice-stack {
   padding: 2px 4px;
 }
 
-.notice-cancel:hover {
-  color: var(--ui-text);
+@media (hover: hover) {
+  .notice-cancel:hover {
+    color: var(--ui-text);
+  }
 }

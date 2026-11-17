@@ -2,7 +2,11 @@ import { useEffect } from "react";
 import { listenToThisWindow, unlistenAll } from "../platform/events";
 import { readBoot } from "../storage/boot";
 import { useLatest } from "../utils/hooks/useLatest";
-import { ENTRY_TRASHED_EVENT, FILE_WRITTEN_EVENT } from "../utils/events";
+import {
+  ENTRY_TRASHED_EVENT,
+  FILE_WRITTEN_EVENT,
+  sendAppEvent,
+} from "../utils/events";
 
 /** What another window did to the folder (tree_ops.rs). */
 interface EntriesChanged {
@@ -21,19 +25,17 @@ export function useEntriesFromOtherWindows(
 ): void {
   const latest = useLatest(follow);
   useEffect(() => {
-    const told = (name: string, path: string) =>
-      window.dispatchEvent(new CustomEvent(name, { detail: path }));
     return unlistenAll(
       listenToThisWindow<EntriesChanged>("entries-changed", (event) => {
         const { from, moved, trashed } = event.payload;
         if (from === readBoot()?.label) return;
         if (moved) {
           latest.current(moved[0], moved[1]);
-          for (const path of moved) told(FILE_WRITTEN_EVENT, path);
+          for (const path of moved) sendAppEvent(FILE_WRITTEN_EVENT, path);
         }
         if (trashed) {
-          told(ENTRY_TRASHED_EVENT, trashed);
-          told(FILE_WRITTEN_EVENT, trashed);
+          sendAppEvent(ENTRY_TRASHED_EVENT, trashed);
+          sendAppEvent(FILE_WRITTEN_EVENT, trashed);
         }
       }),
     );

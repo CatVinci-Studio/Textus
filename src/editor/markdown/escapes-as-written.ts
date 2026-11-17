@@ -34,7 +34,7 @@ function entityAt(text: string, at: number): Token | null {
   return char ? { char, form, plain: false } : null;
 }
 
-function tokenize(text: string): Token[] {
+export function tokenize(text: string): Token[] {
   const tokens: Token[] = [];
   for (let at = 0; at < text.length;) {
     const c = text[at];

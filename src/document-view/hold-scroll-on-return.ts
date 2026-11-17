@@ -9,6 +9,9 @@ const SCROLLERS =
 /** How long after the window comes back a scroll the reader didn't make is
  *  taken back: the webview's own, as it puts the focus back at the caret. */
 const SETTLE_MS = 400;
+/** And until this many frames are drawn: on a slow computer the webview's
+ *  scroll lands in a frame later than SETTLE_MS. */
+const SETTLE_FRAMES = 2;
 
 /**
  * Coming back to the window from another app leaves each document where it
@@ -19,6 +22,8 @@ export function useHoldScrollOnReturn(): void {
   useEffect(() => {
     let kept = new Map<HTMLElement, number>();
     let until = 0;
+    let frames = 0;
+    let frame = 0;
     let stop = () => {};
     // Read while away too: a Mac scrolls a window in the background, and
     // where the reader took it is where it stays. A hidden one (no height)
@@ -44,7 +49,7 @@ export function useHoldScrollOnReturn(): void {
       if (top !== undefined && el.scrollTop !== top) el.scrollTop = top;
     };
     const onScroll = (e: Event) => {
-      if (performance.now() > until) return stop();
+      if (performance.now() > until && frames >= SETTLE_FRAMES) return stop();
       if (e.target instanceof HTMLElement) putBack(e.target);
     };
     // The reader's own move ends the hold at once; a click that brought
@@ -58,12 +63,18 @@ export function useHoldScrollOnReturn(): void {
       stop();
       if (performance.now() - pressedAt < SETTLE_MS) return;
       until = performance.now() + SETTLE_MS;
+      frames = 0;
+      const drawn = () => {
+        if (++frames < SETTLE_FRAMES) frame = requestAnimationFrame(drawn);
+      };
+      frame = requestAnimationFrame(drawn);
       for (const el of kept.keys()) putBack(el);
       document.addEventListener("scroll", onScroll, true);
       for (const type of ["wheel", "pointerdown", "keydown", "touchstart"])
         window.addEventListener(type, release, true);
       stop = () => {
         until = 0;
+        cancelAnimationFrame(frame);
         document.removeEventListener("scroll", onScroll, true);
         for (const type of ["wheel", "pointerdown", "keydown", "touchstart"])
           window.removeEventListener(type, release, true);

@@ -21,6 +21,7 @@ import {
   revealPlace,
 } from "./plugin-edits";
 import type { useEditorProposals } from "../useEditorProposals";
+import type { DocumentReporting } from "../useDocumentReporting";
 
 /**
  * A tab's editor as plugins reach it: while active, its Markdown, selection,
@@ -31,18 +32,20 @@ export function usePluginDocumentAccess({
   isActive,
   filePath,
   addPreviews,
+  textOf,
 }: {
   run: EditorRunner;
   isActive: boolean;
   filePath: string | null;
   addPreviews: ReturnType<typeof useEditorProposals>["addPreviews"];
+  /** What a save would write now: a plugin reads the document as the file
+   *  will be, not as the editor alone would write it. */
+  textOf: DocumentReporting["textOf"];
 }): void {
   useEffect(() => {
     if (!filePath) return;
     const text = () =>
-      run(
-        (ctx) => cachedDocument(ctx, ctx.get(editorViewCtx).state.doc).markdown,
-      ) ?? "";
+      run((ctx) => textOf(ctx, ctx.get(editorViewCtx).state.doc)) ?? "";
     const access: OpenDocumentAccess = {
       text,
       revision: () => documentRevision(text()),
@@ -52,17 +55,14 @@ export function usePluginDocumentAccess({
     };
     setOpenDocument(filePath, access);
     return () => setOpenDocument(filePath, null, access);
-  }, [run, filePath]);
+  }, [run, filePath, textOf]);
 
   useEffect(() => {
     if (!isActive) return;
     const access: ActiveDocumentAccess = {
       path: filePath,
       text: () =>
-        run(
-          (ctx) =>
-            cachedDocument(ctx, ctx.get(editorViewCtx).state.doc).markdown,
-        ) ?? "",
+        run((ctx) => textOf(ctx, ctx.get(editorViewCtx).state.doc)) ?? "",
       blocks: () =>
         run(
           (ctx) => cachedDocument(ctx, ctx.get(editorViewCtx).state.doc).blocks,
@@ -95,5 +95,5 @@ export function usePluginDocumentAccess({
     };
     setActiveDocument(access);
     return () => setActiveDocument(null, access);
-  }, [run, isActive, filePath, addPreviews]);
+  }, [run, isActive, filePath, addPreviews, textOf]);
 }

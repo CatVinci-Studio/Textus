@@ -1,4 +1,5 @@
 import { ownNotes } from "../platform/ipc";
+import { windowTabs } from "../engine/layout/store";
 
 /**
  * Track My Changes keeps a document's file as it was, with only the changes
@@ -27,6 +28,34 @@ export function trackFile(path: string, base: () => string | null) {
   return () => {
     if (bases.get(path) === base) bases.delete(path);
   };
+}
+
+/** The original of a tracked document whose editor has gone (its tab out
+ *  of sight): still what its file holds, and what its next editor tracks
+ *  from. */
+const left = new Map<string, () => string>();
+
+/** `path`'s editor goes, tracking from `base` (null: not tracking). */
+export function leaveTracked(path: string, base: string | null): void {
+  // Its tab closed (gone from the window's model before its editor): an
+  // original kept now would be tracked from when the file is next opened.
+  const stillOpen = windowTabs<{ id: string; path?: string | null }>().some(
+    (tab) => tab.path === path,
+  );
+  if (base === null || !stillOpen) return void forgetTracked(path);
+  const kept = () => base;
+  left.set(path, kept);
+  bases.set(path, kept);
+}
+
+/** The original `path`'s last editor left, or null. */
+export const leftTracked = (path: string): string | null =>
+  left.get(path)?.() ?? null;
+
+/** `path`'s tab closed: nothing is tracked for it any more. */
+export function forgetTracked(path: string): void {
+  if (bases.get(path) === left.get(path)) bases.delete(path);
+  left.delete(path);
 }
 
 /** What a document's file holds for the editor's `content`: its original

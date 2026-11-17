@@ -49,6 +49,7 @@ export function useEditorChat({
     isActive,
     onDecided: learning.record,
     requestImageName: setup.imageName.requestImageName,
+    textOf: setup.reporting.textOf,
   });
   const { pendingEdits, conversation, quickConversation } = proposals;
   useHeldWhileBusy({
@@ -57,6 +58,7 @@ export function useEditorChat({
     quickAskOpen: inlineChat.visible,
     writing: conversation.busy,
     statuses: pendingEdits.allStatuses,
+    filePath,
   });
   const windowChipRef = useRef<SelectionChipHandlers | null>(null);
 

@@ -27,8 +27,10 @@
   cursor: pointer;
 }
 
-.agent-thought-toggle:hover {
-  color: var(--ui-text);
+@media (hover: hover) {
+  .agent-thought-toggle:hover {
+    color: var(--ui-text);
+  }
 }
 
 .agent-thought-chevron {

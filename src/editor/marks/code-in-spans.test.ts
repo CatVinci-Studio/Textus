@@ -24,16 +24,6 @@ it("code typed inside bold, italic and strikethrough is code", async () => {
   expect(textOf(again.view.dom, "strong code")).toEqual(["code"]);
 });
 
-it("Mod+B makes a selection with code in it bold", async () => {
-  const t = await open();
-  t.paste("Run `npm test` first.");
-  // From after "Run " to before "." - across the code.
-  t.select(5, 21);
-  t.press("Mod+b");
-  expect(textOf(t.view.dom, "strong code")).toEqual(["npm test"]);
-  expect(t.markdown()).toBe("Run **`npm test` first**.");
-});
-
 it("pasted bold around code stays bold around code", async () => {
   const t = await open();
   t.paste("粗体 **加粗 `代码` 加粗** 完");

@@ -184,9 +184,11 @@
   background-color: color-mix(in srgb, var(--ui-text) 6%, transparent);
 }
 
-:is(.agent-panel-body, .chat-window-body, .create-studio)
-  .ui-select.inline-chat-mode:not(:disabled):hover {
-  background-color: color-mix(in srgb, var(--ui-text) 10%, transparent);
+@media (hover: hover) {
+  :is(.agent-panel-body, .chat-window-body, .create-studio)
+    .ui-select.inline-chat-mode:not(:disabled):hover {
+    background-color: color-mix(in srgb, var(--ui-text) 10%, transparent);
+  }
 }
 
 /* Input on top, tool row below, always on one row: the chip gives way
@@ -240,8 +242,10 @@
   min-width: 30px;
 }
 
-.inline-chat-selection-chip:hover {
-  background: color-mix(in srgb, var(--ui-accent) 22%, transparent);
+@media (hover: hover) {
+  .inline-chat-selection-chip:hover {
+    background: color-mix(in srgb, var(--ui-accent) 22%, transparent);
+  }
 }
 
 .inline-chat-chip-label {

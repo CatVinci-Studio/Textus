@@ -163,7 +163,7 @@ function PointerMenu({
         onClose();
       }}
     />,
-    menuHost(),
+    menuHost(anchor),
   );
 }
 

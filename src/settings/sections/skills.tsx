@@ -27,17 +27,16 @@ import {
 import { WRITING_CONVENTIONS_AUTOMATIC } from "../../platform/ipc-ai-types";
 import { matchesWords } from "../../utils/match-words";
 import { explainError } from "../../utils/error-explain";
+import { createSubscribers } from "../../utils/store";
 
 // Settings > Textus AI: skills and the Writing conventions row. Skills are
 // files, so these rows mirror and open them rather than embedding an editor.
 
 /** Fired after a skill changes here, so every section showing the list
  *  reloads it. */
-export const SKILLS_CHANGED_EVENT = "textus-skills-changed";
-
-export function announceChange() {
-  window.dispatchEvent(new Event(SKILLS_CHANGED_EVENT));
-}
+const skillChanges = createSubscribers();
+export const onSkillsChanged = skillChanges.subscribe;
+export const announceChange = skillChanges.publish;
 
 /** The skill list as Settings shows it: built-ins and the global layer.
  *  `list` is null where the backend has none. */
@@ -57,8 +56,7 @@ function useSkillList() {
 
   useEffect(() => {
     reload();
-    window.addEventListener(SKILLS_CHANGED_EVENT, reload);
-    return () => window.removeEventListener(SKILLS_CHANGED_EVENT, reload);
+    return onSkillsChanged(reload);
   }, [reload]);
 
   return { list, setList, workspaceSkills };

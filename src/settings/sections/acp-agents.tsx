@@ -3,14 +3,11 @@ import { useExternalAgents } from "../../plugins/contributions/agents";
 import { pluginRecord } from "../../plugins/store/plugin-records";
 import { PluginTabIcon } from "../../plugins/views/plugin-tab-icon";
 import { emitToThisWindow } from "../../platform/menu-events";
-import { SHOW_SIDEBAR_TAB_EVENT } from "../../utils/events";
+import { SHOW_SIDEBAR_TAB_EVENT, sendAppEvent } from "../../utils/events";
 import { SettingsGroup } from "../pages/SettingsGroup";
 import { SettingRow } from "./controls";
 
-const showPlugins = () =>
-  window.dispatchEvent(
-    new CustomEvent(SHOW_SIDEBAR_TAB_EVENT, { detail: "plugins" }),
-  );
+const showPlugins = () => sendAppEvent(SHOW_SIDEBAR_TAB_EVENT, "plugins");
 
 /**
  * Settings › Textus AI › External tools: the ACP agents plugins bring

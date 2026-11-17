@@ -1,5 +1,5 @@
 import { emitPluginEvent } from "../plugins/app-bridge";
-import { ENTRY_TRASHED_EVENT } from "../utils/events";
+import { ENTRY_TRASHED_EVENT, sendAppEvent } from "../utils/events";
 import { fill } from "../i18n/fill";
 import {
   useCallback,
@@ -70,18 +70,25 @@ export function useRowMenu(
   const trash = useCallback(
     async (path: string, isDir: boolean) => {
       const name = basename(path);
+      // A phone has no Trash: the document is deleted for good.
       const ok = await showConfirm(
-        fill(isDir ? t.treeTrashFolderConfirm : t.treeTrashConfirm, { name }),
-        { okLabel: t.treeTrash, cancelLabel: t.cancel, danger: true },
+        isMobileApp
+          ? fill(t.docDeleteConfirm, { name })
+          : fill(isDir ? t.treeTrashFolderConfirm : t.treeTrashConfirm, {
+              name,
+            }),
+        {
+          okLabel: isMobileApp ? t.docDeleteOk : t.treeTrash,
+          cancelLabel: t.cancel,
+          danger: true,
+        },
       );
       if (!ok) return;
       try {
         await fs.trashEntry(path, root);
         reload(parentDir(path) ?? root);
         // Its open tabs let it go (useDocumentActions).
-        window.dispatchEvent(
-          new CustomEvent(ENTRY_TRASHED_EVENT, { detail: path }),
-        );
+        sendAppEvent(ENTRY_TRASHED_EVENT, path);
         emitPluginEvent("fileDelete", { path });
       } catch (err) {
         await showMessage(failureText(t, err, name));
@@ -126,14 +133,17 @@ export function useRowMenu(
       );
       items.push("separator", ...pathItems(t, path, root));
       if (path !== root)
-        items.push(
-          { label: t.treeRenameItem, onSelect: () => void rename(path) },
-          {
-            label: t.treeTrash,
-            onSelect: () => void trash(path, isDir),
-            danger: true,
-          },
-        );
+        items.push({
+          label: t.treeRenameItem,
+          onSelect: () => void rename(path),
+        });
+      // A phone deletes documents only: a folder's would be gone for good.
+      if (path !== root && !(isMobileApp && isDir))
+        items.push({
+          label: isMobileApp ? t.docDelete : t.treeTrash,
+          onSelect: () => void trash(path, isDir),
+          danger: true,
+        });
       const added = contributedContextItems("file/context", {
         path,
         folder: isDir,

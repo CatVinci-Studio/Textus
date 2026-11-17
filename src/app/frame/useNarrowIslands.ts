@@ -1,6 +1,7 @@
 import { useEffect, useRef, useState } from "react";
 import {
   givingWayNow,
+  keptFromFolding,
   panelsGaveWay,
   useIslandsNeed,
 } from "../../engine/frame/frame-store";
@@ -17,8 +18,9 @@ import { isWindowPanel } from "../islands/panel-pane";
  * island at its least folds the last panel's island (the AI, Settings, a
  * plugin's page) into the island beside it, then a split of documents, and
  * puts each back once there is room again. The sidebar opened by hand into
- * too little room makes room the same way; an island opened by hand stays,
- * but for a split made into too little room: its panels fold first.
+ * too little room makes room the same way, and so do islands grown wider
+ * (a larger interface size); islands just made by hand are never folded
+ * for themselves (keptFromFolding).
  * Returns whether the sidebar must wait: put away by the window, it comes
  * back only after every folded island has.
  */
@@ -38,9 +40,6 @@ export function useNarrowIslands(
   useEffect(() => {
     const was = last.current;
     last.current = { need, windowRoom };
-    // Opened by hand; not the first count, where a window starts too
-    // narrow for the islands it brings back (a phone launched on its side).
-    const grew = was.need > 0 && need > was.need;
     if (backAt.current !== null && need !== was.need) {
       backAt.current = null;
       setHold(folded.current.length > 0);
@@ -55,8 +54,13 @@ export function useNarrowIslands(
     if (need <= room) panelsGaveWay(true);
     if (!need || !room || sidebarGoes || backAt.current !== null) return;
     const giving = givingWayNow() === "panels";
-    if (need > room && (!grew || giving)) {
-      const out = foldIsland(windowLayout(), isWindowPanel, need);
+    if (need > room) {
+      const out = foldIsland(
+        windowLayout(),
+        isWindowPanel,
+        need,
+        keptFromFolding(),
+      );
       // Making room for a split: its panels only, then the sidebar's turn.
       if (giving && !out?.panel) panelsGaveWay(false);
       if (!out || (giving && !out.panel)) return;

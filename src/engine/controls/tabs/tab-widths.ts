@@ -12,6 +12,10 @@ export interface TabParts {
   /** Everything else in it: padding, gaps, its dot or padlock, and its
    *  ×'s room, kept whether the × shows or not. */
   fixed: number;
+  /** Of `fixed`, what its name may use: a × hidden till the tab opens. */
+  spare?: number;
+  /** The open tab: squeezed, it keeps its name before the others. */
+  open?: boolean;
 }
 
 interface TabLimits {
@@ -39,7 +43,8 @@ const SLACK = 0.5;
 /**
  * Fits `tabs` into a row `available` px wide with `gap` px between them.
  * Squeezed, they share the row evenly and one that needs less than its
- * share keeps its own width, the rest going to the others.
+ * share keeps its own width, the rest going to the others; the open tab
+ * first keeps what it needs, while the others can still show a few letters.
  */
 export function tabWidths(
   tabs: readonly TabParts[],
@@ -54,18 +59,35 @@ export function tabWidths(
   const wanted = tabs.map((tab) =>
     Math.max(min, Math.min(max, tab.fixed + tab.title)),
   );
-  const total = wanted.reduce((sum, width) => sum + width, 0);
-  const level = shrink && total > room ? shareLevel(wanted, room) : Infinity;
+  const sum = (ws: readonly number[]) => ws.reduce((a, w) => a + w, 0);
   const floor = tabs.map((tab, i) =>
     Math.min(
       wanted[i]!,
       Math.max(min, tab.fixed + Math.min(tab.title, fewest)),
     ),
   );
+  const squeeze = shrink && sum(wanted) > room;
+  const even = squeeze ? shareLevel(wanted, room) : Infinity;
+  const open = squeeze ? tabs.findIndex((tab) => tab.open) : -1;
+  const others = (ws: readonly number[]) => ws.filter((_, i) => i !== open);
+  // What the open tab keeps: its want, less what the others need at their
+  // least, never under its even share; when even their least overflows the
+  // row, which scrolls then, its whole want.
+  const left = room - sum(others(floor));
+  const kept =
+    open < 0
+      ? 0
+      : left < floor[open]!
+        ? Math.min(wanted[open]!, shown)
+        : Math.max(
+            floor[open]!,
+            Math.min(wanted[open]!, even),
+            Math.min(wanted[open]!, shown, left),
+          );
+  const level = open < 0 ? even : shareLevel(others(wanted), room - kept);
   const squeezed = wanted.map((width, i) =>
-    Math.max(floor[i]!, Math.min(width, level)),
+    i === open ? kept : Math.max(floor[i]!, Math.min(width, level)),
   );
-  const sum = (ws: readonly number[]) => ws.reduce((a, w) => a + w, 0);
   const capped = squeezed.map((width) => Math.min(width, shown));
   // Capped to what shows beside the list they may fit after all: then
   // there is no list, and a tab may take the whole row.
@@ -75,7 +97,9 @@ export function tabWidths(
     : squeezed.map((width) => Math.min(width, room));
   return {
     widths,
-    cut: tabs.map((tab, i) => tab.title > widths[i]! - tab.fixed + SLACK),
+    cut: tabs.map(
+      (tab, i) => tab.title > widths[i]! - tab.fixed + (tab.spare ?? 0) + SLACK,
+    ),
     overflow,
   };
 }

@@ -149,11 +149,15 @@ export function AgentIslandTools({
     if (!island) return;
     const onMenu = (e: MouseEvent) => {
       const target = e.target as Element;
-      if (
-        target.closest(OWN_MENUS) ||
-        (getSelection()?.toString() ?? "") !== ""
-      )
-        return;
+      // Text selected here and pressed on keeps the system's menu (Copy);
+      // a selection elsewhere - the document's - is no reason to.
+      const selection = getSelection();
+      const onSelected =
+        !!selection &&
+        !selection.isCollapsed &&
+        island.contains(selection.anchorNode) &&
+        selection.containsNode(target, true);
+      if (target.closest(OWN_MENUS) || onSelected) return;
       e.preventDefault();
       setMenu({ x: e.clientX, y: e.clientY });
     };

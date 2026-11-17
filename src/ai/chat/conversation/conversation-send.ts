@@ -18,6 +18,7 @@ import {
 import { keepCancelledTurns } from "../cancelled-turns";
 import { afterFileChanges } from "../file-changes";
 import { streamStep } from "../stream-step";
+import { showNotice } from "../../../engine/controls/notices";
 import { thinkingDone } from "../thought";
 import {
   nameAfter,
@@ -143,6 +144,8 @@ export async function sendMessage(
           requestId,
           onEvent: (event) => {
             if (!current()) return;
+            if (event.type === "forgot")
+              return tellForgotten(conversationId, settings.language);
             port?.onStreamEvent(event);
             const step = streamStep(
               model.streamingNow,
@@ -210,4 +213,13 @@ export async function sendMessage(
       model.setBusy(false);
     }
   }
+}
+
+/** Conversations whose start no longer goes with a request, said once. */
+const forgotten = new Set<string>();
+
+function tellForgotten(conversation: string, language: Settings["language"]) {
+  if (forgotten.has(conversation)) return;
+  forgotten.add(conversation);
+  showNotice(resolveStrings(language).agentForgotStart);
 }

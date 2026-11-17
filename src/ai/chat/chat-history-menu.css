@@ -53,8 +53,10 @@
   border-top: 1px solid var(--ui-border);
 }
 
-.chat-history-entry:hover {
-  background: var(--ui-hover);
+@media (hover: hover) {
+  .chat-history-entry:hover {
+    background: var(--ui-hover);
+  }
 }
 
 /* The row's own button: the whole entry reopens, by pointer or key. */
@@ -90,8 +92,10 @@
   flex-shrink: 0;
 }
 
-.chat-history-entry-delete:hover {
-  color: var(--ui-text);
+@media (hover: hover) {
+  .chat-history-entry-delete:hover {
+    color: var(--ui-text);
+  }
 }
 
 /* A finger needs room to hit it. */

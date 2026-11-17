@@ -1,6 +1,7 @@
 import { version as APP_VERSION } from "../../../package.json";
 import { pluginsSnapshot } from "../../plugins/store/plugin-records";
 import type { Settings } from "../../prefs/settings-types";
+import { inputTrail } from "./input-trail";
 import { recentErrors } from "./recent-errors";
 
 /** What a problem report says about this Textus, filled in for the user. */
@@ -33,12 +34,13 @@ export function settingsSummary(settings: Settings): string {
 }
 
 /** The facts as the lines a report carries: version, system, plugins,
- *  settings and the errors met lately. */
+ *  settings, the errors met lately and what the focus and input did. */
 export function reportDetails(facts: ReportFacts): string {
   const plugins = pluginsSnapshot().records.map(
     (r) => `${r.id} ${r.manifest?.version ?? "?"} (${r.status})`,
   );
   const errors = recentErrors();
+  const input = inputTrail();
   return [
     `Textus ${APP_VERSION}`,
     `${facts.os} ${facts.arch}`,
@@ -47,6 +49,7 @@ export function reportDetails(facts: ReportFacts): string {
     `Plugins: ${plugins.length ? plugins.join(", ") : "none"}`,
     ...(facts.settings ? [`Settings: ${settingsSummary(facts.settings)}`] : []),
     ...(errors.length ? ["Recent errors:", ...errors] : []),
+    ...(input.length ? ["Focus and input:", ...input] : []),
   ].join("\n");
 }
 

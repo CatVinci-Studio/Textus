@@ -1,7 +1,6 @@
 import { useEffect, useRef } from "react";
 import { scaledPx } from "../engine/tokens/chrome-scale";
 import { onBack } from "./back";
-import { keyboardStaysDown } from "./keyboard-stays-down";
 import { OPEN_SETTINGS_PAGE_EVENT } from "../settings/settings-nav";
 import { androidBridge } from "../platform/android-bridge";
 import { across, swipeClaimed } from "../utils/gesture";
@@ -26,8 +25,6 @@ export function usePushedSidebar(
   useEffect(() => {
     if (!phone) return;
     setOpen(false);
-    // And it is read first: no keyboard until a tap in the page.
-    return keyboardStaysDown();
   }, [phone, activeTabId, setOpen]);
   // Read as events come: the listeners stay put while it opens and closes,
   // so the closing tap's click still finds them.

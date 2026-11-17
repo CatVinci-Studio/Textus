@@ -5,9 +5,9 @@ use super::*;
 
 /// Up to this much the document is embedded in full; past it, an outline and
 /// excerpts, and the model reads on through the document tools. Counted in char
-/// units (CJK as 3) when tools can read on, else in characters. A local
-/// server's model (Ollama, a custom one) keeps this; a cloud model, with a
-/// window of 128k tokens or more, takes ROOMY_DOCUMENT_LIMIT: a third of it.
+/// units (CJK as 3) when tools can read on, else in characters. A provider
+/// whose every model reads 128k tokens or more takes ROOMY_DOCUMENT_LIMIT, a
+/// third of it; any other (a gateway, a local server) keeps this.
 pub(super) const FULL_DOCUMENT_LIMIT: usize = 40_000;
 pub(super) const ROOMY_DOCUMENT_LIMIT: usize = 120_000;
 
@@ -28,15 +28,15 @@ impl Reading {
         }
     }
 
-    /// For `entry`'s model: a cloud model's room, or a local server's.
+    /// For `entry`'s model: the room every model of its provider has.
     pub(crate) fn for_provider(
         tools: bool,
         entry: &crate::ai::catalog::ProviderCatalogEntry,
     ) -> Self {
-        let whole = if entry.key_optional {
-            FULL_DOCUMENT_LIMIT
-        } else {
+        let whole = if aicompat::capabilities::provider(entry.id).roomy {
             ROOMY_DOCUMENT_LIMIT
+        } else {
+            FULL_DOCUMENT_LIMIT
         };
         Reading { tools, whole }
     }

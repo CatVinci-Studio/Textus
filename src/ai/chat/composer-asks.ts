@@ -10,13 +10,20 @@ interface Taker {
   shown: () => boolean;
 }
 
-let waiting: string | null = null;
+let waiting: { text: string; taken: () => void } | null = null;
 const takers: Taker[] = [];
 
-export function askInComposer(text: string): void {
+/** Resolves once a composer has the text: at once, or when the AI tab
+ *  being opened for it is up. */
+export function askInComposer(text: string): Promise<void> {
   const taker = [...takers].reverse().find((t) => t.shown()) ?? takers.at(-1);
-  if (taker) taker.take(text);
-  else waiting = text;
+  if (taker) {
+    taker.take(text);
+    return Promise.resolve();
+  }
+  // An ask still waiting gives way to this one.
+  waiting?.taken();
+  return new Promise((taken) => (waiting = { text, taken }));
 }
 
 /** For a conversation's composer: `take` gets each ask, one waiting first. */
@@ -27,9 +34,10 @@ export function takeComposerAsks(
   const taker = { take, shown };
   takers.push(taker);
   if (waiting !== null) {
-    const text = waiting;
+    const { text, taken } = waiting;
     waiting = null;
     take(text);
+    taken();
   }
   return () => {
     const at = takers.indexOf(taker);

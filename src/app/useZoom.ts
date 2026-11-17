@@ -1,13 +1,13 @@
 import { tabElement } from "../engine/layout/tab-element";
 import { islandAt } from "../engine/frame/frame-store";
-import { windowLayout } from "../engine/layout/store";
+import { tabInUse, windowLayout } from "../engine/layout/store";
 import { paneById } from "../engine/layout/tree";
 import { useEffect, useRef } from "react";
 import { onFlush } from "../storage/pending-writes";
 import { blockAt, holdBlock } from "../engine/controls/hold-line";
 import { listenToThisWindow, unlistenAll } from "../platform/events";
 import type { EditorView } from "@codemirror/view";
-import { sourceViewAt } from "../editor/modes/source-view-registry";
+import { zoomPanesOf, type ZoomPane } from "../engine/zoom/zoom-panes";
 import { contentZoom } from "../engine/zoom/tab-zoom";
 import {
   clearTabZooms,
@@ -59,42 +59,32 @@ function snap(zoom: number): number {
   return Math.abs(clamped - 1) < 0.03 ? 1 : clamped;
 }
 
-/// Where a zoom step is held still: a rendered scroller, or the source
-/// editor's own scroller.
-type Pane =
-  | { kind: "rendered"; scroller: HTMLElement; content: Element }
-  | { kind: "source"; scroller: HTMLElement };
-
 /// The tab a zoom is for: the one under the pointer, else the one in use;
 /// null when it shows no document.
 function zoomTab(x: number | null, y: number | null): HTMLElement | null {
   const island = x !== null && y !== null ? islandAt(x, y) : null;
   const front = island && paneById(windowLayout().root, island.paneId)?.front;
-  const tab = (front && tabElement(front)) || tabElement();
-  return tab?.querySelector(".editor-scroll, .source-view") ? tab : null;
+  const id = (front && tabElement(front) && front) || tabInUse();
+  return zoomPanesOf(id).length ? tabElement(id) : null;
 }
 
 /// In `tab`: the pane under the pointer, else the focused one, else the
-/// first on screen. Split view's panes sit side by side, hence the x.
+/// first on screen, a rendered one first. Split view's panes sit side by
+/// side, hence the x.
 function zoomPane(
   tab: HTMLElement,
   x: number | null,
   y: number | null,
-): Pane | null {
-  const panes: Pane[] = [];
-  for (const selector of [".editor-scroll", ".split-preview"]) {
-    const scroller = tab.querySelector<HTMLElement>(selector);
-    const content = scroller?.querySelector(".milkdown");
-    if (scroller && content)
-      panes.push({ kind: "rendered", scroller, content });
-  }
-  const source = tab.querySelector<HTMLElement>(".source-view .cm-scroller");
-  if (source) panes.push({ kind: "source", scroller: source });
+): ZoomPane | null {
+  const panes = zoomPanesOf(tab.dataset.tabId!).sort(
+    (a, b) => Number(a.kind === "source") - Number(b.kind === "source"),
+  );
   const shown = panes.filter((pane) => {
+    if (pane.kind === "rendered" && !pane.content()) return false;
     const box = pane.scroller.getBoundingClientRect();
     return box.width > 0 && box.height > 0;
   });
-  const under = (pane: Pane) => {
+  const under = (pane: ZoomPane) => {
     const box = pane.scroller.getBoundingClientRect();
     return (
       (x === null || (x >= box.left && x <= box.right)) &&
@@ -114,7 +104,8 @@ function zoomPane(
 /// Keeps the line at viewport y `line` in place: the block under it keeps
 /// its share of its height. Scaling the offset alone drifts as text rewraps.
 function holdRendered(
-  { scroller, content }: { scroller: HTMLElement; content: Element },
+  scroller: HTMLElement,
+  content: Element,
   line: number,
   prev: number,
   next: number,
@@ -144,14 +135,12 @@ function holdRendered(
 /// the line under the pointer is handed to it to put back.
 function holdSource(
   source: HTMLElement,
+  cm: EditorView,
   line: number,
   prev: number,
   next: number,
   setZoomVar: () => void,
 ) {
-  const host = source.closest<HTMLElement>(".source-view");
-  const cm = host?.parentElement && sourceViewAt(host.parentElement)?.view;
-  if (!cm) return setZoomVar();
   // Steps that come before CodeMirror has measured keep the first one's
   // anchor: until then its heights are the old zoom's.
   let held = heldSource.get(source);
@@ -245,8 +234,16 @@ export function useZoom(
         Math.max(box.top, anchorClientY ?? box.top + box.height / 2),
       );
       if (pane.kind === "source")
-        holdSource(pane.scroller, line, prev, next, setZoomVar);
-      else holdRendered(pane, line, prev, next, setZoomVar);
+        holdSource(pane.scroller, pane.view, line, prev, next, setZoomVar);
+      else
+        holdRendered(
+          pane.scroller,
+          pane.content()!,
+          line,
+          prev,
+          next,
+          setZoomVar,
+        );
       // Split panes sync on scroll, and the held pane may not have moved:
       // let the other follow it.
       if (!pane.scroller.closest(".split-view")) return;

@@ -3,14 +3,10 @@ import { editorInUse } from "../editor/editor-in-use";
 import { useCallback, useEffect } from "react";
 import { insertMarkdown } from "../editor/markdown/parse-markdown-source";
 import { editorViewCtx } from "@milkdown/kit/core";
-import {
-  wrapInBlockquoteCommand,
-  createCodeBlockCommand,
-} from "@milkdown/kit/preset/commonmark";
 import { undoCommand, redoCommand } from "@milkdown/kit/plugin/history";
 import type { EditorRunner } from "../editor/useEditorRunner";
 import type { EditorClipboard } from "../editor/clipboard/useEditorClipboard";
-import { insertHeading, insertList, runCommand } from "../editor/editor-menu";
+import { applyBlockKind, runCommand } from "../editor/blocks/block-kinds";
 import {
   deleteImage,
   selectedImagePos,
@@ -28,11 +24,6 @@ import {
   toggleFormat,
 } from "../editor/keys/format-shortcut-plugin";
 import type { EditorView } from "@milkdown/kit/prose/view";
-import {
-  insertMathBlock,
-  insertRule,
-  makeTasks,
-} from "../editor/insert-blocks";
 import {
   cycleHeading,
   toggleBlockquote,
@@ -55,6 +46,8 @@ import {
   CLOSE_FIND_REPLACE_EVENT,
   RESTORE_CHAT_EVENT,
   INSERT_BLOCK_EVENT,
+  BLOCK_MENU_EVENT,
+  type BlockMenuRequest,
   INSERT_MARKDOWN_EVENT,
   TOGGLE_BLOCK_EVENT,
   TOGGLE_MARK_EVENT,
@@ -172,47 +165,7 @@ export function useEditorWindowEvents({
   // body text): the same commands as the right-click Insert submenu.
   useWindowEvent(INSERT_BLOCK_EVENT, (e) => {
     if (!isOnScreen()) return;
-    const kind = (e as CustomEvent<string>).detail;
-    run((ctx) => flushDomSelection(ctx.get(editorViewCtx)));
-    const headingMatch = /^h([1-6])$/.exec(kind);
-    if (headingMatch) {
-      insertHeading(run, Number(headingMatch[1]));
-      return;
-    }
-    if (kind === "paragraph") {
-      // Milkdown's WrapInHeading turns a level below 1 into a paragraph.
-      insertHeading(run, 0);
-      return;
-    }
-    switch (kind) {
-      case "bullet-list":
-        insertList(run, "bullet_list");
-        break;
-      case "ordered-list":
-        insertList(run, "ordered_list");
-        break;
-      case "blockquote":
-        runCommand(run, wrapInBlockquoteCommand.key);
-        break;
-      case "code-block":
-        runCommand(run, createCodeBlockCommand.key);
-        break;
-      case "task-list":
-        insertList(run, "bullet_list");
-        run((ctx) => makeTasks(ctx.get(editorViewCtx)));
-        break;
-      case "math-block":
-        run((ctx) => insertMathBlock(ctx.get(editorViewCtx)));
-        run((ctx) => ctx.get(editorViewCtx).focus());
-        break;
-      case "rule":
-        run((ctx) => insertRule(ctx.get(editorViewCtx)));
-        run((ctx) => ctx.get(editorViewCtx).focus());
-        break;
-      case "table":
-        openTableDialog();
-        break;
-    }
+    applyBlockKind(run, (e as CustomEvent<string>).detail, openTableDialog);
   });
 
   // The iPhone keyboard toolbar's block buttons, which toggle rather than
@@ -287,6 +240,13 @@ export function useEditorWindowEvents({
     // Still selected afterwards, so another preset is a tap away.
     if (width)
       setImageWidth(run, pos, width === "auto" ? null : Number(width), true);
+  });
+
+  // A block handle's ＋ or ⋮⋮ in this editor: the menu for that block.
+  useWindowEvent(BLOCK_MENU_EVENT, (e) => {
+    const { dom, x, y, pos, add } = (e as CustomEvent<BlockMenuRequest>).detail;
+    if (run((ctx) => ctx.get(editorViewCtx).dom) !== dom) return;
+    setMenu({ x, y, imagePos: null, block: { pos, add } });
   });
 
   // The iPhone keyboard toolbar's "More": the editor's menu for where the

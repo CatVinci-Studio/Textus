@@ -2,6 +2,7 @@ import type { StreamEvent } from "../../../platform/ipc";
 import type { Genre } from "../../../platform/bindings/ai-paper";
 import type { PendingStatus } from "../../revision/usePendingEdits";
 import type { ChatBodyProps } from "../chat-body-types";
+import { createSubscribers } from "../../../utils/store";
 
 /**
  * The document in front, as the window's conversations reach it: one at a
@@ -73,10 +74,10 @@ export interface AttachedDocument {
 }
 
 let attached: AttachedDocument | null = null;
-const listeners = new Set<() => void>();
+const subscribers = createSubscribers();
 
 function changed() {
-  for (const listener of listeners) listener();
+  subscribers.publish();
 }
 
 /** `port`'s document is the one in front, its panel as `panel` reads now. */
@@ -96,7 +97,4 @@ export function attachedDocument(): AttachedDocument | null {
   return attached;
 }
 
-export function onAttachedDocument(listener: () => void): () => void {
-  listeners.add(listener);
-  return () => listeners.delete(listener);
-}
+export const onAttachedDocument = subscribers.subscribe;

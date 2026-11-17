@@ -235,8 +235,7 @@ fn open_folder_in_sidebar(app_handle: &tauri::AppHandle, path: &str) {
     if focused_editor_window(app_handle).is_some() {
         emit_to_focused_payload(app_handle, "menu-open-recent-folder", path);
     } else {
-        *crate::PENDING_OPEN_FOLDER.lock().unwrap() = Some(path.to_string());
-        let _ = crate::editor_windows::open_new_window(app_handle);
+        crate::launch::open_folder_window(app_handle, path);
     }
 }
 

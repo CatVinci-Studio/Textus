@@ -199,8 +199,6 @@
   :root[data-window-chrome="mobile"]
     :is(
       .settings-row-label,
-      .provider-disclosure-label,
-      .combobox-trigger,
       button.settings-link-row,
       .settings-advanced > summary
     ) {

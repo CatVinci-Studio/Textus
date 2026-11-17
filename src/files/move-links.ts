@@ -5,7 +5,7 @@ import type { Strings } from "../i18n/strings";
 import { unsavedDocumentAt } from "../registry/open-documents";
 import { linkRewrite } from "./link-rewrite-lazy";
 import { showConfirm, showMessage } from "../engine/controls/app-dialog";
-import { FILE_WRITTEN_EVENT } from "../utils/events";
+import { FILE_WRITTEN_EVENT, sendAppEvent } from "../utils/events";
 import { basename } from "../utils/path";
 
 /**
@@ -74,9 +74,7 @@ export async function updateLinksAfterMove(
       const next = again(text);
       if (next === text) continue;
       await fs.writeTextFile(path, next);
-      window.dispatchEvent(
-        new CustomEvent(FILE_WRITTEN_EVENT, { detail: path }),
-      );
+      sendAppEvent(FILE_WRITTEN_EVENT, path);
     } catch {
       failed.push(path);
     }

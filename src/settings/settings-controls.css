@@ -132,70 +132,6 @@ button.settings-inline-button {
   font-size: var(--text-footnote);
 }
 
-/* ---- General > AI account: two disclosure rows + expanding panels ---- */
-
-.provider-picker {
-  margin: 0;
-}
-
-.combobox-trigger,
-.provider-auth-trigger {
-  display: flex;
-  align-items: center;
-  gap: 8px;
-  width: 100%;
-  min-height: 52px;
-  padding: 8px 0;
-  border: none;
-  border-radius: 0;
-  background: none;
-  color: inherit;
-  font: inherit;
-  font-size: var(--text-body-large);
-  cursor: pointer;
-  text-align: left;
-}
-
-.combobox-trigger:hover,
-.provider-auth-trigger:hover {
-  background: var(--ui-hover);
-}
-
-/* Read like any other row: the name in the text colour, the current value
-   (provider, sign-in state) quieter at the right. */
-.combobox-trigger-label {
-  color: var(--ui-muted);
-}
-
-.provider-disclosure-label {
-  flex: 1;
-  min-width: 0;
-  color: var(--ui-text);
-  font-size: var(--text-body-large);
-}
-
-.combobox-caret {
-  flex-shrink: 0;
-  color: var(--ui-muted);
-  transform: rotate(90deg);
-  transition: transform var(--dur-fast) var(--ease-standard);
-}
-
-.combobox-caret-open {
-  transform: rotate(-90deg);
-}
-
-.status-pill {
-  margin-left: auto;
-  font-size: var(--text-footnote);
-  color: var(--ui-muted);
-  white-space: nowrap;
-}
-
-.status-pill-connected {
-  color: var(--ui-success);
-}
-
 .status-dot {
   width: 6px;
   height: 6px;
@@ -203,23 +139,6 @@ button.settings-inline-button {
   corner-shape: round;
   background: var(--ui-success);
   flex-shrink: 0;
-}
-
-/* Expanded credentials: indented behind an accent-tinted rail. */
-.provider-picker > .provider-panel {
-  border-top: none;
-}
-
-.provider-panel {
-  margin: 2px 0 12px 8px;
-  padding: 0 0 0 16px;
-  border-left: 2px solid
-    color-mix(in srgb, var(--ui-accent) 35%, var(--ui-border));
-}
-
-.provider-panel .settings-row,
-.provider-panel .settings-field {
-  padding: 8px 0;
 }
 
 /* Account vs API key, a command vs an address: the shared segmented

@@ -8,6 +8,7 @@ import {
 } from "../../editor/markdown/edit-actions";
 import { explainAiError } from "../error-messages";
 import { currentStrings } from "../../i18n/current";
+import { createSubscribers } from "../../utils/store";
 
 /** Proposed pictures: kept in the backend's memory until Accept saves them.
  *  Until then the Markdown names each by a placeholder src, and only the
@@ -146,7 +147,7 @@ export async function retryGeneratedImage(id: string): Promise<boolean> {
     return false;
   }
   failed.delete(id);
-  for (const listener of listeners) listener();
+  subscribers.publish();
   return loadGeneratedImage(id);
 }
 
@@ -166,14 +167,14 @@ export async function redrawGeneratedImage(
     await ai.redrawGeneratedImage(id, prompt);
   } catch (err) {
     failed.set(id, err instanceof Error ? err.message : String(err));
-    for (const listener of listeners) listener();
+    subscribers.publish();
     return false;
   }
   const url = loaded.get(id)?.url;
   if (url?.startsWith("blob:")) URL.revokeObjectURL(url);
   loaded.delete(id);
   failed.delete(id);
-  for (const listener of listeners) listener();
+  subscribers.publish();
   return loadGeneratedImage(id);
 }
 
@@ -206,7 +207,7 @@ export function loadGeneratedImage(id: string): Promise<boolean> {
       })
       .finally(() => {
         loading.delete(id);
-        for (const listener of listeners) listener();
+        subscribers.publish();
       });
     loading.set(id, pending);
   }
@@ -214,12 +215,9 @@ export function loadGeneratedImage(id: string): Promise<boolean> {
 }
 
 /** Told whenever a picture has come, or failed to. */
-const listeners = new Set<() => void>();
+const subscribers = createSubscribers();
 
-export function onPictureSettled(listener: () => void): () => void {
-  listeners.add(listener);
-  return () => listeners.delete(listener);
-}
+export const onPictureSettled = subscribers.subscribe;
 
 /** Where a picture is: still being made, here (or saved by an earlier
  *  Accept), or not made. */

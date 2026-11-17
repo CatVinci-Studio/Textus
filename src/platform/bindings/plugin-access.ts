@@ -72,7 +72,17 @@ export const commands = {
 	plugin_git_log: (id: string, root: string, path: string, limit: number | null) => __TAURI_INVOKE<GitCommit[]>("plugin_git_log", { id, root, path, limit }),
 	plugin_git_show: (id: string, root: string, hash: string, path: string) => __TAURI_INVOKE<string | null>("plugin_git_show", { id, root, hash, path }),
 	plugin_git_commit: (id: string, root: string, message: string, paths: string[]) => __TAURI_INVOKE<string>("plugin_git_commit", { id, root, message, paths }),
+	/**
+	 *  The writer agreed to Git running what the repository of `root` sets up,
+	 *  hooks included. Asked by the app itself, never on a plugin's word.
+	 */
+	git_trust_repository: (root: string) => __TAURI_INVOKE<null>("git_trust_repository", { root }),
 	plugin_http: (id: string, request: HttpRequest_Deserialize) => __TAURI_INVOKE<HttpResponse>("plugin_http", { id, request }),
+	/**
+	 *  Stops the plugin's request named `cancel_id`, if it is still going: its
+	 *  connection is dropped and `plugin_http` answers "cancelled".
+	 */
+	plugin_http_cancel: (id: string, cancelId: string) => __TAURI_INVOKE<void>("plugin_http_cancel", { id, cancelId }),
 	/**  What the plugin kept under `key`, or null. */
 	plugin_store_get: (id: string, scope: StoreScope, root: string | null, key: string) => __TAURI_INVOKE<Value | null>("plugin_store_get", { id, scope, root, key }),
 	/**  Keeps `value` under `key`; null takes the key away. */
@@ -219,6 +229,8 @@ export type HttpRequest_Deserialize = {
 	/**  Text, or base64 with `body_base64`. */
 	body?: string | null,
 	bodyBase64?: boolean,
+	/**  The plugin's name for this request, to cancel it by. */
+	cancelId?: string | null,
 };
 
 export type HttpRequest_Serialize = {
@@ -228,6 +240,8 @@ export type HttpRequest_Serialize = {
 	/**  Text, or base64 with `body_base64`. */
 	body: string | null,
 	bodyBase64: boolean,
+	/**  The plugin's name for this request, to cancel it by. */
+	cancelId: string | null,
 };
 
 export type HttpResponse = {

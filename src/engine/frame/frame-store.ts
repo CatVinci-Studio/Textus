@@ -2,6 +2,7 @@ import { useSyncExternalStore } from "react";
 import type { Rect } from "./rect";
 import type { LayoutNode } from "../layout/tree";
 import { isPhoneLayout } from "../../platform/phone-layout";
+import { createSubscribers } from "../../utils/store";
 
 /**
  * The islands as the solver last placed them, in the viewport's pixels:
@@ -35,23 +36,20 @@ const EMPTY: FrameLayout = {
 };
 
 let current: FrameLayout = EMPTY;
-const listeners = new Set<() => void>();
+const subscribers = createSubscribers();
 
 /** The islands placed as they now are; told only when that changed. */
 export function setFrameLayout(next: FrameLayout): void {
   if (JSON.stringify(next) === JSON.stringify(current)) return;
   current = next;
-  for (const listener of listeners) listener();
+  subscribers.publish();
 }
 
 export function frameLayout(): FrameLayout {
   return current;
 }
 
-function onFrameLayout(listener: () => void): () => void {
-  listeners.add(listener);
-  return () => listeners.delete(listener);
-}
+const onFrameLayout = subscribers.subscribe;
 
 /** The islands as placed, kept current in a component. */
 export function useFrameLayout(): FrameLayout {
@@ -91,17 +89,25 @@ export function islandAt(x: number, y: number): FrameIsland | null {
 export interface RoomCheck {
   short: number;
   panels: number;
+  /** Short of height, which nothing gives: no width would do. */
+  low?: boolean;
 }
 
-let check: ((root: LayoutNode) => RoomCheck) | null = null;
+let check: ((root: LayoutNode, keep: ReadonlySet<string>) => RoomCheck) | null =
+  null;
 /** The width the sidebar would give, stepping aside (0 when shut). */
 let sidebarRoom = 0;
 /** A split made into too little room: first the panels' islands fold,
  *  then the sidebar steps aside; null when nothing gives way. */
 let givingWay: "panels" | "sidebar" | null = null;
+/** The islands the change being made room for made: never folded for it,
+ *  or it would come undone as soon as it was made. */
+let kept: ReadonlySet<string> = new Set();
 
 /** Told by the islands' area after each solve. */
-export function setLayoutFits(next: (root: LayoutNode) => RoomCheck): void {
+export function setLayoutFits(
+  next: (root: LayoutNode, keep: ReadonlySet<string>) => RoomCheck,
+): void {
   check = next;
 }
 
@@ -111,10 +117,13 @@ export function setSidebarRoom(room: number): void {
 }
 
 /** A phone shows one island: a split never fits there. */
-function roomFor(root: LayoutNode): RoomCheck {
+function roomFor(
+  root: LayoutNode,
+  keep: ReadonlySet<string> = new Set(),
+): RoomCheck {
   if (root.kind === "split" && isPhoneLayout())
     return { short: Infinity, panels: 0 };
-  return check ? check(root) : { short: 0, panels: 0 };
+  return check ? check(root, keep) : { short: 0, panels: 0 };
 }
 
 /** Whether a layout's islands, each at its least, fit the area as it is. */
@@ -122,18 +131,41 @@ export function layoutFits(root: LayoutNode): boolean {
   return roomFor(root).short <= 0.5;
 }
 
-/** The pixels `root` lacks once the panels' islands fold and the sidebar
- *  steps aside: 0 when it fits so. A split asked for is made then, and
- *  they give way (useNarrowIslands, useNarrowSidebar). */
-export function shortGivingWay(root: LayoutNode): number {
-  const { short, panels } = roomFor(root);
-  return Math.max(0, Math.ceil(short - panels - sidebarRoom - 0.5));
+/** The pixels `root` lacks once the panels' islands but those in `keep`
+ *  (what it makes) fold and the sidebar steps aside: 0 when it fits so. A
+ *  split asked for is made then, and they give way (useNarrowIslands,
+ *  useNarrowSidebar). */
+export function shortGivingWay(
+  root: LayoutNode,
+  keep: ReadonlySet<string>,
+): number {
+  return refusal(root, keep).short;
+}
+
+/** Why a layout has no room: too narrow, or too low (a split upon a split
+ *  that leaves an island under its least height). False: it has room. */
+export type NoRoom = false | "narrow" | "low";
+
+/** shortGivingWay, and why it is short: what the window says (sayNoRoom). */
+export function refusal(
+  root: LayoutNode,
+  keep: ReadonlySet<string>,
+): { short: number; noRoom: NoRoom } {
+  const { short, panels, low } = roomFor(root, keep);
+  const lacks = Math.max(0, Math.ceil(short - panels - sidebarRoom - 0.5));
+  return { short: lacks, noRoom: lacks ? (low ? "low" : "narrow") : false };
 }
 
 /** A layout set into too little room: the panels, then the sidebar, give
  *  way until it fits, rather than the islands waiting for the window. */
-export function askGiveWay(): void {
+export function askGiveWay(made: ReadonlySet<string>): void {
   givingWay = "panels";
+  kept = made;
+}
+
+/** The islands not to fold while the panels give way. */
+export function keptFromFolding(): ReadonlySet<string> {
+  return givingWay ? kept : new Set();
 }
 
 /** Who gives way now. */

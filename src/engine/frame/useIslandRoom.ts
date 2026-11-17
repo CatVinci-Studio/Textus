@@ -1,5 +1,5 @@
 import { tokenPx } from "../tokens/token-px";
-import { useLayoutEffect, useState, type RefObject } from "react";
+import { useLayoutEffect, useRef, useState, type RefObject } from "react";
 import { flushSync } from "react-dom";
 import { isMobileApp } from "../../platform/capabilities";
 
@@ -49,9 +49,18 @@ export function useIslandRoom(
   key: string,
 ): IslandRoom | null {
   const [room, setRoom] = useState<IslandRoom | null>(null);
+  const observer = useRef<ResizeObserver | null>(null);
   useLayoutEffect(() => {
-    const next = measure(area.current);
+    const el = area.current;
+    const next = measure(el);
     if (next) setRoom((was) => (same(was, next) ? was : next));
+    // Observed afresh, it reports its size next frame: a size read
+    // mid-change (a sidebar narrowed and widened again before the frame)
+    // is corrected even when the frame ends at the size it had before.
+    if (el && observer.current) {
+      observer.current.unobserve(el);
+      observer.current.observe(el);
+    }
   }, [area, key]);
   useLayoutEffect(() => {
     const el = area.current;
@@ -61,8 +70,9 @@ export function useIslandRoom(
       if (next)
         flushSync(() => setRoom((was) => (same(was, next) ? was : next)));
     };
-    const observer = new ResizeObserver(remeasure);
-    observer.observe(el);
+    const watch = new ResizeObserver(remeasure);
+    watch.observe(el);
+    observer.current = watch;
     // A phone's also once the window's resize is told: keyboard-up, marked
     // then, may change the spacings after the size is seen. The app's own
     // word on its bars and keyboard comes with no resize at all: read once
@@ -74,7 +84,8 @@ export function useIslandRoom(
       for (const type of told) window.addEventListener(type, later);
     }
     return () => {
-      observer.disconnect();
+      watch.disconnect();
+      observer.current = null;
       window.removeEventListener("resize", remeasure);
       for (const type of told) window.removeEventListener(type, later);
     };

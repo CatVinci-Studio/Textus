@@ -28,6 +28,8 @@
   position: relative;
   flex: none;
   align-self: stretch;
+  /* A touch row's room to scroll to its last tabs' starts (useRevealTab). */
+  margin-inline-end: var(--tab-tail, 0px);
 }
 
 .tab-pill {
@@ -177,8 +179,10 @@
   corner-shape: round;
 }
 
-.tab-bar-add:hover {
-  background: var(--ui-hover);
+@media (hover: hover) {
+  .tab-bar-add:hover {
+    background: var(--ui-hover);
+  }
 }
 
 /* Every tab keeps its ×'s room, shown on the open tab and the one pointed
@@ -237,13 +241,15 @@
   z-index: 2;
 }
 
-.tab-bar-list:hover {
-  background: color-mix(
-    in srgb,
-    var(--ui-text) 8%,
-    var(--ui-frame, var(--ui-bg))
-  );
-  color: var(--ui-text);
+@media (hover: hover) {
+  .tab-bar-list:hover {
+    background: color-mix(
+      in srgb,
+      var(--ui-text) 8%,
+      var(--ui-frame, var(--ui-bg))
+    );
+    color: var(--ui-text);
+  }
 }
 
 .tab-bar-list svg {

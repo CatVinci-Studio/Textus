@@ -121,6 +121,16 @@ Habilidades ficam na pasta skills/ ao lado deste arquivo, um arquivo
   codeBlockEditSource: "Editar o código",
   codeBlockDone: "Concluir edição",
   codeBlockDelete: "Excluir o bloco",
+  blockText: "Texto",
+  blockCallout: "Destaque",
+  blockHandleAdd: "Adicionar um bloco abaixo",
+  blockHandleOptions: "Arraste para mover, clique para opções",
+  blockTurnInto: "Transformar em",
+  blockDuplicate: "Duplicar",
+  blockHandlesLabel: "Alças de bloco",
+  blockHandlesHelp:
+    "＋ e ⋮⋮ ao lado do bloco sob o ponteiro: adicionar um bloco, movê-lo ou transformá-lo em outro tipo.",
+  smoothCaretLabel: "Cursor suave",
   menuBlockWide: "Exibição larga",
   menuBlockZoom: "Tamanho",
   diagramViewerLabel: "Diagrama",
@@ -165,6 +175,8 @@ Habilidades ficam na pasta skills/ ao lado deste arquivo, um arquivo
   revisionDisplayInline: "Tudo no texto",
   revisionDisplayOriginal: "Original no texto, alterações na margem",
   revisionDisplayFinal: "Só o resultado, original na margem",
+  splitNoRoomLow:
+    "Sem espaço para outra divisão: a janela é baixa demais. Oculte o teclado ou deixe a janela mais alta.",
   splitNoRoom:
     "Não cabe outra divisão: a janela é estreita demais. Alargue-a ou feche uma divisão.",
   revisionDisplayNoRoom: "Sem espaço: feche a barra lateral ou o painel de IA",
@@ -648,6 +660,8 @@ Habilidades ficam na pasta skills/ ao lado deste arquivo, um arquivo
     "A loja de plugins precisa de uma versão mais nova do Textus. Atualize o Textus para vê-la.",
   errorImageTooBig: "A imagem está vazia ou tem mais de 25 MB.",
   errorNoFolder: "Abra uma pasta primeiro.",
+  errorPluginsNeedAllFiles:
+    "Os plugins não conseguem ler esta pasta: o Textus não tem acesso a todos os arquivos. Abra a pasta de novo e escolha “Continuar”.",
   errorPdfUnsupported:
     "A exportação para PDF não está disponível neste sistema.",
   errorNoText: "Não há texto legível nele.",
@@ -942,6 +956,12 @@ Habilidades ficam na pasta skills/ ao lado deste arquivo, um arquivo
   agentSend: "Enviar",
   agentStop: "Parar",
   agentRetry: "Tentar de novo",
+  agentForgotStart:
+    "Esta conversa está longa: as primeiras mensagens já não são enviadas ao modelo. Comece uma nova conversa para recomeçar.",
+  revisionsNotKept:
+    "As alterações à espera da sua decisão não puderam ser guardadas no disco. Aceite-as ou recuse-as antes de fechar o documento, ou serão perdidas.",
+  settingsNotSaved:
+    "Neste momento não é possível guardar as definições nem o estado da janela: o que mudar dura até fechar o Textus.",
   agentNeedsFolder:
     "Abra primeiro uma pasta ou salve o documento: o agente trabalha numa pasta.",
   agentStopped: "{agent} parou.",
@@ -1476,6 +1496,8 @@ Habilidades ficam na pasta skills/ ao lado deste arquivo, um arquivo
   wordImportDismiss: "Entendi",
   openFileFailed:
     "Não é possível abrir {name}: não é um documento de texto e nenhum plugin abre arquivos deste tipo.",
+  openFileMuted:
+    "O Textus não abre {name} sozinho. Você desativou a sugestão do plugin que o abre; Ajustes › {page} a mostra de novo.",
   openFileGone:
     "Não é possível abrir {name}: o arquivo não está mais lá. Talvez tenha sido movido, renomeado ou excluído.",
   wordImportFailed: "Não foi possível abrir {name}.",
@@ -1593,7 +1615,7 @@ Habilidades ficam na pasta skills/ ao lado deste arquivo, um arquivo
   themeNamePaper: "Papel",
   themeNameSlate: "Ardósia",
   themeNameForest: "Floresta",
-  themeNameAurora: "Aurora",
+  themeNamePrism: "Prisma",
   appearanceLabel: "Aparência",
   appearanceModeLabel: "Claro ou escuro",
   appearanceSystem: "Seguir o sistema",
@@ -1929,4 +1951,10 @@ Habilidades ficam na pasta skills/ ao lado deste arquivo, um arquivo
   shortcutOutdentListItem: "Diminuir recuo do item",
   pluginKeyTaken:
     "{name}: {key} já é de “{owner}”, então não foi atribuído a “{command}”. Escolha outro em Ajustes › Atalhos.",
+  gitTrustTitle:
+    "Permitir que o Git execute os programas próprios deste repositório?",
+  gitTrustText:
+    "O repositório Git desta pasta está configurado para executar programas no seu computador ({what}). É comum num repositório que você mesmo preparou. Se a pasta veio de outra pessoa, permita apenas se confiar nela.",
+  gitTrustAllow: "Confiar neste repositório",
+  gitTrustRefused: "O Git não é usado aqui: o repositório não é confiável.",
 } satisfies Translation;

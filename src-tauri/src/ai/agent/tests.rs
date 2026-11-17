@@ -165,6 +165,31 @@ fn compact_history_drops_whole_oldest_exchanges_over_budget() {
     assert!(matches!(&out[0], AgentTurn::User { text, .. } if text == "recent"));
 }
 
+#[test]
+fn a_conversation_that_loses_its_start_says_so() {
+    struct Told(std::sync::Mutex<Vec<String>>);
+    impl EventSink for Told {
+        fn send(&self, event: StreamEvent) {
+            let json = serde_json::to_value(&event).unwrap();
+            self.0
+                .lock()
+                .unwrap()
+                .push(json["type"].as_str().unwrap().into());
+        }
+    }
+    let told = Told(Default::default());
+    let short = vec![AgentTurn::user("hi"), AgentTurn::assistant("hello")];
+    compact_telling(short, &told);
+    assert!(told.0.lock().unwrap().is_empty());
+    let long = vec![
+        AgentTurn::user("y".repeat(HISTORY_BUDGET)),
+        AgentTurn::assistant("a1"),
+        AgentTurn::user("recent"),
+    ];
+    compact_telling(long, &told);
+    assert_eq!(*told.0.lock().unwrap(), ["forgot"]);
+}
+
 /// One exchange of `chars` characters: a question, a file read, a reply.
 fn exchange(n: usize, chars: usize) -> Vec<AgentTurn> {
     vec![
@@ -347,7 +372,7 @@ fn the_document_tools_are_for_a_document_shown_in_part() {
 }
 
 #[test]
-fn a_cloud_model_takes_a_long_document_whole_a_local_one_in_part() {
+fn a_roomy_provider_takes_a_long_document_whole_a_gateway_or_local_one_in_part() {
     let provider = |id: &str| {
         crate::ai::catalog::PROVIDER_CATALOG
             .iter()
@@ -359,10 +384,13 @@ fn a_cloud_model_takes_a_long_document_whole_a_local_one_in_part() {
         &doc,
         context::Reading::for_provider(true, provider("anthropic"))
     ));
-    assert!(!context::shown_whole(
-        &doc,
-        context::Reading::for_provider(true, provider("ollama"))
-    ));
+    // A gateway may serve a model of 8k: in part, as a local server's.
+    for id in ["ollama", "openrouter", "groq", "qwen"] {
+        assert!(!context::shown_whole(
+            &doc,
+            context::Reading::for_provider(true, provider(id))
+        ));
+    }
     let past = "x".repeat(context::ROOMY_DOCUMENT_LIMIT + 1);
     assert!(!context::shown_whole(
         &past,

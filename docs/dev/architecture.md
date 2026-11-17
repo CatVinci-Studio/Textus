@@ -158,14 +158,14 @@ add into the app's own registries (`app/commands.ts`,
 `app/frame/sidebar-tabs.tsx`, `engine/layout/store.ts`, the editor's extension
 points). Its folders, by job:
 
-| `plugins/`       | Holds                                                                                                                                                                      |
-| ---------------- | -------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
-| `host/`          | Running a plugin: the sandboxed frames, the runtimes put in them (`runtime/host.js`, `text.js`, `webview.js`), the broker that answers every call (`broker*.ts`), the RPC. |
-| `contributions/` | The registries of what plugins add: commands and menus, code blocks, decorations, completions, hover cards, links, lists, AI tools, before-save.                           |
-| `views/`         | What draws plugins: webviews, lists, web pages, forms, floating views, the theme given to a page.                                                                          |
-| `store/`         | What is installed and how: manifests, the catalog, records and their state, permissions, settings, logs, export, migration, offers.                                        |
-| `workspace/`     | What plugins know of the folder: the metadata index, globs.                                                                                                                |
-| `background/`    | Scheduled jobs and the hidden background host window that runs them when no editor window is open (desktop).                                                               |
+| `plugins/`       | Holds                                                                                                                                                                                                                                      |
+| ---------------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------ |
+| `host/`          | Running a plugin: the sandboxed frames, the runtimes put in them (`runtime/host-*.js` joined by `host-runtime.ts`, `text*.js`, `webview-*.js` joined by `webview-runtime.ts`), the broker that answers every call (`broker*.ts`), the RPC. |
+| `contributions/` | The registries of what plugins add: commands and menus, code blocks, decorations, completions, hover cards, links, lists, AI tools, before-save.                                                                                           |
+| `views/`         | What draws plugins: webviews, lists, web pages, forms, floating views, the theme given to a page.                                                                                                                                          |
+| `store/`         | What is installed and how: manifests, the catalog, records and their state, permissions, settings, logs, export, migration, offers.                                                                                                        |
+| `workspace/`     | What plugins know of the folder: the metadata index, globs.                                                                                                                                                                                |
+| `background/`    | Scheduled jobs and the hidden background host window that runs them when no editor window is open (desktop).                                                                                                                               |
 
 At its top: `manager.ts` (records, install, on and off; the loader),
 `app-bridge.ts` (what the window lends plugins, and `emitPluginEvent` for

@@ -71,8 +71,10 @@
   --tree-indent: min(calc(var(--depth, 0) * var(--tree-step)), 35%);
 }
 
-.tx-list-item:hover {
-  background: var(--ui-hover);
+@media (hover: hover) {
+  .tx-list-item:hover {
+    background: var(--ui-hover);
+  }
 }
 
 /* Picked: the selection's fill, the text as it was (as the outline's and

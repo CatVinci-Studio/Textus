@@ -160,6 +160,8 @@ export const commands = {
 	finish_draft_restore: () => __TAURI_INVOKE<null>("finish_draft_restore"),
 	clear_draft_snapshot: (tabId: string) => __TAURI_INVOKE<null>("clear_draft_snapshot", { tabId }),
 	clear_all_drafts: () => __TAURI_INVOKE<null>("clear_all_drafts"),
+	keep_page_tabs: (text: string) => __TAURI_INVOKE<void>("keep_page_tabs", { text }),
+	kept_page_tabs: () => __TAURI_INVOKE<string>("kept_page_tabs"),
 	/**  Keeps `history` for the document at `path` whose text hashes to `hash`. */
 	undo_file_save: (path: string, hash: string, history: string) => __TAURI_INVOKE<null>("undo_file_save", { path, hash, history }),
 	/**  The history kept for `path`, if it ends at the text hashing to `hash`. */

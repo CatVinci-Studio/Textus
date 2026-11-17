@@ -1,6 +1,7 @@
 import { useSyncExternalStore } from "react";
 import { LOCAL_KEYS, readLocalJson, writeLocal } from "../storage/local";
 import snapshot from "./models-snapshot.json";
+import { createSubscribers } from "../utils/store";
 
 /** What models.dev says about one model, from a bundled snapshot. Absent for
  *  models it doesn't list, which show as a bare id. */
@@ -55,17 +56,14 @@ export function writeFetchedModels(provider: string, models: string[]): void {
     JSON.stringify({ models, at: Date.now() }),
   );
   fetchedCount++;
-  window.dispatchEvent(new Event(MODELS_FETCHED_EVENT));
+  fetched.publish();
 }
 
 // Every picker (Settings' writing and chat rows, the composer) reads the
 // new list at once.
-const MODELS_FETCHED_EVENT = "textus-models-fetched";
+const fetched = createSubscribers();
 let fetchedCount = 0;
-const onFetched = (listener: () => void) => {
-  window.addEventListener(MODELS_FETCHED_EVENT, listener);
-  return () => window.removeEventListener(MODELS_FETCHED_EVENT, listener);
-};
+const onFetched = fetched.subscribe;
 
 /** Draws again whenever a model list is fetched; read the lists with
  *  {@link readFetchedModels}. */

@@ -116,10 +116,36 @@ describe("what comes back", () => {
   });
 
   it("brings a position's proposal back only to the document it was made for", () => {
-    expect(restorable(kept, 42).map((p) => p.callId)).toEqual([
+    const none = () => null;
+    expect(restorable(kept, 42, none).map((p) => p.callId)).toEqual([
       "anchored",
       "caret",
     ]);
-    expect(restorable(kept, 7).map((p) => p.callId)).toEqual(["anchored"]);
+    expect(restorable(kept, 7, none).map((p) => p.callId)).toEqual([
+      "anchored",
+    ]);
+  });
+
+  it("brings a selection's proposal back to a document edited elsewhere, its passage as it was", () => {
+    const made = keptFrom(
+      [
+        preview({
+          callId: "rewrite",
+          proposal: { action: "replace_selection", text: "Better." },
+          from: 3,
+          to: 9,
+        }),
+      ],
+      42,
+      () => "Words.",
+      () => true,
+    )!;
+    const reads = (text: string | null) => (from: number, to: number) =>
+      from === 3 && to === 9 ? text : null;
+    // Typed in further down since: another hash, the same passage.
+    expect(restorable(made, 7, reads("Words."))).toHaveLength(1);
+    // The passage itself changed, or isn't there.
+    expect(restorable(made, 7, reads("Other."))).toHaveLength(0);
+    expect(restorable(made, 7, reads(null))).toHaveLength(0);
   });
 });

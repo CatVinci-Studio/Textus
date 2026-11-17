@@ -28,8 +28,10 @@
   white-space: nowrap;
   cursor: pointer;
 }
-.tx-chip:not(:disabled):hover {
-  background: color-mix(in srgb, var(--ui-selected) 80%, var(--ui-text) 6%);
+@media (hover: hover) {
+  .tx-chip:not(:disabled):hover {
+    background: color-mix(in srgb, var(--ui-selected) 80%, var(--ui-text) 6%);
+  }
 }
 
 /* A value of a few - a status, a label - in a tone (data-tone, in the
@@ -182,8 +184,10 @@
 .tx-table th .tx-icon {
   margin-right: var(--space-1);
 }
-.tx-table tbody tr:hover > td {
-  background: var(--ui-hover);
+@media (hover: hover) {
+  .tx-table tbody tr:hover > td {
+    background: var(--ui-hover);
+  }
 }
 
 /* A card: a record on a board, a tile in a gallery. Grouped, so a hairline
@@ -260,9 +264,11 @@
   cursor: grab;
   touch-action: none;
 }
-.tx-table-grip:hover {
-  border-color: var(--ui-accent);
-  background: var(--ui-accent);
+@media (hover: hover) {
+  .tx-table-grip:hover {
+    border-color: var(--ui-accent);
+    background: var(--ui-accent);
+  }
 }
 .tx-table-grip-row {
   width: 8px;
