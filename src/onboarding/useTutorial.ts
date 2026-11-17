@@ -75,21 +75,27 @@ export function useTutorial(
   // The stop lit within the step (its `stops`), from the first each time.
   const [stop, setStop] = useState(0);
 
-  const go = useCallback((to: (p: TutorialProgress) => number | null) => {
-    setStop(0);
-    setProgress((p) => {
-      if (!p.active) return p;
-      const at = to(p);
-      return at === null || at >= TUTORIAL_STEPS.length
-        ? IDLE
-        : { ...p, stepIndex: at };
-    });
-  }, [setProgress]);
+  const go = useCallback(
+    (to: (p: TutorialProgress) => number | null) => {
+      setStop(0);
+      setProgress((p) => {
+        if (!p.active) return p;
+        const at = to(p);
+        return at === null || at >= TUTORIAL_STEPS.length
+          ? IDLE
+          : { ...p, stepIndex: at };
+      });
+    },
+    [setProgress],
+  );
 
-  const start = useCallback((tabId: string) => {
-    setStop(0);
-    setProgress({ active: true, stepIndex: 0, tabId });
-  }, [setProgress]);
+  const start = useCallback(
+    (tabId: string) => {
+      setStop(0);
+      setProgress({ active: true, stepIndex: 0, tabId });
+    },
+    [setProgress],
+  );
   const { next, back, goTo } = useStepMoves(go);
   const exit = useCallback(() => {
     setStop(0);
@@ -111,9 +117,12 @@ export function useTutorial(
 
   // Rebinds the tour to a new tab, keeping the step: the practice tab is a
   // pathless draft, so it never survives a relaunch.
-  const rebindTab = useCallback((tabId: string) => {
-    setProgress((p) => (p.active ? { ...p, tabId } : p));
-  }, [setProgress]);
+  const rebindTab = useCallback(
+    (tabId: string) => {
+      setProgress((p) => (p.active ? { ...p, tabId } : p));
+    },
+    [setProgress],
+  );
 
   /** The practice tab's AI: the real thing on the step that uses it, muted
    *  everywhere else in the tour. */

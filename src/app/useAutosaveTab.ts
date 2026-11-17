@@ -27,7 +27,7 @@ export function useAutoNamed() {
     [],
   );
 }
-export type AutoNamed = ReturnType<typeof useAutoNamed>;
+type AutoNamed = ReturnType<typeof useAutoNamed>;
 
 /** One save per tab at a time: a racing save would see our own write as
  *  external. */

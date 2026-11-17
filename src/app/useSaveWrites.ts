@@ -37,7 +37,7 @@ import { useCallback, useEffect } from "react";
 import type { Serialized } from "./useAutosaveTab";
 
 /** Writes a document, or says why it couldn't and resolves false. */
-export type WriteOrReport = (
+type WriteOrReport = (
   path: string,
   content: string,
   from?: string | null,
