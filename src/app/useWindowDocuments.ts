@@ -27,6 +27,8 @@ import { usePluginWindow } from "./usePluginWindow";
 import type { WindowShell } from "./useWindowShell";
 import type { Settings } from "../prefs/SettingsContext";
 import type { Strings } from "../i18n/strings";
+import { folderReopener } from "./folder-reopen";
+import { useLatest } from "../utils/hooks/useLatest";
 
 /**
  * A window's documents: the active one, the sidebar folder, opening,
@@ -214,14 +216,16 @@ export function useWindowDocuments({
   // In this window, whatever else it holds: not as Open Recent, which hands
   // a busy window's files to the windows (none on a phone).
   const { openPathInTab } = opening;
+  const openLatest = useLatest(openPathInTab);
+  const [reopenFolder] = useState(() =>
+    folderReopener(
+      async (folder) => openingDocuments(folder, (await readRecents()).files),
+      (path) => openLatest.current(path, { restoreCaret: true }),
+    ),
+  );
   replaceRef.current = (old, next) => {
     if (old) closeTabsOf(old);
-    void readRecents()
-      .then((recents) => openingDocuments(next, recents.files))
-      .then(async (docs) => {
-        for (const doc of docs)
-          await openPathInTab(doc, { restoreCaret: true });
-      });
+    void reopenFolder(next);
   };
 
   // Tabs moving between windows, in both directions.

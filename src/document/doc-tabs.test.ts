@@ -2,12 +2,14 @@ import { describe, expect, it, vi } from "vitest";
 
 const disk = vi.hoisted(() => ({
   read: vi.fn<(path: string) => Promise<string>>(),
+  bytes: vi.fn<(path: string) => Promise<string>>(),
   mtime: vi.fn<(path: string) => Promise<number | null>>(),
   written: [] as [string, string][],
 }));
 vi.mock("../platform/ipc", () => ({
   fs: {
     readTextFile: disk.read,
+    readBinaryFileBase64: disk.bytes,
     fileMtimeMs: disk.mtime,
     writeTextFile: async (path: string, text: string) => {
       disk.written.push([path, text]);
@@ -103,8 +105,18 @@ describe("writeDocFile", () => {
   it("does not write over a file that is there but can't be read", async () => {
     disk.written.length = 0;
     disk.read.mockRejectedValueOnce(new Error("locked"));
+    disk.bytes.mockRejectedValueOnce(new Error("locked"));
     disk.mtime.mockResolvedValueOnce(42);
     await expect(writeDocFile("/a.md", "one\n")).rejects.toThrow("locked");
     expect(disk.written).toEqual([]);
+  });
+
+  it("writes over a file that is there but not UTF-8, in its line endings", async () => {
+    disk.written.length = 0;
+    disk.read.mockRejectedValueOnce(new Error("invalid UTF-8"));
+    disk.bytes.mockResolvedValueOnce(btoa("caf\xe9\r\nold\r\n"));
+    disk.mtime.mockResolvedValueOnce(42);
+    await writeDocFile("/a.txt", "new\n");
+    expect(disk.written).toEqual([["/a.txt", "new\r\n"]]);
   });
 });

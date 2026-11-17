@@ -1,4 +1,4 @@
-import { useEffect, useState } from "react";
+import { useEffect, useRef, useState } from "react";
 import type { AgentMode } from "../../prefs/settings-values";
 import { requestCreate } from "./create-request";
 import { askInComposer } from "./composer-asks";
@@ -30,15 +30,21 @@ export function useAskAi(
   setPanelOpen: (open: boolean) => void,
 ): AgentMode | null {
   const [mode, setMode] = useState<AgentMode | null>(null);
+  const latest = useRef<object | null>(null);
   useEffect(() => {
     if (!isActive) return;
     return asks.subscribe(({ text, mode: asked }) => {
+      const ask = {};
+      latest.current = ask;
       setMode(asked);
       setPanelOpen(true);
       // Set once, for the composer that takes the ask - however long its
-      // panel takes to open: asked again, it is set again.
+      // panel takes to open: asked again, it is set again, and an earlier
+      // ask settling doesn't clear the later one's.
       void askInComposer(text).then(() =>
-        window.setTimeout(() => setMode(null)),
+        window.setTimeout(() => {
+          if (latest.current === ask) setMode(null);
+        }),
       );
     });
   }, [isActive, setPanelOpen]);

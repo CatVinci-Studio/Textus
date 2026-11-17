@@ -259,8 +259,13 @@ export async function writeDocFile(
   // read just now (locked, not downloaded) is not written over as if new,
   // in other line endings.
   const existing = await fs.readTextFile(path).catch(async (error) => {
-    if (await fileExists(path)) throw error;
-    return null;
+    if (!(await fileExists(path))) return null;
+    // Readable, only not UTF-8 (a GBK text, a file Save As replaces): its
+    // line endings from its bytes.
+    const bytes = await fs.readBinaryFileBase64(path).catch(() => {
+      throw error;
+    });
+    return atob(bytes);
   });
   const format =
     existing === null ? { crlf: false, bom: false } : detectFormat(existing);
