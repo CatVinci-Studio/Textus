@@ -31,10 +31,10 @@ import { marginItemsOf } from "./margin-items";
 import { useLatest } from "../../utils/hooks/useLatest";
 
 /** A note's badge clicked open, where its card shows. */
-export type OpenNote = { id: string; x: number; y: number };
+type OpenNote = { id: string; x: number; y: number };
 
 /** The plugin's ref-indirected callbacks. */
-export type ReviewNotesCallbacks = {
+type ReviewNotesCallbacks = {
   current: {
     onChange: (notes: ReviewNote[]) => void;
     onBadge: (id: string, el: HTMLElement) => void;
