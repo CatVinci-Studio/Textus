@@ -2,6 +2,7 @@ import { expect, test, type Page } from "@playwright/test";
 import {
   openApp,
   pasteMarkdown,
+  PHONE,
   selectionRead,
   settled,
   sourceOf,
@@ -136,4 +137,61 @@ test("selected text pulled moves where it is let go; with Option or Ctrl a copy 
     "move me here",
     "to the endmove",
   ]);
+});
+
+test.describe("under a finger", () => {
+  test.use(PHONE);
+
+  test("⋮⋮ stands by the caret's block: tapped, its menu; held, the block moves", async ({
+    page,
+  }) => {
+    await openApp(page, { settings: { language: "en" } });
+    await pasteMarkdown(page, "First\n\nSecond\n\nThird");
+    await block(page, "First").tap();
+    const grip = page.locator(`${handle} .block-handle-grip`);
+    await expect(grip).toBeVisible();
+    await expect(page.locator(`${handle} .block-handle-add`)).toBeHidden();
+    await grip.tap();
+    await expect(
+      page.getByRole("menuitem", { name: "Delete Block" }),
+    ).toBeVisible();
+    await page.keyboard.press("Escape");
+
+    // Held still, then pulled below the last block.
+    const end = (await block(page, "Third").boundingBox())!;
+    await grip.evaluate(
+      async (el, to) => {
+        const { left, top, width, height } = el.getBoundingClientRect();
+        const x = left + width / 2;
+        const from = top + height / 2;
+        const at = (type: string, y: number) =>
+          (type === "pointerdown" ? el : window).dispatchEvent(
+            new PointerEvent(type, {
+              bubbles: true,
+              cancelable: true,
+              pointerType: "touch",
+              pointerId: 9,
+              isPrimary: true,
+              button: 0,
+              buttons: type === "pointerup" ? 0 : 1,
+              clientX: x,
+              clientY: y,
+            }),
+          );
+        at("pointerdown", from);
+        await new Promise((r) => setTimeout(r, 600));
+        for (let step = 1; step <= 10; step++) {
+          at("pointermove", from + ((to - from) * step) / 10);
+          await new Promise((r) => setTimeout(r, 20));
+        }
+        at("pointerup", to);
+      },
+      end.y + end.height - 2,
+    );
+    await expect(page.locator(`${editor} > p`)).toHaveText([
+      "Second",
+      "Third",
+      "First",
+    ]);
+  });
 });

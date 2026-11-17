@@ -13,13 +13,19 @@ const STEP = 16;
  * The block under the handle, pulled: a copy follows the pointer, the
  * block stays in place marked as the one moving, and a line shows where it
  * will land; let go, it moves there in one undo step. Esc drops nothing.
+ * `held`: a finger held on the handle, lifted at once rather than after
+ * it moves.
  */
 export function dragBlock(
   view: EditorView,
   root: HTMLElement,
   block: HandledBlock,
   down: PointerEvent,
-  { started, ended }: { started: () => void; ended: () => void },
+  {
+    started,
+    ended,
+    held = false,
+  }: { started: () => void; ended: () => void; held?: boolean },
 ): void {
   const source = view.nodeDOM(block.pos) as HTMLElement | null;
   if (!source) return;
@@ -98,35 +104,42 @@ export function dragBlock(
     scrolling = requestAnimationFrame(scrollNear);
   };
 
-  trackDrag(down, {
-    start: (x, y) => {
-      started();
-      root.append(line);
-      ghost = dragGhost(
-        source.textContent?.trim().slice(0, 60) || "¶",
-        "tx-drag-ghost block-drag-ghost",
-      );
-      ghost.move(x, y);
-      place(x, y);
+  const lift = (x: number, y: number) => {
+    started();
+    root.append(line);
+    ghost = dragGhost(
+      source.textContent?.trim().slice(0, 60) || "¶",
+      "tx-drag-ghost block-drag-ghost",
+    );
+    ghost.move(x, y);
+    place(x, y);
+  };
+
+  trackDrag(
+    down,
+    {
+      start: lift,
+      move: (x, y) => {
+        last = { x, y };
+        ghost?.move(x, y);
+        place(x, y);
+        if (!scrolling) scrolling = requestAnimationFrame(scrollNear);
+      },
+      end: (_x, _y, dropped) => {
+        cancelAnimationFrame(scrolling);
+        line.remove();
+        ghost?.remove();
+        // The document changed under the drag (an AI edit landing): its
+        // places are gone, so nothing moves.
+        if (dropped && landing !== null && view.state.doc === doc) {
+          const tr = moveTo(view.state, block, landing);
+          if (tr) view.dispatch(tr);
+        }
+        view.focus();
+        ended();
+      },
     },
-    move: (x, y) => {
-      last = { x, y };
-      ghost?.move(x, y);
-      place(x, y);
-      if (!scrolling) scrolling = requestAnimationFrame(scrollNear);
-    },
-    end: (_x, _y, dropped) => {
-      cancelAnimationFrame(scrolling);
-      line.remove();
-      ghost?.remove();
-      // The document changed under the drag (an AI edit landing): its
-      // places are gone, so nothing moves.
-      if (dropped && landing !== null && view.state.doc === doc) {
-        const tr = moveTo(view.state, block, landing);
-        if (tr) view.dispatch(tr);
-      }
-      view.focus();
-      ended();
-    },
-  });
+    { started: held },
+  );
+  if (held) lift(down.clientX, down.clientY);
 }
