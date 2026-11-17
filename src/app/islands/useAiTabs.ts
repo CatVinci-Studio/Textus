@@ -1,4 +1,9 @@
-import { useEffect, useRef, useSyncExternalStore } from "react";
+import {
+  useEffect,
+  useRef,
+  useSyncExternalStore,
+  type MutableRefObject,
+} from "react";
 import {
   DRAFT,
   closeConversation,
@@ -29,6 +34,121 @@ const conversationOf = (tab: DocTab) => conversationIn(tab.view?.state);
 
 const isAiTab = (tab: DocTab) => pageOf(tab) === "ai";
 
+/** The folder's open conversations and its live one. */
+function useConversations(scope: string | null) {
+  const open = useSyncExternalStore(onOpenConversations, () =>
+    scope ? openConversations(scope) : NONE,
+  );
+  const live = useSyncExternalStore(
+    (changed) => onLiveConversation(() => changed()),
+    () => (scope ? liveConversation(scope) : null),
+  );
+  return { open, live };
+}
+
+/** The AI tabs' titles as History names them, and the tab in front making
+ *  its conversation the live one. */
+function useAiTabFollows(
+  tabs: TabState,
+  scope: string | null,
+  titles: Map<string, string>,
+  aiKey: string,
+  titlesKey: string,
+) {
+  const { tabsRef, updateTab, activeTabId } = tabs;
+  // Titles as History names them; a tab given a conversation not named yet
+  // keeps none of the last one's.
+  useEffect(() => {
+    for (const tab of tabsRef.current.filter(isAiTab)) {
+      const id = conversationOf(tab);
+      const title = titles.get(id) || undefined;
+      if (tab.view?.title !== title)
+        updateTab(tab.id, { view: { ...tab.view!, title } });
+    }
+    // eslint-disable-next-line react-hooks/exhaustive-deps -- the keys stand for the lists
+  }, [aiKey, titlesKey]);
+
+  // The tab brought to the front makes its conversation the live one.
+  const front = tabsRef.current.find((tab) => tab.id === activeTabId);
+  const frontConversation =
+    front && isAiTab(front) ? conversationOf(front) : null;
+  useEffect(() => {
+    if (scope && frontConversation && frontConversation !== DRAFT)
+      setLiveConversation(scope, frontConversation);
+  }, [scope, frontConversation]);
+}
+
+/** What opens a conversation in a tab (+, History, Quick Ask) and the AI
+ *  button, while shown. */
+function useAiCommands({
+  tabs,
+  scope,
+  workspaceRoot,
+  live,
+  setShown,
+  asked,
+}: {
+  tabs: TabState;
+  scope: string | null;
+  workspaceRoot: string | null;
+  live: string | null;
+  setShown: (shown: boolean) => void;
+  asked: MutableRefObject<{ id: string; beside: string } | null>;
+}) {
+  const { tabsRef, activeTabId } = tabs;
+  // A + (or History, Quick Ask): a conversation in a tab of its own, open
+  // in the folder's AI from now on; one already open comes to the front.
+  const liveRef = useRef(live);
+  liveRef.current = live;
+  useEffect(() => {
+    setConversationOpener((from, id = crypto.randomUUID(), docPath) => {
+      // Kept per document (no folder): one of another document's joins
+      // that document's tabs, shown once it comes to the front.
+      const home = conversationScope(docPath ?? null, workspaceRoot) ?? scope;
+      if (home && home !== scope) {
+        setLiveConversation(home, id);
+        setShown(true);
+        return true;
+      }
+      if (!scope) return false;
+      const open = tabsRef.current.find(
+        (tab) => isAiTab(tab) && conversationOf(tab) === id,
+      );
+      if (open) {
+        tabs.setActiveTabId(open.id);
+        return true;
+      }
+      asked.current = { id, beside: from ?? liveRef.current ?? DRAFT };
+      setLiveConversation(scope, id);
+      setShown(true);
+      return true;
+    });
+    return () => setConversationOpener(null);
+  }, [scope, workspaceRoot, tabs, tabsRef, setShown, asked]);
+
+  // The AI button, while shown.
+  useEffect(() => {
+    const press = () => {
+      const ai = tabsRef.current.filter(isAiTab);
+      const target =
+        ai.find((tab) => conversationOf(tab) === (live ?? DRAFT)) ?? ai[0];
+      if (!target) return setShown(false);
+      // A phone shows one island, whose front is the tab in use.
+      if (isPhoneLayout())
+        return activeTabId === target.id
+          ? setShown(false)
+          : tabs.setActiveTabId(target.id);
+      const pane = paneWithTab(windowLayout().root, target.id);
+      if (pane?.front !== target.id) return tabs.setActiveTabId(target.id);
+      const onlyAi = pane.tabs.every((id) =>
+        tabsRef.current.some((tab) => tab.id === id && isAiTab(tab)),
+      );
+      if (onlyAi) setShown(false);
+    };
+    return onAiPress(press);
+  }, [tabs, tabsRef, live, activeTabId, setShown]);
+}
+
 /**
  * The AI's conversations as tabs (desktop): while the AI is shown, one tab
  * per conversation open in the folder (a draft's while none is), first in
@@ -52,13 +172,7 @@ export function useAiTabs({
   shown: boolean;
   setShown: (shown: boolean) => void;
 }): void {
-  const open = useSyncExternalStore(onOpenConversations, () =>
-    scope ? openConversations(scope) : NONE,
-  );
-  const live = useSyncExternalStore(
-    (changed) => onLiveConversation(() => changed()),
-    () => (scope ? liveConversation(scope) : null),
-  );
+  const { open, live } = useConversations(scope);
   const history = useChatHistory();
   const had = useRef<ReadonlySet<string>>(new Set());
   // The window's first tabs: shown as it opens, the document stays in use.
@@ -68,7 +182,7 @@ export function useAiTabs({
 
   const wanted = !shown ? NONE : open.length ? open : [live ?? DRAFT];
   const titles = new Map(history.map((entry) => [entry.id, entry.title]));
-  const { tabsRef, setTabs, updateTab, activeTabId } = tabs;
+  const { tabsRef, setTabs, updateTab } = tabs;
   // What the effects below follow: the AI tabs, the conversations wanted
   // and History's names - not every render of the window.
   const aiTabs = tabsRef.current.filter(isAiTab);
@@ -153,76 +267,7 @@ export function useAiTabs({
     // eslint-disable-next-line react-hooks/exhaustive-deps -- the keys stand for the lists
   }, [aiKey, wantedKey, shown, scope]);
 
-  // Titles as History names them; a tab given a conversation not named yet
-  // keeps none of the last one's.
-  useEffect(() => {
-    for (const tab of tabsRef.current.filter(isAiTab)) {
-      const id = conversationOf(tab);
-      const title = titles.get(id) || undefined;
-      if (tab.view?.title !== title)
-        updateTab(tab.id, { view: { ...tab.view!, title } });
-    }
-    // eslint-disable-next-line react-hooks/exhaustive-deps -- the keys stand for the lists
-  }, [aiKey, titlesKey]);
+  useAiTabFollows(tabs, scope, titles, aiKey, titlesKey);
 
-  // The tab brought to the front makes its conversation the live one.
-  const front = tabsRef.current.find((tab) => tab.id === activeTabId);
-  const frontConversation =
-    front && isAiTab(front) ? conversationOf(front) : null;
-  useEffect(() => {
-    if (scope && frontConversation && frontConversation !== DRAFT)
-      setLiveConversation(scope, frontConversation);
-  }, [scope, frontConversation]);
-
-  // A + (or History, Quick Ask): a conversation in a tab of its own, open
-  // in the folder's AI from now on; one already open comes to the front.
-  const liveRef = useRef(live);
-  liveRef.current = live;
-  useEffect(() => {
-    setConversationOpener((from, id = crypto.randomUUID(), docPath) => {
-      // Kept per document (no folder): one of another document's joins
-      // that document's tabs, shown once it comes to the front.
-      const home = conversationScope(docPath ?? null, workspaceRoot) ?? scope;
-      if (home && home !== scope) {
-        setLiveConversation(home, id);
-        setShown(true);
-        return true;
-      }
-      if (!scope) return false;
-      const open = tabsRef.current.find(
-        (tab) => isAiTab(tab) && conversationOf(tab) === id,
-      );
-      if (open) {
-        tabs.setActiveTabId(open.id);
-        return true;
-      }
-      asked.current = { id, beside: from ?? liveRef.current ?? DRAFT };
-      setLiveConversation(scope, id);
-      setShown(true);
-      return true;
-    });
-    return () => setConversationOpener(null);
-  }, [scope, workspaceRoot, tabs, tabsRef, setShown]);
-
-  // The AI button, while shown.
-  useEffect(() => {
-    const press = () => {
-      const ai = tabsRef.current.filter(isAiTab);
-      const target =
-        ai.find((tab) => conversationOf(tab) === (live ?? DRAFT)) ?? ai[0];
-      if (!target) return setShown(false);
-      // A phone shows one island, whose front is the tab in use.
-      if (isPhoneLayout())
-        return activeTabId === target.id
-          ? setShown(false)
-          : tabs.setActiveTabId(target.id);
-      const pane = paneWithTab(windowLayout().root, target.id);
-      if (pane?.front !== target.id) return tabs.setActiveTabId(target.id);
-      const onlyAi = pane.tabs.every((id) =>
-        tabsRef.current.some((tab) => tab.id === id && isAiTab(tab)),
-      );
-      if (onlyAi) setShown(false);
-    };
-    return onAiPress(press);
-  }, [tabs, tabsRef, live, activeTabId, setShown]);
+  useAiCommands({ tabs, scope, workspaceRoot, live, setShown, asked });
 }
