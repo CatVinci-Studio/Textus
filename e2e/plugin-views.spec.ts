@@ -120,7 +120,7 @@ test("a text file no plugin opens shows read-only, not as Markdown to rewrite", 
   await expect(editor).toHaveAttribute("contenteditable", "false");
 });
 
-test("a plugin's page is in the UI's language, and changes with it", async ({
+test("a plugin's page is in the UI's language, and changes with it; a board's list moves by its head", async ({
   page,
 }) => {
   test.skip(!hasPlugin("catvinci.kanban"), "no plugins checkout");
@@ -128,7 +128,7 @@ test("a plugin's page is in the UI's language, and changes with it", async ({
     plugins: { "catvinci.kanban": permissions("catvinci.kanban") },
     folder: {
       "/work/notes/board.md":
-        "---\nkanban-plugin: board\n---\n\n## Todo\n\n- [ ] Outline\n",
+        "---\nkanban-plugin: board\n---\n\n## Todo\n\n- [ ] Outline\n\n## Done\n\n- [x] Title\n",
     },
   });
   await openPath(page, "/work/notes/board.md");
@@ -146,6 +146,25 @@ test("a plugin's page is in the UI's language, and changes with it", async ({
     window.dispatchEvent(new StorageEvent("storage", { key, newValue: next }));
   });
   await expect(frame.locator("html")).toHaveAttribute("lang", "de");
+  // The page kit's reorder: Done's head pulled before Todo.
+  const heads = frame.locator(".list-head");
+  const todo = (await heads.nth(0).boundingBox())!;
+  const done = (await heads.nth(1).boundingBox())!;
+  await page.mouse.move(done.x + 8, done.y + done.height / 2);
+  await page.mouse.down();
+  for (let x = done.x + 8; x > todo.x - 20; x -= 20)
+    await page.mouse.move(x, done.y + done.height / 2);
+  await page.mouse.up();
+  await expect
+    .poll(() =>
+      page.evaluate(
+        () =>
+          (window as unknown as { __devFs: Record<string, string> }).__devFs[
+            "/work/notes/board.md"
+          ],
+      ),
+    )
+    .toMatch(/## Done[\s\S]*## Todo/);
 });
 
 test("a plugin's sidebar list keeps a short count beside its label", async ({
