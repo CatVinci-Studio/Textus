@@ -90,6 +90,55 @@ it("drops when the buttons are found up, and from the first move once handed ove
   expect(end2).toHaveBeenCalledWith(4, 0, false, undefined);
 });
 
+it("follows a finger whose pressed node left the page, its moves held", () => {
+  const pill = document.createElement("div");
+  document.body.append(pill);
+  const end = vi.fn();
+  const move = vi.fn();
+  trackDrag({ button: 0, clientX: 0, clientY: 0, target: pill }, { move, end });
+  pointer("pointermove", 30);
+  pill.remove();
+  const at = (type: string, x: number) =>
+    pill.dispatchEvent(
+      Object.assign(
+        new MouseEvent(type, { clientX: x, buttons: 1, bubbles: true }),
+        { pointerId: 1 },
+      ),
+    );
+  at("pointermove", 60);
+  expect(move).toHaveBeenLastCalledWith(60, 0, expect.any(MouseEvent));
+  const pan = new Event("touchmove", { cancelable: true });
+  pill.dispatchEvent(pan);
+  expect(pan.defaultPrevented).toBe(true);
+  at("pointerup", 80);
+  expect(end).toHaveBeenCalledTimes(1);
+  expect(end).toHaveBeenCalledWith(80, 0, true, expect.any(MouseEvent));
+  // Heard once, though an attached node's events reach the window too.
+  const twice = vi.fn();
+  const row = document.createElement("div");
+  document.body.append(row);
+  trackDrag(
+    { button: 0, clientX: 0, clientY: 0, target: row },
+    { move: twice, end() {} },
+  );
+  row.dispatchEvent(
+    Object.assign(
+      new MouseEvent("pointermove", { clientX: 40, buttons: 1, bubbles: true }),
+      { pointerId: 1 },
+    ),
+  );
+  expect(twice).toHaveBeenCalledTimes(1);
+  pointer("pointerup", 40);
+  row.remove();
+
+  // A release never heard: the next press ends it, dropping nothing.
+  const lost = vi.fn();
+  trackDrag({ button: 0, clientX: 0, clientY: 0 }, { move() {}, end: lost });
+  pointer("pointermove", 50);
+  pointer("pointerdown", 200);
+  expect(lost).toHaveBeenCalledWith(50, 0, false, expect.any(MouseEvent));
+});
+
 it("keeps a long press's menu from taking the touch over while it follows a press", () => {
   const menu = () => {
     const e = new MouseEvent("contextmenu", {

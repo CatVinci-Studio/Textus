@@ -111,3 +111,39 @@ test.describe("searching on a phone", () => {
     await expect(hit).toBeInViewport();
   });
 });
+
+test.describe("dragging a tab by touch on a tablet", () => {
+  test.use({ ...TABLET, viewport: { width: 1024, height: 768 } });
+
+  test("let go at the island's edge, it opens an island there", async ({
+    page,
+    browserName,
+  }) => {
+    // A finger's own event stream, which stays with the node it began on.
+    test.skip(browserName !== "chromium", "touch input by CDP");
+    await openApp(page);
+    await page.locator(".tab-bar-add").first().tap();
+    await expect(page.locator(".tab-pill")).toHaveCount(2);
+    const cdp = await page.context().newCDPSession(page);
+    const touch = (type: string, x: number, y: number) =>
+      cdp.send("Input.dispatchTouchEvent", {
+        type,
+        touchPoints: type === "touchEnd" ? [] : [{ x, y }],
+      });
+    const pill = (await page.locator(".tab-pill").last().boundingBox())!;
+    const sheet = (await page.locator("section.island").first().boundingBox())!;
+    const from = { x: pill.x + pill.width / 2, y: pill.y + pill.height / 2 };
+    const to = { x: sheet.x + sheet.width - 30, y: sheet.y + sheet.height / 2 };
+    await touch("touchStart", from.x, from.y);
+    await page.waitForTimeout(450);
+    for (let i = 1; i <= 20; i++)
+      await touch(
+        "touchMove",
+        from.x + ((to.x - from.x) * i) / 20,
+        from.y + ((to.y - from.y) * i) / 20,
+      );
+    await page.waitForTimeout(200);
+    await touch("touchEnd", to.x, to.y);
+    await expect(page.locator(".main-pane > section.island")).toHaveCount(2);
+  });
+});
