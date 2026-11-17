@@ -112,7 +112,13 @@ function useKeptScroll(
     };
     // Only while it is shown: a hidden one has nothing to say.
     const keep = () => {
-      if (scroller.clientHeight === 0) return;
+      // A scroll the new width made is the observer's below to answer.
+      if (
+        scroller.clientHeight === 0 ||
+        (reading.current.width &&
+          scroller.clientWidth !== reading.current.width)
+      )
+        return;
       reading.current = {
         ...reading.current,
         top: scroller.scrollTop,
@@ -122,8 +128,24 @@ function useKeptScroll(
       window.clearTimeout(timer);
       timer = window.setTimeout(save, 300);
     };
+    // A new width (the device turned, an island resized) rewraps the
+    // text: the block that was at the top stays there, not the offset.
+    const rewrapped = new ResizeObserver(() => {
+      const { width, place } = reading.current;
+      const root = scroller.querySelector(".ProseMirror");
+      if (scroller.clientHeight === 0 || scroller.clientWidth === width) return;
+      if (place && root && width && !pending.current)
+        scrollToPlace(scroller, root, place);
+      reading.current = {
+        ...reading.current,
+        top: scroller.scrollTop,
+        width: scroller.clientWidth,
+      };
+    });
+    rewrapped.observe(scroller);
     scroller.addEventListener("scroll", keep, { passive: true });
     return () => {
+      rewrapped.disconnect();
       scroller.removeEventListener("scroll", keep);
       window.clearTimeout(timer);
     };
