@@ -35,3 +35,21 @@ exact version; [the reference](reference.md) shows them too.
   the plugins that read it - use its `location`.
 - Events are `onDid…` (after) or `onWill…` (before, a chance to change
   it); `register…` gives back something to `dispose()`.
+
+## Unreleased
+
+`appearance.supportsFrameTexture === true` means `appearance.setColors`
+accepts `options.frameTexture`: `{ opacity: 0.09, color: "black" }`.
+Opacity is a finite number from 0 to 1. Color is `"black"` or `"white"`;
+omitting it follows the window's light or dark scheme. The noise tile is
+bundled with Textus; plugin images and URLs remain forbidden.
+
+Supply `--ui-frame-paint` in the same call. The winning paint layer owns
+its texture; a later paint without texture replaces it, and disposing the
+layer restores the previous paint and texture. Other color layers leave
+it alone. A frame-only palette preserves other interface colors.
+
+This is a development API, not yet part of a released Textus version.
+Check the capability before using it on an older host. The return value
+of `appearance.colors()` includes Textus's texture image in the rendered
+paint and cannot be passed back to `setColors` as a plugin image.

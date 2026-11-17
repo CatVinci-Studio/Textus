@@ -944,17 +944,27 @@ type OpenColor =
   | "--tone-gray";
 ```
 
+## FrameTexture
+
+Bundled grain for the frame; no plugin images or network requests. Matches FrameTexture in src/theme/frame-texture.ts. Unreleased.
+
+| Member                       |                                                              |
+| ---------------------------- | ------------------------------------------------------------ |
+| `opacity: number`            | Grain opacity, from 0 to 1. Zero leaves the paint unchanged. |
+| `color?: "black" \| "white"` | Defaults to black in light mode, white in dark mode.         |
+
 ## Appearance
 
-From 1.6 (permission `appearance`): a palette over whichever theme is on. Only the colours the others are drawn from are open; borders, hovers and the like follow. Values are colours; `--ui-frame-paint` (the frame round the pages: bar, rail, sidebar) may also be a `linear-`, `radial-` or `conic-gradient(...)` of colours, laid across the whole window. No images, `url()` or `var()`. Text kept readable: below 4.5:1 on its background (or any of the paint's colours) it is moved toward ink or white. The user's Custom CSS still wins.
+From 1.6 (permission `appearance`): a palette over whichever theme is on. Only the colours the others are drawn from are open; borders, hovers and the like follow. Values are colours; `--ui-frame-paint` (the frame round the pages: bar, rail, sidebar) may also be a `linear-`, `radial-` or `conic-gradient(...)` of colours, laid across the whole window. No plugin images, `url()` or `var()`. When UI colours are supplied, text is kept readable; a frame-only layer leaves other surfaces alone: below 4.5:1 on its background (or any of the paint's colours) it is moved toward ink or white. The user's Custom CSS still wins.
 
 const layer = await textus.appearance.setColors( { "--ui-frame-paint": "linear-gradient(120deg, #f3d9c4, #d6dcec)" }, { scheme: "light" }, ); ctx.subscriptions.push(layer);
 
-| Member                                                                                                                           |                                                                                                                                                                                                                                    |
-| -------------------------------------------------------------------------------------------------------------------------------- | ---------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
-| `setColors(colors: Partial<Record<OpenColor, string>>, options?: { scheme?: "light" \| "dark" \| "both" }): Promise<Disposable>` | Lays `colors` over the theme, for light, dark or both (the default); disposing it, or the plugin stopping, takes it away. Several plugins: per colour the one last by id wins. Rejects naming the first colour or value not taken. |
-| `colors(): Promise<Record<OpenColor, string>>`                                                                                   | The open colours as the window shows them now (theme and every plugin's), as `rgb(...)`; the paint as set, or "". No permission.                                                                                                   |
-| `onDidChange: Event<{ theme: string; scheme: "light" \| "dark" }>`                                                               | The theme (its id, for keeping a palette per theme), the scheme or a plugin's colours changed.                                                                                                                                     |
+| Member                                                                                                                                                         |                                                                                                                                                                                                                                    |
+| -------------------------------------------------------------------------------------------------------------------------------------------------------------- | ---------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| `readonly supportsFrameTexture?: boolean`                                                                                                                      | Unreleased. Check === true before using frameTexture on older hosts.                                                                                                                                                               |
+| `setColors(colors: Partial<Record<OpenColor, string>>, options?: { scheme?: "light" \| "dark" \| "both"; frameTexture?: FrameTexture; }): Promise<Disposable>` | Lays `colors` over the theme, for light, dark or both (the default); disposing it, or the plugin stopping, takes it away. Several plugins: per colour the one last by id wins. Rejects naming the first colour or value not taken. |
+| `colors(): Promise<Record<OpenColor, string>>`                                                                                                                 | The open colours as the window shows them now (theme and every plugin's), as `rgb(...)`; the paint as rendered (including bundled texture), or "". No permission.                                                                  |
+| `onDidChange: Event<{ theme: string; scheme: "light" \| "dark" }>`                                                                                             | The theme (its id, for keeping a palette per theme), the scheme or a plugin's colours changed.                                                                                                                                     |
 
 ## JobRun
 
