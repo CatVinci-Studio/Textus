@@ -9,15 +9,25 @@ import {
 } from "./draw-when-visible";
 
 // A stand-in IntersectionObserver the test drives by hand.
-let observed: { el: Element; fire: (hit: boolean) => void }[] = [];
+let observed: {
+  el: Element;
+  fire: (...hits: boolean[]) => void;
+}[] = [];
 class FakeObserver {
   constructor(private callback: IntersectionObserverCallback) {}
   observe(el: Element) {
     observed.push({
       el,
-      fire: (hit) =>
+      // Several: one batch of reports for it, oldest first.
+      fire: (...hits) =>
         this.callback(
-          [{ isIntersecting: hit, target: el } as IntersectionObserverEntry],
+          hits.map(
+            (hit) =>
+              ({
+                isIntersecting: hit,
+                target: el,
+              }) as IntersectionObserverEntry,
+          ),
           this as unknown as IntersectionObserver,
         ),
     });
@@ -92,6 +102,17 @@ describe("drawWhileNear", () => {
     // An inline one keeps its width too, so its line doesn't rewrap.
     expect(el.style.display).toBe("inline-block");
     expect(el.style.width).toBe("0px");
+  });
+
+  it("gone and back in one batch, it stays drawn", () => {
+    vi.stubGlobal("IntersectionObserver", FakeObserver);
+    const editor = editorIn();
+    const el = editor.appendChild(document.createElement("div"));
+    const undraw = vi.fn();
+    drawWhileNear(el, editor, vi.fn(), undraw, true);
+    observed[0].fire(false, true);
+    expect(undraw).not.toHaveBeenCalled();
+    expect(el.hasAttribute(PENDING_ATTR)).toBe(false);
   });
 
   it("lets go of one taken out before it was ever near", () => {

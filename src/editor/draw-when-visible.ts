@@ -73,8 +73,13 @@ function holdSizes(boxes: HTMLElement[]) {
 }
 
 const onKeepIntersect = (entries: IntersectionObserverEntry[]) => {
+  // Gone and back within one batch (a section folded and opened): only
+  // where each is now counts.
+  const latest = new Map<Element, boolean>();
+  for (const { isIntersecting, target } of entries)
+    latest.set(target, isIntersecting);
   const leaving: HTMLElement[] = [];
-  for (const { isIntersecting, target } of entries) {
+  for (const [target, isIntersecting] of latest) {
     const entry = kept.get(target);
     if (!entry) continue;
     if (!target.isConnected) {

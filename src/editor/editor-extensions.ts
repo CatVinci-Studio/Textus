@@ -85,6 +85,7 @@ import { macNavigationPlugin } from "./keys/mac-navigation-plugin";
 import { editorExtensions } from "./extension-points";
 import { noRevealPlugin } from "./pointer-hold";
 import { pointerPlugins } from "./pointer-plugins";
+import { createBlockHandlesPlugin } from "./blocks/block-handles-plugin";
 import {
   cjkTaskInputPlugin,
   remarkEmptyTaskItems,
@@ -251,6 +252,13 @@ export function withEditorCore(
       .use(editing(editorExtensions().keyInput))
       .use(editing(macNavigationPlugin))
       .use(editing(pointerPlugins(settings)))
+      // A preview has no handles, but its fold carets come by a block's
+      // start as the editor's do.
+      .use(
+        options.preview
+          ? createBlockHandlesPlugin({ enabled: () => false })
+          : [],
+      )
       .use(editing(linuxImeEnterPlugin))
       .use(editing(iosEnterBeforeBlockPlugin))
       .use(editing(compositionPruneGuardPlugin))

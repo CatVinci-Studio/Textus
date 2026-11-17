@@ -437,3 +437,19 @@ test("zoomed in, the blocks making room slide from where they were drawn", async
   expect(startsAt).not.toBeNull();
   expect(Math.abs(startsAt! - second.y)).toBeLessThan(2);
 });
+
+test("in split view the preview's fold caret comes by a heading's start, with no ⋮⋮", async ({
+  page,
+}) => {
+  await openApp(page, { settings: { language: "en", viewMode: "split" } });
+  await page.locator(".cm-content").first().click();
+  await page.keyboard.insertText("## Part one\n\nSome text\n");
+  const heading = page.locator(".split-preview-editor h2");
+  await expect(heading).toHaveText(/Part one/);
+  const box = (await heading.boundingBox())!;
+  await page.mouse.move(box.x + 6, box.y + 10);
+  await expect(heading.locator(".heading-fold")).toHaveCSS("opacity", "1");
+  await expect(
+    page.locator(".split-preview-editor .block-handle"),
+  ).toBeHidden();
+});

@@ -63,7 +63,14 @@ test("jumped straight to the end, the formulas there are drawn at once; folded a
     timeout: 500,
   });
   await page.locator(".ProseMirror h2").click();
-  await page.keyboard.press("End");
+  // The editor has the click's caret before the keys go to it.
+  await expect
+    .poll(() =>
+      page.evaluate(
+        () => !!window.getSelection()?.anchorNode?.parentElement?.closest("h2"),
+      ),
+    )
+    .toBe(true);
   await page.keyboard.press(
     MAC ? "Meta+Alt+BracketLeft" : "Control+Shift+BracketLeft",
   );
