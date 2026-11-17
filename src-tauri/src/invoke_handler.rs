@@ -206,6 +206,7 @@ pub(crate) fn handler() -> impl Fn(tauri::ipc::Invoke<tauri::Wry>) -> bool + Sen
         crate::agents::agent_stop,
         #[cfg(desktop)]
         menu::set_plugin_menu,
+        #[cfg(desktop)]
         menu::set_plugin_exports,
         commands::tree_ops::tree_create_document,
         commands::tree_ops::tree_create_folder,
