@@ -23,6 +23,7 @@ var pickSearches = {};
 var pickSearchCount = 0;
 var pasteHandlerCount = 0;
 var decorationProviders = [];
+var diagnosticProviders = new Map();
 var completionProviders = new Map();
 // Asks the panel may still call off, by request.
 var completionAsks = new Map();

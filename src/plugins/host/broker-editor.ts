@@ -35,6 +35,11 @@ import {
   type PluginDecoration,
 } from "../contributions/decorations";
 import {
+  addDiagnosticProvider,
+  removeDiagnosticProviders,
+  type PluginDiagnostic,
+} from "../contributions/diagnostics";
+import {
   optionalStr,
   str,
   type Params,
@@ -227,6 +232,21 @@ export function editorHandlers(p: PluginScope) {
       );
     },
     "editor.unregisterDecorations": () => removeDecorationProvider(p.id),
+    "editor.registerDiagnostics": ({ id }: Params) => {
+      const name = str(id, "id");
+      addDiagnosticProvider(`${p.id}\n${name}`, {
+        plugin: p.id,
+        name: p.name(),
+        ask: (blocks, all, path) =>
+          p.request<PluginDiagnostic[]>("$diagnose", {
+            id: name,
+            blocks,
+            document: { blocks: all, path },
+          }),
+      });
+    },
+    "editor.unregisterDiagnostics": ({ id }: Params) =>
+      removeDiagnosticProviders((key) => key === `${p.id}\n${String(id)}`),
     "editor.captureKeys": (capture: Params | null) => {
       const held = setKeyCapture(
         p.id,
@@ -251,6 +271,7 @@ export function stopPluginEditor(plugin: string): void {
   releaseKeys(plugin);
   removeHoverProvider(plugin);
   removeDecorationProvider(plugin);
+  removeDiagnosticProviders((_key, provider) => provider.plugin === plugin);
   for (const remove of registeredBlockTypes.get(plugin)?.values() ?? [])
     remove();
   registeredBlockTypes.delete(plugin);

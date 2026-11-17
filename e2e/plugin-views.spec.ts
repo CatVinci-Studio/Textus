@@ -2,7 +2,7 @@ import { readFileSync } from "node:fs";
 import { join } from "node:path";
 import { expect, test } from "@playwright/test";
 import { pluginsCheckout } from "../vite.dev-plugins";
-import { mockInvoke, openApp } from "./helpers";
+import { mockInvoke, openApp, sourceOf } from "./helpers";
 import {
   hasPlugin,
   minimalDocx,
@@ -307,4 +307,27 @@ test("Git marks the blocks changed since the last commit in the margin", async (
     "aria-label",
     "Changed since the last commit. Click to commit.",
   );
+});
+
+test("a plugin's slip is underlined, explained on the slip card, and fixed from it", async ({
+  page,
+}) => {
+  test.skip(!hasPlugin("catvinci.markdown-lint"), "no plugins checkout");
+  await openWithPlugins(page, {
+    plugins: {
+      "catvinci.markdown-lint": permissions("catvinci.markdown-lint"),
+    },
+    folder: { "/work/notes/a.md": "# A\n\n## Notes:\n\nText\n" },
+  });
+  await openPath(page, "/work/notes/a.md");
+  const editor = page.locator('[data-active-tab="true"] .ProseMirror');
+  const slip = editor.locator(".plugin-issue");
+  await expect(slip).toHaveCount(1);
+  await slip.hover();
+  const card = page.locator(".grammar-popover");
+  await expect(card.locator(".grammar-kind")).toHaveText("Tidy");
+  await expect(card).toContainText("MD026");
+  await card.locator(".grammar-popover-apply").click();
+  await expect(slip).toHaveCount(0);
+  await expect.poll(() => sourceOf(page)).toBe("# A\n\n## Notes\n\nText");
 });

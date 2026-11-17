@@ -20,6 +20,9 @@ export interface GrammarPopoverInfo {
   kind: GrammarKind;
   /** Who found it (a plugin), named in place of the kind. */
   label?: string;
+  /** A fix other than a change of the words: its button's label, or the
+   *  plain Apply. */
+  otherFix?: { label?: string };
   /** Its source, as the underlines' registry names it. */
   source: string;
   /** How the card shows the fix when it differs from what is replaced (a
@@ -55,7 +58,7 @@ interface GrammarPopoverProps {
 
 /** "Change to “毕竟”" - or plain "Apply" for a fix that deletes, or one too
  *  long to name on a button. */
-export function applyLabel(
+function applyLabel(
   labels: Pick<GrammarPopoverLabels, "grammarApplyTo" | "grammarApply">,
   suggestion: string,
 ): string {
@@ -63,6 +66,15 @@ export function applyLabel(
   return s && [...s].length <= 16
     ? fill(labels.grammarApplyTo, { s })
     : labels.grammarApply;
+}
+
+/** The Apply button's words, for a fix there is. */
+export function fixLabel(
+  info: Pick<GrammarPopoverInfo, "otherFix" | "suggestion" | "shownSuggestion">,
+  labels: Pick<GrammarPopoverLabels, "grammarApplyTo" | "grammarApply">,
+): string {
+  if (info.otherFix) return info.otherFix.label ?? labels.grammarApply;
+  return applyLabel(labels, info.shownSuggestion ?? info.suggestion ?? "");
 }
 
 /** Who found the slip, or what kind it is. */
@@ -127,9 +139,9 @@ export function GrammarPopover({
         <div className="grammar-popover-error">{error}</div>
       ) : (
         <div className="grammar-popover-actions">
-          {info.suggestion !== undefined && (
+          {(info.suggestion !== undefined || info.otherFix) && (
             <button className="grammar-popover-apply" onClick={onApply}>
-              {applyLabel(labels, info.shownSuggestion ?? info.suggestion)}
+              {fixLabel(info, labels)}
               <kbd>Alt+Enter</kbd>
             </button>
           )}

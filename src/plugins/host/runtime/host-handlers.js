@@ -261,6 +261,12 @@ var handlers = {
     }
     return out;
   },
+  $diagnose: async function (params) {
+    var provider = diagnosticProviders.get(params.id);
+    if (!provider) return [];
+    var found = await provider.check(params.blocks, params.document);
+    return Array.isArray(found) ? plain(found) : [];
+  },
   $willSave: async function (params) {
     var current = params.text;
     for (var i = 0; i < willSave.length; i++) {

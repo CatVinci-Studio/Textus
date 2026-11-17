@@ -111,6 +111,16 @@ textus.editor = {
         quiet(call("editor.unregisterDecorations", {}));
     });
   },
+  registerDiagnostics: function (id, provider) {
+    var name = String(id);
+    diagnosticProviders.set(name, provider);
+    quiet(call("editor.registerDiagnostics", { id: name }));
+    return disposable(function () {
+      if (diagnosticProviders.get(name) !== provider) return;
+      diagnosticProviders.delete(name);
+      quiet(call("editor.unregisterDiagnostics", { id: name }));
+    });
+  },
   onDidChangeActive: on("activeDocument"),
   onDidChange: on("documentChange"),
   onDidChangeSelection: on("selection"),

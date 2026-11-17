@@ -277,6 +277,12 @@ the window bar that runs a command when clicked; one declared in
   `anchor` words in it. From API 1.8 a `"gutter"` mark sits in the margin
   right of a block (a dot, a character or the plugin's SVG), and with a
   `command` a click runs it. Start it with `onEditor`.
+- Check it: from API 1.8 `registerDiagnostics(id, { check(blocks,
+document) })` answers slips for the blocks in sight - `{ block, anchor,
+severity, message, fix }` - within 200 ms. Textus underlines them in the
+  severity's colour and explains each on the grammar check's card, with
+  Apply for a `fix` and Ignore; the text changes only when the user
+  applies one.
 - Help with it: `registerCompletion(id, provider)` for completions as you
   type, `registerHover({ provideHover(target) })` for a card over a link,
   a wikilink or a citation.

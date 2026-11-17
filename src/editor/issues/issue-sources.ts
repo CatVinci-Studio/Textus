@@ -25,6 +25,10 @@ export interface IssueSpec {
   rule?: string;
   /** Who found it, named on the card in place of the kind of slip. */
   label?: string;
+  /** A fix that isn't a change of the words (a block's Markdown made
+   *  anew): its button's label, and what applies it - false when the text
+   *  has moved on since. */
+  fix?: { label?: string; apply(view: EditorView): boolean };
 }
 
 interface IssueSource {
@@ -73,6 +77,11 @@ export function applyIssueKey(view: EditorView, event: KeyboardEvent): boolean {
   if (!selection.empty) return false;
   const deco = issueAt(view.state, selection.from);
   const spec = deco?.spec as IssueSpec | undefined;
+  if (spec?.fix) {
+    if (!spec.fix.apply(view)) return false;
+    event.preventDefault();
+    return true;
+  }
   const source = spec && issueSource(spec);
   if (!deco || !spec || !source || spec.suggestion === undefined) return false;
   if (

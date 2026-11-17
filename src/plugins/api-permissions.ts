@@ -25,6 +25,7 @@ const API_PERMISSIONS: readonly {
       "editor.getOutline",
       "editor.registerHover",
       "editor.registerDecorations",
+      "editor.registerDiagnostics",
       "editor.registerOutline",
       "export.willExport",
       "ai.registerInlineCompletion",

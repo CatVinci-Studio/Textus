@@ -741,6 +741,22 @@ declare global {
           document?: { blocks: Block[]; path?: string | null },
         ): Decoration[] | Promise<Decoration[]>;
       }): Disposable;
+      /** From 1.8: slips in the text (editor.read) - a Markdown rule
+       *  broken, a space missing - asked for the blocks in sight once the
+       *  document rests, with the whole document and its path. Answer
+       *  within 200 ms or that round is skipped. Each is underlined in its
+       *  severity's colour and explained on the grammar check's card,
+       *  which offers its `fix`; nothing is changed until the user applies
+       *  it. */
+      registerDiagnostics(
+        id: string,
+        provider: {
+          check(
+            blocks: Block[],
+            document: { blocks: Block[]; path: string | null },
+          ): Diagnostic[] | Promise<Diagnostic[]>;
+        },
+      ): Disposable;
       /** Another document came to the front (or none). */
       onDidChangeActive: Event<{ path: string | null }>;
       /** Its text changed: once typing pauses, not on every key. 1.1:
@@ -910,6 +926,21 @@ declare global {
       /** For "gutter", from 1.8: a command of the plugin's a click runs;
        *  without one the mark is only shown. */
       command?: { id: string; args?: unknown[] };
+    }
+
+    /** A slip a check found, from 1.8. */
+    interface Diagnostic {
+      block: string;
+      /** The words it is about, in the block's text; all of it without. */
+      anchor?: string;
+      severity: "error" | "warning" | "info";
+      /** What is wrong, in a sentence: on the card. */
+      message: string;
+      /** What the card offers to apply: the words `anchor` becomes ("" deletes
+       *  them), or the block's whole Markdown made anew, with its button's
+       *  label - a fix of the Markdown itself, such as a list marker's
+       *  spacing. Applied only if the block is as it was when checked. */
+      fix?: string | { markdown: string; label?: string };
     }
 
     /** A document about to be saved. */

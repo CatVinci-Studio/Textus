@@ -1,5 +1,5 @@
 import { useMemo } from "react";
-import { GrammarPopover, applyLabel, issueLabel } from "./GrammarPopover";
+import { GrammarPopover, fixLabel, issueLabel } from "./GrammarPopover";
 import type { useGrammarPopover } from "./useGrammarPopover";
 import { BottomCard } from "../../engine/controls/BottomCard";
 import { Presence } from "../../engine/motion/usePresence";
@@ -49,11 +49,11 @@ export function GrammarSuggestion({
             label={issueLabel(grammar.popover, grammarLabels)}
             actions={[
               { label: t.grammarIgnore, onSelect: grammar.ignore },
-              ...(fix === undefined
+              ...(fix === undefined && !grammar.popover.otherFix
                 ? []
                 : [
                     {
-                      label: applyLabel(grammarLabels, fix),
+                      label: fixLabel(grammar.popover, grammarLabels),
                       primary: true,
                       onSelect: () => {
                         if (!grammar.applyFix()) onStale();

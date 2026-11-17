@@ -2,7 +2,7 @@ import { Plugin, PluginKey } from "@milkdown/kit/prose/state";
 import { $prose } from "@milkdown/kit/utils";
 import { cachedDocument } from "../../editor/markdown/doc-markdown";
 import { emitPluginEvent, pluginsListen } from "../../plugins/app-bridge";
-import { inSight } from "./plugin-decorations";
+import { inSight } from "./rest-asking";
 
 /** How long scrolling rests before plugins hear what is in sight. */
 const SETTLE_MS = 200;

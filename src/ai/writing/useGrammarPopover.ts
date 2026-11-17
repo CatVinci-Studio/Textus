@@ -45,6 +45,7 @@ function popoverFor(
     kind: grammarKind(spec.original, spec.suggestion ?? "", spec.rule),
     label: spec.label,
     source: spec.source,
+    otherFix: spec.fix && { label: spec.fix.label },
     shownOriginal: shown?.original,
     shownSuggestion: shown?.suggestion,
     index: Math.max(0, index),
@@ -211,8 +212,20 @@ export function useGrammarPopover(
   const applyFix = useCallback((): boolean => {
     if (!popover) return false;
     const { suggestion, original } = popover;
-    if (suggestion === undefined) return false;
     let applied = false;
+    if (popover.otherFix) {
+      run((ctx) => {
+        const view = ctx.get(editorViewCtx);
+        const here = issueAt(view.state, popover.from);
+        const spec = here?.spec as IssueSpec | undefined;
+        applied = !!spec?.fix?.apply(view);
+        if (applied) focusInPlace(view);
+      });
+      if (applied) setPopover(null);
+      else setApplyError(getStaleMessage());
+      return applied;
+    }
+    if (suggestion === undefined) return false;
     run((ctx) => {
       const view = ctx.get(editorViewCtx);
       const { state } = view;

@@ -39,7 +39,8 @@
 }
 
 .grammar-kind-punctuation,
-.grammar-kind-rules {
+.grammar-kind-rules,
+.grammar-kind-plugin {
   background: color-mix(in srgb, var(--ui-accent) 12%, transparent);
   color: var(--ui-accent-text);
 }

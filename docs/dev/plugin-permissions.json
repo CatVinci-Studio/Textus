@@ -10,6 +10,7 @@
       "editor.getOutline",
       "editor.registerHover",
       "editor.registerDecorations",
+      "editor.registerDiagnostics",
       "editor.registerOutline",
       "export.willExport",
       "ai.registerInlineCompletion",
