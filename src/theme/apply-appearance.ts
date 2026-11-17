@@ -1,6 +1,6 @@
 import { androidBridge } from "../platform/android-bridge";
 import { iosFiles } from "../platform/ios-files";
-import { useEffect } from "react";
+import { useEffect, useLayoutEffect } from "react";
 import { useLatest } from "../utils/hooks/useLatest";
 import { themes, windowBarIpc } from "../platform/ipc";
 import { readBoot } from "../storage/boot";
@@ -100,8 +100,9 @@ export function isEffectiveDark(themeMode: ThemeMode): boolean {
  *  set on <html>. */
 function usePageAttributes(settings: Settings): void {
   // The layout on <html> too: its lengths (layout-tokens.css) reach what
-  // is drawn outside the window's shell - a lifted island, a menu.
-  useEffect(() => {
+  // is drawn outside the window's shell - a lifted island, a menu. Before
+  // the first paint: without it the frame's edges and gaps are unset.
+  useLayoutEffect(() => {
     document.documentElement.dataset.layout = settings.layout;
   }, [settings.layout]);
 

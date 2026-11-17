@@ -38,6 +38,14 @@ window.__textusBoot = function (boot, themeCss) {
       );
     if (settings.theme === "light" || settings.theme === "dark")
       root.setAttribute("data-theme", settings.theme);
+    // The frame's edges and gaps hang on it (layout-tokens.css); the first
+    // of the table is the default.
+    var layouts = tables.layouts || [];
+    if (layouts.length)
+      root.setAttribute(
+        "data-layout",
+        layouts.indexOf(settings.layout) >= 0 ? settings.layout : layouts[0],
+      );
     if ((tables.contentWidths || []).indexOf(settings.contentWidth) >= 0)
       root.setAttribute("data-content-width", settings.contentWidth);
     // But 1, the stylesheet's own default, and its preset (ui-sizes.css);

@@ -25,5 +25,6 @@
     "relaxed": 2.05
   },
   "contentThemes": ["paper", "slate", "forest", "prism"],
-  "contentWidths": ["standard", "full"]
+  "contentWidths": ["standard", "full"],
+  "layouts": ["islands", "classic"]
 }

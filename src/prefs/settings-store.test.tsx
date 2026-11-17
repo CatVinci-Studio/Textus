@@ -2,6 +2,7 @@
 import { localeOf } from "../i18n/strings";
 import TABLES from "./appearance-tables.json";
 import { BUILTIN_CONTENT_THEMES } from "./builtin-themes";
+import { DEFAULT_SETTINGS } from "./settings-types";
 import { act, cleanup, render, screen } from "@testing-library/react";
 import { useEffect, useLayoutEffect } from "react";
 import {
@@ -404,6 +405,7 @@ describe("interface text size", () => {
   it("is applied by the boot script for the same sizes", () => {
     // The table the boot script is handed (settings/app.rs) is this one.
     expect(TABLES.uiTextScales).toEqual([...UI_TEXT_SCALES]);
+    expect(TABLES.layouts[0]).toBe(DEFAULT_SETTINGS.layout);
     expect(TABLES.contentThemes).toEqual(
       BUILTIN_CONTENT_THEMES.map((theme) => theme.id).filter(
         (id) => id !== "default",
