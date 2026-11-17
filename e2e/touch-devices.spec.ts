@@ -125,7 +125,11 @@ test.describe("dragging a tab by touch on a tablet", () => {
     await page.locator(".tab-bar-add").first().tap();
     await expect(page.locator(".tab-pill")).toHaveCount(2);
     const cdp = await page.context().newCDPSession(page);
-    const touch = (type: string, x: number, y: number) =>
+    const touch = (
+      type: "touchStart" | "touchMove" | "touchEnd",
+      x: number,
+      y: number,
+    ) =>
       cdp.send("Input.dispatchTouchEvent", {
         type,
         touchPoints: type === "touchEnd" ? [] : [{ x, y }],
@@ -183,9 +187,11 @@ test.describe("a tap in the page's margin on a tablet", () => {
       .boundingBox())!;
     const table = (await editor.locator("table").boundingBox())!;
     const column = (await editor.boundingBox())!;
+    const sheet = (await page.locator(".editor-scroll:visible").boundingBox())!;
     const gap = (line.y + line.height + table.y) / 2;
-    expect(column.x).toBeGreaterThan(12);
-    await page.touchscreen.tap(column.x / 2, gap);
+    // In the page's own margin, left of the text column.
+    expect(column.x - sheet.x).toBeGreaterThan(12);
+    await page.touchscreen.tap((sheet.x + column.x) / 2, gap);
     await page.keyboard.type("k");
     await expect(editor.locator("p").first()).toHaveText("abovek");
   });
