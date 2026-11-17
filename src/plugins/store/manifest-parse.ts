@@ -381,7 +381,10 @@ export function parseContributes(raw: unknown, id: string): Contributes {
     ),
     HOVER_KINDS,
   );
+  if (c.blockMenu !== undefined && typeof c.blockMenu !== "boolean")
+    throw new ManifestError("contributes.blockMenu is true or false.");
   return {
+    blockMenu: c.blockMenu === true,
     aiTools,
     completions,
     embeds,

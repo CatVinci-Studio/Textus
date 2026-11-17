@@ -1,5 +1,10 @@
 import { afterEach, beforeAll, expect, it } from "vitest";
-import { addSlashItems, slashPanelItems } from "./slash-commands";
+import {
+  addSlashItems,
+  askBlockMenu,
+  blockTypeList,
+  slashPanelItems,
+} from "./slash-commands";
 import { pinyinEngine } from "../../utils/pinyin";
 import { preparePinyin, prepareList, rankList } from "../../utils/list-filter";
 import { matchSources } from "../../editor/completion/panel-rows";
@@ -49,4 +54,26 @@ it("replaces only the / word, not the space before it", () => {
   );
   expect(match?.match).toBe("/tab");
   expect(match?.query).toBe("tab");
+});
+
+it("lists Textus's blocks while a plugin asks, then plugins' own", () => {
+  expect(labels("/table")).toEqual([]);
+  const stop = askBlockMenu("test.quick");
+  remove = addSlashItems("test.kanban", [item("Board")], "test.kanban#board");
+  expect(labels("/table")).toEqual(["Table"]);
+  expect(labels("/h1")).toEqual(["Heading 1"]);
+  expect(labels("/board")).toEqual(["Board"]);
+  const types = blockTypeList();
+  expect(types[0]).toEqual({
+    id: "paragraph",
+    label: "Text",
+    source: "textus",
+  });
+  expect(types.at(-1)).toEqual({
+    id: "board",
+    label: "Board",
+    source: "test.kanban",
+  });
+  stop();
+  expect(labels("/table")).toEqual([]);
 });

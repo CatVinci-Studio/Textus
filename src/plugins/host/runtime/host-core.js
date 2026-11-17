@@ -14,6 +14,7 @@ var codeBlockProviders = new Map();
 var hoverProviders = [];
 var pasteHandlers = {};
 var outlineProviders = [];
+var blockTypes = new Map();
 var pickSearches = {};
 var pickSearchCount = 0;
 var pasteHandlerCount = 0;

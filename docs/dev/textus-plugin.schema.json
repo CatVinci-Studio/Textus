@@ -426,6 +426,10 @@
             }
           }
         },
+        "blockMenu": {
+          "type": "boolean",
+          "description": "The / menu lists Textus's own blocks (headings, lists, quote, callout, code, math, table, divider) while this plugin is on."
+        },
         "settingsPage": {
           "type": "object",
           "required": ["title"],

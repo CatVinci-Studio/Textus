@@ -66,6 +66,27 @@ textus.editor = {
       quiet(call("editor.unregisterPasteHandler", { id: id }));
     });
   },
+  // A block the / menu offers, named `id` among the plugin's own; its
+  // insert() puts it in at the caret.
+  registerBlockType: function (id, type) {
+    id = String(id);
+    blockTypes.set(id, type);
+    quiet(
+      call("editor.registerBlockType", {
+        id: id,
+        label: String(type.label),
+        keywords: type.keywords ? String(type.keywords) : undefined,
+      }),
+    );
+    return disposable(function () {
+      if (blockTypes.get(id) !== type) return;
+      blockTypes.delete(id);
+      quiet(call("editor.unregisterBlockType", { id: id }));
+    });
+  },
+  blockTypes: function () {
+    return call("editor.blockTypes");
+  },
   registerOutline: function (provider) {
     outlineProviders.push(provider);
     quiet(call("editor.registerOutline", {}));

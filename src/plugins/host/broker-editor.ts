@@ -1,3 +1,4 @@
+import { addSlashItems, blockTypeList } from "../contributions/slash-commands";
 import { isRecord } from "../../utils/is-record";
 import { fill } from "../../i18n/fill";
 import {
@@ -115,7 +116,13 @@ function editOf(
  * or as a proposal, going to a place in it, and what it adds while the user
  * types (hover cards, marks, the keyboard).
  */
+/** The block types each plugin registered, each with what takes it away. */
+const registeredBlockTypes = new Map<string, Map<string, () => void>>();
+
 export function editorHandlers(p: PluginScope) {
+  const blockTypes =
+    registeredBlockTypes.get(p.id) ??
+    registeredBlockTypes.set(p.id, new Map()).get(p.id)!;
   // Each call's permission is checked before it runs (api-permissions.ts).
   const doc = getActiveDocument;
   const open = () => {
@@ -175,6 +182,35 @@ export function editorHandlers(p: PluginScope) {
         p.request<unknown>("$provideOutline", { blocks }),
       ),
     "editor.unregisterOutline": () => removeOutlineProvider(p.id),
+    "editor.blockTypes": () => blockTypeList(),
+    "editor.registerBlockType": ({ id, label, keywords }: Params) => {
+      const type = str(id, "id");
+      blockTypes.get(type)?.();
+      blockTypes.set(
+        type,
+        addSlashItems(
+          p.id,
+          [
+            {
+              label: str(label, "label"),
+              detail: p.name(),
+              keywords: typeof keywords === "string" ? keywords : undefined,
+              shown: () => true,
+              run: () =>
+                void p
+                  .request("$insertBlockType", { id: type })
+                  .catch(() => {}),
+            },
+          ],
+          `${p.id}#${type}`,
+        ),
+      );
+    },
+    "editor.unregisterBlockType": ({ id }: Params) => {
+      const type = str(id, "id");
+      blockTypes.get(type)?.();
+      blockTypes.delete(type);
+    },
     "editor.registerHover": () => {
       addHoverProvider(
         p.id,
@@ -215,4 +251,7 @@ export function stopPluginEditor(plugin: string): void {
   releaseKeys(plugin);
   removeHoverProvider(plugin);
   removeDecorationProvider(plugin);
+  for (const remove of registeredBlockTypes.get(plugin)?.values() ?? [])
+    remove();
+  registeredBlockTypes.delete(plugin);
 }

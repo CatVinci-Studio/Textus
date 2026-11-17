@@ -679,6 +679,21 @@ declare global {
         pattern: RegExp | string,
         provide: (text: string) => string | null | Promise<string | null>,
       ): Disposable;
+      /** The blocks the `/` menu can offer now: Textus's own (`source`
+       *  "textus": its id as `textus.insertBlock` takes it) and plugins'.
+       *  From 1.8. */
+      blockTypes(): Promise<{ id: string; label: string; source: string }[]>;
+      /** A block of the plugin's own in the `/` menu: `insert` puts it in at
+       *  the caret (with the plugin's own calls, which need their
+       *  permissions). `keywords` find it too ("kanban board"). From 1.8. */
+      registerBlockType(
+        id: string,
+        type: {
+          label: string;
+          keywords?: string;
+          insert(): void | Promise<void>;
+        },
+      ): Disposable;
       /** From 1.6 (editor.read): rows added to the outline of the document
        *  in front, under its headings - a screenplay's scenes, a novel's
        *  characters - each going to its block when clicked. Asked with its

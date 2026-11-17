@@ -29,7 +29,7 @@ import {
 } from "../store/plugin-records";
 import { evaluateWhen, type WhenContext } from "./when";
 import { addCodeBlockLanguage } from "./code-blocks";
-import { addSlashItems } from "./slash-commands";
+import { addSlashItems, askBlockMenu } from "./slash-commands";
 import { pluginKey } from "./plugin-keys";
 import { claim, ownedClaims } from "./owners";
 import { addAgents } from "./agents";
@@ -128,6 +128,7 @@ export function applyContributions(
           })),
       ),
     );
+  if (manifest.contributes.blockMenu) undo.push(askBlockMenu(id));
   const slashItems = menus["editor/slash"] ?? [];
   if (slashItems.length)
     undo.push(

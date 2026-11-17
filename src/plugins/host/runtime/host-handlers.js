@@ -185,6 +185,10 @@ var handlers = {
     var controller = embedAsks.get(params.request);
     if (controller) controller.abort();
   },
+  $insertBlockType: async function (params) {
+    var type = blockTypes.get(params.id);
+    if (type) await type.insert();
+  },
   $provideOutline: async function (params) {
     var all = [];
     for (var i = 0; i < outlineProviders.length; i++) {

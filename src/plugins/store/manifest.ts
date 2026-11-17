@@ -295,6 +295,8 @@ export interface Contributes {
   agents: AgentContribution[];
   /** Suggested, once, for a document with these. */
   suggestFor: SuggestKind[];
+  /** The `/` menu lists Textus's own blocks while this plugin is on. */
+  blockMenu: boolean;
 }
 
 export interface PluginManifest {
