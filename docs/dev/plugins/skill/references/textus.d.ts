@@ -1288,6 +1288,10 @@ declare global {
         },
       ): Promise<string>;
       tags(): Promise<{ tag: string; count: number }[]>;
+      /** Sets the box of the task at `location` (a Task's) to `status`:
+       *  "x" done, " " open, or any one character. Needs files.write.
+       *  From 1.8. */
+      setTask(location: Location, status: string): Promise<void>;
       tasks(filter?: {
         done?: boolean;
         path?: string;
@@ -1358,7 +1362,10 @@ declare global {
 
     interface Task {
       text: string;
+      /** Anything but a space in its box. */
       done: boolean;
+      /** The character in its box: " ", "x", "-", "/"... From 1.8. */
+      status: string;
       /** From 📅 2026-11-01 or due:2026-11-01. */
       due: string | null;
       tags: string[];

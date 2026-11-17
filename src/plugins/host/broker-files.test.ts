@@ -9,6 +9,7 @@ vi.mock("../app-bridge", async (importOriginal) => ({
   }),
 }));
 
+const disk = vi.hoisted(() => new Map<string, string>());
 vi.mock("../../platform/ipc", async (importOriginal) => {
   const real = await importOriginal<typeof import("../../platform/ipc")>();
   return {
@@ -21,6 +22,16 @@ vi.mock("../../platform/ipc", async (importOriginal) => {
           ? null
           : { path: `\\\\?\\C:\\notes\\${path}` },
       fsCreate: async () => {},
+      fsReadVersioned: async (_id: string, _root: string, path: string) => ({
+        text: disk.get(path) ?? "",
+        token: "t",
+      }),
+      fsWriteIf: async (
+        _id: string,
+        _root: string,
+        path: string,
+        text: string,
+      ) => (disk.set(path, text), true),
     },
   };
 });
@@ -114,4 +125,21 @@ it("keeps a folder convention only as one of what Textus reads", async () => {
   await expect(set({ key: "attachments", value: "x" })).rejects.toThrow();
   await expect(set({ key: "toString", value: "x" })).rejects.toThrow();
   expect(kept).toHaveLength(2);
+});
+
+it("sets a task's box on its line and nothing else", async () => {
+  const scope = { id: "p", root: () => "/notes" } as PluginScope;
+  const files = fileHandlers(scope);
+  disk.set("todo.md", "# Today\n- [ ] milk\n  1. [x] eggs [later]\n");
+  await files["files.setTask"]({ path: "todo.md", line: 1, status: "x" });
+  await files["files.setTask"]({ path: "todo.md", line: 2, status: "/" });
+  expect(disk.get("todo.md")).toBe(
+    "# Today\n- [x] milk\n  1. [/] eggs [later]\n",
+  );
+  await expect(
+    files["files.setTask"]({ path: "todo.md", line: 0, status: "x" }),
+  ).rejects.toThrow("No task on line 0.");
+  await expect(
+    files["files.setTask"]({ path: "todo.md", line: 1, status: "xx" }),
+  ).rejects.toThrow("status is one character.");
 });

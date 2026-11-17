@@ -35,6 +35,8 @@ pub struct LinkMeta {
 pub struct TaskMeta {
     text: String,
     done: bool,
+    /// The character in its brackets: " ", "x", "-", "/" and the like.
+    status: String,
     due: Option<String>,
     tags: Vec<String>,
     line: u32,
@@ -231,6 +233,7 @@ pub fn parse_document(path: &str, rel: &str, text: &str) -> DocumentMeta {
                 tags: tags_in(&task_text),
                 text: task_text,
                 done: &t[1] != " ",
+                status: t[1].to_string(),
                 due,
                 line: line_no,
             });

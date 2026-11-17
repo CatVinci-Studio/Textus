@@ -67,6 +67,10 @@ function placeRoot(p: PluginScope, scope: StoreScope): string | null {
   return p.folder();
 }
 
+/** A task line split around the character in its box (the index's
+ *  reading: a list marker, then `[c]`). */
+const TASK_BOX = /^(\s*(?:[-*+]|\d+[.)])\s+\[)[^\]](\][\s\S]*)$/;
+
 /** A token for the version of a document in a tab. */
 const TAB_TOKEN = "tab:";
 
@@ -313,6 +317,21 @@ export function fileHandlers(p: PluginScope) {
       return change(str(path, "path"), (text) =>
         writeFrontmatterFull(text, frontmatter as Frontmatter),
       );
+    },
+    // A task's box set to one character, on the line the index gave.
+    "files.setTask": async ({ path, line, status }: Params) => {
+      write();
+      const mark = str(status, "status");
+      if ([...mark].length !== 1 || mark === "]" || /[\r\n]/.test(mark))
+        throw new Error("status is one character.");
+      const at = typeof line === "number" ? line : -1;
+      return change(str(path, "path"), (text) => {
+        const lines = text.split("\n");
+        const task = TASK_BOX.exec(lines[at] ?? "");
+        if (!task) throw new Error(`No task on line ${at}.`);
+        lines[at] = task[1] + mark + task[2];
+        return lines.join("\n");
+      });
     },
     "files.willSave": ({ on }: Params) => {
       setWillSave(p.id, on === true, (request) =>

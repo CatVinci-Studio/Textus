@@ -87,13 +87,15 @@
       "files.trash",
       "files.createFolder",
       "files.frontmatterSet",
+      "files.setTask",
       "files.setConvention",
       "files.blockId",
       "files.willSave",
       "webview.writeFile",
       "files.process",
       "files.frontmatter.update",
-      "files.onWillSave"
+      "files.onWillSave",
+      "metadata.setTask"
     ]
   },
   {

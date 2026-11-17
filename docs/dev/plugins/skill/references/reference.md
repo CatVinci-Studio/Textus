@@ -738,6 +738,7 @@ A kind of periodic note: its folder (full path), file name format (moment.js tok
 | `resolveNote(link: string, from: string): Promise<ResolvedLink \| null>`                                                                                                       | Where a link goes, exactly as a click takes it: `link` as written - "[[Note#^id\|alias]]", "![[Note#Heading]]", "[[#^id]]", or a Markdown link's target "Note.md#my-heading" / "../a/Note" - from the document `from` (needed for relative links and same-note anchors). null when `link` is no link to a file (a web URL). From 1.3.9 (files.read).   |
 | `linkTo(to: string, from: string, options?: { heading?: string; block?: string; alias?: string; style?: "wiki" \| "markdown"; embed?: boolean; }): Promise<string>`            | The link Textus writes to `to` from `from`: the folder's style (in an Obsidian vault, its "new link format" and wiki or Markdown links; `[[wiki]]` by the shortest name elsewhere), with `#heading`, `#^block` and `\|alias` as given - `[[#Heading]]` within one note. `style` overrides wiki or Markdown; `embed` adds "!". From 1.3.9 (files.read). |
 | `tags(): Promise<{ tag: string; count: number }[]>`                                                                                                                            |                                                                                                                                                                                                                                                                                                                                                        |
+| `setTask(location: Location, status: string): Promise<void>`                                                                                                                   | Sets the box of the task at `location` (a Task's) to `status`: "x" done, " " open, or any one character. Needs files.write. From 1.8.                                                                                                                                                                                                                  |
 | `tasks(filter?: { done?: boolean; path?: string; tag?: string; }): Promise<Task[]>`                                                                                            |                                                                                                                                                                                                                                                                                                                                                        |
 | `search(query: string, options?: { limit?: number }): Promise<{ hits: (Location & { rel: string; line: number; text: string; location: Location; })[]; truncated: boolean; }>` | The documents' lines holding `query`, ignoring case.                                                                                                                                                                                                                                                                                                   |
 | `onDidChange: Event<{ paths: string[] }>`                                                                                                                                      | Documents were added, changed or removed.                                                                                                                                                                                                                                                                                                              |
@@ -773,15 +774,16 @@ A kind of periodic note: its folder (full path), file name format (moment.js tok
 
 ## Task
 
-| Member                |                                       |
-| --------------------- | ------------------------------------- |
-| `text: string`        |                                       |
-| `done: boolean`       |                                       |
-| `due: string \| null` | From 📅 2026-11-01 or due:2026-11-01. |
-| `tags: string[]`      |                                       |
-| `path: string`        |                                       |
-| `line: number`        |                                       |
-| `location: Location`  |                                       |
+| Member                |                                                           |
+| --------------------- | --------------------------------------------------------- |
+| `text: string`        |                                                           |
+| `done: boolean`       | Anything but a space in its box.                          |
+| `status: string`      | The character in its box: " ", "x", "-", "/"... From 1.8. |
+| `due: string \| null` | From 📅 2026-11-01 or due:2026-11-01.                     |
+| `tags: string[]`      |                                                           |
+| `path: string`        |                                                           |
+| `line: number`        |                                                           |
+| `location: Location`  |                                                           |
 
 ## Net
 

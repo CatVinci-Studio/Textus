@@ -314,6 +314,8 @@ export type TaskMeta = TaskMeta_Serialize | TaskMeta_Deserialize;
 export type TaskMeta_Deserialize = {
 	text: string,
 	done: boolean,
+	/**  The character in its brackets: " ", "x", "-", "/" and the like. */
+	status: string,
 	due?: string | null,
 	tags: string[],
 	line: number,
@@ -322,6 +324,8 @@ export type TaskMeta_Deserialize = {
 export type TaskMeta_Serialize = {
 	text: string,
 	done: boolean,
+	/**  The character in its brackets: " ", "x", "-", "/" and the like. */
+	status: string,
 	due: string | null,
 	tags: string[],
 	line: number,

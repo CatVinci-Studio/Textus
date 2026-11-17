@@ -37,6 +37,15 @@ textus.metadata = {
   tasks: function (filter) {
     return call("metadata.tasks", plain(filter || {}));
   },
+  // The task at `location` (from tasks()) marked with `status`: "x" done,
+  // " " open, or another character a task plugin uses.
+  setTask: function (location, status) {
+    return call("files.setTask", {
+      path: String(location && location.path),
+      line: Number(location && location.line),
+      status: String(status),
+    });
+  },
   search: function (query, options) {
     return call("metadata.search", {
       query: String(query),
