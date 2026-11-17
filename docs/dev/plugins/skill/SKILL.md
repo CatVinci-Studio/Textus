@@ -43,11 +43,13 @@ messages. The full API is in [references/textus.d.ts](references/textus.d.ts)
   with it.
 - `engines.textus` is the oldest Textus with every call the code makes.
   `dates`, `templates`, `files.appSettings` and `layout.panels` need
-  `">=1.3.10"`.
+  `">=1.3.10"`; API 1.8's calls and manifest keys (below) need
+  `">=1.4.4-rc.1"`.
 - `permissions` lists only what the code uses: `editor.read`,
   `editor.write`, `editor.propose`, `editor.input`, `files.read`,
   `files.write` (includes reading), `project.data`, `clipboard`,
-  `notifications`, `ai.tools`, `network:<host>`. A call without its
+  `notifications`, `background`, `ai.tools`, `ai.model`, `comments`,
+  `appearance`, `agents`, `git.commit`, `network:<host>`. A call without its
   permission fails; a completion without `editor.read` is silently left
   out.
 - A menu item's `when` reads only `editorHasSelection`, `documentOpen`,
@@ -55,6 +57,9 @@ messages. The full API is in [references/textus.d.ts](references/textus.d.ts)
   `resourcePath`, `isMac`, `view == <id>`.
 - Strings go in `l10n` per language and are named `%key%` in the
   manifest; `textus.l10n.t(key)` in the code.
+- Without code (1.8): `contributes.snippets` (`{ label, body }`, Markdown
+  the `/` menu puts in, `$0` the caret) and `contributes.walkthroughs`
+  (first steps on the plugin's page in Settings).
 
 ## The code
 
@@ -83,6 +88,15 @@ exports.activate = function (ctx) {
   `textus.dates.parse(text, format)`, and
   `textus.templates.fill(text, { title, values, date, format })` fill
   Obsidian's `{{date}}`-style templates and Templater's common tags.
+- API 1.8 adds, each in references/textus.d.ts: `ui.registerContextMenu`
+  (right-click items worked out as the menu opens),
+  `editor.registerBlockType` (a block in the `/` menu),
+  `editor.registerDiagnostics` (slips underlined with a fix, on the grammar
+  check's card), decorations' `"gutter"` marks, `editor.registerSyntax`
+  (inline syntax shown as it means, preview), `export.registerFormat`,
+  `textus.history`, `textus.comments` (margin notes, preview),
+  `ai.complete` (the user's model, preview) and
+  `ai.registerInlineCompletion`. Use them rather than drawing your own.
 - Data: `ctx.storage.global` (Textus's config folder),
   `ctx.storage.project` (the open folder, needs `project.data`),
   `ctx.storage.document(path)`; settings from `contributes.settings` via

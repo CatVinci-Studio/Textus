@@ -28,7 +28,10 @@ of typing.
 1. Start from an example in textus-plugins'
    [`examples/`](https://github.com/CatVinci-Studio/textus-plugins/tree/main/examples):
    `hello` (a command and a sidebar list), `page` (a sidebar page of its
-   own), `code-block` or `ai-tool`. In a clone of that repository,
+   own), `code-block`, `ai-tool`, and from API 1.8 `ai-model` (the user's
+   model, grey-text completion), `export-format` (a format in File ›
+   Export, a right-click item) and `syntax` (inline syntax, snippets, a
+   walkthrough). In a clone of that repository,
    `node packages/create-textus-plugin/index.mjs my-plugin --from page --id jane.my-plugin`
    copies one with your id; `node packages/textus-plugin/cli.mjs check my-plugin`
    says what Textus would refuse or ignore in it. `packages/textus-plugin`
