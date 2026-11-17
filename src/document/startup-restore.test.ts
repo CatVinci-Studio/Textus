@@ -26,6 +26,7 @@ vi.mock("../platform/ipc", () => ({
   fs: {
     fileMtimeMs: async (path: string) => (ipc.gone.has(path) ? null : 1),
   },
+  session: { addRecentFile: async () => {} },
   drafts: {
     takeDraftSnapshots: ipc.takeDraftSnapshots,
     saveDraftSnapshot: ipc.saveDraftSnapshot,
@@ -53,6 +54,15 @@ vi.mock("../platform/capabilities", async (importOriginal) => ({
   },
 }));
 vi.mock("./ios-recents", () => ({ lastIOSDocument }));
+// A database plugin opens .base files.
+vi.mock("../plugins/manager", () => ({ loadPlugins: async () => {} }));
+vi.mock("../plugins/store/plugin-lookup", () => ({
+  customEditorFor: (path: string) =>
+    path.endsWith(".base")
+      ? { plugin: "db", viewType: "db.table", title: "all.base" }
+      : null,
+  customEditorForContent: () => null,
+}));
 vi.mock("./doc-tabs", async (importOriginal) => ({
   ...(await importOriginal<typeof import("./doc-tabs")>()),
   readDocFromDisk: vi.fn(async (path: string) => ({
@@ -593,5 +603,34 @@ describe("startup restore into the initial tab", () => {
       resavedAs.find((id) => id !== "initial"),
     );
     localStorage.clear();
+  });
+  it("and a file a plugin showed in front comes back in front, the plugin's tab again", async () => {
+    Object.assign(platform, {
+      canUseWindows: false,
+      hasAppMenu: false,
+      isIOSApp: true,
+    });
+    const last = lastIOSDocument.getMockImplementation();
+    lastIOSDocument.mockResolvedValue(null);
+    localStorage.setItem(
+      "textus-tab-order",
+      JSON.stringify({
+        keys: ["path:/docs/a.md", "path:/docs/all.base"],
+        active: "path:/docs/all.base",
+      }),
+    );
+    const { tabs } = await restore();
+    await waitFor(() =>
+      expect(tabs().find((tab) => tab.id === "initial")).toMatchObject({
+        path: null,
+        view: { plugin: "db", kind: "editor", resource: "/docs/all.base" },
+      }),
+    );
+    expect(tabs().map((tab) => tab.path ?? tab.view?.resource)).toEqual([
+      "/docs/a.md",
+      "/docs/all.base",
+    ]);
+    localStorage.clear();
+    lastIOSDocument.mockImplementation(last ?? (async () => null));
   });
 });

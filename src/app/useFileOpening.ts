@@ -41,7 +41,8 @@ import type { TabState } from "./tabs/useTabState";
 import { splitForDrop } from "./islands/split-drop";
 import type { DropTarget } from "../engine/layout/drop-zones";
 import { explainError } from "../utils/error-explain";
-import { isBinaryContent, openUnreadable, pluginTab } from "./open-unreadable";
+import { isBinaryContent, openUnreadable } from "./open-unreadable";
+import { pluginTab } from "../document/plugin-tab";
 import { tabInUse } from "../engine/layout/store";
 
 /** How a document opens, beyond which file. */

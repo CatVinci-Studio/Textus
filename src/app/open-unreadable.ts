@@ -1,36 +1,13 @@
 import { fill } from "../i18n/fill";
 import type { DocTab } from "../document/doc-tabs";
-import { exportDoc, session } from "../platform/ipc";
+import { exportDoc } from "../platform/ipc";
 import { showConfirm, showMessage } from "../engine/controls/app-dialog";
 import type { DocumentPlace } from "../plugins/app-bridge";
 import { customEditorFor } from "../plugins/store/plugin-lookup";
+import { pluginTab } from "../document/plugin-tab";
 import { basename } from "../utils/path";
 import { isNotFoundError } from "../utils/error-explain";
 import type { Strings } from "../i18n/strings";
-
-export /** The tab a plugin's custom editor opens `path` in (a PDF, a board). */
-function pluginTab(
-  path: string,
-  editor: NonNullable<ReturnType<typeof customEditorFor>>,
-  target?: DocumentPlace,
-): Partial<DocTab> {
-  void session.addRecentFile(path);
-  return {
-    path: null,
-    content: "",
-    savedContent: "",
-    diskMtime: null,
-    importedFrom: undefined,
-    view: {
-      plugin: editor.plugin,
-      view: editor.viewType,
-      kind: "editor",
-      resource: path,
-      title: editor.title,
-      ...(target ? { target: { path, ...target } } : {}),
-    },
-  };
-}
 
 /** Formats that are never text, though a small one may read as such
  *  (a PDF of plain ASCII, a zip): opened as text, a save would wreck it. */

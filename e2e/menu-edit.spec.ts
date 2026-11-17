@@ -157,6 +157,51 @@ test("a find bar left open comes back with its tab, the page where it was read",
   ).toBeLessThan(2);
 });
 
+test("with motion on, the page glides to a find match, centred, and along with the caret", async ({
+  page,
+}) => {
+  const lines = Array.from({ length: 80 }, (_, i) => `line ${i}`);
+  await page.addInitScript(
+    (text) => {
+      (window as unknown as Record<string, unknown>).__devFs = {
+        "/work/a.md": text,
+      };
+    },
+    [...lines, "the needle", ...lines].join("\n\n"),
+  );
+  await page.setViewportSize({ width: 1200, height: 600 });
+  await openApp(page, { settings: { menuBarShown: false }, animations: true });
+  await openPath(page, "/work/a.md");
+  const scroller = page.locator(".editor-scroll").first();
+  await docs(page).first().locator("p").first().click();
+  await emit(page, "menu-find-replace");
+  await page
+    .locator(".find-replace-bar")
+    .getByRole("textbox")
+    .first()
+    .fill("needle");
+  // Ends with the match in the page's middle.
+  const offCentre = () =>
+    scroller.evaluate((el) => {
+      const match = document.querySelector(".find-match")!;
+      const m = match.getBoundingClientRect();
+      const box = el.getBoundingClientRect();
+      return Math.abs(m.top + m.height / 2 - (box.top + el.clientHeight / 2));
+    });
+  await expect.poll(offCentre).toBeLessThan(30);
+  // The caret walked past the page's foot: the page follows it there.
+  await page.keyboard.press("Escape");
+  await docs(page).first().locator("p").first().click();
+  for (let i = 0; i < 40; i++) await page.keyboard.press("ArrowDown");
+  const caretShown = () =>
+    scroller.evaluate((el) => {
+      const r = getSelection()!.getRangeAt(0).getBoundingClientRect();
+      const box = el.getBoundingClientRect();
+      return r.top >= box.top && r.bottom <= box.top + el.clientHeight;
+    });
+  await expect.poll(caretShown).toBe(true);
+});
+
 test("the find bar stays over the document as it scrolls", async ({ page }) => {
   await page.setViewportSize({ width: 1200, height: 600 });
   await openApp(page, { settings: { menuBarShown: false } });
