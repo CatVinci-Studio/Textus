@@ -695,10 +695,10 @@ A kind of periodic note: its folder (full path), file name format (moment.js tok
 
 ## Frontmatter
 
-| Member                                                                                                                   |                                                                   |
-| ------------------------------------------------------------------------------------------------------------------------ | ----------------------------------------------------------------- |
-| `get(path: string): Promise<Record<string, unknown>>`                                                                    | The YAML at the top of a document, as an object; {} for none.     |
-| `update(path: string, change: (frontmatter: Record<string, unknown>) => Record<string, unknown> \| void): Promise<void>` | Changes it through files.process; the rest of the file untouched. |
+| Member                                                                                                                   |                                                                                                                                             |
+| ------------------------------------------------------------------------------------------------------------------------ | ------------------------------------------------------------------------------------------------------------------------------------------- |
+| `get(path: string): Promise<Record<string, unknown>>`                                                                    | The YAML at the top of a document, as an object; {} for none. From 1.8 read by a full YAML parser (block text, lists of maps).              |
+| `update(path: string, change: (frontmatter: Record<string, unknown>) => Record<string, unknown> \| void): Promise<void>` | Changes it through files.process; the rest of the file untouched. From 1.8 the keys that didn't change, and every comment, stay as written. |
 
 ## GitChange
 
@@ -972,11 +972,13 @@ exports.remind = async (job, ctx) => { ... };
 
 From 1.7: text read as the app reads it.
 
-| Member                                                                            |                                                                                                                        |
-| --------------------------------------------------------------------------------- | ---------------------------------------------------------------------------------------------------------------------- |
-| `count(markdown: string): Promise<{ words: number; characters: number }>`         | Words and characters as the status bar counts them.                                                                    |
-| `splitFrontmatter(text: string): Promise<{ yaml: string \| null; body: string }>` | A note's front matter (its YAML, null with none) and the rest.                                                         |
-| `compareNames(a: string, b: string): number`                                      | Names in the file tree's order: "Week2" before "Week10", case and accents aside, in the UI language. For `Array.sort`. |
+| Member                                                                            |                                                                                                                                            |
+| --------------------------------------------------------------------------------- | ------------------------------------------------------------------------------------------------------------------------------------------ |
+| `count(markdown: string): Promise<{ words: number; characters: number }>`         | Words and characters as the status bar counts them.                                                                                        |
+| `splitFrontmatter(text: string): Promise<{ yaml: string \| null; body: string }>` | A note's front matter (its YAML, null with none) and the rest.                                                                             |
+| `compareNames(a: string, b: string): number`                                      | Names in the file tree's order: "Week2" before "Week10", case and accents aside, in the UI language. For `Array.sort`.                     |
+| `parseYaml(yaml: string): Promise<Record<string, unknown>>`                       | YAML read in full (YAML 1.2): block text, lists of maps, quoting. {} for YAML that isn't a map; rejects YAML that can't be read. From 1.8. |
+| `stringifyYaml(value: unknown): Promise<string>`                                  | A value written as YAML, without a trailing line break. From 1.8.                                                                          |
 
 ## Path
 

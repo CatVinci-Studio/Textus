@@ -88,18 +88,18 @@ it("creates a file under a free name when asked, as given", async () => {
   ).resolves.toBe("/notes/Dup 3.md");
 });
 
-it("refuses a list as front matter, which would write 0: and 1: keys", () => {
+it("refuses a list as front matter, which would write 0: and 1: keys", async () => {
   const scope = {
     id: "p",
     root: () => "/notes",
     allows: () => true,
   } as unknown as PluginScope;
-  expect(() =>
+  await expect(
     fileHandlers(scope)["files.frontmatterSet"]({
       path: "a.md",
       frontmatter: ["x"],
     }),
-  ).toThrow("frontmatter is an object.");
+  ).rejects.toThrow("frontmatter is an object.");
 });
 
 it("keeps a folder convention only as one of what Textus reads", async () => {

@@ -212,6 +212,12 @@ textus.text = {
   splitFrontmatter: function (value) {
     return call("text.splitFrontmatter", { text: String(value) });
   },
+  parseYaml: function (yaml) {
+    return call("text.parseYaml", { yaml: String(yaml) });
+  },
+  stringifyYaml: function (value) {
+    return call("text.stringifyYaml", { value: plain(value) });
+  },
   compareNames: function (a, b) {
     var collator = collatorFor(env.language || "en");
     a = String(a);

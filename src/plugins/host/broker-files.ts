@@ -30,11 +30,7 @@ import {
   pluginMovedPath,
 } from "../app-bridge";
 import { globToRegExp, isDocumentPath } from "../workspace/glob";
-import {
-  parseFrontmatter,
-  withFrontmatter,
-  type Frontmatter,
-} from "../../utils/frontmatter";
+import { type Frontmatter } from "../../utils/frontmatter";
 import { linkRewrite } from "../../files/link-rewrite-lazy";
 import { blockIdAt } from "../../files/block-id";
 import { setWillExport } from "../contributions/will-export";
@@ -305,13 +301,17 @@ export function fileHandlers(p: PluginScope) {
         : new TextDecoder().decode(
             await pluginsIpc.fsRead(p.id, p.root(), target),
           );
-      return parseFrontmatter(text);
+      const { readFrontmatterFull } =
+        await import("../../utils/frontmatter-yaml");
+      return readFrontmatterFull(text);
     },
-    "files.frontmatterSet": ({ path, frontmatter }: Params) => {
+    "files.frontmatterSet": async ({ path, frontmatter }: Params) => {
       write();
       if (!isRecord(frontmatter)) throw new Error("frontmatter is an object.");
+      const { writeFrontmatterFull } =
+        await import("../../utils/frontmatter-yaml");
       return change(str(path, "path"), (text) =>
-        withFrontmatter(text, frontmatter as Frontmatter),
+        writeFrontmatterFull(text, frontmatter as Frontmatter),
       );
     },
     "files.willSave": ({ on }: Params) => {

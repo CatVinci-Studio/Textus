@@ -1187,9 +1187,12 @@ declare global {
     }
 
     interface Frontmatter {
-      /** The YAML at the top of a document, as an object; {} for none. */
+      /** The YAML at the top of a document, as an object; {} for none.
+       *  From 1.8 read by a full YAML parser (block text, lists of maps). */
       get(path: string): Promise<Record<string, unknown>>;
-      /** Changes it through files.process; the rest of the file untouched. */
+      /** Changes it through files.process; the rest of the file untouched.
+       *  From 1.8 the keys that didn't change, and every comment, stay as
+       *  written. */
       update(
         path: string,
         change: (
@@ -1629,6 +1632,12 @@ declare global {
       /** Names in the file tree's order: "Week2" before "Week10", case
        *  and accents aside, in the UI language. For `Array.sort`. */
       compareNames(a: string, b: string): number;
+      /** YAML read in full (YAML 1.2): block text, lists of maps, quoting.
+       *  {} for YAML that isn't a map; rejects YAML that can't be read.
+       *  From 1.8. */
+      parseYaml(yaml: string): Promise<Record<string, unknown>>;
+      /** A value written as YAML, without a trailing line break. From 1.8. */
+      stringifyYaml(value: unknown): Promise<string>;
     }
 
     /** Paths as Textus writes them: "/" between parts on every system; a
