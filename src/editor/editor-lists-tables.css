@@ -394,4 +394,9 @@
   .table-add-col-btn {
     display: none;
   }
+
+  /* No strip, so no room kept for it past the last column. */
+  .table-track {
+    padding-inline-end: 0;
+  }
 }
