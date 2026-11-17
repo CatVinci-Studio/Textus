@@ -24,13 +24,14 @@
   color: var(--doc-muted);
 }
 
-/* Covered in ink until pointed at, or the caret is in it. */
+/* Covered in ink until pointed at, pressed, or the caret is in it. */
 .plugin-syntax-spoiler {
   background: var(--doc-text);
   color: transparent;
   border-radius: var(--doc-radius-sm);
 }
-.plugin-syntax-spoiler.is-touched {
+.plugin-syntax-spoiler.is-touched,
+.plugin-syntax-spoiler:active {
   background: color-mix(in srgb, var(--doc-text) 10%, transparent);
   color: inherit;
 }

@@ -48,9 +48,14 @@ describe("cloneEditorContent", () => {
     const html = cloneEditorContent(
       editor(
         '<h1><span class="heading-marker"># </span>Title</h1>' +
-          '<div class="code-block-wrapper"><div class="code-block-header">js</div><pre>x</pre></div>',
+          '<div class="code-block-wrapper"><div class="code-block-header">js</div><pre>x</pre></div>' +
+          // A plugin's inline syntax: its source, as written.
+          '<p><span class="plugin-syntax-hidden" data-editor-mark="">||</span>' +
+          '<span class="plugin-syntax plugin-syntax-spoiler" data-editor-mark="">twist</span>' +
+          '<span class="plugin-syntax-hidden" data-editor-mark="">||</span></p>',
       ),
     );
+    expect(html).toContain("<p>||twist||</p>");
     expect(html).not.toContain("heading-marker");
     expect(html).not.toContain("code-block-header");
     expect(html).toContain("Title");
