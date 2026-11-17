@@ -19,8 +19,7 @@ repositories.
 
 ### Owner
 
-- Merges to `main` and `stable` without a second review (CI still has to
-  pass: nobody bypasses it).
+- Merges to `main` once CI passes: nobody bypasses it.
 - Pushes release tags (`v*`, `ios-v*`). Only these tags can run jobs in the
   **release** environment, which holds the signing, notarizing, upload and
   deploy secrets ([releasing.md](releasing.md#secrets)). Pushing a tag is
@@ -38,10 +37,9 @@ repositories.
 
 - Pushes branches to the repository instead of a fork.
 - Reviews, labels, assigns and closes issues and pull requests.
-- Merges a pull request into `main` or `stable` once CI passes and **someone
-  else** with write access has approved it, after the last push, with every
-  review thread resolved. A change to a code-owned path needs an owner's
-  approval.
+- Merges a pull request into `main` once CI passes and **someone else**
+  with write access has read it, with every review thread resolved. A
+  change to a code-owned path waits for an owner.
 - In textus-plugins, merges to `main` without a review; merging publishes the
   plugins (see that repository's README), so ask an owner first for anything
   users will notice.
@@ -70,13 +68,13 @@ repositories.
 
 ## Branch rules
 
-| Repository     | Branch              | Rules                                                                                                                       |
-| -------------- | ------------------- | --------------------------------------------------------------------------------------------------------------------------- |
-| Textus         | `main`, `stable`    | Pull request only; `check`, `e2e`, `native`, `ci-config` must pass; one approval (owners bypass); no force push or deletion |
-| Textus         | tags `v*`, `ios-v*` | Only owners create, move or delete them                                                                                     |
-| textus-plugins | `main`              | Pull request only, no review required; no force push or deletion                                                            |
-| textus-themes  | `main`              | No force push or deletion; the gallery's bot commits submissions directly                                                   |
-| textus-website | `main`              | Private; owners push, members read                                                                                          |
+| Repository     | Branch              | Rules                                                                                         |
+| -------------- | ------------------- | --------------------------------------------------------------------------------------------- |
+| Textus         | `main`              | Pull request only; `check`, `e2e`, `native`, `ci-config` must pass; no force push or deletion |
+| Textus         | tags `v*`, `ios-v*` | Only owners create, move or delete them                                                       |
+| textus-plugins | `main`              | Pull request only, no review required; no force push or deletion                              |
+| textus-themes  | `main`              | No force push or deletion; the gallery's bot commits submissions directly                     |
+| textus-website | `main`              | Private; owners push, members read                                                            |
 
 Every repository merges by squash only, and merged branches are deleted
 automatically. How branches, pull requests, commit messages and releases

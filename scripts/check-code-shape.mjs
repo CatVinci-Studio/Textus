@@ -1,6 +1,7 @@
 #!/usr/bin/env node
 // Checks the code shape rules: at most 500 lines per source file, at most 8
-// hooks per component, and no provider id compared outside its adapter.
+// hooks per component or custom hook, and no provider id compared outside
+// its adapter.
 // Files listed over a limit may shrink, not grow.
 import { readdirSync, readFileSync, statSync } from "node:fs";
 import { dirname, join } from "node:path";
@@ -13,8 +14,46 @@ const MAX_HOOKS = 8;
 /** Over the line limit today: at most this many lines. */
 const LINES_NOW = {};
 
-/** Over the hook limit today: the roots that wire a window together. */
-const HOOKS_NOW = {};
+/** Over the hook limit today: custom hooks that wire a window or an editor
+ *  together, waiting to be split by concern. */
+const HOOKS_NOW = {
+  "src/ai/chat/useChatBodyState.ts useMessageQueue": 10,
+  "src/ai/chat/window/useChatWindowBridge.ts useChatWindowBridge": 17,
+  "src/ai/chat/window/useChatWindowHandoff.ts useChatWindowHandoff": 17,
+  "src/ai/margin/useOwnRevisions.ts useOwnRevisions": 16,
+  "src/ai/margin/useReviewNotes.ts useReviewNotes": 19,
+  "src/ai/revision/useKeptProposals.ts useKeptProposals": 9,
+  "src/ai/writing/useGrammarPopover.ts useGrammarPopover": 12,
+  "src/app/frame/useSidePanels.ts useSidePanels": 16,
+  "src/app/islands/useAiTabs.ts useAiTabs": 12,
+  "src/app/tabs/useTabDragMerge.ts useTabDragMerge": 11,
+  "src/app/useDocumentActions.ts useDocumentActions": 9,
+  "src/app/useFileOpening.ts useFileOpening": 10,
+  "src/app/useOpenFolder.ts useOpenFolder": 15,
+  "src/app/usePluginWindow.ts usePluginWindow": 24,
+  "src/app/useSaveTabs.ts useSaveTabs": 14,
+  "src/app/useWindowDocuments.ts useWindowDocuments": 29,
+  "src/app/useWindowShell.ts useWindowShell": 14,
+  "src/app/useWindowWiring.ts useWindowWiring": 20,
+  "src/document/autosave.ts useAutosave": 14,
+  "src/document-view/EditorPane.tsx useKeptScroll": 9,
+  "src/document-view/useDocumentReporting.ts useDocumentReporting": 10,
+  "src/document-view/useEditorChat.ts useEditorChat": 13,
+  "src/document-view/useEditorProposals.ts useEditorProposals": 28,
+  "src/document-view/useEditorSetup.ts useEditorSetup": 20,
+  "src/document-view/useEditorWindowEvents.ts useEditorWindowEvents": 21,
+  "src/document-view/usePaperWriter.ts usePaperWriter": 12,
+  "src/document-view/useQuickAskReview.ts useQuickAskReview": 9,
+  "src/editor/find/useFindReplace.ts useFindReplace": 32,
+  "src/engine/controls/tabs/useTabStrip.ts useTabStrip": 16,
+  "src/engine/controls/useFloatingList.ts useFloatingList": 9,
+  "src/files/useTreeData.ts useTreeView": 10,
+  "src/onboarding/useTutorial.ts useTutorial": 11,
+  "src/playground/useWebDocuments.ts useWebDocuments": 12,
+  "src/plugins/views/usePluginListItems.ts usePluginListItems": 10,
+  "src/settings/useSettingsSearch.ts useSettingsSearch": 10,
+  "src/theme/apply-appearance.ts useApplyAppearance": 9,
+};
 
 /** Not held to the line limit: tables, not logic. */
 const TABLES = [
@@ -63,13 +102,13 @@ for (const path of sources) {
     );
 }
 
-// Hooks per component.
+// Hooks per component, and per custom hook (`useX`, in .ts files too).
 const COMPONENT =
-  /^(?:export )?(?:default )?(?:function ([A-Z]\w*)|const ([A-Z]\w*) = (?:memo\()?(?:function \w*)?)/gm;
+  /^(?:export )?(?:default )?(?:function ([A-Z]\w*|use[A-Z]\w*)|const ([A-Z]\w*|use[A-Z]\w*) = (?:memo\()?(?:function \w*)?)/gm;
 const NEXT_DECLARATION =
   /^(?:export )?(?:function|const|let|interface|type|class) [a-z_]/gm;
 const HOOK = /(?<![\w.])use[A-Z]\w*\s*(?:<(?:[^<>]|<[^<>]*>)*>)?\s*\(/g;
-for (const path of sources.filter((p) => p.endsWith(".tsx"))) {
+for (const path of sources.filter((p) => /\.tsx?$/.test(p))) {
   const text = readFileSync(join(root, path), "utf8");
   const starts = [...text.matchAll(COMPONENT)].map((m) => ({
     at: m.index,
@@ -80,7 +119,8 @@ for (const path of sources.filter((p) => p.endsWith(".tsx"))) {
     NEXT_DECLARATION.lastIndex = at + 1;
     const next = NEXT_DECLARATION.exec(text);
     const body = text.slice(at, next && next.index < end ? next.index : end);
-    const hooks = body.match(HOOK)?.length ?? 0;
+    // A custom hook's own name isn't one of its calls.
+    const hooks = (body.match(HOOK)?.length ?? 0) - (/^use/.test(name) ? 1 : 0);
     const cap = HOOKS_NOW[`${path} ${name}`] ?? MAX_HOOKS;
     if (hooks > cap)
       problems.push(

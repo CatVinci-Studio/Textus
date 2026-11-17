@@ -1,9 +1,11 @@
 #!/usr/bin/env node
 // What a change needs in CI's quick suite, printed for $GITHUB_OUTPUT:
 // `light` (GitHub's settings, the license or root Markdown alone: only their
-// format and the READMEs' structure), `native` (the Rust checks on Linux) and
-// `roundtrip`. A push runs native for everything but a bump or a light
-// change; without a usable base everything runs.
+// format and the READMEs' structure), `docs` (documentation alone: format,
+// links and the tests that read the docs, no e2e), `native` (the Rust checks
+// on Linux), `roundtrip`, and `full` for a pull request that bumps the
+// version, which gets the whole suite. A push runs native for everything but
+// a bump or a light change; without a usable base everything runs.
 import { execFileSync } from "node:child_process";
 import { readdirSync, readFileSync } from "node:fs";
 import { dirname, join, posix, relative } from "node:path";
@@ -43,6 +45,32 @@ const LIGHT =
  *  it reads. */
 const ROUNDTRIP =
   /^(src\/editor\/|src\/document[^/]*\/|src\/utils\/markdown|src\/help\/|docs\/|package\.json$|package-lock\.json$|\.github\/workflows\/)/;
+
+/** Whether every file is documentation Markdown: no code, nothing Rust
+ *  embeds, and not light (which needs even less). */
+export function docsOnly({ files, rustReads = [] }) {
+  return (
+    files.length > 0 &&
+    files.every(
+      (file) =>
+        file.endsWith(".md") &&
+        !CODE_TREES.test(file) &&
+        !rustReads.includes(file),
+    ) &&
+    !files.every((file) => LIGHT.test(file))
+  );
+}
+
+/** Whether the change moves the app's version: package.json's `version`. */
+export function bumpsVersion(before, after) {
+  try {
+    const old = JSON.parse(before ?? "null")?.version;
+    const now = JSON.parse(after ?? "null")?.version;
+    return Boolean(old && now && old !== now);
+  } catch {
+    return false;
+  }
+}
 
 /** Whether `files` can change what the save round trip finds. */
 export function reachesSaving({ files, push }) {
@@ -168,29 +196,39 @@ function show(rev, file) {
 function main(argv) {
   const at = argv.indexOf("--base");
   const base = at === -1 ? "" : (argv[at + 1] ?? "");
-  let result = { light: false, native: true, roundtrip: true };
+  let result = {
+    light: false,
+    docs: false,
+    native: true,
+    roundtrip: true,
+    full: false,
+  };
   if (base && !/^0+$/.test(base)) {
     try {
       const files = git("diff", "--name-only", "--no-renames", base, "HEAD")
         .split("\n")
         .filter(Boolean);
       const push = argv.includes("--push");
-      const jobs = classify({
-        files,
-        push,
-        read: (file) => [show(base, file), show("HEAD", file)],
-        rustReads: rustIncludes(),
-      });
+      const read = (file) => [show(base, file), show("HEAD", file)];
+      const rustReads = rustIncludes();
+      const jobs = classify({ files, push, read, rustReads });
       result = {
         ...jobs,
+        docs: !push && docsOnly({ files, rustReads }),
         roundtrip: !jobs.light && reachesSaving({ files, push }),
+        full:
+          !push &&
+          files.includes("package.json") &&
+          bumpsVersion(...read("package.json")),
       };
     } catch {
       // The base isn't in this clone (a force push): run everything.
     }
   }
   console.log(
-    `light=${result.light}\nnative=${result.native}\nroundtrip=${result.roundtrip}`,
+    Object.entries(result)
+      .map(([key, value]) => `${key}=${value}`)
+      .join("\n"),
   );
 }
 

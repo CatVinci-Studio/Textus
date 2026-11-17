@@ -1,6 +1,13 @@
 import { readFileSync } from "node:fs";
 import { describe, expect, it } from "vitest";
-import { classify, reachesSaving, rustIncludes } from "./ci-changes.mjs";
+import { linkTargets, isLocal } from "./check-links.mjs";
+import {
+  bumpsVersion,
+  classify,
+  docsOnly,
+  reachesSaving,
+  rustIncludes,
+} from "./ci-changes.mjs";
 
 const VERSION_FILES = [
   "package.json",
@@ -248,6 +255,44 @@ describe("which CI jobs a push needs", () => {
     for (const file of ["docs/dev/testing.md", "src-tauri/src/lib.rs"]) {
       expect(edit([file], { push: true }), file).toEqual(NATIVE);
     }
+  });
+});
+
+describe("documentation alone and the version bump", () => {
+  it("takes Markdown outside the code as documentation alone", () => {
+    expect(
+      docsOnly({ files: ["docs/dev/testing.md", "docs/releases/1.4.4.md"] }),
+    ).toBe(true);
+    expect(docsOnly({ files: ["CONTRIBUTING.md"] })).toBe(false); // light
+    expect(docsOnly({ files: ["docs/dev/textus.d.ts"] })).toBe(false);
+    expect(docsOnly({ files: ["docs/dev/guide.md", "src/main.tsx"] })).toBe(
+      false,
+    );
+    expect(docsOnly({ files: ["src/help/markdown-guide.en.md"] })).toBe(false);
+    expect(docsOnly({ files: ["docs/x.md"], rustReads: ["docs/x.md"] })).toBe(
+      false,
+    );
+  });
+
+  it("finds a bump in package.json's version alone", () => {
+    expect(bumpsVersion(current["package.json"], bumped["package.json"])).toBe(
+      true,
+    );
+    expect(bumpsVersion(current["package.json"], current["package.json"])).toBe(
+      false,
+    );
+    expect(bumpsVersion(null, current["package.json"])).toBe(false);
+  });
+
+  it("follows relative links only, outside code", () => {
+    expect(
+      linkTargets(
+        '[a](../b.md#c) `[x](y.md)` ![p](pic.png "t")\n```\n[z](z.md)\n```\n',
+      ),
+    ).toEqual(["../b.md#c", "pic.png"]);
+    expect(
+      ["../b.md", "https://x.y", "#top", "/abs", "mailto:a@b"].map(isLocal),
+    ).toEqual([true, false, false, false, false]);
   });
 });
 
