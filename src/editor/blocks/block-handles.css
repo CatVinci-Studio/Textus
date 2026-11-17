@@ -66,11 +66,16 @@
   position: relative;
 }
 
-/* 44 square: 24 + 20 high, 20 + 24 wide, the extra in the margin. */
+/* 44 square: 24 + 20 high, 20 + 24 wide, the extra in the margin; beside
+   a fold caret, the margin left of it is the caret's. */
 .block-handle.by-touch .block-handle-grip::after {
   position: absolute;
   inset: -10px -4px -10px -20px;
   content: "";
+}
+
+.block-handle.by-touch[data-beside-fold] .block-handle-grip::after {
+  left: -2px;
 }
 
 /* Where the pulled block will land. */

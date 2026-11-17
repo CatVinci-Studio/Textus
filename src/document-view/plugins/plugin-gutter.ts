@@ -8,19 +8,12 @@ import type { PluginDecoration } from "../../plugins/contributions/decorations";
  * command it is a button that runs it.
  */
 
-/** Where a block's first line starts: inside its first run of text. */
+/** Where the mark goes: inside a paragraph's or a heading's first line;
+ *  before any other block (a list, a quote, code, a table), where it sits
+ *  at the block's top and measures from the text's edge, not the block's
+ *  own padding. */
 export function firstLine(block: ProseNode, pos: number): number {
-  if (block.isTextblock) return pos + 1;
-  let at = pos + 1;
-  block.descendants((node, offset) => {
-    if (at !== pos + 1) return false;
-    if (node.isTextblock) {
-      at = pos + 1 + offset + 1;
-      return false;
-    }
-    return true;
-  });
-  return at;
+  return block.isTextblock && !block.type.spec.code ? pos + 1 : pos;
 }
 
 const svgMask = (svg: string) =>

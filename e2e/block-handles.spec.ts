@@ -194,4 +194,28 @@ test.describe("under a finger", () => {
       "First",
     ]);
   });
+
+  test("beside a heading, the fold caret is tapped, not the ⋮⋮ beside it", async ({
+    page,
+  }) => {
+    await openApp(page, { settings: { language: "en" } });
+    await pasteMarkdown(page, "## Part\n\nUnder it");
+    const heading = page.locator(`${editor} h2`);
+    await heading.tap();
+    const caret = heading.locator(".heading-fold");
+    await expect(caret).toBeVisible();
+    // What a finger on the caret's middle lands on is the caret.
+    expect(
+      await caret.evaluate((el) => {
+        const r = el.getBoundingClientRect();
+        const hit = document.elementFromPoint(
+          r.left + r.width / 2,
+          r.top + r.height / 2,
+        );
+        return !!hit && el.contains(hit);
+      }),
+    ).toBe(true);
+    await caret.tap();
+    await expect(page.getByText("Under it")).toBeHidden();
+  });
 });

@@ -891,7 +891,8 @@ declare global {
       block: string;
       anchor?: string;
       /** From 1.8 also "gutter": a mark in the margin right of the block,
-       *  on its first line (a change, a reading place, a warning). */
+       *  beside its first line, or at the top of a list, quote, table or
+       *  code (a change, a reading place, a warning). */
       style: "highlight" | "underline" | "muted" | "badge" | "gutter";
       tone?: "accent" | "warning" | "danger" | "success";
       /** For "badge": its text, after the words. */

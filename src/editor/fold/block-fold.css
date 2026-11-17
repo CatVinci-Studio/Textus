@@ -98,8 +98,13 @@
 }
 
 /* A touch screen has no hover: the caret shows on the heading being
-   written in, or while folded, never on every heading at once. */
+   written in, or while folded, never on every heading at once. Its ⋮⋮
+   comes without ＋, and the caret takes ＋'s place, as a drawn block's. */
 @media (hover: none) {
+  :root:not([data-block-handles="off"]) .ProseMirror .heading-fold {
+    left: calc(-1 * var(--doc-gutter));
+  }
+
   .ProseMirror
     :is(h1, h2, h3, h4, h5, h6):not([data-folded], :has(> .heading-marker))
     > .heading-fold {

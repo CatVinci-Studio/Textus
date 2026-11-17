@@ -1,5 +1,5 @@
 import { expect, test } from "@playwright/test";
-import { openApp, PHONE, sourceOf } from "./helpers";
+import { MAC, openApp, PHONE, sourceOf } from "./helpers";
 import { openPath } from "./plugin-helpers";
 
 // `![[...]]` while the caret is away: a picture drawn in place of its source.
@@ -78,9 +78,13 @@ test("a heading folds its section away, keeps the text, and opens for a caret", 
   await expect(doc.getByText("inner body")).toBeVisible();
   // From the keyboard: the caret's section (Inner, from the outline's
   // jump) folds and opens.
-  await page.keyboard.press("ControlOrMeta+Alt+BracketLeft");
+  await page.keyboard.press(
+    MAC ? "Meta+Alt+BracketLeft" : "Control+Shift+BracketLeft",
+  );
   await expect(doc.getByText("inner body")).toBeHidden();
   await expect(doc.getByText("first body")).toBeVisible();
-  await page.keyboard.press("ControlOrMeta+Alt+BracketRight");
+  await page.keyboard.press(
+    MAC ? "Meta+Alt+BracketRight" : "Control+Shift+BracketRight",
+  );
   await expect(doc.getByText("inner body")).toBeVisible();
 });

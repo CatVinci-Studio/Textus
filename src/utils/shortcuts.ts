@@ -80,11 +80,14 @@ export const EDITOR_BLOCK_COMBOS = {
 } as const;
 
 /** A heading's section folded and opened from the keyboard
- *  (heading-fold.ts), matched by physical key. */
-export const FOLD_COMBOS = {
-  fold: "mod+alt+[",
-  unfold: "mod+alt+]",
-} as const;
+ *  (heading-fold.ts), matched by physical key: Cmd+Option on a Mac,
+ *  Ctrl+Shift elsewhere, where Ctrl+Alt is AltGr and types "[" and "]" on
+ *  Spanish and Italian keyboards. */
+export function foldCombos(mac = modIsMeta()) {
+  return mac
+    ? { fold: "mod+alt+[", unfold: "mod+alt+]" }
+    : { fold: "mod+shift+[", unfold: "mod+shift+]" };
+}
 
 const RESERVED_COMBOS = new Set([
   "mod+p",
@@ -147,7 +150,6 @@ const RESERVED_COMBOS = new Set([
   "alt+[",
   "alt+]",
   ...Object.values(EDITOR_BLOCK_COMBOS),
-  ...Object.values(FOLD_COMBOS),
   // Fullscreen by convention (and the app's own handler on Windows).
   "f11",
   // Round the window's regions, and through Textus AI's changes.
@@ -167,6 +169,7 @@ const MAC_RESERVED_COMBOS = new Set([
 export function isReservedCombo(combo: string): boolean {
   return (
     RESERVED_COMBOS.has(combo) ||
+    Object.values(foldCombos()).includes(combo) ||
     (modIsMeta()
       ? MAC_RESERVED_COMBOS.has(combo) || isMacSystemCombo(combo)
       : combo === "alt+f4")

@@ -171,11 +171,14 @@ function sectionAt(state: EditorState): Section | undefined {
     .pop();
 }
 
-/** Mod+Alt+[ folds the caret's section, Mod+Alt+] opens it, by physical
- *  key: Option changes the character on a Mac. */
+/** The fold keys (foldCombos) by physical key: Option or Shift changes
+ *  the character. True folds, false opens, null is another key. */
 function foldKeyOf(e: KeyboardEvent): boolean | null {
-  const mod = modIsMeta() ? e.metaKey : e.ctrlKey;
-  if (!mod || !e.altKey || e.shiftKey) return null;
+  if (e.getModifierState?.("AltGraph")) return null;
+  const mac = modIsMeta();
+  const mod = mac ? e.metaKey : e.ctrlKey;
+  const second = mac ? e.altKey && !e.shiftKey : e.shiftKey && !e.altKey;
+  if (!mod || !second) return null;
   if (e.code === "BracketLeft") return true;
   if (e.code === "BracketRight") return false;
   return null;

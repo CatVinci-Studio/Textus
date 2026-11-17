@@ -13,19 +13,23 @@ const schema = new Schema({
     paragraph: { content: "text*", group: "block" },
     bullet_list: { content: "list_item+", group: "block" },
     list_item: { content: "paragraph block*" },
+    table: { content: "paragraph+", group: "block", tableRole: "table" },
+    rule: { group: "block" },
     text: {},
   },
 });
 const p = (text: string) => schema.node("paragraph", null, schema.text(text));
 
 describe("a plugin's mark in the margin", () => {
-  it("sits on the block's first line, inside a list's first item too", () => {
+  it("sits in a paragraph's first line, before any other block", () => {
     expect(firstLine(p("one"), 10)).toBe(11);
     const list = schema.node("bullet_list", null, [
       schema.node("list_item", null, [p("a")]),
     ]);
-    // Into the list, its item, then its paragraph.
-    expect(firstLine(list, 0)).toBe(3);
+    expect(firstLine(list, 0)).toBe(0);
+    // Not in a cell, or after a rule.
+    expect(firstLine(schema.node("table", null, [p("cell")]), 7)).toBe(7);
+    expect(firstLine(schema.node("rule"), 7)).toBe(7);
   });
 
   it("is a dot, a character or the plugin's SVG, shown only without a command", () => {

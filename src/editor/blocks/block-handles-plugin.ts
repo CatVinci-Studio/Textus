@@ -152,6 +152,12 @@ class BlockHandles {
     this.handle.hidden = false;
     // A drawn block with a fold caret in the margin keeps ⋮⋮ only.
     this.add.hidden = dom.classList.contains("block-foldable");
+    // Beside a fold caret (a drawn block's, a heading's), a finger's ⋮⋮
+    // leaves the margin left of it to the caret.
+    this.handle.toggleAttribute(
+      "data-beside-fold",
+      this.add.hidden || /^H[1-6]$/.test(dom.tagName),
+    );
     const style = getComputedStyle(dom);
     const fontSize = parseFloat(style.fontSize) || 16;
     const firstLine = dom.querySelector<HTMLElement>(

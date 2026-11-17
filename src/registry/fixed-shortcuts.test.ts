@@ -133,10 +133,12 @@ describe("the fixed shortcuts in Settings", () => {
           "mod+alt+c",
           "mod+shift+b",
           "mod+[",
-          "mod+alt+[",
-          "mod+alt+]",
         ]),
       );
+    // Folding: Ctrl+Alt is AltGr off a Mac.
+    expect(fixedCombos("macos")).toContain("mod+alt+[");
+    expect(fixedCombos("windows")).toContain("mod+shift+[");
+    expect(fixedCombos("linux")).not.toContain("mod+alt+]");
   });
 
   it("keep macOS's own keys from being bound on a Mac only", () => {
