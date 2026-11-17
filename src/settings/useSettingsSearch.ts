@@ -1,4 +1,5 @@
 import {
+  startTransition,
   useCallback,
   useDeferredValue,
   useEffect,
@@ -54,6 +55,9 @@ export function useSettingsSearch(
   const deferredQuery = useDeferredValue(query);
   const [entries, setEntries] = useState<SearchEntry[]>([]);
   const [active, setActive] = useState(0);
+  // The pages are read while the box has the keys, so the first letter
+  // typed finds them read already.
+  const [focused, setFocused] = useState(false);
   const searchInput = useFindKey(owns);
   const listId = useId();
   const matches = useMemo(
@@ -71,5 +75,12 @@ export function useSettingsSearch(
     matches,
     searchInput,
     listId,
+    /** Whether the pages are read for the search now. */
+    indexing: searching || focused,
+    focusHandlers: {
+      // Drawn in slices, the box answering the keys meanwhile.
+      onFocus: () => startTransition(() => setFocused(true)),
+      onBlur: () => setFocused(false),
+    },
   };
 }

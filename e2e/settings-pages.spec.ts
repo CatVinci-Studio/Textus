@@ -193,3 +193,21 @@ test("a custom endpoint's model is picked from its list, and a name it lacks fai
     )
     .toMatchObject({ model: "gpt-6.1-luna" });
 });
+
+test("the search reads the pages once its box is focused, before the first letter", async ({
+  page,
+}) => {
+  await open(page);
+  await emit(page, "menu-settings");
+  const box = page.locator(".settings-nav-panel input").first();
+  const index = page.locator(".settings-search-index");
+  await expect(index).toHaveCount(0);
+  await box.focus();
+  // Read before the first letter, so typing finds it ready.
+  await expect(index).toHaveCount(1);
+  await box.pressSequentially("字体", { delay: 30 });
+  await expect(page.locator(".settings-nav-hit").first()).toBeVisible();
+  await box.fill("");
+  await box.blur();
+  await expect(index).toHaveCount(0);
+});

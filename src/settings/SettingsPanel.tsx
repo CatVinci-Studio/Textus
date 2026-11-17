@@ -234,6 +234,7 @@ export function SettingsPanel({
               if (moved !== null) setActive(moved);
             }}
             onPick={() => pick(flatMatches[activeIndex])}
+            {...search.focusHandlers}
           />
           {(!phone || !searching) && (
             <nav className="settings-nav">
@@ -305,7 +306,7 @@ export function SettingsPanel({
           {renderCategory(category)}
         </div>
       )}
-      {searching && (
+      {search.indexing && (
         <SettingsSearchIndex pages={searchPages} onEntries={setEntries} />
       )}
     </div>
