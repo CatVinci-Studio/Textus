@@ -17,7 +17,6 @@ const LINES_NOW = {};
 /** Over the hook limit today: custom hooks that wire a window or an editor
  *  together, waiting to be split by concern. */
 const HOOKS_NOW = {
-  "src/app/usePluginWindow.ts usePluginWindow": 24,
   "src/app/useWindowDocuments.ts useWindowDocuments": 29,
   "src/document-view/useEditorProposals.ts useEditorProposals": 28,
   "src/document-view/usePaperWriter.ts usePaperWriter": 12,

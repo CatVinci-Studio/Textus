@@ -3,7 +3,7 @@ import { lazyModule } from "../lazy/lazy-module";
 import { appearanceNow } from "../theme/plugin-appearance-state";
 import { pickWithCommands } from "./command-palette-entry";
 import { watchConventions } from "../plugins/contributions/conventions-watch";
-import { useEffect, useSyncExternalStore } from "react";
+import { useEffect, useMemo, useSyncExternalStore } from "react";
 import { onCopied } from "../clipboard/copied";
 import { setCompletionAsker } from "../plugins/contributions/completion-sources";
 import { refreshAllListViews } from "../plugins/contributions/list-views";
@@ -53,6 +53,172 @@ const windowTasks = lazyModule(
   () => import("../plugins/window-tasks"),
 );
 
+type Opener = (path: string, open?: OpenOptions) => Promise<void>;
+
+/** Field `key` of what `ref` holds now, as a ref of its own. */
+function liveField<T, K extends keyof T>(
+  ref: { readonly current: T },
+  key: K,
+): { readonly current: T[K] } {
+  return {
+    get current() {
+      return ref.current[key];
+    },
+  };
+}
+
+/** What the plugins' long-lived handlers read as it is now. */
+function usePluginRefs(now: {
+  t: Strings;
+  language: string;
+  rootPath: string | null;
+  openPathInTab: Opener;
+  openFile: Opener;
+  saveTab: (id: string) => Promise<boolean>;
+  saveActiveTab: () => Promise<boolean>;
+  closeActiveTab: () => void;
+}) {
+  const tRef = useLatest(now.t);
+  const languageRef = useLatest(now.language);
+  const rootRef = useLatest(now.rootPath);
+  const acts = useLatest({
+    open: now.openPathInTab,
+    look: now.openFile,
+    saveTab: now.saveTab,
+    save: now.saveActiveTab,
+    close: now.closeActiveTab,
+  });
+  // Each action as a ref of its own, read as it is when called.
+  const { openRef, lookRef, saveTabRef, saveRef, closeRef } = useMemo(
+    () => ({
+      openRef: liveField(acts, "open"),
+      lookRef: liveField(acts, "look"),
+      saveTabRef: liveField(acts, "saveTab"),
+      saveRef: liveField(acts, "save"),
+      closeRef: liveField(acts, "close"),
+    }),
+    [acts],
+  );
+  const settingsRef = useLatest(useSettings());
+  return {
+    tRef,
+    languageRef,
+    rootRef,
+    openRef,
+    lookRef,
+    saveTabRef,
+    saveRef,
+    closeRef,
+    settingsRef,
+  };
+}
+
+/** A folder in development reloaded, textus:// links, plugins' AI tools
+ *  (started once the window is up: plugins/window-tasks.ts), and the
+ *  completions plugins suggest as you type, called off once the panel no
+ *  longer needs them. */
+function useWindowTasks() {
+  useEffect(() => {
+    let stop: (() => void) | null = null;
+    let gone = false;
+    void windowTasks.load().then((tasks) => {
+      if (!gone) stop = tasks.startWindowTasks(runPluginAiTool);
+    });
+    return () => {
+      gone = true;
+      stop?.();
+    };
+  }, []);
+  useEffect(() => {
+    setCompletionAsker(
+      (id, source, context) =>
+        askPlugin(
+          id,
+          "$provideCompletions",
+          { id: source, ...context },
+          "editor.read",
+        ),
+      (id, request) =>
+        void askPlugin(id, "$cancelCompletions", { request }).catch(() => {}),
+    );
+    return () => setCompletionAsker(null);
+  }, []);
+}
+
+/** What plugins are told as it changes: the open folder (and its own
+ *  plugin settings), the document and tab in front, the language, a copy,
+ *  the theme and the window's look. */
+function usePluginEvents({
+  rootPath,
+  activePath,
+  activeTabId,
+  language,
+}: {
+  rootPath: string | null;
+  activePath: string | null;
+  activeTabId: string;
+  language: string;
+}) {
+  useEffect(() => {
+    emitPluginEvent("root", { path: rootPath });
+    watchConventions(rootPath);
+    // The folder's own plugin settings, over the general ones.
+    void setPluginProject(rootPath);
+  }, [rootPath]);
+  useEffect(
+    () => emitPluginEvent("activeDocument", { path: activePath }),
+    [activePath],
+  );
+  useEffect(
+    () => emitPluginEvent("activeTab", getWindowAccess()?.activeTab() ?? null),
+    [activeTabId],
+  );
+  useEffect(() => {
+    emitPluginEvent("language", language);
+    refreshAllListViews();
+  }, [language]);
+  useEffect(() => onCopied((copied) => emitPluginEvent("copy", copied)), []);
+  useEffect(() => {
+    let dark = windowIsDark();
+    let look = appearanceNow().key;
+    return watchTheme(() => {
+      const now = appearanceNow();
+      if (now.key !== look) {
+        look = now.key;
+        emitPluginEvent("appearance", { theme: now.theme, scheme: now.scheme });
+      }
+      if (windowIsDark() === dark) return;
+      dark = !dark;
+      emitPluginEvent("theme", dark ? "dark" : "light");
+    });
+  }, []);
+}
+
+/** Plugins' menu items, and their schedules after startup: background
+ *  runs, notifications' clicks, whether Textus is in front. One ended
+ *  before its module came connects nothing: it would outlast the
+ *  connection that replaced it. */
+function usePluginSchedules(
+  language: string,
+  languageRef: ReturnType<typeof usePluginRefs>["languageRef"],
+  settingsRef: ReturnType<typeof usePluginRefs>["settingsRef"],
+  openRef: ReturnType<typeof usePluginRefs>["openRef"],
+) {
+  usePluginMenuSync(language);
+  useEffect(() => {
+    let stop: (() => void) | undefined;
+    let ended = false;
+    void import("../plugins/background/schedule-window").then((m) => {
+      if (!ended)
+        stop = m.connectScheduleWindow(languageRef, settingsRef, openRef);
+    });
+    return () => {
+      ended = true;
+      stop?.();
+    };
+  }, [languageRef, settingsRef, openRef]);
+}
+
 /**
  * A window's side of the plugins: what it tells the manager, what plugins
  * may ask of it, their events and native menus. Returns the plugins' state
@@ -85,16 +251,27 @@ export function usePluginWindow({
   /** File › Close Tab, asking first if it has unsaved changes. */
   closeActiveTab: () => void;
 }): PluginsSnapshot {
-  const tRef = useLatest(t);
-  const languageRef = useLatest(language);
-  const rootRef = useLatest(rootPath);
-  const openRef = useLatest(openPathInTab);
-  const lookRef = useLatest(openFile);
-  const saveTabRef = useLatest(saveTab);
-  const saveRef = useLatest(saveActiveTab);
-  const closeRef = useLatest(closeActiveTab);
+  const {
+    tRef,
+    languageRef,
+    rootRef,
+    openRef,
+    lookRef,
+    saveTabRef,
+    saveRef,
+    closeRef,
+    settingsRef,
+  } = usePluginRefs({
+    t,
+    language,
+    rootPath,
+    openPathInTab,
+    openFile,
+    saveTab,
+    saveActiveTab,
+    closeActiveTab,
+  });
   const { tabsRef, setTabs, setActiveTabId, liveTabs } = tabState;
-  const settingsRef = useLatest(useSettings());
 
   useEffect(() => {
     configurePlugins({
@@ -266,85 +443,14 @@ export function usePluginWindow({
     };
   }, [saveRef, closeRef]);
 
-  // A folder in development reloaded, textus:// links, plugins' AI tools:
-  // started once the window is up (plugins/window-tasks.ts).
-  useEffect(() => {
-    let stop: (() => void) | null = null;
-    let gone = false;
-    void windowTasks.load().then((tasks) => {
-      if (!gone) stop = tasks.startWindowTasks(runPluginAiTool);
-    });
-    return () => {
-      gone = true;
-      stop?.();
-    };
-  }, []);
-  // The completions plugins suggest as you type, and calling off those the
-  // panel no longer needs.
-  useEffect(() => {
-    setCompletionAsker(
-      (id, source, context) =>
-        askPlugin(
-          id,
-          "$provideCompletions",
-          { id: source, ...context },
-          "editor.read",
-        ),
-      (id, request) =>
-        void askPlugin(id, "$cancelCompletions", { request }).catch(() => {}),
-    );
-    return () => setCompletionAsker(null);
-  }, []);
-  useEffect(() => {
-    emitPluginEvent("root", { path: rootPath });
-    watchConventions(rootPath);
-    // The folder's own plugin settings, over the general ones.
-    void setPluginProject(rootPath);
-  }, [rootPath]);
-  useEffect(
-    () => emitPluginEvent("activeDocument", { path: activePath }),
-    [activePath],
-  );
-  useEffect(
-    () => emitPluginEvent("activeTab", getWindowAccess()?.activeTab() ?? null),
-    [tabState.activeTabId],
-  );
-  useEffect(() => {
-    emitPluginEvent("language", language);
-    refreshAllListViews();
-  }, [language]);
-  useEffect(() => onCopied((copied) => emitPluginEvent("copy", copied)), []);
-  useEffect(() => {
-    let dark = windowIsDark();
-    let look = appearanceNow().key;
-    return watchTheme(() => {
-      const now = appearanceNow();
-      if (now.key !== look) {
-        look = now.key;
-        emitPluginEvent("appearance", { theme: now.theme, scheme: now.scheme });
-      }
-      if (windowIsDark() === dark) return;
-      dark = !dark;
-      emitPluginEvent("theme", dark ? "dark" : "light");
-    });
-  }, []);
-  usePluginMenuSync(language);
-  // Plugins' schedules, after startup: background runs, notifications'
-  // clicks, whether Textus is in front.
-  // One ended before its module came connects nothing: it would outlast
-  // the connection that replaced it.
-  useEffect(() => {
-    let stop: (() => void) | undefined;
-    let ended = false;
-    void import("../plugins/background/schedule-window").then((m) => {
-      if (!ended)
-        stop = m.connectScheduleWindow(languageRef, settingsRef, openRef);
-    });
-    return () => {
-      ended = true;
-      stop?.();
-    };
-  }, [languageRef, settingsRef, openRef]);
+  useWindowTasks();
+  usePluginEvents({
+    rootPath,
+    activePath,
+    activeTabId: tabState.activeTabId,
+    language,
+  });
+  usePluginSchedules(language, languageRef, settingsRef, openRef);
 
   return useSyncExternalStore(subscribePlugins, pluginsSnapshot);
 }
