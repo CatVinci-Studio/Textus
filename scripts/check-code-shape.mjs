@@ -29,7 +29,6 @@ const HOOKS_NOW = {
   "src/app/useWindowShell.ts useWindowShell": 14,
   "src/app/useWindowWiring.ts useWindowWiring": 20,
   "src/document/autosave.ts useAutosave": 14,
-  "src/document-view/useEditorChat.ts useEditorChat": 13,
   "src/document-view/useEditorProposals.ts useEditorProposals": 28,
   "src/document-view/useEditorSetup.ts useEditorSetup": 20,
   "src/document-view/useEditorWindowEvents.ts useEditorWindowEvents": 21,
