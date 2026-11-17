@@ -100,6 +100,27 @@ function originalBetween(
   return from <= to ? text.slice(from, to).trim() : null;
 }
 
+/** The blank lines the file had between pieces `a` and `b`, a kept piece
+ *  and a changed run standing in for blocks it had; else one. */
+function gapBetween(
+  { text, units }: SourceBlocks,
+  pieces: Piece[],
+  a: number,
+  b: number,
+): string {
+  if (b !== a + 1 || pieces[a].kind === pieces[b].kind) return "\n\n";
+  const run = pieces[a].kind === "changed" ? a : b;
+  const before = pieces[run - 1];
+  const after = pieces[run + 1];
+  const span = text.slice(
+    before ? units[before.to].end! : 0,
+    after ? units[after.from].start! : text.length,
+  );
+  if (!span.trim()) return "\n\n";
+  const gap = (run === b ? /^\s*/ : /\s*$/).exec(span)![0];
+  return /^\n{2,}$/.test(gap) ? gap : "\n\n";
+}
+
 function unitText(source: SourceBlocks, u: number): string {
   const unit = source.units[u];
   return source.text.slice(unit.start!, unit.end!);
@@ -154,9 +175,17 @@ export function compose(
       : text === "" || text.endsWith("\n")
         ? "\n"
         : "";
+  // An empty paragraph writes nothing, and no blank line around it.
+  let body = "";
+  let before = -1;
+  pieceTexts.forEach((piece, p) => {
+    if (!piece) return;
+    if (before >= 0) body += gapBetween(source, pieces, before, p);
+    body += piece;
+    before = p;
+  });
   return {
-    // An empty paragraph writes nothing, and no blank line around it.
-    text: head + pieceTexts.filter(Boolean).join("\n\n") + tail,
+    text: head + body + tail,
     pieceTexts,
     definitions: definitions.join("\n\n"),
   };

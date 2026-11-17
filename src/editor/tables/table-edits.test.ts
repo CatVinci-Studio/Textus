@@ -301,6 +301,6 @@ describe("the table's keys and pastes", () => {
     const t = await openView("| a | b |\n| --- | --- |\n| 1 | 2 |\n\nend");
     t.caretAt("1");
     runTableAction((fn) => t.editor.action(fn), "delete-row");
-    expect(t.markdown()).toBe("| a | b |\n| - | - |\n\nend");
+    expect(t.markdown()).toBe("| a | b |\n| --- | --- |\n\nend");
   });
 });

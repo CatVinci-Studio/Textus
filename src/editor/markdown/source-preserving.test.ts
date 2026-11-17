@@ -207,7 +207,7 @@ describe("saving after an edit elsewhere keeps as written", () => {
     });
     expect(formula).toBe("a | b");
     expect(out).toContain("| x | $a \\| b\\|c$ |\n");
-    expect(out.split("\n")[0]).toBe("| a | b           |");
+    expect(out.split("\n")[0]).toBe("| a | b |");
   });
 
   it("escapes a bar typed after a formula's \\\\ so the cell holds", async () => {
@@ -252,11 +252,42 @@ describe("saving after an edit elsewhere keeps as written", () => {
     );
   });
 
-  it("keeps the blank lines between untouched blocks only", async () => {
-    const markdown = "a\n\n\n\nb\n\n\n\nc\n";
-    expect(await saveAfter(markdown, typeInto(2))).toBe(
-      "a\n\n\n\nb\n\nc edited\n",
+  it("keeps the blank lines around an edited block", async () => {
+    const markdown = "a\n\n\n\nb\n\n\nc\n\nd\n";
+    expect(await saveAfter(markdown, typeInto(1))).toBe(
+      "a\n\n\n\nb edited\n\n\nc\n\nd\n",
     );
+  });
+
+  it("keeps an unaligned table's other rows as written, a lined-up one lined up", async () => {
+    const loose = "|a|b|\n|-|:-|\n|1|2|\n|33|4|\n";
+    expect(await saveAfter(loose, typeInto(0, "x"))).toBe(
+      "|ax|b|\n|-|:-|\n|1|2|\n|33|4|\n",
+    );
+    const lined = "| a | b |\n| - | - |\n| 1 | 2 |\n";
+    expect(await saveAfter(lined, typeInto(0, "xx"))).toBe(
+      "| axx | b |\n| --- | - |\n| 1   | 2 |\n",
+    );
+  });
+
+  it.each([
+    ["1) one\n2) two\n", "1) one edited\n2) two\n"],
+    ["1. one\n1. two\n", "1. one edited\n1. two\n"],
+    ["- one\n    - two\n", "- one edited\n    - two\n"],
+    ["# Title #\n", "# Title edited #\n"],
+    ["~~~\ncode\n~~~\n", "~~~\ncode edited\n~~~\n"],
+    ["one  \ntwo\n", "one  \ntwo edited\n"],
+  ])("writes %j edited in its own hand", async (markdown, saved) => {
+    expect(await saveAfter(markdown, typeInto(0))).toBe(saved);
+  });
+
+  it("keeps each edited paragraph's own emphasis", async () => {
+    const markdown = "__a__ and **b**\n\n_c_ here\n";
+    const out = await saveAfter(markdown, (view) => {
+      typeInto(1)(view);
+      typeInto(0)(view);
+    });
+    expect(out).toBe("__a__ and **b** edited\n\n_c_ here edited\n");
   });
 
   it("writes nothing for an empty paragraph added at the end", async () => {

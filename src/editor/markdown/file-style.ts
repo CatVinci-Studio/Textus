@@ -1,4 +1,5 @@
 import { tokenize } from "./escapes-as-written";
+import { tableInTheFilesHand } from "./table-style";
 
 /**
  * A changed run, as the serializer writes it, brought closer to how a
@@ -41,6 +42,10 @@ export function withoutNeedlessEscapes(
   return without(plain);
 }
 
+const STARS = /(?<![\\*])\*{1,2}(?!\*)/g;
+const EMPHASIS =
+  /(?<![\\*_\w])(?:\*{1,2}|_{1,2})(?![*_])|(?<![\\*_])(?:\*{1,2}|_{1,2})(?![*_\w])/g;
+
 /** A list's marker at a line's start, an emphasis's, a heading underlined:
  *  each as `original` has it, where the serializer wrote its own. */
 const HANDS: ((original: string, written: string) => string | null)[] = [
@@ -53,11 +58,20 @@ const HANDS: ((original: string, written: string) => string | null)[] = [
   // Emphasis: _word_ and __word__ for *word* and **word**.
   (original, written) => {
     const under = /(^|[\s(["'])_{1,2}[^\s_]/m.test(original);
+    if (!under) return null;
+    // Both kinds in the file: each emphasis as the one in its place there.
+    const theirs = [...original.matchAll(EMPHASIS)].map((m) => m[0]);
+    const ours = [...written.matchAll(STARS)];
+    if (theirs.length === ours.length) {
+      let k = 0;
+      return written.replace(STARS, (stars: string) => {
+        const their = theirs[k++];
+        return their.length === stars.length ? their : stars;
+      });
+    }
     const star = /(^|[^\\*\n])\*{1,2}[^\s*]/.test(original);
-    if (!under || star) return null;
-    return written.replace(/(?<![\\*])(\*{1,2})(?!\*)/g, (stars: string) =>
-      "_".repeat(stars.length),
-    );
+    if (star) return null;
+    return written.replace(STARS, (stars: string) => "_".repeat(stars.length));
   },
   // A heading with its line of = or - under it.
   (original, written) => {
@@ -67,11 +81,76 @@ const HANDS: ((original: string, written: string) => string | null)[] = [
     const line = (heading[1].length === 1 ? "=" : "-").repeat(under.length);
     return `${heading[2]}\n${line}`;
   },
+  // A heading closed with #s: "# h #".
+  (original, written) => {
+    const closing = /^#{1,6} [^\n]*? (#+)[ \t]*$/m.exec(original)?.[1];
+    if (!closing || !/^#{1,6} [^\n]+$/.test(written)) return null;
+    return `${written} ${closing}`;
+  },
+  // Numbered lists: "1)" for "1.", and the same number on every item.
+  (original, written) => {
+    const numbers = [...original.matchAll(/^[ \t]*(\d+)([.)])[ \t]/gm)];
+    if (!numbers.length) return null;
+    const paren = numbers.every((n) => n[2] === ")");
+    const one =
+      numbers.length > 1 && numbers.every((n) => n[1] === numbers[0][1]);
+    if (!paren && !one) return null;
+    return written.replace(
+      /^([ \t]*)(\d+)\.(?=[ \t])/gm,
+      (_all, indent: string, n: string) =>
+        `${indent}${one ? numbers[0][1] : n}${paren ? ")" : "."}`,
+    );
+  },
+  // Bullets nested four spaces deep, for the serializer's two.
+  (original, written) => {
+    if (!/^ {4}[-*+][ \t]/m.test(original) || /^ {2}[-*+][ \t]/m.test(original))
+      return null;
+    if (/^[ \t]*(\d+[.)]|`{3}|~{3})/m.test(written)) return null;
+    return written.replace(/^((?: {2})+)(?=\S)/gm, (indent) => indent + indent);
+  },
+  // Code fenced with ~~~.
+  (original, written) => {
+    if (!/^[ \t]*~{3}/m.test(original) || /^[ \t]*`{3}/m.test(original))
+      return null;
+    return written.replace(
+      /^([ \t]*)(`{3,})/gm,
+      (_all, indent: string, ticks: string) =>
+        indent + "~".repeat(ticks.length),
+    );
+  },
+  // A line broken with two spaces, for the serializer's backslash.
+  (original, written) => {
+    if (!/ {2,}\n/.test(original) || /(?<!\\)\\\n/.test(original)) return null;
+    return written.replace(/(?<!\\)\\\n/g, "  \n");
+  },
+  tableInTheFilesHand,
 ];
 
 /** `written` in `original`'s own hand, each way taken where it reads the
  *  same. */
 export function inTheFilesHand(
+  original: string,
+  written: string,
+  reads: (text: string) => boolean,
+): string {
+  // Block by block where the two hold as many: one paragraph's stars don't
+  // stop the next one's underscores.
+  const theirs = original.split(BLOCK_GAP);
+  const ours = written.split(BLOCK_GAP);
+  if (theirs.length > 1 && theirs.length === ours.length) {
+    const each = ours
+      .map((part, k) => (k % 2 ? part : inOneHand(theirs[k], part, () => true)))
+      .join("");
+    if (each !== written && reads(each)) return each;
+  }
+  return inOneHand(original, written, reads);
+}
+
+/** Blank lines before a line at the margin: between two top-level blocks.
+ *  Kept by the split, as odd parts. */
+const BLOCK_GAP = /(\n{2,}(?=\S))/;
+
+function inOneHand(
   original: string,
   written: string,
   reads: (text: string) => boolean,
