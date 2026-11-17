@@ -1,7 +1,14 @@
 import { CJK_SCRIPT } from "../../utils/cjk";
 import { focusInPlace } from "../../editor/focus-in-place";
 import { TextSelection } from "@milkdown/kit/prose/state";
-import { useCallback, useRef, useState, type MouseEvent } from "react";
+import {
+  useCallback,
+  useRef,
+  useState,
+  type Dispatch,
+  type MouseEvent,
+  type SetStateAction,
+} from "react";
 import { editorViewCtx } from "@milkdown/kit/core";
 import type { Decoration } from "@milkdown/kit/prose/view";
 import {
@@ -84,18 +91,16 @@ function siblingsOf(state: EditorState, deco: Decoration): Decoration[] {
   return issuesIn(state, start, end);
 }
 
-/** Opens the popover over a hovered grammar underline, hiding it on a short
- *  delay so the pointer can travel into the popover. */
-export function useGrammarPopover(
+/** The card shown while the pointer is on an underline, and a moment after
+ *  it leaves, unless it moved onto the card. */
+function usePointerHover(
   run: EditorRunner,
-  getStaleMessage: () => string,
+  setPopover: Dispatch<SetStateAction<GrammarPopoverInfo | null>>,
+  setApplyError: (error: string | null) => void,
 ) {
-  const [popover, setPopover] = useState<GrammarPopoverInfo | null>(null);
-  const [applyError, setApplyError] = useState<string | null>(null);
   const hideTimer = useRef<ReturnType<typeof setTimeout> | undefined>(
     undefined,
   );
-
   const onMouseOver = useCallback(
     (e: MouseEvent) => {
       const target = (e.target as HTMLElement).closest?.(
@@ -122,19 +127,34 @@ export function useGrammarPopover(
         );
       });
     },
-    [run],
+    [run, setPopover, setApplyError],
   );
 
-  const onMouseOut = useCallback((e: MouseEvent) => {
-    const target = (e.target as HTMLElement).closest?.(".grammar-issue");
-    if (!target) return;
-    const related = e.relatedTarget as HTMLElement | null;
-    if (related?.closest?.(".grammar-popover")) return;
-    hideTimer.current = setTimeout(() => setPopover(null), HOVER_GRACE_MS);
+  const onMouseOut = useCallback(
+    (e: MouseEvent) => {
+      const target = (e.target as HTMLElement).closest?.(".grammar-issue");
+      if (!target) return;
+      const related = e.relatedTarget as HTMLElement | null;
+      if (related?.closest?.(".grammar-popover")) return;
+      hideTimer.current = setTimeout(() => setPopover(null), HOVER_GRACE_MS);
+    },
+    [setPopover],
+  );
+
+  const cancelHide = useCallback(() => {
+    if (hideTimer.current) clearTimeout(hideTimer.current);
   }, []);
 
-  // The caret entering an underline opens the popover; leaving closes one
-  // the caret opened, never one the pointer is using.
+  return { onMouseOver, onMouseOut, cancelHide };
+}
+
+/** The caret entering an underline opens the card; leaving closes one the
+ *  caret opened, never one the pointer is using. */
+function useCaretOpens(
+  run: EditorRunner,
+  setPopover: Dispatch<SetStateAction<GrammarPopoverInfo | null>>,
+  setApplyError: (error: string | null) => void,
+) {
   const openedByCaret = useRef(false);
   const onCaretMove = useCallback(() => {
     run((ctx) => {
@@ -163,7 +183,25 @@ export function useGrammarPopover(
             ),
       );
     });
-  }, [run]);
+  }, [run, setPopover, setApplyError]);
+
+  return onCaretMove;
+}
+
+/** Opens the popover over a hovered grammar underline, hiding it on a short
+ *  delay so the pointer can travel into the popover. */
+export function useGrammarPopover(
+  run: EditorRunner,
+  getStaleMessage: () => string,
+) {
+  const [popover, setPopover] = useState<GrammarPopoverInfo | null>(null);
+  const [applyError, setApplyError] = useState<string | null>(null);
+  const { onMouseOver, onMouseOut, cancelHide } = usePointerHover(
+    run,
+    setPopover,
+    setApplyError,
+  );
+  const onCaretMove = useCaretOpens(run, setPopover, setApplyError);
 
   const ignore = useCallback(() => {
     if (!popover) return;
@@ -197,10 +235,6 @@ export function useGrammarPopover(
     },
     [popover, run],
   );
-
-  const cancelHide = useCallback(() => {
-    if (hideTimer.current) clearTimeout(hideTimer.current);
-  }, []);
 
   const hide = useCallback(() => {
     setPopover(null);
