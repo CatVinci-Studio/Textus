@@ -132,6 +132,14 @@
         "description": "Markdown document",
         "role": "Editor",
         "mimeType": "text/markdown"
+      },
+      {
+        "ext": ["mdx"],
+        "name": "MDX",
+        "description": "MDX document",
+        "role": "Editor",
+        "rank": "Alternate",
+        "mimeType": "text/mdx"
       }
     ],
     "icon": [
