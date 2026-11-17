@@ -1,5 +1,6 @@
 import { Plugin, PluginKey } from "@milkdown/kit/prose/state";
 import { $prose } from "@milkdown/kit/utils";
+import { glideScroll } from "../../engine/motion/motion";
 
 /**
  * Transaction meta for an edit made by pointing rather than typing (ticking
@@ -26,13 +27,16 @@ export function createTypewriterPlugin(options: { enabled: () => boolean }) {
         view(editorView) {
           // Centres the caret line's middle, not its top, which sat half a line high.
           const center = (view: typeof editorView) => {
-            const scrollContainer = view.dom.closest(".editor-scroll");
+            const scrollContainer =
+              view.dom.closest<HTMLElement>(".editor-scroll");
             if (!scrollContainer || view.dom.offsetParent === null) return;
             const coords = view.coordsAtPos(view.state.selection.head);
             const containerRect = scrollContainer.getBoundingClientRect();
             const targetY = containerRect.top + containerRect.height / 2;
             const delta = (coords.top + coords.bottom) / 2 - targetY;
-            if (Math.abs(delta) > 2) scrollContainer.scrollTop += delta;
+            // Glides there; the next key retargets from wherever it is.
+            if (Math.abs(delta) > 2)
+              glideScroll(scrollContainer, delta, "--dur-base");
           };
           let wasEnabled = options.enabled();
           // A resized window moves the middle; turning the mode on centres
