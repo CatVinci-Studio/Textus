@@ -1,6 +1,6 @@
 import { viewKey } from "../../engine/frame/island-parts";
 import { tabZoomStyle } from "../../engine/zoom/tab-zoom";
-import { Suspense, type CSSProperties, type ReactNode } from "react";
+import { Suspense, useRef, type CSSProperties, type ReactNode } from "react";
 import { EditorKept, KeptWhileHidden } from "./kept";
 import { userHasActed } from "./user-input";
 import { PageTabContent } from "../tabs/page-tabs";
@@ -42,6 +42,24 @@ const SplitView = lazyComponent(
 );
 
 /**
+ * `tabs` in the order they opened, whatever order the tab row puts them in.
+ * Each view is placed by its island, so the list's order means nothing on
+ * screen; but a view React moves to follow a new order is taken out of the
+ * page and put back, which loses its scroll position.
+ */
+function useOpeningOrder(tabs: DocTab[]): DocTab[] {
+  const order = useRef<string[]>([]);
+  const byId = new Map(tabs.map((tab) => [tab.id, tab]));
+  const kept = order.current.filter((id) => byId.has(id));
+  const known = new Set(kept);
+  order.current = [
+    ...kept,
+    ...tabs.filter((tab) => !known.has(tab.id)).map((tab) => tab.id),
+  ];
+  return order.current.map((id) => byId.get(id)!);
+}
+
+/**
  * Every open tab's view - its editor, source, split view, plugin view, web
  * page or start page - laid on its island's sheet: those in front of a pane
  * in that pane's cell (`shownIn`, `styleOf`), the rest hidden but kept, so
@@ -78,12 +96,13 @@ export function DocumentViews({
   // The document in front is the AI's and draws the margin, even with an
   // AI tab or a page tab active.
   const inFront = useDocumentInFront();
+  const listed = useOpeningOrder(tabs);
   return (
     <>
       {/* A document's editor is mounted while its tab is in front (or a
           draft with no file to come back from), else let go (EditorKept). */}
       {/* In a split, a click or focus in a pane brings its tab to the front. */}
-      {tabs.map((tab) => {
+      {listed.map((tab) => {
         const pane = shownIn.get(tab.id);
         // On its island's sheet; a phone's column lays it out in its own
         // flow; a tab in no island (one pulled away) takes no room.
