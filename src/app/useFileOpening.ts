@@ -153,6 +153,8 @@ export function useFileOpening(opts: {
         const offered = await offerPluginToOpen(path, t);
         const now = offered === "on" ? customEditorFor(path) : null;
         if (now) return pluginTab(path, now, place);
+        // Another file tapped since: that one is opening instead.
+        if (offered === "dropped") return null;
         if (offered === "system") {
           await exportDoc.openLinkedFile(path);
           return null;

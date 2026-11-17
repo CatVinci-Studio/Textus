@@ -31,7 +31,7 @@ export interface CardRequest {
 export type CardChoice = "install" | "system" | "later" | "never";
 
 /** What a card's answer was, or why none was asked. */
-export type CardResult = CardChoice | "busy" | "muted";
+export type CardResult = CardChoice | "busy" | "muted" | "superseded";
 
 /** How many times Later may put a card off before it stops coming. */
 export const LATER_LIMIT = 3;
@@ -88,6 +88,8 @@ export function restoreCards(): void {
 interface Shown {
   request: CardRequest;
   resolve: (choice: CardChoice) => void;
+  /** Gone without an answer: nothing remembered. */
+  drop: () => void;
 }
 
 let shown: Shown | null = null;
@@ -106,15 +108,17 @@ export function currentPluginCard(): CardRequest | null {
 }
 
 /** Shows a card and resolves with the user's answer. An offer finds the
- *  card taken "busy"; content and open cards wait their turn. */
+ *  card taken "busy"; content cards wait their turn. An open card answers
+ *  the latest tap: it takes the place of an earlier one, "superseded". */
 export function showPluginCard(request: CardRequest): Promise<CardResult> {
   const key = cardKey(request);
   if (cardMuted(key)) return Promise.resolve("muted");
+  if (request.situation.type === "open") supersedeOpenCards();
   const same = (s: Shown) => cardKey(s.request) === key;
   if (shown && (request.situation.type === "offer" || same(shown)))
     return Promise.resolve("busy");
   if (waiting.some(same)) return Promise.resolve("busy");
-  return new Promise<CardChoice>((resolve) => {
+  return new Promise<CardResult>((resolve) => {
     const entry: Shown = {
       request,
       resolve: (choice) => {
@@ -123,6 +127,7 @@ export function showPluginCard(request: CardRequest): Promise<CardResult> {
         else remember(key, undefined);
         resolve(choice);
       },
+      drop: () => resolve("superseded"),
     };
     if (shown) waiting.push(entry);
     else {
@@ -130,6 +135,22 @@ export function showPluginCard(request: CardRequest): Promise<CardResult> {
       changed();
     }
   });
+}
+
+const opening = (s: Shown) => s.request.situation.type === "open";
+
+/** Earlier open cards, shown or waiting, give way unanswered. */
+function supersedeOpenCards() {
+  for (const entry of waiting.filter(opening)) {
+    waiting.splice(waiting.indexOf(entry), 1);
+    entry.drop();
+  }
+  if (shown && opening(shown)) {
+    const done = shown;
+    shown = waiting.shift() ?? null;
+    done.drop();
+    changed();
+  }
 }
 
 /** The user's answer to the card on screen; the next one waiting shows. */

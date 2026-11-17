@@ -1412,6 +1412,8 @@ ${AI_NAME}への執筆の指示です。すべての文書に適用されます�
   wordImportDismiss: "OK",
   openFileFailed:
     "{name} を開けません。テキスト文書ではなく、この種類のファイルを開けるプラグインもありません。",
+  openFileMuted:
+    "Textus だけでは {name} を開けません。開けるプラグインの提案をオフにしています。設定 › {page} で再表示できます。",
   openFileGone:
     "{name} を開けません。ファイルが見つかりません。移動、名前の変更、または削除された可能性があります。",
   wordImportFailed: "{name} を開けませんでした。",

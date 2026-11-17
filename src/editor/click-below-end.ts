@@ -57,8 +57,21 @@ function boxOf(dom: HTMLElement) {
  *  Android's went under the table or into a cell. Android only with its
  *  keyboard up: it opens it only for its own caret. */
 function caretBesideBlock(view: EditorView, y: number): boolean {
-  if (!view.editable) return false;
-  if (!isIOSApp && !(isMobileApp && view.hasFocus())) return false;
+  const found = gapCaret(view, y);
+  if (found === null) return false;
+  view.dispatch(
+    view.state.tr.setSelection(TextSelection.create(view.state.doc, found)),
+  );
+  holdCaret(view, found);
+  return true;
+}
+
+/** Where a tap at height `y` in the gap beside a table or a picture puts
+ *  the caret (see caretBesideBlock), in the column or its margin; null
+ *  outside such a gap, or where the system's own caret is kept. */
+export function gapCaret(view: EditorView, y: number): number | null {
+  if (!view.editable) return null;
+  if (!isIOSApp && !(isMobileApp && view.hasFocus())) return null;
   const { doc } = view.state;
   let found = -1;
   doc.forEach((node, offset, index) => {
@@ -76,12 +89,7 @@ function caretBesideBlock(view: EditorView, y: number): boolean {
     // Into the text block of the two: the end of one above, the start of one below.
     found = prev.isTextblock ? offset - 1 : offset + 1;
   });
-  if (found < 0) return false;
-  view.dispatch(
-    view.state.tr.setSelection(TextSelection.create(view.state.doc, found)),
-  );
-  holdCaret(view, found);
-  return true;
+  return found < 0 ? null : found;
 }
 
 const HOLD_MS = 400;

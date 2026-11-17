@@ -1398,6 +1398,8 @@ ${AI_NAME}에게 주는 글쓰기 지침으로, 모든 문서에 적용됩니다
   wordImportDismiss: "확인",
   openFileFailed:
     "{name}을(를) 열 수 없습니다. 텍스트 문서가 아니며 이런 파일을 여는 플러그인도 없습니다.",
+  openFileMuted:
+    "Textus만으로는 {name}을(를) 열 수 없습니다. 이 파일을 여는 플러그인 제안을 껐습니다. 설정 › {page}에서 다시 표시할 수 있습니다.",
   openFileGone:
     "{name}을(를) 열 수 없습니다. 파일이 더 이상 없습니다. 이동되었거나 이름이 바뀌었거나 삭제되었을 수 있습니다.",
   wordImportFailed: "{name}을(를) 열 수 없습니다.",

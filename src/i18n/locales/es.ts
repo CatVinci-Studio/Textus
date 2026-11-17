@@ -1514,6 +1514,8 @@ para usar una.
   wordImportDismiss: "Entendido",
   openFileFailed:
     "No se puede abrir {name}: no es un documento de texto y ningún complemento abre archivos de este tipo.",
+  openFileMuted:
+    "Textus no puede abrir {name} por sí solo. Desactivaste la sugerencia del plugin que lo abre; Ajustes › {page} la vuelve a mostrar.",
   openFileGone:
     "No se puede abrir {name}: ya no está ahí. Puede que se haya movido, renombrado o eliminado.",
   wordImportFailed: "No se pudo abrir {name}.",

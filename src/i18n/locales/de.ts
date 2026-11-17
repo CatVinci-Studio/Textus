@@ -1476,6 +1476,8 @@ Skills liegen im Ordner skills/ neben dieser Datei, je Skill eine
   wordImportDismiss: "Verstanden",
   openFileFailed:
     "{name} lässt sich nicht öffnen: Es ist kein Textdokument, und kein Plugin öffnet solche Dateien.",
+  openFileMuted:
+    "Textus kann {name} nicht selbst öffnen. Den Vorschlag des Plugins, das sie öffnet, hast du ausgeblendet; unter Einstellungen › {page} erscheint er wieder.",
   openFileGone:
     "{name} lässt sich nicht öffnen: Die Datei ist nicht mehr da. Sie wurde vielleicht verschoben, umbenannt oder gelöscht.",
   wordImportFailed: "{name} konnte nicht geöffnet werden.",

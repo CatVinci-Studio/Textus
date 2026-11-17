@@ -1496,6 +1496,8 @@ Habilidades ficam na pasta skills/ ao lado deste arquivo, um arquivo
   wordImportDismiss: "Entendi",
   openFileFailed:
     "Não é possível abrir {name}: não é um documento de texto e nenhum plugin abre arquivos deste tipo.",
+  openFileMuted:
+    "O Textus não abre {name} sozinho. Você desativou a sugestão do plugin que o abre; Ajustes › {page} a mostra de novo.",
   openFileGone:
     "Não é possível abrir {name}: o arquivo não está mais lá. Talvez tenha sido movido, renomeado ou excluído.",
   wordImportFailed: "Não foi possível abrir {name}.",

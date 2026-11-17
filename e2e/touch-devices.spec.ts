@@ -1,5 +1,5 @@
 import { expect, type Page, test } from "@playwright/test";
-import { openApp, PHONE, TABLET } from "./helpers";
+import { emit, openApp, pasteMarkdown, PHONE, TABLET } from "./helpers";
 import { openPath } from "./plugin-helpers";
 
 // The everyday flows on a touch screen: a phone (its own layout) and a
@@ -145,5 +145,84 @@ test.describe("dragging a tab by touch on a tablet", () => {
     await page.waitForTimeout(200);
     await touch("touchEnd", to.x, to.y);
     await expect(page.locator(".main-pane > section.island")).toHaveCount(2);
+  });
+});
+
+test.describe("a fold closed and opened again", () => {
+  test.use({ ...TABLET, viewport: { width: 1024, height: 768 } });
+
+  test("gives the wide layout its sidebar back", async ({ page }) => {
+    await openApp(page);
+    const sidebar = page.locator(".sidebar");
+    await emit(page, "menu-toggle-sidebar");
+    await expect(sidebar).not.toHaveClass(/sidebar-collapsed/);
+    // Folded: a phone's layout, its sidebar put away.
+    await page.setViewportSize({ width: 390, height: 768 });
+    await expect(
+      page.locator(".window-bar-sidebar-toggle:visible"),
+    ).toHaveCount(1);
+    await page.setViewportSize({ width: 1024, height: 768 });
+    await expect(sidebar).not.toHaveClass(/sidebar-collapsed/);
+  });
+});
+
+test.describe("a tap in the page's margin on a tablet", () => {
+  test.use(TABLET);
+
+  test("beside the gap above a table puts the caret in the line above", async ({
+    page,
+  }) => {
+    await openApp(page);
+    await pasteMarkdown(
+      page,
+      "above\n\n| a | b |\n| - | - |\n| 1 | 2 |\n\nlast",
+    );
+    const editor = page.locator(".ProseMirror:visible");
+    const line = (await editor
+      .locator("p", { hasText: "above" })
+      .boundingBox())!;
+    const table = (await editor.locator("table").boundingBox())!;
+    const column = (await editor.boundingBox())!;
+    const gap = (line.y + line.height + table.y) / 2;
+    expect(column.x).toBeGreaterThan(12);
+    await page.touchscreen.tap(column.x / 2, gap);
+    await page.keyboard.type("k");
+    await expect(editor.locator("p").first()).toHaveText("abovek");
+  });
+});
+
+test.describe("a phone on its side", () => {
+  test.use({ ...PHONE, viewport: { width: 900, height: 400 } });
+
+  test("shows a toast and a card at its foot without one over the other", async ({
+    page,
+  }) => {
+    await openApp(page);
+    const boxes = await page.evaluate(() => {
+      const put = (corner: string, width: number) => {
+        const toast = document.createElement("div");
+        toast.className = "corner-toast";
+        toast.style.width = `${width}px`;
+        toast.style.height = "40px";
+        document
+          .querySelector(`.corner-stack[data-corner="${corner}"]`)!
+          .append(toast);
+        return toast;
+      };
+      const start = put("start", 448).getBoundingClientRect();
+      const end = put("end", 572).getBoundingClientRect();
+      return { start, end, height: innerHeight, width: innerWidth };
+    });
+    const { start, end } = boxes;
+    const apart =
+      start.right <= end.left ||
+      end.right <= start.left ||
+      start.bottom <= end.top ||
+      end.bottom <= start.top;
+    expect(apart).toBe(true);
+    for (const box of [start, end]) {
+      expect(box.bottom).toBeLessThanOrEqual(boxes.height);
+      expect(box.right).toBeLessThanOrEqual(boxes.width);
+    }
   });
 });

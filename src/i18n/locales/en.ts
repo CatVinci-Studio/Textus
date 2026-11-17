@@ -1444,6 +1444,8 @@ type /name in a conversation to use one.
   wordImportDismiss: "Got it",
   openFileFailed:
     "Textus can't open {name}: it isn't a text document, and no plugin opens files like it.",
+  openFileMuted:
+    "Textus can't open {name} by itself. You turned off the suggestion of the plugin that opens it; Settings › {page} shows it again.",
   openFileGone:
     "Textus can't open {name}: it isn't there any more. It may have been moved, renamed or deleted.",
   wordImportFailed: "{name} couldn't be opened.",

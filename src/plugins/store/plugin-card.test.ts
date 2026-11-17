@@ -52,6 +52,27 @@ it("shows one card at a time: an offer finds it taken, the others wait", async (
   expect(currentPluginCard()).toBeNull();
 });
 
+it("shows a later tap's open card in place of an earlier one", async () => {
+  const first = showPluginCard(open);
+  const picture: CardRequest = {
+    plugin: "images",
+    situation: { type: "open", path: "/d/b.png" },
+    installed: false,
+  };
+  const second = showPluginCard(picture);
+  expect(await first).toBe("superseded");
+  expect(currentPluginCard()).toBe(picture);
+  // The same kind of file again: the new path's card.
+  const again = { ...open, situation: { type: "open", path: "/d/c.pdf" } };
+  const third = showPluginCard(again as CardRequest);
+  expect(await second).toBe("superseded");
+  expect(currentPluginCard()).toBe(again);
+  answerPluginCard("system");
+  expect(await third).toBe("system");
+  // Given way, nothing was counted against either.
+  expect(mutedCardCount()).toBe(0);
+});
+
 it("asks again after Later, at most three times", async () => {
   for (let n = 0; n < LATER_LIMIT; n++) {
     const shown = showPluginCard(content);

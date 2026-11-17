@@ -2,6 +2,7 @@ import { Plugin, TextSelection } from "@milkdown/kit/prose/state";
 import { $prose } from "@milkdown/kit/utils";
 import type { EditorView } from "@milkdown/kit/prose/view";
 import { edgeStep } from "./drag-autoscroll-plugin";
+import { gapCaret } from "../click-below-end";
 
 /**
  * A click in the page's empty margins, beside the text column, puts the
@@ -26,7 +27,10 @@ function createMarginClickPlugin() {
         if (target === view.dom && inColumn(view, event.clientX)) return;
         // The scroller's own scrollbar.
         if (scroller && onScrollbar(scroller, event)) return;
-        const pos = nearestPos(view, event.clientX, event.clientY);
+        // Beside a table's gap, as a tap in the column there.
+        const pos =
+          gapCaret(view, event.clientY) ??
+          nearestPos(view, event.clientX, event.clientY);
         if (pos === null) return;
         event.preventDefault();
         const { doc, selection } = view.state;

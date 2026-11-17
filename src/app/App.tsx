@@ -4,7 +4,7 @@ import { tabTitle } from "../document/doc-tabs";
 import { useWindowAi } from "./islands/useWindowAi";
 import { conversationIn } from "./islands/ai-tabs";
 import { ConventionsCard } from "./ConventionsCard";
-import { CornerStack } from "../engine/controls/CornerToast";
+import { CornerStacks } from "../engine/controls/CornerToast";
 import { Suspense } from "react";
 import { AppDialogHost } from "../engine/controls/app-dialog";
 import { WindowBar } from "./frame/WindowBar";
@@ -300,23 +300,32 @@ function App() {
 
           {zenMode && <ZenExit onExit={() => setZenMode(false)} t={t} />}
 
-          <CornerStack corner="start">
-            <WordImportNotice
-              path={wordImported.path}
-              onDismiss={wordImported.dismiss}
-              t={t}
-            />
-            <DraftRestoredToast
-              count={draftsRestoredCount}
-              onDismiss={() => setDraftsRestoredCount(0)}
-              t={t}
-            />
-          </CornerStack>
-
-          <CornerStack corner="end">
-            <SuggestCard t={t} />
-            <ConventionsCard path={activeTab.path} settings={settings} t={t} />
-          </CornerStack>
+          <CornerStacks
+            start={
+              <>
+                <WordImportNotice
+                  path={wordImported.path}
+                  onDismiss={wordImported.dismiss}
+                  t={t}
+                />
+                <DraftRestoredToast
+                  count={draftsRestoredCount}
+                  onDismiss={() => setDraftsRestoredCount(0)}
+                  t={t}
+                />
+              </>
+            }
+            end={
+              <>
+                <SuggestCard t={t} />
+                <ConventionsCard
+                  path={activeTab.path}
+                  settings={settings}
+                  t={t}
+                />
+              </>
+            }
+          />
 
           <OnboardingLayers
             tutorial={tutorial}

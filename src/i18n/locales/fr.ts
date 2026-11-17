@@ -1522,6 +1522,8 @@ utiliser une.
   wordImportDismiss: "OK",
   openFileFailed:
     "Impossible d’ouvrir {name} : ce n’est pas un document texte, et aucun plugin n’ouvre ce type de fichier.",
+  openFileMuted:
+    "Textus ne peut pas ouvrir {name} seul. Vous avez masqué la suggestion du plugin qui l'ouvre ; Réglages › {page} la réaffiche.",
   openFileGone:
     "Impossible d’ouvrir {name} : le fichier n’est plus là. Il a peut-être été déplacé, renommé ou supprimé.",
   wordImportFailed: "Impossible d'ouvrir {name}.",

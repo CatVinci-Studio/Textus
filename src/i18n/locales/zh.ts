@@ -1340,6 +1340,8 @@ export default {
     "已将 {name} 转换为新的 Markdown 文档。部分格式可能与 Word 中不同，原 Word 文件不会被改动。",
   wordImportDismiss: "知道了",
   openFileFailed: "无法打开 {name}：它不是文本文档，也没有插件能打开这类文件。",
+  openFileMuted:
+    "Textus 本身打不开 {name}。能打开它的插件建议已被你关闭，可在 设置 › {page} 里重新显示。",
   openFileGone: "无法打开 {name}：文件已不在原处，可能已被移动、重命名或删除。",
   wordImportFailed: "无法打开 {name}。",
   wordSaveRefused:

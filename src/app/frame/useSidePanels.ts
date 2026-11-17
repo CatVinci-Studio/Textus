@@ -1,4 +1,10 @@
-import { useCallback, useEffect, useState, useSyncExternalStore } from "react";
+import {
+  useCallback,
+  useEffect,
+  useRef,
+  useState,
+  useSyncExternalStore,
+} from "react";
 import { usePhoneLayout } from "../../engine/controls/usePhoneLayout";
 import { isPhoneLayout } from "../../platform/phone-layout";
 import { usePresence } from "../../engine/motion/usePresence";
@@ -49,6 +55,13 @@ export function useSidePanels(aiOn: boolean, activeTabId: string) {
   // with the rail and folds both away; the rail stays off.
   const toggleSidebar = useCallback(() => setOpen((v) => !v), []);
   usePushedSidebar(phone, open, setOpen, activeTabId);
+  // Back from a phone's layout (a fold opened out): the wide layout's own
+  // sidebar, as it was remembered, not the phone's put away one.
+  const wasPhone = useRef(phone);
+  useEffect(() => {
+    if (wasPhone.current && !phone) setOpen(getUiState("sidebarOpen") === true);
+    wasPhone.current = phone;
+  }, [phone]);
   useEffect(() => {
     if (!isPhoneLayout()) setUiState("sidebarOpen", open);
     // A phone's sidebar pushes the page aside: the find bar goes with it.

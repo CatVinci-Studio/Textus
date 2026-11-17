@@ -1,7 +1,7 @@
 import { fill } from "../i18n/fill";
 import type { DocTab } from "../document/doc-tabs";
 import { exportDoc, session } from "../platform/ipc";
-import { showMessage } from "../engine/controls/app-dialog";
+import { showConfirm, showMessage } from "../engine/controls/app-dialog";
 import type { DocumentPlace } from "../plugins/app-bridge";
 import { customEditorFor } from "../plugins/store/plugin-lookup";
 import { basename } from "../utils/path";
@@ -65,6 +65,19 @@ export async function openUnreadable(
   }
   const now = offered === "on" ? customEditorFor(path) : null;
   if (now) return pluginTab(path, now, place);
+  // Its offer turned off: said that nothing here opens it, the system's
+  // app a press away.
+  if (offered === "muted") {
+    const open = await showConfirm(
+      fill(t.openFileMuted, {
+        name: basename(path),
+        page: t.navExtensions,
+      }),
+      { okLabel: t.pluginCardSystemApp, cancelLabel: t.cancel },
+    );
+    if (open) await exportDoc.openLinkedFile(path);
+    return null;
+  }
   if (offered === "none")
     void showMessage(
       fill(gone ? t.openFileGone : t.openFileFailed, {
