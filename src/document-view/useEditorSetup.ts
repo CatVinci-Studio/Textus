@@ -82,7 +82,7 @@ export function useEditorSetup({
 
   const run = useEditorRunner();
   const clipboard = useEditorClipboard(run);
-  useEditorFlush(tabId, run, reporting);
+  useEditorFlush(tabId, run, reporting, filePathRef);
 
   const notice = useAiNotice();
   const { showAiNotice } = notice;

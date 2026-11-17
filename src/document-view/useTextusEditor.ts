@@ -91,7 +91,7 @@ export function useTextusEditor({
       withEditorExtensions(
         Editor.make().config((ctx) => {
           let giveBack = () => {};
-          const from = leftAtAll(tabId);
+          const from = leftAtAll(tabId, filePathRef.current);
           configureEditorRoot(
             ctx,
             root,

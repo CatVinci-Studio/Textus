@@ -90,6 +90,8 @@ export function useEditorFlush(
     openedValueRef,
     reportDoc,
   }: DocumentReporting,
+  /** The file it shows: what it leaves is for that file only. */
+  filePathRef: { readonly current: string | null },
 ) {
   const flush = useCallback(
     () =>
@@ -114,6 +116,7 @@ export function useEditorFlush(
     run((ctx) => {
       const { state } = ctx.get(editorViewCtx);
       leaveTab(tabId, {
+        path: filePathRef.current,
         markdown,
         doc: state.doc.toJSON(),
         selection: state.selection.toJSON(),
