@@ -21,7 +21,6 @@ const HOOKS_NOW = {
   "src/app/useWindowDocuments.ts useWindowDocuments": 29,
   "src/document-view/useEditorProposals.ts useEditorProposals": 28,
   "src/document-view/useEditorSetup.ts useEditorSetup": 20,
-  "src/document-view/useEditorWindowEvents.ts useEditorWindowEvents": 21,
   "src/document-view/usePaperWriter.ts usePaperWriter": 12,
   "src/editor/find/useFindReplace.ts useFindReplace": 32,
 };

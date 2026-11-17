@@ -75,31 +75,7 @@ const CLIPBOARD_ACTIONS: Record<string, (clipboard: EditorClipboard) => void> =
 /** The window events one tab's editor answers: menu commands, shortcuts,
  *  the iPhone keyboard toolbar and the sidebar panels. */
 
-/** The marks a menu or toolbar toggles by name. */
-const MARKS: Record<string, (view: EditorView) => unknown> = {
-  bold: (view) => toggleFormat(view, BOLD),
-  italic: (view) => toggleFormat(view, ITALIC),
-  highlight: (view) => toggleFormat(view, HIGHLIGHT),
-  strikethrough: (view) => toggleFormat(view, STRIKETHROUGH),
-  code: toggleCodeSpan,
-};
-
-export function useEditorWindowEvents({
-  run,
-  settings,
-  tour,
-  triggerCompletion,
-  triggerGrammarCheck,
-  toggleAgentConversation,
-  findReplace,
-  clipboard,
-  openTableDialog,
-  setMenu,
-  conversation,
-  guardConversation,
-  agentPanel,
-  docPath,
-}: {
+type EditorEvents = {
   run: EditorRunner;
   settings: Settings;
   /** The tour's AI while this is its practice tab, else null. */
@@ -117,16 +93,21 @@ export function useEditorWindowEvents({
   agentPanel: AgentPanelFrame;
   /** This editor's document; null for one never saved. */
   docPath: string | null;
-}) {
-  // Every tab's editor stays mounted, hidden with display:none, and a split
-  // shows several: these events mean the one in use - the one with focus,
-  // else the one in the island in use. Without this guard each fired in
-  // every editor shown, and the last took the selection.
-  const isOnScreen = useCallback(
-    () => run((ctx) => editorInUse(ctx.get(editorViewCtx).dom)) ?? false,
-    [run],
-  );
+};
 
+type Events = EditorEvents & { isOnScreen: () => boolean };
+
+/** The AI's keys, with the same feature toggles as the context menu;
+ *  the typing-assistance ones ignored while the tour mutes the AI. */
+function useAiKeys(events: Events) {
+  const {
+    settings,
+    tour,
+    triggerCompletion,
+    triggerGrammarCheck,
+    toggleAgentConversation,
+    isOnScreen,
+  } = events;
   // Shortcuts respect the same feature toggles as the context menu. The
   // typing-assistance triggers are also ignored while the tour mutes the AI.
   const features = aiFeatures(settings, tour !== null);
@@ -150,6 +131,11 @@ export function useEditorWindowEvents({
     TOGGLE_FLOATING_CHAT_EVENT,
     () => isOnScreen() && features.chat && toggleAgentConversation(),
   );
+}
+
+/** Find and Replace, from the menu and its keys. */
+function useFindKeys(events: Events) {
+  const { findReplace, isOnScreen } = events;
   useWindowEvent(
     TOGGLE_FIND_REPLACE_EVENT,
     () => isOnScreen() && findReplace.show(),
@@ -160,7 +146,12 @@ export function useEditorWindowEvents({
     () => isOnScreen() && findReplace.showReplace(),
   );
   useWindowEvent(FIND_NEXT_EVENT, () => isOnScreen() && findReplace.findNext());
+}
 
+/** Formatting from the native Format menu, the heading shortcuts and the
+ *  iPhone keyboard toolbar: each as its key or the right-click menu does it. */
+function useFormatEvents(events: Events) {
+  const { run, openTableDialog, isOnScreen } = events;
   // Native Format menu clicks and the heading shortcuts ("paragraph" for
   // body text): the same commands as the right-click Insert submenu.
   useWindowEvent(INSERT_BLOCK_EVENT, (e) => {
@@ -217,7 +208,12 @@ export function useEditorWindowEvents({
       view.focus();
     });
   });
+}
 
+/** The iPhone keyboard toolbar's table and image buttons and its "More", a
+ *  block handle's menu, and the app-drawn menu's Edit items. */
+function useToolbarEvents(events: Events) {
+  const { run, clipboard, setMenu, docPath, isOnScreen } = events;
   // The iPhone keyboard toolbar's table buttons: the right-click menu's
   // insert and delete items, for the table under the caret.
   useWindowEvent(TABLE_ACTION_EVENT, (e) => {
@@ -277,9 +273,13 @@ export function useEditorWindowEvents({
         CLIPBOARD_ACTIONS[(e as CustomEvent<string>).detail]?.(clipboard);
     }
   });
+}
 
-  // A conversation reopened from history becomes the live one in its
-  // document's editor: this one if open, or a tab opened for it on mount.
+/** A conversation reopened from history becomes the live one in its
+ *  document's editor: this one if open, or a tab opened for it on mount. */
+function useChatRestore(events: Events) {
+  const { conversation, guardConversation, agentPanel, docPath, isOnScreen } =
+    events;
   const claimRestore = useLatest(() => {
     const restore = claimChatRestore(docPath, isOnScreen);
     if (!restore) return;
@@ -288,4 +288,32 @@ export function useEditorWindowEvents({
   });
   useWindowEvent(RESTORE_CHAT_EVENT, () => claimRestore.current());
   useEffect(() => claimRestore.current(), [docPath, claimRestore]);
+}
+
+/** The marks a menu or toolbar toggles by name. */
+const MARKS: Record<string, (view: EditorView) => unknown> = {
+  bold: (view) => toggleFormat(view, BOLD),
+  italic: (view) => toggleFormat(view, ITALIC),
+  highlight: (view) => toggleFormat(view, HIGHLIGHT),
+  strikethrough: (view) => toggleFormat(view, STRIKETHROUGH),
+  code: toggleCodeSpan,
+};
+
+export function useEditorWindowEvents(editor: EditorEvents) {
+  const { run } = editor;
+  // Every tab's editor stays mounted, hidden with display:none, and a split
+  // shows several: these events mean the one in use - the one with focus,
+  // else the one in the island in use. Without this guard each fired in
+  // every editor shown, and the last took the selection.
+  const isOnScreen = useCallback(
+    () => run((ctx) => editorInUse(ctx.get(editorViewCtx).dom)) ?? false,
+    [run],
+  );
+
+  const events = { ...editor, isOnScreen };
+  useAiKeys(events);
+  useFindKeys(events);
+  useFormatEvents(events);
+  useToolbarEvents(events);
+  useChatRestore(events);
 }
