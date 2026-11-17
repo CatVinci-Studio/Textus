@@ -14,6 +14,14 @@ pub(crate) fn is_plugin_document(ext: &str) -> bool {
             .is_ok_and(|list| list.iter().any(|e| e == ext))
 }
 
+/// The plugins' document types now, in name order.
+pub(crate) fn plugin_document_extensions() -> Vec<String> {
+    EXTENSIONS
+        .read()
+        .map(|list| list.clone())
+        .unwrap_or_default()
+}
+
 /// The extensions a manifest's `contributes.documentTypes` names, as
 /// `extension_of` spells them.
 fn extensions_in(manifest: &str) -> Vec<String> {

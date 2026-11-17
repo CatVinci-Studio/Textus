@@ -67,6 +67,9 @@ fn a_wikilink_finds_a_note_anywhere_in_the_vault_by_name() {
     assert_eq!(resolve_note(&doc, "page"), Some(page.clone()));
     assert_eq!(resolve_note(&doc, "down/Page"), Some(page));
     assert_eq!(resolve_note(&doc, "Missing"), None);
+    // A note in another of the document types: MDX.
+    let guide = touch(dir.path(), "docs/guide.mdx");
+    assert_eq!(resolve_note(&doc, "guide"), Some(guide));
 }
 
 #[test]
