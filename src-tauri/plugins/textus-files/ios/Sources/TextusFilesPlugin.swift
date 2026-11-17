@@ -257,8 +257,11 @@ class TextusFilesPlugin: Plugin, UIDocumentPickerDelegate {
       }
       let sheet = UIActivityViewController(activityItems: [copy], applicationActivities: nil)
       // iPad shows the sheet as a popover, which needs an anchor: the top
-      // edge, under the title row's menu button.
-      if let popover = sheet.popoverPresentationController {
+      // edge, under the title row's menu button. An iPhone has a popover
+      // controller too but shows a sheet from the bottom, with no anchor.
+      if UIDevice.current.userInterfaceIdiom == .pad,
+        let popover = sheet.popoverPresentationController
+      {
         popover.sourceView = host.view
         popover.sourceRect = CGRect(x: 24, y: host.view.safeAreaInsets.top + 44, width: 1, height: 1)
       }
