@@ -20,9 +20,9 @@ jobs:
         with:
           repo-token: ${{ secrets.GITHUB_TOKEN }}
           issue-message: |
-            Thanks for your first issue in Textus! We usually reply within a week. If it's a feature idea, have a look at the [roadmap](https://github.com/CatVinci-Studio/Textus/blob/main/ROADMAP.md#not-in-the-core-plugins): it may make a great plugin.
+            Thanks for your first issue in Textus! We usually reply within a week. If it's a feature idea, have a look at the [roadmap](https://github.com/CatVinci-Studio/Textus/blob/main/ROADMAP.md); it may also make a great [plugin](https://github.com/CatVinci-Studio/textus-plugins).
 
-            感谢你第一次参与 Textus！我们一般一周内回复。如果是新功能想法，可以先看[路线图](https://github.com/CatVinci-Studio/Textus/blob/main/ROADMAP.zh.md)里“不进核心”的部分，也许更适合做成插件。
+            感谢你第一次参与 Textus！我们一般一周内回复。如果是新功能想法，可以先看[路线图](https://github.com/CatVinci-Studio/Textus/blob/main/ROADMAP.zh.md)；它也许更适合做成[插件](https://github.com/CatVinci-Studio/textus-plugins)。
           pr-message: |
             Thanks for your first pull request to Textus! We reply within 3 days. While you wait, please make sure `npm run check` passes and the description says what you tested.
 

@@ -10,7 +10,8 @@ Twice a week, fifteen minutes each.
 - Close `needs info` after 30 days without an answer, politely, by hand.
 - Answer outside pull requests within 3 days. We often merge one into our
   own branch and finish it there rather than send it back.
-- Each minor release: update [ROADMAP.md](../../ROADMAP.md) and thank
+- Each release: update [ROADMAP.md](../../ROADMAP.md) (the next release's
+  plan only, in English and Chinese alike) and thank
   outside contributors by name in the release notes.
 
 ## A newcomer issue
