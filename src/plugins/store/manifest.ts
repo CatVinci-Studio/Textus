@@ -154,6 +154,20 @@ export interface CustomEditorContribution {
 
 /** Files opened as documents in the editor (from 1.4.3): Quarto's .qmd,
  *  R Markdown's .Rmd. `keep`: what of their syntax stays as written. */
+/** Markdown the `/` menu puts in at the caret. */
+export interface SnippetContribution {
+  label: string;
+  /** `$0` marks where the caret lands. */
+  body: string;
+  keywords?: string;
+}
+
+/** Steps for after it is installed, on its page in Settings. */
+export interface WalkthroughContribution {
+  title: string;
+  steps: { title: string; description: string; command?: string }[];
+}
+
 export interface DocumentTypeContribution {
   extensions: string[];
   keep: VerbatimRules | null;
@@ -299,6 +313,8 @@ export interface Contributes {
   suggestFor: SuggestKind[];
   /** The `/` menu lists Textus's own blocks while this plugin is on. */
   blockMenu: boolean;
+  snippets: SnippetContribution[];
+  walkthroughs: WalkthroughContribution[];
 }
 
 export interface PluginManifest {

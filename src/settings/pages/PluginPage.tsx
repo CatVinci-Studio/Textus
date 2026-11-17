@@ -5,6 +5,7 @@ import { SettingsGroup } from "./SettingsGroup";
 import { SettingRow } from "../sections/controls";
 import { PluginSettingRows } from "./PluginSettings";
 import { PluginErrors } from "./PluginErrors";
+import { PluginWalkthroughs } from "./PluginWalkthroughs";
 import { PluginData } from "./PluginData";
 import { showConfirm } from "../../engine/controls/app-dialog";
 import { links, plugins as pluginsIpc } from "../../platform/ipc";
@@ -182,6 +183,7 @@ export function PluginPage({
           </SettingRow>
         )}
       </SettingsGroup>
+      {runs && <PluginWalkthroughs record={record} />}
       {manifest && manifest.requires.length > 0 && (
         <SettingsGroup title={t.pluginRequiresGroup}>
           {manifest.requires.map((need) => {

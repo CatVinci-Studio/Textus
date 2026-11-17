@@ -432,6 +432,46 @@
           "type": "boolean",
           "description": "The / menu lists Textus's own blocks (headings, lists, quote, callout, code, math, table, divider) while this plugin is on."
         },
+        "snippets": {
+          "type": "array",
+          "description": "Markdown the / menu puts in at the caret; $0 marks where the caret lands. A one-line snippet goes in as text, a longer one as blocks. From 1.4.4.",
+          "items": {
+            "type": "object",
+            "required": ["label", "body"],
+            "additionalProperties": false,
+            "properties": {
+              "label": { "type": "string", "minLength": 1 },
+              "body": { "type": "string", "minLength": 1, "maxLength": 20000 },
+              "keywords": { "type": "string" }
+            }
+          }
+        },
+        "walkthroughs": {
+          "type": "array",
+          "description": "First steps after installing, shown on the plugin's page in Settings while it is on; a step's command is one of contributes.commands. From 1.4.4.",
+          "items": {
+            "type": "object",
+            "required": ["title", "steps"],
+            "additionalProperties": false,
+            "properties": {
+              "title": { "type": "string", "minLength": 1 },
+              "steps": {
+                "type": "array",
+                "minItems": 1,
+                "items": {
+                  "type": "object",
+                  "required": ["title"],
+                  "additionalProperties": false,
+                  "properties": {
+                    "title": { "type": "string", "minLength": 1 },
+                    "description": { "type": "string" },
+                    "command": { "type": "string" }
+                  }
+                }
+              }
+            }
+          }
+        },
         "settingsPage": {
           "type": "object",
           "required": ["title"],

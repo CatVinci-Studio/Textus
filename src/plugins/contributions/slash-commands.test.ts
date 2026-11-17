@@ -77,3 +77,21 @@ it("lists Textus's blocks while a plugin asks, then plugins' own", () => {
   stop();
   expect(labels("/table")).toEqual([]);
 });
+
+it("offers a plugin's snippets: a line as typed text, more as Markdown", async () => {
+  const { snippetItem } = await import("./snippets");
+  const same = (s: string) => s;
+  const line = snippetItem({ label: "Date", body: "Due: $0" }, same, "Notes");
+  const block = snippetItem(
+    { label: "Note box", body: "> [!NOTE]\n> $0" },
+    same,
+    "Notes",
+  );
+  remove = addSlashItems("test.notes#snippets", [line, block]);
+  expect(labels("/date")).toEqual(["Date"]);
+  const [date, box] = slashPanelItems();
+  expect(date.insert).toBe("Due: $0");
+  expect(date.run).toBeUndefined();
+  expect(box.insert).toBe("");
+  expect(typeof box.run).toBe("function");
+});

@@ -22,7 +22,9 @@ interface SlashItem {
   keywords?: string;
   /** Whether it is offered now (its `when`). */
   shown: () => boolean;
-  run: () => void;
+  /** Put in over what was typed (`$0` the caret), before `run`. */
+  insert?: string;
+  run?: () => void;
 }
 
 /** A block the `/` menu offers, as plugins read the list. */
@@ -98,7 +100,7 @@ export function slashPanelItems(): PanelItem[] {
     .filter((item) => item.shown())
     .map((item) => ({
       label: item.label,
-      insert: "",
+      insert: item.insert ?? "",
       detail: item.detail,
       keywords: item.keywords,
       run: item.run,

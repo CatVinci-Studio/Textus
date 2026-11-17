@@ -30,6 +30,7 @@ import {
 import { evaluateWhen, type WhenContext } from "./when";
 import { addCodeBlockLanguage } from "./code-blocks";
 import { addSlashItems, askBlockMenu } from "./slash-commands";
+import { snippetItem } from "./snippets";
 import { pluginKey } from "./plugin-keys";
 import { claim, ownedClaims } from "./owners";
 import { addAgents } from "./agents";
@@ -145,6 +146,15 @@ export function applyContributions(
           shown: () => evaluateWhen(item.when, whenContext()),
           run: () => runCommand(item.command),
         })),
+      ),
+    );
+  if (manifest.contributes.snippets.length)
+    undo.push(
+      addSlashItems(
+        `${id}#snippets`,
+        manifest.contributes.snippets.map((snippet) =>
+          snippetItem(snippet, text, text(manifest.name)),
+        ),
       ),
     );
   const places: ContextMenuPlace[] = [
