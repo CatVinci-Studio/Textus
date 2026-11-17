@@ -5010,7 +5010,7 @@ dependencies = [
 
 [[package]]
 name = "textus"
-version = "1.4.3"
+version = "1.4.3-rc.5"
 dependencies = [
  "aicompat",
  "base64 0.22.1",
