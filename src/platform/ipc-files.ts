@@ -6,6 +6,7 @@ import type { ImageHost } from "../prefs/SettingsContext";
 import type * as Generated from "./bindings/files";
 import { isIOSApp, isMobileApp } from "./capabilities";
 import { iosFiles, isScopedUrl, newDocumentPath } from "./ios-files";
+import { parentDir } from "../utils/path";
 import { scopedFolder } from "./scoped-folder";
 import { command, desktopActionCommand, desktopQueryCommand } from "./ipc-call";
 
@@ -69,8 +70,12 @@ export const fs = {
     isScopedUrl(dir) && !isIOSApp
       ? iosFiles.createEntry(dir, name, true)
       : command("tree_create_folder", dir, name),
-  moveEntry: (path: string, into: string) =>
-    command("tree_move_entry", path, into),
+  moveEntry: (path: string, into: string): Promise<string> => {
+    const from = isScopedUrl(path) && !isIOSApp ? parentDir(path) : null;
+    return from
+      ? iosFiles.moveEntry(path, from, into)
+      : command("tree_move_entry", path, into);
+  },
   /** A new name in the same folder; returns the new path. */
   renameEntry: (path: string, name: string): Promise<string> =>
     isScopedUrl(path) && !isIOSApp

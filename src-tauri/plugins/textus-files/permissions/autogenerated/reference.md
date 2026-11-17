@@ -13,6 +13,7 @@ Everything Textus's iOS and Android document access needs.
 - `allow-list-folder`
 - `allow-create-entry`
 - `allow-rename-entry`
+- `allow-move-entry`
 - `allow-delete-entry`
 - `allow-remembered`
 - `allow-begin-access`
@@ -207,6 +208,32 @@ Enables the list_folder command without any pre-configured scope.
 <td>
 
 Denies the list_folder command without any pre-configured scope.
+
+</td>
+</tr>
+
+<tr>
+<td>
+
+`textus-files:allow-move-entry`
+
+</td>
+<td>
+
+Enables the move_entry command without any pre-configured scope.
+
+</td>
+</tr>
+
+<tr>
+<td>
+
+`textus-files:deny-move-entry`
+
+</td>
+<td>
+
+Denies the move_entry command without any pre-configured scope.
 
 </td>
 </tr>

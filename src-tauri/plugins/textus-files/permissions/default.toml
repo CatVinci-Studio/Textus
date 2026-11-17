@@ -12,6 +12,7 @@ permissions = [
   "allow-list-folder",
   "allow-create-entry",
   "allow-rename-entry",
+  "allow-move-entry",
   "allow-delete-entry",
   "allow-remembered",
   "allow-begin-access",

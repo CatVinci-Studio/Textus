@@ -3,7 +3,7 @@ import { invoke } from "@tauri-apps/api/core";
 import { join } from "@tauri-apps/api/path";
 import { type DirEntryInfo } from "./bindings/files";
 import { isIOSApp, isMobileApp } from "./capabilities";
-import { nameContentUrl } from "../utils/path";
+import { basename, nameContentUrl } from "../utils/path";
 import { documentsDir, insideDocuments } from "./documents-path";
 
 /**
@@ -82,6 +82,8 @@ export const iosFiles = {
   renameEntry: (url: string, name: string) =>
     entry("rename_entry", { url, name }),
   deleteEntry: (url: string) => entry("delete_entry", { url }),
+  moveEntry: (url: string, from: string, into: string) =>
+    entry("move_entry", { url, from, into, name: basename(url) }),
   listFolder: async (url: string): Promise<DirEntryInfo[]> =>
     (
       await call<{

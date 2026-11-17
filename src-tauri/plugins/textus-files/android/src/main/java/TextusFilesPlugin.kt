@@ -71,6 +71,9 @@ class EntryArgs {
   var name: String = ""
   /** A folder, not a document (new entries). */
   var folder: Boolean = false
+  /** Its folder now and the one it moves into (a move). */
+  var from: String = ""
+  var into: String = ""
 }
 
 private const val GRANT =
@@ -224,6 +227,13 @@ class TextusFilesPlugin(private val activity: Activity) : Plugin(activity) {
   @Command
   fun renameEntry(invoke: Invoke) = changing(invoke) { args ->
     DocumentsContract.renameDocument(resolver, Uri.parse(args.url), args.name)
+  }
+
+  /** `url` from its folder `from` into the folder `into`; its URL there. */
+  @Command
+  fun moveEntry(invoke: Invoke) = changing(invoke) { args ->
+    DocumentsContract.moveDocument(
+      resolver, Uri.parse(args.url), Uri.parse(args.from), Uri.parse(args.into))
   }
 
   @Command

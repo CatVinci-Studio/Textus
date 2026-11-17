@@ -11,6 +11,7 @@ const COMMANDS: &[&str] = &[
     "list_folder",
     "create_entry",
     "rename_entry",
+    "move_entry",
     "delete_entry",
     "remembered",
     "begin_access",
