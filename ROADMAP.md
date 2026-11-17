@@ -1,34 +1,45 @@
 # Roadmap
 
-[简体中文](ROADMAP.zh.md) · Updated with every minor release. Last: 1.4.3.
+[简体中文](ROADMAP.zh.md) · Updated with every release. Last: 1.4.4.
 
 No dates on purpose: we're a small team and ship when it's good. What's
 already out is in the [release notes](docs/releases/).
 
-## Now (1.4.x)
+## 1.4.4 (being finished)
 
-- **Plugin API 1.8**: the plugin interface made whole, so others want to
-  build on it - a list of block types the `/` menu reads, display-only
-  syntax, margin icons, right-click menus, problems with one-click fixes,
-  inline completion from plugins, plugins that use your AI model with your
-  consent, export formats, database views and history sources.
+- **Plugin API 1.8**, first part: plugins add export formats, right-click
+  menus, blocks and snippets to the `/` menu, margin marks, problems with
+  one-click fixes, inline completion, display-only syntax, margin comments,
+  and use your AI model with your consent.
 - **Heading folding**, and an **Excalidraw** plugin.
-- **Motion**: smooth scrolling, blocks and table rows that make room and
-  settle, a gliding caret.
-- **Custom AI endpoints** that list their models to pick from.
-- **Phones and tablets**: block handles by touch, the content running to
-  the screen's bottom edge.
-- **Linux**: a roomier title bar.
-  [#664](https://github.com/CatVinci-Studio/Textus/issues/664)
-- **iPhone and iPad on the App Store**; TestFlight and the Android APK
-  until then. [#87](https://github.com/CatVinci-Studio/Textus/issues/87)
+- **Motion and dragging**: blocks dragged as themselves while the others
+  make room, also into a document open beside; smooth scrolling; table
+  rows and columns that open up and glide into place.
+- **Custom AI endpoints** that list their models to pick from, in Settings
+  and in the chat.
+  [#700](https://github.com/CatVinci-Studio/Textus/issues/700)
+  [#701](https://github.com/CatVinci-Studio/Textus/issues/701)
+  [#702](https://github.com/CatVinci-Studio/Textus/issues/702)
+- **Speed with many formulas**: formulas, diagrams and embedded notes drawn
+  only near what you are reading.
+  [#710](https://github.com/CatVinci-Studio/Textus/issues/710)
+- **Phones and tablets**: block handles by touch, the page running to the
+  screen's bottom edge.
+- **The look before 1.4** in reach: Appearance › Window Layout says how.
 
-## Next (1.5)
+Then **iPhone and iPad on the App Store**; the
+[TestFlight beta](https://testflight.apple.com/join/39s9nnzs) and the
+Android APK until then.
 
-- **iPad with the desktop interface**, and the iPhone adapted from it.
-- **Lighter windows**: one editor for each part of the window, documents
-  kept as data, so many open tabs cost little memory.
-- **Voice input.** [#195](https://github.com/CatVinci-Studio/Textus/issues/195)
+## 1.4.5
+
+- **Plugin API 1.8**, the rest: database views of a plugin's own, folders
+  from other places (read and written), conventions of other apps' folders
+  read, and AI answers streamed to plugins.
+- **Remote folders over SSH**, as in VS Code: your `~/.ssh/config` and
+  keys, nothing installed on the server.
+- **Android**: search and databases across a folder opened through the
+  Files app.
 
 ## Later
 
@@ -49,8 +60,8 @@ Already plugins:
 - sync: Cloud Sync (WebDAV, S3, Nutstore);
 - syntax and diagrams: LaTeX completion, ABC music, PlantUML, WaveDrom,
   Markmap, ECharts and Chart.js, function plots;
-- ways of working: kanban, database, canvas, daily notes, tasks, slides,
-  Vim and Emacs keys, and more.
+- ways of working: kanban, database, canvas, Excalidraw, daily notes,
+  tasks, slides, Vim and Emacs keys, and more.
 
 Not yet, and welcome as plugins: MkDocs / Zensical admonitions
 ([#220](https://github.com/CatVinci-Studio/Textus/issues/220)), Cisco IOS

@@ -1,24 +1,26 @@
 # 路线图
 
-[English](ROADMAP.md) · 每个小版本更新一次，上次更新：1.4.3。
+[English](ROADMAP.md) · 每次发版更新，上次更新：1.4.4。
 
 这里特意不写日期：我们人少，做好了再发。已经发布的内容见[更新说明](docs/releases/)。
 
-## 现在（1.4.x）
+## 1.4.4（收尾中）
 
-- **插件接口 1.8**：把插件接口补齐成一整套，让大家愿意来写插件——`/` 菜单读取的块类型清单、只做显示的语法、页边图标、右键菜单、带一键修复的问题提示、插件提供的行内续写、经你同意后使用你的 AI 模型、导出格式、数据库视图和版本来源。
+- **插件接口 1.8** 第一部分：插件可以加导出格式、右键菜单、`/` 菜单里的块和片段、页边标记、带一键修复的问题提示、行内续写、只做显示的语法、页边批注，并在你同意后使用你的 AI 模型。
 - **标题折叠**，以及 **Excalidraw** 插件。
-- **动效**：平滑滚动，块和表格行让位、落位，光标滑动。
-- **自定义 AI 接口**列出可选的模型。
-- **手机和平板**：用触摸拖动块，内容铺到屏幕底边。
-- **Linux**：更宽松的标题栏。[#664](https://github.com/CatVinci-Studio/Textus/issues/664)
-- **iPhone 和 iPad 上架 App Store**；在那之前用 TestFlight 和安卓 APK。[#87](https://github.com/CatVinci-Studio/Textus/issues/87)
+- **动效和拖动**：块按它本身的样子拖动，其他块让出位置，也能拖进并排打开的文档；平滑滚动；表格行列展开、滑到位。
+- **自定义 AI 接口**列出可选的模型，在设置和对话里都能选。[#700](https://github.com/CatVinci-Studio/Textus/issues/700) [#701](https://github.com/CatVinci-Studio/Textus/issues/701) [#702](https://github.com/CatVinci-Studio/Textus/issues/702)
+- **公式多时也流畅**：公式、图表和嵌入的笔记只画在你正在读的附近。[#710](https://github.com/CatVinci-Studio/Textus/issues/710)
+- **手机和平板**：用触摸拖动块，页面铺到屏幕底边。
+- **1.4 之前的样子**随时可以换回：外观 › 窗口布局里有说明。
 
-## 下一个（1.5）
+之后 **iPhone 和 iPad 上架 App Store**；在那之前用 [TestFlight 测试版](https://testflight.apple.com/join/39s9nnzs)和安卓 APK。
 
-- **iPad 使用桌面版界面**，iPhone 在此基础上适配。
-- **更轻的窗口**：窗口的每个区域只用一个编辑器，文档以数据保存，开很多标签页也不怎么占内存。
-- **语音输入。**[#195](https://github.com/CatVinci-Studio/Textus/issues/195)
+## 1.4.5
+
+- **插件接口 1.8** 剩下的部分：插件自己的数据库视图、来自别处的文件夹（可读可写）、读取其他应用文件夹的约定、把 AI 回答流式交给插件。
+- **通过 SSH 打开远端文件夹**，和 VS Code 一样：用你的 `~/.ssh/config` 和密钥，服务器上不用装东西。
+- **安卓**：用"文件"App 打开的文件夹里，整个文件夹的搜索和数据库。
 
 ## 以后
 
@@ -33,7 +35,7 @@ App 本身保持精简。外部服务和较少用的语法都做成插件，在 
 - 外部服务：Zotero、Openverse 图片、WakaTime、DeepSeek，以及作为智能体的 Claude Code、Codex 和 OpenCode；
 - 同步：Cloud Sync（WebDAV、S3、坚果云）；
 - 语法和图表：LaTeX 补全、ABC 乐谱、PlantUML、WaveDrom、Markmap、ECharts 和 Chart.js、函数图像；
-- 工作方式：看板、数据库、白板、日记、任务、幻灯片、Vim 和 Emacs 键位等。
+- 工作方式：看板、数据库、白板、Excalidraw、日记、任务、幻灯片、Vim 和 Emacs 键位等。
 
 还没有、欢迎做成插件的：MkDocs / Zensical 提示块（[#220](https://github.com/CatVinci-Studio/Textus/issues/220)）、Cisco IOS 代码高亮（[#639](https://github.com/CatVinci-Studio/Textus/issues/639)）。
 
