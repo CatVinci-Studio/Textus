@@ -124,7 +124,7 @@
     "copyright": "© 2026 CatVinci Studio",
     "homepage": "https://github.com/CatVinci-Studio/Textus",
     "license": "MIT",
-    "longDescription": "The next-generation Markdown editor. You hold the pen. AI keeps your ink flowing.",
+    "longDescription": "An Integrated Writing Environment, designed for professional writing.",
     "fileAssociations": [
       {
         "ext": ["md", "markdown"],
