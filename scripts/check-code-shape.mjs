@@ -25,7 +25,6 @@ const HOOKS_NOW = {
   "src/app/frame/useSidePanels.ts useSidePanels": 16,
   "src/app/islands/useAiTabs.ts useAiTabs": 12,
   "src/app/tabs/useTabDragMerge.ts useTabDragMerge": 11,
-  "src/app/useFileOpening.ts useFileOpening": 10,
   "src/app/useOpenFolder.ts useOpenFolder": 15,
   "src/app/usePluginWindow.ts usePluginWindow": 24,
   "src/app/useSaveTabs.ts useSaveTabs": 14,

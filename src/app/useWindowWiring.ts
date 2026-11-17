@@ -16,7 +16,7 @@ import {
   useNativeMenuChecks,
 } from "./menu/menu-bridge";
 import { useStartupRestore } from "../document/startup-restore";
-import { useOpenPathsPush, useFileDrop } from "./useFileOpening";
+import { useOpenPathsPush, useFileDrop } from "./window-file-events";
 import { useSettingsCommands } from "./useSettingsCommands";
 import { useCliRequests } from "./useCliRequests";
 import { useDocumentActions } from "./useDocumentActions";
