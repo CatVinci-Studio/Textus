@@ -1940,6 +1940,14 @@ export default {
   pluginPermNotifications: "Показывать системные уведомления",
   pluginPermAppearance: "Менять цвета Textus и ваших документов",
   pluginPermGitCommit: "Делать коммиты Git в открытой папке вашим Git",
+  pluginPermAiModel:
+    "Использовать вашу модель ИИ (учитывается в расходе вашего сервиса ИИ)",
+  pluginAiAsk:
+    "{plugin} хочет использовать вашу модель ИИ. Отправленное учитывается в расходе вашего сервиса ИИ, до {limit} токенов в месяц для этого плагина.",
+  pluginAiLimit:
+    "{plugin} израсходовал свои {limit} токенов ИИ за этот месяц. Разрешить ещё {limit}?",
+  pluginAiAllow: "Разрешить",
+  pluginAiUsage: "ИИ в этом месяце: {used} из {limit} токенов",
   pluginPermAgents:
     "Запускать ИИ-агента, установленного на этом компьютере (он может читать и менять файлы)",
   pluginPermBackground:

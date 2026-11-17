@@ -1730,6 +1730,13 @@ export default {
   pluginPermNotifications: "显示系统通知",
   pluginPermAppearance: "更改 Textus 和文档的颜色",
   pluginPermGitCommit: "用你的 Git 在打开的文件夹里提交",
+  pluginPermAiModel: "使用你的 AI 模型（会计入你的 AI 服务用量）",
+  pluginAiAsk:
+    "{plugin} 想使用你的 AI 模型。它发送的内容会计入你的 AI 服务用量，这个插件每月最多 {limit} token。",
+  pluginAiLimit:
+    "{plugin} 本月的 {limit} 个 AI token 已用完。再允许 {limit} 个吗？",
+  pluginAiAllow: "允许",
+  pluginAiUsage: "本月 AI：已用 {used} / {limit} token",
   pluginPermAgents: "运行这台电脑上安装的 AI Agent（它能读取和修改文件）",
   pluginPermBackground: "按计划运行代码，关闭所有窗口后也会运行",
   pluginScheduleNotice:

@@ -1825,6 +1825,14 @@ ${AI_NAME}への執筆の指示です。すべての文書に適用されます�
   pluginPermNotifications: "システム通知を表示する",
   pluginPermAppearance: "Textus と文書の色を変更する",
   pluginPermGitCommit: "自分の Git で、開いているフォルダにコミットする",
+  pluginPermAiModel:
+    "あなたの AI モデルを使う（AI サービスの使用量に含まれます）",
+  pluginAiAsk:
+    "{plugin} があなたの AI モデルを使おうとしています。送信する内容は AI サービスの使用量に含まれます。このプラグインは月に {limit} トークンまでです。",
+  pluginAiLimit:
+    "{plugin} は今月の AI トークン {limit} を使い切りました。さらに {limit} 許可しますか？",
+  pluginAiAllow: "許可",
+  pluginAiUsage: "今月の AI：{limit} トークン中 {used}",
   pluginPermAgents:
     "このコンピュータにインストールされた AI エージェントを実行する（ファイルの読み取りと変更ができます）",
   pluginPermBackground:

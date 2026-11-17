@@ -148,6 +148,19 @@ textus.ai = {
     return call("ai.state");
   },
   onDidChangeState: on("aiState"),
+  // The user's writing model (ai.model, 1.8): whether it can be asked now,
+  // and its answer. The first call asks the user; each plugin has a
+  // monthly allowance of tokens.
+  available: function () {
+    return call("ai.available");
+  },
+  complete: function (request) {
+    var r = request || {};
+    return call("ai.complete", {
+      system: r.system == null ? undefined : String(r.system),
+      messages: plain(r.prompt != null ? String(r.prompt) : r.messages),
+    });
+  },
 };
 
 textus.plugins = {

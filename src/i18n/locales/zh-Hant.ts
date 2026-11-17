@@ -1736,6 +1736,13 @@ export default {
   pluginPermNotifications: "顯示系統通知",
   pluginPermAppearance: "變更 Textus 和文件的顏色",
   pluginPermGitCommit: "用你的 Git 在開啟的資料夾中提交",
+  pluginPermAiModel: "使用你的 AI 模型（會計入你的 AI 服務用量）",
+  pluginAiAsk:
+    "{plugin} 想使用你的 AI 模型。它傳送的內容會計入你的 AI 服務用量，這個外掛每月最多 {limit} token。",
+  pluginAiLimit:
+    "{plugin} 本月的 {limit} 個 AI token 已用完。再允許 {limit} 個嗎？",
+  pluginAiAllow: "允許",
+  pluginAiUsage: "本月 AI：已用 {used} / {limit} token",
   pluginPermAgents: "執行這台電腦上安裝的 AI Agent（它能讀取和修改檔案）",
   pluginPermBackground: "按排程執行程式碼，關閉所有視窗後也會執行",
   pluginScheduleNotice:

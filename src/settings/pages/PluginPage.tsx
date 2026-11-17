@@ -1,3 +1,4 @@
+import { useEffect, useState } from "react";
 import { Byline } from "./CatalogRow";
 import { fill } from "../../i18n/fill";
 import { SettingsGroup } from "./SettingsGroup";
@@ -6,7 +7,7 @@ import { PluginSettingRows } from "./PluginSettings";
 import { PluginErrors } from "./PluginErrors";
 import { PluginData } from "./PluginData";
 import { showConfirm } from "../../engine/controls/app-dialog";
-import { links } from "../../platform/ipc";
+import { links, plugins as pluginsIpc } from "../../platform/ipc";
 import { useSettings } from "../../prefs/SettingsContext";
 import type { Strings } from "../../i18n/strings";
 import {
@@ -295,6 +296,9 @@ function PluginPermissions({
               {permissionLabel(permission, t)}
               {" · "}
               {granted ? t.pluginGranted : t.pluginNotGranted}
+              {granted && permission === "ai.model" && (
+                <AiUsage id={record.id} t={t} />
+              )}
             </span>
             {granted && (
               <button
@@ -312,5 +316,33 @@ function PluginPermissions({
       })}
       <PluginData id={record.id} name={pluginName(record)} t={t} />
     </SettingsGroup>
+  );
+}
+
+/** " · AI this month: 1,200 of 100,000 tokens", for a plugin that may ask
+ *  the user's model. */
+function AiUsage({ id, t }: { id: string; t: Strings }) {
+  const [usage, setUsage] = useState<{ used: number; limit: number } | null>(
+    null,
+  );
+  useEffect(() => {
+    let live = true;
+    pluginsIpc.aiStatus(id).then(
+      (status) => live && setUsage(status),
+      () => {},
+    );
+    return () => {
+      live = false;
+    };
+  }, [id]);
+  if (!usage) return null;
+  return (
+    <>
+      {" · "}
+      {fill(t.pluginAiUsage, {
+        used: usage.used.toLocaleString(),
+        limit: usage.limit.toLocaleString(),
+      })}
+    </>
   );
 }

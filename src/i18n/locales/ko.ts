@@ -1807,6 +1807,13 @@ ${AI_NAME}에게 주는 글쓰기 지침으로, 모든 문서에 적용됩니다
   pluginPermNotifications: "시스템 알림 표시하기",
   pluginPermAppearance: "Textus와 문서의 색상 변경하기",
   pluginPermGitCommit: "내 Git으로 열린 폴더에 Git 커밋 만들기",
+  pluginPermAiModel: "내 AI 모델 사용(AI 서비스 사용량에 포함됨)",
+  pluginAiAsk:
+    "{plugin}이(가) 내 AI 모델을 사용하려고 합니다. 보내는 내용은 AI 서비스 사용량에 포함되며, 이 플러그인은 한 달에 최대 {limit} 토큰입니다.",
+  pluginAiLimit:
+    "{plugin}이(가) 이번 달 AI 토큰 {limit}개를 다 썼습니다. {limit}개를 더 허용할까요?",
+  pluginAiAllow: "허용",
+  pluginAiUsage: "이번 달 AI: {limit} 토큰 중 {used}",
   pluginPermAgents:
     "이 컴퓨터에 설치된 AI 에이전트 실행하기(파일을 읽고 바꿀 수 있음)",
   pluginPermBackground: "일정에 따라 코드 실행하기(모든 창을 닫아도)",

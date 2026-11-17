@@ -173,24 +173,25 @@ and `!`.
 A plugin asks for these in `permissions`; the user grants them when
 turning it on, or leaves it off, and can take each back later.
 
-| Permission       | Lets the plugin                                                                                     |
-| ---------------- | --------------------------------------------------------------------------------------------------- |
-| `editor.read`    | read the document in front: its text, selection, blocks and outline; also completions               |
-| `editor.write`   | change it at once, each change one undo step                                                        |
-| `editor.propose` | suggest changes to it, shown as Textus AI's are, accepted or rejected by the user                   |
-| `editor.input`   | take the editor's keys and move, select and edit with them (Vim, Emacs)                             |
-| `files.read`     | list, find and read files in the open folder, and what Textus knows of them (metadata)              |
-| `files.write`    | create, change, rename and trash files in the open folder (reading them comes with it)              |
-| `clipboard`      | read and write the clipboard                                                                        |
-| `project.data`   | keep its own data in the open folder, in `.textus/plugins/<id>/`                                    |
-| `ai.tools`       | give Textus AI tools to call                                                                        |
-| `notifications`  | show system notifications, at once or on a schedule (API 1.1)                                       |
-| `background`     | run its `background` code on a schedule, also with every window closed (API 1.1)                    |
-| `agents`         | run the AI agents it names in `contributes.agents` (programs on this computer; 1.3.13)              |
-| `appearance`     | change Textus's colours: a palette over the theme, the frame a gradient (API 1.6)                   |
-| `git.commit`     | commit files of the open folder with the user's git (1.4.3; reading Git history is `files.read`)    |
-| `network:<host>` | fetch from that host over HTTPS (`*.example.com`, `host:port`, `*` for the open web)                |
-| `hidden:<path>`  | read that hidden file of the open folder, named from its top: `hidden:.vitepress/config.ts` (1.4.3) |
+| Permission       | Lets the plugin                                                                                              |
+| ---------------- | ------------------------------------------------------------------------------------------------------------ |
+| `editor.read`    | read the document in front: its text, selection, blocks and outline; also completions                        |
+| `editor.write`   | change it at once, each change one undo step                                                                 |
+| `editor.propose` | suggest changes to it, shown as Textus AI's are, accepted or rejected by the user                            |
+| `editor.input`   | take the editor's keys and move, select and edit with them (Vim, Emacs)                                      |
+| `files.read`     | list, find and read files in the open folder, and what Textus knows of them (metadata)                       |
+| `files.write`    | create, change, rename and trash files in the open folder (reading them comes with it)                       |
+| `clipboard`      | read and write the clipboard                                                                                 |
+| `project.data`   | keep its own data in the open folder, in `.textus/plugins/<id>/`                                             |
+| `ai.tools`       | give Textus AI tools to call                                                                                 |
+| `ai.model`       | ask the user's writing model; the user says yes on the first call, 100,000 tokens a month (API 1.8, preview) |
+| `notifications`  | show system notifications, at once or on a schedule (API 1.1)                                                |
+| `background`     | run its `background` code on a schedule, also with every window closed (API 1.1)                             |
+| `agents`         | run the AI agents it names in `contributes.agents` (programs on this computer; 1.3.13)                       |
+| `appearance`     | change Textus's colours: a palette over the theme, the frame a gradient (API 1.6)                            |
+| `git.commit`     | commit files of the open folder with the user's git (1.4.3; reading Git history is `files.read`)             |
+| `network:<host>` | fetch from that host over HTTPS (`*.example.com`, `host:port`, `*` for the open web)                         |
+| `hidden:<path>`  | read that hidden file of the open folder, named from its top: `hidden:.vitepress/config.ts` (1.4.3)          |
 
 Ask for what the plugin's purpose explains, and no more: each permission
 is shown to the user, and a listing in Textus asks why for the broad ones.
@@ -482,6 +483,11 @@ pushes, pulls or switches branches. Elsewhere `status()` is `null`. Set
   `readClipboard` / `writeClipboard` (`clipboard`).
 - `ai.registerTool(name, run)` (`ai.tools`): runs one of the manifest's
   `aiTools` when Textus AI calls it, answering text for the model.
+- `ai.complete({ system, prompt })` (`ai.model`, 1.8 preview): the user's
+  writing model's answer; `messages: [{ role, content }]` for a conversation.
+  The first call asks the user, and each plugin has 100,000 tokens a month
+  before the user is asked again. `ai.available()` says whether it can be
+  asked (Textus AI on).
 - `plugins.get(id)`: what another plugin's `activate` returned - its functions, callable from here.
 - `uri.registerHandler(fn)`: `textus://<plugin id>/<path>?<query>` links
   from a browser or another app, for "send to Textus" buttons and links

@@ -1466,6 +1466,24 @@ declare global {
        *  what is said. From 1.3.6. */
       state(): Promise<AiState>;
       onDidChangeState: Event<AiState>;
+      /** Whether the user's writing model can be asked now: Textus AI is on
+       *  (never in the iOS App Store download in mainland China). ai.model.
+       *  From 1.4.4 (API 1.8, preview). */
+      available(): Promise<boolean>;
+      /** The user's writing model's answer, as text (ai.model). The first
+       *  call asks the user; each plugin has 100,000 tokens a month (counted
+       *  roughly: a CJK character is one, other text one per four
+       *  characters), and the user is asked before more. Refused when the
+       *  user says no or Textus AI is off. From 1.4.4 (API 1.8, preview). */
+      complete(request: AiRequest): Promise<string>;
+    }
+
+    /** `prompt` for one question, or `messages` for a conversation whose
+     *  next turn is asked for; at most 200,000 characters with `system`. */
+    interface AiRequest {
+      system?: string;
+      prompt?: string;
+      messages?: { role: "user" | "assistant"; content: string }[];
     }
 
     interface PanelsState {

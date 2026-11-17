@@ -129,6 +129,7 @@ const API_PERMISSIONS: readonly {
   { permission: "git.commit", methods: ["git.commit"] },
   // Checked when the window tells Rust the tools (contributions/ai-tools.ts).
   { permission: "ai.tools", methods: [], calls: ["ai.registerTool"] },
+  { permission: "ai.model", methods: ["ai.available", "ai.complete"] },
 ];
 
 const BY_METHOD = new Map<string, Permission[]>();

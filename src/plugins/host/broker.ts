@@ -17,6 +17,7 @@ import {
   type Permission,
   type PluginManifest,
 } from "../store/manifest";
+import { aiModelHandlers } from "./broker-ai";
 import { fileHandlers } from "./broker-files";
 import { layoutHandlers, seenBy } from "./broker-layout";
 import { editorHandlers, stopPluginEditor } from "./broker-editor";
@@ -467,6 +468,7 @@ export class PluginHost {
       ...appearanceHandlers(scope),
       ...textHandlers(),
       ...historyHandlers(scope),
+      ...aiModelHandlers(scope),
     };
   }
 }

@@ -1957,6 +1957,14 @@ utiliser une.
   pluginPermAppearance: "Modifier les couleurs de Textus et de vos documents",
   pluginPermGitCommit:
     "Faire des commits Git dans le dossier ouvert avec votre Git",
+  pluginPermAiModel:
+    "Utiliser votre modèle d'IA (compte dans l'usage de votre service d'IA)",
+  pluginAiAsk:
+    "{plugin} veut utiliser votre modèle d'IA. Ce qu'il envoie compte dans l'usage de votre service d'IA, jusqu'à {limit} jetons par mois pour ce plugin.",
+  pluginAiLimit:
+    "{plugin} a utilisé ses {limit} jetons d'IA ce mois-ci. En autoriser {limit} de plus ?",
+  pluginAiAllow: "Autoriser",
+  pluginAiUsage: "IA ce mois-ci : {used} sur {limit} jetons",
   pluginPermAgents:
     "Lancer un agent IA installé sur cet ordinateur (il peut lire et modifier des fichiers)",
   pluginPermBackground:

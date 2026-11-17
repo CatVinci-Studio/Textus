@@ -1902,6 +1902,14 @@ Skills liegen im Ordner skills/ neben dieser Datei, je Skill eine
   pluginPermNotifications: "Systemmitteilungen anzeigen",
   pluginPermAppearance: "Die Farben von Textus und Ihren Dokumenten ändern",
   pluginPermGitCommit: "Mit Ihrem Git Commits im geöffneten Ordner erstellen",
+  pluginPermAiModel:
+    "Ihr KI-Modell verwenden (zählt zur Nutzung Ihres KI-Dienstes)",
+  pluginAiAsk:
+    "{plugin} möchte Ihr KI-Modell verwenden. Was es sendet, zählt zur Nutzung Ihres KI-Dienstes, bis zu {limit} Tokens im Monat für dieses Plugin.",
+  pluginAiLimit:
+    "{plugin} hat seine {limit} KI-Tokens für diesen Monat verbraucht. Weitere {limit} erlauben?",
+  pluginAiAllow: "Erlauben",
+  pluginAiUsage: "KI diesen Monat: {used} von {limit} Tokens",
   pluginPermAgents:
     "Einen auf diesem Computer installierten KI-Agenten ausführen (er kann Dateien lesen und ändern)",
   pluginPermBackground:

@@ -1860,6 +1860,14 @@ type /name in a conversation to use one.
   pluginPermNotifications: "Show system notifications",
   pluginPermAppearance: "Change the colors of Textus and your documents",
   pluginPermGitCommit: "Make Git commits in the open folder with your Git",
+  pluginPermAiModel:
+    "Use your AI model (it counts toward your AI service's usage)",
+  pluginAiAsk:
+    "{plugin} wants to use your AI model. What it sends counts toward your AI service's usage, up to {limit} tokens a month for this plugin.",
+  pluginAiLimit:
+    "{plugin} has used its {limit} AI tokens for this month. Allow {limit} more?",
+  pluginAiAllow: "Allow",
+  pluginAiUsage: "AI this month: {used} of {limit} tokens",
   pluginPermAgents:
     "Run an AI agent installed on this computer (it can read and change files)",
   pluginPermBackground: "Run code on a schedule, even with every window closed",

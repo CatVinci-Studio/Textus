@@ -1942,6 +1942,14 @@ para usar una.
   pluginPermNotifications: "Mostrar notificaciones del sistema",
   pluginPermAppearance: "Cambiar los colores de Textus y de tus documentos",
   pluginPermGitCommit: "Hacer commits de Git en la carpeta abierta con tu Git",
+  pluginPermAiModel:
+    "Usar tu modelo de IA (cuenta para el uso de tu servicio de IA)",
+  pluginAiAsk:
+    "{plugin} quiere usar tu modelo de IA. Lo que envía cuenta para el uso de tu servicio de IA, hasta {limit} tokens al mes para este plugin.",
+  pluginAiLimit:
+    "{plugin} ha usado sus {limit} tokens de IA de este mes. ¿Permitir {limit} más?",
+  pluginAiAllow: "Permitir",
+  pluginAiUsage: "IA este mes: {used} de {limit} tokens",
   pluginPermAgents:
     "Ejecutar un agente de IA instalado en este ordenador (puede leer y cambiar archivos)",
   pluginPermBackground:

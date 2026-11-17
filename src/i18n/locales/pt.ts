@@ -1921,6 +1921,14 @@ Habilidades ficam na pasta skills/ ao lado deste arquivo, um arquivo
   pluginPermNotifications: "Mostrar notificações do sistema",
   pluginPermAppearance: "Alterar as cores do Textus e dos seus documentos",
   pluginPermGitCommit: "Fazer commits do Git na pasta aberta com o seu Git",
+  pluginPermAiModel:
+    "Usar o seu modelo de IA (conta para o uso do seu serviço de IA)",
+  pluginAiAsk:
+    "{plugin} quer usar o seu modelo de IA. O que ele envia conta para o uso do seu serviço de IA, até {limit} tokens por mês para este plugin.",
+  pluginAiLimit:
+    "{plugin} usou os seus {limit} tokens de IA deste mês. Permitir mais {limit}?",
+  pluginAiAllow: "Permitir",
+  pluginAiUsage: "IA este mês: {used} de {limit} tokens",
   pluginPermAgents:
     "Executar um agente de IA instalado neste computador (ele pode ler e alterar arquivos)",
   pluginPermBackground:

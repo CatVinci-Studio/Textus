@@ -19,6 +19,7 @@ export const PERMISSION_LABELS: Record<
   "editor.input": "pluginPermEditorInput",
   "project.data": "pluginPermProjectData",
   "ai.tools": "pluginPermAiTools",
+  "ai.model": "pluginPermAiModel",
   notifications: "pluginPermNotifications",
   background: "pluginPermBackground",
   agents: "pluginPermAgents",

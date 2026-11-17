@@ -809,11 +809,23 @@ A kind of periodic note: its folder (full path), file name format (moment.js tok
 
 Tools for Textus AI (ai.tools): each one named in the manifest's contributes.aiTools, run here when the model calls it.
 
-| Member                                                                                                                 |                                                                                            |
-| ---------------------------------------------------------------------------------------------------------------------- | ------------------------------------------------------------------------------------------ |
-| `registerTool(name: string, run: (args: Record<string, unknown>) => string \| Promise<string> \| unknown): Disposable` |                                                                                            |
-| `state(): Promise<AiState>`                                                                                            | What Textus AI is doing and with which service and model - never what is said. From 1.3.6. |
-| `onDidChangeState: Event<AiState>`                                                                                     |                                                                                            |
+| Member                                                                                                                 |                                                                                                                                                                                                                                                                                                                                 |
+| ---------------------------------------------------------------------------------------------------------------------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| `registerTool(name: string, run: (args: Record<string, unknown>) => string \| Promise<string> \| unknown): Disposable` |                                                                                                                                                                                                                                                                                                                                 |
+| `state(): Promise<AiState>`                                                                                            | What Textus AI is doing and with which service and model - never what is said. From 1.3.6.                                                                                                                                                                                                                                      |
+| `onDidChangeState: Event<AiState>`                                                                                     |                                                                                                                                                                                                                                                                                                                                 |
+| `available(): Promise<boolean>`                                                                                        | Whether the user's writing model can be asked now: Textus AI is on (never in the iOS App Store download in mainland China). ai.model. From 1.4.4 (API 1.8, preview).                                                                                                                                                            |
+| `complete(request: AiRequest): Promise<string>`                                                                        | The user's writing model's answer, as text (ai.model). The first call asks the user; each plugin has 100,000 tokens a month (counted roughly: a CJK character is one, other text one per four characters), and the user is asked before more. Refused when the user says no or Textus AI is off. From 1.4.4 (API 1.8, preview). |
+
+## AiRequest
+
+`prompt` for one question, or `messages` for a conversation whose next turn is asked for; at most 200,000 characters with `system`.
+
+| Member                                                          |     |
+| --------------------------------------------------------------- | --- |
+| `system?: string`                                               |     |
+| `prompt?: string`                                               |     |
+| `messages?: { role: "user" \| "assistant"; content: string }[]` |     |
 
 ## PanelsState
 

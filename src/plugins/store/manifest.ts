@@ -25,6 +25,7 @@ type PlainPermission =
   | "clipboard"
   | "project.data"
   | "ai.tools"
+  | "ai.model"
   | "notifications"
   | "background"
   | "agents"

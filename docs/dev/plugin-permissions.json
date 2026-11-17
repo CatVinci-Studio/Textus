@@ -144,5 +144,12 @@
     "calls": [
       "ai.registerTool"
     ]
+  },
+  {
+    "permission": "ai.model",
+    "calls": [
+      "ai.available",
+      "ai.complete"
+    ]
   }
 ]
