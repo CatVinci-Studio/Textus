@@ -24,6 +24,20 @@
     </dict>
     <dict>
       <key>CFBundleTypeName</key>
+      <string>MDX</string>
+      <key>CFBundleTypeExtensions</key>
+      <array>
+        <string>mdx</string>
+      </array>
+      <key>CFBundleTypeRole</key>
+      <string>Editor</string>
+      <key>LSHandlerRank</key>
+      <string>Alternate</string>
+      <key>CFBundleTypeIconFile</key>
+      <string>doc.icns</string>
+    </dict>
+    <dict>
+      <key>CFBundleTypeName</key>
       <string>Folder</string>
       <key>LSItemContentTypes</key>
       <array>

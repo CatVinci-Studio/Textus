@@ -1,4 +1,5 @@
 import { decodeUrlPath, hasUrlScheme, isDrivePath, isNoteFile } from "./path";
+import { MARKDOWN_EXTENSIONS } from "../platform/bindings/files";
 
 /**
  * What a link to a note says, read one way for every reader: a click, a
@@ -84,5 +85,7 @@ export function parseNoteLink(written: string): NoteLink | null {
  * then the name as written (`[[file.pdf]]`).
  */
 export function noteFileNames(note: string): string[] {
-  return isNoteFile(note) ? [note] : [`${note}.md`, `${note}.markdown`, note];
+  return isNoteFile(note)
+    ? [note]
+    : [...MARKDOWN_EXTENSIONS.map((ext) => `${note}.${ext}`), note];
 }

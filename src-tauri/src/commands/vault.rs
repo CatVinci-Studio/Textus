@@ -130,15 +130,21 @@ fn folder_distance(from: &[&str], to: &[&str]) -> usize {
     (from.len() - common) + (to.len() - common)
 }
 
-/// The file names a link may mean, in the order tried: a note first
-/// (`[[Note v1.2]]` is `Note v1.2.md`), then the name as written.
+/// The file names a link may mean, in the order tried: a note in each of
+/// its spellings, `.md` first (`[[Note v1.2]]` is `Note v1.2.md`), then
+/// the name as written.
 fn file_names(link: &str, kind: LinkKind) -> Vec<String> {
     match kind {
-        LinkKind::Note if !is_note(Path::new(link)) => vec![
-            format!("{link}.md"),
-            format!("{link}.markdown"),
-            link.to_string(),
-        ],
+        LinkKind::Note if !is_note(Path::new(link)) => {
+            let plugins = crate::plugins::document_types::plugin_document_extensions();
+            crate::extract::MARKDOWN_EXTENSIONS
+                .iter()
+                .map(|ext| ext.to_string())
+                .chain(plugins)
+                .map(|ext| format!("{link}.{ext}"))
+                .chain(std::iter::once(link.to_string()))
+                .collect()
+        }
         _ => vec![link.to_string()],
     }
 }

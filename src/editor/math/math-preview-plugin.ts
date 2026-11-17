@@ -13,7 +13,7 @@ import {
   type RevealState,
   type Touches,
 } from "../reveal-state";
-import { drawWhenVisible, stopDrawing } from "../draw-when-visible";
+import { drawWhileNear, stopDrawing } from "../draw-when-visible";
 import { isLargeDoc } from "../large-doc";
 import { katexNow, mathSourceHtml, onKatexReady } from "./katex-loader";
 import { renderFormula } from "./matrix-rows";
@@ -123,17 +123,15 @@ function decorateMath(
           el.innerHTML =
             renderKatex(source, displayMode) ?? mathSourceHtml(source);
         };
-        // In a large document, one not drawn before waits until it nears the
-        // screen, its source standing in.
-        if (
+        // A formula's KaTeX is dozens of elements: only those within a few
+        // screens are drawn, however many the document holds. At once when
+        // drawn before or the document is short; else its source stands in
+        // until it nears the screen.
+        const now =
           renderCache.has(cacheKeyOf(source, displayMode)) ||
-          !isLargeDoc(view.state.doc)
-        )
-          draw();
-        else {
-          el.innerHTML = mathSourceHtml(source);
-          drawWhenVisible(el, view.dom, draw);
-        }
+          !isLargeDoc(view.state.doc);
+        if (!now) el.innerHTML = mathSourceHtml(source);
+        drawWhileNear(el, view.dom, draw, () => el.replaceChildren(), now);
         caretToSourceOnClick(el, view, getPos);
         return el;
       },

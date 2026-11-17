@@ -25,6 +25,7 @@ import { isImeKeydown } from "../../utils/ime";
 import { trackDrag } from "../../engine/drag/pointer-drag";
 import { listMove } from "../../engine/controls/list-keys";
 import { keyOf, usePluginListItems } from "./usePluginListItems";
+import { liftedCopy } from "../../engine/drag/ghost";
 
 /** A list item as a plugin gives it. */
 export interface PluginListItem {
@@ -127,21 +128,30 @@ export const PluginListPane = memo(function PluginListPane({
       if (!list || e.pointerType === "touch") return;
       let over: HTMLElement | null = null;
       const hover = (next: HTMLElement | null) => {
-        over?.classList.remove("is-drop");
+        over?.classList.remove("tx-drop-into");
         over = next && next !== row ? next : null;
-        over?.classList.add("is-drop");
+        over?.classList.add("tx-drop-into");
       };
+      // A lifted copy follows the pointer; the row's place stays, outlined.
+      const { clientX, clientY } = e;
+      let copy: ReturnType<typeof liftedCopy> | null = null;
       trackDrag(e, {
-        start: () => row.classList.add("is-drag-lifted"),
-        move: (x, y) =>
+        start: () => {
+          copy = liftedCopy(row, { keep: true });
+          row.classList.add("tx-drag-source");
+        },
+        move: (x, y) => {
+          copy?.moveBy(x - clientX, y - clientY);
           hover(
             document
               .elementFromPoint(x, y)
               ?.closest<HTMLElement>("[data-list-key]") ?? null,
-          ),
+          );
+        },
         end: (_x, _y, dropped) => {
           const target = rows.find((r) => r.key === over?.dataset.listKey);
-          row.classList.remove("is-drag-lifted");
+          row.classList.remove("tx-drag-source");
+          copy?.land(row.getBoundingClientRect());
           hover(null);
           if (!dropped || !target || !list.contains(row)) return;
           void askPlugin(plugin, "$listMove", {

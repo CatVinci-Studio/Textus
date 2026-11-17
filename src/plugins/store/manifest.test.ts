@@ -513,7 +513,10 @@ describe("the manifest cases Rust's check reads too", () => {
   it.each(CASES.valid)("takes %j", (extra) => {
     expect(() => parseManifest(manifest(extra))).not.toThrow();
   });
-  it.each(CASES.invalid)("refuses %j", (extra) => {
-    expect(() => parseManifest(manifest(extra))).toThrow();
-  });
+  it.each([...CASES.invalid, ...CASES.invalidInWindow])(
+    "refuses %j",
+    (extra) => {
+      expect(() => parseManifest(manifest(extra))).toThrow();
+    },
+  );
 });

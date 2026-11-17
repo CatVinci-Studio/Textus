@@ -27,6 +27,40 @@ export interface DocumentReporting {
   textOf: (ctx: Ctx, doc: ProseNode) => string;
 }
 
+/** What a save writes for a doc: the opened file, paired block by block
+ *  with the doc it opened as (`pair`), so unchanged blocks are written as
+ *  the file has them and an unedited document stays byte-identical. */
+function useFileText(openedValueRef: { readonly current: string }) {
+  const mountDocRef = useRef<ProseNode | null>(null);
+  const sourceRef = useRef<SourceBlocks | null>(null);
+  // Without that pairing: a doc that serializes as it opened is reported as
+  // the file's own text.
+  const mountMarkdownRef = useRef<string | null>(null);
+  const pair = useCallback(
+    (ctx: Ctx, doc: ProseNode) => {
+      mountDocRef.current = doc;
+      sourceRef.current = readSourceBlocks(ctx, openedValueRef.current, doc);
+    },
+    [openedValueRef],
+  );
+  const textOf = useCallback(
+    (ctx: Ctx, doc: ProseNode) => {
+      const source = sourceRef.current;
+      if (source) return writePreservingSource(ctx, source, doc);
+      const serializer = ctx.get(serializerCtx);
+      const mountDoc = mountDocRef.current;
+      if (mountDoc && mountMarkdownRef.current === null)
+        mountMarkdownRef.current = serializer(mountDoc);
+      const markdown = serializer(doc);
+      return markdown === mountMarkdownRef.current
+        ? openedValueRef.current
+        : markdown;
+    },
+    [openedValueRef],
+  );
+  return { pair, textOf };
+}
+
 export function useDocumentReporting(
   initialValue: string,
   onChange: (markdown: string) => void,
@@ -36,32 +70,15 @@ export function useDocumentReporting(
   // debounce still holds.
   const reportedDocRef = useRef<ProseNode | null>(null);
   const reportedMarkdownRef = useRef<string | null>(null);
-  // The opened file, paired block by block with its doc: a save writes
-  // unchanged blocks as the file has them, so an unedited document stays
-  // byte-identical and clean.
   const openedValueRef = useRef(initialValue);
-  const mountDocRef = useRef<ProseNode | null>(null);
-  const sourceRef = useRef<SourceBlocks | null>(null);
-  // Without that pairing: a doc that serializes as it opened is reported as
-  // the file's own text.
-  const mountMarkdownRef = useRef<string | null>(null);
-  const onMounted = useCallback((ctx: Ctx, doc: ProseNode) => {
-    reportedDocRef.current = doc;
-    mountDocRef.current = doc;
-    sourceRef.current = readSourceBlocks(ctx, openedValueRef.current, doc);
-  }, []);
-  const textOf = useCallback((ctx: Ctx, doc: ProseNode) => {
-    const source = sourceRef.current;
-    if (source) return writePreservingSource(ctx, source, doc);
-    const serializer = ctx.get(serializerCtx);
-    const mountDoc = mountDocRef.current;
-    if (mountDoc && mountMarkdownRef.current === null)
-      mountMarkdownRef.current = serializer(mountDoc);
-    const markdown = serializer(doc);
-    return markdown === mountMarkdownRef.current
-      ? openedValueRef.current
-      : markdown;
-  }, []);
+  const { pair, textOf } = useFileText(openedValueRef);
+  const onMounted = useCallback(
+    (ctx: Ctx, doc: ProseNode) => {
+      reportedDocRef.current = doc;
+      pair(ctx, doc);
+    },
+    [pair],
+  );
   const reportDoc = useCallback(
     (ctx: Ctx, doc: ProseNode) => {
       const value = textOf(ctx, doc);
@@ -90,6 +107,8 @@ export function useEditorFlush(
     openedValueRef,
     reportDoc,
   }: DocumentReporting,
+  /** The file it shows: what it leaves is for that file only. */
+  filePathRef: { readonly current: string | null },
 ) {
   const flush = useCallback(
     () =>
@@ -114,6 +133,7 @@ export function useEditorFlush(
     run((ctx) => {
       const { state } = ctx.get(editorViewCtx);
       leaveTab(tabId, {
+        path: filePathRef.current,
         markdown,
         doc: state.doc.toJSON(),
         selection: state.selection.toJSON(),

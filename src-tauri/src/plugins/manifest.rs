@@ -6,7 +6,8 @@
 //!
 //! Mirrors `parseManifest` in `src/plugins/store/manifest.ts`; change both.
 //! What a plugin adds to the interface (`contributes`) is left to the window,
-//! which checks it before drawing any of it.
+//! which checks it before drawing any of it (`invalidInWindow` in the shared
+//! cases).
 
 use super::require_id;
 use serde_json::{Map, Value};

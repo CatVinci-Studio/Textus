@@ -204,6 +204,16 @@
   margin-bottom: 8px;
 }
 
+/* A line under a group's list, about the group as a whole. */
+.settings-group-note {
+  margin: 8px 0 0;
+  padding-left: 4px;
+  max-width: 560px;
+  color: var(--ui-muted);
+  font-size: var(--text-footnote);
+  line-height: 1.45;
+}
+
 .settings-group + .settings-group {
   margin-top: 28px;
 }

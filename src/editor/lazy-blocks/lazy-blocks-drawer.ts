@@ -143,10 +143,6 @@ function keepInPlace(view: EditorView, scroller: Element, anchor: Anchor) {
 
 const drawers = new WeakMap<Element, LazyBlocksDrawer>();
 
-/** About how long the browser's smooth scrollIntoView takes, for holding
- *  the drawer off while one runs. */
-export const SMOOTH_SCROLL_MS = 700;
-
 /** Blocks either side of a jump's target drawn before it is measured: a
  *  screen of short paragraphs, so where it lands is drawn as it will be. */
 const AROUND_JUMP = 15;

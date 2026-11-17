@@ -3,10 +3,12 @@
 //! made again here, so a window bug can't grant more than the user did.
 
 pub mod access;
+pub mod ai;
 pub mod ai_tools;
 pub mod app_tools;
 pub mod catalog;
 pub mod dev;
+pub mod document_types;
 pub mod export;
 pub mod files;
 pub mod git;
@@ -32,6 +34,9 @@ macro_rules! with_plugin_commands {
             $crate::plugins::state::plugins_state,
             $crate::plugins::state::plugins_set_all,
             $crate::plugins::state::plugin_set,
+            $crate::plugins::ai::plugin_ai_status,
+            $crate::plugins::ai::plugin_ai_allow,
+            $crate::plugins::ai::plugin_ai_complete,
             $crate::plugins::install::plugins_installed,
             $crate::plugins::install::plugin_install,
             $crate::plugins::install::plugin_install_files,

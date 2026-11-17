@@ -1,4 +1,5 @@
-import { Update } from "@tauri-apps/plugin-updater";
+import type { Update } from "@tauri-apps/plugin-updater";
+import { lazyModule } from "../lazy/lazy-module";
 import type { UpdateChannel } from "./update-channel";
 import type {
   ChatHandoff,
@@ -165,6 +166,9 @@ export const menuIpc = {
   setPluginMenu: (
     items: { command: string; label: string; group?: string }[],
   ) => desktopQueryCommand("set_plugin_menu", undefined, items),
+  /** File › Export's plugin formats, in the native menu bar. */
+  setPluginExports: (items: { key: string; label: string }[]) =>
+    desktopQueryCommand("set_plugin_exports", undefined, items),
   /** The plugin commands the background tray icon lists. */
   setTrayPluginItems: (items: { command: string; label: string }[]) =>
     desktopQueryCommand("set_tray_plugin_items", undefined, items),
@@ -386,6 +390,12 @@ export const distribution = {
 /** What the updater plugin's `Update` is made from. */
 type UpdateMetadata = ConstructorParameters<typeof Update>[0];
 
+/** The updater plugin: an update is looked for after startup. */
+const updaterPlugin = lazyModule(
+  "updater",
+  () => import("@tauri-apps/plugin-updater"),
+);
+
 export const updater = {
   /** The plugin's `check()` on `channel`'s endpoints. `backToStable` offers
    *  a beta install the newest stable release, only when the user asks. */
@@ -399,7 +409,9 @@ export const updater = {
       channel,
       backToStable,
     )) as UpdateMetadata | null;
-    return metadata ? new Update(metadata) : null;
+    if (!metadata) return null;
+    const { Update } = await updaterPlugin.load();
+    return new Update(metadata);
   },
   /** Right before the relaunch that applies an update, so the new process
    *  is the running Textus. */

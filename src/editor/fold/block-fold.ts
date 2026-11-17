@@ -38,6 +38,28 @@ const caretSpan = () =>
     className: "disclosure-caret",
   });
 
+/** A fold's caret button: shown as the mouse comes near its block's start
+ *  (block-handles-plugin.ts marks it data-near), or while folded. */
+export function foldCaret(): HTMLButtonElement {
+  const caret = document.createElement("button");
+  caret.type = "button";
+  caret.className = "block-fold";
+  caret.append(caretSpan());
+  return caret;
+}
+
+/** Says on `caret` whether its fold is open, and what folds (`name`). */
+export function labelFoldCaret(
+  caret: HTMLElement,
+  folded: boolean,
+  name?: string,
+): void {
+  const t = currentStrings();
+  const verb = folded ? t.outlineExpand : t.outlineCollapse;
+  caret.setAttribute("aria-expanded", String(!folded));
+  caret.setAttribute("aria-label", name ? `${verb}: ${name}` : verb);
+}
+
 /** Puts the fold's caret and folded line at the start of `el`, for `name`;
  *  `key` rides on the caret (data-key), so markup kept as HTML keeps it. */
 export function addBlockFoldMarkup(
@@ -46,11 +68,8 @@ export function addBlockFoldMarkup(
   key: string,
 ): void {
   el.classList.add("block-foldable");
-  const caret = document.createElement("button");
-  caret.type = "button";
-  caret.className = "tx-reveal block-fold";
+  const caret = foldCaret();
   caret.dataset.key = key;
-  caret.append(caretSpan());
   const line = document.createElement("button");
   line.type = "button";
   line.className = "block-folded-line";
@@ -74,11 +93,7 @@ export function showBlockFold(el: HTMLElement, folded: boolean): void {
     line?.textContent ??
     "";
   const t = currentStrings();
-  caret?.setAttribute("aria-expanded", String(!folded));
-  caret?.setAttribute(
-    "aria-label",
-    `${folded ? t.outlineExpand : t.outlineCollapse}: ${name}`,
-  );
+  if (caret) labelFoldCaret(caret, folded, name);
   line?.setAttribute("aria-hidden", String(!folded));
   line?.setAttribute("aria-label", `${t.outlineExpand}: ${name}`);
 }

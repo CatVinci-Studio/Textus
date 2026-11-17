@@ -6,7 +6,7 @@ import {
   setNoticeSettings,
   type SettingsAccess,
 } from "./schedule-notice";
-import { windowIsDark } from "../views/theme-vars";
+import { windowIsDark } from "../../engine/tokens/appearance";
 import { pluginPlatform } from "../plugin-platform";
 import { currentAppState, watchAppState } from "./app-state";
 import { runWaitingJobs } from "./run-jobs";

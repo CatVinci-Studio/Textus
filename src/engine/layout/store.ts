@@ -27,6 +27,7 @@ import {
   type NoRoom,
 } from "../frame/frame-store";
 import { resolveSplit } from "./resolve";
+import { createSubscribers } from "../../utils/store";
 
 /**
  * The window's model, its one owner: the tabs it has, the one in use, and
@@ -60,18 +61,9 @@ let layout: SplitLayout = oneIsland([], null);
 let request: SplitRequest | null = null;
 let preview: SplitLayout | null = null;
 const arriving = new Map<string, Arrival>();
-const listeners = new Set<() => void>();
-
-function publish() {
-  for (const listener of listeners) listener();
-}
-
-export function subscribeSplit(listener: () => void): () => void {
-  listeners.add(listener);
-  return () => {
-    listeners.delete(listener);
-  };
-}
+const split = createSubscribers();
+const publish = split.publish;
+export const subscribeSplit = split.subscribe;
 
 /** The window's first tabs, and how it makes a blank one; once. */
 export function startWindowTabs<T extends TabRecord>(

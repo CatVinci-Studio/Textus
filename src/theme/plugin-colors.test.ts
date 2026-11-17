@@ -138,3 +138,81 @@ describe("a plugin's colours", () => {
     expect(applied()).toContain("--ui-border");
   });
 });
+
+it("leaves neutral surfaces alone when only the frame paint changes", () => {
+  setPluginColors("a.one", {
+    "--ui-frame-paint": "linear-gradient(#111111, #333333)",
+    "--ui-frame-tint": "#777777",
+  });
+  expect(applied()).toContain("--ui-frame-paint:");
+  expect(applied()).not.toContain("--ui-text:");
+  expect(applied()).not.toContain("--ui-bg:");
+  expect(applied()).not.toContain("--ui-border:");
+});
+
+it("validates texture without permitting plugin images or texture-only layers", () => {
+  const paint = { "--ui-frame-paint": "#ffffff" };
+  for (const texture of [
+    null,
+    [],
+    1,
+    {},
+    { opacity: -1 },
+    { opacity: 1.1 },
+    { opacity: NaN },
+    { opacity: Infinity },
+    { opacity: "0.2" },
+    { opacity: 0.2, color: "red" },
+  ])
+    expect(() => setPluginColors("a.one", paint, "both", texture)).toThrow();
+  expect(() =>
+    setPluginColors("a.one", {}, "both", { opacity: 0.2 }),
+  ).toThrow();
+  expect(() =>
+    setPluginColors(
+      "a.one",
+      { "--ui-frame-paint": "url(data:image/png;base64,a)" },
+      "both",
+      { opacity: 0.2 },
+    ),
+  ).toThrow();
+  expect(applied()).toBe("");
+});
+
+it("keeps grain with the winning paint and removes both on disposal", () => {
+  setPluginColors("a.one", { "--ui-frame-paint": "#ffffff" }, "both", {
+    opacity: 0.09,
+  });
+  expect(applied()).toContain("data:image/svg+xml");
+  expect(decodeURIComponent(applied())).toContain('opacity="0.09"');
+  expect(applied()).toContain(
+    "linear-gradient(rgb(255, 255, 255), rgb(255, 255, 255))",
+  );
+  const otherColor = setPluginColors("b.two", { "--tone-red": "#ff0000" });
+  expect(applied()).toContain("data:image/svg+xml");
+  const otherPaint = setPluginColors("b.two", {
+    "--ui-frame-paint": "#000000",
+  });
+  expect(applied()).not.toContain("data:image/svg+xml");
+  clearPluginColors("b.two", otherPaint);
+  expect(applied()).toContain("data:image/svg+xml");
+  forgetPluginColors("a.one");
+  expect(applied()).not.toContain("--ui-frame-paint");
+  clearPluginColors("b.two", otherColor);
+  expect(applied()).toBe("");
+});
+
+it("limits grain to its scheme and treats zero opacity as plain paint", () => {
+  const paint = { "--ui-frame-paint": "linear-gradient(#ffffff, #eeeeee)" };
+  setPluginColors("a.one", paint, "dark", { opacity: 0.1 });
+  expect(applied()).toBe("");
+  const light = setPluginColors("a.one", paint, "light", {
+    opacity: 0.1,
+    color: "white",
+  });
+  expect(decodeURIComponent(applied())).toContain('values="0 0 0 0 1');
+  clearPluginColors("a.one", light);
+  setPluginColors("a.one", paint, "light", { opacity: 0 });
+  expect(applied()).toContain("linear-gradient");
+  expect(applied()).not.toContain("data:image");
+});

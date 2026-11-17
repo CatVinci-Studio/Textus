@@ -128,6 +128,8 @@ export function contextMenuTarget(
 
 export interface ContextMenuOptions {
   t: Strings;
+  /** What plugins worked out as the menu opened (their own providers). */
+  lateItems?: ContextMenuItem[];
   /** From contextMenuTarget: the image right-clicked, if any. */
   imagePos: number | null;
   imageLocation?: ImageLocation | null;
@@ -231,7 +233,10 @@ export function buildContextMenuItems(
     [...format, ...grouped(t.menuTextusAi, options.aiItems)],
     grouped(
       t.menuPlugins,
-      contributedMenuItems({ selectedText: selectedText(run) }),
+      [
+        ...contributedMenuItems({ selectedText: selectedText(run) }),
+        ...(options.lateItems ?? []),
+      ],
       2,
     ),
   );
@@ -324,7 +329,7 @@ function joinGroups(...groups: ContextMenuEntry[][]): ContextMenuEntry[] {
     );
 }
 
-function selectedText(run: EditorRunner): string {
+export function selectedText(run: EditorRunner): string {
   return (
     run((ctx) => {
       const { state } = ctx.get(editorViewCtx);

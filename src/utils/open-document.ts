@@ -1,3 +1,5 @@
+import { createSubscribers } from "./store";
+
 /**
  * Opening a file the window shows, from anywhere: a followed link, a card's
  * file, a project's document, the detached chat. One entry, registered by
@@ -18,7 +20,7 @@ export interface OpenRequest {
 type Opener = (path: string, request: OpenRequest) => void | Promise<void>;
 
 let opener: Opener | null = null;
-const opened = new Set<(path: string) => void>();
+const opened = createSubscribers<[string]>();
 
 /** Who opens files here; returns the take-back. */
 export function setDocumentOpener(open: Opener): () => void {
@@ -36,14 +38,13 @@ export async function openDocument(
 ): Promise<void> {
   if (!path) return;
   const done = opener?.(path, request);
-  for (const tell of opened) tell(path);
+  opened.publish(path);
   await done;
 }
 
 /** Calls `told` with each file asked to open; returns the stop. */
 export function onDocumentOpened(told: (path: string) => void): () => void {
-  opened.add(told);
-  return () => opened.delete(told);
+  return opened.subscribe(told);
 }
 
 // The dev server's tests open files as a click on a link would.

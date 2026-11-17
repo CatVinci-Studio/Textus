@@ -31,7 +31,7 @@ import { START_MODE } from "../last-mode";
 export function ChatWindowApp({ tabs }: { tabs?: ChatTabs }) {
   const { t, settings, setSettings } = useSettings();
   const handoff = useChatWindowHandoff(settings);
-  const { context, lost, claimed, conversation } = handoff;
+  const { context, workspaceRoot, lost, claimed, conversation } = handoff;
   const pinned = settings.pinAgentWindow;
   const bridge = useChatWindowBridge({ handoff, pinned, t });
   const { docPath, requestDocPath, proposalDocs } = bridge;
@@ -57,10 +57,7 @@ export function ChatWindowApp({ tabs }: { tabs?: ChatTabs }) {
   const header = (
     <ChatWindowHeader
       context={context}
-      scope={conversationScope(
-        context?.docPath ?? null,
-        settings.agentWorkspaceRoot || null,
-      )}
+      scope={conversationScope(context?.docPath ?? null, workspaceRoot)}
       tabs={tabs}
       busy={conversation.busy}
       pinned={pinned}
@@ -116,7 +113,7 @@ export function ChatWindowApp({ tabs }: { tabs?: ChatTabs }) {
           selectedText={context.selectedText}
           selectionMarkdown={context.selectionMarkdown}
           docPath={context.docPath}
-          workspaceRoot={settings.agentWorkspaceRoot || null}
+          workspaceRoot={workspaceRoot}
           conversation={conversation}
           defaultMode={START_MODE}
           labels={labels}

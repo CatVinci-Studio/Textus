@@ -126,6 +126,32 @@ describe("tabWidths", () => {
     const hidden = { ...tab(61), spare: 22 };
     const fit = tabWidths([hidden, tab(61)], { ...LIMITS, max: 100 }, 600);
     expect(fit.cut).toEqual([false, true]);
+    // Squeezed, its least is a few letters with that room too: the open
+    // tab keeps the rest and shows whole.
+    const open = { ...tab(61, 43), open: true };
+    const tight = tabWidths(
+      [{ ...tab(109, 43), spare: 27 }, open],
+      { ...LIMITS, fewest: 36 },
+      182,
+    );
+    expect(tight.widths).toEqual([78, 104]);
+    expect(tight.cut).toEqual([true, false]);
+  });
+
+  it("a tab whose least is more than the others' share keeps it, and the rest still fit", () => {
+    // A padlock's tab can't go as narrow as the others: they give more.
+    const tabs = [
+      tab(100),
+      tab(100),
+      tab(100),
+      tab(100, FIXED + 14),
+      { ...tab(60), open: true },
+    ];
+    const fit = tabWidths(tabs, { ...LIMITS, fewest: 30 }, 400);
+    expect(fit.overflow).toBe(false);
+    expect(fit.widths.reduce((a, w) => a + w, 0)).toBeLessThanOrEqual(400);
+    expect(fit.widths[3]).toBe(FIXED + 14 + 30);
+    expect(fit.cut[4]).toBe(false);
   });
 
   it("fits no tabs in any row", () => {

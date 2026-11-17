@@ -35,7 +35,9 @@
 }
 
 /* A phone's rail lies under the page while it is shut. */
-:root[data-window-chrome="mobile"] .corner-stacks {
+:root[data-window-chrome="mobile"]
+  .app-shell:not([data-sidebar="open"])
+  .corner-stacks {
   --corner-from: calc(var(--safe-left, 0px) + 18px);
 }
 
@@ -148,7 +150,7 @@
    buttons go under the details. */
 @media (max-width: 480px) {
   .corner-stack .corner-toast {
-    width: calc(100vw - 36px);
+    width: calc(100vw - var(--corner-from) - 18px);
     padding: 8px 12px 8px 8px;
   }
 

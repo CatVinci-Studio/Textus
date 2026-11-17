@@ -6,7 +6,7 @@
 
 - **适合上手的 issue：** [good first issue](https://github.com/CatVinci-Studio/Textus/issues?q=is%3Aopen+label%3A%22good+first+issue%22+no%3Aassignee) 和 [help wanted](https://github.com/CatVinci-Studio/Textus/issues?q=is%3Aopen+label%3A%22help+wanted%22+no%3Aassignee)，先挑还没人认领的。在 issue 下评论 `/take` 认领（同时只能认领一个），机器人会把它分配给你。7 天内开一个草稿 PR；14 天没有动静会自动释放给别人。评论 `/untake` 可以主动放弃。
 - **翻译：** 见 [docs/dev/translating.md](docs/dev/translating.md)。
-- **想加新功能？** 先想想能不能做成插件：大多数新功能，以及所有接入外部服务的功能，都应该放在 [textus-plugins](https://github.com/CatVinci-Studio/textus-plugins)，而不是改 App。[路线图](ROADMAP.zh.md) 里列了哪些不进核心。
+- **想加新功能？** 先想想能不能做成插件：大多数新功能，以及所有接入外部服务的功能，都应该放在 [textus-plugins](https://github.com/CatVinci-Studio/textus-plugins)，而不是改 App。[路线图](ROADMAP.zh.md) 里是接下来的计划。
 - **修 bug：** 直接提 PR。**给 App 加功能：** 先开 issue，商量好再动手。
 
 改错字、修死链这类小改动不用开 issue，也不用认领。

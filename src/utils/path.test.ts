@@ -2,6 +2,7 @@ import { describe, expect, it } from "vitest";
 import {
   absoluteIn,
   basename,
+  dirname,
   folderName,
   hasUrlScheme,
   isDrivePath,
@@ -33,6 +34,28 @@ describe("isInside", () => {
     expect(isInside("C:\\a\\c.md", "C:\\")).toBe(true);
     expect(isInside("/ab/c.md", "/a")).toBe(false);
     expect(isInside("/a", "/a")).toBe(false);
+  });
+  it("reads an Android picked folder's entries by their document ids", () => {
+    const tree =
+      "content://com.android.externalstorage.documents/tree/primary%3ANotes";
+    const dir = `${tree}/document/primary%3ANotes`;
+    expect(isInside(`${tree}/document/primary%3ANotes%2Fa.md`, dir)).toBe(true);
+    expect(isInside(`${tree}/document/primary%3ANotes%2Fb%2Fc.md`, dir)).toBe(
+      true,
+    );
+    expect(isInside(`${tree}/document/primary%3ANotesX%2Fa.md`, dir)).toBe(
+      false,
+    );
+    expect(isInside(dir, dir)).toBe(false);
+    expect(
+      isInside("content://other/document/primary%3ANotes%2Fa.md", dir),
+    ).toBe(false);
+    // Its folder, a part up in the same tree; none above the tree's top.
+    expect(parentDir(`${tree}/document/primary%3ANotes%2Fb%2Fc.md`)).toBe(
+      `${tree}/document/primary%3ANotes%2Fb`,
+    );
+    expect(dirname(`${tree}/document/primary%3ANotes%2Fa.md`)).toBe(dir);
+    expect(parentDir(dir)).toBe(null);
   });
   it("onTheWay knows a target and the folders holding it", () => {
     const way = onTheWay("/a/b/c.md", null, "C:\\x\\y");

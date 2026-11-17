@@ -28,6 +28,7 @@ import { useSettings, type PanelMode } from "../../../prefs/SettingsContext";
 import { START_MODE, initialMode } from "../last-mode";
 import { useAiSignedIn } from "../chat-models";
 import { openSettingsPage } from "../../../settings/settings-nav";
+import { useAiRoot } from "../../../ai/workspace/ai-root";
 
 /** The panel always asks for the document as it is now; this stands until
  *  it answers, and where there is none. */
@@ -51,6 +52,15 @@ const NO_DOCUMENT_CHAT: DocumentPanel["chat"] = {
  * on `model`, working on the document in front or, with none open, on the
  * folder.
  */
+/** The composer's mode, which the empty state describes, and Research
+ *  mode's kind of piece ("auto": the model's choice; the message sent is
+ *  its topic). */
+function useComposerMode() {
+  const [mode, setMode] = useState<PanelMode>(() => initialMode());
+  const [paperGenre, setPaperGenre] = useState<PaperGenreChoice>("auto");
+  return { mode, setMode, paperGenre, setPaperGenre };
+}
+
 export function ConversationPanel({
   model,
   document,
@@ -62,14 +72,11 @@ export function ConversationPanel({
   newSlot?: { current: (() => void) | null };
 }) {
   const { settings, t } = useSettings();
+  const workspaceRoot = useAiRoot(settings);
   const agentPanel = useAgentPanel();
   const conversation = useConversation(model);
   const signedIn = useAiSignedIn();
-  // The composer's mode: the empty state says what the AI will do in it.
-  const [mode, setMode] = useState<PanelMode>(() => initialMode());
-  // Research mode's kind of piece, "auto" for the model's choice; the
-  // message sent is its topic.
-  const [paperGenre, setPaperGenre] = useState<PaperGenreChoice>("auto");
+  const { mode, setMode, paperGenre, setPaperGenre } = useComposerMode();
   // What is asked into the AI from elsewhere lands in this composer.
   const composer = useRef<ChatComposerHandle>(null);
   useEffect(
@@ -147,7 +154,7 @@ export function ConversationPanel({
             document={NO_DOCUMENT}
             selectionMarkdown={null}
             docPath={docPath}
-            workspaceRoot={settings.agentWorkspaceRoot || null}
+            workspaceRoot={workspaceRoot}
             conversation={conversation}
             defaultMode={START_MODE}
             labels={labels}

@@ -205,8 +205,13 @@
   word-break: normal;
 }
 
+/* Windows's Latin face before the CJK ones: Chromium (WebView2) puts a
+   combining mark (the bar of H̄) beside the letter in Microsoft YaHei and
+   PingFang, not over it. YaHei's Latin is drawn from Segoe UI, so letters
+   look as they did; the punctuation faces above still take ’ “ ”. */
 :root:is(:lang(zh), :lang(ja), :lang(ko)) {
-  --font-text-sans: var(--font-cjk-sans), Inter, var(--font-system-ui);
+  --font-text-sans:
+    "Segoe UI", var(--font-cjk-sans), Inter, var(--font-system-ui);
 }
 
 :root:lang(zh) {

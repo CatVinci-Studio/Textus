@@ -19,7 +19,25 @@
       "permissions": ["files.read"],
       "contributes": { "embeds": [{ "id": "a.b.e", "targets": ["note"] }] }
     },
-    { "requires": [{ "setting": "runInBackground" }], "platforms": ["desktop"] }
+    {
+      "requires": [{ "setting": "runInBackground" }],
+      "platforms": ["desktop"]
+    },
+    {
+      "contributes": {
+        "commands": [{ "command": "a.b.go", "title": "Go" }],
+        "snippets": [{ "label": "Box", "body": "> [!NOTE]\n> $0" }],
+        "walkthroughs": [
+          {
+            "title": "Start",
+            "steps": [
+              { "title": "One", "command": "a.b.go" },
+              { "title": "Two" }
+            ]
+          }
+        ]
+      }
+    }
   ],
   "invalid": [
     { "id": "AB" },
@@ -35,5 +53,16 @@
     { "contributes": { "embeds": [{ "id": "a.b.e", "targets": ["note"] }] } },
     { "requires": [{ "setting": "nope" }] },
     { "requires": [{ "setting": "runInBackground" }], "platforms": ["ios"] }
+  ],
+  "invalidInWindow": [
+    { "contributes": { "snippets": [{ "label": "Box" }] } },
+    {
+      "contributes": {
+        "walkthroughs": [
+          { "title": "S", "steps": [{ "title": "One", "command": "x.y" }] }
+        ]
+      }
+    },
+    { "contributes": { "walkthroughs": [{ "title": "S", "steps": [] }] } }
   ]
 }

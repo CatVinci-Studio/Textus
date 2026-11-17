@@ -141,7 +141,6 @@ describe.each(LANGS.filter((lang) => lang !== "en"))("%s", (lang) => {
     "agentPanelTitle",
     "menuTextusAi",
     "navAi",
-    "chatWindowTitle",
     "tutorialAiTitle",
     "navMarkdown",
     "extensionsTabMcp",

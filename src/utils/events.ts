@@ -106,7 +106,7 @@ export const FILE_RELOADED_EVENT = "textus:file-reloaded";
  *  menu, from its own window). */
 export const OPEN_AGENT_PANEL_EVENT = "open-agent-panel";
 
-/** A block handle's ＋ or ⋮⋮ pressed: its editor's menu for that block. */
+/** A block handle's ⋮⋮ pressed: its editor's menu for that block. */
 export const BLOCK_MENU_EVENT = "textus:block-menu";
 export interface BlockMenuRequest {
   /** The editor the block is in. */
@@ -114,8 +114,6 @@ export interface BlockMenuRequest {
   x: number;
   y: number;
   pos: number;
-  /** ＋: the blocks to add below it; else its own menu. */
-  add: boolean;
 }
 
 /** What each window event above carries; undefined for none. */

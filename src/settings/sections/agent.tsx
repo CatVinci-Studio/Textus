@@ -5,8 +5,7 @@ import {
   formatContext,
   modelInfo,
   orderForPicker,
-  readFetchedModels,
-  useModelsFetched,
+  useFetchedModels,
   writeFetchedModels,
 } from "../../ai/model-info";
 import { useCallback, useEffect, useState } from "react";
@@ -32,12 +31,11 @@ function useSignInModels(provider: string): SignInModels | null {
   return active ? (SIGN_IN_MODELS[provider] ?? null) : null;
 }
 
-/** The last list fetched for `provider`, remembered across restarts and
- *  refreshed whenever ModelListRow fetches a new one. */
-function useFetchedModels(provider: string) {
-  useModelsFetched();
-  const cached = readFetchedModels(provider);
-  return { models: cached?.models ?? [], at: cached?.at ?? null };
+/** Whether a provider's model list is fetched here: not the custom
+ *  endpoint's (its panel lists them) nor a sign-in's fixed models. */
+export function useModelListShown(provider: string): boolean {
+  const signIn = useSignInModels(provider);
+  return provider !== "custom" && !signIn;
 }
 
 /// Model picker for writing (completion and grammar) or the chat. Seeded
@@ -200,15 +198,14 @@ export function ModelListRow({
 }) {
   const { settings } = useSettings();
   const provider = given ?? settings.aiProvider;
-  const signIn = useSignInModels(provider);
+  const shown = useModelListShown(provider);
   const { at } = useFetchedModels(provider);
   const [error, setError] = useState<string | null>(null);
   const [loading, setLoading] = useState(false);
   // A failed fetch belongs to the provider it was tried against.
   useEffect(() => setError(null), [provider]);
 
-  const canFetch = provider !== "custom" && !signIn;
-  if (!canFetch) return null;
+  if (!shown) return null;
 
   async function fetchModels() {
     setLoading(true);
@@ -305,7 +302,7 @@ export function AgentWorkspaceRootSection({ t }: { t: Strings }) {
             className="text-button settings-inline-button"
             onClick={() => setSettings({ agentWorkspaceRoot: "" })}
           >
-            {t.projectNoFolder}
+            {t.projectFollowSidebar}
           </button>
         )}
         <button

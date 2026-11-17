@@ -5,9 +5,13 @@ import { auth, type CustomEndpointConfig } from "../../platform/ipc";
 import { Select } from "../../engine/controls/Select";
 import { MaskedKeyInput, VERBATIM_INPUT } from "./controls";
 import { explainError } from "../../utils/error-explain";
+import { fill } from "../../i18n/fill";
+import { useFetchedModels, writeFetchedModels } from "../../ai/model-info";
+import { useSettings } from "../../prefs/SettingsContext";
 
 /** The custom endpoint's address, key and model: an OpenAI-compatible
- *  server of the user's own. */
+ *  server of the user's own. Its model list is kept with the providers'
+ *  fetched lists, so the model pickers and the chat offer the same names. */
 
 /** Whether two base URLs name the same endpoint, by the backend's rule for
  *  sending a stored key to a URL. */
@@ -26,12 +30,14 @@ export function CustomProviderPanel({
   const [config, setConfig] = useState<CustomEndpointConfig | null>(null);
   const [baseUrl, setBaseUrl] = useState("");
   const [apiKey, setApiKey] = useState("");
-  const [models, setModels] = useState<string[]>([]);
+  const { models } = useFetchedModels("custom");
+  const { settings, setSettings } = useSettings();
   const [selectedModel, setSelectedModel] = useState("");
-  const [status, setStatus] = useState<"idle" | "checking" | "ok" | "error">(
-    "idle",
+  /** What the last action said: an error, or that it worked. */
+  const [note, setNote] = useState<{ error: boolean; text: string } | null>(
+    null,
   );
-  const [statusMessage, setStatusMessage] = useState<string | null>(null);
+  const fail = (text: string) => setNote({ error: true, text });
   useSavedEndpoint((c) => {
     setConfig(c);
     setBaseUrl(c.base_url);
@@ -42,31 +48,32 @@ export function CustomProviderPanel({
     onStatusChange?.(true);
   });
 
-  async function fetchModels() {
-    setStatus("checking");
-    setStatusMessage(null);
+  /** The endpoint's models, kept for every picker; null when it failed. */
+  async function listModels(): Promise<string[] | null> {
+    setNote(null);
     try {
       const list = await auth.fetchCustomModels(baseUrl, apiKey.trim() || null);
-      setModels(list);
-      setStatus("ok");
-      if (!selectedModel && list.length > 0) setSelectedModel(list[0]);
+      writeFetchedModels("custom", list);
+      return list;
     } catch (err) {
-      setStatus("error");
-      setStatusMessage(explainError(err, t));
+      fail(explainError(err, t));
+      return null;
     }
   }
 
+  async function fetchModels() {
+    const list = await listModels();
+    if (list?.length && !selectedModel) setSelectedModel(list[0]!);
+  }
+
+  // Reached is not enough: the model has to be one the endpoint serves.
   async function testConnection() {
-    setStatus("checking");
-    setStatusMessage(null);
-    try {
-      await auth.testCustomEndpoint(baseUrl, apiKey.trim() || null);
-      setStatus("ok");
-      setStatusMessage(t.customTestSuccess);
-    } catch (err) {
-      setStatus("error");
-      setStatusMessage(explainError(err, t));
-    }
+    const list = await listModels();
+    if (!list) return;
+    const model = selectedModel.trim();
+    if (model && list.length > 0 && !list.includes(model)) {
+      fail(fill(t.customModelNotListed, { model }));
+    } else setNote({ error: false, text: t.customTestSuccess });
   }
 
   // An empty key field means "the saved key", but only while the URL is the
@@ -77,22 +84,23 @@ export function CustomProviderPanel({
   async function save() {
     if (!baseUrl.trim() || !selectedModel.trim()) return;
     const typed = apiKey.trim();
+    const model = selectedModel.trim();
     try {
-      await auth.setCustomEndpoint(
-        baseUrl.trim(),
-        typed || null,
-        selectedModel.trim(),
-      );
+      await auth.setCustomEndpoint(baseUrl.trim(), typed || null, model);
     } catch (err) {
-      setStatus("error");
-      setStatusMessage(explainError(err, t));
+      fail(explainError(err, t));
       return;
     }
+    // The model saved here is the one the chat and writing then use.
+    setSettings({
+      agentModels: { ...settings.agentModels, custom: model },
+      writingModels: { ...settings.writingModels, custom: model },
+    });
     setConfig({
       base_url: baseUrl.trim(),
       api_key: null,
       has_api_key: !!typed || keySaved,
-      model: selectedModel.trim(),
+      model,
     });
     // Like the provider keys: once saved, the key leaves the field.
     setApiKey("");
@@ -103,29 +111,32 @@ export function CustomProviderPanel({
     try {
       await auth.clearCustomEndpoint();
     } catch (err) {
-      setStatus("error");
-      setStatusMessage(explainError(err, t));
+      fail(explainError(err, t));
       return;
     }
     setConfig(null);
     setBaseUrl("");
     setApiKey("");
     setSelectedModel("");
-    setModels([]);
-    setStatus("idle");
+    writeFetchedModels("custom", []);
+    setNote(null);
     onStatusChange?.(false);
   }
 
+  // A saved name the list lacks stays choosable, flagged above.
+  const offered =
+    selectedModel && !models.includes(selectedModel)
+      ? [selectedModel, ...models]
+      : models;
+
   return (
-    <div>
-      {statusMessage && (
-        <div
-          className={status === "error" ? "settings-error" : "settings-success"}
-        >
-          {statusMessage}
+    <div className="custom-endpoint">
+      {note && (
+        <div className={note.error ? "settings-error" : "settings-success"}>
+          {note.text}
         </div>
       )}
-      <div className="settings-field">
+      <div className="custom-endpoint-fields">
         <label className="settings-field-label">{t.customBaseUrlLabel}</label>
         <input
           aria-label={t.customBaseUrlLabel}
@@ -137,8 +148,6 @@ export function CustomProviderPanel({
           value={baseUrl}
           onChange={(e) => setBaseUrl(e.target.value)}
         />
-      </div>
-      <div className="settings-field">
         <label className="settings-field-label">{t.customApiKeyLabel}</label>
         <MaskedKeyInput
           className="settings-text-input"
@@ -147,8 +156,6 @@ export function CustomProviderPanel({
           value={apiKey}
           onChange={setApiKey}
         />
-      </div>
-      <div className="settings-field">
         <label className="settings-field-label">{t.customModelLabel}</label>
         <div className="custom-model-row">
           {models.length > 0 ? (
@@ -158,7 +165,7 @@ export function CustomProviderPanel({
               value={selectedModel}
               onChange={(e) => setSelectedModel(e.target.value)}
             >
-              {models.map((m) => (
+              {offered.map((m) => (
                 <option key={m} value={m}>
                   {m}
                 </option>

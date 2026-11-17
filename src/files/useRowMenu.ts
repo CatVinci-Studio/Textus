@@ -12,7 +12,10 @@ import { iosFiles } from "../platform/ios-files";
 
 import { basename, parentDir } from "../utils/path";
 import { type ContextMenuItem } from "../engine/controls/ContextMenu";
-import { contributedContextItems } from "../registry/context-menu-items";
+import {
+  contributedContextItems,
+  lateContextItems,
+} from "../registry/context-menu-items";
 import {
   showConfirm,
   showMessage,
@@ -150,6 +153,24 @@ export function useRowMenu(
       });
       if (added.length) items.push("separator", ...added);
       setMenu({ ...at, items, title: basename(path) });
+      // What plugins work out for this file joins the menu once they answer.
+      void lateContextItems("file/context", { path, folder: isDir })?.then(
+        (late) => {
+          if (!late.length) return;
+          setMenu((open) =>
+            open?.items === items
+              ? {
+                  ...open,
+                  items: [
+                    ...items,
+                    ...(added.length ? [] : ["separator" as const]),
+                    ...late,
+                  ],
+                }
+              : open,
+          );
+        },
+      );
     },
     [root, t, setDraft, rename, trash, onFileSelect, onEnter],
   );

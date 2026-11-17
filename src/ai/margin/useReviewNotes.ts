@@ -1,35 +1,31 @@
 import { fill } from "../../i18n/fill";
 import { askInComposer } from "../chat/composer-asks";
-import { useEffect, useMemo, useRef, useState } from "react";
+import { useState } from "react";
 import { editorViewCtx } from "@milkdown/kit/core";
 import { TextSelection } from "@milkdown/kit/prose/state";
-import type { EditorView } from "@milkdown/kit/prose/view";
 import type { EditorRunner } from "../../editor/useEditorRunner";
 import { revealPosition } from "../../editor/reveal-position";
-import {
-  numberNotes,
-  reviewNotesKey,
-  type ReviewNote,
-} from "./review-notes-plugin";
-import { commentCalls } from "../chat/comment-args";
+import { reviewNotesKey, type ReviewNote } from "./review-notes-plugin";
 import { setMarginAvailable } from "./margin-room";
 import { blockAt, holdBlock } from "../../engine/controls/hold-line";
 import type { AgentConversation } from "../chat/conversation/conversation-types";
 import type { AgentPanelFrame } from "../chat/panel/agent-panel";
 import { type usePendingEdits } from "../revision/usePendingEdits";
 import { locateTarget } from "../revision/pending-place";
-import { pendingEditKey, type HotSentence } from "../revision/pending-types";
+import { pendingEditKey } from "../revision/pending-types";
 import type { RevisionDisplay } from "../../prefs/SettingsContext";
 import type { Strings } from "../../i18n/strings";
-import { useLatest } from "../../utils/hooks/useLatest";
 import { useNotesBar } from "./useNotesBar";
-import { useOpenedCard } from "./margin-layout";
-import { useOwnNotes } from "./useOwnNotes";
-import { useOwnRevisions } from "./useOwnRevisions";
-import { OWN_CHANGES, ownRevisionKey } from "./own-revision-plugin";
+import {
+  useConversationNotes,
+  useHotItem,
+  useLitItem,
+  useNoteCallbacks,
+  useNotes,
+  useOwnWork,
+} from "./useReviewNoteParts";
+import { OWN_CHANGES } from "./own-revision-plugin";
 import { duration } from "../../engine/motion/motion";
-import { asDrawn, zoomedRectScale } from "../../engine/controls/zoomed-rects";
-import { marginItemsOf } from "./margin-items";
 import { noteOfAnchor } from "./review-notes-plugin";
 
 /** Review notes, the AI's and the writer's own, until done or cleared; also
@@ -69,104 +65,17 @@ export function useReviewNotes({
   t: Strings;
   showAiNotice: (message: string | null) => void;
 }) {
-  const [notes, setNotes] = useState<ReviewNote[]>([]);
-  const notesRef = useLatest(notes);
+  const { notes, setNotes, notesRef } = useNotes();
   // Behind numbered badges (no room for a margin): the chat's note cards
   // then carry the same numbers.
   const [noMargin, setNoMargin] = useState(false);
-  const [hotNote, setHotNote] = useState<string | null>(null);
-  // The same, at once: two pointer events can land before a render.
-  const hotRef = useRef<string | null>(null);
-  const [openNote, setOpenNote] = useState<{
-    id: string;
-    x: number;
-    y: number;
-  } | null>(null);
-  const doneNotes = useRef(new Set<string>());
-  // Notes whose passage wasn't found, by what they were placed from.
-  const lostNotes = useRef(new Set<string>());
-  const [editorView, setEditorView] = useState<EditorView | null>(null);
-  useEffect(() => {
-    reviewNotesRef.current = {
-      onChange: setNotes,
-      onBadge: (id, el) => {
-        // In the text, so inside the document's zoom.
-        const r = asDrawn(el.getBoundingClientRect(), zoomedRectScale(el));
-        setOpenNote({ id, x: r.left, y: r.bottom + 6 });
-      },
-    };
-  }, [reviewNotesRef]);
-  const panelTurns = conversation.streaming?.turns;
-  const quickTurns = quickConversation.streaming?.turns;
-  // Each note still streaming in, once its passage and text are whole.
-  const panelDrafts = conversation.streaming?.comments;
-  const quickDrafts = quickConversation.streaming?.comments;
-  const comments = useMemo(
-    () =>
-      commentCalls([
-        ...conversation.history,
-        ...(panelTurns ?? []),
-        ...(panelDrafts ?? []),
-        ...quickConversation.history,
-        ...(quickTurns ?? []),
-        ...(quickDrafts ?? []),
-      ]),
-    [
-      conversation.history,
-      panelTurns,
-      panelDrafts,
-      quickConversation.history,
-      quickTurns,
-      quickDrafts,
-    ],
+  const { hotNote, hotRef, setNoteHot } = useHotItem();
+  const [openNote, setOpenNote] = useNoteCallbacks(reviewNotesRef, setNotes);
+  const { editorView, doneNotes } = useConversationNotes(
+    run,
+    conversation,
+    quickConversation,
   );
-  // What each note was placed from: a draft placed before its context
-  // came is placed again from the completed call when that differs.
-  const placedFrom = useRef(new Map<string, string>());
-  useEffect(() => {
-    run((ctx) => {
-      const view = ctx.get(editorViewCtx);
-      setEditorView(view);
-      const current = reviewNotesKey.getState(view.state)?.notes ?? [];
-      const wanted = comments.filter((c) => !doneNotes.current.has(c.id));
-      const from = (c: (typeof wanted)[number]) =>
-        [c.block ?? "", c.anchor, c.comment].join("\0");
-      // The writer's own notes aren't the conversation's to drop.
-      const keep = current.filter(
-        (n) =>
-          n.by === "me" ||
-          wanted.some(
-            (w) => w.id === n.id && placedFrom.current.get(n.id) === from(w),
-          ),
-      );
-      const added: Omit<ReviewNote, "num">[] = [];
-      for (const c of wanted) {
-        if (keep.some((n) => n.id === c.id) || lostNotes.current.has(from(c)))
-          continue;
-        placedFrom.current.set(c.id, from(c));
-        const range = locateTarget(ctx, view.state.doc, c);
-        if (!range || range.from >= range.to) {
-          lostNotes.current.add(from(c));
-          continue;
-        }
-        added.push({ id: c.id, ...range, comment: c.comment });
-      }
-      if (added.length === 0 && keep.length === current.length) return;
-      view.dispatch(
-        view.state.tr.setMeta(reviewNotesKey, {
-          type: "set",
-          notes: numberNotes(keep, added).sort((a, b) => a.from - b.from),
-        }),
-      );
-    });
-  }, [comments, run]);
-
-  // What the pointer is on - a margin card or its passage ("note:<id>",
-  // "rev:<callId>:<index>"): both light up together (`lit`, below).
-  function setNoteHot(key: string | null) {
-    hotRef.current = key;
-    setHotNote(key);
-  }
 
   /** The pointer moving over the document: lights up the note or pending
    *  sentence under it, together with its margin card. */
@@ -190,8 +99,7 @@ export function useReviewNotes({
   function doneNote(id: string) {
     doneNotes.current.add(id);
     setOpenNote(null);
-    hotRef.current = null;
-    setHotNote(null);
+    setNoteHot(null);
     run((ctx) => {
       const view = ctx.get(editorViewCtx);
       view.dispatch(
@@ -216,8 +124,7 @@ export function useReviewNotes({
     );
   }
 
-  const own = useOwnNotes({ run, filePath, notes, t });
-  const revisions = useOwnRevisions({ isActive, run, filePath, t });
+  const { own, revisions } = useOwnWork({ isActive, run, filePath, notes, t });
 
   const bar = useNotesBar({
     notes,
@@ -301,66 +208,21 @@ export function useReviewNotes({
     });
   }
 
-  // The notes, then each pending sentence in the review bar's order.
-  const marginItems = useMemo(
-    () =>
-      marginItemsOf(
-        notes,
-        pendingEdits.reviewStops,
-        pendingEdits.reviewed,
-        revisionDisplay,
-        revisions.changes,
-      ),
-    [
-      notes,
-      pendingEdits.reviewStops,
-      pendingEdits.reviewed,
-      revisionDisplay,
-      revisions.changes,
-    ],
-  );
-
   // A card's ✓ / ✕: the writer's own change, or the AI's sentence.
   function decide(callId: string, index: number, take: boolean | null) {
     if (callId === OWN_CHANGES) revisions.decide(index, take);
     else pendingEdits.decide(callId, index, take);
   }
 
-  // The item selected: whichever came last of a click or a bar's pointer.
-  const { focusedStop } = pendingEdits;
-  const pointed =
-    bar.focusedItem ??
-    (focusedStop ? `rev:${focusedStop.callId}:${focusedStop.index}` : null);
-  const [clicked, setClicked] = useOpenedCard<{
-    key: string;
-    over: string | null;
-  }>();
-  const focusedItem =
-    clicked && clicked.over === pointed ? clicked.key : pointed;
-  // Lit, card and passage both: what the pointer is on, else the selected
-  // one - it stays lit while it is read, not only while pointed at.
-  const lit = hotNote ?? focusedItem;
-  useEffect(() => {
-    const id = lit?.startsWith("note:") ? lit.slice(5) : null;
-    let sentence: HotSentence | null = null;
-    if (lit?.startsWith("rev:")) {
-      const [, callId, index] = lit.split(":");
-      sentence = { callId, index: Number(index) };
-    }
-    // Through the plugins, never a class written onto the text.
-    run((ctx) => {
-      const view = ctx.get(editorViewCtx);
-      view.dispatch(
-        view.state.tr
-          .setMeta(reviewNotesKey, { type: "hot", id })
-          .setMeta(pendingEditKey, { type: "hot", sentence })
-          .setMeta(ownRevisionKey, {
-            type: "hot",
-            index: sentence?.callId === OWN_CHANGES ? sentence.index : null,
-          }),
-      );
-    });
-  }, [lit, run]);
+  const { marginItems, focusedItem, lit, setClicked, pointed } = useLitItem({
+    run,
+    notes,
+    pendingEdits,
+    revisionDisplay,
+    ownChanges: revisions.changes,
+    barFocus: bar.focusedItem,
+    hotNote,
+  });
 
   // A card clicked: selected, and its passage brought into view and
   // pulsed, so the eye goes from the note to what it is about.

@@ -10,7 +10,8 @@
     "docs/file.pdf",
     "img/image.png",
     "b/Guide.md",
-    "near/Plan.markdown"
+    "near/Plan.markdown",
+    "docs/Intro.mdx"
   ],
   "cases": [
     {
@@ -131,6 +132,13 @@
       "note": "/b/Guide.md",
       "wiki": false,
       "expect": "b/Guide.md"
+    },
+    {
+      "name": "a note in MDX, named without its extension",
+      "from": "a/Other.md",
+      "note": "Intro",
+      "wiki": true,
+      "expect": "docs/Intro.mdx"
     }
   ]
 }

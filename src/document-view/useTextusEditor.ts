@@ -1,6 +1,6 @@
 import { type Dispatch, type SetStateAction, useRef } from "react";
 import { Editor, editorViewCtx } from "@milkdown/kit/core";
-import { listenerCtx } from "@milkdown/kit/plugin/listener";
+import { listenerCtx } from "../editor/editor-listener";
 import { useEditor } from "@milkdown/react";
 import {
   withEditorExtensions,
@@ -15,7 +15,8 @@ import type { Settings } from "../prefs/SettingsContext";
 import type { Strings } from "../i18n/strings";
 import type { TourAi } from "../utils/events";
 import { configureEditorRoot } from "../editor/editor-extensions";
-import { leftBy } from "../editor/tab-left";
+import { leftAtAll } from "../editor/tab-left";
+import { catchUp } from "../editor/opened-from";
 import { registerTabEditor } from "../editor/tab-editor";
 import { takeKeys } from "../editor/take-keys";
 import {
@@ -90,17 +91,20 @@ export function useTextusEditor({
       withEditorExtensions(
         Editor.make().config((ctx) => {
           let giveBack = () => {};
+          const from = leftAtAll(tabId, filePathRef.current);
           configureEditorRoot(
             ctx,
             root,
             initialValue,
             () => tRef.current.editorLabel,
-            leftBy(tabId, initialValue),
+            from,
           );
           ctx
             .get(listenerCtx)
             .mounted((ctx) => {
               const view = ctx.get(editorViewCtx);
+              if (from && from.markdown !== initialValue)
+                catchUp(ctx, initialValue);
               onMounted(ctx, view.state.doc);
               // The keys can go to it the moment it is built: a render
               // later, what was typed meanwhile went nowhere.

@@ -99,5 +99,23 @@ export async function preparePage(
       : await pageRelativeImages(copy, tab.path, options.from);
   if (options.light)
     html = await lightDiagrams(html, options.light.width, options.light.font);
-  return finishExportPage({ format: options.format, path: tab.path, html });
+  const finished = await finishExportPage({
+    format: options.format,
+    path: tab.path,
+    html,
+  });
+  return { ...finished, css: (await mathFonts(html)) + finished.css };
+}
+
+/** KaTeX's faces carried inside the page, for one with formulas: the app's
+ *  own stylesheet names them by addresses only the app can open, so a
+ *  saved page drew its formulas in whatever font was at hand. */
+async function mathFonts(html: string): Promise<string> {
+  if (!html.includes('class="katex')) return "";
+  try {
+    const { katexInlineCss } = await import("../editor/math/katex-inline-css");
+    return await katexInlineCss();
+  } catch {
+    return "";
+  }
 }

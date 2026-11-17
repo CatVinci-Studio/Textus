@@ -121,20 +121,6 @@ pub async fn fetch_custom_models(
     custom::list_models(&base_url, api_key.as_deref()).await
 }
 
-#[tauri::command]
-#[cfg_attr(test, specta::specta)]
-pub async fn test_custom_endpoint(
-    app: AppHandle,
-    base_url: String,
-    api_key: Option<String>,
-) -> Result<(), String> {
-    crate::ai::ensure_on(&app)?;
-    let api_key = key_for(&app, &base_url, api_key);
-    custom::list_models(&base_url, api_key.as_deref())
-        .await
-        .map(|_| ())
-}
-
 #[cfg(test)]
 mod tests {
     use super::*;

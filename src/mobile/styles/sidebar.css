@@ -117,12 +117,30 @@
   background: none;
 }
 
-/* The page's sheet ends, rounded, at the home indicator; with the keyboard
-   up the web view already ends at the keyboard. */
+/* The page's sheet runs to the screen's foot, under the home indicator or
+   the gesture bar, square there as a sheet from below is. What is on it
+   stops above them: the island ends there, its paper goes on below. With
+   the keyboard up the web view ends at the keyboard and the sheet with it. */
 :root[data-window-chrome="mobile"][data-layout] {
-  --island-foot: max(var(--island-inset), var(--safe-bottom));
+  --island-foot: var(--safe-bottom);
 }
 
-:root[data-window-chrome="mobile"][data-layout].keyboard-up {
-  --island-foot: 0px;
+:root[data-window-chrome="mobile"] [data-island],
+:root[data-window-chrome="mobile"] .split-pane > .format-bar {
+  border-bottom-left-radius: 0;
+  border-bottom-right-radius: 0;
+}
+
+:root[data-window-chrome="mobile"] [data-island]::after {
+  position: absolute;
+  top: 100%;
+  right: 0;
+  left: 0;
+  height: var(--safe-bottom);
+  background: var(--island-paper);
+  box-shadow: var(--island-edge);
+  /* Its sides' edge only: none across its top, over the island's foot. */
+  clip-path: inset(0 -24px -24px);
+  content: "";
+  pointer-events: none;
 }

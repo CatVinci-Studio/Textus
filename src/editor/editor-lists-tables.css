@@ -16,9 +16,17 @@
   position: static;
 }
 
-/* A node-selected item still anchors prosemirror.css's outline ::after. */
-.milkdown li.ProseMirror-selectednode {
-  position: relative;
+/* A block picked whole (a list marker, a rule, a formula, a block's menu
+   open) - ProseMirror rings it in light blue whatever the theme: here a
+   faint accent wash, on every platform. An image keeps its own ring. */
+.milkdown .ProseMirror-selectednode:not(.image-view) {
+  outline: none;
+  border-radius: var(--shape-xs);
+  background: color-mix(in srgb, var(--ui-accent) 10%, transparent);
+}
+
+.milkdown li.ProseMirror-selectednode::after {
+  border: none;
 }
 
 .milkdown ol > li {
@@ -134,8 +142,13 @@
 }
 
 /* Anchors the add-row/column buttons, shown while the pointer is over it. */
+/* As wide as the table and its column strip's room, at most the column:
+   the row strip under it spans the table, not the page. */
 .table-wrapper {
+  --table-strip-room: 20px;
   position: relative;
+  width: fit-content;
+  max-width: 100%;
   margin: var(--doc-gap-box) 0;
 }
 
@@ -205,8 +218,10 @@
   inset: -3px 0 -4px;
 }
 
+/* Back to the table only: past the strip's far side it would widen the
+   scroller and bring up a scrollbar over the row strip. */
 .table-add-col-btn::before {
-  inset: 0 -4px;
+  inset: 0 0 0 -4px;
 }
 
 @media (hover: hover) {
@@ -219,11 +234,10 @@
 
 .table-add-row-btn {
   left: 0;
-  right: 0;
+  right: var(--table-strip-room);
   /* Under the table's edge, clear of a wide table's scrollbar. */
   bottom: -19px;
   height: 16px;
-  width: 100%;
 }
 
 /* The table and its column strip, as wide as the table and the strip's
@@ -232,7 +246,7 @@
 .table-track {
   position: relative;
   width: fit-content;
-  padding-inline-end: 20px;
+  padding-inline-end: var(--table-strip-room);
 }
 
 .table-add-col-btn {
@@ -393,5 +407,10 @@
   .table-add-row-btn,
   .table-add-col-btn {
     display: none;
+  }
+
+  /* No strip, so no room kept for it past the last column. */
+  .table-wrapper {
+    --table-strip-room: 0px;
   }
 }

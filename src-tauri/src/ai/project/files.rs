@@ -39,7 +39,9 @@ pub(crate) fn is_hidden(name: &str) -> bool {
 }
 
 pub(crate) fn is_text_file(path: &Path) -> bool {
-    TEXT_EXTENSIONS.contains(&crate::extract::extension_of(path).as_str())
+    let ext = crate::extract::extension_of(path);
+    TEXT_EXTENSIONS.contains(&ext.as_str())
+        || crate::plugins::document_types::is_plugin_document(&ext)
 }
 
 /// What the project tools make of a file, by its extension.
@@ -55,7 +57,9 @@ pub enum FileKind {
 
 pub fn file_kind(path: &Path) -> Option<FileKind> {
     let ext = crate::extract::extension_of(path);
-    if TEXT_EXTENSIONS.contains(&ext.as_str()) {
+    if TEXT_EXTENSIONS.contains(&ext.as_str())
+        || crate::plugins::document_types::is_plugin_document(&ext)
+    {
         Some(FileKind::Text)
     } else if crate::extract::DOCUMENT_EXTENSIONS.contains(&ext.as_str()) {
         Some(FileKind::Document)

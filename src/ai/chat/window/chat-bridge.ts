@@ -66,6 +66,8 @@ export interface ChatContext {
   /** Selection as markdown - what actually rides with the request. */
   selectionMarkdown: string | null;
   docPath: string | null;
+  /** The AI's project folder in the editor's window (ai-root.ts). */
+  workspaceRoot: string | null;
   /** The tab's display name, for the window title. Sent, not derived from
    *  `docPath`: a Help doc has no path. */
   docTitle: string;

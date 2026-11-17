@@ -20,15 +20,23 @@ const API_PERMISSIONS: readonly {
       "editor.getPath",
       "editor.getText",
       "editor.getSelection",
+      "editor.getCursor",
       "editor.getBlocks",
       "editor.getOutline",
       "editor.registerHover",
       "editor.registerDecorations",
+      "editor.registerDiagnostics",
       "editor.registerOutline",
       "export.willExport",
+      "ai.registerInlineCompletion",
+      "ai.unregisterInlineCompletion",
     ],
     // Completions without it are left out, with no error to say so.
-    calls: ["editor.registerCompletion", "export.onWillExport"],
+    calls: [
+      "editor.registerCompletion",
+      "export.onWillExport",
+      "ai.registerInlineCompletion",
+    ],
   },
   {
     permission: "editor.write",
@@ -68,6 +76,11 @@ const API_PERMISSIONS: readonly {
       "metadata.tags",
       "metadata.tasks",
       "metadata.search",
+      "history.registerSource",
+      "history.unregisterSource",
+      "history.sources",
+      "history.versions",
+      "history.read",
       "git.status",
       "git.log",
       "git.show",
@@ -76,6 +89,7 @@ const API_PERMISSIONS: readonly {
     calls: [
       "files.readText",
       "metadata.",
+      "history.",
       "files.writeText",
       "files.create",
       "files.process",
@@ -95,12 +109,18 @@ const API_PERMISSIONS: readonly {
       "files.trash",
       "files.createFolder",
       "files.frontmatterSet",
+      "files.setTask",
       "files.setConvention",
       "files.blockId",
       "files.willSave",
       "webview.writeFile",
     ],
-    calls: ["files.process", "files.frontmatter.update", "files.onWillSave"],
+    calls: [
+      "files.process",
+      "files.frontmatter.update",
+      "files.onWillSave",
+      "metadata.setTask",
+    ],
   },
   { permission: "project.data", methods: [], calls: ["storage.project"] },
   {
@@ -116,6 +136,11 @@ const API_PERMISSIONS: readonly {
   { permission: "git.commit", methods: ["git.commit"] },
   // Checked when the window tells Rust the tools (contributions/ai-tools.ts).
   { permission: "ai.tools", methods: [], calls: ["ai.registerTool"] },
+  { permission: "ai.model", methods: ["ai.available", "ai.complete"] },
+  {
+    permission: "comments",
+    methods: ["comments.list", "comments.add", "comments.resolve"],
+  },
 ];
 
 const BY_METHOD = new Map<string, Permission[]>();

@@ -1,4 +1,9 @@
 import {
+  registerLateContextItems,
+  type LateMenuPlace,
+} from "../../registry/context-menu-items";
+import { getActiveDocument } from "../app-bridge";
+import {
   showConfirm,
   showMessage,
   showPrompt,
@@ -62,9 +67,52 @@ function commandOwner(command: string): string | null {
   return owner && !owner.startsWith("textus.") ? owner : null;
 }
 
+/** Each plugin's right-click menu providers, each with its remover. */
+const menuProviders = new Map<string, Map<string, () => void>>();
+
+/** The menus a plugin's provider can add to, by the API's name. */
+const MENU_PLACES = {
+  editor: "editor/context",
+  fileTree: "file/context",
+} as const satisfies Record<string, LateMenuPlace>;
+
 export function uiHandlers(p: PluginScope) {
   const progresses = progressesOf(p.id);
+  const menus =
+    menuProviders.get(p.id) ?? menuProviders.set(p.id, new Map()).get(p.id)!;
   return {
+    "ui.registerContextMenu": ({ where }: Params) => {
+      const name = str(where, "where");
+      if (!(name in MENU_PLACES))
+        throw new Error(`No menu ${name}: editor or fileTree.`);
+      menus.get(name)?.();
+      menus.set(
+        name,
+        registerLateContextItems(
+          MENU_PLACES[name as keyof typeof MENU_PLACES],
+          async (target) => {
+            const items = await p.request<unknown>("$contextMenu", {
+              where: name,
+              target: {
+                ...target,
+                path: target.path ?? getActiveDocument()?.path ?? null,
+              },
+            });
+            return menuItemsFrom(items).map((item) => ({
+              label: item.label,
+              plugin: p.id,
+              onSelect: () =>
+                void p.deps.runCommand(item.command, item.args, p.id),
+            }));
+          },
+        ),
+      );
+    },
+    "ui.unregisterContextMenu": ({ where }: Params) => {
+      const name = str(where, "where");
+      menus.get(name)?.();
+      menus.delete(name);
+    },
     "commands.register": ({ command, editor }: Params) => {
       const id = str(command, "command");
       if (!id.startsWith(`${p.id}.`))
@@ -228,4 +276,20 @@ export function stopPluginUi(plugin: string): void {
   forgetFileBadges(plugin);
   forgetPasteHandlers(plugin);
   removeOutlineProvider(plugin);
+  for (const remove of menuProviders.get(plugin)?.values() ?? []) remove();
+  menuProviders.delete(plugin);
+}
+
+/** A provider's answer as menu items: each a label and the command it
+ *  runs; anything else left out. */
+function menuItemsFrom(
+  value: unknown,
+): { label: string; command: string; args: unknown[] }[] {
+  if (!Array.isArray(value)) return [];
+  return value.flatMap((item) => {
+    const { label, command, args } = (item ?? {}) as Record<string, unknown>;
+    return typeof label === "string" && label && typeof command === "string"
+      ? [{ label, command, args: Array.isArray(args) ? args : [] }]
+      : [];
+  });
 }

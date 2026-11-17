@@ -10,6 +10,7 @@ import {
 import { ConversationModel } from "./conversation-model";
 import type { ConversationEnv } from "./conversation-types";
 import { attachedDocument } from "./document-port";
+import { aiRoot } from "../../../ai/workspace/ai-root";
 
 /**
  * The window's conversations, one model each, whatever draws them: an AI
@@ -28,7 +29,7 @@ function windowEnv(): ConversationEnv {
   const port = attachedDocument()?.port ?? null;
   return {
     docPath: port?.docPath ?? null,
-    workspaceRoot: settings.agentWorkspaceRoot || null,
+    workspaceRoot: aiRoot(settings),
     settings,
     port,
   };

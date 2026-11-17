@@ -11,12 +11,13 @@ import {
   lucide,
   MarkdownFileIcon,
 } from "./icons";
+import { MARKDOWN_EXTENSIONS } from "../../platform/bindings/files";
 
 type IconProps = { className?: string };
 
 /** Each kind's extensions. */
 const KINDS: Record<string, string[]> = {
-  markdown: ["md", "markdown", "mdx"],
+  markdown: [...MARKDOWN_EXTENSIONS],
   image: [
     "png",
     "jpg",

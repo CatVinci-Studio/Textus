@@ -18,13 +18,19 @@ import {
   type HelpDoc,
 } from "./doc-tabs";
 import { setTabJump } from "../editor/tab-jump";
-import { lastCaret } from "./last-places";
+import { lastCaret, lastScroll } from "./last-places";
 import { keptTabsRestored, readKeptTabs, type KeptTab } from "./reload-tabs";
 import { takeWindowSession } from "./launch-window";
 import { savedFront } from "../engine/layout/saved";
 import { readTabOrder } from "./tab-order";
 import { documentsDir } from "../platform/documents-path";
 import { fileOf, restoreTabsInOrder } from "./phone-restore";
+import { pluginTab } from "./plugin-tab";
+import { loadPlugins } from "../plugins/manager";
+import {
+  customEditorFor,
+  customEditorForContent,
+} from "../plugins/store/plugin-lookup";
 import {
   activateTab,
   paneOf,
@@ -146,7 +152,12 @@ export function useStartupRestore(options: StartupRestoreOptions): void {
     // At its last caret, taken by the editor its reloadKey remounts.
     const restoreCaret = (path: string, diskMtime: number | null) => {
       const at = opts.restoreCarets ? lastCaret(path, diskMtime) : null;
-      if (at) setTabJump(opts.activeTabId, { kind: "caret", at });
+      if (at)
+        setTabJump(opts.activeTabId, {
+          kind: "caret",
+          at,
+          stay: !!lastScroll(path, diskMtime),
+        });
     };
     void (async () => {
       // The page reloaded: the window gets back what it had. Everything
@@ -373,8 +384,20 @@ export function useStartupRestore(options: StartupRestoreOptions): void {
           initial: opts.activeTabId,
           loadRecovered: loadRecoveredIntoInitialTab,
           loadFile: async (path) => {
+            // A file a plugin shows (a .base, a board) is its tab again.
+            await loadPlugins().catch(() => {});
+            const editor = customEditorFor(path);
+            if (editor) {
+              loadIntoInitialTab(pluginTab(path, editor));
+              return true;
+            }
             try {
               const { content: text, diskMtime } = await readDocFromDisk(path);
+              const claimed = customEditorForContent(path, text);
+              if (claimed) {
+                loadIntoInitialTab(pluginTab(path, claimed));
+                return true;
+              }
               restoreCaret(path, diskMtime);
               loadIntoInitialTab({
                 path,

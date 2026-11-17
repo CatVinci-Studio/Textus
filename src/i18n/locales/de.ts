@@ -96,7 +96,7 @@ Skills liegen im Ordner skills/ neben dieser Datei, je Skill eine
 `,
   projectOpenStyle: "Stilprofil öffnen",
   projectPickFolder: "Ordner wählen…",
-  projectNoFolder: "Keinen Ordner verwenden",
+  projectFollowSidebar: "Ordner der Seitenleiste verwenden",
   projectReveal: "Im Dateimanager anzeigen",
   projectLearnStyle: "Meinen Stil aus Textproben lernen…",
   projectImportReferences: "Quellen importieren…",
@@ -126,7 +126,7 @@ Skills liegen im Ordner skills/ neben dieser Datei, je Skill eine
   blockDuplicate: "Duplizieren",
   blockHandlesLabel: "Block-Griffe",
   blockHandlesHelp:
-    "＋ und ⋮⋮ neben dem Block unter dem Zeiger: einen Block einfügen, ihn verschieben oder in eine andere Art umwandeln.",
+    "⋮⋮ neben dem Block unter dem Zeiger: ziehen, um den Block zu verschieben, oder klicken, um ihn umzuwandeln, zu duplizieren oder zu löschen.",
   smoothCaretLabel: "Fließender Cursor",
   menuBlockWide: "Breit anzeigen",
   menuBlockZoom: "Größe",
@@ -707,6 +707,7 @@ Skills liegen im Ordner skills/ neben dieser Datei, je Skill eine
   outlineExpandAll: "Alle aufklappen",
   outlineCollapseAll: "Alle zuklappen",
   wordCount: { one: "{n} Wort", other: "{n} Wörter" },
+  slipCount: { one: "{n} Problem", other: "{n} Probleme" },
   wordCountDetail: "{words} Wörter · {characters} Zeichen (ohne Leerzeichen)",
   alertNote: "Hinweis",
   alertTip: "Tipp",
@@ -760,6 +761,7 @@ Skills liegen im Ordner skills/ neben dieser Datei, je Skill eine
   backToStableNone:
     "Gerade gibt es keine stabile Version, zu der du zurückkannst.",
   aiCompletionLabel: "KI-Vervollständigung",
+  completionSourceLabel: "Vorschläge von",
   completionToneLabel: "Tonfall der Vervollständigung",
   completionTone_default: "Passend zum Dokument",
   completionTone_formal: "Förmlich",
@@ -926,6 +928,8 @@ Skills liegen im Ordner skills/ neben dieser Datei, je Skill eine
   modelListLabel: "Modellliste",
   customTestConnection: "Verbindung testen",
   customTestSuccess: "Verbindung funktioniert.",
+  customModelNotListed:
+    "Verbunden, aber dieser Endpunkt führt das Modell „{model}“ nicht. Wählen Sie eines aus seiner Liste.",
   customSave: "Speichern",
   proxyLabel: "Netzwerk-Proxy",
   proxyTypeNone: "Keiner (direkt)",
@@ -1150,6 +1154,9 @@ Skills liegen im Ordner skills/ neben dieser Datei, je Skill eine
   activityRail: "Aktivitätsleiste",
   activityRailHide: "Aktivitätsleiste ausblenden",
   activityRailShow: "Aktivitätsleiste einblenden",
+  windowLayoutGroup: "Fensterlayout",
+  classicLookNote:
+    "Lieber wie Textus vor 1.4 aussah? Wähle „Klassisch“, schalte die Aktivitätsleiste aus und die eigene Zeile der Titelleiste ein. Zurückgestellt gilt wieder das neue Aussehen.",
   layoutLabel: "Layout",
   layoutIslands: "Schwebende Inseln",
   layoutClassic: "Klassisch",
@@ -1268,7 +1275,6 @@ Skills liegen im Ordner skills/ neben dieser Datei, je Skill eine
   windowMaximize: "Maximieren",
   windowRestore: "Wiederherstellen",
   windowClose: "Schließen",
-  chatWindowTitle: AI_NAME,
   chatWindowPin: "Immer im Vordergrund",
   chatWindowPinHint: "Dieses Fenster über dem Editor halten",
   chatWindowUnpinHint: "Dieses Fenster nicht mehr über dem Editor halten",
@@ -1444,7 +1450,11 @@ Skills liegen im Ordner skills/ neben dieser Datei, je Skill eine
     "Im Zahnrad sind Design, Schriften und deine KI-Konten.",
   tutorialEditorTitle: "Schreiben, wie es aussieht",
   tutorialEditorBody:
-    "Markdown wird beim Tippen zur Formatierung: probiere `# Ein Titel` oder `- eine Liste`.",
+    "Markdown wird beim Tippen zur Formatierung. Probiere alle aus:",
+  tutorialEditorHeading: "Titel: `# Pläne`",
+  tutorialEditorList: "Liste: `- Milch`",
+  tutorialEditorNumbered: "Nummeriert: `1. zuerst`",
+  tutorialEditorTask: "Aufgabe: `- [ ] zurückrufen`",
   tutorialAiTitle: "Textus AI",
   tutorialAiBody: "Klicke oben rechts auf das Funkeln, um Textus AI zu öffnen.",
   tutorialAiBodyPhone:
@@ -1902,6 +1912,15 @@ Skills liegen im Ordner skills/ neben dieser Datei, je Skill eine
   pluginPermNotifications: "Systemmitteilungen anzeigen",
   pluginPermAppearance: "Die Farben von Textus und Ihren Dokumenten ändern",
   pluginPermGitCommit: "Mit Ihrem Git Commits im geöffneten Ordner erstellen",
+  pluginPermComments: "Notizen am Rand Ihrer Dokumente lesen und hinzufügen",
+  pluginPermAiModel:
+    "Ihr KI-Modell verwenden (zählt zur Nutzung Ihres KI-Dienstes)",
+  pluginAiAsk:
+    "{plugin} möchte Ihr KI-Modell verwenden. Was es sendet, zählt zur Nutzung Ihres KI-Dienstes, bis zu {limit} Tokens im Monat für dieses Plugin.",
+  pluginAiLimit:
+    "{plugin} hat seine {limit} KI-Tokens für diesen Monat verbraucht. Weitere {limit} erlauben?",
+  pluginAiAllow: "Erlauben",
+  pluginAiUsage: "KI diesen Monat: {used} von {limit} Tokens",
   pluginPermAgents:
     "Einen auf diesem Computer installierten KI-Agenten ausführen (er kann Dateien lesen und ändern)",
   pluginPermBackground:
@@ -1929,6 +1948,8 @@ Skills liegen im Ordner skills/ neben dieser Datei, je Skill eine
   pluginKeysTaken:
     "{name} kann die Tastatur nicht übernehmen: {holder} hat sie. Schalte eines davon in der Plugin-Liste der Seitenleiste aus.",
   shortcutIndentListItem: "Listenelement einrücken",
+  shortcutFoldSection: "Abschnitt einklappen",
+  shortcutUnfoldSection: "Abschnitt ausklappen",
   shortcutOutdentListItem: "Listenelement ausrücken",
   pluginKeyTaken:
     "{name}: {key} gehört zu „{owner}“ und wurde „{command}“ daher nicht zugewiesen. Lege unter Einstellungen › Tastenkürzel eine andere Taste fest.",

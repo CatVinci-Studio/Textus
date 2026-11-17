@@ -3,7 +3,7 @@ import type { Settings } from "../../prefs/SettingsContext";
 import type { Strings } from "../../i18n/strings";
 import { showNotice } from "../../engine/controls/notices";
 import { keepInList, uiList } from "../../storage/ui-state";
-import type { Requirement } from "../store/manifest";
+import type { Requirement } from "../store/manifest-types";
 import { pluginName, pluginRecord, windowInfo } from "../store/plugin-records";
 import {
   requirementLabel,

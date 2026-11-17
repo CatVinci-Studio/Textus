@@ -2,7 +2,7 @@ import { Plugin, PluginKey } from "@milkdown/kit/prose/state";
 import { $prose } from "@milkdown/kit/utils";
 import { cachedDocument } from "../../editor/markdown/doc-markdown";
 import { emitPluginEvent, pluginsListen } from "../../plugins/app-bridge";
-import { inSight } from "./plugin-decorations";
+import { inSight, onEditorScroll } from "./rest-asking";
 
 /** How long scrolling rests before plugins hear what is in sight. */
 const SETTLE_MS = 200;
@@ -37,15 +37,7 @@ export const pluginVisible = $prose((ctx) => {
         clearTimeout(timer);
         timer = setTimeout(tell, SETTLE_MS);
       };
-      // The view is made before it is in the page: its scroller is found
-      // as scrolls come.
-      const scrolled = (e: Event) => {
-        if (e.target instanceof Node && e.target.contains(view.dom)) soon();
-      };
-      document.addEventListener("scroll", scrolled, {
-        capture: true,
-        passive: true,
-      });
+      const stopScroll = onEditorScroll(view, soon);
       soon();
       return {
         update(_view, prev) {
@@ -53,7 +45,7 @@ export const pluginVisible = $prose((ctx) => {
         },
         destroy() {
           clearTimeout(timer);
-          document.removeEventListener("scroll", scrolled, { capture: true });
+          stopScroll();
         },
       };
     },

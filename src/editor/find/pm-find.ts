@@ -6,7 +6,8 @@ import { findReplaceKey } from "./find-replace-plugin";
 import { NO_FIND, type FindState } from "./find-query";
 import type { FindBackend } from "./find-backend";
 import type { EditorRunner } from "../useEditorRunner";
-import { SMOOTH_SCROLL_MS } from "../lazy-blocks/lazy-blocks-drawer";
+import { duration, glideScroll } from "../../engine/motion/motion";
+import { revealSideways } from "../editor-scroll";
 import { makeReachable } from "../reveal-position";
 
 const stateOf = (view: EditorView): FindState =>
@@ -55,19 +56,19 @@ function makePmFind(run: EditorRunner): FindBackend {
       ) ?? "",
     reveal: (match, smooth) =>
       withView((view) => {
-        makeReachable(
-          view,
-          match.from,
-          match.to,
-          smooth ? SMOOTH_SCROLL_MS : 0,
-        );
+        const glide = smooth ? duration("--dur-sheet") : 0;
+        makeReachable(view, match.from, match.to, glide);
+        const scroller = view.dom.closest<HTMLElement>(".editor-scroll");
+        if (!scroller) return;
         try {
-          const dom = view.domAtPos(match.from).node;
-          const el = dom instanceof Element ? dom : dom.parentElement;
-          el?.scrollIntoView({
-            block: "center",
-            behavior: smooth ? "smooth" : "auto",
-          });
+          revealSideways(view, match.from);
+          // The match in the middle of the page.
+          const at = view.coordsAtPos(match.from);
+          const box = scroller.getBoundingClientRect();
+          const delta =
+            (at.top + at.bottom) / 2 - (box.top + scroller.clientHeight / 2);
+          if (glide) glideScroll(scroller, delta);
+          else scroller.scrollTop += delta;
         } catch {
           // Not representable in the DOM right now.
         }

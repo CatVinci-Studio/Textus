@@ -85,6 +85,11 @@
      starts at this opacity. Reduced motion sets both to 0, leaving a fade. */
   --motion-travel: 1;
   --motion-travel-fade: 1;
+  /* Items making way for one dragged past them - tabs, rows, a table's
+     cells, a plugin page's list: one slide, so overlapping moves read as
+     one. */
+  --move-make-room: transform calc(var(--dur-settle) * var(--motion-travel))
+    var(--ease-settle);
 }
 
 @supports (transition-timing-function: linear(0, 1)) {

@@ -15,6 +15,18 @@ export const commands = {
 	plugin_export: (id: string, publisher: string, folder: string) => __TAURI_INVOKE<string>("plugin_export", { id, publisher, folder }),
 	/**  Settings › Plugins › Plugins, the switch for all of them. */
 	plugins_set_all: (on: boolean) => __TAURI_INVOKE<null>("plugins_set_all", { on }),
+	/**  Whether Textus AI is on, and the plugin's yes and tokens this month. */
+	plugin_ai_status: (plugin: string) => __TAURI_INVOKE<PluginAiStatus>("plugin_ai_status", { plugin }),
+	/**
+	 *  The user's yes to a plugin's first call; `more` also allows another
+	 *  month's allowance, for this month.
+	 */
+	plugin_ai_allow: (plugin: string, more: boolean) => __TAURI_INVOKE<null>("plugin_ai_allow", { plugin, more }),
+	/**
+	 *  The writing model's answer to `prompt`, for a plugin with `ai.model`
+	 *  that the user allowed and that has tokens left this month.
+	 */
+	plugin_ai_complete: (plugin: string, system: string, prompt: string) => __TAURI_INVOKE<string>("plugin_ai_complete", { plugin, system, prompt }),
 	/**
 	 *  Turns a plugin on or off with the permissions the user granted it. A
 	 *  developer-mode folder is kept.
@@ -101,6 +113,12 @@ export const commands = {
 	 *  change.
 	 */
 	set_plugin_menu: (items: PluginMenuItem_Deserialize[]) => __TAURI_INVOKE<void>("set_plugin_menu", { items }),
+	/**
+	 *  The export formats the plugins that are on add, the menu bar built again
+	 *  when they change. The native menu bar is macOS's; elsewhere the window
+	 *  draws its own from the same list.
+	 */
+	set_plugin_exports: (items: PluginExportItem[]) => __TAURI_INVOKE<void>("set_plugin_exports", { items }),
 	/**  The plugin commands the menu lists, refilled when the enabled plugins change. */
 	set_tray_plugin_items: (items: TrayPluginItem[]) => __TAURI_INVOKE<void>("set_tray_plugin_items", { items }),
 	/**  The tray command waiting for a window to run it, taken. */
@@ -325,6 +343,14 @@ export type McpTool = {
 	inputSchema: Value,
 };
 
+export type PluginAiStatus = {
+	/**  Textus AI is on. */
+	on: boolean,
+	allowed: boolean,
+	used: number,
+	limit: number,
+};
+
 /**  One tool, as the window describes it from the plugin's manifest. */
 export type PluginAiTool = {
 	plugin: string,
@@ -367,6 +393,12 @@ export type PluginEntry_Serialize = {
 	 *  Never set by the window.
 	 */
 	official?: boolean,
+};
+
+/**  One format a plugin adds to File › Export, as the frontend sends it. */
+export type PluginExportItem = {
+	key: string,
+	label: string,
 };
 
 /**  A plugin's files as text, by path in the plugin, as Textus AI writes them. */

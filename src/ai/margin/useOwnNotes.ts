@@ -11,6 +11,7 @@ import {
   reviewNotesKey,
   type ReviewNote,
 } from "./review-notes-plugin";
+import { holdNotes, newNoteId, notesChanged } from "./notes-by-path";
 import {
   locateOwnNote,
   parseOwnNotes,
@@ -92,6 +93,7 @@ export function useOwnNotes({
                     ...range,
                     comment: note.comment,
                     by: "me" as const,
+                    ...(note.author ? { author: note.author } : {}),
                   },
                 ]
               : [];
@@ -125,15 +127,69 @@ export function useOwnNotes({
     const send = () => {
       unsent.current = null;
       written.current = text;
-      void ownNotesIpc.write(filePath, "notes", text).catch(() => {
-        written.current = null;
-      });
+      void ownNotesIpc.write(filePath, "notes", text).then(
+        () => notesChanged(filePath),
+        () => {
+          written.current = null;
+        },
+      );
     };
     unsent.current = send;
     const timer = window.setTimeout(send, WRITE_AFTER);
     return () => window.clearTimeout(timer);
   }, [filePath, notes, run]);
   useEffect(() => () => unsent.current?.(), []);
+
+  // Plugins' comments on this document go through its editor.
+  useEffect(() => {
+    if (!filePath) return;
+    return holdNotes(filePath, {
+      ready: () => loadedFor.current === filePath,
+      list: () =>
+        run((ctx) => {
+          const doc = ctx.get(editorViewCtx).state.doc;
+          return notesRef.current
+            .filter((n) => n.by === "me")
+            .map((n) => storedOwnNote(doc, n));
+        })?.concat(unplaced.current) ?? [],
+      add: ({ anchor, comment, author }) =>
+        run((ctx) => {
+          const view = ctx.get(editorViewCtx);
+          const range = locateOwnNote(view.state.doc, {
+            id: "",
+            comment,
+            anchor,
+            before: "",
+          });
+          if (!range) return null;
+          const id = newNoteId("plugin");
+          const current = reviewNotesKey.getState(view.state)?.notes ?? [];
+          setNotes(
+            view,
+            numberNotes(current, [{ id, ...range, comment, by: "me", author }]),
+          );
+          return id;
+        }) ?? null,
+      remove: (id) =>
+        run((ctx) => {
+          const view = ctx.get(editorViewCtx);
+          const notes = reviewNotesKey.getState(view.state)?.notes ?? [];
+          const kept = unplaced.current.filter((n) => n.id !== id);
+          if (
+            kept.length === unplaced.current.length &&
+            !notes.some((n) => n.id === id && n.by === "me")
+          )
+            return false;
+          unplaced.current = kept;
+          // A new list even when only an unplaced note went: it is written.
+          setNotes(
+            view,
+            notes.filter((n) => n.id !== id),
+          );
+          return true;
+        }) ?? false,
+    });
+  }, [filePath, run, notesRef]);
 
   /** Asks for a note on the selection - inside its paragraph - and puts it
    *  in the margin. */
@@ -157,7 +213,7 @@ export function useOwnNotes({
     run((ctx) => {
       const view = ctx.get(editorViewCtx);
       const current = reviewNotesKey.getState(view.state)?.notes ?? [];
-      const id = `me-${Date.now().toString(36)}-${Math.random().toString(36).slice(2, 6)}`;
+      const id = newNoteId("me");
       setNotes(
         view,
         numberNotes(current, [{ id, ...range, comment, by: "me" }]),

@@ -69,6 +69,53 @@ export function autosaveWants(
   return !pause || pauseResolved(tab, pause);
 }
 
+/** The idle timers that start an autosave: one for documents, a slower
+ *  one for untitled drafts whose title is still being written. */
+function useIdleTimers() {
+  const [timers] = useState(() =>
+    createTabIdleTimers<string>({
+      idleMs: AUTOSAVE_IDLE_MS,
+      same: (a, b) => a === b,
+    }),
+  );
+  const [untitledTimers] = useState(() =>
+    createTabIdleTimers<string>({
+      idleMs: UNTITLED_IDLE_MS,
+      same: (a, b) => a === b,
+    }),
+  );
+  return { timers, untitledTimers };
+}
+
+/** Choosing another tab writes the one left behind; leaving the window
+ *  (another app, another Textus window) or hiding the page (minimised; on
+ *  iOS, going to the background) writes everything. */
+function useFlushOnLeave(
+  activeTabId: string,
+  flush: (ids?: string[]) => Promise<void>,
+) {
+  const previousActive = useRef(activeTabId);
+  useEffect(() => {
+    const left = previousActive.current;
+    previousActive.current = activeTabId;
+    if (left !== activeTabId) void flush([left]);
+  }, [activeTabId, flush]);
+
+  useEffect(() => {
+    const unlisten = thisWindow().onFocusChanged(({ payload: focused }) => {
+      if (!focused) void flush();
+    });
+    const onHidden = () => {
+      if (document.visibilityState === "hidden") void flush();
+    };
+    document.addEventListener("visibilitychange", onHidden);
+    return () => {
+      document.removeEventListener("visibilitychange", onHidden);
+      unlistenAll(unlisten)();
+    };
+  }, [flush]);
+}
+
 /**
  * Save Automatically: writes a document after typing rests, on blur, hide or
  * tab switch; with a folder open, an untitled one into a file of its own
@@ -91,57 +138,59 @@ export function useAutosave(opts: {
   const { tabs, tabsRef, activeTabId, enabled, autosaveTab } = opts;
   const untitledToFile = opts.untitledToFile ?? false;
   const practiceTabId = opts.practiceTabId ?? null;
-  const draftsRef = useRef<DraftRule>(KEEP_DRAFTS);
-  draftsRef.current = { toFile: untitledToFile, practiceTabId };
-  const enabledRef = useRef(enabled);
-  enabledRef.current = enabled;
-  const saveRef = useRef(autosaveTab);
-  saveRef.current = autosaveTab;
+  // As of this render, for the saves under way.
+  const now = useRef<{
+    drafts: DraftRule;
+    enabled: boolean;
+    save: typeof autosaveTab;
+  }>({
+    drafts: KEEP_DRAFTS,
+    enabled,
+    save: autosaveTab,
+  });
+  now.current = {
+    drafts: { toFile: untitledToFile, practiceTabId },
+    enabled,
+    save: autosaveTab,
+  };
 
-  const [timers] = useState(() =>
-    createTabIdleTimers<string>({
-      idleMs: AUTOSAVE_IDLE_MS,
-      same: (a, b) => a === b,
-    }),
-  );
-  const [untitledTimers] = useState(() =>
-    createTabIdleTimers<string>({
-      idleMs: UNTITLED_IDLE_MS,
-      same: (a, b) => a === b,
-    }),
-  );
-  const paused = useRef(new Map<string, AutosavePause>());
-  // One autosave per tab at a time, so one queued behind a prompt sees its pause.
-  const chains = useRef(new Map<string, Promise<void>>());
+  const { timers, untitledTimers } = useIdleTimers();
+  // Tabs paused by a conflict or failure, and one autosave per tab at a
+  // time, so one queued behind a prompt sees its pause.
+  const kept = useRef({
+    paused: new Map<string, AutosavePause>(),
+    chains: new Map<string, Promise<void>>(),
+  });
 
   const saveNow = useCallback(
     (id: string): Promise<void> => {
       timers.cancel(id);
       untitledTimers.cancel(id);
       const attempt = async () => {
-        if (!enabledRef.current || paused.current.has(id)) return;
+        if (!now.current.enabled || kept.current.paused.has(id)) return;
         const tab = tabsRef.current.find((tb) => tb.id === id);
         // Not checked for dirtiness here: the editor may still hold an edit
         // it hasn't reported, which autosaveTab pulls in before judging.
         // Nor for text: autosaveTab judges an untitled draft once pulled in.
-        const drafts = draftsRef.current;
+        const drafts = now.current.drafts;
         if (
           !tab ||
           (!tab.path && (!drafts.toFile || tab.id === drafts.practiceTabId))
         )
           return;
-        const outcome = await saveRef.current(id);
+        const outcome = await now.current.save(id);
         if (outcome === "conflict" || outcome === "failed") {
           const now = tabsRef.current.find((tb) => tb.id === id) ?? tab;
-          paused.current.set(id, pauseOf(now));
+          kept.current.paused.set(id, pauseOf(now));
         }
       };
-      const next = (chains.current.get(id) ?? Promise.resolve())
+      const next = (kept.current.chains.get(id) ?? Promise.resolve())
         .then(attempt)
         .catch((err: unknown) => console.error("[autosave]", err));
-      chains.current.set(id, next);
+      kept.current.chains.set(id, next);
       void next.then(() => {
-        if (chains.current.get(id) === next) chains.current.delete(id);
+        if (kept.current.chains.get(id) === next)
+          kept.current.chains.delete(id);
       });
       return next;
     },
@@ -150,7 +199,7 @@ export function useAutosave(opts: {
 
   const flush = useCallback(
     async (ids?: string[]): Promise<void> => {
-      if (!enabledRef.current) return;
+      if (!now.current.enabled) return;
       const targets = ids ?? tabsRef.current.map((tb) => tb.id);
       await Promise.all(targets.map((id) => saveNow(id)));
     },
@@ -164,9 +213,9 @@ export function useAutosave(opts: {
         timers.cancel(id);
         untitledTimers.cancel(id);
       }
-    for (const [id, pause] of [...paused.current]) {
+    for (const [id, pause] of [...kept.current.paused]) {
       const tab = tabs.find((tb) => tb.id === id);
-      if (!tab || pauseResolved(tab, pause)) paused.current.delete(id);
+      if (!tab || pauseResolved(tab, pause)) kept.current.paused.delete(id);
     }
     if (!enabled) {
       timers.cancelAll();
@@ -175,7 +224,7 @@ export function useAutosave(opts: {
     }
     const drafts = { toFile: untitledToFile, practiceTabId };
     for (const tab of tabs) {
-      const wants = autosaveWants(tab, paused.current.get(tab.id), drafts);
+      const wants = autosaveWants(tab, kept.current.paused.get(tab.id), drafts);
       const slow = wants && !tab.path && !titleSettled(tab.content);
       const [use, other] = slow
         ? [untitledTimers, timers]
@@ -194,29 +243,7 @@ export function useAutosave(opts: {
     saveNow,
   ]);
 
-  // Choosing another tab writes the one left behind.
-  const previousActive = useRef(activeTabId);
-  useEffect(() => {
-    const left = previousActive.current;
-    previousActive.current = activeTabId;
-    if (left !== activeTabId) void flush([left]);
-  }, [activeTabId, flush]);
-
-  // Leaving the window (another app, another Textus window) or hiding the
-  // page (minimised; on iOS, going to the background) writes everything.
-  useEffect(() => {
-    const unlisten = thisWindow().onFocusChanged(({ payload: focused }) => {
-      if (!focused) void flush();
-    });
-    const onHidden = () => {
-      if (document.visibilityState === "hidden") void flush();
-    };
-    document.addEventListener("visibilitychange", onHidden);
-    return () => {
-      document.removeEventListener("visibilitychange", onHidden);
-      unlistenAll(unlisten)();
-    };
-  }, [flush]);
+  useFlushOnLeave(activeTabId, flush);
 
   useEffect(
     () => () => {

@@ -53,6 +53,7 @@ import {
   swapStoredBlobs,
 } from "./image-store";
 import { openDiagramViewer, zoomButton } from "../diagram-zoom";
+import { trackDrag } from "../../engine/drag/pointer-drag";
 /**
  * Image paste (stored in the document's image folder, relative src) and
  * render (local srcs rewritten to asset: URLs; the document keeps the original).
@@ -87,6 +88,9 @@ export function showDocImage(
   stillWanted: () => boolean = () => true,
 ): void {
   img.decoding = "async";
+  // Loaded only as it comes near the screen (set before the src, or it
+  // loads at once): a short note can hold many large photos.
+  img.loading = "lazy";
   if (doc && isScopedUrl(doc) && !hasUrlScheme(src) && !src.startsWith("/")) {
     img.removeAttribute("src");
     void scopedImageSrc(src, doc)
@@ -164,8 +168,6 @@ function createImageView(
   const dom = document.createElement("span");
   dom.className = "image-view";
   const img = document.createElement("img");
-  // Loaded only as it comes near the screen (set before the src, or it
-  // loads at once): a short note can hold many large photos.
   img.loading = "lazy";
   const handle = document.createElement("span");
   handle.className = "image-resize-handle";
@@ -272,32 +274,38 @@ function createImageView(
     // Rendered px -> layout px: the editor content is zoomed with CSS zoom.
     const scale = startWidth / Math.max(1, dom.offsetWidth);
     let percent = (startWidth / scale / available) * 100;
-    handle.setPointerCapture(event.pointerId);
+    const was = dom.style.width;
     dom.classList.add("image-view-resizing");
-
-    const move = (e: PointerEvent) => {
-      const width = startWidth + (e.clientX - startX) * factor;
-      percent = Math.min(100, Math.max(5, (width / scale / available) * 100));
-      dom.style.width = `${percent}%`;
-    };
-    const finish = () => {
-      handle.removeEventListener("pointermove", move);
-      handle.removeEventListener("pointerup", finish);
-      handle.removeEventListener("pointercancel", finish);
-      dom.classList.remove("image-view-resizing");
-      const pos = getPos();
-      if (pos === undefined) return;
-      view.dispatch(
-        view.state.tr.setNodeMarkup(
-          pos,
-          undefined,
-          withImageWidth(current.attrs, percent),
-        ),
-      );
-    };
-    handle.addEventListener("pointermove", move);
-    handle.addEventListener("pointerup", finish);
-    handle.addEventListener("pointercancel", finish);
+    // Esc puts it back as it was.
+    trackDrag(
+      event,
+      {
+        move: (x) => {
+          const width = startWidth + (x - startX) * factor;
+          percent = Math.min(
+            100,
+            Math.max(5, (width / scale / available) * 100),
+          );
+          dom.style.width = `${percent}%`;
+        },
+        end: (_x, _y, dropped) => {
+          dom.classList.remove("image-view-resizing");
+          const pos = getPos();
+          if (!dropped || pos === undefined) {
+            dom.style.width = was;
+            return;
+          }
+          view.dispatch(
+            view.state.tr.setNodeMarkup(
+              pos,
+              undefined,
+              withImageWidth(current.attrs, percent),
+            ),
+          );
+        },
+      },
+      { started: true },
+    );
   });
 
   return {

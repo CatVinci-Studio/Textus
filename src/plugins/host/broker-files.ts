@@ -6,8 +6,9 @@ import { fs, plugins as pluginsIpc, type StoreScope } from "../../platform/ipc";
 import {
   absoluteIn,
   basename,
+  contentRelative,
   dirname,
-  isInside,
+  isWithin,
   slashed,
 } from "../../utils/path";
 import { freeFilePath } from "../../document/autosave-untitled";
@@ -30,11 +31,7 @@ import {
   pluginMovedPath,
 } from "../app-bridge";
 import { globToRegExp, isDocumentPath } from "../workspace/glob";
-import {
-  parseFrontmatter,
-  withFrontmatter,
-  type Frontmatter,
-} from "../../utils/frontmatter";
+import { type Frontmatter } from "../../utils/frontmatter";
 import { linkRewrite } from "../../files/link-rewrite-lazy";
 import { blockIdAt } from "../../files/block-id";
 import { setWillExport } from "../contributions/will-export";
@@ -70,6 +67,10 @@ function placeRoot(p: PluginScope, scope: StoreScope): string | null {
   p.need("project.data");
   return p.folder();
 }
+
+/** A task line split around the character in its box (the index's
+ *  reading: a list marker, then `[c]`). */
+const TASK_BOX = /^(\s*(?:[-*+]|\d+[.)])\s+\[)[^\]](\][\s\S]*)$/;
 
 /** A token for the version of a document in a tab. */
 const TAB_TOKEN = "tab:";
@@ -305,14 +306,33 @@ export function fileHandlers(p: PluginScope) {
         : new TextDecoder().decode(
             await pluginsIpc.fsRead(p.id, p.root(), target),
           );
-      return parseFrontmatter(text);
+      const { readFrontmatterFull } =
+        await import("../../utils/frontmatter-yaml");
+      return readFrontmatterFull(text);
     },
-    "files.frontmatterSet": ({ path, frontmatter }: Params) => {
+    "files.frontmatterSet": async ({ path, frontmatter }: Params) => {
       write();
       if (!isRecord(frontmatter)) throw new Error("frontmatter is an object.");
+      const { writeFrontmatterFull } =
+        await import("../../utils/frontmatter-yaml");
       return change(str(path, "path"), (text) =>
-        withFrontmatter(text, frontmatter as Frontmatter),
+        writeFrontmatterFull(text, frontmatter as Frontmatter),
       );
+    },
+    // A task's box set to one character, on the line the index gave.
+    "files.setTask": async ({ path, line, status }: Params) => {
+      write();
+      const mark = str(status, "status");
+      if ([...mark].length !== 1 || mark === "]" || /[\r\n]/.test(mark))
+        throw new Error("status is one character.");
+      const at = typeof line === "number" ? line : -1;
+      return change(str(path, "path"), (text) => {
+        const lines = text.split("\n");
+        const task = TASK_BOX.exec(lines[at] ?? "");
+        if (!task) throw new Error(`No task on line ${at}.`);
+        lines[at] = task[1] + mark + task[2];
+        return lines.join("\n");
+      });
     },
     "files.willSave": ({ on }: Params) => {
       setWillSave(p.id, on === true, (request) =>
@@ -414,6 +434,8 @@ export function fileHandlers(p: PluginScope) {
 
 /** `path` in the folder `root`, `/`-separated. */
 function relOf(root: string, path: string): string {
+  if (root.startsWith("content://"))
+    return contentRelative(root, path) ?? basename(path);
   const r = slashed(root).replace(/\/$/, "");
   const full = slashed(path);
   return full.startsWith(`${r}/`) ? full.slice(r.length + 1) : basename(full);
@@ -436,7 +458,7 @@ export function openDocument(root: string, path: string) {
 function within(root: string, path: string | undefined): string {
   if (!path) return root;
   const full = absoluteIn(root, path);
-  if (full !== root && !isInside(full, root))
+  if (!isWithin(full, root))
     throw new Error(`${path} isn't in the open folder.`);
   return full;
 }

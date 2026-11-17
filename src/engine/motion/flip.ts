@@ -85,17 +85,23 @@ export function play(
     }
     return move;
   });
-  const box = (r: DOMRect) => ({
-    width: `${r.width}px`,
-    height: `${r.height}px`,
-  });
   for (const { el, dx, dy, size } of own) {
     if (!size && Math.abs(dx) < 0.5 && Math.abs(dy) < 0.5) continue;
     const timing = timingFor?.(el);
+    // Measured on screen; moved in its own units, which a zoom it is drawn
+    // at (the document's) scales.
+    const k = drawnScale(el);
+    const box = (r: DOMRect) => ({
+      width: `${r.width / k}px`,
+      height: `${r.height / k}px`,
+    });
     animate(
       el,
       [
-        { transform: `translate(${dx}px, ${dy}px)`, ...(size && box(size[0])) },
+        {
+          transform: `translate(${dx / k}px, ${dy / k}px)`,
+          ...(size && box(size[0])),
+        },
         { transform: "none", ...(size && box(size[1])) },
       ],
       {
@@ -105,6 +111,17 @@ export function play(
       },
     );
   }
+}
+
+/** How much bigger than laid out `el`'s place is drawn: the zoom it sits
+ *  in, where the engine reports boxes as drawn; 1 where it reports them
+ *  as laid out, or nothing scales it. */
+function drawnScale(el: Element): number {
+  const around = el.parentElement;
+  const laid = around?.offsetWidth;
+  if (!around || !laid) return 1;
+  const k = around.getBoundingClientRect().width / laid;
+  return Math.abs(k - 1) < 0.01 ? 1 : k;
 }
 
 /** What a removed element looked like and where it sat, taken before the

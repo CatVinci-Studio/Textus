@@ -1,4 +1,5 @@
 import { useSyncExternalStore } from "react";
+import { createSubscribers } from "../utils/store";
 /**
  * Each tab's mounted editor, as the rest of the window may ask of it: its
  * live markdown and its caret. One handle a tab, its parts given by the
@@ -27,7 +28,7 @@ interface TabEditor {
 }
 
 const editors = new Map<string, TabEditor>();
-const heldListeners = new Set<() => void>();
+const held = createSubscribers();
 
 /** Gives `tabId`'s handle one of its parts; returns the take-back. */
 export function registerTabEditor<K extends keyof TabEditor>(
@@ -38,7 +39,7 @@ export function registerTabEditor<K extends keyof TabEditor>(
   const handle = editors.get(tabId) ?? {};
   handle[part] = give;
   editors.set(tabId, handle);
-  if (part === "held") for (const tell of heldListeners) tell();
+  if (part === "held") held.publish();
   if (part === "focus") {
     const waiting = awaited.get(tabId);
     awaited.delete(tabId);
@@ -49,7 +50,7 @@ export function registerTabEditor<K extends keyof TabEditor>(
     if (now?.[part] !== give) return;
     delete now[part];
     if (Object.keys(now).length === 0) editors.delete(tabId);
-    if (part === "held") for (const tell of heldListeners) tell();
+    if (part === "held") held.publish();
   };
 }
 
@@ -71,13 +72,7 @@ export function whenEditorBuilt(tabId: string, ready: () => void): () => void {
 
 /** Whether `tabId`'s editor is held loaded, kept current in a component. */
 export function useEditorHeld(tabId: string): boolean {
-  return useSyncExternalStore(
-    (tell) => {
-      heldListeners.add(tell);
-      return () => heldListeners.delete(tell);
-    },
-    () => !!editors.get(tabId)?.held,
-  );
+  return useSyncExternalStore(held.subscribe, () => !!editors.get(tabId)?.held);
 }
 
 // Milkdown's listener reports markdown on a 200ms debounce with no maxWait,

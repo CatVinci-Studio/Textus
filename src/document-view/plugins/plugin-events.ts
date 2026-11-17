@@ -1,6 +1,10 @@
 import type { Ctx } from "@milkdown/kit/ctx";
 import { editorViewCtx } from "@milkdown/kit/core";
-import { emitPluginEvent, pluginsListen } from "../../plugins/app-bridge";
+import {
+  emitPluginEvent,
+  getActiveDocument,
+  pluginsListen,
+} from "../../plugins/app-bridge";
 import { selectionText } from "../../plugins/contributions/editor-text";
 import { takeChangeSource } from "../../editor/change-source";
 import { cachedDocument } from "../../editor/markdown/doc-markdown";
@@ -40,6 +44,7 @@ export function selectionChangedForPlugins(active: boolean, ctx: Ctx): void {
         text: selectionText(state),
         empty: state.selection.empty,
         block: cachedDocument(ctx, state.doc).blocks[index]?.id ?? null,
+        ...(getActiveDocument()?.cursor() ?? {}),
       });
     } catch {
       /* the editor went away */

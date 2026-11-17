@@ -1,6 +1,6 @@
 import { isMobileApp } from "../platform/capabilities";
 import { platformName } from "../platform/window-chrome";
-import type { PluginManifest } from "./store/manifest";
+import type { PluginManifest } from "./store/manifest-types";
 import { engineSatisfied } from "./store/versions";
 import { version as APP_VERSION } from "../../package.json";
 

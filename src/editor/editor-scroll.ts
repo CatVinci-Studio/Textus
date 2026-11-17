@@ -1,4 +1,6 @@
+import { NodeSelection } from "@milkdown/kit/prose/state";
 import type { EditorView } from "@milkdown/kit/prose/view";
+import { glideScroll } from "../engine/motion/motion";
 import { isPhoneLayout } from "../platform/phone-layout";
 
 /**
@@ -8,12 +10,16 @@ import { isPhoneLayout } from "../platform/phone-layout";
  * counting as out of view.
  */
 export function scrollOptions(root: HTMLElement) {
+  const topRoom = () => {
+    const page = root.closest(".editor-content");
+    return page ? parseFloat(getComputedStyle(page).paddingTop) || 5 : 5;
+  };
   return {
-    handleScrollToSelection: scrollOnlyWhenAsked,
+    handleScrollToSelection: (view: EditorView) =>
+      !asked(view) || glideToCaret(view, topRoom(), footRoom(root)),
     scrollMargin: {
       get top() {
-        const page = root.closest(".editor-content");
-        return page ? parseFloat(getComputedStyle(page).paddingTop) || 5 : 5;
+        return topRoom();
       },
       right: 5,
       get bottom() {
@@ -44,16 +50,71 @@ function footRoom(root: HTMLElement): number {
 const scrolled = new WeakMap<EditorView, number>();
 
 /**
- * The view goes to its caret when an edit asks it to (scrollIntoView), not
+ * Whether the view goes to its caret: when an edit asks it to (scrollIntoView), not
  * when the editor merely takes the focus: ProseMirror, finding the caret
  * the browser left at the document's start as focus came, puts its own back
  * and scrolls to it - away from where the page was being read.
  */
-function scrollOnlyWhenAsked(view: EditorView): boolean {
+function asked(view: EditorView): boolean {
   // Counted by the state: one more for each transaction that asked.
-  const asked =
+  const count =
     (view.state as { scrollToSelection?: number }).scrollToSelection ?? 0;
-  if (asked === (scrolled.get(view) ?? 0)) return true;
-  scrolled.set(view, asked);
-  return false;
+  if (count === (scrolled.get(view) ?? 0)) return false;
+  scrolled.set(view, count);
+  return true;
+}
+
+/** Where the selection is drawn: its head, or a selected node's box. */
+function selectionBox(view: EditorView): {
+  top: number;
+  bottom: number;
+  left: number;
+  right: number;
+} {
+  const { selection } = view.state;
+  const node =
+    selection instanceof NodeSelection ? view.nodeDOM(selection.from) : null;
+  return node instanceof HTMLElement
+    ? node.getBoundingClientRect()
+    : view.coordsAtPos(selection.head);
+}
+
+/** Scrolls whatever scrolls sideways around `pos` (a wide table) so `at`
+ *  is in sight, at once: only the page glides. */
+export function revealSideways(
+  view: EditorView,
+  pos: number,
+  at: { left: number; right: number } = view.coordsAtPos(pos),
+) {
+  const scroller = view.dom.closest(".editor-scroll");
+  for (
+    let el = view.domAtPos(pos).node.parentElement;
+    el && el !== scroller;
+    el = el.parentElement
+  ) {
+    if (el.scrollWidth <= el.clientWidth) continue;
+    const box = el.getBoundingClientRect();
+    if (at.left < box.left + 5) el.scrollLeft -= box.left + 5 - at.left;
+    else if (at.right > box.left + el.clientWidth - 5)
+      el.scrollLeft += at.right - (box.left + el.clientWidth - 5);
+  }
+}
+
+/**
+ * Brings the caret into sight as ProseMirror would - sideways at once in
+ * a wide table, the page in one short glide that a wheel or a press stops.
+ * False where the page isn't the app's scroller: ProseMirror does it.
+ */
+function glideToCaret(view: EditorView, top: number, foot: number): boolean {
+  const scroller = view.dom.closest<HTMLElement>(".editor-scroll");
+  if (!scroller) return false;
+  revealSideways(view, view.state.selection.head, selectionBox(view));
+  const at = selectionBox(view);
+  const box = scroller.getBoundingClientRect();
+  const bottom = box.top + scroller.clientHeight;
+  if (at.top < box.top)
+    glideScroll(scroller, at.top - (box.top + top), "--dur-fast");
+  else if (at.bottom > bottom - (foot - 5))
+    glideScroll(scroller, at.bottom - (bottom - foot), "--dur-fast");
+  return true;
 }

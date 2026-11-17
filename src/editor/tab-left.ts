@@ -12,6 +12,9 @@ const open = (tabId: string) => windowTabs().some((tab) => tab.id === tabId);
  * next editor to open as this one was. The tab owns it, until it closes.
  */
 export interface TabLeft {
+  /** The file it was (null for a draft): another file in the tab, as a
+   *  look replaced, starts afresh. */
+  path: string | null;
   /** The text the document stands for: it holds for this text only. */
   markdown: string;
   doc: unknown;
@@ -84,6 +87,14 @@ export function leaveTab(tabId: string, state: TabLeft): void {
 export function leftBy(tabId: string, markdown: string): TabLeft | null {
   const state = left.get(tabId);
   return state?.markdown === markdown ? state : null;
+}
+
+/** What `tabId`'s last editor left for the file at `path`, whatever its
+ *  text now: a change made meanwhile (in source mode) is applied over it
+ *  as one more step. */
+export function leftAtAll(tabId: string, path: string | null): TabLeft | null {
+  const state = left.get(tabId);
+  return state?.path === path ? state : null;
 }
 
 /** The tab closed, or its editor took what was left: nothing kept twice. */

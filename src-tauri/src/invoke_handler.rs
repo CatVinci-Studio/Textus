@@ -8,7 +8,6 @@ use ai::{agent::ai_agent_message, cancel::ai_cancel};
 use auth::claude::{claude_auth_status, claude_login, claude_logout};
 use auth::custom_endpoint::{
     clear_custom_endpoint, custom_endpoint_status, fetch_custom_models, set_custom_endpoint,
-    test_custom_endpoint,
 };
 use auth::keys::{clear_provider_api_key, provider_api_key_status, set_provider_api_key};
 use auth::openai_codex::{codex_auth_status, codex_login, codex_logout};
@@ -27,7 +26,8 @@ use commands::export::{
 use commands::fs::{
     file_mtime_ms, list_dir, migrate_draft_images, open_css_file_dialog, open_file_dialog,
     open_image_file_dialog, open_settings_file_dialog, read_binary_file_base64, read_text_file,
-    save_file_dialog, save_pasted_image, save_settings_file_dialog, write_text_file,
+    save_file_dialog, save_pasted_image, save_settings_file_dialog, write_base64_file,
+    write_text_file,
 };
 use commands::image_host::{image_host_key_id, upload_image};
 #[cfg(desktop)]
@@ -72,6 +72,7 @@ pub(crate) fn handler() -> impl Fn(tauri::ipc::Invoke<tauri::Wry>) -> bool + Sen
         file_mtime_ms,
         read_binary_file_base64,
         write_text_file,
+        write_base64_file,
         save_pasted_image,
         commands::vault::resolve_vault_image,
         commands::vault::resolve_note_link,
@@ -152,7 +153,6 @@ pub(crate) fn handler() -> impl Fn(tauri::ipc::Invoke<tauri::Wry>) -> bool + Sen
         custom_endpoint_status,
         clear_custom_endpoint,
         fetch_custom_models,
-        test_custom_endpoint,
         export_save_dialog,
         save_draft_snapshot,
         take_draft_snapshots,
@@ -204,6 +204,8 @@ pub(crate) fn handler() -> impl Fn(tauri::ipc::Invoke<tauri::Wry>) -> bool + Sen
         crate::agents::agent_stop,
         #[cfg(desktop)]
         menu::set_plugin_menu,
+        #[cfg(desktop)]
+        menu::set_plugin_exports,
         commands::tree_ops::tree_create_document,
         commands::tree_ops::tree_create_folder,
         commands::tree_ops::tree_move_entry,

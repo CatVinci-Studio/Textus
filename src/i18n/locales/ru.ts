@@ -96,7 +96,7 @@ export default {
 `,
   projectOpenStyle: "Открыть профиль стиля",
   projectPickFolder: "Другая рабочая папка…",
-  projectNoFolder: "Не использовать папку",
+  projectFollowSidebar: "Папка из боковой панели",
   projectReveal: "Показать в файловом менеджере",
   projectLearnStyle: "Изучить мой стиль по образцам…",
   projectImportReferences: "Импортировать источники…",
@@ -131,7 +131,7 @@ export default {
   blockDuplicate: "Дублировать",
   blockHandlesLabel: "Маркеры блоков",
   blockHandlesHelp:
-    "＋ и ⋮⋮ рядом с блоком под указателем: добавить блок, переместить его или превратить в блок другого вида.",
+    "⋮⋮ рядом с блоком под указателем: перетащите, чтобы переместить блок, или нажмите, чтобы превратить его в другой вид, дублировать или удалить.",
   smoothCaretLabel: "Плавный курсор",
   menuBlockWide: "Во всю ширину",
   menuBlockZoom: "Масштаб",
@@ -735,6 +735,12 @@ export default {
     many: "{n} сл.",
     other: "{n} сл.",
   },
+  slipCount: {
+    one: "{n} проблема",
+    few: "{n} проблемы",
+    many: "{n} проблем",
+    other: "{n} проблемы",
+  },
   wordCountDetail: "{words} сл. · {characters} знаков (без пробелов)",
   alertNote: "Примечание",
   alertTip: "Совет",
@@ -787,6 +793,7 @@ export default {
   backToStableInstall: "Установить {version}",
   backToStableNone: "Сейчас нет стабильной версии, к которой можно вернуться.",
   aiCompletionLabel: "Автодополнение",
+  completionSourceLabel: "Подсказки от",
   completionToneLabel: "Тон автодополнения",
   completionTone_default: "Как в документе",
   completionTone_formal: "Официальный",
@@ -951,6 +958,8 @@ export default {
   modelListLabel: "Список моделей",
   customTestConnection: "Проверить подключение",
   customTestSuccess: "Подключение работает.",
+  customModelNotListed:
+    "Подключено, но в списке моделей этого адреса нет «{model}». Выберите модель из списка.",
   customSave: "Сохранить",
   proxyLabel: "Прокси-сервер",
   proxyTypeNone: "Нет (напрямую)",
@@ -1189,6 +1198,9 @@ export default {
   activityRail: "Панель действий",
   activityRailHide: "Скрыть панель действий",
   activityRailShow: "Показать панель действий",
+  windowLayoutGroup: "Макет окна",
+  classicLookNote:
+    "Нравится, как Textus выглядел до 1.4? Выберите «Классический», скройте панель действий и покажите заголовок отдельной строкой. Верните их, чтобы вернуть новый вид.",
   layoutLabel: "Макет",
   layoutIslands: "Плавающие острова",
   layoutClassic: "Классический",
@@ -1307,7 +1319,6 @@ export default {
   windowMaximize: "Развернуть",
   windowRestore: "Свернуть в окно",
   windowClose: "Закрыть",
-  chatWindowTitle: AI_NAME,
   chatWindowPin: "Поверх других окон",
   chatWindowPinHint: "Держать это окно поверх редактора",
   chatWindowUnpinHint: "Не держать это окно поверх редактора",
@@ -1480,7 +1491,11 @@ export default {
   tutorialSettingsBody: "В шестерёнке тема, шрифты и ваши аккаунты ИИ.",
   tutorialEditorTitle: "Пишите, как видите",
   tutorialEditorBody:
-    "Markdown становится форматированием прямо при вводе: попробуйте `# Заголовок` или `- список`.",
+    "Markdown становится форматированием прямо при вводе. Попробуйте каждое:",
+  tutorialEditorHeading: "Заголовок: `# Планы`",
+  tutorialEditorList: "Список: `- молоко`",
+  tutorialEditorNumbered: "Нумерованный: `1. сначала`",
+  tutorialEditorTask: "Задача: `- [ ] перезвонить`",
   tutorialAiTitle: "Textus AI",
   tutorialAiBody: "Нажмите на искры справа вверху, чтобы открыть Textus AI.",
   tutorialAiBodyPhone: "Коснитесь искр справа вверху, чтобы открыть Textus AI.",
@@ -1940,6 +1955,15 @@ export default {
   pluginPermNotifications: "Показывать системные уведомления",
   pluginPermAppearance: "Менять цвета Textus и ваших документов",
   pluginPermGitCommit: "Делать коммиты Git в открытой папке вашим Git",
+  pluginPermComments: "Читать и оставлять заметки на полях ваших документов",
+  pluginPermAiModel:
+    "Использовать вашу модель ИИ (учитывается в расходе вашего сервиса ИИ)",
+  pluginAiAsk:
+    "{plugin} хочет использовать вашу модель ИИ. Отправленное учитывается в расходе вашего сервиса ИИ, до {limit} токенов в месяц для этого плагина.",
+  pluginAiLimit:
+    "{plugin} израсходовал свои {limit} токенов ИИ за этот месяц. Разрешить ещё {limit}?",
+  pluginAiAllow: "Разрешить",
+  pluginAiUsage: "ИИ в этом месяце: {used} из {limit} токенов",
   pluginPermAgents:
     "Запускать ИИ-агента, установленного на этом компьютере (он может читать и менять файлы)",
   pluginPermBackground:
@@ -1967,6 +1991,8 @@ export default {
   pluginKeysTaken:
     "{name} не может занять клавиатуру: её занимает {holder}. Выключите один из них в списке плагинов на боковой панели.",
   shortcutIndentListItem: "Увеличить отступ пункта",
+  shortcutFoldSection: "Свернуть раздел",
+  shortcutUnfoldSection: "Развернуть раздел",
   shortcutOutdentListItem: "Уменьшить отступ пункта",
   pluginKeyTaken:
     "{name}: {key} уже занято «{owner}», поэтому не назначено команде «{command}». Задайте другое в Настройки › Сочетания клавиш.",

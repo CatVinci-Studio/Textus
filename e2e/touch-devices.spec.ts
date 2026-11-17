@@ -109,6 +109,16 @@ test.describe("searching on a phone", () => {
       hasText: "the needle here",
     });
     await expect(hit).toBeInViewport();
+    // The caret in the found line, not at the end of the one before.
+    const at = await page.evaluate(
+      () =>
+        (
+          window as unknown as {
+            __pmView: { state: { selection: { $from: { parent: Node } } } };
+          }
+        ).__pmView.state.selection.$from.parent.textContent,
+    );
+    expect(at).toBe("the needle here");
   });
 });
 
@@ -259,5 +269,67 @@ test.describe("a phone's tab row", () => {
         .map((box) => [box.left, box.right, from]);
     });
     expect(cut).toEqual([]);
+  });
+});
+
+test.describe("reordering tabs on a phone", () => {
+  test.use(PHONE);
+
+  test("a tab dragged along the row keeps its document's scroll", async ({
+    page,
+  }) => {
+    const long = Array.from({ length: 200 }, (_, i) => `Paragraph ${i}.`);
+    await page.addInitScript((text) => {
+      (window as unknown as Record<string, unknown>).__devFiles = {
+        "/w/a.md": text,
+      };
+    }, long.join("\n\n"));
+    await openApp(page);
+    await openPath(page, "/w/a.md");
+    await page.locator(".tab-bar-add").first().tap();
+    await expect(page.locator(".tab-pill")).toHaveCount(2);
+    await page
+      .locator(".tab-pill")
+      .first()
+      .evaluate((pill) => {
+        const touch = { bubbles: true, pointerType: "touch", isPrimary: true };
+        pill.dispatchEvent(new PointerEvent("pointerdown", touch));
+        pill.dispatchEvent(new PointerEvent("pointerup", touch));
+      });
+    const scroller = page.locator('[data-active-tab="true"] .editor-scroll');
+    await expect(scroller).toContainText("Paragraph 150");
+    await scroller.evaluate((el) => (el.scrollTop = 2000));
+    // A long press, then the finger along the row past the next tab.
+    await page
+      .locator(".tab-pill")
+      .first()
+      .evaluate(async (pill) => {
+        const next = pill.nextElementSibling!.getBoundingClientRect();
+        const { left, top, width, height } = pill.getBoundingClientRect();
+        const y = top + height / 2;
+        const at = (type: string, x: number) =>
+          pill.dispatchEvent(
+            new PointerEvent(type, {
+              bubbles: true,
+              cancelable: true,
+              pointerType: "touch",
+              pointerId: 7,
+              isPrimary: true,
+              clientX: x,
+              clientY: y,
+            }),
+          );
+        const x = left + width / 2;
+        const dx = next.width + width / 2 + 10;
+        at("pointerdown", x);
+        await new Promise((r) => setTimeout(r, 450));
+        for (let step = 1; step <= 10; step++) {
+          at("pointermove", x + (dx * step) / 10);
+          await new Promise((r) => setTimeout(r, 30));
+        }
+        at("pointerup", x + dx);
+      });
+    await expect(page.locator(".tab-pill").nth(1)).toContainText("a.md");
+    expect(await scroller.evaluate((el) => el.scrollTop)).toBe(2000);
   });
 });

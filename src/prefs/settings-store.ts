@@ -7,6 +7,7 @@ import { listenToThisWindow } from "../platform/events";
 import { SettingsSync, isRecord, type Raw } from "./settings-sync";
 import type { Settings } from "./settings-types";
 import { normaliseSettings } from "./settings-normalise";
+import { createSubscribers } from "../utils/store";
 
 /** Where the settings live: the shared settings file, a local copy for a
  *  fast start, and changes to and from other windows. */
@@ -37,7 +38,7 @@ interface SettingsChanged {
 
 let sync: SettingsSync | null = null;
 let normalised: { raw: Raw; settings: Settings } | null = null;
-const remoteListeners = new Set<() => void>();
+let remote = createSubscribers();
 
 /** The file-backed store, set up on first use; null without Rust. */
 function fileStore(): SettingsSync | null {
@@ -94,7 +95,7 @@ export let remoteVersion = 0;
 
 function notifyRemote() {
   remoteVersion += 1;
-  for (const fn of remoteListeners) fn();
+  remote.publish();
 }
 
 function send(ticket: Map<string, number>) {
@@ -145,8 +146,7 @@ export function changeSettings(patch: Partial<Settings>) {
  *  Returns the unsubscribe. */
 export function subscribeRemote(fn: () => void): () => void {
   if (fileStore()) {
-    remoteListeners.add(fn);
-    return () => remoteListeners.delete(fn);
+    return remote.subscribe(fn);
   }
   // Fallback: another window's write to the same localStorage key.
   const onStorage = (e: StorageEvent) => {
@@ -175,5 +175,5 @@ gateAiRequests(() => loadSettings().textusAi);
 export function resetSettingsStoreForTests(): void {
   sync = null;
   normalised = null;
-  remoteListeners.clear();
+  remote = createSubscribers();
 }

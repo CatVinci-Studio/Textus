@@ -207,7 +207,7 @@ export function useChatContextBridge({
             turns: conversation.history,
             statuses: pendingEdits.allStatuses,
           },
-          t.chatWindowTitle,
+          t.agentPanelTitle,
           settings.pinAgentWindow,
         );
       } catch {

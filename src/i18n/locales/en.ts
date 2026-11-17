@@ -94,7 +94,7 @@ type /name in a conversation to use one.
 `,
   projectOpenStyle: "Open style profile",
   projectPickFolder: "Choose folder…",
-  projectNoFolder: "Use no folder",
+  projectFollowSidebar: "Use the sidebar's folder",
   projectReveal: "Show in file manager",
   projectLearnStyle: "Learn my style from samples…",
   projectImportReferences: "Import references…",
@@ -124,7 +124,7 @@ type /name in a conversation to use one.
   blockDuplicate: "Duplicate",
   blockHandlesLabel: "Block handles",
   blockHandlesHelp:
-    "＋ and ⋮⋮ beside the block under the pointer: add a block, move it, or turn it into another kind.",
+    "⋮⋮ beside the block under the pointer: drag it to move the block, or click it to turn the block into another kind, duplicate or delete it.",
   smoothCaretLabel: "Smooth caret",
   menuBlockWide: "Wide",
   menuBlockZoom: "Size",
@@ -692,6 +692,7 @@ type /name in a conversation to use one.
   outlineExpandAll: "Expand All",
   outlineCollapseAll: "Collapse All",
   wordCount: { one: "{n} word", other: "{n} words" },
+  slipCount: { one: "{n} problem", other: "{n} problems" },
   wordCountDetail: "{words} words · {characters} characters (no spaces)",
   alertNote: "Note",
   alertTip: "Tip",
@@ -746,6 +747,7 @@ type /name in a conversation to use one.
   backToStableInstall: "Install {version}",
   backToStableNone: "There's no stable version to go back to right now.",
   aiCompletionLabel: "AI completion",
+  completionSourceLabel: "Suggestions from",
   completionToneLabel: "Completion tone",
   completionTone_default: "Match the document",
   completionTone_formal: "Formal",
@@ -907,6 +909,8 @@ type /name in a conversation to use one.
   modelListLabel: "Model list",
   customTestConnection: "Test Connection",
   customTestSuccess: "Connection works.",
+  customModelNotListed:
+    "Connected, but this endpoint doesn't list the model “{model}”. Pick one from its list.",
   customSave: "Save",
   proxyLabel: "Network proxy",
   proxyTypeNone: "None (direct)",
@@ -1122,6 +1126,9 @@ type /name in a conversation to use one.
   activityRail: "Activity bar",
   activityRailHide: "Hide the Activity Bar",
   activityRailShow: "Show the Activity Bar",
+  windowLayoutGroup: "Window Layout",
+  classicLookNote:
+    "Prefer how Textus looked before 1.4? Choose Classic, turn off the activity bar and turn on the title bar's own row. Change them back for the new look.",
   layoutLabel: "Layout",
   layoutIslands: "Floating islands",
   layoutClassic: "Classic",
@@ -1241,7 +1248,6 @@ type /name in a conversation to use one.
   windowMaximize: "Maximize",
   windowRestore: "Restore Down",
   windowClose: "Close",
-  chatWindowTitle: AI_NAME,
   chatWindowPin: "Keep on top",
   chatWindowPinHint: "Keep this window above the editor",
   chatWindowUnpinHint: "Stop keeping this window above the editor",
@@ -1413,7 +1419,11 @@ type /name in a conversation to use one.
     "The gear holds the theme, the fonts and your AI accounts.",
   tutorialEditorTitle: "Write as it shows",
   tutorialEditorBody:
-    "Markdown turns into formatting as you type: try `# A title` or `- a list`.",
+    "Markdown turns into formatting as you type. Try each of these:",
+  tutorialEditorHeading: "A title: `# Plans`",
+  tutorialEditorList: "A list: `- milk`",
+  tutorialEditorNumbered: "Numbered: `1. first`",
+  tutorialEditorTask: "A to-do: `- [ ] call back`",
   tutorialAiTitle: "Textus AI",
   tutorialAiBody: "Click the sparkles at the top right to open Textus AI.",
   tutorialAiBodyPhone: "Tap the sparkles at the top right to open Textus AI.",
@@ -1860,6 +1870,15 @@ type /name in a conversation to use one.
   pluginPermNotifications: "Show system notifications",
   pluginPermAppearance: "Change the colors of Textus and your documents",
   pluginPermGitCommit: "Make Git commits in the open folder with your Git",
+  pluginPermComments: "Read and leave notes in your documents' margins",
+  pluginPermAiModel:
+    "Use your AI model (it counts toward your AI service's usage)",
+  pluginAiAsk:
+    "{plugin} wants to use your AI model. What it sends counts toward your AI service's usage, up to {limit} tokens a month for this plugin.",
+  pluginAiLimit:
+    "{plugin} has used its {limit} AI tokens for this month. Allow {limit} more?",
+  pluginAiAllow: "Allow",
+  pluginAiUsage: "AI this month: {used} of {limit} tokens",
   pluginPermAgents:
     "Run an AI agent installed on this computer (it can read and change files)",
   pluginPermBackground: "Run code on a schedule, even with every window closed",
@@ -1886,6 +1905,8 @@ type /name in a conversation to use one.
   pluginKeysTaken:
     "{name} can't take the keyboard: {holder} has it. Turn one of them off in the sidebar's plugin list.",
   shortcutIndentListItem: "Indent List Item",
+  shortcutFoldSection: "Fold Section",
+  shortcutUnfoldSection: "Unfold Section",
   shortcutOutdentListItem: "Outdent List Item",
   pluginKeyTaken:
     "{name}: {key} is {owner}'s, so it wasn't given to “{command}”. Set a key in Settings › Shortcuts.",

@@ -92,7 +92,7 @@ export function EditorChatPortals({
             selectedText={inlineChat.chatInfo.selectedText}
             selectionMarkdown={inlineChat.chatInfo.selectionMarkdown}
             docPath={filePath}
-            workspaceRoot={settings.agentWorkspaceRoot || null}
+            workspaceRoot={chat.workspaceRoot}
             conversation={chat.quickConversation}
             // Write first: Quick Ask is opened on a passage to change it.
             defaultMode="write"

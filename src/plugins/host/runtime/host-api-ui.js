@@ -144,6 +144,18 @@ textus.ui = {
       },
     );
   },
+  // Items for the right-click menu ("editor" or "fileTree"), worked out as
+  // it opens: provide(target) answers [{ label, command, args }].
+  registerContextMenu: function (where, provide) {
+    where = String(where);
+    menuProviders[where] = provide;
+    quiet(call("ui.registerContextMenu", { where: where }));
+    return disposable(function () {
+      if (menuProviders[where] !== provide) return;
+      delete menuProviders[where];
+      quiet(call("ui.unregisterContextMenu", { where: where }));
+    });
+  },
   statusItem: function (id, item) {
     var key = String(id);
     var current = Object.assign({ text: "" }, plain(item));

@@ -23,7 +23,11 @@ import {
   paginateHtml,
   type PageGeometry,
 } from "./paginate";
-import { buildStandaloneHtml, nextFrame } from "./standalone-html";
+import {
+  buildStandaloneHtml,
+  nextFrame,
+  type ExportImages,
+} from "./standalone-html";
 import { explainError } from "../utils/error-explain";
 import { pandocFormat } from "../registry/export-formats";
 // File > Export: HTML serializes the live editor DOM, PDF prints a themed
@@ -87,7 +91,7 @@ function platformPage(): PageGeometry | null {
   return null;
 }
 
-const HTML_LAYOUT_CSS =
+export const HTML_LAYOUT_CSS =
   ".app-shell, .main-pane, .editor-scroll { height: auto; overflow: visible; } " +
   ".editor-content { padding: 2rem 1.5rem; } " +
   EXPORT_FIT_CSS;
@@ -164,7 +168,10 @@ function editorOf(tab: DocTab): Element | null {
 
 /** The editor an HTML or PDF export copies; without one (source mode),
  *  says so. */
-async function drawnEditor(tab: DocTab, t: Strings): Promise<Element | null> {
+export async function drawnEditor(
+  tab: DocTab,
+  t: Strings,
+): Promise<Element | null> {
   const editor = editorOf(tab);
   if (!editor)
     await showMessage(t.exportNeedsWysiwyg, { title: t.exportFailedTitle });
@@ -173,7 +180,7 @@ async function drawnEditor(tab: DocTab, t: Strings): Promise<Element | null> {
 
 /** An export's steps: the save dialog, `write` to the file picked, the
  *  file shown in its folder - or what went wrong, said. */
-async function runExport(
+export async function runExport(
   tab: DocTab,
   t: Strings,
   [ext, kind]: [ext: string, kind: string],
@@ -201,20 +208,33 @@ export async function exportHtml(tab: DocTab, t: Strings): Promise<void> {
   if (!editor) return;
   await runExport(tab, t, ["html", "HTML"], async (picked, base) => {
     const besideDocument = !!tab.path && dirname(tab.path) === dirname(picked);
-    const finished = await preparePage(editor, tab, {
-      format: "html",
-      from: picked,
+    const html = await htmlPage(editor, tab, picked, base, {
       images: besideDocument ? "document" : "inline",
       drawn: appearanceIsDark() ? "dark" : "light",
-      settle: false,
     });
-    const html = buildStandaloneHtml(
-      base,
-      finished.html,
-      HTML_LAYOUT_CSS + finished.css,
-    );
     await fs.writeTextFile(picked, html);
   });
+}
+
+/** The document as one standalone HTML page, read from `picked`. */
+export async function htmlPage(
+  editor: Element,
+  tab: DocTab,
+  picked: string,
+  base: string,
+  look: { images: ExportImages; drawn: "light" | "dark" },
+): Promise<string> {
+  const finished = await preparePage(editor, tab, {
+    format: "html",
+    from: picked,
+    settle: false,
+    ...look,
+  });
+  return buildStandaloneHtml(
+    base,
+    finished.html,
+    HTML_LAYOUT_CSS + finished.css,
+  );
 }
 
 // The drawn blocks' pictures in the document's editor, for a pandoc export.

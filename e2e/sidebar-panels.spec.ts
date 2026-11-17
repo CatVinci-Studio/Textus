@@ -383,3 +383,25 @@ test.describe("on a phone", () => {
     await expect(editor).toBeFocused();
   });
 });
+
+test("a file that takes the preview tab starts with its own history, not the last one's", async ({
+  page,
+}) => {
+  await page.addInitScript(() => {
+    const w = window as unknown as Record<string, unknown>;
+    w.__devFs = { "/one/a.md": "# Alpha\n", "/one/b.md": "# Beta\n" };
+    w.__devPickFolder = "/one";
+  });
+  await openApp(page, { settings: { menuBarShown: false } });
+  await emit(page, "menu-open-folder");
+  await page.locator(".tree-row", { hasText: "a.md" }).click();
+  const doc = page.locator('[data-active-tab="true"] .ProseMirror');
+  await expect(doc.locator("h1")).toContainText("Alpha");
+  await page.locator(".tree-row", { hasText: "b.md" }).click();
+  await expect(doc.locator("h1")).toContainText("Beta");
+  await doc.click();
+  await page.keyboard.press("ControlOrMeta+z");
+  await page.keyboard.press("ControlOrMeta+z");
+  await expect(doc.locator("h1")).toContainText("Beta");
+  await expect(doc).not.toContainText("Alpha");
+});

@@ -1,42 +1,22 @@
 # 路线图
 
-[English](ROADMAP.md) · 每个小版本更新一次，上次更新：1.4.3。
+[English](ROADMAP.md) · Textus 接下来要做的事。已经发布的内容见[更新说明](docs/releases/)。
 
-这里特意不写日期：我们人少，做好了再发。已经发布的内容见[更新说明](docs/releases/)。
+Textus 目前只有很少几个人在做，非常欢迎大家一起参与：提交 PR 可以小到改一个错别字，也可以大到做一个完整的功能；很多大家想要的功能更适合做成插件，任何人都可以写。
 
-## 现在（1.4.x）
+## 1.4.5
 
-- **插件接口 1.8**：把插件接口补齐成一整套，让大家愿意来写插件——`/` 菜单读取的块类型清单、只做显示的语法、页边图标、右键菜单、带一键修复的问题提示、插件提供的行内续写、经你同意后使用你的 AI 模型、导出格式、数据库视图和版本来源。
-- **标题折叠**，以及 **Excalidraw** 插件。
-- **动效**：平滑滚动，块和表格行让位、落位，光标滑动。
-- **自定义 AI 接口**列出可选的模型。
-- **手机和平板**：用触摸拖动块，内容铺到屏幕底边。
-- **Linux**：更宽松的标题栏。[#664](https://github.com/CatVinci-Studio/Textus/issues/664)
-- **iPhone 和 iPad 上架 App Store**；在那之前用 TestFlight 和安卓 APK。[#87](https://github.com/CatVinci-Studio/Textus/issues/87)
-
-## 下一个（1.5）
-
-- **iPad 使用桌面版界面**，iPhone 在此基础上适配。
-- **更轻的窗口**：窗口的每个区域只用一个编辑器，文档以数据保存，开很多标签页也不怎么占内存。
-- **语音输入。**[#195](https://github.com/CatVinci-Studio/Textus/issues/195)
-
-## 以后
-
-其余的按大家的需求排：给 issue 点 👍 让它往前排，或者在[许愿池](https://github.com/CatVinci-Studio/Textus/issues/196)里留言。
-
-## 不进核心，做成插件
-
-App 本身保持精简。外部服务和较少用的语法都做成插件，在 **设置 › 插件** 里安装，在 [textus-plugins](https://github.com/CatVinci-Studio/textus-plugins) 里开发。
-
-已经有的插件：
-
-- 外部服务：Zotero、Openverse 图片、WakaTime、DeepSeek，以及作为智能体的 Claude Code、Codex 和 OpenCode；
-- 同步：Cloud Sync（WebDAV、S3、坚果云）；
-- 语法和图表：LaTeX 补全、ABC 乐谱、PlantUML、WaveDrom、Markmap、ECharts 和 Chart.js、函数图像；
-- 工作方式：看板、数据库、白板、日记、任务、幻灯片、Vim 和 Emacs 键位等。
-
-还没有、欢迎做成插件的：MkDocs / Zensical 提示块（[#220](https://github.com/CatVinci-Studio/Textus/issues/220)）、Cisco IOS 代码高亮（[#639](https://github.com/CatVinci-Studio/Textus/issues/639)）。
+- **通过 SSH 打开远端文件夹**，和 VS Code 一样：打开服务器上的文件夹，像本地文件夹一样写作；用你的 `~/.ssh/config` 和密钥，服务器上不用装任何东西。
+- **插件能做更多**：自己的数据库视图、来自别处的文件夹（比如 WebDAV）、其他应用的文件夹结构（比如 Logseq）、以文件夹形式保存的文档（比如 TextBundle），以及边写边出的 AI 回答。
+- **Mermaid 图表可以折叠**，和标题一样收成一行。
+- **安卓**：用"文件"App 打开的文件夹，也能整个文件夹搜索、使用数据库。
 
 ## 想帮忙？
 
-挑一个还没人认领的 [good first issue](https://github.com/CatVinci-Studio/Textus/issues?q=is%3Aopen+label%3A%22good+first+issue%22+no%3Aassignee)、[help wanted](https://github.com/CatVinci-Studio/Textus/issues?q=is%3Aopen+label%3A%22help+wanted%22+no%3Aassignee) 或[插件点子](https://github.com/CatVinci-Studio/textus-plugins/issues?q=is%3Aopen+label%3A%22plugin+idea%22)，并阅读 [CONTRIBUTING.zh-CN.md](CONTRIBUTING.zh-CN.md)。
+这些现在就开着，等人来做：
+
+- **通读一种语言的界面翻译**，改掉读着别扭的地方：[日语](https://github.com/CatVinci-Studio/Textus/issues/672)、[韩语](https://github.com/CatVinci-Studio/Textus/issues/673)、[法语](https://github.com/CatVinci-Studio/Textus/issues/674)、[德语](https://github.com/CatVinci-Studio/Textus/issues/675)、[西班牙语](https://github.com/CatVinci-Studio/Textus/issues/676)、[葡萄牙语](https://github.com/CatVinci-Studio/Textus/issues/677)、[俄语](https://github.com/CatVinci-Studio/Textus/issues/678)。
+- **适合第一次提交的小 PR**：[修好开发者文档里的三个坏链接](https://github.com/CatVinci-Studio/Textus/issues/670)、[为导入 Word 文档时的罗马数字列表补测试](https://github.com/CatVinci-Studio/Textus/issues/671)。
+- **大家想要的插件**：[MkDocs / Zensical 提示块](https://github.com/CatVinci-Studio/Textus/issues/220)、[Cisco IOS 代码高亮](https://github.com/CatVinci-Studio/Textus/issues/639)。
+
+或者挑一个别的还没人认领的 [good first issue](https://github.com/CatVinci-Studio/Textus/issues?q=is%3Aopen+label%3A%22good+first+issue%22+no%3Aassignee)、[help wanted](https://github.com/CatVinci-Studio/Textus/issues?q=is%3Aopen+label%3A%22help+wanted%22+no%3Aassignee) 或[插件点子](https://github.com/CatVinci-Studio/textus-plugins/issues?q=is%3Aopen+label%3A%22plugin+idea%22)，并阅读 [CONTRIBUTING.zh-CN.md](CONTRIBUTING.zh-CN.md)。插件在 [textus-plugins](https://github.com/CatVinci-Studio/textus-plugins) 里开发。自己的愿望可以写在[许愿池](https://github.com/CatVinci-Studio/Textus/issues/196)；给 issue 点 👍 能让它往前排。

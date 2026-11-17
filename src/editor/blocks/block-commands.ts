@@ -1,9 +1,7 @@
 import { Fragment, type Node as ProseNode } from "@milkdown/kit/prose/model";
 import {
   type EditorState,
-  NodeSelection,
   Selection,
-  TextSelection,
   type Transaction,
 } from "@milkdown/kit/prose/state";
 import { closeHistory } from "@milkdown/kit/prose/history";
@@ -73,21 +71,6 @@ export function duplicateBlock(
   );
 }
 
-/** An empty line after the block, the caret in it: a list item's next
- *  item, else a paragraph. */
-export function addBelow(state: EditorState, block: HandledBlock): Transaction {
-  const { schema } = state;
-  const paragraph = schema.nodes.paragraph!.create();
-  const line = isItem(block.node)
-    ? block.node.type.create(null, paragraph)
-    : paragraph;
-  const at = block.pos + block.node.nodeSize;
-  const tr = closeHistory(state.tr.insert(at, line));
-  return tr.setSelection(
-    TextSelection.create(tr.doc, at + (isItem(block.node) ? 2 : 1)),
-  );
-}
-
 /** Where a block can be put: before or after each child of the document,
  *  and (a list item) of a list. */
 interface Gap {
@@ -96,24 +79,76 @@ interface Gap {
   container: number;
 }
 
-export function gapsFor(doc: ProseNode, block: HandledBlock): Gap[] {
-  const item = isItem(block.node);
+/** Every place a block can go in `doc`; a list item (`items`) also
+ *  between the items of each list - and not just outside one, a place
+ *  the list's own first or last place stands at already. */
+export function gapsIn(doc: ProseNode, items: boolean): Gap[] {
   const gaps: Gap[] = [];
+  const list = (node: ProseNode | null) => !!node && LISTS.test(node.type.name);
   const collect = (node: ProseNode, start: number, container: number) => {
     let offset = start;
     for (let i = 0; i <= node.childCount; i++) {
-      gaps.push({ pos: offset, container });
+      const beside =
+        items &&
+        container < 0 &&
+        (list(i > 0 ? node.child(i - 1) : null) ||
+          list(i < node.childCount ? node.child(i) : null));
+      if (!beside) gaps.push({ pos: offset, container });
       if (i < node.childCount) offset += node.child(i).nodeSize;
     }
   };
   collect(doc, 0, -1);
   doc.descendants((node, pos) => {
-    if (item && LISTS.test(node.type.name)) collect(node, pos + 1, pos);
+    if (items && LISTS.test(node.type.name)) collect(node, pos + 1, pos);
     return !node.isTextblock;
   });
+  return gaps;
+}
+
+export function gapsFor(doc: ProseNode, block: HandledBlock): Gap[] {
   const end = block.pos + block.node.nodeSize;
   // Inside itself, or where it already is, is no move.
-  return gaps.filter((gap) => gap.pos <= block.pos || gap.pos >= end);
+  return gapsIn(doc, isItem(block.node)).filter(
+    (gap) => gap.pos <= block.pos || gap.pos >= end,
+  );
+}
+
+/** What `block` is to be put down as at `gap` in `state`'s document (which
+ *  may be another document's): a list item put outside a list goes in a
+ *  list of its own kind. Null where it can't go. */
+function placed(
+  state: EditorState,
+  from: EditorState,
+  block: HandledBlock,
+  gap: number,
+): ProseNode | null {
+  const $gap = state.doc.resolve(gap);
+  let moving = block.node;
+  if (isItem(moving) && !LISTS.test($gap.parent.type.name)) {
+    const list = from.doc.resolve(block.pos).parent;
+    moving = list.type.create(list.attrs, moving);
+  }
+  // Another editor's nodes are of its own schema.
+  if (state.schema !== from.schema)
+    moving = state.schema.nodeFromJSON(moving.toJSON());
+  const index = $gap.index();
+  return $gap.parent.canReplace(index, index, Fragment.from(moving))
+    ? moving
+    : null;
+}
+
+/** `block` of `from`'s document put down at `gap` in `state`'s (another
+ *  document, or a copy in its own), one undo step, selected. Null where
+ *  it can't go. */
+export function placeAt(
+  state: EditorState,
+  from: EditorState,
+  block: HandledBlock,
+  gap: number,
+): Transaction | null {
+  const moving = placed(state, from, block, gap);
+  if (!moving) return null;
+  return landed(closeHistory(state.tr).insert(gap, moving), gap, moving);
 }
 
 /** The block moved to `gap`, one undo step: a list item put outside a
@@ -125,17 +160,24 @@ export function moveTo(
 ): Transaction | null {
   const { from, to } = ownRange(state, block);
   if (gap >= from && gap <= to) return null;
-  const $gap = state.doc.resolve(gap);
-  let moving: ProseNode = block.node;
-  if (isItem(moving) && !LISTS.test($gap.parent.type.name)) {
-    const list = state.doc.resolve(block.pos).parent;
-    moving = list.type.create(list.attrs, moving);
-  }
-  const index = $gap.index();
-  if (!$gap.parent.canReplace(index, index, Fragment.from(moving))) return null;
+  const moving = placed(state, state, block, gap);
+  if (!moving) return null;
   const tr = closeHistory(state.tr);
   if (gap > from) tr.insert(gap, moving).delete(from, to);
   else tr.delete(from, to).insert(gap, moving);
-  const at = gap > from ? gap - (to - from) : gap;
-  return tr.setSelection(NodeSelection.create(tr.doc, at)).scrollIntoView();
+  return landed(tr, gap > from ? gap - (to - from) : gap, moving);
 }
+
+/** Where a block put down by `moveTo` or `placeAt` now starts. */
+export const landedAt = (tr: Transaction): number | null =>
+  tr.getMeta(LANDED) ?? null;
+
+const LANDED = "block-landed";
+
+/** The caret at the end of the block put down at `at` - not the block
+ *  picked whole, which drew its selected frame round it. */
+const landed = (tr: Transaction, at: number, node: ProseNode) =>
+  tr
+    .setSelection(Selection.near(tr.doc.resolve(at + node.nodeSize), -1))
+    .setMeta(LANDED, at)
+    .scrollIntoView();

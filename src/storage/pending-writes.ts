@@ -1,3 +1,5 @@
+import { createSubscribers } from "../utils/store";
+
 /** Storage writes Rust hasn't answered yet. A Tauri window closes without
  *  `pagehide`, so every close the frontend handles awaits
  *  `flushPendingWrites()` before the window is destroyed. */
@@ -9,7 +11,7 @@ const flushers = new Set<() => void>();
  *  window from closing. */
 const FLUSH_TIMEOUT_MS = 2000;
 
-const failedListeners = new Set<(error: unknown) => void>();
+const failed = createSubscribers<[unknown]>();
 
 /** Remembers a storage write until it settles. Returns the same promise;
  *  one that fails is told to `onWriteFailed` as well as to its caller. */
@@ -21,7 +23,7 @@ export function trackWrite<T>(write: Promise<T>): Promise<T> {
   write.then(done, (error: unknown) => {
     done();
     console.error("[storage] write failed:", error);
-    for (const listener of failedListeners) listener(error);
+    failed.publish(error);
   });
   return write;
 }
@@ -29,8 +31,7 @@ export function trackWrite<T>(write: Promise<T>): Promise<T> {
 /** Told of each storage write that failed: what was changed lasts only
  *  this session. Returns the unregister. */
 export function onWriteFailed(listener: (error: unknown) => void): () => void {
-  failedListeners.add(listener);
-  return () => failedListeners.delete(listener);
+  return failed.subscribe(listener);
 }
 
 /** Registers something to send right away when the window is about to go:

@@ -30,30 +30,20 @@ import type { Strings } from "../i18n/strings";
 import { folderReopener } from "./folder-reopen";
 import { useLatest } from "../utils/hooks/useLatest";
 
-/**
- * A window's documents: the active one, the sidebar folder, opening,
- * saving, closing, view modes and tabs moving between windows.
- */
-export function useWindowDocuments({
-  shell,
-  settings,
-  t,
-}: {
-  shell: WindowShell;
-  settings: Settings;
-  t: Strings;
-}) {
-  const { tabState, panels, tutorial, setPendingClose } = shell;
-  const { tabs, setTabs, activeTabId, setActiveTabId, tabsRef, liveTabs } =
-    tabState;
-  const { setPanelOpen, setPanelMode } = panels;
-  const active = useActiveDocument(tabs, activeTabId, t);
+type Input = { shell: WindowShell; settings: Settings; t: Strings };
+type Active = ReturnType<typeof useActiveDocument>;
+
+/** The sidebar's folder in this window (Open Folder brings the Files tab
+ *  into view), the search request, and what the window keeps. */
+function useFolderAndSearch(input: Input, active: Active) {
+  const { shell, t } = input;
+  const { setPanelOpen, setPanelMode } = shell.panels;
   const { activeTab, documentsFolder, activeTitle } = active;
   const showFiles = useCallback(() => {
     setPanelOpen(true);
     setPanelMode("tree");
   }, [setPanelOpen, setPanelMode]);
-  // Set below, once the tabs can be closed.
+  // Set by useFolderClosing, once the tabs can be closed.
   const replaceRef = useRef<(old: string | null, next: string) => void>(
     () => {},
   );
@@ -67,27 +57,67 @@ export function useWindowDocuments({
     ),
     folderTooBroad: t.folderTooBroad,
   });
-  // The search shortcut's request, cleared by the box once it shows.
+  const search = useSearchRequest(
+    setPanelOpen,
+    setPanelMode,
+    openFolder.treeRoot !== null,
+  );
+  useWindowKeeping(input, activeTitle, activeTab.path, openFolder.folder);
+  return { openFolder, replaceRef, ...search };
+}
+
+/** The search shortcut's request, cleared by the box once it shows. */
+function useSearchRequest(
+  setPanelOpen: (open: boolean) => void,
+  setPanelMode: (mode: "search") => void,
+  hasTree: boolean,
+) {
   const [searchFocusRequest, setSearchFocusRequest] = useState(false);
   const clearSearchFocusRequest = useCallback(
     () => setSearchFocusRequest(false),
     [],
   );
-  const hasTree = openFolder.treeRoot !== null;
   const searchFiles = useCallback(() => {
     setPanelOpen(true);
     setPanelMode("search");
     // No tree yet: a request left standing would take the keyboard later.
     if (hasTree) setSearchFocusRequest(true);
   }, [setPanelOpen, setPanelMode, hasTree]);
+  return { searchFocusRequest, clearSearchFocusRequest, searchFiles };
+}
+
+/** What the window keeps of itself: its title, its projects' tabs, its
+ *  session, the places read in its documents. */
+function useWindowKeeping(
+  { shell, settings }: Input,
+  activeTitle: string,
+  activePath: string | null,
+  folder: string | null,
+) {
+  const { tabs, setActiveTabId } = shell.tabState;
   useWindowTitle(activeTitle);
   useProjectTabs(
-    openFolder.folder,
+    folder,
     tabs.map((tab) => tab.path),
-    activeTab.path,
+    activePath,
   );
-  useWindowSession(tabs, openFolder.folder, setActiveTabId);
+  useWindowSession(tabs, folder, setActiveTabId);
+  useLastPlaces(tabs, settings.restoreSessionOnStartup);
+}
 
+/** Opening files, `[[` listing the folder's notes while no plugin
+ *  completes it, and the plugins' side of the window. */
+function useOpening(
+  { shell, settings, t }: Input,
+  active: Active,
+  folderRoot: string | null,
+  later: {
+    saveTab: (id: string) => Promise<boolean>;
+    requestCloseTab: (id: string) => void;
+  },
+) {
+  const { tabState } = shell;
+  const { activeTab } = active;
   const dialogFilters = useMemo(
     () => ({
       textFilter: t.openDialogText,
@@ -103,9 +133,6 @@ export function useWindowDocuments({
     t,
     onWordDocumentOpened: shell.wordImported.opened,
   });
-  useLastPlaces(tabs, settings.restoreSessionOnStartup);
-  const folderRoot = openFolder.folder ?? openFolder.treeRoot;
-  // `[[` lists the folder's notes while no plugin completes it.
   useEffect(() => {
     setNoteCompletionRoot(folderRoot);
     return registerNoteCompletion(() => t.completionNotes);
@@ -118,27 +145,30 @@ export function useWindowDocuments({
     tabState,
     openPathInTab: opening.openPathInTab,
     openFile: opening.openFile,
-    // Defined below; read when a plugin asks.
-    saveActiveTab: () => saving.saveTab(activeTab.id),
-    saveTab: (id) => saving.saveTab(id),
-    closeActiveTab: () => requestCloseTab(activeTab.id),
+    // Read when a plugin asks.
+    saveActiveTab: () => later.saveTab(activeTab.id),
+    saveTab: (id) => later.saveTab(id),
+    closeActiveTab: () => later.requestCloseTab(activeTab.id),
   });
+  return opening;
+}
 
+/** Help tabs, the tour's practice tab, and the document's text as it is
+ *  typed (a preview tab written in is kept; the tour watches it). */
+function useHelpAndTyping({ shell, settings }: Input) {
+  const { tabState, tutorial, evaluateTutorialDocumentChange } = shell;
+  const { setTabs } = tabState;
   const { openHelpTab } = useHelpTabs({
     tabState,
     language: settings.language,
     stopTutorial: tutorial.exit,
   });
-
   const { claimPracticeTab, startWelcomeTutorial } = usePracticeTab(
     tabState,
     tutorial.start,
   );
-
-  const { evaluateTutorialDocumentChange } = shell;
   const handleChange = useCallback(
     (tabId: string, markdown: string) => {
-      // Written in, a preview tab is kept.
       setTabs((prev) =>
         prev.map((tab) =>
           tab.id !== tabId
@@ -156,7 +186,13 @@ export function useWindowDocuments({
     },
     [setTabs, evaluateTutorialDocumentChange],
   );
+  return { openHelpTab, claimPracticeTab, startWelcomeTutorial, handleChange };
+}
 
+/** Saving: Save and Save As, the AI's names for drafts, autosave. */
+function useSaving({ shell, settings, t }: Input, folder: string | null) {
+  const { tabState, tutorial } = shell;
+  const { tabs, activeTabId } = tabState;
   const aiTitleFor = useDraftTitles(
     tabs,
     settings.textusAi && settings.autoSuggestFilename
@@ -169,7 +205,7 @@ export function useWindowDocuments({
     t,
     autoSuggestFilename: settings.autoSuggestFilename,
     imageFolder: settings.imageFolder,
-    folder: openFolder.folder,
+    folder,
     aiTitleFor,
   });
   const flushAutosave = useAutosave({
@@ -177,14 +213,40 @@ export function useWindowDocuments({
     tabsRef: tabState.tabsRef,
     activeTabId,
     enabled: settings.autosave,
-    untitledToFile: openFolder.folder !== null,
+    untitledToFile: folder !== null,
     practiceTabId: tutorial.active ? tutorial.tabId : null,
     autosaveTab: saving.autosaveTab,
   });
+  return { saving, flushAutosave };
+}
 
+/** Zen, and each tab's source mode. */
+function useViewModes(tabState: WindowShell["tabState"]) {
   const zen = useZenMode();
   const modes = useSourceModes(tabState);
+  return { zen, modes };
+}
 
+/** Closing tabs, and folders: Close Folder also closes the folder's saved
+ *  documents (with none left, the start page); another folder opened here
+ *  takes the old one's place, as an editor's workspace does: its saved
+ *  documents close, and the new one's come back as it was left
+ *  (start-project.ts), in this window, whatever else it holds - not as
+ *  Open Recent, which hands a busy window's files to the windows. */
+function useFolderClosing(
+  { shell, settings, t }: Input,
+  {
+    openFolder,
+    flushAutosave,
+    openPathInTab,
+  }: {
+    openFolder: ReturnType<typeof useOpenFolder>;
+    flushAutosave: ReturnType<typeof useAutosave>;
+    openPathInTab: ReturnType<typeof useFileOpening>["openPathInTab"];
+  },
+) {
+  const { tabState, setPendingClose } = shell;
+  const { liveTabs, addStartTab } = tabState;
   const { removeTab, requestCloseTab } = useTabRemoval({
     tabState,
     cancelDraftFlushes: shell.cancelDraftFlushes,
@@ -193,11 +255,7 @@ export function useWindowDocuments({
     closeLastToStartPage: settings.closeLastToStartPage,
     t,
   });
-
-  // Close Folder also closes the folder's saved documents; with none left,
-  // the start page.
   const { folder, closeFolder: forgetFolder } = openFolder;
-  const { addStartTab } = tabState;
   const closeTabsOf = useCallback(
     (old: string) => {
       const { close, blank } = folderTabsToClose(liveTabs(), old);
@@ -210,12 +268,6 @@ export function useWindowDocuments({
     forgetFolder();
     if (folder) closeTabsOf(folder);
   }, [folder, forgetFolder, closeTabsOf]);
-  // Another folder opened here takes the old one's place, as an editor's
-  // workspace does: its saved documents close, and the new one's come back
-  // as it was left (start-project.ts).
-  // In this window, whatever else it holds: not as Open Recent, which hands
-  // a busy window's files to the windows (none on a phone).
-  const { openPathInTab } = opening;
   const openLatest = useLatest(openPathInTab);
   const [reopenFolder] = useState(() =>
     folderReopener(
@@ -223,10 +275,47 @@ export function useWindowDocuments({
       (path) => openLatest.current(path, { restoreCaret: true }),
     ),
   );
-  replaceRef.current = (old, next) => {
+  const replaceFolder = (old: string | null, next: string) => {
     if (old) closeTabsOf(old);
     void reopenFolder(next);
   };
+  return { removeTab, requestCloseTab, closeFolder, replaceFolder };
+}
+
+/**
+ * A window's documents: the active one, the sidebar folder, opening,
+ * saving, closing, view modes and tabs moving between windows.
+ */
+export function useWindowDocuments(input: Input) {
+  const { shell, settings, t } = input;
+  const { tabState } = shell;
+  const { tabs, setTabs, activeTabId, setActiveTabId, tabsRef, liveTabs } =
+    tabState;
+  const active = useActiveDocument(tabs, activeTabId, t);
+  const { openFolder, replaceRef, ...search } = useFolderAndSearch(
+    input,
+    active,
+  );
+  const opening = useOpening(
+    input,
+    active,
+    openFolder.folder ?? openFolder.treeRoot,
+    {
+      // Defined below; read when a plugin asks.
+      saveTab: (id) => saving.saveTab(id),
+      requestCloseTab: (id) => requestCloseTab(id),
+    },
+  );
+  const help = useHelpAndTyping(input);
+  const { saving, flushAutosave } = useSaving(input, openFolder.folder);
+  const { zen, modes } = useViewModes(tabState);
+  const { removeTab, requestCloseTab, closeFolder, replaceFolder } =
+    useFolderClosing(input, {
+      openFolder,
+      flushAutosave,
+      openPathInTab: opening.openPathInTab,
+    });
+  replaceRef.current = replaceFolder;
 
   // Tabs moving between windows, in both directions.
   const { dragHoverPreview, handleTabDetach, moveTabToNewWindow } =
@@ -248,14 +337,9 @@ export function useWindowDocuments({
   return {
     ...active,
     openFolder: { ...openFolder, closeFolder },
-    searchFocusRequest,
-    clearSearchFocusRequest,
-    searchFiles,
+    ...search,
     ...opening,
-    openHelpTab,
-    claimPracticeTab,
-    startWelcomeTutorial,
-    handleChange,
+    ...help,
     ...saving,
     flushAutosave,
     ...zen,

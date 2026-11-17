@@ -8,6 +8,7 @@ import {
 } from "../conversation/document-port";
 import { useLiveConversationId } from "../conversation/useConversation";
 import { ConversationPanel } from "./ConversationPanel";
+import { useAiRoot } from "../../../ai/workspace/ai-root";
 
 // eslint-disable-next-line no-restricted-syntax -- a lazy chunk's entry passes these on
 export { stopConversations } from "../conversation/conversation-model";
@@ -29,7 +30,7 @@ export function WindowConversation({
   const { settings } = useSettings();
   const scope = conversationScope(
     document?.port.docPath ?? null,
-    settings.agentWorkspaceRoot || null,
+    useAiRoot(settings),
   );
   const live = useLiveConversationId(scope);
   // A draft just sent is its scope's live one before its tab says so.

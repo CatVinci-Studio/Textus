@@ -1,4 +1,5 @@
 import { widgetButton } from "../../editor/widget-button";
+import { pluginSyntax } from "./plugin-syntax";
 import { drawnBlocks } from "./plugin-block-pictures";
 import { watchPressedBlocks } from "../../plugins/views/pressed-blocks";
 import type { Editor } from "@milkdown/kit/core";
@@ -441,8 +442,9 @@ function doneButton(view: EditorView): HTMLElement {
   );
 }
 
-/** Plugins' blocks drawn in another editor (the split view's preview). */
+/** Plugins' blocks and inline syntax drawn in another editor (the split
+ *  view's preview). */
 export const withPluginBlocks = (
   editor: Editor,
   docPath: { readonly current: string | null },
-): Editor => editor.use(pluginCodeBlocks(docPath));
+): Editor => editor.use(pluginCodeBlocks(docPath)).use(pluginSyntax);

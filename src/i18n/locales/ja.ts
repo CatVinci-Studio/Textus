@@ -94,7 +94,7 @@ ${AI_NAME}への執筆の指示です。すべての文書に適用されます�
 `,
   projectOpenStyle: "文体プロファイルを開く",
   projectPickFolder: "フォルダーを選択…",
-  projectNoFolder: "フォルダーを使わない",
+  projectFollowSidebar: "サイドバーのフォルダーを使う",
   projectReveal: "ファイルマネージャーで表示",
   projectLearnStyle: "サンプルから文体を学習…",
   projectImportReferences: "参考資料を読み込む…",
@@ -124,7 +124,7 @@ ${AI_NAME}への執筆の指示です。すべての文書に適用されます�
   blockDuplicate: "複製",
   blockHandlesLabel: "ブロックハンドル",
   blockHandlesHelp:
-    "ポインタのあるブロックの左に ＋ と ⋮⋮ を表示：ブロックの追加、移動、別の種類への変換。",
+    "ポインタのあるブロックの左に ⋮⋮ を表示：ドラッグで移動、クリックで別の種類への変換・複製・削除。",
   smoothCaretLabel: "なめらかなカーソル",
   menuBlockWide: "ワイド表示",
   menuBlockZoom: "表示サイズ",
@@ -679,6 +679,7 @@ ${AI_NAME}への執筆の指示です。すべての文書に適用されます�
   outlineExpandAll: "すべて展開",
   outlineCollapseAll: "すべて折りたたむ",
   wordCount: { other: "{n} 文字" },
+  slipCount: { other: "{n} 件の問題" },
   wordCountDetail: "{characters} 文字（空白を除く） · {words} 語",
   alertNote: "メモ",
   alertTip: "ヒント",
@@ -731,6 +732,7 @@ ${AI_NAME}への執筆の指示です。すべての文書に適用されます�
   backToStableInstall: "{version} をインストール",
   backToStableNone: "今は戻れる安定版がありません。",
   aiCompletionLabel: "AI補完",
+  completionSourceLabel: "補完の提供元",
   completionToneLabel: "補完のトーン",
   completionTone_default: "文書に合わせる",
   completionTone_formal: "フォーマル",
@@ -892,6 +894,8 @@ ${AI_NAME}への執筆の指示です。すべての文書に適用されます�
   modelListLabel: "モデル一覧",
   customTestConnection: "接続をテスト",
   customTestSuccess: "接続できました。",
+  customModelNotListed:
+    "接続できましたが、このエンドポイントのモデル一覧に「{model}」がありません。一覧から選んでください。",
   customSave: "保存",
   proxyLabel: "ネットワークプロキシ",
   proxyTypeNone: "なし（直接接続）",
@@ -1098,6 +1102,9 @@ ${AI_NAME}への執筆の指示です。すべての文書に適用されます�
   activityRail: "アクティビティバー",
   activityRailHide: "アクティビティバーを隠す",
   activityRailShow: "アクティビティバーを表示",
+  windowLayoutGroup: "ウィンドウのレイアウト",
+  classicLookNote:
+    "1.4 より前の見た目が好みなら、レイアウトを「クラシック」にし、アクティビティバーをオフ、タイトルバーの独立表示をオンにします。元に戻せば新しい見た目になります。",
   layoutLabel: "レイアウト",
   layoutIslands: "フローティング",
   layoutClassic: "クラシック",
@@ -1216,7 +1223,6 @@ ${AI_NAME}への執筆の指示です。すべての文書に適用されます�
   windowMaximize: "最大化",
   windowRestore: "元のサイズに戻す",
   windowClose: "閉じる",
-  chatWindowTitle: AI_NAME,
   chatWindowPin: "最前面に固定",
   chatWindowPinHint: "このウィンドウをエディターより前面に保つ",
   chatWindowUnpinHint: "最前面固定を解除",
@@ -1382,7 +1388,11 @@ ${AI_NAME}への執筆の指示です。すべての文書に適用されます�
   tutorialSettingsBody: "歯車にはテーマ、フォント、AI アカウントがあります。",
   tutorialEditorTitle: "見たまま書く",
   tutorialEditorBody:
-    "Markdown は入力したそばから書式になります：`# タイトル` や `- リスト` を試してみて。",
+    "Markdown は入力したそばから書式になります。順に試してみて：",
+  tutorialEditorHeading: "見出し：`# 計画`",
+  tutorialEditorList: "リスト：`- 牛乳`",
+  tutorialEditorNumbered: "番号付き：`1. 最初`",
+  tutorialEditorTask: "やること：`- [ ] 折り返し電話`",
   tutorialAiTitle: "Textus AI",
   tutorialAiBody: "右上のきらめきボタンをクリックして Textus AI を開きます。",
   tutorialAiBodyPhone:
@@ -1825,6 +1835,15 @@ ${AI_NAME}への執筆の指示です。すべての文書に適用されます�
   pluginPermNotifications: "システム通知を表示する",
   pluginPermAppearance: "Textus と文書の色を変更する",
   pluginPermGitCommit: "自分の Git で、開いているフォルダにコミットする",
+  pluginPermComments: "文書の余白のメモを読み、書き加える",
+  pluginPermAiModel:
+    "あなたの AI モデルを使う（AI サービスの使用量に含まれます）",
+  pluginAiAsk:
+    "{plugin} があなたの AI モデルを使おうとしています。送信する内容は AI サービスの使用量に含まれます。このプラグインは月に {limit} トークンまでです。",
+  pluginAiLimit:
+    "{plugin} は今月の AI トークン {limit} を使い切りました。さらに {limit} 許可しますか？",
+  pluginAiAllow: "許可",
+  pluginAiUsage: "今月の AI：{limit} トークン中 {used}",
   pluginPermAgents:
     "このコンピュータにインストールされた AI エージェントを実行する（ファイルの読み取りと変更ができます）",
   pluginPermBackground:
@@ -1852,6 +1871,8 @@ ${AI_NAME}への執筆の指示です。すべての文書に適用されます�
   pluginKeysTaken:
     "{name} はキーボードを使えません：{holder} が使用中です。サイドバーのプラグイン一覧でどちらかをオフにしてください。",
   shortcutIndentListItem: "リスト項目をインデント",
+  shortcutFoldSection: "セクションを折りたたむ",
+  shortcutUnfoldSection: "セクションを展開",
   shortcutOutdentListItem: "リスト項目のインデントを戻す",
   pluginKeyTaken:
     "「{name}」：{key} は「{owner}」が使っているため、「{command}」には割り当てませんでした。設定 › ショートカット で別のキーを設定できます。",

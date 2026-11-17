@@ -13,8 +13,9 @@ export type TabJump =
   /** The outline's row: the document's `index`-th top-level heading, or
    *  with `select` its whole section selected (the outline's menu). */
   | { kind: "outline"; index: number; select?: boolean }
-  /** A document reopened: the caret where it was left. */
-  | { kind: "caret"; at: CaretPlace }
+  /** A document reopened: the caret where it was left. `stay`: the page
+   *  goes back where it was read, and the caret moves no page. */
+  | { kind: "caret"; at: CaretPlace; stay?: boolean }
   /** A plugin opened it at a place: a block, a line, some words, a heading. */
   | { kind: "place"; place: DocumentPlace };
 

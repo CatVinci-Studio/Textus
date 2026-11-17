@@ -63,8 +63,7 @@
               : to < from && i >= to && i < from
                 ? size
                 : 0;
-          el.style.transition =
-            "transform var(--dur-settle) var(--ease-settle)";
+          el.style.transition = "var(--move-make-room)";
           el.style.transform = by ? translate + "(" + by + "px)" : "";
         });
       }

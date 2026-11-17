@@ -373,6 +373,26 @@ pub async fn write_text_file(
         .map_err(|e| e.to_string())
 }
 
+/// A file's bytes, sent as base64: what a plugin's export format made, at
+/// the place the user picked in the save dialog.
+#[tauri::command]
+#[cfg_attr(test, specta::specta)]
+pub async fn write_base64_file(
+    app: tauri::AppHandle,
+    path: String,
+    data: String,
+) -> Result<(), String> {
+    use base64::Engine;
+    require_non_empty(&path)?;
+    not_a_secret(&app, &path)?;
+    let bytes = base64::engine::general_purpose::STANDARD
+        .decode(data.as_bytes())
+        .map_err(|e| e.to_string())?;
+    crate::atomic::write(Path::new(&path), bytes)
+        .await
+        .map_err(|e| e.to_string())
+}
+
 /// Moves a picture that an accepted AI picture replaced to the Trash, once the
 /// user said so; never deletes it.
 #[cfg(desktop)]

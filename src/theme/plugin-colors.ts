@@ -1,4 +1,4 @@
-import { onAppearance } from "../engine/tokens/appearance";
+import { onAppearance, windowIsDark } from "../engine/tokens/appearance";
 import { CUSTOM_CSS_STYLE_ID, PLUGIN_COLORS_STYLE_ID } from "./style-ids";
 import {
   chromePalette,
@@ -16,6 +16,14 @@ import {
   type OpenColor,
 } from "./plugin-colors-check";
 
+import {
+  checkFrameTexture,
+  texturedPaint,
+  type FrameTexture,
+} from "./frame-texture";
+
+import { setAppearanceColorsKey, type Scheme } from "./plugin-appearance-state";
+
 /**
  * Plugins' colours, layered over whichever theme is on (plugin API
  * `textus.appearance`). Each layer gives light and dark values apart; per
@@ -26,9 +34,9 @@ import {
  * theme and before the user's Custom CSS, which keeps the last word.
  */
 
-export type Scheme = "light" | "dark";
 interface Layer {
   plugin: string;
+  texture?: FrameTexture;
   light: Colors;
   dark: Colors;
 }
@@ -49,15 +57,19 @@ function resolved(name: OpenColor): RGB | null {
   return rgbOf(color);
 }
 
-const isDark = () =>
-  getComputedStyle(document.documentElement).colorScheme === "dark";
-
 /** The layers' colours for one scheme, plugins in id order. */
-function composed(scheme: Scheme): Colors {
+function composed(scheme: Scheme): { colors: Colors; texture?: FrameTexture } {
   const ordered = [...layers.values()].sort((a, b) =>
     a.plugin.localeCompare(b.plugin),
   );
-  return Object.assign({}, ...ordered.map((layer) => layer[scheme]));
+  const colors: Colors = {};
+  let texture: FrameTexture | undefined;
+  for (const layer of ordered) {
+    Object.assign(colors, layer[scheme]);
+    // Texture belongs to the winning paint, not to an unrelated colour layer.
+    if (layer[scheme][PAINT]) texture = layer.texture;
+  }
+  return { colors, texture };
 }
 
 const rgb = (c: RGB) => `rgb(${c.map(Math.round).join(", ")})`;
@@ -92,7 +104,7 @@ function applied(colors: Colors): Record<string, string> {
   const paint = colors[PAINT];
   const stops = paint ? gradientStops(paint) : [];
   const ui = ["--ui-bg", "--ui-text", "--ui-accent"] as const;
-  if (ui.some((name) => colors[name]) || stops.length) {
+  if (ui.some((name) => colors[name])) {
     for (const name of ui) if (colors[name]) out[name] = colors[name];
     const background = rgbOf(colors["--ui-bg"] ?? "") ?? resolved("--ui-bg");
     const text = pulled(colors, "--ui-text", "--ui-bg", stops);
@@ -141,13 +153,18 @@ function apply(): void {
   if (sheet) sheet.disabled = true;
   let values: Record<string, string>;
   try {
-    values = applied(composed(isDark() ? "dark" : "light"));
+    const dark = windowIsDark();
+    const { colors, texture } = composed(dark ? "dark" : "light");
+    values = applied(colors);
+    if (texture && values[PAINT])
+      values[PAINT] = texturedPaint(values[PAINT], texture, dark);
   } finally {
     if (sheet) sheet.disabled = false;
   }
   const key = JSON.stringify(values);
   if (key === written) return;
   written = key;
+  setAppearanceColorsKey(key);
   if (!Object.keys(values).length) {
     document.getElementById(PLUGIN_COLORS_STYLE_ID)?.remove();
     return;
@@ -179,11 +196,16 @@ export function setPluginColors(
   plugin: string,
   vars: unknown,
   scheme: Scheme | "both" = "both",
+  frameTexture?: unknown,
 ): string {
   const colors = checkColors(vars);
+  const texture = checkFrameTexture(frameTexture);
+  if (texture && !colors[PAINT])
+    throw new Error("frameTexture needs --ui-frame-paint in the same layer.");
   const id = `${plugin}#${++made}`;
   layers.set(id, {
     plugin,
+    texture,
     light: scheme === "dark" ? {} : colors,
     dark: scheme === "light" ? {} : colors,
   });
@@ -204,18 +226,6 @@ export function forgetPluginColors(plugin: string): void {
   for (const [id, layer] of layers)
     if (layer.plugin === plugin) any = layers.delete(id);
   if (any) changed();
-}
-
-/** Which theme and scheme are showing, and what the layers set: what a
- *  plugin is told changed (its `appearance` event) when any of it does. */
-export function appearanceNow(): {
-  theme: string;
-  scheme: Scheme;
-  key: string;
-} {
-  const theme = document.documentElement.dataset.themeId ?? "default";
-  const scheme = isDark() ? "dark" : "light";
-  return { theme, scheme, key: `${theme} ${scheme} ${written}` };
 }
 
 /** The open colours as the window shows them now (theme and layers). */

@@ -13,6 +13,7 @@ import { mountTableToolbar } from "./TableToolbar";
 import { dragColumnEdge, setCells, type HeldCell } from "./column-edge-drag";
 import { attachGrips } from "./table-grips";
 import { copyTable } from "../clipboard/table-clipboard";
+import { watchScrollFade } from "../../engine/controls/scroll-fade";
 import { tableSchema } from "@milkdown/kit/preset/gfm";
 import {
   addRowAfter,
@@ -138,12 +139,14 @@ export function createTableView(strings: () => Strings) {
     bindInsertButton(addColBtn, view, getPos, addColumnAfter);
 
     const scroller = wrapper.appendChild(document.createElement("div"));
-    scroller.className = "table-scroll";
+    // Wider than its column, the edge it goes on past fades.
+    scroller.className = "table-scroll tx-scroll-fade";
     // The column strip goes with the table's real end, scrolled with it.
     const track = scroller.appendChild(document.createElement("div"));
     track.className = "table-track";
     track.append(table, addColBtn);
     wrapper.appendChild(addRowBtn);
+    const unfade = watchScrollFade(scroller, "x");
     const grips = attachGrips({ wrapper, table, tbody, view, getPos });
     const followCaret = () => {
       // Picked cells (a grip's row or column) leave the grips where they
@@ -234,6 +237,7 @@ export function createTableView(strings: () => Strings) {
         return !tbody.contains(record.target);
       },
       destroy() {
+        unfade();
         grips.destroy();
         tools?.destroy();
       },

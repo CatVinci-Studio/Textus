@@ -1,4 +1,4 @@
-import { contentZoom } from "../zoom/tab-zoom";
+import { contentZoom } from "./tab-zoom";
 /**
  * Boxes read inside the document's zoom (`--content-zoom`, CSS `zoom` on the
  * text) as drawn on screen. Chromium and current WebKit report them as
@@ -33,4 +33,16 @@ export function asDrawn(box: Box, scale: number): Box {
     right: box.right * scale,
     bottom: box.bottom * scale,
   };
+}
+
+/** A point on screen in `root`'s own laid-out units, from its corner: the
+ *  zoom it is drawn at taken off. */
+export function inLayout(
+  root: HTMLElement,
+  x: number,
+  y: number,
+): { x: number; y: number; zoom: number } {
+  const r = root.getBoundingClientRect();
+  const zoom = r.width / root.offsetWidth || 1;
+  return { x: (x - r.left) / zoom, y: (y - r.top) / zoom, zoom };
 }

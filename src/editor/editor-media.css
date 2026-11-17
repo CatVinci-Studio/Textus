@@ -247,6 +247,11 @@
   user-select: none;
 }
 
+/* Shown to the one writing: a document nobody is in reads without it. */
+.ProseMirror:not(.ProseMirror-focused) .heading-marker {
+  display: none;
+}
+
 /* md_span's look is in content-base.css's layer, so a theme's plain
    `strong {}` wins; only the delimiter reveal is here. */
 

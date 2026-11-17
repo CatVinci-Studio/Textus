@@ -3,7 +3,7 @@ import type { EditorView } from "@milkdown/kit/prose/view";
 import { $prose } from "@milkdown/kit/utils";
 import type { Node } from "@milkdown/kit/prose/model";
 import { isIOSApp, isMobileApp } from "../platform/capabilities";
-import { asDrawn, zoomedRectScale } from "../engine/controls/zoomed-rects";
+import { asDrawn, zoomedRectScale } from "../engine/zoom/zoomed-rects";
 
 /** Where and when a single finger went down: a tap, not a scroll. */
 let down: { x: number; y: number; at: number } | null = null;

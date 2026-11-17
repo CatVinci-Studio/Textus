@@ -11,34 +11,34 @@ it.
 
 All under the [CatVinci-Studio](https://github.com/CatVinci-Studio) organization.
 
-| Repository                                                                      | What it is                                                                                                        |
-| ------------------------------------------------------------------------------- | ----------------------------------------------------------------------------------------------------------------- |
-| [Textus](https://github.com/CatVinci-Studio/Textus)                             | The app. `main` is the next version, `stable` the released one; older versions are tags (Levis 0.9.8 is `v0.9.8`) |
-| [textus-plugins](https://github.com/CatVinci-Studio/textus-plugins)             | The official plugins and the market's catalog; merging to `main` publishes them                                   |
-| [textus-plugin-sample](https://github.com/CatVinci-Studio/textus-plugin-sample) | A plugin to copy when starting one                                                                                |
-| [textus-themes](https://github.com/CatVinci-Studio/textus-themes)               | The theme gallery: themes shared through issue #1, reviewed with `/approve`                                       |
-| [homebrew-tap](https://github.com/CatVinci-Studio/homebrew-tap)                 | Retired: its `tap_migrations.json` moves old tap installs to Homebrew's official `textus` cask                    |
-| [arch-repo](https://github.com/CatVinci-Studio/arch-repo)                       | The signed `[catvinci]` pacman repository that serves `textus-bin`                                                |
-| [textus-website](https://github.com/CatVinci-Studio/textus-website)             | textus.md                                                                                                         |
-| [catvinci-homepage](https://github.com/CatVinci-Studio/catvinci-homepage)       | catvinci.com                                                                                                      |
+| Repository                                                                      | What it is                                                                                     |
+| ------------------------------------------------------------------------------- | ---------------------------------------------------------------------------------------------- |
+| [Textus](https://github.com/CatVinci-Studio/Textus)                             | The app. `main` is the only branch; every version is a tag on it (Levis 0.9.8 is `v0.9.8`)     |
+| [textus-plugins](https://github.com/CatVinci-Studio/textus-plugins)             | The official plugins and the market's catalog; merging to `main` publishes them                |
+| [textus-plugin-sample](https://github.com/CatVinci-Studio/textus-plugin-sample) | A plugin to copy when starting one                                                             |
+| [textus-themes](https://github.com/CatVinci-Studio/textus-themes)               | The theme gallery: themes shared through issue #1, reviewed with `/approve`                    |
+| [homebrew-tap](https://github.com/CatVinci-Studio/homebrew-tap)                 | Retired: its `tap_migrations.json` moves old tap installs to Homebrew's official `textus` cask |
+| [arch-repo](https://github.com/CatVinci-Studio/arch-repo)                       | The signed `[catvinci]` pacman repository that serves `textus-bin`                             |
+| [textus-website](https://github.com/CatVinci-Studio/textus-website)             | textus.md                                                                                      |
+| [catvinci-homepage](https://github.com/CatVinci-Studio/catvinci-homepage)       | catvinci.com                                                                                   |
 
 ## Automation
 
 In this repository (`.github/workflows/`):
 
-| Workflow                   | Runs                                              | Does                                                                                   |
-| -------------------------- | ------------------------------------------------- | -------------------------------------------------------------------------------------- |
-| `ci.yml`                   | every pull request, pushes to `main` and `stable` | `check` always; `e2e`, `native` on three platforms and the iOS build in the full suite |
-| `release.yml`              | a `vX.Y.Z` tag, or by hand to rebuild one         | builds, signs and publishes the desktop release ([releasing.md](releasing.md))         |
-| `android-release.yml`      | from `release.yml`                                | builds and signs the Android APK                                                       |
-| `arch-package.yml`         | from `release.yml`                                | builds and tests the `textus-bin` package                                              |
-| `mirror-downloads.yml`     | after a stable release, or by hand                | copies the installers to the website's download bucket                                 |
-| `update-beta-manifest.yml` | after every release, rc included, or by hand      | points the beta update channel's `textus-beta.json` at the newest release              |
-| `update-arch-repo.yml`     | after a stable release, or by hand                | asks `arch-repo` to serve the new `textus-bin`                                         |
-| `deploy-playground.yml`    | `release.yml`, after the newest stable release    | deploys textus.md/playground/ at that tag ([below](#playground))                       |
-| `ios-release.yml`          | an `ios-vX.Y.Z` tag                               | builds the iOS app and uploads it to TestFlight ([ios-release.md](ios-release.md))     |
-| `sync-models.yml`          | Mondays 03:00 UTC                                 | refreshes the AI providers' model lists and opens a pull request if they changed       |
-| `audit.yml`                | Mondays 04:00 UTC                                 | checks npm and Rust dependencies for advisories; opens an issue if it finds any        |
+| Workflow                   | Runs                                           | Does                                                                                   |
+| -------------------------- | ---------------------------------------------- | -------------------------------------------------------------------------------------- |
+| `ci.yml`                   | every pull request, pushes to `main`           | `check` always; `e2e`, `native` on three platforms and the iOS build in the full suite |
+| `release.yml`              | a `vX.Y.Z` tag, or by hand to rebuild one      | builds, signs and publishes the desktop release ([releasing.md](releasing.md))         |
+| `android-release.yml`      | from `release.yml`                             | builds and signs the Android APK                                                       |
+| `arch-package.yml`         | from `release.yml`                             | builds and tests the `textus-bin` package                                              |
+| `mirror-downloads.yml`     | after a stable release, or by hand             | copies the installers to the website's download bucket                                 |
+| `update-beta-manifest.yml` | after every release, rc included, or by hand   | points the beta update channel's `textus-beta.json` at the newest release              |
+| `update-arch-repo.yml`     | after a stable release, or by hand             | asks `arch-repo` to serve the new `textus-bin`                                         |
+| `deploy-playground.yml`    | `release.yml`, after the newest stable release | deploys textus.md/playground/ at that tag ([below](#playground))                       |
+| `ios-release.yml`          | an `ios-vX.Y.Z` tag                            | builds the iOS app and uploads it to TestFlight ([ios-release.md](ios-release.md))     |
+| `sync-models.yml`          | Mondays 03:00 UTC                              | refreshes the AI providers' model lists and opens a pull request if they changed       |
+| `audit.yml`                | Mondays 04:00 UTC                              | checks npm and Rust dependencies for advisories; opens an issue if it finds any        |
 
 Dependabot (`.github/dependabot.yml`) opens one grouped pull request a week
 for npm and Rust updates and one a month for GitHub Actions.

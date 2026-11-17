@@ -16,16 +16,31 @@ describe("the tab order across a reinstall", () => {
   it("keeps documents by their place in Documents and finds them in the new one", async () => {
     await documentsDir();
     writeTabOrder(
-      [{ path: `${NEW}/Notes/a.md` }, { id: "d1", path: null, text: "x" }],
+      [
+        { path: `${NEW}/Notes/a.md` },
+        { id: "d1", path: null, text: "x" },
+        // A database a plugin shows: kept by its file, to be opened again.
+        {
+          path: null,
+          view: { kind: "editor", view: "db", resource: `${NEW}/all.base` },
+        },
+        { path: null, view: { kind: "page", view: "ai" } },
+      ],
       0,
     );
     const stored = JSON.parse(localStorage.getItem("textus-tab-order")!);
     expect(stored.keys[0]).toBe("path:documents:Notes/a.md");
+    expect(stored.keys.slice(2)).toEqual([
+      "path:documents:all.base",
+      "view:ai",
+    ]);
     const docs = "/var/mobile/Containers/Data/Application/LATER/Documents/";
     expect(readTabOrder(docs)).toEqual({
       keys: [
         "path:/var/mobile/Containers/Data/Application/LATER/Documents/Notes/a.md",
         "id:d1",
+        "path:/var/mobile/Containers/Data/Application/LATER/Documents/all.base",
+        "view:ai",
       ],
       active:
         "path:/var/mobile/Containers/Data/Application/LATER/Documents/Notes/a.md",

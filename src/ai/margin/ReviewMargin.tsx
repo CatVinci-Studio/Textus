@@ -23,7 +23,7 @@ import {
 import { RevisionCard } from "./MarginCards";
 import { NoteCard } from "./NoteCards";
 import { MarginGroup } from "./MarginGroup";
-import { asDrawn, zoomedRectScale } from "../../engine/controls/zoomed-rects";
+import { asDrawn, zoomedRectScale } from "../../engine/zoom/zoomed-rects";
 
 /** The page's margin: review notes and a pending rewrite's changes, each card
  *  level with its passage and linked to it. The text column moves left to

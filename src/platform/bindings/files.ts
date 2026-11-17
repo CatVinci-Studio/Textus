@@ -48,6 +48,11 @@ export const commands = {
 	read_binary_file_base64: (path: string) => __TAURI_INVOKE<string>("read_binary_file_base64", { path }),
 	write_text_file: (path: string, contents: string) => __TAURI_INVOKE<null>("write_text_file", { path, contents }),
 	/**
+	 *  A file's bytes, sent as base64: what a plugin's export format made, at
+	 *  the place the user picked in the save dialog.
+	 */
+	write_base64_file: (path: string, data: string) => __TAURI_INVOKE<null>("write_base64_file", { path, data }),
+	/**
 	 *  Persists an image pasted into the editor. Saved documents get it in their
 	 *  image folder with a relative src; unsaved drafts use the app's assets folder, absolute.
 	 */

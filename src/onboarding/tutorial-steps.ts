@@ -1,6 +1,7 @@
 import type { TextKey } from "../i18n/strings";
 import type { AgentMode } from "../prefs/SettingsContext";
 import { hasTextusAi } from "../platform/capabilities";
+import type { Format } from "./tutorial-evaluation";
 
 /**
  * The first-run tour: the window part by part, each one lit while the rest
@@ -28,6 +29,14 @@ export type TutorialUntil =
 export interface TutorialStop {
   target: string;
   key: TextKey;
+  /** Clicked as it is lit, unless already on: the panel it opens shows. */
+  opens?: boolean;
+}
+
+/** One thing a step asks to be typed, ticked off once it is. */
+export interface TutorialTask {
+  format: Format;
+  key: TextKey;
 }
 
 export interface TutorialStep {
@@ -41,6 +50,8 @@ export interface TutorialStep {
   phoneTarget?: string;
   /** Lit one after another, Next going through them. */
   stops?: TutorialStop[];
+  /** What it asks for, ticked off as each is done; all done moves on. */
+  tasks?: TutorialTask[];
   /** What the card keeps clear of beside the lit part (the sidebar just
    *  opened, so its contents show). */
   beside?: string;
@@ -78,10 +89,10 @@ const ALL_STEPS: TutorialStep[] = [
     titleKey: "tutorialRailTitle",
     bodyKey: "tutorialRailBody",
     stops: [
-      { target: RAIL("tree"), key: "tutorialRailFiles" },
-      { target: RAIL("outline"), key: "tutorialRailOutline" },
-      { target: RAIL("search"), key: "tutorialRailSearch" },
-      { target: RAIL("plugins"), key: "tutorialRailPlugins" },
+      { target: RAIL("tree"), key: "tutorialRailFiles", opens: true },
+      { target: RAIL("outline"), key: "tutorialRailOutline", opens: true },
+      { target: RAIL("search"), key: "tutorialRailSearch", opens: true },
+      { target: RAIL("plugins"), key: "tutorialRailPlugins", opens: true },
       { target: ".activity-rail", key: "tutorialRailHide" },
     ],
     beside: "aside.sidebar:not(.sidebar-collapsed)",
@@ -98,6 +109,12 @@ const ALL_STEPS: TutorialStep[] = [
     bodyKey: "tutorialEditorBody",
     target: '[data-active-tab="true"] .editor-scroll',
     until: "formatted",
+    tasks: [
+      { format: "heading", key: "tutorialEditorHeading" },
+      { format: "list", key: "tutorialEditorList" },
+      { format: "numbered", key: "tutorialEditorNumbered" },
+      { format: "task", key: "tutorialEditorTask" },
+    ],
   },
   {
     id: "ai",

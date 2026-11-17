@@ -1,11 +1,13 @@
 import { animate, motionAllowed } from "../motion/motion";
 import { isIOSApp } from "../../platform/capabilities";
 import { isMacPlatform } from "../../platform/os";
+import { fingerDown, onTrackpadTouch } from "../../platform/trackpad";
 
 /** How far the page can be pulled past an end, at most. */
 const MAX_PULL = 80;
-/** How long after the last wheel event the page lets go. A finger held
- *  still sends nothing, so shorter springs back under a paused pull. */
+/** With no word from the native side of the finger (trackpad.rs), how
+ *  long after the last wheel event the page lets go. A finger held still
+ *  sends nothing, so shorter springs back under a paused pull. */
 const RELEASE_MS = 450;
 /** A wheel step this large is a mouse's notch or a hard flick, not a
  *  trackpad's finger; a Mac doesn't stretch the page for those. */
@@ -126,11 +128,20 @@ export function elasticOverscroll(
     travel = travel !== 0 && Math.sign(next) !== Math.sign(travel) ? 0 : next;
     draw();
     window.clearTimeout(release);
-    release = window.setTimeout(letGo, RELEASE_MS);
+    // The finger known to be down: it springs back when it lifts, held
+    // still as long as it likes.
+    if (fingerDown() !== true) release = window.setTimeout(letGo, RELEASE_MS);
   };
 
   scroller.addEventListener("wheel", onWheel, { passive: true });
+  // Lifted: back at once, as a Mac page does.
+  const offTouch = onTrackpadTouch((down) => {
+    if (down) return;
+    window.clearTimeout(release);
+    letGo();
+  });
   return () => {
+    offTouch();
     scroller.removeEventListener("wheel", onWheel);
     window.clearTimeout(release);
     settling?.cancel();

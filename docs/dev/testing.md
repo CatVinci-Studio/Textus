@@ -67,13 +67,16 @@ a key the macOS menu takes reaches nothing.
 
 CI has three layers (`.github/workflows/ci.yml`):
 
-| When                                                    | What runs                                                                                                                                            | Required                      |
-| ------------------------------------------------------- | ---------------------------------------------------------------------------------------------------------------------------------------------------- | ----------------------------- |
-| Every pull request (forks too), and a push to `main`    | `check` (types, lint, unit tests, formats, build); the whole e2e suite in Chromium (2 shards) and in WebKit; Rust on Linux when `src-tauri/` changed | check, e2e, native, ci-config |
-| Before a release (the tag, a PR into `stable`, by hand) | everything: the above, plus Rust on macOS and Windows and the iOS simulator                                                                          | all of them                   |
+| When                                                 | What runs                                                                                                                                            | Required                      |
+| ---------------------------------------------------- | ---------------------------------------------------------------------------------------------------------------------------------------------------- | ----------------------------- |
+| Every pull request (forks too), and a push to `main` | `check` (types, lint, unit tests, formats, build); the whole e2e suite in Chromium (2 shards) and in WebKit; Rust on Linux when `src-tauri/` changed | check, e2e, native, ci-config |
+| Before a release (the version bump's PR, the tag)    | everything: the above, plus Rust on macOS and Windows and the iOS simulator                                                                          | all of them                   |
 
 A change to GitHub's settings, the license or the root Markdown alone
-skips e2e (`light` in `scripts/ci-changes.mjs`). A run with no test in it
+checks only their format (`light` in `scripts/ci-changes.mjs`).
+Documentation alone (`docs`) checks format, links
+(`scripts/check-links.mjs`) and the unit tests that read `docs/`, with no
+build or e2e. A run with no test in it
 fails; a test that passes only on its retry is listed as flaky, a warning
 on the pull request, and goes on the watch list.
 
@@ -245,8 +248,8 @@ device is a manual step on a Mac.
 and a push to `main` run the quick suite: `check`, and `native` on Linux
 when the change reaches Rust. The full suite - every job below on every
 platform, whatever changed - runs on the tagged commit before a release is
-built (`release.yml` calls `ci.yml`), on a pull request into `stable`, and
-by hand (Run workflow). Run the e2e flows locally before a pull request
+built (`release.yml` calls `ci.yml`) and on the pull request that changes
+the version. Run the e2e flows locally before a pull request
 that reaches the browser. The required checks are `check`, `e2e`, `native`
 and `ci-config`; `e2e` and `native` are one-line jobs that pass when every
 job they stand for passed, or when all of them were skipped.

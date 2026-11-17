@@ -8,6 +8,7 @@ vi.mock("../../engine/controls/notices", () => notices);
 
 import { editorHandlers, stopPluginEditor } from "./broker-editor";
 import type { PluginScope } from "./broker-scope";
+import { pluginSyntaxes } from "../contributions/syntax";
 
 const scope = (id: string, name: string) =>
   ({
@@ -35,4 +36,26 @@ it("refuses a second plugin the keyboard and tells the user once", () => {
   expect(emacs["editor.captureKeys"](null)).toBe(false);
   expect(vim["editor.captureKeys"](null)).toBe(true);
   expect(emacs["editor.captureKeys"](all)).toBe(true);
+});
+
+it("takes a plugin's inline syntax as the host sends it, and lets it go with the plugin", () => {
+  const vim = editorHandlers(scope("a.vim", "Vim"));
+  const sent = /\|\|(?<text>[^|]+)\|\|/iu;
+  vim["editor.registerSyntax"]({
+    id: "spoiler",
+    pattern: sent.source,
+    flags: sent.flags,
+    style: "spoiler",
+  });
+  const [syntax] = pluginSyntaxes();
+  expect(syntax.pattern.flags).toBe("dgiu");
+  expect(syntax.tone).toBe("accent");
+  expect(() =>
+    vim["editor.registerSyntax"]({ id: "x", pattern: "a", style: "blink" }),
+  ).toThrow(/syntax "x"/);
+  expect(() =>
+    vim["editor.registerSyntax"]({ id: "y", pattern: "a?", style: "muted" }),
+  ).toThrow();
+  stopPluginEditor("a.vim");
+  expect(pluginSyntaxes()).toEqual([]);
 });

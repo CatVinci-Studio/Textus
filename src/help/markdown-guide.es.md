@@ -37,6 +37,8 @@ Todos están en el menú **Visualización** (**Visualización › Modo** para lo
 
 El panel **Esquema** de la barra lateral muestra los encabezados del documento; haz clic en uno para ir a él. Haz clic derecho en el esquema para **Expandir todo** y **Contraer todo**, o haz `Option`-clic (`Alt`-clic) en la flecha de un encabezado para plegarlos o desplegarlos todos a la vez.
 
+La sección de un encabezado también se pliega en el documento: señala el encabezado y haz clic en la flecha del margen a su izquierda, o pon el cursor en la sección y pulsa `Cmd+Option+[` (`Ctrl+Shift+[`); `Cmd+Option+]` (`Ctrl+Shift+]`) la despliega. Solo cambia la vista, nunca el texto, y una búsqueda o el esquema que llegue dentro de una sección plegada la abre.
+
 **Tamaño de la interfaz** (Ajustes › Apariencia) agranda o reduce la barra lateral, las pestañas, los menús, las pestañas de IA y los Ajustes, texto y controles a la vez; cada documento conserva su propio zoom (`Cmd+=`, `Cmd+-`). `Ctrl+Tab` y `Ctrl+Shift+Tab` pasan a la pestaña siguiente y a la anterior.
 
 ### Notas al pie, líneas y un índice

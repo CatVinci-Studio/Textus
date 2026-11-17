@@ -2,7 +2,6 @@
 import { afterEach, describe, expect, it } from "vitest";
 import { closeViews, openView, type TestView } from "../editor-view-kit";
 import {
-  addBelow,
   blockAround,
   deleteBlock,
   duplicateBlock,
@@ -78,17 +77,25 @@ describe("a block's handle", () => {
     expect(moveTo(v.view.state, b, b.pos)).toBeNull();
   });
 
-  it("deletes, duplicates and adds a line below, each one undo step", async () => {
+  it("offers a list item its list's ends, not a second place just outside them", async () => {
+    const v = await openView("Top.\n\n- one\n- two\n\nEnd.\n");
+    const one = blockOf(v, "one");
+    const list = v.view.state.doc.child(1);
+    const listAt = v.view.state.doc.child(0).nodeSize;
+    const gaps = gapsFor(v.view.state.doc, one).map((gap) => gap.pos);
+    expect(gaps).not.toContain(listAt);
+    expect(gaps).not.toContain(listAt + list.nodeSize);
+    expect(gaps).toContain(listAt + list.nodeSize - 1);
+    // A paragraph still goes either side of the list.
+    const top = gapsFor(v.view.state.doc, blockOf(v, "Top.")).map((g) => g.pos);
+    expect(top).toContain(listAt + list.nodeSize);
+  });
+
+  it("deletes and duplicates, each one undo step", async () => {
     const v = await openView("Keep.\n\nGo.\n\n- item\n");
     run(v, deleteBlock(v.view.state, blockOf(v, "Go.")));
     expect(v.markdown()).toBe("Keep.\n\n- item");
     run(v, duplicateBlock(v.view.state, blockOf(v, "Keep.")));
-    expect(v.markdown()).toBe("Keep.\n\nKeep.\n\n- item");
-    run(v, addBelow(v.view.state, blockOf(v, "item")));
-    v.type("next");
-    expect(v.markdown()).toBe("Keep.\n\nKeep.\n\n- item\n- next");
-    // The line added and what was written in it go together.
-    v.press("Mod+z");
     expect(v.markdown()).toBe("Keep.\n\nKeep.\n\n- item");
     v.press("Mod+z");
     expect(v.markdown()).toBe("Keep.\n\n- item");

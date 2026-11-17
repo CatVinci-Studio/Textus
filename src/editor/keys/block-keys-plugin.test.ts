@@ -8,7 +8,7 @@ import {
 import { tableNodes } from "@milkdown/kit/prose/tables";
 import {
   enterInTable,
-  leaveBlockquote,
+  leaveBlock,
   leaveTextBlockOnEmptyLastLine,
   newlineInCode,
   parsePipeRow,
@@ -241,10 +241,10 @@ describe("leaveTextBlockOnEmptyLastLine", () => {
   });
 });
 
-describe("leaveBlockquote", () => {
+describe("leaveBlock", () => {
   it("continues below the quote from any line", () => {
     const doc = docOf(quote(p("one"), p("two")), p("after"));
-    const next = run(leaveBlockquote, stateAt(doc, "one"))!;
+    const next = run(leaveBlock, stateAt(doc, "one"))!;
     expect(next.doc.child(0).childCount).toBe(2);
     expect(next.doc.child(1).type.name).toBe("paragraph");
     expect(next.selection.$from.depth).toBe(1);
@@ -252,22 +252,27 @@ describe("leaveBlockquote", () => {
   });
 
   it("leaves the innermost quote", () => {
-    const next = run(
-      leaveBlockquote,
-      stateAt(docOf(quote(quote(p("in")))), "in"),
-    )!;
+    const next = run(leaveBlock, stateAt(docOf(quote(quote(p("in")))), "in"))!;
     expect(next.selection.$from.depth).toBe(2);
     expect(next.selection.$from.node(1).type.name).toBe("blockquote");
   });
 
   it("leaves code blocks inside the quote to their own exit", () => {
-    expect(
-      run(leaveBlockquote, stateAt(docOf(quote(code("x"))), "x")),
-    ).toBeNull();
+    expect(run(leaveBlock, stateAt(docOf(quote(code("x"))), "x"))).toBeNull();
   });
 
-  it("does nothing outside a quote", () => {
-    expect(run(leaveBlockquote, stateAt(docOf(p("x")), "x"))).toBeNull();
+  it("leaves a table, inside a quote too, for the line below it", () => {
+    const next = run(
+      leaveBlock,
+      stateAt(docOf(quote(table(["h"], ["a"])), p("after")), "a"),
+    )!;
+    expect(next.selection.$from.node(1).type.name).toBe("blockquote");
+    expect(next.selection.$from.parent.type.name).toBe("paragraph");
+    expect(next.selection.$from.index(1)).toBe(1);
+  });
+
+  it("does nothing outside a quote or table", () => {
+    expect(run(leaveBlock, stateAt(docOf(p("x")), "x"))).toBeNull();
   });
 });
 

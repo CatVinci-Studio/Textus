@@ -95,7 +95,7 @@ Habilidades ficam na pasta skills/ ao lado deste arquivo, um arquivo
 `,
   projectOpenStyle: "Abrir perfil de estilo",
   projectPickFolder: "Escolher pasta…",
-  projectNoFolder: "Não usar nenhuma pasta",
+  projectFollowSidebar: "Usar a pasta da barra lateral",
   projectReveal: "Mostrar no gerenciador de arquivos",
   projectLearnStyle: "Aprender meu estilo com amostras…",
   projectImportReferences: "Importar referências…",
@@ -129,7 +129,7 @@ Habilidades ficam na pasta skills/ ao lado deste arquivo, um arquivo
   blockDuplicate: "Duplicar",
   blockHandlesLabel: "Alças de bloco",
   blockHandlesHelp:
-    "＋ e ⋮⋮ ao lado do bloco sob o ponteiro: adicionar um bloco, movê-lo ou transformá-lo em outro tipo.",
+    "⋮⋮ ao lado do bloco sob o ponteiro: arraste para mover o bloco, ou clique para transformá-lo, duplicá-lo ou excluí-lo.",
   smoothCaretLabel: "Cursor suave",
   menuBlockWide: "Exibição larga",
   menuBlockZoom: "Tamanho",
@@ -723,6 +723,11 @@ Habilidades ficam na pasta skills/ ao lado deste arquivo, um arquivo
     many: "{n} palavras",
     other: "{n} palavras",
   },
+  slipCount: {
+    one: "{n} problema",
+    many: "{n} problemas",
+    other: "{n} problemas",
+  },
   wordCountDetail: "{words} palavras · {characters} caracteres (sem espaços)",
   alertNote: "Nota",
   alertTip: "Dica",
@@ -775,6 +780,7 @@ Habilidades ficam na pasta skills/ ao lado deste arquivo, um arquivo
   backToStableInstall: "Instalar {version}",
   backToStableNone: "No momento não há uma versão estável para a qual voltar.",
   aiCompletionLabel: "Autocompletar com IA",
+  completionSourceLabel: "Sugestões de",
   completionToneLabel: "Tom do autocompletar",
   completionTone_default: "Seguir o documento",
   completionTone_formal: "Formal",
@@ -937,6 +943,8 @@ Habilidades ficam na pasta skills/ ao lado deste arquivo, um arquivo
   modelListLabel: "Lista de modelos",
   customTestConnection: "Testar Conexão",
   customTestSuccess: "A conexão está funcionando.",
+  customModelNotListed:
+    "Conectado, mas este endpoint não lista o modelo “{model}”. Escolha um da lista.",
   customSave: "Salvar",
   proxyLabel: "Proxy de rede",
   proxyTypeNone: "Nenhum (direto)",
@@ -1169,6 +1177,9 @@ Habilidades ficam na pasta skills/ ao lado deste arquivo, um arquivo
   activityRail: "Barra de atividade",
   activityRailHide: "Ocultar a barra de atividade",
   activityRailShow: "Mostrar a barra de atividade",
+  windowLayoutGroup: "Layout da janela",
+  classicLookNote:
+    "Prefere o aspeto do Textus antes da 1.4? Escolha Clássico, oculte a barra de atividade e mostre a barra de título numa linha própria. Reverta-os para o aspeto novo.",
   layoutLabel: "Layout",
   layoutIslands: "Ilhas flutuantes",
   layoutClassic: "Clássico",
@@ -1287,7 +1298,6 @@ Habilidades ficam na pasta skills/ ao lado deste arquivo, um arquivo
   windowMaximize: "Maximizar",
   windowRestore: "Restaurar",
   windowClose: "Fechar",
-  chatWindowTitle: AI_NAME,
   chatWindowPin: "Manter na frente",
   chatWindowPinHint: "Manter esta janela na frente do editor",
   chatWindowUnpinHint: "Deixar de manter esta janela na frente do editor",
@@ -1464,7 +1474,11 @@ Habilidades ficam na pasta skills/ ao lado deste arquivo, um arquivo
     "A engrenagem guarda o tema, as fontes e suas contas de IA.",
   tutorialEditorTitle: "Escreva como aparece",
   tutorialEditorBody:
-    "O Markdown vira formatação enquanto você digita: tente `# Um título` ou `- uma lista`.",
+    "O Markdown vira formatação enquanto você digita. Experimente cada um:",
+  tutorialEditorHeading: "Um título: `# Planos`",
+  tutorialEditorList: "Uma lista: `- leite`",
+  tutorialEditorNumbered: "Numerada: `1. primeiro`",
+  tutorialEditorTask: "Uma tarefa: `- [ ] retornar a ligação`",
   tutorialAiTitle: "Textus AI",
   tutorialAiBody:
     "Clique nas faíscas no canto superior direito para abrir o Textus AI.",
@@ -1921,6 +1935,15 @@ Habilidades ficam na pasta skills/ ao lado deste arquivo, um arquivo
   pluginPermNotifications: "Mostrar notificações do sistema",
   pluginPermAppearance: "Alterar as cores do Textus e dos seus documentos",
   pluginPermGitCommit: "Fazer commits do Git na pasta aberta com o seu Git",
+  pluginPermComments: "Ler e deixar notas na margem dos seus documentos",
+  pluginPermAiModel:
+    "Usar o seu modelo de IA (conta para o uso do seu serviço de IA)",
+  pluginAiAsk:
+    "{plugin} quer usar o seu modelo de IA. O que ele envia conta para o uso do seu serviço de IA, até {limit} tokens por mês para este plugin.",
+  pluginAiLimit:
+    "{plugin} usou os seus {limit} tokens de IA deste mês. Permitir mais {limit}?",
+  pluginAiAllow: "Permitir",
+  pluginAiUsage: "IA este mês: {used} de {limit} tokens",
   pluginPermAgents:
     "Executar um agente de IA instalado neste computador (ele pode ler e alterar arquivos)",
   pluginPermBackground:
@@ -1948,6 +1971,8 @@ Habilidades ficam na pasta skills/ ao lado deste arquivo, um arquivo
   pluginKeysTaken:
     "{name} não consegue usar o teclado: {holder} já o usa. Desligue um deles na lista de plugins da barra lateral.",
   shortcutIndentListItem: "Aumentar recuo do item",
+  shortcutFoldSection: "Recolher seção",
+  shortcutUnfoldSection: "Expandir seção",
   shortcutOutdentListItem: "Diminuir recuo do item",
   pluginKeyTaken:
     "{name}: {key} já é de “{owner}”, então não foi atribuído a “{command}”. Escolha outro em Ajustes › Atalhos.",

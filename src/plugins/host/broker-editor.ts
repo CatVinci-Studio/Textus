@@ -1,3 +1,4 @@
+import { addSlashItems, blockTypeList } from "../contributions/slash-commands";
 import { isRecord } from "../../utils/is-record";
 import { fill } from "../../i18n/fill";
 import {
@@ -33,6 +34,12 @@ import {
   removeDecorationProvider,
   type PluginDecoration,
 } from "../contributions/decorations";
+import { addSyntax, removeSyntaxes } from "../contributions/syntax";
+import {
+  addDiagnosticProvider,
+  removeDiagnosticProviders,
+  type PluginDiagnostic,
+} from "../contributions/diagnostics";
 import {
   optionalStr,
   str,
@@ -115,7 +122,13 @@ function editOf(
  * or as a proposal, going to a place in it, and what it adds while the user
  * types (hover cards, marks, the keyboard).
  */
+/** The block types each plugin registered, each with what takes it away. */
+const registeredBlockTypes = new Map<string, Map<string, () => void>>();
+
 export function editorHandlers(p: PluginScope) {
+  const blockTypes =
+    registeredBlockTypes.get(p.id) ??
+    registeredBlockTypes.set(p.id, new Map()).get(p.id)!;
   // Each call's permission is checked before it runs (api-permissions.ts).
   const doc = getActiveDocument;
   const open = () => {
@@ -127,6 +140,11 @@ export function editorHandlers(p: PluginScope) {
     "editor.getPath": () => doc()?.path ?? null,
     "editor.getText": () => doc()?.text() ?? null,
     "editor.getSelection": () => doc()?.selection() ?? null,
+    "editor.getCursor": () => {
+      const d = doc();
+      const head = d?.cursor()?.head;
+      return d?.path && head ? { path: d.path, ...head } : null;
+    },
     "editor.getBlocks": () => doc()?.blocks() ?? null,
     "editor.getOutline": () => {
       const text = doc()?.text();
@@ -170,6 +188,35 @@ export function editorHandlers(p: PluginScope) {
         p.request<unknown>("$provideOutline", { blocks }),
       ),
     "editor.unregisterOutline": () => removeOutlineProvider(p.id),
+    "editor.blockTypes": () => blockTypeList(),
+    "editor.registerBlockType": ({ id, label, keywords }: Params) => {
+      const type = str(id, "id");
+      blockTypes.get(type)?.();
+      blockTypes.set(
+        type,
+        addSlashItems(
+          p.id,
+          [
+            {
+              label: str(label, "label"),
+              detail: p.name(),
+              keywords: typeof keywords === "string" ? keywords : undefined,
+              shown: () => true,
+              run: () =>
+                void p
+                  .request("$insertBlockType", { id: type })
+                  .catch(() => {}),
+            },
+          ],
+          `${p.id}#${type}`,
+        ),
+      );
+    },
+    "editor.unregisterBlockType": ({ id }: Params) => {
+      const type = str(id, "id");
+      blockTypes.get(type)?.();
+      blockTypes.delete(type);
+    },
     "editor.registerHover": () => {
       addHoverProvider(
         p.id,
@@ -178,14 +225,44 @@ export function editorHandlers(p: PluginScope) {
       );
     },
     "editor.registerDecorations": () => {
-      addDecorationProvider(p.id, (blocks, all) =>
+      addDecorationProvider(p.id, (blocks, all, path) =>
         p.request<PluginDecoration[]>("$decorate", {
           blocks,
-          document: { blocks: all },
+          document: { blocks: all, path },
         }),
       );
     },
     "editor.unregisterDecorations": () => removeDecorationProvider(p.id),
+    "editor.registerDiagnostics": ({ id }: Params) => {
+      const name = str(id, "id");
+      addDiagnosticProvider(`${p.id}\n${name}`, {
+        plugin: p.id,
+        name: p.name(),
+        ask: (blocks, all, path) =>
+          p.request<PluginDiagnostic[]>("$diagnose", {
+            id: name,
+            blocks,
+            document: { blocks: all, path },
+          }),
+      });
+    },
+    "editor.unregisterDiagnostics": ({ id }: Params) =>
+      removeDiagnosticProviders((key) => key === `${p.id}\n${String(id)}`),
+    "editor.registerSyntax": (syntax: Params) => {
+      const name = str(syntax.id, "id");
+      const added = addSyntax(`${p.id}\n${name}`, {
+        pattern: str(syntax.pattern, "pattern"),
+        flags: typeof syntax.flags === "string" ? syntax.flags : "",
+        style: str(syntax.style, "style"),
+        tone: typeof syntax.tone === "string" ? syntax.tone : undefined,
+      });
+      if (!added)
+        throw new Error(
+          `syntax "${name}": a pattern that matches some text, and a style Textus has`,
+        );
+    },
+    "editor.unregisterSyntax": ({ id }: Params) =>
+      removeSyntaxes((key) => key === `${p.id}\n${String(id)}`),
     "editor.captureKeys": (capture: Params | null) => {
       const held = setKeyCapture(
         p.id,
@@ -210,4 +287,9 @@ export function stopPluginEditor(plugin: string): void {
   releaseKeys(plugin);
   removeHoverProvider(plugin);
   removeDecorationProvider(plugin);
+  removeDiagnosticProviders((_key, provider) => provider.plugin === plugin);
+  removeSyntaxes((key) => key.startsWith(`${plugin}\n`));
+  for (const remove of registeredBlockTypes.get(plugin)?.values() ?? [])
+    remove();
+  registeredBlockTypes.delete(plugin);
 }

@@ -156,6 +156,46 @@ test("switching between documents leaves each where it was read", async ({
   }
 });
 
+test("a narrower window keeps the paragraph that was at the top, not the offset", async ({
+  page,
+}) => {
+  const words =
+    "a long line of words that wraps again when the page narrows ".repeat(6);
+  const doc = Array.from({ length: 80 }, (_, i) => `P${i} ${words}`).join(
+    "\n\n",
+  );
+  await page.setViewportSize({ width: 1280, height: 760 });
+  await page.addInitScript(
+    (d) => ((window as unknown as Record<string, unknown>).__devFs = d),
+    { "/work/long.md": doc },
+  );
+  await openApp(page);
+  // As WebKit, which keeps no scroll anchor of its own.
+  await page.addStyleTag({ content: "* { overflow-anchor: none; }" });
+  await openPath(page, "/work/long.md");
+  const active = page.locator('[data-active-tab="true"]');
+  const scroller = active.locator(".editor-scroll");
+  await expect(active.locator(".ProseMirror")).toContainText("P79");
+  /** The paragraph at the scroller's top. */
+  const atTop = () =>
+    scroller.evaluate((el) => {
+      const top = el.getBoundingClientRect().top + 1;
+      const p = [...el.querySelectorAll(".ProseMirror > p")].find(
+        (b) => b.getBoundingClientRect().bottom > top,
+      );
+      return p?.textContent?.split(" ")[0];
+    });
+  await scroller.hover();
+  await page.mouse.wheel(0, 4000);
+  await expect.poll(atTop).not.toBe("P0");
+  await page.waitForTimeout(600);
+  const before = await atTop();
+  await page.setViewportSize({ width: 820, height: 760 });
+  await expect.poll(atTop).toBe(before);
+  await page.setViewportSize({ width: 1280, height: 760 });
+  await expect.poll(atTop).toBe(before);
+});
+
 test("a document comes back with its caret, its undo and its redo", async ({
   page,
 }) => {

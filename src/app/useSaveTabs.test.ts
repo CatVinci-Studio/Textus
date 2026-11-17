@@ -1,7 +1,8 @@
 // @vitest-environment jsdom
 import { act, cleanup, renderHook } from "@testing-library/react";
 import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
-import { saveFolder, useSaveTabs, movedPictures } from "./useSaveTabs";
+import { saveFolder, useSaveTabs } from "./useSaveTabs";
+import { movedPictures } from "./useSaveWrites";
 import { setUiState } from "../storage/ui-state";
 import { useTabState } from "./tabs/useTabState";
 import { fs } from "../platform/ipc";

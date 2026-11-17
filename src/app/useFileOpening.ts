@@ -1,11 +1,6 @@
 import { fill } from "../i18n/fill";
 import { wasClosed } from "./close-flow";
-import { useCallback, useEffect, useRef } from "react";
-import {
-  listenToThisWebview,
-  listenToThisWindow,
-  unlistenAll,
-} from "../platform/events";
+import { useCallback, useRef } from "react";
 import {
   makeBlankTab,
   readDocFromDisk,
@@ -14,15 +9,11 @@ import {
   type DocTab,
 } from "../document/doc-tabs";
 import { exportDoc, fs, session, windowIpc } from "../platform/ipc";
-import { DROP_IMAGE_FILES_EVENT, sendAppEvent } from "../utils/events";
-import { openDocument } from "../utils/open-document";
 import { useDocumentOpener } from "./useDocumentOpener";
+import { isFolder } from "./window-file-events";
 import { setTabJump, type TabJump } from "../editor/tab-jump";
-import { lastCaret } from "../document/last-places";
+import { lastCaret, lastScroll } from "../document/last-places";
 import { lastViewMode } from "../editor/modes/view-mode";
-import { isMobileApp } from "../platform/capabilities";
-import { isWindowsPlatform } from "../platform/os";
-import { dropPointInPage, sortDroppedPaths } from "./dropped-files";
 import { isWordDocument, wordDocumentTab } from "../document/word-import";
 import { showMessage } from "../engine/controls/app-dialog";
 import { loadPlugins, revealInPluginTab } from "../plugins/manager";
@@ -41,7 +32,8 @@ import type { TabState } from "./tabs/useTabState";
 import { splitForDrop } from "./islands/split-drop";
 import type { DropTarget } from "../engine/layout/drop-zones";
 import { explainError } from "../utils/error-explain";
-import { isBinaryContent, openUnreadable, pluginTab } from "./open-unreadable";
+import { isBinaryContent, openUnreadable } from "./open-unreadable";
+import { pluginTab } from "../document/plugin-tab";
 import { tabInUse } from "../engine/layout/store";
 
 /** How a document opens, beyond which file. */
@@ -80,7 +72,58 @@ function openingJump(
   if (open.anchor) return { kind: "heading", anchor: open.anchor };
   const at =
     open.restoreCaret && restoreCarets ? lastCaret(path, diskMtime) : null;
-  return at && { kind: "caret", at };
+  // Where it was read, if kept, decides the page; the caret only goes back.
+  return at && { kind: "caret", at, stay: !!lastScroll(path, diskMtime) };
+}
+
+/** Tabs made for a path, until they are among the window's tabs: an open
+ *  of the same path meanwhile shows that one instead of making another. */
+function useJustOpened(tabsRef: TabState["tabsRef"]) {
+  const opened = useRef(new Map<string, { id: string; at: number }>());
+  const justOpened = useCallback(
+    (path: string): string | null => {
+      const made = opened.current.get(path);
+      if (!made) return null;
+      if (
+        wasClosed(made.id) ||
+        tabsRef.current.some((tab) => tab.id === made.id)
+      ) {
+        opened.current.delete(path);
+        return null;
+      }
+      // Still arriving (a moment); a time limit too, should it never come.
+      if (Date.now() - made.at < 2000) return made.id;
+      opened.current.delete(path);
+      return null;
+    },
+    [tabsRef],
+  );
+  return { opened, justOpened };
+}
+
+/** File > Open, and File > Open Recent. */
+function useOpenMenus(
+  openFile: (path: string, open?: OpenOptions) => Promise<void>,
+  dialogFilters: { textFilter: string; wordFilter: string; allFilter: string },
+  liveTabs: TabState["liveTabs"],
+) {
+  const openFileDialog = useCallback(async () => {
+    const picked = await fs.openFileDialog(dialogFilters);
+    if (picked) await openFile(picked);
+  }, [openFile, dialogFilters]);
+
+  // File > Open Recent: an untouched window takes the file as File > Open
+  // would; otherwise it opens as a file from outside does.
+  const openRecentFile = useCallback(
+    async (path: string) => {
+      if (windowIsUntouched(liveTabs()))
+        await openFile(path, { restoreCaret: true });
+      else await windowIpc.openPaths([path]);
+    },
+    [liveTabs, openFile],
+  );
+
+  return { openFileDialog, openRecentFile };
 }
 
 /**
@@ -184,27 +227,7 @@ export function useFileOpening(opts: {
     [t, onWordDocumentOpened],
   );
 
-  // Tabs made for a path, until they are among the window's tabs: an open
-  // of the same path meanwhile shows that one instead of making another.
-  const opened = useRef(new Map<string, { id: string; at: number }>());
-  const justOpened = useCallback(
-    (path: string): string | null => {
-      const made = opened.current.get(path);
-      if (!made) return null;
-      if (
-        wasClosed(made.id) ||
-        tabsRef.current.some((tab) => tab.id === made.id)
-      ) {
-        opened.current.delete(path);
-        return null;
-      }
-      // Still arriving (a moment); a time limit too, should it never come.
-      if (Date.now() - made.at < 2000) return made.id;
-      opened.current.delete(path);
-      return null;
-    },
-    [tabsRef],
-  );
+  const { opened, justOpened } = useJustOpened(tabsRef);
   const openPathInTab = useCallback(
     async (path: string, open: OpenOptions = {}) => {
       // Beside the tab in front: once the tab is among the window's.
@@ -280,7 +303,15 @@ export function useFileOpening(opts: {
       setTabs((prev) => [...prev, newTab]);
       show(newTab.id);
     },
-    [tabsRef, setTabs, setActiveTabId, restoreCarets, readDocument, justOpened],
+    [
+      tabsRef,
+      setTabs,
+      setActiveTabId,
+      restoreCarets,
+      readDocument,
+      justOpened,
+      opened,
+    ],
   );
 
   // A session's documents coming back: read side by side and made into
@@ -377,20 +408,10 @@ export function useFileOpening(opts: {
   // Links, cards, projects and the detached chat: each in a tab of its own.
   useDocumentOpener(openPathInTab, t);
 
-  const openFileDialog = useCallback(async () => {
-    const picked = await fs.openFileDialog(dialogFilters);
-    if (picked) await openFile(picked);
-  }, [openFile, dialogFilters]);
-
-  // File > Open Recent: an untouched window takes the file as File > Open
-  // would; otherwise it opens as a file from outside does.
-  const openRecentFile = useCallback(
-    async (path: string) => {
-      if (windowIsUntouched(liveTabs()))
-        await openFile(path, { restoreCaret: true });
-      else await windowIpc.openPaths([path]);
-    },
-    [liveTabs, openFile],
+  const { openFileDialog, openRecentFile } = useOpenMenus(
+    openFile,
+    dialogFilters,
+    liveTabs,
   );
 
   return {
@@ -401,72 +422,4 @@ export function useFileOpening(opts: {
     openFileDialog,
     openRecentFile,
   };
-}
-
-/**
- * OS opens on an already-running instance in tab mode, pushed to exactly
- * this window; a catch-all listener would open it in every window.
- */
-export function useOpenPathsPush(
-  openPathInTab: (path: string, open?: OpenOptions) => Promise<void>,
-): void {
-  useEffect(() => {
-    const unlisten = listenToThisWindow<string[]>(
-      "open-paths-as-tabs",
-      async (event) => {
-        // Open Recent from a non-empty window arrives this way too. In
-        // order: the last one in front.
-        for (const p of event.payload)
-          await openDocument(p, { restoreCaret: true });
-      },
-    );
-    return unlistenAll(unlisten);
-  }, [openPathInTab]);
-}
-
-/**
- * Files dropped on this window from a file manager. Each document gets its
- * own tab, never replacing the one being read; only an untouched Untitled
- * tab gives way. Images go to the editor at the drop point, and a folder
- * opens in the sidebar, as Open Folder does.
- */
-export function useFileDrop(
-  openFile: (path: string) => Promise<void>,
-  openPathInTab: (path: string) => Promise<void>,
-  openFolder: (path: string) => void,
-): void {
-  useEffect(() => {
-    if (isMobileApp) return;
-    const unlisten = listenToThisWebview<{
-      paths: string[];
-      position: { x: number; y: number };
-    }>("tauri://drag-drop", async (event) => {
-      const { documents, images } = sortDroppedPaths(event.payload.paths);
-      if (images.length > 0)
-        sendAppEvent(DROP_IMAGE_FILES_EVENT, {
-          paths: images,
-          point: dropPointInPage(
-            event.payload.position,
-            isWindowsPlatform(),
-            window.devicePixelRatio,
-          ),
-        });
-      // What can't be read as text is a folder, opened in the sidebar, or a
-      // file that opens nothing, as in File > Open. Only the first may take
-      // an untouched draft's place.
-      for (const [i, path] of documents.entries())
-        await (i === 0 ? openFile : openPathInTab)(path).catch(async () => {
-          if (await isFolder(path)) openFolder(path);
-        });
-    });
-    return unlistenAll(unlisten);
-  }, [openFile, openPathInTab, openFolder]);
-}
-
-/** Whether `path` is a folder: only a folder lists. */
-function isFolder(path: string): Promise<boolean> {
-  return fs.listDir(path).then(
-    () => true,
-    () => false,
-  );
 }

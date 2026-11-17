@@ -331,6 +331,30 @@
           "markdownDescription": "Denies the create_document command without any pre-configured scope."
         },
         {
+          "description": "Enables the create_entry command without any pre-configured scope.",
+          "type": "string",
+          "const": "allow-create-entry",
+          "markdownDescription": "Enables the create_entry command without any pre-configured scope."
+        },
+        {
+          "description": "Denies the create_entry command without any pre-configured scope.",
+          "type": "string",
+          "const": "deny-create-entry",
+          "markdownDescription": "Denies the create_entry command without any pre-configured scope."
+        },
+        {
+          "description": "Enables the delete_entry command without any pre-configured scope.",
+          "type": "string",
+          "const": "allow-delete-entry",
+          "markdownDescription": "Enables the delete_entry command without any pre-configured scope."
+        },
+        {
+          "description": "Denies the delete_entry command without any pre-configured scope.",
+          "type": "string",
+          "const": "deny-delete-entry",
+          "markdownDescription": "Denies the delete_entry command without any pre-configured scope."
+        },
+        {
           "description": "Enables the haptic command without any pre-configured scope.",
           "type": "string",
           "const": "allow-haptic",
@@ -353,6 +377,18 @@
           "type": "string",
           "const": "deny-list-folder",
           "markdownDescription": "Denies the list_folder command without any pre-configured scope."
+        },
+        {
+          "description": "Enables the move_entry command without any pre-configured scope.",
+          "type": "string",
+          "const": "allow-move-entry",
+          "markdownDescription": "Enables the move_entry command without any pre-configured scope."
+        },
+        {
+          "description": "Denies the move_entry command without any pre-configured scope.",
+          "type": "string",
+          "const": "deny-move-entry",
+          "markdownDescription": "Denies the move_entry command without any pre-configured scope."
         },
         {
           "description": "Enables the pick_document command without any pre-configured scope.",
@@ -415,6 +451,18 @@
           "markdownDescription": "Denies the remembered command without any pre-configured scope."
         },
         {
+          "description": "Enables the rename_entry command without any pre-configured scope.",
+          "type": "string",
+          "const": "allow-rename-entry",
+          "markdownDescription": "Enables the rename_entry command without any pre-configured scope."
+        },
+        {
+          "description": "Denies the rename_entry command without any pre-configured scope.",
+          "type": "string",
+          "const": "deny-rename-entry",
+          "markdownDescription": "Denies the rename_entry command without any pre-configured scope."
+        },
+        {
           "description": "Enables the share command without any pre-configured scope.",
           "type": "string",
           "const": "allow-share",
@@ -439,10 +487,10 @@
           "markdownDescription": "Denies the write_text command without any pre-configured scope."
         },
         {
-          "description": "Everything Textus's iOS and Android document access needs.\n#### This default permission set includes:\n\n- `allow-pick-document`\n- `allow-pick-folder`\n- `allow-create-document`\n- `allow-read-text`\n- `allow-read-data`\n- `allow-write-text`\n- `allow-list-folder`\n- `allow-remembered`\n- `allow-begin-access`\n- `allow-share`\n- `allow-haptic`\n- `allow-appearance`",
+          "description": "Everything Textus's iOS and Android document access needs.\n#### This default permission set includes:\n\n- `allow-pick-document`\n- `allow-pick-folder`\n- `allow-create-document`\n- `allow-read-text`\n- `allow-read-data`\n- `allow-write-text`\n- `allow-list-folder`\n- `allow-create-entry`\n- `allow-rename-entry`\n- `allow-move-entry`\n- `allow-delete-entry`\n- `allow-remembered`\n- `allow-begin-access`\n- `allow-share`\n- `allow-haptic`\n- `allow-appearance`",
           "type": "string",
           "const": "default",
-          "markdownDescription": "Everything Textus's iOS and Android document access needs.\n#### This default permission set includes:\n\n- `allow-pick-document`\n- `allow-pick-folder`\n- `allow-create-document`\n- `allow-read-text`\n- `allow-read-data`\n- `allow-write-text`\n- `allow-list-folder`\n- `allow-remembered`\n- `allow-begin-access`\n- `allow-share`\n- `allow-haptic`\n- `allow-appearance`"
+          "markdownDescription": "Everything Textus's iOS and Android document access needs.\n#### This default permission set includes:\n\n- `allow-pick-document`\n- `allow-pick-folder`\n- `allow-create-document`\n- `allow-read-text`\n- `allow-read-data`\n- `allow-write-text`\n- `allow-list-folder`\n- `allow-create-entry`\n- `allow-rename-entry`\n- `allow-move-entry`\n- `allow-delete-entry`\n- `allow-remembered`\n- `allow-begin-access`\n- `allow-share`\n- `allow-haptic`\n- `allow-appearance`"
         }
       ]
     }

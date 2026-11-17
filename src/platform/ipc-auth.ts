@@ -62,8 +62,6 @@ export const auth = {
   clearCustomEndpoint: () => command("clear_custom_endpoint"),
   fetchCustomModels: (baseUrl: string, apiKey: string | null) =>
     aiCommand("fetch_custom_models", baseUrl, apiKey),
-  testCustomEndpoint: (baseUrl: string, apiKey: string | null) =>
-    aiCommand("test_custom_endpoint", baseUrl, apiKey),
 };
 
 /** Image-host tokens, kept in the provider-key store under the id Rust

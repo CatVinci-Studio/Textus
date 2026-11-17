@@ -1,15 +1,22 @@
 import { CJK_SCRIPT } from "../../utils/cjk";
 import { focusInPlace } from "../../editor/focus-in-place";
 import { TextSelection } from "@milkdown/kit/prose/state";
-import { useCallback, useRef, useState, type MouseEvent } from "react";
+import {
+  useCallback,
+  useRef,
+  useState,
+  type Dispatch,
+  type MouseEvent,
+  type SetStateAction,
+} from "react";
 import { editorViewCtx } from "@milkdown/kit/core";
 import type { Decoration } from "@milkdown/kit/prose/view";
 import {
-  grammarIssueAt,
-  grammarKey,
-  ignoreGrammarIssue,
-  type GrammarDecorationSpec,
-} from "./grammar-check-plugin";
+  issueAt,
+  issueSource,
+  issuesIn,
+  type IssueSpec,
+} from "../../editor/issues/issue-sources";
 import { grammarKind } from "./grammar-kind";
 import type { EditorState } from "@milkdown/kit/prose/state";
 import type { GrammarPopoverInfo } from "./GrammarPopover";
@@ -29,7 +36,7 @@ function popoverFor(
   siblings: Decoration[] = [deco],
   state?: EditorState,
 ): GrammarPopoverInfo {
-  const spec = deco.spec as GrammarDecorationSpec;
+  const spec = deco.spec as IssueSpec;
   const shown = state ? withContext(state, deco, spec) : null;
   const index = siblings.findIndex(
     (d) => d.from === deco.from && d.to === deco.to,
@@ -42,7 +49,10 @@ function popoverFor(
     issue: spec.issue,
     suggestion: spec.suggestion,
     original: spec.original,
-    kind: grammarKind(spec.original, spec.suggestion, spec.rule),
+    kind: grammarKind(spec.original, spec.suggestion ?? "", spec.rule),
+    label: spec.label,
+    source: spec.source,
+    otherFix: spec.fix && { label: spec.fix.label },
     shownOriginal: shown?.original,
     shownSuggestion: shown?.suggestion,
     index: Math.max(0, index),
@@ -55,9 +65,10 @@ function popoverFor(
 function withContext(
   state: EditorState,
   deco: Decoration,
-  spec: GrammarDecorationSpec,
+  spec: IssueSpec,
 ): { original: string; suggestion: string } | null {
   const original = spec.original ?? "";
+  if (spec.suggestion === undefined) return null;
   if ([...original].length !== 1 || !CJK_SCRIPT.test(original)) return null;
   const $pos = state.doc.resolve(deco.from);
   const end = $pos.end();
@@ -77,23 +88,19 @@ function siblingsOf(state: EditorState, deco: Decoration): Decoration[] {
   const $pos = state.doc.resolve(deco.from);
   const start = $pos.start();
   const end = $pos.end();
-  return ((grammarKey.getState(state)?.find(start, end) ?? []) as Decoration[])
-    .slice()
-    .sort((a, b) => a.from - b.from);
+  return issuesIn(state, start, end);
 }
 
-/** Opens the popover over a hovered grammar underline, hiding it on a short
- *  delay so the pointer can travel into the popover. */
-export function useGrammarPopover(
+/** The card shown while the pointer is on an underline, and a moment after
+ *  it leaves, unless it moved onto the card. */
+function usePointerHover(
   run: EditorRunner,
-  getStaleMessage: () => string,
+  setPopover: Dispatch<SetStateAction<GrammarPopoverInfo | null>>,
+  setApplyError: (error: string | null) => void,
 ) {
-  const [popover, setPopover] = useState<GrammarPopoverInfo | null>(null);
-  const [applyError, setApplyError] = useState<string | null>(null);
   const hideTimer = useRef<ReturnType<typeof setTimeout> | undefined>(
     undefined,
   );
-
   const onMouseOver = useCallback(
     (e: MouseEvent) => {
       const target = (e.target as HTMLElement).closest?.(
@@ -105,8 +112,7 @@ export function useGrammarPopover(
       run((ctx) => {
         const view = ctx.get(editorViewCtx);
         const pos = view.posAtDOM(target, 0);
-        const found = grammarKey.getState(view.state)?.find(pos, pos + 1) ?? [];
-        const deco = found[0];
+        const deco = issuesIn(view.state, pos, pos + 1)[0];
         if (!deco) return;
         const rect = target.getBoundingClientRect();
         setApplyError(null);
@@ -121,27 +127,40 @@ export function useGrammarPopover(
         );
       });
     },
-    [run],
+    [run, setPopover, setApplyError],
   );
 
-  const onMouseOut = useCallback((e: MouseEvent) => {
-    const target = (e.target as HTMLElement).closest?.(".grammar-issue");
-    if (!target) return;
-    const related = e.relatedTarget as HTMLElement | null;
-    if (related?.closest?.(".grammar-popover")) return;
-    hideTimer.current = setTimeout(() => setPopover(null), HOVER_GRACE_MS);
+  const onMouseOut = useCallback(
+    (e: MouseEvent) => {
+      const target = (e.target as HTMLElement).closest?.(".grammar-issue");
+      if (!target) return;
+      const related = e.relatedTarget as HTMLElement | null;
+      if (related?.closest?.(".grammar-popover")) return;
+      hideTimer.current = setTimeout(() => setPopover(null), HOVER_GRACE_MS);
+    },
+    [setPopover],
+  );
+
+  const cancelHide = useCallback(() => {
+    if (hideTimer.current) clearTimeout(hideTimer.current);
   }, []);
 
-  // The caret entering an underline opens the popover; leaving closes one
-  // the caret opened, never one the pointer is using.
+  return { onMouseOver, onMouseOut, cancelHide };
+}
+
+/** The caret entering an underline opens the card; leaving closes one the
+ *  caret opened, never one the pointer is using. */
+function useCaretOpens(
+  run: EditorRunner,
+  setPopover: Dispatch<SetStateAction<GrammarPopoverInfo | null>>,
+  setApplyError: (error: string | null) => void,
+) {
   const openedByCaret = useRef(false);
   const onCaretMove = useCallback(() => {
     run((ctx) => {
       const view = ctx.get(editorViewCtx);
       const { selection } = view.state;
-      const deco = selection.empty
-        ? grammarIssueAt(view.state, selection.from)
-        : null;
+      const deco = selection.empty ? issueAt(view.state, selection.from) : null;
       if (!deco) {
         if (openedByCaret.current) {
           openedByCaret.current = false;
@@ -164,17 +183,34 @@ export function useGrammarPopover(
             ),
       );
     });
-  }, [run]);
+  }, [run, setPopover, setApplyError]);
+
+  return onCaretMove;
+}
+
+/** Opens the popover over a hovered grammar underline, hiding it on a short
+ *  delay so the pointer can travel into the popover. */
+export function useGrammarPopover(
+  run: EditorRunner,
+  getStaleMessage: () => string,
+) {
+  const [popover, setPopover] = useState<GrammarPopoverInfo | null>(null);
+  const [applyError, setApplyError] = useState<string | null>(null);
+  const { onMouseOver, onMouseOut, cancelHide } = usePointerHover(
+    run,
+    setPopover,
+    setApplyError,
+  );
+  const onCaretMove = useCaretOpens(run, setPopover, setApplyError);
 
   const ignore = useCallback(() => {
     if (!popover) return;
-    run((ctx) =>
-      ignoreGrammarIssue(
-        ctx.get(editorViewCtx),
-        popover.original,
-        popover.suggestion,
-      ),
-    );
+    run((ctx) => {
+      const view = ctx.get(editorViewCtx);
+      const here = issueAt(view.state, popover.from);
+      const spec = here?.spec as IssueSpec | undefined;
+      if (spec) issueSource(spec)?.ignore(view, spec);
+    });
     setPopover(null);
   }, [popover, run]);
 
@@ -184,7 +220,7 @@ export function useGrammarPopover(
       if (!popover) return;
       run((ctx) => {
         const view = ctx.get(editorViewCtx);
-        const here = grammarIssueAt(view.state, popover.from);
+        const here = issueAt(view.state, popover.from);
         if (!here) return;
         const all = siblingsOf(view.state, here);
         const i = all.findIndex((d) => d.from === here.from);
@@ -200,10 +236,6 @@ export function useGrammarPopover(
     [popover, run],
   );
 
-  const cancelHide = useCallback(() => {
-    if (hideTimer.current) clearTimeout(hideTimer.current);
-  }, []);
-
   const hide = useCallback(() => {
     setPopover(null);
     setApplyError(null);
@@ -215,6 +247,19 @@ export function useGrammarPopover(
     if (!popover) return false;
     const { suggestion, original } = popover;
     let applied = false;
+    if (popover.otherFix) {
+      run((ctx) => {
+        const view = ctx.get(editorViewCtx);
+        const here = issueAt(view.state, popover.from);
+        const spec = here?.spec as IssueSpec | undefined;
+        applied = !!spec?.fix?.apply(view);
+        if (applied) focusInPlace(view);
+      });
+      if (applied) setPopover(null);
+      else setApplyError(getStaleMessage());
+      return applied;
+    }
+    if (suggestion === undefined) return false;
     run((ctx) => {
       const view = ctx.get(editorViewCtx);
       const { state } = view;
@@ -222,10 +267,14 @@ export function useGrammarPopover(
       // The hover-time range goes stale on any edit. A surviving live
       // decoration is trustworthy: the plugin drops ones whose text changed.
       // The same slip may be written twice: the one nearest the card's.
-      const live = (grammarKey.getState(state)?.find() ?? [])
+      const live = issuesIn(state)
         .filter((deco: Decoration) => {
-          const spec = deco.spec as GrammarDecorationSpec;
-          return spec.original === original && spec.suggestion === suggestion;
+          const spec = deco.spec as IssueSpec;
+          return (
+            spec.source === popover.source &&
+            spec.original === original &&
+            spec.suggestion === suggestion
+          );
         })
         .sort(
           (a: Decoration, b: Decoration) =>
@@ -250,7 +299,8 @@ export function useGrammarPopover(
       tr.setSelection(
         TextSelection.create(tr.doc, range.from + suggestion.length),
       );
-      view.dispatch(markChangeSource(tr, "ai"));
+      const source = live && issueSource(live.spec as IssueSpec);
+      view.dispatch(markChangeSource(tr, source?.changeSource ?? "ai"));
       focusInPlace(view);
       applied = true;
     });

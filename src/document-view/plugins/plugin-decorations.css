@@ -59,3 +59,64 @@
   text-decoration-style: dotted;
   text-decoration-color: var(--plugin-tone, var(--doc-accent));
 }
+
+/* A mark in the margin right of a block, on its first line, as the fold
+   caret is in the margin on its left. */
+.ProseMirror:has(> .plugin-gutter),
+.ProseMirror > :has(> .plugin-gutter) {
+  position: relative;
+}
+
+.plugin-gutter {
+  position: absolute;
+  right: calc(-1 * var(--doc-gutter));
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 1.25em;
+  height: 1lh;
+  padding: 0;
+  border: none;
+  background: none;
+  color: var(--plugin-tone);
+  font: inherit;
+  font-size: 0.8em;
+  line-height: inherit;
+  user-select: none;
+}
+
+button.plugin-gutter {
+  cursor: pointer;
+}
+
+.plugin-gutter[data-icon="dot"]::before {
+  width: 6px;
+  height: 6px;
+  border-radius: 50%;
+  background: currentColor;
+  content: "";
+}
+
+.plugin-gutter[data-icon="svg"]::before {
+  width: 1em;
+  height: 1em;
+  background: currentColor;
+  mask: var(--icon) center / contain no-repeat;
+  content: "";
+}
+
+@media (hover: hover) {
+  button.plugin-gutter:hover {
+    border-radius: var(--shape-xs);
+    background: color-mix(in srgb, currentColor 12%, transparent);
+  }
+}
+
+/* Under a finger: 44 square to press, the mark itself as drawn. */
+@media (pointer: coarse) {
+  button.plugin-gutter::after {
+    position: absolute;
+    inset: -10px -12px;
+    content: "";
+  }
+}

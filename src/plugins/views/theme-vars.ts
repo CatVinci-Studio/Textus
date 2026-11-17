@@ -122,11 +122,6 @@ export const WEBVIEW_THEME_VARS = [
   "--motion-mark-bg",
 ] as const;
 
-/** Whether the window shows its dark appearance now. */
-export function windowIsDark(): boolean {
-  return getComputedStyle(document.documentElement).colorScheme === "dark";
-}
-
 /** A `:root {…}` rule giving each variable its value in the window now. A
  *  page drawn in the document grows with the document's zoom, not with
  *  the window. */

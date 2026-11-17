@@ -1,5 +1,5 @@
 import { tabIsDirty, type DocTab } from "../document/doc-tabs";
-import { isWithin } from "../files/tree-root";
+import { isWithin } from "../utils/path";
 
 /**
  * What Close Folder does to the tabs: the saved documents inside `folder`
@@ -10,8 +10,13 @@ export function folderTabsToClose(
   tabs: DocTab[],
   folder: string,
 ): { close: string[]; blank: boolean } {
+  // A plugin's view shows its file by `view.resource` (a .base page).
+  const fileOf = (tab: DocTab) => tab.path ?? tab.view?.resource ?? null;
   const close = tabs
-    .filter((tab) => tab.path && isWithin(tab.path, folder) && !tabIsDirty(tab))
+    .filter((tab) => {
+      const file = fileOf(tab);
+      return file && isWithin(file, folder) && !tabIsDirty(tab);
+    })
     .map((tab) => tab.id);
   return { close, blank: close.length > 0 && close.length === tabs.length };
 }

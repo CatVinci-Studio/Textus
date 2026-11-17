@@ -27,6 +27,19 @@
   cursor: default;
 }
 
+/* Slips plugins found: a quiet capsule in the warning's colour, its list
+   a menu. */
+.document-corner .slip-count {
+  padding: 2px 8px;
+  border: none;
+  border-radius: var(--shape-pill);
+  corner-shape: round;
+  background: color-mix(in srgb, var(--ui-warning) 14%, var(--doc-bg));
+  color: var(--ui-warning);
+  font: inherit;
+  cursor: pointer;
+}
+
 /* A phone's format strip is the sheet's foot: the readouts sit over it. */
 :root[data-window-chrome="mobile"] .document-corner {
   padding-bottom: calc(48px + var(--space-2));

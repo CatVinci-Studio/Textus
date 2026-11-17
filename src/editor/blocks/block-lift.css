@@ -1,0 +1,62 @@
+/* A block pulled by its handle (block-drag.ts), as an island is: the
+   block itself lifted off the page under the pointer, the room it will
+   take open where it lands, the blocks around moved aside. */
+
+/* Inside the document: the block itself at its own size, carried over
+   the page as it is - no frame, no shadow, no backing. */
+.block-drag-lift.tx-drag-ghost {
+  scale: none;
+  /* Its text wraps as on the page. */
+  box-sizing: content-box;
+  width: fit-content;
+  border-radius: 0;
+  background: none;
+  box-shadow: none;
+  color: var(--doc-text, var(--ui-text));
+}
+
+/* Its ⋮⋮, carried along under the pointer as part of the block. */
+.block-drag-lift > .block-drag-grip {
+  position: absolute;
+  background: none;
+  color: var(--doc-muted);
+}
+
+/* A list item in its list as it stood, the list's indent taken off; its
+   marker's reach is set from script (block-lift.ts). */
+.block-drag-lift > .milkdown > :is(ul, ol) {
+  margin: 0;
+  padding: 0;
+}
+
+.block-drag-lift > .milkdown > *,
+.block-drag-lift > .milkdown > :is(ul, ol) > li {
+  margin-top: 0;
+  margin-bottom: 0;
+}
+
+/* Where it will land - in its own place while it would stay - the room
+   it takes: as tall as the block, its outline the block's own (its marker
+   and words, not the margin beside it), the islands' quiet dashed one. */
+.milkdown .block-drag-room {
+  position: relative;
+  display: block;
+  list-style: none;
+  pointer-events: none;
+}
+
+.milkdown .block-drag-room::before {
+  position: absolute;
+  top: var(--room-top, 0);
+  bottom: var(--room-top, 0);
+  left: var(--room-left, 0);
+  width: var(--room-width, 100%);
+  border-radius: var(--shape-s);
+  background: var(--drop-room-slot) center / 100% 100% no-repeat;
+  content: "";
+}
+
+/* Out of the page while it is carried: its room stands for it. */
+.milkdown .block-drag-gone {
+  display: none;
+}

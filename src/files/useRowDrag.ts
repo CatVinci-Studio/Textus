@@ -14,6 +14,7 @@ import { canMoveInto, failureText } from "./tree-shared";
 import { dragGhost } from "../engine/drag/ghost";
 import { trackDrag } from "../engine/drag/pointer-drag";
 import { useLatest } from "../utils/hooks/useLatest";
+import { edgeScroll } from "../engine/drag/edge-scroll";
 
 /** A row being dragged, and the folder under the pointer. */
 interface Drag {
@@ -79,6 +80,17 @@ export function useRowDrag(
           ? dir
           : null;
       };
+      // Near the tree's top or bottom it scrolls on while the pointer rests
+      // there, over the tree.
+      let last = { x: 0, y: 0 };
+      const edge = edgeScroll(
+        () => treeRef.current?.closest<HTMLElement>(".sidebar-body") ?? null,
+        () => {
+          const next = targetAt(last.x, last.y);
+          if (next !== into) setDrag({ path, isDir, into: next });
+          into = next;
+        },
+      );
       trackDrag(e.nativeEvent, {
         start: () => {
           setDragging(true);
@@ -88,6 +100,10 @@ export function useRowDrag(
         },
         move: (x, y, m) => {
           ghost.current?.move(x, y);
+          last = { x, y };
+          const box = treeRef.current?.getBoundingClientRect();
+          if (box && x >= box.left && x <= box.right) edge.at(y);
+          else edge.stop();
           const next = targetAt(x, y);
           // The tree redraws only when where it would land changes.
           if (next !== into) setDrag({ path, isDir, into: next });
@@ -96,6 +112,7 @@ export function useRowDrag(
           else documentDrop()?.leave();
         },
         end: (x, y, dropped, up) => {
+          edge.stop();
           ghost.current?.remove();
           setDragging(false);
           setDrag(null);

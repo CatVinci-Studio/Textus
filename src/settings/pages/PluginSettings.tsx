@@ -22,7 +22,7 @@ import {
   type SettingScope,
 } from "../../plugins/store/plugin-settings";
 import { basename } from "../../utils/path";
-import type { SettingContribution } from "../../plugins/store/manifest";
+import type { SettingContribution } from "../../plugins/store/manifest-types";
 
 /** A plugin's settings from its manifest, drawn like Textus's own: for every
  *  document, or, with a folder open, for this project over those. */

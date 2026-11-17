@@ -11,6 +11,9 @@ textus.editor = {
   getSelection: function () {
     return call("editor.getSelection");
   },
+  getCursor: function () {
+    return call("editor.getCursor");
+  },
   getBlocks: function () {
     return call("editor.getBlocks");
   },
@@ -63,6 +66,27 @@ textus.editor = {
       quiet(call("editor.unregisterPasteHandler", { id: id }));
     });
   },
+  // A block the / menu offers, named `id` among the plugin's own; its
+  // insert() puts it in at the caret.
+  registerBlockType: function (id, type) {
+    id = String(id);
+    blockTypes.set(id, type);
+    quiet(
+      call("editor.registerBlockType", {
+        id: id,
+        label: String(type.label),
+        keywords: type.keywords ? String(type.keywords) : undefined,
+      }),
+    );
+    return disposable(function () {
+      if (blockTypes.get(id) !== type) return;
+      blockTypes.delete(id);
+      quiet(call("editor.unregisterBlockType", { id: id }));
+    });
+  },
+  blockTypes: function () {
+    return call("editor.blockTypes");
+  },
   registerOutline: function (provider) {
     outlineProviders.push(provider);
     quiet(call("editor.registerOutline", {}));
@@ -85,6 +109,38 @@ textus.editor = {
       without(decorationProviders, provider);
       if (!decorationProviders.length)
         quiet(call("editor.unregisterDecorations", {}));
+    });
+  },
+  registerDiagnostics: function (id, provider) {
+    var name = String(id);
+    diagnosticProviders.set(name, provider);
+    quiet(call("editor.registerDiagnostics", { id: name }));
+    return disposable(function () {
+      if (diagnosticProviders.get(name) !== provider) return;
+      diagnosticProviders.delete(name);
+      quiet(call("editor.unregisterDiagnostics", { id: name }));
+    });
+  },
+  // Inline syntax shown as it means (`||spoiler||`); display only, the
+  // text stays as written.
+  registerSyntax: function (id, syntax) {
+    var name = String(id);
+    var pattern = syntax.pattern;
+    var regex = pattern instanceof RegExp;
+    syntaxes.set(name, syntax);
+    call("editor.registerSyntax", {
+      id: name,
+      pattern: regex ? pattern.source : String(pattern),
+      flags: regex ? pattern.flags : "",
+      style: String(syntax.style),
+      tone: syntax.tone ? String(syntax.tone) : undefined,
+    }).catch(function (err) {
+      notify("log", { level: "error", message: String(err.message || err) });
+    });
+    return disposable(function () {
+      if (syntaxes.get(name) !== syntax) return;
+      syntaxes.delete(name);
+      quiet(call("editor.unregisterSyntax", { id: name }));
     });
   },
   onDidChangeActive: on("activeDocument"),

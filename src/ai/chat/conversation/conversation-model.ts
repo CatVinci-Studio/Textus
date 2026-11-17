@@ -26,6 +26,7 @@ import type {
   ConversationPlace,
   ConversationState,
 } from "./conversation-types";
+import { createSubscribers } from "../../../utils/store";
 
 const NONE: string[] = [];
 let made = 0;
@@ -79,7 +80,7 @@ export class ConversationModel {
   private state: ConversationState;
   /** The state without the reply streaming in, for readers out of sight. */
   private settled: ConversationState;
-  private readonly listeners = new Set<() => void>();
+  private readonly listeners = createSubscribers();
   private readonly onIdentity?: (model: ConversationModel) => void;
   // Text deltas can arrive several times a frame, so a delta only marks the
   // state dirty and one change per frame picks them up.
@@ -112,10 +113,8 @@ export class ConversationModel {
     return this.state.conversationId;
   }
 
-  subscribe = (listener: () => void): (() => void) => {
-    this.listeners.add(listener);
-    return () => this.listeners.delete(listener);
-  };
+  subscribe = (listener: () => void): (() => void) =>
+    this.listeners.subscribe(listener);
 
   snapshot = (): ConversationState => this.state;
 
@@ -125,7 +124,7 @@ export class ConversationModel {
     this.state = { ...this.state, ...change };
     if (Object.keys(change).some((key) => key !== "streaming"))
       this.settled = { ...this.state, streaming: null };
-    for (const listener of this.listeners) listener();
+    this.listeners.publish();
   }
 
   setStreaming(value: StreamingState | null, { textOnly = false } = {}) {

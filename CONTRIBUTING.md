@@ -15,7 +15,7 @@ to us in English or Chinese ([中文版](CONTRIBUTING.zh-CN.md)).
 - **A new feature?** Check whether it can be a plugin first: most new
   features, and anything that talks to an outside service, belong in
   [textus-plugins](https://github.com/CatVinci-Studio/textus-plugins), not
-  in the app. The [roadmap](ROADMAP.md) lists what stays out of the core.
+  in the app. The [roadmap](ROADMAP.md) shows what is planned next.
 - **A bug fix:** send the pull request straight away. **A feature for the
   app:** open an issue first, so we can agree on it before you build it.
 

@@ -1,8 +1,9 @@
 /**
  * The window's tabs in order, kept past the app's end (Android ending it in
  * the background, where nothing else of the window survives): each by a
- * key - a page by what it is (the AI's), a saved document by its path, a
- * tab with unsaved text by its id, its draft's.
+ * key - a page by what it is (the AI's), a saved document or a file a
+ * plugin opens (a board, a database) by its path, a tab with unsaved text
+ * by its id, its draft's.
  */
 
 import {
@@ -22,15 +23,24 @@ export interface TabOrder {
 interface Keyed {
   id?: string;
   path: string | null;
-  view?: { kind: string; view?: string };
+  view?: { kind: string; view?: string; resource?: string };
   text?: unknown;
 }
 
+/** The file a tab keeps open: its document's, or a plugin's file editor's. */
+export const keptFile = (tab: Keyed): string | null =>
+  !tab.view
+    ? tab.path
+    : tab.view.kind === "editor"
+      ? (tab.view.resource ?? null)
+      : null;
+
 function orderKey(tab: Keyed): string {
-  if (tab.view) return `view:${tab.view.view ?? tab.view.kind}`;
+  const file = keptFile(tab);
   // Kept by its place in Documents: a reinstall moves an iOS app's folder.
-  if (tab.path && !tab.text)
-    return `path:${storedDocumentPath(tab.path, knownDocumentsDir())}`;
+  if (file && !tab.text)
+    return `path:${storedDocumentPath(file, knownDocumentsDir())}`;
+  if (tab.view) return `view:${tab.view.view ?? tab.view.kind}`;
   return `id:${tab.id ?? ""}`;
 }
 

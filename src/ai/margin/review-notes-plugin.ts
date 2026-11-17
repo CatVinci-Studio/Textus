@@ -17,7 +17,19 @@ export interface ReviewNote {
   num: number;
   /** The writer's own note rather than the AI's. */
   by?: "me";
+  /** A plugin's note, kept with the writer's: the plugin's name. */
+  author?: string;
 }
+
+/** Who wrote a note, as its card says. */
+export const noteAuthor = (
+  note: ReviewNote,
+  labels: { ownNoteBy: string; reviewNoteBy: string },
+) => note.author ?? (note.by === "me" ? labels.ownNoteBy : labels.reviewNoteBy);
+
+/** Only the writer changes their own words; a plugin's note is theirs. */
+export const noteEditable = (note: ReviewNote) =>
+  note.by === "me" && !note.author;
 
 /** Numbers new notes after the existing ones in the order the AI left them,
  *  matching the chat's cards; never renumbers. Back to 1 once none is left. */

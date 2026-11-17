@@ -1,4 +1,5 @@
 import {
+  startTransition,
   useCallback,
   useDeferredValue,
   useEffect,
@@ -14,22 +15,10 @@ import { matchEntries, type SearchEntry } from "./settings-search";
 
 /** The search box: while it holds a query its results stand in for the page,
  *  and picking one goes to the row. */
-export function useSettingsSearch(
-  /** Whether ⌘F is Settings' now (its tab in use); always, as a sheet. */
-  owns: () => boolean = () => true,
-) {
-  const [query, setQuery] = useState("");
-  const searching = query.trim() !== "";
-  const deferredQuery = useDeferredValue(query);
-  const [entries, setEntries] = useState<SearchEntry[]>([]);
-  const [active, setActive] = useState(0);
+/** The search box, which Ctrl/⌘+F (and Edit › Find) focuses while
+ *  Settings `owns` the keys. */
+function useFindKey(owns: () => boolean) {
   const searchInput = useRef<HTMLInputElement>(null);
-  const listId = useId();
-  const matches = useMemo(
-    () => matchEntries(entries, deferredQuery),
-    [entries, deferredQuery],
-  );
-
   const focusSearch = useCallback(() => {
     searchInput.current?.focus();
     searchInput.current?.select();
@@ -54,6 +43,28 @@ export function useSettingsSearch(
   }, [focusSearch, owns]);
   useWindowEvent(TOGGLE_FIND_REPLACE_EVENT, () => owns() && focusSearch());
 
+  return searchInput;
+}
+
+export function useSettingsSearch(
+  /** Whether ⌘F is Settings' now (its tab in use); always, as a sheet. */
+  owns: () => boolean = () => true,
+) {
+  const [query, setQuery] = useState("");
+  const searching = query.trim() !== "";
+  const deferredQuery = useDeferredValue(query);
+  const [entries, setEntries] = useState<SearchEntry[]>([]);
+  const [active, setActive] = useState(0);
+  // The pages are read while the box has the keys, so the first letter
+  // typed finds them read already.
+  const [focused, setFocused] = useState(false);
+  const searchInput = useFindKey(owns);
+  const listId = useId();
+  const matches = useMemo(
+    () => matchEntries(entries, deferredQuery),
+    [entries, deferredQuery],
+  );
+
   return {
     query,
     setQuery,
@@ -64,5 +75,12 @@ export function useSettingsSearch(
     matches,
     searchInput,
     listId,
+    /** Whether the pages are read for the search now. */
+    indexing: searching || focused,
+    focusHandlers: {
+      // Drawn in slices, the box answering the keys meanwhile.
+      onFocus: () => startTransition(() => setFocused(true)),
+      onBlur: () => setFocused(false),
+    },
   };
 }

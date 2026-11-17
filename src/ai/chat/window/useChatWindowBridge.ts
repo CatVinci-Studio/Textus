@@ -19,60 +19,13 @@ import type { Strings } from "../../../i18n/strings";
  *  A slightly older document beats blocking on an unresponsive window. */
 const CONTEXT_REQUEST_TIMEOUT_MS = 400;
 
-/** The chat window's side of the editor bridge, plus its own pin and title. */
-export function useChatWindowBridge({
-  handoff,
-  pinned,
-  t,
-}: {
-  handoff: ChatWindowHandoff;
-  pinned: boolean;
-  t: Strings;
-}) {
-  const { context, statuses, editorLabel, conversation, contextWaiter } =
-    handoff;
+type EditorLabel = ChatWindowHandoff["editorLabel"];
+type Send = (event: string, payload?: unknown) => void;
 
-  // A request belongs to the document it was sent about, and each proposal
-  // remembers it, so a tab switch mid-reply can't misdirect a later Accept.
-  const docPath = context?.docPath ?? null;
-  const contextRef = useRef(context);
-  contextRef.current = context;
-  const requestDocPath = useRef<string | null>(null);
+/** Messages to the editor's window: as they are, scoped to the document
+ *  in front, or to the document a proposal was made about. */
+function useSendToEditor(editorLabel: EditorLabel, docPath: string | null) {
   const proposalDocs = useRef(new Map<string, string | null>());
-
-  // Closing hands the conversation back for re-embedding. The window dies once
-  // this resolves, so pending storage writes are flushed first.
-  // Listened for once: one listener at every moment, the conversation read
-  // as it then is.
-  const conversationNow = useRef(conversation);
-  conversationNow.current = conversation;
-  useEffect(() => {
-    const win = thisWindow();
-    const unlisten = win.onCloseRequested(async () => {
-      const { conversationId, history } = conversationNow.current;
-      if (editorLabel.current)
-        sendToWindow(editorLabel.current, CHAT_TO_EDITOR.reembed, {
-          conversationId,
-          turns: history,
-          docPath:
-            requestDocPath.current ?? contextRef.current?.docPath ?? null,
-        });
-      await flushPendingWrites();
-    });
-    return unlistenAll(unlisten);
-  }, [editorLabel]);
-
-  useEffect(() => {
-    void thisWindow().setAlwaysOnTop(pinned);
-  }, [pinned]);
-
-  const docTitle = context?.docTitle;
-  useEffect(() => {
-    void setWindowTitle(
-      docTitle ? `${t.chatWindowTitle} - ${docTitle}` : t.chatWindowTitle,
-    );
-  }, [docTitle, t.chatWindowTitle]);
-
   const send = useCallback(
     (event: string, payload?: unknown) => {
       if (editorLabel.current)
@@ -80,7 +33,6 @@ export function useChatWindowBridge({
     },
     [editorLabel],
   );
-
   const sendScoped = useCallback(
     (event: string, payload: object, scopedTo: string | null = docPath) =>
       send(event, { ...payload, docPath: scopedTo }),
@@ -97,26 +49,19 @@ export function useChatWindowBridge({
       ),
     [sendScoped, docPath],
   );
+  return { send, sendScoped, sendForProposal, proposalDocs };
+}
 
-  // A reopened conversation waits until its document is on screen; restored
-  // earlier, its first save would file it under the wrong document.
-  const [reopening, setReopening] = useState<ChatRestore | null>(null);
-  useEffect(() => {
-    if (!reopening) return;
-    if (reopening.docPath !== null && reopening.docPath !== docPath) return;
-    setReopening(null);
-    proposalDocs.current.clear();
-    conversation.restore(reopening.id, reopening.turns);
-  }, [reopening, docPath, conversation]);
-  const reopenTarget: ReopenTarget = {
-    restore: setReopening,
-    openDocument: (path) =>
-      send(CHAT_TO_EDITOR.openDocument, { path } satisfies OpenDocumentMessage),
-  };
-
+/** Asks the editor for its current context; null on timeout. Two sends
+ *  at once share the one ask: the editor answers it once. The document a
+ *  request was sent about is kept. */
+function useRefreshContext(
+  send: Send,
+  editorLabel: EditorLabel,
+  contextWaiter: ChatWindowHandoff["contextWaiter"],
+) {
+  const requestDocPath = useRef<string | null>(null);
   const asking = useRef<Promise<ChatContext | null> | null>(null);
-  /** Asks the editor for its current context; null on timeout. Two sends
-   *  at once share the one ask: the editor answers it once. */
   const refreshContext = useCallback(
     () =>
       (asking.current ??= new Promise<ChatContext | null>((resolve) => {
@@ -136,7 +81,89 @@ export function useChatWindowBridge({
       })),
     [send, editorLabel, contextWaiter],
   );
+  return { refreshContext, requestDocPath };
+}
 
+/** Closing hands the conversation back for re-embedding. The window dies
+ *  once this resolves, so pending storage writes are flushed first.
+ *  Listened for once: one listener at every moment, the conversation read
+ *  as it then is. */
+function useHandBackOnClose({
+  editorLabel,
+  conversation,
+  context,
+  requestDocPath,
+}: {
+  editorLabel: EditorLabel;
+  conversation: ChatWindowHandoff["conversation"];
+  context: ChatWindowHandoff["context"];
+  requestDocPath: { readonly current: string | null };
+}) {
+  const now = useRef({ conversation, context });
+  now.current = { conversation, context };
+  useEffect(() => {
+    const win = thisWindow();
+    const unlisten = win.onCloseRequested(async () => {
+      const { conversationId, history } = now.current.conversation;
+      if (editorLabel.current)
+        sendToWindow(editorLabel.current, CHAT_TO_EDITOR.reembed, {
+          conversationId,
+          turns: history,
+          docPath:
+            requestDocPath.current ?? now.current.context?.docPath ?? null,
+        });
+      await flushPendingWrites();
+    });
+    return unlistenAll(unlisten);
+  }, [editorLabel, requestDocPath]);
+}
+
+/** The window kept on top while pinned, and titled after the document. */
+function useChatWindowLook(
+  pinned: boolean,
+  docTitle: string | undefined,
+  t: Strings,
+) {
+  useEffect(() => {
+    void thisWindow().setAlwaysOnTop(pinned);
+  }, [pinned]);
+  useEffect(() => {
+    void setWindowTitle(
+      docTitle ? `${t.agentPanelTitle} - ${docTitle}` : t.agentPanelTitle,
+    );
+  }, [docTitle, t.agentPanelTitle]);
+}
+
+/** A reopened conversation waits until its document is on screen; restored
+ *  earlier, its first save would file it under the wrong document. */
+function useReopening({
+  docPath,
+  conversation,
+  proposalDocs,
+  send,
+}: {
+  docPath: string | null;
+  conversation: ChatWindowHandoff["conversation"];
+  proposalDocs: { readonly current: Map<string, string | null> };
+  send: Send;
+}): ReopenTarget {
+  const [reopening, setReopening] = useState<ChatRestore | null>(null);
+  useEffect(() => {
+    if (!reopening) return;
+    if (reopening.docPath !== null && reopening.docPath !== docPath) return;
+    setReopening(null);
+    proposalDocs.current.clear();
+    conversation.restore(reopening.id, reopening.turns);
+  }, [reopening, docPath, conversation, proposalDocs]);
+  return {
+    restore: setReopening,
+    openDocument: (path) =>
+      send(CHAT_TO_EDITOR.openDocument, { path } satisfies OpenDocumentMessage),
+  };
+}
+
+/** Each proposal's status as the editor last told it, and how many wait. */
+function useStatusCounts(statuses: ChatWindowHandoff["statuses"]) {
   const proposalStatus = useCallback(
     (callId: string): PendingStatus => statuses[callId] ?? "expired",
     [statuses],
@@ -145,7 +172,42 @@ export function useChatWindowBridge({
     () => Object.values(statuses).filter((s) => s === "pending").length,
     [statuses],
   );
+  return { proposalStatus, pendingCount };
+}
 
+/** The chat window's side of the editor bridge, plus its own pin and title. */
+export function useChatWindowBridge({
+  handoff,
+  pinned,
+  t,
+}: {
+  handoff: ChatWindowHandoff;
+  pinned: boolean;
+  t: Strings;
+}) {
+  const { context, statuses, editorLabel, conversation, contextWaiter } =
+    handoff;
+  // A request belongs to the document it was sent about, and each proposal
+  // remembers it, so a tab switch mid-reply can't misdirect a later Accept.
+  const docPath = context?.docPath ?? null;
+  const { send, sendScoped, sendForProposal, proposalDocs } = useSendToEditor(
+    editorLabel,
+    docPath,
+  );
+  const { refreshContext, requestDocPath } = useRefreshContext(
+    send,
+    editorLabel,
+    contextWaiter,
+  );
+  useHandBackOnClose({ editorLabel, conversation, context, requestDocPath });
+  useChatWindowLook(pinned, context?.docTitle, t);
+  const reopenTarget = useReopening({
+    docPath,
+    conversation,
+    proposalDocs,
+    send,
+  });
+  const { proposalStatus, pendingCount } = useStatusCounts(statuses);
   useFilesToEditor(editorLabel);
   return {
     docPath,

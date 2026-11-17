@@ -94,22 +94,33 @@ pub fn cjk_chars(text: &str) -> usize {
     text.chars().filter(|&c| is_cjk(c) || is_hangul(c)).count()
 }
 
-/// Words: Latin, Cyrillic and Hangul words separated by spaces, plus each
-/// Chinese or Japanese character on its own (how those languages count).
+/// Words as the status bar counts them (Unicode word boundaries): Latin,
+/// Cyrillic and Hangul words, each Chinese or Japanese character on its own.
+/// An apostrophe or a full stop between letters or digits stays inside the
+/// word ("don't", "U.S.", "3.14"), a comma between digits too ("1,000"); a
+/// hyphen splits ("well-known" is two).
 pub fn words(text: &str) -> usize {
+    let chars: Vec<char> = text.chars().collect();
+    let word = |c: char| c.is_alphanumeric() && !is_cjk(c);
     let mut n = 0;
     let mut in_word = false;
-    for c in text.chars() {
+    for (i, &c) in chars.iter().enumerate() {
         if is_cjk(c) {
             n += 1;
             in_word = false;
-        } else if c.is_alphanumeric() || (in_word && matches!(c, '\'' | '’' | '-')) {
+        } else if word(c) {
             if !in_word {
                 n += 1;
             }
             in_word = true;
-        } else {
-            in_word = false;
+        } else if in_word {
+            let prev = chars[i - 1];
+            let next = chars.get(i + 1).copied().unwrap_or(' ');
+            in_word = match c {
+                '\'' | '’' | '.' => word(next),
+                ',' | ';' => prev.is_numeric() && next.is_numeric(),
+                _ => false,
+            };
         }
     }
     n
@@ -260,7 +271,19 @@ mod tests {
     #[test]
     fn counts_for_other_platforms() {
         assert_eq!(cjk_chars("我用 React 写了 한글 と"), 7);
-        assert_eq!(words("我用 React 写的 code-review tool"), 7);
+        assert_eq!(words("我用 React 写的 code-review tool"), 8);
+        // As the status bar's count (Intl.Segmenter) has them.
+        for (text, n) in [
+            ("well-known", 2),
+            ("don't", 1),
+            ("3.14", 1),
+            ("U.S.", 1),
+            ("1,000 people", 2),
+            ("한국어 문장", 2),
+            ("end. Next", 2),
+        ] {
+            assert_eq!(words(text), n, "{text}");
+        }
         assert_eq!(
             measure("关于 AI 写作的研究", "zh_academic_title")
                 .unwrap()

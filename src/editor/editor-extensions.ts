@@ -4,7 +4,7 @@ import { orderedListAttr } from "@milkdown/kit/preset/commonmark";
 import { historyOpened, openedFromCtx, openWith } from "./opened-from";
 import type { TabLeft } from "./tab-left";
 import { clipboard } from "@milkdown/kit/plugin/clipboard";
-import { listener } from "@milkdown/kit/plugin/listener";
+import { listener } from "./editor-listener";
 import { $remark } from "@milkdown/kit/utils";
 import { createRemarkVerbatim, keepFor } from "./markdown/verbatim";
 import remarkCjkFriendly from "remark-cjk-friendly";
@@ -33,6 +33,7 @@ import {
   remarkTocPlugin,
   tocSchema,
 } from "./markdown/toc-plugin";
+import { createHeadingFoldPlugin } from "./fold/heading-fold";
 import { rawHtmlSchema } from "./html/raw-html-schema";
 import { remarkHtmlImages } from "./images/image-html";
 import { createRawHtmlPreviewPlugin } from "./html/raw-html-preview-plugin";
@@ -84,6 +85,7 @@ import { macNavigationPlugin } from "./keys/mac-navigation-plugin";
 import { editorExtensions } from "./extension-points";
 import { noRevealPlugin } from "./pointer-hold";
 import { pointerPlugins } from "./pointer-plugins";
+import { createBlockHandlesPlugin } from "./blocks/block-handles-plugin";
 import {
   cjkTaskInputPlugin,
   remarkEmptyTaskItems,
@@ -93,6 +95,7 @@ import { syntaxHighlightPlugin } from "./code/syntax-highlight-plugin";
 import { createCodeBlockView } from "./code/code-block-language-view";
 import { createCodeLineNumbersPlugin } from "./code/code-line-numbers-plugin";
 import { tableCaretPlugin } from "./tables/table-caret";
+import { tableGrowth } from "./tables/table-growth";
 import { keyboardCaretPlugin } from "./keyboard-caret-plugin";
 import { scrollOptions } from "./editor-scroll";
 import { tableKeys, tableRowPaste } from "./tables/table-keys";
@@ -249,6 +252,13 @@ export function withEditorCore(
       .use(editing(editorExtensions().keyInput))
       .use(editing(macNavigationPlugin))
       .use(editing(pointerPlugins(settings)))
+      // A preview has no handles, but its fold carets come by a block's
+      // start as the editor's do.
+      .use(
+        options.preview
+          ? createBlockHandlesPlugin({ enabled: () => false })
+          : [],
+      )
       .use(editing(linuxImeEnterPlugin))
       .use(editing(iosEnterBeforeBlockPlugin))
       .use(editing(compositionPruneGuardPlugin))
@@ -268,6 +278,7 @@ export function withEditorCore(
           return { label: t.tocLabel, empty: t.tocEmpty };
         }),
       )
+      .use(createHeadingFoldPlugin(() => docPath.current))
       // Ahead of gfm's table keys.
       .use(editing(tableEdgeArrowPlugin))
       .use(editing([tableKeys, tableRowPaste, clickBelowEnd]))
@@ -400,6 +411,7 @@ export function withEditorCore(
       )
       .use(createTableView(() => resolveStrings(settings.current.language)))
       .use(tableCaretPlugin)
+      .use(editing(tableGrowth))
       .use(keyboardCaretPlugin)
       // Before the resize plugin: its press holds every column first.
       .use(editing(tableColumnFreeze))

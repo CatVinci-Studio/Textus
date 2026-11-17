@@ -1,3 +1,4 @@
+import { chosenSource } from "./writing/inline-sources";
 import { writingProviderOf } from "../prefs/settings-types";
 import type { Editor } from "@milkdown/kit/core";
 import { createGhostTextPlugin } from "./writing/ghost-text-plugin";
@@ -21,6 +22,7 @@ import { prefersReducedMotion } from "../engine/motion/motion";
 import type { TourAi } from "../utils/events";
 import type { RevisionDisplay, Settings } from "../prefs/SettingsContext";
 import { aiFeatures } from "../prefs/ai-features";
+import { aiRoot } from "../ai/workspace/ai-root";
 
 export interface PendingEditCallbacks {
   onAccept: (callId: string) => void;
@@ -69,8 +71,14 @@ export function withAiPlugins(
       .use(createAiFileChangesPlugin(() => docPath.current))
       .use(
         createGhostTextPlugin({
-          enabled: () =>
-            aiFeatures(settings.current).completion && tour.current !== "muted",
+          enabled: () => {
+            if (tour.current === "muted") return false;
+            const source = chosenSource(settings.current.completionSource);
+            return source === "textus"
+              ? aiFeatures(settings.current).completion
+              : settings.current.enableCompletion && source !== null;
+          },
+          source: () => chosenSource(settings.current.completionSource),
           provider: () => writingProviderOf(settings.current),
           model: () =>
             settings.current.writingModels[
@@ -80,7 +88,7 @@ export function withAiPlugins(
           uiLanguage: () => settings.current.language,
           project: () => ({
             docPath: docPath.current,
-            workspaceRoot: settings.current.agentWorkspaceRoot || null,
+            workspaceRoot: aiRoot(settings.current),
           }),
         }),
       )
@@ -97,7 +105,7 @@ export function withAiPlugins(
           uiLanguage: () => settings.current.language,
           project: () => ({
             docPath: docPath.current,
-            workspaceRoot: settings.current.agentWorkspaceRoot || null,
+            workspaceRoot: aiRoot(settings.current),
           }),
         }),
       )

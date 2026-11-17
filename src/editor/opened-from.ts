@@ -1,4 +1,9 @@
-import { defaultValueCtx, editorStateOptionsCtx } from "@milkdown/kit/core";
+import {
+  defaultValueCtx,
+  editorStateOptionsCtx,
+  editorViewCtx,
+  parserCtx,
+} from "@milkdown/kit/core";
 import type { Ctx, MilkdownPlugin } from "@milkdown/kit/ctx";
 import {
   historyKeymap,
@@ -57,3 +62,25 @@ export const historyOpened: MilkdownPlugin[] = [
   undoCommand,
   redoCommand,
 ].flat();
+
+/** The text changed since the last editor left (in source mode): the
+ *  change goes in as one step the user can undo, after the history that
+ *  came before it. */
+export function catchUp(ctx: Ctx, markdown: string): void {
+  const view = ctx.get(editorViewCtx);
+  const now = ctx.get(parserCtx)(markdown);
+  if (!now) return;
+  const { doc } = view.state;
+  const start = doc.content.findDiffStart(now.content);
+  if (start === null) return;
+  const end = doc.content.findDiffEnd(now.content);
+  if (!end) return;
+  let { a: endOld, b: endNew } = end;
+  // Where the same text repeats, the two ends can cross the start.
+  const overlap = start - Math.min(endOld, endNew);
+  if (overlap > 0) {
+    endOld += overlap;
+    endNew += overlap;
+  }
+  view.dispatch(view.state.tr.replace(start, endOld, now.slice(start, endNew)));
+}

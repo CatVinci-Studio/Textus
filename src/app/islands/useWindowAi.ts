@@ -3,6 +3,7 @@ import { conversationScope } from "../../ai/chat/conversation-scope";
 import type { TabState } from "../tabs/useTabState";
 import { useDocumentInFront } from "../tabs/useDocumentInFront";
 import { useAiTabs } from "./useAiTabs";
+import { useAiRoot } from "../../ai/workspace/ai-root";
 
 /**
  * The window's AI: the conversations of its folder - with none, of the last
@@ -12,17 +13,17 @@ import { useAiTabs } from "./useAiTabs";
  */
 export function useWindowAi({
   tabs,
-  workspaceRoot,
+  settings,
   shown,
   setShown,
 }: {
   tabs: TabState;
-  /** Settings' folder for conversations, if one is chosen. */
-  workspaceRoot: string | null;
+  settings: { agentWorkspaceRoot: string };
   shown: boolean;
   setShown: (shown: boolean) => void;
 }): void {
   const { tabs: list, activeTabId } = tabs;
+  const workspaceRoot = useAiRoot(settings);
   const docInFront = useDocumentInFront();
   const inFront =
     list.find((tab) => tab.id === docInFront) ??

@@ -12,27 +12,24 @@ stable release ([infrastructure.md](infrastructure.md#playground)).
 
 ## Branches
 
-| Branch   | What it is                                                   | Tagged there               |
-| -------- | ------------------------------------------------------------ | -------------------------- |
-| `main`   | Where all work lands: features and fixes                     | test builds, `vX.Y.Z-rc.N` |
-| `stable` | The released version. It moves only by a release from `main` | releases, `vX.Y.Z`         |
+There is one branch, `main`, where all work lands. Every version is a tag
+on it:
 
-- **Test builds are tags on `main`**: `vX.Y.Z-rc.N`, published as GitHub
-  pre-releases and offered on the Beta update channel
-  ([Pre-releases](#pre-releases)).
-- **A release goes from `main` into `stable` in one pull request**
-  ("Textus X.Y.Z"), and is published from `stable`: the `vX.Y.Z` tag is
-  pushed on the merged `stable` commit ([Desktop release](#desktop-release)).
-- A fix the released version needs lands on `main` like any other change,
-  and ships in the next release. Nothing is committed to `stable` except a
-  release.
-- Never push to `main` or `stable` directly. Branch protection requires
+- **Test builds** are `vX.Y.Z-rc.N`, published as GitHub pre-releases and
+  offered on the Beta update channel ([Pre-releases](#pre-releases)).
+- **Releases** are `vX.Y.Z` on the merged commit that sets the version
+  ([Desktop release](#desktop-release)).
+- There are no patch releases from an older tag: a fix the released version
+  needs lands on `main` and ships in the next version.
+- Never push to `main` directly. Branch protection requires
   the `check`, `e2e` and `native` CI jobs (and `ci-config`, which only a
   fork's pull request runs). It doesn't require the branch to be up to
   date: a pull request that passed is merged as it is, and the CI run after
   the merge catches the rare case where two changes only break together.
 - Older versions are kept as tags (`v1.2.8`, `v1.1.2`; `v0.9.8` for Levis),
-  not branches.
+  not branches. The `stable` branch that carried releases until 1.4.2 is
+  kept as the tag `archive/stable`.
+- Only owners push `v*` and `ios-v*` tags.
 
 ## Pull requests and commits
 
@@ -74,7 +71,7 @@ forward (`scripts/updater-manifest.mjs beta`).
 ## Desktop release
 
 A test build and a release run the same workflow; they differ in the
-version, the branch the tag is on, and the notes.
+version and the notes. Both are tagged on `main`.
 
 ### A test build (`vX.Y.Z-rc.N`)
 
@@ -95,7 +92,9 @@ Before either kind, in the release's pull request:
    `src-tauri/tauri.conf.json`, then run `npm install --package-lock-only`
    and `cargo check` (in `src-tauri/`) so `package-lock.json` (both of its
    version fields) and `Cargo.lock` follow. `node scripts/check-versions.mjs`
-   (part of `npm run check`) fails until all five files agree.
+   (part of `npm run check`) fails until all five files agree. A pull
+   request that changes the version runs the full CI suite on every
+   platform by itself.
 2. Once it is merged, tag that exact commit on `main`:
 
    ```sh
@@ -121,28 +120,14 @@ Release notes aren't required for a pre-release: the fragments stay in
    `check-versions.mjs --tag` (step 3, and the workflow's preflight) a
    stable tag with fragments left over or the summary unwritten; the notes
    are the GitHub release's text and the updater's.
-2. Open one pull request into `stable`, titled `Textus X.Y.Z`, from a
-   release branch made from `main`, and squash-merge it once CI passes.
-   Each earlier release was squashed into `stable`, so `main` and `stable`
-   share no recent history and a pull request straight from `main`
-   conflicts. The release branch records `stable` as merged and keeps
-   `main`'s content (nothing lands on `stable` but releases, so there is
-   nothing of its own to keep):
+2. The pull request (`Textus X.Y.Z`) runs the full suite; squash-merge it
+   once that passed.
+3. Check the merged commit on `main` and tag it:
 
    ```sh
    git fetch origin
-   git checkout -b release/vX.Y.Z origin/main
-   git merge -s ours origin/stable -m "Merge stable into the X.Y.Z release"
-   git diff origin/main --stat   # empty: the content is main's
-   git push -u origin release/vX.Y.Z
-   ```
-
-3. Check the merged `stable` and tag that exact commit:
-
-   ```sh
-   git fetch origin
-   node scripts/check-versions.mjs --tag vX.Y.Z   # on a checkout of origin/stable
-   git tag -a vX.Y.Z origin/stable -m "Textus X.Y.Z"
+   node scripts/check-versions.mjs --tag vX.Y.Z   # on a checkout of origin/main
+   git tag -a vX.Y.Z origin/main -m "Textus X.Y.Z"
    git push origin vX.Y.Z
    ```
 
@@ -155,13 +140,11 @@ Release notes aren't required for a pre-release: the fragments stay in
 
 1. `release.yml` checks that the tag matches the version files and runs
    the full CI suite on the tagged commit (`ci.yml`, every job on every
-   platform); the builds start only once it passed. Pull requests into
-   `main` run only the quick checks, so this is where e2e, macOS, Windows
-   and iOS first run together - look at the run whole, `e2e-webkit` and
-   `ios` included, which the builds don't wait for. To see it before
-   tagging, run CI by hand on the commit (Run workflow). A flaky job is
-   rerun alone (`gh run rerun <run> --failed`); a real failure is fixed on
-   `main`, brought to `stable` again, and the unpublished tag moved to the new
+   platform); the builds start only once it passed. The pull request that
+   set the version ran the same suite, so this run should hold no surprise -
+   look at it whole, `e2e-webkit` and `ios` included, which the builds don't
+   wait for. A flaky job is rerun alone (`gh run rerun <run> --failed`); a
+   real failure is fixed on `main` and the unpublished tag moved to the new
    commit. Run `npm run test:perf` once and compare its numbers with the
    last release's: a reference, not a gate. Then it builds,
    signs and notarizes for macOS (Apple silicon and Intel), Windows and Linux

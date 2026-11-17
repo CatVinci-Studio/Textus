@@ -18,6 +18,7 @@ import type { ContextMenuEntry } from "../../../engine/controls/ContextMenu";
 import { MemorySections } from "./MemoryView";
 import { RememberedSection } from "./RememberedSection";
 import { useProjectActions } from "./project-actions";
+import { useAiRoot } from "../../../ai/workspace/ai-root";
 
 /** The project the document belongs to: undefined until the first load
  *  answers, so "no root" is never said before anyone has looked. */
@@ -93,7 +94,7 @@ export function ProjectBar({
   documentText?: string;
 }) {
   const { t, settings, setSettings } = useSettings();
-  const workspaceRoot = settings.agentWorkspaceRoot || null;
+  const workspaceRoot = useAiRoot(settings);
   const { info, reload } = useProjectWorkspace(docPath, workspaceRoot);
   const libraryUse = useLibraryUse(info, docPath, workspaceRoot, documentText);
   const { naming, setNaming, entryName, setEntryName, nameInput } =
@@ -122,15 +123,16 @@ export function ProjectBar({
 
   // The folder row's menu (a sheet headed by the folder on a phone).
   const hasFolderItems =
-    canPickFolder || !!workspaceRoot || canRevealInFileManager;
+    canPickFolder || !!settings.agentWorkspaceRoot || canRevealInFileManager;
   const menuItems: ContextMenuEntry[] = [
     ...(canPickFolder
       ? [{ label: t.projectPickFolder, onSelect: pickFolder }]
       : []),
-    ...(workspaceRoot
+    // A folder picked for the AI: back to following the sidebar's.
+    ...(settings.agentWorkspaceRoot
       ? [
           {
-            label: t.projectNoFolder,
+            label: t.projectFollowSidebar,
             onSelect: () => setSettings({ agentWorkspaceRoot: "" }),
           },
         ]

@@ -1,0 +1,9 @@
+/* A plugin's slip: the grammar check's wavy line (editor-inline.css), in
+   its severity's colour. */
+.grammar-issue.plugin-issue-warning {
+  text-decoration-color: var(--ui-warning);
+}
+
+.grammar-issue.plugin-issue-info {
+  text-decoration-color: var(--doc-accent);
+}

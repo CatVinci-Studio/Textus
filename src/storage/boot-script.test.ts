@@ -72,3 +72,21 @@ describe("the boot script and an imported theme", () => {
     },
   );
 });
+
+describe("the boot script and the layout", () => {
+  it.each([
+    ["classic", "classic"],
+    ["islands", "islands"],
+    [undefined, "islands"],
+  ])("puts layout %s on the first frame as %s", (layout, shown) => {
+    document.documentElement.removeAttribute("data-layout");
+    new Function(BOOT_JS)();
+    (
+      window as unknown as { __textusBoot: (b: unknown, c: unknown) => void }
+    ).__textusBoot(
+      { settings: { layout }, tables: { layouts: ["islands", "classic"] } },
+      null,
+    );
+    expect(document.documentElement.getAttribute("data-layout")).toBe(shown);
+  });
+});

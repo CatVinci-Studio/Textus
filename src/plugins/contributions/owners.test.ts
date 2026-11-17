@@ -13,7 +13,7 @@ import {
   removeHoverProvider,
 } from "./hover-providers";
 import { claim, ownerOf, ownedClaims } from "./owners";
-import type { Contributes } from "../store/manifest";
+import type { Contributes } from "../store/manifest-types";
 import { publish, type PluginRecord } from "../store/plugin-records";
 import {
   customEditorFor,

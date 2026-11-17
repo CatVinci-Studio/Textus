@@ -3,7 +3,8 @@ import PERMISSIONS from "./permissions.json";
 import { PERMISSION_LABELS } from "./permissions";
 import { join } from "node:path";
 import { describe, expect, it } from "vitest";
-import { REQUIRED_SETTINGS, isPermission } from "./manifest";
+import { isPermission } from "./manifest";
+import { REQUIRED_SETTINGS } from "./manifest-types";
 import { MENU_IDS } from "./manifest-parse";
 
 /**

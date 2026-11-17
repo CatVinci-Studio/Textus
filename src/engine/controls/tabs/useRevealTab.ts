@@ -75,7 +75,18 @@ function reveal(
   bar.style.setProperty("--tab-fade", `${room}px`);
   let left = revealAt(slot, bar.scrollLeft, shown, fade, edges ? 0 : 12);
   if (edges) {
-    const snapped = snapToTab(left ?? bar.scrollLeft, edges, slot.x);
+    // Never scrolled past where the tabs end in view: a scroll kept from a
+    // narrower row would leave room after them. There, back to a tab's
+    // start, which shows the end whole.
+    const most = Math.max(0, touch.end - shown);
+    const from = left ?? bar.scrollLeft;
+    const back = [...edges].reverse().find((x) => x <= most + 0.5) ?? 0;
+    const snapped =
+      from <= most
+        ? snapToTab(from, edges, slot.x)
+        : back + shown >= slot.x + slot.w
+          ? back
+          : snapToTab(most, edges, slot.x);
     const room = tailFor(snapped, touch.end, shown);
     bar.style.setProperty("--tab-tail", `${room}px`);
     left = Math.abs(snapped - bar.scrollLeft) < 1 ? null : snapped;

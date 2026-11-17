@@ -10,7 +10,7 @@ import { contributedContextItems } from "../../registry/context-menu-items";
 import type {
   FloatingPlace,
   FloatingViewContribution,
-} from "../store/manifest";
+} from "../store/manifest-types";
 import { createSubscribers } from "../../utils/store";
 
 /**

@@ -1,4 +1,5 @@
 import { useEffect } from "react";
+import { CheckIcon } from "../engine/controls/icons";
 import { fill } from "../i18n/fill";
 import type { Lang, Strings } from "../i18n/strings";
 import { links } from "../platform/ipc";
@@ -62,6 +63,19 @@ function useAiSteps(tutorial: Tutorial, aiOn: boolean) {
   return signedIn;
 }
 
+/** A stop that opens what it lights: its button clicked, as the learner
+ *  would, unless already on. */
+function useOpeningStop(
+  stopAt: { target: string; opens?: boolean } | undefined,
+) {
+  useEffect(() => {
+    if (!stopAt?.opens) return;
+    const button = document.querySelector<HTMLElement>(stopAt.target);
+    if (button && button.getAttribute("aria-pressed") !== "true")
+      button.click();
+  }, [stopAt]);
+}
+
 /** The tour's card over the window, for its current step. */
 export function TutorialExperience({
   tutorial,
@@ -81,6 +95,7 @@ export function TutorialExperience({
 
   const { step, stop, stepIndex, totalSteps } = tutorial;
   const stopAt = step.stops?.[stop];
+  useOpeningStop(stopAt);
   const target =
     stopAt?.target ??
     (phone ? step.phoneTarget : undefined) ??
@@ -122,6 +137,21 @@ export function TutorialExperience({
         {withCode(t[(phone && step.phoneBodyKey) || step.bodyKey])}
       </p>
       {stopAt && <p className="tour-stop">{withCode(t[stopAt.key])}</p>}
+      {step.tasks && (
+        <ul className="tour-tasks">
+          {step.tasks.map((task) => {
+            const done = tutorial.done.includes(task.format);
+            return (
+              <li key={task.format} data-done={done || undefined}>
+                <span className="tour-task-mark" aria-hidden="true">
+                  {done && <CheckIcon />}
+                </span>
+                {withCode(t[task.key])}
+              </li>
+            );
+          })}
+        </ul>
+      )}
       {step.id === "done" && (
         <div className="tour-links">
           <button

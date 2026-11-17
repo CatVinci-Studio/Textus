@@ -1,7 +1,5 @@
-/** One slide for every item making way, so overlapping moves read as one:
- *  the settle spring (motion.css). */
-const SLIDE =
-  "transform calc(var(--dur-settle) * var(--motion-travel)) var(--ease-settle)";
+/** Every item making way slides alike (motion-tokens.css). */
+const SLIDE = "var(--move-make-room)";
 
 /** The items making way for one dragged from `from` to `to`: each moved
  *  `room` along `axis` as its shift changes from `shown` (kept up to date). */

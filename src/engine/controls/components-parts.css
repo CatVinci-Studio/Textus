@@ -233,6 +233,22 @@
   scale: none;
 }
 
+/* Where something dragged will land, before it is let go (a tab, an island,
+   a block, a plugin page's item): a quiet grey dashed outline, the islands around it
+   already moved aside. Drawn as an image - its stroke doubled and half of it clipped at the
+   edge, so it sits just inside - for dashes spaced wider than a border's. */
+:root {
+  --drop-room-island: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='100%' height='100%'%3E%3Crect width='100%' height='100%' rx='12' ry='12' fill='none' stroke='rgb(128,128,128)' stroke-opacity='0.4' stroke-width='3' stroke-dasharray='6 9'/%3E%3C/svg%3E");
+  --drop-room-slot: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='100%' height='100%'%3E%3Crect width='100%' height='100%' rx='7' ry='7' fill='none' stroke='rgb(128,128,128)' stroke-opacity='0.4' stroke-width='3' stroke-dasharray='6 9'/%3E%3C/svg%3E");
+}
+
+/* What something dragged would go into (a folder in the tree, a row on a
+   plugin's list): picked, ringed in the accent. */
+.tx-drop-into {
+  background: var(--ui-selected);
+  box-shadow: inset 0 0 0 1px var(--ui-accent);
+}
+
 /* Dragged on a plugin's page (lib/drag.js): the copy under the pointer, and
    the place the item will land, kept as an empty outline. */
 .tx-drag-ghost {
@@ -242,8 +258,8 @@
   pointer-events: none;
 }
 .tx-drag-source {
-  border-style: dashed;
-  background: transparent;
+  border-color: transparent;
+  background: var(--drop-room-slot) center / 100% 100% no-repeat;
   box-shadow: none;
 }
 .tx-drag-source > * {
@@ -309,8 +325,7 @@ th > .tx-table-grip-col {
   transition: none;
 }
 .tx-making-room :is(tr, td, th) {
-  transition: transform calc(var(--dur-settle) * var(--motion-travel))
-    var(--ease-settle);
+  transition: var(--move-make-room);
 }
 .tx-making-room .tx-cell-lifted {
   transition: none;

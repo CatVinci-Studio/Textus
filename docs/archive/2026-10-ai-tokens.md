@@ -147,7 +147,7 @@ What the numbers show:
 - Within a message every step reads everything the step before it sent,
   and from the second message on the first request reads the prefix
   (10,502) and the history. The breakpoints `anthropic.rs` places work as
-  [ai-eval.md › Prompt caching](ai-eval.md#prompt-caching) describes.
+  [ai-eval.md › Prompt caching](../design/ai-eval.md#prompt-caching) describes.
 - A new mode or project folder writes its whole prefix again (8.7k-12.1k
   tokens, $0.022-0.030 on Sonnet 5.5): the tool list differs per mode, and
   the system prompt per folder. Four of the six runs started cold, and those

@@ -37,6 +37,8 @@ All of them are in the **View** menu (**View › Mode** for the first two) and i
 
 The **Outline** panel of the sidebar lists the document's headings; click one to go there. Right-click the outline for **Expand All** and **Collapse All**, or `Option`-click (`Alt`-click) a heading's arrow to fold or unfold them all at once.
 
+A heading's section folds away in the document too: point at the heading and click the arrow in the margin on its left, or put the caret in the section and press `Cmd+Option+[` (`Ctrl+Shift+[`); `Cmd+Option+]` (`Ctrl+Shift+]`) opens it again. Only the view changes, never the text, and a search or the outline that lands inside a folded section opens it.
+
 **Interface size** (Settings › Appearance) makes the sidebar, tabs, menus, the AI tabs and Settings larger or smaller, text and controls together; each document keeps its own zoom (`Cmd+=`, `Cmd+-`). `Ctrl+Tab` and `Ctrl+Shift+Tab` move to the next and the previous tab.
 
 ### Footnotes, rules and a table of contents

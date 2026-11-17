@@ -8,6 +8,8 @@ export interface StoredOwnNote {
   comment: string;
   anchor: string;
   before: string;
+  /** The plugin that left it, by name. */
+  author?: string;
 }
 
 /** How much of the paragraph before a note is kept to find it again by. */
@@ -32,6 +34,9 @@ export function parseOwnNotes(text: string | null): StoredOwnNote[] {
               comment: n.comment,
               anchor: n.anchor,
               before: n.before,
+              ...(typeof n.author === "string" && n.author
+                ? { author: n.author }
+                : {}),
             },
           ]
         : [],
@@ -50,6 +55,7 @@ export function storedOwnNote(doc: ProseNode, note: ReviewNote): StoredOwnNote {
     comment: note.comment,
     anchor: doc.textBetween(note.from, note.to, "\n", "\n"),
     before: doc.textBetween(start, note.from, "\n", "\n").slice(-BEFORE),
+    ...(note.author ? { author: note.author } : {}),
   };
 }
 

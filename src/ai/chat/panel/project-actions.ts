@@ -9,6 +9,7 @@ import { showConfirm } from "../../../engine/controls/app-dialog";
 import { libraryEntryId } from "./memory-text";
 import { chosenModel } from "../../chosen-model";
 import { joinPath } from "../../../utils/path";
+import { useAiRoot } from "../../../ai/workspace/ai-root";
 
 const openInTab = (path: string) => openDocument(path);
 
@@ -43,7 +44,7 @@ export function useProjectActions({
   endNaming: () => void;
 }) {
   const { t, settings, setSettings } = useSettings();
-  const workspaceRoot = settings.agentWorkspaceRoot || null;
+  const workspaceRoot = useAiRoot(settings);
   const [busy, setBusy] = useState<string | null>(null);
   const [message, setMessage] = useState<string | null>(null);
 

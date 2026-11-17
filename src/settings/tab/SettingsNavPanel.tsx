@@ -105,6 +105,7 @@ export function SettingsNavPanel() {
           placeholder={t.settingsSearchPlaceholder}
           aria-label={t.settingsSearchPlaceholder}
           onChange={(e) => search.setQuery(e.target.value)}
+          {...search.focusHandlers}
           onKeyDown={(e) => {
             // Escape during an input method's word cancels the word only.
             if (e.key === "Escape" && !isImeKeydown(e)) search.setQuery("");
@@ -135,10 +136,6 @@ export function SettingsNavPanel() {
               </span>
             </button>
           ))}
-          <SettingsSearchIndex
-            pages={searchPages}
-            onEntries={search.setEntries}
-          />
         </div>
       ) : (
         <nav className="settings-nav-list" aria-label={t.settingsTitle}>
@@ -182,6 +179,12 @@ export function SettingsNavPanel() {
             );
           })}
         </nav>
+      )}
+      {search.indexing && (
+        <SettingsSearchIndex
+          pages={searchPages}
+          onEntries={search.setEntries}
+        />
       )}
     </div>
   );

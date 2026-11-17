@@ -1,6 +1,6 @@
 import { fill } from "../i18n/fill";
 import { APP_NAME, type Strings } from "../i18n/strings";
-import { EDITOR_BLOCK_COMBOS } from "../utils/shortcuts";
+import { EDITOR_BLOCK_COMBOS, foldCombos } from "../utils/shortcuts";
 import { defaultShortcuts, type Shortcuts } from "../prefs/SettingsContext";
 import { buildAppMenu, NO_RECENTS, type MenuNode } from "./menu/app-menu-model";
 
@@ -39,7 +39,7 @@ export function macTabStep(e: KeyboardEvent, mac: boolean): 1 | -1 | null {
 }
 
 /** The editor's own block keys, named for Settings. */
-function editorKeys(t: Strings): FixedShortcut[] {
+function editorKeys(t: Strings, mac: boolean): FixedShortcut[] {
   const heading = (n: number) => fill(t.menuHeadingTemplate, { n: String(n) });
   const labels: Record<keyof typeof EDITOR_BLOCK_COMBOS, string> = {
     paragraph: t.shortcutParagraph,
@@ -56,10 +56,14 @@ function editorKeys(t: Strings): FixedShortcut[] {
     indent: t.shortcutIndentListItem,
     outdent: t.shortcutOutdentListItem,
   };
-  return Object.entries(EDITOR_BLOCK_COMBOS).map(([key, combo]) => ({
-    label: labels[key as keyof typeof labels],
-    combos: [combo],
-  }));
+  return [
+    ...Object.entries(EDITOR_BLOCK_COMBOS).map(([key, combo]) => ({
+      label: labels[key as keyof typeof labels],
+      combos: [combo],
+    })),
+    { label: t.shortcutFoldSection, combos: [foldCombos(mac).fold] },
+    { label: t.shortcutUnfoldSection, combos: [foldCombos(mac).unfold] },
+  ];
 }
 
 /** Every configurable shortcut unbound: what is left in the menu is fixed. */
@@ -136,7 +140,7 @@ export function fixedShortcutGroups(
       { label: t.toolbarBold, combos: ["mod+b"] },
       { label: t.toolbarItalic, combos: ["mod+i"] },
       ...formatItems,
-      ...editorKeys(t),
+      ...editorKeys(t, mac),
       { label: t.shortcutLeaveBlock, combos: ["mod+enter"] },
       { label: t.shortcutMoveBlockUp, combos: ["alt+arrowup"] },
       { label: t.shortcutMoveBlockDown, combos: ["alt+arrowdown"] },

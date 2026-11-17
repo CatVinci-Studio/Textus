@@ -88,7 +88,7 @@ export default {
 `,
   projectOpenStyle: "開啟文風檔案",
   projectPickFolder: "選擇資料夾…",
-  projectNoFolder: "不使用資料夾",
+  projectFollowSidebar: "使用側邊欄的資料夾",
   projectReveal: "在檔案管理員中顯示",
   projectLearnStyle: "從樣本學習我的文風…",
   projectImportReferences: "匯入參考資料…",
@@ -118,7 +118,7 @@ export default {
   blockDuplicate: "製作副本",
   blockHandlesLabel: "區塊控點",
   blockHandlesHelp:
-    "指標所在的區塊左邊顯示 ＋ 和 ⋮⋮：新增區塊、拖曳移動、轉換成別的類型。",
+    "指標所在的區塊左邊顯示 ⋮⋮：拖曳來移動這個區塊，點按可轉換成別的類型、複製一份或刪除。",
   smoothCaretLabel: "平滑游標",
   menuBlockWide: "寬螢幕顯示",
   menuBlockZoom: "縮放",
@@ -632,6 +632,7 @@ export default {
   outlineExpandAll: "全部展開",
   outlineCollapseAll: "全部摺疊",
   wordCount: { other: "{n} 字" },
+  slipCount: { other: "{n} 個問題" },
   wordCountDetail: "{words} 字 · {characters} 個字元（不含空格）",
   alertNote: "備註",
   alertTip: "提示",
@@ -684,6 +685,7 @@ export default {
   backToStableInstall: "安裝 {version}",
   backToStableNone: "目前沒有可以回到的正式版。",
   aiCompletionLabel: "AI 續寫",
+  completionSourceLabel: "續寫來源",
   completionToneLabel: "續寫語氣",
   completionTone_default: "配合文件",
   completionTone_formal: "正式",
@@ -836,6 +838,8 @@ export default {
   modelListLabel: "模型清單",
   customTestConnection: "測試連線",
   customTestSuccess: "連線正常。",
+  customModelNotListed:
+    "連線正常，但這個介面的模型清單裡沒有「{model}」。請從清單中選一個。",
   customSave: "儲存",
   proxyLabel: "代理伺服器",
   proxyTypeNone: "不使用（直接連線）",
@@ -1037,6 +1041,9 @@ export default {
   activityRail: "圖示列",
   activityRailHide: "隱藏圖示列",
   activityRailShow: "顯示圖示列",
+  windowLayoutGroup: "視窗版面",
+  classicLookNote:
+    "喜歡 1.4 之前的樣子？把版面選為「經典」，關閉左側圖示列，開啟標題列獨立一行。想回到新樣子，改回來即可。",
   layoutLabel: "版面",
   layoutIslands: "浮動島",
   layoutClassic: "經典",
@@ -1153,7 +1160,6 @@ export default {
   windowMaximize: "最大化",
   windowRestore: "向下還原",
   windowClose: "關閉",
-  chatWindowTitle: AI_NAME,
   chatWindowPin: "保持在最上層",
   chatWindowPinHint: "讓這個視窗保持在編輯器上方",
   chatWindowUnpinHint: "不再讓這個視窗保持在編輯器上方",
@@ -1315,8 +1321,11 @@ export default {
   tutorialSettingsTitle: "設定",
   tutorialSettingsBody: "齒輪裡有主題、字型和 AI 帳號。",
   tutorialEditorTitle: "所見即所得",
-  tutorialEditorBody:
-    "輸入 Markdown 會直接變成格式：試試 `# 標題` 或 `- 清單`。",
+  tutorialEditorBody: "輸入 Markdown 會直接變成格式，逐一試試：",
+  tutorialEditorHeading: "標題：`# 計畫`",
+  tutorialEditorList: "清單：`- 牛奶`",
+  tutorialEditorNumbered: "編號：`1. 第一步`",
+  tutorialEditorTask: "待辦：`- [ ] 回電話`",
   tutorialAiTitle: "Textus AI",
   tutorialAiBody: "點右上角的星光按鈕，打開 Textus AI。",
   tutorialAiBodyPhone: "點右上角的星光按鈕，打開 Textus AI。",
@@ -1736,6 +1745,14 @@ export default {
   pluginPermNotifications: "顯示系統通知",
   pluginPermAppearance: "變更 Textus 和文件的顏色",
   pluginPermGitCommit: "用你的 Git 在開啟的資料夾中提交",
+  pluginPermComments: "讀取和新增文件頁邊的註解",
+  pluginPermAiModel: "使用你的 AI 模型（會計入你的 AI 服務用量）",
+  pluginAiAsk:
+    "{plugin} 想使用你的 AI 模型。它傳送的內容會計入你的 AI 服務用量，這個外掛每月最多 {limit} token。",
+  pluginAiLimit:
+    "{plugin} 本月的 {limit} 個 AI token 已用完。再允許 {limit} 個嗎？",
+  pluginAiAllow: "允許",
+  pluginAiUsage: "本月 AI：已用 {used} / {limit} token",
   pluginPermAgents: "執行這台電腦上安裝的 AI Agent（它能讀取和修改檔案）",
   pluginPermBackground: "按排程執行程式碼，關閉所有視窗後也會執行",
   pluginScheduleNotice:
@@ -1760,6 +1777,8 @@ export default {
   pluginKeysTaken:
     "「{name}」無法接管鍵盤：「{holder}」正在使用。請在側邊欄的外掛清單裡關掉其中一個。",
   shortcutIndentListItem: "清單項目縮排",
+  shortcutFoldSection: "摺疊章節",
+  shortcutUnfoldSection: "展開章節",
   shortcutOutdentListItem: "清單項目取消縮排",
   pluginKeyTaken:
     "「{name}」：{key} 已被「{owner}」使用，所以沒有綁定到「{command}」。可在 設定 › 快速鍵 中另設。",

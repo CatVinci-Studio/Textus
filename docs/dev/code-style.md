@@ -21,7 +21,7 @@ menus, motion) are in
 | Rule                                          | Checked by                            |
 | --------------------------------------------- | ------------------------------------- |
 | At most 500 lines a file                      | `check-code-shape.mjs`                |
-| At most 8 hooks a component                   | `check-code-shape.mjs`                |
+| At most 8 hooks a component or custom hook    | `check-code-shape.mjs`                |
 | No provider id compared outside its adapter   | `check-code-shape.mjs`                |
 | No import cycles                              | `check-cycles.mjs`                    |
 | No copied run of code instead of a shared one | `check-duplicates.mjs`                |
@@ -37,13 +37,15 @@ limit doesn't count. Tests, the dev shim (`src/dev/`), `live_eval/`, the
 translation tables, the icon table and the generated bindings are exempt.
 Rust tests sit inline in `#[cfg(test)] mod tests`, or in a `tests.rs`
 beside the module once they would push it past the limit; inline tests
-count towards the module's lines. The script's exception lists are empty
-and stay so.
+count towards the module's lines. The line limit has no exceptions. The
+hook list holds the custom hooks that were over 8 when the check began to
+count them; it only shrinks, and nothing is added to it.
 
 **8 hooks a component.** A component reads its feature's state and draws
 it. Past 8 hooks it is doing several things: each concern becomes a hook
 named for it (`useFloatingList`, `useComposerInput`, `useRowDrag`), in the
-component's file or beside it.
+component's file or beside it. A custom hook keeps the same limit: one
+that calls more is wiring several concerns, and splits the same way.
 
 **Pure logic inside, side effects outside.** Deciding what happens - what
 the tags in a reply become, where a margin card stands, what a stored

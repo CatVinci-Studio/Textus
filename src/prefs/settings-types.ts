@@ -102,6 +102,9 @@ export interface Settings {
   revisionDisplay: RevisionDisplay;
   /// Tone preset for inline completion suggestions.
   completionTone: CompletionTone;
+  /// Where inline completion comes from: "textus" (Textus AI) or a
+  /// plugin's source, `<plugin id>#<its id>`.
+  completionSource: string;
   /// "automatic", or a profile such as "zh-Hans-CN/fiction" the AI and the
   /// checks follow for that language. A project's style profile overrides it.
   writingConventions: string;
@@ -172,7 +175,7 @@ export interface Settings {
   firstLineIndent: boolean;
   /** A gray "type / to insert" on the empty line the caret is on. */
   emptyLineHint: boolean;
-  /** ＋ and ⋮⋮ beside the block under the pointer. */
+  /** ⋮⋮ beside the block under the pointer. */
   blockHandles: boolean;
   /** The caret glides to where it goes (computers only). */
   smoothCaret: boolean;
@@ -317,6 +320,7 @@ export const DEFAULT_SETTINGS: Settings = {
   agentOptions: {},
   revisionDisplay: "final",
   completionTone: "default",
+  completionSource: "textus",
   writingConventions: "automatic",
   aiChangeMode: "revision",
   imageModelProvider: "chat",

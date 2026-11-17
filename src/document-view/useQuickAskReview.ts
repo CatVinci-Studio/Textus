@@ -32,22 +32,16 @@ function previewOnScreen(view: EditorView, pos: number): boolean {
   }
 }
 
-/** Quick Ask's nav bar over the pending edits: each step selects the edit,
- *  scrolls to it, moves the zone widget along and restores the focus. */
-export function useQuickAskReview({
-  run,
-  pendingEdits,
-  inlineChat,
-  phone,
-  isActive,
-}: {
-  run: EditorRunner;
-  pendingEdits: PendingEdits;
-  inlineChat: ReturnType<typeof useInlineChat>;
-  phone: boolean;
-  isActive: boolean;
-}) {
-  /** iPad: whether the editor had focus at the last press anywhere. */
+/** Whether the editor had focus before the action now running: on an iPad,
+ *  as it was at the press that started it. */
+function useFocusBeforeAction(
+  run: EditorRunner,
+  phone: boolean,
+  isActive: boolean,
+): {
+  editorHasFocus: () => boolean;
+  editorHadFocusBeforeAction: () => boolean;
+} {
   const focusAtPress = useRef<{ focused: boolean; at: number } | null>(null);
   const editorHasFocus = useCallback(
     () => run((ctx) => ctx.get(editorViewCtx).hasFocus()) === true,
@@ -63,13 +57,35 @@ export function useQuickAskReview({
     window.addEventListener("pointerdown", record, true);
     return () => window.removeEventListener("pointerdown", record, true);
   }, [phone, isActive, editorHasFocus]);
-  function editorHadFocusBeforeAction(): boolean {
-    return editorFocusedBeforeAction(
+  const editorHadFocusBeforeAction = () =>
+    editorFocusedBeforeAction(
       editorHasFocus(),
       focusAtPress.current,
       Date.now(),
     );
-  }
+  return { editorHasFocus, editorHadFocusBeforeAction };
+}
+
+/** Quick Ask's nav bar over the pending edits: each step selects the edit,
+ *  scrolls to it, moves the zone widget along and restores the focus. */
+export function useQuickAskReview({
+  run,
+  pendingEdits,
+  inlineChat,
+  phone,
+  isActive,
+}: {
+  run: EditorRunner;
+  pendingEdits: PendingEdits;
+  inlineChat: ReturnType<typeof useInlineChat>;
+  phone: boolean;
+  isActive: boolean;
+}) {
+  const { editorHasFocus, editorHadFocusBeforeAction } = useFocusBeforeAction(
+    run,
+    phone,
+    isActive,
+  );
 
   /** Scrolls to a pending edit and moves Quick Ask's zone widget to follow;
    *  only ever the direct result of a nav-bar click. `editorHadFocus`

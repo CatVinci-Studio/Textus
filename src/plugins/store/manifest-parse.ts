@@ -8,9 +8,10 @@ import type {
   MenuId,
   SuggestKind,
   ViewType,
-} from "./manifest";
+} from "./manifest-types";
 import { ManifestError, list, object, text } from "./manifest-json";
 import { parseDocumentTypes } from "./manifest-documents";
+import { parseSnippets, parseWalkthroughs } from "./manifest-guides";
 import { number, parseSetting } from "./manifest-settings";
 
 /** Where a plugin's menu items may go. */
@@ -381,7 +382,15 @@ export function parseContributes(raw: unknown, id: string): Contributes {
     ),
     HOVER_KINDS,
   );
+  if (c.blockMenu !== undefined && typeof c.blockMenu !== "boolean")
+    throw new ManifestError("contributes.blockMenu is true or false.");
   return {
+    blockMenu: c.blockMenu === true,
+    snippets: parseSnippets(c),
+    walkthroughs: parseWalkthroughs(
+      c,
+      commands.map((x) => x.command),
+    ),
     aiTools,
     completions,
     embeds,

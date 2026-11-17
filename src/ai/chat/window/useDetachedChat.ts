@@ -22,13 +22,14 @@ import {
   type SelectionChipMessage,
 } from "./chat-bridge";
 import type { SelectionChipHandlers } from "../ChatComposer";
+import { createSubscribers } from "../../../utils/store";
 
 /**
  * Which chat window this webview talks to. Module-level, not React state, so
  * every tab knows where to push its context, not just the one that detached.
  */
 let sharedChatLabel: string | null = null;
-const labelListeners = new Set<() => void>();
+const label = createSubscribers();
 
 function getSharedChatLabel() {
   return sharedChatLabel;
@@ -37,15 +38,10 @@ function getSharedChatLabel() {
 function setSharedChatLabel(next: string | null) {
   if (sharedChatLabel === next) return;
   sharedChatLabel = next;
-  for (const listener of labelListeners) listener();
+  label.publish();
 }
 
-function subscribeChatLabel(listener: () => void) {
-  labelListeners.add(listener);
-  return () => {
-    labelListeners.delete(listener);
-  };
-}
+const subscribeChatLabel = label.subscribe;
 
 /** Asks Rust which chat window serves this editor window: the chat may have
  *  closed, or this webview reloaded, without the local store seeing it. */

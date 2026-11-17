@@ -35,6 +35,8 @@ export function extname(path: string): string {
 }
 
 export function dirname(path: string): string {
+  const content = contentParent(path);
+  if (content) return content;
   const idx = Math.max(path.lastIndexOf("/"), path.lastIndexOf("\\"));
   if (idx > 0) return path.slice(0, idx);
   return idx === 0 ? path[0] : path;
@@ -42,6 +44,7 @@ export function dirname(path: string): string {
 
 // The folder one level up, or null at a filesystem or UNC share root.
 export function parentDir(path: string): string | null {
+  if (path.startsWith("content://")) return contentParent(path);
   const trimmed = path.replace(/[\\/]+$/, "");
   const idx = Math.max(trimmed.lastIndexOf("/"), trimmed.lastIndexOf("\\"));
   if (idx < 0) return null;
@@ -52,13 +55,77 @@ export function parentDir(path: string): string | null {
   return parent;
 }
 
+/** An Android picked folder's entry's folder: its document id
+ *  ("primary:Notes/a.md", "/" spelled %2F) a part shorter, in the same
+ *  tree; null at the tree's top or for another kind of URL. */
+function contentParent(url: string): string | null {
+  const at = url.indexOf("/document/");
+  if (!url.startsWith("content://") || at < 0) return null;
+  const id = decodeUrlPath(url.slice(at + "/document/".length));
+  const cut = id.lastIndexOf("/");
+  if (cut < 0) return null;
+  return `${url.slice(0, at)}/document/${encodeURIComponent(id.slice(0, cut))}`;
+}
+
+const DOCUMENT = "/document/";
+
+/** An Android picked folder's entry `rel` ("inbox/a.md") below folder
+ *  `dir`: the folder's document id and the path under it, as its listing
+ *  spells them ("primary:Notes/inbox/a.md", "/" as %2F). */
+export function contentJoin(dir: string, rel: string): string {
+  const at = dir.indexOf(DOCUMENT);
+  const parts = rel.split(/[\\/]/).filter((p) => p !== "" && p !== ".");
+  if (at < 0 || !parts.length) return dir;
+  const id = decodeUrlPath(dir.slice(at + DOCUMENT.length)).replace(/\/$/, "");
+  const url = `${dir.slice(0, at)}${DOCUMENT}${encodeURIComponent(`${id}/${parts.join("/")}`)}`;
+  nameContentUrl(url, parts[parts.length - 1]!);
+  return url;
+}
+
+/** `path` as a path below Android picked folder `dir` ("inbox/a.md"); null
+ *  for one that isn't under it. */
+export function contentRelative(dir: string, path: string): string | null {
+  if (!contentInside(path, dir)) return null;
+  const id = (url: string) =>
+    decodeUrlPath(url.slice(url.indexOf(DOCUMENT) + DOCUMENT.length));
+  return id(path).slice(id(dir).replace(/\/$/, "").length + 1);
+}
+
 /** Whether `path` lies under `dir`, its "." and ".." walked first: a path
  *  climbing out with ".." is outside, however it starts. */
 export function isInside(path: string, dir: string): boolean {
+  if (path.startsWith("content://") || dir.startsWith("content://"))
+    return contentInside(path, dir);
   const inner = walked(path);
   const outer = walked(dir);
   if (inner === null || outer === null || inner === outer) return false;
   return inner.startsWith(outer.endsWith("/") ? outer : `${outer}/`);
+}
+
+/** Whether `path` is folder `dir` itself or lies somewhere below it. */
+export function isWithin(path: string, dir: string): boolean {
+  return path === dir || isInside(path, dir);
+}
+
+/** An Android picked folder's entry: under the same picked tree, its
+ *  document id ("primary:Notes/a.md", "/" spelled %2F) below the folder's. */
+function contentInside(path: string, dir: string): boolean {
+  const split = (url: string) => {
+    const at = url.indexOf("/document/");
+    return at < 0
+      ? null
+      : {
+          tree: url.slice(0, at),
+          id: decodeUrlPath(url.slice(at + "/document/".length)),
+        };
+  };
+  const inner = split(path);
+  const outer = split(dir);
+  if (!inner || !outer || inner.tree !== outer.tree) return false;
+  if (inner.id.split("/").includes("..")) return false;
+  return inner.id.startsWith(
+    outer.id.endsWith("/") ? outer.id : `${outer.id}/`,
+  );
 }
 
 /** A test for whether a path is one of `targets` or a folder holding one,
@@ -160,7 +227,9 @@ export function joinPath(dir: string, name: string): string {
  *  path, one typed in a terminal), written with `dir`'s separator and no
  *  leading "./", as the file tree has it; an absolute path as it is. */
 export function absoluteIn(dir: string, path: string): string {
-  if (/^([\\/]|[A-Za-z]:[\\/])/.test(path)) return path;
+  if (/^([\\/]|[A-Za-z]:[\\/])/.test(path) || path.startsWith("content://"))
+    return path;
+  if (dir.startsWith("content://")) return contentJoin(dir, path);
   const sep = dir.includes("\\") && !dir.includes("/") ? "\\" : "/";
   // On macOS and Linux a backslash is part of a name, not a separator.
   if (sep === "/") return joinPath(dir, path.replace(/^(\.\/)+/, ""));

@@ -1,6 +1,7 @@
 #!/usr/bin/env node
 // Checks the code shape rules: at most 500 lines per source file, at most 8
-// hooks per component, and no provider id compared outside its adapter.
+// hooks per component or custom hook, and no provider id compared outside
+// its adapter.
 // Files listed over a limit may shrink, not grow.
 import { readdirSync, readFileSync, statSync } from "node:fs";
 import { dirname, join } from "node:path";
@@ -12,9 +13,6 @@ const MAX_HOOKS = 8;
 
 /** Over the line limit today: at most this many lines. */
 const LINES_NOW = {};
-
-/** Over the hook limit today: the roots that wire a window together. */
-const HOOKS_NOW = {};
 
 /** Not held to the line limit: tables, not logic. */
 const TABLES = [
@@ -63,13 +61,13 @@ for (const path of sources) {
     );
 }
 
-// Hooks per component.
+// Hooks per component, and per custom hook (`useX`, in .ts files too).
 const COMPONENT =
-  /^(?:export )?(?:default )?(?:function ([A-Z]\w*)|const ([A-Z]\w*) = (?:memo\()?(?:function \w*)?)/gm;
+  /^(?:export )?(?:default )?(?:function ([A-Z]\w*|use[A-Z]\w*)|const ([A-Z]\w*|use[A-Z]\w*) = (?:memo\()?(?:function \w*)?)/gm;
 const NEXT_DECLARATION =
   /^(?:export )?(?:function|const|let|interface|type|class) [a-z_]/gm;
 const HOOK = /(?<![\w.])use[A-Z]\w*\s*(?:<(?:[^<>]|<[^<>]*>)*>)?\s*\(/g;
-for (const path of sources.filter((p) => p.endsWith(".tsx"))) {
+for (const path of sources.filter((p) => /\.tsx?$/.test(p))) {
   const text = readFileSync(join(root, path), "utf8");
   const starts = [...text.matchAll(COMPONENT)].map((m) => ({
     at: m.index,
@@ -80,11 +78,11 @@ for (const path of sources.filter((p) => p.endsWith(".tsx"))) {
     NEXT_DECLARATION.lastIndex = at + 1;
     const next = NEXT_DECLARATION.exec(text);
     const body = text.slice(at, next && next.index < end ? next.index : end);
-    const hooks = body.match(HOOK)?.length ?? 0;
-    const cap = HOOKS_NOW[`${path} ${name}`] ?? MAX_HOOKS;
-    if (hooks > cap)
+    // A custom hook's own name isn't one of its calls.
+    const hooks = (body.match(HOOK)?.length ?? 0) - (/^use/.test(name) ? 1 : 0);
+    if (hooks > MAX_HOOKS)
       problems.push(
-        `${path}: ${name} calls ${hooks} hooks, over ${cap} - move a concern into a hook of its own`,
+        `${path}: ${name} calls ${hooks} hooks, over ${MAX_HOOKS} - move a concern into a hook of its own`,
       );
   });
 }
@@ -123,10 +121,33 @@ for (const path of sources) {
     });
 }
 
+// Listeners kept by hand (a Set added to, deleted from, looped over):
+// createSubscribers in src/utils/store.ts does that. Registries that run
+// once or guard each call are not listeners.
+const LISTENER_SET = /new Set<\((?:[^()]|\([^()]*\))*\) => void>\(\)/;
+const REGISTRIES = new Set([
+  "src/utils/store.ts",
+  "src/utils/memory-idle.ts",
+  "src/storage/pending-writes.ts",
+  "src/document/reload-tabs.ts",
+  "src/editor/math/katex-loader.ts",
+]);
+for (const path of sources) {
+  if (!/\.tsx?$/.test(path) || REGISTRIES.has(path)) continue;
+  readFileSync(join(root, path), "utf8")
+    .split("\n")
+    .forEach((line, i) => {
+      if (LISTENER_SET.test(line))
+        problems.push(
+          `${path}:${i + 1}: listeners kept by hand - use createSubscribers`,
+        );
+    });
+}
+
 if (problems.length > 0) {
   console.error(problems.join("\n"));
   process.exit(1);
 }
 console.log(
-  `code shape: ${sources.length} files within ${MAX_LINES} lines, components within ${MAX_HOOKS} hooks, no provider ids compared`,
+  `code shape: ${sources.length} files within ${MAX_LINES} lines, components within ${MAX_HOOKS} hooks, no provider ids compared, listeners shared`,
 );

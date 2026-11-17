@@ -5,14 +5,19 @@
       "editor.getPath",
       "editor.getText",
       "editor.getSelection",
+      "editor.getCursor",
       "editor.getBlocks",
       "editor.getOutline",
       "editor.registerHover",
       "editor.registerDecorations",
+      "editor.registerDiagnostics",
       "editor.registerOutline",
       "export.willExport",
+      "ai.registerInlineCompletion",
+      "ai.unregisterInlineCompletion",
       "editor.registerCompletion",
-      "export.onWillExport"
+      "export.onWillExport",
+      "ai.registerInlineCompletion"
     ]
   },
   {
@@ -63,11 +68,17 @@
       "metadata.tags",
       "metadata.tasks",
       "metadata.search",
+      "history.registerSource",
+      "history.unregisterSource",
+      "history.sources",
+      "history.versions",
+      "history.read",
       "git.status",
       "git.log",
       "git.show",
       "files.readText",
       "metadata.",
+      "history.",
       "files.writeText",
       "files.create",
       "files.process",
@@ -87,13 +98,15 @@
       "files.trash",
       "files.createFolder",
       "files.frontmatterSet",
+      "files.setTask",
       "files.setConvention",
       "files.blockId",
       "files.willSave",
       "webview.writeFile",
       "files.process",
       "files.frontmatter.update",
-      "files.onWillSave"
+      "files.onWillSave",
+      "metadata.setTask"
     ]
   },
   {
@@ -134,6 +147,21 @@
     "permission": "ai.tools",
     "calls": [
       "ai.registerTool"
+    ]
+  },
+  {
+    "permission": "ai.model",
+    "calls": [
+      "ai.available",
+      "ai.complete"
+    ]
+  },
+  {
+    "permission": "comments",
+    "calls": [
+      "comments.list",
+      "comments.add",
+      "comments.resolve"
     ]
   }
 ]

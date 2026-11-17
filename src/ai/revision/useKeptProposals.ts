@@ -20,6 +20,13 @@ import { useIncomingRevisions } from "./useIncomingRevisions";
  *  bar run through them writes once at the end, not at every step. */
 const WRITE_AFTER_MS = 400;
 
+/** A count that grows as each generated picture settles. */
+function usePicturesSettled(): number {
+  const [settled, settle] = useReducer((n: number) => n + 1, 0);
+  useEffect(() => onPictureSettled(settle), []);
+  return settled;
+}
+
 /** Keeps the document's undecided proposals with it, restoring them on open.
  *  Nothing is written before they are restored, so opening never wipes them. */
 export function useKeptProposals({
@@ -48,8 +55,7 @@ export function useKeptProposals({
   const written = useRef<string | null>(null);
   const ready = run(() => true) === true;
   // A picture made since: its proposal may be kept now.
-  const [pictures, picturesSettled] = useReducer((n: number) => n + 1, 0);
-  useEffect(() => onPictureSettled(picturesSettled), []);
+  const pictures = usePicturesSettled();
 
   useEffect(() => {
     if (!ready || !filePath || restored.current === filePath) return;

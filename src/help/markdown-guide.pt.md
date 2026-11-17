@@ -37,6 +37,8 @@ Todos estão no menu **Visualizar** (**Visualizar › Modo** para os dois primei
 
 O painel **Estrutura** da barra lateral lista os títulos do documento; clique em um para ir até ele. Clique com o botão direito na estrutura para **Expandir tudo** e **Recolher tudo**, ou clique com `Option` (`Alt`) na seta de um título para recolher ou expandir todos de uma vez.
 
+A seção de um título também se recolhe no documento: aponte para o título e clique na seta na margem à esquerda, ou ponha o cursor na seção e pressione `Cmd+Option+[` (`Ctrl+Shift+[`); `Cmd+Option+]` (`Ctrl+Shift+]`) a expande de novo. Só a exibição muda, nunca o texto, e uma busca ou a estrutura que chegue dentro de uma seção recolhida a abre.
+
 **Tamanho da interface** (Ajustes › Aparência) aumenta ou diminui a barra lateral, as abas, os menus, as abas de IA e os Ajustes, texto e controles juntos; cada documento mantém o próprio zoom (`Cmd+=`, `Cmd+-`). `Ctrl+Tab` e `Ctrl+Shift+Tab` vão para a próxima aba e para a anterior.
 
 ### Notas de rodapé, linhas e sumário

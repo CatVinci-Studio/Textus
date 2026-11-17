@@ -85,7 +85,7 @@ fn from_free(free: u64) -> u8 {
 /// Linux's own pressure (PSI, /proc/pressure/memory): the share of the last
 /// 10 s that tasks waited on memory. Some waiting is short, all of them
 /// waiting is very short. None on a kernel without it.
-#[cfg(any(test, target_os = "linux"))]
+#[cfg(any(test, target_os = "linux", target_os = "android"))]
 fn from_psi(text: &str) -> Option<u8> {
     let avg10 = |kind: &str| -> Option<f64> {
         let line = text.lines().find(|l| l.starts_with(kind))?;
@@ -104,7 +104,7 @@ fn from_psi(text: &str) -> Option<u8> {
     })
 }
 
-#[cfg(target_os = "macos")]
+#[cfg(any(target_os = "macos", target_os = "ios"))]
 fn sysctl_u64(name: &str) -> Option<u64> {
     let name = std::ffi::CString::new(name).ok()?;
     let mut value: u64 = 0;
@@ -127,7 +127,7 @@ fn sysctl_u64(name: &str) -> Option<u64> {
     })
 }
 
-#[cfg(target_os = "macos")]
+#[cfg(any(target_os = "macos", target_os = "ios"))]
 fn total_bytes() -> u64 {
     sysctl_u64("hw.memsize").unwrap_or(0)
 }
@@ -142,7 +142,7 @@ fn pressure() -> u8 {
     }
 }
 
-#[cfg(target_os = "linux")]
+#[cfg(any(target_os = "linux", target_os = "android"))]
 fn meminfo(key: &str) -> Option<u64> {
     let text = std::fs::read_to_string("/proc/meminfo").ok()?;
     let line = text.lines().find(|l| l.starts_with(key))?;
@@ -150,18 +150,44 @@ fn meminfo(key: &str) -> Option<u64> {
     Some(kb * 1024)
 }
 
-#[cfg(target_os = "linux")]
+#[cfg(any(target_os = "linux", target_os = "android"))]
 fn total_bytes() -> u64 {
     meminfo("MemTotal:").unwrap_or(0)
 }
 
-#[cfg(target_os = "linux")]
+// Android is Linux underneath: the same files, PSI where the system lets
+// an app read it.
+#[cfg(any(target_os = "linux", target_os = "android"))]
 fn pressure() -> u8 {
     let psi = std::fs::read_to_string("/proc/pressure/memory")
         .ok()
         .and_then(|text| from_psi(&text))
         .unwrap_or(0);
-    psi.max(meminfo("MemAvailable:").map_or(0, from_free))
+    psi.max(free_pressure())
+}
+
+#[cfg(target_os = "linux")]
+fn free_pressure() -> u8 {
+    meminfo("MemAvailable:").map_or(0, from_free)
+}
+
+/// Android keeps little free by design, its own killer freeing apps as it
+/// needs: short only when what's left is a small share of the phone.
+#[cfg(target_os = "android")]
+fn free_pressure() -> u8 {
+    match (meminfo("MemAvailable:"), meminfo("MemTotal:")) {
+        (Some(free), Some(total)) if total > 0 => from_share(free, total),
+        _ => 0,
+    }
+}
+
+#[cfg(any(test, target_os = "android"))]
+fn from_share(free: u64, total: u64) -> u8 {
+    match free * 100 / total {
+        p if p < 5 => 2,
+        p if p < 10 => 1,
+        _ => 0,
+    }
 }
 
 #[cfg(windows)]
@@ -186,12 +212,25 @@ fn pressure() -> u8 {
     status().map_or(0, |s| from_free(s.ullAvailPhys))
 }
 
-#[cfg(not(any(target_os = "macos", target_os = "linux", windows)))]
+#[cfg(not(any(
+    target_os = "macos",
+    target_os = "ios",
+    target_os = "linux",
+    target_os = "android",
+    windows
+)))]
 fn total_bytes() -> u64 {
     0
 }
 
-#[cfg(not(any(target_os = "macos", target_os = "linux", windows)))]
+// iOS tells apps no level, and its web view's memory is another
+// process's: the device's size alone sets the tier.
+#[cfg(not(any(
+    target_os = "macos",
+    target_os = "linux",
+    target_os = "android",
+    windows
+)))]
 fn pressure() -> u8 {
     0
 }
@@ -206,6 +245,13 @@ mod tests {
         assert_eq!(super::from_free(4 * GB), 0);
         assert_eq!(super::from_free(GB * 8 / 10), 1);
         assert_eq!(super::from_free(GB / 4), 2);
+    }
+
+    #[test]
+    fn an_android_phone_is_short_by_the_share_left() {
+        assert_eq!(super::from_share(GB, 8 * GB), 0);
+        assert_eq!(super::from_share(GB * 6 / 10, 8 * GB), 1);
+        assert_eq!(super::from_share(GB / 4, 8 * GB), 2);
     }
 
     #[test]

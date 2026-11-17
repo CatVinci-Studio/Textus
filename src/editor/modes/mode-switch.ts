@@ -44,15 +44,31 @@ export function flushDomSelection(view: EditorView): void {
 }
 
 /** The WYSIWYG caret as a markdown offset. */
+/** Where the editor position `pos` falls in `markdown`, the tab's text. */
+export function markdownOffsetAt(
+  ctx: Ctx,
+  markdown: string,
+  pos: number,
+): number {
+  const { doc } = ctx.get(editorViewCtx).state;
+  return alignPrefixOffset(ctx.get(serializerCtx)(doc.cut(0, pos)), markdown);
+}
+
+/** An offset in `text` as a line and a column, both from 0. */
+export function lineAndColumn(
+  text: string,
+  offset: number,
+): { line: number; ch: number } {
+  const before = text.slice(0, offset);
+  const start = before.lastIndexOf("\n") + 1;
+  return { line: before.split("\n").length - 1, ch: offset - start };
+}
+
 export function readEditorCaret(ctx: Ctx, markdown: string): ModeSwitchCaret {
   const view = ctx.get(editorViewCtx);
   flushDomSelection(view);
-  const { doc, selection } = view.state;
-  const serialize = ctx.get(serializerCtx);
-  const offset = alignPrefixOffset(
-    serialize(doc.cut(0, selection.head)),
-    markdown,
-  );
+  const { selection } = view.state;
+  const offset = markdownOffsetAt(ctx, markdown, selection.head);
   let viewportY: number | null = null;
   const scroller = scrollerOf(view.dom);
   try {
@@ -72,6 +88,8 @@ export function applyEditorCaret(
   markdown: string,
   caret: ModeSwitchCaret,
   centre = false,
+  /** False: the caret goes there and the page stays where it is read. */
+  scroll = true,
 ): void {
   const prefixDoc = parseMarkdownSource(
     ctx,
@@ -81,7 +99,13 @@ export function applyEditorCaret(
   prefixDoc?.descendants((node, nodePos) => {
     if (node.isTextblock) pos = nodePos + 1 + node.content.size;
   });
-  placeEditorCaret(ctx.get(editorViewCtx), pos, caret.viewportY, centre);
+  placeEditorCaret(
+    ctx.get(editorViewCtx),
+    pos,
+    caret.viewportY,
+    centre,
+    scroll,
+  );
 }
 
 /** Places the WYSIWYG caret at document position `pos` and scrolls it to
@@ -91,6 +115,7 @@ export function placeEditorCaret(
   pos: number,
   viewportY: number | null,
   centre = false,
+  scroll = true,
 ): void {
   const { doc } = view.state;
   const at = Math.max(0, Math.min(pos, doc.content.size));
@@ -98,7 +123,7 @@ export function placeEditorCaret(
     view.state.tr.setSelection(TextSelection.near(doc.resolve(at))),
   );
   takeKeys(view);
-  const scroller = scrollerOf(view.dom);
+  const scroller = scroll ? scrollerOf(view.dom) : null;
   if (!scroller) return;
   const head = view.state.selection.head;
   try {

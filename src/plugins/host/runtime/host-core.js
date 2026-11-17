@@ -2,7 +2,7 @@
 // inside one function): the link to the window, shared helpers, webviews,
 // storage and the plugin's context.
 
-var API_VERSION = "1.7";
+var API_VERSION = "1.8";
 var app = null;
 var waiting = [];
 var module = { exports: {} };
@@ -14,10 +14,17 @@ var codeBlockProviders = new Map();
 var hoverProviders = [];
 var pasteHandlers = {};
 var outlineProviders = [];
+var blockTypes = new Map();
+var menuProviders = {};
+var historySources = new Map();
+var inlineCompletions = new Map();
+var exportFormats = new Map();
 var pickSearches = {};
 var pickSearchCount = 0;
 var pasteHandlerCount = 0;
 var decorationProviders = [];
+var diagnosticProviders = new Map();
+var syntaxes = new Map();
 var completionProviders = new Map();
 // Asks the panel may still call off, by request.
 var completionAsks = new Map();

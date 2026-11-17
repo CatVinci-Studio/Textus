@@ -1,7 +1,7 @@
 import { Plugin, TextSelection } from "@milkdown/kit/prose/state";
 import { $prose } from "@milkdown/kit/utils";
 import type { EditorView } from "@milkdown/kit/prose/view";
-import { edgeStep } from "./drag-autoscroll-plugin";
+import { edgeScroll } from "../../engine/drag/edge-scroll";
 import { gapCaret } from "../click-below-end";
 
 /**
@@ -60,7 +60,7 @@ function createMarginClickPlugin() {
 
 /**
  * Selects from `anchor` to the text nearest the pointer until the button is
- * let go, scrolling on past the scroller's top or bottom at edgeStep's pace.
+ * let go, scrolling on past the scroller's top or bottom (edgeScroll).
  * One update a frame, however fast the mouse moves. Returns its stop.
  */
 function followDrag(
@@ -69,7 +69,6 @@ function followDrag(
   anchor: number,
 ): () => void {
   let pointer = { x: 0, y: 0 };
-  let frame = 0;
   const follow = (rect?: DOMRect) => {
     const head = nearestPos(view, pointer.x, pointer.y, rect);
     const { doc, selection } = view.state;
@@ -81,28 +80,19 @@ function followDrag(
     const next = TextSelection.between(doc.resolve(anchor), doc.resolve(head));
     view.dispatch(view.state.tr.setSelection(next));
   };
-  const step = () => {
-    frame = 0;
-    const rect = scroller?.getBoundingClientRect();
-    const by = rect ? edgeStep(pointer.y, rect.top, rect.bottom) : 0;
-    if (scroller && by) scroller.scrollTop += by;
-    follow(rect);
-    // Held past an edge, it scrolls on without a move.
-    if (by) frame = requestAnimationFrame(step);
-  };
+  const edge = edgeScroll(() => scroller, follow);
   const move = (event: MouseEvent) => {
     if (!(event.buttons & 1)) return stop();
     pointer = { x: event.clientX, y: event.clientY };
-    if (!frame) frame = requestAnimationFrame(step);
+    edge.at(pointer.y);
   };
   // The button can be let go before the last move's frame: it still counts.
   const up = () => {
-    if (frame) follow(scroller?.getBoundingClientRect());
+    edge.flush();
     stop();
   };
   const stop = () => {
-    if (frame) cancelAnimationFrame(frame);
-    frame = 0;
+    edge.stop();
     window.removeEventListener("mousemove", move, true);
     window.removeEventListener("mouseup", up, true);
   };

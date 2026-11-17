@@ -42,7 +42,6 @@ const requests: [string, () => Promise<unknown>][] = [
       ai.learnStyle({ provider: "openai", model: null, ...project, files: [] }),
   ],
   ["fetch_custom_models", () => auth.fetchCustomModels("http://x", null)],
-  ["test_custom_endpoint", () => auth.testCustomEndpoint("http://x", null)],
 ];
 
 describe("requests to an AI service", () => {

@@ -78,13 +78,14 @@ export const newlineInCode: Command = (state, dispatch) => {
   return true;
 };
 
-/** Mod+Enter in a quote (or GitHub alert): continue below it. Code blocks
- *  and tables inside the quote keep their own exit. */
-export const leaveBlockquote: Command = (state, dispatch) => {
+/** Mod+Enter in a table or a quote (or GitHub alert): continue below the
+ *  innermost one. A code block keeps its own exit. */
+export const leaveBlock: Command = (state, dispatch) => {
   const { $from } = state.selection;
-  if ($from.parent.type.spec.code || isInTable(state)) return false;
+  if ($from.parent.type.spec.code) return false;
+  const leaving = isInTable(state) ? "table" : "blockquote";
   for (let d = $from.depth; d > 0; d--) {
-    if ($from.node(d).type.name !== "blockquote") continue;
+    if ($from.node(d).type.name !== leaving) continue;
     if (dispatch)
       dispatch(landAfter(state.tr, $from.after(d)).scrollIntoView());
     return true;
@@ -383,7 +384,7 @@ const onEnter: Command[] = [
   splitTask,
   newlineInCode,
 ];
-const onModEnter: Command[] = [leaveBlockquote];
+const onModEnter: Command[] = [leaveBlock];
 const onShiftEnter: Command[] = [
   shiftEnterWithoutBreak,
   lineBreakInTableCell,

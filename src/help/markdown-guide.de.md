@@ -37,6 +37,8 @@ Alle findest du im Menü **Ansicht** (die ersten beiden unter **Ansicht › Modu
 
 Der Bereich **Gliederung** der Seitenleiste listet die Überschriften des Dokuments auf; ein Klick auf eine führt dorthin. Ein Rechtsklick auf die Gliederung bietet **Alle aufklappen** und **Alle zuklappen**, oder klappe mit `Option`-Klick (`Alt`-Klick) auf den Pfeil einer Überschrift alle auf einmal auf oder zu.
 
+Auch im Dokument lässt sich der Abschnitt unter einer Überschrift einklappen: Zeige auf die Überschrift und klicke auf den Pfeil links daneben, oder setze den Cursor in den Abschnitt und drücke `Cmd+Option+[` (`Strg+Umschalt+[`); `Cmd+Option+]` (`Strg+Umschalt+]`) klappt ihn wieder aus. Nur die Ansicht ändert sich, nie der Text, und eine Suche oder die Gliederung, die in einem eingeklappten Abschnitt landet, klappt ihn aus.
+
 **Größe der Oberfläche** (Einstellungen › Darstellung) vergrößert oder verkleinert Seitenleiste, Tabs, Menüs, KI-Tabs und Einstellungen, Text und Bedienelemente zusammen; jedes Dokument behält seinen eigenen Zoom (`Cmd+=`, `Cmd+-`). `Ctrl+Tab` und `Ctrl+Shift+Tab` wechseln zum nächsten und zum vorigen Tab.
 
 ### Fußnoten, Trennlinien und ein Inhaltsverzeichnis

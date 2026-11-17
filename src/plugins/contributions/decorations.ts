@@ -8,7 +8,7 @@ import { createSubscribers } from "../../utils/store";
 export interface PluginDecoration {
   block: string;
   anchor?: string;
-  style: "highlight" | "underline" | "muted" | "badge";
+  style: "highlight" | "underline" | "muted" | "badge" | "gutter";
   tone?: "accent" | "warning" | "danger" | "success";
   text?: string;
   tooltip?: string;
@@ -16,6 +16,10 @@ export interface PluginDecoration {
   before?: boolean;
   /** The words link here (http, https, mailto), followed as a link is. */
   url?: string;
+  /** For "gutter": a plugin's SVG or one or two characters; a dot without. */
+  icon?: string;
+  /** For "gutter": the plugin's command a click runs. */
+  command?: { id: string; args?: unknown[] };
 }
 
 /** A mark's link, when it is one a click may follow. */
@@ -27,10 +31,12 @@ export function markUrl(url: unknown): string | null {
 }
 
 /** `blocks` in sight, and the whole document they're of: the asking
- *  editor's, which needn't be the one in front. */
+ *  editor's, which needn't be the one in front, with its path (null for
+ *  one not saved yet). */
 type Ask = (
   blocks: SentBlock[],
   all: readonly SentBlock[],
+  path: string | null,
 ) => Promise<PluginDecoration[]>;
 
 const providers = new Map<string, Ask>();
@@ -61,12 +67,13 @@ export const onDecorationProviders = subscribers.subscribe;
 export async function decorate(
   blocks: SentBlock[],
   doc: readonly SentBlock[],
+  path: string | null = null,
   timeoutMs = 1500,
 ): Promise<(PluginDecoration & { plugin: string })[]> {
   const all = await Promise.all(
     [...providers].map(async ([plugin, ask]) => {
       const marks = await Promise.race([
-        ask(blocks, doc).catch(() => []),
+        ask(blocks, doc, path).catch(() => []),
         new Promise<PluginDecoration[]>((resolve) =>
           setTimeout(() => resolve([]), timeoutMs),
         ),

@@ -149,6 +149,19 @@ function isTopLevel(doc: ProseNode, pos: number): boolean {
   return topLevelStarts(doc)[topLevelIndex(doc, pos)] === pos;
 }
 
+/** A plugin's view for `name`: ProseMirror would take it when the
+ *  editor's own views have none, but these wrappers stand in front. */
+function pluginView(
+  view: EditorView,
+  name: string,
+): NodeViewConstructor | undefined {
+  for (const plugin of view.state.plugins) {
+    const views = plugin.props.nodeViews as NodeViews | undefined;
+    if (views?.[name]) return views[name];
+  }
+  return undefined;
+}
+
 /** What lazyBlockNodeViews wrapped, so wrapping again starts from it. */
 const baseOf = new WeakMap<NodeViews, NodeViews>();
 
@@ -167,7 +180,13 @@ export function lazyBlockNodeViews(
     views[type.name] = (node, view, getPos, outer, inner) => {
       // Null makes ProseMirror draw the node itself, as without a view.
       const delegate = () =>
-        own ? own(node, view, getPos, outer, inner) : null;
+        (own ?? pluginView(view, type.name))?.(
+          node,
+          view,
+          getPos,
+          outer,
+          inner,
+        ) ?? null;
       const state = lazyBlocksKey.getState(view.state);
       if (!state?.active) return delegate() as NodeView;
       // At its making the position is known at once, not walked to.

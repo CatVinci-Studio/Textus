@@ -1,5 +1,5 @@
 import { describe, expect, it } from "vitest";
-import { edgeStep } from "./drag-autoscroll-plugin";
+import { edgeStep } from "./edge-scroll";
 
 describe("edgeStep", () => {
   it("leaves a pointer well inside the scroller alone", () => {

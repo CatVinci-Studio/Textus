@@ -87,14 +87,20 @@ export function railDrag(
       if (!state) return;
       const { items, others, copy, from } = state;
       const to = indexAt(y);
-      copy.remove();
       rail.classList.remove("is-reordering");
       clearSlides(items);
       state = null;
-      if (!dropped || to === from) return;
+      // The copy flies to where the icon is once the rail is drawn anew.
+      const land = () => {
+        const now = rail.querySelector(`[data-rail-id="${CSS.escape(id)}"]`);
+        if (now) copy.land(now.getBoundingClientRect());
+        else copy.remove();
+      };
+      if (!dropped || to === from) return land();
       const order = others.map((o) => o.id);
       order.splice(to, 0, id);
       onDrop(order);
+      requestAnimationFrame(land);
     },
   });
 }

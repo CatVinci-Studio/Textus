@@ -1,0 +1,61 @@
+/* Plugins' inline syntax. The tones are plugin-decorations.css's. */
+
+.plugin-syntax-hidden {
+  display: none;
+}
+
+/* Its source while the caret is in it. */
+.plugin-syntax-source {
+  color: var(--doc-muted);
+}
+
+.plugin-syntax-highlight {
+  background: color-mix(in srgb, var(--plugin-tone) 18%, transparent);
+  border-radius: var(--doc-radius-sm);
+}
+
+.plugin-syntax-underline {
+  text-decoration: underline var(--plugin-tone);
+  text-decoration-thickness: 1px;
+  text-underline-offset: 3px;
+}
+
+.plugin-syntax-muted {
+  color: var(--doc-muted);
+}
+
+/* Covered until pointed at, pressed, or the caret is in it: a block of the
+   ink thinned into the page, so a dark page gets no bright bar. */
+.plugin-syntax-spoiler {
+  background: color-mix(in srgb, var(--doc-text) 40%, var(--doc-bg));
+  color: transparent;
+  border-radius: var(--doc-radius-sm);
+}
+.plugin-syntax-spoiler.is-touched,
+.plugin-syntax-spoiler:active {
+  background: color-mix(in srgb, var(--doc-text) 10%, transparent);
+  color: inherit;
+}
+@media (hover: hover) {
+  .plugin-syntax-spoiler:hover {
+    background: color-mix(in srgb, var(--doc-text) 10%, transparent);
+    color: inherit;
+  }
+}
+
+/* Its note set small above the words. */
+.plugin-syntax-ruby[data-ruby] {
+  position: relative;
+}
+.plugin-syntax-ruby[data-ruby]::before {
+  position: absolute;
+  inset-inline: -2em;
+  bottom: 100%;
+  content: attr(data-ruby);
+  color: var(--doc-muted);
+  font-size: 0.5em;
+  line-height: 1.2;
+  text-align: center;
+  white-space: nowrap;
+  pointer-events: none;
+}

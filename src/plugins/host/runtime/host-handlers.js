@@ -185,6 +185,41 @@ var handlers = {
     var controller = embedAsks.get(params.request);
     if (controller) controller.abort();
   },
+  $historyVersions: async function (params) {
+    var source = historySources.get(params.id);
+    return source ? plain((await source.versions(params.path)) || []) : [];
+  },
+  $historyRead: async function (params) {
+    var source = historySources.get(params.id);
+    return source ? await source.read(params.path, params.version) : null;
+  },
+  $export: async function (params) {
+    var format = exportFormats.get(params.id);
+    if (!format) return null;
+    return await format.export({
+      markdown: params.markdown,
+      html: params.html,
+      path: params.path,
+    });
+  },
+  $inlineCompletion: async function (params) {
+    var source = inlineCompletions.get(params.id);
+    if (!source) return null;
+    var text = await source.provide({
+      before: params.before,
+      after: params.after,
+      path: params.path,
+    });
+    return typeof text === "string" ? text : null;
+  },
+  $contextMenu: async function (params) {
+    var provide = menuProviders[params.where];
+    return provide ? plain((await provide(params.target)) || []) : [];
+  },
+  $insertBlockType: async function (params) {
+    var type = blockTypes.get(params.id);
+    if (type) await type.insert();
+  },
   $provideOutline: async function (params) {
     var all = [];
     for (var i = 0; i < outlineProviders.length; i++) {
@@ -225,6 +260,12 @@ var handlers = {
       if (Array.isArray(marks)) out = out.concat(plain(marks));
     }
     return out;
+  },
+  $diagnose: async function (params) {
+    var provider = diagnosticProviders.get(params.id);
+    if (!provider) return [];
+    var found = await provider.check(params.blocks, params.document);
+    return Array.isArray(found) ? plain(found) : [];
   },
   $willSave: async function (params) {
     var current = params.text;

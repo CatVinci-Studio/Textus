@@ -127,7 +127,7 @@ The folder menu creates `.textus/` and its files for you the first time you ask 
 - Typing `@` in the chat input attaches one of its files to your message.
 - Its `.textus/` folder holds the folder's style profile, library, writing instructions and skills.
 
-Right-click the empty paper of an AI tab and choose **Memory**: its top row shows the folder's name; click it for the **folder menu**. When your reference material doesn't live next to the draft, use **Choose folder…** there (or **Settings › Textus AI › Agent › Folder**). The folder you choose is used for every document — unsaved drafts included — until you pick **Use no folder**.
+Right-click the empty paper of an AI tab and choose **Memory**: its top row shows the folder's name; click it for the **folder menu**. When your reference material doesn't live next to the draft, use **Choose folder…** there (or **Settings › Textus AI › Agent › Folder**). The folder you choose is used for every document — unsaved drafts included — until you pick **Use the sidebar's folder**; with none chosen, the AI uses the folder open in the sidebar.
 
 > [!TIP]
 > Your draft is in `thesis/drafts/` and your interview notes in `thesis/research/`? Choose `thesis/` as the folder, and Textus AI can read `research/interviews.md` while you work on `drafts/chapter-2.md`.

@@ -40,7 +40,8 @@
   --island-edge: 0 0 0 1px var(--ui-frame-edge);
   --tab-radius: 0px;
   --tab-edge: transparent;
-  --tab-lift: 0px;
+  /* As tall as an island's tab, not the whole row: square, not taller. */
+  --tab-lift: var(--ui-tab-lift);
   --tab-gap: 0px;
   --tab-row-line: var(--ui-frame-edge);
   --tab-line: var(--ui-frame-edge);

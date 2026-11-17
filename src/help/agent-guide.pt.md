@@ -127,7 +127,7 @@ O menu da pasta cria a pasta `.textus/` e os arquivos dela na primeira vez que v
 - Digitar `@` no campo do chat anexa um dos arquivos dela à sua mensagem.
 - A pasta `.textus/` dela guarda o perfil de estilo, a biblioteca, as instruções de escrita e as habilidades da pasta.
 
-Clique com o botão direito no papel vazio de uma aba de IA e escolha **Memória**: a linha do topo mostra o nome da pasta; clique nela para abrir o **menu da pasta**. Quando o seu material de referência não está ao lado do rascunho, use **Escolher pasta…** nesse menu (ou **Ajustes › Textus AI › Agente › Pasta**). A pasta escolhida vale para todos os documentos, inclusive rascunhos não salvos, até você escolher **Não usar nenhuma pasta**.
+Clique com o botão direito no papel vazio de uma aba de IA e escolha **Memória**: a linha do topo mostra o nome da pasta; clique nela para abrir o **menu da pasta**. Quando o seu material de referência não está ao lado do rascunho, use **Escolher pasta…** nesse menu (ou **Ajustes › Textus AI › Agente › Pasta**). A pasta escolhida vale para todos os documentos, inclusive rascunhos não salvos, até você escolher **Usar a pasta da barra lateral**; sem nenhuma escolhida, a IA usa a pasta aberta na barra lateral.
 
 > [!TIP]
 > Seu rascunho está em `tese/rascunhos/` e as notas das entrevistas em `tese/pesquisa/`? Escolha `tese/` como pasta, e a Textus AI poderá ler `pesquisa/entrevistas.md` enquanto você trabalha em `rascunhos/capitulo-2.md`.

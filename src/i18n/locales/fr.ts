@@ -102,7 +102,7 @@ utiliser une.
 `,
   projectOpenStyle: "Ouvrir le profil de style",
   projectPickFolder: "Choisir le dossier…",
-  projectNoFolder: "N'utiliser aucun dossier",
+  projectFollowSidebar: "Utiliser le dossier de la barre latérale",
   projectReveal: "Afficher dans le gestionnaire de fichiers",
   projectLearnStyle: "Apprendre mon style à partir d'exemples…",
   projectImportReferences: "Importer des références…",
@@ -136,7 +136,7 @@ utiliser une.
   blockDuplicate: "Dupliquer",
   blockHandlesLabel: "Poignées de bloc",
   blockHandlesHelp:
-    "＋ et ⋮⋮ à côté du bloc sous le pointeur : ajouter un bloc, le déplacer ou le transformer en un autre type.",
+    "⋮⋮ à côté du bloc sous le pointeur : faites-le glisser pour déplacer le bloc, ou cliquez pour le transformer, le dupliquer ou le supprimer.",
   smoothCaretLabel: "Curseur fluide",
   menuBlockWide: "Affichage large",
   menuBlockZoom: "Taille",
@@ -735,6 +735,11 @@ utiliser une.
   outlineExpandAll: "Tout déplier",
   outlineCollapseAll: "Tout replier",
   wordCount: { one: "{n} mot", many: "{n} mots", other: "{n} mots" },
+  slipCount: {
+    one: "{n} problème",
+    many: "{n} problèmes",
+    other: "{n} problèmes",
+  },
   wordCountDetail: "{words} mots · {characters} caractères (sans espaces)",
   alertNote: "Remarque",
   alertTip: "Astuce",
@@ -788,6 +793,7 @@ utiliser une.
   backToStableNone:
     "Il n’y a pas de version stable vers laquelle revenir pour l’instant.",
   aiCompletionLabel: "Complétion IA",
+  completionSourceLabel: "Suggestions de",
   completionToneLabel: "Ton de la complétion",
   completionTone_default: "Adapté au document",
   completionTone_formal: "Soutenu",
@@ -954,6 +960,8 @@ utiliser une.
   modelListLabel: "Liste des modèles",
   customTestConnection: "Tester la connexion",
   customTestSuccess: "La connexion fonctionne.",
+  customModelNotListed:
+    "Connecté, mais ce point d’accès ne propose pas le modèle « {model} ». Choisissez-en un dans sa liste.",
   customSave: "Enregistrer",
   proxyLabel: "Proxy réseau",
   proxyTypeNone: "Aucun (direct)",
@@ -1191,6 +1199,9 @@ utiliser une.
   activityRail: "Barre d'activité",
   activityRailHide: "Masquer la barre d'activité",
   activityRailShow: "Afficher la barre d'activité",
+  windowLayoutGroup: "Disposition de la fenêtre",
+  classicLookNote:
+    "Vous préférez l'aspect de Textus avant la 1.4 ? Choisissez Classique, masquez la barre d'activité et affichez la barre de titre sur sa propre ligne. Rétablissez-les pour revenir au nouvel aspect.",
   layoutLabel: "Disposition",
   layoutIslands: "Îlots flottants",
   layoutClassic: "Classique",
@@ -1309,7 +1320,6 @@ utiliser une.
   windowMaximize: "Agrandir",
   windowRestore: "Niveau inférieur",
   windowClose: "Fermer",
-  chatWindowTitle: AI_NAME,
   chatWindowPin: "Garder au premier plan",
   chatWindowPinHint: "Garder cette fenêtre au-dessus de l'éditeur",
   chatWindowUnpinHint: "Ne plus garder cette fenêtre au-dessus de l'éditeur",
@@ -1488,7 +1498,11 @@ utiliser une.
     "L'engrenage réunit le thème, les polices et vos comptes d'IA.",
   tutorialEditorTitle: "Écrire tel que ça s'affiche",
   tutorialEditorBody:
-    "Le Markdown devient mise en forme pendant la frappe : essayez `# Un titre` ou `- une liste`.",
+    "Le Markdown devient mise en forme pendant la frappe. Essayez chacun :",
+  tutorialEditorHeading: "Un titre : `# Projets`",
+  tutorialEditorList: "Une liste : `- lait`",
+  tutorialEditorNumbered: "Numérotée : `1. d'abord`",
+  tutorialEditorTask: "Une tâche : `- [ ] rappeler`",
   tutorialAiTitle: "Textus AI",
   tutorialAiBody:
     "Cliquez sur les étincelles en haut à droite pour ouvrir Textus AI.",
@@ -1957,6 +1971,16 @@ utiliser une.
   pluginPermAppearance: "Modifier les couleurs de Textus et de vos documents",
   pluginPermGitCommit:
     "Faire des commits Git dans le dossier ouvert avec votre Git",
+  pluginPermComments:
+    "Lire et laisser des notes dans la marge de vos documents",
+  pluginPermAiModel:
+    "Utiliser votre modèle d'IA (compte dans l'usage de votre service d'IA)",
+  pluginAiAsk:
+    "{plugin} veut utiliser votre modèle d'IA. Ce qu'il envoie compte dans l'usage de votre service d'IA, jusqu'à {limit} jetons par mois pour ce plugin.",
+  pluginAiLimit:
+    "{plugin} a utilisé ses {limit} jetons d'IA ce mois-ci. En autoriser {limit} de plus ?",
+  pluginAiAllow: "Autoriser",
+  pluginAiUsage: "IA ce mois-ci : {used} sur {limit} jetons",
   pluginPermAgents:
     "Lancer un agent IA installé sur cet ordinateur (il peut lire et modifier des fichiers)",
   pluginPermBackground:
@@ -1984,6 +2008,8 @@ utiliser une.
   pluginKeysTaken:
     "{name} ne peut pas prendre le clavier : {holder} l'a déjà. Désactivez l'un des deux dans la liste des plugins de la barre latérale.",
   shortcutIndentListItem: "Indenter l’élément de liste",
+  shortcutFoldSection: "Replier la section",
+  shortcutUnfoldSection: "Déplier la section",
   shortcutOutdentListItem: "Désindenter l’élément de liste",
   pluginKeyTaken:
     "{name} : {key} appartient à « {owner} » et n’a donc pas été attribué à « {command} ». Choisissez un raccourci dans Réglages › Raccourcis.",

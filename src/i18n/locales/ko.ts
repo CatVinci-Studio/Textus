@@ -93,7 +93,7 @@ ${AI_NAME}에게 주는 글쓰기 지침으로, 모든 문서에 적용됩니다
 `,
   projectOpenStyle: "문체 프로필 열기",
   projectPickFolder: "폴더 선택…",
-  projectNoFolder: "폴더 사용 안 함",
+  projectFollowSidebar: "사이드바의 폴더 사용",
   projectReveal: "파일 관리자에서 보기",
   projectLearnStyle: "샘플로 내 문체 학습…",
   projectImportReferences: "참고 자료 가져오기…",
@@ -123,7 +123,7 @@ ${AI_NAME}에게 주는 글쓰기 지침으로, 모든 문서에 적용됩니다
   blockDuplicate: "복제",
   blockHandlesLabel: "블록 핸들",
   blockHandlesHelp:
-    "포인터가 있는 블록 왼쪽에 ＋와 ⋮⋮ 표시: 블록 추가, 이동, 다른 종류로 변환.",
+    "포인터가 있는 블록 왼쪽에 ⋮⋮ 표시: 끌어서 블록을 옮기거나, 눌러서 다른 종류로 변환, 복제, 삭제.",
   smoothCaretLabel: "부드러운 커서",
   menuBlockWide: "넓게 보기",
   menuBlockZoom: "크기",
@@ -667,6 +667,7 @@ ${AI_NAME}에게 주는 글쓰기 지침으로, 모든 문서에 적용됩니다
   outlineExpandAll: "모두 펼치기",
   outlineCollapseAll: "모두 접기",
   wordCount: { other: "{n} 단어" },
+  slipCount: { other: "문제 {n}개" },
   wordCountDetail: "{words}단어 · 공백 제외 {characters}자",
   alertNote: "참고",
   alertTip: "팁",
@@ -719,6 +720,7 @@ ${AI_NAME}에게 주는 글쓰기 지침으로, 모든 문서에 적용됩니다
   backToStableInstall: "{version} 설치",
   backToStableNone: "지금은 되돌아갈 안정 버전이 없습니다.",
   aiCompletionLabel: "AI 이어 쓰기",
+  completionSourceLabel: "자동 완성 제공",
   completionToneLabel: "이어 쓰기 어조",
   completionTone_default: "문서에 맞게",
   completionTone_formal: "격식 있게",
@@ -878,6 +880,8 @@ ${AI_NAME}에게 주는 글쓰기 지침으로, 모든 문서에 적용됩니다
   modelListLabel: "모델 목록",
   customTestConnection: "연결 테스트",
   customTestSuccess: "연결에 성공했습니다.",
+  customModelNotListed:
+    "연결되었지만 이 엔드포인트의 모델 목록에 “{model}”이(가) 없습니다. 목록에서 하나를 고르세요.",
   customSave: "저장",
   proxyLabel: "네트워크 프록시",
   proxyTypeNone: "사용 안 함(직접 연결)",
@@ -1084,6 +1088,9 @@ ${AI_NAME}에게 주는 글쓰기 지침으로, 모든 문서에 적용됩니다
   activityRail: "활동 막대",
   activityRailHide: "활동 막대 숨기기",
   activityRailShow: "활동 막대 표시",
+  windowLayoutGroup: "창 레이아웃",
+  classicLookNote:
+    "1.4 이전의 모습이 좋다면 레이아웃을 클래식으로 바꾸고, 활동 막대를 끄고, 제목 표시줄을 별도 줄에 표시하세요. 되돌리면 새 모습으로 돌아갑니다.",
   layoutLabel: "레이아웃",
   layoutIslands: "떠 있는 섬",
   layoutClassic: "클래식",
@@ -1202,7 +1209,6 @@ ${AI_NAME}에게 주는 글쓰기 지침으로, 모든 문서에 적용됩니다
   windowMaximize: "최대화",
   windowRestore: "이전 크기로 복원",
   windowClose: "닫기",
-  chatWindowTitle: AI_NAME,
   chatWindowPin: "항상 위에 표시",
   chatWindowPinHint: "이 창을 항상 편집기 위에 표시",
   chatWindowUnpinHint: "항상 위에 표시 해제",
@@ -1368,7 +1374,11 @@ ${AI_NAME}에게 주는 글쓰기 지침으로, 모든 문서에 적용됩니다
   tutorialSettingsBody: "톱니바퀴에는 테마, 글꼴, AI 계정이 있습니다.",
   tutorialEditorTitle: "보이는 대로 쓰기",
   tutorialEditorBody:
-    "Markdown은 입력하는 즉시 서식이 됩니다: `# 제목`이나 `- 목록`을 써 보세요.",
+    "Markdown은 입력하는 즉시 서식이 됩니다. 하나씩 써 보세요:",
+  tutorialEditorHeading: "제목: `# 계획`",
+  tutorialEditorList: "목록: `- 우유`",
+  tutorialEditorNumbered: "번호 목록: `1. 첫째`",
+  tutorialEditorTask: "할 일: `- [ ] 전화하기`",
   tutorialAiTitle: "Textus AI",
   tutorialAiBody: "오른쪽 위의 반짝이 버튼을 클릭해 Textus AI를 여세요.",
   tutorialAiBodyPhone: "오른쪽 위의 반짝이 버튼을 탭해 Textus AI를 여세요.",
@@ -1807,6 +1817,14 @@ ${AI_NAME}에게 주는 글쓰기 지침으로, 모든 문서에 적용됩니다
   pluginPermNotifications: "시스템 알림 표시하기",
   pluginPermAppearance: "Textus와 문서의 색상 변경하기",
   pluginPermGitCommit: "내 Git으로 열린 폴더에 Git 커밋 만들기",
+  pluginPermComments: "문서 여백의 메모 읽기 및 남기기",
+  pluginPermAiModel: "내 AI 모델 사용(AI 서비스 사용량에 포함됨)",
+  pluginAiAsk:
+    "{plugin}이(가) 내 AI 모델을 사용하려고 합니다. 보내는 내용은 AI 서비스 사용량에 포함되며, 이 플러그인은 한 달에 최대 {limit} 토큰입니다.",
+  pluginAiLimit:
+    "{plugin}이(가) 이번 달 AI 토큰 {limit}개를 다 썼습니다. {limit}개를 더 허용할까요?",
+  pluginAiAllow: "허용",
+  pluginAiUsage: "이번 달 AI: {limit} 토큰 중 {used}",
   pluginPermAgents:
     "이 컴퓨터에 설치된 AI 에이전트 실행하기(파일을 읽고 바꿀 수 있음)",
   pluginPermBackground: "일정에 따라 코드 실행하기(모든 창을 닫아도)",
@@ -1833,6 +1851,8 @@ ${AI_NAME}에게 주는 글쓰기 지침으로, 모든 문서에 적용됩니다
   pluginKeysTaken:
     "{name}이(가) 키보드를 쓸 수 없습니다: {holder}이(가) 사용 중입니다. 사이드바의 플러그인 목록에서 하나를 끄세요.",
   shortcutIndentListItem: "목록 항목 들여쓰기",
+  shortcutFoldSection: "섹션 접기",
+  shortcutUnfoldSection: "섹션 펼치기",
   shortcutOutdentListItem: "목록 항목 내어쓰기",
   pluginKeyTaken:
     "{name}: {key}는 {owner}에서 쓰고 있어 “{command}”에 지정하지 않았습니다. 설정 › 단축키에서 다른 키를 지정하세요.",

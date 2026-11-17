@@ -61,7 +61,7 @@ pub(super) fn workspace_section(workspace: &AgentWorkspace, ui_language: &str) -
     };
     let folder = match (&workspace.root, workspace.root_source) {
         (Some(root), RootSource::Chosen) => format!(
-            "Folder: {root} - opened or chosen by the user, in {}. {readable}. Use no folder, in the same menu or Settings row, goes back to none. {file_tools}{attached} {one_folder}",
+            "Folder: {root} - opened or chosen by the user, in {}. {readable}. Use the sidebar's folder, in the same menu or Settings row, goes back to the folder open in the sidebar, or none. {file_tools}{attached} {one_folder}",
             where_to_choose_the_project_folder(true)
         ),
         (Some(root), _) => format!(

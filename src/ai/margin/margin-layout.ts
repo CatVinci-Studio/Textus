@@ -9,7 +9,7 @@ import { useLatest } from "../../utils/hooks/useLatest";
 import { flip } from "../../engine/motion/flip";
 import { columnForMargin, marginRoom, NARROWEST_SHARE } from "./margin-room";
 import "./ReviewMargin.css";
-import { zoomedRectScale } from "../../engine/controls/zoomed-rects";
+import { zoomedRectScale } from "../../engine/zoom/zoomed-rects";
 import { noteAnchorClass } from "./review-notes-plugin";
 
 /** Where the margin goes and its cards stand, each level with its passage

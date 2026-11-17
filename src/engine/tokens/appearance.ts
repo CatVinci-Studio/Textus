@@ -76,3 +76,8 @@ export function appearanceIsDark(): boolean {
   if (chosen === "light") return false;
   return window.matchMedia?.("(prefers-color-scheme: dark)").matches ?? false;
 }
+
+/** Whether the window shows its dark appearance now. */
+export function windowIsDark(): boolean {
+  return getComputedStyle(document.documentElement).colorScheme === "dark";
+}

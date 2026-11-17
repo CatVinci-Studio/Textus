@@ -15,7 +15,8 @@ import {
 } from "../../registry/context-menu-items";
 import { setHoverStarter } from "./hover-providers";
 import { startOnEmbed } from "./embeds";
-import { localize, type MenuContribution } from "../store/manifest";
+import { localize } from "../store/manifest";
+import { type MenuContribution } from "../store/manifest-types";
 import {
   PluginListPane,
   PluginTabIcon,
@@ -29,7 +30,8 @@ import {
 } from "../store/plugin-records";
 import { evaluateWhen, type WhenContext } from "./when";
 import { addCodeBlockLanguage } from "./code-blocks";
-import { addSlashItems } from "./slash-commands";
+import { addSlashItems, askBlockMenu } from "./slash-commands";
+import { snippetItem } from "./snippets";
 import { pluginKey } from "./plugin-keys";
 import { claim, ownedClaims } from "./owners";
 import { addAgents } from "./agents";
@@ -128,6 +130,7 @@ export function applyContributions(
           })),
       ),
     );
+  if (manifest.contributes.blockMenu) undo.push(askBlockMenu(id));
   const slashItems = menus["editor/slash"] ?? [];
   if (slashItems.length)
     undo.push(
@@ -144,6 +147,15 @@ export function applyContributions(
           shown: () => evaluateWhen(item.when, whenContext()),
           run: () => runCommand(item.command),
         })),
+      ),
+    );
+  if (manifest.contributes.snippets.length)
+    undo.push(
+      addSlashItems(
+        `${id}#snippets`,
+        manifest.contributes.snippets.map((snippet) =>
+          snippetItem(snippet, text, text(manifest.name)),
+        ),
       ),
     );
   const places: ContextMenuPlace[] = [

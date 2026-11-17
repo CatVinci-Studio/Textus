@@ -337,3 +337,31 @@ test("Paste as Plain Text keeps Markdown marks as text", async ({ page }) => {
     page.locator(`${editor} strong, ${editor} .md-strong`),
   ).toHaveCount(0);
 });
+
+test("an image's grip widens it; Esc while pulling puts it back", async ({
+  page,
+}) => {
+  const wide = Buffer.from(
+    '<svg xmlns="http://www.w3.org/2000/svg" width="400" height="120"><rect width="400" height="120" fill="#888"/></svg>',
+  ).toString("base64");
+  await pasteMarkdown(page, `![](data:image/svg+xml;base64,${wide})`);
+  const image = page.locator(`${editor} .image-view`);
+  await expect(image.locator("img")).toHaveJSProperty("complete", true);
+  const before = await sourceOf(page);
+  const pull = async (cancel: boolean) => {
+    await image.hover();
+    const grip = (await image.locator(".image-resize-handle").boundingBox())!;
+    await page.mouse.move(grip.x + grip.width / 2, grip.y + grip.height / 2);
+    await page.mouse.down();
+    await page.mouse.move(grip.x - 60, grip.y + grip.height / 2, {
+      steps: 6,
+    });
+    if (cancel) await page.keyboard.press("Escape");
+    await page.mouse.up();
+  };
+  await pull(true);
+  await settled(page);
+  expect(await sourceOf(page)).toBe(before);
+  await pull(false);
+  await expect.poll(() => sourceOf(page)).not.toBe(before);
+});

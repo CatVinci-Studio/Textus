@@ -5,7 +5,6 @@ import type { ContextMenuEntry } from "../../engine/controls/ContextMenu";
 import type { Strings } from "../../i18n/strings";
 import type { EditorRunner } from "../useEditorRunner";
 import {
-  addBelow,
   blockAround,
   caretInto,
   deleteBlock,
@@ -15,10 +14,9 @@ import {
 import { applyBlockKind } from "./block-kinds";
 import { menuKinds } from "./block-kind-list";
 
-/** A block handle's menu: ＋'s blocks to add below, or ⋮⋮'s own. */
+/** A block handle's menu, for the block at `pos`. */
 export interface BlockMenu {
   pos: number;
-  add: boolean;
 }
 
 /** Runs `make` on the block still at `pos`; nothing once it has gone. */
@@ -48,15 +46,6 @@ export function blockMenuItems(
 ): ContextMenuEntry[] {
   const kind = (id: string) => () =>
     applyBlockKind(run, id, actions.openTableDialog);
-  if (menu.add)
-    return menuKinds().map((k) => ({
-      label: k.label(t),
-      onSelect: () => {
-        if (!onBlock(run, menu.pos, (view, b) => addBelow(view.state, b)))
-          return;
-        if (k.id !== "paragraph") kind(k.id)();
-      },
-    }));
   const node = run((ctx) =>
     blockAround(ctx.get(editorViewCtx).state.doc, menu.pos),
   )?.node;

@@ -1,8 +1,10 @@
 import { SearchField } from "../engine/controls/SearchField";
 import {
+  memo,
   useEffect,
   useLayoutEffect,
   useRef,
+  type FocusEventHandler,
   type ReactNode,
   type Ref,
 } from "react";
@@ -29,9 +31,18 @@ export interface SearchablePage {
   render: () => ReactNode;
 }
 
-/** Every searchable page, mounted hidden while there is a query and read
- *  into entries as it renders, again when a row arrives late. */
-export function SettingsSearchIndex({
+/** Every searchable page, mounted hidden while the search is in use and
+ *  read into entries as it renders, again when a row arrives late. Drawn
+ *  again only when the pages change, not with each letter typed. */
+export const SettingsSearchIndex = memo(
+  SearchIndex,
+  (was, now) =>
+    was.onEntries === now.onEntries &&
+    was.pages.map((p) => p.key).join("\n") ===
+      now.pages.map((p) => p.key).join("\n"),
+);
+
+function SearchIndex({
   pages,
   onEntries,
 }: {
@@ -92,9 +103,13 @@ export function SettingsSearchField({
   onQueryChange,
   onMove,
   onPick,
+  onFocus,
+  onBlur,
 }: {
   t: Strings;
   inputRef: Ref<HTMLInputElement>;
+  onFocus?: FocusEventHandler<HTMLInputElement>;
+  onBlur?: FocusEventHandler<HTMLInputElement>;
   query: string;
   listId: string;
   /** The option ↑/↓ have reached, announced as the box's active one. */
@@ -121,6 +136,8 @@ export function SettingsSearchField({
         // would widen the categories beside the page.
         size={1}
         value={query}
+        onFocus={onFocus}
+        onBlur={onBlur}
         onChange={(e) => onQueryChange(e.target.value)}
         onKeyDown={(e) => {
           if (isImeKeydown(e)) return;
