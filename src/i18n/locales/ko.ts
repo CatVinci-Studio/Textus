@@ -667,6 +667,7 @@ ${AI_NAME}에게 주는 글쓰기 지침으로, 모든 문서에 적용됩니다
   outlineExpandAll: "모두 펼치기",
   outlineCollapseAll: "모두 접기",
   wordCount: { other: "{n} 단어" },
+  slipCount: { other: "문제 {n}개" },
   wordCountDetail: "{words}단어 · 공백 제외 {characters}자",
   alertNote: "참고",
   alertTip: "팁",

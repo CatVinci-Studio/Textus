@@ -1,7 +1,7 @@
 import type { Ctx } from "@milkdown/kit/ctx";
 import { parserCtx } from "@milkdown/kit/core";
 import type { Node as ProseNode } from "@milkdown/kit/prose/model";
-import { Plugin, PluginKey } from "@milkdown/kit/prose/state";
+import { Plugin, PluginKey, TextSelection } from "@milkdown/kit/prose/state";
 import { Decoration, DecorationSet } from "@milkdown/kit/prose/view";
 import { $prose } from "@milkdown/kit/utils";
 import { metaDecorations } from "../../editor/meta-decorations";
@@ -19,6 +19,7 @@ import {
   type PluginDiagnostic,
 } from "../../plugins/contributions/diagnostics";
 import { askAtRest, answerRange } from "./rest-asking";
+import { publishSlips } from "../../editor/issues/slips-by-tab";
 import "./plugin-diagnostics.css";
 
 /**
@@ -118,6 +119,50 @@ function drawSlip(
   ];
 }
 
+/** The caret into the slip `spec` is of, where it is now: its card opens. */
+function goTo(view: EditorView, spec: DiagnosticSpec) {
+  const deco = key
+    .getState(view.state)
+    ?.find(undefined, undefined, (s) => s === spec)[0];
+  if (!deco) return;
+  view.dispatch(
+    view.state.tr
+      .setSelection(TextSelection.create(view.state.doc, deco.from))
+      .scrollIntoView(),
+  );
+  view.focus();
+}
+
+/** The slips drawn, for the tab's corner, whenever they change. */
+function tellSlips(view: EditorView) {
+  let shown: DecorationSet | undefined;
+  let tab: string | undefined;
+  return {
+    update() {
+      const set = key.getState(view.state);
+      if (set === shown) return;
+      shown = set;
+      tab ??= (view.dom.closest("[data-tab-id]") as HTMLElement | null)?.dataset
+        .tabId;
+      if (!tab) return;
+      publishSlips(
+        tab,
+        (set?.find() ?? []).map((deco) => {
+          const spec = deco.spec as DiagnosticSpec;
+          return {
+            label: spec.label ?? "",
+            message: spec.issue,
+            go: () => goTo(view, spec),
+          };
+        }),
+      );
+    },
+    destroy() {
+      if (tab) publishSlips(tab, []);
+    },
+  };
+}
+
 /** The plugins' checks of the blocks in sight, once the document rests. */
 export const pluginDiagnostics = (docPath: {
   readonly current: string | null;
@@ -128,13 +173,25 @@ export const pluginDiagnostics = (docPath: {
         key,
         state: metaDecorations(key),
         props: { decorations: (state) => key.getState(state) },
-        view: (view) =>
-          askAtRest(ctx, view, docPath, {
+        view: (view) => {
+          const asking = askAtRest(ctx, view, docPath, {
             key,
             active: hasDiagnosticProviders,
             subscribe: onDiagnosticProviders,
             ask: diagnose,
             draw: (block, pos, found) => drawSlip(ctx, block, pos, found),
-          }),
+          });
+          const slips = tellSlips(view);
+          return {
+            update(updated, prevState) {
+              asking.update?.(updated, prevState);
+              slips.update();
+            },
+            destroy() {
+              asking.destroy?.();
+              slips.destroy();
+            },
+          };
+        },
       }),
   );

@@ -736,6 +736,11 @@ para usar una.
     many: "{n} palabras",
     other: "{n} palabras",
   },
+  slipCount: {
+    one: "{n} problema",
+    many: "{n} problemas",
+    other: "{n} problemas",
+  },
   wordCountDetail: "{words} palabras · {characters} caracteres (sin espacios)",
   alertNote: "Nota",
   alertTip: "Consejo",

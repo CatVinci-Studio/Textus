@@ -723,6 +723,11 @@ Habilidades ficam na pasta skills/ ao lado deste arquivo, um arquivo
     many: "{n} palavras",
     other: "{n} palavras",
   },
+  slipCount: {
+    one: "{n} problema",
+    many: "{n} problemas",
+    other: "{n} problemas",
+  },
   wordCountDetail: "{words} palavras · {characters} caracteres (sem espaços)",
   alertNote: "Nota",
   alertTip: "Dica",

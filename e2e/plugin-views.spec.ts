@@ -323,6 +323,13 @@ test("a plugin's slip is underlined, explained on the slip card, and fixed from 
   const editor = page.locator('[data-active-tab="true"] .ProseMirror');
   const slip = editor.locator(".plugin-issue");
   await expect(slip).toHaveCount(1);
+  // Counted in the document's corner; its list takes the caret there.
+  const count = page.locator(".slip-count");
+  await expect(count).toHaveText("1 problem");
+  await count.click();
+  await page.getByRole("menuitem", { name: /^Tidy: MD026/ }).click();
+  await expect(page.locator(".grammar-popover")).toBeVisible();
+  await page.keyboard.press("Escape");
   await slip.hover();
   const card = page.locator(".grammar-popover");
   await expect(card.locator(".grammar-kind")).toHaveText("Tidy");

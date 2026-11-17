@@ -692,6 +692,7 @@ type /name in a conversation to use one.
   outlineExpandAll: "Expand All",
   outlineCollapseAll: "Collapse All",
   wordCount: { one: "{n} word", other: "{n} words" },
+  slipCount: { one: "{n} problem", other: "{n} problems" },
   wordCountDetail: "{words} words · {characters} characters (no spaces)",
   alertNote: "Note",
   alertTip: "Tip",

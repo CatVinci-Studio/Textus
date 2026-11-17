@@ -11,6 +11,7 @@ import type { Strings } from "../../i18n/strings";
 import { createPortal } from "react-dom";
 import { useDocEnd } from "../../document-view/doc-end";
 import { isMobileApp } from "../../platform/capabilities";
+import { SlipCount } from "./SlipCount";
 import "./document-corner.css";
 
 /** Where writers count characters, not words: Japanese's 文字数. Chinese
@@ -52,7 +53,6 @@ function DocumentCorner({
   const large = content.length > PAUSE_FEATURES_THRESHOLD;
   const shown = BY_CHARACTERS.has(lang) ? count.characters : count.words;
   const end = useDocEnd(tabId);
-  if (!shown && !large) return null;
   const detail = fill(t.wordCountDetail, {
     words: String(count.words),
     characters: String(count.characters),
@@ -64,6 +64,7 @@ function DocumentCorner({
       data-frame={frame}
       style={style}
     >
+      <SlipCount tabId={tabId} t={t} />
       {large && (
         <Tooltip text={t.largeDocHint}>
           <span className="tx-badge large-doc-badge">{t.largeDocBadge}</span>

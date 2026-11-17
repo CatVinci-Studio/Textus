@@ -735,6 +735,12 @@ export default {
     many: "{n} сл.",
     other: "{n} сл.",
   },
+  slipCount: {
+    one: "{n} проблема",
+    few: "{n} проблемы",
+    many: "{n} проблем",
+    other: "{n} проблемы",
+  },
   wordCountDetail: "{words} сл. · {characters} знаков (без пробелов)",
   alertNote: "Примечание",
   alertTip: "Совет",

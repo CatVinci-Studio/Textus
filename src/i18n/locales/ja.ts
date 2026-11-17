@@ -679,6 +679,7 @@ ${AI_NAME}への執筆の指示です。すべての文書に適用されます�
   outlineExpandAll: "すべて展開",
   outlineCollapseAll: "すべて折りたたむ",
   wordCount: { other: "{n} 文字" },
+  slipCount: { other: "{n} 件の問題" },
   wordCountDetail: "{characters} 文字（空白を除く） · {words} 語",
   alertNote: "メモ",
   alertTip: "ヒント",

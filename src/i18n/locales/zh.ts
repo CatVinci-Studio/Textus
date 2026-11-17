@@ -631,6 +631,7 @@ export default {
   outlineExpandAll: "全部展开",
   outlineCollapseAll: "全部折叠",
   wordCount: { other: "{n} 字" },
+  slipCount: { other: "{n} 个问题" },
   wordCountDetail: "{words} 字 · {characters} 个字符（不含空格）",
   alertNote: "备注",
   alertTip: "提示",

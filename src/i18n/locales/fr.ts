@@ -735,6 +735,11 @@ utiliser une.
   outlineExpandAll: "Tout déplier",
   outlineCollapseAll: "Tout replier",
   wordCount: { one: "{n} mot", many: "{n} mots", other: "{n} mots" },
+  slipCount: {
+    one: "{n} problème",
+    many: "{n} problèmes",
+    other: "{n} problèmes",
+  },
   wordCountDetail: "{words} mots · {characters} caractères (sans espaces)",
   alertNote: "Remarque",
   alertTip: "Astuce",

@@ -100,15 +100,16 @@ export function useEditorChat({
   });
   windowChipRef.current = panelChipHandlers;
 
-  // A new selection becomes a new chip in the detached window and the panel.
-  // Read once the transaction is in: the listener runs before the view holds
-  // the new selection, so the chip would lag one behind.
+  // A new selection becomes a new chip in the detached window and the
+  // panel, and a caret in an underline opens its card. Read once the
+  // transaction is in: the listener runs before the view holds the new
+  // selection, so they would lag one behind.
   setup.onSelectionChangeRef.current = () => {
     queueMicrotask(() => {
       pushLiveContext();
       updatePanelSelection();
+      setup.grammarCaretRef.current();
     });
-    setup.grammarCaretRef.current();
   };
 
   // Becoming the active tab, or saving under a new path, re-points the chat
