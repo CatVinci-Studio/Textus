@@ -319,7 +319,9 @@ pub(crate) fn apply_window_backgrounds(app: &AppHandle) {
         return;
     };
     let color = window_background(&stores.settings.snapshot().0, system_dark());
-    for (label, window) in app.windows() {
+    // The webview's own colour too, which WebView2 shows on maximize: the
+    // window's alone left a theme changed since launch flashing the old one.
+    for (label, window) in app.webview_windows() {
         // Only the windows the user sees: not the transparent tab-drag
         // pill, the hidden PDF-export renderers or background host.
         use crate::windows::WindowKind;

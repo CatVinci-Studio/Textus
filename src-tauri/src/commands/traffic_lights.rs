@@ -152,4 +152,26 @@ pub(crate) fn watch() {
         };
         std::mem::forget(observer);
     }
+    // A window closing takes its bar height along: kept, one more for each
+    // window opened, and an address AppKit may give a new window later.
+    let gone = block2::RcBlock::new(move |note: NonNull<NSNotification>| {
+        // SAFETY: AppKit hands the block a live notification.
+        let Some(window) = (unsafe { note.as_ref() }).object() else {
+            return;
+        };
+        let key = objc2::rc::Retained::as_ptr(&window) as usize;
+        if let Some(bars) = BARS.lock().unwrap_or_else(|e| e.into_inner()).as_mut() {
+            bars.remove(&key);
+        }
+    });
+    // SAFETY: as above, AppKit's own name, delivered on the main thread.
+    let observer = unsafe {
+        center.addObserverForName_object_queue_usingBlock(
+            Some(objc2_app_kit::NSWindowWillCloseNotification),
+            None,
+            None,
+            &gone,
+        )
+    };
+    std::mem::forget(observer);
 }
