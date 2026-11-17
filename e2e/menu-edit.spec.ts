@@ -64,6 +64,16 @@ test("Find and Replace work in source mode, on the source in use", async ({
   await expect(source).toContainText("cow dog cow");
   await page.keyboard.press("Escape");
   await expect(bar).toHaveCount(0);
+
+  // Back in the editor, the source's change is one step to undo, and what
+  // was typed before it is still there to undo after it.
+  await emit(page, "menu-toggle-source-mode");
+  await expect.poll(() => text(page, 0)).toBe("cow dog cow");
+  await docs(page).first().click();
+  await emit(page, "menu-undo");
+  await expect.poll(() => text(page, 0)).toBe("cat dog cat");
+  await emit(page, "menu-undo");
+  await expect.poll(() => text(page, 0)).toBe("");
 });
 
 test("a source view let go for memory comes back with its undo, caret and place", async ({

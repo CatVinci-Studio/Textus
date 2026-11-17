@@ -86,6 +86,12 @@ export function leftBy(tabId: string, markdown: string): TabLeft | null {
   return state?.markdown === markdown ? state : null;
 }
 
+/** What `tabId`'s last editor left, whatever the tab reads now: a change
+ *  made meanwhile (in source mode) is applied over it as one more step. */
+export function leftAtAll(tabId: string): TabLeft | null {
+  return left.get(tabId) ?? null;
+}
+
 /** The tab closed, or its editor took what was left: nothing kept twice. */
 export function forgetLeft(tabId: string): void {
   left.delete(tabId);
