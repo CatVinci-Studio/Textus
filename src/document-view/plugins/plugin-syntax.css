@@ -24,9 +24,10 @@
   color: var(--doc-muted);
 }
 
-/* Covered in ink until pointed at, pressed, or the caret is in it. */
+/* Covered until pointed at, pressed, or the caret is in it: a block of the
+   ink thinned into the page, so a dark page gets no bright bar. */
 .plugin-syntax-spoiler {
-  background: var(--doc-text);
+  background: color-mix(in srgb, var(--doc-text) 40%, var(--doc-bg));
   color: transparent;
   border-radius: var(--doc-radius-sm);
 }
