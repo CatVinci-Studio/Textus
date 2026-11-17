@@ -1,5 +1,11 @@
 import { expect, test, type Page } from "@playwright/test";
-import { openApp, pasteMarkdown, settled, sourceOf } from "./helpers";
+import {
+  openApp,
+  pasteMarkdown,
+  selectionRead,
+  settled,
+  sourceOf,
+} from "./helpers";
 
 // A block's ＋ and ⋮⋮ in the margin: shown for the block under the mouse,
 // ⋮⋮ pulled moves it, ＋ adds a block below, ⋮⋮ clicked opens its menu.
@@ -99,6 +105,7 @@ test("selected text pulled moves where it is let go; with Option or Ctrl a copy 
   await pasteMarkdown(page, "move me here\n\nto the end");
   const word = page.locator(`${editor} > p`).first();
   await word.dblclick({ position: { x: 8, y: 8 } });
+  await selectionRead(page);
   const box = (await word.boundingBox())!;
   const end = (await block(page, "to the end").boundingBox())!;
   await page.mouse.move(box.x + 8, box.y + 8);
