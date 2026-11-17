@@ -282,7 +282,7 @@ export function stopPluginUi(plugin: string): void {
 
 /** A provider's answer as menu items: each a label and the command it
  *  runs; anything else left out. */
-export function menuItemsFrom(
+function menuItemsFrom(
   value: unknown,
 ): { label: string; command: string; args: unknown[] }[] {
   if (!Array.isArray(value)) return [];

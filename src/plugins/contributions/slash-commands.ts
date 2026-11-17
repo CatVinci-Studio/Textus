@@ -26,7 +26,7 @@ interface SlashItem {
 }
 
 /** A block the `/` menu offers, as plugins read the list. */
-export interface BlockType {
+interface BlockType {
   id: string;
   label: string;
   /** "textus" for the app's own, else the plugin's id. */

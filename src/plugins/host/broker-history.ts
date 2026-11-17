@@ -16,7 +16,7 @@ interface HistorySource {
 const sources = new Map<string, HistorySource>();
 
 /** One past version, as a source answers it. */
-export interface HistoryVersion {
+interface HistoryVersion {
   id: string;
   /** When, as an ISO date. */
   at: string;
@@ -26,7 +26,7 @@ export interface HistoryVersion {
 
 /** A source's answer as versions: anything without an id and a date left
  *  out, newest first. */
-export function versionsFrom(value: unknown): HistoryVersion[] {
+function versionsFrom(value: unknown): HistoryVersion[] {
   if (!Array.isArray(value)) return [];
   return value
     .flatMap((item) => {
