@@ -1,6 +1,7 @@
 import { showConfirm } from "../../engine/controls/app-dialog";
 import { fill } from "../../i18n/fill";
 import { hasTextusAi } from "../../platform/capabilities";
+import { addInlineSource } from "../../ai/writing/inline-sources";
 import { plugins as pluginsIpc } from "../../platform/ipc";
 import {
   optionalStr,
@@ -38,6 +39,21 @@ export function promptOf(value: unknown): string {
     .join("\n\n");
 }
 
+/** A plugin's answer waits this long before the suggestion is dropped. */
+const INLINE_WAIT_MS = 5000;
+
+/** Each plugin's inline sources, by `<plugin id>#<its id>`. */
+const inline = new Map<string, () => void>();
+
+/** Takes away a stopped plugin's inline sources. */
+export function stopPluginAi(plugin: string): void {
+  for (const [key, remove] of inline)
+    if (key.startsWith(`${plugin}#`)) {
+      remove();
+      inline.delete(key);
+    }
+}
+
 /** `textus.ai.complete` and `textus.ai.available`: the user's writing
  *  model, asked once per plugin and within its monthly tokens. */
 export function aiModelHandlers(p: PluginScope) {
@@ -56,6 +72,33 @@ export function aiModelHandlers(p: PluginScope) {
     return ok;
   };
   return {
+    "ai.registerInlineCompletion": ({ id, label }: Params) => {
+      const own = str(id, "id");
+      const key = `${p.id}#${own}`;
+      inline.get(key)?.();
+      inline.set(
+        key,
+        addInlineSource({
+          key,
+          plugin: p.id,
+          label: optionalStr(label) ?? p.name(),
+          provide: (request) =>
+            Promise.race([
+              p
+                .request<unknown>("$inlineCompletion", { id: own, ...request })
+                .then((text) => (typeof text === "string" ? text : null)),
+              new Promise<null>((resolve) =>
+                setTimeout(() => resolve(null), INLINE_WAIT_MS),
+              ),
+            ]),
+        }),
+      );
+    },
+    "ai.unregisterInlineCompletion": ({ id }: Params) => {
+      const key = `${p.id}#${str(id, "id")}`;
+      inline.get(key)?.();
+      inline.delete(key);
+    },
     "ai.available": async () =>
       hasTextusAi && (await pluginsIpc.aiStatus(p.id)).on,
     "ai.complete": async ({ system, messages }: Params) => {
@@ -64,16 +107,17 @@ export function aiModelHandlers(p: PluginScope) {
       const instructions = optionalStr(system) ?? "";
       const run = () =>
         pluginsIpc.aiComplete(p.id, instructions, str(prompt, "messages"));
+      let refusal: string;
       try {
         return await run();
       } catch (error) {
-        const refusal = String(error);
+        refusal = String(error);
         if (refusal !== NOT_ALLOWED && refusal !== OVER_LIMIT) throw error;
-        const { limit } = await pluginsIpc.aiStatus(p.id);
-        if (!(await ask(refusal === OVER_LIMIT, limit)))
-          throw new Error("The user didn't allow it.", { cause: error });
-        return run();
       }
+      const { limit } = await pluginsIpc.aiStatus(p.id);
+      if (!(await ask(refusal === OVER_LIMIT, limit)))
+        throw new Error("The user didn't allow it.");
+      return run();
     },
   };
 }

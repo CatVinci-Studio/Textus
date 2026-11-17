@@ -684,6 +684,7 @@ export default {
   backToStableInstall: "安裝 {version}",
   backToStableNone: "目前沒有可以回到的正式版。",
   aiCompletionLabel: "AI 續寫",
+  completionSourceLabel: "續寫來源",
   completionToneLabel: "續寫語氣",
   completionTone_default: "配合文件",
   completionTone_formal: "正式",

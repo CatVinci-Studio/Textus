@@ -17,7 +17,7 @@ import {
   type Permission,
   type PluginManifest,
 } from "../store/manifest";
-import { aiModelHandlers } from "./broker-ai";
+import { aiModelHandlers, stopPluginAi } from "./broker-ai";
 import { fileHandlers } from "./broker-files";
 import { layoutHandlers, seenBy } from "./broker-layout";
 import { editorHandlers, stopPluginEditor } from "./broker-editor";
@@ -271,6 +271,7 @@ export class PluginHost {
     stopPluginUi(this.id);
     stopPluginEditor(this.id);
     stopPluginHistory(this.id);
+    stopPluginAi(this.id);
     forgetListViews(this.id);
     forgetEmbeds(this.id);
     forgetWillSave(this.id);

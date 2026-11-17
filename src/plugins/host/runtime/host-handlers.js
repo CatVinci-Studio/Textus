@@ -193,6 +193,16 @@ var handlers = {
     var source = historySources.get(params.id);
     return source ? await source.read(params.path, params.version) : null;
   },
+  $inlineCompletion: async function (params) {
+    var source = inlineCompletions.get(params.id);
+    if (!source) return null;
+    var text = await source.provide({
+      before: params.before,
+      after: params.after,
+      path: params.path,
+    });
+    return typeof text === "string" ? text : null;
+  },
   $contextMenu: async function (params) {
     var provide = menuProviders[params.where];
     return provide ? plain((await provide(params.target)) || []) : [];

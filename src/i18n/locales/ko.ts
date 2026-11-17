@@ -719,6 +719,7 @@ ${AI_NAME}에게 주는 글쓰기 지침으로, 모든 문서에 적용됩니다
   backToStableInstall: "{version} 설치",
   backToStableNone: "지금은 되돌아갈 안정 버전이 없습니다.",
   aiCompletionLabel: "AI 이어 쓰기",
+  completionSourceLabel: "자동 완성 제공",
   completionToneLabel: "이어 쓰기 어조",
   completionTone_default: "문서에 맞게",
   completionTone_formal: "격식 있게",

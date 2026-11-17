@@ -746,6 +746,7 @@ type /name in a conversation to use one.
   backToStableInstall: "Install {version}",
   backToStableNone: "There's no stable version to go back to right now.",
   aiCompletionLabel: "AI completion",
+  completionSourceLabel: "Suggestions from",
   completionToneLabel: "Completion tone",
   completionTone_default: "Match the document",
   completionTone_formal: "Formal",

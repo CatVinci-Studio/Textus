@@ -760,6 +760,7 @@ Skills liegen im Ordner skills/ neben dieser Datei, je Skill eine
   backToStableNone:
     "Gerade gibt es keine stabile Version, zu der du zurückkannst.",
   aiCompletionLabel: "KI-Vervollständigung",
+  completionSourceLabel: "Vorschläge von",
   completionToneLabel: "Tonfall der Vervollständigung",
   completionTone_default: "Passend zum Dokument",
   completionTone_formal: "Förmlich",

@@ -731,6 +731,7 @@ ${AI_NAME}への執筆の指示です。すべての文書に適用されます�
   backToStableInstall: "{version} をインストール",
   backToStableNone: "今は戻れる安定版がありません。",
   aiCompletionLabel: "AI補完",
+  completionSourceLabel: "補完の提供元",
   completionToneLabel: "補完のトーン",
   completionTone_default: "文書に合わせる",
   completionTone_formal: "フォーマル",

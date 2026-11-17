@@ -15,7 +15,8 @@ const confirm = vi.hoisted(() => vi.fn());
 vi.mock("../../engine/controls/app-dialog", () => ({ showConfirm: confirm }));
 
 import en from "../../i18n/locales/en";
-import { aiModelHandlers, promptOf } from "./broker-ai";
+import { aiModelHandlers, promptOf, stopPluginAi } from "./broker-ai";
+import { inlineSource } from "../../ai/writing/inline-sources";
 import type { PluginScope } from "./broker-scope";
 
 const scope = {
@@ -59,4 +60,24 @@ describe("a plugin asking the user's AI model", () => {
     );
     expect(confirm.mock.calls.at(-1)?.[0]).toContain("Allow 100,000 more?");
   });
+});
+
+it("offers a plugin's inline completion until the plugin stops", async () => {
+  const request = vi.fn(async () => "rhymes with moon");
+  const handlers = aiModelHandlers({ ...scope, request } as PluginScope);
+  handlers["ai.registerInlineCompletion"]({ id: "rhyme", label: "Rhymes" });
+  const source = inlineSource("a.translate#rhyme");
+  expect(source?.label).toBe("Rhymes");
+  await expect(
+    source!.provide({ before: "June", after: "", path: null }),
+  ).resolves.toBe("rhymes with moon");
+  expect(request).toHaveBeenCalledWith("$inlineCompletion", {
+    id: "rhyme",
+    before: "June",
+    after: "",
+    path: null,
+  });
+  expect(inlineSource("textus")).toBeUndefined();
+  stopPluginAi("a.translate");
+  expect(inlineSource("a.translate#rhyme")).toBeUndefined();
 });

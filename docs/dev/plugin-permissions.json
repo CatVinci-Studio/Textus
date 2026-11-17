@@ -12,8 +12,11 @@
       "editor.registerDecorations",
       "editor.registerOutline",
       "export.willExport",
+      "ai.registerInlineCompletion",
+      "ai.unregisterInlineCompletion",
       "editor.registerCompletion",
-      "export.onWillExport"
+      "export.onWillExport",
+      "ai.registerInlineCompletion"
     ]
   },
   {

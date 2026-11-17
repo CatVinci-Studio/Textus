@@ -18,6 +18,10 @@ import { SettingRow, ToggleRow, VERBATIM_INPUT } from "../sections/controls";
 import { SearchServiceSection } from "../sections/search-service";
 import { WritingConventionsRow } from "../sections/skills";
 import { Select } from "../../engine/controls/Select";
+import {
+  TEXTUS_SOURCE,
+  useInlineSources,
+} from "../../ai/writing/inline-sources";
 
 /**
  * Settings › Textus AI › Writing assist, from what is used most to what is
@@ -31,6 +35,7 @@ export function ChatWritingPage({
   phone,
   marginAvailable,
 }: SettingsPageProps) {
+  const sources = useInlineSources();
   return (
     <>
       <SettingsGroup title={t.aiAskLabel}>
@@ -103,6 +108,29 @@ export function ChatWritingPage({
           checked={settings.enableCompletion}
           onChange={(v) => setSettings({ enableCompletion: v })}
         />
+        {settings.enableCompletion && sources.length > 0 && (
+          <SettingRow label={t.completionSourceLabel}>
+            <Select
+              className="settings-select"
+              aria-label={t.completionSourceLabel}
+              value={
+                sources.some((s) => s.key === settings.completionSource)
+                  ? settings.completionSource
+                  : TEXTUS_SOURCE
+              }
+              onChange={(e) =>
+                setSettings({ completionSource: e.target.value })
+              }
+            >
+              <option value={TEXTUS_SOURCE}>Textus AI</option>
+              {sources.map((source) => (
+                <option key={source.key} value={source.key}>
+                  {source.label}
+                </option>
+              ))}
+            </Select>
+          </SettingRow>
+        )}
         {settings.enableCompletion && (
           <SettingRow label={t.completionToneLabel}>
             <Select

@@ -151,6 +151,24 @@ textus.ai = {
   // The user's writing model (ai.model, 1.8): whether it can be asked now,
   // and its answer. The first call asks the user; each plugin has a
   // monthly allowance of tokens.
+  // Grey text after the caret when typing pauses (editor.read, 1.8):
+  // `provide({ before, after, path })` answers the words to offer, or
+  // null. The user picks one source at a time in Settings › Textus AI.
+  registerInlineCompletion: function (id, source) {
+    id = String(id);
+    inlineCompletions.set(id, source);
+    quiet(
+      call("ai.registerInlineCompletion", {
+        id: id,
+        label: source.label == null ? undefined : String(source.label),
+      }),
+    );
+    return disposable(function () {
+      if (inlineCompletions.get(id) !== source) return;
+      inlineCompletions.delete(id);
+      quiet(call("ai.unregisterInlineCompletion", { id: id }));
+    });
+  },
   available: function () {
     return call("ai.available");
   },

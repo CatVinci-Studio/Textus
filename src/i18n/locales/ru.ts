@@ -787,6 +787,7 @@ export default {
   backToStableInstall: "Установить {version}",
   backToStableNone: "Сейчас нет стабильной версии, к которой можно вернуться.",
   aiCompletionLabel: "Автодополнение",
+  completionSourceLabel: "Подсказки от",
   completionToneLabel: "Тон автодополнения",
   completionTone_default: "Как в документе",
   completionTone_formal: "Официальный",

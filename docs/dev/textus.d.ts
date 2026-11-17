@@ -1466,6 +1466,22 @@ declare global {
        *  what is said. From 1.3.6. */
       state(): Promise<AiState>;
       onDidChangeState: Event<AiState>;
+      /** Grey text after the caret when typing pauses: `provide` answers
+       *  the words to offer, or null; it is waited for at most 5 seconds.
+       *  The user picks one source at a time in Settings › Textus AI ›
+       *  Writing assist ("Suggestions from"), Textus AI or one of these.
+       *  editor.read. From 1.4.4 (API 1.8, preview). */
+      registerInlineCompletion(
+        id: string,
+        source: {
+          label?: string;
+          provide(request: {
+            before: string;
+            after: string;
+            path: string | null;
+          }): string | null | Promise<string | null>;
+        },
+      ): Disposable;
       /** Whether the user's writing model can be asked now: Textus AI is on
        *  (never in the iOS App Store download in mainland China). ai.model.
        *  From 1.4.4 (API 1.8, preview). */

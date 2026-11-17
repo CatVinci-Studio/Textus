@@ -788,6 +788,7 @@ para usar una.
   backToStableInstall: "Instalar {version}",
   backToStableNone: "Ahora mismo no hay una versión estable a la que volver.",
   aiCompletionLabel: "Autocompletado con IA",
+  completionSourceLabel: "Sugerencias de",
   completionToneLabel: "Tono del autocompletado",
   completionTone_default: "Según el documento",
   completionTone_formal: "Formal",

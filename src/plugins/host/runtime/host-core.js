@@ -17,6 +17,7 @@ var outlineProviders = [];
 var blockTypes = new Map();
 var menuProviders = {};
 var historySources = new Map();
+var inlineCompletions = new Map();
 var pickSearches = {};
 var pickSearchCount = 0;
 var pasteHandlerCount = 0;

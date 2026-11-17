@@ -27,9 +27,15 @@ const API_PERMISSIONS: readonly {
       "editor.registerDecorations",
       "editor.registerOutline",
       "export.willExport",
+      "ai.registerInlineCompletion",
+      "ai.unregisterInlineCompletion",
     ],
     // Completions without it are left out, with no error to say so.
-    calls: ["editor.registerCompletion", "export.onWillExport"],
+    calls: [
+      "editor.registerCompletion",
+      "export.onWillExport",
+      "ai.registerInlineCompletion",
+    ],
   },
   {
     permission: "editor.write",

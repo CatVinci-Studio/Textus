@@ -683,6 +683,7 @@ export default {
   backToStableInstall: "安装 {version}",
   backToStableNone: "现在没有可以回到的正式版。",
   aiCompletionLabel: "续写",
+  completionSourceLabel: "续写来源",
   completionToneLabel: "续写语气",
   completionTone_default: "跟随文档",
   completionTone_formal: "正式",

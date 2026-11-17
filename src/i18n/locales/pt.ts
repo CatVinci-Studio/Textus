@@ -775,6 +775,7 @@ Habilidades ficam na pasta skills/ ao lado deste arquivo, um arquivo
   backToStableInstall: "Instalar {version}",
   backToStableNone: "No momento não há uma versão estável para a qual voltar.",
   aiCompletionLabel: "Autocompletar com IA",
+  completionSourceLabel: "Sugestões de",
   completionToneLabel: "Tom do autocompletar",
   completionTone_default: "Seguir o documento",
   completionTone_formal: "Formal",

@@ -102,6 +102,9 @@ export interface Settings {
   revisionDisplay: RevisionDisplay;
   /// Tone preset for inline completion suggestions.
   completionTone: CompletionTone;
+  /// Where inline completion comes from: "textus" (Textus AI) or a
+  /// plugin's source, `<plugin id>#<its id>`.
+  completionSource: string;
   /// "automatic", or a profile such as "zh-Hans-CN/fiction" the AI and the
   /// checks follow for that language. A project's style profile overrides it.
   writingConventions: string;
@@ -317,6 +320,7 @@ export const DEFAULT_SETTINGS: Settings = {
   agentOptions: {},
   revisionDisplay: "final",
   completionTone: "default",
+  completionSource: "textus",
   writingConventions: "automatic",
   aiChangeMode: "revision",
   imageModelProvider: "chat",

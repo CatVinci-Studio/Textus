@@ -788,6 +788,7 @@ utiliser une.
   backToStableNone:
     "Il n’y a pas de version stable vers laquelle revenir pour l’instant.",
   aiCompletionLabel: "Complétion IA",
+  completionSourceLabel: "Suggestions de",
   completionToneLabel: "Ton de la complétion",
   completionTone_default: "Adapté au document",
   completionTone_formal: "Soutenu",

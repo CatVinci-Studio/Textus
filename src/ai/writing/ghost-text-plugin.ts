@@ -7,6 +7,7 @@ import { pausesFeatures } from "../../editor/large-doc";
 import { createDebouncedTask } from "../../utils/debounced-task";
 import { hasPendingEdits } from "../revision/pending-edit-plugin";
 import { ai, type CompletionHints } from "../../platform/ipc";
+import type { InlineSource } from "./inline-sources";
 import { AiNoticeError } from "../../utils/error-text";
 import type { Node as ProseNode } from "@milkdown/kit/prose/model";
 import {
@@ -152,6 +153,8 @@ export function createGhostTextPlugin(options: {
   uiLanguage: () => string;
   /** A suggestion was taken (Tab, a tap) - the tour's completion lesson. */
   onAccept?: () => void;
+  /** A plugin's source chosen in Settings, asked instead of Textus AI. */
+  source?: () => InlineSource | undefined;
 }) {
   const debounced = createDebouncedTask(DEBOUNCE_MS);
   // Set by an accept: inserting the suggestion isn't typing, and shouldn't
@@ -367,20 +370,27 @@ export function createGhostTextPlugin(options: {
                 if (!options.enabled() || isReadOnly(view.state)) return;
                 if (rest.resting()) return;
                 let suggestion: string;
+                const source = options.source?.();
                 try {
-                  suggestion = await ai.complete(
-                    options.provider(),
-                    before,
-                    after,
-                    options.style(),
-                    options.model(),
-                    {
-                      ...completionHints(doc, cursorPos, "short"),
-                      prose,
-                      uiLanguage: options.uiLanguage(),
-                    },
-                    options.project(),
-                  );
+                  suggestion = source
+                    ? ((await source.provide({
+                        before,
+                        after,
+                        path: options.project().docPath,
+                      })) ?? "")
+                    : await ai.complete(
+                        options.provider(),
+                        before,
+                        after,
+                        options.style(),
+                        options.model(),
+                        {
+                          ...completionHints(doc, cursorPos, "short"),
+                          prose,
+                          uiLanguage: options.uiLanguage(),
+                        },
+                        options.project(),
+                      );
                 } catch (err) {
                   // Quiet in the UI while typing, but logged.
                   rest.failed(err);
