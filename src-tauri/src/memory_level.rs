@@ -72,7 +72,13 @@ fn settle(was: u8, now: u8, calm: u8) -> (u8, u8) {
 /// Pressure from the memory still free, as an amount: what a few views out
 /// of sight take, not a share of the machine (a share left a big machine
 /// short with gigabytes free, and a small one short all day).
-#[cfg(any(test, target_os = "linux", windows))]
+#[cfg(any(
+    test,
+    target_os = "linux",
+    target_os = "android",
+    target_os = "ios",
+    windows
+))]
 fn from_free(free: u64) -> u8 {
     const MB: u64 = 1024 * 1024;
     match free {
@@ -85,7 +91,7 @@ fn from_free(free: u64) -> u8 {
 /// Linux's own pressure (PSI, /proc/pressure/memory): the share of the last
 /// 10 s that tasks waited on memory. Some waiting is short, all of them
 /// waiting is very short. None on a kernel without it.
-#[cfg(any(test, target_os = "linux"))]
+#[cfg(any(test, target_os = "linux", target_os = "android"))]
 fn from_psi(text: &str) -> Option<u8> {
     let avg10 = |kind: &str| -> Option<f64> {
         let line = text.lines().find(|l| l.starts_with(kind))?;
@@ -104,7 +110,7 @@ fn from_psi(text: &str) -> Option<u8> {
     })
 }
 
-#[cfg(target_os = "macos")]
+#[cfg(any(target_os = "macos", target_os = "ios"))]
 fn sysctl_u64(name: &str) -> Option<u64> {
     let name = std::ffi::CString::new(name).ok()?;
     let mut value: u64 = 0;
@@ -127,7 +133,7 @@ fn sysctl_u64(name: &str) -> Option<u64> {
     })
 }
 
-#[cfg(target_os = "macos")]
+#[cfg(any(target_os = "macos", target_os = "ios"))]
 fn total_bytes() -> u64 {
     sysctl_u64("hw.memsize").unwrap_or(0)
 }
@@ -142,7 +148,7 @@ fn pressure() -> u8 {
     }
 }
 
-#[cfg(target_os = "linux")]
+#[cfg(any(target_os = "linux", target_os = "android"))]
 fn meminfo(key: &str) -> Option<u64> {
     let text = std::fs::read_to_string("/proc/meminfo").ok()?;
     let line = text.lines().find(|l| l.starts_with(key))?;
@@ -150,18 +156,31 @@ fn meminfo(key: &str) -> Option<u64> {
     Some(kb * 1024)
 }
 
-#[cfg(target_os = "linux")]
+#[cfg(any(target_os = "linux", target_os = "android"))]
 fn total_bytes() -> u64 {
     meminfo("MemTotal:").unwrap_or(0)
 }
 
-#[cfg(target_os = "linux")]
+// Android is Linux underneath: the same files, PSI where the system lets
+// an app read it.
+#[cfg(any(target_os = "linux", target_os = "android"))]
 fn pressure() -> u8 {
     let psi = std::fs::read_to_string("/proc/pressure/memory")
         .ok()
         .and_then(|text| from_psi(&text))
         .unwrap_or(0);
     psi.max(meminfo("MemAvailable:").map_or(0, from_free))
+}
+
+// iOS keeps the kernel's level from apps; what this app may still take
+// before the system ends it is the measure.
+#[cfg(target_os = "ios")]
+fn pressure() -> u8 {
+    extern "C" {
+        fn os_proc_available_memory() -> usize;
+    }
+    // SAFETY: no arguments, reads the process's own limit.
+    from_free(unsafe { os_proc_available_memory() } as u64)
 }
 
 #[cfg(windows)]
@@ -186,12 +205,24 @@ fn pressure() -> u8 {
     status().map_or(0, |s| from_free(s.ullAvailPhys))
 }
 
-#[cfg(not(any(target_os = "macos", target_os = "linux", windows)))]
+#[cfg(not(any(
+    target_os = "macos",
+    target_os = "ios",
+    target_os = "linux",
+    target_os = "android",
+    windows
+)))]
 fn total_bytes() -> u64 {
     0
 }
 
-#[cfg(not(any(target_os = "macos", target_os = "linux", windows)))]
+#[cfg(not(any(
+    target_os = "macos",
+    target_os = "ios",
+    target_os = "linux",
+    target_os = "android",
+    windows
+)))]
 fn pressure() -> u8 {
     0
 }

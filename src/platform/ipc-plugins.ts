@@ -16,6 +16,12 @@ export type PluginCatalogEntry = Generated.CatalogEntry_Serialize;
 export type StoreScope = Access.StoreScope;
 export type PluginDocumentMeta = Access.DocumentMeta_Serialize;
 
+/** An Android folder opened without access to all files: its files go
+ *  through the native plugin (content-plugin-fs.ts), not Rust. */
+const inContent = (root: string) => root.startsWith("content://");
+const contentFs = () =>
+  import("./content-plugin-fs").then((m) => m.contentPluginFs);
+
 /** A raw IPC response's bytes, which specta can't type, so those commands
  *  go through `call`. */
 const bytes = async (pending: Promise<ArrayBuffer>) =>
@@ -115,30 +121,46 @@ export const plugins = {
   readResource: (id: string, path: string) =>
     bytes(call<ArrayBuffer>("plugin_read_resource", { id, path })),
   fsRead: (id: string, root: string, path: string) =>
-    bytes(call<ArrayBuffer>("plugin_fs_read", { id, root, path })),
+    inContent(root)
+      ? contentFs().then((f) => f.read(root, path))
+      : bytes(call<ArrayBuffer>("plugin_fs_read", { id, root, path })),
   fsList: (id: string, root: string, path: string) =>
-    command("plugin_fs_list", id, root, path),
+    inContent(root)
+      ? contentFs().then((f) => f.list(root, path))
+      : command("plugin_fs_list", id, root, path),
   /** The folder's Markdown documents with their text, in one call. */
   fsDocuments: (id: string, root: string) =>
     command("plugin_fs_documents", id, root),
   fsSearch: (id: string, root: string, query: string, limit: number | null) =>
     command("plugin_fs_search", id, root, query, limit),
   fsRename: (id: string, root: string, from: string, to: string) =>
-    command("plugin_fs_rename", id, root, from, to),
+    inContent(root)
+      ? contentFs().then((f) => f.rename(root, from, to))
+      : command("plugin_fs_rename", id, root, from, to),
   /** To the system Trash: nothing a plugin removes is gone for good. */
   fsTrash: (id: string, root: string, path: string) =>
-    command("plugin_fs_trash", id, root, path),
+    inContent(root)
+      ? contentFs().then((f) => f.trash())
+      : command("plugin_fs_trash", id, root, path),
   fsMkdir: (id: string, root: string, path: string) =>
-    command("plugin_fs_mkdir", id, root, path),
+    inContent(root)
+      ? contentFs().then((f) => f.mkdir(root, path))
+      : command("plugin_fs_mkdir", id, root, path),
   fsStat: (id: string, root: string, path: string) =>
-    command("plugin_fs_stat", id, root, path),
+    inContent(root)
+      ? contentFs().then((f) => f.stat(root, path))
+      : command("plugin_fs_stat", id, root, path),
   fsCreate: (id: string, root: string, path: string, text: string) =>
-    command("plugin_fs_create", id, root, path, text),
+    inContent(root)
+      ? contentFs().then((f) => f.create(root, path, text))
+      : command("plugin_fs_create", id, root, path, text),
   /** A text file and a token naming its version. */
   appSettings: (id: string, vault: string, name: string) =>
     command("plugin_app_settings", id, vault, name),
   fsReadVersioned: (id: string, root: string, path: string) =>
-    command("plugin_fs_read_versioned", id, root, path),
+    inContent(root)
+      ? contentFs().then((f) => f.readVersioned(root, path))
+      : command("plugin_fs_read_versioned", id, root, path),
   /** Writes only if the file is still the version `token` names. */
   fsWriteIf: (
     id: string,
@@ -146,7 +168,10 @@ export const plugins = {
     path: string,
     text: string,
     token: string,
-  ) => command("plugin_fs_write_if", id, root, path, text, token),
+  ) =>
+    inContent(root)
+      ? contentFs().then((f) => f.writeIf(root, path, text, token))
+      : command("plugin_fs_write_if", id, root, path, text, token),
   /** The folder's documents and what they hold: those changed since
    *  generation `after`, with the paths gone, or every one (`whole`). */
   metadataAll: (id: string, root: string, after: number | null) =>
@@ -174,7 +199,10 @@ export const plugins = {
     path: string,
     contents: string,
     base64 = false,
-  ) => command("plugin_fs_write", id, root, path, contents, base64),
+  ) =>
+    inContent(root)
+      ? contentFs().then((f) => f.write(root, path, contents, base64))
+      : command("plugin_fs_write", id, root, path, contents, base64),
   http: (
     id: string,
     request: {
