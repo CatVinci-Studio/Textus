@@ -16,19 +16,40 @@ export function keyOf(item: PluginListItem, index: number): string {
  * A plugin list's items, asked when the list shows and on each refresh, with
  * the open items' children; the plugin is started first if needed.
  */
-export function usePluginListItems(plugin: string, view: string) {
-  useSyncExternalStore(subscribeListViews, listViewsVersion);
-  const info = listView(plugin, view);
-  const [items, setItems] = useState<PluginListItem[] | null>(null);
-  const [children, setChildren] = useState<Map<string, PluginListItem[]>>(
-    () => new Map(),
-  );
-  const [open, setOpen] = useState<Set<string>>(() => new Set());
+/** The list's last error, and `fail` to show one. */
+function useListError() {
   const [error, setError] = useState<string | null>(null);
   const fail = useCallback(
     (err: unknown) => setError(String((err as Error)?.message ?? err)),
     [],
   );
+  return { error, setError, fail };
+}
+
+/** The list the plugin registered, the plugin started on first show: it
+ *  registers its list as it activates. */
+function useListView(
+  plugin: string,
+  view: string,
+  fail: (err: unknown) => void,
+) {
+  useSyncExternalStore(subscribeListViews, listViewsVersion);
+  const info = listView(plugin, view);
+  useEffect(() => {
+    if (info) return;
+    askPlugin(plugin, "$ping", {}).catch(fail);
+  }, [plugin, info, fail]);
+  return info;
+}
+
+export function usePluginListItems(plugin: string, view: string) {
+  const { error, setError, fail } = useListError();
+  const info = useListView(plugin, view, fail);
+  const [items, setItems] = useState<PluginListItem[] | null>(null);
+  const [children, setChildren] = useState<Map<string, PluginListItem[]>>(
+    () => new Map(),
+  );
+  const [open, setOpen] = useState<Set<string>>(() => new Set());
 
   const ask = useCallback(
     (parent?: PluginListItem) =>
@@ -37,12 +58,6 @@ export function usePluginListItems(plugin: string, view: string) {
       ),
     [plugin, view],
   );
-
-  // Started on first show: the plugin registers its list as it activates.
-  useEffect(() => {
-    if (info) return;
-    askPlugin(plugin, "$ping", {}).catch(fail);
-  }, [plugin, info, fail]);
 
   // Read as they are when the list refreshes, not a reason to refresh.
   const state = useLatest({ open, items, children });
@@ -74,7 +89,7 @@ export function usePluginListItems(plugin: string, view: string) {
     return () => {
       live = false;
     };
-  }, [ask, version, state, fail]);
+  }, [ask, version, state, fail, setError]);
 
   const toggleOpen = (item: PluginListItem, key: string) => {
     const next = new Set(open);

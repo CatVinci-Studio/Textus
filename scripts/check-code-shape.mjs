@@ -41,7 +41,6 @@ const HOOKS_NOW = {
   "src/engine/controls/tabs/useTabStrip.ts useTabStrip": 16,
   "src/onboarding/useTutorial.ts useTutorial": 11,
   "src/playground/useWebDocuments.ts useWebDocuments": 12,
-  "src/plugins/views/usePluginListItems.ts usePluginListItems": 10,
   "src/settings/useSettingsSearch.ts useSettingsSearch": 10,
 };
 
