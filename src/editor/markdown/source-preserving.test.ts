@@ -264,6 +264,10 @@ describe("saving after an edit elsewhere keeps as written", () => {
     expect(await saveAfter(loose, typeInto(0, "x"))).toBe(
       "|ax|b|\n|-|:-|\n|1|2|\n|33|4|\n",
     );
+    const compact = "|a|b|\n|-|-|\n|1|2|\n";
+    expect(await saveAfter(compact, typeInto(0, "x"))).toBe(
+      "|ax|b|\n|-|-|\n|1|2|\n",
+    );
     const lined = "| a | b |\n| - | - |\n| 1 | 2 |\n";
     expect(await saveAfter(lined, typeInto(0, "xx"))).toBe(
       "| axx | b |\n| --- | - |\n| 1   | 2 |\n",

@@ -331,9 +331,17 @@ const splitTask: Command = (state, dispatch) => {
     dispatch &&
       ((tr) => {
         const $to = tr.selection.$from;
-        const made = $to.depth >= 2 ? $to.node(-1) : null;
+        const into = $to.depth >= 2 ? $to.node(-1) : null;
+        if (into?.type !== item) return dispatch(tr);
+        const at = $to.before(-1);
+        // At the text's start the empty item goes above, the task stays.
+        const above = $from.parentOffset === 0 && $from.parent.content.size;
+        const made = above ? tr.doc.resolve(at).nodeBefore : into;
+        const madeAt = above && made ? at - made.nodeSize : at;
+        if (above)
+          tr.setNodeMarkup(at, undefined, { ...into.attrs, ...own.attrs });
         if (made?.type === item && made.attrs.checked !== false)
-          tr.setNodeMarkup($to.before(-1), undefined, {
+          tr.setNodeMarkup(madeAt, undefined, {
             ...made.attrs,
             checked: false,
           });

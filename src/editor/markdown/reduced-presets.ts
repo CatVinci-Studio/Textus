@@ -45,6 +45,7 @@ import {
   tableHeaderSchema,
 } from "@milkdown/kit/preset/gfm";
 import { editorViewCtx } from "@milkdown/kit/core";
+import type { Node as ProseNode } from "@milkdown/kit/prose/model";
 import {
   InputRule,
   textblockTypeInputRule,
@@ -172,6 +173,16 @@ const unaligned = <T extends string>(schema: $NodeSchema<T>) =>
           default: null,
           validate: "string|null",
         },
+      },
+      // No alignment, no text-align: one would read back as "left".
+      toDOM: (node: ProseNode) => {
+        const out = spec.toDOM!(node) as [string, Record<string, string>, 0];
+        if (node.attrs.alignment != null || !out[1]?.style) return out;
+        const attrs = { ...out[1] };
+        const style = attrs.style.replace(/text-align:\s*left;?\s*/, "");
+        if (style) attrs.style = style;
+        else delete attrs.style;
+        return [out[0], attrs, 0];
       },
       parseDOM: spec.parseDOM?.map((rule) => ({
         ...rule,

@@ -273,3 +273,16 @@ it("Enter after a ticked task starts one left to do", async () => {
   t.type("next");
   expect(t.markdown()).toBe("- [x] done\n- [ ] next");
 });
+
+it("Enter at a ticked task's start leaves it ticked and the new one above to do", async () => {
+  const t = await open("- [x] done\n");
+  t.caretAt("done", 0, 0);
+  t.press("Enter");
+  expect(t.markdown()).toBe("- [ ] \n- [x] done");
+});
+
+it("a star typed between spaces stays a star, written as typed in a new file", async () => {
+  const t = await open("");
+  t.type("a * b and 2_3");
+  expect(t.markdown()).toBe("a * b and 2_3");
+});

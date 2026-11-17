@@ -101,13 +101,23 @@ export const createMdSpanAutopairPlugin = (options: {
               }
               // Where no list can start, the star stays what was typed, not an italic
               // span around the rest of the line.
-              if (stars?.rung === 1) {
+              // Nor anywhere else: "a * b". A space after an opening run
+              // can't start what it encloses.
+              const shell = view.state.doc.resolve(from).parent;
+              if (
+                shell.type.name === "md_span" &&
+                shell.content.size === 0 &&
+                /^[*_~=]$/.test(shell.attrs.delim as string)
+              ) {
+                const run = (shell.attrs.delim as string).repeat(
+                  (shell.attrs.rung as number) ?? 1,
+                );
                 const literal = view.state.tr.replaceWith(
                   from - 1,
                   from + 1,
-                  view.state.schema.text("* "),
+                  view.state.schema.text(`${run} `),
                 );
-                view.dispatch(caretAt(literal, from + 1));
+                view.dispatch(caretAt(literal, from - 1 + run.length + 1));
                 return true;
               }
             }

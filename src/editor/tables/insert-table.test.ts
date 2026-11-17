@@ -2,6 +2,7 @@
 import { afterEach, describe, expect, it, vi } from "vitest";
 import { closeViews, openView } from "../editor-view-kit";
 import { insertTable } from "./insert-table";
+import { DOMParser, DOMSerializer } from "@milkdown/kit/prose/model";
 
 afterEach(async () => {
   vi.useRealTimers();
@@ -15,6 +16,18 @@ describe("a new table", () => {
     insertTable((fn) => t.editor.action(fn), 2, 2);
     expect(t.markdown()).toMatch(/\| -+ \| -+ \|/);
     expect(t.markdown()).not.toContain(":-");
+    // Copied and pasted inside the editor, still none.
+    const { schema, doc } = t.view.state;
+    const box = document.createElement("div");
+    box.append(DOMSerializer.fromSchema(schema).serializeFragment(doc.content));
+    const back = DOMParser.fromSchema(schema).parse(box);
+    back.descendants((node) => {
+      if (
+        node.type.spec.tableRole?.includes("cell") ||
+        node.type.spec.tableRole === "header_cell"
+      )
+        expect(node.attrs.alignment).toBeNull();
+    });
   });
 
   it("keeps its caret in the first cell when the browser puts back the one it had", async () => {

@@ -67,7 +67,8 @@ export function tableInTheFilesHand(
 ): string | null {
   const was = readTable(original);
   const now = readTable(written);
-  if (!was || !now || linedUp(was)) return null;
+  // Lined up by its spaces: `|a|b|` over `|-|-|` only happens to be.
+  if (!was || !now || (was.spaced && linedUp(was))) return null;
   const columns = now.cells[0].length;
   const same = (a: string[], b: string[]) =>
     a.length === b.length && a.every((cell, k) => cell === b[k]);
