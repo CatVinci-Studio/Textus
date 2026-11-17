@@ -133,7 +133,9 @@ test.describe("on a Retina screen", () => {
 
 test("the drawn caret stays while an input method composes, where its text ends", async ({
   page,
+  browserName,
 }) => {
+  test.skip(browserName !== "chromium", "input method by CDP");
   await openApp(page, { settings: { language: "en" } });
   await pasteMarkdown(page, "Typing in Chinese:");
   await page.locator(`${editor} p`).click();
