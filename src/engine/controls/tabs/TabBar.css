@@ -28,6 +28,8 @@
   position: relative;
   flex: none;
   align-self: stretch;
+  /* A touch row's room to scroll to its last tabs' starts (useRevealTab). */
+  margin-inline-end: var(--tab-tail, 0px);
 }
 
 .tab-pill {

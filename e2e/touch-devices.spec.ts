@@ -226,3 +226,32 @@ test.describe("a phone on its side", () => {
     }
   });
 });
+
+test.describe("a phone's tab row", () => {
+  test.use(PHONE);
+
+  test("shows no slice of a tab before the first whole one", async ({
+    page,
+  }) => {
+    await openApp(page);
+    for (let i = 0; i < 4; i++)
+      await page.locator(".tab-bar-add").first().tap();
+    await expect(page.locator(".tab-pill")).toHaveCount(5);
+    // The last tab, open, closed: the row a tab shorter, the one before it
+    // open at the row's end.
+    await page.locator(".tab-pill-active .tab-pill-close").tap();
+    await expect(page.locator(".tab-pill")).toHaveCount(4);
+    await page.waitForTimeout(500);
+    const cut = await page.evaluate(() => {
+      const bar = document.querySelector<HTMLElement>(".tab-bar")!;
+      const from =
+        bar.getBoundingClientRect().left +
+        parseFloat(getComputedStyle(bar).paddingLeft);
+      return [...bar.querySelectorAll<HTMLElement>(".tab-pill")]
+        .map((pill) => pill.getBoundingClientRect())
+        .filter((box) => box.left < from - 1 && box.right > from + 1)
+        .map((box) => [box.left, box.right, from]);
+    });
+    expect(cut).toEqual([]);
+  });
+});

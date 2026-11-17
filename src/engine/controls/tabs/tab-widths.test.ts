@@ -5,6 +5,7 @@ import {
   revealAt,
   snapToTab,
   stripSlots,
+  tailFor,
 } from "./tab-strip";
 import { tabWidths, type TabParts } from "./tab-widths";
 
@@ -178,6 +179,12 @@ describe("bringing the open tab into view", () => {
     // Tabs start at 0, 90, 180, 270; the open one at 270, 80 wide, in 200.
     const left = revealAt({ x: 270, w: 80 }, 0, 200, 0, 0)!;
     expect(snapToTab(left, [0, 90, 180, 270], 270)).toBe(180);
+  });
+  it("on a touch row, gives the end room to scroll to the last tabs' starts", () => {
+    // Tabs end at 350, 200 shown: scrolled at most to 150 without more.
+    expect(tailFor(90, 350, 200)).toBe(0);
+    // The open tab at 270 after a close: 120 more room.
+    expect(tailFor(270, 350, 200)).toBe(120);
   });
   it("stays put with the tab already clear", () => {
     expect(revealAt({ x: 100, w: 60 }, 40, 300, fade)).toBeNull();
