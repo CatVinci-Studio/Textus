@@ -25,7 +25,6 @@ const HOOKS_NOW = {
   "src/app/useOpenFolder.ts useOpenFolder": 15,
   "src/app/usePluginWindow.ts usePluginWindow": 24,
   "src/app/useWindowDocuments.ts useWindowDocuments": 29,
-  "src/app/useWindowShell.ts useWindowShell": 14,
   "src/app/useWindowWiring.ts useWindowWiring": 20,
   "src/document/autosave.ts useAutosave": 14,
   "src/document-view/useEditorProposals.ts useEditorProposals": 28,
