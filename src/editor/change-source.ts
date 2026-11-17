@@ -36,12 +36,15 @@ export function markChangeSource<T extends Transaction>(
 }
 
 /** The writer's own edit at the keyboard: not text put in whole (a paste,
- *  a drop, the AI's, a plugin's, the file's from disk) nor undo. */
+ *  a drop, the AI's, a plugin's, the file's from disk), undo, or a change
+ *  kept out of the history (the AI writing on its paper). */
 export function typedByUser(tr: Transaction): boolean {
   const ui = tr.getMeta("uiEvent") as string | undefined;
+  const marked = tr.getMeta(META) as ChangeSource | undefined;
   return (
-    !tr.getMeta(META) &&
+    (!marked || marked === "user") &&
     !isHistoryTransaction(tr) &&
+    tr.getMeta("addToHistory") !== false &&
     ui !== "paste" &&
     ui !== "drop"
   );

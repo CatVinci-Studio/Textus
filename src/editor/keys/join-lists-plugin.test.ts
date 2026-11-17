@@ -61,6 +61,21 @@ describe("lists an edit brings together", () => {
     expect(t.view.state.doc.childCount).toBe(2);
   });
 
+  it("join after an edit marked as the writer's, not the AI's paper", async () => {
+    const text = "- one\n\ntext\n\n- three\n";
+    const between = (t: Awaited<ReturnType<typeof openView>>) => {
+      const { state } = t.view;
+      const at = state.doc.child(0).nodeSize;
+      return state.tr.delete(at, at + state.doc.child(1).nodeSize);
+    };
+    const paper = await openView(text, { enableCompletion: false });
+    paper.view.dispatch(between(paper).setMeta("addToHistory", false));
+    expect(paper.view.state.doc.childCount).toBe(2);
+    const own = await openView(text, { enableCompletion: false });
+    own.view.dispatch(markChangeSource(between(own), "user"));
+    expect(own.view.state.doc.childCount).toBe(1);
+  });
+
   it("are one list again once what stood between them goes", () => {
     // A task taken back to a line of text, then that line deleted.
     const out = deleteBlock(doc(list("one"), p(), list("three")), 1);
