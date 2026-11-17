@@ -40,7 +40,6 @@ const HOOKS_NOW = {
   "src/document-view/useEditorSetup.ts useEditorSetup": 20,
   "src/document-view/useEditorWindowEvents.ts useEditorWindowEvents": 21,
   "src/document-view/usePaperWriter.ts usePaperWriter": 12,
-  "src/document-view/useQuickAskReview.ts useQuickAskReview": 9,
   "src/editor/find/useFindReplace.ts useFindReplace": 32,
   "src/engine/controls/tabs/useTabStrip.ts useTabStrip": 16,
   "src/engine/controls/useFloatingList.ts useFloatingList": 9,
