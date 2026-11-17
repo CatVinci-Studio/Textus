@@ -2,14 +2,14 @@ import { useSyncExternalStore } from "react";
 
 /** What a plugin's export format is given: the document as Markdown, and as
  *  the standalone HTML page File › Export › HTML writes. */
-export interface PluginExportInput {
+interface PluginExportInput {
   markdown: string;
   html: string;
   path: string | null;
 }
 
 /** A format a plugin adds to File › Export. */
-export interface PluginFormat {
+interface PluginFormat {
   /** `<plugin id>#<format id>`. */
   key: string;
   plugin: string;
