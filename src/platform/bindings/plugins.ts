@@ -113,6 +113,12 @@ export const commands = {
 	 *  change.
 	 */
 	set_plugin_menu: (items: PluginMenuItem_Deserialize[]) => __TAURI_INVOKE<void>("set_plugin_menu", { items }),
+	/**
+	 *  The export formats the plugins that are on add, the menu bar built again
+	 *  when they change. The native menu bar is macOS's; elsewhere the window
+	 *  draws its own from the same list.
+	 */
+	set_plugin_exports: (items: PluginExportItem[]) => __TAURI_INVOKE<void>("set_plugin_exports", { items }),
 	/**  The plugin commands the menu lists, refilled when the enabled plugins change. */
 	set_tray_plugin_items: (items: TrayPluginItem[]) => __TAURI_INVOKE<void>("set_tray_plugin_items", { items }),
 	/**  The tray command waiting for a window to run it, taken. */
@@ -387,6 +393,12 @@ export type PluginEntry_Serialize = {
 	 *  Never set by the window.
 	 */
 	official?: boolean,
+};
+
+/**  One format a plugin adds to File › Export, as the frontend sends it. */
+export type PluginExportItem = {
+	key: string,
+	label: string,
 };
 
 /**  A plugin's files as text, by path in the plugin, as Textus AI writes them. */

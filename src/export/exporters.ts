@@ -87,7 +87,7 @@ function platformPage(): PageGeometry | null {
   return null;
 }
 
-const HTML_LAYOUT_CSS =
+export const HTML_LAYOUT_CSS =
   ".app-shell, .main-pane, .editor-scroll { height: auto; overflow: visible; } " +
   ".editor-content { padding: 2rem 1.5rem; } " +
   EXPORT_FIT_CSS;
@@ -164,7 +164,10 @@ function editorOf(tab: DocTab): Element | null {
 
 /** The editor an HTML or PDF export copies; without one (source mode),
  *  says so. */
-async function drawnEditor(tab: DocTab, t: Strings): Promise<Element | null> {
+export async function drawnEditor(
+  tab: DocTab,
+  t: Strings,
+): Promise<Element | null> {
   const editor = editorOf(tab);
   if (!editor)
     await showMessage(t.exportNeedsWysiwyg, { title: t.exportFailedTitle });
@@ -173,7 +176,7 @@ async function drawnEditor(tab: DocTab, t: Strings): Promise<Element | null> {
 
 /** An export's steps: the save dialog, `write` to the file picked, the
  *  file shown in its folder - or what went wrong, said. */
-async function runExport(
+export async function runExport(
   tab: DocTab,
   t: Strings,
   [ext, kind]: [ext: string, kind: string],

@@ -137,3 +137,46 @@ pub fn set_plugin_menu(app: AppHandle, items: Vec<PluginMenuItem>) {
     }
     rebuild_plugin_menu(&app);
 }
+
+/// File › Export's plugin formats: "plugin-export:<plugin id>#<format id>".
+pub(crate) const PLUGIN_EXPORT_PREFIX: &str = "plugin-export:";
+
+/// One format a plugin adds to File › Export, as the frontend sends it.
+#[derive(serde::Deserialize, Clone, PartialEq)]
+#[cfg_attr(test, derive(specta::Type))]
+pub struct PluginExportItem {
+    pub(crate) key: String,
+    pub(crate) label: String,
+}
+
+/// The formats the frontend last sent, built after pandoc's.
+#[derive(Default)]
+pub(crate) struct PluginExports(pub(crate) Mutex<Vec<PluginExportItem>>);
+
+/// The export formats the plugins that are on add, the menu bar built again
+/// when they change. The native menu bar is macOS's; elsewhere the window
+/// draws its own from the same list.
+#[tauri::command(async)]
+#[cfg_attr(test, specta::specta)]
+pub fn set_plugin_exports(app: AppHandle, items: Vec<PluginExportItem>) {
+    #[cfg(target_os = "macos")]
+    {
+        let Some(state) = app.try_state::<PluginExports>() else {
+            return;
+        };
+        {
+            let mut current = state.0.lock().unwrap();
+            if *current == items {
+                return;
+            }
+            *current = items;
+        }
+        let handle = app.clone();
+        let _ = app.run_on_main_thread(move || {
+            let labels = handle.state::<MenuLabels>().0.lock().unwrap().clone();
+            let _ = set_menu(&handle, &labels);
+        });
+    }
+    #[cfg(not(target_os = "macos"))]
+    let _ = (app, items);
+}

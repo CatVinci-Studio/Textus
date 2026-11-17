@@ -74,6 +74,7 @@ export type NativeMenuId =
   | `recent:${string}`
   | `recent-folder:${string}`
   | `export-pandoc:${string}`
+  | `plugin-export:${string}`
   | `insert-block:${string}`
   | `toggle-mark:${string}`
   | `help-doc:${string}`

@@ -5,6 +5,7 @@ import { runCommand } from "../../registry/commands";
 import type { PluginMenuEntry } from "../../registry/menu/plugin-menu";
 import { pluginsSnapshot, subscribePlugins } from "../store/plugin-records";
 import { pluginMenuEntries } from "../store/plugin-lookup";
+import { usePluginFormats } from "../../registry/plugin-export-formats";
 
 /** What the Plugins menu lists now. */
 export function usePluginMenuEntries(language: string): PluginMenuEntry[] {
@@ -24,6 +25,13 @@ export function usePluginMenuSync(language: string): void {
   useEffect(() => {
     if (hasNativeMenuBar) void menuIpc.setPluginMenu(JSON.parse(key));
   }, [key]);
+  const formats = usePluginFormats();
+  const exports = JSON.stringify(
+    formats.map(({ key, label }) => ({ key, label })),
+  );
+  useEffect(() => {
+    if (hasNativeMenuBar) void menuIpc.setPluginExports(JSON.parse(exports));
+  }, [exports]);
   // Read afresh each render: a new language re-renders this, and the
   // labels follow it.
   const tray = JSON.stringify(pluginMenuEntries(snapshot, "app/tray"));

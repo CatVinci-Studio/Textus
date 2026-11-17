@@ -170,6 +170,9 @@ export const fs = {
     folder: string,
     sourceDocPath: string | null,
   ) => command("migrate_draft_images", docPath, srcs, folder, sourceDocPath),
+  /** A file's bytes as base64, at a path the user picked (an export). */
+  writeBase64File: (path: string, data: string): Promise<void> =>
+    command("write_base64_file", path, data),
   writeTextFile: (path: string, contents: string): Promise<void> =>
     isScopedUrl(path)
       ? iosFiles.writeText(path, contents)

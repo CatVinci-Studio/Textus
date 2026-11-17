@@ -101,6 +101,10 @@ const exporters = lazyModule(
   "exporters",
   () => import("../../export/exporters"),
 );
+const pluginExport = lazyModule(
+  "plugin-export",
+  () => import("../../export/plugin-export"),
+);
 
 /** View › Format Bar's items: an edge, or hidden. */
 const FORMAT_BAR_PICKS: (FormatBarSide | null)[] = [
@@ -188,6 +192,14 @@ export function useMenuBridge(handlers: MenuBridgeHandlers): void {
       listenToThisWindow("menu-export-html", () => {
         const tab = activeTabNow();
         if (tab) void exporters.load().then((m) => m.exportHtml(tab, h().t));
+      }),
+      // Payload is the format's key, `<plugin id>#<format id>`.
+      listenToThisWindow<string>("menu-export-plugin", (event) => {
+        const tab = activeTabNow();
+        if (tab)
+          void pluginExport
+            .load()
+            .then((m) => m.exportViaPlugin(tab, event.payload, h().t));
       }),
       // Payload is the pandoc writer name (docx, epub, ...) from the menu id.
       listenToThisWindow<string>("menu-export-pandoc", (event) => {

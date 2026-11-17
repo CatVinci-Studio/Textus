@@ -81,3 +81,23 @@ it("offers a plugin's inline completion until the plugin stops", async () => {
   stopPluginAi("a.translate");
   expect(inlineSource("a.translate#rhyme")).toBeUndefined();
 });
+
+it("puts a plugin's export format in File › Export until it stops", async () => {
+  const { exportFormatHandlers, stopPluginExport } =
+    await import("./broker-export");
+  const { pluginFormat } = await import("../../registry/plugin-export-formats");
+  const request = vi.fn(async () => new Uint8Array([1, 2]));
+  const handlers = exportFormatHandlers({ ...scope, request } as PluginScope);
+  expect(() =>
+    handlers["export.registerFormat"]({ id: "x", extension: "../x" }),
+  ).toThrow();
+  handlers["export.registerFormat"]({ id: "docx", extension: ".DOCX" });
+  const format = pluginFormat("a.translate#docx");
+  expect(format?.extension).toBe("docx");
+  expect(format?.label).toBe("DOCX");
+  await expect(
+    format!.run({ markdown: "# Hi", html: "<h1>Hi</h1>", path: null }),
+  ).resolves.toEqual(new Uint8Array([1, 2]));
+  stopPluginExport("a.translate");
+  expect(pluginFormat("a.translate#docx")).toBeUndefined();
+});

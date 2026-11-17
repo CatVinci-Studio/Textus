@@ -1527,6 +1527,23 @@ declare global {
     }
 
     interface Export {
+      /** A format in File › Export: `export` turns the document into the
+       *  file's contents, text or bytes, and Textus asks where to save it
+       *  and writes it. `html` is the standalone page File › Export › HTML
+       *  writes, pictures inside it. From 1.4.4 (API 1.8). */
+      registerFormat(
+        id: string,
+        format: {
+          label?: string;
+          /** Its files' extension, like "docx". */
+          extension: string;
+          export(document: {
+            markdown: string;
+            html: string;
+            path: string | null;
+          }): string | Uint8Array | Promise<string | Uint8Array>;
+        },
+      ): Disposable;
       /** KaTeX's stylesheet with its fonts inline, as Textus draws formulas:
        *  for a plugin page or a saved file that shows KaTeX's markup without
        *  loading anything from the web. About 400 KB. From 1.4.2 (API 1.6). */

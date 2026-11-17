@@ -202,6 +202,25 @@ textus.plugins = {
 };
 
 textus.export = {
+  // A format in File › Export (1.8): `export({ markdown, html, path })`
+  // answers the file's contents, text or bytes; Textus asks where and
+  // writes it.
+  registerFormat: function (id, format) {
+    id = String(id);
+    exportFormats.set(id, format);
+    quiet(
+      call("export.registerFormat", {
+        id: id,
+        label: format.label == null ? undefined : String(format.label),
+        extension: String(format.extension),
+      }),
+    );
+    return disposable(function () {
+      if (exportFormats.get(id) !== format) return;
+      exportFormats.delete(id);
+      quiet(call("export.unregisterFormat", { id: id }));
+    });
+  },
   mathCss: function () {
     return call("export.mathCss");
   },

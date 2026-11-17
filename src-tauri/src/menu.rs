@@ -23,8 +23,8 @@ pub(crate) use build::*;
 #[cfg(target_os = "macos")]
 mod dock;
 mod plugins;
-pub use plugins::set_plugin_menu;
 pub(crate) use plugins::*;
+pub use plugins::{set_plugin_exports, set_plugin_menu};
 
 /// Menu ids of File > Open Recent entries carry their path: "recent:<path>".
 const RECENT_PREFIX: &str = "recent:";
@@ -245,6 +245,7 @@ fn dispatch(app_handle: &tauri::AppHandle, id: &str) {
     let with_payload = [
         (PLUGIN_COMMAND_PREFIX, "menu-plugin-command"),
         (EXPORT_PANDOC_PREFIX, "menu-export-pandoc"),
+        (PLUGIN_EXPORT_PREFIX, "menu-export-plugin"),
         (INSERT_BLOCK_PREFIX, "menu-insert-block"),
         (TOGGLE_MARK_PREFIX, "menu-toggle-mark"),
     ];

@@ -18,6 +18,7 @@ import {
   type PluginManifest,
 } from "../store/manifest";
 import { aiModelHandlers, stopPluginAi } from "./broker-ai";
+import { exportFormatHandlers, stopPluginExport } from "./broker-export";
 import { fileHandlers } from "./broker-files";
 import { layoutHandlers, seenBy } from "./broker-layout";
 import { editorHandlers, stopPluginEditor } from "./broker-editor";
@@ -272,6 +273,7 @@ export class PluginHost {
     stopPluginEditor(this.id);
     stopPluginHistory(this.id);
     stopPluginAi(this.id);
+    stopPluginExport(this.id);
     forgetListViews(this.id);
     forgetEmbeds(this.id);
     forgetWillSave(this.id);
@@ -470,6 +472,7 @@ export class PluginHost {
       ...textHandlers(),
       ...historyHandlers(scope),
       ...aiModelHandlers(scope),
+      ...exportFormatHandlers(scope),
     };
   }
 }

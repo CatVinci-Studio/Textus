@@ -193,6 +193,15 @@ var handlers = {
     var source = historySources.get(params.id);
     return source ? await source.read(params.path, params.version) : null;
   },
+  $export: async function (params) {
+    var format = exportFormats.get(params.id);
+    if (!format) return null;
+    return await format.export({
+      markdown: params.markdown,
+      html: params.html,
+      path: params.path,
+    });
+  },
   $inlineCompletion: async function (params) {
     var source = inlineCompletions.get(params.id);
     if (!source) return null;

@@ -12,6 +12,7 @@ pub(crate) fn install(app: &tauri::App) -> tauri::Result<()> {
     app.manage(ViewChecks::default());
     app.manage(MenuAccelerators::default());
     app.manage(PluginMenu::default());
+    app.manage(PluginExports::default());
     set_menu(app.handle(), &HashMap::new())?;
     app.on_menu_event(move |app_handle, event| dispatch(app_handle, event.id().as_ref()));
     #[cfg(target_os = "macos")]
@@ -147,6 +148,17 @@ impl Builder<'_> {
                     out.push(Box::new(
                         MenuItemBuilder::with_id(&id, self.text(&id, &format.menu))
                             .build(self.app)?,
+                    ));
+                }
+                let plugins = self
+                    .app
+                    .try_state::<PluginExports>()
+                    .map(|state| state.0.lock().unwrap().clone())
+                    .unwrap_or_default();
+                for format in plugins {
+                    let id = format!("{PLUGIN_EXPORT_PREFIX}{}", format.key);
+                    out.push(Box::new(
+                        MenuItemBuilder::with_id(&id, menu_text(&format.label)).build(self.app)?,
                     ));
                 }
             }

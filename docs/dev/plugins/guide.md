@@ -481,6 +481,9 @@ pushes, pulls or switches branches. Elsewhere `status()` is `null`. Set
   system - use them instead of a path helper of your own.
 - `env`: `language`, `platform`, `theme` and their changes,
   `readClipboard` / `writeClipboard` (`clipboard`).
+- `export.registerFormat(id, { label, extension, export })` (1.8): a format
+  in File › Export. `export({ markdown, html, path })` answers the file's
+  text or bytes; Textus asks where and writes it.
 - `ai.registerTool(name, run)` (`ai.tools`): runs one of the manifest's
   `aiTools` when Textus AI calls it, answering text for the model.
 - `ai.complete({ system, prompt })` (`ai.model`, 1.8 preview): the user's

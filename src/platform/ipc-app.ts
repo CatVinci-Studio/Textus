@@ -165,6 +165,9 @@ export const menuIpc = {
   setPluginMenu: (
     items: { command: string; label: string; group?: string }[],
   ) => desktopQueryCommand("set_plugin_menu", undefined, items),
+  /** File › Export's plugin formats, in the native menu bar. */
+  setPluginExports: (items: { key: string; label: string }[]) =>
+    desktopQueryCommand("set_plugin_exports", undefined, items),
   /** The plugin commands the background tray icon lists. */
   setTrayPluginItems: (items: { command: string; label: string }[]) =>
     desktopQueryCommand("set_tray_plugin_items", undefined, items),

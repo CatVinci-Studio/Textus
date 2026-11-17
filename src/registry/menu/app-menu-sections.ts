@@ -1,6 +1,7 @@
 import { fill } from "../../i18n/fill";
 import type { Strings } from "../../i18n/strings";
 import { PANDOC_FORMATS } from "../export-formats";
+import { pluginFormats } from "../plugin-export-formats";
 import type { HeadingAction, Shortcuts } from "../../prefs/SettingsContext";
 import { basename } from "../../utils/path";
 
@@ -40,12 +41,19 @@ export function recentEntries(t: Strings, recents: RecentLists): MenuNode[] {
   ];
 }
 
-/** File › Export's pandoc formats (export-formats.json). */
+/** File › Export's pandoc formats (export-formats.json), then the formats
+ *  plugins add. */
 export function pandocEntries(t: Strings): MenuNode[] {
-  return PANDOC_FORMATS.map((f) => ({
-    label: t[f.key],
-    action: { native: `export-pandoc:${f.format}` },
-  }));
+  return [
+    ...PANDOC_FORMATS.map((f) => ({
+      label: t[f.key],
+      action: { native: `export-pandoc:${f.format}` } as const,
+    })),
+    ...pluginFormats().map((f) => ({
+      label: f.label,
+      action: { native: `plugin-export:${f.key}` } as const,
+    })),
+  ];
 }
 
 /** Format's heading levels, each with the key Settings gives it. */
