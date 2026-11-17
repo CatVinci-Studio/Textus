@@ -33,6 +33,7 @@ import {
   remarkTocPlugin,
   tocSchema,
 } from "./markdown/toc-plugin";
+import { createHeadingFoldPlugin } from "./fold/heading-fold";
 import { rawHtmlSchema } from "./html/raw-html-schema";
 import { remarkHtmlImages } from "./images/image-html";
 import { createRawHtmlPreviewPlugin } from "./html/raw-html-preview-plugin";
@@ -268,6 +269,7 @@ export function withEditorCore(
           return { label: t.tocLabel, empty: t.tocEmpty };
         }),
       )
+      .use(createHeadingFoldPlugin(() => docPath.current))
       // Ahead of gfm's table keys.
       .use(editing(tableEdgeArrowPlugin))
       .use(editing([tableKeys, tableRowPaste, clickBelowEnd]))
