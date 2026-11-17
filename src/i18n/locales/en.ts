@@ -1897,6 +1897,8 @@ type /name in a conversation to use one.
   pluginKeysTaken:
     "{name} can't take the keyboard: {holder} has it. Turn one of them off in the sidebar's plugin list.",
   shortcutIndentListItem: "Indent List Item",
+  shortcutFoldSection: "Fold Section",
+  shortcutUnfoldSection: "Unfold Section",
   shortcutOutdentListItem: "Outdent List Item",
   pluginKeyTaken:
     "{name}: {key} is {owner}'s, so it wasn't given to “{command}”. Set a key in Settings › Shortcuts.",

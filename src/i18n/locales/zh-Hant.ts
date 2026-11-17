@@ -1770,6 +1770,8 @@ export default {
   pluginKeysTaken:
     "「{name}」無法接管鍵盤：「{holder}」正在使用。請在側邊欄的外掛清單裡關掉其中一個。",
   shortcutIndentListItem: "清單項目縮排",
+  shortcutFoldSection: "摺疊章節",
+  shortcutUnfoldSection: "展開章節",
   shortcutOutdentListItem: "清單項目取消縮排",
   pluginKeyTaken:
     "「{name}」：{key} 已被「{owner}」使用，所以沒有綁定到「{command}」。可在 設定 › 快速鍵 中另設。",

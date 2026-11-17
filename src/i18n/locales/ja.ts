@@ -1863,6 +1863,8 @@ ${AI_NAME}への執筆の指示です。すべての文書に適用されます�
   pluginKeysTaken:
     "{name} はキーボードを使えません：{holder} が使用中です。サイドバーのプラグイン一覧でどちらかをオフにしてください。",
   shortcutIndentListItem: "リスト項目をインデント",
+  shortcutFoldSection: "セクションを折りたたむ",
+  shortcutUnfoldSection: "セクションを展開",
   shortcutOutdentListItem: "リスト項目のインデントを戻す",
   pluginKeyTaken:
     "「{name}」：{key} は「{owner}」が使っているため、「{command}」には割り当てませんでした。設定 › ショートカット で別のキーを設定できます。",

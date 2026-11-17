@@ -1959,6 +1959,8 @@ Habilidades ficam na pasta skills/ ao lado deste arquivo, um arquivo
   pluginKeysTaken:
     "{name} não consegue usar o teclado: {holder} já o usa. Desligue um deles na lista de plugins da barra lateral.",
   shortcutIndentListItem: "Aumentar recuo do item",
+  shortcutFoldSection: "Recolher seção",
+  shortcutUnfoldSection: "Expandir seção",
   shortcutOutdentListItem: "Diminuir recuo do item",
   pluginKeyTaken:
     "{name}: {key} já é de “{owner}”, então não foi atribuído a “{command}”. Escolha outro em Ajustes › Atalhos.",

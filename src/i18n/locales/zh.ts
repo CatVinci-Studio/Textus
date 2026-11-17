@@ -1764,6 +1764,8 @@ export default {
   pluginKeysTaken:
     "「{name}」无法接管键盘：「{holder}」正在使用。请在侧边栏的插件列表里关掉其中一个。",
   shortcutIndentListItem: "列表项缩进",
+  shortcutFoldSection: "折叠章节",
+  shortcutUnfoldSection: "展开章节",
   shortcutOutdentListItem: "列表项取消缩进",
   pluginKeyTaken:
     "「{name}」：{key} 已被「{owner}」使用，所以没有绑定到“{command}”。可在 设置 › 快捷键 中另设。",

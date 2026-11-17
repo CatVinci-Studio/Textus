@@ -76,4 +76,11 @@ test("a heading folds its section away, keeps the text, and opens for a caret", 
   await page.locator(".outline-row", { hasText: "Inner" }).click();
   await expect(doc.getByText("first body")).toBeVisible();
   await expect(doc.getByText("inner body")).toBeVisible();
+  // From the keyboard: the caret's section (Inner, from the outline's
+  // jump) folds and opens.
+  await page.keyboard.press("ControlOrMeta+Alt+BracketLeft");
+  await expect(doc.getByText("inner body")).toBeHidden();
+  await expect(doc.getByText("first body")).toBeVisible();
+  await page.keyboard.press("ControlOrMeta+Alt+BracketRight");
+  await expect(doc.getByText("inner body")).toBeVisible();
 });

@@ -79,6 +79,13 @@ export const EDITOR_BLOCK_COMBOS = {
   outdent: "mod+[",
 } as const;
 
+/** A heading's section folded and opened from the keyboard
+ *  (heading-fold.ts), matched by physical key. */
+export const FOLD_COMBOS = {
+  fold: "mod+alt+[",
+  unfold: "mod+alt+]",
+} as const;
+
 const RESERVED_COMBOS = new Set([
   "mod+p",
   "mod+=",
@@ -140,6 +147,7 @@ const RESERVED_COMBOS = new Set([
   "alt+[",
   "alt+]",
   ...Object.values(EDITOR_BLOCK_COMBOS),
+  ...Object.values(FOLD_COMBOS),
   // Fullscreen by convention (and the app's own handler on Windows).
   "f11",
   // Round the window's regions, and through Textus AI's changes.

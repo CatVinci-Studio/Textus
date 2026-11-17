@@ -1980,6 +1980,8 @@ para usar una.
   pluginKeysTaken:
     "{name} no puede usar el teclado: lo tiene {holder}. Desactiva uno de ellos en la lista de plugins de la barra lateral.",
   shortcutIndentListItem: "Aumentar sangría del elemento",
+  shortcutFoldSection: "Plegar sección",
+  shortcutUnfoldSection: "Desplegar sección",
   shortcutOutdentListItem: "Reducir sangría del elemento",
   pluginKeyTaken:
     "{name}: {key} ya es de «{owner}», así que no se asignó a «{command}». Elige otro en Ajustes › Atajos de teclado.",

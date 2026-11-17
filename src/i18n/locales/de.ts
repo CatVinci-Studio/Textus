@@ -1940,6 +1940,8 @@ Skills liegen im Ordner skills/ neben dieser Datei, je Skill eine
   pluginKeysTaken:
     "{name} kann die Tastatur nicht übernehmen: {holder} hat sie. Schalte eines davon in der Plugin-Liste der Seitenleiste aus.",
   shortcutIndentListItem: "Listenelement einrücken",
+  shortcutFoldSection: "Abschnitt einklappen",
+  shortcutUnfoldSection: "Abschnitt ausklappen",
   shortcutOutdentListItem: "Listenelement ausrücken",
   pluginKeyTaken:
     "{name}: {key} gehört zu „{owner}“ und wurde „{command}“ daher nicht zugewiesen. Lege unter Einstellungen › Tastenkürzel eine andere Taste fest.",

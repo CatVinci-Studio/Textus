@@ -1995,6 +1995,8 @@ utiliser une.
   pluginKeysTaken:
     "{name} ne peut pas prendre le clavier : {holder} l'a déjà. Désactivez l'un des deux dans la liste des plugins de la barre latérale.",
   shortcutIndentListItem: "Indenter l’élément de liste",
+  shortcutFoldSection: "Replier la section",
+  shortcutUnfoldSection: "Déplier la section",
   shortcutOutdentListItem: "Désindenter l’élément de liste",
   pluginKeyTaken:
     "{name} : {key} appartient à « {owner} » et n’a donc pas été attribué à « {command} ». Choisissez un raccourci dans Réglages › Raccourcis.",

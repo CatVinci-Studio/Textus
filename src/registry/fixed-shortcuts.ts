@@ -1,6 +1,6 @@
 import { fill } from "../i18n/fill";
 import { APP_NAME, type Strings } from "../i18n/strings";
-import { EDITOR_BLOCK_COMBOS } from "../utils/shortcuts";
+import { EDITOR_BLOCK_COMBOS, FOLD_COMBOS } from "../utils/shortcuts";
 import { defaultShortcuts, type Shortcuts } from "../prefs/SettingsContext";
 import { buildAppMenu, NO_RECENTS, type MenuNode } from "./menu/app-menu-model";
 
@@ -56,10 +56,14 @@ function editorKeys(t: Strings): FixedShortcut[] {
     indent: t.shortcutIndentListItem,
     outdent: t.shortcutOutdentListItem,
   };
-  return Object.entries(EDITOR_BLOCK_COMBOS).map(([key, combo]) => ({
-    label: labels[key as keyof typeof labels],
-    combos: [combo],
-  }));
+  return [
+    ...Object.entries(EDITOR_BLOCK_COMBOS).map(([key, combo]) => ({
+      label: labels[key as keyof typeof labels],
+      combos: [combo],
+    })),
+    { label: t.shortcutFoldSection, combos: [FOLD_COMBOS.fold] },
+    { label: t.shortcutUnfoldSection, combos: [FOLD_COMBOS.unfold] },
+  ];
 }
 
 /** Every configurable shortcut unbound: what is left in the menu is fixed. */

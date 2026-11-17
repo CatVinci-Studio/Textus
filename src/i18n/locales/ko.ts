@@ -1843,6 +1843,8 @@ ${AI_NAME}에게 주는 글쓰기 지침으로, 모든 문서에 적용됩니다
   pluginKeysTaken:
     "{name}이(가) 키보드를 쓸 수 없습니다: {holder}이(가) 사용 중입니다. 사이드바의 플러그인 목록에서 하나를 끄세요.",
   shortcutIndentListItem: "목록 항목 들여쓰기",
+  shortcutFoldSection: "섹션 접기",
+  shortcutUnfoldSection: "섹션 펼치기",
   shortcutOutdentListItem: "목록 항목 내어쓰기",
   pluginKeyTaken:
     "{name}: {key}는 {owner}에서 쓰고 있어 “{command}”에 지정하지 않았습니다. 설정 › 단축키에서 다른 키를 지정하세요.",

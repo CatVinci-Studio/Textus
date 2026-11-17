@@ -95,6 +95,8 @@ describe("the fixed shortcuts in Settings", () => {
       "mod+alt+c",
       "mod+shift+b",
       "mod+[",
+      "mod+alt+[",
+      "mod+alt+]",
       "mod+]",
     ]);
     expect(mac.filter((combo) => !outsideMenuRs.has(combo)).sort()).toEqual(
@@ -131,6 +133,8 @@ describe("the fixed shortcuts in Settings", () => {
           "mod+alt+c",
           "mod+shift+b",
           "mod+[",
+          "mod+alt+[",
+          "mod+alt+]",
         ]),
       );
   });

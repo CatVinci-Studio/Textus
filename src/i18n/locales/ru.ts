@@ -1978,6 +1978,8 @@ export default {
   pluginKeysTaken:
     "{name} не может занять клавиатуру: её занимает {holder}. Выключите один из них в списке плагинов на боковой панели.",
   shortcutIndentListItem: "Увеличить отступ пункта",
+  shortcutFoldSection: "Свернуть раздел",
+  shortcutUnfoldSection: "Развернуть раздел",
   shortcutOutdentListItem: "Уменьшить отступ пункта",
   pluginKeyTaken:
     "{name}: {key} уже занято «{owner}», поэтому не назначено команде «{command}». Задайте другое в Настройки › Сочетания клавиш.",

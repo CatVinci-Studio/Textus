@@ -13,6 +13,7 @@ import {
 import { $prose } from "@milkdown/kit/utils";
 import { currentStrings } from "../../i18n/current";
 import { keepInList, uiList } from "../../storage/ui-state";
+import { modIsMeta } from "../../platform/os";
 import "./block-fold.css";
 
 /**
@@ -161,6 +162,25 @@ function hiding(state: EditorState, at: readonly number[], pos: number) {
   );
 }
 
+/** The section the caret is in: its heading, or the nearest one above it at
+ *  the top level. */
+function sectionAt(state: EditorState): Section | undefined {
+  const pos = state.selection.from;
+  return sections(state.doc)
+    .filter((s) => pos > s.heading && pos <= s.to)
+    .pop();
+}
+
+/** Mod+Alt+[ folds the caret's section, Mod+Alt+] opens it, by physical
+ *  key: Option changes the character on a Mac. */
+function foldKeyOf(e: KeyboardEvent): boolean | null {
+  const mod = modIsMeta() ? e.metaKey : e.ctrlKey;
+  if (!mod || !e.altKey || e.shiftKey) return null;
+  if (e.code === "BracketLeft") return true;
+  if (e.code === "BracketRight") return false;
+  return null;
+}
+
 export const createHeadingFoldPlugin = (path: () => string | null) =>
   $prose(() => {
     const remember = (node: ProseNode, on: boolean) => {
@@ -228,6 +248,15 @@ export const createHeadingFoldPlugin = (path: () => string | null) =>
       },
       props: {
         decorations: (state) => foldKey.getState(state)?.decorations,
+        handleKeyDown: (view, event) => {
+          const folding = foldKeyOf(event);
+          if (folding === null) return false;
+          const section = sectionAt(view.state);
+          if (!section) return false;
+          const on = foldKey.getState(view.state)?.at.includes(section.heading);
+          if (on !== folding) toggle(view, section.heading);
+          return true;
+        },
       },
     });
   });
