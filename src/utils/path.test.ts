@@ -2,6 +2,7 @@ import { describe, expect, it } from "vitest";
 import {
   absoluteIn,
   basename,
+  dirname,
   folderName,
   hasUrlScheme,
   isDrivePath,
@@ -49,6 +50,12 @@ describe("isInside", () => {
     expect(
       isInside("content://other/document/primary%3ANotes%2Fa.md", dir),
     ).toBe(false);
+    // Its folder, a part up in the same tree; none above the tree's top.
+    expect(parentDir(`${tree}/document/primary%3ANotes%2Fb%2Fc.md`)).toBe(
+      `${tree}/document/primary%3ANotes%2Fb`,
+    );
+    expect(dirname(`${tree}/document/primary%3ANotes%2Fa.md`)).toBe(dir);
+    expect(parentDir(dir)).toBe(null);
   });
   it("onTheWay knows a target and the folders holding it", () => {
     const way = onTheWay("/a/b/c.md", null, "C:\\x\\y");

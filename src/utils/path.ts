@@ -35,6 +35,8 @@ export function extname(path: string): string {
 }
 
 export function dirname(path: string): string {
+  const content = contentParent(path);
+  if (content) return content;
   const idx = Math.max(path.lastIndexOf("/"), path.lastIndexOf("\\"));
   if (idx > 0) return path.slice(0, idx);
   return idx === 0 ? path[0] : path;
@@ -42,6 +44,7 @@ export function dirname(path: string): string {
 
 // The folder one level up, or null at a filesystem or UNC share root.
 export function parentDir(path: string): string | null {
+  if (path.startsWith("content://")) return contentParent(path);
   const trimmed = path.replace(/[\\/]+$/, "");
   const idx = Math.max(trimmed.lastIndexOf("/"), trimmed.lastIndexOf("\\"));
   if (idx < 0) return null;
@@ -50,6 +53,18 @@ export function parentDir(path: string): string | null {
   if (/^[A-Za-z]:$/.test(parent)) return `${parent}\\`;
   if (/^\\\\[^\\]*$/.test(parent)) return null;
   return parent;
+}
+
+/** An Android picked folder's entry's folder: its document id
+ *  ("primary:Notes/a.md", "/" spelled %2F) a part shorter, in the same
+ *  tree; null at the tree's top or for another kind of URL. */
+function contentParent(url: string): string | null {
+  const at = url.indexOf("/document/");
+  if (!url.startsWith("content://") || at < 0) return null;
+  const id = decodeUrlPath(url.slice(at + "/document/".length));
+  const cut = id.lastIndexOf("/");
+  if (cut < 0) return null;
+  return `${url.slice(0, at)}/document/${encodeURIComponent(id.slice(0, cut))}`;
 }
 
 /** Whether `path` lies under `dir`, its "." and ".." walked first: a path
