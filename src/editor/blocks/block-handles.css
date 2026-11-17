@@ -1,4 +1,4 @@
-/* A block's ＋ and ⋮⋮ in the margin left of it (block-handles-plugin.ts):
+/* A block's ⋮⋮ in the margin left of it (block-handles-plugin.ts):
    placed by translate in the editor's own units, so they grow with the
    document's zoom as the text does. Drawn as the table's add buttons are. */
 
@@ -6,9 +6,16 @@
   position: relative;
 }
 
-/* Room in the margin for both. */
+/* ⋮⋮'s size and its space from the text, which a fold caret left of it
+   counts from too (block-fold.css). */
+.editor-content {
+  --block-handle-width: 20px;
+  --block-handle-gap: 4px;
+}
+
+/* Room in the margin for ⋮⋮ and a fold caret left of it. */
 :root:not([data-block-handles="off"]) .editor-content {
-  --doc-gutter: 2.75rem;
+  --doc-gutter: calc(var(--block-handle-width) * 2 + var(--block-handle-gap));
 }
 
 .block-handle {
@@ -26,11 +33,15 @@
   display: none;
 }
 
+.block-handle:not([hidden]) {
+  animation: motion-fade-in var(--dur-fast) var(--ease-standard);
+}
+
 .block-handle-button {
   display: flex;
   align-items: center;
   justify-content: center;
-  width: 20px;
+  width: var(--block-handle-width);
   height: 24px;
   padding: 0;
   border: none;
@@ -57,11 +68,7 @@
   touch-action: none;
 }
 
-/* Under a finger: ⋮⋮ alone, the margin's height of a finger to press. */
-.block-handle.by-touch .block-handle-add {
-  display: none;
-}
-
+/* Under a finger: the margin's height of a finger to press. */
 .block-handle.by-touch .block-handle-grip {
   position: relative;
 }

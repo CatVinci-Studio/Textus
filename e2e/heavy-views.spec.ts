@@ -1,5 +1,5 @@
 import { expect, test } from "@playwright/test";
-import { openApp, pasteMarkdown } from "./helpers";
+import { MAC, openApp, pasteMarkdown } from "./helpers";
 
 // Formulas, diagrams, HTML and embedded notes are drawn only within a few
 // screens of the view: a document holding hundreds keeps a page the size
@@ -36,4 +36,42 @@ test("formulas far from the screen are let go, keeping their size, and drawn aga
   ).toBeLessThan(50);
   await scroller.evaluate((s) => s.scrollTo(0, 0));
   await expect(first.locator(".katex")).toBeVisible();
+});
+
+test("jumped straight to the end, the formulas there are drawn at once; folded and opened again, they come back", async ({
+  page,
+}) => {
+  await page.setViewportSize({ width: 1000, height: 700 });
+  await openApp(page, { settings: { menuBarShown: false } });
+  const blocks = Array.from(
+    { length: 150 },
+    (_, i) => `第 ${i} 段\n\n$$\n\\frac{a_{${i}}}{b} + \\sqrt{c}\n$$`,
+  );
+  await pasteMarkdown(page, `## 开头\n\n$$\nx^2\n$$\n\n${blocks.join("\n\n")}`);
+  const scroller = page.locator(".editor-scroll").first();
+  const formulas = page.locator(".ProseMirror .math-block-rendered");
+  await scroller.evaluate((s) => s.scrollTo(0, 0));
+  await expect(formulas.first().locator(".katex")).toBeVisible();
+  // One jump to the far end: what is on screen there is drawn, quickly.
+  await scroller.evaluate((s) => s.scrollTo(0, s.scrollHeight));
+  await expect(formulas.last().locator(".katex")).toBeVisible({
+    timeout: 500,
+  });
+  // Back at the top, the heading's section folded and opened again.
+  await scroller.evaluate((s) => s.scrollTo(0, 0));
+  await expect(formulas.first().locator(".katex")).toBeVisible({
+    timeout: 500,
+  });
+  await page.locator(".ProseMirror h2").click();
+  await page.keyboard.press("End");
+  await page.keyboard.press(
+    MAC ? "Meta+Alt+BracketLeft" : "Control+Shift+BracketLeft",
+  );
+  await expect(formulas.first()).toBeHidden();
+  await page.keyboard.press(
+    MAC ? "Meta+Alt+BracketRight" : "Control+Shift+BracketRight",
+  );
+  await expect(formulas.first().locator(".katex")).toBeVisible({
+    timeout: 500,
+  });
 });

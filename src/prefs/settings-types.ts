@@ -175,7 +175,7 @@ export interface Settings {
   firstLineIndent: boolean;
   /** A gray "type / to insert" on the empty line the caret is on. */
   emptyLineHint: boolean;
-  /** ＋ and ⋮⋮ beside the block under the pointer. */
+  /** ⋮⋮ beside the block under the pointer. */
   blockHandles: boolean;
   /** The caret glides to where it goes (computers only). */
   smoothCaret: boolean;

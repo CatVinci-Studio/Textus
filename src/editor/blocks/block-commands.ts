@@ -2,7 +2,6 @@ import { Fragment, type Node as ProseNode } from "@milkdown/kit/prose/model";
 import {
   type EditorState,
   Selection,
-  TextSelection,
   type Transaction,
 } from "@milkdown/kit/prose/state";
 import { closeHistory } from "@milkdown/kit/prose/history";
@@ -69,21 +68,6 @@ export function duplicateBlock(
 ): Transaction {
   return closeHistory(
     state.tr.insert(block.pos + block.node.nodeSize, block.node),
-  );
-}
-
-/** An empty line after the block, the caret in it: a list item's next
- *  item, else a paragraph. */
-export function addBelow(state: EditorState, block: HandledBlock): Transaction {
-  const { schema } = state;
-  const paragraph = schema.nodes.paragraph!.create();
-  const line = isItem(block.node)
-    ? block.node.type.create(null, paragraph)
-    : paragraph;
-  const at = block.pos + block.node.nodeSize;
-  const tr = closeHistory(state.tr.insert(at, line));
-  return tr.setSelection(
-    TextSelection.create(tr.doc, at + (isItem(block.node) ? 2 : 1)),
   );
 }
 

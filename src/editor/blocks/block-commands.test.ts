@@ -2,7 +2,6 @@
 import { afterEach, describe, expect, it } from "vitest";
 import { closeViews, openView, type TestView } from "../editor-view-kit";
 import {
-  addBelow,
   blockAround,
   deleteBlock,
   duplicateBlock,
@@ -92,17 +91,11 @@ describe("a block's handle", () => {
     expect(top).toContain(listAt + list.nodeSize);
   });
 
-  it("deletes, duplicates and adds a line below, each one undo step", async () => {
+  it("deletes and duplicates, each one undo step", async () => {
     const v = await openView("Keep.\n\nGo.\n\n- item\n");
     run(v, deleteBlock(v.view.state, blockOf(v, "Go.")));
     expect(v.markdown()).toBe("Keep.\n\n- item");
     run(v, duplicateBlock(v.view.state, blockOf(v, "Keep.")));
-    expect(v.markdown()).toBe("Keep.\n\nKeep.\n\n- item");
-    run(v, addBelow(v.view.state, blockOf(v, "item")));
-    v.type("next");
-    expect(v.markdown()).toBe("Keep.\n\nKeep.\n\n- item\n- next");
-    // The line added and what was written in it go together.
-    v.press("Mod+z");
     expect(v.markdown()).toBe("Keep.\n\nKeep.\n\n- item");
     v.press("Mod+z");
     expect(v.markdown()).toBe("Keep.\n\n- item");

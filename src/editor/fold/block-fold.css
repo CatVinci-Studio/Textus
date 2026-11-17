@@ -1,19 +1,22 @@
-/* A drawn block's fold (block-fold.ts): its caret in the margin on its
-   left, shown on hover or while folded; folded, one line with its name in
-   place of the block. In the document: its colours and sizes. */
+/* A fold (block-fold.ts) - a drawn block's, a heading's: its caret in the
+   margin on its left, shown as the mouse comes near the block's start
+   (data-near) or while folded; folded, a drawn block is one line with its
+   name. In the document: its colours and sizes. */
 
 .block-foldable {
   position: relative;
 }
 
+/* Its right edge just left of ⋮⋮ where the handles show, in ⋮⋮'s place
+   where they are off: one place for every kind of block. */
 .block-fold {
   position: absolute;
   top: 0;
-  left: calc(-1 * var(--doc-gutter));
+  right: calc(100% + var(--block-handle-gap));
   display: inline-flex;
   align-items: center;
   justify-content: center;
-  width: 1.5em;
+  width: var(--block-handle-width);
   height: 1.5em;
   padding: 0;
   border: none;
@@ -21,6 +24,23 @@
   background: none;
   color: var(--doc-muted);
   cursor: pointer;
+  opacity: 0;
+  transition: opacity var(--dur-fast) var(--ease-standard);
+}
+
+:root:not([data-block-handles="off"]) .block-fold {
+  right: calc(100% + var(--block-handle-gap) + var(--block-handle-width));
+}
+
+.block-fold:is([data-near], :hover, :focus-visible) {
+  opacity: 1;
+}
+
+/* No hover to bring it out: a drawn block's is always there. */
+@media (hover: none) {
+  .block-fold {
+    opacity: 1;
+  }
 }
 
 @media (hover: hover) {
@@ -68,21 +88,22 @@
   position: relative;
 }
 
-/* As wide as a block handle, on the heading's first line, left of the
-   handles where they show. */
+/* On the heading's first line. */
 .ProseMirror .heading-fold {
-  width: 20px;
   height: 1.3em;
   height: 1lh;
   /* The heading's size and line, which em and lh above count in. */
   font: inherit;
 }
 
-:root:not([data-block-handles="off"]) .ProseMirror .heading-fold {
-  left: calc(-1 * var(--doc-gutter) - 22px);
-}
-
-.ProseMirror .heading-folded-away {
+.ProseMirror .heading-folded-away,
+/* What a block draws after itself (a formula, a diagram, HTML) goes with
+   it. */
+.ProseMirror > .heading-folded-away + .ProseMirror-widget,
+.ProseMirror
+  > .heading-folded-away
+  + .ProseMirror-widget
+  + .ProseMirror-widget {
   display: none;
 }
 
@@ -98,13 +119,8 @@
 }
 
 /* A touch screen has no hover: the caret shows on the heading being
-   written in, or while folded, never on every heading at once. Its ⋮⋮
-   comes without ＋, and the caret takes ＋'s place, as a drawn block's. */
+   written in, or while folded, never on every heading at once. */
 @media (hover: none) {
-  :root:not([data-block-handles="off"]) .ProseMirror .heading-fold {
-    left: calc(-1 * var(--doc-gutter));
-  }
-
   .ProseMirror
     :is(h1, h2, h3, h4, h5, h6):not([data-folded], :has(> .heading-marker))
     > .heading-fold {

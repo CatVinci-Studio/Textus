@@ -123,7 +123,7 @@ ${AI_NAME}에게 주는 글쓰기 지침으로, 모든 문서에 적용됩니다
   blockDuplicate: "복제",
   blockHandlesLabel: "블록 핸들",
   blockHandlesHelp:
-    "포인터가 있는 블록 왼쪽에 ＋와 ⋮⋮ 표시: 블록 추가, 이동, 다른 종류로 변환.",
+    "포인터가 있는 블록 왼쪽에 ⋮⋮ 표시: 끌어서 블록을 옮기거나, 눌러서 다른 종류로 변환, 복제, 삭제.",
   smoothCaretLabel: "부드러운 커서",
   menuBlockWide: "넓게 보기",
   menuBlockZoom: "크기",

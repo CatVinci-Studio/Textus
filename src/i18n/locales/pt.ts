@@ -129,7 +129,7 @@ Habilidades ficam na pasta skills/ ao lado deste arquivo, um arquivo
   blockDuplicate: "Duplicar",
   blockHandlesLabel: "Alças de bloco",
   blockHandlesHelp:
-    "＋ e ⋮⋮ ao lado do bloco sob o ponteiro: adicionar um bloco, movê-lo ou transformá-lo em outro tipo.",
+    "⋮⋮ ao lado do bloco sob o ponteiro: arraste para mover o bloco, ou clique para transformá-lo, duplicá-lo ou excluí-lo.",
   smoothCaretLabel: "Cursor suave",
   menuBlockWide: "Exibição larga",
   menuBlockZoom: "Tamanho",

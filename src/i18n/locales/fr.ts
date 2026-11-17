@@ -136,7 +136,7 @@ utiliser une.
   blockDuplicate: "Dupliquer",
   blockHandlesLabel: "Poignées de bloc",
   blockHandlesHelp:
-    "＋ et ⋮⋮ à côté du bloc sous le pointeur : ajouter un bloc, le déplacer ou le transformer en un autre type.",
+    "⋮⋮ à côté du bloc sous le pointeur : faites-le glisser pour déplacer le bloc, ou cliquez pour le transformer, le dupliquer ou le supprimer.",
   smoothCaretLabel: "Curseur fluide",
   menuBlockWide: "Affichage large",
   menuBlockZoom: "Taille",

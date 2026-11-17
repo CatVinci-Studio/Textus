@@ -238,11 +238,11 @@ function useToolbarEvents(events: Events) {
       setImageWidth(run, pos, width === "auto" ? null : Number(width), true);
   });
 
-  // A block handle's ＋ or ⋮⋮ in this editor: the menu for that block.
+  // A block handle's ⋮⋮ in this editor: the menu for that block.
   useWindowEvent(BLOCK_MENU_EVENT, (e) => {
-    const { dom, x, y, pos, add } = (e as CustomEvent<BlockMenuRequest>).detail;
+    const { dom, x, y, pos } = (e as CustomEvent<BlockMenuRequest>).detail;
     if (run((ctx) => ctx.get(editorViewCtx).dom) !== dom) return;
-    setMenu({ x, y, imagePos: null, block: { pos, add } });
+    setMenu({ x, y, imagePos: null, block: { pos } });
   });
 
   // The iPhone keyboard toolbar's "More": the editor's menu for where the

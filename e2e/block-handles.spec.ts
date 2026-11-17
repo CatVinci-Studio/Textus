@@ -10,8 +10,8 @@ import {
   sourceOf,
 } from "./helpers";
 
-// A block's ＋ and ⋮⋮ in the margin: shown for the block under the mouse,
-// ⋮⋮ pulled moves it, ＋ adds a block below, ⋮⋮ clicked opens its menu.
+// A block's ⋮⋮ in the margin: shown for the block under the mouse; pulled,
+// it moves the block; clicked, it opens the block's menu.
 
 const editor = '[data-active-tab="true"] .ProseMirror';
 const handle = '[data-active-tab="true"] .block-handle';
@@ -99,6 +99,7 @@ test("a block pulled slowly past its neighbours never flips back and forth", asy
   await pasteMarkdown(page, "# Title line\n\n- one\n- two\n- three\n\nEnd");
   const title = (await page.locator(`${editor} h1`).boundingBox())!;
   await page.mouse.move(title.x + 30, title.y + title.height / 2);
+  await expect(page.locator(handle)).toBeVisible();
   const grip = (await page
     .locator(`${handle} .block-handle-grip`)
     .boundingBox())!;
@@ -146,8 +147,9 @@ test("a list item's handle stays with it across the markers; pulled, the item mo
     page.locator(`${editor} li`, { hasText: text }).last();
   const beta = (await item("Beta").boundingBox())!;
   const y = beta.y + 8;
-  await page.mouse.move(beta.x + 30, y);
+  await page.mouse.move(beta.x + 10, y);
   const grip = page.locator(`${handle} .block-handle-grip`);
+  await expect(grip).toBeVisible();
   const at = (await grip.boundingBox())!;
   // Across the item's marker to its grip: the handle stays where it was.
   await page.mouse.move(at.x + at.width / 2, at.y + at.height / 2, {
@@ -211,16 +213,13 @@ test("a block pulled into the document beside it moves there; with Option or Ctr
   await expect(left.locator("p")).toHaveText(["Left one"]);
 });
 
-test("＋ adds the block picked below; ⋮⋮ turns it into another kind or deletes it", async ({
+test("⋮⋮ alone in the margin turns its block into another kind or deletes it", async ({
   page,
 }) => {
   await openApp(page, { settings: { language: "en" } });
-  await pasteMarkdown(page, "Alpha\n\nOmega");
-  await hover(page, "Alpha");
-  await page.locator(`${handle} .block-handle-add`).click();
-  await page.getByRole("menuitem", { name: "Heading 2" }).click();
-  await page.keyboard.type("Middle");
-  await expect(page.locator(`${editor} > h2`)).toContainText("Middle");
+  await pasteMarkdown(page, "## Middle\n\nOmega\n\nAlpha");
+  await hover(page, "Omega");
+  await expect(page.locator(`${handle} button`)).toHaveCount(1);
 
   await hover(page, "Omega");
   await page.locator(`${handle} .block-handle-grip`).click();
@@ -235,20 +234,47 @@ test("＋ adds the block picked below; ⋮⋮ turns it into another kind or dele
   expect(await sourceOf(page)).toBe("## Middle\n\n- Omega");
 });
 
-test("the handles stay away while typing, and off in Settings", async ({
+test("the handles come only near a block's start, stay away while typing, and are off in Settings", async ({
   page,
 }) => {
   await openApp(page, { settings: { language: "en" } });
-  await pasteMarkdown(page, "Some text");
+  await pasteMarkdown(
+    page,
+    "## Part one\n\nSome text that runs on for a while",
+  );
+  // Over the line being read: nothing; by its start: ⋮⋮ and the fold caret.
+  const heading = (await block(page, "Part one").boundingBox())!;
+  const caret = page.locator(`${editor} h2 > .heading-fold`);
+  await page.mouse.move(heading.x + heading.width - 20, heading.y + 10);
+  await page.waitForTimeout(250);
+  await expect(page.locator(handle)).toBeHidden();
+  await expect(caret).toHaveCSS("opacity", "0");
+  await page.mouse.move(heading.x + 6, heading.y + 10);
+  await expect(page.locator(handle)).toBeVisible();
+  await expect(caret).toHaveCSS("opacity", "1");
+  // Left of ⋮⋮, never over it.
+  const grip = (await page
+    .locator(`${handle} .block-handle-grip`)
+    .boundingBox())!;
+  const fold = (await caret.boundingBox())!;
+  expect(fold.x + fold.width).toBeLessThanOrEqual(grip.x + 1);
   await hover(page, "Some text");
   await page.locator(editor).press("End");
   await page.keyboard.type(" more");
   await expect(page.locator(handle)).toBeHidden();
   await openApp(page, { settings: { language: "en", blockHandles: false } });
-  await pasteMarkdown(page, "Some text");
+  await pasteMarkdown(page, "## Part one\n\nSome text");
   const box = (await block(page, "Some text").boundingBox())!;
   await page.mouse.move(box.x + 20, box.y + box.height / 2);
   await page.waitForTimeout(200);
+  await expect(page.locator(handle)).toBeHidden();
+  // A heading's fold caret still comes by its start.
+  const title = (await block(page, "Part one").boundingBox())!;
+  await page.mouse.move(title.x + 6, title.y + 10);
+  await expect(page.locator(`${editor} h2 > .heading-fold`)).toHaveCSS(
+    "opacity",
+    "1",
+  );
   await expect(page.locator(handle)).toBeHidden();
 });
 
@@ -303,7 +329,6 @@ test.describe("under a finger", () => {
     await block(page, "First").tap();
     const grip = page.locator(`${handle} .block-handle-grip`);
     await expect(grip).toBeVisible();
-    await expect(page.locator(`${handle} .block-handle-add`)).toBeHidden();
     await grip.tap();
     await expect(
       page.getByRole("menuitem", { name: "Delete Block" }),

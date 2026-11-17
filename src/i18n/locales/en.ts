@@ -124,7 +124,7 @@ type /name in a conversation to use one.
   blockDuplicate: "Duplicate",
   blockHandlesLabel: "Block handles",
   blockHandlesHelp:
-    "＋ and ⋮⋮ beside the block under the pointer: add a block, move it, or turn it into another kind.",
+    "⋮⋮ beside the block under the pointer: drag it to move the block, or click it to turn the block into another kind, duplicate or delete it.",
   smoothCaretLabel: "Smooth caret",
   menuBlockWide: "Wide",
   menuBlockZoom: "Size",

@@ -4,7 +4,7 @@ import { fill } from "../../i18n/fill";
 /**
  * The kinds of block the app puts in: one list for the Format menu, the
  * right-click menu, a plugin's `textus.insertBlock` and the block handle's
- * ＋ and Turn Into. `turns`: a block of text can be turned into it.
+ * Turn Into. `turns`: a block of text can be turned into it.
  */
 interface BlockKind {
   id: string;

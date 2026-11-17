@@ -118,7 +118,7 @@ export default {
   blockDuplicate: "复制一份",
   blockHandlesLabel: "块把手",
   blockHandlesHelp:
-    "指针所在的块左边显示 ＋ 和 ⋮⋮：添加一块、拖动移动、转换成别的类型。",
+    "指针所在的块左边显示 ⋮⋮：拖动来移动这一块，点按可转换成别的类型、复制一份或删除。",
   smoothCaretLabel: "平滑光标",
   menuBlockWide: "宽屏显示",
   menuBlockZoom: "缩放",

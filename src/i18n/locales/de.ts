@@ -126,7 +126,7 @@ Skills liegen im Ordner skills/ neben dieser Datei, je Skill eine
   blockDuplicate: "Duplizieren",
   blockHandlesLabel: "Block-Griffe",
   blockHandlesHelp:
-    "＋ und ⋮⋮ neben dem Block unter dem Zeiger: einen Block einfügen, ihn verschieben oder in eine andere Art umwandeln.",
+    "⋮⋮ neben dem Block unter dem Zeiger: ziehen, um den Block zu verschieben, oder klicken, um ihn umzuwandeln, zu duplizieren oder zu löschen.",
   smoothCaretLabel: "Fließender Cursor",
   menuBlockWide: "Breit anzeigen",
   menuBlockZoom: "Größe",

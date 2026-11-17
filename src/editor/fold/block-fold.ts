@@ -38,11 +38,12 @@ const caretSpan = () =>
     className: "disclosure-caret",
   });
 
-/** A fold's caret button, shown on hover (tx-reveal). */
+/** A fold's caret button: shown as the mouse comes near its block's start
+ *  (block-handles-plugin.ts marks it data-near), or while folded. */
 export function foldCaret(): HTMLButtonElement {
   const caret = document.createElement("button");
   caret.type = "button";
-  caret.className = "tx-reveal block-fold";
+  caret.className = "block-fold";
   caret.append(caretSpan());
   return caret;
 }

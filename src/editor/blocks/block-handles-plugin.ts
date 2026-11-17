@@ -10,7 +10,7 @@ import { blockAround, type HandledBlock } from "./block-commands";
 import { openEditors, pulledDecorations, type Pulled } from "./block-lift";
 import { dragBlock } from "./block-drag";
 import { boxIn, handlePlace } from "./block-handle-place";
-import { GRIP_ICON_HTML, PLUS_ICON_HTML } from "../../engine/controls/icons";
+import { GRIP_ICON_HTML } from "../../engine/controls/icons";
 import { TOUCH_SLOP_PX } from "../../utils/gesture";
 import { canHaptic } from "../../platform/capabilities";
 import { iosFiles } from "../../platform/ios-files";
@@ -25,9 +25,18 @@ const MARKER_EM: Record<string, number> = {
 /** How long a finger rests on ⋮⋮ before the block lifts. */
 const HOLD_MS = 450;
 
+/** How long the mouse rests by a block's start before its tools come: one
+ *  passing over on its way elsewhere brings nothing. */
+const DWELL_MS = 100;
+
+/** How far into a block's text, in its ems, the mouse brings its tools:
+ *  over the rest of the line it is reading, not reaching for them. */
+const NEAR_EM = 2;
+
 /**
- * ＋ and ⋮⋮ in the margin beside the block under a mouse: ＋ opens the list
- * of blocks to add below it, ⋮⋮ its menu, and pulled, moves it. Gone while
+ * ⋮⋮ in the margin beside the block a mouse comes near the start of, with
+ * the block's fold caret: clicked, its menu; pulled, it moves the block.
+ * Gone while
  * typing, until the mouse moves again; never in a document that can't be
  * edited. Under a finger, ⋮⋮ alone stands by the block with the caret:
  * tapped, its menu; held, the block lifts to be moved.
@@ -70,9 +79,13 @@ export const createBlockHandlesPlugin = (options: { enabled: () => boolean }) =>
 class BlockHandles {
   private readonly root: HTMLElement;
   private readonly handle = document.createElement("div");
-  private readonly add = button("block-handle-add", PLUS_ICON_HTML);
   private readonly grip = button("block-handle-grip", GRIP_ICON_HTML);
   private block: HandledBlock | null = null;
+  /** The fold caret shown for the block the mouse is near. */
+  private caret: HTMLElement | null = null;
+  /** The mouse's last place, for the rest it makes before tools come. */
+  private pointer = { x: 0, y: 0 };
+  private dwell: ReturnType<typeof setTimeout> | undefined;
   private dragging = false;
   /** The last press was a finger's or a pen's, not a mouse's. */
   private touch = false;
@@ -87,15 +100,14 @@ class BlockHandles {
     this.handle.className = "block-handle";
     this.handle.hidden = true;
     this.handle.setAttribute("aria-hidden", "true");
-    this.handle.append(this.add, this.grip);
+    this.handle.append(this.grip);
     this.root.append(this.handle);
     openEditors.set(view, this.root);
     this.area.addEventListener("pointerdown", this.onPress, true);
     this.area.addEventListener("pointermove", this.onMove);
     this.area.addEventListener("pointerleave", this.onLeave);
-    view.dom.addEventListener("keydown", this.hide);
-    this.add.addEventListener("click", (e) => this.onClick(e, true));
-    this.grip.addEventListener("click", (e) => this.onClick(e, false));
+    view.dom.addEventListener("keydown", this.leave);
+    this.grip.addEventListener("click", this.onClick);
     this.grip.addEventListener("pointerdown", this.onGrip);
   }
 
@@ -105,33 +117,82 @@ class BlockHandles {
     this.touch = touch;
     this.handle.classList.toggle("by-touch", touch);
     // A mouse after a finger: the handle goes, unless it is what's pressed.
-    if (!touch && !this.handle.contains(e.target as Node)) this.hide();
+    if (!touch && !this.handle.contains(e.target as Node)) this.leave();
   };
 
   private readonly onMove = (e: PointerEvent) => {
     if (this.dragging || e.pointerType !== "mouse") return;
-    if (!this.enabled() || !this.view.editable) return this.hide();
     // Over the handle itself: it stays for the block it stands for.
     if (this.handle.contains(e.target as Node)) return;
+    // A button held: text being chosen, not a block reached for.
+    if (e.buttons !== 0) return this.leave();
+    this.pointer = { x: e.clientX, y: e.clientY };
+    if (!this.nearBlock()) return this.leave();
+    // Shown already: they follow from block to block at once.
+    if (this.block || this.caret) return this.reveal();
+    clearTimeout(this.dwell);
+    this.dwell = setTimeout(() => this.reveal(), DWELL_MS);
+  };
+
+  /** The block on the mouse's line whose start it is near, if any. */
+  private nearBlock(): { block: HandledBlock; dom: HTMLElement } | null {
+    const { x, y } = this.pointer;
     const content = this.view.dom.getBoundingClientRect();
-    if (e.clientY < content.top || e.clientY > content.bottom)
-      return this.hide();
+    if (y < content.top || y > content.bottom) return null;
     // From the margin too: the block on the pointer's line.
     const at = this.view.posAtCoords({
-      left: Math.max(e.clientX, content.left + 2),
-      top: e.clientY,
+      left: Math.max(x, content.left + 2),
+      top: y,
     });
-    const block =
+    const around =
       at &&
       blockAround(this.view.state.doc, at.inside >= 0 ? at.inside : at.pos);
-    if (!block) return this.hide();
-    this.show(itemOnLine(this.view, block, e.clientY));
-  };
+    if (!around) return null;
+    const block = itemOnLine(this.view, around, y);
+    const dom = this.view.nodeDOM(block.pos);
+    if (!(dom instanceof HTMLElement) || !dom.isConnected) return null;
+    const em = parseFloat(getComputedStyle(dom).fontSize) || 16;
+    return x < dom.getBoundingClientRect().left + NEAR_EM * em
+      ? { block, dom }
+      : null;
+  }
+
+  /** The tools of the block the mouse is near: its fold caret, and ⋮⋮
+   *  where the document can be edited and handles are on. */
+  private reveal() {
+    const near = this.nearBlock();
+    if (!near) return this.leave();
+    this.markCaret(this.pointer.y);
+    if (this.enabled() && this.view.editable) this.show(near.block);
+    else this.hide();
+  }
+
+  /** Shows the fold caret of the block on line `y`, and no other. */
+  private markCaret(y: number) {
+    let found: HTMLElement | null = null;
+    for (const caret of this.view.dom.querySelectorAll<HTMLElement>(
+      ".block-fold",
+    )) {
+      const r = caret.parentElement?.getBoundingClientRect();
+      if (r && r.height > 0 && y >= r.top && y < r.bottom) found = caret;
+    }
+    if (found === this.caret) return;
+    this.caret?.removeAttribute("data-near");
+    found?.setAttribute("data-near", "");
+    this.caret = found;
+  }
 
   // A finger lifting leaves too; under a finger the handle follows the
   // caret, not the pointer.
   private readonly onLeave = (e: PointerEvent) => {
-    if (!this.dragging && e.pointerType === "mouse") this.hide();
+    if (!this.dragging && e.pointerType === "mouse") this.leave();
+  };
+
+  /** The mouse gone from the blocks' starts, or typing: no tools. */
+  private readonly leave = () => {
+    clearTimeout(this.dwell);
+    this.markCaret(Number.NaN);
+    this.hide();
   };
 
   private readonly hide = () => {
@@ -144,13 +205,11 @@ class BlockHandles {
     if (!dom?.isConnected) return this.hide();
     this.block = block;
     this.handle.hidden = false;
-    // A drawn block with a fold caret in the margin keeps ⋮⋮ only.
-    this.add.hidden = dom.classList.contains("block-foldable");
     // Beside a fold caret (a drawn block's, a heading's), a finger's ⋮⋮
     // leaves the margin left of it to the caret.
     this.handle.toggleAttribute(
       "data-beside-fold",
-      this.add.hidden || /^H[1-6]$/.test(dom.tagName),
+      dom.classList.contains("block-foldable") || /^H[1-6]$/.test(dom.tagName),
     );
     const style = getComputedStyle(dom);
     const fontSize = parseFloat(style.fontSize) || 16;
@@ -171,21 +230,20 @@ class BlockHandles {
     this.handle.style.translate = `${x}px ${y}px`;
   }
 
-  private onClick(e: MouseEvent, add: boolean) {
+  private readonly onClick = (e: MouseEvent) => {
     e.preventDefault();
     // A finger's tap opened it as it lifted.
-    if (!this.touch) this.openMenu(add);
-  }
+    if (!this.touch) this.openMenu();
+  };
 
-  private openMenu(add: boolean) {
+  private openMenu() {
     if (!this.block) return;
-    const r = (add ? this.add : this.grip).getBoundingClientRect();
+    const r = this.grip.getBoundingClientRect();
     const request: BlockMenuRequest = {
       dom: this.view.dom,
       x: r.left,
       y: r.bottom,
       pos: this.block.pos,
-      add,
     };
     sendAppEvent(BLOCK_MENU_EVENT, request);
   }
@@ -225,7 +283,7 @@ class BlockHandles {
     };
     const tapped = () => {
       stop();
-      this.openMenu(false);
+      this.openMenu();
     };
     const moved = (m: PointerEvent) => {
       if (Math.hypot(m.clientX - from.x, m.clientY - from.y) > TOUCH_SLOP_PX)
@@ -266,7 +324,8 @@ class BlockHandles {
     this.area.removeEventListener("pointerdown", this.onPress, true);
     this.area.removeEventListener("pointermove", this.onMove);
     this.area.removeEventListener("pointerleave", this.onLeave);
-    this.view.dom.removeEventListener("keydown", this.hide);
+    this.view.dom.removeEventListener("keydown", this.leave);
+    clearTimeout(this.dwell);
     this.handle.remove();
     openEditors.delete(this.view);
   }

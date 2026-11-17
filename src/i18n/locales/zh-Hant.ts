@@ -118,7 +118,7 @@ export default {
   blockDuplicate: "製作副本",
   blockHandlesLabel: "區塊控點",
   blockHandlesHelp:
-    "指標所在的區塊左邊顯示 ＋ 和 ⋮⋮：新增區塊、拖曳移動、轉換成別的類型。",
+    "指標所在的區塊左邊顯示 ⋮⋮：拖曳來移動這個區塊，點按可轉換成別的類型、複製一份或刪除。",
   smoothCaretLabel: "平滑游標",
   menuBlockWide: "寬螢幕顯示",
   menuBlockZoom: "縮放",

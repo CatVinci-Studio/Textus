@@ -136,7 +136,7 @@ para usar una.
   blockDuplicate: "Duplicar",
   blockHandlesLabel: "Asas de bloque",
   blockHandlesHelp:
-    "＋ y ⋮⋮ junto al bloque bajo el puntero: añadir un bloque, moverlo o convertirlo en otro tipo.",
+    "⋮⋮ junto al bloque bajo el puntero: arrástralo para mover el bloque, o haz clic para convertirlo, duplicarlo o eliminarlo.",
   smoothCaretLabel: "Cursor suave",
   menuBlockWide: "Vista ancha",
   menuBlockZoom: "Tamaño",
