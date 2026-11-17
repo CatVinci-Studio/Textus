@@ -22,7 +22,6 @@ const HOOKS_NOW = {
   "src/ai/margin/useOwnRevisions.ts useOwnRevisions": 16,
   "src/ai/margin/useReviewNotes.ts useReviewNotes": 19,
   "src/app/frame/useSidePanels.ts useSidePanels": 16,
-  "src/app/useOpenFolder.ts useOpenFolder": 15,
   "src/app/usePluginWindow.ts usePluginWindow": 24,
   "src/app/useWindowDocuments.ts useWindowDocuments": 29,
   "src/app/useWindowWiring.ts useWindowWiring": 20,
