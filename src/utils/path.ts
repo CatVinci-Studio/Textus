@@ -102,6 +102,11 @@ export function isInside(path: string, dir: string): boolean {
   return inner.startsWith(outer.endsWith("/") ? outer : `${outer}/`);
 }
 
+/** Whether `path` is folder `dir` itself or lies somewhere below it. */
+export function isWithin(path: string, dir: string): boolean {
+  return path === dir || isInside(path, dir);
+}
+
 /** An Android picked folder's entry: under the same picked tree, its
  *  document id ("primary:Notes/a.md", "/" spelled %2F) below the folder's. */
 function contentInside(path: string, dir: string): boolean {

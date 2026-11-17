@@ -22,7 +22,7 @@ import { isDocumentName } from "./document-name";
 import { localeOf } from "../i18n/langs";
 import { compareEntries, nameCollator } from "../utils/name-order";
 import { useTree, useTreeRowActions } from "./tree-shared";
-import { isWithin } from "./tree-root";
+import { isWithin } from "../utils/path";
 import { DraftRow } from "./DraftRow";
 import { TreeRowsInSight } from "./TreeRowsInSight";
 import type { FileOpenHow } from "./tree-shared";

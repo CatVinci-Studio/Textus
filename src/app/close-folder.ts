@@ -1,5 +1,5 @@
 import { tabIsDirty, type DocTab } from "../document/doc-tabs";
-import { isWithin } from "../files/tree-root";
+import { isWithin } from "../utils/path";
 
 /**
  * What Close Folder does to the tabs: the saved documents inside `folder`

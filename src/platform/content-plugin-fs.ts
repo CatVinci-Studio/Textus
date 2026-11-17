@@ -1,5 +1,5 @@
 import { iosFiles } from "./ios-files";
-import { basename, contentJoin, isInside, parentDir } from "../utils/path";
+import { basename, contentJoin, isWithin, parentDir } from "../utils/path";
 
 /**
  * A plugin's file calls in an Android folder opened without access to all
@@ -20,7 +20,7 @@ interface ContentEntry {
 /** The URL of `path` (relative to `root`, or a URL inside it). */
 export function contentPath(root: string, path: string): string {
   if (path.startsWith("content://")) {
-    if (path !== root && !isInside(path, root))
+    if (!isWithin(path, root))
       throw new Error(`${path} is outside the folder.`);
     return path;
   }
@@ -60,7 +60,7 @@ async function folder(root: string, url: string): Promise<string> {
   if (here?.is_dir) return url;
   if (here) throw new Error(`${basename(url)} is a file.`);
   const parent = parentDir(url);
-  if (!parent || (parent !== root && !isInside(parent, root)))
+  if (!parent || !isWithin(parent, root))
     throw new Error(`${url} is outside the folder.`);
   return iosFiles.createEntry(await folder(root, parent), basename(url), true);
 }

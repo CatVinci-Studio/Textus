@@ -1,4 +1,5 @@
 import { useSyncExternalStore } from "react";
+import { createSubscribers } from "../utils/store";
 
 /** What a plugin's export format is given: the document as Markdown, and as
  *  the standalone HTML page File › Export › HTML writes. */
@@ -20,11 +21,11 @@ interface PluginFormat {
 }
 
 let formats: readonly PluginFormat[] = [];
-const listeners = new Set<() => void>();
+const listeners = createSubscribers();
 
 function changed(next: readonly PluginFormat[]) {
   formats = next;
-  for (const listen of listeners) listen();
+  listeners.publish();
 }
 
 /** A format in File › Export, until the returned function takes it away. */
@@ -44,11 +45,5 @@ export function pluginFormat(key: string): PluginFormat | undefined {
 }
 
 export function usePluginFormats(): readonly PluginFormat[] {
-  return useSyncExternalStore(
-    (listen) => {
-      listeners.add(listen);
-      return () => listeners.delete(listen);
-    },
-    () => formats,
-  );
+  return useSyncExternalStore(listeners.subscribe, () => formats);
 }

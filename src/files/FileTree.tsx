@@ -27,7 +27,7 @@ import { useTreeContexts } from "./useTreeContexts";
 import { useRowDrag } from "./useRowDrag";
 import { DirNode } from "./TreeNodes";
 import "./FileTree.css";
-import { isWithin } from "./tree-root";
+import { isWithin } from "../utils/path";
 import type { FileOpenHow } from "./tree-shared";
 import { useTreeView } from "./useTreeData";
 import { useRowMenu } from "./useRowMenu";

@@ -2,9 +2,7 @@ import type { Strings } from "../i18n/strings";
 import type { DocTab } from "../document/doc-tabs";
 import { fs } from "../platform/ipc";
 import { toBase64 } from "../plugins/store/files";
-import { preparePage } from "./export-page";
-import { buildStandaloneHtml } from "./standalone-html";
-import { HTML_LAYOUT_CSS, drawnEditor, runExport } from "./exporters";
+import { drawnEditor, htmlPage, runExport } from "./exporters";
 import { pluginFormat } from "../registry/plugin-export-formats";
 
 /** File › Export in a plugin's format: the plugin turns the document into
@@ -23,18 +21,10 @@ export async function exportViaPlugin(
     t,
     [format.extension, format.label],
     async (picked, base) => {
-      const finished = await preparePage(editor, tab, {
-        format: "html",
-        from: picked,
+      const html = await htmlPage(editor, tab, picked, base, {
         images: "inline",
         drawn: "light",
-        settle: false,
       });
-      const html = buildStandaloneHtml(
-        base,
-        finished.html,
-        HTML_LAYOUT_CSS + finished.css,
-      );
       // tab.content, not the file on disk: unsaved edits export too.
       const out = await format.run({
         markdown: tab.content,

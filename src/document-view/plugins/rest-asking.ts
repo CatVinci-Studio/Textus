@@ -100,15 +100,7 @@ export function askAtRest<T extends { block: string }>(
     }
     view.dispatch(view.state.tr.setMeta(key, DecorationSet.create(doc, out)));
   };
-  // The view is made before it is in the page: its scroller is found as
-  // scrolls come.
-  const scrolled = (e: Event) => {
-    if (e.target instanceof Node && e.target.contains(view.dom)) ask();
-  };
-  document.addEventListener("scroll", scrolled, {
-    capture: true,
-    passive: true,
-  });
+  const stopScroll = onEditorScroll(view, ask);
   const stop = asking.subscribe(ask);
   ask();
   return {
@@ -118,7 +110,7 @@ export function askAtRest<T extends { block: string }>(
     destroy() {
       clearTimeout(timer);
       stop();
-      document.removeEventListener("scroll", scrolled, { capture: true });
+      stopScroll();
     },
   };
 }
@@ -155,4 +147,18 @@ export function answerRange(
       pos + block.nodeSize - 1,
     ]
   );
+}
+
+/** Calls `cb` whenever whatever scrolls `view` scrolls. The view is made
+ *  before it is in the page, so its scroller is found as scrolls come. */
+export function onEditorScroll(view: EditorView, cb: () => void): () => void {
+  const scrolled = (e: Event) => {
+    if (e.target instanceof Node && e.target.contains(view.dom)) cb();
+  };
+  document.addEventListener("scroll", scrolled, {
+    capture: true,
+    passive: true,
+  });
+  return () =>
+    document.removeEventListener("scroll", scrolled, { capture: true });
 }

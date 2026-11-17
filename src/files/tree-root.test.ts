@@ -1,5 +1,6 @@
 import { describe, expect, it } from "vitest";
-import { isWithin, nextTreeRoot, rootAfterClose } from "./tree-root";
+import { isWithin } from "../utils/path";
+import { nextTreeRoot, rootAfterClose } from "./tree-root";
 
 const root = (
   current: string | null,

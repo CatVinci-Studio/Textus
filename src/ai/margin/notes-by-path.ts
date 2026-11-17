@@ -1,3 +1,4 @@
+import { createSubscribers } from "../../utils/store";
 import type { StoredOwnNote } from "./own-notes";
 
 /**
@@ -16,7 +17,7 @@ interface OpenNotes {
 }
 
 const open = new Map<string, OpenNotes>();
-const listeners = new Set<(path: string) => void>();
+const changes = createSubscribers<[path: string]>();
 
 /** The editor of `path` holds its notes, until the returned call. */
 export function holdNotes(path: string, notes: OpenNotes): () => void {
@@ -30,14 +31,9 @@ export const openNotes = (path: string): OpenNotes | null =>
   open.get(path) ?? null;
 
 /** The notes of `path` were written. */
-export function notesChanged(path: string): void {
-  for (const listener of listeners) listener(path);
-}
+export const notesChanged = (path: string): void => changes.publish(path);
 
-export function onNotesChanged(listener: (path: string) => void): () => void {
-  listeners.add(listener);
-  return () => listeners.delete(listener);
-}
+export const onNotesChanged = changes.subscribe;
 
 export const newNoteId = (who: string) =>
   `${who}-${Date.now().toString(36)}-${Math.random().toString(36).slice(2, 6)}`;

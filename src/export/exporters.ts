@@ -23,7 +23,11 @@ import {
   paginateHtml,
   type PageGeometry,
 } from "./paginate";
-import { buildStandaloneHtml, nextFrame } from "./standalone-html";
+import {
+  buildStandaloneHtml,
+  nextFrame,
+  type ExportImages,
+} from "./standalone-html";
 import { explainError } from "../utils/error-explain";
 import { pandocFormat } from "../registry/export-formats";
 // File > Export: HTML serializes the live editor DOM, PDF prints a themed
@@ -204,20 +208,33 @@ export async function exportHtml(tab: DocTab, t: Strings): Promise<void> {
   if (!editor) return;
   await runExport(tab, t, ["html", "HTML"], async (picked, base) => {
     const besideDocument = !!tab.path && dirname(tab.path) === dirname(picked);
-    const finished = await preparePage(editor, tab, {
-      format: "html",
-      from: picked,
+    const html = await htmlPage(editor, tab, picked, base, {
       images: besideDocument ? "document" : "inline",
       drawn: appearanceIsDark() ? "dark" : "light",
-      settle: false,
     });
-    const html = buildStandaloneHtml(
-      base,
-      finished.html,
-      HTML_LAYOUT_CSS + finished.css,
-    );
     await fs.writeTextFile(picked, html);
   });
+}
+
+/** The document as one standalone HTML page, read from `picked`. */
+export async function htmlPage(
+  editor: Element,
+  tab: DocTab,
+  picked: string,
+  base: string,
+  look: { images: ExportImages; drawn: "light" | "dark" },
+): Promise<string> {
+  const finished = await preparePage(editor, tab, {
+    format: "html",
+    from: picked,
+    settle: false,
+    ...look,
+  });
+  return buildStandaloneHtml(
+    base,
+    finished.html,
+    HTML_LAYOUT_CSS + finished.css,
+  );
 }
 
 // The drawn blocks' pictures in the document's editor, for a pandoc export.

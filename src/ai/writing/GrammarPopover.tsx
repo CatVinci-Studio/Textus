@@ -83,6 +83,23 @@ export const issueLabel = (
   labels: Pick<GrammarPopoverLabels, "grammarKinds">,
 ) => info.label ?? labels.grammarKinds[info.kind];
 
+/** The slip's badge: a plugin's own name, or its kind in that kind's tone. */
+export function IssueKind({
+  info,
+  labels,
+}: {
+  info: Pick<GrammarPopoverInfo, "label" | "kind">;
+  labels: Pick<GrammarPopoverLabels, "grammarKinds">;
+}) {
+  return (
+    <span
+      className={`grammar-kind grammar-kind-${info.label ? "plugin" : info.kind}`}
+    >
+      {issueLabel(info, labels)}
+    </span>
+  );
+}
+
 /** The card under a grammar underline. With several underlines in the
  *  paragraph, ‹ 1/3 › steps between them. */
 export function GrammarPopover({
@@ -112,11 +129,7 @@ export function GrammarPopover({
       onMouseLeave={onMouseLeave}
     >
       <div className="grammar-popover-head">
-        <span
-          className={`grammar-kind grammar-kind-${info.label ? "plugin" : info.kind}`}
-        >
-          {issueLabel(info, labels)}
-        </span>
+        <IssueKind info={info} labels={labels} />
         {info.suggestion !== undefined && (
           <span className="grammar-popover-fix">
             {info.original && <s>{info.shownOriginal ?? info.original}</s>}

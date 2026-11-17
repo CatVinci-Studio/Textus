@@ -1,4 +1,4 @@
-import { onAppearance } from "../engine/tokens/appearance";
+import { onAppearance, windowIsDark } from "../engine/tokens/appearance";
 import { CUSTOM_CSS_STYLE_ID, PLUGIN_COLORS_STYLE_ID } from "./style-ids";
 import {
   chromePalette,
@@ -56,9 +56,6 @@ function resolved(name: OpenColor): RGB | null {
   probe.remove();
   return rgbOf(color);
 }
-
-const isDark = () =>
-  getComputedStyle(document.documentElement).colorScheme === "dark";
 
 /** The layers' colours for one scheme, plugins in id order. */
 function composed(scheme: Scheme): { colors: Colors; texture?: FrameTexture } {
@@ -156,7 +153,7 @@ function apply(): void {
   if (sheet) sheet.disabled = true;
   let values: Record<string, string>;
   try {
-    const dark = isDark();
+    const dark = windowIsDark();
     const { colors, texture } = composed(dark ? "dark" : "light");
     values = applied(colors);
     if (texture && values[PAINT])

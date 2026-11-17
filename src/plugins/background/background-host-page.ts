@@ -1,6 +1,6 @@
 import { schedule as scheduleIpc } from "../../platform/ipc-schedule";
 import { loadSettings } from "../../prefs/SettingsContext";
-import { windowIsDark } from "../views/theme-vars";
+import { windowIsDark } from "../../engine/tokens/appearance";
 import { pluginPlatform } from "../plugin-platform";
 import { setAppState } from "./app-state";
 import { runWaitingJobs } from "./run-jobs";

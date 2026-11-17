@@ -1,10 +1,5 @@
 import { dirname, isInside } from "../utils/path";
 
-/** Whether `path` is folder `dir` itself or lies somewhere below it. */
-export function isWithin(path: string, dir: string): boolean {
-  return path === dir || isInside(path, dir);
-}
-
 /**
  * Where the file tree is rooted after the front document or opened folder
  * changes. An opened folder is always the root; otherwise it stays while

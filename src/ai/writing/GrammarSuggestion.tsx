@@ -1,5 +1,10 @@
 import { useMemo } from "react";
-import { GrammarPopover, fixLabel, issueLabel } from "./GrammarPopover";
+import {
+  GrammarPopover,
+  IssueKind,
+  fixLabel,
+  issueLabel,
+} from "./GrammarPopover";
 import type { useGrammarPopover } from "./useGrammarPopover";
 import { BottomCard } from "../../engine/controls/BottomCard";
 import { Presence } from "../../engine/motion/usePresence";
@@ -63,11 +68,7 @@ export function GrammarSuggestion({
             ]}
             onClose={grammar.hide}
           >
-            <span
-              className={`grammar-kind grammar-kind-${grammar.popover.label ? "plugin" : grammar.popover.kind}`}
-            >
-              {issueLabel(grammar.popover, grammarLabels)}
-            </span>
+            <IssueKind info={grammar.popover} labels={grammarLabels} />
             {fix !== undefined && (
               <div className="grammar-card-fix">
                 {grammar.popover.original && (

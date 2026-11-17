@@ -11,7 +11,7 @@ import {
   type EditorView,
 } from "@milkdown/kit/prose/view";
 import { $prose } from "@milkdown/kit/utils";
-import { currentStrings } from "../../i18n/current";
+import { foldCaret, labelFoldCaret } from "./block-fold";
 import { keepInList, uiList } from "../../storage/ui-state";
 import { modIsMeta } from "../../platform/os";
 import "./block-fold.css";
@@ -80,21 +80,10 @@ function caretButton(
   heading: () => number | undefined,
   toggle: Toggle,
 ): HTMLElement {
-  const button = document.createElement("button");
-  button.type = "button";
-  button.className = "tx-reveal block-fold heading-fold";
+  const button = foldCaret();
+  button.classList.add("heading-fold");
   button.contentEditable = "false";
-  button.setAttribute("aria-expanded", String(!folded));
-  const t = currentStrings();
-  button.setAttribute(
-    "aria-label",
-    folded ? t.outlineExpand : t.outlineCollapse,
-  );
-  button.append(
-    Object.assign(document.createElement("span"), {
-      className: "disclosure-caret",
-    }),
-  );
+  labelFoldCaret(button, folded);
   // Not a click in the text: the caret stays where it was.
   button.addEventListener("mousedown", (e) => e.preventDefault());
   button.addEventListener("click", (e) => {

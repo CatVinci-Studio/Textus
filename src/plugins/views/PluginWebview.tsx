@@ -16,7 +16,8 @@ import { grantedHosts } from "../store/permissions";
 import type { CodeBlockSeen } from "../manager";
 import { windowInfo } from "../store/plugin-records";
 import { useSettingsIfAny } from "../../prefs/SettingsContext";
-import { watchTheme, webviewThemeCss, windowIsDark } from "./theme-vars";
+import { watchTheme, webviewThemeCss } from "./theme-vars";
+import { windowIsDark } from "../../engine/tokens/appearance";
 import { pageMenuEntries } from "./webview-menu";
 import { openPageLink } from "./page-links";
 import {

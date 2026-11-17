@@ -8,7 +8,7 @@ import {
   basename,
   contentRelative,
   dirname,
-  isInside,
+  isWithin,
   slashed,
 } from "../../utils/path";
 import { freeFilePath } from "../../document/autosave-untitled";
@@ -458,7 +458,7 @@ export function openDocument(root: string, path: string) {
 function within(root: string, path: string | undefined): string {
   if (!path) return root;
   const full = absoluteIn(root, path);
-  if (full !== root && !isInside(full, root))
+  if (!isWithin(full, root))
     throw new Error(`${path} isn't in the open folder.`);
   return full;
 }

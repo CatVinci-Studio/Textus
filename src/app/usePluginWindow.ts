@@ -35,7 +35,8 @@ import {
   type PluginsSnapshot,
 } from "../plugins/store/plugin-records";
 import { setPluginProject } from "../plugins/plugin-setting-values";
-import { watchTheme, windowIsDark } from "../plugins/views/theme-vars";
+import { watchTheme } from "../plugins/views/theme-vars";
+import { windowIsDark } from "../engine/tokens/appearance";
 import { usePluginMenuSync } from "../plugins/contributions/usePluginMenu";
 import { placeOnArrival, tabInUse } from "../engine/layout/store";
 import { besideOrSay, openBesideOrSay } from "./menu/split-here";

@@ -1,4 +1,5 @@
 import { useSyncExternalStore } from "react";
+import { createSubscribers } from "../../utils/store";
 
 /** What a plugin's inline completion is asked with. */
 export interface InlineRequest {
@@ -24,11 +25,11 @@ export interface InlineSource {
 export const TEXTUS_SOURCE = "textus";
 
 let sources: readonly InlineSource[] = [];
-const listeners = new Set<() => void>();
+const listeners = createSubscribers();
 
 function changed(next: readonly InlineSource[]) {
   sources = next;
-  for (const listen of listeners) listen();
+  listeners.publish();
 }
 
 /** A source, until the returned function takes it away. */
@@ -48,11 +49,5 @@ export function chosenSource(key: string): InlineSource | "textus" | null {
 }
 
 export function useInlineSources(): readonly InlineSource[] {
-  return useSyncExternalStore(
-    (listen) => {
-      listeners.add(listen);
-      return () => listeners.delete(listen);
-    },
-    () => sources,
-  );
+  return useSyncExternalStore(listeners.subscribe, () => sources);
 }

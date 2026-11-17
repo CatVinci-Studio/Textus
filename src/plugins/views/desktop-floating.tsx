@@ -7,7 +7,8 @@ import {
   unlistenAll,
 } from "../../platform/events";
 import { webviewMessage } from "../manager";
-import { watchTheme, webviewThemeCss, windowIsDark } from "./theme-vars";
+import { watchTheme, webviewThemeCss } from "./theme-vars";
+import { windowIsDark } from "../../engine/tokens/appearance";
 import { windowInfo } from "../store/plugin-records";
 import { useResolvedWebview, webviewPage } from "./PluginWebview";
 import {
