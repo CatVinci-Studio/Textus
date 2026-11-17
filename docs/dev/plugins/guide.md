@@ -271,9 +271,12 @@ the window bar that runs a command when clicked; one declared in
   from before an edit finds nothing rather than the wrong block.
 - Mark it: `registerDecorations({ decorate(blocks, document) })` is asked
   for the blocks in sight once typing pauses, with the whole `document`
-  they're of (it can be beside the one in front), and answers marks - a
+  they're of (it can be beside the one in front; from API 1.8 with its
+  `path`), and answers marks - a
   highlight, an underline, muted text or a badge - on a block or the
-  `anchor` words in it. Start it with `onEditor`.
+  `anchor` words in it. From API 1.8 a `"gutter"` mark sits in the margin
+  right of a block (a dot, a character or the plugin's SVG), and with a
+  `command` a click runs it. Start it with `onEditor`.
 - Help with it: `registerCompletion(id, provider)` for completions as you
   type, `registerHover({ provideHover(target) })` for a card over a link,
   a wikilink or a citation.

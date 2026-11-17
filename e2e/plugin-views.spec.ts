@@ -265,3 +265,46 @@ test("a plugin reads the document in front as a save would write it", async ({
     )
     .toBe(file);
 });
+
+test("Git marks the blocks changed since the last commit in the margin", async ({
+  page,
+}) => {
+  test.skip(!hasPlugin("catvinci.git"), "no plugins checkout");
+  await page.addInitScript(() => {
+    (window as unknown as { __devInvokeResults: unknown }).__devInvokeResults =
+      {
+        plugin_git_status: {
+          branch: "main",
+          changes: [
+            { path: "/work/notes/a.md", state: "modified", staged: false },
+          ],
+        },
+        plugin_git_log: [
+          {
+            hash: "abc1234",
+            at: 0,
+            author: "A",
+            subject: "s",
+            path: "/work/notes/a.md",
+          },
+        ],
+        plugin_git_show: "# A\n\nKept paragraph.\n",
+      };
+  });
+  await openWithPlugins(page, {
+    plugins: { "catvinci.git": permissions("catvinci.git") },
+    folder: {
+      "/work/notes/a.md": "# A\n\nKept paragraph.\n\nNew paragraph.\n",
+    },
+  });
+  await openPath(page, "/work/notes/a.md");
+  const editor = page.locator('[data-active-tab="true"] .ProseMirror');
+  const marks = editor.locator(".plugin-gutter");
+  await expect(marks).toHaveCount(1);
+  await expect(
+    editor.locator("p", { hasText: "New paragraph" }).locator(".plugin-gutter"),
+  ).toHaveAttribute(
+    "aria-label",
+    "Changed since the last commit. Click to commit.",
+  );
+});

@@ -733,11 +733,12 @@ declare global {
       /** Marks over the text (editor.read), asked for the blocks in sight
        *  and again when they change. 1.4.1: `document` is the whole
        *  document those blocks are of, which can be one beside the
-       *  document in front; read it rather than `getBlocks`. */
+       *  document in front; read it rather than `getBlocks`. From 1.8
+       *  also its `path` (null while it is unsaved). */
       registerDecorations(provider: {
         decorate(
           blocks: Block[],
-          document?: { blocks: Block[] },
+          document?: { blocks: Block[]; path?: string | null },
         ): Decoration[] | Promise<Decoration[]>;
       }): Disposable;
       /** Another document came to the front (or none). */
@@ -889,7 +890,9 @@ declare global {
     interface Decoration {
       block: string;
       anchor?: string;
-      style: "highlight" | "underline" | "muted" | "badge";
+      /** From 1.8 also "gutter": a mark in the margin right of the block,
+       *  on its first line (a change, a reading place, a warning). */
+      style: "highlight" | "underline" | "muted" | "badge" | "gutter";
       tone?: "accent" | "warning" | "danger" | "success";
       /** For "badge": its text, after the words. */
       text?: string;
@@ -900,6 +903,12 @@ declare global {
        *  with Cmd/Ctrl+click as a link is - a DOI, an RFC, an issue number
        *  made a link without changing the text. */
       url?: string;
+      /** For "gutter", from 1.8: the plugin's SVG (drawn in the tone) or
+       *  one or two characters; a dot without. */
+      icon?: string;
+      /** For "gutter", from 1.8: a command of the plugin's a click runs;
+       *  without one the mark is only shown. */
+      command?: { id: string; args?: unknown[] };
     }
 
     /** A document about to be saved. */

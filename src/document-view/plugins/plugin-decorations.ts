@@ -19,6 +19,7 @@ import { metaDecorations } from "../../editor/meta-decorations";
 import { isFollowClick } from "../../editor/markdown/link-click-plugin";
 import { editorExtensions } from "../../editor/extension-points";
 import { links } from "../../platform/ipc";
+import { drawGutter } from "./plugin-gutter";
 
 const key = new PluginKey<DecorationSet>("plugin-decorations");
 /** How long the document (or its scrolling) rests before plugins are
@@ -33,91 +34,94 @@ const AROUND = 10;
  * the document rests, and their answers are drawn. Nothing runs while no
  * plugin marks.
  */
-export const pluginDecorations = $prose((ctx) => {
-  return new Plugin<DecorationSet>({
-    key,
-    state: metaDecorations(key),
-    props: {
-      decorations: (state) => key.getState(state),
-      // A mark that links is followed as a link is: Cmd/Ctrl+click, the
-      // caret left where it was.
-      handleDOMEvents: {
-        mousedown: (view, event) => !!linkedMark(view, event),
-        click(view, event) {
-          const url = linkedMark(view, event);
-          if (!url) return false;
-          event.preventDefault();
-          if (!editorExtensions().openLink(url)) void links.openWebLink(url);
-          return true;
+export const pluginDecorations = (docPath: {
+  readonly current: string | null;
+}) =>
+  $prose((ctx) => {
+    return new Plugin<DecorationSet>({
+      key,
+      state: metaDecorations(key),
+      props: {
+        decorations: (state) => key.getState(state),
+        // A mark that links is followed as a link is: Cmd/Ctrl+click, the
+        // caret left where it was.
+        handleDOMEvents: {
+          mousedown: (view, event) => !!linkedMark(view, event),
+          click(view, event) {
+            const url = linkedMark(view, event);
+            if (!url) return false;
+            event.preventDefault();
+            if (!editorExtensions().openLink(url)) void links.openWebLink(url);
+            return true;
+          },
         },
       },
-    },
-    view(view) {
-      let timer: ReturnType<typeof setTimeout> | undefined;
-      let asked = 0;
-      const ask = () => {
-        clearTimeout(timer);
-        timer = setTimeout(() => void run(), ASK_MS);
-      };
-      const run = async () => {
-        const turn = ++asked;
-        if (!hasDecorationProviders()) {
-          if (key.getState(view.state) !== DecorationSet.empty)
-            view.dispatch(view.state.tr.setMeta(key, DecorationSet.empty));
-          return;
-        }
-        const doc = view.state.doc;
-        const all = cachedDocument(ctx, doc).blocks;
-        const [first, last] = inSight(view);
-        const sent = all.slice(
-          Math.max(0, first - AROUND),
-          Math.min(all.length, last + AROUND + 1),
-        );
-        const marks = await decorate(sent, all);
-        // Asked again meanwhile, or the text moved on: that answer wins.
-        if (turn !== asked || view.isDestroyed) return;
-        if (view.state.doc !== doc) {
-          ask();
-          return;
-        }
-        const starts: number[] = [];
-        doc.forEach((_node, pos) => starts.push(pos));
-        const index = new Map(all.map((b, i) => [b.id, i]));
-        const out: Decoration[] = [];
-        for (const mark of marks) {
-          const i = index.get(mark.block);
-          if (i === undefined) continue;
-          out.push(...drawMark(doc.child(i), starts[i], mark));
-        }
-        view.dispatch(
-          view.state.tr.setMeta(key, DecorationSet.create(doc, out)),
-        );
-      };
-      // The view is made before it is in the page: its scroller is found
-      // as scrolls come.
-      const scrolled = (e: Event) => {
-        if (e.target instanceof Node && e.target.contains(view.dom)) ask();
-      };
-      document.addEventListener("scroll", scrolled, {
-        capture: true,
-        passive: true,
-      });
-      const stop = onDecorationProviders(ask);
-      ask();
-      return {
-        update(_view, prevState) {
-          if (prevState.doc !== view.state.doc && hasDecorationProviders())
-            ask();
-        },
-        destroy() {
+      view(view) {
+        let timer: ReturnType<typeof setTimeout> | undefined;
+        let asked = 0;
+        const ask = () => {
           clearTimeout(timer);
-          stop();
-          document.removeEventListener("scroll", scrolled, { capture: true });
-        },
-      };
-    },
+          timer = setTimeout(() => void run(), ASK_MS);
+        };
+        const run = async () => {
+          const turn = ++asked;
+          if (!hasDecorationProviders()) {
+            if (key.getState(view.state) !== DecorationSet.empty)
+              view.dispatch(view.state.tr.setMeta(key, DecorationSet.empty));
+            return;
+          }
+          const doc = view.state.doc;
+          const all = cachedDocument(ctx, doc).blocks;
+          const [first, last] = inSight(view);
+          const sent = all.slice(
+            Math.max(0, first - AROUND),
+            Math.min(all.length, last + AROUND + 1),
+          );
+          const marks = await decorate(sent, all, docPath.current);
+          // Asked again meanwhile, or the text moved on: that answer wins.
+          if (turn !== asked || view.isDestroyed) return;
+          if (view.state.doc !== doc) {
+            ask();
+            return;
+          }
+          const starts: number[] = [];
+          doc.forEach((_node, pos) => starts.push(pos));
+          const index = new Map(all.map((b, i) => [b.id, i]));
+          const out: Decoration[] = [];
+          for (const mark of marks) {
+            const i = index.get(mark.block);
+            if (i === undefined) continue;
+            out.push(...drawMark(doc.child(i), starts[i], mark));
+          }
+          view.dispatch(
+            view.state.tr.setMeta(key, DecorationSet.create(doc, out)),
+          );
+        };
+        // The view is made before it is in the page: its scroller is found
+        // as scrolls come.
+        const scrolled = (e: Event) => {
+          if (e.target instanceof Node && e.target.contains(view.dom)) ask();
+        };
+        document.addEventListener("scroll", scrolled, {
+          capture: true,
+          passive: true,
+        });
+        const stop = onDecorationProviders(ask);
+        ask();
+        return {
+          update(_view, prevState) {
+            if (prevState.doc !== view.state.doc && hasDecorationProviders())
+              ask();
+          },
+          destroy() {
+            clearTimeout(timer);
+            stop();
+            document.removeEventListener("scroll", scrolled, { capture: true });
+          },
+        };
+      },
+    });
   });
-});
 
 /** The link of the plugin mark a Cmd/Ctrl+click is on, or null. */
 function linkedMark(view: EditorView, event: MouseEvent): string | null {
@@ -153,6 +157,8 @@ function drawMark(
   pos: number,
   mark: PluginDecoration & { plugin: string },
 ): Decoration[] {
+  if (mark.style === "gutter")
+    return [drawGutter(block, pos, mark, mark.tone ?? "accent")];
   const [from, to] = (mark.anchor && anchorIn(block, pos, mark.anchor)) || [
     pos + 1,
     pos + block.nodeSize - 1,

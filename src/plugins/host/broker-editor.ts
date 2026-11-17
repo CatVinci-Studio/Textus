@@ -219,10 +219,10 @@ export function editorHandlers(p: PluginScope) {
       );
     },
     "editor.registerDecorations": () => {
-      addDecorationProvider(p.id, (blocks, all) =>
+      addDecorationProvider(p.id, (blocks, all, path) =>
         p.request<PluginDecoration[]>("$decorate", {
           blocks,
-          document: { blocks: all },
+          document: { blocks: all, path },
         }),
       );
     },
