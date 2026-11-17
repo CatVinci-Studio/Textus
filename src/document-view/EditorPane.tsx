@@ -1,6 +1,7 @@
 import {
   memo,
   Suspense,
+  type RefObject,
   useCallback,
   useEffect,
   useLayoutEffect,
@@ -179,15 +180,18 @@ function useKeptScroll(
     const { top } = reading.current;
     if (scroller.scrollTop !== top) scroller.scrollTop = top;
   }, [isActive, tabId]);
-  // A Mac's page gives at either end, short documents too. The iPhone's web
-  // view stretches by itself.
+  return el;
+}
+
+/** A Mac's page gives at either end, short documents too. The iPhone's web
+ *  view stretches by itself. */
+function useElasticPage(el: RefObject<HTMLDivElement | null>) {
   useEffect(() => {
     const scroller = el.current;
     const content = scroller?.firstElementChild;
     if (!scroller || !(content instanceof HTMLElement)) return;
     return elasticOverscroll(scroller, content);
-  }, []);
-  return el;
+  }, [el]);
 }
 
 export const EditorPane = memo(function EditorPane({
@@ -210,6 +214,7 @@ export const EditorPane = memo(function EditorPane({
     [onChange, tabId],
   );
   const scrollRef = useKeptScroll(isActive, tabId, filePath, initialValue);
+  useElasticPage(scrollRef);
   const endRef = useDocEndRef(tabId);
   useEffect(() => {
     const scroller = scrollRef.current;
