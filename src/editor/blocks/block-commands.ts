@@ -96,8 +96,9 @@ interface Gap {
   container: number;
 }
 
-export function gapsFor(doc: ProseNode, block: HandledBlock): Gap[] {
-  const item = isItem(block.node);
+/** Every place a block can go in `doc`; a list item (`items`) also
+ *  between the items of each list. */
+export function gapsIn(doc: ProseNode, items: boolean): Gap[] {
   const gaps: Gap[] = [];
   const collect = (node: ProseNode, start: number, container: number) => {
     let offset = start;
@@ -108,12 +109,57 @@ export function gapsFor(doc: ProseNode, block: HandledBlock): Gap[] {
   };
   collect(doc, 0, -1);
   doc.descendants((node, pos) => {
-    if (item && LISTS.test(node.type.name)) collect(node, pos + 1, pos);
+    if (items && LISTS.test(node.type.name)) collect(node, pos + 1, pos);
     return !node.isTextblock;
   });
+  return gaps;
+}
+
+export function gapsFor(doc: ProseNode, block: HandledBlock): Gap[] {
   const end = block.pos + block.node.nodeSize;
   // Inside itself, or where it already is, is no move.
-  return gaps.filter((gap) => gap.pos <= block.pos || gap.pos >= end);
+  return gapsIn(doc, isItem(block.node)).filter(
+    (gap) => gap.pos <= block.pos || gap.pos >= end,
+  );
+}
+
+/** What `block` is to be put down as at `gap` in `state`'s document (which
+ *  may be another document's): a list item put outside a list goes in a
+ *  list of its own kind. Null where it can't go. */
+function placed(
+  state: EditorState,
+  from: EditorState,
+  block: HandledBlock,
+  gap: number,
+): ProseNode | null {
+  const $gap = state.doc.resolve(gap);
+  let moving = block.node;
+  if (isItem(moving) && !LISTS.test($gap.parent.type.name)) {
+    const list = from.doc.resolve(block.pos).parent;
+    moving = list.type.create(list.attrs, moving);
+  }
+  // Another editor's nodes are of its own schema.
+  if (state.schema !== from.schema)
+    moving = state.schema.nodeFromJSON(moving.toJSON());
+  const index = $gap.index();
+  return $gap.parent.canReplace(index, index, Fragment.from(moving))
+    ? moving
+    : null;
+}
+
+/** `block` of `from`'s document put down at `gap` in `state`'s (another
+ *  document, or a copy in its own), one undo step, selected. Null where
+ *  it can't go. */
+export function placeAt(
+  state: EditorState,
+  from: EditorState,
+  block: HandledBlock,
+  gap: number,
+): Transaction | null {
+  const moving = placed(state, from, block, gap);
+  if (!moving) return null;
+  const tr = closeHistory(state.tr).insert(gap, moving);
+  return tr.setSelection(NodeSelection.create(tr.doc, gap)).scrollIntoView();
 }
 
 /** The block moved to `gap`, one undo step: a list item put outside a
@@ -125,14 +171,8 @@ export function moveTo(
 ): Transaction | null {
   const { from, to } = ownRange(state, block);
   if (gap >= from && gap <= to) return null;
-  const $gap = state.doc.resolve(gap);
-  let moving: ProseNode = block.node;
-  if (isItem(moving) && !LISTS.test($gap.parent.type.name)) {
-    const list = state.doc.resolve(block.pos).parent;
-    moving = list.type.create(list.attrs, moving);
-  }
-  const index = $gap.index();
-  if (!$gap.parent.canReplace(index, index, Fragment.from(moving))) return null;
+  const moving = placed(state, state, block, gap);
+  if (!moving) return null;
   const tr = closeHistory(state.tr);
   if (gap > from) tr.insert(gap, moving).delete(from, to);
   else tr.delete(from, to).insert(gap, moving);

@@ -1,4 +1,4 @@
-import { contentZoom } from "../zoom/tab-zoom";
+import { contentZoom } from "./tab-zoom";
 /**
  * Boxes read inside the document's zoom (`--content-zoom`, CSS `zoom` on the
  * text) as drawn on screen. Chromium and current WebKit report them as

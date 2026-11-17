@@ -1,5 +1,7 @@
 import { expect, test, type Page } from "@playwright/test";
 import {
+  emit,
+  MAC,
   openApp,
   pasteMarkdown,
   PHONE,
@@ -41,15 +43,17 @@ test("a block pulled by its handle moves where it is let go, in one undo step", 
   await page.mouse.move(grip.x + grip.width / 2, grip.y + grip.height / 2);
   await page.mouse.down();
   await page.mouse.move(third.x + 40, third.y + third.height - 2, { steps: 8 });
-  await expect(page.locator(".block-drop-line")).toBeVisible();
-  await expect(block(page, "First")).toHaveClass(/tx-drag-source/);
+  // Lifted off the page; room open where it will land.
+  await expect(page.locator(".block-drag-lift")).toBeVisible();
+  await expect(page.locator(`${editor} .block-drag-room`)).toBeVisible();
+  await expect(block(page, "First")).toHaveClass(/block-drag-gone/);
   await page.mouse.up();
   await expect(page.locator(`${editor} > p`)).toHaveText([
     "Second",
     "Third",
     "First",
   ]);
-  await expect(page.locator(".block-drop-line")).toHaveCount(0);
+  await expect(page.locator(`${editor} .block-drag-room`)).toHaveCount(0);
   await page.keyboard.press("ControlOrMeta+z");
   await expect(page.locator(`${editor} > p`)).toHaveText([
     "First",
@@ -72,7 +76,7 @@ test("a block let go: its copy flies to where it landed, then goes", async ({
   await page.mouse.down();
   await page.mouse.move(third.x + 40, third.y + third.height - 2, { steps: 8 });
   await page.mouse.up();
-  const ghost = page.locator(".block-drag-ghost");
+  const ghost = page.locator(".block-drag-lift");
   expect(
     await ghost.evaluate((el) => el.getAnimations().length),
   ).toBeGreaterThan(0);
@@ -82,6 +86,80 @@ test("a block let go: its copy flies to where it landed, then goes", async ({
     "Third",
     "First",
   ]);
+});
+
+test("a list item's handle stays with it across the markers; pulled, the item moves", async ({
+  page,
+}) => {
+  await openApp(page, { settings: { language: "en" } });
+  await pasteMarkdown(page, "Intro\n\n- Alpha\n- Beta\n  - Inner\n- Gamma");
+  const item = (text: string) =>
+    page.locator(`${editor} li`, { hasText: text }).last();
+  const beta = (await item("Beta").boundingBox())!;
+  const y = beta.y + 8;
+  await page.mouse.move(beta.x + 30, y);
+  const grip = page.locator(`${handle} .block-handle-grip`);
+  const at = (await grip.boundingBox())!;
+  // Across the item's marker to its grip: the handle stays where it was.
+  await page.mouse.move(at.x + at.width / 2, at.y + at.height / 2, {
+    steps: 12,
+  });
+  expect(await grip.boundingBox()).toEqual(at);
+  const gamma = (await item("Gamma").boundingBox())!;
+  await page.mouse.down();
+  await page.mouse.move(gamma.x + 40, gamma.y + gamma.height - 2, {
+    steps: 8,
+  });
+  await page.mouse.up();
+  await expect(page.locator(`${editor} > ul > li > p`)).toHaveText([
+    "Alpha",
+    "Gamma",
+    "Beta",
+  ]);
+  await expect(page.locator(`${editor} ul ul li`)).toHaveText("Inner");
+});
+
+test("a block pulled into the document beside it moves there; with Option or Ctrl a copy goes", async ({
+  page,
+}) => {
+  await page.setViewportSize({ width: 1400, height: 800 });
+  await openApp(page, { settings: { language: "en" } });
+  await pasteMarkdown(page, "Left one\n\nLeft two");
+  await emit(page, "menu-split-right");
+  const editors = page.locator(".ProseMirror");
+  await expect(editors).toHaveCount(2);
+  await page.locator('[data-active-tab="true"] .ProseMirror').click();
+  await page.keyboard.type("Right line");
+  const right = editors.filter({ hasText: "Right line" });
+  const left = editors.filter({ hasNotText: "Right line" });
+  const pull = async (text: string, copy: boolean) => {
+    const from = (await left.locator("p", { hasText: text }).boundingBox())!;
+    await page.mouse.move(from.x + 20, from.y + from.height / 2);
+    const grip = (await page
+      .locator(".block-handle:visible .block-handle-grip")
+      .boundingBox())!;
+    await page.mouse.move(grip.x + grip.width / 2, grip.y + grip.height / 2);
+    await page.mouse.down();
+    // Below the last line, aimed again once the room has opened.
+    for (let i = 0; i < 2; i++) {
+      const to = (await right.locator("p").last().boundingBox())!;
+      await page.mouse.move(to.x + 40, to.y + to.height + 4, { steps: 10 });
+    }
+    await expect(right.locator(".block-drag-room")).toBeVisible();
+    if (copy) await page.keyboard.down(MAC ? "Alt" : "Control");
+    await page.mouse.up();
+    if (copy) await page.keyboard.up(MAC ? "Alt" : "Control");
+  };
+  await pull("Left two", false);
+  await expect(right.locator("p")).toHaveText(["Right line", "Left two"]);
+  await expect(left.locator("p")).toHaveText(["Left one"]);
+  await pull("Left one", true);
+  await expect(right.locator("p")).toHaveText([
+    "Right line",
+    "Left two",
+    "Left one",
+  ]);
+  await expect(left.locator("p")).toHaveText(["Left one"]);
 });
 
 test("＋ adds the block picked below; ⋮⋮ turns it into another kind or deletes it", async ({

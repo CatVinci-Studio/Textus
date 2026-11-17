@@ -26,7 +26,7 @@ import { useOpenedCard } from "./margin-layout";
 import { useOwnNotes } from "./useOwnNotes";
 import { useOwnRevisions } from "./useOwnRevisions";
 import { OWN_CHANGES, ownRevisionKey } from "./own-revision-plugin";
-import { asDrawn, zoomedRectScale } from "../../engine/controls/zoomed-rects";
+import { asDrawn, zoomedRectScale } from "../../engine/zoom/zoomed-rects";
 import { marginItemsOf } from "./margin-items";
 import { useLatest } from "../../utils/hooks/useLatest";
 

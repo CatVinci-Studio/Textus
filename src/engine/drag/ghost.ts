@@ -1,4 +1,6 @@
 import { animate } from "../motion/motion";
+import { contentZoom } from "../zoom/tab-zoom";
+import { asDrawn, zoomedRectScale } from "../zoom/zoomed-rects";
 /**
  * The copy that follows the pointer while something is moved somewhere
  * else (a tab pulled out to split the window, a file dragged in the tree):
@@ -71,36 +73,72 @@ export function dragGhost(text: string, className: string): DragGhost {
 }
 
 /** A copy of `node` lifted where it is, carried by the pointer `dx, dy`
- *  from there: for an item its own clipping box would hide (a rail icon),
- *  the item itself left hidden until `remove`. */
-export function liftedCopy(node: HTMLElement): {
+ *  from there, so it stays under the point it was taken by: for an item
+ *  its own clipping box would hide (a rail icon, a document's block that
+ *  may land in another document). `wrap` puts the copy inside what gives
+ *  it its look (a block's list and editor); it is drawn at `node`'s zoom.
+ *  The item itself is left hidden until the copy goes, unless `keep`. */
+export function liftedCopy(
+  node: HTMLElement,
+  {
+    wrap,
+    keep = false,
+    className = "",
+  }: {
+    wrap?: (copy: HTMLElement) => HTMLElement;
+    keep?: boolean;
+    className?: string;
+  } = {},
+): {
   moveBy(dx: number, dy: number): void;
+  /** Flies to `to`'s start and fades there (the land spring), then goes. */
+  land(to: DOMRect): void;
   remove(): void;
 } {
-  const box = node.getBoundingClientRect();
+  const box = asDrawn(node.getBoundingClientRect(), zoomedRectScale(node));
+  const zoom = contentZoom(node);
   const copy = node.cloneNode(true) as HTMLElement;
   for (const attr of [...copy.attributes])
     if (attr.name.startsWith("data-") || attr.name === "id")
       copy.removeAttribute(attr.name);
-  copy.setAttribute("aria-hidden", "true");
-  copy.classList.add("tx-drag-ghost", "is-lifted");
-  Object.assign(copy.style, {
+  const lifted = wrap ? wrap(copy) : copy;
+  lifted.setAttribute("aria-hidden", "true");
+  lifted.classList.add("tx-drag-ghost", "is-lifted");
+  if (className) lifted.classList.add(...className.split(" "));
+  Object.assign(lifted.style, {
     left: "0",
     top: "0",
-    width: `${box.width}px`,
-    height: `${box.height}px`,
+    width: `${(box.right - box.left) / zoom}px`,
+    height: `${(box.bottom - box.top) / zoom}px`,
+    transformOrigin: "0 0",
+    transform: zoom === 1 ? "" : `scale(${zoom})`,
   });
+  let at = { dx: 0, dy: 0 };
   const moveBy = (dx: number, dy: number) => {
-    copy.style.translate = `${box.left + dx}px ${box.top + dy}px`;
+    at = { dx, dy };
+    lifted.style.translate = `${box.left + dx}px ${box.top + dy}px`;
   };
   moveBy(0, 0);
-  document.body.append(copy);
-  node.style.visibility = "hidden";
+  document.body.append(lifted);
+  if (!keep) node.style.visibility = "hidden";
+  const remove = () => {
+    lifted.remove();
+    if (!keep) node.style.visibility = "";
+  };
   return {
     moveBy,
-    remove() {
-      copy.remove();
-      node.style.visibility = "";
+    land(to) {
+      const flight = animate(
+        lifted,
+        [
+          { translate: `${box.left + at.dx}px ${box.top + at.dy}px` },
+          { translate: `${to.left}px ${to.top}px`, opacity: 0 },
+        ],
+        { duration: "--dur-land", easing: "--ease-land", fill: "forwards" },
+      );
+      if (flight) void flight.finished.finally(remove);
+      else remove();
     },
+    remove,
   };
 }

@@ -1,7 +1,7 @@
 // @vitest-environment jsdom
 import { afterEach, describe, expect, it } from "vitest";
 import { asDrawn, zoomedRectScale } from "./zoomed-rects";
-import { setWindowZoom } from "../zoom/tab-zoom";
+import { setWindowZoom } from "./tab-zoom";
 
 function element(drawnWidth: number, laidWidth: number): HTMLElement {
   const el = document.createElement("div");

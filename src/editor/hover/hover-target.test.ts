@@ -2,7 +2,7 @@
 import { describe, expect, it, vi } from "vitest";
 import type { EditorView } from "@milkdown/kit/prose/view";
 
-vi.mock("../../engine/controls/zoomed-rects", () => ({
+vi.mock("../../engine/zoom/zoomed-rects", () => ({
   zoomedRectScale: () => 1.5,
 }));
 vi.mock("../../platform/ipc", () => ({

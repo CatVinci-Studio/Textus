@@ -1,9 +1,5 @@
 import { Plugin, PluginKey } from "@milkdown/kit/prose/state";
-import {
-  Decoration,
-  DecorationSet,
-  type EditorView,
-} from "@milkdown/kit/prose/view";
+import type { EditorView } from "@milkdown/kit/prose/view";
 import { $prose } from "@milkdown/kit/utils";
 import {
   BLOCK_MENU_EVENT,
@@ -11,6 +7,7 @@ import {
   sendAppEvent,
 } from "../../utils/events";
 import { blockAround, type HandledBlock } from "./block-commands";
+import { openEditors, pulledDecorations, type Pulled } from "./block-lift";
 import { dragBlock } from "./block-drag";
 import { boxIn, handlePlace } from "./block-handle-place";
 import { GRIP_ICON_HTML, PLUS_ICON_HTML } from "../../engine/controls/icons";
@@ -36,41 +33,35 @@ const HOLD_MS = 450;
  * tapped, its menu; held, the block lifts to be moved.
  */
 function blockHandlesPlugin(options: { enabled: () => boolean }) {
-  return new Plugin<number | null>({
+  return new Plugin<Pulled | null>({
     key: pulled,
-    // The block being pulled, marked as the one moving: a class set on its
+    // A block being pulled, as this editor shows it: a class set on its
     // element ProseMirror would draw away.
     state: {
       init: () => null,
-      apply: (tr, at) => {
-        const meta = tr.getMeta(pulled) as number | null | undefined;
+      apply: (tr, now) => {
+        const meta = tr.getMeta(pulled) as Pulled | null | undefined;
         if (meta !== undefined) return meta;
-        return at == null ? null : tr.mapping.map(at);
+        if (!now || !tr.docChanged) return now;
+        const map = (pos: number | null) =>
+          pos === null ? null : tr.mapping.map(pos);
+        return { ...now, pos: map(now.pos), landing: map(now.landing) };
       },
     },
     props: {
-      decorations(state) {
-        const at = pulled.getState(state);
-        const node = at == null ? null : state.doc.nodeAt(at);
-        return node
-          ? DecorationSet.create(state.doc, [
-              Decoration.node(at!, at! + node.nodeSize, {
-                class: "tx-drag-source",
-              }),
-            ])
-          : null;
-      },
+      decorations: (state) =>
+        pulledDecorations(state.doc, pulled.getState(state) ?? null),
     },
     view: (view) => new BlockHandles(view, options.enabled),
   });
 }
 
-const pulled = new PluginKey<number | null>("block-handles");
+const pulled = new PluginKey<Pulled | null>("block-handles");
 
-/** Marks the block at `pos` as the one being pulled; null: none. */
-const markPulled = (view: EditorView, pos: number | null) =>
+/** What `view` shows of a block being pulled; null: nothing. */
+const showPulled = (view: EditorView, state: Pulled | null) =>
   view.dispatch(
-    view.state.tr.setMeta(pulled, pos).setMeta("addToHistory", false),
+    view.state.tr.setMeta(pulled, state).setMeta("addToHistory", false),
   );
 
 export const createBlockHandlesPlugin = (options: { enabled: () => boolean }) =>
@@ -98,6 +89,7 @@ class BlockHandles {
     this.handle.setAttribute("aria-hidden", "true");
     this.handle.append(this.add, this.grip);
     this.root.append(this.handle);
+    openEditors.set(view, this.root);
     this.area.addEventListener("pointerdown", this.onPress, true);
     this.area.addEventListener("pointermove", this.onMove);
     this.area.addEventListener("pointerleave", this.onLeave);
@@ -133,7 +125,7 @@ class BlockHandles {
       at &&
       blockAround(this.view.state.doc, at.inside >= 0 ? at.inside : at.pos);
     if (!block) return this.hide();
-    this.show(block);
+    this.show(itemOnLine(this.view, block, e.clientY));
   };
 
   private readonly onLeave = () => {
@@ -200,15 +192,18 @@ class BlockHandles {
     const block = this.block;
     if (!block || e.button !== 0) return;
     const drag = (held: boolean) =>
-      dragBlock(this.view, this.root, block, e, {
+      dragBlock(this.view, block, e, {
         held,
-        started: () => {
-          this.dragging = true;
-          markPulled(this.view, block.pos);
+        show: (view, state) => {
+          if (view === this.view && state) {
+            this.dragging = true;
+            // Lifted, the block takes its handle along.
+            this.handle.hidden = true;
+          }
+          showPulled(view, state);
         },
         ended: () => {
           this.dragging = false;
-          markPulled(this.view, null);
           if (!this.touch) this.hide();
         },
       });
@@ -268,8 +263,49 @@ class BlockHandles {
     this.area.removeEventListener("pointerleave", this.onLeave);
     this.view.dom.removeEventListener("keydown", this.hide);
     this.handle.remove();
+    openEditors.delete(this.view);
   }
 }
+
+/** In a list's margin (its markers) the pointer's line reads as the list
+ *  around its items: the innermost item on that line stands for it, the
+ *  nearest one between two. */
+function itemOnLine(
+  view: EditorView,
+  block: HandledBlock,
+  y: number,
+): HandledBlock {
+  let found = block;
+  let parent = block;
+  for (;;) {
+    let hit: HandledBlock | null = null;
+    let nearest: { block: HandledBlock; d: number } | null = null;
+    let offset = 0;
+    for (let i = 0; i < parent.node.childCount; i++) {
+      const child = parent.node.child(i);
+      const at = parent.pos + 1 + offset;
+      offset += child.nodeSize;
+      const name = child.type.name;
+      if (name !== "list_item" && !LISTS.test(name)) continue;
+      const dom = view.nodeDOM(at) as HTMLElement | null;
+      if (!dom) continue;
+      const r = dom.getBoundingClientRect();
+      const d = y < r.top ? r.top - y : y >= r.bottom ? y - r.bottom : 0;
+      const here = { pos: at, node: child };
+      if (d === 0) hit ??= here;
+      if (!nearest || d < nearest.d) nearest = { block: here, d };
+    }
+    // Between two items of the list the pointer came in by, the nearer.
+    const next: HandledBlock | null =
+      hit ?? (found === block ? (nearest?.block ?? null) : null);
+    if (!next || (hit === null && !LISTS.test(block.node.type.name)))
+      return found;
+    if (next.node.type.name === "list_item") found = next;
+    parent = next;
+  }
+}
+
+const LISTS = /^(bullet_list|ordered_list)$/;
 
 function button(className: string, icon: string): HTMLButtonElement {
   const el = document.createElement("button");
