@@ -23,9 +23,10 @@ export function documentName(doc: WebDocument, untitled: string): string {
  * The web editor's documents: kept in the browser, one of them open, files
  * opened from disk remembered (for this visit) so Save writes back.
  */
-export function useWebDocuments(sample: string, untitled: string) {
+/** The documents as kept in the browser (IndexedDB, else memory), the one
+ *  in front, and the writes and deletes that keep them. */
+function useKeptDocuments(sample: string) {
   const backend = useRef<DocumentBackend | null>(null);
-  const handles = useRef(new Map<string, FileSystemFileHandle>());
   const [docs, setDocs] = useState<WebDocument[] | null>(null);
   const [current, setCurrent] = useState<string | null>(null);
 
@@ -44,26 +45,41 @@ export function useWebDocuments(sample: string, untitled: string) {
     };
   }, [sample]);
 
-  const keep = (doc: WebDocument) =>
-    void backend.current?.put(doc).catch(() => {});
-
+  const keep = useCallback(
+    (doc: WebDocument) => void backend.current?.put(doc).catch(() => {}),
+    [],
+  );
+  const drop = useCallback(
+    (id: string) => void backend.current?.delete(id).catch(() => {}),
+    [],
+  );
   const select = useCallback((id: string) => {
     setCurrent(id);
     rememberCurrent(id);
   }, []);
+  return { docs, setDocs, current, select, keep, drop };
+}
+
+export function useWebDocuments(sample: string, untitled: string) {
+  const handles = useRef(new Map<string, FileSystemFileHandle>());
+  const { docs, setDocs, current, select, keep, drop } =
+    useKeptDocuments(sample);
 
   /** The open document's text changed. */
-  const update = useCallback((id: string, markdown: string) => {
-    setDocs((list) =>
-      (list ?? []).map((doc) => {
-        if (doc.id !== id || doc.markdown === markdown) return doc;
-        const next = { ...doc, markdown, updatedAt: Date.now() };
-        notePending(next);
-        keep(next);
-        return next;
-      }),
-    );
-  }, []);
+  const update = useCallback(
+    (id: string, markdown: string) => {
+      setDocs((list) =>
+        (list ?? []).map((doc) => {
+          if (doc.id !== id || doc.markdown === markdown) return doc;
+          const next = { ...doc, markdown, updatedAt: Date.now() };
+          notePending(next);
+          keep(next);
+          return next;
+        }),
+      );
+    },
+    [keep, setDocs],
+  );
 
   const add = useCallback(
     (doc: WebDocument, handle?: FileSystemFileHandle) => {
@@ -72,7 +88,7 @@ export function useWebDocuments(sample: string, untitled: string) {
       setDocs((list) => [doc, ...(list ?? [])]);
       select(doc.id);
     },
-    [select],
+    [select, keep, setDocs],
   );
 
   const create = useCallback(() => add(newDocument("")), [add]);
@@ -95,7 +111,7 @@ export function useWebDocuments(sample: string, untitled: string) {
   /** Deletes a document; the last one left becomes an empty one. */
   const remove = useCallback(
     (id: string) => {
-      void backend.current?.delete(id).catch(() => {});
+      drop(id);
       handles.current.delete(id);
       const rest = (docs ?? []).filter((doc) => doc.id !== id);
       if (!rest.length) {
@@ -108,7 +124,7 @@ export function useWebDocuments(sample: string, untitled: string) {
       setDocs(rest);
       if (current === id) select(rest[0].id);
     },
-    [docs, current, select],
+    [docs, current, select, drop, keep, setDocs],
   );
 
   /** Saves the open document to its file, or asks where, or downloads it.
@@ -133,7 +149,7 @@ export function useWebDocuments(sample: string, untitled: string) {
       }
       return result.handle.name;
     },
-    [docs, current, untitled],
+    [docs, current, untitled, keep, setDocs],
   );
 
   const doc = docs?.find((d) => d.id === current) ?? null;
