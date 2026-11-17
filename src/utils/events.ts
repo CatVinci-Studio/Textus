@@ -117,3 +117,54 @@ export interface BlockMenuRequest {
   /** ＋: the blocks to add below it; else its own menu. */
   add: boolean;
 }
+
+/** What each window event above carries; undefined for none. */
+interface AppEvents {
+  [TRIGGER_COMPLETION_EVENT]: undefined;
+  [TRIGGER_GRAMMAR_CHECK_EVENT]: undefined;
+  [TOGGLE_FLOATING_CHAT_EVENT]: undefined;
+  [TOGGLE_FIND_REPLACE_EVENT]: undefined;
+  [SHOW_REPLACE_EVENT]: undefined;
+  [FIND_NEXT_EVENT]: undefined;
+  [INSERT_LINK_EVENT]: undefined;
+  [INSERT_MARKDOWN_EVENT]: string;
+  [SHOW_SIDEBAR_TAB_EVENT]: string;
+  [CLOSE_FIND_REPLACE_EVENT]: undefined;
+  [DROP_IMAGE_FILES_EVENT]: {
+    paths: string[];
+    point: { x: number; y: number } | null;
+  };
+  [RESTORE_CHAT_EVENT]: undefined;
+  [EDIT_ACTION_EVENT]: string;
+  [TRACK_CHANGES_EVENT]: TrackChangesAction;
+  [INSERT_BLOCK_EVENT]: string;
+  [SHOW_FOLDER_EVENT]: string;
+  [TOGGLE_BLOCK_EVENT]: string;
+  [TOGGLE_MARK_EVENT]: string;
+  [TABLE_ACTION_EVENT]: string;
+  [IMAGE_ACTION_EVENT]: string;
+  [EDITOR_MORE_EVENT]: undefined;
+  [KEYBOARD_UP_EVENT]: undefined;
+  [TOUR_SIGNAL_EVENT]: TourSignal;
+  [ZEN_MODE_EVENT]: boolean;
+  [FILE_WRITTEN_EVENT]: string;
+  [FILE_CREATED_EVENT]: string;
+  [ENTRY_TRASHED_EVENT]: string;
+  [FILE_RELOADED_EVENT]: string;
+  [BLOCK_MENU_EVENT]: BlockMenuRequest;
+}
+
+export type AppEventName = keyof AppEvents;
+
+/** The events that carry text, or nothing: a button's or a key's. */
+export type TextEventName = {
+  [K in AppEventName]: AppEvents[K] extends string | undefined ? K : never;
+}[AppEventName];
+
+/** Tells the window `name` happened: the one way these are sent. */
+export function sendAppEvent<K extends AppEventName>(
+  name: K,
+  ...detail: AppEvents[K] extends undefined ? [] : [AppEvents[K]]
+): void {
+  window.dispatchEvent(new CustomEvent(name, { detail: detail[0] }));
+}

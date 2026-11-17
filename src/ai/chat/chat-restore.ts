@@ -1,5 +1,5 @@
 import type { AgentTurn } from "../types";
-import { RESTORE_CHAT_EVENT } from "../../utils/events";
+import { RESTORE_CHAT_EVENT, sendAppEvent } from "../../utils/events";
 
 /** A saved conversation on its way from the history list to an editor. */
 export interface ChatRestore {
@@ -18,7 +18,7 @@ let pending: ChatRestore | null = null;
  */
 export function requestChatRestore(restore: ChatRestore) {
   pending = restore;
-  window.dispatchEvent(new Event(RESTORE_CHAT_EVENT));
+  sendAppEvent(RESTORE_CHAT_EVENT);
 }
 
 /** The pending restore, taken, if it is for the editor of `docPath`. */

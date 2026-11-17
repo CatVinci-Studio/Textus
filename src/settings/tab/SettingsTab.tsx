@@ -9,8 +9,8 @@ import { settingsPage, settingsPages } from "../settings-pages";
 import { useReveal } from "../SettingsSearch";
 import type { SearchEntry } from "../settings-search";
 import {
-  OPEN_SETTINGS_PAGE_EVENT,
   onSettingsPageShown,
+  openSettingsPage,
   setSettingsPageShown,
   settingsListShown,
   showSettingsList,
@@ -65,10 +65,7 @@ export function SettingsTab({
     settings,
     setSettings,
     marginAvailable,
-    openPage: (to) =>
-      window.dispatchEvent(
-        new CustomEvent(OPEN_SETTINGS_PAGE_EVENT, { detail: { page: to } }),
-      ),
+    openPage: (to) => openSettingsPage(to),
     openHelp: (doc) => emitMenuEvent(`help-doc:${doc}`),
     onOpenFile,
     onFilesDeleted,

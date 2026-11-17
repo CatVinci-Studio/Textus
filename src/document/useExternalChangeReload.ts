@@ -4,7 +4,11 @@ import { useEffect } from "react";
 import { thisWindow } from "../platform/this-window";
 import { readDocText, statMtime, tabIsDirty, type DocTab } from "./doc-tabs";
 import { unlistenAll } from "../platform/events";
-import { FILE_RELOADED_EVENT, FILE_WRITTEN_EVENT } from "../utils/events";
+import {
+  FILE_RELOADED_EVENT,
+  FILE_WRITTEN_EVENT,
+  sendAppEvent,
+} from "../utils/events";
 import { fileTextFor } from "./tracked-file";
 import { openDocumentAt } from "../registry/open-documents";
 import { isInside, slashed } from "../utils/path";
@@ -65,9 +69,7 @@ export function takeDiskText(
       diskMtime: mtime,
       reloadKey: tab.reloadKey + 1,
     });
-  window.dispatchEvent(
-    new CustomEvent(FILE_RELOADED_EVENT, { detail: tab.path }),
-  );
+  sendAppEvent(FILE_RELOADED_EVENT, tab.path);
 }
 
 export function useExternalChangeReload(

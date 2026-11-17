@@ -5,7 +5,11 @@ import {
   type EditorView,
 } from "@milkdown/kit/prose/view";
 import { $prose } from "@milkdown/kit/utils";
-import { BLOCK_MENU_EVENT, type BlockMenuRequest } from "../../utils/events";
+import {
+  BLOCK_MENU_EVENT,
+  type BlockMenuRequest,
+  sendAppEvent,
+} from "../../utils/events";
 import { blockAround, type HandledBlock } from "./block-commands";
 import { dragBlock } from "./block-drag";
 import { boxIn, handlePlace } from "./block-handle-place";
@@ -159,9 +163,7 @@ class BlockHandles {
       pos: this.block.pos,
       add,
     };
-    window.dispatchEvent(
-      new CustomEvent(BLOCK_MENU_EVENT, { detail: request }),
-    );
+    sendAppEvent(BLOCK_MENU_EVENT, request);
   }
 
   private readonly onGrip = (e: PointerEvent) => {

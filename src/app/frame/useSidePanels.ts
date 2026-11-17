@@ -2,7 +2,7 @@ import { useCallback, useEffect, useState, useSyncExternalStore } from "react";
 import { usePhoneLayout } from "../../engine/controls/usePhoneLayout";
 import { isPhoneLayout } from "../../platform/phone-layout";
 import { usePresence } from "../../engine/motion/usePresence";
-import { CLOSE_FIND_REPLACE_EVENT } from "../../utils/events";
+import { CLOSE_FIND_REPLACE_EVENT, sendAppEvent } from "../../utils/events";
 import { useAgentDock } from "./useAgentDock";
 import { usePushedSidebar } from "../../mobile/usePushedSidebar";
 import { storeSidebarTab, storedSidebarTab } from "./sidebar-tab";
@@ -52,8 +52,7 @@ export function useSidePanels(aiOn: boolean, activeTabId: string) {
   useEffect(() => {
     if (!isPhoneLayout()) setUiState("sidebarOpen", open);
     // A phone's sidebar pushes the page aside: the find bar goes with it.
-    else if (open)
-      window.dispatchEvent(new CustomEvent(CLOSE_FIND_REPLACE_EVENT));
+    else if (open) sendAppEvent(CLOSE_FIND_REPLACE_EVENT);
   }, [open]);
   // The docked Agent panel: App owns the frame.
   // Both panels narrow with a small window, by one rule; the AI panel also

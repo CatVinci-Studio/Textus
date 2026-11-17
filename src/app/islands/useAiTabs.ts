@@ -21,11 +21,7 @@ import { paneWithTab } from "../../engine/layout/tree";
 import type { TabState } from "../tabs/useTabState";
 import { pageOf } from "../tabs/page-tabs";
 import { isPhoneLayout } from "../../platform/phone-layout";
-import {
-  AI_PRESS_EVENT,
-  conversationIn,
-  setConversationOpener,
-} from "./ai-tabs";
+import { conversationIn, onAiPress, setConversationOpener } from "./ai-tabs";
 
 const NONE: string[] = [];
 
@@ -227,7 +223,6 @@ export function useAiTabs({
       );
       if (onlyAi) setShown(false);
     };
-    window.addEventListener(AI_PRESS_EVENT, press);
-    return () => window.removeEventListener(AI_PRESS_EVENT, press);
+    return onAiPress(press);
   }, [tabs, tabsRef, live, activeTabId, setShown]);
 }

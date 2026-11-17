@@ -11,6 +11,7 @@ import {
   OPEN_AGENT_PANEL_EVENT,
   TRACK_CHANGES_EVENT,
   SHOW_SIDEBAR_TAB_EVENT,
+  sendAppEvent,
 } from "../../utils/events";
 import { menuIpc, windowIpc } from "../../platform/ipc";
 import { editInFocus } from "../../engine/controls/edit-in-focus";
@@ -210,9 +211,7 @@ export function useMenuBridge(handlers: MenuBridgeHandlers): void {
         ),
       ),
       listenToThisWindow("menu-track-changes", () =>
-        window.dispatchEvent(
-          new CustomEvent(TRACK_CHANGES_EVENT, { detail: "toggle" }),
-        ),
+        sendAppEvent(TRACK_CHANGES_EVENT, "toggle"),
       ),
       listenToThisWindow(OPEN_AGENT_PANEL_EVENT, () => h().onOpenAgentPanel()),
       listenToThisWindow("menu-toggle-read-only", () => h().onToggleReadOnly()),
@@ -226,23 +225,17 @@ export function useMenuBridge(handlers: MenuBridgeHandlers): void {
       listenToThisWindow("menu-undo", () => editInFocus("undo")),
       listenToThisWindow("menu-redo", () => editInFocus("redo")),
       listenToThisWindow("menu-copy-as-plain-text", () =>
-        window.dispatchEvent(
-          new CustomEvent(EDIT_ACTION_EVENT, { detail: "copy-as-plain-text" }),
-        ),
+        sendAppEvent(EDIT_ACTION_EVENT, "copy-as-plain-text"),
       ),
       listenToThisWindow("menu-paste-as-plain-text", () =>
-        window.dispatchEvent(
-          new CustomEvent(EDIT_ACTION_EVENT, { detail: "paste-as-plain-text" }),
-        ),
+        sendAppEvent(EDIT_ACTION_EVENT, "paste-as-plain-text"),
       ),
       listenToThisWindow("menu-replace", () =>
-        window.dispatchEvent(new CustomEvent(SHOW_REPLACE_EVENT)),
+        sendAppEvent(SHOW_REPLACE_EVENT),
       ),
-      listenToThisWindow("menu-find-next", () =>
-        window.dispatchEvent(new CustomEvent(FIND_NEXT_EVENT)),
-      ),
+      listenToThisWindow("menu-find-next", () => sendAppEvent(FIND_NEXT_EVENT)),
       listenToThisWindow("menu-insert-link", () =>
-        window.dispatchEvent(new CustomEvent(INSERT_LINK_EVENT)),
+        sendAppEvent(INSERT_LINK_EVENT),
       ),
       listenToThisWindow("menu-close-tab", () =>
         h().requestCloseTab(h().activeTabId),
@@ -254,16 +247,10 @@ export function useMenuBridge(handlers: MenuBridgeHandlers): void {
         // numbers up, the heading it sends is that island's key.
         const island = islandKeyOf(event.payload, h().shortcuts);
         if (island && pickIsland(island)) return;
-        afterComposition(() =>
-          window.dispatchEvent(
-            new CustomEvent(INSERT_BLOCK_EVENT, { detail: event.payload }),
-          ),
-        );
+        afterComposition(() => sendAppEvent(INSERT_BLOCK_EVENT, event.payload));
       }),
       listenToThisWindow<string>("menu-toggle-mark", (event) => {
-        window.dispatchEvent(
-          new CustomEvent(TOGGLE_MARK_EVENT, { detail: event.payload }),
-        );
+        sendAppEvent(TOGGLE_MARK_EVENT, event.payload);
       }),
       listenToThisWindow("menu-help-community", () => h().openCommunity()),
       listenToThisWindow("menu-help-tutorials", () => h().openTutorials()),

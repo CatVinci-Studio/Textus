@@ -1,6 +1,10 @@
 import { useSyncExternalStore } from "react";
 import { ai } from "../../platform/ipc";
-import { FILE_WRITTEN_EVENT, announceFileCreated } from "../../utils/events";
+import {
+  FILE_WRITTEN_EVENT,
+  announceFileCreated,
+  sendAppEvent,
+} from "../../utils/events";
 import type { AgentTurn } from "../types";
 import {
   keepAsCreated,
@@ -166,7 +170,7 @@ export function filesChanged(
       bases.delete(file);
       void keepBase(file, undefined);
     }
-    window.dispatchEvent(new CustomEvent(FILE_WRITTEN_EVENT, { detail: file }));
+    sendAppEvent(FILE_WRITTEN_EVENT, file);
   }
   publish();
 }

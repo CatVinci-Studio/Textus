@@ -1,5 +1,5 @@
 import type { SearchEntry } from "./settings-search";
-import { SHOW_SIDEBAR_TAB_EVENT } from "../utils/events";
+import { SHOW_SIDEBAR_TAB_EVENT, sendAppEvent } from "../utils/events";
 import { tabInUse, windowTabs } from "../engine/layout/store";
 import { createSubscribers } from "../utils/store";
 
@@ -37,9 +37,7 @@ export function setSettingsListShown(on: boolean): void {
 
 /** The sidebar, open on Settings' pages. */
 export function showSettingsList(): void {
-  window.dispatchEvent(
-    new CustomEvent(SHOW_SIDEBAR_TAB_EVENT, { detail: "settings" }),
-  );
+  sendAppEvent(SHOW_SIDEBAR_TAB_EVENT, "settings");
 }
 
 export const onSettingsPageShown = subscribers.subscribe;

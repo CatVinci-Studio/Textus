@@ -2,26 +2,25 @@ import { useEffect, useState } from "react";
 import type { AgentMode } from "../../prefs/settings-values";
 import { requestCreate } from "./create-request";
 import { askInComposer } from "./composer-asks";
+import { createSubscribers } from "../../utils/store";
 
 /**
  * The AI panel asked for from outside the editor (a plugin's "Edit with AI"):
  * the document in front opens its panel in `mode` with `text` in the box.
  */
 
-const ASK_AI_EVENT = "textus-ask-ai";
-
 interface Asked {
   text: string;
   mode: AgentMode;
 }
 
+const asks = createSubscribers<[asked: Asked]>();
+
 export function askAi(text: string, mode: AgentMode): void {
   // Create is made in Settings › Extensions, not beside a document; what
   // asks for it here is about a plugin.
   if (mode === "create") return requestCreate(text, "plugin");
-  window.dispatchEvent(
-    new CustomEvent<Asked>(ASK_AI_EVENT, { detail: { text, mode } }),
-  );
+  asks.publish({ text, mode });
 }
 
 /** For the document in front (`isActive`): opens its panel on an ask and
@@ -33,8 +32,7 @@ export function useAskAi(
   const [mode, setMode] = useState<AgentMode | null>(null);
   useEffect(() => {
     if (!isActive) return;
-    const onAsk = (e: Event) => {
-      const { text, mode: asked } = (e as CustomEvent<Asked>).detail;
+    return asks.subscribe(({ text, mode: asked }) => {
       setMode(asked);
       setPanelOpen(true);
       // Set once, for the composer that takes the ask - however long its
@@ -42,9 +40,7 @@ export function useAskAi(
       void askInComposer(text).then(() =>
         window.setTimeout(() => setMode(null)),
       );
-    };
-    window.addEventListener(ASK_AI_EVENT, onAsk);
-    return () => window.removeEventListener(ASK_AI_EVENT, onAsk);
+    });
   }, [isActive, setPanelOpen]);
   return mode;
 }

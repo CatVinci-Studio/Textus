@@ -14,7 +14,7 @@ import {
   type DocTab,
 } from "../document/doc-tabs";
 import { exportDoc, fs, session, windowIpc } from "../platform/ipc";
-import { DROP_IMAGE_FILES_EVENT } from "../utils/events";
+import { DROP_IMAGE_FILES_EVENT, sendAppEvent } from "../utils/events";
 import { openDocument } from "../utils/open-document";
 import { useDocumentOpener } from "./useDocumentOpener";
 import { setTabJump, type TabJump } from "../editor/tab-jump";
@@ -441,18 +441,14 @@ export function useFileDrop(
     }>("tauri://drag-drop", async (event) => {
       const { documents, images } = sortDroppedPaths(event.payload.paths);
       if (images.length > 0)
-        window.dispatchEvent(
-          new CustomEvent(DROP_IMAGE_FILES_EVENT, {
-            detail: {
-              paths: images,
-              point: dropPointInPage(
-                event.payload.position,
-                isWindowsPlatform(),
-                window.devicePixelRatio,
-              ),
-            },
-          }),
-        );
+        sendAppEvent(DROP_IMAGE_FILES_EVENT, {
+          paths: images,
+          point: dropPointInPage(
+            event.payload.position,
+            isWindowsPlatform(),
+            window.devicePixelRatio,
+          ),
+        });
       // What can't be read as text is a folder, opened in the sidebar, or a
       // file that opens nothing, as in File > Open. Only the first may take
       // an untouched draft's place.

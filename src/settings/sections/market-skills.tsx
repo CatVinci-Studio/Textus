@@ -13,7 +13,7 @@ import { useSettings } from "../../prefs/SettingsContext";
 import { AvailableSection } from "../pages/AvailableSection";
 import { catalogMessage, catalogStatus } from "../pages/CatalogStatus";
 import { installsText } from "../pages/installs-text";
-import { SKILLS_CHANGED_EVENT, announceChange } from "./skills";
+import { announceChange, onSkillsChanged } from "./skills";
 
 /** The catalog's skills whose name, description, author or names in any
  *  language hold every word of `query`. */
@@ -63,10 +63,10 @@ export function AvailableSkills({
         })
         .catch(() => live && setHave(new Map()));
     load();
-    window.addEventListener(SKILLS_CHANGED_EVENT, load);
+    const stop = onSkillsChanged(load);
     return () => {
       live = false;
-      window.removeEventListener(SKILLS_CHANGED_EVENT, load);
+      stop();
     };
   }, []);
   const ready = catalog.status === "ready" && have !== null;

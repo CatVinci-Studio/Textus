@@ -3,6 +3,7 @@ import { ai, type WebSearchStatus } from "../platform/ipc";
 import { useSettings } from "../prefs/SettingsContext";
 import { PROVIDER_CATALOG } from "../platform/bindings/ai";
 import { chosenModel } from "./chosen-model";
+import { createSubscribers } from "../utils/store";
 
 /** Structural facts about each AI provider, as the backend's catalog
  *  (ai/catalog.rs) has them, generated with the bindings. */
@@ -39,11 +40,9 @@ export function useProviderCatalog(): readonly ProviderCatalogEntry[] {
 
 /** Fired when a search service's key is saved or cleared; a key isn't a
  *  setting, so nothing else would ask again. */
-const WEB_SEARCH_SETUP = "textus:web-search-setup";
+const searchSetups = createSubscribers();
 
-export function notifyWebSearchSetup() {
-  window.dispatchEvent(new Event(WEB_SEARCH_SETUP));
-}
+export const notifyWebSearchSetup = searchSetups.publish;
 
 /// What the composer's Web search button can do with the chosen chat provider
 /// and model: its own search, or Textus's search service. Null until known.
@@ -55,9 +54,7 @@ export function useWebSearchStatus(): WebSearchStatus | null {
   const [status, setStatus] = useState<WebSearchStatus | null>(null);
   const [setups, setSetups] = useState(0);
   useEffect(() => {
-    const bump = () => setSetups((n) => n + 1);
-    window.addEventListener(WEB_SEARCH_SETUP, bump);
-    return () => window.removeEventListener(WEB_SEARCH_SETUP, bump);
+    return searchSetups.subscribe(() => setSetups((n) => n + 1));
   }, []);
   useEffect(() => {
     let live = true;

@@ -39,7 +39,11 @@ import { watchTheme, windowIsDark } from "../plugins/views/theme-vars";
 import { usePluginMenuSync } from "../plugins/contributions/usePluginMenu";
 import { placeOnArrival, tabInUse } from "../engine/layout/store";
 import { besideOrSay, openBesideOrSay } from "./menu/split-here";
-import { INSERT_BLOCK_EVENT, SHOW_FOLDER_EVENT } from "../utils/events";
+import {
+  INSERT_BLOCK_EVENT,
+  SHOW_FOLDER_EVENT,
+  sendAppEvent,
+} from "../utils/events";
 import { useSettings } from "../prefs/SettingsContext";
 import { setWindowFolderSource } from "../platform/window-folder";
 
@@ -241,10 +245,7 @@ export function usePluginWindow({
       title: (t) => t.menuFormat,
       palette: false,
       run: (kind) => {
-        if (isBlockKind(kind))
-          window.dispatchEvent(
-            new CustomEvent(INSERT_BLOCK_EVENT, { detail: kind }),
-          );
+        if (isBlockKind(kind)) sendAppEvent(INSERT_BLOCK_EVENT, kind);
       },
     });
     // A folder inside the open one shown in the sidebar (an import's).
@@ -253,10 +254,7 @@ export function usePluginWindow({
       title: (t) => t.menuOpenFolder,
       palette: false,
       run: (path) => {
-        if (typeof path === "string")
-          window.dispatchEvent(
-            new CustomEvent(SHOW_FOLDER_EVENT, { detail: path }),
-          );
+        if (typeof path === "string") sendAppEvent(SHOW_FOLDER_EVENT, path);
       },
     });
     return () => {

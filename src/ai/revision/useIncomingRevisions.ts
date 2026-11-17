@@ -2,10 +2,10 @@ import { useEffect, useReducer } from "react";
 import { editorViewCtx } from "@milkdown/kit/core";
 import type { EditorRunner } from "../../editor/useEditorRunner";
 import { parseMarkdownSource } from "../../editor/markdown/parse-markdown-source";
-import { useWindowEvent } from "../../utils/hooks/useWindowEvent";
+import { useHeard } from "../../utils/hooks/useHeard";
 import { serializeBlocks } from "../../editor/markdown/doc-markdown";
 import {
-  FILE_REVISIONS_EVENT,
+  onFileRevisions,
   revisionProposals,
   updateFileRevisions,
 } from "./file-revisions";
@@ -35,8 +35,8 @@ export function useIncomingRevisions({
 }) {
   const ready = run(() => true) === true;
   const [more, arrived] = useReducer((n: number) => n + 1, 0);
-  useWindowEvent(FILE_REVISIONS_EVENT, (e) => {
-    if ((e as CustomEvent<string>).detail === filePath) arrived();
+  useHeard(onFileRevisions, (path) => {
+    if (path === filePath) arrived();
   });
   useEffect(() => {
     // After its kept proposals are back: placed before, they were written

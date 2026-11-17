@@ -1,5 +1,5 @@
 import { emitPluginEvent } from "../plugins/app-bridge";
-import { ENTRY_TRASHED_EVENT } from "../utils/events";
+import { ENTRY_TRASHED_EVENT, sendAppEvent } from "../utils/events";
 import { fill } from "../i18n/fill";
 import {
   useCallback,
@@ -88,9 +88,7 @@ export function useRowMenu(
         await fs.trashEntry(path, root);
         reload(parentDir(path) ?? root);
         // Its open tabs let it go (useDocumentActions).
-        window.dispatchEvent(
-          new CustomEvent(ENTRY_TRASHED_EVENT, { detail: path }),
-        );
+        sendAppEvent(ENTRY_TRASHED_EVENT, path);
         emitPluginEvent("fileDelete", { path });
       } catch (err) {
         await showMessage(failureText(t, err, name));

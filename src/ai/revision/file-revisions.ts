@@ -10,6 +10,7 @@ import {
 } from "../../storage/ui-state";
 import type { EditProposal } from "../types";
 import { blockHunks } from "./block-hunks";
+import { createSubscribers } from "../../utils/store";
 
 /**
  * What Textus AI left in a file it didn't have open (aiChangeMode): a change
@@ -106,10 +107,7 @@ export function updateFileRevisions(
     if (after !== undefined) await writeFileRevisions(path, after);
     await recount(path, after === undefined ? kept : after);
     // Told only of a change: its editor reads it again when told.
-    if (after !== undefined)
-      window.dispatchEvent(
-        new CustomEvent(FILE_REVISIONS_EVENT, { detail: path }),
-      );
+    if (after !== undefined) revisionsChanged.publish(path);
   });
   const settled = next.catch(() => undefined);
   queues.set(path, settled);
@@ -139,7 +137,7 @@ async function recount(path: string, kept: FileRevisions | null) {
  *  its editor told. */
 export async function revisionsArrived(path: string): Promise<void> {
   await proposalsKept(path);
-  window.dispatchEvent(new CustomEvent(FILE_REVISIONS_EVENT, { detail: path }));
+  revisionsChanged.publish(path);
 }
 
 /** The editor wrote its kept proposals: the count follows them. */
@@ -147,8 +145,9 @@ export function proposalsKept(path: string): Promise<void> {
   return updateFileRevisions(path, () => undefined);
 }
 
-/** Fired with a file's path when what Textus AI left in it changed. */
-export const FILE_REVISIONS_EVENT = "textus-file-revisions";
+/** Told a file's path when what Textus AI left in it changed. */
+const revisionsChanged = createSubscribers<[path: string]>();
+export const onFileRevisions = revisionsChanged.subscribe;
 
 // ---- Marks ----------------------------------------------------------
 

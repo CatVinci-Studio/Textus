@@ -17,7 +17,11 @@ import { updateProjectSettings } from "../../storage/project-settings";
 const SETTABLE_CONVENTIONS: Record<string, readonly string[]> = {
   linkStyle: ["markdown", "wiki"],
 };
-import { ENTRY_TRASHED_EVENT, FILE_WRITTEN_EVENT } from "../../utils/events";
+import {
+  ENTRY_TRASHED_EVENT,
+  FILE_WRITTEN_EVENT,
+  sendAppEvent,
+} from "../../utils/events";
 import { fromBase64, toBase64 } from "../store/files";
 import {
   beforePluginMove,
@@ -55,7 +59,7 @@ export async function written(
   // The window compares whole paths (an embed of the note); plugins hear
   // the path as it was given.
   const full = root ? absoluteIn(root, path) : path;
-  window.dispatchEvent(new CustomEvent(FILE_WRITTEN_EVENT, { detail: full }));
+  sendAppEvent(FILE_WRITTEN_EVENT, full);
   emitPluginEvent(change, { path });
 }
 
@@ -252,9 +256,7 @@ export function fileHandlers(p: PluginScope) {
       const abs = (path: string) => absoluteIn(root, path);
       await beforePluginMove(abs(source));
       await pluginsIpc.fsRename(p.id, root, source, target);
-      window.dispatchEvent(
-        new CustomEvent(FILE_WRITTEN_EVENT, { detail: abs(source) }),
-      );
+      sendAppEvent(FILE_WRITTEN_EVENT, abs(source));
       await pluginMovedPath(abs(source), abs(target));
       if (updateLinks !== true) return;
       const [{ documents }, { files }, conventions, linkRoot] =
@@ -288,13 +290,9 @@ export function fileHandlers(p: PluginScope) {
       const root = write();
       await pluginsIpc.fsTrash(p.id, root, target);
       const full = absoluteIn(root, target);
-      window.dispatchEvent(
-        new CustomEvent(FILE_WRITTEN_EVENT, { detail: full }),
-      );
+      sendAppEvent(FILE_WRITTEN_EVENT, full);
       // Its tabs let go, as for a file trashed in the sidebar.
-      window.dispatchEvent(
-        new CustomEvent(ENTRY_TRASHED_EVENT, { detail: full }),
-      );
+      sendAppEvent(ENTRY_TRASHED_EVENT, full);
       emitPluginEvent("fileDelete", { path: target });
     },
     "files.createFolder": ({ path }: Params) =>
