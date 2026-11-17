@@ -1,5 +1,6 @@
 import { expect, type Page, test } from "@playwright/test";
 import { openApp, PHONE, TABLET } from "./helpers";
+import { openPath } from "./plugin-helpers";
 
 // The everyday flows on a touch screen: a phone (its own layout) and a
 // tablet (the desktop's layout, by touch).
@@ -82,5 +83,31 @@ test.describe("on a phone with its keyboard up", () => {
     await expect(fresh).toBeFocused();
     await page.keyboard.type("Second");
     await expect(fresh).toHaveText("Second");
+  });
+});
+
+test.describe("searching on a phone", () => {
+  test.use(PHONE);
+
+  test("a found line opens its document there", async ({ page }) => {
+    const lines = Array.from({ length: 80 }, (_, i) => `line ${i}`);
+    lines[70] = "the needle here";
+    await page.addInitScript((text) => {
+      (window as unknown as Record<string, unknown>).__devFs = {
+        "/w/a.md": text,
+        "/w/b.md": "# B\n",
+      };
+    }, lines.join("\n\n"));
+    await openApp(page);
+    await openPath(page, "/w/b.md");
+    const toggle = page.locator(".window-bar-sidebar-toggle:visible");
+    if (await toggle.count()) await toggle.tap();
+    await page.locator('[data-rail-id="search"]').tap();
+    await page.locator(".search-panel input").first().fill("needle");
+    await page.locator(".search-text-line").first().tap();
+    const hit = page.locator(".ProseMirror:visible p", {
+      hasText: "the needle here",
+    });
+    await expect(hit).toBeInViewport();
   });
 });

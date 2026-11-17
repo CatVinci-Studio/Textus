@@ -1,5 +1,10 @@
 import type { ScrollPlace } from "../document/last-places";
 import type { LeftHistory } from "./left-history";
+import { windowTabs } from "../engine/layout/store";
+
+/** Kept only for a tab still open: an editor going because its tab closed
+ *  leaves nothing behind (the window's model drops the tab first). */
+const open = (tabId: string) => windowTabs().some((tab) => tab.id === tabId);
 
 /**
  * What a tab's editor leaves as it goes (its tab no longer in front): its
@@ -47,7 +52,7 @@ interface SourceLeft {
 const sources = new Map<string, SourceLeft>();
 
 export function leaveSource(tabId: string, left: SourceLeft): void {
-  sources.set(tabId, left);
+  if (open(tabId)) sources.set(tabId, left);
 }
 
 /** What `tabId`'s last source view left, if the tab still reads `text`. */
@@ -57,7 +62,7 @@ export function sourceLeftBy(tabId: string, text: string): SourceLeft | null {
 }
 
 export function leaveFind(tabId: string, find: FindLeft): void {
-  finds.set(tabId, find);
+  if (open(tabId)) finds.set(tabId, find);
 }
 
 export const findLeft = (tabId: string): FindLeft | null =>
@@ -65,14 +70,14 @@ export const findLeft = (tabId: string): FindLeft | null =>
 
 /** The pane's part of what is left: it is the one that sees the scroll. */
 export function leaveReading(tabId: string, reading: Reading): void {
-  readings.set(tabId, reading);
+  if (open(tabId)) readings.set(tabId, reading);
 }
 
 export const readingLeft = (tabId: string): Reading | null =>
   readings.get(tabId) ?? null;
 
 export function leaveTab(tabId: string, state: TabLeft): void {
-  left.set(tabId, state);
+  if (open(tabId)) left.set(tabId, state);
 }
 
 /** What `tabId`'s last editor left, if the tab still reads `markdown`. */

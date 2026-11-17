@@ -48,8 +48,37 @@ pub(crate) fn queue_windows_to_open(app: &tauri::AppHandle, windows: Vec<WindowS
     }
 }
 
+/// A folder handed over (dropped on the Dock icon, Open With in Finder)
+/// opens as a window's folder, as Open Folder does; the rest as documents.
+#[cfg(desktop)]
+fn split_folders(paths: Vec<String>) -> (Vec<String>, Vec<String>) {
+    paths
+        .into_iter()
+        .partition(|path| !std::path::Path::new(path).is_dir())
+}
+
 #[cfg(desktop)]
 pub(crate) fn queue_paths_to_open(app: &tauri::AppHandle, paths: Vec<String>) {
+    let (paths, folders) = split_folders(paths);
+    if !folders.is_empty() {
+        if UI_READY.load(Ordering::Relaxed) {
+            for folder in &folders {
+                open_folder_window(app, folder);
+            }
+        } else {
+            // Launching: the first window takes the first folder, with the
+            // documents beside it; each other folder gets a window.
+            let mut windows: Vec<WindowSession> = folders
+                .into_iter()
+                .map(|folder| WindowSession {
+                    folder: Some(folder),
+                    ..WindowSession::default()
+                })
+                .collect();
+            windows[0].paths = paths;
+            return queue_windows_to_open(app, windows);
+        }
+    }
     if paths.is_empty() {
         return;
     }
@@ -254,6 +283,21 @@ pub(crate) fn open_urls(app: &tauri::AppHandle, urls: Vec<tauri::Url>) {
 #[cfg(all(test, desktop))]
 mod folder_tests {
     use super::*;
+
+    #[test]
+    fn a_folder_handed_over_opens_as_a_folder_not_a_document() {
+        let dir = std::env::temp_dir().join("textus-split-folders");
+        std::fs::create_dir_all(&dir).unwrap();
+        let file = dir.join("a.md");
+        std::fs::write(&file, "x").unwrap();
+        let (dir, file) = (
+            dir.to_string_lossy().into_owned(),
+            file.to_string_lossy().into_owned(),
+        );
+        let (files, folders) = split_folders(vec![file.clone(), dir.clone()]);
+        assert_eq!(files, vec![file]);
+        assert_eq!(folders, vec![dir]);
+    }
 
     #[test]
     fn each_new_window_takes_the_folder_opened_for_it_once() {
