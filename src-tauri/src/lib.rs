@@ -258,6 +258,7 @@ pub fn run() {
             tauri::async_runtime::spawn(plugins::moved_skills::install_moved_skills(
                 app.handle().clone(),
             ));
+            plugins::document_types::refresh(app.handle());
             memory_level::watch(app.handle().clone());
             crate::editor_windows::build_main_window(app)?;
             #[cfg(desktop)]

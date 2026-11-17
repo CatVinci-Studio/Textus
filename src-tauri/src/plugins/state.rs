@@ -92,6 +92,8 @@ pub fn update<T>(
     let out = change(&mut state);
     let root = plugins_root(app)?;
     crate::json_file::save_pretty(&root.join("state.json"), &state).map_err(|e| e.to_string())?;
+    // What it opens as a document is searched and listed as one.
+    super::document_types::refresh(app);
     // A plugin switched on again: its paused jobs may be due.
     #[cfg(desktop)]
     crate::schedule::rearm(app);

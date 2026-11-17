@@ -182,11 +182,14 @@ pub async fn plugin_ai_complete(
         .find_map(|v| v.as_str().filter(|s| !s.is_empty()).map(str::to_string))
         .ok_or_else(|| crate::ai::route::NOT_CONFIGURED.to_string())?;
     let model = setting("writingModels")
-        .and_then(|m| m.get(&provider).and_then(|v| v.as_str()).map(str::to_string))
+        .and_then(|m| {
+            m.get(&provider)
+                .and_then(|v| v.as_str())
+                .map(str::to_string)
+        })
         .filter(|m| !m.is_empty());
     let spent = tokens(&system) + tokens(&prompt);
-    let answer =
-        crate::ai::client::call(&app, &provider, system, prompt, model.as_deref()).await?;
+    let answer = crate::ai::client::call(&app, &provider, system, prompt, model.as_deref()).await?;
     let spent = spent + tokens(&answer);
     update(&app, |usage| {
         usage.plugins.entry(plugin).or_default().used += spent;

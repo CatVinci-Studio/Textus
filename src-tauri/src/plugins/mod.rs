@@ -8,6 +8,7 @@ pub mod ai_tools;
 pub mod app_tools;
 pub mod catalog;
 pub mod dev;
+pub mod document_types;
 pub mod export;
 pub mod files;
 pub mod git;
