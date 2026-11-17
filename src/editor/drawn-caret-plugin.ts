@@ -11,6 +11,8 @@ import "./drawn-caret.css";
  */
 /** The caret's height, in the block's text size. */
 const CARET_EM = 1.25;
+/** Its width on screen, whatever the document's zoom. */
+const CARET_PX = 2;
 
 class DrawnCaret {
   private readonly root: HTMLElement;
@@ -53,7 +55,9 @@ class DrawnCaret {
     const at = view.coordsAtPos($head.pos);
     // In the editor's own units: the document's zoom taken off.
     const r = this.root.getBoundingClientRect();
-    const zoom = r.width / this.root.offsetWidth || 1;
+    // Its width unrounded: offsetWidth's whole pixels put the caret off
+    // the pixel it was snapped to.
+    const zoom = r.width / parseFloat(getComputedStyle(this.root).width) || 1;
     // One height through a block, from its text size: bold, code, an
     // equation or a fallback font beside the caret doesn't change it.
     let depth = $head.depth;
@@ -66,7 +70,12 @@ class DrawnCaret {
       block instanceof HTMLElement
         ? parseFloat(getComputedStyle(block).fontSize) * CARET_EM
         : (at.bottom - at.top) / zoom;
-    const x = (at.left - r.left) / zoom;
+    // On whole screen pixels, its width the same at any zoom: in between,
+    // or grown with the zoom, it drew thick and soft.
+    const dpr = window.devicePixelRatio || 1;
+    const onPixel = (v: number) => Math.round(v * dpr) / dpr;
+    const x = (onPixel(at.left) - r.left) / zoom;
+    const width = Math.max(1, Math.round(CARET_PX * dpr)) / dpr / zoom;
     const y = ((at.top + at.bottom) / 2 - r.top) / zoom - height / 2;
     // Shown again: it starts where the caret is, not gliding in from
     // where it was last.
@@ -74,6 +83,7 @@ class DrawnCaret {
     this.caret.classList.toggle("drawn-caret-glide", this.glide());
     this.caret.style.transform = `translate(${x}px, ${y}px)`;
     this.caret.style.height = `${height}px`;
+    this.caret.style.width = `${width}px`;
     // Each move starts the blink over, solid while the caret moves: a new
     // animation name restarts it without laying the page out again.
     this.blink = !this.blink;

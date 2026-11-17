@@ -83,6 +83,29 @@ test("the drawn caret is one height through a paragraph, beside bold, code or Ch
   expect(heights.size).toBe(1);
 });
 
+test("the drawn caret keeps its width on screen when the document is zoomed", async ({
+  page,
+}) => {
+  await openApp(page, { settings: { language: "en" } });
+  await pasteMarkdown(page, "A line to zoom");
+  const line = (await page.locator(`${editor} p`).boundingBox())!;
+  await page.mouse.move(line.x + 40, line.y + line.height / 2);
+  await page.keyboard.down("Control");
+  for (let i = 0; i < 4; i++) await page.mouse.wheel(0, -120);
+  await page.keyboard.up("Control");
+  await page.waitForTimeout(600);
+  const zoomed = (await page.locator(`${editor} p`).boundingBox())!;
+  expect(zoomed.height).toBeGreaterThan(line.height * 1.2);
+  await page.locator(`${editor} p`).click();
+  await page.keyboard.press("End");
+  const box = (await page.locator(caret).boundingBox())!;
+  expect(box.width).toBeGreaterThan(1.5);
+  expect(box.width).toBeLessThan(2.5);
+  // On a whole screen pixel.
+  const dpr = await page.evaluate(() => devicePixelRatio);
+  expect(Math.abs(box.x * dpr - Math.round(box.x * dpr))).toBeLessThan(0.02);
+});
+
 test("with Smooth caret on, the drawn caret glides", async ({ page }) => {
   await openApp(page, {
     settings: { language: "en", smoothCaret: true },
