@@ -269,6 +269,15 @@ button.plugin-card-open {
 * + .plugin-readme {
   margin-top: var(--space-6);
 }
+/* The line and byline fill the text's column, and like a row's hint count
+   as a few words' width: the button stays beside them while it fits. */
+.plugin-card :is(.plugin-card-description, .plugin-byline) {
+  align-self: stretch;
+}
+.plugin-card .plugin-byline {
+  contain: inline-size;
+  min-width: 18ch;
+}
 .plugin-byline {
   display: flex;
   flex-wrap: wrap;
