@@ -382,11 +382,13 @@ textus.path = (function () {
 })();
 
 textus.appearance = {
+  supportsFrameTexture: true,
   // Layered over the theme until disposed or the plugin stops.
   setColors: function (colors, options) {
     return call("appearance.setColors", {
       colors: plain(colors),
       scheme: (options && options.scheme) || "both",
+      frameTexture: options && options.frameTexture,
     }).then(function (id) {
       return disposable(function () {
         quiet(call("appearance.clear", { id: id }));

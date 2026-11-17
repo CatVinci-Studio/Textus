@@ -1,6 +1,6 @@
 import { isBlockKind } from "../editor/blocks/block-kind-list";
 import { lazyModule } from "../lazy/lazy-module";
-import { appearanceNow } from "../theme/plugin-colors";
+import { appearanceNow } from "../theme/plugin-appearance-state";
 import { pickWithCommands } from "./command-palette-entry";
 import { watchConventions } from "../plugins/contributions/conventions-watch";
 import { useEffect, useSyncExternalStore } from "react";
