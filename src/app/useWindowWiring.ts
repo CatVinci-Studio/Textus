@@ -35,24 +35,20 @@ import type { Strings } from "../i18n/strings";
 import { tabInUse } from "../engine/layout/store";
 import { pageOf } from "./tabs/page-tabs";
 
-/** Everything that reaches a window from outside its own controls. */
-export function useWindowWiring({
-  shell,
-  docs,
-  settings,
-  setSettings,
-  t,
-}: {
+type WiringInput = {
   shell: WindowShell;
   docs: WindowDocuments;
   settings: Settings;
   setSettings: ReturnType<typeof useSettings>["setSettings"];
   t: Strings;
-}) {
-  const { tabState, tutorial, textusAi, panels, setPendingClose } = shell;
-  const { tabsRef, activeTabId, setActiveTabId, setTabs, liveTabs } = tabState;
-  const { activeTab, openFolder, openFile, openPathInTab } = docs;
+};
 
+/** Settings commands, and the keys that run the actions a menu item runs
+ *  too; those actions. */
+function useKeysAndCommands(input: WiringInput) {
+  const { shell, docs, settings, setSettings } = input;
+  const { tabState, textusAi, panels } = shell;
+  const { tabsRef, activeTabId, setActiveTabId } = tabState;
   useSettingsCommands(settings, setSettings);
   // What the actions a key and a menu item both run work with.
   const appActions: AppActionHandlers = {
@@ -75,7 +71,15 @@ export function useWindowWiring({
     searchFiles: docs.searchFiles,
     showSidebarTab: panels.showSidebarTab,
   });
+  return appActions;
+}
 
+/** Island numbers and back/forward among tabs; the tour's practice tab
+ *  kept, and its notes. */
+function useTabsAndTour(input: WiringInput) {
+  const { shell, docs, settings } = input;
+  const { tabState, tutorial } = shell;
+  const { tabsRef, activeTabId, setActiveTabId } = tabState;
   useIslandNumbers(setActiveTabId);
   useNavHistory({ tabsRef, activeTabId, setActiveTabId });
 
@@ -86,7 +90,16 @@ export function useWindowWiring({
     language: settings.language,
     evaluate: shell.evaluateTutorialDocumentChange,
   });
+}
 
+/** What opens at launch, and what is pushed to the window later: paths
+ *  from the system and the command line, files dropped on it, and files
+ *  from the sidebar dragged over the documents. */
+function useWhatOpens(input: WiringInput) {
+  const { shell, docs, settings, setSettings } = input;
+  const { tabState, tutorial } = shell;
+  const { activeTabId, setTabs, liveTabs } = tabState;
+  const { activeTab, openFolder, openFile, openPathInTab } = docs;
   // What opens at launch (OS-opened files, recovered drafts, a dragged-in
   // tab, a Help doc). Runs only once, at mount.
   useStartupRestore({
@@ -133,7 +146,14 @@ export function useWindowWiring({
     );
     return () => setDocumentDrop(null);
   }, [openPathInTab, liveTabs, openFolder.folder]);
+}
 
+/** Closing the window with unsaved work, files changed on disk, and the
+ *  scroll held on the way back. */
+function useWindowGuards(input: WiringInput) {
+  const { shell, docs, settings } = input;
+  const { tabState, setPendingClose } = shell;
+  const { liveTabs } = tabState;
   useWindowCloseGuard(
     liveTabs,
     docs.flushAutosave,
@@ -143,7 +163,14 @@ export function useWindowWiring({
 
   useExternalChangeReload(liveTabs, tabState.updateTab);
   useHoldScrollOnReturn();
+}
 
+/** What the app's own renames, moves and deletes do to open tabs, also
+ *  those made in other windows. */
+function useFollowingActions(input: WiringInput) {
+  const { shell, docs } = input;
+  const { tabState } = shell;
+  const { openFile } = docs;
   const actions = useDocumentActions({
     tabState,
     openFile,
@@ -151,7 +178,15 @@ export function useWindowWiring({
     saveTab: docs.saveTab,
   });
   useEntriesFromOtherWindows(actions.followMove);
+  return actions;
+}
 
+/** Which View items are on (the check marks in the app-drawn menu and in
+ *  the macOS menu bar), and the menu's keys. */
+function useNativeMenu(input: WiringInput) {
+  const { shell, docs, settings } = input;
+  const { textusAi, panels } = shell;
+  const { activeTab, openFolder } = docs;
   // Which View items are on: the check marks in the app-drawn menu and in
   // the macOS menu bar.
   const menuChecks = {
@@ -170,7 +205,19 @@ export function useWindowWiring({
   };
   useNativeMenuChecks(menuChecks);
   useNativeMenuAccelerators(settings.shortcuts);
+  return menuChecks;
+}
 
+/** The menu's items, wired to what they do. */
+function useMenuBridgeFor(
+  input: WiringInput,
+  appActions: AppActionHandlers,
+  actions: ReturnType<typeof useDocumentActions>,
+) {
+  const { shell, docs, settings, setSettings, t } = input;
+  const { tabState, panels } = shell;
+  const { activeTabId, liveTabs } = tabState;
+  const { openFolder, openPathInTab } = docs;
   useMenuBridge({
     ...appActions,
     activeTabId,
@@ -221,14 +268,24 @@ export function useWindowWiring({
     onOpenDocuments: () => actions.setDocumentsOpen(true),
     shareActiveTab: actions.shareActiveTab,
   });
+}
 
+/** Everything that reaches a window from outside its own controls. */
+export function useWindowWiring(input: WiringInput) {
+  const appActions = useKeysAndCommands(input);
+  useTabsAndTour(input);
+  useWhatOpens(input);
+  useWindowGuards(input);
+  const actions = useFollowingActions(input);
+  const menuChecks = useNativeMenu(input);
+  useMenuBridgeFor(input, appActions, actions);
   const close = useClosePrompt({
-    pendingClose: shell.pendingClose,
-    setPendingClose,
-    tabState,
-    cancelDraftFlushes: shell.cancelDraftFlushes,
-    saveTab: docs.saveTab,
-    removeTab: docs.removeTab,
+    pendingClose: input.shell.pendingClose,
+    setPendingClose: input.shell.setPendingClose,
+    tabState: input.shell.tabState,
+    cancelDraftFlushes: input.shell.cancelDraftFlushes,
+    saveTab: input.docs.saveTab,
+    removeTab: input.docs.removeTab,
   });
 
   return { ...actions, menuChecks, close };

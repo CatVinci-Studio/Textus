@@ -19,7 +19,6 @@ const LINES_NOW = {};
 const HOOKS_NOW = {
   "src/app/usePluginWindow.ts usePluginWindow": 24,
   "src/app/useWindowDocuments.ts useWindowDocuments": 29,
-  "src/app/useWindowWiring.ts useWindowWiring": 20,
   "src/document-view/useEditorProposals.ts useEditorProposals": 28,
   "src/document-view/useEditorSetup.ts useEditorSetup": 20,
   "src/document-view/useEditorWindowEvents.ts useEditorWindowEvents": 21,
