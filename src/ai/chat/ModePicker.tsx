@@ -2,6 +2,7 @@ import { SelectMenu } from "../../engine/controls/SelectMenu";
 import { Fragment, useRef } from "react";
 import type { PanelMode } from "../../prefs/SettingsContext";
 import { useDropdown } from "../../engine/controls/useDropdown";
+import { scaledPx } from "../../engine/tokens/chrome-scale";
 import { AGENTS_GROUP, useChatModels, type ChatModels } from "./chat-models";
 import "./ModePicker.css";
 
@@ -100,7 +101,7 @@ export function ModePicker({
     count: items.length,
     selected: () => items.findIndex(isSelected),
     // The modes and a few providers' models, without a scroll.
-    maxHeight: 480,
+    maxHeight: scaledPx(480),
     onOpen: () => {
       focusBefore.current = document.activeElement as HTMLElement | null;
     },
