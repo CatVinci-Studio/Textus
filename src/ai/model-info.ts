@@ -71,6 +71,14 @@ export function useModelsFetched(): number {
   return useSyncExternalStore(onFetched, () => fetchedCount);
 }
 
+/** The last list fetched for `provider`, remembered across restarts, drawn
+ *  again whenever a new one is fetched. */
+export function useFetchedModels(provider: string) {
+  useModelsFetched();
+  const cached = readFetchedModels(provider);
+  return { models: cached?.models ?? [], at: cached?.at ?? null };
+}
+
 /** Fetched ids ordered for the picker: current models before deprecated
  *  ones, each group keeping the provider's (newest-first) order. */
 export function orderForPicker(provider: string, ids: string[]): string[] {

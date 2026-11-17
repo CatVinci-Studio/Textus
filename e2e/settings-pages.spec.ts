@@ -149,3 +149,47 @@ test("first-line indent sets in the document's paragraphs, not a list's", async 
   await expect.poll(() => indent(":scope > p")).toBeGreaterThan(0);
   expect(await indent("li p")).toBe(0);
 });
+
+test("a custom endpoint's model is picked from its list, and a name it lacks fails the test", async ({
+  page,
+}) => {
+  await openApp(page, { settings: { textusAi: true, aiProvider: "custom" } });
+  await page.evaluate(() => {
+    (window as unknown as { __devInvokeResults: unknown }).__devInvokeResults =
+      {
+        custom_endpoint_status: {
+          base_url: "http://relay.test/v1",
+          api_key: null,
+          has_api_key: true,
+          model: "6.1sol",
+        },
+        fetch_custom_models: ["gpt-6.1-sol", "gpt-6.1-luna"],
+        set_custom_endpoint: null,
+      };
+    window.dispatchEvent(
+      new CustomEvent("textus:open-settings-page", {
+        detail: { page: "providers" },
+      }),
+    );
+  });
+  const panel = page.locator(".providers-detail");
+  await panel.getByRole("button", { name: "测试连接" }).click();
+  await expect(panel.locator(".settings-error")).toContainText("6.1sol");
+  // The list is now the model's choices, here and in the model pickers.
+  const model = panel.getByRole("combobox", { name: "模型" });
+  await model.click();
+  await page.getByRole("option", { name: "gpt-6.1-luna" }).click();
+  await panel.getByRole("button", { name: "测试连接" }).click();
+  await expect(panel.locator(".settings-success")).toBeVisible();
+  await panel.getByRole("button", { name: "保存" }).click();
+  await expect
+    .poll(() =>
+      page.evaluate(() =>
+        (
+          (window as unknown as { __devInvokeCalls: { cmd: string }[] })
+            .__devInvokeCalls ?? []
+        ).find((c) => c.cmd === "set_custom_endpoint"),
+      ),
+    )
+    .toMatchObject({ model: "gpt-6.1-luna" });
+});

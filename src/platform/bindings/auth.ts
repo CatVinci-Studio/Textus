@@ -25,7 +25,6 @@ export const commands = {
 	custom_endpoint_status: () => __TAURI_INVOKE<CustomEndpointStatus_Serialize | null>("custom_endpoint_status"),
 	clear_custom_endpoint: () => __TAURI_INVOKE<null>("clear_custom_endpoint"),
 	fetch_custom_models: (baseUrl: string, apiKey: string | null) => __TAURI_INVOKE<string[]>("fetch_custom_models", { baseUrl, apiKey }),
-	test_custom_endpoint: (baseUrl: string, apiKey: string | null) => __TAURI_INVOKE<null>("test_custom_endpoint", { baseUrl, apiKey }),
 };
 
 /* Types */

@@ -5,8 +5,7 @@ import {
   formatContext,
   modelInfo,
   orderForPicker,
-  readFetchedModels,
-  useModelsFetched,
+  useFetchedModels,
   writeFetchedModels,
 } from "../../ai/model-info";
 import { useCallback, useEffect, useState } from "react";
@@ -30,14 +29,6 @@ import { explainError } from "../../utils/error-explain";
 function useSignInModels(provider: string): SignInModels | null {
   const active = useSignedIn(provider);
   return active ? (SIGN_IN_MODELS[provider] ?? null) : null;
-}
-
-/** The last list fetched for `provider`, remembered across restarts and
- *  refreshed whenever ModelListRow fetches a new one. */
-function useFetchedModels(provider: string) {
-  useModelsFetched();
-  const cached = readFetchedModels(provider);
-  return { models: cached?.models ?? [], at: cached?.at ?? null };
 }
 
 /// Model picker for writing (completion and grammar) or the chat. Seeded

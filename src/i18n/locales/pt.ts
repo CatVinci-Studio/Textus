@@ -938,6 +938,8 @@ Habilidades ficam na pasta skills/ ao lado deste arquivo, um arquivo
   modelListLabel: "Lista de modelos",
   customTestConnection: "Testar Conexão",
   customTestSuccess: "A conexão está funcionando.",
+  customModelNotListed:
+    "Conectado, mas este endpoint não lista o modelo “{model}”. Escolha um da lista.",
   customSave: "Salvar",
   proxyLabel: "Proxy de rede",
   proxyTypeNone: "Nenhum (direto)",

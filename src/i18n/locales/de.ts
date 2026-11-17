@@ -927,6 +927,8 @@ Skills liegen im Ordner skills/ neben dieser Datei, je Skill eine
   modelListLabel: "Modellliste",
   customTestConnection: "Verbindung testen",
   customTestSuccess: "Verbindung funktioniert.",
+  customModelNotListed:
+    "Verbunden, aber dieser Endpunkt führt das Modell „{model}“ nicht. Wählen Sie eines aus seiner Liste.",
   customSave: "Speichern",
   proxyLabel: "Netzwerk-Proxy",
   proxyTypeNone: "Keiner (direkt)",

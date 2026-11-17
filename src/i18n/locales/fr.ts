@@ -955,6 +955,8 @@ utiliser une.
   modelListLabel: "Liste des modèles",
   customTestConnection: "Tester la connexion",
   customTestSuccess: "La connexion fonctionne.",
+  customModelNotListed:
+    "Connecté, mais ce point d’accès ne propose pas le modèle « {model} ». Choisissez-en un dans sa liste.",
   customSave: "Enregistrer",
   proxyLabel: "Proxy réseau",
   proxyTypeNone: "Aucun (direct)",

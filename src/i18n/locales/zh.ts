@@ -835,6 +835,8 @@ export default {
   modelListLabel: "模型列表",
   customTestConnection: "测试连接",
   customTestSuccess: "连接正常。",
+  customModelNotListed:
+    "连接正常，但这个接口的模型列表里没有“{model}”。请从列表里选一个。",
   customSave: "保存",
   proxyLabel: "网络代理",
   proxyTypeNone: "不使用（直连）",

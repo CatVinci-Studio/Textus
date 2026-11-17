@@ -837,6 +837,8 @@ export default {
   modelListLabel: "模型清單",
   customTestConnection: "測試連線",
   customTestSuccess: "連線正常。",
+  customModelNotListed:
+    "連線正常，但這個介面的模型清單裡沒有「{model}」。請從清單中選一個。",
   customSave: "儲存",
   proxyLabel: "代理伺服器",
   proxyTypeNone: "不使用（直接連線）",

@@ -879,6 +879,8 @@ ${AI_NAME}에게 주는 글쓰기 지침으로, 모든 문서에 적용됩니다
   modelListLabel: "모델 목록",
   customTestConnection: "연결 테스트",
   customTestSuccess: "연결에 성공했습니다.",
+  customModelNotListed:
+    "연결되었지만 이 엔드포인트의 모델 목록에 “{model}”이(가) 없습니다. 목록에서 하나를 고르세요.",
   customSave: "저장",
   proxyLabel: "네트워크 프록시",
   proxyTypeNone: "사용 안 함(직접 연결)",

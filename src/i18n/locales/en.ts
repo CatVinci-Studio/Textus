@@ -908,6 +908,8 @@ type /name in a conversation to use one.
   modelListLabel: "Model list",
   customTestConnection: "Test Connection",
   customTestSuccess: "Connection works.",
+  customModelNotListed:
+    "Connected, but this endpoint doesn't list the model “{model}”. Pick one from its list.",
   customSave: "Save",
   proxyLabel: "Network proxy",
   proxyTypeNone: "None (direct)",

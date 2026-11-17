@@ -952,6 +952,8 @@ export default {
   modelListLabel: "Список моделей",
   customTestConnection: "Проверить подключение",
   customTestSuccess: "Подключение работает.",
+  customModelNotListed:
+    "Подключено, но в списке моделей этого адреса нет «{model}». Выберите модель из списка.",
   customSave: "Сохранить",
   proxyLabel: "Прокси-сервер",
   proxyTypeNone: "Нет (напрямую)",

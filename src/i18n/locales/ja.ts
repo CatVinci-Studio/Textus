@@ -893,6 +893,8 @@ ${AI_NAME}への執筆の指示です。すべての文書に適用されます�
   modelListLabel: "モデル一覧",
   customTestConnection: "接続をテスト",
   customTestSuccess: "接続できました。",
+  customModelNotListed:
+    "接続できましたが、このエンドポイントのモデル一覧に「{model}」がありません。一覧から選んでください。",
   customSave: "保存",
   proxyLabel: "ネットワークプロキシ",
   proxyTypeNone: "なし（直接接続）",

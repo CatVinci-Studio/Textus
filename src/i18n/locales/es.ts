@@ -952,6 +952,8 @@ para usar una.
   modelListLabel: "Lista de modelos",
   customTestConnection: "Probar conexión",
   customTestSuccess: "La conexión funciona.",
+  customModelNotListed:
+    "Conectado, pero este endpoint no ofrece el modelo «{model}». Elige uno de su lista.",
   customSave: "Guardar",
   proxyLabel: "Proxy de red",
   proxyTypeNone: "Ninguno (directo)",
