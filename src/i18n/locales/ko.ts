@@ -1206,7 +1206,6 @@ ${AI_NAME}에게 주는 글쓰기 지침으로, 모든 문서에 적용됩니다
   windowMaximize: "최대화",
   windowRestore: "이전 크기로 복원",
   windowClose: "닫기",
-  chatWindowTitle: AI_NAME,
   chatWindowPin: "항상 위에 표시",
   chatWindowPinHint: "이 창을 항상 편집기 위에 표시",
   chatWindowUnpinHint: "항상 위에 표시 해제",

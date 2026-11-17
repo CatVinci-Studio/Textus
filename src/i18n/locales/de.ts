@@ -1272,7 +1272,6 @@ Skills liegen im Ordner skills/ neben dieser Datei, je Skill eine
   windowMaximize: "Maximieren",
   windowRestore: "Wiederherstellen",
   windowClose: "Schließen",
-  chatWindowTitle: AI_NAME,
   chatWindowPin: "Immer im Vordergrund",
   chatWindowPinHint: "Dieses Fenster über dem Editor halten",
   chatWindowUnpinHint: "Dieses Fenster nicht mehr über dem Editor halten",

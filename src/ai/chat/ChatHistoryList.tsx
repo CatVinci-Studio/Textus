@@ -14,6 +14,7 @@ import { basename, dirname } from "../../utils/path";
 import type { ChatSummary } from "./chat-history";
 import { useHistorySearch, type HistoryHit } from "./useHistorySearch";
 import { Tooltip } from "../../engine/controls/Tooltip";
+import { chatTitle } from "./chat-title";
 
 /** Conversations by the folder their document lives in - the project they
  *  belong to - most recently active group first. Unsaved drafts form one
@@ -110,7 +111,7 @@ export function ChatHistoryList({
                 onClick={() => onReopen(entry)}
               >
                 <span className="tx-truncate chat-history-entry-title">
-                  {entry.title || t.untitledTab}
+                  {chatTitle(entry.title, t)}
                 </span>
                 <span className="tx-truncate chat-history-entry-meta">
                   {new Date(entry.updatedAt).toLocaleString(locale)}
@@ -125,7 +126,7 @@ export function ChatHistoryList({
                     e.stopPropagation();
                     void showConfirm(
                       fill(t.chatHistoryDeleteAsk, {
-                        title: entry.title || t.untitledTab,
+                        title: chatTitle(entry.title, t),
                       }),
                       {
                         okLabel: t.chatHistoryDelete,
@@ -171,7 +172,7 @@ function SearchHits({
             onClick={() => onReopen(hit)}
           >
             <span className="tx-truncate chat-history-entry-title">
-              {hit.title || t.untitledTab}
+              {chatTitle(hit.title, t)}
             </span>
             <span className="tx-clamp chat-history-hit">
               {hit.role === "user" ? t.chatHistoryByYou : t.chatHistoryByAi}:{" "}

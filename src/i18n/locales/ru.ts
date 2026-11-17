@@ -1316,7 +1316,6 @@ export default {
   windowMaximize: "Развернуть",
   windowRestore: "Свернуть в окно",
   windowClose: "Закрыть",
-  chatWindowTitle: AI_NAME,
   chatWindowPin: "Поверх других окон",
   chatWindowPinHint: "Держать это окно поверх редактора",
   chatWindowUnpinHint: "Не держать это окно поверх редактора",

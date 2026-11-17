@@ -1317,7 +1317,6 @@ utiliser une.
   windowMaximize: "Agrandir",
   windowRestore: "Niveau inférieur",
   windowClose: "Fermer",
-  chatWindowTitle: AI_NAME,
   chatWindowPin: "Garder au premier plan",
   chatWindowPinHint: "Garder cette fenêtre au-dessus de l'éditeur",
   chatWindowUnpinHint: "Ne plus garder cette fenêtre au-dessus de l'éditeur",

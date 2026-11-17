@@ -6,6 +6,7 @@ import type {
   WorkspaceDocuments,
 } from "./bindings/files";
 import { iosFiles } from "./ios-files";
+import { TEXT_DOCUMENT_EXTENSIONS } from "./bindings/files";
 
 /*
  * A folder Android granted (a content:// tree) has no path the backend can
@@ -16,7 +17,7 @@ import { iosFiles } from "./ios-files";
 const MAX_FILES = 5000;
 const MAX_HITS = 200;
 const MAX_DOCUMENTS = 2000;
-const DOCUMENT = /\.(md|markdown|mdx|txt)$/i;
+const DOCUMENT = new RegExp(`\\.(${TEXT_DOCUMENT_EXTENSIONS.join("|")})$`, "i");
 
 async function walk(root: string): Promise<FolderIndex> {
   const files: IndexedFile[] = [];

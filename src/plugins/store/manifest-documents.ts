@@ -1,9 +1,10 @@
 import type { DocumentTypeContribution } from "./manifest";
 import { ManifestError, list, object, text, type Json } from "./manifest-json";
+import { TEXT_DOCUMENT_EXTENSIONS } from "../../platform/bindings/files";
 
 const EXTENSION = /^[a-z0-9][a-z0-9_-]{0,15}$/;
 /** Textus's own; a plugin can't take them over. */
-const OWN = ["md", "markdown", "mdx", "txt", "text"];
+const OWN: readonly string[] = TEXT_DOCUMENT_EXTENSIONS;
 
 const flag = (value: unknown, what: string): boolean => {
   if (value === undefined) return false;

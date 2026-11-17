@@ -1155,7 +1155,6 @@ export default {
   windowMaximize: "最大化",
   windowRestore: "向下还原",
   windowClose: "关闭",
-  chatWindowTitle: AI_NAME,
   chatWindowPin: "置顶",
   chatWindowPinHint: "让这个窗口始终显示在编辑器上方",
   chatWindowUnpinHint: "取消置顶",

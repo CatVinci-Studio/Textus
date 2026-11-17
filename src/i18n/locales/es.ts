@@ -1311,7 +1311,6 @@ para usar una.
   windowMaximize: "Maximizar",
   windowRestore: "Restaurar",
   windowClose: "Cerrar",
-  chatWindowTitle: AI_NAME,
   chatWindowPin: "Mantener en primer plano",
   chatWindowPinHint: "Mantener esta ventana por encima del editor",
   chatWindowUnpinHint: "Dejar de mantener esta ventana por encima del editor",

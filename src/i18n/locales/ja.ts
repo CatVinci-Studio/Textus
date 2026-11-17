@@ -1220,7 +1220,6 @@ ${AI_NAME}への執筆の指示です。すべての文書に適用されます�
   windowMaximize: "最大化",
   windowRestore: "元のサイズに戻す",
   windowClose: "閉じる",
-  chatWindowTitle: AI_NAME,
   chatWindowPin: "最前面に固定",
   chatWindowPinHint: "このウィンドウをエディターより前面に保つ",
   chatWindowUnpinHint: "最前面固定を解除",

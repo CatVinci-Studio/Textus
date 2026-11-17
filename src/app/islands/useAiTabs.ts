@@ -27,6 +27,7 @@ import type { TabState } from "../tabs/useTabState";
 import { pageOf } from "../tabs/page-tabs";
 import { isPhoneLayout } from "../../platform/phone-layout";
 import { conversationIn, onAiPress, setConversationOpener } from "./ai-tabs";
+import { chatTitles } from "../../ai/chat/chat-title";
 
 const NONE: string[] = [];
 
@@ -181,7 +182,7 @@ export function useAiTabs({
   const asked = useRef<{ id: string; beside: string } | null>(null);
 
   const wanted = !shown ? NONE : open.length ? open : [live ?? DRAFT];
-  const titles = new Map(history.map((entry) => [entry.id, entry.title]));
+  const titles = chatTitles(history);
   const { tabsRef, setTabs, updateTab } = tabs;
   // What the effects below follow: the AI tabs, the conversations wanted
   // and History's names - not every render of the window.

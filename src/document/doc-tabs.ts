@@ -6,6 +6,7 @@ import { lazyModule } from "../lazy/lazy-module";
 import { fs } from "../platform/ipc";
 import { detectFormat, toEditorText, toFileText } from "./file-format";
 import type { PluginTabView } from "../plugins/app-bridge";
+import { chatTitle } from "../ai/chat/chat-title";
 
 // Every bundled guide, by file name. A language without its own copy gets
 // the English one.
@@ -94,7 +95,7 @@ export function namePageTabs(view: string, title: PageTitle): void {
 /** What a tab's name leaves out, on hover: an AI tab's conversation. */
 export function tabTip(tab: DocTab, t: Strings): string | undefined {
   if (tab.view?.kind === "page" && tab.view.view === "ai")
-    return tab.view.title ?? t.chatNewConversation;
+    return chatTitle(tab.view.title, t);
   // An untitled document by its first line: drafts told apart.
   if (!tab.path && !tab.view) return firstLine(tab.content);
   return undefined;

@@ -84,9 +84,10 @@ fn file_name_of(path: &Path) -> String {
 /// The kinds the picker lists first; any other file can be attached too and
 /// is read as text when it is text.
 const SUPPORTED_EXTENSIONS: &[&str] = &[
-    "md", "markdown", "txt", "csv", "tsv", "json", "yaml", "yml", "svg", "pdf", "docx", "pptx",
-    "xlsx", "xlsm", "xlsb", "xls", "ods", "epub", "rtf", "html", "htm", "xhtml", "zip", "png",
-    "jpg", "jpeg", "gif", "webp", "bmp", "tif", "tiff", "ico", "heic", "heif", "avif",
+    "md", "markdown", "mdx", "txt", "text", "csv", "tsv", "json", "yaml", "yml", "svg", "pdf",
+    "docx", "pptx", "xlsx", "xlsm", "xlsb", "xls", "ods", "epub", "rtf", "html", "htm", "xhtml",
+    "zip", "png", "jpg", "jpeg", "gif", "webp", "bmp", "tif", "tiff", "ico", "heic", "heif",
+    "avif",
 ];
 
 /// A free name for `name` in `dir`: `report.pdf`, then `report (2).pdf`.
@@ -209,7 +210,8 @@ mod tests {
     #[test]
     fn every_offered_extension_is_one_the_reader_handles() {
         const AS_TEXT: &[&str] = &[
-            "md", "markdown", "txt", "csv", "tsv", "json", "yaml", "yml", "svg", "zip",
+            "md", "markdown", "mdx", "txt", "text", "csv", "tsv", "json", "yaml", "yml", "svg",
+            "zip",
         ];
         for ext in SUPPORTED_EXTENSIONS {
             assert!(

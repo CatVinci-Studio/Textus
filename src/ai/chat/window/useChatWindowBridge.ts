@@ -129,9 +129,9 @@ function useChatWindowLook(
   }, [pinned]);
   useEffect(() => {
     void setWindowTitle(
-      docTitle ? `${t.chatWindowTitle} - ${docTitle}` : t.chatWindowTitle,
+      docTitle ? `${t.agentPanelTitle} - ${docTitle}` : t.agentPanelTitle,
     );
-  }, [docTitle, t.chatWindowTitle]);
+  }, [docTitle, t.agentPanelTitle]);
 }
 
 /** A reopened conversation waits until its document is on screen; restored

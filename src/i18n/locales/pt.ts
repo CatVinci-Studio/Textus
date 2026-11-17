@@ -1295,7 +1295,6 @@ Habilidades ficam na pasta skills/ ao lado deste arquivo, um arquivo
   windowMaximize: "Maximizar",
   windowRestore: "Restaurar",
   windowClose: "Fechar",
-  chatWindowTitle: AI_NAME,
   chatWindowPin: "Manter na frente",
   chatWindowPinHint: "Manter esta janela na frente do editor",
   chatWindowUnpinHint: "Deixar de manter esta janela na frente do editor",

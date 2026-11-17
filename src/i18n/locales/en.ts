@@ -1245,7 +1245,6 @@ type /name in a conversation to use one.
   windowMaximize: "Maximize",
   windowRestore: "Restore Down",
   windowClose: "Close",
-  chatWindowTitle: AI_NAME,
   chatWindowPin: "Keep on top",
   chatWindowPinHint: "Keep this window above the editor",
   chatWindowUnpinHint: "Stop keeping this window above the editor",
