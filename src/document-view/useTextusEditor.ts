@@ -1,6 +1,6 @@
 import { type Dispatch, type SetStateAction, useRef } from "react";
 import { Editor, editorViewCtx } from "@milkdown/kit/core";
-import { listenerCtx } from "@milkdown/kit/plugin/listener";
+import { listenerCtx } from "../editor/editor-listener";
 import { useEditor } from "@milkdown/react";
 import {
   withEditorExtensions,

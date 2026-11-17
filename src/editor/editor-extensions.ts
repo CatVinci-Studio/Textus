@@ -4,7 +4,7 @@ import { orderedListAttr } from "@milkdown/kit/preset/commonmark";
 import { historyOpened, openedFromCtx, openWith } from "./opened-from";
 import type { TabLeft } from "./tab-left";
 import { clipboard } from "@milkdown/kit/plugin/clipboard";
-import { listener } from "@milkdown/kit/plugin/listener";
+import { listener } from "./editor-listener";
 import { $remark } from "@milkdown/kit/utils";
 import { createRemarkVerbatim, keepFor } from "./markdown/verbatim";
 import remarkCjkFriendly from "remark-cjk-friendly";

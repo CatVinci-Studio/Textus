@@ -1,7 +1,7 @@
 import { type RefObject, Suspense, useEffect, useRef } from "react";
 import { Editor, editorViewCtx } from "@milkdown/kit/core";
 import type { Node as ProseNode } from "@milkdown/kit/prose/model";
-import { listenerCtx } from "@milkdown/kit/plugin/listener";
+import { listenerCtx } from "../editor/editor-listener";
 import { getMarkdown, replaceAll } from "@milkdown/kit/utils";
 import { Milkdown, MilkdownProvider, useEditor } from "@milkdown/react";
 import {
