@@ -22,7 +22,6 @@ const HOOKS_NOW = {
   "src/ai/chat/window/useChatWindowHandoff.ts useChatWindowHandoff": 17,
   "src/ai/margin/useOwnRevisions.ts useOwnRevisions": 16,
   "src/ai/margin/useReviewNotes.ts useReviewNotes": 19,
-  "src/ai/revision/useKeptProposals.ts useKeptProposals": 9,
   "src/ai/writing/useGrammarPopover.ts useGrammarPopover": 12,
   "src/app/frame/useSidePanels.ts useSidePanels": 16,
   "src/app/islands/useAiTabs.ts useAiTabs": 12,
