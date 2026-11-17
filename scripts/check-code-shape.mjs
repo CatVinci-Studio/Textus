@@ -19,7 +19,6 @@ const LINES_NOW = {};
 const HOOKS_NOW = {
   "src/ai/chat/window/useChatWindowBridge.ts useChatWindowBridge": 17,
   "src/ai/chat/window/useChatWindowHandoff.ts useChatWindowHandoff": 17,
-  "src/ai/margin/useOwnRevisions.ts useOwnRevisions": 16,
   "src/ai/margin/useReviewNotes.ts useReviewNotes": 19,
   "src/app/frame/useSidePanels.ts useSidePanels": 16,
   "src/app/usePluginWindow.ts usePluginWindow": 24,

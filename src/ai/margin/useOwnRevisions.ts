@@ -1,6 +1,7 @@
 import { useEffect, useLayoutEffect, useRef, useState } from "react";
 import { editorViewCtx, serializerCtx } from "@milkdown/kit/core";
 import type { Node as ProseNode } from "@milkdown/kit/prose/model";
+import type { EditorView } from "@milkdown/kit/prose/view";
 import { Transform } from "@milkdown/kit/prose/transform";
 import { rejectChanges } from "./own-change-spans";
 import type { EditorRunner } from "../../editor/useEditorRunner";
@@ -29,6 +30,100 @@ import {
 } from "../../document/tracked-file";
 import { reportUndecided } from "../../document/undecided";
 
+type Kept = {
+  current: {
+    loadedFor: string | null;
+    baseSeen: ProseNode | null;
+    text: { base: ProseNode; text: string } | null;
+  };
+};
+
+/** The changes tracked in `view`; null while it isn't tracking. */
+function useOwnChanges(view: EditorView | null) {
+  const [changes, setChanges] = useState<OwnChange[] | null>(null);
+  useEffect(() => {
+    if (!view) return;
+    return watchOwnChanges(view, setChanges);
+  }, [view]);
+  return changes;
+}
+
+/** The ✓ / ✕ in the text. */
+function useOwnPicker(
+  view: EditorView | null,
+  t: Strings,
+  decide: (index: number, take: boolean | null) => void,
+) {
+  const decideRef = useLatest(decide);
+  useEffect(() => {
+    if (!view) return;
+    return setOwnPicker(view, {
+      labels: { take: t.proposalTakeSentence, keep: t.proposalKeepSentence },
+      decide: (index, take) => decideRef.current(index, take),
+    });
+  }, [view, t, decideRef]);
+}
+
+/** What the file holds while tracked, the original, kept for its file;
+ *  when the editor goes (its tab out of sight) with the document still
+ *  open, written out while the editor is there to write it. */
+function useOriginalKept(
+  filePath: string | null,
+  view: EditorView | null,
+  run: EditorRunner,
+  kept: Kept,
+) {
+  const original = useLatest(() => {
+    const base = view && ownRevisionKey.getState(view.state)?.base;
+    if (!base) return null;
+    const text = kept.current.text;
+    if (text?.base === base) return text.text;
+    return run((ctx) => ctx.get(serializerCtx)(base)) ?? null;
+  });
+  useEffect(() => {
+    if (!filePath || !view) return;
+    return trackFile(filePath, () => original.current());
+  }, [filePath, view, original]);
+  const pathNow = useLatest(filePath);
+  useLayoutEffect(
+    () => () => {
+      if (pathNow.current) leaveTracked(pathNow.current, original.current());
+    },
+    [pathNow, original],
+  );
+}
+
+/** The Track Changes menu: its check mark follows the document on screen,
+ *  and its items act on it. */
+function useTrackMenu({
+  view,
+  isActive,
+  changes,
+  toggle,
+  acceptAll,
+  rejectAll,
+}: {
+  view: EditorView | null;
+  isActive: boolean;
+  changes: OwnChange[] | null;
+  toggle: () => Promise<void>;
+  acceptAll: () => void;
+  rejectAll: () => void;
+}) {
+  useEffect(() => {
+    if (!view || !isActive) return;
+    setTrackingShown(changes !== null);
+  });
+
+  useWindowEvent(TRACK_CHANGES_EVENT, (e) => {
+    if (!view || !isActive) return;
+    const action = (e as CustomEvent<TrackChangesAction>).detail;
+    if (action === "toggle") void toggle();
+    else if (action === "accept-all") acceptAll();
+    else if (action === "reject-all") rejectAll();
+  });
+}
+
 /** Track My Changes for one document. The file holds the original with the
  *  changes accepted; the changes still undecided are kept beside it
  *  (document/tracked-file.ts), so tracking carries on when it reopens. */
@@ -44,60 +139,43 @@ export function useOwnRevisions({
   filePath: string | null;
   t: Strings;
 }) {
-  // Null while the document isn't tracking.
-  const [changes, setChanges] = useState<OwnChange[] | null>(null);
-  const loadedFor = useRef<string | null>(null);
-  // The original last seen, so only a change to it writes the file.
-  const baseSeen = useRef<ProseNode | null>(null);
-  // The original as the file spells it, while it is the one tracked.
-  const keptText = useRef<{ base: ProseNode; text: string } | null>(null);
-
   const view = run((ctx) => ctx.get(editorViewCtx)) ?? null;
-  useEffect(() => {
-    if (!view) return;
-    return watchOwnChanges(view, setChanges);
-  }, [view]);
+  const changes = useOwnChanges(view);
+  // Where it was read from, the original last seen (so only a change to it
+  // writes the file), and the original as the file spells it while it is
+  // the one tracked.
+  const kept = useRef<{
+    loadedFor: string | null;
+    baseSeen: ProseNode | null;
+    text: { base: ProseNode; text: string } | null;
+  }>({ loadedFor: null, baseSeen: null, text: null });
 
-  // The ✓ / ✕ in the text.
-  const decideRef = useLatest(decide);
-  useEffect(() => {
-    if (!view) return;
-    return setOwnPicker(view, {
-      labels: { take: t.proposalTakeSentence, keep: t.proposalKeepSentence },
-      decide: (index, take) => decideRef.current(index, take),
-    });
-  }, [view, t, decideRef]);
-
-  // The menu's check mark follows the document on screen.
-  useEffect(() => {
-    if (!view || !isActive) return;
-    setTrackingShown(changes !== null);
-  });
+  useOwnPicker(view, t, decide);
 
   // The original kept beside the file: tracking carries on where the file
   // still holds it and the editor opened with the revised text.
   useEffect(() => {
-    if (!filePath || !view || loadedFor.current === filePath) return;
-    if (loadedFor.current !== null || changes !== null) {
+    if (!filePath || !view || kept.current.loadedFor === filePath) return;
+    if (kept.current.loadedFor !== null || changes !== null) {
       // Saved under a new name: its tracking goes along.
-      loadedFor.current = filePath;
+      kept.current.loadedFor = filePath;
       return;
     }
-    const track = (kept: string) =>
+    const track = (original: string) =>
       run((ctx) => {
-        const base = parseMarkdownSource(ctx, kept);
+        const base = parseMarkdownSource(ctx, original);
         if (!base) return;
         // Until a change is accepted the file keeps the original as written.
-        keptText.current = { base, text: kept };
+        kept.current.text = { base, text: original };
         view.dispatch(
           view.state.tr.setMeta(ownRevisionKey, { type: "base", base }),
         );
-        baseSeen.current = base;
+        kept.current.baseSeen = base;
       });
     // The tab's last editor was tracking: this one carries on from there.
     const from = leftTracked(filePath);
     if (from !== null) {
-      loadedFor.current = filePath;
+      kept.current.loadedFor = filePath;
       track(from);
       return;
     }
@@ -107,7 +185,7 @@ export function useOwnRevisions({
       .catch(() => null)
       .then((text) => {
         if (!alive) return;
-        loadedFor.current = filePath;
+        kept.current.loadedFor = filePath;
         // Most files keep no original: nothing to serialize the document for.
         if (!text) return;
         run((ctx) => {
@@ -128,34 +206,14 @@ export function useOwnRevisions({
     if (filePath) reportUndecided(filePath, "own", changes?.length ?? 0);
   }, [filePath, changes]);
 
-  // What the file holds while tracked: the original.
-  const original = useLatest(() => {
-    const base = view && ownRevisionKey.getState(view.state)?.base;
-    if (!base) return null;
-    if (keptText.current?.base === base) return keptText.current.text;
-    return run((ctx) => ctx.get(serializerCtx)(base)) ?? null;
-  });
-  useEffect(() => {
-    if (!filePath || !view) return;
-    return trackFile(filePath, () => original.current());
-  }, [filePath, view, original]);
-  // The editor goes (its tab out of sight) with the document still open:
-  // the original stays what its file holds, written out while the editor
-  // is there to write it.
-  const pathNow = useLatest(filePath);
-  useLayoutEffect(
-    () => () => {
-      if (pathNow.current) leaveTracked(pathNow.current, original.current());
-    },
-    [pathNow, original],
-  );
+  useOriginalKept(filePath, view, run, kept);
 
   // A change accepted, or tracking started or stopped: the file follows.
   useEffect(() => {
-    if (!filePath || !view || loadedFor.current !== filePath) return;
+    if (!filePath || !view || kept.current.loadedFor !== filePath) return;
     const base = ownRevisionKey.getState(view.state)?.base ?? null;
-    if (baseSeen.current === base) return;
-    baseSeen.current = base;
+    if (kept.current.baseSeen === base) return;
+    kept.current.baseSeen = base;
     originalChanged(filePath);
   }, [filePath, view, changes]);
 
@@ -223,13 +281,7 @@ export function useOwnRevisions({
     view.dispatch(view.state.tr.setMeta(ownRevisionKey, { type: "stop" }));
   }
 
-  useWindowEvent(TRACK_CHANGES_EVENT, (e) => {
-    if (!view || !isActive) return;
-    const action = (e as CustomEvent<TrackChangesAction>).detail;
-    if (action === "toggle") void toggle();
-    else if (action === "accept-all") acceptAll();
-    else if (action === "reject-all") rejectAll();
-  });
+  useTrackMenu({ view, isActive, changes, toggle, acceptAll, rejectAll });
 
   return { changes, decide, acceptAll, rejectAll, toggle };
 }
