@@ -35,6 +35,8 @@ import { forgetWillExport } from "../contributions/will-export";
 import { forgetWillSave } from "../contributions/will-save";
 import { unwatchMetadata, watchMetadata } from "../workspace/metadata-cache";
 import { str, type Params, type PluginScope } from "./broker-scope";
+import { inOpenFolder } from "../may-open";
+import { absoluteIn } from "../../utils/path";
 import type { Endpoint, Handlers } from "./rpc";
 import { guarded } from "../api-permissions";
 import { grants } from "../grants";
@@ -124,6 +126,26 @@ export function withTimeout<T>(
       },
     );
   });
+}
+
+/** Events about one file (or a move), told only to a plugin that can read
+ *  it: in the window's folder, not in a hidden folder of it. */
+const FILE_EVENTS = new Set<keyof PluginEventMap>([
+  "didSave",
+  "fileCreate",
+  "fileChange",
+  "fileChangeOnDisk",
+  "fileRename",
+  "fileDelete",
+]);
+
+/** Whether the files a file event is about are ones plugins read. */
+export function fileEventReadable(data: unknown, root: string | null): boolean {
+  if (!root || typeof data !== "object" || data === null) return false;
+  const paths = ["path", "from", "to"]
+    .map((key) => (data as Record<string, unknown>)[key])
+    .filter((path): path is string => typeof path === "string");
+  return paths.some((path) => inOpenFolder(root, absoluteIn(root, path)));
 }
 
 /** The events that keep a plugin's `textus.env` current. */
@@ -393,14 +415,23 @@ export class PluginHost {
               ? onPluginEvent(event, (data) => {
                   if (data.plugin === this.id) this.event(event, data);
                 })
-              : event === "activeTab"
-                ? onPluginEvent(event, (data) =>
-                    this.event(
-                      event,
-                      seenBy(this.id, this.info.granted, data as PluginTabInfo),
-                    ),
-                  )
-                : onPluginEvent(event, (data) => this.event(event, data)),
+              : FILE_EVENTS.has(event)
+                ? onPluginEvent(event, (data) => {
+                    const root = getWindowAccess()?.rootPath() ?? null;
+                    if (fileEventReadable(data, root)) this.event(event, data);
+                  })
+                : event === "activeTab"
+                  ? onPluginEvent(event, (data) =>
+                      this.event(
+                        event,
+                        seenBy(
+                          this.id,
+                          this.info.granted,
+                          data as PluginTabInfo,
+                        ),
+                      ),
+                    )
+                  : onPluginEvent(event, (data) => this.event(event, data)),
         );
       },
       "plugin.readFile": ({ path }: Params) =>

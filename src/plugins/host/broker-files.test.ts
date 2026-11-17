@@ -143,3 +143,22 @@ it("sets a task's box on its line and nothing else", async () => {
     files["files.setTask"]({ path: "todo.md", line: 1, status: "xx" }),
   ).rejects.toThrow("status is one character.");
 });
+
+it("tells file events only of files a plugin can read", async () => {
+  const { fileEventReadable } = await import("./broker");
+  expect(fileEventReadable({ path: "/notes/a.md" }, "/notes")).toBe(true);
+  expect(fileEventReadable({ path: "/notes/.obsidian/x.json" }, "/notes")).toBe(
+    false,
+  );
+  expect(fileEventReadable({ path: "/private/diary.md" }, "/notes")).toBe(
+    false,
+  );
+  expect(fileEventReadable({ path: "/notes/a.md" }, null)).toBe(false);
+  // As a plugin gave it, relative to the folder.
+  expect(fileEventReadable({ path: "inbox/a.md" }, "/notes")).toBe(true);
+  expect(fileEventReadable({ path: "../private/a.md" }, "/notes")).toBe(false);
+  // A move into the folder, or out of it, is told.
+  expect(
+    fileEventReadable({ from: "/private/a.md", to: "/notes/a.md" }, "/notes"),
+  ).toBe(true);
+});
