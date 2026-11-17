@@ -263,6 +263,21 @@ test("a split the window has no room for is not made, and says why", async ({
   await expect(islands).toHaveCount(3);
   await expect(rows.last().getByRole("tab")).toHaveCount(2);
 
+  // Its own island's edge, no room for another: it stays, and is told why.
+  await page.locator(".notice-text").waitFor({ state: "hidden" });
+  const own = (await rows.last().getByRole("tab").last().boundingBox())!;
+  await page.mouse.move(own.x + own.width / 2, own.y + own.height / 2);
+  await page.mouse.down();
+  await page.mouse.move(own.x, own.y + 150, { steps: 10 });
+  await page.mouse.move(last.x + last.width - 6, last.y + last.height / 2, {
+    steps: 25,
+  });
+  await page.waitForTimeout(700);
+  await page.mouse.up();
+  await expect(page.locator(".notice-text")).toBeVisible();
+  await expect(islands).toHaveCount(3);
+  await expect(rows.last().getByRole("tab")).toHaveCount(2);
+
   // Wide but short (a phone on its side, the keyboard up), the window says
   // it is too short, not too narrow.
   await page.locator(".notice-text").waitFor({ state: "hidden" });

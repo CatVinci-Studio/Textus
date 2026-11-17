@@ -7,13 +7,14 @@ import {
 import type { SplitLayout } from "../../engine/layout/ops";
 import type { SplitDirection } from "../../engine/layout/tree";
 import { currentStrings } from "../../i18n/current";
-import { refusedForHeight } from "../../engine/frame/frame-store";
+import type { NoRoom } from "../../engine/frame/frame-store";
 
-/** Says a split wasn't made for want of room: the menu, a tab dropped
- *  on an edge, a document opened beside. */
-export function sayNoRoom(): void {
+/** Says why a split wasn't made for want of room: the menu, a tab or a
+ *  file dropped on an edge, a document opened beside. */
+export function sayNoRoom(why: NoRoom): void {
+  if (!why) return;
   const t = currentStrings();
-  showNotice(refusedForHeight() ? t.splitNoRoomLow : t.splitNoRoom, {
+  showNotice(why === "low" ? t.splitNoRoomLow : t.splitNoRoom, {
     tone: "warning",
   });
 }
@@ -21,7 +22,7 @@ export function sayNoRoom(): void {
 /** Splits the island in use, or says why the window has no room for it:
  *  the documents never go under their least width for a split. */
 export function splitHere(direction: SplitDirection): void {
-  if (!splitEditor(direction)) sayNoRoom();
+  sayNoRoom(splitEditor(direction));
 }
 
 /** Shows `tabId` beside `from` (openBeside), or says why it can't. `say`
@@ -31,7 +32,8 @@ export function openBesideOrSay(
   from: string | null,
   say = true,
 ): void {
-  if (!openBeside(tabId, from) && say) sayNoRoom();
+  const why = openBeside(tabId, from);
+  if (say) sayNoRoom(why);
 }
 
 /** `now` with `tabId` beside `from` as it arrives; else `now`, and the
@@ -43,6 +45,6 @@ export function besideOrSay(
   say = true,
 ): SplitLayout {
   const { next, noRoom } = besideLayout(now, tabId, from);
-  if (noRoom && say) sayNoRoom();
+  if (say) sayNoRoom(noRoom);
   return next ?? now;
 }

@@ -139,16 +139,21 @@ export function shortGivingWay(
   root: LayoutNode,
   keep: ReadonlySet<string>,
 ): number {
-  const { short, panels, low } = roomFor(root, keep);
-  lastLow = !!low;
-  return Math.max(0, Math.ceil(short - panels - sidebarRoom - 0.5));
+  return refusal(root, keep).short;
 }
 
-let lastLow = false;
-/** Whether the last layout refused lacked height, not width: what the
- *  window says about it (sayNoRoom). */
-export function refusedForHeight(): boolean {
-  return lastLow;
+/** Why a layout has no room: too narrow, or too low (a split upon a split
+ *  that leaves an island under its least height). False: it has room. */
+export type NoRoom = false | "narrow" | "low";
+
+/** shortGivingWay, and why it is short: what the window says (sayNoRoom). */
+export function refusal(
+  root: LayoutNode,
+  keep: ReadonlySet<string>,
+): { short: number; noRoom: NoRoom } {
+  const { short, panels, low } = roomFor(root, keep);
+  const lacks = Math.max(0, Math.ceil(short - panels - sidebarRoom - 0.5));
+  return { short: lacks, noRoom: lacks ? (low ? "low" : "narrow") : false };
 }
 
 /** A layout set into too little room: the panels, then the sidebar, give

@@ -24,7 +24,7 @@ import {
   windowLayout,
 } from "../../engine/layout/store";
 import { paneById } from "../../engine/layout/tree";
-import { frameLayout } from "../../engine/frame/frame-store";
+import { frameLayout, type NoRoom } from "../../engine/frame/frame-store";
 import { setDragging } from "../../engine/controls/document-drop";
 import { commitDrop, dropPlan, roomMarks } from "./split-drop";
 import { sayNoRoom } from "../menu/split-here";
@@ -44,8 +44,9 @@ interface Place {
   next: SplitLayout | null | undefined;
   shown: SplitLayout | null;
   target?: DropTarget;
-  /** Aimed at an edge with no room for an island: it joins the one there. */
-  noRoom?: boolean;
+  /** Aimed at an edge with no room for an island: it joins the one there,
+   *  or stays where it was; why is said as it is let go. */
+  noRoom?: NoRoom;
 }
 
 /**
@@ -120,7 +121,18 @@ export function pullTab(
     }
     if (!target) return null;
     const { next, noRoom } = dropPlan(base, tabId, target);
-    if (next === undefined) return null;
+    // Its own island's edge with no room: it stays, and is told why.
+    if (next === undefined)
+      return noRoom
+        ? {
+            key: `stay:${target.zone}`,
+            opens: false,
+            next,
+            shown: base,
+            target,
+            noRoom,
+          }
+        : null;
     const own = paneOf(base, tabId);
     const middle = target.zone === "center" ? paneOf(base, target.tabId) : null;
     // Its own island's middle: where it came from.
@@ -240,12 +252,12 @@ export function pullTab(
           return;
         }
         const place = current;
+        sayNoRoom(place?.noRoom ?? false);
         if (place && place.next !== undefined) {
           opts.activate(tabId);
           // The layout it showed, made: the same panes, so nothing jumps;
           // the pill lands where its room was.
           commitDrop(place.next);
-          if (place.noRoom) sayNoRoom();
           const room = marks.room();
           if (room && !lift) {
             ghost.land(room);
