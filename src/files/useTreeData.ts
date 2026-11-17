@@ -21,6 +21,15 @@ function savedScope(): SearchScope {
  *  `generation`, bumped by Refresh to remount every node and re-index.
  *  `reload` re-reads only the folders named and opens them; `refresh`
  *  re-reads them as they are. */
+/** A count per folder, bumped for the folders given. */
+function useFolderCounts() {
+  const [counts, setCounts] = useState<Record<string, number>>({});
+  const bumpAll = useCallback((...dirs: string[]) => {
+    setCounts((prev) => bump(prev, dirs));
+  }, []);
+  return [counts, bumpAll] as const;
+}
+
 export function useTreeView(base: string) {
   const [generation, setGeneration] = useState(0);
   const [sort, setSort] = useState<TreeSort>(savedSort);
@@ -28,14 +37,8 @@ export function useTreeView(base: string) {
   const [showHidden, setShowHidden] = useState(
     () => getUiState("fileTreeHidden") === "1",
   );
-  const [versions, setVersions] = useState<Record<string, number>>({});
-  const reload = useCallback((...dirs: string[]) => {
-    setVersions((prev) => bump(prev, dirs));
-  }, []);
-  const [stale, setStale] = useState<Record<string, number>>({});
-  const refresh = useCallback((dirs: string[]) => {
-    setStale((prev) => bump(prev, dirs));
-  }, []);
+  const [versions, reload] = useFolderCounts();
+  const [stale, refresh] = useFolderCounts();
   usePluginWrites(base, refresh);
   const refreshed = useRefreshOnFocus();
   return {
@@ -77,7 +80,7 @@ function bump(counts: Record<string, number>, dirs: string[]) {
  *  shows in the folders it touched,
  *  read again together a moment later. `base` is the opened folder, which a
  *  plugin's relative paths are in. */
-function usePluginWrites(base: string, refresh: (dirs: string[]) => void) {
+function usePluginWrites(base: string, refresh: (...dirs: string[]) => void) {
   useEffect(() => {
     const dirs = new Set<string>();
     let timer: ReturnType<typeof setTimeout> | undefined;
@@ -93,7 +96,7 @@ function usePluginWrites(base: string, refresh: (dirs: string[]) => void) {
         dirs.add(dir);
       clearTimeout(timer);
       timer = setTimeout(() => {
-        refresh([...dirs]);
+        refresh(...dirs);
         dirs.clear();
       }, 150);
     };
