@@ -18,7 +18,6 @@ const LINES_NOW = {};
  *  together, waiting to be split by concern. */
 const HOOKS_NOW = {
   "src/document-view/usePaperWriter.ts usePaperWriter": 12,
-  "src/editor/find/useFindReplace.ts useFindReplace": 32,
 };
 
 /** Not held to the line limit: tables, not logic. */
