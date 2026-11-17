@@ -121,6 +121,28 @@ textus.editor = {
       quiet(call("editor.unregisterDiagnostics", { id: name }));
     });
   },
+  // Inline syntax shown as it means (`||spoiler||`); display only, the
+  // text stays as written.
+  registerSyntax: function (id, syntax) {
+    var name = String(id);
+    var pattern = syntax.pattern;
+    var regex = pattern instanceof RegExp;
+    syntaxes.set(name, syntax);
+    call("editor.registerSyntax", {
+      id: name,
+      pattern: regex ? pattern.source : String(pattern),
+      flags: regex ? pattern.flags : "",
+      style: String(syntax.style),
+      tone: syntax.tone ? String(syntax.tone) : undefined,
+    }).catch(function (err) {
+      notify("log", { level: "error", message: String(err.message || err) });
+    });
+    return disposable(function () {
+      if (syntaxes.get(name) !== syntax) return;
+      syntaxes.delete(name);
+      quiet(call("editor.unregisterSyntax", { id: name }));
+    });
+  },
   onDidChangeActive: on("activeDocument"),
   onDidChange: on("documentChange"),
   onDidChangeSelection: on("selection"),

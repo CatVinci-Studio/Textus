@@ -7,6 +7,7 @@ import { withAiPlugins, type PendingEditCallbacks } from "../ai/editor-plugins";
 import { pluginCodeBlocks } from "./plugins/plugin-code-blocks";
 import { pluginDecorations } from "./plugins/plugin-decorations";
 import { pluginDiagnostics } from "./plugins/plugin-diagnostics";
+import { pluginSyntax } from "./plugins/plugin-syntax";
 import { pluginVisible } from "./plugins/plugin-visible";
 import type { ReviewNote } from "../ai/margin/review-notes-plugin";
 import type { Settings } from "../prefs/SettingsContext";
@@ -52,5 +53,6 @@ export function withEditorExtensions(
     .use(pluginCodeBlocks(docPath))
     .use(pluginDecorations(docPath))
     .use(pluginDiagnostics(docPath))
+    .use(pluginSyntax)
     .use(pluginVisible);
 }

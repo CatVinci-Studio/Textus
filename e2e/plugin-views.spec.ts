@@ -338,3 +338,46 @@ test("a plugin's slip is underlined, explained on the slip card, and fixed from 
   await expect(slip).toHaveCount(0);
   await expect.poll(() => sourceOf(page)).toBe("# A\n\n## Notes\n\nText");
 });
+
+test("a plugin's inline syntax is shown as it means, its source back under the caret", async ({
+  page,
+}) => {
+  await openWithPlugins(page, {
+    plugins: {},
+    folder: {
+      "/work/a.md":
+        "Who? ||the butler|| it was.\n\nRead {漢字|かんじ} and `||code||`.\n",
+    },
+  });
+  await openPath(page, "/work/a.md");
+  const editor = page.locator('[data-active-tab="true"] .ProseMirror');
+  // As the plugin host does it, through the dev server's own module.
+  await page.evaluate(async () => {
+    const path = "/src/plugins/contributions/syntax.ts";
+    const { addSyntax } = await import(/* @vite-ignore */ path);
+    addSyntax("example\nspoiler", {
+      pattern: "\\|\\|(?<text>[^|]+)\\|\\|",
+      style: "spoiler",
+    });
+    addSyntax("example\nruby", {
+      pattern: "\\{(?<text>[^{}|]+)\\|(?<note>[^{}|]+)\\}",
+      style: "ruby",
+    });
+  });
+  const spoiler = editor.locator(".plugin-syntax-spoiler");
+  await expect(spoiler).toHaveCount(1);
+  await expect(spoiler).toHaveText("the butler");
+  await expect(editor.locator(".plugin-syntax-ruby")).toHaveAttribute(
+    "data-ruby",
+    "かんじ",
+  );
+  // Nothing in code; the text is as written.
+  await expect(editor.locator("code .plugin-syntax")).toHaveCount(0);
+  await expect
+    .poll(() => sourceOf(page))
+    .toBe("Who? ||the butler|| it was.\n\nRead {漢字|かんじ} and `||code||`.");
+  await expect(editor.locator(".plugin-syntax-hidden").first()).toBeHidden();
+  await spoiler.click();
+  await expect(spoiler).toHaveClass(/is-touched/);
+  await expect(editor.locator(".plugin-syntax-source")).toHaveCount(2);
+});

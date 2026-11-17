@@ -34,6 +34,7 @@ import {
   removeDecorationProvider,
   type PluginDecoration,
 } from "../contributions/decorations";
+import { addSyntax, removeSyntaxes } from "../contributions/syntax";
 import {
   addDiagnosticProvider,
   removeDiagnosticProviders,
@@ -247,6 +248,21 @@ export function editorHandlers(p: PluginScope) {
     },
     "editor.unregisterDiagnostics": ({ id }: Params) =>
       removeDiagnosticProviders((key) => key === `${p.id}\n${String(id)}`),
+    "editor.registerSyntax": (syntax: Params) => {
+      const name = str(syntax.id, "id");
+      const added = addSyntax(`${p.id}\n${name}`, {
+        pattern: str(syntax.pattern, "pattern"),
+        flags: typeof syntax.flags === "string" ? syntax.flags : "",
+        style: str(syntax.style, "style"),
+        tone: typeof syntax.tone === "string" ? syntax.tone : undefined,
+      });
+      if (!added)
+        throw new Error(
+          `syntax "${name}": a pattern that matches some text, and a style Textus has`,
+        );
+    },
+    "editor.unregisterSyntax": ({ id }: Params) =>
+      removeSyntaxes((key) => key === `${p.id}\n${String(id)}`),
     "editor.captureKeys": (capture: Params | null) => {
       const held = setKeyCapture(
         p.id,
@@ -272,6 +288,7 @@ export function stopPluginEditor(plugin: string): void {
   removeHoverProvider(plugin);
   removeDecorationProvider(plugin);
   removeDiagnosticProviders((_key, provider) => provider.plugin === plugin);
+  removeSyntaxes((key) => key.startsWith(`${plugin}\n`));
   for (const remove of registeredBlockTypes.get(plugin)?.values() ?? [])
     remove();
   registeredBlockTypes.delete(plugin);

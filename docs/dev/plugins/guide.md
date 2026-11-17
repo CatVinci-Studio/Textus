@@ -283,6 +283,13 @@ severity, message, fix }` - within 200 ms. Textus underlines them in the
   severity's colour and explains each on the grammar check's card, with
   Apply for a `fix` and Ignore; the text changes only when the user
   applies one.
+- Show a syntax of your own: from API 1.8 (preview) `registerSyntax(id,
+{ pattern, style, tone })` shows matches of an inline syntax as they
+  mean - `||a spoiler||` covered, `{漢字|かんじ}` with its reading above.
+  The pattern's `text` group is styled (`"highlight"`, `"underline"`,
+  `"muted"`, `"spoiler"`, `"ruby"` with the `note` group above it) and the
+  rest of a match hides until the caret is in it. The text stays as
+  written - an export keeps it - and code is left alone. No permission.
 - Help with it: `registerCompletion(id, provider)` for completions as you
   type, `registerHover({ provideHover(target) })` for a card over a link,
   a wikilink or a citation.

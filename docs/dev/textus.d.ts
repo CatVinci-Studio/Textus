@@ -757,6 +757,21 @@ declare global {
           ): Diagnostic[] | Promise<Diagnostic[]>;
         },
       ): Disposable;
+      /** From 1.8, preview: inline syntax shown as it means - `||a
+       *  spoiler||`, `{漢字|かんじ}`. The words in the pattern's `text`
+       *  group are styled and the rest of a match is hidden until the caret
+       *  is in it; without that group all of it is styled. "ruby" sets the
+       *  `note` group above the words. Only the look changes: the text stays
+       *  as written, in reading views too, and an export keeps it. Not in
+       *  code. Needs no permission. */
+      registerSyntax(
+        id: string,
+        syntax: {
+          pattern: RegExp | string;
+          style: "highlight" | "underline" | "muted" | "spoiler" | "ruby";
+          tone?: "accent" | "warning" | "danger" | "success";
+        },
+      ): Disposable;
       /** Another document came to the front (or none). */
       onDidChangeActive: Event<{ path: string | null }>;
       /** Its text changed: once typing pauses, not on every key. 1.1:

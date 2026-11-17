@@ -21,7 +21,8 @@ import {
 } from "../../plugins/views/plugin-views";
 import { setPreviewExtras } from "../../editor/preview-extras";
 
-// Every preview draws what plugins draw (a chart, a board), as documents do.
+// Every preview draws what plugins draw (a chart, a board, their inline
+// syntax), as documents do.
 setPreviewExtras(() =>
   import("../../document-view/plugins/plugin-code-blocks").then(
     (m) => m.withPluginBlocks,
