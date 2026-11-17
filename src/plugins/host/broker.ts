@@ -20,6 +20,7 @@ import {
 import { fileHandlers } from "./broker-files";
 import { layoutHandlers, seenBy } from "./broker-layout";
 import { editorHandlers, stopPluginEditor } from "./broker-editor";
+import { historyHandlers, stopPluginHistory } from "./broker-history";
 import { metadataHandlers } from "./broker-metadata";
 import { gitHandlers } from "./broker-git";
 import { stopPluginUi, uiHandlers } from "./broker-ui";
@@ -268,6 +269,7 @@ export class PluginHost {
     this.subscriptions.clear();
     stopPluginUi(this.id);
     stopPluginEditor(this.id);
+    stopPluginHistory(this.id);
     forgetListViews(this.id);
     forgetEmbeds(this.id);
     forgetWillSave(this.id);
@@ -464,6 +466,7 @@ export class PluginHost {
       ...scheduleHandlers(scope),
       ...appearanceHandlers(scope),
       ...textHandlers(),
+      ...historyHandlers(scope),
     };
   }
 }

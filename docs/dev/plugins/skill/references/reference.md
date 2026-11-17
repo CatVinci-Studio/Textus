@@ -113,32 +113,33 @@ Values kept for one document.
 
 ## Api
 
-| Member                   |                                                                                          |
-| ------------------------ | ---------------------------------------------------------------------------------------- |
-| `env: Env`               |                                                                                          |
-| `l10n: L10n`             |                                                                                          |
-| `commands: Commands`     |                                                                                          |
-| `ui: Ui`                 |                                                                                          |
-| `layout: Layout`         |                                                                                          |
-| `views: Views`           |                                                                                          |
-| `editor: Editor`         |                                                                                          |
-| `files: Files`           |                                                                                          |
-| `metadata: Metadata`     |                                                                                          |
-| `git: Git`               | From 1.4.3: the folder's Git history (files.read; committing, git.commit). Desktop only. |
-| `dates: Dates`           | From 1.3.10: no permission, nothing leaves the plugin's frame.                           |
-| `templates: Templates`   |                                                                                          |
-| `net: Net`               |                                                                                          |
-| `settings: Settings`     |                                                                                          |
-| `ai: Ai`                 |                                                                                          |
-| `plugins: Plugins`       |                                                                                          |
-| `uri: Uri`               |                                                                                          |
-| `export: Export`         |                                                                                          |
-| `schedule: Schedule`     | 1.1: jobs Textus fires on time (notifications, background).                              |
-| `notify: Notify`         | 1.1: system notifications (notifications).                                               |
-| `app: App`               | 1.1: whether Textus is in front, behind, or has no window.                               |
-| `appearance: Appearance` | 1.6: colours over the theme (appearance).                                                |
-| `text: Text`             | 1.7: text as the app reads it.                                                           |
-| `path: Path`             | From 1.8: paths worked out in the plugin's frame; no permission.                         |
+| Member                   |                                                                                                             |
+| ------------------------ | ----------------------------------------------------------------------------------------------------------- |
+| `env: Env`               |                                                                                                             |
+| `l10n: L10n`             |                                                                                                             |
+| `commands: Commands`     |                                                                                                             |
+| `ui: Ui`                 |                                                                                                             |
+| `layout: Layout`         |                                                                                                             |
+| `views: Views`           |                                                                                                             |
+| `editor: Editor`         |                                                                                                             |
+| `files: Files`           |                                                                                                             |
+| `metadata: Metadata`     |                                                                                                             |
+| `git: Git`               | From 1.4.3: the folder's Git history (files.read; committing, git.commit). Desktop only.                    |
+| `dates: Dates`           | From 1.3.10: no permission, nothing leaves the plugin's frame.                                              |
+| `templates: Templates`   |                                                                                                             |
+| `net: Net`               |                                                                                                             |
+| `settings: Settings`     |                                                                                                             |
+| `ai: Ai`                 |                                                                                                             |
+| `plugins: Plugins`       |                                                                                                             |
+| `uri: Uri`               |                                                                                                             |
+| `export: Export`         |                                                                                                             |
+| `schedule: Schedule`     | 1.1: jobs Textus fires on time (notifications, background).                                                 |
+| `notify: Notify`         | 1.1: system notifications (notifications).                                                                  |
+| `app: App`               | 1.1: whether Textus is in front, behind, or has no window.                                                  |
+| `appearance: Appearance` | 1.6: colours over the theme (appearance).                                                                   |
+| `text: Text`             | 1.7: text as the app reads it.                                                                              |
+| `path: Path`             | From 1.8: paths worked out in the plugin's frame; no permission.                                            |
+| `history: History`       | From 1.8: past versions kept elsewhere (Git, sync), offered by one plugin and read by another (files.read). |
 
 ## Env
 
@@ -986,6 +987,28 @@ From 1.7: text read as the app reads it.
 | `compareNames(a: string, b: string): number`                                      | Names in the file tree's order: "Week2" before "Week10", case and accents aside, in the UI language. For `Array.sort`.                     |
 | `parseYaml(yaml: string): Promise<Record<string, unknown>>`                       | YAML read in full (YAML 1.2): block text, lists of maps, quoting. {} for YAML that isn't a map; rejects YAML that can't be read. From 1.8. |
 | `stringifyYaml(value: unknown): Promise<string>`                                  | A value written as YAML, without a trailing line break. From 1.8.                                                                          |
+
+## HistoryVersion
+
+One past version of a document, as a source keeps it.
+
+| Member            |                       |
+| ----------------- | --------------------- |
+| `id: string`      |                       |
+| `at: string`      | When, as an ISO date. |
+| `label?: string`  |                       |
+| `author?: string` |                       |
+
+## History
+
+Where a document's past versions are kept besides Textus's own: a plugin offers its source (Git, a sync service), another - Version History - lists them all and reads a version. Needs files.read. From 1.8.
+
+| Member                                                                                                                                                                                                                      |                                                              |
+| --------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- | ------------------------------------------------------------ |
+| `registerSource(id: string, source: { label: string; versions(path: string): HistoryVersion[] \| Promise<HistoryVersion[]>; read(path: string, version: string): string \| null \| Promise<string \| null>; }): Disposable` | Offers a source named `id` among the plugin's own.           |
+| `sources(): Promise<{ id: string; label: string; plugin: string }[]>`                                                                                                                                                       | Every source offered now; `id` is "<plugin id>/<source id>". |
+| `versions(source: string, path: string): Promise<HistoryVersion[]>`                                                                                                                                                         | A source's versions of `path`, newest first.                 |
+| `read(source: string, path: string, version: string): Promise<string>`                                                                                                                                                      | One version's text.                                          |
 
 ## Path
 

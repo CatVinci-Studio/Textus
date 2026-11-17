@@ -185,6 +185,14 @@ var handlers = {
     var controller = embedAsks.get(params.request);
     if (controller) controller.abort();
   },
+  $historyVersions: async function (params) {
+    var source = historySources.get(params.id);
+    return source ? plain((await source.versions(params.path)) || []) : [];
+  },
+  $historyRead: async function (params) {
+    var source = historySources.get(params.id);
+    return source ? await source.read(params.path, params.version) : null;
+  },
   $contextMenu: async function (params) {
     var provide = menuProviders[params.where];
     return provide ? plain((await provide(params.target)) || []) : [];

@@ -168,6 +168,9 @@ declare global {
       text: Text;
       /** From 1.8: paths worked out in the plugin's frame; no permission. */
       path: Path;
+      /** From 1.8: past versions kept elsewhere (Git, sync), offered by one
+       *  plugin and read by another (files.read). */
+      history: History;
     }
 
     interface Env {
@@ -1685,6 +1688,42 @@ declare global {
       parseYaml(yaml: string): Promise<Record<string, unknown>>;
       /** A value written as YAML, without a trailing line break. From 1.8. */
       stringifyYaml(value: unknown): Promise<string>;
+    }
+
+    /** One past version of a document, as a source keeps it. */
+    interface HistoryVersion {
+      id: string;
+      /** When, as an ISO date. */
+      at: string;
+      label?: string;
+      author?: string;
+    }
+
+    /** Where a document's past versions are kept besides Textus's own: a
+     *  plugin offers its source (Git, a sync service), another - Version
+     *  History - lists them all and reads a version. Needs files.read.
+     *  From 1.8. */
+    interface History {
+      /** Offers a source named `id` among the plugin's own. */
+      registerSource(
+        id: string,
+        source: {
+          label: string;
+          /** The document's versions here, any order. */
+          versions(path: string): HistoryVersion[] | Promise<HistoryVersion[]>;
+          /** A version's text; null when it has none. */
+          read(
+            path: string,
+            version: string,
+          ): string | null | Promise<string | null>;
+        },
+      ): Disposable;
+      /** Every source offered now; `id` is "<plugin id>/<source id>". */
+      sources(): Promise<{ id: string; label: string; plugin: string }[]>;
+      /** A source's versions of `path`, newest first. */
+      versions(source: string, path: string): Promise<HistoryVersion[]>;
+      /** One version's text. */
+      read(source: string, path: string, version: string): Promise<string>;
     }
 
     /** Paths as Textus writes them: "/" between parts on every system; a

@@ -235,6 +235,39 @@ textus.text = {
   },
 };
 
+// A document's past versions kept elsewhere (Git, a sync service): a
+// plugin offers its source, another (Version History) lists and reads them.
+textus.history = {
+  registerSource: function (id, source) {
+    id = String(id);
+    historySources.set(id, source);
+    quiet(
+      call("history.registerSource", { id: id, label: String(source.label) }),
+    );
+    return disposable(function () {
+      if (historySources.get(id) !== source) return;
+      historySources.delete(id);
+      quiet(call("history.unregisterSource", { id: id }));
+    });
+  },
+  sources: function () {
+    return call("history.sources");
+  },
+  versions: function (source, path) {
+    return call("history.versions", {
+      source: String(source),
+      path: String(path),
+    });
+  },
+  read: function (source, path, version) {
+    return call("history.read", {
+      source: String(source),
+      path: String(path),
+      version: String(version),
+    });
+  },
+};
+
 // Paths as Textus writes them: "/" between parts on every system (a "\\"
 // is read as one), no permission, nothing leaves the frame.
 textus.path = (function () {
