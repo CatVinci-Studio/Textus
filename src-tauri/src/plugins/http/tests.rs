@@ -68,5 +68,20 @@ async fn a_cancelled_request_answers_at_once() {
     let (answer, ()) = tokio::join!(work, cancel);
     assert_eq!(answer, Err("cancelled".to_string()));
     assert!(started.elapsed() < Duration::from_secs(5));
-    assert!(locked(&PENDING).is_empty());
+    assert!(!locked(&PENDING).contains_key(&("test.cancel".into(), "r1".into())));
+}
+
+#[tokio::test]
+async fn a_second_request_under_the_same_id_leaves_the_first_running() {
+    let slow = |n| async move {
+        tokio::time::sleep(Duration::from_millis(80)).await;
+        Ok(n)
+    };
+    let first = cancellable("test.twice", Some("1".into()), slow(1));
+    let second = async {
+        tokio::time::sleep(Duration::from_millis(10)).await;
+        cancellable("test.twice", Some("1".into()), slow(2)).await
+    };
+    let (a, b) = tokio::join!(first, second);
+    assert_eq!((a, b), (Ok(1), Ok(2)));
 }

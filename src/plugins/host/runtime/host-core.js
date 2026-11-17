@@ -64,8 +64,10 @@ function notify(method, params) {
       app.notify(method, params);
     });
 }
-// net.fetch's requests given a signal, each named to cancel it by.
+// net.fetch's requests given a signal, each named to cancel it by; the
+// runtime's own mark keeps them apart from another runtime's of the plugin.
 var fetches = 0;
+var fetchMark = Math.random().toString(36).slice(2);
 function aborted() {
   var err = new Error("The request was cancelled.");
   err.name = "AbortError";

@@ -128,8 +128,9 @@ window.addEventListener("message", function receive(event) {
     event.ports[0],
     {
       message: function (params) {
-        // Before the page listens, kept for its first listener.
-        if (!receivers.size) held.push(params.message);
+        // Before the page listens, kept for its first listener; a page
+        // that listens only for DOM messages keeps no more than a few.
+        if (!receivers.size && held.push(params.message) > HELD) held.shift();
         receivers.forEach(function (receive) {
           receive(params.message);
         });

@@ -30,6 +30,14 @@ type PageApi = {
     options?: { weekStart?: number },
   ) => { date: string; day: number; inMonth: boolean }[];
   pickDate: (value: string | null, anchor: Element) => Promise<string | null>;
+  resizeHandle: (
+    handle: Element,
+    options: {
+      get: () => number;
+      set: (n: number) => void;
+      done?: (n: number) => void;
+    },
+  ) => unknown;
 };
 const page = () => (window as unknown as { textus: PageApi }).textus;
 const settle = () => new Promise((r) => setTimeout(r, 0));
@@ -54,6 +62,19 @@ describe("what every plugin page gets", () => {
     document.body.append(span);
     await settle();
     expect(span.textContent).toBe("«title»");
+
+    // Rows added one by one are read once each, not the list per row.
+    const t = vi.spyOn(page(), "t");
+    const list = document.createElement("ul");
+    document.body.append(list);
+    for (let i = 0; i < 30; i++) {
+      const li = document.createElement("li");
+      li.setAttribute("data-t", "row");
+      list.append(li);
+    }
+    await settle();
+    expect(t.mock.calls.filter(([key]) => key === "row").length).toBe(30);
+    t.mockRestore();
   });
 
   it("makes a switch one tab stop, the arrows choosing in it", async () => {
@@ -156,6 +177,33 @@ describe("what every plugin page gets", () => {
     day.click();
     await expect(picked).resolves.toBe("2026-11-20");
     expect(document.querySelector(".tx-popover")).toBeNull();
+
+    // A page that clears itself while the month is open still gets an answer.
+    const gone = page().pickDate(null, document.getElementById("at")!);
+    document.body.textContent = "";
+    document.dispatchEvent(new MouseEvent("pointerdown", { bubbles: true }));
+    await expect(gone).resolves.toBeNull();
+  });
+
+  it("ends a resize the browser takes back for a pan", () => {
+    document.body.innerHTML = `<div id="h"></div>`;
+    let size = 100;
+    const done = vi.fn();
+    page().resizeHandle(document.getElementById("h")!, {
+      get: () => size,
+      set: (n) => (size = n),
+      done,
+    });
+    const pointer = (type: string, x: number, target: EventTarget = window) =>
+      target.dispatchEvent(
+        new MouseEvent(type, { bubbles: true, clientX: x, button: 0 }),
+      );
+    pointer("pointerdown", 10, document.getElementById("h")!);
+    pointer("pointermove", 30);
+    pointer("pointercancel", 30);
+    expect(done).toHaveBeenCalledWith(120);
+    pointer("pointermove", 80);
+    expect(size).toBe(120);
   });
 
   it("gives a dragged list's item its new place, Esc none", () => {

@@ -31,6 +31,8 @@ it("keeps what the plugin sent before the page listens, and logs its errors", ()
       ports: [new MessageChannel().port1],
     }),
   );
+  // A page that listens only for DOM messages keeps no more than a few.
+  for (let i = 0; i < 200; i++) handlers.message({ message: i });
   handlers.message({ message: "early" });
   const page = scope.textus as Page;
   const got: unknown[] = [];
@@ -39,7 +41,8 @@ it("keeps what the plugin sent before the page listens, and logs its errors", ()
   const old: unknown[] = [];
   page.onMessage((m) => old.push(m));
   handlers.message({ message: "both" });
-  expect(got).toEqual(["early", "later", "both"]);
+  expect(got.length).toBeLessThan(60);
+  expect(got.slice(-3)).toEqual(["early", "later", "both"]);
   expect(old).toEqual(["both"]);
 
   // Told as it goes out of sight, the moment to keep its state.

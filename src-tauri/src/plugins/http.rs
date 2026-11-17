@@ -7,6 +7,7 @@ use super::access::{refused, running, url_allowed};
 use super::state;
 use serde::{Deserialize, Serialize};
 use std::collections::{BTreeMap, HashMap};
+use std::sync::atomic::{AtomicU64, Ordering};
 use std::sync::{LazyLock, Mutex, MutexGuard};
 use std::time::Duration;
 use tokio::sync::oneshot;
@@ -51,9 +52,11 @@ struct Kept {
 }
 
 static CLIENTS: LazyLock<Mutex<HashMap<String, Kept>>> = LazyLock::new(Default::default);
-/// The requests given a `cancelId`, by plugin and that id.
-type Pending = HashMap<(String, String), oneshot::Sender<()>>;
+/// The requests given a `cancelId`, by plugin and that id; each with its
+/// own number, so a later request under the same id never ends this one's.
+type Pending = HashMap<(String, String), (u64, oneshot::Sender<()>)>;
 static PENDING: LazyLock<Mutex<Pending>> = LazyLock::new(Default::default);
+static REQUESTS: AtomicU64 = AtomicU64::new(0);
 
 fn locked<T>(map: &Mutex<T>) -> MutexGuard<'_, T> {
     map.lock().unwrap_or_else(|e| e.into_inner())
@@ -120,12 +123,17 @@ async fn cancellable<T>(
     };
     let key = (id.to_string(), cancel_id);
     let (cancel, cancelled) = oneshot::channel();
-    locked(&PENDING).insert(key.clone(), cancel);
+    let own = REQUESTS.fetch_add(1, Ordering::Relaxed);
+    locked(&PENDING).insert(key.clone(), (own, cancel));
     let answer = tokio::select! {
         answer = work => answer,
-        _ = cancelled => Err("cancelled".to_string()),
+        // Only a cancel sent: a sender dropped for another request isn't one.
+        Ok(()) = cancelled => Err("cancelled".to_string()),
     };
-    locked(&PENDING).remove(&key);
+    let mut pending = locked(&PENDING);
+    if pending.get(&key).is_some_and(|(n, _)| *n == own) {
+        pending.remove(&key);
+    }
     answer
 }
 
@@ -134,7 +142,7 @@ async fn cancellable<T>(
 #[tauri::command]
 #[cfg_attr(test, specta::specta)]
 pub fn plugin_http_cancel(id: String, cancel_id: String) {
-    if let Some(cancel) = locked(&PENDING).remove(&(id, cancel_id)) {
+    if let Some((_, cancel)) = locked(&PENDING).remove(&(id, cancel_id)) {
         let _ = cancel.send(());
     }
 }

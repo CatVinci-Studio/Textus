@@ -165,8 +165,11 @@
       close();
       anchor.focus();
     }
+    var open = true;
+    // Also once the page took the box away itself.
     function close(value) {
-      if (!box.isConnected) return;
+      if (!open) return;
+      open = false;
       box.remove();
       document.removeEventListener("pointerdown", outside, true);
       document.removeEventListener("keydown", key, true);
@@ -313,10 +316,12 @@
       function up() {
         window.removeEventListener("pointermove", move);
         window.removeEventListener("pointerup", up);
+        window.removeEventListener("pointercancel", up);
         if (options.done) options.done(now);
       }
       window.addEventListener("pointermove", move);
       window.addEventListener("pointerup", up);
+      window.addEventListener("pointercancel", up);
     }
     function key(event) {
       var less = axis === "x" ? "ArrowLeft" : "ArrowUp";

@@ -71,7 +71,7 @@ textus.net = {
     init = init || {};
     var signal = init.signal;
     if (signal && signal.aborted) return Promise.reject(aborted());
-    var cancelId = signal ? String(++fetches) : undefined;
+    var cancelId = signal ? fetchMark + ":" + ++fetches : undefined;
     var sent = call("net.fetch", {
       url: String(url),
       method: init.method,

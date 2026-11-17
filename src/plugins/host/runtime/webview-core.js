@@ -5,6 +5,8 @@ var app = null;
 var queue = [];
 var receivers = new Set();
 var held = [];
+// Messages kept for a page that has no receiver yet.
+var HELD = 50;
 var state = null;
 var visibility = new Set();
 var exporter = null;
