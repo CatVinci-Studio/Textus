@@ -20,6 +20,7 @@ const API_PERMISSIONS: readonly {
       "editor.getPath",
       "editor.getText",
       "editor.getSelection",
+      "editor.getCursor",
       "editor.getBlocks",
       "editor.getOutline",
       "editor.registerHover",

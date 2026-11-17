@@ -127,6 +127,11 @@ export function editorHandlers(p: PluginScope) {
     "editor.getPath": () => doc()?.path ?? null,
     "editor.getText": () => doc()?.text() ?? null,
     "editor.getSelection": () => doc()?.selection() ?? null,
+    "editor.getCursor": () => {
+      const d = doc();
+      const head = d?.cursor()?.head;
+      return d?.path && head ? { path: d.path, ...head } : null;
+    },
     "editor.getBlocks": () => doc()?.blocks() ?? null,
     "editor.getOutline": () => {
       const text = doc()?.text();

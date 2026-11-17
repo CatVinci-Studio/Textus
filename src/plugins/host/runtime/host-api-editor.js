@@ -11,6 +11,9 @@ textus.editor = {
   getSelection: function () {
     return call("editor.getSelection");
   },
+  getCursor: function () {
+    return call("editor.getCursor");
+  },
   getBlocks: function () {
     return call("editor.getBlocks");
   },

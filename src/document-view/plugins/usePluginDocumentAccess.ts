@@ -2,6 +2,10 @@ import { useEffect } from "react";
 import { editorViewCtx } from "@milkdown/kit/core";
 import type { EditorRunner } from "../../editor/useEditorRunner";
 import {
+  lineAndColumn,
+  markdownOffsetAt,
+} from "../../editor/modes/mode-switch";
+import {
   cachedDocument,
   caretContext,
   readSelection,
@@ -76,6 +80,17 @@ export function usePluginDocumentAccess({
             markdown: readSelection(ctx, state).selectionMarkdown,
           };
         }) ?? { text: "", markdown: null },
+      cursor: () =>
+        run((ctx) => {
+          const { state } = ctx.get(editorViewCtx);
+          const markdown = textOf(ctx, state.doc);
+          const at = (pos: number) =>
+            lineAndColumn(markdown, markdownOffsetAt(ctx, markdown, pos));
+          return {
+            anchor: at(state.selection.anchor),
+            head: at(state.selection.head),
+          };
+        }) ?? null,
       propose: (callId, proposal) => {
         const target = run((ctx) => {
           const { state } = ctx.get(editorViewCtx);

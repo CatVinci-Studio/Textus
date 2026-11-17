@@ -1,5 +1,5 @@
 import { describe, expect, it } from "vitest";
-import { alignPrefixOffset } from "./mode-switch";
+import { alignPrefixOffset, lineAndColumn } from "./mode-switch";
 
 describe("alignPrefixOffset", () => {
   it("finds where the serialized prefix ends in the file's text", () => {
@@ -18,5 +18,15 @@ describe("alignPrefixOffset", () => {
 
   it("never runs past the end of the text", () => {
     expect(alignPrefixOffset("abc\n\n", "ab")).toBeLessThanOrEqual(2);
+  });
+});
+
+describe("lineAndColumn", () => {
+  it("counts lines and columns from 0, as plugins are told", () => {
+    const text = "# Title\n\nSome *words* here";
+    expect(lineAndColumn(text, 0)).toEqual({ line: 0, ch: 0 });
+    expect(lineAndColumn(text, 7)).toEqual({ line: 0, ch: 7 });
+    expect(lineAndColumn(text, 9)).toEqual({ line: 2, ch: 0 });
+    expect(lineAndColumn(text, text.length)).toEqual({ line: 2, ch: 17 });
   });
 });

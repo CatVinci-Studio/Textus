@@ -46,6 +46,12 @@ export interface PluginTabInfo {
  */
 
 /** The document in front, as its editor reads it. */
+/** A place in a document's Markdown: line and column, from 0. */
+export interface TextPoint {
+  line: number;
+  ch: number;
+}
+
 export interface ActiveDocumentAccess {
   path: string | null;
   text(): string;
@@ -53,6 +59,9 @@ export interface ActiveDocumentAccess {
   blocks(): SentBlock[];
   /** The selection: its plain text, and as Markdown (null when empty). */
   selection(): { text: string; markdown: string | null };
+  /** Where the selection starts and the caret is, in its Markdown: lines
+   *  and columns from 0. */
+  cursor(): { anchor: TextPoint; head: TextPoint } | null;
   /** Shows an edit as a proposal the user accepts or rejects, as Textus
    *  AI's are; false when it can't be placed. */
   propose(callId: string, proposal: EditProposal): boolean;

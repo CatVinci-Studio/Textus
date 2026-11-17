@@ -52,6 +52,8 @@ declare global {
     interface Location {
       path: string;
       line?: number;
+      /** The column in `line`, from 0. From 1.8. */
+      ch?: number;
       heading?: string;
       block?: string;
       text?: string;
@@ -635,6 +637,10 @@ declare global {
       /** Its Markdown (editor.read). */
       getText(): Promise<string | null>;
       getSelection(): Promise<{ text: string; markdown: string | null } | null>;
+      /** Where the caret is in the document's Markdown: its path, line and
+       *  column (from 0); null with no document in front (editor.read).
+       *  From 1.8. */
+      getCursor(): Promise<Location | null>;
       /** Its blocks as Textus AI is shown them (editor.read). */
       getBlocks(): Promise<Block[] | null>;
       getOutline(): Promise<
@@ -718,6 +724,10 @@ declare global {
         text: string;
         empty: boolean;
         block: string | null;
+        /** From 1.8: where the selection starts and the caret is, in the
+         *  document's Markdown (lines and columns from 0). */
+        anchor?: { line: number; ch: number };
+        head?: { line: number; ch: number };
       }>;
       /** From 1.6: the first and last block in sight changed, once
        *  scrolling or an edit rests (editor.read). */

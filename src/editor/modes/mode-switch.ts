@@ -44,15 +44,31 @@ export function flushDomSelection(view: EditorView): void {
 }
 
 /** The WYSIWYG caret as a markdown offset. */
+/** Where the editor position `pos` falls in `markdown`, the tab's text. */
+export function markdownOffsetAt(
+  ctx: Ctx,
+  markdown: string,
+  pos: number,
+): number {
+  const { doc } = ctx.get(editorViewCtx).state;
+  return alignPrefixOffset(ctx.get(serializerCtx)(doc.cut(0, pos)), markdown);
+}
+
+/** An offset in `text` as a line and a column, both from 0. */
+export function lineAndColumn(
+  text: string,
+  offset: number,
+): { line: number; ch: number } {
+  const before = text.slice(0, offset);
+  const start = before.lastIndexOf("\n") + 1;
+  return { line: before.split("\n").length - 1, ch: offset - start };
+}
+
 export function readEditorCaret(ctx: Ctx, markdown: string): ModeSwitchCaret {
   const view = ctx.get(editorViewCtx);
   flushDomSelection(view);
-  const { doc, selection } = view.state;
-  const serialize = ctx.get(serializerCtx);
-  const offset = alignPrefixOffset(
-    serialize(doc.cut(0, selection.head)),
-    markdown,
-  );
+  const { selection } = view.state;
+  const offset = markdownOffsetAt(ctx, markdown, selection.head);
   let viewportY: number | null = null;
   const scroller = scrollerOf(view.dom);
   try {
