@@ -31,6 +31,9 @@ const PILLS = new Map<string, PillMeasures>();
 export function useTabFit(
   bar: RefObject<HTMLElement | null>,
   tabs: readonly TabShape[],
+  /** Something drawn depends on the row's length itself (a touch row's
+   *  room after its tabs): any new length draws again. */
+  byLength = false,
 ): (TabFit & { available: number; between: number; list: number }) | null {
   const [room, setRoom] = useState<TabRoom | null>(null);
   const shapes = useRef(tabs);
@@ -52,7 +55,7 @@ export function useTabFit(
       if (next) PILLS.set(key, next.pill);
       latest.current = next;
       setRoom((was) =>
-        sameRoom(was, next) || sameFit(was, next) ? was : next,
+        sameRoom(was, next) || sameFit(was, next, byLength) ? was : next,
       );
     };
     // First as the observer starts, then as the row resizes: after layout
@@ -77,11 +80,16 @@ export function useTabFit(
       fonts();
       el.removeEventListener("scroll", scrolled);
     };
-  }, [bar, parts]);
+  }, [bar, parts, byLength]);
   /** A row resized (a divider dragged) whose tabs all fit as before at the
    *  same widths: nothing to draw again. */
-  function sameFit(was: TabRoom | null, next: TabRoom | null): boolean {
+  function sameFit(
+    was: TabRoom | null,
+    next: TabRoom | null,
+    byLength: boolean,
+  ): boolean {
     if (!was || !next || was.between !== next.between) return false;
+    if (byLength && was.available !== next.available) return false;
     const a = fitTabs(shapes.current, was);
     const b = fitTabs(shapes.current, next);
     return (

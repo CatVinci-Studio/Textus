@@ -87,6 +87,7 @@ export function TabBar({
     previewTab
       ? [...shapes, { title: previewTab.title, dirty: previewTab.dirty }]
       : shapes,
+    isMobileApp,
   );
   // One tab too long for its row is cut short, not listed: a list of one
   // tells nothing.
