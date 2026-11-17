@@ -55,10 +55,32 @@ export function parentDir(path: string): string | null {
 /** Whether `path` lies under `dir`, its "." and ".." walked first: a path
  *  climbing out with ".." is outside, however it starts. */
 export function isInside(path: string, dir: string): boolean {
+  if (path.startsWith("content://") || dir.startsWith("content://"))
+    return contentInside(path, dir);
   const inner = walked(path);
   const outer = walked(dir);
   if (inner === null || outer === null || inner === outer) return false;
   return inner.startsWith(outer.endsWith("/") ? outer : `${outer}/`);
+}
+
+/** An Android picked folder's entry: under the same picked tree, its
+ *  document id ("primary:Notes/a.md", "/" spelled %2F) below the folder's. */
+function contentInside(path: string, dir: string): boolean {
+  const split = (url: string) => {
+    const at = url.indexOf("/document/");
+    return at < 0
+      ? null
+      : {
+          tree: url.slice(0, at),
+          id: decodeUrlPath(url.slice(at + "/document/".length)),
+        };
+  };
+  const inner = split(path);
+  const outer = split(dir);
+  if (!inner || !outer || inner.tree !== outer.tree) return false;
+  return inner.id.startsWith(
+    outer.id.endsWith("/") ? outer.id : `${outer.id}/`,
+  );
 }
 
 /** A test for whether a path is one of `targets` or a folder holding one,

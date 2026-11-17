@@ -34,6 +34,22 @@ describe("isInside", () => {
     expect(isInside("/ab/c.md", "/a")).toBe(false);
     expect(isInside("/a", "/a")).toBe(false);
   });
+  it("reads an Android picked folder's entries by their document ids", () => {
+    const tree =
+      "content://com.android.externalstorage.documents/tree/primary%3ANotes";
+    const dir = `${tree}/document/primary%3ANotes`;
+    expect(isInside(`${tree}/document/primary%3ANotes%2Fa.md`, dir)).toBe(true);
+    expect(isInside(`${tree}/document/primary%3ANotes%2Fb%2Fc.md`, dir)).toBe(
+      true,
+    );
+    expect(isInside(`${tree}/document/primary%3ANotesX%2Fa.md`, dir)).toBe(
+      false,
+    );
+    expect(isInside(dir, dir)).toBe(false);
+    expect(
+      isInside("content://other/document/primary%3ANotes%2Fa.md", dir),
+    ).toBe(false);
+  });
   it("onTheWay knows a target and the folders holding it", () => {
     const way = onTheWay("/a/b/c.md", null, "C:\\x\\y");
     for (const path of ["/a/b/c.md", "/a/b", "/a", "C:\\x", "C:/x/y"])
