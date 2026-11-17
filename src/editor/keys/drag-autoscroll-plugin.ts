@@ -1,25 +1,7 @@
 import { Plugin, TextSelection } from "@milkdown/kit/prose/state";
 import { $prose } from "@milkdown/kit/utils";
 import type { EditorView } from "@milkdown/kit/prose/view";
-
-/** How near the scroller's top or bottom edge the pointer starts it
- *  scrolling, in pixels, and the fastest it goes, in pixels a frame. */
-const EDGE = 36;
-const MAX_STEP = 40;
-
-/**
- * Pixels a frame a drag-select pointer at `y` asks the scroller to move:
- * more the further into the edge band or past it, up to MAX_STEP; negative
- * upwards.
- */
-export function edgeStep(y: number, top: number, bottom: number): number {
-  const below = y - (bottom - EDGE);
-  const above = top + EDGE - y;
-  const ramp = (into: number) => Math.min(MAX_STEP, Math.ceil(into / 3));
-  if (below > 0) return ramp(below);
-  if (above > 0) return -ramp(above);
-  return 0;
-}
+import { edgeStep } from "../../engine/drag/edge-scroll";
 
 /**
  * Dragging a selection past the document's top or bottom scrolls it and

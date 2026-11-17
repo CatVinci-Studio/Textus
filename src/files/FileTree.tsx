@@ -278,7 +278,7 @@ export function FileTree({
               ref={treeRef}
               role="tree"
               aria-label={t.treeTab}
-              className={`tree-body${drag?.into === root ? " tree-body-drop" : ""}`}
+              className={`tree-body${drag?.into === root ? " tx-drop-into" : ""}`}
               data-drop-dir={root}
               onKeyDown={treeKeys}
               onContextMenu={

@@ -32,6 +32,18 @@ function toward(ghost: HTMLElement, rect: DOMRect): Keyframe {
   return { transform: `translate(${dx}px, ${dy}px)` };
 }
 
+/** A copy flown along `frames` and faded there (the land spring), then
+ *  `done`. */
+function landAlong(copy: HTMLElement, frames: Keyframe[], done: () => void) {
+  const flight = animate(copy, frames, {
+    duration: "--dur-land",
+    easing: "--ease-land",
+    fill: "forwards",
+  });
+  if (flight) void flight.finished.finally(done);
+  else done();
+}
+
 export function dragGhost(text: string, className: string): DragGhost {
   const ghost = document.createElement("div");
   ghost.className = `drag-ghost ${className}`;
@@ -58,13 +70,11 @@ export function dragGhost(text: string, className: string): DragGhost {
       });
     },
     land(to) {
-      const flight = animate(
+      landAlong(
         ghost,
         [{ transform: "none" }, { ...toward(ghost, to), opacity: 0 }],
-        { duration: "--dur-land", easing: "--ease-land", fill: "forwards" },
+        () => ghost.remove(),
       );
-      if (flight) void flight.finished.finally(() => ghost.remove());
-      else ghost.remove();
     },
     remove() {
       ghost.remove();
@@ -137,16 +147,14 @@ export function liftedCopy(
     element: lifted,
     moveBy,
     land(to) {
-      const flight = animate(
+      landAlong(
         lifted,
         [
           { translate: `${box.left + at.dx}px ${box.top + at.dy}px` },
           { translate: `${to.left}px ${to.top}px`, opacity: 0 },
         ],
-        { duration: "--dur-land", easing: "--ease-land", fill: "forwards" },
+        remove,
       );
-      if (flight) void flight.finished.finally(remove);
-      else remove();
     },
     remove,
   };

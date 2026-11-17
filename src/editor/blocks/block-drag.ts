@@ -1,7 +1,7 @@
 import type { EditorView } from "@milkdown/kit/prose/view";
-import { scaledPx } from "../../engine/tokens/chrome-scale";
 import { trackDrag } from "../../engine/drag/pointer-drag";
 import { liftedCopy } from "../../engine/drag/ghost";
+import { edgeScroll } from "../../engine/drag/edge-scroll";
 import { flip } from "../../engine/motion/flip";
 import { isMacPlatform } from "../../platform/os";
 import {
@@ -22,10 +22,6 @@ import {
   roomFor,
   type Pulled,
 } from "./block-lift";
-
-/** How near the scroller's edge the pointer scrolls it, and how fast. */
-const EDGE = 48;
-const STEP = 16;
 
 /** Where a pulled block is aimed: an editor, and the place in it. */
 interface Aim {
@@ -63,7 +59,6 @@ export function dragBlock(
   let room: HTMLElement | null = null;
   let copy: ReturnType<typeof liftedCopy> | null = null;
   let aim: Aim = { view, landing: null };
-  let scrolling = 0;
   let last = { x: down.clientX, y: down.clientY };
 
   /** Each place in `target` the block can go, laid out now. */
@@ -208,24 +203,12 @@ export function dragBlock(
 
   const place = (x: number, y: number) => showAim(aimAt(x, y));
 
-  // Near the scroller's top or bottom, it scrolls on while the pointer
-  // stays there.
-  const scrollNear = () => {
-    scrolling = 0;
-    const scroller = aim.view.dom.closest<HTMLElement>(".editor-scroll");
-    if (!scroller) return;
-    const r = scroller.getBoundingClientRect();
-    const by =
-      last.y < r.top + scaledPx(EDGE)
-        ? -STEP
-        : last.y > r.bottom - scaledPx(EDGE)
-          ? STEP
-          : 0;
-    if (!by) return;
-    scroller.scrollTop += by;
-    place(last.x, last.y);
-    scrolling = requestAnimationFrame(scrollNear);
-  };
+  // Near the aimed editor's top or bottom, it scrolls on while the
+  // pointer stays there.
+  const edge = edgeScroll(
+    () => aim.view.dom.closest<HTMLElement>(".editor-scroll"),
+    () => place(last.x, last.y),
+  );
 
   const lift = (x: number, y: number) => {
     const root = openEditors.get(view);
@@ -272,10 +255,10 @@ export function dragBlock(
         copy?.moveBy(x - down.clientX, y - down.clientY);
         last = { x, y };
         place(x, y);
-        if (!scrolling) scrolling = requestAnimationFrame(scrollNear);
+        edge.at(y);
       },
       end: (_x, _y, dropped, e) => {
-        cancelAnimationFrame(scrolling);
+        edge.stop();
         const copying = !!e && (isMacPlatform() ? e.altKey : e.ctrlKey);
         const landed = dropped ? drop(copying) : null;
         if (aim.view !== view) show(aim.view, null);

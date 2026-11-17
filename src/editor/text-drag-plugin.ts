@@ -6,6 +6,7 @@ import { closeHistory } from "@milkdown/kit/prose/history";
 import { trackDrag } from "../engine/drag/pointer-drag";
 import { isMacPlatform } from "../platform/os";
 import "./text-drag.css";
+import { edgeScroll } from "../engine/drag/edge-scroll";
 
 /**
  * Selected text pressed and pulled moves where it is let go, as in a word
@@ -60,14 +61,25 @@ function pressed(view: EditorView, e: MouseEvent): boolean {
     caret.style.transform = `translate(${(c.left - r.left) / zoom}px, ${(c.top - r.top) / zoom}px)`;
     caret.style.height = `${(c.bottom - c.top) / zoom}px`;
   };
+  // Near the document's top or bottom it scrolls on, the caret following.
+  let last = { x: e.clientX, y: e.clientY };
+  const edge = edgeScroll(
+    () => view.dom.closest<HTMLElement>(".editor-scroll"),
+    () => place(last.x, last.y),
+  );
   trackDrag(e, {
     start: (x, y) => {
       moved = true;
       root.append(caret);
       place(x, y);
     },
-    move: (x, y) => place(x, y),
+    move: (x, y) => {
+      last = { x, y };
+      place(x, y);
+      edge.at(y);
+    },
     end: (_x, _y, dropped, up) => {
+      edge.stop();
       caret.remove();
       if (!dropped || landing === null) return;
       const copy = !!up && (isMacPlatform() ? up.altKey : up.ctrlKey);

@@ -127,9 +127,9 @@ export const PluginListPane = memo(function PluginListPane({
       if (!list || e.pointerType === "touch") return;
       let over: HTMLElement | null = null;
       const hover = (next: HTMLElement | null) => {
-        over?.classList.remove("is-drop");
+        over?.classList.remove("tx-drop-into");
         over = next && next !== row ? next : null;
-        over?.classList.add("is-drop");
+        over?.classList.add("tx-drop-into");
       };
       trackDrag(e, {
         start: () => row.classList.add("is-drag-lifted"),

@@ -322,7 +322,7 @@ function FolderRow({
   );
   return (
     <div
-      className={`tree-row${dropping ? " tree-row-drop" : ""}${ignored ? " tree-row-ignored" : ""}`}
+      className={`tree-row${dropping ? " tx-drop-into" : ""}${ignored ? " tree-row-ignored" : ""}`}
       role="treeitem"
       aria-level={depth}
       aria-expanded={open}
