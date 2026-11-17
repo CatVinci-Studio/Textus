@@ -1491,7 +1491,11 @@ para usar una.
     "El engranaje guarda el tema, las fuentes y tus cuentas de IA.",
   tutorialEditorTitle: "Escribe tal como se ve",
   tutorialEditorBody:
-    "El Markdown se convierte en formato al escribir: prueba `# Un título` o `- una lista`.",
+    "El Markdown se convierte en formato al escribir. Prueba cada uno:",
+  tutorialEditorHeading: "Un título: `# Planes`",
+  tutorialEditorList: "Una lista: `- leche`",
+  tutorialEditorNumbered: "Numerada: `1. primero`",
+  tutorialEditorTask: "Una tarea: `- [ ] devolver la llamada`",
   tutorialAiTitle: "Textus AI",
   tutorialAiBody:
     "Haz clic en los destellos de arriba a la derecha para abrir Textus AI.",

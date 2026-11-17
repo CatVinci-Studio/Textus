@@ -53,7 +53,21 @@ test("the tour walks the window, moving on as each thing is done", async ({
   await expect(
     page.locator('[data-active-tab="true"] .ProseMirror'),
   ).toBeFocused();
+  // Each kind of Markdown is ticked off as it is typed; all four move on.
+  const done = page.locator(".tour-tasks > li[data-done]");
   await page.keyboard.type("# 标题");
+  await page.keyboard.press("Enter");
+  await expect(done).toHaveCount(1);
+  await page.keyboard.type("- 牛奶");
+  await page.keyboard.press("Enter");
+  await page.keyboard.press("Enter");
+  await expect(done).toHaveCount(2);
+  await page.screenshot({ path: "/private/tmp/claude-501/tour-tasks.png" });
+  await page.keyboard.type("1. 第一步");
+  await page.keyboard.press("Enter");
+  await page.keyboard.press("Enter");
+  await expect(done).toHaveCount(3);
+  await page.keyboard.type("- [ ] 回电话");
   await expect(title).toHaveText("Textus AI");
 
   // Not signed in: the AI's own panel asks; skipping goes to the end.

@@ -1,4 +1,5 @@
 import { useEffect } from "react";
+import { CheckIcon } from "../engine/controls/icons";
 import { fill } from "../i18n/fill";
 import type { Lang, Strings } from "../i18n/strings";
 import { links } from "../platform/ipc";
@@ -136,6 +137,21 @@ export function TutorialExperience({
         {withCode(t[(phone && step.phoneBodyKey) || step.bodyKey])}
       </p>
       {stopAt && <p className="tour-stop">{withCode(t[stopAt.key])}</p>}
+      {step.tasks && (
+        <ul className="tour-tasks">
+          {step.tasks.map((task) => {
+            const done = tutorial.done.includes(task.format);
+            return (
+              <li key={task.format} data-done={done || undefined}>
+                <span className="tour-task-mark" aria-hidden="true">
+                  {done && <CheckIcon />}
+                </span>
+                {withCode(t[task.key])}
+              </li>
+            );
+          })}
+        </ul>
+      )}
       {step.id === "done" && (
         <div className="tour-links">
           <button

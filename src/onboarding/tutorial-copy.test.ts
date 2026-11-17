@@ -11,6 +11,7 @@ describe.each(LANGS)("the tour in %s", (lang) => {
       step.bodyKey,
       step.phoneBodyKey,
       ...(step.stops ?? []).map((stop) => stop.key),
+      ...(step.tasks ?? []).map((task) => task.key),
     ].filter((key): key is TextKey => !!key),
   );
 

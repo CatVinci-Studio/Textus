@@ -1388,7 +1388,11 @@ ${AI_NAME}への執筆の指示です。すべての文書に適用されます�
   tutorialSettingsBody: "歯車にはテーマ、フォント、AI アカウントがあります。",
   tutorialEditorTitle: "見たまま書く",
   tutorialEditorBody:
-    "Markdown は入力したそばから書式になります：`# タイトル` や `- リスト` を試してみて。",
+    "Markdown は入力したそばから書式になります。順に試してみて：",
+  tutorialEditorHeading: "見出し：`# 計画`",
+  tutorialEditorList: "リスト：`- 牛乳`",
+  tutorialEditorNumbered: "番号付き：`1. 最初`",
+  tutorialEditorTask: "やること：`- [ ] 折り返し電話`",
   tutorialAiTitle: "Textus AI",
   tutorialAiBody: "右上のきらめきボタンをクリックして Textus AI を開きます。",
   tutorialAiBodyPhone:

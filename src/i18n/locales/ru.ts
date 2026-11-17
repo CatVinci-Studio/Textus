@@ -1491,7 +1491,11 @@ export default {
   tutorialSettingsBody: "В шестерёнке тема, шрифты и ваши аккаунты ИИ.",
   tutorialEditorTitle: "Пишите, как видите",
   tutorialEditorBody:
-    "Markdown становится форматированием прямо при вводе: попробуйте `# Заголовок` или `- список`.",
+    "Markdown становится форматированием прямо при вводе. Попробуйте каждое:",
+  tutorialEditorHeading: "Заголовок: `# Планы`",
+  tutorialEditorList: "Список: `- молоко`",
+  tutorialEditorNumbered: "Нумерованный: `1. сначала`",
+  tutorialEditorTask: "Задача: `- [ ] перезвонить`",
   tutorialAiTitle: "Textus AI",
   tutorialAiBody: "Нажмите на искры справа вверху, чтобы открыть Textus AI.",
   tutorialAiBodyPhone: "Коснитесь искр справа вверху, чтобы открыть Textus AI.",

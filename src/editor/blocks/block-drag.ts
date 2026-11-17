@@ -24,6 +24,8 @@ import {
 } from "./block-lift";
 import { inLayout } from "../../engine/zoom/zoomed-rects";
 
+const TEXT_BLOCK = /^(P|H[1-6]|LI|BLOCKQUOTE|UL|OL)$/;
+
 /** Where a pulled block is aimed: an editor, and the place in it. */
 interface Aim {
   view: EditorView;
@@ -222,7 +224,9 @@ export function dragBlock(
     if (root) layoutOf(view, root);
     copy = liftedCopy(source, {
       keep: true,
-      fit: true,
+      // Lines of text as wide as their words; a block in a box of its own
+      // (code, a table, a diagram) at the box's size, as its room is.
+      fit: TEXT_BLOCK.test(source.tagName),
       wrap: blockLook(source, view),
     });
     room = roomFor(source, copy.element);

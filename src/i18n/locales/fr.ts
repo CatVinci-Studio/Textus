@@ -1498,7 +1498,11 @@ utiliser une.
     "L'engrenage réunit le thème, les polices et vos comptes d'IA.",
   tutorialEditorTitle: "Écrire tel que ça s'affiche",
   tutorialEditorBody:
-    "Le Markdown devient mise en forme pendant la frappe : essayez `# Un titre` ou `- une liste`.",
+    "Le Markdown devient mise en forme pendant la frappe. Essayez chacun :",
+  tutorialEditorHeading: "Un titre : `# Projets`",
+  tutorialEditorList: "Une liste : `- lait`",
+  tutorialEditorNumbered: "Numérotée : `1. d'abord`",
+  tutorialEditorTask: "Une tâche : `- [ ] rappeler`",
   tutorialAiTitle: "Textus AI",
   tutorialAiBody:
     "Cliquez sur les étincelles en haut à droite pour ouvrir Textus AI.",

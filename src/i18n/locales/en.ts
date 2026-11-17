@@ -1419,7 +1419,11 @@ type /name in a conversation to use one.
     "The gear holds the theme, the fonts and your AI accounts.",
   tutorialEditorTitle: "Write as it shows",
   tutorialEditorBody:
-    "Markdown turns into formatting as you type: try `# A title` or `- a list`.",
+    "Markdown turns into formatting as you type. Try each of these:",
+  tutorialEditorHeading: "A title: `# Plans`",
+  tutorialEditorList: "A list: `- milk`",
+  tutorialEditorNumbered: "Numbered: `1. first`",
+  tutorialEditorTask: "A to-do: `- [ ] call back`",
   tutorialAiTitle: "Textus AI",
   tutorialAiBody: "Click the sparkles at the top right to open Textus AI.",
   tutorialAiBodyPhone: "Tap the sparkles at the top right to open Textus AI.",

@@ -1474,7 +1474,11 @@ Habilidades ficam na pasta skills/ ao lado deste arquivo, um arquivo
     "A engrenagem guarda o tema, as fontes e suas contas de IA.",
   tutorialEditorTitle: "Escreva como aparece",
   tutorialEditorBody:
-    "O Markdown vira formatação enquanto você digita: tente `# Um título` ou `- uma lista`.",
+    "O Markdown vira formatação enquanto você digita. Experimente cada um:",
+  tutorialEditorHeading: "Um título: `# Planos`",
+  tutorialEditorList: "Uma lista: `- leite`",
+  tutorialEditorNumbered: "Numerada: `1. primeiro`",
+  tutorialEditorTask: "Uma tarefa: `- [ ] retornar a ligação`",
   tutorialAiTitle: "Textus AI",
   tutorialAiBody:
     "Clique nas faíscas no canto superior direito para abrir o Textus AI.",

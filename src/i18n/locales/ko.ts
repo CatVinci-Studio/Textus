@@ -1374,7 +1374,11 @@ ${AI_NAME}에게 주는 글쓰기 지침으로, 모든 문서에 적용됩니다
   tutorialSettingsBody: "톱니바퀴에는 테마, 글꼴, AI 계정이 있습니다.",
   tutorialEditorTitle: "보이는 대로 쓰기",
   tutorialEditorBody:
-    "Markdown은 입력하는 즉시 서식이 됩니다: `# 제목`이나 `- 목록`을 써 보세요.",
+    "Markdown은 입력하는 즉시 서식이 됩니다. 하나씩 써 보세요:",
+  tutorialEditorHeading: "제목: `# 계획`",
+  tutorialEditorList: "목록: `- 우유`",
+  tutorialEditorNumbered: "번호 목록: `1. 첫째`",
+  tutorialEditorTask: "할 일: `- [ ] 전화하기`",
   tutorialAiTitle: "Textus AI",
   tutorialAiBody: "오른쪽 위의 반짝이 버튼을 클릭해 Textus AI를 여세요.",
   tutorialAiBodyPhone: "오른쪽 위의 반짝이 버튼을 탭해 Textus AI를 여세요.",

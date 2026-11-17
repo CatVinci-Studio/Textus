@@ -76,6 +76,42 @@
   color: var(--ui-accent-text);
 }
 
+/* What a step asks to be typed, each ticked off as it is done. */
+.tour-tasks {
+  display: grid;
+  gap: 4px;
+  margin: 0;
+  padding: 0;
+  list-style: none;
+}
+
+.tour-tasks > li {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  line-height: 1.5;
+}
+
+.tour-task-mark {
+  display: inline-flex;
+  flex: none;
+  align-items: center;
+  justify-content: center;
+  width: 16px;
+  height: 16px;
+  border: 1px solid var(--ui-border);
+  border-radius: var(--shape-pill);
+}
+
+.tour-tasks > li[data-done] {
+  color: var(--ui-muted);
+}
+
+.tour-tasks > li[data-done] .tour-task-mark {
+  border-color: var(--ui-accent);
+  color: var(--ui-accent-text);
+}
+
 .tour-links {
   display: flex;
   flex-wrap: wrap;

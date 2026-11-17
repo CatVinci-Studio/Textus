@@ -33,11 +33,6 @@
   display: none;
 }
 
-/* Fades in with its block's fold caret (block-fold.css); out from script. */
-.block-handle:not([hidden]) {
-  animation: motion-fade-in var(--dur-fast) var(--ease-standard);
-}
-
 .block-handle-button {
   display: flex;
   align-items: center;

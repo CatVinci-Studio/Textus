@@ -1450,7 +1450,11 @@ Skills liegen im Ordner skills/ neben dieser Datei, je Skill eine
     "Im Zahnrad sind Design, Schriften und deine KI-Konten.",
   tutorialEditorTitle: "Schreiben, wie es aussieht",
   tutorialEditorBody:
-    "Markdown wird beim Tippen zur Formatierung: probiere `# Ein Titel` oder `- eine Liste`.",
+    "Markdown wird beim Tippen zur Formatierung. Probiere alle aus:",
+  tutorialEditorHeading: "Titel: `# Pläne`",
+  tutorialEditorList: "Liste: `- Milch`",
+  tutorialEditorNumbered: "Nummeriert: `1. zuerst`",
+  tutorialEditorTask: "Aufgabe: `- [ ] zurückrufen`",
   tutorialAiTitle: "Textus AI",
   tutorialAiBody: "Klicke oben rechts auf das Funkeln, um Textus AI zu öffnen.",
   tutorialAiBodyPhone:

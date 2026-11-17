@@ -1321,8 +1321,11 @@ export default {
   tutorialSettingsTitle: "設定",
   tutorialSettingsBody: "齒輪裡有主題、字型和 AI 帳號。",
   tutorialEditorTitle: "所見即所得",
-  tutorialEditorBody:
-    "輸入 Markdown 會直接變成格式：試試 `# 標題` 或 `- 清單`。",
+  tutorialEditorBody: "輸入 Markdown 會直接變成格式，逐一試試：",
+  tutorialEditorHeading: "標題：`# 計畫`",
+  tutorialEditorList: "清單：`- 牛奶`",
+  tutorialEditorNumbered: "編號：`1. 第一步`",
+  tutorialEditorTask: "待辦：`- [ ] 回電話`",
   tutorialAiTitle: "Textus AI",
   tutorialAiBody: "點右上角的星光按鈕，打開 Textus AI。",
   tutorialAiBodyPhone: "點右上角的星光按鈕，打開 Textus AI。",

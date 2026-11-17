@@ -6,6 +6,7 @@ import {
   type TutorialStepId,
 } from "./tutorial-steps";
 import { getUiState, setUiState } from "../storage/ui-state";
+import type { Format } from "./tutorial-evaluation";
 import {
   TOUR_SIGNAL_EVENT,
   type TourAi,
@@ -67,17 +68,28 @@ function useStepMoves(
   return { next, back, goTo };
 }
 
+/** Where the learner is within a step: the stop lit (its `stops`) and
+ *  the tasks done; both from the start on each step. */
+function useWithinStep() {
+  const [stop, setStop] = useState(0);
+  const [done, setDone] = useState<readonly Format[]>([]);
+  const fresh = useCallback(() => {
+    setStop(0);
+    setDone([]);
+  }, []);
+  return { stop, setStop, done, setDone, fresh };
+}
+
 export function useTutorial(
   /** Textus AI's switch. */
   aiOn = true,
 ) {
   const [progress, setProgress] = useKeptProgress();
-  // The stop lit within the step (its `stops`), from the first each time.
-  const [stop, setStop] = useState(0);
+  const { stop, setStop, done, setDone, fresh } = useWithinStep();
 
   const go = useCallback(
     (to: (p: TutorialProgress) => number | null) => {
-      setStop(0);
+      fresh();
       setProgress((p) => {
         if (!p.active) return p;
         const at = to(p);
@@ -86,21 +98,21 @@ export function useTutorial(
           : { ...p, stepIndex: at };
       });
     },
-    [setProgress],
+    [setProgress, fresh],
   );
 
   const start = useCallback(
     (tabId: string) => {
-      setStop(0);
+      fresh();
       setProgress({ active: true, stepIndex: 0, tabId });
     },
-    [setProgress],
+    [setProgress, fresh],
   );
   const { next, back, goTo } = useStepMoves(go);
   const exit = useCallback(() => {
-    setStop(0);
+    fresh();
     setProgress(IDLE);
-  }, [setProgress]);
+  }, [setProgress, fresh]);
 
   const step = TUTORIAL_STEPS[progress.stepIndex];
   const { active } = progress;
@@ -134,6 +146,8 @@ export function useTutorial(
     step,
     stop,
     setStop,
+    done,
+    setDone,
     totalSteps: TUTORIAL_STEPS.length,
     tabId: progress.tabId,
     practiceAi,

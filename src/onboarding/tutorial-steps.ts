@@ -1,6 +1,7 @@
 import type { TextKey } from "../i18n/strings";
 import type { AgentMode } from "../prefs/SettingsContext";
 import { hasTextusAi } from "../platform/capabilities";
+import type { Format } from "./tutorial-evaluation";
 
 /**
  * The first-run tour: the window part by part, each one lit while the rest
@@ -32,6 +33,12 @@ export interface TutorialStop {
   opens?: boolean;
 }
 
+/** One thing a step asks to be typed, ticked off once it is. */
+export interface TutorialTask {
+  format: Format;
+  key: TextKey;
+}
+
 export interface TutorialStep {
   id: TutorialStepId;
   titleKey: TextKey;
@@ -43,6 +50,8 @@ export interface TutorialStep {
   phoneTarget?: string;
   /** Lit one after another, Next going through them. */
   stops?: TutorialStop[];
+  /** What it asks for, ticked off as each is done; all done moves on. */
+  tasks?: TutorialTask[];
   /** What the card keeps clear of beside the lit part (the sidebar just
    *  opened, so its contents show). */
   beside?: string;
@@ -100,6 +109,12 @@ const ALL_STEPS: TutorialStep[] = [
     bodyKey: "tutorialEditorBody",
     target: '[data-active-tab="true"] .editor-scroll',
     until: "formatted",
+    tasks: [
+      { format: "heading", key: "tutorialEditorHeading" },
+      { format: "list", key: "tutorialEditorList" },
+      { format: "numbered", key: "tutorialEditorNumbered" },
+      { format: "task", key: "tutorialEditorTask" },
+    ],
   },
   {
     id: "ai",

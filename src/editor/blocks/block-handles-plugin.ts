@@ -14,7 +14,6 @@ import { GRIP_ICON_HTML } from "../../engine/controls/icons";
 import { TOUCH_SLOP_PX } from "../../utils/gesture";
 import { canHaptic } from "../../platform/capabilities";
 import { iosFiles } from "../../platform/ios-files";
-import { duration, motionAllowed } from "../../engine/motion/motion";
 import "./block-handles.css";
 
 /** Room a list item's marker takes left of its text, in ems. */
@@ -83,8 +82,6 @@ class BlockHandles {
   private pointer = { x: 0, y: 0 };
   private dwell: ReturnType<typeof setTimeout> | undefined;
   private dragging = false;
-  /** ⋮⋮ fading out, gone when it ends. */
-  private fading: Animation | null = null;
   /** ⋮⋮ pressed and not let go: a pull, not text being chosen. */
   private gripped = false;
   /** The last press was a finger's or a pen's, not a mouse's. */
@@ -193,33 +190,12 @@ class BlockHandles {
 
   private readonly hide = () => {
     this.block = null;
-    if (this.handle.hidden || this.fading) return;
-    if (this.touch || !motionAllowed()) {
-      this.handle.hidden = true;
-      return;
-    }
-    // Fades out with the fold caret, then goes.
-    const fading = this.handle.animate([{ opacity: 1 }, { opacity: 0 }], {
-      duration: duration("--dur-fast"),
-      easing: "ease-out",
-    });
-    this.fading = fading;
-    fading.onfinish = () => {
-      this.fading = null;
-      this.handle.hidden = true;
-    };
+    this.handle.hidden = true;
   };
-
-  /** A fade out stopped: the handle stays. */
-  private stopFading() {
-    this.fading?.cancel();
-    this.fading = null;
-  }
 
   private show(block: HandledBlock) {
     const dom = this.view.nodeDOM(block.pos) as HTMLElement | null;
     if (!dom?.isConnected) return this.hide();
-    this.stopFading();
     this.block = block;
     this.handle.hidden = false;
     // Beside a fold caret (a drawn block's, a heading's), a finger's ⋮⋮
@@ -276,7 +252,6 @@ class BlockHandles {
           if (view === this.view && state) {
             this.dragging = true;
             // Lifted, the block takes its handle along.
-            this.stopFading();
             this.handle.hidden = true;
           }
           showPulled(view, state);
@@ -355,7 +330,6 @@ class BlockHandles {
     this.area.removeEventListener("pointerleave", this.onLeave);
     this.view.dom.removeEventListener("keydown", this.leave);
     clearTimeout(this.dwell);
-    this.stopFading();
     this.handle.remove();
     openEditors.delete(this.view);
   }

@@ -24,8 +24,8 @@
   background: none;
   color: var(--doc-muted);
   cursor: pointer;
+  /* Comes and goes at once, with ⋮⋮ beside it. */
   opacity: 0;
-  transition: opacity var(--dur-fast) var(--ease-standard);
 }
 
 :root:not([data-block-handles="off"]) .block-fold {
