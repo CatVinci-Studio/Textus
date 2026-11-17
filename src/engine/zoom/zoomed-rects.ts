@@ -34,3 +34,15 @@ export function asDrawn(box: Box, scale: number): Box {
     bottom: box.bottom * scale,
   };
 }
+
+/** A point on screen in `root`'s own laid-out units, from its corner: the
+ *  zoom it is drawn at taken off. */
+export function inLayout(
+  root: HTMLElement,
+  x: number,
+  y: number,
+): { x: number; y: number; zoom: number } {
+  const r = root.getBoundingClientRect();
+  const zoom = r.width / root.offsetWidth || 1;
+  return { x: (x - r.left) / zoom, y: (y - r.top) / zoom, zoom };
+}

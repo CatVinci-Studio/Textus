@@ -1,6 +1,5 @@
 import type { EditorView } from "@milkdown/kit/prose/view";
 import { trackDrag } from "../../engine/drag/pointer-drag";
-import { animate } from "../../engine/motion/motion";
 import { passedCount, shiftAt } from "../../engine/drag/row";
 import {
   CellSelection,
@@ -8,6 +7,7 @@ import {
   moveTableRow,
   TableMap,
 } from "@milkdown/kit/prose/tables";
+import { play } from "../../engine/motion/flip";
 
 type Axis = "row" | "col";
 
@@ -232,22 +232,13 @@ export function attachGrips(options: {
         const table = tableNow();
         const moved = !!dropped && !!table && to !== from;
         // They glide from there into their place: the new one, or home.
-        const land = () =>
+        const land = () => {
+          const before = new Map<Element, DOMRect>();
           cells(moved ? to : from).forEach((el, i) => {
-            const was = held[i];
-            if (!was) return;
-            const now = el.getBoundingClientRect();
-            animate(
-              el,
-              [
-                {
-                  transform: `translate(${was.left - now.left}px, ${was.top - now.top}px)`,
-                },
-                { transform: "none" },
-              ],
-              { duration: "--dur-land", easing: "--ease-land" },
-            );
+            if (held[i]) before.set(el, held[i]);
           });
+          play(before, { duration: "--dur-land", easing: "--ease-land" });
+        };
         if (!moved) return land();
         const offset = axis === "row" ? 1 : 0;
         // The move reads its row or column off the selection: picked first,

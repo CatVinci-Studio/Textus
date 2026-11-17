@@ -293,10 +293,20 @@ test("a row or column added opens up, and one dragged glides into its place", as
   await page.mouse.down();
   await page.mouse.move(g.x + g.width / 2, top.y + 2, { steps: 8 });
   await page.mouse.up();
+
   await expect(table.locator("tbody tr:nth-child(2) td").first()).toHaveText(
     "",
   );
-  expect(await moving("tbody tr:nth-child(2) td >> nth=0")).toBe(true);
+  // One pulled a little and let go glides back home, not snapped.
+  await table.locator("tbody tr:last-child td").first().hover();
+  const g2 = (await grip.boundingBox())!;
+  await page.mouse.move(g2.x + g2.width / 2, g2.y + g2.height / 2);
+  await page.mouse.down();
+  await page.mouse.move(g2.x + g2.width / 2, g2.y + g2.height / 2 - 10, {
+    steps: 4,
+  });
+  await page.mouse.up();
+  expect(await moving("tbody tr:last-child td >> nth=0")).toBe(true);
 });
 
 test.describe("on a touch screen", () => {

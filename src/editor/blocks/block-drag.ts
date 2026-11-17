@@ -22,6 +22,7 @@ import {
   roomFor,
   type Pulled,
 } from "./block-lift";
+import { inLayout } from "../../engine/zoom/zoomed-rects";
 
 /** Where a pulled block is aimed: an editor, and the place in it. */
 interface Aim {
@@ -127,13 +128,6 @@ export function dragBlock(
           y: g.y + (g.pos > at ? tall : g.pos === at ? tall / 2 : 0),
         }));
 
-  /** The pointer in `root`'s units: the document's zoom taken off. */
-  const inRoot = (root: HTMLElement, x: number, y: number) => {
-    const r = root.getBoundingClientRect();
-    const zoom = r.width / root.offsetWidth || 1;
-    return { x: (x - r.left) / zoom, y: (y - r.top) / zoom };
-  };
-
   /** The open editor under the pointer: its scroller's box, on screen. */
   const editorAt = (x: number, y: number): EditorView => {
     for (const [target] of openEditors) {
@@ -151,7 +145,7 @@ export function dragBlock(
     const target = editorAt(x, y);
     const root = openEditors.get(target);
     if (!root) return { view: target, landing: null };
-    const at = inRoot(root, x, y);
+    const at = inLayout(root, x, y);
     // Where the room is open in it now: its own place while it stays.
     const open =
       target === view

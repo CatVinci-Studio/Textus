@@ -7,6 +7,7 @@ import { trackDrag } from "../engine/drag/pointer-drag";
 import { isMacPlatform } from "../platform/os";
 import "./text-drag.css";
 import { edgeScroll } from "../engine/drag/edge-scroll";
+import { inLayout } from "../engine/zoom/zoomed-rects";
 
 /**
  * Selected text pressed and pulled moves where it is let go, as in a word
@@ -56,10 +57,9 @@ function pressed(view: EditorView, e: MouseEvent): boolean {
     caret.hidden = pos === null || (pos >= from && pos <= to);
     if (caret.hidden || pos === null) return;
     const c = view.coordsAtPos(pos);
-    const r = root.getBoundingClientRect();
-    const zoom = r.width / root.offsetWidth || 1;
-    caret.style.transform = `translate(${(c.left - r.left) / zoom}px, ${(c.top - r.top) / zoom}px)`;
-    caret.style.height = `${(c.bottom - c.top) / zoom}px`;
+    const at = inLayout(root, c.left, c.top);
+    caret.style.transform = `translate(${at.x}px, ${at.y}px)`;
+    caret.style.height = `${(c.bottom - c.top) / at.zoom}px`;
   };
   // Near the document's top or bottom it scrolls on, the caret following.
   let last = { x: e.clientX, y: e.clientY };

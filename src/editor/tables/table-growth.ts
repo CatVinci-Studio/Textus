@@ -10,6 +10,7 @@ import { $prose } from "@milkdown/kit/utils";
 import { animate, motionAllowed } from "../../engine/motion/motion";
 import { isTableCell } from "./table-pos";
 import { tableSize } from "./table-edits";
+import { play } from "../../engine/motion/flip";
 
 /**
  * A row or column added to a table opens up: the cells that make room
@@ -84,24 +85,18 @@ function measure(
   return grown;
 }
 
-function play(view: EditorView, { moved, table }: Growth) {
+function opened(view: EditorView, { moved, table }: Growth) {
   const node = view.state.doc.nodeAt(table);
   if (!node) return;
-  const old = new Set<Element>();
+  // The cells there before slide from where they were (FLIP)...
+  const before = new Map<Element, DOMRect>();
   for (const { to, was } of moved) {
     const el = view.nodeDOM(to);
-    if (!(el instanceof HTMLElement)) continue;
-    old.add(el);
-    const now = el.getBoundingClientRect();
-    const dx = was.left - now.left;
-    const dy = was.top - now.top;
-    if (Math.abs(dx) < 0.5 && Math.abs(dy) < 0.5) continue;
-    animate(
-      el,
-      [{ transform: `translate(${dx}px, ${dy}px)` }, { transform: "none" }],
-      { duration: "--dur-settle", easing: "--ease-settle" },
-    );
+    if (el instanceof HTMLElement) before.set(el, was);
   }
+  play(before);
+  const old = new Set(before.keys());
+  // ...and the new ones fade in.
   for (const { pos } of cellsOf(node, table)) {
     const el = view.nodeDOM(pos);
     if (el instanceof HTMLElement && !old.has(el))
@@ -130,7 +125,7 @@ export const tableGrowth = $prose(() => {
         update(v) {
           const grown = pending;
           pending = [];
-          for (const growth of grown) play(v, growth);
+          for (const growth of grown) opened(v, growth);
         },
         destroy() {
           view = null;

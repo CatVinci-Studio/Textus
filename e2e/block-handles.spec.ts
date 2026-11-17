@@ -376,3 +376,39 @@ test.describe("under a finger", () => {
     await expect(page.getByText("Under it")).toBeHidden();
   });
 });
+
+test("zoomed in, the blocks making room slide from where they were drawn", async ({
+  page,
+}) => {
+  await openApp(page, { settings: { language: "en" }, animations: true });
+  await pasteMarkdown(page, "First\n\nSecond\n\nThird");
+  const box = (await block(page, "Second").boundingBox())!;
+  await page.mouse.move(box.x + 20, box.y + 4);
+  await page.keyboard.down("Control");
+  for (let i = 0; i < 4; i++) await page.mouse.wheel(0, -120);
+  await page.keyboard.up("Control");
+  await page.waitForTimeout(600);
+  await hover(page, "First");
+  const grip = (await page
+    .locator(`${handle} .block-handle-grip`)
+    .boundingBox())!;
+  const second = (await block(page, "Second").boundingBox())!;
+  await page.mouse.move(grip.x + grip.width / 2, grip.y + grip.height / 2);
+  await page.mouse.down();
+  await page.mouse.move(grip.x + 20, second.y + second.height - 2, {
+    steps: 10,
+  });
+  // Second steps up past the room, its slide starting where it was drawn:
+  // the zoom not counted twice.
+  const startsAt = await block(page, "Second").evaluate((el) => {
+    const flight = el.getAnimations().find((a) => a.id === "flip");
+    if (!flight) return null;
+    flight.pause();
+    flight.currentTime = 0;
+    return el.getBoundingClientRect().top;
+  });
+  await page.keyboard.press("Escape");
+  await page.mouse.up();
+  expect(startsAt).not.toBeNull();
+  expect(Math.abs(startsAt! - second.y)).toBeLessThan(2);
+});
