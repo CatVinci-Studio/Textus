@@ -474,6 +474,9 @@ pushes, pulls or switches branches. Elsewhere `status()` is `null`. Set
 ### The rest
 
 - `net.fetch(url, { method, headers, body })` (`network:<host>`).
+- `path` (API 1.8, no permission): `join`, `normalize`, `dirname`,
+  `basename`, `extname` and `relative`, with "/" between parts on every
+  system - use them instead of a path helper of your own.
 - `env`: `language`, `platform`, `theme` and their changes,
   `readClipboard` / `writeClipboard` (`clipboard`).
 - `ai.registerTool(name, run)` (`ai.tools`): runs one of the manifest's

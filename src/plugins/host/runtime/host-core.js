@@ -2,7 +2,7 @@
 // inside one function): the link to the window, shared helpers, webviews,
 // storage and the plugin's context.
 
-var API_VERSION = "1.7";
+var API_VERSION = "1.8";
 var app = null;
 var waiting = [];
 var module = { exports: {} };

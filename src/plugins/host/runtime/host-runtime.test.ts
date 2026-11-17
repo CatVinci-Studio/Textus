@@ -4,7 +4,17 @@ import { beforeAll, beforeEach, expect, it } from "vitest";
 import { TEXT_RUNTIME as text } from "../text-runtime";
 import { HOST_RUNTIME as host } from "../host-runtime";
 
+type PathTools = {
+  join(...parts: string[]): string;
+  dirname(path: string): string;
+  basename(path: string, ext?: string): string;
+  extname(path: string): string;
+  relative(from: string, to: string): string;
+  normalize(path: string): string;
+};
+
 type Textus = {
+  path: PathTools;
   files: { onDidSave: (fn: () => void) => { dispose(): void } };
   editor: { registerHover: (p: object) => { dispose(): void } };
   net: {
@@ -77,6 +87,25 @@ it("stops a fetch whose signal aborts, in the app too", async () => {
   await expect(
     textus.net.fetch("https://example.com/", { signal: stop.signal }),
   ).rejects.toMatchObject({ name: "AbortError" });
+});
+
+it('works paths out in the frame, with "/" on every system', () => {
+  const p = textus.path;
+  expect(p.join("notes", "daily/", "../2026-11-16.md")).toBe(
+    "notes/2026-11-16.md",
+  );
+  expect(p.join("/Users/me", "vault", "a.md")).toBe("/Users/me/vault/a.md");
+  expect(p.normalize("C:\\notes\\.\\a.md")).toBe("C:/notes/a.md");
+  expect(p.dirname("notes/daily/a.md")).toBe("notes/daily");
+  expect(p.dirname("/a.md")).toBe("/");
+  expect(p.dirname("a.md")).toBe(".");
+  expect(p.basename("notes/a.md")).toBe("a.md");
+  expect(p.basename("notes/a.md", ".md")).toBe("a");
+  expect(p.extname("notes/a.tar.gz")).toBe(".gz");
+  expect(p.extname("notes/.textus")).toBe("");
+  expect(p.relative("notes/daily", "notes/ideas/a.md")).toBe("../ideas/a.md");
+  expect(p.relative("notes", "notes")).toBe(".");
+  expect(sent).toEqual([]);
 });
 
 it("is one clean script once its parts are joined", async () => {

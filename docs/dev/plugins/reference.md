@@ -137,21 +137,22 @@ Values kept for one document.
 | `app: App`               | 1.1: whether Textus is in front, behind, or has no window.                               |
 | `appearance: Appearance` | 1.6: colours over the theme (appearance).                                                |
 | `text: Text`             | 1.7: text as the app reads it.                                                           |
+| `path: Path`             | From 1.8: paths worked out in the plugin's frame; no permission.                         |
 
 ## Env
 
-| Member                                                                     |                                                                                                                                                                                                                                   |
-| -------------------------------------------------------------------------- | --------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
-| `readonly language: string`                                                | Textus's UI language ("en", "zh", "zh-Hant", ...).                                                                                                                                                                                |
-| `readonly appVersion: string`                                              |                                                                                                                                                                                                                                   |
-| `readonly apiVersion: string`                                              | This API's version: "1.7" from Textus 1.4.3 ("1.6": 1.4.2, "1.5": 1.3.13-rc.1, "1.4": 1.3.10, "1.3": 1.3.10-rc.1, "1.2": 1.3.9, "1.1": 1.3.0-beta.8). Prefer engines.textus; compare it as numbers, not as text ("1.10" > "1.9"). |
-| `readonly platform: "macos" \| "windows" \| "linux" \| "ios" \| "android"` |                                                                                                                                                                                                                                   |
-| `readonly theme: "light" \| "dark"`                                        |                                                                                                                                                                                                                                   |
-| `onDidChangeTheme: Event<"light" \| "dark">`                               |                                                                                                                                                                                                                                   |
-| `onDidChangeLanguage: Event<string>`                                       |                                                                                                                                                                                                                                   |
-| `readClipboard(): Promise<string>`                                         | Plain text on the system clipboard (needs clipboard).                                                                                                                                                                             |
-| `writeClipboard(text: string): Promise<void>`                              |                                                                                                                                                                                                                                   |
-| `onDidCopy: Event<{ text: string; cut: boolean }>`                         | 1.3: the user copied or cut text from a document (needs clipboard): the Markdown that went on the clipboard, math source kept. Not what is copied elsewhere in Textus or in other apps.                                           |
+| Member                                                                     |                                                                                                                                                                                                                                                 |
+| -------------------------------------------------------------------------- | ----------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| `readonly language: string`                                                | Textus's UI language ("en", "zh", "zh-Hant", ...).                                                                                                                                                                                              |
+| `readonly appVersion: string`                                              |                                                                                                                                                                                                                                                 |
+| `readonly apiVersion: string`                                              | This API's version: "1.8" from Textus 1.4.4 ("1.7": 1.4.3, "1.6": 1.4.2, "1.5": 1.3.13-rc.1, "1.4": 1.3.10, "1.3": 1.3.10-rc.1, "1.2": 1.3.9, "1.1": 1.3.0-beta.8). Prefer engines.textus; compare it as numbers, not as text ("1.10" > "1.9"). |
+| `readonly platform: "macos" \| "windows" \| "linux" \| "ios" \| "android"` |                                                                                                                                                                                                                                                 |
+| `readonly theme: "light" \| "dark"`                                        |                                                                                                                                                                                                                                                 |
+| `onDidChangeTheme: Event<"light" \| "dark">`                               |                                                                                                                                                                                                                                                 |
+| `onDidChangeLanguage: Event<string>`                                       |                                                                                                                                                                                                                                                 |
+| `readClipboard(): Promise<string>`                                         | Plain text on the system clipboard (needs clipboard).                                                                                                                                                                                           |
+| `writeClipboard(text: string): Promise<void>`                              |                                                                                                                                                                                                                                                 |
+| `onDidCopy: Event<{ text: string; cut: boolean }>`                         | 1.3: the user copied or cut text from a document (needs clipboard): the Markdown that went on the clipboard, math source kept. Not what is copied elsewhere in Textus or in other apps.                                                         |
 
 ## L10n
 
@@ -976,6 +977,19 @@ From 1.7: text read as the app reads it.
 | `count(markdown: string): Promise<{ words: number; characters: number }>`         | Words and characters as the status bar counts them.                                                                    |
 | `splitFrontmatter(text: string): Promise<{ yaml: string \| null; body: string }>` | A note's front matter (its YAML, null with none) and the rest.                                                         |
 | `compareNames(a: string, b: string): number`                                      | Names in the file tree's order: "Week2" before "Week10", case and accents aside, in the UI language. For `Array.sort`. |
+
+## Path
+
+Paths as Textus writes them: "/" between parts on every system; a "\\" in what is given is read as one. From 1.8.
+
+| Member                                         |                                                                                                              |
+| ---------------------------------------------- | ------------------------------------------------------------------------------------------------------------ |
+| `join(...parts: string[]): string`             | The parts joined, "." and ".." worked out: join("a", "../b") is "b".                                         |
+| `normalize(path: string): string`              | "." and ".." worked out, "/" between parts, no "/" at the end.                                               |
+| `dirname(path: string): string`                | The folder it is in: "." for a bare name, "/" at the top.                                                    |
+| `basename(path: string, ext?: string): string` | The last part; without `ext` when it ends so.                                                                |
+| `extname(path: string): string`                | From the last "." of the last part (".md"), "" for none or a name that starts with its only dot (".textus"). |
+| `relative(from: string, to: string): string`   | How to get from the folder `from` to `to`: "../ideas/a.md".                                                  |
 
 ## MenuItem
 

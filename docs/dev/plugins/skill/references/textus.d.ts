@@ -164,13 +164,15 @@ declare global {
       appearance: Appearance;
       /** 1.7: text as the app reads it. */
       text: Text;
+      /** From 1.8: paths worked out in the plugin's frame; no permission. */
+      path: Path;
     }
 
     interface Env {
       /** Textus's UI language ("en", "zh", "zh-Hant", ...). */
       readonly language: string;
       readonly appVersion: string;
-      /** This API's version: "1.7" from Textus 1.4.3 ("1.6": 1.4.2, "1.5": 1.3.13-rc.1,
+      /** This API's version: "1.8" from Textus 1.4.4 ("1.7": 1.4.3, "1.6": 1.4.2, "1.5": 1.3.13-rc.1,
        *  "1.4": 1.3.10, "1.3": 1.3.10-rc.1, "1.2": 1.3.9, "1.1": 1.3.0-beta.8). Prefer engines.textus; compare
        *  it as numbers, not as text ("1.10" > "1.9"). */
       readonly apiVersion: string;
@@ -1627,6 +1629,24 @@ declare global {
       /** Names in the file tree's order: "Week2" before "Week10", case
        *  and accents aside, in the UI language. For `Array.sort`. */
       compareNames(a: string, b: string): number;
+    }
+
+    /** Paths as Textus writes them: "/" between parts on every system; a
+     *  "\\" in what is given is read as one. From 1.8. */
+    interface Path {
+      /** The parts joined, "." and ".." worked out: join("a", "../b") is "b". */
+      join(...parts: string[]): string;
+      /** "." and ".." worked out, "/" between parts, no "/" at the end. */
+      normalize(path: string): string;
+      /** The folder it is in: "." for a bare name, "/" at the top. */
+      dirname(path: string): string;
+      /** The last part; without `ext` when it ends so. */
+      basename(path: string, ext?: string): string;
+      /** From the last "." of the last part (".md"), "" for none or a
+       *  name that starts with its only dot (".textus"). */
+      extname(path: string): string;
+      /** How to get from the folder `from` to `to`: "../ideas/a.md". */
+      relative(from: string, to: string): string;
     }
 
     // ---------------------------------------------------------------

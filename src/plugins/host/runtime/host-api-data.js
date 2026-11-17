@@ -1,5 +1,6 @@
 // The plugin API: what the folder's notes say, Git, the network, settings,
-// AI tools, other plugins, export, links, jobs, notices, text and the app.
+// AI tools, other plugins, export, links, jobs, notices, text, paths and
+// the app.
 
 textus.metadata = {
   get: function (path) {
@@ -218,6 +219,69 @@ textus.text = {
     return collator.compare(a, b) || (a < b ? -1 : a > b ? 1 : 0);
   },
 };
+
+// Paths as Textus writes them: "/" between parts on every system (a "\\"
+// is read as one), no permission, nothing leaves the frame.
+textus.path = (function () {
+  var parts = function (path) {
+    return String(path).replace(/\\/g, "/").split("/");
+  };
+  var normalize = function (path) {
+    var text = String(path).replace(/\\/g, "/");
+    var lead = text.match(/^(\/|[A-Za-z]:\/)/);
+    var out = [];
+    parts(text.slice(lead ? lead[0].length : 0)).forEach(function (part) {
+      if (part === "" || part === ".") return;
+      if (part === ".." && out.length && out[out.length - 1] !== "..")
+        out.pop();
+      else if (part !== ".." || !lead) out.push(part);
+    });
+    var joined = (lead ? lead[0] : "") + out.join("/");
+    return joined || (lead ? lead[0] : ".");
+  };
+  var basename = function (path, ext) {
+    var name = parts(String(path).replace(/[\\/]+$/, "")).pop() || "";
+    return ext && name.length > ext.length && name.slice(-ext.length) === ext
+      ? name.slice(0, -ext.length)
+      : name;
+  };
+  return {
+    normalize: normalize,
+    join: function () {
+      return normalize(
+        Array.prototype.filter
+          .call(arguments, function (part) {
+            return part !== "";
+          })
+          .join("/"),
+      );
+    },
+    dirname: function (path) {
+      var norm = normalize(path);
+      var at = norm.lastIndexOf("/");
+      if (at < 0) return ".";
+      return at === 0 || /^[A-Za-z]:\/$/.test(norm.slice(0, at + 1))
+        ? norm.slice(0, at + 1)
+        : norm.slice(0, at);
+    },
+    basename: basename,
+    extname: function (path) {
+      var name = basename(path);
+      var at = name.lastIndexOf(".");
+      return at > 0 ? name.slice(at) : "";
+    },
+    relative: function (from, to) {
+      var a = normalize(from).split("/").filter(Boolean);
+      var b = normalize(to).split("/").filter(Boolean);
+      var same = 0;
+      while (same < a.length && same < b.length && a[same] === b[same]) same++;
+      var up = a.slice(same).map(function () {
+        return "..";
+      });
+      return up.concat(b.slice(same)).join("/") || ".";
+    },
+  };
+})();
 
 textus.appearance = {
   // Layered over the theme until disposed or the plugin stops.
