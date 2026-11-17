@@ -16,8 +16,10 @@ type Args = Record<string, unknown>;
 const text = (args: Args, key: string) =>
   typeof args[key] === "string" ? (args[key] as string).trim() : "";
 
-async function folder() {
-  const root = getWindowAccess()?.rootPath();
+/** The folder the AI works in, which its call carries: the sidebar's may
+ *  be another. */
+async function folder(args: Args) {
+  const root = text(args, "__root") || getWindowAccess()?.rootPath();
   if (!root) throw new Error("No folder is open.");
   const index = await folderIndex(APP_TOOLS_OWNER, root);
   const rel = (path: string) => index.byPath.get(path)?.rel ?? path;
@@ -36,7 +38,7 @@ function documentAt(
 }
 
 async function listTasks(args: Args) {
-  const { index, rel } = await folder();
+  const { index, rel } = await folder(args);
   const status = text(args, "status") || "open";
   const at = text(args, "path");
   const doc = at ? documentAt(index, at) : undefined;
@@ -65,7 +67,7 @@ async function listTasks(args: Args) {
 }
 
 async function backlinks(args: Args) {
-  const { index, rel } = await folder();
+  const { index, rel } = await folder(args);
   const doc = documentAt(index, text(args, "path"));
   if (!doc) return `No note ${text(args, "path")} in the folder.`;
   const links = backlinksIn(index, doc.path);
@@ -73,15 +75,15 @@ async function backlinks(args: Args) {
   return links.map((l) => `${rel(l.path)}:${l.line + 1}: ${l.text}`).join("\n");
 }
 
-async function listTags() {
-  const { index } = await folder();
+async function listTags(args: Args) {
+  const { index } = await folder(args);
   const tags = tagsIn(index);
   if (!tags.length) return "The folder's notes have no tags.";
   return tags.map((t) => `#${t.tag} (${t.count})`).join("\n");
 }
 
 async function notesWithTag(args: Args) {
-  const { index } = await folder();
+  const { index } = await folder(args);
   const tag = text(args, "tag").replace(/^#/, "").toLowerCase();
   const notes = index.documents.filter((d) =>
     d.tags.some((t) => {

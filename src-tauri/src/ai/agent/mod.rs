@@ -350,8 +350,8 @@ async fn ai_agent_message_inner(
                 tools.add(tool);
             }
             // What the folder's index knows: tasks, backlinks, tags.
-            if workspace.root.is_some() {
-                for tool in crate::plugins::app_tools::folder_tools(&app, &window) {
+            if let Some(root) = workspace.root.as_deref() {
+                for tool in crate::plugins::app_tools::folder_tools(&app, &window, root) {
                     tools.add(tool);
                 }
             }

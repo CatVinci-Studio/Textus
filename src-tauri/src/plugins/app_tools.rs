@@ -13,7 +13,11 @@ use tauri::AppHandle;
 /// The owner a window tool's call names, where a plugin's names its id.
 pub(super) const APP: &str = "textus";
 
-/// One tool answered by `window`.
+/// The argument a folder tool's call carries the AI's folder in: the one
+/// its other tools work in, which the sidebar's may not be.
+const ROOT_ARG: &str = "__root";
+
+/// One tool answered by `window`; `root`, the folder it reads, goes along.
 fn window_tool<'a>(
     app: &AppHandle,
     window: &str,
@@ -21,6 +25,7 @@ fn window_tool<'a>(
     description: &'static str,
     parameters: Value,
     modes: &'static [AgentMode],
+    root: Option<String>,
 ) -> Tool<'a> {
     let (app, window) = (app.clone(), window.to_string());
     Tool {
@@ -32,7 +37,7 @@ fn window_tool<'a>(
         access: Access::ReadOnly,
         modes,
         run: Run::Async(Box::new(move |call: ToolCall| {
-            let (app, window) = (app.clone(), window.clone());
+            let (app, window, root) = (app.clone(), window.clone(), root.clone());
             Box::pin(async move {
                 let tool = PluginAiTool {
                     plugin: APP.into(),
@@ -40,7 +45,11 @@ fn window_tool<'a>(
                     description: String::new(),
                     parameters: json!({}),
                 };
-                let arguments = serde_json::from_str(&call.arguments).unwrap_or_else(|_| json!({}));
+                let mut arguments: Value =
+                    serde_json::from_str(&call.arguments).unwrap_or_else(|_| json!({}));
+                if let (Some(root), Some(args)) = (root, arguments.as_object_mut()) {
+                    args.insert(ROOT_ARG.into(), Value::String(root));
+                }
                 let text = match call_tool(&app, &window, &tool, call.call_id, arguments).await {
                     Ok(text) | Err(text) => text,
                 };
@@ -74,13 +83,15 @@ pub fn check_plugin_tool<'a>(app: &AppHandle, window: &str) -> Tool<'a> {
             "required": ["files"]
         }),
         &[AgentMode::Create],
+        None,
     )
 }
 
-/// What the open folder's notes hold, read from its index: offered with a
-/// folder open.
-pub fn folder_tools<'a>(app: &AppHandle, asking: &str) -> Vec<Tool<'a>> {
+/// What the AI's folder's notes hold, read from its index: offered with a
+/// folder for the AI.
+pub fn folder_tools<'a>(app: &AppHandle, asking: &str, root: &str) -> Vec<Tool<'a>> {
     let window = &editor_window(app, asking);
+    let root = Some(root.to_string());
     let path = |what: &str| json!({ "type": "string", "description": what });
     vec![
         window_tool(
@@ -100,6 +111,7 @@ pub fn folder_tools<'a>(app: &AppHandle, asking: &str) -> Vec<Tool<'a>> {
                 }
             }),
             EVERY_MODE,
+            root.clone(),
         ),
         window_tool(
             app,
@@ -112,6 +124,7 @@ pub fn folder_tools<'a>(app: &AppHandle, asking: &str) -> Vec<Tool<'a>> {
                 "required": ["path"]
             }),
             EVERY_MODE,
+            root.clone(),
         ),
         window_tool(
             app,
@@ -120,6 +133,7 @@ pub fn folder_tools<'a>(app: &AppHandle, asking: &str) -> Vec<Tool<'a>> {
             "Lists the #tags used in the open folder's notes (in the text and the front matter), the most used first, with how many notes use each.",
             json!({ "type": "object", "properties": {} }),
             EVERY_MODE,
+            root.clone(),
         ),
         window_tool(
             app,
@@ -132,6 +146,7 @@ pub fn folder_tools<'a>(app: &AppHandle, asking: &str) -> Vec<Tool<'a>> {
                 "required": ["tag"]
             }),
             EVERY_MODE,
+            root.clone(),
         ),
     ]
 }

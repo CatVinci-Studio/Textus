@@ -100,7 +100,7 @@ vi.mock("../workspace/metadata-cache", async (importOriginal) => {
     documents,
     byPath: new Map(documents.map((d) => [d.path, d])),
   };
-  return { ...real, folderIndex: async () => index };
+  return { ...real, folderIndex: vi.fn(async () => index) };
 });
 
 describe("the app's own folder tools", () => {
@@ -116,5 +116,14 @@ describe("the app's own folder tools", () => {
       "Plan.md - Plan",
     );
     await expect(appTool("nothing", {})).rejects.toThrow("No tool nothing.");
+  });
+
+  it("read the AI's folder its call names, not the sidebar's", async () => {
+    const { appTool } = await import("./app-ai-tools");
+    const { folderIndex } = await import("../workspace/metadata-cache");
+    await appTool("list_tags", { __root: "/ai" });
+    expect(vi.mocked(folderIndex)).toHaveBeenLastCalledWith("textus", "/ai");
+    await appTool("list_tags", {});
+    expect(vi.mocked(folderIndex)).toHaveBeenLastCalledWith("textus", "/v");
   });
 });
