@@ -375,7 +375,7 @@ describe("saving after an edit elsewhere keeps as written", () => {
       const list = schema.nodes.bullet_list.create(null, item);
       view.dispatch(view.state.tr.insert(doc.content.size, list));
     });
-    expect(out).toBe(`${markdown}\n* a\n`);
+    expect(out).toBe(`${markdown}\n- a\n`);
   });
 
   it("doesn't bring back a deleted definition a setext heading was read with", async () => {

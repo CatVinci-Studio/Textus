@@ -12,6 +12,7 @@ import remarkCjkFriendlyGfmStrikethrough from "remark-cjk-friendly-gfm-strikethr
 import {
   commonmarkWithoutMarks,
   gfmWithoutStrikethrough,
+  unalignedTableCells,
   headingInputRule,
   orderedListInputRule,
   ruleInputRule,
@@ -271,6 +272,7 @@ export function withEditorCore(
       .use(editing(tableEdgeArrowPlugin))
       .use(editing([tableKeys, tableRowPaste, clickBelowEnd]))
       .use(gfmWithoutStrikethrough)
+      .use(unalignedTableCells)
 
       // Before anything else can misread its "---" lines as setext headings.
       .use(remarkFrontmatterPlugin)

@@ -9,6 +9,14 @@ afterEach(async () => {
 });
 
 describe("a new table", () => {
+  it("is saved with no column alignment", async () => {
+    const t = await openView("above\n");
+    t.caretAtEnd();
+    insertTable((fn) => t.editor.action(fn), 2, 2);
+    expect(t.markdown()).toMatch(/\| -+ \| -+ \|/);
+    expect(t.markdown()).not.toContain(":-");
+  });
+
   it("keeps its caret in the first cell when the browser puts back the one it had", async () => {
     vi.useFakeTimers();
     const t = await openView("above\n");

@@ -72,7 +72,7 @@ test("＋ adds the block picked below; ⋮⋮ turns it into another kind or dele
   await page.locator(`${handle} .block-handle-grip`).click();
   await page.getByRole("menuitem", { name: "Delete Block" }).click();
   await settled(page);
-  expect(await sourceOf(page)).toBe("## Middle\n\n* Omega");
+  expect(await sourceOf(page)).toBe("## Middle\n\n- Omega");
 });
 
 test("the handles stay away while typing, and off in Settings", async ({

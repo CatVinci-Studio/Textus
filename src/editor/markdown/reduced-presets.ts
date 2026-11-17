@@ -41,6 +41,8 @@ import {
   strikethroughInputRule,
   strikethroughKeymap,
   toggleStrikethroughCommand,
+  tableCellSchema,
+  tableHeaderSchema,
 } from "@milkdown/kit/preset/gfm";
 import { editorViewCtx } from "@milkdown/kit/core";
 import {
@@ -48,7 +50,7 @@ import {
   textblockTypeInputRule,
   wrappingInputRule,
 } from "@milkdown/kit/prose/inputrules";
-import { $inputRule } from "@milkdown/kit/utils";
+import { $inputRule, type $NodeSchema } from "@milkdown/kit/utils";
 import { isLinuxPlatform } from "../../platform/os";
 
 // The stock commonmark/gfm presets minus what Textus replaces or must avoid:
@@ -156,3 +158,33 @@ export const commonmarkWithoutMarks = (commonmark as unknown[]).filter(
 export const gfmWithoutStrikethrough = (gfm as unknown[]).filter(
   (piece) => !excludedGfmSet.has(piece),
 ) as typeof gfm;
+
+/** A new cell has no alignment, as one read from `| --- |`: Milkdown's
+ *  "left" saved every new table as `| :--- |`. */
+const unaligned = <T extends string>(schema: $NodeSchema<T>) =>
+  schema.extendSchema((prev) => (ctx) => {
+    const spec = prev(ctx);
+    return {
+      ...spec,
+      attrs: {
+        ...spec.attrs,
+        alignment: {
+          default: null,
+          validate: "string|null",
+        },
+      },
+      parseDOM: spec.parseDOM?.map((rule) => ({
+        ...rule,
+        getAttrs: (dom: HTMLElement) => {
+          const attrs = rule.getAttrs?.(dom);
+          if (attrs === false) return false;
+          return { ...attrs, alignment: dom.style.textAlign || null };
+        },
+      })),
+    };
+  });
+
+export const unalignedTableCells = [
+  unaligned(tableCellSchema),
+  unaligned(tableHeaderSchema),
+].flat();
