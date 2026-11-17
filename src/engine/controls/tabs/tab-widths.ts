@@ -60,10 +60,17 @@ export function tabWidths(
     Math.max(min, Math.min(max, tab.fixed + tab.title)),
   );
   const sum = (ws: readonly number[]) => ws.reduce((a, w) => a + w, 0);
+  // At its least a tab shows `fewest` of its name: one whose × is hidden
+  // gives its name that room too.
   const floor = tabs.map((tab, i) =>
     Math.min(
       wanted[i]!,
-      Math.max(min, tab.fixed + Math.min(tab.title, fewest)),
+      Math.max(
+        min,
+        tab.fixed -
+          (tab.open ? 0 : (tab.spare ?? 0)) +
+          Math.min(tab.title, fewest),
+      ),
     ),
   );
   const squeeze = shrink && sum(wanted) > room;

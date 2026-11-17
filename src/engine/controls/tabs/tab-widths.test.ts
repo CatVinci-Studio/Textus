@@ -126,6 +126,16 @@ describe("tabWidths", () => {
     const hidden = { ...tab(61), spare: 22 };
     const fit = tabWidths([hidden, tab(61)], { ...LIMITS, max: 100 }, 600);
     expect(fit.cut).toEqual([false, true]);
+    // Squeezed, its least is a few letters with that room too: the open
+    // tab keeps the rest and shows whole.
+    const open = { ...tab(61, 43), open: true };
+    const tight = tabWidths(
+      [{ ...tab(109, 43), spare: 27 }, open],
+      { ...LIMITS, fewest: 36 },
+      182,
+    );
+    expect(tight.widths).toEqual([78, 104]);
+    expect(tight.cut).toEqual([true, false]);
   });
 
   it("fits no tabs in any row", () => {
