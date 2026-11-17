@@ -54,9 +54,11 @@
   cursor: pointer;
 }
 
-.memory-section h4 button:hover,
-.memory-link:hover {
-  text-decoration: underline;
+@media (hover: hover) {
+  .memory-section h4 button:hover,
+  .memory-link:hover {
+    text-decoration: underline;
+  }
 }
 
 .memory-link {
@@ -198,9 +200,11 @@
   cursor: pointer;
 }
 
-.memory-entry-delete:hover {
-  background: color-mix(in srgb, var(--ui-text) 8%, transparent);
-  color: var(--ui-text);
+@media (hover: hover) {
+  .memory-entry-delete:hover {
+    background: color-mix(in srgb, var(--ui-text) 8%, transparent);
+    color: var(--ui-text);
+  }
 }
 
 /* "AI remembered": personal, then the project's, each item its text, a
@@ -230,9 +234,11 @@
   cursor: pointer;
 }
 
-.memory-reveal:hover {
-  color: var(--ui-accent-text);
-  text-decoration: underline;
+@media (hover: hover) {
+  .memory-reveal:hover {
+    color: var(--ui-accent-text);
+    text-decoration: underline;
+  }
 }
 
 /* Recently forgotten: closed until opened, Restore on each. */
@@ -319,8 +325,10 @@
   cursor: pointer;
 }
 
-.memory-remembered-actions button:hover {
-  text-decoration: underline;
+@media (hover: hover) {
+  .memory-remembered-actions button:hover {
+    text-decoration: underline;
+  }
 }
 
 .memory-note {

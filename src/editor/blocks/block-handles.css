@@ -45,9 +45,11 @@
   display: none;
 }
 
-.block-handle-button:hover {
-  background: color-mix(in srgb, currentColor 12%, transparent);
-  color: var(--doc-text);
+@media (hover: hover) {
+  .block-handle-button:hover {
+    background: color-mix(in srgb, currentColor 12%, transparent);
+    color: var(--doc-text);
+  }
 }
 
 .block-handle-grip {

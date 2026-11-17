@@ -209,10 +209,12 @@
   inset: 0 -4px;
 }
 
-.table-add-row-btn:hover,
-.table-add-col-btn:hover {
-  color: var(--doc-accent-text);
-  border-color: var(--doc-accent);
+@media (hover: hover) {
+  .table-add-row-btn:hover,
+  .table-add-col-btn:hover {
+    color: var(--doc-accent-text);
+    border-color: var(--doc-accent);
+  }
 }
 
 .table-add-row-btn {
@@ -321,8 +323,10 @@
   color: inherit;
   cursor: pointer;
 }
-.table-align-pill > button:hover:not(:disabled) {
-  color: var(--doc-text);
+@media (hover: hover) {
+  .table-align-pill > button:hover:not(:disabled) {
+    color: var(--doc-text);
+  }
 }
 .table-align-pill > button[aria-pressed="true"] {
   color: var(--doc-accent-text);
@@ -337,9 +341,11 @@
   aspect-ratio: 1;
   padding: 0.1em;
 }
-.block-pill.is-danger:hover {
-  color: var(--ui-danger);
-  border-color: color-mix(in srgb, var(--ui-danger) 40%, var(--doc-border));
+@media (hover: hover) {
+  .block-pill.is-danger:hover {
+    color: var(--ui-danger);
+    border-color: color-mix(in srgb, var(--ui-danger) 40%, var(--doc-border));
+  }
 }
 
 /* The size grid, under its pill. */

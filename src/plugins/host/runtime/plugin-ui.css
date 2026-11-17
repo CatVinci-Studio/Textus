@@ -24,8 +24,10 @@
   border-radius: var(--shape-pill);
   background: color-mix(in srgb, var(--ui-muted) 35%, transparent) padding-box;
 }
-::-webkit-scrollbar-thumb:hover {
-  background-color: color-mix(in srgb, var(--ui-muted) 55%, transparent);
+@media (hover: hover) {
+  ::-webkit-scrollbar-thumb:hover {
+    background-color: color-mix(in srgb, var(--ui-muted) 55%, transparent);
+  }
 }
 :not(.is-scrolling)::-webkit-scrollbar-thumb:not(:hover) {
   background-color: transparent;
@@ -103,8 +105,10 @@ a {
   color: var(--ui-text);
   cursor: pointer;
 }
-:where(button:not(:disabled), .button):hover {
-  background: color-mix(in srgb, currentColor 8%, transparent);
+@media (hover: hover) {
+  :where(button:not(:disabled), .button):hover {
+    background: color-mix(in srgb, currentColor 8%, transparent);
+  }
 }
 /* The primary action is ink, as the app's: text colour as fill. */
 button.primary {

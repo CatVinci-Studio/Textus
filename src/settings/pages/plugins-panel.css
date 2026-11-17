@@ -41,8 +41,10 @@
   border-radius: var(--shape-s);
 }
 
-.plugins-panel-row:hover {
-  background: var(--ui-hover);
+@media (hover: hover) {
+  .plugins-panel-row:hover {
+    background: var(--ui-hover);
+  }
 }
 
 .plugins-panel-row[data-off] .plugins-panel-open {
@@ -123,6 +125,8 @@
   flex: 1;
 }
 
-.plugins-panel-action[data-update]:hover {
-  color: var(--ui-accent);
+@media (hover: hover) {
+  .plugins-panel-action[data-update]:hover {
+    color: var(--ui-accent);
+  }
 }

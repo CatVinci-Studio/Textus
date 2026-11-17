@@ -91,9 +91,11 @@
   transition: background-color var(--dur-fast) var(--ease-standard);
 }
 
-.start-page-action:hover {
-  background: var(--ui-hover);
-  transition-duration: var(--dur-instant);
+@media (hover: hover) {
+  .start-page-action:hover {
+    background: var(--ui-hover);
+    transition-duration: var(--dur-instant);
+  }
 }
 
 .start-page-action-icon {
@@ -134,8 +136,10 @@
   border-radius: var(--shape-s);
 }
 
-.start-page-row:hover {
-  background: var(--ui-hover);
+@media (hover: hover) {
+  .start-page-row:hover {
+    background: var(--ui-hover);
+  }
 }
 
 .start-page-open {
@@ -186,9 +190,11 @@
   cursor: pointer;
 }
 
-.start-page-remove:hover {
-  background: var(--ui-hover);
-  color: var(--ui-text);
+@media (hover: hover) {
+  .start-page-remove:hover {
+    background: var(--ui-hover);
+    color: var(--ui-text);
+  }
 }
 
 /* The sidebar with no folder: the same three rows. */

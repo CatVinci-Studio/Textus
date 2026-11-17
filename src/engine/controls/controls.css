@@ -27,8 +27,10 @@
   text-align: left;
   cursor: pointer;
 }
-.tx-list-row:hover {
-  background: var(--ui-hover);
+@media (hover: hover) {
+  .tx-list-row:hover {
+    background: var(--ui-hover);
+  }
 }
 .tx-list-row:is([aria-selected="true"], .is-selected) {
   background: var(--ui-selected);
@@ -109,8 +111,10 @@
   border-radius: var(--shape-pill);
   cursor: pointer;
 }
-.tx-zoom > button.tx-value:hover {
-  background: var(--ui-hover);
+@media (hover: hover) {
+  .tx-zoom > button.tx-value:hover {
+    background: var(--ui-hover);
+  }
 }
 
 /* Find in a page: a field, how many it found, the arrows. */
@@ -223,8 +227,10 @@ input[type="checkbox"].tx-switch:focus-visible {
   font-size: var(--text-secondary);
   cursor: pointer;
 }
-.tx-select:hover {
-  background: var(--ui-hover);
+@media (hover: hover) {
+  .tx-select:hover {
+    background: var(--ui-hover);
+  }
 }
 /* The chevron already points down. */
 .tx-select > .tx-icon[data-icon="chevron"] {
@@ -286,8 +292,10 @@ input[type="range"].tx-slider {
   font-variant-numeric: tabular-nums;
   cursor: pointer;
 }
-.tx-calendar-day:hover {
-  background: var(--ui-hover);
+@media (hover: hover) {
+  .tx-calendar-day:hover {
+    background: var(--ui-hover);
+  }
 }
 .tx-calendar-day.is-other {
   color: var(--ui-muted);

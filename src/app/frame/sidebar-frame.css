@@ -60,16 +60,20 @@
   corner-shape: round;
 }
 
-.sidebar-body:hover::-webkit-scrollbar-thumb,
-.sidebar-body:hover .plugin-list-rows::-webkit-scrollbar-thumb {
-  background: color-mix(in srgb, var(--ui-text) 28%, transparent);
+@media (hover: hover) {
+  .sidebar-body:hover::-webkit-scrollbar-thumb,
+  .sidebar-body:hover .plugin-list-rows::-webkit-scrollbar-thumb {
+    background: color-mix(in srgb, var(--ui-text) 28%, transparent);
+  }
 }
 
-:is(
-    .sidebar-body,
-    .sidebar-body .plugin-list-rows
-  )::-webkit-scrollbar-thumb:hover {
-  background: color-mix(in srgb, var(--ui-text) 45%, transparent);
+@media (hover: hover) {
+  :is(
+      .sidebar-body,
+      .sidebar-body .plugin-list-rows
+    )::-webkit-scrollbar-thumb:hover {
+    background: color-mix(in srgb, var(--ui-text) 45%, transparent);
+  }
 }
 
 .text-button {
@@ -120,8 +124,10 @@
   cursor: pointer;
 }
 
-.sidebar-view-action:hover {
-  background: var(--ui-hover);
+@media (hover: hover) {
+  .sidebar-view-action:hover {
+    background: var(--ui-hover);
+  }
 }
 
 :root[data-window-chrome="mobile"] .main-pane {

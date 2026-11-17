@@ -260,8 +260,10 @@
   cursor: pointer;
 }
 
-.project-bar-folder:hover {
-  background: var(--ui-hover);
+@media (hover: hover) {
+  .project-bar-folder:hover {
+    background: var(--ui-hover);
+  }
 }
 
 .project-bar-icon {

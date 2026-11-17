@@ -160,8 +160,10 @@ button.agent-context-chip:hover {
   text-decoration: none;
 }
 
-.agent-markdown a:hover {
-  text-decoration: underline;
+@media (hover: hover) {
+  .agent-markdown a:hover {
+    text-decoration: underline;
+  }
 }
 
 /* Headings stay close to the reply's own size - this is a chat answer,

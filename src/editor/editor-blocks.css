@@ -216,12 +216,17 @@
   pointer-events: none;
 }
 
-.block-pill:is(button):hover,
 .block-pill:focus-visible,
-.code-block-language-select:hover,
 .code-block-language-select:focus-visible,
 .code-block-language-select[aria-expanded="true"] {
   color: var(--doc-text);
+}
+
+@media (hover: hover) {
+  .block-pill:is(button):hover,
+  .code-block-language-select:hover {
+    color: var(--doc-text);
+  }
 }
 
 .block-pill.is-copied {

@@ -11,8 +11,10 @@
     color var(--dur-fast) var(--ease-standard);
 }
 
-:is(.tab-pill, .sidebar-tab):hover {
-  background: var(--ui-hover);
+@media (hover: hover) {
+  :is(.tab-pill, .sidebar-tab):hover {
+    background: var(--ui-hover);
+  }
 }
 
 :is(.tab-pill-active, .sidebar-tab-active) {
@@ -64,8 +66,10 @@
   font-size: var(--text-secondary);
 }
 
-:is(.settings-select, .inline-chat-mode, .paper-outline-kind):hover {
-  border-color: color-mix(in srgb, var(--ui-muted) 45%, var(--ui-border));
+@media (hover: hover) {
+  :is(.settings-select, .inline-chat-mode, .paper-outline-kind):hover {
+    border-color: color-mix(in srgb, var(--ui-muted) 45%, var(--ui-border));
+  }
 }
 
 /* Over the pointer cursor above, the one every disabled button has. */
@@ -265,8 +269,10 @@ input[type="checkbox"].ui-check:checked {
   background: color-mix(in srgb, var(--ui-muted) 35%, transparent) padding-box;
 }
 
-::-webkit-scrollbar-thumb:hover {
-  background-color: color-mix(in srgb, var(--ui-muted) 55%, transparent);
+@media (hover: hover) {
+  ::-webkit-scrollbar-thumb:hover {
+    background-color: color-mix(in srgb, var(--ui-muted) 55%, transparent);
+  }
 }
 
 ::-webkit-scrollbar-corner {

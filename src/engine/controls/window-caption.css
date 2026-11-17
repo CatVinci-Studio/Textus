@@ -66,10 +66,12 @@
   opacity: 0.85;
 }
 
-:root[data-platform="linux"] .window-caption-button:hover,
-:root[data-platform="linux"] .window-caption-close:hover {
-  background: color-mix(in srgb, var(--ui-text) 14%, transparent);
-  color: var(--ui-text);
+@media (hover: hover) {
+  :root[data-platform="linux"] .window-caption-button:hover,
+  :root[data-platform="linux"] .window-caption-close:hover {
+    background: color-mix(in srgb, var(--ui-text) 14%, transparent);
+    color: var(--ui-text);
+  }
 }
 
 :root[data-platform="linux"] .window-caption-button:active,

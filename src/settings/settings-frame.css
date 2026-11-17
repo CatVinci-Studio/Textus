@@ -129,8 +129,10 @@
   hyphens: auto;
 }
 
-.settings-nav-item:hover {
-  background: var(--ui-hover);
+@media (hover: hover) {
+  .settings-nav-item:hover {
+    background: var(--ui-hover);
+  }
 }
 
 .settings-nav-item-active {

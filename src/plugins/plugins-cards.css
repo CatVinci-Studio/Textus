@@ -107,9 +107,11 @@
 button.plugin-card-open {
   cursor: pointer;
 }
-button.plugin-card-open:hover .plugin-card-name {
-  text-decoration: underline;
-  text-underline-offset: 2px;
+@media (hover: hover) {
+  button.plugin-card-open:hover .plugin-card-name {
+    text-decoration: underline;
+    text-underline-offset: 2px;
+  }
 }
 .plugin-card-name {
   font-weight: 600;
@@ -299,8 +301,10 @@ button.plugin-card-open:hover .plugin-card-name {
   font-size: var(--text-control);
   cursor: pointer;
 }
-.plugin-back:hover {
-  background: var(--ui-hover);
+@media (hover: hover) {
+  .plugin-back:hover {
+    background: var(--ui-hover);
+  }
 }
 .plugin-page-title {
   margin: 0 0 4px;

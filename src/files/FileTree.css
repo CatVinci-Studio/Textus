@@ -52,8 +52,10 @@
   padding-left: calc(var(--tree-indent) + var(--tree-chevron) + 8px);
 }
 
-.tree-row:hover {
-  background: var(--ui-hover);
+@media (hover: hover) {
+  .tree-row:hover {
+    background: var(--ui-hover);
+  }
 }
 
 .tree-row-active {

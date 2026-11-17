@@ -172,18 +172,26 @@
   transition: background var(--dur-fast) var(--ease-standard);
 }
 
-.review-bar-button:hover {
-  background: color-mix(in srgb, var(--ui-on-primary) 12%, transparent);
+@media (hover: hover) {
+  .review-bar-button:hover {
+    background: color-mix(in srgb, var(--ui-on-primary) 12%, transparent);
+  }
 }
 
 /* The bar's main button: Accept, or the notes bar's. */
 .review-bar-accept,
-.review-bar-accept:hover,
-.review-bar-primary,
-.review-bar-primary:hover {
+.review-bar-primary {
   border-color: var(--ui-on-primary);
   background: var(--ui-on-primary);
   color: var(--ui-primary);
+}
+@media (hover: hover) {
+  .review-bar-accept:hover,
+  .review-bar-primary:hover {
+    border-color: var(--ui-on-primary);
+    background: var(--ui-on-primary);
+    color: var(--ui-primary);
+  }
 }
 
 /* While a rewrite streams in (Accept, Reject), and with nothing to step

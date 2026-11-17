@@ -109,8 +109,10 @@
   font-size: var(--text-caption);
 }
 
-.tour-link:hover {
-  color: var(--ui-text);
+@media (hover: hover) {
+  .tour-link:hover {
+    color: var(--ui-text);
+  }
 }
 
 .tour-card code {

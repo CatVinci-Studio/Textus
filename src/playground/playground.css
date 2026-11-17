@@ -99,8 +99,10 @@ body {
   text-decoration: none;
 }
 
-.playground-download:hover {
-  background: color-mix(in srgb, var(--ui-primary) 85%, var(--ui-bg));
+@media (hover: hover) {
+  .playground-download:hover {
+    background: color-mix(in srgb, var(--ui-primary) 85%, var(--ui-bg));
+  }
 }
 
 /* The page: an island on the frame, as in the app. */

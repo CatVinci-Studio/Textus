@@ -134,12 +134,14 @@
   color: color-mix(in srgb, var(--ui-text) 72%, var(--ui-frame));
 }
 
-:root
-  .island-row
-  > .tab-bar
-  > .tab-strip
-  > .tab-pill:hover:not(.tab-pill-active) {
-  background: var(--ui-hover);
+@media (hover: hover) {
+  :root
+    .island-row
+    > .tab-bar
+    > .tab-strip
+    > .tab-pill:hover:not(.tab-pill-active) {
+    background: var(--ui-hover);
+  }
 }
 
 /* Between two tabs at rest, a short mark at their middle (as Chrome's):
