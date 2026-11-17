@@ -3,6 +3,7 @@ import { stopPluginUi, uiHandlers } from "./broker-ui";
 import { pluginWhenKeys } from "../contributions/plugin-when-keys";
 import { evaluateWhen } from "../contributions/when";
 import type { PluginScope } from "./broker-scope";
+import { lateContextItems } from "../../registry/context-menu-items";
 
 function scopeOf(id: string, granted: string[]) {
   const runCommand = vi.fn(() => Promise.resolve(null));
@@ -92,5 +93,50 @@ describe("ui.pick as a command line", () => {
     await uiHandlers(scope)["ui.pick"]({ items: [], commands: true });
     expect(Date.now() - held.owner.lastKeyAt).toBeLessThan(1000);
     held.owner = null;
+  });
+});
+
+describe("ui.registerContextMenu", () => {
+  it("adds what a plugin answers in time, runs its command, and goes when it stops", async () => {
+    vi.useFakeTimers();
+    const runCommand = vi.fn(() => Promise.resolve(null));
+    const scope = {
+      id: "a.cite",
+      name: () => "Cite",
+      deps: { runCommand },
+      request: async () => [
+        {
+          label: "Cite @smith2020",
+          command: "a.cite.open",
+          args: ["smith2020"],
+        },
+        { label: "", command: "a.cite.none" },
+        { label: "No command" },
+      ],
+    } as unknown as PluginScope;
+    uiHandlers(scope)["ui.registerContextMenu"]({ where: "editor" });
+    const slow = {
+      ...scope,
+      id: "a.slow",
+      request: () => new Promise(() => {}),
+    } as unknown as PluginScope;
+    uiHandlers(slow)["ui.registerContextMenu"]({ where: "editor" });
+    const found = lateContextItems("editor/context", {
+      path: null,
+      selectedText: "smith",
+    });
+    await vi.advanceTimersByTimeAsync(600);
+    const items = (await found) ?? [];
+    expect(items.map((i) => i.label)).toEqual(["Cite @smith2020"]);
+    items[0].onSelect();
+    expect(runCommand).toHaveBeenCalledWith(
+      "a.cite.open",
+      ["smith2020"],
+      "a.cite",
+    );
+    stopPluginUi("a.cite");
+    stopPluginUi("a.slow");
+    expect(lateContextItems("editor/context", { path: null })).toBeNull();
+    vi.useRealTimers();
   });
 });

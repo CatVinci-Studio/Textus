@@ -15,6 +15,7 @@ var hoverProviders = [];
 var pasteHandlers = {};
 var outlineProviders = [];
 var blockTypes = new Map();
+var menuProviders = {};
 var pickSearches = {};
 var pickSearchCount = 0;
 var pasteHandlerCount = 0;

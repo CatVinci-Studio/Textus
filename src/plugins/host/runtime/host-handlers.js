@@ -185,6 +185,10 @@ var handlers = {
     var controller = embedAsks.get(params.request);
     if (controller) controller.abort();
   },
+  $contextMenu: async function (params) {
+    var provide = menuProviders[params.where];
+    return provide ? plain((await provide(params.target)) || []) : [];
+  },
   $insertBlockType: async function (params) {
     var type = blockTypes.get(params.id);
     if (type) await type.insert();

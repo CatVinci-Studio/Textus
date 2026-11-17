@@ -238,6 +238,21 @@ declare global {
     // ---------------------------------------------------------------
 
     interface Ui {
+      /** Items for a right-click menu - the editor's or the file tree's -
+       *  worked out as it opens, from what it was opened on (the file; in
+       *  the editor also the selected text). Each item runs a command with
+       *  its args. Answers after 0.5 s are left out. No permission; the
+       *  command needs its own. From 1.8. */
+      registerContextMenu(
+        where: "editor" | "fileTree",
+        provide: (target: {
+          path: string | null;
+          folder?: boolean;
+          selectedText?: string;
+        }) =>
+          | { label: string; command: string; args?: unknown[] }[]
+          | Promise<{ label: string; command: string; args?: unknown[] }[]>,
+      ): Disposable;
       /** A short note at the bottom of the window that goes by itself.
        *  With `action` ("Undo"), a button on it: resolves true when it was
        *  clicked before the note went, false otherwise (Textus 1.3.12). */

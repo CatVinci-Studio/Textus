@@ -3,8 +3,10 @@ import type { EditorClipboard } from "../editor/clipboard/useEditorClipboard";
 import {
   buildContextMenuItems,
   buildPhoneMoreItems,
+  selectedText,
   type ContextMenuOptions,
 } from "../editor/editor-menu";
+import { useLateContextItems } from "../registry/useLateContextItems";
 import { ContextMenu } from "../engine/controls/ContextMenu";
 import { Presence } from "../engine/motion/usePresence";
 import type { Settings } from "../prefs/SettingsContext";
@@ -77,6 +79,12 @@ export function EditorContextMenu({
 }) {
   const ai = aiFeatures(settings);
   const imageService = useImageService(settings);
+  const lateItems = useLateContextItems(
+    "editor/context",
+    menu && !menu.block && !menu.phone
+      ? { path: null, selectedText: selectedText(run) }
+      : null,
+  );
   return (
     <Presence show={!!menu}>
       {menu && (
@@ -94,6 +102,7 @@ export function EditorContextMenu({
                   run,
                   {
                     t,
+                    lateItems,
                     imagePos: menu.imagePos,
                     imageLocation: menu.imageLocation,
                     drawnBlock: menu.drawnBlock,
