@@ -31,6 +31,13 @@ function useSignInModels(provider: string): SignInModels | null {
   return active ? (SIGN_IN_MODELS[provider] ?? null) : null;
 }
 
+/** Whether a provider's model list is fetched here: not the custom
+ *  endpoint's (its panel lists them) nor a sign-in's fixed models. */
+export function useModelListShown(provider: string): boolean {
+  const signIn = useSignInModels(provider);
+  return provider !== "custom" && !signIn;
+}
+
 /// Model picker for writing (completion and grammar) or the chat. Seeded
 /// from the catalog's `knownModels` so it is never empty; sign-in presets
 /// replace those where that login is active. Custom endpoints fall back to
@@ -191,15 +198,14 @@ export function ModelListRow({
 }) {
   const { settings } = useSettings();
   const provider = given ?? settings.aiProvider;
-  const signIn = useSignInModels(provider);
+  const shown = useModelListShown(provider);
   const { at } = useFetchedModels(provider);
   const [error, setError] = useState<string | null>(null);
   const [loading, setLoading] = useState(false);
   // A failed fetch belongs to the provider it was tried against.
   useEffect(() => setError(null), [provider]);
 
-  const canFetch = provider !== "custom" && !signIn;
-  if (!canFetch) return null;
+  if (!shown) return null;
 
   async function fetchModels() {
     setLoading(true);

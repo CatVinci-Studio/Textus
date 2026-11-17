@@ -95,12 +95,32 @@
   border-top: none;
 }
 
+/* The custom endpoint's address, key and model: labels in one column,
+   their boxes in the next, one left edge; a narrow panel stacks them. */
+.custom-endpoint {
+  container: custom-endpoint / inline-size;
+}
+
+.custom-endpoint-fields {
+  display: grid;
+  grid-template-columns: max-content minmax(0, 1fr);
+  align-items: center;
+  gap: 16px;
+  padding: 12px 0;
+}
+
+@container custom-endpoint (max-width: 400px) {
+  .custom-endpoint-fields {
+    grid-template-columns: minmax(0, 1fr);
+    gap: 8px;
+  }
+}
+
 .custom-model-row {
   display: flex;
   flex-wrap: wrap;
   align-items: center;
   gap: 8px;
-  flex: 1 1 16ch;
   min-width: 0;
 }
 

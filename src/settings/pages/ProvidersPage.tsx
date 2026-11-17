@@ -11,7 +11,7 @@ import {
 import { useSettingsConnected } from "../sections/provider-connection";
 import { ProviderAuthPanel } from "../sections/provider-auth";
 import { CustomProviderPanel } from "../sections/custom-provider";
-import { ModelListRow } from "../sections/agent";
+import { ModelListRow, useModelListShown } from "../sections/agent";
 import { SettingsGroup } from "./SettingsGroup";
 import "./providers-page.css";
 import { ModelChoices } from "./ModelChoices";
@@ -97,6 +97,7 @@ function ProviderDetail({
     entry.keyOptional && entry.id !== "custom"
       ? t.providerNoKeyRequired
       : undefined;
+  const listShown = useModelListShown(entry.id);
   return (
     <div className="providers-detail">
       <SettingsGroup title={status}>
@@ -111,9 +112,11 @@ function ProviderDetail({
           />
         )}
       </SettingsGroup>
-      <SettingsGroup title={t.providerModelsGroup}>
-        <ModelListRow t={t} provider={entry.id} />
-      </SettingsGroup>
+      {listShown && (
+        <SettingsGroup title={t.providerModelsGroup}>
+          <ModelListRow t={t} provider={entry.id} />
+        </SettingsGroup>
+      )}
       <p className="providers-note">{t.providerKeysLocal}</p>
     </div>
   );

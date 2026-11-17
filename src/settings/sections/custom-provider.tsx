@@ -130,13 +130,13 @@ export function CustomProviderPanel({
       : models;
 
   return (
-    <div>
+    <div className="custom-endpoint">
       {note && (
         <div className={note.error ? "settings-error" : "settings-success"}>
           {note.text}
         </div>
       )}
-      <div className="settings-field">
+      <div className="custom-endpoint-fields">
         <label className="settings-field-label">{t.customBaseUrlLabel}</label>
         <input
           aria-label={t.customBaseUrlLabel}
@@ -148,8 +148,6 @@ export function CustomProviderPanel({
           value={baseUrl}
           onChange={(e) => setBaseUrl(e.target.value)}
         />
-      </div>
-      <div className="settings-field">
         <label className="settings-field-label">{t.customApiKeyLabel}</label>
         <MaskedKeyInput
           className="settings-text-input"
@@ -158,8 +156,6 @@ export function CustomProviderPanel({
           value={apiKey}
           onChange={setApiKey}
         />
-      </div>
-      <div className="settings-field">
         <label className="settings-field-label">{t.customModelLabel}</label>
         <div className="custom-model-row">
           {models.length > 0 ? (
