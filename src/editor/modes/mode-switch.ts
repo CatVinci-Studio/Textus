@@ -88,6 +88,8 @@ export function applyEditorCaret(
   markdown: string,
   caret: ModeSwitchCaret,
   centre = false,
+  /** False: the caret goes there and the page stays where it is read. */
+  scroll = true,
 ): void {
   const prefixDoc = parseMarkdownSource(
     ctx,
@@ -97,7 +99,13 @@ export function applyEditorCaret(
   prefixDoc?.descendants((node, nodePos) => {
     if (node.isTextblock) pos = nodePos + 1 + node.content.size;
   });
-  placeEditorCaret(ctx.get(editorViewCtx), pos, caret.viewportY, centre);
+  placeEditorCaret(
+    ctx.get(editorViewCtx),
+    pos,
+    caret.viewportY,
+    centre,
+    scroll,
+  );
 }
 
 /** Places the WYSIWYG caret at document position `pos` and scrolls it to
@@ -107,6 +115,7 @@ export function placeEditorCaret(
   pos: number,
   viewportY: number | null,
   centre = false,
+  scroll = true,
 ): void {
   const { doc } = view.state;
   const at = Math.max(0, Math.min(pos, doc.content.size));
@@ -114,7 +123,7 @@ export function placeEditorCaret(
     view.state.tr.setSelection(TextSelection.near(doc.resolve(at))),
   );
   takeKeys(view);
-  const scroller = scrollerOf(view.dom);
+  const scroller = scroll ? scrollerOf(view.dom) : null;
   if (!scroller) return;
   const head = view.state.selection.head;
   try {

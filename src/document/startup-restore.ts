@@ -18,7 +18,7 @@ import {
   type HelpDoc,
 } from "./doc-tabs";
 import { setTabJump } from "../editor/tab-jump";
-import { lastCaret } from "./last-places";
+import { lastCaret, lastScroll } from "./last-places";
 import { keptTabsRestored, readKeptTabs, type KeptTab } from "./reload-tabs";
 import { takeWindowSession } from "./launch-window";
 import { savedFront } from "../engine/layout/saved";
@@ -146,7 +146,12 @@ export function useStartupRestore(options: StartupRestoreOptions): void {
     // At its last caret, taken by the editor its reloadKey remounts.
     const restoreCaret = (path: string, diskMtime: number | null) => {
       const at = opts.restoreCarets ? lastCaret(path, diskMtime) : null;
-      if (at) setTabJump(opts.activeTabId, { kind: "caret", at });
+      if (at)
+        setTabJump(opts.activeTabId, {
+          kind: "caret",
+          at,
+          stay: !!lastScroll(path, diskMtime),
+        });
     };
     void (async () => {
       // The page reloaded: the window gets back what it had. Everything

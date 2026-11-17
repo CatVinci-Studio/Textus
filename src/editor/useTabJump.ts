@@ -57,6 +57,7 @@ export function useTabJump(
             jump.at.pos,
             null,
             typewriterRef.current,
+            !jump.stay,
           );
         else
           applyEditorCaret(
@@ -64,6 +65,7 @@ export function useTabJump(
             mountedValue.current,
             { offset: jump.at.offset, viewportY: null },
             typewriterRef.current,
+            !jump.stay,
           );
       }),
     [run, typewriterRef, revealPlace],

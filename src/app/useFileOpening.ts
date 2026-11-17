@@ -18,7 +18,7 @@ import { DROP_IMAGE_FILES_EVENT, sendAppEvent } from "../utils/events";
 import { openDocument } from "../utils/open-document";
 import { useDocumentOpener } from "./useDocumentOpener";
 import { setTabJump, type TabJump } from "../editor/tab-jump";
-import { lastCaret } from "../document/last-places";
+import { lastCaret, lastScroll } from "../document/last-places";
 import { lastViewMode } from "../editor/modes/view-mode";
 import { isMobileApp } from "../platform/capabilities";
 import { isWindowsPlatform } from "../platform/os";
@@ -80,7 +80,8 @@ function openingJump(
   if (open.anchor) return { kind: "heading", anchor: open.anchor };
   const at =
     open.restoreCaret && restoreCarets ? lastCaret(path, diskMtime) : null;
-  return at && { kind: "caret", at };
+  // Where it was read, if kept, decides the page; the caret only goes back.
+  return at && { kind: "caret", at, stay: !!lastScroll(path, diskMtime) };
 }
 
 /**
