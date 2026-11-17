@@ -116,11 +116,22 @@ button.plugin-card-open {
 .plugin-card-name {
   font-weight: 600;
 }
-/* With its icon: the icon, then the text in a column. */
+/* With its icon: the icon, then the text in a column. The icon sits in
+   room the card keeps at its start, so the text and a button that goes
+   under it start at one edge. */
 .plugin-card-with-icon {
   flex-direction: row;
   align-items: flex-start;
   gap: var(--space-3);
+}
+.plugin-card:has(> .plugin-card-with-icon) {
+  position: relative;
+  padding-inline-start: calc(44px + var(--space-3));
+}
+.plugin-card-with-icon > .plugin-icon {
+  position: absolute;
+  top: 8px;
+  inset-inline-start: 0;
 }
 .plugin-card-text {
   display: flex;
