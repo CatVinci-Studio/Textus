@@ -20,7 +20,6 @@ const HOOKS_NOW = {
   "src/ai/chat/window/useChatWindowBridge.ts useChatWindowBridge": 17,
   "src/ai/chat/window/useChatWindowHandoff.ts useChatWindowHandoff": 17,
   "src/ai/margin/useReviewNotes.ts useReviewNotes": 19,
-  "src/app/frame/useSidePanels.ts useSidePanels": 16,
   "src/app/usePluginWindow.ts usePluginWindow": 24,
   "src/app/useWindowDocuments.ts useWindowDocuments": 29,
   "src/app/useWindowWiring.ts useWindowWiring": 20,
