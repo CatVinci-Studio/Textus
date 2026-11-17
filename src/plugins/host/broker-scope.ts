@@ -1,6 +1,7 @@
 import type { Strings } from "../../i18n/strings";
 import type { PluginEventMap, Where } from "../app-bridge";
-import type { Permission, PluginManifest } from "../store/manifest";
+import type { Permission } from "../store/manifest";
+import type { PluginManifest } from "../store/manifest-types";
 import type { BrokerDeps, PluginRuntimeInfo } from "./broker";
 import type { WebviewRecord } from "../views/webviews";
 

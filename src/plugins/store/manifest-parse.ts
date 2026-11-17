@@ -8,7 +8,7 @@ import type {
   MenuId,
   SuggestKind,
   ViewType,
-} from "./manifest";
+} from "./manifest-types";
 import { ManifestError, list, object, text } from "./manifest-json";
 import { parseDocumentTypes } from "./manifest-documents";
 import { parseSnippets, parseWalkthroughs } from "./manifest-guides";

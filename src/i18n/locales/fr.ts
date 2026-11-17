@@ -1199,6 +1199,9 @@ utiliser une.
   activityRail: "Barre d'activité",
   activityRailHide: "Masquer la barre d'activité",
   activityRailShow: "Afficher la barre d'activité",
+  windowLayoutGroup: "Disposition de la fenêtre",
+  classicLookNote:
+    "Vous préférez l'aspect de Textus avant la 1.4 ? Choisissez Classique, masquez la barre d'activité et affichez la barre de titre sur sa propre ligne. Rétablissez-les pour revenir au nouvel aspect.",
   layoutLabel: "Disposition",
   layoutIslands: "Îlots flottants",
   layoutClassic: "Classique",

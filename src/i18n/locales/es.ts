@@ -1193,6 +1193,9 @@ para usar una.
   activityRail: "Barra de actividad",
   activityRailHide: "Ocultar la barra de actividad",
   activityRailShow: "Mostrar la barra de actividad",
+  windowLayoutGroup: "Diseño de la ventana",
+  classicLookNote:
+    "¿Prefieres cómo era Textus antes de la 1.4? Elige Clásico, oculta la barra de actividad y muestra la barra de título en su propia fila. Vuelve a cambiarlos para el aspecto nuevo.",
   layoutLabel: "Diseño",
   layoutIslands: "Islas flotantes",
   layoutClassic: "Clásico",

@@ -1126,6 +1126,9 @@ type /name in a conversation to use one.
   activityRail: "Activity bar",
   activityRailHide: "Hide the Activity Bar",
   activityRailShow: "Show the Activity Bar",
+  windowLayoutGroup: "Window Layout",
+  classicLookNote:
+    "Prefer how Textus looked before 1.4? Choose Classic, turn off the activity bar and turn on the title bar's own row. Change them back for the new look.",
   layoutLabel: "Layout",
   layoutIslands: "Floating islands",
   layoutClassic: "Classic",

@@ -1154,6 +1154,9 @@ Skills liegen im Ordner skills/ neben dieser Datei, je Skill eine
   activityRail: "Aktivitätsleiste",
   activityRailHide: "Aktivitätsleiste ausblenden",
   activityRailShow: "Aktivitätsleiste einblenden",
+  windowLayoutGroup: "Fensterlayout",
+  classicLookNote:
+    "Lieber wie Textus vor 1.4 aussah? Wähle „Klassisch“, schalte die Aktivitätsleiste aus und die eigene Zeile der Titelleiste ein. Zurückgestellt gilt wieder das neue Aussehen.",
   layoutLabel: "Layout",
   layoutIslands: "Schwebende Inseln",
   layoutClassic: "Klassisch",

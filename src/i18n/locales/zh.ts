@@ -1039,6 +1039,9 @@ export default {
   activityRail: "图标栏",
   activityRailHide: "隐藏图标栏",
   activityRailShow: "显示图标栏",
+  windowLayoutGroup: "窗口布局",
+  classicLookNote:
+    "喜欢 1.4 之前的样子？把布局选为“经典”，关掉左侧图标栏，打开标题栏单独一行。想回到新样子，改回来即可。",
   layoutLabel: "布局",
   layoutIslands: "浮动岛",
   layoutClassic: "经典",

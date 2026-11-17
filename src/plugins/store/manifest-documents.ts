@@ -1,4 +1,4 @@
-import type { DocumentTypeContribution } from "./manifest";
+import type { DocumentTypeContribution } from "./manifest-types";
 import { ManifestError, list, object, text, type Json } from "./manifest-json";
 import { TEXT_DOCUMENT_EXTENSIONS } from "../../platform/bindings/files";
 

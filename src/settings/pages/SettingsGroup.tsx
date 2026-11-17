@@ -43,6 +43,7 @@ export function SettingsGroup({
   actions,
   className,
   evenRows = false,
+  note,
   children,
 }: {
   /** None for a page's first section when it would only repeat the page's
@@ -55,6 +56,8 @@ export function SettingsGroup({
   /** Rows alike (a list of shortcuts): one row's control under its name
    *  puts every row's there. */
   evenRows?: boolean;
+  /** A line under the list, about the section as a whole. */
+  note?: ReactNode;
   /** None while the section is folded: only its head shows. */
   children?: ReactNode;
 }) {
@@ -85,6 +88,7 @@ export function SettingsGroup({
           {children}
         </div>
       )}
+      {note && <p className="settings-group-note">{note}</p>}
     </section>
   );
 }

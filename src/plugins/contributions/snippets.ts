@@ -1,4 +1,4 @@
-import type { SnippetContribution } from "../store/manifest";
+import type { SnippetContribution } from "../store/manifest-types";
 import { INSERT_MARKDOWN_EVENT, sendAppEvent } from "../../utils/events";
 
 /** A plugin's snippet as the `/` menu offers it: a line goes in as typed

@@ -1198,6 +1198,9 @@ export default {
   activityRail: "Панель действий",
   activityRailHide: "Скрыть панель действий",
   activityRailShow: "Показать панель действий",
+  windowLayoutGroup: "Макет окна",
+  classicLookNote:
+    "Нравится, как Textus выглядел до 1.4? Выберите «Классический», скройте панель действий и покажите заголовок отдельной строкой. Верните их, чтобы вернуть новый вид.",
   layoutLabel: "Макет",
   layoutIslands: "Плавающие острова",
   layoutClassic: "Классический",

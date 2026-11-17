@@ -2,6 +2,7 @@ import { tokenPx } from "../tokens/token-px";
 import { useLayoutEffect, useRef, useState, type RefObject } from "react";
 import { flushSync } from "react-dom";
 import { isMobileApp } from "../../platform/capabilities";
+import { onAppearance } from "../tokens/appearance";
 
 /** The islands' area as laid out: its size, where it sits in the shell,
  *  and the layout's spacings in pixels. */
@@ -73,6 +74,9 @@ export function useIslandRoom(
     const watch = new ResizeObserver(remeasure);
     watch.observe(el);
     observer.current = watch;
+    // The spacings change with the look (Layout, Interface Size) too, with
+    // the area's size often staying the same.
+    const restyled = onAppearance(remeasure);
     // A phone's also once the window's resize is told: keyboard-up, marked
     // then, may change the spacings after the size is seen. The app's own
     // word on its bars and keyboard comes with no resize at all: read once
@@ -85,6 +89,7 @@ export function useIslandRoom(
     }
     return () => {
       watch.disconnect();
+      restyled();
       observer.current = null;
       window.removeEventListener("resize", remeasure);
       for (const type of told) window.removeEventListener(type, later);

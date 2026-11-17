@@ -1,5 +1,5 @@
 import { whenReadable } from "../contributions/when";
-import type { SettingContribution, SettingType } from "./manifest";
+import type { SettingContribution, SettingType } from "./manifest-types";
 import { ManifestError, list, object, text, type Json } from "./manifest-json";
 
 /** A plugin's settings in its manifest, checked: each type's default, its

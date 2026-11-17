@@ -4,7 +4,7 @@ import { changeSettings, loadSettings } from "../../prefs/settings-store";
 import { pluginName, pluginText, pluginsSnapshot } from "./plugin-records";
 import type { Settings } from "../../prefs/SettingsContext";
 import type { Strings } from "../../i18n/strings";
-import type { RequiredSetting, Requirement } from "./manifest";
+import type { RequiredSetting, Requirement } from "./manifest-types";
 
 /**
  * The Textus settings a plugin may say it needs: what each is called in

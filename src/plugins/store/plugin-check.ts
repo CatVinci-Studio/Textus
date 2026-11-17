@@ -1,6 +1,7 @@
 import type { PluginFile } from "../../platform/ipc";
 import { ownWhenKey } from "../contributions/plugin-when-keys";
-import type { Permission, PluginManifest } from "./manifest";
+import type { Permission } from "./manifest";
+import type { PluginManifest } from "./manifest-types";
 import { PERMISSION_CALLS } from "../api-permissions";
 import { grants } from "../grants";
 import { WHEN_KEYS, whenKeys } from "../contributions/when";

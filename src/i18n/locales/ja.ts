@@ -1102,6 +1102,9 @@ ${AI_NAME}への執筆の指示です。すべての文書に適用されます�
   activityRail: "アクティビティバー",
   activityRailHide: "アクティビティバーを隠す",
   activityRailShow: "アクティビティバーを表示",
+  windowLayoutGroup: "ウィンドウのレイアウト",
+  classicLookNote:
+    "1.4 より前の見た目が好みなら、レイアウトを「クラシック」にし、アクティビティバーをオフ、タイトルバーの独立表示をオンにします。元に戻せば新しい見た目になります。",
   layoutLabel: "レイアウト",
   layoutIslands: "フローティング",
   layoutClassic: "クラシック",

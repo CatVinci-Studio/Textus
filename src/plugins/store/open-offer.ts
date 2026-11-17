@@ -12,7 +12,8 @@ import {
 } from "./catalog";
 import { pluginMayRun, pluginRecord, pluginsSnapshot } from "./plugin-records";
 import { setPluginEnabled } from "../plugin-switches";
-import { matchesFilename, type SuggestKind } from "./manifest";
+import { matchesFilename } from "./manifest";
+import { type SuggestKind } from "./manifest-types";
 import { SUGGEST_KINDS } from "./manifest-parse";
 import { pluginOffer } from "./offer-plugin";
 import { showPluginCard, type CardRequest } from "./plugin-card";

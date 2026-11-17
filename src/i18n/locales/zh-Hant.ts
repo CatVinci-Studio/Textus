@@ -1041,6 +1041,9 @@ export default {
   activityRail: "圖示列",
   activityRailHide: "隱藏圖示列",
   activityRailShow: "顯示圖示列",
+  windowLayoutGroup: "視窗版面",
+  classicLookNote:
+    "喜歡 1.4 之前的樣子？把版面選為「經典」，關閉左側圖示列，開啟標題列獨立一行。想回到新樣子，改回來即可。",
   layoutLabel: "版面",
   layoutIslands: "浮動島",
   layoutClassic: "經典",

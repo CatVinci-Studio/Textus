@@ -211,3 +211,35 @@ test("the search reads the pages once its box is focused, before the first lette
   await box.blur();
   await expect(index).toHaveCount(0);
 });
+
+test("Layout switched in Settings lays the islands out again at once", async ({
+  page,
+}) => {
+  await open(page);
+  await emit(page, "menu-settings");
+  await page.getByRole("button", { name: "外观" }).first().click();
+  await expect(page.locator(".settings-group-note")).toContainText("经典");
+  const sidebar = page.locator(".sidebar");
+  const island = page.locator("section.island").first();
+  const gap = async () =>
+    (await island.boundingBox())!.x -
+    ((await sidebar.boundingBox())!.x + (await sidebar.boundingBox())!.width);
+  expect(await gap()).toBeGreaterThan(4);
+  await page.getByRole("combobox", { name: "布局" }).click();
+  await page.getByRole("option", { name: "经典" }).click();
+  // Flush against the sidebar, with no island gap left over.
+  await expect.poll(gap).toBeLessThanOrEqual(1);
+});
+
+test("a tab brought to the front by a click takes the focus without the keyboard's ring", async ({
+  page,
+}) => {
+  await open(page);
+  await emit(page, "menu-settings");
+  await tabs(page).first().click();
+  await tabs(page).first().locator(".tab-pill-close").click();
+  await expect(tabs(page)).toHaveText(["设置：通用"]);
+  const pill = tabs(page).first();
+  await expect(pill).toBeFocused();
+  expect(await pill.evaluate((el) => el.matches(":focus-visible"))).toBe(false);
+});

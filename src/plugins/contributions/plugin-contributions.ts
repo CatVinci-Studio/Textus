@@ -15,7 +15,8 @@ import {
 } from "../../registry/context-menu-items";
 import { setHoverStarter } from "./hover-providers";
 import { startOnEmbed } from "./embeds";
-import { localize, type MenuContribution } from "../store/manifest";
+import { localize } from "../store/manifest";
+import { type MenuContribution } from "../store/manifest-types";
 import {
   PluginListPane,
   PluginTabIcon,

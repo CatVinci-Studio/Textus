@@ -1,5 +1,5 @@
 import { logPluginMessage } from "../store/plugin-log";
-import type { PluginManifest } from "../store/manifest";
+import type { PluginManifest } from "../store/manifest-types";
 import { createSubscribers } from "../../utils/store";
 
 /**

@@ -15,11 +15,8 @@ import {
 import { connectFrame, hostsContainer, sandboxedFrame } from "./frames";
 import { hostDocument } from "./host-document";
 import { readPluginFile, type PluginOrigin } from "../store/files";
-import {
-  localize,
-  type Permission,
-  type PluginManifest,
-} from "../store/manifest";
+import { localize, type Permission } from "../store/manifest";
+import { type PluginManifest } from "../store/manifest-types";
 import { aiModelHandlers, stopPluginAi } from "./broker-ai";
 import { exportFormatHandlers, stopPluginExport } from "./broker-export";
 import { fileHandlers } from "./broker-files";

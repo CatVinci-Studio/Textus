@@ -2,7 +2,7 @@ import { lazy, Suspense, useEffect, useRef, useState } from "react";
 import { currentStrings } from "../../i18n/current";
 import { dataUrl, readPluginFile } from "../../plugins/store/files";
 import { plugins as pluginsIpc } from "../../platform/ipc";
-import type { PluginManifest } from "../../plugins/store/manifest";
+import type { PluginManifest } from "../../plugins/store/manifest-types";
 import type { PluginOrigin } from "../../plugins/store/files";
 import { catalogReadme, installedReadme } from "../../plugins/store/readme";
 

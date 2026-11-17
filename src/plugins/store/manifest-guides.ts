@@ -1,4 +1,7 @@
-import type { SnippetContribution, WalkthroughContribution } from "./manifest";
+import type {
+  SnippetContribution,
+  WalkthroughContribution,
+} from "./manifest-types";
 import { ManifestError, list, object, text, type Json } from "./manifest-json";
 
 /** The longest snippet: a page, not a document. */

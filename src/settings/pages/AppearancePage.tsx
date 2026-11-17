@@ -11,9 +11,10 @@ import { Select } from "../../engine/controls/Select";
 import { appDrawsWindowFrame } from "../../platform/window-chrome";
 import { canUseWindows } from "../../platform/capabilities";
 
-/** Appearance › Basics: the layout, light or dark, the editor's theme and
- *  importing one, the interface's size, the rail and the menu bar; one's
- *  own CSS under Advanced. */
+/** Appearance › Basics: light or dark, the editor's theme and importing
+ *  one, the interface's size; then the window's layout, its rail, title row
+ *  and menu bar, with how to get the look from before 1.4; one's own CSS
+ *  under Advanced. */
 const SIZE_NAMES = {
   0.85: "uiTextSmall",
   1: "uiTextMedium",
@@ -47,6 +48,11 @@ export function AppearancePage({
             ))}
           </Select>
         </SettingRow>
+      </SettingsGroup>
+      <SettingsGroup
+        title={t.windowLayoutGroup}
+        note={canUseWindows && t.classicLookNote}
+      >
         <SettingRow label={t.layoutLabel}>
           <Select
             className="settings-select"

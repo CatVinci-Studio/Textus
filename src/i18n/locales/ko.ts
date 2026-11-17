@@ -1088,6 +1088,9 @@ ${AI_NAME}에게 주는 글쓰기 지침으로, 모든 문서에 적용됩니다
   activityRail: "활동 막대",
   activityRailHide: "활동 막대 숨기기",
   activityRailShow: "활동 막대 표시",
+  windowLayoutGroup: "창 레이아웃",
+  classicLookNote:
+    "1.4 이전의 모습이 좋다면 레이아웃을 클래식으로 바꾸고, 활동 막대를 끄고, 제목 표시줄을 별도 줄에 표시하세요. 되돌리면 새 모습으로 돌아갑니다.",
   layoutLabel: "레이아웃",
   layoutIslands: "떠 있는 섬",
   layoutClassic: "클래식",

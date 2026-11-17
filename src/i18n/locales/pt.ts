@@ -1177,6 +1177,9 @@ Habilidades ficam na pasta skills/ ao lado deste arquivo, um arquivo
   activityRail: "Barra de atividade",
   activityRailHide: "Ocultar a barra de atividade",
   activityRailShow: "Mostrar a barra de atividade",
+  windowLayoutGroup: "Layout da janela",
+  classicLookNote:
+    "Prefere o aspeto do Textus antes da 1.4? Escolha Clássico, oculte a barra de atividade e mostre a barra de título numa linha própria. Reverta-os para o aspeto novo.",
   layoutLabel: "Layout",
   layoutIslands: "Ilhas flutuantes",
   layoutClassic: "Clássico",

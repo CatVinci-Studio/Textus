@@ -3,7 +3,8 @@ import { matchesWords } from "../../utils/match-words";
 import type { Strings } from "../../i18n/strings";
 import type { Shortcuts } from "../../prefs/SettingsContext";
 import type { PluginOrigin } from "./files";
-import { localize, type Permission, type PluginManifest } from "./manifest";
+import { localize, type Permission } from "./manifest";
+import { type PluginManifest } from "./manifest-types";
 import { canRun, type PluginStatus } from "./lifecycle";
 import { createSubscribers } from "../../utils/store";
 
