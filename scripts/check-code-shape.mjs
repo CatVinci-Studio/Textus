@@ -28,7 +28,6 @@ const HOOKS_NOW = {
   "src/document-view/useEditorWindowEvents.ts useEditorWindowEvents": 21,
   "src/document-view/usePaperWriter.ts usePaperWriter": 12,
   "src/editor/find/useFindReplace.ts useFindReplace": 32,
-  "src/engine/controls/tabs/useTabStrip.ts useTabStrip": 16,
 };
 
 /** Not held to the line limit: tables, not logic. */
