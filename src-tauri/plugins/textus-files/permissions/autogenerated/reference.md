@@ -11,6 +11,9 @@ Everything Textus's iOS and Android document access needs.
 - `allow-read-data`
 - `allow-write-text`
 - `allow-list-folder`
+- `allow-create-entry`
+- `allow-rename-entry`
+- `allow-delete-entry`
 - `allow-remembered`
 - `allow-begin-access`
 - `allow-share`
@@ -100,6 +103,58 @@ Enables the create_document command without any pre-configured scope.
 <td>
 
 Denies the create_document command without any pre-configured scope.
+
+</td>
+</tr>
+
+<tr>
+<td>
+
+`textus-files:allow-create-entry`
+
+</td>
+<td>
+
+Enables the create_entry command without any pre-configured scope.
+
+</td>
+</tr>
+
+<tr>
+<td>
+
+`textus-files:deny-create-entry`
+
+</td>
+<td>
+
+Denies the create_entry command without any pre-configured scope.
+
+</td>
+</tr>
+
+<tr>
+<td>
+
+`textus-files:allow-delete-entry`
+
+</td>
+<td>
+
+Enables the delete_entry command without any pre-configured scope.
+
+</td>
+</tr>
+
+<tr>
+<td>
+
+`textus-files:deny-delete-entry`
+
+</td>
+<td>
+
+Denies the delete_entry command without any pre-configured scope.
 
 </td>
 </tr>
@@ -282,6 +337,32 @@ Enables the remembered command without any pre-configured scope.
 <td>
 
 Denies the remembered command without any pre-configured scope.
+
+</td>
+</tr>
+
+<tr>
+<td>
+
+`textus-files:allow-rename-entry`
+
+</td>
+<td>
+
+Enables the rename_entry command without any pre-configured scope.
+
+</td>
+</tr>
+
+<tr>
+<td>
+
+`textus-files:deny-rename-entry`
+
+</td>
+<td>
+
+Denies the rename_entry command without any pre-configured scope.
 
 </td>
 </tr>

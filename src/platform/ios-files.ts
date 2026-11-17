@@ -32,6 +32,15 @@ function named<T extends { url: string | null; name?: string }>(item: T): T {
 const call = <T>(command: string, args?: Record<string, unknown>) =>
   invoke<T>(`plugin:textus-files|${command}`, args ? { args } : undefined);
 
+async function entry(
+  command: string,
+  args: Record<string, unknown>,
+): Promise<string> {
+  const { url } = await call<{ url: string }>(command, args);
+  named({ url, name: String(args.name ?? "") });
+  return url;
+}
+
 /** A pick from the app's own Documents folder as its plain path, or the
  *  same file opens twice, once per spelling. */
 async function inDocuments(url: string | null): Promise<string | null> {
@@ -66,6 +75,13 @@ export const iosFiles = {
     (await call<{ data: string }>("read_data", { url })).data,
   writeText: (url: string, text: string): Promise<void> =>
     call<void>("write_text", { url, text }),
+  /** The tree's New, Rename and Delete in an Android picked folder; the
+   *  entry's URL. */
+  createEntry: (folder: string, name: string, isFolder: boolean) =>
+    entry("create_entry", { url: folder, name, folder: isFolder }),
+  renameEntry: (url: string, name: string) =>
+    entry("rename_entry", { url, name }),
+  deleteEntry: (url: string) => entry("delete_entry", { url }),
   listFolder: async (url: string): Promise<DirEntryInfo[]> =>
     (
       await call<{

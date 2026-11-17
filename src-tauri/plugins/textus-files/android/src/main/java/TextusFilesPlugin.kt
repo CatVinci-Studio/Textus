@@ -64,6 +64,15 @@ class CreateArgs {
   lateinit var name: String
 }
 
+@InvokeArg
+class EntryArgs {
+  lateinit var url: String
+  /** The new entry's or the new name. */
+  var name: String = ""
+  /** A folder, not a document (new entries). */
+  var folder: Boolean = false
+}
+
 private const val GRANT =
   Intent.FLAG_GRANT_READ_URI_PERMISSION or Intent.FLAG_GRANT_WRITE_URI_PERMISSION
 
@@ -191,6 +200,36 @@ class TextusFilesPlugin(private val activity: Activity) : Plugin(activity) {
       }
     }
     JSObject().put("entries", entries)
+  }
+
+  // ---- The tree's New, Rename and Delete in a picked folder
+
+  private fun changing(invoke: Invoke, change: (EntryArgs) -> Uri?) {
+    try {
+      val url = change(invoke.parseArgs(EntryArgs::class.java)) ?: error("Not allowed here")
+      invoke.resolve(JSObject().put("url", url.toString()))
+    } catch (e: Exception) {
+      invoke.reject(e.message ?: "Not allowed here")
+    }
+  }
+
+  /** A new document or folder in the folder `url`; its URL. */
+  @Command
+  fun createEntry(invoke: Invoke) = changing(invoke) { args ->
+    val mime = if (args.folder) DocumentsContract.Document.MIME_TYPE_DIR else "text/markdown"
+    DocumentsContract.createDocument(resolver, Uri.parse(args.url), mime, args.name)
+  }
+
+  /** `url` under a new name in its folder; its URL now. */
+  @Command
+  fun renameEntry(invoke: Invoke) = changing(invoke) { args ->
+    DocumentsContract.renameDocument(resolver, Uri.parse(args.url), args.name)
+  }
+
+  @Command
+  fun deleteEntry(invoke: Invoke) = changing(invoke) { args ->
+    val url = Uri.parse(args.url)
+    if (DocumentsContract.deleteDocument(resolver, url)) url else null
   }
 
   // ---- Remembered items and folders

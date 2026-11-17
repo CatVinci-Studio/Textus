@@ -61,19 +61,27 @@ export const fs = {
     isScopedUrl(path) ? iosFiles.listFolder(path) : command("list_dir", path),
   /** The sidebar tree's New Document, New Folder and drag-to-move. Each
    *  returns the new path and refuses a taken name. */
-  createDocument: (dir: string, name: string) =>
-    command("tree_create_document", dir, name),
-  createFolder: (dir: string, name: string) =>
-    command("tree_create_folder", dir, name),
+  createDocument: (dir: string, name: string): Promise<string> =>
+    isScopedUrl(dir) && !isIOSApp
+      ? iosFiles.createEntry(dir, name, false)
+      : command("tree_create_document", dir, name),
+  createFolder: (dir: string, name: string): Promise<string> =>
+    isScopedUrl(dir) && !isIOSApp
+      ? iosFiles.createEntry(dir, name, true)
+      : command("tree_create_folder", dir, name),
   moveEntry: (path: string, into: string) =>
     command("tree_move_entry", path, into),
   /** A new name in the same folder; returns the new path. */
-  renameEntry: (path: string, name: string) =>
-    command("tree_rename_entry", path, name),
+  renameEntry: (path: string, name: string): Promise<string> =>
+    isScopedUrl(path) && !isIOSApp
+      ? iosFiles.renameEntry(path, name)
+      : command("tree_rename_entry", path, name),
   /** To the system's Trash; refuses the tree's own root. A phone has none:
    *  there a document is deleted (the tree asks first), a folder never. */
-  trashEntry: (path: string, root: string) =>
-    command("tree_trash_entry", path, root),
+  trashEntry: (path: string, root: string): Promise<void> =>
+    isScopedUrl(path) && !isIOSApp
+      ? iosFiles.deleteEntry(path).then(() => {})
+      : command("tree_trash_entry", path, root),
   /** File > Open Folder…'s picker. Rejects with "TOO_BROAD" for the home
    *  folder or a drive root. A phone's is the system's folder picker. */
   pickOpenFolder: (): Promise<string | null> =>
