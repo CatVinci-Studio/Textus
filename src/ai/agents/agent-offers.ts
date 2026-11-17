@@ -7,6 +7,7 @@ import {
   readOptions,
   type AgentOption,
 } from "./agent-mode";
+import { createSubscribers } from "../../utils/store";
 
 /**
  * What each external agent offers, as last heard from it: the options it
@@ -29,7 +30,7 @@ interface AgentOffer {
 
 const NONE: AgentOffer = { options: [], commands: [] };
 let offers: Map<string, AgentOffer> | null = null;
-const listeners = new Set<() => void>();
+let listeners = createSubscribers();
 
 function readCommands(raw: unknown): AgentCommand[] {
   if (!Array.isArray(raw)) return [];
@@ -88,14 +89,13 @@ function hear(agent: string, next: Partial<AgentOffer>): void {
       ]),
     ),
   );
-  for (const listener of listeners) listener();
+  listeners.publish();
 }
 
 export const offerOf = (agent: string): AgentOffer => all().get(agent) ?? NONE;
 
 export function subscribeOffers(listener: () => void): () => void {
-  listeners.add(listener);
-  return () => listeners.delete(listener);
+  return listeners.subscribe(listener);
 }
 
 /** Options as the agent sent them (`configOptions`), now in force. */
@@ -235,6 +235,6 @@ export async function applyChoices(
 /** Forgets what was heard, for tests. */
 export function resetOffersForTests(): void {
   offers = null;
-  listeners.clear();
+  listeners = createSubscribers();
   refusals.clear();
 }

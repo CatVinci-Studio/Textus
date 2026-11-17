@@ -152,7 +152,7 @@ export const onFileRevisions = revisionsChanged.subscribe;
 // ---- Marks ----------------------------------------------------------
 
 let marks: Record<string, AiFileMark> = readMarks();
-const listeners = new Set<() => void>();
+const listeners = createSubscribers();
 
 function readMarks(): Record<string, AiFileMark> {
   const stored = getUiState("aiFileMarks");
@@ -181,18 +181,13 @@ function setAiFileMark(path: string, patch: AiFileMark): void {
     else delete all[path];
     return all;
   });
-  for (const listener of listeners) listener();
+  listeners.publish();
 }
 
 /** The marks now, outside React. */
 export const aiFileMarksNow = () => marks;
 
-export function onAiFileMarks(listener: () => void): () => void {
-  listeners.add(listener);
-  return () => {
-    listeners.delete(listener);
-  };
-}
+export const onAiFileMarks = listeners.subscribe;
 
 export function useAiFileMarks(): Readonly<Record<string, AiFileMark>> {
   return useSyncExternalStore(onAiFileMarks, () => marks);

@@ -6,24 +6,19 @@ import {
 import { barLayout, type BarLayout } from "./bar-layout";
 import { useFullscreenMark } from "./useFullscreenMark";
 import { usePhoneLayout } from "../controls/usePhoneLayout";
+import { createSubscribers } from "../../utils/store";
 
 // Whether the sidebar's column reaches the window's top, for the sidebar:
 // where it doesn't, the bar covers its header's line.
 let sideToTopNow = false;
-const listeners = new Set<() => void>();
+const sideToTop = createSubscribers();
 function publishSideToTop(next: boolean) {
   if (next === sideToTopNow) return;
   sideToTopNow = next;
-  for (const l of listeners) l();
+  sideToTop.publish();
 }
 export function useSideToTop(): boolean {
-  return useSyncExternalStore(
-    (l) => {
-      listeners.add(l);
-      return () => listeners.delete(l);
-    },
-    () => sideToTopNow,
-  );
+  return useSyncExternalStore(sideToTop.subscribe, () => sideToTopNow);
 }
 
 /**

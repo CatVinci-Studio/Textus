@@ -121,10 +121,33 @@ for (const path of sources) {
     });
 }
 
+// Listeners kept by hand (a Set added to, deleted from, looped over):
+// createSubscribers in src/utils/store.ts does that. Registries that run
+// once or guard each call are not listeners.
+const LISTENER_SET = /new Set<\((?:[^()]|\([^()]*\))*\) => void>\(\)/;
+const REGISTRIES = new Set([
+  "src/utils/store.ts",
+  "src/utils/memory-idle.ts",
+  "src/storage/pending-writes.ts",
+  "src/document/reload-tabs.ts",
+  "src/editor/math/katex-loader.ts",
+]);
+for (const path of sources) {
+  if (!/\.tsx?$/.test(path) || REGISTRIES.has(path)) continue;
+  readFileSync(join(root, path), "utf8")
+    .split("\n")
+    .forEach((line, i) => {
+      if (LISTENER_SET.test(line))
+        problems.push(
+          `${path}:${i + 1}: listeners kept by hand - use createSubscribers`,
+        );
+    });
+}
+
 if (problems.length > 0) {
   console.error(problems.join("\n"));
   process.exit(1);
 }
 console.log(
-  `code shape: ${sources.length} files within ${MAX_LINES} lines, components within ${MAX_HOOKS} hooks, no provider ids compared`,
+  `code shape: ${sources.length} files within ${MAX_LINES} lines, components within ${MAX_HOOKS} hooks, no provider ids compared, listeners shared`,
 );

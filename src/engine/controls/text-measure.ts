@@ -1,3 +1,5 @@
+import { createSubscribers } from "../../utils/store";
+
 /**
  * How wide a line of text draws in a font, without laying it out: measured
  * on a canvas and remembered, so asking in a render costs a lookup.
@@ -9,19 +11,18 @@ const widths = new Map<string, Map<string, number>>();
 let remembered = 0;
 let context: CanvasRenderingContext2D | null | undefined;
 
-const fontListeners = new Set<() => void>();
+const fonts = createSubscribers();
 
 function forget() {
   widths.clear();
   remembered = 0;
-  for (const listener of fontListeners) listener();
+  fonts.publish();
 }
 
 /** Called once a font arrives, after the widths it changes are forgotten. */
 export function onFontsChange(listener: () => void): () => void {
   canvas();
-  fontListeners.add(listener);
-  return () => fontListeners.delete(listener);
+  return fonts.subscribe(listener);
 }
 
 function canvas(): CanvasRenderingContext2D | null {

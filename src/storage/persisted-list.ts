@@ -4,6 +4,7 @@ import { readBoot } from "./boot";
 import { readLocalJson } from "./local";
 import { trackWrite } from "./pending-writes";
 import { listenToThisWindow } from "../platform/events";
+import { createSubscribers } from "../utils/store";
 
 /** A small persisted list as an external store, synced across windows. Rust
  *  changes it one entry at a time, so concurrent saves from two windows both
@@ -30,7 +31,7 @@ export function createPersistedList<T, Saved extends T = T>(
     rewrite?: (stored: T, normalised: T) => Promise<unknown>;
   },
 ) {
-  const listeners = new Set<() => void>();
+  const listeners = createSubscribers();
   let entries: T[] = [];
   let started = false;
   /** File mode: the latest list request, with the operations made since,
@@ -57,9 +58,7 @@ export function createPersistedList<T, Saved extends T = T>(
     }
   }
 
-  function notify() {
-    for (const fn of listeners) fn();
-  }
+  const notify = listeners.publish;
 
   function loadLocal(): T[] {
     const parsed = readLocalJson(key);
@@ -166,8 +165,7 @@ export function createPersistedList<T, Saved extends T = T>(
 
   function subscribe(fn: () => void): () => void {
     start();
-    listeners.add(fn);
-    return () => listeners.delete(fn);
+    return listeners.subscribe(fn);
   }
 
   return {

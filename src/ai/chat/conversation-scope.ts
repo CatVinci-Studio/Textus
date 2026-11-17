@@ -6,13 +6,14 @@
  * keeps its own.
  */
 import { LOCAL_KEYS } from "../../storage/local";
+import { createSubscribers } from "../../utils/store";
 const PREFIX = LOCAL_KEYS.liveConversation;
 
 /** The conversation not yet sent: no id of its own until it is. */
 export const DRAFT = "draft";
 
 type Listener = (scope: string, id: string) => void;
-const listeners = new Set<Listener>();
+const live = createSubscribers<Parameters<Listener>>();
 
 /** The scope's live conversation, if one was ever started there. */
 export function liveConversation(scope: string): string | null {
@@ -32,20 +33,20 @@ export function setLiveConversation(scope: string, id: string) {
   } catch {
     return;
   }
-  for (const listener of listeners) listener(scope, id);
+  live.publish(scope, id);
 }
 
 /** Calls `listener` when a scope's live conversation changes, here or in
  *  another window. */
 export function onLiveConversation(listener: Listener): () => void {
-  listeners.add(listener);
+  const stop = live.subscribe(listener);
   const onStorage = (e: StorageEvent) => {
     if (e.key?.startsWith(PREFIX) && e.newValue)
       listener(e.key.slice(PREFIX.length), e.newValue);
   };
   window.addEventListener("storage", onStorage);
   return () => {
-    listeners.delete(listener);
+    stop();
     window.removeEventListener("storage", onStorage);
   };
 }
@@ -66,7 +67,7 @@ export function conversationScope(
  * history). Kept beside the live one, in every window.
  */
 const OPEN = LOCAL_KEYS.openConversations;
-const openListeners = new Set<() => void>();
+const opened = createSubscribers();
 const openCache = new Map<string, string[]>();
 // Another window's change: never this window's stale copy written back.
 if (typeof window !== "undefined")
@@ -101,7 +102,7 @@ function setOpen(scope: string, ids: string[]) {
   } catch {
     // Storage full or off: kept for this window.
   }
-  for (const listener of openListeners) listener();
+  opened.publish();
 }
 
 function noteOpen(scope: string, id: string) {
@@ -132,7 +133,7 @@ export function reorderConversation(scope: string, id: string, index: number) {
 /** Calls `listener` when any scope's open conversations change, here or
  *  in another window. */
 export function onOpenConversations(listener: () => void): () => void {
-  openListeners.add(listener);
+  const stop = opened.subscribe(listener);
   const onStorage = (e: StorageEvent) => {
     if (!e.key?.startsWith(OPEN)) return;
     openCache.delete(e.key.slice(OPEN.length));
@@ -140,7 +141,7 @@ export function onOpenConversations(listener: () => void): () => void {
   };
   window.addEventListener("storage", onStorage);
   return () => {
-    openListeners.delete(listener);
+    stop();
     window.removeEventListener("storage", onStorage);
   };
 }

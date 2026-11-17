@@ -19,6 +19,7 @@ import {
   persist,
   subscribeRemote,
 } from "../../prefs/settings-store";
+import { createSubscribers } from "../../utils/store";
 
 /**
  * A plugin's settings, kept under `plugins.<id>` in settings.json and, for a
@@ -32,20 +33,16 @@ export type SettingScope = "global" | "project";
 type Layer = Record<string, Record<string, unknown>>;
 
 let project: { root: string; values: Layer } | null = null;
-const listeners = new Set<() => void>();
-
-function notify() {
-  for (const fn of listeners) fn();
-}
+const { subscribe, publish: notify } = createSubscribers();
 
 /** Calls `fn` whenever a plugin setting may have changed: set here, in
  *  another window, or a project's opened. */
 export function onPluginSettingsChange(fn: () => void): () => void {
-  listeners.add(fn);
-  const stop = subscribeRemote(fn);
+  const stop = subscribe(fn);
+  const stopRemote = subscribeRemote(fn);
   return () => {
-    listeners.delete(fn);
     stop();
+    stopRemote();
   };
 }
 
