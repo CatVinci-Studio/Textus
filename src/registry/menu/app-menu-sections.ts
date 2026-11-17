@@ -2,6 +2,7 @@ import { fill } from "../../i18n/fill";
 import type { Strings } from "../../i18n/strings";
 import { PANDOC_FORMATS } from "../export-formats";
 import { pluginFormats } from "../plugin-export-formats";
+import { isDesktopApp } from "../../platform/capabilities";
 import type { HeadingAction, Shortcuts } from "../../prefs/SettingsContext";
 import { basename } from "../../utils/path";
 
@@ -42,14 +43,16 @@ export function recentEntries(t: Strings, recents: RecentLists): MenuNode[] {
 }
 
 /** File › Export's pandoc formats (export-formats.json), then the formats
- *  plugins add. */
+ *  plugins add (desktop). */
 export function pandocEntries(t: Strings): MenuNode[] {
   return [
     ...PANDOC_FORMATS.map((f) => ({
       label: t[f.key],
       action: { native: `export-pandoc:${f.format}` } as const,
     })),
-    ...pluginFormats().map((f) => ({
+    // Desktop only: a phone or iPad saves through the Files app, which
+    // takes text alone.
+    ...(isDesktopApp ? pluginFormats() : []).map((f) => ({
       label: f.label,
       action: { native: `plugin-export:${f.key}` } as const,
     })),

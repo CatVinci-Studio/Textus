@@ -108,29 +108,35 @@ export function ChatWritingPage({
           checked={settings.enableCompletion}
           onChange={(v) => setSettings({ enableCompletion: v })}
         />
-        {settings.enableCompletion && sources.length > 0 && (
-          <SettingRow label={t.completionSourceLabel}>
-            <Select
-              className="settings-select"
-              aria-label={t.completionSourceLabel}
-              value={
-                sources.some((s) => s.key === settings.completionSource)
-                  ? settings.completionSource
-                  : TEXTUS_SOURCE
-              }
-              onChange={(e) =>
-                setSettings({ completionSource: e.target.value })
-              }
-            >
-              <option value={TEXTUS_SOURCE}>Textus AI</option>
-              {sources.map((source) => (
-                <option key={source.key} value={source.key}>
-                  {source.label}
-                </option>
-              ))}
-            </Select>
-          </SettingRow>
-        )}
+        {settings.enableCompletion &&
+          (sources.length > 0 ||
+            settings.completionSource !== TEXTUS_SOURCE) && (
+            <SettingRow label={t.completionSourceLabel}>
+              <Select
+                className="settings-select"
+                aria-label={t.completionSourceLabel}
+                value={settings.completionSource}
+                onChange={(e) =>
+                  setSettings({ completionSource: e.target.value })
+                }
+              >
+                <option value={TEXTUS_SOURCE}>Textus AI</option>
+                {sources.map((source) => (
+                  <option key={source.key} value={source.key}>
+                    {source.label}
+                  </option>
+                ))}
+                {/* A plugin's source that is off now: kept, and nothing
+                    offered, until another is picked. */}
+                {settings.completionSource !== TEXTUS_SOURCE &&
+                  !sources.some((s) => s.key === settings.completionSource) && (
+                    <option value={settings.completionSource} disabled>
+                      {settings.completionSource.split("#")[0]}
+                    </option>
+                  )}
+              </Select>
+            </SettingRow>
+          )}
         {settings.enableCompletion && (
           <SettingRow label={t.completionToneLabel}>
             <Select

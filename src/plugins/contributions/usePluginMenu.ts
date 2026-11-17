@@ -29,8 +29,14 @@ export function usePluginMenuSync(language: string): void {
   const exports = JSON.stringify(
     formats.map(({ key, label }) => ({ key, label })),
   );
+  // Formats are each window's own (its plugins register them as they run),
+  // and a click goes to the focused window: the menu bar shows its list.
   useEffect(() => {
-    if (hasNativeMenuBar) void menuIpc.setPluginExports(JSON.parse(exports));
+    if (!hasNativeMenuBar) return;
+    const send = () => void menuIpc.setPluginExports(JSON.parse(exports));
+    if (document.hasFocus()) send();
+    window.addEventListener("focus", send);
+    return () => window.removeEventListener("focus", send);
   }, [exports]);
   // Read afresh each render: a new language re-renders this, and the
   // labels follow it.

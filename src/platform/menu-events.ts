@@ -16,9 +16,7 @@ export function emitMenuEvent(id: NativeMenuId): void {
         ? ["menu-toggle-mark", id.slice("toggle-mark:".length)]
         : id.startsWith("plugin-command:")
           ? ["menu-plugin-command", id.slice("plugin-command:".length)]
-          : id.startsWith("plugin-export:")
-            ? ["menu-export-plugin", id.slice("plugin-export:".length)]
-            : [`menu-${id}`, undefined];
+          : [`menu-${id}`, undefined];
   emitToThisWindow(event, payload);
 }
 

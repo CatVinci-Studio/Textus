@@ -132,6 +132,10 @@ sight, a `textus://` link for it. `activationEvents` starts it earlier:
 | `onEditor`          | once a document is open, when the window is idle (decorations)   |
 | `onHover`           | when the pointer first rests on a link (a plugin of hover cards) |
 
+What a plugin's code registers - an export format, an inline completion
+source, a history source, a context-menu provider, a block type - is there
+only once the code runs: such a plugin starts with `onStartupFinished`.
+
 What a plugin draws loads lazily too: lists, webviews and code blocks are
 made when they are first shown.
 

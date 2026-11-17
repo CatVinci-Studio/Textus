@@ -1,4 +1,4 @@
-import { inlineSource } from "./writing/inline-sources";
+import { chosenSource } from "./writing/inline-sources";
 import { writingProviderOf } from "../prefs/settings-types";
 import type { Editor } from "@milkdown/kit/core";
 import { createGhostTextPlugin } from "./writing/ghost-text-plugin";
@@ -70,12 +70,14 @@ export function withAiPlugins(
       .use(createAiFileChangesPlugin(() => docPath.current))
       .use(
         createGhostTextPlugin({
-          enabled: () =>
-            tour.current !== "muted" &&
-            (aiFeatures(settings.current).completion ||
-              (settings.current.enableCompletion &&
-                !!inlineSource(settings.current.completionSource))),
-          source: () => inlineSource(settings.current.completionSource),
+          enabled: () => {
+            if (tour.current === "muted") return false;
+            const source = chosenSource(settings.current.completionSource);
+            return source === "textus"
+              ? aiFeatures(settings.current).completion
+              : settings.current.enableCompletion && source !== null;
+          },
+          source: () => chosenSource(settings.current.completionSource),
           provider: () => writingProviderOf(settings.current),
           model: () =>
             settings.current.writingModels[

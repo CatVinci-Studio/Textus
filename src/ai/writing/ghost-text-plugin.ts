@@ -153,8 +153,9 @@ export function createGhostTextPlugin(options: {
   uiLanguage: () => string;
   /** A suggestion was taken (Tab, a tap) - the tour's completion lesson. */
   onAccept?: () => void;
-  /** A plugin's source chosen in Settings, asked instead of Textus AI. */
-  source?: () => InlineSource | undefined;
+  /** The source chosen in Settings: Textus AI, a plugin's, or null for a
+   *  plugin's that isn't there now (nothing is offered). */
+  source?: () => InlineSource | "textus" | null;
 }) {
   const debounced = createDebouncedTask(DEBOUNCE_MS);
   // Set by an accept: inserting the suggestion isn't typing, and shouldn't
@@ -370,27 +371,29 @@ export function createGhostTextPlugin(options: {
                 if (!options.enabled() || isReadOnly(view.state)) return;
                 if (rest.resting()) return;
                 let suggestion: string;
-                const source = options.source?.();
+                const source = options.source?.() ?? "textus";
+                if (source === null) return;
                 try {
-                  suggestion = source
-                    ? ((await source.provide({
-                        before,
-                        after,
-                        path: options.project().docPath,
-                      })) ?? "")
-                    : await ai.complete(
-                        options.provider(),
-                        before,
-                        after,
-                        options.style(),
-                        options.model(),
-                        {
-                          ...completionHints(doc, cursorPos, "short"),
-                          prose,
-                          uiLanguage: options.uiLanguage(),
-                        },
-                        options.project(),
-                      );
+                  suggestion =
+                    source !== "textus"
+                      ? ((await source.provide({
+                          before,
+                          after,
+                          path: options.project().docPath,
+                        })) ?? "")
+                      : await ai.complete(
+                          options.provider(),
+                          before,
+                          after,
+                          options.style(),
+                          options.model(),
+                          {
+                            ...completionHints(doc, cursorPos, "short"),
+                            prose,
+                            uiLanguage: options.uiLanguage(),
+                          },
+                          options.project(),
+                        );
                 } catch (err) {
                   // Quiet in the UI while typing, but logged.
                   rest.failed(err);

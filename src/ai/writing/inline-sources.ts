@@ -35,15 +35,16 @@ function changed(next: readonly InlineSource[]) {
 export function addInlineSource(source: InlineSource): () => void {
   changed([...sources.filter((s) => s.key !== source.key), source]);
   return () => {
-    if (sources.includes(source))
-      changed(sources.filter((s) => s !== source));
+    if (sources.includes(source)) changed(sources.filter((s) => s !== source));
   };
 }
 
-/** The plugin's source the setting names, or undefined for Textus AI's own
- *  (or a source that isn't there now). */
-export function inlineSource(key: string): InlineSource | undefined {
-  return key === TEXTUS_SOURCE ? undefined : sources.find((s) => s.key === key);
+/** What the setting names: Textus AI's own, a plugin's source, or null
+ *  for a plugin's that isn't there now - which offers nothing, never
+ *  Textus AI in its place. */
+export function chosenSource(key: string): InlineSource | "textus" | null {
+  if (key === TEXTUS_SOURCE) return TEXTUS_SOURCE;
+  return sources.find((s) => s.key === key) ?? null;
 }
 
 export function useInlineSources(): readonly InlineSource[] {

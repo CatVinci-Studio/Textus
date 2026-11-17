@@ -16,7 +16,7 @@ vi.mock("../../engine/controls/app-dialog", () => ({ showConfirm: confirm }));
 
 import en from "../../i18n/locales/en";
 import { aiModelHandlers, promptOf, stopPluginAi } from "./broker-ai";
-import { inlineSource } from "../../ai/writing/inline-sources";
+import { chosenSource } from "../../ai/writing/inline-sources";
 import type { PluginScope } from "./broker-scope";
 
 const scope = {
@@ -66,10 +66,11 @@ it("offers a plugin's inline completion until the plugin stops", async () => {
   const request = vi.fn(async () => "rhymes with moon");
   const handlers = aiModelHandlers({ ...scope, request } as PluginScope);
   handlers["ai.registerInlineCompletion"]({ id: "rhyme", label: "Rhymes" });
-  const source = inlineSource("a.translate#rhyme");
-  expect(source?.label).toBe("Rhymes");
+  const source = chosenSource("a.translate#rhyme");
+  if (!source || source === "textus") throw new Error("not offered");
+  expect(source.label).toBe("Rhymes");
   await expect(
-    source!.provide({ before: "June", after: "", path: null }),
+    source.provide({ before: "June", after: "", path: null }),
   ).resolves.toBe("rhymes with moon");
   expect(request).toHaveBeenCalledWith("$inlineCompletion", {
     id: "rhyme",
@@ -77,9 +78,10 @@ it("offers a plugin's inline completion until the plugin stops", async () => {
     after: "",
     path: null,
   });
-  expect(inlineSource("textus")).toBeUndefined();
+  expect(chosenSource("textus")).toBe("textus");
   stopPluginAi("a.translate");
-  expect(inlineSource("a.translate#rhyme")).toBeUndefined();
+  // Gone: nothing is offered, not Textus AI in its place.
+  expect(chosenSource("a.translate#rhyme")).toBeNull();
 });
 
 it("puts a plugin's export format in File › Export until it stops", async () => {
