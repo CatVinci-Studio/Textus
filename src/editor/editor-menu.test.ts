@@ -168,8 +168,8 @@ describe("the editor menu", () => {
       "-",
       // Obsidian's three: inline styles, the block, and what goes in.
       `${t.menuFormat} › ${t.toolbarBold} | ${t.toolbarItalic} | ${t.menuStrikethrough} | ${t.toolbarHighlight} | ${t.menuInlineCode} | - | ${t.menuClearFormatting}`,
-      `${t.menuParagraph} › ${[1, 2, 3].map((n) => t.menuHeadingTemplate.replace("{n}", String(n))).join(" | ")} | - | ${t.menuBulletList} | ${t.menuOrderedList} | ${t.menuTaskList} | ${t.menuBlockquote}`,
-      `${t.menuInsertGroup} › ${t.menuTable} | ${t.menuCodeBlock} | ${t.menuMathBlock} | ${t.menuDivider}`,
+      `${t.menuParagraph} › ${t.blockText} | ${[1, 2, 3].map((n) => t.menuHeadingTemplate.replace("{n}", String(n))).join(" | ")} | - | ${t.menuBulletList} | ${t.menuOrderedList} | ${t.menuTaskList} | ${t.menuBlockquote} | ${t.blockCallout} | ${t.menuCodeBlock}`,
+      `${t.menuInsertGroup} › ${t.menuMathBlock} | ${t.menuTable} | ${t.menuDivider}`,
       `${t.menuTextusAi} › Ask | Continue`,
     ]);
   });

@@ -202,7 +202,7 @@ async fn ai_agent_message_inner(
     // history as it came, before it is cut down for sending.
     let web_plan = WebPlan::new(web_search, session.native_search(), web_service, &history);
     let web = &web_plan;
-    let history = compact_history(web::with_sources_in_text(history));
+    let history = compact_telling(web::with_sources_in_text(history), on_event);
 
     // A selected picture is shown to a model that can see, not only its
     // Markdown: "what's in this picture", "redo it brighter".

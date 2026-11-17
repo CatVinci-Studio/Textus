@@ -18,6 +18,7 @@ import {
   type SessionUpdate,
   type ToolCallFields,
 } from "./acp-client";
+import { explain, stoppedText } from "./agent-errors";
 import { stepFacts, type StepFacts } from "./agent-steps";
 import {
   followEdit,
@@ -39,6 +40,7 @@ import { modeOption } from "./agent-mode";
 import { allowedUnasked } from "./agent-approval";
 import { promptBlocks } from "./agent-prompt";
 import { loadSettings, subscribeRemote } from "../../prefs/settings-store";
+import { createSubscribers } from "../../utils/store";
 
 /**
  * One exchange with an external agent, in a session kept for the
@@ -92,14 +94,11 @@ const sessions = new Map<string, Session>();
 /** Sessions out of use whose reply still runs, by conversation: Stop and
  *  closing the chat still reach them. */
 const retired = new Map<string, Session>();
-const sessionListeners = new Set<() => void>();
-const sessionsChanged = () => sessionListeners.forEach((fn) => fn());
+const subscribers = createSubscribers();
+const sessionsChanged = subscribers.publish;
 
 /** Hears sessions start and end in this window. */
-export function subscribeSessions(listener: () => void): () => void {
-  sessionListeners.add(listener);
-  return () => sessionListeners.delete(listener);
-}
+export const subscribeSessions = subscribers.subscribe;
 /** Conversations whose agent is still starting (or signing in): how to
  *  give up on it. */
 const starting = new Map<string, () => void>();
@@ -318,33 +317,6 @@ async function start(
     throw explain(agent, err);
   }
   return session;
-}
-
-function stoppedText(agent: ExternalAgent, stderr: string): string {
-  const tail = stderr.trim().split("\n").slice(-4).join("\n");
-  return [
-    fill(currentStrings().agentStopped, { agent: agent.name }),
-    tail,
-    agent.setup,
-  ]
-    .filter(Boolean)
-    .join("\n\n");
-}
-
-/** An error as the user can act on it: sign in, or install. */
-function explain(agent: ExternalAgent, err: unknown): Error {
-  const message = err instanceof Error ? err.message : String(err);
-  if (err instanceof AcpError && err.code === AUTH_REQUIRED)
-    return new Error(
-      [fill(currentStrings().agentSignIn, { agent: agent.name }), agent.setup]
-        .filter(Boolean)
-        .join("\n\n"),
-    );
-  return new Error(
-    agent.setup && !message.includes(agent.setup)
-      ? `${message}\n\n${agent.setup}`
-      : message,
-  );
 }
 
 function deliver(session: Session, update: SessionUpdate) {

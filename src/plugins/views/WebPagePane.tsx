@@ -13,6 +13,22 @@ import { hasNativeWebPages } from "../../platform/capabilities";
 import type { Strings } from "../../i18n/strings";
 import { useNativeWebPage } from "./useNativeWebPage";
 import { webPageUrl } from "./web-page-url";
+import { setWindowTabs } from "../../engine/layout/store";
+import type { DocTab } from "../../document/doc-tabs";
+
+/** The address a web tab's page is at now is the tab's: a page loaded
+ *  again, the window restored or the tab moved opens it there. */
+function keepAddress(tabId: string, address: string): void {
+  setWindowTabs<DocTab>((tabs) =>
+    tabs.map((tab) =>
+      tab.id === tabId &&
+      tab.view?.kind === "web" &&
+      tab.view.resource !== address
+        ? { ...tab, view: { ...tab.view, resource: address } }
+        : tab,
+    ),
+  );
+}
 
 function useBarHidden(): [boolean, (hidden: boolean) => void] {
   // One choice for every web page tab.
@@ -49,7 +65,7 @@ export function WebPagePane({
   return hasNativeWebPages ? (
     <NativeWebPage tabId={tabId} url={url} t={t} />
   ) : (
-    <KeptFrame shown={shown} url={url} t={t} />
+    <KeptFrame tabId={tabId} shown={shown} url={url} t={t} />
   );
 }
 
@@ -76,6 +92,7 @@ function NativeWebPage({
   const { failed, retry } = useNativeWebPage(tabId, url, holder, (address) => {
     setShown(address);
     setTyped(address);
+    keepAddress(tabId, address);
   });
   return (
     <div className="web-page-pane">
@@ -197,21 +214,32 @@ function AddressBar({
 }
 
 function KeptFrame({
+  tabId,
   shown,
   url,
   t,
 }: {
+  tabId: string;
   shown: boolean;
   url: string;
   t: Strings;
 }) {
   return useKeptLoaded("web-frame", shown) ? (
-    <FramedWebPage url={url} t={t} />
+    <FramedWebPage tabId={tabId} url={url} t={t} />
   ) : null;
 }
 
-/** The page as a frame, where there are no native pages (Linux, a phone). */
-function FramedWebPage({ url, t }: { url: string; t: Strings }) {
+/** The page as a frame, where there are no native pages (Linux, a phone):
+ *  only an address typed in its bar is known, not where its links led. */
+function FramedWebPage({
+  tabId,
+  url,
+  t,
+}: {
+  tabId: string;
+  url: string;
+  t: Strings;
+}) {
   const [shown, setShown] = useState(url);
   const [typed, setTyped] = useState(url);
   const frameRef = useRef<HTMLIFrameElement>(null);
@@ -225,6 +253,7 @@ function FramedWebPage({ url, t }: { url: string; t: Strings }) {
           if (!next) return;
           setTyped(next);
           setShown(next);
+          keepAddress(tabId, next);
         }}
         onReload={() => {
           if (frameRef.current) frameRef.current.src = shown;

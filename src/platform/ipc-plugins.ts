@@ -156,6 +156,8 @@ export const plugins = {
     command("plugin_git_show", id, root, hash, path),
   gitCommit: (id: string, root: string, message: string, paths: string[]) =>
     command("plugin_git_commit", id, root, message, paths),
+  /** The writer agreed to Git running what the folder's repository sets up. */
+  gitTrust: (root: string) => command("git_trust_repository", root),
   secretGet: (id: string, key: string) => command("plugin_secret_get", id, key),
   secretSet: (id: string, key: string, value: string | null) =>
     command("plugin_secret_set", id, key, value),
@@ -174,8 +176,11 @@ export const plugins = {
       headers?: Record<string, string>;
       body?: string;
       bodyBase64?: boolean;
+      cancelId?: string;
     },
   ) => command("plugin_http", id, request),
+  httpCancel: (id: string, cancelId: string) =>
+    command("plugin_http_cancel", id, cancelId),
   // A plugin's two stores: `root` is the open folder, for the project's.
   storeGet: (id: string, scope: StoreScope, root: string | null, key: string) =>
     command("plugin_store_get", id, scope, root, key) as Promise<unknown>,

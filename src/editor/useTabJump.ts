@@ -32,11 +32,10 @@ export function useTabJump(
         // A heading the document doesn't have leaves it at its top.
         if (jump.kind === "heading")
           revealHeading(ctx.get(editorViewCtx), jump.anchor);
+        else if (jump.kind === "outline" && jump.select)
+          selectNthSection(ctx.get(editorViewCtx), jump.index);
         else if (jump.kind === "outline")
-          (jump.select ? selectNthSection : revealNthHeading)(
-            ctx.get(editorViewCtx),
-            jump.index,
-          );
+          revealNthHeading(ctx.get(editorViewCtx), jump.index);
         // A line alone is counted in the text as it was opened, not in
         // the editor's own writing of it (blank lines, lists, front matter).
         else if (jump.kind === "place" && onlyLine(jump.place) !== null)

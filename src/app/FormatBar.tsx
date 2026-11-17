@@ -1,3 +1,4 @@
+import { focusTabEditor } from "../editor/tab-editor";
 import { tabElement } from "../engine/layout/tab-element";
 import { tabInUse } from "../engine/layout/store";
 import { useEffect, useRef, useState } from "react";
@@ -14,7 +15,11 @@ import type {
 import { fill } from "../i18n/fill";
 import { HideKeyboardIcon, MoreIcon } from "../engine/controls/icons";
 import { formatCombo } from "../utils/shortcuts";
-import { EDITOR_MORE_EVENT, INSERT_BLOCK_EVENT } from "../utils/events";
+import {
+  EDITOR_MORE_EVENT,
+  INSERT_BLOCK_EVENT,
+  sendAppEvent,
+} from "../utils/events";
 import { GROUPS, type Button } from "./format-buttons";
 import { phoneGroups } from "./format-bar-phone";
 import type { FormatBarSide } from "../prefs/settings-values";
@@ -40,7 +45,7 @@ function folded(row: HTMLElement | null): Button[] {
 /** A button's press: its document first, then the menu's event. */
 function press(tabId: string, b: Button) {
   focusDocument(tabId);
-  window.dispatchEvent(new CustomEvent(b.event, { detail: b.detail }));
+  sendAppEvent(b.event, b.detail);
 }
 
 /** The heading picker: body text or a level, as Format's items set them,
@@ -52,7 +57,7 @@ function headingItems(
 ): ("separator" | ContextMenuItem)[] {
   const pick = (detail: string) => () => {
     focusDocument(tabId);
-    window.dispatchEvent(new CustomEvent(INSERT_BLOCK_EVENT, { detail }));
+    sendAppEvent(INSERT_BLOCK_EVENT, detail);
   };
   return [
     {
@@ -98,7 +103,7 @@ function useCaretBlock(tabId: string): CaretBlock {
  *  selection it kept, so the format lands there. */
 function focusDocument(tabId: string) {
   const editor = tabElement(tabId)?.querySelector<HTMLElement>(".ProseMirror");
-  if (editor && !editor.contains(document.activeElement)) editor.focus();
+  if (editor && !editor.contains(document.activeElement)) focusTabEditor(tabId);
 }
 
 export function FormatBar({
@@ -208,7 +213,7 @@ function PhoneEnd({ t }: { t: Strings }) {
     <>
       <IconButton
         label={t.toolbarMore}
-        onClick={() => window.dispatchEvent(new CustomEvent(EDITOR_MORE_EVENT))}
+        onClick={() => sendAppEvent(EDITOR_MORE_EVENT)}
       >
         <MoreIcon />
       </IconButton>

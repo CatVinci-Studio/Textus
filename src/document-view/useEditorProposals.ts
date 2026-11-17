@@ -1,3 +1,4 @@
+import type { DocumentReporting } from "./useDocumentReporting";
 import { useCallback, useEffect, useMemo, useRef } from "react";
 import { reportUndecided } from "../document/undecided";
 import { editorViewCtx } from "@milkdown/kit/core";
@@ -64,6 +65,7 @@ export function useEditorProposals({
   isActive,
   onDecided,
   requestImageName,
+  textOf,
 }: {
   run: EditorRunner;
   pendingEditActionsRef: { current: PendingEditCallbacks };
@@ -76,6 +78,8 @@ export function useEditorProposals({
   onDecided?: (callId: string, changes: DecidedChange[]) => void;
   /** Asks for an accepted picture's file name, when the settings say to. */
   requestImageName: (stem: string, extension: string) => Promise<string | null>;
+  /** What a save would write (useDocumentReporting). */
+  textOf: DocumentReporting["textOf"];
 }) {
   // How accepting writes a proposal's web citations.
   const citations = useRef<CitationStyle>({ asFootnotes: false, sources: [] });
@@ -433,7 +437,7 @@ export function useEditorProposals({
     [addPreviews],
   );
   // A plugin's edits are proposals too, shown as Textus AI's are.
-  usePluginDocumentAccess({ run, isActive, filePath, addPreviews });
+  usePluginDocumentAccess({ run, isActive, filePath, addPreviews, textOf });
 
   return {
     pendingEdits,

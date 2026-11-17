@@ -60,19 +60,20 @@ export const fs = {
   listDir: (path: string): Promise<DirEntryInfo[]> =>
     isScopedUrl(path) ? iosFiles.listFolder(path) : command("list_dir", path),
   /** The sidebar tree's New Document, New Folder and drag-to-move. Each
-   *  returns the new path and refuses a taken name. Desktop only. */
+   *  returns the new path and refuses a taken name. */
   createDocument: (dir: string, name: string) =>
-    desktopActionCommand("tree_create_document", dir, name),
+    command("tree_create_document", dir, name),
   createFolder: (dir: string, name: string) =>
-    desktopActionCommand("tree_create_folder", dir, name),
+    command("tree_create_folder", dir, name),
   moveEntry: (path: string, into: string) =>
-    desktopActionCommand("tree_move_entry", path, into),
+    command("tree_move_entry", path, into),
   /** A new name in the same folder; returns the new path. */
   renameEntry: (path: string, name: string) =>
-    desktopActionCommand("tree_rename_entry", path, name),
-  /** To the system's Trash, never deleted; refuses the tree's own root. */
+    command("tree_rename_entry", path, name),
+  /** To the system's Trash; refuses the tree's own root. A phone has none:
+   *  there a document is deleted (the tree asks first), a folder never. */
   trashEntry: (path: string, root: string) =>
-    desktopActionCommand("tree_trash_entry", path, root),
+    command("tree_trash_entry", path, root),
   /** File > Open Folder…'s picker. Rejects with "TOO_BROAD" for the home
    *  folder or a drive root. A phone's is the system's folder picker. */
   pickOpenFolder: (): Promise<string | null> =>
@@ -258,6 +259,9 @@ export const drafts = {
   finishDraftRestore: () => command("finish_draft_restore"),
   clearDraftSnapshot: (tabId: string) => command("clear_draft_snapshot", tabId),
   clearAllDrafts: () => command("clear_all_drafts"),
+  /** The page's tabs, kept by the app's process (reload-tabs.ts). */
+  keepPageTabs: (text: string) => command("keep_page_tabs", text),
+  keptPageTabs: () => command("kept_page_tabs"),
 };
 
 /** A document's undo history kept beside the app's data while its editor

@@ -1,7 +1,7 @@
 // @vitest-environment jsdom
 import { afterEach, describe, expect, it, vi } from "vitest";
 import {
-  OPEN_CREATE_EVENT,
+  onCreateAsked,
   onCreateRequest,
   requestCreate,
   takeCreateRequest,
@@ -13,9 +13,9 @@ afterEach(() => void takeCreateRequest());
 describe("a request for Create", () => {
   it("opens Settings at Create when no Create tab is open, and waits there", () => {
     const opened = vi.fn();
-    window.addEventListener(OPEN_CREATE_EVENT, opened);
+    const stopAsked = onCreateAsked(opened);
     requestCreate("Change the plugin", "plugin");
-    window.removeEventListener(OPEN_CREATE_EVENT, opened);
+    stopAsked();
     expect(opened).toHaveBeenCalledOnce();
     expect(takeCreateRequest()).toEqual({
       text: "Change the plugin",
@@ -27,11 +27,11 @@ describe("a request for Create", () => {
   it("goes to the open Create tab, keeping Settings as it is", () => {
     const opened = vi.fn();
     const taken: unknown[] = [];
-    window.addEventListener(OPEN_CREATE_EVENT, opened);
+    const stopAsked = onCreateAsked(opened);
     const stop = onCreateRequest(() => taken.push(takeCreateRequest()));
     requestCreate("Fix it", "plugin");
     stop();
-    window.removeEventListener(OPEN_CREATE_EVENT, opened);
+    stopAsked();
     expect(taken).toEqual([{ text: "Fix it", kind: "plugin" }]);
     expect(opened).not.toHaveBeenCalled();
   });

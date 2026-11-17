@@ -3,6 +3,7 @@ import type { Strings } from "../../i18n/strings";
 import type { Settings } from "../../prefs/settings-types";
 import { lazyModule } from "../../lazy/lazy-module";
 import { lazyComponent } from "../../lazy/lazy-component";
+import { createSubscribers } from "../../utils/store";
 
 // Help > Report a Problem: asked for here, at startup; the dialog itself
 // loads the first time it is.
@@ -11,11 +12,11 @@ const ReportProblemDialog = lazyComponent(
   (m) => m.ReportProblemDialog,
 );
 
-const listeners = new Set<(open: boolean) => void>();
+const opening = createSubscribers<[open: boolean]>();
 
 /** Help > Report a Problem. */
 export function openReportProblem(): void {
-  for (const listener of listeners) listener(true);
+  opening.publish(true);
 }
 
 /** The window's Report a Problem dialog, loaded once it is first opened and
@@ -30,14 +31,10 @@ export function ReportProblemHost({
   const [open, setOpen] = useState(false);
   const [asked, setAsked] = useState(false);
   useEffect(() => {
-    const listener = (next: boolean) => {
+    return opening.subscribe((next) => {
       setOpen(next);
       if (next) setAsked(true);
-    };
-    listeners.add(listener);
-    return () => {
-      listeners.delete(listener);
-    };
+    });
   }, []);
   if (!asked) return null;
   return (

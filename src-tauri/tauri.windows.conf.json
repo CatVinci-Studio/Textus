@@ -48,6 +48,9 @@
         ],
         "compression": "lzma"
       }
+    },
+    "resources": {
+      "icons/doc.ico": "doc.ico"
     }
   }
 }

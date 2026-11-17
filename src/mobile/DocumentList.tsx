@@ -212,6 +212,7 @@ export function DocumentList({
       {...presence}
       className="document-list"
       role="dialog"
+      aria-modal="true"
       aria-label={t.docListTitle}
     >
       <header className="document-list-header">

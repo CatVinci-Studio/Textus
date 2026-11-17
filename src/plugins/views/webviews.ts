@@ -1,4 +1,5 @@
 import type { Endpoint } from "../host/rpc";
+import { createSubscribers } from "../../utils/store";
 
 /**
  * The webviews plugins have open, by id. A webview's state is kept by its
@@ -25,16 +26,13 @@ export interface WebviewRecord {
 
 const records = new Map<string, WebviewRecord>();
 const states = new Map<string, unknown>();
-const listeners = new Set<() => void>();
+const subscribers = createSubscribers();
 
 function changed() {
-  for (const listener of listeners) listener();
+  subscribers.publish();
 }
 
-export function subscribeWebviews(listener: () => void): () => void {
-  listeners.add(listener);
-  return () => listeners.delete(listener);
-}
+export const subscribeWebviews = subscribers.subscribe;
 
 /** Webview `id`'s page as useSyncExternalStore reads it: a view of one
  *  draws again when its own page changes, not when any other does. */

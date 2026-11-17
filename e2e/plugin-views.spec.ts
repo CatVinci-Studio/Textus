@@ -10,6 +10,7 @@ import {
   openPath,
   openWithPlugins,
   PNG,
+  tabFrame,
 } from "./plugin-helpers";
 
 // The official plugins' files open as tabs, one after another, each page
@@ -75,8 +76,30 @@ test("each official plugin's file opens in a tab of its own, drawn", async ({
     await expect(
       page.locator('[data-active-tab="true"] .plugin-webview-frame'),
     ).toBeVisible();
+    // Its page starts where its island's sheet does: no band over it.
+    const gap = await page
+      .locator('[data-active-tab="true"] .plugin-webview-frame')
+      .evaluate(
+        (el) =>
+          el.getBoundingClientRect().top -
+          el.closest("[data-active-tab]")!.getBoundingClientRect().top,
+      );
+    expect(gap).toBeLessThanOrEqual(1);
   }
   await expect(page.locator(".plugin-webview-problem")).toHaveCount(0);
+  // A card's checkbox sits on its title's first line, centred on it.
+  await page.locator(".tab-pill", { hasText: "board.md" }).click();
+  const off = await tabFrame(page)
+    .locator(".card")
+    .first()
+    .evaluate((card) => {
+      const box = card.querySelector(".ui-check")!.getBoundingClientRect();
+      const text = card.querySelector(".card-text")!;
+      const line = parseFloat(getComputedStyle(text).lineHeight);
+      const top = text.getBoundingClientRect().top;
+      return box.top + box.height / 2 - (top + line / 2);
+    });
+  expect(Math.abs(off)).toBeLessThanOrEqual(1);
 });
 
 test("a text file no plugin opens shows read-only, not as Markdown to rewrite", async ({
@@ -123,4 +146,122 @@ test("a plugin's page is in the UI's language, and changes with it", async ({
     window.dispatchEvent(new StorageEvent("storage", { key, newValue: next }));
   });
   await expect(frame.locator("html")).toHaveAttribute("lang", "de");
+});
+
+test("a plugin's sidebar list keeps a short count beside its label", async ({
+  page,
+}) => {
+  test.skip(!hasPlugin("catvinci.tags"), "no plugins checkout");
+  await openWithPlugins(page, {
+    plugins: { "catvinci.tags": permissions("catvinci.tags") },
+    folder: {
+      "/work/notes/a.md": "# A\n\n#planning-notes and #project\n",
+      "/work/notes/b.md": "# B\n\n#project\n",
+    },
+  });
+  await openPath(page, "/work/notes/a.md");
+  await page.getByRole("button", { name: "Tags", exact: true }).click();
+  const rows = page.locator(".plugin-list-text");
+  await expect(rows.first()).toBeVisible();
+  const tops = await rows.evaluateAll((all) =>
+    all.map((row) => {
+      const top = (sel: string) =>
+        Math.round(row.querySelector(sel)!.getBoundingClientRect().top);
+      return [top(".plugin-list-label"), top(".plugin-list-description")];
+    }),
+  );
+  for (const [label, count] of tops) expect(count).toBe(label);
+  // Its words given as the manifest's keys follow the UI language.
+  const said = (lang: string) =>
+    JSON.parse(
+      readFileSync(
+        join(pluginsCheckout()!, "plugins/catvinci.tags/textus-plugin.json"),
+        "utf8",
+      ),
+    ).l10n[lang].filter;
+  const field = page.locator(".plugin-list input");
+  await expect(field).toHaveAttribute("placeholder", said("en"));
+  await page.evaluate(() => {
+    const key = "catvinci-settings";
+    const next = JSON.stringify({
+      ...JSON.parse(localStorage.getItem(key) ?? "{}"),
+      language: "de",
+    });
+    localStorage.setItem(key, next);
+    window.dispatchEvent(new StorageEvent("storage", { key, newValue: next }));
+  });
+  await expect(field).toHaveAttribute("placeholder", said("de"));
+});
+
+test("a plugin's page asked for beside, with no room for it, opens as a tab and nothing is said", async ({
+  page,
+}) => {
+  test.skip(!hasPlugin("catvinci.mdx"), "no plugins checkout");
+  await page.setViewportSize({ width: 360, height: 700 });
+  await openWithPlugins(page, {
+    plugins: { "catvinci.mdx": permissions("catvinci.mdx") },
+    folder: { "/work/notes/page.mdx": "# Hello\n\nSome words.\n" },
+  });
+  await openPath(page, "/work/notes/page.mdx");
+  const editor = page.locator('[data-active-tab="true"] .ProseMirror');
+  await expect(editor).toContainText("Some words");
+  await editor.locator("p").click({ button: "right" });
+  await page.getByRole("menuitem", { name: "Preview MDX" }).click();
+  await expect(page.locator(".tab-pill")).toHaveCount(2);
+  await expect(page.locator(".tab-pill-active")).not.toContainText("page.mdx");
+  // Read once: a notice goes by itself after a while.
+  await page.waitForTimeout(300);
+  expect(await page.locator(".notice").count()).toBe(0);
+  // Alone in front, it still draws the document it was asked for from.
+  await expect(tabFrame(page).locator("body")).toContainText("Some words");
+});
+
+test.describe("on a touch screen", () => {
+  test.use({ hasTouch: true, isMobile: true });
+
+  test("a drawing's source button shows once the block is tapped, not over it all the time", async ({
+    page,
+  }) => {
+    test.skip(!hasPlugin("catvinci.function-plot"), "no plugins checkout");
+    await openWithPlugins(page, {
+      plugins: {
+        "catvinci.function-plot": permissions("catvinci.function-plot"),
+      },
+      folder: {
+        "/work/notes/plot.md": "# Plot\n\n```function-plot\ny = x^2\n```\n",
+      },
+    });
+    await openPath(page, "/work/notes/plot.md");
+    const block = page.locator('[data-active-tab="true"] .plugin-code-block');
+    const button = block.locator(".plugin-code-edit");
+    await expect(block.locator(".plugin-webview-frame")).toBeVisible();
+    await expect(button).toHaveCSS("opacity", "0");
+    await block.locator(".plugin-webview-frame").tap();
+    await expect(button).toHaveCSS("opacity", "1");
+  });
+});
+
+test("a plugin reads the document in front as a save would write it", async ({
+  page,
+}) => {
+  const file = "---\ntitle: Notes\n---\n# Notes\n\nFirst  line.\n";
+  await page.addInitScript((f) => {
+    (window as unknown as Record<string, unknown>).__devFs = {
+      "/work/fm.md": f,
+    };
+  }, file);
+  await openApp(page, { settings: { language: "en" } });
+  await openPath(page, "/work/fm.md");
+  await expect(
+    page.locator('[data-active-tab="true"] .ProseMirror'),
+  ).toContainText("First");
+  // Read once the editor is built: before, it has no text to give.
+  await expect
+    .poll(() =>
+      page.evaluate(async (url) => {
+        const bridge = await import(/* @vite-ignore */ url);
+        return bridge.getActiveDocument()?.text();
+      }, "/src/plugins/app-bridge.ts"),
+    )
+    .toBe(file);
 });

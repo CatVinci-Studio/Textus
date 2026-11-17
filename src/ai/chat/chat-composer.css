@@ -26,8 +26,10 @@
   min-width: 0;
 }
 
-.inline-chat-skill-item:hover {
-  background: var(--ui-hover);
+@media (hover: hover) {
+  .inline-chat-skill-item:hover {
+    background: var(--ui-hover);
+  }
 }
 
 /* The keyboard's row: selected, as in the / panel and command palette. */

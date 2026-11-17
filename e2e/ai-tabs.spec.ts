@@ -159,6 +159,10 @@ test("Zen shows the tab in use alone, and the split comes back after", async ({
   await aiButton(page).click();
   await expect(islands(page)).toHaveCount(2);
   await page.locator(".ProseMirror").first().click();
+  // The document's island is the one in use before Zen picks it.
+  await expect(
+    page.locator('[data-active-tab="true"] .ProseMirror'),
+  ).toHaveCount(1);
   await emit(page, "menu-toggle-zen-mode");
   await expect(islands(page)).toHaveCount(1);
   await expect(page.locator(".ai-tab:visible")).toHaveCount(0);
@@ -521,6 +525,12 @@ test("Memory opens from the tab's right-click and closes with its × or Esc", as
   await fromMenu();
   await page.keyboard.press("Escape");
   await expect(memory).toHaveCount(0);
+  // Words selected in the document beside it don't keep the menu away.
+  const editor = page.locator(".ProseMirror").first();
+  await editor.click();
+  await page.keyboard.type("Some words");
+  await page.keyboard.press("ControlOrMeta+a");
+  await fromMenu();
 });
 
 test.describe("on a phone", () => {

@@ -11,6 +11,7 @@ import type {
   SectionStatus,
 } from "../../platform/bindings/ai-paper";
 import type { PaperSources } from "./paper-document";
+import { createSubscribers } from "../../utils/store";
 
 /** The name a paper card's turns go by in the conversation; Rust keeps
  *  them from the model. */
@@ -121,7 +122,7 @@ const NEW_RUN: PaperRunState = {
 };
 
 const runs = new Map<string, PaperRunState>();
-const listeners = new Set<() => void>();
+const subscribers = createSubscribers();
 
 export function paperRun(key: string): PaperRunState | undefined {
   return runs.get(key);
@@ -133,7 +134,7 @@ export function updatePaperRun(
 ) {
   const run = runs.get(key) ?? { ...NEW_RUN, phaseSince: Date.now() };
   runs.set(key, { ...run, ...change(run) });
-  for (const listen of listeners) listen();
+  subscribers.publish();
 }
 
 /** A run's state changed by one of its events. */
@@ -230,10 +231,7 @@ function withQuestion(
   return questions.map((q, i) => (i === index ? { ...q, ...change(q) } : q));
 }
 
-function subscribe(listen: () => void) {
-  listeners.add(listen);
-  return () => listeners.delete(listen);
-}
+const subscribe = subscribers.subscribe;
 
 /** The run behind card `key`, re-rendering as it changes. */
 export function usePaperRun(key: string): PaperRunState | undefined {

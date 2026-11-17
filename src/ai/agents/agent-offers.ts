@@ -132,7 +132,7 @@ const chosenFor = (agent: string): Record<string, string> =>
 /** The value `option` should have: the user's choice while the agent still
  *  offers it, else, for the mode, the one that asks first, and for an
  *  allow-all switch of its own (Copilot's), off. */
-export function wanted(
+function wanted(
   option: AgentOption,
   options: readonly AgentOption[],
   chosen: Record<string, string>,
@@ -162,16 +162,24 @@ export function noteRefused(agent: string, id: string, value: string): void {
 const wasRefused = (agent: string, id: string, value: string) =>
   refusals.get(agent)?.has(`${id}=${value}`) ?? false;
 
+/** What `option` should be for `agent`: the choice wanted, unless the
+ *  agent turned it down - then null, and what it runs in stands. */
+export function wantedNow(
+  agent: string,
+  option: AgentOption,
+  options: readonly AgentOption[],
+  chosen: Record<string, string>,
+): string | null {
+  const value = wanted(option, options, chosen);
+  return value !== null && wasRefused(agent, option.id, value) ? null : value;
+}
+
 export function choicesToSend(agent: string): [string, string][] {
   const { options } = offerOf(agent);
   const chosen = chosenFor(agent);
   return options.flatMap((o): [string, string][] => {
-    const value = wanted(o, options, chosen);
-    return value !== null &&
-      value !== o.current &&
-      !wasRefused(agent, o.id, value)
-      ? [[o.id, value]]
-      : [];
+    const value = wantedNow(agent, o, options, chosen);
+    return value !== null && value !== o.current ? [[o.id, value]] : [];
   });
 }
 

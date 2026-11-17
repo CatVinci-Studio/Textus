@@ -1,16 +1,51 @@
 // @vitest-environment jsdom
 import { act, renderHook } from "@testing-library/react";
-import { describe, expect, it } from "vitest";
+import { afterEach, describe, expect, it, vi } from "vitest";
 import en from "../i18n/locales/en";
 import { useRowMenu } from "./useRowMenu";
 
+const platform = vi.hoisted(() => ({ mobile: false }));
+vi.mock("../platform/capabilities", async (real) => ({
+  ...(await real<typeof import("../platform/capabilities")>()),
+  get isMobileApp() {
+    return platform.mobile;
+  },
+}));
+
+const labelsFor = (path: string, isDir: boolean) => {
+  const noop = () => {};
+  const { result } = renderHook(() =>
+    useRowMenu("/proj", "/proj", en, noop, noop, noop, noop, null),
+  );
+  act(() => result.current.openRowMenu({ x: 0, y: 0 }, path, isDir));
+  return {
+    title: result.current.menu?.title,
+    labels: (result.current.menu?.items ?? []).map((i) =>
+      i === "separator" ? "-" : i.label,
+    ),
+  };
+};
+
 describe("a tree row's menu", () => {
+  afterEach(() => {
+    platform.mobile = false;
+  });
+
   it("is named for the row, heading a phone's sheet", () => {
-    const noop = () => {};
-    const { result } = renderHook(() =>
-      useRowMenu("/proj", "/proj", en, noop, noop, noop, noop, null),
-    );
-    act(() => result.current.openRowMenu({ x: 0, y: 0 }, "/proj/a.md", false));
-    expect(result.current.menu?.title).toBe("a.md");
+    expect(labelsFor("/proj/a.md", false).title).toBe("a.md");
+  });
+
+  it("moves to the Trash on the desktop; a phone, with none, deletes documents only", () => {
+    expect(labelsFor("/proj/a.md", false).labels).toContain(en.treeTrash);
+    expect(labelsFor("/proj/sub", true).labels).toContain(en.treeTrash);
+    platform.mobile = true;
+    const file = labelsFor("/proj/a.md", false).labels;
+    expect(file).toContain(en.docDelete);
+    expect(file).toContain(en.treeRenameItem);
+    expect(file).not.toContain(en.treeTrash);
+    const folder = labelsFor("/proj/sub", true).labels;
+    expect(folder).toContain(en.treeRenameItem);
+    expect(folder).not.toContain(en.docDelete);
+    expect(folder).not.toContain(en.treeTrash);
   });
 });

@@ -1,6 +1,7 @@
 import type { SearchEntry } from "./settings-search";
-import { SHOW_SIDEBAR_TAB_EVENT } from "../utils/events";
+import { SHOW_SIDEBAR_TAB_EVENT, sendAppEvent } from "../utils/events";
 import { tabInUse, windowTabs } from "../engine/layout/store";
+import { createSubscribers } from "../utils/store";
 
 /**
  * Settings on the desktop: its pages listed in the sidebar, the one picked
@@ -9,7 +10,7 @@ import { tabInUse, windowTabs } from "../engine/layout/store";
  * request to show one, for the window to bring the tab to it.
  */
 let shown = "general";
-const listeners = new Set<() => void>();
+const subscribers = createSubscribers();
 
 export function settingsPageShown(): string {
   return shown;
@@ -18,7 +19,7 @@ export function settingsPageShown(): string {
 export function setSettingsPageShown(id: string): void {
   if (id === shown) return;
   shown = id;
-  for (const listener of listeners) listener();
+  subscribers.publish();
 }
 
 /** Whether the sidebar shows the list now (its panel mounted). */
@@ -31,20 +32,15 @@ export function settingsListShown(): boolean {
 export function setSettingsListShown(on: boolean): void {
   if (on === listShown) return;
   listShown = on;
-  for (const listener of listeners) listener();
+  subscribers.publish();
 }
 
 /** The sidebar, open on Settings' pages. */
 export function showSettingsList(): void {
-  window.dispatchEvent(
-    new CustomEvent(SHOW_SIDEBAR_TAB_EVENT, { detail: "settings" }),
-  );
+  sendAppEvent(SHOW_SIDEBAR_TAB_EVENT, "settings");
 }
 
-export function onSettingsPageShown(listener: () => void): () => void {
-  listeners.add(listener);
-  return () => listeners.delete(listener);
-}
+export const onSettingsPageShown = subscribers.subscribe;
 
 /** Asks the window to show Settings at `page`, at a search result's row. */
 export const OPEN_SETTINGS_PAGE_EVENT = "textus:open-settings-page";

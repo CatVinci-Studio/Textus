@@ -1,7 +1,7 @@
 /**
  * The Textus plugin API, 1.7: the `textus` object a plugin's code is given
- * (src/plugins/host/runtime/host.js), the context its `activate` receives, and
- * `acquireTextusApi()` in its webviews (runtime/webview.js). The one source
+ * (src/plugins/host/host-runtime.ts), the context its `activate` receives, and
+ * `acquireTextusApi()` in its webviews (webview-runtime.ts). The one source
  * of truth: docs/dev/plugins/guide.md explains it, the reference pages are
  * made from it, Textus AI writes plugins from it, and
  * src/plugins/host/textus-types.test.ts keeps it in step with the runtime.
@@ -537,9 +537,11 @@ declare global {
        *  From 1.3.10. */
       onMove?(item: ListItem, target: ListItem): void | Promise<void>;
       /** What the field over the list says; without it, there is no
-       *  field. The list filters itself by label, description and detail. */
+       *  field. The list filters itself by label, description and detail.
+       *  A `%key%` of the manifest's `l10n` follows the UI language (from
+       *  1.4.3); plain text stays as given. */
       filterPlaceholder?: string;
-      /** Shown when there are no items. */
+      /** Shown when there are no items; a `%key%` as above. */
       emptyText?: string;
     }
 
@@ -575,7 +577,7 @@ declare global {
     interface ListView extends Disposable {
       /** Asks the provider again. */
       refresh(): void;
-      /** A line over the list ("12 tasks"); "" for none. */
+      /** A line over the list ("12 tasks"), or a `%key%`; "" for none. */
       setMessage(text: string): void;
     }
 
@@ -1365,13 +1367,17 @@ declare global {
     // ---------------------------------------------------------------
 
     interface Net {
-      /** HTTPS to the hosts granted (`network:<host>`); no cookies. */
+      /** HTTPS to the hosts granted (`network:<host>`); no cookies. Each
+       *  plugin's requests share kept connections (HTTP/2 where the server
+       *  has it). `signal` aborted stops the request at once; it then
+       *  rejects with an `AbortError` (from 1.7). */
       fetch(
         url: string,
         init?: {
           method?: string;
           headers?: Record<string, string>;
           body?: Uint8Array | ArrayBuffer | string;
+          signal?: AbortSignal;
         },
       ): Promise<{
         status: number;
@@ -1646,6 +1652,12 @@ declare global {
       /** From 1.7: onMessage by the name host.js's webview has; onMessage
        *  stays. */
       onDidReceiveMessage(fn: (message: unknown) => void): Disposable;
+      /** From 1.7: whether the page is in sight. */
+      readonly visible: boolean;
+      /** From 1.7: told as the page goes out of sight and comes back. Out
+       *  of sight it may be let go to save memory and is rebuilt when
+       *  shown, from `getState()`: set what it should keep here. */
+      onDidChangeVisibility(fn: (visible: boolean) => void): Disposable;
       getState(): unknown;
       setState<T>(state: T): T;
       /** Textus's own menu over the page, for a right-click or a dropdown,

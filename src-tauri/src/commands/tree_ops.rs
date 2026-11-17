@@ -1,6 +1,7 @@
 //! New document, new folder, move, rename and trash for the sidebar's file
-//! tree. Nothing here overwrites or deletes: a taken name is refused, and what
-//! the user removes goes to the Trash.
+//! tree. Nothing here overwrites: a taken name is refused. What the user
+//! removes goes to the Trash; a phone has none, so there a document the user
+//! confirmed is deleted, and a folder never.
 
 use std::path::{Path, PathBuf};
 use tokio::fs;
@@ -234,15 +235,51 @@ pub async fn tree_trash_entry(
 async fn trash_entry(path: String, root: String) -> Result<(), String> {
     let target = itself(&path)?;
     tauri::async_runtime::spawn_blocking(move || {
-        crate::atomic::user_file_to_trash(&target, Some(std::path::Path::new(&root)))
+        #[cfg(desktop)]
+        return crate::atomic::user_file_to_trash(&target, Some(Path::new(&root)));
+        #[cfg(mobile)]
+        delete_document(&target, Path::new(&root))
     })
     .await
     .map_err(|e| e.to_string())?
 }
 
+/// A phone's delete: one file in the folder, never a folder.
+#[cfg(any(mobile, test))]
+fn delete_document(target: &Path, root: &Path) -> Result<(), String> {
+    let root = root.canonicalize().map_err(|e| e.to_string())?;
+    if !target.starts_with(&root) || target == root {
+        return Err(crate::errors::error("outsideDocuments"));
+    }
+    if std::fs::symlink_metadata(target)
+        .map_err(|e| e.to_string())?
+        .is_dir()
+    {
+        return Err(crate::errors::error("notDocument"));
+    }
+    std::fs::remove_file(target).map_err(|e| e.to_string())
+}
+
 #[cfg(test)]
 mod tests {
     use super::*;
+
+    #[test]
+    fn a_phone_deletes_a_document_in_the_folder_never_a_folder() {
+        let tmp = tempfile::tempdir().unwrap();
+        let root = tmp.path().canonicalize().unwrap();
+        let doc = root.join("a.md");
+        std::fs::write(&doc, "x").unwrap();
+        std::fs::create_dir(root.join("sub")).unwrap();
+        assert!(delete_document(&root.join("sub"), &root).is_err());
+        assert!(delete_document(&root, &root).is_err());
+        let outside = tempfile::tempdir().unwrap();
+        let other = outside.path().canonicalize().unwrap().join("b.md");
+        std::fs::write(&other, "y").unwrap();
+        assert!(delete_document(&other, &root).is_err());
+        delete_document(&doc, &root).unwrap();
+        assert!(!doc.exists() && root.join("sub").is_dir() && other.exists());
+    }
 
     #[test]
     fn documents_get_md() {

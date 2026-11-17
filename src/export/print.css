@@ -17,7 +17,7 @@
   .tab-bar,
   .window-bar,
   .tx-backdrop,
-  .corner-stack,
+  .corner-stacks,
   .pdf-export-overlay {
     display: none !important;
   }

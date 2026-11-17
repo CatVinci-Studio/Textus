@@ -20,7 +20,7 @@ import {
   type ContextMenuItem,
 } from "../../engine/controls/ContextMenu";
 import { Presence } from "../../engine/motion/usePresence";
-import { INSERT_MARKDOWN_EVENT } from "../../utils/events";
+import { INSERT_MARKDOWN_EVENT, sendAppEvent } from "../../utils/events";
 import { normalizeAiMarkdown } from "../revision/apply-edit";
 import { CommandText } from "../agents/AgentPermission";
 import { currentStrings } from "../../i18n/current";
@@ -127,10 +127,9 @@ export function AgentTurnView({
                     {
                       label: labels.messageInsert,
                       onSelect: () =>
-                        window.dispatchEvent(
-                          new CustomEvent(INSERT_MARKDOWN_EVENT, {
-                            detail: normalizeAiMarkdown(turn.text),
-                          }),
+                        sendAppEvent(
+                          INSERT_MARKDOWN_EVENT,
+                          normalizeAiMarkdown(turn.text),
                         ),
                     },
                   ]

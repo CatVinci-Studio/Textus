@@ -1,4 +1,4 @@
-import { useEffect, useRef, useState, useSyncExternalStore } from "react";
+import { useEffect, useState, useSyncExternalStore } from "react";
 import type { DocTab } from "../../document/doc-tabs";
 import { session } from "../../platform/ipc";
 import { takeWindowSession } from "../../document/launch-window";
@@ -11,6 +11,7 @@ import {
   subscribeSplit,
   tabInUse,
   windowLayout,
+  windowTabs,
 } from "../../engine/layout/store";
 import { asRoot } from "../../engine/layout/ops";
 import { mapPanes, panesOf, type LayoutNode } from "../../engine/layout/tree";
@@ -51,8 +52,6 @@ export function useWindowSession(
   folder: string | null,
   activate: (id: string) => void,
 ): void {
-  const tabsRef = useRef(tabs);
-  tabsRef.current = tabs;
   const [ready, setReady] = useState(false);
   const layout = useSyncExternalStore(subscribeSplit, windowLayout);
 
@@ -65,13 +64,13 @@ export function useWindowSession(
       // tab in use; nothing here pulls focus from what the user picked.
       if (saved) {
         const idOf = new Map<string, string>();
-        for (const tab of tabsRef.current) {
+        for (const tab of windowTabs<DocTab>()) {
           const path = pathOf(tab);
           if (path && savedPaths(saved).includes(path)) idOf.set(path, tab.id);
         }
         const built = buildSaved(saved, idOf);
         const root =
-          built && withDraftInFront(built, tabsRef.current, tabInUse());
+          built && withDraftInFront(built, windowTabs<DocTab>(), tabInUse());
         if (root && root.kind === "split") {
           const [first] = panesOf(root);
           // Its first island's document in front, so the split keeps them all.
@@ -100,7 +99,9 @@ export function useWindowSession(
   const key = JSON.stringify([paths, layout.root, folder]);
   useEffect(() => {
     if (!canUseWindows || !ready) return;
-    const byId = new Map(tabsRef.current.map((tab) => [tab.id, pathOf(tab)]));
+    const byId = new Map(
+      windowTabs<DocTab>().map((tab) => [tab.id, pathOf(tab)]),
+    );
     const tree = saveNode(layout.root, (id) => byId.get(id) ?? null);
     void trackWrite(
       session.updateWindow({

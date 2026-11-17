@@ -147,8 +147,10 @@
   pointer-events: auto;
 }
 
-.window-bar-lock:hover {
-  color: var(--ui-text);
+@media (hover: hover) {
+  .window-bar-lock:hover {
+    color: var(--ui-text);
+  }
 }
 
 .window-bar-status {

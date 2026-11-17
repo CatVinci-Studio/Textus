@@ -1,7 +1,7 @@
 import { fill } from "../i18n/fill";
 import { CreateChat } from "../settings/pages/create-chat-lazy";
 import { Suspense, useEffect, useState } from "react";
-import { OPEN_CREATE_EVENT } from "../ai/chat/create-request";
+import { onCreateAsked } from "../ai/chat/create-request";
 import { lazyModule } from "../lazy/lazy-module";
 import { lazyComponent } from "../lazy/lazy-component";
 import {
@@ -12,7 +12,7 @@ import type { SettingsPanelProps } from "../settings/SettingsPanel";
 import type { SettingsTabProps } from "../settings/tab/SettingsTab";
 import { Presence } from "../engine/motion/usePresence";
 import { isIOSApp } from "../platform/capabilities";
-import { SHOW_SIDEBAR_TAB_EVENT } from "../utils/events";
+import { SHOW_SIDEBAR_TAB_EVENT, sendAppEvent } from "../utils/events";
 import {
   OPEN_SETTINGS_PAGE_EVENT,
   showSettingsList,
@@ -116,7 +116,7 @@ export function useSettingsOpening(tabs: TabState) {
       if (inTabs) showPage(tabs, "create");
       else setState((s) => ({ open: "extensions", request: s.request + 1 }));
     };
-    window.addEventListener(OPEN_CREATE_EVENT, open);
+    const stopCreate = onCreateAsked(open);
     // A page picked in the sidebar's list, or a search result there.
     const page = (e: Event) => {
       const { page, jump } = (e as CustomEvent<SettingsPageRequest>).detail;
@@ -126,7 +126,7 @@ export function useSettingsOpening(tabs: TabState) {
     };
     window.addEventListener(OPEN_SETTINGS_PAGE_EVENT, page);
     return () => {
-      window.removeEventListener(OPEN_CREATE_EVENT, open);
+      stopCreate();
       window.removeEventListener(OPEN_SETTINGS_PAGE_EVENT, page);
     };
   }, [tabs]);
@@ -152,9 +152,7 @@ export function useSettingsOpening(tabs: TabState) {
       if (inTabs)
         return id
           ? showPage(tabs, "plugins", id, pluginTitle(id))
-          : window.dispatchEvent(
-              new CustomEvent(SHOW_SIDEBAR_TAB_EVENT, { detail: "plugins" }),
-            );
+          : sendAppEvent(SHOW_SIDEBAR_TAB_EVENT, "plugins");
       if (id) openPluginPage(id);
       else openExtensionsTab("plugins");
       request("extensions");

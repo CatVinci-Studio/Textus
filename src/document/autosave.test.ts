@@ -45,12 +45,20 @@ function render(
   untitledToFile = true,
 ) {
   const autosaveTab = vi.fn(() => Promise.resolve(outcome));
+  const live = { current: tabs };
   const hook = renderHook(
-    (props: { tabs: DocTab[]; activeTabId: string; enabled: boolean }) =>
-      useAutosave({ ...props, untitledToFile, autosaveTab }),
+    (props: { tabs: DocTab[]; activeTabId: string; enabled: boolean }) => {
+      live.current = props.tabs;
+      return useAutosave({
+        ...props,
+        tabsRef: live,
+        untitledToFile,
+        autosaveTab,
+      });
+    },
     { initialProps: { tabs, activeTabId: tabs[0].id, enabled } },
   );
-  return { autosaveTab, ...hook };
+  return { autosaveTab, live, ...hook };
 }
 
 const settle = () => act(() => vi.advanceTimersByTimeAsync(AUTOSAVE_IDLE_MS));
@@ -148,6 +156,7 @@ describe("autosave scheduling", () => {
     const { result } = renderHook(() =>
       useAutosave({
         tabs: [{ ...saved, path: null }],
+        tabsRef: { current: [{ ...saved, path: null }] },
         activeTabId: "a",
         enabled: true,
         untitledToFile: true,
@@ -158,6 +167,14 @@ describe("autosave scheduling", () => {
     await settle();
     await act(() => result.current());
     expect(autosaveTab).not.toHaveBeenCalled();
+  });
+
+  it("sees the path a save just gave a draft, before the next render", async () => {
+    const draft = { ...saved, path: null };
+    const { autosaveTab, live, result } = render([draft], "saved", true, false);
+    live.current = [saved];
+    await act(() => result.current());
+    expect(autosaveTab).toHaveBeenCalledWith("a");
   });
 
   it("writes at once when the window loses focus", async () => {
@@ -210,6 +227,7 @@ describe("autosave scheduling", () => {
     const { result } = renderHook(() =>
       useAutosave({
         tabs: [saved],
+        tabsRef: { current: [saved] },
         activeTabId: "a",
         enabled: true,
         autosaveTab,

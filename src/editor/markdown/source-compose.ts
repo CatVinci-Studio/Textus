@@ -2,6 +2,7 @@ import { serializerCtx } from "@milkdown/kit/core";
 import { type Ctx } from "@milkdown/kit/ctx";
 import type { Node as ProseNode } from "@milkdown/kit/prose/model";
 import { withEscapesAsWritten } from "./escapes-as-written";
+import { inTheFilesHand, withoutNeedlessEscapes } from "./file-style";
 import {
   readBlocks,
   sameBlock,
@@ -14,8 +15,11 @@ import {
  *  together, and each join checked to read back as the document has it. */
 
 /** A run of changed blocks as the serializer writes it, without the final
- *  newline, with `original`'s escapes where they still read the same. A
- *  thematic break first in a run (not the document) is "---". */
+ *  newline: with no escape it reads the same without, and `original`'s
+ *  own hand and escapes where they still read the same. A
+ *  thematic break first in a run (not the document) is "---". Each is
+ *  read with the document's link and footnote definitions: a `[ref]`
+ *  unescaped is a link where `[ref]: url` is anywhere in the file. */
 function writeRun(
   ctx: Ctx,
   { runs }: SaveMemo,
@@ -24,23 +28,42 @@ function writeRun(
   from: number,
   to: number,
   original: string | null,
+  definitions: { text: string; count: () => number },
 ): string {
   const nodes: ProseNode[] = [];
   for (let j = from; j < to; j++) nodes.push(doc.child(j));
   const known = runs.get(nodes[0]);
   let text: string;
-  if (known && sameObjects(known.nodes, nodes)) text = known.text;
+  if (
+    known &&
+    sameObjects(known.nodes, nodes) &&
+    known.definitions === definitions.text
+  )
+    text = known.text;
   else {
     const end = to < doc.childCount ? offsets[to] : doc.content.size;
     text = ctx
       .get(serializerCtx)(doc.cut(offsets[from], end))
       .replace(/\n+$/, "");
-    if (original !== null && original.length < MAX_ESCAPE_CHECK) {
-      const kept = withEscapesAsWritten(original, text);
-      if (kept !== text && sameNodes(ctx, nodes, readBlocks(ctx, kept)))
-        text = kept;
+    if (text.length < MAX_ESCAPE_CHECK) {
+      const reads = (as: string) => {
+        if (!definitions.text)
+          return sameNodes(ctx, nodes, readBlocks(ctx, as));
+        const read = readBlocks(ctx, `${as}\n\n${definitions.text}`);
+        return sameNodes(
+          ctx,
+          nodes,
+          read.slice(0, read.length - definitions.count()),
+        );
+      };
+      text = withoutNeedlessEscapes(text, reads);
+      if (original !== null && original.length < MAX_ESCAPE_CHECK) {
+        text = inTheFilesHand(original, text, reads);
+        const kept = withEscapesAsWritten(original, text);
+        if (kept !== text && reads(kept)) text = kept;
+      }
     }
-    runs.set(nodes[0], { nodes, text });
+    runs.set(nodes[0], { nodes, text, definitions: definitions.text });
   }
   return from > 0 && nodes[0].type.name === "hr"
     ? text.replace(/^\*\*\*/, "---")
@@ -94,9 +117,47 @@ function originalBetween(
   return from <= to ? text.slice(from, to).trim() : null;
 }
 
+/** The blank lines the file had between pieces `a` and `b`, a kept piece
+ *  and a changed run standing in for blocks it had; else one. */
+function gapBetween(
+  { text, units }: SourceBlocks,
+  pieces: Piece[],
+  a: number,
+  b: number,
+): string {
+  if (b !== a + 1 || pieces[a].kind === pieces[b].kind) return "\n\n";
+  const run = pieces[a].kind === "changed" ? a : b;
+  const before = pieces[run - 1];
+  const after = pieces[run + 1];
+  const span = text.slice(
+    before ? units[before.to].end! : 0,
+    after ? units[after.from].start! : text.length,
+  );
+  if (!span.trim()) return "\n\n";
+  const gap = (run === b ? /^\s*/ : /\s*$/).exec(span)![0];
+  return /^\n{2,}$/.test(gap) ? gap : "\n\n";
+}
+
 function unitText(source: SourceBlocks, u: number): string {
   const unit = source.units[u];
   return source.text.slice(unit.start!, unit.end!);
+}
+
+/** The document's link and footnote definitions as Markdown, and how many
+ *  blocks they read as (counted once asked). */
+function definitionsOf(ctx: Ctx, doc: ProseNode, offsets: number[]) {
+  const parts: string[] = [];
+  doc.forEach((node, _offset, j) => {
+    if (!isDefinition(node)) return;
+    const end = j + 1 < doc.childCount ? offsets[j + 1] : doc.content.size;
+    parts.push(ctx.get(serializerCtx)(doc.cut(offsets[j], end)).trim());
+  });
+  const text = parts.join("\n\n");
+  let counted: number | null = null;
+  return {
+    text,
+    count: () => (counted ??= text ? readBlocks(ctx, text).length : 0),
+  };
 }
 
 export function compose(
@@ -109,6 +170,7 @@ export function compose(
   const offsets: number[] = [];
   doc.forEach((_node, offset) => offsets.push(offset));
   const definitions: string[] = [];
+  const docDefinitions = definitionsOf(ctx, doc, offsets);
   const pieceTexts = pieces.map((piece, p) => {
     if (piece.kind === "changed") {
       const written = writeRun(
@@ -119,6 +181,7 @@ export function compose(
         piece.from,
         piece.to,
         originalBetween(source, pieces[p - 1], pieces[p + 1]),
+        docDefinitions,
       );
       for (let j = piece.from; j < piece.to; j++)
         if (isDefinition(doc.child(j))) {
@@ -148,9 +211,17 @@ export function compose(
       : text === "" || text.endsWith("\n")
         ? "\n"
         : "";
+  // An empty paragraph writes nothing, and no blank line around it.
+  let body = "";
+  let before = -1;
+  pieceTexts.forEach((piece, p) => {
+    if (!piece) return;
+    if (before >= 0) body += gapBetween(source, pieces, before, p);
+    body += piece;
+    before = p;
+  });
   return {
-    // An empty paragraph writes nothing, and no blank line around it.
-    text: head + pieceTexts.filter(Boolean).join("\n\n") + tail,
+    text: head + body + tail,
     pieceTexts,
     definitions: definitions.join("\n\n"),
   };

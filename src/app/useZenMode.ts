@@ -1,5 +1,5 @@
 import { useCallback, useEffect, useLayoutEffect } from "react";
-import { ZEN_MODE_EVENT } from "../utils/events";
+import { ZEN_MODE_EVENT, sendAppEvent } from "../utils/events";
 import { useSettings } from "../prefs/SettingsContext";
 
 /**
@@ -24,7 +24,7 @@ export function useZenMode() {
     document.documentElement.classList.toggle("zen", zenMode);
   }, [zenMode]);
   useEffect(() => {
-    window.dispatchEvent(new CustomEvent(ZEN_MODE_EVENT, { detail: zenMode }));
+    sendAppEvent(ZEN_MODE_EVENT, zenMode);
   }, [zenMode]);
 
   return { zenMode, setZenMode, toggleZenMode };

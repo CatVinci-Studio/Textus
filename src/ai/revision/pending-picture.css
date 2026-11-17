@@ -126,9 +126,11 @@
   cursor: pointer;
 }
 
-.pending-picture-retry:hover {
-  border-color: var(--doc-accent);
-  color: var(--doc-accent-text);
+@media (hover: hover) {
+  .pending-picture-retry:hover {
+    border-color: var(--doc-accent);
+    color: var(--doc-accent-text);
+  }
 }
 
 /* A made picture, Redraw… over its corner while the pointer is on it. */
@@ -156,9 +158,11 @@
   cursor: pointer;
 }
 
-.pending-picture-redraw:hover {
-  border-color: var(--doc-accent);
-  color: var(--doc-accent-text);
+@media (hover: hover) {
+  .pending-picture-redraw:hover {
+    border-color: var(--doc-accent);
+    color: var(--doc-accent-text);
+  }
 }
 
 /* The chat's proposal card shows it small, in the picture's own shape (its

@@ -20,18 +20,6 @@ function textsOf(doc: ProseNode, type: string): string[] {
   return out;
 }
 
-/** Each span's delimiter and text: "**x" for bold x. */
-function spans(doc: ProseNode): string[] {
-  const out: string[] = [];
-  doc.descendants((node) => {
-    if (node.type.name === "md_span")
-      out.push(
-        `${String(node.attrs.delim).repeat(node.attrs.rung)}${node.textContent}`,
-      );
-  });
-  return out;
-}
-
 /** Each list item's task state: null for a plain item. */
 function tasks(doc: ProseNode): (boolean | null)[] {
   const out: (boolean | null)[] = [];
@@ -64,17 +52,6 @@ it("deleting the text after bold or italic leaves the caret after the closing ma
     t.type("x");
   }
   expect(t.markdown()).toBe("前**3**x。\n\n前*3*x。");
-});
-
-it("with closing marks off, ** stays as typed and **x** still turns bold", async () => {
-  const t = await open("", { autoCloseMarks: false });
-  t.type("**");
-  expect(t.view.state.doc.textContent).toBe("**");
-  expect(spans(t.view.state.doc)).toEqual([]);
-  t.type("x**");
-  expect(spans(t.view.state.doc)).toEqual(["**x"]);
-  t.type(" and ~~s~~");
-  expect(t.markdown()).toBe("**x** and ~~s~~");
 });
 
 it("typed dollar amounts stay text; a typed formula still forms", async () => {

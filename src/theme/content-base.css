@@ -141,8 +141,10 @@
     text-decoration: none;
   }
 
-  .milkdown a:hover {
-    text-decoration: underline;
+  @media (hover: hover) {
+    .milkdown a:hover {
+      text-decoration: underline;
+    }
   }
 
   .milkdown hr {
@@ -362,8 +364,10 @@
     text-underline-offset: 0.2em;
   }
 
-  :root:not([data-user-theme]) .milkdown a:hover {
-    text-decoration-color: currentColor;
+  @media (hover: hover) {
+    :root:not([data-user-theme]) .milkdown a:hover {
+      text-decoration-color: currentColor;
+    }
   }
 
   /* Rounded like the code block: separate borders, so each cell draws only its

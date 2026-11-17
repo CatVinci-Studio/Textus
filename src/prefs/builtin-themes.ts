@@ -4,8 +4,7 @@ import type { TextKey } from "../i18n/strings";
 /// also paint the frame: theme/frame-themes.css); "default"
 /// means none are active. A setting naming a withdrawn one (Parchment)
 /// falls back to the default.
-type BuiltinContentThemeId =
-  "default" | "paper" | "slate" | "forest" | "aurora";
+type BuiltinContentThemeId = "default" | "paper" | "slate" | "forest" | "prism";
 
 /// `nameKey` gives the picker label in the app language; `name` is the
 /// English fallback. Each defines a light and a dark palette, so switching
@@ -20,5 +19,5 @@ export const BUILTIN_CONTENT_THEMES: {
   { id: "slate", name: "Slate", nameKey: "themeNameSlate" },
   { id: "forest", name: "Forest", nameKey: "themeNameForest" },
   // A gradient across the frame (theme/frame-themes.css).
-  { id: "aurora", name: "Aurora", nameKey: "themeNameAurora" },
+  { id: "prism", name: "Prism", nameKey: "themeNamePrism" },
 ];

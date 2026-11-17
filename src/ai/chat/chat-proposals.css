@@ -129,8 +129,10 @@
   margin-left: 2px;
 }
 
-.agent-diff-summary:hover {
-  color: var(--ui-text);
+@media (hover: hover) {
+  .agent-diff-summary:hover {
+    color: var(--ui-text);
+  }
 }
 
 .agent-proposal button {
@@ -179,13 +181,20 @@
   cursor: pointer;
 }
 
-.agent-proposal-link:hover,
 .agent-proposal-link[aria-expanded="true"] {
   color: var(--ui-text);
 }
 
-.agent-proposal-link:hover {
-  text-decoration: underline;
+@media (hover: hover) {
+  .agent-proposal-link:hover {
+    color: var(--ui-text);
+  }
+}
+
+@media (hover: hover) {
+  .agent-proposal-link:hover {
+    text-decoration: underline;
+  }
 }
 
 /* Pinned above the composer whenever anything is undecided, since the cards

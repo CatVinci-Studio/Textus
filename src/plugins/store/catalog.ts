@@ -15,6 +15,7 @@ import { runsHere } from "../plugin-platform";
 import { pluginMatches } from "./plugin-records";
 import { errorText } from "../../utils/error-text";
 import { compareNames } from "../../utils/name-order";
+import { createSubscribers } from "../../utils/store";
 
 /**
  * The plugins Textus offers to install, from the textus-plugins catalog that
@@ -57,17 +58,14 @@ export type CatalogState =
   | { status: "failed"; error: string };
 
 let state: CatalogState = { status: "idle" };
-const listeners = new Set<() => void>();
+const subscribers = createSubscribers();
 
 function publish(next: CatalogState) {
   state = next;
-  for (const listener of listeners) listener();
+  subscribers.publish();
 }
 
-export function subscribeCatalog(listener: () => void): () => void {
-  listeners.add(listener);
-  return () => listeners.delete(listener);
-}
+export const subscribeCatalog = subscribers.subscribe;
 
 /** What the market offers to install: not installed, not unlisted. */
 export function offeredItems(

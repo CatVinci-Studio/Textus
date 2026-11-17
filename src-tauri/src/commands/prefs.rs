@@ -69,20 +69,24 @@ pub fn remember_editor_window(app: &AppHandle, window: &tauri::Window) {
         return;
     };
     let size = size.to_logical::<f64>(scale);
-    let _ = write_pref(
+    if let Err(e) = write_pref(
         app,
         "editor_window_size",
         serde_json::json!([size.width.round(), size.height.round()]),
-    );
+    ) {
+        eprintln!("textus: cannot keep the window size: {e}");
+    }
     if !crate::editor_windows::window_place_known() {
         return;
     }
     if let Ok(at) = window.outer_position() {
         let at = at.to_logical::<f64>(scale);
-        let _ = write_pref(
+        if let Err(e) = write_pref(
             app,
             "editor_window_position",
             serde_json::json!([at.x.round(), at.y.round()]),
-        );
+        ) {
+            eprintln!("textus: cannot keep the window position: {e}");
+        }
     }
 }

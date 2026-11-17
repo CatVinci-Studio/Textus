@@ -1,7 +1,7 @@
 import { linkStyleAt } from "../../files/link-style";
 import { linkToTarget, pathIndex } from "../../files/link-resolve";
 import { dirname } from "../../utils/path";
-import { INSERT_MARKDOWN_EVENT } from "../../utils/events";
+import { INSERT_MARKDOWN_EVENT, sendAppEvent } from "../../utils/events";
 
 /** A link to `path` put in at the caret of the document `from`, written
  *  as links there are (standard with %20, or wiki in a vault that uses
@@ -13,9 +13,5 @@ export async function linkToFile(
 ): Promise<void> {
   const style = await linkStyleAt(from);
   const paths = pathIndex(root ?? dirname(from), [path, from]);
-  window.dispatchEvent(
-    new CustomEvent(INSERT_MARKDOWN_EVENT, {
-      detail: linkToTarget(paths, path, from, style),
-    }),
-  );
+  sendAppEvent(INSERT_MARKDOWN_EVENT, linkToTarget(paths, path, from, style));
 }

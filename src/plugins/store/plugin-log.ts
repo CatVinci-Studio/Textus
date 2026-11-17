@@ -1,3 +1,4 @@
+import { createSubscribers } from "../../utils/store";
 /**
  * What went wrong in each plugin lately, for its page in Settings where a
  * developer reads why. In memory only, the last LIMIT of each.
@@ -12,7 +13,7 @@ interface PluginLogEntry {
 
 const LIMIT = 50;
 const logs = new Map<string, PluginLogEntry[]>();
-const listeners = new Set<() => void>();
+const subscribers = createSubscribers();
 let version = 0;
 
 export function logPluginError(id: string, message: string): void {
@@ -29,7 +30,7 @@ export function logPluginMessage(
   list.push({ at: Date.now(), message: message.slice(0, 2000), level });
   logs.set(id, list.slice(-LIMIT));
   version++;
-  for (const fn of listeners) fn();
+  subscribers.publish();
 }
 
 export function pluginLog(id: string): readonly PluginLogEntry[] {
@@ -39,14 +40,11 @@ export function pluginLog(id: string): readonly PluginLogEntry[] {
 export function clearPluginLog(id: string): void {
   if (!logs.delete(id)) return;
   version++;
-  for (const fn of listeners) fn();
+  subscribers.publish();
 }
 
 /** For useSyncExternalStore. */
-export function subscribePluginLog(fn: () => void): () => void {
-  listeners.add(fn);
-  return () => listeners.delete(fn);
-}
+export const subscribePluginLog = subscribers.subscribe;
 
 export function pluginLogVersion(): number {
   return version;

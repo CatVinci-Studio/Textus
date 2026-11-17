@@ -1,6 +1,6 @@
 //! Commands invoked by the frontend. Shared by desktop and iOS unless gated:
-//! `#[cfg(desktop)]` modules are about OS windows or the desktop shell (and
-//! `tree_ops`, also `#[cfg(desktop)]`); `documents` is `#[cfg(mobile)]`.
+//! `#[cfg(desktop)]` modules are about OS windows or the desktop shell;
+//! `documents` is `#[cfg(mobile)]`.
 
 pub mod attachment;
 #[cfg(desktop)]
@@ -40,7 +40,6 @@ pub mod system_info;
 pub mod theme_gallery;
 pub mod themes;
 pub mod traffic_lights;
-#[cfg(desktop)]
 pub mod tree_ops;
 pub mod undo_files;
 #[cfg(desktop)]

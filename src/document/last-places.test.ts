@@ -22,6 +22,7 @@ import {
   lastCaret,
   lastScroll,
   mergeCarets,
+  placesSaved,
   rememberCaret,
   rememberScroll,
   resetLastPlacesForTests,
@@ -173,6 +174,16 @@ describe("useLastPlaces", () => {
     expect(lastScroll("/a.md", 5)).toEqual({ block: 3, into: 12 });
     // Changed since: neither comes back.
     expect(lastScroll("/a.md", 6)).toBeNull();
+    // Saved by this window, they hold for the file as written, and a caret
+    // reported after the save keeps the reading place.
+    placesSaved("/a.md", 5, 6);
+    expect(lastScroll("/a.md", 6)).toEqual({ block: 3, into: 12 });
+    rememberCaret("/a.md", { offset: 9 }, 6);
+    expect(lastCaret("/a.md", 6)).toEqual({ offset: 9 });
+    expect(lastScroll("/a.md", 6)).toEqual({ block: 3, into: 12 });
+    // Written elsewhere meanwhile (not at the time they were kept for).
+    placesSaved("/a.md", 7, 8);
+    expect(lastScroll("/a.md", 8)).toBeNull();
   });
 
   it("keeps no reading place with Restore Previous Session off", () => {

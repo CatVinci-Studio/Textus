@@ -1,0 +1,70 @@
+/* A block's ＋ and ⋮⋮ in the margin left of it (block-handles-plugin.ts):
+   placed by translate in the editor's own units, so they grow with the
+   document's zoom as the text does. Drawn as the table's add buttons are. */
+
+.milkdown:has(> .block-handle) {
+  position: relative;
+}
+
+/* Room in the margin for both. */
+:root:not([data-block-handles="off"]) .editor-content {
+  --doc-gutter: 2.75rem;
+}
+
+.block-handle {
+  position: absolute;
+  top: 0;
+  left: 0;
+  z-index: 2;
+  display: flex;
+  align-items: center;
+  gap: 2px;
+  user-select: none;
+}
+
+.block-handle[hidden] {
+  display: none;
+}
+
+.block-handle-button {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 20px;
+  height: 24px;
+  padding: 0;
+  border: none;
+  border-radius: var(--shape-xs);
+  background: none;
+  color: var(--doc-muted);
+  cursor: pointer;
+  transition: color var(--dur-fast) var(--ease-standard);
+}
+
+.block-handle-button[hidden] {
+  display: none;
+}
+
+@media (hover: hover) {
+  .block-handle-button:hover {
+    background: color-mix(in srgb, currentColor 12%, transparent);
+    color: var(--doc-text);
+  }
+}
+
+.block-handle-grip {
+  cursor: grab;
+  touch-action: none;
+}
+
+/* Where the pulled block will land. */
+.block-drop-line {
+  position: absolute;
+  top: -1px;
+  left: 0;
+  z-index: 3;
+  height: 2px;
+  border-radius: var(--shape-pill);
+  background: var(--ui-accent);
+  pointer-events: none;
+}

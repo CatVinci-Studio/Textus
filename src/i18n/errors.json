@@ -63,6 +63,10 @@
     "en": "No folder is open.",
     "text": "errorNoFolder"
   },
+  "pluginsNeedAllFiles": {
+    "en": "Plugins can't read this folder: Textus wasn't given access to all files. Open the folder again and choose Continue.",
+    "text": "errorPluginsNeedAllFiles"
+  },
   "pluginTooBig": {
     "en": "The plugin is too big.",
     "text": "errorPluginTooBig"

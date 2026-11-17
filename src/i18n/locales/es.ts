@@ -128,6 +128,16 @@ para usar una.
   codeBlockEditSource: "Editar el código",
   codeBlockDone: "Terminar de editar",
   codeBlockDelete: "Eliminar el bloque",
+  blockText: "Texto",
+  blockCallout: "Aviso",
+  blockHandleAdd: "Añadir un bloque debajo",
+  blockHandleOptions: "Arrastra para mover, haz clic para ver opciones",
+  blockTurnInto: "Convertir en",
+  blockDuplicate: "Duplicar",
+  blockHandlesLabel: "Asas de bloque",
+  blockHandlesHelp:
+    "＋ y ⋮⋮ junto al bloque bajo el puntero: añadir un bloque, moverlo o convertirlo en otro tipo.",
+  smoothCaretLabel: "Cursor suave",
   menuBlockWide: "Vista ancha",
   menuBlockZoom: "Tamaño",
   diagramViewerLabel: "Diagrama",
@@ -172,6 +182,8 @@ para usar una.
   revisionDisplayInline: "Todo en el texto",
   revisionDisplayOriginal: "Original en el texto, cambios en el margen",
   revisionDisplayFinal: "Solo el resultado, original en el margen",
+  splitNoRoomLow:
+    "No hay espacio para otra división: la ventana es demasiado baja. Oculta el teclado o haz la ventana más alta.",
   splitNoRoom:
     "No cabe otra división: la ventana es demasiado estrecha. Ensánchala o cierra una división.",
   revisionDisplayNoRoom:
@@ -660,6 +672,8 @@ para usar una.
     "La tienda de plugins necesita una versión más reciente de Textus. Actualiza Textus para verla.",
   errorImageTooBig: "La imagen está vacía o supera los 25 MB.",
   errorNoFolder: "Abre primero una carpeta.",
+  errorPluginsNeedAllFiles:
+    "Los plugins no pueden leer esta carpeta: Textus no tiene acceso a todos los archivos. Vuelve a abrir la carpeta y elige «Continuar».",
   errorPdfUnsupported:
     "La exportación a PDF no está disponible en este sistema.",
   errorNoText: "No tiene texto legible.",
@@ -956,6 +970,12 @@ para usar una.
   agentSend: "Enviar",
   agentStop: "Detener",
   agentRetry: "Reintentar",
+  agentForgotStart:
+    "Esta conversación es larga: sus primeros mensajes ya no se envían al modelo. Empieza una conversación nueva para comenzar de cero.",
+  revisionsNotKept:
+    "Los cambios pendientes de tu decisión no se pudieron guardar en el disco. Acéptalos o recházalos antes de cerrar el documento, o se perderán.",
+  settingsNotSaved:
+    "Ahora no se pueden guardar los ajustes ni el estado de la ventana: lo que cambies dura hasta que cierres Textus.",
   agentNeedsFolder:
     "Abre primero una carpeta o guarda el documento: el agente trabaja en una carpeta.",
   agentStopped: "{agent} se ha detenido.",
@@ -1494,6 +1514,8 @@ para usar una.
   wordImportDismiss: "Entendido",
   openFileFailed:
     "No se puede abrir {name}: no es un documento de texto y ningún complemento abre archivos de este tipo.",
+  openFileMuted:
+    "Textus no puede abrir {name} por sí solo. Desactivaste la sugerencia del plugin que lo abre; Ajustes › {page} la vuelve a mostrar.",
   openFileGone:
     "No se puede abrir {name}: ya no está ahí. Puede que se haya movido, renombrado o eliminado.",
   wordImportFailed: "No se pudo abrir {name}.",
@@ -1612,7 +1634,7 @@ para usar una.
   themeNamePaper: "Papel",
   themeNameSlate: "Pizarra",
   themeNameForest: "Bosque",
-  themeNameAurora: "Aurora",
+  themeNamePrism: "Prisma",
   appearanceLabel: "Aspecto",
   appearanceModeLabel: "Claro u oscuro",
   appearanceSystem: "Según el sistema",
@@ -1950,4 +1972,10 @@ para usar una.
   shortcutOutdentListItem: "Reducir sangría del elemento",
   pluginKeyTaken:
     "{name}: {key} ya es de «{owner}», así que no se asignó a «{command}». Elige otro en Ajustes › Atajos de teclado.",
+  gitTrustTitle:
+    "¿Permitir que Git ejecute los programas propios de este repositorio?",
+  gitTrustText:
+    "El repositorio Git de esta carpeta está configurado para ejecutar programas en tu ordenador ({what}). Es habitual en un repositorio que has preparado tú. Si la carpeta viene de otra persona, permítelo solo si confías en ella.",
+  gitTrustAllow: "Confiar en este repositorio",
+  gitTrustRefused: "Aquí no se usa Git: el repositorio no es de confianza.",
 } satisfies Translation;

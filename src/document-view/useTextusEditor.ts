@@ -15,6 +15,9 @@ import type { Settings } from "../prefs/SettingsContext";
 import type { Strings } from "../i18n/strings";
 import type { TourAi } from "../utils/events";
 import { configureEditorRoot } from "../editor/editor-extensions";
+import { leftBy } from "../editor/tab-left";
+import { registerTabEditor } from "../editor/tab-editor";
+import { takeKeys } from "../editor/take-keys";
 import {
   documentChangedForPlugins,
   selectionChangedForPlugins,
@@ -37,6 +40,7 @@ interface EditorBridges {
 /** Builds this tab's Milkdown instance, with the listener that reports the
  *  document. */
 export function useTextusEditor({
+  tabId,
   initialValue,
   reporting,
   settingsRef,
@@ -47,6 +51,7 @@ export function useTextusEditor({
   setQuickAskEl,
   requestImageName,
 }: {
+  tabId: string;
   initialValue: string;
   reporting: DocumentReporting;
   // The chain is built once, so plugins read live values through these refs.
@@ -84,17 +89,26 @@ export function useTextusEditor({
     (root) =>
       withEditorExtensions(
         Editor.make().config((ctx) => {
+          let giveBack = () => {};
           configureEditorRoot(
             ctx,
             root,
             initialValue,
             () => tRef.current.editorLabel,
+            leftBy(tabId, initialValue),
           );
           ctx
             .get(listenerCtx)
             .mounted((ctx) => {
-              onMounted(ctx, ctx.get(editorViewCtx).state.doc);
+              const view = ctx.get(editorViewCtx);
+              onMounted(ctx, view.state.doc);
+              // The keys can go to it the moment it is built: a render
+              // later, what was typed meanwhile went nowhere.
+              giveBack = registerTabEditor(tabId, "focus", () =>
+                takeKeys(view),
+              );
             })
+            .destroy(() => giveBack())
             // Not markdownUpdated: that serializes the whole document, and a
             // save writes only the changed blocks.
             .updated((ctx, doc) => {

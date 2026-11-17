@@ -169,11 +169,28 @@ and links to a moved note are rewritten (`files/move-links.ts`).
 
 ## Tabs out of sight
 
-A document's editor out of sight for 10 minutes is let go, and opens
-again at its text with its undo history when shown (`EditorKept` in
-`src/app/islands/DocumentIslands.tsx`, `utils/kept-loaded.ts`; the undo history is kept
-in the app's `undo/` folder by `editor/undo-file.ts`). An editor holding
-Quick Ask, a proposal of Textus AI's or undecided changes stays
-loaded (`document/editor-held.ts`), and so does one with no file to come
-back from. Plugin views and web pages out of sight
-are let go after 5 minutes.
+A document's editor is mounted only while its tab is in front of an island
+(`EditorKept` in `src/app/islands/kept.tsx`). As it goes, the tab keeps what
+the next editor needs to open as this one was (`editor/tab-left.ts`): the
+document, the selection and the undo history as plain data, and the place
+being read (tracked as the page scrolls, since by unmount the tab is already
+drawn out of front). The next editor starts from them
+(`editor/opened-from.ts`, `editor/left-history.ts`): no step is applied
+again, so nothing else in the editor sees an edit. What is left holds only
+for the text it was left at; a tab that closes forgets it.
+
+The editor takes the keys with `focusTabEditor` (`editor/tab-editor.ts`),
+the editor's own focus, which scrolls nothing; the editor scrolls to its
+caret only when a transaction asks (`editor/editor-scroll.ts`). On a phone
+the app gives an editor the keys only while the keyboard is up
+(`editor/take-keys.ts`): a document brought to the front is read first.
+
+The undo history also outlives the app: it is written to the app's `undo/`
+folder when the editor goes (`editor/undo-file.ts`) and read back for a
+document opened afresh. Tracked changes, notes and proposals left in a tab
+are carried the same way (`document/tracked-file.ts`,
+`ai/revision/kept-proposals.ts`). An editor Textus AI is still working in
+stays mounted out of sight until it is done (`document-view/useHeldWhileBusy.ts`).
+Plugin views, source views and web pages out of sight are let go after a
+while that follows the machine's memory, a few of a kind at most kept
+(`utils/kept-loaded.ts`, `utils/memory-policy.ts`).

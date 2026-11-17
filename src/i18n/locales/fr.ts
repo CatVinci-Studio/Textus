@@ -128,6 +128,16 @@ utiliser une.
   codeBlockEditSource: "Modifier la source",
   codeBlockDone: "Terminer la modification",
   codeBlockDelete: "Supprimer le bloc",
+  blockText: "Texte",
+  blockCallout: "Encadré",
+  blockHandleAdd: "Ajouter un bloc en dessous",
+  blockHandleOptions: "Glisser pour déplacer, cliquer pour les options",
+  blockTurnInto: "Transformer en",
+  blockDuplicate: "Dupliquer",
+  blockHandlesLabel: "Poignées de bloc",
+  blockHandlesHelp:
+    "＋ et ⋮⋮ à côté du bloc sous le pointeur : ajouter un bloc, le déplacer ou le transformer en un autre type.",
+  smoothCaretLabel: "Curseur fluide",
   menuBlockWide: "Affichage large",
   menuBlockZoom: "Taille",
   diagramViewerLabel: "Diagramme",
@@ -173,6 +183,8 @@ utiliser une.
   revisionDisplayOriginal:
     "Original dans le texte, modifications dans la marge",
   revisionDisplayFinal: "Résultat seul, original dans la marge",
+  splitNoRoomLow:
+    "Pas de place pour une autre division : la fenêtre est trop basse. Masquez le clavier ou agrandissez la fenêtre en hauteur.",
   splitNoRoom:
     "Pas de place pour une autre division : la fenêtre est trop étroite. Élargissez-la ou fermez une division.",
   revisionDisplayNoRoom:
@@ -664,6 +676,8 @@ utiliser une.
     "La boutique de plugins nécessite une version plus récente de Textus. Mettez Textus à jour pour la voir.",
   errorImageTooBig: "L'image est vide ou dépasse 25 Mo.",
   errorNoFolder: "Ouvrez d'abord un dossier.",
+  errorPluginsNeedAllFiles:
+    "Les plugins ne peuvent pas lire ce dossier : Textus n'a pas accès à tous les fichiers. Rouvrez le dossier et choisissez « Continuer ».",
   errorPdfUnsupported: "L'export PDF n'est pas disponible sur ce système.",
   errorNoText: "Il ne contient aucun texte lisible.",
   errorUnreadable: "Ce fichier ne peut pas être lu.",
@@ -960,6 +974,12 @@ utiliser une.
   agentSend: "Envoyer",
   agentStop: "Arrêter",
   agentRetry: "Réessayer",
+  agentForgotStart:
+    "Cette conversation est longue : ses premiers messages ne sont plus envoyés au modèle. Commencez une nouvelle conversation pour repartir de zéro.",
+  revisionsNotKept:
+    "Les modifications en attente de votre décision n'ont pas pu être enregistrées sur le disque. Acceptez-les ou refusez-les avant de fermer le document, sinon elles seront perdues.",
+  settingsNotSaved:
+    "Les réglages et l'état de la fenêtre ne peuvent pas être enregistrés pour l'instant : vos changements durent jusqu'à la fermeture de Textus.",
   agentNeedsFolder:
     "Ouvrez d’abord un dossier ou enregistrez le document : l’agent travaille dans un dossier.",
   agentStopped: "{agent} s’est arrêté.",
@@ -1502,6 +1522,8 @@ utiliser une.
   wordImportDismiss: "OK",
   openFileFailed:
     "Impossible d’ouvrir {name} : ce n’est pas un document texte, et aucun plugin n’ouvre ce type de fichier.",
+  openFileMuted:
+    "Textus ne peut pas ouvrir {name} seul. Vous avez masqué la suggestion du plugin qui l'ouvre ; Réglages › {page} la réaffiche.",
   openFileGone:
     "Impossible d’ouvrir {name} : le fichier n’est plus là. Il a peut-être été déplacé, renommé ou supprimé.",
   wordImportFailed: "Impossible d'ouvrir {name}.",
@@ -1623,7 +1645,7 @@ utiliser une.
   themeNamePaper: "Papier",
   themeNameSlate: "Ardoise",
   themeNameForest: "Forêt",
-  themeNameAurora: "Aurore",
+  themeNamePrism: "Prisme",
   appearanceLabel: "Apparence",
   appearanceModeLabel: "Clair ou sombre",
   appearanceSystem: "Selon le système",
@@ -1965,4 +1987,9 @@ utiliser une.
   shortcutOutdentListItem: "Désindenter l’élément de liste",
   pluginKeyTaken:
     "{name} : {key} appartient à « {owner} » et n’a donc pas été attribué à « {command} ». Choisissez un raccourci dans Réglages › Raccourcis.",
+  gitTrustTitle: "Laisser Git exécuter les programmes propres à ce dépôt ?",
+  gitTrustText:
+    "Le dépôt Git de ce dossier est configuré pour exécuter des programmes sur votre ordinateur ({what}). C'est courant dans un dépôt que vous avez préparé vous-même. Si le dossier vient de quelqu'un d'autre, ne l'autorisez que si vous lui faites confiance.",
+  gitTrustAllow: "Faire confiance à ce dépôt",
+  gitTrustRefused: "Git n'est pas utilisé ici : le dépôt n'est pas approuvé.",
 } satisfies Translation;

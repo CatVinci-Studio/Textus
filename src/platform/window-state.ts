@@ -1,4 +1,5 @@
 import { useSyncExternalStore } from "react";
+import { createSubscribers } from "../utils/store";
 import { thisWindow } from "./this-window";
 
 /** The window as the system holds it: filling the screen, or full screen. */
@@ -14,8 +15,7 @@ interface WindowState {
  * asking costs IPC round trips - and on AppKit's full-screen event.
  */
 let state: WindowState = { maximized: false, fullscreen: false };
-const listeners = new Set<() => void>();
-let stop: (() => void) | null = null;
+const subscribers = createSubscribers(start);
 
 function set(next: Partial<WindowState>) {
   const merged = { ...state, ...next };
@@ -25,7 +25,7 @@ function set(next: Partial<WindowState>) {
   )
     return;
   state = merged;
-  for (const listener of listeners) listener();
+  subscribers.publish();
 }
 
 function start(): () => void {
@@ -58,17 +58,7 @@ function start(): () => void {
   };
 }
 
-function subscribe(listener: () => void): () => void {
-  listeners.add(listener);
-  stop ??= start();
-  return () => {
-    listeners.delete(listener);
-    if (listeners.size === 0) {
-      stop?.();
-      stop = null;
-    }
-  };
-}
+const subscribe = subscribers.subscribe;
 
 export function useWindowState(): WindowState {
   return useSyncExternalStore(subscribe, () => state);

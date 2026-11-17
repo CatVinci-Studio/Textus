@@ -1,5 +1,5 @@
 // @vitest-environment jsdom
-import { afterEach, beforeAll, describe, expect, it } from "vitest";
+import { afterEach, describe, expect, it } from "vitest";
 import type { Node as ProseNode } from "@milkdown/kit/prose/model";
 import { TextSelection } from "@milkdown/kit/prose/state";
 import type { EditorView } from "@milkdown/kit/prose/view";
@@ -10,12 +10,6 @@ import { tocEntries } from "./toc-plugin";
 
 // A link holds its Markdown as text; the caret on it shows that source,
 // elsewhere decorations hide its syntax. Nothing about it is a document edit.
-
-// An undo scrolls the caret into view, measuring a Range jsdom can't.
-beforeAll(() => {
-  Range.prototype.getClientRects ??= () => [] as unknown as DOMRectList;
-  Range.prototype.getBoundingClientRect ??= () => new DOMRect();
-});
 
 afterEach(closeViews);
 

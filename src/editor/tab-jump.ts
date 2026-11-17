@@ -1,5 +1,6 @@
 import type { CaretPlace } from "./tab-editor";
 import type { DocumentPlace } from "../plugins/app-bridge";
+import { createSubscribers } from "../utils/store";
 
 /**
  * Where a tab's editor should put the reader once it is on screen, handed
@@ -18,7 +19,7 @@ export type TabJump =
   | { kind: "place"; place: DocumentPlace };
 
 const pending = new Map<string, TabJump>();
-const listeners = new Set<(tabId: string) => void>();
+const jumps = createSubscribers<[tabId: string]>();
 
 /**
  * Hands `jump` to the editor of `tabId`, replacing one it hasn't taken. It is
@@ -27,7 +28,7 @@ const listeners = new Set<(tabId: string) => void>();
  */
 export function setTabJump(tabId: string, jump: TabJump, now = false): void {
   pending.set(tabId, jump);
-  if (now) for (const listener of listeners) listener(tabId);
+  if (now) jumps.publish(tabId);
 }
 
 export function takeTabJump(tabId: string): TabJump | null {
@@ -38,7 +39,4 @@ export function takeTabJump(tabId: string): TabJump | null {
 
 /** Called with the tab id of each jump set with `now`. Returns the
  *  unsubscribe. */
-export function onTabJump(listener: (tabId: string) => void): () => void {
-  listeners.add(listener);
-  return () => listeners.delete(listener);
-}
+export const onTabJump = jumps.subscribe;

@@ -23,8 +23,10 @@
   cursor: pointer;
 }
 
-.block-fold:hover {
-  background: color-mix(in srgb, currentColor 12%, transparent);
+@media (hover: hover) {
+  .block-fold:hover {
+    background: color-mix(in srgb, currentColor 12%, transparent);
+  }
 }
 
 .block-fold[aria-expanded="true"] > .disclosure-caret {
@@ -45,8 +47,10 @@
   cursor: pointer;
 }
 
-.block-folded-line:hover {
-  color: var(--doc-accent-text);
+@media (hover: hover) {
+  .block-folded-line:hover {
+    color: var(--doc-accent-text);
+  }
 }
 
 .block-foldable[data-folded] > .block-folded-line {

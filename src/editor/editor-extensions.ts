@@ -1,12 +1,8 @@
-import {
-  type Editor,
-  defaultValueCtx,
-  editorViewOptionsCtx,
-  rootCtx,
-} from "@milkdown/kit/core";
+import { type Editor, editorViewOptionsCtx, rootCtx } from "@milkdown/kit/core";
 import type { Ctx, MilkdownPlugin } from "@milkdown/kit/ctx";
 import { orderedListAttr } from "@milkdown/kit/preset/commonmark";
-import { history } from "@milkdown/kit/plugin/history";
+import { historyOpened, openedFromCtx, openWith } from "./opened-from";
+import type { TabLeft } from "./tab-left";
 import { clipboard } from "@milkdown/kit/plugin/clipboard";
 import { listener } from "@milkdown/kit/plugin/listener";
 import { $remark } from "@milkdown/kit/utils";
@@ -16,6 +12,7 @@ import remarkCjkFriendlyGfmStrikethrough from "remark-cjk-friendly-gfm-strikethr
 import {
   commonmarkWithoutMarks,
   gfmWithoutStrikethrough,
+  unalignedTableCells,
   headingInputRule,
   orderedListInputRule,
   ruleInputRule,
@@ -84,10 +81,9 @@ import { mathAutopairPlugin } from "./math/math-autopair-plugin";
 import { createMathPreviewPlugin } from "./math/math-preview-plugin";
 import { headingMarkerPlugin } from "./marks/heading-marker-plugin";
 import { macNavigationPlugin } from "./keys/mac-navigation-plugin";
-import { dragAutoscrollPlugin } from "./keys/drag-autoscroll-plugin";
 import { editorExtensions } from "./extension-points";
-import { marginClickPlugin } from "./keys/margin-click-plugin";
-import { noRevealPlugin, pointerHoldPlugin } from "./pointer-hold";
+import { noRevealPlugin } from "./pointer-hold";
+import { pointerPlugins } from "./pointer-plugins";
 import {
   cjkTaskInputPlugin,
   remarkEmptyTaskItems,
@@ -109,6 +105,7 @@ import {
 import { createMermaidPreviewPlugin } from "./mermaid-plugin";
 import { blockKeysPlugin } from "./keys/block-keys-plugin";
 import { listBackspacePlugin } from "./keys/list-backspace-plugin";
+import { joinListsPlugin } from "./keys/join-lists-plugin";
 import { blockJoinPlugin } from "./keys/block-join-plugin";
 import { inlineSourcePlugin } from "./keys/inline-source-plugin";
 import { wikilinkRevealPlugin } from "./markdown/wikilink-reveal";
@@ -172,9 +169,11 @@ export function configureEditorRoot(
   root: HTMLElement,
   initialValue: string,
   label: () => string,
+  /** What the tab's last editor left: this one opens as that was. */
+  from: TabLeft | null = null,
 ): void {
   ctx.set(rootCtx, root);
-  ctx.set(defaultValueCtx, initialValue);
+  openWith(ctx, initialValue, from);
   // Typora-compatible themes style their content under `#write`.
   ctx.set(
     editorViewOptionsCtx,
@@ -249,10 +248,7 @@ export function withEditorCore(
       .use(editing(createCompletionPlugin(() => docPath.current)))
       .use(editing(editorExtensions().keyInput))
       .use(editing(macNavigationPlugin))
-      // Before the margin's clicks: held before they move the selection.
-      .use(editing(pointerHoldPlugin))
-      .use(editing(dragAutoscrollPlugin))
-      .use(editing(marginClickPlugin))
+      .use(editing(pointerPlugins(settings)))
       .use(editing(linuxImeEnterPlugin))
       .use(editing(iosEnterBeforeBlockPlugin))
       .use(editing(compositionPruneGuardPlugin))
@@ -276,6 +272,7 @@ export function withEditorCore(
       .use(editing(tableEdgeArrowPlugin))
       .use(editing([tableKeys, tableRowPaste, clickBelowEnd]))
       .use(gfmWithoutStrikethrough)
+      .use(unalignedTableCells)
 
       // Before anything else can misread its "---" lines as setext headings.
       .use(remarkFrontmatterPlugin)
@@ -416,7 +413,8 @@ export function withEditorCore(
 
       // handlePaste props run in registration order: images first, then a lone
       // URL, then markdown source, then milkdown's own clipboard plugin.
-      .use(editing(history))
+      .use(openedFromCtx)
+      .use(editing(historyOpened))
       .use(editing(disk ? createUndoFilePlugin(() => docPath.current) : []))
       .use(editing(ownUndoStepPlugin))
       .use(editing(changeSourcePlugin))
@@ -458,6 +456,7 @@ export function withEditorCore(
       .use(editing(moveBlockPlugin))
       .use(editing(escapeTrailingBlockPlugin))
       .use(editing(listBackspacePlugin))
+      .use(joinListsPlugin)
       .use(editing(blockJoinPlugin))
       .use(editing(inlineSourcePlugin))
       .use(editing(findReplacePlugin))

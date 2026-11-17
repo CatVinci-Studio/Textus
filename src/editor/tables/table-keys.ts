@@ -3,7 +3,6 @@ import {
   CellSelection,
   deleteColumn,
   deleteRow,
-  moveTableColumn,
   moveTableRow,
 } from "@milkdown/kit/prose/tables";
 import { keymap } from "@milkdown/kit/prose/keymap";
@@ -16,22 +15,21 @@ import {
   tabbedRows,
 } from "./row-paste";
 
-/** Alt+↑/↓ moves the caret's row past the next (never above the head
- *  row), Alt+←/→ its column; outside a table the keys move blocks. */
-function move(axis: "row" | "col", by: -1 | 1): Command {
+/** Alt+↑/↓ in a table moves the caret's row (never to or from the head
+ *  row); outside a table the keys move blocks. Columns move by their grip:
+ *  Alt/Option+←/→ is the caret's own, a word at a time. */
+function moveRow(by: -1 | 1): Command {
   return (state, dispatch) => {
     const at = here(state);
     if (!at) return false;
-    const from = axis === "row" ? at.row : at.col;
-    const to = from + by;
-    const last = (axis === "row" ? at.height : at.width) - 1;
-    if (axis === "row" && (from === 0 || to === 0)) return true;
-    if (to < 0 || to > last) return true;
-    const command = axis === "row" ? moveTableRow : moveTableColumn;
-    return command({ from, to, pos: at.tablePos + 1, select: true })(
-      state,
-      dispatch,
-    );
+    const to = at.row + by;
+    if (at.row === 0 || to === 0 || to > at.height - 1) return true;
+    return moveTableRow({
+      from: at.row,
+      to,
+      pos: at.tablePos + 1,
+      select: true,
+    })(state, dispatch);
   };
 }
 
@@ -55,10 +53,8 @@ const deletePicked: Command = (state, dispatch) => {
 
 export const tableKeys = $prose(() =>
   keymap({
-    "Alt-ArrowUp": move("row", -1),
-    "Alt-ArrowDown": move("row", 1),
-    "Alt-ArrowLeft": move("col", -1),
-    "Alt-ArrowRight": move("col", 1),
+    "Alt-ArrowUp": moveRow(-1),
+    "Alt-ArrowDown": moveRow(1),
     Backspace: deletePicked,
     Delete: deletePicked,
   }),

@@ -4,8 +4,12 @@
 //! made as the user would make it (hooks, signing). Every path is checked as
 //! a read of the folder is; .git itself is never handed over.
 
+mod process;
+mod safety;
+
 use super::access::{checked_root, folder_path};
 use super::state::{self, PluginsState};
+use process::{run, run_within, COMMIT_TIME};
 use serde::Serialize;
 use std::path::{Path, PathBuf};
 
@@ -45,77 +49,35 @@ pub struct GitCommit {
     pub path: String,
 }
 
-/// The git to run: on the login PATH; on macOS /usr/bin/git only with the
-/// developer tools there, as it otherwise asks to install them.
-fn git_program() -> Option<PathBuf> {
-    #[cfg(desktop)]
-    {
-        static GIT: std::sync::OnceLock<Option<PathBuf>> = std::sync::OnceLock::new();
-        GIT.get_or_init(|| {
-            let found = crate::mcp::path::find_program("git", &crate::mcp::path::login_path())?;
-            #[cfg(target_os = "macos")]
-            if found == Path::new("/usr/bin/git") {
-                let tools = std::process::Command::new("/usr/bin/xcode-select")
-                    .arg("-p")
-                    .output()
-                    .is_ok_and(|o| o.status.success());
-                if !tools {
-                    return None;
-                }
-            }
-            Some(found)
-        })
-        .clone()
-    }
-    #[cfg(not(desktop))]
-    None
-}
-
-/// git in `dir`, never asking for anything; its output, or what it said
-/// went wrong.
-fn run(dir: &Path, args: &[&str], input: Option<&str>) -> Result<Vec<u8>, String> {
-    use std::io::Write;
-    use std::process::Stdio;
-    let program = git_program().ok_or("Git isn't installed on this computer.")?;
-    let mut command = crate::spawn::quiet_command(program);
-    command
-        .current_dir(dir)
-        .args(["-c", "core.quotepath=off", "-c", "color.ui=false"])
-        .args(args)
-        .env("GIT_TERMINAL_PROMPT", "0")
-        .env("GIT_PAGER", "cat")
-        .env("GIT_OPTIONAL_LOCKS", "0")
-        .stdin(if input.is_some() {
-            Stdio::piped()
-        } else {
-            Stdio::null()
-        })
-        .stdout(Stdio::piped())
-        .stderr(Stdio::piped());
-    let mut child = command.spawn().map_err(|e| e.to_string())?;
-    if let (Some(text), Some(mut stdin)) = (input, child.stdin.take()) {
-        stdin
-            .write_all(text.as_bytes())
-            .map_err(|e| e.to_string())?;
-    }
-    let out = child.wait_with_output().map_err(|e| e.to_string())?;
-    if out.status.success() {
-        Ok(out.stdout)
-    } else {
-        let said = String::from_utf8_lossy(&out.stderr).trim().to_string();
-        Err(if said.is_empty() {
-            "git failed.".to_string()
-        } else {
-            said
-        })
-    }
-}
-
 /// The repository's top folder, or None when the folder is in none.
 fn top(root: &Path) -> Option<PathBuf> {
     let out = run(root, &["rev-parse", "--show-toplevel"], None).ok()?;
     let top = PathBuf::from(String::from_utf8_lossy(&out).trim());
     std::fs::canonicalize(&top).ok()
+}
+
+/// Where the repository at `top` keeps its settings and hooks.
+fn sources(top: &Path) -> safety::Sources {
+    let dir = |flag: &str| {
+        let out = run(top, &["rev-parse", flag], None).ok()?;
+        Some(top.join(String::from_utf8_lossy(&out).trim()))
+    };
+    let common = dir("--git-common-dir").unwrap_or_else(|| top.join(".git"));
+    let own = dir("--git-dir").unwrap_or_else(|| common.clone());
+    safety::Sources {
+        configs: vec![common.join("config"), own.join("config.worktree")],
+        hooks: common.join("hooks"),
+    }
+}
+
+/// Git works in the repository at `top` only while nothing there starts a
+/// program the writer hasn't agreed to (`trusted`, the list they keep).
+fn guard(trusted: &Path, top: &Path, committing: bool) -> Result<(), String> {
+    let risks = safety::risks(&sources(top), committing);
+    if risks.is_empty() || safety::trusted(trusted, top, &risks) {
+        return Ok(());
+    }
+    Err(format!("{}{}", safety::UNTRUSTED, risks.join(", ")))
 }
 
 /// `path` (checked for plugin `id` to read) from the repository's top, with
@@ -176,12 +138,14 @@ fn change_state(kind: &str, xy: &str) -> &'static str {
 
 pub(super) fn status(
     state: &PluginsState,
+    trusted: &Path,
     id: &str,
     root: &str,
 ) -> Result<Option<GitStatus>, String> {
     let Some(top) = top(Path::new(root)) else {
         return Ok(None);
     };
+    guard(trusted, &top, false)?;
     let names = Names::new(root);
     let args = [
         "status",
@@ -234,6 +198,7 @@ pub(super) fn status(
 
 pub(super) fn log(
     state: &PluginsState,
+    trusted: &Path,
     id: &str,
     root: &str,
     path: &str,
@@ -242,6 +207,7 @@ pub(super) fn log(
     let Some(top) = top(Path::new(root)) else {
         return Ok(Vec::new());
     };
+    guard(trusted, &top, false)?;
     let rel = from_top(state, id, root, &top, path)?;
     let names = Names::new(root);
     let count = format!("-n{}", limit.unwrap_or(100).clamp(1, MAX_LOG));
@@ -288,6 +254,7 @@ fn is_hash(hash: &str) -> bool {
 /// file, or it isn't text.
 pub(super) fn show(
     state: &PluginsState,
+    trusted: &Path,
     id: &str,
     root: &str,
     hash: &str,
@@ -299,6 +266,7 @@ pub(super) fn show(
     let Some(top) = top(Path::new(root)) else {
         return Ok(None);
     };
+    guard(trusted, &top, false)?;
     let rel = from_top(state, id, root, &top, path)?;
     let Ok(bytes) = run(&top, &["show", &format!("{hash}:{rel}")], None) else {
         return Ok(None);
@@ -313,6 +281,7 @@ pub(super) fn show(
 /// staged) with `message`, as the user's git does; the new commit's hash.
 pub(super) fn commit(
     state: &PluginsState,
+    trusted: &Path,
     id: &str,
     root: &str,
     message: &str,
@@ -325,6 +294,12 @@ pub(super) fn commit(
         return Err("A commit needs a message and its files.".to_string());
     }
     let top = top(Path::new(root)).ok_or("The folder isn't in a Git repository.")?;
+    guard(trusted, &top, true)?;
+    // Files, each one named: a folder would bring along everything in it,
+    // the hidden files no plugin may read too.
+    if paths.iter().any(|p| Path::new(p).is_dir()) {
+        return Err("A commit names its files, not a folder.".to_string());
+    }
     let rels = paths
         .iter()
         .map(|p| from_top(state, id, root, &top, p))
@@ -336,13 +311,36 @@ pub(super) fn commit(
         args
     };
     run(&top, &with(&["add", "--all"]), None)?;
-    run(
+    run_within(
         &top,
         &with(&["commit", "--file=-", "--only"]),
         Some(message),
+        COMMIT_TIME,
     )?;
     let head = run(&top, &["rev-parse", "HEAD"], None)?;
     Ok(String::from_utf8_lossy(&head).trim().to_string())
+}
+
+/// The repositories the writer trusts (safety.rs), in the app's data.
+fn trusted_list(app: &tauri::AppHandle) -> Result<PathBuf, String> {
+    use crate::app_dirs::AppDirs;
+    use tauri::Manager;
+    let data = app.path().own_data_dir().map_err(|e| e.to_string())?;
+    Ok(data.join("git-trusted.json"))
+}
+
+/// The writer agreed to Git running what the repository of `root` sets up,
+/// hooks included. Asked by the app itself, never on a plugin's word.
+#[tauri::command]
+#[cfg_attr(test, specta::specta)]
+pub async fn git_trust_repository(app: tauri::AppHandle, root: String) -> Result<(), String> {
+    let list = trusted_list(&app)?;
+    tauri::async_runtime::spawn_blocking(move || {
+        let top = top(Path::new(&root)).ok_or("The folder isn't in a Git repository.")?;
+        safety::trust(&list, &top, &safety::risks(&sources(&top), true))
+    })
+    .await
+    .map_err(|e| e.to_string())?
 }
 
 /// A plugin's git call: the folder checked, then the work off the main thread.
@@ -350,11 +348,12 @@ async fn checked<T: Send + 'static>(
     app: &tauri::AppHandle,
     id: &str,
     root: &str,
-    work: impl FnOnce(PluginsState) -> Result<T, String> + Send + 'static,
+    work: impl FnOnce(PluginsState, PathBuf) -> Result<T, String> + Send + 'static,
 ) -> Result<T, String> {
     checked_root(app, id, root)?;
     let state = state::read(app);
-    tauri::async_runtime::spawn_blocking(move || work(state))
+    let trusted = trusted_list(app)?;
+    tauri::async_runtime::spawn_blocking(move || work(state, trusted))
         .await
         .map_err(|e| e.to_string())?
 }
@@ -366,8 +365,8 @@ pub async fn plugin_git_status(
     id: String,
     root: String,
 ) -> Result<Option<GitStatus>, String> {
-    checked(&app, &id.clone(), &root.clone(), move |s| {
-        status(&s, &id, &root)
+    checked(&app, &id.clone(), &root.clone(), move |s, t| {
+        status(&s, &t, &id, &root)
     })
     .await
 }
@@ -381,8 +380,8 @@ pub async fn plugin_git_log(
     path: String,
     limit: Option<u32>,
 ) -> Result<Vec<GitCommit>, String> {
-    checked(&app, &id.clone(), &root.clone(), move |s| {
-        log(&s, &id, &root, &path, limit)
+    checked(&app, &id.clone(), &root.clone(), move |s, t| {
+        log(&s, &t, &id, &root, &path, limit)
     })
     .await
 }
@@ -396,8 +395,8 @@ pub async fn plugin_git_show(
     hash: String,
     path: String,
 ) -> Result<Option<String>, String> {
-    checked(&app, &id.clone(), &root.clone(), move |s| {
-        show(&s, &id, &root, &hash, &path)
+    checked(&app, &id.clone(), &root.clone(), move |s, t| {
+        show(&s, &t, &id, &root, &hash, &path)
     })
     .await
 }
@@ -411,8 +410,8 @@ pub async fn plugin_git_commit(
     message: String,
     paths: Vec<String>,
 ) -> Result<String, String> {
-    checked(&app, &id.clone(), &root.clone(), move |s| {
-        commit(&s, &id, &root, &message, &paths)
+    checked(&app, &id.clone(), &root.clone(), move |s, t| {
+        commit(&s, &t, &id, &root, &message, &paths)
     })
     .await
 }

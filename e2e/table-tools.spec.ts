@@ -1,5 +1,5 @@
 import { expect, test, type Page } from "@playwright/test";
-import { openApp, pasteMarkdown } from "./helpers";
+import { MAC, openApp, pasteMarkdown } from "./helpers";
 
 // A table's own tools at its top right: they show on hover and while the
 // caret is in it, and change what the file says.
@@ -17,18 +17,28 @@ async function open(page: Page, markdown = TABLE) {
 const tool = (page: Page, name: string, exact = true) =>
   page.locator(".table-toolbar").getByRole("button", { name, exact });
 
+/** A tool pressed as a hand does: by way of the head row, which shows them. */
+async function press(page: Page, name: string, exact = true) {
+  await page.locator(".table-wrapper th").last().hover();
+  await tool(page, name, exact).click();
+}
+
 test("a table's tools align the caret's column, size it, and delete it", async ({
   page,
 }) => {
   const table = await open(page);
   await table.locator("td", { hasText: "2" }).click();
-  await expect(tool(page, "Align Center")).toBeVisible();
+  // Its tools come with the pointer by its head row, not with the caret.
+  const tools = table.locator(".block-toolbar-actions");
+  await expect(tools).toHaveCSS("opacity", "0");
+  await table.locator("th").last().hover();
+  await expect(tools).toHaveCSS("opacity", "1");
   await page.screenshot({ path: "test-results/table-tools.png" });
-  await tool(page, "Align Center").click();
+  await press(page, "Align Center");
   await expect(table.locator("th").nth(1)).toHaveCSS("text-align", "center");
   await expect(table.locator("td").nth(1)).toHaveCSS("text-align", "center");
 
-  await tool(page, "Rows and Columns 2 × 2", false).click();
+  await press(page, "Rows and Columns 2 × 2", false);
   const card = page.getByRole("dialog", { name: "Rows and Columns" });
   await expect(card).toBeVisible();
   await card.locator('[data-cell="2,2"]').hover();
@@ -40,7 +50,7 @@ test("a table's tools align the caret's column, size it, and delete it", async (
   await expect(table.locator("tr").first().locator("th")).toHaveCount(3);
 
   // Smaller again: the cells with text it would cut are marked first.
-  await tool(page, "Rows and Columns 3 × 3", false).click();
+  await press(page, "Rows and Columns 3 × 3", false);
   await card.locator('[data-cell="1,0"]').hover();
   await expect(card.locator(".is-lost")).toHaveCount(2);
   await expect(card.getByText("Cells with text will be removed")).toBeVisible();
@@ -48,7 +58,17 @@ test("a table's tools align the caret's column, size it, and delete it", async (
   await page.keyboard.press("Escape");
   await expect(card).toHaveCount(0);
 
-  await tool(page, "Delete Table").click();
+  // Over a narrow column the tools give way rather than run past the table.
+  await page.setViewportSize({ width: 330, height: 760 });
+  await page.waitForTimeout(400);
+  await table.locator("th").last().hover();
+  const box = (await table.boundingBox())!;
+  for (const pill of await table.locator(".block-pill:visible").all())
+    expect((await pill.boundingBox())!.x).toBeGreaterThanOrEqual(box.x - 0.5);
+  await expect(tool(page, "Delete Table")).toBeVisible();
+  await page.setViewportSize({ width: 1200, height: 760 });
+
+  await press(page, "Delete Table");
   await expect(page.locator(".table-wrapper")).toHaveCount(0);
 });
 
@@ -57,7 +77,7 @@ test("a row's grip picks the row, and pulled it moves the row; a column's the sa
 }) => {
   const table = await open(
     page,
-    "| h | k |\n| --- | --- |\n| 1 | x |\n| 2 | y |\n| 3 | z |\n",
+    "intro\n\n| h | k |\n| --- | --- |\n| 1 | x |\n| 2 | y |\n| 3 | z |\n",
   );
   const cell = (text: string) => table.locator("td", { hasText: text });
   await cell("3").hover();
@@ -101,6 +121,60 @@ test("a row's grip picks the row, and pulled it moves the row; a column's the sa
   await page.locator(".table-grip-col").dispatchEvent("click");
   await expect(table.locator(".selectedCell")).toHaveCount(4);
   expect(await rowY()).toBe(before);
+
+  // Zoomed, with the caret out of the table: the lifted row stays under the
+  // pointer, and let go, it lands where the others made room.
+  await page.evaluate(() =>
+    document.documentElement.style.setProperty("--content-zoom", "1.25"),
+  );
+  await page.locator(".ProseMirror p").first().click();
+  const order = await firstColumn();
+  await cell(order[2]!).hover();
+  const g2 = (await grip.boundingBox())!;
+  const lifted = table.locator("tbody tr").nth(3);
+  const was = (await lifted.boundingBox())!;
+  await page.mouse.move(g2.x + g2.width / 2, g2.y + g2.height / 2);
+  await page.mouse.down();
+  await page.mouse.move(g2.x + g2.width / 2, g2.y + g2.height / 2 - 30, {
+    steps: 6,
+  });
+  const now = (await lifted.boundingBox())!;
+  expect(Math.abs(now.y - was.y + 30)).toBeLessThan(2);
+  const up = (await cell(order[0]!).boundingBox())!;
+  await page.mouse.move(g2.x + g2.width / 2, up.y + 2, { steps: 8 });
+  await page.mouse.up();
+  await expect.poll(firstColumn).toEqual([order[2], order[0], order[1]]);
+
+  // A column's edge, zoomed too: no column jumps when it is pressed, and
+  // the edge stays under the pointer.
+  const heads = table.locator("th");
+  const h0 = (await heads.nth(0).boundingBox())!;
+  const h1 = (await heads.nth(1).boundingBox())!;
+  const edge = { x: h0.x + h0.width - 1, y: h0.y + h0.height / 2 };
+  await page.mouse.move(edge.x - 6, edge.y);
+  await page.mouse.move(edge.x, edge.y, { steps: 3 });
+  await page.mouse.down();
+  await page.mouse.move(edge.x + 1, edge.y);
+  const pressed = (await heads.nth(1).boundingBox())!.width;
+  expect(Math.abs(pressed - h1.width)).toBeLessThan(2);
+  await page.mouse.move(edge.x + 40, edge.y, { steps: 6 });
+  // Held past the history's grouping: still one undo step.
+  await page.waitForTimeout(700);
+  await page.mouse.up();
+  const after = (await heads.nth(0).boundingBox())!;
+  expect(Math.abs(after.width - (h0.width + 40))).toBeLessThan(3);
+  await page.keyboard.press(MAC ? "Meta+z" : "Control+z");
+  await expect
+    .poll(async () => (await heads.nth(0).boundingBox())!.width)
+    .toBeCloseTo(h0.width, 0);
+  await expect(table.locator("table")).not.toHaveAttribute("data-sized", /.*/);
+
+  // A press on the edge that moves nothing sizes nothing.
+  await page.mouse.move(edge.x - 6, edge.y);
+  await page.mouse.move(edge.x, edge.y, { steps: 3 });
+  await page.mouse.down();
+  await page.mouse.up();
+  await expect(table.locator("table")).not.toHaveAttribute("data-sized", /.*/);
 });
 
 test("the grips sit at the middle of their row and column, the document zoomed too", async ({
@@ -133,6 +207,7 @@ test("a click below a table that ends the document starts a paragraph there", as
   page,
 }) => {
   const table = await open(page);
+  await page.waitForTimeout(400);
   const box = (await table.boundingBox())!;
   await page.mouse.click(box.x + 40, box.y + box.height + 40);
   await page.keyboard.type("after");
@@ -146,7 +221,26 @@ test("the + strips under and beside a table add a row and a column, reached from
   page,
 }) => {
   const table = await open(page);
+  // Each strip shows by its own edge only: not with the pointer on the head
+  // row's first cell, the row's with it in the last row, the column's by
+  // the last column.
+  const strip = (which: string) => table.locator(`.table-add-${which}-btn`);
+  await table.locator("th").first().hover();
+  await expect(strip("row")).toHaveCSS("opacity", "0");
+  await expect(strip("col")).toHaveCSS("opacity", "0");
+  await table.locator("td").first().hover();
+  await expect(strip("row")).toHaveCSS("opacity", "1");
+  await expect(strip("col")).toHaveCSS("opacity", "0");
+  await table.locator("th").last().hover();
+  await expect(strip("col")).toHaveCSS("opacity", "1");
   const box = (await table.locator("table").boundingBox())!;
+  // A press just inside the table's last row or last column is the
+  // table's own: neither strip reaches over it.
+  await table.locator("td").last().hover();
+  await page.mouse.click(box.x + 40, box.y + box.height - 2);
+  await page.mouse.click(box.x + box.width - 2, box.y + box.height - 12);
+  await expect(table.locator("tr")).toHaveCount(2);
+  await expect(table.locator("tr").first().locator("th")).toHaveCount(2);
   // From inside the table straight down onto the strip, as a hand moves.
   await page.mouse.move(box.x + 40, box.y + box.height - 6);
   await page.mouse.move(box.x + 40, box.y + box.height + 10, { steps: 6 });
@@ -238,5 +332,17 @@ test.describe("on a touch screen", () => {
     );
     await expect(table.locator("td", { hasText: "w1" })).toHaveCount(0);
     await expect.poll(gripAtCaret).toBe("at caret");
+    // A row put in above the caret's, by the phone's table buttons: the
+    // grip goes down with the caret's row.
+    await table.locator("td", { hasText: "c1" }).tap();
+    await page.evaluate(() =>
+      window.dispatchEvent(
+        new CustomEvent("textus:table-action", { detail: "row-above" }),
+      ),
+    );
+    await expect(table.locator("tr")).toHaveCount(5);
+    // Nothing else moves it on a phone: no pointer passes over the table.
+    await page.waitForTimeout(300);
+    expect(await gripAtCaret()).toBe("at caret");
   });
 });

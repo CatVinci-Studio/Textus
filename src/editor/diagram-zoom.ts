@@ -190,7 +190,7 @@ export function openDiagramViewer(
       // In case the animation never runs (a hidden window): its length.
       setTimeout(done, duration("--dur-fast") + 50);
     } else done();
-    previous?.focus?.();
+    previous?.focus?.({ preventScroll: true });
   }
   /** ‹ and › on the sides, and the hint naming the arrow keys; returns the
    *  step to the next picture or the one before. */

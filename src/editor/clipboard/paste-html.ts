@@ -1,3 +1,4 @@
+import { unmergeCells } from "./unmerge-cells";
 /**
  * Pasted HTML as its page meant it: Docs/Word style spans become <strong>,
  * <em>, <del>; mail's empty spacer paragraphs go; Outlook Safe Links become
@@ -86,6 +87,8 @@ export function cleanPastedHtml(html: string): string {
       changed = true;
     }
   }
+
+  if (unmergeCells(root)) changed = true;
 
   // Innermost first, so a block left empty by its empty children goes too.
   for (const el of [...root.querySelectorAll(BLOCKS)].reverse()) {

@@ -36,6 +36,10 @@ export function scanSource(
       else if (ch === "{" && rules.braces) [start, depth] = [at, 1];
       else if (ch === "<" && rules.jsx && TAG_START.test(source[i + 1] ?? ""))
         tag = at;
+    } else if (depth > 0 && ch === "/" && "*/".includes(source[i + 1] ?? "#")) {
+      // A comment in an expression, its apostrophes and braces no code's.
+      const end = source.indexOf(source[i + 1] === "*" ? "*/" : "\n", i + 2);
+      i = end < 0 ? source.length : end + (source[i + 1] === "*" ? 1 : 0);
     } else if (QUOTES.has(ch) && (depth > 0 || ch !== "`")) quote = ch;
     else if (ch === "{") depth++;
     else if (ch === "}" && depth > 0) {

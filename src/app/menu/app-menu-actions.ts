@@ -1,6 +1,6 @@
 import { thisWindow } from "../../platform/this-window";
 import { editInFocus } from "../../engine/controls/edit-in-focus";
-import { EDIT_ACTION_EVENT } from "../../utils/events";
+import { EDIT_ACTION_EVENT, sendAppEvent } from "../../utils/events";
 import type {
   LocalMenuAction,
   MenuAction,
@@ -42,5 +42,5 @@ export function runLocalMenuAction(action: LocalMenuAction): void {
     })();
     return;
   }
-  window.dispatchEvent(new CustomEvent(EDIT_ACTION_EVENT, { detail: action }));
+  sendAppEvent(EDIT_ACTION_EVENT, action);
 }

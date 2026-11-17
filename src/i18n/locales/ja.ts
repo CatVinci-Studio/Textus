@@ -116,6 +116,16 @@ ${AI_NAME}への執筆の指示です。すべての文書に適用されます�
   codeBlockEditSource: "ソースを編集",
   codeBlockDone: "編集を終了",
   codeBlockDelete: "ブロックを削除",
+  blockText: "本文",
+  blockCallout: "コールアウト",
+  blockHandleAdd: "下にブロックを追加",
+  blockHandleOptions: "ドラッグで移動、クリックでオプション",
+  blockTurnInto: "変換",
+  blockDuplicate: "複製",
+  blockHandlesLabel: "ブロックハンドル",
+  blockHandlesHelp:
+    "ポインタのあるブロックの左に ＋ と ⋮⋮ を表示：ブロックの追加、移動、別の種類への変換。",
+  smoothCaretLabel: "なめらかなカーソル",
   menuBlockWide: "ワイド表示",
   menuBlockZoom: "表示サイズ",
   diagramViewerLabel: "図",
@@ -148,6 +158,8 @@ ${AI_NAME}への執筆の指示です。すべての文書に適用されます�
   revisionDisplayInline: "すべて本文に",
   revisionDisplayOriginal: "本文に元の文、修正は余白に",
   revisionDisplayFinal: "結果だけ、元の文は余白に",
+  splitNoRoomLow:
+    "これ以上分割できません：ウインドウの高さが足りません。キーボードを閉じるか、ウインドウを高くしてください。",
   splitNoRoom:
     "これ以上分割できません：ウインドウの幅が足りません。ウインドウを広げるか、分割を 1 つ閉じてください。",
   revisionDisplayNoRoom:
@@ -616,6 +628,8 @@ ${AI_NAME}への執筆の指示です。すべての文書に適用されます�
     "プラグインストアには新しい Textus が必要です。Textus をアップデートしてください。",
   errorImageTooBig: "画像が空か、25 MB を超えています。",
   errorNoFolder: "先にフォルダを開いてください。",
+  errorPluginsNeedAllFiles:
+    "プラグインはこのフォルダを読めません：Textus にすべてのファイルへのアクセスが許可されていません。フォルダを開き直して「続ける」を選んでください。",
   errorPdfUnsupported: "このシステムでは PDF を書き出せません。",
   errorNoText: "読み取れるテキストがありません。",
   errorUnreadable: "このファイルは読み込めません。",
@@ -896,6 +910,12 @@ ${AI_NAME}への執筆の指示です。すべての文書に適用されます�
   agentSend: "送信",
   agentStop: "停止",
   agentRetry: "再試行",
+  agentForgotStart:
+    "会話が長くなったため、最初の方のメッセージはモデルに送られなくなりました。最初からやり直すには新しい会話を始めてください。",
+  revisionsNotKept:
+    "判断待ちの変更をディスクに保存できませんでした。文書を閉じる前に承認か却下をしてください。閉じると失われます。",
+  settingsNotSaved:
+    "設定とウィンドウの状態を今は保存できません。変更は Textus を閉じるまでの間だけ有効です。",
   agentNeedsFolder:
     "先にフォルダを開くか、書類を保存してください。エージェントはフォルダの中で作業します。",
   agentStopped: "{agent} が停止しました。",
@@ -1392,6 +1412,8 @@ ${AI_NAME}への執筆の指示です。すべての文書に適用されます�
   wordImportDismiss: "OK",
   openFileFailed:
     "{name} を開けません。テキスト文書ではなく、この種類のファイルを開けるプラグインもありません。",
+  openFileMuted:
+    "Textus だけでは {name} を開けません。開けるプラグインの提案をオフにしています。設定 › {page} で再表示できます。",
   openFileGone:
     "{name} を開けません。ファイルが見つかりません。移動、名前の変更、または削除された可能性があります。",
   wordImportFailed: "{name} を開けませんでした。",
@@ -1511,7 +1533,7 @@ ${AI_NAME}への執筆の指示です。すべての文書に適用されます�
   themeNamePaper: "ペーパー",
   themeNameSlate: "スレート",
   themeNameForest: "フォレスト",
-  themeNameAurora: "オーロラ",
+  themeNamePrism: "プリズム",
   appearanceLabel: "外観",
   appearanceModeLabel: "ライト／ダーク",
   appearanceSystem: "システムに従う",
@@ -1833,4 +1855,10 @@ ${AI_NAME}への執筆の指示です。すべての文書に適用されます�
   shortcutOutdentListItem: "リスト項目のインデントを戻す",
   pluginKeyTaken:
     "「{name}」：{key} は「{owner}」が使っているため、「{command}」には割り当てませんでした。設定 › ショートカット で別のキーを設定できます。",
+  gitTrustTitle: "このリポジトリ独自のプログラムを Git に実行させますか？",
+  gitTrustText:
+    "このフォルダの Git リポジトリは、お使いのコンピュータでプログラムを実行するように設定されています（{what}）。自分で作ったリポジトリではよくあることです。ほかの人から受け取ったフォルダの場合は、相手を信頼できるときだけ許可してください。",
+  gitTrustAllow: "このリポジトリを信頼",
+  gitTrustRefused:
+    "ここでは Git を使いません：このリポジトリは信頼されていません。",
 } satisfies Translation;

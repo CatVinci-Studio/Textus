@@ -24,8 +24,10 @@
 .mermaid-zoom[hidden] {
   display: none;
 }
-.mermaid-zoom:hover {
-  color: var(--ui-text);
+@media (hover: hover) {
+  .mermaid-zoom:hover {
+    color: var(--ui-text);
+  }
 }
 /* Two corner arrows pointing out, in the button's text colour. */
 .mermaid-zoom-icon {

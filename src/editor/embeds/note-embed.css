@@ -37,8 +37,10 @@
   cursor: pointer;
 }
 
-.note-embed-open:hover {
-  color: var(--doc-accent-text);
+@media (hover: hover) {
+  .note-embed-open:hover {
+    color: var(--doc-accent-text);
+  }
 }
 
 /* Folded (block-fold.css): its line alone, no rule beside it. */

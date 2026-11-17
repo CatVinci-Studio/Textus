@@ -34,12 +34,6 @@
   flex-direction: column;
 }
 
-/* Its resize handle, astride the left edge below the window bar. */
-.agent-panel-resizer {
-  top: var(--window-bar-height);
-  left: -3px;
-}
-
 .agent-panel-view {
   flex: 1;
   min-height: 0;
@@ -127,6 +121,10 @@
 /* Nothing said yet: the spark and what to do, in the middle of the
    panel's empty height rather than as a line in its top corner. */
 .agent-panel-empty {
+  /* The panel's own words, not a conversation's: a right-click on them
+     opens the panel's menu (WebKit selects a word first where it can). */
+  -webkit-user-select: none;
+  user-select: none;
   /* Of everything over the composer, it gives up its room first. */
   flex: 1 100 auto;
   display: flex;
@@ -262,8 +260,10 @@
   cursor: pointer;
 }
 
-.project-bar-folder:hover {
-  background: var(--ui-hover);
+@media (hover: hover) {
+  .project-bar-folder:hover {
+    background: var(--ui-hover);
+  }
 }
 
 .project-bar-icon {

@@ -1,6 +1,10 @@
 import { useSyncExternalStore } from "react";
 import { ai } from "../../platform/ipc";
-import { FILE_WRITTEN_EVENT, announceFileCreated } from "../../utils/events";
+import {
+  FILE_WRITTEN_EVENT,
+  announceFileCreated,
+  sendAppEvent,
+} from "../../utils/events";
 import type { AgentTurn } from "../types";
 import {
   keepAsCreated,
@@ -8,6 +12,7 @@ import {
   readFileRevisions,
   updateFileRevisions,
 } from "../revision/file-revisions";
+import { createSubscribers } from "../../utils/store";
 
 /**
  * General mode's changes to the folder's other files (write_file,
@@ -69,22 +74,19 @@ export function fileRunsOf(
 /** Each file Textus AI changed this session, and its text before the
  *  first change (null for a file it made). */
 const bases = new Map<string, string | null>();
-const listeners = new Set<() => void>();
+const subscribers = createSubscribers();
 let snapshot: ReadonlySet<string> = new Set();
 
 function publish() {
   snapshot = new Set(bases.keys());
-  for (const listener of listeners) listener();
+  subscribers.publish();
 }
 
 /** Calls `listener` when the files changed, or their texts before, do. */
 /** The files changed now, outside React. */
 export const changedFilesNow = () => snapshot;
 
-export function onChangedFiles(listener: () => void): () => void {
-  listeners.add(listener);
-  return () => listeners.delete(listener);
-}
+export const onChangedFiles = subscribers.subscribe;
 
 /** `file`'s text before Textus AI first changed it, or undefined where it
  *  hasn't (or the change was undone). */
@@ -168,7 +170,7 @@ export function filesChanged(
       bases.delete(file);
       void keepBase(file, undefined);
     }
-    window.dispatchEvent(new CustomEvent(FILE_WRITTEN_EVENT, { detail: file }));
+    sendAppEvent(FILE_WRITTEN_EVENT, file);
   }
   publish();
 }

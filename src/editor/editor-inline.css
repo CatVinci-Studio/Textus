@@ -131,8 +131,10 @@
   cursor: pointer;
 }
 
-.md-toc-item a:hover {
-  text-decoration: underline;
+@media (hover: hover) {
+  .md-toc-item a:hover {
+    text-decoration: underline;
+  }
 }
 
 .md-toc-empty {

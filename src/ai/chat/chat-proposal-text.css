@@ -50,8 +50,10 @@
   transition: background var(--dur-fast) var(--ease-standard);
 }
 
-.agent-proposal-sentences > li:hover {
-  background: color-mix(in srgb, var(--ui-text) 4%, transparent);
+@media (hover: hover) {
+  .agent-proposal-sentences > li:hover {
+    background: color-mix(in srgb, var(--ui-text) 4%, transparent);
+  }
 }
 
 .agent-proposal .agent-proposal-sentence {

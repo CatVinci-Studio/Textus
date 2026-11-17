@@ -312,7 +312,17 @@ fn modified_of(meta: &std::fs::Metadata) -> Option<u128> {
 /// the next generation. Answers a caller at `after` under the same lock,
 /// so another folder can't push this one out in between.
 fn refresh(index: &MetadataIndex, root: &Path, after: Option<u64>) -> MetadataAll {
-    let walk = crate::walk::walk(root, &crate::walk::LIMITS, crate::extract::is_markdown);
+    refresh_within(index, root, after, &crate::walk::LIMITS)
+}
+
+fn refresh_within(
+    index: &MetadataIndex,
+    root: &Path,
+    after: Option<u64>,
+    limits: &crate::walk::Limits,
+) -> MetadataAll {
+    let walk = crate::walk::walk(root, limits, crate::extract::is_markdown);
+    let cut_short = walk.truncated;
     let key = root.to_string_lossy().to_string();
     let mut all = index.0.lock().unwrap_or_else(|e| e.into_inner());
     if !all.contains_key(&key) && all.len() >= ROOTS_KEPT {
@@ -364,6 +374,9 @@ fn refresh(index: &MetadataIndex, root: &Path, after: Option<u64>) -> MetadataAl
         .docs
         .keys()
         .filter(|p| !present.contains(*p))
+        // A walk cut short (a slow drive, a huge folder) reached only part
+        // of the folder: what it missed is gone only if its file is.
+        .filter(|p| !cut_short || !Path::new(p).exists())
         .cloned()
         .collect();
     for path in gone {

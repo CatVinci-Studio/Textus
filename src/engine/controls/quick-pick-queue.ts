@@ -2,6 +2,8 @@
  *  typed: the command palette's and a plugin's textus.ui.pick. Requests
  *  queue here; the list itself (quick-pick.tsx) loads with the first. */
 
+import { createRequestQueue } from "../../utils/store";
+
 export interface QuickPickItem {
   label: string;
   description?: string;
@@ -30,24 +32,12 @@ export interface Request {
   resolve: (value: unknown) => void;
 }
 
-let nextId = 1;
-let queue: Request[] = [];
+const queue = createRequestQueue<Request>();
 
-const listeners = new Set<() => void>();
-
-function publish() {
-  for (const listener of listeners) listener();
-}
-
-export function subscribeQuickPick(listener: () => void): () => void {
-  listeners.add(listener);
-  return () => listeners.delete(listener);
-}
+export const subscribeQuickPick = queue.subscribe;
 
 /** The request showing now, if any. */
-export function quickPickNow(): Request | undefined {
-  return queue[0];
-}
+export const quickPickNow = queue.now;
 
 /** Resolves the chosen item's value - with `multiple`, the ticked ones'
  *  values - or null when dismissed. */
@@ -61,22 +51,18 @@ export function showQuickPick(
     search?: Request["search"];
   } = {},
 ): Promise<unknown> {
-  return new Promise((resolve) => {
-    queue = [
-      ...queue,
-      {
-        id: nextId++,
-        items,
-        placeholder,
-        multiple: options.multiple === true,
-        query: options.query ?? "",
-        typed: options.typed === true,
-        search: options.search,
-        resolve,
-      },
-    ];
-    publish();
-  });
+  return new Promise((resolve) =>
+    queue.add((id) => ({
+      id,
+      items,
+      placeholder,
+      multiple: options.multiple === true,
+      query: options.query ?? "",
+      typed: options.typed === true,
+      search: options.search,
+      resolve,
+    })),
+  );
 }
 
 export function valueOf(item: QuickPickItem): unknown {
@@ -84,7 +70,6 @@ export function valueOf(item: QuickPickItem): unknown {
 }
 
 export function answer(request: Request, value: unknown) {
-  queue = queue.filter((r) => r.id !== request.id);
-  publish();
+  queue.remove(request.id);
   request.resolve(value);
 }

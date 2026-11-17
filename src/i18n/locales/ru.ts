@@ -123,6 +123,16 @@ export default {
   codeBlockEditSource: "Изменить исходный код",
   codeBlockDone: "Завершить правку",
   codeBlockDelete: "Удалить блок",
+  blockText: "Текст",
+  blockCallout: "Выноска",
+  blockHandleAdd: "Добавить блок ниже",
+  blockHandleOptions: "Перетащите, чтобы переместить; нажмите для действий",
+  blockTurnInto: "Преобразовать в",
+  blockDuplicate: "Дублировать",
+  blockHandlesLabel: "Маркеры блоков",
+  blockHandlesHelp:
+    "＋ и ⋮⋮ рядом с блоком под указателем: добавить блок, переместить его или превратить в блок другого вида.",
+  smoothCaretLabel: "Плавный курсор",
   menuBlockWide: "Во всю ширину",
   menuBlockZoom: "Масштаб",
   diagramViewerLabel: "Диаграмма",
@@ -170,6 +180,8 @@ export default {
   revisionDisplayInline: "Всё в тексте",
   revisionDisplayOriginal: "Оригинал в тексте, правки на полях",
   revisionDisplayFinal: "Только результат, оригинал на полях",
+  splitNoRoomLow:
+    "Нет места для ещё одного разделения: окно слишком низкое. Скройте клавиатуру или сделайте окно выше.",
   splitNoRoom:
     "Нет места для ещё одного разделения: окно слишком узкое. Расширьте его или закройте одно разделение.",
   revisionDisplayNoRoom:
@@ -661,6 +673,8 @@ export default {
     "Для магазина плагинов нужна более новая версия Textus. Обновите Textus.",
   errorImageTooBig: "Изображение пустое или больше 25 МБ.",
   errorNoFolder: "Сначала откройте папку.",
+  errorPluginsNeedAllFiles:
+    "Плагины не могут прочитать эту папку: у Textus нет доступа ко всем файлам. Откройте папку снова и выберите «Продолжить».",
   errorPdfUnsupported: "Экспорт в PDF недоступен в этой системе.",
   errorNoText: "В нём нет читаемого текста.",
   errorUnreadable: "Не удаётся прочитать этот файл.",
@@ -955,6 +969,12 @@ export default {
   agentSend: "Отправить",
   agentStop: "Остановить",
   agentRetry: "Повторить",
+  agentForgotStart:
+    "Разговор стал длинным: первые сообщения больше не отправляются модели. Чтобы начать заново, начните новый разговор.",
+  revisionsNotKept:
+    "Изменения, ждущие вашего решения, не удалось сохранить на диск. Примите или отклоните их до закрытия документа, иначе они пропадут.",
+  settingsNotSaved:
+    "Сейчас не удаётся сохранить настройки и состояние окна: изменения действуют до закрытия Textus.",
   agentNeedsFolder:
     "Сначала откройте папку или сохраните документ: агент работает в папке.",
   agentStopped: "{agent} остановился.",
@@ -1491,6 +1511,8 @@ export default {
   wordImportDismiss: "Понятно",
   openFileFailed:
     "Не удаётся открыть {name}: это не текстовый документ, и ни один плагин не открывает такие файлы.",
+  openFileMuted:
+    "Textus не может открыть {name} сам. Вы отключили предложение плагина, который его открывает; в Настройках › {page} его можно вернуть.",
   openFileGone:
     "Не удаётся открыть {name}: файла больше нет на месте. Возможно, его переместили, переименовали или удалили.",
   wordImportFailed: "Не удалось открыть {name}.",
@@ -1609,7 +1631,7 @@ export default {
   themeNamePaper: "Бумага",
   themeNameSlate: "Грифель",
   themeNameForest: "Лес",
-  themeNameAurora: "Аврора",
+  themeNamePrism: "Призма",
   appearanceLabel: "Оформление",
   appearanceModeLabel: "Светлая или тёмная",
   appearanceSystem: "Как в системе",
@@ -1948,4 +1970,10 @@ export default {
   shortcutOutdentListItem: "Уменьшить отступ пункта",
   pluginKeyTaken:
     "{name}: {key} уже занято «{owner}», поэтому не назначено команде «{command}». Задайте другое в Настройки › Сочетания клавиш.",
+  gitTrustTitle:
+    "Разрешить Git запускать программы, заданные в этом репозитории?",
+  gitTrustText:
+    "Репозиторий Git в этой папке настроен так, что запускает программы на вашем компьютере ({what}). Для репозитория, который вы настроили сами, это обычно. Если папка получена от другого человека, разрешайте только если доверяете ему.",
+  gitTrustAllow: "Доверять этому репозиторию",
+  gitTrustRefused: "Git здесь не используется: репозиторию не доверяют.",
 } satisfies Translation;

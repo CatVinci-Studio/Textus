@@ -8,6 +8,9 @@ import { showsStartPage, type DocTab } from "../../document/doc-tabs";
 import { Tooltip } from "../../engine/controls/Tooltip";
 import type { Lang } from "../../i18n/langs";
 import type { Strings } from "../../i18n/strings";
+import { createPortal } from "react-dom";
+import { useDocEnd } from "../../document-view/doc-end";
+import { isMobileApp } from "../../platform/capabilities";
 import "./document-corner.css";
 
 /** Where writers count characters, not words: Japanese's 文字数. Chinese
@@ -48,6 +51,7 @@ function DocumentCorner({
   const count = useMemo(() => countWords(deferred), [deferred]);
   const large = content.length > PAUSE_FEATURES_THRESHOLD;
   const shown = BY_CHARACTERS.has(lang) ? count.characters : count.words;
+  const end = useDocEnd(tabId);
   if (!shown && !large) return null;
   const detail = fill(t.wordCountDetail, {
     words: String(count.words),
@@ -65,13 +69,21 @@ function DocumentCorner({
           <span className="tx-badge large-doc-badge">{t.largeDocBadge}</span>
         </Tooltip>
       )}
-      {shown > 0 && (
-        <Tooltip text={detail} side="above">
-          <span className="word-count" tabIndex={-1}>
-            {inWords(t.wordCount, shown)}
-          </span>
-        </Tooltip>
-      )}
+      {shown > 0 &&
+        (isMobileApp ? (
+          // A touch screen has no margin to spare: under the last block.
+          end &&
+          createPortal(
+            <p className="word-count">{inWords(t.wordCount, shown)}</p>,
+            end,
+          )
+        ) : (
+          <Tooltip text={detail} side="above">
+            <span className="word-count" tabIndex={-1}>
+              {inWords(t.wordCount, shown)}
+            </span>
+          </Tooltip>
+        ))}
     </div>
   );
 }

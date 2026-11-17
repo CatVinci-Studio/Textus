@@ -1,7 +1,8 @@
-import { useEffect, useRef, useState } from "react";
+import { useRef, useSyncExternalStore } from "react";
 import { useModalDialog } from "./useModalDialog";
 import { usePresence } from "../motion/usePresence";
 import { isImeKeydown } from "../../utils/ime";
+import { createRequestQueue } from "../../utils/store";
 
 /**
  * The app's own alert, confirm and prompt boxes, in place of OS dialogs.
@@ -35,19 +36,12 @@ interface Request extends AppDialogOptions {
   resolve: (ok: boolean, value?: string) => void;
 }
 
-let nextId = 1;
-let queue: Request[] = [];
-const listeners = new Set<(queue: Request[]) => void>();
-
-function publish() {
-  for (const listener of listeners) listener(queue);
-}
+const queue = createRequestQueue<Request>();
 
 function enqueue(request: Omit<Request, "id" | "resolve">): Promise<boolean> {
-  return new Promise((resolve) => {
-    queue = [...queue, { ...request, id: nextId++, resolve }];
-    publish();
-  });
+  return new Promise((resolve) =>
+    queue.add((id) => ({ ...request, id, resolve })),
+  );
 }
 
 /** A notice with one button. Resolves once it is dismissed. */
@@ -83,20 +77,15 @@ export function showChoice(
     focusCancel?: boolean;
   },
 ): Promise<"ok" | "alt" | null> {
-  return new Promise((resolve) => {
-    queue = [
-      ...queue,
-      {
-        ...options,
-        text,
-        confirm: true,
-        id: nextId++,
-        resolve: (ok, value) =>
-          resolve(value === ALT ? "alt" : ok ? "ok" : null),
-      },
-    ];
-    publish();
-  });
+  return new Promise((resolve) =>
+    queue.add((id) => ({
+      ...options,
+      text,
+      confirm: true,
+      id,
+      resolve: (ok, value) => resolve(value === ALT ? "alt" : ok ? "ok" : null),
+    })),
+  );
 }
 
 /** What the second way forward answers with. */
@@ -113,38 +102,26 @@ export function showPrompt(
     placeholder?: string;
   },
 ): Promise<string | null> {
-  return new Promise((resolve) => {
-    queue = [
-      ...queue,
-      {
-        ...options,
-        text,
-        confirm: true,
-        input: value,
-        id: nextId++,
-        resolve: (ok, typed) => resolve(ok ? (typed ?? value) : null),
-      },
-    ];
-    publish();
-  });
+  return new Promise((resolve) =>
+    queue.add((id) => ({
+      ...options,
+      text,
+      confirm: true,
+      input: value,
+      id,
+      resolve: (ok, typed) => resolve(ok ? (typed ?? value) : null),
+    })),
+  );
 }
 
 function answer(request: Request, ok: boolean, value?: string) {
-  queue = queue.filter((r) => r.id !== request.id);
-  publish();
+  queue.remove(request.id);
   request.resolve(ok, value);
 }
 
 /** Mounted once per window. */
 export function AppDialogHost({ okLabel }: { okLabel: string }) {
-  const [pending, setPending] = useState<Request[]>(queue);
-  useEffect(() => {
-    listeners.add(setPending);
-    return () => {
-      listeners.delete(setPending);
-    };
-  }, []);
-  const current = pending[0];
+  const current = useSyncExternalStore(queue.subscribe, queue.now);
   // The answered box stays a moment to fade out; a queued one takes its
   // place without the dimming going away and coming back.
   const presence = usePresence(!!current);

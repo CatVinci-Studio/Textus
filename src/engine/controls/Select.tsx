@@ -117,6 +117,7 @@ function SheetSelect({
   const options = collectOptions(children);
   const current = options.find((o) => o.value === value);
   const [at, setAt] = useState<{ x: number; y: number } | null>(null);
+  const [button, setButton] = useState<HTMLButtonElement | null>(null);
   const items = runs(options).flatMap((run, r): ContextMenuEntry[] => [
     ...(r > 0 ? ["separator" as const] : []),
     ...run.items.map(({ option }) => ({
@@ -133,15 +134,17 @@ function SheetSelect({
     <>
       <button
         type="button"
+        ref={setButton}
         className={`ui-select ${className ?? ""}`}
         aria-haspopup="menu"
         aria-expanded={!!at}
         aria-label={ariaLabel}
         title={title}
         disabled={disabled}
+        // Pressed again while open: closed, as the menu's own button is.
         onClick={(e) => {
           const r = e.currentTarget.getBoundingClientRect();
-          setAt({ x: r.left, y: r.bottom });
+          setAt((open) => (open ? null : { x: r.left, y: r.bottom }));
         }}
       >
         <span className="tx-truncate ui-select-value">
@@ -155,6 +158,7 @@ function SheetSelect({
             y={at.y}
             title={ariaLabel}
             items={items}
+            anchor={button}
             onClose={() => setAt(null)}
           />
         )}

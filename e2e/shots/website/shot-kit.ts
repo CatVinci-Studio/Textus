@@ -714,7 +714,7 @@ function providerCatalog() {
     throw new Error("catalog.rs: PROVIDER_CATALOG no longer parses");
   return catalog;
 }
-export const PROVIDERS = providerCatalog();
+const PROVIDERS = providerCatalog();
 
 /** Answers backend commands with canned values before the app's startup
  *  reads them. Merged with what is already there. */

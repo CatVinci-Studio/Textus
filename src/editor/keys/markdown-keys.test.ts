@@ -18,7 +18,7 @@ it("* and *** start a list and a rule, as - and --- do; seven #s are no heading"
   t.type("***");
   t.press("Enter");
   t.type("####### seven");
-  expect(t.markdown()).toBe("* item\n\n---\n\n####### seven");
+  expect(t.markdown()).toBe("- item\n\n---\n\n####### seven");
 });
 
 it("Shift+Enter in a heading starts a new line below it, in a code block a new line in it", async () => {
@@ -204,7 +204,7 @@ it("``` and $$ typed in a list item start a code block and a maths block in it",
   code.type("```js");
   code.press("Enter");
   code.type("x");
-  expect(code.markdown()).toBe("* item\n* ```js\n  x\n  ```");
+  expect(code.markdown()).toBe("- item\n- ```js\n  x\n  ```");
 
   const maths = await open();
   maths.type("- item");
@@ -212,7 +212,7 @@ it("``` and $$ typed in a list item start a code block and a maths block in it",
   maths.type("$$");
   maths.press("Enter");
   maths.type("y");
-  expect(maths.markdown()).toBe("* item\n* $$\n  y\n  $$");
+  expect(maths.markdown()).toBe("- item\n- $$\n  y\n  $$");
 });
 
 it("--- and Enter make a rule with the caret on the one line below it", async () => {
@@ -232,9 +232,9 @@ it("Alt+Up and Alt+Down move a list item, caret along", async () => {
   t.type("two");
   t.press("Alt+ArrowUp");
   t.type("!");
-  expect(t.markdown()).toBe("* two!\n* one");
+  expect(t.markdown()).toBe("- two!\n- one");
   t.press("Alt+ArrowDown");
-  expect(t.markdown()).toBe("* one\n* two!");
+  expect(t.markdown()).toBe("- one\n- two!");
 });
 
 it("Enter in a table's last row starts the new row at its first cell", async () => {
@@ -264,4 +264,33 @@ it("Backspace at a task's start makes it text, never a bare item", async () => {
   bullets.press("Backspace");
   expect(bullets.markdown()).toBe("- [ ] a\n\nb\n\n- [ ] c");
   expect(bullets.caretLine()).toBe("|b");
+});
+
+it("Enter after a ticked task starts one left to do", async () => {
+  const t = await open("- [x] done\n");
+  t.caretAtEnd();
+  t.press("Enter");
+  t.type("next");
+  expect(t.markdown()).toBe("- [x] done\n- [ ] next");
+});
+
+it("Enter at a ticked task's start leaves it ticked and the new one above to do", async () => {
+  const t = await open("- [x] done\n");
+  t.caretAt("done", 0, 0);
+  t.press("Enter");
+  expect(t.markdown()).toBe("- [ ] \n- [x] done");
+});
+
+it("a star typed between spaces stays a star, written as typed in a new file", async () => {
+  const t = await open("");
+  t.type("a * b and 2_3");
+  expect(t.markdown()).toBe("a * b and 2_3");
+});
+
+it("Enter at a ticked task's second paragraph leaves the task ticked", async () => {
+  const t = await open("- [x] title\n\n  second\n");
+  t.caretAt("second", 0, 0);
+  t.press("Enter");
+  expect(t.markdown()).toMatch(/^- \[x\] title/);
+  expect(t.markdown()).toMatch(/- \[ \] second$/);
 });

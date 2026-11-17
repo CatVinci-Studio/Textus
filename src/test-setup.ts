@@ -11,3 +11,9 @@ globalThis.ResizeObserver ??= class {
   unobserve() {}
   disconnect() {}
 } as unknown as typeof ResizeObserver;
+
+// The editor measures where its caret is; jsdom lays nothing out.
+if (typeof Range !== "undefined") {
+  Range.prototype.getClientRects ??= () => [] as unknown as DOMRectList;
+  Range.prototype.getBoundingClientRect ??= () => new DOMRect();
+}

@@ -5,6 +5,7 @@ import {
   Annotation,
   Compartment,
   EditorState,
+  type StateEffect,
   Transaction,
   type Extension,
 } from "@codemirror/state";
@@ -16,6 +17,7 @@ import {
 } from "@codemirror/view";
 import {
   history,
+  historyField,
   historyKeymap,
   indentLess,
   insertTab,
@@ -38,9 +40,11 @@ import { followFormatMenu, formatSource } from "./source-format-events";
 import { sourceKeys } from "./source-keys";
 import { tellCopied } from "../../clipboard/copied";
 import { elasticOverscroll } from "../../engine/controls/elastic-overscroll";
+import { leaveSource, sourceLeftBy } from "../tab-left";
 import { registerTabEditor } from "../tab-editor";
 import "./source-editor.css";
 import { sharedEnds } from "../../utils/lcs";
+import { registerZoomPane } from "../../engine/zoom/zoom-panes";
 
 /** A change the tab's markdown made, not the user. */
 const outside = Annotation.define<boolean>();
@@ -120,6 +124,7 @@ export function SourceEditor({
     // The text goes out a pause after typing: a copy of the whole document
     // and a window render per key was too much for a long one.
     let timer: ReturnType<typeof setTimeout> | null = null;
+    let touched = false;
     const report = () => {
       if (timer === null) return null;
       clearTimeout(timer);
@@ -130,70 +135,87 @@ export function SourceEditor({
       latest.current.onChange(text);
       return text;
     };
+    const extensions: Extension[] = [
+      // Source mode edits as plain text does, with colours: no line or
+      // word highlights, multiple carets, auto-indent or code keys.
+      history(),
+      indentUnit.of("\t"),
+      drawSelection(),
+      dropCursor(),
+      EditorView.lineWrapping,
+      EditorView.contentAttributes.of({
+        spellcheck: "false",
+        autocorrect: "off",
+        autocapitalize: "off",
+      }),
+      // The plain-text keys only: no searchKeymap (Ctrl/Cmd+F is
+      // Textus's own find bar). Tab indents as in a text editor; Escape
+      // then Tab still moves the focus on. Bold and italic write their
+      // Markdown, as in the rendered view.
+      sourceKeys,
+      keymap.of([
+        { key: "Mod-b", run: (v) => formatSource(v, "bold") },
+        { key: "Mod-i", run: (v) => formatSource(v, "italic") },
+        { key: "Tab", run: insertTab, shift: indentLess },
+        ...standardKeymap,
+        ...historyKeymap,
+      ]),
+      sourceFind,
+      sourceHighlighting(),
+      sourceEscapes(),
+      // A caller's paste handler (a document's source stores pictures);
+      // anything it leaves alone is CodeMirror's own.
+      EditorView.domEventHandlers({
+        paste: (event, view) => pasteRef.current?.(event, view) ?? false,
+        copy: (_event, view) => (tellSelection(view, false), false),
+        cut: (_event, view) => (tellSelection(view, true), false),
+      }),
+      compartment.of(readOnlyOf(latest.current.readOnly)),
+      EditorView.updateListener.of((update) => {
+        if (update.docChanged || update.selectionSet) touched = true;
+        if (
+          update.docChanged &&
+          !update.transactions.some((tr) => tr.annotation(outside))
+        ) {
+          if (timer !== null) clearTimeout(timer);
+          timer = setTimeout(report, REPORT_MS);
+        }
+        if (
+          latest.current.typewriter &&
+          (update.docChanged || update.selectionSet)
+        )
+          requestAnimationFrame(() => centerSourceCaret(update.view));
+      }),
+    ];
+    // The tab's last source view left its undo, selection and scroll: this
+    // one starts from them, for the same text. Only a view that was used
+    // leaves anything: one mounted and gone unseen would leave the top.
+    const { tabId } = latest.current;
+    const left = tabId ? sourceLeftBy(tabId, latest.current.value) : null;
     const view = new EditorView({
       parent: host,
-      state: EditorState.create({
-        doc: latest.current.value,
-        extensions: [
-          // Source mode edits as plain text does, with colours: no line or
-          // word highlights, multiple carets, auto-indent or code keys.
-          history(),
-          indentUnit.of("\t"),
-          drawSelection(),
-          dropCursor(),
-          EditorView.lineWrapping,
-          EditorView.contentAttributes.of({
-            spellcheck: "false",
-            autocorrect: "off",
-            autocapitalize: "off",
-          }),
-          // The plain-text keys only: no searchKeymap (Ctrl/Cmd+F is
-          // Textus's own find bar). Tab indents as in a text editor; Escape
-          // then Tab still moves the focus on. Bold and italic write their
-          // Markdown, as in the rendered view.
-          sourceKeys,
-          keymap.of([
-            { key: "Mod-b", run: (v) => formatSource(v, "bold") },
-            { key: "Mod-i", run: (v) => formatSource(v, "italic") },
-            { key: "Tab", run: insertTab, shift: indentLess },
-            ...standardKeymap,
-            ...historyKeymap,
-          ]),
-          sourceFind,
-          sourceHighlighting(),
-          sourceEscapes(),
-          // A caller's paste handler (a document's source stores pictures);
-          // anything it leaves alone is CodeMirror's own.
-          EditorView.domEventHandlers({
-            paste: (event, view) => pasteRef.current?.(event, view) ?? false,
-            copy: (_event, view) => (tellSelection(view, false), false),
-            cut: (_event, view) => (tellSelection(view, true), false),
-          }),
-          compartment.of(readOnlyOf(latest.current.readOnly)),
-          EditorView.updateListener.of((update) => {
-            if (
-              update.docChanged &&
-              !update.transactions.some((tr) => tr.annotation(outside))
-            ) {
-              if (timer !== null) clearTimeout(timer);
-              timer = setTimeout(report, REPORT_MS);
-            }
-            if (
-              latest.current.typewriter &&
-              (update.docChanged || update.selectionSet)
-            )
-              requestAnimationFrame(() => centerSourceCaret(update.view));
-          }),
-        ],
-      }),
+      state: left
+        ? EditorState.fromJSON(
+            left.state,
+            { extensions },
+            { history: historyField },
+          )
+        : EditorState.create({ doc: latest.current.value, extensions }),
     });
+    if (left) view.dispatch({ effects: left.scroll as StateEffect<unknown> });
     viewRef.current = view;
     const edit = (action: SourceEdit) => {
       ({ undo, redo, "select-all": selectAll })[action](view);
       view.focus();
     };
     registerSourceView(host, view, edit);
-    const { tabId } = latest.current;
+    const stopZoomPane = tabId
+      ? registerZoomPane(tabId, {
+          kind: "source",
+          scroller: view.scrollDOM,
+          view,
+        })
+      : undefined;
     const stopFlush = tabId
       ? registerTabEditor(tabId, "flush", report)
       : undefined;
@@ -205,13 +227,27 @@ export function SourceEditor({
     host.addEventListener(SOURCE_EDIT_EVENT, onEdit);
     const stopFormat = followFormatMenu(view);
     const scroller = view.scrollDOM;
-    const onScrollEvent = () => latest.current.onScroll?.(scroller);
+    // Where it is read, taken as it scrolls: once out of sight a view
+    // reads as scrolled to the top.
+    let place = left?.scroll ?? null;
+    const onScrollEvent = () => {
+      touched = true;
+      place = view.scrollSnapshot();
+      latest.current.onScroll?.(scroller);
+    };
     scroller.addEventListener("scroll", onScrollEvent, { passive: true });
     // The same give at either end as the rendered view's, on a Mac.
     const stopElastic = elasticOverscroll(scroller, view.dom);
     return () => {
       report();
+      if (tabId && touched)
+        leaveSource(tabId, {
+          state: view.state.toJSON({ history: historyField }),
+          text: view.state.doc.toString(),
+          scroll: place ?? view.scrollSnapshot(),
+        });
       stopFlush?.();
+      stopZoomPane?.();
       stopElastic();
       stopFormat();
       host.removeEventListener(SOURCE_EDIT_EVENT, onEdit);

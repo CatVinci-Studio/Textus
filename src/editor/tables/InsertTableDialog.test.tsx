@@ -28,6 +28,14 @@ describe("the new table's size grid", () => {
     expect(onInsert).toHaveBeenCalledExactlyOnceWith(2, 5);
     expect(onClose).toHaveBeenCalledTimes(1);
   });
+  it("takes no size from a right press", () => {
+    const { onInsert } = setup();
+    Element.prototype.setPointerCapture ??= () => {};
+    document.elementFromPoint ??= () => null;
+    fireEvent.pointerDown(grid(), { button: 2, pointerId: 1 });
+    fireEvent.pointerUp(grid(), { button: 2, pointerId: 1 });
+    expect(onInsert).not.toHaveBeenCalled();
+  });
   it("grows a row and a column past what is lit, within its bounds", () => {
     const most = { rows: 20, cols: 12 };
     expect(shownSize({ rows: 3, cols: 3 }, { rows: 3, cols: 3 }, most)).toEqual(

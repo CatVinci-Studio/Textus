@@ -4,7 +4,7 @@ import { modeOption, unaskingName, type AgentOption } from "./agent-mode";
 import {
   offerOf,
   subscribeOffers,
-  wanted,
+  wantedNow,
   type AgentCommand,
 } from "./agent-offers";
 import { externalAgent } from "../../plugins/contributions/agents";
@@ -41,7 +41,7 @@ export function useAgentOptions(agent: string | null): AgentOptionsMenu | null {
     ...(approval ? [approval] : []),
   ]).map((o) => ({
     ...o,
-    value: wanted(o, offer.options, chosen) ?? o.current,
+    value: wantedNow(agent, o, offer.options, chosen) ?? o.current,
   }));
   const mode = modeOption(options);
   const modeValue = mode && options.find((o) => o.id === mode.id)?.value;

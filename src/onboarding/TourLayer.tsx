@@ -1,6 +1,6 @@
 import {
   useCallback,
-  useEffect,
+  useLayoutEffect,
   useRef,
   useState,
   type ReactNode,
@@ -65,8 +65,9 @@ function useTourView(
   onEscape: () => void,
 ) {
   const [view, setView] = useState(viewNow);
-  const [cardSize, setCardSize] = useState({ width: 320, height: 160 });
-  useEffect(() => {
+  // Measured before the first paint, so no guess is ever drawn.
+  const [cardSize, setCardSize] = useState({ width: 0, height: 0 });
+  useLayoutEffect(() => {
     const el = card.current;
     if (!el) return;
     const measure = () => {
@@ -78,6 +79,7 @@ function useTourView(
         height: el.offsetHeight,
       }));
     };
+    measure();
     const observer = new ResizeObserver(measure);
     observer.observe(el);
     window.addEventListener("resize", measure);

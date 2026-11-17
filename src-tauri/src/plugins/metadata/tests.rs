@@ -110,6 +110,29 @@ fn a_caller_is_sent_only_what_changed_since_it_asked() {
 }
 
 #[test]
+fn a_walk_cut_short_reports_no_file_it_missed_as_gone() {
+    let dir = tempfile::tempdir().unwrap();
+    for name in ["a.md", "b.md", "c.md"] {
+        std::fs::write(dir.path().join(name), "# Note").unwrap();
+    }
+    let index = MetadataIndex::default();
+    let first = refresh(&index, dir.path(), None);
+    assert_eq!(first.documents.len(), 3);
+    // The next walk stops after one file: the other two are still there.
+    let short = crate::walk::Limits {
+        files: 1,
+        ..crate::walk::LIMITS
+    };
+    std::fs::remove_file(dir.path().join("c.md")).unwrap();
+    let cut = refresh_within(&index, dir.path(), Some(first.generation), &short);
+    assert!(cut.gone.iter().all(|path| path.ends_with("c.md")));
+    // A whole walk says what really went.
+    let whole = refresh(&index, dir.path(), Some(first.generation));
+    assert!(whole.gone.len() == 1 && whole.gone[0].ends_with("c.md"));
+    assert_eq!(refresh(&index, dir.path(), None).documents.len(), 2);
+}
+
+#[test]
 fn front_matter_is_read_as_the_app_does() {
     for (name, text, yaml, _) in crate::ai::workspace::tests::frontmatter_cases() {
         assert_eq!(front_matter(&text).0, yaml, "{name}");

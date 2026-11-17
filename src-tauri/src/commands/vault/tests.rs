@@ -375,6 +375,7 @@ fn only_the_most_recently_used_vaults_stay_cached() {
         root: PathBuf::from(name),
         built: Instant::now(),
         files: Arc::new(Vec::new()),
+        cut: false,
     };
     let mut cache = Vec::new();
     for name in ["a", "b", "c", "d"] {
@@ -388,4 +389,17 @@ fn only_the_most_recently_used_vaults_stay_cached() {
         .map(|c| c.root.to_string_lossy().to_string())
         .collect();
     assert_eq!(roots, ["e", "a", "d", "c"]);
+}
+
+#[test]
+fn an_index_says_when_it_stopped_before_the_vaults_end() {
+    let dir = tempfile::tempdir().unwrap();
+    for name in ["a.md", "b.md", "c.md"] {
+        std::fs::write(dir.path().join(name), "").unwrap();
+    }
+    let (all, cut) = index_vault_within(dir.path(), 10, 100);
+    assert!(all.len() == 3 && !cut);
+    let (some, cut) = index_vault_within(dir.path(), 2, 100);
+    assert!(some.len() == 2 && cut);
+    assert!(index_vault_within(dir.path(), 10, 2).1);
 }

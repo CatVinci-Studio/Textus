@@ -5,10 +5,6 @@
   flex: 1;
   min-height: 0;
   min-width: 0;
-  padding-top: var(--window-bar-height);
-}
-.tab-bar ~ * .web-page-pane {
-  padding-top: 0;
 }
 /* The address bar: slim, quiet until used, folded to a handle. */
 .web-page-bar {
@@ -35,8 +31,10 @@
   border-radius: var(--shape-pill);
   corner-shape: round;
 }
-.web-page-address:hover {
-  background: var(--ui-hover);
+@media (hover: hover) {
+  .web-page-address:hover {
+    background: var(--ui-hover);
+  }
 }
 .web-page-address:focus {
   outline: none;
@@ -132,9 +130,11 @@
   font-size: var(--text-secondary);
   cursor: pointer;
 }
-.plugin-status-button:hover {
-  background: var(--ui-hover);
-  color: var(--ui-text);
+@media (hover: hover) {
+  .plugin-status-button:hover {
+    background: var(--ui-hover);
+    color: var(--ui-text);
+  }
 }
 
 /* A plugin holding the keyboard: Vim's block cursor in normal mode, the
@@ -368,9 +368,11 @@
     border-color var(--dur-fast) var(--ease-standard),
     color var(--dur-fast) var(--ease-standard);
 }
-.create-studio-example:hover {
-  border-left-color: var(--ui-accent);
-  color: var(--ui-text);
+@media (hover: hover) {
+  .create-studio-example:hover {
+    border-left-color: var(--ui-accent);
+    color: var(--ui-text);
+  }
 }
 .create-studio-example-text {
   flex: 1;

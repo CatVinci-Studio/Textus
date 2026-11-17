@@ -1,7 +1,7 @@
 import type { ShortcutAction } from "../../prefs/shortcut-defaults";
 import { splitHere } from "./split-here";
 import { openCommandPalette } from "../command-palette-entry";
-import { TOGGLE_FIND_REPLACE_EVENT } from "../../utils/events";
+import { TOGGLE_FIND_REPLACE_EVENT, sendAppEvent } from "../../utils/events";
 
 /** What the window gives the actions to work with. */
 export interface AppActionHandlers {
@@ -73,7 +73,7 @@ export const APP_ACTIONS: readonly AppAction[] = [
   {
     menu: "find-replace",
     key: "findReplace",
-    run: () => window.dispatchEvent(new CustomEvent(TOGGLE_FIND_REPLACE_EVENT)),
+    run: () => sendAppEvent(TOGGLE_FIND_REPLACE_EVENT),
   },
 ];
 

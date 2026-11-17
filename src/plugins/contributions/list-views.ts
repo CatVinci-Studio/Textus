@@ -1,3 +1,4 @@
+import { createSubscribers } from "../../utils/store";
 /**
  * The list views plugins have registered: what PluginListView needs to draw
  * one, and a version each refresh moves on. The items themselves are asked of
@@ -17,7 +18,7 @@ interface ListViewInfo {
 }
 
 const views = new Map<string, ListViewInfo>();
-const listeners = new Set<() => void>();
+const subscribers = createSubscribers();
 let changes = 0;
 
 function key(plugin: string, view: string) {
@@ -26,13 +27,10 @@ function key(plugin: string, view: string) {
 
 function changed() {
   changes++;
-  for (const listener of listeners) listener();
+  subscribers.publish();
 }
 
-export function subscribeListViews(listener: () => void): () => void {
-  listeners.add(listener);
-  return () => listeners.delete(listener);
-}
+export const subscribeListViews = subscribers.subscribe;
 
 /** Moves on whenever any list view does: for useSyncExternalStore. */
 export function listViewsVersion(): number {
@@ -93,4 +91,11 @@ export function forgetListViews(plugin: string): void {
       any = true;
     }
   if (any) changed();
+}
+
+/** Every list asks its plugin again: their rows are in the old language. */
+export function refreshAllListViews(): void {
+  for (const [id, info] of views)
+    views.set(id, { ...info, version: info.version + 1 });
+  changed();
 }

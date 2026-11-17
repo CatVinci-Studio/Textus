@@ -130,7 +130,10 @@ function useApplyAppearance(
       root.removeAttribute("data-content-width");
     else root.setAttribute("data-content-width", settings.contentWidth);
     root.toggleAttribute("data-first-line-indent", settings.firstLineIndent);
-  }, [settings.contentWidth, settings.firstLineIndent]);
+    // The margin keeps room for the block handles only while they show.
+    if (settings.blockHandles) root.removeAttribute("data-block-handles");
+    else root.setAttribute("data-block-handles", "off");
+  }, [settings.contentWidth, settings.firstLineIndent, settings.blockHandles]);
 
   useEffect(() => {
     const root = document.documentElement;

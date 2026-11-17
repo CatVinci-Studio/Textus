@@ -13,7 +13,6 @@ import {
   LANGS,
   LANGUAGES,
   MAC_USER_AGENT,
-  PROVIDERS,
   SAMPLES,
   Sample,
   canned,
@@ -300,10 +299,6 @@ for (const lang of LANGS) {
       await page
         .locator(".settings-nav-item", { hasText: "Textus AI" })
         .click();
-      await page.locator(".provider-picker .combobox-trigger").click();
-      await expect(page.locator(".combobox-option")).toHaveCount(
-        PROVIDERS.length,
-      );
       await shoot(page, browser, lang, "settings");
     });
 

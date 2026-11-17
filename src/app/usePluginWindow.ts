@@ -1,3 +1,4 @@
+import { isBlockKind } from "../editor/blocks/block-kind-list";
 import { lazyModule } from "../lazy/lazy-module";
 import { appearanceNow } from "../theme/plugin-colors";
 import { pickWithCommands } from "./command-palette-entry";
@@ -5,6 +6,7 @@ import { watchConventions } from "../plugins/contributions/conventions-watch";
 import { useEffect, useSyncExternalStore } from "react";
 import { onCopied } from "../clipboard/copied";
 import { setCompletionAsker } from "../plugins/contributions/completion-sources";
+import { refreshAllListViews } from "../plugins/contributions/list-views";
 import {
   makeBlankTab,
   tabIsDirty,
@@ -40,7 +42,7 @@ import { besideOrSay, openBesideOrSay } from "./menu/split-here";
 import {
   INSERT_BLOCK_EVENT,
   SHOW_FOLDER_EVENT,
-  INSERT_BLOCK_KINDS,
+  sendAppEvent,
 } from "../utils/events";
 import { useSettings } from "../prefs/SettingsContext";
 import { setWindowFolderSource } from "../platform/window-folder";
@@ -123,7 +125,9 @@ export function usePluginWindow({
       const from = tabInUse();
       // Beside: its place taken as it arrives, never first drawn in front.
       if (where === "beside")
-        placeOnArrival(made.id, (now) => besideOrSay(now, made.id, from));
+        placeOnArrival(made.id, (now) =>
+          besideOrSay(now, made.id, from, false),
+        );
       // In its place only while nothing unsaved would go with it.
       const front = liveTabs().find((tab) => tab.id === from);
       const replace = where === "current" && !!front && !tabIsDirty(front);
@@ -155,7 +159,7 @@ export function usePluginWindow({
         void (preview ? lookRef : openRef).current(path, {
           ...(place ? { place } : {}),
           ...(asDocument ? { asDocument } : {}),
-          ...(where ? { where } : {}),
+          ...(where ? { where, byPlugin: true } : {}),
           ...(preview ? { preview } : {}),
         }),
       openUntitled: (content, title, where) =>
@@ -178,7 +182,7 @@ export function usePluginWindow({
         if (open) {
           const from = tabInUse();
           setActiveTabId(open.id);
-          if (where === "beside") openBesideOrSay(open.id, from);
+          if (where === "beside") openBesideOrSay(open.id, from, false);
         } else addTab({ view }, where);
       },
       tabs: () => tabsRef.current.map(info),
@@ -241,10 +245,7 @@ export function usePluginWindow({
       title: (t) => t.menuFormat,
       palette: false,
       run: (kind) => {
-        if (typeof kind === "string" && INSERT_BLOCK_KINDS.includes(kind))
-          window.dispatchEvent(
-            new CustomEvent(INSERT_BLOCK_EVENT, { detail: kind }),
-          );
+        if (isBlockKind(kind)) sendAppEvent(INSERT_BLOCK_EVENT, kind);
       },
     });
     // A folder inside the open one shown in the sidebar (an import's).
@@ -253,10 +254,7 @@ export function usePluginWindow({
       title: (t) => t.menuOpenFolder,
       palette: false,
       run: (path) => {
-        if (typeof path === "string")
-          window.dispatchEvent(
-            new CustomEvent(SHOW_FOLDER_EVENT, { detail: path }),
-          );
+        if (typeof path === "string") sendAppEvent(SHOW_FOLDER_EVENT, path);
       },
     });
     return () => {
@@ -310,7 +308,10 @@ export function usePluginWindow({
     () => emitPluginEvent("activeTab", getWindowAccess()?.activeTab() ?? null),
     [tabState.activeTabId],
   );
-  useEffect(() => emitPluginEvent("language", language), [language]);
+  useEffect(() => {
+    emitPluginEvent("language", language);
+    refreshAllListViews();
+  }, [language]);
   useEffect(() => onCopied((copied) => emitPluginEvent("copy", copied)), []);
   useEffect(() => {
     let dark = windowIsDark();

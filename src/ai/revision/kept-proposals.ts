@@ -90,11 +90,21 @@ export function readKept(value: unknown): KeptProposals | null {
 }
 
 /** The kept proposals that may come back to the document as it reads now
- *  (`document`, its hash): those bound to a position only to the same
- *  document. */
+ *  (`document`, its hash): one bound to a position, to the same document -
+ *  or, the document edited elsewhere since, while the passage it was made
+ *  on still reads the same where it was (`reads` a range, as Markdown). */
 export function restorable(
   kept: KeptProposals,
   document: number,
+  reads: (from: number, to: number) => string | null,
 ): KeptProposal[] {
-  return kept.proposals.filter((p) => !p.target || kept.document === document);
+  return kept.proposals.filter((p) => {
+    if (!p.target || kept.document === document) return true;
+    const { range, selectionMarkdown } = p.target;
+    return (
+      !!range &&
+      selectionMarkdown !== null &&
+      reads(range.from, range.to) === selectionMarkdown
+    );
+  });
 }

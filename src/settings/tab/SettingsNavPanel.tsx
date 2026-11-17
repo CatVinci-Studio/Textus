@@ -8,7 +8,7 @@ import {
   PluginsTabIcon,
 } from "../../engine/controls/icons";
 import { isDesktopApp } from "../../platform/capabilities";
-import { SHOW_SIDEBAR_TAB_EVENT } from "../../utils/events";
+import { SHOW_SIDEBAR_TAB_EVENT, sendAppEvent } from "../../utils/events";
 import { useSettings } from "../../prefs/SettingsContext";
 import { useMarginAvailable } from "../../ai/margin/margin-room";
 import { SearchField } from "../../engine/controls/SearchField";
@@ -87,13 +87,7 @@ export function SettingsNavPanel() {
       type="button"
       key="plugins"
       className="tx-list-item settings-nav-away"
-      onClick={() =>
-        window.dispatchEvent(
-          new CustomEvent(SHOW_SIDEBAR_TAB_EVENT, {
-            detail: "plugins",
-          }),
-        )
-      }
+      onClick={() => sendAppEvent(SHOW_SIDEBAR_TAB_EVENT, "plugins")}
     >
       <PluginsTabIcon className="settings-nav-icon" />
       <span className="settings-nav-group-name tx-truncate">

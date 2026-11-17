@@ -78,11 +78,15 @@ export function TabBar({
   } | null>(null);
 
   const ids = tabs.map((tab) => tab.id);
+  const shapes = tabs.map((tab) => ({
+    ...tab,
+    open: tab.id === activeTabId,
+  }));
   const fit = useTabFit(
     barRef,
     previewTab
-      ? [...tabs, { title: previewTab.title, dirty: previewTab.dirty }]
-      : tabs,
+      ? [...shapes, { title: previewTab.title, dirty: previewTab.dirty }]
+      : shapes,
   );
   // One tab too long for its row is cut short, not listed: a list of one
   // tells nothing.
@@ -103,15 +107,14 @@ export function TabBar({
   const shownLength = fit && fit.available - (overflow ? fit.list : 0);
   // What the reveal reads when the row resizes: the tab's place and the
   // row's room as last laid out, not as they were when it began watching.
-  const edges =
-    isMobileApp && fit
-      ? stripSlots(fit.widths, fit.between).map((slot) => slot.x)
-      : null;
+  const slots = isMobileApp && fit ? stripSlots(fit.widths, fit.between) : [];
+  const last = slots[slots.length - 1];
   useRevealTab(barRef, stripEl, activeTabId, {
     slotX,
     slotW,
     shownLength,
-    edges,
+    edges: slots.length ? slots.map((slot) => slot.x) : null,
+    end: last ? last.x + last.w : 0,
   });
 
   const pillOf = (id: string) =>

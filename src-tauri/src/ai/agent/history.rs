@@ -15,12 +15,32 @@ pub(super) const HISTORY_BUDGET: usize = 150_000;
 /// stays put until the conversation grows by another block.
 pub(super) const HISTORY_DROP_STEP: usize = HISTORY_BUDGET / 3;
 
+/// A turn's size in the character units every budget meant to approximate
+/// tokens counts in (CJK as 3).
 pub(super) fn turn_chars(turn: &AgentTurn) -> usize {
+    let units = |text: &str| text.chars().map(crate::ai::project::char_units).sum();
     match turn {
-        AgentTurn::User { text, .. } | AgentTurn::Assistant { text, .. } => text.len(),
-        AgentTurn::ToolCall { arguments, .. } => arguments.len(),
-        AgentTurn::ToolResult { output, .. } => output.len(),
+        AgentTurn::User { text, .. } | AgentTurn::Assistant { text, .. } => units(text),
+        AgentTurn::ToolCall { arguments, .. } => units(arguments),
+        AgentTurn::ToolResult { output, .. } => units(output),
     }
+}
+
+/// `compact_history`, telling `events` when the conversation's start was
+/// left out: the writer hears the model no longer sees it.
+pub(super) fn compact_telling(history: Vec<AgentTurn>, events: &dyn EventSink) -> Vec<AgentTurn> {
+    let asked = |history: &[AgentTurn]| {
+        history
+            .iter()
+            .filter(|turn| matches!(turn, AgentTurn::User { .. }))
+            .count()
+    };
+    let before = asked(&history);
+    let history = compact_history(history);
+    if asked(&history) < before {
+        events.send(StreamEvent::Forgot);
+    }
+    history
 }
 
 /// Memory chips' turns (a remember call and its result) aren't sent: the model

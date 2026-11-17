@@ -110,15 +110,17 @@ describe("the table's keys and pastes", () => {
   const ROWS = "| h | k |\n| - | - |\n| 1 | x |\n| 2 | y |\n\nend";
   const body = (t: TestView) => lines(t).slice(2);
 
-  it("Alt+arrows move the caret's row and column, never above the head row", async () => {
+  it("Alt+up and down move the caret's row, never above the head row; left and right stay the caret's", async () => {
     const t = await openView(ROWS);
     t.caretAt("2");
     t.press("Alt+ArrowUp");
     expect(body(t)).toEqual(["| 2 | y |", "| 1 | x |"]);
     t.press("Alt+ArrowUp");
     expect(lines(t)[0]).toBe("| h | k |");
+    // A word at a time on a Mac: no column moves.
     t.press("Alt+ArrowRight");
-    expect(lines(t)[0]).toBe("| k | h |");
+    t.press("Alt+ArrowLeft");
+    expect(lines(t)[0]).toBe("| h | k |");
   });
 
   it("iOS's own new line at a line's end before a table is refused, leaving prosemirror's Enter", async () => {
@@ -299,6 +301,6 @@ describe("the table's keys and pastes", () => {
     const t = await openView("| a | b |\n| --- | --- |\n| 1 | 2 |\n\nend");
     t.caretAt("1");
     runTableAction((fn) => t.editor.action(fn), "delete-row");
-    expect(t.markdown()).toBe("| a | b |\n| - | - |\n\nend");
+    expect(t.markdown()).toBe("| a | b |\n| --- | --- |\n\nend");
   });
 });

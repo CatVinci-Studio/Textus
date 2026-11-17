@@ -17,6 +17,8 @@
   display: inline-flex;
   align-items: center;
   justify-content: center;
+  /* A label wider than its row is cut at its end, not at both. */
+  justify-content: safe center;
   gap: 8px;
   min-height: var(--control-height);
   padding: 0 12px;
@@ -51,19 +53,21 @@
 }
 
 /* The hover arrives in 80ms and leaves at the 120ms of the base rule. */
-:is(
-    .close-prompt-buttons button,
-    .image-name-buttons button,
-    .insert-table-buttons button,
-    .text-button,
-    .tx-button,
-    .inline-chat-action,
-    .corner-toast button,
-    .project-bar-naming button,
-    .missing-image-actions button
-  ):not(:disabled):hover {
-  background: color-mix(in srgb, currentColor 8%, transparent);
-  transition-duration: var(--dur-instant);
+@media (hover: hover) {
+  :is(
+      .close-prompt-buttons button,
+      .image-name-buttons button,
+      .insert-table-buttons button,
+      .text-button,
+      .tx-button,
+      .inline-chat-action,
+      .corner-toast button,
+      .project-bar-naming button,
+      .missing-image-actions button
+    ):not(:disabled):hover {
+    background: color-mix(in srgb, currentColor 8%, transparent);
+    transition-duration: var(--dur-instant);
+  }
 }
 
 :is(
@@ -78,7 +82,6 @@
 ):is(
   .close-prompt-primary,
   .image-name-primary,
-  .insert-table-primary,
   .language-welcome-continue,
   .inline-chat-action-primary,
   .corner-toast-primary,
@@ -91,28 +94,33 @@
   font-weight: 600;
 }
 
-:is(
-    .close-prompt-buttons button,
-    .image-name-buttons button,
-    .insert-table-buttons button,
-    .language-welcome-continue,
-    .inline-chat-action,
-    .corner-toast button,
-    .inline-chat-send,
-    .tx-button
-  ):is(
-    .close-prompt-primary,
-    .image-name-primary,
-    .insert-table-primary,
-    .language-welcome-continue,
-    .inline-chat-action-primary,
-    .corner-toast-primary,
-    .inline-chat-send,
-    .tx-button.primary
-  ):not(:disabled):hover {
-  border-color: color-mix(in srgb, var(--ui-primary) 86%, var(--ui-on-primary));
-  background: color-mix(in srgb, var(--ui-primary) 86%, var(--ui-on-primary));
-  transition-duration: var(--dur-instant);
+@media (hover: hover) {
+  :is(
+      .close-prompt-buttons button,
+      .image-name-buttons button,
+      .insert-table-buttons button,
+      .language-welcome-continue,
+      .inline-chat-action,
+      .corner-toast button,
+      .inline-chat-send,
+      .tx-button
+    ):is(
+      .close-prompt-primary,
+      .image-name-primary,
+      .language-welcome-continue,
+      .inline-chat-action-primary,
+      .corner-toast-primary,
+      .inline-chat-send,
+      .tx-button.primary
+    ):not(:disabled):hover {
+    border-color: color-mix(
+      in srgb,
+      var(--ui-primary) 86%,
+      var(--ui-on-primary)
+    );
+    background: color-mix(in srgb, var(--ui-primary) 86%, var(--ui-on-primary));
+    transition-duration: var(--dur-instant);
+  }
 }
 
 /* Pressed: a shade darker, at once - and no scale (macOS buttons don't
@@ -144,7 +152,6 @@
   ):is(
     .close-prompt-primary,
     .image-name-primary,
-    .insert-table-primary,
     .language-welcome-continue,
     .inline-chat-action-primary,
     .corner-toast-primary,
@@ -164,10 +171,12 @@
   color: var(--ui-on-fill);
 }
 
-.close-prompt-buttons
-  button.close-prompt-primary.app-dialog-danger:not(:disabled):hover {
-  border-color: color-mix(in srgb, var(--ui-danger-fill) 86%, #000);
-  background: color-mix(in srgb, var(--ui-danger-fill) 86%, #000);
+@media (hover: hover) {
+  .close-prompt-buttons
+    button.close-prompt-primary.app-dialog-danger:not(:disabled):hover {
+    border-color: color-mix(in srgb, var(--ui-danger-fill) 86%, #000);
+    background: color-mix(in srgb, var(--ui-danger-fill) 86%, #000);
+  }
 }
 
 .close-prompt-buttons
@@ -237,16 +246,18 @@
   border: 1px solid var(--ui-border);
 }
 
-:is(
-    .inline-chat-header-button,
-    .tree-tool,
-    .tx-icon-button,
-    .inline-chat-attach,
-    .inline-chat-toggle
-  ):not(:disabled):hover {
-  background: color-mix(in srgb, currentColor 10%, transparent);
-  color: var(--ui-text);
-  transition-duration: var(--dur-instant);
+@media (hover: hover) {
+  :is(
+      .inline-chat-header-button,
+      .tree-tool,
+      .tx-icon-button,
+      .inline-chat-attach,
+      .inline-chat-toggle
+    ):not(:disabled):hover {
+    background: color-mix(in srgb, currentColor 10%, transparent);
+    color: var(--ui-text);
+    transition-duration: var(--dur-instant);
+  }
 }
 
 :is(

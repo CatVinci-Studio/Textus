@@ -325,14 +325,14 @@ What `![[...]]` points at, as `metadata.resolveNote` resolves it.
 
 ## ListProvider
 
-| Member                                                              |                                                                                                                             |
-| ------------------------------------------------------------------- | --------------------------------------------------------------------------------------------------------------------------- |
-| `items(parent?: ListItem): ListItem[] \| Promise<ListItem[]>`       | The items at the top, or under `parent` (one with `children`).                                                              |
-| `onSelect?(item: ListItem): void \| Promise<void>`                  | An item clicked or Enter on it: by default, its `location` opens and its `command` runs.                                    |
-| `onCheck?(item: ListItem, checked: boolean): void \| Promise<void>` | Its checkbox ticked or unticked.                                                                                            |
-| `onMove?(item: ListItem, target: ListItem): void \| Promise<void>`  | An item dragged onto another; with it, the rows can be dragged. From 1.3.10.                                                |
-| `filterPlaceholder?: string`                                        | What the field over the list says; without it, there is no field. The list filters itself by label, description and detail. |
-| `emptyText?: string`                                                | Shown when there are no items.                                                                                              |
+| Member                                                              |                                                                                                                                                                                                                                 |
+| ------------------------------------------------------------------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| `items(parent?: ListItem): ListItem[] \| Promise<ListItem[]>`       | The items at the top, or under `parent` (one with `children`).                                                                                                                                                                  |
+| `onSelect?(item: ListItem): void \| Promise<void>`                  | An item clicked or Enter on it: by default, its `location` opens and its `command` runs.                                                                                                                                        |
+| `onCheck?(item: ListItem, checked: boolean): void \| Promise<void>` | Its checkbox ticked or unticked.                                                                                                                                                                                                |
+| `onMove?(item: ListItem, target: ListItem): void \| Promise<void>`  | An item dragged onto another; with it, the rows can be dragged. From 1.3.10.                                                                                                                                                    |
+| `filterPlaceholder?: string`                                        | What the field over the list says; without it, there is no field. The list filters itself by label, description and detail. A `%key%` of the manifest's `l10n` follows the UI language (from 1.4.3); plain text stays as given. |
+| `emptyText?: string`                                                | Shown when there are no items; a `%key%` as above.                                                                                                                                                                              |
 
 ## ListItem
 
@@ -354,10 +354,10 @@ What `![[...]]` points at, as `metadata.resolveNote` resolves it.
 
 ## ListView
 
-| Member                           |                                                 |
-| -------------------------------- | ----------------------------------------------- |
-| `refresh(): void`                | Asks the provider again.                        |
-| `setMessage(text: string): void` | A line over the list ("12 tasks"); "" for none. |
+| Member                           |                                                               |
+| -------------------------------- | ------------------------------------------------------------- |
+| `refresh(): void`                | Asks the provider again.                                      |
+| `setMessage(text: string): void` | A line over the list ("12 tasks"), or a `%key%`; "" for none. |
 
 ## Webview
 
@@ -784,9 +784,9 @@ A kind of periodic note: its folder (full path), file name format (moment.js tok
 
 ## Net
 
-| Member                                                                                                                                                                                                                                                                                       |                                                            |
-| -------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- | ---------------------------------------------------------- |
-| `fetch(url: string, init?: { method?: string; headers?: Record<string, string>; body?: Uint8Array \| ArrayBuffer \| string; }): Promise<{ status: number; ok: boolean; headers: Record<string, string>; bytes(): Promise<Uint8Array>; text(): Promise<string>; json(): Promise<unknown>; }>` | HTTPS to the hosts granted (`network:<host>`); no cookies. |
+| Member                                                                                                                                                                                                                                                                                                             |                                                                                                                                                                                                                                         |
+| ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------ | --------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| `fetch(url: string, init?: { method?: string; headers?: Record<string, string>; body?: Uint8Array \| ArrayBuffer \| string; signal?: AbortSignal; }): Promise<{ status: number; ok: boolean; headers: Record<string, string>; bytes(): Promise<Uint8Array>; text(): Promise<string>; json(): Promise<unknown>; }>` | HTTPS to the hosts granted (`network:<host>`); no cookies. Each plugin's requests share kept connections (HTTP/2 where the server has it). `signal` aborted stops the request at once; it then rejects with an `AbortError` (from 1.7). |
 
 ## Settings
 
@@ -999,6 +999,8 @@ An item of a page's menu (`WebviewApi.menu`); `items` makes it a submenu (one le
 | `postMessage(message: unknown): void`                                                                                                                                                              |                                                                                                                                                                                                                                                                      |
 | `onMessage(fn: (message: unknown) => void): Disposable`                                                                                                                                            |                                                                                                                                                                                                                                                                      |
 | `onDidReceiveMessage(fn: (message: unknown) => void): Disposable`                                                                                                                                  | From 1.7: onMessage by the name host.js's webview has; onMessage stays.                                                                                                                                                                                              |
+| `readonly visible: boolean`                                                                                                                                                                        | From 1.7: whether the page is in sight.                                                                                                                                                                                                                              |
+| `onDidChangeVisibility(fn: (visible: boolean) => void): Disposable`                                                                                                                                | From 1.7: told as the page goes out of sight and comes back. Out of sight it may be let go to save memory and is rebuilt when shown, from `getState()`: set what it should keep here.                                                                                |
 | `getState(): unknown`                                                                                                                                                                              |                                                                                                                                                                                                                                                                      |
 | `setState<T>(state: T): T`                                                                                                                                                                         |                                                                                                                                                                                                                                                                      |
 | `menu(items: (MenuItem \| "separator")[], at?: Element \| { x: number; y: number }): Promise<unknown>`                                                                                             | Textus's own menu over the page, for a right-click or a dropdown, under `at` (an element) or at a point of the page. Resolves to the chosen item's value (its label without one), or null when the menu is closed without a choice. A page draws no menu of its own. |

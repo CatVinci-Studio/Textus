@@ -62,6 +62,33 @@ test("brought back to the top, the document's first block shows below the format
   await expect
     .poll(async () => (await doc(page).locator("> *").first().boundingBox())!.y)
     .toBeGreaterThanOrEqual(barBox!.y + barBox!.height);
+
+  // Its scrollbar too: the scroller starts where the bar ends.
+  const scroller = await page
+    .locator(".split-pane:has(> .format-bar) .editor-scroll")
+    .boundingBox();
+  expect(scroller!.y).toBeGreaterThanOrEqual(barBox!.y + barBox!.height);
+
+  // A short new document, the wheel turned: nothing to scroll it under.
+  await emit(page, "menu-new-file");
+  await doc(page).click();
+  await page.keyboard.type("one line");
+  await page.mouse.wheel(0, 200);
+  await page.waitForTimeout(300);
+  expect(
+    (await doc(page).locator("> *").first().boundingBox())!.y,
+  ).toBeGreaterThanOrEqual(barBox!.y + barBox!.height);
+});
+
+test("in typewriter mode too, a document's first line starts below the format bar", async ({
+  page,
+}) => {
+  await openApp(page, { settings: { typewriterMode: true } });
+  await doc(page).click();
+  await page.keyboard.type("first line");
+  const barBox = (await bar(page).boundingBox())!;
+  const first = (await doc(page).locator("> *").first().boundingBox())!;
+  expect(first.y).toBeGreaterThanOrEqual(barBox.y + barBox.height);
 });
 
 test("View › Format Bar puts the bar on a side of the sheet, the text beside it, or hides it", async ({

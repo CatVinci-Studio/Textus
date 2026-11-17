@@ -32,6 +32,8 @@
   ; The template writes the ProgID's command with the path unquoted, which
   ; breaks in a folder with a space in its name.
   WriteRegStr HKCU "Software\Classes\${TEXTUS_PROGID}\shell\open\command" "" '"$INSTDIR\${MAINBINARYNAME}.exe" "%1"'
+  ; A document's own icon (paper and quill), not the app's.
+  WriteRegStr HKCU "Software\Classes\${TEXTUS_PROGID}\DefaultIcon" "" '"$INSTDIR\doc.ico"'
 
   WriteRegStr HKCU "${TEXTUS_APPKEY}" "FriendlyAppName" "${PRODUCTNAME}"
   WriteRegStr HKCU "${TEXTUS_APPKEY}\shell\open\command" "" '"$INSTDIR\${MAINBINARYNAME}.exe" "%1"'

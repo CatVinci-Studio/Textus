@@ -16,7 +16,12 @@ interface DragHandlers {
  *  `started`: already a drag (one handed over mid-move), from the first
  *  move on. Returns the handle that ends it, dropping nothing. */
 export function trackDrag(
-  down: { button: number; clientX: number; clientY: number },
+  down: {
+    button: number;
+    clientX: number;
+    clientY: number;
+    target?: EventTarget | null;
+  },
   handlers: DragHandlers,
   { started = false }: { started?: boolean } = {},
 ): { cancel: () => void } {
@@ -26,7 +31,18 @@ export function trackDrag(
   const last = { ...from };
   let dragging = started;
   let done = false;
-  const move = (e: PointerEvent) => {
+  // A finger's events stay with the node it pressed, also once that node
+  // leaves the page (a pulled tab's pill): they no longer reach the window.
+  const origin = down.target instanceof Node ? down.target : null;
+  const heard = new WeakSet<Event>();
+  const once =
+    <E extends Event>(handle: (e: E) => void) =>
+    (e: E) => {
+      if (heard.has(e)) return;
+      heard.add(e);
+      handle(e);
+    };
+  const move = once((e: PointerEvent) => {
     // A release WebView2 never told: the buttons are up.
     if (e.buttons === 0) return finish(e.clientX, e.clientY, true, e);
     last.x = e.clientX;
@@ -39,21 +55,36 @@ export function trackDrag(
     }
     e.preventDefault();
     handlers.move(e.clientX, e.clientY, e);
-  };
+  });
+  // Nor does the web view pan under a drag whose node is gone.
+  const hold = (e: Event) => dragging && e.cancelable && e.preventDefault();
   const finish = (x: number, y: number, dropped: boolean, e?: PointerEvent) => {
     if (done) return;
     done = true;
     window.removeEventListener("pointermove", move);
     window.removeEventListener("pointerup", up);
     window.removeEventListener("pointercancel", cancel);
+    window.removeEventListener("pointerdown", pressed, true);
+    for (const [type, fn] of onOrigin) origin?.removeEventListener(type, fn);
     window.removeEventListener("keydown", key, true);
     window.removeEventListener("contextmenu", noMenu, true);
     if (!dragging) return;
     handlers.end(x, y, dropped, e);
     swallowClick();
   };
-  const up = (e: PointerEvent) => finish(e.clientX, e.clientY, true, e);
-  const cancel = (e: PointerEvent) => finish(e.clientX, e.clientY, false, e);
+  const up = once((e: PointerEvent) => finish(e.clientX, e.clientY, true, e));
+  const cancel = once((e: PointerEvent) =>
+    finish(e.clientX, e.clientY, false, e),
+  );
+  // A new press while this one is still followed: its release went
+  // unheard, and the drag ends where it was, dropping nothing.
+  const pressed = (e: PointerEvent) => finish(last.x, last.y, false, e);
+  const onOrigin = [
+    ["pointermove", move],
+    ["pointerup", up],
+    ["pointercancel", cancel],
+    ["touchmove", hold],
+  ] as [string, EventListener][];
   const key = (e: KeyboardEvent) => {
     if (e.key !== "Escape" || !dragging) return;
     e.preventDefault();
@@ -66,6 +97,9 @@ export function trackDrag(
   window.addEventListener("pointermove", move);
   window.addEventListener("pointerup", up);
   window.addEventListener("pointercancel", cancel);
+  window.addEventListener("pointerdown", pressed, true);
+  for (const [type, fn] of onOrigin)
+    origin?.addEventListener(type, fn, { passive: false });
   window.addEventListener("keydown", key, true);
   return { cancel: () => finish(last.x, last.y, false) };
 }

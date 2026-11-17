@@ -74,7 +74,7 @@ export function useEditorPopups({
   tour: TourAi | null;
   t: Strings;
 }) {
-  const { run, inlineChat } = setup;
+  const { run, inlineChat, tabId } = setup;
   const [menu, setMenu] = useState<EditorMenuState>(null);
   const [tableDialogOpen, setTableDialogOpen] = useState(false);
 
@@ -89,7 +89,10 @@ export function useEditorPopups({
     else if (Date.now() - lastTouchRef.current < 800)
       requestAnimationFrame(onGrammarCaret);
   };
-  const findReplace = useFindReplace(pmFind(run));
+  const findReplace = useFindReplace(pmFind(run), {
+    tabId,
+    ready: run(() => true) === true,
+  });
   useTextusAiOff(run, settings.textusAi, {
     quickAsk: inlineChat.hide,
     grammarCard: grammar.hide,

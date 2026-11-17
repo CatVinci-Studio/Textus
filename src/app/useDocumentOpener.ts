@@ -42,7 +42,7 @@ export function useDocumentOpener(
       if (offered === "on") await openPathInTab(path);
       // The card's "Open with system app" was the user's say-so.
       if (offered === "system") await exportDoc.openLinkedFile(path);
-      if (offered !== "none") return;
+      if (offered !== "none" && offered !== "muted") return;
       const open = await showConfirm(
         fill(t.linkOpenFileConfirm, { name: basename(path) }),
         { okLabel: t.linkOpenFileOk, cancelLabel: t.cancel },

@@ -1230,6 +1230,8 @@ export function installDevTauriShim(): void {
           ? atob(String(args.contents))
           : String(args.contents);
         return Promise.resolve(null);
+      case "plugin_http_cancel":
+        return Promise.resolve(null);
       case "plugin_http": {
         const request = args.request as {
           url: string;

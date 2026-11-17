@@ -7,7 +7,8 @@ import { mixedDoc, plainDoc, type LargeDoc } from "./large-docs";
 
 // The large-document benchmark: measures opening, memory, typing, scrolling,
 // saving and tab switching per generated document. Asserts nothing about the
-// numbers. Env: PERF_DOCS, PERF_CHARS (default 200), PERF_LABEL.
+// numbers. Env: PERF_DOCS, PERF_CHARS (default 200), PERF_LABEL,
+// PERF_CPU_THROTTLE, PERF_SMOOTH_CARET.
 
 const here = dirname(fileURLToPath(import.meta.url));
 const root = join(here, "..", "..");
@@ -556,9 +557,20 @@ for (const doc of docs) {
       route.fulfill({ contentType: "image/png", body: PNG }),
     );
     await page.addInitScript(installProbes);
+    // PERF_CPU_THROTTLE=4: about a one-core, slow machine.
+    const slow = Number(process.env.PERF_CPU_THROTTLE);
+    if (slow > 1 && browserName === "chromium") {
+      const cpu = await page.context().newCDPSession(page);
+      await cpu.send("Emulation.setCPUThrottlingRate", { rate: slow });
+    }
     // Tabs, not windows: the tab switch below needs two in one window.
     await openApp(page, {
-      settings: { language: "en", newDocumentMode: "tab" },
+      settings: {
+        language: "en",
+        newDocumentMode: "tab",
+        // PERF_SMOOTH_CARET=1: the typing measured with the drawn caret.
+        smoothCaret: !!process.env.PERF_SMOOTH_CARET,
+      },
     });
     const path = `/bench/${doc.name}.md`;
 

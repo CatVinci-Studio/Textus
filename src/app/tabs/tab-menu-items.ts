@@ -4,7 +4,7 @@ import { tabReadOnly } from "../../document/read-only";
 import { pathItems } from "../../clipboard/copy-path";
 import { windowFolder } from "../../platform/window-folder";
 import { isWithin } from "../../files/tree-root";
-import { SHOW_SIDEBAR_TAB_EVENT } from "../../utils/events";
+import { SHOW_SIDEBAR_TAB_EVENT, sendAppEvent } from "../../utils/events";
 import type { Strings } from "../../i18n/strings";
 
 /** A document tab's menu items beyond Open Beside and Close: its path,
@@ -52,9 +52,7 @@ export function tabMenuItems({
   };
   const revealInTree = (id: string) => {
     onActivate(id);
-    window.dispatchEvent(
-      new CustomEvent(SHOW_SIDEBAR_TAB_EVENT, { detail: "tree" }),
-    );
+    sendAppEvent(SHOW_SIDEBAR_TAB_EVENT, "tree");
     // Once the tree has opened down to it.
     requestAnimationFrame(() =>
       requestAnimationFrame(() =>

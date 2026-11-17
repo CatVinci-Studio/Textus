@@ -4,8 +4,9 @@ import { memoryLimits, onMemoryLevel } from "./memory-policy";
 /**
  * Views that are heavy to keep (a web page's WebKit process, a plugin's
  * page) and cheap to load again: one out of sight for `hiddenMs` is let
- * go, and no more than `max` of a kind stay loaded, the longest unseen
- * going first. Shown again, it loads afresh. Both follow the machine's
+ * go, and no more than `max` of a kind stay loaded out of sight, the
+ * longest unseen going first: a split showing several is no reason to let
+ * go of the rest. Shown again, it loads afresh. Both follow the machine's
  * memory (memory-policy.ts) unless a kind sets its own.
  */
 
@@ -22,7 +23,7 @@ function trim(kept: Map<object, Kept>, keep: number): void {
   const hidden = [...kept.values()]
     .filter((k) => !k.visible)
     .sort((a, b) => a.seen - b.seen);
-  while (kept.size > keep && hidden.length) hidden.shift()!.unload();
+  while (hidden.length > keep) hidden.shift()!.unload();
 }
 
 // Memory got short: what no longer fits goes now, not at its timer.
@@ -80,6 +81,7 @@ export function keepLoaded(
         later,
         options.hiddenMs ?? memoryLimits().hiddenMs,
       );
+      if (kept.has(key)) trim(kept, options.max ?? memoryLimits().keep);
     },
     drop() {
       clearTimeout(timer);

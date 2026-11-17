@@ -18,6 +18,8 @@ import {
 } from "../../engine/layout/drop-zones";
 import "./split-drop.css";
 import { transientStyle } from "../../engine/tokens/appearance";
+import type { NoRoom } from "../../engine/frame/frame-store";
+import { sayNoRoom } from "../menu/split-here";
 
 /**
  * The layout once `tabId` is dropped at `target`: on an island's edge, in a
@@ -39,10 +41,12 @@ export function dropPlan(
   now: SplitLayout,
   tabId: string,
   target: DropTarget,
-): { next: SplitLayout | null | undefined; noRoom: boolean } {
-  const none = { next: undefined, noRoom: false };
+): { next: SplitLayout | null | undefined; noRoom: NoRoom } {
+  const none = { next: undefined, noRoom: false as const };
   if (target.whole && target.zone !== "center") {
     const { next, noRoom } = withRoom(splitOff(now, tabId, null, target.zone));
+    // No room beside them all: as on the edge of the island under it.
+    if (noRoom) return dropPlan(now, tabId, { ...target, whole: false });
     return { next: next ?? undefined, noRoom };
   }
   const pane = paneOf(now, target.tabId);
@@ -73,8 +77,16 @@ export function splitForDrop(
   arriving = false,
 ): void {
   if (arriving)
-    placeOnArrival(tabId, (now) => dropLayout(now, tabId, target) ?? now);
-  else commitDrop(dropLayout(windowLayout(), tabId, target));
+    placeOnArrival(tabId, (now) => {
+      const { next, noRoom } = dropPlan(now, tabId, target);
+      sayNoRoom(noRoom);
+      return next ?? now;
+    });
+  else {
+    const { next, noRoom } = dropPlan(windowLayout(), tabId, target);
+    sayNoRoom(noRoom);
+    commitDrop(next);
+  }
 }
 
 /** The tab something on its way in stands as, in the preview of where it

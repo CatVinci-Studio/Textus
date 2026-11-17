@@ -118,6 +118,16 @@ Skills liegen im Ordner skills/ neben dieser Datei, je Skill eine
   codeBlockEditSource: "Quelltext bearbeiten",
   codeBlockDone: "Bearbeitung beenden",
   codeBlockDelete: "Block löschen",
+  blockText: "Text",
+  blockCallout: "Hinweis",
+  blockHandleAdd: "Block darunter einfügen",
+  blockHandleOptions: "Ziehen zum Verschieben, Klicken für Optionen",
+  blockTurnInto: "Umwandeln in",
+  blockDuplicate: "Duplizieren",
+  blockHandlesLabel: "Block-Griffe",
+  blockHandlesHelp:
+    "＋ und ⋮⋮ neben dem Block unter dem Zeiger: einen Block einfügen, ihn verschieben oder in eine andere Art umwandeln.",
+  smoothCaretLabel: "Fließender Cursor",
   menuBlockWide: "Breit anzeigen",
   menuBlockZoom: "Größe",
   diagramViewerLabel: "Diagramm",
@@ -159,6 +169,8 @@ Skills liegen im Ordner skills/ neben dieser Datei, je Skill eine
   revisionDisplayInline: "Alles im Text",
   revisionDisplayOriginal: "Original im Text, Änderungen am Rand",
   revisionDisplayFinal: "Nur das Ergebnis, Original am Rand",
+  splitNoRoomLow:
+    "Kein Platz für eine weitere Teilung: Das Fenster ist zu niedrig. Blende die Tastatur aus oder mach das Fenster höher.",
   splitNoRoom:
     "Kein Platz für eine weitere Teilung: Das Fenster ist zu schmal. Verbreitern Sie es oder schließen Sie eine Teilung.",
   revisionDisplayNoRoom:
@@ -642,6 +654,8 @@ Skills liegen im Ordner skills/ neben dieser Datei, je Skill eine
     "Der Plugin-Store braucht eine neuere Textus-Version. Aktualisiere Textus, um ihn zu sehen.",
   errorImageTooBig: "Das Bild ist leer oder größer als 25 MB.",
   errorNoFolder: "Öffne zuerst einen Ordner.",
+  errorPluginsNeedAllFiles:
+    "Plugins können diesen Ordner nicht lesen: Textus hat keinen Zugriff auf alle Dateien. Öffne den Ordner erneut und wähle „Weiter“.",
   errorPdfUnsupported: "PDF-Export ist auf diesem System nicht verfügbar.",
   errorNoText: "Es enthält keinen lesbaren Text.",
   errorUnreadable: "Diese Datei kann nicht gelesen werden.",
@@ -931,6 +945,12 @@ Skills liegen im Ordner skills/ neben dieser Datei, je Skill eine
   agentSend: "Senden",
   agentStop: "Stoppen",
   agentRetry: "Erneut versuchen",
+  agentForgotStart:
+    "Dieses Gespräch ist lang: Seine ersten Nachrichten gehen nicht mehr an das Modell. Für einen Neuanfang ein neues Gespräch beginnen.",
+  revisionsNotKept:
+    "Änderungen, die auf Ihre Entscheidung warten, konnten nicht gespeichert werden. Nehmen Sie sie an oder lehnen Sie sie ab, bevor Sie das Dokument schließen, sonst gehen sie verloren.",
+  settingsNotSaved:
+    "Einstellungen und Fensterzustand können gerade nicht gespeichert werden: Änderungen gelten nur, bis Textus beendet wird.",
   agentNeedsFolder:
     "Öffne zuerst einen Ordner oder speichere das Dokument: Der Agent arbeitet in einem Ordner.",
   agentStopped: "{agent} wurde beendet.",
@@ -1456,6 +1476,8 @@ Skills liegen im Ordner skills/ neben dieser Datei, je Skill eine
   wordImportDismiss: "Verstanden",
   openFileFailed:
     "{name} lässt sich nicht öffnen: Es ist kein Textdokument, und kein Plugin öffnet solche Dateien.",
+  openFileMuted:
+    "Textus kann {name} nicht selbst öffnen. Den Vorschlag des Plugins, das sie öffnet, hast du ausgeblendet; unter Einstellungen › {page} erscheint er wieder.",
   openFileGone:
     "{name} lässt sich nicht öffnen: Die Datei ist nicht mehr da. Sie wurde vielleicht verschoben, umbenannt oder gelöscht.",
   wordImportFailed: "{name} konnte nicht geöffnet werden.",
@@ -1578,7 +1600,7 @@ Skills liegen im Ordner skills/ neben dieser Datei, je Skill eine
   themeNamePaper: "Papier",
   themeNameSlate: "Schiefer",
   themeNameForest: "Wald",
-  themeNameAurora: "Polarlicht",
+  themeNamePrism: "Prisma",
   appearanceLabel: "Erscheinungsbild",
   appearanceModeLabel: "Hell oder dunkel",
   appearanceSystem: "System",
@@ -1910,4 +1932,10 @@ Skills liegen im Ordner skills/ neben dieser Datei, je Skill eine
   shortcutOutdentListItem: "Listenelement ausrücken",
   pluginKeyTaken:
     "{name}: {key} gehört zu „{owner}“ und wurde „{command}“ daher nicht zugewiesen. Lege unter Einstellungen › Tastenkürzel eine andere Taste fest.",
+  gitTrustTitle: "Darf Git die eigenen Programme dieses Repositorys ausführen?",
+  gitTrustText:
+    "Das Git-Repository dieses Ordners ist so eingerichtet, dass es Programme auf deinem Computer ausführt ({what}). Bei einem selbst eingerichteten Repository ist das üblich. Stammt der Ordner von jemand anderem, erlaube es nur, wenn du dieser Person vertraust.",
+  gitTrustAllow: "Diesem Repository vertrauen",
+  gitTrustRefused:
+    "Git wird hier nicht verwendet: Dem Repository wird nicht vertraut.",
 } satisfies Translation;

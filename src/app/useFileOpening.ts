@@ -14,7 +14,7 @@ import {
   type DocTab,
 } from "../document/doc-tabs";
 import { exportDoc, fs, session, windowIpc } from "../platform/ipc";
-import { DROP_IMAGE_FILES_EVENT } from "../utils/events";
+import { DROP_IMAGE_FILES_EVENT, sendAppEvent } from "../utils/events";
 import { openDocument } from "../utils/open-document";
 import { useDocumentOpener } from "./useDocumentOpener";
 import { setTabJump, type TabJump } from "../editor/tab-jump";
@@ -60,6 +60,9 @@ export interface OpenOptions {
   /** In a tab of its own (the default), beside the tab in front, or in
    *  its place. */
   where?: Where;
+  /** A plugin asked for `where`: a window with no room for it just opens
+   *  a tab, saying nothing. */
+  byPlugin?: boolean;
   /** Dropped over the documents: opens on that side. */
   drop?: DropTarget;
   /** A single click to look: in the preview tab (DocTab.preview). */
@@ -150,6 +153,8 @@ export function useFileOpening(opts: {
         const offered = await offerPluginToOpen(path, t);
         const now = offered === "on" ? customEditorFor(path) : null;
         if (now) return pluginTab(path, now, place);
+        // Another file tapped since: that one is opening instead.
+        if (offered === "dropped") return null;
         if (offered === "system") {
           await exportDoc.openLinkedFile(path);
           return null;
@@ -211,8 +216,10 @@ export function useFileOpening(opts: {
         // update: never drawn first in front where it doesn't stay.
         const arriving = !tabsRef.current.some((tab) => tab.id === id);
         if (open.where === "beside") {
-          if (arriving) placeOnArrival(id, (now) => besideOrSay(now, id, from));
-          else openBesideOrSay(id, from);
+          const say = !open.byPlugin;
+          if (arriving)
+            placeOnArrival(id, (now) => besideOrSay(now, id, from, say));
+          else openBesideOrSay(id, from, say);
         } else if (drop) splitForDrop(id, drop, arriving);
       };
       const existing = tabsRef.current.find(
@@ -436,18 +443,14 @@ export function useFileDrop(
     }>("tauri://drag-drop", async (event) => {
       const { documents, images } = sortDroppedPaths(event.payload.paths);
       if (images.length > 0)
-        window.dispatchEvent(
-          new CustomEvent(DROP_IMAGE_FILES_EVENT, {
-            detail: {
-              paths: images,
-              point: dropPointInPage(
-                event.payload.position,
-                isWindowsPlatform(),
-                window.devicePixelRatio,
-              ),
-            },
-          }),
-        );
+        sendAppEvent(DROP_IMAGE_FILES_EVENT, {
+          paths: images,
+          point: dropPointInPage(
+            event.payload.position,
+            isWindowsPlatform(),
+            window.devicePixelRatio,
+          ),
+        });
       // What can't be read as text is a folder, opened in the sidebar, or a
       // file that opens nothing, as in File > Open. Only the first may take
       // an untouched draft's place.

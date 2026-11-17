@@ -183,19 +183,33 @@
     });
   }
 
-  function settle(root) {
-    translate(root);
-    rovingAll(root);
+  function settle(roots) {
+    roots.forEach(function (root) {
+      translate(root);
+      rovingAll(root);
+    });
     fitAll(document);
   }
   function watch() {
-    settle(document);
+    settle([document]);
+    // Each parent once, however many children it was given.
     new MutationObserver(function (records) {
+      var roots = new Set();
       records.forEach(function (record) {
         record.addedNodes.forEach(function (node) {
-          if (node.nodeType === 1) settle(node.parentElement || node);
+          if (node.nodeType === 1) roots.add(node.parentElement || node);
         });
       });
+      // A parent inside another one is read with it.
+      var outer = [];
+      roots.forEach(function (root) {
+        var inside = false;
+        roots.forEach(function (other) {
+          if (other !== root && other.contains(root)) inside = true;
+        });
+        if (!inside) outer.push(root);
+      });
+      if (outer.length) settle(outer);
     }).observe(document.body, { childList: true, subtree: true });
     if (document.fonts) document.fonts.ready.then(fitAll.bind(null, document));
   }

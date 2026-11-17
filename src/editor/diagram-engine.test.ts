@@ -138,26 +138,6 @@ describe("diagramRenderer", () => {
       securityLevel: "strict",
     });
   });
-
-  it("draws a light pass in the grey palette", async () => {
-    const draw = diagramRenderer("mermaid", { width: 500, dark: false });
-    await draw(FLOW, "d1");
-    expect(mermaid.initialize.mock.calls[0][0]).toMatchObject({
-      theme: "neutral",
-    });
-  });
-
-  it("draws in the palette the page's --doc-mermaid-theme names", async () => {
-    document.body.style.setProperty("--doc-mermaid-theme", "forest");
-    try {
-      await diagramRenderer("mermaid", { width: 500 })(FLOW, "d1");
-      expect(mermaid.initialize.mock.calls[0][0]).toMatchObject({
-        theme: "forest",
-      });
-    } finally {
-      document.body.style.removeProperty("--doc-mermaid-theme");
-    }
-  });
 });
 
 describe("mermaidTheme", () => {

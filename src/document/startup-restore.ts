@@ -96,27 +96,29 @@ async function keptTab(
 }
 
 /** The drafts of tabs a reload gave new ids, kept under the new ones before
- *  the old go, so a draft dropped since doesn't come back next launch. */
-async function moveDrafts(
+ *  the old go, so a draft dropped since doesn't come back next launch. An
+ *  old one whose new copy couldn't be written stays: it is the only one. */
+export async function moveDrafts(
   kept: KeptTab[],
   newId: (i: number) => string | undefined,
 ): Promise<void> {
   await Promise.all(
-    kept.map((tab, i) => {
+    kept.map(async (tab, i) => {
       const id = newId(i);
-      return id && tab.text && tab.text.content !== tab.text.savedContent
-        ? drafts.saveDraftSnapshot(
+      try {
+        if (id && tab.text && tab.text.content !== tab.text.savedContent)
+          await drafts.saveDraftSnapshot(
             id,
             tab.path,
             tab.text.content,
             tab.text.diskMtime,
-          )
-        : null;
+          );
+        if (tab.id) await drafts.clearDraftSnapshot(tab.id);
+      } catch {
+        /* Kept as it was; the next launch tries again. */
+      }
     }),
-  ).catch(() => {});
-  await Promise.all(
-    kept.map((tab) => tab.id && drafts.clearDraftSnapshot(tab.id)),
-  ).catch(() => {});
+  );
 }
 
 /**
@@ -149,7 +151,7 @@ export function useStartupRestore(options: StartupRestoreOptions): void {
     void (async () => {
       // The page reloaded: the window gets back what it had. Everything
       // below was handed out at its first start.
-      const kept = readKeptTabs();
+      const kept = await readKeptTabs();
       if (kept) {
         opts.stopTutorial();
         const docs = await Promise.all(
@@ -242,7 +244,8 @@ export function useStartupRestore(options: StartupRestoreOptions): void {
             ),
           )
             .then(() => drafts.finishDraftRestore())
-            .catch(() => undefined)
+            // Offered again next launch, the same drafts: say why.
+            .catch((err: unknown) => console.error("[drafts] restore:", err))
         : Promise.resolve();
       // A Help doc clicked with no window open: this window was spawned to
       // show it in the blank tab. "welcome" starts the tutorial there.
@@ -282,7 +285,7 @@ export function useStartupRestore(options: StartupRestoreOptions): void {
             ),
           )
           .then(() => drafts.clearDraftSnapshot(recovered.id))
-          .catch(() => undefined);
+          .catch((err: unknown) => console.error("[drafts] recover:", err));
         loadIntoInitialTab({
           path: recovered.path,
           content: recovered.content,

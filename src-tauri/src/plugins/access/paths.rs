@@ -98,7 +98,7 @@ pub(crate) fn read_only_hidden(root: &str, path: &str) -> bool {
 /// (store/hidden-files.ts).
 static NEVER_HIDDEN: std::sync::LazyLock<regex::Regex> = std::sync::LazyLock::new(|| {
     regex::Regex::new(
-        r"(?i)^(?:\.git|\.ssh|\.aws|\.gnupg|\.docker|\.kube|\.textus|\.env.*|\.netrc|\.npmrc|\.pypirc|\.pgpass|\.htpasswd|credentials.*|.*\.(?:pem|key|p12|pfx))$",
+        r"(?i)^(?:\.git|\.git-credentials|\.ssh|\.aws|\.gnupg|\.docker|\.kube|\.config|\.textus|\.env.*|\.netrc|\.npmrc|\.pypirc|\.pgpass|\.htpasswd|\.vault-token|\.terraformrc|.*_history|\.?mcp\.json|credentials.*|.*\.(?:pem|key|p12|pfx))$",
     )
     .expect("a valid pattern")
 });

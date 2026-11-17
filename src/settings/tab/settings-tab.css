@@ -91,9 +91,11 @@
   cursor: pointer;
 }
 
-.settings-about-links > button:hover,
-.settings-about-sponsor:hover {
-  color: var(--ui-text);
+@media (hover: hover) {
+  .settings-about-links > button:hover,
+  .settings-about-sponsor:hover {
+    color: var(--ui-text);
+  }
 }
 
 /* The update button at the card's end, its answer under the card's text. */

@@ -9,14 +9,28 @@ const flushers = new Set<() => void>();
  *  window from closing. */
 const FLUSH_TIMEOUT_MS = 2000;
 
-/** Remembers a storage write until it settles. Returns the same promise. */
+const failedListeners = new Set<(error: unknown) => void>();
+
+/** Remembers a storage write until it settles. Returns the same promise;
+ *  one that fails is told to `onWriteFailed` as well as to its caller. */
 export function trackWrite<T>(write: Promise<T>): Promise<T> {
   inFlight.add(write);
   const done = () => {
     inFlight.delete(write);
   };
-  write.then(done, done);
+  write.then(done, (error: unknown) => {
+    done();
+    console.error("[storage] write failed:", error);
+    for (const listener of failedListeners) listener(error);
+  });
   return write;
+}
+
+/** Told of each storage write that failed: what was changed lasts only
+ *  this session. Returns the unregister. */
+export function onWriteFailed(listener: (error: unknown) => void): () => void {
+  failedListeners.add(listener);
+  return () => failedListeners.delete(listener);
 }
 
 /** Registers something to send right away when the window is about to go:

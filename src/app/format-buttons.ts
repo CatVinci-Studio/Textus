@@ -20,6 +20,7 @@ import {
   INSERT_LINK_EVENT,
   TOGGLE_BLOCK_EVENT,
   TOGGLE_MARK_EVENT,
+  type TextEventName,
 } from "../utils/events";
 
 /** A format bar button: the menu event it sends, and whether it is on at
@@ -30,7 +31,7 @@ export interface Button {
   /** Drawn as an icon, or as short words (an image's width). */
   Icon?: ComponentType<{ className?: string }>;
   text?: (t: Strings) => string;
-  event: string;
+  event: TextEventName;
   detail?: string;
   on?: (block: CaretBlock) => boolean;
   /** Opens a choice of levels rather than acting at once. */

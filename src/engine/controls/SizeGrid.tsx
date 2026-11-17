@@ -150,6 +150,8 @@ export function SizeGrid(p: SizeGridProps) {
         style={{ gridTemplateColumns: `repeat(${shown.cols}, auto)` }}
         onKeyDown={keys}
         onPointerDown={(e) => {
+          // A right or middle press opens nothing and picks nothing.
+          if (e.button !== 0) return;
           e.currentTarget.setPointerCapture(e.pointerId);
           const size = cellAt(e);
           if (size) setAt(size);
