@@ -128,15 +128,18 @@ function useEditorPushes(
   // sends that want it share it (refreshContext).
   const contextWaiter = useRef<((context: ChatContext) => void) | null>(null);
 
-  const applyContext = useCallback((incoming: ChatContext) => {
-    // The push doubles as "this editor is the one talking now", so the reply
-    // address moves with the document.
-    if (incoming.editorLabel) editorLabel.current = incoming.editorLabel;
-    setContext(incoming);
-    const waiter = contextWaiter.current;
-    contextWaiter.current = null;
-    waiter?.(incoming);
-  }, [editorLabel, setContext]);
+  const applyContext = useCallback(
+    (incoming: ChatContext) => {
+      // The push doubles as "this editor is the one talking now", so the reply
+      // address moves with the document.
+      if (incoming.editorLabel) editorLabel.current = incoming.editorLabel;
+      setContext(incoming);
+      const waiter = contextWaiter.current;
+      contextWaiter.current = null;
+      waiter?.(incoming);
+    },
+    [editorLabel, setContext],
+  );
 
   useEffect(() => {
     return unlistenAll(
