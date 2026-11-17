@@ -108,8 +108,8 @@ export function useSaveTabs(opts: {
   );
 
   // A draft's first file, or a document's new one: written, its images
-  // brought along, and the tab pointed at it. tabsRef is patched too, so an
-  // autosave right behind this one sees the path and doesn't save it again.
+  // brought along, and the tab pointed at it. The model has the path at
+  // once, so an autosave right behind this one doesn't save it again.
   const adoptFile = useCallback(
     async (tab: DocTab, picked: string, auto: boolean): Promise<boolean> => {
       // Saved over a file already there: not a new one to plugins.

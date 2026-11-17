@@ -4,7 +4,7 @@ import type { Node as ProseNode } from "@milkdown/kit/prose/model";
 import { Plugin, PluginKey, type EditorState } from "@milkdown/kit/prose/state";
 import { Decoration, DecorationSet } from "@milkdown/kit/prose/view";
 import { $prose } from "@milkdown/kit/utils";
-import { createDebouncedTask } from "./debounced-task";
+import { createDebouncedTask } from "../../utils/debounced-task";
 import { scalarToUtf16Offset, textOffsetToDocPos } from "../doc-text";
 import { pausesFeatures } from "../../editor/large-doc";
 import type { FoldAttention } from "../../editor/html/details-fold";

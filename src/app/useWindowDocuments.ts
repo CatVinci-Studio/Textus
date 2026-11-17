@@ -172,6 +172,7 @@ export function useWindowDocuments({
   });
   const flushAutosave = useAutosave({
     tabs,
+    tabsRef: tabState.tabsRef,
     activeTabId,
     enabled: settings.autosave,
     untitledToFile: openFolder.folder !== null,

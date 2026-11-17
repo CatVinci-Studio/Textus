@@ -1,5 +1,5 @@
-/// Debounces an AI request behind typing, and lets the response be dropped
-/// if a newer keystroke scheduled another while it was in flight.
+/// Runs work after a pause in typing; a later call supersedes an earlier one,
+/// even one already running.
 export function createDebouncedTask(delayMs: number) {
   let timer: ReturnType<typeof setTimeout> | undefined;
   let seq = 0;

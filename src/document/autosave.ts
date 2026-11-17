@@ -77,6 +77,9 @@ export function autosaveWants(
  */
 export function useAutosave(opts: {
   tabs: DocTab[];
+  /** The window's tabs as they are now, not as of the last render: a save
+   *  that just gave a draft its path is seen by the next autosave. */
+  tabsRef: { readonly current: readonly DocTab[] };
   activeTabId: string;
   enabled: boolean;
   /** A folder is open, so untitled drafts get files in it. */
@@ -85,13 +88,11 @@ export function useAutosave(opts: {
   practiceTabId?: string | null;
   autosaveTab: (tabId: string) => Promise<SaveOutcome>;
 }): (ids?: string[]) => Promise<void> {
-  const { tabs, activeTabId, enabled, autosaveTab } = opts;
+  const { tabs, tabsRef, activeTabId, enabled, autosaveTab } = opts;
   const untitledToFile = opts.untitledToFile ?? false;
   const practiceTabId = opts.practiceTabId ?? null;
   const draftsRef = useRef<DraftRule>(KEEP_DRAFTS);
   draftsRef.current = { toFile: untitledToFile, practiceTabId };
-  const tabsRef = useRef(tabs);
-  tabsRef.current = tabs;
   const enabledRef = useRef(enabled);
   enabledRef.current = enabled;
   const saveRef = useRef(autosaveTab);
@@ -144,7 +145,7 @@ export function useAutosave(opts: {
       });
       return next;
     },
-    [timers, untitledTimers],
+    [timers, untitledTimers, tabsRef],
   );
 
   const flush = useCallback(
@@ -153,7 +154,7 @@ export function useAutosave(opts: {
       const targets = ids ?? tabsRef.current.map((tb) => tb.id);
       await Promise.all(targets.map((id) => saveNow(id)));
     },
-    [saveNow],
+    [saveNow, tabsRef],
   );
 
   useEffect(() => {
@@ -222,7 +223,7 @@ export function useAutosave(opts: {
       timers.cancelAll();
       untitledTimers.cancelAll();
     },
-    [timers, untitledTimers],
+    [timers, untitledTimers, tabsRef],
   );
 
   return flush;
