@@ -96,28 +96,9 @@ export function isEffectiveDark(themeMode: ThemeMode): boolean {
   return systemPrefersDark();
 }
 
-function useApplyAppearance(
-  settings: Settings,
-  setSettings: (patch: Partial<Settings>) => void,
-): void {
-  // Called from the theme effect only to fall back from a deleted theme;
-  // a ref, so a new function each render doesn't re-run that effect.
-  const setSettingsRef = useLatest(setSettings);
-  // "system" removes the attribute, so the prefers-color-scheme rules answer
-  // and an OS switch is followed live with no listener.
-  useEffect(() => {
-    const root = document.documentElement;
-    if (settings.theme === "system") {
-      root.removeAttribute("data-theme");
-    } else {
-      root.setAttribute("data-theme", settings.theme);
-    }
-    // Android's bar icons go light on a dark page (MainActivity).
-    androidBridge()?.setAppearance(settings.theme);
-    // iOS's keyboard takes the window's dark or light.
-    if (isIOSApp) iosFiles.appearance(settings.theme);
-  }, [settings.theme]);
-
+/** The page's layout, width, picture alignment and the reader's type,
+ *  set on <html>. */
+function usePageAttributes(settings: Settings): void {
   // The layout on <html> too: its lengths (layout-tokens.css) reach what
   // is drawn outside the window's shell - a lifted island, a menu.
   useEffect(() => {
@@ -192,6 +173,31 @@ function useApplyAppearance(
     settings.docLetterSpacing,
     settings.docLetterSpacingBy,
   ]);
+}
+
+function useApplyAppearance(
+  settings: Settings,
+  setSettings: (patch: Partial<Settings>) => void,
+): void {
+  // Called from the theme effect only to fall back from a deleted theme;
+  // a ref, so a new function each render doesn't re-run that effect.
+  const setSettingsRef = useLatest(setSettings);
+  // "system" removes the attribute, so the prefers-color-scheme rules answer
+  // and an OS switch is followed live with no listener.
+  useEffect(() => {
+    const root = document.documentElement;
+    if (settings.theme === "system") {
+      root.removeAttribute("data-theme");
+    } else {
+      root.setAttribute("data-theme", settings.theme);
+    }
+    // Android's bar icons go light on a dark page (MainActivity).
+    androidBridge()?.setAppearance(settings.theme);
+    // iOS's keyboard takes the window's dark or light.
+    if (isIOSApp) iosFiles.appearance(settings.theme);
+  }, [settings.theme]);
+
+  usePageAttributes(settings);
 
   // A factor on font sizes rather than CSS zoom on the panels: WebKit's zoom
   // leaves popovers and pointer coordinates in the unzoomed space.

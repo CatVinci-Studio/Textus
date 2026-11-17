@@ -47,7 +47,6 @@ const HOOKS_NOW = {
   "src/playground/useWebDocuments.ts useWebDocuments": 12,
   "src/plugins/views/usePluginListItems.ts usePluginListItems": 10,
   "src/settings/useSettingsSearch.ts useSettingsSearch": 10,
-  "src/theme/apply-appearance.ts useApplyAppearance": 9,
 };
 
 /** Not held to the line limit: tables, not logic. */
