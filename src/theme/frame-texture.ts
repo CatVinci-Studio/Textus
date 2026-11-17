@@ -2,7 +2,8 @@ import grainImage from "./frame-grain.png?inline";
 
 /** Matches FrameTexture in docs/dev/textus.d.ts. Plugins supply numbers,
  *  never URLs; the only image is this bundled, deterministic noise tile.
- *  Tile from Prism (ArcMD contributors), see LICENSE-frame-grain. */
+ *  Tile from Prism (ArcMD contributors), MIT: its notice ships in
+ *  public/THIRD_PARTY_NOTICES.txt. */
 export interface FrameTexture {
   opacity: number;
   color?: "black" | "white";

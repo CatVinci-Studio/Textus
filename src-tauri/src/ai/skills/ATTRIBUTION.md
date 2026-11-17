@@ -2,7 +2,7 @@
 
 The built-in skills (`*.md` in this folder) and the reference packs (`packs/*.md`) are written in our own words and distributed under the MIT licence, like the rest of the app. Rules from copyrighted standards, style guides and reference works are summarised, never copied, and those sources are named in each file's `textus-sources` line as a courtesy. Text from GPL, LGPL, AGPL, CC BY-NC(-ND), CC BY-SA and proprietary sources is not used.
 
-The parts listed below are adapted from openly licensed or reusable texts. Their licences ask for this attribution, which is also shown in Help > Acknowledgements.
+The parts listed below are adapted from openly licensed or reusable texts. Their licences ask for this attribution, which this file gives; each skill and pack also names its sources.
 
 ## Adapted texts
 

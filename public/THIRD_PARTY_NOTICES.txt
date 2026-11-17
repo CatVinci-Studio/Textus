@@ -1,3 +1,15 @@
+Third-party notices for Textus
+==============================
+
+Textus is distributed under the MIT License. It also includes the parts
+below, made by others, under their own licences.
+
+
+Frame grain tile (src/theme/frame-grain.png)
+--------------------------------------------
+
+From Prism, by the ArcMD contributors.
+
 MIT License
 
 Copyright (c) 2026 ArcMD contributors
