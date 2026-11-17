@@ -28,7 +28,6 @@
 /* The one divider: an inset hairline between adjacent rows of a card.
    Fragments flatten sections into direct children, so this covers them all. */
 .settings-group-body > * + *,
-.provider-picker > * + *,
 .tx-group > * + *,
 .settings-advanced-body > * + *,
 .settings-fold-body > *,

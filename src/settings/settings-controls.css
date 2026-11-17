@@ -149,17 +149,6 @@ button.settings-inline-button {
 
 /* ---- Label + control rows that aren't toggle rows ---- */
 
-/* As a row: short of room, the control goes under the label, from its
-   start (by the width it has, not the window's). */
-.settings-field {
-  display: flex;
-  flex-wrap: wrap;
-  align-items: center;
-  justify-content: space-between;
-  gap: 8px 16px;
-  padding: 12px 0;
-}
-
 /* Label on top, then the controls, then their note, for controls that need
    the row's width. */
 .settings-field-label {
