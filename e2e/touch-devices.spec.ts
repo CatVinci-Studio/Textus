@@ -109,6 +109,16 @@ test.describe("searching on a phone", () => {
       hasText: "the needle here",
     });
     await expect(hit).toBeInViewport();
+    // The caret in the found line, not at the end of the one before.
+    const at = await page.evaluate(
+      () =>
+        (
+          window as unknown as {
+            __pmView: { state: { selection: { $from: { parent: Node } } } };
+          }
+        ).__pmView.state.selection.$from.parent.textContent,
+    );
+    expect(at).toBe("the needle here");
   });
 });
 

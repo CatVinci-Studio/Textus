@@ -43,7 +43,9 @@ export function useTabJump(
             ctx,
             mountedValue.current,
             {
-              offset: lineOffset(mountedValue.current, onlyLine(jump.place)!),
+              // Its end: read up to its start, the caret would land at the
+              // end of the block before.
+              offset: lineEnd(mountedValue.current, onlyLine(jump.place)!),
               viewportY: null,
             },
             typewriterRef.current,
@@ -92,6 +94,13 @@ function onlyLine(place: DocumentPlace): number | null {
     !place.heading
     ? place.line
     : null;
+}
+
+/** Where 0-based line `line` ends in `text`, before its line break. */
+export function lineEnd(text: string, line: number): number {
+  const at = lineOffset(text, line);
+  const next = text.indexOf("\n", at);
+  return next < 0 ? text.length : next;
 }
 
 /** Where 0-based line `line` starts in `text`; its end past the last. */
