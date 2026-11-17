@@ -17,7 +17,6 @@ const LINES_NOW = {};
 /** Over the hook limit today: custom hooks that wire a window or an editor
  *  together, waiting to be split by concern. */
 const HOOKS_NOW = {
-  "src/ai/chat/useChatBodyState.ts useMessageQueue": 10,
   "src/ai/chat/window/useChatWindowBridge.ts useChatWindowBridge": 17,
   "src/ai/chat/window/useChatWindowHandoff.ts useChatWindowHandoff": 17,
   "src/ai/margin/useOwnRevisions.ts useOwnRevisions": 16,
