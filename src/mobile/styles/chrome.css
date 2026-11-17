@@ -326,11 +326,12 @@
   }
 
   /* Tabs keep their own width and the row scrolls, rather than all of
-     them squeezing down to unreadable stubs. */
+     them squeezing down to unreadable stubs. At its widest the name keeps
+     about 20 letters beside the ×'s fingertip box. */
   :root[data-window-chrome="mobile"] .tab-pill {
     flex-shrink: 0;
     min-width: 0;
-    max-width: 198px;
+    max-width: 216px;
     min-height: 40px;
     padding: 0 0 0 12px;
     gap: 0;
