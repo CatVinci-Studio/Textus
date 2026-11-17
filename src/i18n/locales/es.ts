@@ -102,7 +102,7 @@ para usar una.
 `,
   projectOpenStyle: "Abrir perfil de estilo",
   projectPickFolder: "Elegir carpeta…",
-  projectNoFolder: "No usar ninguna carpeta",
+  projectFollowSidebar: "Usar la carpeta de la barra lateral",
   projectReveal: "Mostrar en el gestor de archivos",
   projectLearnStyle: "Aprender mi estilo a partir de muestras…",
   projectImportReferences: "Importar referencias…",

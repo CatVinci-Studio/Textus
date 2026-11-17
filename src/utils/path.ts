@@ -67,6 +67,30 @@ function contentParent(url: string): string | null {
   return `${url.slice(0, at)}/document/${encodeURIComponent(id.slice(0, cut))}`;
 }
 
+const DOCUMENT = "/document/";
+
+/** An Android picked folder's entry `rel` ("inbox/a.md") below folder
+ *  `dir`: the folder's document id and the path under it, as its listing
+ *  spells them ("primary:Notes/inbox/a.md", "/" as %2F). */
+export function contentJoin(dir: string, rel: string): string {
+  const at = dir.indexOf(DOCUMENT);
+  const parts = rel.split(/[\\/]/).filter((p) => p !== "" && p !== ".");
+  if (at < 0 || !parts.length) return dir;
+  const id = decodeUrlPath(dir.slice(at + DOCUMENT.length)).replace(/\/$/, "");
+  const url = `${dir.slice(0, at)}${DOCUMENT}${encodeURIComponent(`${id}/${parts.join("/")}`)}`;
+  nameContentUrl(url, parts[parts.length - 1]!);
+  return url;
+}
+
+/** `path` as a path below Android picked folder `dir` ("inbox/a.md"); null
+ *  for one that isn't under it. */
+export function contentRelative(dir: string, path: string): string | null {
+  if (!contentInside(path, dir)) return null;
+  const id = (url: string) =>
+    decodeUrlPath(url.slice(url.indexOf(DOCUMENT) + DOCUMENT.length));
+  return id(path).slice(id(dir).replace(/\/$/, "").length + 1);
+}
+
 /** Whether `path` lies under `dir`, its "." and ".." walked first: a path
  *  climbing out with ".." is outside, however it starts. */
 export function isInside(path: string, dir: string): boolean {
@@ -93,6 +117,7 @@ function contentInside(path: string, dir: string): boolean {
   const inner = split(path);
   const outer = split(dir);
   if (!inner || !outer || inner.tree !== outer.tree) return false;
+  if (inner.id.split("/").includes("..")) return false;
   return inner.id.startsWith(
     outer.id.endsWith("/") ? outer.id : `${outer.id}/`,
   );
@@ -197,7 +222,9 @@ export function joinPath(dir: string, name: string): string {
  *  path, one typed in a terminal), written with `dir`'s separator and no
  *  leading "./", as the file tree has it; an absolute path as it is. */
 export function absoluteIn(dir: string, path: string): string {
-  if (/^([\\/]|[A-Za-z]:[\\/])/.test(path)) return path;
+  if (/^([\\/]|[A-Za-z]:[\\/])/.test(path) || path.startsWith("content://"))
+    return path;
+  if (dir.startsWith("content://")) return contentJoin(dir, path);
   const sep = dir.includes("\\") && !dir.includes("/") ? "\\" : "/";
   // On macOS and Linux a backslash is part of a name, not a separator.
   if (sep === "/") return joinPath(dir, path.replace(/^(\.\/)+/, ""));

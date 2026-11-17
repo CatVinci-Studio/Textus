@@ -127,7 +127,7 @@ El menú de la carpeta crea `.textus/` y sus archivos la primera vez que los pid
 - Escribir `@` en el cuadro de texto del chat adjunta uno de sus archivos a tu mensaje.
 - Su carpeta `.textus/` guarda el perfil de estilo, la biblioteca, las instrucciones de escritura y las habilidades de la carpeta.
 
-Haz clic derecho en el papel vacío de una pestaña de IA y elige **Memoria**: su fila superior muestra el nombre de la carpeta; haz clic en ella para abrir el **menú de la carpeta**. Si tu material de consulta no está junto al borrador, usa **Elegir carpeta…** en ese menú (o **Ajustes › Textus AI › Agente › Carpeta**). La carpeta que elijas se usa para todos los documentos, incluidos los borradores sin guardar, hasta que elijas **No usar ninguna carpeta**.
+Haz clic derecho en el papel vacío de una pestaña de IA y elige **Memoria**: su fila superior muestra el nombre de la carpeta; haz clic en ella para abrir el **menú de la carpeta**. Si tu material de consulta no está junto al borrador, usa **Elegir carpeta…** en ese menú (o **Ajustes › Textus AI › Agente › Carpeta**). La carpeta que elijas se usa para todos los documentos, incluidos los borradores sin guardar, hasta que elijas **Usar la carpeta de la barra lateral**; sin ninguna elegida, la IA usa la carpeta abierta en la barra lateral.
 
 > [!TIP]
 > ¿Tu borrador está en `tesis/borradores/` y tus notas de entrevistas en `tesis/fuentes/`? Elige `tesis/` como carpeta y Textus AI podrá leer `fuentes/entrevistas.md` mientras trabajas en `borradores/capitulo-2.md`.

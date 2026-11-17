@@ -72,13 +72,7 @@ fn settle(was: u8, now: u8, calm: u8) -> (u8, u8) {
 /// Pressure from the memory still free, as an amount: what a few views out
 /// of sight take, not a share of the machine (a share left a big machine
 /// short with gigabytes free, and a small one short all day).
-#[cfg(any(
-    test,
-    target_os = "linux",
-    target_os = "android",
-    target_os = "ios",
-    windows
-))]
+#[cfg(any(test, target_os = "linux", windows))]
 fn from_free(free: u64) -> u8 {
     const MB: u64 = 1024 * 1024;
     match free {
@@ -169,18 +163,31 @@ fn pressure() -> u8 {
         .ok()
         .and_then(|text| from_psi(&text))
         .unwrap_or(0);
-    psi.max(meminfo("MemAvailable:").map_or(0, from_free))
+    psi.max(free_pressure())
 }
 
-// iOS keeps the kernel's level from apps; what this app may still take
-// before the system ends it is the measure.
-#[cfg(target_os = "ios")]
-fn pressure() -> u8 {
-    extern "C" {
-        fn os_proc_available_memory() -> usize;
+#[cfg(target_os = "linux")]
+fn free_pressure() -> u8 {
+    meminfo("MemAvailable:").map_or(0, from_free)
+}
+
+/// Android keeps little free by design, its own killer freeing apps as it
+/// needs: short only when what's left is a small share of the phone.
+#[cfg(target_os = "android")]
+fn free_pressure() -> u8 {
+    match (meminfo("MemAvailable:"), meminfo("MemTotal:")) {
+        (Some(free), Some(total)) if total > 0 => from_share(free, total),
+        _ => 0,
     }
-    // SAFETY: no arguments, reads the process's own limit.
-    from_free(unsafe { os_proc_available_memory() } as u64)
+}
+
+#[cfg(any(test, target_os = "android"))]
+fn from_share(free: u64, total: u64) -> u8 {
+    match free * 100 / total {
+        p if p < 5 => 2,
+        p if p < 10 => 1,
+        _ => 0,
+    }
 }
 
 #[cfg(windows)]
@@ -216,9 +223,10 @@ fn total_bytes() -> u64 {
     0
 }
 
+// iOS tells apps no level, and its web view's memory is another
+// process's: the device's size alone sets the tier.
 #[cfg(not(any(
     target_os = "macos",
-    target_os = "ios",
     target_os = "linux",
     target_os = "android",
     windows
@@ -237,6 +245,13 @@ mod tests {
         assert_eq!(super::from_free(4 * GB), 0);
         assert_eq!(super::from_free(GB * 8 / 10), 1);
         assert_eq!(super::from_free(GB / 4), 2);
+    }
+
+    #[test]
+    fn an_android_phone_is_short_by_the_share_left() {
+        assert_eq!(super::from_share(GB, 8 * GB), 0);
+        assert_eq!(super::from_share(GB * 6 / 10, 8 * GB), 1);
+        assert_eq!(super::from_share(GB / 4, 8 * GB), 2);
     }
 
     #[test]

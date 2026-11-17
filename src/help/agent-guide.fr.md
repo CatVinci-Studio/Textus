@@ -127,7 +127,7 @@ Le menu du dossier crée `.textus/` et ses fichiers pour vous la première fois 
 - Taper `@` dans la zone de saisie de la discussion joint l'un de ses fichiers à votre message.
 - Son dossier `.textus/` contient le profil de style, la bibliothèque, les instructions d'écriture et les compétences du dossier.
 
-Faites un clic droit sur la page vide d'un onglet IA et choisissez **Mémoire** : sa première ligne affiche le nom du dossier ; cliquez dessus pour ouvrir le **menu du dossier**. Si votre documentation ne se trouve pas à côté du brouillon, utilisez **Choisir le dossier…** dans ce menu (ou **Réglages › Textus AI › Agent › Dossier**). Le dossier choisi sert pour tous les documents, brouillons non enregistrés compris, jusqu'à ce que vous choisissiez **N'utiliser aucun dossier**.
+Faites un clic droit sur la page vide d'un onglet IA et choisissez **Mémoire** : sa première ligne affiche le nom du dossier ; cliquez dessus pour ouvrir le **menu du dossier**. Si votre documentation ne se trouve pas à côté du brouillon, utilisez **Choisir le dossier…** dans ce menu (ou **Réglages › Textus AI › Agent › Dossier**). Le dossier choisi sert pour tous les documents, brouillons non enregistrés compris, jusqu'à ce que vous choisissiez **Utiliser le dossier de la barre latérale** ; sans dossier choisi, l'IA prend celui ouvert dans la barre latérale.
 
 > [!TIP]
 > Votre brouillon est dans `thèse/brouillons/` et vos notes d'entretien dans `thèse/recherche/` ? Choisissez `thèse/` comme dossier : Textus AI pourra lire `recherche/entretiens.md` pendant que vous travaillez sur `brouillons/chapitre-2.md`.

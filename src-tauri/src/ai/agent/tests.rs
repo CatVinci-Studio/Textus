@@ -617,7 +617,7 @@ fn the_workspace_section_says_which_folder_and_why() {
     assert_eq!(chosen.root_source, RootSource::Chosen);
     let text = workspace_section(&chosen, "en");
     assert!(text.contains("chosen by the user") && text.contains("click the folder name"));
-    assert!(text.contains("Use no folder"));
+    assert!(text.contains("Use the sidebar's folder"));
     // Attached files are named wherever there are some.
     let with_files = AgentWorkspace {
         attached: true,
@@ -743,7 +743,7 @@ fn the_prompt_names_things_exactly_as_the_ui_does() {
     let en_ts = read("src/i18n/locales/en.ts");
     for label in [
         "Choose folder…",
-        "Use no folder",
+        "Use the sidebar's folder",
         "Learn my style from samples…",
         "Create style profile",
         "Open style profile",

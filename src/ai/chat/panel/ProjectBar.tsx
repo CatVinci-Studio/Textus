@@ -123,15 +123,16 @@ export function ProjectBar({
 
   // The folder row's menu (a sheet headed by the folder on a phone).
   const hasFolderItems =
-    canPickFolder || !!workspaceRoot || canRevealInFileManager;
+    canPickFolder || !!settings.agentWorkspaceRoot || canRevealInFileManager;
   const menuItems: ContextMenuEntry[] = [
     ...(canPickFolder
       ? [{ label: t.projectPickFolder, onSelect: pickFolder }]
       : []),
-    ...(workspaceRoot
+    // A folder picked for the AI: back to following the sidebar's.
+    ...(settings.agentWorkspaceRoot
       ? [
           {
-            label: t.projectNoFolder,
+            label: t.projectFollowSidebar,
             onSelect: () => setSettings({ agentWorkspaceRoot: "" }),
           },
         ]

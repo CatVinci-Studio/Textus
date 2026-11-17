@@ -112,7 +112,8 @@ class BlockHandles {
     if (touch === this.touch) return;
     this.touch = touch;
     this.handle.classList.toggle("by-touch", touch);
-    if (!touch) this.hide();
+    // A mouse after a finger: the handle goes, unless it is what's pressed.
+    if (!touch && !this.handle.contains(e.target as Node)) this.hide();
   };
 
   private readonly onMove = (e: PointerEvent) => {

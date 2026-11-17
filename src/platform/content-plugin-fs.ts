@@ -1,5 +1,5 @@
 import { iosFiles } from "./ios-files";
-import { basename, isInside, nameContentUrl, parentDir } from "../utils/path";
+import { basename, contentJoin, isInside, parentDir } from "../utils/path";
 
 /**
  * A plugin's file calls in an Android folder opened without access to all
@@ -17,8 +17,6 @@ interface ContentEntry {
   modified_ms: number | null;
 }
 
-const DOC = "/document/";
-
 /** The URL of `path` (relative to `root`, or a URL inside it). */
 export function contentPath(root: string, path: string): string {
   if (path.startsWith("content://")) {
@@ -26,16 +24,11 @@ export function contentPath(root: string, path: string): string {
       throw new Error(`${path} is outside the folder.`);
     return path;
   }
-  const parts = path.split(/[\\/]/).filter((p) => p !== "" && p !== ".");
-  if (parts.some((p) => p === ".."))
+  if (path.split(/[\\/]/).some((p) => p === ".."))
     throw new Error(`${path} is outside the folder.`);
-  if (!parts.length) return root;
-  const at = root.indexOf(DOC);
-  if (at < 0) throw new Error(`${root} isn't a folder's URL.`);
-  const id = decodeURIComponent(root.slice(at + DOC.length)).replace(/\/$/, "");
-  const url = `${root.slice(0, at)}${DOC}${encodeURIComponent(`${id}/${parts.join("/")}`)}`;
-  nameContentUrl(url, parts[parts.length - 1]!);
-  return url;
+  if (!root.includes("/document/"))
+    throw new Error(`${root} isn't a folder's URL.`);
+  return contentJoin(root, path);
 }
 
 const entryOf = (e: {

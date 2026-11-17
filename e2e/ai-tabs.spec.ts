@@ -560,3 +560,48 @@ test.describe("on a phone", () => {
     await expect(tabs(page)).toHaveCount(2);
   });
 });
+
+async function aiFolderAsked(page: Page, settings: Record<string, unknown>) {
+  await page.addInitScript(() => {
+    const w = window as unknown as Record<string, unknown>;
+    w.__devFs = { "/proj/a.md": "# A\n" };
+    w.__devPickFolder = "/proj";
+    w.__devInvokeResults = { load_agent_workspace: null };
+  });
+  await page.setViewportSize({ width: 1200, height: 760 });
+  await openApp(page, { settings: { menuBarShown: false, ...settings } });
+  await emit(page, "menu-open-folder");
+  await expect(page.locator(".tree-row").first()).toBeVisible();
+  await aiButton(page).click();
+  const box = (await page.locator(".ai-tab").boundingBox())!;
+  await page.mouse.click(box.x + box.width / 2, box.y + box.height / 2, {
+    button: "right",
+  });
+  await page.getByRole("menuitem", { name: "记忆" }).click();
+  return () =>
+    page.evaluate(() => {
+      const calls = (
+        window as unknown as {
+          __devInvokeCalls?: { cmd: string; rootOverride?: unknown }[];
+        }
+      ).__devInvokeCalls;
+      return calls?.filter((c) => c.cmd === "load_agent_workspace").at(-1)
+        ?.rootOverride;
+    });
+}
+
+test("the AI's folder is the one open in the sidebar, none once it closes", async ({
+  page,
+}) => {
+  const lastRoot = await aiFolderAsked(page, {});
+  await expect.poll(lastRoot).toBe("/proj");
+  await emit(page, "menu-close-folder");
+  await expect.poll(lastRoot).toBeNull();
+});
+
+test("a folder picked for the AI wins over the sidebar's", async ({ page }) => {
+  const lastRoot = await aiFolderAsked(page, {
+    agentWorkspaceRoot: "/research",
+  });
+  await expect.poll(lastRoot).toBe("/research");
+});

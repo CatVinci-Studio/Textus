@@ -96,7 +96,7 @@ export default {
 `,
   projectOpenStyle: "Открыть профиль стиля",
   projectPickFolder: "Другая рабочая папка…",
-  projectNoFolder: "Не использовать папку",
+  projectFollowSidebar: "Папка из боковой панели",
   projectReveal: "Показать в файловом менеджере",
   projectLearnStyle: "Изучить мой стиль по образцам…",
   projectImportReferences: "Импортировать источники…",

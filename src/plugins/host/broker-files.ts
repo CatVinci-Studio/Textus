@@ -6,6 +6,7 @@ import { fs, plugins as pluginsIpc, type StoreScope } from "../../platform/ipc";
 import {
   absoluteIn,
   basename,
+  contentRelative,
   dirname,
   isInside,
   slashed,
@@ -433,6 +434,8 @@ export function fileHandlers(p: PluginScope) {
 
 /** `path` in the folder `root`, `/`-separated. */
 function relOf(root: string, path: string): string {
+  if (root.startsWith("content://"))
+    return contentRelative(root, path) ?? basename(path);
   const r = slashed(root).replace(/\/$/, "");
   const full = slashed(path);
   return full.startsWith(`${r}/`) ? full.slice(r.length + 1) : basename(full);

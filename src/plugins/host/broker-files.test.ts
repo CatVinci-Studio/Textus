@@ -46,6 +46,7 @@ vi.mock("../../storage/project-settings", () => ({
 }));
 
 import { fileHandlers, openDocument } from "./broker-files";
+import { FILE_WRITTEN_EVENT } from "../../utils/events";
 import { fileBadge } from "../contributions/file-badges";
 import type { PluginScope } from "./broker-scope";
 
@@ -161,4 +162,30 @@ it("tells file events only of files a plugin can read", async () => {
   expect(
     fileEventReadable({ from: "/private/a.md", to: "/notes/a.md" }, "/notes"),
   ).toBe(true);
+});
+
+describe("in an Android folder opened without access to all files", () => {
+  const root =
+    "content://com.android.externalstorage.documents/tree/primary%3ANotes/document/primary%3ANotes";
+  const file =
+    "content://com.android.externalstorage.documents/tree/primary%3ANotes/document/primary%3ANotes%2Finbox%2Fa.md";
+
+  it("finds the open tab of a path from the folder, as the tree spells it", () => {
+    open.add(file);
+    expect(openDocument(root, "inbox/a.md")).toEqual({ path: file });
+    expect(openDocument(root, "../Other/a.md")).toBeNull();
+  });
+
+  it("tells the window of a write by the file's own URL", async () => {
+    const heard: unknown[] = [];
+    const listen = (e: Event) => heard.push((e as CustomEvent).detail);
+    window.addEventListener(FILE_WRITTEN_EVENT, listen);
+    const scope = { id: "p", root: () => root } as PluginScope;
+    await fileHandlers(scope)["files.create"]({
+      path: "inbox/a.md",
+      text: "x",
+    });
+    window.removeEventListener(FILE_WRITTEN_EVENT, listen);
+    expect(heard).toEqual([file]);
+  });
 });

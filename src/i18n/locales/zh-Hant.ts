@@ -88,7 +88,7 @@ export default {
 `,
   projectOpenStyle: "開啟文風檔案",
   projectPickFolder: "選擇資料夾…",
-  projectNoFolder: "不使用資料夾",
+  projectFollowSidebar: "使用側邊欄的資料夾",
   projectReveal: "在檔案管理員中顯示",
   projectLearnStyle: "從樣本學習我的文風…",
   projectImportReferences: "匯入參考資料…",

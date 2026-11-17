@@ -52,7 +52,15 @@ import { usePluginDocumentAccess } from "./plugins/usePluginDocumentAccess";
 import { noteBase } from "../ai/chat/file-changes";
 import { useKeptProposals } from "../ai/revision/useKeptProposals";
 import { explainError } from "../utils/error-explain";
-import { aiRoot } from "../ai/workspace/ai-root";
+import { aiRoot, useAiRoot } from "../ai/workspace/ai-root";
+
+/** How accepting writes a proposal's web citations: kept as the replies
+ *  arrive, read as one is accepted. */
+function useCitationStyle() {
+  const citations = useRef<CitationStyle>({ asFootnotes: false, sources: [] });
+  const citationStyle = useCallback(() => citations.current, []);
+  return { citations, citationStyle };
+}
 
 /** The editor's side of AI edits: pending previews, the conversations that
  *  propose them (the window's live one, and Quick Ask's own), and streaming
@@ -82,9 +90,8 @@ export function useEditorProposals({
   /** What a save would write (useDocumentReporting). */
   textOf: DocumentReporting["textOf"];
 }) {
-  // How accepting writes a proposal's web citations.
-  const citations = useRef<CitationStyle>({ asFootnotes: false, sources: [] });
-  const citationStyle = useCallback(() => citations.current, []);
+  const workspaceRoot = useAiRoot(settings);
+  const { citations, citationStyle } = useCitationStyle();
   const filePathRef = useLatest(filePath);
   /** A generated picture saved beside the document; its src, or null when
    *  naming it was cancelled. */
@@ -164,7 +171,7 @@ export function useEditorProposals({
   useKeptProposals({
     run,
     filePath,
-    workspaceRoot: aiRoot(settings),
+    workspaceRoot,
     previews: pendingEdits.previews,
     showPreviews: pendingEdits.showPreviews,
     decide: pendingEdits.decide,
@@ -395,7 +402,7 @@ export function useEditorProposals({
   );
   // The window's, read here: it outlives this editor. Followed by its
   // turns, never each frame of a reply: the editor reads none of it.
-  const conversation = useLiveConversation(filePath, aiRoot(settings), false);
+  const conversation = useLiveConversation(filePath, workspaceRoot, false);
   // Quick Ask's one-off exchange, kept out of History. "Continue in the
   // panel" hands it to `conversation`.
   const quickConversation = useOwnConversation(
@@ -415,6 +422,7 @@ export function useEditorProposals({
       ),
     };
   }, [
+    citations,
     settings.sourcesAsFootnotes,
     conversation.history,
     quickConversation.history,
@@ -437,6 +445,7 @@ export function useEditorProposals({
   usePluginDocumentAccess({ run, isActive, filePath, addPreviews, textOf });
 
   return {
+    workspaceRoot,
     pendingEdits,
     conversation,
     quickConversation,

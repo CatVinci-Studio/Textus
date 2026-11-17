@@ -95,7 +95,7 @@ Habilidades ficam na pasta skills/ ao lado deste arquivo, um arquivo
 `,
   projectOpenStyle: "Abrir perfil de estilo",
   projectPickFolder: "Escolher pasta…",
-  projectNoFolder: "Não usar nenhuma pasta",
+  projectFollowSidebar: "Usar a pasta da barra lateral",
   projectReveal: "Mostrar no gerenciador de arquivos",
   projectLearnStyle: "Aprender meu estilo com amostras…",
   projectImportReferences: "Importar referências…",

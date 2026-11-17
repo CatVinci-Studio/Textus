@@ -88,7 +88,7 @@ export default {
 `,
   projectOpenStyle: "打开文风档案",
   projectPickFolder: "选择文件夹…",
-  projectNoFolder: "不使用文件夹",
+  projectFollowSidebar: "使用侧边栏的文件夹",
   projectReveal: "在文件管理器中显示",
   projectLearnStyle: "从样本学习我的文风…",
   projectImportReferences: "导入参考资料…",

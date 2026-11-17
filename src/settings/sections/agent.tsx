@@ -296,7 +296,7 @@ export function AgentWorkspaceRootSection({ t }: { t: Strings }) {
             className="text-button settings-inline-button"
             onClick={() => setSettings({ agentWorkspaceRoot: "" })}
           >
-            {t.projectNoFolder}
+            {t.projectFollowSidebar}
           </button>
         )}
         <button

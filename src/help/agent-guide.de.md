@@ -127,7 +127,7 @@ Das Ordnermenü legt `.textus/` und die Dateien darin an, sobald du sie zum erst
 - Tippst du `@` ins Eingabefeld des Chats, hängst du eine seiner Dateien an deine Nachricht an.
 - Sein Ordner `.textus/` enthält Stilprofil, Lexikon, Schreibanweisungen und Skills des Ordners.
 
-Klicke mit rechts auf das leere Papier eines KI-Tabs und wähle **Gedächtnis**: Die oberste Zeile zeigt den Namen des Ordners; ein Klick darauf öffnet das **Ordnermenü**. Liegt dein Material nicht neben dem Entwurf, nimm dort **Ordner wählen…** (oder **Einstellungen › Textus AI › Agent › Ordner**). Der gewählte Ordner gilt für jedes Dokument – auch für ungespeicherte Entwürfe –, bis du **Keinen Ordner verwenden** wählst.
+Klicke mit rechts auf das leere Papier eines KI-Tabs und wähle **Gedächtnis**: Die oberste Zeile zeigt den Namen des Ordners; ein Klick darauf öffnet das **Ordnermenü**. Liegt dein Material nicht neben dem Entwurf, nimm dort **Ordner wählen…** (oder **Einstellungen › Textus AI › Agent › Ordner**). Der gewählte Ordner gilt für jedes Dokument – auch für ungespeicherte Entwürfe –, bis du **Ordner der Seitenleiste verwenden** wählst; ohne gewählten Ordner nimmt die KI den in der Seitenleiste geöffneten.
 
 > [!TIP]
 > Dein Entwurf liegt in `masterarbeit/entwürfe/` und deine Interviewnotizen in `masterarbeit/recherche/`? Wähle `masterarbeit/` als Ordner, dann kann Textus AI `recherche/interviews.md` lesen, während du an `entwürfe/kapitel-2.md` arbeitest.

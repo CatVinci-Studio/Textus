@@ -18,7 +18,7 @@ style profile
 Learn my style
 completion
 Choose folder…
-Use no folder
+Use the sidebar's folder
 Learn my style from samples…
 Create style profile
 Open style profile

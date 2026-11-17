@@ -94,7 +94,7 @@ type /name in a conversation to use one.
 `,
   projectOpenStyle: "Open style profile",
   projectPickFolder: "Choose folder…",
-  projectNoFolder: "Use no folder",
+  projectFollowSidebar: "Use the sidebar's folder",
   projectReveal: "Show in file manager",
   projectLearnStyle: "Learn my style from samples…",
   projectImportReferences: "Import references…",

@@ -94,7 +94,7 @@ ${AI_NAME}への執筆の指示です。すべての文書に適用されます�
 `,
   projectOpenStyle: "文体プロファイルを開く",
   projectPickFolder: "フォルダーを選択…",
-  projectNoFolder: "フォルダーを使わない",
+  projectFollowSidebar: "サイドバーのフォルダーを使う",
   projectReveal: "ファイルマネージャーで表示",
   projectLearnStyle: "サンプルから文体を学習…",
   projectImportReferences: "参考資料を読み込む…",

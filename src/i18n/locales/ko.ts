@@ -93,7 +93,7 @@ ${AI_NAME}에게 주는 글쓰기 지침으로, 모든 문서에 적용됩니다
 `,
   projectOpenStyle: "문체 프로필 열기",
   projectPickFolder: "폴더 선택…",
-  projectNoFolder: "폴더 사용 안 함",
+  projectFollowSidebar: "사이드바의 폴더 사용",
   projectReveal: "파일 관리자에서 보기",
   projectLearnStyle: "샘플로 내 문체 학습…",
   projectImportReferences: "참고 자료 가져오기…",

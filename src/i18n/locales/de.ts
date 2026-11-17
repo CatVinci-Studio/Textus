@@ -96,7 +96,7 @@ Skills liegen im Ordner skills/ neben dieser Datei, je Skill eine
 `,
   projectOpenStyle: "Stilprofil öffnen",
   projectPickFolder: "Ordner wählen…",
-  projectNoFolder: "Keinen Ordner verwenden",
+  projectFollowSidebar: "Ordner der Seitenleiste verwenden",
   projectReveal: "Im Dateimanager anzeigen",
   projectLearnStyle: "Meinen Stil aus Textproben lernen…",
   projectImportReferences: "Quellen importieren…",

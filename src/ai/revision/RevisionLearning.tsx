@@ -19,6 +19,7 @@ import {
 } from "./revision-learning";
 import { type DecidedChange } from "./pending-place";
 import "./ReviewBar.css";
+import { aiRoot } from "../workspace/ai-root";
 
 interface RevisionLearningLabels extends LearnLabels {
   learnSuggestion: string;
@@ -34,10 +35,11 @@ interface RevisionLearningLabels extends LearnLabels {
  *  lead to. One window's reads and writes of the log run in turn. */
 export function useRevisionLearning({
   docPath,
-  workspaceRoot,
+  settingsRef,
 }: {
   docPath: string | null;
-  workspaceRoot: string | null;
+  /** Read as a reply is saved, for the AI's folder then (ai-root.ts). */
+  settingsRef: { readonly current: { agentWorkspaceRoot: string } };
 }) {
   const [kind, setKind] = useState<string | null>(null);
   const [saved, setSaved] = useState<"saved" | "failed" | null>(null);
@@ -84,7 +86,7 @@ export function useRevisionLearning({
         try {
           await ai.memoryRemember(
             docPath,
-            workspaceRoot,
+            aiRoot(settingsRef.current),
             "requirement",
             "personal",
             rule,
@@ -101,7 +103,7 @@ export function useRevisionLearning({
       setKind(null);
       await update((log) => answer(log, kind, given, Date.now()));
     },
-    [kind, docPath, workspaceRoot, update],
+    [kind, docPath, settingsRef, update],
   );
 
   return {
