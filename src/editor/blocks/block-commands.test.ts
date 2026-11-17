@@ -78,6 +78,20 @@ describe("a block's handle", () => {
     expect(moveTo(v.view.state, b, b.pos)).toBeNull();
   });
 
+  it("offers a list item its list's ends, not a second place just outside them", async () => {
+    const v = await openView("Top.\n\n- one\n- two\n\nEnd.\n");
+    const one = blockOf(v, "one");
+    const list = v.view.state.doc.child(1);
+    const listAt = v.view.state.doc.child(0).nodeSize;
+    const gaps = gapsFor(v.view.state.doc, one).map((gap) => gap.pos);
+    expect(gaps).not.toContain(listAt);
+    expect(gaps).not.toContain(listAt + list.nodeSize);
+    expect(gaps).toContain(listAt + list.nodeSize - 1);
+    // A paragraph still goes either side of the list.
+    const top = gapsFor(v.view.state.doc, blockOf(v, "Top.")).map((g) => g.pos);
+    expect(top).toContain(listAt + list.nodeSize);
+  });
+
   it("deletes, duplicates and adds a line below, each one undo step", async () => {
     const v = await openView("Keep.\n\nGo.\n\n- item\n");
     run(v, deleteBlock(v.view.state, blockOf(v, "Go.")));

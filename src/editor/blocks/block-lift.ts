@@ -124,9 +124,32 @@ export function blockLook(source: HTMLElement, view: EditorView) {
     milkdown.append(inner);
     const lift = document.createElement("div");
     lift.className = "block-drag-lift";
+    // Its marker drawn left of it, taken in: the copy starts where the
+    // block shows, not at its margin.
+    const reach = source.tagName === "LI" ? markerReach(source) : 0;
+    if (reach) {
+      lift.style.paddingLeft = `${reach}px`;
+      lift.style.marginLeft = `${-reach}px`;
+    }
     lift.append(milkdown);
     return lift;
   };
+}
+
+/** How far left of a list item its marker is drawn (a bullet or number
+ *  out in the list's indent); a task's box is drawn inside the item. */
+function markerReach(item: HTMLElement): number {
+  const marker = getComputedStyle(item, "::before");
+  if (marker.content === "none" || marker.position !== "absolute") return 0;
+  const shift =
+    marker.transform && marker.transform !== "none"
+      ? new DOMMatrix(marker.transform).m41
+      : 0;
+  const left =
+    (parseFloat(getComputedStyle(item).paddingLeft) || 0) +
+    (parseFloat(marker.marginLeft) || 0) +
+    shift;
+  return Math.max(0, Math.round(-left));
 }
 
 /** The editors a block can be pulled between: every one open in this

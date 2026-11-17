@@ -15,6 +15,8 @@ import { locatePlainText } from "../../ai/revision/text-locate";
 import { parseMarkdownSource } from "../../editor/markdown/parse-markdown-source";
 import type { DocumentPlace } from "../../plugins/app-bridge";
 import { markChangeSource } from "../../editor/change-source";
+import { flipMatched } from "../../engine/motion/flip-matched";
+import { movingBlocks } from "../../editor/blocks/block-lift";
 
 /**
  * A plugin's edits to the document in front, placed by block ids in order
@@ -74,7 +76,13 @@ export function applyPluginEdits(ctx: Ctx, edits: EditProposal[]): boolean {
         ? Selection.near(anchor!)
         : TextSelection.between(anchor!, head!),
     );
-    view.dispatch(markChangeSource(tr, "plugin"));
+    // Blocks written again in another order (a list sorted) slide from
+    // where they stood to their new places.
+    flipMatched(
+      () => movingBlocks(view),
+      (el) => `${el.tagName}\u0000${el.textContent}`,
+      () => view.dispatch(markChangeSource(tr, "plugin")),
+    );
     return true;
   }
   view.dispatch(markChangeSource(tr, "plugin").scrollIntoView());

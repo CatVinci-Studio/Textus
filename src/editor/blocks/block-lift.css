@@ -2,31 +2,25 @@
    block itself lifted off the page under the pointer, the room it will
    take open where it lands, the blocks around moved aside. */
 
-/* Inside the document: its own content at its own size, a hairline frame
-   close around it and a light shadow - not grown, not a sheet. */
+/* Inside the document: the block itself at its own size, on the page's
+   own colour so the words it passes over don't show through - no frame,
+   no shadow. */
 .block-drag-lift.tx-drag-ghost {
   scale: none;
-  /* Its text wraps as on the page: the frame sits outside it. */
+  /* Its text wraps as on the page. */
   box-sizing: content-box;
   width: fit-content;
-  margin: -5px -9px;
-  padding: 4px 8px;
-  border: 1px solid var(--ui-border);
-  border-radius: var(--shape-s);
-  box-shadow: var(--shadow-1);
+  border-radius: 0;
+  background: var(--doc-bg, var(--ui-bg));
+  box-shadow: none;
   color: var(--doc-text, var(--ui-text));
 }
 
-/* A list item in its list as it stood, the list's indent taken off; the
-   frame takes in its marker. */
+/* A list item in its list as it stood, the list's indent taken off; its
+   marker's reach is set from script (block-lift.ts). */
 .block-drag-lift > .milkdown > :is(ul, ol) {
   margin: 0;
   padding: 0;
-}
-
-.block-drag-lift.tx-drag-ghost:has(> .milkdown > :is(ul, ol)) {
-  margin-left: -29px;
-  padding-left: 28px;
 }
 
 .block-drag-lift > .milkdown > *,
@@ -36,8 +30,8 @@
 }
 
 /* Where it will land - in its own place while it would stay - the room
-   it takes: as tall as the block, its outline the lifted copy's own, the
-   islands' quiet dashed one. */
+   it takes: as tall as the block, its outline the block's own (its marker
+   and words, not the margin beside it), the islands' quiet dashed one. */
 .milkdown .block-drag-room {
   position: relative;
   display: block;

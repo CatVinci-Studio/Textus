@@ -128,8 +128,10 @@ class BlockHandles {
     this.show(itemOnLine(this.view, block, e.clientY));
   };
 
-  private readonly onLeave = () => {
-    if (!this.dragging) this.hide();
+  // A finger lifting leaves too; under a finger the handle follows the
+  // caret, not the pointer.
+  private readonly onLeave = (e: PointerEvent) => {
+    if (!this.dragging && e.pointerType === "mouse") this.hide();
   };
 
   private readonly hide = () => {
@@ -208,6 +210,9 @@ class BlockHandles {
         },
       });
     if (e.pointerType === "mouse") return drag(false);
+    // No mousedown made of the finger after it lifts: it would land
+    // outside the menu just opened and close it.
+    e.preventDefault();
     // A finger: a tap is the menu, a rest lifts the block. The tap is
     // read from the finger itself: the click a web view makes of it may
     // land on the text instead.

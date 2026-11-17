@@ -54,6 +54,10 @@ test("a block pulled by its handle moves where it is let go, in one undo step", 
     "First",
   ]);
   await expect(page.locator(`${editor} .block-drag-room`)).toHaveCount(0);
+  // Put down with the caret in it, not picked whole in a frame.
+  await expect(page.locator(`${editor} .ProseMirror-selectednode`)).toHaveCount(
+    0,
+  );
   await page.keyboard.press("ControlOrMeta+z");
   await expect(page.locator(`${editor} > p`)).toHaveText([
     "First",

@@ -44,23 +44,6 @@
   pointer-events: auto;
 }
 
-/* A tapped list marker, code block edge, formula or rule selects the block,
-   which ProseMirror rings in light blue whatever the theme. Here it is a faint
-   accent wash; an image keeps its own ring. */
-:root[data-window-chrome="mobile"]
-  .milkdown
-  .ProseMirror-selectednode:not(.image-view) {
-  outline: none;
-  border-radius: var(--shape-xs);
-  background: color-mix(in srgb, var(--ui-accent) 10%, transparent);
-}
-
-:root[data-window-chrome="mobile"]
-  .milkdown
-  li.ProseMirror-selectednode::after {
-  border: none;
-}
-
 /* The title row here is the status bar plus 44pt, not the desktop's 28px, so
    the column's 3rem no longer clears it. A tab bar, when shown, clears it
    already. */

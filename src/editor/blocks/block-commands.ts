@@ -1,7 +1,6 @@
 import { Fragment, type Node as ProseNode } from "@milkdown/kit/prose/model";
 import {
   type EditorState,
-  NodeSelection,
   Selection,
   TextSelection,
   type Transaction,
@@ -97,13 +96,20 @@ interface Gap {
 }
 
 /** Every place a block can go in `doc`; a list item (`items`) also
- *  between the items of each list. */
+ *  between the items of each list - and not just outside one, a place
+ *  the list's own first or last place stands at already. */
 export function gapsIn(doc: ProseNode, items: boolean): Gap[] {
   const gaps: Gap[] = [];
+  const list = (node: ProseNode | null) => !!node && LISTS.test(node.type.name);
   const collect = (node: ProseNode, start: number, container: number) => {
     let offset = start;
     for (let i = 0; i <= node.childCount; i++) {
-      gaps.push({ pos: offset, container });
+      const beside =
+        items &&
+        container < 0 &&
+        (list(i > 0 ? node.child(i - 1) : null) ||
+          list(i < node.childCount ? node.child(i) : null));
+      if (!beside) gaps.push({ pos: offset, container });
       if (i < node.childCount) offset += node.child(i).nodeSize;
     }
   };
@@ -158,8 +164,7 @@ export function placeAt(
 ): Transaction | null {
   const moving = placed(state, from, block, gap);
   if (!moving) return null;
-  const tr = closeHistory(state.tr).insert(gap, moving);
-  return tr.setSelection(NodeSelection.create(tr.doc, gap)).scrollIntoView();
+  return landed(closeHistory(state.tr).insert(gap, moving), gap, moving);
 }
 
 /** The block moved to `gap`, one undo step: a list item put outside a
@@ -176,6 +181,19 @@ export function moveTo(
   const tr = closeHistory(state.tr);
   if (gap > from) tr.insert(gap, moving).delete(from, to);
   else tr.delete(from, to).insert(gap, moving);
-  const at = gap > from ? gap - (to - from) : gap;
-  return tr.setSelection(NodeSelection.create(tr.doc, at)).scrollIntoView();
+  return landed(tr, gap > from ? gap - (to - from) : gap, moving);
 }
+
+/** Where a block put down by `moveTo` or `placeAt` now starts. */
+export const landedAt = (tr: Transaction): number | null =>
+  tr.getMeta(LANDED) ?? null;
+
+const LANDED = "block-landed";
+
+/** The caret at the end of the block put down at `at` - not the block
+ *  picked whole, which drew its selected frame round it. */
+const landed = (tr: Transaction, at: number, node: ProseNode) =>
+  tr
+    .setSelection(Selection.near(tr.doc.resolve(at + node.nodeSize), -1))
+    .setMeta(LANDED, at)
+    .scrollIntoView();

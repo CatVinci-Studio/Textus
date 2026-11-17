@@ -40,10 +40,19 @@ export function Sheet({
   useEffect(() => {
     if (role === "menu") sheet.current?.focus({ preventScroll: true });
   }, [role]);
+  // The click a tap makes after the finger lifts can reach a sheet that the
+  // same tap opened: only a press made on it counts (a key's click too).
+  const pressed = useRef(false);
   return createPortal(
     <div
       {...presence}
       className="sheet-scrim"
+      onPointerDown={() => (pressed.current = true)}
+      onClickCapture={(e) => {
+        if (pressed.current || e.detail === 0) return;
+        e.preventDefault();
+        e.stopPropagation();
+      }}
       onClick={(e) => {
         if (e.target === e.currentTarget) onClose();
       }}

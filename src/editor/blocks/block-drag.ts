@@ -8,6 +8,7 @@ import {
   deleteBlock,
   gapsFor,
   gapsIn,
+  landedAt,
   moveTo,
   placeAt,
   type HandledBlock,
@@ -242,7 +243,7 @@ export function dragBlock(
   };
 
   /** Puts the block down where it is aimed; the document it lands in, and
-   *  where, or null when nothing moved. */
+   *  where it starts there, or null when nothing moved. */
   const drop = (copying: boolean) => {
     const { view: target, landing } = aim;
     // A document changed under the drag (an AI edit landing): its places
@@ -254,13 +255,13 @@ export function dragBlock(
         : moveTo(view.state, block, landing);
       if (!tr) return null;
       view.dispatch(tr);
-      return view;
+      return { into: view, at: landedAt(tr) };
     }
     const tr = placeAt(target.state, startState, block, landing);
     if (!tr) return null;
     target.dispatch(tr);
     if (!copying) view.dispatch(deleteBlock(view.state, block));
-    return target;
+    return { into: target, at: landedAt(tr) };
   };
 
   trackDrag(
@@ -280,10 +281,8 @@ export function dragBlock(
         if (aim.view !== view) show(aim.view, null);
         show(view, null);
         // The copy settles where the block is now, moved or not.
-        const into = landed ?? view;
-        const now = into.nodeDOM(
-          landed ? into.state.selection.from : block.pos,
-        );
+        const into = landed?.into ?? view;
+        const now = into.nodeDOM(landed?.at ?? block.pos);
         if (copy && now instanceof HTMLElement)
           copy.land(now.getBoundingClientRect());
         else copy?.remove();

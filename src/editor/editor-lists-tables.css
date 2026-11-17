@@ -16,9 +16,17 @@
   position: static;
 }
 
-/* A node-selected item still anchors prosemirror.css's outline ::after. */
-.milkdown li.ProseMirror-selectednode {
-  position: relative;
+/* A block picked whole (a list marker, a rule, a formula, a block's menu
+   open) - ProseMirror rings it in light blue whatever the theme: here a
+   faint accent wash, on every platform. An image keeps its own ring. */
+.milkdown .ProseMirror-selectednode:not(.image-view) {
+  outline: none;
+  border-radius: var(--shape-xs);
+  background: color-mix(in srgb, var(--ui-accent) 10%, transparent);
+}
+
+.milkdown li.ProseMirror-selectednode::after {
+  border: none;
 }
 
 .milkdown ol > li {
