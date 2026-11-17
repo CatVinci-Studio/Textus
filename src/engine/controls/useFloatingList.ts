@@ -5,6 +5,7 @@ import {
   useRef,
   useState,
   type CSSProperties,
+  type RefObject,
 } from "react";
 import { useLatest } from "../../utils/hooks/useLatest";
 import { EDGE, clampLeft, opensBelow } from "./placement";
@@ -24,60 +25,14 @@ export function useFloatingList(
   /** How tall the list may grow; a longer one scrolls. */
   maxHeight = scaledPx(MENU_MAX_HEIGHT),
 ) {
-  const [place, setPlace] = useState<CSSProperties>({});
   const triggerRef = useRef<HTMLButtonElement>(null);
   const listRef = useRef<HTMLUListElement>(null);
-  // Where the trigger was when the list was placed beside it.
-  const placedAt = useRef<DOMRect | null>(null);
-
-  // Below the trigger, or above when the window has no room under it.
-  useLayoutEffect(() => {
-    if (!open) return;
-    const rect = triggerRef.current?.getBoundingClientRect();
-    if (!rect) return;
-    placedAt.current = rect;
-    const margin = scaledPx(EDGE);
-    const gap = scaledPx(LIST_GAP);
-    const up = !opensBelow(rect, Math.min(maxHeight, 160), gap);
-    const room = up
-      ? rect.top - gap - margin
-      : window.innerHeight - rect.bottom - gap - margin;
-    setPlace({
-      left: clampLeft(rect.left, rect.width),
-      minWidth: rect.width,
-      maxHeight: Math.min(maxHeight, room),
-      ...(up
-        ? { bottom: window.innerHeight - rect.top + gap }
-        : { top: rect.bottom + gap }),
-      // It grows out of the edge that touches the trigger.
-      ...({
-        "--transform-origin": up ? "bottom left" : "top left",
-      } as CSSProperties),
-    });
-  }, [open, maxHeight]);
-
-  // Then kept inside the window across: the list is often wider than its
-  // trigger. Layout width, not the box: the entrance scales it from 96%.
-  useLayoutEffect(() => {
-    const list = listRef.current;
-    const rect = placedAt.current;
-    const placed = place.left;
-    if (!open || !list || !rect || typeof placed !== "number") return;
-    const width = list.offsetWidth;
-    const margin = scaledPx(EDGE);
-    const room = window.innerWidth - margin;
-    if (placed + width <= room) return;
-    const left = Math.max(margin, Math.min(rect.right, room) - width);
-    setPlace(
-      (p) =>
-        ({
-          ...p,
-          left,
-          maxWidth: room - margin,
-          "--transform-origin": `${p.bottom !== undefined ? "bottom" : "top"} right`,
-        }) as CSSProperties,
-    );
-  }, [open, place.left]);
+  const { place, placedAt } = useListPlace(
+    open,
+    maxHeight,
+    triggerRef,
+    listRef,
+  );
 
   // While open: focus the list, and close on an outside press or when the page
   // moves under it. The latest dismiss is read when it fires.
@@ -119,10 +74,82 @@ export function useFloatingList(
       window.removeEventListener("resize", onMove);
       window.removeEventListener("blur", onMove);
     };
-  }, [open, close]);
+  }, [open, close, placedAt]);
 
-  // The highlighted option stays in view by scrolling the list alone:
-  // scrollIntoView would scroll every area around it too.
+  useActiveInView(listRef, open, active);
+
+  return { triggerRef, listRef, place };
+}
+
+/** Where the list goes beside its trigger, and where the trigger was then. */
+function useListPlace(
+  open: boolean,
+  maxHeight: number,
+  triggerRef: RefObject<HTMLButtonElement | null>,
+  listRef: RefObject<HTMLUListElement | null>,
+) {
+  const [place, setPlace] = useState<CSSProperties>({});
+  // Where the trigger was when the list was placed beside it.
+  const placedAt = useRef<DOMRect | null>(null);
+
+  // Below the trigger, or above when the window has no room under it.
+  useLayoutEffect(() => {
+    if (!open) return;
+    const rect = triggerRef.current?.getBoundingClientRect();
+    if (!rect) return;
+    placedAt.current = rect;
+    const margin = scaledPx(EDGE);
+    const gap = scaledPx(LIST_GAP);
+    const up = !opensBelow(rect, Math.min(maxHeight, 160), gap);
+    const room = up
+      ? rect.top - gap - margin
+      : window.innerHeight - rect.bottom - gap - margin;
+    setPlace({
+      left: clampLeft(rect.left, rect.width),
+      minWidth: rect.width,
+      maxHeight: Math.min(maxHeight, room),
+      ...(up
+        ? { bottom: window.innerHeight - rect.top + gap }
+        : { top: rect.bottom + gap }),
+      // It grows out of the edge that touches the trigger.
+      ...({
+        "--transform-origin": up ? "bottom left" : "top left",
+      } as CSSProperties),
+    });
+  }, [open, maxHeight, triggerRef]);
+
+  // Then kept inside the window across: the list is often wider than its
+  // trigger. Layout width, not the box: the entrance scales it from 96%.
+  useLayoutEffect(() => {
+    const list = listRef.current;
+    const rect = placedAt.current;
+    const placed = place.left;
+    if (!open || !list || !rect || typeof placed !== "number") return;
+    const width = list.offsetWidth;
+    const margin = scaledPx(EDGE);
+    const room = window.innerWidth - margin;
+    if (placed + width <= room) return;
+    const left = Math.max(margin, Math.min(rect.right, room) - width);
+    setPlace(
+      (p) =>
+        ({
+          ...p,
+          left,
+          maxWidth: room - margin,
+          "--transform-origin": `${p.bottom !== undefined ? "bottom" : "top"} right`,
+        }) as CSSProperties,
+    );
+  }, [open, place.left, listRef]);
+  return { place, placedAt };
+}
+
+/** The highlighted option kept in view by scrolling the list alone:
+ *  scrollIntoView would scroll every area around it too. */
+function useActiveInView(
+  listRef: RefObject<HTMLUListElement | null>,
+  open: boolean,
+  active: number,
+) {
   useEffect(() => {
     const list = listRef.current;
     if (!open || !list) return;
@@ -139,7 +166,5 @@ export function useFloatingList(
       list.scrollTop + list.clientHeight
     )
       list.scrollTop = item.offsetTop + item.offsetHeight - list.clientHeight;
-  }, [open, active]);
-
-  return { triggerRef, listRef, place };
+  }, [open, active, listRef]);
 }
