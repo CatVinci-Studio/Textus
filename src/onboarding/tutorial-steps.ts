@@ -28,6 +28,8 @@ export type TutorialUntil =
 export interface TutorialStop {
   target: string;
   key: TextKey;
+  /** Clicked as it is lit, unless already on: the panel it opens shows. */
+  opens?: boolean;
 }
 
 export interface TutorialStep {
@@ -78,10 +80,10 @@ const ALL_STEPS: TutorialStep[] = [
     titleKey: "tutorialRailTitle",
     bodyKey: "tutorialRailBody",
     stops: [
-      { target: RAIL("tree"), key: "tutorialRailFiles" },
-      { target: RAIL("outline"), key: "tutorialRailOutline" },
-      { target: RAIL("search"), key: "tutorialRailSearch" },
-      { target: RAIL("plugins"), key: "tutorialRailPlugins" },
+      { target: RAIL("tree"), key: "tutorialRailFiles", opens: true },
+      { target: RAIL("outline"), key: "tutorialRailOutline", opens: true },
+      { target: RAIL("search"), key: "tutorialRailSearch", opens: true },
+      { target: RAIL("plugins"), key: "tutorialRailPlugins", opens: true },
       { target: ".activity-rail", key: "tutorialRailHide" },
     ],
     beside: "aside.sidebar:not(.sidebar-collapsed)",

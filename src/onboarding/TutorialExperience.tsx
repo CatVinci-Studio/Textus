@@ -62,6 +62,19 @@ function useAiSteps(tutorial: Tutorial, aiOn: boolean) {
   return signedIn;
 }
 
+/** A stop that opens what it lights: its button clicked, as the learner
+ *  would, unless already on. */
+function useOpeningStop(
+  stopAt: { target: string; opens?: boolean } | undefined,
+) {
+  useEffect(() => {
+    if (!stopAt?.opens) return;
+    const button = document.querySelector<HTMLElement>(stopAt.target);
+    if (button && button.getAttribute("aria-pressed") !== "true")
+      button.click();
+  }, [stopAt]);
+}
+
 /** The tour's card over the window, for its current step. */
 export function TutorialExperience({
   tutorial,
@@ -81,6 +94,7 @@ export function TutorialExperience({
 
   const { step, stop, stepIndex, totalSteps } = tutorial;
   const stopAt = step.stops?.[stop];
+  useOpeningStop(stopAt);
   const target =
     stopAt?.target ??
     (phone ? step.phoneTarget : undefined) ??

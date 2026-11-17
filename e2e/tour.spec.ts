@@ -8,7 +8,14 @@ test("the tour walks the window, moving on as each thing is done", async ({
   page,
 }) => {
   await page.setViewportSize({ width: 1200, height: 760 });
-  await openApp(page);
+  // From the Start page, with no document open: the tour brings its own.
+  await openApp(page, {
+    settings: { startPageOnLaunch: true, restoreSessionOnStartup: false },
+    ready: ".activity-rail",
+  });
+  await expect(
+    page.locator('[data-active-tab="true"] .ProseMirror'),
+  ).toHaveCount(0);
   await emit(page, "menu-open-help", "welcome");
 
   const title = page.locator(".tour-title");
@@ -28,13 +35,24 @@ test("the tour walks the window, moving on as each thing is done", async ({
   await expect
     .poll(async () => (await page.locator(".tour-card").boundingBox())!.x)
     .toBeGreaterThanOrEqual(side!.x + side!.width);
-  for (let i = 0; i < 5; i++) await primary.click();
+  // Each rail button is lit alone and opens its own panel.
+  for (const id of ["tree", "outline", "search", "plugins"]) {
+    const button = page.locator(`.activity-rail [data-rail-id="${id}"]`);
+    await expect(button).toHaveAttribute("aria-pressed", "true");
+    const ring = (await page.locator(".tour-ring").boundingBox())!;
+    expect(ring.height).toBeLessThan(80);
+    await primary.click();
+  }
+  await primary.click();
   await expect(title).toHaveText("设置");
   await primary.click();
 
   // Typing Markdown in the practice tab moves on by itself.
+  // The practice document comes to the front, ready to type in.
   await expect(title).toHaveText("所见即所得");
-  await page.locator('[data-active-tab="true"] .ProseMirror').click();
+  await expect(
+    page.locator('[data-active-tab="true"] .ProseMirror'),
+  ).toBeFocused();
   await page.keyboard.type("# 标题");
   await expect(title).toHaveText("Textus AI");
 

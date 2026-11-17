@@ -82,6 +82,12 @@ export function dragGhost(text: string, className: string): DragGhost {
   };
 }
 
+/** `v` on a whole device pixel. */
+const onPixel = (v: number) => {
+  const dpr = window.devicePixelRatio || 1;
+  return Math.round(v * dpr) / dpr;
+};
+
 /** A copy of `node` lifted where it is, carried by the pointer `dx, dy`
  *  from there, so it stays under the point it was taken by: for an item
  *  its own clipping box would hide (a rail icon, a document's block that
@@ -134,7 +140,9 @@ export function liftedCopy(
   let at = { dx: 0, dy: 0 };
   const moveBy = (dx: number, dy: number) => {
     at = { dx, dy };
-    lifted.style.translate = `${box.left + dx}px ${box.top + dy}px`;
+    // On whole device pixels: placed between them, the lifted layer is
+    // drawn blurred.
+    lifted.style.translate = `${onPixel(box.left + dx)}px ${onPixel(box.top + dy)}px`;
   };
   moveBy(0, 0);
   document.body.append(lifted);

@@ -2,18 +2,24 @@
    block itself lifted off the page under the pointer, the room it will
    take open where it lands, the blocks around moved aside. */
 
-/* Inside the document: the block itself at its own size, on the page's
-   own colour so the words it passes over don't show through - no frame,
-   no shadow. */
+/* Inside the document: the block itself at its own size, carried over
+   the page as it is - no frame, no shadow, no backing. */
 .block-drag-lift.tx-drag-ghost {
   scale: none;
   /* Its text wraps as on the page. */
   box-sizing: content-box;
   width: fit-content;
   border-radius: 0;
-  background: var(--doc-bg, var(--ui-bg));
+  background: none;
   box-shadow: none;
   color: var(--doc-text, var(--ui-text));
+}
+
+/* Its ⋮⋮, carried along under the pointer as part of the block. */
+.block-drag-lift > .block-drag-grip {
+  position: absolute;
+  background: none;
+  color: var(--doc-muted);
 }
 
 /* A list item in its list as it stood, the list's indent taken off; its

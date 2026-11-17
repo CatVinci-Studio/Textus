@@ -170,6 +170,53 @@ test("a list item's handle stays with it across the markers; pulled, the item mo
   await expect(page.locator(`${editor} ul ul li`)).toHaveText("Inner");
 });
 
+test("a list's only item pulled away can go back between the headings round it, its ⋮⋮ held all the way", async ({
+  page,
+}) => {
+  await openApp(page, { settings: { language: "en" } });
+  await pasteMarkdown(page, "- Top\n\n## Life\n\n- Eat\n\n## Work\n\nEnd");
+  const life = (await block(page, "Life").boundingBox())!;
+  const work = (await block(page, "Work").boundingBox())!;
+  const top = (await block(page, "Top").boundingBox())!;
+  const eat = (await page
+    .locator(`${editor} li`, { hasText: "Eat" })
+    .boundingBox())!;
+  await page.mouse.move(eat.x + 10, eat.y + 8);
+  await expect(page.locator(handle)).toBeVisible();
+  const grip = (await page
+    .locator(`${handle} .block-handle-grip`)
+    .boundingBox())!;
+  await page.mouse.move(grip.x + grip.width / 2, grip.y + grip.height / 2);
+  await page.mouse.down();
+  const room = page.locator(`${editor} .block-drag-room`);
+  // Up by Top: the room opens under it, the ⋮⋮ under the pointer.
+  const up = { x: top.x + 40, y: top.y + top.height - 2 };
+  await page.mouse.move(up.x, up.y, { steps: 8 });
+  const carried = (await page
+    .locator(".block-drag-lift .block-drag-grip")
+    .boundingBox())!;
+  expect(Math.abs(carried.x + carried.width / 2 - up.x)).toBeLessThan(
+    carried.width,
+  );
+  expect(Math.abs(carried.y + carried.height / 2 - up.y)).toBeLessThan(
+    carried.height,
+  );
+  await expect
+    .poll(async () => (await room.boundingBox())!.y)
+    .toBeLessThan(life.y);
+  // Back between Life and Work: its own place opens there again.
+  await page.mouse.move(up.x, (life.y + life.height + work.y) / 2, {
+    steps: 8,
+  });
+  await expect
+    .poll(async () => (await room.boundingBox())!.y)
+    .toBeGreaterThan(life.y + life.height / 2);
+  await page.mouse.up();
+  expect(await sourceOf(page)).toBe(
+    "- Top\n\n## Life\n\n- Eat\n\n## Work\n\nEnd",
+  );
+});
+
 test("a block pulled into the document beside it moves there; with Option or Ctrl a copy goes", async ({
   page,
 }) => {
@@ -234,7 +281,7 @@ test("⋮⋮ alone in the margin turns its block into another kind or deletes it
   expect(await sourceOf(page)).toBe("## Middle\n\n- Omega");
 });
 
-test("the handles come only near a block's start, stay away while typing, and are off in Settings", async ({
+test("the handles come with the fold caret over a block's line, stay away while typing, and are off in Settings", async ({
   page,
 }) => {
   await openApp(page, { settings: { language: "en" } });
@@ -242,22 +289,25 @@ test("the handles come only near a block's start, stay away while typing, and ar
     page,
     "## Part one\n\nSome text that runs on for a while",
   );
-  // Over the line being read: nothing; by its start: ⋮⋮ and the fold caret.
+  // Anywhere on the line: ⋮⋮ and the fold caret, together.
   const heading = (await block(page, "Part one").boundingBox())!;
   const caret = page.locator(`${editor} h2 > .heading-fold`);
-  await page.mouse.move(heading.x + heading.width - 20, heading.y + 10);
-  await page.waitForTimeout(250);
-  await expect(page.locator(handle)).toBeHidden();
   await expect(caret).toHaveCSS("opacity", "0");
-  await page.mouse.move(heading.x + 6, heading.y + 10);
+  await page.mouse.move(heading.x + heading.width - 20, heading.y + 10);
   await expect(page.locator(handle)).toBeVisible();
   await expect(caret).toHaveCSS("opacity", "1");
-  // Left of ⋮⋮, never over it.
+  // Left of ⋮⋮, never over it; reached across ⋮⋮, both stay.
   const grip = (await page
     .locator(`${handle} .block-handle-grip`)
     .boundingBox())!;
   const fold = (await caret.boundingBox())!;
   expect(fold.x + fold.width).toBeLessThanOrEqual(grip.x + 1);
+  await page.mouse.move(fold.x + fold.width / 2, fold.y + fold.height / 2, {
+    steps: 10,
+  });
+  await page.waitForTimeout(200);
+  await expect(page.locator(handle)).toBeVisible();
+  await expect(caret).toHaveCSS("opacity", "1");
   await hover(page, "Some text");
   await page.locator(editor).press("End");
   await page.keyboard.type(" more");
@@ -268,7 +318,7 @@ test("the handles come only near a block's start, stay away while typing, and ar
   await page.mouse.move(box.x + 20, box.y + box.height / 2);
   await page.waitForTimeout(200);
   await expect(page.locator(handle)).toBeHidden();
-  // A heading's fold caret still comes by its start.
+  // A heading's fold caret still comes over its line.
   const title = (await block(page, "Part one").boundingBox())!;
   await page.mouse.move(title.x + 6, title.y + 10);
   await expect(page.locator(`${editor} h2 > .heading-fold`)).toHaveCSS(

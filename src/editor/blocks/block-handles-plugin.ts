@@ -14,6 +14,7 @@ import { GRIP_ICON_HTML } from "../../engine/controls/icons";
 import { TOUCH_SLOP_PX } from "../../utils/gesture";
 import { canHaptic } from "../../platform/capabilities";
 import { iosFiles } from "../../platform/ios-files";
+import { duration, motionAllowed } from "../../engine/motion/motion";
 import "./block-handles.css";
 
 /** Room a list item's marker takes left of its text, in ems. */
@@ -25,18 +26,13 @@ const MARKER_EM: Record<string, number> = {
 /** How long a finger rests on ⋮⋮ before the block lifts. */
 const HOLD_MS = 450;
 
-/** How long the mouse rests by a block's start before its tools come: one
- *  passing over on its way elsewhere brings nothing. */
+/** How long the mouse rests on a block before its tools come: one passing
+ *  over on its way elsewhere brings nothing. */
 const DWELL_MS = 100;
 
-/** How far into a block's text, in its ems, the mouse brings its tools:
- *  over the rest of the line it is reading, not reaching for them. */
-const NEAR_EM = 2;
-
 /**
- * ⋮⋮ in the margin beside the block a mouse comes near the start of, with
- * the block's fold caret: clicked, its menu; pulled, it moves the block.
- * Gone while
+ * ⋮⋮ in the margin beside the block the mouse rests on, with the block's
+ * fold caret: clicked, its menu; pulled, it moves the block. Gone while
  * typing, until the mouse moves again; never in a document that can't be
  * edited. Under a finger, ⋮⋮ alone stands by the block with the caret:
  * tapped, its menu; held, the block lifts to be moved.
@@ -87,6 +83,10 @@ class BlockHandles {
   private pointer = { x: 0, y: 0 };
   private dwell: ReturnType<typeof setTimeout> | undefined;
   private dragging = false;
+  /** ⋮⋮ fading out, gone when it ends. */
+  private fading: Animation | null = null;
+  /** ⋮⋮ pressed and not let go: a pull, not text being chosen. */
+  private gripped = false;
   /** The last press was a finger's or a pen's, not a mouse's. */
   private touch = false;
   private readonly area: HTMLElement;
@@ -121,27 +121,27 @@ class BlockHandles {
   };
 
   private readonly onMove = (e: PointerEvent) => {
-    if (this.dragging || e.pointerType !== "mouse") return;
+    if (this.dragging || this.gripped || e.pointerType !== "mouse") return;
     // Over the handle itself: it stays for the block it stands for.
     if (this.handle.contains(e.target as Node)) return;
     // A button held: text being chosen, not a block reached for.
     if (e.buttons !== 0) return this.leave();
     this.pointer = { x: e.clientX, y: e.clientY };
-    if (!this.nearBlock()) return this.leave();
+    if (!this.blockOnLine()) return this.leave();
     // Shown already: they follow from block to block at once.
     if (this.block || this.caret) return this.reveal();
     clearTimeout(this.dwell);
     this.dwell = setTimeout(() => this.reveal(), DWELL_MS);
   };
 
-  /** The block on the mouse's line whose start it is near, if any. */
-  private nearBlock(): { block: HandledBlock; dom: HTMLElement } | null {
+  /** The block on the mouse's line, from the margin across, if any. */
+  private blockOnLine(): HandledBlock | null {
     const { x, y } = this.pointer;
     const content = this.view.dom.getBoundingClientRect();
     if (y < content.top || y > content.bottom) return null;
-    // From the margin too: the block on the pointer's line.
+    // From the margins too: the block on the pointer's line.
     const at = this.view.posAtCoords({
-      left: Math.max(x, content.left + 2),
+      left: Math.min(Math.max(x, content.left + 2), content.right - 2),
       top: y,
     });
     const around =
@@ -150,20 +150,16 @@ class BlockHandles {
     if (!around) return null;
     const block = itemOnLine(this.view, around, y);
     const dom = this.view.nodeDOM(block.pos);
-    if (!(dom instanceof HTMLElement) || !dom.isConnected) return null;
-    const em = parseFloat(getComputedStyle(dom).fontSize) || 16;
-    return x < dom.getBoundingClientRect().left + NEAR_EM * em
-      ? { block, dom }
-      : null;
+    return dom instanceof HTMLElement && dom.isConnected ? block : null;
   }
 
-  /** The tools of the block the mouse is near: its fold caret, and ⋮⋮
+  /** The tools of the block the mouse is on: its fold caret, and ⋮⋮
    *  where the document can be edited and handles are on. */
   private reveal() {
-    const near = this.nearBlock();
-    if (!near) return this.leave();
+    const block = this.blockOnLine();
+    if (!block) return this.leave();
     this.markCaret(this.pointer.y);
-    if (this.enabled() && this.view.editable) this.show(near.block);
+    if (this.enabled() && this.view.editable) this.show(block);
     else this.hide();
   }
 
@@ -188,7 +184,7 @@ class BlockHandles {
     if (!this.dragging && e.pointerType === "mouse") this.leave();
   };
 
-  /** The mouse gone from the blocks' starts, or typing: no tools. */
+  /** The mouse gone from the blocks, or typing: no tools. */
   private readonly leave = () => {
     clearTimeout(this.dwell);
     this.markCaret(Number.NaN);
@@ -197,12 +193,33 @@ class BlockHandles {
 
   private readonly hide = () => {
     this.block = null;
-    this.handle.hidden = true;
+    if (this.handle.hidden || this.fading) return;
+    if (this.touch || !motionAllowed()) {
+      this.handle.hidden = true;
+      return;
+    }
+    // Fades out with the fold caret, then goes.
+    const fading = this.handle.animate([{ opacity: 1 }, { opacity: 0 }], {
+      duration: duration("--dur-fast"),
+      easing: "ease-out",
+    });
+    this.fading = fading;
+    fading.onfinish = () => {
+      this.fading = null;
+      this.handle.hidden = true;
+    };
   };
+
+  /** A fade out stopped: the handle stays. */
+  private stopFading() {
+    this.fading?.cancel();
+    this.fading = null;
+  }
 
   private show(block: HandledBlock) {
     const dom = this.view.nodeDOM(block.pos) as HTMLElement | null;
     if (!dom?.isConnected) return this.hide();
+    this.stopFading();
     this.block = block;
     this.handle.hidden = false;
     // Beside a fold caret (a drawn block's, a heading's), a finger's ⋮⋮
@@ -254,10 +271,12 @@ class BlockHandles {
     const drag = (held: boolean) =>
       dragBlock(this.view, block, e, {
         held,
+        grip: this.grip,
         show: (view, state) => {
           if (view === this.view && state) {
             this.dragging = true;
             // Lifted, the block takes its handle along.
+            this.stopFading();
             this.handle.hidden = true;
           }
           showPulled(view, state);
@@ -267,7 +286,17 @@ class BlockHandles {
           if (!this.touch) this.hide();
         },
       });
-    if (e.pointerType === "mouse") return drag(false);
+    if (e.pointerType === "mouse") {
+      this.gripped = true;
+      const free = () => {
+        this.gripped = false;
+        window.removeEventListener("pointerup", free, true);
+        window.removeEventListener("pointercancel", free, true);
+      };
+      window.addEventListener("pointerup", free, true);
+      window.addEventListener("pointercancel", free, true);
+      return drag(false);
+    }
     // No mousedown made of the finger after it lifts: it would land
     // outside the menu just opened and close it.
     e.preventDefault();
@@ -326,6 +355,7 @@ class BlockHandles {
     this.area.removeEventListener("pointerleave", this.onLeave);
     this.view.dom.removeEventListener("keydown", this.leave);
     clearTimeout(this.dwell);
+    this.stopFading();
     this.handle.remove();
     openEditors.delete(this.view);
   }

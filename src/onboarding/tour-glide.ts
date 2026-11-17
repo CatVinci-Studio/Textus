@@ -3,10 +3,12 @@ import { easingFn } from "../engine/frame/easing";
 import { duration, motionAllowed } from "../engine/motion/motion";
 import type { Box } from "./tour-place";
 
-/** What the tour draws: the lit hole (none: the window dimmed whole) and
- *  the card's corner, with a width when it is narrowed. */
+/** What the tour draws: the lit hole (none: the window dimmed whole), what
+ *  it opened left undimmed beside it, unringed, and the card's corner, with
+ *  a width when it is narrowed. */
 export interface TourFrame {
   hole: Box | null;
+  beside?: Box | null;
   card: { left: number; top: number; width?: number };
 }
 
@@ -26,6 +28,7 @@ function mixBox(a: Box, b: Box, k: number): Box {
 function mixFrame(a: TourFrame, b: TourFrame, k: number): TourFrame {
   return {
     hole: b.hole && (a.hole ? mixBox(a.hole, b.hole, k) : b.hole),
+    beside: b.beside && (a.beside ? mixBox(a.beside, b.beside, k) : b.beside),
     card: {
       left: mix(a.card.left, b.card.left, k),
       top: mix(a.card.top, b.card.top, k),

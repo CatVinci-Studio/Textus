@@ -47,11 +47,14 @@ export function dragBlock(
     show,
     ended,
     held = false,
+    grip,
   }: {
     /** What `view` shows of the drag; null: nothing. */
     show: (view: EditorView, pulled: Pulled | null) => void;
     ended: () => void;
     held?: boolean;
+    /** The handle pulled: carried on the lifted block, under the pointer. */
+    grip?: HTMLElement;
   },
 ): void {
   const source = view.nodeDOM(block.pos) as HTMLElement | null;
@@ -62,7 +65,17 @@ export function dragBlock(
   let aim: Aim = { view, landing: null };
   let last = { x: down.clientX, y: down.clientY };
 
-  /** Each place in `target` the block can go, laid out now. */
+  const end = block.pos + block.node.nodeSize;
+  const style = getComputedStyle(source);
+  const tall =
+    source.offsetHeight +
+    Math.max(
+      parseFloat(style.marginTop) || 0,
+      parseFloat(style.marginBottom) || 0,
+    );
+
+  /** Each place in `target` the block can go, laid out as it will stand
+   *  with the block taken out of its own document. */
   const measured = (target: EditorView, root: HTMLElement) => {
     const own = target === view;
     const gaps = own
@@ -73,20 +86,31 @@ export function dragBlock(
       const el = target.nodeDOM(pos) as HTMLElement | null;
       return el?.isConnected && el.offsetParent && el !== source ? el : null;
     };
+    // What is past the block moves up into its place.
+    const top = (el: HTMLElement, pos: number) =>
+      boxIn(root, el).y - (own && pos >= end ? tall : 0);
+    // Next to the block, a place stands by what is past it: alone in its
+    // list, where its top was.
+    const after = (pos: number) => (own && pos === block.pos ? end : pos);
+    const before = (pos: number) => (own && pos === end ? block.pos : pos);
     return gaps.map((gap) => {
-      const $gap = target.state.doc.resolve(gap.pos);
-      const after = $gap.nodeAfter ? shown(gap.pos) : null;
-      const before = $gap.nodeBefore
-        ? shown(gap.pos - $gap.nodeBefore.nodeSize)
-        : null;
-      const top = after ? boxIn(root, after).y : null;
-      const bottom = before
-        ? boxIn(root, before).y + before.offsetHeight
-        : null;
+      const $after = target.state.doc.resolve(after(gap.pos));
+      const $before = target.state.doc.resolve(before(gap.pos));
+      const next = $after.nodeAfter ? shown($after.pos) : null;
+      const prevPos = $before.nodeBefore
+        ? $before.pos - $before.nodeBefore.nodeSize
+        : -1;
+      const prev = prevPos >= 0 ? shown(prevPos) : null;
+      const below = next ? top(next, $after.pos) : null;
+      const above = prev ? top(prev, prevPos) + prev.offsetHeight : null;
+      const home =
+        own && (gap.pos === block.pos || gap.pos === end)
+          ? boxIn(root, source).y
+          : 0;
       const y =
-        top !== null && bottom !== null
-          ? (top + bottom) / 2
-          : (top ?? bottom ?? 0);
+        below !== null && above !== null
+          ? (below + above) / 2
+          : (below ?? above ?? home);
       const box =
         gap.container < 0
           ? boxIn(root, target.dom)
@@ -95,25 +119,14 @@ export function dragBlock(
     });
   };
 
-  // Each editor's places as it stood before the drag touched it, the
-  // pulled block taken out: read live, the room opening and the block's
-  // place closing moved them under the pointer, and the aim flipped back
-  // and forth.
-  const end = block.pos + block.node.nodeSize;
-  const style = getComputedStyle(source);
-  const tall =
-    source.offsetHeight +
-    Math.max(
-      parseFloat(style.marginTop) || 0,
-      parseFloat(style.marginBottom) || 0,
-    );
+  // Each editor's places as it stood before the drag touched it: read
+  // live, the room opening and the block's place closing moved them under
+  // the pointer, and the aim flipped back and forth.
   const layouts = new Map<EditorView, ReturnType<typeof measured>>();
   const layoutOf = (target: EditorView, root: HTMLElement) => {
     let gaps = layouts.get(target);
     if (!gaps) {
       gaps = measured(target, root);
-      if (target === view)
-        gaps = gaps.map((g) => (g.pos >= end ? { ...g, y: g.y - tall } : g));
       layouts.set(target, gaps);
     }
     return gaps;
@@ -213,6 +226,7 @@ export function dragBlock(
       wrap: blockLook(source, view),
     });
     room = roomFor(source, copy.element);
+    if (grip) carryGrip(copy.element, grip);
     placeRoom(room, block.node.type.name === "list_item");
     show(view, { pos: block.pos, landing: block.pos, room });
     last = { x, y };
@@ -270,4 +284,22 @@ export function dragBlock(
     { started: held },
   );
   if (held) lift(down.clientX, down.clientY);
+}
+
+/** A copy of `grip` on `lifted`, where it stood beside the block: what the
+ *  pointer holds goes along with it. */
+function carryGrip(lifted: HTMLElement, grip: HTMLElement) {
+  const g = grip.getBoundingClientRect();
+  const l = lifted.getBoundingClientRect();
+  if (!g.width || !lifted.offsetWidth) return;
+  const scale = l.width / lifted.offsetWidth;
+  const carried = grip.cloneNode(true) as HTMLElement;
+  carried.classList.add("block-drag-grip");
+  Object.assign(carried.style, {
+    left: `${(g.left - l.left) / scale}px`,
+    top: `${(g.top - l.top) / scale}px`,
+    width: `${g.width / scale}px`,
+    height: `${g.height / scale}px`,
+  });
+  lifted.append(carried);
 }

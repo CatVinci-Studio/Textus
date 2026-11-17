@@ -20,11 +20,20 @@ export function usePracticeTab(
 ) {
   const { tabsRef, setTabs, activeTabId, setActiveTabId } = tabState;
 
-  // Reuses the active tab when it's an untouched draft; otherwise appends a
-  // blank one, so typing demos never land in real content.
+  // Reuses the active tab when it's an untouched draft - a start page made
+  // a document, as New does with it - otherwise appends a blank one, so
+  // typing demos never land in real content.
   const claimPracticeTab = useCallback((): string => {
     const active = tabsRef.current.find((tb) => tb.id === activeTabId);
-    if (active && tabIsUntouchedDraft(active)) return active.id;
+    if (active && tabIsUntouchedDraft(active)) {
+      if (active.start)
+        setTabs((prev) =>
+          prev.map((tb) =>
+            tb.id === active.id ? { ...tb, start: false } : tb,
+          ),
+        );
+      return active.id;
+    }
     const blank = makeBlankTab();
     setTabs((prev) => [...prev, blank]);
     setActiveTabId(blank.id);
@@ -59,6 +68,30 @@ export function useTutorialTabRecovery(
     if (tabsRef.current.some((tab) => tab.id === tutorial.tabId)) return;
     tutorial.rebindTab(claimPracticeTab());
   }, [latest, tabsRef]);
+}
+
+/**
+ * The step that has the learner type brings the practice tab to the front
+ * (another may have been opened since), and its editor takes the keys.
+ */
+export function usePracticeTabFront(
+  tutorial: Tutorial,
+  tabState: TabState,
+): void {
+  const { tabsRef, setActiveTabId } = tabState;
+  const { active, tabId } = tutorial;
+  const typing = tutorial.step.until === "formatted";
+  useEffect(() => {
+    if (!active || !typing || !tabId) return;
+    if (!tabsRef.current.some((tb) => tb.id === tabId)) return;
+    setActiveTabId(tabId);
+    const focus = requestAnimationFrame(() =>
+      document
+        .querySelector<HTMLElement>('[data-active-tab="true"] .ProseMirror')
+        ?.focus({ preventScroll: true }),
+    );
+    return () => cancelAnimationFrame(focus);
+  }, [active, typing, tabId, tabsRef, setActiveTabId]);
 }
 
 // The notes come for the step where the AI works on them; a tour without

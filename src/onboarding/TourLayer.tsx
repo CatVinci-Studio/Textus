@@ -33,6 +33,22 @@ function scrimPath(
   return `M0 0H${view.width}V${view.height}H0Z` + holes.map(holePath).join("");
 }
 
+/** Whether two boxes share any of their area. */
+const overlap = (a: Box, b: Box) =>
+  a.left < b.left + b.width &&
+  b.left < a.left + a.width &&
+  a.top < b.top + b.height &&
+  b.top < a.top + a.height;
+
+/** `beside` cut back to start past `lit`'s right edge, when `lit` sits at
+ *  its left; null when that leaves nothing. */
+function pastRight(beside: Box, lit: Box): Box | null {
+  const left = lit.left + lit.width;
+  const right = beside.left + beside.width;
+  if (lit.left > beside.left || left >= right) return null;
+  return { ...beside, left, width: right - left };
+}
+
 /** The smallest box holding both. */
 function union(a: Box, b: Box): Box {
   const left = Math.min(a.left, b.left);
@@ -134,11 +150,21 @@ export function TourLayer({
   const ring = useRef<HTMLDivElement>(null);
   const { view, cardSize } = useTourView(card, onEscape);
 
-  // The lit part and what it opened (the sidebar) light as one, one ring.
+  // The ring round the part the step is about, and only it; what that part
+  // opened (the sidebar) stays undimmed beside it, cut back where the two
+  // meet, or joined into one hole when it can't be.
   const lit = box && holeAround(box, view);
-  const hole = lit && besideBox ? union(lit, besideBox) : lit;
+  const meet = !!lit && !!besideBox && overlap(lit, besideBox);
+  const trimmed = lit && besideBox && meet ? pastRight(besideBox, lit) : null;
+  const joined = meet && !trimmed;
+  const hole = lit && joined ? union(lit, besideBox!) : lit;
+  const besideHole =
+    lit && besideBox && !joined ? (trimmed ?? besideBox) : null;
   const draw = useCallback((frame: TourFrame) => {
-    path.current?.setAttribute("d", scrimPath(viewNow(), [frame.hole]));
+    path.current?.setAttribute(
+      "d",
+      scrimPath(viewNow(), [frame.hole, frame.beside ?? null]),
+    );
     const ringEl = ring.current;
     if (ringEl) {
       ringEl.hidden = !frame.hole;
@@ -158,9 +184,14 @@ export function TourLayer({
     }
   }, []);
   // The card beside it all, level with the part the step is about.
-  const anchor = lit && hole ? across(lit, hole) : hole;
+  const all = hole && besideHole ? union(hole, besideHole) : hole;
+  const anchor = lit && all ? across(lit, all) : all;
   useGlide(
-    { hole, card: placeCard(anchor, cardSize, view, phone, hole) },
+    {
+      hole,
+      beside: besideHole,
+      card: placeCard(anchor, cardSize, view, phone, all),
+    },
     draw,
   );
 

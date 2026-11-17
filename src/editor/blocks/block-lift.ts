@@ -88,6 +88,9 @@ export const movingBlocks = (view: EditorView): Element[] => [
 export function blockLook(source: HTMLElement, view: EditorView) {
   return (copy: HTMLElement): HTMLElement => {
     copy.classList.remove("ProseMirror-selectednode", "block-drag-gone");
+    // As it reads at rest: not what editing it shows (its "##", its caret).
+    for (const el of copy.querySelectorAll(".heading-marker, .block-fold"))
+      el.remove();
     // What draws it (a task's box, its state) is in its data- attributes,
     // which a lifted copy is cleared of.
     for (const attr of source.attributes)

@@ -25,7 +25,11 @@ import {
   useClosePrompt,
   useWindowCloseGuard,
 } from "./close-flow";
-import { usePracticeNotes, useTutorialTabRecovery } from "./onboarding-wiring";
+import {
+  usePracticeNotes,
+  usePracticeTabFront,
+  useTutorialTabRecovery,
+} from "./onboarding-wiring";
 import { setDocumentDrop } from "../engine/controls/document-drop";
 import { fileDropOnDocuments } from "./islands/split-drop";
 import type { WindowShell } from "./useWindowShell";
@@ -84,6 +88,7 @@ function useTabsAndTour(input: WiringInput) {
   useNavHistory({ tabsRef, activeTabId, setActiveTabId });
 
   useTutorialTabRecovery(tutorial, tabState, docs.claimPracticeTab);
+  usePracticeTabFront(tutorial, tabState);
   usePracticeNotes({
     tutorial,
     tabState,
