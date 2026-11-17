@@ -52,6 +52,7 @@ import { usePluginDocumentAccess } from "./plugins/usePluginDocumentAccess";
 import { noteBase } from "../ai/chat/file-changes";
 import { useKeptProposals } from "../ai/revision/useKeptProposals";
 import { explainError } from "../utils/error-explain";
+import { aiRoot } from "../ai/workspace/ai-root";
 
 /** The editor's side of AI edits: pending previews, the conversations that
  *  propose them (the window's live one, and Quick Ask's own), and streaming
@@ -163,7 +164,7 @@ export function useEditorProposals({
   useKeptProposals({
     run,
     filePath,
-    workspaceRoot: settings.agentWorkspaceRoot || null,
+    workspaceRoot: aiRoot(settings),
     previews: pendingEdits.previews,
     showPreviews: pendingEdits.showPreviews,
     decide: pendingEdits.decide,
@@ -394,17 +395,13 @@ export function useEditorProposals({
   );
   // The window's, read here: it outlives this editor. Followed by its
   // turns, never each frame of a reply: the editor reads none of it.
-  const conversation = useLiveConversation(
-    filePath,
-    settings.agentWorkspaceRoot || null,
-    false,
-  );
+  const conversation = useLiveConversation(filePath, aiRoot(settings), false);
   // Quick Ask's one-off exchange, kept out of History. "Continue in the
   // panel" hands it to `conversation`.
   const quickConversation = useOwnConversation(
     () => ({
       docPath: filePath,
-      workspaceRoot: settingsRef.current.agentWorkspaceRoot || null,
+      workspaceRoot: aiRoot(settingsRef.current),
       settings: settingsRef.current,
       port,
     }),

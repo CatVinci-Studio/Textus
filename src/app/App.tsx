@@ -111,7 +111,7 @@ function App() {
 
   useWindowAi({
     tabs: shell.tabState,
-    workspaceRoot: settings.agentWorkspaceRoot || null,
+    settings,
     shown: agentPanel.open,
     setShown: agentPanel.setOpen,
   });

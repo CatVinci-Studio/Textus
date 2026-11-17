@@ -29,6 +29,7 @@ import { withoutPictures } from "../ai/paper/paper-document";
 import { figureErrors } from "../ai/paper/figure-check";
 import { usePaperDocument } from "./usePaperDocument";
 import { chosenModel } from "../ai/chosen-model";
+import { aiRoot } from "../ai/workspace/ai-root";
 
 /**
  * Research mode's paper: researches and outlines a paper on a topic, waits
@@ -75,7 +76,7 @@ export function usePaperWriter({
       provider: s.aiProvider,
       model: chosenModel(s),
       docPath,
-      workspaceRoot: s.agentWorkspaceRoot || null,
+      workspaceRoot: aiRoot(s),
       imageModel: imageModelOf(s),
     };
   };

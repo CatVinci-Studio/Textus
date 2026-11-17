@@ -6,6 +6,8 @@ import {
 } from "../../editor/markdown/doc-markdown";
 import { type SelectionTarget } from "../revision/pending-place";
 import type { ChatContext } from "./window/chat-bridge";
+import { aiRoot } from "../workspace/ai-root";
+import { loadSettings } from "../../prefs/settings-store";
 
 /**
  * The editor's state right now, as the detached chat window needs it. That
@@ -41,6 +43,7 @@ export function readChatContext(
           selectedText,
           selectionMarkdown,
           docPath: filePath,
+          workspaceRoot: aiRoot(loadSettings()),
           docTitle,
           editorLabel,
         },

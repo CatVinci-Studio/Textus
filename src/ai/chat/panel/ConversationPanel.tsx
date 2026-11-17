@@ -28,6 +28,7 @@ import { useSettings, type PanelMode } from "../../../prefs/SettingsContext";
 import { START_MODE, initialMode } from "../last-mode";
 import { useAiSignedIn } from "../chat-models";
 import { openSettingsPage } from "../../../settings/settings-nav";
+import { aiRoot } from "../../../ai/workspace/ai-root";
 
 /** The panel always asks for the document as it is now; this stands until
  *  it answers, and where there is none. */
@@ -147,7 +148,7 @@ export function ConversationPanel({
             document={NO_DOCUMENT}
             selectionMarkdown={null}
             docPath={docPath}
-            workspaceRoot={settings.agentWorkspaceRoot || null}
+            workspaceRoot={aiRoot(settings)}
             conversation={conversation}
             defaultMode={START_MODE}
             labels={labels}

@@ -14,6 +14,7 @@ import {
   errorText,
   type AiNoticeCode,
 } from "../../utils/error-text";
+import { aiRoot } from "../../ai/workspace/ai-root";
 
 const NOTICE_TEXT: Record<AiNoticeCode, TextKey> = {
   "completion-needs-caret": "noticeCompletionNeedsCaret",
@@ -75,7 +76,7 @@ export function useAiActions(
           writingModels[provider] || null,
           {
             docPath: getDocPath(),
-            workspaceRoot: getSettings().agentWorkspaceRoot || null,
+            workspaceRoot: aiRoot(getSettings()),
           },
           language,
         ),
@@ -97,7 +98,7 @@ export function useAiActions(
           writingModels[provider] || null,
           {
             docPath: getDocPath(),
-            workspaceRoot: getSettings().agentWorkspaceRoot || null,
+            workspaceRoot: aiRoot(getSettings()),
           },
           getSettings().language,
         ),

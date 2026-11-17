@@ -1,13 +1,5 @@
 import { describe, expect, it } from "vitest";
-import { ownFolderMoved } from "../platform/documents-path";
-import {
-  agentRootOnClose,
-  agentRootOnOpen,
-  agentRootsMoved,
-  isWithin,
-  nextTreeRoot,
-  rootAfterClose,
-} from "./tree-root";
+import { isWithin, nextTreeRoot, rootAfterClose } from "./tree-root";
 
 const root = (
   current: string | null,
@@ -82,55 +74,6 @@ describe("isWithin", () => {
     expect(isWithin("/notes", "/notes")).toBe(true);
     expect(isWithin("/notes/a/b.md", "/notes")).toBe(true);
     expect(isWithin("/notesx", "/notes")).toBe(false);
-  });
-});
-
-describe("the AI's project folder after a reinstall", () => {
-  const old = "/var/mobile/Containers/Data/Application/AAA/Documents";
-  const docs = "/var/mobile/Containers/Data/Application/BBB/Documents/";
-  const move = (path: string) => ownFolderMoved(path, docs);
-
-  it("moves into this install's Documents, with the folder that set it", () => {
-    expect(agentRootsMoved(`${old}/Notes`, `${old}/Notes`, move)).toEqual({
-      current: `${docs}Notes`,
-      fromFolder: `${docs}Notes`,
-    });
-  });
-
-  it("leaves an unset or unmoved folder alone", () => {
-    expect(agentRootsMoved("", "", move)).toBeNull();
-    expect(agentRootsMoved(`${docs}Notes`, "", move)).toBeNull();
-  });
-});
-
-describe("the AI's project folder when a folder opens", () => {
-  it("follows the folder while the AI has none of its own", () => {
-    expect(agentRootOnOpen("", "", "/notes")).toBe("/notes");
-  });
-
-  it("follows the next folder after one Open Folder set it", () => {
-    expect(agentRootOnOpen("/notes", "/notes", "/novel")).toBe("/novel");
-  });
-
-  it("leaves a folder the user chose for the AI", () => {
-    expect(agentRootOnOpen("/research", "", "/notes")).toBeNull();
-    expect(agentRootOnOpen("/research", "/old", "/notes")).toBeNull();
-  });
-
-  it("changes nothing when it already is the folder", () => {
-    expect(agentRootOnOpen("/notes", "", "/notes")).toBeNull();
-  });
-});
-
-describe("the AI's project folder when a folder closes", () => {
-  it("goes back to the default if this folder set it", () => {
-    expect(agentRootOnClose("/notes", "/notes", "/notes")).toBe("");
-  });
-
-  it("is left alone if the user chose it, or another folder set it", () => {
-    expect(agentRootOnClose("/research", "/notes", "/notes")).toBeNull();
-    expect(agentRootOnClose("/novel", "/novel", "/notes")).toBeNull();
-    expect(agentRootOnClose("", "", "/notes")).toBeNull();
   });
 });
 

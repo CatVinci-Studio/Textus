@@ -5,6 +5,7 @@ import { useSettings } from "../../prefs/SettingsContext";
 import { errorText } from "../../utils/error-text";
 import { useAgentPanel } from "./panel/agent-panel";
 import { focusMemory } from "./panel/memory-focus";
+import { useAiRoot } from "../../ai/workspace/ai-root";
 
 /** What was remembered. `previous`: the file before an update or a forget,
  *  for Undo to put back; `forgot`: taken back, `text` being what it said. */
@@ -78,7 +79,7 @@ export function MemoryChip({
 }) {
   const { settings } = useSettings();
   const panel = useAgentPanel();
-  const workspaceRoot = settings.agentWorkspaceRoot || null;
+  const workspaceRoot = useAiRoot(settings);
   const [current, setCurrent] = useState({
     id: result.remembered,
     scope: result.scope,

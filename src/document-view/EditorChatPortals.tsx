@@ -9,6 +9,7 @@ import { useAttachDocument } from "../ai/chat/conversation/useAttachDocument";
 import { chatLabels } from "../ai/chat/chat-labels";
 import type { AgentMode, Settings } from "../prefs/SettingsContext";
 import type { Strings } from "../i18n/strings";
+import { aiRoot } from "../ai/workspace/ai-root";
 
 /** One tab's part in Textus AI's chats: in front, its document is what the
  *  window's conversations work on; Quick Ask is drawn in the document's
@@ -92,7 +93,7 @@ export function EditorChatPortals({
             selectedText={inlineChat.chatInfo.selectedText}
             selectionMarkdown={inlineChat.chatInfo.selectionMarkdown}
             docPath={filePath}
-            workspaceRoot={settings.agentWorkspaceRoot || null}
+            workspaceRoot={aiRoot(settings)}
             conversation={chat.quickConversation}
             // Write first: Quick Ask is opened on a passage to change it.
             defaultMode="write"

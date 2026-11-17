@@ -14,6 +14,7 @@ import { listenToThisWindow, unlistenAll } from "../../../platform/events";
 import { editInFocus } from "../../../engine/controls/edit-in-focus";
 import { useLatest } from "../../../utils/hooks/useLatest";
 import type { Settings } from "../../../prefs/SettingsContext";
+import { aiRoot } from "../../workspace/ai-root";
 
 /**
  * The chat window's side of a detach: the handoffs it takes on, the editor's
@@ -30,7 +31,8 @@ export function useChatWindowHandoff(settings: Settings) {
   const editorLabel = useRef<string | null>(null);
 
   const docPath = context?.docPath ?? null;
-  const workspaceRoot = settings.agentWorkspaceRoot || null;
+  // The editor's folder, which this window has none of its own to follow.
+  const workspaceRoot = context ? context.workspaceRoot : aiRoot(settings);
   const conversation = useLiveConversation(docPath, workspaceRoot, true);
   // The editor's document, as far as this window knows it: its proposals
   // stream in the editor's window.
@@ -137,6 +139,7 @@ export function useChatWindowHandoff(settings: Settings) {
 
   return {
     context,
+    workspaceRoot,
     statuses,
     lost,
     claimed,

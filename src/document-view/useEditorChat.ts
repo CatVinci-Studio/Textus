@@ -13,6 +13,7 @@ import { useAgentPanel } from "../ai/chat/panel/agent-panel";
 import { useRevisionLearning } from "../ai/revision/RevisionLearning";
 import type { Settings } from "../prefs/SettingsContext";
 import type { Strings } from "../i18n/strings";
+import { aiRoot } from "../ai/workspace/ai-root";
 
 /**
  * One tab's editor and Textus AI's chats: their proposals, what each chat
@@ -38,7 +39,7 @@ export function useEditorChat({
   const { run, inlineChat } = setup;
   const learning = useRevisionLearning({
     docPath: filePath,
-    workspaceRoot: settings.agentWorkspaceRoot || null,
+    workspaceRoot: aiRoot(settings),
   });
   const proposals = useEditorProposals({
     run,

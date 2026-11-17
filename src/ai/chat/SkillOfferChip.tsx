@@ -3,6 +3,7 @@ import { ai } from "../../platform/ipc";
 import type { SkillOffer } from "../../platform/bindings/ai-memory";
 import { useSettings } from "../../prefs/SettingsContext";
 import { SkillSaveChip, useSkillSave } from "./SkillSaveChip";
+import { aiRoot } from "../../ai/workspace/ai-root";
 
 /** The call an offer stands in the conversation as. */
 export const OFFER_SKILL = "offer_skill";
@@ -46,7 +47,7 @@ export function SkillOfferChip({
         offer,
         scope,
         docPath,
-        settings.agentWorkspaceRoot || null,
+        aiRoot(settings),
         modes,
         confirmed,
       ),

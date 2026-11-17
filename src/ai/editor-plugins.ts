@@ -22,6 +22,7 @@ import { prefersReducedMotion } from "../engine/motion/motion";
 import type { TourAi } from "../utils/events";
 import type { RevisionDisplay, Settings } from "../prefs/SettingsContext";
 import { aiFeatures } from "../prefs/ai-features";
+import { aiRoot } from "../ai/workspace/ai-root";
 
 export interface PendingEditCallbacks {
   onAccept: (callId: string) => void;
@@ -87,7 +88,7 @@ export function withAiPlugins(
           uiLanguage: () => settings.current.language,
           project: () => ({
             docPath: docPath.current,
-            workspaceRoot: settings.current.agentWorkspaceRoot || null,
+            workspaceRoot: aiRoot(settings.current),
           }),
         }),
       )
@@ -104,7 +105,7 @@ export function withAiPlugins(
           uiLanguage: () => settings.current.language,
           project: () => ({
             docPath: docPath.current,
-            workspaceRoot: settings.current.agentWorkspaceRoot || null,
+            workspaceRoot: aiRoot(settings.current),
           }),
         }),
       )
