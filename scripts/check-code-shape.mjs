@@ -14,12 +14,6 @@ const MAX_HOOKS = 8;
 /** Over the line limit today: at most this many lines. */
 const LINES_NOW = {};
 
-/** Over the hook limit today: custom hooks that wire a window or an editor
- *  together, waiting to be split by concern. */
-const HOOKS_NOW = {
-  "src/document-view/usePaperWriter.ts usePaperWriter": 12,
-};
-
 /** Not held to the line limit: tables, not logic. */
 const TABLES = [
   /^src\/i18n\/locales\//,
@@ -86,10 +80,9 @@ for (const path of sources.filter((p) => /\.tsx?$/.test(p))) {
     const body = text.slice(at, next && next.index < end ? next.index : end);
     // A custom hook's own name isn't one of its calls.
     const hooks = (body.match(HOOK)?.length ?? 0) - (/^use/.test(name) ? 1 : 0);
-    const cap = HOOKS_NOW[`${path} ${name}`] ?? MAX_HOOKS;
-    if (hooks > cap)
+    if (hooks > MAX_HOOKS)
       problems.push(
-        `${path}: ${name} calls ${hooks} hooks, over ${cap} - move a concern into a hook of its own`,
+        `${path}: ${name} calls ${hooks} hooks, over ${MAX_HOOKS} - move a concern into a hook of its own`,
       );
   });
 }
