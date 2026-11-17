@@ -161,21 +161,9 @@ pub(crate) struct PluginExports(pub(crate) Mutex<Vec<PluginExportItem>>);
 pub fn set_plugin_exports(app: AppHandle, items: Vec<PluginExportItem>) {
     #[cfg(target_os = "macos")]
     {
-        let Some(state) = app.try_state::<PluginExports>() else {
-            return;
-        };
-        {
-            let mut current = state.0.lock().unwrap();
-            if *current == items {
-                return;
-            }
-            *current = items;
+        if let Some(state) = app.try_state::<PluginExports>() {
+            super::keep_and_rebuild(&app, &state.0, items);
         }
-        let handle = app.clone();
-        let _ = app.run_on_main_thread(move || {
-            let labels = handle.state::<MenuLabels>().0.lock().unwrap().clone();
-            let _ = set_menu(&handle, &labels);
-        });
     }
     #[cfg(not(target_os = "macos"))]
     let _ = (app, items);

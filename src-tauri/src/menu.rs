@@ -155,24 +155,30 @@ pub fn set_menu_checks(app: AppHandle, checks: HashMap<String, bool>) {
 pub fn set_menu_accelerators(app: AppHandle, accelerators: HashMap<String, String>) {
     #[cfg(target_os = "macos")]
     {
-        let Some(state) = app.try_state::<MenuAccelerators>() else {
-            return;
-        };
-        {
-            let mut current = state.0.lock().unwrap();
-            if *current == accelerators {
-                return;
-            }
-            *current = accelerators;
+        if let Some(state) = app.try_state::<MenuAccelerators>() {
+            keep_and_rebuild(&app, &state.0, accelerators);
         }
-        let handle = app.clone();
-        let _ = app.run_on_main_thread(move || {
-            let labels = handle.state::<MenuLabels>().0.lock().unwrap().clone();
-            let _ = set_menu(&handle, &labels);
-        });
     }
     #[cfg(not(target_os = "macos"))]
     let _ = (app, accelerators);
+}
+
+/// Keeps `value` in `slot` and, when it changed, builds the menu bar again
+/// on the main thread with the labels it has.
+#[cfg(target_os = "macos")]
+pub(crate) fn keep_and_rebuild<T: PartialEq>(app: &AppHandle, slot: &Mutex<T>, value: T) {
+    {
+        let mut current = slot.lock().unwrap();
+        if *current == value {
+            return;
+        }
+        *current = value;
+    }
+    let handle = app.clone();
+    let _ = app.run_on_main_thread(move || {
+        let labels = handle.state::<MenuLabels>().0.lock().unwrap().clone();
+        let _ = set_menu(&handle, &labels);
+    });
 }
 
 /// Runs a menu id exactly as clicking that native item would; the way in for
