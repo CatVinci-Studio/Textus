@@ -1,7 +1,7 @@
 import type { Node as ProseNode } from "@milkdown/kit/prose/model";
 import { Plugin, type Transaction } from "@milkdown/kit/prose/state";
 import { canJoin, Mapping, type Mappable } from "@milkdown/kit/prose/transform";
-import { isHistoryTransaction } from "@milkdown/kit/prose/history";
+import { typedByUser } from "../change-source";
 import { $prose } from "@milkdown/kit/utils";
 
 /**
@@ -56,7 +56,8 @@ function listsToJoin(
   const start = next.content.findDiffStart(was.content);
   const end = next.content.findDiffEnd(was.content);
   if (start == null || !end) return [];
-  return meetings(next, start, Math.max(start, end.b)).filter(
+  // `a` is the end in `next`, the receiver; `b` would be `was`'s.
+  return meetings(next, start, Math.max(start, end.a)).filter(
     (pos) => !metAt(was, back.map(pos, -1)) && !metAt(was, back.map(pos, 1)),
   );
 }
@@ -79,8 +80,10 @@ export const joinListsPlugin = $prose(
   () =>
     new Plugin({
       appendTransaction(trs, oldState, newState) {
-        // Undo gives back what was, lists apart included.
-        if (!trs.some((tr) => tr.docChanged) || trs.some(isHistoryTransaction))
+        // Only the writer's own edits: undo gives back what was, and text
+        // put in whole (a paste, a plugin's, the AI's, the file's from
+        // disk) is as its writer had it, lists apart included.
+        if (!trs.some((tr) => tr.docChanged) || !trs.every(typedByUser))
           return null;
         const mapping = new Mapping();
         for (const tr of trs) mapping.appendMapping(tr.mapping);

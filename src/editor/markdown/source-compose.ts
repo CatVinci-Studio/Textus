@@ -17,7 +17,9 @@ import {
 /** A run of changed blocks as the serializer writes it, without the final
  *  newline: with no escape it reads the same without, and `original`'s
  *  own hand and escapes where they still read the same. A
- *  thematic break first in a run (not the document) is "---". */
+ *  thematic break first in a run (not the document) is "---". Each is
+ *  read with the document's link and footnote definitions: a `[ref]`
+ *  unescaped is a link where `[ref]: url` is anywhere in the file. */
 function writeRun(
   ctx: Ctx,
   { runs }: SaveMemo,
@@ -26,19 +28,34 @@ function writeRun(
   from: number,
   to: number,
   original: string | null,
+  definitions: { text: string; count: () => number },
 ): string {
   const nodes: ProseNode[] = [];
   for (let j = from; j < to; j++) nodes.push(doc.child(j));
   const known = runs.get(nodes[0]);
   let text: string;
-  if (known && sameObjects(known.nodes, nodes)) text = known.text;
+  if (
+    known &&
+    sameObjects(known.nodes, nodes) &&
+    known.definitions === definitions.text
+  )
+    text = known.text;
   else {
     const end = to < doc.childCount ? offsets[to] : doc.content.size;
     text = ctx
       .get(serializerCtx)(doc.cut(offsets[from], end))
       .replace(/\n+$/, "");
     if (text.length < MAX_ESCAPE_CHECK) {
-      const reads = (as: string) => sameNodes(ctx, nodes, readBlocks(ctx, as));
+      const reads = (as: string) => {
+        if (!definitions.text)
+          return sameNodes(ctx, nodes, readBlocks(ctx, as));
+        const read = readBlocks(ctx, `${as}\n\n${definitions.text}`);
+        return sameNodes(
+          ctx,
+          nodes,
+          read.slice(0, read.length - definitions.count()),
+        );
+      };
       text = withoutNeedlessEscapes(text, reads);
       if (original !== null && original.length < MAX_ESCAPE_CHECK) {
         text = inTheFilesHand(original, text, reads);
@@ -46,7 +63,7 @@ function writeRun(
         if (kept !== text && reads(kept)) text = kept;
       }
     }
-    runs.set(nodes[0], { nodes, text });
+    runs.set(nodes[0], { nodes, text, definitions: definitions.text });
   }
   return from > 0 && nodes[0].type.name === "hr"
     ? text.replace(/^\*\*\*/, "---")
@@ -126,6 +143,23 @@ function unitText(source: SourceBlocks, u: number): string {
   return source.text.slice(unit.start!, unit.end!);
 }
 
+/** The document's link and footnote definitions as Markdown, and how many
+ *  blocks they read as (counted once asked). */
+function definitionsOf(ctx: Ctx, doc: ProseNode, offsets: number[]) {
+  const parts: string[] = [];
+  doc.forEach((node, _offset, j) => {
+    if (!isDefinition(node)) return;
+    const end = j + 1 < doc.childCount ? offsets[j + 1] : doc.content.size;
+    parts.push(ctx.get(serializerCtx)(doc.cut(offsets[j], end)).trim());
+  });
+  const text = parts.join("\n\n");
+  let counted: number | null = null;
+  return {
+    text,
+    count: () => (counted ??= text ? readBlocks(ctx, text).length : 0),
+  };
+}
+
 export function compose(
   ctx: Ctx,
   source: SourceBlocks,
@@ -136,6 +170,7 @@ export function compose(
   const offsets: number[] = [];
   doc.forEach((_node, offset) => offsets.push(offset));
   const definitions: string[] = [];
+  const docDefinitions = definitionsOf(ctx, doc, offsets);
   const pieceTexts = pieces.map((piece, p) => {
     if (piece.kind === "changed") {
       const written = writeRun(
@@ -146,6 +181,7 @@ export function compose(
         piece.from,
         piece.to,
         originalBetween(source, pieces[p - 1], pieces[p + 1]),
+        docDefinitions,
       );
       for (let j = piece.from; j < piece.to; j++)
         if (isDefinition(doc.child(j))) {

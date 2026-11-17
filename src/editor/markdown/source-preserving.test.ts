@@ -285,6 +285,16 @@ describe("saving after an edit elsewhere keeps as written", () => {
     expect(await saveAfter(markdown, typeInto(0))).toBe(saved);
   });
 
+  it("keeps the escape on a typed [ref] the file defines elsewhere", async () => {
+    const link = "first para\n\n[ref]: https://x.test\n";
+    expect(await saveAfter(link, typeInto(0, " see [ref] here"))).toBe(
+      "first para see \\[ref] here\n\n[ref]: https://x.test\n",
+    );
+    const note = "a\n\n[^1]: note\n";
+    const out = await saveAfter(note, typeInto(0, " see [^1]"));
+    expect((await readAs(out)).child(0).textContent).toBe("a see [^1]");
+  });
+
   it("keeps each edited paragraph's own emphasis", async () => {
     const markdown = "__a__ and **b**\n\n_c_ here\n";
     const out = await saveAfter(markdown, (view) => {

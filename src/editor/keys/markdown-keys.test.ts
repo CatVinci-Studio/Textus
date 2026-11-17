@@ -286,3 +286,11 @@ it("a star typed between spaces stays a star, written as typed in a new file", a
   t.type("a * b and 2_3");
   expect(t.markdown()).toBe("a * b and 2_3");
 });
+
+it("Enter at a ticked task's second paragraph leaves the task ticked", async () => {
+  const t = await open("- [x] title\n\n  second\n");
+  t.caretAt("second", 0, 0);
+  t.press("Enter");
+  expect(t.markdown()).toMatch(/^- \[x\] title/);
+  expect(t.markdown()).toMatch(/- \[ \] second$/);
+});

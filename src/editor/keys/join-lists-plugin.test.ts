@@ -4,6 +4,7 @@ import { closeViews, openView } from "../editor-view-kit";
 import { Schema, type Node } from "@milkdown/kit/prose/model";
 import { EditorState } from "@milkdown/kit/prose/state";
 import { joinListsAfter } from "./join-lists-plugin";
+import { markChangeSource } from "../change-source";
 
 const schema = new Schema({
   nodes: {
@@ -43,6 +44,21 @@ describe("lists an edit brings together", () => {
     // Its text, the task taken back to a line, then the line.
     for (let i = 0; i < 5; i++) t.press("Backspace");
     expect(t.markdown()).toMatch(/^([-*]) \[ \] one\n\1 \[ \] three$/);
+  });
+
+  it("leave lists a plugin's or a paste's text puts side by side", async () => {
+    const t = await openView("- one\n\ntext\n\n- three\n", {
+      enableCompletion: false,
+    });
+    const { state } = t.view;
+    const para = state.doc.child(1);
+    const at = state.doc.child(0).nodeSize;
+    const tr = state.tr.delete(at, at + para.nodeSize);
+    t.view.dispatch(markChangeSource(tr, "plugin"));
+    expect(t.view.state.doc.childCount).toBe(2);
+    const paste = t.view.state.tr.insertText("x", 3);
+    t.view.dispatch(paste.setMeta("uiEvent", "paste"));
+    expect(t.view.state.doc.childCount).toBe(2);
   });
 
   it("are one list again once what stood between them goes", () => {

@@ -335,7 +335,10 @@ const splitTask: Command = (state, dispatch) => {
         if (into?.type !== item) return dispatch(tr);
         const at = $to.before(-1);
         // At the text's start the empty item goes above, the task stays.
-        const above = $from.parentOffset === 0 && $from.parent.content.size;
+        const above =
+          $from.parentOffset === 0 &&
+          $from.parent.content.size &&
+          $from.index(-1) === 0;
         const made = above ? tr.doc.resolve(at).nodeBefore : into;
         const madeAt = above && made ? at - made.nodeSize : at;
         if (above)
