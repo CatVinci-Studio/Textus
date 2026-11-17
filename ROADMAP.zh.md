@@ -1,15 +1,18 @@
 # 路线图
 
-[English](ROADMAP.md) · 每个小版本更新一次，上次更新：1.4.1。
+[English](ROADMAP.md) · 每个小版本更新一次，上次更新：1.4.3。
 
 这里特意不写日期：我们人少，做好了再发。已经发布的内容见[更新说明](docs/releases/)。
 
 ## 现在（1.4.x）
 
-- **查找替换**在各种情况下都可靠。[#668](https://github.com/CatVinci-Studio/Textus/issues/668)
-- **大表格**可以调整宽度。[#645](https://github.com/CatVinci-Studio/Textus/issues/645)
-- **Linux**：降低内存占用，窗口加阴影、标题栏更宽松。[#644](https://github.com/CatVinci-Studio/Textus/issues/644)、[#664](https://github.com/CatVinci-Studio/Textus/issues/664)
-- **iOS 公测**通过 TestFlight 开放，Android 版随每个版本提供 APK。[#87](https://github.com/CatVinci-Studio/Textus/issues/87)
+- **插件接口 1.8**：把插件接口补齐成一整套，让大家愿意来写插件——`/` 菜单读取的块类型清单、只做显示的语法、页边图标、右键菜单、带一键修复的问题提示、插件提供的行内续写、经你同意后使用你的 AI 模型、导出格式、数据库视图和版本来源。
+- **标题折叠**，以及 **Excalidraw** 插件。
+- **动效**：平滑滚动，块和表格行让位、落位，光标滑动。
+- **自定义 AI 接口**列出可选的模型。
+- **手机和平板**：用触摸拖动块，内容铺到屏幕底边。
+- **Linux**：更宽松的标题栏。[#664](https://github.com/CatVinci-Studio/Textus/issues/664)
+- **iPhone 和 iPad 上架 App Store**；在那之前用 TestFlight 和安卓 APK。[#87](https://github.com/CatVinci-Studio/Textus/issues/87)
 
 ## 下一个（1.5）
 
