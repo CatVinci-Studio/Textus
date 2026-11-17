@@ -19,17 +19,9 @@ export function useDocumentActions(opts: {
   saveTab: (tabId: string) => Promise<boolean>;
 }) {
   const { tabState, openFile, removeTab, saveTab } = opts;
-  const { tabsRef, setTabs, activeTabId, setActiveTabId, liveTabs } = tabState;
+  const { tabsRef, setTabs, setActiveTabId, liveTabs } = tabState;
 
-  // iPhone: the document list. An entry that no longer exists is dropped.
-  const [documentsOpen, setDocumentsOpen] = useState(false);
-  const openFromDocuments = useCallback(
-    (path: string) => {
-      setDocumentsOpen(false);
-      void openFile(path).catch(() => forgetIOSDocument(path));
-    },
-    [openFile],
-  );
+  const iphone = useIPhoneDocuments(tabState, openFile, saveTab);
   // A file or folder moved, here or in another window: every open tab in
   // it follows.
   const followMove = useCallback(
@@ -141,7 +133,33 @@ export function useDocumentActions(opts: {
     );
   });
 
-  // iPhone Share needs a file, so an unsaved document is saved first.
+  return {
+    ...iphone,
+    documentRenamed,
+    entryMoved,
+    followMove,
+    documentDeleted,
+    skillFilesDeleted,
+  };
+}
+
+/** The iPhone's document list, open or not, and Share for the tab in front. */
+function useIPhoneDocuments(
+  tabState: TabState,
+  openFile: (path: string) => Promise<void>,
+  saveTab: (tabId: string) => Promise<boolean>,
+) {
+  const { tabsRef, activeTabId, liveTabs } = tabState;
+  // An entry that no longer exists is dropped from the list.
+  const [documentsOpen, setDocumentsOpen] = useState(false);
+  const openFromDocuments = useCallback(
+    (path: string) => {
+      setDocumentsOpen(false);
+      void openFile(path).catch(() => forgetIOSDocument(path));
+    },
+    [openFile],
+  );
+  // Share needs a file, so an unsaved document is saved first.
   const shareActiveTab = useCallback(async () => {
     const tab = liveTabs().find((tb) => tb.id === activeTabId);
     if (!tab) return;
@@ -151,16 +169,5 @@ export function useDocumentActions(opts: {
     const path = tabsRef.current.find((tb) => tb.id === tab.id)?.path;
     if (path) await iosFiles.share(path).catch(() => {});
   }, [activeTabId, liveTabs, saveTab, tabsRef]);
-
-  return {
-    documentsOpen,
-    setDocumentsOpen,
-    openFromDocuments,
-    documentRenamed,
-    entryMoved,
-    followMove,
-    documentDeleted,
-    skillFilesDeleted,
-    shareActiveTab,
-  };
+  return { documentsOpen, setDocumentsOpen, openFromDocuments, shareActiveTab };
 }
