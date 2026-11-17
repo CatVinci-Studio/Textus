@@ -74,7 +74,7 @@ export function tabWidths(
     ),
   );
   const squeeze = shrink && sum(wanted) > room;
-  const even = squeeze ? shareLevel(wanted, room) : Infinity;
+  const even = squeeze ? shareLevel(wanted, room, floor) : Infinity;
   const open = squeeze ? tabs.findIndex((tab) => tab.open) : -1;
   const others = (ws: readonly number[]) => ws.filter((_, i) => i !== open);
   // What the open tab keeps: its want, less what the others need at their
@@ -91,7 +91,8 @@ export function tabWidths(
             Math.min(wanted[open]!, even),
             Math.min(wanted[open]!, shown, left),
           );
-  const level = open < 0 ? even : shareLevel(others(wanted), room - kept);
+  const level =
+    open < 0 ? even : shareLevel(others(wanted), room - kept, others(floor));
   const squeezed = wanted.map((width, i) =>
     i === open ? kept : Math.max(floor[i]!, Math.min(width, level)),
   );
@@ -112,8 +113,29 @@ export function tabWidths(
 }
 
 /** The width no tab goes over so that together they take `room`: those
- *  that want less keep theirs. Whole px, so the tabs' edges stay sharp. */
-function shareLevel(wanted: readonly number[], room: number): number {
+ *  that want less keep theirs, and those whose least is more keep that
+ *  (a padlock's or a dot's tab), the rest sharing what they leave. Whole
+ *  px, so the tabs' edges stay sharp. */
+function shareLevel(
+  wanted: readonly number[],
+  room: number,
+  floor: readonly number[],
+): number {
+  let held = wanted.map(() => false);
+  for (;;) {
+    const free = wanted.filter((_, i) => !held[i]);
+    // Every tab at its least: past that the row overflows.
+    if (free.length === 0) return 0;
+    const left = room - floor.reduce((a, f, i) => a + (held[i] ? f : 0), 0);
+    const level = evenLevel(free, left);
+    const next = held.map((h, i) => h || floor[i]! > level);
+    if (next.every((h, i) => h === held[i])) return level;
+    held = next;
+  }
+}
+
+/** shareLevel without least widths. */
+function evenLevel(wanted: readonly number[], room: number): number {
   const rising = [...wanted].sort((a, b) => a - b);
   let left = room;
   for (let i = 0; i < rising.length; i++) {

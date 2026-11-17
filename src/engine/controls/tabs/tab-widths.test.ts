@@ -138,6 +138,22 @@ describe("tabWidths", () => {
     expect(tight.cut).toEqual([true, false]);
   });
 
+  it("a tab whose least is more than the others' share keeps it, and the rest still fit", () => {
+    // A padlock's tab can't go as narrow as the others: they give more.
+    const tabs = [
+      tab(100),
+      tab(100),
+      tab(100),
+      tab(100, FIXED + 14),
+      { ...tab(60), open: true },
+    ];
+    const fit = tabWidths(tabs, { ...LIMITS, fewest: 30 }, 400);
+    expect(fit.overflow).toBe(false);
+    expect(fit.widths.reduce((a, w) => a + w, 0)).toBeLessThanOrEqual(400);
+    expect(fit.widths[3]).toBe(FIXED + 14 + 30);
+    expect(fit.cut[4]).toBe(false);
+  });
+
   it("fits no tabs in any row", () => {
     expect(tabWidths([], LIMITS, 0)).toEqual({
       widths: [],
