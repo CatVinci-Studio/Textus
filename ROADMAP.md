@@ -1,21 +1,27 @@
 # Roadmap
 
-[简体中文](ROADMAP.zh.md) · Updated with every minor release. Last: 1.4.1.
+[简体中文](ROADMAP.zh.md) · Updated with every minor release. Last: 1.4.3.
 
 No dates on purpose: we're a small team and ship when it's good. What's
 already out is in the [release notes](docs/releases/).
 
 ## Now (1.4.x)
 
-- **Find and replace** that holds up in every case.
-  [#668](https://github.com/CatVinci-Studio/Textus/issues/668)
-- **Wide tables** you can resize.
-  [#645](https://github.com/CatVinci-Studio/Textus/issues/645)
-- **Linux**: lower memory use, and a window with a shadow and a roomier
-  bar. [#644](https://github.com/CatVinci-Studio/Textus/issues/644),
+- **Plugin API 1.8**: the plugin interface made whole, so others want to
+  build on it - a list of block types the `/` menu reads, display-only
+  syntax, margin icons, right-click menus, problems with one-click fixes,
+  inline completion from plugins, plugins that use your AI model with your
+  consent, export formats, database views and history sources.
+- **Heading folding**, and an **Excalidraw** plugin.
+- **Motion**: smooth scrolling, blocks and table rows that make room and
+  settle, a gliding caret.
+- **Custom AI endpoints** that list their models to pick from.
+- **Phones and tablets**: block handles by touch, the content running to
+  the screen's bottom edge.
+- **Linux**: a roomier title bar.
   [#664](https://github.com/CatVinci-Studio/Textus/issues/664)
-- **iOS public beta** on TestFlight, and Android as an APK with each release.
-  [#87](https://github.com/CatVinci-Studio/Textus/issues/87)
+- **iPhone and iPad on the App Store**; TestFlight and the Android APK
+  until then. [#87](https://github.com/CatVinci-Studio/Textus/issues/87)
 
 ## Next (1.5)
 
