@@ -86,6 +86,9 @@ const bytesOf = (base64: string) =>
   Uint8Array.from(atob(base64), (c) => c.charCodeAt(0));
 
 export const contentPluginFs = {
+  /** A file the user picked: its URL is its grant, no folder around it. */
+  readResource: async (url: string) => bytesOf(await iosFiles.readBase64(url)),
+  writeResource: (url: string, text: string) => iosFiles.writeText(url, text),
   read: async (root: string, path: string) =>
     bytesOf(await iosFiles.readBase64(contentPath(root, path))),
   list: async (root: string, path: string) =>

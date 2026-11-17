@@ -6,7 +6,7 @@ import {
   splitLayout,
   windowLayout,
 } from "../engine/layout/store";
-import { savedPaths, type TabOrder } from "./tab-order";
+import { keptFile, savedPaths, type TabOrder } from "./tab-order";
 import { inOrder } from "../utils/in-order";
 
 /** The file a tab shows: its own, a plugin view's, or the one imported. */
@@ -65,6 +65,8 @@ export async function restoreTabsInOrder(o: {
   );
   if (!front && !shown && !restored.length && !behind.length) return false;
   const keyOf = (tab: DocTab) => {
+    const file = tab.view && keptFile(tab);
+    if (file) return `path:${file}`;
     if (tab.view) return `view:${tab.view.view ?? tab.view.kind}`;
     const old = oldIds.get(tab.id);
     if (old) return `id:${old}`;

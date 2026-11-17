@@ -28,6 +28,7 @@ vi.mock("./ios-files", () => ({
       return url(id);
     },
     readText: async (u: string) => files.get(idOf(u)) ?? "",
+    readBase64: async (u: string) => btoa(files.get(idOf(u)) ?? ""),
     writeText: async (u: string, text: string) => {
       files.set(idOf(u), text);
     },
@@ -88,5 +89,18 @@ describe("a plugin's files in a content:// folder", () => {
     expect((await fs.list(ROOT, "done")).map((e) => e.name)).toEqual(["b.md"]);
     expect(await fs.stat(ROOT, "a.md")).toBeNull();
     await expect(fs.trash()).rejects.toThrow(/Trash/);
+  });
+});
+
+describe("a file picked with Open…, outside any folder", () => {
+  it("is read and written by its own URL", async () => {
+    const picked =
+      "content://com.android.providers.downloads.documents/document/42";
+    files.set("42", "views: []");
+    expect(new TextDecoder().decode(await fs.readResource(picked))).toBe(
+      "views: []",
+    );
+    await fs.writeResource(picked, "views:\n  - type: table");
+    expect(files.get("42")).toBe("views:\n  - type: table");
   });
 });

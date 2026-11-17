@@ -15,12 +15,17 @@ const ai = (): DocTab => ({
   view: { kind: "page", view: "ai" } as DocTab["view"],
 });
 
-function launch(o: { keys: string[]; active: string; last: string | null }) {
+function launch(o: {
+  keys: string[];
+  active: string;
+  last: string | null;
+  behind?: DocTab[];
+}) {
   const initial = makeBlankTab();
   const page = ai();
   const draft = { ...makeBlankTab(), content: "kept" };
   setWindowTabs<DocTab>(() => [initial, page, draft]);
-  const tabsForPaths = vi.fn(async () => [] as DocTab[]);
+  const tabsForPaths = vi.fn(async () => o.behind ?? []);
   const run = restoreTabsInOrder({
     order: { keys: o.keys, active: o.active },
     restored: [draft],
@@ -67,5 +72,27 @@ describe("a phone's tabs brought back in order", () => {
     await run;
     expect(tabInUse()).toBe(page.id);
     expect(windowTabs()[0]?.id).toBe(page.id);
+  });
+
+  it("opens a file a plugin shows again, in its place", async () => {
+    const base: DocTab = {
+      ...makeBlankTab(),
+      path: null,
+      view: {
+        plugin: "db",
+        kind: "editor",
+        view: "db",
+        resource: "/n/all.base",
+      },
+    };
+    const { run, tabsForPaths } = launch({
+      keys: ["path:/n/all.base", "id:d1"],
+      active: "id:d1",
+      last: null,
+      behind: [base],
+    });
+    await run;
+    expect(tabsForPaths).toHaveBeenCalledWith(["/n/all.base"], true);
+    expect(windowTabs()[0]?.id).toBe(base.id);
   });
 });

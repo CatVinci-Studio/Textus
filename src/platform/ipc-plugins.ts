@@ -5,6 +5,7 @@ import type * as Access from "./bindings/plugin-access";
 export type PluginFile = Generated.PluginFile;
 import { Channel } from "@tauri-apps/api/core";
 import { call, command, desktopActionCommand } from "./ipc-call";
+import { dirname } from "../utils/path";
 
 /** Plugins and MCP servers: the calls Settings › Extensions and the plugin broker make. */
 
@@ -118,8 +119,16 @@ export const plugins = {
   openScriptsDir: () => desktopActionCommand("plugin_open_scripts_dir"),
   file: (id: string, rel: string) =>
     bytes(call<ArrayBuffer>("plugin_file", { id, rel })),
+  /** The file a plugin's tab was opened on; on Android it may be a
+   *  content:// file picked with Open…, outside any folder. */
   readResource: (id: string, path: string) =>
-    bytes(call<ArrayBuffer>("plugin_read_resource", { id, path })),
+    inContent(path)
+      ? contentFs().then((f) => f.readResource(path))
+      : bytes(call<ArrayBuffer>("plugin_read_resource", { id, path })),
+  writeResource: (id: string, path: string, text: string) =>
+    inContent(path)
+      ? contentFs().then((f) => f.writeResource(path, text))
+      : command("plugin_fs_write", id, dirname(path), path, text, false),
   fsRead: (id: string, root: string, path: string) =>
     inContent(root)
       ? contentFs().then((f) => f.read(root, path))

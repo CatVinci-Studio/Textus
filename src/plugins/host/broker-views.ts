@@ -1,5 +1,4 @@
 import { plugins as pluginsIpc } from "../../platform/ipc";
-import { dirname } from "../../utils/path";
 import { withResources } from "../store/files";
 import { written } from "./broker-files";
 import {
@@ -72,12 +71,7 @@ export function viewHandlers(p: PluginScope) {
       if (!record.resource) throw new Error("This view shows no file.");
       return written(
         record.resource,
-        pluginsIpc.fsWrite(
-          p.id,
-          dirname(record.resource),
-          record.resource,
-          str(text, "text"),
-        ),
+        pluginsIpc.writeResource(p.id, record.resource, str(text, "text")),
       );
     },
     "views.registerList": ({
