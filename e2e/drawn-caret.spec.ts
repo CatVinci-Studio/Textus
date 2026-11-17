@@ -48,20 +48,27 @@ test("the drawn caret is one height through a paragraph, beside bold, code or Ch
   for (const word of ["plain", "bold", "code", "中文", "end"]) {
     const at = await page.evaluate(
       ([sel, word]) => {
+        // By the paragraph's whole text: a mark drawn over a letter (the
+        // grammar check's) splits the word across nodes.
         const walk = document.createTreeWalker(
           document.querySelector(sel)!,
           NodeFilter.SHOW_TEXT,
         );
-        while (walk.nextNode()) {
-          const i = walk.currentNode.textContent!.indexOf(word);
-          if (i < 0) continue;
-          const range = document.createRange();
-          range.setStart(walk.currentNode, i + 1);
-          range.setEnd(walk.currentNode, i + 2);
-          const r = range.getBoundingClientRect();
-          return { x: r.left, y: r.top + r.height / 2 };
-        }
-        throw new Error(word);
+        const nodes: Text[] = [];
+        while (walk.nextNode()) nodes.push(walk.currentNode as Text);
+        let i =
+          nodes
+            .map((n) => n.data)
+            .join("")
+            .indexOf(word) + 1;
+        if (i < 1) throw new Error(word);
+        const node = nodes.find((n) => (i -= n.data.length) < 0)!;
+        const at = node.data.length + i;
+        const range = document.createRange();
+        range.setStart(node, at);
+        range.setEnd(node, at + 1);
+        const r = range.getBoundingClientRect();
+        return { x: r.left, y: r.top + r.height / 2 };
       },
       [`${editor} p`, word],
     );

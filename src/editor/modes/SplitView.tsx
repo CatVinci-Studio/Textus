@@ -4,6 +4,7 @@ import { useVaultLineBreaks } from "./useVaultLineBreaks";
 import { DocSourceEditor } from "./lazy-doc-source-editor";
 import { elasticOverscroll } from "../../engine/controls/elastic-overscroll";
 import "./SplitView.css";
+import { registerZoomPane } from "../../engine/zoom/zoom-panes";
 
 /**
  * Split view: editable markdown source on the left, the document as the
@@ -34,6 +35,15 @@ export function SplitView({
   // deferred value and catches up a beat later.
   const deferred = useDeferredValue(content);
   const breaks = useVaultLineBreaks(filePath);
+  useEffect(() => {
+    const scroller = previewRef.current;
+    if (!scroller) return;
+    return registerZoomPane(tabId, {
+      kind: "rendered",
+      scroller,
+      content: () => scroller.querySelector(".milkdown"),
+    });
+  }, [tabId]);
   // The preview gives at either end as the source beside it does, on a Mac.
   useEffect(() => {
     const preview = previewRef.current;

@@ -44,6 +44,7 @@ import { leaveSource, sourceLeftBy } from "../tab-left";
 import { registerTabEditor } from "../tab-editor";
 import "./source-editor.css";
 import { sharedEnds } from "../../utils/lcs";
+import { registerZoomPane } from "../../engine/zoom/zoom-panes";
 
 /** A change the tab's markdown made, not the user. */
 const outside = Annotation.define<boolean>();
@@ -208,6 +209,13 @@ export function SourceEditor({
       view.focus();
     };
     registerSourceView(host, view, edit);
+    const stopZoomPane = tabId
+      ? registerZoomPane(tabId, {
+          kind: "source",
+          scroller: view.scrollDOM,
+          view,
+        })
+      : undefined;
     const stopFlush = tabId
       ? registerTabEditor(tabId, "flush", report)
       : undefined;
@@ -239,6 +247,7 @@ export function SourceEditor({
           scroll: place ?? view.scrollSnapshot(),
         });
       stopFlush?.();
+      stopZoomPane?.();
       stopElastic();
       stopFormat();
       host.removeEventListener(SOURCE_EDIT_EVENT, onEdit);

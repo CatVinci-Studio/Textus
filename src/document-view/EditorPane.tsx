@@ -25,6 +25,7 @@ import type { TourAi } from "../utils/events";
 import { lazyModule } from "../lazy/lazy-module";
 import { lazyComponent } from "../lazy/lazy-component";
 import { useDocEndRef } from "./doc-end";
+import { registerZoomPane } from "../engine/zoom/zoom-panes";
 
 // The editor loads with the first document shown, or first once the window
 // is idle, so opening a document doesn't wait on it.
@@ -188,6 +189,15 @@ export const EditorPane = memo(function EditorPane({
   );
   const scrollRef = useKeptScroll(isActive, tabId, filePath, initialValue);
   const endRef = useDocEndRef(tabId);
+  useEffect(() => {
+    const scroller = scrollRef.current;
+    if (!scroller) return;
+    return registerZoomPane(tabId, {
+      kind: "rendered",
+      scroller,
+      content: () => scroller.querySelector(".milkdown"),
+    });
+  }, [tabId, scrollRef]);
 
   return (
     <div className="editor-scroll tx-scroll-reveal" ref={scrollRef}>
