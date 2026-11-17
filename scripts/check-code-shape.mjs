@@ -24,7 +24,6 @@ const HOOKS_NOW = {
   "src/app/frame/useSidePanels.ts useSidePanels": 16,
   "src/app/useOpenFolder.ts useOpenFolder": 15,
   "src/app/usePluginWindow.ts usePluginWindow": 24,
-  "src/app/useSaveTabs.ts useSaveTabs": 14,
   "src/app/useWindowDocuments.ts useWindowDocuments": 29,
   "src/app/useWindowShell.ts useWindowShell": 14,
   "src/app/useWindowWiring.ts useWindowWiring": 20,

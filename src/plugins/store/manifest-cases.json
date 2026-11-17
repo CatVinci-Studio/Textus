@@ -52,7 +52,9 @@
     { "l10n": { "en": "x" } },
     { "contributes": { "embeds": [{ "id": "a.b.e", "targets": ["note"] }] } },
     { "requires": [{ "setting": "nope" }] },
-    { "requires": [{ "setting": "runInBackground" }], "platforms": ["ios"] },
+    { "requires": [{ "setting": "runInBackground" }], "platforms": ["ios"] }
+  ],
+  "invalidInWindow": [
     { "contributes": { "snippets": [{ "label": "Box" }] } },
     {
       "contributes": {
