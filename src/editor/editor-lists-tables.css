@@ -218,8 +218,10 @@
   inset: -3px 0 -4px;
 }
 
+/* Back to the table only: past the strip's far side it would widen the
+   scroller and bring up a scrollbar over the row strip. */
 .table-add-col-btn::before {
-  inset: 0 -4px;
+  inset: 0 0 0 -4px;
 }
 
 @media (hover: hover) {

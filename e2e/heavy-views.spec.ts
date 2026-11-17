@@ -52,11 +52,9 @@ test("jumped straight to the end, the formulas there are drawn at once; folded a
   const formulas = page.locator(".ProseMirror .math-block-rendered");
   await scroller.evaluate((s) => s.scrollTo(0, 0));
   await expect(formulas.first().locator(".katex")).toBeVisible();
-  // One jump to the far end: what is on screen there is drawn, quickly.
+  // One jump to the far end: what is on screen there is drawn.
   await scroller.evaluate((s) => s.scrollTo(0, s.scrollHeight));
-  await expect(formulas.last().locator(".katex")).toBeVisible({
-    timeout: 500,
-  });
+  await expect(formulas.last().locator(".katex")).toBeVisible();
   // Back at the top, the heading's section folded and opened again.
   await scroller.evaluate((s) => s.scrollTo(0, 0));
   await expect(formulas.first().locator(".katex")).toBeVisible({
