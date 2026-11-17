@@ -6,9 +6,12 @@ import { MAC, openApp, pasteMarkdown } from "./helpers";
 
 const TABLE = "| a | b |\n| --- | --- |\n| 1 | 2 |\n";
 
-async function open(page: Page, markdown = TABLE) {
+async function open(page: Page, markdown = TABLE, animations = false) {
   await page.setViewportSize({ width: 1200, height: 760 });
-  await openApp(page, { settings: { menuBarShown: false, language: "en" } });
+  await openApp(page, {
+    settings: { menuBarShown: false, language: "en" },
+    animations,
+  });
   await page.locator(".ProseMirror:visible").first().click();
   await pasteMarkdown(page, markdown);
   return page.locator(".table-wrapper").first();
@@ -258,6 +261,29 @@ test("the + strips under and beside a table add a row and a column, reached from
   await page.mouse.down();
   await page.mouse.up();
   await expect(table.locator("tr").first().locator("th")).toHaveCount(3);
+});
+
+test("a row or column added opens up: the new cells fade in, the rest make room", async ({
+  page,
+}) => {
+  const table = await open(page, TABLE, true);
+  const moving = (cell: string) =>
+    table
+      .locator(cell)
+      .evaluate((el) =>
+        el.getAnimations().some((a) => a.playState !== "finished"),
+      );
+  // Tab in the last cell adds a row.
+  await table.locator("td").last().click();
+  await page.keyboard.press("Tab");
+  await expect(table.locator("tr")).toHaveCount(3);
+  expect(await moving("tr:last-child td >> nth=0")).toBe(true);
+  // A column added before the last: the last one slides over.
+  await table.locator("th").first().click({ button: "right" });
+  await page.getByRole("menuitem", { name: "Insert Column Right" }).click();
+  await expect(table.locator("tr").first().locator("th")).toHaveCount(3);
+  expect(await moving("tr:first-child th >> nth=1")).toBe(true);
+  expect(await moving("tr:first-child th >> nth=2")).toBe(true);
 });
 
 test.describe("on a touch screen", () => {
