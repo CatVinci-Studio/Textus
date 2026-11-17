@@ -15,7 +15,11 @@ import {
 import { fnv1a } from "../utils/hash";
 import { zoomButton } from "./diagram-zoom";
 import { isLargeDoc, pausesFeatures } from "./large-doc";
-import { registerDrawAll } from "./draw-when-visible";
+import {
+  drawWhileNear,
+  registerDrawAll,
+  stopDrawing,
+} from "./draw-when-visible";
 import { appearanceIsDark } from "../engine/tokens/appearance";
 import {
   diagramRenderer,
@@ -154,9 +158,19 @@ export function createMermaidPreviewPlugin(options: {
             // A fence's box, as in Typora: a theme's rule for code boxes
             // (.md-fences) dresses the drawing alike.
             container.className = "mermaid-preview md-fences";
-            container.innerHTML = svg;
-            keepReadable(container);
-            container.append(zoomButton(container));
+            // A drawing is hundreds of elements: kept only within a few
+            // screens, its box's size held when let go.
+            drawWhileNear(
+              container,
+              view.dom,
+              () => {
+                container.innerHTML = svg;
+                keepReadable(container);
+                container.append(zoomButton(container));
+              },
+              () => container.replaceChildren(),
+              true,
+            );
             container.addEventListener("mousedown", (event) => {
               event.preventDefault();
               // The widget's DOM outlives edits above it, so where its block starts is
@@ -179,6 +193,7 @@ export function createMermaidPreviewPlugin(options: {
           {
             side: 1,
             key: `mermaid-${fnv1a(code).toString(36)}-${drawn.id}`,
+            destroy: stopDrawing,
           },
         ),
       ];

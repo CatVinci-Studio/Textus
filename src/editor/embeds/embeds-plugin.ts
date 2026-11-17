@@ -21,6 +21,7 @@ import {
 import { embedFolded, setEmbedFolded } from "./embed-folds";
 import { embedProvider, onEmbedsChange } from "./embed-sources";
 import "./note-embed.css";
+import { drawWhileNear, stopDrawing } from "../draw-when-visible";
 import {
   applyReveal,
   caretToSourceOnClick,
@@ -67,32 +68,54 @@ function embedWidget(state: EmbedView, source: string, docPath: string) {
     const el = document.createElement("span");
     el.className = "note-embed";
     el.contentEditable = "false";
-    const remembered = lastShown.get(`${docPath}\n${source}`);
-    if (remembered) {
-      el.innerHTML = remembered;
-      // Folded before: folded again at once, not after a flash of it all.
-      const key = el.querySelector<HTMLElement>(":scope > .block-fold")?.dataset
-        .key;
-      if (key) showBlockFold(el, embedFolded(key));
-    }
     const link = noteEmbedOf(source)!;
     // Inside another embed's drawing: one level down from it.
     const outer = embedDepthOf(view.dom);
-    void fillEmbed(el, link, {
-      docPath,
-      folder: windowFolder(),
-      depth: outer.depth,
-      chain: [...outer.chain, embedKey(docPath)],
-      signal: state.asks.signal,
-      read: (path) => state.read.add(slashed(path)),
-    }).then(() => {
-      if (state.asks.signal.aborted) return;
-      const key = `${docPath}\n${source}`;
-      lastShown.delete(key);
-      lastShown.set(key, el.innerHTML);
-      if (lastShown.size > SHOWN_KEPT)
-        lastShown.delete(lastShown.keys().next().value!);
-    });
+    const key = `${docPath}\n${source}`;
+    let drawing: AbortController | null = null;
+    const fill = () => {
+      const remembered = lastShown.get(key);
+      if (remembered) {
+        el.innerHTML = remembered;
+        // Folded before: folded again at once, not after a flash of it all.
+        const fold = el.querySelector<HTMLElement>(":scope > .block-fold")
+          ?.dataset.key;
+        if (fold) showBlockFold(el, embedFolded(fold));
+      }
+      // Called off when let go, as when every embed is asked again.
+      const asked = new AbortController();
+      drawing = asked;
+      state.asks.signal.addEventListener("abort", () => asked.abort(), {
+        once: true,
+      });
+      void fillEmbed(el, link, {
+        docPath,
+        folder: windowFolder(),
+        depth: outer.depth,
+        chain: [...outer.chain, embedKey(docPath)],
+        signal: asked.signal,
+        read: (path) => state.read.add(slashed(path)),
+      }).then(() => {
+        if (asked.signal.aborted) return;
+        lastShown.delete(key);
+        lastShown.set(key, el.innerHTML);
+        if (lastShown.size > SHOWN_KEPT)
+          lastShown.delete(lastShown.keys().next().value!);
+      });
+    };
+    // A note drawn in the note is a whole read-only editor: kept only
+    // within a few screens, its size held when let go.
+    drawWhileNear(
+      el,
+      view.dom,
+      fill,
+      () => {
+        drawing?.abort();
+        releaseEmbed(el);
+        el.replaceChildren();
+      },
+      true,
+    );
     el.addEventListener("click", (event) => {
       const target = event.target as Element;
       const key = foldButtonKey(target);
@@ -151,7 +174,10 @@ function noteDecorations(
     Decoration.widget(to, embedWidget(state, source, docPath), {
       side: -1,
       key: `${docPath}\n${source}\n${state.generation}`,
-      destroy: (el) => releaseEmbed(el as HTMLElement),
+      destroy: (el) => {
+        stopDrawing(el);
+        releaseEmbed(el as HTMLElement);
+      },
     }),
   ];
 }

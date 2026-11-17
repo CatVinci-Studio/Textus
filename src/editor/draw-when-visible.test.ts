@@ -3,7 +3,7 @@ import { afterEach, describe, expect, it, vi } from "vitest";
 import {
   PENDING_ATTR,
   drawEverything,
-  drawWhenVisible,
+  drawWhileNear,
   registerDrawAll,
   stopDrawing,
 } from "./draw-when-visible";
@@ -44,49 +44,75 @@ afterEach(() => {
   document.body.replaceChildren();
 });
 
-describe("drawWhenVisible", () => {
+const none = () => {};
+
+describe("drawWhileNear", () => {
   it("draws at once where nothing can tell what is on screen", () => {
     const draw = vi.fn();
-    drawWhenVisible(document.createElement("span"), editorIn(), draw);
+    drawWhileNear(document.createElement("span"), editorIn(), draw, none);
     expect(draw).toHaveBeenCalledOnce();
   });
 
-  it("draws once the placeholder comes near the screen, and only once", () => {
+  it("draws near the screen and lets go far from it, keeping its size", () => {
     vi.stubGlobal("IntersectionObserver", FakeObserver);
     const editor = editorIn();
-    const el = document.createElement("span");
-    editor.append(el);
+    const el = editor.appendChild(document.createElement("div"));
     const draw = vi.fn();
-    drawWhenVisible(el, editor, draw);
+    const undraw = vi.fn();
+    drawWhileNear(el, editor, draw, undraw);
     expect(el.hasAttribute(PENDING_ATTR)).toBe(true);
     observed[0].fire(false);
     expect(draw).not.toHaveBeenCalled();
+    expect(undraw).not.toHaveBeenCalled();
     observed[0].fire(true);
     expect(draw).toHaveBeenCalledOnce();
     expect(el.hasAttribute(PENDING_ATTR)).toBe(false);
-    expect(observed).toHaveLength(0);
+    observed[0].fire(false);
+    expect(undraw).toHaveBeenCalledOnce();
+    expect(el.hasAttribute(PENDING_ATTR)).toBe(true);
+    expect(el.style.minHeight).toBe("0px");
+    observed[0].fire(true);
+    expect(draw).toHaveBeenCalledTimes(2);
+    expect(el.style.minHeight).toBe("");
   });
 
-  it("lets go of a placeholder taken out before it was ever near", () => {
+  it("drawn at once, it is still let go far from the screen", () => {
     vi.stubGlobal("IntersectionObserver", FakeObserver);
     const editor = editorIn();
-    const el = document.createElement("span");
-    editor.append(el);
-    drawWhenVisible(el, editor, vi.fn());
+    const el = editor.appendChild(document.createElement("span"));
+    const draw = vi.fn();
+    const undraw = vi.fn();
+    drawWhileNear(el, editor, draw, undraw, true);
+    expect(draw).toHaveBeenCalledOnce();
+    expect(el.hasAttribute(PENDING_ATTR)).toBe(false);
+    observed[0].fire(true);
+    expect(draw).toHaveBeenCalledOnce();
+    observed[0].fire(false);
+    expect(undraw).toHaveBeenCalledOnce();
+    // An inline one keeps its width too, so its line doesn't rewrap.
+    expect(el.style.display).toBe("inline-block");
+    expect(el.style.width).toBe("0px");
+  });
+
+  it("lets go of one taken out before it was ever near", () => {
+    vi.stubGlobal("IntersectionObserver", FakeObserver);
+    const editor = editorIn();
+    const el = editor.appendChild(document.createElement("span"));
+    drawWhileNear(el, editor, vi.fn(), none);
     expect(observed).toHaveLength(1);
     el.remove();
     stopDrawing(el);
     expect(observed).toHaveLength(0);
   });
 
-  it("draws everything still waiting for an export", async () => {
+  it("draws everything not drawn for an export", async () => {
     vi.stubGlobal("IntersectionObserver", FakeObserver);
     const editor = editorIn();
     const els = [1, 2].map(() =>
       editor.appendChild(document.createElement("span")),
     );
     const draw = vi.fn();
-    for (const el of els) drawWhenVisible(el, editor, draw);
+    for (const el of els) drawWhileNear(el, editor, draw, none);
     const diagrams = vi.fn(async () => {});
     registerDrawAll(editor, diagrams);
     await drawEverything(editor.parentElement!);

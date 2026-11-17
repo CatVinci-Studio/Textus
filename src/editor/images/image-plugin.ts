@@ -88,6 +88,9 @@ export function showDocImage(
   stillWanted: () => boolean = () => true,
 ): void {
   img.decoding = "async";
+  // Loaded only as it comes near the screen (set before the src, or it
+  // loads at once): a short note can hold many large photos.
+  img.loading = "lazy";
   if (doc && isScopedUrl(doc) && !hasUrlScheme(src) && !src.startsWith("/")) {
     img.removeAttribute("src");
     void scopedImageSrc(src, doc)
@@ -165,8 +168,6 @@ function createImageView(
   const dom = document.createElement("span");
   dom.className = "image-view";
   const img = document.createElement("img");
-  // Loaded only as it comes near the screen (set before the src, or it
-  // loads at once): a short note can hold many large photos.
   img.loading = "lazy";
   const handle = document.createElement("span");
   handle.className = "image-resize-handle";

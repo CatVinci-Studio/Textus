@@ -1,79 +1,11 @@
 import { drawAllBlocks } from "./lazy-blocks/lazy-blocks-drawer";
 
-// Drawing deferred until it is near the screen: drawing every formula of a
-// long document is much of what opening it costs. An export or print draws
-// everything still waiting first.
+// Heavy views (formulas, a plugin's frame) drawn only near the screen and
+// let go far from it, so a document's DOM stays the size of a few screens
+// however many it holds. An export or print draws everything first.
 
-/** Marks an element still waiting to be drawn. */
+/** Marks an element not drawn now: not yet, or let go far from the screen. */
 export const PENDING_ATTR = "data-draw-pending";
-
-interface Waiting {
-  draw: () => void;
-  observer: IntersectionObserver;
-}
-
-const waiting = new WeakMap<Element, Waiting>();
-const observers = new WeakMap<Element, IntersectionObserver>();
-
-function drawNow(el: Element) {
-  const near = kept.get(el);
-  if (near && !near.drawn) {
-    near.drawn = true;
-    (el as HTMLElement).style.minHeight = "";
-    el.removeAttribute(PENDING_ATTR);
-    near.draw();
-  }
-  const entry = waiting.get(el);
-  if (!entry) return;
-  waiting.delete(el);
-  entry.observer.unobserve(el);
-  el.removeAttribute(PENDING_ATTR);
-  entry.draw();
-}
-
-const onIntersect = (entries: IntersectionObserverEntry[]) => {
-  for (const { isIntersecting, target } of entries) {
-    if (isIntersecting) drawNow(target);
-    // Taken out of the document undrawn: nothing to wait for any more.
-    else if (!target.isConnected) {
-      waiting.get(target)?.observer.unobserve(target);
-      waiting.delete(target);
-    }
-  }
-};
-
-/** One observer per scroller, reaching a screen above and below it. */
-function observerFor(scroller: Element): IntersectionObserver {
-  let observer = observers.get(scroller);
-  if (!observer) {
-    observer = new IntersectionObserver(onIntersect, {
-      root: scroller,
-      rootMargin: "100% 0px",
-    });
-    observers.set(scroller, observer);
-  }
-  return observer;
-}
-
-/**
- * Calls `draw` once the placeholder `el` comes within a screen of the view.
- * Without an IntersectionObserver or a scroller it draws at once.
- */
-export function drawWhenVisible(
-  el: HTMLElement,
-  editorDom: Element,
-  draw: () => void,
-): void {
-  const scroller = editorDom.closest(".editor-scroll");
-  if (!scroller || typeof IntersectionObserver === "undefined") {
-    draw();
-    return;
-  }
-  const observer = observerFor(scroller);
-  waiting.set(el, { draw, observer });
-  el.setAttribute(PENDING_ATTR, "");
-  observer.observe(el);
-}
 
 /** Each editor's way to draw what it holds back outside these placeholders
  *  (its diagrams), by its view.dom. */
@@ -99,7 +31,8 @@ export async function drawEverything(root: Element): Promise<void> {
   root.querySelectorAll(`[${PENDING_ATTR}]`).forEach(drawNow);
 }
 
-/** How far off screen a drawn view is kept, in screens above and below. */
+/** How far off screen a view is drawn and kept, in screens above and
+ *  below. */
 const KEEP_MARGIN = "300% 0px";
 
 interface Kept {
@@ -111,7 +44,36 @@ interface Kept {
 const kept = new WeakMap<Element, Kept>();
 const keepObservers = new WeakMap<Element, IntersectionObserver>();
 
+function drawNow(el: Element) {
+  const entry = kept.get(el);
+  if (!entry || entry.drawn) return;
+  entry.drawn = true;
+  const box = el as HTMLElement;
+  box.style.minHeight = box.style.width = box.style.display = "";
+  el.removeAttribute(PENDING_ATTR);
+  entry.draw();
+}
+
+/** The size each kept when it goes, so the page and its lines don't
+ *  move: a block its height, an inline one its width too. All read before
+ *  any is written, or each write would lay the page out again. */
+function holdSizes(boxes: HTMLElement[]) {
+  const sizes = boxes.map((box) => ({
+    rect: box.getBoundingClientRect(),
+    inline: getComputedStyle(box).display === "inline",
+  }));
+  boxes.forEach((box, i) => {
+    const { rect, inline } = sizes[i]!;
+    if (inline) {
+      box.style.display = "inline-block";
+      box.style.width = `${rect.width}px`;
+    }
+    box.style.minHeight = `${rect.height}px`;
+  });
+}
+
 const onKeepIntersect = (entries: IntersectionObserverEntry[]) => {
+  const leaving: HTMLElement[] = [];
   for (const { isIntersecting, target } of entries) {
     const entry = kept.get(target);
     if (!entry) continue;
@@ -120,27 +82,30 @@ const onKeepIntersect = (entries: IntersectionObserverEntry[]) => {
       kept.delete(target);
     } else if (isIntersecting) {
       drawNow(target);
-    } else if (!isIntersecting && entry.drawn) {
-      // Its height kept, so the page doesn't move when it goes.
-      (target as HTMLElement).style.minHeight =
-        `${(target as HTMLElement).offsetHeight}px`;
-      entry.drawn = false;
-      target.setAttribute(PENDING_ATTR, "");
-      entry.undraw();
+    } else if (entry.drawn) {
+      leaving.push(target as HTMLElement);
     }
+  }
+  holdSizes(leaving);
+  for (const target of leaving) {
+    kept.get(target)!.drawn = false;
+    target.setAttribute(PENDING_ATTR, "");
+    kept.get(target)!.undraw();
   }
 };
 
 /**
- * `drawWhenVisible` for heavy views (a plugin's frame): drawn as it comes
- * near, and undrawn again once it is three screens away, its height kept.
- * Without an IntersectionObserver or a scroller it draws once and stays.
+ * Draws `el` as it comes near the screen and undraws it again once it is
+ * three screens away, its size kept. `now`: drawn at once (on screen, or
+ * cheap to draw), and let go the same way. Without an IntersectionObserver
+ * or a scroller it draws once and stays.
  */
 export function drawWhileNear(
   el: HTMLElement,
   editorDom: Element,
   draw: () => void,
   undraw: () => void,
+  now = false,
 ): void {
   const scroller = editorDom.closest(".editor-scroll");
   if (!scroller || typeof IntersectionObserver === "undefined") {
@@ -155,9 +120,10 @@ export function drawWhileNear(
     });
     keepObservers.set(scroller, observer);
   }
-  kept.set(el, { draw, undraw, drawn: false });
+  kept.set(el, { draw, undraw, drawn: now });
   keepObservers.set(el, observer);
-  el.setAttribute(PENDING_ATTR, "");
+  if (now) draw();
+  else el.setAttribute(PENDING_ATTR, "");
   observer.observe(el);
 }
 
@@ -166,8 +132,6 @@ export function drawWhileNear(
 export function stopDrawing(node: Node): void {
   if (!(node instanceof Element)) return;
   const el = node;
-  waiting.get(el)?.observer.unobserve(el);
-  waiting.delete(el);
   keepObservers.get(el)?.unobserve(el);
   keepObservers.delete(el);
   kept.delete(el);

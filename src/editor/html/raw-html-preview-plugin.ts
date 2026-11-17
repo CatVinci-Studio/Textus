@@ -1,6 +1,7 @@
 import { Plugin } from "@milkdown/kit/prose/state";
 import { Decoration } from "@milkdown/kit/prose/view";
 import { $prose } from "@milkdown/kit/utils";
+import { drawWhileNear } from "../draw-when-visible";
 import { showDocImage } from "../images/image-plugin";
 import { revealMoved } from "../pointer-hold";
 import type { Node as ProseNode } from "@milkdown/kit/prose/model";
@@ -78,12 +79,27 @@ function fragmentWidget(
     el.className = rendered.inline
       ? "raw-html-rendered raw-html-rendered-inline"
       : "raw-html-rendered";
-    el.innerHTML = rendered.html;
-    // An <img src="pic.png"> means the file beside the document, as in Typora.
-    el.querySelectorAll<HTMLImageElement>("img:not(.html-svg)").forEach((img) =>
-      showDocImage(img, img.getAttribute("src") ?? "", docPath()),
+    let edit: ((event: MouseEvent) => boolean) | null = null;
+    // A big table or drawing is many elements: kept only within a few
+    // screens, its size held when let go.
+    drawWhileNear(
+      el,
+      view.dom,
+      () => {
+        el.innerHTML = rendered.html;
+        // An <img src="pic.png"> means the file beside the document, as in
+        // Typora.
+        el.querySelectorAll<HTMLImageElement>("img:not(.html-svg)").forEach(
+          (img) => showDocImage(img, img.getAttribute("src") ?? "", docPath()),
+        );
+        edit = source ? htmlTextEditing(el, view, getPos, source) : null;
+      },
+      () => {
+        el.replaceChildren();
+        edit = null;
+      },
+      true,
     );
-    const edit = source ? htmlTextEditing(el, view, getPos, source) : null;
     caretToSourceOnClick(
       el,
       view,
