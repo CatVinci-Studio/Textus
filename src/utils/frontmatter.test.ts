@@ -90,7 +90,8 @@ describe("front matter read and written in full, for plugins", () => {
   });
 
   it("removes a gone key and adds a new one at the end", () => {
-    const { status: _gone, ...data } = readFrontmatterFull(doc);
+    const data = readFrontmatterFull(doc);
+    delete data.status;
     const out = writeFrontmatterFull(doc, { ...data, tags: ["a", "b"] });
     expect(out).not.toContain("status:");
     expect(readFrontmatterFull(out).tags).toEqual(["a", "b"]);
