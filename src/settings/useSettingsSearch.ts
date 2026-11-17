@@ -14,22 +14,10 @@ import { matchEntries, type SearchEntry } from "./settings-search";
 
 /** The search box: while it holds a query its results stand in for the page,
  *  and picking one goes to the row. */
-export function useSettingsSearch(
-  /** Whether ⌘F is Settings' now (its tab in use); always, as a sheet. */
-  owns: () => boolean = () => true,
-) {
-  const [query, setQuery] = useState("");
-  const searching = query.trim() !== "";
-  const deferredQuery = useDeferredValue(query);
-  const [entries, setEntries] = useState<SearchEntry[]>([]);
-  const [active, setActive] = useState(0);
+/** The search box, which Ctrl/⌘+F (and Edit › Find) focuses while
+ *  Settings `owns` the keys. */
+function useFindKey(owns: () => boolean) {
   const searchInput = useRef<HTMLInputElement>(null);
-  const listId = useId();
-  const matches = useMemo(
-    () => matchEntries(entries, deferredQuery),
-    [entries, deferredQuery],
-  );
-
   const focusSearch = useCallback(() => {
     searchInput.current?.focus();
     searchInput.current?.select();
@@ -53,6 +41,25 @@ export function useSettingsSearch(
     return () => window.removeEventListener("keydown", onKeyDown, true);
   }, [focusSearch, owns]);
   useWindowEvent(TOGGLE_FIND_REPLACE_EVENT, () => owns() && focusSearch());
+
+  return searchInput;
+}
+
+export function useSettingsSearch(
+  /** Whether ⌘F is Settings' now (its tab in use); always, as a sheet. */
+  owns: () => boolean = () => true,
+) {
+  const [query, setQuery] = useState("");
+  const searching = query.trim() !== "";
+  const deferredQuery = useDeferredValue(query);
+  const [entries, setEntries] = useState<SearchEntry[]>([]);
+  const [active, setActive] = useState(0);
+  const searchInput = useFindKey(owns);
+  const listId = useId();
+  const matches = useMemo(
+    () => matchEntries(entries, deferredQuery),
+    [entries, deferredQuery],
+  );
 
   return {
     query,
