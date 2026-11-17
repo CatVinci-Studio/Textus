@@ -62,7 +62,6 @@ test("the tour walks the window, moving on as each thing is done", async ({
   await page.keyboard.press("Enter");
   await page.keyboard.press("Enter");
   await expect(done).toHaveCount(2);
-  await page.screenshot({ path: "/private/tmp/claude-501/tour-tasks.png" });
   await page.keyboard.type("1. 第一步");
   await page.keyboard.press("Enter");
   await page.keyboard.press("Enter");
