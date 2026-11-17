@@ -1,3 +1,4 @@
+import { createSubscribers } from "../../utils/store";
 /**
  * Who gives the content of `![[note]]` embeds: plugins register here
  * (contributes.embeds) and the editor draws what the owner of each kind
@@ -34,11 +35,8 @@ export interface EmbedProvider {
 
 const providers: EmbedProvider[] = [];
 /** Told when embeds must be asked again: those showing `path`, or all. */
-type Listener = (path?: string) => void;
-const listeners = new Set<Listener>();
-
-const changed = (path?: string) =>
-  listeners.forEach((listener) => listener(path));
+const changes = createSubscribers<[path?: string]>();
+const changed = changes.publish;
 
 export function addEmbedProvider(provider: EmbedProvider): () => void {
   providers.push(provider);
@@ -82,7 +80,4 @@ export function refreshEmbeds(path?: string): void {
   changed(path);
 }
 
-export function onEmbedsChange(listener: Listener): () => void {
-  listeners.add(listener);
-  return () => listeners.delete(listener);
-}
+export const onEmbedsChange = changes.subscribe;

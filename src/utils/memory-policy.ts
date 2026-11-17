@@ -1,3 +1,4 @@
+import { createSubscribers } from "./store";
 /**
  * How much the window keeps loaded out of sight, from how much memory the
  * machine has and how short of it the system is now (memory_level.rs).
@@ -33,19 +34,14 @@ function levelOf(totalMb: number, pressure: number): MemoryLevel {
 }
 
 let level: MemoryLevel = "normal";
-const listeners = new Set<(level: MemoryLevel, tighter: boolean) => void>();
+const levels = createSubscribers<[level: MemoryLevel, tighter: boolean]>();
 
 export function memoryLimits(): MemoryLimits {
   return LIMITS[level];
 }
 
 /** Told when the level moves, and whether it is tighter than it was. */
-export function onMemoryLevel(
-  listener: (level: MemoryLevel, tighter: boolean) => void,
-): () => void {
-  listeners.add(listener);
-  return () => listeners.delete(listener);
-}
+export const onMemoryLevel = levels.subscribe;
 
 export function setMemoryState(state: {
   totalMb: number;
@@ -55,5 +51,5 @@ export function setMemoryState(state: {
   if (next === level) return;
   const tighter = ORDER.indexOf(next) > ORDER.indexOf(level);
   level = next;
-  for (const listener of listeners) listener(next, tighter);
+  levels.publish(next, tighter);
 }

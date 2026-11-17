@@ -1,11 +1,13 @@
 /** Who listens to a module's own state, told when it changes: what
  *  useSyncExternalStore subscribes to. `whileHeard` starts what feeds the
  *  state with the first listener; what it returns stops it after the last. */
-export function createSubscribers(whileHeard?: () => () => void): {
-  subscribe: (listener: () => void) => () => void;
-  publish: () => void;
+export function createSubscribers<A extends unknown[] = []>(
+  whileHeard?: () => () => void,
+): {
+  subscribe: (listener: (...args: A) => void) => () => void;
+  publish: (...args: A) => void;
 } {
-  const listeners = new Set<() => void>();
+  const listeners = new Set<(...args: A) => void>();
   let stop: (() => void) | null = null;
   return {
     subscribe: (listener) => {
@@ -19,8 +21,8 @@ export function createSubscribers(whileHeard?: () => () => void): {
         was();
       };
     },
-    publish: () => {
-      for (const listener of [...listeners]) listener();
+    publish: (...args) => {
+      for (const listener of [...listeners]) listener(...args);
     },
   };
 }
