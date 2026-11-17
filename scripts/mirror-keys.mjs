@@ -19,6 +19,8 @@ export const MIRROR_KEYS = [
   ["deb-arm64", /_arm64\.deb$/],
   ["rpm-arm64", /\.aarch64\.rpm$/],
   ["android", /_android_arm64\.apk$/],
+  ["windows-portable", /_x64-portable\.zip$/],
+  ["windows-arm64-portable", /_arm64-portable\.zip$/],
 ];
 
 /** The key a release asset is mirrored under, or null for any other file. */
