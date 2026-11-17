@@ -20,6 +20,7 @@ export const PERMISSION_LABELS: Record<
   "project.data": "pluginPermProjectData",
   "ai.tools": "pluginPermAiTools",
   "ai.model": "pluginPermAiModel",
+  comments: "pluginPermComments",
   notifications: "pluginPermNotifications",
   background: "pluginPermBackground",
   agents: "pluginPermAgents",

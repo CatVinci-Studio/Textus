@@ -1906,6 +1906,7 @@ Skills liegen im Ordner skills/ neben dieser Datei, je Skill eine
   pluginPermNotifications: "Systemmitteilungen anzeigen",
   pluginPermAppearance: "Die Farben von Textus und Ihren Dokumenten ändern",
   pluginPermGitCommit: "Mit Ihrem Git Commits im geöffneten Ordner erstellen",
+  pluginPermComments: "Notizen am Rand Ihrer Dokumente lesen und hinzufügen",
   pluginPermAiModel:
     "Ihr KI-Modell verwenden (zählt zur Nutzung Ihres KI-Dienstes)",
   pluginAiAsk:

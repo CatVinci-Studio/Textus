@@ -1950,6 +1950,7 @@ para usar una.
   pluginPermNotifications: "Mostrar notificaciones del sistema",
   pluginPermAppearance: "Cambiar los colores de Textus y de tus documentos",
   pluginPermGitCommit: "Hacer commits de Git en la carpeta abierta con tu Git",
+  pluginPermComments: "Leer y dejar notas en el margen de tus documentos",
   pluginPermAiModel:
     "Usar tu modelo de IA (cuenta para el uso de tu servicio de IA)",
   pluginAiAsk:

@@ -1811,6 +1811,7 @@ ${AI_NAME}에게 주는 글쓰기 지침으로, 모든 문서에 적용됩니다
   pluginPermNotifications: "시스템 알림 표시하기",
   pluginPermAppearance: "Textus와 문서의 색상 변경하기",
   pluginPermGitCommit: "내 Git으로 열린 폴더에 Git 커밋 만들기",
+  pluginPermComments: "문서 여백의 메모 읽기 및 남기기",
   pluginPermAiModel: "내 AI 모델 사용(AI 서비스 사용량에 포함됨)",
   pluginAiAsk:
     "{plugin}이(가) 내 AI 모델을 사용하려고 합니다. 보내는 내용은 AI 서비스 사용량에 포함되며, 이 플러그인은 한 달에 최대 {limit} 토큰입니다.",

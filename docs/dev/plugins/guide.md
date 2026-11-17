@@ -189,6 +189,7 @@ turning it on, or leaves it off, and can take each back later.
 | `project.data`   | keep its own data in the open folder, in `.textus/plugins/<id>/`                                             |
 | `ai.tools`       | give Textus AI tools to call                                                                                 |
 | `ai.model`       | ask the user's writing model; the user says yes on the first call, 100,000 tokens a month (API 1.8, preview) |
+| `comments`       | read and leave notes in a document's margin, with `files.read` for the file (API 1.8, preview)               |
 | `notifications`  | show system notifications, at once or on a schedule (API 1.1)                                                |
 | `background`     | run its `background` code on a schedule, also with every window closed (API 1.1)                             |
 | `agents`         | run the AI agents it names in `contributes.agents` (programs on this computer; 1.3.13)                       |
@@ -492,6 +493,18 @@ commits those files' changes only, through the user's own git (hooks,
 signing), and needs `git.commit`. Hidden files stay out, and nothing
 pushes, pulls or switches branches. Elsewhere `status()` is `null`. Set
 `engines.textus` to `">=1.4.3"`.
+
+### Margin notes - `textus.comments` (API 1.8, preview)
+
+The notes the user sees in a document's margin, theirs and plugins':
+`comments.list(path)` gives `{ id, text, comment, author }` (the words a
+note is on; `author` is the plugin's name, null for the writer's own),
+`comments.add({ path, text }, comment)` puts one on the first place those
+words of one paragraph are and answers its id, signed with the plugin's
+name, and `comments.resolve(path, id)` takes one away. `onDidChange`
+says whose notes changed. While the document is open they change in its
+editor, at once; else in the file Textus keeps them in. It needs
+`comments` and `files.read`.
 
 ### The rest
 

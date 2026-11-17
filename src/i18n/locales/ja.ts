@@ -1829,6 +1829,7 @@ ${AI_NAME}への執筆の指示です。すべての文書に適用されます�
   pluginPermNotifications: "システム通知を表示する",
   pluginPermAppearance: "Textus と文書の色を変更する",
   pluginPermGitCommit: "自分の Git で、開いているフォルダにコミットする",
+  pluginPermComments: "文書の余白のメモを読み、書き加える",
   pluginPermAiModel:
     "あなたの AI モデルを使う（AI サービスの使用量に含まれます）",
   pluginAiAsk:

@@ -96,3 +96,35 @@ it("writes a note made a moment before the editor goes", async () => {
     anchor: "beta",
   });
 });
+
+it("takes a plugin's note while open, signed and kept with the writer's, and lets one go", async () => {
+  const { openNotes } = await import("./notes-by-path");
+  file.text = JSON.stringify([
+    stored("here", "beta"),
+    stored("gone", "no such words"),
+  ]);
+  const hook = mount([]);
+  await settle();
+  const held = openNotes("/a.md")!;
+  expect(held.ready()).toBe(true);
+  expect(held.add({ anchor: "absent", comment: "x", author: "Review" })).toBe(
+    null,
+  );
+  const id = held.add({ anchor: "Second", comment: "Hm", author: "Review" })!;
+  expect(notesNow().find((n) => n.id === id)?.author).toBe("Review");
+  expect(held.remove("gone")).toBe(true);
+  expect(held.remove("nothing")).toBe(false);
+  hook.rerender({ notes: notesNow() });
+  await act(async () => void (await new Promise((r) => setTimeout(r, 450))));
+  const last = JSON.parse(file.writes.at(-1)!) as {
+    id: string;
+    author?: string;
+  }[];
+  expect(last.map((n) => [n.id, n.author])).toEqual([
+    ["here", undefined],
+    [id, "Review"],
+  ]);
+  expect(held.list().map((n) => n.id)).toEqual(["here", id]);
+  hook.unmount();
+  expect(openNotes("/a.md")).toBeNull();
+});

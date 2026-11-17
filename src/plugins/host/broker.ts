@@ -1,10 +1,13 @@
 import { ownError } from "../../utils/error-text";
+import { commentHandlers } from "./broker-comments";
+import { onNotesChanged } from "../../ai/margin/notes-by-path";
 import { readableRoot } from "./scoped-root";
 import type { QuickPickItem } from "../../engine/controls/quick-pick-queue";
 import { logPluginError, logPluginMessage } from "../store/plugin-log";
 import type { Strings } from "../../i18n/strings";
 import {
   getWindowAccess,
+  emitPluginEvent,
   onPluginEvent,
   type PluginEventMap,
   type PluginTabInfo,
@@ -138,9 +141,13 @@ const FILE_EVENTS = new Set<keyof PluginEventMap>([
   "fileCreate",
   "fileChange",
   "fileChangeOnDisk",
+  "comments",
   "fileRename",
   "fileDelete",
 ]);
+
+// Margin notes are written by the editor or a plugin; plugins hear of both.
+onNotesChanged((path) => emitPluginEvent("comments", { path }));
 
 /** Whether the files a file event is about are ones plugins read. */
 export function fileEventReadable(data: unknown, root: string | null): boolean {
@@ -170,6 +177,7 @@ const PLUGIN_EVENT_NEEDS: Record<keyof PluginEventMap, Permission | null> = {
   fileCreate: "files.read",
   fileChange: "files.read",
   fileChangeOnDisk: "files.read",
+  comments: "comments",
   fileRename: "files.read",
   fileDelete: "files.read",
   metadata: "files.read",
@@ -472,6 +480,7 @@ export class PluginHost {
       ...textHandlers(),
       ...historyHandlers(scope),
       ...aiModelHandlers(scope),
+      ...commentHandlers(scope),
       ...exportFormatHandlers(scope),
     };
   }

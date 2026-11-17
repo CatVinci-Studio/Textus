@@ -1864,6 +1864,7 @@ type /name in a conversation to use one.
   pluginPermNotifications: "Show system notifications",
   pluginPermAppearance: "Change the colors of Textus and your documents",
   pluginPermGitCommit: "Make Git commits in the open folder with your Git",
+  pluginPermComments: "Read and leave notes in your documents' margins",
   pluginPermAiModel:
     "Use your AI model (it counts toward your AI service's usage)",
   pluginAiAsk:

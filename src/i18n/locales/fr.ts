@@ -1965,6 +1965,8 @@ utiliser une.
   pluginPermAppearance: "Modifier les couleurs de Textus et de vos documents",
   pluginPermGitCommit:
     "Faire des commits Git dans le dossier ouvert avec votre Git",
+  pluginPermComments:
+    "Lire et laisser des notes dans la marge de vos documents",
   pluginPermAiModel:
     "Utiliser votre modèle d'IA (compte dans l'usage de votre service d'IA)",
   pluginAiAsk:

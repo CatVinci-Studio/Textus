@@ -1,6 +1,10 @@
 import type { EditorView } from "@milkdown/kit/prose/view";
 import { NotePopover } from "./NoteCards";
-import type { ReviewNote } from "./review-notes-plugin";
+import {
+  noteAuthor,
+  noteEditable,
+  type ReviewNote,
+} from "./review-notes-plugin";
 import { BottomCard } from "../../engine/controls/BottomCard";
 import { Presence } from "../../engine/motion/usePresence";
 import type { Strings } from "../../i18n/strings";
@@ -47,13 +51,13 @@ export function OpenReviewNote({
       <Presence show={!!note && phone}>
         {note && phone && (
           <BottomCard
-            label={own ? t.ownNoteBy : t.reviewNoteBy}
+            label={noteAuthor(note, t)}
             actions={[
               {
                 label: t.reviewNoteAsk,
                 onSelect: () => onAsk(note),
               },
-              ...(own
+              ...(noteEditable(note)
                 ? [{ label: t.ownNoteEdit, onSelect: () => onEdit(note) }]
                 : []),
               {
@@ -69,9 +73,13 @@ export function OpenReviewNote({
                 className={`review-note-mark${own ? " review-note-mark-me" : ""}`}
                 aria-hidden="true"
               >
-                {own ? t.ownNoteMark : "AI"}
+                {own
+                  ? note.author
+                    ? [...note.author][0]
+                    : t.ownNoteMark
+                  : "AI"}
               </span>
-              {own ? t.ownNoteBy : t.reviewNoteBy}
+              {noteAuthor(note, t)}
             </div>
             <p className="tx-clamp bottom-card-quote">
               {editorView?.state.doc.textBetween(note.from, note.to, " ")}

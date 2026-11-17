@@ -171,6 +171,9 @@ declare global {
       /** From 1.8: past versions kept elsewhere (Git, sync), offered by one
        *  plugin and read by another (files.read). */
       history: History;
+      /** From 1.8, preview: the notes in a document's margin (comments and
+       *  files.read). */
+      comments: Comments;
     }
 
     interface Env {
@@ -1829,6 +1832,33 @@ declare global {
      *  plugin offers its source (Git, a sync service), another - Version
      *  History - lists them all and reads a version. Needs files.read.
      *  From 1.8. */
+    /** The notes in a document's margin: the writer's own and plugins',
+     *  the same ones the user sees. While the document is open they are
+     *  changed in its editor, else in the file Textus keeps them in. */
+    interface Comments {
+      list(path: string): Promise<Comment[]>;
+      /** A note on the first place `text` (words of one paragraph) is in
+       *  the file, signed with the plugin's name; its id. Refused when
+       *  the words aren't there. */
+      add(
+        location: { path: string; text: string },
+        comment: string,
+      ): Promise<string>;
+      /** Takes a note away (the writer's too); false when it isn't there. */
+      resolve(path: string, id: string): Promise<boolean>;
+      /** A document's notes changed, by the user or a plugin. */
+      onDidChange: Event<{ path: string }>;
+    }
+
+    interface Comment {
+      id: string;
+      /** The words it is on. */
+      text: string;
+      comment: string;
+      /** The plugin that left it, by name; null for the writer's own. */
+      author: string | null;
+    }
+
     interface History {
       /** Offers a source named `id` among the plugin's own. */
       registerSource(

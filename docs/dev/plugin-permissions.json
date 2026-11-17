@@ -155,5 +155,13 @@
       "ai.available",
       "ai.complete"
     ]
+  },
+  {
+    "permission": "comments",
+    "calls": [
+      "comments.list",
+      "comments.add",
+      "comments.resolve"
+    ]
   }
 ]

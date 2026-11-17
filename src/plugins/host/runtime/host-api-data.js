@@ -134,6 +134,27 @@ textus.settings = {
   onDidChange: on("settings"),
 };
 
+// The notes in a document's margin, the writer's and plugins' (comments
+// and files.read, 1.8 preview): `add` puts one on the first place the words
+// are, `resolve` takes one away.
+textus.comments = {
+  list: function (path) {
+    return call("comments.list", { path: String(path) });
+  },
+  add: function (location, comment) {
+    var at = location || {};
+    return call("comments.add", {
+      path: String(at.path),
+      text: String(at.text),
+      comment: String(comment),
+    });
+  },
+  resolve: function (path, id) {
+    return call("comments.resolve", { path: String(path), id: String(id) });
+  },
+  onDidChange: on("comments"),
+};
+
 textus.ai = {
   // Runs one of the manifest's contributes.aiTools when Textus AI
   // calls it (ai.tools): `run(args)` answers with text for the model.

@@ -1740,6 +1740,7 @@ export default {
   pluginPermNotifications: "顯示系統通知",
   pluginPermAppearance: "變更 Textus 和文件的顏色",
   pluginPermGitCommit: "用你的 Git 在開啟的資料夾中提交",
+  pluginPermComments: "讀取和新增文件頁邊的註解",
   pluginPermAiModel: "使用你的 AI 模型（會計入你的 AI 服務用量）",
   pluginAiAsk:
     "{plugin} 想使用你的 AI 模型。它傳送的內容會計入你的 AI 服務用量，這個外掛每月最多 {limit} token。",

@@ -1929,6 +1929,7 @@ Habilidades ficam na pasta skills/ ao lado deste arquivo, um arquivo
   pluginPermNotifications: "Mostrar notificações do sistema",
   pluginPermAppearance: "Alterar as cores do Textus e dos seus documentos",
   pluginPermGitCommit: "Fazer commits do Git na pasta aberta com o seu Git",
+  pluginPermComments: "Ler e deixar notas na margem dos seus documentos",
   pluginPermAiModel:
     "Usar o seu modelo de IA (conta para o uso do seu serviço de IA)",
   pluginAiAsk:

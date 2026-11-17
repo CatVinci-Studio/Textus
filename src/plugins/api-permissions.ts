@@ -137,6 +137,10 @@ const API_PERMISSIONS: readonly {
   // Checked when the window tells Rust the tools (contributions/ai-tools.ts).
   { permission: "ai.tools", methods: [], calls: ["ai.registerTool"] },
   { permission: "ai.model", methods: ["ai.available", "ai.complete"] },
+  {
+    permission: "comments",
+    methods: ["comments.list", "comments.add", "comments.resolve"],
+  },
 ];
 
 const BY_METHOD = new Map<string, Permission[]>();

@@ -1734,6 +1734,7 @@ export default {
   pluginPermNotifications: "显示系统通知",
   pluginPermAppearance: "更改 Textus 和文档的颜色",
   pluginPermGitCommit: "用你的 Git 在打开的文件夹里提交",
+  pluginPermComments: "读取和添加文档页边的批注",
   pluginPermAiModel: "使用你的 AI 模型（会计入你的 AI 服务用量）",
   pluginAiAsk:
     "{plugin} 想使用你的 AI 模型。它发送的内容会计入你的 AI 服务用量，这个插件每月最多 {limit} token。",

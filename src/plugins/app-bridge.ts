@@ -167,6 +167,8 @@ export interface PluginEventMap {
   conventions: { root: string };
   fileCreate: { path: string };
   fileChange: { path: string };
+  /** The margin notes of `path` changed. */
+  comments: { path: string };
   /** An open document's file changed outside the window, and its tab took
    *  the new text: what it had saved, and what is on disk now. */
   fileChangeOnDisk: { path: string; before: string; after: string };

@@ -26,6 +26,7 @@ type PlainPermission =
   | "project.data"
   | "ai.tools"
   | "ai.model"
+  | "comments"
   | "notifications"
   | "background"
   | "agents"

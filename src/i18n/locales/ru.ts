@@ -1949,6 +1949,7 @@ export default {
   pluginPermNotifications: "Показывать системные уведомления",
   pluginPermAppearance: "Менять цвета Textus и ваших документов",
   pluginPermGitCommit: "Делать коммиты Git в открытой папке вашим Git",
+  pluginPermComments: "Читать и оставлять заметки на полях ваших документов",
   pluginPermAiModel:
     "Использовать вашу модель ИИ (учитывается в расходе вашего сервиса ИИ)",
   pluginAiAsk:

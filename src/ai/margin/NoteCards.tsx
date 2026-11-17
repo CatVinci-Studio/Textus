@@ -2,7 +2,11 @@ import { tabElement } from "../../engine/layout/tab-element";
 import { InlineMarkdownText } from "../MarkdownText";
 import { memo } from "react";
 import { createPortal } from "react-dom";
-import type { ReviewNote } from "./review-notes-plugin";
+import {
+  noteAuthor,
+  noteEditable,
+  type ReviewNote,
+} from "./review-notes-plugin";
 import { usePlacement } from "../../engine/controls/usePlacement";
 import "./ReviewMargin.css";
 import { useCloseOnOutsideClick } from "../../utils/hooks/useCloseOnOutsideClick";
@@ -71,7 +75,7 @@ export const NoteCard = memo(function NoteCard({
         <>
           <div className="review-note-by">
             <NoteMark note={note} labels={labels} />
-            {note.by === "me" ? labels.ownNoteBy : labels.reviewNoteBy}
+            {noteAuthor(note, labels)}
           </div>
           <div className="tx-truncate review-note-chip-text">
             <InlineMarkdownText text={note.comment} />
@@ -100,7 +104,7 @@ function NoteMark({
 }) {
   return note.by === "me" ? (
     <span className="review-note-mark review-note-mark-me" aria-hidden="true">
-      {labels.ownNoteMark}
+      {note.author ? [...note.author][0] : labels.ownNoteMark}
     </span>
   ) : (
     <span className="review-note-num" aria-hidden="true">
@@ -128,7 +132,7 @@ function NoteBody({
     <>
       <div className="review-note-by">
         <NoteMark note={note} labels={labels} />
-        {note.by === "me" ? labels.ownNoteBy : labels.reviewNoteBy}
+        {noteAuthor(note, labels)}
       </div>
       <div className="review-note-text">
         <InlineMarkdownText text={note.comment} />
@@ -137,7 +141,7 @@ function NoteBody({
         <button type="button" onClick={() => onAsk(note)}>
           {labels.reviewNoteAsk}
         </button>
-        {note.by === "me" && (
+        {noteEditable(note) && (
           <button type="button" onClick={() => onEdit(note)}>
             {labels.ownNoteEdit}
           </button>
