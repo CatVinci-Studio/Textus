@@ -202,6 +202,20 @@
   }
 }
 
+/* A touch row scrolls under a finger's drag; its + stays at the row's end
+   rather than riding after the tabs.
+   The strip fills the room, not a margin: the fit reads the +'s margin as
+   room it takes (tab-room.ts). */
+.tab-bar[data-touch] .tab-strip {
+  flex-grow: 1;
+}
+
+.tab-bar[data-touch] .tab-bar-add {
+  position: sticky;
+  right: 0;
+  z-index: 2;
+}
+
 /* Overflowing, the + stays beside the list at the row's end as the tabs
    scroll under them. */
 .tab-bar[data-overflow] .tab-bar-add {

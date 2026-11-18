@@ -15,25 +15,6 @@ export function across(
   return Math.abs(dx) > 2 * Math.abs(t.clientY - start.y) ? dx : null;
 }
 
-// Whether the touch under way is already one control's swipe; a new touch
-// clears it before anyone hears its start.
-let claimed = false;
-if (typeof window !== "undefined")
-  window.addEventListener("touchstart", () => (claimed = false), {
-    capture: true,
-    passive: true,
-  });
-
-/** Marks the touch under way as a control's own swipe (the tab row's):
- *  a swipe watched across the whole window (the sidebar's) leaves it. */
-export function claimSwipe(): void {
-  claimed = true;
-}
-
-export function swipeClaimed(): boolean {
-  return claimed;
-}
-
 let lastTouch = 0;
 if (typeof window !== "undefined")
   window.addEventListener(

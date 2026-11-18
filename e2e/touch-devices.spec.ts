@@ -285,9 +285,25 @@ test.describe("a phone's tab row", () => {
     page,
   }) => {
     await openApp(page);
-    for (let i = 0; i < 4; i++)
+    // The + at the row's end however many tabs it has, beside their list
+    // once they overflow.
+    const addAtEnd = () =>
+      page.evaluate(() => {
+        const bar = document.querySelector<HTMLElement>(".tab-bar")!;
+        const add = bar.querySelector(".tab-bar-add")!.getBoundingClientRect();
+        const list = bar.querySelector(".tab-bar-list");
+        const end = list
+          ? list.getBoundingClientRect().left
+          : bar.getBoundingClientRect().right -
+            parseFloat(getComputedStyle(bar).paddingRight);
+        return Math.abs(end - add.right) <= 1;
+      });
+    await page.locator(".tab-bar-add").first().tap();
+    expect(await addAtEnd()).toBe(true);
+    for (let i = 0; i < 3; i++)
       await page.locator(".tab-bar-add").first().tap();
     await expect(page.locator(".tab-pill")).toHaveCount(5);
+    expect(await addAtEnd()).toBe(true);
     // The last tab, open, closed: the row a tab shorter, the one before it
     // open at the row's end.
     await page.locator(".tab-pill-active .tab-pill-close").tap();
