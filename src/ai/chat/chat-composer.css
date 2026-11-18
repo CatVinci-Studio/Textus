@@ -26,7 +26,7 @@
   min-width: 0;
 }
 
-@media (hover: hover) {
+@media (any-hover: hover) {
   .inline-chat-skill-item:hover {
     background: var(--ui-hover);
   }

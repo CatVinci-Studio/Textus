@@ -182,7 +182,7 @@
   corner-shape: round;
 }
 
-@media (hover: hover) {
+@media (any-hover: hover) {
   .tab-bar-add:hover {
     background: var(--ui-hover);
   }
@@ -196,7 +196,7 @@
 
 /* With no pointer to bring it, an unopened tab's × only takes its name's
    room: the name has it, the pill's width the same. */
-@media (hover: none) {
+@media (any-hover: none) {
   .tab-pill:not(.tab-pill-active, :focus-visible) .tab-pill-close {
     display: none;
   }
@@ -258,7 +258,7 @@
   z-index: 2;
 }
 
-@media (hover: hover) {
+@media (any-hover: hover) {
   .tab-bar-list:hover {
     background: color-mix(
       in srgb,

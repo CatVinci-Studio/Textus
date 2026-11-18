@@ -91,7 +91,7 @@
   transition: background-color var(--dur-fast) var(--ease-standard);
 }
 
-@media (hover: hover) {
+@media (any-hover: hover) {
   .start-page-action:hover {
     background: var(--ui-hover);
     transition-duration: var(--dur-instant);
@@ -136,7 +136,7 @@
   border-radius: var(--shape-s);
 }
 
-@media (hover: hover) {
+@media (any-hover: hover) {
   .start-page-row:hover {
     background: var(--ui-hover);
   }
@@ -190,7 +190,7 @@
   cursor: pointer;
 }
 
-@media (hover: hover) {
+@media (any-hover: hover) {
   .start-page-remove:hover {
     background: var(--ui-hover);
     color: var(--ui-text);

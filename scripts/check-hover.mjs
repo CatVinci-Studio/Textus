@@ -1,7 +1,7 @@
 #!/usr/bin/env node
 // A touch leaves :hover on the last thing tapped, so a hover tint belongs
 // to devices that hover: a rule that only paints (background, colour,
-// borders, shadows) on :hover sits under @media (hover: hover). Rules that
+// borders, shadows) on :hover sits under @media (any-hover: hover). Rules that
 // reveal a control (opacity, visibility), undo a tint, or group :hover with
 // focus inside :is() are left as they are; so is the phone's own CSS.
 import { readFileSync, readdirSync, statSync } from "node:fs";
@@ -39,7 +39,7 @@ for (const file of files("src")) {
     const own = rule.selectors.filter((s) => s.includes(":hover"));
     if (own.some((s) => /:(is|where|not)\([^)]*:hover/.test(s))) return;
     problems.push(
-      `${file}:${rule.source.start.line}: ${own.join(", ")} - a hover tint goes under @media (hover: hover)`,
+      `${file}:${rule.source.start.line}: ${own.join(", ")} - a hover tint goes under @media (any-hover: hover)`,
     );
   });
 }

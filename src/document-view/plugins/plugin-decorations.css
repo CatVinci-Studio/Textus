@@ -105,7 +105,7 @@ button.plugin-gutter {
   content: "";
 }
 
-@media (hover: hover) {
+@media (any-hover: hover) {
   button.plugin-gutter:hover {
     border-radius: var(--shape-xs);
     background: color-mix(in srgb, currentColor 12%, transparent);

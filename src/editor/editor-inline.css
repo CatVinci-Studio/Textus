@@ -131,7 +131,7 @@
   cursor: pointer;
 }
 
-@media (hover: hover) {
+@media (any-hover: hover) {
   .md-toc-item a:hover {
     text-decoration: underline;
   }

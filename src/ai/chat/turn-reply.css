@@ -160,7 +160,7 @@ button.agent-context-chip:hover {
   text-decoration: none;
 }
 
-@media (hover: hover) {
+@media (any-hover: hover) {
   .agent-markdown a:hover {
     text-decoration: underline;
   }

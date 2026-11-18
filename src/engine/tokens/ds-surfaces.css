@@ -11,7 +11,7 @@
     color var(--dur-fast) var(--ease-standard);
 }
 
-@media (hover: hover) {
+@media (any-hover: hover) {
   :is(.tab-pill, .sidebar-tab):hover {
     background: var(--ui-hover);
   }
@@ -66,7 +66,7 @@
   font-size: var(--text-secondary);
 }
 
-@media (hover: hover) {
+@media (any-hover: hover) {
   :is(.settings-select, .inline-chat-mode, .paper-outline-kind):hover {
     border-color: color-mix(in srgb, var(--ui-muted) 45%, var(--ui-border));
   }
@@ -278,7 +278,7 @@ input[type="checkbox"].ui-check:checked {
   min-width: var(--control-height);
 }
 
-@media (hover: hover) {
+@media (any-hover: hover) {
   ::-webkit-scrollbar-thumb:hover {
     background-color: color-mix(in srgb, var(--ui-muted) 55%, transparent);
   }

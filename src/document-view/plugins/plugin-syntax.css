@@ -36,7 +36,7 @@
   background: color-mix(in srgb, var(--doc-text) 10%, transparent);
   color: inherit;
 }
-@media (hover: hover) {
+@media (any-hover: hover) {
   .plugin-syntax-spoiler:hover {
     background: color-mix(in srgb, var(--doc-text) 10%, transparent);
     color: inherit;

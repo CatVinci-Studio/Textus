@@ -54,7 +54,7 @@
   cursor: pointer;
 }
 
-@media (hover: hover) {
+@media (any-hover: hover) {
   .memory-section h4 button:hover,
   .memory-link:hover {
     text-decoration: underline;
@@ -200,7 +200,7 @@
   cursor: pointer;
 }
 
-@media (hover: hover) {
+@media (any-hover: hover) {
   .memory-entry-delete:hover {
     background: color-mix(in srgb, var(--ui-text) 8%, transparent);
     color: var(--ui-text);
@@ -234,7 +234,7 @@
   cursor: pointer;
 }
 
-@media (hover: hover) {
+@media (any-hover: hover) {
   .memory-reveal:hover {
     color: var(--ui-accent-text);
     text-decoration: underline;
@@ -325,7 +325,7 @@
   cursor: pointer;
 }
 
-@media (hover: hover) {
+@media (any-hover: hover) {
   .memory-remembered-actions button:hover {
     text-decoration: underline;
   }

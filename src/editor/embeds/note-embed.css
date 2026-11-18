@@ -37,7 +37,7 @@
   cursor: pointer;
 }
 
-@media (hover: hover) {
+@media (any-hover: hover) {
   .note-embed-open:hover {
     color: var(--doc-accent-text);
   }

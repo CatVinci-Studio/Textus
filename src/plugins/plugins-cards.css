@@ -107,7 +107,7 @@
 button.plugin-card-open {
   cursor: pointer;
 }
-@media (hover: hover) {
+@media (any-hover: hover) {
   button.plugin-card-open:hover .plugin-card-name {
     text-decoration: underline;
     text-underline-offset: 2px;
@@ -326,7 +326,7 @@ button.plugin-card-open {
   font-size: var(--text-control);
   cursor: pointer;
 }
-@media (hover: hover) {
+@media (any-hover: hover) {
   .plugin-back:hover {
     background: var(--ui-hover);
   }

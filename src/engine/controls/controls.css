@@ -27,7 +27,7 @@
   text-align: left;
   cursor: pointer;
 }
-@media (hover: hover) {
+@media (any-hover: hover) {
   .tx-list-row:hover {
     background: var(--ui-hover);
   }
@@ -111,7 +111,7 @@
   border-radius: var(--shape-pill);
   cursor: pointer;
 }
-@media (hover: hover) {
+@media (any-hover: hover) {
   .tx-zoom > button.tx-value:hover {
     background: var(--ui-hover);
   }
@@ -227,7 +227,7 @@ input[type="checkbox"].tx-switch:focus-visible {
   font-size: var(--text-secondary);
   cursor: pointer;
 }
-@media (hover: hover) {
+@media (any-hover: hover) {
   .tx-select:hover {
     background: var(--ui-hover);
   }
@@ -292,7 +292,7 @@ input[type="range"].tx-slider {
   font-variant-numeric: tabular-nums;
   cursor: pointer;
 }
-@media (hover: hover) {
+@media (any-hover: hover) {
   .tx-calendar-day:hover {
     background: var(--ui-hover);
   }

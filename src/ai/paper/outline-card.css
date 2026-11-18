@@ -169,7 +169,7 @@
   cursor: pointer;
 }
 
-@media (hover: hover) {
+@media (any-hover: hover) {
   .paper-outline-edit:hover:not(:disabled),
   .paper-outline-more:hover {
     color: var(--ui-accent, var(--ui-text));

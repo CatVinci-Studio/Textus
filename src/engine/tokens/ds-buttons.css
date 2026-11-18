@@ -53,7 +53,7 @@
 }
 
 /* The hover arrives in 80ms and leaves at the 120ms of the base rule. */
-@media (hover: hover) {
+@media (any-hover: hover) {
   :is(
       .close-prompt-buttons button,
       .image-name-buttons button,
@@ -94,7 +94,7 @@
   font-weight: 600;
 }
 
-@media (hover: hover) {
+@media (any-hover: hover) {
   :is(
       .close-prompt-buttons button,
       .image-name-buttons button,
@@ -171,7 +171,7 @@
   color: var(--ui-on-fill);
 }
 
-@media (hover: hover) {
+@media (any-hover: hover) {
   .close-prompt-buttons
     button.close-prompt-primary.app-dialog-danger:not(:disabled):hover {
     border-color: color-mix(in srgb, var(--ui-danger-fill) 86%, #000);
@@ -246,7 +246,7 @@
   border: 1px solid var(--ui-border);
 }
 
-@media (hover: hover) {
+@media (any-hover: hover) {
   :is(
       .inline-chat-header-button,
       .tree-tool,
@@ -273,7 +273,7 @@
 
 /* A touch screen has no hover to give way to: the pressed button also
    dims, as an iOS button does while a finger is on it. */
-@media (hover: none) {
+@media (any-hover: none) {
   :is(
       .close-prompt-buttons button,
       .image-name-buttons button,

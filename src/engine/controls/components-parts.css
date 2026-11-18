@@ -28,7 +28,7 @@
   white-space: nowrap;
   cursor: pointer;
 }
-@media (hover: hover) {
+@media (any-hover: hover) {
   .tx-chip:not(:disabled):hover {
     background: color-mix(in srgb, var(--ui-selected) 80%, var(--ui-text) 6%);
   }
@@ -184,7 +184,7 @@
 .tx-table th .tx-icon {
   margin-right: var(--space-1);
 }
-@media (hover: hover) {
+@media (any-hover: hover) {
   .tx-table tbody tr:hover > td {
     background: var(--ui-hover);
   }
@@ -280,7 +280,7 @@
   cursor: grab;
   touch-action: none;
 }
-@media (hover: hover) {
+@media (any-hover: hover) {
   .tx-table-grip:hover {
     border-color: var(--ui-accent);
     background: var(--ui-accent);

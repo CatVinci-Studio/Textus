@@ -71,7 +71,7 @@
   --tree-indent: min(calc(var(--depth, 0) * var(--tree-step)), 35%);
 }
 
-@media (hover: hover) {
+@media (any-hover: hover) {
   .tx-list-item:hover {
     background: var(--ui-hover);
   }

@@ -86,7 +86,7 @@
   cursor: pointer;
 }
 
-@media (hover: hover) {
+@media (any-hover: hover) {
   .grammar-popover-nav .tx-icon-button:hover {
     background: var(--ui-hover);
     color: var(--ui-text);
@@ -148,7 +148,7 @@
   cursor: pointer;
 }
 
-@media (hover: hover) {
+@media (any-hover: hover) {
   .grammar-popover-ignore:hover {
     border-color: var(--ui-muted);
   }

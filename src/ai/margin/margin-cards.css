@@ -166,7 +166,7 @@
   cursor: pointer;
 }
 
-@media (hover: hover) {
+@media (any-hover: hover) {
   .review-note-actions button:hover {
     border-color: var(--review-note-line);
   }

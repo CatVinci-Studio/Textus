@@ -134,7 +134,7 @@
   color: color-mix(in srgb, var(--ui-text) 72%, var(--ui-frame));
 }
 
-@media (hover: hover) {
+@media (any-hover: hover) {
   :root
     .island-row
     > .tab-bar

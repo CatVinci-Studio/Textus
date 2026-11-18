@@ -172,7 +172,7 @@
 
 /* With a mouse they take it while hidden too: a pointer leaving the block
    on its way up to them finds them there, and they show again. */
-@media (hover: hover) {
+@media (any-hover: hover) {
   .block-toolbar > .block-toolbar-actions > * {
     pointer-events: auto;
   }
@@ -185,7 +185,7 @@
 
 /* A finger leaves :hover and a tapped pill's focus stuck on the table it
    touched: there its tools show only while the caret is in it. */
-@media (hover: none) {
+@media (any-hover: none) {
   .table-wrapper.is-table-caret > .block-toolbar > .block-toolbar-actions {
     opacity: 1;
   }
@@ -265,7 +265,7 @@
   color: var(--doc-text);
 }
 
-@media (hover: hover) {
+@media (any-hover: hover) {
   .block-pill:is(button):hover,
   .code-block-language-select:hover {
     color: var(--doc-text);

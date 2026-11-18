@@ -53,7 +53,7 @@
   border-top: 1px solid var(--ui-border);
 }
 
-@media (hover: hover) {
+@media (any-hover: hover) {
   .chat-history-entry:hover {
     background: var(--ui-hover);
   }
@@ -92,7 +92,7 @@
   flex-shrink: 0;
 }
 
-@media (hover: hover) {
+@media (any-hover: hover) {
   .chat-history-entry-delete:hover {
     color: var(--ui-text);
   }

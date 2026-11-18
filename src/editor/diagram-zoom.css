@@ -24,7 +24,7 @@
 .mermaid-zoom[hidden] {
   display: none;
 }
-@media (hover: hover) {
+@media (any-hover: hover) {
   .mermaid-zoom:hover {
     color: var(--ui-text);
   }

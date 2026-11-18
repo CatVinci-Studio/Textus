@@ -221,7 +221,7 @@ textarea.tx-input {
 .tx-reveal:focus-visible {
   opacity: 1;
 }
-@media (hover: none) {
+@media (any-hover: none) {
   .tx-reveal {
     opacity: 1;
   }

@@ -52,7 +52,7 @@
   display: none;
 }
 
-@media (hover: hover) {
+@media (any-hover: hover) {
   .block-handle-button:hover {
     background: color-mix(in srgb, currentColor 12%, transparent);
     color: var(--doc-text);

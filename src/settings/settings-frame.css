@@ -129,7 +129,7 @@
   hyphens: auto;
 }
 
-@media (hover: hover) {
+@media (any-hover: hover) {
   .settings-nav-item:hover {
     background: var(--ui-hover);
   }

@@ -37,13 +37,13 @@
 }
 
 /* No hover to bring it out: a drawn block's is always there. */
-@media (hover: none) {
+@media (any-hover: none) {
   .block-fold {
     opacity: 1;
   }
 }
 
-@media (hover: hover) {
+@media (any-hover: hover) {
   .block-fold:hover {
     background: color-mix(in srgb, currentColor 12%, transparent);
   }
@@ -67,7 +67,7 @@
   cursor: pointer;
 }
 
-@media (hover: hover) {
+@media (any-hover: hover) {
   .block-folded-line:hover {
     color: var(--doc-accent-text);
   }
@@ -120,7 +120,7 @@
 
 /* A touch screen has no hover: the caret shows on the heading being
    written in, or while folded, never on every heading at once. */
-@media (hover: none) {
+@media (any-hover: none) {
   .ProseMirror
     :is(h1, h2, h3, h4, h5, h6):not([data-folded], :has(> .heading-marker))
     > .heading-fold {

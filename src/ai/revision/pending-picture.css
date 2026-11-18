@@ -126,7 +126,7 @@
   cursor: pointer;
 }
 
-@media (hover: hover) {
+@media (any-hover: hover) {
   .pending-picture-retry:hover {
     border-color: var(--doc-accent);
     color: var(--doc-accent-text);
@@ -158,7 +158,7 @@
   cursor: pointer;
 }
 
-@media (hover: hover) {
+@media (any-hover: hover) {
   .pending-picture-redraw:hover {
     border-color: var(--doc-accent);
     color: var(--doc-accent-text);
