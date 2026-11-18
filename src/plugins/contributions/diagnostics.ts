@@ -79,22 +79,28 @@ function wellFormed(d: unknown): d is PluginDiagnostic {
   );
 }
 
-/** Every plugin's slips in `blocks`, each with who found it; one that
- *  fails or is slower than `timeoutMs` adds none this time. */
+/** Every plugin's slips in `blocks`, each with who found it. One that
+ *  fails adds none; one slower than `timeoutMs` is named as late, so what
+ *  it found before stays rather than reading as no slips. */
 export async function diagnose(
   blocks: SentBlock[],
   doc: readonly SentBlock[],
   path: string | null,
   timeoutMs = 200,
-): Promise<(PluginDiagnostic & { plugin: string; name: string })[]> {
+): Promise<{
+  answers: (PluginDiagnostic & { plugin: string; name: string })[];
+  late: string[];
+}> {
+  const late: string[] = [];
   const all = await Promise.all(
     [...providers.values()].map(async ({ plugin, name, ask }) => {
       const found = await Promise.race([
         ask(blocks, doc, path).catch(() => []),
-        new Promise<PluginDiagnostic[]>((resolve) =>
-          setTimeout(() => resolve([]), timeoutMs),
+        new Promise<null>((resolve) =>
+          setTimeout(() => resolve(null), timeoutMs),
         ),
       ]);
+      if (found === null) late.push(plugin);
       return (Array.isArray(found) ? found : [])
         .filter(wellFormed)
         .map((d) => ({
@@ -114,5 +120,5 @@ export async function diagnose(
         }));
     }),
   );
-  return all.flat();
+  return { answers: all.flat(), late };
 }

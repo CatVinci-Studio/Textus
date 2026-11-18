@@ -62,26 +62,32 @@ export function hasDecorationProviders(): boolean {
 /** The editor redraws when a plugin starts or stops marking. */
 export const onDecorationProviders = subscribers.subscribe;
 
-/** Every plugin's marks for `blocks`, each tagged with whose it is; a
- *  plugin that fails or takes too long adds none. */
+/** Every plugin's marks for `blocks`, each tagged with whose it is. One
+ *  that fails adds none; one that takes too long is named as late, so its
+ *  marks from before stay. */
 export async function decorate(
   blocks: SentBlock[],
   doc: readonly SentBlock[],
   path: string | null = null,
   timeoutMs = 1500,
-): Promise<(PluginDecoration & { plugin: string })[]> {
+): Promise<{
+  answers: (PluginDecoration & { plugin: string })[];
+  late: string[];
+}> {
+  const late: string[] = [];
   const all = await Promise.all(
     [...providers].map(async ([plugin, ask]) => {
       const marks = await Promise.race([
         ask(blocks, doc, path).catch(() => []),
-        new Promise<PluginDecoration[]>((resolve) =>
-          setTimeout(() => resolve([]), timeoutMs),
+        new Promise<null>((resolve) =>
+          setTimeout(() => resolve(null), timeoutMs),
         ),
       ]);
+      if (marks === null) late.push(plugin);
       return (Array.isArray(marks) ? marks : [])
         .filter((m) => m && typeof m.block === "string")
         .map((m) => ({ ...m, plugin }));
     }),
   );
-  return all.flat();
+  return { answers: all.flat(), late };
 }

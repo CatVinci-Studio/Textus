@@ -1,11 +1,28 @@
 //! Shared HTTP client construction for every provider request. A GUI app
-//! launched from Finder doesn't inherit HTTPS_PROXY, so the proxy is an
-//! app-level setting mirrored here from the frontend.
+//! launched from Finder doesn't inherit HTTPS_PROXY, so the proxy follows
+//! the system's network settings, or the app's own, mirrored here from the
+//! frontend.
 
 use std::sync::RwLock;
 use std::time::Duration;
 
-static PROXY_URL: RwLock<Option<String>> = RwLock::new(None);
+/// Where requests go: the system's proxy, straight out, or a proxy the
+/// user set.
+#[derive(Clone, Debug, PartialEq, Eq)]
+pub enum Route {
+    /// The proxy the system's network settings name (and HTTPS_PROXY and
+    /// the like), as a browser follows it; direct when there is none.
+    System,
+    Direct,
+    Via(String),
+}
+
+// Tests run against servers on this computer, whatever its proxy.
+static ROUTE: RwLock<Route> = RwLock::new(if cfg!(test) {
+    Route::Direct
+} else {
+    Route::System
+});
 
 /// The loopback family, which never goes through a proxy: a model or
 /// service on this computer is reached directly whatever the settings say
@@ -31,20 +48,79 @@ const STREAM_EVENT_TIMEOUT: Duration = if cfg!(test) {
     Duration::from_secs(300)
 };
 
-/// Sets (or clears, with None/empty) the proxy all provider requests route
-/// through. Unparseable URLs are rejected here so a typo fails visibly.
-pub fn set_proxy(url: Option<String>) -> Result<(), String> {
-    let url = url.map(|u| u.trim().to_string()).filter(|u| !u.is_empty());
-    if let Some(u) = &url {
-        reqwest::Proxy::all(u.clone()).map_err(|e| format!("invalid proxy URL: {e}"))?;
-    }
-    *PROXY_URL.write().unwrap() = url;
+/// Sets where requests go. An unparseable proxy URL is rejected here so a
+/// typo fails visibly; an empty one follows the system.
+pub fn set_route(route: Route) -> Result<(), String> {
+    let route = match route {
+        Route::Via(u) if u.trim().is_empty() => Route::System,
+        Route::Via(u) => {
+            let u = u.trim().to_string();
+            reqwest::Proxy::all(u.clone()).map_err(|e| format!("invalid proxy URL: {e}"))?;
+            Route::Via(u)
+        }
+        other => other,
+    };
+    *ROUTE.write().unwrap() = route;
     Ok(())
 }
 
-/// The proxy set with [`set_proxy`], for requests that build their own client.
+/// Where requests go, as set.
+pub fn current_route() -> Route {
+    ROUTE.read().unwrap().clone()
+}
+
+/// The proxy requests go through now, for requests that build their own
+/// client: the one set, or the system's, or None for direct.
 pub fn proxy_url() -> Option<String> {
-    PROXY_URL.read().unwrap().clone()
+    match ROUTE.read().unwrap().clone() {
+        Route::Via(url) => Some(url),
+        Route::Direct => None,
+        Route::System => system_proxy(),
+    }
+}
+
+/// The system's proxy for web requests, read again after a few seconds so
+/// a proxy switched on while Textus runs is followed. One proxy for all:
+/// the system's bypass list isn't read; this computer is always direct.
+fn system_proxy() -> Option<String> {
+    use std::sync::Mutex;
+    use std::time::Instant;
+    static READ: Mutex<Option<(Instant, Option<String>)>> = Mutex::new(None);
+    let mut read = READ.lock().unwrap_or_else(|e| e.into_inner());
+    if let Some((at, url)) = read.as_ref() {
+        if at.elapsed() < Duration::from_secs(5) {
+            return url.clone();
+        }
+    }
+    let url = system_proxy_now();
+    *read = Some((Instant::now(), url.clone()));
+    url
+}
+
+fn system_proxy_now() -> Option<String> {
+    let matcher = hyper_util::client::proxy::matcher::Matcher::from_system();
+    let probe: http::Uri = "https://example.com/".parse().ok()?;
+    let found = matcher.intercept(&probe)?;
+    let mut url = reqwest::Url::parse(&found.uri().to_string()).ok()?;
+    // An HTTP proxy's name and password come as its Basic header.
+    let basic = found
+        .basic_auth()
+        .and_then(|h| h.to_str().ok()?.strip_prefix("Basic ").map(str::to_string))
+        .and_then(|b| {
+            use base64::Engine;
+            base64::engine::general_purpose::STANDARD.decode(b).ok()
+        })
+        .and_then(|raw| String::from_utf8(raw).ok());
+    let auth = match (found.raw_auth(), &basic) {
+        (Some((user, pass)), _) => Some((user, pass)),
+        (None, Some(pair)) => pair.split_once(':'),
+        _ => None,
+    };
+    if let Some((user, pass)) = auth {
+        let _ = url.set_username(user);
+        let _ = url.set_password(Some(pass));
+    }
+    Some(url.to_string())
 }
 
 fn builder() -> reqwest::ClientBuilder {
@@ -57,10 +133,8 @@ fn streaming_builder() -> reqwest::ClientBuilder {
         .read_timeout(STREAM_READ_TIMEOUT)
 }
 
-/// `builder` through the app's proxy, or else direct: a terminal that
-/// started the app with HTTPS_PROXY set must not hijack a request through
-/// it, and "None (direct)" says direct. A service that needs a proxy has
-/// the app's setting.
+/// `builder` through the proxy in effect ([`proxy_url`]), or else direct:
+/// reqwest's own reading of the environment never decides.
 pub(crate) fn route(builder: reqwest::ClientBuilder) -> reqwest::ClientBuilder {
     match proxy() {
         Some(proxy) => builder.proxy(proxy),
@@ -88,8 +162,7 @@ pub(crate) fn streaming_client() -> reqwest::Client {
 /// on this computer (Ollama, LM Studio) is reached directly, as the app's
 /// other requests reach it (net.rs).
 pub(crate) fn proxy() -> Option<reqwest::Proxy> {
-    let url = PROXY_URL.read().unwrap().clone()?;
-    proxy_for(&url).ok()
+    proxy_for(&proxy_url()?).ok()
 }
 
 /// A proxy for every request to `url`, the loopback family left direct.
@@ -212,6 +285,15 @@ pub(crate) async fn read_sse(
 #[cfg(test)]
 mod tests {
     use super::*;
+
+    #[test]
+    fn the_system_proxy_is_read_with_its_credentials() {
+        // The environment is read first, as the system's settings are.
+        std::env::set_var("HTTPS_PROXY", "http://ann:pw@proxy.example:3128");
+        let found = system_proxy_now();
+        std::env::remove_var("HTTPS_PROXY");
+        assert_eq!(found.as_deref(), Some("http://ann:pw@proxy.example:3128/"));
+    }
 
     fn collect(buffer: &mut SseLineBuffer, chunk: &[u8]) -> Vec<String> {
         let mut out = Vec::new();

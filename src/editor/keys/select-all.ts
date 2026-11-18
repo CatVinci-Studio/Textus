@@ -9,18 +9,13 @@ import {
 import { keydownHandler } from "@milkdown/kit/prose/keymap";
 import { $prose } from "@milkdown/kit/utils";
 
-/** All of `doc`. WebKit draws no highlight for a selection that starts or
- *  ends beside a code block; there it runs from its first character to its
- *  last. */
+/** All of `doc`, from its first character to its last where it starts
+ *  and ends in text: WebKit draws no highlight for a selection that starts
+ *  before a heading's fold arrow or beside a code block. */
 function wholeDocument(doc: ProseNode): Selection {
   const start = Selection.atStart(doc);
   const end = Selection.atEnd(doc);
-  const codeAtEdge = [doc.firstChild, doc.lastChild].some(
-    (node) => node?.type.spec.code,
-  );
-  return codeAtEdge &&
-    start instanceof TextSelection &&
-    end instanceof TextSelection
+  return start instanceof TextSelection && end instanceof TextSelection
     ? TextSelection.create(doc, start.from, end.to)
     : new AllSelection(doc);
 }

@@ -134,7 +134,7 @@ export const commands = {
 	 */
 	set_window_title: (title: string) => __TAURI_INVOKE<void>("set_window_title", { title }),
 	system_info: () => __TAURI_INVOKE<SystemInfo>("system_info"),
-	system_font_families: () => __TAURI_INVOKE<string[]>("system_font_families"),
+	system_font_families: () => __TAURI_INVOKE<FontFamily[]>("system_font_families"),
 	/**
 	 *  Files `report`. sendLimit when this computer has sent its share today;
 	 *  otherwise the connection's or the service's error.
@@ -373,6 +373,15 @@ export type DetachedTab_Serialize = {
 	importedFrom?: string,
 };
 
+/**
+ *  An installed family: the name CSS knows it by, and what it is called in
+ *  the CJK languages that name it themselves (微软雅黑 for Microsoft YaHei).
+ */
+export type FontFamily = {
+	name: string,
+	local: LocalName[],
+};
+
 /**  A stylesheet fetched to install the theme, which counts the install. */
 export type GalleryInstall = {
 	/**  The catalog's `updated`, which stands for a theme's version. */
@@ -461,6 +470,12 @@ export type GalleryTheme_Serialize = {
 	 *  English ones.
 	 */
 	l10n: { [key in string]: GalleryText_Serialize },
+};
+
+export type LocalName = {
+	/**  "zh", "zh-Hant", "ja" or "ko", as Settings › Language spells them. */
+	language: string,
+	name: string,
 };
 
 /**  The machine's memory and the system's pressure: 0 none, 1 short, 2 very. */

@@ -1,9 +1,12 @@
 /**
  * The text fonts Settings offers: a short list of well-made faces first,
- * then the rest of what is installed. Only faces that draw the interface's
- * language: a Korean face picked for Chinese text changes nothing, and a
- * name the web view can't match changes nothing either.
+ * then the rest of what is installed. Recommended faces draw the
+ * interface's language; the rest draw it or Latin text, since a Latin face
+ * still serves a CJK document. A name the web view can't match changes
+ * nothing, so it is left out.
  */
+
+import type { FontFamily } from "../../platform/bindings/app";
 
 /** Faces the large platforms and type foundries ship for reading, by the
  *  script they are for; the first installed ones are offered first. */
@@ -96,39 +99,52 @@ function draws(
   });
 }
 
+/** One font in the list: the name it is set by, and the name shown,
+ *  with its name in the interface's language first where it has one. */
+interface FontChoice {
+  value: string;
+  label: string;
+}
+
 interface FontChoices {
-  recommended: string[];
-  more: string[];
+  recommended: FontChoice[];
+  more: FontChoice[];
 }
 
 /** The installed `families` for `language`, split as Settings lists them.
  *  Without a canvas (tests, an old engine) nothing is filtered. */
 export function fontChoices(
-  families: readonly string[],
+  families: readonly FontFamily[],
   language: string,
 ): FontChoices {
   const script = scriptOf(language);
   const context = document.createElement("canvas").getContext("2d");
-  const drawing = (sample: string) => (family: string) =>
-    !context || draws(context, family, sample);
-  const installed = new Map(families.map((f) => [f.toLowerCase(), f]));
+  const drawing = (family: string, ...samples: string[]) =>
+    !context || samples.some((sample) => draws(context, family, sample));
+  const choice = (family: FontFamily, ...samples: string[]) => {
+    const local = family.local.find((l) => l.language === script)?.name;
+    // The web view may know a face only by a localized name.
+    const value = [family.name, ...family.local.map((l) => l.name)].find(
+      (name) => drawing(name, ...samples),
+    );
+    if (!value) return [];
+    return [{ value, label: local ? `${local} ${family.name}` : family.name }];
+  };
+  const installed = new Map(families.map((f) => [f.name.toLowerCase(), f]));
   const pick = (names: readonly string[], sample: string) =>
-    names
-      .flatMap((name) => installed.get(name.toLowerCase()) ?? [])
-      .filter(drawing(sample));
-  // Latin faces still serve a CJK document: its own face follows for the
-  // rest (--doc-chosen-font).
+    names.flatMap((name) => {
+      const family = installed.get(name.toLowerCase());
+      return family ? choice(family, sample) : [];
+    });
   const recommended = [
-    ...new Set([
-      ...(script === "latin" ? [] : pick(RECOMMENDED[script], SAMPLES[script])),
-      ...pick(RECOMMENDED.latin, SAMPLES.latin),
-    ]),
-  ];
-  const picked = new Set(recommended);
+    ...(script === "latin" ? [] : pick(RECOMMENDED[script], SAMPLES[script])),
+    ...pick(RECOMMENDED.latin, SAMPLES.latin),
+  ].filter((c, i, all) => all.findIndex((o) => o.value === c.value) === i);
+  const picked = new Set(recommended.map((c) => c.value));
   return {
     recommended,
     more: families
-      .filter((family) => !picked.has(family))
-      .filter(drawing(SAMPLES[script])),
+      .flatMap((family) => choice(family, SAMPLES[script], SAMPLES.latin))
+      .filter((c) => !picked.has(c.value)),
   };
 }

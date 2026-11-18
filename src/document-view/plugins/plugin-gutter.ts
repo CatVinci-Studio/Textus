@@ -64,6 +64,7 @@ export function drawGutter(
     firstLine(block, pos),
     () => gutterMark(mark, tone),
     {
+      plugin: mark.plugin,
       side: -1,
       ignoreSelection: true,
       stopEvent: () => true,

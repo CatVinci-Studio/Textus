@@ -2,6 +2,7 @@
 //! and backgrounds, the boot script a new window starts with, and the
 //! settings the backend reads or sets.
 
+use aicompat::http::Route;
 use super::*;
 use crate::app_dirs::AppDirs;
 
@@ -19,8 +20,9 @@ pub fn init(app: &AppHandle) {
 
 /// The settings' proxy, for every request the app makes: read here, at
 /// launch and on each change, so a request made before any window (a
-/// scheduled job in background mode) goes through it too. An unreadable one
-/// is left out: requests go direct.
+/// scheduled job in background mode) goes through it too. Unless set, or
+/// set to direct, requests follow the system's proxy; an unreadable one
+/// follows the system too.
 pub(crate) fn proxy_changed(settings: &Value) {
     let text = |key: &str| {
         settings
@@ -38,7 +40,13 @@ pub(crate) fn proxy_changed(settings: &Value) {
         .unwrap_or("")
         .to_string();
     let user = text("proxyUsername");
-    let proxy = (!host.is_empty() && !kind.is_empty() && kind != "none").then(|| {
+    let manual = matches!(kind.as_str(), "http" | "https" | "socks5");
+    let route = if kind == "direct" {
+        Route::Direct
+    } else if !manual || host.is_empty() {
+        // "system", and "none", which before 1.4.5 was the default.
+        Route::System
+    } else {
         let mut url = format!("{kind}://{host}");
         if !port.is_empty() {
             url.push_str(&format!(":{port}"));
@@ -55,10 +63,10 @@ pub(crate) fn proxy_changed(settings: &Value) {
                 url = parsed.to_string();
             }
         }
-        url
-    });
-    if aicompat::http::set_proxy(proxy).is_err() {
-        let _ = aicompat::http::set_proxy(None);
+        Route::Via(url)
+    };
+    if aicompat::http::set_route(route).is_err() {
+        let _ = aicompat::http::set_route(Route::System);
     }
 }
 

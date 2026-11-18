@@ -10,7 +10,8 @@ import "./drawn-caret.css";
  * a focused editor, an input method's composing included. It stands where
  * the browser's own caret is - the one the input method follows - and
  * only where the browser gives no place (beside a picture, a formula, a
- * hidden mark), where the editor computes it. Placed once a frame at most.
+ * hidden mark), where the editor computes it. Beside a picture it is as
+ * tall as the picture. Placed once a frame at most.
  */
 /** The caret's height, in the block's text size. */
 const CARET_EM = 1.25;
@@ -70,6 +71,21 @@ class DrawnCaret {
     return box && box.height > 0 ? box : null;
   }
 
+  /** The box of the picture right before or after the caret, if any. */
+  private pictureBeside(): DOMRect | null {
+    const { $head } = this.view.state.selection;
+    const before = $head.nodeBefore?.type.name === "image";
+    const after = $head.nodeAfter?.type.name === "image";
+    if (!before && !after) return null;
+    const pos = before ? $head.pos - $head.nodeBefore!.nodeSize : $head.pos;
+    const dom = this.view.nodeDOM(pos);
+    if (!(dom instanceof HTMLElement)) return null;
+    const img =
+      dom instanceof HTMLImageElement ? dom : dom.querySelector("img");
+    const box = (img ?? dom).getBoundingClientRect();
+    return box.height > 0 ? box : null;
+  }
+
   private readonly place = () => {
     this.frame = 0;
     const { view } = this;
@@ -116,10 +132,19 @@ class DrawnCaret {
     // drew thick and soft.
     const dpr = window.devicePixelRatio || 1;
     const onPixel = (v: number) => Math.round(v * dpr) / dpr;
+    // Beside a picture it stands as tall as the picture, as in Word.
+    const picture = this.pictureBeside();
     const tall = onPixel(
-      fontSize ? fontSize * CARET_EM * zoom : at.bottom - at.top,
+      picture
+        ? picture.height
+        : fontSize
+          ? fontSize * CARET_EM * zoom
+          : at.bottom - at.top,
     );
-    const top = onPixel((at.top + at.bottom) / 2 - tall / 2);
+    const middle = picture
+      ? picture.top + picture.height / 2
+      : (at.top + at.bottom) / 2;
+    const top = onPixel(middle - tall / 2);
     const x = (onPixel(at.left) - r.left) / zoom;
     const y = (top - r.top) / zoom;
     const width = Math.max(1, Math.round(CARET_PX * dpr)) / dpr / zoom;

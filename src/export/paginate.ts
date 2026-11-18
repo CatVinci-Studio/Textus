@@ -10,9 +10,14 @@ export interface PageGeometry {
   margin: number;
 }
 
-/** macOS: createPDF renders 1 CSS px as 1 pt, so the sheet is A4 in points.
- *  NSPrintOperation's page height depends on the printer, so it can't match. */
-export const MAC_PAGE: PageGeometry = { width: 595, height: 842, margin: 57 };
+/** macOS: A4 (595 × 842 pt) at 96 CSS px an inch, as on Windows: the
+ *  export's web view is zoomed to 3/4 pt a CSS px (pdf_macos.rs). Not cut
+ *  to whole pixels, so its sheets meet createPDF's exactly. */
+export const MAC_PAGE: PageGeometry = {
+  width: 595 / 0.75,
+  height: 842 / 0.75,
+  margin: 76,
+};
 
 /** Windows: PrintToPdf lays out at 96 CSS px per inch, cutting pages at
  *  whole pixels. */

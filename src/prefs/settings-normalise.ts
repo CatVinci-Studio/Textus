@@ -24,6 +24,8 @@ import {
   CREATION_KINDS,
   type CreationKind,
   THEME_MODES,
+  PROXY_TYPES,
+  type ProxyType,
   type ThemeMode,
   UI_TEXT_SCALES,
   UI_TEXT_SCALES_BEFORE,
@@ -218,6 +220,9 @@ function readSettings(parsed: Raw | null): Settings {
       // An unknown language (a newer build's, a hand edit) is English, not
       // a string table that isn't there.
       language: isLang(parsed.language) ? parsed.language : "en",
+      proxyType: PROXY_TYPES.includes(parsed.proxyType as ProxyType)
+        ? (parsed.proxyType as ProxyType)
+        : DEFAULT_SETTINGS.proxyType,
       theme: THEME_MODES.includes(parsed.theme as ThemeMode)
         ? (parsed.theme as ThemeMode)
         : DEFAULT_SETTINGS.theme,

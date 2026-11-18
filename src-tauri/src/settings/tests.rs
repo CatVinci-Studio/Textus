@@ -387,9 +387,14 @@ fn the_proxy_follows_the_settings() {
         aicompat::http::proxy_url().as_deref(),
         Some("http://alice:p%40ss%3Aw%2541rd%20@proxy.lan:8080/")
     );
-    // None, or no host: direct. Credentials without a proxy are nothing.
-    proxy_changed(&json!({ "proxyType": "none", "proxyHost": "proxy.lan" }));
+    // Direct; and none (the old default), system or no host: the system's.
+    proxy_changed(&json!({ "proxyType": "direct", "proxyHost": "proxy.lan" }));
     assert_eq!(aicompat::http::proxy_url(), None);
+    for kind in ["none", "system"] {
+        proxy_changed(&json!({ "proxyType": kind, "proxyHost": "proxy.lan" }));
+        assert_eq!(aicompat::http::current_route(), aicompat::http::Route::System);
+    }
     proxy_changed(&json!({ "proxyType": "http", "proxyHost": "" }));
-    assert_eq!(aicompat::http::proxy_url(), None);
+    assert_eq!(aicompat::http::current_route(), aicompat::http::Route::System);
+    proxy_changed(&json!({ "proxyType": "direct" }));
 }

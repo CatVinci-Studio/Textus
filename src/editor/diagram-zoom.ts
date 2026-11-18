@@ -1,5 +1,8 @@
 import { currentStrings } from "../i18n/current";
 import { motionAllowed, duration } from "../engine/motion/motion";
+import { fingerDown, onTrackpadTouch } from "../platform/trackpad";
+import { scaledPx } from "../engine/tokens/chrome-scale";
+import { isMacPlatform } from "../platform/os";
 import "./diagram-zoom.css";
 
 /** How far a diagram can be zoomed out and in. */
@@ -14,6 +17,35 @@ export function nextScale(scale: number, deltaY: number): number {
 
 const clampScale = (scale: number) =>
   Math.min(MAX_SCALE, Math.max(MIN_SCALE, scale));
+
+/** How much of the picture, at most, stays in the window wherever it is
+ *  dragged or zoomed. */
+const KEEP_PX = 64;
+
+/** The offset that keeps a strip (or all, if smaller) of a
+ *  `size`-long drawing at `at` inside a `room`-long stage. */
+export function keepInView(at: number, size: number, room: number): number {
+  const keep = Math.min(scaledPx(KEEP_PX), size, room);
+  return Math.min(room - keep, Math.max(keep - size, at));
+}
+
+/** Whether a wheel event is a mouse wheel's notch, which zooms, rather than
+ *  a trackpad's two-finger swipe, which moves the picture. A notch comes in
+ *  lines, or in whole steps of 120 with no sideways part; a swipe already
+ *  under way keeps moving the picture. */
+export function wheelNotch(
+  event: Pick<WheelEvent, "deltaMode" | "deltaX"> & { wheelDeltaY?: number },
+  swiping: boolean,
+): boolean {
+  if (event.deltaMode === 1) return true;
+  if (swiping || event.deltaX !== 0) return false;
+  const step = event.wheelDeltaY ?? 0;
+  return step !== 0 && step % 120 === 0;
+}
+
+/** How long after a trackpad swipe's last event a wheel event still
+ *  belongs to it (momentum included). */
+const SWIPE_GAP_MS = 300;
 
 /** WebKit's pinch: the zoom since the fingers went down, and where. */
 interface PinchEvent extends UIEvent {
@@ -107,19 +139,36 @@ export function openDiagramViewer(
     apply();
   };
 
-  /** Zooms to `next`, the point under the pointer staying under it. */
+  /** Moves the drawing so some of it stays in the window. */
+  const keep = () => {
+    const room = stage.getBoundingClientRect();
+    const box = drawing.getBoundingClientRect();
+    x = keepInView(x, box.width, room.width);
+    y = keepInView(y, box.height, room.height);
+    apply();
+  };
+
+  /** Zooms to `next` about the point under the pointer, or, with the
+   *  pointer off the drawing, about the drawing's nearest point: zooming
+   *  never pushes it out of the window. */
   const zoomAt = (clientX: number, clientY: number, next: number) => {
     const room = stage.getBoundingClientRect();
-    const px = clientX - room.left;
-    const py = clientY - room.top;
+    const box = drawing.getBoundingClientRect();
+    const px = Math.min(box.right, Math.max(box.left, clientX)) - room.left;
+    const py = Math.min(box.bottom, Math.max(box.top, clientY)) - room.top;
     x = px - ((px - x) * next) / scale;
     y = py - ((py - y) * next) / scale;
     scale = next;
     apply();
+    keep();
   };
   // The scale a WebKit pinch started from, while it lasts.
   let pinchFrom: number | null = null;
 
+  // When the last trackpad swipe's event came.
+  let swipedAt = -Infinity;
+  // Only a Mac says when a finger is on the trackpad.
+  const stopTrackpad = isMacPlatform() ? onTrackpadTouch(() => {}) : () => {};
   // Over the whole layer, and no further: a pinch is a wheel event in
   // Chromium, and the window's own zoom would take it too.
   layer.addEventListener(
@@ -129,7 +178,19 @@ export function openDiagramViewer(
       event.stopPropagation();
       // WebKit's pinch comes as gestures below; its wheel twin is skipped.
       if (pinchFrom !== null && event.ctrlKey) return;
-      zoomAt(event.clientX, event.clientY, nextScale(scale, event.deltaY));
+      // On a Mac the native side says when a finger is on the trackpad.
+      const swiping =
+        fingerDown() === true || event.timeStamp - swipedAt < SWIPE_GAP_MS;
+      // A pinch (Chromium), ⌘ or Ctrl with the wheel, or a mouse's notch
+      // zooms; a trackpad's two-finger swipe moves the picture.
+      if (event.ctrlKey || event.metaKey || wheelNotch(event, swiping)) {
+        zoomAt(event.clientX, event.clientY, nextScale(scale, event.deltaY));
+        return;
+      }
+      swipedAt = event.timeStamp;
+      x -= event.deltaX;
+      y -= event.deltaY;
+      keep();
     },
     { passive: false },
   );
@@ -144,7 +205,7 @@ export function openDiagramViewer(
     if (!drag) return;
     x = event.clientX - drag.x;
     y = event.clientY - drag.y;
-    apply();
+    keep();
   });
   const endDrag = () => {
     drag = null;
@@ -182,6 +243,7 @@ export function openDiagramViewer(
   function dismiss() {
     if (closed) return;
     closed = true;
+    stopTrackpad();
     document.removeEventListener("keydown", onKey, true);
     const done = () => layer.remove();
     if (motionAllowed()) {

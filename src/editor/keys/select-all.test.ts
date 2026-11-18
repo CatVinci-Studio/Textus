@@ -58,3 +58,12 @@ it("selects the whole document from a paragraph at once", async () => {
   pressSelectAll(view);
   expect(selected(view)).toBe("One\nTwo");
 });
+
+it("selects from a heading's first character, not before its fold arrow", async () => {
+  const view = await viewAt("# Title\n\nBody\n", "Body");
+  pressSelectAll(view);
+  const { from, to } = view.state.selection;
+  expect(view.state.selection).toBeInstanceOf(TextSelection);
+  expect([from, to]).toEqual([1, view.state.doc.content.size - 1]);
+  expect(selected(view)).toBe("Title\nBody");
+});

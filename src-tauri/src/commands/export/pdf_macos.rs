@@ -16,10 +16,13 @@ use objc2_web_kit::{
     WKWebViewConfiguration,
 };
 
-// A4 in points; createPDF renders 1 CSS px as 1pt, so this is also the page
-// in CSS px. Keep in step with MAC_PAGE in paginate.ts.
+// A4 in points, the web view's own units. createPDF renders one view point
+// as 1pt; the page is zoomed to 96 CSS px an inch (3/4 pt each), as print
+// lays out on Windows and in browsers, so the document's 16px is 12pt.
+// MAC_PAGE in paginate.ts is this sheet in CSS px.
 const PAPER_WIDTH: f64 = 595.0;
 const PAPER_HEIGHT: f64 = 842.0;
+const PAGE_ZOOM: f64 = 0.75;
 
 // createPDF splits anything taller than a PDF page may be (14400pt, 200 in)
 // into more pages, which can't be cut into sheets at the seams; so it is asked
@@ -27,7 +30,7 @@ const PAPER_HEIGHT: f64 = 842.0;
 const SHEETS_PER_RENDER: usize = (14400.0 / PAPER_HEIGHT) as usize;
 
 // Runs before rendering: fonts and images must settle, or the PDF captures
-// fallback glyphs. Returns the document height.
+// fallback glyphs. Returns the document height, in CSS px.
 const SETTLE_JS: &str = "await document.fonts.ready; \
         await Promise.all(Array.from(document.images).map(i => \
           i.complete ? null : i.decode().catch(() => null))); \
@@ -117,7 +120,7 @@ impl PdfExporter {
             let height = unsafe { result.cast::<NSNumber>().as_ref() }
                 .map(|n| n.doubleValue())
                 .unwrap_or(PAPER_HEIGHT);
-            let pages = ((height / PAPER_HEIGHT).ceil() as usize).max(1);
+            let pages = ((height * PAGE_ZOOM / PAPER_HEIGHT).ceil() as usize).max(1);
             this.render(&view, pages);
         });
         let world = unsafe { WKContentWorld::pageWorld(mtm) };
@@ -246,12 +249,14 @@ pub fn start_pdf_export(
     });
 
     let config = unsafe { WKWebViewConfiguration::new(mtm) };
-    // The paper width: the frontend laid the document out at this width.
+    // The paper width: at the page zoom, the width the frontend laid the
+    // document out at.
     let frame = CGRect {
         origin: CGPoint::new(0.0, 0.0),
         size: CGSize::new(PAPER_WIDTH, PAPER_HEIGHT),
     };
     let webview = unsafe { WKWebView::initWithFrame_configuration(mtm.alloc(), frame, &config) };
+    unsafe { webview.setPageZoom(PAGE_ZOOM) };
 
     let delegate = {
         let this = mtm.alloc::<PdfExporter>().set_ivars(PdfExporterIvars {

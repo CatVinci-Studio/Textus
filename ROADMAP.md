@@ -8,7 +8,23 @@ request can be anything from fixing a typo to a whole feature, and many
 of the features people ask for work best as plugins, which anyone can
 write.
 
-## 1.4.5
+## 1.4.5: fixes
+
+- **Select All shows its highlight** again in a document that starts with
+  a heading (on the Mac it selected everything but showed nothing).
+- **Text font list**: every installed font is offered, Latin fonts included
+  when Textus is in Chinese, Japanese or Korean, and Chinese fonts show
+  their Chinese names too (微软雅黑 Microsoft YaHei).
+- **The caret beside a picture** is as tall as the picture.
+- **Picture viewer**: two fingers on a trackpad move the picture and a
+  pinch zooms it, and a zoomed picture can no longer be pushed out of
+  sight.
+- **PDF export on the Mac** prints at the usual size (it printed about a
+  third larger than on Windows).
+- **Network proxy**: follows the system proxy by default, and moves to
+  General, so plugins install behind a proxy even with Textus AI off.
+
+## 1.4.6
 
 - **Remote folders over SSH**, as in VS Code: open a folder on a server
   and write in it as in a local one, using your `~/.ssh/config` and keys,
@@ -17,11 +33,7 @@ write.
   the folder's `.textus/`, so they travel with the folder (sync, Git) and
   can be shared; moving a file outside Textus no longer loses them.
   Existing ones move over as their documents are opened.
-- **Network proxy**: follows the system proxy by default, and moves to
-  General, so plugins install behind a proxy even with Textus AI off.
-- **PDF export**: the usual print size on the Mac (it printed about a
-  third larger than on Windows), and print options: paper size, margins,
-  text size and page numbers.
+- **PDF print options**: paper size, margins, text size and page numbers.
 - **More for plugins**: their own database views, folders from other
   places (the SSH folders above use it), other apps' folder layouts (such
   as Logseq), documents kept as folders (such as TextBundle), and AI
@@ -29,10 +41,6 @@ write.
 - **Mermaid diagrams fold** like headings, to a single line.
 - **Android**: search and databases across a whole folder opened through
   the Files app.
-- **Picture viewer**: two fingers on a trackpad move the picture and a
-  pinch zooms it, and a zoomed picture can no longer be pushed out of
-  sight.
-- **Fixes**: the caret beside a picture is as tall as the picture.
 
 ## Want to help?
 

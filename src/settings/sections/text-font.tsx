@@ -1,5 +1,6 @@
 import { useEffect, useMemo, useState } from "react";
 import { fontChoices } from "./font-choices";
+import type { FontFamily } from "../../platform/bindings/app";
 import type { Strings } from "../../i18n/strings";
 import { systemIpc } from "../../platform/ipc";
 import {
@@ -20,10 +21,10 @@ import { ChevronIcon } from "../../engine/controls/icons";
 /** The reader's own size, spacing and font for the document, over the
  *  theme's: folded under one row that says whether any is set. */
 
-let families: Promise<string[]> | null = null;
+let families: Promise<FontFamily[]> | null = null;
 /** Read once per session: the list is a few hundred names and rarely
  *  changes while Textus runs. */
-function fontFamilies(): Promise<string[]> {
+function fontFamilies(): Promise<FontFamily[]> {
   // Without the native side (the browser build) there is no list.
   families ??= systemIpc
     .fontFamilies()
@@ -110,7 +111,7 @@ export function DocTextFold({ t, settings, setSettings }: Props) {
 }
 
 function FontRow({ t, settings, setSettings }: Props) {
-  const [fonts, setFonts] = useState<string[]>([]);
+  const [fonts, setFonts] = useState<FontFamily[]>([]);
   useEffect(() => {
     let live = true;
     void fontFamilies().then((list) => live && setFonts(list));
@@ -125,8 +126,7 @@ function FontRow({ t, settings, setSettings }: Props) {
   // A font chosen on another machine still shows as the choice.
   const chosenElsewhere =
     settings.docFont &&
-    !recommended.includes(settings.docFont) &&
-    !more.includes(settings.docFont);
+    ![...recommended, ...more].some((c) => c.value === settings.docFont);
   return (
     <SettingRow label={t.docFontLabel}>
       <Select
@@ -139,16 +139,16 @@ function FontRow({ t, settings, setSettings }: Props) {
         {chosenElsewhere && (
           <option value={settings.docFont}>{settings.docFont}</option>
         )}
-        {recommended.map((name) => (
-          <option key={name} value={name}>
-            {name}
+        {recommended.map(({ value, label }) => (
+          <option key={value} value={value}>
+            {label}
           </option>
         ))}
         {more.length > 0 && (
           <optgroup label={t.docFontMore}>
-            {more.map((name) => (
-              <option key={name} value={name}>
-                {name}
+            {more.map(({ value, label }) => (
+              <option key={value} value={value}>
+                {label}
               </option>
             ))}
           </optgroup>
