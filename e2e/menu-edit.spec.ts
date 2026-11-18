@@ -1,5 +1,5 @@
 import { expect, test, type Page } from "@playwright/test";
-import { MAC, emit, openApp, pasteMarkdown } from "./helpers";
+import { MAC, emit, openApp, pasteMarkdown, settled } from "./helpers";
 import { openPath } from "./plugin-helpers";
 import { STORY, streamRevise } from "./revise-mock";
 
@@ -109,10 +109,27 @@ test("a source view let go for memory comes back with its undo, caret and place"
   await page.keyboard.press("End");
   await page.keyboard.type(" typed");
   const scroller = page.locator(".cm-scroller:visible");
-  // The last key's own scroll to the caret first, then the reader's.
-  await page.waitForTimeout(300);
+  // The last key's own scroll to the caret lands on CodeMirror's next
+  // frame: only then the reader's, and the view has heard it.
+  await settled(page);
   await scroller.evaluate((el) => (el.scrollTop = 900));
-  await page.waitForTimeout(300);
+  await settled(page);
+  expect(await scroller.evaluate((el) => Math.round(el.scrollTop))).toBe(900);
+  // Into split view and back: each rebuilt source keeps its place and the
+  // keys, the caret where it was.
+  for (const toggle of ["menu-toggle-split-view", "menu-toggle-source-mode"]) {
+    await emit(page, toggle);
+    await expect(source).toBeFocused();
+    await expect
+      .poll(() => scroller.evaluate((el) => Math.round(el.scrollTop)))
+      .toBeGreaterThan(850);
+  }
+  await page.keyboard.type("+");
+  await expect(source).toContainText("line 2 typed+");
+  await page.keyboard.press("ControlOrMeta+z");
+  await expect(source).not.toContainText("+");
+  await scroller.evaluate((el) => (el.scrollTop = 900));
+  await settled(page);
   // Short of memory with b's source on screen: a's, out of sight, goes.
   await page.locator(".tab-pill", { hasText: "b.md" }).click();
   await expect(source).toContainText("# B");

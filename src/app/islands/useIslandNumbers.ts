@@ -15,7 +15,11 @@ const TYPED_IN = ".cm-content, textarea";
  *  meanwhile went nowhere; anything else once drawn in front, a frame or two
  *  later; with nothing to type in, its tab. `onlyIfLost`: only where the
  *  focus would be lost with the view that went out of sight. */
-function focusTab(tabId: string, keyed: boolean, onlyIfLost = false): void {
+export function focusTab(
+  tabId: string,
+  keyed: boolean,
+  onlyIfLost = false,
+): void {
   const mayTake = () => (!onlyIfLost || focusLost()) && mayTakeKeys();
   if (mayTake() && focusTabEditor(tabId)) return;
   const cancel = whenEditorBuilt(tabId, () => {

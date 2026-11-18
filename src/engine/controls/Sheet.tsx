@@ -1,4 +1,4 @@
-import { useEffect, useRef, type ReactNode } from "react";
+import { useLayoutEffect, useRef, type ReactNode } from "react";
 import { createPortal } from "react-dom";
 import { isImeKeydown } from "../../utils/ime";
 import { usePresenceProps } from "../motion/usePresence";
@@ -26,7 +26,8 @@ export function Sheet({
 }) {
   const presence = usePresenceProps<HTMLDivElement>();
   const open = presence["data-state"] === "open";
-  useEffect(() => {
+  // Both in the commit that shows it: a key a moment later is already its.
+  useLayoutEffect(() => {
     if (!open) return;
     const onKey = (e: KeyboardEvent) => {
       if (e.key === "Escape" && !isImeKeydown(e)) onClose();
@@ -37,7 +38,7 @@ export function Sheet({
   // A menu takes the focus: the keyboard goes down, and nothing typed lands
   // in the document behind it.
   const sheet = useRef<HTMLDivElement>(null);
-  useEffect(() => {
+  useLayoutEffect(() => {
     if (role === "menu") sheet.current?.focus({ preventScroll: true });
   }, [role]);
   // The click a tap makes after the finger lifts can reach a sheet that the

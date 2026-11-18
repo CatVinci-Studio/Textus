@@ -318,6 +318,11 @@ test("a split the window has no room for is not made, and says why", async ({
   // it is too short, not too narrow.
   await page.locator(".notice-text").waitFor({ state: "hidden" });
   await page.setViewportSize({ width: 2400, height: 170 });
+  // The islands laid out in the new window first: the split is weighed
+  // against the room they have.
+  await expect
+    .poll(async () => (await islands.first().boundingBox())!.height)
+    .toBeLessThan(170);
   await emit(page, "menu-split-right");
   await expect(page.locator(".notice-text")).toContainText("太矮");
 });

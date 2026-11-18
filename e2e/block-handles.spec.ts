@@ -384,6 +384,9 @@ test.describe("under a finger", () => {
       page.getByRole("menuitem", { name: "Delete Block" }),
     ).toBeVisible();
     await page.keyboard.press("Escape");
+    // The menu gone and the grip back by the caret: what the hold needs.
+    await expect(page.getByRole("menu")).toHaveCount(0);
+    await expect(grip).toBeVisible();
 
     // Held still, then pulled below the last block.
     const end = (await block(page, "Third").boundingBox())!;

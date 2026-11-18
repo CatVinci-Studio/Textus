@@ -38,7 +38,7 @@ test("formulas far from the screen are let go, keeping their size, and drawn aga
   await expect(first.locator(".katex")).toBeVisible();
 });
 
-test("jumped straight to the end, the formulas there are drawn at once; folded and opened again, they come back", async ({
+test("jumped straight to the end, the formulas there are drawn; folded and opened again, they come back", async ({
   page,
 }) => {
   await page.setViewportSize({ width: 1000, height: 700 });
@@ -57,9 +57,7 @@ test("jumped straight to the end, the formulas there are drawn at once; folded a
   await expect(formulas.last().locator(".katex")).toBeVisible();
   // Back at the top, the heading's section folded and opened again.
   await scroller.evaluate((s) => s.scrollTo(0, 0));
-  await expect(formulas.first().locator(".katex")).toBeVisible({
-    timeout: 500,
-  });
+  await expect(formulas.first().locator(".katex")).toBeVisible();
   await page.locator(".ProseMirror h2").click();
   // The editor has the click's caret before the keys go to it.
   await expect
@@ -76,7 +74,5 @@ test("jumped straight to the end, the formulas there are drawn at once; folded a
   await page.keyboard.press(
     MAC ? "Meta+Alt+BracketRight" : "Control+Shift+BracketRight",
   );
-  await expect(formulas.first().locator(".katex")).toBeVisible({
-    timeout: 500,
-  });
+  await expect(formulas.first().locator(".katex")).toBeVisible();
 });

@@ -108,10 +108,17 @@ it('works paths out in the frame, with "/" on every system', () => {
   expect(sent).toEqual([]);
 });
 
-it("is one clean script once its parts are joined", async () => {
-  // The parts use what the others define, so they are linted as one.
-  const [result] = await new ESLint().lintText(host, {
-    filePath: "src/plugins/host/runtime/host.js",
-  });
-  expect(result.messages.map((m) => `${m.line}: ${m.message}`)).toEqual([]);
-});
+const LINT_TIMEOUT = 30_000;
+
+it(
+  "is one clean script once its parts are joined",
+  async () => {
+    // The parts use what the others define, so they are linted as one.
+    const [result] = await new ESLint().lintText(host, {
+      filePath: "src/plugins/host/runtime/host.js",
+    });
+    expect(result.messages.map((m) => `${m.line}: ${m.message}`)).toEqual([]);
+  },
+  // Starts ESLint and its TypeScript parser cold: seconds on a busy runner.
+  LINT_TIMEOUT,
+);
