@@ -118,14 +118,16 @@
   pointer-events: none;
 }
 
-/* As wide as the block, the pills at its right: what doesn't fit gives way
-   (a table's fit steps) instead of running past it. The gap under them is
-   theirs, so the pointer reaching them stays on them. */
+/* Hugging the pills at the block's right, at most as wide as the block:
+   what doesn't fit gives way (a table's fit steps) instead of running past
+   it. The gaps under and between them are theirs, so the pointer on its way
+   to them, or from one to the next, stays on them. */
 .block-toolbar-actions {
   position: absolute;
   bottom: 100%;
-  left: 0;
   right: 0;
+  max-width: 100%;
+  box-sizing: border-box;
   padding-bottom: 4px;
   display: flex;
   align-items: center;
@@ -145,8 +147,8 @@
   flex-shrink: 0;
 }
 
-/* Only the pills take the pointer, and only while shown: the strip's empty
-   left, and hidden pills, leave the line above to the text. */
+/* They take the pointer only while shown: hidden, they leave the line above
+   to the text. */
 .code-block-wrapper:is(:hover, :focus-within, .is-picking-language)
   > .block-toolbar
   > .block-toolbar-actions,
@@ -158,23 +160,19 @@
 .block-toolbar > .block-toolbar-actions:is(:hover, :focus-within) {
   opacity: 1;
 }
+.code-block-wrapper:is(:hover, :focus-within, .is-picking-language)
+  > .block-toolbar
+  > .block-toolbar-actions,
 .table-wrapper:is([data-near~="top"]:hover, .is-sizing)
   > .block-toolbar
-  > .block-toolbar-actions
-  > *,
-.block-toolbar > .block-toolbar-actions:is(:hover, :focus-within) > * {
+  > .block-toolbar-actions,
+.block-toolbar > .block-toolbar-actions:is(:hover, :focus-within) {
   pointer-events: auto;
 }
 
-/* A code block's hug its pills, so the gap under them holds the pointer on
-   its way up to them, and the line above stays the text's beside them. */
+/* A code block's have no fit steps: on a narrow block they run left. */
 .code-block-actions {
-  left: auto;
-}
-.code-block-wrapper:is(:hover, :focus-within, .is-picking-language)
-  > .block-toolbar
-  > .code-block-actions {
-  pointer-events: auto;
+  max-width: none;
 }
 
 /* A finger leaves :hover and a tapped pill's focus stuck on the table it
@@ -183,7 +181,7 @@
   .table-wrapper.is-table-caret > .block-toolbar > .block-toolbar-actions {
     opacity: 1;
   }
-  .table-wrapper.is-table-caret > .block-toolbar > .block-toolbar-actions > * {
+  .table-wrapper.is-table-caret > .block-toolbar > .block-toolbar-actions {
     pointer-events: auto;
   }
   .table-wrapper:is(:hover, :focus-within):not(.is-table-caret, .is-sizing)
@@ -198,13 +196,11 @@
   }
   .table-wrapper:is(:hover, :focus-within):not(.is-table-caret, .is-sizing)
     > .block-toolbar
-    > .block-toolbar-actions
-    > *,
+    > .block-toolbar-actions,
   .ProseMirror:not(.ProseMirror-focused)
     .table-wrapper.is-table-caret:not(.is-sizing, :focus-within)
     > .block-toolbar
-    > .block-toolbar-actions
-    > * {
+    > .block-toolbar-actions {
     pointer-events: none;
   }
 }

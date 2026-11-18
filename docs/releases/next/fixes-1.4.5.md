@@ -11,6 +11,8 @@
 - Puts a code block's language, Copy and Select All above the block, as a table's tools are, so they no longer cover the first line or stop a drag selection.
 - Opens a picture in the viewer centred and fitted to the window, not empty until a double-click.
 - Leaves the caret and the headings' fold arrows out of exports, where the caret showed as a dark bar over the text, and exports folded sections in full.
+- Keeps a selection dragged or Shift-extended from text into a table, and Select All in a document that ends with a table selects all of it; both were pulled back to the first paragraph.
+- Keeps a table's tools shown while the pointer moves up to them.
 - Draws the caret beside a picture as tall as the picture.
 - Prints PDF exports on the Mac at the usual size: text came out about a third larger than on Windows, so a long document took far more pages.
 - Keeps a plugin's underlines and the problem count in the corner when the plugin is slow to answer for a moment, as after picking a problem from the count's list; they used to vanish until the next edit or scroll.

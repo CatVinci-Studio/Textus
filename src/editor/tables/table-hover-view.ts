@@ -202,7 +202,14 @@ export function createTableView(strings: () => Strings) {
       tools ??= mountTableToolbar(actions);
       render();
     };
-    wrapper.addEventListener("pointerenter", showTools);
+    // Not mounted under a held button: new nodes under a text drag make
+    // WebKit start the selection over.
+    wrapper.addEventListener("pointerenter", (event) => {
+      if (!event.buttons) showTools();
+    });
+    wrapper.addEventListener("pointermove", (event) => {
+      if (!tools && !event.buttons) showTools();
+    });
     if (caretCols.length) showTools();
 
     return {
@@ -272,6 +279,13 @@ export const tableColumnFreeze = $prose(
     new Plugin({
       props: {
         handleDOMEvents: {
+          // A text drag passing a column edge: no resize handle drawn into
+          // the cells under it (columnResizing's hover ignores the button).
+          mousemove(view, event) {
+            if (!event.buttons) return false;
+            const state = columnResizingPluginKey.getState(view.state);
+            return !state?.dragging;
+          },
           mousedown(view, event) {
             if (event.button !== 0) return false;
             const handle = columnResizingPluginKey.getState(

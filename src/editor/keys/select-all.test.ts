@@ -1,7 +1,7 @@
 // @vitest-environment jsdom
 import { afterEach, expect, it, vi } from "vitest";
 import { editorViewCtx, type Editor } from "@milkdown/kit/core";
-import { TextSelection } from "@milkdown/kit/prose/state";
+import { AllSelection, TextSelection } from "@milkdown/kit/prose/state";
 import type { EditorView } from "@milkdown/kit/prose/view";
 import { createTestEditor } from "../editor-test-kit";
 
@@ -66,4 +66,20 @@ it("selects from a heading's first character, not before its fold arrow", async 
   expect(view.state.selection).toBeInstanceOf(TextSelection);
   expect([from, to]).toEqual([1, view.state.doc.content.size - 1]);
   expect(selected(view)).toBe("Title\nBody");
+});
+
+it("takes the whole document when a table ends it, and deleting leaves no table", async () => {
+  for (const markdown of [
+    "# Title\n\nBody\n\n| a | b |\n| --- | --- |\n|  |  |\n",
+    "| a | b |\n| --- | --- |\n| 1 | 2 |\n\nBody\n",
+  ]) {
+    const view = await viewAt(markdown, "Body");
+    pressSelectAll(view);
+    expect(view.state.selection).toBeInstanceOf(AllSelection);
+    view.dispatch(view.state.tr.deleteSelection());
+    expect(view.state.doc.childCount).toBe(1);
+    expect(view.state.doc.firstChild!.type.name).toBe("paragraph");
+    await editor?.destroy();
+    editor = null;
+  }
 });
