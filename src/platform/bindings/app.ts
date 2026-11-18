@@ -538,6 +538,7 @@ export type PandocOptions_Serialize = {
 export type PdfSheet = {
 	width: number | null,
 	height: number | null,
+	/**  macOS lays its pages out with the band already in them. */
 	margin: number | null,
 };
 

@@ -9,6 +9,7 @@ import {
   minimalPdf,
   openPath,
   openWithPlugins,
+  pluginRuns,
   PNG,
   tabFrame,
 } from "./plugin-helpers";
@@ -517,6 +518,10 @@ test("a folder a plugin opens as one document: one row in the sidebar, its text 
       "/work/notes.md": "Notes\n",
     },
   });
+  test.skip(
+    !(await pluginRuns(page, "catvinci.textbundle")),
+    "made for the next version",
+  );
   await page.evaluate(() => {
     (window as unknown as Record<string, unknown>).__devPickFolder = "/work";
   });
