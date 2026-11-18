@@ -27,7 +27,10 @@ import {
   requirementMet,
   turnOnRequirement,
 } from "../../plugins/store/requirements";
-import { permissionLabel } from "../../plugins/store/permissions";
+import {
+  permissionLabel,
+  shownPermissions,
+} from "../../plugins/store/permissions";
 import { canSwitch } from "../../plugins/store/lifecycle";
 import { PluginReadme } from "./PluginArt";
 import { PluginSettingsWebview } from "../../plugins/views/plugin-views";
@@ -287,10 +290,10 @@ function PluginPermissions({
   const manifest = record.manifest!;
   return (
     <SettingsGroup title={t.pluginPermissionsLabel}>
-      {manifest.permissions.length === 0 && (
+      {shownPermissions(manifest.permissions).length === 0 && (
         <p className="tx-list-note">{t.pluginNoPermissions}</p>
       )}
-      {manifest.permissions.map((permission) => {
+      {shownPermissions(manifest.permissions).map((permission) => {
         const granted = record.granted.includes(permission);
         return (
           <div className="plugin-permission" key={permission}>

@@ -17,8 +17,9 @@ export function installMobileViewport(): void {
   if (isIOSApp) watchWebKitInsets();
   safeArea();
   window.addEventListener("resize", safeArea);
-  // Android's app says when its bars change: a half turn or a fold may not
-  // resize the page, or resize it before the bars are known.
+  // The app says when its bars change: a half turn or a fold may not
+  // resize the page, or resize it before the bars are known. iOS's says
+  // what they are (SystemBars.swift).
   window.addEventListener("textus-insets", safeArea);
 }
 
@@ -32,8 +33,14 @@ interface Insets {
 /** What the page keeps clear of at each edge (--native-safe-*, which the
  *  stylesheets read as --safe-top and the rest). */
 function safeArea(): void {
-  applyInsets(isIOSApp ? turned(webKitInsets()) : androidInsets());
+  applyInsets(isIOSApp ? (iosInsets() ?? webKitInsets()) : androidInsets());
 }
+
+/** What iOS's app last said (SystemBars.swift): only it knows which way the
+ *  phone is turned, so which side the camera is at. WebKit's own are read
+ *  until it says. */
+const iosInsets = () =>
+  (window as { textusInsets?: Insets }).textusInsets ?? null;
 
 const SIDES = ["top", "right", "bottom", "left"] as const;
 
@@ -90,20 +97,4 @@ function webKitInsets(): Insets {
     bottom: px(style?.paddingBottom),
     left: px(style?.paddingLeft),
   };
-}
-
-/**
- * An iPhone turned on its side can go on reporting its upright insets: the
- * camera's at the top, none at the sides. Its camera is then at one side
- * and a corner as round at the other, each as deep as the top was, and no
- * status bar. An iPad's are left as they are: its status bar stays on top.
- */
-export function turned(
-  insets: Insets,
-  width = innerWidth,
-  height = innerHeight,
-): Insets {
-  const phoneOnSide = width > height && height < 500;
-  if (!phoneOnSide || insets.left || insets.right || !insets.top) return insets;
-  return { ...insets, top: 0, left: insets.top, right: insets.top };
 }

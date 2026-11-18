@@ -32,6 +32,32 @@ for (const device of DEVICES)
   test.describe(`on ${device.name}`, () => {
     test.use(device.device);
 
+    test("names Textus AI nowhere, as iOS goes without it", async ({
+      page,
+    }) => {
+      await openApp(page, { settings: { language: "en", textusAi: true } });
+      const naming = () =>
+        page.evaluate(() =>
+          [...document.querySelectorAll<HTMLElement>("body *")]
+            .filter((el) => el.checkVisibility() && !el.children.length)
+            .map((el) => el.textContent ?? "")
+            .concat(
+              [...document.querySelectorAll<HTMLElement>("[aria-label]")]
+                .filter((el) => el.checkVisibility())
+                .map((el) => el.getAttribute("aria-label")!),
+            )
+            .filter((text) => /\bAI\b|Assistant/.test(text)),
+        );
+      expect(await naming()).toEqual([]);
+      await page.getByRole("button", { name: "Menu", exact: true }).tap();
+      expect(await naming()).toEqual([]);
+      await page.getByRole("menuitem", { name: /Settings/ }).tap();
+      await expect(
+        page.locator('[role="dialog"], .settings-tab-page').first(),
+      ).toBeVisible();
+      expect(await naming()).toEqual([]);
+    });
+
     test("writing, a second tab and back, the sidebar and settings", async ({
       page,
     }) => {
@@ -61,9 +87,18 @@ for (const device of DEVICES)
       await expect(settings).toBeVisible();
       await fitsTheScreen(page, ".activity-rail");
       await settings.tap();
-      const dialog = page.getByRole("dialog", { name: "设置" });
-      await expect(dialog.getByRole("button", { name: "外观" })).toBeVisible();
-      await fitsTheScreen(page, '[role="dialog"]');
+      // A phone's Settings is a sheet over the window; a tablet's a tab, as
+      // on the desktop.
+      if (device.name === "a phone") {
+        const dialog = page.getByRole("dialog", { name: "设置" });
+        await expect(
+          dialog.getByRole("button", { name: "外观" }),
+        ).toBeVisible();
+        await fitsTheScreen(page, '[role="dialog"]');
+      } else {
+        await expect(page.locator(".settings-tab-page")).toBeVisible();
+        await fitsTheScreen(page, ".settings-tab-page");
+      }
     });
   });
 

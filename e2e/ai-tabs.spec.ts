@@ -533,10 +533,11 @@ test("Memory opens from the tab's right-click and closes with its × or Esc", as
   await fromMenu();
 });
 
+// An Android phone: iOS goes without Textus AI.
 test.describe("on a phone", () => {
   test.use({
     userAgent:
-      "Mozilla/5.0 (iPhone; CPU iPhone OS 18_0 like Mac OS X) AppleWebKit/605.1.15 (KHTML, like Gecko) Mobile/15E148",
+      "Mozilla/5.0 (Linux; Android 15; Pixel 9) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/131.0 Mobile Safari/537.36",
     viewport: { width: 402, height: 874 },
     hasTouch: true,
     isMobile: true,

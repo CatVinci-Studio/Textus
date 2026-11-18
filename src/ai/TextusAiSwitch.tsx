@@ -2,6 +2,7 @@ import { externalAgent } from "../plugins/contributions/agents";
 import { fill } from "../i18n/fill";
 import { useEffect, useState, type MouseEvent } from "react";
 import { createPortal } from "react-dom";
+import { hasTextusAi } from "../platform/capabilities";
 import { useSettings } from "../prefs/SettingsContext";
 import { announce } from "../engine/controls/announce";
 import { AssistantIcon } from "../engine/controls/icons";
@@ -89,7 +90,8 @@ export function TextusAiButton({
   const pressed = ai.on && panelOpen && !agentInUse;
   const [menu, setMenu] = useState<{ x: number; y: number } | null>(null);
   // On with chat turned off there is nothing to open; the switch is in Settings.
-  if (ai.on && !showPanel) return null;
+  // Where Textus AI isn't offered, there is nothing to turn on either.
+  if (!hasTextusAi || (ai.on && !showPanel)) return null;
 
   const openMenu = (e: MouseEvent<HTMLButtonElement>, atPointer: boolean) => {
     e.preventDefault();

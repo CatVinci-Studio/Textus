@@ -11,8 +11,7 @@
 
 /* The page runs under the status bar, a phone's or a tablet's: the title
    row takes its height, and whatever clears the row clears both. The
-   insets are mobile-viewport.ts's: Android's app tells them, and an iPhone
-   on its side has WebKit's turned. */
+   insets are mobile-viewport.ts's, as the app tells them. */
 :root:is([data-platform="ios"], [data-platform="android"]) {
   --safe-top: var(--native-safe-top, env(safe-area-inset-top, 0px));
   --safe-left: var(--native-safe-left, env(safe-area-inset-left, 0px));
@@ -26,6 +25,16 @@
   box-sizing: border-box;
   padding: 0 var(--safe-right) 0 var(--safe-left);
   background: var(--ui-frame-fill) fixed;
+}
+
+/* Out of the phone's layout the tabs are in the bar and the frame inside
+   sinks a step (layout.css): what shows beside it, at the camera's side,
+   sinks with it. */
+:root:is([data-platform="ios"], [data-platform="android"]):not(
+    [data-window-chrome="mobile"]
+  )
+  :is(body, #root) {
+  background: var(--ui-frame-paint, var(--ui-frame-sunk)) fixed;
 }
 
 :root:is([data-platform="ios"], [data-platform="android"]) .window-bar {

@@ -1,26 +1,23 @@
 // @vitest-environment jsdom
 import { afterEach, expect, it, vi } from "vitest";
 
-// An install where Textus AI isn't offered (an iOS App Store download in
-// mainland China), as Rust's boot snapshot says.
+// iOS, which goes without Textus AI.
 async function withoutAi() {
   vi.resetModules();
-  (window as unknown as { __BOOT__: unknown }).__BOOT__ = {
-    settings: { textusAi: true, enableAskAi: true },
-    rev: 1,
-    uiState: {},
-    aiUnavailable: true,
-  };
+  vi.spyOn(navigator, "userAgent", "get").mockReturnValue(
+    "Mozilla/5.0 (iPhone; CPU iPhone OS 18_0 like Mac OS X) AppleWebKit/605.1.15",
+  );
   return {
     normalise: await import("../prefs/settings-normalise"),
     pages: await import("../settings/settings-pages"),
     tour: await import("../onboarding/tutorial-steps"),
     features: await import("../prefs/ai-features"),
+    permissions: await import("../plugins/store/permissions"),
   };
 }
 
 afterEach(() => {
-  delete (window as unknown as { __BOOT__?: unknown }).__BOOT__;
+  vi.restoreAllMocks();
   vi.resetModules();
 });
 
@@ -37,6 +34,13 @@ it("offers no Textus AI page, and the tour skips the AI steps", async () => {
   const { pages, tour } = await withoutAi();
   expect(pages.settingsPages().map((p) => p.id)).not.toContain("ai");
   expect(tour.TUTORIAL_STEPS.filter((s) => s.ai)).toEqual([]);
+});
+
+it("names no AI permission when a plugin asks for one", async () => {
+  const { permissions } = await withoutAi();
+  expect(
+    permissions.shownPermissions(["ai.tools", "ai.model", "network:x.org"]),
+  ).toEqual(["network:x.org"]);
 });
 
 it("is offered everywhere else", async () => {

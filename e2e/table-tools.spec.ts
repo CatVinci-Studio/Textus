@@ -8,8 +8,10 @@ const TABLE = "| a | b |\n| --- | --- |\n| 1 | 2 |\n";
 
 async function open(page: Page, markdown = TABLE, animations = false) {
   await page.setViewportSize({ width: 1200, height: 760 });
+  // No completion: its suggestion, waiting at the caret in a cell, widens
+  // the column under the pointer on its way to the tools.
   await openApp(page, {
-    settings: { menuBarShown: false, language: "en" },
+    settings: { menuBarShown: false, language: "en", enableCompletion: false },
     animations,
   });
   await page.locator(".ProseMirror:visible").first().click();

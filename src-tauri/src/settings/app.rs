@@ -182,10 +182,6 @@ pub fn boot_script(app: &AppHandle, label: &str) -> String {
     let (settings, rev) = stores.settings.snapshot();
     let (ui_state, _) = stores.ui_state.snapshot();
     let theme_css = user_theme_css(app, &settings);
-    #[cfg(target_os = "ios")]
-    let ai_unavailable = tauri_plugin_textus_files::ai_unavailable();
-    #[cfg(not(target_os = "ios"))]
-    let ai_unavailable = false;
     let boot = json!({
         "settings": settings,
         "rev": rev,
@@ -194,7 +190,6 @@ pub fn boot_script(app: &AppHandle, label: &str) -> String {
         // seed already put there must not pass for the user's choices.
         "newProfile": stores.settings.missing_at_load(),
         "label": label,
-        "aiUnavailable": ai_unavailable,
         // The settings' values the boot script turns into the page's look:
         // the frontend's own tables, one file.
         "tables": serde_json::from_str::<Value>(include_str!(
