@@ -54,8 +54,9 @@ export const canToggleFullscreen = isDesktopApp;
 /** The self-updater. iOS updates come from the App Store. */
 export const canAutoUpdate = isDesktopApp;
 
-/** File > Export as PDF, through each desktop webview's PDF backend. */
-export const canExportPdf = isDesktopApp;
+/** File > Export as PDF, through each webview's PDF backend: iOS's is the
+ *  Mac's WebKit one. */
+export const canExportPdf = isDesktopApp || isIOSApp;
 
 /** Export through pandoc, an external process iOS can't spawn. */
 export const canExportWithPandoc = isDesktopApp;
@@ -63,9 +64,9 @@ export const canExportWithPandoc = isDesktopApp;
 /** Showing a file or folder in Finder/Explorer/the file manager. */
 export const canRevealInFileManager = isDesktopApp;
 
-/** A picker for an image file on disk. iOS's Files picker gives files the
- *  image store can't read by path. */
-export const canPickImageFile = isDesktopApp;
+/** A picker for an image file: on iOS, Files' pick read through the native
+ *  plugin (image-store's fileImage). */
+export const canPickImageFile = isDesktopApp || isIOSApp;
 
 /** A folder picker: the dialog plugin's on desktop, Files' on iOS. */
 export const canPickFolder = isDesktopApp || isIOSApp;

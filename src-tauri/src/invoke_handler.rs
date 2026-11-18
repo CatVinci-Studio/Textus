@@ -18,11 +18,11 @@ use commands::drafts::{
     clear_all_drafts, clear_draft_snapshot, finish_draft_restore, keep_page_tabs, kept_page_tabs,
     save_draft_snapshot, take_draft_snapshots,
 };
+#[cfg(any(desktop, target_os = "ios"))]
+use commands::export::export_pdf_native;
 use commands::export::export_save_dialog;
 #[cfg(desktop)]
-use commands::export::{
-    detect_pandoc, export_pdf_native, export_via_pandoc, open_pandoc_install_page, reveal_in_dir,
-};
+use commands::export::{detect_pandoc, export_via_pandoc, open_pandoc_install_page, reveal_in_dir};
 use commands::fs::{
     file_mtime_ms, list_dir, migrate_draft_images, open_css_file_dialog, open_file_dialog,
     open_image_file_dialog, open_settings_file_dialog, read_binary_file_base64, read_text_file,
@@ -344,7 +344,7 @@ pub(crate) fn handler() -> impl Fn(tauri::ipc::Invoke<tauri::Wry>) -> bool + Sen
         #[cfg(desktop)]
         export_via_pandoc,
         commands::export::check_pandoc_args,
-        #[cfg(desktop)]
+        #[cfg(any(desktop, target_os = "ios"))]
         export_pdf_native,
         commands::links::open_community_page,
         commands::links::open_sponsor_page,

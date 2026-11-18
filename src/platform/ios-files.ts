@@ -1,6 +1,6 @@
 import { useEffect, useState } from "react";
 import { invoke } from "@tauri-apps/api/core";
-import { join } from "@tauri-apps/api/path";
+import { join, tempDir } from "@tauri-apps/api/path";
 import { type DirEntryInfo } from "./bindings/files";
 import { isIOSApp, isMobileApp } from "./capabilities";
 import { basename, nameContentUrl } from "../utils/path";
@@ -19,6 +19,16 @@ export function isScopedUrl(path: string): boolean {
     ? path.startsWith("file://")
     : isMobileApp && path.startsWith("content://");
 }
+
+/** Where the page was last pressed: what a share asked for from a menu
+ *  points back at. */
+let lastPress: { x: number; y: number } | undefined;
+if (isIOSApp && typeof window !== "undefined")
+  window.addEventListener(
+    "pointerdown",
+    (e) => (lastPress = { x: e.clientX, y: e.clientY }),
+    { capture: true, passive: true },
+  );
 
 type Picked = { url: string | null; name?: string; folder?: boolean };
 
@@ -69,8 +79,13 @@ export const iosFiles = {
    *  follows it. Never fails. */
   appearance: (mode: string): void =>
     void call<void>("appearance", { mode }).catch(() => {}),
-  /** The share sheet for a saved document, by path or picked URL. */
-  share: (path: string): Promise<void> => call<void>("share", { path }),
+  /** A file named `name` in the app's temporary folder, to share from. */
+  scratchPath: async (name: string): Promise<string> =>
+    join(await tempDir(), name),
+  /** The share sheet for a saved document, by path or picked URL; on an
+   *  iPad it points at the last tap or click. */
+  share: (path: string): Promise<void> =>
+    call<void>("share", { path, ...lastPress }),
   readBase64: async (url: string): Promise<string> =>
     (await call<{ data: string }>("read_data", { url })).data,
   writeText: (url: string, text: string): Promise<void> =>

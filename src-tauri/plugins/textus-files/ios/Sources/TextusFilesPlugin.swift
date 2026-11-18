@@ -26,6 +26,10 @@ struct WriteArgs: Decodable {
 struct ShareArgs: Decodable {
   /// A plain path in the app's container or a picked file's URL.
   let path: String
+  /// Where the share was asked for (the last tap or click), in the page's
+  /// points: an iPad's popover points at it.
+  let x: Double?
+  let y: Double?
 }
 
 struct PickArgs: Decodable {
@@ -283,20 +287,38 @@ class TextusFilesPlugin: Plugin, UIDocumentPickerDelegate {
         return invoke.reject("No view to present from")
       }
       let sheet = UIActivityViewController(activityItems: [copy], applicationActivities: nil)
-      // iPad shows the sheet as a popover, which needs an anchor: the top
-      // edge, under the title row's menu button. An iPhone has a popover
-      // controller too but shows a sheet from the bottom, with no anchor.
+      // iPad shows the sheet as a popover, which needs an anchor: where the
+      // share was asked for, else under the title row's menu button. An
+      // iPhone has a popover controller too but shows a sheet from the
+      // bottom, with no anchor.
       if UIDevice.current.userInterfaceIdiom == .pad,
         let popover = sheet.popoverPresentationController
       {
         popover.sourceView = host.view
-        popover.sourceRect = CGRect(x: 24, y: host.view.safeAreaInsets.top + 44, width: 1, height: 1)
+        let at =
+          args.x.flatMap { x in args.y.map { CGPoint(x: x, y: $0) } }
+          ?? CGPoint(x: 24, y: host.view.safeAreaInsets.top + 44)
+        popover.sourceRect = CGRect(origin: at, size: CGSize(width: 1, height: 1))
       }
       sheet.completionWithItemsHandler = { _, completed, _, _ in
         try? FileManager.default.removeItem(at: folder)
         invoke.resolve(["completed": completed])
       }
       host.present(sheet, animated: true)
+    }
+  }
+
+  /// File > Export as PDF: the paginated page drawn into a PDF at
+  /// `outputPath` (PdfExport.swift).
+  @objc public func exportPdf(_ invoke: Invoke) throws {
+    let args = try invoke.parseArgs(PdfExportArgs.self)
+    DispatchQueue.main.async {
+      PdfExport.start(args, in: self.manager.viewController?.view.window) { result in
+        switch result {
+        case .success: invoke.resolve()
+        case .failure(let error): invoke.reject(error.localizedDescription)
+        }
+      }
     }
   }
 

@@ -5,6 +5,7 @@ import { closeHistory } from "@milkdown/kit/prose/history";
 import { resolveStrings } from "../../i18n/strings";
 import { showMessage } from "../../engine/controls/app-dialog";
 import { fs } from "../../platform/ipc";
+import { iosFiles, isScopedUrl } from "../../platform/ios-files";
 import type { Settings, ImageNamingMode } from "../../prefs/SettingsContext";
 import { IMAGE_FILE_EXTENSIONS, imageMimeForPath } from "./pasted-files";
 import { unwrittenImageSrcs } from "../markdown/markdown-output";
@@ -289,14 +290,19 @@ export function pastedImages(sources: {
   ];
 }
 
-/** An image file on disk, read through the backend once it's stored. */
+/** An image file on disk, read through the backend once it's stored; one
+ *  picked in the Files app (a URL) through the native plugin, which holds
+ *  its scope. */
 export function fileImage(path: string): PastedImage {
+  const name = path.slice(
+    Math.max(path.lastIndexOf("/"), path.lastIndexOf("\\")) + 1,
+  );
+  const picked = isScopedUrl(path);
   return {
-    name: path.slice(
-      Math.max(path.lastIndexOf("/"), path.lastIndexOf("\\")) + 1,
-    ),
+    name: picked ? decodeURIComponent(name) : name,
     type: imageMimeForPath(path) ?? "",
-    base64: () => fs.readBinaryFileBase64(path),
+    base64: () =>
+      picked ? iosFiles.readBase64(path) : fs.readBinaryFileBase64(path),
   };
 }
 

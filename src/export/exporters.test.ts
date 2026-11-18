@@ -24,6 +24,7 @@ vi.mock("../platform/ipc", () => ({
 vi.mock("../platform/capabilities", () => ({
   canExportPdf: true,
   canExportWithPandoc: true,
+  isIOSApp: false,
 }));
 vi.mock("../engine/controls/app-dialog", () => ({
   showMessage: mocks.showMessage,

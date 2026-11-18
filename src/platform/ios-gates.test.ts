@@ -18,6 +18,8 @@ const ALLOWED: Record<string, string> = {
   "ai/chat/panel/agent-panel.tsx": "a docked panel drawn at its width",
   "editor/click-below-end.ts":
     "a tap beside a table: its caret went astray, onto a word it selected",
+  "export/exporters.ts":
+    "its PDF is WebKit's, as a Mac's, and goes to the share sheet",
   "document/word-import.ts":
     "Files' security-scoped URLs the converter can't read",
   "platform/far-files.ts": "the Files app's documents",

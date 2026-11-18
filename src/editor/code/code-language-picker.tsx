@@ -1,7 +1,7 @@
 import { SelectMenu } from "../../engine/controls/SelectMenu";
 import { useEffect, useId, useRef, useState, type KeyboardEvent } from "react";
 import { createRoot, type Root } from "react-dom/client";
-import { isMobileApp } from "../../platform/capabilities";
+import { isPhoneLayout } from "../../platform/phone-layout";
 import { Select } from "../../engine/controls/Select";
 import { usePresence, useMergedRef } from "../../engine/motion/usePresence";
 import { useFloatingList } from "../../engine/controls/useFloatingList";
@@ -37,7 +37,7 @@ export function matchLanguages(
 }
 
 /** The code block view's language menu, searchable as the list is long;
- *  on iPhone and iPad the system picker, sized for a finger. */
+ *  on a phone the system picker, sized for a finger. */
 export function mountLanguagePicker(container: HTMLElement) {
   let root: Root | null = createRoot(container);
   return {
@@ -48,7 +48,7 @@ export function mountLanguagePicker(container: HTMLElement) {
         ? props.languages
         : [...props.languages, props.value];
       root?.render(
-        isMobileApp ? (
+        isPhoneLayout() ? (
           <Select
             className="code-block-language-select"
             aria-label={props.label}

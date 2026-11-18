@@ -7,7 +7,12 @@ import { basename, dirname } from "../utils/path";
 import { tabTitle, type DocTab } from "../document/doc-tabs";
 import { exportDoc, fs } from "../platform/ipc";
 import { isMacPlatform, isWindowsPlatform } from "../platform/os";
-import { canExportPdf, canExportWithPandoc } from "../platform/capabilities";
+import {
+  canExportPdf,
+  canExportWithPandoc,
+  isIOSApp,
+} from "../platform/capabilities";
+import { iosFiles } from "../platform/ios-files";
 import { toPandocMarkdown } from "./pandoc-markdown";
 import { numberedHeadings } from "./pandoc-headings";
 import { pandocOptions, type PandocSettings } from "./pandoc-options";
@@ -46,6 +51,8 @@ function exportBaseName(tab: DocTab, t: Strings): string {
 // stylesheet inlined and the app root's theme attributes mirrored.
 
 const isMac = isMacPlatform();
+/** The PDF drawn by WebKit's createPDF, on the page's own colour. */
+const webKitPdf = isMac || isIOSApp;
 
 // Content too wide for a page wraps or shrinks instead of being clipped. A
 // page can't scroll, so display math breaks like inline math, and a diagram
@@ -96,7 +103,7 @@ export function pdfLayoutCss(
 
 /** The sheet this platform's native renderer lays out, if known. */
 function platformPage(layout: PdfLayout): PageGeometry | null {
-  if (isMac) return pageGeometry(layout, "mac");
+  if (webKitPdf) return pageGeometry(layout, "mac");
   if (isWindowsPlatform()) return pageGeometry(layout, "windows");
   return null;
 }
@@ -135,8 +142,8 @@ export async function exportPdf(
       const overlay = showPdfOverlay(t);
       try {
         await nextFrame();
-        // macOS keeps the theme's page colour unless asked for light colours.
-        const whitePage = !isMac || lightColors;
+        // WebKit keeps the theme's page colour unless asked for light colours.
+        const whitePage = !webKitPdf || lightColors;
         const style = getComputedStyle(editor);
         const finished = await preparePage(editor, tab, {
           format: "pdf",
@@ -209,11 +216,16 @@ export async function runExport(
   failed: (err: unknown) => string = (err) => explainError(err, t),
 ): Promise<void> {
   const base = exportBaseName(tab, t);
-  const picked = await exportDoc.exportSaveDialog(`${base}.${ext}`, kind, ext);
+  // iOS: written aside, then the share sheet saves or sends it.
+  const share = isIOSApp && ext === "pdf";
+  const picked = share
+    ? await iosFiles.scratchPath(`${base}.${ext}`)
+    : await exportDoc.exportSaveDialog(`${base}.${ext}`, kind, ext);
   if (!picked) return;
   try {
     await write(picked, base);
-    void exportDoc.revealInDir(picked);
+    if (share) await iosFiles.share(picked);
+    else void exportDoc.revealInDir(picked);
   } catch (err) {
     await showMessage(failed(err), {
       title: t.exportFailedTitle,
