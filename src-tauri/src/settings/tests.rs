@@ -392,9 +392,15 @@ fn the_proxy_follows_the_settings() {
     assert_eq!(aicompat::http::proxy_url(), None);
     for kind in ["none", "system"] {
         proxy_changed(&json!({ "proxyType": kind, "proxyHost": "proxy.lan" }));
-        assert_eq!(aicompat::http::current_route(), aicompat::http::Route::System);
+        assert_eq!(
+            aicompat::http::current_route(),
+            aicompat::http::Route::System
+        );
     }
     proxy_changed(&json!({ "proxyType": "http", "proxyHost": "" }));
-    assert_eq!(aicompat::http::current_route(), aicompat::http::Route::System);
+    assert_eq!(
+        aicompat::http::current_route(),
+        aicompat::http::Route::System
+    );
     proxy_changed(&json!({ "proxyType": "direct" }));
 }

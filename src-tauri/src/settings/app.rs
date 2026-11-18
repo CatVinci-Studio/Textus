@@ -2,9 +2,9 @@
 //! and backgrounds, the boot script a new window starts with, and the
 //! settings the backend reads or sets.
 
-use aicompat::http::Route;
 use super::*;
 use crate::app_dirs::AppDirs;
+use aicompat::http::Route;
 
 /// Loads every store into app state, before any window is built (their boot
 /// scripts are made from it).
