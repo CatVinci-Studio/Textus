@@ -24,7 +24,8 @@ import type {
 import { currentStrings } from "../../i18n/current";
 import { explainError } from "../../utils/error-explain";
 import { blobToBase64 } from "../../utils/blob-base64";
-import { clipboardImageSources } from "../../editor/images/pasted-files";
+import { clipboardFiles } from "../../editor/images/pasted-files";
+import { basename } from "../../utils/path";
 
 /** The composer's state, one hook per concern. */
 
@@ -95,11 +96,20 @@ export function useAttachments(noVisionMessage: string, conversation: string) {
     await stage(() => ai.pickAttachmentFiles(conversation));
   }
 
-  /** A paste of pictures or image files: attached as the "+" button's
-   *  are. False when it carries none, and is the textarea's to paste. */
+  /** A paste of files (a picture, a PDF, a spreadsheet): attached as the
+   *  "+" button's are. False when it is text, and the textarea's to paste:
+   *  text copied in Word or Excel brings a picture of itself along. */
   function attachPasted(data: DataTransfer | null): boolean {
-    const { files, paths } = clipboardImageSources(data);
+    const { files, paths } = clipboardFiles(data);
     if (!files.length && !paths.length) return false;
+    const names = new Set([
+      ...files.map((file) => file.name),
+      ...paths.map((path) => basename(path)),
+    ]);
+    const text = (data?.getData("text/plain") ?? "").trim();
+    // A file manager's copy names its files in the text, and nothing else.
+    if (text && !text.split(/\r?\n/).every((line) => names.has(line.trim())))
+      return false;
     void stage(async () =>
       ai.attachPasted(conversation, [
         ...paths.map((path) => ({ kind: "path" as const, path })),

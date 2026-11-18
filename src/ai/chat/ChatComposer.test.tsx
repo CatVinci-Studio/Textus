@@ -594,15 +594,27 @@ describe("ChatComposer attachments", () => {
     expect(attachPasted).toHaveBeenLastCalledWith("c1", [
       { kind: "bytes", name: "image.png", dataBase64: "AQID" },
     ]);
+    // A PDF copied in a file manager, its name in the text as Finder has it.
     pasted({
       getData: (type: string) =>
-        type === "text/uri-list" ? "file:///Users/me/chart%202.png" : "",
+        type === "text/uri-list"
+          ? "file:///Users/me/report%202.pdf"
+          : type === "text/plain"
+            ? "report 2.pdf"
+            : "",
     });
     await waitFor(() =>
       expect(attachPasted).toHaveBeenLastCalledWith("c1", [
-        { kind: "path", path: "/Users/me/chart 2.png" },
+        { kind: "path", path: "/Users/me/report 2.pdf" },
       ]),
     );
+    // Text copied in Word, a picture of it alongside: pasted as text.
+    attachPasted.mockClear();
+    pasted({
+      files: [shot],
+      getData: (type: string) => (type === "text/plain" ? "Q3 numbers" : ""),
+    });
+    expect(attachPasted).not.toHaveBeenCalled();
   });
 
   it("says so when an attachment was cut at the extraction cap", async () => {
