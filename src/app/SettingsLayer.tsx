@@ -11,7 +11,7 @@ import {
 import type { SettingsPanelProps } from "../settings/SettingsPanel";
 import type { SettingsTabProps } from "../settings/tab/SettingsTab";
 import { Presence } from "../engine/motion/usePresence";
-import { isIOSApp } from "../platform/capabilities";
+import { isPhoneLayout } from "../platform/phone-layout";
 import { SHOW_SIDEBAR_TAB_EVENT, sendAppEvent } from "../utils/events";
 import {
   OPEN_SETTINGS_PAGE_EVENT,
@@ -49,8 +49,9 @@ function showSettings(tabs: TabState, to?: string, jump?: unknown): void {
     });
 }
 
-/** Settings and Plugins as tabs: everywhere but the iPhone and iPad. */
-const inTabs = !isIOSApp;
+/** Settings and Plugins as tabs: everywhere but a phone's layout, where
+ *  they come up as a sheet over the window. Read as each opens. */
+const inTabs = () => !isPhoneLayout();
 
 // Settings' tab loads with Settings, warmed once the window is idle.
 const SettingsTab = lazyComponent(
@@ -97,9 +98,9 @@ type SettingsStart = "general" | "extensions" | "updates" | (string & {});
 
 /** Whether Settings is open, and at which page. Each request counts, so
  *  one made while Settings is open goes to its page from wherever it was.
- *  On the desktop Settings and Plugins are tabs (page-tabs.tsx): a request
- *  brings the tab to the front, at its page; the iPhone's and iPad's
- *  Settings stays a sheet over the window. */
+ *  Settings and Plugins are tabs (page-tabs.tsx): a request brings the tab
+ *  to the front, at its page; in a phone's layout Settings is a sheet over
+ *  the window. */
 export function useSettingsOpening(tabs: TabState) {
   const [state, setState] = useState<{
     open: SettingsStart | null;
@@ -113,15 +114,15 @@ export function useSettingsOpening(tabs: TabState) {
     const open = () => {
       openExtensionsTab("create");
       // Making a theme, a plugin or a skill with the AI: a tab of its own.
-      if (inTabs) showPage(tabs, "create");
+      if (inTabs()) showPage(tabs, "create");
       else setState((s) => ({ open: "extensions", request: s.request + 1 }));
     };
     const stopCreate = onCreateAsked(open);
     // A page picked in the sidebar's list, or a search result there.
     const page = (e: Event) => {
       const { page, jump } = (e as CustomEvent<SettingsPageRequest>).detail;
-      // The iPhone's and iPad's Settings is the sheet, from anywhere.
-      if (!inTabs) setState((s) => ({ open: page, request: s.request + 1 }));
+      // A phone's Settings is the sheet, from anywhere.
+      if (!inTabs()) setState((s) => ({ open: page, request: s.request + 1 }));
       else showSettings(tabs, page, jump);
     };
     window.addEventListener(OPEN_SETTINGS_PAGE_EVENT, page);
@@ -134,7 +135,7 @@ export function useSettingsOpening(tabs: TabState) {
     open: state.open,
     request: state.request,
     openSettings: () => {
-      if (!inTabs) return request("general");
+      if (!inTabs()) return request("general");
       showSettingsList();
       // Not open: at General. Open: brought forward where it was.
       const open = tabs.tabsRef.current.some(
@@ -143,13 +144,13 @@ export function useSettingsOpening(tabs: TabState) {
       showSettings(tabs, open ? undefined : "general");
     },
     openUpdates: () => {
-      if (!inTabs) return request("updates");
+      if (!inTabs()) return request("updates");
       showSettingsList();
       showSettings(tabs, "updates");
     },
     openPluginSettings: (id?: string) => {
       // A plugin's page in its tab; the list itself is the sidebar's.
-      if (inTabs)
+      if (inTabs())
         return id
           ? showPage(tabs, "plugins", id, pluginTitle(id))
           : sendAppEvent(SHOW_SIDEBAR_TAB_EVENT, "plugins");

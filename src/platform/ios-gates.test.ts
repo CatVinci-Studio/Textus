@@ -11,7 +11,6 @@ import { describe, expect, it } from "vitest";
  */
 const ALLOWED: Record<string, string> = {
   "ai/chat/chat-history.ts": "paths relative to the app's Documents folder",
-  "app/SettingsLayer.tsx": "Settings is a sheet over the window, not a tab",
   "app/frame/WindowControls.tsx": "the title row's menu button",
   "app/frame/sidebar-tabs.tsx": "the drawer closes over a document it opened",
   "app/useOpenFolder.ts":

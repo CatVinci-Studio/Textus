@@ -1,16 +1,12 @@
 // @vitest-environment jsdom
 import { afterEach, expect, it, vi } from "vitest";
 
-// An install where Textus AI isn't offered (an iOS App Store download in
-// mainland China), as Rust's boot snapshot says.
+// iOS, which goes without Textus AI.
 async function withoutAi() {
   vi.resetModules();
-  (window as unknown as { __BOOT__: unknown }).__BOOT__ = {
-    settings: { textusAi: true, enableAskAi: true },
-    rev: 1,
-    uiState: {},
-    aiUnavailable: true,
-  };
+  vi.spyOn(navigator, "userAgent", "get").mockReturnValue(
+    "Mozilla/5.0 (iPhone; CPU iPhone OS 18_0 like Mac OS X) AppleWebKit/605.1.15",
+  );
   return {
     normalise: await import("../prefs/settings-normalise"),
     pages: await import("../settings/settings-pages"),
@@ -21,7 +17,7 @@ async function withoutAi() {
 }
 
 afterEach(() => {
-  delete (window as unknown as { __BOOT__?: unknown }).__BOOT__;
+  vi.restoreAllMocks();
   vi.resetModules();
 });
 

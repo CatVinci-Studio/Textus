@@ -32,23 +32,10 @@ for (const device of DEVICES)
   test.describe(`on ${device.name}`, () => {
     test.use(device.device);
 
-    test("an install without Textus AI names it nowhere", async ({ page }) => {
-      // As an iOS App Store download's boot snapshot says.
-      await page.addInitScript(() => {
-        (window as unknown as { __BOOT__: unknown }).__BOOT__ = {
-          settings: {
-            language: "en",
-            languageChosen: true,
-            onboardingShown: true,
-            textusAi: true,
-          },
-          rev: 1,
-          uiState: {},
-          aiUnavailable: true,
-        };
-      });
-      await page.goto("/");
-      await page.waitForSelector('[data-active-tab="true"] .ProseMirror');
+    test("names Textus AI nowhere, as iOS goes without it", async ({
+      page,
+    }) => {
+      await openApp(page, { settings: { language: "en", textusAi: true } });
       const naming = () =>
         page.evaluate(() =>
           [...document.querySelectorAll<HTMLElement>("body *")]
@@ -65,7 +52,9 @@ for (const device of DEVICES)
       await page.getByRole("button", { name: "Menu", exact: true }).tap();
       expect(await naming()).toEqual([]);
       await page.getByRole("menuitem", { name: /Settings/ }).tap();
-      await expect(page.getByText("Privacy & Data").first()).toBeVisible();
+      await expect(
+        page.locator('[role="dialog"], .settings-tab-page').first(),
+      ).toBeVisible();
       expect(await naming()).toEqual([]);
     });
 
@@ -98,9 +87,18 @@ for (const device of DEVICES)
       await expect(settings).toBeVisible();
       await fitsTheScreen(page, ".activity-rail");
       await settings.tap();
-      const dialog = page.getByRole("dialog", { name: "设置" });
-      await expect(dialog.getByRole("button", { name: "外观" })).toBeVisible();
-      await fitsTheScreen(page, '[role="dialog"]');
+      // A phone's Settings is a sheet over the window; a tablet's a tab, as
+      // on the desktop.
+      if (device.name === "a phone") {
+        const dialog = page.getByRole("dialog", { name: "设置" });
+        await expect(
+          dialog.getByRole("button", { name: "外观" }),
+        ).toBeVisible();
+        await fitsTheScreen(page, '[role="dialog"]');
+      } else {
+        await expect(page.locator(".settings-tab-page")).toBeVisible();
+        await fitsTheScreen(page, ".settings-tab-page");
+      }
     });
   });
 
