@@ -38,6 +38,9 @@ write.
   places (the SSH folders above use it), other apps' folder layouts (such
   as Logseq), documents kept as folders (such as TextBundle), and AI
   answers that stream in as they are written.
+- **Heading fold arrows in the margin**, beside the block handle instead
+  of inside the heading's text, so selecting, typing and exporting never
+  meet them.
 - **Mermaid diagrams fold** like headings, to a single line.
 - **Android**: search and databases across a whole folder opened through
   the Files app.

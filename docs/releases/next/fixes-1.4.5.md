@@ -5,13 +5,13 @@
 
 ### Fixed
 
-- Shows the highlight of Select All in a document that starts with a heading; on the Mac it selected everything but showed nothing.
+- Shows the highlight of Select All on the Mac in a document that starts with a heading or starts or ends with a table; it selected everything but showed nothing.
 - Lists every installed font in Settings' text font list, Latin fonts included when Textus is in Chinese, Japanese or Korean, and shows Chinese, Japanese and Korean fonts by their own names too (微软雅黑 Microsoft YaHei).
 - Keeps pinyin and other input methods' text in an empty code block on the Mac; it piled up as "nnini hni hao" and never reached the document.
 - Puts a code block's language, Copy and Select All above the block, as a table's tools are, so they no longer cover the first line or stop a drag selection.
 - Opens a picture in the viewer centred and fitted to the window, not empty until a double-click.
 - Leaves the caret and the headings' fold arrows out of exports, where the caret showed as a dark bar over the text, and exports folded sections in full.
-- Keeps a selection dragged or Shift-extended from text into a table, and Select All in a document that ends with a table selects all of it; both were pulled back to the first paragraph.
+- Keeps a selection dragged or Shift-extended from text into a table; it was pulled back to the paragraph it began in.
 - Keeps a table's tools shown while the pointer moves up to them.
 - Draws the caret beside a picture as tall as the picture.
 - Prints PDF exports on the Mac at the usual size: text came out about a third larger than on Windows, so a long document took far more pages.

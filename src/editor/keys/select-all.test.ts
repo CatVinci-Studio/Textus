@@ -59,16 +59,7 @@ it("selects the whole document from a paragraph at once", async () => {
   expect(selected(view)).toBe("One\nTwo");
 });
 
-it("selects from a heading's first character, not before its fold arrow", async () => {
-  const view = await viewAt("# Title\n\nBody\n", "Body");
-  pressSelectAll(view);
-  const { from, to } = view.state.selection;
-  expect(view.state.selection).toBeInstanceOf(TextSelection);
-  expect([from, to]).toEqual([1, view.state.doc.content.size - 1]);
-  expect(selected(view)).toBe("Title\nBody");
-});
-
-it("takes the whole document when a table ends it, and deleting leaves no table", async () => {
+it("takes the whole document, and deleting it leaves no table cut open", async () => {
   for (const markdown of [
     "# Title\n\nBody\n\n| a | b |\n| --- | --- |\n|  |  |\n",
     "| a | b |\n| --- | --- |\n| 1 | 2 |\n\nBody\n",

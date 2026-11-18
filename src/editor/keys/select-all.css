@@ -1,0 +1,10 @@
+/* Select All's highlight, painted by select-all.ts in place of the
+   selection the web view leaves undrawn. */
+::highlight(select-all) {
+  background-color: Highlight;
+}
+
+/* Where the web view draws some of it after all, it doesn't draw twice. */
+.ProseMirror.is-all-selected ::selection {
+  background-color: transparent;
+}
