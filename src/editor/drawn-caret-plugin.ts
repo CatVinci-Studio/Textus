@@ -42,6 +42,8 @@ class DrawnCaret {
     this.root = view.dom.parentElement as HTMLElement;
     this.caret.className = "drawn-caret";
     this.caret.setAttribute("aria-hidden", "true");
+    // The editor's alone: an export or a print leaves it out.
+    this.caret.dataset.editorChrome = "";
     this.caret.hidden = true;
     this.root.append(this.caret);
     for (const name of MOVES) view.dom.addEventListener(name, this.schedule);
