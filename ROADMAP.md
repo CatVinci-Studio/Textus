@@ -41,6 +41,13 @@ write.
 - **Heading fold arrows in the margin**, beside the block handle instead
   of inside the heading's text, so selecting, typing and exporting never
   meet them.
+- **One rule for what loads late**: in a long document, blocks, formulas,
+  diagrams, plugin frames and pictures draw as they come near; export,
+  print, search and jumping to a heading all load the whole document by
+  the same rule.
+- **A full pass over the plugin API**, brought up to date in one go.
+- **Smoother editing**: a review of typing, scrolling and dragging for
+  any stalls, a better feel when dragging blocks, and interface polish.
 - **Mermaid diagrams fold** like headings, to a single line.
 - **Android**: search and databases across a whole folder opened through
   the Files app.
