@@ -1,5 +1,5 @@
 import { describe, expect, it } from "vitest";
-import { dropPointInPage, sortDroppedPaths } from "./dropped-files";
+import { dropPointInPage, freeName, sortDroppedPaths } from "./dropped-files";
 
 describe("sortDroppedPaths", () => {
   it("opens text files and inserts images", () => {
@@ -42,5 +42,13 @@ describe("dropPointInPage", () => {
       x: 300,
       y: 150,
     });
+  });
+});
+
+describe("freeName", () => {
+  it("numbers a copy before its extension, as Files does", () => {
+    expect(freeName("a.md", new Set())).toBe("a.md");
+    expect(freeName("a.md", new Set(["a.md", "a 2.md"]))).toBe("a 3.md");
+    expect(freeName("notes", new Set(["notes"]))).toBe("notes 2");
   });
 });

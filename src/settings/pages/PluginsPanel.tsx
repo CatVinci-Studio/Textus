@@ -16,7 +16,10 @@ import { AvailableButton, RowButton } from "./plugin-row-buttons";
 import { useMenuButton } from "../../engine/controls/useMenuButton";
 import type { ContextMenuEntry } from "../../engine/controls/ContextMenu";
 import { requestCreate } from "../../ai/chat/create-request";
-import { isDesktopApp } from "../../platform/capabilities";
+import {
+  canInstallPluginFile,
+  canPickPluginFolder,
+} from "../../platform/capabilities";
 import { plugins as pluginsIpc } from "../../platform/ipc";
 import { installPluginFiles } from "./PluginsPage";
 import { emitToThisWindow } from "../../platform/menu-events";
@@ -333,14 +336,14 @@ function moreMenu(
       if (opened) openPage(opened);
     });
   return [
-    ...(isDesktopApp
-      ? [
-          { label: t.pluginsInstallFile, onSelect: () => fromFiles(false) },
-          { label: t.pluginsLoadFolder, onSelect: () => fromFiles(true) },
-        ]
+    ...(canInstallPluginFile
+      ? [{ label: t.pluginsInstallFile, onSelect: () => fromFiles(false) }]
+      : []),
+    ...(canPickPluginFolder
+      ? [{ label: t.pluginsLoadFolder, onSelect: () => fromFiles(true) }]
       : []),
     { label: t.createMakePlugin, onSelect: () => requestCreate("", "plugin") },
-    ...(isDesktopApp
+    ...(canPickPluginFolder
       ? [
           {
             label: t.pluginsOpenScripts,

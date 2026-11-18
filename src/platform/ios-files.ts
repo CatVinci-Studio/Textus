@@ -64,9 +64,17 @@ async function inDocuments(url: string | null): Promise<string | null> {
 }
 
 export const iosFiles = {
-  /** The Files app's document picker; null when cancelled. */
-  pickDocument: async (): Promise<string | null> =>
-    inDocuments(named(await call<Picked>("pick_document")).url),
+  /** The Files app's document picker, for Markdown unless `extensions`
+   *  say otherwise; null when cancelled. */
+  pickDocument: async (extensions?: string[]): Promise<string | null> =>
+    inDocuments(
+      named(
+        await call<Picked>(
+          "pick_document",
+          extensions ? { allowedExtensions: extensions } : undefined,
+        ),
+      ).url,
+    ),
   /** Android's Save As for a new document: where and under what name, in
    *  the system's picker; null when cancelled. */
   createDocument: async (name: string): Promise<string | null> =>

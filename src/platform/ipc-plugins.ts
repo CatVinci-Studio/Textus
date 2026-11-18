@@ -6,9 +6,22 @@ export type PluginFile = Generated.PluginFile;
 import { Channel } from "@tauri-apps/api/core";
 import { call, command, desktopActionCommand } from "./ipc-call";
 import { isFarUrl } from "./far-files";
+import { canPickPluginFolder } from "./capabilities";
+import { iosFiles } from "./ios-files";
 import { dirname } from "../utils/path";
 
 /** Plugins and MCP servers: the calls Settings › Extensions and the plugin broker make. */
+
+/** A package picked in the Files app, copied where the install can read it
+ *  by path; null when cancelled. */
+async function pickFilesPackage(): Promise<string[] | null> {
+  const url = await iosFiles.pickDocument(["textusplugin", "zip"]);
+  if (!url) return null;
+  const name = decodeURIComponent(url.slice(url.lastIndexOf("/") + 1));
+  const copy = await iosFiles.scratchPath(name);
+  await command("write_base64_file", copy, await iosFiles.readBase64(url));
+  return [copy];
+}
 
 // Plugins: what is installed and granted, and the calls a plugin makes
 // through the window.
@@ -125,7 +138,9 @@ export const plugins = {
   /** Install from file… (`folder` false) and Load a plugin folder…'s
    *  picker. Desktop only. */
   pickPackage: (folder: boolean, filterName: string) =>
-    desktopActionCommand("plugin_pick_package", folder, filterName),
+    canPickPluginFolder
+      ? desktopActionCommand("plugin_pick_package", folder, filterName)
+      : pickFilesPackage(),
   /** Settings › Plugins › Open Scripts Folder. Desktop only. */
   openScriptsDir: () => desktopActionCommand("plugin_open_scripts_dir"),
   file: (id: string, rel: string) =>

@@ -68,6 +68,18 @@ export const canRevealInFileManager = isDesktopApp;
  *  plugin (image-store's fileImage). */
 export const canPickImageFile = isDesktopApp || isIOSApp;
 
+/** Settings › Plugins › Install from File: a package picked on the
+ *  desktop, or in Files on iOS. */
+export const canInstallPluginFile = isDesktopApp || isIOSApp;
+
+/** Load Plugin Folder and the scripts folder: a folder the app watches,
+ *  on the desktop. */
+export const canPickPluginFolder = isDesktopApp;
+
+/** Files dragged in from another app arrive as their contents, with no
+ *  paths (an iPad's HTML5 drop), not as the desktop's drop of paths. */
+export const filesDropAsContents = isIOSApp;
+
 /** A folder picker: the dialog plugin's on desktop, Files' on iOS. */
 export const canPickFolder = isDesktopApp || isIOSApp;
 
