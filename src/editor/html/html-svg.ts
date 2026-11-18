@@ -61,7 +61,7 @@ function safeSvgAttribute(name: string, value: string): boolean {
   return !/url\s*\(/i.test(value.replace(/url\s*\(\s*['"]?#[^)]*\)/gi, ""));
 }
 
-export function cleanSvgTree(el: Element): void {
+function cleanSvgTree(el: Element): void {
   for (const attr of Array.from(el.attributes))
     if (!safeSvgAttribute(attr.name, attr.value)) el.removeAttributeNode(attr);
   for (const child of Array.from(el.childNodes)) {
@@ -83,7 +83,7 @@ export function cleanSvgTree(el: Element): void {
   }
 }
 
-export const SVG_NS = "http://www.w3.org/2000/svg";
+const SVG_NS = "http://www.w3.org/2000/svg";
 
 /** The data URL of a cleaned copy of `svg`, for an <img src>. */
 export function svgDataUrl(svg: Element): string {
