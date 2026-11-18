@@ -316,6 +316,7 @@ fn groups() -> Vec<(&'static str, Builder<tauri::Wry>)> {
                     crate::ai::agent::ai_agent_message,
                     crate::ai::cancel::ai_cancel,
                     crate::commands::attachment::pick_attachment_files,
+                    crate::commands::attachment::attach_pasted,
                     crate::ai::images::list_image_providers,
                     crate::ai::images::ai_generated_image,
                     crate::ai::images::ai_retry_generated_image,

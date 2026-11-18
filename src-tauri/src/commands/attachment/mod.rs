@@ -95,10 +95,7 @@ fn free_name(dir: &Path, name: &str) -> String {
     crate::ids::free_name(dir, name, crate::ids::Numbered::Paren)
 }
 
-/// Copies one picked file into `attached` and reads it, all inside one
-/// `spawn_blocking`.
-fn stage(source: &Path, attached: &Path) -> Result<ChatAttachment, String> {
-    let bytes = std::fs::metadata(source).map_err(|e| e.to_string())?.len();
+fn within_limit(bytes: u64) -> Result<(), String> {
     if bytes > MAX_SOURCE_BYTES {
         return Err(format!(
             "That file is too large to attach ({} MB; the limit is {} MB).",
@@ -106,19 +103,41 @@ fn stage(source: &Path, attached: &Path) -> Result<ChatAttachment, String> {
             MAX_SOURCE_BYTES / (1024 * 1024)
         ));
     }
+    Ok(())
+}
+
+/// Copies one picked file into `attached` and reads it, all inside one
+/// `spawn_blocking`.
+fn stage(source: &Path, attached: &Path) -> Result<ChatAttachment, String> {
+    within_limit(std::fs::metadata(source).map_err(|e| e.to_string())?.len())?;
     let name = free_name(attached, &file_name_of(source));
     let copy = attached.join(&name);
     std::fs::copy(source, &copy).map_err(|e| e.to_string())?;
+    read_staged(&copy, name, attached)
+}
+
+/// Writes pasted bytes into `attached` as `name` and reads them.
+fn stage_bytes(name: &str, bytes: &[u8], attached: &Path) -> Result<ChatAttachment, String> {
+    within_limit(bytes.len() as u64)?;
+    let name = free_name(attached, &file_name_of(Path::new(name)));
+    let copy = attached.join(&name);
+    std::fs::write(&copy, bytes).map_err(|e| e.to_string())?;
+    read_staged(&copy, name, attached)
+}
+
+/// A file staged in `attached` as `name`, turned into what the message
+/// carries.
+fn read_staged(copy: &Path, name: String, attached: &Path) -> Result<ChatAttachment, String> {
     let path = format!("{ATTACHED}/{name}");
-    let ext = extension_of(&copy);
+    let ext = extension_of(copy);
 
     if picture::PICTURE_EXTENSIONS.contains(&ext.as_str()) {
-        let sent = picture::picture(&copy, &ext)?;
+        let sent = picture::picture(copy, &ext)?;
         return Ok(ChatAttachment::image(name, sent.mime, &sent.bytes, path));
     }
     if ext == "zip" {
         let folder = free_name(attached, name.trim_end_matches(".zip"));
-        let files = archive::unpack(&copy, &attached.join(&folder))?;
+        let files = archive::unpack(copy, &attached.join(&folder))?;
         let listing = files
             .iter()
             .map(|f| format!("- {ATTACHED}/{folder}/{f}"))
@@ -131,9 +150,9 @@ fn stage(source: &Path, attached: &Path) -> Result<ChatAttachment, String> {
         return Ok(ChatAttachment::text(name, content, path));
     }
 
-    let text = match document_text(&copy, &ext) {
+    let text = match document_text(copy, &ext) {
         Some(text) => text?,
-        None => std::fs::read_to_string(&copy).map_err(|_| {
+        None => std::fs::read_to_string(copy).map_err(|_| {
             format!("`{name}` isn't a text file, and Textus can't read this format yet.")
         })?,
     };
@@ -170,6 +189,49 @@ pub async fn pick_attachment_files(
     tauri::async_runtime::spawn_blocking(move || {
         let attached = scratch::attached_dir(&conversation)?;
         paths.iter().map(|p| stage(p, &attached)).collect()
+    })
+    .await
+    .map_err(|_| "Reading that file failed.".to_string())?
+}
+
+/// What was pasted into the composer: a copied picture's bytes, or a file
+/// copied in a file manager, by its path.
+#[derive(serde::Deserialize)]
+#[cfg_attr(test, derive(specta::Type))]
+#[serde(tag = "kind", rename_all = "camelCase")]
+pub enum Pasted {
+    Path {
+        path: String,
+    },
+    #[serde(rename_all = "camelCase")]
+    Bytes {
+        name: String,
+        data_base64: String,
+    },
+}
+
+/// The chat composer's paste: each pasted picture or file copied and read
+/// into the conversation's attachments, as the "+" button's are.
+#[tauri::command]
+#[cfg_attr(test, specta::specta)]
+pub async fn attach_pasted(
+    conversation: String,
+    pasted: Vec<Pasted>,
+) -> Result<Vec<ChatAttachment>, String> {
+    tauri::async_runtime::spawn_blocking(move || {
+        let attached = scratch::attached_dir(&conversation)?;
+        pasted
+            .iter()
+            .map(|item| match item {
+                Pasted::Path { path } => stage(Path::new(path), &attached),
+                Pasted::Bytes { name, data_base64 } => {
+                    let bytes = base64::engine::general_purpose::STANDARD
+                        .decode(data_base64)
+                        .map_err(|e| e.to_string())?;
+                    stage_bytes(name, &bytes, &attached)
+                }
+            })
+            .collect()
     })
     .await
     .map_err(|_| "Reading that file failed.".to_string())?
@@ -252,6 +314,16 @@ mod tests {
             panic!();
         };
         assert_eq!(path, "attached/main (2).py");
+        // Pasted bytes are staged and read the same way.
+        let ChatAttachment::Text { content, path, .. } =
+            stage_bytes("main.py", b"print('hi')\n", &dir.join("attached")).unwrap()
+        else {
+            panic!();
+        };
+        assert_eq!(
+            (content.as_str(), path.as_str()),
+            ("print('hi')\n", "attached/main (3).py")
+        );
         let _ = std::fs::remove_dir_all(&dir);
     }
 

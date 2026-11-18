@@ -400,6 +400,10 @@ export function ChatComposer({
                 setPickerIndex(0);
               }}
               onKeyDown={onKeyDown}
+              // Pictures and image files attach, as the "+" button's do.
+              onPaste={(e) => {
+                if (staged.attachPasted(e.clipboardData)) e.preventDefault();
+              }}
               autoFocus={focusOnOpen}
             />
           </div>

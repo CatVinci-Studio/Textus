@@ -23,6 +23,8 @@ import type {
 } from "./composer-types";
 import { currentStrings } from "../../i18n/current";
 import { explainError } from "../../utils/error-explain";
+import { blobToBase64 } from "../../utils/blob-base64";
+import { clipboardImageSources } from "../../editor/images/pasted-files";
 
 /** The composer's state, one hook per concern. */
 
@@ -89,10 +91,28 @@ export function useAttachments(noVisionMessage: string, conversation: string) {
   const [attachError, setAttachError] = useState<string | null>(null);
 
   async function attachFile() {
+    // None means the picker was cancelled - not something to report.
+    await stage(() => ai.pickAttachmentFiles(conversation));
+  }
+
+  /** A paste of pictures or image files: attached as the "+" button's
+   *  are. False when it carries none, and is the textarea's to paste. */
+  function attachPasted(data: DataTransfer | null): boolean {
+    const { files, paths } = clipboardImageSources(data);
+    if (!files.length && !paths.length) return false;
+    void stage(async () =>
+      ai.attachPasted(conversation, [
+        ...paths.map((path) => ({ kind: "path" as const, path })),
+        ...(await Promise.all(files.map(pastedBytes))),
+      ]),
+    );
+    return true;
+  }
+
+  async function stage(read: () => Promise<ChatAttachment[]>) {
     setAttachError(null);
     try {
-      // None means the picker was cancelled - not something to report.
-      const files = await ai.pickAttachmentFiles(conversation);
+      const files = await read();
       // An outside agent answering takes pictures if it reads them; the
       // exchange leaves them out for one that doesn't.
       const agent = externalAgent(loadSettings().chatAgent);
@@ -113,6 +133,17 @@ export function useAttachments(noVisionMessage: string, conversation: string) {
     attachError,
     setAttachError,
     attachFile,
+    attachPasted,
+  };
+}
+
+/** A pasted picture's bytes, named for its type (a screenshot comes as
+ *  "image.png"). */
+async function pastedBytes(file: File) {
+  return {
+    kind: "bytes" as const,
+    name: file.name || "image.png",
+    dataBase64: await blobToBase64(file),
   };
 }
 

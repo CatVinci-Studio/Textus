@@ -11,7 +11,7 @@ use auth::custom_endpoint::{
 };
 use auth::keys::{clear_provider_api_key, provider_api_key_status, set_provider_api_key};
 use auth::openai_codex::{codex_auth_status, codex_login, codex_logout};
-use commands::attachment::pick_attachment_files;
+use commands::attachment::{attach_pasted, pick_attachment_files};
 #[cfg(desktop)]
 use commands::cli::{cli_command_status, install_cli_command};
 use commands::drafts::{
@@ -146,6 +146,7 @@ pub(crate) fn handler() -> impl Fn(tauri::ipc::Invoke<tauri::Wry>) -> bool + Sen
         crate::ai::kept_proposals::kept_proposals_read,
         crate::ai::kept_proposals::kept_proposals_write,
         pick_attachment_files,
+        attach_pasted,
         set_provider_api_key,
         provider_api_key_status,
         clear_provider_api_key,

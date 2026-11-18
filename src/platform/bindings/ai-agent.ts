@@ -20,6 +20,11 @@ export const commands = {
 	 *  file that can't be read fails the whole pick, naming it.
 	 */
 	pick_attachment_files: (conversation: string) => __TAURI_INVOKE<ChatAttachment[]>("pick_attachment_files", { conversation }),
+	/**
+	 *  The chat composer's paste: each pasted picture or file copied and read
+	 *  into the conversation's attachments, as the "+" button's are.
+	 */
+	attach_pasted: (conversation: string, pasted: Pasted[]) => __TAURI_INVOKE<ChatAttachment[]>("attach_pasted", { conversation, pasted }),
 	list_image_providers: () => __TAURI_INVOKE<ImageProviderEntry_Serialize[]>("list_image_providers"),
 	/**
 	 *  A picture, once it is made: the frame in the document waits on this.
@@ -402,6 +407,12 @@ export type MessageRequest_Serialize = {
 	/**  General mode's file changes wait to be applied. None writes them. */
 	askBeforeFileChanges: boolean | null,
 };
+
+/**
+ *  What was pasted into the composer: a copied picture's bytes, or a file
+ *  copied in a file manager, by its path.
+ */
+export type Pasted = { kind: "path"; path: string } | { kind: "bytes"; name: string; dataBase64: string };
 
 /**  One block as the request carries it. */
 export type SentBlock = SentBlock_Serialize | SentBlock_Deserialize;

@@ -14,6 +14,7 @@ import { explainError } from "../../utils/error-explain";
 import { LINK } from "../markdown/link-source";
 import { announceFileCreated } from "../../utils/events";
 import IMAGE_TYPES from "./image-types.json";
+import { blobToBase64 } from "../../utils/blob-base64";
 
 /** Pictures pasted, dropped or picked, saved where the writer keeps them. */
 
@@ -23,18 +24,6 @@ const EXT_BY_MIME: Record<string, string> = Object.entries(IMAGE_TYPES).reduce(
   (by, [ext, mime]) => ({ [mime]: ext, ...by }),
   {} as Record<string, string>,
 );
-
-function blobToBase64(blob: Blob): Promise<string> {
-  return new Promise((resolve, reject) => {
-    const reader = new FileReader();
-    reader.onload = () => {
-      const url = reader.result as string;
-      resolve(url.slice(url.indexOf(",") + 1));
-    };
-    reader.onerror = () => reject(reader.error);
-    reader.readAsDataURL(blob);
-  });
-}
 
 export function safeImageStem(name: string): string {
   const withoutExtension = name.replace(/\.[^.]*$/, "");
