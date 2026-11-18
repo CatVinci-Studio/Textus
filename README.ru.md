@@ -119,6 +119,12 @@ Textus бесплатен и открыт. [Поддержите нас](https:/
 
 <p align="center"><img src="docs/images/readme/sponsors/sponsors.svg" alt="Sponsors" width="800"></p>
 
+## Поддержка сообщества
+
+Этот проект признаёт и поддерживает [сообщество LINUX DO](https://linux.do/).
+
+Спасибо LINUX DO за площадку, где разработчики обмениваются знаниями и делятся открытым кодом.
+
 ## Сообщество
 
 Присоединяйтесь к нам в Discord, QQ или WeChat: [textus.md/community](https://textus.md/ru/community/). Сообщения об ошибках и пожелания ждём в [GitHub Issues](https://github.com/CatVinci-Studio/Textus/issues). Чтобы помочь с кодом, начните с [CONTRIBUTING.md](CONTRIBUTING.md) (на английском).

@@ -120,6 +120,12 @@ Textus 免費開源。歡迎[贊助我們](https://github.com/CatVinci-Studio/Te
 
 <p align="center"><img src="docs/images/readme/sponsors/sponsors.svg" alt="Sponsors" width="800"></p>
 
+## 社群支持
+
+本專案認可並支持 [LINUX DO 社群](https://linux.do/)。
+
+感謝 LINUX DO 社群為開發者提供技術交流與開源分享的平台。
+
 ## 社群
 
 加入 Discord、QQ 群或微信群：[textus.md/community](https://textus.md/zh-hant/community/)。歡迎在 [GitHub Issues](https://github.com/CatVinci-Studio/Textus/issues) 回報問題、提出建議；想參與開發，請先看 [CONTRIBUTING.md](CONTRIBUTING.md)。
