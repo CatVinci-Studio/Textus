@@ -27,6 +27,13 @@ test("the format bar's styles wrap what is selected", async ({ page }) => {
     await bar(page).getByRole("button", { name, exact: true }).click();
     await expect(doc(page).locator(tag)).toHaveText("gamma");
   }
+  // A highlight keeps the text's colour, not the browser's black for <mark>.
+  const colour = (sel: string) =>
+    doc(page)
+      .locator(sel)
+      .last()
+      .evaluate((el) => getComputedStyle(el).color);
+  expect(await colour("mark")).toBe(await colour("p"));
 });
 
 test("the format bar's heading button picks a level", async ({ page }) => {

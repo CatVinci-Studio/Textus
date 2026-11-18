@@ -3,6 +3,7 @@ import cases from "./frontmatter-cases.json";
 import {
   parseFrontmatter,
   splitFrontmatter,
+  stringifyYaml,
   withFrontmatter,
 } from "./frontmatter";
 import {
@@ -107,5 +108,60 @@ describe("front matter read and written in full, for plugins", () => {
     expect(parseYamlFull("a: 1\nb: [x, y]")).toEqual({ a: 1, b: ["x", "y"] });
     expect(parseYamlFull("- a")).toEqual({});
     expect(stringifyYamlFull({ a: "x: y" })).toBe('a: "x: y"');
+  });
+});
+
+describe("front matter", () => {
+  const doc = [
+    "---",
+    "title: A day",
+    'quote: "a: b"',
+    "count: 3",
+    "done: false",
+    "tags: [work, home]",
+    "aliases:",
+    "  - first",
+    "  - second",
+    "meta:",
+    "  author: Ann",
+    "empty:",
+    "---",
+    "# Body",
+  ].join("\n");
+
+  it("reads keys, numbers, booleans, lists and one level of nesting", () => {
+    expect(parseFrontmatter(doc)).toEqual({
+      title: "A day",
+      quote: "a: b",
+      count: 3,
+      done: false,
+      tags: ["work", "home"],
+      aliases: ["first", "second"],
+      meta: { author: "Ann" },
+      empty: null,
+    });
+  });
+
+  it("is {} for a document without any", () => {
+    expect(parseFrontmatter("# Just a title")).toEqual({});
+    expect(splitFrontmatter("# x").yaml).toBeNull();
+  });
+
+  it("writes back what it read, the body untouched", () => {
+    const data = parseFrontmatter(doc);
+    const again = withFrontmatter(doc, { ...data, count: 4 });
+    expect(again.endsWith("# Body")).toBe(true);
+    expect(parseFrontmatter(again)).toEqual({ ...data, count: 4 });
+  });
+
+  it("quotes what YAML would read otherwise", () => {
+    expect(stringifyYaml({ a: "true", b: "x: y", c: "12", d: "plain" })).toBe(
+      'a: "true"\nb: "x: y"\nc: "12"\nd: plain',
+    );
+  });
+
+  it("adds a block to a document without one, and takes it away when empty", () => {
+    expect(withFrontmatter("Text", { a: 1 })).toBe("---\na: 1\n---\n\nText");
+    expect(withFrontmatter("---\na: 1\n---\nText", {})).toBe("Text");
   });
 });

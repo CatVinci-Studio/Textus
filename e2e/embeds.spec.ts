@@ -1,6 +1,6 @@
 import { expect, test } from "@playwright/test";
-import { MAC, openApp, PHONE, sourceOf } from "./helpers";
-import { openPath } from "./plugin-helpers";
+import { MAC, mockInvoke, openApp, PHONE, sourceOf } from "./helpers";
+import { openPath, PNG } from "./plugin-helpers";
 
 // `![[...]]` while the caret is away: a picture drawn in place of its source.
 test("an image embed shows as its picture, its source hidden", async ({
@@ -12,14 +12,29 @@ test("an image embed shows as its picture, its source hidden", async ({
       "/work/pic.png": "",
     };
   });
+  // The picture's file, as the asset protocol serves it.
+  await page.route("http://asset.localhost/**", (route) =>
+    route.fulfill({
+      contentType: "image/png",
+      body: Buffer.from(PNG, "base64"),
+    }),
+  );
   await openApp(page);
+  // Found in the folder by its name, as the native side finds it.
+  await mockInvoke(page, { resolve_vault_image: "/work/pic.png" });
   await openPath(page, "/work/a.md");
   const doc = page.locator('[data-active-tab="true"] .ProseMirror');
   await expect(doc).toContainText("After");
   await expect(doc.locator(".obsidian-embed-source-hidden")).toHaveCount(1);
-  await expect(
-    doc.locator(".obsidian-embed-rendered, .missing-image").first(),
-  ).toBeAttached();
+  // The picture itself, loaded.
+  await expect
+    .poll(() =>
+      doc
+        .locator(".obsidian-embed-rendered img")
+        .first()
+        .evaluate((img) => (img as HTMLImageElement).naturalWidth),
+    )
+    .toBeGreaterThan(0);
 });
 
 // `[TOC]` lists the document's headings, on the desktop and on a phone.
