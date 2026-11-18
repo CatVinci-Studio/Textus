@@ -77,6 +77,17 @@ export const plugins = {
     command("plugin_ai_allow", plugin, more),
   aiComplete: (plugin: string, system: string, prompt: string) =>
     command("plugin_ai_complete", plugin, system, prompt),
+  /** aiComplete, each piece of the answer to `onText` as it comes. */
+  aiStream: (
+    plugin: string,
+    system: string,
+    prompt: string,
+    onText: (text: string) => void,
+  ) => {
+    const channel = new Channel<string>();
+    channel.onmessage = onText;
+    return command("plugin_ai_stream", plugin, system, prompt, channel);
+  },
   setAll: (on: boolean) => command("plugins_set_all", on),
   set: (id: string, enabled: boolean, granted: string[]) =>
     command("plugin_set", id, enabled, granted),

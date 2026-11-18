@@ -200,6 +200,20 @@ textus.ai = {
       messages: plain(r.prompt != null ? String(r.prompt) : r.messages),
     });
   },
+  stream: function (request, onText) {
+    var r = request || {};
+    var stream = String(++aiStreamCount);
+    aiStreams.set(stream, function (text) {
+      if (typeof onText === "function") onText(text);
+    });
+    return call("ai.stream", {
+      system: r.system == null ? undefined : String(r.system),
+      messages: plain(r.prompt != null ? String(r.prompt) : r.messages),
+      stream: stream,
+    }).finally(function () {
+      aiStreams.delete(stream);
+    });
+  },
 };
 
 textus.plugins = {

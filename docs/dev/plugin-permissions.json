@@ -153,7 +153,8 @@
     "permission": "ai.model",
     "calls": [
       "ai.available",
-      "ai.complete"
+      "ai.complete",
+      "ai.stream"
     ]
   },
   {

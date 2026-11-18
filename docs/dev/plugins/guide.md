@@ -528,7 +528,8 @@ editor, at once; else in the file Textus keeps them in. It needs
   writing model's answer; `messages: [{ role, content }]` for a conversation.
   The first call asks the user, and each plugin has 100,000 tokens a month
   before the user is asked again. `ai.available()` says whether it can be
-  asked (Textus AI on).
+  asked (Textus AI on). `ai.stream(request, onText)` (1.4.6) is the same
+  call with the answer handed to `onText` piece by piece as it is written.
 - `ai.registerInlineCompletion(id, { label, provide })` (`editor.read`, 1.8
   preview): grey text after the caret when typing pauses, from
   `provide({ before, after, path })`. One source at a time, picked by the

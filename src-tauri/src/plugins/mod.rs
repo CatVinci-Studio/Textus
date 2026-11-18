@@ -37,6 +37,7 @@ macro_rules! with_plugin_commands {
             $crate::plugins::ai::plugin_ai_status,
             $crate::plugins::ai::plugin_ai_allow,
             $crate::plugins::ai::plugin_ai_complete,
+            $crate::plugins::ai::plugin_ai_stream,
             $crate::plugins::install::plugins_installed,
             $crate::plugins::install::plugin_install,
             $crate::plugins::install::plugin_install_files,

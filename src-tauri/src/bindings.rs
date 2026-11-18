@@ -207,6 +207,7 @@ fn groups() -> Vec<(&'static str, Builder<tauri::Wry>)> {
                 crate::plugins::ai::plugin_ai_status,
                 crate::plugins::ai::plugin_ai_allow,
                 crate::plugins::ai::plugin_ai_complete,
+                crate::plugins::ai::plugin_ai_stream,
                 crate::plugins::state::plugin_set,
                 crate::plugins::install::plugins_installed,
                 crate::plugins::install::plugin_install,

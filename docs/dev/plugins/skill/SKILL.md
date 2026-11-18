@@ -95,7 +95,7 @@ exports.activate = function (ctx) {
   check's card), decorations' `"gutter"` marks, `editor.registerSyntax`
   (inline syntax shown as it means, preview), `export.registerFormat`,
   `textus.history`, `textus.comments` (margin notes, preview),
-  `ai.complete` (the user's model, preview) and
+  `ai.complete` / `ai.stream` (the user's model, preview) and
   `ai.registerInlineCompletion`. Use them rather than drawing your own.
 - Data: `ctx.storage.global` (Textus's config folder),
   `ctx.storage.project` (the open folder, needs `project.data`),

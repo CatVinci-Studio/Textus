@@ -1551,6 +1551,14 @@ declare global {
        *  characters), and the user is asked before more. Refused when the
        *  user says no or Textus AI is off. From 1.4.4 (API 1.8, preview). */
       complete(request: AiRequest): Promise<string>;
+      /** complete(), the answer coming in as it is written: each piece
+       *  to `onText` in order, the whole answer returned at the end. The
+       *  same permission, question and tokens as complete(). From 1.4.6
+       *  (API 1.8, preview). */
+      stream(
+        request: AiRequest,
+        onText: (text: string) => void,
+      ): Promise<string>;
     }
 
     /** `prompt` for one question, or `messages` for a conversation whose

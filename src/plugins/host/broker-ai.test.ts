@@ -9,6 +9,7 @@ const ipc = vi.hoisted(() => ({
   })),
   aiAllow: vi.fn(async () => null),
   aiComplete: vi.fn(),
+  aiStream: vi.fn(),
 }));
 vi.mock("../../platform/ipc", () => ({ plugins: ipc }));
 const confirm = vi.hoisted(() => vi.fn());
@@ -49,6 +50,28 @@ describe("a plugin asking the user's AI model", () => {
     ).resolves.toBe("Bonjour");
     expect(confirm.mock.calls[0][0]).toContain("Translate wants to use");
     expect(ipc.aiAllow).toHaveBeenCalledWith("a.translate", false);
+  });
+
+  it("streams the answer to the plugin piece by piece, asked as complete is", async () => {
+    ipc.aiStream
+      .mockRejectedValueOnce("plugin-ai-not-allowed")
+      .mockImplementationOnce(async (_p, _s, _m, onText) => {
+        onText("Bon");
+        onText("jour");
+        return "Bonjour";
+      });
+    confirm.mockResolvedValueOnce(true);
+    const request = vi.fn(async () => null);
+    const stream = aiModelHandlers({ ...scope, request } as PluginScope)[
+      "ai.stream"
+    ];
+    await expect(stream({ messages: "Hello", stream: "1" })).resolves.toBe(
+      "Bonjour",
+    );
+    expect(request.mock.calls).toEqual([
+      ["$aiStreamText", { stream: "1", text: "Bon" }],
+      ["$aiStreamText", { stream: "1", text: "jour" }],
+    ]);
   });
 
   it("stops when the user says no, and asks for more at the limit", async () => {

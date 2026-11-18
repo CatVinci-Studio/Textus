@@ -28,6 +28,11 @@ export const commands = {
 	 */
 	plugin_ai_complete: (plugin: string, system: string, prompt: string) => __TAURI_INVOKE<string>("plugin_ai_complete", { plugin, system, prompt }),
 	/**
+	 *  [`plugin_ai_complete`], the answer streamed to `on_text` as it comes;
+	 *  the whole returned.
+	 */
+	plugin_ai_stream: (plugin: string, system: string, prompt: string, onText: Channel<string>) => __TAURI_INVOKE<string>("plugin_ai_stream", { plugin, system, prompt, onText }),
+	/**
 	 *  Turns a plugin on or off with the permissions the user granted it. A
 	 *  developer-mode folder is kept.
 	 */

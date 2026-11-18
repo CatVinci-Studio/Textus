@@ -18,6 +18,9 @@ var blockTypes = new Map();
 var menuProviders = {};
 var historySources = new Map();
 var inlineCompletions = new Map();
+// Each ai.stream call's onText, by its number, while it runs.
+var aiStreams = new Map();
+var aiStreamCount = 0;
 var exportFormats = new Map();
 var pickSearches = {};
 var pickSearchCount = 0;

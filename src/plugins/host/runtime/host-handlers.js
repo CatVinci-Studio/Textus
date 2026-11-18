@@ -202,6 +202,11 @@ var handlers = {
       path: params.path,
     });
   },
+  $aiStreamText: function (params) {
+    var onText = aiStreams.get(params.stream);
+    if (onText) onText(params.text);
+    return null;
+  },
   $inlineCompletion: async function (params) {
     var source = inlineCompletions.get(params.id);
     if (!source) return null;
