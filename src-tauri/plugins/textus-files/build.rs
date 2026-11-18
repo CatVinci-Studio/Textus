@@ -1,6 +1,7 @@
 // The command list is also the permission list (permissions/default.toml
 // allows them all). Each one is a method of TextusFilesPlugin.swift and
-// TextusFilesPlugin.kt (create_document and the *_entry ones: Android only).
+// TextusFilesPlugin.kt (create_document and the *_entry ones: Android only;
+// trash: iOS only).
 const COMMANDS: &[&str] = &[
     "pick_document",
     "pick_folder",
@@ -13,6 +14,7 @@ const COMMANDS: &[&str] = &[
     "rename_entry",
     "move_entry",
     "delete_entry",
+    "trash",
     "remembered",
     "begin_access",
     "share",

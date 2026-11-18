@@ -1,0 +1,13 @@
+# Automatically generated - DO NOT EDIT!
+
+"$schema" = "../../schemas/schema.json"
+
+[[permission]]
+identifier = "allow-trash"
+description = "Enables the trash command without any pre-configured scope."
+commands.allow = ["trash"]
+
+[[permission]]
+identifier = "deny-trash"
+description = "Denies the trash command without any pre-configured scope."
+commands.deny = ["trash"]

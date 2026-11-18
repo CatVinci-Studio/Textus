@@ -226,6 +226,31 @@ class TextusFilesPlugin: Plugin, UIDocumentPickerDelegate {
     }
   }
 
+  /// A file or folder to the Files app's Recently Deleted, from where it
+  /// can be put back: by path in the app's container, or a picked URL.
+  @objc public func trash(_ invoke: Invoke) throws {
+    let args = try invoke.parseArgs(ShareArgs.self)
+    let target = args.path.hasPrefix("file://")
+      ? URL(string: args.path) : URL(fileURLWithPath: args.path)
+    guard let target = target else { return invoke.reject("Invalid path") }
+    do {
+      try withAccess(to: target) {
+        var result: Result<Void, Error> = .success(())
+        var coordError: NSError?
+        NSFileCoordinator().coordinate(
+          writingItemAt: target, options: .forDeleting, error: &coordError
+        ) { u in
+          result = Result { try FileManager.default.trashItem(at: u, resultingItemURL: nil) }
+        }
+        if let coordError = coordError { throw coordError }
+        try result.get()
+      }
+      invoke.resolve()
+    } catch {
+      invoke.reject(error.localizedDescription)
+    }
+  }
+
   /// The system share sheet (AirDrop, Mail, Messages, Save to Files...) for
   /// a document. It gets a copy in the temporary folder, not the file
   /// itself: a picked file's security scope would have to stay open for as

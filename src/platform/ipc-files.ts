@@ -84,9 +84,11 @@ export const fs = {
   /** To the system's Trash; refuses the tree's own root. A phone has none:
    *  there a document is deleted (the tree asks first), a folder never. */
   trashEntry: (path: string, root: string): Promise<void> =>
-    isScopedUrl(path) && !isIOSApp
-      ? iosFiles.deleteEntry(path).then(() => {})
-      : command("tree_trash_entry", path, root),
+    isIOSApp
+      ? iosFiles.trash(path)
+      : isScopedUrl(path)
+        ? iosFiles.deleteEntry(path).then(() => {})
+        : command("tree_trash_entry", path, root),
   /** File > Open Folder…'s picker. Rejects with "TOO_BROAD" for the home
    *  folder or a drive root. A phone's is the system's folder picker. */
   pickOpenFolder: (): Promise<string | null> =>

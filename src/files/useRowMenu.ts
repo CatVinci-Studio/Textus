@@ -7,7 +7,7 @@ import {
   type MouseEvent as ReactMouseEvent,
 } from "react";
 import { fs } from "../platform/ipc";
-import { isMobileApp } from "../platform/capabilities";
+import { canTrashFiles, isMobileApp } from "../platform/capabilities";
 import { iosFiles } from "../platform/ios-files";
 
 import { basename, parentDir } from "../utils/path";
@@ -78,15 +78,15 @@ export function useRowMenu(
   const trash = useCallback(
     async (path: string, isDir: boolean) => {
       const name = basename(path);
-      // A phone has no Trash: the document is deleted for good.
+      // Without a Trash (Android) the document is deleted for good.
       const ok = await showConfirm(
-        isMobileApp
+        !canTrashFiles
           ? fill(t.docDeleteConfirm, { name })
           : fill(isDir ? t.treeTrashFolderConfirm : t.treeTrashConfirm, {
               name,
             }),
         {
-          okLabel: isMobileApp ? t.docDeleteOk : t.treeTrash,
+          okLabel: !canTrashFiles ? t.docDeleteOk : t.treeTrash,
           cancelLabel: t.cancel,
           danger: true,
         },
@@ -194,10 +194,11 @@ export function useRowMenu(
           label: t.treeRenameItem,
           onSelect: () => void rename(path),
         });
-      // A phone deletes documents only: a folder's would be gone for good.
-      if (path !== root && !(isMobileApp && isDir))
+      // Without a Trash only documents are deleted: a folder's would be gone
+      // for good.
+      if (path !== root && (canTrashFiles || !isDir))
         items.push({
-          label: isMobileApp ? t.docDelete : t.treeTrash,
+          label: canTrashFiles ? t.treeTrash : t.docDelete,
           onSelect: () => void trash(path, isDir),
           danger: true,
         });

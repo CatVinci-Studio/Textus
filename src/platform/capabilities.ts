@@ -78,8 +78,8 @@ export const canOpenFolder = isDesktopApp || isMobileApp;
 /** Settings' "install the `textus` terminal command". */
 export const canInstallCliCommand = isDesktopApp;
 
-/** Moving a replaced picture's file to the Trash. */
-export const canTrashFiles = isDesktopApp;
+/** Moving files to the Trash: iOS's is the Files app's Recently Deleted. */
+export const canTrashFiles = isDesktopApp || isIOSApp;
 
 /** Settings' "Default Markdown editor". iOS has no default app to set. */
 export const canSetDefaultEditor = isDesktopApp;

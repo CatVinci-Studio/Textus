@@ -82,6 +82,8 @@ export const iosFiles = {
   renameEntry: (url: string, name: string) =>
     entry("rename_entry", { url, name }),
   deleteEntry: (url: string) => entry("delete_entry", { url }),
+  /** iOS: a file or folder to the Files app's Recently Deleted. */
+  trash: (path: string): Promise<void> => call<void>("trash", { path }),
   moveEntry: (url: string, from: string, into: string) =>
     entry("move_entry", { url, from, into, name: basename(url) }),
   listFolder: async (url: string): Promise<DirEntryInfo[]> =>
