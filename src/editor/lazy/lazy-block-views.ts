@@ -16,15 +16,13 @@ import {
   topLevelIndex,
   topLevelStarts,
 } from "./lazy-blocks-state";
+import { PLACEHOLDER_CLASS } from "./lazy-rules";
 
 // The views of a long document's top-level blocks: a placeholder of the
 // block's height, or the block drawn as it always is. Which one is the
 // lazy-blocks plugin's decision; a block that changes from one to the other
 // is made anew. Below the threshold every block gets the view it had
 // before, so short documents are drawn exactly as without this.
-
-/** Marks a placeholder, for the view that finds them on screen. */
-export const PLACEHOLDER_CLASS = "lazy-block";
 
 /** On a heading's placeholder, so the outline still finds every top-level
  *  heading in the DOM, in order. */
@@ -81,7 +79,7 @@ function measureMetrics(view: EditorView): TextMetrics {
   };
 }
 
-function heightOf(view: EditorView, node: ProseNode): number {
+export function heightOf(view: EditorView, node: ProseNode): number {
   const known = sizes(view);
   const measured = known.heights.get(node);
   if (measured !== undefined) return measured;
@@ -89,11 +87,29 @@ function heightOf(view: EditorView, node: ProseNode): number {
   return estimateHeight(node, known.metrics);
 }
 
+/** A placeholder's height: below zero, a margin pulling the block below
+ *  up (margins its neighbours shared fold into one around it). */
+function setHeight(dom: HTMLElement, height: number) {
+  dom.style.height = `${Math.max(0, height)}px`;
+  dom.style.marginBottom = height < 0 ? `${height}px` : "";
+}
+
+/** A placeholder's height set and kept for its block. */
+export function fitPlaceholder(
+  view: EditorView,
+  dom: HTMLElement,
+  node: ProseNode,
+  height: number,
+): void {
+  rememberHeight(view, node, height);
+  setHeight(dom, height);
+}
+
 function placeholderView(initial: ProseNode, view: EditorView): NodeView {
   let node = initial;
   const dom = document.createElement("div");
   dom.className = PLACEHOLDER_CLASS;
-  dom.style.height = `${heightOf(view, node)}px`;
+  setHeight(dom, heightOf(view, node));
   if (node.type.name === "heading") dom.dataset.heading = "";
   blockNodes.set(dom, node);
   return {
@@ -102,7 +118,7 @@ function placeholderView(initial: ProseNode, view: EditorView): NodeView {
       // Drawn by this transaction: made anew as the block.
       if (flipOf(decorations) === true) return false;
       // Changed while out of sight (Replace All): its size anew.
-      if (next !== node) dom.style.height = `${heightOf(view, next)}px`;
+      if (next !== node) setHeight(dom, heightOf(view, next));
       node = next;
       blockNodes.set(dom, node);
       return true;

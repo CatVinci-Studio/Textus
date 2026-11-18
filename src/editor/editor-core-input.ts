@@ -34,7 +34,7 @@ import { createTypewriterPlugin } from "./modes/typewriter-plugin";
 import { zenFocusPlugin } from "./modes/zen-focus-plugin";
 import { createPlaceholderPlugin } from "./placeholder-plugin";
 import { findReplacePlugin } from "./find/find-replace-plugin";
-import { lazyBlocksPlugin } from "./lazy-blocks/lazy-blocks-editor";
+import { lazyBlocksPlugin } from "./lazy/lazy-blocks-editor";
 import { readOnlyPlugin } from "./read-only-plugin";
 import { resolveStrings } from "../i18n/strings";
 import type { CoreEnv } from "./editor-core-env";

@@ -1,10 +1,13 @@
 import type { Node as ProseNode } from "@milkdown/kit/prose/model";
 import type { EditorState, PluginView } from "@milkdown/kit/prose/state";
 import type { EditorView } from "@milkdown/kit/prose/view";
+import { firstBelow, holdStill, stillPoint } from "./hold-still";
+import { DRAW_SCREENS, KEEP_SCREENS, PLACEHOLDER_CLASS } from "./lazy-rules";
 import {
-  PLACEHOLDER_CLASS,
   blockNodes,
+  fitPlaceholder,
   forgetHeights,
+  heightOf,
   lazyBlockNodeViews,
   rememberHeight,
 } from "./lazy-block-views";
@@ -20,65 +23,70 @@ import {
 // scrolling, resizing and edits; it reads every position first and writes
 // (one transaction) after, so the layout is computed once.
 
-/** How far beyond the visible part blocks are drawn, in screens. */
-const DRAW_WITHIN = 1;
-/** How far drawn blocks stay drawn, in screens: the gap keeps a block
- *  scrolled just past the edge from being made again on the way back. */
-const KEEP_WITHIN = 3;
-/** Widgets between blocks put a block's element after its index among the
- *  editor's children; this many at most are looked past. */
-const WIDGETS_PAST = 8;
-
-/** The first child of `children` whose bottom is below `y`, by binary
- *  search: their tops only grow down the document. */
-function firstBelow(children: HTMLCollection, y: number): number {
-  let low = 0;
-  let high = children.length;
-  while (low < high) {
-    const mid = (low + high) >> 1;
-    if (children[mid].getBoundingClientRect().bottom < y) low = mid + 1;
-    else high = mid;
-  }
-  return low;
+/** Which of the editor's children show which top-level blocks: widgets
+ *  between them (a formula's, a diagram's) aren't blocks, so a child's
+ *  place says nothing of its block's. One pass, matched in order by node. */
+interface BlockElements {
+  /** The block index each child shows, or -1 for a widget. */
+  blockOf: Int32Array;
+  /** The element of each block shown. */
+  elementOf: (Element | undefined)[];
 }
 
-/** The index of the top-level block the editor's child `i` shows. */
-function blockIndexOf(
+function blockElements(
   doc: ProseNode,
-  i: number,
-  node: ProseNode,
-): number | null {
-  const last = Math.min(i, doc.childCount - 1);
-  for (let b = last; b >= Math.max(0, last - WIDGETS_PAST); b--)
-    if (doc.child(b) === node) return b;
-  return null;
-}
-
-/** The element showing top-level block `index`. */
-function elementOf(
   children: HTMLCollection,
-  index: number,
-  node: ProseNode,
-): Element | null {
-  const end = Math.min(children.length, index + WIDGETS_PAST);
-  for (let i = index; i < end; i++)
-    if (blockNodes.get(children[i]) === node) return children[i];
-  return null;
+): BlockElements {
+  const blockOf = new Int32Array(children.length).fill(-1);
+  const elementOf: (Element | undefined)[] = new Array(doc.childCount);
+  let next = 0;
+  for (let i = 0; i < children.length && next < doc.childCount; i++) {
+    const node = blockNodes.get(children[i]!);
+    if (!node || doc.child(next) !== node) continue;
+    blockOf[i] = next;
+    elementOf[next++] = children[i];
+  }
+  return { blockOf, elementOf };
 }
 
-/** A block at the top of the screen and where it was, so drawing blocks
- *  above it (taller or shorter than their estimate) can leave it in place:
- *  WebKit has no CSS scroll anchoring to do it. */
-interface Anchor {
-  index: number;
-  node: ProseNode;
-  top: number;
+/** Not shown (a diagram's hidden source): no place to measure from. */
+const shown = (el: Element | null, step: (el: Element) => Element | null) => {
+  let at = el;
+  while (at && !at.getClientRects().length) at = step(at);
+  return at;
+};
+
+/** The first after `el` with a height of its own to measure by: an empty
+ *  one (a formula's hidden source) has margins that fold through it. */
+function measurableAfter(el: Element | undefined): Element | null {
+  let at = el?.nextElementSibling ?? null;
+  while (at && !at.getBoundingClientRect().height) at = at.nextElementSibling;
+  return at;
+}
+
+/** The room a block takes between its neighbours: from the margin's edge
+ *  of the one above to that of the one below. A placeholder has no
+ *  margins, so the margins it shared with them are its own height. */
+function slotOf(el: Element, rect: DOMRect): number {
+  const prev = shown(
+    el.previousElementSibling,
+    (at) => at.previousElementSibling,
+  );
+  const next = shown(el.nextElementSibling, (at) => at.nextElementSibling);
+  const margin = (at: Element, side: "marginTop" | "marginBottom") =>
+    parseFloat(getComputedStyle(at)[side]) || 0;
+  const start = prev
+    ? prev.getBoundingClientRect().bottom + margin(prev, "marginBottom")
+    : rect.top - margin(el, "marginTop");
+  const end = next
+    ? next.getBoundingClientRect().top - margin(next, "marginTop")
+    : rect.bottom + margin(el, "marginBottom");
+  return end - start;
 }
 
 interface Plan {
   draw: number[];
   release: number[];
-  anchor: Anchor | null;
 }
 
 /** What should change, from the layout as it is now. */
@@ -92,53 +100,43 @@ export function plan(view: EditorView, scroller: Element): Plan | null {
   if (box.height === 0) return null;
   const screen = box.height;
   const children = view.dom.children;
+  const blocks = blockElements(doc, children);
 
-  let anchor: Anchor | null = null;
   const draw: number[] = [];
-  const bottom = box.bottom + DRAW_WITHIN * screen;
+  const bottom = box.bottom + DRAW_SCREENS * screen;
   for (
-    let i = firstBelow(children, box.top - DRAW_WITHIN * screen);
+    let i = firstBelow(children, box.top - DRAW_SCREENS * screen);
     i < children.length;
     i++
   ) {
     const child = children[i];
     const rect = child.getBoundingClientRect();
     if (rect.top > bottom) break;
-    const node = blockNodes.get(child);
-    const index = node ? blockIndexOf(doc, i, node) : null;
-    if (!node || index === null) continue;
-    if (!anchor && rect.bottom >= box.top)
-      anchor = { index, node, top: rect.top };
+    const index = blocks.blockOf[i]!;
+    if (index < 0) continue;
     if (child.classList.contains(PLACEHOLDER_CLASS)) draw.push(starts[index]);
   }
 
   const release: number[] = [];
-  const far = KEEP_WITHIN * screen;
+  const far = KEEP_SCREENS * screen;
+  // The caret's blocks stay drawn wherever they are (lazy-blocks-state):
+  // let go, they would be drawn again at once, frame after frame.
+  const { anchor, head } = view.state.selection;
+  const caret = new Set([topLevelIndex(doc, anchor), topLevelIndex(doc, head)]);
   for (const decoration of state.drawn.find()) {
     const index = topLevelIndex(doc, decoration.from);
+    if (caret.has(index)) continue;
     const node = doc.child(index);
-    const el = elementOf(children, index, node);
+    const el = blocks.elementOf[index];
     if (!el) continue;
     const rect = el.getBoundingClientRect();
     if (rect.bottom > box.top - far && rect.top < box.bottom + far) continue;
-    // Its slot: down to the next block's top, its margins included.
-    const next = el.nextElementSibling;
-    const height = next
-      ? next.getBoundingClientRect().top - rect.top
-      : rect.height;
-    if (height > 0) rememberHeight(view, node, height);
+    const height = slotOf(el, rect);
+    rememberHeight(view, node, height);
     release.push(decoration.from);
   }
   if (!draw.length && !release.length) return null;
-  return { draw, release, anchor };
-}
-
-/** Scrolls by what the anchor moved, once its blocks above changed. */
-function keepInPlace(view: EditorView, scroller: Element, anchor: Anchor) {
-  const el = elementOf(view.dom.children, anchor.index, anchor.node);
-  if (!el) return;
-  const moved = el.getBoundingClientRect().top - anchor.top;
-  if (Math.abs(moved) >= 0.5) scroller.scrollTop += moved;
+  return { draw, release };
 }
 
 const drawers = new WeakMap<Element, LazyBlocksDrawer>();
@@ -253,12 +251,51 @@ export class LazyBlocksDrawer implements PluginView {
     if (performance.now() < this.pausedUntil) return;
     const next = plan(this.view, this.scroller);
     if (!next) return;
+    const still = stillPoint(this.view.dom, this.scroller);
+    if (next.release.length) this.release(next.release);
+    if (next.draw.length) this.change({ draw: next.draw });
+    holdStill(this.scroller, still);
+  }
+
+  private change(meta: { draw?: number[]; release?: number[] }) {
     this.view.dispatch(
       this.view.state.tr
-        .setMeta(lazyBlocksKey, { draw: next.draw, release: next.release })
+        .setMeta(lazyBlocksKey, meta)
         .setMeta("addToHistory", false),
     );
-    if (next.anchor) keepInPlace(this.view, this.scroller, next.anchor);
+  }
+
+  /** Blocks made placeholders of the room they took. Margins a block
+   *  shared with its neighbours fold differently around a placeholder, so
+   *  where the next block lands corrects each: all read, then written. */
+  private release(release: number[]) {
+    const { view } = this;
+    const root = view.dom;
+    const { doc } = view.state;
+    const indexes = release.map((pos) => topLevelIndex(doc, pos));
+    const before = blockElements(doc, root.children);
+    let origin = root.getBoundingClientRect().top;
+    const was = indexes.map((index) => {
+      const below = measurableAfter(before.elementOf[index]);
+      return below ? below.getBoundingClientRect().top - origin : null;
+    });
+    this.change({ release });
+    const after = blockElements(view.state.doc, root.children);
+    origin = root.getBoundingClientRect().top;
+    let carried = 0;
+    const fixes = indexes.flatMap((index, i) => {
+      const el = after.elementOf[index] as HTMLElement | undefined;
+      const below = measurableAfter(el);
+      if (!el?.classList.contains(PLACEHOLDER_CLASS) || !below) return [];
+      if (was[i] === null) return [];
+      const error = below.getBoundingClientRect().top - origin - was[i]!;
+      const node = view.state.doc.child(index);
+      const height = heightOf(view, node) - (error - carried);
+      carried = error;
+      return [{ el, node, height }];
+    });
+    for (const { el, node, height } of fixes)
+      fitPlaceholder(view, el, node, height);
   }
 
   private readonly redraw = () => {

@@ -3,7 +3,7 @@ import { useEffect, useMemo, useState, type CSSProperties } from "react";
 import { parseHeadings, sourceAnchors } from "./outline-parse";
 import { ChevronIcon } from "../engine/controls/icons";
 import { useSettings } from "../prefs/SettingsContext";
-import { HEADING_PLACEHOLDER } from "../editor/lazy-blocks/lazy-block-views";
+import { HEADING_PLACEHOLDER } from "../editor/lazy/lazy-block-views";
 import { useTreeKeys } from "../engine/controls/useTreeKeys";
 import { plainInline } from "../utils/markdown-plain";
 import { Tooltip } from "../engine/controls/Tooltip";

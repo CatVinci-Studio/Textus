@@ -40,7 +40,7 @@
   min-height: calc((100vh - 9rem) / var(--content-zoom, 1));
 }
 
-/* A long document's block out of sight (editor/lazy-blocks): only its
+/* A long document's block out of sight (editor/lazy): only its
    height, margins included, so nothing in it is laid out or painted. */
 .milkdown .ProseMirror > .lazy-block {
   margin: 0;

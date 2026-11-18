@@ -1,12 +1,12 @@
 // @vitest-environment jsdom
 import { afterEach, describe, expect, it, vi } from "vitest";
 import {
-  PENDING_ATTR,
   drawEverything,
   drawWhileNear,
   registerDrawAll,
   stopDrawing,
 } from "./draw-when-visible";
+import { PENDING_ATTR } from "./lazy-rules";
 
 // A stand-in IntersectionObserver the test drives by hand.
 let observed: {

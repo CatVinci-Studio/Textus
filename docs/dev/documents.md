@@ -197,18 +197,24 @@ while that follows the machine's memory, a few of a kind at most kept
 
 ## Drawn near the screen
 
-A long document is drawn only near the screen, by one rule with two
-parts:
+What is heavy to draw is drawn only near the screen, by one rule in
+`editor/lazy/` (`lazy-rules.ts`): drawn within a screen of the view, let go
+three screens away. A document's weight, its text plus what each formula,
+diagram, raw HTML block, picture and embedded note costs to draw, decides
+how much of the rule applies. The rule has two parts:
 
-- **Blocks** (`editor/lazy-blocks/`): in a long document, top-level blocks
-  more than a screen from the view are placeholders of their measured (or
-  estimated) height, drawn as they come within a screen and released
-  three screens away.
-- **Heavy views** (`editor/draw-when-visible.ts`, `drawWhileNear`):
-  formulas, diagrams and charts, rendered HTML, embedded notes and
-  plugins' blocks are drawn within three screens and let go beyond,
-  keeping their size. Pictures load as the browser's `loading="lazy"`
-  brings them.
+- **Blocks** (`lazy-blocks-*`): in a heavy document, top-level blocks out
+  of sight are placeholders of the room they took, measured as they are
+  let go (or estimated before they were ever drawn). The caret's block is
+  always drawn.
+- **Heavy views** (`draw-when-visible.ts`, `drawWhileNear`): formulas,
+  diagrams, rendered HTML, embedded notes and plugins' blocks. In a
+  lighter document they are drawn at once; either way they are let go far
+  away, holding the exact box they had. Pictures load as the browser's
+  `loading="lazy"` brings them.
+
+Either part, drawing or letting go, keeps what the reader sees where it is
+(`hold-still.ts`): WebKit has no CSS scroll anchoring.
 
 Whatever copies the page or measures a place in it draws first, through
 the same two calls:

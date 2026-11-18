@@ -1,5 +1,5 @@
 import { expect, test, type Page } from "@playwright/test";
-import { MAC, openApp, pasteMarkdown, settled } from "./helpers";
+import { MAC, emit, openApp, pasteMarkdown, settled } from "./helpers";
 
 // Formulas, diagrams, HTML and embedded notes are drawn only within a few
 // screens of the view: a document holding hundreds keeps a page the size
@@ -7,8 +7,8 @@ import { MAC, openApp, pasteMarkdown, settled } from "./helpers";
 
 /** Where each block of the document, and each view in it, sits from the
  *  document's top, and how big it is. */
-const layout = (page: Page) =>
-  page.evaluate(() => {
+const layout = (page: Page, mark = false) =>
+  page.evaluate((mark) => {
     const root = document.querySelector(".ProseMirror")!;
     const { top, left } = root.getBoundingClientRect();
     const at = (el: Element) => {
@@ -18,6 +18,7 @@ const layout = (page: Page) =>
       );
     };
     return {
+      height: root.getBoundingClientRect().height,
       // The blocks shown; a diagram's source hides behind its drawing.
       blocks: [...root.children]
         .filter((el) => getComputedStyle(el).display !== "none")
@@ -26,12 +27,19 @@ const layout = (page: Page) =>
         ...root.querySelectorAll(
           ".math-inline-rendered, .math-block-rendered, .mermaid-preview, .raw-html-rendered",
         ),
-      ].map((el) => ({
-        drawn: !el.hasAttribute("data-draw-pending"),
-        at: at(el),
-      })),
+      ].map((el, i) => {
+        // Known again by a mark set the first time: one in a block made a
+        // placeholder is gone from the page.
+        const view = el as HTMLElement;
+        if (mark) view.dataset.seen = String(i);
+        return {
+          key: view.dataset.seen,
+          drawn: !el.hasAttribute("data-draw-pending"),
+          at: at(el),
+        };
+      }),
     };
-  });
+  }, mark);
 
 test("formulas far from the screen are let go where they were drawn, and drawn again as they come back", async ({
   page,
@@ -58,7 +66,7 @@ test("formulas far from the screen are let go where they were drawn, and drawn a
     page.locator(".ProseMirror .mermaid-block svg").first(),
   ).toBeVisible();
   await settled(page);
-  const drawn = await layout(page);
+  const drawn = await layout(page, true);
   expect(drawn.views.every((v) => v.drawn)).toBe(true);
   await page.setViewportSize({ width: 1000, height: 700 });
   // Read to the end: those at the top go, the page doesn't move.
@@ -73,20 +81,26 @@ test("formulas far from the screen are let go where they were drawn, and drawn a
   await expect(first).toHaveAttribute("data-draw-pending", "");
   await settled(page);
   // Each view let go holds the place it was drawn in, and every block
-  // stays where it was, to half a pixel.
+  // stays where it was, to half a pixel, a block made a placeholder too.
   const letGo = await layout(page);
   const moved: string[] = [];
   const near = (a: number[], b: number[]) =>
     a.every((n, i) => Math.abs(n - b[i]!) < 0.5);
+  // Where each starts (a placeholder's height holds its margins too).
   drawn.blocks.forEach((at, i) => {
-    if (!near(at, letGo.blocks[i]!))
+    // An empty one (a formula's hidden source) has no place of its own.
+    if (at[3] && !near(at.slice(0, 3), letGo.blocks[i]!))
       moved.push(`block ${i}: ${at} -> ${letGo.blocks[i]}`);
   });
+  const after = new Map(
+    letGo.views.filter((view) => view.key).map((view) => [view.key, view]),
+  );
   drawn.views.forEach((view, i) => {
-    const now = letGo.views[i]!;
+    const now = after.get(view.key);
     // Where it sits in its line and how wide: how tall its line is, the
     // blocks say (a fraction reaches past the formula's own box).
     if (
+      now &&
       view.drawn &&
       !now.drawn &&
       !near([view.at[1]!, view.at[2]!], [now.at[1]!, now.at[2]!])
@@ -95,6 +109,7 @@ test("formulas far from the screen are let go where they were drawn, and drawn a
   });
   expect(letGo.views.filter((v) => !v.drawn).length).toBeGreaterThan(20);
   expect(moved.slice(0, 20)).toEqual([]);
+  expect(Math.abs(letGo.height - drawn.height)).toBeLessThan(0.5);
   await scroller.evaluate((s) => s.scrollTo(0, 0));
   await expect(first.locator(".katex")).toBeVisible();
 });
@@ -166,4 +181,115 @@ test("jumped to from the outline past many formulas, a heading lands at the top 
   const top = (await end.boundingBox())!.y - box.y;
   expect(top).toBeGreaterThanOrEqual(0);
   expect(top).toBeLessThan(box.height / 3);
+});
+
+/** A document past the size where its blocks out of sight are
+ *  placeholders: sections of long paragraphs, a formula every tenth. */
+const longDoc = (end: string) =>
+  [
+    ...Array.from({ length: 1700 }, (_, i) =>
+      [
+        i % 100 === 0 ? `## 第 ${i / 100} 节` : "",
+        `第 ${i} 段 ${"长文写作".repeat(24)}`,
+        i % 10 === 0 ? `$$\n\\frac{a_{${i}}}{b} + \\sqrt{c}\n$$` : "",
+      ]
+        .filter(Boolean)
+        .join("\n\n"),
+    ),
+    end,
+  ].join("\n\n");
+
+/** A paragraph drawn above the screen that scrolling up by `by` brings
+ *  onto it, found again by its words a few frames on: how far it moved
+ *  besides, as blocks around it were drawn. */
+const jumpWhile = (page: Page, by: number) =>
+  page.evaluate(async (by) => {
+    const scroller = document.querySelector(
+      '[data-active-tab="true"] .editor-scroll',
+    )!;
+    const box = scroller.getBoundingClientRect();
+    const y = box.top + box.height * 0.75 - by;
+    const paragraphs = () => [...scroller.querySelectorAll(".ProseMirror > p")];
+    const at = paragraphs().find((p) => {
+      const r = p.getBoundingClientRect();
+      return r.top <= y && r.bottom >= y;
+    });
+    const words = at?.textContent!.slice(0, 8);
+    const before = at?.getBoundingClientRect().top ?? 0;
+    scroller.scrollTop -= by;
+    for (let i = 0; i < 10; i++)
+      await new Promise((done) => requestAnimationFrame(done));
+    if (!words) return null;
+    const again = paragraphs().find((p) => p.textContent!.startsWith(words));
+    return again ? again.getBoundingClientRect().top - (before + by) : null;
+  }, by);
+
+test("a long document read upward through blocks out of sight: what is on screen stays still, and at rest nothing is redrawn", async ({
+  page,
+}) => {
+  test.setTimeout(120_000);
+  await page.setViewportSize({ width: 1000, height: 700 });
+  await openApp(page, { settings: { menuBarShown: false } });
+  await pasteMarkdown(page, longDoc("末尾"));
+  // Away from the editor: a suggestion at the caret would come and go.
+  await page.evaluate(() => (document.activeElement as HTMLElement).blur());
+  const scroller = page.locator(".editor-scroll").first();
+  await expect(
+    page.locator(".ProseMirror > .lazy-block").first(),
+  ).toBeAttached();
+  await scroller.evaluate((s) => s.scrollTo(0, s.scrollHeight));
+  await settled(page);
+  // Up a screen and a half at a time, faster than blocks are drawn ahead.
+  const jumps: (number | null)[] = [];
+  for (let step = 0; step < 12; step++) {
+    const moved = await jumpWhile(page, 1000);
+    jumps.push(moved);
+  }
+  expect(jumps).toEqual([]);
+  // At rest, nothing drawn or let go, frame after frame.
+  await settled(page);
+  const changes = await page.evaluate(async () => {
+    const seen: string[] = [];
+    const watch = new MutationObserver((records) => {
+      for (const r of records) {
+        const el = r.target as Element;
+        seen.push(`${r.type} ${r.attributeName ?? ""} on ${el.className}`);
+      }
+    });
+    watch.observe(document.querySelector(".ProseMirror")!, {
+      childList: true,
+      subtree: true,
+      attributes: true,
+      attributeFilter: ["data-draw-pending", "style", "class"],
+    });
+    for (let i = 0; i < 60; i++)
+      await new Promise((done) => requestAnimationFrame(done));
+    watch.disconnect();
+    return seen;
+  });
+  expect(changes).toEqual([]);
+});
+
+test("in a long document, find lands on a match far below and it stays on screen", async ({
+  page,
+}) => {
+  test.setTimeout(120_000);
+  await page.setViewportSize({ width: 1000, height: 700 });
+  await openApp(page, { settings: { menuBarShown: false } });
+  await pasteMarkdown(page, longDoc("这里有一根针"));
+  await page
+    .locator(".editor-scroll")
+    .first()
+    .evaluate((s) => s.scrollTo(0, 0));
+  await settled(page);
+  await emit(page, "menu-find-replace");
+  await page
+    .locator(".find-replace-bar")
+    .getByRole("textbox")
+    .first()
+    .fill("一根针");
+  const match = page.locator(".find-match").first();
+  await expect(match).toBeInViewport();
+  await settled(page);
+  await expect(match).toBeInViewport();
 });

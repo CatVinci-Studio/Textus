@@ -11,7 +11,7 @@ import {
   DecorationSet,
   type EditorView,
 } from "@milkdown/kit/prose/view";
-import { drawsLazily, keepsDrawingLazily } from "../large-doc";
+import { drawsLazily, keepsDrawingLazily } from "./lazy-rules";
 import { changedRanges } from "../changed-ranges";
 
 // Which top-level blocks of a long document are drawn. The document itself

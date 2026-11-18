@@ -12,8 +12,9 @@ import {
 
 const schema = new Schema({
   nodes: {
-    doc: { content: "paragraph+" },
+    doc: { content: "(paragraph | math_block)+" },
     paragraph: { content: "text*" },
+    math_block: { content: "text*" },
     text: {},
   },
 });
@@ -117,6 +118,32 @@ describe("drawing a long document's blocks lazily", () => {
     );
     expect(lazyBlocksKey.getState(state)!.active).toBe(false);
     expect(drawn(state)).toEqual([]);
+  });
+});
+
+describe("what turns it on", () => {
+  /** `count` blocks of a short formula's length, each a `type`. */
+  const blocks = (count: number, type: string) =>
+    EditorState.create({
+      schema,
+      doc: schema.node(
+        "doc",
+        null,
+        Array.from({ length: count }, (_, i) =>
+          schema.node(type, null, schema.text(`x_{${i}}^2`)),
+        ),
+      ),
+      plugins: [createLazyBlocksPlugin()],
+    });
+
+  it("is how heavy the document is to draw, not its length", () => {
+    // A few thousand characters either way: as formulas, too much to draw.
+    expect(lazyBlocksKey.getState(blocks(120, "math_block"))!.active).toBe(
+      true,
+    );
+    expect(lazyBlocksKey.getState(blocks(120, "paragraph"))!.active).toBe(
+      false,
+    );
   });
 });
 

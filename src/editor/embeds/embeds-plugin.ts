@@ -21,7 +21,7 @@ import {
 import { embedFolded, setEmbedFolded } from "./embed-folds";
 import { embedProvider, onEmbedsChange } from "./embed-sources";
 import "./note-embed.css";
-import { drawWhileNear, stopDrawing } from "../draw-when-visible";
+import { drawWhileNear, stopDrawing } from "../lazy/draw-when-visible";
 import {
   applyReveal,
   caretToSourceOnClick,

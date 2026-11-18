@@ -1,11 +1,10 @@
-import { drawAllBlocks } from "./lazy-blocks/lazy-blocks-drawer";
+import { holdStill, stillPoint } from "./hold-still";
+import { drawAllBlocks } from "./lazy-blocks-drawer";
+import { DRAW_SCREENS, KEEP_SCREENS, PENDING_ATTR } from "./lazy-rules";
 
 // Heavy views (formulas, a plugin's frame) drawn only near the screen and
 // let go far from it, so a document's DOM stays the size of a few screens
 // however many it holds. An export or print draws everything first.
-
-/** Marks an element not drawn now: not yet, or let go far from the screen. */
-export const PENDING_ATTR = "data-draw-pending";
 
 /** Each editor's way to draw what it holds back outside these placeholders
  *  (its diagrams), by its view.dom. */
@@ -35,13 +34,11 @@ export async function drawEverything(root: Element): Promise<void> {
     if (img.loading === "lazy") img.loading = "eager";
 }
 
-/** How far off screen a view is drawn, and how far it is kept once drawn,
- *  in screens above and below. The gap between them keeps one whose
- *  placeholder sits a few pixels from where it sat drawn (an inline
- *  formula's baseline) from being drawn and let go over and over at the
- *  edge, each time moving the page. */
-const DRAW_MARGIN = "100% 0px";
-const KEEP_MARGIN = "300% 0px";
+/** The gap between drawing and letting go keeps one whose placeholder
+ *  sits a few pixels from where it sat drawn from being drawn and let go
+ *  over and over at the edge, each time moving the page. */
+const DRAW_MARGIN = `${DRAW_SCREENS * 100}% 0px`;
+const KEEP_MARGIN = `${KEEP_SCREENS * 100}% 0px`;
 
 interface Kept {
   draw: () => void;
@@ -164,25 +161,48 @@ function latest(entries: IntersectionObserverEntry[]): Map<Element, boolean> {
   return now;
 }
 
-const onNear = (entries: IntersectionObserverEntry[]) => {
-  for (const [target, near] of latest(entries)) if (near) drawNow(target);
+/** Draws or lets go in the scroller `observer` watches, what is on screen
+ *  held where it is. */
+function stillWhile(observer: IntersectionObserver, change: () => void) {
+  const scroller = observer.root as Element | null;
+  const root = scroller?.querySelector(".ProseMirror");
+  const still = scroller && root ? stillPoint(root, scroller) : null;
+  change();
+  if (scroller) holdStill(scroller, still);
+}
+
+const onNear = (
+  entries: IntersectionObserverEntry[],
+  observer: IntersectionObserver,
+) => {
+  const coming = [...latest(entries)].filter(
+    ([target, near]) => near && !kept.get(target)?.drawn,
+  );
+  if (coming.length)
+    stillWhile(observer, () => coming.forEach(([target]) => drawNow(target)));
 };
 
 /** An inline drawing broken over lines (a long formula) has no one box
  *  to hold: it stays drawn. */
 const wraps = (el: Element) => el.getClientRects().length > 1;
 
-const onFar = (entries: IntersectionObserverEntry[]) => {
+const onFar = (
+  entries: IntersectionObserverEntry[],
+  observer: IntersectionObserver,
+) => {
   const leaving: HTMLElement[] = [];
   for (const [target, inKeep] of latest(entries))
     if (!inKeep && kept.get(target)?.drawn && !wraps(target))
       leaving.push(target as HTMLElement);
-  holdSizes(leaving);
-  for (const target of leaving) {
-    kept.get(target)!.drawn = false;
-    target.setAttribute(PENDING_ATTR, "");
-    kept.get(target)!.undraw();
-  }
+  if (!leaving.length) return;
+  stillWhile(observer, () => {
+    holdSizes(leaving);
+    for (const target of leaving) {
+      kept.get(target)!.drawn = false;
+      target.setAttribute(PENDING_ATTR, "");
+      kept.get(target)!.undraw();
+    }
+  });
 };
 
 function watchersOf(scroller: Element): Watchers {

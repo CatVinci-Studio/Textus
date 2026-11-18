@@ -18,7 +18,7 @@ import { scrollOptions } from "./editor-scroll";
 import { createCompletionPlugin } from "./completion/completion-plugin";
 import { addEmojiCompletion } from "./emoji/emoji-completion";
 import { createImagePlugin } from "./images/image-plugin";
-import { withLazyBlockViews } from "./lazy-blocks/lazy-blocks-editor";
+import { withLazyBlockViews } from "./lazy/lazy-blocks-editor";
 import { readOnlyStatePlugin } from "./read-only-plugin";
 import { resolveStrings } from "../i18n/strings";
 import type { Settings } from "../prefs/SettingsContext";

@@ -12,8 +12,9 @@ import {
   type Touches,
 } from "./reveal-state";
 import { fnv1a } from "../utils/hash";
-import { isLargeDoc, pausesFeatures } from "./large-doc";
-import { registerDrawAll, stopDrawing } from "./draw-when-visible";
+import { pausesFeatures } from "./large-doc";
+import { viewsWaitForScreen } from "./lazy/lazy-rules";
+import { registerDrawAll, stopDrawing } from "./lazy/draw-when-visible";
 import { appearanceIsDark } from "../engine/tokens/appearance";
 import { diagramRenderer, mermaidTheme } from "./diagram-engine";
 import {
@@ -246,7 +247,7 @@ export function createMermaidPreviewPlugin(options: {
 
           const rendered = new Map<string, Drawn>();
           let offScreen = false;
-          const large = isLargeDoc(editorView.state.doc);
+          const large = viewsWaitForScreen(editorView.state.doc);
           for (const { from, code, language, key } of blocks) {
             if (!code.trim() || rendered.has(key)) continue;
             // A pass only draws sources it hasn't drawn for the same width, face and

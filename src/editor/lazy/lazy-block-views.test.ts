@@ -2,8 +2,13 @@
 
 import { afterEach, describe, expect, it, vi } from "vitest";
 import { Schema } from "@milkdown/kit/prose/model";
-import { EditorState, TextSelection } from "@milkdown/kit/prose/state";
-import { EditorView, type NodeViewConstructor } from "@milkdown/kit/prose/view";
+import { EditorState, Plugin, TextSelection } from "@milkdown/kit/prose/state";
+import {
+  Decoration,
+  DecorationSet,
+  EditorView,
+  type NodeViewConstructor,
+} from "@milkdown/kit/prose/view";
 import {
   LazyBlocksDrawer,
   drawAllBlocks,
@@ -49,9 +54,27 @@ afterEach(() => {
   vi.restoreAllMocks();
 });
 
+/** A widget before each of the first `count` blocks, as a drawn formula
+ *  or diagram stands beside its source. */
+const widgetsBefore = (count: number) =>
+  new Plugin({
+    props: {
+      decorations: (state) => {
+        const widgets: Decoration[] = [];
+        state.doc.forEach((_block, offset, index) => {
+          if (index < count)
+            widgets.push(
+              Decoration.widget(offset, () => document.createElement("div")),
+            );
+        });
+        return DecorationSet.create(state.doc, widgets);
+      },
+    },
+  });
+
 /** `count` blocks of 100 characters, every tenth a code block; 2,000 is
  *  past the threshold. */
-function open(count: number, drawer = false) {
+function open(count: number, drawer = false, widgets = 0) {
   const doc = schema.node(
     "doc",
     null,
@@ -72,6 +95,7 @@ function open(count: number, drawer = false) {
         createLazyBlocksPlugin(
           drawer ? { view: (v) => new LazyBlocksDrawer(v) } : {},
         ),
+        widgetsBefore(widgets),
       ],
     }),
     nodeViews: lazyBlockNodeViews(schema, { code_block: codeView }),
@@ -212,6 +236,37 @@ describe("what is on screen decides what is drawn", () => {
     expect(plan(view, view.dom.parentElement!)!.draw).toEqual([
       startOf(view, 3),
       startOf(view, 4),
+    ]);
+  });
+});
+
+describe("blocks among widgets", () => {
+  it("finds a placeholder's block past many widgets above it", () => {
+    const view = open(2000, false, 20);
+    view.dispatch(
+      view.state.tr.setMeta(lazyBlocksKey, {
+        release: [startOf(view, 25), startOf(view, 26)],
+      }),
+    );
+    // Every child 100 px tall; the screen over children 40 to 45, where the
+    // two placeholders are, twenty widgets on.
+    vi.spyOn(Element.prototype, "getBoundingClientRect").mockImplementation(
+      function (this: Element) {
+        if (this === view.dom.parentElement)
+          return { top: 4000, bottom: 4500, height: 500 } as DOMRect;
+        const i = Array.prototype.indexOf.call(view.dom.children, this);
+        return {
+          top: i * 100,
+          bottom: i * 100 + 100,
+          height: 100,
+          width: 100,
+        } as DOMRect;
+      },
+    );
+    expect(view.dom.children[45].className).toBe("lazy-block");
+    expect(plan(view, view.dom.parentElement!)!.draw).toEqual([
+      startOf(view, 25),
+      startOf(view, 26),
     ]);
   });
 });

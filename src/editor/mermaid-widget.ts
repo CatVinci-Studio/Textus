@@ -3,7 +3,7 @@ import type { EditorView } from "@milkdown/kit/prose/view";
 import { zoomButton } from "./diagram-zoom";
 import { addBlockFold } from "./fold/block-fold";
 import { currentStrings } from "../i18n/current";
-import { drawWhileNear } from "./draw-when-visible";
+import { drawWhileNear } from "./lazy/draw-when-visible";
 import { keepReadable } from "./mermaid-blocks";
 
 /**
