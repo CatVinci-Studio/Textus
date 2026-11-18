@@ -9,6 +9,7 @@ import { iosFiles, isScopedUrl, newDocumentPath } from "./ios-files";
 import { parentDir } from "../utils/path";
 import { scopedFolder } from "./scoped-folder";
 import { command, desktopActionCommand, desktopQueryCommand } from "./ipc-call";
+import { onOpenFolder, openFolderOnDisk } from "./open-folder";
 
 /**
  * Backend commands for files and what the app keeps on disk: documents,
@@ -293,14 +294,22 @@ export const undoFiles = {
 /** What is kept beside the app's data for a document or a folder's
  *  documents (notes, tracked changes, proposals, undo) follows a move. */
 export const keptForDocuments = {
-  move: (from: string, to: string) => command("document_data_move", from, to),
+  move: (from: string, to: string) =>
+    command("document_data_move", from, to, openFolderOnDisk()),
 };
 
-/** What the writer keeps on a document beside the app's data, as JSON:
- *  their notes, or the changes they track. */
+/** What the writer keeps on a document, as JSON: their notes (in its
+ *  project's .textus/ when it is in one, this window's folder counting),
+ *  or the changes they track. */
 export const ownNotes = {
   read: (path: string, part: "notes" | "revisions") =>
-    command("own_notes_read", path, part),
+    command("own_notes_read", path, part, openFolderOnDisk()),
   write: (path: string, part: "notes" | "revisions", value: string) =>
-    command("own_notes_write", path, part, value),
+    command("own_notes_write", path, part, value, openFolderOnDisk()),
+  /** The notes of `folder`'s documents still in the app's data, brought
+   *  into it. */
+  adopt: (folder: string) => command("own_notes_adopt", folder),
 };
+
+// A folder opened shares its documents' notes from then on.
+onOpenFolder((folder) => void ownNotes.adopt(folder).catch(() => {}));

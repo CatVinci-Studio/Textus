@@ -67,6 +67,7 @@ fn groups() -> Vec<(&'static str, Builder<tauri::Wry>)> {
                     crate::commands::doc_data::document_data_move,
                     crate::commands::own_notes::own_notes_read,
                     crate::commands::own_notes::own_notes_write,
+                    crate::commands::own_notes::own_notes_adopt,
                     crate::settings::settings_get,
                     crate::settings::settings_patch,
                     crate::settings::settings_fill_defaults,

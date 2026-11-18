@@ -28,7 +28,7 @@ import {
 } from "../platform/documents-path";
 import { SHOW_FOLDER_EVENT } from "../utils/events";
 import { nextTreeRoot, rootAfterClose } from "../files/tree-root";
-import { setOpenFolder } from "../ai/workspace/ai-root";
+import { setOpenFolder } from "../platform/open-folder";
 
 /** The folder the last session had open, where there are no windows (an
  *  iPad); a desktop window's comes with its session (launch-window.ts). */

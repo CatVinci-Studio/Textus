@@ -172,17 +172,19 @@ export const commands = {
 	/**  The history kept for `path`, if it ends at the text hashing to `hash`. */
 	undo_file_load: (path: string, hash: string) => __TAURI_INVOKE<string | null>("undo_file_load", { path, hash }),
 	/**  What is kept for `from` follows it to `to` (both already moved on disk). */
-	document_data_move: (from: string, to: string) => __TAURI_INVOKE<null>("document_data_move", { from, to }),
+	document_data_move: (from: string, to: string, folder: string | null) => __TAURI_INVOKE<null>("document_data_move", { from, to, folder }),
 	/**
 	 *  What is kept of `part` for the document at `path`, as the JSON it was
 	 *  written as - none when nothing is.
 	 */
-	own_notes_read: (path: string, part: OwnPart) => __TAURI_INVOKE<string | null>("own_notes_read", { path, part }),
+	own_notes_read: (path: string, part: OwnPart, folder: string | null) => __TAURI_INVOKE<string | null>("own_notes_read", { path, part, folder }),
 	/**
 	 *  Keeps `value` (JSON: a list of notes, or the revisions' object) as
 	 *  `part` for the document at `path`; an empty one removes its file.
 	 */
-	own_notes_write: (path: string, part: OwnPart, value: string) => __TAURI_INVOKE<null>("own_notes_write", { path, part, value }),
+	own_notes_write: (path: string, part: OwnPart, value: string, folder: string | null) => __TAURI_INVOKE<null>("own_notes_write", { path, part, value, folder }),
+	/**  Brings the notes of the documents under `folder`, just opened, into it. */
+	own_notes_adopt: (folder: string) => __TAURI_INVOKE<null>("own_notes_adopt", { folder }),
 	/**  The live settings, for a window to correct its boot snapshot with. */
 	settings_get: () => __TAURI_INVOKE<Snapshot>("settings_get"),
 	/**

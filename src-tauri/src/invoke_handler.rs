@@ -168,6 +168,7 @@ pub(crate) fn handler() -> impl Fn(tauri::ipc::Invoke<tauri::Wry>) -> bool + Sen
         commands::doc_data::document_data_move,
         commands::own_notes::own_notes_read,
         commands::own_notes::own_notes_write,
+        commands::own_notes::own_notes_adopt,
         distribution::app_distribution,
         #[cfg(desktop)]
         background::tray::set_tray_plugin_items,

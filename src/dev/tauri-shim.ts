@@ -288,6 +288,8 @@ export function installDevTauriShim(): void {
         else kept[key] = String(args.value);
         return Promise.resolve(null);
       }
+      case "own_notes_adopt":
+        return Promise.resolve(null);
       case "undo_file_save": {
         const kept = (w.__devUndoFiles ??= {}) as Record<string, string[]>;
         kept[String(args.path)] = [String(args.hash), String(args.history)];
