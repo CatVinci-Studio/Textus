@@ -147,8 +147,8 @@
   flex-shrink: 0;
 }
 
-/* They take the pointer only while shown: hidden, they leave the line above
-   to the text. */
+/* The strip, the gaps between and under its pills too, takes the pointer
+   while shown; hidden, only the pills themselves do (below). */
 .code-block-wrapper:is(:hover, :focus-within, .is-picking-language)
   > .block-toolbar
   > .block-toolbar-actions,
@@ -168,6 +168,14 @@
   > .block-toolbar-actions,
 .block-toolbar > .block-toolbar-actions:is(:hover, :focus-within) {
   pointer-events: auto;
+}
+
+/* With a mouse they take it while hidden too: a pointer leaving the block
+   on its way up to them finds them there, and they show again. */
+@media (hover: hover) {
+  .block-toolbar > .block-toolbar-actions > * {
+    pointer-events: auto;
+  }
 }
 
 /* A code block's have no fit steps: on a narrow block they run left. */

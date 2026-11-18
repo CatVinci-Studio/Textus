@@ -20,10 +20,10 @@ async function open(page: Page, markdown = TABLE, animations = false) {
 const tool = (page: Page, name: string, exact = true) =>
   page.locator(".table-toolbar").getByRole("button", { name, exact });
 
-/** A tool pressed as a hand does: by way of the head row, which shows them,
- *  the pointer crossing the gap above the table on its way. */
+/** A tool pressed as a hand does: from the head row, which shows them,
+ *  straight across to it, leaving the table on its way. */
 async function press(page: Page, name: string, exact = true) {
-  await page.locator(".table-wrapper th").last().hover();
+  await page.locator(".table-wrapper th").first().hover();
   const to = (await tool(page, name, exact).boundingBox())!;
   await page.mouse.move(to.x + to.width / 2, to.y + to.height / 2, {
     steps: 12,
