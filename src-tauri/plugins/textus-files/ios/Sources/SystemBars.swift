@@ -54,7 +54,9 @@ final class SystemBars {
   /// A phone on its side can go on giving its upright insets (the camera's
   /// depth at the top), or that depth at both sides: it goes to the
   /// camera's side only. Turned with the home indicator at the right
-  /// (landscapeRight), the camera is at the left. An iPad's stay as given.
+  /// (landscapeRight), the camera is at the left. The other side keeps
+  /// what UIKit keeps at the foot for the screen's rounded corners, so the
+  /// buttons there stay clear of the corner. An iPad's stay as given.
   private func tellInsets(_ window: UIWindow) {
     let safe = window.safeAreaInsets
     var top = safe.top
@@ -64,9 +66,10 @@ final class SystemBars {
       let turn = window.windowScene?.interfaceOrientation, turn.isLandscape
     {
       let depth = max(top, left, right)
+      let corner = safe.bottom
       top = 0
-      left = turn == .landscapeRight ? depth : 0
-      right = turn == .landscapeLeft ? depth : 0
+      left = turn == .landscapeRight ? depth : corner
+      right = turn == .landscapeLeft ? depth : corner
     }
     let insets = "{top:\(top),right:\(right),bottom:\(safe.bottom),left:\(left)}"
     // Kept too for a page that hasn't started listening yet.
