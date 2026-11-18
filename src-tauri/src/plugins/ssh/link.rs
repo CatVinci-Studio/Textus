@@ -21,7 +21,6 @@ pub(crate) const NEEDS_LOGIN: &str = "ssh-needs-login";
 
 pub(crate) struct Link {
     pub(crate) plugin: String,
-    pub(crate) host: String,
     pub(crate) sftp: SftpSession,
     child: tokio::sync::Mutex<Child>,
 }
@@ -144,7 +143,6 @@ pub(crate) async fn open(plugin: &str, host: &str, config: Option<&Path>) -> Res
     match started {
         Ok(Ok(sftp)) => Ok(Link {
             plugin: plugin.to_string(),
-            host: host.to_string(),
             sftp,
             child: tokio::sync::Mutex::new(child),
         }),
