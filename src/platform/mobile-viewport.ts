@@ -17,6 +17,8 @@ export function installMobileViewport(): void {
   if (isIOSApp) watchWebKitInsets();
   safeArea();
   window.addEventListener("resize", safeArea);
+  // A half turn keeps the size: only the camera's side changes.
+  screen.orientation?.addEventListener("change", safeArea);
   // Android's app says when its bars change: a half turn or a fold may not
   // resize the page, or resize it before the bars are known.
   window.addEventListener("textus-insets", safeArea);
@@ -93,17 +95,36 @@ function webKitInsets(): Insets {
 }
 
 /**
- * An iPhone turned on its side can go on reporting its upright insets: the
- * camera's at the top, none at the sides. Its camera is then at one side
- * and a corner as round at the other, each as deep as the top was, and no
- * status bar. An iPad's are left as they are: its status bar stays on top.
+ * An iPhone on its side keeps clear of its camera only. WebKit gives both
+ * sides the camera's depth (or, still upright, gives it to the top), so the
+ * depth goes to the side the camera is at, which the turn's angle tells:
+ * 90 is turned left, the camera at the left. The other side is a rounded
+ * corner and gets nothing. An iPad's are left as they are: its status bar
+ * stays on top.
  */
 export function turned(
   insets: Insets,
   width = innerWidth,
   height = innerHeight,
+  angle = turnAngle(),
 ): Insets {
   const phoneOnSide = width > height && height < 500;
-  if (!phoneOnSide || insets.left || insets.right || !insets.top) return insets;
-  return { ...insets, top: 0, left: insets.top, right: insets.top };
+  const depth = Math.max(insets.top, insets.left, insets.right);
+  if (!phoneOnSide || !depth) return insets;
+  const left = angle === 90;
+  const right = angle === -90 || angle === 270;
+  return {
+    ...insets,
+    top: 0,
+    left: left || !right ? depth : 0,
+    right: right || !left ? depth : 0,
+  };
+}
+
+/** How far the screen is turned: iOS WebKit still has window.orientation
+ *  (90 or -90), the standard says it as 90 or 270. */
+function turnAngle(): number | null {
+  const legacy = (window as { orientation?: unknown }).orientation;
+  if (typeof legacy === "number") return legacy;
+  return screen.orientation?.angle ?? null;
 }

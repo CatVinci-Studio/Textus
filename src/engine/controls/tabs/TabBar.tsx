@@ -10,6 +10,7 @@ import { useTabSwipe } from "./useTabSwipe";
 import { stripSlots } from "./tab-strip";
 import { useRevealTab } from "./useRevealTab";
 import { isMobileApp } from "../../../platform/capabilities";
+import { PlusIcon } from "../icons";
 
 interface TabBarProps {
   tabs: TabInfo[];
@@ -222,7 +223,7 @@ export function TabBar({
             onAdd();
           }}
         >
-          +
+          <PlusIcon />
         </button>
       </Tooltip>
       {overflow && (
