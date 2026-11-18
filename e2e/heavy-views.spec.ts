@@ -1,24 +1,75 @@
-import { expect, test } from "@playwright/test";
+import { expect, test, type Page } from "@playwright/test";
 import { MAC, openApp, pasteMarkdown, settled } from "./helpers";
 
 // Formulas, diagrams, HTML and embedded notes are drawn only within a few
 // screens of the view: a document holding hundreds keeps a page the size
 // of a few screens.
 
-test("formulas far from the screen are let go, keeping their size, and drawn again as they come back", async ({
+/** Where each block of the document, and each view in it, sits from the
+ *  document's top, and how big it is. */
+const layout = (page: Page) =>
+  page.evaluate(() => {
+    const root = document.querySelector(".ProseMirror")!;
+    const { top, left } = root.getBoundingClientRect();
+    const at = (el: Element) => {
+      const r = el.getBoundingClientRect();
+      return [r.top - top, r.left - left, r.width, r.height]
+        .map((n) => Math.round(n * 100) / 100)
+        .concat([
+          el.tagName + "." + el.className + ":" + getComputedStyle(el).display,
+        ] as never);
+    };
+    return {
+      // The document's own blocks; widgets between them come and go.
+      blocks: [...root.children]
+        .filter((el) => getComputedStyle(el).display !== "none")
+        .map(at),
+      views: [
+        ...root.querySelectorAll(
+          ".math-inline-rendered, .math-block-rendered, .mermaid-preview, .raw-html-rendered",
+        ),
+      ].map((el) => {
+        // A drawn formula reaches past its line of text (a fraction).
+        const html = el.querySelector(".katex-html");
+        const box = at(el);
+        if (html) {
+          const [top, , , height] = at(html);
+          const end = Math.max(box[0]! + box[3]!, top! + height!);
+          box[0] = Math.min(box[0]!, top!);
+          box[3] = Math.round((end - box[0]) * 100) / 100;
+        }
+        return { drawn: !el.hasAttribute("data-draw-pending"), at: box };
+      }),
+    };
+  });
+
+test("formulas far from the screen are let go where they were drawn, and drawn again as they come back", async ({
   page,
 }) => {
-  await page.setViewportSize({ width: 1000, height: 700 });
+  // A window tall enough for all of them to be drawn first.
+  await page.setViewportSize({ width: 1000, height: 12000 });
   await openApp(page, { settings: { menuBarShown: false } });
   const blocks = Array.from(
     { length: 150 },
-    (_, i) => `第 ${i} 段 $x^${i}$\n\n$$\n\\frac{a_{${i}}}{b} + \\sqrt{c}\n$$`,
+    (_, i) =>
+      `第 ${i} 段 $x^${i}$ 与 $\\frac{a}{b_{${i}}}$ 在行中\n\n$$\n\\frac{a_{${i}}}{b} + \\sqrt{c}\n$$` +
+      (i % 25 === 0
+        ? `\n\n<div align="center"><b>${i}</b></div>\n\n\`\`\`mermaid\ngraph LR\n  A${i} --> B${i}\n\`\`\``
+        : ""),
   );
   await pasteMarkdown(page, blocks.join("\n\n"));
   const katex = page.locator(".ProseMirror .math-block-rendered .katex");
   const scroller = page.locator(".editor-scroll").first();
   await scroller.evaluate((s) => s.scrollTo(0, 0));
   await expect(katex.first()).toBeVisible();
+  // The first diagram drawn in its source's place before anything is measured.
+  await expect(
+    page.locator(".ProseMirror .mermaid-block svg").first(),
+  ).toBeVisible();
+  await settled(page);
+  const drawn = await layout(page);
+  expect(drawn.views.every((v) => v.drawn)).toBe(true);
+  await page.setViewportSize({ width: 1000, height: 700 });
   // Read to the end: those at the top go, the page doesn't move.
   const height = await scroller.evaluate((s) => s.scrollHeight);
   for (let y = 0; y <= height; y += 600) {
@@ -29,12 +80,25 @@ test("formulas far from the screen are let go, keeping their size, and drawn aga
   await expect.poll(() => katex.count()).toBeLessThan(100);
   const first = page.locator(".ProseMirror .math-block-rendered").first();
   await expect(first).toHaveAttribute("data-draw-pending", "");
-  expect(
-    await first.evaluate((el) => el.getBoundingClientRect().height),
-  ).toBeGreaterThan(10);
-  expect(
-    Math.abs((await scroller.evaluate((s) => s.scrollHeight)) - height),
-  ).toBeLessThan(50);
+  await settled(page);
+  // Each view let go holds the place it was drawn in, and every block
+  // stays where it was, to half a pixel.
+  const letGo = await layout(page);
+  const moved: string[] = [];
+  const near = (a: number[], b: number[]) =>
+    a.slice(0, 4).every((n, i) => Math.abs(n - b[i]!) < 0.5);
+  drawn.blocks.forEach((at, i) => {
+    if (!near(at, letGo.blocks[i]!))
+      moved.push(`block ${i}: ${at} -> ${letGo.blocks[i]}`);
+  });
+  drawn.views.forEach((view, i) => {
+    const now = letGo.views[i]!;
+    // Where it starts and how wide; its lines' heights are the blocks'.
+    if (view.drawn && !now.drawn && !near(view.at.slice(0, 3), now.at))
+      moved.push(`view ${i}: ${view.at} -> ${now.at}`);
+  });
+  expect(letGo.views.filter((v) => !v.drawn).length).toBeGreaterThan(20);
+  expect(moved.slice(0, 20)).toEqual([]);
   await scroller.evaluate((s) => s.scrollTo(0, 0));
   await expect(first.locator(".katex")).toBeVisible();
 });

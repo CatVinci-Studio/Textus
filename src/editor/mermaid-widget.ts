@@ -32,8 +32,9 @@ export function diagramWidget(
   addBlockFold(block, currentStrings().diagramViewerLabel, at.fold);
   // A drawing is hundreds of elements: kept only within a few
   // screens, its box's size held when let go.
+  // The box emptied is the one held: its margins and padding stay.
   drawWhileNear(
-    block,
+    container,
     view.dom,
     () => {
       container.innerHTML = svg;
