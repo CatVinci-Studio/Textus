@@ -94,16 +94,21 @@ async function tokenOf(text: string): Promise<string> {
 const bytesOf = (base64: string) =>
   Uint8Array.from(atob(base64), (c) => c.charCodeAt(0));
 
-/** The folder's documents' metadata as last read: read again once it is
- *  older than a moment or a file was written here. */
+/** The folder's documents' metadata as last read, kept until a file is
+ *  written here or the window comes back from another app. */
 let known: {
   root: string;
-  at: number;
+  stale: boolean;
   generation: number;
   texts: Map<string, string>;
   documents: DocumentMeta_Serialize[];
 } | null = null;
-const FRESH_MS = 2000;
+
+/** Something here may have changed: read again when next asked. */
+export function contentFolderChanged(): void {
+  if (known) known.stale = true;
+}
+let listening = false;
 
 const parse = (
   documents: { path: string; rel: string; text: string }[],
@@ -118,19 +123,22 @@ const parse = (
 /** As the backend's metadata.all: every document, whole when they changed
  *  since `after`, nothing when they didn't. */
 async function metadataAll(root: string, after: number | null) {
-  const now = Date.now();
-  if (!(known?.root === root && now - known.at < FRESH_MS)) {
+  if (!listening) {
+    listening = true;
+    window.addEventListener("focus", contentFolderChanged);
+  }
+  if (!(known?.root === root && !known.stale)) {
     const { documents } = await scopedFolder.documents(root);
     const texts = new Map(documents.map((d) => [d.path, d.text]));
     const was = known?.root === root ? known : null;
     const same =
       was?.texts.size === texts.size &&
       [...texts].every(([path, text]) => was.texts.get(path) === text);
-    if (same) was.at = now;
+    if (same) was.stale = false;
     else
       known = {
         root,
-        at: now,
+        stale: false,
         generation: (was?.generation ?? 0) + 1,
         texts,
         documents: await parse(documents, false),
@@ -147,10 +155,7 @@ async function metadataAll(root: string, after: number | null) {
 function written<A extends unknown[], T>(
   run: (...args: A) => Promise<T>,
 ): (...args: A) => Promise<T> {
-  return (...args) =>
-    run(...args).finally(() => {
-      if (known) known.at = 0;
-    });
+  return (...args) => run(...args).finally(contentFolderChanged);
 }
 
 export const contentPluginFs = {

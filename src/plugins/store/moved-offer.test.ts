@@ -8,10 +8,20 @@ const state = vi.hoisted(() => ({
   answer: "later" as string,
   cards: 0,
   takenUp: 0,
+  folder: null as string | null,
+  apps: [] as string[],
 }));
 
 vi.mock("../../platform/ipc", () => ({
   storage: { historyList: async () => state.history },
+  fs: {
+    folderConventions: async () => ({
+      sources: state.apps.map((app) => ({ app, root: state.folder })),
+    }),
+  },
+}));
+vi.mock("../../platform/open-folder", () => ({
+  openFolderOnDisk: () => state.folder,
 }));
 vi.mock("../../storage/ui-state", () => ({
   uiList: () => state.offered ?? [],
@@ -26,7 +36,10 @@ vi.mock("./catalog", () => ({
   loadCatalog: async () => {},
   catalogSnapshot: () => ({
     status: "ready",
-    items: [{ id: "catvinci.clipboard-history", official: true }],
+    items: [
+      { id: "catvinci.clipboard-history", official: true },
+      { id: "catvinci.logseq", official: true },
+    ],
   }),
 }));
 vi.mock("./open-offer", () => ({
@@ -54,6 +67,8 @@ describe("offerMovedFeatures", () => {
       answer: "later",
       cards: 0,
       takenUp: 0,
+      folder: null,
+      apps: [],
     });
   });
 
@@ -74,6 +89,16 @@ describe("offerMovedFeatures", () => {
     state.installed = true;
     await offerMovedFeatures(t);
     expect(state.cards).toBe(0);
+    expect(state.offered).toEqual(["clipboard-history", "logseq-settings"]);
+  });
+
+  it("offers Logseq Folders once a Logseq graph is open, not before", async () => {
+    await offerMovedFeatures(t);
     expect(state.offered).toEqual(["clipboard-history"]);
+    state.folder = "/graph";
+    state.apps = ["logseq"];
+    await offerMovedFeatures(t);
+    expect(state.cards).toBe(1);
+    expect(state.offered).toEqual(["clipboard-history", "logseq-settings"]);
   });
 });

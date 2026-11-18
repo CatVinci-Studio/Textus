@@ -541,4 +541,16 @@ test("a folder a plugin opens as one document: one row in the sidebar, its text 
   await expect(page.locator('.tree-row[data-path$="info.json"]')).toHaveCount(
     0,
   );
+  // Renamed in the sidebar, the whole folder goes, its tab with it.
+  await bundle.click({ button: "right" });
+  await page.getByRole("menuitem", { name: /^Rename/ }).click();
+  await page.keyboard.press("ControlOrMeta+a");
+  await page.keyboard.type("Journey.textbundle");
+  await page.keyboard.press("Enter");
+  await expect(
+    page.locator('.tree-row[data-path="/work/Journey.textbundle"]'),
+  ).toHaveClass(/tree-row-active/);
+  await expect(page.locator(".tab-pill").last()).toContainText(
+    "Journey.textbundle",
+  );
 });

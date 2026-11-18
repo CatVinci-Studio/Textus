@@ -203,9 +203,15 @@ export const fs = {
     command("write_base64_file", path, data),
   writeTextFile: (path: string, contents: string): Promise<void> =>
     isScopedUrl(path)
-      ? iosFiles.writeText(path, contents)
+      ? iosFiles.writeText(path, contents).finally(contentWritten)
       : command("write_text_file", path, contents),
 };
+
+/** A document saved in an Android folder: plugins' view of it read again. */
+function contentWritten(): void {
+  if (!isIOSApp)
+    void import("./content-plugin-fs").then((m) => m.contentFolderChanged());
+}
 
 // Session and recents
 
