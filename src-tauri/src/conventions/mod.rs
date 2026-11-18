@@ -6,6 +6,7 @@
 //! read the rest through `files.conventions` instead of parsing other apps'
 //! settings themselves.
 
+pub(crate) mod plugin_readers;
 mod readers;
 mod text;
 
@@ -41,6 +42,8 @@ pub struct Setting<T> {
 pub struct Source {
     pub app: String,
     pub root: String,
+    /// The app keeps notes linked by name, found from its folder.
+    pub notes: bool,
 }
 
 #[derive(Serialize, Clone, Debug, PartialEq)]
@@ -142,10 +145,9 @@ impl Conventions {
     /// wikilink is resolved in - read whether or not its settings were taken,
     /// since it only says where links are found.
     pub(crate) fn notes_root(&self) -> Option<PathBuf> {
-        const NOTE_APPS: [&str; 4] = ["obsidian", "logseq", "dendron", "foam"];
         self.sources
             .iter()
-            .find(|s| NOTE_APPS.contains(&s.app.as_str()))
+            .find(|s| s.notes)
             .map(|s| PathBuf::from(&s.root))
             .or_else(|| self.link_style.as_ref().map(|s| PathBuf::from(&s.root)))
     }
@@ -162,6 +164,13 @@ impl Conventions {
 }
 
 static CACHE: Mutex<Option<HashMap<PathBuf, (Instant, Conventions)>>> = Mutex::new(None);
+
+/// Forgets every folder's answer: a plugin's reader came or answered.
+fn forget() {
+    if let Ok(mut cache) = CACHE.lock() {
+        *cache = None;
+    }
+}
 
 /// The conventions of the folder `dir`: every app found in it and above it,
 /// the nearest deciding each field.
@@ -197,11 +206,12 @@ pub(crate) fn of_folder(dir: &Path) -> Conventions {
 fn read_folder(dir: &Path) -> Conventions {
     let mut ours = Conventions::default();
     let mut theirs = Conventions::default();
-    for found in dir
-        .ancestors()
-        .take(MAX_ASCENT)
-        .flat_map(|d| readers::READERS.iter().filter_map(move |read| read(d)))
-    {
+    for found in dir.ancestors().take(MAX_ASCENT).flat_map(|d| {
+        readers::READERS
+            .iter()
+            .filter_map(move |read| read(d))
+            .chain(plugin_readers::at(d))
+    }) {
         if found.sources.first().is_some_and(|s| s.app == "textus") {
             ours = ours.or(found);
         } else {

@@ -178,6 +178,18 @@ export const fs = {
   /** A project's .textus/settings.json as a whole, comments allowed; {}
    *  when there is none. */
   projectSettings: (root: string) => command("project_settings_read", root),
+  /** The plugins' folder convention readers in this window. */
+  conventionReaders: (readers: Generated.PluginReader_Deserialize[]) =>
+    command("conventions_readers", readers),
+  /** Marker files above `path` that a plugin's reader hasn't answered. */
+  conventionsPending: (path: string) => command("conventions_pending", path),
+  /** A plugin reader's answer for the marker text it was handed. */
+  conventionsAnswer: (
+    app: string,
+    root: string,
+    text: string,
+    found: Generated.Found_Deserialize | null,
+  ) => command("conventions_answer", app, root, text, found),
   /** `sourceDocPath`: the file a Save As started from, whose relative
    *  images are copied along. */
   migrateDraftImages: (

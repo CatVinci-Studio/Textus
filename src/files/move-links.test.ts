@@ -50,7 +50,7 @@ const none = {
  *  still follow its "update links" (the owner's rule for vaults). */
 const vault = (update = "always") => ({
   ...none,
-  sources: [{ app: "obsidian", root: "/w" }],
+  sources: [{ app: "obsidian", root: "/w", notes: true }],
   detected: { ...none, linkStyle: at("wiki"), updateLinks: at(update) },
 });
 

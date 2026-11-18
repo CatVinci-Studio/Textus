@@ -32,13 +32,11 @@ export function linkStyleIn(text: string): LinkStyle | null {
 /** Obsidian's way, for a note that already links so. */
 const WIKI_LINKS: LinkStyle = { wiki: true, format: "shortest" };
 
-const NOTE_APPS = new Set(["obsidian", "logseq", "dendron", "foam"]);
-
 /** The folder links by name are found in: the nearest notes app's, whether
  *  or not its settings were taken (it only says where links are). */
 export function notesRoot(conventions: Conventions | null): string | null {
   return (
-    conventions?.sources.find((s) => NOTE_APPS.has(s.app))?.root ??
+    conventions?.sources.find((s) => s.notes)?.root ??
     conventions?.linkStyle?.root ??
     null
   );

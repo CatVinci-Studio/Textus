@@ -1244,6 +1244,19 @@ declare global {
        *  instead of other apps' settings files; a field no app sets is
        *  null, for Textus's own settings. From 1.3.9 (files.read). */
       conventions(path?: string): Promise<FolderConventions>;
+      /** From 1.4.6 (API 1.8, files.read): reads the folder conventions of an
+       *  app Textus doesn't read itself (Logseq, Zettlr...). The app finds
+       *  `marker`, a file from the app's folder, in the open folder and the
+       *  folders above it, and hands `read` its text once (again when it
+       *  changes). What `read` answers is offered to the user like any
+       *  other app's settings, never applied by itself; folders are from the
+       *  app's folder, and ones leading out of it are left out. `notes`: the
+       *  app keeps notes linked by name, so wikilinks are found from its
+       *  folder. */
+      registerConventionReader(
+        id: string,
+        reader: ConventionReader,
+      ): Disposable;
       /** From 1.7 (files.write): sets how the open folder writes something,
        *  in its `.textus/settings.json` "conventions", keeping the rest;
        *  null clears it. Only `linkStyle` for now. */
@@ -1263,12 +1276,42 @@ declare global {
       onDidChangeConventions: Event<{ root: string }>;
     }
 
+    interface ConventionReader {
+      /** The app's name, as a card offering its settings shows it. */
+      label: string;
+      /** The file that says the folder is the app's, e.g.
+       *  "logseq/config.edn". */
+      marker: string;
+      notes?: boolean;
+      read(request: {
+        /** The app's folder, a whole path. */
+        root: string;
+        /** The marker file's text. */
+        text: string;
+      }): FoundConventions | null | Promise<FoundConventions | null>;
+    }
+
+    /** What an app sets, as a reader answers it. */
+    interface FoundConventions {
+      linkStyle?: "wiki" | "markdown";
+      linkPath?: "shortest" | "relative" | "absolute";
+      updateLinks?: "always" | "ask" | "never";
+      /** As FolderConventions' `attachments`, inside the app's folder. */
+      attachments?: string;
+      softBreaks?: boolean;
+      /** Folders and files from the app's folder. */
+      templates?: string;
+      daily?: { folder: string; format: string; template?: string };
+      newNotes?: string;
+      ignore?: string[];
+    }
+
     /** One setting of a folder and where it came from. */
     interface ConventionSetting<T> {
       value: T;
       /** "textus", "typora", "obsidian", "logseq", "dendron", "foam",
-       *  "vscode", "mkdocs", "hugo", "docusaurus", "jekyll", "quarto" or
-       *  "git". */
+       *  "vscode", "mkdocs", "hugo", "docusaurus", "jekyll", "quarto",
+       *  "git", or from 1.4.6 a plugin's reader, `<plugin id>#<id>`. */
       app: string;
       /** The folder these settings belong to. */
       root: string;
@@ -1284,8 +1327,9 @@ declare global {
     }
 
     interface FolderConventions {
-      /** The apps found, nearest first. */
-      sources: { app: string; root: string }[];
+      /** The apps found, nearest first; from 1.4.6 `notes` when the app
+       *  keeps notes linked by name, found from its folder. */
+      sources: { app: string; root: string; notes?: boolean }[];
       /** "wiki" or "markdown". */
       linkStyle: ConventionSetting<string> | null;
       /** "shortest", "relative" or "absolute". */

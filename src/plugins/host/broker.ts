@@ -23,6 +23,8 @@ import {
   databaseViewHandlers,
   stopPluginDatabaseViews,
 } from "./broker-database-views";
+import { conventionReaderHandlers } from "./broker-conventions";
+import { stopPluginConventionReaders } from "../contributions/convention-readers";
 import { fileHandlers } from "./broker-files";
 import { layoutHandlers, seenBy } from "./broker-layout";
 import { editorHandlers, stopPluginEditor } from "./broker-editor";
@@ -284,6 +286,7 @@ export class PluginHost {
     stopPluginAi(this.id);
     stopPluginExport(this.id);
     stopPluginDatabaseViews(this.id);
+    stopPluginConventionReaders(this.id);
     forgetListViews(this.id);
     forgetEmbeds(this.id);
     forgetWillSave(this.id);
@@ -485,6 +488,7 @@ export class PluginHost {
       ...commentHandlers(scope),
       ...exportFormatHandlers(scope),
       ...databaseViewHandlers(scope),
+      ...conventionReaderHandlers(scope),
     };
   }
 }

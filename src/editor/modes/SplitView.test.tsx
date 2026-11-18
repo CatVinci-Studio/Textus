@@ -19,7 +19,7 @@ afterEach(cleanup);
 
 /** A vault's conventions with "Strict line breaks" set as given. */
 const vault = (strict: boolean) => ({
-  sources: [{ app: "obsidian", root: "/v" }],
+  sources: [{ app: "obsidian", root: "/v", notes: true }],
   linkStyle: null,
   linkPath: null,
   linkRoot: null,

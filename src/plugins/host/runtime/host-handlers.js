@@ -208,6 +208,12 @@ var handlers = {
     var html = await view.render(params.data);
     return typeof html === "string" ? html : null;
   },
+  $conventionRead: async function (params) {
+    var reader = conventionReaders.get(params.id);
+    if (!reader) return null;
+    var found = await reader.read({ root: params.root, text: params.text });
+    return found && typeof found === "object" ? plain(found) : null;
+  },
   $aiStreamText: function (params) {
     var onText = aiStreams.get(params.stream);
     if (onText) onText(params.text);

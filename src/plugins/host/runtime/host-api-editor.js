@@ -215,6 +215,23 @@ textus.files = {
       value: value === undefined ? null : plain(value),
     });
   },
+  registerConventionReader: function (id, reader) {
+    var key = String(id);
+    conventionReaders.set(key, reader);
+    quiet(
+      call("files.registerConventionReader", {
+        id: key,
+        label: String(reader.label == null ? key : reader.label),
+        marker: String(reader.marker),
+        notes: !!reader.notes,
+      }),
+    );
+    return disposable(function () {
+      if (conventionReaders.get(key) !== reader) return;
+      conventionReaders.delete(key);
+      quiet(call("files.unregisterConventionReader", { id: key }));
+    });
+  },
   appSettings: function (app, file, path) {
     return call("files.appSettings", {
       app: String(app),

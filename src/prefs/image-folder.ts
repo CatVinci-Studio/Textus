@@ -66,7 +66,17 @@ const APP_NAMES: Record<string, string> = {
   vscode: "VS Code",
 };
 
-export const conventionsAppName = (app: string) => APP_NAMES[app] ?? app;
+/** Apps plugins read (`<plugin>#<reader>`), by the name each gave. */
+const pluginApps = new Map<string, string>();
+
+/** Names (or with null forgets) an app a plugin's reader reads. */
+export function nameConventionsApp(app: string, name: string | null): void {
+  if (name === null) pluginApps.delete(app);
+  else pluginApps.set(app, name);
+}
+
+export const conventionsAppName = (app: string) =>
+  APP_NAMES[app] ?? pluginApps.get(app) ?? app;
 
 /** A folder's `attachments` rule as words: "img/", the document's own
  *  folder, or the root. */

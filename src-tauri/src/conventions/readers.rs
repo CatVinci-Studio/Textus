@@ -53,6 +53,7 @@ impl At<'_> {
             sources: vec![super::Source {
                 app: self.app.to_string(),
                 root: self.root.to_string_lossy().into_owned(),
+                notes: ["obsidian", "logseq", "dendron", "foam"].contains(&self.app),
             }],
             ..Default::default()
         }
@@ -181,27 +182,16 @@ fn with_md(name: &str) -> String {
     }
 }
 
-/// A Logseq graph kept as files: `logseq/config.edn`.
+/// A Logseq graph kept as files: `logseq/config.edn`. Only found here, so
+/// its links resolve from the graph; its settings are a plugin's to read.
 fn logseq(dir: &Path) -> Option<Conventions> {
-    let config = read(&dir.join("logseq/config.edn"))?;
-    let at = At {
-        app: "logseq",
-        root: dir,
-    };
-    let key = |k: &str| flat_key(&config, k);
-    let mut out = at.conventions();
-    out.link_style = at.set("wiki".into());
-    out.link_path = at.set("shortest".into());
-    out.attachments = at.set("assets".into());
-    out.soft_breaks = at.set(true);
-    out.new_notes = at.set(key(":pages-directory").unwrap_or_else(|| "pages".into()));
-    let format = key(":journal/file-name-format").unwrap_or_else(|| "yyyy_MM_dd".into());
-    out.daily = at.set(Daily {
-        folder: at.folder(&key(":journals-directory").unwrap_or_else(|| "journals".into())),
-        format: moment_format(&format, DateSyntax::Unicode),
-        template: None,
-    });
-    Some(out)
+    dir.join("logseq/config.edn").is_file().then(|| {
+        At {
+            app: "logseq",
+            root: dir,
+        }
+        .conventions()
+    })
 }
 
 /// A Dendron workspace: `dendron.yml`, notes named by dotted hierarchy.

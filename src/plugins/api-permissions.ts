@@ -60,6 +60,8 @@ const API_PERMISSIONS: readonly {
       "files.root",
       "files.conventions",
       "files.appSettings",
+      "files.registerConventionReader",
+      "files.unregisterConventionReader",
       "files.list",
       "files.find",
       "files.stat",

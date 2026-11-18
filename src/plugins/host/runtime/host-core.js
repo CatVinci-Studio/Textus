@@ -20,6 +20,8 @@ var historySources = new Map();
 var inlineCompletions = new Map();
 // Each database view's provider, by its id.
 var databaseViews = new Map();
+// Each folder convention reader, by its id.
+var conventionReaders = new Map();
 // Each ai.stream call's onText, by its number, while it runs.
 var aiStreams = new Map();
 var aiStreamCount = 0;

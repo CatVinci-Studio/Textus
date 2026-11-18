@@ -290,6 +290,12 @@ export function installDevTauriShim(): void {
       }
       case "own_notes_adopt":
         return Promise.resolve(null);
+      // Folder conventions are reimplemented here without plugin readers.
+      case "conventions_readers":
+      case "conventions_answer":
+        return Promise.resolve(null);
+      case "conventions_pending":
+        return Promise.resolve([]);
       case "undo_file_save": {
         const kept = (w.__devUndoFiles ??= {}) as Record<string, string[]>;
         kept[String(args.path)] = [String(args.hash), String(args.history)];
@@ -877,7 +883,7 @@ export function installDevTauriShim(): void {
             }
             return Promise.resolve({
               ...applied,
-              sources: [{ app: "obsidian", root: dir }],
+              sources: [{ app: "obsidian", root: dir, notes: true }],
               detected: ours?.detected
                 ? null
                 : {

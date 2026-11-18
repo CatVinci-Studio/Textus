@@ -537,6 +537,12 @@ columns, types, group, date }` and answers HTML, shown without scripts or
   `<style>`; an element with `data-row="<path>"` opens that row. The plugin
   that draws databases lists them with `views.databaseViews()` and draws one
   with `views.renderDatabaseView(id, data)`.
+- `files.registerConventionReader(id, { label, marker, notes, read })`
+  (`files.read`, 1.4.6): reads the folder conventions of an app Textus
+  doesn't read itself. The app finds `marker` (e.g. `logseq/config.edn`)
+  in the open folder and above it and hands `read({ root, text })` the
+  file's text once; the answer (`linkStyle`, `attachments`, `daily`,
+  `newNotes`...) is offered to the user like any other app's settings.
 - `ai.registerInlineCompletion(id, { label, provide })` (`editor.read`, 1.8
   preview): grey text after the caret when typing pauses, from
   `provide({ before, after, path })`. One source at a time, picked by the
