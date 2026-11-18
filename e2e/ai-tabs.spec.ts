@@ -124,11 +124,9 @@ test("messages sent during a reply wait their turn; a failure holds them until t
   await box.fill("mind the tone");
   await box.press("Enter");
   await queue.getByRole("button", { name: "现在发: mind the tone" }).click();
-  await expect(queue.locator(".chat-queue-text")).toHaveText([
-    "one more question",
-  ]);
-  await expect(turns).toContainText("mind the tone");
   await expect(queue).toHaveCount(0);
+  // Sent in that order, however quickly the reply ends.
+  await expect(turns).toContainText(/mind the tone[\s\S]*one more question/);
 });
 
 test("a message sent now that the reply can't take stops it and goes next", async ({

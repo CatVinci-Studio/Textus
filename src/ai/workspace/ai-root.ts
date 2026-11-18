@@ -3,6 +3,7 @@ import {
   onOpenFolderChange,
   openFolderOnDisk,
 } from "../../platform/open-folder";
+import { isFarUrl } from "../../platform/far-files";
 
 /**
  * The AI's project folder in this window, worked out in one place: the one
@@ -16,6 +17,19 @@ export function aiRoot(settings: {
   agentWorkspaceRoot: string;
 }): string | null {
   return settings.agentWorkspaceRoot || openFolderOnDisk();
+}
+
+/** The document and folder a call on a document's text reads its project
+ *  from (conventions, library names). A document read through a plugin
+ *  or another app's storage has no path the backend could open. */
+export function aiProject(
+  docPath: string | null,
+  settings: { agentWorkspaceRoot: string },
+): { docPath: string | null; workspaceRoot: string | null } {
+  return {
+    docPath: docPath && !isFarUrl(docPath) ? docPath : null,
+    workspaceRoot: aiRoot(settings),
+  };
 }
 
 /** {@link aiRoot}, drawn again when the open folder changes. */

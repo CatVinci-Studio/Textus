@@ -180,7 +180,17 @@ const onNear = (
   );
   if (coming.length)
     stillWhile(observer, () => coming.forEach(([target]) => drawNow(target)));
+  for (const [target] of coming) askAgain(target, "far");
 };
+
+/** Each watcher reports only a change: a report that came late (a slow
+ *  frame in a fast scroll) may have drawn or let go what the other one
+ *  already saw pass. Asked again, it says where the element is now. */
+function askAgain(target: Element, which: keyof Watchers) {
+  const watcher = watchers.get(target)?.[which];
+  watcher?.unobserve(target);
+  watcher?.observe(target);
+}
 
 /** An inline drawing broken over lines (a long formula) has no one box
  *  to hold: it stays drawn. */
@@ -203,6 +213,7 @@ const onFar = (
       kept.get(target)!.undraw();
     }
   });
+  for (const target of leaving) askAgain(target, "near");
 };
 
 function watchersOf(scroller: Element): Watchers {
