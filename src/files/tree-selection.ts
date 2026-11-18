@@ -1,9 +1,20 @@
-import { createContext, useContext, useSyncExternalStore } from "react";
+import {
+  createContext,
+  useContext,
+  useEffect,
+  useState,
+  useSyncExternalStore,
+  type KeyboardEvent as ReactKeyboardEvent,
+  type MouseEvent as ReactMouseEvent,
+} from "react";
+import { useLatestCallback } from "../utils/hooks/useLatest";
+import { createSubscribers } from "../utils/store";
+import { useTreeKeys } from "../engine/controls/useTreeKeys";
 import { isMacPlatform } from "../platform/os";
 import { isInside } from "../utils/path";
 
 /** What a click with a modifier does to the tree's selection. */
-export type PickHow = "toggle" | "range";
+type PickHow = "toggle" | "range";
 
 /** A row of the tree: a file's or a folder's. */
 export interface TreeRow {
@@ -13,7 +24,7 @@ export interface TreeRow {
 
 /** The modifier a click carries: ⌘ on a Mac (Ctrl-click is its right
  *  click), Ctrl elsewhere, Shift for a range; null for a plain click. */
-export function pickHow(e: {
+function pickHow(e: {
   metaKey: boolean;
   ctrlKey: boolean;
   shiftKey: boolean;
@@ -31,12 +42,9 @@ export class TreeSelection {
   private rows: readonly TreeRow[] = [];
   /** Where a Shift-click's range starts: the row last clicked. */
   private anchor: string | null = null;
-  private readonly listeners = new Set<() => void>();
+  private readonly listeners = createSubscribers();
 
-  subscribe = (listener: () => void): (() => void) => {
-    this.listeners.add(listener);
-    return () => this.listeners.delete(listener);
-  };
+  subscribe = this.listeners.subscribe;
 
   has = (path: string): boolean => this.rows.some((row) => row.path === path);
 
@@ -100,8 +108,39 @@ export class TreeSelection {
     )
       return;
     this.rows = next;
-    for (const listener of this.listeners) listener();
+    this.listeners.publish();
   }
+}
+
+/** The tree's rows walked by keys and picked by clicks: its selection, none
+ *  once it shows another folder, whether any rows are picked, a row's click
+ *  handed to it (true: it picked), and the tree's keys, Escape letting the
+ *  picked rows go. */
+export function useTreeSelection(root: string, activePath: string | null) {
+  const { ref: treeRef, onKeyDown } = useTreeKeys<HTMLDivElement>();
+  const [selection] = useState(() => new TreeSelection());
+  const picking = useSyncExternalStore(
+    selection.subscribe,
+    () => selection.size > 0,
+  );
+  useEffect(() => selection.clear(), [selection, root]);
+  const onRowPick = useLatestCallback((e: ReactMouseEvent, path: string) => {
+    const how = pickHow(e);
+    if (!how) {
+      selection.clickedPlain(path);
+      return false;
+    }
+    selection.pick(how, path, shownRows(treeRef.current), activePath);
+    return true;
+  });
+  const onTreeKey = (e: ReactKeyboardEvent<HTMLDivElement>) => {
+    if (e.key === "Escape" && picking) {
+      e.stopPropagation();
+      return selection.clear();
+    }
+    onKeyDown(e);
+  };
+  return { treeRef, onTreeKey, selection, picking, onRowPick };
 }
 
 export const TreeSelectionContext = createContext<TreeSelection | null>(null);
@@ -119,7 +158,7 @@ const noSubscribe = () => () => {};
 
 /** The tree's rows in the order shown: its folders' rows are drawn as they
  *  are opened and come near, so the page holds that order. */
-export function shownRows(tree: HTMLElement | null): TreeRow[] {
+function shownRows(tree: HTMLElement | null): TreeRow[] {
   return [
     ...(tree?.querySelectorAll<HTMLElement>("[role=treeitem][data-path]") ??
       []),

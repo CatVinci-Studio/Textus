@@ -36,8 +36,6 @@ const ALLOWED = {
     "the sidebar's left, as its stylesheet places it by the rail: where its reveal's clip starts",
   "src/engine/frame/content-min.ts":
     "an island's narrowest content as its stylesheet draws it: the solver's least-width input",
-  "src/engine/controls/tabs/useTabSwipe.ts":
-    "whether a finger came down on the tab row, under the window bar's empty middle: a touch's place, not a layout",
   "src/app/tabs/drag-pill-look.ts":
     "a dragged tab's colours from the theme, not a place or a size",
 };

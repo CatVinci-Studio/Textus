@@ -4,7 +4,7 @@ import { DRAG_START_PX, TOUCH_SLOP_PX } from "../../utils/gesture";
 import { trackDrag } from "./pointer-drag";
 
 /** How long a finger holds still to lift what it is on. */
-export const HOLD_MS = 300;
+const HOLD_MS = 300;
 
 interface HoldDragHandlers {
   /** Held long enough: it lifts, ready to drag. */

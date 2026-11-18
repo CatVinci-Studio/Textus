@@ -1,10 +1,5 @@
 import { useLatestCallback } from "../utils/hooks/useLatest";
-import {
-  useEffect,
-  useState,
-  useSyncExternalStore,
-  type MouseEvent as ReactMouseEvent,
-} from "react";
+import { type MouseEvent as ReactMouseEvent } from "react";
 import {
   ChevronIcon,
   CloseIcon,
@@ -20,7 +15,6 @@ import { folderName, parentDir } from "../utils/path";
 import { canOpenFolder, isMobileApp } from "../platform/capabilities";
 import { ContextMenu } from "../engine/controls/ContextMenu";
 import { Presence } from "../engine/motion/usePresence";
-import { useTreeKeys } from "../engine/controls/useTreeKeys";
 import { Tooltip } from "../engine/controls/Tooltip";
 import { setUiState } from "../storage/ui-state";
 import {
@@ -37,12 +31,7 @@ import type { FileOpenHow } from "./tree-shared";
 import { useTreeView } from "./useTreeData";
 import { useRowMenu } from "./useRowMenu";
 import { useNewEntry } from "./useNewEntry";
-import {
-  pickHow,
-  shownRows,
-  TreeSelection,
-  TreeSelectionContext,
-} from "./tree-selection";
+import { TreeSelectionContext, useTreeSelection } from "./tree-selection";
 
 interface FileTreeProps {
   /** Where the tree is rooted. With no folder opened, the toolbar's parent
@@ -88,27 +77,12 @@ export function FileTree({
   // a picked folder is outside what the user granted. Not above an
   // opened folder either: that is the edge of what the user opened.
   const parent = isMobileApp || root === folder ? null : parentDir(root);
-  const { ref: treeRef, onKeyDown: treeKeys } = useTreeKeys<HTMLDivElement>();
   // One handler for the tree's life: a row redraws only when it changes.
   const select = useLatestCallback(onFileSelect);
   const desktop = !isMobileApp && canOpenFolder;
   const { draft, setDraft, finishDraft } = useNewEntry(t, reload, select);
-  // The rows picked together; none once the tree shows another folder.
-  const [selection] = useState(() => new TreeSelection());
-  const picking = useSyncExternalStore(
-    selection.subscribe,
-    () => selection.size > 0,
-  );
-  useEffect(() => selection.clear(), [selection, root]);
-  const onRowPick = useLatestCallback((e: ReactMouseEvent, path: string) => {
-    const how = pickHow(e);
-    if (!how) {
-      selection.clickedPlain(path);
-      return false;
-    }
-    selection.pick(how, path, shownRows(treeRef.current), activePath);
-    return true;
-  });
+  const { treeRef, onTreeKey, selection, picking, onRowPick } =
+    useTreeSelection(root, activePath);
 
   const { menu, setMenu, onRowMenu, openRowMenu } = useRowMenu(
     root,
@@ -315,13 +289,7 @@ export function FileTree({
                 aria-label={t.treeTab}
                 className={`tree-body${drag?.into === root ? " tx-drop-into" : ""}`}
                 data-drop-dir={root}
-                onKeyDown={(e) => {
-                  if (e.key === "Escape" && picking) {
-                    e.stopPropagation();
-                    return selection.clear();
-                  }
-                  treeKeys(e);
-                }}
+                onKeyDown={onTreeKey}
                 onContextMenu={
                   desktop ? (e) => onRowMenu(e, root, true) : undefined
                 }
