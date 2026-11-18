@@ -202,6 +202,12 @@ var handlers = {
       path: params.path,
     });
   },
+  $databaseView: async function (params) {
+    var view = databaseViews.get(params.id);
+    if (!view) return null;
+    var html = await view.render(params.data);
+    return typeof html === "string" ? html : null;
+  },
   $aiStreamText: function (params) {
     var onText = aiStreams.get(params.stream);
     if (onText) onText(params.text);

@@ -19,6 +19,10 @@ import { localize, type Permission } from "../store/manifest";
 import { type PluginManifest } from "../store/manifest-types";
 import { aiModelHandlers, stopPluginAi } from "./broker-ai";
 import { exportFormatHandlers, stopPluginExport } from "./broker-export";
+import {
+  databaseViewHandlers,
+  stopPluginDatabaseViews,
+} from "./broker-database-views";
 import { fileHandlers } from "./broker-files";
 import { layoutHandlers, seenBy } from "./broker-layout";
 import { editorHandlers, stopPluginEditor } from "./broker-editor";
@@ -279,6 +283,7 @@ export class PluginHost {
     stopPluginHistory(this.id);
     stopPluginAi(this.id);
     stopPluginExport(this.id);
+    stopPluginDatabaseViews(this.id);
     forgetListViews(this.id);
     forgetEmbeds(this.id);
     forgetWillSave(this.id);
@@ -479,6 +484,7 @@ export class PluginHost {
       ...aiModelHandlers(scope),
       ...commentHandlers(scope),
       ...exportFormatHandlers(scope),
+      ...databaseViewHandlers(scope),
     };
   }
 }

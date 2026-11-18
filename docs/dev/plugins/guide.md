@@ -530,6 +530,13 @@ editor, at once; else in the file Textus keeps them in. It needs
   before the user is asked again. `ai.available()` says whether it can be
   asked (Textus AI on). `ai.stream(request, onText)` (1.4.6) is the same
   call with the answer handed to `onText` piece by piece as it is written.
+- `views.registerDatabaseView(id, { label, icon, render(data) })` (1.4.6):
+  another way to show a database's rows, offered beside the database
+  plugin's own views. `render` gets `{ rows: [{ path, name, props }],
+columns, types, group, date }` and answers HTML, shown without scripts or
+  `<style>`; an element with `data-row="<path>"` opens that row. The plugin
+  that draws databases lists them with `views.databaseViews()` and draws one
+  with `views.renderDatabaseView(id, data)`.
 - `ai.registerInlineCompletion(id, { label, provide })` (`editor.read`, 1.8
   preview): grey text after the caret when typing pauses, from
   `provide({ before, after, path })`. One source at a time, picked by the

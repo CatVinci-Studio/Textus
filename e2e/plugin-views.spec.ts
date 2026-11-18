@@ -2,7 +2,7 @@ import { readFileSync } from "node:fs";
 import { join } from "node:path";
 import { expect, test } from "@playwright/test";
 import { pluginsCheckout } from "../vite.dev-plugins";
-import { mockInvoke, openApp, sourceOf } from "./helpers";
+import { emit, mockInvoke, openApp, sourceOf } from "./helpers";
 import {
   hasPlugin,
   minimalDocx,
@@ -471,4 +471,36 @@ test("a plugin's inline syntax is shown as it means, its source back under the c
   await spoiler.click();
   await expect(spoiler).toHaveClass(/is-touched/);
   await expect(editor.locator(".plugin-syntax-source")).toHaveCount(2);
+});
+
+test("a database shown as another plugin's view: the timeline's rows in date order, one opening on a click", async ({
+  page,
+}) => {
+  test.skip(
+    !hasPlugin("catvinci.database") || !hasPlugin("catvinci.timeline"),
+    "no plugins checkout",
+  );
+  await openWithPlugins(page, {
+    plugins: {
+      "catvinci.database": permissions("catvinci.database"),
+      "catvinci.timeline": permissions("catvinci.timeline"),
+    },
+    folder: {
+      "/work/notes/launch.md": "---\ndue: 2026-11-20\n---\n\nLaunch day\n",
+      "/work/notes/plan.md": "---\ndue: 2026-11-01\n---\n\nThe plan\n",
+      "/work/notes/tasks.base":
+        "views:\n  - type: catvinci.timeline#timeline\n    name: Timeline\n",
+    },
+  });
+  await page.evaluate(() => {
+    (window as unknown as Record<string, unknown>).__devPickFolder = "/work";
+  });
+  await emit(page, "menu-open-folder");
+  await expect(page.locator(".tree-row").first()).toBeVisible();
+  await openPath(page, "/work/notes/tasks.base");
+  const rows = tabFrame(page).locator(".plugin-view [data-row]");
+  await expect(rows).toHaveCount(2);
+  await expect(rows).toHaveText([/plan/, /launch/]);
+  await rows.first().click();
+  await expect(page.locator(".tab-pill").last()).toContainText("plan.md");
 });

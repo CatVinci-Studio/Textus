@@ -513,10 +513,52 @@ declare global {
        *  and expands embeds inside it itself. One plugin draws each kind:
        *  the first turned on. From 1.3.9 (files.read). */
       registerEmbed(id: string, provider: EmbedProvider): EmbedHandle;
+      /** Another way to show a database's rows - a timeline, a gallery -
+       *  that the plugin drawing databases offers beside its own views.
+       *  `render` gets the rows and answers HTML, which is shown without
+       *  scripts, event attributes or `<style>` (style inline instead); an
+       *  element with `data-row="<row path>"` opens that row when clicked.
+       *  It gets rows only when the user picks it in a database. From 1.4.6
+       *  (API 1.8). */
+      registerDatabaseView(
+        id: string,
+        provider: DatabaseViewProvider,
+      ): Disposable;
+      /** The database views plugins registered, `id` as
+       *  `<plugin id>#<view id>`: for the plugin that draws databases.
+       *  From 1.4.6 (API 1.8). */
+      databaseViews(): Promise<
+        { id: string; label: string; icon: string | null; plugin: string }[]
+      >;
+      /** One of databaseViews() drawn for `data`: its HTML, cleaned. From
+       *  1.4.6 (API 1.8). */
+      renderDatabaseView(id: string, data: DatabaseViewData): Promise<string>;
       /** The plugin's page in Settings (`contributes.settingsPage`). */
       registerSettingsPage(provider: {
         resolve(webview: Webview): void | Promise<void>;
       }): Disposable;
+    }
+
+    interface DatabaseViewProvider {
+      label: string;
+      /** An SVG's markup, drawn in the text's colour. */
+      icon?: string;
+      render(data: DatabaseViewData): string | Promise<string>;
+    }
+
+    /** A database's rows as its view shows them: filtered and sorted. */
+    interface DatabaseViewData {
+      /** Each row: its note's path, name, and properties. */
+      rows: { path: string; name: string; props: Record<string, unknown> }[];
+      /** The properties shown, in order. */
+      columns: string[];
+      /** Each property's type: "text", "number", "date", "checkbox",
+       *  "tags", "list"... */
+      types: Record<string, string>;
+      /** The property the view is grouped by, if any. */
+      group?: string;
+      /** The property its dates come from, if it has one. */
+      date?: string;
     }
 
     interface EmbedProvider {
