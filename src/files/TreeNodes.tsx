@@ -17,7 +17,6 @@ import {
 import { fs } from "../platform/ipc";
 import { useSettings } from "../prefs/SettingsContext";
 import { basename, isInside, onTheWay, parentDir } from "../utils/path";
-import { useLongPress } from "../utils/hooks/useLongPress";
 import { isDocumentName } from "./document-name";
 import { localeOf } from "../i18n/langs";
 import { compareEntries, nameCollator } from "../utils/name-order";
@@ -239,9 +238,6 @@ const FileNode = memo(function FileNode({
   const lang = settings.language;
   const tree = useTreeRowActions();
   const Icon = fileIconFor(entry.name);
-  const press = useLongPress(
-    tree.onRowHold ? (at) => tree.onRowHold!(at, entry.path, false) : undefined,
-  );
   const picked = useRowPicked(entry.path);
   const mark = useFileMark(entry.path);
   const badge = useFileBadge(entry.path);
@@ -267,7 +263,7 @@ const FileNode = memo(function FileNode({
         onClick={(e) => {
           if (tree.onRowPick?.(e, entry.path)) return;
           // A click looks (the preview tab); a double click keeps it.
-          if (!press.consumeClick()) onSelect(entry.path, "preview");
+          onSelect(entry.path, "preview");
         }}
         onDoubleClick={() => onSelect(entry.path)}
         onContextMenu={
@@ -280,7 +276,6 @@ const FileNode = memo(function FileNode({
             ? (e) => tree.onRowPointerDown!(e, entry.path, entry.name, false)
             : undefined
         }
-        {...(tree.onRowHold ? press.handlers : {})}
       >
         <Icon className="tree-icon" />
         <Tooltip text={entry.name} description={null} whenCut>
@@ -319,9 +314,6 @@ function FolderRow({
   onToggle: () => void;
 }) {
   const tree = useTreeRowActions();
-  const press = useLongPress(
-    tree.onRowHold ? (at) => tree.onRowHold!(at, path, true) : undefined,
-  );
   const picked = useRowPicked(path);
   return (
     <div
@@ -336,7 +328,7 @@ function FolderRow({
       // A double click folds or unfolds it once, as a click does; going
       // into it is the row's menu's Show Only This Folder.
       onClick={(e) => {
-        if (e.detail > 1 || press.consumeClick()) return;
+        if (e.detail > 1) return;
         if (tree.onRowPick?.(e, path)) return;
         onToggle();
       }}
@@ -348,7 +340,6 @@ function FolderRow({
           ? (e) => tree.onRowPointerDown!(e, path, basename(path), true)
           : undefined
       }
-      {...(tree.onRowHold ? press.handlers : {})}
     >
       <ChevronIcon className={`chevron ${open ? "chevron-open" : ""}`} />
       {open ? (

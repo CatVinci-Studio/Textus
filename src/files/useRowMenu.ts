@@ -25,6 +25,7 @@ import type { Strings } from "../i18n/strings";
 import { failureText, type TreeDraft } from "./tree-shared";
 import { updateLinksAfterMove } from "./move-links";
 import { pathItems } from "../clipboard/copy-path";
+import { heldByFinger } from "../utils/gesture";
 import type { FileOpenHow } from "./tree-shared";
 import { counted } from "../i18n/current";
 import { outermost, type TreeRow, type TreeSelection } from "./tree-selection";
@@ -231,6 +232,8 @@ export function useRowMenu(
     (e: ReactMouseEvent, path: string, isDir: boolean) => {
       e.preventDefault();
       e.stopPropagation();
+      // Android's hold sends one too: a finger's hold is the drag's.
+      if (heldByFinger(e.nativeEvent)) return;
       const at = { x: e.clientX, y: e.clientY };
       const group = selection.groupOf(path);
       if (group) return openGroupMenu(at, group);

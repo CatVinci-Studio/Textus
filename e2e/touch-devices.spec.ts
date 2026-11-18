@@ -193,6 +193,66 @@ test.describe("a tablet's menu and sidebar", () => {
   });
 });
 
+test.describe("the file tree by touch", () => {
+  // Any touch screen, a laptop's too: the tablet's folders open by iOS's picker.
+  test.use({ hasTouch: true });
+
+  test("a row held and let go shows its menu; held and moved, it goes into a folder", async ({
+    page,
+    browserName,
+  }) => {
+    test.skip(browserName !== "chromium", "touch input by CDP");
+    await page.addInitScript(() => {
+      const w = window as unknown as Record<string, unknown>;
+      w.__devFs = { "/proj/a.md": "# A\n", "/proj/notes/n.md": "# N\n" };
+      w.__devPickFolder = "/proj";
+    });
+    await openApp(page);
+    await emit(page, "menu-open-folder");
+    const row = (name: string) => page.locator(".tree-row", { hasText: name });
+    await expect(row("a.md")).toBeVisible();
+    const cdp = await page.context().newCDPSession(page);
+    const touch = (
+      type: "touchStart" | "touchMove" | "touchEnd",
+      x: number,
+      y: number,
+    ) =>
+      cdp.send("Input.dispatchTouchEvent", {
+        type,
+        touchPoints: type === "touchEnd" ? [] : [{ x, y }],
+      });
+    const a = (await row("a.md").boundingBox())!;
+    const from = { x: a.x + 30, y: a.y + a.height / 2 };
+    await touch("touchStart", from.x, from.y);
+    await page.waitForTimeout(450);
+    await touch("touchEnd", from.x, from.y);
+    await expect(page.getByRole("menuitem", { name: "打开" })).toBeVisible();
+    await page.keyboard.press("Escape");
+    await expect(page.getByRole("menu")).toHaveCount(0);
+
+    const notes = (await row("notes").boundingBox())!;
+    const to = { x: notes.x + 30, y: notes.y + notes.height / 2 };
+    await touch("touchStart", from.x, from.y);
+    await page.waitForTimeout(450);
+    for (let i = 1; i <= 10; i++)
+      await touch(
+        "touchMove",
+        from.x + ((to.x - from.x) * i) / 10,
+        from.y + ((to.y - from.y) * i) / 10,
+      );
+    await touch("touchEnd", to.x, to.y);
+    await expect
+      .poll(() =>
+        page.evaluate(() =>
+          Object.keys(
+            (window as unknown as { __devFs: Record<string, string> }).__devFs,
+          ),
+        ),
+      )
+      .toContain("/proj/notes/a.md");
+  });
+});
+
 test.describe("dragging a tab by touch on a tablet", () => {
   test.use({ ...TABLET, viewport: { width: 1024, height: 768 } });
 

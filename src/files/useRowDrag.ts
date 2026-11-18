@@ -13,6 +13,7 @@ import { updateLinksAfterMove } from "./move-links";
 import { canMoveInto, failureText } from "./tree-shared";
 import { dragGhost } from "../engine/drag/ghost";
 import { trackDrag } from "../engine/drag/pointer-drag";
+import { holdToDrag } from "../engine/drag/hold-drag";
 import { useLatest } from "../utils/hooks/useLatest";
 import { edgeScroll } from "../engine/drag/edge-scroll";
 import { outermost, type TreeRow, type TreeSelection } from "./tree-selection";
@@ -53,13 +54,15 @@ export function useRowDrag(
   t: Strings,
   /** Rows picked together: a press on one of them drags them all. */
   selection: TreeSelection,
+  /** A finger's hold let go where it was: the row's menu. */
+  onHeld: (at: { x: number; y: number }, path: string, isDir: boolean) => void,
 ) {
   const [drag, setDrag] = useState<Drag | null>(null);
-  const latest = useLatest({ reload, onEntryMoved, linkBase, t });
+  const latest = useLatest({ reload, onEntryMoved, linkBase, t, onHeld });
 
   const onRowPointerDown = useCallback(
     (e: ReactPointerEvent, path: string, name: string, isDir: boolean) => {
-      if (e.button !== 0 || e.pointerType === "touch") return;
+      if (e.button !== 0) return;
       // A modified press is a pick (tree-selection.ts), not a drag.
       if (e.shiftKey || e.metaKey || e.ctrlKey) return;
       holdSelection();
@@ -97,7 +100,7 @@ export function useRowDrag(
           into = next;
         },
       );
-      trackDrag(e.nativeEvent, {
+      const handlers = {
         start: () => {
           setDragging(true);
           // The copy under the pointer, as every drag elsewhere has it.
@@ -133,7 +136,15 @@ export function useRowDrag(
           if (group) selection.clear();
           void moveAll(moving, into);
         },
-      });
+      } satisfies Parameters<typeof trackDrag>[1];
+      // A finger lifts the row by holding still; a move before that scrolls.
+      if (e.pointerType === "touch")
+        holdToDrag(e.nativeEvent, {
+          ...handlers,
+          lift: handlers.start,
+          held: (x, y) => latest.current.onHeld({ x, y }, path, isDir),
+        });
+      else trackDrag(e.nativeEvent, handlers);
     },
     // eslint-disable-next-line react-hooks/exhaustive-deps -- moveAll reads latest
     [treeRef, selection],

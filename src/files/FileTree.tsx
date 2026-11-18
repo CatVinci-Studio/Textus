@@ -128,6 +128,7 @@ export function FileTree({
     folder ?? root,
     t,
     selection,
+    openRowMenu,
   );
   const { rowActions, shared } = useTreeContexts({
     sort,
@@ -139,7 +140,6 @@ export function FileTree({
     dropInto: drag?.into,
     desktop,
     onRowMenu,
-    onRowHold: isMobileApp ? openRowMenu : null,
     onRowPointerDown,
     onRowPick,
     draft,

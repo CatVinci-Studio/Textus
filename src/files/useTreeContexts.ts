@@ -8,8 +8,6 @@ export function useTreeContexts(
     desktop: boolean;
     dropInto: string | null | undefined;
     onRowMenu: NonNullable<TreeRowActions["onRowMenu"]>;
-    /** Null where rows aren't touched (the desktop). */
-    onRowHold: TreeRowActions["onRowHold"];
     onRowPointerDown: NonNullable<TreeRowActions["onRowPointerDown"]>;
     onRowPick: NonNullable<TreeRowActions["onRowPick"]>;
     newDocumentLabel: string;
@@ -17,15 +15,11 @@ export function useTreeContexts(
     root: string;
   },
 ): { rowActions: TreeRowActions; shared: TreeShared } {
-  const { desktop, onRowMenu, onRowHold, onRowPointerDown, onRowPick } = input;
+  const { desktop, onRowMenu, onRowPointerDown, onRowPick } = input;
+  // Every screen: a finger's hold lifts a row, a trackpad right-clicks it.
   const rowActions = useMemo<TreeRowActions>(
-    () => ({
-      onRowMenu: desktop ? onRowMenu : null,
-      onRowHold,
-      onRowPointerDown: desktop ? onRowPointerDown : null,
-      onRowPick: desktop ? onRowPick : null,
-    }),
-    [desktop, onRowMenu, onRowHold, onRowPointerDown, onRowPick],
+    () => ({ onRowMenu, onRowPointerDown, onRowPick }),
+    [onRowMenu, onRowPointerDown, onRowPick],
   );
   const {
     sort,
