@@ -119,7 +119,7 @@ Textus est gratuit et open source. [Soutenez-nous](https://github.com/CatVinci-S
 
 <p align="center"><img src="docs/images/readme/sponsors/sponsors.svg" alt="Sponsors" width="800"></p>
 
-## Soutien de la communauté
+### Autres soutiens
 
 Ce projet reconnaît et soutient la [communauté LINUX DO](https://linux.do/).
 
