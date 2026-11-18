@@ -98,6 +98,7 @@ async function caretAtZooms(page: Page) {
     for (let i = 0; i < Math.abs(by); i++)
       await page.mouse.wheel(0, by > 0 ? -120 : 120);
     await page.keyboard.up("Control");
+    // Real time: a pinch ends once the wheel has been still a moment (useZoom's 250 ms).
     await page.waitForTimeout(500);
   };
   const heights = [];

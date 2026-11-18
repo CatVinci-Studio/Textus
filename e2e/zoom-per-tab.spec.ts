@@ -20,6 +20,7 @@ async function zoomIn(page: Page, x: number, y: number) {
   await page.keyboard.down("Control");
   for (let i = 0; i < 4; i++) await page.mouse.wheel(0, -120);
   await page.keyboard.up("Control");
+  // Real time: a pinch ends once the wheel has been still a moment (useZoom's 250 ms).
   await page.waitForTimeout(600);
 }
 
@@ -99,8 +100,7 @@ test("a trackpad pinch right after a scroll zooms (Windows: ctrl+wheel in fracti
   const column = page.locator(".editor-content").first();
   expect(await zoomOf(page, 0)).toBe(1);
   await expect(column).toHaveCSS("transform", /matrix/);
-  await page.waitForTimeout(600);
-  expect(await zoomOf(page, 0)).toBeGreaterThan(1.1);
+  await expect.poll(() => zoomOf(page, 0)).toBeGreaterThan(1.1);
   await expect(column).toHaveCSS("transform", "none");
 });
 

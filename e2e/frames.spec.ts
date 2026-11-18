@@ -266,6 +266,7 @@ test("switching tabs back and forth, no tab changes width @perf", async ({
     async () => {
       for (const at of [0, 2, 1, 2]) {
         await page.locator(".tab-pill").nth(at).click();
+        // Real time: a moment on each tab, as the recording measures it.
         await page.waitForTimeout(250);
       }
     },

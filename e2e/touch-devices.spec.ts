@@ -1,5 +1,13 @@
 import { expect, type Page, test } from "@playwright/test";
-import { emit, openApp, pasteMarkdown, PHONE, TABLET } from "./helpers";
+import {
+  emit,
+  openApp,
+  pasteMarkdown,
+  PHONE,
+  restedOn,
+  settled,
+  TABLET,
+} from "./helpers";
 import { openPath } from "./plugin-helpers";
 
 // The everyday flows on a touch screen: a phone (its own layout) and a
@@ -224,6 +232,7 @@ test.describe("the file tree by touch", () => {
     const a = (await row("a.md").boundingBox())!;
     const from = { x: a.x + 30, y: a.y + a.height / 2 };
     await touch("touchStart", from.x, from.y);
+    // Real time: a finger held still long enough for its menu (hold-drag's 300 ms).
     await page.waitForTimeout(450);
     await touch("touchEnd", from.x, from.y);
     await expect(page.getByRole("menuitem", { name: "打开" })).toBeVisible();
@@ -233,6 +242,7 @@ test.describe("the file tree by touch", () => {
     const notes = (await row("notes").boundingBox())!;
     const to = { x: notes.x + 30, y: notes.y + notes.height / 2 };
     await touch("touchStart", from.x, from.y);
+    // Real time: a finger held still long enough to lift (hold-drag's 300 ms).
     await page.waitForTimeout(450);
     for (let i = 1; i <= 10; i++)
       await touch(
@@ -284,6 +294,7 @@ test.describe("the rail by touch", () => {
     const third = (await rail.locator("[data-rail-id]").nth(2).boundingBox())!;
     const x = first.x + first.width / 2;
     await touch("touchStart", x, first.y + first.height / 2);
+    // Real time: a finger held still long enough to lift (hold-drag's 300 ms).
     await page.waitForTimeout(450);
     for (let i = 1; i <= 10; i++)
       await touch(
@@ -327,6 +338,7 @@ test.describe("dragging a tab by touch on a tablet", () => {
     const from = { x: pill.x + pill.width / 2, y: pill.y + pill.height / 2 };
     const to = { x: sheet.x + sheet.width - 30, y: sheet.y + sheet.height / 2 };
     await touch("touchStart", from.x, from.y);
+    // Real time: a finger held still long enough to lift (hold-drag's 300 ms).
     await page.waitForTimeout(450);
     for (let i = 1; i <= 20; i++)
       await touch(
@@ -334,7 +346,7 @@ test.describe("dragging a tab by touch on a tablet", () => {
         from.x + ((to.x - from.x) * i) / 20,
         from.y + ((to.y - from.y) * i) / 20,
       );
-    await page.waitForTimeout(200);
+    await restedOn(page);
     await touch("touchEnd", to.x, to.y);
     await expect(page.locator(".main-pane > section.island")).toHaveCount(2);
   });
@@ -451,7 +463,7 @@ test.describe("a phone's tab row", () => {
     // open at the row's end.
     await page.locator(".tab-pill-active .tab-pill-close").tap();
     await expect(page.locator(".tab-pill")).toHaveCount(4);
-    await page.waitForTimeout(500);
+    await settled(page);
     const cut = await page.evaluate(() => {
       const bar = document.querySelector<HTMLElement>(".tab-bar")!;
       const from =

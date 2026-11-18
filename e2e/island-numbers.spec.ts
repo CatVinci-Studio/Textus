@@ -22,6 +22,7 @@ test("Ctrl held shows the islands' numbers and a number goes to that island; wit
   const numbers = page.locator(".island-number");
   await page.keyboard.down(MOD);
   await expect(numbers).toHaveCount(0);
+  // Real time: the key held past the numbers' delay (island-numbers' 500 ms).
   await page.waitForTimeout(600);
   await expect(numbers).toHaveText(["1", "2"]);
   // Each on its own island.
@@ -39,11 +40,13 @@ test("Ctrl held shows the islands' numbers and a number goes to that island; wit
   // Back to the first, which has words and so its corner's readout: the
   // focus still goes into its text.
   await page.keyboard.down(MOD);
+  // Real time: the key held past the numbers' delay (island-numbers' 500 ms).
   await page.waitForTimeout(600);
   await page.keyboard.press("1");
   await page.keyboard.up(MOD);
   await expect(editors.first()).toBeFocused();
   await page.keyboard.down(MOD);
+  // Real time: the key held past the numbers' delay (island-numbers' 500 ms).
   await page.waitForTimeout(600);
   await page.keyboard.press("2");
   await page.keyboard.up(MOD);

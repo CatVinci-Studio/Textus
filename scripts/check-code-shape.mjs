@@ -144,10 +144,28 @@ for (const path of sources) {
     });
 }
 
+// A fixed pause in an end-to-end test says what real time it stands for
+// (the undo grouping, a hold, a notice's life) on the line above; else it
+// waits for what it means instead (settled, an expect.poll). The suite run on
+// every pull request: not the benches, perf runs or screenshot scripts.
+const PAUSE = /\.waitForTimeout\(/;
+const OFF_SUITE = /^e2e\/(bench|perf|shots|frames)\//;
+for (const path of walk("e2e").filter(
+  (p) => /\.ts$/.test(p) && !OFF_SUITE.test(p),
+)) {
+  const lines = readFileSync(join(root, path), "utf8").split("\n");
+  lines.forEach((line, i) => {
+    if (PAUSE.test(line) && !/^\s*\/\//.test(lines[i - 1] ?? ""))
+      problems.push(
+        `${path}:${i + 1}: a fixed pause - wait for what it means (settled, expect.poll), or say on the line above what real time it is`,
+      );
+  });
+}
+
 if (problems.length > 0) {
   console.error(problems.join("\n"));
   process.exit(1);
 }
 console.log(
-  `code shape: ${sources.length} files within ${MAX_LINES} lines, components within ${MAX_HOOKS} hooks, no provider ids compared, listeners shared`,
+  `code shape: ${sources.length} files within ${MAX_LINES} lines, components within ${MAX_HOOKS} hooks, no provider ids compared, listeners shared, e2e pauses explained`,
 );

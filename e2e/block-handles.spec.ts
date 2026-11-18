@@ -305,7 +305,7 @@ test("the handles come with the fold caret over a block's line, stay away while 
   await page.mouse.move(fold.x + fold.width / 2, fold.y + fold.height / 2, {
     steps: 10,
   });
-  await page.waitForTimeout(200);
+  await settled(page);
   await expect(page.locator(handle)).toBeVisible();
   await expect(caret).toHaveCSS("opacity", "1");
   await hover(page, "Some text");
@@ -316,7 +316,7 @@ test("the handles come with the fold caret over a block's line, stay away while 
   await pasteMarkdown(page, "## Part one\n\nSome text");
   const box = (await block(page, "Some text").boundingBox())!;
   await page.mouse.move(box.x + 20, box.y + box.height / 2);
-  await page.waitForTimeout(200);
+  await settled(page);
   await expect(page.locator(handle)).toBeHidden();
   // A heading's fold caret still comes over its line.
   const title = (await block(page, "Part one").boundingBox())!;
@@ -465,7 +465,7 @@ test("zoomed in, the blocks making room slide from where they were drawn", async
   await page.keyboard.down("Control");
   for (let i = 0; i < 4; i++) await page.mouse.wheel(0, -120);
   await page.keyboard.up("Control");
-  await page.waitForTimeout(600);
+  await settled(page);
   await hover(page, "First");
   const grip = (await page
     .locator(`${handle} .block-handle-grip`)

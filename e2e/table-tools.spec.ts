@@ -1,5 +1,5 @@
 import { expect, test, type Page } from "@playwright/test";
-import { MAC, openApp, pasteMarkdown } from "./helpers";
+import { MAC, openApp, pasteMarkdown, settled } from "./helpers";
 
 // A table's own tools at its top right: they show on hover and while the
 // caret is in it, and change what the file says.
@@ -71,7 +71,7 @@ test("a table's tools align the caret's column, size it, and delete it", async (
 
   // Over a narrow column the tools give way rather than run past the table.
   await page.setViewportSize({ width: 330, height: 760 });
-  await page.waitForTimeout(400);
+  await settled(page);
   await table.locator("th").last().hover();
   const box = (await table.boundingBox())!;
   for (const pill of await table.locator(".block-pill:visible").all())
@@ -243,7 +243,7 @@ test("a click below a table that ends the document starts a paragraph there", as
   page,
 }) => {
   const table = await open(page);
-  await page.waitForTimeout(400);
+  await settled(page);
   const box = (await table.boundingBox())!;
   await page.mouse.click(box.x + 40, box.y + box.height + 40);
   await page.keyboard.type("after");

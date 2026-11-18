@@ -108,7 +108,7 @@ for (const language of ["zh", "en", "de", "ru", "ja"])
             ),
           id,
         );
-        await page.waitForTimeout(150);
+        await settled(page);
         for (const p of await problems(page))
           found.push(`${width} ${id}: ${p}`);
       }
@@ -119,6 +119,24 @@ for (const language of ["zh", "en", "de", "ru", "ja"])
 // The window's own parts - its bar, tab rows, rail and sidebar heads -
 // across the states it can be in: nothing drawn on top of anything else.
 // One page per platform, the states switched in it, so it stays quick.
+/** The menu bar's and the window's buttons drawn past the window's edges. */
+function outsideWindow(page: Page, width: number) {
+  return page.evaluate(
+    (width) =>
+      [...document.querySelectorAll(".window-menu-bar, .window-caption")]
+        .map((el) => {
+          const r = el.getBoundingClientRect();
+          return [
+            el.className,
+            Math.round(r.left),
+            Math.round(r.right),
+          ] as const;
+        })
+        .filter(([, left, right]) => left < 0 || right > width),
+    width,
+  );
+}
+
 async function chromeOverlaps(page: Page): Promise<string[]> {
   return page.evaluate(() => {
     const roots = document.querySelectorAll(
@@ -244,7 +262,6 @@ for (const [os, platform] of [
           for (const sidebar of [false, true]) {
             const open = await page.locator(".sidebar-header").count();
             if (!!open !== sidebar) await emit(page, "menu-toggle-sidebar");
-            await page.waitForTimeout(120);
             const said = JSON.stringify({
               ...state,
               uiTextScale,
@@ -252,45 +269,15 @@ for (const [os, platform] of [
               sidebar,
             });
             // Only what stays: under load the layout may still be settling.
-            let left = await chromeOverlaps(page);
-            for (let i = 0; left.length && i < 10; i++) {
-              await page.waitForTimeout(150);
-              left = await chromeOverlaps(page);
-            }
-            for (const p of left) found.push(`${said}: ${p}`);
+            await settled(page);
+            for (const p of await chromeOverlaps(page))
+              found.push(`${said}: ${p}`);
+            // The menu bar's titles and the window's buttons stay inside it.
+            for (const [name, left, right] of await outsideWindow(page, width))
+              found.push(`${said}: ${name} drawn at ${left}..${right}`);
           }
         }
     expect([...new Set(found)]).toEqual([]);
-  });
-
-for (const [os, platform] of [
-  ["windows", "Win32"],
-  ["linux", "Linux x86_64"],
-] as const)
-  test(`the menu bar's titles show on ${os}, the window's buttons inside it`, async ({
-    page,
-  }) => {
-    await page.addInitScript((p) => {
-      Object.defineProperty(navigator, "platform", { get: () => p });
-      Object.defineProperty(navigator, "userAgent", {
-        get: () => `Mozilla/5.0 (${p}) AppleWebKit/537.36 Chrome/157.0`,
-      });
-    }, platform);
-    await page.setViewportSize({ width: 1200, height: 760 });
-    await openApp(page, { settings: { menuBarShown: true } });
-    await expect(page.locator(".window-menu-bar").first()).toBeVisible();
-    const edges = await page.evaluate(() =>
-      [...document.querySelectorAll(".window-menu-bar, .window-caption")].map(
-        (el) => {
-          const r = el.getBoundingClientRect();
-          return [r.left, r.right];
-        },
-      ),
-    );
-    for (const [left, right] of edges) {
-      expect(left).toBeGreaterThanOrEqual(0);
-      expect(right).toBeLessThanOrEqual(1200);
-    }
   });
 
 test("a button label wider than its row is cut at its end, never its start", async ({

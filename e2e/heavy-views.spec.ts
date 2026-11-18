@@ -23,6 +23,7 @@ test("formulas far from the screen are let go, keeping their size, and drawn aga
   const height = await scroller.evaluate((s) => s.scrollHeight);
   for (let y = 0; y <= height; y += 600) {
     await scroller.evaluate((s, y) => s.scrollTo(0, y), y);
+    // Real time: a frame or so a step, as a reader scrolls.
     await page.waitForTimeout(20);
   }
   await expect.poll(() => katex.count()).toBeLessThan(100);

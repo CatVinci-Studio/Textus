@@ -32,6 +32,13 @@ test("the Edit menu's Undo, Redo and Select All act on the document in use", asy
   await expect(docs(page)).toHaveCount(2);
   await docs(page).nth(1).click();
   await page.keyboard.type("beta");
+  // Its key takes that island's document alone...
+  await page.keyboard.press("ControlOrMeta+a");
+  await expect
+    .poll(() => page.evaluate(() => String(getSelection()).trim()))
+    .toBe("beta");
+  // ...as the menu's item does.
+  await page.keyboard.press("ArrowRight");
   await emit(page, "menu-select-all");
   await expect
     // WebKit's selection text ends with the block's line break.
@@ -128,8 +135,11 @@ test("a source view let go for memory comes back with its undo, caret and place"
   await expect(source).toContainText("line 2 typed+");
   await page.keyboard.press("ControlOrMeta+z");
   await expect(source).not.toContainText("+");
+  // The undo's own scroll to the caret first, then the reader's.
+  await settled(page);
   await scroller.evaluate((el) => (el.scrollTop = 900));
   await settled(page);
+  expect(await scroller.evaluate((el) => Math.round(el.scrollTop))).toBe(900);
   // Short of memory with b's source on screen: a's, out of sight, goes.
   await page.locator(".tab-pill", { hasText: "b.md" }).click();
   await expect(source).toContainText("# B");
@@ -173,7 +183,7 @@ test("a find bar left open comes back with its tab, the page where it was read",
   // Read on elsewhere, the bar still open.
   const scroller = page.locator(".editor-scroll").first();
   await scroller.evaluate((el) => (el.scrollTop = 600));
-  await page.waitForTimeout(200);
+  await settled(page);
   const read = await scroller.evaluate((el) => el.scrollTop);
 
   await page.locator(".tab-pill", { hasText: "b.md" }).click();
@@ -181,7 +191,7 @@ test("a find bar left open comes back with its tab, the page where it was read",
   await page.locator(".tab-pill", { hasText: "a.md" }).click();
   await expect(bar.getByRole("textbox").first()).toHaveValue("needle");
   await expect(page.locator(".find-match")).toHaveCount(1);
-  await page.waitForTimeout(300);
+  await settled(page);
   expect(
     Math.abs((await scroller.evaluate((el) => el.scrollTop)) - read),
   ).toBeLessThan(2);
@@ -279,7 +289,7 @@ test("a ⌘ or Ctrl click in the text places the caret, never selects the block"
   await pasteMarkdown(page, "> **W1:** quoted words here\n\nafter\n");
   const quoted = docs(page).first().locator("blockquote p");
   await quoted.click({ modifiers: [MAC ? "Meta" : "Control"] });
-  await page.waitForTimeout(100);
+  await settled(page);
   await expect(page.locator(".ProseMirror-selectednode")).toHaveCount(0);
   expect(
     await page.evaluate(
@@ -427,6 +437,7 @@ test("a look at the source and back keeps the document's undo and its caret", as
   await line.click();
   await page.keyboard.press("End");
   await page.keyboard.type(" ONE");
+  // Past the editor's undo grouping (500 ms): the two words undo apart.
   await page.waitForTimeout(700);
   await page.keyboard.type(" TWO");
   await expect(line).toHaveText("The first line. ONE TWO");
@@ -436,7 +447,7 @@ test("a look at the source and back keeps the document's undo and its caret", as
   ).toContainText("ONE TWO");
   await emit(page, "menu-toggle-source-mode");
   await expect(line).toHaveText("The first line. ONE TWO");
-  await page.waitForTimeout(500);
+  await settled(page);
   await page.keyboard.press("ControlOrMeta+z");
   await expect(line).toHaveText("The first line. ONE");
   await page.keyboard.type("!");
@@ -482,6 +493,6 @@ test("Find Next from the menu reaches its match while the AI writes, and the pag
   await emit(page, "menu-find-next");
   const needle = docs(page).first().locator("p", { hasText: "needle" });
   await expect(needle).toBeInViewport();
-  await page.waitForTimeout(500);
+  await settled(page);
   await expect(needle).toBeInViewport();
 });
