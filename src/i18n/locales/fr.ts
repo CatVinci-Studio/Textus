@@ -652,6 +652,11 @@ utiliser une.
     "Mettre « {name} » à la corbeille ? Vous pourrez l’en sortir.",
   treeTrashFolderConfirm:
     "Mettre le dossier « {name} » et tout son contenu à la corbeille ? Vous pourrez l’en sortir.",
+  treeTrashManyConfirm: {
+    one: "Mettre {n} élément à la corbeille ? Vous pourrez l’en sortir.",
+    many: "Mettre {n} éléments à la corbeille ? Vous pourrez les en sortir.",
+    other: "Mettre {n} éléments à la corbeille ? Vous pourrez les en sortir.",
+  },
   errorPermission:
     "Textus n'a pas l'autorisation d'ouvrir ce fichier ou ce dossier. Vérifiez ses autorisations ou choisissez un autre emplacement.",
   errorNotFound:

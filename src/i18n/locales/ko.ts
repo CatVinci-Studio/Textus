@@ -596,6 +596,9 @@ ${AI_NAME}에게 주는 글쓰기 지침으로, 모든 문서에 적용됩니다
     "“{name}”을(를) 휴지통으로 옮길까요? 휴지통에서 되돌릴 수 있습니다.",
   treeTrashFolderConfirm:
     "폴더 “{name}”와(과) 그 안의 모든 항목을 휴지통으로 옮길까요? 휴지통에서 되돌릴 수 있습니다.",
+  treeTrashManyConfirm: {
+    other: "항목 {n}개를 휴지통으로 옮길까요? 휴지통에서 되돌릴 수 있습니다.",
+  },
   errorPermission:
     "Textus에 이 파일 또는 폴더에 접근할 권한이 없습니다. 권한을 확인하거나 다른 위치를 선택하세요.",
   errorNotFound:

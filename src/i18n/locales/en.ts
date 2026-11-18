@@ -621,6 +621,10 @@ type /name in a conversation to use one.
     "Move “{name}” to the Trash? You can put it back from there.",
   treeTrashFolderConfirm:
     "Move the folder “{name}” and everything in it to the Trash? You can put it back from there.",
+  treeTrashManyConfirm: {
+    one: "Move {n} item to the Trash? You can put it back from there.",
+    other: "Move {n} items to the Trash? You can put them back from there.",
+  },
   errorPermission:
     "Textus isn't allowed to open this file or folder. Check its permissions, or choose another location.",
   errorNotFound:

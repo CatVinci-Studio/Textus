@@ -605,6 +605,9 @@ ${AI_NAME}への執筆の指示です。すべての文書に適用されます�
   treeTrashConfirm: "「{name}」をゴミ箱に入れますか？ゴミ箱から元に戻せます。",
   treeTrashFolderConfirm:
     "フォルダ「{name}」とその中身をすべてゴミ箱に入れますか？ゴミ箱から元に戻せます。",
+  treeTrashManyConfirm: {
+    other: "{n} 項目をゴミ箱に入れますか？ゴミ箱から元に戻せます。",
+  },
   errorPermission:
     "Textus にはこのファイルまたはフォルダへのアクセス権がありません。権限を確認するか、別の場所を選んでください。",
   errorNotFound:

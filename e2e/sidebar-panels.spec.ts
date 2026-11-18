@@ -158,20 +158,26 @@ test("a file closed at once opens again at once", async ({ page }) => {
   await expect(tab).toBeVisible();
 });
 
-test("a file dragged onto a folder moves into it; with Esc it stays", async ({
+test("a file dragged onto a folder moves into it; with Esc it stays; picked files go together", async ({
   page,
 }) => {
   await page.addInitScript(() => {
     const w = window as unknown as Record<string, unknown>;
-    w.__devFs = { "/proj/a.md": "# A\n", "/proj/notes/n.md": "# N\n" };
+    w.__devFs = {
+      "/proj/a.md": "# A\n",
+      "/proj/b.md": "# B\n",
+      "/proj/c.md": "# C\n",
+      "/proj/d.md": "# D\n",
+      "/proj/notes/n.md": "# N\n",
+    };
     w.__devPickFolder = "/proj";
   });
   await openApp(page);
   await emit(page, "menu-open-folder");
   const row = (name: string) => page.locator(".tree-row", { hasText: name });
   await expect(row("a.md")).toBeVisible();
-  const drag = async (escape: boolean) => {
-    const from = (await row("a.md").boundingBox())!;
+  const drag = async (escape: boolean, name = "a.md") => {
+    const from = (await row(name).boundingBox())!;
     const to = (await row("notes").boundingBox())!;
     await page.mouse.move(from.x + 20, from.y + from.height / 2);
     await page.mouse.down();
@@ -190,6 +196,36 @@ test("a file dragged onto a folder moves into it; with Esc it stays", async ({
   expect(await files()).toContain("/proj/a.md");
   await drag(false);
   await expect.poll(files).toContain("/proj/notes/a.md");
+
+  // b to d by Shift, c let go of by ⌘/Ctrl: b and d go into notes together.
+  const picked = () =>
+    page.locator(".tree-row-picked .tree-label").allInnerTexts();
+  await row("b.md").click();
+  await row("d.md").click({ modifiers: ["Shift"] });
+  await expect.poll(picked).toEqual(["b.md", "c.md", "d.md"]);
+  await row("c.md").click({ modifiers: ["ControlOrMeta"] });
+  await expect.poll(picked).toEqual(["b.md", "d.md"]);
+  await drag(false, "b.md");
+  await expect
+    .poll(files)
+    .toEqual(
+      expect.arrayContaining([
+        "/proj/notes/b.md",
+        "/proj/notes/d.md",
+        "/proj/c.md",
+      ]),
+    );
+  await expect.poll(picked).toEqual([]);
+
+  // Two picked, right-clicked: both to the Trash after one question.
+  await row("c.md").click();
+  await row("n.md").click({ modifiers: ["ControlOrMeta"] });
+  await expect.poll(picked).toEqual(["n.md", "c.md"]);
+  await row("c.md").click({ button: "right" });
+  await page.getByRole("menuitem", { name: "移到废纸篓" }).click();
+  await page.getByRole("button", { name: "移到废纸篓" }).click();
+  await expect.poll(files).not.toContain("/proj/c.md");
+  expect(await files()).not.toContain("/proj/notes/n.md");
 });
 
 test("the AI's edge stepped past what the window can show stops there, and steps back at once", async ({

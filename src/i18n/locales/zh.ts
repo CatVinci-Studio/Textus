@@ -566,6 +566,9 @@ export default {
   treeTrashConfirm: "把“{name}”移到废纸篓吗？之后可以从废纸篓里放回。",
   treeTrashFolderConfirm:
     "把文件夹“{name}”和其中的所有内容移到废纸篓吗？之后可以从废纸篓里放回。",
+  treeTrashManyConfirm: {
+    other: "把这 {n} 项移到废纸篓吗？之后可以从废纸篓里放回。",
+  },
   errorPermission:
     "Textus 没有权限访问这个文件或文件夹。请检查它的权限，或换一个位置。",
   errorNotFound: "文件或文件夹已经不在了，可能被移动、改名或删除。",

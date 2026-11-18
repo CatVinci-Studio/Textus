@@ -58,9 +58,17 @@
   }
 }
 
-.tree-row-active {
+.tree-row-active,
+.tree-row-picked {
   background: var(--ui-selected);
   color: var(--ui-selected-text);
+}
+
+/* Rows picked together: the open document's row looks picked only if it
+   is one of them. */
+.file-tree-picking .tree-row-active:not(.tree-row-picked, :hover) {
+  background: none;
+  color: inherit;
 }
 
 .tree-icon {

@@ -26,6 +26,8 @@ import { failureText, type TreeDraft } from "./tree-shared";
 import { updateLinksAfterMove } from "./move-links";
 import { pathItems } from "../clipboard/copy-path";
 import type { FileOpenHow } from "./tree-shared";
+import { counted } from "../i18n/current";
+import { outermost, type TreeRow, type TreeSelection } from "./tree-selection";
 
 /** A row's right-click menu, while it is open. */
 type TreeMenu = {
@@ -49,6 +51,8 @@ export function useRowMenu(
   /** The tree narrowed to a folder inside it. */
   /** Null with a folder opened: the tree shows it whole. */
   onEnter: ((path: string) => void) | null,
+  /** The rows picked together, which a right-click on one of them acts on. */
+  selection: TreeSelection,
 ) {
   const [menu, setMenu] = useState<TreeMenu>(null);
   const rename = useCallback(
@@ -98,6 +102,55 @@ export function useRowMenu(
       }
     },
     [root, t, reload],
+  );
+
+  /** Several rows to the Trash at once, after one question; a row inside a
+   *  picked folder goes with it. */
+  const trashMany = useCallback(
+    async (rows: readonly TreeRow[]) => {
+      const ok = await showConfirm(
+        counted(t.treeTrashManyConfirm, rows.length),
+        { okLabel: t.treeTrash, cancelLabel: t.cancel, danger: true },
+      );
+      if (!ok) return;
+      selection.clear();
+      for (const { path } of outermost(rows)) {
+        try {
+          await fs.trashEntry(path, root);
+          reload(parentDir(path) ?? root);
+          sendAppEvent(ENTRY_TRASHED_EVENT, path);
+          emitPluginEvent("fileDelete", { path });
+        } catch (err) {
+          await showMessage(failureText(t, err, basename(path)));
+          return;
+        }
+      }
+    },
+    [root, t, reload, selection],
+  );
+
+  /** The menu of several rows picked together: open its documents, or
+   *  move them all to the Trash. */
+  const openGroupMenu = useCallback(
+    (at: { x: number; y: number }, rows: readonly TreeRow[]) => {
+      const files = rows.filter((row) => !row.isDir).map((row) => row.path);
+      const items: (ContextMenuItem | "separator")[] = [];
+      if (files.length)
+        items.push(
+          {
+            label: t.treeOpen,
+            onSelect: () => files.forEach((path) => onFileSelect(path)),
+          },
+          "separator",
+        );
+      items.push({
+        label: t.treeTrash,
+        onSelect: () => void trashMany(rows),
+        danger: true,
+      });
+      setMenu({ ...at, items });
+    },
+    [t, onFileSelect, trashMany],
   );
 
   const openRowMenu = useCallback(
@@ -178,9 +231,13 @@ export function useRowMenu(
     (e: ReactMouseEvent, path: string, isDir: boolean) => {
       e.preventDefault();
       e.stopPropagation();
-      openRowMenu({ x: e.clientX, y: e.clientY }, path, isDir);
+      const at = { x: e.clientX, y: e.clientY };
+      const group = selection.groupOf(path);
+      if (group) return openGroupMenu(at, group);
+      selection.clear();
+      openRowMenu(at, path, isDir);
     },
-    [openRowMenu],
+    [openRowMenu, openGroupMenu, selection],
   );
   return { menu, setMenu, onRowMenu, openRowMenu };
 }

@@ -630,6 +630,11 @@ Skills liegen im Ordner skills/ neben dieser Datei, je Skill eine
     "„{name}“ in den Papierkorb legen? Von dort lässt es sich zurücklegen.",
   treeTrashFolderConfirm:
     "Den Ordner „{name}“ mit allem darin in den Papierkorb legen? Von dort lässt er sich zurücklegen.",
+  treeTrashManyConfirm: {
+    one: "{n} Objekt in den Papierkorb legen? Von dort lässt es sich zurücklegen.",
+    other:
+      "{n} Objekte in den Papierkorb legen? Von dort lassen sie sich zurücklegen.",
+  },
   errorPermission:
     "Textus darf diese Datei oder diesen Ordner nicht öffnen. Prüfe die Zugriffsrechte oder wähle einen anderen Ort.",
   errorNotFound:

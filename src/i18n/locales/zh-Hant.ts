@@ -567,6 +567,9 @@ export default {
   treeTrashConfirm: "要把「{name}」移到垃圾桶嗎？之後可以從垃圾桶放回。",
   treeTrashFolderConfirm:
     "要把資料夾「{name}」和其中的所有內容移到垃圾桶嗎？之後可以從垃圾桶放回。",
+  treeTrashManyConfirm: {
+    other: "要把這 {n} 項移到垃圾桶嗎？之後可以從垃圾桶放回。",
+  },
   errorPermission:
     "Textus 沒有權限存取這個檔案或資料夾。請檢查它的權限，或換一個位置。",
   errorNotFound: "檔案或資料夾已經不在了，可能被移動、重新命名或刪除。",

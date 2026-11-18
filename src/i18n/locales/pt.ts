@@ -639,6 +639,11 @@ Habilidades ficam na pasta skills/ ao lado deste arquivo, um arquivo
   treeTrashConfirm: "Mover “{name}” para a lixeira? Dá para recuperar de lá.",
   treeTrashFolderConfirm:
     "Mover a pasta “{name}” e tudo o que ela contém para a lixeira? Dá para recuperar de lá.",
+  treeTrashManyConfirm: {
+    one: "Mover {n} item para a lixeira? Dá para recuperar de lá.",
+    many: "Mover {n} itens para a lixeira? Dá para recuperá-los de lá.",
+    other: "Mover {n} itens para a lixeira? Dá para recuperá-los de lá.",
+  },
   errorPermission:
     "O Textus não tem permissão para abrir este arquivo ou pasta. Verifique as permissões ou escolha outro local.",
   errorNotFound:

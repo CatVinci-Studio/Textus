@@ -650,6 +650,12 @@ para usar una.
     "¿Mover «{name}» a la papelera? Podrás recuperarlo desde allí.",
   treeTrashFolderConfirm:
     "¿Mover la carpeta «{name}» y todo su contenido a la papelera? Podrás recuperarla desde allí.",
+  treeTrashManyConfirm: {
+    one: "¿Mover {n} elemento a la papelera? Podrás recuperarlo desde allí.",
+    many: "¿Mover {n} elementos a la papelera? Podrás recuperarlos desde allí.",
+    other:
+      "¿Mover {n} elementos a la papelera? Podrás recuperarlos desde allí.",
+  },
   errorPermission:
     "Textus no tiene permiso para abrir este archivo o carpeta. Revisa sus permisos o elige otra ubicación.",
   errorNotFound:

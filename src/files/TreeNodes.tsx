@@ -22,6 +22,7 @@ import { isDocumentName } from "./document-name";
 import { localeOf } from "../i18n/langs";
 import { compareEntries, nameCollator } from "../utils/name-order";
 import { useTree, useTreeRowActions } from "./tree-shared";
+import { useRowPicked } from "./tree-selection";
 import { isWithin } from "../utils/path";
 import { DraftRow } from "./DraftRow";
 import { TreeRowsInSight } from "./TreeRowsInSight";
@@ -241,6 +242,7 @@ const FileNode = memo(function FileNode({
   const press = useLongPress(
     tree.onRowHold ? (at) => tree.onRowHold!(at, entry.path, false) : undefined,
   );
+  const picked = useRowPicked(entry.path);
   const mark = useFileMark(entry.path);
   const badge = useFileBadge(entry.path);
   const changed = !!mark?.changed;
@@ -253,17 +255,17 @@ const FileNode = memo(function FileNode({
   return (
     <>
       <div
-        className={`tree-row tree-row-file${active ? " tree-row-active" : ""}${entry.ignored ? " tree-row-ignored" : ""}`}
+        className={`tree-row tree-row-file${active ? " tree-row-active" : ""}${picked ? " tree-row-picked" : ""}${entry.ignored ? " tree-row-ignored" : ""}`}
         role="treeitem"
         aria-level={depth}
-        aria-selected={active}
+        aria-selected={active || picked}
+        data-path={entry.path}
         data-ai-changed={changed || undefined}
         // Dropped on a file, a drag goes into that file's folder.
         data-drop-dir={parentDir(entry.path) ?? undefined}
         style={{ "--depth": depth } as CSSProperties}
         onClick={(e) => {
-          if ((e.metaKey || e.ctrlKey) && tree.openInNewWindow)
-            return tree.openInNewWindow(entry.path);
+          if (tree.onRowPick?.(e, entry.path)) return;
           // A click looks (the preview tab); a double click keeps it.
           if (!press.consumeClick()) onSelect(entry.path, "preview");
         }}
@@ -320,18 +322,22 @@ function FolderRow({
   const press = useLongPress(
     tree.onRowHold ? (at) => tree.onRowHold!(at, path, true) : undefined,
   );
+  const picked = useRowPicked(path);
   return (
     <div
-      className={`tree-row${dropping ? " tx-drop-into" : ""}${ignored ? " tree-row-ignored" : ""}`}
+      className={`tree-row${dropping ? " tx-drop-into" : ""}${picked ? " tree-row-picked" : ""}${ignored ? " tree-row-ignored" : ""}`}
       role="treeitem"
       aria-level={depth}
       aria-expanded={open}
+      aria-selected={picked}
+      data-path={path}
       data-drop-dir={path}
       style={{ "--depth": depth } as CSSProperties}
       // A double click folds or unfolds it once, as a click does; going
       // into it is the row's menu's Show Only This Folder.
       onClick={(e) => {
         if (e.detail > 1 || press.consumeClick()) return;
+        if (tree.onRowPick?.(e, path)) return;
         onToggle();
       }}
       onContextMenu={
