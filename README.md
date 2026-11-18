@@ -122,7 +122,7 @@ Textus is free and open source. [Sponsor us](https://github.com/CatVinci-Studio/
 
 <p align="center"><img src="docs/images/readme/sponsors/sponsors.svg" alt="Sponsors" width="800"></p>
 
-## Community support
+### Other support
 
 This project recognizes and supports the [LINUX DO community](https://linux.do/).
 

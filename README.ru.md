@@ -119,7 +119,7 @@ Textus бесплатен и открыт. [Поддержите нас](https:/
 
 <p align="center"><img src="docs/images/readme/sponsors/sponsors.svg" alt="Sponsors" width="800"></p>
 
-## Поддержка сообщества
+### Другая поддержка
 
 Этот проект признаёт и поддерживает [сообщество LINUX DO](https://linux.do/).
 

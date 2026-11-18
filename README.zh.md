@@ -120,7 +120,7 @@ Textus 免费开源。欢迎[赞助我们](https://github.com/CatVinci-Studio/Te
 
 <p align="center"><img src="docs/images/readme/sponsors/sponsors.svg" alt="Sponsors" width="800"></p>
 
-## 社区支持
+### 其他支持
 
 本项目认可并支持 [LINUX DO 社区](https://linux.do/)。
 

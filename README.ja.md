@@ -119,7 +119,7 @@ Textusは無料のオープンソースです。開発を支えていただけ�
 
 <p align="center"><img src="docs/images/readme/sponsors/sponsors.svg" alt="Sponsors" width="800"></p>
 
-## コミュニティ支援
+### その他の支援
 
 本プロジェクトは [LINUX DO コミュニティ](https://linux.do/) を認め、支援しています。
 
