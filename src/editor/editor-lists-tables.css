@@ -263,33 +263,6 @@
   opacity: 0.32;
 }
 
-/* A table's tools sit over its top edge, not on its head row's words; the
-   gap under them is theirs, so the pointer reaching them stays on it. */
-.table-toolbar > .block-toolbar-actions {
-  top: auto;
-  bottom: 100%;
-  right: 0;
-  padding-bottom: 4px;
-  /* As wide as the table shows, the pills at its right: what doesn't fit
-     gives way (TableToolbar's fit steps) instead of running past it. */
-  left: 0;
-  overflow: hidden;
-}
-/* Pushed right by an auto margin, not justify-content, so what doesn't fit
-   overflows where the fit steps can see it. */
-.table-toolbar > .block-toolbar-actions > :first-child {
-  margin-inline-start: auto;
-}
-/* Only the pills take the pointer: the row's empty left stays the text's. */
-.table-wrapper:is(:hover, :focus-within, .is-table-caret, .is-sizing)
-  > .block-toolbar.table-toolbar
-  > .block-toolbar-actions {
-  pointer-events: none;
-}
-.table-toolbar > .block-toolbar-actions > * {
-  flex-shrink: 0;
-  pointer-events: auto;
-}
 .table-toolbar > [data-fit="tight"],
 .table-toolbar > [data-fit^="no-"] {
   gap: 2px;

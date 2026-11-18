@@ -86,7 +86,12 @@ export function openDiagramViewer(
   stage.className = "diagram-viewer-stage";
   const drawing = source.cloneNode(true) as SVGSVGElement | HTMLImageElement;
   drawing.removeAttribute("style");
-  if (drawing instanceof HTMLImageElement) drawing.draggable = false;
+  if (drawing instanceof HTMLImageElement) {
+    drawing.draggable = false;
+    // The copy loads again (a picture on a server may not come from the
+    // cache at once): never lazily, out here.
+    drawing.loading = "eager";
+  }
   drawing.classList.add("diagram-viewer-drawing");
   stage.append(drawing);
   // A Pele drawing takes its colours from its frame's variables, Mermaid's
@@ -116,9 +121,15 @@ export function openDiagramViewer(
   };
   const fit = () => {
     // A picture at its own size, a drawing at the size it is drawn.
+    // Until the copy has loaded, the shown picture's size: it opens
+    // centred and fitted, not as nothing.
+    const sized =
+      drawing instanceof HTMLImageElement && drawing.naturalWidth > 0
+        ? drawing
+        : source;
     const box =
-      drawing instanceof HTMLImageElement
-        ? { width: drawing.naturalWidth, height: drawing.naturalHeight }
+      sized instanceof HTMLImageElement
+        ? { width: sized.naturalWidth, height: sized.naturalHeight }
         : source.getBoundingClientRect();
     const room = stage.getBoundingClientRect();
     // A picture opens no larger than it is: stretched, it blurs.
@@ -291,6 +302,17 @@ export function openDiagramViewer(
   document.addEventListener("keydown", onKey, true);
   document.body.append(layer);
   fit();
+  // The copy loaded later than it opened: fitted again, unless moved since.
+  if (drawing instanceof HTMLImageElement && !drawing.complete) {
+    const opened = { x, y, scale };
+    drawing.addEventListener(
+      "load",
+      () => {
+        if (x === opened.x && y === opened.y && scale === opened.scale) fit();
+      },
+      { once: true },
+    );
+  }
   close.focus();
   return dismiss;
 }
