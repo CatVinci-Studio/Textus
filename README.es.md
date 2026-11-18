@@ -119,6 +119,12 @@ Textus es gratuito y de código abierto. [Patrocínanos](https://github.com/CatV
 
 <p align="center"><img src="docs/images/readme/sponsors/sponsors.svg" alt="Sponsors" width="800"></p>
 
+## Apoyo de la comunidad
+
+Este proyecto reconoce y apoya a la [comunidad LINUX DO](https://linux.do/).
+
+Gracias a LINUX DO por ofrecer a los desarrolladores un lugar para compartir conocimiento técnico y trabajo de código abierto.
+
 ## Comunidad
 
 Únete en Discord, QQ o WeChat: [textus.md/community](https://textus.md/es/community/). Los errores y las sugerencias son bienvenidos en [GitHub Issues](https://github.com/CatVinci-Studio/Textus/issues). Para contribuir con código, empieza por [CONTRIBUTING.md](CONTRIBUTING.md).

@@ -119,6 +119,12 @@ Textusは無料のオープンソースです。開発を支えていただけ�
 
 <p align="center"><img src="docs/images/readme/sponsors/sponsors.svg" alt="Sponsors" width="800"></p>
 
+## コミュニティ支援
+
+本プロジェクトは [LINUX DO コミュニティ](https://linux.do/) を認め、支援しています。
+
+開発者に技術交流とオープンソース共有の場を提供している LINUX DO コミュニティに感謝します。
+
 ## コミュニティ
 
 Discord、QQ、WeChatで参加できます：[textus.md/community](https://textus.md/ja/community/)。不具合の報告や要望は [GitHub Issues](https://github.com/CatVinci-Studio/Textus/issues) へどうぞ。コードで貢献するなら、まず [CONTRIBUTING.md](CONTRIBUTING.md) をご覧ください。
