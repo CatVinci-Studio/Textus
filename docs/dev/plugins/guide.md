@@ -538,6 +538,11 @@ columns, types, group, date }` and answers HTML, shown without scripts or
   `<style>`; an element with `data-row="<path>"` opens that row. The plugin
   that draws databases lists them with `views.databaseViews()` and draws one
   with `views.renderDatabaseView(id, data)`.
+- `ssh` (`ssh`, 1.4.6 preview, desktop): `hosts()` from `~/.ssh/config`,
+  `connect(host)` → a session (the user is asked once per host), `home`,
+  `list`, `read` / `readText`, `write`, `create`, `rename`, `remove`,
+  `close`. The user's own ssh runs SFTP only; an unknown host key or a
+  password ends the link with words saying what to do.
 - `files.registerProvider(scheme, provider)` (1.4.6, preview): paths of
   the plugin's own scheme (`ssh://host/home/me`) read and written by the
   plugin - `list`, `readText`, `readBytes`, `writeText`, `create`,

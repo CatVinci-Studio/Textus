@@ -1849,6 +1849,13 @@ ${AI_NAME}への執筆の指示です。すべての文書に適用されます�
   pluginPermNotifications: "システム通知を表示する",
   pluginPermAppearance: "Textus と文書の色を変更する",
   pluginPermGitCommit: "自分の Git で、開いているフォルダにコミットする",
+  pluginPermSsh: "自分の SSH 設定でサーバーに接続する（許可したものだけ）",
+  pluginSshAsk:
+    "{plugin} があなたの SSH 設定で {host} に接続し、そこのファイルを読み書きしようとしています。",
+  pluginSshUnknownHost:
+    "{host} はまだ既知のホストではありません。一度ターミナルで接続し（ssh {host}）、鍵を確かめて受け入れてから、もう一度お試しください。",
+  pluginSshNeedsLogin:
+    "{host} がパスワードか、読み込まれていない鍵を求めました。鍵を SSH エージェントに追加する（ssh-add）か鍵ログインを設定してから、もう一度お試しください。",
   pluginPermComments: "文書の余白のメモを読み、書き加える",
   pluginPermAiModel:
     "あなたの AI モデルを使う（AI サービスの使用量に含まれます）",

@@ -1973,6 +1973,14 @@ para usar una.
   pluginPermNotifications: "Mostrar notificaciones del sistema",
   pluginPermAppearance: "Cambiar los colores de Textus y de tus documentos",
   pluginPermGitCommit: "Hacer commits de Git en la carpeta abierta con tu Git",
+  pluginPermSsh:
+    "Conectarse a servidores con tu configuración SSH (solo los que permitas)",
+  pluginSshAsk:
+    "{plugin} quiere conectarse a {host} con tu configuración SSH para leer y escribir archivos allí.",
+  pluginSshUnknownHost:
+    "{host} aún no es un host conocido. Conéctate una vez en una terminal (ssh {host}) para comprobar y aceptar su clave, y vuelve a intentarlo.",
+  pluginSshNeedsLogin:
+    "{host} pidió una contraseña o una clave no cargada. Añade tu clave al agente SSH (ssh-add) o configura el acceso con clave, y vuelve a intentarlo.",
   pluginPermComments: "Leer y dejar notas en el margen de tus documentos",
   pluginPermAiModel:
     "Usar tu modelo de IA (cuenta para el uso de tu servicio de IA)",

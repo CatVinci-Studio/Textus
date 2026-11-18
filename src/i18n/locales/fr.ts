@@ -1987,6 +1987,14 @@ utiliser une.
   pluginPermAppearance: "Modifier les couleurs de Textus et de vos documents",
   pluginPermGitCommit:
     "Faire des commits Git dans le dossier ouvert avec votre Git",
+  pluginPermSsh:
+    "Se connecter à des serveurs avec vos réglages SSH (seulement ceux que vous autorisez)",
+  pluginSshAsk:
+    "{plugin} veut se connecter à {host} avec vos réglages SSH, pour y lire et écrire des fichiers.",
+  pluginSshUnknownHost:
+    "{host} n'est pas encore un hôte connu. Connectez-vous-y une fois dans un terminal (ssh {host}) pour vérifier et accepter sa clé, puis réessayez.",
+  pluginSshNeedsLogin:
+    "{host} a demandé un mot de passe ou une clé non chargée. Ajoutez votre clé à l'agent SSH (ssh-add) ou configurez la connexion par clé, puis réessayez.",
   pluginPermComments:
     "Lire et laisser des notes dans la marge de vos documents",
   pluginPermAiModel:

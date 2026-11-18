@@ -1951,6 +1951,14 @@ Habilidades ficam na pasta skills/ ao lado deste arquivo, um arquivo
   pluginPermNotifications: "Mostrar notificações do sistema",
   pluginPermAppearance: "Alterar as cores do Textus e dos seus documentos",
   pluginPermGitCommit: "Fazer commits do Git na pasta aberta com o seu Git",
+  pluginPermSsh:
+    "Ligar-se a servidores com as suas definições SSH (só os que permitir)",
+  pluginSshAsk:
+    "{plugin} quer ligar-se a {host} com as suas definições SSH, para ler e escrever ficheiros lá.",
+  pluginSshUnknownHost:
+    "{host} ainda não é um anfitrião conhecido. Ligue-se uma vez num terminal (ssh {host}) para verificar e aceitar a sua chave e tente de novo.",
+  pluginSshNeedsLogin:
+    "{host} pediu uma palavra-passe ou uma chave não carregada. Adicione a sua chave ao agente SSH (ssh-add) ou configure o acesso por chave e tente de novo.",
   pluginPermComments: "Ler e deixar notas na margem dos seus documentos",
   pluginPermAiModel:
     "Usar o seu modelo de IA (conta para o uso do seu serviço de IA)",

@@ -1757,6 +1757,12 @@ export default {
   pluginPermNotifications: "顯示系統通知",
   pluginPermAppearance: "變更 Textus 和文件的顏色",
   pluginPermGitCommit: "用你的 Git 在開啟的資料夾中提交",
+  pluginPermSsh: "用你的 SSH 設定連線伺服器（只連你允許的）",
+  pluginSshAsk: "{plugin} 想用你的 SSH 設定連線 {host}，在那裡讀寫檔案。",
+  pluginSshUnknownHost:
+    "{host} 還不是已知主機。請先在終端機裡連線一次（ssh {host}），核對並接受它的金鑰，然後再試。",
+  pluginSshNeedsLogin:
+    "{host} 需要密碼或一個尚未載入的金鑰。請把金鑰加入 SSH agent（ssh-add）或設定金鑰登入，然後再試。",
   pluginPermComments: "讀取和新增文件頁邊的註解",
   pluginPermAiModel: "使用你的 AI 模型（會計入你的 AI 服務用量）",
   pluginAiAsk:

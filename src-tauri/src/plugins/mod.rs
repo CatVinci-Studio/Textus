@@ -20,6 +20,7 @@ pub mod moved_skills;
 pub mod read_tool;
 pub mod scheme;
 pub mod scripts;
+pub mod ssh;
 pub mod state;
 pub mod store;
 pub mod uri;
@@ -64,6 +65,17 @@ macro_rules! with_plugin_commands {
             $crate::plugins::git::plugin_git_log,
             $crate::plugins::git::plugin_git_show,
             $crate::plugins::git::plugin_git_commit,
+            $crate::plugins::ssh::plugin_ssh_hosts,
+            $crate::plugins::ssh::plugin_ssh_allow,
+            $crate::plugins::ssh::plugin_ssh_connect,
+            $crate::plugins::ssh::plugin_ssh_home,
+            $crate::plugins::ssh::plugin_ssh_list,
+            $crate::plugins::ssh::plugin_ssh_read,
+            $crate::plugins::ssh::plugin_ssh_write,
+            $crate::plugins::ssh::plugin_ssh_create,
+            $crate::plugins::ssh::plugin_ssh_rename,
+            $crate::plugins::ssh::plugin_ssh_remove,
+            $crate::plugins::ssh::plugin_ssh_close,
             $crate::plugins::git::git_trust_repository,
             $crate::plugins::catalog::plugin_install_catalog,
             $crate::plugins::dev::plugin_load_dev,

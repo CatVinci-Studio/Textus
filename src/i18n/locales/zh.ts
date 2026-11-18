@@ -1752,6 +1752,12 @@ export default {
   pluginPermNotifications: "显示系统通知",
   pluginPermAppearance: "更改 Textus 和文档的颜色",
   pluginPermGitCommit: "用你的 Git 在打开的文件夹里提交",
+  pluginPermSsh: "用你的 SSH 设置连接服务器（只连你允许的）",
+  pluginSshAsk: "{plugin} 想用你的 SSH 设置连接 {host}，在那里读写文件。",
+  pluginSshUnknownHost:
+    "{host} 还不是已知主机。请先在终端里连接一次（ssh {host}），核对并接受它的密钥，然后再试。",
+  pluginSshNeedsLogin:
+    "{host} 需要密码或一个尚未加载的密钥。请把密钥加入 SSH agent（ssh-add）或设置密钥登录，然后再试。",
   pluginPermComments: "读取和添加文档页边的批注",
   pluginPermAiModel: "使用你的 AI 模型（会计入你的 AI 服务用量）",
   pluginAiAsk:

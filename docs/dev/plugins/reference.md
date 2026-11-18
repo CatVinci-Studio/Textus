@@ -113,34 +113,35 @@ Values kept for one document.
 
 ## Api
 
-| Member                   |                                                                                                             |
-| ------------------------ | ----------------------------------------------------------------------------------------------------------- |
-| `env: Env`               |                                                                                                             |
-| `l10n: L10n`             |                                                                                                             |
-| `commands: Commands`     |                                                                                                             |
-| `ui: Ui`                 |                                                                                                             |
-| `layout: Layout`         |                                                                                                             |
-| `views: Views`           |                                                                                                             |
-| `editor: Editor`         |                                                                                                             |
-| `files: Files`           |                                                                                                             |
-| `metadata: Metadata`     |                                                                                                             |
-| `git: Git`               | From 1.4.3: the folder's Git history (files.read; committing, git.commit). Desktop only.                    |
-| `dates: Dates`           | From 1.3.10: no permission, nothing leaves the plugin's frame.                                              |
-| `templates: Templates`   |                                                                                                             |
-| `net: Net`               |                                                                                                             |
-| `settings: Settings`     |                                                                                                             |
-| `ai: Ai`                 |                                                                                                             |
-| `plugins: Plugins`       |                                                                                                             |
-| `uri: Uri`               |                                                                                                             |
-| `export: Export`         |                                                                                                             |
-| `schedule: Schedule`     | 1.1: jobs Textus fires on time (notifications, background).                                                 |
-| `notify: Notify`         | 1.1: system notifications (notifications).                                                                  |
-| `app: App`               | 1.1: whether Textus is in front, behind, or has no window.                                                  |
-| `appearance: Appearance` | 1.6: colours over the theme (appearance).                                                                   |
-| `text: Text`             | 1.7: text as the app reads it.                                                                              |
-| `path: Path`             | From 1.8: paths worked out in the plugin's frame; no permission.                                            |
-| `history: History`       | From 1.8: past versions kept elsewhere (Git, sync), offered by one plugin and read by another (files.read). |
-| `comments: Comments`     | From 1.8, preview: the notes in a document's margin (comments and files.read).                              |
+| Member                   |                                                                                                                |
+| ------------------------ | -------------------------------------------------------------------------------------------------------------- |
+| `env: Env`               |                                                                                                                |
+| `l10n: L10n`             |                                                                                                                |
+| `commands: Commands`     |                                                                                                                |
+| `ui: Ui`                 |                                                                                                                |
+| `layout: Layout`         |                                                                                                                |
+| `views: Views`           |                                                                                                                |
+| `editor: Editor`         |                                                                                                                |
+| `files: Files`           |                                                                                                                |
+| `metadata: Metadata`     |                                                                                                                |
+| `git: Git`               | From 1.4.3: the folder's Git history (files.read; committing, git.commit). Desktop only.                       |
+| `ssh: Ssh`               | From 1.4.6 (API 1.8, preview): a folder on a server through the user's own ssh (permission ssh). Desktop only. |
+| `dates: Dates`           | From 1.3.10: no permission, nothing leaves the plugin's frame.                                                 |
+| `templates: Templates`   |                                                                                                                |
+| `net: Net`               |                                                                                                                |
+| `settings: Settings`     |                                                                                                                |
+| `ai: Ai`                 |                                                                                                                |
+| `plugins: Plugins`       |                                                                                                                |
+| `uri: Uri`               |                                                                                                                |
+| `export: Export`         |                                                                                                                |
+| `schedule: Schedule`     | 1.1: jobs Textus fires on time (notifications, background).                                                    |
+| `notify: Notify`         | 1.1: system notifications (notifications).                                                                     |
+| `app: App`               | 1.1: whether Textus is in front, behind, or has no window.                                                     |
+| `appearance: Appearance` | 1.6: colours over the theme (appearance).                                                                      |
+| `text: Text`             | 1.7: text as the app reads it.                                                                                 |
+| `path: Path`             | From 1.8: paths worked out in the plugin's frame; no permission.                                               |
+| `history: History`       | From 1.8: past versions kept elsewhere (Git, sync), offered by one plugin and read by another (files.read).    |
+| `comments: Comments`     | From 1.8, preview: the notes in a document's margin (comments and files.read).                                 |
 
 ## Env
 
@@ -815,6 +816,24 @@ A kind of periodic note: its folder (full path), file name format (moment.js tok
 | `log(path: string, options?: { limit?: number }): Promise<GitCommit[]>`       | `path`'s commits, newest first, through renames (100, at most 500).                                                                                       |
 | `show(hash: string, path: string): Promise<string \| null>`                   | The file as commit `hash` had it at `path` (a GitCommit's path); null when it had none there, or it isn't text.                                           |
 | `commit(message: string, paths: string[]): Promise<string>`                   | Commits the changes of `paths` only, with `message`, as the user's git does (hooks, signing): the new commit's hash. git.commit.                          |
+
+## Ssh
+
+A link to a server: the user's own `ssh` (their config, agent, keys and known hosts) running SFTP only. Each host is asked of the user once per plugin. An unknown host key or a password is never answered for the user: the link fails saying what to do. Paths are the server's, absolute.
+
+| Member                                                                              |                                                            |
+| ----------------------------------------------------------------------------------- | ---------------------------------------------------------- |
+| `hosts(): Promise<string[]>`                                                        | The hosts named in `~/.ssh/config` (and its Includes).     |
+| `connect(host: string): Promise<number>`                                            | A link to `host`, as the user's ssh names it: its session. |
+| `home(session: number): Promise<string>`                                            | The folder the link starts in: the user's home there.      |
+| `list(session: number, path: string): Promise<{ name: string; folder: boolean }[]>` |                                                            |
+| `read(session: number, path: string): Promise<Uint8Array>`                          |                                                            |
+| `readText(session: number, path: string): Promise<string>`                          |                                                            |
+| `write(session: number, path: string, data: string \| Uint8Array): Promise<void>`   | Writes the file whole.                                     |
+| `create(session: number, path: string, folder?: boolean): Promise<void>`            | A new empty file or folder; a name taken is refused.       |
+| `rename(session: number, from: string, to: string): Promise<void>`                  | Moves or renames; a name taken is refused.                 |
+| `remove(session: number, path: string): Promise<void>`                              | Deletes a file or an empty folder for good.                |
+| `close(session: number): Promise<void>`                                             |                                                            |
 
 ## Metadata
 

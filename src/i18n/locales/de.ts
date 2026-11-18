@@ -1928,6 +1928,13 @@ Skills liegen im Ordner skills/ neben dieser Datei, je Skill eine
   pluginPermNotifications: "Systemmitteilungen anzeigen",
   pluginPermAppearance: "Die Farben von Textus und Ihren Dokumenten ändern",
   pluginPermGitCommit: "Mit Ihrem Git Commits im geöffneten Ordner erstellen",
+  pluginPermSsh: "Mit Ihren SSH-Einstellungen Server verbinden (nur erlaubte)",
+  pluginSshAsk:
+    "{plugin} möchte sich mit Ihren SSH-Einstellungen mit {host} verbinden, um dort Dateien zu lesen und zu schreiben.",
+  pluginSshUnknownHost:
+    "{host} ist noch kein bekannter Host. Verbinden Sie sich einmal im Terminal (ssh {host}), prüfen und akzeptieren Sie seinen Schlüssel und versuchen Sie es erneut.",
+  pluginSshNeedsLogin:
+    "{host} hat nach einem Passwort oder einem nicht geladenen Schlüssel gefragt. Fügen Sie Ihren Schlüssel dem SSH-Agenten hinzu (ssh-add) oder richten Sie die Anmeldung per Schlüssel ein und versuchen Sie es erneut.",
   pluginPermComments: "Notizen am Rand Ihrer Dokumente lesen und hinzufügen",
   pluginPermAiModel:
     "Ihr KI-Modell verwenden (zählt zur Nutzung Ihres KI-Dienstes)",

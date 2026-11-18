@@ -24,6 +24,7 @@ import {
 } from "./broker-database-views";
 import { conventionReaderHandlers } from "./broker-conventions";
 import { providerHandlers, stopPluginProviders } from "./broker-providers";
+import { sshHandlers, stopPluginSsh } from "./broker-ssh";
 import { stopPluginConventionReaders } from "../contributions/convention-readers";
 import { fileHandlers } from "./broker-files";
 import { layoutHandlers, seenBy } from "./broker-layout";
@@ -288,6 +289,7 @@ export class PluginHost {
     stopPluginDatabaseViews(this.id);
     stopPluginConventionReaders(this.id);
     stopPluginProviders(this.id);
+    stopPluginSsh(this.id);
     forgetListViews(this.id);
     forgetEmbeds(this.id);
     forgetWillSave(this.id);
@@ -491,6 +493,7 @@ export class PluginHost {
       ...databaseViewHandlers(scope),
       ...conventionReaderHandlers(scope),
       ...providerHandlers(scope),
+      ...sshHandlers(scope),
     };
   }
 }

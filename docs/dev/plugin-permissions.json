@@ -160,6 +160,21 @@
     ]
   },
   {
+    "permission": "ssh",
+    "calls": [
+      "ssh.hosts",
+      "ssh.connect",
+      "ssh.home",
+      "ssh.list",
+      "ssh.read",
+      "ssh.write",
+      "ssh.create",
+      "ssh.rename",
+      "ssh.remove",
+      "ssh.close"
+    ]
+  },
+  {
     "permission": "comments",
     "calls": [
       "comments.list",

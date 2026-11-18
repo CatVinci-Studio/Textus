@@ -147,6 +147,9 @@ declare global {
       /** From 1.4.3: the folder's Git history (files.read; committing,
        *  git.commit). Desktop only. */
       git: Git;
+      /** From 1.4.6 (API 1.8, preview): a folder on a server through the
+       *  user's own ssh (permission ssh). Desktop only. */
+      ssh: Ssh;
       /** From 1.3.10: no permission, nothing leaves the plugin's frame. */
       dates: Dates;
       templates: Templates;
@@ -1455,6 +1458,39 @@ declare global {
       /** Commits the changes of `paths` only, with `message`, as the user's
        *  git does (hooks, signing): the new commit's hash. git.commit. */
       commit(message: string, paths: string[]): Promise<string>;
+    }
+
+    /** A link to a server: the user's own `ssh` (their config, agent,
+     *  keys and known hosts) running SFTP only. Each host is asked of the
+     *  user once per plugin. An unknown host key or a password is never
+     *  answered for the user: the link fails saying what to do. Paths are
+     *  the server's, absolute. */
+    interface Ssh {
+      /** The hosts named in `~/.ssh/config` (and its Includes). */
+      hosts(): Promise<string[]>;
+      /** A link to `host`, as the user's ssh names it: its session. */
+      connect(host: string): Promise<number>;
+      /** The folder the link starts in: the user's home there. */
+      home(session: number): Promise<string>;
+      list(
+        session: number,
+        path: string,
+      ): Promise<{ name: string; folder: boolean }[]>;
+      read(session: number, path: string): Promise<Uint8Array>;
+      readText(session: number, path: string): Promise<string>;
+      /** Writes the file whole. */
+      write(
+        session: number,
+        path: string,
+        data: string | Uint8Array,
+      ): Promise<void>;
+      /** A new empty file or folder; a name taken is refused. */
+      create(session: number, path: string, folder?: boolean): Promise<void>;
+      /** Moves or renames; a name taken is refused. */
+      rename(session: number, from: string, to: string): Promise<void>;
+      /** Deletes a file or an empty folder for good. */
+      remove(session: number, path: string): Promise<void>;
+      close(session: number): Promise<void>;
     }
 
     // ---------------------------------------------------------------

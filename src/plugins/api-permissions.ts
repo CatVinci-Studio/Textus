@@ -143,6 +143,21 @@ const API_PERMISSIONS: readonly {
     methods: ["ai.available", "ai.complete", "ai.stream"],
   },
   {
+    permission: "ssh",
+    methods: [
+      "ssh.hosts",
+      "ssh.connect",
+      "ssh.home",
+      "ssh.list",
+      "ssh.read",
+      "ssh.write",
+      "ssh.create",
+      "ssh.rename",
+      "ssh.remove",
+      "ssh.close",
+    ],
+  },
+  {
     permission: "comments",
     methods: ["comments.list", "comments.add", "comments.resolve"],
   },

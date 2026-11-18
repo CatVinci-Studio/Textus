@@ -1831,6 +1831,13 @@ ${AI_NAME}에게 주는 글쓰기 지침으로, 모든 문서에 적용됩니다
   pluginPermNotifications: "시스템 알림 표시하기",
   pluginPermAppearance: "Textus와 문서의 색상 변경하기",
   pluginPermGitCommit: "내 Git으로 열린 폴더에 Git 커밋 만들기",
+  pluginPermSsh: "내 SSH 설정으로 서버에 연결 (허용한 서버만)",
+  pluginSshAsk:
+    "{plugin}이(가) 내 SSH 설정으로 {host}에 연결해 그곳의 파일을 읽고 쓰려고 합니다.",
+  pluginSshUnknownHost:
+    "{host}은(는) 아직 알려진 호스트가 아닙니다. 터미널에서 한 번 연결해(ssh {host}) 키를 확인하고 받아들인 뒤 다시 시도하세요.",
+  pluginSshNeedsLogin:
+    "{host}이(가) 비밀번호나 불러오지 않은 키를 요구했습니다. 키를 SSH 에이전트에 추가하거나(ssh-add) 키 로그인을 설정한 뒤 다시 시도하세요.",
   pluginPermComments: "문서 여백의 메모 읽기 및 남기기",
   pluginPermAiModel: "내 AI 모델 사용(AI 서비스 사용량에 포함됨)",
   pluginAiAsk:

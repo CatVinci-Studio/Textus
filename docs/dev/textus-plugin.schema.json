@@ -104,7 +104,8 @@
               "background",
               "agents",
               "appearance",
-              "git.commit"
+              "git.commit",
+              "ssh"
             ]
           },
           {

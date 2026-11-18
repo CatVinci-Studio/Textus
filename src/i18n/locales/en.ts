@@ -1885,6 +1885,14 @@ type /name in a conversation to use one.
   pluginPermNotifications: "Show system notifications",
   pluginPermAppearance: "Change the colors of Textus and your documents",
   pluginPermGitCommit: "Make Git commits in the open folder with your Git",
+  pluginPermSsh:
+    "Connect to servers with your SSH settings (only ones you allow)",
+  pluginSshAsk:
+    "{plugin} wants to connect to {host} with your SSH settings, to read and write files there.",
+  pluginSshUnknownHost:
+    "{host} isn't a known host yet. Connect to it once in a terminal (ssh {host}) to check and accept its key, then try again.",
+  pluginSshNeedsLogin:
+    "{host} asked for a password or a key that isn't loaded. Add your key to the SSH agent (ssh-add) or set up key login, then try again.",
   pluginPermComments: "Read and leave notes in your documents' margins",
   pluginPermAiModel:
     "Use your AI model (it counts toward your AI service's usage)",

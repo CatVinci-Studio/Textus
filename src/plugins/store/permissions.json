@@ -15,7 +15,8 @@
     "background",
     "agents",
     "appearance",
-    "git.commit"
+    "git.commit",
+    "ssh"
   ],
   "platforms": ["desktop", "ios"],
   "hosts": {
