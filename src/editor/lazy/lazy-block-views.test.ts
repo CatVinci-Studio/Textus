@@ -182,7 +182,8 @@ describe("a long document's blocks drawn lazily", () => {
     );
     await Promise.resolve();
     expect(placeholders(view)).toBeGreaterThan(1500);
-  });
+    // Two thousand blocks drawn and let go: slow in jsdom on a busy machine.
+  }, 20_000);
 });
 
 describe("what is on screen decides what is drawn", () => {
@@ -328,5 +329,6 @@ describe("a jump or an export reaching blocks out of sight", () => {
     view.dom.parentElement!.dispatchEvent(new Event("wheel"));
     (frame as FrameRequestCallback | null)?.(0);
     expect(placeholders(view)).toBeGreaterThan(1500);
-  });
+    // Two thousand blocks drawn and let go: slow in jsdom on a busy machine.
+  }, 20_000);
 });

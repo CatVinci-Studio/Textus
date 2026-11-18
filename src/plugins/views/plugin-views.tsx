@@ -14,7 +14,10 @@ import { lazyModule } from "../../lazy/lazy-module";
  * What draws plugins in the window, loaded the first time one is shown. The
  * rest of the app imports them from here, not from their modules.
  */
-const webviews = lazyModule("plugin-webviews", () => import("./PluginWebview"));
+const webviews = lazyModule(
+  "plugin-webviews",
+  () => import("./plugin-webview-hosts"),
+);
 const lists = lazyModule("plugin-lists", () => import("./PluginListView"));
 const codeBlocks = lazyModule(
   "plugin-code-blocks",

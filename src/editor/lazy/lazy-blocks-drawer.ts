@@ -63,10 +63,19 @@ const shown = (el: Element | null, step: (el: Element) => Element | null) => {
 
 /** The first after `el` with a height of its own to measure by: an empty
  *  one (a formula's hidden source) has margins that fold through it. */
-function measurableAfter(el: Element | undefined): Element | null {
+function measurableAfter(
+  el: Element | undefined,
+  passed: Map<Element, Element | null>,
+): Element | null {
+  const walked: Element[] = [];
   let at = el?.nextElementSibling ?? null;
-  while (at && !at.getBoundingClientRect().height) at = at.nextElementSibling;
-  return at;
+  while (at && !passed.has(at) && !at.getBoundingClientRect().height) {
+    walked.push(at);
+    at = at.nextElementSibling;
+  }
+  const found = at && passed.has(at) ? passed.get(at)! : at;
+  for (const one of walked) passed.set(one, found);
+  return found;
 }
 
 /** The room a block takes between its neighbours: from the margin's edge
@@ -201,7 +210,7 @@ const USER_INPUT = ["wheel", "touchstart", "pointerdown", "keydown"] as const;
 
 export class LazyBlocksDrawer implements PluginView {
   private frame = 0;
-  private scrolledAt = 0;
+  private scrolledAt = -Infinity;
   private settle: ReturnType<typeof setTimeout> | undefined;
   private pausedUntil = 0;
   private resume: ReturnType<typeof setTimeout> | undefined;
@@ -318,17 +327,20 @@ export class LazyBlocksDrawer implements PluginView {
     const indexes = release.map((pos) => topLevelIndex(doc, pos));
     const before = blockElements(doc, root.children);
     let origin = root.getBoundingClientRect().top;
+    // Blocks without height walked past once, not once per release.
+    const passedBefore = new Map<Element, Element | null>();
     const was = indexes.map((index) => {
-      const below = measurableAfter(before.elementOf[index]);
+      const below = measurableAfter(before.elementOf[index], passedBefore);
       return below ? below.getBoundingClientRect().top - origin : null;
     });
     this.change({ release });
     const after = blockElements(view.state.doc, root.children);
     origin = root.getBoundingClientRect().top;
     let carried = 0;
+    const passedAfter = new Map<Element, Element | null>();
     const fixes = indexes.flatMap((index, i) => {
       const el = after.elementOf[index] as HTMLElement | undefined;
-      const below = measurableAfter(el);
+      const below = measurableAfter(el, passedAfter);
       if (!el?.classList.contains(PLACEHOLDER_CLASS) || !below) return [];
       if (was[i] === null) return [];
       const error = below.getBoundingClientRect().top - origin - was[i]!;

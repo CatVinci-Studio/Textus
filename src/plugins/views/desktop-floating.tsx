@@ -10,7 +10,8 @@ import { webviewMessage } from "../manager";
 import { watchTheme, webviewThemeCss } from "./theme-vars";
 import { windowIsDark } from "../../engine/tokens/appearance";
 import { windowInfo } from "../store/plugin-records";
-import { useResolvedWebview, webviewPage } from "./PluginWebview";
+import { webviewPage } from "./PluginWebview";
+import { useResolvedWebview } from "./plugin-webview-hosts";
 import {
   setWebviewState,
   subscribeWebviews,
