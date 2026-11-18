@@ -1,4 +1,5 @@
 import { createSubscribers } from "../utils/store";
+import { isProviderUrl } from "./far-files";
 
 /**
  * The folder open in this window's sidebar, as useOpenFolder sets it. An
@@ -18,7 +19,7 @@ export function setOpenFolder(path: string | null): void {
 
 /** This window's open folder on disk, if any. */
 export const openFolderOnDisk = (): string | null =>
-  open && !open.startsWith("content://") ? open : null;
+  open && !open.startsWith("content://") && !isProviderUrl(open) ? open : null;
 
 /** Called as the open folder changes. */
 export const onOpenFolderChange = changed.subscribe;

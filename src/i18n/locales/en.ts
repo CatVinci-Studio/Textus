@@ -646,6 +646,8 @@ type /name in a conversation to use one.
     "The plugin store needs a newer Textus. Update Textus to see it.",
   errorImageTooBig: "The picture is empty or larger than 25 MB.",
   errorNoFolder: "Open a folder first.",
+  errorFarPictures:
+    "Pictures can't be saved into this folder yet. Paste them into a document on this device.",
   errorPdfUnsupported: "PDF export isn't available on this system.",
   errorNoText: "There is no readable text in it.",
   errorUnreadable: "This file can't be read.",

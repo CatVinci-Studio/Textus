@@ -155,7 +155,8 @@ export async function scopedImageSrc(
   const url = new URL(src, docUrl).href;
   const ext = url.split(".").pop()?.toLowerCase() ?? "";
   const type = IMAGE_TYPES[ext] ?? "application/octet-stream";
-  return `data:${type};base64,${await iosFiles.readBase64(url)}`;
+  const { farFiles } = await import("./far-files");
+  return `data:${type};base64,${await farFiles(url).readBase64(url)}`;
 }
 
 /**

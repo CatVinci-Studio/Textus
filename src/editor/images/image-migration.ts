@@ -1,3 +1,4 @@
+import { isFarUrl } from "../../platform/far-files";
 import { fs } from "../../platform/ipc";
 import {
   decodeUrlPath,
@@ -84,6 +85,9 @@ export async function migrateDraftImages(
 ): Promise<{ content: string; migrated: boolean; failed: string[] }> {
   const candidates = extractImageSrcs(content, sourceDocPath !== null);
   if (candidates.size === 0) return { content, migrated: false, failed: [] };
+  // A folder the backend can't write: the pictures stay where they are.
+  if (isFarUrl(docPath))
+    return { content, migrated: false, failed: [...candidates.keys()] };
 
   const written = new Map(
     [...candidates].map(([src, path]) => [path, src] as const),

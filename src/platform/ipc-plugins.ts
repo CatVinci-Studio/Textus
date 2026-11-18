@@ -5,6 +5,7 @@ import type * as Access from "./bindings/plugin-access";
 export type PluginFile = Generated.PluginFile;
 import { Channel } from "@tauri-apps/api/core";
 import { call, command, desktopActionCommand } from "./ipc-call";
+import { isFarUrl } from "./far-files";
 import { dirname } from "../utils/path";
 
 /** Plugins and MCP servers: the calls Settings › Extensions and the plugin broker make. */
@@ -17,11 +18,10 @@ export type PluginCatalogEntry = Generated.CatalogEntry_Serialize;
 export type StoreScope = Access.StoreScope;
 export type PluginDocumentMeta = Access.DocumentMeta_Serialize;
 
-/** An Android folder opened without access to all files: its files go
- *  through the native plugin (content-plugin-fs.ts), not Rust. */
-const inContent = (root: string) => root.startsWith("content://");
-const contentFs = () =>
-  import("./content-plugin-fs").then((m) => m.contentPluginFs);
+/** A folder the backend can't walk (an Android pick, a plugin's remote
+ *  folder): its files go through far-plugin-fs.ts, not Rust. */
+const inContent = (root: string) => isFarUrl(root);
+const contentFs = () => import("./far-plugin-fs").then((m) => m.farPluginFs);
 
 /** A raw IPC response's bytes, which specta can't type, so those commands
  *  go through `call`. */

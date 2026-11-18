@@ -7,7 +7,7 @@ import {
 } from "@milkdown/kit/prose/view";
 import { $prose } from "@milkdown/kit/utils";
 import { fs } from "../../platform/ipc";
-import { isScopedUrl } from "../../platform/ios-files";
+import { isFarUrl } from "../../platform/far-files";
 import { windowFolder } from "../../platform/window-folder";
 import { FILE_WRITTEN_EVENT } from "../../utils/events";
 import { parseNoteLink } from "../../utils/note-link";
@@ -90,7 +90,7 @@ export function createMissingLinksPlugin(docPath: () => string | null) {
             if (timer) clearTimeout(timer);
             timer = setTimeout(() => {
               const path = docPath();
-              if (!path || isScopedUrl(path)) return;
+              if (!path || isFarUrl(path)) return;
               void missingIn(view, path).then((set) => {
                 if (set && !view.isDestroyed)
                   view.dispatch(view.state.tr.setMeta(key, set));

@@ -586,6 +586,7 @@ export default {
   errorCatalogNewer: "外掛商店需要較新版本的 Textus，請先更新 Textus。",
   errorImageTooBig: "圖片是空的，或超過了 25 MB。",
   errorNoFolder: "請先開啟一個資料夾。",
+  errorFarPictures: "暫時還不能把圖片存進這個資料夾。請貼到本機的文件裡。",
   errorPdfUnsupported: "此系統不支援匯出 PDF。",
   errorNoText: "裡面沒有可讀的文字。",
   errorUnreadable: "無法讀取這個檔案。",

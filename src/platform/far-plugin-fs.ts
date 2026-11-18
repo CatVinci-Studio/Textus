@@ -1,21 +1,16 @@
-import { iosFiles } from "./ios-files";
+import { farFiles, farRelative } from "./far-files";
 import { command } from "./ipc-call";
 import { scopedFolder } from "./scoped-folder";
 import type { DocumentMeta_Serialize } from "./bindings/plugin-access";
-import {
-  basename,
-  contentJoin,
-  contentRelative,
-  isWithin,
-  parentDir,
-} from "../utils/path";
+import { basename, contentJoin, isWithin, parentDir } from "../utils/path";
 
 /**
- * A plugin's file calls in an Android folder opened without access to all
- * files: content:// URLs, read and written through the native plugin. The
- * paths are checked here as Rust checks them on disk: inside the folder,
- * never climbing out. A file's URL is its folder's document id and its own
- * path below it, as the folder's listing spells them.
+ * A plugin's file calls in a folder the backend can't walk (far-files.ts):
+ * an Android pick, read through the native plugin, or a plugin's remote
+ * folder. The paths are checked here as Rust checks them on disk: inside
+ * the folder, never climbing out. An Android file's URL is its folder's
+ * document id and its own path below it, as the folder's listing spells
+ * them; a remote one is a plain URL path.
  */
 
 interface ContentEntry {
@@ -28,13 +23,18 @@ interface ContentEntry {
 
 /** The URL of `path` (relative to `root`, or a URL inside it). */
 export function contentPath(root: string, path: string): string {
-  if (path.startsWith("content://")) {
+  if (/^[a-z][a-z0-9+.-]*:\/\//i.test(path)) {
     if (!isWithin(path, root))
       throw new Error(`${path} is outside the folder.`);
     return path;
   }
-  if (path.split(/[\\/]/).some((p) => p === ".."))
+  const parts = path.split(/[\\/]/);
+  if (parts.some((p) => p === ".."))
     throw new Error(`${path} is outside the folder.`);
+  if (!root.startsWith("content://")) {
+    const kept = parts.filter((p) => p !== "" && p !== ".");
+    return kept.length ? `${root.replace(/\/+$/, "")}/${kept.join("/")}` : root;
+  }
   if (!root.includes("/document/"))
     throw new Error(`${root} isn't a folder's URL.`);
   return contentJoin(root, path);
@@ -57,7 +57,9 @@ async function stat(root: string, path: string): Promise<ContentEntry | null> {
   if (url === root) return entryOf({ name: "", path: root, is_dir: true });
   const parent = parentDir(url);
   if (!parent) return null;
-  const listed = await iosFiles.listFolder(parent).catch(() => []);
+  const listed = await farFiles(parent)
+    .listFolder(parent)
+    .catch(() => []);
   const found = listed.find((e) => e.path === url);
   return found ? entryOf(found) : null;
 }
@@ -71,14 +73,22 @@ async function folder(root: string, url: string): Promise<string> {
   const parent = parentDir(url);
   if (!parent || !isWithin(parent, root))
     throw new Error(`${url} is outside the folder.`);
-  return iosFiles.createEntry(await folder(root, parent), basename(url), true);
+  return farFiles(url).createEntry(
+    await folder(root, parent),
+    basename(url),
+    true,
+  );
 }
 
 /** A new file at `url`, its folders made first. */
 async function newFile(root: string, url: string): Promise<string> {
   const parent = parentDir(url);
   if (!parent) throw new Error(`${url} is outside the folder.`);
-  return iosFiles.createEntry(await folder(root, parent), basename(url), false);
+  return farFiles(url).createEntry(
+    await folder(root, parent),
+    basename(url),
+    false,
+  );
 }
 
 async function tokenOf(text: string): Promise<string> {
@@ -158,25 +168,32 @@ function written<A extends unknown[], T>(
   return (...args) => run(...args).finally(contentFolderChanged);
 }
 
-export const contentPluginFs = {
+export const farPluginFs = {
   /** A file the user picked: its URL is its grant, no folder around it. */
-  readResource: async (url: string) => bytesOf(await iosFiles.readBase64(url)),
-  writeResource: (url: string, text: string) => iosFiles.writeText(url, text),
-  read: async (root: string, path: string) =>
-    bytesOf(await iosFiles.readBase64(contentPath(root, path))),
-  list: async (root: string, path: string) =>
-    (await iosFiles.listFolder(contentPath(root, path))).map(entryOf),
+  readResource: async (url: string) =>
+    bytesOf(await farFiles(url).readBase64(url)),
+  writeResource: (url: string, text: string) =>
+    farFiles(url).writeText(url, text),
+  read: async (root: string, path: string) => {
+    const url = contentPath(root, path);
+    return bytesOf(await farFiles(url).readBase64(url));
+  },
+  list: async (root: string, path: string) => {
+    const url = contentPath(root, path);
+    return (await farFiles(url).listFolder(url)).map(entryOf);
+  },
   stat,
   readVersioned: async (root: string, path: string) => {
-    const text = await iosFiles.readText(contentPath(root, path));
+    const url = contentPath(root, path);
+    const text = await farFiles(url).readText(url);
     return { text, token: await tokenOf(text) };
   },
   writeIf: written(
     async (root: string, path: string, text: string, token: string) => {
       const url = contentPath(root, path);
-      const now = await iosFiles.readText(url);
+      const now = await farFiles(url).readText(url);
       if ((await tokenOf(now)) !== token) return false;
-      await iosFiles.writeText(url, text);
+      await farFiles(url).writeText(url, text);
       return true;
     },
   ),
@@ -188,13 +205,14 @@ export const contentPluginFs = {
         );
       const url = contentPath(root, path);
       const at = (await stat(root, url)) ? url : await newFile(root, url);
-      await iosFiles.writeText(at, text);
+      await farFiles(at).writeText(at, text);
     },
   ),
   create: written(async (root: string, path: string, text: string) => {
     const url = contentPath(root, path);
     if (await stat(root, url)) throw new Error(`${path} already exists.`);
-    await iosFiles.writeText(await newFile(root, url), text);
+    const made = await newFile(root, url);
+    await farFiles(made).writeText(made, text);
   }),
   mkdir: written(async (root: string, path: string) => {
     await folder(root, contentPath(root, path));
@@ -209,9 +227,13 @@ export const contentPluginFs = {
     if (!into) throw new Error(`${to} is outside the folder.`);
     let url = source;
     if (into !== was)
-      url = await iosFiles.moveEntry(source, was, await folder(root, into));
+      url = await farFiles(source).moveEntry(
+        source,
+        was,
+        await folder(root, into),
+      );
     if (basename(url) !== basename(target))
-      await iosFiles.renameEntry(url, basename(target));
+      await farFiles(url).renameEntry(url, basename(target));
   }),
   documents: (root: string) => scopedFolder.documents(root),
   search: async (root: string, query: string, limit: number | null) => {
@@ -223,9 +245,11 @@ export const contentPluginFs = {
   metadataAll,
   metadataGet: async (root: string, path: string) => {
     const url = contentPath(root, path);
-    const text = await iosFiles.readText(url).catch(() => null);
+    const text = await farFiles(url)
+      .readText(url)
+      .catch(() => null);
     if (text === null) return null;
-    const rel = contentRelative(root, url) ?? basename(url);
+    const rel = farRelative(root, url);
     const [meta] = await parse([{ path: url, rel, text }], true);
     return meta ?? null;
   },

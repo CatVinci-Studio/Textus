@@ -1,3 +1,4 @@
+import { ownError } from "../utils/error-text";
 import {
   type DirEntryInfo,
   type WindowSession_Deserialize,
@@ -5,7 +6,8 @@ import {
 import type { ImageHost } from "../prefs/SettingsContext";
 import type * as Generated from "./bindings/files";
 import { isIOSApp, isMobileApp } from "./capabilities";
-import { iosFiles, isScopedUrl, newDocumentPath } from "./ios-files";
+import { iosFiles, newDocumentPath } from "./ios-files";
+import { farEntries, farFiles, isFarUrl } from "./far-files";
 import { parentDir } from "../utils/path";
 import { scopedFolder } from "./scoped-folder";
 import { command, desktopActionCommand, desktopQueryCommand } from "./ipc-call";
@@ -60,35 +62,37 @@ export const fs = {
             async (path) => (await command("file_mtime_ms", path)) !== null,
           ),
   listDir: (path: string): Promise<DirEntryInfo[]> =>
-    isScopedUrl(path) ? iosFiles.listFolder(path) : command("list_dir", path),
+    isFarUrl(path)
+      ? farFiles(path).listFolder(path)
+      : command("list_dir", path),
   /** The sidebar tree's New Document, New Folder and drag-to-move. Each
    *  returns the new path and refuses a taken name. */
   createDocument: (dir: string, name: string): Promise<string> =>
-    isScopedUrl(dir) && !isIOSApp
-      ? iosFiles.createEntry(dir, name, false)
-      : command("tree_create_document", dir, name),
+    farEntries(dir)?.createEntry(dir, name, false) ??
+    command("tree_create_document", dir, name),
   createFolder: (dir: string, name: string): Promise<string> =>
-    isScopedUrl(dir) && !isIOSApp
-      ? iosFiles.createEntry(dir, name, true)
-      : command("tree_create_folder", dir, name),
+    farEntries(dir)?.createEntry(dir, name, true) ??
+    command("tree_create_folder", dir, name),
   moveEntry: (path: string, into: string): Promise<string> => {
-    const from = isScopedUrl(path) && !isIOSApp ? parentDir(path) : null;
-    return from
-      ? iosFiles.moveEntry(path, from, into)
+    const far = farEntries(path);
+    const from = far && parentDir(path);
+    return far && from
+      ? far.moveEntry(path, from, into)
       : command("tree_move_entry", path, into);
   },
   /** A new name in the same folder; returns the new path. */
   renameEntry: (path: string, name: string): Promise<string> =>
-    isScopedUrl(path) && !isIOSApp
-      ? iosFiles.renameEntry(path, name)
-      : command("tree_rename_entry", path, name),
+    farEntries(path)?.renameEntry(path, name) ??
+    command("tree_rename_entry", path, name),
   /** To the system's Trash; refuses the tree's own root. A phone has none:
    *  there a document is deleted (the tree asks first), a folder never. */
   trashEntry: (path: string, root: string): Promise<void> =>
     isIOSApp
       ? iosFiles.trash(path)
-      : isScopedUrl(path)
-        ? iosFiles.deleteEntry(path).then(() => {})
+      : isFarUrl(path)
+        ? farFiles(path)
+            .deleteEntry(path)
+            .then(() => {})
         : command("tree_trash_entry", path, root),
   /** File > Open Folder…'s picker. Rejects with "TOO_BROAD" for the home
    *  folder or a drive root. A phone's is the system's folder picker. */
@@ -99,28 +103,26 @@ export const fs = {
   /** Every document under `root`, for the sidebar's file-name search.
    *  Rejects with "TOO_BROAD" as the picker does. */
   indexFolder: (root: string) =>
-    isScopedUrl(root)
-      ? scopedFolder.index(root)
-      : command("index_folder", root),
+    isFarUrl(root) ? scopedFolder.index(root) : command("index_folder", root),
   /** The lines of the documents under `root` holding `query`, ignoring
    *  case, for the Search page. Rejects as `indexFolder` does. */
   searchFolderText: (root: string, query: string) =>
-    isScopedUrl(root)
+    isFarUrl(root)
       ? scopedFolder.search(root, query)
       : command("search_folder_text", root, query),
   /** Every Markdown document under `root` with its text, for the links a
    *  rename updates. Rejects as `indexFolder` does. */
   folderDocuments: (root: string) =>
-    isScopedUrl(root)
+    isFarUrl(root)
       ? scopedFolder.documents(root)
       : command("folder_documents", root),
   // No change watching for picked documents: the coordinator serialises
   // our writes with iCloud's, and the app re-reads on open.
   fileMtimeMs: (path: string): Promise<number | null> =>
-    isScopedUrl(path) ? Promise.resolve(null) : command("file_mtime_ms", path),
+    isFarUrl(path) ? Promise.resolve(null) : command("file_mtime_ms", path),
   readTextFile: (path: string): Promise<string> =>
-    isScopedUrl(path)
-      ? iosFiles.readText(path)
+    isFarUrl(path)
+      ? farFiles(path).readText(path)
       : command("read_text_file", path),
   /** A Word document as a new document's Markdown, its pictures saved with
    *  the drafts'. Desktop only. */
@@ -132,11 +134,16 @@ export const fs = {
     dataBase64: string,
     ext: string,
     folder: string,
-  ) => command("save_pasted_image", docPath, dataBase64, ext, folder),
+  ) =>
+    docPath && isFarUrl(docPath)
+      ? Promise.reject(new Error(ownError("farPictures")))
+      : command("save_pasted_image", docPath, dataBase64, ext, folder),
   /** A replaced picture's file to the Trash, only from the document's folder
    *  or the drafts' images. Desktop only. */
   movePictureToTrash: (docPath: string | null, path: string) =>
-    command("move_picture_to_trash", docPath, path),
+    isFarUrl(path)
+      ? Promise.resolve(null)
+      : command("move_picture_to_trash", docPath, path),
   uploadImage: (
     host: ImageHost,
     dataBase64: string,
@@ -170,14 +177,22 @@ export const fs = {
   /** The folder a link from `/` is read from (typora-root-url, the git
    *  repository, the vault, the open folder); null for the disk's root. */
   documentLinkRoot: (docPath: string, folder: string | null) =>
-    command("document_link_root", docPath, folder),
+    isFarUrl(docPath)
+      ? Promise.resolve(null)
+      : command("document_link_root", docPath, folder),
   /** How the folder of a document (or a folder) is written, whichever app
    *  made it: links, pictures, line breaks, templates, daily notes. Read
    *  only; a field no app sets is left to Textus's settings. */
-  folderConventions: (path: string) => command("folder_conventions", path),
+  folderConventions: (path: string) =>
+    isFarUrl(path)
+      ? Promise.resolve(NO_CONVENTIONS)
+      : command("folder_conventions", path),
   /** A project's .textus/settings.json as a whole, comments allowed; {}
    *  when there is none. */
-  projectSettings: (root: string) => command("project_settings_read", root),
+  projectSettings: (root: string) =>
+    isFarUrl(root)
+      ? Promise.resolve({})
+      : command("project_settings_read", root),
   /** The plugins' folder convention readers in this window. */
   conventionReaders: (readers: Generated.PluginReader_Deserialize[]) =>
     command("conventions_readers", readers),
@@ -202,16 +217,35 @@ export const fs = {
   writeBase64File: (path: string, data: string): Promise<void> =>
     command("write_base64_file", path, data),
   writeTextFile: (path: string, contents: string): Promise<void> =>
-    isScopedUrl(path)
-      ? iosFiles.writeText(path, contents).finally(contentWritten)
+    isFarUrl(path)
+      ? farFiles(path).writeText(path, contents).finally(contentWritten)
       : command("write_text_file", path, contents),
 };
 
-/** A document saved in an Android folder: plugins' view of it read again. */
+/** A document saved in a far folder: plugins' view of it read again. */
 function contentWritten(): void {
   if (!isIOSApp)
-    void import("./content-plugin-fs").then((m) => m.contentFolderChanged());
+    void import("./far-plugin-fs").then((m) => m.contentFolderChanged());
 }
+
+/** A folder the backend can't read sets nothing: Textus's settings apply. */
+const NO_CONVENTIONS: Generated.Conventions_Serialize = {
+  sources: [],
+  linkStyle: null,
+  linkPath: null,
+  linkRoot: null,
+  updateLinks: null,
+  attachments: null,
+  softBreaks: null,
+  templates: null,
+  templateFormats: null,
+  daily: null,
+  weekly: null,
+  monthly: null,
+  newNotes: null,
+  ignore: [],
+  detected: null,
+};
 
 // Session and recents
 

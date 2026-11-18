@@ -585,6 +585,7 @@ export default {
   errorCatalogNewer: "插件商店需要更新版本的 Textus，请先更新 Textus。",
   errorImageTooBig: "图片是空的，或超过了 25 MB。",
   errorNoFolder: "请先打开一个文件夹。",
+  errorFarPictures: "暂时还不能把图片存进这个文件夹。请粘贴到本机的文档里。",
   errorPdfUnsupported: "此系统不支持导出 PDF。",
   errorNoText: "里面没有可读的文字。",
   errorUnreadable: "无法读取此文件。",

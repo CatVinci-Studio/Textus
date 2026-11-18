@@ -538,6 +538,13 @@ columns, types, group, date }` and answers HTML, shown without scripts or
   `<style>`; an element with `data-row="<path>"` opens that row. The plugin
   that draws databases lists them with `views.databaseViews()` and draws one
   with `views.renderDatabaseView(id, data)`.
+- `files.registerProvider(scheme, provider)` (1.4.6, preview): paths of
+  the plugin's own scheme (`ssh://host/home/me`) read and written by the
+  plugin - `list`, `readText`, `readBytes`, `writeText`, `create`,
+  `rename`, `move`, `delete` - so a folder it serves opens in the sidebar
+  and its documents in tabs. `files.openFolder(url)` opens one of its
+  folders as the window's folder. Pictures can't be pasted into such a
+  folder yet.
 - `files.registerConventionReader(id, { label, marker, notes, read })`
   (`files.read`, 1.4.6): reads the folder conventions of an app Textus
   doesn't read itself. The app finds `marker` (e.g. `logseq/config.edn`)

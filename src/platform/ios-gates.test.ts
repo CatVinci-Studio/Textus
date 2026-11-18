@@ -20,6 +20,7 @@ const ALLOWED: Record<string, string> = {
     "a tap beside a table: its caret went astray, onto a word it selected",
   "document/word-import.ts":
     "Files' security-scoped URLs the converter can't read",
+  "platform/far-files.ts": "the Files app's documents",
   "platform/ios-files.ts": "the Files app's documents",
   "platform/ipc-files.ts": "the Files app's documents",
   "platform/ipc-ai-workspace.ts": "the project folder is picked in Files",

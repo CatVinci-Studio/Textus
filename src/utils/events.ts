@@ -43,6 +43,9 @@ export const INSERT_BLOCK_EVENT = "textus:insert-block";
 /** A folder inside the open one to show in the sidebar (detail: its path),
  *  as its Show Only This Folder does: a plugin's import going into what it made. */
 export const SHOW_FOLDER_EVENT = "textus:show-folder";
+/** A folder a plugin provides (`ssh://host/…`) to open as the window's
+ *  folder (detail: its URL). */
+export const OPEN_FOLDER_EVENT = "textus:open-folder";
 
 /// detail: "heading" | "bullet-list" | "ordered-list" | "blockquote"; these
 /// toggle rather than only insert.
@@ -137,6 +140,7 @@ interface AppEvents {
   [TRACK_CHANGES_EVENT]: TrackChangesAction;
   [INSERT_BLOCK_EVENT]: string;
   [SHOW_FOLDER_EVENT]: string;
+  [OPEN_FOLDER_EVENT]: string;
   [TOGGLE_BLOCK_EVENT]: string;
   [TOGGLE_MARK_EVENT]: string;
   [TABLE_ACTION_EVENT]: string;

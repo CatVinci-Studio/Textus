@@ -63,6 +63,10 @@
     "en": "No folder is open.",
     "text": "errorNoFolder"
   },
+  "farPictures": {
+    "en": "Pictures can't be saved into this folder yet.",
+    "text": "errorFarPictures"
+  },
   "pluginTooBig": {
     "en": "The plugin is too big.",
     "text": "errorPluginTooBig"

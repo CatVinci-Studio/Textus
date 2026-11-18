@@ -22,6 +22,8 @@ var inlineCompletions = new Map();
 var databaseViews = new Map();
 // Each folder convention reader, by its id.
 var conventionReaders = new Map();
+// Each file provider, by its scheme.
+var fileProviders = new Map();
 // Each ai.stream call's onText, by its number, while it runs.
 var aiStreams = new Map();
 var aiStreamCount = 0;

@@ -1244,6 +1244,16 @@ declare global {
        *  instead of other apps' settings files; a field no app sets is
        *  null, for Textus's own settings. From 1.3.9 (files.read). */
       conventions(path?: string): Promise<FolderConventions>;
+      /** From 1.4.6 (API 1.8, preview): paths of the plugin's own scheme
+       *  (`ssh://host/home/me/notes`), read and written by `provider`, so
+       *  a folder it serves opens in the sidebar and its documents in tabs
+       *  like any other. Paths are whole URLs. A scheme is one plugin's;
+       *  file, content, http(s), data, blob, asset, tauri, textus and
+       *  mailto are never a plugin's. */
+      registerProvider(scheme: string, provider: FileProvider): Disposable;
+      /** From 1.4.6 (API 1.8, preview): opens a folder the plugin provides
+       *  (its `registerProvider` scheme) as the window's folder. */
+      openFolder(url: string): Promise<void>;
       /** From 1.4.6 (API 1.8, files.read): reads the folder conventions of an
        *  app Textus doesn't read itself (Logseq, Zettlr...). The app finds
        *  `marker`, a file from the app's folder, in the open folder and the
@@ -1274,6 +1284,20 @@ declare global {
       /** The open folder's conventions changed: another folder, or its
        *  app's settings edited. From 1.3.9. */
       onDidChangeConventions: Event<{ root: string }>;
+    }
+
+    /** A remote or virtual folder's files (files.registerProvider). Each
+     *  path is a whole URL; a name taken is refused, never replaced. */
+    interface FileProvider {
+      list(path: string): Promise<{ name: string; folder: boolean }[]>;
+      readText(path: string): Promise<string>;
+      readBytes(path: string): Promise<Uint8Array>;
+      writeText(path: string, text: string): Promise<void>;
+      create(dir: string, name: string, folder: boolean): Promise<void>;
+      rename(path: string, name: string): Promise<void>;
+      move(path: string, into: string): Promise<void>;
+      /** For good: a remote folder has no Trash. The user is asked first. */
+      delete(path: string): Promise<void>;
     }
 
     interface ConventionReader {

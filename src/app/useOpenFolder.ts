@@ -26,7 +26,7 @@ import {
   ownFolderMoved,
   storedOwnFolder,
 } from "../platform/documents-path";
-import { SHOW_FOLDER_EVENT } from "../utils/events";
+import { OPEN_FOLDER_EVENT, SHOW_FOLDER_EVENT } from "../utils/events";
 import { nextTreeRoot, rootAfterClose } from "../files/tree-root";
 import { setOpenFolder } from "../platform/open-folder";
 
@@ -251,6 +251,19 @@ function useFolderActions({
   return { openFolder, closeFolder, openFolderDialog };
 }
 
+/** A folder a plugin provides (`ssh://host/…`), opened at its asking. */
+function useProvidedFolder(openFolder: (path: string) => void) {
+  const open = useLatest(openFolder);
+  useEffect(() => {
+    const take = (event: Event) => {
+      const url = (event as CustomEvent<unknown>).detail;
+      if (typeof url === "string") open.current(url);
+    };
+    window.addEventListener(OPEN_FOLDER_EVENT, take);
+    return () => window.removeEventListener(OPEN_FOLDER_EVENT, take);
+  }, [open]);
+}
+
 /** A recent folder chosen while no window was open (this window was
  *  opened to show it), else the folder its session had open. Taken once. */
 function useTakePendingFolder(openFolder: (path: string) => void) {
@@ -314,6 +327,7 @@ export function useOpenFolder({
   });
 
   useTakePendingFolder(openFolder);
+  useProvidedFolder(openFolder);
 
   return {
     folder,

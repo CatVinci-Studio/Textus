@@ -3,7 +3,7 @@ import { Plugin } from "@milkdown/kit/prose/state";
 import type { EditorView } from "@milkdown/kit/prose/view";
 import { $prose } from "@milkdown/kit/utils";
 import { fs, links } from "../../platform/ipc";
-import { isScopedUrl } from "../../platform/ios-files";
+import { isFarUrl } from "../../platform/far-files";
 import { editorExtensions } from "../extension-points";
 import { modIsMeta } from "../../platform/os";
 import { revealHeading } from "./heading-jump";
@@ -73,7 +73,7 @@ export function openLinkHref(
   docPath: string | null,
 ): void {
   // An iOS Files document has no folder this app may read beside it.
-  const local = docPath && !isScopedUrl(docPath) ? docPath : null;
+  const local = docPath && !isFarUrl(docPath) ? docPath : null;
   const base = docPath ? local : draftBase(windowFolder());
   const target = linkTarget(href, base);
   if (target) void follow(view, href, target, local).catch(() => {});
@@ -85,7 +85,7 @@ export function openWikilink(
   source: string,
   docPath: string | null,
 ): void {
-  const local = docPath && !isScopedUrl(docPath) ? docPath : null;
+  const local = docPath && !isFarUrl(docPath) ? docPath : null;
   void followNoteLink(view, source, local, windowFolder()).catch(() => {});
 }
 

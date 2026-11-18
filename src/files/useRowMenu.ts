@@ -1,3 +1,4 @@
+import { farEntries } from "../platform/far-files";
 import { emitPluginEvent } from "../plugins/app-bridge";
 import { ENTRY_TRASHED_EVENT, sendAppEvent } from "../utils/events";
 import { fill } from "../i18n/fill";
@@ -41,6 +42,10 @@ type TreeMenu = {
 
 /** The tree's menus: the one open, and a row's context menu - open, new
  *  document or folder, rename, move to Trash. */
+/** Whether `path` goes to a Trash; one in a phone's or a remote folder is
+ *  deleted for good. */
+const trashable = (path: string) => canTrashFiles && !farEntries(path);
+
 export function useRowMenu(
   root: string,
   linkBase: string,
@@ -78,15 +83,17 @@ export function useRowMenu(
   const trash = useCallback(
     async (path: string, isDir: boolean) => {
       const name = basename(path);
-      // Without a Trash (Android) the document is deleted for good.
+      // Without a Trash (Android, a remote folder) the document is deleted
+      // for good.
+      const hasTrash = trashable(path);
       const ok = await showConfirm(
-        !canTrashFiles
+        !hasTrash
           ? fill(t.docDeleteConfirm, { name })
           : fill(isDir ? t.treeTrashFolderConfirm : t.treeTrashConfirm, {
               name,
             }),
         {
-          okLabel: !canTrashFiles ? t.docDeleteOk : t.treeTrash,
+          okLabel: !hasTrash ? t.docDeleteOk : t.treeTrash,
           cancelLabel: t.cancel,
           danger: true,
         },
@@ -196,9 +203,9 @@ export function useRowMenu(
         });
       // Without a Trash only documents are deleted: a folder's would be gone
       // for good.
-      if (path !== root && (canTrashFiles || !isDir))
+      if (path !== root && (trashable(path) || !isDir))
         items.push({
-          label: canTrashFiles ? t.treeTrash : t.docDelete,
+          label: trashable(path) ? t.treeTrash : t.docDelete,
           onSelect: () => void trash(path, isDir),
           danger: true,
         });

@@ -48,6 +48,11 @@ vi.mock("./ios-files", () => ({
   },
 }));
 
+// An Android pick: read through the native plugin.
+vi.mock("./far-files", async (actual) => {
+  const { iosFiles } = await import("./ios-files");
+  return { ...(await actual<object>()), farFiles: () => iosFiles };
+});
 // The backend reads the texts handed to it; here, each as its title.
 vi.mock("./ipc-call", () => ({
   command: async (
@@ -63,8 +68,7 @@ vi.mock("./ipc-call", () => ({
     })),
 }));
 
-const { contentPath, contentPluginFs: fs } =
-  await import("./content-plugin-fs");
+const { contentPath, farPluginFs: fs } = await import("./far-plugin-fs");
 
 beforeEach(() => {
   files.clear();

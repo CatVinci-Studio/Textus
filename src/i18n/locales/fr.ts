@@ -681,6 +681,8 @@ utiliser une.
     "La boutique de plugins nécessite une version plus récente de Textus. Mettez Textus à jour pour la voir.",
   errorImageTooBig: "L'image est vide ou dépasse 25 Mo.",
   errorNoFolder: "Ouvrez d'abord un dossier.",
+  errorFarPictures:
+    "Les images ne peuvent pas encore être enregistrées dans ce dossier. Collez-les dans un document de cet appareil.",
   errorPdfUnsupported: "L'export PDF n'est pas disponible sur ce système.",
   errorNoText: "Il ne contient aucun texte lisible.",
   errorUnreadable: "Ce fichier ne peut pas être lu.",

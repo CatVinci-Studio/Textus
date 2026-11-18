@@ -208,6 +208,15 @@ var handlers = {
     var html = await view.render(params.data);
     return typeof html === "string" ? html : null;
   },
+  $provider: async function (params) {
+    var provider = fileProviders.get(params.scheme);
+    if (!provider || typeof provider[params.op] !== "function")
+      throw new Error(params.scheme + " can't " + params.op + ".");
+    var answer = await provider[params.op].apply(provider, params.args);
+    if (params.op === "readBytes")
+      return answer instanceof Uint8Array ? answer : bytesOf(answer);
+    return answer === undefined ? null : plain(answer);
+  },
   $conventionRead: async function (params) {
     var reader = conventionReaders.get(params.id);
     if (!reader) return null;

@@ -1,3 +1,4 @@
+import { isFarUrl } from "../platform/far-files";
 import type { Strings } from "../i18n/strings";
 import type { ContextMenuItem } from "../engine/controls/ContextMenu";
 import { canRevealInFileManager } from "../platform/capabilities";
@@ -36,7 +37,7 @@ export function pathItems(
           },
         ]
       : []),
-    ...(canRevealInFileManager
+    ...(canRevealInFileManager && !isFarUrl(path)
       ? [
           {
             label: t.imageReveal,

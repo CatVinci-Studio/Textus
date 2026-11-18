@@ -215,6 +215,19 @@ textus.files = {
       value: value === undefined ? null : plain(value),
     });
   },
+  registerProvider: function (scheme, provider) {
+    var key = String(scheme).toLowerCase();
+    fileProviders.set(key, provider);
+    quiet(call("files.registerProvider", { scheme: key }));
+    return disposable(function () {
+      if (fileProviders.get(key) !== provider) return;
+      fileProviders.delete(key);
+      quiet(call("files.unregisterProvider", { scheme: key }));
+    });
+  },
+  openFolder: function (url) {
+    return call("files.openFolder", { url: String(url) });
+  },
   registerConventionReader: function (id, reader) {
     var key = String(id);
     conventionReaders.set(key, reader);
