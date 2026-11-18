@@ -13,6 +13,7 @@
 - Leaves the caret and the headings' fold arrows out of exports, where the caret showed as a dark bar over the text, and exports folded sections in full.
 - Keeps a selection dragged or Shift-extended from text into a table; it was pulled back to the paragraph it began in.
 - Keeps a table's tools shown while the pointer moves up to them.
+- Exports to PDF a document with pictures further down: the export waited for pictures that load only as they come near, and never finished.
 - Draws the caret beside a picture as tall as the picture.
 - Prints PDF exports on the Mac at the usual size: text came out about a third larger than on Windows, so a long document took far more pages.
 - Keeps a plugin's underlines and the problem count in the corner when the plugin is slow to answer for a moment, as after picking a problem from the count's list; they used to vanish until the next edit or scroll.

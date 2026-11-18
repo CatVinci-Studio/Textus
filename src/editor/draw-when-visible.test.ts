@@ -126,9 +126,11 @@ describe("drawWhileNear", () => {
     expect(observed).toHaveLength(0);
   });
 
-  it("draws everything not drawn for an export", async () => {
+  it("draws everything not drawn for an export, its pictures loaded too", async () => {
     vi.stubGlobal("IntersectionObserver", FakeObserver);
     const editor = editorIn();
+    const picture = editor.appendChild(document.createElement("img"));
+    picture.loading = "lazy";
     const els = [1, 2].map(() =>
       editor.appendChild(document.createElement("span")),
     );
@@ -140,5 +142,7 @@ describe("drawWhileNear", () => {
     expect(diagrams).toHaveBeenCalledOnce();
     expect(draw).toHaveBeenCalledTimes(2);
     expect(editor.querySelector(`[${PENDING_ATTR}]`)).toBeNull();
+    // Off screen it would load only once scrolled near: never, for an export.
+    expect(picture.loading).toBe("eager");
   });
 });
