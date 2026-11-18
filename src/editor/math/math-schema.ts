@@ -9,6 +9,7 @@ import {
   latexMathFromMarkdown,
   latexMathSyntax,
 } from "./latex-math-syntax";
+import { looseMathFlow } from "./loose-math-flow";
 
 interface MdastNode {
   type: string;
@@ -83,7 +84,7 @@ function remarkMathWithPandocDollars(
 ) {
   remarkMath.apply(this, args);
   const data = this.data();
-  (data.micromarkExtensions ??= []).push(latexMathSyntax());
+  (data.micromarkExtensions ??= []).push(latexMathSyntax(), looseMathFlow());
   (data.fromMarkdownExtensions ??= []).push(latexMathFromMarkdown());
   return (root: Root, file: { value: unknown }) => {
     const tree = root as MdastNode;
