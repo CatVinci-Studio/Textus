@@ -44,6 +44,8 @@ const layout = (page: Page, mark = false) =>
 test("formulas far from the screen are let go where they were drawn, and drawn again as they come back", async ({
   page,
 }) => {
+  // Hundreds of formulas drawn and let go: minutes on a slow runner.
+  test.setTimeout(120_000);
   // A window tall enough for all of them to be drawn first.
   await page.setViewportSize({ width: 1000, height: 12000 });
   await openApp(page, { settings: { menuBarShown: false } });
