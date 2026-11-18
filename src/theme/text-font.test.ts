@@ -45,10 +45,10 @@ describe("text font and character spacing", () => {
     expect(loadSettings().docFont).toBe("Songti SC");
   });
 
-  it("offers well-made faces first, and only faces that draw the language", () => {
-    // A canvas that measures a face as drawing CJK only if it is one of
-    // these, and Latin for any face.
-    const cjk = ["PingFang SC", "Songti SC"];
+  it("offers well-made faces first, then every face the web view draws", () => {
+    // The canvas: CJK faces draw everything, any other face Latin only;
+    // "Hidden" is known to the web view by its Chinese name alone.
+    const cjk = ["PingFang SC", "Songti SC", "微软雅黑", "隐藏"];
     let font = "";
     vi.spyOn(HTMLCanvasElement.prototype, "getContext").mockReturnValue({
       set font(value: string) {
@@ -56,25 +56,40 @@ describe("text font and character spacing", () => {
       },
       measureText: (text: string) => {
         const named = /"([^"]+)"/.exec(font)?.[1];
-        const own = !!named && (/^[ -~]+$/.test(text) || cjk.includes(named));
+        const known =
+          !!named && named !== "Hidden" && named !== "Microsoft YaHei";
+        const own = known && (/^[ -~]+$/.test(text) || cjk.includes(named!));
         return { width: own ? 1 : 2 };
       },
     } as unknown as CanvasRenderingContext2D);
+    const family = (name: string, zh?: string) => ({
+      name,
+      local: zh ? [{ language: "zh", name: zh }] : [],
+    });
     const installed = [
-      "Apple SD Gothic Neo",
-      "Georgia",
-      "PingFang SC",
-      "Songti SC",
-      "Zapfino",
+      family("Georgia"),
+      family("Hidden", "隐藏"),
+      family("Microsoft YaHei", "微软雅黑"),
+      family("PingFang SC", "苹方-简"),
+      family("Zapfino"),
     ];
-    expect(fontChoices(installed, "zh")).toEqual({
-      recommended: ["PingFang SC", "Songti SC", "Georgia"],
-      more: [],
-    });
-    expect(fontChoices(installed, "en")).toEqual({
-      recommended: ["Georgia"],
-      more: ["Apple SD Gothic Neo", "PingFang SC", "Songti SC", "Zapfino"],
-    });
+    const label = (c: { label: string }) => c.label;
+    const zh = fontChoices(installed, "zh");
+    expect(zh.recommended.map(label)).toEqual([
+      "苹方-简 PingFang SC",
+      "微软雅黑 Microsoft YaHei",
+      "Georgia",
+    ]);
+    expect(zh.recommended[1].value).toBe("微软雅黑");
+    expect(zh.more.map(label)).toEqual(["隐藏 Hidden", "Zapfino"]);
+    const en = fontChoices(installed, "en");
+    expect(en.recommended.map(label)).toEqual(["Georgia"]);
+    expect(en.more.map(label)).toEqual([
+      "Hidden",
+      "Microsoft YaHei",
+      "PingFang SC",
+      "Zapfino",
+    ]);
     vi.restoreAllMocks();
   });
 });

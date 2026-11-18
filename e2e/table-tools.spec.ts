@@ -20,10 +20,16 @@ async function open(page: Page, markdown = TABLE, animations = false) {
 const tool = (page: Page, name: string, exact = true) =>
   page.locator(".table-toolbar").getByRole("button", { name, exact });
 
-/** A tool pressed as a hand does: by way of the head row, which shows them. */
+/** A tool pressed as a hand does: from the head row, which shows them,
+ *  straight across to it, leaving the table on its way. */
 async function press(page: Page, name: string, exact = true) {
-  await page.locator(".table-wrapper th").last().hover();
-  await tool(page, name, exact).click();
+  await page.locator(".table-wrapper th").first().hover();
+  const to = (await tool(page, name, exact).boundingBox())!;
+  await page.mouse.move(to.x + to.width / 2, to.y + to.height / 2, {
+    steps: 12,
+  });
+  await page.mouse.down();
+  await page.mouse.up();
 }
 
 test("a table's tools align the caret's column, size it, and delete it", async ({
@@ -204,6 +210,31 @@ test("the grips sit at the middle of their row and column, the document zoomed t
     expect(Math.abs(row.y - (c.y + c.height / 2))).toBeLessThan(2);
     expect(Math.abs(col.x - (c.x + c.width / 2))).toBeLessThan(2);
   }
+});
+
+test("a selection dragged from the text above into an empty cell keeps both ends", async ({
+  page,
+}) => {
+  await open(page, "Above the table.\n\n| a | b |\n| --- | --- |\n|  | 2 |\n");
+  const from = (await page
+    .locator(".ProseMirror:visible > p")
+    .first()
+    .boundingBox())!;
+  const cell = (await page.locator(".table-wrapper td").first().boundingBox())!;
+  await page.mouse.move(from.x + 30, from.y + from.height / 2);
+  await page.mouse.down();
+  await page.mouse.move(cell.x + cell.width / 2, cell.y + cell.height / 2, {
+    steps: 20,
+  });
+  await page.mouse.up();
+  const ends = await page.evaluate(() => {
+    const s = getSelection()!;
+    const inCell = (n: Node | null) =>
+      !!(n instanceof Element ? n : n?.parentElement)?.closest("td, th");
+    return [inCell(s.anchorNode), inCell(s.focusNode), s.anchorOffset > 0];
+  });
+  // From where it was pressed, not pulled back to the paragraph's start.
+  expect(ends).toEqual([false, true, true]);
 });
 
 test("a click below a table that ends the document starts a paragraph there", async ({

@@ -160,7 +160,7 @@ test("the drawn caret stays while an input method composes, where its text ends"
   await expect.poll(near).toBe(true);
 });
 
-test("after a formula and on an empty line, the drawn caret stands on its line", async ({
+test("after a formula, on an empty line and beside a picture, the drawn caret stands on its line", async ({
   page,
 }) => {
   await openApp(page, { settings: { language: "en" } });
@@ -188,6 +188,25 @@ test("after a formula and on an empty line, the drawn caret stands on its line",
     .poll(async () => {
       const box = (await drawn())!;
       return box.y > p.y + p.height - 4 && Math.abs(box.x - p.x) < 4;
+    })
+    .toBe(true);
+  // A picture alone on the last line: the caret after it is as tall.
+  const svg = Buffer.from(
+    '<svg xmlns="http://www.w3.org/2000/svg" width="120" height="90"/>',
+  ).toString("base64");
+  await page.keyboard.press(MAC ? "Meta+ArrowDown" : "Control+End");
+  await page.keyboard.press("Enter");
+  await pasteMarkdown(page, `![p](data:image/svg+xml;base64,${svg})`);
+  const img = page.locator(`${editor} img:not(.ProseMirror-separator)`);
+  await expect(img).toBeVisible();
+  await page.keyboard.press(MAC ? "Meta+ArrowDown" : "Control+End");
+  await expect
+    .poll(async () => {
+      const box = (await drawn())!;
+      const pic = (await img.boundingBox())!;
+      return (
+        Math.abs(box.height - pic.height) < 2 && Math.abs(box.y - pic.y) < 2
+      );
     })
     .toBe(true);
 });

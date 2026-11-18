@@ -93,7 +93,14 @@ function drawMark(
   }
   // An export keeps neither.
   if (mark.style !== "badge")
-    return [Decoration.inline(from, to, { ...attrs, "data-editor-mark": "" })];
+    return [
+      Decoration.inline(
+        from,
+        to,
+        { ...attrs, "data-editor-mark": "" },
+        { plugin: mark.plugin },
+      ),
+    ];
   return [
     Decoration.widget(
       mark.before ? from : to,
@@ -109,6 +116,7 @@ function drawMark(
         return badge;
       },
       {
+        plugin: mark.plugin,
         side: mark.before ? -1 : 1,
         key: `${mark.plugin}:${mark.block}:${mark.text ?? ""}:${tone}:${mark.before ? "<" : ">"}`,
       },

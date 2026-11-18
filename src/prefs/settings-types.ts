@@ -146,8 +146,8 @@ export interface Settings {
   /// is read and it bounds the agent's file tools, so setting it lets the
   /// agent reach material that doesn't live next to the draft.
   agentWorkspaceRoot: string;
-  /// Proxy all AI provider requests route through ("none" or an empty host
-  /// means direct). Handed to Rust as a URL.
+  /// Where every request the app makes goes (settings/app.rs): the
+  /// system's proxy, direct, or the host and port below.
   proxyType: ProxyType;
   proxyHost: string;
   proxyPort: string;
@@ -336,7 +336,7 @@ export const DEFAULT_SETTINGS: Settings = {
   plugins: {},
   pinAgentWindow: false,
   agentWorkspaceRoot: "",
-  proxyType: "none",
+  proxyType: "system",
   proxyHost: "",
   proxyPort: "",
   proxyUsername: "",

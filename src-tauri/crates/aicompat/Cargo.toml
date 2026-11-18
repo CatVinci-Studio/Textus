@@ -13,6 +13,10 @@ sha2 = "0.10"
 base64 = "0.22"
 rand = "0.8"
 url = "2"
+# The system's proxy settings (macOS, Windows), for "follow the system":
+# already in the tree through reqwest, so no new crates.
+hyper-util = { version = "0.1", default-features = false, features = ["client-proxy", "client-proxy-system"] }
+http = "1"
 # Image generation (images/): the download resolver and nothing else -
 # already in the tree through reqwest, so no new crates.
 tokio = { version = "1", features = ["net", "time"] }

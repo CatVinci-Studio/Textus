@@ -21,7 +21,7 @@ it("asks with the asking editor's whole document, not the one in front", async (
       text: String(all.indexOf(b) + 1),
     })),
   );
-  const marks = await decorate([doc[1]], doc);
+  const { answers: marks } = await decorate([doc[1]], doc);
   expect(marks).toEqual([
     { block: "b", style: "badge", text: "2", plugin: "numbers" },
   ]);

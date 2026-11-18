@@ -20,7 +20,9 @@ export function registerDrawAll(
 }
 
 /** Draws everything in `root` still waiting, for an export or print: a
- *  long document's blocks out of sight first, then what is in them. */
+ *  long document's blocks out of sight first, then what is in them, and
+ *  last their pictures, which load only as they come near and would
+ *  never be waited for off screen. */
 export async function drawEverything(root: Element): Promise<void> {
   const editor = root.matches(".ProseMirror")
     ? root
@@ -29,6 +31,8 @@ export async function drawEverything(root: Element): Promise<void> {
   const drawAll = editor && drawAllers.get(editor);
   if (drawAll) await drawAll();
   root.querySelectorAll(`[${PENDING_ATTR}]`).forEach(drawNow);
+  for (const img of root.querySelectorAll("img"))
+    if (img.loading === "lazy") img.loading = "eager";
 }
 
 /** How far off screen a view is drawn and kept, in screens above and

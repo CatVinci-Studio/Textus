@@ -42,6 +42,7 @@ import {
   strikethroughKeymap,
   toggleStrikethroughCommand,
   tableCellSchema,
+  tableEditingPlugin,
   tableHeaderSchema,
 } from "@milkdown/kit/preset/gfm";
 import { editorViewCtx } from "@milkdown/kit/core";
@@ -53,6 +54,7 @@ import {
 } from "@milkdown/kit/prose/inputrules";
 import { $inputRule, type $NodeSchema } from "@milkdown/kit/utils";
 import { isLinuxPlatform } from "../../platform/os";
+import { tableEditingInTables } from "../tables/table-editing";
 
 // The stock commonmark/gfm presets minus what Textus replaces or must avoid:
 // - bold/italic/strike/inline code marks: md_span nodes instead;
@@ -156,9 +158,12 @@ const excludedGfmSet = new Set<unknown>(excludedGfmPieces);
 export const commonmarkWithoutMarks = (commonmark as unknown[]).filter(
   (piece) => !excludedCommonmarkSet.has(piece),
 ) as typeof commonmark;
-export const gfmWithoutStrikethrough = (gfm as unknown[]).filter(
-  (piece) => !excludedGfmSet.has(piece),
-) as typeof gfm;
+// Table editing in its place, its selection tidying kept inside tables.
+export const gfmWithoutStrikethrough = (gfm as unknown[])
+  .filter((piece) => !excludedGfmSet.has(piece))
+  .map((piece) =>
+    piece === tableEditingPlugin ? tableEditingInTables : piece,
+  ) as typeof gfm;
 
 /** A new cell has no alignment, as one read from `| --- |`: Milkdown's
  *  "left" saved every new table as `| :--- |`. */

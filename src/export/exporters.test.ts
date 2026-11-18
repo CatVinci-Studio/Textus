@@ -47,7 +47,10 @@ describe("cloneEditorContent", () => {
   it("drops editing affordances that are not document content", () => {
     const html = cloneEditorContent(
       editor(
-        '<h1><span class="heading-marker"># </span>Title</h1>' +
+        '<h1 data-folded=""><button class="block-fold heading-fold"></button><span class="heading-marker"># </span>Title</h1>' +
+          '<p class="heading-folded-away">Folded away</p>' +
+          '<span class="drawn-caret" data-editor-chrome="" aria-hidden="true"></span>' +
+          '<div class="block-foldable" data-folded=""><div class="block-folded-line">Embed</div><p>Inside</p></div>' +
           '<div class="code-block-wrapper"><div class="code-block-header">js</div><pre>x</pre></div>' +
           // A plugin's inline syntax: its source, as written.
           '<p><span class="plugin-syntax-hidden" data-editor-mark="">||</span>' +
@@ -58,7 +61,14 @@ describe("cloneEditorContent", () => {
     expect(html).toContain("<p>||twist||</p>");
     expect(html).not.toContain("heading-marker");
     expect(html).not.toContain("code-block-header");
-    expect(html).toContain("Title");
+    expect(html).not.toContain("drawn-caret");
+    // Folding is the writer's view: no arrows, and everything unfolded.
+    expect(html).not.toMatch(
+      /block-fold"|block-folded-line|data-folded|heading-folded-away/,
+    );
+    expect(html).toContain("<h1>Title</h1>");
+    expect(html).toContain("Folded away");
+    expect(html).toContain("<p>Inside</p>");
     expect(html).toContain("<pre>x</pre>");
   });
 

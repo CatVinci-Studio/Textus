@@ -4,6 +4,7 @@ import { LANGS, LANG_NAMES, type Lang } from "../../i18n/strings";
 import { SettingRow, ToggleRow } from "../sections/controls";
 import { CliCommandSection, DefaultEditorSection } from "../sections/general";
 import { BackgroundSection } from "../sections/background";
+import { ProxySection } from "../sections/proxy";
 import { Select } from "../../engine/controls/Select";
 import {
   canInstallCliCommand,
@@ -11,8 +12,8 @@ import {
   canUseWindows,
 } from "../../platform/capabilities";
 
-/** General: language, documents and disk, system integrations, and which
- *  updates to take. */
+/** General: language, documents and disk, the network, system
+ *  integrations, and which updates to take. */
 export function GeneralPage({ t, settings, setSettings }: SettingsPageProps) {
   return (
     <>
@@ -90,6 +91,10 @@ export function GeneralPage({ t, settings, setSettings }: SettingsPageProps) {
           checked={settings.autoSuggestFilename}
           onChange={(v) => setSettings({ autoSuggestFilename: v })}
         />
+      </SettingsGroup>
+
+      <SettingsGroup title={t.generalNetworkLabel}>
+        <ProxySection t={t} settings={settings} setSettings={setSettings} />
       </SettingsGroup>
 
       {/* A desktop's: the phone has no windows to close, no default editor

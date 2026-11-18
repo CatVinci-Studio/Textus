@@ -1,28 +1,24 @@
-import type { Node as ProseNode } from "@milkdown/kit/prose/model";
 import {
   AllSelection,
   Plugin,
-  Selection,
   TextSelection,
   type EditorState,
+  type Selection,
 } from "@milkdown/kit/prose/state";
 import { keydownHandler } from "@milkdown/kit/prose/keymap";
 import { $prose } from "@milkdown/kit/utils";
+import "./select-all.css";
 
-/** All of `doc`. WebKit draws no highlight for a selection that starts or
- *  ends beside a code block; there it runs from its first character to its
- *  last. */
-function wholeDocument(doc: ProseNode): Selection {
-  const start = Selection.atStart(doc);
-  const end = Selection.atEnd(doc);
-  const codeAtEdge = [doc.firstChild, doc.lastChild].some(
-    (node) => node?.type.spec.code,
-  );
-  return codeAtEdge &&
-    start instanceof TextSelection &&
-    end instanceof TextSelection
-    ? TextSelection.create(doc, start.from, end.to)
-    : new AllSelection(doc);
+/** The highlight Select All paints itself: WebKit draws none for the
+ *  whole document when it starts beside a heading's fold arrow or a code
+ *  block's tools, or ends by a table. */
+const HIGHLIGHT = "select-all";
+
+function paintedHighlight(): Highlight | null {
+  if (typeof Highlight === "undefined" || !CSS.highlights) return null;
+  let painted = CSS.highlights.get(HIGHLIGHT);
+  if (!painted) CSS.highlights.set(HIGHLIGHT, (painted = new Highlight()));
+  return painted;
 }
 
 /** Select All: in a code or math block its code first, as in Typora and
@@ -35,7 +31,7 @@ export function selectAllIn(state: EditorState): Selection {
     if (end > start && ($from.pos > start || $to.pos < end))
       return TextSelection.create(state.doc, start, end);
   }
-  return wholeDocument(state.doc);
+  return new AllSelection(state.doc);
 }
 
 /** Mod+A where the keydown reaches the page (Windows, Linux); macOS's Edit
@@ -43,7 +39,45 @@ export function selectAllIn(state: EditorState): Selection {
 export const selectAllKeyPlugin = $prose(
   () =>
     new Plugin({
+      view(view) {
+        let painted: Range[] = [];
+        const paint = (state: EditorState) => {
+          const all = state.selection instanceof AllSelection;
+          const highlight = paintedHighlight();
+          for (const range of painted) highlight?.delete(range);
+          painted = [];
+          if (!all || !highlight) return;
+          // A range for each run of text, found afresh on every update (the
+          // blocks redraw, a heading's # shown): WebKit paints one range
+          // spanning blocks only in its first.
+          const walker = document.createTreeWalker(
+            view.dom,
+            NodeFilter.SHOW_TEXT,
+          );
+          while (walker.nextNode()) {
+            const text = walker.currentNode;
+            if (text.parentElement?.closest('[contenteditable="false"]'))
+              continue;
+            const range = document.createRange();
+            range.selectNodeContents(text);
+            highlight.add(range);
+            painted.push(range);
+          }
+        };
+        paint(view.state);
+        return {
+          update: (v) => paint(v.state),
+          destroy: () => {
+            const highlight = paintedHighlight();
+            for (const range of painted) highlight?.delete(range);
+          },
+        };
+      },
       props: {
+        attributes: (state): Record<string, string> =>
+          state.selection instanceof AllSelection
+            ? { class: "is-all-selected" }
+            : {},
         handleKeyDown: keydownHandler({
           "Mod-a": (state, dispatch) => {
             dispatch?.(state.tr.setSelection(selectAllIn(state)));

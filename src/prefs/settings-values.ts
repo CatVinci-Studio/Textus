@@ -21,7 +21,16 @@ export type EmbedDisplay = "expand" | "card";
 /** How every document shows: the rich editor, its Markdown source, or the
  *  source beside a preview. One for all windows. */
 export type ViewMode = "rich" | "source" | "split";
-export type ProxyType = "none" | "http" | "https" | "socks5";
+/** Where requests go: the system's proxy, straight out, or a proxy set
+ *  here. Before 1.4.5 "none" was the default; it reads as "system". */
+export type ProxyType = "system" | "direct" | "http" | "https" | "socks5";
+export const PROXY_TYPES: ProxyType[] = [
+  "system",
+  "direct",
+  "http",
+  "https",
+  "socks5",
+];
 /** Which edge of a document the format bar sits on (not on a phone). */
 export type FormatBarSide = "top" | "left" | "right";
 

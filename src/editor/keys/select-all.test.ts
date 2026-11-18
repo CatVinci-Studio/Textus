@@ -1,7 +1,7 @@
 // @vitest-environment jsdom
 import { afterEach, expect, it, vi } from "vitest";
 import { editorViewCtx, type Editor } from "@milkdown/kit/core";
-import { TextSelection } from "@milkdown/kit/prose/state";
+import { AllSelection, TextSelection } from "@milkdown/kit/prose/state";
 import type { EditorView } from "@milkdown/kit/prose/view";
 import { createTestEditor } from "../editor-test-kit";
 
@@ -57,4 +57,20 @@ it("selects the whole document from a paragraph at once", async () => {
   const view = await viewAt("One\n\nTwo\n", "Two");
   pressSelectAll(view);
   expect(selected(view)).toBe("One\nTwo");
+});
+
+it("takes the whole document, and deleting it leaves no table cut open", async () => {
+  for (const markdown of [
+    "# Title\n\nBody\n\n| a | b |\n| --- | --- |\n|  |  |\n",
+    "| a | b |\n| --- | --- |\n| 1 | 2 |\n\nBody\n",
+  ]) {
+    const view = await viewAt(markdown, "Body");
+    pressSelectAll(view);
+    expect(view.state.selection).toBeInstanceOf(AllSelection);
+    view.dispatch(view.state.tr.deleteSelection());
+    expect(view.state.doc.childCount).toBe(1);
+    expect(view.state.doc.firstChild!.type.name).toBe("paragraph");
+    await editor?.destroy();
+    editor = null;
+  }
 });

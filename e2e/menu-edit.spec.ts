@@ -36,6 +36,17 @@ test("the Edit menu's Undo, Redo and Select All act on the document in use", asy
     // WebKit's selection text ends with the block's line break.
     .poll(() => page.evaluate(() => String(getSelection()).trim()))
     .toBe("beta");
+  // Its highlight painted over that document alone, gone once the caret moves.
+  const painted = () =>
+    page.evaluate(() =>
+      [...(CSS.highlights.get("select-all") ?? [])].map((r) =>
+        String(r).trim(),
+      ),
+    );
+  expect(await painted()).toEqual(["beta"]);
+  await page.keyboard.press("ArrowRight");
+  await expect.poll(painted).toEqual([]);
+  await emit(page, "menu-select-all");
   await emit(page, "menu-undo");
   await expect.poll(() => text(page, 1)).toBe("");
   // The first island's document kept its own.

@@ -90,6 +90,8 @@
    beside Copy and Select All, in their look but in the text's colour. */
 .plugin-code-source-open .code-block-actions {
   opacity: 1;
+}
+.plugin-code-source-open .code-block-actions > * {
   pointer-events: auto;
 }
 .code-block-actions .plugin-code-done {

@@ -18,23 +18,23 @@
      targets, and 16px text, below which iOS zooms into a focused control. */
   :root[data-window-chrome="mobile"]
     :is(.code-block-language-select, .code-block-actions .block-pill) {
-    min-height: 48px;
+    min-height: 40px;
     padding: 0 12px;
     font-size: 18px;
   }
 }
 
-/* A touch screen (phone, tablet, unfolded fold) shows a table's tools
-   while the caret is in it, with no hover to wait for: room is kept above
-   every table for them, so they never cover the line before it, and
+/* A touch screen (phone, tablet, unfolded fold) shows a table's or a code
+   block's tools while the caret is in it, with no hover to wait for: room
+   is kept above every one for them, so they never cover the line before it, and
    nothing moves as they come. */
 @media (pointer: coarse) {
-  .table-toolbar .block-pill {
+  :is(.block-toolbar .block-pill, .code-block-language-select) {
     min-height: 40px;
   }
 
   /* Over the editor's own margin, which comes later. */
-  .milkdown .ProseMirror .table-wrapper {
+  .milkdown .ProseMirror :is(.table-wrapper, .code-block-wrapper) {
     margin-top: calc(var(--doc-gap-box) + 44px);
   }
 }

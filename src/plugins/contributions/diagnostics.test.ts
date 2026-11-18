@@ -27,7 +27,7 @@ it("keeps only slips it can show, each with who found it", async () => {
         { block: "a", severity: "info", message: "x", fix: 3 },
       ] as never,
   });
-  expect(await diagnose(doc, doc, "/n/a.md")).toEqual([
+  expect((await diagnose(doc, doc, "/n/a.md")).answers).toEqual([
     {
       block: "a",
       anchor: undefined,
@@ -40,7 +40,7 @@ it("keeps only slips it can show, each with who found it", async () => {
   ]);
 });
 
-it("leaves out a check slower than its time", async () => {
+it("names a check slower than its time as late, not as finding nothing", async () => {
   addDiagnosticProvider("slow\nx", {
     plugin: "slow",
     name: "Slow",
@@ -52,5 +52,8 @@ it("leaves out a check slower than its time", async () => {
         ),
       ),
   });
-  expect(await diagnose(doc, doc, null, 10)).toEqual([]);
+  expect(await diagnose(doc, doc, null, 10)).toEqual({
+    answers: [],
+    late: ["slow"],
+  });
 });

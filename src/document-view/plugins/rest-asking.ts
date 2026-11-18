@@ -23,12 +23,14 @@ interface RestAsking<T extends { block: string }> {
   active(): boolean;
   /** Called when plugins start or stop answering; gives the unsubscribe. */
   subscribe(changed: () => void): () => void;
+  /** The answers, and the plugins too slow to give theirs this time. */
   ask(
     blocks: SentBlock[],
     all: readonly SentBlock[],
     path: string | null,
-  ): Promise<T[]>;
-  /** One answer on the block at `pos`. */
+  ): Promise<{ answers: T[]; late: string[] }>;
+  /** One answer on the block at `pos`; each decoration's spec names its
+   *  `plugin`. */
   draw(block: ProseNode, pos: number, answer: T): Decoration[];
 }
 
@@ -53,7 +55,9 @@ export function inSight(view: EditorView): [number, number] {
 /**
  * Asks plugins about the blocks in sight once the document, or its
  * scrolling, rests, and draws their answers; an answer for a document that
- * has moved on since is dropped and asked again.
+ * has moved on since is dropped and asked again. A plugin too slow to
+ * answer (the page busy after a jump) keeps what it drew before and is
+ * asked once more.
  */
 export function askAtRest<T extends { block: string }>(
   ctx: Ctx,
@@ -64,6 +68,8 @@ export function askAtRest<T extends { block: string }>(
   const { key } = asking;
   let timer: ReturnType<typeof setTimeout> | undefined;
   let asked = 0;
+  // Asked again already for a late plugin: once, not on and on.
+  let retried = false;
   const ask = () => {
     clearTimeout(timer);
     timer = setTimeout(() => void run(), ASK_MS);
@@ -82,7 +88,7 @@ export function askAtRest<T extends { block: string }>(
       Math.max(0, first - AROUND),
       Math.min(all.length, last + AROUND + 1),
     );
-    const answers = await asking.ask(sent, all, docPath.current);
+    const { answers, late } = await asking.ask(sent, all, docPath.current);
     // Asked again meanwhile, or the text moved on: that answer wins.
     if (turn !== asked || view.isDestroyed) return;
     if (view.state.doc !== doc) {
@@ -98,7 +104,20 @@ export function askAtRest<T extends { block: string }>(
       if (i !== undefined)
         out.push(...asking.draw(doc.child(i), starts[i], answer));
     }
-    view.dispatch(view.state.tr.setMeta(key, DecorationSet.create(doc, out)));
+    const kept = late.length
+      ? (key.getState(view.state) ?? DecorationSet.empty).find(
+          undefined,
+          undefined,
+          (spec) => late.includes((spec as { plugin?: string }).plugin ?? ""),
+        )
+      : [];
+    view.dispatch(
+      view.state.tr.setMeta(key, DecorationSet.create(doc, [...out, ...kept])),
+    );
+    if (late.length && !retried) {
+      retried = true;
+      ask();
+    } else retried = false;
   };
   const stopScroll = onEditorScroll(view, ask);
   const stop = asking.subscribe(ask);

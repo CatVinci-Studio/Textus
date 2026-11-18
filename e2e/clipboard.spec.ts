@@ -248,6 +248,8 @@ test("a copy's plain text is its Markdown source, and code copied inside a code 
     for (let n = walker.nextNode(); n; n = walker.nextNode()) last = n as Text;
     getSelection()!.setBaseAndExtent(first, 0, last, last.data.length);
   }, editor);
+  // The editor takes the new selection before the copy, as after a drag.
+  await selectionRead(page);
   await page.keyboard.press("ControlOrMeta+c");
   expect((await clipboardNow(page))["text/plain"]).toBe("let x = 1;");
 });
