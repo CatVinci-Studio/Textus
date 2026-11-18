@@ -27,10 +27,11 @@
   background: var(--ui-frame-fill) fixed;
 }
 
-/* With tabs the frame inside sinks a step (layout.css): what shows beside
-   it, at the camera's side, sinks with it. */
-:root:is([data-platform="ios"], [data-platform="android"]):has(
-    .app-shell[data-tabs="bar"]
+/* Out of the phone's layout the tabs are in the bar and the frame inside
+   sinks a step (layout.css): what shows beside it, at the camera's side,
+   sinks with it. */
+:root:is([data-platform="ios"], [data-platform="android"]):not(
+    [data-window-chrome="mobile"]
   )
   :is(body, #root) {
   background: var(--ui-frame-paint, var(--ui-frame-sunk)) fixed;
