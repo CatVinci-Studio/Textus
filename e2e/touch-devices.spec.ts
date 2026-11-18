@@ -253,6 +253,53 @@ test.describe("the file tree by touch", () => {
   });
 });
 
+test.describe("the rail by touch", () => {
+  test.use({ hasTouch: true });
+
+  test("an icon held, then moved, takes its new place", async ({
+    page,
+    browserName,
+  }) => {
+    test.skip(browserName !== "chromium", "touch input by CDP");
+    await openApp(page);
+    const rail = page.getByRole("navigation", { name: "图标栏" });
+    const order = () =>
+      rail
+        .locator("[data-rail-id]")
+        .evaluateAll((els) =>
+          els.map((el) => (el as HTMLElement).dataset.railId),
+        );
+    const before = await order();
+    const cdp = await page.context().newCDPSession(page);
+    const touch = (
+      type: "touchStart" | "touchMove" | "touchEnd",
+      x: number,
+      y: number,
+    ) =>
+      cdp.send("Input.dispatchTouchEvent", {
+        type,
+        touchPoints: type === "touchEnd" ? [] : [{ x, y }],
+      });
+    const first = (await rail.locator("[data-rail-id]").nth(0).boundingBox())!;
+    const third = (await rail.locator("[data-rail-id]").nth(2).boundingBox())!;
+    const x = first.x + first.width / 2;
+    await touch("touchStart", x, first.y + first.height / 2);
+    await page.waitForTimeout(450);
+    for (let i = 1; i <= 10; i++)
+      await touch(
+        "touchMove",
+        x,
+        first.y +
+          first.height / 2 +
+          ((third.y + third.height - first.y) * i) / 10,
+      );
+    await touch("touchEnd", x, third.y + third.height);
+    await expect
+      .poll(order)
+      .toEqual([before[1], before[2], before[0], ...before.slice(3)]);
+  });
+});
+
 test.describe("dragging a tab by touch on a tablet", () => {
   test.use({ ...TABLET, viewport: { width: 1024, height: 768 } });
 
