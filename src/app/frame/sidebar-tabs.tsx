@@ -19,8 +19,8 @@ import {
 import { Suspense } from "react";
 import { lazyModule } from "../../lazy/lazy-module";
 import { lazyComponent } from "../../lazy/lazy-component";
-import { isDesktopApp } from "../../platform/capabilities";
 import { canOpenFolder, isIOSApp } from "../../platform/capabilities";
+import { isPhoneLayout } from "../../platform/phone-layout";
 import type { Strings } from "../../i18n/strings";
 import type { OpenFolder } from "../useOpenFolder";
 import type { FileOpenHow } from "../../files/tree-shared";
@@ -167,7 +167,8 @@ const PLUGINS_TAB: SidebarTabDef = {
   ),
 };
 
-const pluginsTab = () => (isDesktopApp ? [PLUGINS_TAB] : []);
+// A phone manages plugins in Settings; a tablet's layout is the desktop's.
+const pluginsTab = () => (isPhoneLayout() ? [] : [PLUGINS_TAB]);
 
 // Settings' pages, loaded when the gear first opens them.
 const SettingsNavPanel = lazyComponent(
@@ -191,7 +192,8 @@ const SETTINGS_TAB: SidebarTabDef = {
   ),
   railFoot: true,
 };
-const settingsTab = () => (isIOSApp ? [] : [SETTINGS_TAB]);
+// An iPhone opens Settings from its menu, as a sheet.
+const settingsTab = () => (isIOSApp && isPhoneLayout() ? [] : [SETTINGS_TAB]);
 
 /** The first tab, Files: where the sidebar opens with nothing remembered. */
 export const DEFAULT_SIDEBAR_TAB = "tree";

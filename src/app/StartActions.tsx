@@ -6,7 +6,8 @@ import {
   NewDocumentIcon,
 } from "../engine/controls/icons";
 import { Tooltip } from "../engine/controls/Tooltip";
-import { canOpenFolder, isMobileApp } from "../platform/capabilities";
+import { canOpenFolder } from "../platform/capabilities";
+import { usePhoneLayout } from "../engine/controls/usePhoneLayout";
 import type { Strings } from "../i18n/strings";
 
 /**
@@ -24,6 +25,7 @@ export function StartActions({
   t: Strings;
   look?: "rows" | "buttons";
 }) {
+  const phone = usePhoneLayout();
   const actions = [
     {
       label: t.menuNewFile,
@@ -86,8 +88,8 @@ export function StartActions({
               {a.icon}
             </span>
             <span className="start-page-action-label">{a.label}</span>
-            {/* A touch screen's keys are its own. */}
-            {a.combo && !isMobileApp && (
+            {/* A phone has no keys; a tablet may have a keyboard. */}
+            {a.combo && !phone && (
               <kbd className="start-page-action-keys">
                 {formatCombo(a.combo)}
               </kbd>

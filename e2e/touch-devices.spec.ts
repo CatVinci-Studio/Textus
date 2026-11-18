@@ -157,6 +157,28 @@ test.describe("searching on a phone", () => {
   });
 });
 
+test.describe("a tablet's menu and sidebar", () => {
+  test.use({ ...TABLET, viewport: { width: 1024, height: 768 } });
+
+  test("are the desktop's, less what it can't do", async ({ page }) => {
+    await openApp(page);
+    await page.locator(".window-menu-button").first().tap();
+    const menu = page.getByRole("menu").first();
+    await expect(menu.getByRole("menuitem", { name: "视图" })).toBeVisible();
+    await menu.getByRole("menuitem", { name: "文件" }).tap();
+    await expect(
+      page.getByRole("menuitem", { name: "分享…" }).first(),
+    ).toBeVisible();
+    await expect(page.getByRole("menuitem", { name: "新建窗口" })).toHaveCount(
+      0,
+    );
+    await page.keyboard.press("Escape");
+    await expect(
+      page.locator(".activity-rail").getByRole("button", { name: "插件" }),
+    ).toBeVisible();
+  });
+});
+
 test.describe("dragging a tab by touch on a tablet", () => {
   test.use({ ...TABLET, viewport: { width: 1024, height: 768 } });
 

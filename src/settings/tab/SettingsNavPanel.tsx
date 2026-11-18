@@ -7,7 +7,7 @@ import {
   GoToIcon,
   PluginsTabIcon,
 } from "../../engine/controls/icons";
-import { isDesktopApp } from "../../platform/capabilities";
+import { isPhoneLayout } from "../../platform/phone-layout";
 import { SHOW_SIDEBAR_TAB_EVENT, sendAppEvent } from "../../utils/events";
 import { useSettings } from "../../prefs/SettingsContext";
 import { useMarginAvailable } from "../../ai/margin/margin-room";
@@ -82,7 +82,7 @@ export function SettingsNavPanel() {
   });
   // Plugins' own settings are in their panel: the way there, before
   // Shortcuts.
-  const pluginsItem = isDesktopApp && (
+  const pluginsItem = !isPhoneLayout() && (
     <button
       type="button"
       key="plugins"

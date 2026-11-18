@@ -5,12 +5,9 @@ import en from "../../i18n/locales/en";
 import { useDocEndRef } from "../../document-view/doc-end";
 import { DocumentCorners } from "./DocumentCorner";
 
-const platform = vi.hoisted(() => ({ mobile: false }));
-vi.mock("../../platform/capabilities", async (real) => ({
-  ...(await real<typeof import("../../platform/capabilities")>()),
-  get isMobileApp() {
-    return platform.mobile;
-  },
+const platform = vi.hoisted(() => ({ phone: false }));
+vi.mock("../../engine/controls/usePhoneLayout", () => ({
+  usePhoneLayout: () => platform.phone,
 }));
 
 function Page() {
@@ -26,7 +23,7 @@ function Page() {
 
 describe("a document's word count", () => {
   afterEach(() => {
-    platform.mobile = false;
+    platform.phone = false;
   });
 
   it("sits in the page's corner on the desktop", () => {
@@ -36,8 +33,8 @@ describe("a document's word count", () => {
     );
   });
 
-  it("on a touch screen, under the last block, never over the text", () => {
-    platform.mobile = true;
+  it("on a phone, under the last block, never over the text", () => {
+    platform.phone = true;
     const { container } = render(<Page />);
     expect(container.querySelector(".document-corner .word-count")).toBe(null);
     expect(
