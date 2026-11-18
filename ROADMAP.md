@@ -13,13 +13,24 @@ write.
 - **Remote folders over SSH**, as in VS Code: open a folder on a server
   and write in it as in a local one, using your `~/.ssh/config` and keys,
   with nothing to install on the server.
+- **Comments live with your files**: notes and tracked changes move into
+  the folder's `.textus/`, so they travel with the folder (sync, Git) and
+  can be shared; moving a file outside Textus no longer loses them.
+  Existing ones move over as their documents are opened.
+- **Network proxy**: follows the system proxy by default, and moves to
+  General, so plugins install behind a proxy even with Textus AI off.
+- **PDF export on the Mac** at the usual print size (it printed about a
+  third larger than on Windows).
 - **More for plugins**: their own database views, folders from other
-  places (such as a WebDAV share), other apps' folder layouts (such as
-  Logseq), documents kept as folders (such as TextBundle), and AI answers
-  that stream in as they are written.
+  places (the SSH folders above use it), other apps' folder layouts (such
+  as Logseq), documents kept as folders (such as TextBundle), and AI
+  answers that stream in as they are written.
 - **Mermaid diagrams fold** like headings, to a single line.
 - **Android**: search and databases across a whole folder opened through
   the Files app.
+- **Fixes**: the caret beside a picture is as tall as the picture; a
+  picture zoomed in the viewer can no longer be pushed out of sight; no
+  macOS Live Text boxes over the words in a selected picture.
 
 ## Want to help?
 
