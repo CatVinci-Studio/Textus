@@ -14,18 +14,34 @@ function isEngineKey(event: KeyboardEvent): boolean {
   return key === "f5" || (ctrl && (key === "r" || key === "p"));
 }
 
+/** Editable text, where the engine's own menu and middle-click paste stay. */
+const EDITABLE = "input, textarea, [contenteditable='true']";
+
+/** Linux pastes the last selection where the caret is on any middle
+ *  release: a middle click on a tab, which closes it, wrote into the
+ *  document then in front. Only one released on text pastes. */
+function guardMiddlePaste(): void {
+  window.addEventListener("mouseup", (event) => {
+    const target = event.target as Element | null;
+    if (event.button === 1 && !target?.closest(EDITABLE))
+      event.preventDefault();
+  });
+}
+
 /**
  * Turns off the engine's own right-click menu (text fields take Textus's own,
- * text-field-menu.tsx) and its reload and print keys. Release builds only.
+ * text-field-menu.tsx) and its reload and print keys, in release builds;
+ * and, in every build, its middle-click paste outside text.
  * Caught first, so a field that keeps its keys to itself (Find, a new
  * name in the tree) can't let one through.
  */
 export function installWebviewGuards(): void {
+  guardMiddlePaste();
   if (import.meta.env.DEV) return;
 
   window.addEventListener("contextmenu", (event) => {
     const target = event.target as HTMLElement | null;
-    if (target?.closest("input, textarea, [contenteditable='true']")) return;
+    if (target?.closest(EDITABLE)) return;
     event.preventDefault();
   });
 
