@@ -180,8 +180,8 @@ class TocView implements NodeView {
         TextSelection.create(this.view.state.doc, pos),
       ),
     );
-    revealPosition(this.view, pos);
     this.view.focus();
+    revealPosition(this.view, pos);
   };
 
   // The jump is the mousedown's: the link's href is for an exported page.

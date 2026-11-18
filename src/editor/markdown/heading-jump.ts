@@ -137,8 +137,8 @@ export function revealNthHeading(view: EditorView, index: number): boolean {
   const { pos, end } = found;
   const { doc } = view.state;
   view.dispatch(view.state.tr.setSelection(TextSelection.create(doc, end)));
-  revealPosition(view, pos, "top");
   takeKeys(view);
+  revealPosition(view, pos, "top");
   return true;
 }
 
@@ -166,8 +166,8 @@ export function selectNthSection(view: EditorView, index: number): boolean {
     doc.resolve((end ?? doc.content.size) - 1),
   );
   view.dispatch(view.state.tr.setSelection(selection));
-  revealPosition(view, start + 1, "top");
   takeKeys(view);
+  revealPosition(view, start + 1, "top");
   return true;
 }
 

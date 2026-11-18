@@ -145,8 +145,8 @@ export function revealPlace(ctx: Ctx, place: DocumentPlace): boolean {
     ? TextSelection.create(view.state.doc, $pos.pos)
     : Selection.near($pos);
   view.dispatch(view.state.tr.setSelection(selection));
-  revealPosition(view, selection.from);
   takeKeys(view);
+  revealPosition(view, selection.from);
   return true;
 }
 

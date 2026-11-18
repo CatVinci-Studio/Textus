@@ -194,3 +194,34 @@ stays mounted out of sight until it is done (`document-view/useHeldWhileBusy.ts`
 Plugin views, source views and web pages out of sight are let go after a
 while that follows the machine's memory, a few of a kind at most kept
 (`utils/kept-loaded.ts`, `utils/memory-policy.ts`).
+
+## Drawn near the screen
+
+A long document is drawn only near the screen, by one rule with two
+parts:
+
+- **Blocks** (`editor/lazy-blocks/`): in a long document, top-level blocks
+  more than a screen from the view are placeholders of their measured (or
+  estimated) height, drawn as they come within a screen and released
+  three screens away.
+- **Heavy views** (`editor/draw-when-visible.ts`, `drawWhileNear`):
+  formulas, diagrams and charts, rendered HTML, embedded notes and
+  plugins' blocks are drawn within three screens and let go beyond,
+  keeping their size. Pictures load as the browser's `loading="lazy"`
+  brings them.
+
+Whatever copies the page or measures a place in it draws first, through
+the same two calls:
+
+- **Export and print** (PDF, HTML, and the pictures a Word export takes)
+  call `drawEverything` (through `drawPending`): every block, every heavy
+  view, every picture loaded.
+- **Jumps** (the outline, find, links, review notes, the [TOC]) call
+  `makeReachable` (inside `revealPosition`): the blocks around the target
+  drawn and held while the page glides there. An editor that takes the
+  keys on a jump takes them before the scroll: WebKit scrolls to the
+  selection as an editor takes the focus.
+- **Search, the AI and copying** read the document itself, never the page,
+  so nothing needs drawing for them.
+
+A new heavy view uses `drawWhileNear`; nothing keeps its own observer.
