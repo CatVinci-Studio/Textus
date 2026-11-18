@@ -40,21 +40,40 @@ export const selectAllKeyPlugin = $prose(
   () =>
     new Plugin({
       view(view) {
-        let range: Range | null = null;
-        const paint = (all: boolean) => {
-          const painted = paintedHighlight();
-          if (range) painted?.delete(range);
-          range = null;
-          if (!all || !painted) return;
-          // Made afresh on each update: the blocks it spans are redrawn.
-          range = document.createRange();
-          range.selectNodeContents(view.dom);
-          painted.add(range);
+        let painted: Range[] = [];
+        let paintedDoc: unknown = null;
+        const paint = (state: EditorState) => {
+          const all = state.selection instanceof AllSelection;
+          if (all && state.doc === paintedDoc) return;
+          const highlight = paintedHighlight();
+          for (const range of painted) highlight?.delete(range);
+          painted = [];
+          paintedDoc = all ? state.doc : null;
+          if (!all || !highlight) return;
+          // A range for each run of text: WebKit paints one spanning blocks
+          // only in its first.
+          const walker = document.createTreeWalker(
+            view.dom,
+            NodeFilter.SHOW_TEXT,
+          );
+          while (walker.nextNode()) {
+            const text = walker.currentNode;
+            if (text.parentElement?.closest('[contenteditable="false"]'))
+              continue;
+            const range = document.createRange();
+            range.selectNodeContents(text);
+            highlight.add(range);
+            painted.push(range);
+          }
         };
-        paint(view.state.selection instanceof AllSelection);
+        paint(view.state);
         return {
-          update: (v) => paint(v.state.selection instanceof AllSelection),
-          destroy: () => paint(false),
+          update: (v) => paint(v.state),
+          destroy: () => {
+            paintedDoc = null;
+            const highlight = paintedHighlight();
+            for (const range of painted) highlight?.delete(range);
+          },
         };
       },
       props: {
