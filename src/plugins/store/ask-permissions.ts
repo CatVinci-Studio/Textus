@@ -1,7 +1,7 @@
 import { fill } from "../../i18n/fill";
 import { showConfirm } from "../../engine/controls/app-dialog";
 import type { Permission } from "./manifest";
-import { permissionLabel } from "./permissions";
+import { permissionLabel, shownPermissions } from "./permissions";
 import { pluginName, windowInfo, type PluginRecord } from "./plugin-records";
 
 /** Asks the user for what the plugin asks that it hasn't been granted;
@@ -11,9 +11,10 @@ export async function askPermissions(
 ): Promise<Permission[] | null> {
   const wanted = record.manifest?.permissions ?? [];
   const missing = wanted.filter((p) => !record.granted.includes(p));
-  if (!missing.length) return wanted;
+  const named = shownPermissions(missing);
+  if (!named.length) return wanted;
   const t = windowInfo().strings();
-  const list = missing.map((p) => `• ${permissionLabel(p, t)}`).join("\n");
+  const list = named.map((p) => `• ${permissionLabel(p, t)}`).join("\n");
   const ok = await showConfirm(
     `${fill(t.pluginPermissionsAsk, { name: pluginName(record) })}\n\n${list}`,
     {

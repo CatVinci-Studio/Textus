@@ -8,7 +8,10 @@ import { SettingsGroup } from "./SettingsGroup";
 import { SettingRow } from "../sections/controls";
 import type { Strings } from "../../i18n/strings";
 import { pluginName, pluginText } from "../../plugins/store/plugin-records";
-import { permissionLabel } from "../../plugins/store/permissions";
+import {
+  permissionLabel,
+  shownPermissions,
+} from "../../plugins/store/permissions";
 import type { CatalogItem } from "../../plugins/store/catalog";
 
 /** A catalog plugin's page in Get more, before it is installed: what it
@@ -90,8 +93,8 @@ export function MarketPluginPage({
         />
       )}
       <SettingsGroup title={t.pluginPermissionsLabel}>
-        {item.manifest.permissions.length ? (
-          item.manifest.permissions.map((p) => (
+        {shownPermissions(item.manifest.permissions).length ? (
+          shownPermissions(item.manifest.permissions).map((p) => (
             <SettingRow key={p} label={permissionLabel(p, t)} />
           ))
         ) : (

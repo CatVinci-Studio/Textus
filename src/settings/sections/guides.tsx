@@ -1,6 +1,7 @@
 import type { Lang, Strings } from "../../i18n/strings";
 import { links } from "../../platform/ipc";
 import { LinkRow } from "./controls";
+import { hasTextusAi } from "../../platform/capabilities";
 import type { HelpGuide } from "../pages/types";
 
 /** The guides as documents, and the videos: rows for a section. */
@@ -16,7 +17,9 @@ export function GuidesSection({
   return (
     <>
       <LinkRow label={t.menuHelpMarkdown} onOpen={() => openHelp("markdown")} />
-      <LinkRow label={t.menuHelpAgent} onOpen={() => openHelp("agent")} />
+      {hasTextusAi && (
+        <LinkRow label={t.menuHelpAgent} onOpen={() => openHelp("agent")} />
+      )}
       <LinkRow
         label={t.menuHelpTutorials}
         onOpen={() => void links.openTutorialsPage(language)}

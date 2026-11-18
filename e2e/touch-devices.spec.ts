@@ -32,6 +32,43 @@ for (const device of DEVICES)
   test.describe(`on ${device.name}`, () => {
     test.use(device.device);
 
+    test("an install without Textus AI names it nowhere", async ({ page }) => {
+      // As an iOS App Store download's boot snapshot says.
+      await page.addInitScript(() => {
+        (window as unknown as { __BOOT__: unknown }).__BOOT__ = {
+          settings: {
+            language: "en",
+            languageChosen: true,
+            onboardingShown: true,
+            textusAi: true,
+          },
+          rev: 1,
+          uiState: {},
+          aiUnavailable: true,
+        };
+      });
+      await page.goto("/");
+      await page.waitForSelector('[data-active-tab="true"] .ProseMirror');
+      const naming = () =>
+        page.evaluate(() =>
+          [...document.querySelectorAll<HTMLElement>("body *")]
+            .filter((el) => el.checkVisibility() && !el.children.length)
+            .map((el) => el.textContent ?? "")
+            .concat(
+              [...document.querySelectorAll<HTMLElement>("[aria-label]")]
+                .filter((el) => el.checkVisibility())
+                .map((el) => el.getAttribute("aria-label")!),
+            )
+            .filter((text) => /\bAI\b|Assistant/.test(text)),
+        );
+      expect(await naming()).toEqual([]);
+      await page.getByRole("button", { name: "Menu", exact: true }).tap();
+      expect(await naming()).toEqual([]);
+      await page.getByRole("menuitem", { name: /Settings/ }).tap();
+      await expect(page.getByText("Privacy & Data").first()).toBeVisible();
+      expect(await naming()).toEqual([]);
+    });
+
     test("writing, a second tab and back, the sidebar and settings", async ({
       page,
     }) => {

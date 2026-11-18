@@ -16,6 +16,7 @@ async function withoutAi() {
     pages: await import("../settings/settings-pages"),
     tour: await import("../onboarding/tutorial-steps"),
     features: await import("../prefs/ai-features"),
+    permissions: await import("../plugins/store/permissions"),
   };
 }
 
@@ -37,6 +38,13 @@ it("offers no Textus AI page, and the tour skips the AI steps", async () => {
   const { pages, tour } = await withoutAi();
   expect(pages.settingsPages().map((p) => p.id)).not.toContain("ai");
   expect(tour.TUTORIAL_STEPS.filter((s) => s.ai)).toEqual([]);
+});
+
+it("names no AI permission when a plugin asks for one", async () => {
+  const { permissions } = await withoutAi();
+  expect(
+    permissions.shownPermissions(["ai.tools", "ai.model", "network:x.org"]),
+  ).toEqual(["network:x.org"]);
 });
 
 it("is offered everywhere else", async () => {
