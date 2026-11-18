@@ -184,14 +184,19 @@ test("jumped to from the outline past many formulas, a heading lands at the top 
 });
 
 /** A document past the size where its blocks out of sight are
- *  placeholders: sections of long paragraphs, a formula every tenth. */
+ *  placeholders: sections of long paragraphs, inline formulas in every
+ *  third, a display formula every tenth, a diagram every 250th. */
 const longDoc = (end: string) =>
   [
     ...Array.from({ length: 1700 }, (_, i) =>
       [
         i % 100 === 0 ? `## 第 ${i / 100} 节` : "",
-        `第 ${i} 段 ${"长文写作".repeat(24)}`,
+        `第 ${i} 段 ${"长文写作".repeat(20)}` +
+          (i % 3 === 0 ? ` 其中 $x_{${i}}^2$ 与 $\\frac{1}{n}$ 并列` : ""),
         i % 10 === 0 ? `$$\n\\frac{a_{${i}}}{b} + \\sqrt{c}\n$$` : "",
+        i % 250 === 0
+          ? `\`\`\`mermaid\ngraph LR\n  A${i} --> B${i}\n\`\`\``
+          : "",
       ]
         .filter(Boolean)
         .join("\n\n"),
@@ -216,12 +221,17 @@ const jumpWhile = (page: Page, by: number) =>
     });
     const words = at?.textContent!.slice(0, 8);
     const before = at?.getBoundingClientRect().top ?? 0;
+    // By what it really scrolled: the position is whole pixels.
+    const from = scroller.scrollTop;
     scroller.scrollTop -= by;
+    const scrolled = from - scroller.scrollTop;
     for (let i = 0; i < 10; i++)
       await new Promise((done) => requestAnimationFrame(done));
     if (!words) return null;
     const again = paragraphs().find((p) => p.textContent!.startsWith(words));
-    return again ? again.getBoundingClientRect().top - (before + by) : null;
+    return again
+      ? again.getBoundingClientRect().top - (before + scrolled)
+      : null;
   }, by);
 
 test("a long document read upward through blocks out of sight: what is on screen stays still, and at rest nothing is redrawn", async ({
@@ -239,15 +249,22 @@ test("a long document read upward through blocks out of sight: what is on screen
   ).toBeAttached();
   await scroller.evaluate((s) => s.scrollTo(0, s.scrollHeight));
   await settled(page);
+  // KaTeX's fonts in: their loading moves formulas once, not this.
+  await page.evaluate(() => document.fonts.ready);
   // Up a screen and a half at a time, faster than blocks are drawn ahead.
-  const jumps: (number | null)[] = [];
+  const moves: number[] = [];
   for (let step = 0; step < 12; step++) {
     const moved = await jumpWhile(page, 1000);
-    jumps.push(moved);
+    if (moved !== null) moves.push(moved);
   }
-  expect(jumps).toEqual([]);
-  // At rest, nothing drawn or let go, frame after frame.
+  // Most steps land a paragraph to follow (not a formula or a heading).
+  expect(moves.length).toBeGreaterThan(6);
+  expect(moves.filter((moved) => Math.abs(moved) >= 0.5)).toEqual([]);
+  // At rest, nothing drawn or let go, frame after frame, once those far
+  // away are let go.
   await settled(page);
+  // Real time: they go a moment after the last scroll (SETTLE_MS).
+  await page.waitForTimeout(400);
   const changes = await page.evaluate(async () => {
     const seen: string[] = [];
     const watch = new MutationObserver((records) => {
@@ -292,4 +309,38 @@ test("in a long document, find lands on a match far below and it stays on screen
   await expect(match).toBeInViewport();
   await settled(page);
   await expect(match).toBeInViewport();
+});
+
+test("pictures loading above the screen as a document is read upward don't push what is on screen", async ({
+  page,
+}) => {
+  await page.setViewportSize({ width: 1000, height: 700 });
+  await openApp(page, { settings: { menuBarShown: false } });
+  // Loaded only as they come near, and not at once: those above load on
+  // the way up, a moment after the page has moved on.
+  await page.route("https://pictures.test/**", async (route) => {
+    await new Promise((done) => setTimeout(done, 100));
+    await route.fulfill({
+      contentType: "image/svg+xml",
+      body: '<svg xmlns="http://www.w3.org/2000/svg" width="600" height="400"><rect width="600" height="400" fill="#ccc"/></svg>',
+    });
+  });
+  const blocks = Array.from(
+    { length: 300 },
+    (_, i) =>
+      `第 ${i} 段 ${"长文写作".repeat(20)}` +
+      (i % 15 === 0 ? `\n\n![p${i}](https://pictures.test/${i}.svg)` : ""),
+  );
+  await pasteMarkdown(page, blocks.join("\n\n"));
+  await page.evaluate(() => (document.activeElement as HTMLElement).blur());
+  const scroller = page.locator(".editor-scroll").first();
+  await scroller.evaluate((s) => s.scrollTo(0, s.scrollHeight));
+  await settled(page);
+  const moves: number[] = [];
+  for (let step = 0; step < 12; step++) {
+    const moved = await jumpWhile(page, 600);
+    if (moved !== null) moves.push(moved);
+  }
+  expect(moves.length).toBeGreaterThan(6);
+  expect(moves.filter((moved) => Math.abs(moved) >= 0.5)).toEqual([]);
 });

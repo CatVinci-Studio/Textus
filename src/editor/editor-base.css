@@ -134,3 +134,10 @@
     opacity: 0;
   }
 }
+
+/* Drawing near the screen holds what the reader sees still itself
+   (editor/lazy/hold-still.ts); the browser's own anchoring would move it
+   a second time a frame later. */
+.editor-scroll {
+  overflow-anchor: none;
+}

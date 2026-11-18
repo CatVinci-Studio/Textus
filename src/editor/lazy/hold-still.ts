@@ -27,26 +27,53 @@ interface Still {
   top: number;
 }
 
-/** The first of the editor's blocks on screen that is drawn: a
- *  placeholder, or a view still waiting, changes as it is drawn. */
+/** Changes as it is drawn: a placeholder, or a view still waiting. */
+const changes = (el: Element) =>
+  el.classList.contains(PLACEHOLDER_CLASS) ||
+  el.hasAttribute(PENDING_ATTR) ||
+  !!el.querySelector(`[${PENDING_ATTR}]`);
+
+/**
+ * The block on screen that holds still: one drawn, below the last that is
+ * about to change, since what scrolls in fresh is at that end (scrolling up,
+ * the top); the first drawn one when nothing below is; the first on screen
+ * when none is drawn yet (a screen of placeholders).
+ */
 export function stillPoint(root: Element, scroller: Element): Still | null {
   const box = scroller.getBoundingClientRect();
   if (!box.height) return null;
   const children = root.children;
+  let any: Still | null = null;
+  let first: Still | null = null;
+  let below: Still | null = null;
   for (let i = firstBelow(children, box.top); i < children.length; i++) {
     const el = children[i]!;
     const rect = el.getBoundingClientRect();
     if (rect.top > box.bottom) break;
-    if (!rect.height || el.classList.contains(PLACEHOLDER_CLASS)) continue;
-    if (el.hasAttribute(PENDING_ATTR)) continue;
-    return { el, top: rect.top };
+    if (!rect.height) continue;
+    any ??= { el, top: rect.top };
+    if (changes(el)) below = null;
+    // A widget (a drawn formula) may be made anew as the blocks beside it
+    // are: only blocks hold still.
+    else if (!el.classList.contains("ProseMirror-widget")) {
+      first ??= { el, top: rect.top };
+      below ??= { el, top: rect.top };
+    }
   }
-  return null;
+  return below ?? first ?? any;
 }
 
-/** Scrolls by what `still` moved. */
-export function holdStill(scroller: Element, still: Still | null): void {
-  if (!still?.el.isConnected) return;
-  const moved = still.el.getBoundingClientRect().top - still.top;
-  if (Math.abs(moved) >= 0.5) scroller.scrollTop += moved;
+/** Scrolls by what `still` moved, to the nearest whole pixel the scroll
+ *  position takes. `now`: where its block is shown now, when it was made
+ *  anew (a placeholder drawn). */
+export function holdStill(
+  scroller: Element,
+  still: Still | null,
+  now: (el: Element) => Element | null | undefined = (el) => el,
+): void {
+  const el = still && (still.el.isConnected ? still.el : now(still.el));
+  if (!el?.isConnected) return;
+  const moved = el.getBoundingClientRect().top - still!.top;
+  if (Math.abs(moved) >= 0.5)
+    scroller.scrollTop = Math.round(scroller.scrollTop + moved);
 }

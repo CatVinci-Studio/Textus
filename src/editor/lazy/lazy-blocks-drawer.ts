@@ -2,7 +2,12 @@ import type { Node as ProseNode } from "@milkdown/kit/prose/model";
 import type { EditorState, PluginView } from "@milkdown/kit/prose/state";
 import type { EditorView } from "@milkdown/kit/prose/view";
 import { firstBelow, holdStill, stillPoint } from "./hold-still";
-import { DRAW_SCREENS, KEEP_SCREENS, PLACEHOLDER_CLASS } from "./lazy-rules";
+import {
+  DRAW_AHEAD_SCREENS,
+  DRAW_SCREENS,
+  KEEP_SCREENS,
+  PLACEHOLDER_CLASS,
+} from "./lazy-rules";
 import {
   blockNodes,
   fitPlaceholder,
@@ -89,8 +94,13 @@ interface Plan {
   release: number[];
 }
 
-/** What should change, from the layout as it is now. */
-export function plan(view: EditorView, scroller: Element): Plan | null {
+/** What should change, from the layout as it is now. `releasing`: off
+ *  while the page scrolls, those far away let go once it rests. */
+export function plan(
+  view: EditorView,
+  scroller: Element,
+  releasing = true,
+): Plan | null {
   const state = lazyBlocksKey.getState(view.state);
   if (!state?.active) return null;
   const { doc } = view.state;
@@ -102,10 +112,12 @@ export function plan(view: EditorView, scroller: Element): Plan | null {
   const children = view.dom.children;
   const blocks = blockElements(doc, children);
 
+  // Placeholders within the further reach, and whether one is near.
   const draw: number[] = [];
-  const bottom = box.bottom + DRAW_SCREENS * screen;
+  let near = false;
+  const bottom = box.bottom + DRAW_AHEAD_SCREENS * screen;
   for (
-    let i = firstBelow(children, box.top - DRAW_SCREENS * screen);
+    let i = firstBelow(children, box.top - DRAW_AHEAD_SCREENS * screen);
     i < children.length;
     i++
   ) {
@@ -113,9 +125,13 @@ export function plan(view: EditorView, scroller: Element): Plan | null {
     const rect = child.getBoundingClientRect();
     if (rect.top > bottom) break;
     const index = blocks.blockOf[i]!;
-    if (index < 0) continue;
-    if (child.classList.contains(PLACEHOLDER_CLASS)) draw.push(starts[index]);
+    if (index < 0 || !child.classList.contains(PLACEHOLDER_CLASS)) continue;
+    draw.push(starts[index]);
+    near ||=
+      rect.bottom >= box.top - DRAW_SCREENS * screen &&
+      rect.top <= box.bottom + DRAW_SCREENS * screen;
   }
+  if (!near) draw.length = 0;
 
   const release: number[] = [];
   const far = KEEP_SCREENS * screen;
@@ -123,7 +139,7 @@ export function plan(view: EditorView, scroller: Element): Plan | null {
   // let go, they would be drawn again at once, frame after frame.
   const { anchor, head } = view.state.selection;
   const caret = new Set([topLevelIndex(doc, anchor), topLevelIndex(doc, head)]);
-  for (const decoration of state.drawn.find()) {
+  for (const decoration of releasing ? state.drawn.find() : []) {
     const index = topLevelIndex(doc, decoration.from);
     if (caret.has(index)) continue;
     const node = doc.child(index);
@@ -140,6 +156,9 @@ export function plan(view: EditorView, scroller: Element): Plan | null {
 }
 
 const drawers = new WeakMap<Element, LazyBlocksDrawer>();
+
+/** How long after the last scroll the page is at rest. */
+const SETTLE_MS = 200;
 
 /** Blocks either side of a jump's target drawn before it is measured: a
  *  screen of short paragraphs, so where it lands is drawn as it will be. */
@@ -182,6 +201,8 @@ const USER_INPUT = ["wheel", "touchstart", "pointerdown", "keydown"] as const;
 
 export class LazyBlocksDrawer implements PluginView {
   private frame = 0;
+  private scrolledAt = 0;
+  private settle: ReturnType<typeof setTimeout> | undefined;
   private pausedUntil = 0;
   private resume: ReturnType<typeof setTimeout> | undefined;
   /** Set by drawAll: blocks are drawn, never released, until user input. */
@@ -193,7 +214,7 @@ export class LazyBlocksDrawer implements PluginView {
   constructor(readonly view: EditorView) {
     this.scroller =
       view.dom.closest(".editor-scroll") ?? view.dom.parentElement;
-    this.scroller?.addEventListener("scroll", this.schedule, {
+    this.scroller?.addEventListener("scroll", this.onScroll, {
       passive: true,
     });
     this.resize =
@@ -220,7 +241,8 @@ export class LazyBlocksDrawer implements PluginView {
     cancelAnimationFrame(this.frame);
     this.frame = 0;
     clearTimeout(this.resume);
-    this.scroller?.removeEventListener("scroll", this.schedule);
+    this.scroller?.removeEventListener("scroll", this.onScroll);
+    clearTimeout(this.settle);
     for (const type of USER_INPUT)
       this.scroller?.removeEventListener(type, this.letGo);
     this.resize?.disconnect();
@@ -245,16 +267,37 @@ export class LazyBlocksDrawer implements PluginView {
     );
   }
 
-  /** Draws and releases what the layout asks for now, at once. */
+  /** Draws what the layout asks for now, and releases what it no longer
+   *  needs once the page rests: every change makes the browser lay out
+   *  and restyle a document of thousands of blocks again, and a release
+   *  is measured before the frame is drawn. */
   drawNow(): void {
     if (this.view.isDestroyed || !this.scroller || this.holding) return;
     if (performance.now() < this.pausedUntil) return;
-    const next = plan(this.view, this.scroller);
+    const scrolling = performance.now() - this.scrolledAt < SETTLE_MS;
+    const next = plan(this.view, this.scroller, !scrolling);
     if (!next) return;
     const still = stillPoint(this.view.dom, this.scroller);
+    const doc = this.view.state.doc;
+    const stillAt = still
+      ? blockElements(doc, this.view.dom.children).elementOf.indexOf(still.el)
+      : -1;
+    // Only what is drawn above it moves what the reader sees: drawn below
+    // (reading down), there is nothing to measure before the frame.
+    const above =
+      stillAt < 0 ||
+      still!.el.classList.contains(PLACEHOLDER_CLASS) ||
+      next.release.length > 0 ||
+      next.draw.some((pos) => topLevelIndex(doc, pos) < stillAt);
     if (next.release.length) this.release(next.release);
     if (next.draw.length) this.change({ draw: next.draw });
-    holdStill(this.scroller, still);
+    if (!above) return;
+    // A placeholder held still is a new element once drawn: its block's.
+    holdStill(this.scroller, still, () =>
+      stillAt < 0 || this.view.state.doc !== doc
+        ? null
+        : blockElements(doc, this.view.dom.children).elementOf[stillAt],
+    );
   }
 
   private change(meta: { draw?: number[]; release?: number[] }) {
@@ -320,6 +363,14 @@ export class LazyBlocksDrawer implements PluginView {
     if (width === 0 || width === this.width) return;
     if (this.width) forgetHeights(this.view);
     this.width = width;
+    this.schedule();
+  };
+
+  /** Scrolled: drawn now, released once it rests. */
+  private readonly onScroll = () => {
+    this.scrolledAt = performance.now();
+    clearTimeout(this.settle);
+    this.settle = setTimeout(this.schedule, SETTLE_MS);
     this.schedule();
   };
 

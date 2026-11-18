@@ -3,11 +3,15 @@ import type { Node as ProseNode } from "@milkdown/kit/prose/model";
 // The one rule for what is drawn only near the screen: a long document's
 // blocks (lazy-blocks-*) and the heavy views in them (draw-when-visible).
 
-/** How far beyond the screen things are drawn, in screens above and below. */
+/** Something not drawn this near the screen, in screens above and below,
+ *  has everything within DRAW_AHEAD_SCREENS drawn at once: each change to
+ *  a long document's blocks restyles all of them (tens of ms in WebKit),
+ *  so they change in a few large steps, not a little every frame. */
 export const DRAW_SCREENS = 1;
+export const DRAW_AHEAD_SCREENS = 2;
 /** How far drawn things stay drawn, in screens: the gap keeps one scrolled
  *  just past the edge from being drawn and let go over and over. */
-export const KEEP_SCREENS = 3;
+export const KEEP_SCREENS = 4;
 
 /** Marks a heavy view not drawn now: not yet, or let go far from the screen. */
 export const PENDING_ATTR = "data-draw-pending";

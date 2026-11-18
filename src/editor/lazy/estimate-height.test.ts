@@ -12,6 +12,7 @@ const schema = new Schema({
     list_item: { content: "paragraph+" },
     hr: { group: "block" },
     image: { inline: true, group: "inline" },
+    math_block: { content: "text*", group: "block" },
     text: { group: "inline" },
   },
 });
@@ -43,6 +44,11 @@ describe("a placeholder's estimated height", () => {
       schema.node("list_item", null, [p("two")]),
     ]);
     expect(estimateHeight(list, metrics)).toBe(2 * 40);
+  });
+
+  it("leaves no room for a display formula: its drawing stands beside it", () => {
+    const formula = schema.node("math_block", null, schema.text("x^2"));
+    expect(estimateHeight(formula, metrics)).toBe(0);
   });
 
   it("leaves room for a picture", () => {

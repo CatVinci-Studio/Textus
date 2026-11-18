@@ -1,8 +1,8 @@
 import type { Node as ProseNode } from "@milkdown/kit/prose/model";
 
 // A placeholder's height before its block was ever drawn. It only has to be
-// close: the block is measured once drawn, and the scroller's anchoring
-// keeps what is on screen in place when an estimate above it turns out wrong.
+// close: the block is measured once drawn, and what is on screen is held
+// still (hold-still.ts) when an estimate above it turns out wrong.
 
 /** The text column as the view measured it. */
 export interface TextMetrics {
@@ -15,9 +15,16 @@ export interface TextMetrics {
   blockGap: number;
 }
 
-/** Pictures and display formulas: about a short figure. */
+/** Pictures: about a short figure. */
 const FIGURE_HEIGHT = 240;
-const FIGURES = new Set(["image", "math_block"]);
+const FIGURES = new Set(["image"]);
+
+/** Blocks whose drawing stands beside them (a formula's, a diagram's, raw
+ *  HTML's): the block itself is its hidden source, no height. */
+const DRAWN_BESIDE = new Set(["math_block", "html"]);
+const drawnBeside = (node: ProseNode) =>
+  DRAWN_BESIDE.has(node.type.name) ||
+  (node.type.name === "code_block" && node.attrs.language === "mermaid");
 
 const WIDE = /[ᄀ-ᅟ⺀-꓏가-힣豈-﫿︰-﹏＀-｠￠-￦]/;
 
@@ -34,6 +41,7 @@ function textblockLines(node: ProseNode, metrics: TextMetrics): number {
 }
 
 export function estimateHeight(node: ProseNode, metrics: TextMetrics): number {
+  if (drawnBeside(node)) return 0;
   let height = 0;
   let figures = 0;
   const measure = (child: ProseNode) => {

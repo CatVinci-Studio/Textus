@@ -206,13 +206,33 @@ describe("what is on screen decides what is drawn", () => {
     expect(next?.draw).toEqual([]);
   });
 
-  it("releases drawn blocks three screens away, keeping the caret's", () => {
+  it("releases drawn blocks four screens away, keeping the caret's", () => {
     const view = open(2000);
     layOut(view);
     const next = plan(view, view.dom.parentElement!)!;
-    // 2,000 px is three screens below the screen's bottom.
-    expect(next.release).toHaveLength(41 - 20);
-    expect(next.release[0]).toBe(startOf(view, 20));
+    // 2,500 px is four screens below the screen's bottom.
+    expect(next.release).toHaveLength(41 - 25);
+    expect(next.release[0]).toBe(startOf(view, 25));
+  });
+
+  it("draws nothing while all within a screen is drawn, then two screens' worth at once", () => {
+    const view = open(2000);
+    view.dispatch(
+      view.state.tr.setMeta(lazyBlocksKey, {
+        release: [12, 13].map((i) => startOf(view, i)),
+      }),
+    );
+    layOut(view);
+    // 1,200 px down: more than a screen below the 500 px screen.
+    expect(plan(view, view.dom.parentElement!)?.draw ?? []).toEqual([]);
+    view.dispatch(
+      view.state.tr.setMeta(lazyBlocksKey, {
+        release: [8, 13].map((i) => startOf(view, i)),
+      }),
+    );
+    expect(plan(view, view.dom.parentElement!)!.draw).toEqual(
+      [8, 12, 13].map((i) => startOf(view, i)),
+    );
   });
 
   it("asks for nothing while the editor has no layout (a tab in the back)", () => {
