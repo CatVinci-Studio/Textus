@@ -191,7 +191,12 @@ async fn checked_model(
 }
 
 /// Counts a call's tokens against the plugin's month.
-fn spend(app: &tauri::AppHandle, plugin: String, sent: &[&str], answer: &str) -> Result<(), String> {
+fn spend(
+    app: &tauri::AppHandle,
+    plugin: String,
+    sent: &[&str],
+    answer: &str,
+) -> Result<(), String> {
     let spent = sent.iter().map(|text| tokens(text)).sum::<u64>() + tokens(answer);
     update(app, |usage| {
         usage.plugins.entry(plugin).or_default().used += spent;

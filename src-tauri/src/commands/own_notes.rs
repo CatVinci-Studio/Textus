@@ -70,7 +70,11 @@ pub(crate) fn kept_file_in(
                 let rel = Path::new(path).strip_prefix(root).ok()?;
                 let mut name = rel.as_os_str().to_owned();
                 name.push(".json");
-                Some(crate::ai::workspace::project_dir(root).join("notes").join(name))
+                Some(
+                    crate::ai::workspace::project_dir(root)
+                        .join("notes")
+                        .join(name),
+                )
             })
             .collect();
         if let Some(file) = files.iter().find(|f| f.is_file()).or(files.first()) {
