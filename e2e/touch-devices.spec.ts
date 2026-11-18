@@ -162,6 +162,10 @@ test.describe("a tablet's menu and sidebar", () => {
 
   test("are the desktop's, less what it can't do", async ({ page }) => {
     await openApp(page);
+    // A keyboard's ⌘T, with no menu bar to take it.
+    await page.locator(".ProseMirror").first().click();
+    await page.keyboard.press("ControlOrMeta+t");
+    await expect(page.locator(".tab-pill")).toHaveCount(2);
     await page.locator(".window-menu-button").first().tap();
     const menu = page.getByRole("menu").first();
     await expect(menu.getByRole("menuitem", { name: "视图" })).toBeVisible();
