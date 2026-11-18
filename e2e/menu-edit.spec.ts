@@ -15,6 +15,7 @@ const text = (page: Page, i: number) =>
 
 test("the Edit menu's Undo, Redo and Select All act on the document in use", async ({
   page,
+  browserName,
 }) => {
   await page.setViewportSize({ width: 1200, height: 760 });
   await openApp(page, { settings: { menuBarShown: false } });
@@ -36,14 +37,15 @@ test("the Edit menu's Undo, Redo and Select All act on the document in use", asy
     // WebKit's selection text ends with the block's line break.
     .poll(() => page.evaluate(() => String(getSelection()).trim()))
     .toBe("beta");
-  // Its highlight painted over that document alone, gone once the caret moves.
+  // WebKit's highlight painted by the app over that document alone, gone
+  // once the caret moves; Chromium draws its own.
   const painted = () =>
     page.evaluate(() =>
       [...(CSS.highlights.get("select-all") ?? [])].map((r) =>
         String(r).trim(),
       ),
     );
-  expect(await painted()).toEqual(["beta"]);
+  expect(await painted()).toEqual(browserName === "webkit" ? ["beta"] : []);
   await page.keyboard.press("ArrowRight");
   await expect.poll(painted).toEqual([]);
   await emit(page, "menu-select-all");
