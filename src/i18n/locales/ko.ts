@@ -904,6 +904,7 @@ ${AI_NAME}에게 주는 글쓰기 지침으로, 모든 문서에 적용됩니다
   agentQueueContinue: "계속",
   agentQueueEdit: "편집",
   agentQueueRemove: "삭제",
+  agentQueueInsert: "지금 보내기",
   agentSend: "보내기",
   agentStop: "중지",
   agentRetry: "다시 시도",

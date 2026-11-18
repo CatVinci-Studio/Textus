@@ -15,6 +15,11 @@ export const commands = {
 	ai_agent_message: (request: MessageRequest_Deserialize, onEvent: Channel<StreamEvent_Deserialize>) => __TAURI_INVOKE<AgentTurn_Serialize[]>("ai_agent_message", { request, onEvent }),
 	ai_cancel: (requestId: string) => __TAURI_INVOKE<void>("ai_cancel", { requestId }),
 	/**
+	 *  Puts `message` into the running request's inbox. False when no request of
+	 *  that id is running: the caller sends it as a message of its own.
+	 */
+	ai_steer: (requestId: string, message: string) => __TAURI_INVOKE<boolean>("ai_steer", { requestId, message }),
+	/**
 	 *  The chat composer's "+" button: pick files, then copy and read each into
 	 *  the conversation's attachments. Empty when the picker was cancelled; a
 	 *  file that can't be read fails the whole pick, naming it.

@@ -4,7 +4,7 @@
 
 use super::*;
 use ai::client::{ai_complete, ai_grammar_check, fetch_agent_models};
-use ai::{agent::ai_agent_message, cancel::ai_cancel};
+use ai::{agent::ai_agent_message, cancel::ai_cancel, steer::ai_steer};
 use auth::claude::{claude_auth_status, claude_login, claude_logout};
 use auth::custom_endpoint::{
     clear_custom_endpoint, custom_endpoint_status, fetch_custom_models, set_custom_endpoint,
@@ -98,6 +98,7 @@ pub(crate) fn handler() -> impl Fn(tauri::ipc::Invoke<tauri::Wry>) -> bool + Sen
         ai_grammar_check,
         ai_agent_message,
         ai_cancel,
+        ai_steer,
         crate::ai::paper::ai_paper_run,
         crate::ai::paper::status::ai_paper_save_outline,
         crate::ai::paper::drafting::ai_paper_draft,

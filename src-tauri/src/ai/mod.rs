@@ -21,6 +21,7 @@ pub(crate) mod project_data;
 pub mod route;
 pub mod rules;
 pub(crate) mod scratch;
+pub mod steer;
 pub mod tools;
 pub(crate) mod ui_language;
 pub mod web;

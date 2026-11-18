@@ -970,6 +970,7 @@ Habilidades ficam na pasta skills/ ao lado deste arquivo, um arquivo
   agentQueueContinue: "Continuar",
   agentQueueEdit: "Editar",
   agentQueueRemove: "Remover",
+  agentQueueInsert: "Enviar agora",
   agentSend: "Enviar",
   agentStop: "Parar",
   agentRetry: "Tentar de novo",

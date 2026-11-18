@@ -90,6 +90,60 @@ fn tool_results_are_fed_back_before_the_final_answer() {
     assert_eq!(seen[1].len(), 3);
 }
 
+/// A message sent in while a step's tools ran is the next step's to read,
+/// after their results; one sent in after the last step is left for the
+/// caller.
+#[test]
+fn a_message_sent_in_meanwhile_goes_on_after_the_steps_results() {
+    let script = RefCell::new(VecDeque::from(vec![
+        StepResult::ToolCalls(vec![call("1", "read_document", "{}")]),
+        StepResult::Done("done".into()),
+    ]));
+    let seen = RefCell::new(Vec::new());
+    let inbox = RefCell::new(vec![vec![user("shorter, please")], vec![user("late")]]);
+    let reported = RefCell::new(Vec::new());
+    let turns = crate::block_on(run_agent_loop_steered(
+        vec![],
+        user("go"),
+        12,
+        |history| {
+            seen.borrow_mut().push(history);
+            let next = script.borrow_mut().pop_front();
+            async move { next.ok_or_else(|| "script ran out".to_string()) }
+        },
+        |_: ToolCall| std::future::ready("text".to_string()),
+        |_| ToolRun::InOrder,
+        |event| {
+            if let LoopEvent::Turn(AgentTurn::User { text, .. }) = event {
+                reported.borrow_mut().push(text.clone());
+            }
+        },
+        || {
+            let mut inbox = inbox.borrow_mut();
+            if inbox.is_empty() {
+                Vec::new()
+            } else {
+                inbox.remove(0)
+            }
+        },
+    ))
+    .unwrap();
+    // go, call, result, the message, the answer.
+    let said = |turn: Option<&AgentTurn>| match turn {
+        Some(AgentTurn::User { text, .. }) => Some(text.clone()),
+        _ => None,
+    };
+    assert_eq!(turns.len(), 5);
+    assert_eq!(said(turns.get(3)).as_deref(), Some("shorter, please"));
+    assert_eq!(
+        said(seen.borrow()[1].last()).as_deref(),
+        Some("shorter, please")
+    );
+    assert_eq!(*reported.borrow(), vec!["shorter, please".to_string()]);
+    // The answer came before it was asked again: "late" is left unread.
+    assert_eq!(inbox.borrow().len(), 1);
+}
+
 /// A step's calls come first, then their results in the same order, so
 /// a call after a result marks the next step - what the providers group
 /// assistant messages by.

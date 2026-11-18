@@ -3,6 +3,7 @@ import type { DocumentSnapshot } from "../../editor/markdown/doc-markdown";
 import { useFollowBottom } from "./useFollowBottom";
 import { pictureSrc } from "../revision/generated-images";
 import { MessageQueue } from "./MessageQueue";
+import { useQueueInsert } from "./useQueueInsert";
 import { useRef } from "react";
 import type { AgentRequestOptions } from "./conversation/conversation-types";
 import type {
@@ -90,6 +91,7 @@ export function ChatBody({
     retryable,
     send,
     stop,
+    steer,
     retry,
   } = conversation;
   const streaming = useRevealedStream(received, variant === "quick");
@@ -180,6 +182,11 @@ export function ChatBody({
   );
   const { queue, setQueue, queuePaused, goOn, giveBack } = queueState;
   const { nextQueued, sending, run } = queueState;
+  const insertQueued = useQueueInsert(queue, setQueue, {
+    turns: received?.turns,
+    steer,
+    stop,
+  });
 
   function handleSend(
     typedMessage: string,
@@ -419,6 +426,7 @@ export function ChatBody({
           if (item) composer.current?.restore(item.typed);
         }}
         onRemove={(id) => setQueue((now) => now.filter((q) => q.id !== id))}
+        onInsert={insertQueued}
         onContinue={goOn}
       />
       <ChatComposer

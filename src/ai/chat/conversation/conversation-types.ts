@@ -73,6 +73,9 @@ export interface ConversationActions {
   ) => Promise<AgentTurn[] | undefined>;
   /** Cancels the in-flight request, if any - a no-op otherwise. */
   stop: () => void;
+  /** `message` into the reply in progress, which reads it at its next
+   *  step: true when it took it (Textus AI's own replies only). */
+  steer: (message: string) => Promise<boolean>;
   /** Resends the last failed message unchanged. */
   retry: () => Promise<AgentTurn[] | undefined>;
   /** A new, empty conversation, for the whole folder: `place`'s, or else

@@ -181,6 +181,12 @@ export class ConversationModel {
     this.patch({ history: turns });
   }
 
+  steer = async (message: string) => {
+    const id = this.requestId;
+    if (!id || id.startsWith(AGENT_REQUEST)) return false;
+    return ai.steerAgentMessage(id, message);
+  };
+
   stop = () => {
     if (this.requestId?.startsWith(AGENT_REQUEST)) cancelAgentExchange(this.id);
     else if (this.requestId) void ai.cancelAgentMessage(this.requestId);
@@ -222,6 +228,7 @@ export class ConversationModel {
     send: (document, message, images, options) =>
       sendMessage(this, document, message, images, options),
     stop: this.stop,
+    steer: this.steer,
     retry: () => {
       const { retryable } = this.state;
       if (!retryable) return Promise.resolve(undefined);

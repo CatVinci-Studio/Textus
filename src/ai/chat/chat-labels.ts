@@ -37,6 +37,7 @@ function buildLabels(t: Strings, lang: Lang): InlineChatLabels {
     queueContinue: t.agentQueueContinue,
     queueEdit: t.agentQueueEdit,
     queueRemove: t.agentQueueRemove,
+    queueInsert: t.agentQueueInsert,
     picker: pickerLabels(t, lang),
     send: t.agentSend,
     stop: t.agentStop,

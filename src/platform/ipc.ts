@@ -220,6 +220,10 @@ export const ai = {
     searxngUrl: string,
   ) => command("web_search_status", provider, model, searchService, searxngUrl),
   cancelAgentMessage: (requestId: string) => command("ai_cancel", requestId),
+  /** Into the reply in progress, read at its next step; false when none
+   *  of that id is running. */
+  steerAgentMessage: (requestId: string, message: string) =>
+    command("ai_steer", requestId, message),
   ...aiPaper,
 
   loadAgentWorkspace: (docPath: string | null, rootOverride: string | null) =>

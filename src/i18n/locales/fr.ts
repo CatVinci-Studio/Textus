@@ -988,6 +988,7 @@ utiliser une.
   agentQueueContinue: "Continuer",
   agentQueueEdit: "Modifier",
   agentQueueRemove: "Retirer",
+  agentQueueInsert: "Envoyer maintenant",
   agentSend: "Envoyer",
   agentStop: "Arrêter",
   agentRetry: "Réessayer",

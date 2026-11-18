@@ -1,5 +1,12 @@
 import { expect, test, type Page } from "@playwright/test";
-import { emit, openApp, pasteMarkdown, restedOn, settled } from "./helpers";
+import {
+  emit,
+  mockInvoke,
+  openApp,
+  pasteMarkdown,
+  restedOn,
+  settled,
+} from "./helpers";
 import { openPath } from "./plugin-helpers";
 
 // Textus AI's conversations are tabs: the AI button opens one in an island
@@ -109,6 +116,48 @@ test("messages sent during a reply wait their turn; a failure holds them until t
   // Real time: long enough for a send that must not happen to show.
   await page.waitForTimeout(500);
   await expect(turns).not.toContainText("fourth");
+  // Going on, then two more wait behind it; one is sent now, into the
+  // reply running, and the other keeps its place.
+  await queue.locator(".inline-chat-action").click();
+  await box.fill("one more question");
+  await box.press("Enter");
+  await box.fill("mind the tone");
+  await box.press("Enter");
+  await queue.getByRole("button", { name: "现在发: mind the tone" }).click();
+  await expect(queue.locator(".chat-queue-text")).toHaveText([
+    "one more question",
+  ]);
+  await expect(turns).toContainText("mind the tone");
+  await expect(queue).toHaveCount(0);
+});
+
+test("a message sent now that the reply can't take stops it and goes next", async ({
+  page,
+}) => {
+  await openApp(page, { settings: { menuBarShown: false } });
+  await mockInvoke(page, { ai_steer: false, ai_cancel: null });
+  await aiButton(page).click();
+  const box = page.locator(".ai-tab textarea").first();
+  const turns = page.locator(".ai-tab .inline-chat-messages");
+  const queue = page.locator(".ai-tab .chat-queue");
+  await box.fill(
+    "a long first question for the reply to take a while, and longer still so that it is stopped well before its end",
+  );
+  await box.press("Enter");
+  await box.fill("mind the tone");
+  await box.press("Enter");
+  await queue.getByRole("button", { name: "现在发: mind the tone" }).click();
+  await expect(queue).toHaveCount(0);
+  await expect(turns).toContainText("mind the tone");
+  await expect(page.locator(".ai-tab .agent-streaming")).toHaveCount(0);
+  const cancels = await page.evaluate(
+    () =>
+      (
+        (window as unknown as { __devInvokeCalls?: { cmd: string }[] })
+          .__devInvokeCalls ?? []
+      ).filter((call) => call.cmd === "ai_cancel").length,
+  );
+  expect(cancels).toBe(1);
 });
 
 test("pressed again in front of its own island, it collapses; again, it comes back", async ({

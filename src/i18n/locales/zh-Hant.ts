@@ -861,6 +861,7 @@ export default {
   agentQueueContinue: "繼續",
   agentQueueEdit: "編輯",
   agentQueueRemove: "移除",
+  agentQueueInsert: "現在發",
   agentSend: "傳送",
   agentStop: "停止",
   agentRetry: "重試",

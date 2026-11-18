@@ -985,6 +985,7 @@ export default {
   agentQueueContinue: "Продолжить",
   agentQueueEdit: "Изменить",
   agentQueueRemove: "Убрать",
+  agentQueueInsert: "Отправить сейчас",
   agentSend: "Отправить",
   agentStop: "Остановить",
   agentRetry: "Повторить",

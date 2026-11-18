@@ -7,7 +7,8 @@ use crate::ai::ui_language::UiNames;
 use crate::ai::web::{self, WebPlan};
 use crate::ai::workspace::AgentWorkspace;
 use aicompat::agent::{
-    run_agent_loop, AgentTurn, ImageAttachment, LoopEvent, ProviderEvent, StepResult,
+    run_agent_loop, run_agent_loop_steered, AgentTurn, ImageAttachment, LoopEvent, ProviderEvent,
+    StepResult,
 };
 use aicompat::capabilities::ThinkingLevel;
 use serde::{Deserialize, Serialize};
@@ -270,9 +271,21 @@ pub(super) async fn ai_agent_message_inner(
                     })
                 }
             };
+            // Messages the user sends in while it works, read between steps.
+            let inbox = crate::ai::steer::Inbox::open(&request.request_id);
+            let steered = || {
+                inbox
+                    .take()
+                    .into_iter()
+                    .map(|text| AgentTurn::User {
+                        text,
+                        images: Vec::new(),
+                    })
+                    .collect()
+            };
             // `history` is cloned so the plain-chat fallback below still has
-            // it; `run_agent_loop` would otherwise have consumed it.
-            match run_agent_loop(
+            // it; the loop would otherwise have consumed it.
+            match run_agent_loop_steered(
                 history.clone(),
                 user_turn,
                 MAX_STEPS,
@@ -280,6 +293,7 @@ pub(super) async fn ai_agent_message_inner(
                 |call| tools.execute(&tool_ctx, call),
                 |name| tools.how_to_run(name),
                 report(on_event),
+                steered,
             )
             .await
             {

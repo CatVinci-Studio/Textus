@@ -934,6 +934,7 @@ type /name in a conversation to use one.
   agentQueueContinue: "Continue",
   agentQueueEdit: "Edit",
   agentQueueRemove: "Remove",
+  agentQueueInsert: "Send now",
   agentSend: "Send",
   agentStop: "Stop",
   agentRetry: "Retry",

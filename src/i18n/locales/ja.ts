@@ -918,6 +918,7 @@ ${AI_NAME}への執筆の指示です。すべての文書に適用されます�
   agentQueueContinue: "続ける",
   agentQueueEdit: "編集",
   agentQueueRemove: "削除",
+  agentQueueInsert: "今すぐ送信",
   agentSend: "送信",
   agentStop: "停止",
   agentRetry: "再試行",

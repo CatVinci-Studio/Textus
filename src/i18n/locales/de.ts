@@ -955,6 +955,7 @@ Skills liegen im Ordner skills/ neben dieser Datei, je Skill eine
   agentQueueContinue: "Weiter",
   agentQueueEdit: "Bearbeiten",
   agentQueueRemove: "Entfernen",
+  agentQueueInsert: "Jetzt senden",
   agentSend: "Senden",
   agentStop: "Stoppen",
   agentRetry: "Erneut versuchen",

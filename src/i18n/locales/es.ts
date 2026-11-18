@@ -985,6 +985,7 @@ para usar una.
   agentQueueContinue: "Continuar",
   agentQueueEdit: "Editar",
   agentQueueRemove: "Quitar",
+  agentQueueInsert: "Enviar ya",
   agentSend: "Enviar",
   agentStop: "Detener",
   agentRetry: "Reintentar",
