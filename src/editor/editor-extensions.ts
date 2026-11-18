@@ -420,6 +420,7 @@ export function withEditorCore(
         createMermaidPreviewPlugin({
           enabled: () => settings.current.enableMermaid,
           engine: () => settings.current.diagramEngine,
+          path: () => docPath.current,
         }),
       )
 

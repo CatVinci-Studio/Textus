@@ -11,14 +11,15 @@ import {
   type EditorView,
 } from "@milkdown/kit/prose/view";
 import { $prose } from "@milkdown/kit/utils";
-import { foldCaret, labelFoldCaret } from "./block-fold";
+import { HeadingFoldMarks } from "./heading-fold-marks";
 import { keepInList, uiList } from "../../storage/ui-state";
 import { modIsMeta } from "../../platform/os";
 import "./block-fold.css";
 
 /**
  * A heading's section folded away under it, as drawn blocks fold: a caret
- * in the margin on its left, shown on hover or while folded. Only what is
+ * in the margin on its left, outside the text - with ⋮⋮ on hover
+ * (block-handles-plugin.ts), and on its own while folded. Only what is
  * drawn changes; the text, its saving and its export are the same. A caret
  * that lands in a folded section (a search, the outline) opens it. Folds
  * are kept on this machine by the document and the heading.
@@ -74,48 +75,11 @@ function sections(doc: ProseNode): Section[] {
 
 type Toggle = (view: EditorView, heading: number) => void;
 
-function caretButton(
-  folded: boolean,
-  view: EditorView,
-  heading: () => number | undefined,
-  toggle: Toggle,
-): HTMLElement {
-  const button = foldCaret();
-  button.classList.add("heading-fold");
-  button.contentEditable = "false";
-  labelFoldCaret(button, folded);
-  // Not a click in the text: the caret stays where it was.
-  button.addEventListener("mousedown", (e) => e.preventDefault());
-  button.addEventListener("click", (e) => {
-    e.preventDefault();
-    const at = heading();
-    if (at !== undefined) toggle(view, at - 1);
-  });
-  return button;
-}
-
-function decorate(
-  doc: ProseNode,
-  at: readonly number[],
-  toggle: Toggle,
-): DecorationSet {
+function decorate(doc: ProseNode, at: readonly number[]): DecorationSet {
   const folded = new Set(at);
   const decorations: Decoration[] = [];
   for (const section of sections(doc)) {
-    const on = folded.has(section.heading);
-    decorations.push(
-      Decoration.widget(
-        section.heading + 1,
-        (view, getPos) => caretButton(on, view, getPos, toggle),
-        {
-          side: -1,
-          key: `heading-fold:${on}`,
-          ignoreSelection: true,
-          stopEvent: () => true,
-        },
-      ),
-    );
-    if (!on) continue;
+    if (!folded.has(section.heading)) continue;
     const heading = doc.nodeAt(section.heading)!;
     decorations.push(
       Decoration.node(section.heading, section.heading + heading.nodeSize, {
@@ -197,6 +161,8 @@ export const createHeadingFoldPlugin = (path: () => string | null) =>
     };
     return new Plugin<Folds>({
       key: foldKey,
+      toggle,
+      view: (view) => new HeadingFoldMarks(view, foldedAt, toggle),
       state: {
         init: (_config, state) => {
           const where = path();
@@ -206,7 +172,7 @@ export const createHeadingFoldPlugin = (path: () => string | null) =>
                 .map((s) => s.heading)
                 .filter((pos) => kept.has(keyOf(where, state.doc.nodeAt(pos)!)))
             : [];
-          return { at, decorations: decorate(state.doc, at, toggle) };
+          return { at, decorations: decorate(state.doc, at) };
         },
         apply: (tr, folds, _old, state) => {
           const toggled = tr.getMeta(foldKey) as number[] | undefined;
@@ -222,7 +188,7 @@ export const createHeadingFoldPlugin = (path: () => string | null) =>
               at = at.includes(pos)
                 ? at.filter((p) => p !== pos)
                 : [...at, pos];
-          return { at, decorations: decorate(state.doc, at, toggle) };
+          return { at, decorations: decorate(state.doc, at) };
         },
       },
       // A caret in a folded section (a jump, a search) opens it.
@@ -252,3 +218,24 @@ export const createHeadingFoldPlugin = (path: () => string | null) =>
       },
     });
   });
+
+/** The folded headings' positions in `state`, top-level. */
+function foldedAt(state: EditorState): readonly number[] {
+  return foldKey.getState(state)?.at ?? [];
+}
+
+/** The fold of the top-level heading at `pos` in `view`, if it has one. */
+export function headingFold(
+  view: EditorView,
+  pos: number,
+): { folded: boolean; toggle: () => void } | null {
+  const plugin = foldKey.get(view.state);
+  const node = view.state.doc.nodeAt(pos);
+  if (!plugin || node?.type.name !== "heading") return null;
+  if (view.state.doc.resolve(pos).depth !== 0) return null;
+  const toggle = plugin.spec.toggle as Toggle;
+  return {
+    folded: foldedAt(view.state).includes(pos),
+    toggle: () => toggle(view, pos),
+  };
+}

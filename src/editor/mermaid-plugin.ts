@@ -14,6 +14,8 @@ import {
 } from "./reveal-state";
 import { fnv1a } from "../utils/hash";
 import { zoomButton } from "./diagram-zoom";
+import { addBlockFold } from "./fold/block-fold";
+import { currentStrings } from "../i18n/current";
 import { isLargeDoc, pausesFeatures } from "./large-doc";
 import {
   drawWhileNear,
@@ -118,6 +120,8 @@ export function createMermaidPreviewPlugin(options: {
   enabled: () => boolean;
   /** Which engine draws first. */
   engine: () => DiagramEngine;
+  /** The document's path, which a folded diagram is kept under. */
+  path: () => string | null;
 }) {
   return $prose(() => {
     let debounceTimer: ReturnType<typeof setTimeout> | undefined;
@@ -154,14 +158,24 @@ export function createMermaidPreviewPlugin(options: {
         Decoration.widget(
           to,
           (view: EditorView, getPos: () => number | undefined) => {
+            // The block, which folds to a line; the drawing's box inside it
+            // scrolls a wide diagram without cutting off the fold's caret.
+            const block = document.createElement("div");
+            block.className = "mermaid-block";
             const container = document.createElement("div");
             // A fence's box, as in Typora: a theme's rule for code boxes
             // (.md-fences) dresses the drawing alike.
             container.className = "mermaid-preview md-fences";
+            block.append(container);
+            addBlockFold(
+              block,
+              currentStrings().diagramViewerLabel,
+              `${options.path() ?? ""}\ndiagram:${fnv1a(code).toString(36)}`,
+            );
             // A drawing is hundreds of elements: kept only within a few
             // screens, its box's size held when let go.
             drawWhileNear(
-              container,
+              block,
               view.dom,
               () => {
                 container.innerHTML = svg;
@@ -185,7 +199,7 @@ export function createMermaidPreviewPlugin(options: {
               view.dispatch(tr);
               view.focus();
             });
-            return container;
+            return block;
           },
           // ProseMirror reuses a widget's DOM while its key is unchanged, so the
           // source is part of the key; the position isn't, or typing above a diagram

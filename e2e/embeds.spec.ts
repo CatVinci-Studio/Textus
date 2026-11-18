@@ -61,6 +61,39 @@ for (const phone of [false, true]) {
   });
 }
 
+test("a diagram folds to its line, its source kept, and stays folded", async ({
+  page,
+}) => {
+  await page.addInitScript(() => {
+    (window as unknown as { __devFiles: Record<string, string> }).__devFiles = {
+      "/work/d.md": "before\n\n```mermaid\ngraph LR\n  A --> B\n```\n\nafter\n",
+    };
+  });
+  await openApp(page);
+  await openPath(page, "/work/d.md");
+  const doc = page.locator('[data-active-tab="true"] .ProseMirror');
+  const block = doc.locator(".mermaid-block");
+  await expect(block.locator(".mermaid-preview svg")).toBeVisible();
+  await block.hover();
+  await block.getByRole("button", { name: "折叠: 图表" }).click();
+  await expect(block.locator(".mermaid-preview")).toBeHidden();
+  await expect(
+    block.getByRole("button", { name: "展开: 图表" }).last(),
+  ).toBeVisible();
+  expect(await sourceOf(page)).toBe(
+    "before\n\n```mermaid\ngraph LR\n  A --> B\n```\n\nafter",
+  );
+  // Kept through the document being opened again.
+  await page.reload();
+  await openPath(page, "/work/d.md");
+  await expect(doc.locator(".mermaid-block")).toHaveAttribute(
+    "data-folded",
+    "",
+  );
+  await doc.locator(".mermaid-block .block-folded-line").click();
+  await expect(doc.locator(".mermaid-preview svg")).toBeVisible();
+});
+
 test("a heading folds its section away, keeps the text, and opens for a caret", async ({
   page,
 }) => {
@@ -75,7 +108,9 @@ test("a heading folds its section away, keeps the text, and opens for a caret", 
   const doc = page.locator('[data-active-tab="true"] .ProseMirror');
   await expect(doc).toContainText("second body");
   await doc.locator("h1", { hasText: "One" }).hover();
-  await doc.locator("h1", { hasText: "One" }).locator(".heading-fold").click();
+  await page
+    .locator('[data-active-tab="true"] .block-handle .block-handle-fold')
+    .click();
   // Everything under One, up to Two, is gone; Two's section stays.
   await expect(doc.getByText("first body")).toBeHidden();
   await expect(doc.getByText("inner body")).toBeHidden();
