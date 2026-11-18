@@ -8,22 +8,6 @@ request can be anything from fixing a typo to a whole feature, and many
 of the features people ask for work best as plugins, which anyone can
 write.
 
-## 1.4.5: fixes
-
-- **Select All shows its highlight** again in a document that starts with
-  a heading (on the Mac it selected everything but showed nothing).
-- **Text font list**: every installed font is offered, Latin fonts included
-  when Textus is in Chinese, Japanese or Korean, and Chinese fonts show
-  their Chinese names too (微软雅黑 Microsoft YaHei).
-- **The caret beside a picture** is as tall as the picture.
-- **Picture viewer**: two fingers on a trackpad move the picture and a
-  pinch zooms it, and a zoomed picture can no longer be pushed out of
-  sight.
-- **PDF export on the Mac** prints at the usual size (it printed about a
-  third larger than on Windows).
-- **Network proxy**: follows the system proxy by default, and moves to
-  General, so plugins install behind a proxy even with Textus AI off.
-
 ## 1.4.6
 
 - **Remote folders over SSH**, as in VS Code: open a folder on a server
@@ -51,6 +35,12 @@ write.
 - **Mermaid diagrams fold** like headings, to a single line.
 - **Android**: search and databases across a whole folder opened through
   the Files app.
+- **Textus on the App Store** for iPhone and iPad (a public beta on
+  TestFlight comes first).
+- **iPhone on its side** keeps clear of the camera only, with a little room
+  at the rounded corner on the other side, and the tab row's + stays in
+  one place.
+- **Problems list on the Mac**: clicking a problem opens its card again.
 
 ## Want to help?
 
