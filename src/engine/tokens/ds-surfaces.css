@@ -269,6 +269,15 @@ input[type="checkbox"].ui-check:checked {
   background: color-mix(in srgb, var(--ui-muted) 35%, transparent) padding-box;
 }
 
+/* A long document would shrink the thumb to a sliver too thin to grab. */
+::-webkit-scrollbar-thumb:vertical {
+  min-height: var(--control-height);
+}
+
+::-webkit-scrollbar-thumb:horizontal {
+  min-width: var(--control-height);
+}
+
 @media (hover: hover) {
   ::-webkit-scrollbar-thumb:hover {
     background-color: color-mix(in srgb, var(--ui-muted) 55%, transparent);
