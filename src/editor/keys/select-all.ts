@@ -41,17 +41,15 @@ export const selectAllKeyPlugin = $prose(
     new Plugin({
       view(view) {
         let painted: Range[] = [];
-        let paintedDoc: unknown = null;
         const paint = (state: EditorState) => {
           const all = state.selection instanceof AllSelection;
-          if (all && state.doc === paintedDoc) return;
           const highlight = paintedHighlight();
           for (const range of painted) highlight?.delete(range);
           painted = [];
-          paintedDoc = all ? state.doc : null;
           if (!all || !highlight) return;
-          // A range for each run of text: WebKit paints one spanning blocks
-          // only in its first.
+          // A range for each run of text, found afresh on every update (the
+          // blocks redraw, a heading's # shown): WebKit paints one range
+          // spanning blocks only in its first.
           const walker = document.createTreeWalker(
             view.dom,
             NodeFilter.SHOW_TEXT,
@@ -70,7 +68,6 @@ export const selectAllKeyPlugin = $prose(
         return {
           update: (v) => paint(v.state),
           destroy: () => {
-            paintedDoc = null;
             const highlight = paintedHighlight();
             for (const range of painted) highlight?.delete(range);
           },
