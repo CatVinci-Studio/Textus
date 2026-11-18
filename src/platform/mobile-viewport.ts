@@ -17,10 +17,9 @@ export function installMobileViewport(): void {
   if (isIOSApp) watchWebKitInsets();
   safeArea();
   window.addEventListener("resize", safeArea);
-  // A half turn keeps the size: only the camera's side changes.
-  screen.orientation?.addEventListener("change", safeArea);
-  // Android's app says when its bars change: a half turn or a fold may not
-  // resize the page, or resize it before the bars are known.
+  // The app says when its bars change: a half turn or a fold may not
+  // resize the page, or resize it before the bars are known. iOS's says
+  // what they are (SystemBars.swift).
   window.addEventListener("textus-insets", safeArea);
 }
 
@@ -34,8 +33,14 @@ interface Insets {
 /** What the page keeps clear of at each edge (--native-safe-*, which the
  *  stylesheets read as --safe-top and the rest). */
 function safeArea(): void {
-  applyInsets(isIOSApp ? turned(webKitInsets()) : androidInsets());
+  applyInsets(isIOSApp ? (iosInsets() ?? webKitInsets()) : androidInsets());
 }
+
+/** What iOS's app last said (SystemBars.swift): only it knows which way the
+ *  phone is turned, so which side the camera is at. WebKit's own are read
+ *  until it says. */
+const iosInsets = () =>
+  (window as { textusInsets?: Insets }).textusInsets ?? null;
 
 const SIDES = ["top", "right", "bottom", "left"] as const;
 
@@ -92,39 +97,4 @@ function webKitInsets(): Insets {
     bottom: px(style?.paddingBottom),
     left: px(style?.paddingLeft),
   };
-}
-
-/**
- * An iPhone on its side keeps clear of its camera only. WebKit gives both
- * sides the camera's depth (or, still upright, gives it to the top), so the
- * depth goes to the side the camera is at, which the turn's angle tells:
- * 90 is turned left, the camera at the left. The other side is a rounded
- * corner and gets nothing. An iPad's are left as they are: its status bar
- * stays on top.
- */
-export function turned(
-  insets: Insets,
-  width = innerWidth,
-  height = innerHeight,
-  angle = turnAngle(),
-): Insets {
-  const phoneOnSide = width > height && height < 500;
-  const depth = Math.max(insets.top, insets.left, insets.right);
-  if (!phoneOnSide || !depth) return insets;
-  const left = angle === 90;
-  const right = angle === -90 || angle === 270;
-  return {
-    ...insets,
-    top: 0,
-    left: left || !right ? depth : 0,
-    right: right || !left ? depth : 0,
-  };
-}
-
-/** How far the screen is turned: iOS WebKit still has window.orientation
- *  (90 or -90), the standard says it as 90 or 270. */
-function turnAngle(): number | null {
-  const legacy = (window as { orientation?: unknown }).orientation;
-  if (typeof legacy === "number") return legacy;
-  return screen.orientation?.angle ?? null;
 }
