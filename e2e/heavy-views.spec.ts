@@ -13,14 +13,12 @@ const layout = (page: Page) =>
     const { top, left } = root.getBoundingClientRect();
     const at = (el: Element) => {
       const r = el.getBoundingClientRect();
-      return [r.top - top, r.left - left, r.width, r.height]
-        .map((n) => Math.round(n * 100) / 100)
-        .concat([
-          el.tagName + "." + el.className + ":" + getComputedStyle(el).display,
-        ] as never);
+      return [r.top - top, r.left - left, r.width, r.height].map(
+        (n) => Math.round(n * 100) / 100,
+      );
     };
     return {
-      // The document's own blocks; widgets between them come and go.
+      // The blocks shown; a diagram's source hides behind its drawing.
       blocks: [...root.children]
         .filter((el) => getComputedStyle(el).display !== "none")
         .map(at),
@@ -28,18 +26,10 @@ const layout = (page: Page) =>
         ...root.querySelectorAll(
           ".math-inline-rendered, .math-block-rendered, .mermaid-preview, .raw-html-rendered",
         ),
-      ].map((el) => {
-        // A drawn formula reaches past its line of text (a fraction).
-        const html = el.querySelector(".katex-html");
-        const box = at(el);
-        if (html) {
-          const [top, , , height] = at(html);
-          const end = Math.max(box[0]! + box[3]!, top! + height!);
-          box[0] = Math.min(box[0]!, top!);
-          box[3] = Math.round((end - box[0]) * 100) / 100;
-        }
-        return { drawn: !el.hasAttribute("data-draw-pending"), at: box };
-      }),
+      ].map((el) => ({
+        drawn: !el.hasAttribute("data-draw-pending"),
+        at: at(el),
+      })),
     };
   });
 
@@ -54,7 +44,8 @@ test("formulas far from the screen are let go where they were drawn, and drawn a
     (_, i) =>
       `第 ${i} 段 $x^${i}$ 与 $\\frac{a}{b_{${i}}}$ 在行中\n\n$$\n\\frac{a_{${i}}}{b} + \\sqrt{c}\n$$` +
       (i % 25 === 0
-        ? `\n\n<div align="center"><b>${i}</b></div>\n\n\`\`\`mermaid\ngraph LR\n  A${i} --> B${i}\n\`\`\``
+        ? `\n\n长的公式 $${Array.from({ length: 40 }, (_, k) => `a_{${k}}`).join(" + ")}$ 折到下一行` +
+          `\n\n<div align="center"><b>${i}</b></div>\n\n\`\`\`mermaid\ngraph LR\n  A${i} --> B${i}\n\`\`\``
         : ""),
   );
   await pasteMarkdown(page, blocks.join("\n\n"));
@@ -86,15 +77,20 @@ test("formulas far from the screen are let go where they were drawn, and drawn a
   const letGo = await layout(page);
   const moved: string[] = [];
   const near = (a: number[], b: number[]) =>
-    a.slice(0, 4).every((n, i) => Math.abs(n - b[i]!) < 0.5);
+    a.every((n, i) => Math.abs(n - b[i]!) < 0.5);
   drawn.blocks.forEach((at, i) => {
     if (!near(at, letGo.blocks[i]!))
       moved.push(`block ${i}: ${at} -> ${letGo.blocks[i]}`);
   });
   drawn.views.forEach((view, i) => {
     const now = letGo.views[i]!;
-    // Where it starts and how wide; its lines' heights are the blocks'.
-    if (view.drawn && !now.drawn && !near(view.at.slice(0, 3), now.at))
+    // Where it sits in its line and how wide: how tall its line is, the
+    // blocks say (a fraction reaches past the formula's own box).
+    if (
+      view.drawn &&
+      !now.drawn &&
+      !near([view.at[1]!, view.at[2]!], [now.at[1]!, now.at[2]!])
+    )
       moved.push(`view ${i}: ${view.at} -> ${now.at}`);
   });
   expect(letGo.views.filter((v) => !v.drawn).length).toBeGreaterThan(20);

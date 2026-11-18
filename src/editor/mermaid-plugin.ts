@@ -103,7 +103,11 @@ export function createMermaidPreviewPlugin(options: {
           {
             side: 1,
             key: `mermaid-${fnv1a(code).toString(36)}-${drawn.id}`,
-            destroy: stopDrawing,
+            // The drawing's box is what is watched (diagramWidget).
+            destroy: (dom) =>
+              stopDrawing(
+                (dom as Element).querySelector?.(".mermaid-preview") ?? dom,
+              ),
           },
         ),
       ];

@@ -168,10 +168,15 @@ const onNear = (entries: IntersectionObserverEntry[]) => {
   for (const [target, near] of latest(entries)) if (near) drawNow(target);
 };
 
+/** An inline drawing broken over lines (a long formula) has no one box
+ *  to hold: it stays drawn. */
+const wraps = (el: Element) => el.getClientRects().length > 1;
+
 const onFar = (entries: IntersectionObserverEntry[]) => {
   const leaving: HTMLElement[] = [];
   for (const [target, inKeep] of latest(entries))
-    if (!inKeep && kept.get(target)?.drawn) leaving.push(target as HTMLElement);
+    if (!inKeep && kept.get(target)?.drawn && !wraps(target))
+      leaving.push(target as HTMLElement);
   holdSizes(leaving);
   for (const target of leaving) {
     kept.get(target)!.drawn = false;
