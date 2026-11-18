@@ -19,8 +19,9 @@ write.
   Existing ones move over as their documents are opened.
 - **Network proxy**: follows the system proxy by default, and moves to
   General, so plugins install behind a proxy even with Textus AI off.
-- **PDF export on the Mac** at the usual print size (it printed about a
-  third larger than on Windows).
+- **PDF export**: the usual print size on the Mac (it printed about a
+  third larger than on Windows), and print options: paper size, margins,
+  text size and page numbers.
 - **More for plugins**: their own database views, folders from other
   places (the SSH folders above use it), other apps' folder layouts (such
   as Logseq), documents kept as folders (such as TextBundle), and AI
@@ -28,9 +29,10 @@ write.
 - **Mermaid diagrams fold** like headings, to a single line.
 - **Android**: search and databases across a whole folder opened through
   the Files app.
-- **Fixes**: the caret beside a picture is as tall as the picture; a
-  picture zoomed in the viewer can no longer be pushed out of sight; no
-  macOS Live Text boxes over the words in a selected picture.
+- **Picture viewer**: two fingers on a trackpad move the picture and a
+  pinch zooms it, and a zoomed picture can no longer be pushed out of
+  sight.
+- **Fixes**: the caret beside a picture is as tall as the picture.
 
 ## Want to help?
 
