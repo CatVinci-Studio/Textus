@@ -38,6 +38,8 @@ export default defineConfig({
     locale: "zh-CN",
     timezoneId: "Asia/Shanghai",
     colorScheme: "light",
+    // A failed attempt on CI leaves its trace, a retry that passed too.
+    trace: process.env.CI ? "retain-on-failure" : "off",
   },
   projects: [
     {

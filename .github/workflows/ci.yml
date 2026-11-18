@@ -212,14 +212,15 @@ jobs:
           path: ~/.cache/ms-playwright
           key: ${{ steps.browser.outputs.cache-primary-key }}
       - run: npm run test:e2e -- --shard=${{ matrix.shard }}/2
-      # A failed flow's error context (the page as it was) and any
-      # screenshots and traces it left.
-      - if: failure()
+      # Every failed attempt's error context (the page as it was) and
+      # trace, a test that passed on its retry included.
+      - if: always()
         uses: actions/upload-artifact@v7
         with:
           name: e2e-test-results-${{ matrix.shard }}
           path: test-results/
           retention-days: 7
+          if-no-files-found: ignore
 
   # One required check for the shards and WebKit, like `native` below:
   # passes only when all of them passed (or were skipped together, for a
@@ -264,12 +265,13 @@ jobs:
       - run: npx playwright test --project=webkit --ignore-snapshots
         env:
           E2E_WEBKIT: "1"
-      - if: failure()
+      - if: always()
         uses: actions/upload-artifact@v7
         with:
           name: e2e-webkit-test-results
           path: test-results/
           retention-days: 7
+          if-no-files-found: ignore
 
   # Linux alone in the quick suite, where the change reaches Rust; macOS
   # and Windows (with their unit tests: path and line-ending code) in the
