@@ -45,7 +45,7 @@
   padding-bottom: calc(48px + var(--space-2));
 }
 
-/* A touch screen's count: under the document's last block, in its flow. */
+/* A phone's count: under the document's last block, in its flow. */
 .doc-end .word-count {
   margin: var(--space-4) 0 0;
   text-align: end;
