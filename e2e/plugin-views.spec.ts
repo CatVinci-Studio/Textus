@@ -504,3 +504,36 @@ test("a database shown as another plugin's view: the timeline's rows in date ord
   await rows.first().click();
   await expect(page.locator(".tab-pill").last()).toContainText("plan.md");
 });
+
+test("a folder a plugin opens as one document: one row in the sidebar, its text in a tab named after it", async ({
+  page,
+}) => {
+  test.skip(!hasPlugin("catvinci.textbundle"), "no plugins checkout");
+  await openWithPlugins(page, {
+    plugins: { "catvinci.textbundle": [] },
+    folder: {
+      "/work/Trip.textbundle/text.md": "# Trip\n\nThe road north.\n",
+      "/work/Trip.textbundle/info.json": "{}",
+      "/work/notes.md": "Notes\n",
+    },
+  });
+  await page.evaluate(() => {
+    (window as unknown as Record<string, unknown>).__devPickFolder = "/work";
+  });
+  await emit(page, "menu-open-folder");
+  const bundle = page.locator('.tree-row[data-path="/work/Trip.textbundle"]');
+
+  await expect(bundle).toHaveClass(/tree-row-file/);
+  await bundle.dblclick();
+  await expect(
+    page.locator('[data-active-tab="true"] .ProseMirror'),
+  ).toContainText("The road north.");
+  await expect(page.locator(".tab-pill").last()).toContainText(
+    "Trip.textbundle",
+  );
+  await expect(bundle).toHaveClass(/tree-row-active/);
+  // Nothing inside it is listed on its own.
+  await expect(page.locator('.tree-row[data-path$="info.json"]')).toHaveCount(
+    0,
+  );
+});

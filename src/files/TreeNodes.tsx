@@ -18,6 +18,11 @@ import { fs } from "../platform/ipc";
 import { useSettings } from "../prefs/SettingsContext";
 import { basename, isInside, onTheWay, parentDir } from "../utils/path";
 import { isDocumentName } from "./document-name";
+import {
+  folderDocumentAround,
+  folderDocumentOf,
+  useFolderDocumentKinds,
+} from "./folder-documents";
 import { localeOf } from "../i18n/langs";
 import { compareEntries, nameCollator } from "../utils/name-order";
 import { useTree, useTreeRowActions } from "./tree-shared";
@@ -64,6 +69,34 @@ function keptEntries(
 /** Newest first; one the system gave no date for goes last. */
 function byModified(a: DirEntryInfo, b: DirEntryInfo): number {
   return (b.modified_ms ?? -Infinity) - (a.modified_ms ?? -Infinity);
+}
+
+/** A folder's entries as the tree shows them: in the file manager's order
+ *  for the UI language, not byte order ("第2章" before "第10章"), folders
+ *  first; drawn again when a plugin opening folders as documents comes. */
+function useShownEntries(
+  entries: DirEntryInfo[] | null,
+  tree: Pick<ReturnType<typeof useTree>, "showHidden" | "scope" | "sort">,
+): DirEntryInfo[] | null {
+  const { settings } = useSettings();
+  const collator = nameCollator(localeOf(settings.language));
+  const folderDocuments = useFolderDocumentKinds();
+  const { showHidden, scope, sort } = tree;
+  return useMemo(() => {
+    if (!entries) return null;
+    const shown = entries.filter(
+      (entry) =>
+        (showHidden || !entry.hidden) &&
+        (entry.is_dir || scope === "all" || isDocumentName(entry.name)),
+    );
+    return shown.sort(
+      (a, b) =>
+        (sort === "modified" && a.is_dir === b.is_dir ? byModified(a, b) : 0) ||
+        compareEntries(collator, a, b),
+    );
+    // A plugin's kinds change what the rows are, not this list's inputs.
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [entries, collator, showHidden, scope, sort, folderDocuments]);
 }
 
 export const DirNode = memo(function DirNode({
@@ -128,24 +161,8 @@ export const DirNode = memo(function DirNode({
       cancelled = true;
     };
   }, [open, loaded, listing, path]);
-  // In the file manager's order for the UI language, not byte order
-  // ("第2章" before "第10章"). Folders first.
-  const { settings } = useSettings();
-  const collator = nameCollator(localeOf(settings.language));
-  const sorted = useMemo(() => {
-    if (!loaded) return null;
-    const shown = loaded.entries.filter(
-      (entry) =>
-        (tree.showHidden || !entry.hidden) &&
-        (entry.is_dir || tree.scope === "all" || isDocumentName(entry.name)),
-    );
-    return shown.sort(
-      (a, b) =>
-        (tree.sort === "modified" && a.is_dir === b.is_dir
-          ? byModified(a, b)
-          : 0) || compareEntries(collator, a, b),
-    );
-  }, [loaded, collator, tree.scope, tree.sort, tree.showHidden]);
+  const sorted = useShownEntries(loaded?.entries ?? null, tree);
+
   // Rows that must be drawn: the open document's, and the way to it.
   const onWay = onTheWay(activePath, tree.reveal);
 
@@ -196,7 +213,7 @@ export const DirNode = memo(function DirNode({
             entries={sorted}
             needed={(entry) => onWay(entry.path)}
             row={(entry) =>
-              entry.is_dir ? (
+              entry.is_dir && !folderDocumentOf(entry.name) ? (
                 <DirNode
                   key={entry.path}
                   path={entry.path}
@@ -210,7 +227,10 @@ export const DirNode = memo(function DirNode({
                   key={entry.path}
                   entry={entry}
                   depth={depth + 1}
-                  active={entry.path === activePath}
+                  active={
+                    entry.path === activePath ||
+                    entry.path === folderDocumentAround(activePath)
+                  }
                   onSelect={onFileSelect}
                 />
               )
@@ -237,7 +257,8 @@ const FileNode = memo(function FileNode({
   const { t, settings } = useSettings();
   const lang = settings.language;
   const tree = useTreeRowActions();
-  const Icon = fileIconFor(entry.name);
+  // A folder opened as one document shows its document's icon.
+  const Icon = fileIconFor(folderDocumentOf(entry.name)?.[0] ?? entry.name);
   const picked = useRowPicked(entry.path);
   const mark = useFileMark(entry.path);
   const badge = useFileBadge(entry.path);

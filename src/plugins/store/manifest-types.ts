@@ -122,6 +122,13 @@ export interface DocumentTypeContribution {
   keep: VerbatimRules | null;
 }
 
+/** A folder with this extension opened as one document: the first of
+ *  `documents` found in it (`.textbundle` and its `text.md`). */
+export interface FolderDocumentContribution {
+  extension: string;
+  documents: string[];
+}
+
 export type SettingType =
   "boolean" | "string" | "number" | "enum" | "color" | "list" | "button";
 
@@ -246,6 +253,7 @@ export interface Contributes {
   views: ViewContribution[];
   customEditors: CustomEditorContribution[];
   documentTypes: DocumentTypeContribution[];
+  folderDocuments: FolderDocumentContribution[];
   settings: SettingContribution[];
   /** A page of its own in Settings, a webview. */
   settingsPage: { title: string } | null;

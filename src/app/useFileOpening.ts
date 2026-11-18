@@ -25,6 +25,7 @@ import {
 } from "../plugins/store/plugin-lookup";
 import { basename } from "../utils/path";
 import { isDocumentName } from "../files/document-name";
+import { documentPathOf } from "../files/folder-documents";
 import { placeOnArrival } from "../engine/layout/store";
 import { besideOrSay, openBesideOrSay } from "./menu/split-here";
 import type { Strings } from "../i18n/strings";
@@ -229,7 +230,8 @@ export function useFileOpening(opts: {
 
   const { opened, justOpened } = useJustOpened(tabsRef);
   const openPathInTab = useCallback(
-    async (path: string, open: OpenOptions = {}) => {
+    async (asked: string, open: OpenOptions = {}) => {
+      const path = await documentPathOf(asked);
       // Beside the tab in front: once the tab is among the window's.
       const from = tabInUse();
       const show = (id: string) => {
@@ -374,7 +376,8 @@ export function useFileOpening(opts: {
   // its own; nothing written is replaced. (The setting only says where files
   // from outside go: startup-restore and the native side.)
   const openFile = useCallback(
-    async (path: string, open: OpenOptions = {}) => {
+    async (asked: string, open: OpenOptions = {}) => {
+      const path = await documentPathOf(asked);
       // Live: an edit still being debounced is no longer untouched.
       const tabs = liveTabs();
       const front = tabs.find((tab) => tab.id === activeTabId);
