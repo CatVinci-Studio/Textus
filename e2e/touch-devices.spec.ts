@@ -166,6 +166,16 @@ test.describe("a tablet's menu and sidebar", () => {
     await page.locator(".ProseMirror").first().click();
     await page.keyboard.press("ControlOrMeta+t");
     await expect(page.locator(".tab-pill")).toHaveCount(2);
+    // With it connected, a tab tapped to the front takes the keys.
+    await page.evaluate(() => {
+      (window as { textusHardwareKeyboard?: boolean }).textusHardwareKeyboard =
+        true;
+      (document.activeElement as HTMLElement | null)?.blur();
+    });
+    await page.locator(".tab-pill").first().tap();
+    await expect(
+      page.locator('[data-active-tab="true"] .ProseMirror'),
+    ).toBeFocused();
     await page.locator(".window-menu-button").first().tap();
     const menu = page.getByRole("menu").first();
     await expect(menu.getByRole("menuitem", { name: "视图" })).toBeVisible();
