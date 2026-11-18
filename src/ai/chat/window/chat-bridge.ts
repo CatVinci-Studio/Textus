@@ -1,3 +1,4 @@
+import type { FileWritten } from "../file-changes";
 import type { OpenRequest } from "../../../utils/open-document";
 import { CHAT_WINDOWS_CHANGED } from "../../../platform/bindings/app";
 import type { DocumentSnapshot } from "../../../editor/markdown/doc-markdown";
@@ -40,7 +41,7 @@ export const CHAT_TO_EDITOR = {
 
 /** What `filesChanged` carries. */
 export interface FilesChangedMessage {
-  written: { file: string; applied: boolean; before: string | null }[];
+  written: FileWritten[];
   revised: string[];
 }
 

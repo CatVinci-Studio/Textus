@@ -50,8 +50,7 @@ export async function readForAgent(
 
 /** An open document is changed in its editor, one undo step, and saved:
  *  read again from disk, it would start over and lose the conversation
- *  beside it. Either way the file is marked as Textus AI's own changes
- *  are, each place in it put back from the editor. */
+ *  beside it. An agent's changes are written as they are, unmarked. */
 export async function writeForAgent(
   cwd: string,
   { path, content }: { path: string; content: string },
@@ -59,29 +58,19 @@ export async function writeForAgent(
   withinFolder(cwd, path);
   const doc = openDocumentAt(path);
   if (doc) {
-    const before = doc.text();
     if (!doc.replaceText(content, doc.revision()))
       throw new Error(`${path} changed while it was being written.`);
     await getWindowAccess()?.saveAt(path);
-    filesChanged([{ file: path, applied: true, before }]);
-    return null;
-  }
-  const before = await fs.readTextFile(path).catch(() => null);
-  await fs.writeTextFile(path, content);
-  filesChanged([{ file: path, applied: true, before }]);
+  } else await fs.writeTextFile(path, content);
+  filesChanged([{ file: path, applied: true }]);
   return null;
 }
 
-/** Steps that change files: the ones whose changes are marked. */
+/** Steps that change files. */
 const EDIT_KINDS = new Set(["edit", "delete", "move"]);
 
-/** Each edit step's files as they were before it, by step id. */
-/** A file before a step: on disk, and as its open editor shows it. */
-interface Before {
-  disk: string | null;
-  shown: string | null;
-}
-export type EditSnapshots = Map<string, Map<string, Promise<Before>>>;
+/** Each edit step's files as they were on disk before it, by step id. */
+export type EditSnapshots = Map<string, Map<string, Promise<string | null>>>;
 
 /** The files a step touches: its places, else the path in its input. */
 function pathsOf(fields: ToolCallFields): string[] {
@@ -92,17 +81,13 @@ function pathsOf(fields: ToolCallFields): string[] {
   return [...(fields.locations ?? []).map((l) => l.path), ...named];
 }
 
-/** `path` now: on disk, and as an open editor has it (unsaved typing). */
-async function textNow(path: string): Promise<Before> {
-  const disk = await fs.readTextFile(path).catch(() => null);
-  return { disk, shown: openDocumentAt(path)?.text() ?? disk };
-}
+const onDisk = (path: string) => fs.readTextFile(path).catch(() => null);
 
 /**
  * Most agents write files themselves, not through Textus: an edit step's
  * files are kept as they were when it is first heard of, and once it ends,
- * those it changed are marked as Textus AI's changes are (the open ones
- * take the new text as one undo step: useExternalChangeReload).
+ * those it changed are read again (the open ones take the new text as one
+ * undo step: useExternalChangeReload).
  */
 export function followEdit(
   snapshots: EditSnapshots,
@@ -117,17 +102,14 @@ export function followEdit(
     for (const path of pathsOf(fields)) {
       if (!insideFolder(cwd, path) || files?.has(path)) continue;
       if (!files) snapshots.set(id, (files = new Map()));
-      files.set(path, textNow(path));
+      files.set(path, onDisk(path));
     }
     return;
   }
   snapshots.delete(id);
   for (const [path, was] of files ?? [])
-    // Changed on disk, not merely unlike unsaved typing in its editor.
-    void Promise.all([was, fs.readTextFile(path).catch(() => null)]).then(
-      ([before, after]) => {
-        if (after !== null && after !== before.disk)
-          filesChanged([{ file: path, applied: true, before: before.shown }]);
-      },
-    );
+    void Promise.all([was, onDisk(path)]).then(([before, after]) => {
+      if (after !== null && after !== before)
+        filesChanged([{ file: path, applied: true }]);
+    });
 }
