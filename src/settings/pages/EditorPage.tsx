@@ -8,7 +8,14 @@ import {
   type ColorSwatchMode,
   type DiagramEngine,
 } from "../../prefs/SettingsContext";
-import type { FormatBarSide, ViewMode } from "../../prefs/settings-values";
+import {
+  PDF_TEXT_SCALES,
+  type FormatBarSide,
+  type PdfMargin,
+  type PdfPaper,
+  type PdfTextScale,
+  type ViewMode,
+} from "../../prefs/settings-values";
 import { AdvancedFold, SettingRow, ToggleRow } from "../sections/controls";
 import { DocTextFold } from "../sections/text-font";
 import { ImageStorageSection } from "../sections/images";
@@ -257,6 +264,52 @@ export function EditExportPage({
             checked={settings.pdfPageNumbers}
             onChange={(v) => setSettings({ pdfPageNumbers: v })}
           />
+          <SettingRow label={t.pdfPaperLabel}>
+            <Select
+              className="settings-select"
+              aria-label={t.pdfPaperLabel}
+              value={settings.pdfPaper}
+              onChange={(e) =>
+                setSettings({ pdfPaper: e.target.value as PdfPaper })
+              }
+            >
+              <option value="a4">A4</option>
+              <option value="letter">Letter</option>
+              <option value="a5">A5</option>
+            </Select>
+          </SettingRow>
+          <SettingRow label={t.pdfMarginLabel}>
+            <Select
+              className="settings-select"
+              aria-label={t.pdfMarginLabel}
+              value={settings.pdfMargin}
+              onChange={(e) =>
+                setSettings({ pdfMargin: e.target.value as PdfMargin })
+              }
+            >
+              <option value="narrow">{t.pdfMarginNarrow}</option>
+              <option value="normal">{t.pdfMarginNormal}</option>
+              <option value="wide">{t.pdfMarginWide}</option>
+            </Select>
+          </SettingRow>
+          <SettingRow label={t.pdfTextScaleLabel}>
+            <Select
+              className="settings-select"
+              aria-label={t.pdfTextScaleLabel}
+              value={String(settings.pdfTextScale)}
+              onChange={(e) =>
+                setSettings({
+                  pdfTextScale: Number(e.target.value) as PdfTextScale,
+                })
+              }
+            >
+              {PDF_TEXT_SCALES.map((scale) => (
+                <option key={scale} value={scale}>
+                  {Math.round(scale * 100)}%
+                </option>
+              ))}
+            </Select>
+          </SettingRow>
           {isMacPlatform() && (
             <ToggleRow
               label={t.pdfLightColorsLabel}

@@ -309,6 +309,8 @@ export const exportDoc = {
     baseDir: string | null;
     outputPath: string;
     pageNumbers: boolean;
+    /** The paper and its top and bottom margin, in points. */
+    sheet: { width: number; height: number; margin: number };
   }) =>
     desktopActionCommand(
       "export_pdf_native",
@@ -316,6 +318,7 @@ export const exportDoc = {
       args.baseDir,
       args.outputPath,
       args.pageNumbers,
+      args.sheet,
     ),
 };
 

@@ -1170,6 +1170,12 @@ export default {
   autoCloseBracketsLabel: "Закрывать (), [] и «»",
   plainTextMenuLabel: "Копировать/вставить как текст в контекстном меню",
   pdfPageNumbersLabel: "Показывать номера страниц при экспорте",
+  pdfPaperLabel: "Размер бумаги PDF",
+  pdfMarginLabel: "Поля PDF",
+  pdfMarginNarrow: "Узкие",
+  pdfMarginNormal: "Обычные",
+  pdfMarginWide: "Широкие",
+  pdfTextScaleLabel: "Размер текста PDF",
   docxTemplateLabel: "Шаблон Word",
   docxTemplateHelp:
     "Экспортированные файлы Word берут стили, шрифты и поля из этого файла.",

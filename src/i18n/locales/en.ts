@@ -1096,6 +1096,12 @@ type /name in a conversation to use one.
   autoCloseBracketsLabel: "Close (), [] and “”",
   plainTextMenuLabel: "Plain text copy and paste in the context menu",
   pdfPageNumbersLabel: "Show page numbers in exports",
+  pdfPaperLabel: "PDF paper size",
+  pdfMarginLabel: "PDF margins",
+  pdfMarginNarrow: "Narrow",
+  pdfMarginNormal: "Normal",
+  pdfMarginWide: "Wide",
+  pdfTextScaleLabel: "PDF text size",
   docxTemplateLabel: "Word template",
   docxTemplateHelp:
     "Exported Word files take this file's styles, fonts and margins.",

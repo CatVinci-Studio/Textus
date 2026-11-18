@@ -9,6 +9,9 @@ import {
   type AiProvider,
   type ContentWidth,
   type ImageAlign,
+  type PdfMargin,
+  type PdfPaper,
+  type PdfTextScale,
   type EmbedDisplay,
   type ViewMode,
   type ProxyType,
@@ -254,6 +257,10 @@ export interface Settings {
   autosave: boolean;
   /** Export as PDF numbers each page in its bottom margin. */
   pdfPageNumbers: boolean;
+  /** The paper, margins and text size a PDF export prints with. */
+  pdfPaper: PdfPaper;
+  pdfMargin: PdfMargin;
+  pdfTextScale: PdfTextScale;
   /** macOS: export PDFs on white in the theme's light colours. Other
    *  platforms always do. */
   pdfLightColors: boolean;
@@ -383,6 +390,9 @@ export const DEFAULT_SETTINGS: Settings = {
   autoSuggestFilename: true,
   autosave: false,
   pdfPageNumbers: false,
+  pdfPaper: "a4",
+  pdfMargin: "normal",
+  pdfTextScale: 1,
   pdfLightColors: false,
   docxReferenceDoc: "",
   exportToc: false,

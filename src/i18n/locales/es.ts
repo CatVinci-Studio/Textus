@@ -1164,6 +1164,12 @@ para usar una.
   autoCloseBracketsLabel: "Cerrar (), [] y «»",
   plainTextMenuLabel: "Copiar y pegar sin formato en el menú contextual",
   pdfPageNumbersLabel: "Mostrar números de página al exportar",
+  pdfPaperLabel: "Tamaño de papel del PDF",
+  pdfMarginLabel: "Márgenes del PDF",
+  pdfMarginNarrow: "Estrechos",
+  pdfMarginNormal: "Normales",
+  pdfMarginWide: "Anchos",
+  pdfTextScaleLabel: "Tamaño del texto del PDF",
   docxTemplateLabel: "Plantilla de Word",
   docxTemplateHelp:
     "Los archivos de Word exportados toman los estilos, fuentes y márgenes de este archivo.",

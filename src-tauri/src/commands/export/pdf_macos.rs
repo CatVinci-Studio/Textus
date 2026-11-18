@@ -2,6 +2,8 @@ use std::cell::{Cell, RefCell};
 use std::collections::HashMap;
 use std::sync::mpsc::Sender;
 
+use super::PdfSheet;
+
 use block2::RcBlock;
 use objc2::rc::Retained;
 use objc2::runtime::{AnyObject, NSObject, ProtocolObject};
@@ -16,18 +18,18 @@ use objc2_web_kit::{
     WKWebViewConfiguration,
 };
 
-// A4 in points, the web view's own units. createPDF renders one view point
-// as 1pt; the page is zoomed to 96 CSS px an inch (3/4 pt each), as print
-// lays out on Windows and in browsers, so the document's 16px is 12pt.
-// MAC_PAGE in paginate.ts is this sheet in CSS px.
-const PAPER_WIDTH: f64 = 595.0;
-const PAPER_HEIGHT: f64 = 842.0;
+// The sheet is in points, the web view's own units. createPDF renders one
+// view point as 1pt; the page is zoomed to 96 CSS px an inch (3/4 pt each),
+// as print lays out on Windows and in browsers, so the document's 16px is
+// 12pt. The frontend's page geometry (pdf-page.ts) is this sheet in CSS px.
 const PAGE_ZOOM: f64 = 0.75;
 
 // createPDF splits anything taller than a PDF page may be (14400pt, 200 in)
 // into more pages, which can't be cut into sheets at the seams; so it is asked
 // for this many whole sheets at a time.
-const SHEETS_PER_RENDER: usize = (14400.0 / PAPER_HEIGHT) as usize;
+fn sheets_per_render(sheet: &PdfSheet) -> usize {
+    ((14400.0 / sheet.height) as usize).max(1)
+}
 
 // Runs before rendering: fonts and images must settle, or the PDF captures
 // fallback glyphs. Returns the document height, in CSS px.
@@ -52,6 +54,7 @@ struct PdfExporterIvars {
     id: usize,
     output_path: String,
     result_tx: Sender<Result<(), String>>,
+    sheet: PdfSheet,
     // Guards against a second send (a late callback after a failure, say).
     signalled: Cell<bool>,
 }
@@ -119,8 +122,9 @@ impl PdfExporter {
             // SAFETY: a JS number arrives as an NSNumber.
             let height = unsafe { result.cast::<NSNumber>().as_ref() }
                 .map(|n| n.doubleValue())
-                .unwrap_or(PAPER_HEIGHT);
-            let pages = ((height * PAGE_ZOOM / PAPER_HEIGHT).ceil() as usize).max(1);
+                .unwrap_or(0.0);
+            let paper = this.ivars().sheet.height;
+            let pages = ((height * PAGE_ZOOM / paper).ceil() as usize).max(1);
             this.render(&view, pages);
         });
         let world = unsafe { WKContentWorld::pageWorld(mtm) };
@@ -139,10 +143,12 @@ impl PdfExporter {
         self.render_from(webview, pages, Vec::new());
     }
 
-    // Renders the next SHEETS_PER_RENDER sheets after those in `rendered`,
+    // Renders the next sheets_per_render sheets after those in `rendered`,
     // and writes the file once every sheet is rendered.
     fn render_from(&self, webview: &WKWebView, pages: usize, rendered: Vec<Retained<NSData>>) {
-        let start = rendered.len() * SHEETS_PER_RENDER;
+        let sheet = self.ivars().sheet;
+        let per_render = sheets_per_render(&sheet);
+        let start = rendered.len() * per_render;
         if start >= pages {
             let result = self.write_pages(&rendered, pages);
             self.finish(result);
@@ -152,12 +158,12 @@ impl PdfExporter {
             self.finish(Err(crate::errors::error("pdfFailed")));
             return;
         };
-        let sheets = SHEETS_PER_RENDER.min(pages - start);
+        let sheets = per_render.min(pages - start);
         let config = unsafe { WKPDFConfiguration::new(mtm) };
         unsafe {
             config.setRect(CGRect {
-                origin: CGPoint::new(0.0, PAPER_HEIGHT * start as f64),
-                size: CGSize::new(PAPER_WIDTH, PAPER_HEIGHT * sheets as f64),
+                origin: CGPoint::new(0.0, sheet.height * start as f64),
+                size: CGSize::new(sheet.width, sheet.height * sheets as f64),
             });
         }
         let this = self.retain();
@@ -183,10 +189,12 @@ impl PdfExporter {
         }
     }
 
-    // Cuts each rendered stretch, one tall page, into A4 sheets by moving each
+    // Cuts each rendered stretch, one tall page, into sheets by moving each
     // copy's media and crop boxes (PDF space starts at the bottom left).
     fn write_pages(&self, rendered: &[Retained<NSData>], pages: usize) -> Result<(), String> {
         let output = unsafe { PDFDocument::new() };
+        let paper = self.ivars().sheet;
+        let per_render = sheets_per_render(&paper);
         // Kept until the file is written: the sheets are copies of their pages.
         let mut sources = Vec::with_capacity(rendered.len());
         for (chunk, data) in rendered.iter().enumerate() {
@@ -195,12 +203,12 @@ impl PdfExporter {
             let tall = unsafe { source.pageAtIndex(0) }.ok_or("Rendered PDF is empty")?;
             let bounds = unsafe { tall.boundsForBox(PDFDisplayBox::MediaBox) };
             let top = bounds.origin.y + bounds.size.height;
-            let first = chunk * SHEETS_PER_RENDER;
-            for i in 0..SHEETS_PER_RENDER.min(pages - first) {
+            let first = chunk * per_render;
+            for i in 0..per_render.min(pages - first) {
                 let sheet = tall.copy();
                 let rect = CGRect {
-                    origin: CGPoint::new(bounds.origin.x, top - PAPER_HEIGHT * (i + 1) as f64),
-                    size: CGSize::new(PAPER_WIDTH, PAPER_HEIGHT),
+                    origin: CGPoint::new(bounds.origin.x, top - paper.height * (i + 1) as f64),
+                    size: CGSize::new(paper.width, paper.height),
                 };
                 unsafe {
                     sheet.setBounds_forBox(rect, PDFDisplayBox::MediaBox);
@@ -236,6 +244,7 @@ pub fn start_pdf_export(
     html: String,
     base_dir: Option<String>,
     output_path: String,
+    sheet: PdfSheet,
     tx: Sender<Result<(), String>>,
 ) {
     let Some(mtm) = MainThreadMarker::new() else {
@@ -253,7 +262,7 @@ pub fn start_pdf_export(
     // document out at.
     let frame = CGRect {
         origin: CGPoint::new(0.0, 0.0),
-        size: CGSize::new(PAPER_WIDTH, PAPER_HEIGHT),
+        size: CGSize::new(sheet.width, sheet.height),
     };
     let webview = unsafe { WKWebView::initWithFrame_configuration(mtm.alloc(), frame, &config) };
     unsafe { webview.setPageZoom(PAGE_ZOOM) };
@@ -263,6 +272,7 @@ pub fn start_pdf_export(
             id,
             output_path,
             result_tx: tx,
+            sheet,
             signalled: Cell::new(false),
         });
         let this: Retained<PdfExporter> = unsafe { msg_send![super(this), init] };

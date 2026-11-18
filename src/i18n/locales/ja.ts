@@ -1071,6 +1071,12 @@ ${AI_NAME}への執筆の指示です。すべての文書に適用されます�
   autoCloseBracketsLabel: "()、[]、「」を補完",
   plainTextMenuLabel: "コンテキストメニューにプレーンテキストでコピー/ペースト",
   pdfPageNumbersLabel: "書き出し時にページ番号を表示",
+  pdfPaperLabel: "PDF の用紙サイズ",
+  pdfMarginLabel: "PDF の余白",
+  pdfMarginNarrow: "狭い",
+  pdfMarginNormal: "標準",
+  pdfMarginWide: "広い",
+  pdfTextScaleLabel: "PDF の文字サイズ",
   docxTemplateLabel: "Word テンプレート",
   docxTemplateHelp:
     "書き出した Word ファイルに、このファイルのスタイル・フォント・余白を使います。",

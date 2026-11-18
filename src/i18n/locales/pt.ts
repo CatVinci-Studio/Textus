@@ -1148,6 +1148,12 @@ Habilidades ficam na pasta skills/ ao lado deste arquivo, um arquivo
   autoCloseBracketsLabel: "Fechar (), [] e “”",
   plainTextMenuLabel: "Copiar/colar como texto simples no menu de contexto",
   pdfPageNumbersLabel: "Mostrar números de página ao exportar",
+  pdfPaperLabel: "Tamanho do papel do PDF",
+  pdfMarginLabel: "Margens do PDF",
+  pdfMarginNarrow: "Estreitas",
+  pdfMarginNormal: "Normais",
+  pdfMarginWide: "Largas",
+  pdfTextScaleLabel: "Tamanho do texto do PDF",
   docxTemplateLabel: "Modelo do Word",
   docxTemplateHelp:
     "Os arquivos do Word exportados usam os estilos, fontes e margens deste arquivo.",
