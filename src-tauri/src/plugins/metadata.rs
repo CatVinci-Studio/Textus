@@ -486,5 +486,7 @@ pub async fn plugin_metadata_get(
     Ok(Some(meta))
 }
 
+pub mod texts;
+
 #[cfg(test)]
 mod tests;

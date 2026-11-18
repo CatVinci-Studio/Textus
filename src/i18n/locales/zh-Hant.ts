@@ -586,8 +586,6 @@ export default {
   errorCatalogNewer: "外掛商店需要較新版本的 Textus，請先更新 Textus。",
   errorImageTooBig: "圖片是空的，或超過了 25 MB。",
   errorNoFolder: "請先開啟一個資料夾。",
-  errorPluginsNeedAllFiles:
-    "外掛讀不了這個資料夾：Textus 沒有取得「所有檔案」的存取權。請重新打開這個資料夾，並選擇「繼續」。",
   errorPdfUnsupported: "此系統不支援匯出 PDF。",
   errorNoText: "裡面沒有可讀的文字。",
   errorUnreadable: "無法讀取這個檔案。",

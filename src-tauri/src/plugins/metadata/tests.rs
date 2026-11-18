@@ -28,6 +28,17 @@ fn reads_what_a_note_holds() {
     assert!(m.tasks[1].done);
     assert_eq!(m.tasks[1].due.as_deref(), Some("2026-10-01"));
     assert_eq!(m.tasks[2].line, 16);
+    // Handed in by the window (an Android folder), read the same.
+    let doc = texts::DocumentText {
+        path: "content://t/plan.md".into(),
+        rel: "plan.md".into(),
+        text: DOC.into(),
+    };
+    let [read] = &texts::of_texts(&[doc], true)[..] else {
+        panic!("one document")
+    };
+    assert_eq!(read.tags, m.tags);
+    assert!(read.blocks.as_ref().is_some_and(|b| !b.is_empty()));
 }
 
 #[test]

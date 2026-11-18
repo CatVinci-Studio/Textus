@@ -68,6 +68,8 @@ export const commands = {
 	plugin_metadata_all: (id: string, root: string, after: number | null) => __TAURI_INVOKE<MetadataAll_Serialize>("plugin_metadata_all", { id, root, after }),
 	/**  What one document holds now, its blocks with it - read afresh. */
 	plugin_metadata_get: (id: string, root: string, path: string) => __TAURI_INVOKE<DocumentMeta_Serialize | null>("plugin_metadata_get", { id, root, path }),
+	/**  Reads no file: the window hands the texts in. */
+	plugin_metadata_of_texts: (documents: DocumentText[], blocks: boolean) => __TAURI_INVOKE<DocumentMeta_Serialize[]>("plugin_metadata_of_texts", { documents, blocks }),
 	plugin_git_status: (id: string, root: string) => __TAURI_INVOKE<GitStatus_Serialize | null>("plugin_git_status", { id, root }),
 	plugin_git_log: (id: string, root: string, path: string, limit: number | null) => __TAURI_INVOKE<GitCommit[]>("plugin_git_log", { id, root, path, limit }),
 	plugin_git_show: (id: string, root: string, hash: string, path: string) => __TAURI_INVOKE<string | null>("plugin_git_show", { id, root, hash, path }),
@@ -159,6 +161,13 @@ export type DocumentMeta_Serialize = {
 	blockIds: BlockIdMeta[],
 	blocks: BlockMeta[] | null,
 	modifiedMs: number | null,
+};
+
+/**  A document's place and text, as the window read it. */
+export type DocumentText = {
+	path: string,
+	rel: string,
+	text: string,
 };
 
 /**  One entry of a folder listing. */

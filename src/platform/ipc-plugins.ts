@@ -150,9 +150,13 @@ export const plugins = {
       : command("plugin_fs_list", id, root, path),
   /** The folder's Markdown documents with their text, in one call. */
   fsDocuments: (id: string, root: string) =>
-    command("plugin_fs_documents", id, root),
+    inContent(root)
+      ? contentFs().then((f) => f.documents(root))
+      : command("plugin_fs_documents", id, root),
   fsSearch: (id: string, root: string, query: string, limit: number | null) =>
-    command("plugin_fs_search", id, root, query, limit),
+    inContent(root)
+      ? contentFs().then((f) => f.search(root, query, limit))
+      : command("plugin_fs_search", id, root, query, limit),
   fsRename: (id: string, root: string, from: string, to: string) =>
     inContent(root)
       ? contentFs().then((f) => f.rename(root, from, to))
@@ -195,9 +199,13 @@ export const plugins = {
   /** The folder's documents and what they hold: those changed since
    *  generation `after`, with the paths gone, or every one (`whole`). */
   metadataAll: (id: string, root: string, after: number | null) =>
-    command("plugin_metadata_all", id, root, after),
+    inContent(root)
+      ? contentFs().then((f) => f.metadataAll(root, after))
+      : command("plugin_metadata_all", id, root, after),
   metadataGet: (id: string, root: string, path: string) =>
-    command("plugin_metadata_get", id, root, path),
+    inContent(root)
+      ? contentFs().then((f) => f.metadataGet(root, path))
+      : command("plugin_metadata_get", id, root, path),
   /** The folder's Git branch and changes; null outside a repository. */
   gitStatus: (id: string, root: string) =>
     command("plugin_git_status", id, root),

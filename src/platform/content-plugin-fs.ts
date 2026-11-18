@@ -1,5 +1,14 @@
 import { iosFiles } from "./ios-files";
-import { basename, contentJoin, isWithin, parentDir } from "../utils/path";
+import { command } from "./ipc-call";
+import { scopedFolder } from "./scoped-folder";
+import type { DocumentMeta_Serialize } from "./bindings/plugin-access";
+import {
+  basename,
+  contentJoin,
+  contentRelative,
+  isWithin,
+  parentDir,
+} from "../utils/path";
 
 /**
  * A plugin's file calls in an Android folder opened without access to all
@@ -85,6 +94,65 @@ async function tokenOf(text: string): Promise<string> {
 const bytesOf = (base64: string) =>
   Uint8Array.from(atob(base64), (c) => c.charCodeAt(0));
 
+/** The folder's documents' metadata as last read: read again once it is
+ *  older than a moment or a file was written here. */
+let known: {
+  root: string;
+  at: number;
+  generation: number;
+  texts: Map<string, string>;
+  documents: DocumentMeta_Serialize[];
+} | null = null;
+const FRESH_MS = 2000;
+
+const parse = (
+  documents: { path: string; rel: string; text: string }[],
+  blocks: boolean,
+) =>
+  command(
+    "plugin_metadata_of_texts",
+    documents.map(({ path, rel, text }) => ({ path, rel, text })),
+    blocks,
+  );
+
+/** As the backend's metadata.all: every document, whole when they changed
+ *  since `after`, nothing when they didn't. */
+async function metadataAll(root: string, after: number | null) {
+  const now = Date.now();
+  if (!(known?.root === root && now - known.at < FRESH_MS)) {
+    const { documents } = await scopedFolder.documents(root);
+    const texts = new Map(documents.map((d) => [d.path, d.text]));
+    const was = known?.root === root ? known : null;
+    const same =
+      was?.texts.size === texts.size &&
+      [...texts].every(([path, text]) => was.texts.get(path) === text);
+    if (same) was.at = now;
+    else
+      known = {
+        root,
+        at: now,
+        generation: (was?.generation ?? 0) + 1,
+        texts,
+        documents: await parse(documents, false),
+      };
+  }
+  const { generation, documents } = known!;
+  return after === generation
+    ? { generation, whole: false, documents: [], gone: [] }
+    : { generation, whole: true, documents, gone: [] };
+}
+
+/** `run`, which writes here: the folder's documents read again when next
+ *  asked. */
+function written<A extends unknown[], T>(
+  run: (...args: A) => Promise<T>,
+): (...args: A) => Promise<T> {
+  return (...args) =>
+    run(...args).finally(() => {
+      if (known) known.at = 0;
+    });
+}
+
 export const contentPluginFs = {
   /** A file the user picked: its URL is its grant, no folder around it. */
   readResource: async (url: string) => bytesOf(await iosFiles.readBase64(url)),
@@ -98,29 +166,35 @@ export const contentPluginFs = {
     const text = await iosFiles.readText(contentPath(root, path));
     return { text, token: await tokenOf(text) };
   },
-  writeIf: async (root: string, path: string, text: string, token: string) => {
-    const url = contentPath(root, path);
-    const now = await iosFiles.readText(url);
-    if ((await tokenOf(now)) !== token) return false;
-    await iosFiles.writeText(url, text);
-    return true;
-  },
-  write: async (root: string, path: string, text: string, base64: boolean) => {
-    if (base64)
-      throw new Error("Files other than text can't be written in this folder.");
-    const url = contentPath(root, path);
-    const at = (await stat(root, url)) ? url : await newFile(root, url);
-    await iosFiles.writeText(at, text);
-  },
-  create: async (root: string, path: string, text: string) => {
+  writeIf: written(
+    async (root: string, path: string, text: string, token: string) => {
+      const url = contentPath(root, path);
+      const now = await iosFiles.readText(url);
+      if ((await tokenOf(now)) !== token) return false;
+      await iosFiles.writeText(url, text);
+      return true;
+    },
+  ),
+  write: written(
+    async (root: string, path: string, text: string, base64: boolean) => {
+      if (base64)
+        throw new Error(
+          "Files other than text can't be written in this folder.",
+        );
+      const url = contentPath(root, path);
+      const at = (await stat(root, url)) ? url : await newFile(root, url);
+      await iosFiles.writeText(at, text);
+    },
+  ),
+  create: written(async (root: string, path: string, text: string) => {
     const url = contentPath(root, path);
     if (await stat(root, url)) throw new Error(`${path} already exists.`);
     await iosFiles.writeText(await newFile(root, url), text);
-  },
-  mkdir: async (root: string, path: string) => {
+  }),
+  mkdir: written(async (root: string, path: string) => {
     await folder(root, contentPath(root, path));
-  },
-  rename: async (root: string, from: string, to: string) => {
+  }),
+  rename: written(async (root: string, from: string, to: string) => {
     const source = contentPath(root, from);
     const target = contentPath(root, to);
     if (!(await stat(root, source))) throw new Error(`No file ${from}.`);
@@ -133,6 +207,22 @@ export const contentPluginFs = {
       url = await iosFiles.moveEntry(source, was, await folder(root, into));
     if (basename(url) !== basename(target))
       await iosFiles.renameEntry(url, basename(target));
+  }),
+  documents: (root: string) => scopedFolder.documents(root),
+  search: async (root: string, query: string, limit: number | null) => {
+    const found = await scopedFolder.search(root, query);
+    return limit === null || found.hits.length <= limit
+      ? found
+      : { hits: found.hits.slice(0, limit), truncated: true };
+  },
+  metadataAll,
+  metadataGet: async (root: string, path: string) => {
+    const url = contentPath(root, path);
+    const text = await iosFiles.readText(url).catch(() => null);
+    if (text === null) return null;
+    const rel = contentRelative(root, url) ?? basename(url);
+    const [meta] = await parse([{ path: url, rel, text }], true);
+    return meta ?? null;
   },
   /** Such a folder has no Trash, and nothing a plugin removes is gone for
    *  good: it is left to the Files app. */

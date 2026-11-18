@@ -659,8 +659,6 @@ Skills liegen im Ordner skills/ neben dieser Datei, je Skill eine
     "Der Plugin-Store braucht eine neuere Textus-Version. Aktualisiere Textus, um ihn zu sehen.",
   errorImageTooBig: "Das Bild ist leer oder größer als 25 MB.",
   errorNoFolder: "Öffne zuerst einen Ordner.",
-  errorPluginsNeedAllFiles:
-    "Plugins können diesen Ordner nicht lesen: Textus hat keinen Zugriff auf alle Dateien. Öffne den Ordner erneut und wähle „Weiter“.",
   errorPdfUnsupported: "PDF-Export ist auf diesem System nicht verfügbar.",
   errorNoText: "Es enthält keinen lesbaren Text.",
   errorUnreadable: "Diese Datei kann nicht gelesen werden.",

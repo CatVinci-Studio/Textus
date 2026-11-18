@@ -678,8 +678,6 @@ para usar una.
     "La tienda de plugins necesita una versión más reciente de Textus. Actualiza Textus para verla.",
   errorImageTooBig: "La imagen está vacía o supera los 25 MB.",
   errorNoFolder: "Abre primero una carpeta.",
-  errorPluginsNeedAllFiles:
-    "Los plugins no pueden leer esta carpeta: Textus no tiene acceso a todos los archivos. Vuelve a abrir la carpeta y elige «Continuar».",
   errorPdfUnsupported:
     "La exportación a PDF no está disponible en este sistema.",
   errorNoText: "No tiene texto legible.",

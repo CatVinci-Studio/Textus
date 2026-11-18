@@ -620,8 +620,6 @@ ${AI_NAME}에게 주는 글쓰기 지침으로, 모든 문서에 적용됩니다
     "플러그인 스토어를 보려면 최신 Textus가 필요합니다. Textus를 업데이트하세요.",
   errorImageTooBig: "그림이 비어 있거나 25MB보다 큽니다.",
   errorNoFolder: "먼저 폴더를 여세요.",
-  errorPluginsNeedAllFiles:
-    "플러그인이 이 폴더를 읽을 수 없습니다: Textus에 모든 파일 접근 권한이 없습니다. 폴더를 다시 열고 '계속'을 고르세요.",
   errorPdfUnsupported: "이 시스템에서는 PDF로 내보낼 수 없습니다.",
   errorNoText: "읽을 수 있는 텍스트가 없습니다.",
   errorUnreadable: "이 파일을 읽을 수 없습니다.",

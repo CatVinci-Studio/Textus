@@ -59,6 +59,7 @@ macro_rules! with_plugin_commands {
             $crate::plugins::files::plugin_secret_set,
             $crate::plugins::metadata::plugin_metadata_all,
             $crate::plugins::metadata::plugin_metadata_get,
+            $crate::plugins::metadata::texts::plugin_metadata_of_texts,
             $crate::plugins::git::plugin_git_status,
             $crate::plugins::git::plugin_git_log,
             $crate::plugins::git::plugin_git_show,

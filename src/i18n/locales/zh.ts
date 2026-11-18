@@ -585,8 +585,6 @@ export default {
   errorCatalogNewer: "插件商店需要更新版本的 Textus，请先更新 Textus。",
   errorImageTooBig: "图片是空的，或超过了 25 MB。",
   errorNoFolder: "请先打开一个文件夹。",
-  errorPluginsNeedAllFiles:
-    "插件读不了这个文件夹：Textus 没有获得“所有文件”的访问权限。请重新打开这个文件夹，并选择“继续”。",
   errorPdfUnsupported: "此系统不支持导出 PDF。",
   errorNoText: "里面没有可读的文字。",
   errorUnreadable: "无法读取此文件。",
