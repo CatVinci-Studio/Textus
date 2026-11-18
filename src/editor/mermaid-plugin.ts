@@ -1,6 +1,5 @@
-import { DIAGRAM_LANGUAGES } from "./diagram-languages";
 import { onAppearance } from "../engine/tokens/appearance";
-import { Plugin, PluginKey, TextSelection } from "@milkdown/kit/prose/state";
+import { Plugin, PluginKey } from "@milkdown/kit/prose/state";
 import { Decoration } from "@milkdown/kit/prose/view";
 import { $prose } from "@milkdown/kit/utils";
 import type { Node as ProseNode } from "@milkdown/kit/prose/model";
@@ -13,21 +12,18 @@ import {
   type Touches,
 } from "./reveal-state";
 import { fnv1a } from "../utils/hash";
-import { zoomButton } from "./diagram-zoom";
-import { addBlockFold } from "./fold/block-fold";
-import { currentStrings } from "../i18n/current";
 import { isLargeDoc, pausesFeatures } from "./large-doc";
-import {
-  drawWhileNear,
-  registerDrawAll,
-  stopDrawing,
-} from "./draw-when-visible";
+import { registerDrawAll, stopDrawing } from "./draw-when-visible";
 import { appearanceIsDark } from "../engine/tokens/appearance";
+import { diagramRenderer, mermaidTheme } from "./diagram-engine";
 import {
-  diagramRenderer,
-  mermaidTheme,
-  type DrawnDiagram,
-} from "./diagram-engine";
+  collectMermaidBlocks,
+  drawingKey,
+  isCodeBlock,
+  isMermaid,
+  type Drawn,
+} from "./mermaid-blocks";
+import { diagramWidget } from "./mermaid-widget";
 import {
   redrawPendingDiagrams,
   registerPendingDrawer,
@@ -44,72 +40,12 @@ const RESIZE_DEBOUNCE_MS = 250;
  *  written changes several times a second, and its diagrams were drawn only
  *  once it stopped. */
 const MAX_WAIT_MS = 2000;
-/** The smallest a diagram is scaled down to fit the column; one wider than
- *  that keeps this scale and scrolls, so a long timeline stays readable. */
-const MIN_SCALE = 0.65;
-
-/** `container`'s drawing given the least width it can be read at, from its
- *  viewBox. One laid out for the column, as a chart is, is never held. */
-function keepReadable(container: HTMLElement) {
-  const svg = container.querySelector("svg");
-  const width = svg?.viewBox?.baseVal?.width;
-  if (!svg || !width) return;
-  svg.style.minWidth = `${Math.round(width * MIN_SCALE)}px`;
-}
 /** Drawings of diagrams not in the document kept for when one is accepted;
  *  every streamed step of one lands here too. */
 const PENDING_KEPT = 30;
 // Render ids are unique across every editor: two tabs sharing an id removed
 // each other's measuring node mid-render.
 let renderIdCounter = 0;
-
-/** A diagram as the preview last drew it. */
-interface Drawn {
-  svg: string;
-  engine: DrawnDiagram["engine"];
-  /** What it was drawn for (the render pass's `styleOf`). */
-  style: string;
-  /** Part of its widget's key: with the source alone, ProseMirror kept the old
-   *  widget DOM after a theme switch. */
-  id: number;
-}
-
-interface MermaidBlock {
-  from: number;
-  to: number;
-  code: string;
-  language: string;
-  /** What its drawing is kept under. */
-  key: string;
-}
-
-const isCodeBlock = (node: ProseNode) => node.type.name === "code_block";
-const isMermaid = (node: ProseNode) =>
-  isCodeBlock(node) && DIAGRAM_LANGUAGES.includes(node.attrs.language);
-
-/** A drawing's cache key: its source, and a chart's language with it, so a
- *  chart and a diagram of the same text never share a drawing. */
-const drawingKey = (language: string, code: string) =>
-  language === "mermaid" ? code : `${language}\n${code}`;
-
-function collectMermaidBlocks(doc: ProseNode): MermaidBlock[] {
-  const blocks: MermaidBlock[] = [];
-  doc.descendants((node, pos) => {
-    // A paragraph's or heading's inline nodes never hold a diagram.
-    if (node.isTextblock && !isCodeBlock(node)) return false;
-    if (isMermaid(node)) {
-      const language = node.attrs.language as string;
-      blocks.push({
-        from: pos,
-        to: pos + node.nodeSize,
-        code: node.textContent,
-        language,
-        key: drawingKey(language, node.textContent),
-      });
-    }
-  });
-  return blocks;
-}
 
 /**
  * A live diagram preview below every ```mermaid and ```chart block. While
@@ -157,50 +93,10 @@ export function createMermaidPreviewPlugin(options: {
         Decoration.node(from, to, { class: "mermaid-source-hidden" }),
         Decoration.widget(
           to,
-          (view: EditorView, getPos: () => number | undefined) => {
-            // The block, which folds to a line; the drawing's box inside it
-            // scrolls a wide diagram without cutting off the fold's caret.
-            const block = document.createElement("div");
-            block.className = "mermaid-block";
-            const container = document.createElement("div");
-            // A fence's box, as in Typora: a theme's rule for code boxes
-            // (.md-fences) dresses the drawing alike.
-            container.className = "mermaid-preview md-fences";
-            block.append(container);
-            addBlockFold(
-              block,
-              currentStrings().diagramViewerLabel,
-              `${options.path() ?? ""}\ndiagram:${fnv1a(code).toString(36)}`,
-            );
-            // A drawing is hundreds of elements: kept only within a few
-            // screens, its box's size held when let go.
-            drawWhileNear(
-              block,
-              view.dom,
-              () => {
-                container.innerHTML = svg;
-                keepReadable(container);
-                container.append(zoomButton(container));
-              },
-              () => container.replaceChildren(),
-              true,
-            );
-            container.addEventListener("mousedown", (event) => {
-              event.preventDefault();
-              // The widget's DOM outlives edits above it, so where its block starts is
-              // asked now.
-              const end = getPos();
-              if (end === undefined) return;
-              const block = view.state.doc.resolve(end).nodeBefore;
-              if (block?.type.name !== "code_block") return;
-              const tr = view.state.tr.setSelection(
-                TextSelection.create(view.state.doc, end - block.nodeSize + 1),
-              );
-              view.dispatch(tr);
-              view.focus();
-            });
-            return block;
-          },
+          (view: EditorView, getPos: () => number | undefined) =>
+            diagramWidget(view, getPos, svg, {
+              fold: `${options.path() ?? ""}\ndiagram:${fnv1a(code).toString(36)}`,
+            }),
           // ProseMirror reuses a widget's DOM while its key is unchanged, so the
           // source is part of the key; the position isn't, or typing above a diagram
           // rebuilt its SVG on every keystroke.

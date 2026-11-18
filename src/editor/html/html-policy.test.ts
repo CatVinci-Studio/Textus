@@ -1,6 +1,8 @@
 // @vitest-environment jsdom
 import { beforeAll, describe, expect, it } from "vitest";
-import { sanitizeNodes, sanitizeStyle, svgDataUrl } from "./html-policy";
+import { sanitizeNodes } from "./html-policy";
+import { sanitizeStyle } from "./html-values";
+import { svgDataUrl } from "./html-svg";
 import { renderWhitelistedHtml } from "./raw-html-sanitize";
 import { renderDocumentHtml } from "../markdown/render-html";
 import { loadKatex } from "../math/katex-loader";

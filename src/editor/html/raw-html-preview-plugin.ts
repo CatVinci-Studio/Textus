@@ -18,7 +18,7 @@ import {
 import { renderWhitelistedHtml } from "./raw-html-sanitize";
 import { katexLoaded } from "../math/katex-loader";
 import { htmlTextEditing, inHtmlTextEdit } from "./html-text-edit";
-import { sanitizeStyle } from "./html-policy";
+import { sanitizeStyle } from "./html-values";
 import { arrowOntoHtml } from "./html-arrow-keys";
 import {
   arrowIntoHtmlBlock,
