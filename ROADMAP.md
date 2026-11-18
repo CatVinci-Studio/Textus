@@ -32,6 +32,13 @@ write.
 - **A full pass over the plugin API**, brought up to date in one go.
 - **Smoother editing**: a review of typing, scrolling and dragging for
   any stalls, a better feel when dragging blocks, and interface polish.
+- **Tab works the same everywhere**: in lists and to-dos it indents an
+  item a level (Shift+Tab takes it back); in formulas and the properties
+  at a document's top it indents as in a code block; in source mode it
+  indents the whole list line. A completion suggestion still takes Tab
+  first.
+- **Select All on Windows and Linux** shows the same colour as any other
+  selection.
 - **Mermaid diagrams fold** like headings, to a single line.
 - **Android**: search and databases across a whole folder opened through
   the Files app.
