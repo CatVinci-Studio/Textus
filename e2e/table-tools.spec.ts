@@ -428,3 +428,22 @@ test.describe("on a touch screen", () => {
     expect(await gripAtCaret()).toBe("at caret");
   });
 });
+
+test("Tab takes a waiting suggestion before it moves on a cell", async ({
+  page,
+}) => {
+  await page.setViewportSize({ width: 1200, height: 760 });
+  await openApp(page, {
+    settings: { menuBarShown: false, language: "en", enableCompletion: true },
+  });
+  await page.locator(".ProseMirror:visible").first().click();
+  await pasteMarkdown(page, TABLE);
+  const table = page.locator(".table-wrapper").first();
+  await table.locator("td").first().click();
+  await page.keyboard.press("End");
+  await page.keyboard.type(" more words here");
+  await expect(page.locator(".ghost-text")).toBeVisible({ timeout: 10_000 });
+  await page.keyboard.press("Tab");
+  await expect(table.locator("td").first()).toContainText("canned dev-shim");
+  await expect(page.locator(".ghost-text")).toHaveCount(0);
+});

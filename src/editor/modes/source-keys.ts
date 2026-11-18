@@ -3,6 +3,7 @@ import {
   indentLess,
   indentMore,
   insertBlankLine,
+  insertTab,
   moveLineDown,
   moveLineUp,
 } from "@codemirror/commands";
@@ -25,6 +26,19 @@ const block =
   (view) =>
     setSourceBlock(view, kind);
 const B = EDITOR_BLOCK_COMBOS;
+
+/** A list's or a to-do's line: a bullet or a number, then a space. */
+const LIST_LINE = /^\s*(?:[-*+]|\d+[.)])\s/;
+
+/** Tab: on a list's line the whole line goes in a level, wherever the caret
+ *  is in it, as in the rendered view; anywhere else a tab at the caret. */
+export const sourceTab: Run = (view) => {
+  const { state } = view;
+  const onList = state.selection.ranges.every((range) =>
+    LIST_LINE.test(state.doc.lineAt(range.head).text),
+  );
+  return onList ? indentMore(view) : insertTab(view);
+};
 
 /**
  * The rendered editor's keys, writing their Markdown in source mode: the

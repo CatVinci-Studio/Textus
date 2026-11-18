@@ -156,3 +156,58 @@ describe("Tab in a table", () => {
     expect(view.state.selection.$from.node(-2)).toBe(table.lastChild);
   });
 });
+
+/** The caret at the end of the first textblock reading `text`. */
+function caretAtEndOf(view: EditorView, text: string): void {
+  let end = -1;
+  view.state.doc.descendants((node, pos) => {
+    if (end < 0 && node.isTextblock && node.textContent === text)
+      end = pos + node.nodeSize - 1;
+  });
+  view.dispatch(
+    view.state.tr.setSelection(TextSelection.create(view.state.doc, end)),
+  );
+}
+
+describe("Tab everywhere else", () => {
+  it("takes a list's item a level in, and Shift+Tab back out", async () => {
+    const { view, save } = await openView("- one\n- two\n");
+    caretAtEndOf(view, "two");
+    expect(press(view, "Tab")).toBe(true);
+    expect(save()).toBe("- one\n  - two\n");
+    expect(press(view, "Tab", true)).toBe(true);
+    expect(save()).toBe("- one\n- two\n");
+  });
+
+  it("leaves a list's first item where it is: nothing above to go in under", async () => {
+    const { view, save } = await openView("- one\n- two\n");
+    caretAtEndOf(view, "one");
+    press(view, "Tab");
+    expect(save()).toBe("- one\n- two\n");
+  });
+
+  it("takes a to-do a level in", async () => {
+    const { view, save } = await openView("- [ ] one\n- [ ] two\n");
+    caretAtEndOf(view, "two");
+    press(view, "Tab");
+    expect(save()).toBe("- [ ] one\n  - [ ] two\n");
+  });
+
+  it("indents in a formula and in the front matter, as in code", async () => {
+    const { view, save } = await openView(
+      "---\ntitle: A\n---\n\n$$\nx = 1\n$$\n",
+    );
+    caretAtEndOf(view, "x = 1");
+    expect(press(view, "Tab")).toBe(true);
+    caretAtEndOf(view, "title: A");
+    expect(press(view, "Tab")).toBe(true);
+    expect(save()).toBe("---\ntitle: A  \n---\n\n$$\nx = 1  \n$$\n");
+  });
+
+  it("does nothing in a quote", async () => {
+    const { view, save } = await openView("> words\n");
+    caretAtEndOf(view, "words");
+    press(view, "Tab");
+    expect(save()).toBe("> words\n");
+  });
+});

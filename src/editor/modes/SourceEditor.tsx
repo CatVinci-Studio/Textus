@@ -20,7 +20,6 @@ import {
   historyField,
   historyKeymap,
   indentLess,
-  insertTab,
   redo,
   selectAll,
   standardKeymap,
@@ -37,7 +36,7 @@ import {
 } from "./source-view-registry";
 import { SOURCE_EDIT_EVENT } from "../../utils/events";
 import { followFormatMenu, formatSource } from "./source-format-events";
-import { sourceKeys } from "./source-keys";
+import { sourceKeys, sourceTab } from "./source-keys";
 import { tellCopied } from "../../clipboard/copied";
 import { elasticOverscroll } from "../../engine/controls/elastic-overscroll";
 import { leaveSource, sourceLeftBy } from "../tab-left";
@@ -157,7 +156,7 @@ export function SourceEditor({
       keymap.of([
         { key: "Mod-b", run: (v) => formatSource(v, "bold") },
         { key: "Mod-i", run: (v) => formatSource(v, "italic") },
-        { key: "Tab", run: insertTab, shift: indentLess },
+        { key: "Tab", run: sourceTab, shift: indentLess },
         ...standardKeymap,
         ...historyKeymap,
       ]),
