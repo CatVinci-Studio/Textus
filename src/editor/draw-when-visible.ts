@@ -35,8 +35,12 @@ export async function drawEverything(root: Element): Promise<void> {
     if (img.loading === "lazy") img.loading = "eager";
 }
 
-/** How far off screen a view is drawn and kept, in screens above and
- *  below. */
+/** How far off screen a view is drawn, and how far it is kept once drawn,
+ *  in screens above and below. The gap between them keeps one whose
+ *  placeholder sits a few pixels from where it sat drawn (an inline
+ *  formula's baseline) from being drawn and let go over and over at the
+ *  edge, each time moving the page. */
+const DRAW_MARGIN = "100% 0px";
 const KEEP_MARGIN = "300% 0px";
 
 interface Kept {
@@ -45,8 +49,13 @@ interface Kept {
   drawn: boolean;
 }
 
+interface Watchers {
+  near: IntersectionObserver;
+  far: IntersectionObserver;
+}
+
 const kept = new WeakMap<Element, Kept>();
-const keepObservers = new WeakMap<Element, IntersectionObserver>();
+const watchers = new WeakMap<Element, Watchers>();
 
 function drawNow(el: Element) {
   const entry = kept.get(el);
@@ -76,25 +85,29 @@ function holdSizes(boxes: HTMLElement[]) {
   });
 }
 
-const onKeepIntersect = (entries: IntersectionObserverEntry[]) => {
-  // Gone and back within one batch (a section folded and opened): only
-  // where each is now counts.
-  const latest = new Map<Element, boolean>();
+/** Where each reported element is now: gone and back within one batch (a
+ *  section folded and opened), only the last report counts. Ones taken out
+ *  of the document are let go. */
+function latest(entries: IntersectionObserverEntry[]): Map<Element, boolean> {
+  const now = new Map<Element, boolean>();
   for (const { isIntersecting, target } of entries)
-    latest.set(target, isIntersecting);
-  const leaving: HTMLElement[] = [];
-  for (const [target, isIntersecting] of latest) {
-    const entry = kept.get(target);
-    if (!entry) continue;
+    now.set(target, isIntersecting);
+  for (const target of now.keys())
     if (!target.isConnected) {
-      keepObservers.get(target)?.unobserve(target);
-      kept.delete(target);
-    } else if (isIntersecting) {
-      drawNow(target);
-    } else if (entry.drawn) {
-      leaving.push(target as HTMLElement);
+      stopDrawing(target);
+      now.delete(target);
     }
-  }
+  return now;
+}
+
+const onNear = (entries: IntersectionObserverEntry[]) => {
+  for (const [target, near] of latest(entries)) if (near) drawNow(target);
+};
+
+const onFar = (entries: IntersectionObserverEntry[]) => {
+  const leaving: HTMLElement[] = [];
+  for (const [target, inKeep] of latest(entries))
+    if (!inKeep && kept.get(target)?.drawn) leaving.push(target as HTMLElement);
   holdSizes(leaving);
   for (const target of leaving) {
     kept.get(target)!.drawn = false;
@@ -103,11 +116,29 @@ const onKeepIntersect = (entries: IntersectionObserverEntry[]) => {
   }
 };
 
+function watchersOf(scroller: Element): Watchers {
+  let found = watchers.get(scroller);
+  if (!found) {
+    found = {
+      near: new IntersectionObserver(onNear, {
+        root: scroller,
+        rootMargin: DRAW_MARGIN,
+      }),
+      far: new IntersectionObserver(onFar, {
+        root: scroller,
+        rootMargin: KEEP_MARGIN,
+      }),
+    };
+    watchers.set(scroller, found);
+  }
+  return found;
+}
+
 /**
- * Draws `el` as it comes near the screen and undraws it again once it is
- * three screens away, its size kept. `now`: drawn at once (on screen, or
- * cheap to draw), and let go the same way. Without an IntersectionObserver
- * or a scroller it draws once and stays.
+ * Draws `el` as it comes within a screen of the screen and undraws it again
+ * once it is three screens away, its size kept. `now`: drawn at once (on
+ * screen, or cheap to draw), and let go the same way. Without an
+ * IntersectionObserver or a scroller it draws once and stays.
  */
 export function drawWhileNear(
   el: HTMLElement,
@@ -121,19 +152,13 @@ export function drawWhileNear(
     draw();
     return;
   }
-  let observer = keepObservers.get(scroller);
-  if (!observer) {
-    observer = new IntersectionObserver(onKeepIntersect, {
-      root: scroller,
-      rootMargin: KEEP_MARGIN,
-    });
-    keepObservers.set(scroller, observer);
-  }
+  const watching = watchersOf(scroller);
   kept.set(el, { draw, undraw, drawn: now });
-  keepObservers.set(el, observer);
+  watchers.set(el, watching);
   if (now) draw();
   else el.setAttribute(PENDING_ATTR, "");
-  observer.observe(el);
+  watching.near.observe(el);
+  watching.far.observe(el);
 }
 
 /** Lets go of a placeholder taken out of the document: one that never came
@@ -141,7 +166,9 @@ export function drawWhileNear(
 export function stopDrawing(node: Node): void {
   if (!(node instanceof Element)) return;
   const el = node;
-  keepObservers.get(el)?.unobserve(el);
-  keepObservers.delete(el);
+  const watching = watchers.get(el);
+  watching?.near.unobserve(el);
+  watching?.far.unobserve(el);
+  watchers.delete(el);
   kept.delete(el);
 }

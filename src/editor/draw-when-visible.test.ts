@@ -63,25 +63,33 @@ describe("drawWhileNear", () => {
     expect(draw).toHaveBeenCalledOnce();
   });
 
-  it("draws near the screen and lets go far from it, keeping its size", () => {
+  it("draws near the screen and lets go only far from it, keeping its size", () => {
     vi.stubGlobal("IntersectionObserver", FakeObserver);
     const editor = editorIn();
     const el = editor.appendChild(document.createElement("div"));
     const draw = vi.fn();
     const undraw = vi.fn();
     drawWhileNear(el, editor, draw, undraw);
+    const [near, far] = observed;
     expect(el.hasAttribute(PENDING_ATTR)).toBe(true);
-    observed[0].fire(false);
+    near.fire(false);
+    far.fire(false);
     expect(draw).not.toHaveBeenCalled();
     expect(undraw).not.toHaveBeenCalled();
-    observed[0].fire(true);
+    near.fire(true);
     expect(draw).toHaveBeenCalledOnce();
     expect(el.hasAttribute(PENDING_ATTR)).toBe(false);
-    observed[0].fire(false);
+    // Just past where it was drawn: kept, or a placeholder a few pixels off
+    // would be drawn and let go over and over there.
+    near.fire(false);
+    expect(undraw).not.toHaveBeenCalled();
+    far.fire(false);
     expect(undraw).toHaveBeenCalledOnce();
     expect(el.hasAttribute(PENDING_ATTR)).toBe(true);
     expect(el.style.minHeight).toBe("0px");
-    observed[0].fire(true);
+    far.fire(true);
+    expect(draw).toHaveBeenCalledOnce();
+    near.fire(true);
     expect(draw).toHaveBeenCalledTimes(2);
     expect(el.style.minHeight).toBe("");
   });
@@ -93,11 +101,12 @@ describe("drawWhileNear", () => {
     const draw = vi.fn();
     const undraw = vi.fn();
     drawWhileNear(el, editor, draw, undraw, true);
+    const [near, far] = observed;
     expect(draw).toHaveBeenCalledOnce();
     expect(el.hasAttribute(PENDING_ATTR)).toBe(false);
-    observed[0].fire(true);
+    near.fire(true);
     expect(draw).toHaveBeenCalledOnce();
-    observed[0].fire(false);
+    far.fire(false);
     expect(undraw).toHaveBeenCalledOnce();
     // An inline one keeps its width too, so its line doesn't rewrap.
     expect(el.style.display).toBe("inline-block");
@@ -110,7 +119,7 @@ describe("drawWhileNear", () => {
     const el = editor.appendChild(document.createElement("div"));
     const undraw = vi.fn();
     drawWhileNear(el, editor, vi.fn(), undraw, true);
-    observed[0].fire(false, true);
+    observed[1].fire(false, true);
     expect(undraw).not.toHaveBeenCalled();
     expect(el.hasAttribute(PENDING_ATTR)).toBe(false);
   });
@@ -120,7 +129,7 @@ describe("drawWhileNear", () => {
     const editor = editorIn();
     const el = editor.appendChild(document.createElement("span"));
     drawWhileNear(el, editor, vi.fn(), none);
-    expect(observed).toHaveLength(1);
+    expect(observed).toHaveLength(2);
     el.remove();
     stopDrawing(el);
     expect(observed).toHaveLength(0);
