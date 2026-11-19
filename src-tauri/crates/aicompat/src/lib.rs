@@ -13,6 +13,7 @@ pub mod providers;
 pub mod public_address;
 pub mod responses_api;
 pub mod system_proxy;
+pub mod trust;
 
 pub use oauth_page::success_page_html;
 

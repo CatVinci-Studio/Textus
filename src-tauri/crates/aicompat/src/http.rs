@@ -91,8 +91,10 @@ fn streaming_builder() -> reqwest::ClientBuilder {
 }
 
 /// `builder` through the proxy in effect ([`proxy_url`]), or else direct:
-/// reqwest's own reading of the environment never decides.
+/// reqwest's own reading of the environment never decides. It trusts the
+/// system's certificates too.
 pub(crate) fn route(builder: reqwest::ClientBuilder) -> reqwest::ClientBuilder {
+    let builder = crate::trust::trusted(builder);
     match proxy() {
         Some(proxy) => builder.proxy(proxy),
         None => builder.no_proxy(),

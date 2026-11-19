@@ -31,6 +31,9 @@ pub(crate) fn start(
     command
         .args(args)
         .env("PATH", &path)
+        // Node (most agents and servers are) trusts the system's certificates
+        // too, as the app does: a company's own root among them.
+        .env("NODE_USE_SYSTEM_CA", "1")
         .envs(env.iter().map(|(k, v)| (k.as_str(), v.as_str())))
         .stdin(std::process::Stdio::piped())
         .stdout(std::process::Stdio::piped())

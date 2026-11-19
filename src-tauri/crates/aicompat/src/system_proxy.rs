@@ -25,7 +25,7 @@ pub(crate) fn system_proxy() -> Option<String> {
 }
 
 fn system_proxy_now() -> Option<String> {
-    // Fork: the Windows settings carry the proxy in forms hyper-util's
+    // The Windows settings carry the proxy in forms hyper-util's
     // registry reader drops (see parse_windows_proxy_server); a PAC or a
     // WPAD-discovered one (what the browser follows) isn't in the registry
     // reader's reach at all. WinHTTP answers both, like the browser.
@@ -68,7 +68,7 @@ fn system_proxy_now() -> Option<String> {
 /// `http=host:port;https=host:port` (the per-protocol form) fails to parse
 /// and the request then goes direct, which on an intranet whose own DNS
 /// cannot resolve a site's name fails with a name error, while the browser
-/// reads the same setting and works. Fork-only; keep when syncing upstream.
+/// reads the same setting and works.
 #[cfg(windows)]
 fn system_proxy_from_registry() -> Option<String> {
     let settings = windows_registry::CURRENT_USER
@@ -84,7 +84,7 @@ fn system_proxy_from_registry() -> Option<String> {
 /// The proxy a PAC script or a WPAD-discovered one answers with, asked the
 /// way the browser asks: WinHTTP's autoproxy, which evaluates the script
 /// for the URL. An auto-detection without a WPAD answer can take seconds,
-/// so the result (including "none") is kept for five minutes. Fork-only.
+/// so the result (including "none") is kept for five minutes.
 #[cfg(windows)]
 fn system_proxy_winhttp() -> Option<String> {
     use std::sync::Mutex;
