@@ -26,8 +26,8 @@ Textus 目前只有很少几个人在做，非常欢迎大家一起参与：提�
 
 这些现在就开着，等人来做：
 
-- **通读一种语言的界面翻译**，改掉读着别扭的地方：[日语](https://github.com/CatVinci-Studio/Textus/issues/672)、[韩语](https://github.com/CatVinci-Studio/Textus/issues/673)、[法语](https://github.com/CatVinci-Studio/Textus/issues/674)、[德语](https://github.com/CatVinci-Studio/Textus/issues/675)、[西班牙语](https://github.com/CatVinci-Studio/Textus/issues/676)、[葡萄牙语](https://github.com/CatVinci-Studio/Textus/issues/677)、[俄语](https://github.com/CatVinci-Studio/Textus/issues/678)。
-- **适合第一次提交的小 PR**：[修好开发者文档里的三个坏链接](https://github.com/CatVinci-Studio/Textus/issues/670)、[为导入 Word 文档时的罗马数字列表补测试](https://github.com/CatVinci-Studio/Textus/issues/671)。
-- **大家想要的插件**：[MkDocs / Zensical 提示块](https://github.com/CatVinci-Studio/Textus/issues/220)、[Cisco IOS 代码高亮](https://github.com/CatVinci-Studio/Textus/issues/639)。
+- **大家想要的插件**：[MkDocs / Zensical 支持](https://github.com/CatVinci-Studio/Textus/issues/220)、[Cisco IOS 代码高亮](https://github.com/CatVinci-Studio/Textus/issues/639)、[按 Foam 工作区的设置来](https://github.com/CatVinci-Studio/Textus/issues/724)。
+- **手机**：[安卓的返回键先在应用里一步步退回，最后才离开](https://github.com/CatVinci-Studio/Textus/issues/725)。
+- **适合第一次提交的小 PR**：[插件指南里补一个 `ai.stream` 的完整例子](https://github.com/CatVinci-Studio/Textus/issues/726)、[数据库视图的入门教程](https://github.com/CatVinci-Studio/Textus/issues/727)、[安装检查认出换了名字的接口调用](https://github.com/CatVinci-Studio/Textus/issues/728)。
 
 或者挑一个别的还没人认领的 [good first issue](https://github.com/CatVinci-Studio/Textus/issues?q=is%3Aopen+label%3A%22good+first+issue%22+no%3Aassignee)、[help wanted](https://github.com/CatVinci-Studio/Textus/issues?q=is%3Aopen+label%3A%22help+wanted%22+no%3Aassignee) 或[插件点子](https://github.com/CatVinci-Studio/textus-plugins/issues?q=is%3Aopen+label%3A%22plugin+idea%22)，并阅读 [CONTRIBUTING.zh-CN.md](CONTRIBUTING.zh-CN.md)。插件在 [textus-plugins](https://github.com/CatVinci-Studio/textus-plugins) 里开发。自己的愿望可以写在[许愿池](https://github.com/CatVinci-Studio/Textus/issues/196)；给 issue 点 👍 能让它往前排。
