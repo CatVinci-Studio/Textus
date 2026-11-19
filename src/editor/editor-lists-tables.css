@@ -80,6 +80,61 @@
   padding-left: 1.5em;
 }
 
+/* A first line taller than its text - a matrix or a picture in it: the
+   marker stands on that line's baseline, not at its top. The item is a grid
+   so the marker and the first block align by baseline; a zero-width space
+   gives a drawn marker a baseline, and its drop below the line's top moves
+   to a transform. Grid margins don't collapse: only the bottom one keeps
+   the gap between blocks. */
+.milkdown li:has(> p:first-child :is(.math-inline, .image-view)) {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr);
+  align-items: baseline;
+}
+
+.milkdown li:has(> p:first-child :is(.math-inline, .image-view)) > * + * {
+  margin-top: 0;
+}
+
+.milkdown li:has(> p:first-child :is(.math-inline, .image-view)) > :first-child,
+.milkdown li:has(> p:first-child :is(.math-inline, .image-view))::before {
+  grid-area: 1 / 1;
+}
+
+.milkdown li:has(> p:first-child :is(.math-inline, .image-view))::before {
+  position: static;
+  justify-self: start;
+}
+
+.milkdown
+  ul
+  > li:not([data-item-type="task"]):has(
+    > p:first-child :is(.math-inline, .image-view)
+  )::before {
+  content: "\200b";
+  margin-top: 0;
+  transform: translate(calc(-100% - 0.4em), 0.73em);
+}
+
+.milkdown
+  ul
+  ul
+  ul
+  > li:not([data-item-type="task"]):has(
+    > p:first-child :is(.math-inline, .image-view)
+  )::before {
+  transform: translate(calc(-100% - 0.4em), 0.75em);
+}
+
+.milkdown
+  li[data-item-type="task"]:has(
+    > p:first-child :is(.math-inline, .image-view)
+  )::before {
+  content: "\200b";
+  margin-top: 0;
+  transform: translateY(0.4em);
+}
+
 .milkdown li[data-item-type="task"]::before {
   content: "";
   position: absolute;
