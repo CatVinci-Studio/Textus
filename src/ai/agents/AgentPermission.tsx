@@ -39,7 +39,7 @@ export function CommandText({
       {long && (
         <button
           type="button"
-          className="text-button agent-command-more"
+          className="tx-button text-button agent-command-more"
           aria-expanded={open}
           onClick={() => setOpen(!open)}
         >
@@ -83,7 +83,7 @@ export function AgentPermission({
         {pending.options.map((option) => (
           <button
             key={option.optionId}
-            className="inline-chat-action"
+            className="tx-button small inline-chat-action"
             onClick={() => pending.choose(option.optionId)}
           >
             {option.name}

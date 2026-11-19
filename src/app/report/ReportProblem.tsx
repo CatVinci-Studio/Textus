@@ -127,10 +127,16 @@ function ReportForm({
         </p>
         <div className="close-prompt-buttons">
           <div className="close-prompt-spacer" />
-          <button onClick={() => void links.openWebLink(phase.url)}>
+          <button
+            className="tx-button"
+            onClick={() => void links.openWebLink(phase.url)}
+          >
             {t.reportView}
           </button>
-          <button className="close-prompt-primary" onClick={close}>
+          <button
+            className="tx-button primary close-prompt-primary"
+            onClick={close}
+          >
             {t.hoverClose}
           </button>
         </div>
@@ -220,6 +226,7 @@ function ReportForm({
       )}
       <div className="close-prompt-buttons">
         <button
+          className="tx-button"
           disabled={!facts}
           onClick={() => {
             const all = text.trim() ? `${text.trim()}\n\n${details}` : details;
@@ -233,6 +240,7 @@ function ReportForm({
         </button>
         <div className="close-prompt-spacer" />
         <button
+          className="tx-button"
           disabled={!facts}
           onClick={() => {
             if (!facts) return;
@@ -243,7 +251,7 @@ function ReportForm({
           {t.reportOnGithub}
         </button>
         <button
-          className="close-prompt-primary"
+          className="tx-button primary close-prompt-primary"
           disabled={!ready || phase.state === "sending"}
           onClick={() => void send()}
         >

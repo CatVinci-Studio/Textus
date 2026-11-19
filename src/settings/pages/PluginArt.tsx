@@ -170,7 +170,7 @@ export function PluginReadme({
       {long && (
         <button
           type="button"
-          className="text-button plugin-readme-more"
+          className="tx-button text-button plugin-readme-more"
           aria-expanded={open}
           onClick={() => setOpen(!open)}
         >

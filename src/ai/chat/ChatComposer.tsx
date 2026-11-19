@@ -416,7 +416,7 @@ export function ChatComposer({
             {!compact && (
               <Tooltip text={labels.attachFile} side="above">
                 <button
-                  className="inline-chat-attach"
+                  className="tx-icon-button framed inline-chat-attach"
                   aria-label={labels.attachFile}
                   onClick={staged.attachFile}
                 >
@@ -455,7 +455,7 @@ export function ChatComposer({
               </span>
             )}
             <button
-              className="inline-chat-send"
+              className="tx-button small primary inline-chat-send"
               aria-label={busy ? labels.stop : labels.send}
               {...holdFocus}
               onClick={busy ? onStop : () => submit()}

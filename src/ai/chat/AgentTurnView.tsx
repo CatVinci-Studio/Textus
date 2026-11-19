@@ -314,7 +314,7 @@ export function ToolOutput({
       {open && cut && (
         <button
           type="button"
-          className="text-button agent-command-more"
+          className="tx-button text-button agent-command-more"
           onClick={() => setAll(true)}
         >
           {currentStrings().chatAgentShowAll}

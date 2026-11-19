@@ -31,7 +31,7 @@ export function CatalogProblem({
       <div className="settings-row-control">
         <button
           type="button"
-          className="text-button settings-inline-button"
+          className="tx-button text-button settings-inline-button"
           onClick={retry}
         >
           {t.pluginsCatalogRetry}

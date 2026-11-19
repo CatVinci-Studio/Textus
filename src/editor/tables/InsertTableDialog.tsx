@@ -48,7 +48,9 @@ export function InsertTableDialog({
           }}
         />
         <div className="insert-table-buttons">
-          <button onClick={onClose}>{t.cancel}</button>
+          <button className="tx-button" onClick={onClose}>
+            {t.cancel}
+          </button>
         </div>
       </div>
     </div>

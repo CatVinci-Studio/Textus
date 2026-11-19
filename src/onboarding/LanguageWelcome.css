@@ -62,11 +62,8 @@
 }
 
 .language-welcome-continue {
-  gap: 8px;
   width: 100%;
   margin-top: 28px;
-  font-size: var(--text-control);
-  cursor: pointer;
 }
 
 @media (max-width: 520px) {

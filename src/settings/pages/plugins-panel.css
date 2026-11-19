@@ -20,7 +20,6 @@
 
 .plugins-panel-update-all {
   flex: none;
-  font-size: var(--text-caption);
 }
 
 .plugins-panel-search {

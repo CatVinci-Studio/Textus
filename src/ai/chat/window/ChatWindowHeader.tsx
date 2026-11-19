@@ -47,14 +47,14 @@ export function ChatWindowHeader({
 }) {
   const history = (
     <ChatHistoryMenu
-      buttonClassName="inline-chat-header-button"
+      buttonClassName="tx-icon-button inline-chat-header-button"
       disabled={busy || !context}
       onReopen={(entry) => void reopenConversation(entry, t, reopenTarget)}
     />
   );
   const pin = (
     <IconButton
-      className={`inline-chat-header-button ${pinned ? "chat-window-pin-on" : ""}`}
+      className={`tx-icon-button inline-chat-header-button ${pinned ? "chat-window-pin-on" : ""}`}
       label={t.chatWindowPin}
       hint={pinned ? t.chatWindowUnpinHint : t.chatWindowPinHint}
       pressed={pinned}
@@ -103,7 +103,7 @@ export function ChatWindowHeader({
     >
       {history}
       <IconButton
-        className="inline-chat-header-button"
+        className="tx-icon-button inline-chat-header-button"
         label={t.chatNewConversation}
         disabled={busy}
         onClick={onNewConversation}

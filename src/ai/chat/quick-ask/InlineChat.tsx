@@ -127,7 +127,7 @@ export function InlineChat({
       {/* Nothing to start over from on a fresh panel. */}
       {(conversation.history.length > 0 || conversation.busy) && (
         <IconButton
-          className="inline-chat-header-button"
+          className="tx-icon-button inline-chat-header-button"
           label={labels.newConversation}
           onClick={onNewConversation}
         >
@@ -135,14 +135,14 @@ export function InlineChat({
         </IconButton>
       )}
       <IconButton
-        className="inline-chat-header-button"
+        className="tx-icon-button inline-chat-header-button"
         label={labels.continueInPanel}
         onClick={onDetach}
       >
         <DetachIcon />
       </IconButton>
       <IconButton
-        className="inline-chat-header-button inline-chat-close"
+        className="tx-icon-button inline-chat-header-button inline-chat-close"
         label={labels.close}
         onClick={onRequestClose}
       >

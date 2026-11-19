@@ -77,9 +77,11 @@ export function ImageNameDialog({
         </label>
         {!valid && <div className="image-name-error">{invalidLabel}</div>}
         <div className="image-name-buttons">
-          <button onClick={() => onClose(null)}>{cancelLabel}</button>
+          <button className="tx-button" onClick={() => onClose(null)}>
+            {cancelLabel}
+          </button>
           <button
-            className="image-name-primary"
+            className="tx-button primary image-name-primary"
             disabled={!valid}
             onClick={submit}
           >

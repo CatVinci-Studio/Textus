@@ -40,7 +40,7 @@ export function ComposerToggles({
       >
         <button
           type="button"
-          className={`inline-chat-toggle inline-chat-web-search${webSearch ? " is-active" : ""}${
+          className={`tx-icon-button framed inline-chat-toggle inline-chat-web-search${webSearch ? " is-active" : ""}${
             webSearch && searchUnavailable ? " needs-setup" : ""
           }`}
           aria-label={labels.webSearch}
@@ -63,7 +63,7 @@ export function ComposerToggles({
         >
           <button
             type="button"
-            className={`inline-chat-toggle inline-chat-deep-thinking${deepThinking ? " is-active" : ""}`}
+            className={`tx-icon-button framed inline-chat-toggle inline-chat-deep-thinking${deepThinking ? " is-active" : ""}`}
             aria-label={labels.deepThinking}
             aria-pressed={deepThinking}
             {...holdFocus}

@@ -91,7 +91,7 @@ export function CreateChat({ t }: { t: Strings }) {
         <div className="create-studio-bar">
           <button
             type="button"
-            className="text-button settings-inline-button"
+            className="tx-button text-button settings-inline-button"
             disabled={conversation.busy}
             onClick={() => {
               setKind(null);

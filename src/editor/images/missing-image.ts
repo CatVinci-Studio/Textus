@@ -207,7 +207,7 @@ export function missingImageCard(
     const row = document.createElement("span");
     row.className = "missing-image-actions";
     for (const [name, label, run] of actions) {
-      const button = widgetButton("", label, () => run());
+      const button = widgetButton("tx-button small", label, () => run());
       button.dataset.action = name;
       row.append(button);
     }

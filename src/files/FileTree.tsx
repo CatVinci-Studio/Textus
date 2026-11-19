@@ -207,7 +207,7 @@ export function FileTree({
                     <Tooltip text={t.treeNewDocument}>
                       <button
                         type="button"
-                        className="tree-tool"
+                        className="tx-icon-button tree-tool"
                         aria-label={t.treeNewDocument}
                         onClick={() =>
                           setDraft({ dir: root, kind: "document" })
@@ -219,7 +219,7 @@ export function FileTree({
                     <Tooltip text={t.treeNewFolder}>
                       <button
                         type="button"
-                        className="tree-tool"
+                        className="tx-icon-button tree-tool"
                         aria-label={t.treeNewFolder}
                         onClick={() => setDraft({ dir: root, kind: "folder" })}
                       >
@@ -241,7 +241,7 @@ export function FileTree({
                   >
                     <button
                       type="button"
-                      className="tree-tool"
+                      className="tx-icon-button tree-tool"
                       aria-label={t.treeOpenAsFolder}
                       onClick={() => onOpenAsFolder(root)}
                     >
@@ -252,7 +252,7 @@ export function FileTree({
                 <Tooltip text={t.treeSort}>
                   <button
                     type="button"
-                    className="tree-tool"
+                    className="tx-icon-button tree-tool"
                     aria-label={t.treeSort}
                     aria-haspopup="menu"
                     onClick={openSortMenu}
@@ -264,7 +264,7 @@ export function FileTree({
                   <Tooltip text={t.menuCloseFolder}>
                     <button
                       type="button"
-                      className="tree-tool"
+                      className="tx-icon-button tree-tool"
                       onClick={onCloseFolder}
                       aria-label={t.menuCloseFolder}
                     >
@@ -275,7 +275,7 @@ export function FileTree({
                 <Tooltip text={t.treeRefresh}>
                   <button
                     type="button"
-                    className="tree-tool"
+                    className="tx-icon-button tree-tool"
                     onClick={() => setGeneration((g) => g + 1)}
                     aria-label={t.treeRefresh}
                   >

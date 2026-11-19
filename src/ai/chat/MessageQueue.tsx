@@ -66,7 +66,7 @@ export function MessageQueue({
         {paused && (
           <button
             type="button"
-            className="inline-chat-action"
+            className="tx-button small inline-chat-action"
             onClick={onContinue}
           >
             {labels.queueContinue}

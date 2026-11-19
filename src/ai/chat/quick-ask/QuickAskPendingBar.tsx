@@ -69,14 +69,14 @@ export function QuickAskPendingBar({
           <>
             <button
               type="button"
-              className="inline-chat-action inline-chat-action-primary"
+              className="tx-button small inline-chat-action primary inline-chat-action-primary"
               onClick={onAcceptFocused}
             >
               {labels.proposalAccept}
             </button>
             <button
               type="button"
-              className="inline-chat-action"
+              className="tx-button small inline-chat-action"
               onClick={onRejectFocused}
             >
               {labels.proposalReject}
@@ -131,14 +131,14 @@ function SplitButton({
     <div className="quick-ask-split-button">
       <button
         type="button"
-        className={`inline-chat-action${primary ? " inline-chat-action-primary" : ""} quick-ask-split-main`}
+        className={`tx-button small inline-chat-action${primary ? " primary inline-chat-action-primary" : ""} quick-ask-split-main`}
         onClick={onClick}
       >
         {label}
       </button>
       <button
         type="button"
-        className={`inline-chat-action${primary ? " inline-chat-action-primary" : ""} quick-ask-split-chevron`}
+        className={`tx-button small inline-chat-action${primary ? " primary inline-chat-action-primary" : ""} quick-ask-split-chevron`}
         aria-label={menuLabel}
         {...menu.button}
       >

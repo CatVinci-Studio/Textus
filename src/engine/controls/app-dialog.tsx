@@ -181,19 +181,22 @@ export function AppDialogHost({ okLabel }: { okLabel: string }) {
           <div className="close-prompt-spacer" />
           {shown.confirm && (
             <button
-              className="app-dialog-cancel"
+              className="tx-button app-dialog-cancel"
               onClick={() => current && answer(current, false)}
             >
               {shown.cancelLabel}
             </button>
           )}
           {shown.altLabel && (
-            <button onClick={() => current && answer(current, true, ALT)}>
+            <button
+              className="tx-button"
+              onClick={() => current && answer(current, true, ALT)}
+            >
               {shown.altLabel}
             </button>
           )}
           <button
-            className={`close-prompt-primary${shown.danger ? " app-dialog-danger" : ""}`}
+            className={`tx-button primary close-prompt-primary${shown.danger ? " danger app-dialog-danger" : ""}`}
             onClick={ok}
           >
             {shown.confirm ? shown.okLabel : okLabel}

@@ -110,7 +110,7 @@ export function ConversationPanel({
       onPopOut={canDetachChat ? doc?.onPopOut : undefined}
       history={
         <ChatHistoryMenu
-          buttonClassName="inline-chat-header-button"
+          buttonClassName="tx-icon-button inline-chat-header-button"
           onReopen={(entry) => void reopenConversation(entry, t)}
         />
       }

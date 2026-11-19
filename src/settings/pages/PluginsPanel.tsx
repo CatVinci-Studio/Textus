@@ -114,7 +114,7 @@ export function PluginsPanel({
         <Tooltip text={t.pluginsMore}>
           <button
             type="button"
-            className="tree-tool plugins-panel-more"
+            className="tx-icon-button tree-tool plugins-panel-more"
             aria-label={t.pluginsMore}
             {...more.button}
           >
@@ -134,7 +134,7 @@ export function PluginsPanel({
             updates.length > 1 && (
               <button
                 type="button"
-                className="text-button plugins-panel-update-all"
+                className="tx-button text-button plugins-panel-update-all"
                 disabled={installing !== null}
                 onClick={() => void updateAll(updates)}
               >

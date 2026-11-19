@@ -65,7 +65,7 @@ export function MemoryPage({
         actions={
           <button
             type="button"
-            className="text-button settings-inline-button"
+            className="tx-button text-button settings-inline-button"
             onClick={() =>
               void importSkill().then(
                 () => setError(null),

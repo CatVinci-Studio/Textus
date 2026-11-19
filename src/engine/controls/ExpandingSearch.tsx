@@ -29,7 +29,7 @@ export function ExpandingSearch({
     return (
       <IconButton
         label={label}
-        className="tree-tool tx-search-open"
+        className="tx-icon-button tree-tool tx-search-open"
         onClick={() => setOpen(true)}
       >
         <SearchIcon />

@@ -22,7 +22,7 @@ export function AcpAgentsSection({ t }: { t: Strings }) {
       actions={
         <button
           type="button"
-          className="text-button settings-inline-button"
+          className="tx-button text-button settings-inline-button"
           onClick={showPlugins}
         >
           {t.acpAgentsGet}
@@ -53,7 +53,7 @@ export function AcpAgentsSection({ t }: { t: Strings }) {
             >
               <button
                 type="button"
-                className="text-button settings-inline-button"
+                className="tx-button text-button settings-inline-button"
                 onClick={() =>
                   emitToThisWindow(
                     "menu-plugin-command",

@@ -39,21 +39,21 @@ export function AboutSection({
       <div className="settings-about-links">
         <button
           type="button"
-          className="text-button settings-about-link"
+          className="tx-button text-button settings-about-link"
           onClick={() => void links.openAboutLink("github")}
         >
           GitHub
         </button>
         <button
           type="button"
-          className="text-button settings-about-link"
+          className="tx-button text-button settings-about-link"
           onClick={() => void links.openAboutLink("discord")}
         >
           Discord
         </button>
         <button
           type="button"
-          className="text-button settings-about-link"
+          className="tx-button text-button settings-about-link"
           onClick={() => void links.openAboutLink("qq")}
         >
           {t.aboutQq}

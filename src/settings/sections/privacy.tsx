@@ -49,7 +49,7 @@ function ClearRow({
   return (
     <SettingRow label={label}>
       <button
-        className="text-button settings-inline-button settings-danger-button"
+        className="tx-button text-button settings-inline-button settings-danger-button"
         aria-label={`${t.privacyClearButton}: ${label}`}
         onClick={() => void clear()}
       >

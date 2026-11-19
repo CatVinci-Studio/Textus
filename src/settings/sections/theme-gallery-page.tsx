@@ -26,7 +26,7 @@ export function ThemeGalleryPage({
   const action = !copy ? (
     <button
       type="button"
-      className="text-button settings-inline-button"
+      className="tx-button text-button settings-inline-button"
       disabled={install.busy === theme.id}
       onClick={() => void install.install(theme)}
     >
@@ -37,7 +37,7 @@ export function ThemeGalleryPage({
   ) : (
     <button
       type="button"
-      className="text-button settings-inline-button"
+      className="tx-button text-button settings-inline-button"
       onClick={() => setSettings({ themeId: copy.id })}
     >
       {t.themeGalleryUse}

@@ -388,7 +388,7 @@ export function ChatBody({
               <div className="inline-chat-pending-actions">
                 {onRevealPending && (
                   <button
-                    className="inline-chat-action"
+                    className="tx-button small inline-chat-action"
                     onClick={onRevealPending}
                   >
                     {labels.pendingReveal}
@@ -398,13 +398,13 @@ export function ChatBody({
                 {pendingCount > 1 && (
                   <>
                     <button
-                      className="inline-chat-action"
+                      className="tx-button small inline-chat-action"
                       onClick={onAcceptAll}
                     >
                       {labels.proposalAcceptAll}
                     </button>
                     <button
-                      className="inline-chat-action"
+                      className="tx-button small inline-chat-action"
                       onClick={onRejectAll}
                     >
                       {labels.proposalRejectAll}

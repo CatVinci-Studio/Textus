@@ -225,7 +225,7 @@ export function ThemeSection({ t }: { t: Strings }) {
       <SettingRow label={t.themeImportLabel}>
         <button
           type="button"
-          className="text-button settings-inline-button"
+          className="tx-button text-button settings-inline-button"
           disabled={busy}
           onClick={() => void importTheme()}
         >
@@ -368,7 +368,7 @@ export function ThemesTab({ t }: { t: Strings }) {
                 {updates.has(theme.id) && (
                   <button
                     type="button"
-                    className="text-button settings-inline-button"
+                    className="tx-button text-button settings-inline-button"
                     disabled={install.busy === theme.id}
                     onClick={() => void install.install(updates.get(theme.id)!)}
                   >
@@ -378,7 +378,7 @@ export function ThemesTab({ t }: { t: Strings }) {
                 {settings.themeId !== theme.id && (
                   <button
                     type="button"
-                    className="text-button settings-inline-button"
+                    className="tx-button text-button settings-inline-button"
                     disabled={busy}
                     onClick={() => setSettings({ themeId: theme.id })}
                   >
@@ -387,7 +387,7 @@ export function ThemesTab({ t }: { t: Strings }) {
                 )}
                 <button
                   type="button"
-                  className="text-button settings-inline-button"
+                  className="tx-button text-button settings-inline-button"
                   disabled={busy}
                   onClick={() => void remove(theme.id, theme.name)}
                 >

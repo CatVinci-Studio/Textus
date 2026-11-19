@@ -105,7 +105,7 @@ export function UpdateButton({
     <>
       <button
         type="button"
-        className="text-button settings-about-link"
+        className="tx-button text-button settings-about-link"
         onClick={ready ? install : checkNow}
         disabled={busy}
       >
@@ -180,7 +180,7 @@ function BackToStable({ t }: { t: Strings }) {
     <>
       <button
         type="button"
-        className="text-button settings-inline-button"
+        className="tx-button text-button settings-inline-button"
         disabled={phase === "working"}
         onClick={() => void goBack()}
       >
@@ -272,7 +272,7 @@ export function CliCommandSection({ t }: { t: Strings }) {
     >
       {!error && <span className="settings-row-value">{state}</span>}
       <button
-        className="text-button settings-inline-button"
+        className="tx-button text-button settings-inline-button"
         onClick={install}
         disabled={phase === "installing"}
       >
@@ -340,7 +340,7 @@ export function DefaultEditorSection({ t }: { t: Strings }) {
       )}
       {!status.isDefault && (
         <button
-          className="text-button settings-inline-button"
+          className="tx-button text-button settings-inline-button"
           onClick={makeDefault}
           disabled={busy}
         >

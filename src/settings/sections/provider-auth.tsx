@@ -162,14 +162,14 @@ function OauthPanel({
         </div>
         {configured ? (
           <button
-            className="text-button settings-inline-button"
+            className="tx-button text-button settings-inline-button"
             onClick={logout}
           >
             {t.logoutButton}
           </button>
         ) : (
           <button
-            className="text-button settings-inline-button"
+            className="tx-button text-button settings-inline-button"
             onClick={login}
             disabled={loggingIn}
           >
@@ -184,7 +184,7 @@ function OauthPanel({
             <code className="settings-login-url">{loginUrl}</code>
           </div>
           <button
-            className="text-button settings-inline-button"
+            className="tx-button text-button settings-inline-button"
             onClick={() => {
               void navigator.clipboard
                 .writeText(loginUrl)

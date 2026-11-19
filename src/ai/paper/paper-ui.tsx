@@ -377,7 +377,7 @@ export function PaperCard({ info }: { info: PaperCardInfo }) {
         <div className="paper-card-actions">
           <button
             type="button"
-            className="inline-chat-action"
+            className="tx-button small inline-chat-action"
             onClick={() => paperActions()?.stop(info.key)}
           >
             {t.paperPause}
@@ -390,7 +390,7 @@ export function PaperCard({ info }: { info: PaperCardInfo }) {
           <div className="paper-card-actions">
             <button
               type="button"
-              className="inline-chat-action"
+              className="tx-button small inline-chat-action"
               onClick={() => paperActions()?.resume(info.key)}
             >
               {t.paperContinue}

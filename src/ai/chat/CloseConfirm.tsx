@@ -29,7 +29,7 @@ export function CloseConfirmBar({
       </span>
       <div className="inline-chat-confirm-actions">
         <button
-          className="inline-chat-action inline-chat-action-primary"
+          className="tx-button small inline-chat-action primary inline-chat-action-primary"
           onClick={() => {
             onAcceptAll();
             onClose();
@@ -38,7 +38,7 @@ export function CloseConfirmBar({
           {labels.closeConfirmAccept}
         </button>
         <button
-          className="inline-chat-action"
+          className="tx-button small inline-chat-action"
           onClick={() => {
             onRejectAll();
             onClose();
@@ -46,7 +46,10 @@ export function CloseConfirmBar({
         >
           {labels.closeConfirmReject}
         </button>
-        <button className="inline-chat-action" onClick={onCancel}>
+        <button
+          className="tx-button small inline-chat-action"
+          onClick={onCancel}
+        >
           {labels.closeConfirmCancel}
         </button>
       </div>

@@ -271,7 +271,7 @@ export function ProposalCard({
           <div className="agent-proposal-actions">
             {!nothingToAccept && (
               <button
-                className="inline-chat-action inline-chat-action-primary"
+                className="tx-button small inline-chat-action primary inline-chat-action-primary"
                 disabled={pictures === "painting"}
                 onClick={() => onAccept(callId)}
               >
@@ -286,7 +286,7 @@ export function ProposalCard({
               </button>
             )}
             <button
-              className="inline-chat-action"
+              className="tx-button small inline-chat-action"
               onClick={() => onReject(callId)}
             >
               {labels.proposalReject}
@@ -304,7 +304,7 @@ export function ProposalCard({
               picture's placeholder, not words the model wrote. */}
           {!proposal.image && (
             <button
-              className="inline-chat-action"
+              className="tx-button small inline-chat-action"
               onClick={() => onRelocate(proposal)}
             >
               {labels.proposalRelocate}

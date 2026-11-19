@@ -183,7 +183,7 @@ export function CustomProviderPanel({
             />
           )}
           <button
-            className="text-button settings-inline-button"
+            className="tx-button text-button settings-inline-button"
             onClick={fetchModels}
             disabled={!baseUrl.trim()}
           >
@@ -193,14 +193,14 @@ export function CustomProviderPanel({
       </div>
       <div className="custom-actions-row">
         <button
-          className="text-button settings-inline-button"
+          className="tx-button text-button settings-inline-button"
           onClick={testConnection}
           disabled={!baseUrl.trim()}
         >
           {t.customTestConnection}
         </button>
         <button
-          className="text-button settings-inline-button"
+          className="tx-button text-button settings-inline-button"
           onClick={save}
           disabled={!baseUrl.trim() || !selectedModel.trim()}
         >
@@ -208,7 +208,7 @@ export function CustomProviderPanel({
         </button>
         {config && (
           <button
-            className="text-button settings-inline-button"
+            className="tx-button text-button settings-inline-button"
             onClick={clear}
           >
             {t.apiKeyClear}

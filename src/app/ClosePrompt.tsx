@@ -65,13 +65,18 @@ export function ClosePrompt({
             >
               <p>{message}</p>
               <div className="close-prompt-buttons">
-                <button className="close-prompt-discard" onClick={onDiscard}>
+                <button
+                  className="tx-button close-prompt-discard"
+                  onClick={onDiscard}
+                >
                   {t.closePromptDiscard}
                 </button>
                 <div className="close-prompt-spacer" />
-                <button onClick={onCancel}>{t.cancel}</button>
+                <button className="tx-button" onClick={onCancel}>
+                  {t.cancel}
+                </button>
                 <button
-                  className="close-prompt-primary"
+                  className="tx-button primary close-prompt-primary"
                   autoFocus
                   onClick={onSave}
                 >

@@ -145,10 +145,17 @@ function PluginForm({ request }: { request: Request }) {
         })}
         <div className="close-prompt-buttons">
           <div className="close-prompt-spacer" />
-          <button type="button" onClick={() => answer(request, null)}>
+          <button
+            className="tx-button"
+            type="button"
+            onClick={() => answer(request, null)}
+          >
             {request.cancelLabel}
           </button>
-          <button type="submit" className="close-prompt-primary">
+          <button
+            type="submit"
+            className="tx-button primary close-prompt-primary"
+          >
             {request.okLabel}
           </button>
         </div>

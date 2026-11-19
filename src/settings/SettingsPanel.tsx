@@ -286,7 +286,7 @@ export function SettingsPanel({
         >
           <button
             type="button"
-            className="text-button settings-back-button"
+            className="tx-button text-button settings-back-button"
             onClick={nav.back}
           >
             <ChevronIcon className="settings-back-chevron" />

@@ -103,7 +103,7 @@ export function AvailableThemes({
     extra: (
       <button
         type="button"
-        className="text-button settings-inline-button"
+        className="tx-button text-button settings-inline-button"
         onClick={() => void links.openAboutLink("themes")}
       >
         {t.themeGalleryWebsite}
@@ -229,7 +229,7 @@ function GalleryItem({
     >
       <button
         type="button"
-        className="text-button settings-inline-button"
+        className="tx-button text-button settings-inline-button"
         disabled={busy}
         onClick={onInstall}
       >

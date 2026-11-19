@@ -63,7 +63,7 @@ export function RowButton({
     <Tooltip text={tip}>
       <button
         type="button"
-        className="tree-tool plugins-panel-action"
+        className="tx-icon-button tree-tool plugins-panel-action"
         data-update={update || undefined}
         aria-label={label}
         disabled={disabled}

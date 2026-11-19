@@ -277,14 +277,14 @@ export function ProposalGroup({
       {actions && !done && (
         <div className="agent-proposal-actions">
           <button
-            className="inline-chat-action inline-chat-action-primary"
+            className="tx-button small inline-chat-action primary inline-chat-action-primary"
             disabled={streaming}
             onClick={() => waiting.forEach((item) => onAccept(item.callId))}
           >
             {labels.proposalAcceptAll}
           </button>
           <button
-            className="inline-chat-action"
+            className="tx-button small inline-chat-action"
             disabled={streaming}
             onClick={() => waiting.forEach((item) => onReject(item.callId))}
           >

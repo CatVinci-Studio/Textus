@@ -83,7 +83,7 @@ export function AgentPanelView({
       >
         {memory && (
           <IconButton
-            className="inline-chat-header-button"
+            className="tx-icon-button inline-chat-header-button"
             label={labels.project}
             pressed={showingMemory}
             onClick={() => setTab(showingMemory ? "chat" : "memory")}
@@ -93,7 +93,7 @@ export function AgentPanelView({
         )}
         {history}
         <IconButton
-          className="inline-chat-header-button"
+          className="tx-icon-button inline-chat-header-button"
           label={labels.newConversation}
           onClick={() => {
             setTab("chat");
@@ -104,7 +104,7 @@ export function AgentPanelView({
         </IconButton>
         {onPopOut && (
           <IconButton
-            className="inline-chat-header-button"
+            className="tx-icon-button inline-chat-header-button"
             label={labels.popOut}
             onClick={onPopOut}
           >

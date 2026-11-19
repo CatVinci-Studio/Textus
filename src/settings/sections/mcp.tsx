@@ -225,7 +225,7 @@ function ServerCard({
           <span className="mcp-actions">
             <button
               type="button"
-              className="text-button settings-inline-button"
+              className="tx-button text-button settings-inline-button"
               onClick={onEdit}
             >
               {t.mcpEdit}
@@ -233,7 +233,7 @@ function ServerCard({
             {server.enabled && (
               <button
                 type="button"
-                className="text-button settings-inline-button"
+                className="tx-button text-button settings-inline-button"
                 onClick={onRestart}
               >
                 {t.mcpRestart}
@@ -241,7 +241,7 @@ function ServerCard({
             )}
             <button
               type="button"
-              className="text-button settings-inline-button"
+              className="tx-button text-button settings-inline-button"
               onClick={onRemove}
             >
               {t.mcpRemove}
@@ -438,7 +438,7 @@ function McpForm({
         <div className="mcp-form-actions">
           <button
             type="button"
-            className="text-button settings-inline-button"
+            className="tx-button text-button settings-inline-button"
             disabled={!ready || trying}
             onClick={() => void tryServer(built())}
           >
@@ -447,14 +447,14 @@ function McpForm({
           <span className="mcp-form-spacer" />
           <button
             type="button"
-            className="text-button settings-inline-button"
+            className="tx-button text-button settings-inline-button"
             onClick={onCancel}
           >
             {t.cancel}
           </button>
           <button
             type="button"
-            className="text-button settings-inline-button"
+            className="tx-button text-button settings-inline-button"
             disabled={!ready}
             onClick={() => onSave(built())}
           >

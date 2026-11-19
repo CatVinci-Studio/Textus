@@ -71,7 +71,7 @@ export function AvailableSection({
           {(folded || rows.length > FOLD_FROM) && (
             <button
               type="button"
-              className="text-button settings-inline-button"
+              className="tx-button text-button settings-inline-button"
               aria-expanded={!folded}
               onClick={toggle}
             >

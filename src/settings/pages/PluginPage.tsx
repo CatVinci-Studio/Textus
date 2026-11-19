@@ -98,7 +98,7 @@ export function PluginPage({
   const uninstall = (
     <button
       type="button"
-      className="text-button settings-inline-button danger"
+      className="tx-button text-button settings-inline-button danger"
       onClick={() =>
         void attempt(async () => {
           const ok = await showConfirm(fill(t.pluginUninstallAsk, { name }), {
@@ -157,7 +157,7 @@ export function PluginPage({
             {update && (
               <button
                 type="button"
-                className="text-button settings-inline-button"
+                className="tx-button text-button settings-inline-button"
                 disabled={installing}
                 onClick={onUpdate}
               >
@@ -169,7 +169,7 @@ export function PluginPage({
             {manifest.repository && (
               <button
                 type="button"
-                className="text-button settings-inline-button"
+                className="tx-button text-button settings-inline-button"
                 onClick={() => void links.openWebLink(manifest.repository!)}
               >
                 {t.pluginRepository}
@@ -177,7 +177,7 @@ export function PluginPage({
             )}
             <button
               type="button"
-              className="text-button settings-inline-button"
+              className="tx-button text-button settings-inline-button"
               onClick={onEditWithAi}
             >
               {t.pluginEditWithAi}
@@ -204,7 +204,7 @@ export function PluginPage({
                 ) : (
                   <button
                     type="button"
-                    className="text-button settings-inline-button"
+                    className="tx-button text-button settings-inline-button"
                     onClick={() => setSettings(turnOnRequirement(need))}
                   >
                     {t.pluginTurnOn}
@@ -256,7 +256,7 @@ export function PluginPage({
         {record.origin === "dev" && (
           <button
             type="button"
-            className="text-button settings-inline-button"
+            className="tx-button text-button settings-inline-button"
             onClick={() => void attempt(() => reloadPlugin(record.id))}
           >
             {t.pluginReload}
@@ -265,7 +265,7 @@ export function PluginPage({
         {(record.origin === "dev" || record.id.startsWith("local.")) && (
           <button
             type="button"
-            className="text-button settings-inline-button"
+            className="tx-button text-button settings-inline-button"
             onClick={() => void exportPluginForPublishing(record.id)}
           >
             {t.pluginExport}
@@ -308,7 +308,7 @@ function PluginPermissions({
             {granted && (
               <button
                 type="button"
-                className="text-button settings-inline-button"
+                className="tx-button text-button settings-inline-button"
                 onClick={() =>
                   void attempt(() => revokePermission(record.id, permission))
                 }

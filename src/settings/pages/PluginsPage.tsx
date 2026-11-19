@@ -189,7 +189,7 @@ export function PluginsPage({ t }: SettingsPageProps) {
         updates.length > 1 && (
           <button
             type="button"
-            className="text-button settings-inline-button"
+            className="tx-button text-button settings-inline-button"
             disabled={installing !== null}
             onClick={() => void updateAll(updates)}
           >
@@ -243,7 +243,7 @@ function MutedSuggestions({ t }: { t: Strings }) {
     <SettingRow label={fill(t.pluginCardsMuted, { n: String(count) })}>
       <button
         type="button"
-        className="text-button settings-inline-button"
+        className="tx-button text-button settings-inline-button"
         onClick={restore}
       >
         {t.pluginCardsRestore}
@@ -259,7 +259,7 @@ function ListYours({ t }: { t: Strings }) {
       {t.marketListYours}{" "}
       <button
         type="button"
-        className="text-button settings-inline-button"
+        className="tx-button text-button settings-inline-button"
         onClick={() => void links.openAboutLink("listing")}
       >
         {t.marketListingRules}

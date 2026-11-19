@@ -48,7 +48,7 @@ export function LanguageWelcome({
         </Select>
         <button
           type="button"
-          className="language-welcome-continue"
+          className="tx-button primary language-welcome-continue"
           onClick={onContinue}
         >
           {t.tutorialNext}

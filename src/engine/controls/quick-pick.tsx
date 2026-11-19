@@ -165,7 +165,10 @@ function QuickPick({
         {request.multiple && (
           <div className="close-prompt-buttons">
             <div className="close-prompt-spacer" />
-            <button className="close-prompt-primary" onClick={done}>
+            <button
+              className="tx-button primary close-prompt-primary"
+              onClick={done}
+            >
               {okLabel}
             </button>
           </div>

@@ -89,7 +89,7 @@ export function ExtensionsTabLayout({
               {primary && (
                 <button
                   type="button"
-                  className="text-button settings-inline-button"
+                  className="tx-button text-button settings-inline-button"
                   onClick={primary.onSelect}
                 >
                   {primary.label}
@@ -128,7 +128,7 @@ function MoreMenu({ t, actions }: { t: Strings; actions: ExtensionsAction[] }) {
     <div className="extensions-more">
       <button
         type="button"
-        className="text-button settings-inline-button extensions-more-button"
+        className="tx-button text-button settings-inline-button extensions-more-button"
         aria-label={t.toolbarMore}
         {...button}
       >
