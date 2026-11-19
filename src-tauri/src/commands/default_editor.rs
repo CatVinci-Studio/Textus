@@ -87,7 +87,11 @@ mod registry {
             text(&app, "FriendlyAppName", "Textus"),
             text(&format!(r"{app}\shell\open\command"), "", &open),
             text(CAPABILITIES, "ApplicationName", "Textus"),
-            text(CAPABILITIES, "ApplicationDescription", "Integrated Writing Environment"),
+            text(
+                CAPABILITIES,
+                "ApplicationDescription",
+                "Integrated Writing Environment",
+            ),
             text(
                 r"Software\RegisteredApplications",
                 REGISTERED_APP,
