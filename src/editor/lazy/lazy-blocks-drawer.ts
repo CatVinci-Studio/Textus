@@ -7,6 +7,7 @@ import {
   DRAW_SCREENS,
   KEEP_SCREENS,
   PLACEHOLDER_CLASS,
+  SETTLE_MS,
 } from "./lazy-rules";
 import {
   blockNodes,
@@ -165,9 +166,6 @@ export function plan(
 }
 
 const drawers = new WeakMap<Element, LazyBlocksDrawer>();
-
-/** How long after the last scroll the page is at rest. */
-const SETTLE_MS = 200;
 
 /** Blocks either side of a jump's target drawn before it is measured: a
  *  screen of short paragraphs, so where it lands is drawn as it will be. */

@@ -210,7 +210,10 @@ how much of the rule applies. The rule has two parts:
 - **Heavy views** (`draw-when-visible.ts`, `drawWhileNear`): formulas,
   diagrams, rendered HTML, embedded notes and plugins' blocks. In a
   lighter document they are drawn at once; either way they are let go far
-  away, holding the exact box they had. Pictures load as the browser's
+  away, holding the exact box they had.
+- **Letting go waits for rest** (`SETTLE_MS`): blocks and views alike are
+  let go once scrolling has stopped, by where they are then, not by an
+  observer's report (WebKit on Linux may not run a frame to send one). Pictures load as the browser's
   `loading="lazy"` brings them.
 
 Either part, drawing or letting go, keeps what the reader sees where it is

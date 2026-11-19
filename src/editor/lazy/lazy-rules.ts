@@ -12,6 +12,9 @@ export const DRAW_AHEAD_SCREENS = 2;
 /** How far drawn things stay drawn, in screens: the gap keeps one scrolled
  *  just past the edge from being drawn and let go over and over. */
 export const KEEP_SCREENS = 4;
+/** How long after the last scroll the page is at rest: what is far is let
+ *  go then, not while the reader scrolls. */
+export const SETTLE_MS = 200;
 
 /** Marks a heavy view not drawn now: not yet, or let go far from the screen. */
 export const PENDING_ATTR = "data-draw-pending";

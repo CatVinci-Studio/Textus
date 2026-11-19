@@ -73,9 +73,12 @@ test("formulas far from the screen are let go where they were drawn, and drawn a
   await page.setViewportSize({ width: 1000, height: 700 });
   // Read to the end: those at the top go, the page doesn't move.
   const height = await scroller.evaluate((s) => s.scrollHeight);
+  await scroller.hover();
   for (let y = 0; y <= height; y += 600) {
-    await scroller.evaluate((s, y) => s.scrollTo(0, y), y);
-    // Real time: a frame or so a step, as a reader scrolls.
+    // The wheel, as a reader scrolls: WebKit on Linux runs no frame for a
+    // script's scroll alone.
+    await page.mouse.wheel(0, 600);
+    // Real time: a frame or so a step.
     await page.waitForTimeout(20);
   }
   await expect.poll(() => katex.count()).toBeLessThan(100);

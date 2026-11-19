@@ -1,6 +1,11 @@
 import { holdStill, stillPoint } from "./hold-still";
 import { drawAllBlocks } from "./lazy-blocks-drawer";
-import { DRAW_SCREENS, KEEP_SCREENS, PENDING_ATTR } from "./lazy-rules";
+import {
+  DRAW_SCREENS,
+  KEEP_SCREENS,
+  PENDING_ATTR,
+  SETTLE_MS,
+} from "./lazy-rules";
 
 // Heavy views (formulas, a plugin's frame) drawn only near the screen and
 // let go far from it, so a document's DOM stays the size of a few screens
@@ -34,11 +39,8 @@ export async function drawEverything(root: Element): Promise<void> {
     if (img.loading === "lazy") img.loading = "eager";
 }
 
-/** The gap between drawing and letting go keeps one whose placeholder
- *  sits a few pixels from where it sat drawn from being drawn and let go
- *  over and over at the edge, each time moving the page. */
+/** Drawn within a screen of the screen, by the observer's margin. */
 const DRAW_MARGIN = `${DRAW_SCREENS * 100}% 0px`;
-const KEEP_MARGIN = `${KEEP_SCREENS * 100}% 0px`;
 
 interface Kept {
   draw: () => void;
@@ -46,12 +48,16 @@ interface Kept {
   drawn: boolean;
 }
 
+/** One scroller's views: an observer that draws them as they come near,
+ *  and a timer that lets go of the far ones once scrolling rests. */
 interface Watchers {
   near: IntersectionObserver;
-  far: IntersectionObserver;
+  views: Set<Element>;
+  rest: ReturnType<typeof setTimeout> | undefined;
 }
 
 const kept = new WeakMap<Element, Kept>();
+/** By scroller, and by each view in it. */
 const watchers = new WeakMap<Element, Watchers>();
 
 function drawNow(el: Element) {
@@ -162,8 +168,8 @@ function latest(
   return now;
 }
 
-/** Draws or lets go in the scroller `observer` watches, what is on screen
- *  held where it is. */
+/** Draws in the scroller `observer` watches, what is on screen held where
+ *  it is. */
 function stillWhile(observer: IntersectionObserver, change: () => void) {
   const scroller = observer.root as Element | null;
   const root = scroller?.querySelector(".ProseMirror");
@@ -189,29 +195,31 @@ const onNear = (
     coming.every(([, entry]) => entry.boundingClientRect.top >= screen.bottom);
   if (below) draw();
   else stillWhile(observer, draw);
-  for (const [target] of coming) askAgain(target, "far");
 };
-
-/** Each watcher reports only a change: a report that came late (a slow
- *  frame in a fast scroll) may have drawn or let go what the other one
- *  already saw pass. Asked again, it says where the element is now. */
-function askAgain(target: Element, which: keyof Watchers) {
-  const watcher = watchers.get(target)?.[which];
-  watcher?.unobserve(target);
-  watcher?.observe(target);
-}
 
 /** An inline drawing broken over lines (a long formula) has no one box
  *  to hold: it stays drawn. */
 const wraps = (el: Element) => el.getClientRects().length > 1;
 
-/** Let go far away, each holding its exact size: nothing on screen moves,
- *  so nothing is measured after. */
-const onFar = (entries: IntersectionObserverEntry[]) => {
+/** Lets go of the views drawn far from the screen, each holding its exact
+ *  size, so nothing on screen moves. Where each is, is read at rest: an
+ *  observer's report of leaving can wait for the next paint, which a
+ *  scrolled box (WebKit on Linux) may not ask for. */
+function letGoFar(scroller: Element, watching: Watchers) {
+  const screen = scroller.getBoundingClientRect();
+  const reach = KEEP_SCREENS * screen.height;
   const leaving: HTMLElement[] = [];
-  for (const [target, entry] of latest(entries))
-    if (!entry.isIntersecting && kept.get(target)?.drawn && !wraps(target))
-      leaving.push(target as HTMLElement);
+  for (const el of watching.views) {
+    if (!el.isConnected) {
+      stopDrawing(el);
+      continue;
+    }
+    if (!kept.get(el)?.drawn) continue;
+    const rect = el.getBoundingClientRect();
+    const far =
+      rect.bottom < screen.top - reach || rect.top > screen.bottom + reach;
+    if (far && !wraps(el)) leaving.push(el as HTMLElement);
+  }
   if (!leaving.length) return;
   holdSizes(leaving);
   for (const target of leaving) {
@@ -219,30 +227,39 @@ const onFar = (entries: IntersectionObserverEntry[]) => {
     target.setAttribute(PENDING_ATTR, "");
     kept.get(target)!.undraw();
   }
-  for (const target of leaving) askAgain(target, "near");
-};
+}
+
+/** Lets go of what is far once nothing has scrolled for a while. */
+function letGoAtRest(scroller: Element) {
+  const watching = watchers.get(scroller);
+  if (!watching) return;
+  clearTimeout(watching.rest);
+  watching.rest = setTimeout(() => letGoFar(scroller, watching), SETTLE_MS);
+}
 
 function watchersOf(scroller: Element): Watchers {
   let found = watchers.get(scroller);
   if (!found) {
-    found = {
+    const watching: Watchers = {
       near: new IntersectionObserver(onNear, {
         root: scroller,
         rootMargin: DRAW_MARGIN,
       }),
-      far: new IntersectionObserver(onFar, {
-        root: scroller,
-        rootMargin: KEEP_MARGIN,
-      }),
+      views: new Set(),
+      rest: undefined,
     };
-    watchers.set(scroller, found);
+    scroller.addEventListener("scroll", () => letGoAtRest(scroller), {
+      passive: true,
+    });
+    watchers.set(scroller, watching);
+    found = watching;
   }
   return found;
 }
 
 /**
  * Draws `el` as it comes within a screen of the screen and undraws it again
- * once it is three screens away, its size kept. `now`: drawn at once (on
+ * once scrolling rests with it four screens away, its size kept. `now`: drawn at once (on
  * screen, or cheap to draw), and let go the same way. Without an
  * IntersectionObserver or a scroller it draws once and stays.
  */
@@ -261,10 +278,14 @@ export function drawWhileNear(
   const watching = watchersOf(scroller);
   kept.set(el, { draw, undraw, drawn: now });
   watchers.set(el, watching);
-  if (now) draw();
-  else el.setAttribute(PENDING_ATTR, "");
+  // Drawn at once wherever it is (a formula drawn before, its view made
+  // again as the blocks around it change): let go if that is far.
+  if (now) {
+    draw();
+    letGoAtRest(scroller);
+  } else el.setAttribute(PENDING_ATTR, "");
+  watching.views.add(el);
   watching.near.observe(el);
-  watching.far.observe(el);
 }
 
 /** Lets go of a placeholder taken out of the document: one that never came
@@ -274,7 +295,7 @@ export function stopDrawing(node: Node): void {
   const el = node;
   const watching = watchers.get(el);
   watching?.near.unobserve(el);
-  watching?.far.unobserve(el);
+  watching?.views.delete(el);
   watchers.delete(el);
   kept.delete(el);
 }
