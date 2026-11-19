@@ -3,6 +3,7 @@
 
 pub mod agent;
 pub mod capabilities;
+pub mod error_kind;
 pub mod http;
 pub mod images;
 pub mod models;

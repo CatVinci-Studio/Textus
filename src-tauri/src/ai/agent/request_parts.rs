@@ -45,7 +45,7 @@ pub(super) fn refuses_tools(error: &str) -> bool {
         .any(|word| lower.contains(word))
         && !lower.contains("403")
         && !matches!(
-            crate::ai::error_kind::kind(error),
+            aicompat::error_kind::kind(error),
             Some("rateLimit" | "timeout" | "auth" | "balance")
         )
 }

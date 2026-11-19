@@ -206,8 +206,8 @@ impl AgentProvider {
 }
 
 /// Whether a streamed step's error reads as the server refusing the request
-/// as made (a 4xx other than a key, a permission or a rate), which a request
-/// without streaming may get past.
+/// as made (a 4xx other than a key, a permission, a rate or a balance),
+/// which a request without streaming may get past.
 fn streaming_refused(error: &str) -> bool {
     if capabilities::is_thinking_refusal(error) {
         return false;
@@ -216,7 +216,11 @@ fn streaming_refused(error: &str) -> bool {
         .split_once("failed (")
         .and_then(|(_, rest)| rest.get(..3))
         .and_then(|code| code.parse::<u16>().ok());
-    matches!(status, Some(400..=499)) && !matches!(status, Some(401 | 403 | 429))
+    matches!(status, Some(400..=499))
+        && !matches!(
+            crate::error_kind::kind(error),
+            Some("auth" | "rateLimit" | "balance")
+        )
 }
 
 #[cfg(test)]
@@ -263,7 +267,9 @@ mod tests {
         ));
         for kept in [
             "Custom endpoint request failed (401): bad key",
+            "Custom endpoint request failed (403): not allowed",
             "Custom endpoint request failed (429): slow down",
+            "Custom endpoint request failed (402): payment required",
             "Custom endpoint request failed (500): oops",
             "The model hit its output limit in the middle of an edit.",
             "The connection ended in the middle of the reply. Try again.",

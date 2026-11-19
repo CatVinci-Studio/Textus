@@ -6,7 +6,7 @@ use std::sync::LazyLock;
 
 static KINDS: LazyLock<Vec<(String, Regex)>> = LazyLock::new(|| {
     let list: Vec<serde_json::Value> =
-        serde_json::from_str(include_str!("../../../src/ai/ai-error-kinds.json"))
+        serde_json::from_str(include_str!("../../../../src/ai/ai-error-kinds.json"))
             .expect("ai-error-kinds.json");
     list.iter()
         .map(|entry| {
@@ -41,6 +41,8 @@ mod tests {
             Some("balance")
         );
         assert_eq!(kind("request failed (401): bad key"), Some("auth"));
+        assert_eq!(kind("request failed (403): not allowed"), Some("auth"));
+        assert_eq!(kind("ChatGPT: usage limit reached"), Some("rateLimit"));
         assert_eq!(kind("request failed (503): busy"), Some("server"));
         assert_eq!(kind("tools are not supported"), None);
     }
