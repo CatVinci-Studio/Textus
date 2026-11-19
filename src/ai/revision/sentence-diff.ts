@@ -26,6 +26,21 @@ export function inlineSentence(sentence: string): string {
   return trimBreaks(sentence).replace(/^#{1,6}[ \t]+/, "");
 }
 
+/** Several lines or blocks as one line, for a row that shows only its
+ *  start: the lines joined, without their list, quote or heading marks. */
+export function oneLine(markdown: string): string {
+  return markdown
+    .split("\n")
+    .map((line) =>
+      trimBreaks(line).replace(
+        /^(?:>\s*)*(?:#{1,6}\s+|[-*+]\s+(?:\[[ xX]\]\s+)?|\d+[.)]\s+)?/,
+        "",
+      ),
+    )
+    .filter(Boolean)
+    .join(" ");
+}
+
 /** Units diffed by LCS, runs of non-matching ones becoming changes.
  *  `alignTail`: `b` is a stream so far; without it every paragraph is
  *  regrouped. */

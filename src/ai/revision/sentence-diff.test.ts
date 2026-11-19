@@ -2,7 +2,7 @@
 import { afterAll, beforeAll, describe, expect, it } from "vitest";
 import type { Editor } from "@milkdown/kit/core";
 import { createTestEditor } from "../../document-view/editor-test-harness";
-import { composeSentences, trimBreaks } from "./sentence-diff";
+import { composeSentences, oneLine, trimBreaks } from "./sentence-diff";
 import { splitSentences } from "./sentence-pairs";
 import { diffSentences, splitUnits } from "./unit-diff";
 
@@ -55,6 +55,12 @@ describe("trimBreaks", () => {
     expect(trimBreaks("One.\\\n")).toBe("One.");
     expect(trimBreaks("Three.<br> ")).toBe("Three.");
     expect(trimBreaks("  Two.  \n")).toBe("Two.");
+  });
+
+  it("puts blocks on one line without their marks, for a row", () => {
+    expect(oneLine("Data:\n\n- **Speed**: one\n- [ ] Two\n\n> 1. Three")).toBe(
+      "Data: **Speed**: one Two Three",
+    );
   });
 });
 

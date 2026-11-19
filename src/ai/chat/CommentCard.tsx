@@ -7,6 +7,7 @@ import { useRef, useState, type CSSProperties } from "react";
 import { Tooltip } from "../../engine/controls/Tooltip";
 import { FlipOnChange } from "../../engine/motion/flip";
 import { InlineMarkdownText } from "../MarkdownText";
+import { oneLine } from "../revision/sentence-diff";
 import type { AgentTurn } from "../types";
 import { parseComment, type Comment } from "./comment-args";
 
@@ -104,7 +105,7 @@ export function CommentCard({
         }
       />
       <blockquote className="tx-clamp agent-comment-quote">
-        {comment.anchor}
+        <InlineMarkdownText text={oneLine(comment.anchor)} />
       </blockquote>
       <div className="agent-comment-text">
         <InlineMarkdownText text={comment.comment} />
@@ -203,7 +204,7 @@ export function CommentGroup({
                   <span className="agent-comment-num">{num}</span>
                 )}
                 <span className="tx-truncate agent-comment-row-anchor">
-                  {comment.anchor}
+                  <InlineMarkdownText text={oneLine(comment.anchor)} />
                 </span>
               </button>
             </Tooltip>

@@ -15,7 +15,7 @@ import { Tooltip } from "../../engine/controls/Tooltip";
 import type { ChatMessagesLabels } from "./chat-messages-types";
 import { InlineMarkdownText } from "../MarkdownText";
 import { blockSummary, type BlockNames } from "../revision/markdown-forms";
-import { inlineSentence } from "../revision/sentence-diff";
+import { inlineSentence, oneLine } from "../revision/sentence-diff";
 
 /** What the user is told of a generate_image call that made no picture.
  *  Null for a call the model got wrong and sends again: the model's to fix. */
@@ -327,13 +327,19 @@ export function ProposalCard({
 export function ChangeText({
   markdown,
   names,
+  line = false,
 }: {
   markdown: string;
   names: BlockNames;
+  /** Drawn on one line: a row that shows only the text's start. */
+  line?: boolean;
 }) {
   return (
     <InlineMarkdownText
-      text={blockSummary(markdown, names) ?? inlineSentence(markdown)}
+      text={
+        blockSummary(markdown, names) ??
+        (line ? oneLine(markdown) : inlineSentence(markdown))
+      }
     />
   );
 }

@@ -27,7 +27,7 @@ import { composeSentences, trimBreaks } from "./sentence-diff";
 import { findInOrder } from "./sentence-locate";
 import type { CitationStyle } from "./usePendingEdits";
 import { markChangeSource } from "../../editor/change-source";
-import type { Transaction } from "@milkdown/kit/prose/state";
+import { Selection, type Transaction } from "@milkdown/kit/prose/state";
 import type { EditorView } from "@milkdown/kit/prose/view";
 
 /** What an Accept did: written, not yet (streaming), or nothing because
@@ -63,9 +63,25 @@ function land(
           .trim() ?? "",
     ),
   );
+  keepCaretInside(view, tr, preview);
   tr.setMeta(pendingEditKey, { type: "remove", callId, applied: true, landed });
   closeHistory(tr);
   view.dispatch(markChangeSource(tr, "ai").scrollIntoView());
+}
+
+/** A caret in the replaced text stays in the new text: mapped through a
+ *  whole-block replacement it would land in the block after, at its start. */
+function keepCaretInside(
+  view: EditorView,
+  tr: Transaction,
+  range: { from: number; to: number },
+) {
+  const { head } = view.state.selection;
+  if (head < range.from || head > range.to) return;
+  const from = tr.mapping.map(range.from, -1);
+  const to = tr.mapping.map(range.to, -1);
+  if (tr.selection.head >= from && tr.selection.head <= to) return;
+  tr.setSelection(Selection.near(tr.doc.resolve(to), -1));
 }
 
 export function writeAccept(

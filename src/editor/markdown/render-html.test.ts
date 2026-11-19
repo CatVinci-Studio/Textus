@@ -1,6 +1,10 @@
 // @vitest-environment jsdom
 import { beforeAll, describe, expect, it } from "vitest";
-import { renderDocumentHtml, renderMarkdownHtml } from "./render-html";
+import {
+  renderDocumentHtml,
+  renderMarkdownHtml,
+  renderMarkdownInlineHtml,
+} from "./render-html";
 import { loadKatex } from "../math/katex-loader";
 
 // The app loads KaTeX on the first formula; these render with it there.
@@ -40,6 +44,12 @@ describe("renderMarkdownHtml", () => {
     );
     expect(html).toContain("<table>");
     expect(html).toContain('type="checkbox"');
+  });
+
+  it("takes stars next to CJK punctuation as bold, as the editor does", () => {
+    const md = "这就是**线性（linearity）**在这里的含义";
+    for (const html of [renderMarkdownHtml(md), renderMarkdownInlineHtml(md)])
+      expect(html).toContain("<strong>线性（linearity）</strong>");
   });
 
   it("still strips script from model output", () => {

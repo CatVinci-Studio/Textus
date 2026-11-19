@@ -185,10 +185,6 @@ button.chat-queue-action {
   align-items: center;
 }
 
-.agent-proposal-group-rows .agent-proposal-sentence-text {
-  flex: 1 1 8ch;
-}
-
 .agent-proposal-group-rows .agent-diff-summary {
   display: inline-flex;
   gap: 4px;
@@ -210,7 +206,7 @@ button.chat-queue-action {
 /* A group's row text, and its own reason under it where the group's
    reasons differ. */
 .agent-proposal-group-row-text {
-  flex: 1;
+  flex: 1 1 8ch;
   min-width: 0;
   display: flex;
   flex-direction: column;

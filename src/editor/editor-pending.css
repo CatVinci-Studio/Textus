@@ -244,6 +244,13 @@ br:is(.pending-delete, .pending-sentence-hot) {
   display: none;
 }
 
+/* A hidden original's formula: its drawing stands beside its source. */
+.ProseMirror[data-revision-display="final"]
+  .math-inline:has(> .pending-delete:not(.pending-sentence-kept))
+  + .math-inline-rendered {
+  display: none;
+}
+
 .ProseMirror[data-revision-display="final"] .pending-insert {
   background: none;
   padding: 0;
