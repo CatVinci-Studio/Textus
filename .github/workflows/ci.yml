@@ -2,10 +2,10 @@ name: CI
 
 # Three layers (docs/dev/testing.md has the table):
 #
-#   pull request   check (types, lint, unit tests, format, build), the
-#                  whole e2e suite in Chromium (2 shards) and in WebKit
-#                  (3 shards; its width sweep and a11y scan in the full
-#                  suite only),
+#   pull request   check (types, lint, format, repo checks and build beside
+#                  the unit tests in 2 shards), the whole e2e suite in
+#                  Chromium (2 shards) and in WebKit (3 shards; its width
+#                  sweep and a11y scan in the full suite only),
 #                  plus the Rust checks on Linux when src-tauri/ changed
 #                  (scripts/ci-changes.mjs). A change to GitHub's settings
 #                  or root Markdown alone checks only their format;
@@ -13,7 +13,10 @@ name: CI
 #                  that read the docs, without builds or e2e. Required:
 #                  check, e2e, native, ci-config. A contributor runs
 #                  `npm run check` locally.
-#   push to main   the same.
+#   push to main   check, and the Rust checks and Linux app build
+#                  (scripts/ci-changes.mjs takes every push as native):
+#                  the merged tree's build. The e2e suite ran on the pull
+#                  request; here only the browsers' cache is refreshed.
 #   before release the full suite on every platform: native on Linux, macOS
 #                  and Windows, e2e, the iOS simulator. It runs on the pull
 #                  request that bumps the version, and release.yml calls it
@@ -25,7 +28,8 @@ name: CI
 # e2e/ or src-tauri/ (help guides, the AI skills) is code, not
 # documentation.
 #
-# Caches: Rust builds and the Playwright browser are saved from main only.
+# Caches: Rust builds and the Playwright browsers are saved from main only
+# (the browsers by `browser-cache`).
 # Pull requests restore main's and write none, so they don't evict main's
 # from the repository's 10 GB.
 
@@ -45,10 +49,7 @@ permissions:
   contents: read
 
 # A pull request's newer push replaces its older run. A push to main never
-# does: each commit there gets its own run, because the
-# release workflow waits for CI on the exact tagged commit - grouped by
-# branch, a pending run was replaced by the next merge and v1.0.5-rc.3 waited
-# for a CI result that never came.
+# does: each commit there gets its own run, grouped by commit.
 concurrency:
   group: ci-${{ inputs.full && 'full-' || '' }}${{ github.event_name == 'pull_request' && github.ref || github.sha }}
   cancel-in-progress: ${{ github.event_name == 'pull_request' }}
@@ -114,7 +115,8 @@ jobs:
           git fetch --no-tags origin "pull/$NUMBER/head:refs/remotes/pr/head"
           node scripts/guard-ci-config.mjs --base "$BASE" --head refs/remotes/pr/head
 
-  check:
+  # Everything but the unit tests, which run beside it in `unit`.
+  check-static:
     needs: changes
     runs-on: ubuntu-22.04
     timeout-minutes: 30
@@ -137,15 +139,16 @@ jobs:
           node scripts/check-readmes.mjs
           node scripts/check-links.mjs
           npx vitest run $(git grep -l 'docs/' -- '*.test.ts' '*.test.tsx' '*.test.mjs')
-      # The save round trip only where the change can reach saving.
       - if: needs.changes.outputs.light != 'true' && needs.changes.outputs.docs != 'true'
-        run: npm run check
-        env:
-          TEXTUS_SKIP_ROUNDTRIP: ${{ needs.changes.outputs.roundtrip != 'true' && '1' || '' }}
+        run: |
+          npm run typecheck
+          npm run lint
+          npm run format:check
+          npm run check:repo
       # The minifier only warns on a broken selector list - and a warning
       # dropped a whole design-system rule once, unnoticed for three releases.
       # Both builds are `vite build` without the `tsc` that `npm run build`
-      # puts in front of it: `npm run check` has just type-checked the same
+      # puts in front of it: the step above has just type-checked the same
       # project. `set -o pipefail` because the step's shell otherwise takes
       # the exit status of `tee`: a build that failed - over the startup
       # budget, say (vite.startup-budget.ts) - passed here.
@@ -164,11 +167,50 @@ jobs:
           npx vite build --config vite.playground.config.ts 2>&1 | tee build-playground.log
           ! grep -q 'css-syntax-error' build-playground.log
 
+  # The unit tests in two shards. The save round trip only where the
+  # change can reach saving.
+  unit:
+    needs: changes
+    if: needs.changes.outputs.light != 'true' && needs.changes.outputs.docs != 'true'
+    name: unit (${{ matrix.shard }}/2)
+    strategy:
+      fail-fast: false
+      matrix:
+        shard: [1, 2]
+    runs-on: ubuntu-22.04
+    timeout-minutes: 20
+    steps:
+      - uses: actions/checkout@v7
+      - uses: actions/setup-node@v7
+        with:
+          node-version-file: .nvmrc
+          cache: npm
+      - run: npm ci
+      - run: npx vitest run --shard=${{ matrix.shard }}/2
+        env:
+          TEXTUS_SKIP_ROUNDTRIP: ${{ needs.changes.outputs.roundtrip != 'true' && '1' || '' }}
+
+  # The required check: the static half and every unit shard passed (the
+  # shards skipped together for a light or documentation change).
+  check:
+    needs: [changes, check-static, unit]
+    if: always()
+    runs-on: ubuntu-22.04
+    timeout-minutes: 5
+    steps:
+      - name: Require both halves
+        env:
+          STATIC: ${{ needs.check-static.result }}
+          UNIT: ${{ needs.unit.result }}
+        run: |
+          test "$STATIC" = success
+          test "$UNIT" = success || test "$UNIT" = skipped
+
   # The flows split by test across two machines, each running two workers
   # (playwright.config.ts): a few minutes each.
   e2e-shard:
     needs: changes
-    if: needs.changes.outputs.light != 'true' && needs.changes.outputs.docs != 'true'
+    if: needs.changes.outputs.light != 'true' && needs.changes.outputs.docs != 'true' && (github.event_name != 'push' || github.ref != 'refs/heads/main' || inputs.full)
     name: e2e (${{ matrix.shard }}/2)
     strategy:
       fail-fast: false
@@ -207,12 +249,6 @@ jobs:
         run: npx playwright install-deps chromium
       - if: steps.browser.outputs.cache-hit != 'true'
         run: npx playwright install --with-deps chromium
-      # Saved from main only, and by one shard (the others would race it for the key).
-      - if: steps.browser.outputs.cache-hit != 'true' && github.ref == 'refs/heads/main' && matrix.shard == 1
-        uses: actions/cache/save@v6
-        with:
-          path: ~/.cache/ms-playwright
-          key: ${{ steps.browser.outputs.cache-primary-key }}
       - run: npm run test:e2e -- --shard=${{ matrix.shard }}/2
       # Every failed attempt's error context (the page as it was) and
       # trace, a test that passed on its retry included.
@@ -223,6 +259,42 @@ jobs:
           path: test-results/
           retention-days: 7
           if-no-files-found: ignore
+
+  # The browsers' cache, written from main only (pull requests read it):
+  # each engine fetched once per Playwright version, when it is missing.
+  browser-cache:
+    if: github.event_name == 'push' && github.ref == 'refs/heads/main'
+    name: browser cache (${{ matrix.engine }})
+    strategy:
+      matrix:
+        include:
+          - engine: chromium
+            key: playwright
+          - engine: webkit
+            key: playwright-webkit
+    runs-on: ubuntu-22.04
+    timeout-minutes: 15
+    steps:
+      - uses: actions/checkout@v7
+      - uses: actions/setup-node@v7
+        with:
+          node-version-file: .nvmrc
+          cache: npm
+      - id: playwright
+        run: echo "version=$(node -p 'require("./package-lock.json").packages["node_modules/@playwright/test"].version')" >> "$GITHUB_OUTPUT"
+      - id: browser
+        uses: actions/cache/restore@v6
+        with:
+          path: ~/.cache/ms-playwright
+          key: ${{ matrix.key }}-${{ runner.os }}-${{ steps.playwright.outputs.version }}
+          lookup-only: true
+      - if: steps.browser.outputs.cache-hit != 'true'
+        run: npm ci && npx playwright install ${{ matrix.engine }}
+      - if: steps.browser.outputs.cache-hit != 'true'
+        uses: actions/cache/save@v6
+        with:
+          path: ~/.cache/ms-playwright
+          key: ${{ steps.browser.outputs.cache-primary-key }}
 
   # One required check for the shards and WebKit, like `native` below:
   # passes only when all of them passed (or were skipped together, for a
@@ -249,7 +321,7 @@ jobs:
   # on every pull request, run here only in the full suite.
   e2e-webkit:
     needs: changes
-    if: needs.changes.outputs.light != 'true' && needs.changes.outputs.docs != 'true'
+    if: needs.changes.outputs.light != 'true' && needs.changes.outputs.docs != 'true' && (github.event_name != 'push' || github.ref != 'refs/heads/main' || inputs.full)
     name: e2e webkit (${{ matrix.shard }}/3)
     strategy:
       fail-fast: false
@@ -283,11 +355,6 @@ jobs:
         run: npx playwright install-deps webkit
       - if: steps.browser.outputs.cache-hit != 'true'
         run: npx playwright install --with-deps webkit
-      - if: steps.browser.outputs.cache-hit != 'true' && github.ref == 'refs/heads/main' && matrix.shard == 1
-        uses: actions/cache/save@v6
-        with:
-          path: ~/.cache/ms-playwright
-          key: ${{ steps.browser.outputs.cache-primary-key }}
       - run: npx playwright test --project=webkit --ignore-snapshots --shard=${{ matrix.shard }}/3
         env:
           E2E_WEBKIT: "1"
