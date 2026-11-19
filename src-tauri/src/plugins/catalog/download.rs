@@ -52,7 +52,7 @@ pub(super) async fn fetch() -> Result<String, String> {
                 // site's name cannot resolve" is the whole diagnosis.
                 "Couldn't reach the plugin catalog: {} (proxy: {})",
                 crate::net::error_text(&e),
-                aicompat::http::proxy_display()
+                aicompat::system_proxy::proxy_display()
             )
         })?;
         if !response.status().is_success() {
