@@ -156,17 +156,19 @@ export const pasteMarkdownSourcePlugin = $prose(
       props: {
         // Pasted HTML, Textus's own copies and drags: ProseMirror's slice, which
         // the clipboard plugin pastes as it is.
-        transformPasted: (slice, view) =>
-          itemsLikeTarget(
-            joinLinesForTableCell(
-              keepPastedSpans(
-                keepPastedBlock(slice, view.state.selection.$from, false),
-                view.state.selection,
-              ),
-              view.state.selection.$from,
+        transformPasted: (slice, view) => {
+          const pasted = joinLinesForTableCell(
+            keepPastedSpans(
+              keepPastedBlock(slice, view.state.selection.$from, false),
+              view.state.selection,
             ),
             view.state.selection.$from,
-          ),
+          );
+          // A drop lands where the pointer is, not at the selection.
+          return view.dragging
+            ? pasted
+            : itemsLikeTarget(pasted, view.state.selection.$from);
+        },
         transformPastedHTML: (html) => cleanPastedHtml(wordListsToHtml(html)),
         handlePaste(view, event) {
           const data = event.clipboardData;

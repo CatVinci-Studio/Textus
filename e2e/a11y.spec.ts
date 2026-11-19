@@ -36,6 +36,8 @@ async function scan(page: Page, name: string) {
 
 for (const colorScheme of ["light", "dark"] as const) {
   test(`the window's surfaces in ${colorScheme}`, async ({ page }) => {
+    // Every surface opened and scanned: near 30 s in WebKit.
+    test.setTimeout(60_000);
     await page.setViewportSize({ width: 1280, height: 800 });
     await openApp(page, { colorScheme, settings: { menuBarShown: false } });
     await pasteMarkdown(page, SAMPLE_DOC);
