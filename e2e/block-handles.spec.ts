@@ -66,7 +66,7 @@ test("a block pulled by its handle moves where it is let go, in one undo step", 
   ]);
 });
 
-test("a block let go: its copy flies to where it landed, then goes", async ({
+test("a block let go: its copy flies to where it landed, then goes @perf", async ({
   page,
 }) => {
   await openApp(page, { settings: { language: "en" }, animations: true });

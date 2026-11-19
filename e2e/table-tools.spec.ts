@@ -296,7 +296,7 @@ test("the + strips under and beside a table add a row and a column, reached from
   await expect(table.locator("tr").first().locator("th")).toHaveCount(3);
 });
 
-test("a row or column added opens up, and one dragged glides into its place", async ({
+test("a row or column added opens up, and one dragged glides into its place @perf", async ({
   page,
 }) => {
   const table = await open(page, TABLE, true);

@@ -266,7 +266,13 @@ test("a split the window has no room for is not made, and says why", async ({
   page,
 }) => {
   await page.setViewportSize({ width: 900, height: 600 });
+  // The page's clock, to let each note's time pass at once.
+  await page.clock.install();
   await openApp(page, { settings: { menuBarShown: false } });
+  const noteGone = async () => {
+    await page.clock.fastForward(5000);
+    await page.locator(".notice-text").waitFor({ state: "hidden" });
+  };
   const islands = page.locator("section.island");
   // Splits while a document keeps its least, 240 wide, whatever its zoom.
   let count = 1;
@@ -281,7 +287,7 @@ test("a split the window has no room for is not made, and says why", async ({
 
   // A tab dropped on the window's outer edge then joins the island there,
   // and the window says why.
-  await page.locator(".notice-text").waitFor({ state: "hidden" });
+  await noteGone();
   const box = (await islands.first().boundingBox())!;
   await page.mouse.click(box.x + box.width / 2, box.y + box.height / 2);
   await emit(page, "menu-new-file");
@@ -302,7 +308,7 @@ test("a split the window has no room for is not made, and says why", async ({
   await expect(rows.last().getByRole("tab")).toHaveCount(2);
 
   // Its own island's edge, no room for another: it stays, and is told why.
-  await page.locator(".notice-text").waitFor({ state: "hidden" });
+  await noteGone();
   const own = (await rows.last().getByRole("tab").last().boundingBox())!;
   await page.mouse.move(own.x + own.width / 2, own.y + own.height / 2);
   await page.mouse.down();
@@ -318,7 +324,7 @@ test("a split the window has no room for is not made, and says why", async ({
 
   // Wide but short (a phone on its side, the keyboard up), the window says
   // it is too short, not too narrow.
-  await page.locator(".notice-text").waitFor({ state: "hidden" });
+  await noteGone();
   await page.setViewportSize({ width: 2400, height: 170 });
   // The islands laid out in the new window first: the split is weighed
   // against the room they have.
