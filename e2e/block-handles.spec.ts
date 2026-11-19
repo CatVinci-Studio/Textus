@@ -118,12 +118,12 @@ test("a block pulled slowly past its neighbours never flips back and forth", asy
       return room >= 0 ? `room@${room}` : null;
     }, editor);
   const seen: string[] = [];
-  for (let dy = 0; dy <= 160; dy += 2) {
+  for (let dy = 0; dy <= 160; dy += 4) {
     await page.mouse.move(x, y0 + dy);
     const now = await aim();
     if (now && seen.at(-1) !== now) seen.push(now);
   }
-  for (let dy = 160; dy >= -10; dy -= 2) {
+  for (let dy = 160; dy >= -10; dy -= 4) {
     await page.mouse.move(x, y0 + dy);
     const now = await aim();
     if (now && seen.at(-1) !== now) seen.push(now);

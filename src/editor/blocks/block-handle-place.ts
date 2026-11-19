@@ -68,3 +68,17 @@ export function nearestGap<G extends { y: number; left: number }>(
   }
   return best;
 }
+
+/** The places as they stand with the room open at `at` (null: none): what
+ *  is after it moved down by the block's height `tall`. */
+export const withRoom = <G extends { pos: number; y: number }>(
+  gaps: readonly G[],
+  at: number | null,
+  tall: number,
+): readonly G[] =>
+  at === null
+    ? gaps
+    : gaps.map((g) => ({
+        ...g,
+        y: g.y + (g.pos > at ? tall : g.pos === at ? tall / 2 : 0),
+      }));
