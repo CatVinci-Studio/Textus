@@ -12,7 +12,7 @@ import {
   canExportWithPandoc,
   isIOSApp,
 } from "../platform/capabilities";
-import { iosFiles } from "../platform/ios-files";
+import { nativeFiles } from "../platform/native-files";
 import { toPandocMarkdown } from "./pandoc-markdown";
 import { numberedHeadings } from "./pandoc-headings";
 import { pandocOptions, type PandocSettings } from "./pandoc-options";
@@ -219,12 +219,12 @@ export async function runExport(
   // iOS: written aside, then the share sheet saves or sends it.
   const share = isIOSApp && ext === "pdf";
   const picked = share
-    ? await iosFiles.scratchPath(`${base}.${ext}`)
+    ? await nativeFiles.scratchPath(`${base}.${ext}`)
     : await exportDoc.exportSaveDialog(`${base}.${ext}`, kind, ext);
   if (!picked) return;
   try {
     await write(picked, base);
-    if (share) await iosFiles.share(picked);
+    if (share) await nativeFiles.share(picked);
     else void exportDoc.revealInDir(picked);
   } catch (err) {
     await showMessage(failed(err), {

@@ -3,7 +3,7 @@ import { MARKDOWN_EXTENSIONS } from "../platform/bindings/files";
 // separators are treated as separators here.
 
 /** Android's content:// URLs carry no readable name: the picker's and the
- *  folder listing's names, by URL (platform/ios-files.ts). */
+ *  folder listing's names, by URL (platform/native-files.ts). */
 const contentNames = new Map<string, string>();
 
 export function nameContentUrl(url: string, name: string): void {

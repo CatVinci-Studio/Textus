@@ -1,5 +1,5 @@
 import { useDeferredValue, useEffect, useMemo } from "react";
-import { useIOSDocumentsFolder } from "../platform/ios-files";
+import { useIOSDocumentsFolder } from "../platform/native-files";
 import { rememberIOSDocument } from "../document/ios-recents";
 import { countWords } from "../utils/word-count";
 import { PAUSE_FEATURES_THRESHOLD } from "../editor/large-doc";

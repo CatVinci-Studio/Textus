@@ -5,7 +5,7 @@ import { closeHistory } from "@milkdown/kit/prose/history";
 import { resolveStrings } from "../../i18n/strings";
 import { showMessage } from "../../engine/controls/app-dialog";
 import { fs } from "../../platform/ipc";
-import { iosFiles, isScopedUrl } from "../../platform/ios-files";
+import { nativeFiles, isScopedUrl } from "../../platform/native-files";
 import type { Settings, ImageNamingMode } from "../../prefs/SettingsContext";
 import { IMAGE_FILE_EXTENSIONS, imageMimeForPath } from "./pasted-files";
 import { unwrittenImageSrcs } from "../markdown/markdown-output";
@@ -302,7 +302,7 @@ export function fileImage(path: string): PastedImage {
     name: picked ? decodeURIComponent(name) : name,
     type: imageMimeForPath(path) ?? "",
     base64: () =>
-      picked ? iosFiles.readBase64(path) : fs.readBinaryFileBase64(path),
+      picked ? nativeFiles.readBase64(path) : fs.readBinaryFileBase64(path),
   };
 }
 

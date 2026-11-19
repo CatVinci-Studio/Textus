@@ -1,7 +1,7 @@
 import { blobToBase64 } from "../utils/blob-base64";
 import { DROP_IMAGE_FILES_EVENT, sendAppEvent } from "../utils/events";
 import { fs } from "../platform/ipc";
-import { iosFiles } from "../platform/ios-files";
+import { nativeFiles } from "../platform/native-files";
 import { documentsDir } from "../platform/documents-path";
 import { joinPath } from "../utils/path";
 import { freeName, sortDroppedPaths } from "./dropped-files";
@@ -46,7 +46,7 @@ async function takeIn(
   if (images.length) {
     const paths = await Promise.all(
       images.map(async (name) => {
-        const path = await iosFiles.scratchPath(name);
+        const path = await nativeFiles.scratchPath(name);
         await fs.writeBase64File(path, await blobToBase64(byName.get(name)!));
         return path;
       }),

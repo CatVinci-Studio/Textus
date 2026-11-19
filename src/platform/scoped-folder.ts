@@ -11,9 +11,11 @@ import { TEXT_DOCUMENT_EXTENSIONS } from "./bindings/files";
 /*
  * A folder the backend can't walk (far-files.ts: an Android pick, a
  * plugin's remote folder): its index, text search and documents are read
- * here, with the backend's limits and result shapes.
+ * here, in the backend's result shapes.
  */
 
+/** Smaller than the backend's: each entry is a call through the native
+ *  plugin or a plugin's provider. */
 const MAX_FILES = 5000;
 const MAX_HITS = 200;
 const MAX_DOCUMENTS = 2000;

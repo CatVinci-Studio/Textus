@@ -63,7 +63,7 @@ async function inDocuments(url: string | null): Promise<string | null> {
   return inside === null ? url : docs + inside;
 }
 
-export const iosFiles = {
+export const nativeFiles = {
   /** The Files app's document picker, for Markdown unless `extensions`
    *  say otherwise; null when cancelled. */
   pickDocument: async (extensions?: string[]): Promise<string | null> =>
@@ -153,7 +153,7 @@ export const iosFiles = {
       okLabel: t.allFilesAccessContinue,
       cancelLabel: t.allFilesAccessNotNow,
     });
-    return go ? iosFiles.beginAccess(url) : first.path;
+    return go ? nativeFiles.beginAccess(url) : first.path;
   },
 };
 
@@ -197,7 +197,7 @@ export async function restoreFolderAccess(): Promise<void> {
   await Promise.all(
     items
       .filter((item) => item.folder)
-      .map((item) => iosFiles.beginAccess(item.url).catch(() => null)),
+      .map((item) => nativeFiles.beginAccess(item.url).catch(() => null)),
   );
 }
 

@@ -11,8 +11,8 @@ const files = new Map<string, string | null>(); // id → text, null a folder
 const idOf = (u: string) =>
   decodeURIComponent(u.slice(u.indexOf("/document/") + 10));
 
-vi.mock("./ios-files", () => ({
-  iosFiles: {
+vi.mock("./native-files", () => ({
+  nativeFiles: {
     listFolder: async (u: string) => {
       const dir = idOf(u);
       return [...files]
@@ -50,8 +50,8 @@ vi.mock("./ios-files", () => ({
 
 // An Android pick: read through the native plugin.
 vi.mock("./far-files", async (actual) => {
-  const { iosFiles } = await import("./ios-files");
-  return { ...(await actual<object>()), farFiles: () => iosFiles };
+  const { nativeFiles } = await import("./native-files");
+  return { ...(await actual<object>()), farFiles: () => nativeFiles };
 });
 // The backend reads the texts handed to it; here, each as its title.
 vi.mock("./ipc-call", () => ({

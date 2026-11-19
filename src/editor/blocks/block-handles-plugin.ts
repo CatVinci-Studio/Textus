@@ -15,7 +15,7 @@ import { foldCaret, labelFoldCaret } from "../fold/block-fold";
 import { headingFold } from "../fold/heading-fold";
 import { TOUCH_SLOP_PX } from "../../utils/gesture";
 import { canHaptic } from "../../platform/capabilities";
-import { iosFiles } from "../../platform/ios-files";
+import { nativeFiles } from "../../platform/native-files";
 import "./block-handles.css";
 
 /** Room a list item's marker takes left of its text, in ems. */
@@ -314,7 +314,7 @@ class BlockHandles {
     };
     const timer = setTimeout(() => {
       stop();
-      if (canHaptic) iosFiles.haptic();
+      if (canHaptic) nativeFiles.haptic();
       drag(true);
     }, HOLD_MS);
     window.addEventListener("pointermove", moved);

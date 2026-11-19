@@ -12,7 +12,7 @@ import {
   canPickImageFile,
   canRevealInFileManager,
 } from "../../platform/capabilities";
-import { scopedImageSrc } from "../../platform/ios-files";
+import { scopedImageSrc } from "../../platform/native-files";
 import { isFarUrl } from "../../platform/far-files";
 import {
   MISSING_IMAGE_CLASS,

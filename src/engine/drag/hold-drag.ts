@@ -1,5 +1,5 @@
 import { canHaptic } from "../../platform/capabilities";
-import { iosFiles } from "../../platform/ios-files";
+import { nativeFiles } from "../../platform/native-files";
 import { DRAG_START_PX, TOUCH_SLOP_PX } from "../../utils/gesture";
 import { trackDrag } from "./pointer-drag";
 
@@ -38,7 +38,7 @@ export function holdToDrag(
   };
   const timer = setTimeout(() => {
     stop();
-    if (canHaptic) iosFiles.haptic();
+    if (canHaptic) nativeFiles.haptic();
     handlers.lift?.();
     let travelled = false;
     trackDrag(

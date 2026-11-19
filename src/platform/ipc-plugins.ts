@@ -7,7 +7,7 @@ import { Channel } from "@tauri-apps/api/core";
 import { call, command, desktopActionCommand } from "./ipc-call";
 import { isFarUrl } from "./far-files";
 import { canPickPluginFolder } from "./capabilities";
-import { iosFiles } from "./ios-files";
+import { nativeFiles } from "./native-files";
 import { dirname } from "../utils/path";
 
 /** Plugins and MCP servers: the calls Settings › Extensions and the plugin broker make. */
@@ -15,11 +15,11 @@ import { dirname } from "../utils/path";
 /** A package picked in the Files app, copied where the install can read it
  *  by path; null when cancelled. */
 async function pickFilesPackage(): Promise<string[] | null> {
-  const url = await iosFiles.pickDocument(["textusplugin", "zip"]);
+  const url = await nativeFiles.pickDocument(["textusplugin", "zip"]);
   if (!url) return null;
   const name = decodeURIComponent(url.slice(url.lastIndexOf("/") + 1));
-  const copy = await iosFiles.scratchPath(name);
-  await command("write_base64_file", copy, await iosFiles.readBase64(url));
+  const copy = await nativeFiles.scratchPath(name);
+  await command("write_base64_file", copy, await nativeFiles.readBase64(url));
   return [copy];
 }
 

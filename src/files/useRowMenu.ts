@@ -9,7 +9,7 @@ import {
 } from "react";
 import { fs } from "../platform/ipc";
 import { canTrashFiles, isMobileApp } from "../platform/capabilities";
-import { iosFiles } from "../platform/ios-files";
+import { nativeFiles } from "../platform/native-files";
 
 import { basename, parentDir } from "../utils/path";
 import { type ContextMenuItem } from "../engine/controls/ContextMenu";
@@ -174,7 +174,7 @@ export function useRowMenu(
             ? [
                 {
                   label: t.menuShare,
-                  onSelect: () => void iosFiles.share(path).catch(() => {}),
+                  onSelect: () => void nativeFiles.share(path).catch(() => {}),
                 },
               ]
             : []),

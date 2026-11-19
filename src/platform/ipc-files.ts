@@ -6,7 +6,7 @@ import {
 import type { ImageHost } from "../prefs/SettingsContext";
 import type * as Generated from "./bindings/files";
 import { isIOSApp, isMobileApp } from "./capabilities";
-import { iosFiles, newDocumentPath } from "./ios-files";
+import { nativeFiles, newDocumentPath } from "./native-files";
 import { farEntries, farFiles, isFarUrl } from "./far-files";
 import { parentDir } from "../utils/path";
 import { scopedFolder } from "./scoped-folder";
@@ -32,7 +32,7 @@ export const fs = {
     allFilter: string;
   }): Promise<string | null> =>
     isMobileApp
-      ? iosFiles.pickDocument()
+      ? nativeFiles.pickDocument()
       : command(
           "open_file_dialog",
           filters?.textFilter ?? null,
@@ -56,7 +56,7 @@ export const fs = {
     !isMobileApp
       ? command("save_file_dialog", defaultName, defaultDir)
       : !isIOSApp
-        ? iosFiles.createDocument(defaultName)
+        ? nativeFiles.createDocument(defaultName)
         : newDocumentPath(
             defaultName,
             async (path) => (await command("file_mtime_ms", path)) !== null,
@@ -88,7 +88,7 @@ export const fs = {
    *  there a document is deleted (the tree asks first), a folder never. */
   trashEntry: (path: string, root: string): Promise<void> =>
     isIOSApp
-      ? iosFiles.trash(path)
+      ? nativeFiles.trash(path)
       : isFarUrl(path)
         ? farFiles(path)
             .deleteEntry(path)
@@ -98,7 +98,7 @@ export const fs = {
    *  folder or a drive root. A phone's is the system's folder picker. */
   pickOpenFolder: (): Promise<string | null> =>
     isMobileApp
-      ? iosFiles.pickProjectFolder()
+      ? nativeFiles.pickProjectFolder()
       : desktopActionCommand("pick_open_folder"),
   /** Every document under `root`, for the sidebar's file-name search.
    *  Rejects with "TOO_BROAD" as the picker does. */

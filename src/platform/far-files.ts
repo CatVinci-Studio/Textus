@@ -1,5 +1,5 @@
 import type { DirEntryInfo } from "./bindings/files";
-import { iosFiles, isScopedUrl } from "./ios-files";
+import { nativeFiles, isScopedUrl } from "./native-files";
 import { isIOSApp } from "./capabilities";
 import { basename, contentRelative } from "../utils/path";
 
@@ -66,7 +66,7 @@ export const isProviderUrl = (path: string): boolean => {
 
 /** How `path` is read: its provider's, or the native plugin's. */
 export const farFiles = (path: string): FarFiles =>
-  providerOf(path) ?? iosFiles;
+  providerOf(path) ?? nativeFiles;
 
 /** Where a folder's entries are made, renamed, moved and deleted here: an
  *  Android pick or a provider's path; null for the backend's (an iOS pick
@@ -74,7 +74,7 @@ export const farFiles = (path: string): FarFiles =>
 export function farEntries(path: string): FarFiles | null {
   const provider = providerOf(path);
   if (provider) return provider;
-  return isScopedUrl(path) && !isIOSApp ? iosFiles : null;
+  return isScopedUrl(path) && !isIOSApp ? nativeFiles : null;
 }
 
 /** `url` as a path below the far folder `root` ("inbox/a.md"); its name

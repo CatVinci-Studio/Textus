@@ -1,5 +1,5 @@
 import { useCallback, useEffect, useState } from "react";
-import { iosFiles } from "../platform/ios-files";
+import { nativeFiles } from "../platform/native-files";
 import { forgetIOSDocument } from "../document/ios-recents";
 import { makeBlankTab, statMtime, tabIsDirty } from "../document/doc-tabs";
 import type { TabState } from "./tabs/useTabState";
@@ -167,7 +167,7 @@ function useIPhoneDocuments(
     // A first save lands in `tabs` on the next render.
     await new Promise((resolve) => requestAnimationFrame(resolve));
     const path = tabsRef.current.find((tb) => tb.id === tab.id)?.path;
-    if (path) await iosFiles.share(path).catch(() => {});
+    if (path) await nativeFiles.share(path).catch(() => {});
   }, [activeTabId, liveTabs, saveTab, tabsRef]);
   return { documentsOpen, setDocumentsOpen, openFromDocuments, shareActiveTab };
 }
