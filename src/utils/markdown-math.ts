@@ -34,3 +34,42 @@ export function normalizeMathDelimiters(text: string): string {
     )
     .join("");
 }
+
+/**
+ * Display maths whose `$$` lines touch the text around them, given blank
+ * lines, for marked: it reads such a block as part of the paragraph above,
+ * and a lone `=` line inside as that paragraph's heading underline. The
+ * editor's parser reads them as a formula already. Fenced code is skipped.
+ */
+export function displayMathApart(text: string): string {
+  return text
+    .split(/(```[\s\S]*?```)/)
+    .map((segment, i) => (i % 2 === 1 ? segment : apart(segment)))
+    .join("");
+}
+
+function apart(segment: string): string {
+  const lines = segment.split("\n");
+  const out: string[] = [];
+  let open = false;
+  const blankBefore = () => {
+    if (out.length && out[out.length - 1].trim()) out.push("");
+  };
+  lines.forEach((line, i) => {
+    const t = line.trim();
+    if (!open && t.startsWith("$$")) {
+      blankBefore();
+      out.push(line);
+      // `$$x = 1$$` on one line closes at once.
+      open = !(t.length > 2 && t.endsWith("$$"));
+    } else if (open && t.endsWith("$$")) {
+      out.push(line);
+      open = false;
+    } else {
+      out.push(line);
+      return;
+    }
+    if (!open && lines[i + 1]?.trim()) out.push("");
+  });
+  return out.join("\n");
+}

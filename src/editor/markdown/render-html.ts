@@ -3,7 +3,10 @@ import { Marked, Renderer, type TokenizerAndRendererExtension } from "marked";
 import createDOMPurify from "dompurify";
 import { escapeHtml } from "../../utils/html";
 import { WIKILINK_SOURCE } from "../../utils/note-link";
-import { normalizeMathDelimiters } from "../../utils/markdown-math";
+import {
+  displayMathApart,
+  normalizeMathDelimiters,
+} from "../../utils/markdown-math";
 import { sanitizeNodes } from "../html/html-policy";
 import { readImagePresentation } from "../images/image-html";
 import { katexNow, mathSourceHtml } from "../math/katex-loader";
@@ -143,7 +146,7 @@ const AUTHORED = {
  *  sources in order: a streaming reply redraws only its last. */
 export function markdownBlocks(markdown: string): string[] {
   return chatMarked
-    .lexer(normalizeMathDelimiters(markdown))
+    .lexer(displayMathApart(normalizeMathDelimiters(markdown)))
     .map((token) => token.raw);
 }
 
@@ -151,9 +154,12 @@ export function markdownBlocks(markdown: string): string[] {
 export function renderMarkdownHtml(markdown: string): string {
   // `\(`/`\[` are folded to `$`/`$$` first, so markdown's backslash escaping
   // can't mangle them.
-  const parsed = chatMarked.parse(normalizeMathDelimiters(markdown), {
-    async: false,
-  });
+  const parsed = chatMarked.parse(
+    displayMathApart(normalizeMathDelimiters(markdown)),
+    {
+      async: false,
+    },
+  );
   return purify().sanitize(parsed, AUTHORED);
 }
 

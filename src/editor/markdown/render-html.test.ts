@@ -14,6 +14,16 @@ describe("renderMarkdownHtml", () => {
     expect(html).toContain("katex-display");
   });
 
+  it("takes display math right under a line of text as a formula, not a heading", () => {
+    const html = renderMarkdownHtml(
+      "先给法向量 $v=(1,0)$，求完整受力：\n$$\nMv=\n\\begin{bmatrix}2&1\\\\1&2\\end{bmatrix}\n=\n\\begin{bmatrix}2\\\\1\\end{bmatrix}\n$$\n这对应**线性映射**：输入一个向量。",
+    );
+    expect(html).not.toMatch(/<h\d/);
+    expect(html.match(/katex-display/g)).toHaveLength(1);
+    expect(html).toContain("<strong>线性映射</strong>");
+    expect(html).not.toContain("katex-error");
+  });
+
   it("renders LaTeX's own delimiters too", () => {
     expect(renderMarkdownHtml("so \\(x^2\\) holds")).toContain('class="katex"');
   });
