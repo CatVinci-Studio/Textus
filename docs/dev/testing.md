@@ -67,10 +67,10 @@ a key the macOS menu takes reaches nothing.
 
 CI has three layers (`.github/workflows/ci.yml`):
 
-| When                                                 | What runs                                                                                                                                            | Required                      |
-| ---------------------------------------------------- | ---------------------------------------------------------------------------------------------------------------------------------------------------- | ----------------------------- |
-| Every pull request (forks too), and a push to `main` | `check` (types, lint, unit tests, formats, build); the whole e2e suite in Chromium (2 shards) and in WebKit; Rust on Linux when `src-tauri/` changed | check, e2e, native, ci-config |
-| Before a release (the version bump's PR, the tag)    | everything: the above, plus Rust on macOS and Windows and the iOS simulator                                                                          | all of them                   |
+| When                                                 | What runs                                                                                                                                                       | Required                      |
+| ---------------------------------------------------- | --------------------------------------------------------------------------------------------------------------------------------------------------------------- | ----------------------------- |
+| Every pull request (forks too), and a push to `main` | `check` (types, lint, unit tests, formats, build); the whole e2e suite in Chromium (2 shards) and in WebKit (3 shards); Rust on Linux when `src-tauri/` changed | check, e2e, native, ci-config |
+| Before a release (the version bump's PR, the tag)    | everything: the above, plus Rust on macOS and Windows and the iOS simulator                                                                                     | all of them                   |
 
 A change to GitHub's settings, the license or the root Markdown alone
 checks only their format (`light` in `scripts/ci-changes.mjs`).
@@ -215,7 +215,9 @@ solver, the tab strip, the row insets, the drop zones): an e2e flow checks
 what a user sees happen - where a tab lands, which island it joins - not
 pixels or styles. There are no screenshot baselines. Every flow runs in
 WebKit too (`E2E_WEBKIT=1`), in CI's `e2e-webkit` job, which the `e2e`
-check requires. `playwright.webview.config.ts` runs the flows in an old Chromium you
+check requires; the width sweep (`fit-sweep.spec.ts`) and the
+accessibility scan (`a11y.spec.ts`) run there only in the full suite
+(`E2E_FULL=1`), Chromium running them on every pull request. `playwright.webview.config.ts` runs the flows in an old Chromium you
 point it at, the oldest WebView2 Textus supports
 ([webview-support.md](webview-support.md#testing)); CI doesn't run it.
 
@@ -259,7 +261,7 @@ job they stand for passed, or when all of them were skipped.
 | `ci-config`                         | `scripts/guard-ci-config.mjs`: fails a change to CI or test configuration                                                        | a pull request from a fork; skipped (passed) otherwise |
 | `check`                             | `npm run check`, then `vite build` of the app and of the playground; for a light change only `format:check` and the README check | always                                                 |
 | `e2e (1/2)` and `e2e (2/2)`         | `npm run test:e2e -- --shard=N/2`, with a pinned textus-plugins checkout                                                         | the full suite                                         |
-| `e2e-webkit`                        | every flow in WebKit; `e2e` passes only when it does                                                                             | the full suite                                         |
+| `e2e webkit (1/3)` … `(3/3)`        | every flow in WebKit, the width sweep and a11y scan only in the full suite; `e2e` passes only when they do                       | the full suite                                         |
 | `native (ubuntu-22.04)`             | `npm run check:native`                                                                                                           | the change reaches Rust                                |
 | `native (macos-26)`                 | `npm test`, then `npm run check:native`                                                                                          | the full suite                                         |
 | `native (windows-2025)`             | `npm run check:native`                                                                                                           | the full suite                                         |

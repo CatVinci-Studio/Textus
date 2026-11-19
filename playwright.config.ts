@@ -51,12 +51,16 @@ export default defineConfig({
       },
     },
     // The same flows in Playwright's WebKit, with E2E_WEBKIT=1 (CI's
-    // e2e-webkit job sets it on every pull request).
+    // e2e-webkit job sets it on every pull request). The width sweep and
+    // the accessibility scan there only in the full suite (E2E_FULL=1):
+    // Chromium runs them on every pull request.
     ...(process.env.E2E_WEBKIT
       ? [
           {
             name: "webkit",
-            testIgnore: ignored,
+            testIgnore: process.env.E2E_FULL
+              ? ignored
+              : [...ignored, "fit-sweep.spec.ts", "a11y.spec.ts"],
             use: {
               ...devices["Desktop Safari"],
               viewport: { width: 1180, height: 780 },

@@ -3,7 +3,9 @@ name: CI
 # Three layers (docs/dev/testing.md has the table):
 #
 #   pull request   check (types, lint, unit tests, format, build), the
-#                  whole e2e suite in Chromium (2 shards) and in WebKit,
+#                  whole e2e suite in Chromium (2 shards) and in WebKit
+#                  (3 shards; its width sweep and a11y scan in the full
+#                  suite only),
 #                  plus the Rust checks on Linux when src-tauri/ changed
 #                  (scripts/ci-changes.mjs). A change to GitHub's settings
 #                  or root Markdown alone checks only their format;
@@ -242,10 +244,17 @@ jobs:
           test "$WEBKIT" = success || test "$WEBKIT" = skipped
 
   # The whole suite again in WebKit, the engine macOS, iOS and Linux users
-  # meet, on every pull request: a failure here fails `e2e`.
+  # meet, on every pull request, in three shards: a failure here fails
+  # `e2e`. The width sweep and the accessibility scan, which Chromium runs
+  # on every pull request, run here only in the full suite.
   e2e-webkit:
     needs: changes
     if: needs.changes.outputs.light != 'true' && needs.changes.outputs.docs != 'true'
+    name: e2e webkit (${{ matrix.shard }}/3)
+    strategy:
+      fail-fast: false
+      matrix:
+        shard: [1, 2, 3]
     runs-on: ubuntu-22.04
     timeout-minutes: 30
     steps:
@@ -261,14 +270,32 @@ jobs:
           ref: 14e1b28c23850a69ed78c3e206efcf0076715201
           path: textus-plugins
       - run: npm ci --prefix textus-plugins
-      - run: npx playwright install --with-deps webkit
-      - run: npx playwright test --project=webkit --ignore-snapshots
+      # As in e2e-shard: the browser from main's cache, its libraries
+      # installed either way.
+      - id: playwright
+        run: echo "version=$(node -p 'require("./package-lock.json").packages["node_modules/@playwright/test"].version')" >> "$GITHUB_OUTPUT"
+      - id: browser
+        uses: actions/cache/restore@v6
+        with:
+          path: ~/.cache/ms-playwright
+          key: playwright-webkit-${{ runner.os }}-${{ steps.playwright.outputs.version }}
+      - if: steps.browser.outputs.cache-hit == 'true'
+        run: npx playwright install-deps webkit
+      - if: steps.browser.outputs.cache-hit != 'true'
+        run: npx playwright install --with-deps webkit
+      - if: steps.browser.outputs.cache-hit != 'true' && github.ref == 'refs/heads/main' && matrix.shard == 1
+        uses: actions/cache/save@v6
+        with:
+          path: ~/.cache/ms-playwright
+          key: ${{ steps.browser.outputs.cache-primary-key }}
+      - run: npx playwright test --project=webkit --ignore-snapshots --shard=${{ matrix.shard }}/3
         env:
           E2E_WEBKIT: "1"
+          E2E_FULL: ${{ needs.changes.outputs.full == 'true' && '1' || '' }}
       - if: always()
         uses: actions/upload-artifact@v7
         with:
-          name: e2e-webkit-test-results
+          name: e2e-webkit-test-results-${{ matrix.shard }}
           path: test-results/
           retention-days: 7
           if-no-files-found: ignore
@@ -481,6 +508,16 @@ jobs:
           key: android
           save-if: ${{ github.ref == 'refs/heads/main' }}
       - run: npm ci
+      # Gradle's downloads: Maven Central has refused a cold run (429).
+      # This job runs only in the full suite, never on main, so it saves
+      # wherever it runs.
+      - uses: actions/cache@v6
+        with:
+          path: |
+            ~/.gradle/caches
+            ~/.gradle/wrapper
+          key: gradle-${{ runner.os }}-${{ hashFiles('src-tauri/Cargo.lock', 'package-lock.json') }}
+          restore-keys: gradle-${{ runner.os }}-
       # The runner image's SDK and newest NDK.
       - name: Generate the Android project (src-tauri/gen/android)
         run: |
