@@ -53,10 +53,18 @@ const { sessionId } = await call("POST", "/session", {
   },
 });
 const s = `/session/${sessionId}`;
-const find = async (css) =>
-  (await call("POST", `${s}/element`, { using: "css selector", value: css }))[
-    ELEMENT
-  ];
+/** The element `css` finds: its reference, under the W3C key or the one
+ *  older drivers use. */
+const find = async (css) => {
+  const found = await call("POST", `${s}/element`, {
+    using: "css selector",
+    value: css,
+  });
+  const id =
+    found?.[ELEMENT] ?? found?.ELEMENT ?? Object.values(found ?? {})[0];
+  if (!id) throw new Error(`${css}: ${JSON.stringify(found)}`);
+  return id;
+};
 const run = (script, ...args) =>
   call("POST", `${s}/execute/sync`, { script, args });
 const keys = (...values) =>
