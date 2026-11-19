@@ -1,5 +1,6 @@
 import { useEffect, useRef, useState } from "react";
-import { StreamReveal } from "../stream-reveal";
+import { StreamReveal } from "../../engine/motion/stream-reveal";
+import { revealFrames } from "../../engine/motion/reveal";
 import { motionAllowed } from "../../engine/motion/motion";
 
 /**
@@ -22,12 +23,7 @@ export function useRevealedText(text: string, live: boolean): string {
     }
     const current = (reveal.current ??= new StreamReveal());
     current.update(text, false, performance.now());
-    let frame = requestAnimationFrame(function step(now) {
-      current.tick(now);
-      setShown(current.text);
-      if (!current.caughtUp) frame = requestAnimationFrame(step);
-    });
-    return () => cancelAnimationFrame(frame);
+    return revealFrames(current, () => setShown(current.text));
   }, [text, live]);
   return live ? shown : text;
 }

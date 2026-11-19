@@ -289,14 +289,14 @@ Every size in the interface is written once, in **interface pixels** on the 4 px
 ## 10. Motion - In force
 
 - Durations, curves, offsets and scales come only from `src/engine/motion/motion.css`. `src/engine/motion/motion-tokens.test.ts` fails on a new keyframe or a raw time elsewhere.
-- Everything that moves is one of these moves: **enter** (`motion-enter`, `enter()`), **exit** (`motion-exit`, `exit()`), **mark** (`.motion-mark`, `land()`), **glide** (FLIP, `engine/motion/flip.ts`), **beat** (`startBeat` / `enterOnBeat` / `joinBeat`: the parts of one change appear as one), **crossfade** (`crossfade()`), with **presence** (`engine/motion/usePresence.ts`) keeping an element mounted while it exits.
+- Everything that moves is one of these moves: **enter** (`motion-enter`, `enter()`), **exit** (`motion-exit`, `exit()`), **mark** (`.motion-mark`, `land()`), **glide** (FLIP, `engine/motion/flip.ts`), **beat** (`startBeat` / `enterOnBeat` / `joinBeat`: the parts of one change appear as one), **crossfade** (`crossfade()`), **reveal** (`engine/motion/reveal.ts`: text that arrives in pieces goes on screen behind it at a steady pace - a stream typed in, or the AI's sentences landing one at a time), with **presence** (`engine/motion/usePresence.ts`) keeping an element mounted while it exits.
 - Durations: `--dur-instant` 80 ms (press, hover colour), `--dur-fast` 120 ms (small exits, fades), `--dur-base` 200 ms (menus, popovers, dialogs), `--dur-medium` 250 ms (_Planned, 1.3.13_: folded into 200 or 320), `--dur-slow` 320 ms (sidebar, AI panel, Settings, Zen mode), `--dur-sheet` 450 ms (phone sheets). An exit takes about 70% of its entry. Loops (`--dur-blink`, `--dur-pulse`, `--dur-spin`, `--dur-sheen`, `--dur-drift`) are only for "working" indicators.
 - Curves: `--ease-standard` (in place), `--ease-out` (entry), `--ease-in` (exit), `--ease-in-out` (movement), `--ease-spring-bouncy` (about 3% overshoot) only for a finger release.
-- Only `opacity` and `transform` animate (`src/engine/motion/motion-properties.test.ts`). Size changes use FLIP or a crossfade.
+- Only `opacity` and `transform` animate (`src/engine/motion/motion-properties.test.ts`). Size changes use FLIP or a crossfade. The one exception is the frame clock (`engine/frame/clock.ts`): islands and tab rows making room move their boxes' place and size each frame, because what is inside them reflows as they go; scaled with a transform, their text would stretch.
 - Toggles (sidebar, panels, switches, arrows) use transitions so they can reverse; keyframes are only for one-time entries. An exiting element is `inert`; animations never block input.
 - Space is consistent: a surface grows from its anchor and shrinks back into it, enters and leaves the same way, one direction per surface.
 - **Dragging** looks the same everywhere: the copy under the pointer is lifted - `scale: 1.06`, `--ui-surface`, `--shadow-popover` (`.tx-drag-ghost`, `.tree-drag-ghost`, `.tab-pull-ghost`, `.tab-pill-lifted`, `.is-drag-lifted`) - and the place it left, where it stays, is a dashed outline (`.tx-drag-source`). The copy stays exactly under the point it was taken by, zoomed or not.
-- Nothing moves while the user types: input, the caret, the selection, completions, typewriter scrolling, find highlights and counts change instantly.
+- What the user types appears at once. The caret may follow it with a glide (Smooth caret), and typewriter scrolling glides the line back to its place.
 - Under reduced motion, offsets and scales become 0, springs become the standard curve, slow motion becomes a 150 ms fade, loops stop and smooth scrolling is instant (`engine/motion/motion.ts`: `prefersReducedMotion()`, `motionAllowed()`).
 
 ## 11. Components - In force
@@ -512,6 +512,6 @@ Before a change to the interface, a plugin page or a theme is merged:
 - [ ] Only overlays have shadows (7).
 - [ ] Icons come from the set (8).
 - [ ] Hover, selected, disabled and focus follow section 9; the page works from the keyboard (13).
-- [ ] Motion uses the moves and tokens; nothing moves while typing (10).
+- [ ] Motion uses the moves and tokens (10).
 - [ ] Words follow section 12 and are localized.
 - [ ] Light and dark, the four built-in themes, and one imported theme were looked at; a plugin page also in one signature-palette theme.
