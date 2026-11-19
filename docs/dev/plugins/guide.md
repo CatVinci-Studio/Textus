@@ -183,26 +183,27 @@ and `!`.
 A plugin asks for these in `permissions`; the user grants them when
 turning it on, or leaves it off, and can take each back later.
 
-| Permission       | Lets the plugin                                                                                              |
-| ---------------- | ------------------------------------------------------------------------------------------------------------ |
-| `editor.read`    | read the document in front: its text, selection, blocks and outline; also completions                        |
-| `editor.write`   | change it at once, each change one undo step                                                                 |
-| `editor.propose` | suggest changes to it, shown as Textus AI's are, accepted or rejected by the user                            |
-| `editor.input`   | take the editor's keys and move, select and edit with them (Vim, Emacs)                                      |
-| `files.read`     | list, find and read files in the open folder, and what Textus knows of them (metadata)                       |
-| `files.write`    | create, change, rename and trash files in the open folder (reading them comes with it)                       |
-| `clipboard`      | read and write the clipboard                                                                                 |
-| `project.data`   | keep its own data in the open folder, in `.textus/plugins/<id>/`                                             |
-| `ai.tools`       | give Textus AI tools to call                                                                                 |
-| `ai.model`       | ask the user's writing model; the user says yes on the first call, 100,000 tokens a month (API 1.8, preview) |
-| `comments`       | read and leave notes in a document's margin, with `files.read` for the file (API 1.8, preview)               |
-| `notifications`  | show system notifications, at once or on a schedule (API 1.1)                                                |
-| `background`     | run its `background` code on a schedule, also with every window closed (API 1.1)                             |
-| `agents`         | run the AI agents it names in `contributes.agents` (programs on this computer; 1.3.13)                       |
-| `appearance`     | change Textus's colours: a palette over the theme, the frame a gradient (API 1.6)                            |
-| `git.commit`     | commit files of the open folder with the user's git (1.4.3; reading Git history is `files.read`)             |
-| `network:<host>` | fetch from that host over HTTPS (`*.example.com`, `host:port`, `*` for the open web)                         |
-| `hidden:<path>`  | read that hidden file of the open folder, named from its top: `hidden:.vitepress/config.ts` (1.4.3)          |
+| Permission       | Lets the plugin                                                                                                     |
+| ---------------- | ------------------------------------------------------------------------------------------------------------------- |
+| `editor.read`    | read the document in front: its text, selection, blocks and outline; also completions                               |
+| `editor.write`   | change it at once, each change one undo step                                                                        |
+| `editor.propose` | suggest changes to it, shown as Textus AI's are, accepted or rejected by the user                                   |
+| `editor.input`   | take the editor's keys and move, select and edit with them (Vim, Emacs)                                             |
+| `files.read`     | list, find and read files in the open folder, and what Textus knows of them (metadata)                              |
+| `files.write`    | create, change, rename and trash files in the open folder (reading them comes with it)                              |
+| `clipboard`      | read and write the clipboard                                                                                        |
+| `project.data`   | keep its own data in the open folder, in `.textus/plugins/<id>/`                                                    |
+| `ai.tools`       | give Textus AI tools to call                                                                                        |
+| `ai.model`       | ask the user's writing model; the user says yes on the first call, 100,000 tokens a month (API 1.8, preview)        |
+| `comments`       | read and leave notes in a document's margin, with `files.read` for the file (API 1.8, preview)                      |
+| `notifications`  | show system notifications, at once or on a schedule (API 1.1)                                                       |
+| `background`     | run its `background` code on a schedule, also with every window closed (API 1.1)                                    |
+| `agents`         | run the AI agents it names in `contributes.agents` (programs on this computer; 1.3.13)                              |
+| `appearance`     | change Textus's colours: a palette over the theme, the frame a gradient (API 1.6)                                   |
+| `git.commit`     | commit files of the open folder with the user's git (1.4.3; reading Git history is `files.read`)                    |
+| `ssh`            | reach servers through the user's own ssh, SFTP only, each host allowed once by the user (API 1.9, desktop, preview) |
+| `network:<host>` | fetch from that host over HTTPS (`*.example.com`, `host:port`, `*` for the open web)                                |
+| `hidden:<path>`  | read that hidden file of the open folder, named from its top: `hidden:.vitepress/config.ts` (1.4.3)                 |
 
 Ask for what the plugin's purpose explains, and no more: each permission
 is shown to the user, and a listing in Textus asks why for the broad ones.
@@ -266,7 +267,8 @@ the window bar that runs a command when clicked; one declared in
 
 - Read it: `getText()`, `getPath()`, `getSelection()`, `getOutline()`,
   and `getBlocks()` - its blocks as Textus AI is shown them, each with an
-  `id` (a hash of its Markdown) and a `kind`.
+  `id` (a hash of its Markdown) and a `kind`. From API 1.8 `getCursor()`
+  gives where the caret is, as a `Location` (`{ path, line, ch }`).
 - Change it: `insertText(text)`, `replaceSelection(text)`, or
   `edit(change)` (`editor.write`) - at once, one undo step each.
   `propose(change, { reason })` (`editor.propose`) shows the change for
@@ -300,6 +302,10 @@ severity, message, fix }` - within 200 ms. Textus underlines them in the
 - Help with it: `registerCompletion(id, provider)` for completions as you
   type, `registerHover({ provideHover(target) })` for a card over a link,
   a wikilink or a citation.
+- Add a block: from API 1.8 `registerBlockType(id, { label, keywords,
+insert })` puts a block in the `/` menu; `insert()` writes it at the
+  caret. `blockTypes()` lists every plugin's. Right-click items come from
+  `ui.registerContextMenu(fn)`, worked out as the menu opens.
 - Follow it: `onDidChangeActive`, `onDidChange` (once typing pauses),
   `onDidChangeSelection`; `reveal(location)` scrolls to a place. From API
   1.1 `onDidChange` says who made the change, `source`: `"user"` (typing,
@@ -354,7 +360,17 @@ updateLinks: true })` (links to it follow), `trash`, `createFolder`.
 - `files.frontmatter.get(path)` / `update(path, fm => ({ ...fm, done: true }))`, and
   `files.onWillSave(({ path, text }) => newText)` to change a document
   just before it is saved (a `modified` date); `onDidSave`, `onDidCreate`,
-  `onDidChange`, `onDidRename`, `onDidDelete`, `onDidChangeRoot`.
+  `onDidChange`, `onDidRename`, `onDidDelete`, `onDidChangeRoot`, and from
+  API 1.8 `onDidChangeOnDisk` for a change made outside Textus.
+- `metadata.setTask(location, status)` (`files.write`, API 1.8) sets a
+  task's box (`" "`, `"x"`, `"-"`...) where it is, in its editor when open.
+  `text.parseYaml` / `stringifyYaml` read and write YAML as front matter
+  does.
+- `history` (`files.read`, API 1.8): past versions kept besides Textus's
+  own. `registerSource(id, { label, versions(path), read(path, version)
+})` offers a source (Git, a sync service); `sources()`, `versions(source,
+path)` and `read(source, path, version)` read every plugin's, as Version
+  History does.
 - `metadata` (`files.read`): what Textus knows of each document - its
   headings, links, tags, tasks and front matter - built once and kept up
   to date: `get(path)`, `all()`, `backlinks(path)`, `resolveLink(link,
@@ -529,29 +545,31 @@ editor, at once; else in the file Textus keeps them in. It needs
   writing model's answer; `messages: [{ role, content }]` for a conversation.
   The first call asks the user, and each plugin has 100,000 tokens a month
   before the user is asked again. `ai.available()` says whether it can be
-  asked (Textus AI on). `ai.stream(request, onText)` (1.4.6) is the same
+  asked (Textus AI on). `ai.stream(request, onText)` (API 1.9) is the same
   call with the answer handed to `onText` piece by piece as it is written.
-- `views.registerDatabaseView(id, { label, icon, render(data) })` (1.4.6):
+  Both take `{ signal }` last (API 1.9): stop the call when its panel
+  closes, so the plugin's tokens aren't spent on an answer no one reads.
+- `views.registerDatabaseView(id, { label, icon, render(data) })` (API 1.9):
   another way to show a database's rows, offered beside the database
   plugin's own views. `render` gets `{ rows: [{ path, name, props }],
 columns, types, group, date }` and answers HTML, shown without scripts or
   `<style>`; an element with `data-row="<path>"` opens that row. The plugin
   that draws databases lists them with `views.databaseViews()` and draws one
   with `views.renderDatabaseView(id, data)`.
-- `ssh` (`ssh`, 1.4.6 preview, desktop): `hosts()` from `~/.ssh/config`,
+- `ssh` (`ssh`, API 1.9 preview, desktop): `hosts()` from `~/.ssh/config`,
   `connect(host)` → a session (the user is asked once per host), `home`,
-  `list`, `read` / `readText`, `write`, `create`, `rename`, `remove`,
+  `list`, `read` / `readText`, `write`, `create`, `rename`, `delete`,
   `close`. The user's own ssh runs SFTP only; an unknown host key or a
   password ends the link with words saying what to do.
-- `files.registerProvider(scheme, provider)` (1.4.6, preview): paths of
+- `files.registerProvider(scheme, provider)` (API 1.9, preview): paths of
   the plugin's own scheme (`ssh://host/home/me`) read and written by the
-  plugin - `list`, `readText`, `readBytes`, `writeText`, `create`,
+  plugin - `list`, `readText`, `read`, `writeText`, `create`,
   `rename`, `move`, `delete` - so a folder it serves opens in the sidebar
   and its documents in tabs. `files.openFolder(url)` opens one of its
   folders as the window's folder. Pictures can't be pasted into such a
   folder yet.
 - `files.registerConventionReader(id, { label, marker, notes, read })`
-  (`files.read`, 1.4.6): reads the folder conventions of an app Textus
+  (`files.read`, API 1.9): reads the folder conventions of an app Textus
   doesn't read itself. The app finds `marker` (e.g. `logseq/config.edn`)
   in the open folder and above it and hands `read({ root, text })` the
   file's text once; the answer (`linkStyle`, `attachments`, `daily`,
@@ -567,7 +585,7 @@ columns, types, group, date }` and answers HTML, shown without scripts or
   `textus://command/<command id>?<query>` runs any command - Textus asks
   the user first, and the command gets the query as its argument.
 - `editor.keys` (`editor.input`): for a way of typing (Vim, Emacs) -
-  `capture`, `onKey` and `exec(op)`; see the Vim plugin.
+  `capture`, `onDidPressKey` and `exec(op)`; see the Vim plugin.
 - `export.onWillExport(fn)` (`editor.read`): an HTML or PDF export's
   page before it is written - return `{ css }` to add styles (numbered
   headings, a print footer) or `{ html }` to change its content. Scripts

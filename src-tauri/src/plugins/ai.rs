@@ -204,7 +204,8 @@ fn spend(
 }
 
 /// The writing model's answer to `prompt`, for a plugin with `ai.model`
-/// that the user allowed and that has tokens left this month.
+/// that the user allowed and that has tokens left this month. Cancelled
+/// by `cancel_id` (plugin_http_cancel), only the question is counted.
 #[tauri::command]
 #[cfg_attr(test, specta::specta)]
 pub async fn plugin_ai_complete(
@@ -212,16 +213,30 @@ pub async fn plugin_ai_complete(
     plugin: String,
     system: String,
     prompt: String,
+    cancel_id: Option<String>,
 ) -> Result<String, String> {
     let (provider, model) = checked_model(&app, &plugin, &system, &prompt).await?;
     let (sent_system, sent_prompt) = (system.clone(), prompt.clone());
-    let answer = crate::ai::client::call(&app, &provider, system, prompt, model.as_deref()).await?;
-    spend(&app, plugin, &[&sent_system, &sent_prompt], &answer)?;
-    Ok(answer)
+    let call = crate::ai::client::call(&app, &provider, system, prompt, model.as_deref());
+    let answer = super::http::cancellable(&plugin, cancel_id, call).await;
+    if let Some(written) = counted(&answer, String::new()) {
+        spend(&app, plugin, &[&sent_system, &sent_prompt], &written)?;
+    }
+    answer
+}
+
+/// What a call spent: its answer, or what was written of it when it was
+/// cancelled; nothing when it failed.
+fn counted(answer: &Result<String, String>, so_far: String) -> Option<String> {
+    match answer {
+        Ok(text) => Some(text.clone()),
+        Err(e) if e == "cancelled" => Some(so_far),
+        Err(_) => None,
+    }
 }
 
 /// [`plugin_ai_complete`], the answer streamed to `on_text` as it comes;
-/// the whole returned.
+/// the whole returned. Cancelled, what was written so far is counted.
 #[tauri::command]
 #[cfg_attr(test, specta::specta)]
 pub async fn plugin_ai_stream(
@@ -230,16 +245,25 @@ pub async fn plugin_ai_stream(
     system: String,
     prompt: String,
     on_text: tauri::ipc::Channel<String>,
+    cancel_id: Option<String>,
 ) -> Result<String, String> {
     let (provider, model) = checked_model(&app, &plugin, &system, &prompt).await?;
     let (sent_system, sent_prompt) = (system.clone(), prompt.clone());
+    let written = Mutex::new(String::new());
     let send = |text: &str| {
+        if let Ok(mut so_far) = written.lock() {
+            so_far.push_str(text);
+        }
         let _ = on_text.send(text.to_string());
     };
-    let answer =
-        crate::ai::client::stream(&app, &provider, system, prompt, model.as_deref(), &send).await?;
-    spend(&app, plugin, &[&sent_system, &sent_prompt], &answer)?;
-    Ok(answer)
+    let stream =
+        crate::ai::client::stream(&app, &provider, system, prompt, model.as_deref(), &send);
+    let answer = super::http::cancellable(&plugin, cancel_id, stream).await;
+    let so_far = written.lock().map(|s| s.clone()).unwrap_or_default();
+    if let Some(written) = counted(&answer, so_far) {
+        spend(&app, plugin, &[&sent_system, &sent_prompt], &written)?;
+    }
+    answer
 }
 
 #[cfg(test)]

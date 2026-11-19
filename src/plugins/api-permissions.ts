@@ -153,13 +153,15 @@ const API_PERMISSIONS: readonly {
       "ssh.write",
       "ssh.create",
       "ssh.rename",
-      "ssh.remove",
+      "ssh.delete",
       "ssh.close",
     ],
+    calls: ["ssh.readText"],
   },
   {
     permission: "comments",
     methods: ["comments.list", "comments.add", "comments.resolve"],
+    calls: ["comments.onDidChange"],
   },
 ];
 

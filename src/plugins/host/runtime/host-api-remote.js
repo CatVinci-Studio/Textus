@@ -40,8 +40,8 @@ textus.ssh = {
       to: String(to),
     });
   },
-  remove: function (session, path) {
-    return call("ssh.remove", { session: session, path: String(path) });
+  delete: function (session, path) {
+    return call("ssh.delete", { session: session, path: String(path) });
   },
   close: function (session) {
     return call("ssh.close", { session: session });

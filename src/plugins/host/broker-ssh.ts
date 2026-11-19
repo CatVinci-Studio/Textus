@@ -84,7 +84,7 @@ export function sshHandlers(p: PluginScope) {
       ssh.create(p.id, sessionOf(session), str(path, "path"), folder === true),
     "ssh.rename": ({ session, from, to }: Params) =>
       ssh.rename(p.id, sessionOf(session), str(from, "from"), str(to, "to")),
-    "ssh.remove": ({ session, path }: Params) =>
+    "ssh.delete": ({ session, path }: Params) =>
       ssh.remove(p.id, sessionOf(session), str(path, "path")),
     "ssh.close": ({ session }: Params) => ssh.close(p.id, sessionOf(session)),
   };

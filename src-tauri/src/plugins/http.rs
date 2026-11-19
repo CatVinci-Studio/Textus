@@ -112,8 +112,9 @@ pub async fn plugin_http(
     cancellable(&id, cancel_id, send(&id, &granted, request)).await
 }
 
-/// `work`, or "cancelled" as soon as the plugin cancels `cancel_id`.
-async fn cancellable<T>(
+/// `work`, or "cancelled" as soon as the plugin cancels `cancel_id`
+/// (plugin_http_cancel): a request, or a call to the AI model.
+pub(super) async fn cancellable<T>(
     id: &str,
     cancel_id: Option<String>,
     work: impl std::future::Future<Output = Result<T, String>>,

@@ -213,7 +213,7 @@ var handlers = {
     if (!provider || typeof provider[params.op] !== "function")
       throw new Error(params.scheme + " can't " + params.op + ".");
     var answer = await provider[params.op].apply(provider, params.args);
-    if (params.op === "readBytes")
+    if (params.op === "read")
       return answer instanceof Uint8Array ? answer : bytesOf(answer);
     return answer === undefined ? null : plain(answer);
   },

@@ -170,8 +170,9 @@
       "ssh.write",
       "ssh.create",
       "ssh.rename",
-      "ssh.remove",
-      "ssh.close"
+      "ssh.delete",
+      "ssh.close",
+      "ssh.readText"
     ]
   },
   {
@@ -179,7 +180,8 @@
     "calls": [
       "comments.list",
       "comments.add",
-      "comments.resolve"
+      "comments.resolve",
+      "comments.onDidChange"
     ]
   }
 ]

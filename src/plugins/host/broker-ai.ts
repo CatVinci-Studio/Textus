@@ -124,16 +124,27 @@ export function aiModelHandlers(p: PluginScope) {
     },
     "ai.available": async () =>
       hasTextusAi && (await pluginsIpc.aiStatus(p.id)).on,
-    "ai.complete": ({ system, messages }: Params) =>
+    "ai.complete": ({ system, messages, cancelId }: Params) =>
       gated(system, messages, (instructions, prompt) =>
-        pluginsIpc.aiComplete(p.id, instructions, prompt),
+        pluginsIpc.aiComplete(
+          p.id,
+          instructions,
+          prompt,
+          optionalStr(cancelId) ?? null,
+        ),
       ),
-    "ai.stream": ({ system, messages, stream }: Params) => {
+    "ai.stream": ({ system, messages, stream, cancelId }: Params) => {
       const id = str(stream, "stream");
       return gated(system, messages, (instructions, prompt) =>
-        pluginsIpc.aiStream(p.id, instructions, prompt, (text) => {
-          void p.request("$aiStreamText", { stream: id, text });
-        }),
+        pluginsIpc.aiStream(
+          p.id,
+          instructions,
+          prompt,
+          (text) => {
+            void p.request("$aiStreamText", { stream: id, text });
+          },
+          optionalStr(cancelId) ?? null,
+        ),
       );
     },
   };

@@ -100,6 +100,7 @@ textus.editor = {
     quiet(call("editor.registerHover", {}));
     return disposable(function () {
       without(hoverProviders, provider);
+      if (!hoverProviders.length) quiet(call("editor.unregisterHover", {}));
     });
   },
   registerDecorations: function (provider) {

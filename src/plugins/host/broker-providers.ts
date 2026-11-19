@@ -46,7 +46,7 @@ function providerFiles(ask: Ask): FarFiles {
     listFolder: async (url) => entries(url, await ask("list", [url])),
     readText: async (url) => String(await ask("readText", [url])),
     readBase64: async (url) => {
-      const bytes = await ask("readBytes", [url]);
+      const bytes = await ask("read", [url]);
       if (!(bytes instanceof Uint8Array))
         throw new Error(`${basename(url)} wasn't read.`);
       return toBase64(bytes);
