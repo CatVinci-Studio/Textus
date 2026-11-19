@@ -17,6 +17,7 @@ import {
 import { useChatHistory } from "../../ai/chat/chat-history";
 import { makeBlankTab, type DocTab } from "../../document/doc-tabs";
 import {
+  documentInFront,
   ifFits,
   placeOnArrival,
   windowLayout,
@@ -26,6 +27,8 @@ import { paneWithTab } from "../../engine/layout/tree";
 import type { TabState } from "../tabs/useTabState";
 import { pageOf } from "../tabs/page-tabs";
 import { isPhoneLayout } from "../../platform/phone-layout";
+import { usePhoneLayout } from "../../engine/controls/usePhoneLayout";
+import { onBack } from "../../mobile/back";
 import { conversationIn, onAiPress, setConversationOpener } from "./ai-tabs";
 import { chatTitles } from "../../ai/chat/chat-title";
 
@@ -97,6 +100,7 @@ function useAiCommands({
   asked: MutableRefObject<{ id: string; beside: string } | null>;
 }) {
   const { tabsRef, activeTabId } = tabs;
+  const phone = usePhoneLayout();
   // A + (or History, Quick Ask): a conversation in a tab of its own, open
   // in the folder's AI from now on; one already open comes to the front.
   const liveRef = useRef(live);
@@ -148,6 +152,21 @@ function useAiCommands({
     };
     return onAiPress(press);
   }, [tabs, tabsRef, live, activeTabId, setShown]);
+
+  // Android's Back on a phone: from an AI tab it returns to the document
+  // the AI was opened over. The conversation's tab stays open; the AI
+  // button brings it back.
+  useEffect(() => {
+    if (!phone) return;
+    return onBack(() => {
+      const front = tabsRef.current.find((tab) => tab.id === activeTabId);
+      if (!front || !isAiTab(front)) return false;
+      const doc = documentInFront();
+      if (!doc || doc === activeTabId) return false;
+      tabs.setActiveTabId(doc);
+      return true;
+    });
+  }, [phone, tabs, tabsRef, activeTabId]);
 }
 
 /**

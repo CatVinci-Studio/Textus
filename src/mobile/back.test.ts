@@ -35,4 +35,19 @@ describe("Android's Back", () => {
     offNewer();
     expect(back()).toBe(false);
   });
+
+  it("counts the find bar as a layer: its own Escape closes it", () => {
+    const bar = document.createElement("div");
+    bar.className = "find-replace-bar";
+    bar.getClientRects = () => [{}] as unknown as DOMRectList;
+    document.body.append(bar);
+    const escape = vi.fn();
+    window.addEventListener("keydown", (e) => e.key === "Escape" && escape());
+    const step = vi.fn(() => true);
+    const off = onBack(step);
+    expect(back()).toBe(true);
+    expect(escape).toHaveBeenCalled();
+    expect(step).not.toHaveBeenCalled();
+    off();
+  });
 });
