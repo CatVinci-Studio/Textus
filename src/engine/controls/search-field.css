@@ -45,21 +45,4 @@
   display: none;
 }
 
-/* A filtered list's small titles and its notes (nothing found, still
-   reading), under the box. */
-/* .tx-list-heading: pane.css. */
-
-/* A list's one line about itself: nothing here yet, nothing found,
-   loading. Inside a card, the card already keeps it off the edge. */
-.tx-list-note {
-  margin: 0;
-  padding: var(--space-2) var(--pane-row-inset);
-  color: var(--ui-muted);
-  font-size: var(--text-footnote);
-  user-select: text;
-}
-:is(.settings-group-body, .settings-tab-page) .tx-list-note {
-  padding: var(--space-3) 0;
-}
-
 /* A pane's top line is pane.css's (.tx-pane-top). */
