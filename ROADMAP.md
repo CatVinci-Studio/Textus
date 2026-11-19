@@ -53,21 +53,16 @@ write.
 
 Open right now and waiting for someone to take them:
 
-- **Read through a translation** of the interface and fix what sounds
-  wrong:
-  [Japanese](https://github.com/CatVinci-Studio/Textus/issues/672),
-  [Korean](https://github.com/CatVinci-Studio/Textus/issues/673),
-  [French](https://github.com/CatVinci-Studio/Textus/issues/674),
-  [German](https://github.com/CatVinci-Studio/Textus/issues/675),
-  [Spanish](https://github.com/CatVinci-Studio/Textus/issues/676),
-  [Portuguese](https://github.com/CatVinci-Studio/Textus/issues/677),
-  [Russian](https://github.com/CatVinci-Studio/Textus/issues/678).
-- **Small first pull requests**:
-  [fix three broken links in the developer docs](https://github.com/CatVinci-Studio/Textus/issues/670),
-  [tests for Roman numeral lists when importing Word documents](https://github.com/CatVinci-Studio/Textus/issues/671).
 - **Plugins people asked for**:
-  [MkDocs / Zensical admonitions](https://github.com/CatVinci-Studio/Textus/issues/220),
-  [Cisco IOS code highlighting](https://github.com/CatVinci-Studio/Textus/issues/639).
+  [MkDocs / Zensical support](https://github.com/CatVinci-Studio/Textus/issues/220),
+  [Cisco IOS code highlighting](https://github.com/CatVinci-Studio/Textus/issues/639),
+  [following a Foam workspace's settings](https://github.com/CatVinci-Studio/Textus/issues/724).
+- **Phones**:
+  [Android's Back steps through the app before leaving it](https://github.com/CatVinci-Studio/Textus/issues/725).
+- **Small first pull requests**:
+  [a worked example of `ai.stream` in the plugin guide](https://github.com/CatVinci-Studio/Textus/issues/726),
+  [a tutorial for database views](https://github.com/CatVinci-Studio/Textus/issues/727),
+  [the install check finding calls through a renamed namespace](https://github.com/CatVinci-Studio/Textus/issues/728).
 
 Or pick another unclaimed
 [good first issue](https://github.com/CatVinci-Studio/Textus/issues?q=is%3Aopen+label%3A%22good+first+issue%22+no%3Aassignee),
