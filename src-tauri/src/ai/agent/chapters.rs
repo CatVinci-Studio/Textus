@@ -217,7 +217,8 @@ impl ChapterRun<'_, '_> {
         };
         let chapters = chapters(self.document);
         let of = chapters.len();
-        let parent = call.call_id.as_str();
+        let parent = short_id(&call.call_id);
+        let parent = parent.as_str();
         let results: Vec<(String, Result<Vec<AgentTurn>, String>)> = stream::iter(chapters)
             .map(|chapter| {
                 let message = helper_message(&instruction, &glossary, &chapter, of);
@@ -358,6 +359,15 @@ impl ChapterRun<'_, '_> {
             .map(|turn| tagged(for_history(turn), &tag))
             .collect())
     }
+}
+
+/// Six characters standing for `id`, kept short as it goes back to the
+/// provider in every helper call's id.
+fn short_id(id: &str) -> String {
+    use std::hash::{Hash, Hasher};
+    let mut hasher = std::collections::hash_map::DefaultHasher::new();
+    id.hash(&mut hasher);
+    format!("{:06x}", hasher.finish() & 0xff_ffff)
 }
 
 /// `turn` with its call's id marked by `tag` (one helper's).
