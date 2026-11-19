@@ -41,11 +41,15 @@ export async function restoreTabsInOrder(o: {
   // An order of tabs that leaves it out had it closed.
   const keyed = order.keys.some((k) => !k.startsWith("id:"));
   if (o.last && !keyed && !paths.includes(o.last)) paths.push(o.last);
-  const activePath = order.active.startsWith("path:")
-    ? order.active.slice(5)
-    : !order.active && o.last && !keyed
-      ? o.last
-      : null;
+  // A desktop's documents come back with its window's session, as its
+  // startup setting says: not the last window's front one regardless.
+  const activePath = !o.phone
+    ? null
+    : order.active.startsWith("path:")
+      ? order.active.slice(5)
+      : !order.active && o.last && !keyed
+        ? o.last
+        : null;
   const front =
     o.frontDraft ??
     (activePath ? recoveredFor(activePath) : undefined) ??

@@ -9,9 +9,12 @@
   border-radius: var(--doc-radius);
 }
 
+/* Its width and height attributes, once it has loaded before, keep its
+   room while it loads again. */
 .milkdown .image-view img {
   display: block;
   max-width: 100%;
+  height: auto;
   margin: 0;
   border-radius: var(--doc-radius);
   box-shadow: var(--shadow-image);

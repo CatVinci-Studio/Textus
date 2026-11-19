@@ -295,7 +295,7 @@ test("a long document read upward through blocks out of sight: what is on screen
   expect(changes).toEqual([]);
 });
 
-test("in a long document, find lands on a match far below and it stays on screen @perf", async ({
+test("in a long document, find lands on a match far below and it stays on screen", async ({
   page,
 }) => {
   test.setTimeout(120_000);

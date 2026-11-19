@@ -172,10 +172,17 @@ afterEach(cleanup);
 
 describe("startup restore into the initial tab", () => {
   it("shows the start page in a window nothing opens in, when chosen", async () => {
+    // The last window's tab order, kept as it closed (Cmd+Q): a phone's
+    // way back, not a desktop's.
+    localStorage.setItem(
+      "textus-tab-order",
+      JSON.stringify({ keys: ["path:/docs/a.md"], active: "path:/docs/a.md" }),
+    );
     const { tabs } = await restore(true, true);
     await waitFor(() =>
       expect(tabs()).toEqual([expect.objectContaining({ start: true })]),
     );
+    localStorage.clear();
   });
 
   it("a reloaded page comes back to the window's own session, not nothing", async () => {

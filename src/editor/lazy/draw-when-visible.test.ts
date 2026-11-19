@@ -8,6 +8,7 @@ import {
 } from "./draw-when-visible";
 import { PENDING_ATTR, SETTLE_MS } from "./lazy-rules";
 import { holdStill } from "./hold-still";
+import { holdBy } from "./hold-on-resize";
 
 // A stand-in IntersectionObserver the test drives by hand.
 let observed: {
@@ -118,7 +119,7 @@ describe("drawWhileNear", () => {
     vi.stubGlobal("IntersectionObserver", FakeObserver);
     vi.useFakeTimers();
     const editor = editorIn();
-    const el = editor.appendChild(document.createElement("span"));
+    const el = editor.appendChild(document.createElement("div"));
     const draw = vi.fn();
     const undraw = vi.fn();
     drawWhileNear(el, editor, draw, undraw, true);
@@ -130,9 +131,20 @@ describe("drawWhileNear", () => {
     scrolled(editor);
     vi.advanceTimersByTime(SETTLE_MS);
     expect(undraw).toHaveBeenCalledOnce();
-    // An inline one keeps its width too, so its line doesn't rewrap.
-    expect(el.style.display).toBe("inline-block");
-    expect(el.style.width).toBe("40px");
+    vi.useRealTimers();
+  });
+
+  it("in a line (a formula in a paragraph), it stays drawn far away", () => {
+    vi.stubGlobal("IntersectionObserver", FakeObserver);
+    vi.useFakeTimers();
+    const editor = editorIn();
+    const el = editor.appendChild(document.createElement("span"));
+    const undraw = vi.fn();
+    drawWhileNear(el, editor, vi.fn(), undraw, true);
+    placeAt(el, -99_999);
+    scrolled(editor);
+    vi.advanceTimersByTime(SETTLE_MS);
+    expect(undraw).not.toHaveBeenCalled();
     vi.useRealTimers();
   });
 
@@ -209,5 +221,18 @@ describe("what is on screen held still", () => {
       holdStill(pulled, moved(20));
       expect(pulled.scrollTop).toBe(was);
     }
+  });
+});
+
+describe("a box above the screen that changes size", () => {
+  it("scrolls the page by its change, so what is shown holds still", () => {
+    expect(holdBy(0, 236, -300, 0)).toBe(236);
+    expect(holdBy(320, 92, -500, 40)).toBe(-228);
+  });
+
+  it("leaves the page alone when it is on screen, new or the same", () => {
+    expect(holdBy(0, 236, 120, 0)).toBe(0);
+    expect(holdBy(undefined, 236, -300, 0)).toBe(0);
+    expect(holdBy(236, 236.2, -300, 0)).toBe(0);
   });
 });

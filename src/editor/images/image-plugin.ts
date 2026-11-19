@@ -55,6 +55,7 @@ import {
 } from "./image-store";
 import { openDiagramViewer, zoomButton } from "../diagram-zoom";
 import { trackDrag } from "../../engine/drag/pointer-drag";
+import { holdOnResize } from "../lazy/hold-on-resize";
 /**
  * Image paste (stored in the document's image folder, relative src) and
  * render (local srcs rewritten to asset: URLs; the document keeps the original).
@@ -148,6 +149,21 @@ function isImageParagraph(node: ProseNode): boolean {
 
 const isTextblock = (node: ProseNode) => node.isTextblock;
 
+/** Each picture's size once it has loaded, by document and src: drawn
+ *  again, it takes its room before it loads. */
+const pictureSizes = new Map<string, { width: number; height: number }>();
+
+function reserveRoom(img: HTMLImageElement, key: string) {
+  const size = pictureSizes.get(key);
+  if (size) {
+    img.width = size.width;
+    img.height = size.height;
+  } else {
+    img.removeAttribute("width");
+    img.removeAttribute("height");
+  }
+}
+
 const imageParagraph = (node: ProseNode, pos: number) =>
   isImageParagraph(node)
     ? [Decoration.node(pos, pos + node.nodeSize, { class: "image-paragraph" })]
@@ -221,6 +237,14 @@ function createImageView(
     dom.append(card);
   };
   img.addEventListener("load", clearMissing);
+  img.addEventListener("load", () => {
+    if (img.naturalWidth)
+      pictureSizes.set(shown(), {
+        width: img.naturalWidth,
+        height: img.naturalHeight,
+      });
+  });
+  const stopHold = holdOnResize(dom);
   // A short, wide strip (a README badge) has nothing to enlarge or
   // resize, and the controls would cover its words.
   img.addEventListener("load", () => {
@@ -245,6 +269,7 @@ function createImageView(
     const want = shown();
     if (want !== drawn || card) {
       drawn = want;
+      reserveRoom(img, want);
       showDocImage(
         img,
         (n.attrs.src as string) ?? "",
@@ -316,6 +341,7 @@ function createImageView(
       apply(n);
       return true;
     },
+    destroy: stopHold,
     selectNode: () => dom.classList.add("ProseMirror-selectednode"),
     deselectNode: () => dom.classList.remove("ProseMirror-selectednode"),
     // The handle's drag is ours, not ProseMirror's (which would start a
