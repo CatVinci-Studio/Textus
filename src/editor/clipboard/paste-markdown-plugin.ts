@@ -3,7 +3,11 @@ import { Slice } from "@milkdown/kit/prose/model";
 import type { Node as ProseNode, ResolvedPos } from "@milkdown/kit/prose/model";
 import { $prose } from "@milkdown/kit/utils";
 import { parseMarkdownSource } from "../markdown/parse-markdown-source";
-import { inTableCell, joinLinesForTableCell } from "./paste-slice";
+import {
+  inTableCell,
+  itemsLikeTarget,
+  joinLinesForTableCell,
+} from "./paste-slice";
 import { pastedRows, pasteRows } from "../tables/row-paste";
 import { wordListsToHtml } from "./word-lists";
 import { keepPastedLines } from "./paste-lines";
@@ -153,10 +157,13 @@ export const pasteMarkdownSourcePlugin = $prose(
         // Pasted HTML, Textus's own copies and drags: ProseMirror's slice, which
         // the clipboard plugin pastes as it is.
         transformPasted: (slice, view) =>
-          joinLinesForTableCell(
-            keepPastedSpans(
-              keepPastedBlock(slice, view.state.selection.$from, false),
-              view.state.selection,
+          itemsLikeTarget(
+            joinLinesForTableCell(
+              keepPastedSpans(
+                keepPastedBlock(slice, view.state.selection.$from, false),
+                view.state.selection,
+              ),
+              view.state.selection.$from,
             ),
             view.state.selection.$from,
           ),
@@ -199,10 +206,13 @@ export const pasteMarkdownSourcePlugin = $prose(
             return true;
           }
           const parsed = Slice.maxOpen(doc.content);
-          const slice = joinLinesForTableCell(
-            keepPastedSpans(
-              keepPastedBlock(parsed, view.state.selection.$from, true),
-              view.state.selection,
+          const slice = itemsLikeTarget(
+            joinLinesForTableCell(
+              keepPastedSpans(
+                keepPastedBlock(parsed, view.state.selection.$from, true),
+                view.state.selection,
+              ),
+              view.state.selection.$from,
             ),
             view.state.selection.$from,
           );
