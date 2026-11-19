@@ -49,6 +49,19 @@
   padding: 0;
 }
 
+/* A list's one line about itself: nothing here yet, nothing found,
+   loading. Inside a card, the card already keeps it off the edge. */
+.tx-list-note {
+  margin: 0;
+  padding: var(--space-2) var(--pane-row-inset);
+  color: var(--ui-muted);
+  font-size: var(--text-footnote);
+  user-select: text;
+}
+:is(.settings-group-body, .settings-tab-page) .tx-list-note {
+  padding: var(--space-3) 0;
+}
+
 .tx-list-item {
   display: flex;
   align-items: center;
