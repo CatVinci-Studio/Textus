@@ -135,7 +135,9 @@ export function elasticOverscroll(
     }
     lastAt = now;
     lastStep = step;
-    const coasting = shrinking >= COASTING_STEPS;
+    // Shrinking steps are momentum only with no finger known to be down:
+    // a held finger slowing as it pulls is still pulling.
+    const coasting = fingerDown() !== true && shrinking >= COASTING_STEPS;
     // A large step stretches nothing unless it is a flick's momentum, which
     // bounces as it arrives rather than once it has slowed.
     if (step > MAX_TRACKPAD_DELTA && !coasting) return;

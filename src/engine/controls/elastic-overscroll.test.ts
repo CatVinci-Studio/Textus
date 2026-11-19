@@ -126,7 +126,12 @@ describe("the Mac's give at a document's end", () => {
     const { scroller, content, springs, stop } = page();
     finger(true);
     swipe(scroller, [-8, -9, -8, -10, -8]);
+    // Slowing down with the finger on, as momentum's steps would: still
+    // the finger's, so it keeps pulling.
+    swipe(scroller, [-7, -6, -5, -4, -3, -2]);
+    expect(springs).toHaveLength(0);
     const held = content.style.translate;
+    expect(held).toMatch(/^0 \d/);
     // Held still well past any pause a guess would take for a lift.
     vi.advanceTimersByTime(2000);
     expect(content.style.translate).toBe(held);
