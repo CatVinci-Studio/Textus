@@ -49,7 +49,26 @@ pub fn error_text(error: &reqwest::Error) -> String {
         }
         cause = next.source();
     }
+    if let Some(hint) = dns_hint(&text) {
+        text = format!("{text} ({hint})");
+    }
     text
+}
+
+/// What a failed name lookup means here: behind a proxy, the address that
+/// failed to resolve is the proxy's own, so the raw OS error (Windows'
+/// 11001, Unix's "Name or service not known") reads like the site is gone.
+fn dns_hint(text: &str) -> Option<&'static str> {
+    const NAMES: [&str; 4] = [
+        "os error 11001",
+        "nodename nor servname",
+        "name or service not known",
+        "Temporary failure in name resolution",
+    ];
+    NAMES
+        .iter()
+        .find(|name| text.contains(*name))
+        .map(|_| "a name didn't resolve - if a proxy is set, its address must resolve: use its IP, or check the system proxy")
 }
 
 /// The response's body, or None if it is longer than `max` bytes, judged by the
@@ -232,6 +251,44 @@ mod tests {
         drop(dead);
     }
 
+    #[tokio::test]
+    async fn a_socks_proxy_is_reached_and_speaks_socks() {
+        // The `socks` feature must be compiled in: without it a socks5h
+        // proxy address is accepted by the setting but every request fails
+        // before it leaves the computer. A SOCKS5 greeting starts with its
+        // version, 5 - the byte the proxy below waits for.
+        use std::io::Read;
+        let listener = std::net::TcpListener::bind("127.0.0.1:0").unwrap();
+        let proxy = format!("socks5h://{}", listener.local_addr().unwrap());
+        let seen = std::sync::Arc::new(std::sync::Mutex::new(None));
+        let record = seen.clone();
+        std::thread::spawn(move || {
+            if let Ok((mut stream, _)) = listener.accept() {
+                let mut version = [0u8; 1];
+                if stream.read(&mut version).is_ok() {
+                    *record.lock().unwrap() = Some(version[0]);
+                }
+            }
+        });
+        let client = through(
+            client(Duration::from_secs(5), Duration::from_secs(5)),
+            Some(proxy),
+        )
+        .unwrap()
+        .build()
+        .unwrap();
+        // The greeting arrives first; the request itself fails against this
+        // proxy that never answers, which is fine here.
+        let _ = client.get("http://example.invalid/").send().await;
+        for _ in 0..100 {
+            if seen.lock().unwrap().is_some() {
+                break;
+            }
+            tokio::time::sleep(Duration::from_millis(20)).await;
+        }
+        assert_eq!(*seen.lock().unwrap(), Some(5));
+    }
+
     #[test]
     fn an_unreadable_proxy_is_an_error() {
         let builder = client(Duration::from_secs(5), Duration::from_secs(5));
@@ -287,6 +344,22 @@ mod tests {
         let text = error_text(&err);
         assert!(text.starts_with(&err.to_string()), "{text}");
         assert!(text.len() > err.to_string().len(), "{text}");
+    }
+
+    #[test]
+    fn a_failed_name_lookup_gets_a_hint() {
+        // What Windows reports when a proxy's address doesn't resolve
+        // (11001), and the two Unix wordings: each gets the hint, other
+        // errors don't.
+        for raw in [
+            "tunnel error: failed to create underlying connection: error trying to connect: dns error: 无效的主机名 (os error 11001)",
+            "dns error: nodename nor servname provided",
+            "dns error: Temporary failure in name resolution",
+        ] {
+            let text = dns_hint(raw).expect(raw);
+            assert!(text.contains("use its IP"), "{text}");
+        }
+        assert!(dns_hint("error trying to connect: connection refused").is_none());
     }
 
     #[tokio::test]

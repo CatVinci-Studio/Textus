@@ -3,6 +3,7 @@
 //! the system's network settings, or the app's own, mirrored here from the
 //! frontend.
 
+use crate::system_proxy::system_proxy;
 use std::sync::RwLock;
 use std::time::Duration;
 
@@ -77,50 +78,6 @@ pub fn proxy_url() -> Option<String> {
         Route::Direct => None,
         Route::System => system_proxy(),
     }
-}
-
-/// The system's proxy for web requests, read again after a few seconds so
-/// a proxy switched on while Textus runs is followed. One proxy for all:
-/// the system's bypass list isn't read; this computer is always direct.
-fn system_proxy() -> Option<String> {
-    use std::sync::Mutex;
-    use std::time::Instant;
-    static READ: Mutex<Option<(Instant, Option<String>)>> = Mutex::new(None);
-    let mut read = READ.lock().unwrap_or_else(|e| e.into_inner());
-    if let Some((at, url)) = read.as_ref() {
-        if at.elapsed() < Duration::from_secs(5) {
-            return url.clone();
-        }
-    }
-    let url = system_proxy_now();
-    *read = Some((Instant::now(), url.clone()));
-    url
-}
-
-fn system_proxy_now() -> Option<String> {
-    let matcher = hyper_util::client::proxy::matcher::Matcher::from_system();
-    let probe: http::Uri = "https://example.com/".parse().ok()?;
-    let found = matcher.intercept(&probe)?;
-    let mut url = reqwest::Url::parse(&found.uri().to_string()).ok()?;
-    // An HTTP proxy's name and password come as its Basic header.
-    let basic = found
-        .basic_auth()
-        .and_then(|h| h.to_str().ok()?.strip_prefix("Basic ").map(str::to_string))
-        .and_then(|b| {
-            use base64::Engine;
-            base64::engine::general_purpose::STANDARD.decode(b).ok()
-        })
-        .and_then(|raw| String::from_utf8(raw).ok());
-    let auth = match (found.raw_auth(), &basic) {
-        (Some((user, pass)), _) => Some((user, pass)),
-        (None, Some(pair)) => pair.split_once(':'),
-        _ => None,
-    };
-    if let Some((user, pass)) = auth {
-        let _ = url.set_username(user);
-        let _ = url.set_password(Some(pass));
-    }
-    Some(url.to_string())
 }
 
 fn builder() -> reqwest::ClientBuilder {
@@ -285,15 +242,6 @@ pub(crate) async fn read_sse(
 #[cfg(test)]
 mod tests {
     use super::*;
-
-    #[test]
-    fn the_system_proxy_is_read_with_its_credentials() {
-        // The environment is read first, as the system's settings are.
-        std::env::set_var("HTTPS_PROXY", "http://ann:pw@proxy.example:3128");
-        let found = system_proxy_now();
-        std::env::remove_var("HTTPS_PROXY");
-        assert_eq!(found.as_deref(), Some("http://ann:pw@proxy.example:3128/"));
-    }
 
     fn collect(buffer: &mut SseLineBuffer, chunk: &[u8]) -> Vec<String> {
         let mut out = Vec::new();
