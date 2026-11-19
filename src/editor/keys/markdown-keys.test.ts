@@ -131,6 +131,23 @@ it("Mod+Shift+H with no selection opens a highlight to type into, and pressed ag
   expect(t.markdown()).toBe("==marked== after");
 });
 
+it("a mark pressed on words inside another span nests there, and comes off again", async () => {
+  const t = await open("a **bold** c\n");
+  // The words only: the selection a drag over them makes, inside the span.
+  t.caretAt("bold", 0, 4);
+  t.press("Mod+Shift+h");
+  expect(t.markdown()).toBe("a **==bold==** c");
+  t.press("Mod+Shift+h");
+  expect(t.markdown()).toBe("a **bold** c");
+});
+
+it("a mark on part of a span's words nests inside it", async () => {
+  const t = await open("**abcd** e\n");
+  t.caretAt("abcd", 1, 2);
+  t.press("Mod+i");
+  expect(t.markdown()).toBe("**a*bc*d** e");
+});
+
 it("~~ and == stay as typed until their closing pair makes a strikethrough or a highlight", async () => {
   const t = await open();
   t.type("~~");
