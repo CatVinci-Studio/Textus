@@ -1,7 +1,7 @@
 import type { Node as ProseNode } from "@milkdown/kit/prose/model";
 import type { EditorState, PluginView } from "@milkdown/kit/prose/state";
 import type { EditorView } from "@milkdown/kit/prose/view";
-import { firstBelow, holdStill, stillPoint } from "./hold-still";
+import { firstBelow, holdStill, pastAnEnd, stillPoint } from "./hold-still";
 import {
   DRAW_AHEAD_SCREENS,
   DRAW_SCREENS,
@@ -281,6 +281,8 @@ export class LazyBlocksDrawer implements PluginView {
   drawNow(): void {
     if (this.view.isDestroyed || !this.scroller || this.holding) return;
     if (performance.now() < this.pausedUntil) return;
+    // The scroll's end (onScroll's settle) draws it.
+    if (pastAnEnd(this.scroller)) return;
     const scrolling = performance.now() - this.scrolledAt < SETTLE_MS;
     const next = plan(this.view, this.scroller, !scrolling);
     if (!next) return;

@@ -7,6 +7,7 @@ import {
   stopDrawing,
 } from "./draw-when-visible";
 import { PENDING_ATTR, SETTLE_MS } from "./lazy-rules";
+import { holdStill } from "./hold-still";
 
 // A stand-in IntersectionObserver the test drives by hand.
 let observed: {
@@ -175,5 +176,38 @@ describe("drawWhileNear", () => {
     expect(editor.querySelector(`[${PENDING_ATTR}]`)).toBeNull();
     // Off screen it would load only once scrolled near: never, for an export.
     expect(picture.loading).toBe("eager");
+  });
+});
+
+describe("what is on screen held still", () => {
+  const scroller = (scrollTop: number) => {
+    const el = document.createElement("div");
+    Object.defineProperties(el, {
+      scrollHeight: { value: 2000 },
+      clientHeight: { value: 500 },
+    });
+    let top = scrollTop;
+    Object.defineProperty(el, "scrollTop", {
+      get: () => top,
+      set: (v: number) => (top = v),
+    });
+    return el;
+  };
+  const moved = (by: number) => {
+    const el = document.createElement("p");
+    document.body.append(el);
+    el.getBoundingClientRect = () => ({ top: 100 + by }) as DOMRect;
+    return { el, top: 100 };
+  };
+
+  it("scrolls by what moved, but not while the page is pulled past an end", () => {
+    const resting = scroller(300);
+    holdStill(resting, moved(20));
+    expect(resting.scrollTop).toBe(320);
+    for (const pulled of [scroller(-30), scroller(1540)]) {
+      const was = pulled.scrollTop;
+      holdStill(pulled, moved(20));
+      expect(pulled.scrollTop).toBe(was);
+    }
   });
 });

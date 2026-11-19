@@ -63,6 +63,15 @@ export function stillPoint(root: Element, scroller: Element): Still | null {
   return below ?? first ?? any;
 }
 
+/** Pulled past an end (macOS's rubber band): the page is the hand's until
+ *  it springs back, so nothing is drawn, let go or scrolled meanwhile - a
+ *  block drawn, at its own height, and the page put back by it, cut the
+ *  stretch short, and the page jumped between the two. */
+export function pastAnEnd(scroller: Element): boolean {
+  const top = scroller.scrollTop;
+  return top < 0 || top > scroller.scrollHeight - scroller.clientHeight + 0.5;
+}
+
 /** Scrolls by what `still` moved, to the nearest whole pixel the scroll
  *  position takes. `now`: where its block is shown now, when it was made
  *  anew (a placeholder drawn). */
@@ -71,6 +80,7 @@ export function holdStill(
   still: Still | null,
   now: (el: Element) => Element | null | undefined = (el) => el,
 ): void {
+  if (pastAnEnd(scroller)) return;
   const el = still && (still.el.isConnected ? still.el : now(still.el));
   if (!el?.isConnected) return;
   const moved = el.getBoundingClientRect().top - still!.top;
