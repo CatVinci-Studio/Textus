@@ -49,7 +49,26 @@ pub fn error_text(error: &reqwest::Error) -> String {
         }
         cause = next.source();
     }
+    if let Some(hint) = dns_hint(&text) {
+        text = format!("{text} ({hint})");
+    }
     text
+}
+
+/// What a failed name lookup means here: behind a proxy, the address that
+/// failed to resolve is the proxy's own, so the raw OS error (Windows'
+/// 11001, Unix's "Name or service not known") reads like the site is gone.
+fn dns_hint(text: &str) -> Option<&'static str> {
+    const NAMES: [&str; 4] = [
+        "os error 11001",
+        "nodename nor servname",
+        "name or service not known",
+        "Temporary failure in name resolution",
+    ];
+    NAMES
+        .iter()
+        .find(|name| text.contains(*name))
+        .map(|_| "a name didn't resolve - if a proxy is set, its address must resolve: use its IP, or check the system proxy")
 }
 
 /// The response's body, or None if it is longer than `max` bytes, judged by the
@@ -325,6 +344,22 @@ mod tests {
         let text = error_text(&err);
         assert!(text.starts_with(&err.to_string()), "{text}");
         assert!(text.len() > err.to_string().len(), "{text}");
+    }
+
+    #[test]
+    fn a_failed_name_lookup_gets_a_hint() {
+        // What Windows reports when a proxy's address doesn't resolve
+        // (11001), and the two Unix wordings: each gets the hint, other
+        // errors don't.
+        for raw in [
+            "tunnel error: failed to create underlying connection: error trying to connect: dns error: 无效的主机名 (os error 11001)",
+            "dns error: nodename nor servname provided",
+            "dns error: Temporary failure in name resolution",
+        ] {
+            let text = dns_hint(raw).expect(raw);
+            assert!(text.contains("use its IP"), "{text}");
+        }
+        assert!(dns_hint("error trying to connect: connection refused").is_none());
     }
 
     #[tokio::test]
