@@ -4,10 +4,11 @@
 use std::time::Duration;
 
 /// A client that gives up connecting after `connect` and on the whole
-/// request, body included, after `total`. The caller adds anything else it
+/// request, body included, after `total`, trusting the system's certificates
+/// too. The caller adds anything else it
 /// needs (a redirect policy) and builds it.
 pub fn client(connect: Duration, total: Duration) -> reqwest::ClientBuilder {
-    reqwest::Client::builder()
+    aicompat::trust::trusted(reqwest::Client::builder())
         .connect_timeout(connect)
         .timeout(total)
         .user_agent(concat!("Textus/", env!("CARGO_PKG_VERSION")))
