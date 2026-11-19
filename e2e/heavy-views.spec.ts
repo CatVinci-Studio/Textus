@@ -112,7 +112,9 @@ test("formulas far from the screen are let go where they were drawn, and drawn a
     )
       moved.push(`view ${i}: ${view.at} -> ${now.at}`);
   });
-  expect(letGo.views.filter((v) => !v.drawn).length).toBeGreaterThan(20);
+  // Let go: waiting to be drawn, or gone with a block made a placeholder.
+  const stillDrawn = letGo.views.filter((v) => v.drawn).length;
+  expect(drawn.views.length - stillDrawn).toBeGreaterThan(20);
   expect(moved.slice(0, 20)).toEqual([]);
   expect(Math.abs(letGo.height - drawn.height)).toBeLessThan(0.5);
   await scroller.evaluate((s) => s.scrollTo(0, 0));

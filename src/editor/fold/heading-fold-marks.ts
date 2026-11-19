@@ -30,9 +30,11 @@ export class HeadingFoldMarks {
 
   update(view: EditorView, before: EditorState) {
     const at = this.foldedAt(view.state);
-    if (at.length === 0 && this.marks.length === 0) return;
-    if (view.state.doc === before.doc && at === this.foldedAt(before)) return;
+    if (at.length === 0 && this.marks.length === 0 && !this.away.length) return;
+    // Also when only decorations changed: a view drawn again is a new
+    // widget to mark.
     this.hideWidgets();
+    if (view.state.doc === before.doc && at === this.foldedAt(before)) return;
     this.place();
   }
 
