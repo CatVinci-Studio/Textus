@@ -204,18 +204,32 @@ test("after a formula, on an empty line and beside a picture, the drawn caret st
       );
     })
     .toBe(true);
-  // Enter at a code block's end: the caret on the new, empty line.
-  await page.keyboard.press("Enter");
-  await pasteMarkdown(page, "```\ncode\n```");
-  const code = page.locator(`${editor} pre`);
+});
+
+test("Enter in a code block puts the drawn caret on the new line, not the one above", async ({
+  page,
+}) => {
+  await openApp(page, { settings: { language: "en" } });
+  await pasteMarkdown(page, "```js\none\n```");
+  const code = page.locator(`${editor} pre code`);
   await code.click();
   await page.keyboard.press(MAC ? "Meta+ArrowRight" : "End");
-  const first = (await code.locator("code").boundingBox())!;
   await page.keyboard.press("Enter");
+  // One Enter adds a line inside the block, it doesn't leave it.
+  await expect(code).toHaveText("one\n");
+  // The empty line it starts, as ProseMirror breaks it for the caret.
+  const next = await page.evaluate((sel) => {
+    const br = document.querySelector(`${sel} pre code br`);
+    const r = br!.getBoundingClientRect();
+    return { x: r.left, y: r.top, h: r.height };
+  }, editor);
   await expect
     .poll(async () => {
-      const box = (await drawn())!;
-      return box.y > first.y + first.height - 4;
+      const box = (await page.locator(caret).boundingBox())!;
+      return (
+        Math.abs(box.x - next.x) < 3 &&
+        Math.abs(box.y + box.height / 2 - (next.y + next.h / 2)) < 3
+      );
     })
     .toBe(true);
 });
