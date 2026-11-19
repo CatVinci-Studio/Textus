@@ -103,6 +103,7 @@ function GroupRow({
             <ChangeText
               markdown={(after || before).trim()}
               names={labels.proposalBlocks}
+              line
             />
           </span>
           {ownReason && proposal.reason && (
