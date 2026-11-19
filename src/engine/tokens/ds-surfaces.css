@@ -157,7 +157,11 @@
   font-size: var(--text-body);
 }
 
+/* A row: its label, then its keys, its check or its chevron at the end. */
 .context-menu-item {
+  display: flex;
+  align-items: center;
+  gap: 16px;
   width: 100%;
   padding: 4px 8px;
   border: none;
