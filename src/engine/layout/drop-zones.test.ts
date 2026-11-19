@@ -7,6 +7,7 @@ import {
   panelsGaveWay,
   sidebarGaveWay,
   layoutFits,
+  refusal,
   setLayoutFits,
   setSidebarRoom,
   shortGivingWay,
@@ -105,6 +106,11 @@ describe("a split into too little room", () => {
       // Without the sidebar, 100 short: said, not made.
       setSidebarRoom(0);
       expect(shortGivingWay(split, new Set())).toBe(100);
+      // Said as too narrow, or too short when height is what it lacks.
+      expect(refusal(split, new Set()).noRoom).toBe("narrow");
+      setLayoutFits(() => ({ short: 300, panels: 200, low: true }));
+      expect(refusal(split, new Set()).noRoom).toBe("low");
+      setLayoutFits(() => ({ short: 300, panels: 200 }));
       // The panels go first, then the sidebar.
       askGiveWay(new Set());
       expect(givingWayNow()).toBe("panels");
