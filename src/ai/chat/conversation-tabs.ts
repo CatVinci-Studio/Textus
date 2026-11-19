@@ -1,5 +1,6 @@
 import { conversationFor } from "./conversation/conversation-registry";
 import type { AgentTurn } from "../types";
+import { storeAgent, storedAgent } from "./conversation/conversation-agent";
 
 /** Opens conversation `id` (a new one by default) in a tab beside
  *  `from`'s, or the live one's (useAiTabs); false where conversations have
@@ -15,7 +16,11 @@ export function setConversationOpener(open: typeof opener): void {
 /** An AI tab's +: a new conversation in a tab of its own beside it, or,
  *  with nowhere to keep more than one, `startOver` in its own. */
 export function newConversation(from: string, startOver: () => void): void {
-  if (!opener?.(from)) startOver();
+  // Who answers in the one it was asked from answers in the new one.
+  const id = crypto.randomUUID();
+  const agent = storedAgent(from);
+  if (agent !== null) storeAgent(id, agent);
+  if (!opener?.(from, id)) startOver();
 }
 
 /** A conversation reopened from History, or carried on from Quick Ask

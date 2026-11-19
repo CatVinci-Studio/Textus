@@ -1,4 +1,5 @@
 import { useSettings } from "../../prefs/SettingsContext";
+import { useWhoAnswers } from "./conversation/useWhoAnswers";
 import {
   useProviderCatalog,
   type ProviderCatalogEntry,
@@ -99,7 +100,8 @@ export function useChatModels(): ChatModels {
   const chosen = settings.agentModels;
   useModelsFetched();
   const agents = useExternalAgents();
-  const agent = agents.find((a) => a.key === settings.chatAgent);
+  const who = useWhoAnswers();
+  const agent = agents.find((a) => a.key === who.agent);
   const agentOptions = useAgentOptions(agent?.key ?? null);
   // A provider with nothing to offer isn't listed, not even its name.
   const groups = ready
@@ -126,28 +128,29 @@ export function useChatModels(): ChatModels {
     provider: agent ? AGENTS_GROUP : settings.aiProvider,
     groups: canSwitchModel(groups) ? groups : [],
     agentOptions,
-    choose: (provider, model) =>
-      setSettings(
-        provider === AGENTS_GROUP
-          ? { chatAgent: agents.find((a) => a.name === model)?.key ?? "" }
-          : {
-              chatAgent: "",
-              aiProvider: provider as typeof settings.aiProvider,
-              agentModels: { ...chosen, [provider]: model },
-            },
-      ),
+    choose: (provider, model) => {
+      if (provider === AGENTS_GROUP)
+        return who.setAgent(agents.find((a) => a.name === model)?.key ?? "");
+      who.setAgent("");
+      setSettings({
+        aiProvider: provider as typeof settings.aiProvider,
+        agentModels: { ...chosen, [provider]: model },
+      });
+    },
   };
 }
 
 /** Whether a message can go anywhere: an agent chosen, or the selected
  *  provider signed in (or needing no key). Null until that is known, so
  *  the panel doesn't flash a sign-in it then takes back. */
-export function useAiSignedIn(): boolean | null {
+export function useAiSignedIn(forAgent?: string): boolean | null {
   const { settings } = useSettings();
   const catalog = useProviderCatalog();
   const { connected } = useConnectedProviders(catalog, settings.aiProvider);
   const agents = useExternalAgents();
-  if (agents.some((a) => a.key === settings.chatAgent)) return true;
+  const who = useWhoAnswers();
+  const agent = forAgent ?? who.agent;
+  if (agents.some((a) => a.key === agent)) return true;
   const active = catalog.find((e) => e.id === settings.aiProvider);
   if (!active) return null;
   const state = connected[active.id];

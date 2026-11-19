@@ -1,8 +1,10 @@
 import { expect, test } from "@playwright/test";
 import { openApp } from "./helpers";
+import { openPath } from "./plugin-helpers";
 
 // An outside agent a plugin brings (contributes.agents) has its button at
-// the window bar's end, beside Textus AI's: a press opens the AI with it.
+// the window bar's end, beside Textus AI's: a press starts a conversation
+// with it, in a tab of its own.
 
 const ICON =
   '<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 16 16"><circle cx="8" cy="8" r="6" fill="none" stroke="currentColor"/></svg>';
@@ -28,7 +30,7 @@ const manifest = {
   },
 };
 
-test("an outside agent's button opens the AI with that agent", async ({
+test("an outside agent's button starts a conversation with it, each press a new one", async ({
   page,
 }) => {
   await page.addInitScript(
@@ -44,6 +46,7 @@ test("an outside agent's button opens the AI with that agent", async ({
           files: { "icon.svg": icon, "host.js": "" },
         },
       ];
+      w.__devFs = { "/work/a.md": "# A\n" };
       w.__devPluginState = {
         allOn: true,
         plugins: {
@@ -55,6 +58,8 @@ test("an outside agent's button opens the AI with that agent", async ({
   );
   await page.setViewportSize({ width: 1200, height: 760 });
   await openApp(page, { settings: { menuBarShown: false } });
+  // A document's conversations are kept with it: a place for several.
+  await openPath(page, "/work/a.md");
   const agent = page.getByRole("button", { name: "Coder" });
   await expect(agent).toBeVisible();
   // Before Textus AI's own button.
@@ -64,13 +69,13 @@ test("an outside agent's button opens the AI with that agent", async ({
   );
   await agent.click();
   await expect(page.locator(".ai-tab")).toBeVisible();
-  await expect(agent).toHaveAttribute("aria-pressed", "true");
   // Named for who answers; Textus AI's own button isn't lit beside it.
-  await expect(page.locator(".tab-pill", { hasText: "Coder" })).toBeVisible();
+  const coder = page.locator(".tab-pill", { hasText: "Coder" });
+  await expect(coder).toHaveCount(1);
   await expect(ai).toHaveAttribute("aria-pressed", "false");
-  // Pressed again, as the AI button: its own island collapses.
+  // Pressed again: another conversation with it, beside the first.
   await agent.click();
-  await expect(page.locator(".ai-tab")).toHaveCount(0);
+  await expect(coder).toHaveCount(2);
   // Listed in Settings' External tools, Manage opening its plugin's page.
   await page.evaluate(() =>
     window.dispatchEvent(
@@ -80,5 +85,5 @@ test("an outside agent's button opens the AI with that agent", async ({
   const row = page.locator(".settings-row", { hasText: "Coder" });
   await expect(row).toBeVisible();
   await row.getByRole("button", { name: "管理" }).click();
-  await expect(page.locator(".tab-pill").last()).toContainText("插件：");
+  await expect(page.locator(".tab-pill", { hasText: "插件：" })).toBeVisible();
 });

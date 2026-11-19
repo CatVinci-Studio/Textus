@@ -10,7 +10,7 @@ import type { ChatAttachment, ThinkingLevel } from "../types";
 import { ai } from "../../platform/ipc";
 import { useActiveProvider, useWebSearchStatus } from "../provider-catalog";
 import type { AgentMode, PanelMode } from "../../prefs/SettingsContext";
-import { loadSettings } from "../../prefs/settings-store";
+import { useWhoAnswers } from "./conversation/useWhoAnswers";
 import { externalAgent } from "../../plugins/contributions/agents";
 import { initialMode, rememberMode } from "./last-mode";
 import { rememberWebSearch, webSearchOn } from "./web-search-on";
@@ -88,6 +88,7 @@ export function useComposerInput(handle?: Ref<ChatComposerHandle | null>) {
  *  image is staged, so no caller can forget it. */
 export function useAttachments(noVisionMessage: string, conversation: string) {
   const providerVision = useActiveProvider()?.supportsVision ?? true;
+  const who = useLatest(useWhoAnswers().agent);
   const [attachments, setAttachments] = useState<ChatAttachment[]>([]);
   const [attachError, setAttachError] = useState<string | null>(null);
 
@@ -125,7 +126,7 @@ export function useAttachments(noVisionMessage: string, conversation: string) {
       const files = await read();
       // An outside agent answering takes pictures if it reads them; the
       // exchange leaves them out for one that doesn't.
-      const agent = externalAgent(loadSettings().chatAgent);
+      const agent = externalAgent(who.current);
       const kept =
         agent || providerVision
           ? files

@@ -1,5 +1,6 @@
 import { useSyncExternalStore } from "react";
-import { useSettings, useSettingsIfAny } from "../../prefs/SettingsContext";
+import { useWhoAnswers } from "../chat/conversation/useWhoAnswers";
+import { useSettings } from "../../prefs/SettingsContext";
 import { modeOption, unaskingName, type AgentOption } from "./agent-mode";
 import {
   offerOf,
@@ -86,7 +87,7 @@ const byKind = (options: AgentOption[]) => {
 export function useAgentCommands(
   answers: boolean,
 ): { name: string; commands: AgentCommand[] } | null {
-  const chatAgent = useSettingsIfAny()?.settings.chatAgent;
+  const { agent: chatAgent } = useWhoAnswers();
   const agent = answers ? externalAgent(chatAgent) : undefined;
   const offer = useSyncExternalStore(subscribeOffers, () =>
     offerOf(agent?.key ?? ""),

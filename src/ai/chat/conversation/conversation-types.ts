@@ -44,6 +44,8 @@ export interface ConversationState {
   /** Exposed so a conversation can move between windows without being
    *  re-saved under a new id each hop. */
   conversationId: string;
+  /** Who answers: an outside agent's key, "" for Textus AI. */
+  agent: string;
   history: AgentTurn[];
   /** Each finished exchange's thinking, by the index of its user turn in
    *  `history`. Session only, not saved. */
@@ -60,6 +62,8 @@ export interface ConversationActions {
   /** How the last message was sent - Continue, after an exchange ran out
    *  of steps, sends the same way. */
   lastOptions: () => AgentRequestOptions | null;
+  /** Who answers from now on, in this conversation alone. */
+  setAgent: (agent: string) => void;
   /** Returns the newly arrived turns, e.g. for turning propose_edit calls
    *  into previews. A stop returns the partial turns it kept; undefined
    *  means skipped, failed, or stopped before anything streamed. */

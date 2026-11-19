@@ -3,6 +3,13 @@ import {
   useExternalAgents,
 } from "../../plugins/contributions/agents";
 import { namePageTabs } from "../../document/doc-tabs";
+import { openConversationTab } from "../chat/conversation-tabs";
+import { conversationFor } from "../chat/conversation/conversation-registry";
+import {
+  storeAgent,
+  storedAgent,
+} from "../chat/conversation/conversation-agent";
+import { DRAFT } from "../chat/conversation-scope";
 import { loadSettings } from "../../prefs/settings-store";
 import { pluginRecord } from "../../plugins/store/plugin-records";
 import { PluginTabIcon } from "../../plugins/views/plugin-views";
@@ -11,13 +18,28 @@ import { Tooltip } from "../../engine/controls/Tooltip";
 
 // An AI tab is named for who answers in it: Claude Code, Codex, or (none
 // chosen) Textus AI.
-namePageTabs("ai", () => externalAgent(loadSettings().chatAgent)?.name ?? null);
+namePageTabs("ai", (state) => {
+  const id = (state as { conversation?: string } | null)?.conversation;
+  const agent = (id && storedAgent(id)) ?? loadSettings().chatAgent;
+  return externalAgent(agent)?.name ?? null;
+});
+
+/** A new conversation with `agent` answering, in a tab of its own; where
+ *  there are no AI tabs, the conversation not yet begun takes it. */
+function openWithAgent(agent: string, aiOpen: boolean, showAi: () => void) {
+  const id = crypto.randomUUID();
+  storeAgent(id, agent);
+  if (openConversationTab(id)) return;
+  const draft = conversationFor(DRAFT, null);
+  if (draft.snapshot().history.length === 0) draft.setAgent(agent);
+  if (!aiOpen) showAi();
+}
 
 /**
  * The outside agents plugins bring (Claude Code, Codex…), one button each
- * beside Textus AI's at the window bar's end: a press opens the AI with
- * that agent; pressed again while it is the one in use, it acts as the AI
- * button does.
+ * beside Textus AI's at the window bar's end: a press starts a new
+ * conversation with that agent, beside the others; the conversation in
+ * use keeps its own (its composer switches who answers in it).
  */
 export function AgentButtons({
   aiOpen,
@@ -31,17 +53,16 @@ export function AgentButtons({
   if (!agents.length || !settings.textusAi) return null;
   return agents.map((agent) => {
     const record = pluginRecord(agent.plugin);
-    const inUse = settings.chatAgent === agent.key;
     return (
       <Tooltip key={agent.key} text={agent.name}>
         <button
           type="button"
-          className={`window-bar-agent${aiOpen && inUse ? " window-bar-toggle-on" : ""}`}
+          className="window-bar-agent"
           aria-label={agent.name}
-          aria-pressed={aiOpen && inUse}
           onClick={() => {
-            if (!inUse) setSettings({ chatAgent: agent.key });
-            if (!aiOpen || inUse) onToggleAi();
+            // Where the next conversation starts too.
+            setSettings({ chatAgent: agent.key });
+            openWithAgent(agent.key, aiOpen, onToggleAi);
           }}
         >
           {record?.manifest?.icon ? (

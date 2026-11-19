@@ -4,6 +4,7 @@ import { ai, AI_CANCELLED, IpcError } from "../../../platform/ipc";
 import { resolveStrings } from "../../../i18n/strings";
 import { reportAiState } from "../../../plugins/ai-state";
 import { externalAgent } from "../../../plugins/contributions/agents";
+import { storeAgent } from "./conversation-agent";
 import type { Settings } from "../../../prefs/SettingsContext";
 import type { DocumentSnapshot } from "../../../editor/markdown/doc-markdown";
 import { imageModelOf } from "../../image-models";
@@ -62,6 +63,7 @@ export async function sendMessage(
   model.about = port;
   // What is said here is the folder's conversation from now on.
   model.publish(env);
+  storeAgent(model.id, model.snapshot().agent);
   model.next.clear();
   model.patch({ error: null, retryable: null });
   model.setBusy(true);
@@ -88,7 +90,7 @@ export async function sendMessage(
   // Quick Ask.
   const agent =
     model.persist && sent.mode !== "create"
-      ? externalAgent(settings.chatAgent)
+      ? externalAgent(model.snapshot().agent)
       : undefined;
   const folder = agent ? agentFolder(workspaceRoot, docPath) : null;
   const requestId = (agent ? AGENT_REQUEST : "") + crypto.randomUUID();
