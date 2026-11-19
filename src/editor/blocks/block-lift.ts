@@ -160,10 +160,11 @@ export function blockLook(source: HTMLElement, view: EditorView) {
 }
 
 /** How far left of a list item its marker is drawn (a bullet or number
- *  out in the list's indent); a task's box is drawn inside the item. */
+ *  out in the list's indent); a task's box is drawn inside the item. Out of
+ *  the flow, or a grid item beside a tall first line. */
 function markerReach(item: HTMLElement): number {
   const marker = getComputedStyle(item, "::before");
-  if (marker.content === "none" || marker.position !== "absolute") return 0;
+  if (marker.content === "none" || marker.display === "inline") return 0;
   const shift =
     marker.transform && marker.transform !== "none"
       ? new DOMMatrix(marker.transform).m41
