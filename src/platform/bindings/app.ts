@@ -666,6 +666,11 @@ export type WindowSession_Deserialize = {
 	paths: string[],
 	layout?: Value | null,
 	folder?: string | null,
+	/**
+	 *  Documents handed over as it opens (Finder, a second launch): put
+	 *  in front. Never written to the session file.
+	 */
+	opened?: string[],
 };
 
 /**
@@ -677,5 +682,10 @@ export type WindowSession_Serialize = {
 	paths: string[],
 	layout: Value | null,
 	folder: string | null,
+	/**
+	 *  Documents handed over as it opens (Finder, a second launch): put
+	 *  in front. Never written to the session file.
+	 */
+	opened?: string[],
 };
 

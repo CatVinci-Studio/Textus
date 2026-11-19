@@ -1,7 +1,7 @@
 import { describe, expect, it } from "vitest";
 import type { DocTab } from "../../document/doc-tabs";
 import { pane, panesOf, type LayoutNode } from "../../engine/layout/tree";
-import { withDraftInFront } from "./window-session";
+import { withDraftInFront, withTabInFront } from "./window-session";
 
 const tabs = [
   { id: "a", path: "/n/Ideas.md" },
@@ -21,5 +21,21 @@ describe("a split brought back at launch", () => {
 
   it("is left as saved when a file was in front", () => {
     expect(withDraftInFront(saved, tabs, "a")).toBe(saved);
+  });
+
+  it("puts a document opened from outside in front, in its island or the first", () => {
+    const two = {
+      ...saved,
+      children: [pane(["a"]), pane(["b", "c"])],
+    } as unknown as LayoutNode;
+    const held = withTabInFront(two, "b");
+    const [, second] = panesOf(held.root);
+    expect(second).toMatchObject({ tabs: ["b", "c"], front: "b" });
+    expect(held.island).toBe(second.id);
+    const fresh = withTabInFront(two, "e");
+    expect(panesOf(fresh.root)[0]).toMatchObject({
+      tabs: ["a", "e"],
+      front: "e",
+    });
   });
 });
