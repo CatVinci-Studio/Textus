@@ -9,6 +9,9 @@ export const GAP = 30;
 const MIN_LEFT = 18;
 /** The air kept between a card and the editor's right edge. */
 const RIGHT_EDGE = 18;
+/** Widths read back from the layout are a hair off whole pixels: a column
+ *  sized to fit exactly must still fit. */
+const SUBPIXEL = 0.5;
 
 interface MarginRoom {
   /** Where the column's left edge sits on its own, centred. */
@@ -39,7 +42,7 @@ export function marginRoom(
     natural,
     textRight,
     shift,
-    available: natural + padding / 2 - shift >= MIN_LEFT,
+    available: natural + padding / 2 - shift >= MIN_LEFT - SUBPIXEL,
   };
 }
 

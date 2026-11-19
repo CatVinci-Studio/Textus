@@ -1,5 +1,6 @@
+// @vitest-environment jsdom
 import { describe, expect, it } from "vitest";
-import { marginRoom } from "./margin-room";
+import { columnForMargin, marginRoom } from "./margin-room";
 
 // The "auto" text width: a 680px column at most widths, 1.5rem padding each
 // side.
@@ -29,5 +30,25 @@ describe("marginRoom", () => {
 
   it("has no margin when the column fills the editor", () => {
     expect(marginRoom(700, 700, PADDING).available).toBe(false);
+  });
+
+  it("gives the column narrowed for cards its margin at every width and size", () => {
+    // Interface sizes scale the card and the padding to fractions of a
+    // pixel.
+    const root = document.documentElement.style;
+    for (const scale of ["1", "1.1", "1.0000000493"]) {
+      root.setProperty("--ui-text-scale", scale);
+      for (const padding of [PADDING, 88, 96.8])
+        for (let width = 700; width < 1100; width += 0.5) {
+          const column = columnForMargin(width, padding, 0);
+          // Read back from the layout a hair off, as WebKit's sub-pixel
+          // units give it.
+          if (column !== null)
+            expect(
+              marginRoom(width, column + 0.00003, padding - 0.00003).available,
+            ).toBe(true);
+        }
+    }
+    root.removeProperty("--ui-text-scale");
   });
 });

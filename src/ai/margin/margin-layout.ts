@@ -286,6 +286,8 @@ export function useMarginRoom(
         if (widest !== null) {
           contentEl.style.maxWidth = `${widest}px`;
           room = measureRoom(scrollEl, contentEl, view);
+          // Narrowed for cards it can't have: back to its own width.
+          if (!room.available) contentEl.style.maxWidth = "";
         }
       }
       const next = !room.available;
