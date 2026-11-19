@@ -104,7 +104,8 @@ function scheduleWarm() {
   });
 }
 
-function whenIdle(run: () => void) {
+/** `run` once the page is idle. */
+export function whenIdle(run: () => void) {
   const idle = (
     globalThis as {
       requestIdleCallback?: (

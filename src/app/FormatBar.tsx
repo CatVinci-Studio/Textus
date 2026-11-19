@@ -3,7 +3,12 @@ import { tabElement } from "../engine/layout/tab-element";
 import { tabInUse } from "../engine/layout/store";
 import { useEffect, useRef, useState } from "react";
 import type { Strings } from "../i18n/strings";
-import { caretBlock, NO_BLOCK, type CaretBlock } from "../editor/caret-block";
+import {
+  caretBlock,
+  NO_BLOCK,
+  sameCaretBlock,
+  type CaretBlock,
+} from "../editor/caret-block";
 import { IconButton } from "../engine/controls/IconButton";
 import { useFitItems } from "../engine/controls/fit-steps";
 import { useMenuButton } from "../engine/controls/useMenuButton";
@@ -83,9 +88,12 @@ function useCaretBlock(tabId: string): CaretBlock {
     // The DOM settles after ProseMirror's update; read it a frame later.
     const read = () => {
       cancelAnimationFrame(frame);
-      frame = requestAnimationFrame(() =>
-        setBlock(caretBlock(tabInUse() === tabId ? tabElement(tabId) : null)),
-      );
+      frame = requestAnimationFrame(() => {
+        const next = caretBlock(
+          tabInUse() === tabId ? tabElement(tabId) : null,
+        );
+        setBlock((prev) => (sameCaretBlock(prev, next) ? prev : next));
+      });
     };
     read();
     document.addEventListener("selectionchange", read);

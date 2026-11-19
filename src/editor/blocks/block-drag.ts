@@ -84,8 +84,9 @@ export function dragBlock(
       ? gapsFor(target.state.doc, block)
       : gapsIn(target.state.doc, block.node.type.name === "list_item");
     // The block on its way out, and the room, aren't there to stand by.
+    const tops = topLevelElements(target);
     const shown = (pos: number) => {
-      const el = target.nodeDOM(pos) as HTMLElement | null;
+      const el = (tops.get(pos) ?? target.nodeDOM(pos)) as HTMLElement | null;
       return el?.isConnected && el.offsetParent && el !== source ? el : null;
     };
     // What is past the block moves up into its place.
@@ -306,4 +307,21 @@ function carryGrip(lifted: HTMLElement, grip: HTMLElement) {
     height: `${g.height / scale}px`,
   });
   lifted.append(carried);
+}
+
+/** The editor's top-level blocks' elements by position, in one pass: a
+ *  lookup each would scan the editor's children every time. */
+function topLevelElements(view: EditorView): Map<number, Element> {
+  const { doc } = view.state;
+  const found = new Map<number, Element>();
+  let next = 0;
+  let pos = 0;
+  for (const el of view.dom.children) {
+    if (next >= doc.childCount) break;
+    const desc = (el as { pmViewDesc?: { node?: unknown } }).pmViewDesc;
+    if (desc?.node !== doc.child(next)) continue;
+    found.set(pos, el);
+    pos += doc.child(next++).nodeSize;
+  }
+  return found;
 }

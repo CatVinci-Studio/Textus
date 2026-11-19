@@ -12,6 +12,8 @@ import { foldCaret, labelFoldCaret } from "./block-fold";
 export class HeadingFoldMarks {
   private readonly root: HTMLElement;
   private marks: HTMLElement[] = [];
+  /** Widgets a folded-away block draws after itself, hidden with it. */
+  private away: HTMLElement[] = [];
   private frame = 0;
   private readonly resized = new ResizeObserver(() => this.place());
 
@@ -22,6 +24,7 @@ export class HeadingFoldMarks {
   ) {
     this.root = view.dom.parentElement as HTMLElement;
     this.resized.observe(view.dom);
+    this.hideWidgets();
     this.place();
   }
 
@@ -29,7 +32,29 @@ export class HeadingFoldMarks {
     const at = this.foldedAt(view.state);
     if (at.length === 0 && this.marks.length === 0) return;
     if (view.state.doc === before.doc && at === this.foldedAt(before)) return;
+    this.hideWidgets();
     this.place();
+  }
+
+  /** Marked at once, as the change is drawn: a sibling rule in CSS would
+   *  restyle every block on each one added. */
+  private hideWidgets() {
+    for (const widget of this.away) delete widget.dataset.foldedAway;
+    this.away = [];
+    if (this.foldedAt(this.view.state).length === 0) return;
+    for (const block of this.view.dom.querySelectorAll(
+      ":scope > .heading-folded-away",
+    )) {
+      let next = block.nextElementSibling;
+      while (
+        next instanceof HTMLElement &&
+        next.classList.contains("ProseMirror-widget")
+      ) {
+        next.dataset.foldedAway = "";
+        this.away.push(next);
+        next = next.nextElementSibling;
+      }
+    }
   }
 
   /** Laid out once the change is drawn. */
@@ -94,5 +119,6 @@ export class HeadingFoldMarks {
     cancelAnimationFrame(this.frame);
     this.resized.disconnect();
     for (const mark of this.marks) mark.remove();
+    for (const widget of this.away) delete widget.dataset.foldedAway;
   }
 }

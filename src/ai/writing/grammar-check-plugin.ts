@@ -330,7 +330,7 @@ export function createGrammarCheckPlugin(options: {
               if (!options.enabled()) return;
               if (view.composing) return;
               if (pausesFeatures(view.state.doc)) return;
-              if (view.state.doc.eq(prevState.doc)) return;
+              if (view.state.doc === prevState.doc) return;
               debounced.cancel();
 
               const { $from } = view.state.selection;

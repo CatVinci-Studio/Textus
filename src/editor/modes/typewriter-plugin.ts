@@ -70,7 +70,7 @@ export function createTypewriterPlugin(options: { enabled: () => boolean }) {
               if (!enabled) return;
               if (view.composing) return;
               if (typewriterKey.getState(view.state)) return;
-              if (!justEnabled && view.state.doc.eq(prevState.doc)) {
+              if (!justEnabled && view.state.doc === prevState.doc) {
                 if (view.state.selection.eq(prevState.selection)) return;
                 if (pointerPlaced) return;
               }

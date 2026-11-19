@@ -3,6 +3,7 @@ import { editorViewCtx, serializerCtx } from "@milkdown/kit/core";
 import type { Ctx } from "@milkdown/kit/ctx";
 import type { Node as ProseNode } from "@milkdown/kit/prose/model";
 import { leaveHistory } from "../editor/left-history";
+import { whenIdle } from "../lazy/lazy-module";
 import { registerTabEditor } from "../editor/tab-editor";
 import { leaveTab } from "../editor/tab-left";
 import {
@@ -36,15 +37,32 @@ function useFileText(openedValueRef: { readonly current: string }) {
   // Without that pairing: a doc that serializes as it opened is reported as
   // the file's own text.
   const mountMarkdownRef = useRef<string | null>(null);
+  // Paired once the tab is drawn (a long file is parsed again for it), or
+  // at once when its text is wanted first.
+  const pendingRef = useRef<(() => void) | null>(null);
+  useEffect(
+    () => () => {
+      pendingRef.current = null;
+    },
+    [],
+  );
   const pair = useCallback(
     (ctx: Ctx, doc: ProseNode) => {
       mountDocRef.current = doc;
-      sourceRef.current = readSourceBlocks(ctx, openedValueRef.current, doc);
+      sourceRef.current = null;
+      const run = () => {
+        if (pendingRef.current !== run) return;
+        pendingRef.current = null;
+        sourceRef.current = readSourceBlocks(ctx, openedValueRef.current, doc);
+      };
+      pendingRef.current = run;
+      whenIdle(run);
     },
     [openedValueRef],
   );
   const textOf = useCallback(
     (ctx: Ctx, doc: ProseNode) => {
+      pendingRef.current?.();
       const source = sourceRef.current;
       if (source) return writePreservingSource(ctx, source, doc);
       const serializer = ctx.get(serializerCtx);

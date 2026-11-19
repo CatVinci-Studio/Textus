@@ -1,7 +1,6 @@
-import { useDeferredValue, useEffect, useMemo } from "react";
+import { useEffect } from "react";
 import { useIOSDocumentsFolder } from "../platform/native-files";
 import { rememberIOSDocument } from "../document/ios-recents";
-import { countWords } from "../utils/word-count";
 import { PAUSE_FEATURES_THRESHOLD } from "../editor/large-doc";
 import { tabIsDirty, tabTitle, type DocTab } from "../document/doc-tabs";
 import type { Strings } from "../i18n/strings";
@@ -22,12 +21,6 @@ export function useActiveDocument(
   useEffect(() => {
     void rememberIOSDocument(activeTab.path);
   }, [activeTab.path]);
-  // Deferred, so a whole-document count doesn't sit in the edit's render.
-  const deferredContent = useDeferredValue(activeTab.content);
-  const wordCount = useMemo(
-    () => countWords(deferredContent),
-    [deferredContent],
-  );
   // A markdown-length proxy for the size the plugins check: close enough
   // for a status indicator.
   const featuresPaused = activeTab.content.length > PAUSE_FEATURES_THRESHOLD;
@@ -37,7 +30,6 @@ export function useActiveDocument(
   return {
     activeTab,
     documentsFolder,
-    wordCount,
     featuresPaused,
     activeDirty,
     activeTitle,

@@ -33,6 +33,15 @@ export const NO_BLOCK: CaretBlock = {
   code: false,
 };
 
+/** Whether two readings show the same: a bar redrawn only when it changes. */
+export function sameCaretBlock(a: CaretBlock, b: CaretBlock): boolean {
+  return (Object.keys(a) as (keyof CaretBlock)[]).every((key) =>
+    key === "image"
+      ? a.image?.width === b.image?.width && !a.image === !b.image
+      : a[key] === b[key],
+  );
+}
+
 const EDITOR = ".milkdown .ProseMirror";
 
 /** The caret's block in the focused editor, or in `root`'s when given (the

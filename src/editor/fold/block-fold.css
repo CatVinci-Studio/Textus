@@ -86,12 +86,8 @@
    heading ends in "…". */
 .ProseMirror .heading-folded-away,
 /* What a block draws after itself (a formula, a diagram, HTML) goes with
-   it. */
-.ProseMirror > .heading-folded-away + .ProseMirror-widget,
-.ProseMirror
-  > .heading-folded-away
-  + .ProseMirror-widget
-  + .ProseMirror-widget {
+   it (heading-fold-marks.ts marks it). */
+.ProseMirror > .ProseMirror-widget[data-folded-away] {
   display: none;
 }
 

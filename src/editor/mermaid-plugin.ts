@@ -353,7 +353,7 @@ export function createMermaidPreviewPlugin(options: {
               void renderAll();
               return;
             }
-            if (view.state.doc.eq(prevState.doc)) return;
+            if (view.state.doc === prevState.doc) return;
             // Past the pause threshold, existing diagrams stay as drawn; only new render
             // passes, the expensive part, stop.
             if (pausesFeatures(view.state.doc)) return;

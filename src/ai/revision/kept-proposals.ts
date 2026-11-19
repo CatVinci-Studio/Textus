@@ -48,7 +48,7 @@ export function picturesOf(kept: KeptProposals | null): string[] {
  *  to decide. `selectionMarkdown` reads a range of the document as it is. */
 export function keptFrom(
   previews: PendingPreview[],
-  document: number,
+  document: () => number,
   selectionMarkdown: (from: number, to: number) => string,
   made: (id: string) => boolean,
 ): KeptProposals | null {
@@ -68,7 +68,7 @@ export function keptFrom(
       return kept;
     });
   return proposals.length > 0
-    ? { version: KEPT_VERSION, document, proposals }
+    ? { version: KEPT_VERSION, document: document(), proposals }
     : null;
 }
 
