@@ -40,6 +40,11 @@ export const commands = {
 	 *  compares it to detect external modifications.
 	 */
 	file_mtime_ms: (path: string) => __TAURI_INVOKE<number | null>("file_mtime_ms", { path }),
+	/**
+	 *  The size `path` shows at, turned as its EXIF says (as the page shows a
+	 *  photo); None for what can't be read this way (SVG, a missing file).
+	 */
+	picture_size: (path: string) => __TAURI_INVOKE<PictureSize | null>("picture_size", { path }),
 	read_text_file: (path: string) => __TAURI_INVOKE<string>("read_text_file", { path }),
 	/**
 	 *  Reads a file as base64, to inline a CSS theme's local `url(...)` assets: a
@@ -546,6 +551,11 @@ export type PendingRead = {
 	app: string,
 	root: string,
 	text: string,
+};
+
+export type PictureSize = {
+	width: number,
+	height: number,
 };
 
 /**

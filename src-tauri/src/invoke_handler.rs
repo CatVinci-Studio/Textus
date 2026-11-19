@@ -70,6 +70,7 @@ pub(crate) fn handler() -> impl Fn(tauri::ipc::Invoke<tauri::Wry>) -> bool + Sen
         read_text_file,
         commands::word_import::open_word_document,
         file_mtime_ms,
+        commands::picture_size::picture_size,
         read_binary_file_base64,
         write_text_file,
         write_base64_file,

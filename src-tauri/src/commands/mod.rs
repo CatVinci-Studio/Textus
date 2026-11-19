@@ -32,6 +32,7 @@ pub mod native_edit;
 pub mod own_notes;
 #[cfg(any(desktop, target_os = "ios"))]
 pub mod pdf_page_numbers;
+pub mod picture_size;
 #[cfg(desktop)]
 pub mod prefs;
 pub mod recents;
