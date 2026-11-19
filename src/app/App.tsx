@@ -82,7 +82,8 @@ function App() {
 
   const { tutorial, settingsOpening, pendingClose } = shell;
   const { draftsRestoredCount, setDraftsRestoredCount, wordImported } = shell;
-  const { tabs, activeTabId, setActiveTabId, addBlankTab } = shell.tabState;
+  const { tabs, activeTabId, setActiveTabId } = shell.tabState;
+  const { addBlankTab, addStartTab } = shell.tabState;
   const { panelOpen, setPanelOpen, toggleSidebar, sidebarWidth } = shell.panels;
   const { agentPanel, toggleAgentPanel } = shell.panels;
   const { sidebarPresence, sidebarClosing, agentPresence } = shell.panels;
@@ -227,7 +228,7 @@ function App() {
             showTabBar={showTabBar}
             onActivate={setActiveTabId}
             onClose={requestCloseTab}
-            onAdd={addBlankTab}
+            onAdd={settings.addTabShowsStartPage ? addStartTab : addBlankTab}
             onDetach={handleTabDetach}
             onMoveToNewWindow={moveTabToNewWindow}
             onToggleReadOnly={toggleReadOnly}

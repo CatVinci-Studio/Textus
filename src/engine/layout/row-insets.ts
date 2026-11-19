@@ -194,6 +194,19 @@ export function barEndRoom(): number {
   return obstacles!.right - Math.min(...ends) + scaledPx(AIR) + scaledPx(ROOM);
 }
 
+/** Whether every tab row in the window bar's row keeps a tab's room
+ *  beside the bar's controls as they are drawn now: measured afresh, for
+ *  the bar to fold its own (WindowBar's fit steps) until they do. */
+export function barRowsHaveRoom(): boolean {
+  const bar = measure();
+  const room = scaledPx(ROOM) - 0.5;
+  return frameLayout().islands.every((island) => {
+    if (!island.row || island.row.y >= bar.bottom - 1) return true;
+    const { start, end } = insetsFor(island, bar);
+    return island.row.w - start - end >= room;
+  });
+}
+
 /** The window bar's controls as last measured; null until they are. */
 export function useBarObstacles(): BarObstacles | null {
   return useSyncExternalStore(subscribe, snapshot);

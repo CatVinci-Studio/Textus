@@ -16,10 +16,12 @@ export const LOCAL_KEYS = {
    *  ones. */
   liveConversation: "textus-ai-live:",
   openConversations: "textus-ai-open:",
+  /** By conversation: who answers in it ("" Textus AI). */
+  conversationAgent: "textus-ai-agent:",
 } as const;
 
 /** The value under `key`, or null when it is absent or can't be read. */
-function readLocal(key: string): string | null {
+export function readLocal(key: string): string | null {
   try {
     return localStorage.getItem(key);
   } catch {

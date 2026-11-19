@@ -74,6 +74,11 @@ pub(crate) fn build_with_app_chrome(
         .hidden_title(true);
     #[cfg(any(windows, target_os = "linux"))]
     let builder = builder.decorations(false);
+    // Windows 10 draws an undecorated window's shadow with a 1px border in
+    // the accent colour, on three sides: none, and the page draws its own
+    // edge in the theme's colour (window-outline.css).
+    #[cfg(windows)]
+    let builder = builder.shadow(!crate::commands::system_info::is_windows_10());
     #[cfg(target_os = "linux")]
     let builder = builder.visible(false);
     let window = builder.build()?;

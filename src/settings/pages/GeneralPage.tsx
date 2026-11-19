@@ -74,6 +74,21 @@ export function GeneralPage({ t, settings, setSettings }: SettingsPageProps) {
                 <option value="start">{t.closeLastStartPage}</option>
               </Select>
             </SettingRow>
+            <SettingRow label={t.addTabLabel}>
+              <Select
+                className="settings-select"
+                aria-label={t.addTabLabel}
+                value={settings.addTabShowsStartPage ? "start" : "blank"}
+                onChange={(e) =>
+                  setSettings({
+                    addTabShowsStartPage: e.target.value === "start",
+                  })
+                }
+              >
+                <option value="blank">{t.startupOpenBlank}</option>
+                <option value="start">{t.startupOpenStartPage}</option>
+              </Select>
+            </SettingRow>
           </>
         )}
       </SettingsGroup>

@@ -237,3 +237,26 @@ it("a table copies as other apps read one, and pastes back as itself", async () 
   expect(back).toMatch(/\|\s*a\s*\|\s*\*\*b\*\*\s*\|/);
   expect(back).toMatch(/\|\s*1\s*\|\s*`2`\s*\|/);
 });
+
+it("list items pasted into a list take its kind; on a blank line they stay as they were", async () => {
+  const into = async (doc: string, at: string, pasted: string) => {
+    const t = await open(doc);
+    t.caretAt(at, at.length);
+    t.press("Enter");
+    t.paste(pasted);
+    return t.markdown().trim();
+  };
+  expect(await into("- [ ] one", "one", "- a\n- b")).toBe(
+    "- [ ] one\n- [ ] a\n- [ ] b",
+  );
+  expect(await into("- one", "one", "- [ ] a\n- [x] b")).toBe(
+    "- one\n- a\n- b",
+  );
+  expect(await into("- [ ] one", "one", "- [x] a")).toBe("- [ ] one\n- [x] a");
+  expect(await into("1. one", "one", "- [ ] a")).toBe("1. one\n2. a");
+  const t = await open("Para");
+  t.caretAtEnd();
+  t.press("Enter");
+  t.paste("- [ ] a\n- b");
+  expect(t.markdown().trim()).toBe("Para\n\n- [ ] a\n- b");
+});

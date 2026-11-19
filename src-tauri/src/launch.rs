@@ -105,6 +105,21 @@ pub(crate) fn queue_paths_to_open(app: &tauri::AppHandle, paths: Vec<String>) {
         }
         return;
     }
+    // No window yet (launching) or none left (macOS): the app opens as it
+    // would anyway, its last session back, with these in it.
+    let pending_empty = app.state::<PendingOpenPaths>().0.lock().unwrap().is_empty();
+    if pending_empty
+        && (!ui_ready || crate::editor_windows::last_editor(app).is_none())
+        && crate::commands::prefs::read_restore_session_on_startup(app)
+    {
+        let saved = crate::commands::session::read_session_windows(app);
+        if !saved.is_empty() {
+            return queue_windows_to_open(
+                app,
+                crate::commands::session::with_documents(saved, paths),
+            );
+        }
+    }
     // Still launching, or no window alive: park the whole batch, as one
     // window's tabs, for the window that mounts next.
     app.state::<PendingOpenPaths>()

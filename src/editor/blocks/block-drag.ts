@@ -13,7 +13,7 @@ import {
   placeAt,
   type HandledBlock,
 } from "./block-commands";
-import { boxIn, nearestGap } from "./block-handle-place";
+import { boxIn, nearestGap, withRoom } from "./block-handle-place";
 import {
   blockLook,
   movingBlocks,
@@ -134,16 +134,6 @@ export function dragBlock(
     }
     return gaps;
   };
-  /** The places as they stand with the room open at `at` (null: none):
-   *  what is after it moved down by the block's height. */
-  const withRoom = (gaps: ReturnType<typeof measured>, at: number | null) =>
-    at === null
-      ? gaps
-      : gaps.map((g) => ({
-          ...g,
-          y: g.y + (g.pos > at ? tall : g.pos === at ? tall / 2 : 0),
-        }));
-
   /** The open editor under the pointer: its scroller's box, on screen. */
   const editorAt = (x: number, y: number): EditorView => {
     for (const [target] of openEditors) {
@@ -171,7 +161,11 @@ export function dragBlock(
         : aim.view === target
           ? aim.landing
           : null;
-    const gap = nearestGap(withRoom(layoutOf(target, root), open), at.x, at.y);
+    const gap = nearestGap(
+      withRoom(layoutOf(target, root), open, tall),
+      at.x,
+      at.y,
+    );
     if (!gap) return { view: target, landing: null };
     const fits =
       target === view

@@ -248,6 +248,9 @@ export interface Settings {
   /** Closing the last document shows the start page instead of closing
    *  the window. */
   closeLastToStartPage: boolean;
+  /** The tab row's + opens the start page, which New File there then
+   *  turns into the document, instead of a blank document at once. */
+  addTabShowsStartPage: boolean;
   /** Suggest an H1 or first content line as a draft's Save As filename. */
   autoSuggestFilename: boolean;
   /** Write a document that has a file back to it once typing rests. */
@@ -383,6 +386,7 @@ export const DEFAULT_SETTINGS: Settings = {
   creations: [],
   startPageOnLaunch: false,
   closeLastToStartPage: false,
+  addTabShowsStartPage: false,
   autoSuggestFilename: true,
   autosave: false,
   pdfPageNumbers: false,

@@ -1286,6 +1286,7 @@ export default {
   closeLastLabel: "关闭最后一个文档时",
   closeLastWindow: "关闭窗口",
   closeLastStartPage: "显示起始页",
+  addTabLabel: "标签栏的 + 打开",
   startPageRemoveRecent: "从最近列表中移除",
   startPageRecentProjects: "最近的文件夹",
   startPagePickDocument: "从侧边栏里选一篇 {folder} 中的文档开始。",

@@ -1341,6 +1341,7 @@ ${AI_NAME}에게 주는 글쓰기 지침으로, 모든 문서에 적용됩니다
   closeLastLabel: "마지막 문서를 닫을 때",
   closeLastWindow: "창 닫기",
   closeLastStartPage: "시작 페이지 표시",
+  addTabLabel: "탭 막대의 +로 열기",
   startPageRemoveRecent: "최근 항목에서 제거",
   startPageRecentProjects: "최근 폴더",
   startPagePickDocument: "사이드바에서 {folder}의 문서를 골라 시작하세요.",

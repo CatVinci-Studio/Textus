@@ -1,0 +1,9 @@
+/* Windows 10's window edge, drawn by the page (WindowOutline): over
+   everything, taking no clicks. */
+.window-outline {
+  position: fixed;
+  inset: 0;
+  z-index: var(--z-edges);
+  border: 1px solid var(--ui-border);
+  pointer-events: none;
+}

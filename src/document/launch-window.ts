@@ -9,6 +9,8 @@ interface WindowSession {
   paths: string[];
   layout?: unknown;
   folder?: string | null;
+  /** Documents handed over as it opened: in front. */
+  opened?: string[];
 }
 
 let taken: Promise<WindowSession | null> | null = null;

@@ -314,6 +314,9 @@ test("the editor taking the focus scrolls nothing; typing brings the caret into 
   await page.mouse.wheel(0, -20000);
   await expect.poll(() => scroller.evaluate((el) => el.scrollTop)).toBe(0);
   await settled(page);
+  // Real time: ProseMirror takes a focus within 300 ms of a click as the
+  // click's own, and keeps the caret the browser placed.
+  await page.waitForTimeout(300);
   // Focus given to the element itself, the page's selection gone meanwhile
   // (a menu or a dialog took it): the browser starts the caret at the top,
   // and the editor, putting its own back, must not scroll to it.

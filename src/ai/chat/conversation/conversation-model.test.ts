@@ -157,6 +157,22 @@ describe("a conversation's model", () => {
     });
     await model.actions.send(NO_DOCUMENT, "hi");
     expect(during).toEqual({ provider: "anthropic", id: "Claude Code" });
+    // Who answers is the conversation's own: switched in one, the other
+    // and the setting a new one starts with are left as they were.
+    const other = modelAt({ docPath: "/notes/b.md", workspaceRoot: "/notes" });
+    model.actions.setAgent("");
+    expect(other.snapshot().agent).toBe("");
+    other.actions.setAgent("catvinci.claude-code/claude");
+    expect(model.snapshot().agent).toBe("");
+    agentRequest.mockClear();
+    await other.actions.send(NO_DOCUMENT, "again");
+    expect(agentRequest).toHaveBeenCalledTimes(1);
+    // A new conversation keeps who answered; one reopened, its own.
+    const reopened = other.id;
+    other.actions.reset();
+    expect(other.snapshot().agent).toBe("catvinci.claude-code/claude");
+    model.actions.restore(reopened, []);
+    expect(model.snapshot().agent).toBe("catvinci.claude-code/claude");
     remove();
   });
 

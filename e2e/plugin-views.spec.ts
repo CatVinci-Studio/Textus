@@ -308,6 +308,28 @@ test("a plugin's page asked for beside, with no room for it, opens as a tab and 
   await expect(tabFrame(page).locator("body")).toContainText("Some words");
 });
 
+test("a plugin's block is on the page as a table is, its edge shown only while pointed at", async ({
+  page,
+}) => {
+  test.skip(!hasPlugin("catvinci.function-plot"), "no plugins checkout");
+  await openWithPlugins(page, {
+    plugins: {
+      "catvinci.function-plot": permissions("catvinci.function-plot"),
+    },
+    folder: {
+      "/work/notes/plot.md": "# Plot\n\n```function-plot\ny = x^2\n```\n",
+    },
+  });
+  await openPath(page, "/work/notes/plot.md");
+  const block = page.locator('[data-active-tab="true"] .plugin-code-block');
+  await expect(block.locator(".plugin-webview-frame")).toBeVisible();
+  await page.mouse.move(5, 5);
+  await expect(block).toHaveCSS("border-top-color", "rgba(0, 0, 0, 0)");
+  await expect(block).toHaveCSS("background-color", "rgba(0, 0, 0, 0)");
+  await block.hover();
+  await expect(block).not.toHaveCSS("border-top-color", "rgba(0, 0, 0, 0)");
+});
+
 test.describe("on a touch screen", () => {
   test.use({ hasTouch: true, isMobile: true });
 

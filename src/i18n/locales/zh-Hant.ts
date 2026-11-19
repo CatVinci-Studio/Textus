@@ -1288,6 +1288,7 @@ export default {
   closeLastLabel: "關閉最後一份文件時",
   closeLastWindow: "關閉視窗",
   closeLastStartPage: "顯示起始頁",
+  addTabLabel: "分頁列的 + 開啟",
   startPageRemoveRecent: "從最近清單中移除",
   startPageRecentProjects: "最近的資料夾",
   startPagePickDocument: "從側邊欄選一篇 {folder} 裡的文件開始。",

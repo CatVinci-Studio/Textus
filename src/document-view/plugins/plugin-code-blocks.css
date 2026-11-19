@@ -15,12 +15,29 @@
   overflow: hidden;
 }
 
+/* On the page as a table is, no box around it: the plugin's own drawing
+   is the block. Its edge shows faintly while pointed at or in use. */
 .plugin-code-block {
   position: relative;
   margin: var(--doc-gap-box) 0;
-  border: 1px solid var(--doc-border);
+  border: 1px solid transparent;
   border-radius: var(--doc-radius);
-  background: var(--doc-code-bg);
+  transition: border-color var(--dur-fast) var(--ease-standard);
+}
+
+.plugin-code-block:is(:focus-within, .ProseMirror-selectednode) {
+  border-color: var(--doc-border);
+}
+
+@media (any-hover: hover) {
+  .plugin-code-block:hover {
+    border-color: var(--doc-border);
+  }
+}
+
+/* Folded: the line alone, no edge however pointed at. */
+.plugin-code-block[data-folded]:is(*, :hover, :focus-within) {
+  border-color: transparent;
 }
 
 /* The drawing keeps to the box's corners; the fold's caret sits outside it,
@@ -28,12 +45,6 @@
 .plugin-code-holder {
   overflow: hidden;
   border-radius: inherit;
-}
-
-/* Folded: the line alone, no box around it. */
-.plugin-code-block[data-folded] {
-  border-color: transparent;
-  background: transparent;
 }
 
 .plugin-code-block .plugin-code-block-frame,

@@ -1,5 +1,5 @@
 import { describe, expect, it } from "vitest";
-import { handlePlace, nearestGap } from "./block-handle-place";
+import { handlePlace, nearestGap, withRoom } from "./block-handle-place";
 
 describe("a block's handle", () => {
   it("stands in the margin left of the text, and of a list item's marker", () => {
@@ -32,5 +32,16 @@ describe("where a pulled block lands", () => {
   it("at one height, is the innermost the pointer is right of", () => {
     expect(nearestGap(gaps, 60, 100)?.pos).toBe(20);
     expect(nearestGap(gaps, 10, 100)?.pos).toBe(21);
+  });
+
+  it("with the room open, is the place the pointer sees, past it moved down by the block", () => {
+    const tall = 40;
+    const places = [0, 1, 2, 3].map((pos) => ({ pos, y: pos * 24, left: 0 }));
+    // Open at 1: 2 shows at 48 + 40, the room's middle at 24 + 20.
+    const at = (y: number) => nearestGap(withRoom(places, 1, tall), 10, y)!.pos;
+    expect(at(44)).toBe(1);
+    expect(at(88)).toBe(2);
+    expect(at(60)).toBe(1);
+    expect(nearestGap(withRoom(places, null, tall), 10, 48)!.pos).toBe(2);
   });
 });

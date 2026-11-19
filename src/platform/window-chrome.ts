@@ -34,6 +34,33 @@ export const ownsMenuAccelerators = isLinuxPlatform();
 export const drawsWindowEdges = isLinuxPlatform();
 
 /**
+ * Whether the page draws the window's outline: Windows 10, whose undecorated
+ * window is built without its shadow (editor_windows.rs), the shadow's
+ * accent-coloured border with it. WebView2 tells 11 (13 and up) from 10
+ * (up to 10) by its platform version.
+ */
+export async function drawsWindowOutline(): Promise<boolean> {
+  if (!appDrawsWindowFrame || !isWindowsPlatform()) return false;
+  const data = (
+    navigator as Navigator & {
+      userAgentData?: {
+        getHighEntropyValues(hints: string[]): Promise<{
+          platformVersion?: string;
+        }>;
+      };
+    }
+  ).userAgentData;
+  try {
+    const { platformVersion } =
+      (await data?.getHighEntropyValues(["platformVersion"])) ?? {};
+    const major = parseInt(platformVersion ?? "", 10);
+    return major > 0 && major < 13;
+  } catch {
+    return false;
+  }
+}
+
+/**
  * Which platform's webview this is, for `data-platform`. iOS is checked
  * first: an iPad reports "MacIntel" like a Mac.
  */

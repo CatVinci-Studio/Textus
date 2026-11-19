@@ -311,7 +311,7 @@ export function useStartupRestore(options: StartupRestoreOptions): void {
       const paths = taken?.paths ?? [];
       // The one that ends up in front opens first, in the tab already
       // shown: nothing swaps in after it.
-      const front = savedFront(taken?.layout);
+      const front = taken?.opened?.[0] ?? savedFront(taken?.layout);
       // A saved session (it has a layout), not files sent from outside:
       // opened as last time, with no plugin offered.
       const reopening = !!taken?.layout;

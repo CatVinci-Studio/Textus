@@ -118,3 +118,42 @@ export function fillTableAt(
   const cell = pos + 1 + TableMap.get(filled).positionAt(top, left, filled);
   return tr.setSelection(Selection.near(tr.doc.resolve(cell + 1)));
 }
+
+/**
+ * List items pasted into a list item take that list's kind: into a to-do
+ * list each is a to-do (one already ticked stays ticked), into a plain or
+ * numbered list none is. Only the items that join the list, not lists
+ * nested in them; pasted anywhere else they stay as they were.
+ */
+export function itemsLikeTarget(slice: Slice, $pos: ResolvedPos): Slice {
+  let item: Node | null = null;
+  for (let d = $pos.depth; d > 0 && !item; d--)
+    if ($pos.node(d).type.name === "list_item") item = $pos.node(d);
+  if (!item) return slice;
+  const todo = item.attrs.checked != null;
+  const listType = item.attrs.listType as string;
+  let changed = false;
+  const like = (node: Node): Node => {
+    if (node.type.name !== "list_item") return node;
+    const checked = todo ? (node.attrs.checked ?? false) : null;
+    if (checked === node.attrs.checked && listType === node.attrs.listType)
+      return node;
+    changed = true;
+    return node.type.create(
+      { ...node.attrs, checked, listType },
+      node.content,
+      node.marks,
+    );
+  };
+  const each = (fragment: Fragment, map: (node: Node) => Node) => {
+    const nodes: Node[] = [];
+    fragment.forEach((node) => nodes.push(map(node)));
+    return Fragment.from(nodes);
+  };
+  const content = each(slice.content, (node) =>
+    node.type.name === "bullet_list" || node.type.name === "ordered_list"
+      ? node.copy(each(node.content, like))
+      : like(node),
+  );
+  return changed ? new Slice(content, slice.openStart, slice.openEnd) : slice;
+}

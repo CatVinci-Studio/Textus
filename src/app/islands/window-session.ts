@@ -41,6 +41,28 @@ export function withDraftInFront(
   );
 }
 
+/** `root` with tab `id` in front: of the island holding it, else of the
+ *  first; and that island. */
+export function withTabInFront(
+  root: LayoutNode,
+  id: string,
+): { root: LayoutNode; island: string } {
+  const panes = panesOf(root);
+  const holder = panes.find((p) => p.tabs.includes(id)) ?? panes[0];
+  return {
+    root: mapPanes(root, (p) =>
+      p.id === holder.id
+        ? {
+            ...p,
+            tabs: p.tabs.includes(id) ? p.tabs : [...p.tabs, id],
+            front: id,
+          }
+        : p,
+    ),
+    island: holder.id,
+  };
+}
+
 /**
  * Brings this window's islands back once the launch has opened its
  * documents, then keeps its session written as it changes - not before, so
@@ -65,16 +87,28 @@ export function useWindowSession(
         const idOf = new Map<string, string>();
         for (const tab of windowTabs<DocTab>()) {
           const path = pathOf(tab);
-          if (path && savedPaths(saved).includes(path)) idOf.set(path, tab.id);
+          if (
+            path &&
+            (savedPaths(saved).includes(path) || taken?.opened?.includes(path))
+          )
+            idOf.set(path, tab.id);
         }
         const built = buildSaved(saved, idOf);
         const root =
           built && withDraftInFront(built, windowTabs<DocTab>(), tabInUse());
         if (root && root.kind === "split") {
-          const [first] = panesOf(root);
-          // Its first island's document in front, so the split keeps them all.
-          if (first.front) activate(first.front);
-          setSplitLayout({ root: asRoot(root), focus: first.id });
+          // A document opened from outside in front, in its island;
+          // else the first island's, so the split keeps them all.
+          const opened = taken?.opened?.[0];
+          const openedId = opened ? idOf.get(opened) : undefined;
+          const shown = openedId
+            ? withTabInFront(root, openedId)
+            : { root, island: panesOf(root)[0].id };
+          const front = panesOf(shown.root).find(
+            (p) => p.id === shown.island,
+          )?.front;
+          if (front) activate(front);
+          setSplitLayout({ root: asRoot(shown.root), focus: shown.island });
         }
       }
       setReady(true);

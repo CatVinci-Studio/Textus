@@ -1,6 +1,11 @@
 import { headingsOf } from "../../utils/markdown-lines";
 import { localize } from "../store/manifest";
-import { runningPlugins, type PluginsSnapshot } from "../store/plugin-records";
+import {
+  pluginsSnapshot,
+  runningPlugins,
+  subscribePlugins,
+  type PluginsSnapshot,
+} from "../store/plugin-records";
 import { createSubscribers } from "../../utils/store";
 
 /**
@@ -27,6 +32,26 @@ function publish(next: StatusItem[]) {
 }
 
 export const subscribeStatusItems = subscribers.subscribe;
+
+/** Whether the window bar has any status to show: one set, or one a
+ *  running plugin's manifest declares before its code has started. */
+export function anyStatus(): boolean {
+  return (
+    items.length > 0 ||
+    runningPlugins(pluginsSnapshot()).some(
+      (p) => p.manifest.contributes.statusItems.length > 0,
+    )
+  );
+}
+
+export function subscribeAnyStatus(changed: () => void): () => void {
+  const stopItems = subscribers.subscribe(changed);
+  const stopPlugins = subscribePlugins(changed);
+  return () => {
+    stopItems();
+    stopPlugins();
+  };
+}
 
 export function statusItemsSnapshot(): StatusItem[] {
   return items;

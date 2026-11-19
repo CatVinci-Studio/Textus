@@ -1,7 +1,7 @@
 import type { Node as ProseNode } from "@milkdown/kit/prose/model";
 import type { EditorState, PluginView } from "@milkdown/kit/prose/state";
 import type { EditorView } from "@milkdown/kit/prose/view";
-import { firstBelow, holdStill, stillPoint } from "./hold-still";
+import { firstBelow, holdStill, pastAnEnd, stillPoint } from "./hold-still";
 import {
   DRAW_AHEAD_SCREENS,
   DRAW_SCREENS,
@@ -81,8 +81,14 @@ function measurableAfter(
 
 /** The room a block takes between its neighbours: from the margin's edge
  *  of the one above to that of the one below. A placeholder has no
- *  margins, so the margins it shared with them are its own height. */
-function slotOf(el: Element, rect: DOMRect): number {
+ *  margins, so the margins it shared with them are its own height. Two
+ *  let go together meet at the upper one's margin edge, so a run's rooms
+ *  add up to the run and the page keeps its height. */
+export function slotOf(
+  el: Element,
+  rect: DOMRect,
+  released: ReadonlySet<Element> = new Set(),
+): number {
   const prev = shown(
     el.previousElementSibling,
     (at) => at.previousElementSibling,
@@ -93,9 +99,10 @@ function slotOf(el: Element, rect: DOMRect): number {
   const start = prev
     ? prev.getBoundingClientRect().bottom + margin(prev, "marginBottom")
     : rect.top - margin(el, "marginTop");
-  const end = next
-    ? next.getBoundingClientRect().top - margin(next, "marginTop")
-    : rect.bottom + margin(el, "marginBottom");
+  const end =
+    next && !released.has(next)
+      ? next.getBoundingClientRect().top - margin(next, "marginTop")
+      : rect.bottom + margin(el, "marginBottom");
   return end - start;
 }
 
@@ -149,17 +156,21 @@ export function plan(
   // let go, they would be drawn again at once, frame after frame.
   const { anchor, head } = view.state.selection;
   const caret = new Set([topLevelIndex(doc, anchor), topLevelIndex(doc, head)]);
+  const going: { from: number; el: Element; rect: DOMRect; node: ProseNode }[] =
+    [];
   for (const decoration of releasing ? state.drawn.find() : []) {
     const index = topLevelIndex(doc, decoration.from);
     if (caret.has(index)) continue;
-    const node = doc.child(index);
     const el = blocks.elementOf[index];
     if (!el) continue;
     const rect = el.getBoundingClientRect();
     if (rect.bottom > box.top - far && rect.top < box.bottom + far) continue;
-    const height = slotOf(el, rect);
-    rememberHeight(view, node, height);
-    release.push(decoration.from);
+    going.push({ from: decoration.from, el, rect, node: doc.child(index) });
+  }
+  const released = new Set(going.map((g) => g.el));
+  for (const { from, el, rect, node } of going) {
+    rememberHeight(view, node, slotOf(el, rect, released));
+    release.push(from);
   }
   if (!draw.length && !release.length) return null;
   return { draw, release };
@@ -281,6 +292,8 @@ export class LazyBlocksDrawer implements PluginView {
   drawNow(): void {
     if (this.view.isDestroyed || !this.scroller || this.holding) return;
     if (performance.now() < this.pausedUntil) return;
+    // The scroll's end (onScroll's settle) draws it.
+    if (pastAnEnd(this.scroller)) return;
     const scrolling = performance.now() - this.scrolledAt < SETTLE_MS;
     const next = plan(this.view, this.scroller, !scrolling);
     if (!next) return;

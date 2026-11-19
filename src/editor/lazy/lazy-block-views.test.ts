@@ -14,6 +14,7 @@ import {
   drawAllBlocks,
   drawAround,
   plan,
+  slotOf,
 } from "./lazy-blocks-drawer";
 import { lazyBlockNodeViews, rememberHeight } from "./lazy-block-views";
 import { createLazyBlocksPlugin, lazyBlocksKey } from "./lazy-blocks-state";
@@ -331,4 +332,37 @@ describe("a jump or an export reaching blocks out of sight", () => {
     expect(placeholders(view)).toBeGreaterThan(1500);
     // Two thousand blocks drawn and let go: slow in jsdom on a busy machine.
   }, 20_000);
+});
+
+describe("the room blocks let go together take", () => {
+  // Four paragraphs 20 tall with 10 margins that fold into one between
+  // them: tops at 0, 30, 60, 90.
+  function blocks() {
+    const root = document.createElement("div");
+    const els = [0, 30, 60, 90].map((top) => {
+      const p = document.createElement("p");
+      p.style.margin = "10px 0";
+      const rect = { top, bottom: top + 20, height: 20 } as DOMRect;
+      p.getBoundingClientRect = () => rect;
+      p.getClientRects = () => [rect] as unknown as DOMRectList;
+      root.append(p);
+      return p;
+    });
+    document.body.append(root);
+    return els;
+  }
+
+  it("adds up to the run, so the page keeps its height", () => {
+    const [a, b, c, d] = blocks();
+    const run = new Set<Element>([b, c]);
+    const rooms = [b, c].map((el) =>
+      slotOf(el, el.getBoundingClientRect(), run),
+    );
+    // From a's margin edge (30 + 0) to d's (90 - 10): 50 between them.
+    expect(rooms[0] + rooms[1]).toBe(
+      d.getBoundingClientRect().top -
+        10 -
+        (a.getBoundingClientRect().bottom + 10),
+    );
+  });
 });

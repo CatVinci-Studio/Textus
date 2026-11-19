@@ -16,18 +16,44 @@ export function stoppedText(agent: ExternalAgent, stderr: string): string {
     .join("\n\n");
 }
 
-/** An error as the user can act on it: sign in, or install. */
-export function explain(agent: ExternalAgent, err: unknown): Error {
-  const message = err instanceof Error ? err.message : String(err);
+/** An error as the user can act on it: sign in, or, for one it gave
+ *  while `starting`, install. The agent's own reason comes before its
+ *  error's generic title ("Internal error"). */
+export function explain(
+  agent: ExternalAgent,
+  err: unknown,
+  starting = false,
+): Error {
   if (err instanceof AcpError && err.code === AUTH_REQUIRED)
     return new Error(
       [fill(currentStrings().agentSignIn, { agent: agent.name }), agent.setup]
         .filter(Boolean)
         .join("\n\n"),
     );
+  const message =
+    reasonIn(err) ??
+    (err instanceof Error ? err.message : String(err)).replace(
+      /^Internal error: /,
+      "",
+    );
   return new Error(
-    agent.setup && !message.includes(agent.setup)
+    starting && agent.setup && !message.includes(agent.setup)
       ? `${message}\n\n${agent.setup}`
       : message,
   );
+}
+
+/** Where agents put why they stopped: Codex in `message`, Claude and
+ *  Qwen in `details`, a server's body in `error.message`. */
+function reasonIn(err: unknown): string | undefined {
+  if (!(err instanceof AcpError) || typeof err.data !== "object") return;
+  const data = err.data as {
+    message?: unknown;
+    details?: unknown;
+    error?: { message?: unknown };
+  } | null;
+  const reason = data?.message ?? data?.details ?? data?.error?.message;
+  return typeof reason === "string" && reason.trim()
+    ? reason.trim()
+    : undefined;
 }

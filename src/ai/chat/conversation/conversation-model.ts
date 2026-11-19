@@ -18,6 +18,7 @@ import { conversationScope, setLiveConversation } from "../conversation-scope";
 import { NextMessage } from "../next-message";
 import type { StreamingState } from "../stream-step";
 import { sendMessage } from "./conversation-send";
+import { storeAgent, storedAgent } from "./conversation-agent";
 import type { DocumentPort } from "./document-port";
 import type {
   AgentRequestOptions,
@@ -96,8 +97,10 @@ export class ConversationModel {
     this.env = options.env;
     this.persist = options.persist ?? true;
     this.onIdentity = options.onIdentity;
+    const id = options.id ?? crypto.randomUUID();
     this.state = {
-      conversationId: options.id ?? crypto.randomUUID(),
+      conversationId: id,
+      agent: storedAgent(id) ?? this.env().settings.chatAgent,
       history: [],
       thoughts: {},
       streaming: null,
@@ -223,8 +226,16 @@ export class ConversationModel {
     this.save();
   };
 
+  /** Who answers from now on, in this conversation alone. */
+  setAgent = (agent: string) => {
+    if (agent === this.state.agent) return;
+    storeAgent(this.id, agent);
+    this.patch({ agent });
+  };
+
   readonly actions: ConversationActions = {
     lastOptions: () => this.lastOptions,
+    setAgent: this.setAgent,
     send: (document, message, images, options) =>
       sendMessage(this, document, message, images, options),
     stop: this.stop,
@@ -262,6 +273,8 @@ export class ConversationModel {
     this.setStreaming(null);
     this.patch({
       conversationId: id,
+      // A new one keeps who answered; one reopened, who answered in it.
+      agent: storedAgent(id) ?? this.state.agent,
       history: turns,
       thoughts: {},
       error: null,

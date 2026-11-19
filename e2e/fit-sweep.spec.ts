@@ -90,14 +90,16 @@ for (const language of ["zh", "en", "de", "ru", "ja"])
     test.setTimeout(120_000);
     await page.setViewportSize({ width: 1400, height: 900 });
     const found: string[] = [];
+    await openApp(page, { settings: { language, menuBarShown: false } });
+    await emit(page, "menu-settings");
+    await emit(page, "menu-split-right");
+    await page.locator(".settings-tab").waitFor();
     for (const width of WIDTHS) {
-      await openApp(page, {
-        settings: { language, menuBarShown: false },
-        storage: { "textus-panel-px": String(width) },
-      });
-      await emit(page, "menu-settings");
-      await emit(page, "menu-split-right");
-      await page.locator(".settings-tab").waitFor();
+      // The width a panel's edge dragged there leaves.
+      await page.evaluate(
+        async ([w, path]) => (await import(path)).setPanelWidth(w),
+        [width, "/src/engine/frame/panel-width.ts"] as const,
+      );
       for (const id of PAGES) {
         await page.evaluate(
           (p) =>

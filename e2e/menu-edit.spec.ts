@@ -197,7 +197,7 @@ test("a find bar left open comes back with its tab, the page where it was read",
   ).toBeLessThan(2);
 });
 
-test("with motion on, the page glides to a find match, centred, and along with the caret", async ({
+test("a find match is brought to the page's middle, the caret followed, and the find bar stays over the document", async ({
   page,
 }) => {
   const lines = Array.from({ length: 80 }, (_, i) => `line ${i}`);
@@ -210,17 +210,13 @@ test("with motion on, the page glides to a find match, centred, and along with t
     [...lines, "the needle", ...lines].join("\n\n"),
   );
   await page.setViewportSize({ width: 1200, height: 600 });
-  await openApp(page, { settings: { menuBarShown: false }, animations: true });
+  await openApp(page, { settings: { menuBarShown: false } });
   await openPath(page, "/work/a.md");
   const scroller = page.locator(".editor-scroll").first();
   await docs(page).first().locator("p").first().click();
   await emit(page, "menu-find-replace");
-  await page
-    .locator(".find-replace-bar")
-    .getByRole("textbox")
-    .first()
-    .fill("needle");
-  // Ends with the match in the page's middle.
+  const bar = page.locator(".find-replace-bar");
+  await bar.getByRole("textbox").first().fill("needle");
   const offCentre = () =>
     scroller.evaluate((el) => {
       const match = document.querySelector(".find-match")!;
@@ -229,6 +225,14 @@ test("with motion on, the page glides to a find match, centred, and along with t
       return Math.abs(m.top + m.height / 2 - (box.top + el.clientHeight / 2));
     });
   await expect.poll(offCentre).toBeLessThan(30);
+  // The bar stays where it is however the page scrolls.
+  const before = await bar.boundingBox();
+  await scroller.evaluate((el) => {
+    el.scrollTop = 0;
+    el.scrollTop = el.scrollHeight;
+  });
+  await expect(bar).toBeInViewport();
+  expect((await bar.boundingBox())?.y).toBe(before?.y);
   // The caret walked past the page's foot: the page follows it there.
   await page.keyboard.press("Escape");
   await docs(page).first().locator("p").first().click();
@@ -240,26 +244,6 @@ test("with motion on, the page glides to a find match, centred, and along with t
       return r.top >= box.top && r.bottom <= box.top + el.clientHeight;
     });
   await expect.poll(caretShown).toBe(true);
-});
-
-test("the find bar stays over the document as it scrolls", async ({ page }) => {
-  await page.setViewportSize({ width: 1200, height: 600 });
-  await openApp(page, { settings: { menuBarShown: false } });
-  await docs(page).first().click();
-  for (let i = 0; i < 60; i++) await page.keyboard.type(`line ${i}\n`);
-  await emit(page, "menu-find-replace");
-  const bar = page.locator(".find-replace-bar");
-  await expect(bar).toBeVisible();
-  const before = await bar.boundingBox();
-  await page
-    .locator(".editor-scroll")
-    .first()
-    .evaluate((el) => {
-      el.scrollTop = 0;
-      el.scrollTop = el.scrollHeight;
-    });
-  await expect(bar).toBeInViewport();
-  expect((await bar.boundingBox())?.y).toBe(before?.y);
 });
 
 test("in source mode the format keys and the Format menu write Markdown", async ({

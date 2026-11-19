@@ -1458,6 +1458,7 @@ utiliser une.
   closeLastLabel: "À la fermeture du dernier document",
   closeLastWindow: "Fermer la fenêtre",
   closeLastStartPage: "Afficher la page d'accueil",
+  addTabLabel: "Le + de la barre d’onglets ouvre",
   startPageRemoveRecent: "Retirer des récents",
   startPageRecentProjects: "Dossiers récents",
   startPagePickDocument:

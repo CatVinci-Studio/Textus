@@ -3,7 +3,7 @@ import { MAC, emit, openApp, pasteMarkdown, settled } from "./helpers";
 
 // Formulas, diagrams, HTML and embedded notes are drawn only within a few
 // screens of the view: a document holding hundreds keeps a page the size
-// of a few screens. The two over hundreds of formulas or a very long
+// of a few screens. The ones over hundreds of formulas or a very long
 // document are @perf: a loaded runner can't hold them to the pixel.
 
 /** Where each block of the document, and each view in it, sits from the
@@ -242,7 +242,7 @@ const jumpWhile = (page: Page, by: number) =>
       : null;
   }, by);
 
-test("a long document read upward through blocks out of sight: what is on screen stays still, and at rest nothing is redrawn", async ({
+test("a long document read upward through blocks out of sight: what is on screen stays still, and at rest nothing is redrawn @perf", async ({
   page,
 }) => {
   test.setTimeout(120_000);
@@ -295,7 +295,7 @@ test("a long document read upward through blocks out of sight: what is on screen
   expect(changes).toEqual([]);
 });
 
-test("in a long document, find lands on a match far below and it stays on screen @perf", async ({
+test("in a long document, find lands on a match far below and it stays on screen", async ({
   page,
 }) => {
   test.setTimeout(120_000);

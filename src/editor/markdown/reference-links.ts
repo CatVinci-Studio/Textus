@@ -189,7 +189,22 @@ export const linkDefinitionSchema = $nodeSchema("link_definition", () => ({
     match: (node) => node.type.name === "link_definition",
     // `html` is the mdast node whose value goes out verbatim.
     runner: (state, node) => {
-      state.addNode("html", undefined, node.textContent);
+      state.addNode("html", undefined, node.textContent, { definition: true });
     },
   },
 }));
+
+/** A paragraph that is a definition's source line. */
+const definitionLine = (node: object): boolean => {
+  const { type, children } = node as AnyNode;
+  return (
+    type === "paragraph" &&
+    children?.length === 1 &&
+    children[0].definition === true
+  );
+};
+
+/** Definitions one after another are written on lines of their own, with
+ *  no blank line between them, as a file lists them. */
+export const joinDefinitions = (left: object, right: object) =>
+  definitionLine(left) && definitionLine(right) ? 0 : undefined;

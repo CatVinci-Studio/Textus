@@ -117,12 +117,6 @@ async function caretAtZooms(page: Page) {
   expect(heights[3]).toBeGreaterThan(heights[1] * 1.3);
 }
 
-test("the drawn caret keeps its width on screen at any zoom, on whole pixels", async ({
-  page,
-}) => {
-  await caretAtZooms(page);
-});
-
 test.describe("on a Retina screen", () => {
   test.use({ deviceScaleFactor: 2 });
   test("the drawn caret keeps its width on screen at any zoom, on whole pixels", async ({

@@ -65,90 +65,19 @@ function drawNow(el: Element) {
   if (!entry || entry.drawn) return;
   entry.drawn = true;
   const box = el as HTMLElement;
-  box.style.minHeight = box.style.width = box.style.display = "";
-  box.style.boxSizing = box.style.verticalAlign = "";
+  box.style.minHeight = box.style.boxSizing = "";
   el.removeAttribute(PENDING_ATTR);
   entry.draw();
 }
 
-/** How far below an inline box's top its baseline sits, by its font:
- *  measured once a font on a probe outside the editor, whose own DOM
- *  isn't to be touched. */
-const ascents = new Map<string, number>();
-function ascentOf(style: CSSStyleDeclaration): number {
-  // WebKit leaves the shorthand empty.
-  const font = `${style.fontStyle} ${style.fontWeight} ${style.fontSize} ${style.fontFamily}`;
-  let found = ascents.get(font);
-  if (found === undefined) {
-    const holder = document.createElement("div");
-    holder.style.cssText =
-      "position:absolute;visibility:hidden;white-space:pre";
-    const line = document.createElement("span");
-    line.style.font = font;
-    const mark = document.createElement("span");
-    mark.style.cssText = "display:inline-block;width:0;height:0";
-    line.append("x", mark);
-    holder.append(line);
-    document.body.append(holder);
-    found =
-      mark.getBoundingClientRect().bottom - line.getBoundingClientRect().top;
-    holder.remove();
-    ascents.set(font, found);
-  }
-  return found;
-}
-
-/** The box an inline element's line is made to hold for it: its own,
- *  and each box set in the line inside it (an inline-block, as KaTeX
- *  draws), as far as it reaches; what is taken out of the flow (KaTeX's
- *  hidden MathML) left out. */
-function reach(box: HTMLElement): DOMRect {
-  const outer = box.getBoundingClientRect();
-  let top = outer.top;
-  let bottom = outer.bottom;
-  const walk = (el: Element) => {
-    for (const child of el.children) {
-      const { position, display } = getComputedStyle(child);
-      if (position === "absolute" || position === "fixed") continue;
-      if (display === "inline") {
-        walk(child);
-        continue;
-      }
-      const r = child.getBoundingClientRect();
-      top = Math.min(top, r.top);
-      bottom = Math.max(bottom, r.bottom);
-    }
-  };
-  walk(box);
-  return new DOMRect(outer.left, top, outer.width, bottom - top);
-}
-
-/** The size each kept when it goes, so the page and its lines don't
- *  move: a block its height, an inline one its width too, set on the
- *  line where the drawing reached. All read before any is written, or
- *  each write would lay the page out again. */
+/** The height each kept when it goes, so the page doesn't move. All read
+ *  before any is written, or each write would lay the page out again. */
 function holdSizes(boxes: HTMLElement[]) {
-  const styles = boxes.map((box) => getComputedStyle(box));
-  const inline = styles.map((style) => style.display === "inline");
-  const own = boxes.map((box) => box.getBoundingClientRect());
-  // An inline drawing reaches past its own line of text (a fraction, a
-  // root): held is all of it, what lines it makes taller included.
-  const rects = boxes.map((box, i) => (inline[i] ? reach(box) : own[i]!));
-  // An empty inline-block rests its bottom on the baseline: lowered by
-  // what of the drawing hung below it.
-  const lower = styles.map((style, i) =>
-    inline[i] ? rects[i]!.bottom - (own[i]!.top + ascentOf(style)) : 0,
-  );
+  const heights = boxes.map((box) => box.getBoundingClientRect().height);
   boxes.forEach((box, i) => {
-    const rect = rects[i]!;
-    if (inline[i]) {
-      box.style.display = "inline-block";
-      box.style.width = `${rect.width}px`;
-      box.style.verticalAlign = `${-lower[i]!}px`;
-    }
     // Its padding and border inside the height held, as they were drawn.
     box.style.boxSizing = "border-box";
-    box.style.minHeight = `${rect.height}px`;
+    box.style.minHeight = `${heights[i]}px`;
   });
 }
 
@@ -197,9 +126,10 @@ const onNear = (
   else stillWhile(observer, draw);
 };
 
-/** An inline drawing broken over lines (a long formula) has no one box
- *  to hold: it stays drawn. */
-const wraps = (el: Element) => el.getClientRects().length > 1;
+/** An inline drawing (a formula in a line) stays once drawn: the line
+ *  it sets can't be held exactly without it, and a block far away is let
+ *  go whole, its lines with it. */
+const inline = (el: Element) => getComputedStyle(el).display === "inline";
 
 /** Lets go of the views drawn far from the screen, each holding its exact
  *  size, so nothing on screen moves. Where each is, is read at rest: an
@@ -218,15 +148,18 @@ function letGoFar(scroller: Element, watching: Watchers) {
     const rect = el.getBoundingClientRect();
     const far =
       rect.bottom < screen.top - reach || rect.top > screen.bottom + reach;
-    if (far && !wraps(el)) leaving.push(el as HTMLElement);
+    if (far && !inline(el)) leaving.push(el as HTMLElement);
   }
   if (!leaving.length) return;
-  holdSizes(leaving);
-  for (const target of leaving) {
-    kept.get(target)!.drawn = false;
-    target.setAttribute(PENDING_ATTR, "");
-    kept.get(target)!.undraw();
-  }
+  // Each holds its size, but WebKit may still scroll as their insides go.
+  stillWhile(watching.near, () => {
+    holdSizes(leaving);
+    for (const target of leaving) {
+      kept.get(target)!.drawn = false;
+      target.setAttribute(PENDING_ATTR, "");
+      kept.get(target)!.undraw();
+    }
+  });
 }
 
 /** Lets go of what is far once nothing has scrolled for a while. */
