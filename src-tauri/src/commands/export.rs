@@ -266,8 +266,9 @@ pub async fn reveal_in_dir(app: tauri::AppHandle, path: String) -> Result<(), St
 pub struct PdfSheet {
     pub width: f64,
     pub height: f64,
-    /// macOS lays its pages out with the band already in them.
-    #[cfg_attr(any(target_os = "macos", target_os = "ios"), allow(dead_code))]
+    /// Read on Linux only: elsewhere the pages are laid out with the band
+    /// already in them.
+    #[cfg_attr(not(target_os = "linux"), allow(dead_code))]
     pub margin: f64,
 }
 
