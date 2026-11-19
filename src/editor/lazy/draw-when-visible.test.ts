@@ -216,7 +216,10 @@ describe("what is on screen held still", () => {
     const resting = scroller(300);
     holdStill(resting, moved(20));
     expect(resting.scrollTop).toBe(320);
-    for (const pulled of [scroller(-30), scroller(1540)]) {
+    // The page's own stretch moves its content, not its scroll position.
+    const stretched = scroller(300);
+    stretched.setAttribute("data-stretched", "");
+    for (const pulled of [scroller(-30), scroller(1540), stretched]) {
       const was = pulled.scrollTop;
       holdStill(pulled, moved(20));
       expect(pulled.scrollTop).toBe(was);
